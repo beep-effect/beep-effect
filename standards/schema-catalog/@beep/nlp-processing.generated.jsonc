@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/nlp-processing",
   "entries": [
+    {"file":"packages/foundation/capability/nlp-processing/src/Activity.ts","symbol":"ActivityFacts","kind":"struct-const","owner":"@beep/nlp-processing","identity":"ActivityFacts","description":"The start-time facts an attributed run states."},
     {"file":"packages/foundation/capability/nlp-processing/src/Backend/Composition.ts","symbol":"CachingOptions","kind":"struct-const","owner":"@beep/nlp-processing","identity":"CachingOptions","description":"Cache settings for memoized backend composition."},
     {"file":"packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts","symbol":"BackendCapabilities","kind":"struct-const","owner":"@beep/nlp-processing","identity":"BackendCapabilities","description":"Capabilities of an NLP backend service."},
     {"file":"packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts","symbol":"BackendInitError","kind":"tagged-error","owner":"@beep/nlp-processing","identity":"BackendInitError"},
@@ -84,6 +85,7 @@
     {"file":"packages/foundation/capability/nlp-processing/src/Graph/Schema.ts","symbol":"TextNode","kind":"tagged-union","owner":"@beep/nlp-processing","identity":"TextNode","description":"Type-discriminated text-graph node with processing metadata and a creation timestamp."},
     {"file":"packages/foundation/capability/nlp-processing/src/Graph/Schema.ts","symbol":"TextNodeType","kind":"literal-kit","owner":"@beep/nlp-processing","identity":"TextNodeType","description":"Structural text-graph node kind (document/paragraph/sentence/token)."},
     {"file":"packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts","symbol":"GraphCycleError","kind":"tagged-error","owner":"@beep/nlp-processing","identity":"GraphCycleError"},
+    {"file":"packages/foundation/capability/nlp-processing/src/NlpProcessing.instruments.ts","symbol":"NlpCacheResult","kind":"literal-kit","owner":"@beep/nlp-processing","identity":"NlpCacheResult","description":"Whether an NLP cache lookup found its entry."},
     {"file":"packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts","symbol":"ExportedToolError","kind":"tagged-error","owner":"@beep/nlp-processing","identity":"ExportedToolError"},
     {"file":"packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts","symbol":"AiAnalysis","kind":"struct-const","owner":"@beep/nlp-processing","identity":"AiAnalysis","description":"Composite linguistic analysis of a text: counts, sentences, and annotated tokens."},
     {"file":"packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts","symbol":"AiCorpusConfig","kind":"struct-const","owner":"@beep/nlp-processing","identity":"AiCorpusConfig","description":"Resolved BM25 configuration values for a managed corpus."},

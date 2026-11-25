@@ -16,6 +16,7 @@ import {
   UsptoClaims,
   UsptoClaimsError,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import { LawPrincipal, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import {
   ClaimSelfCheckReviewRequest,
   claimInspectInput,
@@ -63,6 +64,7 @@ import {
   decodePracticeKgGraphRows,
   toToolRecord,
 } from "./PracticeKg.rows.ts";
+import { practiceKgReadScopeOf } from "./PracticeKg.wall.ts";
 import type {
   PracticeKgCorrespondentLink,
   PracticeKgCorrespondentLookupResult,
@@ -381,7 +383,7 @@ export const PracticeKgLocalClaimChecksLive: Layer.Layer<
 export const PracticeKgToolkitHandlersLive: Layer.Layer<
   Tool.HandlersFor<typeof PracticeKgToolkit.tools>,
   WinkIntrinsicNounActivationError,
-  DuckDb | Path.Path | PracticeKgBundle | SqlClientService
+  DuckDb | LawPrincipal | MatterAuthority | Path.Path | PracticeKgBundle | SqlClientService
 > = PracticeKgToolkit.toLayer(
   Effect.gen(function* () {
     const selfCheck = yield* ClaimSelfCheck;
@@ -391,44 +393,52 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
     const sql = (yield* SqlClientService).withoutTransforms();
     const path = yield* Path.Path;
     const version = bundle.manifest.bundleVersion;
+    const { principal } = yield* LawPrincipal;
+    const authority = yield* MatterAuthority;
+    const readScope = Effect.map(authority.grantedScopes(principal), practiceKgReadScopeOf);
 
     return PracticeKgToolkit.of({
       kg_clients: Effect.fn("PracticeKgTools.kg_clients")(function* (request) {
-        const rows = yield* queryPglite(sql, PracticeKgQueries.clients, [], decodePracticeKgGraphRows).pipe(
+        const scope = yield* readScope;
+        const rows = yield* queryPglite(sql, PracticeKgQueries.clients(scope), [], decodePracticeKgGraphRows).pipe(
           Effect.mapError(toolFailure("kg_clients"))
         );
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
       kg_docket_family: Effect.fn("PracticeKgTools.kg_docket_family")(function* (request) {
+        const scope = yield* readScope;
         const rows = yield* queryPglite(
           sql,
-          PracticeKgQueries.family,
+          PracticeKgQueries.family(scope),
           [request.family],
           decodePracticeKgFamilyRows
         ).pipe(Effect.mapError(toolFailure("kg_docket_family")));
         return projectRows(A.map(rows, toToolRecord), practiceKgFamilyFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
       kg_application_lookup: Effect.fn("PracticeKgTools.kg_application_lookup")(function* (request) {
+        const scope = yield* readScope;
         const rows = yield* queryPglite(
           sql,
-          PracticeKgQueries.application,
+          PracticeKgQueries.application(scope),
           [request.application_number ?? null, request.patent_number ?? null, request.docket ?? null],
           decodePracticeKgGraphRows
         ).pipe(Effect.mapError(toolFailure("kg_application_lookup")));
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
       kg_find: Effect.fn("PracticeKgTools.kg_find")(function* (request) {
+        const scope = yield* readScope;
         const rows = yield* queryPglite(
           sql,
-          PracticeKgQueries.find,
+          PracticeKgQueries.find(scope),
           [likePattern(request.query)],
           decodePracticeKgGraphRows
         ).pipe(Effect.mapError(toolFailure("kg_find")));
         return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
       corpus_search_text: Effect.fn("PracticeKgTools.corpus_search_text")(function* (request) {
+        const scope = yield* readScope;
         const rows = yield* duckdb
-          .query(PracticeKgQueries.searchText, [request.query, request.family ?? null, request.limit])
+          .query(PracticeKgQueries.searchText(scope), [request.query, request.family ?? null, request.limit])
           .pipe(
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
@@ -440,8 +450,9 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
       corpus_get_document: Effect.fn("PracticeKgTools.corpus_get_document")(function* (request) {
+        const scope = yield* readScope;
         const rows = yield* duckdb
-          .query(PracticeKgQueries.getDocument, [
+          .query(PracticeKgQueries.getDocument(scope), [
             request.digest ?? null,
             request.organized_path ?? null,
             request.range.start,
@@ -458,8 +469,9 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
       email_search: Effect.fn("PracticeKgTools.email_search")(function* (request) {
+        const scope = yield* readScope;
         const rows = yield* duckdb
-          .query(PracticeKgQueries.email, [
+          .query(PracticeKgQueries.email(scope), [
             likePattern(request.query),
             likePattern(request.sender),
             request.after ?? null,
@@ -493,6 +505,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
       kg_candidate_claims: Effect.fn("PracticeKgTools.kg_candidate_claims")(
         function* (request) {
+          const scope = yield* readScope;
           const tables = yield* sql.unsafe(PracticeKgQueries.claimsTableProbe);
           if (A.length(tables) < 2) {
             return PracticeKgCandidateClaimsNotLoadedResult.make({
@@ -504,7 +517,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           }
           const rows = yield* queryPglite(
             sql,
-            PracticeKgQueries.candidateClaims,
+            PracticeKgQueries.candidateClaims(scope),
             [request.docket ?? null, request.family ?? null, request.digest ?? null],
             decodePracticeKgCandidateClaimRows
           );
@@ -522,8 +535,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
       kg_matter_lookup: Effect.fn("PracticeKgTools.kg_matter_lookup")(
         function* (request) {
+          const scope = yield* readScope;
           const result = yield* lookupPracticeKgMatters(
-            PracticeKgMatterLookupRequest.make({ reference: request.reference })
+            PracticeKgMatterLookupRequest.make({ reference: request.reference }),
+            scope
           ).pipe(Effect.provideService(DuckDb, duckdb), Effect.provideService(PracticeKgBundle, bundle));
           const rows = A.flatMap(result.matters, (matter) => {
             const shared = {
@@ -574,8 +589,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
       kg_correspondent_lookup: Effect.fn("PracticeKgTools.kg_correspondent_lookup")(
         function* (request) {
+          const scope = yield* readScope;
           const result = yield* lookupPracticeKgCorrespondents(
-            PracticeKgCorrespondentLookupRequest.make({ address: request.address })
+            PracticeKgCorrespondentLookupRequest.make({ address: request.address }),
+            scope
           ).pipe(Effect.provideService(DuckDb, duckdb), Effect.provideService(PracticeKgBundle, bundle));
           return projectRows(
             A.map(correspondentRows(result), toToolRecord),
@@ -601,6 +618,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
       kg_provenance: Effect.fn("PracticeKgTools.kg_provenance")(
         function* (request) {
+          const scope = yield* readScope;
           const hasKey = request.iri !== undefined || request.natural_key !== undefined || request.digest !== undefined;
           if (!hasKey) {
             const statusRow = PracticeKgGraphToolRow.make({
@@ -620,7 +638,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           }
           if (request.digest !== undefined) {
             const documents = yield* duckdb
-              .query(PracticeKgQueries.provenanceDocument, [request.digest])
+              .query(PracticeKgQueries.provenanceDocument(scope), [request.digest])
               .pipe(
                 Effect.mapError(failureOf("store-query-failed")),
                 Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
@@ -636,7 +654,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           }
           const rows = yield* queryPglite(
             sql,
-            PracticeKgQueries.provenance,
+            PracticeKgQueries.provenance(scope),
             [request.iri ?? null, request.natural_key ?? null, null],
             decodePracticeKgGraphRows
           );

@@ -32,6 +32,7 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { makeCitationXmlTestRuntime } from "./CitationXmlWorker.fixtures.ts";
+import { provideMatterWallGrantingEveryScope } from "./MatterWall.fixtures.ts";
 import type {
   installCitationDefaultConfigurationFixture,
   installCitationSourceDocumentConfigurationFixture,
@@ -81,6 +82,7 @@ export const buildCitationEngineFixture = Effect.fn("EngineLayerTest.build")(fun
   const built = yield* Layer.build(CitationEngineLive(tamper(configuration))).pipe(
     Effect.provideContext(provided),
     Effect.provideService(SourceTextResolver, resolver),
+    provideMatterWallGrantingEveryScope,
     // Controlled identity inputs qualify grouping conditionally. They do not
     // attest a production allocator or exact native source hash integers.
     Effect.provideService(CitationMissingPageIdentityFactory, citationFixtureMissingPageIdentityFactory),
@@ -136,6 +138,7 @@ export const buildCitationDefaultEngineFixture = Effect.fn("EngineLayerTest.buil
       Effect.provideService(CitationCleanerProtocols, citationPrimitiveCleanerProtocols),
       Effect.provideService(CitationMissingPageIdentityFactory, citationFixtureMissingPageIdentityFactory),
       Effect.provideService(SourceTextResolver, resolver),
+      provideMatterWallGrantingEveryScope,
       DateTime.withCurrentZoneOffset(0)
     )
   );

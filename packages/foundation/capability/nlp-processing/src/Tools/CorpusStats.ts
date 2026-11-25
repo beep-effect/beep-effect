@@ -68,4 +68,8 @@ export const CorpusStats = Tool.make("CorpusStats", {
   failureMode: "return",
   parameters: CorpusStatsParameters,
   success: S.toEncoded(AiCorpusStats),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

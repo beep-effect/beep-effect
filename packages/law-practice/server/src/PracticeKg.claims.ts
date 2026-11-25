@@ -292,7 +292,7 @@ const sourceDocumentStem = (filename: string): string =>
   Str.toLowerCase(Str.replace(extensionSuffix, "")(Str.replace(batchOrdinalPrefix, "")(filename)));
 
 const sourceDocumentDigestsSql = `
-SELECT digest
+SELECT DISTINCT digest
 FROM documents
 WHERE lower(regexp_replace(effective_name, '\\.[^.]+$', '')) = $1
 ORDER BY digest`;

@@ -6,6 +6,7 @@
  */
 
 import { makePracticeKgServerLayer, PracticeKgMcpServerConfig } from "@beep/law-practice-server";
+import { MatterWallLive } from "@beep/law-practice-server/MatterAuthority";
 import { makePracticeKgHostResourcesLayer } from "@beep/law-practice-server/PracticeKgHost";
 import * as Layer from "effect/Layer";
 import { PRACTICE_KG_EXTENSION_VERSION } from "../Version.ts";
@@ -13,8 +14,8 @@ import { layerPracticeKgTelemetryProduction } from "./Telemetry.ts";
 import type { PracticeKgBundleContext } from "@beep/law-practice-server";
 
 /**
- * Compose the stdio server with app-owned PGlite and DuckDB resources, leaving
- * its telemetry to the caller.
+ * Compose the stdio server with app-owned PGlite and DuckDB resources and the
+ * host's matter wall, leaving its telemetry to the caller.
  *
  * **Details**
  *
@@ -42,7 +43,7 @@ export const makePracticeKgHostServerLayer = (context: PracticeKgBundleContext) 
       name: "beep-practice-kg",
       version: PRACTICE_KG_EXTENSION_VERSION,
     })
-  ).pipe(Layer.provide(makePracticeKgHostResourcesLayer(context)));
+  ).pipe(Layer.provide(Layer.merge(makePracticeKgHostResourcesLayer(context), MatterWallLive)));
 
 /**
  * Compose the stdio server with app-owned PGlite and DuckDB resources and the

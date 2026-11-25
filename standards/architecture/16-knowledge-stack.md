@@ -56,9 +56,9 @@ lands in the phase of its layer.
 | L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | Implemented in P3 lane |
 | L3 | Taxonomy and alignments | `@beep/ontology` | Implemented in P5 lane |
 | L4 | Claims | `@beep/epistemics` | Implemented in P4 lane |
-| L5 | Operations | `@beep/nlp-processing` (capability) | Pending P6 |
+| L5 | Operations | `@beep/nlp-processing` (capability) | Implemented in P6 lane |
 | L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Implemented in P5 lane |
-| L7 | Agent surface | a contract, not a package | Pending P6 |
+| L7 | Agent surface | a contract, not a package | Implemented in P6 lane |
 
 ### L0 · Identity
 
@@ -302,8 +302,9 @@ domain, under the `law-practice` registry namespace.
 
 **Arrows.** The fold to an RDF `Dataset` as the only serialization path;
 `checkMappingCoherence` over a mapping set's SKOS closure against a gUFO
-typing; `audit` over the typed subset of terms, a function since P5 and run as
-a lint on any term an agent proposes from P6. The legal seeds and their seed
+typing; `audit` over the typed subset of terms, a function since P5, which
+the ontology session runs since P6 on every term an agent batch adds quads
+about, before the batch is saved. The legal seeds and their seed
 data files moved to the law-practice asset pack and load through
 `packages/foundation/modeling/ontology/src/TaxonomyLoader.ts`; the FOLIO HTTP
 DTOs and their data are deleted.
@@ -382,10 +383,12 @@ unassessed), `L4-7` (acceptance: `Absent{reason}` never coerces to a number).
 ### L5 · Operations
 
 **Owner.** `@beep/nlp-processing`, an existing `foundation/capability`
-package. It absorbs `nlp/Operations`, the `nlp/Algebra` instances an
-`effect/Combiner` and `effect/Reducer` census leaves uncovered and a consumer
-uses, and the linguistic engine contract `nlp/Core`; its own duplicated
-operation modules merge into one (Pending P6).
+package. It took the linguistic engine contract `nlp/Core` and the graph node
+schemas from `@beep/nlp` in P6. `nlp/Operations` and `nlp/Algebra` had no
+consumer and the `effect/Combiner` and `effect/Reducer` census left no needed
+instance uncovered, so both were deleted rather than moved; `Operation.ts` is
+the one operation arrow, `Graph/TypeClass.ts` is deleted and the graph
+operations are `Operation`s named by their declared terms.
 
 **Denotes.** Effectful transformations as arrows, with provenance recorded by
 construction.
@@ -471,8 +474,8 @@ with a `@beep/schema` primitive; any base entry of
 `@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
 `@beep/rdf` to `@beep/md`; any `foundation/modeling` package to a
 capability; a slice's `domain` or model package to a capability. These hold for `@beep/text` since P2, the annotation base since P3 and the
-epistemics base since P4 (its import-boundary test) and `@beep/rdf` since P5,
-and are Pending P6 for the packages that have not landed.
+epistemics base since P4 (its import-boundary test), `@beep/rdf` since P5 and
+`@beep/nlp-processing` since P6, whose only new edge is `@beep/jsonc`.
 
 ## 4. Identity regimes
 
@@ -714,30 +717,44 @@ access path calls it with a caller-independent principal:
 
 Identical bytes in two matters never grant cross-matter access. Comparing two
 caller-supplied scope values is a consistency check, not authorization. The
-proof is a two-matter adversarial test in the law-practice server tests that
-composes the real server layer widened to reach all seven paths, loads
-identical bytes into two matters with distinct decisions, and makes one
-assertion per path. Pending P6.
+proof is `packages/law-practice/server/test/MatterWall.two-matter.test.ts`: it
+loads identical bytes into two matters with distinct decisions and makes one
+assertion per path against the layer that owns the path. Paths 1 and 2 run the
+walled source resolver and citation source resolution, paths 3 and 4 serve two
+Practice KG bundles built from a two-matter corpus through the host toolkit,
+path 5 checks that each citation request keeps its own scope, path 6 checks
+that a notice carries no matter material, and path 7 runs `LawPracticeServerLive`.
+The Practice KG hosts provide the principal and `MatterAuthority` from their
+environment and deny every walled path when unconfigured; the operational
+bundle rebuild and the operator grants configuration run outside the repo.
 
 ## 12. The agent surface contract
 
 - **Schemas are the tool contract.** MCP tool input and output schemas are the
   same Effect schemas the layers export; `@beep/mcp-kit` derives tool JSON
-  Schema from them. Prompts render from schema annotations, not hand-written
-  prose beside the schema (Pending P6).
+  Schema from them, and a same-schemas property over the four toolkits checks
+  it on the wire. Rendering prompts from schema annotations is not done: the
+  langextract prompt bytes key semantica's hosted artifact hash and every
+  handoff's `promptDigest`, so the change needs a measured re-pin (decision
+  `2026-11-24-p6-chapter-12-pending-notes-close-as-delivered-or-scoped`).
 - **Write tools emit proposed records only.** A tool may write a `proposed`
-  record; it never mints an admission. The first claim-writing tool is defined
-  in the law-practice use-cases package, its success schema is a proposed-only
-  record schema exported by `@beep/epistemics`, and the test that write tools
-  emit proposed records lives in the law-practice use-cases tests. The
-  `TierGate` in `@beep/mcp-kit` stays the dispatch gate (Pending P6).
-- **Proposed terms are linted.** The L3 audit runs on any term an agent
-  proposes (Pending P6; P5 ships the audit as a function).
+  record; it never mints an admission. The first claim-writing tool,
+  `claim_propose` in `LawClaimToolkit`, is defined in the law-practice
+  use-cases package; its success schema is `LawProposedClaimRecord`, built by
+  `@beep/epistemics`'s `makeClaimRecords`, and `WriteTools.proposed-only.test.ts`
+  in the law-practice use-cases tests proves that every law-practice write tool
+  emits proposed records only. The `TierGate` in `@beep/mcp-kit` stays the
+  dispatch gate. No app hosts the toolkit until a host binds a
+  caller-independent principal per dispatch.
+- **Proposed terms are linted.** The ontology session runs the L3 audit on every
+  term an agent batch adds quads about and refuses the save on a finding.
 - **Attorney-facing output.** Every emitted quotation and citation has
   verified source evidence; every attributed factual assertion has evidence or
   a visible unresolved flag; original argument is labelled as proposed with
   its authorities and review status; approval binds to a versioned draft
-  revision (Pending P6).
+  revision. P6 delivers the approval half for claims: `LawAdmission` checks the
+  gate first and binds an attorney admission to the opened revision. The
+  drafting invariants wait for a drafting surface.
 
 ## 13. What counts as a law
 

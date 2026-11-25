@@ -2604,6 +2604,45 @@
       ],
       "@beep/law-practice-domain/values/LibrarianLoop": [
         "./packages/law-practice/domain/src/values/LibrarianLoop/index.ts"
+      ],
+      "@beep/nlp-processing/Activity": [
+        "./packages/foundation/capability/nlp-processing/src/Activity.ts"
+      ],
+      "@beep/nlp-processing/Operation": [
+        "./packages/foundation/capability/nlp-processing/src/Operation.ts"
+      ],
+      "@beep/nlp-processing/NlpProcessing.instruments": [
+        "./packages/foundation/capability/nlp-processing/src/NlpProcessing.instruments.ts"
+      ],
+      "@beep/law-practice-domain/values/LawClaim": [
+        "./packages/law-practice/domain/src/values/LawClaim/index.ts"
+      ],
+      "@beep/law-practice-domain/values/MatterScope": [
+        "./packages/law-practice/domain/src/values/MatterScope/index.ts"
+      ],
+      "@beep/law-practice-server/MatterAuthority": [
+        "./packages/law-practice/server/src/MatterAuthority/index.ts"
+      ],
+      "@beep/law-practice-use-cases/MatterWall": [
+        "./packages/law-practice/use-cases/src/MatterWall/index.ts"
+      ],
+      "@beep/law-practice-server/ClaimStore": [
+        "./packages/law-practice/server/src/ClaimStore/index.ts"
+      ],
+      "@beep/law-practice-use-cases/ClaimProposal": [
+        "./packages/law-practice/use-cases/src/ClaimProposal/index.ts"
+      ],
+      "@beep/law-practice-use-cases/ClaimStore": [
+        "./packages/law-practice/use-cases/src/ClaimStore/index.ts"
+      ],
+      "@beep/law-practice-use-cases/LawAdmission": [
+        "./packages/law-practice/use-cases/src/LawAdmission/index.ts"
+      ],
+      "@beep/law-practice-server/ProvenanceTraversal": [
+        "./packages/law-practice/server/src/ProvenanceTraversal/index.ts"
+      ],
+      "@beep/law-practice-use-cases/ProvenanceTraversal": [
+        "./packages/law-practice/use-cases/src/ProvenanceTraversal/index.ts"
       ]
     }
   }

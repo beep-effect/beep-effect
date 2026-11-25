@@ -3404,7 +3404,9 @@
       {
         "from": "@beep/law-practice-domain",
         "allow": [
+          "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/law-practice-domain",
           "@beep/md",
           "@beep/ontology",
@@ -3416,7 +3418,9 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/law-practice-domain",
           "@beep/md",
           "@beep/ontology",
@@ -3435,9 +3439,8 @@
           "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemic-domain",
-          "@beep/epistemic-server",
           "@beep/epistemic-tables",
-          "@beep/epistemic-use-cases",
+          "@beep/epistemics",
           "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
@@ -3472,9 +3475,8 @@
           "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemic-domain",
-          "@beep/epistemic-server",
           "@beep/epistemic-tables",
-          "@beep/epistemic-use-cases",
+          "@beep/epistemics",
           "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
@@ -3529,10 +3531,10 @@
         "allow": [
           "@beep/annotation",
           "@beep/epistemic-domain",
-          "@beep/epistemic-use-cases",
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
@@ -3552,10 +3554,10 @@
         "allowTypeOnly": [
           "@beep/annotation",
           "@beep/epistemic-domain",
-          "@beep/epistemic-use-cases",
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
@@ -3941,6 +3943,7 @@
         "from": "@beep/nlp-processing",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
@@ -3951,6 +3954,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
@@ -4194,6 +4198,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
+          "@beep/ontology",
           "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -4213,6 +4218,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
+          "@beep/ontology",
           "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -4255,6 +4261,7 @@
         "allow": [
           "@beep/identity",
           "@beep/mcp-kit",
+          "@beep/ontology",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",
@@ -4268,6 +4275,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcp-kit",
+          "@beep/ontology",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",

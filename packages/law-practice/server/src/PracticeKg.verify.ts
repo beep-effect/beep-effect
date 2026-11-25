@@ -138,8 +138,8 @@ WHERE NOT EXISTS (SELECT 1 FROM kg_node n WHERE n.iri = e.subject_iri)
    OR NOT EXISTS (SELECT 1 FROM kg_node n WHERE n.iri = e.object_iri)`;
 
 const claimsWithSourceDocumentSql = `
-SELECT COUNT(*)::FLOAT8 AS count FROM epistemic_candidate_claim c
-JOIN kg_node doc ON doc.kind = 'document' AND doc.natural_key = c.snapshot->>'sourceDocumentDigest'`;
+SELECT COUNT(DISTINCT c.public_id)::FLOAT8 AS count FROM epistemic_candidate_claim c
+JOIN kg_node doc ON doc.kind = 'document' AND doc.provenance_ref = c.snapshot->>'sourceDocumentDigest'`;
 
 const pgCount = (sql: SqlClient.SqlClient, statement: string) =>
   sql.unsafe(statement).pipe(

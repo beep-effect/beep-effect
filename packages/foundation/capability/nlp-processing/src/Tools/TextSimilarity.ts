@@ -79,4 +79,8 @@ export const TextSimilarity = Tool.make("TextSimilarity", {
   failureMode: "return",
   parameters: TextSimilarityParameters,
   success: S.toEncoded(TextSimilaritySuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

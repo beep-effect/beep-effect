@@ -24,6 +24,7 @@ import * as Str from "effect/String";
 import { SqlClient } from "effect/sql/SqlClient";
 import { PracticeKgQueries } from "../PracticeKg.queries.ts";
 import { PracticeKgSchemaVersions } from "../PracticeKg.schemas.ts";
+import { PracticeKgReadScope } from "../PracticeKg.wall.ts";
 import { PracticeKgToolkit } from "../Tools.ts";
 import { loadPracticeKgBundleContext } from "./PracticeKgHost.bundle.ts";
 import { PracticeKgHostError } from "./PracticeKgHost.errors.ts";
@@ -44,7 +45,7 @@ const $I = $LawPracticeServerId.create("PracticeKgHost/PracticeKgHost.selfCheck"
  * const report = PracticeKgSelfCheckReport.make({
  *   extensionVersion: "0.4.0",
  *   bundleVersion: "2026.08.1",
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" }),
  *   nodes: S.Natural.make(4),
  *   matters: S.Natural.make(1),
  *   tools: S.Natural.make(9)
@@ -217,6 +218,7 @@ FULL JOIN contact_addresses a USING (address)
 FULL JOIN contact_client_links l ON l.contact_id = a.contact_id
 LIMIT 1`;
 
+const selfCheckScope = PracticeKgReadScope.cases.Unwalled.make({});
 const GRAPH_STORE = "graph store (kg.pglite)";
 const MATTER_STORE = "matter store (practice.duckdb)";
 
@@ -225,7 +227,7 @@ const readGraphStore = Effect.fn("PracticeKgSelfCheck.readGraphStore")(function*
   yield* sql.unsafe("SELECT 1").pipe(Effect.mapError(openFailure(GRAPH_STORE, bundleDir)));
   // `kg_find` text: selects every graph column the tools project, attribution_source included.
   return yield* sql
-    .unsafe(PracticeKgQueries.find, [SELF_CHECK_REFERENCE])
+    .unsafe(PracticeKgQueries.find(selfCheckScope), [SELF_CHECK_REFERENCE])
     .pipe(
       Effect.andThen(sql.unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM kg_node")),
       Effect.flatMap(decodeCountRows),
@@ -244,8 +246,8 @@ const readMatterStore = Effect.fn("PracticeKgSelfCheck.readMatterStore")(functio
     .query(matterColumnsProbe)
     .pipe(
       Effect.andThen(duckdb.query(correspondentColumnsProbe)),
-      Effect.andThen(duckdb.query(PracticeKgQueries.getDocument, [SELF_CHECK_REFERENCE, null, 1, 1])),
-      Effect.andThen(duckdb.query(PracticeKgQueries.searchText, [SELF_CHECK_REFERENCE, null, 1])),
+      Effect.andThen(duckdb.query(PracticeKgQueries.getDocument(selfCheckScope), [SELF_CHECK_REFERENCE, null, 1, 1])),
+      Effect.andThen(duckdb.query(PracticeKgQueries.searchText(selfCheckScope), [SELF_CHECK_REFERENCE, null, 1])),
       Effect.andThen(duckdb.query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")),
       Effect.flatMap(decodeCountRows),
       Effect.mapBoth({ onFailure: storeFailure(MATTER_STORE, bundleDir), onSuccess: firstCount })

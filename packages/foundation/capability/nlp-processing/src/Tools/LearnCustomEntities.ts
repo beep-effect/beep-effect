@@ -111,4 +111,8 @@ export const LearnCustomEntities = Tool.make("LearnCustomEntities", {
   failureMode: "return",
   parameters: LearnCustomEntitiesParameters,
   success: S.toEncoded(LearnCustomEntitiesSuccess),
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, false)
+  .annotate(Tool.OpenWorld, false);

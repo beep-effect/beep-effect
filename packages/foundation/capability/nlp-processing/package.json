@@ -36,6 +36,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./Activity": "./src/Activity.ts",
     "./Backend": "./src/Backend/index.ts",
     "./Backend/*": "./src/Backend/*.ts",
     "./Core": "./src/Core/index.ts",
@@ -45,6 +46,7 @@
     "./Graph/GraphOperations/*": "./src/Graph/GraphOperations/*.ts",
     "./Graph/*": "./src/Graph/*.ts",
     "./internal/*": null,
+    "./NlpProcessing.instruments": "./src/NlpProcessing.instruments.ts",
     "./NLPService": "./src/NLPService.ts",
     "./Operation": "./src/Operation.ts",
     "./package.json": "./package.json",
@@ -64,6 +66,7 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./Activity": "./dist/Activity.js",
       "./Backend": "./dist/Backend/index.js",
       "./Backend/*": "./dist/Backend/*.js",
       "./Core": "./dist/Core/index.js",
@@ -73,6 +76,7 @@
       "./Graph/GraphOperations/*": "./dist/Graph/GraphOperations/*.js",
       "./Graph/*": "./dist/Graph/*.js",
       "./internal/*": null,
+      "./NlpProcessing.instruments": "./dist/NlpProcessing.instruments.js",
       "./NLPService": "./dist/NLPService.js",
       "./Operation": "./dist/Operation.js",
       "./package.json": "./package.json",
@@ -82,6 +86,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

@@ -83,4 +83,8 @@ export const CreateCorpus = Tool.make("CreateCorpus", {
   failureMode: "return",
   parameters: CreateCorpusParameters,
   success: S.toEncoded(AiCorpusSummary),
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, false)
+  .annotate(Tool.OpenWorld, false);

@@ -220,7 +220,7 @@ export const singleton: {
  * @category constructors
  * @since 0.0.0
  */
-export const fromDocument = Effect.fn("fromDocument")(function* (
+export const fromDocument = Effect.fn("TextGraph.fromDocument")(function* (
   text: string
 ): Effect.fn.Return<TextGraph, Tok.TokenizationError, Tok.Tokenization> {
   const attributes = {
@@ -257,7 +257,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
       sentence_count: `${A.length(sentenceModels)}`,
     });
     return graph;
-  }).pipe(Obs.observeNlpWorkflow("nlp.text_graph.from_document", attributes));
+  }).pipe(Obs.observeNlpWorkflow("TextGraph.fromDocument", attributes));
 });
 
 // =============================================================================
@@ -401,7 +401,7 @@ export const addChildren: {
  * @category combinators
  * @since 0.0.0
  */
-export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
+export const tokenizeNodes = Effect.fn("TextGraph.tokenizeNodes")(function* (
   graph: TextGraph
 ): Effect.fn.Return<TextGraph, Tok.TokenizationError, Tok.Tokenization> {
   const attributes = {
@@ -461,7 +461,7 @@ export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
       token_count: `${tokenCount}`,
     });
     return result;
-  }).pipe(Obs.observeNlpWorkflow("nlp.text_graph.tokenize_nodes", attributes));
+  }).pipe(Obs.observeNlpWorkflow("TextGraph.tokenizeNodes", attributes));
 });
 
 const rebuild = (

@@ -2627,6 +2627,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/text": "workspace:^",
@@ -3662,7 +3663,9 @@
       "name": "@beep/law-practice-domain",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/epistemics": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/md": "workspace:^",
         "@beep/ontology": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -3688,9 +3691,8 @@
         "@beep/csv": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
-        "@beep/epistemic-server": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
-        "@beep/epistemic-use-cases": "workspace:^",
+        "@beep/epistemics": "workspace:^",
         "@beep/eyecite": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
@@ -3755,10 +3757,10 @@
       "dependencies": {
         "@beep/annotation": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
-        "@beep/epistemic-use-cases": "workspace:^",
         "@beep/epistemics": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/langextract": "workspace:^",
         "@beep/law-practice-domain": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
@@ -3858,6 +3860,7 @@
       },
       "devDependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/ontology": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/semantic-web": "workspace:^",
         "@beep/test-runner": "workspace:^",
@@ -3900,6 +3903,7 @@
       "dependencies": {
         "@beep/identity": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
+        "@beep/ontology": "workspace:^",
         "@beep/ontology-domain": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
