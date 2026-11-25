@@ -414,23 +414,26 @@ jobs:
               ;;
           esac
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
-        if: steps.lane-gate.outputs.should_run == 'true' && always()
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always() && (steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true')
         continue-on-error: true
-        env:
-          JOB_NAME: ${{ env.BEEP_CI_LANE_NAME }}
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: ${{ env.BEEP_CI_LANE_NAME }}
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
 
-      - name: Upload Turbo task outcomes
-        if: steps.lane-gate.outputs.should_run == 'true' && always()
+      - name: Upload gate reports and task outcomes
+        if: always() && (steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true')
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -497,6 +500,29 @@ jobs:
           # mint App's pull request (C8 condition i), as in Heavy / Lint Policy.
           KNOWLEDGE_MINT_APP_SLUG: ${{ vars.KNOWLEDGE_MINT_APP_SLUG }}
         run: bun run beep ci lane docs-policy --base "origin/${GITHUB_BASE_REF:-main}"
+
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Docs Policy
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
 
   ecosystem:
     name: Ecosystem Contracts
@@ -644,23 +670,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Labs
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Labs
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -765,23 +794,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Lint (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Lint (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -994,6 +1026,29 @@ jobs:
           echo "test_unit_hosted=$(jq --compact-output . <<<"$hosted")" >> "$GITHUB_OUTPUT"
           echo "test_unit_overflow=$(jq --compact-output . <<<"$overflow")" >> "$GITHUB_OUTPUT"
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always() && github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Test Plan
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: always() && github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
   # The hosted half of the plan. Every partition the overflow step did not
   # route runs here; PLANNED_PARTITIONS stays the whole plan, so each shard's
   # unplanned-partition check still sees every partition of the run.
@@ -1139,23 +1194,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Test Unit (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Test Unit (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -1354,23 +1412,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Test Integration (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Test Integration (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -1623,6 +1684,29 @@ jobs:
           fi
           bun run beep ci lane coverage --compare-only --coverage-input .beep/ci-coverage-inputs "${shape_args[@]}"
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip comparison
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Coverage comparison passes without work for this change set."
@@ -1754,6 +1838,29 @@ jobs:
         working-directory: apps/professional-desktop/src-tauri
         run: cargo clippy --locked -- -D warnings
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Professional Desktop IPC Stdio
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping desktop IPC stdio proof for this change set."
@@ -1857,23 +1964,26 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
-      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
-      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
-      # decides the job, so it continues on error.
-      - name: Record Turbo task outcomes
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
-        env:
-          JOB_NAME: Property Laws (${{ matrix.partition }})
-        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Property Laws (${{ matrix.partition }})
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
 
-      - name: Upload Turbo task outcomes
+      - name: Upload gate reports and task outcomes
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
-          path: .beep/ci-task-outcomes/record.json
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
           retention-days: 30
           if-no-files-found: warn
 
@@ -2069,6 +2179,29 @@ jobs:
           path: .beep/fallow/**
           if-no-files-found: error
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Fallow Advisory Envelopes
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Fallow Advisory Envelopes for this change set."
@@ -2138,6 +2271,29 @@ jobs:
             echo "- command: \`bun run beep ci lane jsdoc-ratchet\` (inventory + ratchet)"
             echo "- total wall time: \`${total_seconds}s\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: JSDoc Ratchet
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
@@ -2509,6 +2665,29 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         run: bun run beep ci lane nix
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Nix Shell
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Nix Shell for this change set."
@@ -2561,3 +2740,26 @@ jobs:
           # — no SEMGREP_APP_TOKEN, which would only exist in CI and break that
           # parity. See goals/one-round-loop/history/p0-parity-evidence.md §2.
           bun run beep ci lane sast
+
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: SAST
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
