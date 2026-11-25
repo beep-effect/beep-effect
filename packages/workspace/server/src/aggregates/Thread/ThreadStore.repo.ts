@@ -138,9 +138,15 @@ const makePublicIdGenerators = Effect.fn("Workspace.ThreadStore.makePublicIdGene
   const context = yield* Effect.context<CuidState | Digest.Digest>();
 
   return {
-    message: PublicEntityId.generate(WorkspaceIdentity.MessageId).pipe(Effect.provide(context)),
+    appendTurn: Effect.all(
+      {
+        messagePublicId: PublicEntityId.generate(WorkspaceIdentity.MessageId),
+        turnPublicId: PublicEntityId.generate(WorkspaceIdentity.TurnId),
+        now: Clock.currentTimeMillis,
+      },
+      { concurrency: 1 }
+    ).pipe(Effect.provide(context)),
     thread: PublicEntityId.generate(WorkspaceIdentity.ThreadId).pipe(Effect.provide(context)),
-    turn: PublicEntityId.generate(WorkspaceIdentity.TurnId).pipe(Effect.provide(context)),
   };
 });
 
@@ -258,7 +264,6 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
       const state = yield* Ref.get(store);
       return state.threads.pipe(
         HashMap.values,
-        A.fromIterable,
         A.filter((thread) => WorkspaceIdentity.WorkspaceId.equivalence(thread.workspaceId, workspaceId))
       );
     }),
@@ -297,13 +302,10 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
         return yield* ThreadStoreServer.Thread.ThreadStoreNotFound.make({ threadId: input.threadId });
       }
       const parentTurnId = O.getOrNull(input.parentTurnId);
-      const messagePublicId = yield* publicIds.message;
-      const turnPublicId = yield* publicIds.turn;
-      const now = yield* Clock.currentTimeMillis;
+      const { messagePublicId, turnPublicId, now } = yield* publicIds.appendTurn;
       return yield* Ref.modify(store, (current) => {
         const existingTurns = current.turns.pipe(
           HashMap.values,
-          A.fromIterable,
           A.filter((turn) => WorkspaceIdentity.ThreadId.equivalence(turn.threadId, input.threadId))
         );
         const turnIndex = S.Natural.make(existingTurns.length);
@@ -343,7 +345,6 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
       }
       const turns = state.turns.pipe(
         HashMap.values,
-        A.fromIterable,
         A.filter((turn) => WorkspaceIdentity.ThreadId.equivalence(turn.threadId, threadId))
       );
       return projectTimeline(threadId, turns, (messageId) => HashMap.get(state.messages, messageId));
@@ -484,9 +485,7 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
         return yield* ThreadStoreServer.Thread.ThreadStoreNotFound.make({ threadId: input.threadId });
       }
       const parentTurnId = O.getOrNull(input.parentTurnId);
-      const messagePublicId = yield* publicIds.message;
-      const turnPublicId = yield* publicIds.turn;
-      const now = yield* Clock.currentTimeMillis;
+      const { messagePublicId, turnPublicId, now } = yield* publicIds.appendTurn;
       return yield* writeSemaphore.withPermit(
         db
           .transaction(
