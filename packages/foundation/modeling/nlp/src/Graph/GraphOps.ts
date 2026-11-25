@@ -558,7 +558,7 @@ export const collectTraversal: {
  * @since 0.0.0
  */
 export const getRoots = <A, E>(graph: DirectedGraph<A, E>): ReadonlyArray<NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "incoming" })));
+  graph.pipe(Graph.externals({ direction: "incoming" }), Graph.indices, A.fromIterable);
 
 /**
  * Return node indices with no outgoing edges.
@@ -575,7 +575,7 @@ export const getRoots = <A, E>(graph: DirectedGraph<A, E>): ReadonlyArray<NodeIn
  * @since 0.0.0
  */
 export const getLeaves = <A, E>(graph: DirectedGraph<A, E>): ReadonlyArray<NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "outgoing" })));
+  graph.pipe(Graph.externals({ direction: "outgoing" }), Graph.indices, A.fromIterable);
 
 /**
  * Return direct outgoing neighbor indices for a node.

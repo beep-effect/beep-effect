@@ -310,7 +310,7 @@ export const IconCollapsible: Story = {
     const canvas = within(canvasElement);
     const triggers = canvas.getAllByRole("button", { name: "Toggle Sidebar" });
     const trigger = A.findFirst(triggers, (button) => button.getAttribute("data-slot") === "sidebar-trigger");
-    expect(O.isSome(trigger)).toBe(true);
+    trigger.pipe(O.isSome, expect).toBe(true);
     return O.match(trigger, {
       onNone: () => Promise.resolve(),
       onSome: (button) => {

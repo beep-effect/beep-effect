@@ -346,7 +346,10 @@ const archiveFailure = (message: string, cause: unknown): AiMetricsArchiveError 
   AiMetricsArchiveError.make({ cause, message });
 
 const decodeRawArchiveKey = (rawArchiveKey: AiMetricsRawArchiveKey): Effect.Effect<Uint8Array, AiMetricsArchiveError> =>
-  decodeAes256KeyBase64(Str.trim(Redacted.value(rawArchiveKey))).pipe(
+  rawArchiveKey.pipe(
+    Redacted.value,
+    Str.trim,
+    decodeAes256KeyBase64,
     Effect.flatMap(decodeUint8ArrayFromBase64),
     Effect.mapError((cause) =>
       archiveFailure("Raw archive key must be valid base64 and decode to exactly 32 bytes.", cause)

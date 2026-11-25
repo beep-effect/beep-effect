@@ -987,7 +987,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     const cachedScopes = MutableHashMap.get(resolvedScopes, scopeId);
     if (O.isSome(cachedScopes)) {
       if (MutableHashMap.size(cachedScopes.value) === 1) {
-        return O.getOrThrow(A.head(A.fromIterable(MutableHashMap.values(cachedScopes.value))));
+        return cachedScopes.value.pipe(MutableHashMap.values, A.fromIterable, A.head, O.getOrThrow);
       }
       const currentRoot = yield* resolveRepoRoot(O.none()).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
       const matchingScope = O.flatMap(currentRoot, (root) => MutableHashMap.get(cachedScopes.value, root));

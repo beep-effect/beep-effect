@@ -85,9 +85,10 @@ export const lintJsdocCommand = Command.make(
           "apps/labs/**",
           "**/node_modules/**",
           "**/.context/**",
-          ...A.map(
-            A.fromIterable(HashMap.values(workspaces)),
-            (dir) => `${normalizePath(path.relative(root, dir))}/**`
+          ...workspaces.pipe(
+            HashMap.values,
+            A.fromIterable,
+            A.map((dir) => `${normalizePath(path.relative(root, dir))}/**`)
           ),
         ],
       })

@@ -222,7 +222,7 @@ export const resolveTurboSchema = Effect.fn("resolveTurboSchema")(function* (
   );
 
   const directories = A.prepend(
-    A.sort(A.dedupe(A.fromIterable(HashMap.values(workspaceDirs))), Order.String),
+    A.sort(workspaceDirs.pipe(HashMap.values, A.fromIterable, A.dedupe), Order.String),
     repoRoot
   );
 

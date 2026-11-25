@@ -2522,7 +2522,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // compare-and-swap on the archived head.
   const branchDeleted = yield* deleteArchivedBranch(request, head);
   const argument1 = O.some(unpushedInspection);
-  const argument2 = A.sort(A.fromIterable(HashMap.keys(reQuiescent.success.quietShells)), N.Order);
+  const argument2 = A.sort(reQuiescent.success.quietShells.pipe(HashMap.keys, A.fromIterable), N.Order);
   const nameInotifyWatchers1 = yield* nameInotifyWatchers(reQuiescent.success.watchers);
   return makeRemovalReceipt(
     request,
