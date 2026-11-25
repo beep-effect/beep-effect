@@ -19,8 +19,6 @@ export * from "./Document.ts";
  */
 export * from "./Pattern.ts";
 /**
- * Pattern constructors.
- *
  * @since 0.0.0
  * @category constructors
  */
@@ -40,8 +38,6 @@ export * from "./PatternOperations.ts";
  */
 export * from "./PatternParsers.ts";
 /**
- * Sentence model.
- *
  * @since 0.0.0
  * @category models
  */

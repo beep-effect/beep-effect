@@ -37,16 +37,12 @@ export const LawAdmissionRefused = S.TaggedUnion({
 }).pipe($I.annoteSchema("LawAdmissionRefused", { description: "Why an attorney admission wrote nothing." }));
 
 /**
- * Type of {@link LawAdmissionRefused}.
- *
  * @category models
  * @since 0.0.0
  */
 export type LawAdmissionRefused = typeof LawAdmissionRefused.Type;
 
 /**
- * The stored admission, or why none was written.
- *
  * **Example** (Read the result cases)
  *
  * ```ts
@@ -64,8 +60,6 @@ export const LawAdmissionResult = S.TaggedUnion({
 }).pipe($I.annoteSchema("LawAdmissionResult", { description: "The stored admission, or why none was written." }));
 
 /**
- * Type of {@link LawAdmissionResult}.
- *
  * @category models
  * @since 0.0.0
  */

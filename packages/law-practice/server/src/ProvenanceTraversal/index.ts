@@ -7,8 +7,6 @@
  */
 
 /**
- * The provenance traversal layer.
- *
  * @category layers
  * @since 0.0.0
  */

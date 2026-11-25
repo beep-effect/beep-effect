@@ -7,8 +7,6 @@
  */
 
 /**
- * Provenance traversal service port.
- *
  * @category services
  * @since 0.0.0
  */

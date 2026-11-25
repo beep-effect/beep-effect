@@ -6,15 +6,11 @@
  */
 
 /**
- * Claim store failure.
- *
  * @category errors
  * @since 0.0.0
  */
 export * from "./ClaimStore.errors.ts";
 /**
- * Claim store ports.
- *
  * @category ports
  * @since 0.0.0
  */

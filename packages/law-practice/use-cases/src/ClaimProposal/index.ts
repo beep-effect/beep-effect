@@ -7,22 +7,16 @@
  */
 
 /**
- * Claim proposal refusals.
- *
  * @category errors
  * @since 0.0.0
  */
 export * from "./ClaimProposal.errors.ts";
 /**
- * Claim proposal service port.
- *
  * @category services
  * @since 0.0.0
  */
 export * from "./ClaimProposal.ports.ts";
 /**
- * Claim proposal layer.
- *
  * @category layers
  * @since 0.0.0
  */
@@ -35,8 +29,6 @@ export * from "./ClaimProposal.service.ts";
  */
 export * from "./ClaimProposal.tools.ts";
 /**
- * Claim proposal request.
- *
  * @category models
  * @since 0.0.0
  */

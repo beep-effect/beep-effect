@@ -617,9 +617,6 @@ export const audit =
     });
 
 /**
- * The gUFO typings a dataset states, and the relators it states without a
- * mediation.
- *
  * **Details**
  *
  * A relator needs a mediated type to have a {@link GufoTyping}, so a dataset

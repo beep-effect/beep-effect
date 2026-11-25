@@ -7,22 +7,16 @@
  */
 
 /**
- * Law admission ports.
- *
  * @category ports
  * @since 0.0.0
  */
 export * from "./LawAdmission.ports.ts";
 /**
- * Law admission layer.
- *
  * @category layers
  * @since 0.0.0
  */
 export * from "./LawAdmission.service.ts";
 /**
- * Law admission values.
- *
  * @category models
  * @since 0.0.0
  */

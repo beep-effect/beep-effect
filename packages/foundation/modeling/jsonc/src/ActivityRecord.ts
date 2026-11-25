@@ -48,8 +48,6 @@ export const ActivityOutcome = LiteralKit(["completed", "failed"]).pipe(
 );
 
 /**
- * Type of {@link ActivityOutcome}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -145,16 +143,12 @@ export const ActivityRecordInvalidReason = LiteralKit(["id-mismatch"]).pipe(
 );
 
 /**
- * Type of {@link ActivityRecordInvalidReason}.
- *
  * @category errors
  * @since 0.0.0
  */
 export type ActivityRecordInvalidReason = typeof ActivityRecordInvalidReason.Type;
 
 /**
- * A record whose id is not the id minted from its start.
- *
  * **Example** (Build a refusal)
  *
  * ```ts import.meta.vitest name="Build a refusal"

@@ -39,8 +39,6 @@ const ActivityRecordsById = ActivityRecord.pipe(
 );
 
 /**
- * A request for the provenance of one law claim.
- *
  * **Example** (Request a claim's provenance)
  *
  * ```ts
@@ -116,16 +114,12 @@ export const ClaimProvenanceMissing = S.TaggedStruct("Missing", {}).pipe(
 );
 
 /**
- * Type of {@link ClaimProvenanceMissing}.
- *
  * @category models
  * @since 0.0.0
  */
 export type ClaimProvenanceMissing = typeof ClaimProvenanceMissing.Type;
 
 /**
- * A traversal's result: the claim's provenance, or `Missing`.
- *
  * **Details**
  *
  * A claim the principal may not traverse answers `Missing`, the value an
@@ -153,8 +147,6 @@ export const ProvenanceResult = S.TaggedUnion({
 );
 
 /**
- * Type of {@link ProvenanceResult}.
- *
  * @category models
  * @since 0.0.0
  */

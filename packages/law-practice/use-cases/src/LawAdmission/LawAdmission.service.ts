@@ -73,6 +73,15 @@ const resolutionOfFailure = (error: SourceTextResolverError): SourceResolution =
  * `Missing` and a digest mismatch as `Stale`. No historical snapshot exists in
  * P6, so `resolveAt` answers `Unavailable`.
  *
+ * **Example** (Reference the admission layer)
+ *
+ * ```ts
+ * import { LawAdmissionLayer } from "@beep/law-practice-use-cases/LawAdmission"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(LawAdmissionLayer)) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

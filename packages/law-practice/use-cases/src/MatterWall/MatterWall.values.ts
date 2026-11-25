@@ -33,8 +33,6 @@ export const MatterDenialReason = LiteralKit(["unbound-scope", "not-staffed"]).p
 );
 
 /**
- * Type of {@link MatterDenialReason}.
- *
  * @category models
  * @since 0.0.0
  */
@@ -63,8 +61,6 @@ export const MatterAccess = S.TaggedUnion({
 }).pipe($I.annoteSchema("MatterAccess", { description: "The matter a granted scope binds, or a denial reason." }));
 
 /**
- * Type of {@link MatterAccess}.
- *
  * @category models
  * @since 0.0.0
  */

@@ -57,8 +57,6 @@ export const LawAuthorityType = LiteralKit(["office-action"]).pipe(
 );
 
 /**
- * Type of {@link LawAuthorityType}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -109,8 +107,6 @@ export class DistinctionProposition extends S.Opaque<DistinctionProposition, { r
 ) {}
 
 /**
- * Encoded form of {@link DistinctionProposition}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -170,9 +166,6 @@ export const logicalKey = (proposition: DistinctionProposition): string =>
   );
 
 /**
- * Content id of a distinction proposition, minted from the
- * `law-distinction/v1` preimage.
- *
  * **Example** (Brand a content hash)
  *
  * ```ts
@@ -194,8 +187,6 @@ export const DistinctionId = ContentHash.pipe(
 );
 
 /**
- * Type of {@link DistinctionId}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -300,8 +291,6 @@ export const ScopeRef = SourceTextIdentity.fields.scopeRef;
 export type ScopeRef = typeof ScopeRef.Type;
 
 /**
- * The draft or review revision an admission binds to.
- *
  * **Example** (Brand a revision)
  *
  * ```ts
@@ -319,16 +308,12 @@ export const LawRevision = S.NonEmptyString.pipe(
 );
 
 /**
- * Type of {@link LawRevision}.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export type LawRevision = typeof LawRevision.Type;
 
 /**
- * The action a law admission token authorizes.
- *
  * **Example** (Check the admission action)
  *
  * ```ts import.meta.vitest name="Check the admission action"
@@ -345,8 +330,6 @@ export const LawAdmissionAction = LiteralKit(["admit-distinction"]).pipe(
 );
 
 /**
- * Type of {@link LawAdmissionAction}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -378,8 +361,6 @@ export const LawPrincipalId = EntityIdValue.pipe(
 );
 
 /**
- * Type of {@link LawPrincipalId}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -456,6 +437,14 @@ export class LawProposedClaimRecord extends S.Opaque<LawProposedClaimRecord, { r
 /**
  * The agent a law claim names as its asserter.
  *
+ * **Example** (List the agent kinds)
+ *
+ * ```ts
+ * import { LawClaimAgent } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log(Object.keys(LawClaimAgent.cases)) // ["Person", "Organization", "SoftwareAgent"]
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -471,6 +460,14 @@ export type LawClaimAgent = typeof LawClaimAgent.Type;
 
 /**
  * A writable non-authoritative stance on a law claim: verbatim or proposed.
+ *
+ * **Example** (List the stance kinds)
+ *
+ * ```ts
+ * import { LawStanceRecord } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log(Object.keys(LawStanceRecord.cases)) // ["Verbatim", "Proposed"]
+ * ```
  *
  * @category value-objects
  * @since 0.0.0
@@ -488,6 +485,14 @@ export type LawStanceRecord = typeof LawStanceRecord.Type;
 /**
  * A challenge from one law claim to another, by a person or an activity.
  *
+ * **Example** (List the challenger kinds)
+ *
+ * ```ts
+ * import { LawChallenge } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log(Object.keys(LawChallenge.cases)) // ["ByPerson", "ByActivity"]
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -504,6 +509,14 @@ export type LawChallenge = typeof LawChallenge.Type;
 /**
  * An explicit retraction of a law claim by a person.
  *
+ * **Example** (Read the retraction fields)
+ *
+ * ```ts
+ * import { LawRetraction } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log(Object.keys(LawRetraction.fields)) // ["claim", "actor", "reason", "at"]
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -512,6 +525,14 @@ export class LawRetraction extends S.Opaque<LawRetraction, { readonly brand: uni
 /**
  * A serialized attorney attestation bound to an actor, scope, action and
  * revision; verification is a separate port.
+ *
+ * **Example** (Read what a token binds)
+ *
+ * ```ts
+ * import { LawHumanAdmissionToken } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log(Object.keys(LawHumanAdmissionToken.fields).slice(0, 4)) // ["actor", "scope", "action", "revision"]
+ * ```
  *
  * @category value-objects
  * @since 0.0.0
@@ -522,6 +543,14 @@ export class LawHumanAdmissionToken extends S.Opaque<LawHumanAdmissionToken, { r
 
 /**
  * A scoped admission of a law claim, bound to its token.
+ *
+ * **Example** (Read the admission binding)
+ *
+ * ```ts
+ * import { LawAdmission } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log("token" in LawAdmission.fields) // true
+ * ```
  *
  * @category value-objects
  * @since 0.0.0

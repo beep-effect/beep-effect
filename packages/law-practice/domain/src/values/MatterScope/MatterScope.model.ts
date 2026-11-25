@@ -59,8 +59,6 @@ export const MatterAccessKind = LiteralKit([
 ]).pipe($I.annoteSchema("MatterAccessKind", { description: "The kind of access a walled path asks for." }));
 
 /**
- * Type of {@link MatterAccessKind}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -79,9 +77,6 @@ const FamilyKeyFields = S.Struct({
 });
 
 /**
- * The client-qualified Practice KG family key that keys `matters`, encoded
- * as the Practice KG spelling `client.family`.
- *
  * **Details**
  *
  * Decoding splits at the first dot, so the client part holds no dot. A row
@@ -222,8 +217,6 @@ export class MatterScope extends S.Opaque<MatterScope, { readonly brand: unique 
 ) {}
 
 /**
- * The matters one principal is staffed on.
- *
  * **Example** (Staff a principal on a matter)
  *
  * ```ts
