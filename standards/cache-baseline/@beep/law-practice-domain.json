@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/law-practice-domain",
   "review": {
-    "reviewer": "Claude Opus 5.5 (P5 L3 and L6 implementation lane)",
-    "reason": "Record the P5 dependency edges of rdf, ontology and law-practice domain and use-cases, plus the inherited P4 root, epistemics and party-server drifts. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P5 taxonomy lane)",
+    "reason": "Re-record the law-practice domain package after P5 regenerated its doctest script pair, and the root turbo.json source digest after the main merges; configuration review only, no qualification granted.",
     "basis": {
-      "path": "docs/reports/tksr-p5-l3-l6-cache-review-2026-11-23.md",
-      "sha256": "0c79d5f2e1f8cf3698be95135266b5bd972a96f1e24804cad03c615bb3bc6f47"
+      "path": "docs/reports/tksr-p5-doctest-pair-cache-review-2026-11-25.md",
+      "sha256": "12d4345ce40fed245239f306767e7b0513de9c4e93ab12913091a219e0b36c86"
     }
   },
   "nodes": [
     {
       "computation": "@beep/law-practice-domain#build",
       "command": "bun run beep:build",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -74,7 +74,7 @@
     {
       "computation": "@beep/law-practice-domain#check",
       "command": "beep-cli gate run check",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -134,7 +134,7 @@
     {
       "computation": "@beep/law-practice-domain#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -192,7 +192,7 @@
     {
       "computation": "@beep/law-practice-domain#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/law-practice-domain#transit",
         "@beep/repo-docgen#transit"
@@ -230,9 +230,66 @@
       }
     },
     {
+      "computation": "@beep/law-practice-domain#doctest",
+      "command": "bun run beep:doctest",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
+      "dependencies": [
+        "@beep/identity#transit",
+        "@beep/md#transit",
+        "@beep/ontology#transit",
+        "@beep/schema#transit",
+        "@beep/shared-domain#transit",
+        "@beep/test-runner#transit",
+        "@beep/test-utils#transit",
+        "@beep/text#transit",
+        "@beep/utils#transit",
+        "@beep/utils#transit"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!**/node_modules/**",
+          "!../../../package.json",
+          "!node_modules/**",
+          "../../../.bun-version",
+          "../../../.nvmrc",
+          "../../../packages/foundation/modeling/utils/src/**",
+          "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+          "../../../standards/root-package.projection.generated.json",
+          "../../../tsconfig.base.json",
+          "../../../tsconfig.json",
+          "../../../tsconfig.packages.json",
+          "../../../vite.shared.ts",
+          "../../../vitest.aliases.generated.json",
+          "../../../vitest.setup.ts",
+          "../../../vitest.shared.ts",
+          ".env",
+          ".env.*",
+          "package.json",
+          "src/**",
+          "test/**",
+          "tsconfig*.json",
+          "vitest*.config.ts"
+        ],
+        "env": [
+          "BEEP_VITEST_DOCTEST"
+        ],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/utils#transit",
+          "^transit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
       "computation": "@beep/law-practice-domain#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -266,7 +323,7 @@
     {
       "computation": "@beep/law-practice-domain#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -339,7 +396,7 @@
     {
       "computation": "@beep/law-practice-domain#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -369,7 +426,7 @@
     {
       "computation": "@beep/law-practice-domain#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -425,7 +482,7 @@
     {
       "computation": "@beep/law-practice-domain#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -471,7 +528,7 @@
     {
       "computation": "@beep/law-practice-domain#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -522,7 +579,7 @@
     {
       "computation": "@beep/law-practice-domain#test",
       "command": "bun run beep:test",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -585,7 +642,7 @@
     {
       "computation": "@beep/law-practice-domain#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "c1d9ed220c12ec328e7d87bac4d1795b031959d1cdf31059eb8b15beaf901633",
+      "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
