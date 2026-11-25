@@ -21,6 +21,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -346,49 +347,31 @@ describe("Practice KG matter wall", () => {
   });
 });
 
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
+
 describe("Practice KG matter wall rows schema-derived values", () => {
-  it.effect.prop(
-    "round-trips every generated MailFolderBinding through its encoding",
-    [MailFolderBinding],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(MailFolderBinding)(value);
-        const decoded = yield* S.decodeUnknownEffect(MailFolderBinding)(encoded);
-        expect(S.toEquivalence(MailFolderBinding)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated MailFolderBinding through its encoding", () =>
+    roundTripsEveryGeneratedValue(MailFolderBinding)
   );
-  it.effect.prop(
-    "round-trips every generated SearchRow through its encoding",
-    [SearchRow],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(SearchRow)(value);
-        const decoded = yield* S.decodeUnknownEffect(SearchRow)(encoded);
-        expect(S.toEquivalence(SearchRow)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated SearchRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(SearchRow)
   );
-  it.effect.prop(
-    "round-trips every generated DocumentKeyRow through its encoding",
-    [DocumentKeyRow],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(DocumentKeyRow)(value);
-        const decoded = yield* S.decodeUnknownEffect(DocumentKeyRow)(encoded);
-        expect(S.toEquivalence(DocumentKeyRow)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated DocumentKeyRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(DocumentKeyRow)
   );
-  it.effect.prop(
-    "round-trips every generated FolderRow through its encoding",
-    [FolderRow],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(FolderRow)(value);
-        const decoded = yield* S.decodeUnknownEffect(FolderRow)(encoded);
-        expect(S.toEquivalence(FolderRow)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated FolderRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(FolderRow)
   );
 });

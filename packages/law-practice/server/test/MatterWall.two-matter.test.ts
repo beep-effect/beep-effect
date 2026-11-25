@@ -67,6 +67,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { McpServerClient } from "effect/ai/McpSchema";
@@ -814,16 +815,22 @@ describe("MatterWall two matters with identical bytes", () => {
   });
 });
 
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
+
 describe("MatterWall draft notice schema-derived values", () => {
-  it.effect.prop(
-    "round-trips every generated NoticeMessage through its encoding",
-    [NoticeMessage],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(NoticeMessage)(value);
-        const decoded = yield* S.decodeUnknownEffect(NoticeMessage)(encoded);
-        expect(S.toEquivalence(NoticeMessage)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated NoticeMessage through its encoding", () =>
+    roundTripsEveryGeneratedValue(NoticeMessage)
   );
 });

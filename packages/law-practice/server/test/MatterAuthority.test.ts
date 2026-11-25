@@ -20,6 +20,7 @@ import { fcRuns } from "@beep/test-utils";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -263,27 +264,25 @@ describe("MatterAuthority", () => {
   );
 });
 
-describe("MatterAuthority schema-derived values", () => {
-  it.effect.prop(
-    "round-trips every generated GrantedScopes through its encoding",
-    [GrantedScopes],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(GrantedScopes)(value);
-        const decoded = yield* S.decodeUnknownEffect(GrantedScopes)(encoded);
-        expect(S.toEquivalence(GrantedScopes)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
   );
-  it.effect.prop(
-    "round-trips every generated MatterAuthorityConfig through its encoding",
-    [MatterAuthorityConfig],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(MatterAuthorityConfig)(value);
-        const decoded = yield* S.decodeUnknownEffect(MatterAuthorityConfig)(encoded);
-        expect(S.toEquivalence(MatterAuthorityConfig)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  expect(result._tag).toBe("Passed");
+});
+
+describe("MatterAuthority schema-derived values", () => {
+  it.effect("round-trips every generated GrantedScopes through its encoding", () =>
+    roundTripsEveryGeneratedValue(GrantedScopes)
+  );
+  it.effect("round-trips every generated MatterAuthorityConfig through its encoding", () =>
+    roundTripsEveryGeneratedValue(MatterAuthorityConfig)
   );
 });

@@ -11,6 +11,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
@@ -88,38 +89,28 @@ describe("MatterScope", () => {
   });
 });
 
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
+
 describe("MatterScope schema-derived values", () => {
-  it.effect.prop(
-    "round-trips every generated PracticeKgFamilyKey through its encoding",
-    [PracticeKgFamilyKey],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(PracticeKgFamilyKey)(value);
-        const decoded = yield* S.decodeUnknownEffect(PracticeKgFamilyKey)(encoded);
-        expect(S.toEquivalence(PracticeKgFamilyKey)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated PracticeKgFamilyKey through its encoding", () =>
+    roundTripsEveryGeneratedValue(PracticeKgFamilyKey)
   );
-  it.effect.prop(
-    "round-trips every generated MatterGrant through its encoding",
-    [MatterGrant],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(MatterGrant)(value);
-        const decoded = yield* S.decodeUnknownEffect(MatterGrant)(encoded);
-        expect(S.toEquivalence(MatterGrant)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated MatterGrant through its encoding", () =>
+    roundTripsEveryGeneratedValue(MatterGrant)
   );
-  it.effect.prop(
-    "round-trips every generated MailFolderBinding through its encoding",
-    [MailFolderBinding],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(MailFolderBinding)(value);
-        const decoded = yield* S.decodeUnknownEffect(MailFolderBinding)(encoded);
-        expect(S.toEquivalence(MailFolderBinding)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  it.effect("round-trips every generated MailFolderBinding through its encoding", () =>
+    roundTripsEveryGeneratedValue(MailFolderBinding)
   );
 });

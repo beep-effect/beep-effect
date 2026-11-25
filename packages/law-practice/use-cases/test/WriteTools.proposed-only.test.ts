@@ -74,6 +74,7 @@ import { fcRuns } from "@beep/test-utils";
 import { mintCaptureId } from "@beep/text/Capture";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Tool from "effect/ai/Tool";
 import * as Toolkit from "effect/ai/Toolkit";
@@ -650,27 +651,25 @@ describe("write tools emit proposed records only: (e) same schemas", () => {
   );
 });
 
-describe("write tools emit proposed records only: (f) generated schema-derived values", () => {
-  it.effect.prop(
-    "round-trips every generated PracticeKgEpistemicStatus through its encoding",
-    [PracticeKgEpistemicStatus],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(PracticeKgEpistemicStatus)(value);
-        const decoded = yield* S.decodeUnknownEffect(PracticeKgEpistemicStatus)(encoded);
-        expect(S.toEquivalence(PracticeKgEpistemicStatus)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
+  const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      S.encodeEffect(schema)(value).pipe(
+        Effect.flatMap(S.decodeEffect(schema)),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(25)
   );
-  it.effect.prop(
-    "round-trips every generated VerdictRow through its encoding",
-    [VerdictRow],
-    ([value]) =>
-      Effect.gen(function* () {
-        const encoded = yield* S.encodeEffect(VerdictRow)(value);
-        const decoded = yield* S.decodeUnknownEffect(VerdictRow)(encoded);
-        expect(S.toEquivalence(VerdictRow)(decoded, value)).toBe(true);
-      }),
-    { arbitrary: fcRuns(25) }
+  expect(result._tag).toBe("Passed");
+});
+
+describe("write tools emit proposed records only: (f) generated schema-derived values", () => {
+  it.effect("round-trips every generated PracticeKgEpistemicStatus through its encoding", () =>
+    roundTripsEveryGeneratedValue(PracticeKgEpistemicStatus)
+  );
+  it.effect("round-trips every generated VerdictRow through its encoding", () =>
+    roundTripsEveryGeneratedValue(VerdictRow)
   );
 });
