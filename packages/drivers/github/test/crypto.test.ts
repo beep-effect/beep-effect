@@ -9,7 +9,6 @@ import nacl from "tweetnacl";
 
 const PUBLIC_KEY_BYTES = 32;
 
-/** The sealed box, or a thrown assertion — the Result is the point elsewhere. */
 const sealBytes = (publicKey: string, value: string): Uint8Array => {
   const sealed = Result.getOrThrow(encryptSecret(publicKey, value));
   return Result.getOrThrow(Base64.decode(sealed));
@@ -24,13 +23,9 @@ describe("encryptSecret", () => {
 
     const sealed = sealBytes(publicKey, "hunter2");
 
-    // A sealed box is `ephemeral_public_key (32) || ciphertext`.
     const ephemeralPublicKey = sealed.subarray(0, PUBLIC_KEY_BYTES);
     const ciphertext = sealed.subarray(PUBLIC_KEY_BYTES);
 
-    // The recipient recomputes the nonce from the two public keys alone,
-    // having received no nonce alongside the box — which is why it is derived
-    // rather than random.
     const nonceInput = new Uint8Array(PUBLIC_KEY_BYTES * 2);
     nonceInput.set(ephemeralPublicKey);
     nonceInput.set(recipient.publicKey, PUBLIC_KEY_BYTES);
@@ -38,7 +33,7 @@ describe("encryptSecret", () => {
 
     const opened = nacl.box.open(ciphertext, nonce, ephemeralPublicKey, recipient.secretKey);
 
-    assert.isNotNull(opened);
+    assert.isNotNull(opened, "the recipient derives the nonce from the two public keys alone");
     assert.strictEqual(new TextDecoder().decode(opened), "hunter2");
   });
 
@@ -50,10 +45,7 @@ describe("encryptSecret", () => {
     const second = sealBytes(publicKey, "x").subarray(0, PUBLIC_KEY_BYTES);
 
     assert.lengthOf(first, PUBLIC_KEY_BYTES);
-    // The keypair is ephemeral: encrypting the same plaintext twice must not
-    // produce the same box, or the sender is reusing a keypair it promised to
-    // discard.
-    assert.notStrictEqual(b64(first), b64(second));
+    assert.notStrictEqual(b64(first), b64(second), "a reused ephemeral keypair would seal the same box twice");
   });
 
   it("cannot be opened by a different recipient", () => {
@@ -74,11 +66,9 @@ describe("encryptSecret", () => {
   });
 
   it("fails as a typed Result on a public key that is not base64", () => {
-    // Garbage from the API is INPUT. It fails typed rather than throwing, which
-    // is what lets the caller map it onto a GitHubError instead of a defect.
     const sealed = encryptSecret("!!! not base64 !!!", "hunter2");
 
-    assert.strictEqual(Result.isFailure(sealed), true);
+    assert.strictEqual(Result.isFailure(sealed), true, "a typed failure lets the caller map it onto a GitHubError");
   });
 
   it("never returns the plaintext", () => {
@@ -92,24 +82,21 @@ describe("encryptSecret", () => {
   });
 });
 
-describe("the sealed-box nonce derivation", () => {
-  /**
-   * The nonce is `blake2b(ephemeral_pk || recipient_pk)` truncated to 24 bytes by
-   * BLAKE2b's own output-length parameter, which is not the same as slicing a
-   * 64-byte digest. These known answers come from an independent BLAKE2b
-   * implementation (CPython `hashlib.blake2b(digest_size=24)`), so a hasher that
-   * truncated instead of parameterising would fail here before GitHub received a
-   * box it cannot decrypt.
-   */
+describe("the sealed-box nonce is BLAKE2b with a 24-byte output length, not a sliced 64-byte digest", () => {
   it("matches the BLAKE2b-192 known answer for a 64-byte key pair input", () => {
     const input = Uint8Array.from({ length: PUBLIC_KEY_BYTES * 2 }, (_, index) => index);
-    assert.strictEqual(Hex.encode(blake2b(input, { dkLen: 24 })), "aa054507b4916837a6d2b35b1ce7c525facdb7868ed55a8a");
+    assert.strictEqual(
+      Hex.encode(blake2b(input, { dkLen: 24 })),
+      "aa054507b4916837a6d2b35b1ce7c525facdb7868ed55a8a",
+      "known answer from CPython hashlib.blake2b(digest_size=24)"
+    );
   });
 
   it("matches the BLAKE2b-192 known answer for the empty input", () => {
     assert.strictEqual(
       Hex.encode(blake2b(new Uint8Array(0), { dkLen: 24 })),
-      "ab3b5331a7135ed50d0f182d026e60abdb3646fd51bcf8a3"
+      "ab3b5331a7135ed50d0f182d026e60abdb3646fd51bcf8a3",
+      "known answer from CPython hashlib.blake2b(digest_size=24)"
     );
   });
 });
