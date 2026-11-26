@@ -13,7 +13,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { GitmodulesParseError } from "@beep/git/Gitmodules";
 
-/** Unwraps a successful Result or fails the test with the failure's message. */
 const ok = <A, E>(result: Result.Result<A, E>): A => {
   assertSuccess(result, result.pipe(Result.getSuccess, O.getOrThrow));
   return result.success;
@@ -202,9 +201,8 @@ describe("Gitmodules", () => {
         const modules = yield* S.decodeEffect(Gitmodules.FromString)(REAL_WORLD);
         assert.strictEqual(modules.entries.length, 2);
         const encoded = yield* S.encodeUnknownEffect(Gitmodules.FromString)(modules);
-        // Canonical rendering, then a decode of it, must agree with the original decode.
         const again = yield* S.decodeEffect(Gitmodules.FromString)(encoded);
-        assert.deepStrictEqual(again, modules);
+        assert.deepStrictEqual(again, modules, "a decode of the canonical rendering agrees with the original decode");
       })
     );
 
@@ -229,11 +227,10 @@ describe("Gitmodules", () => {
           }),
         ],
       });
-      // Internal whitespace needs no quoting in git-config; a comment
-      // character does.
       assert.strictEqual(
         modules.stringify(),
-        '[submodule "with space"]\n\tpath = a path\n\turl = https://example.com/r.git\n\tbranch = "release # 1"\n\tshallow = false\n'
+        '[submodule "with space"]\n\tpath = a path\n\turl = https://example.com/r.git\n\tbranch = "release # 1"\n\tshallow = false\n',
+        "internal whitespace needs no quoting in git-config; a comment character does"
       );
     });
 
@@ -242,13 +239,13 @@ describe("Gitmodules", () => {
     });
 
     it("a hand-built entry name with a newline is refused at construction — render cannot emit a broken document", () => {
-      // serializeHeader escapes only `"` and `\` (git's subsection grammar
-      // has no newline escape), so a name containing a line break would
-      // serialize across lines and not re-decode to the same entries. The
-      // constructor refuses it, matching GitConfig.addSection's [\n\r\0]
-      // subsection refusal. v4 constructors validate, so this throws.
       for (const name of ['"]\nurl = evil\n[x "', "cr\rbad", "nul\0bad"]) {
-        assert.throws(() => GitmodulesEntry.make({ name, path: "p", url: "u" }));
+        assert.throws(
+          () => GitmodulesEntry.make({ name, path: "p", url: "u" }),
+          undefined,
+          undefined,
+          "the subsection grammar escapes only quote and backslash, so make refuses [\\n\\r\\0] as GitConfig.addSection does"
+        );
       }
     });
   });
@@ -262,8 +259,10 @@ describe("Gitmodules", () => {
         edited.stringify(),
         Str.replace("https://github.com/Effect-TS/effect.git", "https://github.com/effect-ts/effect.git")(REAL_WORLD)
       );
-      // The leading comment is untouched — the edit was surgical.
-      assert.isTrue(Str.startsWith("# vendored reference repos\n")(edited.stringify()));
+      assert.isTrue(
+        Str.startsWith("# vendored reference repos\n")(edited.stringify()),
+        "the leading comment is untouched: the edit was surgical"
+      );
     });
 
     it("setBranch sets, and unsets when omitted", () => {
@@ -296,8 +295,7 @@ describe("Gitmodules", () => {
       const decoded = ok(Gitmodules.fromConfigResult(edited));
       assert.strictEqual(decoded.entries.length, 3);
       assert.deepStrictEqual(decoded.entries[2], entry);
-      // The pre-existing text is untouched.
-      assert.isTrue(Str.startsWith(REAL_WORLD)(edited.stringify()));
+      assert.isTrue(Str.startsWith(REAL_WORLD)(edited.stringify()), "the pre-existing text is untouched");
     });
 
     it("remove deletes the named section only", () => {

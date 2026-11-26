@@ -1,8 +1,3 @@
-// The `Git.log` unit suite: argv routing, the record parser's byte shape, the
-// unborn-HEAD degrade, and the two pre-spawn refusals. Every case here scripts
-// the spawner — `__test__/integration/GitSurface.int.test.ts` is where `log`
-// meets a real git binary, a real rename and a real merge.
-
 import { CommitLogEntry, Git, GitCommandError, NameStatusEntry, NotARepositoryError } from "@beep/git/Git";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
@@ -33,11 +28,6 @@ const log = Effect.fn("log")(function* (options?: Parameters<GitStubs["log"]>[1]
   return yield* git.log(cwd, options);
 });
 
-/**
- * Builds one record in git's probed `-z` shape: the six-field header (the
- * subject defaults to `"subject"`), then `\n` and NUL-terminated body tokens —
- * paths under `--name-only`, `<code>`/`<path>` tokens under `--name-status`.
- */
 const record = (
   sha: string,
   authoredAt: string,
@@ -78,21 +68,19 @@ describe("Git.log", () => {
       assert.strictEqual(entry?.authorName, "Ada");
       assert.strictEqual(entry?.authorEmail, "ada@example.com");
       assert.strictEqual(entry?.subject, "feat(git): the subject line");
-      // `changes` is the name-status mode's field; a --name-only read leaves it absent.
-      assert.isUndefined(entry?.changes);
+      assert.isUndefined(entry?.changes, "changes is the name-status field; a --name-only read leaves it absent");
       assert.deepStrictEqual(entry?.paths, ["src/Git.ts", "README.md"]);
-      // The offset-bearing ISO decodes to the INSTANT, not the wall clock:
-      // -04:00 at 20:25 is 00:25 the next day in UTC.
-      assert.strictEqual(entry === undefined ? "" : DateTime.formatIso(entry.authoredAt), "2026-09-08T00:25:41.000Z");
+      assert.strictEqual(
+        entry === undefined ? "" : DateTime.formatIso(entry.authoredAt),
+        "2026-09-08T00:25:41.000Z",
+        "the offset-bearing ISO decodes to the instant, not the wall clock: -04:00 at 20:25 is 00:25 next day UTC"
+      );
       assert.strictEqual(entry === undefined ? "" : DateTime.formatIso(entry.committedAt), "2026-09-08T07:00:00.000Z");
     })
   );
 
   it.effect("keeps a record whose commit touched nothing as an EMPTY path list", () =>
     Effect.gen(function* () {
-      // git's default for a merge commit: a header with no diff at all. The
-      // discriminating case for the trailing-NUL token — read naively it is
-      // one empty-string path, which is a different (and wrong) answer.
       const entries = yield* run(
         log(),
         (): ScriptResult => ({
@@ -103,16 +91,14 @@ describe("Git.log", () => {
       );
       assert.deepStrictEqual(
         A.map(entries, (entry) => entry.paths),
-        [[], ["f.txt"]]
+        [[], ["f.txt"]],
+        "git's default merge record has no diff: an empty list, never one empty-string path read off the trailing NUL"
       );
     })
   );
 
   it.effect("returns paths raw — a space, a quote and a leading newline all survive", () =>
     Effect.gen(function* () {
-      // `-z` disables git's C-style path quoting, so the parser must not undo
-      // any. The leading-newline path is the case that discriminates a
-      // "strip one separator byte" parser from a "trim the token" one.
       const entries = yield* run(
         log(),
         (): ScriptResult => ({
@@ -122,7 +108,11 @@ describe("Git.log", () => {
           ]),
         })
       );
-      assert.deepStrictEqual(entries[0]?.paths, ['\nnl "quoted" name.txt', "a b.txt"]);
+      assert.deepStrictEqual(
+        entries[0]?.paths,
+        ['\nnl "quoted" name.txt', "a b.txt"],
+        "-z disables C-style quoting so nothing is unquoted; the leading newline tells a separator strip from a trim"
+      );
     })
   );
 
@@ -167,8 +157,6 @@ describe("Git.log", () => {
 
   it.effect("degrades an unknown-revision HEAD to the empty listing too", () =>
     Effect.gen(function* () {
-      // The other spelling of "there is no history here". `Git.log` takes no
-      // ref, so there is nothing an UnknownRefError could name.
       const entries = yield* run(
         log(),
         (): ScriptResult => ({
@@ -176,7 +164,11 @@ describe("Git.log", () => {
           exit: 128,
         })
       );
-      assert.deepStrictEqual(entries, []);
+      assert.deepStrictEqual(
+        entries,
+        [],
+        "no history here: Git.log takes no ref, so there is nothing an UnknownRefError could name"
+      );
     })
   );
 
@@ -295,9 +287,11 @@ describe("Git.log", () => {
         paths: ["f.txt"],
       });
       const encoded = yield* S.encodeEffect(CommitLogEntry)(entry);
-      // The class IS the schema, so this is the shape a consumer persisting a
-      // CommitLogEntry gets: -04:00 has become Z, and the offset is gone.
-      assert.strictEqual(encoded.authoredAt, "2026-09-08T00:25:41.000Z");
+      assert.strictEqual(
+        encoded.authoredAt,
+        "2026-09-08T00:25:41.000Z",
+        "the class is the schema: a persisted CommitLogEntry has -04:00 become Z and loses the offset"
+      );
       assert.strictEqual(encoded.committedAt, "2026-09-08T00:25:41.000Z");
     })
   );
@@ -328,9 +322,8 @@ describe("Git.log", () => {
       throw new Error("Git.log spawned git despite an option guard");
     };
 
-    it.effect("decodes each body record as a NameStatusEntry and derives paths from the NEW path", () =>
+    it.effect("decodes each body record of git 2.56's probed shape as a NameStatusEntry, paths from the NEW path", () =>
       Effect.gen(function* () {
-        // The probed git 2.56 byte shape: `\nM\0README.md\0D\0docs/gone.md\0A\0src/added.ts\0R100\0src/old.ts\0src/new.ts\0`.
         const entries = yield* run(log({ nameStatus: true }), (args): ScriptResult => {
           assert.include(args, "--name-status");
           assert.notInclude(args, "--name-only");
@@ -379,8 +372,11 @@ describe("Git.log", () => {
         );
         assert.deepStrictEqual(entries[0]?.changes, []);
         assert.deepStrictEqual(entries[0]?.paths, []);
-        // Only the FIRST body token (the code) loses git's separator newline; the path keeps its own.
-        assert.deepStrictEqual(entries[1]?.paths, ["\nleading.txt"]);
+        assert.deepStrictEqual(
+          entries[1]?.paths,
+          ["\nleading.txt"],
+          "only the first body token, the code, loses git's separator newline; the path keeps its own"
+        );
       })
     );
 

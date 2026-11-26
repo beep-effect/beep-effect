@@ -1,23 +1,3 @@
-// Proves the Task 3-6 surface additions (nameStatus, the promoted working-tree
-// primitives, the quiet probes, commitInfo/status, and the mutating tier)
-// against a REAL git binary and a real filesystem, through
-// @effect/platform-node's NodeServices.layer. ../Git.int.test.ts remains the
-// authority for the ORIGINAL surface (show/lsTree/refExists/mergeBase/
-// changedFiles/workingChanges/revParse/checkout) and the runCollected
-// backpressure guard; this file is the only place the expanded surface meets
-// real git.
-//
-// Two fixtures, each in their own scoped temporary directory removed with its layer:
-//  - Fixture A: a single introspection repository with a rename, a modified
-//    file, a staged addition and an untracked file, exercising the read tier.
-//  - Fixture B: a "library" repo and a "superproject" repo, exercising the
-//    mutating tier (submoduleAdd, add, fetch, checkout --detach,
-//    sparseCheckoutSet, submoduleUpdate) against a local file:// remote.
-//
-// git >= 2.38 blocks file-protocol submodules unless protocol.file.allow is
-// set to "always" — the superproject (and any clone of it) sets that BEFORE
-// the submodule operation that would otherwise be refused.
-
 import { Git, GitCommandError, NameStatusEntry, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
@@ -49,7 +29,9 @@ class FixtureSetupError extends S.TaggedError<FixtureSetupError, { readonly bran
   $I.annote("FixtureSetupError", { description: "A real Git fixture command exited unsuccessfully." })
 ) {}
 
-/** Pins fixture configuration at the real spawner boundary without changing the host environment. */
+const FILE_PROTOCOL_FOR_INTERNAL_CLONES = { GIT_ALLOW_PROTOCOL: "file" };
+const GIT_2_38_FILE_SUBMODULE_OPT_IN = ["config", "protocol.file.allow", "always"];
+
 const FixtureServices = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
   Effect.gen(function* () {
@@ -57,7 +39,7 @@ const FixtureServices = Layer.effect(
     return ChildProcessSpawner.make((command) =>
       real.spawn(
         ChildProcess.setEnv(command, {
-          GIT_ALLOW_PROTOCOL: "file",
+          ...FILE_PROTOCOL_FOR_INTERNAL_CLONES,
           GIT_CONFIG_GLOBAL: "/dev/null",
           GIT_CONFIG_SYSTEM: "/dev/null",
         })
@@ -66,31 +48,17 @@ const FixtureServices = Layer.effect(
   })
 ).pipe(Layer.provideMerge(NodeServices.layer));
 
-/**
- * The real Git service over the pinned real spawner. The layer harness builds
- * it once per block, and every fixture directory below is a scoped temporary
- * directory that the owning block's layer scope removes.
- */
 const TestLayer = Git.layer.pipe(Layer.provideMerge(FixtureServices));
 
-/** The locale and prompt pins the `Git` service applies to its own spawns (#670). */
-const FIXTURE_ENV = { LC_ALL: "C", GIT_TERMINAL_PROMPT: "0" } as const;
+const SERVICE_LOCALE_AND_PROMPT_PINS = { LC_ALL: "C", GIT_TERMINAL_PROMPT: "0" } as const;
 
-// A repo-local protocol.file.allow does not reach submodule add's internal clone.
-// The real spawner supplies GIT_ALLOW_PROTOCOL=file to Git and its subprocesses.
-
-/**
- * Runs one raw `git` invocation for fixture setup — the operations that are
- * deliberately NOT part of the `Git` surface (init, config, add, commit,
- * branch, tag, mv, clone, remote, update-ref, symbolic-ref). Dies loudly
- * (never cascades as a passed test) if git itself could not be spawned, or if
- * it ran and exited non-zero.
- */
 const runFixtureGit = (
   cwd: string,
   args: ReadonlyArray<string>
 ): Effect.Effect<string, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  runCollected(ChildProcess.setCwd(ChildProcess.make("git", args, { env: FIXTURE_ENV, extendEnv: true }), cwd)).pipe(
+  runCollected(
+    ChildProcess.setCwd(ChildProcess.make("git", args, { env: SERVICE_LOCALE_AND_PROMPT_PINS, extendEnv: true }), cwd)
+  ).pipe(
     Effect.orDie,
     Effect.flatMap((result) =>
       result.exitCode === 0
@@ -103,280 +71,273 @@ const runFixtureGit = (
     )
   );
 
-/** Confirms a path exists on the real FS — dies with the platform error if it does not. */
 const assertExists = Effect.fnUntraced(function* (file: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.stat(file).pipe(Effect.asVoid, Effect.orDie);
 });
 
-it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection repository (fixture A)", (it) => {
-  let dirA = "";
-  let commit1Sha = "";
+it.layer(TestLayer, { timeout: "30 seconds" })(
+  "Git surface read tier against a real git binary and filesystem (fixture A)",
+  (it) => {
+    let dirA = "";
+    let commit1Sha = "";
 
-  /**
-   * commit1 = a.txt ("one") + sub/c.txt ("c"); then sub/c.txt is renamed to
-   * renamed.txt, a.txt is modified, staged.txt is staged new, and
-   * untracked.txt is left untracked — every stage of the working tree in one
-   * fixture.
-   */
-  const FixtureALayer = Layer.effectDiscard(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
-      dirA = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-surface-a-" });
-
-      const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirA, args);
-
-      yield* raw(["-c", "init.defaultBranch=main", "init"]);
-      yield* raw(["config", "user.email", "git-integration@example.com"]);
-      yield* raw(["config", "user.name", "Git Integration"]);
-
-      yield* fs.writeFileString(join(dirA, "a.txt"), "one\n");
-      yield* fs.makeDirectory(join(dirA, "sub"), { recursive: true });
-      yield* fs.writeFileString(join(dirA, "sub", "c.txt"), "c\n");
-      yield* raw(["add", "-A"]);
-      yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
-      const raw1 = yield* raw(["rev-parse", "HEAD"]);
-      const commit1 = Str.trim(raw1);
-
-      yield* raw(["mv", "sub/c.txt", "renamed.txt"]);
-      yield* fs.writeFileString(join(dirA, "a.txt"), "two\n");
-      yield* fs.writeFileString(join(dirA, "staged.txt"), "staged\n");
-      yield* raw(["add", "staged.txt"]);
-      yield* fs.writeFileString(join(dirA, "untracked.txt"), "loose\n");
-
-      commit1Sha = commit1;
-    })
-  );
-
-  it.layer(FixtureALayer, { timeout: "30 seconds" })((it) => {
-    it.effect("nameStatus (working-tree form) reports modify, rename and add with typed statuses", () =>
+    const FixtureALayer = Layer.effectDiscard(
       Effect.gen(function* () {
-        const git = yield* Git;
-        const entries = yield* git.nameStatus(dirA, { base: "HEAD" });
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
+        dirA = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-surface-a-" });
 
-        const modified = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "a.txt"));
-        assert.isDefined(modified);
-        assert.strictEqual(modified?.status, "modified");
+        const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirA, args);
 
-        const renamed = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "renamed.txt"));
-        assert.isDefined(renamed);
-        assert.strictEqual(renamed?.status, "renamed");
-        assert.strictEqual(renamed?.oldPath, "sub/c.txt");
-        // `git mv` with unchanged content is an exact rename: git prints R100.
-        assert.strictEqual(renamed?.score, 100);
+        yield* raw(["-c", "init.defaultBranch=main", "init"]);
+        yield* raw(["config", "user.email", "git-integration@example.com"]);
+        yield* raw(["config", "user.name", "Git Integration"]);
 
-        const added = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "staged.txt"));
-        assert.isDefined(added);
-        assert.strictEqual(added?.status, "added");
+        yield* fs.writeFileString(join(dirA, "a.txt"), "one\n");
+        yield* fs.makeDirectory(join(dirA, "sub"), { recursive: true });
+        yield* fs.writeFileString(join(dirA, "sub", "c.txt"), "c\n");
+        yield* raw(["add", "-A"]);
+        yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
+        const raw1 = yield* raw(["rev-parse", "HEAD"]);
+        const commit1 = Str.trim(raw1);
 
-        // untracked.txt never appears in a diff.
-        assert.isUndefined(O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "untracked.txt")));
+        yield* raw(["mv", "sub/c.txt", "renamed.txt"]);
+        yield* fs.writeFileString(join(dirA, "a.txt"), "two\n");
+        yield* fs.writeFileString(join(dirA, "staged.txt"), "staged\n");
+        yield* raw(["add", "staged.txt"]);
+        yield* fs.writeFileString(join(dirA, "untracked.txt"), "loose\n");
+
+        commit1Sha = commit1;
       })
     );
 
-    it.effect("the promoted primitives partition the working tree", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const unstaged = yield* git.unstagedChanges(dirA);
-        const staged = yield* git.stagedChanges(dirA);
-        const untracked = yield* git.untrackedFiles(dirA);
+    it.layer(FixtureALayer, { timeout: "30 seconds" })((it) => {
+      it.effect("nameStatus (working-tree form) reports modify, rename and add with typed statuses", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.nameStatus(dirA, { base: "HEAD" });
 
-        assert.include(unstaged, "a.txt");
-        assert.include(staged, "staged.txt");
-        // --name-only reports only the NEW path for a staged rename (unlike
-        // --name-status's three-token form, which carries the old path too) —
-        // probed against real git; "the rename pair" is visible via nameStatus
-        // above, not through this name-only primitive.
-        assert.include(staged, "renamed.txt");
-        assert.notInclude(staged, "sub/c.txt");
-        assert.deepStrictEqual(untracked, ["untracked.txt"]);
-      })
-    );
+          const modified = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "a.txt"));
+          assert.isDefined(modified);
+          assert.strictEqual(modified?.status, "modified");
 
-    it.effect("status --porcelain reports the same tree with XY codes", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const entries = yield* git.status(dirA);
+          const renamed = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "renamed.txt"));
+          assert.isDefined(renamed);
+          assert.strictEqual(renamed?.status, "renamed");
+          assert.strictEqual(renamed?.oldPath, "sub/c.txt");
+          assert.strictEqual(renamed?.score, 100, "git mv with unchanged content is an exact rename: git prints R100");
 
-        const untrackedEntry = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "untracked.txt"));
-        assert.isDefined(untrackedEntry);
-        assert.strictEqual(untrackedEntry?.x, "?");
-        assert.strictEqual(untrackedEntry?.y, "?");
+          const added = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "staged.txt"));
+          assert.isDefined(added);
+          assert.strictEqual(added?.status, "added");
 
-        const renamedEntry = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "renamed.txt"));
-        assert.isDefined(renamedEntry);
-        assert.strictEqual(renamedEntry?.x, "R");
-        assert.strictEqual(renamedEntry?.origPath, "sub/c.txt");
-      })
-    );
+          assert.isUndefined(
+            O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "untracked.txt")),
+            "untracked.txt never appears in a diff"
+          );
+        })
+      );
 
-    it.effect("lsTree with a pathspec narrows to the subtree", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const entries = yield* git.lsTree(dirA, commit1Sha, { pathspec: ["sub"] });
-        assert.deepStrictEqual(
-          A.map(entries, (entry) => entry.path),
-          ["sub/c.txt"]
-        );
-      })
-    );
+      it.effect("the promoted primitives partition the working tree", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const unstaged = yield* git.unstagedChanges(dirA);
+          const staged = yield* git.stagedChanges(dirA);
+          const untracked = yield* git.untrackedFiles(dirA);
 
-    it.effect("configGet reads what configSet wrote, and -f writes into an explicit file", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
+          assert.include(unstaged, "a.txt");
+          assert.include(staged, "staged.txt");
+          assert.include(staged, "renamed.txt");
+          assert.notInclude(
+            staged,
+            "sub/c.txt",
+            "--name-only reports only a staged rename's NEW path; the pair lives in nameStatus's three-token form"
+          );
+          assert.deepStrictEqual(untracked, ["untracked.txt"]);
+        })
+      );
 
-        yield* git.configSet(dirA, "test.kit", "yes");
-        const configGet2 = yield* git.configGet(dirA, "test.kit");
-        assertSome(configGet2, "yes");
-        const configGet3 = yield* git.configGet(dirA, "test.unset");
-        assertNone(configGet3);
+      it.effect("status --porcelain reports the same tree with XY codes", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.status(dirA);
 
-        yield* git.configSet(dirA, "submodule.x.shallow", "true", { file: "modcfg" });
-        const written = yield* runFixtureGit(dirA, ["config", "-f", "modcfg", "--get", "submodule.x.shallow"]);
-        assert.strictEqual(Str.trim(written), "true");
-      })
-    );
+          const untrackedEntry = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "untracked.txt"));
+          assert.isDefined(untrackedEntry);
+          assert.strictEqual(untrackedEntry?.x, "?");
+          assert.strictEqual(untrackedEntry?.y, "?");
 
-    it.effect("nameStatus honors findRenames, diffFilter and a pathspec against the real tree", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        // Only renames, detected at 50%, and only under the paths the rename touches.
-        const renames = yield* git.nameStatus(dirA, {
-          base: "HEAD",
-          findRenames: 50,
-          diffFilter: "R",
-          pathspec: ["renamed.txt", "sub"],
-        });
-        assert.deepStrictEqual(
-          A.map(renames, (entry) => [entry.status, entry.oldPath, entry.path, entry.score]),
-          [["renamed", "sub/c.txt", "renamed.txt", 100]]
-        );
-        // Lower case excludes: everything BUT renames, scoped to a.txt.
-        const notRenames = yield* git.nameStatus(dirA, { base: "HEAD", diffFilter: "r", pathspec: ["a.txt"] });
-        assert.deepStrictEqual(
-          A.map(notRenames, (entry) => [entry.status, entry.path]),
-          [["modified", "a.txt"]]
-        );
-      })
-    );
+          const renamedEntry = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "renamed.txt"));
+          assert.isDefined(renamedEntry);
+          assert.strictEqual(renamedEntry?.x, "R");
+          assert.strictEqual(renamedEntry?.origPath, "sub/c.txt");
+        })
+      );
 
-    it.effect("remoteUrl is none before a remote exists and some after; push reads the push URL", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const remoteUrl4 = yield* git.remoteUrl(dirA);
-        assertNone(remoteUrl4);
-        const remoteUrl5 = yield* git.remoteUrl(dirA, { push: true });
-        assertNone(remoteUrl5);
+      it.effect("lsTree with a pathspec narrows to the subtree", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.lsTree(dirA, commit1Sha, { pathspec: ["sub"] });
+          assert.deepStrictEqual(
+            A.map(entries, (entry) => entry.path),
+            ["sub/c.txt"]
+          );
+        })
+      );
 
-        yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
-        yield* runFixtureGit(dirA, ["remote", "set-url", "--push", "origin", "git@example.com:o/r.git"]);
-        const remoteUrl6 = yield* git.remoteUrl(dirA);
-        assertSome(remoteUrl6, "https://example.com/o/r.git");
-        const remoteUrl7 = yield* git.remoteUrl(dirA, { push: true });
-        assertSome(remoteUrl7, "git@example.com:o/r.git");
-      })
-    );
+      it.effect("configGet reads what configSet wrote, and -f writes into an explicit file", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
 
-    it.effect("defaultBranch is none until origin/HEAD is set symbolically", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const defaultBranch8 = yield* git.defaultBranch(dirA);
-        assertNone(defaultBranch8);
+          yield* git.configSet(dirA, "test.kit", "yes");
+          const configGet2 = yield* git.configGet(dirA, "test.kit");
+          assertSome(configGet2, "yes");
+          const configGet3 = yield* git.configGet(dirA, "test.unset");
+          assertNone(configGet3);
 
-        yield* runFixtureGit(dirA, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
-        yield* runFixtureGit(dirA, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
+          yield* git.configSet(dirA, "submodule.x.shallow", "true", { file: "modcfg" });
+          const written = yield* runFixtureGit(dirA, ["config", "-f", "modcfg", "--get", "submodule.x.shallow"]);
+          assert.strictEqual(Str.trim(written), "true");
+        })
+      );
 
-        const defaultBranch9 = yield* git.defaultBranch(dirA);
-        assertSome(defaultBranch9, "main");
-      })
-    );
+      it.effect("nameStatus honors findRenames, diffFilter and a pathspec against the real tree", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const renames = yield* git.nameStatus(dirA, {
+            base: "HEAD",
+            findRenames: 50,
+            diffFilter: "R",
+            pathspec: ["renamed.txt", "sub"],
+          });
+          assert.deepStrictEqual(
+            A.map(renames, (entry) => [entry.status, entry.oldPath, entry.path, entry.score]),
+            [["renamed", "sub/c.txt", "renamed.txt", 100]],
+            "only renames, detected at 50%, and only under the paths the rename touches"
+          );
+          const notRenames = yield* git.nameStatus(dirA, { base: "HEAD", diffFilter: "r", pathspec: ["a.txt"] });
+          assert.deepStrictEqual(
+            A.map(notRenames, (entry) => [entry.status, entry.path]),
+            [["modified", "a.txt"]],
+            "a lower-case filter excludes: everything BUT renames, scoped to a.txt"
+          );
+        })
+      );
 
-    it.effect("currentBranch names the branch, and repoRoot agrees with rev-parse", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const currentBranch10 = yield* git.currentBranch(dirA);
-        assertSome(currentBranch10, "main");
+      it.effect("remoteUrl is none before a remote exists and some after; push reads the push URL", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const remoteUrl4 = yield* git.remoteUrl(dirA);
+          assertNone(remoteUrl4);
+          const remoteUrl5 = yield* git.remoteUrl(dirA, { push: true });
+          assertNone(remoteUrl5);
 
-        const root = yield* git.repoRoot(dirA);
-        const resultFixtureGit = yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"]);
-        const expected = Str.trim(resultFixtureGit);
-        assert.strictEqual(root, expected);
-      })
-    );
+          yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
+          yield* runFixtureGit(dirA, ["remote", "set-url", "--push", "origin", "git@example.com:o/r.git"]);
+          const remoteUrl6 = yield* git.remoteUrl(dirA);
+          assertSome(remoteUrl6, "https://example.com/o/r.git");
+          const remoteUrl7 = yield* git.remoteUrl(dirA, { push: true });
+          assertSome(remoteUrl7, "git@example.com:o/r.git");
+        })
+      );
 
-    it.effect("commitInfo reads HEAD's sha, N signature and exact message", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const info = yield* git.commitInfo(dirA);
-        const sha = yield* git.revParse(dirA, "HEAD");
+      it.effect("defaultBranch is none until origin/HEAD is set symbolically", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const defaultBranch8 = yield* git.defaultBranch(dirA);
+          assertNone(defaultBranch8);
 
-        assert.strictEqual(info.sha, sha);
-        // The fixture's commits are never signed.
-        assert.strictEqual(info.signatureStatus, "N");
-        // Raw %B output is byte-identical to commitInfo's untrimmed message —
-        // a trim or mutation anywhere in the pipeline breaks this equality.
-        const expectedMessage = yield* runFixtureGit(dirA, ["log", "-1", "--format=%B"]);
-        assert.strictEqual(info.message, expectedMessage);
-      })
-    );
+          yield* runFixtureGit(dirA, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+          yield* runFixtureGit(dirA, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"]);
 
-    it.effect("commitInfo ignores repository signature banners and preserves the exact message", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const previous = yield* git.configGet(dirA, "log.showSignature", { scope: "local" });
-        const restore = O.match(previous, {
-          onSome: (value) => runFixtureGit(dirA, ["config", "--local", "log.showSignature", value]),
-          onNone: () => runFixtureGit(dirA, ["config", "--local", "--unset", "log.showSignature"]),
-        });
-        yield* Effect.gen(function* () {
-          yield* runFixtureGit(dirA, ["config", "--local", "log.showSignature", "true"]);
+          const defaultBranch9 = yield* git.defaultBranch(dirA);
+          assertSome(defaultBranch9, "main");
+        })
+      );
+
+      it.effect("currentBranch names the branch, and repoRoot agrees with rev-parse", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const currentBranch10 = yield* git.currentBranch(dirA);
+          assertSome(currentBranch10, "main");
+
+          const root = yield* git.repoRoot(dirA);
+          const resultFixtureGit = yield* runFixtureGit(dirA, ["rev-parse", "--show-toplevel"]);
+          const expected = Str.trim(resultFixtureGit);
+          assert.strictEqual(root, expected);
+        })
+      );
+
+      it.effect("commitInfo reads HEAD's sha, N signature and exact message", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
           const info = yield* git.commitInfo(dirA);
-          const revParse11 = yield* git.revParse(dirA, "HEAD");
-          assert.strictEqual(info.sha, revParse11);
-          assert.strictEqual(info.signatureStatus, "N");
-          const resultFixtureGit12 = yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%B"]);
-          assert.strictEqual(info.message, resultFixtureGit12);
-        }).pipe(Effect.ensuring(restore));
-      })
-    );
+          const sha = yield* git.revParse(dirA, "HEAD");
 
-    it.effect("commitInfo returns a typed failure when a tree ref selects no commit", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const ref = "HEAD^{tree}";
-        const resultFixtureGit13 = yield* runFixtureGit(dirA, [
-          "log",
-          "--no-show-signature",
-          "-1",
-          "--format=%H%x00%G?%x00%B",
-          ref,
-        ]);
-        assert.strictEqual(resultFixtureGit13, "");
-        const error = yield* Effect.flip(git.commitInfo(dirA, ref));
-        assert.instanceOf(error, GitCommandError);
-        if (!S.is(GitCommandError)(error)) return;
-        assert.strictEqual(error.kind, "failed");
-        assert.deepStrictEqual(error.args, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
-        assert.strictEqual(error.cwd, dirA);
-        assert.include(error.detail, "unparseable commitInfo output");
-      })
-    );
-  });
-});
+          assert.strictEqual(info.sha, sha);
+          assert.strictEqual(info.signatureStatus, "N", "the fixture's commits are never signed");
+          const expectedMessage = yield* runFixtureGit(dirA, ["log", "-1", "--format=%B"]);
+          assert.strictEqual(
+            info.message,
+            expectedMessage,
+            "raw %B is byte-identical to the untrimmed message: a trim anywhere in the pipeline breaks this"
+          );
+        })
+      );
+
+      it.effect("commitInfo ignores repository signature banners and preserves the exact message", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const previous = yield* git.configGet(dirA, "log.showSignature", { scope: "local" });
+          const restore = O.match(previous, {
+            onSome: (value) => runFixtureGit(dirA, ["config", "--local", "log.showSignature", value]),
+            onNone: () => runFixtureGit(dirA, ["config", "--local", "--unset", "log.showSignature"]),
+          });
+          yield* Effect.gen(function* () {
+            yield* runFixtureGit(dirA, ["config", "--local", "log.showSignature", "true"]);
+            const info = yield* git.commitInfo(dirA);
+            const revParse11 = yield* git.revParse(dirA, "HEAD");
+            assert.strictEqual(info.sha, revParse11);
+            assert.strictEqual(info.signatureStatus, "N");
+            const resultFixtureGit12 = yield* runFixtureGit(dirA, ["log", "--no-show-signature", "-1", "--format=%B"]);
+            assert.strictEqual(info.message, resultFixtureGit12);
+          }).pipe(Effect.ensuring(restore));
+        })
+      );
+
+      it.effect("commitInfo returns a typed failure when a tree ref selects no commit", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const ref = "HEAD^{tree}";
+          const resultFixtureGit13 = yield* runFixtureGit(dirA, [
+            "log",
+            "--no-show-signature",
+            "-1",
+            "--format=%H%x00%G?%x00%B",
+            ref,
+          ]);
+          assert.strictEqual(resultFixtureGit13, "");
+          const error = yield* Effect.flip(git.commitInfo(dirA, ref));
+          assert.instanceOf(error, GitCommandError);
+          if (!S.is(GitCommandError)(error)) return;
+          assert.strictEqual(error.kind, "failed");
+          assert.deepStrictEqual(error.args, ["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
+          assert.strictEqual(error.cwd, dirA);
+          assert.include(error.detail, "unparseable commitInfo output");
+        })
+      );
+    });
+  }
+);
 
 let libDir = "";
 let superDir = "";
 let libTagSha = "";
-/** The submodule's working copy, once `submoduleAdd` has vendored it. */
-let subDir = "";
+let vendoredSubmoduleDir = "";
 
-/**
- * "library" = a one-commit repo on `main`, tagged `v1.0.0`. "superproject" =
- * an empty repo with `protocol.file.allow always` set BEFORE any submodule
- * operation — git >= 2.38 refuses a file:// submodule otherwise.
- */
+// decision: staged-integration-fixtures-run-in-order
 const FixtureBLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -401,31 +362,25 @@ const FixtureBLayer = Layer.effectDiscard(
     yield* rawSuper(["-c", "init.defaultBranch=main", "init"]);
     yield* rawSuper(["config", "user.email", "git-integration@example.com"]);
     yield* rawSuper(["config", "user.name", "Git Integration"]);
-    yield* rawSuper(["config", "protocol.file.allow", "always"]);
+    yield* rawSuper(GIT_2_38_FILE_SUBMODULE_OPT_IN);
 
     libTagSha = tagSha;
-    subDir = join(superDir, "vendor", "lib");
+    vendoredSubmoduleDir = join(superDir, "vendor", "lib");
   })
 );
 
 it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" })(
-  "Git surface — submodule/fetch pair (fixture B)",
+  "Git surface mutating tier against a local file:// library and superproject (fixture B)",
   (it) => {
-    // Sequential, order-dependent stages against the same superproject: add
-    // vendors the submodule, fetch+checkout pin it to a tag, a bad fetch fails
-    // typed, and sparse-checkout narrows its tree — each stage builds on the
-    // last, mirroring the brief's scenario-grouped-its style.
-
     it.effect(
       "submoduleAdd vendors the library and add stages the result",
       () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          // No depth: local-path clones ignore/warn on --depth; the depth argv
-          // is already unit-tested.
-          yield* git.submoduleAdd(superDir, { url: libDir, path: "vendor/lib" });
+          const localPathCloneIgnoresDepth = { url: libDir, path: "vendor/lib" };
+          yield* git.submoduleAdd(superDir, localPathCloneIgnoresDepth);
           const path = yield* Path.Path;
-          yield* assertExists(path.join(subDir, "lib.txt"));
+          yield* assertExists(path.join(vendoredSubmoduleDir, "lib.txt"));
 
           yield* git.add(superDir, [".gitmodules", "vendor/lib"]);
           const entries = yield* git.status(superDir);
@@ -444,12 +399,12 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
     it.effect("fetch tag + checkout --detach pins the submodule, currentBranch reads none", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        yield* git.fetch(subDir, { ref: "v1.0.0", tag: true });
-        yield* git.checkout(subDir, "FETCH_HEAD", { detach: true });
+        yield* git.fetch(vendoredSubmoduleDir, { ref: "v1.0.0", tag: true });
+        yield* git.checkout(vendoredSubmoduleDir, "FETCH_HEAD", { detach: true });
 
-        const currentBranch15 = yield* git.currentBranch(subDir);
+        const currentBranch15 = yield* git.currentBranch(vendoredSubmoduleDir);
         assertNone(currentBranch15);
-        const revParse16 = yield* git.revParse(subDir, "HEAD");
+        const revParse16 = yield* git.revParse(vendoredSubmoduleDir, "HEAD");
         assert.strictEqual(revParse16, libTagSha);
       })
     );
@@ -457,7 +412,7 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
     it.effect("fetch of a tag the remote does not have fails typed", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        const exit = yield* Effect.exit(git.fetch(subDir, { ref: "v9.9.9", tag: true }));
+        const exit = yield* Effect.exit(git.fetch(vendoredSubmoduleDir, { ref: "v9.9.9", tag: true }));
         assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
         const found = Cause.findFail(exit.cause);
         assertSuccess(found, found.pipe(Result.getSuccess, O.getOrThrow));
@@ -468,15 +423,16 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
     it.effect("sparseCheckoutSet --no-cone narrows the submodule's tree", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        yield* git.sparseCheckoutSet(subDir, ["src"], { cone: false });
-        const configGet17 = yield* git.configGet(subDir, "core.sparseCheckout");
+        yield* git.sparseCheckoutSet(vendoredSubmoduleDir, ["src"], { cone: false });
+        const configGet17 = yield* git.configGet(vendoredSubmoduleDir, "core.sparseCheckout");
         assertSome(configGet17, "true");
-        // The narrowing must be real, not just configured: lib.txt sits at the
-        // tree root, outside the "src" pattern, so it leaves the working tree.
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const libGone = yield* fs.stat(path.join(subDir, "lib.txt")).pipe(Effect.isFailure);
-        assert.isTrue(libGone);
+        const libGone = yield* fs.stat(path.join(vendoredSubmoduleDir, "lib.txt")).pipe(Effect.isFailure);
+        assert.isTrue(
+          libGone,
+          "the narrowing is real, not just configured: root lib.txt sits outside the src pattern and leaves the tree"
+        );
       })
     );
 
@@ -486,13 +442,10 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        // The superproject needs a commit between add and clone so the clone
-        // has something to check out — fixture setup, so raw, not the service.
         yield* runFixtureGit(superDir, ["-c", "commit.gpgsign=false", "commit", "-m", "vendor lib"]);
         cloneDir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-surface-clone-" });
         yield* runFixtureGit(path.dirname(cloneDir), ["clone", superDir, cloneDir]);
-        // Any clone needs protocol.file.allow set BEFORE submoduleUpdate --init too.
-        yield* runFixtureGit(cloneDir, ["config", "protocol.file.allow", "always"]);
+        yield* runFixtureGit(cloneDir, GIT_2_38_FILE_SUBMODULE_OPT_IN);
       })
     );
 
@@ -512,215 +465,206 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
   }
 );
 
-// Fixture C is `Git.log`'s own: it is the only member whose answer depends on
-// the SHAPE of history rather than one tree, so it needs a repository with a
-// rename across the scoped path, an off-pathspec commit, and a real merge.
-// A mock spawner can pin the parser; only real git can tell us whether
-// `--follow` actually walks the rename and whether `--diff-merges` actually
-// changes what a merge contributes.
-it.layer(TestLayer, { timeout: "30 seconds" })("Git.log — history repository (fixture C)", (it) => {
-  let dirC = "";
-  let emptyDir = "";
-  let notRepoDir = "";
+it.layer(TestLayer, { timeout: "30 seconds" })(
+  "Git.log over a real history: a rename, an off-pathspec commit, a merge",
+  (it) => {
+    let dirC = "";
+    let emptyDir = "";
+    let notRepoDir = "";
 
-  /**
-   * main:  c1 (tracked/old.txt + other.txt)
-   *     -> c2 (tracked/old.txt renamed to tracked/new.txt)
-   *     -> c3 (other.txt only — the off-pathspec commit)
-   *     -> c4 (main edits tracked/new.txt)   \
-   *        side branched at c2, also edits it -> merge (conflict, resolved)
-   */
-  const FixtureCLayer = Layer.effectDiscard(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
-      dirC = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-log-c-" });
-      emptyDir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-log-empty-" });
-
-      const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirC, args);
-      const commit = (message: string) => raw(["-c", "commit.gpgsign=false", "commit", "-m", message]);
-
-      yield* raw(["-c", "init.defaultBranch=main", "init"]);
-      yield* raw(["config", "user.email", "log-integration@example.com"]);
-      yield* raw(["config", "user.name", "Log Integration"]);
-
-      yield* fs.makeDirectory(join(dirC, "tracked"), { recursive: true });
-      yield* fs.writeFileString(join(dirC, "tracked", "old.txt"), "one\n");
-      yield* fs.writeFileString(join(dirC, "other.txt"), "other\n");
-      // A path with a space, to prove -z leaves names unquoted.
-      yield* fs.writeFileString(join(dirC, "a name.txt"), "spaced\n");
-      yield* raw(["add", "-A"]);
-      yield* commit("c1");
-
-      yield* raw(["mv", "tracked/old.txt", "tracked/new.txt"]);
-      yield* commit("c2");
-      const raw18 = yield* raw(["rev-parse", "HEAD"]);
-      const branchPoint = Str.trim(raw18);
-
-      yield* fs.writeFileString(join(dirC, "other.txt"), "other again\n");
-      yield* raw(["add", "-A"]);
-      yield* commit("c3");
-
-      yield* fs.writeFileString(join(dirC, "tracked", "new.txt"), "main\n");
-      yield* raw(["add", "-A"]);
-      yield* commit("c4");
-
-      yield* raw(["checkout", "-b", "side", branchPoint]);
-      yield* fs.writeFileString(join(dirC, "tracked", "new.txt"), "side\n");
-      yield* raw(["add", "-A"]);
-      yield* commit("side");
-
-      yield* raw(["checkout", "main"]);
-      // The merge conflicts on purpose; the resolution is what makes the
-      // merge commit differ from its first parent.
-      yield* runCollected(
-        ChildProcess.setCwd(ChildProcess.make("git", ["merge", "side"], { env: FIXTURE_ENV, extendEnv: true }), dirC)
-      ).pipe(Effect.orDie);
-      yield* fs.writeFileString(join(dirC, "tracked", "new.txt"), "resolved\n");
-      yield* raw(["add", "-A"]);
-      yield* commit("merge side");
-
-      yield* runFixtureGit(emptyDir, ["-c", "init.defaultBranch=main", "init"]);
-      notRepoDir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-log-not-repo-" });
-    })
-  );
-
-  it.layer(FixtureCLayer, { timeout: "60 seconds" })((it) => {
-    it.effect("--follow walks a real rename; the same query without it stops at the rename", () =>
+    const FixtureCLayer = Layer.effectDiscard(
       Effect.gen(function* () {
-        const git = yield* Git;
-        const followed = yield* git.log(dirC, { paths: ["tracked/new.txt"], follow: true });
-        const unfollowed = yield* git.log(dirC, { paths: ["tracked/new.txt"] });
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
+        dirC = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-log-c-" });
+        emptyDir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-log-empty-" });
 
-        // The discriminating pair: `--follow` reaches back past c2's rename to
-        // c1, where the blob was still tracked/old.txt. Without it, history
-        // for this path begins at the rename. Note this is NOT a
-        // longer-vs-shorter comparison — `--follow` also drops merge commits
-        // (probed against git 2.54), so the two walks are the same LENGTH here
-        // and only their contents discriminate.
-        assert.include(
-          A.flatMap(followed, (entry) => entry.paths),
-          "tracked/old.txt"
-        );
-        assert.notInclude(
-          A.flatMap(unfollowed, (entry) => entry.paths),
-          "tracked/old.txt"
-        );
-        // ...and the merge, present unfollowed, is gone under --follow.
-        const merged = O.getOrUndefined(A.findFirst(unfollowed, (entry) => entry.paths.length === 0));
-        assert.isDefined(merged);
-        assert.isUndefined(O.getOrUndefined(A.findFirst(followed, (entry) => entry.sha === merged?.sha)));
+        const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirC, args);
+        const commit = (message: string) => raw(["-c", "commit.gpgsign=false", "commit", "-m", message]);
+
+        yield* raw(["-c", "init.defaultBranch=main", "init"]);
+        yield* raw(["config", "user.email", "log-integration@example.com"]);
+        yield* raw(["config", "user.name", "Log Integration"]);
+
+        yield* fs.makeDirectory(join(dirC, "tracked"), { recursive: true });
+        yield* fs.writeFileString(join(dirC, "tracked", "old.txt"), "one\n");
+        yield* fs.writeFileString(join(dirC, "other.txt"), "other\n");
+        yield* fs.writeFileString(join(dirC, "a name.txt"), "spaced\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("c1");
+
+        yield* raw(["mv", "tracked/old.txt", "tracked/new.txt"]);
+        yield* commit("c2");
+        const raw18 = yield* raw(["rev-parse", "HEAD"]);
+        const branchPoint = Str.trim(raw18);
+
+        yield* fs.writeFileString(join(dirC, "other.txt"), "other again\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("c3");
+
+        yield* fs.writeFileString(join(dirC, "tracked", "new.txt"), "main\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("c4");
+
+        yield* raw(["checkout", "-b", "side", branchPoint]);
+        yield* fs.writeFileString(join(dirC, "tracked", "new.txt"), "side\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("side");
+
+        yield* raw(["checkout", "main"]);
+        yield* runCollected(
+          ChildProcess.setCwd(
+            ChildProcess.make("git", ["merge", "side"], { env: SERVICE_LOCALE_AND_PROMPT_PINS, extendEnv: true }),
+            dirC
+          )
+        ).pipe(Effect.orDie);
+        yield* fs.writeFileString(join(dirC, "tracked", "new.txt"), "resolved\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("merge side");
+
+        yield* runFixtureGit(emptyDir, ["-c", "init.defaultBranch=main", "init"]);
+        notRepoDir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-log-not-repo-" });
       })
     );
 
-    it.effect("log ignores repository signature banners without changing history", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const expected = yield* git.log(dirC);
-        const previous = yield* git.configGet(dirC, "log.showSignature", { scope: "local" });
-        const restore = O.match(previous, {
-          onSome: (value) => runFixtureGit(dirC, ["config", "--local", "log.showSignature", value]),
-          onNone: () => runFixtureGit(dirC, ["config", "--local", "--unset", "log.showSignature"]),
-        });
-        yield* Effect.gen(function* () {
-          yield* runFixtureGit(dirC, ["config", "--local", "log.showSignature", "true"]);
-          const log19 = yield* git.log(dirC);
-          assert.deepStrictEqual(log19, expected);
-        }).pipe(Effect.ensuring(restore));
-      })
-    );
+    it.layer(FixtureCLayer, { timeout: "60 seconds" })((it) => {
+      it.effect("--follow walks a real rename; the same query without it stops at the rename", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const followed = yield* git.log(dirC, { paths: ["tracked/new.txt"], follow: true });
+          const unfollowed = yield* git.log(dirC, { paths: ["tracked/new.txt"] });
 
-    it.effect("a pathspec scopes the walk — an off-pathspec commit never appears", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const scoped = yield* git.log(dirC, { paths: ["other.txt"] });
-        const everything = yield* git.log(dirC);
+          assert.include(
+            A.flatMap(followed, (entry) => entry.paths),
+            "tracked/old.txt",
+            "--follow reaches back past c2's rename to c1, where the blob was still tracked/old.txt"
+          );
+          assert.notInclude(
+            A.flatMap(unfollowed, (entry) => entry.paths),
+            "tracked/old.txt",
+            "unfollowed history begins at the rename; --follow drops merges (git 2.54), so only contents discriminate"
+          );
+          const merged = O.getOrUndefined(A.findFirst(unfollowed, (entry) => entry.paths.length === 0));
+          assert.isDefined(merged);
+          assert.isUndefined(
+            O.getOrUndefined(A.findFirst(followed, (entry) => entry.sha === merged?.sha)),
+            "the merge, present unfollowed, is gone under --follow"
+          );
+        })
+      );
 
-        assert.isTrue(scoped.length < everything.length);
-        // Every scoped entry touched other.txt and nothing that is not it.
-        for (const entry of scoped) {
-          assert.deepStrictEqual(entry.paths, ["other.txt"]);
-        }
-        // The control: c2's rename IS in the unscoped walk, so the absence
-        // above is scoping rather than an empty query.
-        assert.include(
-          A.flatMap(everything, (entry) => entry.paths),
-          "tracked/new.txt"
-        );
-      })
-    );
+      it.effect("log ignores repository signature banners without changing history", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const expected = yield* git.log(dirC);
+          const previous = yield* git.configGet(dirC, "log.showSignature", { scope: "local" });
+          const restore = O.match(previous, {
+            onSome: (value) => runFixtureGit(dirC, ["config", "--local", "log.showSignature", value]),
+            onNone: () => runFixtureGit(dirC, ["config", "--local", "--unset", "log.showSignature"]),
+          });
+          yield* Effect.gen(function* () {
+            yield* runFixtureGit(dirC, ["config", "--local", "log.showSignature", "true"]);
+            const log19 = yield* git.log(dirC);
+            assert.deepStrictEqual(log19, expected);
+          }).pipe(Effect.ensuring(restore));
+        })
+      );
 
-    it.effect("firstParentDiffMerges is what gives a merge commit any paths at all", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const plain = yield* git.log(dirC, { paths: ["tracked/new.txt"], limit: 1 });
-        const firstParent = yield* git.log(dirC, {
-          paths: ["tracked/new.txt"],
-          limit: 1,
-          firstParentDiffMerges: true,
-        });
+      it.effect("a pathspec scopes the walk — an off-pathspec commit never appears", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const scoped = yield* git.log(dirC, { paths: ["other.txt"] });
+          const everything = yield* git.log(dirC);
 
-        // Same commit both times — the merge — but git omits a merge's diff by
-        // default, so the entry's path list is empty until we ask for the
-        // first-parent diff.
-        assert.strictEqual(plain[0]?.sha, firstParent[0]?.sha);
-        assert.deepStrictEqual(plain[0]?.paths, []);
-        assert.deepStrictEqual(firstParent[0]?.paths, ["tracked/new.txt"]);
-      })
-    );
+          assert.isTrue(scoped.length < everything.length);
+          for (const entry of scoped) {
+            assert.deepStrictEqual(entry.paths, ["other.txt"], "every scoped entry touched other.txt and nothing else");
+          }
+          assert.include(
+            A.flatMap(everything, (entry) => entry.paths),
+            "tracked/new.txt",
+            "the control: c2's rename IS in the unscoped walk, so the absence above is scoping, not an empty query"
+          );
+        })
+      );
 
-    it.effect("entries arrive newest-first with real, ordered, decoded dates", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const entries = yield* git.log(dirC);
-        assert.isTrue(entries.length >= 5);
-        for (let index = 1; index < entries.length; index++) {
-          const newer = entries[index - 1];
-          const older = entries[index];
-          assert.isDefined(newer);
-          assert.isDefined(older);
-          if (newer === undefined || older === undefined) continue;
-          assert.isTrue(DateTime.toEpochMillis(newer.committedAt) >= DateTime.toEpochMillis(older.committedAt));
-        }
-        assert.strictEqual(entries[0]?.authorEmail, "log-integration@example.com");
-      })
-    );
+      it.effect("firstParentDiffMerges is what gives a merge commit any paths at all", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const plain = yield* git.log(dirC, { paths: ["tracked/new.txt"], limit: 1 });
+          const firstParent = yield* git.log(dirC, {
+            paths: ["tracked/new.txt"],
+            limit: 1,
+            firstParentDiffMerges: true,
+          });
 
-    it.effect("limit caps the walk, and limit 0 is the empty listing", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        assert.strictEqual((yield* git.log(dirC, { limit: 2 })).length, 2);
-        const log20 = yield* git.log(dirC, { limit: 0 });
-        assert.deepStrictEqual(log20, []);
-      })
-    );
+          assert.strictEqual(plain[0]?.sha, firstParent[0]?.sha, "the same commit both times: the merge");
+          assert.deepStrictEqual(
+            plain[0]?.paths,
+            [],
+            "git omits a merge's diff by default, so its path list stays empty until the first-parent diff is asked for"
+          );
+          assert.deepStrictEqual(
+            firstParent[0]?.paths,
+            ["tracked/new.txt"],
+            "the merge conflicted on purpose; its resolution makes the merge differ from its first parent"
+          );
+        })
+      );
 
-    it.effect("a path with a space comes back raw, never C-quoted", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const entries = yield* git.log(dirC, { paths: ["a name.txt"], follow: true });
-        assert.deepStrictEqual(entries.at(-1)?.paths, ["a name.txt"]);
-      })
-    );
+      it.effect("entries arrive newest-first with real, ordered, decoded dates", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.log(dirC);
+          assert.isTrue(entries.length >= 5);
+          for (let index = 1; index < entries.length; index++) {
+            const newer = entries[index - 1];
+            const older = entries[index];
+            assert.isDefined(newer);
+            assert.isDefined(older);
+            if (newer === undefined || older === undefined) continue;
+            assert.isTrue(DateTime.toEpochMillis(newer.committedAt) >= DateTime.toEpochMillis(older.committedAt));
+          }
+          assert.strictEqual(entries[0]?.authorEmail, "log-integration@example.com");
+        })
+      );
 
-    it.effect("an unborn HEAD is the empty listing against real git, not a failure", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const log21 = yield* git.log(emptyDir);
-        assert.deepStrictEqual(log21, []);
-      })
-    );
+      it.effect("limit caps the walk, and limit 0 is the empty listing", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          assert.strictEqual((yield* git.log(dirC, { limit: 2 })).length, 2);
+          const log20 = yield* git.log(dirC, { limit: 0 });
+          assert.deepStrictEqual(log20, []);
+        })
+      );
 
-    it.effect("a directory that is not a repository still fails NotARepositoryError", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const error = yield* Effect.flip(git.log(notRepoDir));
-        assert.isTrue(S.is(NotARepositoryError)(error));
-      })
-    );
-  });
-});
+      it.effect("a path with a space comes back raw, never C-quoted", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.log(dirC, { paths: ["a name.txt"], follow: true });
+          assert.deepStrictEqual(entries.at(-1)?.paths, ["a name.txt"]);
+        })
+      );
+
+      it.effect("an unborn HEAD is the empty listing against real git, not a failure", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const log21 = yield* git.log(emptyDir);
+          assert.deepStrictEqual(log21, []);
+        })
+      );
+
+      it.effect("a directory that is not a repository still fails NotARepositoryError", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const error = yield* Effect.flip(git.log(notRepoDir));
+          assert.isTrue(S.is(NotARepositoryError)(error));
+        })
+      );
+    });
+  }
+);
 
 it.layer(TestLayer, { timeout: "30 seconds" })(
   "Git surface — repository identity across worktrees (commonDir)",
@@ -733,13 +677,7 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
     let spaced = "";
     let outside = "";
 
-    /**
-     * A repository with a subdirectory and one linked worktree, a directory
-     * symlink onto the repository, a bare repository, and a plain directory.
-     * `base` is the UNRESOLVED tmpdir path, so on macOS every cwd below sits
-     * behind the `/var` -> `/private/var` link, and `linked` adds an explicit
-     * symlink so the same trap is exercised on Linux, whose tmpdir is real.
-     */
+    // decision: staged-integration-fixtures-run-in-order
     const CommonDirLayer = Layer.effectDiscard(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -785,7 +723,11 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           const expected = yield* fs.realPath(path.join(main, ".git"));
           for (const cwd of [main, path.join(main, "sub"), worktree, linked, path.join(linked, "sub")]) {
             const commonDir22 = yield* git.commonDir(cwd);
-            assert.strictEqual(commonDir22, expected, cwd);
+            assert.strictEqual(
+              commonDir22,
+              expected,
+              `${cwd}: the unresolved tmpdir (macOS /var -> /private/var) and the linked symlink (Linux) answer the realpath`
+            );
           }
         })
       );
@@ -819,8 +761,6 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         })
       );
 
-      // Last in the block on purpose: it removes the linked worktree's
-      // directory, which the commonDir cases above still read.
       it.effect("worktreeList reports prunable once a linked worktree's directory is gone", () =>
         Effect.gen(function* () {
           const git = yield* Git;
@@ -849,15 +789,6 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
     let c1Sha = "";
     let c2Sha = "";
 
-    /**
-     * main: c1 (src/keep.ts, src/old.ts, docs/gone.md, README.md, other.txt, "a name.txt")
-     *    -> c2 (src/old.ts renamed to src/new.ts, docs/gone.md deleted, README.md
-     *           modified, src/added.ts added)
-     * side: branched at c1, edits other.txt only — the branch that makes
-     *       `base...head` and `base head` answer differently.
-     * Working tree after c2: src/keep.ts renamed to src/kept.ts (staged),
-     * README.md modified (unstaged), loose/inner.txt inside an untracked directory.
-     */
     const FixtureDLayer = Layer.effectDiscard(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -959,12 +890,18 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
       it.effect("changedFiles diffFilter and noRenames select the deleted paths; pathspec scopes the range", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          // Rename detection on: the moved file is R, so only the true deletion is D.
           const deleted = yield* git.changedFiles(dirD, { base: c1Sha, head: c2Sha, diffFilter: "D" });
-          assert.deepStrictEqual(deleted, ["docs/gone.md"]);
-          // Rename detection off: the moved file's OLD path is a deletion too.
+          assert.deepStrictEqual(
+            deleted,
+            ["docs/gone.md"],
+            "with rename detection on the moved file is R, so only the true deletion is D"
+          );
           const split = yield* git.changedFiles(dirD, { base: c1Sha, head: c2Sha, diffFilter: "D", noRenames: true });
-          assert.deepStrictEqual([...split].sort(), ["docs/gone.md", "src/old.ts"]);
+          assert.deepStrictEqual(
+            [...split].sort(),
+            ["docs/gone.md", "src/old.ts"],
+            "with rename detection off the moved file's OLD path is a deletion too"
+          );
           const scoped = yield* git.changedFiles(dirD, { base: c1Sha, head: c2Sha, pathspec: ["src"] });
           assert.deepStrictEqual([...scoped].sort(), ["src/added.ts", "src/new.ts"]);
         })
@@ -975,12 +912,14 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         () =>
           Effect.gen(function* () {
             const git = yield* Git;
-            // side...main: main's changes since the fork point — other.txt is side's own edit, so absent.
             const mergeBase = yield* git.changedFiles(dirD, { base: "side", head: "main" });
-            assert.notInclude(mergeBase, "other.txt");
-            // side main: the two trees differ on other.txt as well.
+            assert.notInclude(
+              mergeBase,
+              "other.txt",
+              "side...main is main's changes since the fork point; other.txt is side's own edit, so absent"
+            );
             const trees = yield* git.changedFiles(dirD, { base: "side", head: "main", twoDot: true });
-            assert.include(trees, "other.txt");
+            assert.include(trees, "other.txt", "side main compares the trees, which differ on other.txt as well");
             const statuses = yield* git.nameStatus(dirD, { base: "side", head: "main", twoDot: true });
             assert.include(
               A.map(statuses, (entry) => entry.path),
@@ -1001,15 +940,12 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           assert.deepStrictEqual(unstagedChanges31, ["README.md"]);
           const unstagedChanges32 = yield* git.unstagedChanges(dirD, { pathspec: ["src"] });
           assert.deepStrictEqual(unstagedChanges32, []);
-          // Against c1 the working tree carries every change since, staged or not, under the pathspec.
           const sinceC1 = yield* git.unstagedChanges(dirD, { head: c1Sha, pathspec: ["src"], noRenames: true });
-          assert.deepStrictEqual([...sinceC1].sort(), [
-            "src/added.ts",
-            "src/keep.ts",
-            "src/kept.ts",
-            "src/new.ts",
-            "src/old.ts",
-          ]);
+          assert.deepStrictEqual(
+            [...sinceC1].sort(),
+            ["src/added.ts", "src/keep.ts", "src/kept.ts", "src/new.ts", "src/old.ts"],
+            "against c1 the working tree carries every change since, staged or not, under the pathspec"
+          );
           const stagedChanges33 = yield* git.stagedChanges(dirD, { diffFilter: "A", noRenames: true });
           assert.deepStrictEqual(stagedChanges33, ["src/kept.ts"]);
           const stagedChanges34 = yield* git.stagedChanges(dirD, { diffFilter: "A" });
@@ -1055,11 +991,10 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           );
           const sortedPaths = A.sort(c2.paths, Str.Order);
           assert.deepStrictEqual(sortedPaths, ["README.md", "docs/gone.md", "src/added.ts", "src/new.ts"]);
-          // The same commit through --name-only: subject present, changes absent, the same paths.
           const log38 = yield* git.log(dirD, { limit: 1 });
           const nameOnly = O.getOrThrow(A.head(log38));
           assert.strictEqual(nameOnly.subject, "c2: rename, delete, modify, add");
-          assert.isUndefined(nameOnly.changes);
+          assert.isUndefined(nameOnly.changes, "the same commit through --name-only: subject present, changes absent");
           assert.deepStrictEqual(A.sort(nameOnly.paths, Str.Order), sortedPaths);
         })
       );
@@ -1073,10 +1008,10 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
             findRenames: 50,
             quotePath: false,
           });
-          // c1 has no deletion or rename, so git drops it from the filtered walk entirely.
           assert.deepStrictEqual(
             A.map(entries, (entry) => entry.sha),
-            [c2Sha]
+            [c2Sha],
+            "c1 has no deletion or rename, so git drops it from the filtered walk entirely"
           );
           assert.deepStrictEqual(
             A.map(entries[0]?.changes ?? [], (change) => [change.status, change.oldPath, change.path]),
@@ -1085,23 +1020,24 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
               ["renamed", "src/old.ts", "src/new.ts"],
             ]
           );
-          // c1's seed, through the unfiltered walk, carries the spaced path raw.
           const seed = yield* git.log(dirD, { nameStatus: true, paths: ["a name.txt"] });
-          assert.deepStrictEqual(seed[0]?.changes, [NameStatusEntry.make({ status: "added", path: "a name.txt" })]);
+          assert.deepStrictEqual(
+            seed[0]?.changes,
+            [NameStatusEntry.make({ status: "added", path: "a name.txt" })],
+            "c1's seed, through the unfiltered walk, carries the spaced path raw"
+          );
         })
       );
 
       it.effect("log noRenames lists a move's source as a deletion and noWalk lists exactly the given commits", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          // Rename detection off: c2's move of src/old.ts reads as a deletion of its source.
           const deletions = yield* git.log(dirD, { diffFilter: "D", noRenames: true, quotePath: false });
           assert.deepStrictEqual(
             A.map(deletions, (entry) => [entry.sha, A.sort(entry.paths, Str.Order)] as const),
-            [[c2Sha, ["docs/gone.md", "src/old.ts"]]]
+            [[c2Sha, ["docs/gone.md", "src/old.ts"]]],
+            "with rename detection off, c2's move of src/old.ts reads as a deletion of its source"
           );
-          // The given commits in the given order (older first here), each with the changes the walk
-          // gives it, and no ancestor of either.
           const walked = yield* git.log(dirD, { nameStatus: true, findRenames: 50 });
           const listed = yield* git.log(dirD, {
             nameStatus: true,
@@ -1111,11 +1047,13 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           });
           assert.deepStrictEqual(
             A.map(listed, (entry) => entry.sha),
-            [c1Sha, c2Sha]
+            [c1Sha, c2Sha],
+            "noWalk lists the given commits in the given order, older first here, and no ancestor of either"
           );
           assert.deepStrictEqual(
             A.map(listed, (entry) => entry.changes),
-            A.map(A.reverse(walked), (entry) => entry.changes)
+            A.map(A.reverse(walked), (entry) => entry.changes),
+            "each listed commit carries the changes the walk gives it"
           );
           const single = yield* git.log(dirD, { nameStatus: true, noWalk: true, revisions: [c2Sha] });
           assert.deepStrictEqual(
