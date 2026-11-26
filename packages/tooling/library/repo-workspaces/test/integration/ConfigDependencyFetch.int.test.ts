@@ -1,19 +1,3 @@
-// effected#842: a diff across a config-dependency bump, where the BASE side
-// declares a version this checkout never installed.
-//
-// A real git repository: `base` pins cfg-842@0.11.1 as a bare spec, with the
-// integrity only in its pnpm-lock.yaml env preamble; `head` bumps it to
-// 0.11.2, which is what `.pnpm-config` holds. The store holds no 0.11.1.
-// Further tags break the integrity record one way each.
-//
-// No live package manager runs. A fake `pnpm` on PATH (see
-// `writeFakePnpm`) stands in for the fetch rung's `pnpm install
-// --frozen-lockfile`: it serves each version from a fake registry and refuses
-// a tarball whose integrity does not match the pinned lockfile, as pnpm does
-// (probed against pnpm 11.27.1 and 12.6.0 for the real command). Real `git`
-// and `node` run through `NodeServices`, and the fixture is written through
-// Effect's FileSystem on the same platform services.
-
 import { CatalogAssemblyError } from "@beep/npm-spec/CatalogAssemblyError";
 import { ConfigDependencyHooks, WorkspaceSnapshots, Workspaces } from "@beep/repo-workspaces";
 import { HookReplay } from "@beep/repo-workspaces/ConfigDependencyReplay";
@@ -33,14 +17,11 @@ import { installConfigDependency, writeFakePnpm, writeModulesYaml } from "./util
 import { gitIn, makeNodeFixture, nodeHost } from "./utils/nodeFixture.ts";
 
 const NAME = "cfg-842";
-/** The integrity the base lockfile records for 0.11.1, and what the fake registry serves. */
 const BASE_SRI = `sha512-${Str.repeat(86)("A")}==`;
-/** A different, well-formed integrity. */
 const OTHER_SRI = `sha512-${Str.repeat(86)("B")}==`;
 
 let root: string;
 let store: string;
-/** The canonical spelling of the store's parent, as the fetch hands it to pnpm. */
 let storeParentReal: string;
 let pnpmLog: string;
 const fixture = makeNodeFixture();
@@ -51,8 +32,7 @@ const workspaceYaml = (spec: string): string =>
     "\n"
   );
 
-/** The two-document pnpm-lock.yaml pnpm 11/12 write for one config dependency (see the lockfiles fixtures env-configdeps-pnpm11/12). */
-const lockfileRecording = (version: string, integrity: string): string =>
+const pnpm11Or12ConfigLockfile = (version: string, integrity: string): string =>
   A.join(
     [
       "---",
@@ -86,7 +66,6 @@ const lockfileRecording = (version: string, integrity: string): string =>
     "\n"
   );
 
-/** One line of the fake pnpm's log. */
 const PnpmRun = S.Struct({
   argv: S.Array(S.String),
   lockfile: S.String,
@@ -95,8 +74,7 @@ const PnpmRun = S.Struct({
 });
 const PnpmRunLine = S.fromJsonString(PnpmRun);
 
-/** The fake pnpm's runs so far, in order. */
-const pnpmRuns = Effect.gen(function* () {
+const pnpmRunsInOrder = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   if (!(yield* fs.exists(pnpmLog))) return A.empty<typeof PnpmRun.Type>();
   const readFileString1 = yield* fs.readFileString(pnpmLog);
@@ -123,8 +101,6 @@ const setUp = Effect.gen(function* () {
   vi.stubEnv("FAKE_PNPM_LOG", pnpmLog);
   vi.stubEnv("FAKE_PNPM_PUBLISHED", `{"${NAME}@0.11.1":"${BASE_SRI}"}`);
 
-  // The checkout after `pnpm install` on the bumped branch: .pnpm-config holds
-  // 0.11.2 only, and the workspace store holds nothing of cfg-842.
   yield* writeModulesYaml(root, store);
   yield* installConfigDependency(root, NAME, "0.11.2", [
     "pnpmfile.mjs",
@@ -149,36 +125,26 @@ const setUp = Effect.gen(function* () {
   yield* git("init", "-q");
   yield* git("config", "user.email", "test@example.com");
   yield* git("config", "user.name", "Test");
-  // The #842 base: a bare spec, the integrity only in the lockfile preamble.
-  yield* commit("base", "0.11.1", lockfileRecording("0.11.1", BASE_SRI));
-  // The legacy inline form and no lockfile at all: the inline integrity is the only record.
+  yield* commit("base", "0.11.1", pnpm11Or12ConfigLockfile("0.11.1", BASE_SRI));
   yield* commit("inline-only", `0.11.1+${BASE_SRI}`, undefined);
-  // Inline and lockfile disagree.
-  yield* commit("mismatch", `0.11.1+${OTHER_SRI}`, lockfileRecording("0.11.1", BASE_SRI));
-  // A bare spec and no lockfile: nothing to verify against.
+  yield* commit("mismatch", `0.11.1+${OTHER_SRI}`, pnpm11Or12ConfigLockfile("0.11.1", BASE_SRI));
   yield* commit("unrecorded", "0.11.1", undefined);
-  // The record says OTHER_SRI; the registry serves BASE_SRI — a tampered or
-  // republished tarball, which pnpm's own check refuses.
-  yield* commit("tampered", "0.11.1", lockfileRecording("0.11.1", OTHER_SRI));
-  // The bumped head, as installed.
-  yield* commit("head", "0.11.2", lockfileRecording("0.11.2", OTHER_SRI));
+  yield* commit("tampered", "0.11.1", pnpm11Or12ConfigLockfile("0.11.1", OTHER_SRI));
+  yield* commit("head", "0.11.2", pnpm11Or12ConfigLockfile("0.11.2", OTHER_SRI));
 });
 
 beforeAll(() => fixture.runtime.runPromise(setUp));
 
 beforeEach(() => {
-  // No `.npmrc` in the checkout, so the fake pnpm refuses a scratch that has one.
-  vi.stubEnv("FAKE_PNPM_EXPECT_NPMRC", "");
-  // Every test starts from the #842 state: no 0.11.1 anywhere in the store,
-  // and no pnpm runs yet.
-  return fixture.runtime.runPromise(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove(join(store, "links"), { recursive: true, force: true });
-      yield* fs.remove(pnpmLog, { force: true });
-      yield* fs.remove(join(root, ".npmrc"), { force: true });
-    })
-  );
+  const checkoutHasNoNpmrc = "";
+  vi.stubEnv("FAKE_PNPM_EXPECT_NPMRC", checkoutHasNoNpmrc);
+  const resetToUnfetchedBase = Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.remove(join(store, "links"), { recursive: true, force: true });
+    yield* fs.remove(pnpmLog, { force: true });
+    yield* fs.remove(join(root, ".npmrc"), { force: true });
+  });
+  return fixture.runtime.runPromise(resetToUnfetchedBase);
 });
 
 afterAll(() => {
@@ -190,7 +156,6 @@ const Subprocess = () =>
   Workspaces.layerWithGitAndConfigDependenciesSubprocess({ cwd: root }).pipe(Layer.provideMerge(nodeHost));
 const InProcess = () => Workspaces.layerWithGitAndConfigDependencies({ cwd: root }).pipe(Layer.provideMerge(nodeHost));
 
-/** `at(ref)`'s failure, which must be a typed hooks-source assembly error. */
 const failureAt = Effect.fn("failureAt")(function* (ref: string) {
   const snapshots = yield* WorkspaceSnapshots;
   const error = yield* Effect.flip(snapshots.at(ref));
@@ -200,35 +165,42 @@ const failureAt = Effect.fn("failureAt")(function* (ref: string) {
   return error;
 });
 
-describe("effected#842 — the base side of a config-dependency bump", () => {
+describe("effected#842 — the base side of a config-dependency bump the checkout never installed, over real git and a fake pnpm", () => {
   it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
-    it.effect("the subprocess composite fetches the base version, verified, and the diff succeeds", () =>
-      Effect.gen(function* () {
-        const snapshots = yield* WorkspaceSnapshots;
-        const base = yield* snapshots.at("base");
-        const head = yield* snapshots.at("head");
-        // Each side replays ITS OWN pinned version: the bump is a visible row.
-        assertSome(base.catalogs.rangeOf("hooked-dep", O.none()), "^0.11.1");
-        assertSome(head.catalogs.rangeOf("hooked-dep", O.none()), "^0.11.2");
-        assert.deepStrictEqual(base.hookReplays, { [NAME]: "0.11.1" });
+    it.effect(
+      "the subprocess composite fetches the bare-spec base version, lockfile-preamble integrity verified; the diff succeeds",
+      () =>
+        Effect.gen(function* () {
+          const snapshots = yield* WorkspaceSnapshots;
+          const base = yield* snapshots.at("base");
+          const head = yield* snapshots.at("head");
+          const baseReplaysItsOwnPin = base.catalogs.rangeOf("hooked-dep", O.none());
+          assertSome(baseReplaysItsOwnPin, "^0.11.1");
+          const headReplaysItsOwnPin = head.catalogs.rangeOf("hooked-dep", O.none());
+          assertSome(headReplaysItsOwnPin, "^0.11.2");
+          assert.deepStrictEqual(base.hookReplays, { [NAME]: "0.11.1" });
 
-        // Exactly one fetch, pinned to the BASE lockfile's integrity, writing to
-        // the store the ladder searched (pnpm appends the `v11` itself).
-        const runs = yield* pnpmRuns;
-        assert.strictEqual(runs.length, 1);
-        const [run] = runs;
-        assert.deepStrictEqual(run?.argv.slice(0, 2), ["install", "--frozen-lockfile"]);
-        assert.strictEqual(run?.argv[run.argv.indexOf("--store-dir") + 1], storeParentReal);
-        assert.include(run?.lockfile, `resolution: {integrity: "${BASE_SRI}"}`);
-        // The scratch workspace is gone.
-        const scratch = run?.argv[run.argv.indexOf("--dir") + 1] ?? "";
-        const exists2 = yield* (yield* FileSystem.FileSystem).exists(scratch);
-        assert.isFalse(exists2);
-        // The checkout has no `.npmrc` and no registry keys, so none are invented.
-        assert.isNull(run?.npmrc);
-        assert.notInclude(run?.workspaceYaml, "registry");
-        assert.notInclude(run?.workspaceYaml, "registries");
-      })
+          const runs = yield* pnpmRunsInOrder;
+          assert.strictEqual(runs.length, 1, "exactly one fetch");
+          const [run] = runs;
+          assert.deepStrictEqual(run?.argv.slice(0, 2), ["install", "--frozen-lockfile"]);
+          assert.strictEqual(
+            run?.argv[run.argv.indexOf("--store-dir") + 1],
+            storeParentReal,
+            "the fetch hands pnpm the canonical spelling of the store parent the ladder searched; pnpm appends v11 itself"
+          );
+          assert.include(
+            run?.lockfile,
+            `resolution: {integrity: "${BASE_SRI}"}`,
+            "pinned to the base lockfile integrity"
+          );
+          const scratch = run?.argv[run.argv.indexOf("--dir") + 1] ?? "";
+          const scratchStillExists = yield* (yield* FileSystem.FileSystem).exists(scratch);
+          assert.isFalse(scratchStillExists, "the scratch workspace is gone");
+          assert.isNull(run?.npmrc, "the checkout has no .npmrc and no registry keys, so none are invented");
+          assert.notInclude(run?.workspaceYaml, "registry");
+          assert.notInclude(run?.workspaceYaml, "registries");
+        })
     );
   });
 
@@ -236,11 +208,8 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
     timeout: "30 seconds",
   })((it) => {
     it.effect("the fetch inherits the workspace's .npmrc verbatim and its registry keys", () => {
-      // A scoped registry with an env-var token and a default-registry mirror:
-      // the fetch must reach the registries `pnpm install` in the checkout would.
-      // A literal `${NPM_TOKEN}` reference, spelled so it reads as npmrc text, not a template.
-      const tokenRef = `${"$"}{NPM_TOKEN}`;
-      const npmrc = `@acme:registry=https://npm.acme.example/\n//npm.acme.example/:_authToken=${tokenRef}\n`;
+      const literalNpmTokenReference = `${"$"}{NPM_TOKEN}`;
+      const npmrc = `@acme:registry=https://npm.acme.example/\n//npm.acme.example/:_authToken=${literalNpmTokenReference}\n`;
       const yamlWithRegistries = A.join(
         [
           workspaceYaml("0.11.2"),
@@ -257,17 +226,19 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
         yield* fs.writeFileString(join(root, "pnpm-workspace.yaml"), yamlWithRegistries);
         vi.stubEnv("FAKE_PNPM_EXPECT_NPMRC", npmrc);
         const hooks = yield* ConfigDependencyHooks;
-        const lockfile = lockfileRecording("0.11.1", BASE_SRI);
+        const lockfile = pnpm11Or12ConfigLockfile("0.11.1", BASE_SRI);
         const result = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
         assert.deepStrictEqual(result.replays, { [NAME]: HookReplay.make({ version: "0.11.1", source: "fetched" }) });
-        const [run] = yield* pnpmRuns;
-        // Byte for byte: the `${NPM_TOKEN}` reference is pnpm's to expand.
-        assert.strictEqual(run?.npmrc, npmrc);
+        const [run] = yield* pnpmRunsInOrder;
+        assert.strictEqual(run?.npmrc, npmrc, "byte for byte: the NPM_TOKEN reference is pnpm's to expand");
         assert.include(run?.workspaceYaml, 'registry: "https://mirror.example/"');
-        assert.include(run?.workspaceYaml, 'registries:\n  "@acme": "https://npm.acme.example/"');
-        // The copy goes with the scratch.
-        const exists3 = yield* fs.exists(run?.argv[run.argv.indexOf("--dir") + 1] ?? "");
-        assert.isFalse(exists3);
+        assert.include(
+          run?.workspaceYaml,
+          'registries:\n  "@acme": "https://npm.acme.example/"',
+          "the fetch must reach the registries pnpm install in the checkout would: a scoped registry with an env-var token and a default-registry mirror"
+        );
+        const npmrcCopyExists = yield* fs.exists(run?.argv[run.argv.indexOf("--dir") + 1] ?? "");
+        assert.isFalse(npmrcCopyExists, "the copy goes with the scratch");
       }).pipe(
         Effect.ensuring(
           Effect.gen(function* () {
@@ -286,12 +257,12 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
     it.effect("the replay records that the fetch rung answered, and the next replay finds it in the store", () =>
       Effect.gen(function* () {
         const hooks = yield* ConfigDependencyHooks;
-        const lockfile = lockfileRecording("0.11.1", BASE_SRI);
+        const lockfile = pnpm11Or12ConfigLockfile("0.11.1", BASE_SRI);
         const first = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
         assert.deepStrictEqual(first.replays, { [NAME]: HookReplay.make({ version: "0.11.1", source: "fetched" }) });
         const second = yield* hooks.inject(root, { [NAME]: "0.11.1" }, {}, undefined, { lockfile, ref: "base" });
         assert.deepStrictEqual(second.replays, { [NAME]: HookReplay.make({ version: "0.11.1", source: "store" }) });
-        assert.strictEqual((yield* pnpmRuns).length, 1);
+        assert.strictEqual((yield* pnpmRunsInOrder).length, 1);
       })
     );
   });
@@ -305,9 +276,12 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
         assert.include(error.message, "holds version 0.11.2");
         assert.include(error.message, "the base side of a diff across a config-dependency bump");
         assert.include(error.message, `pnpm add --config ${NAME}@0.11.1`);
-        // The remediation names the primitive that fetches, not one composite.
-        assert.include(error.message, "This replay layer does not fetch; ConfigDependencyHooks.layerSubprocess");
-        assert.strictEqual((yield* pnpmRuns).length, 0);
+        assert.include(
+          error.message,
+          "This replay layer does not fetch; ConfigDependencyHooks.layerSubprocess",
+          "the remediation names the primitive that fetches, not one composite"
+        );
+        assert.strictEqual((yield* pnpmRunsInOrder).length, 0);
       })
     );
   });
@@ -318,7 +292,7 @@ describe("effected#842 — the base side of a config-dependency bump", () => {
         const snapshots = yield* WorkspaceSnapshots;
         const snapshot = yield* snapshots.at("inline-only");
         assertSome(snapshot.catalogs.rangeOf("hooked-dep", O.none()), "^0.11.1");
-        assert.include((yield* pnpmRuns)[0]?.lockfile, BASE_SRI);
+        assert.include((yield* pnpmRunsInOrder)[0]?.lockfile, BASE_SRI);
       })
     );
   });
@@ -332,7 +306,7 @@ describe("effected#842 — the fetch is never unverified", () => {
         assert.strictEqual(error.reason, "integrityMismatch");
         assert.include(error.message, OTHER_SRI);
         assert.include(error.message, BASE_SRI);
-        assert.strictEqual((yield* pnpmRuns).length, 0);
+        assert.strictEqual((yield* pnpmRunsInOrder).length, 0);
       })
     );
   });
@@ -343,7 +317,7 @@ describe("effected#842 — the fetch is never unverified", () => {
         const error = yield* failureAt("unrecorded");
         assert.strictEqual(error.reason, "integrityUnavailable");
         assert.include(error.message, "ref unrecorded records no integrity");
-        assert.strictEqual((yield* pnpmRuns).length, 0);
+        assert.strictEqual((yield* pnpmRunsInOrder).length, 0);
       })
     );
   });
@@ -353,13 +327,22 @@ describe("effected#842 — the fetch is never unverified", () => {
       Effect.gen(function* () {
         const error = yield* failureAt("tampered");
         assert.strictEqual(error.reason, "fetchFailed");
-        assert.include(error.message, "ERR_PNPM_TARBALL_INTEGRITY");
+        assert.include(
+          error.message,
+          "ERR_PNPM_TARBALL_INTEGRITY",
+          "the fake pnpm refuses a tampered or republished tarball whose integrity does not match the pinned lockfile, as pnpm 11.27.1 and 12.6.0 do (probed for the real command)"
+        );
         assert.include(error.message, `pnpm add --config ${NAME}@0.11.1`);
-        // pnpm ran once, pinned to the tampered record, and installed nothing.
-        assert.strictEqual((yield* pnpmRuns).length, 1);
-        assert.include((yield* pnpmRuns)[0]?.lockfile, OTHER_SRI);
-        const exists4 = yield* (yield* FileSystem.FileSystem).exists(join(store, "links", NAME, "0.11.1"));
-        assert.isFalse(exists4);
+        assert.strictEqual(
+          (yield* pnpmRunsInOrder).length,
+          1,
+          "pnpm ran once, pinned to the tampered record, and installed nothing"
+        );
+        assert.include((yield* pnpmRunsInOrder)[0]?.lockfile, OTHER_SRI);
+        const tamperedVersionStored = yield* (yield* FileSystem.FileSystem).exists(
+          join(store, "links", NAME, "0.11.1")
+        );
+        assert.isFalse(tamperedVersionStored);
       })
     );
   });

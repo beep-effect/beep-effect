@@ -35,8 +35,6 @@ const tree: Record<string, string> = {
 describe("enumerate — literal pattern probes", () => {
   let inFlight = 0;
   let maxInFlight = 0;
-  // A spy, not a stub: the faults factory hands the handler the unfaulted
-  // volume, so every probe is counted and then answered by the real `exists`.
   const Counted = Layer.mergeAll(
     MemoryFileSystem.layerWith(tree, {
       faults: (base) => ({
@@ -61,7 +59,8 @@ describe("enumerate — literal pattern probes", () => {
 
         assert.deepStrictEqual(
           A.map(directories, (directory) => directory.relativePath),
-          [...literals].sort()
+          [...literals].sort(),
+          "a spy, not a stub: the faults factory hands the handler the unfaulted volume, so every probe is counted and then answered by the real exists"
         );
         assert.isAbove(maxInFlight, 1, "expected literal package checks to overlap");
       })
@@ -75,7 +74,6 @@ describe("enumerate — skipMissingBaseDirs skips only a base whose stat fails N
     "/repo/packages/a/package.json": '{ "name": "@x/a", "version": "1.0.0" }',
     "/repo/apps/web/package.json": '{ "name": "@x/web", "version": "1.0.0" }',
   };
-  // `apps` exists; only its `stat` fails, so it is unreadable, not absent.
   const DeniedApps = Layer.mergeAll(
     MemoryFileSystem.layerWith(baseTree, {
       faults: {
@@ -111,14 +109,17 @@ describe("enumerate — skipMissingBaseDirs skips only a base whose stat fails N
       Effect.gen(function* () {
         const globs = yield* GlobSet.compile(["packages/*", "apps/*"]);
         const failure = yield* Effect.flip(enumerate("/repo", globs, { skipMissingBaseDirs: true }));
-        assert.deepStrictEqual(failure, { kind: "unreadableDirectory", pattern: "apps/*", detail: "apps" });
+        assert.deepStrictEqual(
+          failure,
+          { kind: "unreadableDirectory", pattern: "apps/*", detail: "apps" },
+          "apps exists; only its stat fails, so it is unreadable, not absent"
+        );
       })
     );
   });
 });
 
 describe("enumerate — an unreadable root-level wildcard base names the root", () => {
-  // A root-level wildcard (`*`) has an empty base, so its unreadable verdict names the root itself.
   const DeniedRoot = Layer.mergeAll(
     MemoryFileSystem.layerWith(
       {
@@ -149,7 +150,11 @@ describe("enumerate — an unreadable root-level wildcard base names the root", 
       Effect.gen(function* () {
         const globs = yield* GlobSet.compile(["*"]);
         const failure = yield* Effect.flip(enumerate("/repo", globs, { skipMissingBaseDirs: true }));
-        assert.deepStrictEqual(failure, { kind: "unreadableDirectory", pattern: "*", detail: "/repo" });
+        assert.deepStrictEqual(
+          failure,
+          { kind: "unreadableDirectory", pattern: "*", detail: "/repo" },
+          "a root-level wildcard (*) has an empty base, so its unreadable verdict names the root itself"
+        );
       })
     );
   });

@@ -1,10 +1,3 @@
-// The package's runtime import graph, read from the source text Vite's raw
-// glob import inlines at transform time, so the confinement suite needs no
-// filesystem. Edges are top-of-line `import … from` / `export … from`
-// statements, side-effect `import "x"` statements and literal dynamic
-// `import("x")` calls. Comment lines are dropped first, so JSDoc example
-// imports never count, and `import type` / `export type` statements are erased
-// at runtime. A dynamic import of a computed URL has no literal to follow.
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -15,7 +8,11 @@ import { hostPath } from "./hostPath.ts";
 
 const SRC = "../../src/";
 
-const sources = import.meta.glob<string>("../../src/**/*.ts", { query: "?raw", import: "default", eager: true });
+const viteInlinedSources = import.meta.glob<string>("../../src/**/*.ts", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 
 const STATEMENT = /^(?:(?:import|export)\s+(?!type\b)[^;"']*?\bfrom\s*|import\s*)["']([^"']+)["']/gm;
 const DYNAMIC = /(?<![\w$.])import\(\s*["']([^"']+)["']\s*\)/g;
@@ -34,15 +31,14 @@ export const specifiersOf = (text: string): ReadonlyArray<string> => {
 
 /** Every `src` module's source text, by its `src`-relative path. */
 export const sourceTexts: Readonly<Record<string, string>> = R.fromEntries(
-  A.map(R.toEntries(sources), ([key, text]) => [Str.slice(SRC.length)(key), text])
+  A.map(R.toEntries(viteInlinedSources), ([key, text]) => [Str.slice(SRC.length)(key), text])
 );
 
 /** Every `src` module, by its `src`-relative path, with the specifiers it imports at runtime. */
 export const runtimeImports: Readonly<Record<string, ReadonlyArray<string>>> = R.fromEntries(
-  A.map(R.toEntries(sources), ([key, text]) => [Str.slice(SRC.length)(key), specifiersOf(text)])
+  A.map(R.toEntries(viteInlinedSources), ([key, text]) => [Str.slice(SRC.length)(key), specifiersOf(text)])
 );
 
-/** Whether `specifier` names `pkg` or one of its subpaths. */
 const names = (pkg: string) => (specifier: string) => specifier === pkg || Str.startsWith(`${pkg}/`)(specifier);
 
 /** The modules that import `pkg` directly, sorted. */
@@ -52,13 +48,11 @@ export const directImportersOf = (pkg: string): ReadonlyArray<string> =>
     Str.Order
   );
 
-/** The `src` modules a module's relative imports name. */
 const relativeImportsOf = (module: string): ReadonlyArray<string> =>
   A.map(A.filter(runtimeImports[module] ?? [], Str.startsWith(".")), (specifier) =>
     hostPath.posix.join(hostPath.posix.dirname(module), specifier)
   );
 
-/** `entry` and every `src` module it reaches through relative imports. */
 const closureOf = (entry: string): MutableHashSet.MutableHashSet<string> => {
   const seen = MutableHashSet.empty<string>();
   let frontier: ReadonlyArray<string> = [entry];

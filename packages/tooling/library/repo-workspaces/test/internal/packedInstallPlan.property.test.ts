@@ -90,7 +90,6 @@ it.effect.prop(
         assert.strictEqual(binTargetOf(text, name), target);
         assert.strictEqual(binTargetOf(reparsedText, name), target);
       }
-      // Rehydrate only the facts the parser returns, discarding resolved specs and bin targets.
       const name = parsed.name;
       assertDefined(name);
       const runtimeMaps = R.fromEntries(
@@ -105,17 +104,21 @@ it.effect.prop(
           return [field, dependencies] as const;
         })
       );
-      const canonical = {
+      const parserFacts = {
         name,
         bin: R.fromEntries(A.map(parsed.bins, (bin) => [bin, "bin.js"] as const)),
         ...runtimeMaps,
       };
-      const normalized = yield* S.encodeEffect(json)(canonical);
+      const normalized = yield* S.encodeEffect(json)(parserFacts);
       assertSuccess(readPackedManifest(normalized), parsed);
       const argument1 = S.encodeEffect(json);
       const value4 = yield* S.decodeEffect(json)(normalized);
       const value1 = yield* argument1(value4);
-      assert.strictEqual(value1, normalized);
+      assert.strictEqual(
+        value1,
+        normalized,
+        "rehydrating only the facts the parser returns, discarding resolved specs and bin targets, is stable"
+      );
     }),
   runs
 );

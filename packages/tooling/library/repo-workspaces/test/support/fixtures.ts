@@ -1,19 +1,7 @@
-import * as A from "effect/Array";
-import { dual, identity } from "effect/Function";
-// In-memory filesystem fixtures.
-//
-// The volume is `@effected/memfs`, a real virtual POSIX filesystem, so the
-// package still tests without `@effect/platform-node`. It replaces a stub that
-// implemented the four operations this package happens to call — and a stub
-// only ever implements the semantics its author remembered, so a bug that
-// depends on anything else cannot surface in a test. Directories are created
-// by the volume rather than derived from file keys here.
-//
-// A suite-boundary `layer(...)` cannot vary per test, so each distinct tree
-// gets its own `layer(...)` block — that is the house shape.
-
 import { MemoryFileSystem } from "@beep/memfs";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -54,15 +42,9 @@ export interface FileSystemOptions {
   readonly unreadableStat?: ReadonlyArray<string>;
 }
 
-/**
- * A `FileSystem` over a virtual tree, implementing exactly the four operations
- * this package uses: `exists`, `readFileString`, `readDirectory`, `stat`.
- */
 const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<FileSystem.FileSystem> => {
   const { unreadable = [], unreadableFiles = [], unreadableExists = [], unreadableStat = [] } = options;
 
-  // The v4 constructor is `PlatformError.systemError`, not a `new SystemError` —
-  // `SystemError` is the reason payload, `PlatformError` is the failure.
   const denied = (method: string, path: string) =>
     Effect.fail(
       PlatformError.systemError({
@@ -73,16 +55,15 @@ const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<Fi
       })
     );
 
-  // Each handler declines (returns `undefined`) for every path it does not
-  // name, delegating to the volume — so presence, directory listings and stat
-  // are the volume's real answers and only the misbehavior is simulated.
+  const delegateToVolume = undefined;
   return MemoryFileSystem.layerWith(tree, {
     faults: {
-      exists: (path: string) => (A.contains(unreadableExists, path) ? denied("access", path) : undefined),
+      exists: (path: string) => (A.contains(unreadableExists, path) ? denied("access", path) : delegateToVolume),
       readFileString: (path: string) =>
-        A.contains(unreadableFiles, path) ? denied("readFileString", path) : undefined,
-      readDirectory: (path: string) => (A.contains(unreadable, path) ? denied("readDirectory", path) : undefined),
-      stat: (path: string) => (A.contains(unreadableStat, path) ? denied("stat", path) : undefined),
+        A.contains(unreadableFiles, path) ? denied("readFileString", path) : delegateToVolume,
+      readDirectory: (path: string) =>
+        A.contains(unreadable, path) ? denied("readDirectory", path) : delegateToVolume,
+      stat: (path: string) => (A.contains(unreadableStat, path) ? denied("stat", path) : delegateToVolume),
     },
   });
 };

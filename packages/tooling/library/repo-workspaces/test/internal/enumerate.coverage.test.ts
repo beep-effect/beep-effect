@@ -81,8 +81,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
   );
 });
 
-// Every `package.json` probe is recorded and then answered by the real volume.
-const probed: Array<string> = [];
+const recordedPackageJsonProbes: Array<string> = [];
 const listing = Layer.merge(
   MemoryFileSystem.layerWith(
     {
@@ -96,7 +95,7 @@ const listing = Layer.merge(
       faults: (base) => ({
         exists: (path) =>
           Effect.andThen(
-            Effect.sync(() => probed.push(path)),
+            Effect.sync(() => recordedPackageJsonProbes.push(path)),
             base.exists(path)
           ),
       }),
@@ -117,14 +116,14 @@ it.layer(listing, { timeout: "30 seconds" })((it) => {
   );
   it.effect("a skipped name, a pruned entry and an excluded match are never probed for a package", () =>
     Effect.gen(function* () {
-      probed.length = 0;
+      recordedPackageJsonProbes.length = 0;
       const globs = yield* GlobSet.compile(["packages/*", "!packages/beta"]);
       const directories = yield* enumerate("/repo", globs, { skipDirectoryNames: ["dist"] });
       assert.deepStrictEqual(
         A.map(directories, (directory) => directory.relativePath),
         ["packages/alpha"]
       );
-      assert.deepStrictEqual(A.sort(probed, Str.Order), [
+      assert.deepStrictEqual(A.sort(recordedPackageJsonProbes, Str.Order), [
         "/repo/packages/alpha/package.json",
         "/repo/packages/gamma/package.json",
       ]);

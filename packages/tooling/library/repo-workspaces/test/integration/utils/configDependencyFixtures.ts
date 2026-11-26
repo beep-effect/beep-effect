@@ -1,10 +1,3 @@
-// On-disk fixtures for the config-dependency resolution ladder: a fake
-// `node_modules/.pnpm-config/<name>` install, a fake pnpm store `links/` tree,
-// and the `.modules.yaml` that points one at the other. Each helper is an
-// effect over the provided `FileSystem` and `Path`: the integration suites run
-// them on the real filesystem, because the replaying layers `import()` the
-// pnpmfiles and the fetch rung spawns a fake `pnpm` that must see the files.
-
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -12,10 +5,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 
-/** A pnpmfile to write beside a manifest: `[filename, source]`. */
 type Pnpmfile = readonly [filename: string, source: string];
 
-/** The services every fixture writes through. */
 type FixtureServices = FileSystem.FileSystem | Path.Path;
 
 /** A pnpmfile whose hook injects `hooked-dep` at `range` into the default catalog — the value proves WHICH file ran. */
@@ -47,16 +38,12 @@ export const pnpmfileInjectingCjs = (range: string): string =>
     "\n"
   );
 
-/** A `package.json` naming a package, with or without a version. */
 const ManifestJson = S.fromJsonString(S.Struct({ name: S.String, version: S.optionalKey(S.String) }));
-/** A JSON-quoted string, as `.modules.yaml` spells its keys and values. */
-const JsonQuoted = S.fromJsonString(S.String);
+const ModulesYamlJsonQuoted = S.fromJsonString(S.String);
 
-/** A `package.json` naming `name` at `version`, or with no version at all. */
 const manifestText = (name: string, version: string | undefined): Effect.Effect<string, S.SchemaError> =>
   S.encodeEffect(ManifestJson)(version === undefined ? { name } : { name, version });
 
-/** Write `dir/package.json` with `name` and `version`, creating the directory, then the optional pnpmfile. */
 const writePackage = Effect.fnUntraced(function* (
   dir: string,
   name: string,
@@ -142,7 +129,7 @@ export const writeModulesYaml = Effect.fnUntraced(function* (
   yield* fs.makeDirectory(dir, { recursive: true });
   yield* fs.writeFileString(
     path.join(dir, ".modules.yaml"),
-    `"layoutVersion": 5\n"storeDir": ${yield* Effect.orDie(S.encodeEffect(JsonQuoted)(store))}\n`
+    `"layoutVersion": 5\n"storeDir": ${yield* Effect.orDie(S.encodeEffect(ModulesYamlJsonQuoted)(store))}\n`
   );
 });
 
