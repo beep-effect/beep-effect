@@ -20,7 +20,9 @@ const ParserState = S.Struct({
     $I.annoteKey("ParserState.text", { description: "Original YAML source used to preserve exact CST spans." })
   ),
   pos: S.mutableKey(S.Finite).pipe(
-    $I.annoteKey("ParserState.pos", { description: "Writable cursor pointing to the next token." })
+    $I.annoteKey("ParserState.pos", {
+      description: "Writable cursor pointing to the next token; callers check atEnd before reading it.",
+    })
   ),
   depth: S.mutableKey(S.Finite).pipe(
     $I.annoteKey("ParserState.depth", { description: "Writable collection-nesting depth checked by guardDepth." })
