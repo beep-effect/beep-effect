@@ -196,12 +196,14 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
-  const controlledDeadlineSoParityIgnoresHostScheduling = true;
-  const setup = yield* install(kind, undefined, false, controlledDeadlineSoParityIgnoresHostScheduling);
+  const controlledDeadline = true;
+  const setup = yield* install(kind, undefined, false, controlledDeadline);
   const smoke = [13, 55, 137, 185, 197, 201, 239, 243, 251, 293, 301, 305, 313, 321];
   const rows = A.filter(setup.corpus.cases, (row) => full || row.error === "TypeError" || A.contains(smoke, row.id));
   for (const row of rows) yield* assertRow(setup.stage, row);
-  expect(rows).toHaveLength(full ? 328 : 114);
+  expect(rows, "the controlled deadline keeps source parity independent of host scheduling").toHaveLength(
+    full ? 328 : 114
+  );
   const calls = A.reduce(rows, 0, (sum, row) => sum + (row.error !== "TypeError" && row.calls.length > 0 ? 1 : 0));
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });

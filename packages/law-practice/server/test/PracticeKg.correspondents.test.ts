@@ -348,9 +348,7 @@ describe("practice KG correspondents", () => {
         const databasePath = path.join(directory, "practice.duckdb");
         const extractRoot = path.join(directory, "extract");
         yield* fs.makeDirectory(path.join(extractRoot, "metadata"), { recursive: true });
-        const threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries: ReadonlyArray<
-          readonly [string, Record<string, unknown>]
-        > = [
+        const filedMetadata: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
           ["a", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-Id": "<a@example.com>" }],
           ["b", { "MESSAGE:RAW-HEADER:MESSAGE-ID": [" <b@example.com> "], "Message-From": "pat@example.com" }],
           ["c", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": "<c@example.com>" }],
@@ -359,7 +357,7 @@ describe("practice KG correspondents", () => {
           ["f", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": ["", " ", "<f@example.com>"] }],
         ];
         yield* Effect.forEach(
-          threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries,
+          filedMetadata,
           ([name, fields]) =>
             Effect.flatMap(encodeJson(fields), (json) =>
               fs.writeFileString(path.join(extractRoot, "metadata", `operation:op-${name}.json`), json)
@@ -367,7 +365,7 @@ describe("practice KG correspondents", () => {
           { concurrency: 1 }
         );
         const sourceLines = yield* Effect.forEach(
-          threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries,
+          filedMetadata,
           ([name]) => encodeJson({ digest: `sha256:${name}`, operationId: `operation:op-${name}` }),
           { concurrency: 1 }
         );
@@ -377,7 +375,7 @@ describe("practice KG correspondents", () => {
           const db = yield* DuckDb;
           yield* db.run("CREATE TABLE documents (digest VARCHAR PRIMARY KEY, effective_name VARCHAR NOT NULL)");
           yield* Effect.forEach(
-            threeHeaderSpellingsUnusableValueNoHeaderAndEmptyLeadingEntries,
+            filedMetadata,
             ([name]) => db.run("INSERT INTO documents VALUES ($1, $2)", [`sha256:${name}`, `${name}.eml`]),
             { concurrency: 1 }
           );
@@ -388,7 +386,10 @@ describe("practice KG correspondents", () => {
             sourceSpecs: [{ sourcesPath, textGlob: path.join(extractRoot, "text", "*.txt") }],
           })
         ).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
-        expect(A.map(messages, (message) => [message.digest, message.messageId])).toStrictEqual([
+        expect(
+          A.map(messages, (message) => [message.digest, message.messageId]),
+          "three header spellings, an unusable value, no header, and a list opening with empty entries"
+        ).toStrictEqual([
           ["sha256:a", "a@example.com"],
           ["sha256:b", "b@example.com"],
           ["sha256:c", "c@example.com"],

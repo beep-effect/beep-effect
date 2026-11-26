@@ -27,11 +27,7 @@ const fixture = Effect.fnUntraced(function* (name: string) {
   return yield* (yield* FileSystem.FileSystem).readFileString(filename);
 });
 
-const offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly = (
-  application: string,
-  publication: string,
-  xml: ReturnType<typeof fixture>
-) =>
+const nativePublicationClient = (application: string, publication: string, xml: ReturnType<typeof fixture>) =>
   Layer.effect(
     HttpClient.HttpClient,
     Effect.gen(function* () {
@@ -58,18 +54,14 @@ const offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly = (
     })
   );
 
-const checkerFor = (transport: ReturnType<typeof offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly>) =>
+const checkerFor = (transport: ReturnType<typeof nativePublicationClient>) =>
   ClaimSelfCheckLive.pipe(
     Layer.provide(UsptoClaimsLive),
     Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
     Layer.provide(transport)
   );
 const checker = checkerFor(
-  offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly(
-    "16287736",
-    "US20200109732A1",
-    fixture("US20200109732A1.claims.xml")
-  )
+  nativePublicationClient("16287736", "US20200109732A1", fixture("US20200109732A1.claims.xml"))
 );
 
 const patentClaimsJson = S.fromJsonString(PatentClaims);
@@ -100,7 +92,11 @@ describe("Public USPTO antecedent slice", () => {
           })),
           "the immutable legacy file is kept; only its old wrapper boundary is projected to the corrected preamble"
         );
-        assert.deepStrictEqual(result.report.undecomposed, []);
+        assert.deepStrictEqual(
+          result.report.undecomposed,
+          [],
+          "replayed offline from the public claims subtree and its locating metadata only"
+        );
         const actualTree = yield* Effect.fromOption(A.head(result.report.trees));
         for (const expected of expectedTree.elements) {
           const actual = yield* Effect.fromOption(
@@ -165,11 +161,7 @@ const brushFixture = Effect.fnUntraced(function* (name: string) {
   return yield* (yield* FileSystem.FileSystem).readFileString(filename);
 });
 const brushChecker = checkerFor(
-  offlineReplayOfPublicClaimsSubtreeAndLocatingMetadataOnly(
-    "12838228",
-    "US20110074901A1",
-    brushFixture("source.claims.xml")
-  )
+  nativePublicationClient("12838228", "US20110074901A1", brushFixture("source.claims.xml"))
 );
 const referenceTreesJson = ClaimElementTree.pipe(S.Array, S.fromJsonString);
 const canonicalClaimsJson = S.fromJsonString(
@@ -183,7 +175,7 @@ const publicProvenanceJson = S.fromJsonString(
   })
 );
 
-describe("Current strict public claim slice over a pre-prediction reference witness, not a new label, benchmark claim or held-out result", () => {
+describe("Current strict public claim slice over a pre-prediction reference witness: no new label, benchmark or held-out result", () => {
   it.layer(brushChecker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))), {
     timeout: "30 seconds",
   })((it) => {

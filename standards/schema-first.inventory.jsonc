@@ -1291,7 +1291,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 221,
+      "line": 218,
       "owner": "@beep/law-practice-server",
       "reason": "Replays owned host-origin and deceptive-presentation scenes through real host ports, preserving identity, dispatch and source events. Host capabilities are not schema-generatable fixture data. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
@@ -1481,7 +1481,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 84,
+      "line": 76,
       "owner": "@beep/law-practice-server",
       "reason": "Owner: @beep/law-practice-server. Fixed public USPTO integration witnesses verify native XML, exact operative-source text, recorded office-action identifiers/date/rejection phrases, and full frozen-tree equality. Generated arbitrary payloads cannot establish those real-record facts. This is intentionally golden/source-integrity coverage, not a new codec-law suite. Exit: retire when the detector recognizes native public-slice regression subjects or equivalent source-integrity property coverage becomes meaningful."
     },

@@ -9,11 +9,7 @@ import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 
-const breakBorrowedStorageBetweenMeasurementAndCapture = (
-  bytes: Uint8Array,
-  offset: number,
-  replacement: ReadonlyArray<number>
-) =>
+const overwrite = (bytes: Uint8Array, offset: number, replacement: ReadonlyArray<number>) =>
   Effect.sync(() => {
     bytes.set(replacement, offset);
   });
@@ -28,7 +24,7 @@ it.effect("re-attributes a capture-time overflow of mutated native storage to th
       .prepareUnicode({ width: 4, bytes }, (layout) =>
         Effect.sync(() => {
           measured = A.append(measured, layout);
-        }).pipe(Effect.andThen(breakBorrowedStorageBetweenMeasurementAndCapture(bytes, 4, [0x01, 0x00, 0x01, 0x00])))
+        }).pipe(Effect.andThen(overwrite(bytes, 4, [0x01, 0x00, 0x01, 0x00])))
       )
       .pipe(Effect.flip);
     deepStrictEqual(measured, [
@@ -48,47 +44,45 @@ it.effect("re-attributes a capture-time overflow of mutated native storage to th
   })
 );
 
-it.effect("refuses native storage whose capture no longer matches its measured layout", () =>
-  Effect.gen(function* () {
-    const limits = (yield* defaultCitationEnginePolicy).limits;
-    const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
-    const cases = [
-      {
-        scene: "a point beyond U+10FFFF fails the Unicode capture itself",
-        width: 4 as const,
-        bytes: [0x00, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00],
-        at: 4,
-        next: [0x00, 0x00, 0x11],
-      },
-      {
-        scene: "a BMP point widened to astral changes the measured UTF-16 size",
-        width: 4 as const,
-        bytes: [0x00, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00],
-        at: 4,
-        next: [0x01, 0x00, 0x01],
-      },
-      {
-        scene: "a lone high surrogate gains a low partner, changing only projection ambiguity",
-        width: 2 as const,
-        bytes: [0x00, 0xd8, 0x41, 0x00],
-        at: 2,
-        next: [0x00, 0xdc],
-      },
-    ];
-    for (const { scene, width, bytes: initial, at, next } of cases) {
-      const bytes = Uint8Array.from(initial);
-      const failure = yield* input
-        .prepareUnicode(
-          { width, bytes },
-          () => Effect.void,
-          breakBorrowedStorageBetweenMeasurementAndCapture(bytes, at, next)
-        )
-        .pipe(Effect.flip);
-      deepStrictEqual(
-        { _tag: failure._tag, reason: "reason" in failure ? failure.reason : undefined },
-        { _tag: "CitationRegexInputFailure", reason: "invalid-input" },
-        scene
-      );
-    }
-  })
+it.effect(
+  "refuses borrowed native storage changed between measurement and capture instead of publishing a mismatched map",
+  () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
+      const cases = [
+        {
+          scene: "a point beyond U+10FFFF fails the Unicode capture itself",
+          width: 4 as const,
+          bytes: [0x00, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00],
+          at: 4,
+          next: [0x00, 0x00, 0x11],
+        },
+        {
+          scene: "a BMP point widened to astral changes the measured UTF-16 size",
+          width: 4 as const,
+          bytes: [0x00, 0x00, 0x01, 0x00, 0x41, 0x00, 0x00, 0x00],
+          at: 4,
+          next: [0x01, 0x00, 0x01],
+        },
+        {
+          scene: "a lone high surrogate gains a low partner, changing only projection ambiguity",
+          width: 2 as const,
+          bytes: [0x00, 0xd8, 0x41, 0x00],
+          at: 2,
+          next: [0x00, 0xdc],
+        },
+      ];
+      for (const { scene, width, bytes: initial, at, next } of cases) {
+        const bytes = Uint8Array.from(initial);
+        const failure = yield* input
+          .prepareUnicode({ width, bytes }, () => Effect.void, overwrite(bytes, at, next))
+          .pipe(Effect.flip);
+        deepStrictEqual(
+          { _tag: failure._tag, reason: "reason" in failure ? failure.reason : undefined },
+          { _tag: "CitationRegexInputFailure", reason: "invalid-input" },
+          scene
+        );
+      }
+    })
 );

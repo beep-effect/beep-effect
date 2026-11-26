@@ -430,7 +430,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
     })
   );
   it.effect(
-    "encodes all sixteen source group snapshots including list aliases and detached nodes; placeholder decisions prove representability, not resolution inference or live dictionary and list mutation, without claiming callback execution",
+    "encodes all sixteen source group snapshots, list aliases and detached nodes without claiming callback execution",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -440,7 +440,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
           )
         );
         const data = yield* S.decodeEffect(CorpusJson)(raw);
-        expect(data.cases).toHaveLength(16);
+        expect(
+          data.cases,
+          "placeholder decisions prove representability, not resolution inference or live dictionary and list mutation"
+        ).toHaveLength(16);
         for (const row of data.cases) {
           const input = yield* prepareCallbackObservation(
             CitationCallbackObservation.make({
