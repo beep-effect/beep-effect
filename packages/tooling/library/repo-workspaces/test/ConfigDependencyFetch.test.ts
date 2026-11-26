@@ -1,13 +1,3 @@
-import { identity } from "effect/Function";
-// The fetch rung's guards, over a scripted pnpm: what the rung refuses to use
-// even when pnpm exits zero, and how a pnpm that never ran is reported. The
-// #842 scenario end to end, with real git and a fake pnpm, lives in
-// `integration/ConfigDependencyFetch.int.test.ts`.
-//
-// The ladder reads through the provided FileSystem, so the root, the store and
-// the scratch workspace all live on one `@beep/memfs` volume, and the fake pnpm
-// writes into that same volume.
-
 import { ScriptedSpawner } from "@beep/commands";
 import { MemoryFileSystem } from "@beep/memfs";
 import { CatalogAssemblyError } from "@beep/npm-spec/CatalogAssemblyError";
@@ -18,6 +8,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -39,8 +30,7 @@ const seed = {
 
 const optionOf = (args: ReadonlyArray<string>, flag: string): string => args[args.indexOf(flag) + 1] ?? "";
 
-/** Link the scratch workspace's `.pnpm-config/<NAME>` at a package directory holding `version`, as pnpm does. */
-const linkScratchAt =
+const linkScratchPnpmConfigAt =
   (target: string, version: string): ProcessAction =>
   (_command, args) =>
     Effect.gen(function* () {
@@ -53,7 +43,6 @@ const linkScratchAt =
       yield* fs.symlink(target, link);
     });
 
-/** The subprocess hooks over a scripted pnpm and one shared virtual volume. */
 const hooksOver = (fake: FakeProcess) =>
   ConfigDependencyHooks.layerSubprocess.pipe(
     Layer.provide(fake.layer),
@@ -65,20 +54,21 @@ const failureWith = Effect.fn("failureWith")(function* (fake: FakeProcess) {
   const error = yield* Effect.flip(hooks.inject(ROOT, { [NAME]: SPEC }, {}));
   assert.instanceOf(error, CatalogAssemblyError);
   assert.strictEqual(error.path, NAME);
-  // Nothing was replayed: the only spawns are pnpm's.
-  assert.isTrue(A.every(fake.scripted.spawns, (spawn) => spawn.command === "pnpm"));
+  assert.isTrue(
+    A.every(fake.scripted.spawns, (spawn) => spawn.command === "pnpm"),
+    "nothing was replayed: the only spawns are pnpm's"
+  );
   return error;
 });
 
-describe("the fetch rung refuses what it cannot verify", () => {
+describe("the fetch rung refuses what it cannot verify, over a scripted pnpm writing into the one memfs volume the ladder reads", () => {
   {
     const rewrite: ProcessAction = Effect.fn("rewrite")(function* (command, args) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* fs.writeFileString(path.join(optionOf(args, "--dir"), "pnpm-lock.yaml"), "lockfileVersion: '6.0'\n");
-      // Linked outside the store so no later test finds it there; the
-      // lockfile guard runs first either way.
-      yield* linkScratchAt(`/rewritten/${NAME}`, "1.0.0")(command, args);
+      const outsideTheStoreSoNoLaterTestFindsIt = `/rewritten/${NAME}`;
+      yield* linkScratchPnpmConfigAt(outsideTheStoreSoNoLaterTestFindsIt, "1.0.0")(command, args);
     });
     const fake = fakeProcess({ act: rewrite });
     it.layer(hooksOver(fake), { timeout: "30 seconds" })((it) => {
@@ -94,7 +84,7 @@ describe("the fetch rung refuses what it cannot verify", () => {
   }
 
   {
-    const fake = fakeProcess({ act: linkScratchAt(`/elsewhere/${NAME}`, "1.0.0") });
+    const fake = fakeProcess({ act: linkScratchPnpmConfigAt(`/elsewhere/${NAME}`, "1.0.0") });
     it.layer(hooksOver(fake), { timeout: "30 seconds" })((it) => {
       it.effect("a link that is not a store copy of the declared version is not used", () =>
         Effect.gen(function* () {
@@ -114,9 +104,8 @@ describe("the fetch rung refuses what it cannot verify", () => {
           const error = yield* failureWith(fake);
           assert.strictEqual(error.reason, "fetchFailed");
           assert.include(error.message, `pnpm add --config ${NAME}@1.0.0`);
-          // The spawn failure stays on the cause chain beneath the diagnosis.
           assert.instanceOf(error.cause, Error);
-          assert.isDefined(error.cause.cause);
+          assert.isDefined(error.cause.cause, "the spawn failure stays on the cause chain beneath the diagnosis");
         })
       );
     });
@@ -140,8 +129,11 @@ describe("the fetch rung refuses what it cannot verify", () => {
             assert.instanceOf(error, CatalogAssemblyError);
             assert.strictEqual(error.reason, "integrityUnavailable");
             assert.include([NAME, second], error.path);
-            // Mapped per dependency: the message names the dependency that failed.
-            assert.include(error.message, `config dependency ${error.path}@1.0.0 must be fetched`);
+            assert.include(
+              error.message,
+              `config dependency ${error.path}@1.0.0 must be fetched`,
+              "mapped per dependency: the message names the dependency that failed"
+            );
             assert.include(error.message, "the pnpm-lock.yaml of ref broken cannot be read");
             assert.strictEqual(fake.scripted.spawns.length, 0);
           })
