@@ -666,10 +666,12 @@ const entriesWhere: {
     graph: AnnotatedTextGraph,
     refine: (node: AnnotatedNode) => node is K
   ): ReadonlyArray<{ readonly index: Graph.NodeIndex; readonly node: K }> =>
-    A.getSomes(
-      A.map(A.fromIterable(graph.pipe(Graph.nodes, Graph.entries)), ([index, node]) =>
-        refine(node) ? O.some({ index, node }) : O.none()
-      )
+    graph.pipe(
+      Graph.nodes,
+      Graph.entries,
+      A.fromIterable,
+      A.map(([index, node]) => (refine(node) ? O.some({ index, node }) : O.none())),
+      A.getSomes
     )
 );
 
@@ -893,4 +895,4 @@ export const nodeCount = (graph: AnnotatedTextGraph): number => Graph.nodeCount(
  * @since 0.0.0
  */
 export const getRoots = (graph: AnnotatedTextGraph): ReadonlyArray<Graph.NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "incoming" })));
+  graph.pipe(Graph.externals({ direction: "incoming" }), Graph.indices, A.fromIterable);

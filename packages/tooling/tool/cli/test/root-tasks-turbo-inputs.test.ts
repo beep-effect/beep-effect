@@ -537,7 +537,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "08fb622c8ef78771b1501bba5cea9c083dc31e1c384f2462d0e25b974244f696"
+            "b3265be8948dea385f882a8be061c97016b495bab49b6d949e8d234e3a2309eb"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",

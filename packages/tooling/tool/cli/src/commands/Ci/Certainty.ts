@@ -441,8 +441,9 @@ const groupHeads = (runs: ReadonlyArray<CiCertaintyRun>): ReadonlyArray<HeadRuns
       A.append(O.getOrElse(HashMap.get(heads, run.run.head_sha), A.empty<CiCertaintyRun>), run)
     )
   );
-  return pipe(
-    A.fromIterable(HashMap.toEntries(grouped)),
+  return grouped.pipe(
+    HashMap.toEntries,
+    A.fromIterable,
     A.flatMap(([headSha, headRuns]) => {
       const checkRuns = A.filter(headRuns, isCheckPullRequestRun);
       return A.match(checkRuns, {

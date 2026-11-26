@@ -126,7 +126,8 @@ const platform = Layer.provideMerge(CiOpsKpiLive, Layer.merge(BunServices.layer,
  */
 export const runKpiScript = <E>(program: Effect.Effect<void, E, CiOpsKpi | BunServices.BunServices>): void =>
   BunRuntime.runMain(
-    Layer.build(platform).pipe(
+    platform.pipe(
+      Layer.build,
       Effect.flatMap((context) => Effect.provide(program, context)),
       Effect.scoped
     )

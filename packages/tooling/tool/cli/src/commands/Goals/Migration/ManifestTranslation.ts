@@ -145,26 +145,25 @@ const duplicateIdentityFindings = (nodes: ReadonlyArray<PacketNode>): ReadonlyAr
     const slugs = pipe(MutableHashMap.get(declared, node.declaredId), O.getOrElse(A.empty<string>));
     MutableHashMap.set(declared, node.declaredId, A.append(slugs, node.slug));
   }
-  return A.getSomes(
-    A.map(A.fromIterable(MutableHashMap.keys(declared)), (id) =>
-      pipe(
-        MutableHashMap.get(declared, id),
-        O.flatMap((slugs) =>
-          A.length(slugs) > 1
-            ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
-              O.some(
-                FleetLintFinding.make({
-                  slug: id,
-                  kind: "duplicate-slug",
-                  severity: "violation",
-                  related: A.sort(slugs, Order.String),
-                  message: `initiative.id "${id}" is declared by ${A.join(A.sort(slugs, Order.String), ", ")}`,
-                })
-              )
-            : O.none<FleetLintFinding>()
+  return declared.pipe(
+    MutableHashMap.keys,
+    A.fromIterable,
+    A.map((id) =>
+      MutableHashMap.get(declared, id).pipe(
+        O.filter((slugs) => A.length(slugs) > 1),
+        O.map(A.sort(Order.String)),
+        O.map((slugs) =>
+          FleetLintFinding.make({
+            slug: id,
+            kind: "duplicate-slug",
+            severity: "violation",
+            related: slugs,
+            message: `initiative.id "${id}" is declared by ${A.join(slugs, ", ")}`,
+          })
         )
       )
-    )
+    ),
+    A.getSomes
   );
 };
 

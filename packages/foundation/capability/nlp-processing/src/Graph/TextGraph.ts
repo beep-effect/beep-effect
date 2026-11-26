@@ -413,8 +413,11 @@ export const tokenizeNodes = Effect.fn("TextGraph.tokenizeNodes")(function* (
     let skippedSentenceCount = 0;
     let tokenCount = 0;
 
-    const sentenceEntries = A.getSomes(
-      A.map(A.fromIterable(graph.pipe(Graph.nodes, Graph.indices)), (idx) =>
+    const sentenceEntries = graph.pipe(
+      Graph.nodes,
+      Graph.indices,
+      A.fromIterable,
+      A.map((idx) =>
         O.flatMap(Graph.getNode(graph, idx), (node) =>
           node.type === "sentence"
             ? O.some({
@@ -423,7 +426,8 @@ export const tokenizeNodes = Effect.fn("TextGraph.tokenizeNodes")(function* (
               })
             : O.none()
         )
-      )
+      ),
+      A.getSomes
     );
 
     for (const { idx, node } of sentenceEntries) {
@@ -715,7 +719,7 @@ export const findNodesByType: {
  * @since 0.0.0
  */
 export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "incoming" })));
+  graph.pipe(Graph.externals({ direction: "incoming" }), Graph.indices, A.fromIterable);
 
 /**
  * Return text-graph leaves, defined as nodes with no outgoing edges.
@@ -733,7 +737,7 @@ export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  * @since 0.0.0
  */
 export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "outgoing" })));
+  graph.pipe(Graph.externals({ direction: "outgoing" }), Graph.indices, A.fromIterable);
 
 /**
  * Return direct child indices for a text node.

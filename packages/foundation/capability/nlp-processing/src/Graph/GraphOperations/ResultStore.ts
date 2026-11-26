@@ -311,7 +311,7 @@ const makeResultStore = Effect.gen(function* () {
 
     stats: Effect.gen(function* () {
       const map = yield* Ref.get(storeRef);
-      const entries = A.fromIterable(HashMap.values(map));
+      const entries = map.pipe(HashMap.values, A.fromIterable);
       const timestamps = A.map(entries, (e) => e.timestamp);
       return CacheStats.make({
         newestEntry: A.match(timestamps, {
