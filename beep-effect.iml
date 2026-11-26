@@ -355,6 +355,8 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/repo-cli-gh-git-consolidation" />
       <excludeFolder url="file://$MODULE_DIR$/goals/session-route-resolver" />
       <excludeFolder url="file://$MODULE_DIR$/goals/gate-output-switch-on" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/comment-law" />
+      <excludeFolder url="file://$MODULE_DIR$/explorations/model-first-slices" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

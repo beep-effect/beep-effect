@@ -727,13 +727,12 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       }
       const sql = yield* SqlClient.SqlClient;
       yield* sql`VACUUM`;
-      const pageCountWithoutFreePagesAsThePhysicalAllocationCeiling = yield* sql`PRAGMA page_count`.pipe(
-        Effect.flatMap(decodeArguments)
-      );
-      yield* sql.unsafe(
-        `PRAGMA max_page_count = ${pageCountWithoutFreePagesAsThePhysicalAllocationCeiling[0].page_count}`
-      );
-      expect((yield* f.retention.seal(0).pipe(Effect.flip)).reason).toBe("storage");
+      const pageCount = yield* sql`PRAGMA page_count`.pipe(Effect.flatMap(decodeArguments));
+      yield* sql.unsafe(`PRAGMA max_page_count = ${pageCount[0].page_count}`);
+      expect(
+        (yield* f.retention.seal(0).pipe(Effect.flip)).reason,
+        "the page count after VACUUM, without free pages, is the physical allocation ceiling"
+      ).toBe("storage");
       const window65 = yield* f.retention.window;
       expect(window65).toMatchObject({ epoch: 0 });
       for (const receipt of receipts) {

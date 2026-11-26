@@ -222,7 +222,7 @@ const captionPlainTextFromWire = Effect.fnUntraced(function* (caption: unknown) 
 
 describe("Pandoc.codec", { concurrent: false }, () => {
   it.effect(
-    "observes real derivation and sampling of semantic documents, and restores the passthrough observer even when compilation, generation or an assertion fails",
+    "observes real derivation and sampling of semantic documents, and restores the passthrough observer on any failure",
     () =>
       Effect.gen(function* () {
         const passthroughWarnSpyRestoredOnAnyFailure = yield* Effect.acquireRelease(
@@ -234,7 +234,10 @@ describe("Pandoc.codec", { concurrent: false }, () => {
         const documents = yield* Arbitrary.sampleEffect(arbitrary, { count: runs, seed });
         expect(documents).toHaveLength(runs);
         assertTrue(A.every(documents, isPandocDocument));
-        expect(passthroughWarnSpyRestoredOnAnyFailure).not.toHaveBeenCalled();
+        expect(
+          passthroughWarnSpyRestoredOnAnyFailure,
+          "the passthrough observer is restored even when compilation, generation or an assertion fails"
+        ).not.toHaveBeenCalled();
       })
   );
 
@@ -1610,7 +1613,7 @@ describe("Pandoc.codec", { concurrent: false }, () => {
 });
 
 it.effect.prop(
-  "encodes Table through its generation link: the arbitrary compiler consumes that link's decode only, so the advertised encoding is verified separately",
+  "encodes Table through its generation link, verifying the advertised encoding separately",
   { value: Arbitrary.schema(Table) },
   Effect.fnUntraced(function* ({ value }) {
     const annotations: S.Annotations.Declaration<unknown, []> | undefined = SchemaAST.toType(Table.ast).annotations;
@@ -1622,7 +1625,7 @@ it.effect.prop(
     );
     const encodeGenerationTable = S.encodeEffect(codec);
     const encoded = yield* encodeGenerationTable(value);
-    expect(encoded).toEqual({});
+    expect(encoded, "the arbitrary compiler consumes that link's decode only").toEqual({});
   }),
   { arbitrary: fcRuns(50) }
 );

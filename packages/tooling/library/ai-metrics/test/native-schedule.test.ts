@@ -132,7 +132,7 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
   const readStatus = yield* Ref.make(200);
   const hang = yield* Ref.make(false);
   const entered = yield* Deferred.make<void>();
-  const hungPostGateInsteadOfRealTimeSoNoResponseLandsBeforeTheTestObserves = yield* Latch.make();
+  const hungPostGate = yield* Latch.make();
   const sql = yield* SqlClient.SqlClient;
   yield* server.serve(
     Effect.gen(function* () {
@@ -150,7 +150,7 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
       yield* Ref.update(posts, (n) => n + 1);
       yield* Deferred.succeed(entered, undefined);
       if (yield* Ref.get(hang)) {
-        yield* hungPostGateInsteadOfRealTimeSoNoResponseLandsBeforeTheTestObserves.await;
+        yield* hungPostGate.await;
       }
       return HttpServerResponse.uint8Array(new Uint8Array(), {
         status: yield* Ref.get(status),
@@ -159,20 +159,16 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
     })
   );
   const openTheGateOnScopeCloseBeforeServerShutdownSoAHeldRequestDrainsEvenOnFailure = () =>
-    Effect.asVoid(hungPostGateInsteadOfRealTimeSoNoResponseLandsBeforeTheTestObserves.open);
+    Effect.asVoid(hungPostGate.open);
   yield* Effect.addFinalizer(openTheGateOnScopeCloseBeforeServerShutdownSoAHeldRequestDrainsEvenOnFailure);
-  const release = Ref.set(hang, false).pipe(
-    Effect.andThen(hungPostGateInsteadOfRealTimeSoNoResponseLandsBeforeTheTestObserves.open),
-    Effect.asVoid
-  );
+  const release = Ref.set(hang, false).pipe(Effect.andThen(hungPostGate.open), Effect.asVoid);
   const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
   const currentTimeMillis2 = yield* Clock.currentTimeMillis;
   yield* clock.setTime(currentTimeMillis2);
-  const pinTheSeededTestClockSoHostLoadNeverMovesDelaysOrDeadlines = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-    Effect.provideService(effect, Clock.Clock, clock);
+  const pinTestClock = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.provideService(effect, Clock.Clock, clock);
   const reopen = (p = schedulePolicy) =>
     Effect.map(makeNativeDeliveryScheduler(intake, config, p, sender, reader), (scheduler) => ({
-      tick: pinTheSeededTestClockSoHostLoadNeverMovesDelaysOrDeadlines(scheduler.tick),
+      tick: pinTestClock(scheduler.tick),
     }));
   return {
     intake,
@@ -192,7 +188,7 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
     release,
     entered,
     clock,
-    pin: pinTheSeededTestClockSoHostLoadNeverMovesDelaysOrDeadlines,
+    pin: pinTestClock,
     reopen,
   };
 });
@@ -569,41 +565,42 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
 );
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
-  it.effect(
-    "claims only the next event before I/O, because reserving a whole batch would skip its tail when the first event times out, and recovers uncertainty by read-back",
-    () =>
-      Effect.gen(function* () {
-        const f = yield* fixture(3);
-        const policy = NativeSchedulePolicy.make({ ...schedulePolicy, maxEvents: 3, tickTimeoutMillis: 400 });
-        const scheduler = yield* f.reopen(policy);
-        yield* Ref.set(f.hang, true);
-        const firstSendStalledUntilTheTestClockPassesTheDeadline = yield* scheduler.tick.pipe(Effect.forkChild);
-        yield* Deferred.await(f.entered);
-        yield* f.clock.adjust(400);
-        const join48 = yield* Fiber.join(firstSendStalledUntilTheTestClockPassesTheDeadline);
-        expect(join48).toEqual({ _tag: "Deadline" });
-        const got49 = yield* Ref.get(f.posts);
-        expect(got49).toBe(1);
-        yield* f.release;
-        const reopened = yield* f.reopen(policy);
-        const result = yield* reopened.tick;
-        expect(result).toMatchObject({
-          _tag: "Complete",
-          outcomes: [
-            { _tag: "Sent", eventId: f.batch.spans[1]?.eventId },
-            { _tag: "Sent", eventId: f.batch.spans[2]?.eventId },
-            { _tag: "Reconciled", eventId: f.batch.spans[0]?.eventId, result: { _tag: "Missing" } },
-          ],
-        });
-        const got50 = yield* Ref.get(f.posts);
-        expect(got50).toBe(3);
-        const got51 = yield* Ref.get(f.reads);
-        expect(got51).toBe(1);
-        const state52 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
-        expect(state52).toMatchObject({
-          value: { state: "unresolved", attempts: 1 },
-        });
-      })
+  it.effect("claims only the next event before I/O and recovers uncertainty by read-back", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture(3);
+      const policy = NativeSchedulePolicy.make({ ...schedulePolicy, maxEvents: 3, tickTimeoutMillis: 400 });
+      const scheduler = yield* f.reopen(policy);
+      yield* Ref.set(f.hang, true);
+      const firstSend = yield* scheduler.tick.pipe(Effect.forkChild);
+      yield* Deferred.await(f.entered);
+      yield* f.clock.adjust(400);
+      const join48 = yield* Fiber.join(firstSend);
+      expect(
+        join48,
+        "the first send stalls until the test clock passes the deadline; the seeded TestClock is pinned so host load never moves delays or deadlines"
+      ).toEqual({ _tag: "Deadline" });
+      const got49 = yield* Ref.get(f.posts);
+      expect(got49, "a hung POST gate instead of real time, so no response lands before the test observes").toBe(1);
+      yield* f.release;
+      const reopened = yield* f.reopen(policy);
+      const result = yield* reopened.tick;
+      expect(result, "reserving a whole batch would skip its tail when the first event times out").toMatchObject({
+        _tag: "Complete",
+        outcomes: [
+          { _tag: "Sent", eventId: f.batch.spans[1]?.eventId },
+          { _tag: "Sent", eventId: f.batch.spans[2]?.eventId },
+          { _tag: "Reconciled", eventId: f.batch.spans[0]?.eventId, result: { _tag: "Missing" } },
+        ],
+      });
+      const got50 = yield* Ref.get(f.posts);
+      expect(got50).toBe(3);
+      const got51 = yield* Ref.get(f.reads);
+      expect(got51).toBe(1);
+      const state52 = yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"));
+      expect(state52).toMatchObject({
+        value: { state: "unresolved", attempts: 1 },
+      });
+    })
   )
 );
 

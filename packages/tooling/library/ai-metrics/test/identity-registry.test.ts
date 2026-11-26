@@ -82,9 +82,7 @@ const makeLinkedWorktree = Effect.fn("identityRegistryTest.makeLinkedWorktree")(
   return worktreeGitDir;
 });
 
-const recordingWriteTargetsIncludingTempFilesRenamedAwayBeforeUpsertEnds = (
-  writesRef: Ref.Ref<ReadonlyArray<string>>
-) =>
+const recordingWriteTargets = (writesRef: Ref.Ref<ReadonlyArray<string>>) =>
   Layer.effect(
     FileSystem.FileSystem,
     Effect.map(FileSystem.FileSystem, (fs) => ({
@@ -640,82 +638,84 @@ describe("@beep/repo-ai-metrics identity registry", () => {
   });
 
   it.layer(NodeServices.layer)((it) => {
-    it.effect(
-      "hashes the home directory as its resolved path, as makeAiMetricsSourceDiscoveryResult does, so a trailing slash cannot fork the digest the two sides join on",
-      () =>
-        withTempDirectory(
-          Effect.fnUntraced(function* (tmpDir) {
-            const pathApi = yield* Path.Path;
-            const clonePath = pathApi.join(tmpDir, "clone");
-            const homeDir = pathApi.join(tmpDir, "home");
-            yield* makeClone(clonePath);
+    it.effect("hashes the home directory as its resolved path, as makeAiMetricsSourceDiscoveryResult does", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const pathApi = yield* Path.Path;
+          const clonePath = pathApi.join(tmpDir, "clone");
+          const homeDir = pathApi.join(tmpDir, "home");
+          yield* makeClone(clonePath);
 
-            const upsertIntoOwnDataRootSoEachRegistryHoldsOneInstance = (store: string, home: string) =>
-              upsertAiMetricsIdentityRegistry(
-                AiMetricsIdentityRegistryUpsertInput.make({
-                  dataRoot: pathApi.join(tmpDir, store),
-                  hashSalt,
-                  homeDir: home,
-                  rootPath: clonePath,
-                  sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
-                })
-              );
-
-            const normalized = yield* upsertIntoOwnDataRootSoEachRegistryHoldsOneInstance("store-normalized", homeDir);
-            const trailingSlash = yield* upsertIntoOwnDataRootSoEachRegistryHoldsOneInstance(
-              "store-trailing-slash",
-              `${homeDir}/`
+          const upsertOwnRoot = (store: string, home: string) =>
+            upsertAiMetricsIdentityRegistry(
+              AiMetricsIdentityRegistryUpsertInput.make({
+                dataRoot: pathApi.join(tmpDir, store),
+                hashSalt,
+                homeDir: home,
+                rootPath: clonePath,
+                sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+              })
             );
 
-            expect(A.length(normalized.sourceInstances)).toBe(1);
-            expect(A.length(trailingSlash.sourceInstances)).toBe(1);
-            const expectation = expect(normalized.sourceInstances[0]?.homeDirHash);
-            const hashPrivateIdentifier1 = yield* hashPrivateIdentifier(homeDir, O.some(hashSalt));
-            expectation.toBe(hashPrivateIdentifier1);
-            expect(trailingSlash.sourceInstances[0]?.homeDirHash).toBe(normalized.sourceInstances[0]?.homeDirHash);
-            expect(trailingSlash.sourceInstances[0]?.instanceIdHash).toBe(
-              normalized.sourceInstances[0]?.instanceIdHash
-            );
-          })
-        )
+          const normalized = yield* upsertOwnRoot("store-normalized", homeDir);
+          const trailingSlash = yield* upsertOwnRoot("store-trailing-slash", `${homeDir}/`);
+
+          expect(
+            A.length(normalized.sourceInstances),
+            "each upsert goes into its own data root, so each registry holds one instance"
+          ).toBe(1);
+          expect(A.length(trailingSlash.sourceInstances)).toBe(1);
+          const expectation = expect(normalized.sourceInstances[0]?.homeDirHash);
+          const hashPrivateIdentifier1 = yield* hashPrivateIdentifier(homeDir, O.some(hashSalt));
+          expectation.toBe(hashPrivateIdentifier1);
+          expect(
+            trailingSlash.sourceInstances[0]?.homeDirHash,
+            "a trailing slash cannot fork the digest the two sides join on"
+          ).toBe(normalized.sourceInstances[0]?.homeDirHash);
+          expect(trailingSlash.sourceInstances[0]?.instanceIdHash).toBe(normalized.sourceInstances[0]?.instanceIdHash);
+        })
+      )
     );
   });
 
   it.layer(NodeServices.layer)((it) => {
-    it.effect(
-      "fails the upsert when an existing registry cannot be read instead of overwriting it and every other root's firstSeen history",
-      () =>
-        withTempDirectory(
-          Effect.fnUntraced(function* (tmpDir) {
-            const fs = yield* FileSystem.FileSystem;
-            const pathApi = yield* Path.Path;
-            const clonePath = pathApi.join(tmpDir, "clone");
-            const dataRoot = pathApi.join(tmpDir, "store");
-            yield* makeClone(clonePath);
+    it.effect("fails the upsert when an existing registry cannot be read instead of overwriting it", () =>
+      withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const pathApi = yield* Path.Path;
+          const clonePath = pathApi.join(tmpDir, "clone");
+          const dataRoot = pathApi.join(tmpDir, "store");
+          yield* makeClone(clonePath);
 
-            const registryPathPresentButADirectory = pathApi.join(dataRoot, "identity/registry.json");
-            yield* fs.makeDirectory(registryPathPresentButADirectory, { recursive: true });
+          const registryPathPresentButADirectory = pathApi.join(dataRoot, "identity/registry.json");
+          yield* fs.makeDirectory(registryPathPresentButADirectory, { recursive: true });
 
-            const failure = yield* Effect.flip(
-              upsertAiMetricsIdentityRegistry(
-                AiMetricsIdentityRegistryUpsertInput.make({
-                  dataRoot,
-                  hashSalt,
-                  homeDir: pathApi.join(tmpDir, "home"),
-                  rootPath: clonePath,
-                  sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
-                })
-              )
-            );
+          const failure = yield* Effect.flip(
+            upsertAiMetricsIdentityRegistry(
+              AiMetricsIdentityRegistryUpsertInput.make({
+                dataRoot,
+                hashSalt,
+                homeDir: pathApi.join(tmpDir, "home"),
+                rootPath: clonePath,
+                sourceKinds: [AiMetricsTranscriptSource.Enum.codex],
+              })
+            )
+          );
 
-            expect(failure).toBeInstanceOf(AiMetricsIdentityRegistryError);
-            expect(failure.message).toContain("Failed to read");
-            expect(
-              (yield* fs.stat(registryPathPresentButADirectory)).type,
-              "the unreadable entry is still there: nothing was clobbered on the way out"
-            ).toBe("Directory");
-          })
-        )
+          expect(failure, "an overwrite would also lose every other root's firstSeen history").toBeInstanceOf(
+            AiMetricsIdentityRegistryError
+          );
+          expect(
+            failure.message,
+            "a read yields None only when the file is absent, never when it is unreadable"
+          ).toContain("Failed to read");
+          expect(
+            (yield* fs.stat(registryPathPresentButADirectory)).type,
+            "the unreadable entry is still there: nothing was clobbered on the way out"
+          ).toBe("Directory");
+        })
+      )
     );
   });
 
@@ -769,12 +769,15 @@ describe("@beep/repo-ai-metrics identity registry", () => {
             yield* Effect.forEach(clonePaths, (clonePath) => upsertRoot(dataRoot, clonePath, homeDir), {
               concurrency: 1,
               discard: true,
-            }).pipe(provideScopedLayer(recordingWriteTargetsIncludingTempFilesRenamedAwayBeforeUpsertEnds(writesRef)));
+            }).pipe(provideScopedLayer(recordingWriteTargets(writesRef)));
 
             const got = yield* Ref.get(writesRef);
             const tmpWrites = pipe(got, A.filter(Str.endsWith(".tmp")));
 
-            expect(A.length(tmpWrites)).toBe(A.length(clonePaths));
+            expect(
+              A.length(tmpWrites),
+              "the recorder sees every write target, including temp files renamed away before the upsert ends"
+            ).toBe(A.length(clonePaths));
             expect(A.length(A.dedupe(tmpWrites))).toBe(A.length(tmpWrites));
             pipe(
               A.some(tmpWrites, (path) => Str.endsWith(path, "registry.json.tmp")),

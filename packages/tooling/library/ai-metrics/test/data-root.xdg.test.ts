@@ -21,7 +21,7 @@ type DivergentRow<I> = readonly [name: string, input: I, before: string | null, 
 const stateHomeOf = (input: StateHomeInput) =>
   Effect.map(S.decodeEffect(AiMetricsStateHomeInput)(input), (decoded) => O.getOrNull(aiMetricsStateHome(decoded)));
 
-const windowsDriveAndUncRowsKeptSinceAiMetricsAbsoluteDataRootAdmitsThem: ReadonlyArray<Row<StateHomeInput>> = [
+const windowsDriveAndUncRows: ReadonlyArray<Row<StateHomeInput>> = [
   ["a Windows drive HOME", { homeDir: "C:\\Users\\dev" }, "C:\\Users\\dev/.local/state"],
   ["a forward-slash drive HOME", { homeDir: "C:/Users/dev/" }, "C:/Users/dev/.local/state"],
   ["a UNC HOME", { homeDir: "\\\\srv\\home\\dev" }, "\\\\srv\\home\\dev/.local/state"],
@@ -40,10 +40,10 @@ const stateHomeRowsTheAdoptionLeavesUnchanged: ReadonlyArray<Row<StateHomeInput>
   ["a blank XDG_STATE_HOME is unset", { homeDir: "/h", stateHome: "  " }, "/h/.local/state"],
   ["nothing set", {}, null],
   ["a blank HOME", { homeDir: "   " }, null],
-  ...windowsDriveAndUncRowsKeptSinceAiMetricsAbsoluteDataRootAdmitsThem,
+  ...windowsDriveAndUncRows,
 ];
 
-const stateHomeRowsWhereTheHandWrittenBodyBrokeTheSpec: ReadonlyArray<DivergentRow<StateHomeInput>> = [
+const divergentStateHomeRows: ReadonlyArray<DivergentRow<StateHomeInput>> = [
   ["a relative XDG_STATE_HOME", { homeDir: "/h", stateHome: "relative" }, "relative", "/h/.local/state"],
   ["a relative XDG_STATE_HOME without HOME", { stateHome: "relative" }, "relative", null],
   ["a relative HOME", { homeDir: "relative" }, "relative/.local/state", null],
@@ -51,7 +51,7 @@ const stateHomeRowsWhereTheHandWrittenBodyBrokeTheSpec: ReadonlyArray<DivergentR
   ["an unnormalized HOME", { homeDir: "/h/./a" }, "/h/./a/.local/state", "/h/a/.local/state"],
 ];
 
-const windowsRootRowsAcceptedByXdgIsAbsoluteWin32DriveOrAnyTwoLeadingSeparators: ReadonlyArray<Row<StateHomeInput>> = [
+const windowsRootRows: ReadonlyArray<Row<StateHomeInput>> = [
   ["a backslash UNC XDG_STATE_HOME", { stateHome: "\\\\server\\share" }, "\\\\server\\share"],
   ["a slash UNC XDG_STATE_HOME", { stateHome: "//server/share" }, "//server/share"],
   ["a backslash-slash UNC XDG_STATE_HOME", { stateHome: "\\/server" }, "\\/server"],
@@ -128,26 +128,34 @@ describe("aiMetricsStateHome env matrix", () => {
     it.effect(name, () =>
       Effect.gen(function* () {
         const stateHomeOf1 = yield* stateHomeOf(input);
-        assert.strictEqual(stateHomeOf1, expected);
+        assert.strictEqual(
+          stateHomeOf1,
+          expected,
+          "the unchanged rows keep the Windows drive and UNC rows, since AiMetricsAbsoluteDataRoot admits them"
+        );
       })
     );
   }
-  for (const [name, input, , after] of stateHomeRowsWhereTheHandWrittenBodyBrokeTheSpec) {
+  for (const [name, input, , after] of divergentStateHomeRows) {
     it.effect(`${name} (diverges on purpose: XDG absolute-only)`, () =>
       Effect.gen(function* () {
         const stateHomeOf2 = yield* stateHomeOf(input);
-        assert.strictEqual(stateHomeOf2, after);
+        assert.strictEqual(stateHomeOf2, after, "a row where the hand-written body broke the spec");
       })
     );
   }
 });
 
 describe("aiMetricsStateHome Windows roots", () => {
-  for (const [name, input, expected] of windowsRootRowsAcceptedByXdgIsAbsoluteWin32DriveOrAnyTwoLeadingSeparators) {
+  for (const [name, input, expected] of windowsRootRows) {
     it.effect(name, () =>
       Effect.gen(function* () {
         const stateHomeOf3 = yield* stateHomeOf(input);
-        assert.strictEqual(stateHomeOf3, expected);
+        assert.strictEqual(
+          stateHomeOf3,
+          expected,
+          "Windows roots accepted by XDG isAbsolute: a win32 drive or any two leading separators"
+        );
       })
     );
   }

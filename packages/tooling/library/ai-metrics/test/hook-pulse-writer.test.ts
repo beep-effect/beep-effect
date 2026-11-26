@@ -34,7 +34,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
@@ -841,9 +841,12 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse writer co
         expectation2.toBe(privateDigest2);
         expect(decoded.notifierRev).toBe("log-only-0");
         expect(decoded.waitReason).toBe(waitReason);
-        const transcriptPathForwardedSinceARowWithoutItCannotBeReEncodedForReplay =
-          yield* typeScriptOraclePrivateDigest(baseFields.transcript_path);
-        assertSome(decoded.transcriptPath, transcriptPathForwardedSinceARowWithoutItCannotBeReEncodedForReplay);
+        const transcriptDigest = yield* typeScriptOraclePrivateDigest(baseFields.transcript_path);
+        deepStrictEqual(
+          decoded.transcriptPath,
+          O.some(transcriptDigest),
+          "transcriptPath is forwarded since a row without it cannot be re-encoded for replay"
+        );
         assertSome(decoded.promptId, baseFields.prompt_id);
         expect(
           decoded.permissionMode,
@@ -1129,12 +1132,8 @@ fi
         const root = yield* makeHarnessFixtureRootHittingEveryMirroredWalkRule();
         const oracle = yield* typescriptOracleHarnessHash(root);
         yield* fs.symlink("loop.md", path.join(root, ".claude/loop.md"));
-        const indexSymlinkLoopThatRefusesTheStampEvenAsRoot = yield* ChildProcess.make(
-          "git",
-          ["add", ".claude/loop.md"],
-          { cwd: root }
-        );
-        const exitCode14 = yield* indexSymlinkLoopThatRefusesTheStampEvenAsRoot.exitCode;
+        const indexLoopLink = yield* ChildProcess.make("git", ["add", ".claude/loop.md"], { cwd: root });
+        const exitCode14 = yield* indexLoopLink.exitCode;
         expect(exitCode14).toBe(0);
         const encodedJson15 = yield* encodeRawHarnessJson({
           ...sessionStartPayload(root),
@@ -1145,7 +1144,11 @@ fi
           ...(adapter.registeredEvent === undefined ? {} : { registeredEvent: adapter.registeredEvent }),
         });
         expect(run.rows).toHaveLength(1);
-        assertNone((yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow))).harnessHash);
+        deepStrictEqual(
+          (yield* decodeHookPulseRow(pipe(A.head(run.rows), O.getOrThrow))).harnessHash,
+          O.none(),
+          "an indexed symlink loop refuses the stamp, even when the writer runs as root"
+        );
         for (const failedRun of [run, { ...run, rows: A.empty<string>() }]) {
           const failure = yield* assertAdapterStamp(
             failedRun,
@@ -1410,8 +1413,12 @@ fi
       const exitCode31 = yield* indexed1.exitCode;
       expect(exitCode31).toBe(0);
       yield* typescriptOracleHarnessHash(root);
-      const nonAsciiPathStampRefusedSinceJsAndCSortOrdersMayDisagree = yield* stampOf(sessionStartPayload(root));
-      assertNone(nonAsciiPathStampRefusedSinceJsAndCSortOrdersMayDisagree);
+      const nonAsciiStamp = yield* stampOf(sessionStartPayload(root));
+      deepStrictEqual(
+        nonAsciiStamp,
+        O.none(),
+        "a non-ASCII path stamp is refused since JS and C sort orders may disagree"
+      );
       yield* fs.remove(path.join(root, ".claude", "skills", "caf\u00e9"), { recursive: true });
 
       yield* fs.makeDirectory(path.join(root, ".claude", "bulk"), { recursive: true });
@@ -1428,8 +1435,12 @@ fi
       const exitCode33 = yield* indexed2.exitCode;
       expect(exitCode33).toBe(0);
       pipe((yield* typescriptOracleHarnessHash(root)).snapshot.bounds.truncationReason, O.isSome, assertTrue);
-      const stampRefusedRatherThanGuessingTheTypeScript1000FileTruncation = yield* stampOf(sessionStartPayload(root));
-      assertNone(stampRefusedRatherThanGuessingTheTypeScript1000FileTruncation);
+      const truncatedStamp = yield* stampOf(sessionStartPayload(root));
+      deepStrictEqual(
+        truncatedStamp,
+        O.none(),
+        "the stamp is refused rather than guessing the TypeScript 1000-file truncation"
+      );
     })
   );
 
@@ -1621,8 +1632,8 @@ fi
 
       assertSome(decodedEnd.sessionEndReason, "prompt_input_exit");
       assertNone(decodedStop.sessionEndReason);
-      const permissionDeniedReasonIsContentNotASessionEndReason = decodedDenied.sessionEndReason;
-      assertNone(permissionDeniedReasonIsContentNotASessionEndReason);
+      const deniedEndReason = decodedDenied.sessionEndReason;
+      deepStrictEqual(deniedEndReason, O.none(), "a permission-denied reason is content, not a session-end reason");
     })
   );
 
@@ -1776,23 +1787,25 @@ fi
     }
   );
 
-  it.effect(
-    "carries the bracket-closing toolUseId, durationMs and isInterrupt on PostToolUseFailure, which ends a call in place of PostToolUse",
-    () =>
-      Effect.gen(function* () {
-        const encodedJson56 = yield* encodeRawHarnessJson(postToolUseFailurePayload(true));
-        const interrupted = yield* runWriter(encodedJson56);
-        const encodedJson57 = yield* encodeRawHarnessJson(postToolUseFailurePayload(false));
-        const errored = yield* runWriter(encodedJson57);
-        const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
-        const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
+  it.effect("carries the bracket-closing toolUseId, durationMs and isInterrupt on PostToolUseFailure", () =>
+    Effect.gen(function* () {
+      const encodedJson56 = yield* encodeRawHarnessJson(postToolUseFailurePayload(true));
+      const interrupted = yield* runWriter(encodedJson56);
+      const encodedJson57 = yield* encodeRawHarnessJson(postToolUseFailurePayload(false));
+      const errored = yield* runWriter(encodedJson57);
+      const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
+      const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
 
-        assertSome(decodedInterrupted.toolUseId, "toolu_writer_1");
-        assertSome(decodedInterrupted.durationMs, 12);
-        assertSome(decodedInterrupted.isInterrupt, true);
-        const toolErroredRatherThanTheHumanHittingEscape = false;
-        assertSome(decodedErrored.isInterrupt, toolErroredRatherThanTheHumanHittingEscape);
-      })
+      deepStrictEqual(
+        decodedInterrupted.toolUseId,
+        O.some("toolu_writer_1"),
+        "PostToolUseFailure ends a call in place of PostToolUse, so it carries the bracket-closing id"
+      );
+      assertSome(decodedInterrupted.durationMs, 12);
+      assertSome(decodedInterrupted.isInterrupt, true);
+      const toolErroredRatherThanTheHumanHittingEscape = false;
+      assertSome(decodedErrored.isInterrupt, toolErroredRatherThanTheHumanHittingEscape);
+    })
   );
 
   it.effect(
@@ -1901,46 +1914,44 @@ fi
   };
   const projectionDocument = encodeRawHarnessJson(projectionFields);
 
-  it.effect(
-    "reproduces the writer's private digests through the projection rung, above the ai-metrics rung and below the instrument override",
-    () =>
-      Effect.gen(function* () {
-        const projectionDocument61 = yield* projectionDocument;
-        const { file } = yield* writeProjection(projectionDocument61);
-        const encodedJson62 = yield* encodeRawHarnessJson(preToolUsePayload);
-        const run = yield* runWriter(encodedJson62, {
-          namespaceProjection: file,
-          aiMetricsHashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
-        });
-        const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
-        const expectation10 = expect(writerRow.sessionId);
-        const hashPrivateIdentifier12 = yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT));
-        expectation10.toBe(hashPrivateIdentifier12);
-        const expectation11 = expect(writerRow.cwd);
-        const hashPrivateIdentifier13 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT));
-        expectation11.toBe(hashPrivateIdentifier13);
-        const namespace = yield* withPinnedSaltProviderNotAmbientEnv(
-          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
-          hookPulseNamespace
-        );
-        expect(namespace.source).toBe("projection");
-        const hashPrivateIdentifier63 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
-        expect(hashPrivateIdentifier63).toBe(writerRow.sessionId);
-        const encodedJson64 = yield* encodeRawHarnessJson(preToolUsePayload);
-        const overridden = yield* runWriter(encodedJson64, {
-          namespaceProjection: file,
-          hashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
-        });
-        const overriddenRow = yield* decodeHookPulseRow(expectSingleRow(overridden));
-        const expectation12 = expect(overriddenRow.sessionId, "the instrument override wins over the projection");
-        const hashPrivateIdentifier14 = yield* hashPrivateIdentifier(session, O.some(SALT_SHARED_BY_WRITER_AND_CODEC));
-        expectation12.toBe(hashPrivateIdentifier14);
-        const overriddenNamespace = yield* withPinnedSaltProviderNotAmbientEnv(
-          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
-          hookPulseNamespace
-        );
-        expect(overriddenNamespace.source).toBe("hook-pulse-env");
-      })
+  it.effect("reproduces the writer's private digests through the projection rung, above the ai-metrics rung", () =>
+    Effect.gen(function* () {
+      const projectionDocument61 = yield* projectionDocument;
+      const { file } = yield* writeProjection(projectionDocument61);
+      const encodedJson62 = yield* encodeRawHarnessJson(preToolUsePayload);
+      const run = yield* runWriter(encodedJson62, {
+        namespaceProjection: file,
+        aiMetricsHashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
+      });
+      const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
+      const expectation10 = expect(writerRow.sessionId);
+      const hashPrivateIdentifier12 = yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT));
+      expectation10.toBe(hashPrivateIdentifier12);
+      const expectation11 = expect(writerRow.cwd);
+      const hashPrivateIdentifier13 = yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT));
+      expectation11.toBe(hashPrivateIdentifier13);
+      const namespace = yield* withPinnedSaltProviderNotAmbientEnv(
+        { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
+        hookPulseNamespace
+      );
+      expect(namespace.source).toBe("projection");
+      const hashPrivateIdentifier63 = yield* hashPrivateIdentifier(session, namespace.hashSalt);
+      expect(hashPrivateIdentifier63).toBe(writerRow.sessionId);
+      const encodedJson64 = yield* encodeRawHarnessJson(preToolUsePayload);
+      const overridden = yield* runWriter(encodedJson64, {
+        namespaceProjection: file,
+        hashSalt: SALT_SHARED_BY_WRITER_AND_CODEC,
+      });
+      const overriddenRow = yield* decodeHookPulseRow(expectSingleRow(overridden));
+      const expectation12 = expect(overriddenRow.sessionId, "the instrument override wins over the projection");
+      const hashPrivateIdentifier14 = yield* hashPrivateIdentifier(session, O.some(SALT_SHARED_BY_WRITER_AND_CODEC));
+      expectation12.toBe(hashPrivateIdentifier14);
+      const overriddenNamespace = yield* withPinnedSaltProviderNotAmbientEnv(
+        { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: SALT_SHARED_BY_WRITER_AND_CODEC },
+        hookPulseNamespace
+      );
+      expect(overriddenNamespace.source).toBe("hook-pulse-env");
+    })
   );
 
   it.effect("matches accepted projection salts byte for byte, including significant spaces and extra keys", () =>
@@ -2119,7 +2130,10 @@ fi
           },
           hookPulseNamespace
         ).pipe(Effect.flip);
-        expect(resolved._tag).toBe("HookPulseNamespaceError");
+        expect(
+          resolved._tag,
+          "the link is read before exists, which follows a link and would hide a dangling one"
+        ).toBe("HookPulseNamespaceError");
       }
     })
   );
@@ -2269,8 +2283,12 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse kill-swit
 
       expectSwitchOk(run);
       const readSentinel76 = yield* readSentinel(store);
-      const seedByteIdenticalWithReasonTimestampAndTrailingNewline = yield* seededSentinelJson;
-      assertSome(readSentinel76, seedByteIdenticalWithReasonTimestampAndTrailingNewline);
+      const seed = yield* seededSentinelJson;
+      deepStrictEqual(
+        readSentinel76,
+        O.some(seed),
+        "the sentinel stays byte-identical to the seed, with its reason, timestamp and trailing newline"
+      );
       expect(run.stdout).toContain(SEEDED_DISARM_OLDER_THAN_ANY_DATE_U_SECOND.disarmedAt);
     })
   );
@@ -2339,16 +2357,24 @@ it.layer(GitKitOverNodeSpawner, { timeout: "30 seconds" })("hook-pulse kill-swit
             disarmed.stderr,
             "jq diagnostics on a mangled sentinel are handled and never reach stderr, so operators are not trained to ignore the channel that reports real trouble"
           ).toBe("");
-          const unparseableSentinelIsStillASentinelWithNoInventedStart = yield* readSentinel(store);
-          assertSome(unparseableSentinelIsStillASentinelWithNoInventedStart, contents);
+          const keptSentinel = yield* readSentinel(store);
+          deepStrictEqual(
+            keptSentinel,
+            O.some(contents),
+            "an unparseable sentinel is still a sentinel, with no invented start"
+          );
 
           const armed = yield* runSwitch(store, ["arm"]);
           const readWindowRows81 = yield* readWindowRows(store);
           const window = yield* decodeDisarmWindow(expectSingleWindow(readWindowRows81));
 
           expectSwitchOk(armed);
-          const disarmedAtIsNullNeverTheRearmInstantThatWouldReadAsZeroLengthCoverage = window.disarmedAt;
-          assertNone(disarmedAtIsNullNeverTheRearmInstantThatWouldReadAsZeroLengthCoverage);
+          const disarmedAt = window.disarmedAt;
+          deepStrictEqual(
+            disarmedAt,
+            O.none(),
+            "disarmedAt is null, never the rearm instant that would read as zero-length coverage"
+          );
           assertNone(window.reason);
           expect(window.rearmedAt).toMatch(isoUtcSecondAsDateUPrintsIt);
           const readSentinel82 = yield* readSentinel(store);

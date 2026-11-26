@@ -9,12 +9,16 @@ describe("TomlDateTime classes", () => {
     const d = TomlLocalDate.make({ year: 1979, month: 5, day: 27 });
     assert.strictEqual(d.toString(), "1979-05-27");
   });
-  it("rejects impossible calendar dates with the predicate's own text naming the day, which no static message annotation may replace", () => {
+  it("rejects impossible calendar dates with the predicate's own text naming the day", () => {
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 2, day: 29 }));
     assert.throws(() => TomlLocalDate.make({ year: 2021, month: 4, day: 31 }));
     const february = S.decodeResult(TomlLocalDate)({ year: 2021, month: 2, day: 29 });
     const reported = Result.match(february, { onFailure: String, onSuccess: () => "decoded" });
-    assert.include(reported, "day 29 does not exist in 2021-02 (month has 28 days)");
+    assert.include(
+      reported,
+      "day 29 does not exist in 2021-02 (month has 28 days)",
+      "no static message annotation may replace the predicate's own text"
+    );
   });
   it("accepts leap-day and century rules", () => {
     assert.strictEqual(TomlLocalDate.make({ year: 2000, month: 2, day: 29 }).day, 29);
