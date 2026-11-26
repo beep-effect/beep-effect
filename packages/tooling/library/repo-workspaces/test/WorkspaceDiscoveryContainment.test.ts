@@ -1,21 +1,10 @@
-import { identity } from "effect/Function";
-// `containWithinRoot`: discovery that stays inside the workspace root's real
-// path.
-//
-// Upstream discovery follows links, as the package managers do: a member
-// directory that is a link to somewhere outside the checkout is read like any
-// other. A caller that scans a checkout it does not fully trust (the repo
-// CLI's Quality generators, 4-A1) opts into containment, and then such a link
-// must be skipped BEFORE its manifest is read and before a `**` descent walks
-// into it — a malformed manifest outside the root can no longer fail
-// discovery, and a link to a large tree can no longer spend the visit budget.
-
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { WorkspaceDiscovery, WorkspaceRoot } from "@beep/repo-workspaces";
 import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -40,28 +29,33 @@ const root = (patterns: ReadonlyArray<string>): string =>
     identity
   );
 
-/** A tree with links that leave `/repo` and links that stay inside it. */
-const linked: Seed = {
-  "/repo/package.json": root(["packages/*", "escape", "groups/**", "outer/*", "inner", "dangling/*", "absent"]),
-  "/repo/packages/a/package.json": manifest("a"),
-  // Leaves the root: its manifest is not even JSON.
+const nonJsonManifestOutside: Seed = {
   "/repo/packages/out": MemoryFileSystem.symlink("/outside/broken"),
   "/outside/broken/package.json": "{",
-  // A literal member that leaves the root.
+};
+const literalMemberOutside: Seed = {
   "/repo/escape": MemoryFileSystem.symlink("/outside/good"),
   "/outside/good/package.json": manifest("outside-good"),
-  // A `**` descent whose first level leaves the root into a deep tree.
+};
+const globstarDescentIntoDeepOutside: Seed = {
   "/repo/groups/local/package.json": manifest("local"),
   "/repo/groups/away": MemoryFileSystem.symlink("/outside/tree"),
   "/outside/tree/one/package.json": manifest("tree-one"),
   "/outside/tree/one/two/package.json": manifest("tree-two"),
-  // A wildcard base that itself leaves the root.
-  "/repo/outer": MemoryFileSystem.symlink("/outside/tree"),
-  // A literal link that stays inside the root.
-  "/repo/inner": MemoryFileSystem.symlink("/repo/packages/a"),
-  // A dangling link under a wildcard base; `absent` names nothing at all, so
-  // its real path cannot be resolved.
-  "/repo/dangling/gone": MemoryFileSystem.symlink("/repo/nowhere"),
+};
+const wildcardBaseOutside: Seed = { "/repo/outer": MemoryFileSystem.symlink("/outside/tree") };
+const literalLinkInside: Seed = { "/repo/inner": MemoryFileSystem.symlink("/repo/packages/a") };
+const danglingLinkUnderWildcard: Seed = { "/repo/dangling/gone": MemoryFileSystem.symlink("/repo/nowhere") };
+
+const escapingAndInternalLinks: Seed = {
+  "/repo/package.json": root(["packages/*", "escape", "groups/**", "outer/*", "inner", "dangling/*", "absent"]),
+  "/repo/packages/a/package.json": manifest("a"),
+  ...nonJsonManifestOutside,
+  ...literalMemberOutside,
+  ...globstarDescentIntoDeepOutside,
+  ...wildcardBaseOutside,
+  ...literalLinkInside,
+  ...danglingLinkUnderWildcard,
 };
 
 const discoveryOver = (seed: Seed, options: WorkspaceDiscoveryOptions.Encoded, faults = {}) => {
@@ -102,7 +96,7 @@ const escapingOnly: Seed = {
 const brokenOutside = "Workspace discovery failed at /repo/packages/out/package.json (invalidJson)";
 
 describe("WorkspaceDiscovery containWithinRoot", () => {
-  layer(discoveryOver(linked, {}), { timeout: "30 seconds" })("absent", (it) => {
+  layer(discoveryOver(escapingAndInternalLinks, {}), { timeout: "30 seconds" })("absent", (it) => {
     it.effect("follows links out of the root, so a broken manifest outside it fails discovery", () =>
       Effect.gen(function* () {
         strictEqual((yield* Effect.flip(listed)).message, brokenOutside);
@@ -110,22 +104,32 @@ describe("WorkspaceDiscovery containWithinRoot", () => {
     );
   });
 
-  layer(discoveryOver(linked, { containWithinRoot: false }), { timeout: "30 seconds" })("false", (it) => {
-    it.effect("follows links out of the root, as when the option is absent", () =>
-      Effect.gen(function* () {
-        strictEqual((yield* Effect.flip(listed)).message, brokenOutside);
-      })
-    );
-  });
+  layer(discoveryOver(escapingAndInternalLinks, { containWithinRoot: false }), { timeout: "30 seconds" })(
+    "false",
+    (it) => {
+      it.effect("follows links out of the root, as when the option is absent", () =>
+        Effect.gen(function* () {
+          strictEqual((yield* Effect.flip(listed)).message, brokenOutside);
+        })
+      );
+    }
+  );
 
-  layer(discoveryOver(linked, { containWithinRoot: true }), { timeout: "30 seconds" })("true", (it) => {
-    it.effect("skips every directory whose real path leaves the root, before reading or descending into it", () =>
-      Effect.gen(function* () {
-        const listed1 = yield* listed;
-        deepStrictEqual(listed1, ["root=.", "local=groups/local", "a=inner", "a=packages/a"]);
-      })
-    );
-  });
+  layer(discoveryOver(escapingAndInternalLinks, { containWithinRoot: true }), { timeout: "30 seconds" })(
+    "true",
+    (it) => {
+      it.effect("skips every directory whose real path leaves the root, before reading or descending into it", () =>
+        Effect.gen(function* () {
+          const listed1 = yield* listed;
+          deepStrictEqual(
+            listed1,
+            ["root=.", "local=groups/local", "a=inner", "a=packages/a"],
+            "an untrusted checkout's escaping links: no manifest outside fails discovery or spends the visit budget; dangling/gone and absent have no real path"
+          );
+        })
+      );
+    }
+  );
 
   layer(discoveryOver(escapingOnly, { containWithinRoot: true }, unresolvableRoot), { timeout: "30 seconds" })(
     "true, with a root realPath cannot resolve",

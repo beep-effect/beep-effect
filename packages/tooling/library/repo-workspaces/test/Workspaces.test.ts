@@ -1,11 +1,3 @@
-// The one-call conveniences on the composite: `Workspaces.resolverLayer`
-// (the two @effected/npm contracts over one factory call) and
-// `Workspaces.resolveManifest` (whole-manifest projection in one shot).
-//
-// Everything runs on the virtual filesystem — `platform(tree)` — so the
-// factory's FileSystem/Path requirement is discharged without a platform
-// package, exactly like every other suite here.
-
 import { CatalogResolver } from "@beep/npm-spec/CatalogResolver";
 import { Manifest, UnresolvedDependencyError } from "@beep/npm-spec/Manifest";
 import { WorkspaceResolver } from "@beep/npm-spec/WorkspaceResolver";
@@ -62,11 +54,12 @@ describe("Workspaces.resolveManifest", () => {
           lodash: "^4.17.0",
           react: "^18.2.0",
         });
-        // `workspace:^` is the pnpm publish projection against the member's
-        // CONCRETE version, not a passthrough.
-        assert.deepStrictEqual(record.devDependencies, { "@x/a": "^1.2.3" });
-        // Non-dependency fields ride through untouched.
-        assert.strictEqual(record.name, "consumer");
+        assert.deepStrictEqual(
+          record.devDependencies,
+          { "@x/a": "^1.2.3" },
+          "workspace:^ is pnpm's publish projection against the member's concrete version, not a passthrough"
+        );
+        assert.strictEqual(record.name, "consumer", "non-dependency fields ride through untouched");
         assert.deepStrictEqual(record.scripts, { build: "tsc" });
         assert.isFalse(resolved.needsResolution);
       })
@@ -79,11 +72,14 @@ describe("Workspaces.resolveManifest", () => {
           dependencies: { viz: "workspace:@x/a@*", charts: "workspace:@x/a@^" },
         });
         const resolved = yield* Workspaces.resolveManifest(manifest, { cwd: "/repo" });
-        // The dep key is the alias; the version is the TARGET member's.
-        assert.deepStrictEqual(resolved.toRecord().dependencies, {
-          charts: "npm:@x/a@^1.2.3",
-          viz: "npm:@x/a@1.2.3",
-        });
+        assert.deepStrictEqual(
+          resolved.toRecord().dependencies,
+          {
+            charts: "npm:@x/a@^1.2.3",
+            viz: "npm:@x/a@1.2.3",
+          },
+          "the dependency key is the alias; the version is the target member's"
+        );
       })
     );
 
@@ -100,8 +96,7 @@ describe("Workspaces.resolveManifest", () => {
     it.effect("a manifest with nothing to resolve passes through unchanged", () =>
       Effect.gen(function* () {
         const manifest = yield* Manifest.decode({ name: "plain", dependencies: { effect: "^4.0.0" } });
-        // The documented skip-fast path: nothing to resolve, no assembly needed.
-        assert.isFalse(manifest.needsResolution);
+        assert.isFalse(manifest.needsResolution, "the documented skip-fast path: nothing to resolve, no assembly");
         const resolved = yield* Workspaces.resolveManifest(manifest, { cwd: "/repo" });
         assert.deepStrictEqual(resolved.toRecord(), { dependencies: { effect: "^4.0.0" }, name: "plain" });
       })
@@ -110,47 +105,31 @@ describe("Workspaces.resolveManifest", () => {
 });
 
 describe("Workspaces.resolverLayer", () => {
-  // A fresh layer per call is the factory's documented contract; a suite
-  // boundary needs exactly one, bound to a const — same rule as any layer.
-  // Its own requirement set is FileSystem | Path, discharged by the same
-  // virtual platform every other suite uses.
   const Resolvers = Workspaces.resolverLayer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(TREE)));
   it.layer(Resolvers, { timeout: "30 seconds" })((it) => {
-    it.effect("provides both @effected/npm contracts over one factory call", () =>
-      Effect.gen(function* () {
-        const catalogs = yield* CatalogResolver;
-        const workspaces = yield* WorkspaceResolver;
-        const rangeOf1 = yield* catalogs.rangeOf("effect", O.none());
-        assertSome(rangeOf1, "^4.0.0");
-        const rangeOf2 = yield* catalogs.rangeOf("react", O.some("react18"));
-        assertSome(rangeOf2, "^18.2.0");
-        const versionOf3 = yield* workspaces.versionOf("@x/a");
-        assertSome(versionOf3, "1.2.3");
-        // An unmatched name is none, not an error — the contract's convention.
-        const rangeOf4 = yield* catalogs.rangeOf("nothing", O.none());
-        assertNone(rangeOf4);
-      })
+    it.effect(
+      "provides both @effected/npm contracts over one factory call; an unmatched name is none, not an error",
+      () =>
+        Effect.gen(function* () {
+          const catalogs = yield* CatalogResolver;
+          const workspaces = yield* WorkspaceResolver;
+          const rangeOf1 = yield* catalogs.rangeOf("effect", O.none());
+          assertSome(rangeOf1, "^4.0.0");
+          const rangeOf2 = yield* catalogs.rangeOf("react", O.some("react18"));
+          assertSome(rangeOf2, "^18.2.0");
+          const versionOf3 = yield* workspaces.versionOf("@x/a");
+          assertSome(versionOf3, "1.2.3");
+          const unmatchedNameRange = yield* catalogs.rangeOf("nothing", O.none());
+          assertNone(unmatchedNameRange);
+        })
     );
   });
 });
 
-//
-// `Workspaces.layer()` deliberately does NOT provide a `PublishabilityDetector`;
-// it requires one. The reason is a silent-revert hazard rather than taste: when
-// the composite supplied npm semantics itself, `Layer.mergeAll` being last-wins
-// meant the natural spelling of an override —
-// `Layer.mergeAll(myDetector, Workspaces.layer())` — resolved to the DEFAULT,
-// with no type error. For the service that decides whether a package publishes
-// and to which registry, silently reverting to "publishes to the public npm
-// registry, access public" is the worst failure available.
-//
-// These tests pin the fix from the outside: a caller's detector is the one
-// observed through the composite, in BOTH merge orders, because there is no
-// default left to shadow it.
+// decision: composite-supplies-no-publishability-detector
 const CUSTOM_REGISTRY = "https://npm.internal.test/";
 
-/** A detector nothing in this package would ever produce by accident. */
-const customDetector = Layer.succeed(PublishabilityDetector, {
+const unmistakableCustomDetector = Layer.succeed(PublishabilityDetector, {
   detect: Effect.fn("PublishabilityDetector.detect")((pkg: WorkspacePackage) =>
     Effect.succeed([
       PublishTarget.make({
@@ -164,8 +143,7 @@ const customDetector = Layer.succeed(PublishabilityDetector, {
   ),
 });
 
-/** Resolves whichever detector is in context and reports its registry. */
-const observedRegistry = Effect.gen(function* () {
+const registryOfDetectorInContext = Effect.gen(function* () {
   const detector = yield* PublishabilityDetector;
   const targets = yield* detector.detect(
     WorkspacePackage.make({
@@ -181,28 +159,28 @@ const observedRegistry = Effect.gen(function* () {
 });
 
 describe("Workspaces.layer — the publishability seam", () => {
-  it.layer(Layer.mergeAll(Workspaces.layer(), customDetector).pipe(Layer.provideMerge(platform(TREE))), {
+  it.layer(Layer.mergeAll(Workspaces.layer(), unmistakableCustomDetector).pipe(Layer.provideMerge(platform(TREE))), {
     timeout: "30 seconds",
   })((it) => {
     it.effect("a caller's detector is observed when merged AFTER the composite", () =>
       Effect.gen(function* () {
-        const observedRegistry5 = yield* observedRegistry;
+        const observedRegistry5 = yield* registryOfDetectorInContext;
         assert.strictEqual(observedRegistry5, CUSTOM_REGISTRY);
       })
     );
   });
 
-  it.layer(Layer.mergeAll(customDetector, Workspaces.layer()).pipe(Layer.provideMerge(platform(TREE))), {
+  it.layer(Layer.mergeAll(unmistakableCustomDetector, Workspaces.layer()).pipe(Layer.provideMerge(platform(TREE))), {
     timeout: "30 seconds",
   })((it) => {
     it.effect("and when merged BEFORE it — the order that used to silently lose", () =>
-      // This is the regression. With a default baked into the composite, this
-      // spelling resolved to npm semantics and published to the wrong registry
-      // with no diagnostic. It passes now because the composite supplies no
-      // detector at all, so there is nothing to shadow the caller's.
       Effect.gen(function* () {
-        const observedRegistry6 = yield* observedRegistry;
-        assert.strictEqual(observedRegistry6, CUSTOM_REGISTRY);
+        const observedRegistry6 = yield* registryOfDetectorInContext;
+        assert.strictEqual(
+          observedRegistry6,
+          CUSTOM_REGISTRY,
+          "the regression: a default baked into the composite won this spelling and published to the wrong registry"
+        );
       })
     );
   });
@@ -213,7 +191,7 @@ describe("Workspaces.layer — the publishability seam", () => {
   )((it) => {
     it.effect("layerNpm is opt-in and still yields npm semantics", () =>
       Effect.gen(function* () {
-        const observedRegistry7 = yield* observedRegistry;
+        const observedRegistry7 = yield* registryOfDetectorInContext;
         assert.strictEqual(observedRegistry7, "https://registry.npmjs.org/");
       })
     );
@@ -225,15 +203,12 @@ describe("Workspaces.layer — the publishability seam", () => {
   )((it) => {
     it.effect("layerNone publishes nothing", () =>
       Effect.gen(function* () {
-        const observedRegistry8 = yield* observedRegistry;
+        const observedRegistry8 = yield* registryOfDetectorInContext;
         assert.strictEqual(observedRegistry8, undefined);
       })
     );
   });
   it.effect("the npm rules are reachable as a VALUE, without entering the tag", () =>
-    // The contortion this deletes: silk had to write
-    // `Effect.provide(PublishabilityDetector, PublishabilityDetector.layer)`
-    // inside its own implementation of that tag to reach these rules.
     Effect.gen(function* () {
       const targets = yield* PublishabilityDetector.npm.detect(
         WorkspacePackage.make({
@@ -245,7 +220,11 @@ describe("Workspaces.layer — the publishability seam", () => {
           workspaceRoot: "/repo",
         })
       );
-      assert.strictEqual(targets[0]?.registry, "https://registry.npmjs.org/");
+      assert.strictEqual(
+        targets[0]?.registry,
+        "https://registry.npmjs.org/",
+        "silk had to provide PublishabilityDetector inside its own implementation of the tag to reach these rules"
+      );
     })
   );
 });
@@ -274,21 +253,19 @@ describe("composite workspace option schemas", () => {
       { arbitrary: fcRuns(100) }
     );
   };
-  // The owning depth declaration accepts all numbers but has no generation link.
-  // Add one only to the generator; codecs under test remain the actual composites.
-  const depth = WorkspacesOptions.fields.maxDepth.annotate({
+  const depthWithGeneratorLink = WorkspacesOptions.fields.maxDepth.annotate({
     toCodecArbitrary: () =>
       S.link<number>()(S.Finite, SchemaTransformation.transform({ decode: identity, encode: identity })),
   });
   roundTrip(
     "WorkspacesOptions retains all owning-service fields",
     WorkspacesOptions,
-    S.Struct({ ...WorkspacesOptions.fields, maxDepth: depth })
+    S.Struct({ ...WorkspacesOptions.fields, maxDepth: depthWithGeneratorLink })
   );
   roundTrip(
     "WorkspacesGitOptions retains all snapshot fields",
     WorkspacesGitOptions,
-    S.Struct({ ...WorkspacesGitOptions.fields, maxDepth: depth })
+    S.Struct({ ...WorkspacesGitOptions.fields, maxDepth: depthWithGeneratorLink })
   );
   it.effect("omitted options stay omitted and an explicit undefined stopAt is rejected", () =>
     Effect.gen(function* () {

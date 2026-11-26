@@ -3539,6 +3539,7 @@
     {"file":"packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.schemas.ts","symbol":"RuntimeRootChoice","kind":"struct-const","owner":"@beep/repo-cli","identity":"RuntimeRootChoice","description":"Absolute base directory for machine-wide coordination state and how it was selected."},
     {"file":"packages/tooling/tool/cli/src/internal/repo-run/RuntimeRoot.schemas.ts","symbol":"RuntimeRootKind","kind":"literal-kit","owner":"@beep/repo-cli","identity":"RuntimeRootKind","description":"Origin of the chosen runtime root: the invariant host coordination root or an injected test override."},
     {"file":"packages/tooling/tool/cli/src/internal/state/WorkstationState.ts","symbol":"CheckoutRepository","kind":"struct-const","owner":"@beep/repo-cli","identity":"CheckoutRepository","description":"Canonical home of a checkout, from its origin fetch URL; keys workstation state."},
-    {"file":"packages/tooling/tool/cli/src/internal/state/WorkstationState.ts","symbol":"CheckoutRepositorySlug","kind":"codec","owner":"@beep/repo-cli","identity":"CheckoutRepositorySlug","description":"The host/owner/name spelling of a checkout repository."}
+    {"file":"packages/tooling/tool/cli/src/internal/state/WorkstationState.ts","symbol":"CheckoutRepositorySlug","kind":"codec","owner":"@beep/repo-cli","identity":"CheckoutRepositorySlug","description":"The host/owner/name spelling of a checkout repository."},
+    {"file":"packages/tooling/tool/cli/src/internal/state/WorkstationState.ts","symbol":"StateFileVariant","kind":"literal-kit","owner":"@beep/repo-cli","identity":"StateFileVariant","description":"A per-repository state file named <key>.<variant>.jsonl beside the plain <key>.jsonl file."}
   ]
 }

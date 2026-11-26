@@ -40,9 +40,8 @@ describe("PackageManagerDetector.makeTest, the house double whose detect has no 
       const double = PackageManagerDetector.makeTest();
       const exit = yield* Effect.exit(double.detect("/repo"));
 
-      // Assert helpers are not type predicates, so narrow with a real `if`.
       if (!Exit.isFailure(exit)) {
-        assert.fail("expected the unstubbed member to die");
+        assert.fail("expected the unstubbed member to die; assert helpers do not narrow, so this `if` does");
       }
       assert.isTrue(Cause.hasDies(exit.cause), "detect has no honest default, unlike LocalExec's real Option.none()");
       assert.isFalse(

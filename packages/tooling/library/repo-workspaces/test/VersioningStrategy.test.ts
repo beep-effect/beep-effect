@@ -1,8 +1,3 @@
-// Classification is pure and total, so most of this file is plain `it()`.
-// Only `detect` — the one effectful entry point — needs a runner, and it is
-// tested against `WorkspaceDiscovery.layerTest` plus a stub
-// `PublishabilityDetector`, so nothing here touches a filesystem.
-
 import {
   PublishabilityDetector,
   PublishTarget,
@@ -26,8 +21,7 @@ const pkg = (name: string) =>
     workspaceRoot: "/repo",
   });
 
-/** A detector that publishes exactly the named packages and nothing else. */
-const publishes = (...names: ReadonlyArray<string>) =>
+const publishesExactly = (...names: ReadonlyArray<string>) =>
   Layer.succeed(PublishabilityDetector, {
     detect: Effect.fn("PublishabilityDetector.detect")((candidate: WorkspacePackage) =>
       Effect.succeed(
@@ -71,35 +65,39 @@ describe("VersioningStrategy.classify", () => {
   });
 
   it("a group that covers only SOME publishable packages is `independent`", () => {
-    // The discriminating case: a naive "is there any fixed group?" test would
-    // call this fixed-group and cut one shared tag for packages that version
-    // separately.
     const strategy = VersioningStrategy.classify({
       packages: ["a", "b", "c"],
       fixedGroups: [["a", "b"]],
     });
-    assert.strictEqual(strategy.type, "independent");
+    assert.strictEqual(
+      strategy.type,
+      "independent",
+      "an any-fixed-group test would cut one shared tag for packages that version separately"
+    );
   });
 
   it("groups are matched INDIVIDUALLY — two groups covering the set between them is `independent`", () => {
-    // The union of the groups covers everything, but no SINGLE group does, so
-    // the packages do not move in lockstep.
     const strategy = VersioningStrategy.classify({
       packages: ["a", "b"],
       fixedGroups: [["a"], ["b"]],
     });
-    assert.strictEqual(strategy.type, "independent");
+    assert.strictEqual(
+      strategy.type,
+      "independent",
+      "the union covers everything but no single group does: no lockstep"
+    );
   });
 
   it("a group naming packages that are not publishable still counts", () => {
-    // `fixedGroups` is caller-supplied and describes the whole repo, not just
-    // the publishable slice. A group that is a strict SUPERSET of the
-    // publishable set still means lockstep.
     const strategy = VersioningStrategy.classify({
       packages: ["a", "b"],
       fixedGroups: [["a", "b", "private-thing", "does-not-exist"]],
     });
-    assert.strictEqual(strategy.type, "fixed-group");
+    assert.strictEqual(
+      strategy.type,
+      "fixed-group",
+      "fixedGroups describes the whole repo, so a strict superset of the publishable set is still lockstep"
+    );
   });
 
   it("publishable packages are sorted and de-duplicated", () => {
@@ -108,9 +106,11 @@ describe("VersioningStrategy.classify", () => {
   });
 
   it("a duplicated single package is still `single`", () => {
-    // Without de-duplication `["a", "a"]` has length 2 and misclassifies as
-    // independent, cutting per-package tags for a one-package repo.
-    assert.strictEqual(VersioningStrategy.classify({ packages: ["a", "a"] }).type, "single");
+    assert.strictEqual(
+      VersioningStrategy.classify({ packages: ["a", "a"] }).type,
+      "single",
+      "without de-duplication this has length 2 and cuts per-package tags for a one-package repo"
+    );
   });
 });
 
@@ -137,9 +137,8 @@ describe("VersioningStrategy.tagsFor", () => {
     const tags = VersioningStrategy.classify({ packages: ["@acme/cli", "helper"] }).tagsFor(releases);
     assert.deepStrictEqual(
       A.map(tags, (tag) => tag.value),
-      // The default versionPrefix is "" uniformly (strict SemVer,
-      // 2026-07-25) — no scoped/unscoped asymmetry.
-      ["@acme/cli@1.2.3", "helper@1.2.3"]
+      ["@acme/cli@1.2.3", "helper@1.2.3"],
+      'the default versionPrefix is "" for scoped and unscoped names alike'
     );
   });
 
@@ -182,7 +181,7 @@ describe("VersioningStrategy.detect — independent", () => {
       WorkspaceDiscovery.layerTest({
         listPackages: Effect.suspend(() => Effect.succeed([pkg("a"), pkg("b"), pkg("internal")])),
       }),
-      publishes("a", "b")
+      publishesExactly("a", "b")
     ),
     { timeout: "30 seconds" }
   )((it) => {
@@ -190,10 +189,11 @@ describe("VersioningStrategy.detect — independent", () => {
       Effect.gen(function* () {
         const strategy = yield* VersioningStrategy.detect();
         assert.strictEqual(strategy.type, "independent");
-        // `internal` publishes nowhere, so it must not appear — a workspace
-        // with two publishable packages and fifty private ones is still a
-        // two-package release.
-        assert.deepStrictEqual(strategy.publishablePackages, ["a", "b"]);
+        assert.deepStrictEqual(
+          strategy.publishablePackages,
+          ["a", "b"],
+          "internal publishes nowhere; two publishable packages beside fifty private ones is a two-package release"
+        );
       })
     );
   });
@@ -203,7 +203,7 @@ describe("VersioningStrategy.detect — fixed groups supplied by the caller", ()
   layer(
     Layer.mergeAll(
       WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed([pkg("a"), pkg("b")])) }),
-      publishes("a", "b")
+      publishesExactly("a", "b")
     ),
     { timeout: "30 seconds" }
   )((it) => {
@@ -229,7 +229,7 @@ describe("VersioningStrategy.detect — nothing publishes", () => {
   layer(
     Layer.mergeAll(
       WorkspaceDiscovery.layerTest({ listPackages: Effect.suspend(() => Effect.succeed([pkg("a"), pkg("b")])) }),
-      publishes()
+      publishesExactly()
     ),
     { timeout: "30 seconds" }
   )((it) => {

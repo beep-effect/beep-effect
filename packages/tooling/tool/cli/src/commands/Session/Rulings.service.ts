@@ -19,9 +19,8 @@ import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { makeJsonLinesStore, makeMemoryJsonLinesStore } from "../../internal/state/JsonLinesStore.ts";
-import { CheckoutRepository, repositoryJsonLinesFileName } from "../../internal/state/WorkstationState.ts";
+import { CheckoutRepository, repositoryVariantFileName } from "../../internal/state/WorkstationState.ts";
 import { orchestratorStateDirectory } from "./Register.service.ts";
 import { RulingRow, RulingRowJson } from "./Rulings.schemas.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
@@ -87,10 +86,7 @@ export class OrchestratorRulings extends Context.Service<OrchestratorRulings, Or
  * @category services
  * @since 0.0.0
  */
-export const rulingsFileName: (repository: CheckoutRepository) => string = flow(
-  repositoryJsonLinesFileName,
-  Str.replace(/\.jsonl$/u, ".rulings.jsonl")
-);
+export const rulingsFileName: (repository: CheckoutRepository) => string = repositoryVariantFileName("rulings");
 
 /**
  * Build the live rulings store against the workstation state directory.
