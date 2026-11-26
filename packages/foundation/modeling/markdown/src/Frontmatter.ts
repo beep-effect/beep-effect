@@ -444,6 +444,11 @@ export class FrontmatterCodec {
   /**
    * Decode a capture node's raw value into data.
    *
+   * **Gotchas**
+   *
+   * An engine defect thrown while parsing surfaces as a defect of the
+   * returned effect, never at call time.
+   *
    * @since 0.0.0
    */
   readonly decode: (
@@ -452,6 +457,11 @@ export class FrontmatterCodec {
 
   /**
    * Serialize data into a frontmatter body, without fences.
+   *
+   * **Gotchas**
+   *
+   * An engine defect thrown while serializing surfaces as a defect of the
+   * returned effect, never at call time.
    *
    * @since 0.0.0
    */
@@ -469,8 +479,6 @@ export class FrontmatterCodec {
         : Result.fail(FrontmatterFormatMismatchError.make({ expected: format, actual: node.format }));
     this.encodeResult = (data) =>
       Result.mapError(stringify(data), (cause) => FrontmatterEncodeError.make({ format, cause }));
-    // Suspended so an engine defect thrown while parsing or serializing
-    // surfaces as a defect of the returned effect, never at call time.
     this.decode = Effect.fn("FrontmatterCodec.decode")((node: FrontmatterNode) =>
       Effect.suspend(() => Effect.fromResult(this.decodeResult(node)))
     );

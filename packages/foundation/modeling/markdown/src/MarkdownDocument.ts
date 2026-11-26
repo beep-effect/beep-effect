@@ -179,7 +179,8 @@ export class DocumentSection extends S.Opaque<DocumentSection, { readonly brand:
     ),
     bodyRange: MarkdownRange.pipe(
       $I.annoteKey("DocumentSection.bodyRange", {
-        description: "The section without its heading: from the heading node's end offset to the section's end",
+        description:
+          "The section without its heading: from the heading node's end offset to the section's end; a setext heading's node span covers its underline, so the body never begins inside it",
       })
     ),
     source: S.String.pipe(

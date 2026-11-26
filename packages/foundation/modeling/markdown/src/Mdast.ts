@@ -577,7 +577,7 @@ export class Mdast {
    * (the vendored interop corpus pins this). The frontmatter capture
    * projects to a `yaml`/`toml`/`json` literal node.
    *
-   * Three engine conventions are translated rather than forwarded. A `code`
+   * Four engine conventions are translated rather than forwarded. A `code`
    * value drops the one final line feed this package's nodes carry, as
    * `mdast-util-from-markdown` stores it, and `fromMdast` restores it; a
    * carriage return before it is content and stays. A `label` is decoded of
