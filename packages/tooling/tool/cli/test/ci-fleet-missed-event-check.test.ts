@@ -2190,6 +2190,52 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
       })
     );
 
+    layerIt.effect("--guard without an event name reads the runs like a scheduled run", () =>
+      Effect.gen(function* () {
+        const { exit, recorded } = yield* runCommandFor(
+          ["--guard"],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_RUN_ID: "12" },
+          emptyFleet
+        );
+        expect(exit._tag).toBe("Success");
+        expect(A.length(recorded)).toBe(1);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain(
+          "fleet missed-event guard: run; no previous check run found"
+        );
+      })
+    );
+
+    layerIt.effect("passes when the current run's check job has not started", () =>
+      Effect.gen(function* () {
+        const startedAt = DateTime.formatIso(DateTime.makeUnsafe(ago(20)));
+        const routes: ReadonlyArray<Route> = [
+          ["actions/runners", 200, '{"total_count":0,"runners":[]}'],
+          [
+            "workflows/fleet-missed-event-check.yml/runs",
+            200,
+            '{"total_count":2,"workflow_runs":[{"id":12,"created_at":"2026-11-22T21:20:00Z"},{"id":11,"created_at":"2026-11-22T21:00:00Z"}]}',
+          ],
+          [
+            "actions/runs/11/jobs",
+            200,
+            `{"total_count":1,"jobs":[{"name":"${FLEET_CHECK_JOB_NAME}","status":"completed","conclusion":"success","started_at":"${startedAt}"}]}`,
+          ],
+          ["actions/runs/12/jobs", 200, '{"total_count":0,"jobs":[]}'],
+          ["actions/runs?", 200, '{"total_count":0,"workflow_runs":[]}'],
+        ];
+        const { exit, recorded } = yield* runCommandFor(
+          [],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_RUN_ID: "12" },
+          routes
+        );
+        expect(exit._tag).toBe("Success");
+        expect(A.some(recorded, (request) => Str.includes("actions/runs/12/jobs")(request.url))).toBe(true);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain("fleet missed-event check: green");
+      })
+    );
+
     layerIt.effect("refuses to run without a repository", () =>
       Effect.gen(function* () {
         const { exit } = yield* runCommandFor([], { GH_TOKEN: "ghs_x" }, emptyFleet);
