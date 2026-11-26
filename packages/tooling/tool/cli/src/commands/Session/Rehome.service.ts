@@ -2,10 +2,11 @@
  * `session rehome`: copy a checkout's session history (ledger, presence,
  * register, rulings) from one repository partition to another, rewriting each
  * row's `repository`. The source files are never modified and stay as the
- * backup. Apply only appends: when a target file did not exist before it,
- * deleting that file reverses the apply; when it did (the report counts the
- * rows already there), copy it aside before `--apply`, because the source
- * cannot restore rows only the target held.
+ * backup. Apply only appends: deleting a target file reverses the apply only
+ * when the file did not exist before it and nothing has written to it since.
+ * When it did exist (the report counts the rows already there), or when the
+ * rehomed checkout may write to it before you decide, copy it aside before
+ * `--apply`, because the source cannot restore rows only the target held.
  *
  * @packageDocumentation
  * @since 0.0.0

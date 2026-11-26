@@ -31,8 +31,6 @@ describe("WorkspacePackage schema fidelity", () => {
   roundTrips("WorkspacePackage: decode(encode(x)) equals x and never fails", WorkspacePackage);
 });
 
-// The manifest reader's parse/stringify/parse law also preserves fields outside
-// discovery's tolerant projection, through the strict Package wire codec.
 const ManifestDocument = S.Struct({
   name: S.Literals(["@scope/member", "member"]),
   version: S.Literals(["1.2.3", "2.0.0-beta.1"]),
@@ -67,7 +65,11 @@ it.layer(MemoryFileSystem.layerWith({}), { timeout: "30 seconds" })((it) => {
         assert.isTrue(S.toEquivalence(Package.schema)(first, second));
         assert.strictEqual(second.toJsonString(), text);
         const encoded = yield* S.encodeEffect(Package.schema)(second);
-        assert.deepStrictEqual(encoded.custom, original.custom);
+        assert.deepStrictEqual(
+          encoded.custom,
+          original.custom,
+          "fields outside discovery's tolerant projection survive the strict Package wire codec"
+        );
         assert.deepStrictEqual(encoded.scripts ?? {}, document.scripts);
       }),
     runs

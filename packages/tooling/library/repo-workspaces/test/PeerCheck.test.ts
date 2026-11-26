@@ -385,10 +385,7 @@ describe("PeerCheck.run, a pure value over real pnpm lockfiles, checked against 
   );
 });
 
-// pnpm's suppression policy, and the fail-closed states. pnpm computes the same
-// violations we do and then hides the ones `peerDependencyRules.allowedVersions`
-// permits, so a checker without the rules reports findings pnpm calls clean.
-describe("PeerCheck.run — peerDependencyRules and the unverified states", () => {
+describe("PeerCheck.run — the allowedVersions findings pnpm hides, and the fail-closed unverified states", () => {
   const rules = (allowedVersions: Record<string, string>) => ({
     allowedVersions,
     ignoreMissing: [],

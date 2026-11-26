@@ -35,8 +35,6 @@ describe("WorkspacesSync schema fidelity", () => {
   );
 });
 
-// README: the optional typed-entry fast path changes cost while preserving
-// enumeration results. Repeated reads preserve package and manifest fidelity.
 const MemberDocument = S.Struct({
   name: S.Literals(["a", "@scope/b", "c"]),
   version: S.Literals(["1.0.0", "2.0.0"]),
@@ -67,8 +65,16 @@ it.layer(Path.layer, { timeout: "30 seconds" })((it) => {
             })),
         };
         const fallback = getWorkspacePackagesSync("/repo", { fileSystem: fs, path });
-        assert.deepStrictEqual(getWorkspacePackagesSync("/repo", { fileSystem: typed, path }), fallback);
-        assert.deepStrictEqual(getWorkspacePackagesSync("/repo", { fileSystem: fs, path }), fallback);
+        assert.deepStrictEqual(
+          getWorkspacePackagesSync("/repo", { fileSystem: typed, path }),
+          fallback,
+          "the optional typed-entry fast path changes cost, never enumeration results"
+        );
+        assert.deepStrictEqual(
+          getWorkspacePackagesSync("/repo", { fileSystem: fs, path }),
+          fallback,
+          "repeated reads preserve package and manifest fidelity"
+        );
         assert.strictEqual(fallback.length, documents.length + 1);
         for (const [index, document] of A.map(documents, (document, index) => [index, document] as const)) {
           const member = A.findFirst(fallback, (pkg) => pkg.relativePath === `packages/member-${index}`);

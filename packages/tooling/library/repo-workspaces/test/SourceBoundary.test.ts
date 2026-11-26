@@ -470,8 +470,7 @@ describe("SourceBoundary.check console-stdout", () => {
   });
 });
 
-/** The OffenceRule a fixture's rule reports under. */
-const kindOf = (rule: BoundaryRule): OffenceRule =>
+const offenceRuleOf = (rule: BoundaryRule): OffenceRule =>
   typeof rule === "string" ? rule : "forbidTokens" in rule ? "forbidTokens" : "forbidImports";
 
 describe("SourceBoundary.fixtures", () => {
@@ -480,9 +479,9 @@ describe("SourceBoundary.fixtures", () => {
   });
 
   it("covers both polarities for every rule kind", () => {
-    const kinds = A.dedupe(A.map(SourceBoundary.fixtures, (fixture) => kindOf(fixture.rule)));
+    const kinds = A.dedupe(A.map(SourceBoundary.fixtures, (fixture) => offenceRuleOf(fixture.rule)));
     for (const kind of kinds) {
-      const own = A.filter(SourceBoundary.fixtures, (fixture) => kindOf(fixture.rule) === kind);
+      const own = A.filter(SourceBoundary.fixtures, (fixture) => offenceRuleOf(fixture.rule) === kind);
       assert.isTrue(
         A.some(own, (fixture) => fixture.flagged),
         `${kind} has a flagged fixture`
@@ -497,9 +496,6 @@ describe("SourceBoundary.fixtures", () => {
 });
 
 describe("SourceBoundary on the real tree", () => {
-  // ConfigDependencyHooks.ts embeds a node program (REPLAY_SCRIPT) as template
-  // text: it reads process.argv, writes process.stdout and calls import(url),
-  // all as TEXT that this module never executes.
   const text = O.getOrElse(R.get(sourceTexts, "ConfigDependencyHooks.ts"), () => "");
   const open = O.getOrElse(Str.indexOf("const REPLAY_SCRIPT = `")(text), () => 0);
   const rest = Str.slice(open)(text);
@@ -516,7 +512,8 @@ describe("SourceBoundary on the real tree", () => {
     const offences = SourceBoundary.check("src/ConfigDependencyHooks.ts", text, ["process", "stdout-write", "console"]);
     assert.deepStrictEqual(
       A.map(offences, (offence) => offence.label),
-      []
+      [],
+      "REPLAY_SCRIPT's process.argv reads, stdout write and import(url) are template text this module never runs"
     );
     assert.notInclude(SourceBoundary.importSpecifiers(text), "url");
     assert.include(SourceBoundary.importSpecifiers(text), "effect/process/ChildProcess");
@@ -575,7 +572,6 @@ describe("SourceBoundary review regressions", () => {
 });
 
 describe("SourceBoundary round-2 scanner contracts", () => {
-  // W4-j: EF-40 (#2145) made these keys exact, so an explicit undefined is rejected.
   it.effect("keeps option payloads plain, exact-optional and free of eager defaults", () =>
     Effect.gen(function* () {
       const options: ScanOptions.Encoded = { root: "/repo/src", rules: ["process"] };
@@ -592,8 +588,14 @@ describe("SourceBoundary round-2 scanner contracts", () => {
       const value3 = yield* S.decodeEffect(ScanOptions)(present);
       assert.deepStrictEqual(value3, ScanOptions.make(present));
       for (const key of ["ignoreTokens", "allow", "extensions", "allowRules"] as const)
-        assert.isFalse(S.is(ScanOptions)({ ...options, [key]: undefined }), key);
-      assert.isFalse(S.is(ScanOptions)({ ...options, allowRules: { process: undefined } }));
+        assert.isFalse(
+          S.is(ScanOptions)({ ...options, [key]: undefined }),
+          `${key}: exact keys reject explicit undefined`
+        );
+      assert.isFalse(
+        S.is(ScanOptions)({ ...options, allowRules: { process: undefined } }),
+        "exact keys reject an explicit undefined waiver"
+      );
     })
   );
 
