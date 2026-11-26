@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Resumed 2026-11-19 on the operator's `/goal` launch, which reverses the 2026-11-13 finish-board pause ([`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md)) by the route that ruling names.
 
