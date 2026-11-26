@@ -130,16 +130,11 @@ export const scrollThreadAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
         onNone: thunkEffectVoid,
         onSome: (element) =>
           Effect.sync(() => {
-            // Streaming blocks can arrive faster than a smooth animation. If the
-            // viewport trails the growing DOM, the next update mistakes that lag
-            // for a reader who intentionally scrolled away and stops following.
-            // An atomic programmatic scroll keeps the pinned invariant truthful;
-            // the slack guard above still preserves genuine reader position.
-            const scrollToBottom = () => element.scrollIntoView({ behavior: "auto", block: "end" });
+            const instantScrollToBottom = () => element.scrollIntoView({ behavior: "auto", block: "end" });
             if (P.isFunction(globalThis.requestAnimationFrame)) {
-              globalThis.requestAnimationFrame(scrollToBottom);
+              globalThis.requestAnimationFrame(instantScrollToBottom);
             } else {
-              scrollToBottom();
+              instantScrollToBottom();
             }
           }),
       });
@@ -178,9 +173,6 @@ export const reconcileThreadTimelineAtoms = Atom.family((threadId: WorkspaceIden
   )
 );
 
-// Only an existing, earlier parent describes an edit edge. Self, forward,
-// equal-index, and missing parents are corrupt and mirror activeBranchTurns by
-// leaving the linear conversation untouched.
 const resolvableParentTurnId: {
   (
     allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>,
@@ -209,8 +201,6 @@ const resolvableParentTurnId: {
     )
 );
 
-// A resolvable parent covers both replacements and same-parent siblings.
-// Looking for a turn that validly points here also marks the turn it replaced.
 const turnHasSiblings: {
   (allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>, turn: ThreadUseCases.TimelineTurn): boolean;
   (turn: ThreadUseCases.TimelineTurn): (allTurns: ReadonlyArray<ThreadUseCases.TimelineTurn>) => boolean;
@@ -221,9 +211,7 @@ const turnHasSiblings: {
     A.some(allTurns, (candidate) => O.contains(resolvableParentTurnId(allTurns, candidate), turn.turnId))
 );
 
-// The sibling scan is quadratic in the timeline and depends on nothing else,
-// so it owns its own atom: streaming writes land once per block and must not
-// drag the whole walk along behind them.
+// decision: transcript-view-stays-off-the-hot-path
 const threadSiblingTurnIdsAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
   Atom.make((get): HashSet.HashSet<WorkspaceIdentity.TurnId> => {
     const timelineTurns = O.match(AsyncResult.value(get(threadTimelineAtoms(threadId))), {
@@ -248,9 +236,7 @@ const threadSiblingTurnIdsAtoms = Atom.family((threadId: WorkspaceIdentity.Threa
  * @category models
  * @since 0.0.0
  */
-// crispen: kept as an interface — every field is already schema-validated
-// upstream and this view is rederived on each streaming block, so an S.Class
-// .make here would revalidate a hot path for no new invariant.
+// decision: transcript-view-stays-off-the-hot-path
 interface ThreadTranscriptView {
   readonly empty: boolean;
   readonly failed: boolean;
@@ -282,11 +268,7 @@ export const visibleThreadTurnsAtoms = Atom.family((threadId: WorkspaceIdentity.
   Atom.make((get): ThreadTranscriptView => {
     const timeline = get(threadTimelineAtoms(threadId));
     const unreconciled = get(unreconciledTurnAtoms(threadId));
-    // a turn keeps streaming in its own thread when the user navigates away.
     const streaming = O.filter(get(streamingTurnAtom), P.Struct({ threadId: Eq.equals(threadId) }));
-    // A success is authoritative for timeline fallbacks, but it cannot identify
-    // an exact request whose receipt RPC stayed unavailable. Keep those prompts
-    // visible and non-sendable until exact persistence evidence resolves.
     const displayedUnreconciled = AsyncResult.isSuccess(timeline)
       ? A.filter(unreconciled, P.Struct({ reconciliation: Eq.equals("receipt") }))
       : unreconciled;
@@ -295,7 +277,6 @@ export const visibleThreadTurnsAtoms = Atom.family((threadId: WorkspaceIdentity.
       onSome: (value) => value.turns,
     });
     const allTurns = ThreadProjections.activeBranchTurns(timelineTurns);
-    // While the replacement streams, its predecessor is already on its way out.
     const localTurns = A.appendAll(displayedUnreconciled, O.toArray(streaming));
     const truncateIndex = A.reduce(localTurns, O.none<number>(), (earliest, localTurn) =>
       O.match(

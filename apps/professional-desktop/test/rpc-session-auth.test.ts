@@ -34,14 +34,13 @@ describe("desktop sidecar RPC session auth", () => {
   });
 
   it("accepts the exact header the desktop HTTP protocol sends", () => {
-    // makeDesktopHttpProtocolLive attaches the token with
-    // HttpClientRequest.bearerToken; the sidecar middleware must accept that
-    // wire format verbatim, or an authenticated session silently degrades to
-    // 401s that render as generic "unavailable" states (QA closeout P1).
     const token = "test-session-token";
     const request = HttpClientRequest.bearerToken(HttpClientRequest.post("http://127.0.0.1:3939/rpc"), token);
 
-    expect(isAuthorizedRpcSessionRequest(request.method, request.headers, Redacted.make(token))).toBe(true);
+    expect(
+      isAuthorizedRpcSessionRequest(request.method, request.headers, Redacted.make(token)),
+      "makeDesktopHttpProtocolLive sends HttpClientRequest.bearerToken; rejecting it degrades a session to unavailable 401s"
+    ).toBe(true);
     expect(isAuthorizedRpcSessionRequest(request.method, request.headers, Redacted.make("other-token"))).toBe(false);
   });
 
@@ -61,8 +60,6 @@ describe("desktop sidecar RPC session auth", () => {
   });
 });
 
-// Exercise the real middleware and RPC wire boundary on an ephemeral socket.
-// The list handler is a deterministic observation point, not a database proof.
 const encodeRpcJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeRpcJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const AuthProbeRpcs = RpcGroup.make(ListContradictionCandidatesRpc);

@@ -44,9 +44,6 @@ import type * as Md from "@beep/md/Md.model";
 const realAnthropicChatTimeoutMillis = 300_000;
 const shouldRunRealAnthropic = Bun.env.BEEP_TEST_REAL_ANTHROPIC_CHAT === "1";
 const anthropicApiKeyEnv = "AI_ANTHROPIC_API_KEY";
-// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
-// database has to register the bundled extension exactly as the sidecar's
-// `makeBundledPgliteLayer` does.
 const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 

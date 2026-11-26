@@ -31,8 +31,6 @@ const TokenPriceUsd = S.Finite.check(
   })
 );
 
-// One static approximate provider-model price row (module-internal: the public
-// surface is approximateCostUsdMicros; the table itself is private data).
 class ApproximateModelPrice extends S.Opaque<ApproximateModelPrice, { readonly brand: unique symbol }>()(
   S.Struct({
     inputPerMillionTokensUsd: TokenPriceUsd.annotateKey({
@@ -49,11 +47,6 @@ class ApproximateModelPrice extends S.Opaque<ApproximateModelPrice, { readonly b
     })
   )
 ) {
-  /**
-   * Small data-only pricing table. Rates are approximate USD per million
-   * tokens; update these literals when the configured production model or
-   * published provider pricing changes.
-   */
   static readonly table: ReadonlyArray<ApproximateModelPrice> = [
     ApproximateModelPrice.make({
       inputPerMillionTokensUsd: ANTHROPIC_DEFAULT_APPROXIMATE_PRICE.inputPerMillionTokensUsd,
@@ -69,9 +62,6 @@ class ApproximateModelPrice extends S.Opaque<ApproximateModelPrice, { readonly b
     }),
   ];
 
-  /**
-   * The price row for a `(model, provider)` pair, when one is known.
-   */
   static readonly forUsage = (usage: {
     readonly model: string;
     readonly provider: string;

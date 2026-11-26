@@ -24,7 +24,6 @@ import { pgliteFixtureTimeout } from "./PgliteFixtureBudget.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-// RuntimeTest provides SyncDatabaseInMemory: a cold bundled PGlite plus the boot migrations.
 const fixtureTimeout = pgliteFixtureTimeout;
 const instant = Result.getOrThrow(S.decodeResult(S.DateTimeUtcFromMillis)(2_000));
 

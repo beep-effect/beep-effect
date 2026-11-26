@@ -58,11 +58,6 @@ const ipcOutboundBytes = Metric.counter("desktop_ipc_outbound_bytes_total", { in
 const ipcSendFailures = Metric.counter("desktop_ipc_send_failures_total", { incremental: true });
 const ipcSendDuration = Metric.timer("desktop_ipc_send_duration");
 
-/**
- * The Tauri event names the Rust shell uses for the IPC stdio bridge: inbound
- * ndjson rpc frames ride `sidecar://rx`, and a terminal sidecar lifecycle signal
- * rides `sidecar://closed` (see `src-tauri/src/lib.rs`).
- */
 const SidecarEvent = {
   closed: "sidecar://closed",
   rx: "sidecar://rx",
@@ -137,8 +132,6 @@ export class SidecarClosedPayload extends S.Opaque<SidecarClosedPayload, { reado
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(SidecarClosedPayload);
 }
 
-// `none` when an optional lifecycle field is absent, else its string form —
-// hoisted so the message match below is not an option-match nested in a match.
 const optionLabel = (option: O.Option<number | string>): string =>
   O.match(option, { onNone: () => "none", onSome: (value) => `${value}` });
 
@@ -251,13 +244,6 @@ export const InboundEvent = S.TaggedUnion({
 
 type InboundEvent = typeof InboundEvent.Type;
 
-/**
- * Register one Tauri event listener and tie its `UnlistenFn` to the current
- * scope, so the listener is torn down through scope finalization instead of
- * manual teardown. The Promise that `listen` returns is the only Promise
- * boundary, and it is lifted into Effect with `Effect.tryPromise`. The handler
- * is a pure synchronous offer, so no fiber is spawned from the callback.
- */
 const scopedListen = (
   event: (typeof SidecarEvent)[keyof typeof SidecarEvent],
   toEvent: (payload: unknown) => InboundEvent,
@@ -284,12 +270,6 @@ const scopedListen = (
     Effect.withSpan("desktop.ipc.listen", { attributes: { event } })
   );
 
-/**
- * Decode one raw inbound event into a downstream effect: an `Rx` event decodes
- * to its ndjson frame, while a `Closed` event decodes its lifecycle payload and
- * fails the stream with a typed {@link SidecarClosedError}. Decode failures in
- * either branch surface as `Socket.SocketError`, matching the read signature.
- */
 const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, Socket.SocketError> =>
   InboundEvent.match({
     Closed: ({ payload }) =>
@@ -339,10 +319,6 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
       ),
   })(event).pipe(Effect.withSpan("desktop.ipc.decode_inbound", { attributes: { event: event._tag } }));
 
-/**
- * Acquire both Tauri listeners before asking Rust to replay buffered frames.
- * The acquisition scope owns the listeners and wakes pending pulls on release.
- */
 const makeReader: Socket.Socket["reader"] = Effect.gen(function* () {
   const queue = yield* Queue.unbounded<InboundEvent, Socket.SocketError>();
   yield* Effect.addFinalizer(() =>
@@ -363,11 +339,6 @@ const makeReader: Socket.Socket["reader"] = Effect.gen(function* () {
   };
 });
 
-/**
- * Ship a single complete, newline-terminated outbound frame to the sidecar's
- * stdin via the `sidecar_send` command. The frame already carries its ndjson
- * framing, so it is written verbatim.
- */
 const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Return<void, SidecarSendError> {
   yield* Metric.update(ipcOutboundBytes, Str.length(frame));
   return yield* Effect.gen(function* () {
@@ -407,12 +378,6 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
   );
 });
 
-/**
- * Flush every complete (newline-terminated) frame currently buffered, leaving
- * any trailing partial frame in the buffer. A partial frame means the producer
- * was interrupted mid-frame; force-terminating it would corrupt the sidecar's
- * stdin protocol, so it waits for the rest of its bytes.
- */
 const flushBufferedFrames = (buffer: Ref.Ref<string>): Effect.Effect<void, SidecarSendError> =>
   Ref.get(buffer).pipe(
     Effect.flatMap((pending) =>
@@ -429,13 +394,6 @@ const flushBufferedFrames = (buffer: Ref.Ref<string>): Effect.Effect<void, Sidec
     )
   );
 
-/**
- * The scoped outbound writer the {@link Socket} contract requires. Outgoing
- * chunks (already UTF-8 ndjson) accumulate in a buffer, and only complete frames
- * are shipped; a `CloseEvent` is ignored because the sidecar's stdin is closed
- * by killing the child on the Rust side, not by an in-band close frame. Send
- * failures are surfaced as `Socket.SocketError` to match the writer signature.
- */
 const makeWriter: Socket.Socket["writer"] = Effect.gen(function* () {
   const decoder = new TextDecoder();
   const buffer = yield* Ref.make("");
@@ -458,7 +416,6 @@ const makeWriter: Socket.Socket["writer"] = Effect.gen(function* () {
   };
 });
 
-/** Builds the IPC socket from its scoped pull reader and buffered writer. */
 const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
   Socket.make({ reader: makeReader, writer: makeWriter })
 );

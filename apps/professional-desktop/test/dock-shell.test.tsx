@@ -33,22 +33,22 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       const validated = yield* validateWorkspace(defaultDesktopWorkspace);
 
       expect(validated.kind).toBe("populated");
-      // Actives: one per group — Explorer left, Graph center, Inspector right,
-      // Chat along the shell row.
-      expect(isPanelActive(validated, "ontology-explorer")).toBe(true);
+      expect(isPanelActive(validated, "ontology-explorer"), "one active panel per group: Explorer on the left").toBe(
+        true
+      );
       expect(isPanelActive(validated, "ontology-graph")).toBe(true);
       expect(isPanelActive(validated, "ontology-inspector")).toBe(true);
-      expect(isPanelActive(validated, "chat")).toBe(true);
-      // Open-but-inactive tabs of the core cluster.
-      expect(isPanelOpen(validated, "ontology-document")).toBe(true);
+      expect(isPanelActive(validated, "chat"), "Chat is active along the shell row").toBe(true);
+      expect(isPanelOpen(validated, "ontology-document"), "core-cluster tabs open but inactive").toBe(true);
       expect(isPanelOpen(validated, "ontology-source")).toBe(true);
       expect(isPanelOpen(validated, "ontology-changelog")).toBe(true);
       expect(isPanelOpen(validated, "home")).toBe(true);
       expect(isPanelOpen(validated, "sync")).toBe(true);
       expect(isPanelOpen(validated, "editor-proof")).toBe(false);
       expect(isPanelOpen(validated, "contradiction-triage")).toBe(false);
-      // Heavy tools start closed; the rail menu opens them.
-      expect(isPanelOpen(validated, "ontology-sparql")).toBe(false);
+      expect(isPanelOpen(validated, "ontology-sparql"), "heavy tools start closed; the rail menu opens them").toBe(
+        false
+      );
       expect(isPanelOpen(validated, "ontology-validation")).toBe(false);
       expect(isPanelOpen(validated, "ontology-metrics")).toBe(false);
     })
@@ -80,12 +80,16 @@ describe("Desktop dock shell", { concurrent: false }, () => {
 
       expect(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)).not.toBeNull();
 
-      // A fresh boot restores the saved layout instead of the default.
-      const second = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) => Effect.sync(() => graph.dispose()));
-      const restored = second.registry.get(second.workspaceAtom);
-      second.dispose();
+      const freshBoot = yield* Effect.acquireRelease(makeDesktopDockGraph, (graph) =>
+        Effect.sync(() => graph.dispose())
+      );
+      const restored = freshBoot.registry.get(freshBoot.workspaceAtom);
+      freshBoot.dispose();
 
-      expect(isPanelActive(restored, "ontology-source")).toBe(true);
+      expect(
+        isPanelActive(restored, "ontology-source"),
+        "a fresh boot restores the saved layout, not the default"
+      ).toBe(true);
       expect(isPanelActive(restored, "ontology-graph")).toBe(false);
     })
   );
@@ -118,7 +122,6 @@ describe("Desktop dock shell", { concurrent: false }, () => {
       const workspace = graph.registry.get(graph.workspaceAtom);
       graph.registry.set(graph.operationAtom, panelOperation(workspace, "ontology-source"));
       yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, { suspendOnWaiting: true });
-      // Observe the mounted binding's completed write within the original 600 ms budget.
       const stored = yield* Effect.promise(() =>
         waitFor(
           () => {
@@ -179,10 +182,10 @@ describe("Desktop dock shell", { concurrent: false }, () => {
 
         return screen.findByRole("button", { name: "Home", current: "page" }).then((activeButton) => {
           expect(activeButton).toBeInTheDocument();
-          // Keep-alive means the SAME node survives — not a remounted lookalike.
-          // Node identity fails if the renderer map hands React a fresh
-          // component type per workspace change (the P0 the review caught).
-          expect(screen.getByTestId("chat-app")).toBe(chatApp);
+          expect(
+            screen.getByTestId("chat-app"),
+            "keep-alive keeps the same node; a fresh component type per workspace change would remount it"
+          ).toBe(chatApp);
           expect(screen.getByRole("button", { name: "Chat" })).not.toHaveAttribute("aria-current", "page");
         });
       })
@@ -205,9 +208,10 @@ describe("Desktop dock shell", { concurrent: false }, () => {
 
         return screen.findByRole("tab", { name: /SPARQL/ }).then((tab) => {
           expect(tab).toBeInTheDocument();
-          // Selecting an entry keeps the disclosure open for successive panel
-          // picks; outside press and Escape still dismiss it.
-          expect(screen.getByRole("button", { name: "SPARQL" })).toBeInTheDocument();
+          expect(
+            screen.getByRole("button", { name: "SPARQL" }),
+            "selecting an entry keeps the disclosure open for successive panel picks"
+          ).toBeInTheDocument();
         });
       })
       .finally(unmount);

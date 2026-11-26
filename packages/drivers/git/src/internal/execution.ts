@@ -28,21 +28,15 @@ import type { ClassifiedFor, ClassifyKind, RunFor } from "./classification.ts";
 
 const $I = $GitId.create("Git");
 
-/**
- * The ssh-related environment, read once at layer construction. None of these
- * can change under a running service, so none is re-read per call — unlike
- * their git-config counterparts, which are repository-local.
- */
 const SshFromEnv = S.Struct({
-  /** `GIT_SSH_COMMAND` — a full command line; the first rung. */
   command: S.Option(S.String).pipe(
     $I.annoteKey("SshFromEnv.command", { description: "GIT_SSH_COMMAND, a full command line with highest precedence." })
   ),
-  /** `GIT_SSH` — a program name with no argument support; the third rung. */
   program: S.Option(S.String).pipe(
-    $I.annoteKey("SshFromEnv.program", { description: "GIT_SSH, a program name with no argument support." })
+    $I.annoteKey("SshFromEnv.program", {
+      description: "GIT_SSH, a program name with no argument support; the third precedence rung.",
+    })
   ),
-  /** `GIT_SSH_VARIANT` — overrides git's basename inference of the grammar. */
   variant: S.Option(S.String).pipe(
     $I.annoteKey("SshFromEnv.variant", {
       description: "GIT_SSH_VARIANT, overriding basename inference of the SSH grammar.",
@@ -54,6 +48,8 @@ const SshFromEnv = S.Struct({
   })
 );
 type SshFromEnv = typeof SshFromEnv.Type;
+
+const isNonBlank = (value: string): boolean => Str.isNonEmpty(Str.trim(value));
 
 /**
  * Execution capabilities used by repository operations after construction.
@@ -104,30 +100,10 @@ export interface Execution {
  */
 export const makeWith = Effect.fnUntraced(function* (options: GitOptions) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  // The AMBIENT ENVIRONMENT is read ONCE, here, and never again — it
-  // cannot change under a running service. The read goes through
-  // ConfigProvider (whose default is `fromEnv()`) rather than
-  // `process.env`, so a test provides a provider instead of mutating the
-  // environment and `src/` keeps its zero-`node:` boundary. A blank value
-  // is treated as absent — an exported-but-empty GIT_SSH_COMMAND is not
-  // an ssh configuration worth preserving.
-  //
-  // `core.sshCommand` is NOT read here: it is repository-local, so it
-  // belongs to a cwd rather than to the service, and is resolved per
-  // network-touching call instead.
-  // A source-level ConfigError degrades to "absent" rather than escaping:
-  // the layer's error channel is `never` by contract, and an unreadable
-  // provider is answered with the pin that cannot hang.
-  const read = (name: string) =>
-    Config.String(name).pipe(
-      Config.option,
-      Effect.orElseSucceed(O.none<string>),
-      // A blank value is treated as absent — an exported-but-empty
-      // variable is not a configuration worth preserving.
-      Effect.map(O.filter((value) => Str.trim(value) !== ""))
-    );
+  const readAmbient = (name: string) =>
+    Config.String(name).pipe(Config.option, Effect.orElseSucceed(O.none<string>), Effect.map(O.filter(isNonBlank)));
   const [command, program, variant] = yield* Effect.all(
-    [read("GIT_SSH_COMMAND"), read("GIT_SSH"), read("GIT_SSH_VARIANT")],
+    [readAmbient("GIT_SSH_COMMAND"), readAmbient("GIT_SSH"), readAmbient("GIT_SSH_VARIANT")],
     { concurrency: "unbounded" }
   );
 
@@ -140,7 +116,6 @@ export const makeWith = Effect.fnUntraced(function* (options: GitOptions) {
       )
   );
 
-  /** One `git config --get <key>` at `cwd`; unset and failure both read as `""`. */
   const readConfig: {
     (cwd: string, key: string): Effect.Effect<string>;
     (key: string): (cwd: string) => Effect.Effect<string>;
@@ -152,25 +127,6 @@ export const makeWith = Effect.fnUntraced(function* (options: GitOptions) {
       )
   );
 
-  /**
-   * Resolves the spawn environment for a member that reaches a remote,
-   * following git's OWN precedence order rather than a simplification of it:
-   * `GIT_SSH_COMMAND` \> `core.sshCommand` \> `GIT_SSH` \> plain `ssh` (each
-   * rung verified against git 2.55).
-   *
-   * **Details**
-   *
-   * The config reads are why this is per-call rather than per-service:
-   * `core.sshCommand` and `ssh.variant` are both repository-local, while one
-   * `Git` instance serves every `cwd` a caller hands it. Each is skipped when
-   * its environment counterpart already decides the answer, and the two run
-   * concurrently, so the common case costs one round trip on a member about
-   * to touch the network anyway.
-   *
-   * They deliberately run through `runFor` (BASE_ENV, no ssh pin): a local
-   * config read needs no ssh, and routing them through the network path would
-   * recurse.
-   */
   const resolveSshEnv = Effect.fnUntraced(function* (cwd: string) {
     const [fromConfig, variantFromConfig] = yield* Effect.all(
       [
@@ -180,16 +136,13 @@ export const makeWith = Effect.fnUntraced(function* (options: GitOptions) {
       { concurrency: "unbounded" }
     );
 
-    // The variant decides the argument GRAMMAR, so it is checked first: a
-    // non-OpenSSH variant means `-o BatchMode=yes` is not a thing git's ssh
-    // invocation understands, whatever the command happens to be named.
-    const variant = pipe(
+    const grammarVariant = pipe(
       ssh.variant,
       O.getOrElse(() => variantFromConfig),
       Str.trim,
       Str.toLowerCase
     );
-    if (!HashSet.has(OPENSSH_VARIANTS, variant)) {
+    if (!HashSet.has(OPENSSH_VARIANTS, grammarVariant)) {
       return { ...BASE_ENV };
     }
 
@@ -197,20 +150,12 @@ export const makeWith = Effect.fnUntraced(function* (options: GitOptions) {
     if (command !== "") {
       return sshEnv(command);
     }
-    // No COMMAND anywhere, so GIT_SSH is the deciding rung if it is set. It
-    // names a program and takes no arguments, so pinning anything here would
-    // displace it rather than extend it — decline instead.
     if (O.isSome(ssh.program)) {
       return { ...BASE_ENV };
     }
     return sshEnv("ssh");
   });
 
-  /**
-   * `runFor` for a member that reaches a remote. Everything else spawns with
-   * `BASE_ENV` alone — a member that never invokes ssh has no business
-   * pinning an ssh command, and would pay the config read for nothing.
-   */
   const runForNetwork: RunFor = dual(
     3,
     Effect.fnUntraced(function* <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K) {

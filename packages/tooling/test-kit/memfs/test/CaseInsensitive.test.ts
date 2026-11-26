@@ -7,8 +7,6 @@ import * as Str from "effect/String";
 import { caseInsensitiveSuite } from "./CaseInsensitiveContract.ts";
 import { firstEvent } from "./helpers.ts";
 
-// The host-proven contract (integration/case-insensitive.int.test.ts) against
-// the memory engine built with `caseSensitive: false`.
 caseInsensitiveSuite("memory", MemoryFileSystem.layerWith({}, { caseSensitive: false }));
 
 describe("case-insensitive facade", () => {

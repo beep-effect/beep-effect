@@ -1,8 +1,3 @@
-// The constructor set: make/layer (the upstream mirror), makeWith/layerWith
-// (seed optional; root, caseSensitive and faults in one options bag),
-// makeHandle/makeSync (every view over one volume). Every memory layer also
-// publishes MemoryFileSystem.Volume.
-
 import { MemoryFileSystem } from "@beep/memfs";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
@@ -94,8 +89,11 @@ describe("options.faults", () => {
         assert.strictEqual(error.reason._tag, "PermissionDenied");
         assert.strictEqual(volume.text("/ok.txt"), "ok");
         assert.isUndefined(volume.text("/locked.txt"));
-        // The seed is written beneath the faults, never through them.
-        assert.strictEqual(volume.text("/locked-seed.txt"), "seeded");
+        assert.strictEqual(
+          volume.text("/locked-seed.txt"),
+          "seeded",
+          "the seed is written beneath the faults, never through them"
+        );
       })
     );
   });
@@ -168,10 +166,6 @@ describe("MemoryFileSystem.layerWith", () => {
 
   it.effect("each build of the layer builds an isolated volume", () =>
     Effect.gen(function* () {
-      // Separate builds do not memoize: two builds of ONE layer const are two
-      // volumes, as two provides are. (Sharing happens through layer-graph
-      // memoization — the suite-boundary `layer(...)` block — and is
-      // documented on the facade.)
       const build6 = yield* Layer.build(Seeded);
       const first = Context.get(build6, FileSystem.FileSystem);
       yield* first.writeFileString("/scratch.txt", "first volume");
@@ -179,7 +173,10 @@ describe("MemoryFileSystem.layerWith", () => {
       const build7 = yield* Layer.build(Seeded);
       const second = Context.get(build7, FileSystem.FileSystem);
       const exists8 = yield* second.exists("/scratch.txt");
-      assert.isFalse(exists8);
+      assert.isFalse(
+        exists8,
+        "two builds of one layer const are two volumes, as two provides are; sharing needs one layer graph"
+      );
       const exists9 = yield* first.exists("/scratch.txt");
       assert.isTrue(exists9);
     })

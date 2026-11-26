@@ -1,23 +1,30 @@
-// The git-config engine: a lossless, line-oriented scanner producing raw
-// structural records over the source text, plus the splice-based edit
-// primitives the facade compiles surgical edits into.
-//
-// Never exported from the package. This module emits raw carriers (plain
-// records with offsets) and never imports the public `GitConfig` classes — the
-// facade materializes typed errors and Schema classes from what it finds here.
-//
-// The grammar is git-config (git-config(5)), NOT generic INI:
-//
-// - `[section]` and `[section "subsection"]` headers; section and variable
-//   names are case-insensitive, quoted subsection names are case-SENSITIVE.
-// - The deprecated dotted form `[section.subsection]` splits at the FIRST
-//   dot and lowercases its subsection before case-sensitive comparisons.
-// - Variable names start with a letter and contain letters, digits and `-`.
-// - A bare `key` line (no `=`) is git's boolean-true shorthand.
-// - Values: unquoted trailing whitespace is discarded, internal whitespace
-//   kept verbatim; `"` toggles quoting; `\"`, `\\`, `\n`, `\t`, `\b` are the
-//   recognized escapes; a backslash at end of line continues the value onto
-//   the next line; `#` and `;` start a comment outside quotes.
+/**
+ * The git-config engine: a lossless, line-oriented scanner producing raw
+ * structural records over the source text, plus the splice-based edit
+ * primitives the `GitConfig` facade compiles surgical edits into.
+ *
+ * **Details**
+ *
+ * Never exported from the package. This module emits raw carriers (plain
+ * records with offsets) and never imports the public `GitConfig` classes; the
+ * facade materializes typed errors and Schema classes from what it finds here.
+ *
+ * The grammar is git-config(5), not generic INI:
+ *
+ * - `[section]` and `[section "subsection"]` headers; section and variable
+ *   names are case-insensitive, quoted subsection names are case-sensitive.
+ * - The deprecated dotted form `[section.subsection]` splits at the first
+ *   dot and lowercases its subsection before case-sensitive comparisons.
+ * - Variable names start with a letter and contain letters, digits and `-`.
+ * - A bare `key` line (no `=`) is git's boolean-true shorthand.
+ * - Values: unquoted trailing whitespace is discarded, internal whitespace
+ *   kept verbatim; `"` toggles quoting; `\"`, `\\`, `\n`, `\t`, `\b` are the
+ *   recognized escapes; a backslash at end of line continues the value onto
+ *   the next line; `#` and `;` start a comment outside quotes.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { $GitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -304,7 +311,6 @@ const GitSectionName = S.String.check(S.isPattern(/^[A-Za-z0-9.-]+$/)).pipe(
  */
 export const isValidSectionName = S.is(GitSectionName);
 
-/** A carriage return ends a line only before LF or at the end of the source. */
 const isLineEnd: {
   (text: string, offset: number): boolean;
   (offset: number): (text: string) => boolean;
@@ -316,7 +322,6 @@ const isLineEnd: {
     (text[offset] === "\r" && (text[offset + 1] === "\n" || offset + 1 === text.length))
 );
 
-/** Advances past the current line's newline (handles `\r\n`, `\n` and EOF). */
 const skipToLineEnd: {
   (text: string, from: number): number;
   (from: number): (text: string) => number;
@@ -326,14 +331,12 @@ const skipToLineEnd: {
   return i < text.length ? i + 1 : i;
 });
 
-/** Advances past spaces and tabs. */
 const skipWs = (text: string, from: number): number => {
   let i = from;
   while (isWs(text[i])) i += 1;
   return i;
 };
 
-/** Advances while `predicate` holds for the current character. */
 const skipWhile = (text: string, from: number, predicate: (ch: string) => boolean): number => {
   let i = from;
   while (i < text.length && predicate(Str.slice(i, i + 1)(text))) i += 1;
@@ -342,11 +345,9 @@ const skipWhile = (text: string, from: number, predicate: (ch: string) => boolea
 
 const isCommentStart = (ch: string | undefined): boolean => ch === "#" || ch === ";";
 
-/** True when nothing significant follows `offset` on this line (line end or comment). */
 const endsLineOrComment = (text: string, offset: number): boolean =>
   isLineEnd(text, offset) || isCommentStart(text[offset]);
 
-/** True for a carriage return that does NOT end the line (text follows it). */
 const isStrayCarriageReturn = (text: string, offset: number): boolean =>
   text[offset] === "\r" && !isLineEnd(text, offset);
 
@@ -397,7 +398,6 @@ const scanEntryLine = (state: ScanState, lineStart: number, keyStart: number): n
   return entryResult.next;
 };
 
-/** Scans one physical line (plus any continuation) starting at `lineStart`; returns the next line's offset. */
 const scanLine = (state: ScanState, lineStart: number): number => {
   const text = state.text;
   const i = skipWs(text, lineStart === 0 && text[0] === "﻿" ? 1 : lineStart);
@@ -477,7 +477,6 @@ interface HeaderContext {
   readonly text: string;
 }
 
-/** Records a header diagnostic spanning from the line start through the line at `at`. */
 const headerFailure = (
   context: HeaderContext,
   at: number,
@@ -497,12 +496,10 @@ interface QuotedSubsection {
   readonly value: string;
 }
 
-/** In a subsection name a backslash escapes ANY next character (git drops the backslash, keeps the character). */
 const subsectionCharAt = (text: string, i: number): string | undefined => (text[i] === "\\" ? text[i + 1] : text[i]);
 
 const subsectionCharWidth = (text: string, i: number): number => (text[i] === "\\" ? 2 : 1);
 
-/** Scans a quoted subsection body starting just past its opening quote. */
 const scanQuotedSubsection = (text: string, from: number): QuotedSubsection => {
   let i = from;
   let value = "";
@@ -522,10 +519,6 @@ interface HeaderAddress {
   readonly subsection: string | undefined;
 }
 
-/**
- * The deprecated `[section.subsection]` form: split at the FIRST dot; git
- * lowercases this form's subsection before case-sensitive comparisons.
- */
 const headerAddress = (name: string, subsection: string | undefined, quoted: boolean): HeaderAddress => {
   const dot = quoted ? -1 : pipe(name, Str.indexOf("."), O.getOrElse(constant(-1)));
   return dot < 0
@@ -533,7 +526,6 @@ const headerAddress = (name: string, subsection: string | undefined, quoted: boo
     : { name: Str.slice(0, dot)(name), subsection: pipe(name, Str.slice(dot + 1), Str.toLowerCase), fold: true };
 };
 
-/** Finishes a header after its name (and optional quoted subsection): `]`, then an optional inline entry. */
 const closeHeader = (
   context: HeaderContext,
   name: string,
@@ -578,7 +570,6 @@ interface EntryScan {
   readonly next: number;
 }
 
-/** Records an entry diagnostic spanning the whole line and returns the entry-less scan. */
 const entryFailure = (
   text: string,
   lineStart: number,
@@ -592,7 +583,6 @@ const entryFailure = (
   return { entry: undefined, next };
 };
 
-/** Mutable cursor over one value region; `significant*` track the last character unquoted trimming keeps. */
 interface ValueCursor {
   decoded: string;
   i: number;
@@ -608,14 +598,12 @@ const markSignificant = (cursor: ValueCursor): void => {
 
 const VALUE_ESCAPES: Readonly<Record<string, string>> = { n: "\n", t: "\t", b: "\b", '"': '"', "\\": "\\" };
 
-/** Width of a backslash line continuation (`\` + LF or `\` + CRLF) at `i`, or 0. */
 const continuationWidth = (text: string, i: number): number => {
   const next = text[i + 1];
   if (next === "\n") return 2;
   return next === "\r" && text[i + 2] === "\n" ? 3 : 0;
 };
 
-/** Consumes a backslash sequence; returns true when the value ends here. */
 const stepValueEscape = (
   text: string,
   key: string,
@@ -630,7 +618,6 @@ const stepValueEscape = (
   }
   const continuation = continuationWidth(text, cursor.i);
   if (continuation > 0) {
-    // Line continuation: the backslash and newline are both dropped.
     cursor.i += continuation;
     markSignificant(cursor);
     return false;
@@ -654,7 +641,6 @@ const stepValueEscape = (
   return false;
 };
 
-/** Consumes one ordinary value character; returns true when an unquoted comment ends the value. */
 const stepValueChar = (ch: string, cursor: ValueCursor): boolean => {
   if (ch === '"') {
     cursor.inQuotes = !cursor.inQuotes;
@@ -662,7 +648,6 @@ const stepValueChar = (ch: string, cursor: ValueCursor): boolean => {
     markSignificant(cursor);
     return false;
   }
-  // Trailing comment: the value ended at the last significant character.
   if (!cursor.inQuotes && isCommentStart(ch)) return true;
   cursor.i += 1;
   if (!cursor.inQuotes && cursor.decoded === "" && isWs(ch)) return false;
@@ -676,7 +661,6 @@ const isValueLineEnd = (text: string, i: number): boolean => {
   return ch === "\n" || (ch === "\r" && isLineEnd(text, i));
 };
 
-/** Decodes the value region starting at `valueOffset` (quotes, escapes, continuations, trailing trim). */
 const scanValue = (text: string, key: string, valueOffset: number, diagnostics: Array<RawDiagnostic>): ValueCursor => {
   const cursor: ValueCursor = {
     decoded: "",
@@ -687,14 +671,13 @@ const scanValue = (text: string, key: string, valueOffset: number, diagnostics: 
   };
   while (cursor.i < text.length && !isValueLineEnd(text, cursor.i)) {
     const ch = Str.slice(cursor.i, cursor.i + 1)(text);
-    const done = ch === "\\" ? stepValueEscape(text, key, cursor, diagnostics) : stepValueChar(ch, cursor);
-    if (done) break;
+    const valueEnded = ch === "\\" ? stepValueEscape(text, key, cursor, diagnostics) : stepValueChar(ch, cursor);
+    if (valueEnded) break;
   }
   return cursor;
 };
 
 const bareEntry = (text: string, key: string, lineStart: number, keyEnd: number, at: number): EntryScan => {
-  // Bare `key` — git's boolean-true shorthand.
   const next = skipToLineEnd(text, at);
   return {
     entry: RawEntry.make({

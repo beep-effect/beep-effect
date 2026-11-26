@@ -34,13 +34,6 @@ import {
   makeMcpClient,
 } from "./support/ontology-mcp-harness.ts";
 
-// Observable-state recording for the execution-authority slice move
-// (goals/execution-authority-slice). It drives the real desktop MCP transport
-// over a migrated PGlite ledger and records what an operator can observe: the
-// sidecar bind host, the ledger's verdict and settlement counts, chain
-// verification, and the physical column, constraint and trigger pins. Set
-// EXECUTION_AUTHORITY_RECORDING_OUT to write the recording as JSON; the packet
-// keeps the pre-move and post-move recordings and their diff.
 const decisionTable = "execution_authority_decision";
 const outcomeTable = "execution_authority_outcome";
 

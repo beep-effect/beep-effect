@@ -133,18 +133,12 @@ export const DocumentIntakeHandlersLive = DocumentsRpcs.toLayer(
         return yield* observeIntakeOperation(
           "dropped_file",
           Effect.gen(function* () {
-            // The UI refuses an oversized file, but the UI is not the boundary:
-            // the content arrives here base64-expanded and is held in memory
-            // through extraction and filing, so a payload posted straight at the
-            // RPC could still exhaust the sidecar. Refuse it where it lands.
+            // decision: intake-rpc-rechecks-client-refusals
             if (payload.content.length > MAX_INTAKE_CONTENT_BYTES) {
               return yield* DocumentIntakeActionError.failEffect(
                 `Document exceeds the ${Math.round(MAX_INTAKE_CONTENT_BYTES / (1024 * 1024))} MB intake limit.`
               );
             }
-            // The UI refuses an empty file, but the UI is not the boundary. Filing zero
-            // bytes writes a content-free object to the vault and asks the model to
-            // invent a rationale for a document that does not exist.
             if (payload.content.length === 0) {
               return yield* DocumentIntakeActionError.failEffect("The document is empty, so there is nothing to file.");
             }

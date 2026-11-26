@@ -131,7 +131,6 @@ const classify = <A, E, R>(
     Effect.mapError((error: E): VaultSyncUnreachable | VaultSyncRefused =>
       isRefusalReason(error) ? VaultSyncRefused.make({ reason: error }) : VaultSyncUnreachable.make({})
     ),
-    // A command defect is an unknown outcome too: retry it with the same id.
     Effect.catchDefect(() => Effect.fail(VaultSyncUnreachable.make({})))
   );
 
@@ -192,10 +191,9 @@ const makeApiTransport = Effect.gen(function* () {
     const list = yield* classify(
       client.DestinationList.get(V.WorkspaceKey.make(`${DESKTOP_VAULT_SYNC_ORG_ID}:${workspaceId}`))
     );
-    // Genesis creates one destination per workspace and provider; pick it deterministically.
-    const first = O.fromNullOr(list).pipe(O.getOrElse(H.empty), H.keys, A.fromIterable, A.sort(Order.String), A.head);
-    if (O.isNone(first)) return O.none<VaultSyncServerState>();
-    const destinationId = first.value;
+    const genesis = O.fromNullOr(list).pipe(O.getOrElse(H.empty), H.keys, A.fromIterable, A.sort(Order.String), A.head);
+    if (O.isNone(genesis)) return O.none<VaultSyncServerState>();
+    const destinationId = genesis.value;
     const status = yield* classify(client.VaultSyncStatus.get(destinationId));
     const open = yield* classify(client.OpenConflicts.get(destinationId));
     return VaultSyncServerState.makeOption({
