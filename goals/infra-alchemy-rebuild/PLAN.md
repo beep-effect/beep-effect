@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
@@ -12,11 +12,11 @@ Status: `active`
 | P1 Foundations | complete | Doctrine amendment (tooling kind `infra`); catalog pins for `alchemy`, `@alchemy.run/*`, `@distilled.cloud/*`; S3 state store bootstrapped under a new bucket; `BeepEffectWeb` re-adopted into it; CI deploy skeleton (per-stack concurrency, `op run`). | `alchemy plan` for `BeepEffectWeb` is a no-op on the shared store; one workflow deploys a stack from `main`. |
 | P2 Providers | complete | `@beep/alchemy-vercel`, `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, each on the `@alchemy.run/test` harness. | `package-verify` green; provider tests cover create/update/delete/read/adopt. |
 | P3 Low-risk stacks | complete | Storybook, turbo cache (move scratchpad module, delete scratchpad), cost controls, GitHub. Parallel build, flip, destroy Pulumi program. | Each stack live on Alchemy; CI enrolled on the Worker cache with hit evidence; four Pulumi programs destroyed with export archives recorded. |
-| P4 OIP and hosts | pending | OIP web (Vercel project, env vars, domains, DNS, assets bucket), AI metrics through `@beep/infra-hosts`; OpenClaw declared and tested there, not installed (operator ruling, 2026-11-22). | oip.law prod and staging served from Alchemy-managed config; AI metrics deploys via Alchemy and the OpenClaw stack passes its tests undeployed; both opip-web Pulumi stacks destroyed (done 2026-11-14); the host programs have no Pulumi state (decision 2026-11-13) and their files are deleted in P6. |
-| P5 Runner fleet | pending | `@beep/infra-ci-runners` deployed beside the live fleet, CI moved over, old fleet destroyed. | Hosted CI green on the new fleet for a full day; `beep-ci-runners` destroyed; export archived. |
-| P6 Retire | pending | Delete `infra/`, Pulumi and TS6 pins, root `postinstall` hook, runbook rewrite. | Verification matrix rows "Pulumi gone" and "Infra gone" pass on `main`. |
-| P7 Yeet: final PR to mergeable | pending | Publish through yeet and drive the final PR to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P8 Close | pending | Closeout reflection and the `closeout` record in the final PR; completion refresh verifies it after the merge. | `closeout.status == initiative.status` on `origin/main`. |
+| P4 OIP and hosts | complete | OIP web (Vercel project, env vars, domains, DNS, assets bucket), AI metrics through `@beep/infra-hosts`; OpenClaw declared and tested there, not installed (operator ruling, 2026-11-22). | oip.law prod and staging served from Alchemy-managed config; AI metrics deploys via Alchemy and the OpenClaw stack passes its tests undeployed; both opip-web Pulumi stacks destroyed (done 2026-11-14); the host programs have no Pulumi state (decision 2026-11-13) and their files are deleted in P6. |
+| P5 Runner fleet | complete | `@beep/infra-ci-runners` deployed beside the live fleet, CI moved over, old fleet destroyed. | Hosted CI green on the new fleet for a full day; `beep-ci-runners` destroyed; export archived. |
+| P6 Retire | complete | Delete `infra/`, Pulumi and TS6 pins, root `postinstall` hook, runbook rewrite. | Verification matrix rows "Pulumi gone" and "Infra gone" pass on `main`. |
+| P7 Yeet: final PR to mergeable | complete | Publish through yeet and drive the final PR to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P8 Close | complete | Closeout reflection and the `closeout` record in the final PR; completion refresh verifies it after the merge. | `closeout.status == initiative.status` on `origin/main`. |
 
 Each phase ships as its own PR wave (at most three open at once per packet). Stacks inside P3
 and P4 may ship as separate PRs.
