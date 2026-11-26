@@ -690,7 +690,9 @@ const movesOf = (segments: ReadonlyArray<Segment2>, shifts: ReadonlyArray<Point>
  * shorter line is a connector: its ends follow the lines it joins. An end
  * stands on a line within 2% of `coincidence`, and never closer than one and
  * a half `quantum` steps, so ends the kernel rounded off the lines they meet
- * are still found on a drawing enlarged far past its model units. The
+ * are still found on a drawing enlarged far past its model units: a rounded
+ * end lies up to half a step's diagonal off its exact place, and the line
+ * through two rounded ends as far again, so an end can sit √2 steps off. The
  * result is measured again and opened again, at most four times, and the
  * drawing that falls least short of the spacing is returned. Lengths are in
  * the segments' units.

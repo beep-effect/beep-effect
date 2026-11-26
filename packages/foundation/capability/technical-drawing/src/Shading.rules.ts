@@ -194,6 +194,12 @@ const projectedSpan = (face: FaceFacts, view: ViewFacts): number => {
  * under `minFaceSpan` (model units), `square-on` within one degree of the
  * sight line, `oblique` otherwise.
  *
+ * **Details**
+ *
+ * The projected width is the least extent of the face's projected outline
+ * across each projected straight edge, where a convex outline is narrowest,
+ * and across every 5° direction.
+ *
  * **Example** (A 2-wide band under a 3-wide minimum)
  *
  * ```ts
@@ -1254,8 +1260,9 @@ const darkestEdgeDirection = (face: FaceFacts, view: ViewFacts): O.Option<V3> =>
  * into a model-lit one. Only major edges count, at least a quarter as long as
  * the face's longest, so a tab notch or chamfer cannot turn a flap's strokes
  * into a row of ticks. Ties go to the edge least aligned with the sheet's
- * vertical, then to the longer edge, so a regular lid keeps one direction per
- * set. In a view where upright faces hatch (any view not looking straight
+ * vertical (upright faces hatch vertically, and a level face's band must not
+ * run on from a wall's), then to the longer edge, so a regular lid keeps one
+ * direction per set. In a view where upright faces hatch (any view not looking straight
  * down or up), an inclined face never hatches within 15° of the sheet's
  * vertical, since its strokes would run on from the band of a wall below it
  * and read the flap as part of the wall (review loop 2, O-01; round 2,
@@ -1571,13 +1578,22 @@ const gradedTreatment = (input: {
  * face alone, measured along the step from the shadow anchor, so a stretch
  * another part uncovers gets its band at the side nearest the shadow, its
  * first line the window's `lead` in from the stretch's edge when it has
- * one (see {@link bandLead}). A window that carries its stretch's measured
- * room (`ShadingRoom`) has each band position judged by what the view shows
- * there, on whole chords, rather than by the face's chord, so a band moves
- * off a glimpsed tip that shows too little of the face for a stroke (review
- * loop 4, G-01). A graded band is cut back by its `taper` (default `full`, the band its tone
- * gives; see {@link BandTaper}), which {@link settleBandTapers} sets when the
- * face out-inks a darker neighbour. A face lit between exposures 0.6 and 0.7
+ * one (see {@link bandLead}). A window never starts before the shadow
+ * anchor: a probe through a tab or chamfer sticking out past the face's
+ * shadow side sees the face begin inside it, and a band measured from there
+ * would put its first stroke in the tab. A face's chord at a position is its
+ * outline's full extent across it, notches included, since that is what a
+ * stroke spans; a face without straight edges has room everywhere. A window
+ * that carries its stretch's measured room (`ShadingRoom`) has each band
+ * position judged by what the view shows there, on whole chords, rather than
+ * by the face's chord, so a band moves off a glimpsed tip that shows too
+ * little of the face for a stroke (review loop 4, G-01). The engine later
+ * cuts such a band back to its taper, never below the minimum stroke, so
+ * there the taper may shorten a band but never decides where it goes or
+ * empties it. A graded band is cut back by its `taper` (default `full`, the
+ * band its tone gives; see
+ * {@link BandTaper}), which {@link settleBandTapers} sets when the face
+ * out-inks a darker neighbour. A face lit between exposures 0.6 and 0.7
  * gets a band between the light and faint recipes ({@link faintShareOf}).
  *
  * **Example** (A square-on wall under graded shading)
