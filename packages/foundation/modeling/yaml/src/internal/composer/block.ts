@@ -800,7 +800,8 @@ const reportStraySequenceDash: {
   if (scan.lastValueSepOffset < 0) return;
   const onSepLine = sameLine(state.text, scan.lastValueSepOffset, child.offset);
   if (onSepLine) {
-    if (hasNonWhitespaceBeforeOnLine(state.text, scan.lastValueSepOffset)) {
+    const implicitKeyBeforeSep = hasNonWhitespaceBeforeOnLine(state.text, scan.lastValueSepOffset);
+    if (implicitKeyBeforeSep) {
       reportSpan(state, "UnexpectedToken", "Sequence entry on same line as mapping value indicator", child);
     }
     return;
@@ -838,7 +839,9 @@ const flushValueMetaBeforeKey = (scan: BlockMapScan, child: CstNode, state: Comp
   if (!scan.afterValueSep) return;
   const valueSepOffset = findValueSepOffset(scan.children, scan.index + 1);
   if (valueSepOffset < 0) return;
-  if (lineCol(state.text, child.offset).line === lineCol(state.text, valueSepOffset).line) {
+  const scalarIsKeyOfSameLineValueSep =
+    lineCol(state.text, child.offset).line === lineCol(state.text, valueSepOffset).line;
+  if (scalarIsKeyOfSameLineValueSep) {
     flushCombinedMetaAsEmpty(scan, state, child.offset);
   }
 };
@@ -1885,7 +1888,7 @@ export const checkMultilineImplicitKeys: {
   }
 );
 
-const isSpanCheckedKey = (key: YamlNode): boolean => {
+const keySpanRevealsLineBreak = (key: YamlNode): boolean => {
   if (key._tag === "YamlScalar") return key.style === "single-quoted" || key.style === "double-quoted";
   return (key._tag === "YamlMap" || key._tag === "YamlSeq") && key.style === "flow";
 };
@@ -1894,7 +1897,7 @@ const checkImplicitKeySpan = (key: YamlNode, state: ComposerState): void => {
   const isSyntheticNullKey = key.length === 0;
   if (isSyntheticNullKey) return;
   if (wasIntroducedByExplicitKeyIndicator(state.text, key.offset)) return;
-  if (isSpanCheckedKey(key)) reportMultilineImplicitKey(state, key);
+  if (keySpanRevealsLineBreak(key)) reportMultilineImplicitKey(state, key);
 };
 
 const scalarKeyCandidate = (item: SemanticItem | undefined): YamlNode | undefined => {

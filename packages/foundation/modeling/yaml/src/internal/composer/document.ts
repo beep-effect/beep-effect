@@ -126,7 +126,7 @@ const checkNextDocumentAfterDocEnd = (
   }
 };
 
-const checkDocumentMarkerSameLine: {
+const checkDocumentEndMarkerSameLine: {
   (state: ComposerState, nextDocChildren?: readonly CstNode[]): (children: readonly CstNode[]) => void;
   (children: readonly CstNode[], state: ComposerState, nextDocChildren?: readonly CstNode[]): void;
 } = dual(
@@ -649,7 +649,7 @@ export const composeDocument: {
       compose(walk, child);
     }
     validateDirectives(walk.directives, cst, state, hasSubsequentDocuments);
-    checkDocumentMarkerSameLine(walk.children, state, nextDocCst?.children);
+    checkDocumentEndMarkerSameLine(walk.children, state, nextDocCst?.children);
     return finishDocument(walk);
   }
 );

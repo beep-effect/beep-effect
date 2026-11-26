@@ -105,10 +105,8 @@ export function resolveTagHandle(
     return Str.slice(2, -1)(tag);
   }
   if (Str.startsWith("!!")(tag)) {
-    const secondaryPrefix = tagPrefixFor(state.tagMap, "!!");
-    return (
-      O.getOrElse(secondaryPrefix, () => defaultSecondaryPrefix) + decodeTagSuffix(Str.slice(2)(tag), tag, state, span)
-    );
+    const prefix = tagPrefixFor(state.tagMap, "!!");
+    return O.getOrElse(prefix, () => defaultSecondaryPrefix) + decodeTagSuffix(Str.slice(2)(tag), tag, state, span);
   }
   const named = splitNamedHandle(tag);
   if (O.isSome(named)) {
@@ -117,10 +115,8 @@ export function resolveTagHandle(
     if (O.isSome(prefix)) return prefix.value + decodeTagSuffix(suffix, tag, state, span);
   }
   if (isPrimaryHandleTag(tag)) {
-    return (
-      O.getOrElse(tagPrefixFor(state.tagMap, "!"), () => localTagPrefix) +
-      decodeTagSuffix(Str.slice(1)(tag), tag, state, span)
-    );
+    const primaryPrefix = tagPrefixFor(state.tagMap, "!");
+    return O.getOrElse(primaryPrefix, () => localTagPrefix) + decodeTagSuffix(Str.slice(1)(tag), tag, state, span);
   }
   return tag;
 }
