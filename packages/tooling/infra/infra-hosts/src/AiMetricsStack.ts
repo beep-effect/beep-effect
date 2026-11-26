@@ -69,6 +69,8 @@ const volumeProjectTemplate = '{{ with index .Labels "com.docker.compose.project
 
 const containerStateTemplate = "{{ .State.Status }}";
 
+const phoenixPeerNetwork = (config: AiMetricsHostConfig): string => `${config.legacyCompose.composeProject}_default`;
+
 const tailnetPortStatePath = (config: AiMetricsHostConfig): string =>
   `${config.legacyCompose.configRoot}/phoenix-tailnet-https-port`;
 
@@ -153,6 +155,8 @@ export const renderPreflightCommand = ({
           `expected_project=${shellQuote(config.legacyCompose.composeProject)}`,
           `volume_project="$(docker volume inspect -f ${shellQuote(volumeProjectTemplate)} "\${volume}")"`,
           '[ -z "${volume_project}" ] || [ "${volume_project}" = "${expected_project}" ] || { printf \'data volume %s carries Compose project "%s", expected "%s" or none; refusing\\n\' "${volume}" "${volume_project}" "${expected_project}" >&2; exit 1; }',
+          `peer_network=${shellQuote(phoenixPeerNetwork(config))}`,
+          'docker network inspect "${peer_network}" >/dev/null || { printf \'peer network %s, which the OTLP collector reaches Phoenix on, is missing; refusing\\n\' "${peer_network}" >&2; exit 1; }',
         ],
         // One rehearsal at a time per port on the engine: the port must be free
         // or already published by this stage's own container.
@@ -423,6 +427,19 @@ export const renderRollbackToComposeCommand = (config: AiMetricsHostConfig): str
     ],
   });
 
+const phoenixStopTimeout = "2 minutes";
+
+const phoenixEnvironment = (config: AiMetricsHostConfig): Record<string, string> => ({
+  PHOENIX_WORKING_DIR: config.phoenix.dataDir,
+  PHOENIX_ENABLE_AUTH: "false",
+  PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER: "false",
+  PHOENIX_ENABLE_MCP_SERVER: "true",
+  PHOENIX_ENABLE_MCP_CODE_MODE: "false",
+  PHOENIX_DISABLE_AGENT_ASSISTANT: "true",
+  PHOENIX_ALLOWED_SANDBOX_PROVIDERS: "NONE",
+  PHOENIX_TELEMETRY_ENABLED: "false",
+});
+
 const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiMetricsHostConfig) {
   const context = yield* Docker.Context("Host", {
     name: config.dockerContextName,
@@ -456,10 +473,11 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
     image: config.phoenix.image,
     start: true,
     restart: "unless-stopped",
-    environment: { PHOENIX_WORKING_DIR: config.phoenix.dataDir },
+    environment: phoenixEnvironment(config),
     ports: [{ external: `127.0.0.1:${config.phoenix.port}`, internal: config.phoenix.port }],
     volumes: [{ hostPath: data.name, containerPath: config.phoenix.dataDir }],
-    networks: [{ name: network.name }],
+    networks: [{ name: network.name }, { name: phoenixPeerNetwork(config) }],
+    stopTimeout: phoenixStopTimeout,
     labels: { "beep.infra-hosts/compose-retired": Output.map(retire.hash, () => "true") },
   });
   const serve = yield* Command.Exec("TailscaleServe", {
@@ -510,10 +528,11 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
     image: config.phoenix.image,
     start: true,
     restart: "unless-stopped",
-    environment: { PHOENIX_WORKING_DIR: config.phoenix.dataDir },
+    environment: phoenixEnvironment(config),
     ports: [{ external: `127.0.0.1:${config.phoenix.rehearsalPort}`, internal: config.phoenix.port }],
     volumes: [{ hostPath: data.name, containerPath: config.phoenix.dataDir }],
     networks: [{ name: network.name }],
+    stopTimeout: phoenixStopTimeout,
     labels: { "beep.infra-hosts/preflight": Output.map(preflight.hash, () => "passed") },
   });
   yield* Command.Exec("Health", {

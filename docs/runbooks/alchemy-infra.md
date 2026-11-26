@@ -615,7 +615,8 @@ Cutover, in order:
    it under `<legacy config root>/retired-compose/` and refuses to continue if a
    Compose container named `beep-ai-metrics-phoenix` is still present; the
    container starts on the same volume; TailscaleServe re-points HTTPS 8447 at
-   loopback 6006; Health waits until the container runs and answers `/healthz`
+   loopback 6006; the container also joins `<composeProject>_default`, where the
+   host's OTLP collector reaches it by name; Health waits until the container runs and answers `/healthz`
    on its own published loopback port, then checks Serve and the public URL. A
    failure in any step fails the deploy. The Phoenix image ships no shell, so
    the container carries no Docker healthcheck (`docker ps` shows no health

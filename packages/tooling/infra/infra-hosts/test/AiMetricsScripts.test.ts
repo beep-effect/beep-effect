@@ -40,6 +40,7 @@ const fakeHost = A.join(
     '  case "$1" in',
     "    version|logs) return 0 ;;",
     '    volume) printf "%s" "${FAKE_VOLUME_PROJECT-}" ;;',
+    '    network) [ -z "${FAKE_NO_PEER_NETWORK-}" ] ;;',
     '    container) printf "%s" "${FAKE_CONTAINER_PROJECT-}" ;;',
     '    ps) [ -n "${FAKE_PORT_HOLDER-}" ] && printf "%s\\n" "${FAKE_PORT_HOLDER}"; return 0 ;;',
     '    inspect) printf "%s" "${FAKE_STATE-running}" ;;',
@@ -135,6 +136,9 @@ describe("AI metrics host step scripts", () => {
         expect(differing.stderr).toContain(
           'carries Compose project "other-project", expected "beep-ai-metrics-dankserver"'
         );
+        const isolated = yield* runStep(command, { FAKE_VOLUME_PROJECT: "", FAKE_NO_PEER_NETWORK: "1" });
+        expect(isolated.exitCode).toBe(1);
+        expect(isolated.stderr).toContain("peer network beep-ai-metrics-dankserver_default");
       })
     );
 

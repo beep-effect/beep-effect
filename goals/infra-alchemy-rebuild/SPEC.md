@@ -2852,6 +2852,15 @@ Config facts found live in the same session, now in the runbook:
 - The data volume is `external: true` in the live Compose file and carries no `com.docker.compose.project` label (Pulumi created it 2026-08-06). The first prod apply (02:27Z) stopped at Preflight on that label, with nothing retired; the unit was restarted at once (74 s down). Preflight now accepts an unlabelled volume and still refuses one labelled with another project.
 - The live unit's `ExecStop` is `docker compose stop`, not `down`. The cutover runs `docker compose down` without `-v` after stopping the unit, because RetireCompose refuses while a container of the Compose project survives.
 
+Attempt 2 (02:40:36Z, from f0c12fcf150) deployed, but a field-by-field audit against the retired Compose service found three deltas the stack had never carried. All three now ride the stack:
+- Seven Phoenix settings in the Compose `environment`: `PHOENIX_ENABLE_AUTH=false`, `PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER=false`, `PHOENIX_ENABLE_MCP_SERVER=true`, `PHOENIX_ENABLE_MCP_CODE_MODE=false`, `PHOENIX_DISABLE_AGENT_ASSISTANT=true`, `PHOENIX_ALLOWED_SANDBOX_PROVIDERS=NONE` and `PHOENIX_TELEMETRY_ENABLED=false`. Without them, 22.0.1's defaults turned auth on (`/v1/projects` answered 401) and enabled telemetry and the agent assistant.
+- The external network `beep-ai-metrics-dankserver_default` (`<composeProject>_default`). The host's OTLP collector exports to `http://beep-ai-metrics-phoenix:6006/v1/traces` on that network, so it could no longer resolve Phoenix. The prod container now joins it, and Preflight refuses when it is missing.
+- `stop_grace_period: 2m`, now `stopTimeout: "2 minutes"`, so a stop does not kill Phoenix's SQLite writer at Docker's 10 s default.
+
+The same audit found the image, port binding, volume and restart policy matching. The healthcheck is dropped on purpose (above).
+
+Ingestion was degraded from 02:40:46Z, when the attempt-2 container came up, until attempt 3 replaced it. The collector retried through its persistent queue. The P4 PR body records the measured end.
+
 Rollback for the prod cutover (also in the runbook):
 - RetireCompose deletes nothing. It disables the unit and moves the unit file into `<legacy config root>/retired-compose/`; the Compose root and its files stay on disk.
 - To return to Compose, run `alchemy destroy --stage prod`, which keeps the looked-up volume, then the stack's `operatorCommands.rollbackToCompose`, which restores the unit and starts it on the same volume.
