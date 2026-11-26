@@ -59,7 +59,7 @@ describe("document framing: a pnpm lockfile is the last document of its YAML str
         assert.deepStrictEqual(
           lockfile.packagesNamed("@effected/pnpm-plugin-effect"),
           [],
-          "a parse of the validating preamble yields its config dependency as the only package"
+          "parsing the validating preamble instead would yield its config dependency as the only package"
         );
 
         const chalk = lockfile.packagesNamed("chalk");

@@ -134,7 +134,7 @@ describe("PnpmEnvLockfile.packageManager reads the package manager pinned in the
   });
 
   describe("no package manager recorded → none", () => {
-    it.effect("a single-document lockfile, as a legacy packageManager field writes, has no preamble", () =>
+    it.effect("a single-document lockfile, which a legacy packageManager field writes, has no preamble", () =>
       Effect.gen(function* () {
         const result = yield* PnpmEnvLockfile.packageManager(fixture("v1"));
         assertNone(result);

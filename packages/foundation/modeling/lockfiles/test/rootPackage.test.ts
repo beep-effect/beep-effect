@@ -303,7 +303,7 @@ describe("ResolvedPackage#installName, the alias-aware name the bun and npm pars
     Effect.gen(function* () {
       const lockfile = yield* Lockfile.parse(ALIASED_NPM, { format: "npm" });
       const plain = O.getOrThrow(lockfile.rootPackage("string-width"));
-      strictEqual(plain.alias, undefined, "a plain npm 10 entry records no name");
+      strictEqual(plain.alias, undefined, "a plain npm 10 entry records no name, so it carries no alias");
       strictEqual(plain.installName, "string-width");
       const aliased = O.getOrThrow(lockfile.rootPackage("string-width-cjs"));
       strictEqual(aliased.name, "string-width", "npm 10 records the real name on the install-position entry");
