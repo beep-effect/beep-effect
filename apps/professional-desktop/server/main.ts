@@ -59,6 +59,7 @@ import type { DesktopStartupError } from "@/runtime/Layer";
 
 const PORT = Effect.runSync(Config.Port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
+// decision: http-idle-timeout-at-bun-max
 const bunMaxIdleTimeoutSeconds = 255;
 
 // decision: http-desktop-rpcs-require-launch-token
