@@ -35,11 +35,11 @@ const FieldsSample = S.Struct({
   type: S.optionalKey(S.String),
   rest: S.optionalKey(S.Record(S.String.check(S.isPattern(/^x-[a-z]+$/)), S.Unknown)),
 });
+const makeThroughFundingClass = (fields: typeof FieldsSample.Type) => Funding.make(fields);
 const FundingSample = S.instanceOf(Funding, {
   toCodecArbitrary: () =>
     S.link<Funding>()(FieldsSample, {
-      // Called through the class: since effect 4.1.0 a static `make` reads `this`.
-      decode: Getter.transform((fields) => Funding.make(fields)),
+      decode: Getter.transform(makeThroughFundingClass),
       encode: Getter.transform((entry) => ({ ...entry })),
     }),
 });

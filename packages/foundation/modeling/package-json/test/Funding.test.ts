@@ -1,27 +1,10 @@
-import { identity } from "effect/Function";
-// `funding` — the manifest field a consumer reaches for when it wants to put a
-// sponsor link beside a maintainer's name.
-//
-// The motivating evidence is the tsdoctor docs site, which credits maintainers
-// and wants the funding link next to them; before this the field was unmodeled
-// on every tier and landed in `rest` untyped.
-//
-// Two contracts are under test and they pull against each other:
-//
-//   READ  — `Funding.FromField` always yields an ARRAY, whichever of npm's
-//           three encodings the manifest used, so no consumer branches on
-//           arity.
-//   WRITE — wire fidelity, the package's hard requirement: a formatter must
-//           not rewrite one legal encoding into another. A bare entry
-//           re-encodes bare, NOT as a one-element array, and a string entry
-//           re-encodes as that exact string.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Funding, LenientManifest, Package, PackageManifest } from "@beep/package-json";
 import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertExitSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -90,8 +73,6 @@ describe("Funding — own __proto__ extension fidelity", () => {
   );
 });
 
-// One remembered-wire case: a bare object entry, or the same entry first in a
-// two-entry array, whose `rest` is then cleared or loses one key.
 const SECOND_ENTRY = "https://second.example";
 
 const deletionPersists = Effect.fnUntraced(function* (array: boolean, clear: boolean) {
@@ -197,15 +178,17 @@ describe("Funding.FromField — every encoding decodes to an array", () => {
   );
 });
 
-describe("Funding.FromField — wire fidelity", () => {
-  // The point of the whole design: reading normalizes, writing does not.
+describe("Funding.FromField — wire fidelity (reading normalizes to an array, writing does not)", () => {
   const roundTrip = (wire: unknown) => Effect.flatMap(decode(field, wire), (entries) => encode(field, entries));
 
   it.effect("a lone bare string stays bare", () =>
     Effect.gen(function* () {
-      // The mutant this kills: wrapping in an array on encode.
       const roundTrip6 = yield* roundTrip("https://example.com/sponsor");
-      assert.deepStrictEqual<unknown>(roundTrip6, "https://example.com/sponsor");
+      assert.deepStrictEqual<unknown>(
+        roundTrip6,
+        "https://example.com/sponsor",
+        "encode must not wrap a lone bare string in an array"
+      );
     })
   );
 
@@ -219,10 +202,12 @@ describe("Funding.FromField — wire fidelity", () => {
 
   it.effect("a one-element array stays an array", () =>
     Effect.gen(function* () {
-      // The other half of the same promise: an author who wrote the array
-      // form must not have it collapsed to a bare value either.
       const roundTrip8 = yield* roundTrip(["https://example.com/sponsor"]);
-      assert.deepStrictEqual<unknown>(roundTrip8, ["https://example.com/sponsor"]);
+      assert.deepStrictEqual<unknown>(
+        roundTrip8,
+        ["https://example.com/sponsor"],
+        "an authored array form must not collapse to a bare value"
+      );
     })
   );
 
@@ -236,64 +221,72 @@ describe("Funding.FromField — wire fidelity", () => {
 
   it.effect("key order inside an object entry survives", () =>
     Effect.gen(function* () {
-      // `url` before `type` is legal and a formatter must not reorder it.
       const wire = [{ url: "https://a.example", type: "github" }];
       const argument4 = S.encodeEffect(Json);
       const roundTrip5 = yield* roundTrip(wire);
       const value10 = yield* argument4(roundTrip5);
       const value20 = yield* S.encodeEffect(Json)(wire);
-      assert.deepStrictEqual<unknown>(value10, value20);
+      assert.deepStrictEqual<unknown>(value10, value20, "url before type is legal and a formatter must not reorder it");
     })
   );
 
   it.effect("a hand-built array has no provenance and encodes as an array", () =>
     Effect.gen(function* () {
-      // Provenance must not survive being copied into a hand-built value.
       const built = [Funding.make({ url: "https://example.com/sponsor" })];
       const encoded11 = yield* encode(field, built);
-      assert.deepStrictEqual<unknown>(encoded11, [{ url: "https://example.com/sponsor" }]);
+      assert.deepStrictEqual<unknown>(
+        encoded11,
+        [{ url: "https://example.com/sponsor" }],
+        "provenance must not survive being copied into a hand-built value"
+      );
     })
   );
 
   it.effect("pushing a second entry into a decoded bare field upgrades it to an array", () =>
     Effect.gen(function* () {
-      // Mutated IN PLACE — rebuilding the array would produce a value with no
-      // provenance and never reach the replay path at all.
       const entries = yield* decode(field, "https://a.example");
       const mutable = entries;
       assertTrue(A.isArray(mutable));
       mutable.push(Funding.make({ url: "https://b.example" }));
       const encoded12 = yield* encode(field, entries);
-      assert.deepStrictEqual<unknown>(encoded12, ["https://a.example", { url: "https://b.example" }]);
+      assert.deepStrictEqual<unknown>(
+        encoded12,
+        ["https://a.example", { url: "https://b.example" }],
+        "mutated in place: a rebuilt array carries no provenance and never reaches the replay path"
+      );
     })
   );
 
   it.effect("an entry edited in place is not replayed stale", () =>
     Effect.gen(function* () {
-      // `Schema.Class` instances are not frozen; an unguarded replay would
-      // write the ORIGINAL wire back and discard the edit.
       const entries = yield* decode(field, "https://old.example");
       const entry = entries[0];
       assertDefined(entry);
       Object.assign(entry, { url: "https://new.example" } satisfies Partial<Funding>);
       const encoded13 = yield* encode(field, entries);
-      assert.deepStrictEqual<unknown>(encoded13, "https://new.example");
+      assert.deepStrictEqual<unknown>(
+        encoded13,
+        "https://new.example",
+        "Schema.Class instances are not frozen; an unguarded replay writes the original wire and drops the edit"
+      );
     })
   );
 
   it.effect("an entry that gains a `type` can no longer be a bare string", () =>
     Effect.gen(function* () {
-      // A string has no syntax for `type`; data fidelity outranks shape
-      // fidelity in the one case where they conflict.
       const entries = yield* decode(field, "https://example.com/sponsor");
       const entry = entries[0];
       assertDefined(entry);
       Object.assign(entry, { type: "github" } satisfies Partial<Funding>);
       const encoded14 = yield* encode(field, entries);
-      assert.deepStrictEqual<unknown>(encoded14, {
-        type: "github",
-        url: "https://example.com/sponsor",
-      });
+      assert.deepStrictEqual<unknown>(
+        encoded14,
+        {
+          type: "github",
+          url: "https://example.com/sponsor",
+        },
+        "a string has no syntax for type: data fidelity outranks shape fidelity where they conflict"
+      );
     })
   );
 });
@@ -327,10 +320,7 @@ describe("Funding — unknown keys", () => {
   );
 });
 
-describe("Funding — `url` is required", () => {
-  // Unlike `Bugs`, where an email-only entry is legal, an entry with no URL
-  // says nothing at all — so it is a decode failure, not a half-populated
-  // value.
+describe("Funding — `url` is required (unlike an email-only Bugs entry, a url-less entry says nothing)", () => {
   it.effect("an object without a url fails to decode", () =>
     Effect.gen(function* () {
       const result = yield* decode(field, [{ type: "github" }]).pipe(Effect.flip, Effect.asVoid, Effect.exit);
@@ -362,14 +352,12 @@ describe("funding — the manifest tiers", () => {
 
   it.effect("Package decodes and round-trips a real manifest's funding field", () =>
     Effect.gen(function* () {
-      // A real fixture manifest, plus the field the consumer asked for.
-      const raw = { ...fixture, private: false, funding: "https://github.com/sponsors/spencerbeggs" };
-      const pkg = yield* Package.decode(raw);
+      const fixtureWithFunding = { ...fixture, private: false, funding: "https://github.com/sponsors/spencerbeggs" };
+      const pkg = yield* Package.decode(fixtureWithFunding);
       assert.strictEqual(pkg.funding?.[0]?.url, "https://github.com/sponsors/spencerbeggs");
       const encoded = yield* encode(Package.schema, pkg);
       assert.deepStrictEqual<unknown>(encoded.funding, "https://github.com/sponsors/spencerbeggs");
-      // And it is a modeled field now, not an unknown key parked in `rest`.
-      assert.isUndefined(pkg.rest?.funding);
+      assert.isUndefined(pkg.rest?.funding, "funding is a modeled field, not an unknown key parked in rest");
     })
   );
 

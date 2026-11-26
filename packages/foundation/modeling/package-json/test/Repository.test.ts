@@ -1,17 +1,3 @@
-// `repository`, `bugs` and `homepage` — the manifest fields a consumer reaches
-// for when it needs to say where a package LIVES.
-//
-// The motivating evidence is silk-release-action's `infer-sbom-metadata.ts`,
-// which hand-rolls `parseRepository` / `parseBugs` because this package offered
-// `repository` as an untyped `Union([String, Record])` and no `bugs` at all.
-// The hand-roll handles four git-URL rewrites and misses every npm shorthand
-// (`github:user/repo`, bare `user/repo`), which is the "improve on it where it
-// is sloppy" half of this gap-fill.
-//
-// Wire fidelity is the same hard requirement the rest of this package holds: a
-// formatter must not rewrite one legal encoding into another, so a shorthand
-// string round-trips as that exact string.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Bugs, Person, Repository } from "@beep/package-json";
 import { assert, describe, it } from "@effect/vitest";
@@ -61,11 +47,12 @@ describe("Repository and Bugs — own __proto__ extension fidelity", () => {
 describe("Repository — the npm shorthands", () => {
   it.effect("a bare `user/repo` browses to GitHub", () =>
     Effect.gen(function* () {
-      // The default host. `parseRepository` missed this entirely and returned
-      // the string unchanged, so a consumer got `"user/repo"` where it wanted
-      // a URL.
       const repo = yield* decode(Repository.FromValue, "effected/kit");
-      assert.deepStrictEqual(repo.browseUrl, O.some("https://github.com/effected/kit"));
+      assert.deepStrictEqual(
+        repo.browseUrl,
+        O.some("https://github.com/effected/kit"),
+        "GitHub is the default host: a bare user/repo must become a URL, not stay the raw string"
+      );
     })
   );
 
@@ -105,11 +92,12 @@ describe("Repository — git URL normalization", () => {
 
   it.effect("handles the `git+ssh://` form the hand-roll missed", () =>
     Effect.gen(function* () {
-      // `git+ssh://git@github.com/u/r.git` survived `parseRepository` with its
-      // scheme intact, because the `git@host:` rewrite only matched the scp
-      // form.
       const repo = yield* decode(Repository.FromValue, "git+ssh://git@github.com/effected/kit.git");
-      assert.deepStrictEqual(repo.browseUrl, O.some("https://github.com/effected/kit"));
+      assert.deepStrictEqual(
+        repo.browseUrl,
+        O.some("https://github.com/effected/kit"),
+        "the scheme must be stripped too: a git@host: rewrite alone matches only the scp form"
+      );
     })
   );
 
@@ -127,16 +115,12 @@ describe("Repository — git URL normalization", () => {
     })
   );
 
-  it.effect("an underivable url yields None rather than a guess", () =>
+  it.effect("an underivable url yields None rather than a guess: a missing answer, not a decode failure", () =>
     Effect.gen(function* () {
-      // Total by construction: `repository` is caller data, and a value we
-      // cannot interpret is a missing answer, not a failure — the same
-      // posture the rest of the kit takes on absence.
       const repo = yield* decode(Repository.FromValue, "not a url at all");
       assertNone(repo.browseUrl);
       assertNone(repo.gitUrl);
-      // The raw value is still there for a caller that knows better.
-      assert.strictEqual(repo.url, "not a url at all");
+      assert.strictEqual(repo.url, "not a url at all", "the raw value stays for a caller that knows better");
     })
   );
 });
@@ -168,12 +152,10 @@ describe("Repository — the object form", () => {
 describe("Repository — wire fidelity", () => {
   it.effect("a shorthand string re-encodes as that exact string", () =>
     Effect.gen(function* () {
-      // The load-bearing property: formatting a manifest must not rewrite
-      // `"effected/kit"` into `{ "url": "effected/kit" }`.
       for (const input of ["effected/kit", "github:effected/kit", "git@github.com:effected/kit.git"]) {
         const repo = yield* decode(Repository.FromValue, input);
         const encoded = yield* encode(Repository.FromValue, repo);
-        assert.strictEqual(encoded, input, input);
+        assert.strictEqual(encoded, input, `${input}: formatting must not rewrite a shorthand into { url }`);
       }
     })
   );
@@ -189,27 +171,27 @@ describe("Repository — wire fidelity", () => {
 
   it.effect("a STALE wire is not replayed once the url no longer matches", () =>
     Effect.gen(function* () {
-      // `Schema.Class` instances are not frozen at runtime (probed), so a
-      // mutated instance keeps its provenance entry while no longer being
-      // described by it. Without the url check on the replay, this re-encodes
-      // as the ORIGINAL shorthand and silently writes the wrong repository
-      // back to the manifest. Found by a surviving mutant — the guard was
-      // there, the test was not.
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { url: "effected/other" } satisfies Partial<Repository>);
       const encoded = yield* encode(Repository.FromValue, repo);
-      assert.notStrictEqual(encoded, "effected/kit");
+      assert.notStrictEqual(
+        encoded,
+        "effected/kit",
+        "Schema.Class instances are not frozen, so the replay must check the url or write the wrong repository"
+      );
       assert.deepStrictEqual<unknown>(encoded, { url: "effected/other" });
     })
   );
 
   it.effect("a hand-built repository encodes canonically as an object", () =>
     Effect.gen(function* () {
-      // No provenance to replay, so the canonical form is the honest answer —
-      // the `Person` precedent exactly.
       const repo = Repository.make({ url: "https://github.com/effected/kit" });
       const encoded = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual<unknown>(encoded, { url: "https://github.com/effected/kit" });
+      assert.deepStrictEqual<unknown>(
+        encoded,
+        { url: "https://github.com/effected/kit" },
+        "no provenance to replay, so the canonical object form, as Person does"
+      );
     })
   );
 });
@@ -255,9 +237,6 @@ describe("Bugs", () => {
 describe("Repository — directoryUrl", () => {
   it.effect("descends into `directory` on each host it knows", () =>
     Effect.gen(function* () {
-      // The motivating case: every member of a monorepo has the same
-      // `url` and differs only by `directory`, so `browseUrl` reports one
-      // location for all of them.
       const cases = [
         ["effected/kit", "https://github.com/effected/kit/tree/HEAD/packages/spdx"],
         ["gitlab:effected/kit", "https://gitlab.com/effected/kit/-/tree/HEAD/packages/spdx"],
@@ -265,18 +244,20 @@ describe("Repository — directoryUrl", () => {
       ] as const;
       for (const [url, expected] of cases) {
         const repo = yield* decode(Repository.FromValue, { url, directory: "packages/spdx" });
-        assert.deepStrictEqual(repo.directoryUrl, O.some(expected), url);
+        assert.deepStrictEqual(
+          repo.directoryUrl,
+          O.some(expected),
+          `${url}: monorepo members share one url and differ only by directory, so browseUrl cannot tell them apart`
+        );
       }
     })
   );
 
   it.effect("two members of one repository get two different URLs", () =>
     Effect.gen(function* () {
-      // The property the consumer actually depends on: this is the field a
-      // crawler uses to tell two packages apart.
       const spdx = yield* decode(Repository.FromValue, { url: "effected/kit", directory: "packages/spdx" });
       const glob = yield* decode(Repository.FromValue, { url: "effected/kit", directory: "packages/glob" });
-      assert.notDeepEqual(spdx.directoryUrl, glob.directoryUrl);
+      assert.notDeepEqual(spdx.directoryUrl, glob.directoryUrl, "a crawler tells two packages apart by this field");
       assert.deepStrictEqual(spdx.browseUrl, glob.browseUrl);
     })
   );
@@ -298,11 +279,8 @@ describe("Repository — directoryUrl", () => {
     })
   );
 
-  it.effect("an unknown host yields none rather than the repository root", () =>
+  it.effect("an unknown host yields none rather than the repository root, which would look like a real answer", () =>
     Effect.gen(function* () {
-      // The whole point: falling back to `browseUrl` here would hand back
-      // the repository root for a package that does not live there, and it
-      // would look like a real answer.
       const repo = yield* decode(Repository.FromValue, {
         url: "https://git.example.com/team/thing",
         directory: "packages/spdx",
@@ -374,60 +352,57 @@ describe("Repository — directoryUrl", () => {
 
   it.effect("reading directoryUrl does not rewrite the field", () =>
     Effect.gen(function* () {
-      // Wire fidelity holds for the derived getters, same as browseUrl.
       const input = { url: "effected/kit", directory: "packages/spdx" };
       const repo = yield* decode(Repository.FromValue, input);
       assertSome(repo.directoryUrl, O.getOrThrow(repo.directoryUrl));
       const encoded6 = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual(encoded6, input);
+      assert.deepStrictEqual(encoded6, input, "wire fidelity holds for the derived getters, as for browseUrl");
     })
   );
 });
 
 describe("Repository and Bugs — the object wire is replayed only while it is faithful", () => {
-  // `Person` has always guarded this; `Repository` and `Bugs` replayed the
-  // remembered object unconditionally, so an instance edited after decoding
-  // re-encoded as the stale original and the edit vanished with no error.
-  // Wire fidelity means "do not rewrite one legal encoding into another", not
-  // "write back whatever was read".
-
   it.effect("an edited url does not re-encode as the original", () =>
     Effect.gen(function* () {
       const repo = yield* decode(Repository.FromValue, { type: "git", url: "effected/kit" });
       Object.assign(repo, { url: "effected/other" } satisfies Partial<Repository>);
       const encoded7 = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual(encoded7, {
-        type: "git",
-        url: "effected/other",
-      });
+      assert.deepStrictEqual(
+        encoded7,
+        {
+          type: "git",
+          url: "effected/other",
+        },
+        "wire fidelity forbids rewriting one legal encoding into another, not an edit: replay is not write-back"
+      );
     })
   );
 
   it.effect("an edited directory does not re-encode as the original", () =>
     Effect.gen(function* () {
-      // The field item 6 exists to read — a stale replay here would hand
-      // back a directoryUrl for the wrong package.
       const repo = yield* decode(Repository.FromValue, { url: "effected/kit", directory: "packages/spdx" });
       Object.assign(repo, { directory: "packages/glob" } satisfies Partial<Repository>);
       const encoded8 = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual(encoded8, {
-        url: "effected/kit",
-        directory: "packages/glob",
-      });
+      assert.deepStrictEqual(
+        encoded8,
+        {
+          url: "effected/kit",
+          directory: "packages/glob",
+        },
+        "a stale replay would hand back a directoryUrl for the wrong package"
+      );
     })
   );
 
   it.effect("an unedited object still replays verbatim, key order and all", () =>
     Effect.gen(function* () {
-      // The guard must not cost the fidelity it protects: an untouched
-      // value re-encodes as the exact bytes it was read from.
       const input = { type: "git", url: "git+https://github.com/effected/kit.git", directory: "packages/spdx" };
       const repo = yield* decode(Repository.FromValue, input);
       const encoded = yield* encode(Repository.FromValue, repo);
       assert.deepStrictEqual(encoded, input);
       const value9 = yield* S.encodeEffect(Json)(encoded);
       const value23 = yield* S.encodeEffect(Json)(input);
-      assert.strictEqual(value9, value23);
+      assert.strictEqual(value9, value23, "the guard must not cost the fidelity it protects: same bytes as read");
     })
   );
 
@@ -472,37 +447,35 @@ describe("Repository and Bugs — the object wire is replayed only while it is f
 
   it.effect("CONTROL — Person, which has always guarded this, behaves identically", () =>
     Effect.gen(function* () {
-      // If this control ever fails, the bug is in the shared understanding
-      // of provenance, not in the two classes being fixed here.
       const person = yield* decode(Person.FromValue, { name: "Ada", email: "ada@example.com" });
       Object.assign(person, { name: "Grace" } satisfies Partial<Person>);
       const encoded14 = yield* encode(Person.FromValue, person);
-      assert.deepStrictEqual(encoded14, {
-        name: "Grace",
-        email: "ada@example.com",
-      });
+      assert.deepStrictEqual(
+        encoded14,
+        {
+          name: "Grace",
+          email: "ada@example.com",
+        },
+        "a failing control puts the bug in the shared provenance model, not in Repository or Bugs"
+      );
     })
   );
 });
 
 describe("Repository and Bugs — the shorthand is replayed only while it can carry the value", () => {
-  // The object branch's stale-replay guard has a twin on the string branch, and
-  // it fails differently: the shorthand has no SYNTAX for `type`, `directory`
-  // or an unknown key, so a value that gains one is no longer describable by
-  // the wire it remembers. Replaying it drops the addition with no error.
-  // `Person` and `Funding` already gate their string branches this way.
-
-  it.effect("a directory added to a string-decoded repository is not dropped", () =>
+  it.effect("a directory added to a string-decoded repository is not dropped (the monorepo-member edit)", () =>
     Effect.gen(function* () {
-      // The live case: this package ships `directoryUrl`, so making a
-      // bare-string repository into a monorepo member is the natural edit.
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { directory: "packages/spdx" } satisfies Partial<Repository>);
       const encoded15 = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual(encoded15, {
-        url: "effected/kit",
-        directory: "packages/spdx",
-      });
+      assert.deepStrictEqual(
+        encoded15,
+        {
+          url: "effected/kit",
+          directory: "packages/spdx",
+        },
+        "the shorthand has no syntax for directory, so replaying it would drop the addition silently"
+      );
     })
   );
 
@@ -511,7 +484,11 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { type: "git" } satisfies Partial<Repository>);
       const encoded16 = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual(encoded16, { type: "git", url: "effected/kit" });
+      assert.deepStrictEqual(
+        encoded16,
+        { type: "git", url: "effected/kit" },
+        "the shorthand has no syntax for type, so replaying it would drop the addition silently"
+      );
     })
   );
 
@@ -520,21 +497,23 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
       const repo = yield* decode(Repository.FromValue, "effected/kit");
       Object.assign(repo, { rest: { homepage: "https://example.com" } } satisfies Partial<Repository>);
       const encoded17 = yield* encode(Repository.FromValue, repo);
-      assert.deepStrictEqual(encoded17, {
-        url: "effected/kit",
-        homepage: "https://example.com",
-      });
+      assert.deepStrictEqual(
+        encoded17,
+        {
+          url: "effected/kit",
+          homepage: "https://example.com",
+        },
+        "the shorthand has no syntax for an unknown key, so replaying it would drop the addition silently"
+      );
     })
   );
 
   it.effect("an untouched shorthand still replays verbatim", () =>
     Effect.gen(function* () {
-      // The guard must not cost the fidelity it protects: a value the
-      // shorthand CAN still carry re-encodes as that exact string.
       for (const input of ["effected/kit", "github:effected/kit", "git@github.com:effected/kit.git"]) {
         const repo = yield* decode(Repository.FromValue, input);
         const encoded18 = yield* encode(Repository.FromValue, repo);
-        assert.strictEqual(encoded18, input, input);
+        assert.strictEqual(encoded18, input, `${input}: the guard must not cost the fidelity it protects`);
       }
     })
   );
@@ -553,15 +532,17 @@ describe("Repository and Bugs — the shorthand is replayed only while it can ca
 
   it.effect("Bugs: an email added to a string-decoded entry is still not dropped", () =>
     Effect.gen(function* () {
-      // This half was already guarded; it is kept so a future rewrite of the
-      // predicate cannot quietly drop the clause that was already correct.
       const bugs = yield* decode(Bugs.FromValue, "https://example.com/issues");
       Object.assign(bugs, { email: "bugs@example.com" } satisfies Partial<Bugs>);
       const encoded20 = yield* encode(Bugs.FromValue, bugs);
-      assert.deepStrictEqual(encoded20, {
-        url: "https://example.com/issues",
-        email: "bugs@example.com",
-      });
+      assert.deepStrictEqual(
+        encoded20,
+        {
+          url: "https://example.com/issues",
+          email: "bugs@example.com",
+        },
+        "a rewrite of the replay predicate must keep the email clause"
+      );
     })
   );
 
