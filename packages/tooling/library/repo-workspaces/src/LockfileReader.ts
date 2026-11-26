@@ -38,6 +38,8 @@ import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 
 const $I = $RepoWorkspacesId.create("LockfileReader");
 
+const DISCOVERY_MANIFEST_READ_CONCURRENCY = 10;
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -72,9 +74,6 @@ export class LockfileReadError extends S.TaggedError<LockfileReadError, { readon
         description: "Absolute path to the lockfile that could not be read.",
       })
     ),
-    // `LockfileFormat` is @beep/lockfiles' own schema, not a re-spelling of it.
-    // Hand-rolling `Schema.Literals([...])` here duplicates the source of truth and
-    // would silently disagree the day upstream adds a format.
     /** The format the detected package manager implies. */
     format: LockfileFormat.pipe(
       $I.annoteKey("LockfileReadError.format", { description: "The format the detected package manager implies." })
@@ -246,12 +245,6 @@ class LockfileReaderTestDoubleError extends S.TaggedError<
   })
 ) {}
 
-/**
- * A defect naming the unstubbed test-double method — a test-wiring mistake, not a typed failure.
- *
- * @param method - The unstubbed method's name.
- * @returns An effect that dies naming the method.
- */
 const unstubbed = (method: string): Effect.Effect<never> =>
   Effect.die(
     LockfileReaderTestDoubleError.make({
@@ -319,8 +312,6 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
     const init: Effect.Effect<Lockfile, LockfileReadFailure> = Effect.gen(function* () {
       const root = yield* findLayerRoot(roots, options);
       const detected = yield* detector.detect(root);
-      // `PackageManagerName` and `LockfileFormat` are the same four literals;
-      // the assignment is what makes the two concepts interoperate for free.
       const format: LockfileFormat = detected.name;
       const lockfilePath = path.join(root, filenameFor(format));
 
@@ -328,36 +319,12 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
         .readFileString(lockfilePath)
         .pipe(Effect.mapError((cause) => LockfileReadError.make({ lockfilePath, format, cause })));
 
-      // `Lockfile.parse` owns YAML-stream framing: `pnpm-lock.yaml` is a
-      // stream, and pnpm's writer always emits the config-dependencies document
-      // as a PREFIX, so the real lockfile is deterministically the last one. A
-      // stream carrying no lockfile document fails typed as a
-      // `LockfileFramingError`.
-      //
-      // A preamble followed by an EMPTY main document is ambiguous: pnpm writes
-      // those bytes for a config-dependency-only workspace with no root
-      // `package.json`, and also when a first install fails after the config
-      // dependencies went in. The pure parser cannot tell them apart, so this
-      // reader — which can look — asserts `configOnly` only when the root has
-      // no `package.json`. A failing `exists` probe (anything but NotFound,
-      // which `exists` already answers `false`) is read as "present": the flag
-      // is an assertion of absence, so it is made only on evidence of absence.
-      // That fails closed without widening the error channel — at worst an
-      // ambiguous stream fails `noLockfileDocument`, and an unambiguous one
-      // parses as it would have anyway.
       const configOnly =
         format === "pnpm" &&
         !(yield* fs.exists(path.join(root, "package.json")).pipe(Effect.orElseSucceed(() => true)));
       const lockfile = yield* LockfileModel.parse(content, { format, configOnly });
       if (format !== "pnpm") return lockfile;
 
-      // The pure second stage. pnpm names workspace packages by IMPORTER PATH;
-      // only reading each `package.json` turns those into real names, and that
-      // read is IO — which is exactly why the stage lives here and not in the
-      // pure package.
-      //
-      // Bounded at concurrency 10, matching `WorkspaceDiscovery`'s per-package
-      // read: a large workspace should not serialize one read per member.
       const importers = A.filter(
         lockfile.packages,
         (pkg): pkg is typeof pkg & { readonly relativePath: string } =>
@@ -369,7 +336,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
           readName(path.join(root, pkg.relativePath, "package.json")).pipe(
             Effect.map((name) => [pkg.relativePath, name] as const)
           ),
-        { concurrency: 10 }
+        { concurrency: DISCOVERY_MANIFEST_READ_CONCURRENCY }
       );
       const names = MutableHashMap.empty<string, string>();
       for (const [relativePath, name] of resolved) {
@@ -378,13 +345,9 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
       return lockfile.withImporterNames(HashMap.fromIterable(names));
     });
 
-    /** A workspace member's name, or none — an unreadable manifest is a miss, not a failure. */
     const readName = Effect.fnUntraced(function* (manifestPath: string): Effect.fn.Return<O.Option<string>> {
       const content = yield* fs.readFileString(manifestPath).pipe(Effect.orElseSucceed(() => ""));
       if (content === "") return O.none<string>();
-      // `JSON.parse` returns `undefined` for nothing: a manifest of `null`
-      // parses to `null`, and reading `.name` off it would throw a TypeError
-      // as an unhandled DEFECT. Narrow to a plain object before touching it.
       const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.orElseSucceed(() => undefined));
       if (!P.isObject(parsed)) return O.none<string>();
       const name = parsed.name;

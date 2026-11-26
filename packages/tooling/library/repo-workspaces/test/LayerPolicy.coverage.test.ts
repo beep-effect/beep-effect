@@ -31,7 +31,8 @@ describe("LayerPolicy diagnostics coverage", () => {
       }
       assert.strictEqual(
         LayerPolicyError.make({ reason: "decode", cause: new Error("missing layers") }).message,
-        "The layer policy does not match the LayerPolicy shape: missing layers"
+        "The layer policy does not match the LayerPolicy shape: missing layers",
+        "the schema issue names the offending key, so the reader is not left hunting for it"
       );
     })
   );

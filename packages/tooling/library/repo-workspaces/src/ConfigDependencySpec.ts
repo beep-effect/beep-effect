@@ -106,14 +106,8 @@ export class InvalidConfigDependencySpecError extends S.TaggedError<
   }
 }
 
-// A config dependency's version is exact and carries NO build metadata: the
-// spec grammar cannot express it (the first `+` always begins the integrity),
-// so a constructed version with build identifiers would encode to a string
-// that re-parses differently. Rejecting it at the field keeps decode/encode
-// sound — the same rule `@beep/npm-spec`'s `PackageManagerPin` applies.
 const specVersion = SemVer.pipe(
   S.check(
-    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
       (version: SemVer) => version.build.length === 0,
       $I.annote("VersionWithoutBuildMetadata", {

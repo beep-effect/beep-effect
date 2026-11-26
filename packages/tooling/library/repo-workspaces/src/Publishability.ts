@@ -19,9 +19,6 @@ import type { WorkspacePackage } from "./WorkspacePackage.ts";
 
 const $I = $RepoWorkspacesId.create("Publishability");
 
-/**
- * The public npm registry, used when `publishConfig.registry` says nothing.
- */
 const DEFAULT_REGISTRY = "https://registry.npmjs.org/";
 
 /**
@@ -235,7 +232,6 @@ export class PublishabilityDetector extends Context.Service<PublishabilityDetect
         const config = pkg.publishConfig;
         const access = config?.access;
 
-        // Private and silent about access: npm will not publish it.
         if (pkg.private && access === undefined) return [];
 
         return [

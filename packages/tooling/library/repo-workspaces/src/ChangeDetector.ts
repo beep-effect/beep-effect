@@ -259,18 +259,6 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
     const git = yield* Git;
     const discovery = yield* WorkspaceDiscovery;
 
-    /**
-     * The changed files of the range, plus the working tree when asked.
-     *
-     * **Details**
-     *
-     * Every query runs with `relative: true`, so `Git` reports paths relative
-     * to `cwd` — the workspace root — and excludes changes outside it. That is
-     * what makes a workspace nested inside a larger git repository correct:
-     * without it, `git diff` reports repository-top-level paths that resolve to
-     * nothing under the workspace root. `Git` owns the `--relative` mechanics;
-     * this detector only asks for the relative mode.
-     */
     const filesOf: {
       (
         root: string,
@@ -299,15 +287,6 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
       })
     );
 
-    /**
-     * Every git query above reports paths relative to `cwd` — the workspace
-     * root — so the workspace root is the correct bridge to the absolute paths
-     * discovery indexes by. That holds whether or not the workspace root and
-     * the git root coincide, which is the point: a workspace nested inside a
-     * larger repository is legitimate.
-     *
-     * @returns The workspace root.
-     */
     const rootOf = (): Effect.Effect<string, WorkspaceDiscoveryFailure> =>
       discovery.info.pipe(Effect.map((info) => info.root));
 

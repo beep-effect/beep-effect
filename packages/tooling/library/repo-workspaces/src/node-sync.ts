@@ -38,7 +38,6 @@ import type { SyncFileSystem, SyncPath, WorkspacesSyncOptions } from "./Workspac
 
 const $I = $RepoWorkspacesId.create("node-sync");
 
-/** Raised on first use when the running platform has no `node:fs`. */
 class NodeSyncUnavailableError extends S.TaggedError<NodeSyncUnavailableError, { readonly brand: unique symbol }>(
   $I`NodeSyncUnavailableError`
 )(
@@ -49,9 +48,6 @@ class NodeSyncUnavailableError extends S.TaggedError<NodeSyncUnavailableError, {
   })
 ) {}
 
-// Effect FileSystem is asynchronous, and this binding's contract is the native
-// synchronous calls with their native exceptions, so it keeps `node:fs` —
-// resolved on first use, never at import, the guarded form `@beep/utils` uses.
 let nodeFsHandle: typeof import("node:fs") | undefined;
 const nodeFs = (): typeof import("node:fs") => {
   nodeFsHandle ??= globalThis.process?.getBuiltinModule?.("node:fs");
@@ -59,11 +55,6 @@ const nodeFs = (): typeof import("node:fs") => {
   return nodeFsHandle;
 };
 
-// This module is an ENTRY POINT, so re-exporting is allowed (and required):
-// api-extractor models each entry as its own surface, and the three op types
-// appear in this entry's public declarations — without the re-export the
-// build reports ae-forgotten-export for all three. It also lets a consumer
-// type against the subpath alone.
 export type { SyncDirectoryEntry, SyncFileSystem, SyncPath, WorkspacesSyncOptions } from "./WorkspacesSync.ts";
 
 /**
@@ -92,9 +83,6 @@ export const nodeFileSystem: SyncFileSystem = {
   readFile: (p) => nodeFs().readFileSync(p, "utf8"),
   readDirectory: (p) => nodeFs().readdirSync(p),
   isDirectory: (p) => nodeFs().statSync(p).isDirectory(),
-  // The optional fast path: one `readdirSync` carries every entry's type, so
-  // enumeration stops paying a `statSync` per entry. Links keep reporting as
-  // links — enumeration re-resolves those itself.
   readDirectoryWithTypes: (p) =>
     A.map(nodeFs().readdirSync(p, { withFileTypes: true }), (entry) => ({
       name: entry.name,
