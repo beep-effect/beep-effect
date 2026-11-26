@@ -168,23 +168,22 @@ const observableState = (snapshot: WorkspaceStateSnapshot) => ({
 
 describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tree", () => {
   it.layer(snapshotsLayer(scriptGit(headRefFromTree(parityTree)), parityTree), { timeout: "30 seconds" })((it) => {
-    it.effect("the two snapshots agree on packages, catalogs and resolution", () =>
-      Effect.gen(function* () {
-        const snapshots = yield* WorkspaceSnapshots;
-        const atHead = yield* snapshots.at("HEAD");
-        const worktree = yield* snapshots.worktree;
-        assert.deepStrictEqual(
-          observableState(atHead),
-          observableState(worktree),
-          "worktree() reads the inline catalog from disk and at('HEAD') from git; a clean tree must agree"
-        );
-        const effectViaCatalog = atHead.resolve("effect", "catalog:");
-        assertSome(effectViaCatalog, "^4.0.0");
-        const alphaViaWorkspaceStar = atHead.resolve("@x/alpha", "workspace:*");
-        assertSome(alphaViaWorkspaceStar, "1.0.0");
-        const betaViaWorkspaceCaret = atHead.resolve("@x/beta", "workspace:^");
-        assertSome(betaViaWorkspaceCaret, "2.0.0");
-      })
+    it.effect(
+      "the two snapshots agree on packages, catalogs and resolution, with catalog and workspace indirections resolved",
+      () =>
+        Effect.gen(function* () {
+          const snapshots = yield* WorkspaceSnapshots;
+          const atHead = yield* snapshots.at("HEAD");
+          const worktree = yield* snapshots.worktree;
+          assert.deepStrictEqual(
+            observableState(atHead),
+            observableState(worktree),
+            "worktree() reads the inline catalog from disk and at('HEAD') from git; a clean tree must agree"
+          );
+          assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
+          assertSome(atHead.resolve("@x/alpha", "workspace:*"), "1.0.0");
+          assertSome(atHead.resolve("@x/beta", "workspace:^"), "2.0.0");
+        })
     );
   });
 });
@@ -214,7 +213,7 @@ describe("WorkspaceSnapshots — bun inline catalogs at a ref with NO bun.lock (
           assert.deepStrictEqual(
             atHead.catalogs.entries,
             worktree.catalogs.entries,
-            "gating the at-ref inline read on bun.lock returned an empty set here: c594ff1 again, one layer up"
+            "gating the at-ref inline read on bun.lock returned an empty set here: c594ff1 again, one layer up, so every catalog dependency diffed as new"
           );
           assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
           assertSome(worktree.resolve("effect", "catalog:"), "^4.0.0");
@@ -570,7 +569,7 @@ describe("WorkspaceSnapshots — seedCatalogs hand a held live set to the ref si
         assert.deepStrictEqual(
           live.resolve("hooked-dep", "catalog:"),
           atRef.resolve("hooked-dep", "catalog:"),
-          "a seeded at against an unseeded worktree reports the catalog removed every run; HOOKED_REF derives from HOOKED_MARKER"
+          "a seeded at against an unseeded worktree reports the catalog removed every run; HOOKED_REF is derived from HOOKED_MARKER, so two hand-written trees cannot drift into a false agreement"
         );
       })
     );

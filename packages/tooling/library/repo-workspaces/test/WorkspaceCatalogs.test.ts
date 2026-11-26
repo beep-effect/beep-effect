@@ -47,14 +47,13 @@ describe("CatalogSet", () => {
     })
   );
 
-  it.effect("reads named catalogs", () =>
+  it.effect("reads every named catalog, not only the first", () =>
     Effect.gen(function* () {
       const set = yield* CatalogSet.fromWorkspaceYaml(
         "catalogs:\n  build:\n    typescript: ^6.0.0\n  test:\n    vitest: ^3.0.0\n"
       );
       assert.deepStrictEqual(R.keys(set.entries).sort(), ["build", "test"]);
-      const secondNamedCatalogRange = set.rangeOf("vitest", O.some("test"));
-      assertSome(secondNamedCatalogRange, "^3.0.0");
+      assertSome(set.rangeOf("vitest", O.some("test")), "^3.0.0");
       assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
     })
   );
@@ -94,7 +93,7 @@ describe("CatalogSet", () => {
     })
   );
 
-  it("fromLockfileCatalogs unwraps the { specifier, version } lockfile shape to the declared specifier, not the version", () => {
+  it("fromLockfileCatalogs unwraps { specifier, version } to the declared range, never pinning consumers to the version", () => {
     const set = CatalogSet.fromLockfileCatalogs({
       default: { effect: { specifier: "^4.0.0", version: "4.0.0-beta.97" } },
     });

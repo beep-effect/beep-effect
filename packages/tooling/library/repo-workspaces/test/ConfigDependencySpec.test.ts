@@ -63,13 +63,13 @@ describe("ConfigDependencySpec.parseResult over real SRI values from savvy-web/s
     }
   });
 
-  it("rejects a malformed integrity half with reason 'integrity'", () => {
-    const corepackValidIntegrityHash = "0.11.1+sha512.deadbeef";
+  it("rejects a malformed integrity half with reason 'integrity', even the corepack form IntegrityHash accepts", () => {
+    const corepackIntegrityForm = "0.11.1+sha512.deadbeef";
     const semverBuildMetadata = "0.11.1+build.5";
     for (const input of [
       "0.11.1+",
       "0.11.1+garbage",
-      corepackValidIntegrityHash,
+      corepackIntegrityForm,
       semverBuildMetadata,
       "0.11.1+sha512-not base64",
     ]) {

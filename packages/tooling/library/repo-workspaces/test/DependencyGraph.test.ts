@@ -108,12 +108,7 @@ describe("DependencyGraph", () => {
     );
   });
 
-  // The explicit timeout: the claim is stack-safety, not latency. The walk
-  // is ~375ms uninstrumented, but v8 coverage on a shared CI runner
-  // amplifies wall time well past the 5s default (observed 18x elsewhere in
-  // this repo). A RangeError still fails instantly; only the legitimate
-  // walk needs the headroom.
-  const stackSafetyTimeoutMs = 30_000;
+  const coverageHeadroomTimeoutMs = 30_000;
   it(
     "cycle detection does not overflow on a long chain",
     () => {
@@ -122,10 +117,10 @@ describe("DependencyGraph", () => {
       );
       assert.isFalse(
         DependencyGraph.make({ packages: twentyThousandLinkChain }).hasCycle,
-        "a recursive DFS throws RangeError on 20,000 links, an unhandled defect"
+        "a recursive DFS throws RangeError on 20,000 links, an unhandled defect that fails at once; the timeout is v8-coverage headroom past the 5s default"
       );
     },
-    stackSafetyTimeoutMs
+    coverageHeadroomTimeoutMs
   );
 
   it.effect("levels groups packages into parallel build tiers, leaves first", () =>

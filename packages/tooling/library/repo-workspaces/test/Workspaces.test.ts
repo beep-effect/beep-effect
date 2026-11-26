@@ -107,19 +107,21 @@ describe("Workspaces.resolveManifest", () => {
 describe("Workspaces.resolverLayer", () => {
   const Resolvers = Workspaces.resolverLayer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(TREE)));
   it.layer(Resolvers, { timeout: "30 seconds" })((it) => {
-    it.effect("provides both @effected/npm contracts over one factory call", () =>
-      Effect.gen(function* () {
-        const catalogs = yield* CatalogResolver;
-        const workspaces = yield* WorkspaceResolver;
-        const rangeOf1 = yield* catalogs.rangeOf("effect", O.none());
-        assertSome(rangeOf1, "^4.0.0");
-        const rangeOf2 = yield* catalogs.rangeOf("react", O.some("react18"));
-        assertSome(rangeOf2, "^18.2.0");
-        const versionOf3 = yield* workspaces.versionOf("@x/a");
-        assertSome(versionOf3, "1.2.3");
-        const unmatchedNameIsNone = yield* catalogs.rangeOf("nothing", O.none());
-        assertNone(unmatchedNameIsNone);
-      })
+    it.effect(
+      "provides both @effected/npm contracts over one factory call; an unmatched name is none, not an error",
+      () =>
+        Effect.gen(function* () {
+          const catalogs = yield* CatalogResolver;
+          const workspaces = yield* WorkspaceResolver;
+          const rangeOf1 = yield* catalogs.rangeOf("effect", O.none());
+          assertSome(rangeOf1, "^4.0.0");
+          const rangeOf2 = yield* catalogs.rangeOf("react", O.some("react18"));
+          assertSome(rangeOf2, "^18.2.0");
+          const versionOf3 = yield* workspaces.versionOf("@x/a");
+          assertSome(versionOf3, "1.2.3");
+          const unmatchedNameRange = yield* catalogs.rangeOf("nothing", O.none());
+          assertNone(unmatchedNameRange);
+        })
     );
   });
 });

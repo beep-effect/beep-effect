@@ -105,7 +105,10 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
           Cause.hasDies(exit.cause),
           "developer wiring: find passes 2.5 to the walker's guard rather than reading it as a legitimate not-found"
         );
-        assert.isFalse(A.some(exit.cause.reasons, Cause.isFailReason));
+        assert.isFalse(
+          A.some(exit.cause.reasons, Cause.isFailReason),
+          "developer wiring must not widen the error channel callers branch on"
+        );
       })
     );
   });

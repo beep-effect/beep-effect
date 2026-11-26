@@ -223,7 +223,7 @@ describe("WorkspaceDiscovery.refreshIn", () => {
         assert.deepStrictEqual(
           names(listPackagesIn7),
           ["@x/alpha", "@x/gamma", "root"],
-          "the refresh states the precondition: layer(...) shares one service, so a sibling's order must not hold it"
+          "holds after this test's own refresh: layer(...) shares one service, so sibling order must not make it vacuous"
         );
       })
     );

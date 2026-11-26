@@ -77,7 +77,7 @@ describe("WorkspaceStateSnapshot.withSeededCatalogs — precedence", () => {
 describe("WorkspaceStateSnapshot.withSeededCatalogs — against the importerVersions fallback", () => {
   const importerVersions = { "packages/a": { effect: "4.0.0-rc.109" } };
 
-  it("prefers the seed's declared RANGE over the recorded concrete version", () => {
+  it("prefers the seed's declared RANGE over the recorded concrete version, which hides a range move", () => {
     const bare = snapshot({ catalogs: CatalogSet.empty(), importerVersions });
     const recordedConcreteVersion = bare.resolve("effect", "catalog:");
     assertSome(recordedConcreteVersion, "4.0.0-rc.109");

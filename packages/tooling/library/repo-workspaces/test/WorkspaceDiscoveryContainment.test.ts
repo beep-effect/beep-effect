@@ -124,7 +124,7 @@ describe("WorkspaceDiscovery containWithinRoot", () => {
           deepStrictEqual(
             listed1,
             ["root=.", "local=groups/local", "a=inner", "a=packages/a"],
-            "an untrusted checkout's escaping links: no manifest outside fails discovery or spends the visit budget"
+            "an untrusted checkout's escaping links: no manifest outside fails discovery or spends the visit budget; dangling/gone and absent have no real path"
           );
         })
       );

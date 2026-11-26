@@ -202,7 +202,7 @@ describe("WorkspacePackage", () => {
   });
 });
 
-describe("WorkspacePackage.dependencyVersion — inherited names are not dependencies", () => {
+describe("WorkspacePackage.dependencyVersion — inherited names are not dependencies, never Option.some(<Function>)", () => {
   const pkg = WorkspacePackage.make({
     name: "@x/a",
     version: "1.0.0",
@@ -219,8 +219,7 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
 
   for (const inherited of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"]) {
     it(`dependencyVersion(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is none`, () => {
-      const inheritedNameVersion = pkg.dependencyVersion(inherited);
-      assertNone(inheritedNameVersion);
+      assertNone(pkg.dependencyVersion(inherited));
     });
 
     it(`hasAnyDependencyOn(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is false`, () => {
