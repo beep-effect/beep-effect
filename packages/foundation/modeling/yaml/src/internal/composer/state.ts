@@ -1,7 +1,3 @@
-// Composer state, shared metadata types, and position/text utilities used
-// across the composer seams. Imports nothing from the other composer modules
-// so every seam can depend on it without cycles.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -19,19 +15,10 @@ import type { CommentFields } from "./comments.ts";
 
 const $I = $YamlId.create("internal/composer/state");
 
-/** The structural comment-field triple every YAML node carries. */
 type CommentFieldsView = S.Struct.Type<typeof CommentFields.fields>;
 
-// ---------------------------------------------------------------------------
-// Line/column computation
-// ---------------------------------------------------------------------------
-
-// Single-entry memo keyed on the text reference: composition issues one
-// lineCol call per AST node against the same document string, so scanning
-// from offset 0 on every call made composition O(nodes × length). The index
-// is rebuilt only when a different text arrives.
-let lineStartsText: string | undefined;
-let lineStartsCache: ReadonlyArray<number> = [];
+let singleEntryMemoText: string | undefined;
+let singleEntryMemoLineStarts: ReadonlyArray<number> = [];
 
 /**
  * Indexes the source offsets where each line begins for repeated position lookups.
@@ -54,7 +41,7 @@ let lineStartsCache: ReadonlyArray<number> = [];
  * @since 0.0.0
  */
 export function getLineStarts(text: string): ReadonlyArray<number> {
-  if (lineStartsText === text) return lineStartsCache;
+  if (singleEntryMemoText === text) return singleEntryMemoLineStarts;
   const starts = [0];
   for (let i = 0; i < text.length; i++) {
     if (text[i] === "\r") {
@@ -62,8 +49,8 @@ export function getLineStarts(text: string): ReadonlyArray<number> {
       starts.push(i + 1);
     } else if (text[i] === "\n") starts.push(i + 1);
   }
-  lineStartsText = text;
-  lineStartsCache = starts;
+  singleEntryMemoText = text;
+  singleEntryMemoLineStarts = starts;
   return starts;
 }
 
@@ -118,21 +105,21 @@ export class LineColumn extends S.Opaque<LineColumn, { readonly brand: unique sy
 export function lineCol(...[text, offset]: [text: string, offset: number]): LineColumn {
   const starts = getLineStarts(text);
   const pos = Math.min(Math.max(offset, 0), text.length);
-  // Binary search for the greatest line start <= pos.
-  let lo = 0;
+  let lastLineStartingAtOrBeforePos = 0;
   let hi = starts.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
+  while (lastLineStartingAtOrBeforePos < hi) {
+    const mid = (lastLineStartingAtOrBeforePos + hi + 1) >> 1;
     const start = starts[mid];
     if (start !== undefined && start <= pos) {
-      lo = mid;
+      lastLineStartingAtOrBeforePos = mid;
     } else {
       hi = mid - 1;
     }
   }
-  const lineStart = A.getUnsafe(starts, lo);
+  const line = lastLineStartingAtOrBeforePos;
+  const lineStart = A.getUnsafe(starts, line);
   const bom = text[lineStart] === "\uFEFF" && pos > lineStart ? 1 : 0;
-  return LineColumn.make({ line: lo, column: pos - lineStart - bom });
+  return LineColumn.make({ line, column: pos - lineStart - bom });
 }
 
 /**
@@ -184,7 +171,7 @@ export function hasNonWhitespaceBeforeOnLine(...[text, offset]: [text: string, o
     if (ch === "\n" || ch === "\r") return false;
     if (ch !== " " && ch !== "\t") return true;
   }
-  return false; // start of string
+  return false;
 }
 
 /**
@@ -215,10 +202,6 @@ export function lineIndentColumn(...[text, offset]: [text: string, offset: numbe
   while (i < text.length && (text[i] === " " || text[i] === "\t")) i++;
   return i - lineStart;
 }
-
-// ---------------------------------------------------------------------------
-// Metadata for anchors/tags/comments attached to nodes
-// ---------------------------------------------------------------------------
 
 /**
  * Describes writable pending anchor, tag, and comment metadata for the next composed node.
@@ -400,7 +383,6 @@ export function recordPendingTag(meta: NodeMeta, ...[child, state]: [child: CstN
   MutableHashSet.add(state.tagOffsets, child.offset);
 }
 
-/** The node-property and comment fields a rebuilt collection carries over. */
 type CollectionPropsView = Pick<YamlMap, "tag" | "anchor" | "commentBefore" | "comment" | "spaceBefore">;
 
 /**
@@ -436,10 +418,6 @@ export function collectionProps(n: CollectionPropsView): CollectionPropsView {
     spaceBefore: O.fromUndefinedOr(n.spaceBefore),
   });
 }
-
-// ---------------------------------------------------------------------------
-// Composer state
-// ---------------------------------------------------------------------------
 
 /**
  * Provides the flow-composer dispatch injected by `document.ts` when creating state.
