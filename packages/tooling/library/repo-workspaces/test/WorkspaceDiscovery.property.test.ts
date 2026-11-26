@@ -131,8 +131,11 @@ it.effect.prop(
       const value8 = yield* S.encodeEffect(PackageNotFoundError)(error);
       const decoded = yield* argument4(value8);
       assert.strictEqual(error.message, `No workspace package named "${error.packageName}"`);
-      // D-24: the requested name no longer shadows the error's own `name`.
-      assert.strictEqual(error.name, "@beep/repo-workspaces/WorkspaceDiscovery/PackageNotFoundError");
+      assert.strictEqual(
+        error.name,
+        "@beep/repo-workspaces/WorkspaceDiscovery/PackageNotFoundError",
+        "D-24: the requested name does not shadow the error's own name"
+      );
       assert.strictEqual(decoded.message, error.message);
       const argument5 = S.decodeEffect(PackageNotFoundError);
       const value9 = yield* S.encodeEffect(PackageNotFoundError)(decoded);

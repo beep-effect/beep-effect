@@ -1,11 +1,3 @@
-// Root discovery: the ascent bounds, the carried discovery root, and the test
-// double.
-//
-// The tree is the shape that produced the downstream regression: a fixture
-// workspace nested inside an enclosing repository that is itself a workspace
-// root. An unbounded ascent out of an UNMARKED fixture reaches the host, which
-// is exactly the silent escape `stopAt` exists to refuse.
-
 import { MemoryFileSystem } from "@beep/memfs";
 import {
   WORKSPACE_MARKERS,
@@ -32,25 +24,23 @@ const rootsOver = (tree: Tree) => {
   return WorkspaceRoot.layer.pipe(Layer.provide(base));
 };
 
-// ── bounded ascent (item 4) ─────────────────────────────────────────────────
-
-// The regression shape: `/host` is a real workspace root, `/host/fixtures/wsp`
-// is an intended-but-unmarked one.
-const nested: Tree = {
+const unmarkedFixtureInsideHost: Tree = {
   "/host/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
   "/host/package.json": manifest("@host/root"),
   "/host/fixtures/wsp/packages/a/package.json": manifest("@fixture/a"),
 };
 
 describe("WorkspaceRoot.find — ascent bounds", () => {
-  layer(rootsOver(nested), { timeout: "30 seconds" })((it) => {
+  layer(rootsOver(unmarkedFixtureInsideHost), { timeout: "30 seconds" })((it) => {
     it.effect("unbounded, it escapes the fixture and resolves the host root", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        // Not a bug being asserted as correct — this is the documented default,
-        // and the control that proves the bounded case below is doing work.
         const found1 = yield* roots.find("/host/fixtures/wsp/packages/a");
-        assert.strictEqual(found1, "/host");
+        assert.strictEqual(
+          found1,
+          "/host",
+          "the documented unbounded default, and the control proving stopAt does work"
+        );
       })
     );
 
@@ -58,7 +48,11 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
         const error = yield* Effect.flip(roots.find("/host/fixtures/wsp/packages/a", { stopAt: "/host/fixtures/wsp" }));
-        assert.instanceOf(error, WorkspaceRootNotFoundError);
+        assert.instanceOf(
+          error,
+          WorkspaceRootNotFoundError,
+          "the downstream regression: an unmarked fixture inside a host workspace must not escape to the host"
+        );
         assert.strictEqual(error.stopAt, "/host/fixtures/wsp");
         assert.include(error.message, "up to /host/fixtures/wsp");
       })
@@ -75,43 +69,46 @@ describe("WorkspaceRoot.find — ascent bounds", () => {
     it.effect("a non-normalized stopAt still bounds the ascent", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        // Walker compares the ceiling by string equality, so an unresolved
-        // `stopAt` would never match and would silently run unbounded to
-        // "/host". This asserts `find` resolves it first.
         const error = yield* Effect.flip(
           roots.find("/host/fixtures/wsp/packages/a", { stopAt: "/host/fixtures/wsp/packages/../" })
         );
-        assert.strictEqual(error.stopAt, "/host/fixtures/wsp");
+        assert.strictEqual(
+          error.stopAt,
+          "/host/fixtures/wsp",
+          "the walker compares the ceiling by string equality, so find must resolve it or run unbounded"
+        );
       })
     );
 
     it.effect("an unbounded failure records no ceiling", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        // `stopAt`'s absence is the signal that distinguishes "no root anywhere
-        // above me" from "none below my ceiling"; the two render identically
-        // without it.
         const error = yield* Effect.flip(roots.find("/host/fixtures/wsp/packages/a", { maxDepth: 2 }));
         assert.instanceOf(error, WorkspaceRootNotFoundError);
-        assert.strictEqual(error.stopAt, undefined);
+        assert.strictEqual(
+          error.stopAt,
+          undefined,
+          "stopAt's absence tells no root anywhere above from none below the ceiling"
+        );
       })
     );
 
     it.effect("an invalid maxDepth is a defect, not a typed failure", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        // Developer wiring, so it must not widen the error channel callers
-        // branch on. Walker's guard owns this; the assertion is that `find`
-        // passes the value through rather than normalizing it away — a `2.5`
-        // that silently became "no ancestors" would be indistinguishable from
-        // a legitimate not-found.
         const exit = yield* Effect.exit(roots.find("/host/packages", { maxDepth: 2.5 }));
         assertExitFailure(
           exit,
           O.getOrElse(Exit.getCause(exit), () => Cause.empty)
         );
-        assert.isTrue(Cause.hasDies(exit.cause));
-        assert.isFalse(A.some(exit.cause.reasons, Cause.isFailReason));
+        assert.isTrue(
+          Cause.hasDies(exit.cause),
+          "developer wiring: find passes 2.5 to the walker's guard rather than reading it as a legitimate not-found"
+        );
+        assert.isFalse(
+          A.some(exit.cause.reasons, Cause.isFailReason),
+          "developer wiring must not widen the error channel callers branch on"
+        );
       })
     );
   });
@@ -237,8 +234,6 @@ describe("WorkspaceRoot.find — marker stat failures", () => {
   });
 });
 
-// ── the carried discovery root (item 5) ─────────────────────────────────────
-
 const discovered: Tree = {
   "/repo/package.json": rootManifest(["packages/*", "apps/nested/*"]),
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
@@ -263,9 +258,7 @@ describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
         const packages = yield* discovery.listPackages;
         const info = yield* discovery.info;
 
-        // Root package plus three members — a bare loop over an empty array
-        // would pass vacuously.
-        assert.strictEqual(packages.length, 4);
+        assert.strictEqual(packages.length, 4, "root plus three members, so the loop below cannot pass vacuously");
         for (const pkg of packages) {
           assert.strictEqual(pkg.workspaceRoot, info.root, `${pkg.name} disagreed`);
         }
@@ -286,20 +279,17 @@ describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
         const web = yield* discovery.getPackage("@x/web");
-        // The whole point of carrying it: `apps/nested/web` is three segments
-        // deep, so anything that walked up "one level" would land on
-        // `/repo/apps/nested` and read the wrong config.
         assert.strictEqual(web.path, "/repo/apps/nested/web");
-        assert.strictEqual(web.workspaceRoot, "/repo");
+        assert.strictEqual(
+          web.workspaceRoot,
+          "/repo",
+          "apps/nested/web is three segments deep; a one-level walk-up lands on /repo/apps/nested's config"
+        );
       })
     );
   });
 });
 
-// ── the test double (item 9) ────────────────────────────────────────────────
-
-// Bound to a const: layerTest is a parameterized layer factory and layers
-// memoize by reference.
 const TestRoot = WorkspaceRoot.layerTest("/repo");
 
 describe("WorkspaceRoot.layerTest", () => {
@@ -325,11 +315,12 @@ describe("WorkspaceRoot.layerTest", () => {
     it.effect("fails typed when the root lies ABOVE the ceiling", () =>
       Effect.gen(function* () {
         const roots = yield* WorkspaceRoot;
-        // The fidelity that a hand-rolled `find: () => Effect.succeed("/repo")`
-        // does not have: ignoring the ceiling makes a bounded call pass under
-        // test and fail against the live service.
         const error = yield* Effect.flip(roots.find("/repo/packages/a", { stopAt: "/repo/packages" }));
-        assert.instanceOf(error, WorkspaceRootNotFoundError);
+        assert.instanceOf(
+          error,
+          WorkspaceRootNotFoundError,
+          "a hand-rolled find that ignores the ceiling passes a bounded call under test and fails it live"
+        );
         assert.strictEqual(error.stopAt, "/repo/packages");
         assert.deepStrictEqual([...error.markers], [...WORKSPACE_MARKERS]);
       })
@@ -338,7 +329,6 @@ describe("WorkspaceRoot.layerTest", () => {
 });
 
 describe("WorkspaceRoot.makeTest — ceiling containment", () => {
-  // makeTest requires `Path` to normalize the ceiling; the runner supplies it.
   layer(Path.layer, { timeout: "30 seconds" })((it) => {
     it.effect("treats the ceiling itself as containing the root", () =>
       Effect.gen(function* () {
@@ -348,10 +338,8 @@ describe("WorkspaceRoot.makeTest — ceiling containment", () => {
       })
     );
 
-    it.effect("does not treat a sibling with a shared prefix as containing the root", () =>
+    it.effect("does not treat a sibling with a shared prefix as containing the root, as a raw startsWith would", () =>
       Effect.gen(function* () {
-        // "/repo-other" starts with "/repo" as a raw string but is NOT beneath it;
-        // a naive `startsWith` check would wrongly succeed here.
         const double = yield* WorkspaceRoot.makeTest("/repo-other");
         const exit = yield* Effect.exit(double.find("/repo-other/packages/a", { stopAt: "/repo" }));
         assertExitFailure(
@@ -363,19 +351,18 @@ describe("WorkspaceRoot.makeTest — ceiling containment", () => {
 
     it.effect("normalizes a stopAt carrying `..` before comparing, matching the live path", () =>
       Effect.gen(function* () {
-        // "/repo/packages/../packages" resolves to "/repo/packages", an ancestor of
-        // the root, so the bounded call succeeds. A raw string compare would never
-        // match that spelling against the root and would wrongly fail — the exact
-        // test/live divergence this double exists to prevent.
         const double = yield* WorkspaceRoot.makeTest("/repo/packages/a");
         const found11 = yield* double.find("/repo/packages/a", { stopAt: "/repo/packages/../packages" });
-        assert.strictEqual(found11, "/repo/packages/a");
+        assert.strictEqual(
+          found11,
+          "/repo/packages/a",
+          "the spelling resolves to an ancestor; a raw string compare would fail here and diverge from live"
+        );
       })
     );
   });
 });
 
-// The double and the live service must agree, or the double is a liability.
 describe("WorkspaceRoot.layerTest — agrees with the live service", () => {
   const marked: Tree = {
     "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
@@ -386,12 +373,15 @@ describe("WorkspaceRoot.layerTest — agrees with the live service", () => {
     it.effect("both resolve the same root, and both refuse the same ceiling", () =>
       Effect.gen(function* () {
         const live = yield* WorkspaceRoot;
-        // The surrounding layer exposes `Path` for the double too.
         const double = yield* WorkspaceRoot.makeTest("/repo");
 
         const found12 = yield* live.find("/repo/packages/alpha");
         const found13 = yield* double.find("/repo/packages/alpha");
-        assert.strictEqual(found12, found13);
+        assert.strictEqual(
+          found12,
+          found13,
+          "the double and the live service must agree, or the double is a liability"
+        );
 
         const liveError = yield* Effect.flip(live.find("/repo/packages/alpha", { stopAt: "/repo/packages" }));
         const doubleError = yield* Effect.flip(double.find("/repo/packages/alpha", { stopAt: "/repo/packages" }));
@@ -402,8 +392,6 @@ describe("WorkspaceRoot.layerTest — agrees with the live service", () => {
   });
 });
 
-// A hand-built value still has to state its root — the field is required, and
-// that is the point.
 describe("WorkspacePackage.workspaceRoot — hand-built", () => {
   it("is carried verbatim, not re-derived from path arithmetic", () => {
     const pkg = WorkspacePackage.make({
@@ -414,20 +402,17 @@ describe("WorkspacePackage.workspaceRoot — hand-built", () => {
       relativePath: "packages/utils",
       workspaceRoot: "/repo",
     });
-    assert.strictEqual(pkg.workspaceRoot, "/repo");
+    assert.strictEqual(pkg.workspaceRoot, "/repo", "a hand-built value still states its root: the field is required");
   });
 });
-
-// ── the not-found message names the `workspaces` field ─────────────────────
 
 describe("WorkspaceRootNotFoundError — message", () => {
   it("words the package.json marker as the field it requires, keeping `markers` raw", () => {
     const error = WorkspaceRootNotFoundError.make({ searchPath: "/solo", markers: WORKSPACE_MARKERS });
-    // A single-package repo HAS a package.json; a bare "package.json" in the
-    // message claimed the probe missed a file that is plainly there.
     assert.strictEqual(
       error.message,
-      'No workspace root above /solo (looked for pnpm-workspace.yaml, package.json with a "workspaces" field)'
+      'No workspace root above /solo (looked for pnpm-workspace.yaml, package.json with a "workspaces" field)',
+      "a single-package repo HAS a package.json; a bare package.json here claims the probe missed it"
     );
     assert.deepStrictEqual([...error.markers], ["pnpm-workspace.yaml", "package.json"]);
   });

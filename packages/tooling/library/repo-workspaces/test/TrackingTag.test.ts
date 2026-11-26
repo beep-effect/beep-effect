@@ -1,13 +1,3 @@
-// Tracking tags: the floating `v1` / `v1.2` alias family that a repo re-points
-// at its newest matching release. This is the GitHub Actions distribution
-// convention (`uses: owner/repo@v1`).
-//
-// They are deliberately NOT SemVer — a release tag is strict SemVer 2, a
-// tracking tag is an alias with a `v` prefix and a truncated version — which is
-// why they are their own concept rather than a third `TagStyle`. Everything
-// here is pure derivation, formatting and parsing; actually MOVING a git tag is
-// a consumer concern and lives nowhere in this package.
-
 import { classifyTag, ReleaseTag, TrackingTag } from "@beep/repo-workspaces";
 import { UnrecognizedTagClassification } from "@beep/repo-workspaces/ReleaseTag";
 import { assert, describe, it } from "@effect/vitest";
@@ -40,12 +30,10 @@ describe("TrackingTag.forVersion", () => {
   });
 
   it("derives for a 0.x version too", () => {
-    // 0.x is unstable and floating v0 across minors is a real hazard, but that
-    // is the CONSUMER's policy call — the derivation is mechanical, and which
-    // of these to actually publish is decided where the tags are moved.
     assert.deepStrictEqual(
       A.map(TrackingTag.forVersion("0.5.2"), (tag) => tag.value),
-      ["v0", "v0.5"]
+      ["v0", "v0.5"],
+      "derivation is mechanical; whether to float v0 across unstable minors is the consumer's call where tags move"
     );
   });
 
@@ -70,22 +58,20 @@ describe("TrackingTag.forVersion", () => {
 
 describe("TrackingTag.forVersion — the prerelease guard", () => {
   it("a PRERELEASE derives NO tracking tags", () => {
-    // The load-bearing rule: you do not float `v1` onto a beta. Anyone
-    // installing `owner/repo@v1` is asking for the newest STABLE 1.x, and
-    // re-pointing it at 1.0.0-beta.3 ships a prerelease to every such consumer
-    // silently.
-    assert.deepStrictEqual(TrackingTag.forVersion("1.0.0-beta.3"), []);
+    assert.deepStrictEqual(
+      TrackingTag.forVersion("1.0.0-beta.3"),
+      [],
+      "owner/repo@v1 asks for the newest STABLE 1.x; floating it onto a beta silently ships a prerelease"
+    );
     assert.deepStrictEqual(TrackingTag.forVersion("2.0.0-rc.1"), []);
     assert.deepStrictEqual(TrackingTag.forVersion("1.0.0-0"), []);
   });
 
   it("BUILD METADATA is not a prerelease and still derives", () => {
-    // `+build` carries no precedence meaning in SemVer, so `1.2.3+sha.abc` is
-    // the stable 1.2.3. Treating any `-`-or-`+` suffix as prerelease is the
-    // obvious wrong implementation.
     assert.deepStrictEqual(
       A.map(TrackingTag.forVersion("1.2.3+sha.abc123"), (tag) => tag.value),
-      ["v1", "v1.2"]
+      ["v1", "v1.2"],
+      "+build has no SemVer precedence, so this is stable 1.2.3; reading any - or + suffix as prerelease is wrong"
     );
   });
 
@@ -94,10 +80,10 @@ describe("TrackingTag.forVersion — the prerelease guard", () => {
   });
 
   it("`includePrerelease` overrides the guard, for callers who mean it", () => {
-    // Aliases derive from the numeric core, so a beta of 1.0.0 floats v1/v1.0.
     assert.deepStrictEqual(
       A.map(TrackingTag.forVersion("1.0.0-beta.3", { includePrerelease: true }), (tag) => tag.value),
-      ["v1", "v1.0"]
+      ["v1", "v1.0"],
+      "aliases derive from the numeric core"
     );
   });
 });
@@ -129,9 +115,11 @@ describe("TrackingTag.forVersion — non-derivable input", () => {
   });
 
   it("a version that is not X.Y.Z derives nothing, and does not throw", () => {
-    // Total by construction: derivation is a query, not a validation, so junk
-    // yields an empty set rather than an error channel nobody wants.
-    assert.deepStrictEqual(TrackingTag.forVersion("1.2"), []);
+    assert.deepStrictEqual(
+      TrackingTag.forVersion("1.2"),
+      [],
+      "derivation is a query, not a validation: junk yields an empty set, not an error channel"
+    );
     assert.deepStrictEqual(TrackingTag.forVersion("1"), []);
     assert.deepStrictEqual(TrackingTag.forVersion("not-a-version"), []);
     assert.deepStrictEqual(TrackingTag.forVersion(""), []);
@@ -200,8 +188,7 @@ describe("classifyTag — release vs tracking vs neither", () => {
     const result = classifyTag("@scope/pkg@1.0.0");
     assert.strictEqual(result.kind, "release");
     if (result.kind !== "release") return;
-    // Split at the LAST `@`, so the leading scope `@` survives.
-    assert.strictEqual(result.tag.packageName, "@scope/pkg");
+    assert.strictEqual(result.tag.packageName, "@scope/pkg", "split at the LAST @, so the leading scope @ survives");
     assert.strictEqual(result.tag.version, "1.0.0");
   });
 
@@ -210,8 +197,7 @@ describe("classifyTag — release vs tracking vs neither", () => {
     assert.strictEqual(result.kind, "release");
     if (result.kind !== "release") return;
     assert.strictEqual(result.tag.packageName, "pkg");
-    // `version` is the bare version; the `v` was presentation.
-    assert.strictEqual(result.tag.version, "1.0.0");
+    assert.strictEqual(result.tag.version, "1.0.0", "version is bare; the v was presentation");
   });
 
   it("a PRERELEASE is a valid release tag", () => {
@@ -248,10 +234,11 @@ describe("classifyTag — release vs tracking vs neither", () => {
   });
 
   it("the `v` is REQUIRED for a tracking tag — bare `1` is neither", () => {
-    // `1` is not valid SemVer and not the tracking convention. Accepting it
-    // would make `classifyTag` guess, and the whole point of the classifier is
-    // that it does not.
-    assert.strictEqual(classifyTag("1").kind, "unrecognized");
+    assert.strictEqual(
+      classifyTag("1").kind,
+      "unrecognized",
+      "1 is neither SemVer nor the tracking convention; accepting it would make the classifier guess"
+    );
     assert.strictEqual(classifyTag("1.2").kind, "unrecognized");
   });
 
@@ -312,9 +299,6 @@ describe("classifyTag — numeric and suffix regressions", () => {
 
 describe("classifyTag — round-trips against the producers", () => {
   it("every ReleaseTag this package formats classifies as a release", () => {
-    // The two halves must agree. If `ReleaseTag` ever emits a shape
-    // `classifyTag` cannot read back, this fails — which is the property that
-    // makes the classifier trustworthy rather than a parallel guess.
     const tags = [
       ReleaseTag.single("1.2.3"),
       ReleaseTag.single("1.2.3", { versionPrefix: "v" }),
@@ -324,7 +308,11 @@ describe("classifyTag — round-trips against the producers", () => {
     ];
     for (const tag of tags) {
       const result = classifyTag(tag.value);
-      assert.strictEqual(result.kind, "release", `${tag.value} should classify as a release`);
+      assert.strictEqual(
+        result.kind,
+        "release",
+        `${tag.value} should classify as a release; a formatted shape it cannot read back makes it a parallel guess`
+      );
       if (result.kind !== "release") continue;
       assert.strictEqual(result.tag.version, tag.version, `${tag.value} version round-trip`);
       assert.strictEqual(result.tag.packageName, tag.packageName, `${tag.value} package round-trip`);
@@ -349,11 +337,13 @@ describe("classifyTag — round-trips against the producers", () => {
   });
 
   it("a release tag and its tracking tags never collide", () => {
-    // `1.2.3` and `v1` / `v1.2` must stay distinguishable, or re-pointing a
-    // tracking tag could clobber a release tag.
     const release = ReleaseTag.single("1.2.3");
     const tracking = TrackingTag.forVersion("1.2.3");
     const values = HashSet.fromIterable([release.value, ...A.map(tracking, (tag) => tag.value)]);
-    assert.strictEqual(HashSet.size(values), 3);
+    assert.strictEqual(
+      HashSet.size(values),
+      3,
+      "1.2.3, v1 and v1.2 stay distinct, so re-pointing a tracking tag cannot clobber a release tag"
+    );
   });
 });
