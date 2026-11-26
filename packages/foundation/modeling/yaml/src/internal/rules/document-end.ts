@@ -1,11 +1,3 @@
-// document-end: the `...` marker at the tail of the stream —
-// required (`present: true`, the default when the rule is enabled) or
-// forbidden (`present: false`). Tail-of-stream scope only, mirroring
-// document-start's head-of-stream scope: mid-stream `...` markers are
-// document structure.
-//
-// Opt-in: absent from both presets.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -58,49 +50,35 @@ export class documentEndOptions extends S.Opaque<documentEndOptions, { readonly 
 
 const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-order-mark"]);
 
-/** The last non-trivia token: it decides whether the stream ends with `...`. */
-const tailToken = (ctx: LintContext): YamlToken | undefined =>
+const lastNonTriviaToken = (ctx: LintContext): YamlToken | undefined =>
   O.getOrUndefined(A.findLast(ctx.tokens, (t) => !HashSet.has(TRIVIA, t.kind)));
 
-/**
- * The end-of-stream position, shared by the missing-marker diagnostic and
- * the absent-marker vote so the two cannot drift apart.
- *
- * **Details**
- *
- * `line`/`character`
- * must agree with `offset` (= text length): when the text ends with a
- * newline, that offset sits at the head of the line AFTER the last content
- * line `buildLines` kept.
- */
-const endOfStreamPosition = (
+const endOfStreamPositionSharedByDiagnosticAndVote = (
   ctx: LintContext
 ): { readonly offset: number; readonly length: number; readonly line: number; readonly character: number } => {
   const lastLine = O.getOrUndefined(A.last(ctx.lines));
-  const trailingNewline = Str.endsWith("\n")(ctx.text) || Str.endsWith("\r")(ctx.text);
+  const offsetSitsOnLineAfterLastKeptLine = Str.endsWith("\n")(ctx.text) || Str.endsWith("\r")(ctx.text);
   return {
     offset: ctx.text.length,
     length: 0,
-    line: (lastLine?.number ?? 0) + (trailingNewline ? 1 : 0),
-    character: trailingNewline ? 0 : (lastLine?.text.length ?? 0),
+    line: (lastLine?.number ?? 0) + (offsetSitsOnLineAfterLastKeptLine ? 1 : 0),
+    character: offsetSitsOnLineAfterLastKeptLine ? 0 : (lastLine?.text.length ?? 0),
   };
 };
 
-/** Report a non-empty stream whose tail is not `...`. */
 const missingEndMarker = (ctx: LintContext, tail: YamlToken | undefined): ReadonlyArray<YamlLintDiagnostic> => {
   if (tail?.kind === "document-end" || Str.trim(ctx.text) === "") return [];
+  const markerLineAfterTheNewlineEofNewlineOwns = Str.endsWith("\n")(ctx.text) ? "...\n" : "\n...\n";
   return [
     YamlLintDiagnostic.make({
       rule: "document-end",
       severity: "error",
       message: 'Missing "..." document end marker',
-      ...endOfStreamPosition(ctx),
-      // The fix appends the marker line; a missing final newline is
-      // eof-newline's business, so insert one first when needed.
+      ...endOfStreamPositionSharedByDiagnosticAndVote(ctx),
       fix: YamlEdit.make({
         offset: ctx.text.length,
         length: 0,
-        content: Str.endsWith("\n")(ctx.text) ? "...\n" : "\n...\n",
+        content: markerLineAfterTheNewlineEofNewlineOwns,
       }),
     }),
   ];
@@ -109,37 +87,30 @@ const missingEndMarker = (ctx: LintContext, tail: YamlToken | undefined): Readon
 const isDocumentMarker = (token: YamlToken): boolean =>
   token.kind === "document-start" || token.kind === "document-end";
 
-/**
- * Offset where the final document begins. A previous end marker closes its
- * document; a start marker belongs to the final document and independently
- * preserves an empty value.
- */
 const finalDocumentStart = (ctx: LintContext, tail: YamlToken): number => {
   const boundary = O.getOrUndefined(
     A.findLast(ctx.tokens, (token) => token.offset < tail.offset && isDocumentMarker(token))
   );
   if (boundary === undefined) return 0;
-  return boundary.offset + (boundary.kind === "document-end" ? boundary.length : 0);
+  const endMarkerClosesItsDocumentWhileStartMarkerOpensTheFinalOne = boundary.kind === "document-end";
+  return boundary.offset + (endMarkerClosesItsDocumentWhileStartMarkerOpensTheFinalOne ? boundary.length : 0);
 };
 
-/** True when the tail `...` stands alone on its line and removing it keeps the final document. */
 const isRemovableEndMarker = (ctx: LintContext, tail: YamlToken): boolean => {
   const lineText = ctx.lines[tail.line]?.text ?? "";
-  // Compose only the final document: ctx.document is the first one.
-  const finalDocument = composeFirstDocument(
+  const finalDocumentSinceCtxDocumentIsTheFirst = composeFirstDocument(
     Str.slice(finalDocumentStart(ctx, tail))(ctx.text),
     ParseOptionsInput.make({ uniqueKeys: false })
   );
-  const preservesDocument = finalDocument.contents !== null || finalDocument.hasDocumentStart === true;
+  const preservesDocument =
+    finalDocumentSinceCtxDocumentIsTheFirst.contents !== null ||
+    finalDocumentSinceCtxDocumentIsTheFirst.hasDocumentStart === true;
   return preservesDocument && Str.trim(lineText) === "...";
 };
 
-/** Report the forbidden tail `...`, fixing it only when the marker line can go whole. */
 const forbiddenEndMarker = (ctx: LintContext, tail: YamlToken): YamlLintDiagnostic => {
-  const alone = isRemovableEndMarker(ctx, tail);
-  // The fix removes the marker line whole: marker plus its terminator
-  // (two characters under CRLF, one under LF).
-  const terminator = Str.startsWith("\r\n", tail.offset + tail.length)(ctx.text) ? 2 : 1;
+  const markerLineCanGoWhole = isRemovableEndMarker(ctx, tail);
+  const crlfOrLfTerminatorLength = Str.startsWith("\r\n", tail.offset + tail.length)(ctx.text) ? 2 : 1;
   return YamlLintDiagnostic.make({
     rule: "document-end",
     severity: "error",
@@ -148,7 +119,9 @@ const forbiddenEndMarker = (ctx: LintContext, tail: YamlToken): YamlLintDiagnost
     length: tail.length,
     line: tail.line,
     character: tail.character,
-    ...(alone ? { fix: YamlEdit.make({ offset: tail.offset, length: tail.length + terminator, content: "" }) } : {}),
+    ...(markerLineCanGoWhole
+      ? { fix: YamlEdit.make({ offset: tail.offset, length: tail.length + crlfOrLfTerminatorLength, content: "" }) }
+      : {}),
   });
 };
 
@@ -180,16 +153,13 @@ export const documentEnd = YamlRule.make({
   check: dual(2, (ctx: LintContext, options: unknown): Iterable<YamlLintDiagnostic> => {
     const opts = P.isObject(options) ? options : {};
     const present = S.is(S.Boolean)(opts.present) ? opts.present : true;
-    // The last non-trivia token decides: does the stream end with `...`?
-    const tail = tailToken(ctx);
+    const tail = lastNonTriviaToken(ctx);
     if (present) return missingEndMarker(ctx, tail);
     return tail?.kind === "document-end" ? [forbiddenEndMarker(ctx, tail)] : [];
   }),
-  // Inference: a non-empty stream votes `present` — tailed by `...`
-  // or not; absence votes `false` (mirroring document-start).
   infer: (ctx) => {
     if (Str.trim(ctx.text) === "") return [];
-    const tail = tailToken(ctx);
+    const tail = lastNonTriviaToken(ctx);
     if (tail === undefined) return [];
     const ended = tail.kind === "document-end";
     if (ended) {
@@ -204,7 +174,8 @@ export const documentEnd = YamlRule.make({
         }),
       ];
     }
-    // Same end-of-stream position math as the missing-marker diagnostic.
-    return [StyleVote.make({ dimension: "present", value: false, ...endOfStreamPosition(ctx) })];
+    return [
+      StyleVote.make({ dimension: "present", value: false, ...endOfStreamPositionSharedByDiagnosticAndVote(ctx) }),
+    ];
   },
 });

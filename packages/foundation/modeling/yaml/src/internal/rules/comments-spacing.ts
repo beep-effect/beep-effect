@@ -1,10 +1,3 @@
-// comments-spacing: a `#` needs a space after it to read as prose,
-// and a TRAILING comment needs breathing room from the content before it.
-// Own-line versus trailing is decided from token adjacency (content before
-// the comment on its line) — the comment model's leading/trailing split
-// at the source level. A shebang (`#!` at the very start of the stream) is
-// exempt.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -59,15 +52,10 @@ export class commentsSpacingOptions extends S.Opaque<commentsSpacingOptions, { r
   )
 ) {}
 
-/**
- * The horizontal whitespace run directly before a comment token, and whether
- * line content precedes it (a TRAILING comment) — shared by the check and
- * the inference hook so the two cannot disagree about what "before" means.
- */
-const spacingBefore: {
-  (ctx: LintContext, token: YamlToken): { readonly spaces: number; readonly hasContentBefore: boolean };
-  (token: YamlToken): (ctx: LintContext) => { readonly spaces: number; readonly hasContentBefore: boolean };
-} = dual(2, (ctx: LintContext, token: YamlToken): { readonly spaces: number; readonly hasContentBefore: boolean } => {
+const spacingBeforeSharedByCheckAndInfer: {
+  (ctx: LintContext, token: YamlToken): { readonly spaces: number; readonly isTrailingComment: boolean };
+  (token: YamlToken): (ctx: LintContext) => { readonly spaces: number; readonly isTrailingComment: boolean };
+} = dual(2, (ctx: LintContext, token: YamlToken): { readonly spaces: number; readonly isTrailingComment: boolean } => {
   let i = token.offset - 1;
   let spaces = 0;
   while (i >= 0 && (ctx.text[i] === " " || ctx.text[i] === "\t")) {
@@ -76,14 +64,12 @@ const spacingBefore: {
   }
   return {
     spaces,
-    hasContentBefore: i >= 0 && ctx.text[i] !== "\n" && ctx.text[i] !== "\r" && !(i === 0 && ctx.text[i] === "\uFEFF"),
+    isTrailingComment: i >= 0 && ctx.text[i] !== "\n" && ctx.text[i] !== "\r" && !(i === 0 && ctx.text[i] === "\uFEFF"),
   };
 });
 
-/** Recognizes a shebang (hash followed by an exclamation mark) at the very start of the stream. */
 const isShebang = (token: YamlToken): boolean => token.offset === 0 && Str.startsWith("#!")(token.text);
 
-/** The configured spacing requirements, with their defaults. */
 const readCommentOptions = (options: unknown): { readonly minBefore: number; readonly requireAfter: boolean } => {
   const opts = P.isObject(options) ? options : {};
   return {
@@ -92,15 +78,12 @@ const readCommentOptions = (options: unknown): { readonly minBefore: number; rea
   };
 };
 
-/** Every comment token except a leading shebang. */
 const lintableComments = (ctx: LintContext): ReadonlyArray<YamlToken> =>
   A.filter(ctx.tokens, (token) => token.kind === "comment" && !isShebang(token));
 
-/** True when a space or tab follows the `#`. */
 const hasSpaceAfterHash = (token: YamlToken): boolean => /[ \t]/.test(Str.slice(1, 2)(token.text));
 
-/** True when prose follows the `#` without a separating space. */
-const lacksSpaceAfter = (token: YamlToken): boolean => token.text.length > 1 && !hasSpaceAfterHash(token);
+const proseFollowsHashWithoutSpace = (token: YamlToken): boolean => token.text.length > 1 && !hasSpaceAfterHash(token);
 
 const missingSpaceAfter = (token: YamlToken): YamlLintDiagnostic =>
   YamlLintDiagnostic.make({
@@ -114,18 +97,13 @@ const missingSpaceAfter = (token: YamlToken): YamlLintDiagnostic =>
     fix: YamlEdit.make({ offset: token.offset + 1, length: 0, content: " " }),
   });
 
-/**
- * Space before a TRAILING comment's `#`: only when content precedes
- * the comment on its line (own-line comments are indentation's
- * business).
- */
 const spacingBeforeFinding = (
   ctx: LintContext,
   token: YamlToken,
   minBefore: number
 ): YamlLintDiagnostic | undefined => {
-  const { spaces, hasContentBefore } = spacingBefore(ctx, token);
-  if (!hasContentBefore || spaces >= minBefore) return undefined;
+  const { spaces, isTrailingComment } = spacingBeforeSharedByCheckAndInfer(ctx, token);
+  if (!isTrailingComment || spaces >= minBefore) return undefined;
   return YamlLintDiagnostic.make({
     rule: "comments-spacing",
     severity: "error",
@@ -153,8 +131,8 @@ const spaceAfterVote = (token: YamlToken): StyleVote =>
   });
 
 const spacingBeforeVote = (ctx: LintContext, token: YamlToken): StyleVote | undefined => {
-  const { spaces, hasContentBefore } = spacingBefore(ctx, token);
-  if (!hasContentBefore) return undefined;
+  const { spaces, isTrailingComment } = spacingBeforeSharedByCheckAndInfer(ctx, token);
+  if (!isTrailingComment) return undefined;
   return StyleVote.make({
     dimension: "minSpacesBefore",
     value: spaces,
@@ -194,22 +172,17 @@ export const commentsSpacing = YamlRule.make({
     const { minBefore, requireAfter } = readCommentOptions(options);
     const out: Array<YamlLintDiagnostic> = [];
     for (const token of lintableComments(ctx)) {
-      // Space after `#`: a bare `#` is fine, `#text` is not.
-      if (requireAfter && lacksSpaceAfter(token)) out.push(missingSpaceAfter(token));
+      if (requireAfter && proseFollowsHashWithoutSpace(token)) out.push(missingSpaceAfter(token));
       const before = spacingBeforeFinding(ctx, token, minBefore);
       if (before !== undefined) out.push(before);
     }
     return out;
   }),
-  // Inference: every non-shebang comment with content after its `#`
-  // votes `requireSpaceAfter` (does a space follow?), and every TRAILING
-  // comment votes its observed spacing for `minSpacesBefore`. A bare `#`
-  // says nothing about after-spacing; own-line comments say nothing about
-  // before-spacing (their leading run is indentation).
   infer: (ctx) => {
     const out: Array<StyleVote> = [];
     for (const token of lintableComments(ctx)) {
-      if (token.text.length > 1) out.push(spaceAfterVote(token));
+      const bareHashSaysNothingAboutAfterSpacing = token.text.length <= 1;
+      if (!bareHashSaysNothingAboutAfterSpacing) out.push(spaceAfterVote(token));
       const before = spacingBeforeVote(ctx, token);
       if (before !== undefined) out.push(before);
     }

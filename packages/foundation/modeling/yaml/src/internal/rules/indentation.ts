@@ -1,18 +1,3 @@
-// indentation: block-structure indent STYLE — the one rule that
-// reasons about structure rather than a token and its neighbours, built
-// last by design. Two checks:
-//
-//   1. Every new block level indents by the same unit (`spaces`: a number,
-//      or "consistent" — the first observed delta decides).
-//   2. Sequences under a mapping key follow one policy (`indentSequences`:
-//      true, false, or "consistent" — the first occurrence decides).
-//
-// Structural LEGALITY is the parser's job (a dedent to an unknown level is
-// a parse error parse-validity reports); this rule only speaks where the
-// document is well-formed and the style drifts. Lines inside scalar content
-// or flow collections are skipped — their layout is value or flow syntax,
-// not block indentation. No fix: reindenting is formatting.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -109,7 +94,6 @@ const ContentLine = S.Struct({
 );
 type ContentLine = typeof ContentLine.Type;
 
-/** Net flow-collection depth change contributed by one token kind. */
 const flowDepthDelta = (kind: YamlToken["kind"]): number => {
   if (kind === "flow-map-start" || kind === "flow-seq-start") return 1;
   if (kind === "flow-map-end" || kind === "flow-seq-end") return -1;
@@ -118,7 +102,6 @@ const flowDepthDelta = (kind: YamlToken["kind"]): number => {
 
 type FlowCursor = { index: number; depth: number };
 
-/** Advance through tokens that END at or before `lineOffset`, tracking flow depth. */
 const advanceFlowCursor = (tokens: ReadonlyArray<YamlToken>, cursor: FlowCursor, lineOffset: number): number => {
   while (cursor.index < tokens.length) {
     const token = A.getUnsafe(tokens, cursor.index);
@@ -129,14 +112,12 @@ const advanceFlowCursor = (tokens: ReadonlyArray<YamlToken>, cursor: FlowCursor,
   return cursor.depth;
 };
 
-/** Flow-collection depth at each line start, from the token stream. */
 const flowDepthAtLineStarts = (ctx: LintContext): ReadonlyArray<number> => {
   const cursor: FlowCursor = { index: 0, depth: 0 };
   return A.map(ctx.lines, (line) => advanceFlowCursor(ctx.tokens, cursor, line.offset));
 };
 
-/** Cross-line cursors shared by every line of one {@link contentLines} pass. */
-type ContentScan = {
+type CrossLineContentScan = {
   readonly tokens: ReadonlyArray<YamlToken>;
   readonly scalarSpans: ReadonlyArray<YamlScalar>;
   scalarIdx: number;
@@ -144,8 +125,7 @@ type ContentScan = {
   explicitKeyColumn: number | undefined;
 };
 
-/** Per-line token-scan state for {@link scanLineTokens}. */
-type LineScan = {
+type PerLineTokenScan = {
   readonly indents: A.NonEmptyArray<number>;
   readonly prefixWidth: number;
   opensKey: boolean;
@@ -156,23 +136,22 @@ type LineScan = {
   inlineFlowDepth: number;
 };
 
-/** Leading characters of lines that carry no block structure. */
-const isSkippedLeader = (firstChar: string): boolean =>
-  // blank, comment lines, directives, and tab indent (the parser's error)
+const isLeaderOfCommentDirectiveOrParserRejectedTabLine = (firstChar: string): boolean =>
   firstChar === "#" || firstChar === "%" || firstChar === "\t";
 
-/** Width of the initial stream BOM excluded from indentation. */
 const bomPrefixWidth = (line: LintLine): number => (line.offset === 0 && line.text[0] === "\uFEFF" ? 1 : 0);
 
-/** Count the leading spaces after `prefixWidth`. */
 const leadingSpaces = (text: string, prefixWidth: number): number => {
   let indent = 0;
   while (text[prefixWidth + indent] === " ") indent++;
   return indent;
 };
 
-/** True when `probeOffset` lies inside a multi-line scalar that began before the line. */
-const insideMultilineScalar = (scan: ContentScan, lineOffset: number, probeOffset: number): boolean => {
+const insideMultilineScalarBegunOnEarlierLine = (
+  scan: CrossLineContentScan,
+  lineOffset: number,
+  probeOffset: number
+): boolean => {
   const spans = scan.scalarSpans;
   while (scan.scalarIdx < spans.length) {
     const scalar = A.getUnsafe(spans, scan.scalarIdx);
@@ -191,51 +170,50 @@ const isNodeProperty = (kind: YamlToken["kind"]): boolean => kind === "anchor" |
 const isBlockIndicator = (kind: YamlToken["kind"]): boolean =>
   kind === "block-map-key" || kind === "block-map-value" || kind === "block-seq-entry";
 
-/** After a `- ` entry, record a nested compact entry column or a pending compact key column. */
-const recordCompactColumn = (line: LineScan, token: YamlToken): void => {
+const recordCompactEntryOrPendingKeyColumn = (line: PerLineTokenScan, token: YamlToken): void => {
   const column = token.character - line.prefixWidth;
   if (token.kind === "block-seq-entry" || token.kind === "block-map-key") line.indents.push(column);
   else line.compactKeyIndent = column;
 };
 
-/** A block `:` confirms a pending compact key column as a nesting level. */
-const flushCompactKey = (line: LineScan, kind: YamlToken["kind"]): void => {
+const confirmPendingCompactKeyAsLevel = (line: PerLineTokenScan, kind: YamlToken["kind"]): void => {
   if (kind !== "block-map-value" || line.inlineFlowDepth !== 0 || line.compactKeyIndent === undefined) return;
   line.indents.push(line.compactKeyIndent);
   line.compactKeyIndent = undefined;
 };
 
-/** Track explicit-key columns and block indicators outside inline flow collections. */
-const trackBlockIndicator = (scan: ContentScan, line: LineScan, token: YamlToken): void => {
+const trackBlockIndicator = (scan: CrossLineContentScan, line: PerLineTokenScan, token: YamlToken): void => {
   if (line.inlineFlowDepth !== 0) return;
   if (token.kind === "block-map-key") scan.explicitKeyColumn = token.character - line.prefixWidth;
   if (token.kind === "block-map-value") scan.explicitKeyColumn = undefined;
   if (isBlockIndicator(token.kind)) line.hasBlockIndicator = true;
 };
 
-/** Whether the line so far ends in a block `:` with only node properties after it. */
-const nextOpensKey = (line: LineScan, kind: YamlToken["kind"]): boolean => {
+const nextOpensKey = (line: PerLineTokenScan, kind: YamlToken["kind"]): boolean => {
   if (kind === "block-map-value" && line.inlineFlowDepth === 0) return true;
   return isNodeProperty(kind) ? line.opensKey : false;
 };
 
-/** Fold one significant token into the line scan. */
-const stepLineToken = (scan: ContentScan, line: LineScan, token: YamlToken): void => {
+const stepLineToken = (scan: CrossLineContentScan, line: PerLineTokenScan, token: YamlToken): void => {
   if (token.length === 0 || token.kind === "whitespace" || token.kind === "comment") return;
   if (!isNodeProperty(token.kind)) line.propertiesOnly = false;
   line.inlineFlowDepth += flowDepthDelta(token.kind);
-  if (line.afterEntry) recordCompactColumn(line, token);
-  flushCompactKey(line, token.kind);
+  if (line.afterEntry) recordCompactEntryOrPendingKeyColumn(line, token);
+  confirmPendingCompactKeyAsLevel(line, token.kind);
   trackBlockIndicator(scan, line, token);
   line.afterEntry = token.kind === "block-seq-entry";
   line.opensKey = nextOpensKey(line, token.kind);
 };
 
-/** Read the significant tokens of one line, rather than treating quoted ` # ` as a comment. */
-const scanLineTokens = (scan: ContentScan, line: LintLine, indent: number, prefixWidth: number): LineScan => {
+const scanLineTokensSoQuotedHashIsNotComment = (
+  scan: CrossLineContentScan,
+  line: LintLine,
+  indent: number,
+  prefixWidth: number
+): PerLineTokenScan => {
   const tokens = scan.tokens;
   while (scan.tokenIdx < tokens.length && A.getUnsafe(tokens, scan.tokenIdx).offset < line.offset) scan.tokenIdx++;
-  const lineScan: LineScan = {
+  const lineScan: PerLineTokenScan = {
     indents: A.of(indent),
     prefixWidth,
     opensKey: false,
@@ -255,45 +233,37 @@ const scanLineTokens = (scan: ContentScan, line: LintLine, indent: number, prefi
   return lineScan;
 };
 
-/**
- * Explicit plain keys can be composed from separate tokens while their
- * AST span still covers only the first fragment. Keep the later ':'
- * structural, but omit deeper scalar fragments until that indicator.
- */
-const isExplicitKeyFragment = (
+const isDeeperFragmentOfMultiTokenExplicitPlainKey = (
   continuationKeyColumn: number | undefined,
   indent: number,
   firstToken: YamlToken | undefined,
-  lineScan: LineScan
+  lineScan: PerLineTokenScan
 ): boolean =>
   continuationKeyColumn !== undefined &&
   indent > continuationKeyColumn &&
   firstToken?.kind === "scalar" &&
   !lineScan.hasBlockIndicator;
 
-/** Close an explicit-key continuation once a line dedents to or past its column. */
-const takeContinuationKeyColumn = (scan: ContentScan, indent: number): number | undefined => {
+const takeContinuationKeyColumn = (scan: CrossLineContentScan, indent: number): number | undefined => {
   const continuationKeyColumn = scan.explicitKeyColumn;
   if (continuationKeyColumn !== undefined && indent <= continuationKeyColumn) scan.explicitKeyColumn = undefined;
   return continuationKeyColumn;
 };
 
-/** True when the line is inside a flow collection or continues scalar content. */
 const isNonStructuralLine = (
   ctx: LintContext,
-  scan: ContentScan,
+  scan: CrossLineContentScan,
   flowDepths: ReadonlyArray<number>,
   line: LintLine,
   probeOffset: number
 ): boolean =>
   A.getUnsafe(flowDepths, line.number) > 0 ||
   isScalarContinuationLine(ctx.tokens, line.offset, probeOffset) ||
-  insideMultilineScalar(scan, line.offset, probeOffset);
+  insideMultilineScalarBegunOnEarlierLine(scan, line.offset, probeOffset);
 
-/** Classify one source line as a structural content line, or skip it. */
 const contentLine = (
   ctx: LintContext,
-  scan: ContentScan,
+  scan: CrossLineContentScan,
   flowDepths: ReadonlyArray<number>,
   line: LintLine
 ): ContentLine | undefined => {
@@ -301,7 +271,7 @@ const contentLine = (
   const indent = leadingSpaces(line.text, prefixWidth);
   const probeOffset = line.offset + prefixWidth + indent;
   const firstChar = line.text[prefixWidth + indent];
-  if (firstChar === undefined || isSkippedLeader(firstChar)) return undefined;
+  if (firstChar === undefined || isLeaderOfCommentDirectiveOrParserRejectedTabLine(firstChar)) return undefined;
   if (isNonStructuralLine(ctx, scan, flowDepths, line, probeOffset)) return undefined;
   const firstToken = coveringToken(ctx.tokens, probeOffset);
   if (isDocumentMarker(firstToken)) {
@@ -309,13 +279,13 @@ const contentLine = (
     return undefined;
   }
   const continuationKeyColumn = takeContinuationKeyColumn(scan, indent);
-  const lineScan = scanLineTokens(scan, line, indent, prefixWidth);
-  if (isExplicitKeyFragment(continuationKeyColumn, indent, firstToken, lineScan)) return undefined;
+  const lineScan = scanLineTokensSoQuotedHashIsNotComment(scan, line, indent, prefixWidth);
+  if (isDeeperFragmentOfMultiTokenExplicitPlainKey(continuationKeyColumn, indent, firstToken, lineScan))
+    return undefined;
   const { indents, opensKey, propertiesOnly } = lineScan;
   return { line, indent, firstChar, indents, opensKey, prefixWidth, propertiesOnly };
 };
 
-/** Multi-line scalars of the document, ordered by offset. */
 const multilineScalarSpans = (ctx: LintContext): ReadonlyArray<YamlScalar> => {
   const multilineScalars: Array<YamlScalar> = [];
   walkScalars(ctx.document.contents, "root", (scalar) => {
@@ -324,15 +294,9 @@ const multilineScalarSpans = (ctx: LintContext): ReadonlyArray<YamlScalar> => {
   return A.sortWith(multilineScalars, (scalar) => scalar.offset, N.Order);
 };
 
-/**
- * The content lines block structure speaks about — shared by the check and
- * the inference hook so the two read the same lines. Skips blanks, comment
- * lines, directives, tab-indented lines (the parser's error), lines inside
- * flow collections, scalar continuations and document markers.
- */
 const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
   const flowDepths = flowDepthAtLineStarts(ctx);
-  const scan: ContentScan = {
+  const scan: CrossLineContentScan = {
     tokens: ctx.tokens,
     scalarSpans: multilineScalarSpans(ctx),
     scalarIdx: 0,
@@ -347,7 +311,6 @@ const contentLines = (ctx: LintContext): ReadonlyArray<ContentLine> => {
   return content;
 };
 
-/** One block-level indent increase observed on a content line's first column. */
 type IndentIncrease = {
   readonly line: ContentLine["line"];
   readonly prefixWidth: number;
@@ -355,7 +318,6 @@ type IndentIncrease = {
   readonly delta: number;
 };
 
-/** Apply one content line's indentation columns to the level stack, recording an increase. */
 const applyLineIndents = (stack: Array<number>, increases: Array<IndentIncrease>, entry: ContentLine): void => {
   const { line, indents, prefixWidth } = entry;
   const indent = A.headNonEmpty(indents);
@@ -364,14 +326,11 @@ const applyLineIndents = (stack: Array<number>, increases: Array<IndentIncrease>
     increases.push({ line, prefixWidth, indent, delta: indent - top });
     stack.push(indent);
   } else {
-    // A dedent to an unknown level is a parse error — parse-validity's
-    // business, not style.
     while (stack.length > 1 && A.getUnsafe(stack, stack.length - 1) > indent) stack.pop();
   }
   for (let columnIndex = 1; columnIndex < indents.length; columnIndex++) stack.push(A.getUnsafe(indents, columnIndex));
 };
 
-/** Every block-level indent increase across the content lines, in source order. */
 const indentIncreases = (content: ReadonlyArray<ContentLine>): ReadonlyArray<IndentIncrease> => {
   const stack: Array<number> = [0];
   const increases: Array<IndentIncrease> = [];
@@ -379,10 +338,8 @@ const indentIncreases = (content: ReadonlyArray<ContentLine>): ReadonlyArray<Ind
   return increases;
 };
 
-/** A mapping-key line followed by a sequence-entry line, with the entry's placement. */
 type KeySeqPair = { readonly curr: ContentLine; readonly indented: boolean };
 
-/** Content-line pairs `key:` → `- item`, looking past node properties. */
 const keySeqPairs = (
   ctx: LintContext,
   content: ReadonlyArray<ContentLine>,
@@ -399,40 +356,30 @@ const keySeqPairs = (
   return pairs;
 };
 
-/**
- * True when consecutive content lines `prev` → `curr` are a mapping key
- * followed by a sequence entry — the pair the `indentSequences` policy is
- * about. Shared by the check and the inference hook.
- */
 const isKeyThenSeqEntry: {
   (ctx: LintContext, prev: ContentLine, curr: ContentLine, unit: number): boolean;
   (prev: ContentLine, curr: ContentLine, unit: number): (ctx: LintContext) => boolean;
 } = dual(4, (ctx: LintContext, prev: ContentLine, curr: ContentLine, unit: number): boolean => {
   if (curr.firstChar !== "-") return false;
-  // A leading `-` is not necessarily a sequence entry: `-5` and `--flag`
-  // are plain scalars (YAML 1.2 §7.1). The lexer already knows — only a
-  // line whose first content token is `block-seq-entry` is one.
-  if (coveringToken(ctx.tokens, curr.line.offset + curr.prefixWidth + curr.indent)?.kind !== "block-seq-entry")
-    return false;
+  const lexedAsBlockSeqEntryNotDashLeadingPlainScalar =
+    coveringToken(ctx.tokens, curr.line.offset + curr.prefixWidth + curr.indent)?.kind === "block-seq-entry";
+  if (!lexedAsBlockSeqEntryNotDashLeadingPlainScalar) return false;
   if (!prev.opensKey) return false;
   const keyIndent = A.getUnsafe(prev.indents, prev.indents.length - 1);
   return curr.indent === keyIndent || curr.indent === keyIndent + unit;
 });
 
-/** The configured `spaces` option, defaulting to "consistent". */
 const readSpacesOption = (options: unknown): number | "consistent" =>
   P.hasProperty(options, "spaces") && S.is(indentationOptions.fields.spaces.schema)(options.spaces)
     ? options.spaces
     : "consistent";
 
-/** The configured `indentSequences` option, defaulting to "consistent". */
 const readSequencesOption = (options: unknown): boolean | "consistent" =>
   P.hasProperty(options, "indentSequences") &&
   S.is(indentationOptions.fields.indentSequences.schema)(options.indentSequences)
     ? options.indentSequences
     : "consistent";
 
-/** Report increases that differ from the configured or first observed unit. */
 const unitFindings = (
   increases: ReadonlyArray<IndentIncrease>,
   configured: number | undefined
@@ -460,7 +407,6 @@ const unitFindings = (
   return { unit, out };
 };
 
-/** Report key-to-sequence pairs that break the configured or first observed placement. */
 const sequenceFindings = (
   pairs: ReadonlyArray<KeySeqPair>,
   seqOpt: boolean | "consistent"
@@ -525,19 +471,12 @@ const sequenceFindings = (
 export const indentation = YamlRule.make({
   id: "indentation",
   check: dual(2, (ctx: LintContext, options: unknown): Iterable<YamlLintDiagnostic> => {
-    // The content lines this rule speaks about.
     const content = contentLines(ctx);
     const spaces = readSpacesOption(options);
-    // Check 1: every new level indents by one consistent unit.
     const units = unitFindings(indentIncreases(content), P.isNumber(spaces) ? spaces : undefined);
-    // Check 2: sequences under a mapping key follow one policy.
     const sequences = sequenceFindings(keySeqPairs(ctx, content, units.unit ?? 0), readSequencesOption(options));
     return A.appendAll(units.out, sequences);
   }),
-  // Inference: every indent INCREASE votes its delta for `spaces`,
-  // and every key-then-sequence-entry pair votes whether the sequence is
-  // indented for `indentSequences` — the same content lines and the same
-  // detection the check polices in "consistent" mode.
   infer: (ctx) => {
     const content = contentLines(ctx);
     const increases = indentIncreases(content);
