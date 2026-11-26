@@ -119,7 +119,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
           assert.deepStrictEqual(
             outcome(host, () => sync.lstat(`/r/${c}`)),
             outcome(host, () => lstatSync(unnormalizedHostPath(host, c))),
-            `lstat ${c}`
+            `lstat ${c}: a trailing slash follows the final link even here, ENOTDIR for a non-directory`
           );
           assert.deepStrictEqual(
             outcome(host, () => sync.readFile(`/r/${c}`)),
@@ -129,7 +129,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
           assert.deepStrictEqual(
             outcome(host, () => [...sync.readDirectory(`/r/${c}`)].sort()),
             outcome(host, () => readdirSync(unnormalizedHostPath(host, c)).sort()),
-            `readDirectory ${c}: a trailing slash asserts a directory, following the final link even for lstat`
+            `readDirectory ${c}: a trailing slash asserts a directory and lists it`
           );
         }
       })
@@ -304,7 +304,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
     );
   });
 
-  // decision: errno-parity-expectation-shapes
+  // decision: engine-errno-reference-is-adapter-callback
   describe("handle mkdir through links, as mkdirSync(p, { recursive: true }) reports, not the adapter's fs.mkdir", () => {
     const paths = [
       "dang",

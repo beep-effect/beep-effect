@@ -151,6 +151,7 @@ const cases: ReadonlyArray<Case> = [
     expect: "success",
   },
 
+  // decision: engine-errno-reference-is-adapter-callback
   {
     name: "makeDirectory recursively onto a dangling symlink",
     run: (fs, p) => fs.makeDirectory(p("dangling"), { recursive: true }),

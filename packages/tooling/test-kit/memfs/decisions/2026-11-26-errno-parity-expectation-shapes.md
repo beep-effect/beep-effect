@@ -7,14 +7,11 @@ governs:
   - test/ErrnoParityContract.ts#resolveExpectation
   - test/ErrnoParityContract.ts#assertOutcome
   - test/ErrnoParityContract.ts#cases
-  - vitest.config.ts#tmpfsTempDirectory
 enforcedBy: []
 ---
 
 ErrnoParityContract is the kit's own extension of the differential oracle; the vendored FileSystemContract stays upstream's and unedited. Each case pins a failure the audit found memfs and the node adapter disagreeing on: the reason `_tag`, the `method` and the errno `code` on `reason.cause`. It runs unchanged against MemoryFileSystem.layer and @effect/platform-node's real filesystem.
 An expectation is one outcome (both sides agree on every platform), `{ linux, darwin }` (the platform disagrees with itself: memfs models the Linux errno, the node run asserts the platform it is on) or `{ memory, node }` (a known divergence memfs keeps: both sides are still asserted, so a change on either side fails and forces this decision to be revisited).
-The engine's reference is the adapter's own call, never its Sync twin: a dangling link earlier in a recursive makeDirectory path is ENOTDIR for the callback `fs.mkdir`, where `mkdirSync` says ENOENT. The handle mutators imitate the Sync calls instead, so integration/ports.int.test.ts pins handle mkdir against `mkdirSync`.
-The node run pins TMPDIR to tmpfs: btrfs lets copyFile read an empty directory, where the asserted Linux EISDIR comes from tmpfs.
 `pathOrDescriptor` is not asserted: the adapter reports the first path argument of a two-path operation (rename, copy, copyFile, link, symlink), memfs the one the conflict concerns.
 Accepted limit: without `overwrite`, `fs.cp` silently keeps an existing destination (merging into an existing directory) and creates missing destination parents, where memfs fails EEXIST and ENOENT. Same-entry and kind mismatches fail before `overwrite` is consulted, on both sides.
-Rejected: skipping the cases where the sides disagree, which hides drift on either side; asserting `pathOrDescriptor`, which fails every two-path conflict on node; modeling darwin errnos in memfs; inheriting the host TMPDIR, which on btrfs fails the copyFile-from-a-directory case.
+Rejected: skipping the cases where the sides disagree, which hides drift on either side; asserting `pathOrDescriptor`, which fails every two-path conflict on node; modeling darwin errnos in memfs.
