@@ -131,7 +131,7 @@ describe("aiMetricsStateHome env matrix", () => {
         assert.strictEqual(
           stateHomeOf1,
           expected,
-          "Windows drive and UNC rows stay unchanged since AiMetricsAbsoluteDataRoot admits them"
+          "the unchanged rows keep the Windows drive and UNC rows, since AiMetricsAbsoluteDataRoot admits them"
         );
       })
     );
