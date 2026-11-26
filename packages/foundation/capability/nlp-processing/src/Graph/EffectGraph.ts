@@ -1,26 +1,15 @@
 /**
- * EffectGraph - a categorical approach to text processing as graph transformations.
+ * EffectGraph - text processing as transformations over a graph of nodes.
  *
  * **Details**
  *
- * Models text processing as morphisms in a category where objects are nodes in a
- * directed acyclic graph and morphisms are operations that transform nodes
- * (potentially creating children). Composition preserves the DAG property.
+ * Nodes form a directed acyclic graph, and operations transform a node,
+ * possibly creating children. `cata` folds the graph bottom-up and `ana`
+ * unfolds it from a seed. Built on Effect's in-core `effect/Graph` module.
  *
- * Theoretical foundations: catamorphism (bottom-up fold), F-algebra (`F a -> a`),
- * and structure-preserving operation composition. Built on Effect's in-core
- * `effect/Graph` module.
- *
- * Effect v4 `@beep/nlp` implementation notes:
- * - `makeNode`/`singleton`/`ana` are EFFECTFUL (read `Clock` for the timestamp and an
- *   `effect/Random`-based id generator) instead of calling `Date.now()` +
- *   `crypto.randomUUID()` inline, both of which are repo-law violations.
- * - `NodeId` is a `Brand.nominal` branded string (no `as`).
- * - native keyed/set collections become `MutableHashMap`/`MutableHashSet`; native
- *   array methods become `effect/Array`; partial `getOrThrow`/`!` become `Option` handling.
- * - `Data.TaggedError` becomes `S.TaggedError` from `@beep/schema`.
- * - the terminal `Formatter` (which depended on the dropped `@effect/printer`) is gone;
- *   `show` renders the plain-text tree.
+ * `makeNode`, `singleton` and `ana` are effectful: they read `Clock` for the
+ * timestamp and draw the node id from `effect/Random`. `show` renders the
+ * plain-text tree.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -505,10 +494,6 @@ export const getRoots = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> 
     A.getSomes
   );
 
-// =============================================================================
-// Catamorphism / Anamorphism
-// =============================================================================
-
 /**
  * Algebra used by {@link cata} to collapse a node after its children.
  *
@@ -646,10 +631,6 @@ export const ana: {
   yield* go(seed, O.none());
   return graph;
 });
-
-// =============================================================================
-// Functor / utilities
-// =============================================================================
 
 /**
  * Map every node payload while preserving ids, metadata, and edge structure.

@@ -124,8 +124,8 @@ benchmark; external embedding egress; adopting transformers.js, ONNX Runtime,
 
 **Answer:** Do not create `@beep/retrieval` for the first goal. Extend
 `packages/foundation/capability/nlp-processing` for fusion contracts, weighted
-RRF, and diagnostics; `packages/foundation/modeling/nlp` for generic vector and
-result schemas; `packages/foundation/modeling/text` for anchor
+RRF, and diagnostics; the then-live `@beep/nlp` package (retired since) for generic
+vector and result schemas; `packages/foundation/modeling/text` for anchor
 construction; and `packages/foundation/capability/langextract` for window
 normalization, offsets, and straddles against the verified-span contract.
 Projection tables live in `packages/epistemic/tables`, query ports in

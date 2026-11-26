@@ -28,7 +28,7 @@ projection does not acquire competing authority.
 
 ## 2. Metadata-first privacy and consent
 
-Local-first storage does not erase privilege or surveillance risk. Every
+Where the data is stored does not erase privilege or surveillance risk. Every
 passive source requires explicit opt-in and a declared purpose. Manual timers
 have explicit start/stop controls and a visible running state. Consented
 calendar or activity capture begins with metadata; content is fetched only on

@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli",
   "review": {
-    "reviewer": "GPT-6.1 Sol (P2 text implementation lane)",
-    "reason": "Retain C final cache policy and re-record P2 text graph changes; no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
+    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p2-final-c-merge-cache-review-2026-11-23.md",
-      "sha256": "66a1f29eff36afc9fb0ba53c489212991b5bbc62f465f7ba184dd787b140fda9"
+      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
+      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
     }
   },
   "nodes": [

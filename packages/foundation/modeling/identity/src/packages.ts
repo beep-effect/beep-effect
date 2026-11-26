@@ -62,7 +62,6 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "identity",
   "langextract",
   "md",
-  "nlp",
   "nlp-processing",
   "observability",
   "ontology",
@@ -217,7 +216,6 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "jsonl",
   "semver",
   "spdx",
-  "schema-org",
   "github-references",
   "github-commands",
   "commands",
@@ -786,23 +784,6 @@ export const $SharedTablesId: Identity.IdentityComposer<"@beep/shared-tables"> =
  * @since 0.0.0
  */
 export const $SemanticWebId: Identity.IdentityComposer<"@beep/semantic-web"> = /*#__PURE__*/ $I.create("semantic-web");
-
-/**
- * Identity composer for the `@beep/nlp` package.
- *
- * **Example** (Make NLP package ID)
- *
- * ```ts import.meta.vitest name="Make NLP package ID"
- * import { $NlpId } from "@beep/identity/packages"
- *
- * const id = $NlpId.make("Tokenizer")
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $NlpId: Identity.IdentityComposer<"@beep/nlp"> = /*#__PURE__*/ $I.create("nlp");
-
 /**
  * Identity composer for the `@beep/nlp-processing` package.
  *
@@ -3205,24 +3186,6 @@ export const $SemverId: Identity.IdentityComposer<"@beep/semver"> = /*#__PURE__*
  * @since 0.0.0
  */
 export const $SpdxId: Identity.IdentityComposer<"@beep/spdx"> = /*#__PURE__*/ $I.create("spdx");
-
-/**
- * Identity composer for `@beep/schema-org`.
- *
- * **Example** (Make package ID)
- *
- * ```ts import.meta.vitest name="Make package ID"
- * import { $SchemaOrgId } from "@beep/identity/packages"
- *
- * const id = $SchemaOrgId.make("SchemaOrg")
- * console.log(id)
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $SchemaOrgId: Identity.IdentityComposer<"@beep/schema-org"> = /*#__PURE__*/ $I.create("schema-org");
-
 /**
  * Identity composer for `@beep/github-references`.
  *

@@ -10,15 +10,9 @@
  * parsing and relation extraction are unsupported and fail with
  * {@link BackendNotSupported}.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - instead of instantiating its own `winkNLP(model)`, it reads the existing
- *   {@link WinkEngine} service (one wink wrapper, shared lifecycle).
- * - `doc...out(its.detail)` accessors are assigned to typed
- *   `ItsFunction<...>` locals (the proven repo pattern) and the
- *   `Detail | string` entity output is narrowed with `typeof`, so there are no
- *   assertions.
- * - service methods use `Effect.fn`; nodes are built with `Schema.X.make(...)` and
- *   a `Clock`-sourced timestamp (was `new S.XNode(...)` + `Date.now()`).
+ * It reads the shared {@link WinkEngine} service rather than creating its own
+ * wink-nlp instance, so the model lifecycle has one owner, and node timestamps come
+ * from `Clock`.
  *
  * @since 0.0.0
  * @packageDocumentation

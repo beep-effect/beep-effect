@@ -26,7 +26,6 @@
   "@beep/semantic-web/*": [
     "./packages/foundation/capability/semantic-web/src/*"
   ],
-  "@beep/nlp": ["./packages/foundation/modeling/nlp/src/index.ts"],
   "@beep/langextract": [
     "./packages/foundation/capability/langextract/src/index.ts"
   ],
@@ -84,16 +83,6 @@
   "@beep/md/Md": ["./packages/foundation/modeling/md/src/Md.ts"],
   "@beep/md/Md.model": ["./packages/foundation/modeling/md/src/Md.model.ts"],
   "@beep/md/Md.render": ["./packages/foundation/modeling/md/src/Md.render.ts"],
-  "@beep/nlp/IdentifierText": [
-    "./packages/foundation/modeling/nlp/src/IdentifierText.ts"
-  ],
-  "@beep/nlp/PathText": ["./packages/foundation/modeling/nlp/src/PathText.ts"],
-  "@beep/nlp/QueryText": [
-    "./packages/foundation/modeling/nlp/src/QueryText.ts"
-  ],
-  "@beep/nlp/VariantText": [
-    "./packages/foundation/modeling/nlp/src/VariantText.ts"
-  ],
   "@beep/observability/experimental/server": [
     "./packages/foundation/capability/observability/src/experimental/server/index.ts"
   ],
@@ -1902,13 +1891,6 @@
   "@beep/jsonl/*": ["./packages/foundation/modeling/jsonl/src/*"],
   "@beep/jsonl/internal/*": [
     "./packages/foundation/modeling/jsonl/src/internal/*"
-  ],
-  "@beep/schema-org": [
-    "./packages/foundation/modeling/schema-org/src/index.ts"
-  ],
-  "@beep/schema-org/*": ["./packages/foundation/modeling/schema-org/src/*"],
-  "@beep/schema-org/internal/*": [
-    "./packages/foundation/modeling/schema-org/src/internal/*"
   ],
   "@beep/semver": ["./packages/foundation/modeling/semver/src/index.ts"],
   "@beep/semver/*": ["./packages/foundation/modeling/semver/src/*"],

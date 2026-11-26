@@ -9354,7 +9354,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "@beep/law-practice-server",
           "@beep/lexical-schema",
           "@beep/lint-rules",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/ontology-client",

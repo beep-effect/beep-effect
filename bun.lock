@@ -3097,23 +3097,6 @@
         "micromark": "catalog:",
       },
     },
-    "packages/foundation/modeling/nlp": {
-      "name": "@beep/nlp",
-      "version": "0.0.2",
-      "dependencies": {
-        "@beep/identity": "workspace:^",
-        "@beep/schema": "workspace:^",
-        "@beep/utils": "workspace:^",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@beep/test-runner": "workspace:^",
-        "@beep/test-utils": "workspace:^",
-        "@effect/vitest": "catalog:",
-        "@types/bun": "catalog:",
-        "@types/node": "catalog:",
-      },
-    },
     "packages/foundation/modeling/npm-spec": {
       "name": "@beep/npm-spec",
       "version": "0.0.0",
@@ -3271,22 +3254,6 @@
         "@types/react": "catalog:",
         "bun-types": "catalog:",
         "fast-xml-builder": "catalog:",
-      },
-    },
-    "packages/foundation/modeling/schema-org": {
-      "name": "@beep/schema-org",
-      "version": "0.0.0",
-      "dependencies": {
-        "@beep/identity": "workspace:^",
-        "@beep/schema": "workspace:^",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@beep/fc-runs": "workspace:^",
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
-        "vitest": "catalog:",
       },
     },
     "packages/foundation/modeling/semver": {
@@ -5614,8 +5581,6 @@
 
     "@beep/n3": ["@beep/n3@workspace:packages/drivers/n3"],
 
-    "@beep/nlp": ["@beep/nlp@workspace:packages/foundation/modeling/nlp"],
-
     "@beep/nlp-mcp": ["@beep/nlp-mcp@workspace:packages/drivers/nlp-mcp"],
 
     "@beep/nlp-processing": ["@beep/nlp-processing@workspace:packages/foundation/capability/nlp-processing"],
@@ -5737,8 +5702,6 @@
     "@beep/sbom": ["@beep/sbom@workspace:packages/foundation/modeling/sbom"],
 
     "@beep/schema": ["@beep/schema@workspace:packages/foundation/modeling/schema"],
-
-    "@beep/schema-org": ["@beep/schema-org@workspace:packages/foundation/modeling/schema-org"],
 
     "@beep/scratchpad": ["@beep/scratchpad@workspace:scratchpad"],
 

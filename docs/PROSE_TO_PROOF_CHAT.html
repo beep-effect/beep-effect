@@ -122,7 +122,7 @@
       <a class="tab" href="PROSE_TO_PROOF_GRAPH.html">Graph</a>
       <a class="tab on" href="PROSE_TO_PROOF_CHAT.html">Chat</a>
     </div>
-    <span class="conn">local · on device</span>
+    <span class="conn">one practice · one workbench</span>
   </nav>
 
   <div class="wrap">
@@ -134,9 +134,9 @@
 
     <div class="modes">
       <span class="lbl">mode</span>
-      <button class="mode on">Graph RAG</button>
-      <button class="mode">Doc RAG</button>
-      <button class="mode">Agent</button>
+      <button type="button" class="mode on">Graph RAG</button>
+      <button type="button" class="mode">Doc RAG</button>
+      <button type="button" class="mode">Agent</button>
     </div>
 
     <div class="chat">
@@ -146,11 +146,11 @@
       <div class="msg assistant" data-graph="g1">
         <div class="who"><i style="background:var(--safe)"></i> assistant · graph-rag</div>
         <div class="ans">
-          <p>The strongest distinction is <b>functional and temporal</b>. The claimed <span class="cite" tabindex="0" data-focus="cl1,t_sensor">burr alignment sensor (Claim 1)</span> operates <em>before</em> grinding, to set burr geometry; <span class="cite" tabindex="0" data-focus="ha,t_grind">Halvorsen</span> measures grind size <em>downstream</em>, after grinding.</p>
-          <p>That is a <b>teaching-away</b>: Halvorsen's downstream placement presupposes the fixed burr geometry that the claimed sensor exists to establish. It is supported in the specification at <span class="cite" tabindex="0" data-focus="spec">¶0021</span>, depicted in <span class="cite" tabindex="0" data-focus="fig3">Figure 3</span>, and corroborated by the <span class="cite" tabindex="0" data-focus="email">inventor email</span> ("before the grind, not after").</p>
+          <p>The strongest distinction is <b>functional and temporal</b>. The claimed <span class="cite" role="button" tabindex="0" data-focus="cl1,t_sensor">burr alignment sensor (Claim 1)</span> operates <em>before</em> grinding, to set burr geometry; <span class="cite" role="button" tabindex="0" data-focus="ha,t_grind">Halvorsen</span> measures grind size <em>downstream</em>, after grinding.</p>
+          <p>That is a <b>teaching-away</b>: Halvorsen's downstream placement presupposes the fixed burr geometry that the claimed sensor exists to establish. It is supported in the specification at <span class="cite" role="button" tabindex="0" data-focus="spec">¶0021</span>, depicted in <span class="cite" role="button" tabindex="0" data-focus="fig3">Figure 3</span>, and corroborated by the <span class="cite" role="button" tabindex="0" data-focus="email">inventor email</span> ("before the grind, not after").</p>
         </div>
         <div class="ground">
-          <button class="groundbtn open"><span class="chev">▸</span><span class="net">⓰</span> View source graph <span class="badge">1 subgraph</span></button>
+          <button type="button" class="groundbtn open"><span class="chev">▸</span><span class="net">⓰</span> View source graph <span class="badge">1 subgraph</span></button>
           <div class="groundpanel open">
             <div class="groundstat"><span class="ns"></span><span class="tbadges"></span></div>
             <div class="minicanvaswrap"><canvas role="img" aria-label="Source subgraph that grounds the answer above — the nodes and labelled relationships the assistant relied on. Click a citation in the answer to highlight the relevant nodes."></canvas><span class="minihint">click a citation ↑ · drag · scroll-zoom</span></div>
@@ -164,11 +164,11 @@
       <div class="msg assistant" data-graph="g2">
         <div class="who"><i style="background:var(--safe)"></i> assistant · graph-rag</div>
         <div class="ans">
-          <p><b>No substantive conflict.</b> <span class="cite" tabindex="0" data-focus="m_beacon,c_beacon">Beacon Roasters</span> is a trademark matter with no shared parties, IP assets, or adverse positions against the <span class="cite" tabindex="0" data-focus="m_aanstoot">Aanstoot</span> or <span class="cite" tabindex="0" data-focus="m_mesh">Mesh Labs</span> matters.</p>
-          <p>The only node they share is <span class="cite" tabindex="0" data-focus="p_tom">you (Tom Oppold)</span>, as attorney of record — which is exactly how this check runs as a <em>single query</em> across otherwise sealed matters. The matters stay walled; only the join the conflict check needs crosses them.</p>
+          <p><b>No substantive conflict.</b> <span class="cite" role="button" tabindex="0" data-focus="m_beacon,c_beacon">Beacon Roasters</span> is a trademark matter with no shared parties, IP assets, or adverse positions against the <span class="cite" role="button" tabindex="0" data-focus="m_aanstoot">Aanstoot</span> or <span class="cite" role="button" tabindex="0" data-focus="m_mesh">Mesh Labs</span> matters.</p>
+          <p>The only node they share is <span class="cite" role="button" tabindex="0" data-focus="p_tom">you (Tom Oppold)</span>, as attorney of record — which is exactly how this check runs as a <em>single query</em> across otherwise sealed matters. The matters stay walled; only the join the conflict check needs crosses them.</p>
         </div>
         <div class="ground">
-          <button class="groundbtn"><span class="chev">▸</span><span class="net">⓰</span> View source graph <span class="badge">1 subgraph</span></button>
+          <button type="button" class="groundbtn"><span class="chev">▸</span><span class="net">⓰</span> View source graph <span class="badge">1 subgraph</span></button>
           <div class="groundpanel">
             <div class="groundstat"><span class="ns"></span><span class="tbadges"></span></div>
             <div class="minicanvaswrap"><canvas role="img" aria-label="Source subgraph that grounds the answer above — the nodes and labelled relationships the assistant relied on. Click a citation in the answer to highlight the relevant nodes."></canvas><span class="minihint">the walls hold · only the attorney node joins</span></div>
@@ -179,7 +179,7 @@
 
     <div class="composer">
       <input type="text" placeholder="Ask using Graph RAG… (static demo)" aria-label="chat input">
-      <button class="send" title="send">➤</button>
+      <button type="button" class="send" title="send">➤</button>
     </div>
     <div class="note">a static demo of the live Graph-RAG chat · in the product, every sentence resolves to span-grounded evidence</div>
 
@@ -224,13 +224,23 @@ const SUB = {
 /* ---------- compact force-graph renderer (shared) ---------- */
 function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
   const ctx=canvas.getContext('2d');
-  let DPR=Math.min(window.devicePixelRatio||1,2), W=0,H=0;
+  let DPR=Math.min(window.devicePixelRatio||1,2);
+  let W=0;
+  let H=0;
   const nodes=rawNodes.map(n=>({id:n[0],label:n[1],type:n[2],x:(Math.random()-0.5)*180,y:(Math.random()-0.5)*180,vx:0,vy:0}));
   const byId=new Map(nodes.map(n=>[n.id,n]));
   const links=rawLinks.map(l=>({source:byId.get(l[0]),target:byId.get(l[1]),label:l[2]})).filter(l=>l.source&&l.target);
   nodes.forEach(n=>n.degree=0); links.forEach(l=>{l.source.degree++;l.target.degree++;});
-  let scale=opts.scale||1.05, tx=0, ty=0, centered=false, alpha=1;
-  let hover=null, dragging=null, panning=false, last=null, focusSet=null;
+  let scale=opts.scale||1.05;
+  let tx=0;
+  let ty=0;
+  let centered=false;
+  let alpha=1;
+  let hover=null;
+  let dragging=null;
+  let panning=false;
+  let last=null;
+  let focusSet=null;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches; let visible=true;
   const radius=n=>Math.max(4,Math.sqrt(n.degree+1)*3.0);
 
@@ -241,10 +251,19 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
   function tick(){ if(alpha<0.005) return;
     for(let i=0;i<nodes.length;i++){ const a=nodes[i];
       for(let j=i+1;j<nodes.length;j++){ const b=nodes[j];
-        let dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy; if(d2<0.01)d2=0.01; const d=Math.sqrt(d2),f=2400/d2,fx=f*dx/d,fy=f*dy/d;
+        const dx=a.x-b.x;
+        const dy=a.y-b.y;
+        let d2=dx*dx+dy*dy; if(d2<0.01)d2=0.01; const d=Math.sqrt(d2);
+        const f=2400/d2;
+        const fx=f*dx/d;
+        const fy=f*dy/d;
         a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy; } }
-    for(const l of links){ const dx=l.target.x-l.source.x,dy=l.target.y-l.source.y,d=Math.hypot(dx,dy)||0.01;
-      const f=0.05*(d-74),fx=f*dx/d,fy=f*dy/d; l.source.vx+=fx;l.source.vy+=fy;l.target.vx-=fx;l.target.vy-=fy; }
+    for(const l of links){ const dx=l.target.x-l.source.x;
+    const dy=l.target.y-l.source.y;
+    const d=Math.hypot(dx,dy)||0.01;
+      const f=0.05*(d-74);
+      const fx=f*dx/d;
+      const fy=f*dy/d; l.source.vx+=fx;l.source.vy+=fy;l.target.vx-=fx;l.target.vy-=fy; }
     for(const n of nodes){ n.vx+=-n.x*0.016; n.vy+=-n.y*0.016; if(n===dragging)continue;
       n.vx*=0.85; n.vy*=0.85; n.x+=n.vx*Math.min(1,alpha*2); n.y+=n.vy*Math.min(1,alpha*2); }
     alpha*=0.985; }
@@ -254,55 +273,80 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
     ctx.save(); ctx.translate(tx,ty); ctx.scale(scale,scale);
     for(const l of links){ const faded=focusSet&&(dim(l.source)&&dim(l.target));
       const hi=hover&&(l.source===hover||l.target===hover);
-      const sx=l.source.x,sy=l.source.y,ex=l.target.x,ey=l.target.y,mx=(sx+ex)/2,my=(sy+ey)/2;
-      const nx=-(ey-sy),ny=(ex-sx),nl=Math.hypot(nx,ny)||1,len=Math.hypot(ex-sx,ey-sy);
-      const cx=mx+nx/nl*len*0.10,cy=my+ny/nl*len*0.10;
+      const sx=l.source.x;
+      const sy=l.source.y;
+      const ex=l.target.x;
+      const ey=l.target.y;
+      const mx=(sx+ex)/2;
+      const my=(sy+ey)/2;
+      const nx=-(ey-sy);
+      const ny=(ex-sx);
+      const nl=Math.hypot(nx,ny)||1;
+      const len=Math.hypot(ex-sx,ey-sy);
+      const cx=mx+nx/nl*len*0.10;
+      const cy=my+ny/nl*len*0.10;
       ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(cx,cy,ex,ey);
       ctx.lineWidth=(hi?1.9:1.3)/scale; ctx.strokeStyle=faded?'rgba(124,194,147,0.06)':(hi?'rgba(174,230,238,0.55)':'rgba(124,194,147,0.26)'); ctx.stroke();
-      const t=0.86,it=1-t,ax=it*it*sx+2*it*t*cx+t*t*ex,ay=it*it*sy+2*it*t*cy+t*t*ey;
-      const dxx=2*it*(cx-sx)+2*t*(ex-cx),dyy=2*it*(cy-sy)+2*t*(ey-cy),ang=Math.atan2(dyy,dxx),asz=6/scale;
+      const t=0.86;
+      const it=1-t;
+      const ax=it*it*sx+2*it*t*cx+t*t*ex;
+      const ay=it*it*sy+2*it*t*cy+t*t*ey;
+      const dxx=2*it*(cx-sx)+2*t*(ex-cx);
+      const dyy=2*it*(cy-sy)+2*t*(ey-cy);
+      const ang=Math.atan2(dyy,dxx);
+      const asz=6/scale;
       if(!faded){ ctx.fillStyle=hi?'rgba(174,230,238,0.85)':'rgba(174,209,174,0.7)';
         ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ax-asz*Math.cos(ang-0.4),ay-asz*Math.sin(ang-0.4)); ctx.lineTo(ax-asz*Math.cos(ang+0.4),ay-asz*Math.sin(ang+0.4)); ctx.closePath(); ctx.fill(); }
       if(scale>0.9 && !faded){ const fs=Math.max(8/scale,2.6); ctx.font=`${fs}px 'IBM Plex Mono',monospace`; ctx.textAlign='center'; ctx.textBaseline='middle';
         ctx.fillStyle=hi?'rgba(233,238,243,0.85)':'rgba(154,166,177,0.55)'; ctx.fillText(l.label,mx,my); } }
-    for(const n of nodes){ const r=radius(n)*(n===hover?1.3:1), fill=n.type==='matter'?COL.matter:COL[n.type]||COL.entity;
+    for(const n of nodes){ const r=radius(n)*(n===hover?1.3:1);
+    const fill=n.type==='matter'?COL.matter:COL[n.type]||COL.entity;
       const a=dim(n)?0.18:1; ctx.globalAlpha=a;
-      if(n===hover||(focusSet&&focusSet.has(n.id))){ ctx.beginPath(); ctx.arc(n.x,n.y,r+5/scale,0,7); ctx.fillStyle=fill; ctx.globalAlpha=a*0.2; ctx.fill(); ctx.globalAlpha=a; }
+      if(n===hover||(focusSet?.has(n.id))){ ctx.beginPath(); ctx.arc(n.x,n.y,r+5/scale,0,7); ctx.fillStyle=fill; ctx.globalAlpha=a*0.2; ctx.fill(); ctx.globalAlpha=a; }
       ctx.beginPath(); ctx.arc(n.x,n.y,r,0,7); ctx.fillStyle=fill; ctx.fill(); ctx.lineWidth=1.4/scale; ctx.strokeStyle='rgba(10,13,16,0.85)'; ctx.stroke();
       if(scale>0.55 && !dim(n)){ const fs=Math.max(9.5/scale,2.6); ctx.font=`${fs}px 'IBM Plex Sans',sans-serif`; ctx.textAlign='center'; ctx.textBaseline='top';
         ctx.fillStyle='rgba(233,238,243,0.85)'; ctx.fillText(n.label,n.x,n.y+r+2/scale); }
       ctx.globalAlpha=1; }
     ctx.restore(); }
   function frame(){ requestAnimationFrame(frame); if(!visible) return; if(!reduced) tick(); draw(); }
-  function pick(sx,sy){ const [wx,wy]=s2w(sx,sy); let best=null,bd=1e9; for(const n of nodes){ const d=Math.hypot(n.x-wx,n.y-wy); if(d<radius(n)+6/scale&&d<bd){bd=d;best=n;} } return best; }
+  function pick(sx,sy){ const [wx,wy]=s2w(sx,sy); let best=null;
+  let bd=1e9; for(const n of nodes){ const d=Math.hypot(n.x-wx,n.y-wy); if(d<radius(n)+6/scale&&d<bd){bd=d;best=n;} } return best; }
 
-  window.addEventListener('mousemove',e=>{ const r=canvas.getBoundingClientRect(),sx=e.clientX-r.left,sy=e.clientY-r.top;
+  window.addEventListener('mousemove',e=>{ const r=canvas.getBoundingClientRect();
+  const sx=e.clientX-r.left;
+  const sy=e.clientY-r.top;
     if(dragging){ const [wx,wy]=s2w(sx,sy); dragging.x=wx; dragging.y=wy; dragging.vx=0; dragging.vy=0; reheat(0.4); if(reduced) draw(); return; }
     if(panning&&last){ tx+=sx-last[0]; ty+=sy-last[1]; last=[sx,sy]; if(reduced||!visible) draw(); return; }
     const inB=sx>=0&&sy>=0&&sx<=r.width&&sy<=r.height; const tip=document.getElementById('gtip');
     if(!inB){ if(hover){ hover=null; if(reduced) draw(); } tip.classList.remove('show'); return; }
     const n=pick(sx,sy); if(n!==hover){ hover=n; if(reduced) draw(); }
     if(hover){ tip.innerHTML=`<div class="tt"><i style="background:${hover.type==='matter'?COL.matter:COL[hover.type]}"></i>${hover.label}</div><div class="tm">${ntype(hover)} · ${hover.degree} edge${hover.degree===1?'':'s'}</div>`;
-      tip.style.left=Math.min(e.clientX+13,window.innerWidth-230)+'px'; tip.style.top=(e.clientY+13)+'px'; tip.classList.add('show'); }
+      tip.style.left=`${Math.min(e.clientX+13,window.innerWidth-230)}px`; tip.style.top=`${e.clientY+13}px`; tip.classList.add('show'); }
     else tip.classList.remove('show'); });
   canvas.addEventListener('mouseleave',()=>{hover=null;document.getElementById('gtip').classList.remove('show');});
-  canvas.addEventListener('mousedown',e=>{ const r=canvas.getBoundingClientRect(),sx=e.clientX-r.left,sy=e.clientY-r.top; const n=pick(sx,sy); if(n){dragging=n;}else{panning=true;last=[sx,sy];} });
+  canvas.addEventListener('mousedown',e=>{ const r=canvas.getBoundingClientRect();
+  const sx=e.clientX-r.left;
+  const sy=e.clientY-r.top; const n=pick(sx,sy); if(n){dragging=n;}else{panning=true;last=[sx,sy];} });
   window.addEventListener('mouseup',()=>{dragging=null;panning=false;});
-  canvas.addEventListener('wheel',e=>{ e.preventDefault(); const r=canvas.getBoundingClientRect(),sx=e.clientX-r.left,sy=e.clientY-r.top,[wx,wy]=s2w(sx,sy);
+  canvas.addEventListener('wheel',e=>{ e.preventDefault(); const r=canvas.getBoundingClientRect();
+  const sx=e.clientX-r.left;
+  const sy=e.clientY-r.top;
+  const [wx,wy]=s2w(sx,sy);
     scale=Math.max(0.4,Math.min(3.4,scale*(e.deltaY<0?1.12:0.89))); tx=sx-wx*scale; ty=sy-wy*scale; if(reduced) draw(); },{passive:false});
   function ntype(n){ return n.type==='matter'?'matter':n.type==='entity'?'proven entity':n.type==='claim'?'proposed':n.type==='artifact'?'evidence':'external'; }
 
   if('ResizeObserver' in window) new ResizeObserver(()=>{resize(); if(reduced||!visible) draw();}).observe(canvas);
   if('IntersectionObserver' in window) new IntersectionObserver(es=>{ visible=es[0].isIntersecting; if(visible&&reduced) reheat(1); }).observe(canvas);
   window.addEventListener('resize',()=>{resize(); if(reduced) draw();}); resize(); if(reduced) reheat(1); frame();
-  return { focus(ids){ focusSet=ids&&ids.length?new Set(ids):null; reheat(0.4); }, resize,
+  return { focus(ids){ focusSet=ids?.length?new Set(ids):null; reheat(0.4); }, resize,
     counts(){ return {n:nodes.length,e:links.length}; }, types(){ return [...new Set(nodes.map(n=>n.type))]; } };
 }
 
 /* ---------- wire chat ---------- */
 const TYPE_LABEL={entity:'entity',claim:'claim',artifact:'evidence',external:'external',matter:'matter'};
 document.querySelectorAll('.msg.assistant').forEach(msg=>{
-  const key=msg.dataset.graph, sub=SUB[key];
+  const key=msg.dataset.graph;
+  const sub=SUB[key];
   const canvas=msg.querySelector('canvas');
   const api=ForceGraph(canvas, sub.nodes, sub.links, {});
   msg.__api=api;
@@ -310,7 +354,8 @@ document.querySelectorAll('.msg.assistant').forEach(msg=>{
   msg.querySelector('.ns').textContent=`${c.n} nodes, ${c.e} edges`;
   msg.querySelector('.tbadges').innerHTML=api.types().map(t=>`<span class="tb">${TYPE_LABEL[t]}</span>`).join('');
   // expander
-  const btn=msg.querySelector('.groundbtn'), panel=msg.querySelector('.groundpanel');
+  const btn=msg.querySelector('.groundbtn');
+  const panel=msg.querySelector('.groundpanel');
   btn.setAttribute('aria-expanded', panel.classList.contains('open'));
   btn.addEventListener('click',()=>{ const open=panel.classList.toggle('open'); btn.classList.toggle('open',open); btn.setAttribute('aria-expanded',open); if(open) setTimeout(()=>api.resize(),30); });
   // citations

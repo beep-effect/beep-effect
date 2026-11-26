@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
-    "reason": "Re-record the subjects the P5 merge and the P6 writer-check fixes changed: law-practice domain and use-cases, nlp, jsonc and the root turbo.json digest. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
+    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p6-p5-merge-cache-review-2026-11-25.md",
-      "sha256": "0911b2a5937b3dc19753404ad33841bfcbfcf18fa5d434608025ff5d16a71b11"
+      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
+      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "ad383713ab39f7102eff83b0b453009aa2c5eb57f60f45d43861f5087875c1a4"
+      "sha256": "4228e9935eb9756c382e131dc44573e3d4a6f7c6280649e8a079bbc1aa8383b2"
     }
   ],
   "nodes": [
@@ -2257,7 +2257,6 @@
           "packages/foundation/modeling/markdown/src/**",
           "packages/foundation/modeling/md/package.json",
           "packages/foundation/modeling/md/src/**",
-          "packages/foundation/modeling/nlp/package.json",
           "packages/foundation/modeling/npm-spec/package.json",
           "packages/foundation/modeling/npm-spec/src/**",
           "packages/foundation/modeling/ontology/package.json",
@@ -2267,7 +2266,6 @@
           "packages/foundation/modeling/public-site/package.json",
           "packages/foundation/modeling/rdf/package.json",
           "packages/foundation/modeling/sbom/package.json",
-          "packages/foundation/modeling/schema-org/package.json",
           "packages/foundation/modeling/schema/package.json",
           "packages/foundation/modeling/schema/src/**",
           "packages/foundation/modeling/semver/package.json",
