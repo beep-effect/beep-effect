@@ -155,7 +155,7 @@ describe("PackageManager.FromString version rejection matrix (strict SemVer pars
     })
   );
 
-  it("a malformed version is rejected at construction, so no manifest string re-parses differently", () => {
+  it("a malformed version is rejected at construction, not encoded to a string that re-parses differently", () => {
     assert.throws(() => PackageManager.make({ name: "pnpm", version: "01.2.3", integrity: O.none() }));
     assert.throws(() => PackageManager.make({ name: "pnpm", version: "latest", integrity: O.none() }));
     const buildMetadataInIntegritySlot = () =>

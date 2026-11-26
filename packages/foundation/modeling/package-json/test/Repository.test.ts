@@ -279,7 +279,7 @@ describe("Repository — directoryUrl", () => {
     })
   );
 
-  it.effect("an unknown host yields none rather than the repository root, which would look like a real answer", () =>
+  it.effect("an unknown host yields a none directoryUrl, not the repository root posing as a real answer", () =>
     Effect.gen(function* () {
       const repo = yield* decode(Repository.FromValue, {
         url: "https://git.example.com/team/thing",
