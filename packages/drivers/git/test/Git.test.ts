@@ -457,6 +457,53 @@ describe("Git", () => {
     );
   });
 
+  describe("worktreeLock / worktreeUnlock", () => {
+    it.effect("spawns `worktree lock --reason` and `worktree unlock`, data-first and data-last", () =>
+      Effect.gen(function* () {
+        const seen: Array<ReadonlyArray<string>> = [];
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          yield* git.worktreeLock(cwd, "../wt", { reason: "fenced" });
+          yield* git.worktreeLock("../wt")(cwd);
+          yield* git.worktreeUnlock(cwd, "../wt");
+          return yield* git.worktreeUnlock("../wt")(cwd);
+        });
+        yield* run(program, (args) => {
+          seen.push(args);
+          return { exit: 0 };
+        });
+        assert.deepStrictEqual(
+          A.filter(seen, (args) => args[0] === "worktree"),
+          [
+            ["worktree", "lock", "--reason", "fenced", "../wt"],
+            ["worktree", "lock", "../wt"],
+            ["worktree", "unlock", "../wt"],
+            ["worktree", "unlock", "../wt"],
+          ]
+        );
+      })
+    );
+
+    it.effect("refuses an option-like path before spawning and fails on a non-zero exit", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.worktreeLock(cwd, "../wt");
+        });
+        const failure = yield* Effect.flip(
+          run(program, () => ({ stderr: "fatal: '../wt' is already locked\n", exit: 128 }))
+        );
+        assert.instanceOf(failure, GitCommandError);
+        const optionLike = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.worktreeUnlock(cwd, "--force");
+        });
+        const refused = yield* Effect.flip(run(optionLike, () => ({ exit: 0 })));
+        assert.instanceOf(refused, GitCommandError);
+      })
+    );
+  });
+
   describe("revParse", () => {
     it.effect("returns the trimmed SHA", () =>
       Effect.gen(function* () {
