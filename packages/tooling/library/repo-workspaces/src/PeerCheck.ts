@@ -1,25 +1,3 @@
-/**
- * Unsatisfied peer-dependency detection over a parsed lockfile — a pure
- * VALUE, not a service. No IO, nothing in `R`, no error channel.
- *
- * **Details**
- *
- * The computation is FORMAT-FREE. `@beep/lockfiles` normalizes every
- * manager's lockfile into package *instances* carrying `instanceId`,
- * `peerDependencies`, `peerDependenciesMeta` and `resolved` (name → the
- * instanceId that name actually resolved to), so this module never learns
- * which manager wrote the file. That is the whole point of the model work
- * behind it: shelling out to each package manager's own peer command cannot
- * deliver bun (which reports nothing on a no-op install and never records the
- * wanted range), so the answer has to come from the graph.
- *
- * `instanceId` is OPAQUE here — looked up, never parsed. Splitting one on `@`
- * or "(" would re-introduce the format knowledge this module exists without.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-
 import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { Lockfile, ResolvedPackage } from "@beep/lockfiles";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -444,8 +422,6 @@ const Walk = S.Struct({
     $I.annoteKey("Walk.path", { description: "The ordered parent chain from the importer to this instance." })
   ),
 }).pipe($I.annoteSchema("Walk", { description: "One plain traversal node and its ordered peer-attribution chain." }));
-// The walk carries plain `PeerParent` inputs: `PeerCheck.make` admits every
-// row and its parent chain once, instead of each level re-validating it.
 type Walk = (typeof Walk)["~type.make.in"];
 type PeerParentInput = (typeof PeerParent)["~type.make.in"];
 type UnsatisfiedPeerInput = (typeof UnsatisfiedPeer)["~type.make.in"];
@@ -500,23 +476,14 @@ const resolveSegment = (resolved: ReadonlyArray<string>, segment: string): Reado
  * @internal
  */
 const LinkEdge = S.Struct({
-  /**
-   * The name the importer depends on the target under.
-   */
   name: S.String.pipe(
     $I.annoteKey("LinkEdge.name", { description: "The dependency name the importer uses for this link." })
   ),
-  /**
-   * The workspace row the target directory stands for, when the lockfile records one.
-   */
   row: S.UndefinedOr(ResolvedPackage).pipe(
     $I.annoteKey("LinkEdge.row", {
       description: "The target's workspace row, or explicit undefined when no row is recorded.",
     })
   ),
-  /**
-   * Whether the caller supplied a manifest for the target directory.
-   */
   covered: S.Boolean.pipe(
     $I.annoteKey("LinkEdge.covered", { description: "Whether the supplied manifest set covers this link target." })
   ),
@@ -614,21 +581,9 @@ const linkTargetsOf: {
  * @internal
  */
 interface Join {
-  /**
-   * The caller's catalogs, which a joined `catalog:` peer range resolves through.
-   */
   readonly catalogs: CatalogSet | undefined;
-  /**
-   * The importer's own dependency instances, by name.
-   */
   readonly context: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
-  /**
-   * Instance ids of the rows a COVERED `link:` edge lands on: the nodes whose peers are joined.
-   */
   readonly joinable: MutableHashSet.MutableHashSet<string>;
-  /**
-   * Supplied manifests by `relativePath` — the spelling a `link:` target uses.
-   */
   readonly manifests: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
 }
 
@@ -671,9 +626,6 @@ const providerContext: {
     byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>,
     links: ReadonlyArray<LinkEdge>
   ): MutableHashMap.MutableHashMap<string, ResolvedPackage> => {
-    // A workspace row is named by its DIRECTORY, so a linked provider is
-    // keyed by the name the importer depends on it under, which is the name a
-    // peer asks for.
     const entries =
       roots._tag === "dependencies"
         ? [
@@ -991,9 +943,6 @@ const judgeJoined: {
     const provider = O.getOrUndefined(MutableHashMap.get(context, peer));
     if (provider === undefined)
       return optional ? SATISFIED : { _tag: "unsatisfied", found: null, version: null, wanted };
-    // A workspace row carries the placeholder version `0.0.0`, so accepting it
-    // on name alone is the same decline {@link judge} makes: an edge exists and
-    // a provider exists, and nothing indicates dissatisfaction.
     if (provider.isWorkspace) return SATISFIED;
     const reasons = unjudgedReasons(resolvedRange, provider.version);
     if (resolvedRange === undefined || reasons.length > 0) return { _tag: "unjudged", reasons };
@@ -1015,9 +964,6 @@ const unjudgedReasons = (resolvedRange: string | undefined, version: string): Re
   ...(isProtocolSpecifier(version) ? (["peerVersionUnresolved"] as const) : []),
 ];
 
-/**
- * The effective suppression policy, with both list axes compiled to predicates.
- */
 interface Policy {
   readonly allowAny: PeerNameMatcher;
   readonly allowed: Readonly<Record<string, string>>;
@@ -1244,10 +1190,6 @@ export class PeerCheck extends S.Class<PeerCheck, { readonly brand: unique symbo
   } = dual(
     (args) => S.is(Lockfile)(args[0]),
     (lockfile: Lockfile, options?: PeerCheckOptions.Input): PeerCheck => {
-      // PRESENCE of the key is the assertion, not its contents: supplying
-      // `NoPeerDependencyRules` asserts the workspace has none, while omitting
-      // the option says nothing was looked up. Collapsing the two would tell a
-      // gate that an unchecked workspace is clean.
       const keySupplied = options !== undefined && "peerDependencyRules" in options;
       const unverified: Array<UnverifiedReason> = keySupplied ? [] : ["peerRulesNotApplied"];
 
@@ -1271,12 +1213,10 @@ export class PeerCheck extends S.Class<PeerCheck, { readonly brand: unique symbo
           seen: MutableHashSet.empty<string>(),
         },
       };
-      // Every importer is walked: the flags are collected before they are
-      // combined, so no importer's walk is skipped by an earlier one's answer.
-      const walkedUnjoined = A.some(
-        A.map(lockfile.importers, (importer) => walkImporter(scope, importer)),
-        P.isTruthy
+      const unjoinedFlagPerImporterBeforeCombining = A.map(lockfile.importers, (importer) =>
+        walkImporter(scope, importer)
       );
+      const walkedUnjoined = A.some(unjoinedFlagPerImporterBeforeCombining, P.isTruthy);
 
       return PeerCheck.make({
         supported: true,
@@ -1294,21 +1234,9 @@ export class PeerCheck extends S.Class<PeerCheck, { readonly brand: unique symbo
  * @internal
  */
 interface Findings {
-  /**
-   * The unsatisfied rows, in walk order.
-   */
   readonly rows: Array<UnsatisfiedPeerInput>;
-  /**
-   * The (importer, peer, instance) keys already reported.
-   */
   readonly seen: MutableHashSet.MutableHashSet<string>;
-  /**
-   * The reasons some peer could not be judged.
-   */
   readonly unjudged: MutableHashSet.MutableHashSet<UnverifiedReason>;
-  /**
-   * The importers whose roots could not be joined.
-   */
   readonly unresolved: Array<string>;
 }
 
@@ -1318,29 +1246,11 @@ interface Findings {
  * @internal
  */
 interface WalkScope {
-  /**
-   * Every instance, by id.
-   */
   readonly byId: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
-  /**
-   * The run's accumulators.
-   */
   readonly findings: Findings;
-  /**
-   * The importer the walk reports on.
-   */
   readonly importerPath: string;
-  /**
-   * The supplied manifests and the importer's provider context.
-   */
   readonly join: Join;
-  /**
-   * The joinable rows whose manifest peers this walk read.
-   */
   readonly judged: MutableHashSet.MutableHashSet<string>;
-  /**
-   * The effective suppression policy.
-   */
   readonly policy: Policy;
 }
 
@@ -1351,16 +1261,7 @@ interface WalkScope {
  * @internal
  */
 interface ManifestIndex {
-  /**
-   * The manifests by every directory a `link:` to them can name: the package
-   * directory, and its publish directory when pnpm links into it (see
-   * {@link linkTargetsOf}).
-   */
   readonly byLinkTarget: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
-  /**
-   * The manifests by package directory. Empty when the key is omitted, which
-   * is what keeps every `link:` edge on the fail-closed branch.
-   */
   readonly byPath: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
 }
 
@@ -1420,13 +1321,7 @@ const policyOf = (rules: PeerDependencyRules.Encoded | undefined): Policy => ({
  * @internal
  */
 interface LinkLookup {
-  /**
-   * The supplied manifests by link target.
-   */
   readonly byLinkTarget: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
-  /**
-   * The lockfile's workspace rows by directory.
-   */
   readonly workspaceByPath: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
 }
 
@@ -1436,17 +1331,8 @@ interface LinkLookup {
  * @internal
  */
 interface LinkScan {
-  /**
-   * Each importer's edges, for the importers that have any.
-   */
   readonly byImporter: MutableHashMap.MutableHashMap<string, ReadonlyArray<LinkEdge>>;
-  /**
-   * Instance ids of the rows a COVERED edge lands on; see {@link Join.joinable}.
-   */
   readonly joinable: MutableHashSet.MutableHashSet<string>;
-  /**
-   * Whether some edge names a target the caller did not supply.
-   */
   readonly unjoined: boolean;
 }
 
@@ -1530,30 +1416,12 @@ const scanLinks = (lockfile: Lockfile, lookup: LinkLookup): LinkScan => {
  * @internal
  */
 interface RunScope {
-  /**
-   * The caller's catalogs.
-   */
   readonly catalogs: CatalogSet | undefined;
-  /**
-   * The run's accumulators.
-   */
   readonly findings: Findings;
-  /**
-   * The lockfile's instances, indexed.
-   */
   readonly index: InstanceIndex;
-  /**
-   * The classified `link:` edges.
-   */
   readonly links: LinkScan;
   readonly lockfile: Lockfile;
-  /**
-   * The supplied manifests by package directory.
-   */
   readonly manifests: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
-  /**
-   * The effective suppression policy.
-   */
   readonly policy: Policy;
 }
 
@@ -1583,8 +1451,8 @@ const walkImporter = (scope: RunScope, importer: Lockfile["importers"][number]):
   const roots = withLinkRoots(rootInstances(scope.lockfile, importer.path, scope.index), links, importer.dependencies);
   if (roots === undefined) {
     scope.findings.unresolved.push(importer.path);
-    // Nothing was walked, so no edge here was judged.
-    return links.length > 0;
+    const unwalkedLinkEdgesStayUnjudged = links.length > 0;
+    return unwalkedLinkEdgesStayUnjudged;
   }
   const join: Join = {
     manifests: scope.manifests,
@@ -1723,13 +1591,7 @@ const collect: {
  * @internal
  */
 interface Declaration {
-  /**
-   * The declared peers, name to range.
-   */
   readonly declared: Readonly<Record<string, string>>;
-  /**
-   * The declaring package's name, which a rule key's parent is matched against.
-   */
   readonly declaring: string;
   readonly isOptional: (peer: string) => boolean;
   readonly verdictOf: (peer: string, wanted: string, optional: boolean) => JoinedVerdict;
@@ -1898,25 +1760,6 @@ const ruleParentName = (parent: string): string =>
     { onNone: () => parent, onSome: (at) => Str.slice(0, at)(parent) }
   );
 
-/**
- * Whether an `allowedVersions` key names this parent and peer.
- *
- * **Details**
- *
- * A BARE key applies to every parent that declares this peer. Measured
- * against pnpm 11.22.0: with `allowedVersions: { react: "17" }` and nothing
- * else, `pnpm peers check --json` reports the same workspace clean that it
- * reports `react-dom>react` for — and still reports the row when the bare
- * key's range does not cover the found version. Skipping bare keys therefore
- * reports rows pnpm suppresses, while the report claims the policy was
- * applied. A key starting with `>` names no parent at all — malformed, and a
- * malformed rule suppresses nothing.
- *
- * @param key - An `allowedVersions` key such as `react-dom>react` or `react`.
- * @param parentName - The package that declares the peer, its version stripped.
- * @param peer - The peer the row is about.
- * @returns `true` when the key applies.
- */
 const ruleKeyApplies = (key: string, parentName: string, peer: string): boolean =>
   O.match(Str.indexOf(">")(key), {
     onNone: () => key === peer,
@@ -1926,15 +1769,6 @@ const ruleKeyApplies = (key: string, parentName: string, peer: string): boolean 
       ruleParentName(Str.slice(0, separator)(key)) === parentName,
   });
 
-/**
- * Whether a rule's range covers the found version. A rule whose own value is
- * unparseable suppresses nothing — it cannot be evaluated, and treating it as
- * a wildcard would hide real findings.
- *
- * @param permitted - The rule's range.
- * @param version - The found version.
- * @returns `true` when the range parses and covers the version.
- */
 const rangeCovers = (permitted: string, version: SemVer): boolean =>
   Result.match(Range.parseResult(permitted), {
     onFailure: () => false,
@@ -2014,50 +1848,15 @@ const judge: {
     const providerId = instance.resolved[peer];
     const provider = providerId === undefined ? undefined : O.getOrUndefined(MutableHashMap.get(byId, providerId));
     if (provider === undefined) {
-      // An ABSENT optional peer is satisfied by definition — that is what
-      // "optional" means, and reporting it would be a false positive. An
-      // optional peer installed at the WRONG version still is one, and is
-      // reported below with the flag set. Confirmed against `pnpm peers check`,
-      // whose `missing` section carries only non-optional entries while its
-      // `bad` section carries optional ones.
       if (optional) return SATISFIED;
-      // The edge IS recorded — the lockfile just spells its target in a way
-      // the model could not name (a `link:` into a build-output directory, say).
-      // So this peer may well be satisfied, and reporting it as unsatisfied is
-      // precisely the false positive `unresolvedEdges` exists to prevent. It is
-      // declined here and surfaced on the report's `unverified` instead: not
-      // proven clean, but not falsely accused either.
       if (instance.unresolvedEdges.includes(peer)) return SATISFIED;
-      // Nothing resolved for a required peer, and nothing recorded either:
-      // reportable without any range arithmetic, and reported even when the
-      // range itself is junk — "no provider" is a fact about the graph, not
-      // about the range.
       return { _tag: "unsatisfied", found: null, version: null };
     }
 
-    // A peer satisfied by a WORKSPACE package is accepted without a version
-    // check, and that is correct rather than a hole: pnpm records no version for
-    // an importer, so a workspace row carries the placeholder `"0.0.0"` and any
-    // comparison would be against a placeholder rather than the real version.
-    // An edge exists and a provider exists, so nothing indicates dissatisfaction
-    // — a declined answer beats a false one, and reporting `found: "0.0.0"`
-    // against a real range would be exactly that false answer.
     if (provider.isWorkspace) return SATISFIED;
 
-    // A provider resolved through a protocol — a `file:` dependency or
-    // override, or a git or remote tarball pnpm keys by its URL — carries the
-    // specifier where a version belongs:
-    // `@beep/lockfiles` passes it through, and for a `file:` DIRECTORY the
-    // lockfile records no version at all. `pnpm peers check` reports such a
-    // peer `bad`, with the specifier as `foundVersion`, even when the
-    // directory's own manifest satisfies the range (`filedep/`,
-    // `filedep-override/`, `filedep-tarball/`). Skipping it as unparseable
-    // would call a peer pnpm rejects satisfied and the report proven clean,
-    // so it fails the report closed instead, with no fabricated row either.
     if (isProtocolSpecifier(provider.version)) return { _tag: "unjudged", reasons: ["peerVersionUnresolved"] };
 
-    // Something resolved but the comparison cannot be performed. Claiming
-    // "unsatisfied" here would assert the result of a test that never ran.
     return compare(wanted, provider.version);
   }
 );

@@ -246,38 +246,17 @@ export interface WorkspaceSnapshotsShape {
   readonly worktree: Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotWorktreeFailure>;
 }
 
-/**
- * Project the live replay record onto the snapshot's `name → version` field:
- * a snapshot is "what the workspace looked like then", and WHERE this machine
- * found each pnpmfile is machine-local provenance that does not belong on a
- * serializable value.
- *
- * @param replays - The live replay record.
- * @returns Each replayed dependency's version, by name.
- */
 const hookVersionsOf = (replays: Readonly<Record<string, HookReplay>>): Record<string, string> =>
   R.fromEntries(A.map(R.toEntries(replays), ([name, replay]) => [name, replay.version]));
 
-/** Whether `value` is a non-null, non-array object. */
 const isObject = S.is(JsonObject);
 
-/**
- * Parse a manifest tolerantly, retaining the empty-object fallback.
- *
- * @param text - The manifest text.
- * @returns The parsed object, or `{}`.
- */
 const parseJsonObject = (text: string): Record<string, unknown> =>
   Result.match(S.decodeResult(JsonValue)(text), {
     onFailure: () => ({}),
     onSuccess: (parsed) => (isObject(parsed) ? parsed : {}),
   });
 
-/**
- * Project one `package.json` text (as read at a ref) into a
- * {@link PackageStateSnapshot}. An absent path, unparseable content, or a
- * manifest with no usable name is skipped — never an error.
- */
 const snapshotOf: {
   (content: O.Option<string>, relativePath: string): O.Option<PackageStateSnapshot>;
   (relativePath: string): (content: O.Option<string>) => O.Option<PackageStateSnapshot>;
@@ -286,9 +265,6 @@ const snapshotOf: {
   const parsed = parseJsonObject(content.value);
   const name = parsed.name;
   if (!P.isString(name) || name.length === 0) return O.none();
-  // Absent stays absent. At-ref content is not ours to fix, so a present but
-  // unusable `version` (a non-string, or `""`) degrades to absent rather than
-  // failing the snapshot — the tolerance this projection applies throughout.
   const version = parsed.version;
   return PackageStateSnapshot.makeOption({
     name,
@@ -298,7 +274,6 @@ const snapshotOf: {
   });
 });
 
-/** What a ref declares: its globs, its catalog sources and its hook replays. */
 interface RefDeclarations {
   readonly hookReplays: Readonly<Record<string, HookReplay>>;
   readonly injected: CatalogSet;
@@ -307,24 +282,9 @@ interface RefDeclarations {
   readonly recorded: LockfileRecord;
 }
 
-/**
- * The workspace-relative directory a member `package.json` path names.
- *
- * @param path - A tree entry's path.
- * @returns The member directory, or none.
- */
 const manifestDirOf = (path: string): O.Option<string> =>
   Str.endsWith("/package.json")(path) ? O.some(Str.slice(0, path.length - "/package.json".length)(path)) : O.none();
 
-/**
- * The member directories a tree listing holds — every blob `package.json`
- * below the root whose directory the globs match, sorted — and whether the
- * root has a manifest of its own.
- *
- * @param entries - The tree listing.
- * @param globs - The compiled workspace globs.
- * @returns The sorted member directories and whether the root has a manifest.
- */
 const memberDirsOf = (
   entries: ReadonlyArray<{ readonly path: string; readonly type: string }>,
   globs: GlobSet
@@ -339,16 +299,6 @@ const memberDirsOf = (
   };
 };
 
-/**
- * bun's inline catalogs from the root manifest's top-level and
- * `workspaces.catalog` / `.catalogs` blocks, read **tolerantly** — at-ref content is not ours to fix, so a
- * malformed block degrades rather than failing the snapshot. (The live
- * {@link WorkspaceCatalogs} reader hard-fails the same shape; the difference is
- * deliberate.) Normalization is the shared {@link CatalogSet.fromBunBlocks}.
- *
- * @param manifest - The parsed root manifest.
- * @returns The top-level and `workspaces` catalogs, merged.
- */
 const bunInlineCatalogs = (manifest: Record<string, unknown>): CatalogSet => {
   const topLevel = CatalogSet.fromBunBlocks({ catalog: manifest.catalog, catalogs: manifest.catalogs });
   const workspaces = manifest.workspaces;
@@ -359,17 +309,6 @@ const bunInlineCatalogs = (manifest: Record<string, unknown>): CatalogSet => {
   );
 };
 
-/**
- * What one parse of a manager's lockfile contributes to a snapshot: the catalogs
- * it records, and each importer's resolved versions.
- *
- * **Details**
- *
- * Both come from the SAME parse deliberately. Reading the lockfile twice — once
- * for catalogs, once for importer versions — would let the two halves disagree
- * if the file changed between reads, and would double the git object reads
- * `at(ref)` performs per snapshot.
- */
 const LockfileRecord = S.Struct({
   catalogs: CatalogSet.pipe(
     $I.annoteKey("LockfileRecord.catalogs", { description: "Catalogs recorded by the lockfile." })
@@ -384,7 +323,6 @@ const LockfileRecord = S.Struct({
 );
 type LockfileRecord = typeof LockfileRecord.Type;
 
-/** The contribution of an absent or malformed lockfile: nothing, on both counts. */
 const EMPTY_LOCKFILE_RECORD: LockfileRecord = { catalogs: CatalogSet.empty(), importerVersions: {} };
 
 class WorkspaceSnapshotsTestDoubleError extends S.TaggedError<
@@ -400,12 +338,6 @@ class WorkspaceSnapshotsTestDoubleError extends S.TaggedError<
   })
 ) {}
 
-/**
- * A defect naming the unstubbed test-double method — a test-wiring mistake, not a typed failure.
- *
- * @param method - The unstubbed method's name.
- * @returns An effect that dies naming the method.
- */
 const unstubbed = (method: string): Effect.Effect<never> =>
   Effect.die(
     WorkspaceSnapshotsTestDoubleError.make({
@@ -483,15 +415,9 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
     const catalogsService = yield* WorkspaceCatalogs;
     const hooks = yield* ConfigDependencyHooks;
 
-    // One seed for the layer's life, applied to every snapshot this service
-    // hands back. Kept as a function rather than inlined so `at` and
-    // `worktree` cannot drift on whether they seed — a seeded `at` diffed
-    // against an unseeded `worktree` is precisely the asymmetric-resolution
-    // bug the seam exists to remove.
     const seeded = (snapshot: WorkspaceStateSnapshot): WorkspaceStateSnapshot =>
       options?.seedCatalogs === undefined ? snapshot : snapshot.withSeededCatalogs(options.seedCatalogs);
 
-    /** A manager's lockfile text at the ref, `none` when the ref has none. */
     const lockfileText: {
       (
         root: string,
@@ -509,16 +435,9 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
         ref: string,
         format: "pnpm" | "bun"
       ): Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError> =>
-        // `./`-prefixed so git resolves the lockfile relative to `cwd` (the
-        // workspace root), NOT the git repo top-level — see `computeAt`.
         git.show(root, ref, `./${filenameFor(format)}`)
     );
 
-    /**
-     * What a manager's lockfile records at the ref: its catalog set and its
-     * importer versions, from ONE parse. Empty on both counts when the
-     * lockfile is absent or malformed.
-     */
     const lockfileRecord: {
       (content: O.Option<string>, format: "pnpm" | "bun"): Effect.Effect<LockfileRecord>;
       (format: "pnpm" | "bun"): (content: O.Option<string>) => Effect.Effect<LockfileRecord>;
@@ -533,15 +452,11 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
                 catalogs: CatalogSet.fromLockfile(lockfile),
                 importerVersions: importerVersionsOf(lockfile),
               })),
-              // A malformed lockfile at the ref is a broken RECORD, not a
-              // broken source of truth — degrade to no catalogs, exactly as
-              // the live WorkspaceCatalogs does for an unreadable lockfile.
               Effect.orElseSucceed(() => EMPTY_LOCKFILE_RECORD)
             ),
         })
     );
 
-    /** The pnpm side: `pnpm-workspace.yaml` declares the globs, catalogs and config dependencies. */
     const pnpmDeclarations = Effect.fnUntraced(function* (
       root: string,
       ref: string,
@@ -555,16 +470,6 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
       );
       const pnpmPatterns = WorkspacePatterns.fromPnpmWorkspace(document);
       const inline = yield* CatalogSet.fromWorkspaceYaml(text);
-      // Replay the ref's config-dependency hooks at the versions the ref's
-      // OWN `configDependencies` declare, seeded by the ref's inline
-      // catalogs — mirroring the live assembler. A replaying layer resolves
-      // each declared version through `.pnpm-config` or the pnpm store, so
-      // a config dependency bumped between two refs yields two different
-      // injected sets; `layerNoop` returns the seed and executes nothing.
-      // The ref's OWN lockfile is read once and serves twice: as the
-      // record below, and as the integrity source a fetched config
-      // dependency is verified against — the base side of a diff is
-      // checked against the base side's pins, never the working tree's.
       const lockfile = yield* lockfileText(root, ref, "pnpm");
       const replayed = yield* injectFromDocument(hooks, root, document, inline, {
         ...O.getSomesStruct({ lockfile }),
@@ -572,8 +477,6 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
       });
       const recorded = yield* lockfileRecord(lockfile, "pnpm");
       return {
-        // A `pnpm-workspace.yaml` with no `packages:` falls back to the root
-        // manifest's `workspaces` field, matching live `WorkspacePatterns.read`.
         patterns: pnpmPatterns.length > 0 ? pnpmPatterns : WorkspacePatterns.fromManifest(rootManifest),
         inline,
         injected: replayed.injected,
@@ -582,26 +485,6 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
       } satisfies RefDeclarations;
     });
 
-    /**
-     * The bun and npm side: no `pnpm-workspace.yaml`.
-     *
-     * **Details**
-     *
-     * The workspace globs come from the root `package.json` `workspaces`
-     * field. WITHOUT this, a bun or npm workspace collapses to the root
-     * package alone at a ref, and a consumer diffing two snapshots sees every
-     * declared dependency as newly added.
-     *
-     * Inline catalogs come from the root manifest UNCONDITIONALLY: a bun
-     * workspace declaring `workspaces.catalog`/`.catalogs` with no committed
-     * `bun.lock` at the ref still has catalogs, and gating them on the
-     * lockfile would make `at(ref)` and `worktree()` (which reads inline via
-     * `fromManifestWorkspaces` regardless of any lockfile) disagree.
-     * `bunInlineCatalogs` is tolerant: an array-form `workspaces` contributes
-     * only top-level catalogs. The lockfile half degrades the absent
-     * `bun.lock` to empty on `Option.none`. Config dependencies are a pnpm
-     * feature; there are none on this path.
-     */
     const bunDeclarations = Effect.fnUntraced(function* (
       root: string,
       ref: string,
@@ -627,13 +510,6 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
         root: string,
         ref: string
       ): Effect.fn.Return<WorkspaceStateSnapshot, WorkspaceSnapshotAtFailure> {
-        // Every workspace-relative path here is `./`-prefixed so git resolves
-        // it relative to `cwd` (the resolved workspace root), aligning with
-        // `git.lsTree`, which already emits cwd-relative paths. A bare path
-        // (`package.json`) resolves relative to the git repo TOP-LEVEL, so a
-        // workspace root nested inside a larger repo would read the OUTER
-        // manifest and drop or misread its members. `Git.show`'s contract is
-        // unchanged — the `./` is this consumer's explicit choice.
         const [pnpmWorkspaceText, rootManifestText] = yield* Effect.all(
           [git.show(root, ref, "./pnpm-workspace.yaml"), git.show(root, ref, "./package.json")],
           { concurrency: 2 }
@@ -643,15 +519,10 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
           onSome: parseJsonObject,
         });
 
-        // The replay record: what the hooks layer resolved on the pnpm path,
-        // empty on the bun one (config dependencies are a pnpm feature).
         const { patterns, inline, injected, recorded, hookReplays } = O.isSome(pnpmWorkspaceText)
           ? yield* pnpmDeclarations(root, ref, pnpmWorkspaceText.value, rootManifest)
           : yield* bunDeclarations(root, ref, rootManifest);
 
-        // Precedence follows the live assembler: lockfile record first, then
-        // the inline declaration, then the hook-injected set (which already
-        // carries the inline seed).
         const catalogs = CatalogSet.merge(recorded.catalogs, inline, injected);
 
         const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns)).pipe(
@@ -660,9 +531,6 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
           )
         );
 
-        // Package directories come from the tree listing at the ref, matched
-        // against the compiled glob set — no directory descent, because
-        // `ls-tree -r` already enumerates every path (globstar included).
         const lsTree2 = yield* git.lsTree(root, ref);
         const { hasRootManifest, memberDirs } = memberDirsOf(lsTree2, globs);
 
@@ -686,18 +554,10 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
       })
     );
 
-    // Per-`(root, ref)` memo of the success-only invalidating cell. A failed
-    // init invalidates its cell, so the next call recomputes rather than
-    // replaying the failure.
     const atCaches = MutableHashMap.empty<string, Effect.Effect<WorkspaceStateSnapshot, WorkspaceSnapshotAtFailure>>();
 
     const at = Effect.fn("WorkspaceSnapshots.at")(function* (ref: string) {
-      // The ambient cwd is read at call time, not layer build (`findLayerRoot` suspends).
       const root = yield* findLayerRoot(roots, options);
-      // NUL-separated — a NUL can occur in neither a path nor a ref, so keys
-      // cannot collide. Kept as the `\0` escape deliberately: a literal NUL
-      // byte makes `file` classify this source as binary and grep/ripgrep
-      // silently skip it.
       const key = `${root}\0${ref}`;
       let memo = O.getOrUndefined(MutableHashMap.get(atCaches, key));
       if (memo === undefined) {
@@ -706,8 +566,6 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
           Duration.infinity
         );
         const built = Effect.onError(resolveOnce, () => invalidate);
-        // Re-check under the benign concurrent-miss race: keep whichever cell
-        // landed first so callers dedupe onto one.
         const existing = O.getOrUndefined(MutableHashMap.get(atCaches, key));
         if (existing !== undefined) {
           memo = existing;
@@ -721,23 +579,13 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
 
     const worktree = Effect.suspend(
       Effect.fn("WorkspaceSnapshots.worktree")(function* () {
-        // The ONE shared read path: discovery's memo and the catalog memo, no
-        // second manifest/lockfile read.
         const packages = yield* discovery.listPackages;
         const catalogs = yield* catalogsService.set;
-        // Off the SAME memoized assemble pass as `set()` — no second lockfile
-        // read. Symmetry with `at(ref)` is the point: both sides of a diff must
-        // answer an unresolvable `catalog:` specifier the same way, or the
-        // fallback would manufacture a bogus row on every run.
         const importerVersions = yield* catalogsService.importerVersions;
-        // Same memo again: which version each config dependency replayed from.
         const hookReplays = yield* catalogsService.hookReplays;
         const snapshotPackages = A.map(packages, (pkg) =>
           PackageStateSnapshot.make({
             name: pkg.name,
-            // A version-less member omits the key, exactly as `snapshotOf` does
-            // for the same manifest at a ref: both sides of a diff must answer
-            // the same way, or the missing field would read as a change.
             ...O.getSomesStruct({ version: O.fromUndefinedOr(pkg.version) }),
             relativePath: pkg.relativePath,
             dependencies: pkg.dependencies,

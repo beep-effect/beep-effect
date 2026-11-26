@@ -48,7 +48,6 @@ import type { WorkspaceRootNotFoundError } from "./WorkspaceRoot.ts";
 
 const $I = $RepoWorkspacesId.create("WorkspaceCatalogs");
 
-/** A catalog shape or test-wiring defect with the original diagnostic message. */
 class WorkspaceCatalogsDefect extends S.TaggedError<WorkspaceCatalogsDefect, { readonly brand: unique symbol }>(
   $I`WorkspaceCatalogsDefect`
 )(
@@ -446,34 +445,14 @@ export class CatalogSet extends S.Class<CatalogSet, { readonly brand: unique sym
   }
 }
 
-/**
- * Whether `value` is a non-null, non-array object.
- *
- * @param value - Any value.
- * @returns `true` for a non-null, non-array object.
- */
 const isObject = (value: unknown): value is Record<string, unknown> =>
   P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
-/** Whether every value in an object is a string — a usable `dependency → range` catalog. */
 const isStringRecord = S.is(CatalogRecord);
 
-/**
- * Whether a `catalog` block and a non-null `catalogs.default` both declare the default catalog.
- *
- * @param catalog - The document's `catalog` block.
- * @param catalogs - The document's `catalogs` block.
- * @returns `true` when both declare the default catalog.
- */
 const declaresDefaultTwice = (catalog: unknown, catalogs: unknown): boolean =>
   P.isNotNullish(catalog) && P.isObjectKeyword(catalogs) && "default" in catalogs && catalogs.default !== null;
 
-/**
- * The `catalog` / `catalogs` blocks of a parsed pnpm-workspace document.
- *
- * @param document - A parsed `pnpm-workspace.yaml` document.
- * @returns The usable blocks, or none when the default catalog is declared twice.
- */
 const catalogBlocksOf = (
   document: unknown
 ): {
@@ -483,7 +462,6 @@ const catalogBlocksOf = (
   if (!P.isObjectKeyword(document)) return {};
   const catalog = "catalog" in document ? document.catalog : undefined;
   const catalogs = "catalogs" in document ? document.catalogs : undefined;
-  // Preserve pnpm's duplicate-default refusal before dropping unusable entries.
   if (declaresDefaultTwice(catalog, catalogs)) return {};
   return {
     catalogs: normalize({
@@ -493,29 +471,6 @@ const catalogBlocksOf = (
   };
 };
 
-/**
- * The inline release-age gate contribution of a parsed `pnpm-workspace.yaml`
- * document — pnpm's top-level `minimumReleaseAge` (minutes) and
- * `minimumReleaseAgeExclude` (name patterns) keys, mapped onto
- * `@beep/npm-spec`'s `PartialReleaseAgeGate` field names
- * (`ageMinutes` / `exclude`).
- *
- * **Details**
- *
- * **Hard-fail by design**, the same posture as the live catalog-block reader:
- * a present-but-malformed value (a non-numeric `minimumReleaseAge`, a
- * `minimumReleaseAgeExclude` that is not a string array) fails typed as a
- * `CatalogAssemblyError` rather than being silently dropped, because a
- * silently-ignored gate is the "install refuses a too-young version the
- * resolver already picked" bug this vocabulary exists to prevent. An absent or
- * explicitly `null` key contributes nothing; the permissive
- * `PartialReleaseAgeGate` accepts every finite `ageMinutes` (negatives and
- * fractions included) — `ReleaseAgeGate.combine` is the single clamping
- * authority, exactly as on the hook path.
- *
- * @param document - A parsed `pnpm-workspace.yaml` document.
- * @returns The gate contribution, failing typed on a malformed value.
- */
 const inlineReleaseAge = (document: unknown): Effect.Effect<PartialReleaseAgeGate, CatalogAssemblyError> => {
   if (!isObject(document)) return Effect.succeed(PartialReleaseAgeGate.make({}));
   const raw: Record<string, unknown> = {};
@@ -533,7 +488,6 @@ const inlineReleaseAge = (document: unknown): Effect.Effect<PartialReleaseAgeGat
   );
 };
 
-/** A hard-fail catalog-assembly failure naming the malformed part of a `workspaces` field. */
 const malformed: {
   (source: "manifest" | "catalog", path: string, detail: string): CatalogAssemblyError;
   (path: string, detail: string): (source: "manifest" | "catalog") => CatalogAssemblyError;
@@ -543,19 +497,6 @@ const malformed: {
     CatalogAssemblyError.make({ source, path, cause: WorkspaceCatalogsDefect.make({ message: detail }) })
 );
 
-/**
- * Validate a `catalog` (default) / `catalogs` (named) block pair, hard-failing on
- * a malformed shape or the default catalog declared twice.
- *
- * **Details**
- *
- * Shared by the bun `package.json` `workspaces` reader
- * ({@link CatalogSet.fromManifestWorkspaces}) and the pnpm `pnpm-workspace.yaml`
- * reader, so both fail typed on exactly the same conditions rather than one
- * hard-failing and the other silently normalizing to `{}` — the "every dependency
- * looks newly added" bug. `labels` names the two blocks in the diagnostics so the
- * error reads in the caller's vocabulary (`workspaces.catalog` vs. `catalog`).
- */
 const validatedCatalogBlocks: {
   (
     catalog: unknown,
@@ -589,8 +530,6 @@ const validatedCatalogBlocks: {
         concurrency: 1,
       }),
       ([validCatalog, validCatalogs]) =>
-        // The default catalog declared twice — pnpm rejects the equivalent
-        // duplication. Structural presence: an explicit `catalog: {}` still counts.
         O.isSome(validCatalog) && O.isSome(validCatalogs) && "default" in validCatalogs.value
           ? Effect.fail(
               malformed(
@@ -606,13 +545,6 @@ const validatedCatalogBlocks: {
     )
 );
 
-/**
- * A present `catalog` block, which must map dependency names to version strings.
- *
- * @param catalog - The `catalog` block.
- * @param label - The block's name in the caller's vocabulary.
- * @returns The block when present, failing typed when malformed.
- */
 const validCatalogOf = (
   catalog: unknown,
   label: string
@@ -622,13 +554,6 @@ const validCatalogOf = (
   return Effect.fail(malformed("catalog", label, `"${label}" must map dependency names to version strings`));
 };
 
-/**
- * A present `catalogs` block, which must map catalog names to catalogs.
- *
- * @param catalogs - The `catalogs` block.
- * @param label - The block's name in the caller's vocabulary.
- * @returns The block when present, failing typed when malformed.
- */
 const validCatalogsOf = (
   catalogs: unknown,
   label: string
@@ -656,20 +581,12 @@ const validCatalogsOf = (
   );
 };
 
-/**
- * The `catalog` / `catalogs` blocks of a root `package.json` `workspaces` field,
- * hard-failing on a malformed shape or the default catalog declared twice.
- *
- * @param workspaces - The root manifest's `workspaces` field.
- * @returns The blocks, failing typed on a malformed shape.
- */
 const manifestCatalogBlocks = (
   workspaces: unknown
 ): Effect.Effect<
   { readonly catalog?: Record<string, string>; readonly catalogs?: Record<string, Record<string, string>> },
   CatalogAssemblyError
 > => {
-  // Absent, explicitly null, or the npm/yarn array form: nothing to misread.
   if (workspaces === undefined || workspaces === null || A.isArray(workspaces)) return Effect.succeed({});
   if (!isObject(workspaces)) {
     return Effect.fail(
@@ -690,23 +607,6 @@ const manifestCatalogBlocks = (
   });
 };
 
-/**
- * Validate the inline `catalog` / `catalogs` blocks of a parsed
- * `pnpm-workspace.yaml` document, hard-failing on the same malformed-shape and
- * duplicate-default conditions as the bun `package.json` path.
- *
- * **Details**
- *
- * The live pnpm reader in {@link WorkspaceCatalogs.make} runs this BEFORE
- * normalizing with `inlineCatalogs`, so an invalid inline catalog fails typed
- * rather than normalizing to `{}` and reading as ABSENT. A non-object document,
- * or one with no catalog blocks, validates to `{}` — absent/empty still yields
- * empty. The return is discarded; normalization stays on the shared
- * `inlineCatalogs` path.
- *
- * @param document - A parsed `pnpm-workspace.yaml` document.
- * @returns Nothing, failing typed on a malformed block.
- */
 const validatePnpmWorkspaceCatalogs = (document: unknown): Effect.Effect<void, CatalogAssemblyError> => {
   if (!isObject(document)) return Effect.void;
   return Effect.asVoid(
@@ -723,12 +623,6 @@ const validatePnpmWorkspaceCatalogs = (document: unknown): Effect.Effect<void, C
  */
 export type CatalogAssemblyFailure = CatalogAssemblyError | WorkspaceRootNotFoundError;
 
-/**
- * A defect naming the unstubbed test-double method — a test-wiring mistake, not a typed failure.
- *
- * @param method - The unstubbed method's name.
- * @returns An effect that dies naming the method.
- */
 const unstubbed = (method: string): Effect.Effect<never> =>
   Effect.die(
     WorkspaceCatalogsDefect.make({
@@ -736,8 +630,6 @@ const unstubbed = (method: string): Effect.Effect<never> =>
     })
   );
 
-/** The single assembly pass's outputs, memoized together. */
-// Assembly retains its plain-object representation; only the type owner changes.
 const Assembled = S.Struct({
   catalogs: CatalogSet.pipe($I.annoteKey("Assembled.catalogs", { description: "The assembled catalog collection." })),
   releaseAgeGate: ReleaseAgeGate.pipe(
@@ -1075,21 +967,6 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
-    // A file-presence probe that distinguishes genuine absence from a probe
-    // FAILURE. `fs.exists` already normalizes a NotFound PlatformError to
-    // `false`, so any error that escapes it (a permission or IO failure) is a
-    // genuine probe failure — surfacing it typed rather than collapsing it to
-    // "absent" is what keeps a locked-down `pnpm-workspace.yaml` from silently
-    // selecting the package.json reader (a silently-empty catalog is the "every
-    // dependency looks newly added" bug). The explicit NotFound arm is
-    // belt-and-suspenders for a backend whose `exists` surfaces NotFound.
-    //
-    // A `PlatformError` wraps one of two variants: `SystemError` (a normalized
-    // `reason._tag` such as `NotFound` / `PermissionDenied`) or `BadArgument`
-    // (`reason._tag === "BadArgument"`, no system reason). Only a `SystemError`
-    // whose reason is `NotFound` is genuine absence; every other reason — a
-    // `BadArgument`, or a `SystemError` with any other tag — is a real probe
-    // failure and surfaces typed.
     const probeExists = (target: string): Effect.Effect<boolean, CatalogAssemblyError> =>
       fs.exists(target).pipe(
         Effect.catchTag("PlatformError", (error) => {
@@ -1100,18 +977,9 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
         })
       );
 
-    // The single assembly pass produces BOTH the catalog set and the effective
-    // release-age gate off one root discovery, one inline read, and one hook
-    // replay — so the config-dependency hooks (which execute arbitrary code)
-    // run exactly once, and both outputs share the same memo.
     const assemble: Effect.Effect<Assembled, CatalogAssemblyFailure> = Effect.gen(function* () {
       const root = yield* findLayerRoot(roots, options);
 
-      // The lockfile is a RECORD of what was installed; an absent or
-      // unreadable one is not a catalog failure, it just contributes nothing.
-      // PM-aware: whichever extension (pnpm or bun) the lockfile carries.
-      // Both catalog and importer-version outputs come off this ONE read, the
-      // same "one pass, several outputs" discipline `releaseAgeGate` follows.
       const lockfileOutputs = yield* lockfiles.read.pipe(
         Effect.map((lockfile) => ({
           catalogs: CatalogSet.fromLockfile(lockfile),
@@ -1124,26 +992,14 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
       const fromLockfile = lockfileOutputs.catalogs;
       const importerVersions = lockfileOutputs.importerVersions;
 
-      // File presence picks the inline reader, the same rule the glob
-      // enumerator uses: pnpm-workspace.yaml → the pnpm path (config
-      // dependencies live only here); absent → the package.json path.
       const workspaceYaml = path.join(root, "pnpm-workspace.yaml");
       const hasPnpmWorkspace = yield* probeExists(workspaceYaml);
 
       let inline: CatalogSet;
       let injected: CatalogSet;
-      // The release-age gate contributions: inline pnpm-workspace.yaml keys and
-      // the replayed hooks. Both empty on the bun/package.json path (release-age
-      // is a pnpm feature and config dependencies live only in pnpm-workspace.yaml).
       let inlineGate: PartialReleaseAgeGate.Encoded = {};
       let hookGate: PartialReleaseAgeGate.Encoded = {};
-      // The EFFECTIVE rules: the workspace file's block seeded into the
-      // threaded config, with every replayed hook's contribution merged onto
-      // it. Read back off the injection rather than recomputed here — the
-      // point of seeding is that one object carries the answer.
       let peerDependencyRules: PeerDependencyRules = NoPeerDependencyRules;
-      // Which version each config dependency replayed from; empty where
-      // config dependencies do not exist.
       let hookReplays: Readonly<Record<string, HookReplay>> = {};
       if (hasPnpmWorkspace) {
         const text = yield* fs
@@ -1156,27 +1012,9 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
             CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause })
           )
         );
-        // Validate the inline shape BEFORE normalizing: a malformed catalog block
-        // or the default catalog declared twice must fail typed here, exactly as
-        // the bun package.json path does — normalization would otherwise swallow
-        // it and read as an ABSENT catalog. Absent/empty catalogs still yield empty.
         yield* validatePnpmWorkspaceCatalogs(document);
         inline = CatalogSet.fromCatalogs(inlineCatalogs(catalogBlocksOf(document)));
-        // The inline release-age keys, hard-failing on a malformed value the same
-        // way the catalog blocks do.
         inlineGate = yield* inlineReleaseAge(document);
-        // The opt-in hook replay, seeded by the inline catalogs and merged on
-        // top. The default layer's no-op hooks return the seed untouched, so
-        // this executes no config-dependency code. It surfaces the injected
-        // catalogs, the hooks' release-age contribution, the effective rules
-        // and the replay record from ONE replay.
-        // The working tree's own lockfile text, the integrity record a fetched
-        // config dependency is verified against. Unreadable reads as absent
-        // here, as it does for the lockfile record above: only a fetch needs
-        // it, and a fetch without it fails closed on its own. Read only when
-        // a config dependency is declared, since nothing else can use it.
-        // Read as TEXT beside `lockfiles.read()` because the env preamble
-        // the fetch verifies against is a document `Lockfile` does not model.
         const lockfileText =
           R.keys(configDependenciesOf(document)).length === 0
             ? undefined
@@ -1196,11 +1034,6 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
         hookReplays = replayed.injection.replays;
       } else {
         const manifestPath = path.join(root, "package.json");
-        // The presence probe must distinguish genuine absence from a probe
-        // FAILURE here too: a non-NotFound PlatformError (a permission/IO error)
-        // on `package.json` must fail typed rather than collapse to "absent" and
-        // return lockfile-only catalogs — the "every dependency looks newly
-        // added" bug on the bun branch. `probeExists` already does this.
         const hasManifest = yield* probeExists(manifestPath);
         if (!hasManifest)
           return {
@@ -1216,13 +1049,10 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
             Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: manifestPath, cause }))
           );
         inline = yield* CatalogSet.fromManifestWorkspaces(text);
-        // Config dependencies are a pnpm feature; there are none on this path.
         injected = CatalogSet.empty();
       }
 
       const assembled = CatalogSet.merge(fromLockfile, inline, injected);
-      // Strictest-wins across the two sources: max age (clamped non-negative),
-      // exclude sets unioned — `ReleaseAgeGate.combine` is the single authority.
       const releaseAgeGate = ReleaseAgeGate.combine(inlineGate, hookGate);
       yield* Effect.logDebug("Catalogs assembled").pipe(
         Effect.annotateLogs({
@@ -1269,8 +1099,6 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
           return (yield* memo).hookReplays;
         })
       ),
-      // Infallible bookkeeping, not a fallible boundary — no span. The next
-      // read after this runs the full assembly again.
       refresh: Effect.suspend(() => invalidate),
     };
   });
@@ -1473,7 +1301,6 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
   static readonly makeTest = (
     overrides: Partial<
       Omit<WorkspaceCatalogsShape, "resolveSpecifier"> & {
-        // A double stubs the data-first form; `makeTest` derives the pipeable form with `dual`.
         readonly resolveSpecifier: (
           dependency: string,
           specifier: string

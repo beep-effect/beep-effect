@@ -90,9 +90,7 @@ export interface DuplicateCheckOptions {
  * @since 0.0.0
  */
 export const Dependent = S.Union([
-  /** A workspace importer takes the instance directly. */
   S.TaggedStruct("importer", { path: S.NonEmptyString }),
-  /** A resolved package's dependency edge points at the instance. */
   S.TaggedStruct("package", { name: S.NonEmptyString, version: S.String }),
 ]).pipe($I.annoteSchema("Dependent", { description: "Who pulls one resolved instance into the graph." }));
 
@@ -470,19 +468,8 @@ export class DuplicateCheck extends S.Class<DuplicateCheck, { readonly brand: un
  * @internal
  */
 interface Seeds {
-  /**
-   * Roots taken directly by importer entries (no workspace row), recorded in
-   * importer order so provenance visits each relationship only once. A
-   * workspace row's edges are attributed when the walk leaves it.
-   */
   readonly importerRoots: ReadonlyArray<readonly [instanceId: string, importerPath: string]>;
-  /**
-   * The walk's starting instances.
-   */
   readonly queue: ReadonlyArray<ResolvedPackage>;
-  /**
-   * The importers whose roots could not be joined.
-   */
   readonly unresolved: ReadonlyArray<string>;
 }
 
@@ -645,8 +632,6 @@ const duplicateOf = (
   });
 };
 
-// The plain constructor input of a `DuplicatedPackage`, admitted once by
-// `DuplicateCheck.make`.
 type DuplicatedPackageInput = (typeof DuplicatedPackage)["~type.make.in"];
 
 /**
