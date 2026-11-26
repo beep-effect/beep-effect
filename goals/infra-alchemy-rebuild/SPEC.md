@@ -2859,7 +2859,11 @@ Attempt 2 (02:40:36Z, from f0c12fcf150) deployed, but a field-by-field audit aga
 
 The same audit found the image, port binding, volume and restart policy matching. The healthcheck is dropped on purpose (above).
 
-Ingestion was degraded from 02:40:46Z, when the attempt-2 container came up, until attempt 3 replaced it. The collector retried through its persistent queue. The P4 PR body records the measured end.
+Outcome of the cutover, applied as attempt 3 from `f096be4dca8`:
+- The export-failure window was 02:27:04Z (the attempt-1 stop) to 02:54:35Z, and ingestion was degraded from 02:40:46Z to 02:54:35Z.
+- The collector's persistent queue drained from 42 batches to 0 after attempt 3. Between 02:44:41Z and 02:54:09Z, 22 batches ran out of retries and 91 spans were dropped. The driver accepted that as the cost of the cutover.
+- Phoenix was down about 74 s, 52 s and 20 s across the three attempts.
+- The live state was proven at `f096be4dca8`; later commits on the P4 PR change only documentation.
 
 Rollback for the prod cutover (also in the runbook):
 - RetireCompose deletes nothing. It disables the unit and moves the unit file into `<legacy config root>/retired-compose/`; the Compose root and its files stay on disk.
