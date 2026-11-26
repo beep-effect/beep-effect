@@ -2,52 +2,13 @@ import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual, flow, identity } from "effect/Function";
-// The fetch rung of the config-dependency ladder: when neither
-// `node_modules/.pnpm-config` nor any discovered store holds the version a
-// side DECLARES, have pnpm put exactly that version into the store, verified
-// against the integrity the declaring side recorded.
-//
-// Only `ConfigDependencyHooks.layerSubprocess` wires this rung; every other
-// replaying layer fails typed with `reason: "notInstalled"` instead. The
-// subprocess goes through `@beep/commands`' `Run` over core's
-// `ChildProcessSpawner`, the same seam the replay itself uses.
-//
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// How the fetch is verified. pnpm is run in a SCRATCH workspace whose
-// `pnpm-workspace.yaml` declares the config dependency as a bare version and
-// whose `pnpm-lock.yaml` env preamble records it with the expected integrity,
-// under `install --frozen-lockfile`. pnpm then checks the tarball against that
-// integrity itself, and refuses on a mismatch even when the store already
-// holds a copy (probed on pnpm 11.27.1 and 12.6.0). The integrity is decided
-// here, BEFORE the spawn, fail-closed: the inline `<version>+<integrity>` spec
-// when present, the declaring side's lockfile preamble otherwise, and a typed
-// failure when the two disagree or neither exists. Nothing is ever fetched
-// unverified.
-//
-// The declaring workspace's registry config comes along. pnpm reads a
-// workspace's registry and auth from `<root>/.npmrc` and its `registry` /
-// `registries` keys from `<root>/pnpm-workspace.yaml`, and a scratch under
-// the OS temp dir sees neither, so a config dependency resolved through a
-// scoped registry, a mirror or repo-level auth would fetch from the public
-// registry and fail. The rung copies `<root>/.npmrc` into the scratch as-is
-// (never read, never logged; `${VAR}` references stay verbatim for pnpm to
-// expand) and carries those two yaml keys into the scratch
-// `pnpm-workspace.yaml` (probed on pnpm 11.27.1 and 12.6.0: both keys are
-// read from the workspace yaml; `npmrcAuthFile` is ignored there and auth
-// lives only in `.npmrc`). `root` is the CURRENT workspace root for both
-// sides of a diff: the base ref's `.npmrc` is not read through git, since
-// registry config describes where this checkout fetches from, not what a ref
-// declared.
-//
-// Every read and write goes through the caller's `FileSystem` and `Path`
-// services, like the rest of the ladder: the scratch workspace and the store
-// are real directories, so the replaying layer that wires this rung needs a
-// real `FileSystem` for pnpm to see them.
+// decision: config-dependency-reads-through-caller-filesystem
 
 import { Run } from "@beep/commands";
 import { IntegrityHash } from "@beep/npm-spec/IntegrityHash";
@@ -264,11 +225,7 @@ export type FetchConfigDependency = (
   locks: RecordedLocks
 ) => Effect.Effect<string, FetchFailure, FileSystem.FileSystem | Path.Path>;
 
-/**
- * The ceiling on one fetch. It downloads one small tarball; two minutes covers
- * a slow registry without letting a hung pnpm stall catalog assembly forever.
- */
-const FETCH_TIMEOUT = Duration.minutes(2);
+const HUNG_PNPM_FETCH_CEILING = Duration.minutes(2);
 
 /**
  * The integrity the fetched copy must match, decided before anything is
@@ -485,8 +442,6 @@ export const scratchWorkspaceYaml: {
   }
 );
 
-/** Whether `error` is a node filesystem "no such file" failure. */
-/** `None` when `effect` fails because its target does not exist; any other failure passes through. */
 const orAbsent = <A, R>(
   effect: Effect.Effect<A, PlatformError.PlatformError, R>
 ): Effect.Effect<O.Option<A>, PlatformError.PlatformError, R> =>
@@ -498,11 +453,6 @@ const orAbsent = <A, R>(
     )
   );
 
-/**
- * The scratch workspace's `pnpm-lock.yaml`: the env preamble pnpm 11 and 12
- * write for a lone config dependency, pinned to `integrity`, followed by the
- * empty lockfile document they write when there are no projects.
- */
 const scratchLockfile: {
   (name: string, version: string, integrity: string): string;
   (version: string, integrity: string): (name: string) => string;
@@ -587,7 +537,6 @@ export const fetchArgs: {
   ];
 });
 
-/** Whether `resolved` sits under a store's `links/<name>/<version>/` tree. */
 const isStoreEntry: {
   (resolved: string, name: string, version: string): boolean;
   (name: string, version: string): (resolved: string) => boolean;
@@ -642,10 +591,6 @@ export const makeFetchConfigDependency =
         );
 
         const integrity = yield* expectedIntegrity(request, locks);
-        // The declaring workspace's registry keys, read before anything is
-        // spawned. An absent yaml carries none; an unparseable one fails,
-        // since fetching past it could reach a registry the workspace
-        // never configured.
         const rootYaml = yield* io(
           "reading the workspace pnpm-workspace.yaml",
           orAbsent(fs.readFileString(path.join(request.root, "pnpm-workspace.yaml")))
@@ -679,14 +624,12 @@ export const makeFetchConfigDependency =
               ],
               { concurrency: 1 }
             ),
-            // Copied as-is, never read: it may carry auth. The scratch's release
-            // removes it with the rest of the directory.
             orAbsent(fs.copyFile(path.join(request.root, ".npmrc"), path.join(scratch, ".npmrc")))
           )
         );
 
         const command = ChildProcess.make("pnpm", fetchArgs(scratch, request.stores), { cwd: scratch });
-        yield* Run.text(command, { timeout: FETCH_TIMEOUT }).pipe(
+        yield* Run.text(command, { timeout: HUNG_PNPM_FETCH_CEILING }).pipe(
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.mapError((cause) =>
             failed(
@@ -696,9 +639,6 @@ export const makeFetchConfigDependency =
           )
         );
 
-        // `--frozen-lockfile` forbids pnpm from rewriting the pin. A pnpm that
-        // did anyway (one that does not read the env preamble, say) installed
-        // something the pin never verified, so its result is not used.
         const after = yield* io(
           "reading back the scratch lockfile",
           fs.readFileString(path.join(scratch, "pnpm-lock.yaml"))
@@ -712,8 +652,6 @@ export const makeFetchConfigDependency =
           );
         }
 
-        // The copy pnpm linked is the one it verified: resolve the scratch
-        // workspace's `.pnpm-config` entry to its store directory.
         const linked = path.join(scratch, "node_modules", ".pnpm-config", name);
         const resolved = yield* io(`resolving ${linked}`, fs.realPath(linked));
         const manifest = yield* manifestVersion(name, resolved).pipe(

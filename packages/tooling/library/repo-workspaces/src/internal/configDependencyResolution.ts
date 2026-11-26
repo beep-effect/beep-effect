@@ -2,31 +2,7 @@ import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-// Resolving a declared pnpm config dependency to the pnpmfile of the version
-// it DECLARES — not whatever happens to be installed right now.
-//
-// `configDependencies` in `pnpm-workspace.yaml` pins each config dependency
-// to `<version>+<integrity>` (or a bare `<version>`). pnpm installs the
-// declared version to `<root>/node_modules/.pnpm-config/<name>` — a SYMLINK
-// into the store's `links/` tree — and the store keeps EVERY version ever
-// installed on the machine at `<store>/links/<name>/<version>/<hash>/node_modules/<name>/`.
-// So a past ref's pnpmfile is recoverable without a checkout, a fetch, or a
-// registry: read the ref's declared version, then find that version in the
-// store. This module is that ladder, shared by `layerLive` and
-// `layerSubprocess` (the parent resolves; the child only imports).
-//
-// Every read goes through the caller's `FileSystem` and `Path` services, and
-// the environment through `Config`. The store is a real directory, so a
-// replaying layer needs a real `FileSystem` (the dynamic `import()` that
-// loads a pnpmfile is real anyway); on a virtual one the ladder finds no
-// store and fails typed, naming what it searched.
-//
-// Fail-closed. A declared version found neither under `.pnpm-config` nor in
-// any store goes to the fetch rung when the caller wired one
-// (`configDependencyFetch.ts`, only `layerSubprocess` does), which fetches it
-// verified against the declaring side's recorded integrity; otherwise, and
-// whenever that fails, it fails typed with a `reason` and the remediation in
-// the message. Nothing is ever fetched unverified.
+// decision: config-dependency-reads-through-caller-filesystem
 
 import { PnpmEnvLockfile } from "@beep/lockfiles";
 import { PackageManagerCache } from "@beep/npm-spec/PackageManagerCache";
@@ -53,7 +29,6 @@ import type { ManifestVersion } from "./configDependencyShared.ts";
 
 const $I = $RepoWorkspacesId.create("internal/configDependencyResolution");
 
-/** The resolution failure retained as the cause of a catalog assembly error. */
 class ConfigDependencyResolutionError extends S.TaggedError<
   ConfigDependencyResolutionError,
   { readonly brand: unique symbol }
@@ -61,7 +36,8 @@ class ConfigDependencyResolutionError extends S.TaggedError<
   "ConfigDependencyResolutionError",
   { message: S.String, cause: S.optionalKey(S.Defect({ includeStack: true })) },
   $I.annoteError<ConfigDependencyResolutionError>("ConfigDependencyResolutionError", {
-    description: "Explains why a declared config dependency could not be resolved.",
+    description:
+      "Explains why a declared config dependency could not be resolved; retained as the cause of the hooks catalog assembly error.",
   })
 ) {}
 
@@ -124,31 +100,12 @@ export declare namespace ResolvedPnpmfile {
   export type Encoded = typeof ResolvedPnpmfile.Encoded;
 }
 
-/** The pnpmfile filenames a config dependency may ship, in the order pnpm tries them. */
 const PNPMFILE_CANDIDATES = ["pnpmfile.mjs", "pnpmfile.cjs", "pnpmfile.js"] as const;
 
-/**
- * The version part of a `configDependencies` spec: the text before the first
- * `+` (`0.9.0+sha512-…` → `0.9.0`); a bare `0.9.0` is returned whole.
- *
- * **Details**
- *
- * Deliberately lenient — it goes through the same split as the public
- * `ConfigDependencySpec` but validates neither half. See
- * `configDependencySpecGrammar.ts` for why replay must not adopt the strict
- * model's rejections.
- */
 const declaredVersionOf = (spec: string): string => splitConfigDependencySpec(spec).version;
 
-/**
- * Whether a config-dependency name or version carries a `..` path segment. A scoped name
- * legitimately contains `/` (`@scope/pkg`), so only a `..` *segment* is rejected —
- * it would traverse out of `.pnpm-config` and feed an attacker-chosen path to the
- * dynamic `import()`.
- */
 const hasTraversalSegment = (name: string): boolean => Str.split(name, /[/\\]/).includes("..");
 
-/** A declared `(name, version)` pair, validated, with the spec it came from. */
 const DeclaredEntry = S.Struct({
   name: S.String.pipe(
     $I.annoteKey("DeclaredEntry.name", {
@@ -160,7 +117,6 @@ const DeclaredEntry = S.Struct({
       description: "The version text before the first plus sign, checked for traversal by the ladder.",
     })
   ),
-  /** The declared spec verbatim; the fetch rung reads its inline integrity. */
   spec: S.String.pipe(
     $I.annoteKey("DeclaredEntry.spec", {
       description: "The complete declared spec, retained for fetch integrity verification.",
@@ -172,15 +128,8 @@ const DeclaredEntry = S.Struct({
   })
 );
 
-/** A plain declared config dependency retained for resolution. */
 type DeclaredEntry = typeof DeclaredEntry.Type;
 
-/**
- * The declared `(name, version)` pairs of a `configDependencies` map, in
- * declaration order, with EVERY name and version validated before any path is built from
- * one: a `..` segment fails typed. Shared by both resolvers so the refusal and
- * the version split cannot drift between them.
- */
 const declaredEntries = (
   configDependencies: Readonly<Record<string, string>>
 ): Effect.Effect<ReadonlyArray<DeclaredEntry>, CatalogAssemblyError> => {
@@ -209,10 +158,8 @@ const declaredEntries = (
   );
 };
 
-/** The services every rung of the ladder reads through. */
 type LadderServices = FileSystem.FileSystem | Path.Path;
 
-/** Directory entries of `dir`, or `[]` when it is absent; typed on any other failure. */
 const entriesOf: {
   (path: string, dir: string): Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError, LadderServices>;
   (dir: string): (path: string) => Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError, LadderServices>;
@@ -228,7 +175,6 @@ const entriesOf: {
   })
 );
 
-/** The canonical path of `target`, or `None` when it is absent; typed on any other failure. */
 const realPathOf: {
   (path: string, target: string): Effect.Effect<O.Option<string>, CatalogAssemblyError, LadderServices>;
   (target: string): (path: string) => Effect.Effect<O.Option<string>, CatalogAssemblyError, LadderServices>;
@@ -243,18 +189,12 @@ const realPathOf: {
   })
 );
 
-/** The `<root>/node_modules/.pnpm-config` directory. */
 const pnpmConfigDir: {
   (path: Path.Path, root: string): string;
   (root: string): (path: Path.Path) => string;
 } = dual(2, (path: Path.Path, root: string): string => path.join(root, "node_modules", ".pnpm-config"));
 
-/**
- * The store directory a realpath'd `.pnpm-config` entry lives under: the
- * parent of the ancestor directory named `links`. `None` when the resolved
- * path is not under a `links` tree (a non-store installation).
- */
-const storeOfLinkedPath: {
+const parentOfLinksAncestor: {
   (path: Path.Path, resolved: string): O.Option<string>;
   (resolved: string): (path: Path.Path) => O.Option<string>;
 } = dual(2, (path: Path.Path, resolved: string): O.Option<string> => {
@@ -267,31 +207,22 @@ const storeOfLinkedPath: {
   }
 });
 
-/** The non-empty `storeDir` a parsed `.modules.yaml` document names, if any. */
-const storeDirOf = (text: string): ReadonlyArray<string> =>
+const nonEmptyStoreDirOf = (text: string): ReadonlyArray<string> =>
   Result.match(Yaml.parseResult(text), {
     onFailure: A.empty<string>,
     onSuccess: (document) =>
       P.isObject(document) && P.isString(document.storeDir) && document.storeDir.length > 0 ? [document.storeDir] : [],
   });
 
-/**
- * Rung 1 of store discovery: the `storeDir` key of
- * `<root>/node_modules/.modules.yaml`. Absent in a config-only install; a
- * malformed file or a missing key contributes nothing (discovery is
- * best-effort — the final error lists what was searched); a non-absent IO
- * failure is typed.
- */
 const storeFromModulesYaml = Effect.fnUntraced(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const text = yield* ioOrNone(root, fs.readFileString(path.join(root, "node_modules", ".modules.yaml")));
-  return O.match(text, { onNone: A.empty<string>, onSome: storeDirOf });
+  return O.match(text, { onNone: A.empty<string>, onSome: nonEmptyStoreDirOf });
 });
 
-/** The `.pnpm-config` entries, scoped ones (`@scope/pkg`) one level deeper. */
 const pnpmConfigEntries = Effect.fnUntraced(function* (
   root: string,
   base: string
@@ -312,11 +243,6 @@ const pnpmConfigEntries = Effect.fnUntraced(function* (
   return A.flatten(nested);
 });
 
-/**
- * Rung 2 of store discovery: the realpath of every `.pnpm-config` entry,
- * each walked up to its `links` ancestor. Scoped entries (`@scope/pkg`) are
- * one level deeper.
- */
 const storesFromLinks = Effect.fn("ConfigDependencyResolution.storesFromLinks")(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
@@ -328,22 +254,15 @@ const storesFromLinks = Effect.fn("ConfigDependencyResolution.storesFromLinks")(
     (candidate) => realPathOf(root, path.join(base, candidate)),
     { concurrency: 1 }
   );
-  return A.getSomes(A.map(A.getSomes(resolved), (target) => storeOfLinkedPath(path, target)));
+  return A.getSomes(A.map(A.getSomes(resolved), (target) => parentOfLinksAncestor(path, target)));
 });
 
-/** An optional environment value, with an empty one read as absent. */
 const environmentValue = (name: string): Effect.Effect<O.Option<string>> =>
   Config.option(Config.String(name)).pipe(
     Effect.orElseSucceed(O.none<string>),
     Effect.map(O.filter((value) => value !== ""))
   );
 
-/**
- * The conventional store roots the environment names: `$PNPM_HOME/store`,
- * `$XDG_DATA_HOME/pnpm/store`, `%LOCALAPPDATA%\pnpm\store` on Windows, the
- * platform default from `@beep/npm-spec`'s cache table, and the XDG default
- * under the home directory off Windows.
- */
 const environmentStoreRoots = Effect.fnUntraced(function* (): Effect.fn.Return<
   ReadonlyArray<string>,
   never,
@@ -363,31 +282,22 @@ const environmentStoreRoots = Effect.fnUntraced(function* (): Effect.fn.Return<
   );
   const windows = platform === "win32";
   const homeDirectory = O.orElse(windows ? userProfile : home, () => (windows ? home : userProfile));
+  const standaloneScriptStoreWhenPnpmHomeUnexported = windows
+    ? O.none()
+    : O.map(homeDirectory, (dir) => path.join(dir, ".local", "share", "pnpm", "store"));
   return A.getSomes([
     O.map(pnpmHome, (dir) => path.join(dir, "store")),
     O.map(xdgDataHome, (dir) => path.join(dir, "pnpm", "store")),
     windows ? O.map(localAppData, (dir) => path.join(dir, "pnpm", "store")) : O.none(),
     O.map(homeDirectory, (dir) => PackageManagerCache.defaultDirectory("pnpm", { platform, home: dir })),
-    // The XDG path is also searched off-platform: a pnpm installed through its
-    // standalone script sets `PNPM_HOME` to `~/.local/share/pnpm` on macOS too,
-    // and a shell that did not export it (CI, a login-less runner) would
-    // otherwise miss a store that is really there.
-    windows ? O.none() : O.map(homeDirectory, (dir) => path.join(dir, ".local", "share", "pnpm", "store")),
+    standaloneScriptStoreWhenPnpmHomeUnexported,
   ]);
 });
 
-/** NEWEST store format first, numerically: `v11` before `v10` before `v9`. */
 const NewestStoreFormatFirst: Order.Order<string> = Order.mapInput(Order.flip(Order.Number), (version: string) =>
   Number(Str.slice(1)(version))
 );
 
-/**
- * Rung 3 of store discovery: the conventional store roots — `$PNPM_HOME/store`,
- * `$XDG_DATA_HOME/pnpm/store`, `%LOCALAPPDATA%\pnpm\store` on Windows, then
- * the platform default from `@beep/npm-spec`'s cache table — each expanded to
- * its `v*` subdirectories (a store root holds one directory per store
- * version, `v11` today).
- */
 const storesFromEnvironment = Effect.fn("ConfigDependencyResolution.storesFromEnvironment")(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
@@ -396,9 +306,6 @@ const storesFromEnvironment = Effect.fn("ConfigDependencyResolution.storesFromEn
   const expanded = yield* Effect.forEach(
     environmentStoreRoots4,
     (storeRoot) =>
-      // A plain `.sort()` orders `v10 < v11 < v9`, and since the first store
-      // holding a version answers, a pnpm upgrade that left `v10` beside `v11`
-      // would otherwise replay the stale copy without a word.
       Effect.map(entriesOf(root, storeRoot), (entries) =>
         A.map(
           A.sort(
@@ -413,12 +320,6 @@ const storesFromEnvironment = Effect.fn("ConfigDependencyResolution.storesFromEn
   return A.flatten(expanded);
 });
 
-/**
- * Every store directory the ladder searches, in discovery order,
- * deduplicated. IO failures during discovery are attributed to the workspace
- * root, since discovery serves every dependency of one `resolvePnpmfiles`
- * call rather than any single one.
- */
 const discoverStores = Effect.fn("ConfigDependencyResolution.discoverStores")(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
@@ -426,12 +327,6 @@ const discoverStores = Effect.fn("ConfigDependencyResolution.discoverStores")(fu
     [storeFromModulesYaml(root), storesFromLinks(root), storesFromEnvironment(root)],
     { concurrency: 1 }
   );
-  // Dedupe by PHYSICAL directory, not by spelling: rung 2 already answers a
-  // realpath, while `.modules.yaml` and the environment rungs answer
-  // whatever spelling they were given — a symlinked home, `/var` versus
-  // `/private/var` — so string equality would keep one store twice and every
-  // entry in it would then read as two copies. A store that does not exist
-  // is dropped here; it could never hold anything.
   const resolved = yield* Effect.forEach(
     [...fromYaml, ...fromLinks, ...fromEnvironment],
     (store) => realPathOf(root, store),
@@ -440,33 +335,6 @@ const discoverStores = Effect.fn("ConfigDependencyResolution.discoverStores")(fu
   return A.dedupe(A.getSomes(resolved));
 });
 
-/**
- * The `<store>/links/<name>/<declared>/<hash>/node_modules/<name>` directories
- * whose manifest carries exactly `declared`, from the FIRST store (in
- * discovery order) that holds any — `[]` when none does.
- *
- * **Gotchas**
- *
- * The `<hash>` segment is pnpm's, and it is NOT derivable from the declared
- * integrity (sha256/sha512 of the integrity string, its decoded bytes, the
- * `name@version` dep path and the tarball URL were all tried and none match),
- * and the store keeps no integrity metadata beside the entry — so the
- * manifest version is the only identity this rung can check.
- *
- * Two rules follow. The decision is scoped to ONE store: discovery order
- * already encodes authority (`.modules.yaml` names the store this workspace
- * installed from, the environment rungs are guesses), so a version held by
- * several distinct stores — `store/v10` beside `store/v11`, a workspace store
- * beside the platform default — resolves from the first, exactly as the rung
- * order intends. Within that store every match is returned rather than the
- * first taken, because the CALLER must fail closed when more than one hash
- * directory carries the version: two honest copies of one version (a
- * same-version re-publish, a private mirror, a hand-populated store) cannot be
- * told apart here, and importing whichever `readdir` listed first would
- * execute code the ref's own integrity pin was written to exclude. The stores
- * are already deduplicated by realpath, so two matches here are two entries,
- * never one entry reached by two spellings.
- */
 const findInStores: {
   (
     name: string,
@@ -512,7 +380,6 @@ const findInStores: {
   })
 );
 
-/** The fail-closed message for a version ONE store holds more than once: which store, which copies, how to disambiguate. */
 const ambiguousMessage: {
   (name: string, declared: string, store: string, matches: ReadonlyArray<string>): string;
   (declared: string, store: string, matches: ReadonlyArray<string>): (name: string) => string;
@@ -524,11 +391,6 @@ const ambiguousMessage: {
     `Remove the stale copies, or install ${name}@${declared} in this workspace so node_modules/.pnpm-config answers instead.`
 );
 
-/**
- * The fail-closed message: what was declared, by which side, what is
- * installed, where we looked, why that happens, and how to fix it. `fetch`
- * is the fetch rung's failure when one ran.
- */
 const notInstalledMessage: {
   (
     name: string,
@@ -567,9 +429,6 @@ const notInstalledMessage: {
     const found =
       `config dependency ${name}@${declared}${by} is not installed: node_modules/.pnpm-config/${name} holds ${holds}, ` +
       `and no store copy of ${name}@${declared} was found (${searched}).`;
-    // The case: the replayed side pins a DIFFERENT version from the
-    // installed one, which is what the base side of a diff across a
-    // config-dependency bump always does on a fresh checkout.
     const why =
       installed._tag === "version" && installed.version !== declared
         ? "This side declares a different version from the installed one, as the base side of a diff across a " +
@@ -582,10 +441,8 @@ const notInstalledMessage: {
       onSome: (failure) =>
         failure.reason === "fetchFailed" ? `Fetching it into the store failed: ${failure.message}` : failure.message,
     });
-    // Two recorded integrities that disagree are the one case where populating
-    // the store by hand is the wrong advice: the fetch message says to
-    // reconcile the pins instead.
-    const remedy = O.exists(fetch, (failure) => failure.reason === "integrityMismatch")
+    const pinsNeedReconcilingNotPopulating = O.exists(fetch, (failure) => failure.reason === "integrityMismatch");
+    const remedy = pinsNeedReconcilingNotPopulating
       ? ""
       : `Run \`pnpm add --config ${name}@${declared}\` in a throwaway workspace to populate the store, then retry.`;
     return pipe(
@@ -596,13 +453,6 @@ const notInstalledMessage: {
   }
 );
 
-/**
- * The first pnpmfile candidate present in `dir`, from ONE directory listing.
- * `None` when the dependency ships none. Presence is settled by the listing
- * alone: a listed-but-unreadable file (`EACCES`, say) is returned and fails
- * typed at `import()` time — it never reads as "this dependency ships no
- * hook".
- */
 const pnpmfileIn: {
   (name: string, dir: string): Effect.Effect<O.Option<string>, CatalogAssemblyError, LadderServices>;
   (dir: string): (name: string) => Effect.Effect<O.Option<string>, CatalogAssemblyError, LadderServices>;
@@ -621,36 +471,13 @@ const pnpmfileIn: {
   })
 );
 
-/** What one {@link resolvePnpmfiles} call shares across its declared entries. */
 interface LadderCall {
-  /** The fetch rung, when the replaying layer wires one. */
   readonly fetch: O.Option<FetchConfigDependency>;
-  /** The memoized decode of the declaring side's recorded locks. */
   readonly locks: RecordedLocks;
-  /** What the declaring side recorded. */
   readonly side: HookReplayContext.Encoded;
-  /** The memoized store discovery. */
   readonly stores: Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError>;
 }
 
-/**
- * Resolve one declared config dependency to the directory holding its
- * declared version: `.pnpm-config` when it holds exactly that version, else
- * the store, else the fetch rung when one is wired, else a typed fail-closed
- * error. `stores` is the memoized discovery, run at most once per
- * {@link resolvePnpmfiles} call and only on the first `.pnpm-config` miss;
- * `locks` is the declaring side's memoized lockfile decode, run at most once
- * per call and only by the fetch rung.
- *
- * **Details**
- *
- * A fetch failure is folded into the not-installed message, so the error
- * still says what was declared, what is installed and where the ladder
- * looked, and it keeps the fetch rung's own `reason` (`integrityMismatch`,
- * `integrityUnavailable`, `fetchFailed`). The `pnpm add --config`
- * remediation is kept except for `integrityMismatch`, where the pins must be
- * reconciled first.
- */
 const resolveDirectory: {
   (
     root: string,
@@ -683,9 +510,6 @@ const resolveDirectory: {
     const { store, matches } = yield* findInStores(name, declared, searched);
     const [only, ...rest] = matches;
     if (only !== undefined && A.isReadonlyArrayEmpty(rest)) return { dir: only, source: "store" };
-    // Two or more copies of one version in ONE store: nothing here can say
-    // which one the ref's integrity pinned, so replaying either would be a
-    // guess about which code to execute. Fail closed and say why.
     if (only !== undefined)
       return yield* hooksError(
         name,
@@ -717,11 +541,6 @@ const resolveDirectory: {
   })
 );
 
-/**
- * A lazy memo of `effect`, scoped to one {@link resolvePnpmfiles} call: the
- * house success-only memo (never `Effect.cached`, which would pin an
- * interrupt), so a failed or interrupted run is retried by the next user.
- */
 const memoizeSuccess = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<Effect.Effect<A, E>> =>
   Effect.map(Effect.cachedInvalidateWithTTL(effect, Duration.infinity), ([once, invalidate]) =>
     Effect.onError(once, () => invalidate)
@@ -772,10 +591,7 @@ export const resolvePnpmfiles: {
   ): Effect.fn.Return<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError, LadderServices> {
     const entries = yield* declaredEntries(configDependencies);
     const services = yield* Effect.context<LadderServices>();
-    // Store discovery and the declaring side's lockfile decode are each shared
-    // across the whole call and run lazily on first use (the first
-    // `.pnpm-config` miss, the first fetch); concurrent users dedupe onto one
-    // run.
+    // decision: store-discovery-shared-per-call
     const stores = yield* memoizeSuccess(discoverStores(root).pipe(Effect.provide(services)));
     const locks: RecordedLocks =
       side.lockfile === undefined

@@ -1,7 +1,6 @@
 import * as HashSet from "effect/HashSet";
 
-// The package's bound constants, in a shared leaf so every surface
-// imports one number without an import cycle.
+// decision: shared-internal-leaves
 
 /**
  * Default cap on how far the `packages:` enumerator descends below a
