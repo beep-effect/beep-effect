@@ -11,23 +11,24 @@ import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Equivalence from "effect/Equivalence";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeJsonLinesStore } from "../../internal/state/JsonLinesStore.ts";
-import {
-  repositoryJsonLinesFileName,
-  resolveWorkstationStateDir,
-  StateRepository,
-} from "../../internal/state/WorkstationState.ts";
+import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { YeetCommandError } from "../Yeet/Yeet.errors.ts";
 import { GoalCompletionReceipt } from "./Goals.schemas.ts";
+import type { CheckoutRepositoryKey } from "../../internal/state/WorkstationState.ts";
 
 const $I = $RepoCliId.create("commands/Goals/CompletionReceiptStore.service");
-const equivalentStateRepository = S.toEquivalence(StateRepository);
+const equivalentStateRepository = Equivalence.Struct({
+  host: Equivalence.String,
+  owner: Equivalence.String,
+  name: Equivalence.String,
+});
 
 /**
  * JSON Lines codec for one stored goal completion receipt.
@@ -68,7 +69,7 @@ export const GoalCompletionReceiptJson = JsonStringCodec(GoalCompletionReceipt);
  * @category formatting
  * @since 0.0.0
  */
-export const goalCompletionReceiptPartition = (repository: string): StateRepository => {
+export const goalCompletionReceiptPartition = (repository: string): CheckoutRepositoryKey => {
   const parts = Str.split(Str.toLowerCase(repository), "/");
   return {
     host: "github.com",

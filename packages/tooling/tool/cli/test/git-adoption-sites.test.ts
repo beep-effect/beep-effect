@@ -1,6 +1,6 @@
 import { isRegisteredWorktree, removeGitWorktree, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { readAtMergeBase } from "@beep/repo-cli/test/Skills";
-import { detectPrRepository, readProvenanceLabels } from "@beep/repo-cli/test/Yeet";
+import { detectCheckoutRepository, detectPrRepository, readProvenanceLabels } from "@beep/repo-cli/test/Yeet";
 import { expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -204,6 +204,56 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
         ]);
         const ambiguous = yield* detectPrRepository(repoRoot).pipe(Effect.flip);
         expect(ambiguous.message).toBe("Expected origin's push URLs to name one github.com repository.");
+      })
+    )
+  );
+
+  it.effect("reads the checkout repository from origin's fetch URL on any host", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        const detect = (url: string) =>
+          runGit(repoRoot, ["remote", "set-url", "origin", url]).pipe(
+            Effect.andThen(detectCheckoutRepository(repoRoot)),
+            Effect.map((repository) => [repository.host, repository.owner, repository.name])
+          );
+        yield* runGit(repoRoot, ["remote", "add", "origin", "git@github.com:Owner/Repo.git"]);
+        const githubSsh = yield* detect("git@github.com:Owner/Repo.git");
+        expect(githubSsh).toEqual(["github.com", "owner", "repo"]);
+        const githubHttps = yield* detect("https://github.com/Owner/Repo");
+        expect(githubHttps).toEqual(["github.com", "owner", "repo"]);
+        const gitlabScp = yield* detect("git@GitLab.Example.com:Team/App.git");
+        expect(gitlabScp).toEqual(["gitlab.example.com", "team", "app"]);
+        const sshPort = yield* detect("ssh://git@gitlab.example.com:2222/team/app.git");
+        expect(sshPort).toEqual(["gitlab.example.com", "team", "app"]);
+      })
+    )
+  );
+
+  it.effect("keys the checkout by its fetch URL, not a GitHub push URL or an insteadOf rewrite", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        yield* runGit(repoRoot, ["remote", "add", "origin", "git@gitlab.example.com:team/app.git"]);
+        yield* runGit(repoRoot, ["remote", "set-url", "--push", "origin", "git@github.com:owner/app.git"]);
+        yield* runGit(repoRoot, ["config", "url.https://mirror.invalid/.insteadOf", "git@gitlab.example.com:"]);
+        const checkout = yield* detectCheckoutRepository(repoRoot);
+        expect([checkout.host, checkout.owner, checkout.name]).toEqual(["gitlab.example.com", "team", "app"]);
+        const pullRequests = yield* detectPrRepository(repoRoot);
+        expect([pullRequests.host, pullRequests.owner, pullRequests.name]).toEqual(["github.com", "owner", "app"]);
+      })
+    )
+  );
+
+  it.effect("fails typed when the checkout has no origin or an unparsable one", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        const missing = yield* detectCheckoutRepository(repoRoot).pipe(Effect.flip);
+        expect(missing.message).toBe("Expected an origin remote URL.");
+        yield* runGit(repoRoot, ["remote", "add", "origin", "/srv/git/app.git"]);
+        const localPath = yield* detectCheckoutRepository(repoRoot).pipe(Effect.flip);
+        expect(localPath.message).toBe("Expected the origin URL to name host/owner/name.");
+        yield* runGit(repoRoot, ["remote", "set-url", "origin", "git@gitlab.example.com:group/subgroup/app.git"]);
+        const nested = yield* detectCheckoutRepository(repoRoot).pipe(Effect.flip);
+        expect(nested._tag).toBe("YeetCommandError");
       })
     )
   );

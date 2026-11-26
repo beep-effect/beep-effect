@@ -1,9 +1,9 @@
 import {
+  CheckoutRepository,
   currentRegisterRows,
   decodeRegister,
   layerOrchestratorRegisterMemory,
   OrchestratorRegister,
-  PrRepository,
   RegisterRow,
   RegisterRowJson,
   registerRowsWaiting,
@@ -27,7 +27,7 @@ import * as Str from "effect/String";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 const ledgerRow = (
   overrides: Partial<{
@@ -196,7 +196,7 @@ it.layer(Layer.fresh(layerOrchestratorRegisterMemory), { timeout: "30 seconds" }
         yield* register.append(
           RegisterRow.make({
             ...registerRow({ address: "b" }),
-            repository: PrRepository.make({ host: "github.com", owner: "other", name: "repo" }),
+            repository: CheckoutRepository.make({ host: "github.com", owner: "other", name: "repo" }),
           })
         );
         const rows = yield* register.list(repository);

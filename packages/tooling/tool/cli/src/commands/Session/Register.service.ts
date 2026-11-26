@@ -26,15 +26,18 @@ import {
   makeMemoryJsonLinesStore,
   partitionJsonLines,
 } from "../../internal/state/JsonLinesStore.ts";
-import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
-import { PrRepository } from "../Yeet/internal/Provenance.ts";
+import {
+  CheckoutRepository,
+  repositoryJsonLinesFileName,
+  resolveWorkstationStateDir,
+} from "../../internal/state/WorkstationState.ts";
 import { RegisterRow, RegisterRowJson } from "./Register.schemas.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
 import { sessionCheckoutFacts, sessionHarness } from "./SessionLedger.service.ts";
 import type { RegisterNoteInput } from "./Register.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Session/Register.service");
-const equivalentRepository = S.toEquivalence(PrRepository);
+const equivalentRepository = S.toEquivalence(CheckoutRepository);
 
 /**
  * Service contract for the register: append one row, list a repository's rows.
@@ -53,7 +56,7 @@ const equivalentRepository = S.toEquivalence(PrRepository);
  */
 export interface OrchestratorRegisterShape {
   readonly append: (row: RegisterRow) => Effect.Effect<void, SessionLedgerError>;
-  readonly list: (repository: PrRepository) => Effect.Effect<ReadonlyArray<RegisterRow>, SessionLedgerError>;
+  readonly list: (repository: CheckoutRepository) => Effect.Effect<ReadonlyArray<RegisterRow>, SessionLedgerError>;
 }
 
 /**
@@ -125,16 +128,37 @@ export const decodeRegister = (content: string): DecodedRegister =>
  * **Example** (Name the file)
  *
  * ```ts
- * import { PrRepository, registerFileName } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, registerFileName } from "@beep/repo-cli/test/Session"
  *
- * console.log(registerFileName(PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
+ * console.log(registerFileName(CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
  * // "github.com__beep-effect__beep-effect.jsonl"
  * ```
  *
  * @category services
  * @since 0.0.0
  */
-export const registerFileName: (repository: PrRepository) => string = repositoryJsonLinesFileName;
+export const registerFileName: (repository: CheckoutRepository) => string = repositoryJsonLinesFileName;
+
+/**
+ * The orchestrator state directory the register and rulings stores share:
+ * `BEEP_ORCHESTRATOR_STATE_ROOT`, else `<state>/beep/orchestrator`.
+ *
+ * **Example** (Build the resolver effect)
+ *
+ * ```ts
+ * import { orchestratorStateDirectory } from "@beep/repo-cli/test/Session"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(orchestratorStateDirectory)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const orchestratorStateDirectory = resolveWorkstationStateDir({
+  override: "BEEP_ORCHESTRATOR_STATE_ROOT",
+  store: "orchestrator",
+});
 
 /**
  * Build the live register store against the workstation state directory.
@@ -152,7 +176,7 @@ export const registerFileName: (repository: PrRepository) => string = repository
  */
 export const makeOrchestratorRegisterLive = Effect.fn("OrchestratorRegister.makeLive")(function* () {
   const store = yield* makeJsonLinesStore({
-    directory: yield* resolveWorkstationStateDir({ override: "BEEP_ORCHESTRATOR_STATE_ROOT", store: "orchestrator" }),
+    directory: yield* orchestratorStateDirectory,
     fileName: registerFileName,
     partitionOf: (row: RegisterRow) => row.repository,
     encode: flow(

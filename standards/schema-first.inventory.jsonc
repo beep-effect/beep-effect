@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-25",
+  "generatedOn": "2026-11-26",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -2434,14 +2434,6 @@
       "line": 665,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
-      "symbol": "StateRepository",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Generic workstation state partition key shared by PR-session and session-ledger helpers. It accepts existing plain repository objects and PrRepository instances; S.Struct preserves that structural contract without a redundant class constructor."
     },
     {
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",

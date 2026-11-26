@@ -6,3 +6,4 @@
  */
 export * from "../commands/Session/index.ts";
 export { PrNumber, PrProvenanceHarness, PrRepository } from "../commands/Yeet/internal/Provenance.ts";
+export { CheckoutRepository, CheckoutRepositorySlug } from "../internal/state/WorkstationState.ts";

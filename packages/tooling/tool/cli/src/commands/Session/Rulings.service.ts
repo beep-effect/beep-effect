@@ -21,15 +21,15 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeJsonLinesStore, makeMemoryJsonLinesStore } from "../../internal/state/JsonLinesStore.ts";
-import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
-import { PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository, repositoryJsonLinesFileName } from "../../internal/state/WorkstationState.ts";
+import { orchestratorStateDirectory } from "./Register.service.ts";
 import { RulingRow, RulingRowJson } from "./Rulings.schemas.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
 import { sessionCheckoutFacts, sessionHarness } from "./SessionLedger.service.ts";
 import type { RulingNoteInput } from "./Rulings.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Session/Rulings.service");
-const equivalentRepository = S.toEquivalence(PrRepository);
+const equivalentRepository = S.toEquivalence(CheckoutRepository);
 
 /**
  * Service contract for the rulings store: append one row, list a repository's rows.
@@ -48,7 +48,7 @@ const equivalentRepository = S.toEquivalence(PrRepository);
  */
 export interface OrchestratorRulingsShape {
   readonly append: (row: RulingRow) => Effect.Effect<void, SessionLedgerError>;
-  readonly list: (repository: PrRepository) => Effect.Effect<ReadonlyArray<RulingRow>, SessionLedgerError>;
+  readonly list: (repository: CheckoutRepository) => Effect.Effect<ReadonlyArray<RulingRow>, SessionLedgerError>;
 }
 
 /**
@@ -76,9 +76,9 @@ export class OrchestratorRulings extends Context.Service<OrchestratorRulings, Or
  * **Example** (Name the file)
  *
  * ```ts
- * import { PrRepository, rulingsFileName } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, rulingsFileName } from "@beep/repo-cli/test/Session"
  *
- * console.log(rulingsFileName(PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
+ * console.log(rulingsFileName(CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
  * // "github.com__beep-effect__beep-effect.rulings.jsonl"
  * ```
  *
@@ -87,7 +87,7 @@ export class OrchestratorRulings extends Context.Service<OrchestratorRulings, Or
  * @category services
  * @since 0.0.0
  */
-export const rulingsFileName: (repository: PrRepository) => string = flow(
+export const rulingsFileName: (repository: CheckoutRepository) => string = flow(
   repositoryJsonLinesFileName,
   Str.replace(/\.jsonl$/u, ".rulings.jsonl")
 );
@@ -108,7 +108,7 @@ export const rulingsFileName: (repository: PrRepository) => string = flow(
  */
 export const makeOrchestratorRulingsLive = Effect.fn("OrchestratorRulings.makeLive")(function* () {
   const store = yield* makeJsonLinesStore({
-    directory: yield* resolveWorkstationStateDir({ override: "BEEP_ORCHESTRATOR_STATE_ROOT", store: "orchestrator" }),
+    directory: yield* orchestratorStateDirectory,
     fileName: rulingsFileName,
     partitionOf: (row: RulingRow) => row.repository,
     encode: flow(

@@ -20,7 +20,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
-import { PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 import { latestPresence, routesFor, SessionPresenceStore } from "./Presence.service.ts";
 import {
   FallbackStep,
@@ -49,10 +49,10 @@ const $I = $RepoCliId.create("commands/Session/Resolve.service");
  * **Example** (Describe a query)
  *
  * ```ts
- * import { PrRepository, SessionResolveInput } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, SessionResolveInput } from "@beep/repo-cli/test/Session"
  *
  * const input = SessionResolveInput.make({
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   query: "#3172",
  *   cwd: "/work/beep-effect",
  * })
@@ -63,7 +63,7 @@ const $I = $RepoCliId.create("commands/Session/Resolve.service");
  * @since 0.0.0
  */
 export class SessionResolveInput extends S.Opaque<SessionResolveInput, { readonly brand: unique symbol }>()(
-  S.Struct({ repository: PrRepository, query: S.String, cwd: S.String }).pipe(
+  S.Struct({ repository: CheckoutRepository, query: S.String, cwd: S.String }).pipe(
     $I.annoteSchema("SessionResolveInput", {
       description: "A resolve key, its repository and the directory it is read in.",
     })
@@ -504,13 +504,13 @@ export const layerSessionResolver = Layer.effect(SessionResolver, makeSessionRes
  * **Example** (Render a key with no owner)
  *
  * ```ts
- * import { PrRepository, renderSessionResolution, SessionResolution } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, renderSessionResolution, SessionResolution } from "@beep/repo-cli/test/Session"
  * import * as O from "effect/Option"
  *
  * const resolution = SessionResolution.make({
  *   schemaVersion: "session-resolution/v1",
  *   query: "3172",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   owner: O.none(),
  *   superseded: [],
  *   routes: [],
