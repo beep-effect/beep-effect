@@ -160,7 +160,7 @@
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -185,5 +185,6 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3562
-  }
+  },
+  "retentionReason": "Standards and the retired-package registry cite this packet: its decisions record how to recover @beep/nlp and @beep/schema-org from 6265d739bb6, and research/consumer-census.md holds the chapter-11 dispositions for every retired facet."
 }
