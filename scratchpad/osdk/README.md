@@ -943,3 +943,17 @@ fix wave. `REVIEW.md` is the independent review of the laws, the consistency and
 numbered F1 to F23 and a status for each: fixed, partly fixed or open. `PORTING_LEDGER.md` gives the disposition
 of each of the 310 `@osdk/api` exports (ported, redesigned, subsumed, rejected or missing) and ranks what is
 missing; its opening section recomputes the totals and the ranking.
+
+## 10. Harvest map
+
+Ruling of 2026-11-26: this folder is a frozen reference, not a layer the repository adopts. Its wire shape stays
+as built, nothing more of `@osdk/api` is ported, and no CI lane runs its suite, so it may stop compiling on a
+later Effect version. Four parts are worth lifting. A part moves only when a slice has a concrete use for it, in
+that slice's pull request, and lands in the home the table names.
+
+| Part | Source | Home on first pull | Pull it when |
+| --- | --- | --- | --- |
+| Filter and object-set algebra | `src/Filter/Filter.model.ts`, `Filter.behavior.ts`, `Filter.policy.ts`; `src/ObjectSet/ObjectSet.model.ts`, `ObjectSet.behavior.ts`, `ObjectSet.policy.ts` | the slice that pulls it; `foundation/modeling` only when a second slice wants it, through the promotion gate | a tool or query needs a filter a caller composes, in place of hand-written parameters for each task |
+| Action validate, apply, edits | the pattern of `src/Model/Model.action.ts` and `src/Client/Client.operations.ts`, not the Foundry schemas of `src/Action` | the slice that owns the write | a write needs a dry-run report a person approves and a record of what changed |
+| Value and geo primitives | `src/Value/Value.model.ts` (`LongValue`, `DecimalValue`, `TimestampValue`), `src/Geo/Geo.model.ts`, `src/Page/Page.model.ts` | `@beep/schema` | a boundary carries a 64-bit integer or a decimal as text, GeoJSON, or a page token |
+| In-memory world as oracle | the technique of `src/Faux/Faux.behavior.ts` (`evaluateObjectSet`, `matchesFilter`) | the tests of the store being checked | a store or projection needs a reference interpreter to be property-tested against |
