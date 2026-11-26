@@ -236,6 +236,9 @@ describe("checkout repository partitions", () => {
     const rulingsNamed = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "repo.rulings" });
     expect(sessionLedgerFileName(presenceNamed)).toBe("gitlab.example.com__team__repo%2Epresence.jsonl");
     expect(sessionPresenceFileName(repo)).toBe("gitlab.example.com__team__repo.presence.jsonl");
+    expect(sessionPresenceFileName(presenceNamed)).toBe("gitlab.example.com__team__repo%2Epresence.presence.jsonl");
+    expect(sessionPresenceFileName(presenceNamed)).not.toBe(sessionPresenceFileName(repo));
+    expect(rulingsFileName(rulingsNamed)).toBe("gitlab.example.com__team__repo%2Erulings.rulings.jsonl");
     expect(registerFileName(rulingsNamed)).toBe("gitlab.example.com__team__repo%2Erulings.jsonl");
     expect(rulingsFileName(repo)).toBe("gitlab.example.com__team__repo.rulings.jsonl");
     expect(checkoutRepositoryStateKey({ host: "gitlab.example.com", owner: "team", name: "repo.presenced" })).toBe(
