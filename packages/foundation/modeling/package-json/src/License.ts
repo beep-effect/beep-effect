@@ -123,6 +123,10 @@ export const isValidSpdx = (value: string): boolean => {
  * and yields `Option.none()` for a spelling that is not one. Reach for
  * {@link isValidSpdx} when the question is instead "may a manifest carry this".
  *
+ * A rejected value reports the check's `message` annotation as its issue
+ * text: Effect's issue formatter prefers a check's `message` annotation to any
+ * string its predicate returns, so the check keeps its label in `title`.
+ *
  * **Example** (Decode manifest license strings)
  *
  * ```ts
@@ -142,8 +146,6 @@ export const isValidSpdx = (value: string): boolean => {
 export const SpdxLicense = S.String.pipe(
   S.check(
     S.makeFilterGroup([
-      // effect 4.0.6 renders a check's `message` annotation as the issue message,
-      // ahead of any string the predicate returns, so the label lives in `title`.
       S.makeFilter(
         isValidSpdx,
         $I.annote("SpdxLicenseCheck", {

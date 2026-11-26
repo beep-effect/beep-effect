@@ -119,7 +119,6 @@ const PACKAGE_MANAGER_NAME_RE = /^[a-z]+$/;
 
 const SemVerRangeString: S.String = S.String.pipe(
   S.check(
-    // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
     S.makeFilter(
       (value) => Str.isNonEmpty(value) && Result.isSuccess(Range.parseResult(value)),
       $I.annote("SemVerRangeStringCheck", {
@@ -266,6 +265,13 @@ const fromParts: {
  * The first `+` after the `@` begins the integrity component, exactly as in
  * the strict grammar — the version position of this field never carries
  * semver build metadata.
+ *
+ * **Gotchas**
+ *
+ * A `range` that fails its semver check reports the check's `message`
+ * annotation as its issue text: Effect's issue formatter prefers a check's
+ * `message` annotation to any string its predicate returns, so the check keeps
+ * its label in `title`.
  *
  * **Example** (Decode a package manager semver range)
  *

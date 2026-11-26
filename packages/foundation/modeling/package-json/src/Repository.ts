@@ -127,7 +127,6 @@ const decodeRepositoryFields = S.decodeUnknownEffect(RepositoryFields);
 const decodeBugsFields = S.decodeUnknownEffect(BugsFields);
 
 // decision: wire-replay-guarded-by-faithfulness
-
 const isStringExpressibleRepository = (repository: Repository): boolean =>
   repository.type === undefined && repository.directory === undefined && R.isEmptyRecord(repository.rest ?? {});
 
