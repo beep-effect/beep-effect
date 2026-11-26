@@ -1,4 +1,7 @@
 import { $RepoWorkspacesId } from "@beep/identity/packages";
+import { getCatalogsFromWorkspaceManifest, mergeCatalogs } from "@pnpm/catalogs.config";
+import { parseCatalogProtocol } from "@pnpm/catalogs.protocol-parser";
+import { matchCatalogResolveResult, resolveFromCatalog } from "@pnpm/catalogs.resolver";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -6,17 +9,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-// The ONLY module that imports `@pnpm/catalogs.*`.
-//
-// Those four packages are what make this package integrated tier: they are
-// pnpm's catalog semantics, versioned to pnpm majors, and reimplementing them
-// would mean owning a moving spec with no oracle. Containing them behind one
-// module keeps the tier-3 blast radius to one file — if the quartet ever has to
-// be replaced or vendored, this is what changes.
-
-import { getCatalogsFromWorkspaceManifest, mergeCatalogs } from "@pnpm/catalogs.config";
-import { parseCatalogProtocol } from "@pnpm/catalogs.protocol-parser";
-import { matchCatalogResolveResult, resolveFromCatalog } from "@pnpm/catalogs.resolver";
 import type { Catalogs } from "@pnpm/catalogs.types";
 
 export type { Catalogs };
@@ -138,13 +130,10 @@ export declare namespace InlineCatalogBlocks {
  */
 export const inlineCatalogs = (manifest: InlineCatalogBlocks.Encoded): Catalogs => {
   if (manifest.catalog === undefined && manifest.catalogs === undefined) return {};
-  // pnpm throws when the default catalog is defined twice (a top-level
-  // `catalog:` *and* a `catalogs.default`). That is a malformed workspace file,
-  // which is a data condition, so it must not escape as a defect.
-  return Result.getOrElse(
-    Result.try(() => getCatalogsFromWorkspaceManifest({ catalog: manifest.catalog, catalogs: manifest.catalogs })),
-    () => ({})
+  const doubleDefaultCatalogThrowAsData = Result.try(() =>
+    getCatalogsFromWorkspaceManifest({ catalog: manifest.catalog, catalogs: manifest.catalogs })
   );
+  return Result.getOrElse(doubleDefaultCatalogThrowAsData, () => ({}));
 };
 
 /**
@@ -205,19 +194,15 @@ export const normalize = (raw: unknown): CatalogEntries => {
   );
 };
 
-/** An object's or array's own enumerable entries, keyed by property name. */
 const ownEntries = (value: object): ReadonlyArray<readonly [string, unknown]> => R.toEntries({ ...value });
 
-/** The range a catalog entry declares: the string itself, or a lockfile entry's `specifier`. */
 const rangeOfEntry = (value: unknown): O.Option<string> => {
   if (P.isString(value)) return O.some(value);
-  // Lockfile entries carry the declared range in `specifier`.
-  const specifier =
+  const lockfileEntrySpecifier =
     P.isObjectKeyword(value) && !P.isFunction(value) && "specifier" in value ? value.specifier : undefined;
-  return P.isString(specifier) ? O.some(specifier) : O.none();
+  return P.isString(lockfileEntrySpecifier) ? O.some(lockfileEntrySpecifier) : O.none();
 };
 
-/** One catalog's usable `dependency → range` entries, in order. */
 const usableEntries = (catalog: object): Record<string, string> =>
   R.fromEntries(
     A.getSomes(

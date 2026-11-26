@@ -30,52 +30,23 @@ import { loadAllTestCases } from "./support/suite.ts";
 
 const allCases = loadAllTestCases();
 
-/** Deep comparison that treats NaN as equal to itself (parity with the conformance harness). */
-function deepEqual(a: unknown, b: unknown): boolean {
-  // Object.is already treats NaN as equal to itself.
+function deepEqualWithNaN(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (A.isArray(a) || A.isArray(b)) return A.isArray(a) && A.isArray(b) && arraysEqual(a, b);
   return P.isObject(a) && P.isObject(b) && recordsEqual(a, b);
 }
 
 function arraysEqual(a: ReadonlyArray<unknown>, b: ReadonlyArray<unknown>): boolean {
-  return a.length === b.length && A.every(a, (v, i) => deepEqual(v, b[i]));
+  return a.length === b.length && A.every(a, (v, i) => deepEqualWithNaN(v, b[i]));
 }
 
 function recordsEqual(a: { readonly [x: PropertyKey]: unknown }, b: { readonly [x: PropertyKey]: unknown }): boolean {
   const keysA = R.keys(a);
-  return keysA.length === R.keys(b).length && A.every(keysA, (k) => deepEqual(a[k], b[k]));
+  return keysA.length === R.keys(b).length && A.every(keysA, (k) => deepEqualWithNaN(a[k], b[k]));
 }
 
-// ── Known-defect ledgers (exact-match ratchets) ─────────────────────────────
-//
-// Every id below is a REAL open defect on a corpus-exotic shape, pinned so the
-// property still guards the rest of the corpus while the defect is tracked.
-// The assertion compares the failure set EXACTLY: a new failure fails the
-// suite (regression), and a fixed case fails it too until its id is removed
-// here (the ratchet). Do not add an id without classifying it against the
-// released line first.
-//
-// Classification, verified against origin/main (the released 0.7.0 engine) on
-// 2026-08-12:
-// - PRE-EXISTING on main (explicit-key, empty-key, tag-only and block-scalar
-//   edge shapes; independent of this branch): M2N8/00, M2N8/01, T26H, T4YY,
-//   WZ62 (idempotence); F6MC, R4YG, T26H, T4YY, WZ62, X38W, ZWK4 (meaning).
-//
-// NKF9, RZP5 and XW4D sat here as "comment-convergence gaps" until #348 found
-// what they actually were: two comment-LOSS defects, not slow convergence.
-// RZP5/XW4D — the explicit-key branch of the block-mapping stringifier never
-// emitted the value node's own `commentBefore`, unlike every sibling branch.
-// NKF9 — a mapping whose last pair had a null value swallowed the terminal
-// own-line comment while looking for a value that was not there, losing it on
-// a SINGLE pass. Both fixed; ids removed from this ledger.
-// Round 3 preserves tagged empty scalar separators (WZ62) and alias-key
-// separators (X38W). WZ62 now converges too; both have regressions below.
-// M2N8/00 and M2N8/01 converged once a compact explicit key stopped losing its
-// mapping's start marker and a `? k: v` key stopped absorbing its own `:` value.
 const KNOWN_NON_IDEMPOTENT: ReadonlyArray<string> = ["T26H", "T4YY"];
 
-// F6MC and R4YG now preserve meaning; keep them outside the defect ratchet.
 const KNOWN_MEANING_CHANGES: ReadonlyArray<string> = ["T26H", "T4YY", "ZWK4"];
 
 describe("format properties over the yaml-test-suite corpus", () => {
@@ -108,10 +79,10 @@ describe("format properties over the yaml-test-suite corpus", () => {
     const failures: string[] = [];
     for (const tc of allCases) {
       const before = Yaml.parseAllResult(tc.yaml);
-      if (Result.isFailure(before)) continue; // unparseable input — idempotence above still covers it
+      if (Result.isFailure(before)) continue;
       const formatted = YamlFormat.formatToString(tc.yaml);
       const after = Yaml.parseAllResult(formatted);
-      if (Result.isFailure(after) || !deepEqual(Result.getOrThrow(after), Result.getOrThrow(before))) {
+      if (Result.isFailure(after) || !deepEqualWithNaN(Result.getOrThrow(after), Result.getOrThrow(before))) {
         failures.push(tc.id);
       }
     }

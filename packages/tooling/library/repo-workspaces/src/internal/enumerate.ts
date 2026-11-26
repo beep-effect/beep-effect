@@ -1,26 +1,17 @@
 import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
-
-// The `packages:` enumerator. `@beep/glob` classifies the pattern set and
-// tells us, per wildcard, whether it can cross a segment boundary; when it can,
-// a trailing `/**` earns a real descent rather than a one-level read.
-//
-// The descent is a WORKLIST, not a recursion: it cannot overflow the stack, so
-// there is no cap to get wrong. It is bounded by depth, by a visited-directory
-// budget, and by an unconditional node_modules / .git prune.
-
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { MAX_ENUMERATION_DEPTH } from "./limits.ts";
 import { badMaxDepthMessage, excludedBy, isPruned, isValidMaxDepth, joinRelative, Traversal } from "./traverse.ts";
 import type { GlobPattern, GlobSet } from "@beep/glob";
@@ -117,8 +108,7 @@ export const EnumerationFailureKind = LiteralKit([
  */
 export type EnumerationFailureKind = typeof EnumerationFailureKind.Type;
 
-/** Builds one existing plain failure case without a constructor default. */
-const enumerationFailureCase = <const Kind extends EnumerationFailureKind>(kind: S.Literal<Kind>) => {
+const plainFailureCaseNoDefault = <const Kind extends EnumerationFailureKind>(kind: S.Literal<Kind>) => {
   const identifier: string = `EnumerationFailure.${kind.literal}`;
   return S.Struct({
     kind: kind.pipe(
@@ -150,10 +140,10 @@ const enumerationFailureCase = <const Kind extends EnumerationFailureKind>(kind:
  */
 export const EnumerationFailure = EnumerationFailureKind.mapMembers(
   ([missingBaseDir, depthExceeded, budgetExceeded, unreadableDirectory]) => [
-    enumerationFailureCase(missingBaseDir),
-    enumerationFailureCase(depthExceeded),
-    enumerationFailureCase(budgetExceeded),
-    enumerationFailureCase(unreadableDirectory),
+    plainFailureCaseNoDefault(missingBaseDir),
+    plainFailureCaseNoDefault(depthExceeded),
+    plainFailureCaseNoDefault(budgetExceeded),
+    plainFailureCaseNoDefault(unreadableDirectory),
   ]
 ).pipe(
   S.toTaggedUnion("kind"),
@@ -203,7 +193,7 @@ export class EnumerateOptions extends S.Opaque<EnumerateOptions, { readonly bran
     skipMissingBaseDirs: S.optionalKey(S.Boolean).pipe(
       $I.annoteKey("EnumerateOptions.skipMissingBaseDirs", {
         description:
-          "Whether a wildcard whose enumeration base directory is absent selects nothing instead of failing.",
+          "Whether a wildcard whose enumeration base directory is absent selects nothing instead of failing, as a filesystem glob does: git keeps no empty directory, so a base whose last member was deleted is absent from a fresh checkout.",
       })
     ),
     /** Directory names that hold no member at any depth. Defaults to none. */
@@ -233,7 +223,6 @@ export declare namespace EnumerateOptions {
   export type Encoded = typeof EnumerateOptions.Encoded;
 }
 
-/** Strip a trailing slash from `GlobPattern.enumerationPrefix` to get a relative directory. */
 const baseOf = (pattern: GlobPattern): string => Str.replace(/\/$/, "")(pattern.enumerationPrefix);
 
 /**
@@ -253,17 +242,9 @@ interface EnumerationScope {
   readonly skipsPath: (relative: string) => boolean;
 }
 
-/** Whether `absolute` holds a `package.json`; an unreadable probe is `false`. */
 const isPackageAt = (scope: EnumerationScope, absolute: string): Effect.Effect<boolean> =>
   scope.fs.exists(scope.path.join(absolute, "package.json")).pipe(Effect.orElseSucceed(() => false));
 
-/**
- * Whether a root-relative path has a segment the enumeration skips.
- *
- * **Details**
- *
- * Without skipped names nothing is skipped and no path is split.
- */
 const skipsPathOf = (names: ReadonlyArray<string>): ((relative: string) => boolean) => {
   const skipped = HashSet.fromIterable(names);
   return HashSet.isEmpty(skipped)
@@ -271,36 +252,17 @@ const skipsPathOf = (names: ReadonlyArray<string>): ((relative: string) => boole
     : (relative) => A.some(Str.split(relative, "/"), (segment) => HashSet.has(skipped, segment));
 };
 
-/** Whether `absolute` is a directory; an unreadable probe is `false`. */
 const isDirectoryAt = (scope: EnumerationScope, absolute: string): Effect.Effect<boolean> =>
   scope.fs.stat(absolute).pipe(
     Effect.map((info) => info.type === "Directory"),
     Effect.orElseSucceed(() => false)
   );
 
-/**
- * Whether `real` is `canonicalRoot` or lies beneath it.
- *
- * **Details**
- *
- * Both paths are already canonical, so a lexical `relative` decides it: a
- * result that climbs (`..`) or stays absolute (another drive) is outside.
- */
 const isWithin = (path: Path.Path, canonicalRoot: string, real: string): boolean => {
   const relative = path.relative(canonicalRoot, real);
   return relative !== ".." && !Str.startsWith(`..${path.sep}`)(relative) && !path.isAbsolute(relative);
 };
 
-/**
- * The containment probe for one enumeration.
- *
- * **Details**
- *
- * Off, every directory is admitted without a probe. On, the root is
- * canonicalized once and each probed directory is canonicalized through
- * `realPath`; a directory whose real path cannot be resolved (a dangling link)
- * is not admitted. A root that cannot be canonicalized is compared as given.
- */
 const containmentOf = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   path: Path.Path,
@@ -316,19 +278,16 @@ const containmentOf = Effect.fnUntraced(function* (
     );
 });
 
-/** Whether `absolute` is a directory the enumeration's containment admits. */
 const isAdmittedDirectoryAt = (scope: EnumerationScope, absolute: string): Effect.Effect<boolean> =>
   Effect.flatMap(isDirectoryAt(scope, absolute), (directory) =>
     directory ? scope.contains(absolute) : Effect.succeed(false)
   );
 
-/** A shared-traversal stop, materialized as this module's failure record. */
 const failureOf = (
   stop: { readonly kind: EnumerationFailureKind; readonly detail: string },
   pattern: string
 ): EnumerationFailure => ({ kind: stop.kind, pattern, detail: stop.detail });
 
-/** A literal include that names a package directory, as an `included` entry. */
 const literalHit = Effect.fnUntraced(function* (
   scope: EnumerationScope,
   literal: string
@@ -339,37 +298,15 @@ const literalHit = Effect.fnUntraced(function* (
   return (yield* isPackageAt(scope, absolute)) ? O.some([literal, absolute] as const) : O.none();
 });
 
-/**
- * Literals: an exact lookup, no directory read at all.
- *
- * **Details**
- *
- * `Effect.forEach` defaults to concurrency 1, so the explicit bound is what
- * lets independent `package.json` existence probes overlap.
- */
+const OVERLAPPING_LITERAL_PROBES = 10;
+
 const includeLiterals = Effect.fnUntraced(function* (scope: EnumerationScope, literals: ReadonlyArray<string>) {
-  const hits = yield* Effect.forEach(literals, (literal) => literalHit(scope, literal), { concurrency: 10 });
+  const hits = yield* Effect.forEach(literals, (literal) => literalHit(scope, literal), {
+    concurrency: OVERLAPPING_LITERAL_PROBES,
+  });
   for (const [relative, absolute] of A.getSomes(hits)) MutableHashMap.set(scope.included, relative, absolute);
 });
 
-/**
- * One frame's directory listing.
- *
- * **Details**
- *
- * A directory that vanished between the parent's listing and this read is a
- * benign race — treat it as empty. Anything else (permission denied, an IO
- * error) means a subtree we were asked to enumerate is unreadable, and
- * answering with "no packages there" would be a WRONG ANSWER dressed as an
- * empty one.
- *
- * This is deliberately NOT `@beep/walker`'s per-probe absorption. Walker
- * absorbs because one unreadable ANCESTOR must not hide a valid root above it
- * — the walk continues upward and can still succeed. This is DOWNWARD
- * enumeration: a swallowed subtree is silently missing membership, which is
- * the same silent-degradation shape as the trailing-`/**` bug this module
- * exists to fix.
- */
 const readFrame = (
   scope: EnumerationScope,
   wildcard: GlobPattern,
@@ -387,17 +324,8 @@ const readFrame = (
     )
   );
 
-/** Whether a listed entry is never visited: an unconditional prune or a skipped directory name. */
 const skipsEntry = (scope: EnumerationScope, entry: string): boolean => isPruned(entry) || scope.skipsPath(entry);
 
-/**
- * Whether the admitted directory at `relative` is a package `wildcard` selects.
- *
- * **Details**
- *
- * The `package.json` probe runs only for a directory the wildcard matches and
- * no exclude rejects.
- */
 const isSelectedPackageAt = (
   scope: EnumerationScope,
   wildcard: GlobPattern,
@@ -406,19 +334,6 @@ const isSelectedPackageAt = (
 ): Effect.Effect<boolean> =>
   wildcard.matches(relative) && !scope.isExcluded(relative) ? isPackageAt(scope, absolute) : Effect.succeed(false);
 
-/**
- * One listed entry: include it when it is a selected package, and descend
- * into it when the pattern crosses segments.
- *
- * **Details**
- *
- * Depth is checked BEFORE acceptance, not merely before descent. The cap
- * bounds what the traversal ENUMERATES; a directory past it is out of scope
- * entirely. Gating only the descent is what let the sync copy return a package
- * one level beyond the cap that this path rejected. Only a segment-crossing
- * pattern earns a descent: `packages/*` reads one level, correctly for that
- * pattern.
- */
 const visitEntry = Effect.fnUntraced(function* (
   scope: EnumerationScope,
   wildcard: GlobPattern,
@@ -439,7 +354,6 @@ const visitEntry = Effect.fnUntraced(function* (
   if (wildcard.crossesSegments) traversal.push(frame, relative, absolute);
 });
 
-/** An absent wildcard base: a `missingBaseDir` failure, or nothing at all with `skipMissingBaseDirs`. */
 const missingBase = (
   scope: EnumerationScope,
   wildcard: GlobPattern,
@@ -449,17 +363,6 @@ const missingBase = (
     ? Effect.void
     : Effect.fail({ kind: "missingBaseDir", pattern: wildcard.source, detail: base === "" ? scope.root : base });
 
-/**
- * Whether the wildcard base `absolute` is a directory.
- *
- * **Details**
- *
- * Only a confirmed absence reads as "no directory": a `stat` that fails
- * `NotFound`, or an entry that is not a directory. Any other `stat` failure
- * (permission denied, an I/O error) fails `unreadableDirectory`, as an
- * unreadable frame does, so `skipMissingBaseDirs` cannot turn an unreadable
- * base into an empty selection.
- */
 const isBaseDirectoryAt = (
   scope: EnumerationScope,
   wildcard: GlobPattern,
@@ -479,28 +382,12 @@ const isBaseDirectoryAt = (
     )
   );
 
-/**
- * One wildcard include, walked with THE shared traversal — the same state
- * machine `WorkspacesSync` drives.
- *
- * **Details**
- *
- * A missing enumeration base fails: that is what catches a typo in
- * `packages:` instead of silently discovering nothing. With
- * `skipMissingBaseDirs` it selects nothing instead, as a filesystem glob
- * does: git keeps no empty directory, so a base whose last member was
- * deleted is absent from a fresh checkout. A base that cannot be read fails
- * `unreadableDirectory` either way, and a base under a skipped directory name
- * selects nothing before it is probed.
- */
 const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, wildcard: GlobPattern) {
   const base = baseOf(wildcard);
   if (scope.skipsPath(base)) return;
   const absoluteBase = scope.path.join(scope.root, base);
   if (!(yield* isBaseDirectoryAt(scope, wildcard, base, absoluteBase)))
     return yield* missingBase(scope, wildcard, base);
-  // A base that exists but leaves the root is not a typo: there is simply
-  // nothing inside the root to enumerate under it.
   if (!(yield* scope.contains(absoluteBase))) return;
   const traversal = new Traversal(base, absoluteBase, scope.maxDepth);
   for (let current = traversal.next(); current !== undefined; current = traversal.next()) {
@@ -515,14 +402,6 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
   }
 });
 
-/**
- * Every enumeration option with its default applied.
- *
- * **Details**
- *
- * `maxDepth` is defaulted here but validated by {@link enumerate}, so an
- * invalid bound stays a defect rather than a typed failure.
- */
 const resolvedOptionsOf = (options: EnumerateOptions.Encoded = {}) => ({
   maxDepth: options.maxDepth ?? MAX_ENUMERATION_DEPTH,
   containWithinRoot: options.containWithinRoot ?? false,
@@ -587,9 +466,6 @@ export const enumerate: {
     options?: EnumerateOptions.Encoded
   ): Effect.fn.Return<ReadonlyArray<EnumeratedDirectory>, EnumerationFailure, FileSystem.FileSystem | Path.Path> {
     const { maxDepth, containWithinRoot, skipMissingBaseDirs, skipDirectoryNames } = resolvedOptionsOf(options);
-    // A bad bound is a PROGRAMMER error, not a data condition — a defect, not a
-    // typed failure. The predicate is shared with the sync hatch so the two
-    // entry points cannot disagree about what a valid bound is.
     if (!isValidMaxDepth(maxDepth)) {
       return yield* Effect.die(EnumerationOptionsError.make({ message: `enumerate: ${badMaxDepthMessage(maxDepth)}` }));
     }
