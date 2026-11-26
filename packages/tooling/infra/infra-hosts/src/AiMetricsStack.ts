@@ -67,7 +67,7 @@ const composeProjectTemplate = '{{ with index .Config.Labels "com.docker.compose
 
 const volumeProjectTemplate = '{{ with index .Labels "com.docker.compose.project" }}{{ . }}{{ end }}';
 
-const healthStatusTemplate = "{{ if .State.Health }}{{ .State.Health.Status }}{{ else }}none{{ end }}";
+const containerStateTemplate = "{{ .State.Status }}";
 
 const tailnetPortStatePath = (config: AiMetricsHostConfig): string =>
   `${config.legacyCompose.configRoot}/phoenix-tailnet-https-port`;
@@ -265,9 +265,17 @@ export const renderTailscaleServeCommand = (config: AiMetricsHostConfig): string
   });
 
 /**
- * Health gate: the container's Docker healthcheck reports healthy, Phoenix
- * answers on loopback and, for `prod`, Tailscale Serve fronts it and the public
- * URL answers. The step's exit status is the result: a failure fails the deploy.
+ * Health gate: the container is running and answers `/healthz` on its own
+ * published loopback port and, for `prod`, Tailscale Serve fronts it and the
+ * public URL answers. The step's exit status is the result: a failure fails the
+ * deploy.
+ *
+ * **Gotchas**
+ *
+ * The Phoenix image ships no shell, and the Docker provider sets a healthcheck
+ * through `docker run --health-cmd`, which always runs in `/bin/sh`. The
+ * container therefore carries no Docker healthcheck, and this gate probes
+ * `/healthz` from the host instead.
  *
  * **Example** (Render the rehearsal health gate)
  * ```ts
@@ -305,11 +313,12 @@ export const renderHealthCommand = ({
     lines: [
       "set -euo pipefail",
       `container=${shellQuote(containerName)}`,
+      `healthz=${shellQuote(`http://127.0.0.1:${hostPort}/healthz`)}`,
       "for attempt in $(seq 1 36); do",
-      `  status="$(docker inspect -f ${shellQuote(healthStatusTemplate)} "\${container}")"`,
-      '  [ "${status}" = "healthy" ] && break',
+      `  state="$(docker inspect -f ${shellQuote(containerStateTemplate)} "\${container}")"`,
+      '  [ "${state}" = "running" ] && curl -fsS --max-time 5 "${healthz}" >/dev/null 2>&1 && break',
       '  if [ "${attempt}" -eq 36 ]; then',
-      '    printf \'Phoenix container %s is %s\\n\' "${container}" "${status}" >&2',
+      '    printf \'Phoenix container %s is %s and %s does not answer\\n\' "${container}" "${state}" "${healthz}" >&2',
       '    docker logs --tail 80 "${container}" >&2 || true',
       "    exit 1",
       "  fi",
@@ -408,19 +417,6 @@ export const renderRollbackToComposeCommand = (config: AiMetricsHostConfig): str
     ],
   });
 
-const phoenixHealthcheck = (config: AiMetricsHostConfig): Docker.Container.Healthcheck => ({
-  cmd: [
-    "CMD",
-    "python3",
-    "-c",
-    `import urllib.request; urllib.request.urlopen('http://127.0.0.1:${config.phoenix.port}/healthz', timeout=5)`,
-  ],
-  interval: "30 seconds",
-  timeout: "10 seconds",
-  retries: 3,
-  startPeriod: "60 seconds",
-});
-
 const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiMetricsHostConfig) {
   const context = yield* Docker.Context("Host", {
     name: config.dockerContextName,
@@ -458,7 +454,6 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
     ports: [{ external: `127.0.0.1:${config.phoenix.port}`, internal: config.phoenix.port }],
     volumes: [{ hostPath: data.name, containerPath: config.phoenix.dataDir }],
     networks: [{ name: network.name }],
-    healthcheck: phoenixHealthcheck(config),
     labels: { "beep.infra-hosts/compose-retired": Output.map(retire.hash, () => "true") },
   });
   const serve = yield* Command.Exec("TailscaleServe", {
@@ -513,7 +508,6 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
     ports: [{ external: `127.0.0.1:${config.phoenix.rehearsalPort}`, internal: config.phoenix.port }],
     volumes: [{ hostPath: data.name, containerPath: config.phoenix.dataDir }],
     networks: [{ name: network.name }],
-    healthcheck: phoenixHealthcheck(config),
     labels: { "beep.infra-hosts/preflight": Output.map(preflight.hash, () => "passed") },
   });
   yield* Command.Exec("Health", {

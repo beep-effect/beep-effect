@@ -72,7 +72,7 @@ const containerProps = (recording: Recording) =>
     readonly ports: ReadonlyArray<{ readonly external: string; readonly internal: number }>;
     readonly volumes: ReadonlyArray<{ readonly hostPath: string; readonly containerPath: string }>;
     readonly networks: ReadonlyArray<{ readonly name: string }>;
-    readonly healthcheck: { readonly cmd: ReadonlyArray<string> };
+    readonly healthcheck?: unknown;
   };
 
 describe("AI metrics host stack", () => {
@@ -106,7 +106,7 @@ describe("AI metrics host stack", () => {
       expect(phoenix.ports).toEqual([{ external: "127.0.0.1:6006", internal: 6006 }]);
       expect(phoenix.volumes).toEqual([{ hostPath: dataVolume, containerPath: "/data" }]);
       expect(phoenix.networks).toEqual([{ name: "beep-ai-metrics" }]);
-      expect(phoenix.healthcheck.cmd[0]).toBe("CMD");
+      expect(phoenix.healthcheck).toBeUndefined();
 
       const commands = A.map(recording.commands, ({ command }) => command);
       expect(commands).toHaveLength(4);

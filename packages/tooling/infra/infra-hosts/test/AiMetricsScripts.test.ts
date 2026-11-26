@@ -42,15 +42,16 @@ const fakeHost = A.join(
     '    volume) printf "%s" "${FAKE_VOLUME_PROJECT-}" ;;',
     '    container) printf "%s" "${FAKE_CONTAINER_PROJECT-}" ;;',
     '    ps) [ -n "${FAKE_PORT_HOLDER-}" ] && printf "%s\\n" "${FAKE_PORT_HOLDER}"; return 0 ;;',
-    "    inspect) printf healthy ;;",
+    '    inspect) printf "%s" "${FAKE_STATE-running}" ;;',
     '    port) printf "%s\\n" "${FAKE_PUBLISHED-}" ;;',
     "  esac",
     "}",
     'ss() { printf "%s" "${FAKE_SS-}"; }',
-    "curl() { return 0; }",
+    'curl() { [ -z "${FAKE_HEALTHZ_DOWN-}" ]; }',
+    "sleep() { return 0; }",
     "systemctl() { return 0; }",
     'tailscale() { [ "$1 $2" = "serve status" ] && printf "127.0.0.1:6006\\n"; return 0; }',
-    "export -f ssh docker ss curl systemctl tailscale",
+    "export -f ssh docker ss curl sleep systemctl tailscale",
   ],
   "\n"
 );
@@ -183,6 +184,24 @@ describe("AI metrics host step scripts", () => {
         const other = yield* runStep(command, { FAKE_PUBLISHED: "127.0.0.1:16007" });
         expect(other.exitCode).toBe(1);
         expect(other.stderr).toContain("is not published by container beep-ai-metrics-phoenix-dev_operator");
+      })
+    );
+
+    it.effect("Health fails when Phoenix stops running or never answers /healthz", () =>
+      Effect.gen(function* () {
+        const config = yield* decodeConfig(configBody);
+        const command = renderHealthCommand({
+          config,
+          containerName: "beep-ai-metrics-phoenix-dev_operator",
+          hostPort: 16006,
+          kind: "rehearsal",
+        });
+        const silent = yield* runStep(command, { FAKE_PUBLISHED: "127.0.0.1:16006", FAKE_HEALTHZ_DOWN: "1" });
+        expect(silent.exitCode).toBe(1);
+        expect(silent.stderr).toContain("is running and http://127.0.0.1:16006/healthz does not answer");
+        const exited = yield* runStep(command, { FAKE_PUBLISHED: "127.0.0.1:16006", FAKE_STATE: "exited" });
+        expect(exited.exitCode).toBe(1);
+        expect(exited.stderr).toContain("is exited and");
       })
     );
   });

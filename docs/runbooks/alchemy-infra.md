@@ -545,11 +545,16 @@ hold machine facts and `op://` references, never a resolved secret; the schema
 rejects anything else before a resource is read.
 
 - AI metrics (`AiMetricsHostConfig`): `sshDestination` (the ssh_config alias of
-  the wrapped dankserver route), `phoenix.image` (pinned; the Pulumi stack
-  config pins `arizephoenix/phoenix:15.5.0`), `tailnet.fqdn`,
+  the wrapped dankserver route), `phoenix.image` (pinned; copy the `image:`
+  line of the live Compose file, tag and digest, so the cutover never runs an
+  older Phoenix against a volume a newer one migrated), `tailnet.fqdn`,
   `legacyCompose.configRoot` (the directory holding today's Compose file and the
-  Tailscale port state file), `secretRefs.hashSalt` and
-  `secretRefs.rawArchiveKey`. Container, network, unit and port fields default
+  Tailscale port state file; read it from the unit's `WorkingDirectory`,
+  `systemctl --user cat ai-metrics-phoenix.service`), `secretRefs.hashSalt` and
+  `secretRefs.rawArchiveKey` (`op://BEEP_SECRETS/ai-metrics/hash-salt` and
+  `op://BEEP_SECRETS/ai-metrics/raw-archive-key`; the agent service account
+  reads only `BEEP_SECRETS`, so the Pulumi stack's `op://TBK/...` references do
+  not resolve). Container, network, unit and port fields default
   to the Compose deployment's values; the data volume defaults to
   `<legacyCompose.composeProject>_phoenix_data`, today
   `beep-ai-metrics-dankserver_phoenix_data`.
@@ -606,8 +611,11 @@ Cutover, in order:
    it under `<legacy config root>/retired-compose/` and refuses to continue if a
    Compose container named `beep-ai-metrics-phoenix` is still present; the
    container starts on the same volume; TailscaleServe re-points HTTPS 8447 at
-   loopback 6006; Health waits for the Docker healthcheck, then checks loopback,
-   Serve and the public URL. A failure in any step fails the deploy.
+   loopback 6006; Health waits until the container runs and answers `/healthz`
+   on its own published loopback port, then checks Serve and the public URL. A
+   failure in any step fails the deploy. The Phoenix image ships no shell, so
+   the container carries no Docker healthcheck (`docker ps` shows no health
+   column); the Health step is the gate.
 3. Verify by hand: the Phoenix UI at the stack's `phoenixUrl` lists the existing
    projects (the data survived), and a test span posted to `otlpTraceUrl`
    appears. Then `bunx alchemy drift --stage prod` exits 0.
