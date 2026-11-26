@@ -315,7 +315,7 @@ describe("fix routes only through YamlEdit.applyAll — structural pin", () => {
       assert.isAbove(
         specifiers.length,
         0,
-        `${file}: the import walker found no imports; a walker that finds none would pass vacuously, so line comments are stripped before block comments (a \`/*\` inside a \`//\` comment, a glob like \`src/internal/rules/*\`, must not open a phantom block comment)`
+        `${file}: the import walker found no imports; a walker that finds none would pass vacuously. Line comments are stripped before block comments because a \`/*\` inside a \`//\` comment (a glob like \`src/internal/rules/*\`) must not open a phantom block comment that swallows imports`
       );
       for (const specifier of specifiers) {
         assert.isFalse(

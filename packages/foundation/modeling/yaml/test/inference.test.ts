@@ -30,7 +30,7 @@ const combineAll = (evidences: ReadonlyArray<StyleEvidence>): StyleEvidence =>
 type StyleConflict = YamlStyleConflictError["conflicts"][number];
 type StyleCandidate = StyleConflict["candidates"][number];
 
-const candidateSource = (text: string, candidate: StyleCandidate | undefined): string => {
+const candidateSourceOrEmpty = (text: string, candidate: StyleCandidate | undefined): string => {
   const offset = candidate?.offset ?? 0;
   return Str.slice(candidate?.offset, offset + (candidate?.length ?? 0))(text);
 };
@@ -43,12 +43,8 @@ const assertQuoteConflictCandidates = (text: string, conflict: StyleConflict | u
   );
   const single = O.getOrUndefined(A.findFirst(candidates, (c) => c.value === "single"));
   const double = O.getOrUndefined(A.findFirst(candidates, (c) => c.value === "double"));
-  assert.strictEqual(
-    candidateSource(text, single),
-    "'x'",
-    "the candidate's source text; a missing candidate keeps empty-window semantics"
-  );
-  assert.strictEqual(candidateSource(text, double), '"y"');
+  assert.strictEqual(candidateSourceOrEmpty(text, single), "'x'");
+  assert.strictEqual(candidateSourceOrEmpty(text, double), '"y"');
 };
 
 describe("inference identity regressions", () => {

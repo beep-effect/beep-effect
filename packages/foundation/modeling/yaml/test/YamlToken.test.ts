@@ -66,9 +66,9 @@ describe("YamlTokens", () => {
       assert.strictEqual(comment?.text, "# note");
     });
 
-    it("is TOTAL: malformed input succeeds with error-kind tokens, never a failure", () => {
-      const tokensParseValidityMustLint = YamlTokens.tokenize("a: [unclosed\n\tb:\t:");
-      assertSuccess(tokensParseValidityMustLint, Result.getOrThrow(tokensParseValidityMustLint));
+    it("is TOTAL: malformed input succeeds with error-kind tokens, never a failure, so linting runs on unparseable text", () => {
+      const result = YamlTokens.tokenize("a: [unclosed\n\tb:\t:");
+      assertSuccess(result, Result.getOrThrow(result));
     });
 
     it("tokenizes the empty string to an empty array", () => {

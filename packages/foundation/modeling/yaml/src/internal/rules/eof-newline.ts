@@ -75,6 +75,8 @@ const contentBreakDecidedByScalarOrUndefined = (
     ctx.lines,
     (line) => line.offset > scalar.offset && line.offset < scalar.offset + scalar.length && !isBlankText(line.text)
   );
+  // A wholly blank scalar gains a break only when an earlier body
+  // line was completed; its lone unfinished line already clips to one.
   if (O.isNone(firstContent))
     return A.some(ctx.lines, (line) => line.offset > scalar.offset && line.offset < lastLine.offset);
   const firstValueContent = A.findFirst(Str.split(String(scalar.value), "\n"), (line) => !isBlankText(line));
