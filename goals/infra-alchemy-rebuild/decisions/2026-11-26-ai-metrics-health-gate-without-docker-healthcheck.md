@@ -13,3 +13,9 @@ Config facts found live in the same session, now in the runbook:
 - The image pin copies the live Compose `image:` line, tag and digest. The `15.5.0` the runbook named would have run an older Phoenix against a volume that 22.0.1 migrated.
 - `legacyCompose.configRoot` comes from the unit's `WorkingDirectory`.
 - The secret references live in `BEEP_SECRETS`, the only vault the agent service account reads.
+- The live unit's `ExecStop` is `docker compose stop`, not `down`. The cutover runs `docker compose down` without `-v` after stopping the unit, because RetireCompose refuses while a container of the Compose project survives.
+
+Rollback for the prod cutover (also in the runbook):
+- RetireCompose deletes nothing. It disables the unit and moves the unit file into `<legacy config root>/retired-compose/`; the Compose root and its files stay on disk.
+- To return to Compose, run `alchemy destroy --stage prod`, which keeps the looked-up volume, then the stack's `operatorCommands.rollbackToCompose`, which restores the unit and starts it on the same volume.
+- If the data is damaged, stop the unit, restore the pre-cutover snapshot tarball into the volume with a throwaway container, and start the unit.
