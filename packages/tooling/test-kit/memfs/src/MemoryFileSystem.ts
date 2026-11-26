@@ -231,8 +231,6 @@ export interface MemoryFileSystemVolume {
   readonly text: (path: string) => string | undefined;
 }
 
-// Tells a volume subject apart from the optional port options in the dual
-// port constructors.
 const isVolume = (u: unknown): u is MemoryFileSystemVolume => P.hasProperty(u, "snapshot") && P.hasProperty(u, "paths");
 
 /**
@@ -376,7 +374,6 @@ export type MemoryFileSystemPromisesFaults = {
   ) => Promise<Uint8Array | string> | undefined;
 };
 
-// A handle member that is behavior: held by reference, recognized as a function.
 const declareFunction = <F>() => S.declare((u: unknown): u is F => P.isFunction(u));
 
 /**
@@ -402,6 +399,18 @@ const declareFunction = <F>() => S.declare((u: unknown): u is F => P.isFunction(
  * existing file fails `EEXIST`. A contradictory seed fails the same way,
  * with node's syscall for the failing step (`mkdir`, `open`, `symlink`,
  * `chmod`, `utime`).
+ *
+ * **Gotchas**
+ *
+ * - Parent presence is the port's `lstat`, so a dangling or looping link AS
+ *   the parent counts as present and the write itself fails `ENOENT` or
+ *   `ELOOP`, as `writeFileSync` does, never `EEXIST` from a mkdir over the
+ *   link. When a component higher up blocks the parent, the failure is the
+ *   errno and syscall of the write or link itself (`open`, `symlink`), never
+ *   the parent mkdir's.
+ * - `mkdir` answers as `mkdirSync(p, { recursive: true })` does: a dangling
+ *   link earlier in the path is `ENOENT`, where the `FileSystem` service,
+ *   modelling the node adapter's callback `fs.mkdir`, says `ENOTDIR`.
  *
  * **Example** (Write through a handle and read the volume)
  *
@@ -553,8 +562,6 @@ export interface MemoryFileSystemPortOptions<Faults> {
   readonly faults?: Faults | undefined;
 }
 
-// Fault maps and factories are behavior (functions and transient faults), so
-// the options schema holds them by reference behind a structural guard.
 const FaultsOption = S.declare(
   (u: unknown): u is MemoryFileSystemFaults | MemoryFileSystemFaultsFactory => P.isFunction(u) || P.isObject(u)
 ).pipe(
@@ -796,10 +803,6 @@ const handleContext = ({
   FileSystem.FileSystem | MemoryFileSystemVolume
 > => Context.make(FileSystem.FileSystem, fileSystem).pipe(Context.add(MemoryFileSystem.Volume, volume));
 
-// The one build path behind every seeded constructor: engine, seed (written
-// beneath any faults), view, then the optional fault wrapper over the service.
-// The mutators and ports use the RAW filesystem and view — they are setup and
-// inspection, not the code under test.
 const buildHandle: {
   (
     seed: MemoryFileSystemSeed,
@@ -819,34 +822,12 @@ const buildHandle: {
     yield* seedWith(raw, seed, options);
     const volume = makeVolumeService(engine);
     const fileSystem = options?.faults === undefined ? raw : wrapFaulty(raw, options.faults);
-    // `seedWith` has already rejected a relative root, so this is the normalized join base.
     const root = options?.root === undefined ? undefined : normalizeAbsolute(options.root);
-    // A mutator path: absolute as given; relative joined to the root (or to
-    // "/" without one). The join is deliberately NOT normalized: the engine
-    // resolves "." and ".." AFTER following links, POSIX-style, so
-    // "link/../x" lands where the link leads — as the host and the absolute
-    // spelling do. (Seed keys, by contrast, join lexically.) Errors still
-    // report the caller's own path.
     const at = (path: string) => (Str.startsWith("/")(path) ? path : `${root ?? ""}/${path}`);
     const parentOf = (path: string) =>
       Str.slice(0, Math.max(1, pipe(path, Str.lastIndexOf("/"), O.getOrElse(constant(-1)))))(path);
     const sync = makeSyncFileSystem(volume);
-    // Only creates a parent that is absent: an existing parent that is a file
-    // must reach the write itself, which fails ENOTDIR as `writeFileSync` does
-    // (a recursive mkdir over an existing file would say EEXIST instead).
-    // Presence is checked with the port's `lstat`: intermediate links and
-    // ".." resolve (so it agrees with the engine on an unnormalized path —
-    // never the lexical view), but the FINAL component is not followed. A
-    // dangling or looping link AS the parent is therefore present, so the
-    // write itself fails ENOENT / ELOOP, as `writeFileSync` does — never a
-    // mkdir over the link (EEXIST).
     const present = (path: string) => Result.isSuccess(Result.try(() => sync.lstat(path)));
-    // errno fidelity: a recursive mkdir fails with an errno only when some component blocks
-    // it — a non-directory, or a dangling or looping link HIGHER up (which
-    // makes `lstat` of the parent fail too). The call that follows walks
-    // the same component, so it is bound to fail on it: swallow the mkdir's
-    // errno and let that call report node's own errno and syscall (ENOENT /
-    // ELOOP / ENOTDIR on `open` or `symlink`, never the mkdir's).
     const ensureParent = (path: string) => {
       const parent = parentOf(path);
       return present(parent)
@@ -858,13 +839,6 @@ const buildHandle: {
             )
           );
     };
-    // `mkdir` stands in for `mkdirSync(p, { recursive: true })`, whose walk
-    // reports a dangling link EARLIER in the path as ENOENT; the engine
-    // models the node adapter's callback `fs.mkdir`, which says ENOTDIR
-    // there. The first component that does not resolve tells them apart:
-    // ENOENT from it can only be a dangling link (mkdir -p creates anything
-    // merely missing), while a file or a link through one answers ENOTDIR,
-    // as `mkdirSync` does.
     const mkdirSync = (path: string) =>
       raw.makeDirectory(path, { recursive: true }).pipe(
         Effect.mapError((error) => {
@@ -874,12 +848,12 @@ const buildHandle: {
           for (let index = 1; index < pieces.length; index++) {
             const prefix = A.join(pieces.slice(0, index + 1), "/");
             const resolved = resolvePath(volume, prefix);
-            const failure = Resolved.match(resolved, {
+            const danglingLinkOrOriginal = Resolved.match(resolved, {
               Failure: ({ code }) =>
                 code === "ENOENT" ? errnoError("makeDirectory", path, "ENOENT", undefined) : error,
               Success: () => undefined,
             });
-            if (failure !== undefined) return failure;
+            if (danglingLinkOrOriginal !== undefined) return danglingLinkOrOriginal;
           }
           return error;
         })
@@ -907,7 +881,6 @@ const buildHandle: {
       ),
       mkdir: (path) => runMutation(mkdirSync(at(path)), "makeDirectory", path),
       remove: (path) => runMutation(raw.remove(at(path), { recursive: true }), "remove", path),
-      // Only the link's own path resolves against the root; the target text is stored verbatim.
       symlink: dual(2, (target: string, path: string): void =>
         runMutation(Effect.andThen(ensureParent(at(path)), raw.symlink(target, at(path))), "symlink", path)
       ),
@@ -1327,6 +1300,12 @@ export class MemoryFileSystem {
    * directly; the tagged form exists for the `mode` option. Modes are
    * recorded and readable via `stat`, never enforced (see the class notes).
    *
+   * **Gotchas**
+   *
+   * The entry is built unchecked, as a seed literal is: an invalid mode or
+   * time reaches the volume and fails there, typed, as the same entry spelled
+   * by hand does.
+   *
    * **Example** (Inspect an explicit file mode)
    *
    * ```ts
@@ -1356,8 +1335,6 @@ export class MemoryFileSystem {
       content: string | Uint8Array,
       options?: { readonly mode?: number | undefined; readonly mtime?: number | undefined }
     ): MemoryFileSystemSeedFile =>
-      // Unchecked, as a seed literal is: an invalid mode or time reaches the
-      // volume and fails there, typed, as the same seed spelled by hand does.
       MemoryFileSystemSeedFile.make(
         {
           content,
@@ -1667,6 +1644,11 @@ export class MemoryFileSystem {
    * `code`, `syscall` and `path` — when the seed contradicts itself or the
    * `root` is invalid (`EINVAL`).
    *
+   * The root and seed keys are checked before anything is built, ahead of the
+   * same check inside the build, so the thrown `EINVAL` names the offending
+   * key in its `path` and message: the build's own failure is a typed
+   * `BadArgument` that carries no path and would surface as `seed ''`.
+   *
    * The handle reads the real clock, so writes do not follow `TestClock`.
    *
    * **Example** (Write and inspect one synchronous handle)
@@ -1688,12 +1670,6 @@ export class MemoryFileSystem {
     seed: MemoryFileSystemSeed = {},
     options?: MemoryFileSystemOptionsInput
   ): MemoryFileSystemHandle => {
-    // A bad root or seed key throws node's EINVAL naming the offending value
-    // in the path slot (and so in the message), before anything is built.
-    // This DUPLICATES the check `seedWith` makes inside `buildHandle` — on
-    // purpose: there the failure is a typed BadArgument, which carries no
-    // path, so `runNode` could only report `seed ''`. Validating here first is
-    // the only way the thrown error can name the key. Do not dedup it away.
     const applied = applyRoot(seed, options?.root);
     if (applied._tag === "Failure") throw nodeErrno("EINVAL", "seed", applied.failure.subject);
     return runNode(buildHandle(seed, options), (error) => ({

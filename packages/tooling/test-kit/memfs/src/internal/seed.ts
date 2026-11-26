@@ -1,6 +1,3 @@
-// KIT EXTENSION (seeding). The seed applier and the `root` option, kept out of
-// the facade so every seeded constructor shares one path.
-
 import { $MemfsId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -20,8 +17,6 @@ import type { PlatformError } from "effect/PlatformError";
 import type { MemoryFileSystemOptionsInput } from "../MemoryFileSystem.ts";
 
 const $I = $MemfsId.create("internal/seed");
-// The public seed models live here, beside the applier that reads them, but
-// keep the facade's identity: they are re-exported from it.
 const $Facade = $MemfsId.create("MemoryFileSystem");
 
 /**
@@ -210,14 +205,12 @@ export type MemoryFileSystemSeed = typeof MemoryFileSystemSeed.Type;
 
 const encoder = new TextEncoder();
 
-// Creates the entry's parent directories; the root always exists.
 const seedParent = (fs: FileSystem.FileSystem, path: string): Effect.Effect<void, PlatformError> => {
   const separator = pipe(path, Str.lastIndexOf("/"), O.getOrElse(constant(-1)));
   const parent = separator <= 0 ? "/" : Str.slice(0, separator)(path);
   return parent === "/" ? Effect.void : fs.makeDirectory(parent, { recursive: true });
 };
 
-// Writes one seed entry at `path`, after its parent exists.
 const seedEntry = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   path: string,
@@ -230,26 +223,14 @@ const seedEntry = Effect.fnUntraced(function* (
     MemoryFileSystemSeedFile: Effect.fnUntraced(function* (entry) {
       const data = P.isString(entry.content) ? encoder.encode(entry.content) : entry.content;
       yield* fs.writeFile(path, data, entry.mode !== undefined ? { mode: entry.mode } : undefined);
-      // Applied after the write, which stamps the volume's clock. Both
-      // times are set together because `utimes` takes the pair; a seed
-      // that pins mtime without pinning atime would leave the two
-      // disagreeing for no stated reason.
-      //
-      // A `Date`, NOT the bare number: `utimes` reads a numeric
-      // argument as Unix SECONDS (as `fs.utimesSync` does), while this
-      // option is epoch milliseconds — passing it through unconverted
-      // silently multiplies every seeded time by 1000.
       if (entry.mtime !== undefined) {
-        const stamp = DateTime.toDateUtc(DateTime.makeUnsafe(0));
-        stamp.setTime(entry.mtime);
-        yield* fs.utimes(path, stamp, stamp);
+        const millisecondStamp = DateTime.toDateUtc(DateTime.makeUnsafe(0));
+        millisecondStamp.setTime(entry.mtime);
+        yield* fs.utimes(path, millisecondStamp, millisecondStamp);
       }
     }),
     MemoryFileSystemSeedDirectory: Effect.fnUntraced(function* (entry) {
       yield* fs.makeDirectory(path, { recursive: true });
-      // Applied via chmod rather than makeDirectory's mode option so the
-      // mode also lands when the directory already exists — e.g. created
-      // implicitly as an earlier entry's parent.
       if (entry.mode !== undefined) {
         yield* fs.chmod(path, entry.mode);
       }
@@ -264,6 +245,10 @@ const seedEntry = Effect.fnUntraced(function* (
  * **Details**
  *
  * Strings are encoded as UTF-8. File metadata is applied after writing; a supplied modification time sets both access and modification times. Directory modes are applied even when a directory already exists.
+ *
+ * **Gotchas**
+ *
+ * A file's `mtime` is applied after the write, which stamps the volume's clock, and sets atime too because `utimes` takes the pair. It is passed as a `Date`, never the bare number: `utimes` reads a number as Unix seconds (as `fs.utimesSync` does) while the option is epoch milliseconds. A directory mode is applied through `chmod`, not `makeDirectory`'s mode option, so it also lands on a directory an earlier entry created as its parent.
  *
  * **Example** (Seed a nested file)
  *
@@ -293,10 +278,6 @@ export const seedVolume: {
   })
 );
 
-// Lexical-only normalization shared by the seed root and the inspection view:
-// collapses "//" and ".", applies "..", resolves relative paths from the
-// virtual root — matching the engine's canonical "/a/b" spelling. Deliberately
-// does NOT follow symlinks.
 /**
  * Normalizes a path lexically to the volume's canonical absolute spelling.
  *
@@ -358,10 +339,6 @@ export class SeedRootError extends S.Opaque<SeedRootError, { readonly brand: uni
   )
 ) {}
 
-// The shape a seed reference must have: every value plain contents or a
-// tagged entry. Entry fields are NOT re-validated here — re-keying is not
-// validation; the volume rejects an invalid mode or time when it is applied,
-// exactly as it does for a seed that never passed through a root.
 const SeedEntryTag = S.Literals([
   "MemoryFileSystemSeedFile",
   "MemoryFileSystemSeedDirectory",
@@ -369,16 +346,16 @@ const SeedEntryTag = S.Literals([
 ]).pipe($I.annoteSchema("SeedEntryTag", { description: "The tags of the structured seed entries." }));
 const isSeedShape = S.is(
   S.Record(S.String, S.Union([S.String, S.Uint8Array, S.Struct({ _tag: SeedEntryTag })])).pipe(
-    $I.annoteSchema("SeedShape", { description: "Paths mapped to plain contents or tagged seed entries." })
+    $I.annoteSchema("SeedShape", {
+      description:
+        "Paths mapped to plain contents or tagged seed entries; entry fields are left for the volume to reject.",
+    })
   )
 );
 
-// Declared rather than structural: the payload carries the caller's seed by
-// reference (an unrooted seed keeps its identity, a rooted one its entry
-// references), and a structural Record would be rebuilt on construction.
 const SeedReference = S.declare((u: unknown): u is MemoryFileSystemSeed => isSeedShape(u)).pipe(
   $I.annoteSchema("SeedReference", {
-    description: "A MemoryFileSystemSeed held by reference.",
+    description: "A MemoryFileSystemSeed held by reference, never rebuilt the way a structural Record would be.",
     toCodecArbitrary: () =>
       S.link<MemoryFileSystemSeed>()(MemoryFileSystemSeed, SchemaTransformation.passthroughSupertype()),
   })
