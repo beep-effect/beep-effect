@@ -15,7 +15,13 @@
   },
   "references": [
     {
+      "path": "../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/jsonc/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/md/tsconfig.json"

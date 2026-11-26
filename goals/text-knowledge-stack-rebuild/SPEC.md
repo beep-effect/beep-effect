@@ -2692,6 +2692,697 @@ Lane p5
 
 Reverse: Remove decimal from the xsd pin terms, re-run sync-data-to-ts pinned-vocabularies and identity registry --write, and map non-integer numbers to xsd:double
 
+### P6: a typed failure of an attributed run records its activity in a LoggedFailure; L5-3 covers failing pipelines, 2026-11-24
+
+Independent review of the P6 design. The first draft built the activity record only from a successful value, so a failed run emitted none and L5-3, quantified over successful runs, could not see 'a run with no activity' for any failure; the generator's fail flag reached no property. withActivity's error channel becomes LoggedFailure<E | EF | PreimageMintError> { error, activities }. A typed failure of the wrapped run (caught with Effect.catch, effect/Effect.ts:2809,2851) carries one ActivityRecord with outcome failed, generated empty and ended read at the failure; a failure of the facts function or of mintActivityId precedes the start and carries an empty log; a defect or an interruption records nothing, as the declared observation excludes them. composeLogged joins the upstream log into a downstream failure. ActivityRecord gains outcome: ActivityOutcome (LiteralKit completed, failed), outside the activity/v1 preimage, with a filter that a failed record generates nothing. L5-3 quantifies over every run: on failure |L| equals the number of steps that started, the failing one included, and exactly one record is failed. A control with a success-only recorder fails the count. Amends 2026-11-24-p6-with-activity-mints-at-start-exposes-current-activity-and-composes-as-a-writer.
+
+Lane p6
+
+Reverse: Record activities only for successful runs and restrict L5-3 to them
+
+### P6: ActivityRecord lives in @beep/jsonc beside ActivityStart, with a nested start and a re-minting verifier, 2026-11-24
+
+The finished activity needs a schema home. ActivityStart, ActivityPin and mintActivityId already live in @beep/jsonc (jsonc/src/ActivityStart.ts:50-258), and langextract's ExtractionActivity { id, start } (langextract/src/Handoff/Handoff.model.ts:117) and the party ClaimGeneration { claim, activity, ended } already split start from completion. ActivityRecord is therefore jsonc/src/ActivityRecord.ts: S.Opaque { id: ActivityId, start: ActivityStart, generated: CanonicalHashSet(ContentHash), ended: DateTime.Utc }, filtered on start.started <= ended. Nesting start keeps the preimage separate from the facts outside the id (generated and ended). verifyActivityRecord is Effect.fn("ActivityRecord.verify"), re-mints the id from start and fails with ActivityRecordInvalid { reason: id-mismatch }, as the party ledger checks (party/server/src/values/Ledger/Ledger.memory.ts:89-94). nlp-processing gains runtime edges to @beep/jsonc and @beep/text and none to annotation or epistemics, because facts functions live with the callers that know the ids. No stored row holds an ActivityRecord in P6. Answers O10 and F11.
+
+Lane p6
+
+Reverse: Move ActivityRecord into np/src/Activity.ts, spread the start fields as the sketch did, and drop verifyActivityRecord
+
+### P6: ontology_propose_change_batch runs SHACL and the gUFO audit before the session's CAS save, 2026-11-24
+
+ontology_propose_change_batch (packages/ontology/server/src/tools/OntologyToolHandlers.ts:164-167) saves an agent's batch into the session workspace immediately. The workspace is the proposed state and ontology_publish_provenance behind TierGate is the authority step, so the tool already emits proposed state; what is missing is the chapter 16 obligation that agent-proposed terms are linted. P6 runs, before the CAS save, the session SHACL validation (packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts) if the row measures that proposeChangeBatch does not already run it, and the gUFO audit from @beep/ontology/Gufo over the typings the batch states, read by a new pure typingsFromDataset from rdf:type gufo class-type and rdfs:subClassOf assertions. A violation returns a typed refusal and saves nothing. An untyped term is not audited, which is the L3-3 contract. Answers A6.
+
+Lane p6
+
+Reverse: Remove the pre-save lint from OntologyToolHandlers.ts and the session use case, and delete typingsFromDataset from @beep/ontology Gufo.ts
+
+### An unconfigured principal gets the empty authority, 2026-11-24
+
+`MatterWallLive` (server `MatterAuthority`) reads `BEEP_LAW_PRACTICE_PRINCIPAL` as an optional principal. With a principal it builds the authority from `BEEP_LAW_PRACTICE_MATTER_AUTHORITY`; without one it builds the empty authority whatever grants are configured and provides an unused sentinel principal, so a host that forgot its principal denies every walled path instead of failing to start or running as a guessed user. `apps/practice-kg-mcp/src/claims.ts` provides it to `LawPracticeServerLive`.
+
+Lane p6
+
+Reverse: Make BEEP_LAW_PRACTICE_PRINCIPAL required and fail host startup without it.
+
+### P6: the gateway's Box Drive reads stay outside the matter wall; Box's own sharing is their authority, 2026-11-24
+
+Independent review of the P6 design. The P0 access-path map lists the gateway's Box reads under source retrieval, 'path confined to the Box folder' (research/consumer-census.md:595). box_list and box_read read the local Box Drive folder (apps/practice-gateway/src/BoxDriveTools.ts:1-4), which holds only what Box's sharing grants the signed-in user's account; Box is the caller-independent authority for those bytes, the stack holds no copy of them, and they carry no matter key the stack could bind. The matter wall protects material the stack holds and serves across principals. A Box file whose text enters the stack is captured under a scopeRef and is walled by path 1 from then on. The two-matter test makes no Box assertion. If a host ever serves Box bytes to a principal other than the Box account's owner, this decision is reversed.
+
+Lane p6
+
+Reverse: Add Box path prefixes to MatterScope and authorize box_list and box_read through MatterAuthority
+
+### The cache path is proved by the walled resolver and a static module-cache guard, 2026-11-24
+
+Design path 5 asks that identical bytes under two matters never share a cache entry. The composed citation engine needs native runtimes the server shard does not load, and mention receipts already embed the source identity. The proof is two-part: AuthorizedSourceTextResolver resolves identical bytes under matter A and then matter B for a principal granted both, and each identity keeps its own scopeRef; a static guard scans src/internal/Citation for module-level Map, Set, MutableHashMap, MutableRef, Ref.makeUnsafe or Cache declarations and for Cache.make, ScopedCache, cachedWithTTL, cachedFunction and Effect.cached outside NativeLane.ts. Module-level WeakMaps keyed by request objects are allowed.
+
+Lane p6
+
+Reverse: Replace CitationCache.scope.test.ts with an end-to-end citation engine run under two matters once the native lanes run in the server test shard.
+
+### Candidate claims status and label take the full domain status kit, 2026-11-24
+
+The not-loaded `epistemic_status` and the candidate row `label` of kg_candidate_claims are the domain PracticeKgEpistemicStatus, the full literal kit, rather than a one-member subset, so the published definition equals the domain definition byte for byte. The server still emits only `candidate-unreviewed` for both, and the tool description now names that label in the same spelling.
+
+Lane p6
+
+Reverse: Narrow both fields to a one-member pick of PracticeKgEpistemicStatus and assert the pick instead.
+
+### P6: chapter 16 pending-P6 agent-surface notes close as delivered or scoped; prompt bytes stay, 2026-11-24
+
+Chapter 16 section 12 carries pending-P6 notes that are not map questions: prompts render from schema annotations, and an attorney-facing invariant. Prompt rendering stays out of P6: buildPrompt's bytes key semantica's hosted artifact hash (apps/labs/semantica/src/layers/ExtractorLive.ts:244) and every handoff's promptDigest (langextract/src/Handoff/Handoff.behavior.ts:78-84), so a change needs a measured re-pin, which is its own work with no P6 acceptance attached. The attorney-facing invariant is delivered as admission bound to the opened revision through LawAdmission, with the gate checked first; drafting invariants wait for a drafting surface. The exit row rewrites each pending note to the delivered state or this scope.
+
+Lane p6
+
+Reverse: Render the langextract prompt from schema annotations and re-pin semantica's HOSTED_EXTRACTION_ARTIFACT_HASH from a measured run
+
+### P6 (superseded after review): citation caches partition their keys by source scopeRef; the denied observable is a counted miss and a B-scoped receipt, 2026-11-24
+
+The citation session caches (server/src/internal/Citation/Resolve.ts, SessionDocument.ts, RuntimeDictionary.ts, RuntimeSet.ts) key on content, so identical text in two scopes shares an entry and a receipt could carry the first scope. P6 adds the source scopeRef to each key. For a principal staffed on both matters, resolving B after A records a miss and returns a receipt whose source.scopeRef is B; for a principal staffed only on A, B is refused at anchor resolution before any cache read. The caches are in-process session state with no stored reader. Answers A10.
+
+Superseded after independent review by decision `2026-11-24-p6-no-law-practice-cache-outlives-a-request-and-path-5-asserts-receipt-scope`. The tables named above are per-call state (`Resolve.ts:108-130`, `SessionDocument.ts:83-127`) and `RuntimeDictionary.ts` and `RuntimeSet.ts` are the CPython parity port (`RuntimeDictionary.ts:1-5,48-57`), so no key changes and the counted-miss observable is replaced by a cross-request receipt-scope check and a guard on future caches.
+
+Lane p6
+
+Reverse: Remove scopeRef from the citation cache keys in server/src/internal/Citation
+
+### P6: law claim logs partition by scope, and propose stamps and appends under the partition's one permit with the floor at its last knowledgeStart, 2026-11-24
+
+Independent review of the P6 design. ClaimLog refuses an entry whose knowledgeStart is earlier than the last row's, whatever its scope (epistemics/src/ClaimLog.ts:53-57). The ActivityFloor clamp covers only composeLogged pipelines; separate or concurrent claim_propose calls read the stamp inside withActivity and append afterwards, so an interleaving or a clock step back between calls would be refused as KnowledgeStartRegression, and with one log for every scope B's appends would cause A's refusals, which leaks across the wall. LawClaimProposals holds one log per ScopeRef. withPartition(scope, f) runs f under that partition's one-permit Semaphore (effect/Semaphore.ts:438,489; the partition's semaphore is created once, atomically, in a SynchronizedRef of partitions, effect/SynchronizedRef.ts:320) and hands f the partition's last knowledgeStart, which the proposer sets as ActivityFloor before withActivity runs. effect/PartitionedSemaphore (PartitionedSemaphore.ts:367) was read and not used: it shares one permit pool across partitions. The write-tools test asserts two concurrent proposals in one scope, a backward clock step between two separate calls, and that a proposal in B leaves A's log unchanged. The review's office-action flow appends through the same withPartition.
+
+Lane p6
+
+Reverse: Hold one append-ordered claim log for every scope and drop the partition semaphore and floor
+
+### Claim proposal checks support before promote, so its refusals are defects, 2026-11-24
+
+`ClaimProposal.propose` re-verifies the support itself before it calls `promote`: the checked document decode guarantees every candidate target has an anchor row, the request names only annotations of the document (an absent one is refused as `SupportUnverified`), and every supporting anchor is verified against the text the authorized resolver returns. Every refusal `promote` can raise is therefore checked before it runs, so a `promote` refusal is a defect, as are a claim store failure and a mint failure. The service error channel is `ClaimProposalRefused` only, matching section 2 of the design, and the new files carry no unreachable refusal branch.
+
+Lane p6
+
+Reverse: Catch ClaimCoreInvalid from promote and map it to SupportUnverified again, and restore the anchor lookup as an Option match.
+
+### P6: claim_propose is idempotent by lookup: an unsuperseded proposed claim for the same scope, logical key and support is returned, not re-minted, 2026-11-24
+
+Independent review of the P6 design. The first draft declared claim_propose idempotent, but the claim/v1 preimage hashes generatedBy and knowledgeStart (epistemics/src/ClaimCore.ts:78-95), and both are fresh per call (generatedBy is the activity id minted over started), so a retry minted a second claim id and was either appended as a duplicate proposition or refused as ValidTimeOverlap within the same partition (epistemics/src/ClaimLog.ts:99-100). An agent retries tool calls, so the hint should be true and honest. Inside the partition's permit, the handler first calls LawClaimProposals.findProposed({ scope, logicalKey, supportAtCreation }); an unsuperseded proposed claim found there is returned as it is, with no new activity, mint or append. Property (d) of the write-tools test asserts that two identical dispatches return the same claim id, leave one claim and one activity record, and record no activity on the second.
+
+Lane p6
+
+Reverse: Declare claim_propose idempotent: false and let a retry mint a new claim or be refused
+
+### claim_propose is strict and returns the gate refusal as a value, 2026-11-24
+
+`claim_propose` is annotated `Tool.Strict`, so a host that mounts it through `sanitizedToolkit` decodes its parameters with `onExcessProperty: "error"` and an extra field (such as a smuggled admission token) is refused before the handler runs. The tool failure schema is `ClaimProposeFailure`: the three `ClaimProposalRefused` cases plus `TierGateRefused { reason }`, the audit reason of a refused dispatch, so a refused call returns a value the agent can read instead of failing the stream.
+
+Lane p6
+
+Reverse: Drop the Tool.Strict annotation and fail the handler with the gate refusal instead of returning ClaimProposeFailure.
+
+### claim_propose same-schemas is proved against a reference tool on the wire, 2026-11-24
+
+Property (e) for claim_propose mounts LawClaimToolkit through the mcp-kit Conformance harness beside a reference tool declared directly over ClaimProposalRequest, LawProposedClaimRecord and ClaimProposeFailure, and asserts the two listed inputSchema and outputSchema values are equal. The wire conversion (`toolJsonSchema` in SanitizedSpan.ts) is module-private, so the reference tool runs the same conversion without exporting a testing seam from mcp-kit. The unmounted law-practice tools compare `S.toJsonSchemaDocument` of their parameter and success schemas with the domain schemas they are declared over, in one table that must cover every PracticeKg and ReviewHub tool.
+
+Lane p6
+
+Reverse: Export a testing seam for toolJsonSchema from mcp-kit and compare against it directly.
+
+### Claim provenance returns admissions as an append-order array, 2026-11-24
+
+LawAdmission has no id of its own, and two admissions of one claim can differ only in time and token. ClaimProvenance.admissions is therefore S.Array(LawAdmission) in store append order, while activities are a set encoded as an id-sorted array and captures a canonical set of CaptureId.
+
+Lane p6
+
+Reverse: Add an admission id to LawAdmission and return a set keyed by it.
+
+### P6: claim_provenance answers Missing for a claim the principal may not traverse, the same value an absent id gets, 2026-11-24
+
+Independent review of the P6 design. Path 1 deliberately hides a scope's existence behind scope-unavailable, but the first draft's claim_provenance returned Denied for an existing B claim and Missing for an absent id, and claim ids appear in span attributes, so a principal staffed only on A could test whether a B claim exists. ProvenanceResult is Found { provenance } or Missing; ProvenanceTraversal folds a denial into Missing at the use-case boundary, and the tool's failure schema has only Missing. The denial reason is kept in the span (as an access kind and reason attribute, never the scope text). An activity or capture reached through used that the principal may not traverse is omitted from the provenance. Path 7 of the two-matter test expects Missing for a B claim under pA, identical to the response for a non-existent id. Amends the traversal half of 2026-11-24-p6-draft-assembly-and-provenance-traversal-under-the-wall.
+
+Lane p6
+
+Reverse: Return Denied for a denied claim and Missing for an absent one
+
+### claim_provenance is a read-only tool that answers Missing and skips the tier gate, 2026-11-24
+
+claim_provenance writes nothing, so it carries readOnly true, idempotent true, destructive false and openWorld false and runs without an approval. Its only failure is Missing, returned for an absent claim and for a claim whose scope the principal may not traverse, so the answer never reveals that a denied claim exists. The matter wall is enforced inside ProvenanceTraversal, not by the tool layer. The toolkit spans are renamed to LawClaimToolkit.claimPropose and LawClaimToolkit.claimProvenance so both conform to the span naming law.
+
+Lane p6
+
+Reverse: Dispatch claim_provenance through dispatchWithTierGate like claim_propose.
+
+### P6: nlp Core and Graph Schema move into nlp-processing; CharPosition becomes a text Position, 2026-11-24
+
+The PLAN P6 row names only Operations and Algebra, but 2026-11-19-p0-census-dispositions moves nlp Core to nlp-processing in P6 and 2026-11-22-p3-graph-span-becomes-an-optional-position moves Graph Schema with Core in P6. The routing preference for modeling packages is outweighed here: the linguistic engine contract already lives in nlp-processing (np/src/Core/Tokenization), every Core consumer (wink 8 src and 2 test files, semantica 3 files, the law-practice use-cases test ClaimInspection.lexical.test.ts:13, scratchpad effect-ontology/Service/Nlp.ts:15-16) already depends on nlp-processing, and P7 retires @beep/nlp. P6 moves Core, Graph/Schema.ts and internal/numbers.ts by git mv, re-annotates identifiers under $NlpProcessingId (the P2 precedent), deletes CharPosition (nlp/src/Core/Token.ts:115-170) and gives Token a span typed as @beep/text OffsetUnit Position in utf16-code-unit, since wink computes offsets from JavaScript string lengths (drivers/wink/src/WinkTokenization.service.ts:157-158). The unused @beep/nlp devDependency of the law-practice server leaves. The four text helpers (IdentifierText, PathText, QueryText, VariantText) stay in nlp until P7. Coverage, gitleaks and lint-rule allowance rows move by rename (S31). The PLAN row wording is amended in the exit row. Answers O7, F1 and F17.
+
+Lane p6
+
+Reverse: git mv np/src/Core moved files and np/src/Graph/Schema.ts back to nlp/src, restore CharPosition on Token, restore the nlp edges of wink, semantica, law-practice and scratchpad
+
+### The DailyNotice draft-path test is a new schema test, 2026-11-24
+
+Design path 7 names a DailyNotice schema test to edit, but none existed on this head. DailyNotice.schemas.test.ts is new: the encoded NoticeMessage definition has exactly the subject and body fields, both required strings, so a draft can carry no matter or client field. The definition allows additional properties, which is the schema encoder's default, so the test does not assert a closed object.
+
+Lane p6
+
+Reverse: Fold the assertions into an existing DailyNotice test file if one is added.
+
+### P6: the distinction ground is the statute section and the law principal codec is rebuilt from the user id value, 2026-11-24
+
+The design names the proposition ground `RejectionGround`, but that union carries fixture keys: the 102 case has `referenceFixtureKey` and the 103 case has `referenceFixtureKeys` (`entities/Rejection/Rejection.values.ts`). The same design says the proposition carries no fixture key, so that it is stable across runs. `DistinctionProposition.ground` is therefore the statute section alone, `RejectionStatute`, which `Rejection.values.ts` now exports. The cited reference is already named by `referenceDocument`, the document number.
+
+The design also names the principal `Shared.UserId` and asks row 7 to check it against the factory's `IdCodec` bound. The check fails: `EntityId` declares its schema as `S.Codec<…, number>`, whose `~type.make` is `unknown`, so `makeClaimCore` refuses it. `LawPrincipalId` rebuilds the codec from `EntityIdValue` with the same `SharedUserId` brand. Its decoded type is `Shared.UserId`'s, and `LawClaim.identity.test.ts` assigns one to the other. `MatterGrant.principal` keeps `Shared.UserId` itself, because no factory bound applies there.
+
+Lane p6
+
+Reverse: Put RejectionGround back as DistinctionProposition.ground and Shared.UserId as the core principal once EntityId's declared make type satisfies IdCodec; bump law-distinction to v2
+
+### P6: ProvenanceTraversal walks the law claim store authorized at each step (the draft-assembly half is superseded after review), 2026-11-24
+
+Two wall paths had no owning code shape. Draft assembly: before createDraftMessage (server/src/NoticeMailbox/NoticeMailbox.layer.ts:303), authorize draft-assembly on the draft's matter and on the scope of every quoted or attached item; a draft carrying material outside its matter is refused and the fake mailbox records nothing. Provenance traversal: no law claim provenance read exists. ProvenanceTraversal.fromClaim walks LawClaimStore (claim, generation fact, activity records, used captures, admissions), authorizing provenance-traversal on the claim's scope and on every capture reached, and returns Found { ClaimProvenance }, Denied or Missing; it is exposed as claim_provenance. kg_provenance is walled as part of the graph-query path, not replaced. CandorRecord and LegalPositionRecord filter by a caller orgId, which is tenant isolation, a separate axis; candor reaches matter text only through source retrieval, which is walled. Answers A11, A12 and A13.
+
+Amended after independent review. The draft-assembly half is superseded by decision `2026-11-24-p6-no-draft-carries-matter-material-and-path-6-is-a-structural-proof`: the only outbound draft is the count-only daily notice (`NoticeMailbox.layer.ts:300-317`, `DailyNotice.schemas.ts:38-47`), so there is no guard and path 6 is a structural proof on `NoticeMessage`. The traversal half stands with two changes: a claim the principal may not traverse answers `Missing`, the value an absent id gets (decision `2026-11-24-p6-claim-provenance-answers-missing-for-a-denied-claim`), and an activity or capture it may not traverse is omitted; the traversal reads the `LawClaimProposals` and `LawClaimAdmissions` ports (decision `2026-11-24-p6-the-claim-store-splits-proposal-and-admission-ports`) and reaches captures because each flow step's `used` and `generated` now chain (decision `2026-11-24-p6-flow-steps-generate-and-use-content-ids-so-attribution-chains`).
+
+Lane p6
+
+Reverse: Remove the NoticeMailbox draft guard, delete ProvenanceTraversal and claim_provenance, and leave kg_provenance as the only provenance read
+
+### P6: email rows are walled by archive and folder-prefix bindings to one matter; unbound messages are denied, 2026-11-24
+
+Independent review of the P6 design. email_messages carries no docket, family or client column (server/src/PracticeKg.fts.ts:93-107); the existing email_search family filter is a substring match on subject or folder (PracticeKg.queries.ts:100-112, the $5 parameter), and the tool notes that matter linkage is archive-level confidence only (PracticeKg.tool-handlers.ts:79-80). A docket-family filter therefore either drops every email or matches text, which is not authorization. MatterScope gains mailFolders: HashSet<MailFolderBinding { archive, folderPrefix }>, binding the messages of one archive (archive_digest) under one folder path prefix to one matter. email_search filters inside its SQL by the granted bindings (archive_digest equal and folder_path prefixed); a message under no granted binding is not returned, and the free-text family filter stays a text filter. MatterAuthorityConfig refuses a binding whose prefix is a prefix of another matter's binding in the same archive. The bindings are evaluated at query time against configuration, so a grants change needs no rebuild. The two-matter fixture puts a message in each matter, and path 4 asserts email_search as well as corpus_search_text. Until the operator writes the bindings (the row 14 HOLD), email_search returns nothing.
+
+Lane p6
+
+Reverse: Remove MailFolderBinding from MatterScope and leave email_search unwalled, recording why in a decision
+
+### P6: every app that composes a walled layer provides LawPrincipal and MatterAuthorityLive from configuration in the row that widens it, with empty grants by default, 2026-11-24
+
+Independent review of the P6 design, three findings. LawPracticeServerLive's only app host composes it with the language model and BunCrypto only (apps/practice-kg-mcp/src/claims.ts:66), so widening its requirement by LawPrincipal and MatterAuthority without changing the host would break the app's typecheck until the KG row. apps/practice-gateway is a second production host of PracticeKgToolkitLayer, loaded lazily (src/PracticeKgProvider.ts:22,52,76-81,202), and the first draft named only practice-kg-mcp. Rule: the row that first widens a composed layer's requirement also changes each host to provide MatterAuthorityLive and a LawPrincipal from its own configuration, and adds the host's check and tests to that row's gate: practice-kg-mcp in row 9 (claims) and row 14 (KG), practice-gateway in row 14. The default MatterAuthorityConfig is empty, so an unconfigured host starts and denies every walled path; the claims batch's extractCandidate path is not walled and keeps working. Both hosts are single-user processes and name their principal in their profile or settings. The operator's real grants are the row 14 HOLD. Amends 2026-11-24-p6-matter-authority-port-principal-and-scope-bindings (hosts).
+
+Lane p6
+
+Reverse: Keep LawPrincipal and MatterAuthority out of the composed layers' requirements and provide them inside the server
+
+### Flow descriptor coverage asserts exact id sets, 2026-11-24
+
+Design section 3.6 asks each production descriptor's `generated` to equal the content-hash fields of its output found by an AST walk, minus the input ids. The flow steps' outputs are not schemas (`Mapped` and `Proposed` are in-memory records holding the handoff), and the activity id `withActivity` mints appears in the output core but is not generated by the operation. The flow test instead asserts the exact sets: Extract generates the annotation and occurrence ids, MapToLaw the independently minted `DistinctionId`, ProposeClaim the claim id. A descriptor that forgets an id still fails. Code: `use-cases/test/OfficeActionReview.flow.test.ts` (L5-3 case).
+
+Lane p6
+
+Reverse: Add an AST walk over schema-typed step outputs and compare against it.
+
+### P6: each flow step generates and uses content ids, MapToLaw mints a law-distinction/v1 id, and production descriptors are checked against their output schema, 2026-11-24
+
+Independent review of the P6 design. withActivity records whatever a caller-supplied generated function returns, and the first draft's flow broke its own L5-3 property: MapToLaw generated nothing although its output feeds ProposeClaim, and ProposeClaim used a distinction occurrence id that no record generated, so provenance traversal could not reach a capture and path 7's denied observable held without a wall. P6: recordedExtract's generated includes the annotation ids and the occurrence ids the handoff minted, and its used holds the capture id; MapToLaw mints a DistinctionId (a ContentHash under the new law-distinction/v1 preimage over the encoded DistinctionProposition, with a frozen golden, in @beep/law-practice-domain, which gains the -> @beep/jsonc edge) per distinction and generates them; ProposeClaim uses the DistinctionId, the candidate annotation ids and their occurrence ids, and generates the claim id; claim_propose's ProposeClaim uses the document's capture ids directly. The pipeline is composeLogged over the three, so each step's started is clamped to the previous ended. Flow assertion 2 checks the full L5-3 attribution property over the log. Because the L5-3 generator mints its own outputs, each production descriptor also gets a coverage case in its owning package: generated(output) equals the values of every ContentHash-branded field of the encoded output, found by a test-support walk of the output schema, minus the input's ids. This is the HasIds intent of the report (research/2026-11-08-rebuild-report.md:286) enforced by test rather than by a type, because a schema-derived extractor would need every id field to be declared once across packages that do not share a base. Amends 2026-11-24-p6-the-langextract-handoff-keeps-its-hand-minted-activity.
+
+Lane p6
+
+Reverse: Return MapToLaw to generating nothing, drop DistinctionId and the descriptor coverage cases
+
+### P6: the ten graph catalog steps declare operation terms, GraphOperation.name is removed, and the result cache keys on the term, 2026-11-24
+
+Independent review of the P6 design. A GraphOperation carries an Operation whose name is a TermIri, but the catalog steps (np/src/Graph/GraphOperations/Catalog.ts:65,95,126,156,186,217,251,271,291,311: sentencize, tokenize, posTag, lemmatize, extractEntities, parseDependencies, extractRelations, toLowerCase, toUpperCase, trim) have no declared terms, and the ResultStore keys results by operation name and node id (ResultStore.ts:118-128), so reusing one parent term would collide in the cache. The identity row, moved before the Operation row, declares operation:Sentencize, Tokenize, PosTag, Lemmatize, ExtractEntities, ParseDependencies, ExtractRelations, ToLowerCase, ToUpperCase and Trim beside MapToLaw and ProposeClaim. GraphOperation.name: string (Operation.ts:68) is removed and ResultKey.operationName carries the term IRI string; the cache is in-process with no stored reader. Amends 2026-11-24-p6-operation-terms-are-declared-for-the-office-action-steps and 2026-11-24-p6-one-operation-arrow-and-graph-operations-carry-it.
+
+Lane p6
+
+Reverse: Keep GraphOperation.name as a plain string beside the carried Operation and name its Operation with a parent term
+
+### P6: graph operations drop identity, map, flatMap and the description field, 2026-11-24
+
+Row 4 makes a graph operation an `Operation` over nodes named by its registry
+term (design section 2, `GraphOperation` row). The old constructors
+`identity()`, `map(f)` and `flatMap(f)` minted the fixed names
+`"identity"`, `"map"` and `"flatMap"`, which have no declared term, and
+`identity` re-emits a node under a fresh id, the same unlawful identity the
+census removed with `TypeClass.identityOperation`. None has a consumer outside
+the package's own tests and doc examples, and `transform` and `expand` cover
+`map` and `flatMap` once a name is required. They are deleted.
+
+The `description` field leaves `GraphOperation` and its constructors: the
+design's field list is `{ operation, category, estimateCost, validate }`, the
+term names the step, and the catalog's JSDoc keeps the prose. No reader of
+`description` exists in the repository.
+
+Lane goals/text-knowledge-stack-rebuild-p6-operations
+
+Reverse: Restore the identity, map and flatMap constructors and the description field in np/src/Graph/GraphOperations/Operation.ts, each taking a TermIri name.
+
+### P6: kg_provenance by natural_key also matches document nodes by digest, 2026-11-24
+
+After documents key as digest@docket, a caller that passes a bare digest as natural_key would match only an unfiled document. The provenance query also matches kind = 'document' rows whose provenance_ref equals the value, under the same granted-family filter, so the answer is each granted matter's document node for those bytes and never another matter's. The digest parameter keeps reading the DuckDB documents rows.
+
+Lane p6
+
+Reverse: Match kg_provenance natural_key against kg_node.natural_key only
+
+### LawAdmission stays out of the host layer in P6, 2026-11-24
+
+The design lists `LawAdmission` in `LawPracticeServerLive`'s output, but `LawAdmissionLayer` needs a `SourceTextResolver` and an `AttorneyAttestation`. The server ships neither for production (P6 ships a test attestation only and no host admits in P6), and adding them would grow the layer's requirement beyond `LawPrincipal` and `MatterAuthority`. `LawPracticeServerLive` therefore outputs `OfficeActionReview`, `IrToLaw`, `LawClaimProposals` and `LawClaimAdmissions`; a host that admits composes `LawAdmissionLayer` over them with its own resolver and attestation. Code: `server/src/Layer.ts`.
+
+Lane p6
+
+Reverse: Add LawAdmissionLayer to LawPracticeServerLive once a production resolver and attestation exist.
+
+### LawAdmission.admit takes the assessments it gates on, 2026-11-24
+
+The design's `LawAdmission.admit(request: { claim, token, grounding, revision })` has no source for the office-action assessments its gate check needs, and the store keeps proposals only. `admit` therefore takes `assessments: OfficeActionAssessments` in its request and checks `OfficeActionDistinctionGate.passes` before the epistemics admission; a failing record returns `GateNotPassed`. The attorney action carries the review's assessment record (or one the attorney revised). Code: `use-cases/src/LawAdmission/LawAdmission.ports.ts`.
+
+Lane p6
+
+Reverse: Store assessments with each proposal in LawClaimProposals and read them in admit.
+
+### P6: law claims are held in a LawClaimStore port with only a memory layer; no stored format in P6, 2026-11-24
+
+Proposed law claims, generation facts, activity records and admissions need somewhere to live for the flow, the claim toolkit, admission and provenance traversal. No host persists them in P6 (the toolkit is not hosted, decision 2026-11-24-p6-the-claim-toolkit-is-defined-in-law-practice-and-not-yet-hosted), so a table now would be a stored format nobody reads. LawClaimStore is a use-cases port (append, get, openAdmission, binding, generation, admissions) with a typed LawClaimStoreError, and the server ships LawClaimStore.memory.ts only. A persistent store is versioned from its first row when a host adds it, which keeps the stored-format law simple: no row exists that would need a read-side converter. Answers A2 and F6.
+
+Amended after independent review. The single `LawClaimStore` port splits into `LawClaimProposals` and `LawClaimAdmissions` (decision `2026-11-24-p6-the-claim-store-splits-proposal-and-admission-ports`), and the proposal side holds one claim log per scope with stamp-then-append serialized per partition (decision `2026-11-24-p6-claim-logs-partition-by-scope-and-serialize-stamp-then-append`). The server's memory layer backs both ports and has its own server test, `ClaimStore.memory.test.ts`. No stored format is added.
+
+Lane p6
+
+Reverse: Add a persistent LawClaimStore layer with a versioned table and migrate the memory layer's callers to it
+
+### P6: the law-practice value concepts are hand-authored after an architecture dry-run, 2026-11-24
+
+The touch table routes new concepts through `bun run beep architecture`. For `law-practice` the only route is `architecture add concept law-practice <Concept> --domain-kind values`, which targets the legacy seven-package shape. Its dry-run plan for `LawClaim` writes placeholder `WorkPriority` model, behavior and test files (a `low`/`normal`/`high` literal kit). It also rewrites `packages/law-practice/domain/src/values/index.ts` to a single `WorkPriority` export, and it removes the fixture-lab specimen package and two CLI fixture paths. Applying the plan would replace the real values barrel and add content unrelated to the concept. The row ran the dry-run only, as evidence. It hand-authored `packages/law-practice/domain/src/values/LawClaim` and `packages/law-practice/domain/src/values/MatterScope` in the package's existing `values/<Concept>/{index,<Concept>.model}.ts` layout, with the two subpath exports the plan names (`@beep/law-practice-domain/values/LawClaim` and `@beep/law-practice-domain/values/MatterScope`).
+
+Lane p6
+
+Reverse: Apply the architecture plan once its law-practice values template stops writing placeholder content and rewriting the values barrel, and diff it against the hand-authored files
+
+### Matter authority reads one JSON variable and a denied anchor resolution looks like absent evidence, 2026-11-24
+
+## Context
+
+Row 8 adds `MatterAuthorityLive`, `AuthorizedSourceTextResolver` and the anchor-resolution check in
+citation `SourceResolution`. The design names `MatterAuthorityConfig` as a `Config` decode with the
+empty configuration as the default, and the resolution's "refusal value" for path 2, without naming
+the variable or the value.
+
+## Decision
+
+- `MatterAuthorityLive` reads `BEEP_LAW_PRACTICE_MATTER_AUTHORITY` as JSON through
+  `Config.schema(S.fromJsonString(MatterAuthorityConfig))` with `EmptyMatterAuthorityConfig` as the
+  default. `MatterAuthorityLayer(config)` takes an explicit configuration for hosts that read their
+  own profile (rows 9 and 14) and for tests.
+- A denied anchor resolution fails with `CitationPrerequisiteError { dependency: "source-evidence" }`,
+  the value an unresolvable source already gets, before any source read. A denial and an absent
+  source are indistinguishable to the caller; the access kind and reason go to the
+  `MatterAuthority.authorize` span only.
+- Citation tests that are not about the wall provide a principal and an authority that grants every
+  scope (`test/MatterWall.fixtures.ts`); the wall itself is proved with the real
+  `MatterAuthorityLayer` in `MatterAuthority.test.ts` and `CitationResolverBoundary.test.ts`.
+
+Lane p6
+
+Reverse: Rename the variable or map Denied to a distinct citation error; the empty default and the span attributes stay.
+
+### P6: one MatterAuthority port over a host-provided LawPrincipal; MatterScope binds existing scope keys to a matter, 2026-11-24
+
+2026-11-19-p0-item11-matter-wall-test-shape names one MatterAuthority port; it does not say who the principal is or how scopes map to matters. McpCallerIdentity carries transport facts only (mcp-kit/src/McpCaller.ts:44-61), and ContradictionReviewScope (epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.ports.ts:86-92) is the precedent for a host-provided scope. P6: LawPrincipal is a host-provided Context.Service { principal: Shared.UserId }, never a request field. MatterAuthority.authorize({ principal, scope: ScopeRef, access: MatterAccessKind }) returns MatterAccess Granted { matter } or Denied { reason: unbound-scope | not-staffed }; authorizeFamily does the same for a docket family and grantedScopes returns the scope refs and families a bulk read filters by. MatterAccessKind is a LiteralKit of the seven SPEC paths plus claim-proposal and claim-admission. The domain MatterScope { matter, scopeRefs, docketFamilies } binds existing spellings (workspace:<id>, fixture keys, docket families) to one MatterId; an unbound scope fails closed, and a config with a scope bound to two matters is refused at load. scopeRef bytes are never re-spelled, because they are hashed into CaptureId and OccurrenceId. Grants are configuration in P6; the stdio host apps/practice-kg-mcp names its principal and grants in configuration. Answers A7, A8 and F13.
+
+Amended after independent review. `MatterScope` is `{ matter, scopeRefs, familyKeys, mailFolders }`: Practice KG rows bind by the client-qualified `PracticeKgFamilyKey` (decision `2026-11-24-p6-the-practice-kg-wall-key-is-the-client-qualified-family-key`) and email rows by `MailFolderBinding` (decision `2026-11-24-p6-email-rows-are-walled-by-mail-folder-bindings`); `authorizeFamily` takes a family key; the empty `MatterAuthorityConfig` is the default and denies every path. Hosts are `apps/practice-kg-mcp` and `apps/practice-gateway`, each providing `LawPrincipal` and `MatterAuthorityLive` from configuration in the row that widens its layer (decision `2026-11-24-p6-every-host-of-a-walled-layer-provides-principal-and-authority-fail-closed`). The port, `LawPrincipal`, `MatterAccess` and `GrantedScopes` land in the commit row before the office-action flow row, so no row uses them before they exist.
+
+Lane p6
+
+Reverse: Delete MatterWall ports and MatterScope, remove the authorize calls from each path, and rewrite scopeRef spellings to a matter scheme with a read-side converter for stored occurrence ids
+
+### Minimal-fold alignment assesses as fuzzy, 2026-11-24
+
+langextract reports four aligned statuses; the office-action profile has three aligned values. `match_exact` reads as `exact`, `match_lesser` (case-insensitive) as `lesser`, and both `match_minimal_fold` and `match_fuzzy` as `fuzzy`. Minimal fold also rewrites characters beyond case, so the conservative choice ranks it with fuzzy rather than lesser. Every aligned value passes the gate, so the mapping changes the assessment record and not admission. Code: `alignmentOf` in `OfficeActionReview.service.ts`.
+
+Lane p6
+
+Reverse: Map match_minimal_fold to lesser in alignmentOf.
+
+### P6: nlp-processing helpers open no span and label metrics only by declared keys, 2026-11-24
+
+The nlp-processing observability helpers (observeNlpWorkflow, trackNlpDuration) used to open their own span with a name passed in as an argument, such as nlp.tool.handle or a template literal nlp.backend.fallback.${operation}. The harvester (Observability.harvest.ts) reads only literal Effect.fn, Effect.fnUntraced and Effect.withSpan names, so those spans were invisible to the catalog, and the template names broke the static-name rule of chapter 12. The helpers now open no span. They record the declared beep.nlp metrics and annotate the current span. Every span is opened by a literal Effect.fn or Effect.withSpan at the call site: ToolExport.decodeParameters, ToolExport.start, ToolExport.stream and ToolExport.exportTools are new; the backend fallback and cache steps sit inside the existing FallbackBackend.* and CachedBackend.* spans, and their operation is an attribute. The three Effect.fn names whose inner helper span this removes, fromDocument, fromDocumentAnnotated and tokenizeNodes, become TextGraph.fromDocument, AnnotatedTextGraph.fromDocument and TextGraph.tokenizeNodes. Otherwise the outer span would carry a pre-domain name where a domain-named span used to be. Metric labels are only declared static or bounded keys: beep.package, beep.outcome on beep.nlp.workflow_runs, a new beep.nlp.cache_result (hit or miss) on beep.nlp.cache_lookups, and a new beep.nlp.cause_classification on beep.nlp.backend_fallbacks and beep.nlp.failures. beep.outcome has a fixed value list, so it cannot carry hit or miss. The free-form caller attributes (tool, operation, backend names, cache sizes) go to the span and the log only.
+
+Lane p6
+
+Reverse: Restore the name argument and Effect.withSpan in observeNlpWorkflow and trackNlpDuration, the three pre-domain Effect.fn names, and the free-form metric labels
+
+### P6: nlp Operations and Algebra are replaced, not moved; ActivityLogReducer is the only surviving instance, 2026-11-24
+
+PLAN P6 says nlp-processing absorbs nlp/Operations and nlp/Algebra after a Combiner/Reducer census. The census (research/2026-11-24-p6-map-operations.md section 3) found zero consumers outside nlp for either module: the 25 Monoid.ts instances, the 26 NLPMonoid.ts exports and the Composable operation builder are imported only by their own tests. StringDelimited is unlawful (nlp/src/Algebra/Monoid.ts:223-243), several numeric instances are lawful only on restricted domains, and Composable.compose unions the error and requirement channels (nlp/src/Operations/Composable.ts:528-545), so its hom-sets do not form a category. Upstream effect 4.1.5 covers 14 of the instances through effect/Combiner and effect/Reducer and has no HashSet reducer. P6 therefore reads absorbs as replaced by: both modules and their tests are deleted, the one arrow is rewritten at fixed channels in np/src/Operation.ts, and the only instance P6 needs, the activity-log union, is written as ActivityLogReducer = Reducer.make(HashSet.union, HashSet.empty()) beside withActivity (effect Reducer.ts:120, HashSet.ts:132,363). It gets no law test and no ledger row because its laws are upstream behaviour with no named bug (SPEC Constraints, laws need a named bug). This answers O3, O13 and F2.
+
+Lane p6
+
+Reverse: Restore nlp/src/Operations and nlp/src/Algebra from the P5 head, git mv them into nlp-processing, and add law rows for each moved instance
+
+### NLP same-schemas is stated over the stack types the tools expose, 2026-11-24
+
+The NLP tools declare their parameters and success shapes as module-private schemas, so the np case of property (e) is stated over the stack types they expose: every JSON Schema definition a tool publishes is either local to that tool (its own module or nlp-processing internals) or equal to the definition its stack type (the _schemas exports, Position, UnitInterval, BM25Norm, MarkRange) publishes on its own; the tools that expose spans are exactly those that publish Position. Exporting 45 tool-local schemas only for a test would add public API with no consumer.
+
+Lane p6
+
+Reverse: Export every NLP tool's parameter and success schema and compare each tool against them in a table.
+
+### P6: no outbound draft carries matter material today; path 6 is a structural proof on NoticeMessage, 2026-11-24
+
+Independent review of the P6 design, two findings. The only outbound draft in law-practice is the daily notice: NoticeMailbox.send builds it from NoticeMessage.subject and body and addresses it to the configured mailbox (server/src/NoticeMailbox/NoticeMailbox.layer.ts:300-317), and NoticeMessage is { subject, body }, 'the count only, never question text' (use-cases/src/DailyNotice/DailyNotice.schemas.ts:38-47). createDraftMessage has no other caller; MailTagging.mailbox.ts and DocketIntake.graph.ts read and categorize inbound mail and download attachments (DocketIntake.graph.ts:340-349,441-499) but assemble no draft. A guard on the notice would have no matter and no quoted item to authorize, and the fake mailbox would record no B content with or without it. MatterAuthority also authorizes a ScopeRef or a family key, not a MatterId. P6 adds no guard. The invariant is asserted structurally: NoticeMessage has exactly the fields subject and body, neither is a ScopeRef, anchor or scoped text payload, and its encoded schema has no other key. A draft that carries matter material, when one is added, takes an input of scoped items, each with its ScopeRef, and authorizes each through authorize with draft-assembly. The two-matter test therefore does not compose the notice mailbox, and apps/practice-review-hub (src/Notice.ts:146) needs no change. Supersedes the draft-assembly half of 2026-11-24-p6-draft-assembly-and-provenance-traversal-under-the-wall. Answers A11 as amended.
+
+Lane p6
+
+Reverse: Add a draft-assembly guard to NoticeMailbox.send that authorizes the draft's matter
+
+### P6: no law-practice cache outlives a request; path 5 asserts each receipt's scope across requests and guards future caches, 2026-11-24
+
+Independent review of the P6 design, two findings. The citation tables path 5 named are per-call algorithm state: resolveMentions holds local let HashMaps created on each call (server/src/internal/Citation/Resolve.ts:108-130), and SessionDocument's registered and identities tables are local to one project call (SessionDocument.ts:83-127). RuntimeDictionary.ts and RuntimeSet.ts are the CPython 3.11 dict and set parity port (RuntimeDictionary.ts:1-5), keyed by { objectId, hash } and documented as never a persisted authority (:48-57); changing that key would risk eyecite parity and wall nothing. No Cache, Ref or MutableHashMap under internal/Citation survives a call, and the one Effect.cached (NativeLane.ts:156) memoizes a native process owner, not text. 'Resolving B after A records a miss' holds for every implementation, so it tests nothing. The session boundary is the partition. Path 5 asserts a cross-request property instead: through the composed citation layer, principal pAB resolves the identical bytes under A and then under B, and each receipt's source.scopeRef equals its own request's. A guard test (server/test/CitationCache.scope.test.ts) fails when a module under internal/Citation declares a cache that outlives a call without scopeRef in its key. The parity keys are not changed. Supersedes 2026-11-24-p6-citation-caches-partition-by-scope. Answers A10 as amended.
+
+Lane p6
+
+Reverse: Add scopeRef to the citation session table keys and assert a counted miss
+
+### P6: the office-action assessment profile has support, alignment and reference; admission is a separate attorney action, 2026-11-24
+
+SPEC assigns P6 the assessment profiles and attorney admission of the flow (SPEC.md:418-420) without naming coordinates or the token source. LawAuthorityType is LiteralKit office-action and profiles are keyed by it, so a new authority type adds a literal and a profile. makeAssessments (epistemics/src/Assessments.ts:53) gets three coordinates: support (verified, unverified), alignment (exact, lesser, fuzzy, unaligned, the handoff's alignment vocabulary) and reference (identified, unidentified). OfficeActionDistinctionGate passes only when all three are assessed with support verified, reference identified and alignment not unaligned; Unassessed never passes (L4-6). Admission is not a step of review, because a review may run without a person and write tools never admit: LawAdmission.open records the binding from the authenticated principal, action and revision, and LawAdmission.admit checks the gate (GateNotPassed) and then calls makeAdmissionArrows(...).admit (Admission.ts:590) through LawAdmissionPorts: authenticate is LawPrincipal plus MatterAuthority (claim-admission), generation and resolveBinding read LawClaimStore, resolveCurrent and resolveAt use the authorized resolver, verifyToken is an AttorneyAttestation port with only a test layer in P6. No ReviewHub verdict projects to an admission. Answers F9.
+
+Lane p6
+
+Reverse: Drop LawClaim.policy.ts and the LawAdmission service, and let the review project its result through the legacy gate as before
+
+### P6: one Operation arrow at fixed channels; GraphOperation carries an Operation and TypeClass.ts is deleted, 2026-11-24
+
+Four operation models exist (research/2026-11-24-p6-map-operations.md section 4): the nlp OperationBuilder (0 consumers), np TextOperation in Graph/TypeClass.ts (0 consumers, and identityOperation mints a fresh node id at TypeClass.ts:174-181, so it is not an identity), np GraphOperation (live through the catalog and one wink test) and the design sketch. P6 keeps the sketch's shape: Operation = { name: TermIri, run: (a) => Effect<B, E, R> } with pure, compose (dual 3, one fixed E and R, explicit name), map, sequential product and traverse with concurrency 1. Fixing E and R is what makes compose(pure(identity), f) the same type as f. A GraphOperation becomes { operation: Operation<GraphNode<A>, ReadonlyArray<GraphNode<B>>, E, R>, category, estimateCost, validate }, so the executor, result store and catalog stay and run the one arrow. ExecutionMetrics.combine (Types.ts:160-187) is deleted because no src code calls it; ExecutionMetrics.empty stays. Input and output schemas leave the arrow; a tool attaches them in its own Tool.make. Answers O6 and F3.
+
+Amended after independent review. A `GraphOperation` is named by its `operation:` term and `GraphOperation.name` is removed (decision `2026-11-24-p6-graph-catalog-steps-declare-operation-terms`); `compose`, `map`, `product` and `traverse` suspend their components, and `Pure` is branded (decision `2026-11-24-p6-pure-is-branded-and-commute-is-the-production-interchange`).
+
+Lane p6
+
+Reverse: Restore np/src/Graph/TypeClass.ts and its test, restore GraphOperation's own execute field and ExecutionMetrics.combine, and drop np/src/Operation.ts
+
+### P6: P6 ships as one PR stacked on the P5 branch, opened when the packet has fewer than three open PRs, 2026-11-24
+
+P6 depends on P5's term snapshot and on P4's admission arrows, and its rows are ordered so each compiles and passes its gate before the next. One PR stacked on the P5 branch keeps the closure pin cycle to one (Registry.data.ts and bun.lock both move) and keeps the packet under the three-open-PR limit (operator 2026-11-05). The implementation lane opens it only when the packet has fewer than three open PRs, merges its parent after each parent layer merges and re-runs the term snapshot writer with --base origin/main, as P5 did. Row 14's operational step is a HOLD; the code row merges.
+
+Amended after independent review. The row table is 0-17 after the reorder (identity in row 3, MatterWall in row 8, ProvenanceTraversal and claim_provenance in row 13). Closure inputs per row: `bun.lock` changes in rows 1, 5, 7, 9 and 12; the root `tsconfig.json` in rows 1 and 2; `Registry.data.ts` in row 3. Row 14 stays an operational HOLD covering `apps/practice-kg-mcp`, `apps/practice-gateway` and docket intake, which refuse the old bundle.
+
+Lane p6
+
+Reverse: Split P6 into an operations PR (rows 1-6) and an agent-surface and wall PR (rows 7-17), each stacked on its predecessor
+
+### P6: one literal Operation.run span; nlp-processing telemetry takes its own package label and beep.nlp instruments, 2026-11-24
+
+SPEC Constraints name spans Concept(.Sub)*.action with ids, digests and counts as attributes, never quote or matter text. The instrumentation harvester records only literal Effect.fn names (Observability.harvest.ts), so a per-operation span name would be invisible to the catalog. withActivity's run is Effect.fn("Operation.run") with attributes beep.operation.term, beep.activity.id, beep.activity.used_count and beep.activity.generated_count; plain arrows emit no span, and every Operation run emits a prov:Activity is read as every attributed run. np/src/internal/observability.ts:16 labels nlp-processing spans package @beep/nlp, which is wrong and is fixed. The nlp_*_total counters and nlp_*_duration timers become declared instruments in np/src/NlpProcessing.instruments.ts named beep.nlp.<noun> with UCUM units and one counter per concept with a bounded beep.outcome attribute (standards/architecture/12-observability.md:43-44). A repo search for the old metric names finds only that file, so no dashboard breaks. Of the 11 non-conforming span names, only those row 3 rewrites (applyOne, cacheResult, runStrategy) are renamed; the others keep their pre-domain names as the catalog allows. Answers O11 and F10.
+
+Amended after independent review. The span carries an `outcome` attribute, `completed` or `failed`, matching the activity record (decision `2026-11-24-p6-a-failed-attributed-run-records-its-activity`). The `@beep/nlp` observability shard is removed in row 2, where the package is deleted, and the catalog run in that row proves the orphan check; what this decision called row 3 is row 4 in the revised row table.
+
+Lane p6
+
+Reverse: Restore the per-function span names, the @beep/nlp package label at np/src/internal/observability.ts:16 and the nlp_*_total and nlp_*_duration metric names
+
+### P6: operation:MapToLaw and operation:ProposeClaim are declared; composites name a term only when they leave a process, 2026-11-24
+
+Operation.name is a TermIri (identity/src/Term.ts:49-60), and the office-action flow gains two attributed steps the registry does not name. P6 declares operation:MapToLaw (IrToLaw.toLaw over a langextract handoff) and operation:ProposeClaim (minting and promoting a law claim core). Admission is a principal's act through LawAdmission, not an operation, so no admit term is declared. compose takes an explicit term; a production composite or step that leaves a process (is recorded, served or logged) carries a declared operation term, while in-process composites may reuse their parent's. Law tests reuse operation:Extract because the name is outside the declared observation. The registry and term snapshot are written with bun run beep identity registry --write --base origin/main per 2026-11-23-p5-stack-layers-write-the-term-snapshot-against-origin-main; Registry.data.ts is a CI binary closure input, so the PR takes one closure release and pin cycle. Answers O4 and F15.
+
+Amended after independent review. Ten further `operation:` terms are declared for the graph catalog steps, which now name their operation by term and drop `GraphOperation.name` (decision `2026-11-24-p6-graph-catalog-steps-declare-operation-terms`).
+
+Lane p6
+
+Reverse: Remove the two terms from identity/registry/namespaces/operation.json, regenerate the registry and snapshot with --base origin/main, and name the steps with existing terms
+
+### P6: kg_clients and correspondents return only rows reached through a granted family; the unattributed clients row is dropped, 2026-11-24
+
+kg_clients inner-joins the client nodes to granted docket_family nodes, so a client appears only with at least one granted family, and the former unattributed row (documents with no client) is dropped because no client-qualified key can grant it. Correspondent links that carry a family_key are visible when that key is granted; a link with only a client (no family) is visible when the client owns a granted family, because a client-level correspondent is shared by that client's matters. Contacts, candidates and linked matters are returned only through such a link or a granted candidate, never as a free directory read. Candidate claims join their document node by provenance_ref = sourceDocumentDigest and, when the digest is filed in more than one docket, by the snapshot docket, then filter by the granted family key; the join stays a LEFT JOIN so a claim whose document node is absent keeps its row under an Unwalled read.
+
+Lane p6
+
+Reverse: Return every client and correspondent row again and restore the unattributed kg_clients row
+
+### P6: Practice KG documents key as digest@docket (or digest@family) once attributed; text stays keyed by digest; BM25 is computed per query, 2026-11-24
+
+Row 14 implements decision 2026-11-24-p6-the-practice-kg-is-walled-by-docket-family-and-keys-documents-by-digest-and-docket. The document key is practiceKgDocumentKey (PracticeKg.families.ts): digest@<client-qualified docket key> for a docket document, digest@<family key> for a family-level document, which has no docket, and the bare digest for a document filed nowhere. The design's 'document:' || digest || ':' || docket spelling cannot name a family-level document, so the FTS doc id is 'document:' || document_key; the @ cannot occur in a digest or a docket key. The same key is the PGlite document node's natural key and IRI and the has_document, family_document and archived_in edge targets; provenance_ref stays the digest and the node payload carries digest and docket. Attribution needs the staged documents and their text, so buildDuckDb stages documents by catalog ordinal (row_ord) and indexDuckDbDocuments re-keys them from the attributions (QUALIFY ROW_NUMBER() OVER (PARTITION BY document_key ORDER BY row_ord) = 1), then builds the FTS tables over the keyed rows. document_text stays keyed by digest: the text is a property of the bytes, identical in both matters. fts_docstats gains family_key (NULL when the document has no client). The fts_bm25 view is deleted because it scored over the whole corpus; searchText computes BM25 over the granted docs in its own CTEs (decision 2026-11-24-p6-search-scores-over-the-granted-subset-and-doc-ids-carry-the-docket), and the practice-kg-mcp startup refusal case now drops fts_docstats instead of the view.
+
+Lane p6
+
+Reverse: Key documents and the FTS doc ids by digest alone again, restore the fts_bm25 view and build FTS inside buildDuckDb
+
+### P6: practice-kg-mcp and practice-gateway provide MatterWallLive beside the bundle resources, 2026-11-24
+
+PracticeKgToolkitLayer and makePracticeKgServerLayer now require LawPrincipal and MatterAuthority. apps/practice-kg-mcp provides MatterWallLive next to makePracticeKgHostResourcesLayer in makePracticeKgHostServerLayer (src/runtime/Host.ts); apps/practice-gateway loads MatterWallLive with the other Practice KG modules through its dynamic import, so the gateway still starts without the DuckDB sidecar, and provides it in PracticeKgProviderLayer. Both read the principal and grants from the environment; the grants configuration of the operational hosts is the operator's input and part of the row 14 HOLD, and until it exists each host denies every walled path.
+
+Lane p6
+
+Reverse: Remove MatterWallLive from both hosts' layers and drop the requirement from PracticeKgToolkitLayer
+
+### P6: every Practice KG query takes a PracticeKgReadScope, Walled for a principal and Unwalled only for named system readers, 2026-11-24
+
+PracticeKgReadScope (PracticeKg.wall.ts) is a tagged union: Walled { familyKeys, mailFolders } is built from the principal's GrantedScopes by practiceKgReadScopeOf, in a stable sort; Unwalled is a system read. The tool handlers always read through LawPrincipal and MatterAuthority.grantedScopes, so a host without a configured principal gets the empty grant and every walled tool answers nothing (decision p6-an-unconfigured-principal-gets-the-empty-authority). Two readers are system reads and take Unwalled: PracticeKgMatterLookupLive, which docket intake uses to resolve a reference before any principal is involved, and the host self-check, which proves the bundle answers the tools' queries. Neither answers a principal's request; the kg_matter_lookup tool reads through the walled scope. The filters are SQL fragments built inside each query (practiceKgFamilyKeyFilter, practiceKgClientFilter, practiceKgMailFolderFilter) with sqlStringLiteral IN-lists rather than extra bind parameters: the values are decoded PracticeKgFamilyKey and MailFolderBinding fields, every query keeps its parameter list, and an empty grant is the literal FALSE, so a query cannot widen by an unbound parameter.
+
+Lane p6
+
+Reverse: Pass GrantedScopes to each query directly and delete PracticeKgReadScope; give the matter lookup service and the self-check a granted scope
+
+### Proposed claim entries record capture identities so traversal can authorize each capture, 2026-11-24
+
+ActivityRecord.used names capture ids without their scope, so a traversal cannot decide whether a principal may see a capture from the activity record. ProposedClaimEntry now carries captures, a HashSet of the SourceTextIdentity values the proposal read; the claim proposal and office-action review writers fill it. ProvenanceTraversal mints each identity's CaptureId and authorizes the identity's scopeRef with provenance-traversal. An activity that used a denied capture is omitted, and only granted captures used by kept activities are returned. A capture id with no recorded identity is not treated as a capture.
+
+Lane p6
+
+Reverse: Drop ProposedClaimEntry.captures and LawClaimProposals.captures, and authorize captures by the claim scope alone.
+
+### P6: Pure is a brand only pure sets, commute is the production interchange it witnesses, combinators suspend their components, and the observation is total, 2026-11-24
+
+Independent review of the P6 design. The report requires a commutes witness to claim interchange and defines Pure as Effect.succeed(f(a)) with total f (research/2026-11-08-rebuild-report.md:286-288); the first draft had neither, so no production code could treat a throwing sync as pure and L5-2 tested only Effect's sequencing. pure returns Pure<A, B>, an Operation<A, B, never, never> with a brand only pure sets, and runs Effect.sync(() => f(a)), observationally the live flow(f, Effect.succeed) for a total f. commute(p: Pure, q) runs q before p and returns the pair in product order; it is the only production interchange, and L5-2 states observe(product(p, q)) = observe(commute(p, q)) = observe(swap ∘ product(q, p)), so the law tests that the witness is sound. A non-Pure operation cannot be passed to commute (a @ts-expect-error case). The sketch's compose and the live product call self.run(a) eagerly (ops/design/L5.operations.ts:57-77, nlp/src/Operations/Composable.ts:238); every combinator now suspends its components' run (Effect.suspend, effect/Effect.ts:1220), and the observation is Effect.exit(Effect.suspend(() => op.run(x))), so an operation that throws when called is observed as Died rather than escaping the test. Cases: a composite over a component that throws when called is Died; pure over a throwing f is Died. Amends 2026-11-24-p6-the-declared-observation-and-the-l5-2-restatement.
+
+Lane p6
+
+Reverse: Drop the Pure brand and commute, restate L5-2 as a test of Effect sequencing only, and observe with Effect.exit(op.run(x))
+
+### The review assesses alignment and reference, then support through the gate, 2026-11-24
+
+`OfficeActionAssessmentArrows.updateAssessment` returns `Updated` only when the whole record is assessed and passes the gate; otherwise it returns `Refused` with the old record. Three serial updates from an all-`Unassessed` record therefore never get past the first. The review instead builds the record with `alignment` (from the distinction reading's alignment status) and `reference` (`identified`, because the reference document number is non-empty text) already assessed, then makes one `updateAssessment` for `support: "verified"` through `OfficeActionDistinctionGate`. A record that does not pass keeps `support` `Unassessed`, which `LawAdmission.admit` reports as `GateNotPassed`. Code: `use-cases/src/OfficeActionReview/OfficeActionReview.service.ts` (`assess`).
+
+Lane p6
+
+Reverse: Make updateAssessment accept partial records and replace assess with three serial updates.
+
+### Review composites take their last step's name, 2026-11-24
+
+`composeLogged` needs a name for each composite; the composite records no activity. The operation registry has no review-level term, and adding one only to name a derived view is not worth a registry entry, so the inner composite takes `operation:MapToLaw` and the outer `operation:ProposeClaim`, the name of its last step. Code: `OfficeActionReview.service.ts` (`review`).
+
+Lane p6
+
+Reverse: Add operation:OfficeActionReview to the registry and name the outer composite with it.
+
+### P6: same schemas is proved on the wire for four toolkits; duplicated status and NLP offset fields take the stack types, 2026-11-24
+
+Every tool already publishes JSON Schema derived from its own Effect schemas (research/2026-11-24-p6-map-agent-surface.md section 3), so MCP schemas are the Effect schemas is proved, not built: property (e) runs as a parameterized case over PracticeKgToolkit, ReviewHubToolkit, LawClaimToolkit and NlpToolkit. Fields that duplicate a stack type migrate: kg_candidate_claims spells a third status vocabulary (S.tag candidate-unreviewed at PracticeKg.tools.ts:506 and a label tag at :697-721) and takes the domain PracticeKgEpistemicStatus; AiToken and AiSentence offsets (Tools/_schemas.ts:123-132,226-230) become a Position in utf16-code-unit in the row that deletes CharPosition. The KG candidate offsets keep their types because the bundle does not record their unit, and typing them as a Position would state an unmeasured unit. The 25 unannotated NLP tools gain four-hint annotations through annotateFourHints (mcp-kit/src/ToolAnnotations.ts:64-75,156). The S.toEncoded success schemas stay, since the published JSON Schema is the encoded side either way. Answers A14.
+
+Amended after independent review. The candidate-claim `label` is produced by SQL (`PracticeKg.queries.ts:59`), so the label change edits that query and the projections test that asserts it, not only the schema. `AiEntity` gains `span` on the wire beside the migrated fields. The NLP tools take their four hints through `Tool.annotate` with `Tool.Readonly`, `Tool.Destructive`, `Tool.Idempotent` and `Tool.OpenWorld` (`.repos/effect/packages/effect/src/ai/Tool.ts:2149,2177,2205,2233`), so `@beep/nlp-processing` gains no `@beep/mcp-kit` edge.
+
+Lane p6
+
+Reverse: Restore the hand-spelled kg_candidate_claims status tags and the AiToken/AiSentence start/end S.Natural pairs, and drop property (e) for the non-law toolkits
+
+### P6: corpus search scores BM25 over the granted documents only, and FTS doc ids carry the docket, 2026-11-24
+
+Independent review of the P6 design. fts_terms.document_frequency and the corpus document_count and average_length are computed over the whole corpus (server/src/PracticeKg.fts.ts:145-177), and searchText scores first and filters by family afterwards (PracticeKg.queries.ts:193-211), so A's scores and ranking for a term move with how often B uses it and A can probe B's vocabulary. The FTS doc_id is 'document:' || digest (fts.ts:131-133), joined back on that spelling (queries.ts:206): after the (digest, docket) re-key, two matters' rows would share one doc_id, GROUP BY doc_id would double token_count and term_frequency, and the join would return both dockets. doc_id becomes 'document:' || digest || ':' || docket. The search query filters fts_docstats and fts_postings to the granted family keys in CTEs before it computes the corpus and per-term statistics, so BM25 is the score of the granted sub-corpus. Path 4 of the two-matter test asserts that A's scores and ordering are identical with and without B's documents in the bundle. One index serves every principal; a per-matter index was not chosen because a principal staffed on two matters must search both as one corpus.
+
+Lane p6
+
+Reverse: Score over the whole corpus and filter afterwards, with digest-only doc ids
+
+### P6 SPEC amendment: the L5 exit's 'every run emits a prov:Activity' reads 'every attributed run, successful or failed, emits a prov:Activity', 2026-11-24
+
+Independent review of the P6 design. SPEC.md:458-464 says every run emits a prov:Activity. A plain arrow (pure, a graph catalog step, an in-process composite) has no facts, no pin and no used set, and an activity for it would be a record with nothing to attribute; the report already makes a composite a derived view with no activity of its own (research/2026-11-08-rebuild-report.md:286). The first draft narrowed the exit to attributed runs only in its exit table. This decision records the narrowing as a SPEC amendment: the runs that emit a prov:Activity are those withActivity wraps, and they emit it on success and on typed failure (decision 2026-11-24-p6-a-failed-attributed-run-records-its-activity). The acceptance row's other clauses are unchanged. Row 16 rewrites the PLAN row wording to match; SPEC's generated Decision log block carries this decision.
+
+Lane p6
+
+Reverse: Restore the SPEC wording and make every Operation run, plain arrows included, emit an activity
+
+### P6: the law claim store splits into LawClaimProposals and LawClaimAdmissions; the proposal layer cannot require the admission side, 2026-11-24
+
+Independent review of the P6 design. The first draft asserted that the claim_propose handler's requirements exclude AdmissionPorts, but AdmissionPorts is a plain interface, never a Context requirement (epistemics/src/Admission.ts:280), so the assertion was always true; LawAdmission was not excluded; and one LawClaimStore port with append(entry), openAdmission and admissions would let a proposal path store an Admission, whose decoding repeats no authority verification (epistemics/src/ClaimCore.schema.ts:224-226). The store splits: LawClaimProposals (appendProposed of a LawProposedClaimRecord with its GenerationFact and activity records only, findProposed, get, generation, activities, withPartition) and LawClaimAdmissions (openAdmission, binding, appendAdmission, admissions), provided to LawAdmission's layer only. The server's memory layer backs both from one state. The write-tools test asserts at the type level that the ClaimProposal layer's RIn and the toolkit handler layer's RIn exclude LawAdmission, LawClaimAdmissions and AttorneyAttestation, and property (c) checks that after a successful claim_propose the admission side holds no admission and no binding. Amends 2026-11-24-p6-law-claims-are-held-in-memory-until-a-host-persists-them.
+
+Lane p6
+
+Reverse: Merge the two ports back into one LawClaimStore
+
+### P6: LawClaimToolkit (claim_propose, claim_provenance) is defined in law-practice use-cases and mounted only in tests, 2026-11-24
+
+The P0 routing decision places the first claim-writing tool in law-practice use-cases with a proposed-only success schema. P6 defines LawClaimToolkit there with claim_propose (input { document, proposition, candidates }; checked annotation decode; MatterAuthority claim-proposal; re-verification of candidate anchors through the authorized resolver; a withActivity-wrapped ProposeClaim operation that mints the core and calls promote; success LawProposedClaimRecord; failure ClaimProposalRefused InvalidDocument, SupportUnverified or DeniedScope) and claim_provenance (read-only). claim_propose dispatches through dispatchWithTierGate (mcp-kit/src/TierGate.ts:607) with readOnly false, destructive false, idempotent true, openWorld false. No app serves it in P6: a host must supply a caller-independent principal per dispatch, and none does. The review hub authenticates a login in HTTP middleware (apps/practice-review-hub/src/runtime/Layer.ts:46-65) and sanitizedToolkit strips HttpServerRequest from handler services, passing only the transport McpCallerIdentity { clientId, sessionId } (mcp-kit/src/SanitizedSpan.ts:318-324,510-515). The toolkit is mounted through the conformance kit in tests. The ReviewHub tools are left as they are. Answers A3, A4 and F7.
+
+Amended after independent review. `LawClaimToolkit.toLayer` lives in law-practice use-cases and its handlers require only service ports (`ClaimProposal`, `MatterAuthority`, `LawPrincipal`, `LawClaimProposals`, `ProvenanceTraversal`), so the use-cases package does not import the server (decision `2026-11-24-p6-the-claim-toolkit-layer-lives-in-use-cases-over-service-ports`). claim_propose stays `idempotent: true` because a repeated proposal returns the stored record without a new activity (decision `2026-11-24-p6-claim-propose-is-idempotent-by-lookup`); claim_provenance answers `Found` or `Missing`, never a distinct denial (decision `2026-11-24-p6-claim-provenance-answers-missing-for-a-denied-claim`).
+
+Lane p6
+
+Reverse: Mount LawClaimToolkit in apps/practice-review-hub or apps/practice-kg-mcp once a per-dispatch principal exists, or delete it
+
+### P6: LawClaimToolkit.toLayer lives in law-practice use-cases over the TierGate, ClaimProposal and ProvenanceTraversal ports; other toolkits are compared without mounting, 2026-11-24
+
+Independent review of the P6 design. The P0 routing decision puts the write-tools-emit-proposed test in the law-practice use-cases tests, but the first draft put the handler layer in law-practice server, which use-cases cannot depend on (the server depends on use-cases, server/package.json:86), so properties (b), (c) and (e) could not exercise production handlers. LawClaimToolkit.toLayer is defined in use-cases ClaimProposal.tools.ts over the TierGate, ClaimProposal and (from the provenance row) ProvenanceTraversal service ports, which use-cases reaches through @beep/mcp-kit (use-cases/package.json:81); the server supplies only the service implementations. The test supplies in-memory store ports, a MatterAuthority stub and a LawPrincipal from use-cases test support and mounts the toolkit through the mcp-kit conformance kit. PracticeKgToolkit, ReviewHubToolkit and NlpToolkit have handler layers outside use-cases (server/src/PracticeKg.tool-handlers.ts:385, apps/practice-review-hub/src/runtime/Layer.ts:69, drivers/wink/src/WinkTools.service.ts:385), so property (e) for them compares toolJsonSchema(tool) with the domain schemas directly; the NlpToolkit case runs in np's tests. The server's memory store, admission ports and authority get their own server tests so each new server file is covered in its own package. Amends 2026-11-24-p6-write-tools-emit-proposed-test-covers-every-law-practice-write-tool.
+
+Lane p6
+
+Reverse: Move the handler layer to the server and the write-tools test to the server tests by a decision amending the P0 routing
+
+### P6: the declared observation is an ExitShape plus a Ref trace; L5-2 is stated over sequential product and swap, 2026-11-24
+
+The rebuild report defines the observation as the Exit of a run plus a Ref trace with defects excluded (research/2026-11-08-rebuild-report.md:288), but L5-2's acceptance case needs a throwing sync to be compared with something, which is impossible if defects are excluded outright. The observation is therefore { exit: ExitShape, trace }, where ExitShape is Succeeded { value } (Exit.isSuccess, Exit.ts:406), Died {} with the defect payload erased (Cause.hasDies, Cause.ts:897) or Failed { error } (Cause.findErrorOption, Cause.ts:871); the trace is a Ref<ReadonlyArray<number>> held by a test Trace service; equality is Equal.equals. Excluded: defect payload and stack, interruption, spans, and Operation.name. L5-2 is product(p, q) observed equal to map(product(q, p), swap) for p = pure of a generated affine function and any generated q, where swap is a test-local lambda because effect/Tuple has no swap. A throwing sync observes (Died, []) against (Died, [event]) or (Failed, [event]) and a trace-writing sync gives two traces, so neither is central. Generators come from an OperationDescriptor schema { event: Int, outcome: Succeed { scale, shift } | Fail { code } } through Arbitrary, all at (E, R) = (OperationFailure, Trace). The law-test-plan statement already fits and is not edited. Answers O2 and F4.
+
+Amended after independent review. The observation is `Effect.exit(Effect.suspend(() => op.run(x)))`, so a component that throws when called is observed as a defect rather than escaping the law; the combinators suspend their components; `Pure` is a brand that only `pure` sets, and L5-2's interchange is stated over `commute(p: Pure, q)`, the production witness (decision `2026-11-24-p6-pure-is-branded-and-commute-is-the-production-interchange`). Controls add a throw-when-called component and a `@ts-expect-error` for a non-`Pure` argument to `commute`.
+
+Lane p6
+
+Reverse: Change the observation in np/test/support/OperationObservation.ts back to Exit with defects excluded entirely and drop the throwing-sync acceptance case from L5-2
+
+### P6: ops/design retires at the P6 exit with its manifest command and opsScripts entries; the ops tsconfig check stays, 2026-11-24
+
+L5.operations.ts is the last sketch in ops/design. Its surfaces now live in production with recorded differences: ActivityRecord in @beep/jsonc with id and nested start; ActivityFacts with effectful facts; withActivity minting at start, exposing CurrentActivity, emitting Operation.run and clamping to ActivityFloor; composeLogged as the Writer bind; product, map and traverse. With L5 gone the directory is empty, so ops/design (index.ts, tsconfig.json), the manifest's bunx tsrs -p goals/text-knowledge-stack-rebuild/ops/design/tsconfig.json --noEmit command (ops/manifest.json:162) and both opsScripts entries (:171-180) leave in the exit row. The goals/tsconfig.ops.json check stays for the other ops scripts. Answers F16.
+
+Lane p6
+
+Reverse: Restore goals/text-knowledge-stack-rebuild/ops/design from the P6 head before the exit row, with its manifest verificationCommand and opsScripts entries
+
+### P6: the gUFO lint audits the subjects of the batch's added quads, in the use case every save runs through, 2026-11-24
+
+The gUFO audit runs over the named subjects of the batch delta added quads, against the typings the whole post-apply asserted partition states, so a batch is judged on the terms it touches with the context the ontology already holds. Terms the batch does not touch are not audited, so a pre-existing violation elsewhere never blocks an unrelated batch. Both lints run in OntologyToolService.applyAndSave, the session use case every mutation saves through, rather than in the MCP handler, so ontology_repair is linted too and the handler stays a TierGate wrapper. The refusal joins OntologyToolFailure, so the MCP tool returns it as a value. @beep/ontology-use-cases takes @beep/ontology as a dependency; @beep/ontology-server takes it as a devDependency because only its handler test reads OntoViolation.
+
+Lane p6
+
+Reverse: Move the lint into OntologyToolHandlers.ts or audit every typed term of the session
+
+### P6: the langextract handoff keeps its hand-minted Extract activity; the flow records it as an ActivityRecord, 2026-11-24
+
+Which runs P6 wraps in withActivity is open (map O question O12). The langextract handoff mints its own operation:Extract activity at start (langextract/src/Handoff/Handoff.behavior.ts:69) and carries it inside the handoff value, and semantica pins the service output through HOSTED_EXTRACTION_ARTIFACT_HASH (apps/labs/semantica/src/layers/ExtractorLive.ts:244). Wrapping it would mint a second activity for the same run or move the id out of the handoff and break that pin. P6 therefore wraps the office-action law steps (MapToLaw, ProposeClaim) and the claim_propose handler, and the flow records the handoff's activity as an ActivityRecord built from handoff.activity (id, start), the annotation ids it generated and an ended read when extract returns, clamped to be no earlier than any generation time. Assessment is a pure update of an owner record and is not an activity. Answers O12.
+
+Amended after independent review. `recordedExtract` generates the annotation and occurrence ids from the capture it uses, so MapToLaw and ProposeClaim chain on those ids (decision `2026-11-24-p6-flow-steps-generate-and-use-content-ids-so-attribution-chains`), and the handoff composes with the downstream steps through `composeLogged`. Whether the handoff output already exposes occurrence ids is measured in its row before the step is wrapped.
+
+Lane p6
+
+Reverse: Wrap the langextract extract call in withActivity with operation:Extract and remove the hand-minted ExtractionActivity from the handoff, re-pinning semantica's artifact hash
+
+### P6: a law-owned LawClaimCore over a DistinctionProposition lives in the law-practice domain, 2026-11-24
+
+The flow test still runs the legacy CandidateClaim, ClaimGate and ClaimTransition (OfficeActionReview.service.ts:17-45) and no law claim core exists. P6 instances makeClaimCore (epistemics/src/ClaimCore.schema.ts:129) in packages/law-practice/domain/src/values/LawClaim, following the party template (party/domain/src/entities/Claim/Claim.model.ts). The proposition is DistinctionProposition { authority: LawAuthorityType, applicationNumber, claimNumber, ground: RejectionGround, referenceDocument, detail: DistinctionDetail }, every field read from LawEntities, with no fixture key or entity id so the proposition is stable across runs. logicalKey uses length-prefixed parts in field order, the party pattern (party/domain/src/values/Proposition/Proposition.model.ts:435), so it is injective. ids: scope is the SourceTextIdentity scopeRef schema, so a claim's scope is its capture's scope byte for byte; principal is Shared.UserId (checked against the IdCodec bound in the row); action is LiteralKit admit-distinction; revision is a branded LawRevision. makeClaimRecords gives LawProposedClaimRecord, the proposed-only schema the P0 routing decision names. The domain gains an @beep/epistemics edge, as the party domain has. LawEntities is unchanged, so the frozen ir-to-law-entities-v1 fixture keeps its bytes. A law instance of L4-5 lands in the domain tests. Answers A1 and F5.
+
+Amended after independent review. The P0 routing names the core "exported by @beep/epistemics"; this decision re-routes it under that decision's reversal clause ("Re-route any of the three by a decision file before its phase opens"): `@beep/epistemics` exports the claim-core factory and the law-practice domain owns the `LawClaimCore` instance. The distinction reference is a content id, `DistinctionId`, minted from the `law-distinction/v1` preimage with `@beep/jsonc/Mint` `definePreimage`, which adds the law-practice domain edges to `@beep/epistemics` and `@beep/jsonc`. The scope-only core-difference test lives in `LawClaim.identity.test.ts`.
+
+Lane p6
+
+Reverse: Delete packages/law-practice/domain/src/values/LawClaim, drop the domain -> epistemics edge, and return the flow to the legacy CandidateClaim chain
+
+### P6: a law-practice instance of two claims over one verified occurrence lands beside the epistemics proof, 2026-11-24
+
+SPEC names a law-practice location for the absorbed attributed-span proof (SPEC.md:443-446), while the live proof is generic and lives in epistemics. P6 adds packages/law-practice/use-cases/test/ClaimGate.two-claims-one-occurrence.test.ts: two law claims proposed over one verified distinction occurrence, each gated through OfficeActionDistinctionGate, with accepted and rejected assessments retained per claim. The epistemics file stays as the generic proof, and the SPEC location becomes true as well. Answers F12.
+
+Lane p6
+
+Reverse: Delete packages/law-practice/use-cases/test/ClaimGate.two-claims-one-occurrence.test.ts and amend SPEC to point at the epistemics file only
+
+### P6: extractCandidate and its CandidateClaim and Evidence result stay for the Practice KG claims batch; only the gate, lifecycle and projection leave the review, 2026-11-24
+
+Independent review of the P6 design. extractCandidate returns OfficeActionCandidateExtraction { candidate: CandidateClaim, evidence: Evidence } (use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts:114-125), built with spikeEntityInput (OfficeActionReview.service.ts:17,35,90-113). runPracticeKgClaimsBatch calls it, spreads extracted.candidate and extracted.evidence into the stored epistemic_candidate_claim and epistemic_evidence rows and calls persistCandidate (server/src/PracticeKg.claims.ts:343,478-518,580); the batch is hosted by apps/practice-kg-mcp/src/claims.ts:63-70, whose carryClaims carries those rows between bundles. The first draft both kept extractCandidate's role and gated row 8 on CandidateClaim leaving OfficeActionReview. Option (a) is taken: extractCandidate, CandidateClaim, Evidence and spikeEntityInput stay for the batch, whose stored rows keep their DDL and shape, so the stored-format law needs no converter; makeClaimGate, makeClaimTransition, projectClaims, ClaimGateShape and ClaimTransitionShape leave the review. The row gate becomes rg -n 'makeClaimGate|makeClaimTransition|projectClaims|ClaimGateShape|ClaimTransitionShape' over OfficeActionReview, and PracticeKg.claims.ts, PracticeKg.projections.test.ts:2452,2604 and apps/practice-kg-mcp/src/claims.ts are in that row's files and gate. Moving the batch to law claims is left to the phase that persists law claims.
+
+Lane p6
+
+Reverse: Move the claims batch onto the new review result and add a read-side converter for the stored epistemic_* rows
+
+### P6: Practice KG queries filter by granted family keys; documents and document nodes key by (digest, docket); both store versions bump, 2026-11-24
+
+Practice KG nodes carry client and docket_family (PracticeKg.projections.ts:244-273) and matters are keyed by family_key (PracticeKg.matters.ts:297-318), so the graph-query and search paths can be walled by filtering every query and BM25 posting through the principal's granted docket families inside one bundle. But documents and document_text key by digest alone (PracticeKg.fts.ts:62-90): identical bytes filed in two matters collapse to one row with one docket, and a family filter would hide the document from one matter and cannot represent the two-matter fixture. Their identity becomes (digest, docket), the bundle version bumps and the host refuses an older bundle with a typed error, because the scope of a collapsed row cannot be recovered on read. The bundle is a derived build artifact rebuilt from sources, not a store of record, so regeneration satisfies the stored-format law. Directory rows (clients, correspondents) are returned only through a granted matter's links. The row measures how the builder dedupes identical digests today before the change. The operational rebuild over the corpus and the operator's grants configuration are a HOLD on commit row 14. Answers A9.
+
+Amended after independent review. (1) The filter key is the client-qualified family key, not the bare docket family, and rows with a NULL client or family are denied (decision `2026-11-24-p6-the-practice-kg-wall-key-is-the-client-qualified-family-key`). (2) The graph is the PGlite store: document nodes key by digest alone (`PracticeKg.projections.ts:345,409,476`) and candidate claims join them on `natural_key = sourceDocumentDigest` (`PracticeKg.queries.ts:63-72`), so the `(digest, docket)` key extends to the document natural key and IRI, the `has_document` edges and every `natural_key = digest` join, and both `PracticeKgSchemaVersions.duckdb` and `.pglite` bump (`PracticeKg.schemas.ts:470`, `PracticeKg.projections.ts:1020`). (3) Every reader that joins on digest moves to the pair: `PracticeKg.references.ts:36-37,60-66`, `PracticeKg.correspondents.ts:608`, `PracticeKg.claims.ts:296`, `PracticeKg.verify.ts:196`, `DocketIntake/DocketIntake.matters.ts:160-164`, `PracticeKg.fts.ts:130,206-218` and `PracticeKg.queries.ts:143-212`, including the FTS `doc_id` (decision `2026-11-24-p6-search-scores-over-the-granted-subset-and-doc-ids-carry-the-docket`). (4) The host's refusal of a mismatched bundle already exists; the hand mirror `supportedStoreVersions` (`PracticeKgHost/PracticeKgHost.bundle.ts:19-20,72-73`) is deleted and the host reads `PracticeKgSchemaVersions.make({})`, as docket intake does (`DocketIntake.matters.ts:498`), and docket intake, which refuses any other DuckDB format (`:570-575`), joins the HOLD. (5) Email rows are walled by mail folder bindings (decision `2026-11-24-p6-email-rows-are-walled-by-mail-folder-bindings`), and `corpus_get_document` and the lookup tools filter by granted family keys. (6) `apps/practice-gateway` is a second host and is configured in the same row (decision `2026-11-24-p6-every-host-of-a-walled-layer-provides-principal-and-authority-fail-closed`).
+
+Lane p6
+
+Reverse: Return documents and document_text to a digest-only key, drop the docket-family filters and restore the previous bundle version
+
+### P6: the Practice KG wall key is the client-qualified family key; rows with a NULL client or family are denied, 2026-11-24
+
+Independent review of the P6 design. Practice KG matters are keyed by the client-qualified family_key (server/src/PracticeKg.matters.ts:297-306), but documents and search filter on the bare docket_family (PracticeKg.queries.ts:211), and the KG spells the qualified key as client || '.' || docket_family, NULL when client is NULL (:58); documents.client, docket and docket_family are nullable (PracticeKg.fts.ts:61-68). Two clients with the same family string would share a bare-family grant, and a config check over configured keys cannot see a data collision. The wall key is PracticeKgFamilyKey { client, family }, both non-empty, encoded as the KG spelling. Every walled query filters on it inside its SQL: client || '.' || docket_family on kg_node and documents, family_key on the matter tables, and for candidate claims the snapshot family with the document node's client. A row whose client or family is NULL has no key and is denied. The two-matter fixture files its matters under two clients that share one bare family string. Amends 2026-11-24-p6-matter-authority-port-principal-and-scope-bindings (MatterScope.familyKeys replaces docketFamilies) and the Practice KG wall decision.
+
+Lane p6
+
+Reverse: Return MatterScope to bare docket families and filter on docket_family
+
+### The review authorizes claim-proposal on the capture scope, 2026-11-24
+
+`OfficeActionReview.review` asks `MatterAuthority.authorize` for `claim-proposal` on the capture scope (the extraction request's `source.scopeRef`) before it runs any step, and fails with `ClaimProposalRefused.DeniedScope` when the answer is `Denied`. The principal is the host's `LawPrincipal`, passed in the review's deps. `extractCandidate` stays unwalled so the Practice KG claims batch keeps working under the empty default. Code: `OfficeActionReview.service.ts` (`review`).
+
+Lane p6
+
+Reverse: Remove the authorize call from review and wall only the store append.
+
+### P6: the pre-save SHACL lint refuses a batch that raises the violation count, not one that leaves it non-conforming, 2026-11-24
+
+Row 12 measured that proposeChangeBatch (OntologyToolService.applyAndSave) saved a batch without running SHACL validation. The lint now validates the session before and after the batch and refuses when the count of violation-severity findings rises, or when the after-run is truncated and the before-run was not. It does not require the result to conform: the ontology_repair path saves through the same applyAndSave and a repair may reduce violations without clearing them, and an ontology that already fails SHACL must still accept batches that fix or leave its violations alone. When both runs are truncated the counts are capped at the validation budget and the batch passes. A finding-identity diff was rejected because property shapes are blank nodes whose labels are not stable across runs. The refusal is OntologyProposedTermRefusal with lint ShaclWorsened {before, after, truncated}.
+
+Lane p6
+
+Reverse: Replace ensureShaclNotWorsened in OntologyToolService.ts with a conformance check, or delete it
+
+### The test claim store serializes partitions and refuses a knowledge-start regression, 2026-11-24
+
+The use-cases test double for `LawClaimProposals` runs every `withPartition` body under one permit and refuses an append whose knowledge start is earlier than the latest stored in its scope, the refusal the claim log makes as `KnowledgeStartRegression`. Property (f) of the write-tools test therefore fails if `ClaimProposal` stops flooring its activity at the partition's last knowledge start, which it would not with a store that accepts any order.
+
+Lane p6
+
+Reverse: Restore the unserialized test double; property (f) then only checks that both appends return.
+
+### P6: MatterWall.two-matter.test.ts composes a PGlite graph store built by the test and fails rather than skips without it, 2026-11-24
+
+Independent review of the P6 design. The Practice KG graph tools query PGlite, not DuckDB: the handler layer requires SqlClient (server/src/PracticeKg.tool-handlers.ts:381-391) and kg_clients, kg_docket_family, kg_application_lookup, kg_find, kg_candidate_claims and kg_provenance go through queryPglite (:397,402-415,421,505,637); the graph store is kg.pglite (PracticeKgHost/PracticeKgHost.selfCheck.ts:220). A test without PGlite either fails to compose or sees the NotLoaded result of kg_candidate_claims (:496-503), which makes 'B rows absent' true with no wall. The test therefore composes a PGlite graph store built by the test through Pglite.makeLayer in a scoped temporary directory, as server/test/PracticeKg.projections.test.ts:850,868 already does in the unit shard, and asserts that kg_candidate_claims returned the loaded result type before asserting that B rows are absent. The worry of 2026-11-24-p6-the-two-matter-test-runs-in-the-unit-shard-without-pglite was a gated skip; the file fails, never skips, when PGlite is absent. That decision is amended: what remains of it is that the PGlite repositories CandorRecord and LegalPositionRecord are not composed and that the file runs in the unit shard. Answers A15 and F14 as amended.
+
+Lane p6
+
+Reverse: Drop the PGlite graph store from the test layer and assert path 3 only on the DuckDB matter store tools
+
+### P6: the two-matter test builds real bundles from a two-matter corpus and composes each path's production layer per principal, 2026-11-24
+
+MatterWall.two-matter.test.ts follows section 8.3 with these choices. The Practice KG paths (3 and 4) read bundles built by buildPracticeKgBundle from a two-matter fixture corpus in a scoped temporary directory on the node file system, not MemoryFileSystem: PGlite and DuckDB need real files, and building the bundle exercises the (digest, docket) keys end to end. The corpus files identical bytes under 11111.20001US01 and 22222.20001US02 (two clients sharing the bare family 20001), one document only in each matter, and one mail archive with a folder per matter; a second bundle without matter B gives the with-and-without-B score comparison. The candidate-claim tables are seeded into the built graph store, so kg_candidate_claims returns the loaded result. Path 2 reuses the citation callback observation fixture, whose source scope is bound to matter B, because anchor resolution needs mentions captured against a verified source. Path 7 builds LawPracticeServerLive per principal with a stub language model and seeds its claim store. Paths 1 and 5 compose AuthorizedSourceTextResolver over identical office-action bytes; path 6 is the NoticeMessage structural case. Each walled case asserts the denial and the granted control. A mutation that replaces the walled family filter with TRUE fails paths 3 and 4.
+
+Lane p6
+
+Reverse: Replace the built bundles with hand-written PGlite and DuckDB rows and the per-path layers with test doubles
+
+### P6: MatterWall.two-matter.test.ts composes no PGlite repositories and runs in the server unit shard, 2026-11-24
+
+2026-11-19-p0-item11-matter-wall-test-shape lists PGlite repositories in the widened server test layer. The only repositories in law-practice server are CandorRecord and LegalPositionRecord, which filter by orgId (CandorRecord.repo.ts:99-109, LegalPositionRecord.repo.ts:107-138): tenant isolation, outside the seven matter paths. Composing them would add PGlite to the test without exercising a path, and a gated skip on a host without PGlite would let the exit go green without running. This amends the P0 layer list: the test composes LawPracticeServerLive widened with the Practice KG host over MemoryFileSystem and an in-memory DuckDB bundle, the citation engine, the notice mailbox over the fake mailbox, MatterAuthorityLive over a test config and a test LawPrincipal. Fixture: the synthetic office-action text captured under two scope references bound to matters A and B; principal pA staffed on A, pAB on both; one it.layer case per path. The file joins server/vitest.shards.json in the unit shard and is reweighted with bun run beep ci partitions rebalance --write --run <id> after the first hosted run. Answers A15 and F14.
+
+Amended after independent review by decision `2026-11-24-p6-the-two-matter-test-builds-an-in-memory-pglite-graph-store`. The Practice KG graph tools query PGlite, so the test composes a PGlite graph store built by the test and fails, never skips, without it; the notice mailbox is no longer composed (path 6 is a structural proof). What stands from this decision: the PGlite repositories `CandorRecord` and `LegalPositionRecord` are not composed, `orgId` isolation is outside the seven paths, and the file runs in the server unit shard.
+
+Lane p6
+
+Reverse: Add the PGlite repositories to the test layer and move the file to the integration shard, amending server/vitest.shards.json
+
+### P6: typingsFromDataset types a term only on one stated class type and reads mediations over the subclass closure, 2026-11-24
+
+typingsFromDataset types a named non-gUFO subject only when it states exactly one rdf:type gufo:<ClassType>; none or several leaves it untyped, so the audit stays silent rather than guessing (the L3-3 contract). Its instance category is the first of gufo:Relator, gufo:Quality and gufo:Event that its rdfs:subClassOf closure reaches, otherwise Object, because a gUFO class type such as Kind does not fix the category and Object is the endurant default. Mediations are the owl:onProperty gufo:mediates restrictions stated anywhere in the closure, so a relator subkind inherits its supertype mediations: owl:someValuesFrom reads as cardinality 1 and owl:qualifiedCardinality or owl:minQualifiedCardinality with owl:onClass as its value, the largest per mediated type winning. specializes keeps only named non-gUFO superclasses, since a gUFO upper class as an untyped supertype would wrongly exempt a role from RoleWithoutKind. A relator stated with no mediation cannot be a GufoTyping (its check requires one), so StatedTypings lists it in unmediated and auditStated reports it as RelatorUndermediated. The namespace IRIs come from the identity registry rows; the owl restriction terms are not registry terms, so they are spelled against the owl namespace row.
+
+Lane p6
+
+Reverse: Change classTypeOf, instanceCategoryOf and mediationsOf in @beep/ontology Gufo.ts
+
+### Use-cases tests run on a test-double claim store, 2026-11-24
+
+use-cases tests cannot import `@beep/law-practice-server`, so the office-action flow, two-claims and admission tests run on a small in-memory `LawClaimProposals`/`LawClaimAdmissions` double in `use-cases/test/fixtures/office-action-review/support.ts` (no partition permit; a Ref of entries and bindings). The server's `LawClaimStoreMemory` is the real memory layer, with a one-permit partition per scope, and has its own `server/test/ClaimStore.memory.test.ts`.
+
+Lane p6
+
+Reverse: Move the memory store into use-cases src and have the server layer wrap it.
+
+### P6: withActivity mints the id at start, provides CurrentActivity, and composeLogged clamps started to an ActivityFloor, 2026-11-24
+
+The sketch withActivity (ops/design/L5.operations.ts) has pure facts, no activity id and no bind for logged pipelines, and only clamps ended. P6 settles the open points: (1) facts is effectful, (a) => Effect<{ pin, promptDigest, used }>, so a model-backed run reads Model.ProviderName and Model.ModelName in its own requirements, as the langextract handoff does; generated is (b) => Iterable<ContentHash>. (2) The id is minted at start through mintActivityId (jsonc/src/ActivityStart.ts:221), per 2026-11-19-p0-activity-id-minted-at-start, so R gains Digest and E gains PreimageMintError uniformly across a logged pipeline. (3) A CurrentActivity service { id, start, stamp } is provided to the wrapped run only; stamp reads Clock and returns max(now, started, last stamp), so stamps are monotone and never precede started; ended = max(now, started, last stamp). (4) Generation time is a stamp, so GenerationFact.at equals the claim core's knowledgeStart and promote's check generation.at <= knowledgeStart holds (epistemics/src/ClaimCore.ts:212-216); this refines 2026-11-22-p3-generation-time-is-the-stated-time. (5) composeLogged runs the downstream operation under ActivityFloor = Some(max ended upstream), a Context.Reference<Option<Utc>> defaulting to None, and unions logs through ActivityLogReducer, so used is never earlier than generated under any clock, including one stepping backwards. Clamping was chosen over refusing because clock skew is not an operation failure. Answers O1, O5, O8 and O9.
+
+Amended after independent review. `withActivity` takes an `ActivityDescriptor` interface (`ActivityFacts` remains only the schema); a run that fails after start records its activity with `outcome: failed` and fails with `LoggedFailure<E | EF | PreimageMintError>{ error, activities }`, a failure before start carrying an empty log (decision `2026-11-24-p6-a-failed-attributed-run-records-its-activity`). `composeLogged` sets `ActivityFloor` for the downstream step and joins the upstream log into a downstream failure. L5-3 covers failing pipelines, and each production descriptor has a coverage test against the ContentHash fields of its output schema.
+
+Lane p6
+
+Reverse: Return withActivity to the sketch form (pure facts, no id, no CurrentActivity), drop ActivityFloor and composeLogged, and restate L5-3 per activity only
+
+### P6: WriteTools.proposed-only.test.ts proves properties (a) to (e) over every non-read-only law-practice tool, 2026-11-24
+
+The PLAN exit names a write-tools-emit-proposed test; the P0 routing decision puts it in the use-cases tests. The file is packages/law-practice/use-cases/test/WriteTools.proposed-only.test.ts and a write tool is every tool of a law-practice toolkit whose Tool.Readonly annotation is not true (effect ai/Tool.ts:2149): today the three ReviewHub append tools and claim_propose. Properties: (a) every write tool's success JSON Schema (Schema.toJsonSchemaDocument, Schema.ts:18327) carries no admitted stance and no Admission or HumanAdmissionToken schema, and an admitted value fails LawProposedClaimRecord decode; (b) the claim_propose handler's requirements exclude AttorneyAttestation and AdmissionPorts, and an extra token field is refused by strict decode; (c) unverifiable support and an unstaffed scope return typed refusals and leave LawClaimStore empty; (d) readOnly false makes fromApprovedToolsPolicy refuse without approval; (e) the conformance kit lists input and output schemas equal to toolJsonSchema of the domain schemas. ReviewHub verdicts are review-item judgements and carry no stance, so (a) holds for them; no verdict projects to an admission. NLP corpus tools write in-process corpus state, not records, so they are outside this test. Answers A5, A16 and F8.
+
+Amended after independent review. (b) asserts the handler's `RIn` names `ClaimProposal` and no admission port, at the type level; (c) asserts `LawClaimAdmissions.admissions` is empty after every write, with the admission port provided only to `LawAdmission`'s layer (decision `2026-11-24-p6-the-claim-store-splits-proposal-and-admission-ports`); (d) asserts a repeated identical `claim_propose` returns the same record and records no second activity (decision `2026-11-24-p6-claim-propose-is-idempotent-by-lookup`); (e) compares the PracticeKg, ReviewHub and Nlp toolkits through `toolJsonSchema` without mounting them; (f) asserts two concurrent proposals in one scope stamp two generations in order; (g) asserts a refused proposal appends nothing.
+
+Lane p6
+
+Reverse: Narrow the test to claim_propose only and move it into the law-practice server tests
+
 ### The P5 registration commit clears its own lint debt and re-records the inherited cache drift, 2026-11-24
 
 Row 16 found P5-introduced findings the design did not foresee and fixed them in place rather than growing an inventory (S31). Rdf.ts coverage had fallen in row 2 (lines 97.43 to 95, branches 100 to 87.5): Literal.fromParts gains refusal tests and the escapeIri helper is deleted, because RFC 3987 IRIs cannot contain a character it escapes and the encoded-quad order only ever sees encoded valid IRIs or input that fails decoding. Twenty-four effect-vitest findings in P5 tests become @effect/vitest/utils assertions, an Exit in the parity property, an explicit layer timeout and realPath resolution of committed fixtures. Six plain-data S.Class schemas in Canonical.ts and Rdfc10.ts become S.Opaque over annotated structs. MappingSet.profile and DocumentAnnotation (whose property moved to md in row 6) gain schema-derived properties. Three terse-effect advisories in rdf and ontology are rewritten. The cache re-record names all seven drifted subjects because the tool refuses a partial set; root, epistemics and party-server drifted in P4 (2ced3e0a632, 97b2de8a43b) and the review report says so. Full docgen is not run locally: docgen:local demands it because global inputs differ from origin/main on this stale stack base, and every edited package passed its own docgen through package-verify.
@@ -2699,6 +3390,14 @@ Row 16 found P5-introduced findings the design did not foresee and fixed them in
 Lane p5
 
 Reverse: Revert the row 16 commit; the coverage rows, cache re-record and test rewrites return together, and escapeIri can be restored from 34c34d8bdba.
+
+### Row 17 fixes its findings in place and re-records the L5 and L7 catalogs, 2026-11-25
+
+Row 17 found P6-introduced findings the design did not foresee and fixed them in place rather than growing an inventory (S31). The coverage ratchet withholds a lowered row on any package that owns or depends on a changed file, so every P6 drop had to be repaired, not re-recorded. Gufo.ts gains a non-literal cardinality test; ProvenanceTraversal.values, Wink.models, Types.ts, ClaimInspection.lexical, DocketReview.schemas and the nlp-processing branch total gain tests; Session.validation and the nlp-mcp Streaming files rise above their stale floors. Three source changes remove unreachable or wrong code: OfficeActionReview reads the extractor version from the narrowed Extracted result and maps alignment through an exhaustive record, and fails a mint error through Effect.catchIf; observability builds its log attributes with O.getSomesStruct because the diagnostic redaction channel always carries a detail, and a new exported-tool failure test covers recordNlpFailure; WinkEngineCustomEntities.fromPatterns had a data-last overload that dual silently swapped (name and patterns reversed) and now dispatches explicitly. ActivityFacts becomes an S.Opaque schema and CurrentActivity inlines its shape (schema-first lint). Twenty-five effect-vitest findings in P6 tests are fixed, including the inherited docket-check Option assertion in a file this row edits; five PracticeKg.projections rows are re-keyed in place without adding entries. Inherited and left for their owners: semantica CanaryC1Live, LanguageModelLive and LedgerLive drifted with P4 commits 960b792a314 and 6a306ed615e after their rows were recorded, and Command.ts lost one counted statement with no source change (uncovered fell 13 to 12); the P4 lane re-records them. The schema-first and effect-vitest findings in semantica, epistemics, docket review and tool/cli predate P6. The cache baselines of the eight drifted P6 subjects and the root are re-recorded from docs/reports/tksr-p6-l5-l7-cache-review-2026-11-25.md, after the policy-tools fingerprint gained jsonc ActivityRecord. New nlp-processing files moved in by row 16 are registered at their measured rows, as the row names; raising them to full coverage is test work the ratchet does not require. docgen:local asked for the full proof because rows 1 and 2 changed global inputs; package-verify ran docgen for every changed package and hosted Docgen runs the full proof. beep laws comments is not a subcommand on this head.
+
+Lane p6
+
+Reverse: Revert the row 17 commit; the coverage, cache and fingerprint files return to their row 16 values and the tests and source fixes go with it.
 
 <!-- beep:decisions:end -->
 

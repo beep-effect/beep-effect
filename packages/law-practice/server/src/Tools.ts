@@ -19,6 +19,7 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
+import type { LawPrincipal, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import type * as Arr from "effect/Array";
 import type * as McpProtocol from "effect/ai/McpProtocol";
 import type * as Path from "effect/Path";
@@ -206,7 +207,11 @@ export const PRACTICE_KG_MCP_INSTRUCTIONS =
  */
 export const makePracticeKgServerLayer = (
   config: PracticeKgMcpServerConfig
-): Layer.Layer<never, never, DuckDb | Path.Path | PracticeKgBundle | SqlClient | Stdio> =>
+): Layer.Layer<
+  never,
+  never,
+  DuckDb | LawPrincipal | MatterAuthority | Path.Path | PracticeKgBundle | SqlClient | Stdio
+> =>
   PracticeKgToolkitLayer.pipe(
     Layer.provide(
       McpServer.layerStdio({

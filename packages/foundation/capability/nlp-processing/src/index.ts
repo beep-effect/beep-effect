@@ -6,6 +6,13 @@
  */
 
 /**
+ * Attributed operation runs recorded as prov activities.
+ *
+ * @since 0.0.0
+ * @category combinators
+ */
+export * as Activity from "./Activity.ts";
+/**
  * Pluggable NLP backend interface, capabilities, and failures.
  *
  * @since 0.0.0
@@ -33,6 +40,20 @@ export * as Graph from "./Graph/index.ts";
  * @category services
  */
 export * as NLPService from "./NLPService.ts";
+/**
+ * The `Operation.run` span, activity attributes and `beep.nlp.*` metrics.
+ *
+ * @since 0.0.0
+ * @category observability
+ */
+export * as NlpProcessingInstrumentation from "./NlpProcessing.instruments.ts";
+/**
+ * The named effectful arrow and its Kleisli combinators.
+ *
+ * @since 0.0.0
+ * @category combinators
+ */
+export * as Operation from "./Operation.ts";
 /**
  * NLP AI tool schemas and export adapters.
  *

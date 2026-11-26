@@ -149,7 +149,7 @@ const getCanonicalDataset = (
 > =>
   CanonicalizationAlgorithm.match(request.algorithm, {
     "rdfc-1.0": () => canonicalizeSemantically(digest, request.dataset),
-    "lexical-sort-v1": () => Effect.succeed(canonicalizeLexically(A.fromIterable(request.dataset.quads))),
+    "lexical-sort-v1": () => request.dataset.quads.pipe(A.fromIterable, canonicalizeLexically, Effect.succeed),
   });
 
 /**

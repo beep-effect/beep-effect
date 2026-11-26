@@ -6,10 +6,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { BM25Norm, PositiveNumber } from "@beep/nlp/Core/Vectorization";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Tool from "effect/ai/Tool";
 import * as S from "effect/Schema";
+import { BM25Norm, PositiveNumber } from "../Core/Vectorization.ts";
 import { AiCorpusSummary, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/CreateCorpus");
@@ -83,4 +83,8 @@ export const CreateCorpus = Tool.make("CreateCorpus", {
   failureMode: "return",
   parameters: CreateCorpusParameters,
   success: S.toEncoded(AiCorpusSummary),
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, false)
+  .annotate(Tool.OpenWorld, false);

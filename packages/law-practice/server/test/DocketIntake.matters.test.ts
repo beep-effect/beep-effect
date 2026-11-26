@@ -548,7 +548,7 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
         const path = yield* Path.Path;
         const noManifest = yield* bundleDirectory({ database: true, documents: false, manifest: O.none() });
         const garbage = yield* bundleDirectory({ database: true, documents: false, manifest: O.some("not json") });
-        const argument = Str.replace('"duckdb":"4"', '"duckdb":"3"');
+        const argument = Str.replace('"duckdb":"5"', '"duckdb":"4"');
         const fixtureManifest1 = yield* fixtureManifest;
         const older = yield* bundleDirectory({
           database: true,
@@ -558,12 +558,12 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
         const noFormat = yield* bundleDirectory({
           database: true,
           documents: false,
-          manifest: O.some('{"schemaVersion":{"pglite":"4"}}'),
+          manifest: O.some('{"schemaVersion":{"pglite":"5"}}'),
         });
         const partial = yield* bundleDirectory({
           database: true,
           documents: false,
-          manifest: O.some('{"schemaVersion":{"duckdb":"4","pglite":"4"}}'),
+          manifest: O.some('{"schemaVersion":{"duckdb":"5","pglite":"5"}}'),
         });
         const fixtureManifest7 = yield* fixtureManifest;
         const noDatabase = yield* bundleDirectory({
@@ -582,8 +582,8 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
           "Practice KG bundle directory <path> does not exist.",
           "Practice KG bundle manifest <path> cannot be read.",
           "Practice KG bundle manifest <path> is not a bundle manifest.",
-          "Practice KG bundle at <path> uses DuckDB store format 3; the docket intake reads format 4. Install a rebuilt bundle.",
-          "Practice KG bundle at <path> uses DuckDB store format none; the docket intake reads format 4. Install a rebuilt bundle.",
+          "Practice KG bundle at <path> uses DuckDB store format 4; the docket intake reads format 5. Install a rebuilt bundle.",
+          "Practice KG bundle at <path> uses DuckDB store format none; the docket intake reads format 5. Install a rebuilt bundle.",
           "Practice KG bundle manifest <path> is invalid.",
           "Practice KG bundle database <path> is missing.",
         ]);

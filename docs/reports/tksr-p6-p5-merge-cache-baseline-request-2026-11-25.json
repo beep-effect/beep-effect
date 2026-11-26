@@ -1,0 +1,27 @@
+{
+  "previous": {
+    "//": "0183c0c4ef477300809ecd961fd2dde115be50629243bdfd7a62d524b3089e7f",
+    "@beep/jsonc": "2bb5c106dc9fa6105089d4d729ea179b97fdec267dfe6b5a05fa46026b3efd9f",
+    "@beep/law-practice-domain": "4e5f748bd4b2f81ca1ac3015a50a92441c9189b65f81fbfb33d04e57ca109aba",
+    "@beep/law-practice-use-cases": "4c9e271659072526d03361b2e46fba10fa0a97c1aa6e801e068595aa08cbaca9",
+    "@beep/nlp": "96f874128bf65b705ae8c8276ed9d765380f0e9105e7b5716fce4e7858990af7"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Re-record the subjects the P5 merge and the P6 writer-check fixes changed: law-practice domain and use-cases, nlp, jsonc and the root turbo.json digest. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p6-p5-merge-cache-review-2026-11-25.md",
+      "sha256": "0911b2a5937b3dc19753404ad33841bfcbfcf18fa5d434608025ff5d16a71b11"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/jsonc",
+    "@beep/law-practice-domain",
+    "@beep/law-practice-use-cases",
+    "@beep/nlp"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

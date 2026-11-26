@@ -1,3 +1,5 @@
+import { TermIri } from "@beep/identity/Term";
+import { OntoViolation, RoleWithoutKind } from "@beep/ontology/Gufo";
 import { ChangeOperation, OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyToolsLive } from "@beep/ontology-server/tools";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
@@ -14,6 +16,8 @@ import {
   ValidateOntologyRequest,
 } from "@beep/ontology-use-cases/tools";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -82,6 +86,17 @@ const withToolkit = <A2, E>(
     const root = yield* Config.String("ONTOLOGY_WORKSPACE_ROOT");
     const path = yield* decodeOntologyFilePath("ontology.ttl");
     return yield* run(tools, path, root);
+  });
+
+const addSubclass = (local: string, supertype: string) =>
+  ChangeOperation.make({
+    kind: "addQuad",
+    partition: "asserted",
+    quad: makeQuad(
+      makeNamedNode(`https://example.test/${local}`),
+      makeNamedNode("http://www.w3.org/2000/01/rdf-schema#subClassOf"),
+      makeNamedNode(`https://example.test/${supertype}`)
+    ),
   });
 
 const addName = (person: string, name: string) =>
@@ -370,6 +385,85 @@ describe("ontology agent toolkit real-engine handlers", () => {
           pipe(repaired.proposal.verified, assertTrue);
           expect(repaired.change.delta.added.length + repaired.change.delta.removed.length).toBeGreaterThan(0);
           pipe(repaired.validation.validation.conforms, assertTrue);
+        })
+      ),
+      { timeout: 120_000 }
+    );
+  });
+});
+
+const gufoType = (local: string, classType: string) =>
+  ChangeOperation.make({
+    kind: "addQuad",
+    partition: "asserted",
+    quad: makeQuad(
+      makeNamedNode(`https://example.test/${local}`),
+      RDF_TYPE,
+      makeNamedNode(`http://purl.org/nemo/gufo#${classType}`)
+    ),
+  });
+
+const addLabel = (local: string, label: string) =>
+  ChangeOperation.make({
+    kind: "addQuad",
+    partition: "asserted",
+    quad: makeQuad(makeNamedNode(`https://example.test/${local}`), RDFS_LABEL, makeLiteral(label)),
+  });
+
+const addPerson = (local: string) =>
+  ChangeOperation.make({
+    kind: "addQuad",
+    partition: "asserted",
+    quad: makeQuad(
+      makeNamedNode(`https://example.test/${local}`),
+      RDF_TYPE,
+      makeNamedNode("https://example.test/Person")
+    ),
+  });
+
+const sameViolations = S.toEquivalence(S.Array(OntoViolation));
+
+describe("ontology agent toolkit proposed-term lint", () => {
+  it.layer(Layer.fresh(TestLayer), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "refuses a typed role without a kind and a SHACL-worsening batch, and saves an untyped batch",
+      withToolkit((tools, path) =>
+        Effect.gen(function* () {
+          const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
+          const propose = (
+            operations: A.NonEmptyReadonlyArray<ChangeOperation>,
+            expectedFingerprint = opened.fingerprint
+          ) =>
+            tools.proposeChangeBatch(
+              ProposeChangeBatchRequest.make({ path, expectedFingerprint, operations }),
+              testActor
+            );
+          const role = yield* Effect.flip(propose([gufoType("Student", "Role")]));
+          const worsened = yield* Effect.flip(propose([addPerson("bob")]));
+          const unchanged = yield* tools.openInspect(OpenInspectRequest.make({ path }));
+          const untyped = yield* propose([addLabel("Student", "Student")]);
+          const kinded = yield* propose(
+            [gufoType("Person", "Kind"), gufoType("Student", "Role"), addSubclass("Student", "Person")],
+            untyped.currentFingerprint
+          );
+
+          expect(role._tag).toBe("OntologyProposedTermRefusal");
+          expect(
+            role._tag === "OntologyProposedTermRefusal" &&
+              role.lint._tag === "GufoViolated" &&
+              sameViolations(role.lint.violations, [
+                RoleWithoutKind.make({ term: TermIri.make("https://example.test/Student") }),
+              ])
+          ).toBe(true);
+          expect(worsened._tag).toBe("OntologyProposedTermRefusal");
+          expect(
+            worsened._tag === "OntologyProposedTermRefusal" && worsened.lint._tag === "ShaclWorsened"
+              ? [worsened.lint.before, worsened.lint.after]
+              : []
+          ).toEqual([2, 4]);
+          expect(unchanged.fingerprint).toBe(opened.fingerprint);
+          expect(untyped.delta.added).toHaveLength(1);
+          expect(kinded.delta.added).toHaveLength(3);
         })
       ),
       { timeout: 120_000 }

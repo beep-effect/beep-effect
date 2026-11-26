@@ -6,10 +6,11 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { BM25Norm } from "@beep/nlp/Core/Vectorization";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Position } from "@beep/text/OffsetUnit";
 import * as S from "effect/Schema";
+import { BM25Norm } from "../Core/Vectorization.ts";
 
 const $I = $NlpProcessingId.create("Tools/_schemas");
 
@@ -98,12 +99,11 @@ export const AiPhoneticAlgorithm = AiPhoneticAlgorithmKit.pipe(
  * import { AiToken } from "@beep/nlp-processing/Tools/_schemas"
  *
  * const token = S.decodeUnknownSync(AiToken)({
- *   end: 5,
  *   isPunctuation: false,
  *   isStopWord: false,
  *   lemma: "quick",
  *   pos: "ADJ",
- *   start: 1,
+ *   span: { _tag: "Position", unit: "utf16-code-unit", start: 1, end: 5 },
  *   stem: "quick",
  *   text: "quick"
  * })
@@ -116,19 +116,18 @@ export const AiPhoneticAlgorithm = AiPhoneticAlgorithmKit.pipe(
  */
 export class AiToken extends S.Opaque<AiToken, { readonly brand: unique symbol }>()(
   S.Struct({
-    end: describe(S.Natural, "Character offset where the token ends in the source text."),
     isPunctuation: describe(S.Boolean, "Whether the token represents punctuation."),
     isStopWord: describe(S.Boolean, "Whether the token is a common stop word."),
     lemma: describe(S.String, "Base or dictionary form of the token."),
     pos: describe(S.String, "Part-of-speech tag such as NOUN, VERB, or ADJ.", {
       examples: ["NOUN", "VERB", "ADJ", "DET", "ADP"],
     }),
-    start: describe(S.Natural, "Character offset where the token begins in the source text."),
+    span: describe(Position, "UTF-16 code-unit span of the token in the source text."),
     stem: describe(S.String, "Stemmed form of the token."),
     text: describe(S.String, "The token text as it appears in the source input."),
   }).pipe(
     $I.annoteSchema("AiToken", {
-      description: "A linguistic token with POS, lemma, stemming, and character offsets.",
+      description: "A linguistic token with POS, lemma, stemming, and a UTF-16 source span.",
     })
   )
 ) {}
@@ -153,12 +152,11 @@ export class AiToken extends S.Opaque<AiToken, { readonly brand: unique symbol }
  *   tokenCount: 3,
  *   tokens: [
  *     {
- *       end: 5,
  *       isPunctuation: false,
  *       isStopWord: false,
  *       lemma: "hello",
  *       pos: "INTJ",
- *       start: 0,
+ *       span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 5 },
  *       stem: "hello",
  *       text: "Hello"
  *     }
@@ -178,7 +176,7 @@ export class AiAnalysis extends S.Opaque<AiAnalysis, { readonly brand: unique sy
     sentenceCount: describe(S.Natural, "Number of detected sentences."),
     sentences: describe(S.Array(S.String), "Detected sentence texts in document order."),
     tokenCount: describe(S.Natural, "Number of tokens including punctuation."),
-    tokens: describe(S.Array(AiToken), "Annotated tokens with POS, lemma, stem, and character offsets."),
+    tokens: describe(S.Array(AiToken), "Annotated tokens with POS, lemma, stem, and UTF-16 source spans."),
     wordCount: describe(S.Natural, "Approximate count of word-like tokens excluding punctuation."),
   }).pipe(
     $I.annoteSchema("AiAnalysis", {
@@ -202,9 +200,8 @@ export class AiAnalysis extends S.Opaque<AiAnalysis, { readonly brand: unique sy
  * import { AiSentence } from "@beep/nlp-processing/Tools/_schemas"
  *
  * const sentence = S.decodeUnknownSync(AiSentence)({
- *   end: 12,
  *   index: 0,
- *   start: 0,
+ *   span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 12 },
  *   text: "Hello world.",
  *   tokenCount: 3
  * })
@@ -217,14 +214,13 @@ export class AiAnalysis extends S.Opaque<AiAnalysis, { readonly brand: unique sy
  */
 export class AiSentence extends S.Opaque<AiSentence, { readonly brand: unique symbol }>()(
   S.Struct({
-    end: describe(S.Natural, "Character offset where the sentence ends."),
     index: describe(S.Natural, "Zero-based sentence index in the document."),
-    start: describe(S.Natural, "Character offset where the sentence begins."),
+    span: describe(Position, "UTF-16 code-unit span of the sentence in the source text."),
     text: describe(S.String, "The sentence text."),
     tokenCount: describe(S.Natural, "Number of tokens contained in the sentence."),
   }).pipe(
     $I.annoteSchema("AiSentence", {
-      description: "A sentence with token count and character positions.",
+      description: "A sentence with token count and a UTF-16 source span.",
     })
   )
 ) {}
@@ -384,8 +380,8 @@ export class AiRankedText extends S.Opaque<AiRankedText, { readonly brand: uniqu
  *
  * **Details**
  *
- * The model carries entity text, type labels, token boundaries, character
- * offsets, and whether the match came from built-in or custom entity logic.
+ * The model carries entity text, type labels, token boundaries, a UTF-16
+ * source span, and whether the match came from built-in or custom entity logic.
  *
  * **Example** (Decoding a named entity)
  *
@@ -394,10 +390,9 @@ export class AiRankedText extends S.Opaque<AiRankedText, { readonly brand: uniqu
  * import { AiEntity } from "@beep/nlp-processing/Tools/_schemas"
  *
  * const entity = S.decodeUnknownSync(AiEntity)({
- *   end: 20,
  *   endTokenIndex: 2,
  *   source: "builtin",
- *   start: 4,
+ *   span: { _tag: "Position", unit: "utf16-code-unit", start: 4, end: 20 },
  *   startTokenIndex: 1,
  *   type: "EMAIL",
  *   value: "john@example.com"
@@ -411,16 +406,15 @@ export class AiRankedText extends S.Opaque<AiRankedText, { readonly brand: uniqu
  */
 export class AiEntity extends S.Opaque<AiEntity, { readonly brand: unique symbol }>()(
   S.Struct({
-    end: describe(S.Natural, "Character offset where the entity ends."),
     endTokenIndex: describe(S.Natural, "Inclusive token index where the entity ends."),
     source: describe(S.optionalKey(AiEntitySource), "Whether the entity came from built-in or custom matching."),
-    start: describe(S.Natural, "Character offset where the entity begins."),
+    span: describe(Position, "UTF-16 code-unit span of the entity in the source text."),
     startTokenIndex: describe(S.Natural, "Inclusive token index where the entity begins."),
     type: describe(S.String, "Entity type label such as DATE, MONEY, EMAIL, or URL."),
     value: describe(S.String, "The extracted entity text."),
   }).pipe(
     $I.annoteSchema("AiEntity", {
-      description: "A named entity with offsets, token boundaries, and extraction source.",
+      description: "A named entity with a source span, token boundaries, and extraction source.",
     })
   )
 ) {}

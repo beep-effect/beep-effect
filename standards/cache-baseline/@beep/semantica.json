@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/semantica",
   "review": {
-    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
-    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Record the P6 dependency edges of nlp-processing, wink, semantica, ontology server and use-cases, and law-practice domain, use-cases and server, plus the root policy fingerprint input. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
-      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
+      "path": "docs/reports/tksr-p6-l5-l7-cache-review-2026-11-25.md",
+      "sha256": "fed2485257df7c6782354a329423d188df8b644718f2b7c37083d744e4967dcd"
     }
   },
   "nodes": [
@@ -24,7 +24,6 @@
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/langextract#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/openai#build",
         "@beep/oxigraph#build",
@@ -98,7 +97,6 @@
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/langextract#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/openai#build",
         "@beep/oxigraph#build",
@@ -166,7 +164,6 @@
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/langextract#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/openai#build",
         "@beep/oxigraph#build",
@@ -236,7 +233,6 @@
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/langextract#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/openai#build",
         "@beep/oxigraph#build",
@@ -320,7 +316,6 @@
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/langextract#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/openai#transit",
         "@beep/oxigraph#transit",
@@ -481,7 +476,6 @@
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/langextract#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/openai#transit",
         "@beep/oxigraph#transit",
@@ -544,7 +538,6 @@
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/langextract#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/openai#transit",
         "@beep/oxigraph#transit",

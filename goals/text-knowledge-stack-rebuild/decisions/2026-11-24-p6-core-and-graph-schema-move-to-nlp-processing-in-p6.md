@@ -1,0 +1,8 @@
+---
+title: "P6: nlp Core and Graph Schema move into nlp-processing; CharPosition becomes a text Position"
+date: 2026-11-24
+lane: "p6"
+reversal: "git mv np/src/Core moved files and np/src/Graph/Schema.ts back to nlp/src, restore CharPosition on Token, restore the nlp edges of wink, semantica, law-practice and scratchpad"
+---
+
+The PLAN P6 row names only Operations and Algebra, but 2026-11-19-p0-census-dispositions moves nlp Core to nlp-processing in P6 and 2026-11-22-p3-graph-span-becomes-an-optional-position moves Graph Schema with Core in P6. The routing preference for modeling packages is outweighed here: the linguistic engine contract already lives in nlp-processing (np/src/Core/Tokenization), every Core consumer (wink 8 src and 2 test files, semantica 3 files, the law-practice use-cases test ClaimInspection.lexical.test.ts:13, scratchpad effect-ontology/Service/Nlp.ts:15-16) already depends on nlp-processing, and P7 retires @beep/nlp. P6 moves Core, Graph/Schema.ts and internal/numbers.ts by git mv, re-annotates identifiers under $NlpProcessingId (the P2 precedent), deletes CharPosition (nlp/src/Core/Token.ts:115-170) and gives Token a span typed as @beep/text OffsetUnit Position in utf16-code-unit, since wink computes offsets from JavaScript string lengths (drivers/wink/src/WinkTokenization.service.ts:157-158). The unused @beep/nlp devDependency of the law-practice server leaves. The four text helpers (IdentifierText, PathText, QueryText, VariantText) stay in nlp until P7. Coverage, gitleaks and lint-rule allowance rows move by rename (S31). The PLAN row wording is amended in the exit row. Answers O7, F1 and F17.

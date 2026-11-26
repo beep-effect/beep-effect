@@ -155,6 +155,12 @@
       "test/DocketIntake.agents.test.ts",
       "test/LegalPositionRecord.pglite.test.ts",
       "test/MailTagging.matters.test.ts",
+      "test/MatterAuthority.test.ts",
+      "test/ClaimStore.memory.test.ts",
+      "test/ProvenanceTraversal.test.ts",
+      "test/CitationCache.scope.test.ts",
+      "test/PracticeKg.wall.test.ts",
+      "test/MatterWall.two-matter.test.ts",
       "test/ReviewFiles.test.ts"
     ],
     [

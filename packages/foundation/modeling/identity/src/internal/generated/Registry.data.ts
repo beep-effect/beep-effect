@@ -363,6 +363,18 @@ export const RegistryVocab = {
     iri: `${IdentityAuthority}operation/`,
     terms: [
       "Extract",
+      "ExtractEntities",
+      "ExtractRelations",
+      "Lemmatize",
+      "MapToLaw",
+      "ParseDependencies",
+      "PosTag",
+      "ProposeClaim",
+      "Sentencize",
+      "ToLowerCase",
+      "ToUpperCase",
+      "Tokenize",
+      "Trim",
     ],
   },
   owl: {

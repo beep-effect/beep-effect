@@ -7,6 +7,8 @@
  */
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
+import { TermIri } from "@beep/identity/Term";
+import { auditStated, typingsFromDataset } from "@beep/ontology/Gufo";
 import {
   applyChangeOperationsWithDelta,
   ChangeOperation,
@@ -52,9 +54,12 @@ import {
   OntologyBudgetRefusal,
   OntologyCasConflict,
   OntologyFingerprint,
+  OntologyGufoViolated,
   OntologyNoOpRefusal,
+  OntologyProposedTermRefusal,
   OntologyReasonerDriftRefusal,
   OntologySearchResponse,
+  OntologyShaclWorsened,
   OntologySparqlQueryResponse,
   OntologyToolCapability,
   OntologyToolExecutionError,
@@ -67,10 +72,12 @@ import {
   ValidateOntologyResponse,
 } from "./OntologyToolkit.ts";
 import type { OntologyChangeActor, Session, SessionChangeApplication } from "@beep/ontology-domain/aggregates/Session";
+import type { RunOntologyValidationResult } from "../aggregates/Session/index.ts";
 import type {
   CapabilityMetadataRequest,
   ExportProvenanceRequest,
   OntologyFingerprint as OntologyFingerprintType,
+  OntologyProposedTermLint,
   OntologySearchRequest,
   OntologySparqlQueryRequest,
   OntologyToolFailure,
@@ -238,6 +245,8 @@ const applyAndSave = Effect.fn("Ontology.Tools.applyAndSave")(function* (
   const application = applyChangeOperationsWithDelta(opened.session, attributedOperations);
   yield* ensureRealDelta(application);
   yield* ensureSharedPartitionClassification(application, request.operations);
+  yield* ensureShaclNotWorsened(opened.session, application.session);
+  yield* ensureGufoConformance(application);
 
   const sessions = yield* SessionUseCases;
   yield* sessions
@@ -298,6 +307,52 @@ const validateSession = Effect.fn("Ontology.Tools.validateSession")(function* (
     )
     .pipe(Effect.mapError(mapLayerError("validate")));
 });
+
+const decodeTermIri = S.decodeUnknownOption(TermIri);
+
+const violationCount = (result: RunOntologyValidationResult): number =>
+  A.length(A.filter(result.validation.violations, (violation) => violation.severity === "violation"));
+
+const proposedTermRefusal = (lint: OntologyProposedTermLint, guidance: string) =>
+  OntologyProposedTermRefusal.make({ lint, guidance, recoverable: true });
+
+const ensureShaclNotWorsened = Effect.fnUntraced(function* (before: Session, after: Session) {
+  const prior = yield* validateSession(before, false);
+  const proposed = yield* validateSession(after, false);
+  const worsened =
+    violationCount(proposed) > violationCount(prior) || (proposed.validation.truncated && !prior.validation.truncated);
+  return worsened
+    ? yield* proposedTermRefusal(
+        OntologyShaclWorsened.make({
+          before: S.Natural.make(violationCount(prior)),
+          after: S.Natural.make(violationCount(proposed)),
+          truncated: proposed.validation.truncated,
+        }),
+        "Validate the ontology, revise the batch so it adds no SHACL violation, and retry."
+      )
+    : undefined;
+});
+
+const ensureGufoConformance = (application: SessionChangeApplication) => {
+  const stated = typingsFromDataset(deriveSessionGraphPartitions(application.session).asserted);
+  const violations = pipe(
+    application.delta.added,
+    A.flatMap((quad) => (quad.subject.termType === "NamedNode" ? [quad.subject.value] : [])),
+    A.dedupe,
+    A.flatMap((subject) => O.toArray(decodeTermIri(subject))),
+    A.flatMap(auditStated(stated))
+  );
+  return A.match(violations, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (stated) =>
+      Effect.fail(
+        proposedTermRefusal(
+          OntologyGufoViolated.make({ violations: stated }),
+          "Give each proposed role or phase a kind, keep rigid types out from under anti-rigid ones, and mediate each relator at least twice, then retry."
+        )
+      ),
+  });
+};
 
 const capabilities = [
   OntologyToolCapability.make({ name: "ontology_open_inspect", mutating: false }),

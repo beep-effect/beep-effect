@@ -10,9 +10,9 @@ import { SchemaUtils } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import type { Document, DocumentId } from "@beep/nlp/Core/Document";
-import type { Sentence } from "@beep/nlp/Core/Sentence";
-import type { Token } from "@beep/nlp/Core/Token";
+import type { Document, DocumentId } from "./Document.ts";
+import type { Sentence } from "./Sentence.ts";
+import type { Token } from "./Token.ts";
 
 const $I = $NlpProcessingId.create("Core/Tokenization");
 
@@ -77,7 +77,7 @@ export class Tokenization extends Context.Service<Tokenization, TokenizationShap
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document, DocumentId } from "@beep/nlp/Core/Document"
+ * import { Document, DocumentId } from "@beep/nlp-processing/Core/Document"
  * import { Tokenization, tokenize } from "@beep/nlp-processing/Core/Tokenization"
  *
  * const service = Tokenization.of({
@@ -116,7 +116,7 @@ export const tokenize = Effect.fn("Nlp.Core.Tokenization.tokenize")(function* (t
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document, DocumentId } from "@beep/nlp/Core/Document"
+ * import { Document, DocumentId } from "@beep/nlp-processing/Core/Document"
  * import { Tokenization, sentences } from "@beep/nlp-processing/Core/Tokenization"
  *
  * const service = Tokenization.of({
@@ -155,7 +155,7 @@ export const sentences = Effect.fn("Nlp.Core.Tokenization.sentences")(function* 
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document, DocumentId } from "@beep/nlp/Core/Document"
+ * import { Document, DocumentId } from "@beep/nlp-processing/Core/Document"
  * import { Tokenization, tokenizeToDocument } from "@beep/nlp-processing/Core/Tokenization"
  *
  * const service = Tokenization.of({
@@ -200,7 +200,7 @@ export const tokenizeToDocument = Effect.fn("Nlp.Core.Tokenization.tokenizeToDoc
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document, DocumentId } from "@beep/nlp/Core/Document"
+ * import { Document, DocumentId } from "@beep/nlp-processing/Core/Document"
  * import { Tokenization, tokenCount } from "@beep/nlp-processing/Core/Tokenization"
  *
  * const service = Tokenization.of({

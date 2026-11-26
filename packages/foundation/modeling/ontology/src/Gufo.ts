@@ -7,18 +7,24 @@
  */
 
 import { $OntologyId } from "@beep/identity/packages";
+import { namespace } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import { makeNamedNode, serializeTerm } from "@beep/rdf/Rdf";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
+import type { Dataset, ObjectTerm, Quad } from "@beep/rdf/Rdf";
 
 const $I = $OntologyId.create("Gufo");
 
@@ -609,3 +615,292 @@ export const audit =
         ];
       },
     });
+
+/**
+ * **Details**
+ *
+ * A relator needs a mediated type to have a {@link GufoTyping}, so a dataset
+ * that types a term as a relator and states no `gufo:mediates` restriction
+ * for it lists the term in `unmediated` instead of `hierarchy.typing`.
+ *
+ * **Example** (Read stated typings)
+ *
+ * ```ts
+ * import { StatedTypings, TypedHierarchy } from "@beep/ontology/Gufo"
+ * import * as HashMap from "effect/HashMap"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const stated = StatedTypings.make({
+ *   hierarchy: TypedHierarchy.make({ typing: HashMap.empty(), specializes: HashMap.empty() }),
+ *   unmediated: HashSet.empty()
+ * })
+ * console.log(HashSet.size(stated.unmediated))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StatedTypings extends S.Opaque<StatedTypings, { readonly brand: unique symbol }>()(
+  S.Struct({
+    hierarchy: TypedHierarchy,
+    unmediated: TermIri.pipe(CanonicalHashSet),
+  }).pipe(
+    $I.annoteSchema("StatedTypings", {
+      description: "The gUFO typings and specializations a dataset states, and its relators stated without mediation.",
+    })
+  )
+) {}
+
+const GUFO_NAMESPACE = namespace("gufo").iri;
+const OWL_NAMESPACE = namespace("owl").iri;
+const RDF_TYPE_IRI = `${namespace("rdf").iri}type`;
+const SUBCLASS_OF_IRI = `${namespace("rdfs").iri}subClassOf`;
+const MEDIATES_IRI = `${GUFO_NAMESPACE}mediates`;
+const ON_PROPERTY_IRI = `${OWL_NAMESPACE}onProperty`;
+const SOME_VALUES_FROM_IRI = `${OWL_NAMESPACE}someValuesFrom`;
+const ON_CLASS_IRI = `${OWL_NAMESPACE}onClass`;
+const CARDINALITY_IRIS = HashSet.make(
+  `${OWL_NAMESPACE}qualifiedCardinality`,
+  `${OWL_NAMESPACE}minQualifiedCardinality`
+);
+
+const CardinalityLexical = S.FiniteFromString.pipe(
+  S.decodeTo(MediationCardinality),
+  $I.annoteSchema("CardinalityLexical", {
+    description: "The lexical form of an OWL qualified cardinality read as a mediation cardinality.",
+  })
+);
+
+const decodeCardinality = S.decodeUnknownOption(CardinalityLexical);
+const decodeTermIri = S.decodeUnknownOption(TermIri);
+const decodeClassType = S.decodeUnknownOption(GufoClassType);
+
+type QuadIndex = HashMap.HashMap<string, ReadonlyArray<Quad>>;
+
+const indexBySubject = (dataset: Dataset): QuadIndex =>
+  dataset.quads.pipe(
+    A.groupBy((quad) => serializeTerm(quad.subject)),
+    R.toEntries,
+    HashMap.fromIterable
+  );
+
+const objectsOf = (index: QuadIndex, subject: string, predicate: string): ReadonlyArray<ObjectTerm> =>
+  pipe(
+    HashMap.get(index, subject),
+    O.getOrElse(A.empty<Quad>),
+    A.filter((quad) => quad.predicate.value === predicate),
+    A.map((quad) => quad.object)
+  );
+
+const namedIris = A.flatMap(
+  (term: ObjectTerm): ReadonlyArray<string> => (term.termType === "NamedNode" ? [term.value] : [])
+);
+
+const namedKey = (value: string) => serializeTerm(makeNamedNode(value));
+
+const isGufoIri = Str.startsWith(GUFO_NAMESPACE);
+
+const classTypeOf = (index: QuadIndex, subject: string): O.Option<GufoClassType> =>
+  pipe(
+    namedIris(objectsOf(index, subject, RDF_TYPE_IRI)),
+    A.filter(isGufoIri),
+    A.flatMap((type) => O.toArray(decodeClassType(Str.slice(GUFO_NAMESPACE.length)(type)))),
+    A.dedupe,
+    O.liftPredicate((types) => types.length === 1),
+    O.flatMap(A.head)
+  );
+
+const superclassClosure = (index: QuadIndex, term: string): HashSet.HashSet<string> => {
+  let seen = HashSet.make(term);
+  let frontier: ReadonlyArray<string> = [term];
+  while (A.isReadonlyArrayNonEmpty(frontier)) {
+    const next = pipe(
+      frontier,
+      A.flatMap((current) => namedIris(objectsOf(index, namedKey(current), SUBCLASS_OF_IRI))),
+      A.filter((supertype) => !HashSet.has(seen, supertype)),
+      A.dedupe
+    );
+    seen = HashSet.union(seen, HashSet.fromIterable(next));
+    frontier = next;
+  }
+  return seen;
+};
+
+const instanceCategoryOf = (closure: HashSet.HashSet<string>): GufoInstanceCategory =>
+  pipe(
+    A.make(GufoInstanceCategory.Enum.Relator, GufoInstanceCategory.Enum.Quality, GufoInstanceCategory.Enum.Event),
+    A.findFirst((category) => HashSet.has(closure, `${GUFO_NAMESPACE}${category}`)),
+    O.getOrElse(() => GufoInstanceCategory.Enum.Object)
+  );
+
+const mediationsOf = (
+  index: QuadIndex,
+  closure: HashSet.HashSet<string>
+): HashMap.HashMap<TermIri, MediationCardinality> =>
+  pipe(
+    A.fromIterable(closure),
+    A.flatMap((type) => objectsOf(index, namedKey(type), SUBCLASS_OF_IRI)),
+    A.filter((restriction) => restriction.termType !== "NamedNode" && restriction.termType !== "Literal"),
+    A.map(serializeTerm),
+    A.filter((restriction) => A.contains(namedIris(objectsOf(index, restriction, ON_PROPERTY_IRI)), MEDIATES_IRI)),
+    A.flatMap((restriction): ReadonlyArray<readonly [TermIri, MediationCardinality]> => {
+      const someValuesFrom = A.map(
+        namedIris(objectsOf(index, restriction, SOME_VALUES_FROM_IRI)),
+        (target) => [target, 1] as const
+      );
+      const qualified = A.flatMap(namedIris(objectsOf(index, restriction, ON_CLASS_IRI)), (target) =>
+        pipe(
+          HashMap.get(index, restriction),
+          O.getOrElse(A.empty<Quad>),
+          A.filter((quad) => HashSet.has(CARDINALITY_IRIS, quad.predicate.value)),
+          A.flatMap((quad) =>
+            quad.object.termType === "Literal" ? O.toArray(decodeCardinality(quad.object.value)) : []
+          ),
+          A.map((cardinality) => [target, cardinality] as const)
+        )
+      );
+      return A.flatMap([...someValuesFrom, ...qualified], ([target, cardinality]) =>
+        A.map(O.toArray(decodeTermIri(target)), (term) => [term, cardinality] as const)
+      );
+    }),
+    A.reduce(HashMap.empty<TermIri, MediationCardinality>(), (mediations, [target, cardinality]) =>
+      HashMap.set(
+        mediations,
+        target,
+        O.match(HashMap.get(mediations, target), {
+          onNone: () => cardinality,
+          onSome: (stated) => Math.max(stated, cardinality),
+        })
+      )
+    )
+  );
+
+/**
+ * Read the gUFO typings and specializations a dataset states.
+ *
+ * **Details**
+ *
+ * A named non-gUFO subject is typed when it states exactly one
+ * `rdf:type gufo:<ClassType>`; a term that states none or several is
+ * untyped, and the audit is silent on it. Its instance category is the first
+ * of `gufo:Relator`, `gufo:Quality` and `gufo:Event` its `rdfs:subClassOf`
+ * closure reaches, otherwise `Object`. A relator's mediations are the
+ * `owl:onProperty gufo:mediates` restrictions its closure states, with
+ * `owl:someValuesFrom` read as cardinality 1 and `owl:qualifiedCardinality` or
+ * `owl:minQualifiedCardinality` with `owl:onClass` read as its value; the
+ * largest cardinality per mediated type wins. `specializes` holds the named
+ * non-gUFO superclasses each subject states.
+ *
+ * **Example** (Read a role without a kind)
+ *
+ * ```ts import.meta.vitest name="Read a role without a kind"
+ * import { TermIri } from "@beep/identity/Term"
+ * import { audit, typingsFromDataset } from "@beep/ontology/Gufo"
+ * import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf"
+ *
+ * const student = makeNamedNode("https://example.test/Student")
+ * const stated = typingsFromDataset(
+ *   makeDataset([makeQuad(student, RDF_TYPE, makeNamedNode("http://purl.org/nemo/gufo#Role"))])
+ * )
+ * audit(stated.hierarchy)(TermIri.make(student.value)).map((violation) => violation._tag) // => ["RoleWithoutKind"]
+ * ```
+ *
+ * @param dataset - The dataset whose assertions state the typings.
+ * @returns The stated typings, specializations and unmediated relators.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const typingsFromDataset = (dataset: Dataset): StatedTypings => {
+  const index = indexBySubject(dataset);
+  const subjects = pipe(
+    A.fromIterable(dataset.quads),
+    A.flatMap((quad) => (quad.subject.termType === "NamedNode" ? [quad.subject.value] : [])),
+    A.filter((subject) => !isGufoIri(subject)),
+    A.dedupe,
+    A.flatMap((subject) => A.map(O.toArray(decodeTermIri(subject)), (term) => [subject, term] as const))
+  );
+  const stated = A.map(subjects, ([subject, term]) => {
+    const key = namedKey(subject);
+    const supertypes = pipe(
+      namedIris(objectsOf(index, key, SUBCLASS_OF_IRI)),
+      A.filter((supertype) => !isGufoIri(supertype)),
+      A.flatMap((supertype) => O.toArray(decodeTermIri(supertype)))
+    );
+    const typing = O.map(classTypeOf(index, key), (classType) => {
+      const closure = superclassClosure(index, subject);
+      const instanceCategory = instanceCategoryOf(closure);
+      return {
+        classType,
+        instanceCategory,
+        mediates:
+          instanceCategory === GufoInstanceCategory.Enum.Relator
+            ? mediationsOf(index, closure)
+            : HashMap.empty<TermIri, MediationCardinality>(),
+      };
+    });
+    return { term, supertypes, typing };
+  });
+  const isUnmediated = (typing: (typeof stated)[number]["typing"]) =>
+    O.exists(typing, (stated) => !hasMediationExactlyForRelators(stated));
+  return StatedTypings.make({
+    hierarchy: TypedHierarchy.make({
+      typing: pipe(
+        stated,
+        A.flatMap(({ term, typing }) =>
+          isUnmediated(typing) ? [] : A.map(O.toArray(typing), (value) => [term, GufoTyping.make(value)] as const)
+        ),
+        HashMap.fromIterable
+      ),
+      specializes: pipe(
+        stated,
+        A.filter(({ supertypes }) => A.isReadonlyArrayNonEmpty(supertypes)),
+        A.map(({ term, supertypes }) => [term, HashSet.fromIterable(supertypes)] as const),
+        HashMap.fromIterable
+      ),
+    }),
+    unmediated: pipe(
+      stated,
+      A.filter(({ typing }) => isUnmediated(typing)),
+      A.map(({ term }) => term),
+      HashSet.fromIterable
+    ),
+  });
+};
+
+/**
+ * Audit one term against the typings a dataset states.
+ *
+ * **Details**
+ *
+ * A relator stated without mediation is `RelatorUndermediated`; every other
+ * term is audited by {@link audit} over the stated hierarchy.
+ *
+ * **Example** (Audit an unmediated relator)
+ *
+ * ```ts import.meta.vitest name="Audit an unmediated relator"
+ * import { TermIri } from "@beep/identity/Term"
+ * import { auditStated, typingsFromDataset } from "@beep/ontology/Gufo"
+ * import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf"
+ *
+ * const marriage = makeNamedNode("https://example.test/Marriage")
+ * const subClassOf = makeNamedNode("http://www.w3.org/2000/01/rdf-schema#subClassOf")
+ * const stated = typingsFromDataset(
+ *   makeDataset([
+ *     makeQuad(marriage, RDF_TYPE, makeNamedNode("http://purl.org/nemo/gufo#Kind")),
+ *     makeQuad(marriage, subClassOf, makeNamedNode("http://purl.org/nemo/gufo#Relator"))
+ *   ])
+ * )
+ * auditStated(stated)(TermIri.make(marriage.value)).map((violation) => violation._tag) // => ["RelatorUndermediated"]
+ * ```
+ *
+ * @param stated - The typings a dataset states.
+ * @returns A function from a term IRI to its violations.
+ * @category validation
+ * @since 0.0.0
+ */
+export const auditStated =
+  (stated: StatedTypings) =>
+  (term: TermIri): ReadonlyArray<OntoViolation> =>
+    HashSet.has(stated.unmediated, term) ? [RelatorUndermediated.make({ term })] : audit(stated.hierarchy)(term);

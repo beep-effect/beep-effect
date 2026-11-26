@@ -57,7 +57,7 @@ import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import type { LangExtractError } from "@beep/langextract/Extraction";
 import type { ExtractionHandoff, ExtractionReading, ResidualCandidate } from "@beep/langextract/Handoff";
-import type { EntityNode } from "@beep/nlp/Graph/Schema";
+import type { EntityNode } from "@beep/nlp-processing/Graph/Schema";
 import type { Sha256Hex } from "@beep/schema";
 import type {
   EvidenceClaim as EvidenceClaimValue,

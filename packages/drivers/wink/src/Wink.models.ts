@@ -6,17 +6,17 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { MarkRange } from "@beep/nlp/Core/Pattern";
+import { MarkRange } from "@beep/nlp-processing/Core/Pattern";
 import { A } from "@beep/utils";
 import * as Chunk from "effect/Chunk";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
+import type { Pattern, PatternElement } from "@beep/nlp-processing/Core/Pattern";
 
 const $I = $WinkId.create("Wink/WinkPattern");
 
@@ -160,6 +160,40 @@ export class CustomEntityExample extends S.Class<CustomEntityExample, { readonly
 
 const sameCustomEntityExample = S.toEquivalence(CustomEntityExample);
 
+const customEntitiesOf = (
+  name: EntityGroupName | string,
+  patterns: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>
+): WinkEngineCustomEntities => {
+  const groupName = P.isString(name) ? EntityGroupName.make(name) : name;
+  return WinkEngineCustomEntities.make({
+    name: groupName,
+    patterns: A.filterMap(Chunk.isChunk(patterns) ? Chunk.toReadonlyArray(patterns) : patterns, (pattern) =>
+      A.match(patternElementToBracketString(pattern), {
+        onEmpty: () => Result.failVoid,
+        onNonEmpty: (serialized) =>
+          Result.succeed(CustomEntityExample.make({ mark: pattern.mark, name: groupName, patterns: serialized })),
+      })
+    ),
+  });
+};
+
+function customEntitiesFromPatterns(
+  name: EntityGroupName | string,
+  patterns: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>
+): WinkEngineCustomEntities;
+function customEntitiesFromPatterns(
+  name: EntityGroupName | string
+): (patterns: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>) => WinkEngineCustomEntities;
+function customEntitiesFromPatterns(
+  name: EntityGroupName | string,
+  patterns?: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>
+): WinkEngineCustomEntities | ((patterns: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>) => WinkEngineCustomEntities) {
+  return O.match(O.fromUndefinedOr(patterns), {
+    onNone: () => (given: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>) => customEntitiesOf(name, given),
+    onSome: (given) => customEntitiesOf(name, given),
+  });
+}
+
 /**
  * Collection of custom-entity examples learned as one logical wink entity group.
  *
@@ -215,36 +249,7 @@ export class WinkEngineCustomEntities extends S.Class<WinkEngineCustomEntities, 
     (
       name: EntityGroupName | string
     ): (patterns: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>) => WinkEngineCustomEntities;
-  } = dual(
-    2,
-    (
-      name: EntityGroupName | string,
-      patterns: ReadonlyArray<Pattern> | Chunk.Chunk<Pattern>
-    ): WinkEngineCustomEntities => {
-      const groupName = P.isString(name) ? EntityGroupName.make(name) : name;
-      const entries = Chunk.isChunk(patterns) ? Chunk.toReadonlyArray(patterns) : patterns;
-
-      return WinkEngineCustomEntities.make({
-        name: groupName,
-        patterns: pipe(
-          entries,
-          A.filterMap((pattern) => {
-            const serialized = patternElementToBracketString(pattern);
-            const [head, ...tail] = serialized;
-            return head === undefined
-              ? Result.failVoid
-              : Result.succeed(
-                  CustomEntityExample.make({
-                    mark: pattern.mark,
-                    name: groupName,
-                    patterns: [head, ...tail],
-                  })
-                );
-          })
-        ),
-      });
-    }
-  );
+  } = customEntitiesFromPatterns;
 
   /**
    * Number of custom entity examples in the group.

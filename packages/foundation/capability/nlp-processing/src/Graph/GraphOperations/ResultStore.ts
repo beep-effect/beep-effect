@@ -22,6 +22,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { TermIri } from "@beep/identity/Term";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -93,7 +94,7 @@ export class AnyOperationResult extends S.Opaque<AnyOperationResult, { readonly 
  * **Details**
  *
  * Re-running the same operation against the same leaf can reuse a cached result.
- * Changing either the operation name or the node id creates an independent cache
+ * Changing either the operation term or the node id creates an independent cache
  * entry, which keeps sibling operation pipelines from colliding.
  *
  * **Example** (Create and stringify key)
@@ -101,11 +102,13 @@ export class AnyOperationResult extends S.Opaque<AnyOperationResult, { readonly 
  * ```ts import.meta.vitest name="Create and stringify key"
  * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { ResultKey } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
+ * import { TermIri } from "@beep/identity/Term"
+ * import { iri } from "@beep/identity/Registry"
  *
  * const nodeId = NodeId.make("node-example")
- * const key = ResultKey.new("tokenize", nodeId)
+ * const key = ResultKey.new(TermIri.make(iri("operation:Tokenize")), nodeId)
  *
- * ResultKey.toString(key) // => "tokenize:node-example"
+ * ResultKey.toString(key) // => "https://beep-effect.com/ns/operation/Tokenize:node-example"
  * ```
  *
  * @category models
@@ -114,19 +117,19 @@ export class AnyOperationResult extends S.Opaque<AnyOperationResult, { readonly 
 export class ResultKey extends S.Opaque<ResultKey, { readonly brand: unique symbol }>()(
   S.Struct({
     nodeId: NodeId,
-    operationName: S.String,
+    operationName: TermIri,
   }).pipe(
     $I.annoteSchema("ResultKey", {
-      description: "Cache key: an operation name paired with a node id.",
+      description: "Cache key: an operation term paired with a node id.",
     })
   )
 ) {
   static readonly new: {
-    (operationName: string, nodeId: NodeId): ResultKey;
-    (nodeId: NodeId): (operationName: string) => ResultKey;
+    (operationName: TermIri, nodeId: NodeId): ResultKey;
+    (nodeId: NodeId): (operationName: TermIri) => ResultKey;
   } = dual(
     2,
-    (operationName: string, nodeId: NodeId): ResultKey =>
+    (operationName: TermIri, nodeId: NodeId): ResultKey =>
       ResultKey.make({
         nodeId,
         operationName,

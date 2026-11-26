@@ -68,4 +68,8 @@ export const Tokenize = Tool.make("Tokenize", {
   failureMode: "return",
   parameters: TokenizeParameters,
   success: S.toEncoded(TokenizeSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

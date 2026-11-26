@@ -1,5 +1,6 @@
 import { sentences, tokenCount, tokenize, tokenizeToDocument } from "@beep/nlp-processing/Core/Tokenization";
 import { it } from "@beep/test-runner";
+import { Position } from "@beep/text/OffsetUnit";
 import { WinkTokenizationLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -19,8 +20,7 @@ describe("WinkTokenization", () => {
         expect(tokens).toHaveLength(7);
         expect(tokens[0]?.text).toBe("Ada");
         pipe(tokens[0]?.pos ?? O.none(), O.isSome, assertTrue);
-        expect(tokens[0]?.start).toBe(0);
-        expect(tokens[0]?.end).toBe(3);
+        expect(tokens[0]?.span).toEqual(Position.make({ unit: "utf16-code-unit", start: 0, end: 3 }));
         expect(tokens[6]?.text).toBe(".");
       })
     );
@@ -61,7 +61,9 @@ describe("WinkTokenization", () => {
         const text = `${Str.repeat(65_535)(" ")}Ada`;
         const tokens = yield* tokenize(text);
 
-        expect(A.map(tokens, (token) => [token.text, token.start, token.end])).toEqual([["Ada", 65_535, 65_538]]);
+        expect(A.map(tokens, (token) => [token.text, token.span.start, token.span.end])).toEqual([
+          ["Ada", 65_535, 65_538],
+        ]);
       })
     );
   });

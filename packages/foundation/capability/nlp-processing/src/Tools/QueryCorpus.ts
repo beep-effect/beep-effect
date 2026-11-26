@@ -95,4 +95,8 @@ export const QueryCorpus = Tool.make("QueryCorpus", {
   failureMode: "return",
   parameters: QueryCorpusParameters,
   success: S.toEncoded(QueryCorpusSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

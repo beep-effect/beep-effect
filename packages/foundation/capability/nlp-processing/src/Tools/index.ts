@@ -247,10 +247,9 @@ export const AiDocumentStats = AiDocumentStatsSource;
  * import { AiEntity } from "@beep/nlp-processing/Tools"
  *
  * const entity = S.decodeUnknownSync(AiEntity)({
- *   end: 20,
  *   endTokenIndex: 2,
  *   source: "builtin",
- *   start: 4,
+ *   span: { _tag: "Position", unit: "utf16-code-unit", start: 4, end: 20 },
  *   startTokenIndex: 1,
  *   type: "EMAIL",
  *   value: "john@example.com"
@@ -360,9 +359,8 @@ export const AiRankedText = AiRankedTextSource;
  * import { AiSentence } from "@beep/nlp-processing/Tools"
  *
  * const sentence = S.decodeUnknownSync(AiSentence)({
- *   end: 12,
  *   index: 0,
- *   start: 0,
+ *   span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 12 },
  *   text: "Hello world.",
  *   tokenCount: 3
  * })
@@ -432,12 +430,11 @@ export const AiToolError = AiToolErrorSource;
  * import { AiToken } from "@beep/nlp-processing/Tools"
  *
  * const token = S.decodeUnknownSync(AiToken)({
- *   end: 5,
  *   isPunctuation: false,
  *   isStopWord: false,
  *   lemma: "quick",
  *   pos: "ADJ",
- *   start: 1,
+ *   span: { _tag: "Position", unit: "utf16-code-unit", start: 1, end: 5 },
  *   stem: "quick",
  *   text: "quick"
  * })

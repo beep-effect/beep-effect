@@ -15,6 +15,7 @@ import {
   workflowPolicyDiagnostics,
 } from "@beep/repo-cli/commands/Ci";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
+import { findRepoRoot } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -22,8 +23,12 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -304,3 +309,173 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer)
     );
   }
 );
+
+const reportStep = (overrides = "") =>
+  `      - name: Report gate records\n        if: always()\n        continue-on-error: true\n        uses: ./.github/actions/gate-reports\n        with:\n          job-name: Lane\n          artifact: task-outcomes-1-1-lane-single\n${overrides}`;
+const uploadStep = (withLines: string, guard = "        if: always()\n        continue-on-error: true\n") =>
+  `      - name: Upload gate reports and task outcomes\n${guard}        uses: actions/upload-artifact@abc\n        with:\n          path: \${{ runner.temp }}/gate-reports/\n${withLines}`;
+const wiredUpload = uploadStep(
+  "          name: task-outcomes-${{ github.run_id }}-1-lane-single\n          include-hidden-files: true\n          retention-days: 30\n"
+);
+const laneStep = "      - run: bun run beep ci lane repo-sanity\n";
+const gateWorkflow = (steps: string) => `on: push\njobs:\n  lane:\n    steps:\n${steps}`;
+
+describe("gate-report upload policy", () => {
+  it.effect("accepts a ci lane job that renders and uploads its gate reports, through a shared YAML anchor too", () =>
+    Effect.gen(function* () {
+      const direct = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(laneStep + reportStep() + wiredUpload)
+      );
+      expect(direct).toEqual([]);
+      const anchored = `on: push\njobs:\n  first:\n    steps: &lane-steps\n${laneStep}${reportStep()}${wiredUpload}  second:\n    steps: *lane-steps\n`;
+      const shared = yield* workflowPolicyDiagnostics("fixture.yml", anchored);
+      expect(shared).toEqual([]);
+    })
+  );
+  it.effect("decodes a literal boolean step condition instead of failing the file", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(`${laneStep}      - run: echo disabled\n        if: false\n${reportStep()}${wiredUpload}`)
+      );
+      expect(diagnostics).toEqual([]);
+    })
+  );
+  it.effect("treats a lane command with extra whitespace as a lane", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow("      - run: bun run beep ci  lane\trepo-sanity\n")
+      );
+      expect(diagnostics).toEqual([
+        "lane: gate job does not render gate reports through ./.github/actions/gate-reports",
+        "lane: gate job does not upload ${{ runner.temp }}/gate-reports/",
+      ]);
+    })
+  );
+  it.effect("rejects a guard that adds success() or failure() to always()", () =>
+    Effect.gen(function* () {
+      const suppressed = Str.replace("        if: always()\n", "        if: always() && success()\n")(reportStep());
+      const failureOnly = uploadStep(
+        "          name: task-outcomes-1-1-lane-single\n          include-hidden-files: true\n          retention-days: 30\n",
+        "        if: always() && failure()\n        continue-on-error: true\n"
+      );
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(laneStep + suppressed + failureOnly)
+      );
+      expect(diagnostics).toEqual([
+        "lane: gate report step must run on always(), without success() or failure(), and continue on error",
+        "lane: gate report upload must run on always(), without success() or failure(), and continue on error",
+      ]);
+    })
+  );
+  it.effect("rejects report and upload steps that run before the lane or out of order", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(wiredUpload + laneStep + reportStep() + laneStep)
+      );
+      expect(diagnostics).toEqual([
+        "lane: gate report step must follow the job's last ci lane step",
+        "lane: gate report upload must follow the gate report step",
+      ]);
+    })
+  );
+  it.effect("ignores a job that runs no ci lane and stages no gate reports", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow("      - run: bunx commitlint --from origin/main\n")
+      );
+      expect(diagnostics).toEqual([]);
+    })
+  );
+  it.effect("rejects a ci lane job that neither renders nor uploads its gate reports", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics("fixture.yml", gateWorkflow(laneStep));
+      expect(diagnostics).toEqual([
+        "lane: gate job does not render gate reports through ./.github/actions/gate-reports",
+        "lane: gate job does not upload ${{ runner.temp }}/gate-reports/",
+      ]);
+    })
+  );
+  it.effect(
+    "rejects a report or upload that can decide the job, a wrong name, hidden files left out and short retention",
+    () =>
+      Effect.gen(function* () {
+        const gatedReport = Str.replace("        if: always()\n        continue-on-error: true\n", "")(reportStep());
+        const badUpload = uploadStep(
+          "          name: gate-reports\n          retention-days: 7\n",
+          "        if: success()\n"
+        );
+        const diagnostics = yield* workflowPolicyDiagnostics(
+          "fixture.yml",
+          gateWorkflow(laneStep + gatedReport + badUpload)
+        );
+        expect(diagnostics).toEqual([
+          "lane: gate report step must run on always(), without success() or failure(), and continue on error",
+          "lane: gate report upload must run on always(), without success() or failure(), and continue on error",
+          "lane: gate report upload must be named task-outcomes-<run>-<attempt>-<job>-<partition>",
+          "lane: gate report upload must include hidden files",
+          "lane: gate report upload must keep retention-days 30",
+        ]);
+      })
+  );
+});
+
+const gateWorkflowJobs = {
+  "check.yml": [
+    "verify",
+    "docs-policy",
+    "ecosystem",
+    "codegen",
+    "labs",
+    "lint-shard",
+    "test-plan",
+    "test-unit-shard",
+    "test-integration-shard",
+    "coverage-regression",
+    "professional-desktop-ipc-stdio",
+    "property-laws-shard",
+    "fallow-advisory",
+    "jsdoc-ratchet",
+    "nix",
+    "sast",
+  ],
+  "heavy.yml": ["verify", "check", "docgen", "doctest", "build"],
+  "shard-overflow.yml": ["test-unit-shard"],
+  "storybook.yml": ["storybook"],
+  "property-laws-nightly.yml": ["property-sweep"],
+  "fleet-lane-probe.yml": ["lane-probe"],
+} as const;
+const unwiredJobIds = (diagnostics: ReadonlyArray<string>) =>
+  pipe(
+    diagnostics,
+    A.filter(Str.endsWith("through ./.github/actions/gate-reports")),
+    A.map(flow(Str.split(":"), A.headNonEmpty))
+  );
+
+it.layer(NodeServices.layer)("gate-report uploads in the repository workflows", (it) => {
+  it.effect("every gate job in the six gate workflows renders and uploads its reports with 30-day retention", () =>
+    Effect.gen(function* () {
+      const root = yield* findRepoRoot();
+      const fs = yield* FileSystem.FileSystem;
+      yield* Effect.forEach(
+        R.toEntries(gateWorkflowJobs),
+        Effect.fnUntraced(function* ([file, jobs]) {
+          const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+          const wired = yield* workflowPolicyDiagnostics(file, text);
+          expect(wired, file).toEqual([]);
+          const unwired = yield* workflowPolicyDiagnostics(
+            file,
+            Str.replaceAll("uses: ./.github/actions/gate-reports", "uses: ./.github/actions/absent")(text)
+          );
+          expect(unwiredJobIds(unwired), file).toEqual(jobs);
+        }),
+        { concurrency: 1 }
+      );
+    })
+  );
+});

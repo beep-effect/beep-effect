@@ -1,0 +1,8 @@
+---
+title: "P6: no law-practice cache outlives a request; path 5 asserts each receipt's scope across requests and guards future caches"
+date: 2026-11-24
+lane: "p6"
+reversal: "Add scopeRef to the citation session table keys and assert a counted miss"
+---
+
+Independent review of the P6 design, two findings. The citation tables path 5 named are per-call algorithm state: resolveMentions holds local let HashMaps created on each call (server/src/internal/Citation/Resolve.ts:108-130), and SessionDocument's registered and identities tables are local to one project call (SessionDocument.ts:83-127). RuntimeDictionary.ts and RuntimeSet.ts are the CPython 3.11 dict and set parity port (RuntimeDictionary.ts:1-5), keyed by { objectId, hash } and documented as never a persisted authority (:48-57); changing that key would risk eyecite parity and wall nothing. No Cache, Ref or MutableHashMap under internal/Citation survives a call, and the one Effect.cached (NativeLane.ts:156) memoizes a native process owner, not text. 'Resolving B after A records a miss' holds for every implementation, so it tests nothing. The session boundary is the partition. Path 5 asserts a cross-request property instead: through the composed citation layer, principal pAB resolves the identical bytes under A and then under B, and each receipt's source.scopeRef equals its own request's. A guard test (server/test/CitationCache.scope.test.ts) fails when a module under internal/Citation declares a cache that outlives a call without scopeRef in its key. The parity keys are not changed. Supersedes 2026-11-24-p6-citation-caches-partition-by-scope. Answers A10 as amended.
