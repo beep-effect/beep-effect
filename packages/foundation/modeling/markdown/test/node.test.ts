@@ -40,14 +40,12 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-/** A throwaway span. Node identity in these tests never depends on the span. */
-const span = (startOffset = 0, endOffset = 0): Position =>
+const throwawaySpan = (startOffset = 0, endOffset = 0): Position =>
   Position.make({
     start: Point.make({ line: 1, column: 1, offset: startOffset }),
     end: Point.make({ line: 1, column: 1 + endOffset - startOffset, offset: endOffset }),
   });
 
-/** A plain-object span, for decoding tests that start from untyped JSON. */
 const rawSpan = (startOffset = 0, endOffset = 0) => ({
   start: { line: 1, column: 1, offset: startOffset },
   end: { line: 1, column: 1 + endOffset - startOffset, offset: endOffset },
@@ -144,23 +142,23 @@ describe("MarkdownNode", () => {
         children: [
           Heading.make({
             depth: 1,
-            children: [Text.make({ value: "Title", position: span(2, 7) })],
-            position: span(0, 7),
+            children: [Text.make({ value: "Title", position: throwawaySpan(2, 7) })],
+            position: throwawaySpan(0, 7),
             headingStyle: "atx",
           }),
           Paragraph.make({
             children: [
-              Text.make({ value: "hello ", position: span(9, 15) }),
+              Text.make({ value: "hello ", position: throwawaySpan(9, 15) }),
               Emphasis.make({
-                children: [Text.make({ value: "world", position: span(16, 21) })],
-                position: span(15, 22),
+                children: [Text.make({ value: "world", position: throwawaySpan(16, 21) })],
+                position: throwawaySpan(15, 22),
                 markerChar: "*",
               }),
             ],
-            position: span(9, 22),
+            position: throwawaySpan(9, 22),
           }),
         ],
-        position: span(0, 22),
+        position: throwawaySpan(0, 22),
       });
 
       assert.strictEqual(document.type, "root");
@@ -172,8 +170,8 @@ describe("MarkdownNode", () => {
     });
 
     it("omits an absent optionalKey field rather than storing undefined", () => {
-      const indented = Code.make({ value: "x = 1", position: span(0, 5) });
-      const fenced = Code.make({ value: "x = 1", position: span(0, 13), fenceChar: "`", fenceLength: 3 });
+      const indented = Code.make({ value: "x = 1", position: throwawaySpan(0, 5) });
+      const fenced = Code.make({ value: "x = 1", position: throwawaySpan(0, 13), fenceChar: "`", fenceLength: 3 });
 
       assert.isFalse(P.hasProperty(indented, "fenceChar"));
       assert.isFalse(P.hasProperty(indented, "lang"));
@@ -182,31 +180,31 @@ describe("MarkdownNode", () => {
     });
 
     it("keeps every node's position on the instance", () => {
-      const text = Text.make({ value: "a", position: span(3, 4) });
+      const text = Text.make({ value: "a", position: throwawaySpan(3, 4) });
       assert.strictEqual(text.position.start.offset, 3);
       assert.strictEqual(text.position.end.offset, 4);
     });
 
     it("copies constructed children through `make`, keeping them deep-equal", () => {
-      // Nodes are plain-data `S.Opaque` values (D-22, D-39): `make` validates
-      // and copies nested data, through a plain node-typed field and through a
-      // category union (`RowContent`, `TableContent`, `ListContent`) alike.
-      // Before the conversion, class instances passed through by reference.
-      const text = Text.make({ value: "x", position: span(0, 1) });
-      const cell = TableCell.make({ children: [text], position: span(0, 1) });
-      assert.notStrictEqual(cell.children[0], text);
+      const text = Text.make({ value: "x", position: throwawaySpan(0, 1) });
+      const cell = TableCell.make({ children: [text], position: throwawaySpan(0, 1) });
+      assert.notStrictEqual(
+        cell.children[0],
+        text,
+        "make validates and copies nested data, through a plain node-typed field and a category union (RowContent, TableContent, ListContent) alike"
+      );
       assert.deepStrictEqual(cell.children[0], text);
 
-      const row = TableRow.make({ children: [cell], position: span(0, 1) });
+      const row = TableRow.make({ children: [cell], position: throwawaySpan(0, 1) });
       assert.notStrictEqual(row.children[0], cell);
       assert.deepStrictEqual(row.children[0], cell);
 
-      const table = Table.make({ children: [row], position: span(0, 1) });
+      const table = Table.make({ children: [row], position: throwawaySpan(0, 1) });
       assert.notStrictEqual(table.children[0], row);
       assert.deepStrictEqual(table.children[0], row);
 
-      const item = ListItem.make({ children: [], position: span(0, 1) });
-      const list = List.make({ children: [item], position: span(0, 1) });
+      const item = ListItem.make({ children: [], position: throwawaySpan(0, 1) });
+      const list = List.make({ children: [item], position: throwawaySpan(0, 1) });
       assert.notStrictEqual(list.children[0], item);
       assert.deepStrictEqual(list.children[0], item);
     });
@@ -220,22 +218,22 @@ describe("MarkdownNode", () => {
             Blockquote.make({
               children: [
                 Paragraph.make({
-                  children: [Text.make({ value: "quoted", position: span(2, 8) })],
-                  position: span(2, 8),
+                  children: [Text.make({ value: "quoted", position: throwawaySpan(2, 8) })],
+                  position: throwawaySpan(2, 8),
                 }),
               ],
-              position: span(0, 8),
+              position: throwawaySpan(0, 8),
             }),
           ],
-          position: span(0, 8),
+          position: throwawaySpan(0, 8),
         });
 
       assert.deepStrictEqual(build(), build());
     });
 
     it("distinguishes trees differing only in a fidelity extra", () => {
-      const withMarker = ThematicBreak.make({ position: span(0, 3), markerChar: "-" });
-      const withoutMarker = ThematicBreak.make({ position: span(0, 3) });
+      const withMarker = ThematicBreak.make({ position: throwawaySpan(0, 3), markerChar: "-" });
+      const withoutMarker = ThematicBreak.make({ position: throwawaySpan(0, 3) });
 
       assert.notDeepEqual(withMarker, withoutMarker);
     });
@@ -243,7 +241,7 @@ describe("MarkdownNode", () => {
 
   describe("mdast type literals", () => {
     it("spells every node type exactly as mdast does", () => {
-      const p = span(0, 0);
+      const p = throwawaySpan(0, 0);
       const types = [
         Root.make({ children: [], position: p }).type,
         Paragraph.make({ children: [], position: p }).type,
@@ -428,9 +426,11 @@ describe("MarkdownNode", () => {
       const decoded = decodeRoot(tree);
       const encoded = Result.getOrThrow(S.encodeUnknownResult(Root)(decoded));
 
-      // Compared as plain JSON: the encoded side is typed against Root's
-      // literal `type` fields, which the untyped fixture widens to `string`.
-      assert.deepStrictEqual<unknown>(encoded, tree);
+      assert.deepStrictEqual<unknown>(
+        encoded,
+        tree,
+        "compared as plain JSON: the encoded side is typed against Root's literal type fields, which the untyped fixture widens to string"
+      );
     });
 
     it("rejects a node whose type is not an mdast name", () => {
@@ -495,14 +495,23 @@ describe("MarkdownNode", () => {
           children: [
             TableRow.make({
               children: [
-                TableCell.make({ children: [Text.make({ value: "a", position: span(0, 1) })], position: span(0, 1) }),
-                TableCell.make({ children: [Text.make({ value: "b", position: span(2, 3) })], position: span(2, 3) }),
-                TableCell.make({ children: [Text.make({ value: "c", position: span(4, 5) })], position: span(4, 5) }),
+                TableCell.make({
+                  children: [Text.make({ value: "a", position: throwawaySpan(0, 1) })],
+                  position: throwawaySpan(0, 1),
+                }),
+                TableCell.make({
+                  children: [Text.make({ value: "b", position: throwawaySpan(2, 3) })],
+                  position: throwawaySpan(2, 3),
+                }),
+                TableCell.make({
+                  children: [Text.make({ value: "c", position: throwawaySpan(4, 5) })],
+                  position: throwawaySpan(4, 5),
+                }),
               ],
-              position: span(0, 5),
+              position: throwawaySpan(0, 5),
             }),
           ],
-          position: span(0, 5),
+          position: throwawaySpan(0, 5),
         });
 
         assert.strictEqual(table.type, "table");
@@ -513,8 +522,8 @@ describe("MarkdownNode", () => {
 
       it("builds a delete node with X.make", () => {
         const strikethrough = Delete.make({
-          children: [Text.make({ value: "gone", position: span(2, 6) })],
-          position: span(0, 8),
+          children: [Text.make({ value: "gone", position: throwawaySpan(2, 6) })],
+          position: throwawaySpan(0, 8),
         });
 
         assert.strictEqual(strikethrough.type, "delete");
@@ -526,11 +535,18 @@ describe("MarkdownNode", () => {
           identifier: "alpha",
           label: "alpha",
           children: [
-            Paragraph.make({ children: [Text.make({ value: "bravo", position: span(0, 5) })], position: span(0, 5) }),
+            Paragraph.make({
+              children: [Text.make({ value: "bravo", position: throwawaySpan(0, 5) })],
+              position: throwawaySpan(0, 5),
+            }),
           ],
-          position: span(0, 5),
+          position: throwawaySpan(0, 5),
         });
-        const reference = FootnoteReference.make({ identifier: "alpha", label: "alpha", position: span(10, 17) });
+        const reference = FootnoteReference.make({
+          identifier: "alpha",
+          label: "alpha",
+          position: throwawaySpan(10, 17),
+        });
 
         assert.strictEqual(definition.type, "footnoteDefinition");
         assert.strictEqual(reference.type, "footnoteReference");
@@ -538,9 +554,9 @@ describe("MarkdownNode", () => {
       });
 
       it("sets checked on a task-list item", () => {
-        const done = ListItem.make({ checked: true, children: [], position: span(0, 5) });
-        const notDone = ListItem.make({ checked: false, children: [], position: span(0, 5) });
-        const notATask = ListItem.make({ children: [], position: span(0, 5) });
+        const done = ListItem.make({ checked: true, children: [], position: throwawaySpan(0, 5) });
+        const notDone = ListItem.make({ checked: false, children: [], position: throwawaySpan(0, 5) });
+        const notATask = ListItem.make({ children: [], position: throwawaySpan(0, 5) });
 
         assert.strictEqual(done.checked, true);
         assert.strictEqual(notDone.checked, false);
@@ -550,18 +566,18 @@ describe("MarkdownNode", () => {
 
     describe("absent optionalKey fields", () => {
       it("omits checked on a non-task list item rather than storing undefined", () => {
-        const item = ListItem.make({ children: [], position: span(0, 1) });
+        const item = ListItem.make({ children: [], position: throwawaySpan(0, 1) });
         assert.isFalse(P.hasProperty(item, "checked"));
       });
 
       it("omits align on a table with no declared alignment rather than storing undefined", () => {
-        const table = Table.make({ children: [], position: span(0, 1) });
+        const table = Table.make({ children: [], position: throwawaySpan(0, 1) });
         assert.isFalse(P.hasProperty(table, "align"));
       });
 
       it("omits label on a footnote definition and reference rather than storing undefined", () => {
-        const definition = FootnoteDefinition.make({ identifier: "a", children: [], position: span(0, 1) });
-        const reference = FootnoteReference.make({ identifier: "a", position: span(0, 1) });
+        const definition = FootnoteDefinition.make({ identifier: "a", children: [], position: throwawaySpan(0, 1) });
+        const reference = FootnoteReference.make({ identifier: "a", position: throwawaySpan(0, 1) });
         assert.isFalse(P.hasProperty(definition, "label"));
         assert.isFalse(P.hasProperty(reference, "label"));
       });
@@ -578,25 +594,25 @@ describe("MarkdownNode", () => {
                   TableRow.make({
                     children: [
                       TableCell.make({
-                        children: [Text.make({ value: "h", position: span(0, 1) })],
-                        position: span(0, 1),
+                        children: [Text.make({ value: "h", position: throwawaySpan(0, 1) })],
+                        position: throwawaySpan(0, 1),
                       }),
                     ],
-                    position: span(0, 1),
+                    position: throwawaySpan(0, 1),
                   }),
                 ],
-                position: span(0, 1),
+                position: throwawaySpan(0, 1),
               }),
             ],
-            position: span(0, 1),
+            position: throwawaySpan(0, 1),
           });
 
         assert.deepStrictEqual(build(), build());
       });
 
       it("distinguishes list items differing only in checked", () => {
-        const done = ListItem.make({ checked: true, children: [], position: span(0, 1) });
-        const notATask = ListItem.make({ children: [], position: span(0, 1) });
+        const done = ListItem.make({ checked: true, children: [], position: throwawaySpan(0, 1) });
+        const notATask = ListItem.make({ children: [], position: throwawaySpan(0, 1) });
 
         assert.notDeepEqual(done, notATask);
       });
@@ -604,7 +620,7 @@ describe("MarkdownNode", () => {
 
     describe("mdast type literals", () => {
       it("spells every GFM node type exactly as mdast does", () => {
-        const p = span(0, 0);
+        const p = throwawaySpan(0, 0);
         const types = [
           Delete.make({ children: [], position: p }).type,
           FootnoteDefinition.make({ identifier: "a", children: [], position: p }).type,

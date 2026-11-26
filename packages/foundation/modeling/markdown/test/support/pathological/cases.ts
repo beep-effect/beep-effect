@@ -19,16 +19,7 @@
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 
-/**
- * A single pathological/adversarial-input case: an input string engineered to
- * expose quadratic or worse behavior in a naive parser, paired with a regex
- * the correctly-linear output must match within `timeoutMs`.
- */
 interface PathologicalCase {
-  /**
-   * The dialect the case parses under. Absent means the commonmark
-   * substrate; upstream's GFM-extension cases carry `"gfm"`.
-   */
   readonly dialect?: "gfm";
   readonly expectedPattern: RegExp;
   readonly input: string;
@@ -38,27 +29,18 @@ interface PathologicalCase {
 
 const TIMEOUT_MS = 8000;
 
-// Mirrors cmark-gfm's `hash_collisions()`: finds the first 50000 keys "x<i>"
-// whose weak hash collides into refmap bucket 0 (of 16), then builds a
-// reference-definition document engineered to degrade an O(1)-amortized
-// refmap lookup into O(n) per lookup if the implementation under test uses
-// the same weak hash. Uses BigInt so the 32-bit masking arithmetic matches
-// Python's arbitrary-precision `& 0xFFFFFFFF` exactly, including on
-// intermediate negative values (Python's `&` on a negative int treats it as
-// infinite-precision two's complement; JS BigInt `&` does the same).
 const hashCollisions = (): { readonly document: string; readonly badKey: string } => {
   const REFMAP_SIZE = 16n;
   const MASK32 = 0xffffffffn;
   const COUNT = 50000;
 
-  // The code points of the key `x<i>`: `x`, then one ASCII digit each.
   const keyCodePoints = (i: number): ReadonlyArray<number> =>
     A.prepend(
       A.map(Str.split(String(i), ""), (digit) => 0x30 + Number(digit)),
       0x78
     );
 
-  const badHash = (codePoints: ReadonlyArray<number>): boolean => {
+  const hashesToBucketZero = (codePoints: ReadonlyArray<number>): boolean => {
     let h = 0n;
     for (const codePoint of codePoints) {
       const code = BigInt(codePoint);
@@ -73,7 +55,7 @@ const hashCollisions = (): { readonly document: string; readonly badKey: string 
   const collisions: Array<string> = [];
   let i = 0;
   while (collisions.length < COUNT) {
-    if (badHash(keyCodePoints(i))) {
+    if (hashesToBucketZero(keyCodePoints(i))) {
       collisions.push(`x${i}`);
     }
     i++;

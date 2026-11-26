@@ -1,14 +1,3 @@
-import { identity } from "effect/Function";
-// Canonical stringify: hand-built trees in, markdown source out.
-//
-// Two kinds of assertion live here. Exact-string cases pin the canonical
-// form where it is stable and documented (the default table in
-// `src/internal/stringify.ts`); re-parse cases assert the operational
-// contract — emitted text must parse back to a render-equivalent document —
-// for shapes where the exact spelling is an implementation detail. The
-// corpus-wide version of the re-parse property lives in
-// `__test__/e2e/stringify-roundtrip.e2e.test.ts`.
-
 import { Markdown, MarkdownStringifyError } from "@beep/markdown/Markdown";
 import {
   Blockquote,
@@ -44,6 +33,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -52,22 +42,20 @@ import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** A throwaway span. Stringify never reads offsets, only shapes. */
-const span = (): Position =>
+const throwawaySpan = (): Position =>
   Position.make({
     start: Point.make({ line: 1, column: 1, offset: 0 }),
     end: Point.make({ line: 1, column: 1, offset: 0 }),
   });
 
-const text = (value: string): Text => Text.make({ value, position: span() });
+const text = (value: string): Text => Text.make({ value, position: throwawaySpan() });
 
 const paragraph = (...children: Paragraph["children"][number][]): Paragraph =>
-  Paragraph.make({ children, position: span() });
+  Paragraph.make({ children, position: throwawaySpan() });
 
 const rootOf = (...children: ReadonlyArray<Root["children"][number]>): Root =>
-  Root.make({ children, position: span() });
+  Root.make({ children, position: throwawaySpan() });
 
-/** stringify, asserting success. */
 const out = (root: Root): string => {
   const result = Markdown.stringifyResult(root);
   if (Result.isFailure(result)) {
@@ -76,7 +64,6 @@ const out = (root: Root): string => {
   return Result.getOrThrow(result);
 };
 
-/** Render-equivalence through the real parser: emitted text re-parses. */
 const reparses = (root: Root, expectType: string): void => {
   const emitted = out(root);
   const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
@@ -87,18 +74,6 @@ const reparses = (root: Root, expectType: string): void => {
   );
 };
 
-// The canonical-form table published on `Markdown.stringifyResult`'s TSDoc is a
-// STABILITY COMMITMENT: consumers are told they may assert against these bytes,
-// and that changing one is a breaking change. A published promise that no test
-// pins is a promise that drifts, so each row of that table is asserted here in
-// the same order it is documented.
-//
-// If you change a row, you are making a breaking change — update the table, the
-// package README and this suite together, and bump accordingly.
-/**
- * The destination-bearing nodes of a re-parsed `paragraph(link, image)` plus
- * `definition` document, failing unless it has exactly that shape.
- */
 const destinationNodes = (root: Root): ReadonlyArray<Link | Image | Definition> => {
   const [first, definition] = root.children;
   if (root.children.length !== 2 || first?.type !== "paragraph" || definition?.type !== "definition")
@@ -111,22 +86,20 @@ const destinationNodes = (root: Root): ReadonlyArray<Link | Image | Definition> 
   return [...inline, definition];
 };
 
-/** A one-row table holding two cells. */
 const twoCellTable = (first: PhrasingContent, second: PhrasingContent): Table =>
   Table.make({
     children: [
       TableRow.make({
         children: [
-          TableCell.make({ children: [first], position: span() }),
-          TableCell.make({ children: [second], position: span() }),
+          TableCell.make({ children: [first], position: throwawaySpan() }),
+          TableCell.make({ children: [second], position: throwawaySpan() }),
         ],
-        position: span(),
+        position: throwawaySpan(),
       }),
     ],
-    position: span(),
+    position: throwawaySpan(),
   });
 
-/** The header-row cells of the table `emitted` re-parses to, failing unless it is one. */
 const headerCells = (emitted: string): ReadonlyArray<TableCell> => {
   const first = Result.getOrThrow(Markdown.parseResult(emitted)).children[0];
   if (first?.type !== "table")
@@ -136,24 +109,24 @@ const headerCells = (emitted: string): ReadonlyArray<TableCell> => {
   return first.children[0]?.children ?? [];
 };
 
-describe("Markdown.stringify — the documented canonical form", () => {
+describe("Markdown.stringify — the documented canonical form, pinned row by row in its TSDoc order", () => {
   it("heading: ATX at every depth", () => {
     for (const depth of [1, 2, 3, 4, 5, 6] as const) {
-      const heading = Heading.make({ depth, children: [text("T")], position: span() });
+      const heading = Heading.make({ depth, children: [text("T")], position: throwawaySpan() });
       assert.strictEqual(out(rootOf(heading)), `${Str.repeat(depth)("#")} T\n`);
     }
   });
 
   it("thematic break: ***", () => {
-    assert.strictEqual(out(rootOf(ThematicBreak.make({ position: span() }))), "***\n");
+    assert.strictEqual(out(rootOf(ThematicBreak.make({ position: throwawaySpan() }))), "***\n");
   });
 
   it("bullet list marker: -", () => {
     const list = List.make({
       ordered: false,
       spread: false,
-      children: [ListItem.make({ spread: false, children: [paragraph(text("a"))], position: span() })],
-      position: span(),
+      children: [ListItem.make({ spread: false, children: [paragraph(text("a"))], position: throwawaySpan() })],
+      position: throwawaySpan(),
     });
     assert.strictEqual(out(rootOf(list)), "- a\n");
   });
@@ -162,26 +135,29 @@ describe("Markdown.stringify — the documented canonical form", () => {
     const list = List.make({
       ordered: true,
       spread: false,
-      children: [ListItem.make({ spread: false, children: [paragraph(text("a"))], position: span() })],
-      position: span(),
+      children: [ListItem.make({ spread: false, children: [paragraph(text("a"))], position: throwawaySpan() })],
+      position: throwawaySpan(),
     });
     assert.strictEqual(out(rootOf(list)), "1. a\n");
   });
 
   it("ordered list delimiter flips to ) to separate an adjacent sibling list", () => {
     const item = (value: string) =>
-      ListItem.make({ spread: false, children: [paragraph(text(value))], position: span() });
+      ListItem.make({ spread: false, children: [paragraph(text(value))], position: throwawaySpan() });
     const list = (child: string) =>
-      List.make({ ordered: true, spread: false, children: [item(child)], position: span() });
-    // The one documented exception to the row above, and the reason the table
-    // states it: two adjacent ordered lists that both emitted `.` would reparse
-    // as ONE list.
+      List.make({ ordered: true, spread: false, children: [item(child)], position: throwawaySpan() });
     const emitted = out(rootOf(list("a"), list("b")));
-    assert.strictEqual(emitted, "1. a\n\n1) b\n");
-    // The delimiter flip only earns its place if the emitted text actually
-    // reparses as TWO lists — substring assertions pass even when it does not.
+    assert.strictEqual(
+      emitted,
+      "1. a\n\n1) b\n",
+      "the one documented exception to the row above: two adjacent ordered lists both emitting . would reparse as ONE list"
+    );
     const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
-    assert.strictEqual(reparsed.children.length, 2);
+    assert.strictEqual(
+      reparsed.children.length,
+      2,
+      "the delimiter flip only earns its place if the text reparses as TWO lists; substring assertions pass even when it does not"
+    );
     assert.strictEqual(reparsed.children[0]?.type, "list");
     assert.strictEqual(reparsed.children[1]?.type, "list");
   });
@@ -189,64 +165,66 @@ describe("Markdown.stringify — the documented canonical form", () => {
   it("emphasis * and strong **", () => {
     const tree = rootOf(
       paragraph(
-        Emphasis.make({ children: [text("em")], position: span() }),
+        Emphasis.make({ children: [text("em")], position: throwawaySpan() }),
         text(" "),
-        Strong.make({ children: [text("st")], position: span() })
+        Strong.make({ children: [text("st")], position: throwawaySpan() })
       )
     );
     assert.strictEqual(out(tree), "*em* **st**\n");
   });
 
   it("code block: indented with neither lang nor fenceChar", () => {
-    const code = Code.make({ value: "let x = 1;", position: span() });
+    const code = Code.make({ value: "let x = 1;", position: throwawaySpan() });
     assert.strictEqual(out(rootOf(code)), "    let x = 1;\n");
   });
 
   it("code block: fenced once a lang is present, and the fence grows past interior backticks", () => {
-    const plain = Code.make({ value: "x", lang: "js", position: span() });
+    const plain = Code.make({ value: "x", lang: "js", position: throwawaySpan() });
     assert.strictEqual(out(rootOf(plain)), "```js\nx\n```\n");
 
-    const nested = Code.make({ value: "a ``` b", lang: "js", position: span() });
+    const nested = Code.make({ value: "a ``` b", lang: "js", position: throwawaySpan() });
     const emitted = out(rootOf(nested));
-    // A fence that did not grow would terminate the block early — the emitted
-    // text must re-parse as ONE code node carrying the whole value.
     const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
-    assert.strictEqual(reparsed.children.length, 1);
+    assert.strictEqual(
+      reparsed.children.length,
+      1,
+      "a fence that did not grow would terminate the block early: the text must re-parse as ONE code node with the whole value"
+    );
     assert.strictEqual(reparsed.children[0]?.type, "code");
   });
 
   it("code block: an empty bare block is fenced, since an indented block cannot be empty", () => {
-    const empty = Code.make({ value: "", position: span() });
+    const empty = Code.make({ value: "", position: throwawaySpan() });
     assert.strictEqual(out(rootOf(empty)), "```\n```\n");
     const reparsed = Result.getOrThrow(Markdown.parseResult(out(rootOf(empty))));
     assert.strictEqual(reparsed.children[0]?.type, "code");
   });
 
   it("code block: representability forces a fence where indenting would not reparse", () => {
-    // The documented exception to the row above, and a REAL split in the
-    // canonical form: an indented block directly after a list is absorbed as
-    // list content, so the emitter fences instead. A byte assertion over
-    // synthesized code blocks therefore depends on the preceding sibling.
-    const bare = Code.make({ value: "A", position: span() });
+    const bare = Code.make({ value: "A", position: throwawaySpan() });
     const list = List.make({
       ordered: false,
       spread: false,
-      children: [ListItem.make({ spread: false, children: [paragraph(text("item"))], position: span() })],
-      position: span(),
+      children: [ListItem.make({ spread: false, children: [paragraph(text("item"))], position: throwawaySpan() })],
+      position: throwawaySpan(),
     });
 
-    // Alone, and after a paragraph: indented, per the row.
-    assert.strictEqual(out(rootOf(bare)), "    A\n");
+    assert.strictEqual(out(rootOf(bare)), "    A\n", "alone, and after a paragraph: indented, per the row");
     assert.strictEqual(out(rootOf(paragraph(text("p")), bare)), "p\n\n    A\n");
 
-    // Directly after a list: fenced.
     const afterList = out(rootOf(list, bare));
-    assert.strictEqual(afterList, "- item\n\n```\nA\n```\n");
+    assert.strictEqual(
+      afterList,
+      "- item\n\n```\nA\n```\n",
+      "the documented exception: an indented block directly after a list is absorbed as list content, so the emitter fences"
+    );
 
-    // And the reason it must: the emitted text has to reparse as a list
-    // followed by a SEPARATE code node, which indenting would not give.
     const reparsed = Result.getOrThrow(Markdown.parseResult(afterList));
-    assert.strictEqual(reparsed.children.length, 2);
+    assert.strictEqual(
+      reparsed.children.length,
+      2,
+      "the reason it must: the text has to reparse as a list followed by a SEPARATE code node, which indenting would not give"
+    );
     assert.strictEqual(reparsed.children[0]?.type, "list");
     assert.strictEqual(reparsed.children[1]?.type, "code");
   });
@@ -262,13 +240,13 @@ describe("Markdown.stringify — the documented canonical form", () => {
   });
 
   it("a fidelity field overrides its row", () => {
-    // The table describes a SYNTHESIZED node; a parsed one re-serializes in its
-    // author's spelling. Both halves are load-bearing for the promise.
-    const setext = Heading.make({ depth: 1, children: [text("T")], position: span(), headingStyle: "setext" });
-    // The underline is sized to the heading text, so a one-character heading
-    // gets a one-character rule.
-    assert.strictEqual(out(rootOf(setext)), "T\n=\n");
-    const dashBreak = ThematicBreak.make({ position: span(), markerChar: "_" });
+    const setext = Heading.make({ depth: 1, children: [text("T")], position: throwawaySpan(), headingStyle: "setext" });
+    assert.strictEqual(
+      out(rootOf(setext)),
+      "T\n=\n",
+      "the table describes a synthesized node; a parsed one keeps its author's spelling, with the underline sized to the heading text"
+    );
+    const dashBreak = ThematicBreak.make({ position: throwawaySpan(), markerChar: "_" });
     assert.strictEqual(out(rootOf(dashBreak)), "___\n");
   });
 });
@@ -280,7 +258,7 @@ describe("Markdown.stringify", () => {
     });
 
     it("ATX heading by default", () => {
-      const heading = Heading.make({ depth: 2, children: [text("Title")], position: span() });
+      const heading = Heading.make({ depth: 2, children: [text("Title")], position: throwawaySpan() });
       assert.strictEqual(out(rootOf(heading)), "## Title\n");
     });
 
@@ -288,7 +266,7 @@ describe("Markdown.stringify", () => {
       const heading = Heading.make({
         depth: 1,
         children: [text("Title")],
-        position: span(),
+        position: throwawaySpan(),
         headingStyle: "setext",
       });
       assert.strictEqual(out(rootOf(heading)), "Title\n=====\n");
@@ -298,25 +276,25 @@ describe("Markdown.stringify", () => {
       const heading = Heading.make({
         depth: 3,
         children: [text("Title")],
-        position: span(),
+        position: throwawaySpan(),
         headingStyle: "setext",
       });
       assert.strictEqual(out(rootOf(heading)), "### Title\n");
     });
 
     it("thematic break defaults to ***", () => {
-      assert.strictEqual(out(rootOf(ThematicBreak.make({ position: span() }))), "***\n");
+      assert.strictEqual(out(rootOf(ThematicBreak.make({ position: throwawaySpan() }))), "***\n");
     });
 
     it("thematic break honors markerChar", () => {
-      assert.strictEqual(out(rootOf(ThematicBreak.make({ position: span(), markerChar: "_" }))), "___\n");
+      assert.strictEqual(out(rootOf(ThematicBreak.make({ position: throwawaySpan(), markerChar: "_" }))), "___\n");
     });
 
     it("fenced code with fidelity", () => {
       const code = Code.make({
         value: "let x = 1;",
         lang: "js",
-        position: span(),
+        position: throwawaySpan(),
         fenceChar: "~",
         fenceLength: 4,
       });
@@ -324,30 +302,30 @@ describe("Markdown.stringify", () => {
     });
 
     it("indented code when fidelity marks it indented", () => {
-      const code = Code.make({ value: "a\nb", position: span() });
+      const code = Code.make({ value: "a\nb", position: throwawaySpan() });
       assert.strictEqual(out(rootOf(code)), "    a\n    b\n");
     });
 
     it("indented fidelity with a lang forces a fence", () => {
-      const code = Code.make({ value: "x", lang: "js", position: span() });
+      const code = Code.make({ value: "x", lang: "js", position: throwawaySpan() });
       assert.strictEqual(out(rootOf(code)), "```js\nx\n```\n");
     });
 
     it("fence grows past interior backtick runs", () => {
-      const code = Code.make({ value: "``` inside", position: span(), fenceChar: "`", fenceLength: 3 });
+      const code = Code.make({ value: "``` inside", position: throwawaySpan(), fenceChar: "`", fenceLength: 3 });
       assert.strictEqual(out(rootOf(code)), "````\n``` inside\n````\n");
     });
 
     it("blockquote prefixes every line", () => {
       const quote = Blockquote.make({
         children: [paragraph(text("a")), paragraph(text("b"))],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(quote)), "> a\n>\n> b\n");
     });
 
     it("html block passes through verbatim", () => {
-      const html = Html.make({ value: "<div>\n<p>x</p>\n</div>", position: span() });
+      const html = Html.make({ value: "<div>\n<p>x</p>\n</div>", position: throwawaySpan() });
       assert.strictEqual(out(rootOf(html)), "<div>\n<p>x</p>\n</div>\n");
     });
 
@@ -357,14 +335,14 @@ describe("Markdown.stringify", () => {
         label: "Ref",
         url: "/url",
         title: "the title",
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(definition)), '[Ref]: /url "the title"\n');
     });
 
     it("definition with an empty or spacey destination uses pointy brackets", () => {
-      const empty = Definition.make({ identifier: "a", url: "", position: span() });
-      const spacey = Definition.make({ identifier: "b", url: "/u r l", position: span() });
+      const empty = Definition.make({ identifier: "a", url: "", position: throwawaySpan() });
+      const spacey = Definition.make({ identifier: "b", url: "/u r l", position: throwawaySpan() });
       assert.strictEqual(out(rootOf(empty)), "[a]: <>\n");
       assert.strictEqual(out(rootOf(spacey)), "[b]: </u r l>\n");
     });
@@ -384,10 +362,10 @@ describe("Markdown.stringify", () => {
         ordered: false,
         spread: false,
         children: [
-          ListItem.make({ spread: false, children: [paragraph(text("one"))], position: span() }),
-          ListItem.make({ spread: false, children: [paragraph(text("two"))], position: span() }),
+          ListItem.make({ spread: false, children: [paragraph(text("one"))], position: throwawaySpan() }),
+          ListItem.make({ spread: false, children: [paragraph(text("two"))], position: throwawaySpan() }),
         ],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(list)), "- one\n- two\n");
     });
@@ -398,10 +376,10 @@ describe("Markdown.stringify", () => {
         start: 3,
         spread: false,
         children: [
-          ListItem.make({ spread: false, children: [paragraph(text("a"))], position: span() }),
-          ListItem.make({ spread: false, children: [paragraph(text("b"))], position: span() }),
+          ListItem.make({ spread: false, children: [paragraph(text("a"))], position: throwawaySpan() }),
+          ListItem.make({ spread: false, children: [paragraph(text("b"))], position: throwawaySpan() }),
         ],
-        position: span(),
+        position: throwawaySpan(),
         delimiter: ")",
       });
       assert.strictEqual(out(rootOf(list)), "3) a\n4) b\n");
@@ -412,10 +390,10 @@ describe("Markdown.stringify", () => {
         ordered: false,
         spread: true,
         children: [
-          ListItem.make({ spread: true, children: [paragraph(text("a"))], position: span() }),
-          ListItem.make({ spread: true, children: [paragraph(text("b"))], position: span() }),
+          ListItem.make({ spread: true, children: [paragraph(text("a"))], position: throwawaySpan() }),
+          ListItem.make({ spread: true, children: [paragraph(text("b"))], position: throwawaySpan() }),
         ],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(list)), "- a\n\n- b\n");
     });
@@ -428,10 +406,10 @@ describe("Markdown.stringify", () => {
           ListItem.make({
             spread: true,
             children: [paragraph(text("first")), paragraph(text("second"))],
-            position: span(),
+            position: throwawaySpan(),
           }),
         ],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(list)), "- first\n\n  second\n");
     });
@@ -441,19 +419,29 @@ describe("Markdown.stringify", () => {
         ordered: false,
         spread: false,
         children: [
-          ListItem.make({ spread: false, checked: true, children: [paragraph(text("done"))], position: span() }),
-          ListItem.make({ spread: false, checked: false, children: [paragraph(text("todo"))], position: span() }),
+          ListItem.make({
+            spread: false,
+            checked: true,
+            children: [paragraph(text("done"))],
+            position: throwawaySpan(),
+          }),
+          ListItem.make({
+            spread: false,
+            checked: false,
+            children: [paragraph(text("todo"))],
+            position: throwawaySpan(),
+          }),
         ],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(list)), "- [x] done\n- [ ] todo\n");
     });
 
     it("adjacent same-marker lists alternate markers so they stay separate", () => {
       const item = (label: string): ListItem =>
-        ListItem.make({ spread: false, children: [paragraph(text(label))], position: span() });
-      const listA = List.make({ ordered: false, spread: false, children: [item("a")], position: span() });
-      const listB = List.make({ ordered: false, spread: false, children: [item("b")], position: span() });
+        ListItem.make({ spread: false, children: [paragraph(text(label))], position: throwawaySpan() });
+      const listA = List.make({ ordered: false, spread: false, children: [item("a")], position: throwawaySpan() });
+      const listB = List.make({ ordered: false, spread: false, children: [item("b")], position: throwawaySpan() });
       const emitted = out(rootOf(listA, listB));
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
       assert.deepStrictEqual(
@@ -467,14 +455,16 @@ describe("Markdown.stringify", () => {
       const inner = List.make({
         ordered: false,
         spread: false,
-        children: [ListItem.make({ spread: false, children: [paragraph(text("inner"))], position: span() })],
-        position: span(),
+        children: [ListItem.make({ spread: false, children: [paragraph(text("inner"))], position: throwawaySpan() })],
+        position: throwawaySpan(),
       });
       const outer = List.make({
         ordered: false,
         spread: false,
-        children: [ListItem.make({ spread: false, children: [paragraph(text("outer")), inner], position: span() })],
-        position: span(),
+        children: [
+          ListItem.make({ spread: false, children: [paragraph(text("outer")), inner], position: throwawaySpan() }),
+        ],
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(outer)), "- outer\n  - inner\n");
     });
@@ -482,13 +472,13 @@ describe("Markdown.stringify", () => {
 
   describe("gfm blocks", () => {
     it("table with alignment row", () => {
-      const cell = (value: string): TableCell => TableCell.make({ children: [text(value)], position: span() });
+      const cell = (value: string): TableCell => TableCell.make({ children: [text(value)], position: throwawaySpan() });
       const row = (...cells: ReadonlyArray<TableCell>): TableRow =>
-        TableRow.make({ children: cells, position: span() });
+        TableRow.make({ children: cells, position: throwawaySpan() });
       const table = Table.make({
         align: ["left", null, "center"],
         children: [row(cell("a"), cell("b"), cell("c")), row(cell("1"), cell("2"), cell("3"))],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(table)), "| a | b | c |\n| :-- | --- | :-: |\n| 1 | 2 | 3 |\n");
     });
@@ -497,11 +487,11 @@ describe("Markdown.stringify", () => {
       const table = Table.make({
         children: [
           TableRow.make({
-            children: [TableCell.make({ children: [text("a|b")], position: span() })],
-            position: span(),
+            children: [TableCell.make({ children: [text("a|b")], position: throwawaySpan() })],
+            position: throwawaySpan(),
           }),
         ],
-        position: span(),
+        position: throwawaySpan(),
       });
       const emitted = out(rootOf(table));
       assert.include(emitted, "a\\|b");
@@ -509,14 +499,10 @@ describe("Markdown.stringify", () => {
       assert.strictEqual(reparsed.children[0]?.type, "table");
     });
 
-    // The cell splitter reads `\\` as ONE escaped character, so a pipe
-    // after an even run of backslashes is a real column boundary. Raw
-    // emissions (a code span, inline HTML) carry backslashes verbatim, and
-    // the post-pass must count the run rather than peek one character back.
     describe("a raw cell pipe after an escaped backslash stays in its cell", () => {
       const rawCells = [
-        ["inline code", (value: string) => InlineCode.make({ value, position: span() })],
-        ["html", (value: string) => Html.make({ value: `<b title="${value}">`, position: span() })],
+        ["inline code", (value: string) => InlineCode.make({ value, position: throwawaySpan() })],
+        ["html", (value: string) => Html.make({ value: `<b title="${value}">`, position: throwawaySpan() })],
       ] as const;
       const values = ["a|b", "a\\\\|b", "a\\\\\\\\|b", "\\\\|"];
       for (const [kind, make] of rawCells) {
@@ -528,7 +514,7 @@ describe("Markdown.stringify", () => {
             assert.strictEqual(
               cells.length,
               2,
-              `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+              `the splitter reads an escaped backslash as one character and the post-pass counts the run; emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
             );
             const [child] = cells[0]?.children ?? [];
             assert.strictEqual(
@@ -551,15 +537,15 @@ describe("Markdown.stringify", () => {
             Table.make({
               children: [
                 TableRow.make({
-                  children: [TableCell.make({ children: [node], position: span() })],
-                  position: span(),
+                  children: [TableCell.make({ children: [node], position: throwawaySpan() })],
+                  position: throwawaySpan(),
                 }),
               ],
-              position: span(),
+              position: throwawaySpan(),
             })
           );
-        const code = (value: string) => out(tableOf(InlineCode.make({ value, position: span() })));
-        const html = (value: string) => out(tableOf(Html.make({ value, position: span() })));
+        const code = (value: string) => out(tableOf(InlineCode.make({ value, position: throwawaySpan() })));
+        const html = (value: string) => out(tableOf(Html.make({ value, position: throwawaySpan() })));
         assert.strictEqual(code("a|b"), "| `a\\|b` |\n| --- |\n");
         assert.strictEqual(code("a\\\\|b"), "| `a\\\\\\|b` |\n| --- |\n");
         assert.strictEqual(code("a\\\\\\\\|b"), "| `a\\\\\\\\\\|b` |\n| --- |\n");
@@ -571,15 +557,15 @@ describe("Markdown.stringify", () => {
       const definition = FootnoteDefinition.make({
         identifier: "note",
         children: [paragraph(text("first")), paragraph(text("second"))],
-        position: span(),
+        position: throwawaySpan(),
       });
       assert.strictEqual(out(rootOf(definition)), "[^note]: first\n\n    second\n");
     });
 
     it("footnote reference round-trips against its definition", () => {
       const tree = rootOf(
-        paragraph(text("body"), FootnoteReference.make({ identifier: "n", position: span() })),
-        FootnoteDefinition.make({ identifier: "n", children: [paragraph(text("note"))], position: span() })
+        paragraph(text("body"), FootnoteReference.make({ identifier: "n", position: throwawaySpan() })),
+        FootnoteDefinition.make({ identifier: "n", children: [paragraph(text("note"))], position: throwawaySpan() })
       );
       const emitted = out(tree);
       assert.include(emitted, "[^n]");
@@ -597,19 +583,19 @@ describe("Markdown.stringify", () => {
   describe("frontmatter fences", () => {
     it("yaml", () => {
       const tree = rootOf(
-        Frontmatter.make({ format: "yaml", value: "title: x", position: span() }),
+        Frontmatter.make({ format: "yaml", value: "title: x", position: throwawaySpan() }),
         paragraph(text("body"))
       );
       assert.strictEqual(out(tree), "---\ntitle: x\n---\n\nbody\n");
     });
 
     it("toml", () => {
-      const tree = rootOf(Frontmatter.make({ format: "toml", value: 'title = "x"', position: span() }));
+      const tree = rootOf(Frontmatter.make({ format: "toml", value: 'title = "x"', position: throwawaySpan() }));
       assert.strictEqual(out(tree), '+++\ntitle = "x"\n+++\n');
     });
 
     it("json closes with three dashes and re-parses", () => {
-      const tree = rootOf(Frontmatter.make({ format: "json", value: '{ "a": 1 }', position: span() }));
+      const tree = rootOf(Frontmatter.make({ format: "json", value: '{ "a": 1 }', position: throwawaySpan() }));
       const emitted = out(tree);
       assert.strictEqual(emitted, '---json\n{ "a": 1 }\n---\n');
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted, { frontmatter: true }));
@@ -621,21 +607,23 @@ describe("Markdown.stringify", () => {
     it("emphasis and strong with default markers", () => {
       const tree = rootOf(
         paragraph(
-          Emphasis.make({ children: [text("em")], position: span() }),
+          Emphasis.make({ children: [text("em")], position: throwawaySpan() }),
           text(" and "),
-          Strong.make({ children: [text("st")], position: span() })
+          Strong.make({ children: [text("st")], position: throwawaySpan() })
         )
       );
       assert.strictEqual(out(tree), "*em* and **st**\n");
     });
 
     it("underscore fidelity is honored", () => {
-      const tree = rootOf(paragraph(Emphasis.make({ children: [text("em")], position: span(), markerChar: "_" })));
+      const tree = rootOf(
+        paragraph(Emphasis.make({ children: [text("em")], position: throwawaySpan(), markerChar: "_" }))
+      );
       assert.strictEqual(out(tree), "_em_\n");
     });
 
     it("strikethrough", () => {
-      const tree = rootOf(paragraph(Delete.make({ children: [text("gone")], position: span() })));
+      const tree = rootOf(paragraph(Delete.make({ children: [text("gone")], position: throwawaySpan() })));
       assert.strictEqual(out(tree), "~~gone~~\n");
     });
 
@@ -643,8 +631,8 @@ describe("Markdown.stringify", () => {
       const tree = rootOf(
         paragraph(
           Emphasis.make({
-            children: [Strong.make({ children: [text("both")], position: span() })],
-            position: span(),
+            children: [Strong.make({ children: [text("both")], position: throwawaySpan() })],
+            position: throwawaySpan(),
           })
         )
       );
@@ -659,8 +647,8 @@ describe("Markdown.stringify", () => {
       const tree = rootOf(
         paragraph(
           Strong.make({
-            children: [Emphasis.make({ children: [text("both")], position: span() })],
-            position: span(),
+            children: [Emphasis.make({ children: [text("both")], position: throwawaySpan() })],
+            position: throwawaySpan(),
           })
         )
       );
@@ -671,22 +659,24 @@ describe("Markdown.stringify", () => {
     });
 
     it("inline code picks a longer run than its content", () => {
-      const tree = rootOf(paragraph(InlineCode.make({ value: "a ` b", position: span() })));
+      const tree = rootOf(paragraph(InlineCode.make({ value: "a ` b", position: throwawaySpan() })));
       assert.strictEqual(out(tree), "``a ` b``\n");
     });
 
     it("inline code starting with a backtick pads with spaces", () => {
-      const tree = rootOf(paragraph(InlineCode.make({ value: "`x", position: span() })));
+      const tree = rootOf(paragraph(InlineCode.make({ value: "`x", position: throwawaySpan() })));
       assert.strictEqual(out(tree), "`` `x ``\n");
     });
 
     it("hard break defaults to backslash", () => {
-      const tree = rootOf(paragraph(text("a"), Break.make({ position: span() }), text("b")));
+      const tree = rootOf(paragraph(text("a"), Break.make({ position: throwawaySpan() }), text("b")));
       assert.strictEqual(out(tree), "a\\\nb\n");
     });
 
     it("hard break honors the spaces spelling", () => {
-      const tree = rootOf(paragraph(text("a"), Break.make({ position: span(), breakStyle: "spaces" }), text("b")));
+      const tree = rootOf(
+        paragraph(text("a"), Break.make({ position: throwawaySpan(), breakStyle: "spaces" }), text("b"))
+      );
       assert.strictEqual(out(tree), "a  \nb\n");
     });
 
@@ -696,20 +686,18 @@ describe("Markdown.stringify", () => {
     });
 
     it("link with title", () => {
-      const tree = rootOf(paragraph(Link.make({ url: "/u", title: "t", children: [text("x")], position: span() })));
+      const tree = rootOf(
+        paragraph(Link.make({ url: "/u", title: "t", children: [text("x")], position: throwawaySpan() }))
+      );
       assert.strictEqual(out(tree), '[x](/u "t")\n');
     });
 
     it("image with alt and no title", () => {
-      const tree = rootOf(paragraph(Image.make({ url: "/i.png", alt: "pic", position: span() })));
+      const tree = rootOf(paragraph(Image.make({ url: "/i.png", alt: "pic", position: throwawaySpan() })));
       assert.strictEqual(out(tree), "![pic](/i.png)\n");
     });
 
     it("link reference forms by referenceType", () => {
-      // A shortcut or collapsed reference's bracket IS its label, so
-      // those forms emit the label; only a full reference carries free
-      // content in its first bracket. In a parsed tree the label and
-      // children always agree — the divergence here is synthesized.
       const make = (referenceType: "full" | "collapsed" | "shortcut"): Root =>
         rootOf(
           paragraph(
@@ -718,26 +706,32 @@ describe("Markdown.stringify", () => {
               label: "Ref",
               referenceType,
               children: [text("Ref")],
-              position: span(),
+              position: throwawaySpan(),
             })
           ),
-          Definition.make({ identifier: "ref", label: "Ref", url: "/u", position: span() })
+          Definition.make({ identifier: "ref", label: "Ref", url: "/u", position: throwawaySpan() })
         );
-      assert.strictEqual(out(make("full")), "[Ref][Ref]\n\n[Ref]: /u\n");
+      assert.strictEqual(
+        out(make("full")),
+        "[Ref][Ref]\n\n[Ref]: /u\n",
+        "only a full reference carries free content in its first bracket; a shortcut or collapsed bracket IS its label"
+      );
       assert.strictEqual(out(make("collapsed")), "[Ref][]\n\n[Ref]: /u\n");
       assert.strictEqual(out(make("shortcut")), "[Ref]\n\n[Ref]: /u\n");
     });
 
     it("image reference", () => {
       const tree = rootOf(
-        paragraph(ImageReference.make({ identifier: "ref", referenceType: "shortcut", alt: "ref", position: span() })),
-        Definition.make({ identifier: "ref", url: "/u", position: span() })
+        paragraph(
+          ImageReference.make({ identifier: "ref", referenceType: "shortcut", alt: "ref", position: throwawaySpan() })
+        ),
+        Definition.make({ identifier: "ref", url: "/u", position: throwawaySpan() })
       );
       assert.strictEqual(out(tree), "![ref]\n\n[ref]: /u\n");
     });
 
     it("inline html passes through", () => {
-      const tree = rootOf(paragraph(text("a "), Html.make({ value: "<b>", position: span() }), text("c")));
+      const tree = rootOf(paragraph(text("a "), Html.make({ value: "<b>", position: throwawaySpan() }), text("c")));
       assert.strictEqual(out(tree), "a <b>c\n");
     });
   });
@@ -794,16 +788,12 @@ describe("Markdown.stringify", () => {
       );
     });
     it("www autolink literal shape survives as text content", () => {
-      // Under gfm a bare www literal re-parses as a link; the design's
-      // bar is render equivalence of TEXT — a literal that was plain
-      // text must stay plain text. The www matcher reads RAW source, so
-      // an escaped dot defeats it while decoding back to the same text.
       const emitted = out(rootOf(paragraph(text("www.example.com"))));
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
       const p = reparsed.children[0];
       assert.isTrue(
         p?.type === "paragraph" && A.every(p.children, (child) => child.type === "text"),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} must not re-parse as an autolink`
+        `plain text must stay plain text; the www matcher reads raw source, so an escaped dot defeats it; emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)} must not re-parse as an autolink`
       );
     });
     it("scheme autolink literal shape survives as text content", () => {
@@ -816,11 +806,14 @@ describe("Markdown.stringify", () => {
       );
     });
     it("keeps email-shaped plain text literal under gfm", () => {
-      // Escape provenance survives until the email postprocess.
       const emitted = out(rootOf(paragraph(text("mail a@b.example please"))));
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
       const p = reparsed.children[0];
-      assert.strictEqual(emitted, "mail a\\@b.example please\n");
+      assert.strictEqual(
+        emitted,
+        "mail a\\@b.example please\n",
+        "escape provenance survives until the email postprocess"
+      );
       assert.isTrue(p?.type === "paragraph");
       if (p?.type === "paragraph") {
         assert.deepStrictEqual(
@@ -833,14 +826,9 @@ describe("Markdown.stringify", () => {
   });
 
   describe("inline text escaping is minimal (parse ∘ stringify identity)", () => {
-    // A downstream consumer asserts `parse(stringify(tree))` reproduces the
-    // text it put in — byte for byte where the canonical form allows it.
-    // Every case below pins the emitted bytes AND re-parses them, asserting
-    // the single text node comes back with the original value.
     const heading = (depth: Heading["depth"], ...children: Heading["children"][number][]): Heading =>
-      Heading.make({ depth, children, position: span() });
+      Heading.make({ depth, children, position: throwawaySpan() });
 
-    /** The value of the sole text child of the first block, after re-parsing `emitted`. */
     const reparsedText = (emitted: string, expectType: string): string => {
       const reparsed = Result.getOrThrow(Markdown.parseResult(emitted));
       const block = reparsed.children[0];
@@ -871,7 +859,6 @@ describe("Markdown.stringify", () => {
       assert.strictEqual(reparsedText(emitted, "heading"), value);
     };
 
-    /** parse → stringify → the same string. */
     const stringIdentity = (source: string): void => {
       const parsed = Result.getOrThrow(Markdown.parseResult(source));
       assert.strictEqual(out(parsed), source);
@@ -899,7 +886,6 @@ describe("Markdown.stringify", () => {
       it("a one-letter name is not entity-shaped", () => paragraphCase("AT&T;", "AT&T;\n"));
       it("a value-final ampersand with no sibling stays raw", () => paragraphCase("a &", "a &\n"));
       it("an entity split across text siblings is detected", () => {
-        // Text("&") + Text("amp;") and Text("&a") + Text("mp;") must not fuse.
         for (const [head, tail] of [
           ["a &", "amp;"],
           ["a &a", "mp;"],
@@ -907,7 +893,11 @@ describe("Markdown.stringify", () => {
         ] as const) {
           const emitted = out(rootOf(paragraph(text(head), text(tail))));
           assert.strictEqual(emitted, `a \\&${Str.slice(3)(head + tail)}\n`);
-          assert.strictEqual(reparsedText(emitted, "paragraph"), head + tail);
+          assert.strictEqual(
+            reparsedText(emitted, "paragraph"),
+            head + tail,
+            "an entity split across Text siblings must not fuse"
+          );
         }
       });
       it("a value-final ampersand before plain text siblings stays raw", () => {
@@ -917,7 +907,7 @@ describe("Markdown.stringify", () => {
       });
       it("an entity-prefix run before a non-text sibling is conservatively escaped", () => {
         const emitted = out(
-          rootOf(paragraph(text("a &am"), Strong.make({ children: [text("p;")], position: span() })))
+          rootOf(paragraph(text("a &am"), Strong.make({ children: [text("p;")], position: throwawaySpan() })))
         );
         assert.strictEqual(emitted, "a \\&am**p;**\n");
       });
@@ -941,7 +931,9 @@ describe("Markdown.stringify", () => {
       });
       it("a `#` that is the whole heading text is escaped", () => headingCase(2, "#", "## \\#\n"));
       it("a trailing `#` before a non-text sibling is conservatively escaped", () => {
-        const emitted = out(rootOf(heading(2, text("a #"), Strong.make({ children: [text("b")], position: span() }))));
+        const emitted = out(
+          rootOf(heading(2, text("a #"), Strong.make({ children: [text("b")], position: throwawaySpan() })))
+        );
         assert.strictEqual(emitted, "## a \\#**b**\n");
       });
       it("a `#` run is judged against the contiguous text siblings", () => {
@@ -955,43 +947,49 @@ describe("Markdown.stringify", () => {
       it("a `#` outside a heading is untouched mid-line", () => paragraphCase("Issue #12 #", "Issue #12 #\n"));
     });
 
-    // Issue #585: a soft break sitting at the boundary of a Text node (index
-    // 0 or the last index) is entity-encoded even though the neighbouring
-    // non-text inline keeps the paragraph continuous — a plain newline
-    // cannot open a block there. The `adjacent` case (a literal blank line
-    // inside a text value) is the one boundary-adjacent shape that DOES
-    // need the entity, and stays covered by the negative control below.
     describe("a soft break at a Text boundary stays a plain newline (#585)", () => {
       it("before inlineCode", () => {
-        const tree = rootOf(paragraph(text("a\n"), InlineCode.make({ value: "b", position: span() })));
-        assert.strictEqual(out(tree), "a\n`b`\n");
+        const tree = rootOf(paragraph(text("a\n"), InlineCode.make({ value: "b", position: throwawaySpan() })));
+        assert.strictEqual(
+          out(tree),
+          "a\n`b`\n",
+          "a boundary soft break beside a non-text inline keeps the paragraph continuous: a plain newline cannot open a block there"
+        );
       });
       it("after inlineCode", () => {
-        const tree = rootOf(paragraph(InlineCode.make({ value: "a", position: span() }), text("\nb")));
+        const tree = rootOf(paragraph(InlineCode.make({ value: "a", position: throwawaySpan() }), text("\nb")));
         assert.strictEqual(out(tree), "`a`\nb\n");
       });
       it("before strong", () => {
-        const tree = rootOf(paragraph(text("a\n"), Strong.make({ children: [text("b")], position: span() })));
+        const tree = rootOf(paragraph(text("a\n"), Strong.make({ children: [text("b")], position: throwawaySpan() })));
         assert.strictEqual(out(tree), "a\n**b**\n");
       });
       it("after strong", () => {
-        const tree = rootOf(paragraph(Strong.make({ children: [text("a")], position: span() }), text("\nb")));
+        const tree = rootOf(paragraph(Strong.make({ children: [text("a")], position: throwawaySpan() }), text("\nb")));
         assert.strictEqual(out(tree), "**a**\nb\n");
       });
       it("before emphasis", () => {
-        const tree = rootOf(paragraph(text("a\n"), Emphasis.make({ children: [text("b")], position: span() })));
+        const tree = rootOf(
+          paragraph(text("a\n"), Emphasis.make({ children: [text("b")], position: throwawaySpan() }))
+        );
         assert.strictEqual(out(tree), "a\n*b*\n");
       });
       it("after emphasis", () => {
-        const tree = rootOf(paragraph(Emphasis.make({ children: [text("a")], position: span() }), text("\nb")));
+        const tree = rootOf(
+          paragraph(Emphasis.make({ children: [text("a")], position: throwawaySpan() }), text("\nb"))
+        );
         assert.strictEqual(out(tree), "*a*\nb\n");
       });
       it("before a link", () => {
-        const tree = rootOf(paragraph(text("a\n"), Link.make({ url: "/u", children: [text("b")], position: span() })));
+        const tree = rootOf(
+          paragraph(text("a\n"), Link.make({ url: "/u", children: [text("b")], position: throwawaySpan() }))
+        );
         assert.strictEqual(out(tree), "a\n[b](/u)\n");
       });
       it("after a link", () => {
-        const tree = rootOf(paragraph(Link.make({ url: "/u", children: [text("a")], position: span() }), text("\nb")));
+        const tree = rootOf(
+          paragraph(Link.make({ url: "/u", children: [text("a")], position: throwawaySpan() }), text("\nb"))
+        );
         assert.strictEqual(out(tree), "[a](/u)\nb\n");
       });
 
@@ -1001,21 +999,21 @@ describe("Markdown.stringify", () => {
         stringIdentity("swapped per API while\n`generateApiDocs` ran\n"));
 
       it("negative control: a blank line inside a text value still encodes", () => {
-        // Two consecutive newlines cannot occur in a parsed Text value (a
-        // real blank line ends the paragraph), but a hand-built tree can
-        // carry one — and it must stay entity-encoded, or a literal blank
-        // line would end the paragraph early on re-parse.
         const tree = rootOf(paragraph(text("a\n\nb")));
-        assert.strictEqual(out(tree), "a&#10;&#10;b\n");
+        assert.strictEqual(
+          out(tree),
+          "a&#10;&#10;b\n",
+          "a hand-built Text can hold a blank line a parsed one cannot; unencoded it would end the paragraph early on re-parse"
+        );
       });
 
       it("a boundary newline that WOULD open a blank line after a hard break stays encoded", () => {
-        // A hard break already lands the next position at a fresh physical
-        // line; a soft break's leading newline right after it would open a
-        // second, blank line — checked via the line-start state, not the
-        // boundary position alone.
-        const tree = rootOf(paragraph(text("a"), Break.make({ position: span() }), text("\nb")));
-        assert.strictEqual(out(tree), "a\\\n&#10;b\n");
+        const tree = rootOf(paragraph(text("a"), Break.make({ position: throwawaySpan() }), text("\nb")));
+        assert.strictEqual(
+          out(tree),
+          "a\\\n&#10;b\n",
+          "after a hard break a soft break's leading newline would open a second, blank line; checked via the line-start state"
+        );
       });
     });
   });
@@ -1024,7 +1022,7 @@ describe("Markdown.stringify", () => {
     it("depth past the cap fails typed, never a RangeError", () => {
       let tree: Paragraph | Blockquote = paragraph(text("x"));
       for (let i = 0; i < 300; i += 1) {
-        tree = Blockquote.make({ children: [tree], position: span() });
+        tree = Blockquote.make({ children: [tree], position: throwawaySpan() });
       }
       const result = Markdown.stringifyResult(rootOf(tree));
       assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));

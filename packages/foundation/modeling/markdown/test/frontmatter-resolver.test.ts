@@ -1,17 +1,3 @@
-// Unit and property coverage for the frontmatter $schema declaration contract
-// and the registry-backed resolver (P3 Task 4).
-//
-// The design doc's "$schema declarations" section is prescriptive: the
-// four-variant classification (ByUrl / ByPath / Inline / ByName), the
-// last-@ name[@version] split, the X[.Y[.Z]] integers-only version grammar,
-// day-one EXACT version-segment resolution (prefix resolution is a documented
-// future minor), and the unresolvable-version vs unknown-name distinction.
-//
-// Naming note: the design's indicative error names (SchemaDeclarationMissing,
-// SchemaNameUnknown, SchemaVersionUnresolvable) finalize here with the house
-// Error suffix; the declaration union members carry the SchemaDeclaration
-// prefix so the package index stays collision-free.
-
 import { fcRuns } from "@beep/fc-runs";
 import {
   SchemaDeclarationByName,
@@ -39,7 +25,6 @@ import type {
   SchemaDeclaration,
 } from "@beep/markdown/FrontmatterResolver";
 
-/** Assert a guard holds, narrowing the value for the field checks that follow. */
 const assertIs: <T>(guard: (input: unknown) => input is T, value: unknown) => asserts value is T = (guard, value) => {
   assert.isTrue(guard(value));
 };
@@ -270,11 +255,12 @@ describe("SchemaResolver.fromRegistry", () => {
 
   it.effect("distinguishes a legal-but-unresolvable version prefix from an unknown name", () =>
     Effect.gen(function* () {
-      // skill@2 is legal grammar (one segment) but resolves only against an
-      // identically written registration — day-one exact matching, the
-      // documented prefix-resolution future minor must NOT fire.
       const failure = yield* Effect.flip(resolver.resolve(declare("skill@2"), {}));
-      assert.instanceOf(failure, SchemaVersionUnresolvableError);
+      assert.instanceOf(
+        failure,
+        SchemaVersionUnresolvableError,
+        "skill@2 is legal one-segment grammar that resolves only against an identically written registration; no prefix resolution"
+      );
       if (S.is(SchemaVersionUnresolvableError)(failure)) {
         assert.strictEqual(failure.schemaName, "skill");
         assert.strictEqual(failure.version, "2");
@@ -314,10 +300,12 @@ describe("SchemaResolver.fromRegistry", () => {
 
   it.effect("compares version segments numerically, not textually", () =>
     Effect.gen(function* () {
-      // "identically-written" modulo integer value: 02.1.00 and 2.1.0 carry
-      // the same one-to-three integer segments.
       const schema = yield* resolver.resolve(declare("skill@02.1.00"), {});
-      assert.strictEqual(schema, Skill);
+      assert.strictEqual(
+        schema,
+        Skill,
+        "identically written modulo integer value: 02.1.00 and 2.1.0 carry the same segments"
+      );
     })
   );
 
@@ -413,9 +401,6 @@ describe("SchemaResolver.fromRegistry", () => {
 describe("the resolver seam", () => {
   it.effect("supports whole-data dispatch with zero declaration handling", () =>
     Effect.gen(function* () {
-      // The OKF model: the resolver sees the whole decoded frontmatter and
-      // keys on OKF's `type` field, ignoring $schema entirely — no OKF code
-      // in this package.
       const okf: FrontmatterSchemaResolver = {
         resolve: dual(
           2,
@@ -429,7 +414,11 @@ describe("the resolver seam", () => {
         ),
       };
       const schema = yield* okf.resolve(undefined, { type: "concept", title: "t" });
-      assert.strictEqual(schema, Skill);
+      assert.strictEqual(
+        schema,
+        Skill,
+        "the OKF model: a resolver sees the whole decoded frontmatter and keys on OKF's type field, with no OKF code in this package"
+      );
       const failure = yield* Effect.flip(okf.resolve(undefined, { type: "log" }));
       assert.instanceOf(failure, SchemaDeclarationMissingError);
     })

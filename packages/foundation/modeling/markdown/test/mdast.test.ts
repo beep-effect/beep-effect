@@ -1,8 +1,3 @@
-// The Mdast projection facade: toMdast's canonical plain-JSON emission
-// (the mdast-util-from-markdown shape the interop corpus pins), and
-// fromMdast's checked admission of foreign mdast — null normalization,
-// sentinel positions, frontmatter literal mapping, and typed failure.
-
 import { Markdown, MarkdownParseOptions } from "@beep/markdown/Markdown";
 import { Frontmatter, Root } from "@beep/markdown/MarkdownNode";
 import { Mdast, MdastDecodeError } from "@beep/markdown/Mdast";
@@ -41,7 +36,6 @@ const firstTypedChild = (root: Root) => {
   return child;
 };
 
-/** A plain tree carrying `association` on every association-bearing node type. */
 const associationTree = (association: { readonly identifier: string; readonly label: string }): unknown => ({
   type: "root",
   children: [
@@ -58,7 +52,6 @@ const associationTree = (association: { readonly identifier: string; readonly la
   ],
 });
 
-/** `value` as an array of plain records, failing the test otherwise. */
 const recordsOf = (value: unknown, what: string): ReadonlyArray<Record<string, unknown>> => {
   if (!A.isArray(value) || !A.every(value, isRecord)) assert.fail(`expected ${what} records`);
   return value;
@@ -92,14 +85,14 @@ describe("Mdast.toMdast", () => {
   });
 
   it("computes list spread as blank-between-items, not looseness", () => {
-    // A blank line INSIDE the single item makes the list loose for
-    // rendering, but mdast's List.spread reads false: no blank line
-    // separates two items.
     const withinItem = first(Mdast.toMdast(gfm("- a\n\n  b\n")));
-    assert.strictEqual(withinItem.spread, false);
-    // A blank line BETWEEN items reads true.
+    assert.strictEqual(
+      withinItem.spread,
+      false,
+      "a blank line inside the single item makes the list loose for rendering, but mdast List.spread reads false: no blank line separates two items"
+    );
     const betweenItems = first(Mdast.toMdast(gfm("- a\n\n- b\n")));
-    assert.strictEqual(betweenItems.spread, true);
+    assert.strictEqual(betweenItems.spread, true, "a blank line between items reads true");
   });
 
   it("emits explicit nulls for absent code lang and meta and strips the value terminator", () => {
@@ -362,8 +355,7 @@ describe("Mdast.fromMdast", () => {
         const item = list.children[0];
         assert.isDefined(item);
         assert.isFalse(P.hasProperty(item, "checked"));
-        // Explicit false is a value, not absence.
-        assert.strictEqual(list.ordered, false);
+        assert.strictEqual(list.ordered, false, "explicit false is a value, not absence");
       }
     }
   });

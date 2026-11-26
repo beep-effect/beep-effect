@@ -19,23 +19,26 @@ const definitionAt = (children: ReadonlyArray<FlowContent>, index: number, messa
   return node;
 };
 
-/** Each scaled `> [keyN]: /targetN` line: identifier, url and a span inside its `> ` prefix and CRLF. */
 const assertScaledDefinitions = (children: ReadonlyArray<FlowContent>, lines: ReadonlyArray<string>): void => {
   let offset = 0;
   A.forEach(lines, (line, index) => {
     const definition = definitionAt(children, index, "expected a definition");
     assert.strictEqual(definition.identifier, `key${index}`);
     assert.strictEqual(definition.url, `/target${index}`);
-    assert.deepStrictEqual(definition.position.start, Point.make({ offset: offset + 2, line: index + 1, column: 3 }));
+    assert.deepStrictEqual(
+      definition.position.start,
+      Point.make({ offset: offset + 2, line: index + 1, column: 3 }),
+      "each scaled definition span starts inside its `> ` prefix"
+    );
     assert.deepStrictEqual(
       definition.position.end,
-      Point.make({ offset: offset + line.length - 2, line: index + 1, column: line.length - 1 })
+      Point.make({ offset: offset + line.length - 2, line: index + 1, column: line.length - 1 }),
+      "each scaled definition span ends before its CRLF"
     );
     offset += line.length;
   });
 };
 
-/** The setext heading that survives after the definitions, and the emphasis inside it. */
 const assertSetextTail = (
   children: ReadonlyArray<FlowContent>,
   size: number,

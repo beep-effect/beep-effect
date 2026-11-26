@@ -1,9 +1,3 @@
-// `MarkdownDocument.find`/`findAll`: the query helpers over the parsed tree —
-// type-string selectors that narrow through the node-class union, plain and
-// type-guard predicates, document pre-order (the visitor's Enter order,
-// root-inclusive), identity into `MarkdownFormat.modify`, and the getters'
-// thrown-defect posture on an over-deep foreign tree.
-
 import { MAX_NESTING_DEPTH } from "@beep/markdown/internal/limits";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownFormat } from "@beep/markdown/MarkdownFormat";
@@ -52,17 +46,16 @@ describe("MarkdownDocument.find", () => {
     const heading = document.find("heading");
     assert.isDefined(heading);
     assert(S.is(Heading)(heading));
-    // The narrowed static type exposes `depth` without a cast.
-    assert.strictEqual(heading.depth, 1);
+    assert.strictEqual(heading.depth, 1, "the narrowed static type exposes depth without a cast");
   });
 
   it("matches by identity against the document's own tree", () => {
     const document = parseDoc(source);
     assert.strictEqual(document.find("heading"), document.root.children[0]);
-    // The root itself is in the walk, so the widest query returns it first.
     assert.strictEqual(
       document.find(() => true),
-      document.root
+      document.root,
+      "the root is in the walk, so the widest query returns it first"
     );
     assert.strictEqual(document.find("root"), document.root);
   });
@@ -97,16 +90,15 @@ describe("MarkdownDocument.findAll", () => {
     for (const heading of headings) {
       assert(S.is(Heading)(heading));
     }
-    // Document order: the quoted heading sits between the two root-level
-    // ones, and `findAll("heading")[1]` addresses it without child indexing.
     assert.deepStrictEqual(
       A.map(headings, (heading) => heading.depth),
-      [1, 2, 2]
+      [1, 2, 2],
+      "document order puts the quoted heading between the root-level ones, so findAll(heading)[1] addresses it"
     );
-    // Same nodes, same order as the navigation getter, by identity.
     assert.deepStrictEqual(
       headings,
-      A.map(document.headings, (entry) => entry.node)
+      A.map(document.headings, (entry) => entry.node),
+      "the same nodes in the same order as the headings getter"
     );
   });
 
@@ -168,8 +160,8 @@ describe("guard posture", () => {
   it("refuses an over-deep foreign tree as a defect, mirroring the getters", () => {
     const document = overDeepDocument();
     assert.throws(() => document.findAll("text"));
-    // A find that must descend past the cap trips the same guard.
-    assert.throws(() => document.find("text"));
+    const findDescendingPastCap = () => document.find("text");
+    assert.throws(findDescendingPastCap);
   });
 
   it("returns early without visiting the deep region when a shallow node matches", () => {

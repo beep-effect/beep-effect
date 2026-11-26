@@ -1,16 +1,5 @@
 import { identity } from "effect/Function";
-// The MDX vocabulary: construction (schema checks included), serialization
-// conformance against the vendored oracles, and the Mdast interop boundary.
-//
-// Serialization expectations are lifted from the vendored oracle suites
-// (.repos/mdast-util-mdx-jsx/test.js `mdxJsxToMarkdown`,
-// .repos/mdast-util-mdx-expression, .repos/mdast-util-mdxjs-esm) at the
-// oracle defaults: quote `"`, no quoteSmart, spaced self-closing, attributes
-// wrapped onto their own lines only when one carries a line ending. Where a
-// case's CHILD block content is ordinary markdown, the bytes follow THIS
-// package's canonical table (bullet `-`, tight lists), not the oracle's
-// to-markdown defaults — the MDX structure is the oracle contract, the
-// markdown inside it is ours.
+// decision: mdx-bytes-follow-oracle-structure
 
 import { Markdown } from "@beep/markdown/Markdown";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
@@ -114,7 +103,6 @@ const foreignMdxTree = {
   ],
 };
 
-/** The JSX text element opening a paragraph block, if that is what the block holds. */
 const leadingTextElement = (block: Root["children"][number] | undefined): MdxJsxTextElement | undefined => {
   const first = block?.type === "paragraph" ? block.children[0] : undefined;
   return first?.type === "mdxJsxTextElement" ? first : undefined;
@@ -132,15 +120,21 @@ describe("mdx nodes", () => {
     });
 
     it("refuses an empty-string element name — `null` is the fragment spelling", () => {
-      // An empty name has no MDX spelling: the oracle's parser only ever
-      // produces a real name or `null`, and a serialized `< />` is invalid.
-      assert.throws(() => flowElement(""));
+      assert.throws(
+        () => flowElement(""),
+        undefined,
+        undefined,
+        "an empty name has no MDX spelling: the oracle's parser yields a real name or null, and a serialized `< />` is invalid"
+      );
       assert.throws(() => textElement(""));
     });
 
     it("admits every attribute value spelling the oracle contract has", () => {
-      // Absent, null, string, expression — never explicit undefined.
-      assert.strictEqual(MdxJsxAttribute.make({ name: "a" }).value, undefined);
+      assert.strictEqual(
+        MdxJsxAttribute.make({ name: "a" }).value,
+        undefined,
+        "absent, null, string, expression: never explicit undefined"
+      );
       assert.strictEqual(MdxJsxAttribute.make({ name: "a", value: null }).value, null);
       assert.strictEqual(MdxJsxAttribute.make({ name: "a", value: "b" }).value, "b");
       const expression = MdxJsxAttributeValueExpression.make({ value: "c" });
@@ -259,10 +253,6 @@ describe("mdx nodes", () => {
     it("restarts JSX indentation inside a blockquote and a list item", () => {
       const quoted = rootOf(Blockquote.make({ children: [flowElement("x", [], [paragraph(text("y"))])] }));
       assert.strictEqual(stringified(quoted), "> <x>\n>   y\n> </x>\n");
-      // The list item's hanging indent owns indentation from there in, so a
-      // JSX element inside an item of a list that itself sits inside a JSX
-      // element renders at depth 0 and takes the item indent only — the
-      // oracle's inferDepth break at `listItem`.
       const listed = rootOf(
         flowElement(
           "x",
@@ -274,19 +264,14 @@ describe("mdx nodes", () => {
           ]
         )
       );
-      assert.strictEqual(stringified(listed), "<x>\n  - <y>\n      z\n    </y>\n</x>\n");
+      assert.strictEqual(
+        stringified(listed),
+        "<x>\n  - <y>\n      z\n    </y>\n</x>\n",
+        "the list item's hanging indent owns indentation from there in: the inner element renders at depth 0 (inferDepth breaks at listItem)"
+      );
     });
 
     it("keeps counting JSX depth through a footnote definition", () => {
-      // The oracle's inferDepth breaks ONLY at `blockquote` and `listItem`
-      // (.repos/mdast-util-mdx-jsx/lib/index.js `inferDepth`), so for
-      // mdxJsxFlowElement > footnoteDefinition > mdxJsxFlowElement the
-      // inner element still counts its JSX ancestor. Expected bytes are
-      // derived from the oracle's algorithm: the inner element
-      // self-indents by inferDepth (`  <b>` at depth 1, its child at
-      // depth 2), the footnote applies its four-space continuation
-      // indent over that, and the outer element's flow indents the whole
-      // definition one more step.
       const sandwiched = rootOf(
         flowElement(
           "a",
@@ -299,24 +284,31 @@ describe("mdx nodes", () => {
           ]
         )
       );
-      assert.strictEqual(stringified(sandwiched), "<a>\n  [^x]:   <b>\n          y\n        </b>\n</a>\n");
-      // With no JSX ancestor the inner element sits at depth 0 and only
-      // the footnote's continuation indent applies.
+      assert.strictEqual(
+        stringified(sandwiched),
+        "<a>\n  [^x]:   <b>\n          y\n        </b>\n</a>\n",
+        "inferDepth breaks only at blockquote and listItem: <b> self-indents at depth 1, the footnote adds its four-space continuation, <a> one more step"
+      );
       const topLevel = rootOf(
         FootnoteDefinition.make({
           identifier: "x",
           children: [flowElement("b", [], [paragraph(text("y"))])],
         })
       );
-      assert.strictEqual(stringified(topLevel), "[^x]: <b>\n      y\n    </b>\n");
+      assert.strictEqual(
+        stringified(topLevel),
+        "[^x]: <b>\n      y\n    </b>\n",
+        "with no JSX ancestor the inner element sits at depth 0 and only the footnote's continuation indent applies"
+      );
     });
 
     it("preserves child line terminators, leaving blank CRLF lines bare", () => {
-      // The oracle's indentLines splits on `\r\n`, `\n` and bare `\r`,
-      // keeps each terminator verbatim, and never indents a blank line —
-      // a blank CRLF line must not become `  \r`.
       const tree = rootOf(flowElement("x", [], [Code.make({ value: "a\r\n\r\nb\n", lang: "txt" })]));
-      assert.strictEqual(stringified(tree), "<x>\n  ```txt\n  a\r\n\r\n  b\n  ```\n</x>\n");
+      assert.strictEqual(
+        stringified(tree),
+        "<x>\n  ```txt\n  a\r\n\r\n  b\n  ```\n</x>\n",
+        "the oracle's indentLines keeps each terminator verbatim and never indents a blank line: a blank CRLF line must not become two spaces and CR"
+      );
     });
   });
 
@@ -352,9 +344,11 @@ describe("mdx nodes", () => {
     });
 
     it("indents expression continuation lines across every terminator spelling", () => {
-      // Oracle line handling: a bare `\r` separates lines too, terminators
-      // survive verbatim, and blank lines take no indent.
-      assert.strictEqual(stringified(rootOf(MdxFlowExpression.make({ value: "a\rb" }))), "{a\r  b}\n");
+      assert.strictEqual(
+        stringified(rootOf(MdxFlowExpression.make({ value: "a\rb" }))),
+        "{a\r  b}\n",
+        "oracle line handling: a bare CR separates lines too, terminators survive verbatim, and blank lines take no indent"
+      );
       assert.strictEqual(stringified(rootOf(MdxFlowExpression.make({ value: "a\r\n\r\nb" }))), "{a\r\n\r\n  b}\n");
     });
 
@@ -432,10 +426,16 @@ describe("mdx nodes", () => {
       if (!isRecords(attributes)) assert.fail("expected projected attributes");
       assert.strictEqual(element.type, "mdxJsxFlowElement");
       assert.strictEqual(element.name, "x");
-      // A bare attribute projects `value: null` (the parser's spelling);
-      // a value expression projects without a position (ditto).
-      assert.deepStrictEqual(attributes[0]?.value, null);
-      assert.deepStrictEqual(attributes[1]?.value, { type: "mdxJsxAttributeValueExpression", value: "c" });
+      assert.deepStrictEqual(
+        attributes[0]?.value,
+        null,
+        "a bare attribute projects value: null, the parser's spelling"
+      );
+      assert.deepStrictEqual(
+        attributes[1]?.value,
+        { type: "mdxJsxAttributeValueExpression", value: "c" },
+        "a value expression projects without a position, the parser's spelling"
+      );
       assert.deepStrictEqual(attributes[2]?.type, "mdxJsxExpressionAttribute");
       assert.strictEqual(children[1]?.type, "mdxjsEsm");
     });
@@ -451,17 +451,17 @@ describe("mdx nodes", () => {
       assert.strictEqual(expression?.type, "mdxFlowExpression");
       const textEl = leadingTextElement(wrapper);
       assert.isDefined(textEl);
-      // The null value spelling survives admission, and sentinel positions
-      // were synthesized on the attribute carriers.
       const [attribute] = textEl.attributes;
       assert.strictEqual(attribute?.type, "mdxJsxAttribute");
-      assert.strictEqual(attribute?.type === "mdxJsxAttribute" ? attribute.value : "x", null);
+      assert.strictEqual(
+        attribute?.type === "mdxJsxAttribute" ? attribute.value : "x",
+        null,
+        "the null value spelling survives admission, with sentinel positions synthesized on the attribute carriers"
+      );
       assert.strictEqual(attribute?.position.start.offset, 0);
     });
 
-    it("passes a malformed element name through so the decode fails typed", () => {
-      // The oracle contract is exactly `string | null`; anything else must
-      // reach the schema and fail the decode, never be coerced to a fragment.
+    it("passes a malformed element name through so the decode fails typed, never coerced to a fragment", () => {
       const numericName = {
         type: "root",
         children: [{ type: "mdxJsxFlowElement", name: 42, attributes: [], children: [] }],
@@ -480,11 +480,7 @@ describe("mdx nodes", () => {
       );
     });
 
-    it("passes non-array attributes and children through so the decode fails typed", () => {
-      // Same contract discipline as `name`: `attributes` and `children`
-      // are exactly arrays, so any other value must reach the schema and
-      // fail the decode — never be coerced to `[]`, which would decode
-      // successfully while silently dropping input.
+    it("passes non-array attributes and children through so the decode fails typed, never coerced to an input-dropping []", () => {
       const objectAttributes = {
         type: "root",
         children: [{ type: "mdxJsxFlowElement", name: "x", attributes: {}, children: [] }],
@@ -551,11 +547,10 @@ describe("mdx nodes", () => {
       );
       const sections = document.sections;
       assert.strictEqual(sections.length, 1);
-      // ESM is metadata, not prose — like frontmatter it belongs to no
-      // section, which is also what keeps the FlowContent typing sound.
       assert.deepStrictEqual(
         A.map(sections[0]?.children ?? [], (child) => child.type),
-        ["paragraph"]
+        ["paragraph"],
+        "ESM is metadata, not prose: like frontmatter it belongs to no section, which keeps the FlowContent typing sound"
       );
     });
   });
