@@ -154,7 +154,6 @@ const stringAt =
   (args: IArguments): boolean =>
     P.isString(args[index]);
 
-/** `values` followed by `optional` when it is defined — the argv refs a call actually passes. */
 const withDefined = (values: ReadonlyArray<string>, optional: string | undefined): ReadonlyArray<string> =>
   optional === undefined ? values : [...values, optional];
 
@@ -2806,6 +2805,14 @@ export interface GitShape {
    * The value never surfaces in an error: a failing `configSet` carries
    * `<redacted>` in `GitCommandError.args` and `.message`, and the method's
    * span annotates `key` and `file` only.
+   *
+   * **Gotchas**
+   *
+   * `git config` has no documented `--` separator, so `key`, `value` and
+   * `file` all pass the option-like guard: a value beginning with `-` is
+   * refused typed before any spawn and cannot be written through this method.
+   * `configUnset`, `configRemoveSection` and `configRenameSection` guard their
+   * positionals the same way.
    */
   readonly configSet: {
     (

@@ -96,7 +96,6 @@ export const OPENSSH_VARIANTS = HashSet.make("", "auto", "ssh");
 
 const DECIDES_BATCH_MODE = /(?:^|\s)-o\s*["']?\s*BatchMode\s*[=\s]/i;
 
-/** A leading quoted program: the opening quote, then everything up to the first matching quote. */
 const QUOTED_PROGRAM = /^(["'])([\s\S]*?)\1/;
 
 const sshProgram = (command: string): string | undefined => {
