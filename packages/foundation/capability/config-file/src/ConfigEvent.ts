@@ -78,37 +78,62 @@ export class ConfigSourceRef extends S.Opaque<ConfigSourceRef, { readonly brand:
  * @since 0.0.0
  */
 export const ConfigEventPayload = S.Union([
-  /** A resolver matched a path. Emitted before the file is read. */
-  S.TaggedStruct("Discovered", { path: S.String, resolver: S.String }),
-  /** The resolver chain matched nothing. */
-  S.TaggedStruct("NotFound", {}),
-  /** The codec turned file content into a document. */
-  S.TaggedStruct("Parsed", { path: S.String, codec: S.String }),
-  /** The codec could not parse the file's content. */
-  S.TaggedStruct("ParseFailed", { path: S.String, codec: S.String, error: S.Defect() }),
-  /** The document satisfied the schema and any caller-supplied `validate`. */
-  S.TaggedStruct("Validated", { path: S.String }),
-  /** The document did not satisfy the schema, or `validate` rejected it. */
-  S.TaggedStruct("ValidationFailed", { path: S.String, error: S.Defect() }),
-  /**
-   * The merge strategy combined the discovered sources into one value.
-   *
-   * **Details**
-   *
-   * Carries EVERY contributing source — under `layeredMerge` all of them
-   * contributed, not just the first.
-   */
-  S.TaggedStruct("Resolved", { sources: S.Array(ConfigSourceRef), strategy: S.String }),
-  /** The load completed. Carries every contributing source, as `Resolved` does. */
-  S.TaggedStruct("Loaded", { sources: S.Array(ConfigSourceRef) }),
-  /** The codec could not serialize the value. */
-  S.TaggedStruct("StringifyFailed", { codec: S.String, error: S.Defect() }),
-  /** `write` persisted a value to an explicit path. */
-  S.TaggedStruct("Written", { path: S.String }),
-  /** `save` persisted a value to the configured `defaultPath`. */
-  S.TaggedStruct("Saved", { path: S.String }),
-  /** `update` loaded, transformed and persisted a value. Emitted alone. */
-  S.TaggedStruct("Updated", { path: S.String }),
+  S.TaggedStruct("Discovered", { path: S.String, resolver: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Discovered", {
+      description:
+        "A resolver matched a path. Emitted before the file is read, so a corrupt file is still reported as found.",
+    })
+  ),
+  S.TaggedStruct("NotFound", {}).pipe(
+    $I.annoteSchema("ConfigEventPayload.NotFound", { description: "The resolver chain matched nothing." })
+  ),
+  S.TaggedStruct("Parsed", { path: S.String, codec: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Parsed", { description: "The codec turned file content into a document." })
+  ),
+  S.TaggedStruct("ParseFailed", { path: S.String, codec: S.String, error: S.Defect() }).pipe(
+    $I.annoteSchema("ConfigEventPayload.ParseFailed", { description: "The codec could not parse the file's content." })
+  ),
+  S.TaggedStruct("Validated", { path: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Validated", {
+      description: "The document satisfied the schema and any caller-supplied `validate`.",
+    })
+  ),
+  S.TaggedStruct("ValidationFailed", { path: S.String, error: S.Defect() }).pipe(
+    $I.annoteSchema("ConfigEventPayload.ValidationFailed", {
+      description:
+        "The document did not satisfy the schema, or `validate` rejected it: one validation step from a subscriber's point of view.",
+    })
+  ),
+  S.TaggedStruct("Resolved", { sources: S.Array(ConfigSourceRef), strategy: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Resolved", {
+      description:
+        "The merge strategy combined the discovered sources into one value. Carries every contributing source: under `layeredMerge` all of them contributed, not just the first.",
+    })
+  ),
+  S.TaggedStruct("Loaded", { sources: S.Array(ConfigSourceRef) }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Loaded", {
+      description: "The load completed. Carries every contributing source, as `Resolved` does.",
+    })
+  ),
+  S.TaggedStruct("StringifyFailed", { codec: S.String, error: S.Defect() }).pipe(
+    $I.annoteSchema("ConfigEventPayload.StringifyFailed", {
+      description:
+        "The codec could not serialize the value on a write path. Never emitted by `encode`, which publishes nothing.",
+    })
+  ),
+  S.TaggedStruct("Written", { path: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Written", { description: "`write` persisted a value to an explicit path." })
+  ),
+  S.TaggedStruct("Saved", { path: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Saved", {
+      description: "`save` persisted a value to the configured `defaultPath`.",
+    })
+  ),
+  S.TaggedStruct("Updated", { path: S.String }).pipe(
+    $I.annoteSchema("ConfigEventPayload.Updated", {
+      description: "`update` loaded, transformed and persisted a value. Emitted alone, without a `Saved`.",
+    })
+  ),
 ]).pipe(
   $I.annoteSchema("ConfigEventPayload", {
     description: "Every event published during config discovery, parsing, validation and persistence.",
