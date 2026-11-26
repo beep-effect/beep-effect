@@ -117,15 +117,11 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
             : invalidObservation()
         )
       );
-      const freshPolicyCopySoReportMutationCannotReachInstall = yield* captureCitationOperationPolicy(
-        limits,
-        engineArtifact,
-        invalidObservation
-      );
+      const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalidObservation);
       const report = CitationExtractorReport.make({
         engineArtifact,
         vocabularyVersion: projection.vocabularyVersion,
-        limits: freshPolicyCopySoReportMutationCannotReachInstall.limits,
+        limits: reportPolicy.limits,
         recognizedMentions: A.length(mentions),
         outsideProfile: output.outsideProfile,
       });

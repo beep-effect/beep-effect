@@ -13,14 +13,14 @@ import integrationPlan from "../vitest.integration.shards.json" with { type: "js
 import unitPlan from "../vitest.shards.json" with { type: "json" };
 import type { TestSpecification } from "vitest/node";
 
-const checkedInIntegrationFilesViteResolvesAtTransform = R.keys(
+const integrationFiles = R.keys(
   import.meta.glob<string>("./integration/*.test.ts", { eager: true, import: "default", query: "?raw" })
 );
 const plannedSeconds: Readonly<Record<string, number>> = integrationPlan.fileSeconds;
 
 it("plans every checked-in integration file in exactly one shard, so plan drift cannot silently unbalance the partitions", () => {
   const onDisk = A.sort(
-    A.map(checkedInIntegrationFilesViteResolvesAtTransform, (file) => `test/${Str.slice(Str.length("./"))(file)}`),
+    A.map(integrationFiles, (file) => `test/${Str.slice(Str.length("./"))(file)}`),
     Str.Order
   );
   const planned = A.sort(A.flatten(integrationPlan.shards), Str.Order);

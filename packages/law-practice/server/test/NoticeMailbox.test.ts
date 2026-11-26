@@ -50,17 +50,14 @@ const recordingMailboxWithSequentialDraftIds = (calls: Ref.Ref<Calls>) =>
       Ref.update(calls, (current) => ({ ...current, sends: A.append(current.sends, request) })),
   });
 
-const mailboxConfigOmittingLinkKeyWhenNoneLikePreLinkConfigs = (
-  dataDirectory: string,
-  claudeLink: O.Option<NoticeClaudeLink>
-) =>
+const mailboxConfig = (dataDirectory: string, claudeLink: O.Option<NoticeClaudeLink>) =>
   O.match(claudeLink, {
     onNone: () => NoticeMailboxConfig.make({ mailbox: MAILBOX, dataDirectory }),
     onSome: (link) => NoticeMailboxConfig.make({ mailbox: MAILBOX, dataDirectory, claudeLink: O.some(link) }),
   });
 
 const mailboxLayer = (dataDirectory: string, calls: Ref.Ref<Calls>, claudeLink = O.none<NoticeClaudeLink>()) =>
-  makeNoticeMailboxLayer(mailboxConfigOmittingLinkKeyWhenNoneLikePreLinkConfigs(dataDirectory, claudeLink)).pipe(
+  makeNoticeMailboxLayer(mailboxConfig(dataDirectory, claudeLink)).pipe(
     Layer.provide(recordingMailboxWithSequentialDraftIds(calls))
   );
 
@@ -122,7 +119,8 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
               draft.body.contentType,
               draft.toRecipients,
               O.getOrElse(userId, () => "no user id"),
-            ])
+            ]),
+            "a config made without a link has no claudeLink key, like configs written before links"
           ).toStrictEqual([
             ["Claude: 2 questions waiting", "2 questions are waiting in Claude.", "text", [MAILBOX], MAILBOX],
           ]);

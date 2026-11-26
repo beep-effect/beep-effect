@@ -137,11 +137,7 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
     if (completeBytes > limits.processMessageBytes) return yield* safety("processMessageBytes");
     return { matches, bytes, completeBytes };
   });
-  const checkCaptureAgainstSourceNotWholeMatchForLookaround = Effect.fnUntraced(function* (
-    start: number,
-    end: number,
-    group: number
-  ) {
+  const checkCapture = Effect.fnUntraced(function* (start: number, end: number, group: number) {
     if (start === absent || end === absent) {
       if (group === 0 || start !== absent || end !== absent) return yield* invalid();
       return false;
@@ -165,7 +161,7 @@ export const makeCitationRegexResult = Effect.fn("Citation.makeRegexResult")(fun
         if (offset % 4096 === 0) yield* Effect.yieldNow;
         const start = view.getUint32(offset, true);
         const end = view.getUint32(offset + 4, true);
-        if (!(yield* checkCaptureAgainstSourceNotWholeMatchForLookaround(start, end, group))) continue;
+        if (!(yield* checkCapture(start, end, group))) continue;
         if (group === 0) yield* wholeMatch(start, end);
       }
     });

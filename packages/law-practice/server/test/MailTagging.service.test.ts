@@ -228,7 +228,7 @@ const sha1OfTheThreeAttachmentBytes = "7037807198c22a7d2b0807371d763779a84fdfcf"
 const encodeFilingRecord = S.encodeEffect(FilingLedgerRecordJsonLine);
 const decodeFilingRecord = S.decodeEffect(FilingLedgerRecordJsonLine);
 
-const intentLineOfEarlierRunStoppedBeforeCompletion = FilingIntent.make({
+const interruptedIntent = FilingIntent.make({
   runId: TaggingRunId.make("run-0001"),
   contentSha256: ContentSha256.make("039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81"),
   matterKey: MatterKey.make("1234.10001"),
@@ -335,18 +335,16 @@ describe("MailTagging assembled service", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         yield* fs.makeDirectory(path.dirname(workspace.filingLedgerPath), { recursive: true });
-        yield* fs.writeFileString(
-          workspace.filingLedgerPath,
-          `${yield* encodeFilingRecord(intentLineOfEarlierRunStoppedBeforeCompletion)}\n`
-        );
+        yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
         const linesOf5 = yield* linesOf(workspace.filingLedgerPath);
         const records = yield* Effect.forEach(linesOf5, (line) => decodeFilingRecord(line), { concurrency: 1 });
 
-        expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
-          1, 0, 0,
-        ]);
+        expect(
+          [report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped],
+          "the ledger opens with an earlier run's intent line, written before its upload and never completed"
+        ).toStrictEqual([1, 0, 0]);
         expect(A.map(records, filingLine)).toStrictEqual([
           ["FilingIntended", intendedName],
           ["FilingAbandoned", intendedName, "holder-mismatch"],
@@ -383,10 +381,7 @@ describe("MailTagging assembled service", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         yield* fs.makeDirectory(path.dirname(workspace.filingLedgerPath), { recursive: true });
-        yield* fs.writeFileString(
-          workspace.filingLedgerPath,
-          `${yield* encodeFilingRecord(intentLineOfEarlierRunStoppedBeforeCompletion)}\n`
-        );
+        yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
         const linesOf7 = yield* linesOf(workspace.filingLedgerPath);

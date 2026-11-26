@@ -296,7 +296,7 @@ const rewindIdSequencesSoNextAppendReceives = Effect.fnUntraced(function* (nextI
   );
 });
 
-const forceSessionHeapScansPastIdOrderedTenantIndex = Effect.fnUntraced(function* () {
+const forceSequentialScans = Effect.fnUntraced(function* () {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
   yield* sql`SET enable_indexscan = off`;
@@ -319,7 +319,7 @@ if (!shouldRunPgliteIntegration) {
   describe(DRIZZLE_CANDOR_INTEGRATION_TITLE, { concurrent: false }, () => {
     it.layer(makeCandorRepositoryLayer(), { timeout: "5 minutes" })("appending and reading each record kind", (it) => {
       it.effect(
-        "reads each kind back out of Postgres scoped to its filing: jsonb equality alone separates a same-tenant filing of another representation",
+        "reads every appended kind back out of Postgres scoped to the filing it was recorded for",
         Effect.fnUntraced(function* () {
           yield* migrateCandorTables();
           const repository = yield* CandorRecordRepository;
@@ -352,7 +352,10 @@ if (!shouldRunPgliteIntegration) {
           expect(A.map(submissionFacts, (fact) => fact.submissionKind)).toEqual(["initial"]);
 
           const listEvents4 = yield* repository.listEvents(filingB);
-          expect(ids(listEvents4)).toEqual([other.event.id]);
+          expect(
+            ids(listEvents4),
+            "jsonb equality alone separates a same-tenant filing of another representation"
+          ).toEqual([other.event.id]);
           const listDispositions5 = yield* repository.listDispositions(filingB);
           expect(ids(listDispositions5)).toEqual([other.disposition.id]);
           const listSubmissionFacts6 = yield* repository.listSubmissionFacts(filingB);
@@ -427,7 +430,7 @@ if (!shouldRunPgliteIntegration) {
             "setup: without the rewind these appends land ascending and prove nothing below"
           ).toBe(1);
 
-          yield* forceSessionHeapScansPastIdOrderedTenantIndex();
+          yield* forceSequentialScans();
           const filing = yield* tenantFilingScope(FILING_A, 1);
 
           const listEvents13 = yield* repository.listEvents(filing);
