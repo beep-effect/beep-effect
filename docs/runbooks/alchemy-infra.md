@@ -1180,9 +1180,11 @@ the restore of these inputs. The scheduled `cache-warm.yml` pass writes the Work
 its R2 adapter now starts only for the explicit `r2_probe` qualification
 dispatch.
 
-The old caches keep serving: the AWS Lambda cache (`vars.TURBO_API`,
-`secrets.TURBO_TOKEN`, `secrets.TURBO_READ_TOKEN`) and the R2 pilot
-(`vars.TURBO_R2_*`, `secrets.TURBO_R2_*`) are untouched and still answer
-workstations and any branch that predates the switch. Rollback is reverting the
-stage-2 PR: the callers go back to the old names, which never stopped working.
-P6 retires the old names and the old caches.
+The AWS Lambda cache is gone: cutover step 6(d) destroyed it on 2026-11-26, and
+P6 deleted its names (`vars.TURBO_API`, `vars.TURBO_TEAM`,
+`secrets.TURBO_READ_TOKEN`, `secrets.TURBO_TEAM` and the `turbo-cache-write`
+environment's `TURBO_TOKEN`). A checkout whose `.env` still
+points `TURBO_API` at the AWS host only loses its remote reads. The R2 pilot
+(`vars.TURBO_R2_*`, `secrets.TURBO_R2_*`) stays enrolled for
+`@beep/infra-turbo-cache`'s `r2-pilot`. Rollback of stage 2 no longer has an
+old cache to fall back to: restore the Worker callers instead.
