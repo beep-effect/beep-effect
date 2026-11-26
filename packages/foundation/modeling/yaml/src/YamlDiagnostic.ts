@@ -331,7 +331,7 @@ export class YamlDiagnostic extends S.Opaque<YamlDiagnostic, { readonly brand: u
       index?: ReturnType<typeof YamlDiagnostic.positionIndex>
     ): YamlDiagnostic => {
       const { line, character } =
-        index === undefined ? Text.lineCharacterAt(text, raw.offset, lineGrammar) : index(raw.offset);
+        index === undefined ? Text.lineCharacterAt(text, raw.offset, standaloneLineGrammar) : index(raw.offset);
       return YamlDiagnostic.make({
         code: raw.code,
         message: raw.message,
@@ -361,7 +361,7 @@ export class YamlDiagnostic extends S.Opaque<YamlDiagnostic, { readonly brand: u
    * @since 0.0.0
    */
   static positionIndex(text: string): (offset: number) => { line: number; character: number } {
-    return Text.lineCharacterIndex(text, lineGrammar);
+    return Text.lineCharacterIndex(text, standaloneLineGrammar);
   }
 
   /**
@@ -404,8 +404,4 @@ export class YamlDiagnostic extends S.Opaque<YamlDiagnostic, { readonly brand: u
   );
 }
 
-/**
- * YAML newline grammar: LF, CR, CRLF, LS and PS, with the CRLF pair check
- * kept inside the scanned prefix for standalone diagnostic conversion.
- */
-const lineGrammar = { unicodeSeparators: true, crlfLookahead: "prefix" } as const;
+const standaloneLineGrammar = { unicodeSeparators: true, crlfLookahead: "prefix" } as const;

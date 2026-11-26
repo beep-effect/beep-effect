@@ -354,13 +354,11 @@ export class StyleFloor extends S.Opaque<StyleFloor, { readonly brand: unique sy
  */
 export type StyleObservation = StyleVote | StyleFloor;
 
-/** The dual check signature every rule implements. */
 type RuleCheck = {
   (ctx: LintContext, options: unknown): Iterable<YamlLintDiagnostic>;
   (options: unknown): (ctx: LintContext) => Iterable<YamlLintDiagnostic>;
 };
 
-/** The optional style-inference hook signature. */
 type RuleInfer = (ctx: LintContext) => Iterable<StyleObservation>;
 
 const RuleCheck = S.declare((u: unknown): u is RuleCheck => P.isFunction(u)).pipe(
