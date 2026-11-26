@@ -1,3 +1,25 @@
+/**
+ * Unsatisfied peer-dependency detection over a parsed lockfile — a pure
+ * VALUE, not a service. No IO, nothing in `R`, no error channel.
+ *
+ * **Details**
+ *
+ * The computation is FORMAT-FREE. `@beep/lockfiles` normalizes every
+ * manager's lockfile into package *instances* carrying `instanceId`,
+ * `peerDependencies`, `peerDependenciesMeta` and `resolved` (name → the
+ * instanceId that name actually resolved to), so this module never learns
+ * which manager wrote the file. That is the whole point of the model work
+ * behind it: shelling out to each package manager's own peer command cannot
+ * deliver bun (which reports nothing on a no-op install and never records the
+ * wanted range), so the answer has to come from the graph.
+ *
+ * `instanceId` is OPAQUE here — looked up, never parsed. Splitting one on `@`
+ * or "(" would re-introduce the format knowledge this module exists without.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { Lockfile, ResolvedPackage } from "@beep/lockfiles";
 import { LiteralKit } from "@beep/schema/LiteralKit";
