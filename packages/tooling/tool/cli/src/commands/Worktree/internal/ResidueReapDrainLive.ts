@@ -23,7 +23,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
-import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
+import { detectCheckoutRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
 import { checkoutLivenessReadings, FleetMirrorService, FleetMirrorServiceLive } from "../Fleet.service.ts";
 import { FleetScanOptions } from "../Worktree.schemas.ts";
 import { layerWorktreeGithub } from "../Worktree.service.ts";
@@ -157,7 +157,7 @@ const liveFacts = Effect.fnUntraced(function* (
   const mirror = yield* FleetMirrorService;
   const store = yield* FleetRegistryStore;
   const ledger = yield* SessionLedger;
-  const repository = yield* detectPrRepository(repoRoot);
+  const repository = yield* detectCheckoutRepository(repoRoot);
   const roots = yield* mirror.roots(FleetScanOptions.make({ startFrom: repoRoot }));
   const registry = yield* store.read(repository);
   const stateDirectory = yield* fleetStateDirectory(repository);
@@ -191,7 +191,7 @@ const liveUpdateRegistry = Effect.fnUntraced(function* (
   transform: Parameters<ResidueDrainProbeShape["updateRegistry"]>[1]
 ) {
   const store = yield* FleetRegistryStore;
-  const repository = yield* detectPrRepository(repoRoot);
+  const repository = yield* detectCheckoutRepository(repoRoot);
   const [document] = yield* store.update(repository, (current) => {
     const next = FleetRegistryDocument.make({ schemaVersion: current.schemaVersion, rows: transform(current.rows) });
     return [next, undefined] as const;

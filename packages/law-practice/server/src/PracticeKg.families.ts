@@ -270,8 +270,8 @@ const ownDocketEvidenceNotCrossClientCitations = (
   references: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): ReadonlyArray<PracticeKgDocketReferenceRow> => {
   const { docket } = row;
-  const familyLevelDocumentCountsEveryFamilyReference = docket === null;
-  if (familyLevelDocumentCountsEveryFamilyReference) {
+  const familyLevelDocument = docket === null;
+  if (familyLevelDocument) {
     return references;
   }
   return A.filter(references, (reference) =>

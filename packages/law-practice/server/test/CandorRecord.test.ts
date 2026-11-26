@@ -50,18 +50,18 @@ const FILING_B: CitingApplicationIdentity.Encoded = {
   officeCode: "EP",
 };
 
-type FixtureDigestIsTrueSha256OfTextNotReverifiedHere = {
+type Source = {
   readonly digest: string;
   readonly name: string;
   readonly text: string;
 };
 
-const SOURCE_A: FixtureDigestIsTrueSha256OfTextNotReverifiedHere = {
+const SOURCE_A: Source = {
   digest: "sha256:a04772355ef288ca617fbb35bf5e6f8987c38321cff61151b20e8a52ff95281c",
   name: "smith",
   text: "Smith discloses a hinge assembly.",
 };
-const SOURCE_B: FixtureDigestIsTrueSha256OfTextNotReverifiedHere = {
+const SOURCE_B: Source = {
   digest: "sha256:7ea8c349c033bd438ca72b7bf6b7bfa17d58db85b7b5d08c5814af9c100e3da2",
   name: "jones",
   text: "Jones discloses a latch.",
@@ -77,7 +77,7 @@ const scopeFilingToTenantDefaultingToFixtureOrg = Effect.fnUntraced(function* (
   return CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(org) });
 });
 
-const groundingOf = (source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere) => ({
+const groundingOf = (source: Source) => ({
   anchor: { endChar: Str.length(source.text), quote: source.text, startChar: 0 },
   source: {
     extractor: { name: "utf8", version: "1" },
@@ -90,12 +90,7 @@ const groundingOf = (source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere) =
   },
 });
 
-const eventFixture = (
-  id: number,
-  citingApplication: CitingApplicationIdentity.Encoded,
-  source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere,
-  org = 1
-) =>
+const eventFixture = (id: number, citingApplication: CitingApplicationIdentity.Encoded, source: Source, org = 1) =>
   decodeUnknownPatentCitationEvent({
     ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
     orgId: org,
@@ -114,7 +109,7 @@ const dispositionFixture = (
   id: number,
   citingApplication: CitingApplicationIdentity.Encoded,
   eventId: number,
-  source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere,
+  source: Source,
   org = 1
 ) =>
   decodeUnknownCandorDisposition({
@@ -170,11 +165,11 @@ const submissionFactFixture = (id: number, citingApplication: CitingApplicationI
     submissionKind: "initial",
   });
 
-const appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable = Effect.fnUntraced(function* (
+const appendFiling = Effect.fnUntraced(function* (
   repository: CandorRecordRepositoryShape,
   citingApplication: CitingApplicationIdentity.Encoded,
   seed: number,
-  source: FixtureDigestIsTrueSha256OfTextNotReverifiedHere,
+  source: Source,
   org = 1
 ) {
   const eventFixture1 = yield* eventFixture(seed, citingApplication, source, org);
@@ -195,8 +190,8 @@ describe("@beep/law-practice-server candor record repository", () => {
       () =>
         Effect.gen(function* () {
           const repository = yield* CandorRecordRepository;
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A, 1);
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 2, SOURCE_B, 2);
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A, 1);
+          yield* appendFiling(repository, FILING_A, 2, SOURCE_B, 2);
 
           const tenantOne = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A, 1);
           const tenantTwo = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A, 2);
@@ -204,7 +199,10 @@ describe("@beep/law-practice-server candor record repository", () => {
           const listEvents4 = yield* repository.listEvents(tenantOne);
           expect(ids(listEvents4)).toEqual([1]);
           const listDispositions5 = yield* repository.listDispositions(tenantOne);
-          expect(ids(listDispositions5)).toEqual([101]);
+          expect(
+            ids(listDispositions5),
+            "each kind takes seed, seed + 100 or seed + 200, so the three ids stay distinguishable"
+          ).toEqual([101]);
           const listSubmissionFacts6 = yield* repository.listSubmissionFacts(tenantOne);
           expect(ids(listSubmissionFacts6)).toEqual([201]);
 
@@ -225,7 +223,7 @@ describe("@beep/law-practice-server candor record repository", () => {
         "reads every appended kind back scoped to the filing it was recorded for",
         Effect.fnUntraced(function* () {
           const repository = yield* CandorRecordRepository;
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A);
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
 
           const filing = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A);
           const events = yield* repository.listEvents(filing);
@@ -243,7 +241,10 @@ describe("@beep/law-practice-server candor record repository", () => {
             A.map(dispositions, (disposition) => disposition.disposes.eventId),
             "the disposition still names the exact observation it answers"
           ).toEqual([1]);
-          expect(A.map(events, (event) => event.grounding.source.textDigest)).toEqual([SOURCE_A.digest]);
+          expect(
+            A.map(events, (event) => event.grounding.source.textDigest),
+            "the fixture digest is the real SHA-256 of its text; nothing here re-verifies it"
+          ).toEqual([SOURCE_A.digest]);
         })
       );
     }
@@ -256,8 +257,8 @@ describe("@beep/law-practice-server candor record repository", () => {
         "never returns a second filing's records, and nothing matches across identity representations",
         Effect.fnUntraced(function* () {
           const repository = yield* CandorRecordRepository;
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A);
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_B, 2, SOURCE_B);
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
+          yield* appendFiling(repository, FILING_B, 2, SOURCE_B);
 
           const filingA = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A);
           const filingB = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_B);
@@ -288,8 +289,8 @@ describe("@beep/law-practice-server candor record repository", () => {
         Effect.fnUntraced(function* () {
           const repository = yield* CandorRecordRepository;
 
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 3, SOURCE_B);
-          yield* appendEachKindWithSeedPlus100AndPlus200SoIdsStayDistinguishable(repository, FILING_A, 1, SOURCE_A);
+          yield* appendFiling(repository, FILING_A, 3, SOURCE_B);
+          yield* appendFiling(repository, FILING_A, 1, SOURCE_A);
 
           const filing = yield* scopeFilingToTenantDefaultingToFixtureOrg(FILING_A);
 

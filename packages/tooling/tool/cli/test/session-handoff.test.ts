@@ -1,4 +1,5 @@
 import {
+  CheckoutRepository,
   convertRegisterRow,
   currentRulings,
   HandoffRenderInput,
@@ -6,7 +7,6 @@ import {
   lastJournalLine,
   layerOrchestratorRulingsMemory,
   OrchestratorRulings,
-  PrRepository,
   parseHandoffDocument,
   RegisterConvertInput,
   RegisterRow,
@@ -30,7 +30,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 const ruling = (overrides: Partial<Parameters<typeof RulingRow.make>[0]> = {}) =>
   RulingRow.make({
@@ -259,7 +259,7 @@ describe("orchestrator rulings memory layer", () => {
     it.effect("lists only the rows of the asked repository", () =>
       Effect.gen(function* () {
         const rulings = yield* OrchestratorRulings;
-        const elsewhere = PrRepository.make({ host: "github.com", owner: "someone", name: "else" });
+        const elsewhere = CheckoutRepository.make({ host: "github.com", owner: "someone", name: "else" });
         yield* rulings.append(ruling());
         yield* rulings.append(ruling({ id: "other", repository: elsewhere }));
         const listed = yield* rulings.list(repository);

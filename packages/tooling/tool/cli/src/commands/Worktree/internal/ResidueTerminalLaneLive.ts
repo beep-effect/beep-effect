@@ -23,7 +23,7 @@ import * as Str from "effect/String";
 import { invokerAncestryPids, isRegisteredWorktree, scanProcessAttachments } from "../../../internal/repo-run/index.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
-import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
+import { detectCheckoutRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
 import { mergedPullRequestsForBranch } from "../Worktree.service.ts";
 import { ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
 import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
@@ -103,8 +103,8 @@ const liveSessionRowCount = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const ledger = yield* SessionLedger;
-  const detectPrRepository13 = yield* detectPrRepository(checkout);
-  const list7 = yield* ledger.list(detectPrRepository13);
+  const repository = yield* detectCheckoutRepository(checkout);
+  const list7 = yield* ledger.list(repository);
   const rows = openSessionRows(list7);
   const named = yield* Effect.filter(rows, (row) =>
     fs.realPath(row.checkout).pipe(

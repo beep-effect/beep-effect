@@ -14,8 +14,9 @@ import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
+import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 import { GoalCloseoutView } from "../Goals/Goals.schemas.ts";
-import { PrNumber, PrProvenanceHarness, PrRepository } from "../Yeet/internal/Provenance.ts";
+import { PrNumber, PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Session/Session.schemas");
 
@@ -81,13 +82,13 @@ export type SessionRole = typeof SessionRole.Type;
  * **Example** (Make a row)
  *
  * ```ts
- * import { PrRepository, SessionLedgerRow } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, SessionLedgerRow } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const row = SessionLedgerRow.make({
  *   schemaVersion: "session-ledger/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   clone: "/work/beep-effect",
  *   checkout: "/work/beep-effect-worktrees/lane",
  *   lane: "lane",
@@ -109,7 +110,7 @@ export type SessionRole = typeof SessionRole.Type;
 export class SessionLedgerRow extends S.Opaque<SessionLedgerRow, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("session-ledger/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     clone: S.String,
     checkout: S.String,
     lane: S.String,
@@ -163,7 +164,7 @@ export const SessionLedgerRowJson = JsonStringCodec(SessionLedgerRow);
 export class SessionOpenReport extends S.Opaque<SessionOpenReport, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("session-open/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     rows: S.Array(SessionLedgerRow),
     goalCloseouts: GoalCloseoutView.pipe(S.Array, S.optionalKey),
   }).pipe(

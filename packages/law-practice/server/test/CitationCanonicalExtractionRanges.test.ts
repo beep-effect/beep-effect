@@ -23,14 +23,11 @@ import {
 } from "./CitationCanonicalRemainingExtraction.fixtures.ts";
 
 // decision: citation-integration-replay-files
-const checkedInIntegrationSourcesInlinedByViteAtTransformTime = import.meta.glob<string>(
-  "./integration/CitationCanonical*.test.ts",
-  {
-    eager: true,
-    import: "default",
-    query: "?raw",
-  }
-);
+const integrationSources = import.meta.glob<string>("./integration/CitationCanonical*.test.ts", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
 const integrationPrefix = "./integration/";
 const rangeReference = /^const RANGE = (\d+);$/gm;
 
@@ -87,7 +84,7 @@ for (const corpus of splits) {
 for (const corpus of splits) {
   it(`replays every ${corpus.corpus} range in exactly one integration file`, () => {
     const references = pipe(
-      R.toEntries(checkedInIntegrationSourcesInlinedByViteAtTransformTime),
+      R.toEntries(integrationSources),
       A.map(([key, source]) => ({ file: Str.slice(Str.length(integrationPrefix))(key), source })),
       A.filter(({ file }) => corpus.filePattern.test(file)),
       A.sort(Order.mapInput(Str.Order, ({ file }: { readonly file: string }) => file)),

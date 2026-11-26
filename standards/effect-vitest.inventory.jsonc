@@ -1573,15 +1573,15 @@
       "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/execution-authority-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1270:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1259:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1270,
-      "endLine": 1270,
+      "line": 1259,
+      "endLine": 1259,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:67ba5b2df97651befb70919f9ab8fd742f473dca78c83e3a247193f5c67e1c4d",
+      "occurrence": "v2:3a627dd5fbde8dc3893817fdaf8a16d8915e211d69fc177c5163d99ce523f086",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, \"kg.pglite\") }))",
       "replacement": {
@@ -1595,15 +1595,15 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2092:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2087:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2092,
-      "endLine": 2092,
+      "line": 2087,
+      "endLine": 2087,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:484f966b53049e3d8f0a7faf51e9ca7bbbdff0e7a460d4f45f078a3353e8b85c",
+      "occurrence": "v2:62ace515e21f72b16374399082d88bba6c61f2edc8493ff865892d46cf7062a3",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(host)",
       "replacement": {
@@ -1639,15 +1639,15 @@
       "reason": "A separate empty-input bundle is built within the case; its body-derived PGlite directory and fixture model open for the zero-claims failure and close independently of the populated bundle. Owner: @beep/law-practice-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2813:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2815:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2813,
-      "endLine": 2813,
+      "line": 2815,
+      "endLine": 2815,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:8a3861f5dcf89aba57be413a0e821e6e20962be6a4f9e69a2c7e4a412eb5bcb3",
+      "occurrence": "v2:882345ad50b8c34534212c8b5c75272b4d38df3915af974501a7fb7ad847ed40",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(brokenBundle, \"kg.pglite\") }))",
       "replacement": {
@@ -2461,7 +2461,7 @@
       "line": 14,
       "endLine": 14,
       "symbol": "withCitationTestInvocation",
-      "occurrence": "v2:e5996f062510ac02163193019a999a4223006fdd5b952298c420ba9421af7efc",
+      "occurrence": "v2:6870427940393f1542f7d23a80a943592a8b25ca12f888057500e9b94f892395",
       "class": "unresolved-resource-wrapper",
       "evidence": "withCitationTestInvocation(replayCitationCanonicalExtraction(kind, 10, 1))",
       "replacement": {
@@ -3245,15 +3245,15 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationOccurrenceProjectionCoverage.test.ts:85:withCitationTestInvocation@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationOccurrenceProjectionCoverage.test.ts:83:withCitationTestInvocation@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationOccurrenceProjectionCoverage.test.ts",
-      "line": 85,
-      "endLine": 105,
+      "line": 83,
+      "endLine": 103,
       "symbol": "withCitationTestInvocation",
-      "occurrence": "v2:39e999a04374d58fe62a297ae274fb303cd4e2bd91d965bc29f67163e0ad16ef",
+      "occurrence": "v2:580420fd408ac9c369612dfd497c51254a52f835ad2bfa81e80b139948e2c50e",
       "class": "unresolved-resource-wrapper",
       "evidence": "withCitationTestInvocation( Effect.gen(function* () { const { stage, citations, shortcut } = yield* install(); const source = yield* citationFixtureSourceProof(\"eyecite\"); const projected = yield* sta",
       "replacement": {
@@ -5202,15 +5202,15 @@
       "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine. Owner: @beep/law-practice-server (goals/citation-extraction-engine). Exit: delete this row once EV004/EV010 accept the test or the test is rewritten (decisions/2026-11-09-keep-pr-2994-effect-vitest-exceptions-as-debt.md)."
     },
     {
-      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:274:scoped@21#1",
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:272:scoped@19#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
-      "line": 274,
-      "endLine": 288,
+      "line": 272,
+      "endLine": 286,
       "symbol": "scoped",
-      "occurrence": "v2:85a483ccf1d4d509cd4c67e28e74ec443e53e9a7b4cebfa34fad49e40c298a06",
+      "occurrence": "v2:94b9d4d00b353c9fe1e8b1a63e1e0bfd8cdc9eaf73321be9afa524dc77cc46d6",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); yield* rpc.Echo({ text: \"ready\" }); const busy = yield* rpc.Busy().pipe(Effect.forkChild); const marker = yield* child.stderr",
       "replacement": {
@@ -13173,6 +13173,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native git subprocesses, linked worktrees, chmod/stat and real path semantics are the subjects. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner over a memory volume."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/session-rehome.test.ts:26:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/session-rehome.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The GitLab-origin case runs native git against a real fixture checkout, and the session stores append to real JSON Lines files under a scoped temp state root; real path and file semantics are the subject. Owner: @beep/repo-cli. Exit: retire when git runs behind a scriptable service the test can stub."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/session-route-resolver.test.ts:40:@effect/platform-node@0#1",

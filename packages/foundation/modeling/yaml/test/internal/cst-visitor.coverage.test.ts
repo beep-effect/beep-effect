@@ -41,6 +41,14 @@ const cases = [
       ["CstAliasEvent", 1, "*ref"],
     ],
   },
+  {
+    name: "anchors and tags yield no events of their own, only the node they precede does",
+    text: "a: &x !t v\n",
+    expected: [
+      ["CstKeyEvent", 1, "a"],
+      ["CstValueEvent", 2, "v"],
+    ],
+  },
   { name: "block scalar source", text: "|\n  hello\n", expected: [["CstScalarEvent", 1, "|\n  hello\n"]] },
   {
     name: "empty block key after a literal value",

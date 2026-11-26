@@ -1,8 +1,3 @@
-// The raw composed-document record produced by the internal composer and
-// consumed by the internal stringifier. The public `YamlDocument` class (a
-// `Schema.Class` carrying materialized `YamlDiagnostic` arrays) is built from
-// this record by the facade; the engine never constructs public classes.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { YamlNode } from "../YamlNode.ts";

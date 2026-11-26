@@ -55,22 +55,22 @@ const runtime = Effect.gen(function* () {
 });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
 
-const hosted1097CaseReplayPastTenMinuteWatchdogWithPerRequestDeadlinesKept = 1_200_000;
+const replayTimeout = 1_200_000;
 it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification", (it) => {
   it.effect("smoke-tests the actual worker entrypoint for parser errors and successful text", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const admission = yield* makeCitationNativeProcessAdmission(limits);
       const citationResult2 = yield* runtime;
-      const directSourceEntrypointControlBesideBundledReplays = NodeURL.fileURLToPath(
+      const sourceWorkerFile = NodeURL.fileURLToPath(
         new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)
       );
       const worker = yield* makeCitationHtmlWorker(limits, {
         ...citationResult2,
-        workerFile: directSourceEntrypointControlBesideBundledReplays,
+        workerFile: sourceWorkerFile,
       }).pipe(Effect.provideService(CitationNativeProcessAdmission, admission));
       const citationResult3 = yield* worker.clean("").pipe(Effect.flip);
-      expect(citationResult3).toMatchObject({
+      expect(citationResult3, "a direct source-entrypoint control beside the bundled corpus replays").toMatchObject({
         _tag: "CitationHtmlKernelFailure",
         reason: "parse-error",
       });
@@ -186,11 +186,14 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         expect(A.filter(outcomes, (x) => x === "parse")).toHaveLength(16);
         expect(A.filter(outcomes, (x) => x === "resource")).toHaveLength(3);
         expect(spawned).toBe(859);
-        expect(confirmedExits).toBe(859);
+        expect(
+          confirmedExits,
+          "the 1,097-case replay outlived the ten-minute watchdog; per-request deadlines and exit checks still hold"
+        ).toBe(859);
         const citationResult12 = yield* worker.snapshot;
         expect(citationResult12).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
-    { timeout: hosted1097CaseReplayPastTenMinuteWatchdogWithPerRequestDeadlinesKept }
+    { timeout: replayTimeout }
   );
   it.effect(
     "preserves the absolute source ceiling and exact request/reply boundaries without partial output",

@@ -16,16 +16,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const headerFormConsumingWholeValueSoQuotedLocalBracketsAreNotTheAddress = /^[^<>@]*<([^<>]*)>$/u;
+const bracketedAddressPattern = /^[^<>@]*<([^<>]*)>$/u;
 const surroundingQuotesPattern = /^['"\s]+|['"\s]+$/gu;
 
 const decodeAddress = S.decodeUnknownOption(EmailString);
 
 const bracketedOrWhole = (raw: string): string =>
-  O.getOrElse(
-    O.flatMap(Str.match(headerFormConsumingWholeValueSoQuotedLocalBracketsAreNotTheAddress)(raw), A.get(1)),
-    () => raw
-  );
+  O.getOrElse(O.flatMap(Str.match(bracketedAddressPattern)(raw), A.get(1)), () => raw);
 
 /**
  * Reads one mail address out of a bare address, a quoted address, or one

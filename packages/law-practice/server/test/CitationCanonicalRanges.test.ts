@@ -10,7 +10,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
   (it) => {
     for (const kind of ["bun", "node"] as const) {
       it.effect(
-        `retains original builtin input 11 primary [20,29], full [4,54] and pin-inclusive [20,38] ranges from the sealed capture on ${kind}`,
+        `retains builtin input 11 primary [20,29], full [4,54], pin-inclusive [20,38] ranges from the sealed capture on ${kind}`,
         () => withCitationTestInvocation(replayCitationCanonicalExtraction(kind, 10, 1)),
         { timeout: 180000 }
       );

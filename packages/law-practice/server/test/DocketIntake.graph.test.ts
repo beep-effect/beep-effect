@@ -454,7 +454,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
   it.layer(graphLayer({ mailbox: MAILBOX_ID }), { timeout: "5 seconds" })((it) => {
     it.effect(
-      "drops Sent Items, Drafts and Outbox mail by folder even for a mailbox addressed by id, and marks Junk Email and Deleted Items mail with its folder",
+      "drops Sent Items, Drafts and Outbox mail by folder, and marks Junk Email and Deleted Items mail with its folder",
       Effect.fnUntraced(function* () {
         const testHttp = yield* GraphTestHttp;
         const mailbox = yield* DocketMailbox;
@@ -462,7 +462,10 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         const messages = yield* mailbox.receivedSince(O.none());
 
-        expect(A.map(messages, (received) => [received.messageId, received.sourceFolder])).toStrictEqual([
+        expect(
+          A.map(messages, (received) => [received.messageId, received.sourceFolder]),
+          "for a mailbox addressed by id, only the folder tells its own sent mail from inbound mail"
+        ).toStrictEqual([
           ["junk-1", "junk"],
           ["deleted-1", "deleted"],
           ["subfolder-1", "mailbox"],
@@ -491,7 +494,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
   it.layer(graphLayer({ maxDocumentBytes: 120, maxTotalDocumentBytes: 250 }), { timeout: "5 seconds" })((it) => {
     it.effect(
-      "keeps source documents that fit the remaining budget, skips one that does not for later smaller ones, and drops a download larger than it claimed",
+      "keeps source documents that fit the remaining budget, skips a larger one for later ones, drops an oversized download",
       Effect.fnUntraced(function* () {
         const testHttp = yield* GraphTestHttp;
         const mailbox = yield* DocketMailbox;
