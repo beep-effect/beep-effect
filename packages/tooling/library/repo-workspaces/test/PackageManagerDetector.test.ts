@@ -24,7 +24,6 @@ const corepack = (spec: string) =>
     identity
   );
 
-/** A root manifest carrying any combination of the two manager-declaring fields. */
 const manifestWith = (fields: Record<string, unknown>) =>
   Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", ...fields }), identity);
 
@@ -85,8 +84,8 @@ describe("PackageManagerDetector — pnpm wins over a stray lockfile", () => {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // The corepack field names YARN, so no pnpm version can be attributed.
-        assertNone(detected.version);
+        const noPnpmVersionSinceTheCorepackFieldNamesYarn = detected.version;
+        assertNone(noPnpmVersionSinceTheCorepackFieldNamesYarn);
       })
     );
   });
@@ -102,10 +101,11 @@ describe("PackageManagerDetector — bun", () => {
           assert.strictEqual(detected.name, "bun");
           assert.strictEqual(detected.runtime, "bun");
           assertSome(detected.version, "1.2.0");
-          // The conjunction needed the manifest field too, but the lockfile is
-          // the recorded signal: the field alone would have resolved in the
-          // declaration tier, so the lockfile is what this rung added.
-          assert.strictEqual(detected.evidence, "bun.lock");
+          assert.strictEqual(
+            detected.evidence,
+            "bun.lock",
+            "the lockfile is the recorded signal: the field alone would have resolved in the declaration tier"
+          );
         })
       );
     }
@@ -127,13 +127,14 @@ describe("PackageManagerDetector — a bun lockfile WITHOUT the corepack field",
     }),
     { timeout: "30 seconds" }
   )((it) => {
-    it.effect("falls through to npm — the conjunction is deliberate", () =>
-      Effect.gen(function* () {
-        const detector = yield* PackageManagerDetector;
-        // A stray lockfile is common; only the corepack field disambiguates.
-        const detected = yield* detector.detect("/repo");
-        assert.strictEqual(detected.name, "npm");
-      })
+    it.effect(
+      "falls through to npm — the conjunction is deliberate: a stray lockfile is common, only the corepack field disambiguates",
+      () =>
+        Effect.gen(function* () {
+          const detector = yield* PackageManagerDetector;
+          const detected = yield* detector.detect("/repo");
+          assert.strictEqual(detected.name, "npm");
+        })
     );
   });
 });
@@ -181,10 +182,7 @@ describe("PackageManagerDetector — npm", () => {
   });
 });
 
-describe("PackageManagerDetector — NO EVIDENCE AT ALL", () => {
-  // The genuine no-evidence case: a manifest that declares nothing, and not a
-  // single lockfile. Distinct from the standalone-repo cases below, which have
-  // evidence but no workspace.
+describe("PackageManagerDetector — NO EVIDENCE AT ALL: a manifest declaring nothing and no lockfile, unlike a standalone repo with evidence but no workspace", () => {
   layer(
     detectorOver({
       "/repo/package.json": Result.getOrThrowWith(
@@ -204,33 +202,27 @@ describe("PackageManagerDetector — NO EVIDENCE AT ALL", () => {
         assert.strictEqual(error.root, "/repo");
         assert.include(error.checked, "pnpm-workspace.yaml");
         assert.include(error.checked, "yarn.lock");
-        // The standalone probes are part of the contract too, so they belong
-        // on the error that reports having tried them.
-        assert.include(error.checked, "pnpm-lock.yaml");
+        assert.include(
+          error.checked,
+          "pnpm-lock.yaml",
+          "the standalone probes are part of the contract, so the error reports having tried them"
+        );
         assert.include(error.checked, "package-lock.json");
-        // ONE vocabulary serves both halves of the contract: what the error
-        // reports as probed is exactly the evidence union a success reports
-        // from, member for member and in priority order.
-        assert.deepStrictEqual([...error.checked], [...PackageManagerEvidence.literals]);
-        // The declaration tier's order is DECISION precedence, positionally:
-        // devEngines is authoritative for the name, so it precedes the
-        // top-level field (set equality would not catch a swap).
-        assert.strictEqual(error.checked[7], "package.json#devEngines.packageManager");
+        assert.deepStrictEqual(
+          [...error.checked],
+          [...PackageManagerEvidence.literals],
+          "one vocabulary: the probed list is the success evidence union, member for member, in priority order"
+        );
+        assert.strictEqual(
+          error.checked[7],
+          "package.json#devEngines.packageManager",
+          "devEngines is authoritative for the name, so it precedes the top-level field; set equality would miss a swap"
+        );
         assert.strictEqual(error.checked[8], "package.json#packageManager");
       })
     );
   });
 });
-
-// ── standalone repos: evidence, but no workspace ──────────────────────────
-//
-// The chain above answers "which manager runs this WORKSPACE". Most repos are
-// not workspaces, and before these tiers existed a single-package repo — a
-// pnpm-lock.yaml, no `workspaces` field — was undetectable, which is why one
-// consumer carried three competing hand-rolled detections with two different
-// silent defaults. The tiers are strictly additive: they run after every
-// workspace marker has missed, so no input that previously succeeded can change
-// its answer.
 
 describe("PackageManagerDetector — standalone pnpm repo", () => {
   layer(
@@ -266,8 +258,6 @@ describe("PackageManagerDetector — standalone pnpm repo with no manifest hint"
     it.effect("the lockfile alone is sufficient — this is the case that used to fail", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // Only pnpm writes a pnpm-lock.yaml, so no manifest conjunction is
-        // needed — the same reasoning that makes pnpm-workspace.yaml sufficient.
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
         assertNone(detected.version);
@@ -308,8 +298,11 @@ describe("PackageManagerDetector — standalone yarn repo", () => {
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "yarn");
         assertSome(detected.version, "4.5.0");
-        // The lockfile, not the corepack field, is the recorded signal.
-        assert.strictEqual(detected.evidence, "yarn.lock");
+        assert.strictEqual(
+          detected.evidence,
+          "yarn.lock",
+          "the lockfile, not the corepack field, is the recorded signal"
+        );
       })
     );
   });
@@ -325,9 +318,11 @@ describe("PackageManagerDetector — standalone bun repo", () => {
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "bun");
         assert.strictEqual(detected.runtime, "bun");
-        // The binary lockfile is its own evidence spelling — this tree carries
-        // bun.lockb, not bun.lock, and the report says which one it saw.
-        assert.strictEqual(detected.evidence, "bun.lockb");
+        assert.strictEqual(
+          detected.evidence,
+          "bun.lockb",
+          "the binary lockfile is its own evidence spelling, and the report says which one it saw"
+        );
       })
     );
   });
@@ -347,10 +342,6 @@ describe("PackageManagerDetector — a STRAY yarn.lock in a standalone repo", ()
     it.effect("the manifest conjunction holds in the standalone tier too", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // A stray yarn.lock is the classic false signal, and it is exactly as
-        // common in a single-package repo as in a workspace. The standalone tier
-        // mirrors the workspace tier's conjunction rather than inventing a
-        // second, looser rule inside one service.
         const error = yield* Effect.flip(detector.detect("/repo"));
         assert.instanceOf(error, PackageManagerDetectionError);
       })
@@ -358,15 +349,11 @@ describe("PackageManagerDetector — a STRAY yarn.lock in a standalone repo", ()
   });
 });
 
-// ── the manifest-only tier: declared, but not yet installed ────────────────
-
 describe("PackageManagerDetector — declared but never installed", () => {
   layer(detectorOver({ "/repo/package.json": corepack("pnpm@10.33.0") }), { timeout: "30 seconds" })((it) => {
     it.effect("a packageManager declaration with no lockfile anywhere is honest evidence", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // A fresh clone before the first install has no lockfile of its own to
-        // read, but the manifest says plainly which manager is meant to run.
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
         assertSome(detected.version, "10.33.0");
@@ -411,11 +398,11 @@ describe("PackageManagerDetector — both declaration fields, no lockfile", () =
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // devEngines is authoritative for the name, so it is the evidence even
-        // though the VERSION came from the top-level field. Version provenance
-        // is deliberately not carried: it follows the documented two-field
-        // precedence, which is a rule, not a probe.
-        assert.strictEqual(detected.evidence, "package.json#devEngines.packageManager");
+        assert.strictEqual(
+          detected.evidence,
+          "package.json#devEngines.packageManager",
+          "devEngines names the manager, so it is the evidence though the version came from the top-level field; version provenance follows the two-field rule and is not carried"
+        );
         assertSome(detected.version, "10.33.0");
       })
     );
@@ -427,11 +414,6 @@ describe("PackageManagerDetector — a manifest naming a manager we do not know"
     it.effect("refuses rather than falling back to npm", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // THE REFUSAL CONTRACT. Both consumer reimplementations invented a
-        // default here and they invented DIFFERENT ones — one "npm", one "pnpm"
-        // — which is precisely why a library must not make this call. A caller
-        // that wants a default writes `Effect.orElseSucceed` where a reader can
-        // see it.
         const error = yield* Effect.flip(detector.detect("/repo"));
         assert.instanceOf(error, PackageManagerDetectionError);
       })
@@ -454,10 +436,12 @@ describe("PackageManagerDetector — the workspace tier still wins", () => {
     it.effect("standalone probes run only after every workspace marker has missed", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // If the standalone tier ran first, this stray package-lock.json would
-        // turn a pnpm workspace into an npm repo.
         const detected = yield* detector.detect("/repo");
-        assert.strictEqual(detected.name, "pnpm");
+        assert.strictEqual(
+          detected.name,
+          "pnpm",
+          "if the standalone tier ran first, the stray package-lock.json would turn this pnpm workspace into npm"
+        );
       })
     );
   });
@@ -470,12 +454,12 @@ describe("PackageManagerDetector — a corrupt root package.json", () => {
     it.effect("fails typed rather than degrading to 'no manager declared'", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // A manifest that is PRESENT but unparseable is a corrupt-manifest
-        // condition, not a missing hint. Swallowing it would report a pnpm
-        // workspace with no version and hide a genuinely broken manifest — the
-        // same silent-degradation shape the multi-document lockfile bug had.
         const error = yield* Effect.flip(detector.detect("/repo"));
-        assert.instanceOf(error, WorkspaceManifestError);
+        assert.instanceOf(
+          error,
+          WorkspaceManifestError,
+          "a present but unparseable manifest is corrupt, not a missing hint; swallowing it would hide it behind a versionless pnpm"
+        );
         assert.strictEqual(error.kind, "decode");
         assert.strictEqual(error.packageJsonPath, "/repo/package.json");
       })
@@ -533,26 +517,10 @@ describe("PackageManagerDetector — a malformed corepack field", () => {
   });
 });
 
-//
-// Corepack reads BOTH the top-level `packageManager` and `devEngines.packageManager`,
-// and they are not interchangeable:
-//
-//   * `devEngines.packageManager.name` is authoritative for the NAME — corepack
-//     errors (per `onFail`) when the top-level field disagrees with it.
-//   * the top-level `packageManager` is authoritative for the exact VERSION — it
-//     is the field that carries the integrity hash.
-//
-// Lockfile evidence remains the primary signal for which manager actually ran;
-// these fields only disambiguate the name and supply the version.
-
-describe("PackageManagerDetector — devEngines alone", () => {
+describe("PackageManagerDetector — devEngines alone, the only place a +sha512 devEngines version is normalized, so this pins the hash strip", () => {
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
-      // The version carries the +sha512 hash, exactly as this repo's own
-      // devEngines does. With no top-level packageManager to fall back on, this
-      // is the ONLY place the devEngines version is normalized — so it is the
-      // test that pins the hash stripping.
       "/repo/package.json": manifestWith({
         devEngines: {
           packageManager: { name: "pnpm", version: "11.11.0+sha512.4463f65fd80ed80d69bc1", onFail: "error" },
@@ -566,24 +534,24 @@ describe("PackageManagerDetector — devEngines alone", () => {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // Before devEngines support this was Option.none() — the whole point.
-        // And the hash is `integrity`, not part of the version.
-        assertSome(detected.version, "11.11.0");
+        const hashStrippedAsIntegrityWhereNoneBeforeDevEnginesSupport = detected.version;
+        assertSome(hashStrippedAsIntegrityWhereNoneBeforeDevEnginesSupport, "11.11.0");
       })
     );
   });
 });
 
 describe("PackageManagerDetector — both fields, the effected repo's own shape", () => {
-  // Verbatim from this repository's root package.json: both fields present, the
-  // same version, and BOTH carrying the +sha512 hash.
-  const spec = "11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c";
+  const verbatimRootSpecWithTheHashInBothFields =
+    "11.11.0+sha512.4463f65fd80ed80d69bc1d4bf163ee94f605c7380fc318bb5b2ebe15f8cd12d49c";
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
       "/repo/package.json": manifestWith({
-        packageManager: `pnpm@${spec}`,
-        devEngines: { packageManager: { name: "pnpm", version: spec, onFail: "ignore" } },
+        packageManager: `pnpm@${verbatimRootSpecWithTheHashInBothFields}`,
+        devEngines: {
+          packageManager: { name: "pnpm", version: verbatimRootSpecWithTheHashInBothFields, onFail: "ignore" },
+        },
       }),
     }),
     { timeout: "30 seconds" }
@@ -593,10 +561,8 @@ describe("PackageManagerDetector — both fields, the effected repo's own shape"
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // The hash is `integrity`, not part of the version — a devEngines version
-        // carrying one must normalize exactly as the top-level field's does, or
-        // the two disagree on a repo where they are literally identical.
-        assertSome(detected.version, "11.11.0");
+        const devEnginesHashStripsExactlyAsTheTopLevelFieldDoes = detected.version;
+        assertSome(devEnginesHashStripsExactlyAsTheTopLevelFieldDoes, "11.11.0");
       })
     );
   });
@@ -639,9 +605,8 @@ describe("PackageManagerDetector — the two fields disagree on the NAME", () =>
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // devEngines names pnpm but carries no version, and the packageManager
-        // field names a DIFFERENT manager — so there is no pnpm version to report.
-        assertNone(detected.version);
+        const noPnpmVersionSinceDevEnginesHasNoneAndTheTopLevelFieldNamesYarn = detected.version;
+        assertNone(noPnpmVersionSinceDevEnginesHasNoneAndTheTopLevelFieldNamesYarn);
       })
     );
   });
@@ -663,10 +628,11 @@ describe("PackageManagerDetector — devEngines overrides the name disambiguator
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
-        // devEngines.packageManager.name is authoritative for the name, so the
-        // yarn conjunction does not fire and detection falls through to the npm
-        // `workspaces` fallback. Corepack would have ERRORED on this manifest.
-        assert.strictEqual(detected.name, "npm");
+        assert.strictEqual(
+          detected.name,
+          "npm",
+          "devEngines' name wins, so the yarn conjunction does not fire and npm's workspaces fallback answers; corepack would have errored"
+        );
         assertNone(detected.version);
       })
     );
@@ -688,9 +654,6 @@ describe("PackageManagerDetector — devEngines disambiguates bun with no versio
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
-        // The old code keyed the bun/yarn conjunction off `Option.isSome(version)`,
-        // which conflated "the manifest names bun" with "the manifest gives bun's
-        // version". A devEngines entry with no version names bun perfectly well.
         assert.strictEqual(detected.name, "bun");
         assert.strictEqual(detected.runtime, "bun");
         assertNone(detected.version);
@@ -714,15 +677,12 @@ describe("PackageManagerDetector — devEngines names a manager we did not detec
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // The same discipline the packageManager field already had: a yarn version
-        // in a pnpm workspace tells us nothing about pnpm.
-        assertNone(detected.version);
+        const aYarnVersionSaysNothingAboutPnpm = detected.version;
+        assertNone(aYarnVersionSaysNothingAboutPnpm);
       })
     );
   });
 });
-
-// ── malformed devEngines: ignore the field, never fail detection ───────────
 
 describe("PackageManagerDetector — devEngines is not an object", () => {
   layer(
@@ -743,15 +703,10 @@ describe("PackageManagerDetector — devEngines is not an object", () => {
   });
 });
 
-describe("PackageManagerDetector — devEngines.packageManager is an ARRAY", () => {
+describe("PackageManagerDetector — devEngines.packageManager is an ARRAY and the only version source, so honouring its first element would report a version", () => {
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
-      // NO top-level packageManager: the array is the only version source, so if
-      // it were honoured the version WOULD be reported. That is what makes this
-      // test discriminating — the obvious wrong implementation is
-      // `Array.isArray(slot) ? slot[0] : slot`, and an array whose element names
-      // a manager we do not detect would be silently ignored anyway.
       "/repo/package.json": manifestWith({
         devEngines: { packageManager: [{ name: "pnpm", version: "9.9.9" }] },
       }),
@@ -763,8 +718,8 @@ describe("PackageManagerDetector — devEngines.packageManager is an ARRAY", () 
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // Taking the array's first element would report 9.9.9 here.
-        assertNone(detected.version);
+        const noVersionThoughTheArraysFirstElementWouldReport999 = detected.version;
+        assertNone(noVersionThoughTheArraysFirstElementWouldReport999);
       })
     );
   });
@@ -807,9 +762,8 @@ describe("PackageManagerDetector — devEngines version is a RANGE", () => {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        // A range is not a version — corepack will not run one either — but it
-        // does not invalidate the NAME, which is still a good disambiguator.
-        assertNone(detected.version);
+        const aRangeIsNoVersionCorepackWouldRun = detected.version;
+        assertNone(aRangeIsNoVersionCorepackWouldRun);
       })
     );
   });
@@ -829,8 +783,6 @@ describe("PackageManagerDetector — a malformed devEngines cannot break detecti
     it.effect("a non-string name falls back to packageManager, keeping bun detectable", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
-        // The invariant: a malformed manifest HINT must never turn a detectable
-        // workspace into a detection error.
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "bun");
         assertSome(detected.version, "1.2.0");

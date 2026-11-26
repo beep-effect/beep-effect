@@ -1,14 +1,3 @@
-// DuplicateCheck: which names resolve at more than one version, and who pulls
-// each copy.
-//
-// The lockfiles under `fixtures/duplicates/` are HAND-AUTHORED (see that
-// directory's README): there is no oracle to agree with, because no package
-// manager ships the aggregated question this module answers (issue #603). Each
-// fixture differs from its neighbour in exactly one way, so a test cannot pass
-// by accident. `fixtures/peers/` is reused where PeerCheck already measured the
-// same limitation. No `FileSystem` service is involved: DuplicateCheck is a
-// pure value over an already-parsed Lockfile.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Lockfile } from "@beep/lockfiles";
 import { DuplicateCheck, DuplicatedPackage } from "@beep/repo-workspaces/DuplicateCheck";
@@ -24,11 +13,9 @@ import type { Dependent } from "@beep/repo-workspaces/DuplicateCheck";
 
 const parse = (dir: string) => Lockfile.parse(fixture(`duplicates/${dir}/pnpm-lock.yaml`), { format: "pnpm" });
 
-/** A dependent rendered as one comparable string. */
 const render = (dependent: Dependent): string =>
   dependent._tag === "importer" ? `importer:${dependent.path}` : `package:${dependent.name}@${dependent.version}`;
 
-/** One duplicated package flattened to `version → instanceId → dependents`. */
 const flatten = (row: DuplicatedPackage): Record<string, Record<string, ReadonlyArray<string>>> =>
   R.fromEntries(
     A.map(row.versions, (version) => [
@@ -40,7 +27,7 @@ const flatten = (row: DuplicatedPackage): Record<string, Record<string, Readonly
 const byName = (report: DuplicateCheck, name: string): DuplicatedPackage | undefined =>
   O.getOrUndefined(A.findFirst(report.duplicates, (row) => row.name === name));
 
-describe("DuplicateCheck.run", () => {
+describe("DuplicateCheck.run, a pure value over hand-authored lockfiles with no oracle (#603), each differing from its neighbour in one way", () => {
   for (const [label, secondVersion] of [
     ["embedded-NUL collision", "y\0z"],
     ["non-collision control", "yz"],
@@ -250,23 +237,22 @@ describe("DuplicateCheck.run", () => {
 
       const commands = byName(report, "@effected/commands");
       assert.isDefined(commands);
-      // The question the issue could not answer from the type error: WHICH
-      // versions, and WHO holds each one. `@effected/npm` was never bumped,
-      // which is exactly why nobody suspected it.
       if (commands === undefined) return assert.fail("expected commands in duplicate report");
-      assert.deepStrictEqual(flatten(commands), {
-        "0.2.1": { "@effected/commands@0.2.1": ["package:@effected/npm@0.8.2"] },
-        "0.3.1": { "@effected/commands@0.3.1": ["package:@effected/workspaces@0.10.1"] },
-      });
+      assert.deepStrictEqual(
+        flatten(commands),
+        {
+          "0.2.1": { "@effected/commands@0.2.1": ["package:@effected/npm@0.8.2"] },
+          "0.3.1": { "@effected/commands@0.3.1": ["package:@effected/workspaces@0.10.1"] },
+        },
+        "which versions, and who holds each: the never-bumped @effected/npm is why nobody suspected it"
+      );
     })
   );
 
   it.effect("is clean once the same graph deduplicates to one version", () =>
     Effect.gen(function* () {
-      // `kit-skew` after `pnpm update @effected/npm`: the ONE edit the issue's
-      // fix needed. The other copy is simply gone, and so is the finding.
-      const parsed2 = yield* parse("kit-deduped");
-      const report = DuplicateCheck.run(parsed2);
+      const kitSkewAfterTheOnePnpmUpdateTheFixNeeded = yield* parse("kit-deduped");
+      const report = DuplicateCheck.run(kitSkewAfterTheOnePnpmUpdateTheFixNeeded);
 
       assert.deepStrictEqual(report.duplicates, []);
       assert.isTrue(report.isClean);
@@ -276,24 +262,20 @@ describe("DuplicateCheck.run", () => {
 
   it.effect("does not call two peer-suffix instances of ONE version a duplicate", () =>
     Effect.gen(function* () {
-      // foo@1.0.0 exists twice — resolved with and without its optional peer.
-      // Two instances, one version: the code that loads is identical, so
-      // nothing here can produce the type-identity skew the check exists to
-      // catch. Counting instances instead of versions would report this.
-      const parsed3 = yield* parse("peer-variants");
-      const report = DuplicateCheck.run(parsed3);
+      const fooOnceWithAndOnceWithoutItsOptionalPeer = yield* parse("peer-variants");
+      const report = DuplicateCheck.run(fooOnceWithAndOnceWithoutItsOptionalPeer);
 
-      assert.deepStrictEqual(report.duplicates, []);
+      assert.deepStrictEqual(
+        report.duplicates,
+        [],
+        "one version loads identical code, so it cannot skew types; counting instances would report it"
+      );
       assert.isTrue(report.isClean);
     })
   );
 
   it.effect("lists both instances under their version once a second version makes the name a duplicate", () =>
     Effect.gen(function* () {
-      // The same graph plus a third importer taking foo@2.0.0. Now the
-      // version list has two entries, and the 1.0.0 entry carries BOTH
-      // instances — with the peer variant attributed to the importer that
-      // took it, not merged into the other.
       const parsed4 = yield* parse("peer-variants-skew");
       const report = DuplicateCheck.run(parsed4);
 
@@ -306,23 +288,22 @@ describe("DuplicateCheck.run", () => {
       assert.isDefined(foo);
       assert.strictEqual(foo?.versions.length, 2);
       if (foo === undefined) return assert.fail("expected foo in duplicate report");
-      assert.deepStrictEqual(flatten(foo), {
-        "1.0.0": {
-          "foo@1.0.0": ["importer:packages/other"],
-          "foo@1.0.0(bar@1.0.0)": ["importer:."],
+      assert.deepStrictEqual(
+        flatten(foo),
+        {
+          "1.0.0": {
+            "foo@1.0.0": ["importer:packages/other"],
+            "foo@1.0.0(bar@1.0.0)": ["importer:."],
+          },
+          "2.0.0": { "foo@2.0.0": ["importer:packages/third"] },
         },
-        "2.0.0": { "foo@2.0.0": ["importer:packages/third"] },
-      });
+        "a third importer's foo@2.0.0 makes a skew; the 1.0.0 row keeps both instances, the peer variant attributed to its own importer"
+      );
     })
   );
 
   it.effect("`names` narrows what is REPORTED, never what is walked", () =>
     Effect.gen(function* () {
-      // Two skews: the kit's `@effected/commands` and a non-kit `semver`. The
-      // non-kit `@savvy-web/silk-effects` is what pulls the stale commands
-      // copy — the second incident in issue #603. Filtering it out of the
-      // report must leave it standing as a dependent, or the report names
-      // the skew without naming the culprit.
       const parsed5 = yield* parse("filtered");
       const unfiltered = DuplicateCheck.run(parsed5);
       assert.deepStrictEqual(
@@ -339,17 +320,19 @@ describe("DuplicateCheck.run", () => {
       assert.isFalse(kit.isClean);
       const commands = byName(kit, "@effected/commands");
       if (commands === undefined) return assert.fail("expected commands in duplicate report");
-      assert.deepStrictEqual(flatten(commands), {
-        "0.2.1": { "@effected/commands@0.2.1": ["package:@savvy-web/silk-effects@6.0.4"] },
-        "0.3.1": { "@effected/commands@0.3.1": ["package:@effected/workspaces@0.10.1"] },
-      });
+      assert.deepStrictEqual(
+        flatten(commands),
+        {
+          "0.2.1": { "@effected/commands@0.2.1": ["package:@savvy-web/silk-effects@6.0.4"] },
+          "0.3.1": { "@effected/commands@0.3.1": ["package:@effected/workspaces@0.10.1"] },
+        },
+        "the filtered-out non-kit @savvy-web/silk-effects still stands as the culprit pulling the stale copy (#603)"
+      );
 
-      // A filter matching nothing duplicated is a clean report — `isClean`
-      // answers for the names asked about, not for the whole graph.
       const parsed7 = yield* parse("filtered");
       const nothing = DuplicateCheck.run(parsed7, { names: (name) => name === "left-pad" });
       assert.deepStrictEqual(nothing.duplicates, []);
-      assert.isTrue(nothing.isClean);
+      assert.isTrue(nothing.isClean, "isClean answers for the names asked about, not for the whole graph");
     })
   );
 
@@ -357,10 +340,8 @@ describe("DuplicateCheck.run", () => {
     assert.isTrue(DuplicateCheck.kit("effect"));
     assert.isTrue(DuplicateCheck.kit("@effected/commands"));
     assert.isTrue(DuplicateCheck.kit("@effected/git"));
-    // `effect` exactly — not everything with the prefix, which would drag in
-    // `@effect/vitest` and `effect-*` lookalikes a consumer never asked about.
-    assert.isFalse(DuplicateCheck.kit("@effect/vitest"));
-    assert.isFalse(DuplicateCheck.kit("effect-utils"));
+    assert.isFalse(DuplicateCheck.kit("@effect/vitest"), "the kit is effect exactly, not every name with the prefix");
+    assert.isFalse(DuplicateCheck.kit("effect-utils"), "effect-* lookalikes are not names a consumer asked about");
     assert.isFalse(DuplicateCheck.kit("@effected"));
     assert.isFalse(DuplicateCheck.kit("@savvy-web/silk-effects"));
     assert.isFalse(DuplicateCheck.kit("semver"));
@@ -368,64 +349,65 @@ describe("DuplicateCheck.run", () => {
 
   it.effect("attributes a copy taken by a non-root importer to that importer's path", () =>
     Effect.gen(function* () {
-      // The root importer is empty; `packages/app` takes commands 0.3.1
-      // directly while its @effected/npm holds 0.2.1. Under pnpm that importer
-      // has its own workspace row, and the row's edges are the importer's own
-      // dependencies — so the dependent is the importer, by path, never a
-      // `package` row named after a directory with a "0.0.0" placeholder.
       const parsed8 = yield* parse("other-importer");
       const report = DuplicateCheck.run(parsed8);
 
       assert.isFalse(report.isClean);
       const commands = byName(report, "@effected/commands");
       if (commands === undefined) return assert.fail("expected commands in duplicate report");
-      assert.deepStrictEqual(flatten(commands), {
-        "0.2.1": { "@effected/commands@0.2.1": ["package:@effected/npm@0.8.2"] },
-        "0.3.1": { "@effected/commands@0.3.1": ["importer:packages/app"] },
-      });
+      assert.deepStrictEqual(
+        flatten(commands),
+        {
+          "0.2.1": { "@effected/commands@0.2.1": ["package:@effected/npm@0.8.2"] },
+          "0.3.1": { "@effected/commands@0.3.1": ["importer:packages/app"] },
+        },
+        "a pnpm workspace row's edges are the importer's own, so the dependent is the importer by path, never a 0.0.0 placeholder package row"
+      );
     })
   );
 
   it.effect("names the importers it could not resolve, exactly as PeerCheck does", () =>
     Effect.gen(function* () {
-      // The same limitation, the same fixtures: npm and bun record no resolved
-      // version per root-importer dependency and no root package row, so the
-      // root cannot be joined to instances and is reported rather than passed
-      // silently. pnpm records the version and is unaffected.
       const parsed9 = yield* Lockfile.parse(fixture("peers/npm-root/package-lock.json"), { format: "npm" });
       const npm = DuplicateCheck.run(parsed9);
-      assert.include(npm.unresolvedImporters, ".");
+      assert.include(
+        npm.unresolvedImporters,
+        ".",
+        "npm records no resolved root-importer version and no root row, so the root is reported, not passed silently"
+      );
 
       const parsed10 = yield* Lockfile.parse(fixture("peers/mixed/pnpm-lock.yaml"), { format: "pnpm" });
       const pnpm = DuplicateCheck.run(parsed10);
-      assert.deepStrictEqual(pnpm.unresolvedImporters, []);
+      assert.deepStrictEqual(pnpm.unresolvedImporters, [], "pnpm records the version and is unaffected");
 
-      // A root with NO dependencies has nothing to fail to resolve.
       const parsed11 = yield* Lockfile.parse(fixture("peers/npm/package-lock.json"), { format: "npm" });
       const rootless = DuplicateCheck.run(parsed11);
-      assert.deepStrictEqual(rootless.unresolvedImporters, []);
+      assert.deepStrictEqual(
+        rootless.unresolvedImporters,
+        [],
+        "a root with no dependencies has nothing to fail to resolve"
+      );
     })
   );
 
-  it.effect("finds the skew PeerCheck's own root-importer fixture carries", () =>
-    Effect.gen(function* () {
-      // `peers/rootimporter` is real pnpm output: react at 17.0.2 (root) and
-      // 18.3.1 (packages/other), with react-dom@18.3.1 present twice by peer
-      // suffix. react is a duplicate; react-dom is not.
-      const parsed12 = yield* Lockfile.parse(fixture("peers/rootimporter/pnpm-lock.yaml"), { format: "pnpm" });
-      const report = DuplicateCheck.run(parsed12);
+  it.effect(
+    "finds the skew PeerCheck's own real-pnpm root-importer fixture carries: react at two versions, not react-dom twice by peer suffix",
+    () =>
+      Effect.gen(function* () {
+        const parsed12 = yield* Lockfile.parse(fixture("peers/rootimporter/pnpm-lock.yaml"), { format: "pnpm" });
+        const report = DuplicateCheck.run(parsed12);
 
-      assert.deepStrictEqual(
-        A.map(report.duplicates, (row) => row.name),
-        ["react"]
-      );
-      const react = byName(report, "react");
-      if (react === undefined) return assert.fail("expected react in duplicate report");
-      assert.deepStrictEqual(flatten(react), {
-        "17.0.2": { "react@17.0.2": ["importer:.", "package:react-dom@18.3.1"] },
-        "18.3.1": { "react@18.3.1": ["importer:packages/other", "package:react-dom@18.3.1"] },
-      });
-    })
+        assert.deepStrictEqual(
+          A.map(report.duplicates, (row) => row.name),
+          ["react"]
+        );
+        const react = byName(report, "react");
+        if (react === undefined) return assert.fail("expected react in duplicate report");
+        assert.deepStrictEqual(flatten(react), {
+          "17.0.2": { "react@17.0.2": ["importer:.", "package:react-dom@18.3.1"] },
+          "18.3.1": { "react@18.3.1": ["importer:packages/other", "package:react-dom@18.3.1"] },
+        });
+      })
   );
 });
 

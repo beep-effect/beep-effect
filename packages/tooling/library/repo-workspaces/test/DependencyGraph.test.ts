@@ -6,7 +6,6 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 
-/** A workspace member with the given dependency edges. */
 const pkg = (
   name: string,
   deps: Record<string, string> = {},
@@ -22,8 +21,7 @@ const pkg = (
     [kind]: deps,
   });
 
-// a → b → c, and d standing alone. `a` depends on `b`, so `b` builds first.
-const chain = DependencyGraph.make({
+const aOnBOnCWithDIsolated = DependencyGraph.make({
   packages: [pkg("a", { b: "1.0.0" }), pkg("b", { c: "1.0.0" }), pkg("c"), pkg("d")],
 });
 
@@ -48,7 +46,7 @@ describe("DependencyGraph", () => {
       assert.deepStrictEqual(sort2, ["c", "d", "b", "a"]);
       const sortSubset3 = yield* graph.sortSubset(["a", "d"]);
       assert.deepStrictEqual(sortSubset3, ["c", "d", "b", "a"]);
-      assert.strictEqual(graph.toMermaid(), chain.toMermaid());
+      assert.strictEqual(graph.toMermaid(), aOnBOnCWithDIsolated.toMermaid());
     })
   );
 
@@ -73,11 +71,11 @@ describe("DependencyGraph", () => {
   });
 
   it("names lists every package sorted", () => {
-    assert.deepStrictEqual(chain.names, ["a", "b", "c", "d"]);
+    assert.deepStrictEqual(aOnBOnCWithDIsolated.names, ["a", "b", "c", "d"]);
   });
 
   it("hasCycle is false for an acyclic graph", () => {
-    assert.isFalse(chain.hasCycle);
+    assert.isFalse(aOnBOnCWithDIsolated.hasCycle);
   });
 
   it("hasCycle is true for a two-node cycle", () => {
@@ -86,8 +84,6 @@ describe("DependencyGraph", () => {
   });
 
   it("hasCycle is true for a three-node cycle reached through a DAG prefix", () => {
-    // `root` is acyclic and visited first, so a detector that only inspects the
-    // first component — or that forgets to clear its on-stack set — misses this.
     const graph = DependencyGraph.make({
       packages: [
         pkg("root", { a: "1.0.0" }),
@@ -96,42 +92,44 @@ describe("DependencyGraph", () => {
         pkg("c", { a: "1.0.0" }),
       ],
     });
-    assert.isTrue(graph.hasCycle);
+    assert.isTrue(
+      graph.hasCycle,
+      "root is acyclic and visited first: inspecting only the first component, or not clearing the on-stack set, misses this"
+    );
   });
 
   it("hasCycle is false for a diamond — a re-visited node is not a cycle", () => {
-    // The classic false positive: `d` is reachable from both `b` and `c`. A
-    // detector that treats "already visited" as "on the stack" reports a cycle.
     const graph = DependencyGraph.make({
       packages: [pkg("a", { b: "1.0.0", c: "1.0.0" }), pkg("b", { d: "1.0.0" }), pkg("c", { d: "1.0.0" }), pkg("d")],
     });
-    assert.isFalse(graph.hasCycle);
+    assert.isFalse(
+      graph.hasCycle,
+      "d is reachable from b and c; treating already-visited as on-stack reports a false cycle"
+    );
   });
 
-  // The explicit timeout: the claim is stack-safety, not latency. The walk
-  // is ~375ms uninstrumented, but v8 coverage on a shared CI runner
-  // amplifies wall time well past the 5s default (observed 18x elsewhere in
-  // this repo). A RangeError still fails instantly; only the legitimate
-  // walk needs the headroom.
-  it("cycle detection does not overflow on a long chain", () => {
-    // 20,000 links. A recursive DFS — which is what v3 shipped — throws
-    // RangeError here, and a RangeError is an unhandled defect.
-    const packages = Array.from({ length: 20_000 }, (_, i) =>
-      i === 19_999 ? pkg(`p${i}`) : pkg(`p${i}`, { [`p${i + 1}`]: "1.0.0" })
-    );
-    assert.isFalse(DependencyGraph.make({ packages }).hasCycle);
-  }, 30_000);
+  const stackSafetyNotLatencyHeadroomForCoverageAmplifiedWallTimeMs = 30_000;
+  it(
+    "cycle detection does not overflow on a long chain",
+    () => {
+      const twentyThousandLinksThatOverflowARecursiveDfs = Array.from({ length: 20_000 }, (_, i) =>
+        i === 19_999 ? pkg(`p${i}`) : pkg(`p${i}`, { [`p${i + 1}`]: "1.0.0" })
+      );
+      assert.isFalse(DependencyGraph.make({ packages: twentyThousandLinksThatOverflowARecursiveDfs }).hasCycle);
+    },
+    stackSafetyNotLatencyHeadroomForCoverageAmplifiedWallTimeMs
+  );
 
   it.effect("levels groups packages into parallel build tiers, leaves first", () =>
     Effect.gen(function* () {
-      const levels = yield* chain.levels();
+      const levels = yield* aOnBOnCWithDIsolated.levels();
       assert.deepStrictEqual(levels, [["c", "d"], ["b"], ["a"]]);
     })
   );
 
   it.effect("sort flattens the levels into one deterministic order", () =>
     Effect.gen(function* () {
-      const sort4 = yield* chain.sort();
+      const sort4 = yield* aOnBOnCWithDIsolated.sort();
       assert.deepStrictEqual(sort4, ["c", "d", "b", "a"]);
     })
   );
@@ -149,15 +147,16 @@ describe("DependencyGraph", () => {
 
   it.effect("the cycle payload excludes packages merely DOWNSTREAM of the cycle", () =>
     Effect.gen(function* () {
-      // a↔b cycle, c depends on a. Kahn's stalled set is ["a", "b", "c"] — c
-      // never clears because its dependency chain is blocked — but c is not a
-      // cycle member. The old payload was the stalled set; this discriminates.
       const graph = DependencyGraph.make({
         packages: [pkg("a", { b: "1.0.0" }), pkg("b", { a: "1.0.0" }), pkg("c", { a: "1.0.0" })],
       });
       const error = yield* Effect.flip(graph.levels());
       assert.instanceOf(error, CyclicDependencyError);
-      assert.deepStrictEqual(error.cycle, ["a", "b"]);
+      assert.deepStrictEqual(
+        error.cycle,
+        ["a", "b"],
+        "Kahn's stalled set is a, b, c, but c only waits behind the cycle and is not a member"
+      );
     })
   );
 
@@ -179,25 +178,25 @@ describe("DependencyGraph", () => {
 
   it.effect("dependenciesOf returns the direct workspace dependencies", () =>
     Effect.gen(function* () {
-      const dependenciesOf5 = yield* chain.dependenciesOf("a");
+      const dependenciesOf5 = yield* aOnBOnCWithDIsolated.dependenciesOf("a");
       assert.deepStrictEqual(dependenciesOf5, ["b"]);
-      const dependenciesOf6 = yield* chain.dependenciesOf("c");
+      const dependenciesOf6 = yield* aOnBOnCWithDIsolated.dependenciesOf("c");
       assert.deepStrictEqual(dependenciesOf6, []);
     })
   );
 
   it.effect("dependentsOf returns the direct reverse edges", () =>
     Effect.gen(function* () {
-      const dependentsOf7 = yield* chain.dependentsOf("b");
+      const dependentsOf7 = yield* aOnBOnCWithDIsolated.dependentsOf("b");
       assert.deepStrictEqual(dependentsOf7, ["a"]);
-      const dependentsOf8 = yield* chain.dependentsOf("a");
+      const dependentsOf8 = yield* aOnBOnCWithDIsolated.dependentsOf("a");
       assert.deepStrictEqual(dependentsOf8, []);
     })
   );
 
   it.effect("dependenciesOf fails typed on an unknown package", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(chain.dependenciesOf("nope"));
+      const error = yield* Effect.flip(aOnBOnCWithDIsolated.dependenciesOf("nope"));
       assert.instanceOf(error, PackageNotFoundError);
       assert.deepStrictEqual(error.available, ["a", "b", "c", "d"]);
     })
@@ -205,38 +204,39 @@ describe("DependencyGraph", () => {
 
   it.effect("affectedBy walks the reverse edges TRANSITIVELY", () =>
     Effect.gen(function* () {
-      // `c` is at the far end of the chain: a→b→c. Changing it affects b AND a.
-      // A one-hop implementation returns ["b", "c"] and passes a lazier test.
-      const affectedBy9 = yield* chain.affectedBy(["c"]);
-      assert.deepStrictEqual(affectedBy9, ["a", "b", "c"]);
+      const affectedBy9 = yield* aOnBOnCWithDIsolated.affectedBy(["c"]);
+      assert.deepStrictEqual(
+        affectedBy9,
+        ["a", "b", "c"],
+        "c is at the far end of a→b→c; a one-hop walk returns only b and c"
+      );
     })
   );
 
   it.effect("affectedBy includes the seeds themselves and dedupes", () =>
     Effect.gen(function* () {
-      const affectedBy10 = yield* chain.affectedBy(["b", "c"]);
+      const affectedBy10 = yield* aOnBOnCWithDIsolated.affectedBy(["b", "c"]);
       assert.deepStrictEqual(affectedBy10, ["a", "b", "c"]);
     })
   );
 
   it.effect("affectedBy on an isolated package returns just it", () =>
     Effect.gen(function* () {
-      const affectedBy11 = yield* chain.affectedBy(["d"]);
+      const affectedBy11 = yield* aOnBOnCWithDIsolated.affectedBy(["d"]);
       assert.deepStrictEqual(affectedBy11, ["d"]);
     })
   );
 
   it.effect("sortSubset pulls in transitive dependencies, not just the named packages", () =>
     Effect.gen(function* () {
-      // Asking for `a` alone must still build `c` then `b` first.
-      const sortSubset12 = yield* chain.sortSubset(["a"]);
+      const sortSubset12 = yield* aOnBOnCWithDIsolated.sortSubset(["a"]);
       assert.deepStrictEqual(sortSubset12, ["c", "b", "a"]);
     })
   );
 
   it.effect("sortSubset excludes packages outside the closure", () =>
     Effect.gen(function* () {
-      const order = yield* chain.sortSubset(["b"]);
+      const order = yield* aOnBOnCWithDIsolated.sortSubset(["b"]);
       assert.deepStrictEqual(order, ["c", "b"]);
       assert.notInclude(order, "d");
     })
@@ -244,41 +244,34 @@ describe("DependencyGraph", () => {
 
   it.effect("sortSubset fails typed on an unknown name", () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(chain.sortSubset(["nope"]));
+      const error = yield* Effect.flip(aOnBOnCWithDIsolated.sortSubset(["nope"]));
       assert.instanceOf(error, PackageNotFoundError);
     })
   );
 
   it.effect("sortSubset's cycle payload also excludes downstream packages", () =>
     Effect.gen(function* () {
-      // The subset closure of c is {a, b, c} — the cycle is only a↔b.
       const graph = DependencyGraph.make({
         packages: [pkg("a", { b: "1.0.0" }), pkg("b", { a: "1.0.0" }), pkg("c", { a: "1.0.0" })],
       });
       const error = yield* Effect.flip(graph.sortSubset(["c"]));
       assert.instanceOf(error, CyclicDependencyError);
-      assert.deepStrictEqual(error.cycle, ["a", "b"]);
+      assert.deepStrictEqual(error.cycle, ["a", "b"], "the subset closure of c is a, b, c, but the cycle is only a↔b");
     })
   );
 
   it("toMermaid renders scoped package names inside quoted labels, deterministically", () => {
-    // Dependencies are declared out of sorted order on purpose: the edge list
-    // must come out sorted regardless of manifest key order, and `@`/`/` must
-    // survive as label text (node IDs are the numeric indexes).
     const graph = DependencyGraph.make({
       packages: [pkg("@scope/a", { "@scope/c": "1.0.0", "@scope/b": "1.0.0" }), pkg("@scope/b"), pkg("@scope/c")],
     });
     assert.strictEqual(
       graph.toMermaid(),
-      A.join(["flowchart TD", '  0["@scope/a"]', '  1["@scope/b"]', '  2["@scope/c"]', "  0 --> 1", "  0 --> 2"], "\n")
+      A.join(["flowchart TD", '  0["@scope/a"]', '  1["@scope/b"]', '  2["@scope/c"]', "  0 --> 1", "  0 --> 2"], "\n"),
+      "edges sort despite out-of-order declaration, and @ and / survive as label text because node IDs are indexes"
     );
   });
 
-  it("make accepts a ReadonlyArray of packages without a spread copy", () => {
-    // The type-level half IS the test: `packages` is declared readonly and
-    // handed to `make` unspread. `Schema.Array`'s constructor input is
-    // `ReadonlyArray<...>` on the pinned beta — if a regression narrows it
-    // back to a mutable `Array`, this stops compiling.
+  it("make accepts a ReadonlyArray of packages without a spread copy, so narrowing Schema.Array's constructor input to a mutable Array stops this compiling", () => {
     const packages: ReadonlyArray<WorkspacePackage> = [pkg("a", { b: "1.0.0" }), pkg("b")] as const;
     const graph = DependencyGraph.make({ packages });
     assert.deepStrictEqual(graph.names, ["a", "b"]);

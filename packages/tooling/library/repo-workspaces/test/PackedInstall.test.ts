@@ -55,7 +55,6 @@ const ENV = {
 const SCRUBBED = { PATH: "/usr/bin", HOME: "/home/u" };
 const versions: Readonly<Record<string, string>> = { npm: "11.19.1\n", pnpm: "12.5.1\n", bun: "1.4.2\n" };
 
-/** Answers `--version` from `versions` (absent = not installed); everything else from `rest`. */
 const script =
   (rest: SpawnScript = () => ({})): SpawnScript =>
   (command, args) => {
@@ -156,10 +155,9 @@ describe("PackedInstall.run", () => {
     );
   });
 
-  // bun prints a perfectly good version and exits 1 (a corepack refusal looks like this): only the exit code rules it out.
-  const refusing: SpawnScript = (command, args) =>
+  const bunPrintsAGoodVersionButExits1LikeACorepackRefusal: SpawnScript = (command, args) =>
     command === "bun" && args[0] === "--version" ? { exit: 1, stdout: "1.4.2\n" } : script()(command, args);
-  suite(ScriptedSpawner.make(refusing))((it) => {
+  suite(ScriptedSpawner.make(bunPrintsAGoodVersionButExits1LikeACorepackRefusal))((it) => {
     it.effect("a manager whose --version exits non-zero is unavailable", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
@@ -290,9 +288,7 @@ describe("PackedInstall.run", () => {
   });
 });
 
-describe("PackedInstall.run past the pack", () => {
-  // The scratch directory is pinned to /scratch through a fault handler, so a
-  // seed can stand in for what npm pack writes and what an install links.
+describe("PackedInstall.run past the pack, with scratch pinned to /scratch by a fault handler so seeds stand in for npm pack output and install links", () => {
   const SCRATCH = "/scratch";
   const CARRIER_TGZ = "/scratch/tarballs/0/x-carrier-1.0.0.tgz";
   const LIB_TGZ = "/scratch/tarballs/1/x-lib-1.0.0.tgz";
@@ -483,9 +479,12 @@ describe("PackedInstall.run past the pack", () => {
         );
         assert.deepStrictEqual([error.reason, error.manager], ["MissingBin", "npm"]);
         assert.include(error.message, ".bin/ghost", "x is present and passed; ghost is the one reported");
-        // What .bin DOES hold separates a wrong bin name from a link that never happened.
         assert.strictEqual(error.package, "@x/carrier");
-        assert.strictEqual(error.output, "node_modules/.bin holds: x");
+        assert.strictEqual(
+          error.output,
+          "node_modules/.bin holds: x",
+          "what .bin does hold separates a wrong bin name from a link that never happened"
+        );
         assert.include(error.message, "node_modules/.bin holds: x");
       })
     );
@@ -584,11 +583,10 @@ describe("PackedInstall.run past the pack", () => {
     );
   });
 
-  // The real clock: installTimeout is a real ceiling, and a hung install must trip it.
-  const hungInstall = ScriptedSpawner.make((command, args) =>
+  const hungInstallMustTripTheRealClockCeiling = ScriptedSpawner.make((command, args) =>
     args[0] === "install" ? { hang: true } : manifests()(command, args)
   );
-  installSuite(hungInstall, seedWith(), { excludeTestServices: true })((it) => {
+  installSuite(hungInstallMustTripTheRealClockCeiling, seedWith(), { excludeTestServices: true })((it) => {
     it.effect("an install that outlives installTimeout fails InstallFailed naming the manager and the ceiling", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
@@ -604,19 +602,18 @@ describe("PackedInstall.run past the pack", () => {
         assert.deepStrictEqual([error.reason, error.manager], ["InstallFailed", "npm"]);
         assert.strictEqual(error.message, "npm install timed out after 50ms");
         assert.isTrue(
-          A.some(hungInstall.spawns, (spawn) => spawn.args[0] === "install"),
+          A.some(hungInstallMustTripTheRealClockCeiling.spawns, (spawn) => spawn.args[0] === "install"),
           "the install was spawned"
         );
       })
     );
   });
 
-  // The discriminating control: a spawn that never started keeps the spawn-failure message.
-  const unspawnable = ScriptedSpawner.make((command, args) =>
+  const controlSpawnThatNeverStartedKeepsItsMessage = ScriptedSpawner.make((command, args) =>
     args[0] === "install" ? ScriptedSpawner.notFound(command) : manifests()(command, args)
   );
   installSuite(
-    unspawnable,
+    controlSpawnThatNeverStartedKeepsItsMessage,
     seedWith()
   )((it) => {
     it.effect("an install that cannot spawn fails InstallFailed as could not run, not as a timeout", () =>
@@ -630,7 +627,6 @@ describe("PackedInstall.run past the pack", () => {
     );
   });
 
-  // Overrides: packages from outside the workspace, a directory packed like the closure and a tarball used as it is.
   const DIR_TGZ = "/scratch/tarballs/2/y-dir-9.0.0.tgz";
   const EXT_TGZ = "/ext/y-tgz-9.0.0.tgz";
   const overrideSeed = (extra: MemoryFileSystemSeed = {}) =>
@@ -643,7 +639,6 @@ describe("PackedInstall.run past the pack", () => {
       "/scratch/consumer-pnpm/node_modules/.bin/x": BIN,
       ...extra,
     });
-  /** Each tarball's packed manifest; the carrier declares the bin x. */
   const packedManifests = (overrides: Record<string, unknown> = {}): SpawnScript =>
     script((command, args) => {
       if (command !== "tar") return {};
@@ -697,7 +692,6 @@ describe("PackedInstall.run past the pack", () => {
             managers: ["npm", "pnpm"],
             bins: ["x"],
             env: ENV,
-            // A relative path resolves against the workspace root (/repo), never /; a file: prefix is accepted.
             overrides: { "@y/tgz": EXT_TGZ, "@y/dir": "file:vendor/y-dir" },
             consumerDependencies: { "@y/tgz": "^9.0.0" },
           } as const;
@@ -724,7 +718,7 @@ describe("PackedInstall.run past the pack", () => {
               ["npm", "/repo/packages/lib/dist/prod/npm/pkg", "/scratch/tarballs/1"],
               ["npm", "/repo/vendor/y-dir", "/scratch/tarballs/2"],
             ],
-            "the directory is packed in place, the tarball is not packed at all"
+            "the file:vendor/y-dir directory is packed in place, resolved against /repo and never /; the tarball is not packed at all"
           );
           const tars = A.filter(overridden.spawns, (spawn) => spawn.command === "tar");
           assert.deepStrictEqual(
@@ -918,12 +912,11 @@ describe("PackedInstall.run past the pack", () => {
     );
   });
 
-  // Only the carrier declares its bins: a closure member declaring one of them could take the .bin slot.
-  const conflicting = ScriptedSpawner.make(
+  const closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot = ScriptedSpawner.make(
     packedManifests({ [LIB_TGZ]: { name: "@x/lib", bin: { "lib-only": "./l.js", x: "./mirror.js" } } })
   );
   rootedSuite(
-    conflicting,
+    closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot,
     overrideSeed()
   )((it) => {
     it.effect("a closure member declaring the carrier's bin fails BinConflict before any install", () =>
@@ -934,7 +927,9 @@ describe("PackedInstall.run past the pack", () => {
         assert.deepStrictEqual([error.reason, error.package], ["BinConflict", "@x/lib"]);
         assert.include(error.message, "@x/lib declares the bin x, which the carrier @x/carrier declares");
         assert.include(error.message, "pass allowSharedBins: true", "the message names the way out");
-        assert.isFalse(A.some(conflicting.spawns, (spawn) => spawn.args[0] === "install"));
+        assert.isFalse(
+          A.some(closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot.spawns, (spawn) => spawn.args[0] === "install")
+        );
       })
     );
 
@@ -953,7 +948,10 @@ describe("PackedInstall.run past the pack", () => {
           ["npm"]
         );
         assert.isTrue(
-          A.some(conflicting.spawns, (spawn) => spawn.args[0] === "install"),
+          A.some(
+            closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot.spawns,
+            (spawn) => spawn.args[0] === "install"
+          ),
           "the install ran"
         );
         const missing = yield* Effect.flip(
@@ -988,10 +986,11 @@ describe("PackedInstall.run past the pack", () => {
     );
   });
 
-  // A string bin links under the unscoped package name: @y/x's "./x.js" is the bin x.
-  const conflictingOverride = ScriptedSpawner.make(packedManifests({ [EXT_TGZ]: { name: "@y/x", bin: "./x.js" } }));
+  const stringBinLinksUnderTheUnscopedNameX = ScriptedSpawner.make(
+    packedManifests({ [EXT_TGZ]: { name: "@y/x", bin: "./x.js" } })
+  );
   rootedSuite(
-    conflictingOverride,
+    stringBinLinksUnderTheUnscopedNameX,
     overrideSeed()
   )((it) => {
     it.effect("an override package declaring the carrier's bin fails BinConflict too", () =>
@@ -1007,16 +1006,15 @@ describe("PackedInstall.run past the pack", () => {
           })
         );
         assert.deepStrictEqual([error.reason, error.package], ["BinConflict", "@y/x"]);
-        assert.isFalse(A.some(conflictingOverride.spawns, (spawn) => spawn.args[0] === "install"));
+        assert.isFalse(A.some(stringBinLinksUnderTheUnscopedNameX.spawns, (spawn) => spawn.args[0] === "install"));
       })
     );
   });
 
-  // The real clock: packTimeout is a real ceiling.
-  const hungPack = ScriptedSpawner.make((command, args) =>
+  const hungPackMustTripTheRealClockCeiling = ScriptedSpawner.make((command, args) =>
     args[0] === "pack" ? { hang: true } : manifests()(command, args)
   );
-  installSuite(hungPack, seedWith(), { excludeTestServices: true })((it) => {
+  installSuite(hungPackMustTripTheRealClockCeiling, seedWith(), { excludeTestServices: true })((it) => {
     it.effect("a pack that outlives packTimeout fails PackFailed naming the package and the ceiling", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
@@ -1038,12 +1036,17 @@ describe("PackedInstall.run past the pack", () => {
 
 describe("InstalledConsumer.runBin", () => {
   const BIN_DIR = "/scratch/consumer-npm";
+  const handMadeEnvWhoseInitCwdTrapIsStillScrubbed = Redacted.make({
+    PATH: "/usr/bin",
+    HOME: "/home/u",
+    XDG_DATA_HOME: "/home/u/.local/share",
+    INIT_CWD: "/repo",
+  });
   const consumer = InstalledConsumer.make({
     manager: "npm",
     managerVersion: "11.19.1",
     directory: BIN_DIR,
-    // A trap left in a hand-made consumer's env is still scrubbed from the base.
-    env: Redacted.make({ PATH: "/usr/bin", HOME: "/home/u", XDG_DATA_HOME: "/home/u/.local/share", INIT_CWD: "/repo" }),
+    env: handMadeEnvWhoseInitCwdTrapIsStillScrubbed,
   });
   const runs = ScriptedSpawner.make((command) =>
     Str.endsWith("/tool")(command)
@@ -1065,13 +1068,16 @@ describe("InstalledConsumer.runBin", () => {
             [`${BIN_DIR}/node_modules/.bin/tool`, "--version"]
           );
           assert.strictEqual(spawn?.cwd, BIN_DIR);
-          // HOME: undefined deletes; CI and npm_config_* are explicit, so they survive the scrub.
-          assert.deepStrictEqual(spawn?.env, {
-            PATH: "/usr/bin",
-            XDG_DATA_HOME: "/scratch/xdg",
-            CI: "true",
-            npm_config_user_agent: "pnpm/12",
-          });
+          assert.deepStrictEqual(
+            spawn?.env,
+            {
+              PATH: "/usr/bin",
+              XDG_DATA_HOME: "/scratch/xdg",
+              CI: "true",
+              npm_config_user_agent: "pnpm/12",
+            },
+            "HOME: undefined deletes; CI and npm_config_* are explicit, so they survive the scrub"
+          );
           assert.strictEqual(spawn?.extendEnv, false);
           assert.strictEqual(spawn?.options.stdin, "ignore");
         })
@@ -1145,9 +1151,8 @@ describe("InstalledConsumer.runBin", () => {
     );
   });
 
-  // The real clock: the bin's ceiling is a real ceiling.
-  const hung = ScriptedSpawner.make(() => ({ hang: true }));
-  layer(hung.layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
+  const hungBinMustTripTheRealClockCeiling = ScriptedSpawner.make(() => ({ hang: true }));
+  layer(hungBinMustTripTheRealClockCeiling.layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
     it.effect("a bin that outlives its timeout fails BinFailed naming the ceiling", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(consumer.runBin("tool", [], { timeout: "50 millis" })).pipe(
@@ -1169,19 +1174,17 @@ describe("PackedInstall.timeoutBudget", () => {
       packages: 3,
       perConsumer: "2 minutes",
     });
-    // 4 x (0.5 + 3 + 2) + 3 x (2 + 0.5) + 0.5 untimed + 1 cleanup
-    assert.strictEqual(minutes(budget), 31);
+    assert.strictEqual(minutes(budget), 31, "4 x (0.5 + 3 + 2) + 3 x (2 + 0.5) + 0.5 untimed + 1 cleanup");
     assert.strictEqual(Duration.format(budget), "31m");
   });
 
   it("defaults installTimeout to the run's four minutes and perConsumer to one runBin's minute, and counts a repeated manager once", () => {
     const budget = PackedInstall.timeoutBudget({ managers: ["npm", "npm"], packages: 1 });
-    // 1 x (0.5 + 4 + 1) + 1 x 2.5 + 0.5 untimed + 1 cleanup
-    assert.strictEqual(minutes(budget), 9.5);
-    // An install-only test passes zero explicitly.
+    assert.strictEqual(minutes(budget), 9.5, "1 x (0.5 + 4 + 1) + 1 x 2.5 + 0.5 untimed + 1 cleanup");
     assert.strictEqual(
       minutes(PackedInstall.timeoutBudget({ managers: ["npm"], packages: 1, perConsumer: "0 seconds" })),
-      8.5
+      8.5,
+      "an install-only test passes zero explicitly"
     );
   });
 
@@ -1193,8 +1196,11 @@ describe("PackedInstall.timeoutBudget", () => {
       packages: ["my-tool", "my-tool-cli", "my-tool-core"],
       perConsumer: "2 minutes",
     });
-    // 4 x (0.5 + 3 + 2) + 3 x (0.5 + 0.5) + 0.5 untimed + 1 cleanup
-    assert.strictEqual(Duration.format(budget), "26m 30s");
+    assert.strictEqual(
+      Duration.format(budget),
+      "26m 30s",
+      "4 x (0.5 + 3 + 2) + 3 x (0.5 + 0.5) + 0.5 untimed + 1 cleanup"
+    );
     assert.strictEqual(
       minutes(PackedInstall.timeoutBudget({ managers: ["npm"], packages: ["a", "b"] })),
       minutes(PackedInstall.timeoutBudget({ managers: ["npm"], packages: 2 }))
@@ -1207,9 +1213,9 @@ describe("InstalledConsumer.binProvenance", () => {
   const NM = `${DIR}/node_modules`;
   const at = (manager: "npm" | "pnpm", directory = DIR) =>
     InstalledConsumer.make({ manager, managerVersion: "1.0.0", directory });
+  const namedManifestAtTheBoundAWalkPastWouldClaimTheOrphanFor = `${DIR}/package.json`;
   const SEED: MemoryFileSystemSeed = {
-    // A named manifest AT the bound: a walk that passed the consumer directory would claim the orphan for it.
-    [`${DIR}/package.json`]: Result.getOrThrowWith(
+    [namedManifestAtTheBoundAWalkPastWouldClaimTheOrphanFor]: Result.getOrThrowWith(
       S.encodeUnknownResult(JsonValue)({ name: "the-consumer", private: true }),
       identity
     ),
@@ -1321,7 +1327,6 @@ describe("InstalledConsumer.binProvenance", () => {
     );
   });
 
-  // Node reports "not a link" as EINVAL, tagged Unknown with the errno on the cause; anything else is a real failure.
   const readLinkFails = (tag: "Unknown" | "PermissionDenied" | "BadResource", code: string) =>
     MemoryFileSystem.layerWith(SEED, {
       faults: {
@@ -1353,18 +1358,18 @@ describe("InstalledConsumer.binProvenance", () => {
       })
     );
   });
-  // memfs once tagged "not a link" BadResource; it now raises Node's shape, so BadResource is a real failure.
   layer(Layer.mergeAll(readLinkFails("BadResource", "EBADF"), Path.layer), { timeout: "30 seconds" })((it) => {
-    it.effect("a BadResource from readLink propagates as Io, never read as a shim", () =>
-      Effect.gen(function* () {
-        const error = yield* Effect.flip(at("pnpm").binProvenance("shim"));
-        assert.deepStrictEqual([error.reason, error.message], ["Io", `could not read the link ${NM}/.bin/shim`]);
-      })
+    it.effect(
+      "a BadResource from readLink propagates as Io, never read as a shim, now that memfs raises Node's not-a-link shape",
+      () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(at("pnpm").binProvenance("shim"));
+          assert.deepStrictEqual([error.reason, error.message], ["Io", `could not read the link ${NM}/.bin/shim`]);
+        })
     );
   });
-  // An Unknown whose errno is not EINVAL is a real failure too: the errno, not the tag, decides.
   layer(Layer.mergeAll(readLinkFails("Unknown", "EIO"), Path.layer), { timeout: "30 seconds" })((it) => {
-    it.effect("an Unknown readLink failure with another errno propagates as Io", () =>
+    it.effect("an Unknown readLink failure with another errno propagates as Io: the errno, not the tag, decides", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(at("pnpm").binProvenance("shim"));
         assert.strictEqual(error.reason, "Io");
@@ -1397,10 +1402,12 @@ describe("PackedInstall.timeoutBudgetFor", () => {
             perConsumer: "1 minute",
           })
         );
-        // 2 x (0.5 + 3 + 1) + 2 x (20s + 30s) + 0.5 untimed + 1 cleanup
-        assert.strictEqual(Duration.format(budget), "12m 10s");
-        // Defaults: the run's own four-minute install and two-minute pack, no per-consumer work.
-        const defaults = yield* PackedInstall.timeoutBudgetFor({
+        assert.strictEqual(
+          Duration.format(budget),
+          "12m 10s",
+          "2 x (0.5 + 3 + 1) + 2 x (20s + 30s) + 0.5 untimed + 1 cleanup"
+        );
+        const defaultFourMinuteInstallTwoMinutePackNoPerConsumer = yield* PackedInstall.timeoutBudgetFor({
           carrier: options.carrier,
           managers: options.managers,
           bins: options.bins,
@@ -1408,7 +1415,7 @@ describe("PackedInstall.timeoutBudgetFor", () => {
           closure: [],
         });
         assert.strictEqual(
-          Duration.format(defaults),
+          Duration.format(defaultFourMinuteInstallTwoMinutePackNoPerConsumer),
           Duration.format(PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages: 1 }))
         );
       })
@@ -1476,7 +1483,6 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
       identity
     ),
     [`${NM}/@x/carrier/dist/tool.js`]: "#!/usr/bin/env node\n",
-    // The front end won the .bin slot: a link to its bin, not the carrier's.
     [`${NM}/@x/cli/package.json`]: Result.getOrThrowWith(
       S.encodeUnknownResult(JsonValue)({ name: "@x/cli", bin: { tool: "./bin.js" } }),
       identity
@@ -1503,12 +1509,18 @@ describe("InstalledConsumer.carrierCommand and runCarrierBin", () => {
           assert.strictEqual(command.options.cwd, "/work");
           assert.strictEqual(command.options.extendEnv, false);
           assert.isUndefined(command.options.stdin, "left open for a probe");
-          // The same scrub and layering command() applies.
           const same = consumer.command("tool", [], { env: { XDG_DATA_HOME: "/scratch/xdg" } });
-          assert.deepStrictEqual(command.options.env, same.options.env);
+          assert.deepStrictEqual(
+            command.options.env,
+            same.options.env,
+            "the same scrub and layering command() applies"
+          );
           assert.deepStrictEqual(command.options.env, { PATH: "/usr/bin", XDG_DATA_HOME: "/scratch/xdg" });
-          // The .bin slot belongs to the front end; carrierCommand never looked there.
-          assert.strictEqual((yield* consumer.binProvenance("tool"))?.package, "@x/cli");
+          assert.strictEqual(
+            (yield* consumer.binProvenance("tool"))?.package,
+            "@x/cli",
+            "the .bin slot belongs to the front end; carrierCommand never looked there"
+          );
           assert.strictEqual((yield* consumer.carrierCommand("tool")).options.cwd, DIR);
         })
     );
