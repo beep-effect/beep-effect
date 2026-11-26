@@ -1,13 +1,3 @@
-// quoted-strings: quote-style policy for string VALUE scalars (and
-// sequence items) — keys are out of scope (they belong to `truthy`'s trap
-// detection when they matter). `quoteType` defaults to DOUBLE, the
-// default preset's one taste call.
-//
-// Fixes are conservative: a quote swap or a wrap happens only when it
-// provably preserves the parsed value (single-line, no escapes in play, no
-// quote character of the target style in the content, no tag/anchor on the
-// node); otherwise the diagnostic ships without a fix.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
@@ -70,15 +60,7 @@ export class quotedStringsOptions extends S.Opaque<quotedStringsOptions, { reado
   )
 ) {}
 
-/**
- * A value-preserving requote/wrap edit, or undefined when none is safe.
- *
- * **Details**
- *
- * Delegates to the shared helper's CONSERVATIVE mode — the shipped
- * fix behavior stays exactly as released; the escaping-capable mode belongs
- * to the format path's opt-in `requoteScalars`, not the lint fix.
- */
+// decision: shared-requote-modes
 const safeQuoteFix: {
   (ctx: LintContext, scalar: YamlScalar, quote: '"' | "'"): YamlEdit | undefined;
   (scalar: YamlScalar, quote: '"' | "'"): (ctx: LintContext) => YamlEdit | undefined;
@@ -172,9 +154,6 @@ export const quotedStrings = YamlRule.make({
     );
     return out;
   }),
-  // Inference: every already-quoted string VALUE scalar votes its
-  // quote style for `quoteType` — the same scope the check polices (keys
-  // excluded, plain scalars say nothing about quote preference).
   infer: (ctx) => {
     const out: Array<StyleVote> = [];
     walkScalars(

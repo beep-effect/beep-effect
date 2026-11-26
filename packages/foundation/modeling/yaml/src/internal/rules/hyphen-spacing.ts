@@ -1,8 +1,3 @@
-// hyphen-spacing: at most one space after the block-sequence `-`
-// indicator. Spaces BEFORE the hyphen are indentation — the indentation
-// rule's business — and a comment after the hyphen belongs to
-// comments-spacing.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -64,8 +59,7 @@ export class hyphenSpacingOptions extends S.Opaque<hyphenSpacingOptions, { reado
   )
 ) {}
 
-/** A block-scalar header with an explicit indentation indicator, e.g. `|2` or `>-1`. */
-const explicitIndentHeader = /^[|>](?:[1-9][+-]?|[+-][1-9])(?:[ \t\r\n]|$)/;
+const blockHeaderWithExplicitIndentIndicator = /^[|>](?:[1-9][+-]?|[+-][1-9])(?:[ \t\r\n]|$)/;
 
 const isFlowStart = (kind: YamlToken["kind"]): boolean => kind === "flow-map-start" || kind === "flow-seq-start";
 
@@ -80,16 +74,13 @@ const isTransparentToken = (kind: YamlToken["kind"]): boolean =>
 const isLayoutToken = (kind: YamlToken["kind"]): boolean =>
   kind === "whitespace" || kind === "newline" || kind === "comment";
 
-/** Same-line structure flags, indexed by token position. */
-type LineStructure = {
+type SameLineStructureByTokenIndex = {
   readonly compactEntries: Array<boolean>;
   readonly explicitScalarParents: Array<boolean>;
 };
 
-/** Forward-scan cursor; flow depth and the previous content token reset per line. */
-type ForwardScan = { line: number; flowDepth: number; previousContentIndex: number };
+type ForwardScanResetPerLine = { line: number; flowDepth: number; previousContentIndex: number };
 
-/** True when `token` is an explicit-indent block scalar whose immediate parent is a `-` entry. */
 const hasExplicitScalarChild = (
   tokens: ReadonlyArray<YamlToken>,
   token: YamlToken,
@@ -98,10 +89,14 @@ const hasExplicitScalarChild = (
   token.kind === "scalar" &&
   previousContentIndex >= 0 &&
   A.getUnsafe(tokens, previousContentIndex).kind === "block-seq-entry" &&
-  O.isSome(Str.match(explicitIndentHeader)(token.text));
+  O.isSome(Str.match(blockHeaderWithExplicitIndentIndicator)(token.text));
 
-/** Track flow depth and flag block indicators outside flow collections. */
-const markCompactEntry = (scan: ForwardScan, structure: LineStructure, token: YamlToken, index: number): void => {
+const markCompactEntry = (
+  scan: ForwardScanResetPerLine,
+  structure: SameLineStructureByTokenIndex,
+  token: YamlToken,
+  index: number
+): void => {
   if (isFlowStart(token.kind)) {
     scan.flowDepth++;
   } else if (isFlowEnd(token.kind)) {
@@ -111,11 +106,10 @@ const markCompactEntry = (scan: ForwardScan, structure: LineStructure, token: Ya
   }
 };
 
-/** Fold one token into the forward scan. */
 const stepForward = (
   tokens: ReadonlyArray<YamlToken>,
-  scan: ForwardScan,
-  structure: LineStructure,
+  scan: ForwardScanResetPerLine,
+  structure: SameLineStructureByTokenIndex,
   index: number
 ): void => {
   const token = A.getUnsafe(tokens, index);
@@ -131,23 +125,17 @@ const stepForward = (
   scan.previousContentIndex = index;
 };
 
-/**
- * Index same-line structure once. Flow colons are not compact block
- * mappings, and only a scalar's immediate parent indicator determines
- * whether moving a hyphen changes its explicit indentation.
- */
-const indexLineStructure = (tokens: ReadonlyArray<YamlToken>): LineStructure => {
-  const structure: LineStructure = {
+const indexSameLineStructureByTokenIndex = (tokens: ReadonlyArray<YamlToken>): SameLineStructureByTokenIndex => {
+  const structure: SameLineStructureByTokenIndex = {
     compactEntries: A.makeBy(tokens.length, () => false),
     explicitScalarParents: A.makeBy(tokens.length, () => false),
   };
-  const scan: ForwardScan = { line: -1, flowDepth: 0, previousContentIndex: -1 };
+  const scan: ForwardScanResetPerLine = { line: -1, flowDepth: 0, previousContentIndex: -1 };
   for (let index = 0; index < tokens.length; index++) stepForward(tokens, scan, structure, index);
   return structure;
 };
 
-/** Backward-scan suffix summary of the tokens after the current one. */
-type BackwardScan = {
+type BackwardSuffixSummary = {
   line: number;
   nextContentCharacter: number;
   nextLineCharacter: number;
@@ -155,30 +143,34 @@ type BackwardScan = {
   movesScalarParent: boolean;
 };
 
-/** Fold one token into the backward scan and return whether its hyphen would relocate a collection. */
-const stepBackward = (scan: BackwardScan, structure: LineStructure, token: YamlToken, index: number): boolean => {
+const stepBackward = (
+  scan: BackwardSuffixSummary,
+  structure: SameLineStructureByTokenIndex,
+  token: YamlToken,
+  index: number
+): boolean => {
   if (token.line !== scan.line) {
     scan.line = token.line;
     scan.nextLineCharacter = scan.nextContentCharacter;
     scan.compact = false;
     scan.movesScalarParent = false;
   }
-  const relocates = scan.movesScalarParent || (scan.compact && scan.nextLineCharacter > token.character);
+  const hyphenWouldRelocateCollection =
+    scan.movesScalarParent || (scan.compact && scan.nextLineCharacter > token.character);
   scan.compact = scan.compact || A.getUnsafe(structure.compactEntries, index);
   // The parent hyphen itself stays put when deleting spaces after it.
   // Only earlier hyphens move that parent and must withhold their fix.
   scan.movesScalarParent = scan.movesScalarParent || A.getUnsafe(structure.explicitScalarParents, index);
   if (!isLayoutToken(token.kind)) scan.nextContentCharacter = token.character;
-  return relocates;
+  return hyphenWouldRelocateCollection;
 };
 
-/**
- * Suffix summaries make each hyphen's safety query constant-time. The
- * next content column skips blank/comment lines, as the old scan did.
- */
-const relocationSummary = (tokens: ReadonlyArray<YamlToken>, structure: LineStructure): ReadonlyArray<boolean> => {
+const relocationSuffixSummary = (
+  tokens: ReadonlyArray<YamlToken>,
+  structure: SameLineStructureByTokenIndex
+): ReadonlyArray<boolean> => {
   const relocatesCollections = A.makeBy(tokens.length, () => false);
-  const scan: BackwardScan = {
+  const scan: BackwardSuffixSummary = {
     line: -1,
     nextContentCharacter: -1,
     nextLineCharacter: -1,
@@ -191,14 +183,12 @@ const relocationSummary = (tokens: ReadonlyArray<YamlToken>, structure: LineStru
   return relocatesCollections;
 };
 
-/** Count the spaces starting at `from`. */
 const spacesFrom = (text: string, from: number): number => {
   let j = from;
   while (j < text.length && text[j] === " ") j++;
   return j - from;
 };
 
-/** Report excess spaces after one `-` entry, withholding the fix when it would relocate a collection. */
 const hyphenFinding = (
   text: string,
   token: YamlToken,
@@ -260,15 +250,18 @@ export const hyphenSpacing = YamlRule.make({
   id: "hyphen-spacing",
   check: dual(2, (ctx: LintContext, options: unknown): Iterable<YamlLintDiagnostic> => {
     const opts = P.isObject(options) ? options : {};
-    // Clamped so a hand-built options object cannot bypass the schema and
-    // delete the separation space.
-    const maxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
-    const relocatesCollections = relocationSummary(ctx.tokens, indexLineStructure(ctx.tokens));
+    const separationSafeMaxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
+    const relocatesCollections = relocationSuffixSummary(ctx.tokens, indexSameLineStructureByTokenIndex(ctx.tokens));
     const out: Array<YamlLintDiagnostic> = [];
     for (let tokenIndex = 0; tokenIndex < ctx.tokens.length; tokenIndex++) {
       const token = A.getUnsafe(ctx.tokens, tokenIndex);
       if (token.kind !== "block-seq-entry") continue;
-      const finding = hyphenFinding(ctx.text, token, maxAfter, A.getUnsafe(relocatesCollections, tokenIndex));
+      const finding = hyphenFinding(
+        ctx.text,
+        token,
+        separationSafeMaxAfter,
+        A.getUnsafe(relocatesCollections, tokenIndex)
+      );
       if (finding !== undefined) out.push(finding);
     }
     return out;

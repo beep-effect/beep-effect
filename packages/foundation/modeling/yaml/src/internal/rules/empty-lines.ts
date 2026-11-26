@@ -1,8 +1,3 @@
-// empty-lines: caps runs of consecutive blank lines — in the body
-// (`max`), at document start (`maxStart`) and at document end (`maxEnd`).
-// Blank lines inside scalar content are the value's business and are
-// skipped. The fix deletes the excess lines surgically.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -68,8 +63,8 @@ export class emptyLinesOptions extends S.Opaque<emptyLinesOptions, { readonly br
   )
 ) {}
 
-/** Build the layout-line predicate once, protecting composed scalar content too. */
-const layoutBlankLine = (ctx: LintContext): ((line: LintLine) => boolean) => {
+// decision: layout-rules-skip-scalar-content
+const layoutBlankPredicateGuardingComposedScalars = (ctx: LintContext): ((line: LintLine) => boolean) => {
   const spans: Array<YamlScalar> = [];
   walkScalars(ctx.document.contents, "root", (scalar) => {
     if (scalar.sourceMultiline === true) spans.push(scalar);
@@ -80,10 +75,8 @@ const layoutBlankLine = (ctx: LintContext): ((line: LintLine) => boolean) => {
     !A.some(spans, (scalar) => scalar.offset < line.offset && line.offset < scalar.offset + scalar.length);
 };
 
-/** A maximal run `[start, end)` of layout-blank line indices. */
-type BlankRun = { readonly start: number; readonly end: number };
+type HalfOpenLayoutBlankRun = { readonly start: number; readonly end: number };
 
-/** The configured blank-run caps for the body, start and end of the input. */
 type BlankCaps = { readonly max: number; readonly maxStart: number; readonly maxEnd: number };
 
 const readBlankCaps = (options: unknown): BlankCaps => ({
@@ -98,11 +91,10 @@ const readBlankCaps = (options: unknown): BlankCaps => ({
       : 0,
 });
 
-/** Every maximal run of layout-blank lines, in source order. */
-const blankRuns = (ctx: LintContext): ReadonlyArray<BlankRun> => {
+const blankRuns = (ctx: LintContext): ReadonlyArray<HalfOpenLayoutBlankRun> => {
   const lines = ctx.lines;
-  const isLayoutBlank = layoutBlankLine(ctx);
-  const runs: Array<BlankRun> = [];
+  const isLayoutBlank = layoutBlankPredicateGuardingComposedScalars(ctx);
+  const runs: Array<HalfOpenLayoutBlankRun> = [];
   let i = 0;
   while (i < lines.length) {
     if (!isLayoutBlank(A.getUnsafe(lines, i))) {
@@ -117,40 +109,32 @@ const blankRuns = (ctx: LintContext): ReadonlyArray<BlankRun> => {
   return runs;
 };
 
-/** True when the run touches neither the start nor the end of the input. */
-const isBodyRun = (ctx: LintContext, run: BlankRun): boolean => run.start !== 0 && run.end !== ctx.lines.length;
+const isBodyRun = (ctx: LintContext, run: HalfOpenLayoutBlankRun): boolean =>
+  run.start !== 0 && run.end !== ctx.lines.length;
 
-/** The cap that applies to a run by where it sits. */
-const allowedForRun = (ctx: LintContext, run: BlankRun, caps: BlankCaps): number => {
+const allowedForRun = (ctx: LintContext, run: HalfOpenLayoutBlankRun, caps: BlankCaps): number => {
   if (run.start === 0) return caps.maxStart;
   return run.end === ctx.lines.length ? caps.maxEnd : caps.max;
 };
 
-/**
- * Report a run beyond its cap. Line text excludes the terminator whole (a
- * CRLF blank line is `""`), but fix spans are SOURCE coordinates: delete
- * from the first excess blank line's start through the last blank line's
- * terminator — derived from the NEXT line's offset (or the text end) so a
- * CRLF terminator goes whole.
- */
-const runFinding = (ctx: LintContext, run: BlankRun, allowed: number): YamlLintDiagnostic | undefined => {
+const runFinding = (ctx: LintContext, run: HalfOpenLayoutBlankRun, allowed: number): YamlLintDiagnostic | undefined => {
   const runLength = run.end - run.start;
   if (runLength <= allowed) return undefined;
-  // The excess index is inside the scanned run: allowed < runLength.
-  const firstExcess = A.getUnsafe(ctx.lines, run.start + allowed);
+  const firstExcessIndex = run.start + allowed;
+  const firstExcess = A.getUnsafe(ctx.lines, firstExcessIndex);
   const nextLine = ctx.lines[run.end];
-  const deleteEnd = nextLine !== undefined ? nextLine.offset : ctx.text.length;
+  const sourceEndThroughLastTerminatorFromNextLine = nextLine !== undefined ? nextLine.offset : ctx.text.length;
   return YamlLintDiagnostic.make({
     rule: "empty-lines",
     severity: "error",
     message: `Too many consecutive blank lines (${runLength} > ${allowed})`,
     offset: firstExcess.offset,
-    length: deleteEnd - firstExcess.offset,
+    length: sourceEndThroughLastTerminatorFromNextLine - firstExcess.offset,
     line: firstExcess.number,
     character: 0,
     fix: YamlEdit.make({
       offset: firstExcess.offset,
-      length: deleteEnd - firstExcess.offset,
+      length: sourceEndThroughLastTerminatorFromNextLine - firstExcess.offset,
       content: "",
     }),
   });
@@ -192,12 +176,6 @@ export const emptyLines = YamlRule.make({
     }
     return out;
   }),
-  // Inference: the max blank run is inferable only as a FLOOR — a
-  // corpus whose longest body run is N proves `max` must be at least N to
-  // accept it, not that the author would forbid N+1. The floor rides in
-  // the evidence; the caps stay default-driven under both resolvers. Same
-  // segmentation as the check: body runs only (start/end runs are the
-  // `maxStart`/`maxEnd` caps' business), scalar content skipped.
   infer: (ctx) => {
     let longest = 0;
     for (const run of blankRuns(ctx)) {

@@ -1,8 +1,3 @@
-// Block/flow scalar folding helpers: rendering multi-line string values as
-// block-literal (`|`), block-folded (`>`) and fold-encoded single-quoted
-// scalars, plus the whitespace analyses that decide when block styles cannot
-// represent a value faithfully.
-
 import { replaceWith } from "@beep/utils/Str";
 import * as A from "effect/Array";
 import { constant, pipe } from "effect/Function";
@@ -55,52 +50,36 @@ export function foldScalarLine(
   return folds.length === 0 ? text : applyFolds(text, folds, indent);
 }
 
-/** True for a fold-neighbour character that would make a break unsafe: end of text, space or tab. */
 const isBlankOrEnd = (ch: string | undefined): boolean => ch === undefined || ch === " " || ch === "\t";
 
-/**
- * True when the space at `i` is a safe fold point: a single space whose
- * previous character is content on the same physical line and whose next
- * character is neither a space nor a tab.
- */
 const isSafeSplit = (text: string, i: number): boolean =>
   text[i] === " " && text[i - 1] !== "\n" && !isBlankOrEnd(text[i - 1]) && !isBlankOrEnd(text[i + 1]);
 
-/** The indices of the spaces {@link foldScalarLine} replaces with line breaks. */
 function findFoldPoints(text: string, lineWidth: number, indentAtStart: number, indentLength: number): number[] {
-  // Chars a continuation line can hold before reaching the width column. Guard
-  // against a pathological indent >= lineWidth (nothing would fit) by never
-  // dropping below one character of progress.
-  const contentWidth = Math.max(1, lineWidth - indentLength);
-  // Index budget for the current physical line: fold once the scan index
-  // reaches it and a candidate split has been seen.
-  let end = Math.max(1, lineWidth - indentAtStart);
+  const continuationWidthEvenPastIndentAtLeastOne = Math.max(1, lineWidth - indentLength);
+  let foldOnceIndexReaches = Math.max(1, lineWidth - indentAtStart);
   const folds: number[] = [];
-  let split: number | undefined;
+  let splitCandidateOnThisPhysicalLine: number | undefined;
   for (let i = 0; i < text.length; i++) {
-    // An existing physical break already satisfies the previous line's
-    // budget. Never reuse its split candidate when folding rendered text.
     if (text[i] === "\n") {
-      split = undefined;
-      end = i + 1 + lineWidth;
+      splitCandidateOnThisPhysicalLine = undefined;
+      foldOnceIndexReaches = i + 1 + lineWidth;
       continue;
     }
-    if (isSafeSplit(text, i)) split = i;
-    if (i >= end && split !== undefined) {
-      folds.push(split);
-      end = split + contentWidth;
-      split = undefined;
+    if (isSafeSplit(text, i)) splitCandidateOnThisPhysicalLine = i;
+    if (i >= foldOnceIndexReaches && splitCandidateOnThisPhysicalLine !== undefined) {
+      folds.push(splitCandidateOnThisPhysicalLine);
+      foldOnceIndexReaches = splitCandidateOnThisPhysicalLine + continuationWidthEvenPastIndentAtLeastOne;
+      splitCandidateOnThisPhysicalLine = undefined;
     }
   }
   return folds;
 }
 
-/** Replaces each fold-point space with a break plus the continuation indent. */
 function applyFolds(text: string, folds: ReadonlyArray<number>, indent: string): string {
   let result = Str.slice(0, folds[0])(text);
   for (const [f, fold] of folds.entries()) {
     const sliceEnd = folds[f + 1] ?? text.length;
-    // Drop the space at `fold`; the inserted break carries the join.
     result += `\n${indent}${Str.slice(fold + 1, sliceEnd)(text)}`;
   }
   return result;
@@ -144,30 +123,22 @@ export function foldRenderedScalar(
 ): string {
   if (lineWidth <= 0 || rendered.length === 0) return rendered;
   const first = rendered[0];
-  // Block-literal and single-quoted are never width-folded.
   if (first === "|" || first === "'") return rendered;
   if (first === ">") return foldBlockFoldedBody(rendered, indent, lineWidth);
   if (first === '"') {
     const inner = Str.slice(1, -1)(rendered);
-    // +1 for the opening quote already consumed on the first line.
-    return `"${foldScalarLine(inner, indent, lineWidth, indent.length + 1)}"`;
+    const firstLineStartsPastOpeningQuote = indent.length + 1;
+    return `"${foldScalarLine(inner, indent, lineWidth, firstLineStartsPastOpeningQuote)}"`;
   }
-  // Plain scalar.
   return foldScalarLine(rendered, indent, lineWidth, indent.length);
 }
 
-/**
- * Fold only base-indent content lines: they start with exactly `indent` and
- * the next char is content (not a further space/tab, which would make the
- * line "more-indented" and its break literal to the reader).
- */
 const isBaseIndentContentLine = (line: string, indent: string): boolean =>
   line.length > indent.length &&
   Str.startsWith(indent)(line) &&
   line[indent.length] !== " " &&
   line[indent.length] !== "\t";
 
-/** Width-folds the base-indent body lines of a rendered `>` block scalar, keeping its header line. */
 function foldBlockFoldedBody(rendered: string, indent: string, lineWidth: number): string {
   const lines = Str.split("\n")(rendered);
   const body = A.map(lines.slice(1), (line) =>
@@ -218,15 +189,11 @@ export function isControlChar(code: number): boolean {
  */
 export function hasInteriorTrailingWhitespace(s: string): boolean {
   if (!hasWhitespaceBeforeNewline(s)) return false;
-  // Confirm the whitespace-before-newline is not purely in the trailing newline
-  // block. If the whitespace sits on the last content line only, block style
-  // handles it correctly via the chomp indicator — only an INTERIOR newline
-  // followed by content matters here.
   const firstNewline = O.getOrElse(constant(-1))(Str.indexOf("\n")(s));
-  return firstNewline >= 0 && firstNewline < trailingNewlinesStart(s);
+  const chompOwnedTrailingNewlinesStart = trailingNewlinesStart(s);
+  return firstNewline >= 0 && firstNewline < chompOwnedTrailingNewlinesStart;
 }
 
-/** True when some newline is immediately preceded by a space or tab. */
 function hasWhitespaceBeforeNewline(s: string): boolean {
   for (let i = 1; i < s.length; i++) {
     if (s[i] === "\n" && isSpaceOrTabCode(Str.slice(i - 1, i)(s))) return true;
@@ -236,7 +203,6 @@ function hasWhitespaceBeforeNewline(s: string): boolean {
 
 const isSpaceOrTabCode = (ch: string): boolean => ch === " " || ch === "\t";
 
-/** The index where the run of trailing newlines begins (`s.length` when there is none). */
 function trailingNewlinesStart(s: string): number {
   let start = s.length;
   while (start > 0 && s[start - 1] === "\n") start--;
@@ -267,7 +233,6 @@ export function hasNewlineSpacesTab(s: string): boolean {
   return false;
 }
 
-/** True when `s` holds one or more spaces starting at `from`, immediately followed by a tab. */
 function isSpacesThenTab(s: string, from: number): boolean {
   let j = from;
   while (j < s.length && s[j] === " ") j++;
@@ -310,8 +275,6 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
   if (hasSingleQuoteUnsafeChar(s)) return O.none();
   if (hasInteriorTrailingWhitespace(s) || /\n[ \t]/.test(s)) return O.none();
   const escaped = Str.replace(/'/g, "''")(s);
-  // Each literal newline in the value requires one extra source newline; a
-  // newline run followed by content starts an indented continuation line.
   const result = replaceWith(
     escaped,
     /\n+/g,
@@ -321,22 +284,20 @@ export function renderSingleQuotedMultiline(s: string, ...[indent]: [indent: str
   return O.some(`'${result}'`);
 }
 
-/** CR or non-tab control chars cannot be represented in single-quoted style. */
-const singleQuoteControl = /[\x00-\x08\x0b\x0c\x0e-\x1f]/;
+const nonTabC0Control = /[\x00-\x08\x0b\x0c\x0e-\x1f]/;
 
 function hasSingleQuoteUnsafeChar(s: string): boolean {
   for (let i = 0; i < s.length; i++) {
     const ch = Str.slice(i, i + 1)(s);
-    if (ch === "\r" || singleQuoteControl.test(ch)) return true;
+    if (ch === "\r" || nonTabC0Control.test(ch)) return true;
   }
   return false;
 }
 
-/** The source's explicit indentation indicator, re-emitted only when it matches the rendered indent; `""` otherwise. */
+// decision: block-scalar-header-emission
 const fidelityIndentIndicator = (explicitIndent: number | undefined, indent: string): string =>
   explicitIndent !== undefined && explicitIndent === indent.length ? String(explicitIndent) : "";
 
-/** True when an emitted indentation indicator would fall outside YAML's single-digit range 1–9. */
 const indicatorOutOfRange = (indicator: string, indent: string): boolean =>
   indicator !== "" && (indent.length < 1 || indent.length > 9);
 
@@ -377,16 +338,9 @@ export function renderBlockLiteral(
     explicitIndent?: number,
   ]
 ): O.Option<string> {
-  // Compute chomp indicator from the value's trailing-newline structure.
-  // `+` (keep) is required when the value retains more than one trailing
-  // newline OR when the value consists solely of newlines (otherwise `|`
-  // with empty content would parse as the empty string, losing the trailing
-  // newline). `-` (strip) is required when the value has no trailing
-  // newline. Default (clip `|`) preserves exactly one trailing newline —
-  // but an EXPLICIT keep header is re-emitted on the fidelity path even
-  // when clip would read identically (byte preservation).
+  // decision: block-scalar-header-emission
   const chomp = blockChomp(s, preserveKeep && explicitChomp === "keep");
-  const lines = blockBodyLines(s);
+  const lines = bodyLinesWithoutFinalBreakLine(s);
   const indentIndicator = literalIndentIndicator(lines, chomp, parentPosition, indent, explicitIndent);
   if (indicatorOutOfRange(indentIndicator, indent)) return O.none();
   return O.some(
@@ -398,19 +352,13 @@ export function renderBlockLiteral(
   );
 }
 
-/**
- * The block chomp indicator for `s`: `+` for several trailing newlines or a
- * newline-only value, `-` for no trailing newline, otherwise clip (`""`) —
- * or `+` when the caller re-emits an explicit keep header.
- */
 function blockChomp(s: string, explicitKeep: boolean): string {
   if (Str.endsWith("\n\n")(s) || (s.length > 0 && /^\n+$/.test(s))) return "+";
   if (!Str.endsWith("\n")(s)) return "-";
   return explicitKeep ? "+" : "";
 }
 
-/** The value's lines for a block body; a trailing `\n` contributes no final empty line. */
-function blockBodyLines(s: string): string[] {
+function bodyLinesWithoutFinalBreakLine(s: string): string[] {
   const lines = Str.split("\n")(s);
   if (Str.endsWith("\n")(s)) lines.pop();
   return lines;
@@ -419,21 +367,6 @@ function blockBodyLines(s: string): string[] {
 const isEmptyLine = (l: string): boolean => l === "";
 const startsWithSpace = (l: string): boolean => Str.startsWith(" ")(l);
 
-/**
- * Explicit indent indicator for a `|` block is needed when:
- * - First content line starts with space (reader would misdetect indent)
- * - Value starts with empty lines AND has actual content (reader can't
- *   auto-detect indent from leading blanks).
- * - Newline-only body with keep-chomp under a block-map value (K858):
- *   libyaml's canonical emitter emits `|2+` here since the parent's value
- *   indent is already established by sibling pairs and the empty body is
- *   ambiguous without an explicit indicator. Block-seq items (JEF9) do
- *   not get the indicator — there the `-` already anchors the entry.
- *
- * Otherwise the fidelity path re-emits a redundant explicit indicator the
- * source spelled (`|2` over auto-detectable content) when it matches the
- * rendered indent, byte-preserving the header.
- */
 function literalIndentIndicator(
   lines: ReadonlyArray<string>,
   chomp: string,
@@ -447,10 +380,6 @@ function literalIndentIndicator(
   return needsIndicator ? String(indent.length) : fidelityIndentIndicator(explicitIndent, indent);
 }
 
-/**
- * True when the first content line starts with a space, or the body has
- * content and opens with at least `leadingBlanks` empty lines.
- */
 function needsLeadingIndentIndicator(lines: ReadonlyArray<string>, leadingBlanks: number): boolean {
   const firstContent = A.findFirst(lines, (l) => l !== "");
   if (O.exists(firstContent, startsWithSpace)) return true;
@@ -492,29 +421,11 @@ export function renderBlockFolded(
     explicitIndent?: number,
   ]
 ): O.Option<string> {
-  // Chomp derivation mirrors renderBlockLiteral; `explicitChomp` /
-  // `explicitIndent` are fidelity-path header preservation (a redundant
-  // explicit `+` or `>2` re-emits byte-intact) — canonical callers pass
-  // neither.
+  // decision: block-scalar-header-emission
   const chomp = blockChomp(s, explicitChomp === "keep");
 
-  // Split the value into lines and build folded output.
-  // In folded scalars, the reader folds bare newlines between same-indent
-  // content lines into spaces. To preserve a literal \n in the value:
-  // - Between two "normal" (non-indented) lines → insert empty line
-  // - Before a "more-indented" line (starts with space/tab) → no extra line
-  //   needed, the reader preserves newlines before more-indented lines
-  // - Empty lines in the value → emit as-is (already preserved by reader)
-  const valueLines = blockBodyLines(s);
+  const valueLines = bodyLinesWithoutFinalBreakLine(s);
 
-  // Explicit indent indicator needed when first content line starts with
-  // space, or when the value starts with two-or-more empty lines and has
-  // actual content. A single leading blank line is fine without the
-  // indicator because the next non-empty content line still establishes
-  // the indent, but multiple leading blanks introduce enough ambiguity
-  // that libyaml's canonical form emits the explicit indicator.
-  // Otherwise the fidelity path re-emits the source's redundant explicit
-  // indicator when it matches the rendered indent — see renderBlockLiteral.
   const indentIndicator = needsLeadingIndentIndicator(valueLines, 2)
     ? String(indent.length)
     : fidelityIndentIndicator(explicitIndent, indent);
@@ -523,31 +434,7 @@ export function renderBlockFolded(
   return O.some(`>${indentIndicator}${chomp}\n${A.join(foldedOutputLines(valueLines, indent), "\n")}`);
 }
 
-/**
- * Builds folded output from the resolved value lines.
- *
- * Folded scalar reading rules (YAML 1.2 §8.2.1):
- * - Bare newline between same-indent content lines → folded to space
- * - Empty line (blank line) → preserves the newline
- * - The line break BEFORE an empty line or more-indented line is also
- *   preserved (not folded)
- *
- * To reverse this for rendering, a "normal" (not more-indented) content line
- * whose nearest preceding content line is also normal gets one extra empty
- * line before it:
- * - directly adjacent, that empty line is the fold break that stops the
- *   reader folding the pair to a space;
- * - across a blank run, it compensates for the preserved break after the
- *   earlier content line. Every line in a blank run is the identical `""`,
- *   so emitting the compensation line at the end of the run is byte-identical
- *   to emitting it at its start.
- *
- * A more-indented line never gets the extra line — the reader already
- * preserves the break before it — and a TRAILING blank run gets none either:
- * those breaks are governed by chomping and map 1:1 to value newlines, so a
- * compensation line there would grow a keep-chomp scalar by one newline per
- * round-trip.
- */
+// decision: block-scalar-header-emission
 function foldedOutputLines(valueLines: ReadonlyArray<string>, indent: string): string[] {
   const outputLines: string[] = [];
   let prevContentNormal = false;

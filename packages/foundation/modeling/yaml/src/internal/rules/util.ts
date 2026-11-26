@@ -1,10 +1,7 @@
-import { dual } from "effect/Function";
-// Shared rule helpers: span queries over the eager token array, the
-// scalar walk the style rules share, and the bounded numeric option schema.
-
 import { $YamlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { YamlScalar as Scalar, YamlMap, YamlSeq } from "../../YamlNode.ts";
@@ -193,7 +190,6 @@ export const walkScalars: {
   }
 );
 
-/** Recurse into a collection's children, assigning each its structural role. */
 const walkScalarChildren = (
   node: YamlNode,
   visit: (scalar: YamlScalar, role: ScalarRole) => void,
