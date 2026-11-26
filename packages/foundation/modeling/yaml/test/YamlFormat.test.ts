@@ -36,10 +36,6 @@ describe("YamlFormat", () => {
     });
 
     it("preserves a leading document comment by default", () => {
-      // The stringifier only ever re-emits the document-level leading
-      // comment (verified against v3: per-node/per-pair comments are
-      // captured on the AST for round-trip detection but are not
-      // re-serialized by either engine) — preserveComments governs this.
       const text = "# top comment\na: 1\n";
       const out = YamlFormat.formatToString(text);
       assert.include(out, "# top comment");
@@ -61,9 +57,8 @@ describe("YamlFormat", () => {
       const text = "a:\n    b: 1\nc:\n    d: 2\n";
       const full = YamlFormat.format(text);
       assert.isAbove(full.length, 0);
-      // A zero-length range at the very start admits no edit.
       const restricted = YamlFormat.format(text, { offset: 0, length: 0 });
-      assert.deepStrictEqual(restricted, []);
+      assert.deepStrictEqual(restricted, [], "a zero-length range at the very start admits no edit");
     });
 
     it("accepts a plain range object identically to a YamlRange instance", () => {
@@ -84,15 +79,15 @@ describe("YamlFormat", () => {
   });
 
   describe("finalNewline: false — governs the end of the OUTPUT, never an internal separator", () => {
-    // Before this fix, finalNewline: false stripped the newline BETWEEN the
-    // body and a following `...` end marker (or trailing comment block),
-    // gluing them onto the last content line: "a: 1\n...\n" formatted to
-    // "a: 1...\n", which re-parses as { a: "1..." } — a silent value change.
     const options = YamlFormattingOptions.make({ finalNewline: false });
 
     it("keeps a `...` end marker on its own line (byte-pinned)", () => {
       const out = YamlFormat.formatToString("a: 1\n...\n", undefined, options);
-      assert.strictEqual(out, "a: 1\n...");
+      assert.strictEqual(
+        out,
+        "a: 1\n...",
+        'finalNewline: false used to strip the newline BETWEEN the body and a following `...` end marker (or trailing comment block), gluing them onto the last content line: "a: 1\\n...\\n" formatted to "a: 1...\\n", which re-parses as { a: "1..." }, a silent value change'
+      );
     });
 
     it("keeps a trailing comment block on its own line (byte-pinned)", () => {
@@ -128,13 +123,13 @@ describe("YamlFormat", () => {
   });
 
   describe("multi-document streams — formatted whole, never truncated", () => {
-    // Before this contract, formatToString("a: 1\n---\nb: 2\n") returned
-    // "a: 1\n" and silently destroyed documents 2..n (probe-verified
-    // downstream, writing format output back to disk). Streams now format
-    // every document, re-emitting each document's own framing.
     it("formats every document of a stream, preserving the separators", () => {
       const text = "a:   1\n---\nb:\n    c: 2\n";
-      assert.strictEqual(YamlFormat.formatToString(text), "a: 1\n---\nb:\n  c: 2\n");
+      assert.strictEqual(
+        YamlFormat.formatToString(text),
+        "a: 1\n---\nb:\n  c: 2\n",
+        'streams format every document, re-emitting each document\'s own framing; formatToString("a: 1\\n---\\nb: 2\\n") used to return "a: 1\\n" and silently destroy documents 2..n (probe-verified downstream, writing format output back to disk)'
+      );
     });
 
     it("is idempotent on a multi-document stream", () => {
@@ -148,13 +143,12 @@ describe("YamlFormat", () => {
     });
 
     it("a comment between --- and content stays where it was written", () => {
-      // It leads the ROOT NODE of the following document, so it emits on the
-      // marker's far side. This used to hoist above the marker, because the
-      // comment was stored as a document-level header block with no way to
-      // say "after the marker"; a node-level leading slot says exactly that,
-      // so the input is now a byte-identical fixed point.
       const text = "a: 1\n---\n# doc two\nb: 2\n";
-      assert.strictEqual(YamlFormat.formatToString(text), text);
+      assert.strictEqual(
+        YamlFormat.formatToString(text),
+        text,
+        'it leads the ROOT NODE of the following document, so it emits on the far side of the marker; it used to hoist above the marker while stored as a document-level header block with no way to say "after the marker", and a node-level leading slot says exactly that'
+      );
       assert.strictEqual(YamlFormat.formatToString(YamlFormat.formatToString(text)), text);
     });
 
@@ -168,12 +162,6 @@ describe("YamlFormat", () => {
     });
 
     it("the composer guarantees every later document has its own --- or a predecessor ...", () => {
-      // The stream path REFUSES a document after the first that has
-      // neither its own `---` nor a predecessor `...` (it could not be
-      // re-emitted with faithful framing). This pins the composer
-      // guarantee that makes the refusal branch unreachable for composer
-      // output — a composer change breaking the guarantee fails here
-      // instead of silently activating the refusal.
       const streams = [
         "a: 1\n---\nb: 2\n",
         "a: 1\n...\nb: 2\n",
@@ -193,7 +181,7 @@ describe("YamlFormat", () => {
         for (let i = 1; i < documents.length; i++) {
           assert.isTrue(
             documents[i]?.hasDocumentStart === true || documents[i - 1]?.hasDocumentEnd === true,
-            `document ${i} of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)} has neither its own --- nor a predecessor ...`
+            `document ${i} of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)} has neither its own --- nor a predecessor ...; the stream path REFUSES such a document (it could not be re-emitted with faithful framing), so a composer change breaking this guarantee fails here instead of silently activating that otherwise unreachable refusal`
           );
         }
       }
@@ -210,8 +198,11 @@ describe("YamlFormat", () => {
       assert.strictEqual(after.success.length, 2);
       assert.deepStrictEqual(after.success, before.success);
       assert.include(once, "---\nlockfileVersion:");
-      // Fixed point: formatting the formatted stream changes nothing.
-      assert.strictEqual(YamlFormat.formatToString(once), once);
+      assert.strictEqual(
+        YamlFormat.formatToString(once),
+        once,
+        "fixed point: formatting the formatted stream changes nothing"
+      );
     });
 
     it("a stream carrying %YAML/%TAG directives is left byte-identical (not re-emittable faithfully)", () => {
@@ -228,11 +219,13 @@ describe("YamlFormat", () => {
 
     it.effect("modify stays single-document: fails typed with MultiDocumentStream, never a guess", () =>
       Effect.gen(function* () {
-        // A YamlPath carries no document index, so which document of a
-        // stream it names is a rule the format does not define.
         const error = yield* Effect.flip(YamlFormat.modify("a: 1\n---\nb: 2\n", ["a"], 2));
         assert.instanceOf(error, YamlModificationError);
-        assert.strictEqual(error.diagnostics[0]?.code, "MultiDocumentStream");
+        assert.strictEqual(
+          error.diagnostics[0]?.code,
+          "MultiDocumentStream",
+          "a YamlPath carries no document index, so which document of a stream it names is a rule the format does not define"
+        );
         assert.notProperty(error, "reason");
       })
     );
@@ -262,14 +255,13 @@ describe("YamlFormat", () => {
   });
 
   describe("single-document %YAML/%TAG directives — refused, never corrupted", () => {
-    // Probe-verified downstream (independent oracle): the pre-fix path
-    // dropped the %TAG line but kept the !e!foo shorthand that depends on
-    // it, so the output failed TAG_RESOLVE_FAILED — a formatter turning a
-    // valid file into one no parser can read. Directive re-emission is
-    // unimplemented; until it lands, directive-carrying input is refused.
     it("a %TAG document is left byte-identical — never re-emitted without the directive its tags depend on", () => {
       const text = "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\n";
-      assert.deepStrictEqual(YamlFormat.format(text), []);
+      assert.deepStrictEqual(
+        YamlFormat.format(text),
+        [],
+        "probe-verified downstream (independent oracle): the pre-fix path dropped the %TAG line but kept the !e!foo shorthand that depends on it, so the output failed TAG_RESOLVE_FAILED; directive re-emission is unimplemented, and until it lands directive-carrying input is refused"
+      );
       assert.strictEqual(YamlFormat.formatToString(text), text);
     });
 
@@ -282,12 +274,18 @@ describe("YamlFormat", () => {
     it.effect("modify keeps a %TAG prologue byte for byte, never re-emits without the directive", () =>
       Effect.gen(function* () {
         const text = "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 1\n";
-        // The splice touches only the target span.
         const modifyToString1 = yield* YamlFormat.modifyToString(text, ["b"], 2);
-        assert.strictEqual(modifyToString1, "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 2\n");
-        // The whole-document pipeline renders the body after the verbatim prologue.
+        assert.strictEqual(
+          modifyToString1,
+          "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 2\n",
+          "the splice touches only the target span"
+        );
         const modifyToString2 = yield* YamlFormat.modifyToString(text, ["b"], [2]);
-        assert.strictEqual(modifyToString2, "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb:\n- 2\n");
+        assert.strictEqual(
+          modifyToString2,
+          "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb:\n- 2\n",
+          "the whole-document pipeline renders the body after the verbatim prologue"
+        );
       })
     );
 
@@ -308,12 +306,18 @@ describe("YamlFormat", () => {
         assert.deepStrictEqual(parsed4, {
           services: { redis: { image: "redis:8.10.3", restart: "always" } },
         });
-        // A CRLF prologue keeps its bytes; the re-rendered body is LF, as on every whole-document edit.
         const modifyToString5 = yield* YamlFormat.modifyToString("%YAML 1.2\r\n---\r\na: 1\r\n", ["b"], 2);
-        assert.strictEqual(modifyToString5, "%YAML 1.2\r\n---\r\na: 1\nb: 2\n");
-        // A marker-line comment belongs to the body and renders on its own line, as without directives.
+        assert.strictEqual(
+          modifyToString5,
+          "%YAML 1.2\r\n---\r\na: 1\nb: 2\n",
+          "a CRLF prologue keeps its bytes; the re-rendered body is LF, as on every whole-document edit"
+        );
         const modifyToString6 = yield* YamlFormat.modifyToString("%YAML 1.2\n--- # body\na: 1\n", ["b"], 2);
-        assert.strictEqual(modifyToString6, "%YAML 1.2\n---\n# body\na: 1\nb: 2\n");
+        assert.strictEqual(
+          modifyToString6,
+          "%YAML 1.2\n---\n# body\na: 1\nb: 2\n",
+          "a marker-line comment belongs to the body and renders on its own line, as without directives"
+        );
       })
     );
 
@@ -328,33 +332,38 @@ describe("YamlFormat", () => {
 
     it.effect("modify reads a long CRLF prologue in linear time, refused or kept", () =>
       Effect.gen(function* () {
-        // Each CRLF directive, comment and blank line has exactly one way to
-        // match, so a refused marker line fails without backtracking 2^n paths.
         const prologue = `%YAML 1.2\r\n${Str.repeat(40)("# note\r\n\r\n  \r\n")}`;
         const error = yield* Effect.flip(YamlFormat.modify(`${prologue}--- !!map\r\na: 1\r\n`, ["b"], 2));
-        assert.strictEqual(error.diagnostics[0]?.code, "DirectiveCarryingDocument");
+        assert.strictEqual(
+          error.diagnostics[0]?.code,
+          "DirectiveCarryingDocument",
+          "each CRLF directive, comment and blank line has exactly one way to match, so a refused marker line fails without backtracking 2^n paths"
+        );
         const modifyToString7 = yield* YamlFormat.modifyToString(`${prologue}---\r\na: 1\r\n`, ["b"], [2]);
         assert.strictEqual(modifyToString7, `${prologue}---\r\na: 1\nb:\n- 2\n`);
       })
     );
 
     it("a literal %TAG inside scalar content is content, not a directive — formats normally", () => {
-      // The refusal must be directive-token-level, never text scanning: a
-      // "%TAG ..." line inside a block scalar and a "%TAG" mid-scalar are
-      // both content, and the badly-spaced sibling key still reformats.
       const text = 'a:   1\nnote: "contains %TAG inside"\ntext: |\n  %TAG !e! tag:example.com,2000:\n';
       const out = YamlFormat.formatToString(text);
-      assert.strictEqual(out, 'a: 1\nnote: "contains %TAG inside"\ntext: |\n  %TAG !e! tag:example.com,2000:\n');
+      assert.strictEqual(
+        out,
+        'a: 1\nnote: "contains %TAG inside"\ntext: |\n  %TAG !e! tag:example.com,2000:\n',
+        'the refusal must be directive-token-level, never text scanning: a "%TAG ..." line inside a block scalar and a "%TAG" mid-scalar are both content, and the badly-spaced sibling key still reformats'
+      );
       assert.isTrue(Yaml.equals(out, text));
     });
   });
 
   describe("format — indentSequences", () => {
-    // Exercises the AST (node-path) stringifier: YamlFormattingOptions
-    // derives every YamlStringifyOptions field, including indentSequences.
     it("indents block sequences under mapping keys one level when set", () => {
       const options = YamlFormattingOptions.make({ indentSequences: true });
-      assert.strictEqual(YamlFormat.formatToString("key:\n- a\n- b\n", undefined, options), "key:\n  - a\n  - b\n");
+      assert.strictEqual(
+        YamlFormat.formatToString("key:\n- a\n- b\n", undefined, options),
+        "key:\n  - a\n  - b\n",
+        "exercises the AST (node-path) stringifier: YamlFormattingOptions derives every YamlStringifyOptions field, including indentSequences"
+      );
     });
 
     it("default formatting leaves sequences under mapping keys unindented", () => {
@@ -370,15 +379,15 @@ describe("YamlFormat", () => {
   });
 
   describe("quoteStyle", () => {
-    // Exercises the AST (node-path) stringifier: YamlFormattingOptions derives
-    // every YamlStringifyOptions field, quoteStyle included. On this path the
-    // option governs only scalars with no style of their own — a value the
-    // caller just inserted — because composed nodes carry their source style.
     it.effect("a modify-inserted value requiring quoting follows the option", () =>
       Effect.gen(function* () {
         const text = "deps:\n  a: 1\n";
         const modifyToString8 = yield* YamlFormat.modifyToString(text, ["deps", "a"], "*");
-        assert.strictEqual(modifyToString8, "deps:\n  a: '*'\n");
+        assert.strictEqual(
+          modifyToString8,
+          "deps:\n  a: '*'\n",
+          "exercises the AST (node-path) stringifier, where YamlFormattingOptions derives every YamlStringifyOptions field, quoteStyle included; on this path the option governs only scalars with no style of their own, a value the caller just inserted, because composed nodes carry their source style"
+        );
         const modifyToString9 = yield* YamlFormat.modifyToString(
           text,
           ["deps", "a"],
@@ -403,10 +412,12 @@ describe("YamlFormat", () => {
     );
 
     it("formatting preserves an existing scalar's own quote style rather than restyling it", () => {
-      // Reformatting is not a restyling pass: a single-quoted source scalar
-      // stays single-quoted even under quoteStyle "double".
       const options = YamlFormattingOptions.make({ quoteStyle: "double" });
-      assert.strictEqual(YamlFormat.formatToString("k: '*'\n", undefined, options), "k: '*'\n");
+      assert.strictEqual(
+        YamlFormat.formatToString("k: '*'\n", undefined, options),
+        "k: '*'\n",
+        'reformatting is not a restyling pass: a single-quoted source scalar stays single-quoted even under quoteStyle "double"'
+      );
     });
 
     it("YamlFormattingOptions.make constructs a validated instance carrying the derived field", () => {
@@ -426,16 +437,21 @@ describe("YamlFormat", () => {
     });
 
     it("single→double: content needing escaping gets proper double-quote escapes", () => {
-      // An inner double quote must be escaped as \" — the conservative lint
-      // fix skips this shape; the format path escapes it.
       assert.strictEqual(
         YamlFormat.formatToString("k: 'say \"hi\"'\n", undefined, requoteDouble),
-        'k: "say \\"hi\\""\n'
+        'k: "say \\"hi\\""\n',
+        'an inner double quote must be escaped as \\": the conservative lint fix skips this shape; the format path escapes it'
       );
-      // A literal backslash (literal in single-quoted YAML) becomes \\.
-      assert.strictEqual(YamlFormat.formatToString("k: 'a\\b'\n", undefined, requoteDouble), 'k: "a\\\\b"\n');
-      // A doubled '' (the one single-quote escape) decodes to ' and re-encodes plainly.
-      assert.strictEqual(YamlFormat.formatToString("k: 'it''s'\n", undefined, requoteDouble), 'k: "it\'s"\n');
+      assert.strictEqual(
+        YamlFormat.formatToString("k: 'a\\b'\n", undefined, requoteDouble),
+        'k: "a\\\\b"\n',
+        "a literal backslash (literal in single-quoted YAML) becomes \\\\"
+      );
+      assert.strictEqual(
+        YamlFormat.formatToString("k: 'it''s'\n", undefined, requoteDouble),
+        'k: "it\'s"\n',
+        "a doubled '' (the one single-quote escape) decodes to ' and re-encodes plainly"
+      );
     });
 
     it("double→single: a simple double-quoted scalar is re-quoted", () => {
@@ -460,14 +476,22 @@ describe("YamlFormat", () => {
     });
 
     it("double→single: content single quotes cannot express is skipped, never corrupted", () => {
-      // \n, \t escapes and control characters have no single-quoted spelling.
-      assert.strictEqual(YamlFormat.formatToString('k: "a\\nb"\n', undefined, requoteSingle), 'k: "a\\nb"\n');
-      assert.strictEqual(YamlFormat.formatToString('k: "a\\tb"\n', undefined, requoteSingle), 'k: "a\\tb"\n');
-      // A control character (BEL): the scalar must stay double-quoted. Its
-      // escape spelling may normalize (\x07 → \a), so compare against the
-      // no-requote baseline rather than the raw source bytes.
+      assert.strictEqual(
+        YamlFormat.formatToString('k: "a\\nb"\n', undefined, requoteSingle),
+        'k: "a\\nb"\n',
+        "\\n escapes have no single-quoted spelling"
+      );
+      assert.strictEqual(
+        YamlFormat.formatToString('k: "a\\tb"\n', undefined, requoteSingle),
+        'k: "a\\tb"\n',
+        "\\t escapes have no single-quoted spelling"
+      );
       const bel = 'k: "\\x07"\n';
-      assert.strictEqual(YamlFormat.formatToString(bel, undefined, requoteSingle), YamlFormat.formatToString(bel));
+      assert.strictEqual(
+        YamlFormat.formatToString(bel, undefined, requoteSingle),
+        YamlFormat.formatToString(bel),
+        "a control character (BEL) has no single-quoted spelling, so the scalar must stay double-quoted; its escape spelling may normalize (\\x07 → \\a), so the comparison is against the no-requote baseline rather than the raw source bytes"
+      );
     });
 
     it("plain scalars stay plain — quote-style normalization, not quote forcing", () => {
@@ -491,11 +515,12 @@ describe("YamlFormat", () => {
     });
 
     it("a quoted scalar folded on CR-only line breaks is skipped too", () => {
-      // A lone \r is a YAML line break (b-carriage-return): the scalar is
-      // multi-line even though its raw slice carries no \n, and re-quoting
-      // it from the folded value would collapse the layout.
       const text = "k: 'a\r  b'\n";
-      assert.strictEqual(YamlFormat.formatToString(text, undefined, requoteDouble), YamlFormat.formatToString(text));
+      assert.strictEqual(
+        YamlFormat.formatToString(text, undefined, requoteDouble),
+        YamlFormat.formatToString(text),
+        "a lone \\r is a YAML line break (b-carriage-return): the scalar is multi-line even though its raw slice carries no \\n, and re-quoting it from the folded value would collapse the layout"
+      );
     });
 
     it("quoted mapping keys and sequence items re-quote too", () => {
@@ -514,14 +539,16 @@ describe("YamlFormat", () => {
     it("comment and byte fidelity is preserved around requoted spans", () => {
       const text = "# top\na: 'x' # trail\nb: 2\n";
       assert.strictEqual(YamlFormat.formatToString(text, undefined, requoteDouble), '# top\na: "x" # trail\nb: 2\n');
-      // The computed edits are surgical: each one falls inside a quoted
-      // scalar's source span, touching nothing around it.
       const edits = YamlFormat.format(text, undefined, requoteDouble);
       assert.isAbove(edits.length, 0);
       const span = { offset: O.getOrElse(constant(-1))(Str.indexOf("'x'")(text)), length: "'x'".length };
       for (const edit of edits) {
         assert.isAtLeast(edit.offset, span.offset);
-        assert.isAtMost(edit.offset + edit.length, span.offset + span.length);
+        assert.isAtMost(
+          edit.offset + edit.length,
+          span.offset + span.length,
+          "the computed edits are surgical: each one falls inside a quoted scalar's source span, touching nothing around it"
+        );
       }
     });
 
@@ -592,9 +619,12 @@ describe("YamlFormat", () => {
       Effect.gen(function* () {
         const text = "first: unchanged\nsecond: 2\n";
         const edits = yield* YamlFormat.modify(text, ["second"], 5);
-        // Only the changed line's span should appear among the edits.
         for (const edit of edits) {
-          assert.isAtLeast(edit.offset, O.getOrElse(constant(-1))(Str.indexOf("second")(text)));
+          assert.isAtLeast(
+            edit.offset,
+            O.getOrElse(constant(-1))(Str.indexOf("second")(text)),
+            "only the changed line's span should appear among the edits"
+          );
         }
         const parsed15 = yield* Yaml.parse(apply(text, edits));
         assert.deepStrictEqual(parsed15, { first: "unchanged", second: 5 });
@@ -628,13 +658,12 @@ describe("YamlFormat", () => {
 
     it.effect("modify keeps the BOM when it falls back to the whole-document pipeline", () =>
       Effect.gen(function* () {
-        // Insertion, removal and an object value all leave the fast path.
         const modifyToString19 = yield* YamlFormat.modifyToString("\uFEFFa: 1\n", ["b"], 2);
-        assert.strictEqual(modifyToString19, "\uFEFFa: 1\nb: 2\n");
+        assert.strictEqual(modifyToString19, "\uFEFFa: 1\nb: 2\n", "insertion leaves the fast path");
         const modifyToString20 = yield* YamlFormat.modifyToString("\uFEFFa: 1\nb: 2\n", ["b"], undefined);
-        assert.strictEqual(modifyToString20, "\uFEFFa: 1\n");
+        assert.strictEqual(modifyToString20, "\uFEFFa: 1\n", "removal leaves the fast path");
         const modifyToString21 = yield* YamlFormat.modifyToString("\uFEFFa: 1\n", ["a"], { c: 3 });
-        assert.strictEqual(modifyToString21, "\uFEFFa:\n  c: 3\n");
+        assert.strictEqual(modifyToString21, "\uFEFFa:\n  c: 3\n", "an object value leaves the fast path");
         const modifyToString22 = yield* YamlFormat.modifyToString(
           "\uFEFFb: 1\na: 2\n",
           ["a"],
@@ -689,9 +718,6 @@ describe("YamlFormat", () => {
     );
   });
 
-  // #642. `jsValueToNode` lowered scalars only, so a mapping or sequence value
-  // fell through the node stringifier's `String(value)` fallback and landed in
-  // the document as the literal text `[object Object]`.
   describe("modify — a non-scalar value is lowered into nodes, never String()-coerced", () => {
     it.effect("appends a mapping to a sequence of mappings", () =>
       Effect.gen(function* () {
@@ -702,7 +728,11 @@ describe("YamlFormat", () => {
           { by: "human:other", at: "2026-09-02T00:00:00Z" },
           YamlStringifyOptions.make({ indentSequences: true })
         );
-        assert.notInclude(out, "[object Object]");
+        assert.notInclude(
+          out,
+          "[object Object]",
+          "`jsValueToNode` used to lower scalars only, so a mapping or sequence value fell through the node stringifier's `String(value)` fallback and landed in the document as the literal text `[object Object]`"
+        );
         assert.strictEqual(
           out,
           "verified:\n  - by: human:spencer\n    at: 2026-09-01T00:00:00Z\n  - by: human:other\n    at: 2026-09-02T00:00:00Z\nstatus: stable\n"
@@ -848,13 +878,16 @@ describe("YamlFormat", () => {
           path.push(0);
           replacement = [replacement];
         }
-        // Each input is admissible on its own; only insertion exceeds the cap.
         yield* Yaml.parse(text);
         yield* YamlFormat.modify("0\n", [], replacement);
         const error = yield* Effect.flip(YamlFormat.modify(text, path, replacement));
         assert.instanceOf(error, YamlModificationError);
         assert.deepStrictEqual(error.path, path);
-        assert.strictEqual(error.diagnostics[0]?.code, "NestingDepthExceeded");
+        assert.strictEqual(
+          error.diagnostics[0]?.code,
+          "NestingDepthExceeded",
+          "each input is admissible on its own; only insertion exceeds the cap"
+        );
         assert.strictEqual(error.diagnostics[0]?.message, "Nesting depth exceeded maximum of 256");
       })
     );
@@ -1012,12 +1045,8 @@ describe("YamlFormat", () => {
     );
   });
 
+  // decision: plain-merge-key-stays-plain
   describe("merge key", () => {
-    // A plain `<<` mapping key resolves to `tag:yaml.org,2002:merge` and
-    // splices the aliased mapping into its parent; `'<<'` is an ordinary
-    // string key that merges nothing. Quoting it on re-emission is a silent
-    // semantic rewrite — the document still parses and still round-trips,
-    // which is exactly why nothing caught it.
     it("leaves a plain merge key unquoted", () => {
       const text = "base: &base\n  a: 1\nderived:\n  <<: *base\n  b: 2\n";
       const out = YamlFormat.formatToString(text);
@@ -1044,9 +1073,6 @@ describe("YamlFormat", () => {
       assert.strictEqual(YamlFormat.formatToString(once), once);
     });
 
-    // The carve-out is deliberately narrow: it reads the key's SOURCE style,
-    // so a key the author quoted on purpose keeps the quotes that make it a
-    // literal string key rather than a merge key.
     it("preserves an explicitly single-quoted '<<' key as a literal string key", () => {
       const out = YamlFormat.formatToString("derived:\n  '<<': *base\n");
       assert.include(out, "'<<': *base");
@@ -1057,44 +1083,42 @@ describe("YamlFormat", () => {
       assert.include(out, '"<<": *base');
     });
 
-    // `<<` in value position is an ordinary string either way — plain and
-    // quoted resolve to the same scalar — so the carve-out does not reach it
-    // and the existing conservative quoting stands.
     it("does not change quoting of `<<` in value position", () => {
       const out = YamlFormat.formatToString("a: <<\n");
-      assert.include(out, "'<<'");
+      assert.include(
+        out,
+        "'<<'",
+        "`<<` in value position is an ordinary string either way (plain and quoted resolve to the same scalar), so the carve-out does not reach it and the existing conservative quoting stands"
+      );
     });
 
-    // The value path is the opposite case: a JS object key "<<" is a literal
-    // string key with no merge intent, so emitting it plain would CREATE
-    // merge semantics that the input never had. It stays quoted.
     it.effect("still quotes a '<<' key on the value path, where there is no merge intent", () =>
       Effect.gen(function* () {
         const out = yield* Yaml.stringify({ "<<": 1 });
-        assert.include(out, "'<<'");
+        assert.include(
+          out,
+          "'<<'",
+          'the value path is the opposite case: a JS object key "<<" is a literal string key with no merge intent, so emitting it plain would CREATE merge semantics that the input never had'
+        );
       })
     );
   });
 
+  type FixedPoint = readonly [name: string, text: string, formNote?: string];
+
   describe("keep-chomp block scalars — trailing blanks are VALUE, never doubled (P0 regression)", () => {
-    // Under `+` chomping the trailing line breaks are part of the scalar's
-    // value; the composer's blank-line-fidelity capture must not ALSO record
-    // them as spaceBefore (or a leading-blank embed on a terminal comment
-    // run), or emission renders both and the document grows one newline per
-    // format pass — non-idempotent, meaning-changing whitespace rot. The
-    // downstream scope table (savvy-web-systems, 2026-08-12) plus the shapes
-    // the diagnosis found beyond it, each pinned as a byte fixed point.
-    const fixedPoints: ReadonlyArray<readonly [string, string]> = [
-      // The scope table — previously-growing rows.
+    const scopeTableGrowingRows: ReadonlyArray<FixedPoint> = [
       ["|+ keep, trailing blank, sibling follows", "a: |+\n  text\n\nb: 1\n"],
       [">+ folded keep, trailing blank, sibling follows", "a: >+\n  text\n\nb: 1\n"],
       ["|2+ explicit indent + keep, trailing blank", "a: |2+\n  text\n\nb: 1\n"],
-      // The scope table — stable controls that must stay stable.
+    ];
+    const scopeTableStableControls: ReadonlyArray<FixedPoint> = [
       ["|+ keep, no trailing blank", "a: |+\n  text\nb: 1\n"],
       ["|+ keep at EOF, no sibling", "a: |+\n  text\n\n"],
       ["| clip, trailing blank", "a: |\n  text\n\nb: 1\n"],
       ["|- strip, trailing blank", "a: |-\n  text\n\nb: 1\n"],
-      // Beyond the table: every other site the same capture reaches.
+    ];
+    const sitesBeyondTheScopeTable: ReadonlyArray<FixedPoint> = [
       ["|+ keep, two trailing blanks, sibling", "a: |+\n  text\n\n\nb: 1\n"],
       ["|+ keep, terminal comment run", "a: |+\n  text\n\n# tail\n"],
       ["|+ keep, comment run then sibling", "a: |+\n  text\n\n# c\nb: 1\n"],
@@ -1102,23 +1126,31 @@ describe("YamlFormat", () => {
       ["seq: |+ keep item, blank, next item", "- |+\n  text\n\n- 2\n"],
       ["seq: |+ keep item, blank, terminal comment", "- |+\n  text\n\n# tail\n"],
       ["nested map |+ keep, blank, outer sibling", "m:\n  a: |+\n    text\n\nb: 1\n"],
-      // The formatter's canonical compact sequence form. The indented
-      // spelling only stayed byte-identical while the parser rejected a
-      // block scalar as the last item before an outer sibling (#2131).
-      ["nested seq |+ keep, blank, outer sibling", "m:\n- |+\n  text\n\nb: 1\n"],
+      [
+        "nested seq |+ keep, blank, outer sibling",
+        "m:\n- |+\n  text\n\nb: 1\n",
+        "the formatter's canonical compact sequence form; the indented spelling only stayed byte-identical while the parser rejected a block scalar as the last item before an outer sibling",
+      ],
       ["nested >+ folded keep, blank, outer sibling", "m:\n  a: >+\n    text\n\nb: 1\n"],
       ["doc root |+ keep, trailing comment", "|+\n  text\n\n# tail\n"],
       ["doc root |+ keep at EOF", "|+\n  text\n\n"],
     ];
+    const fixedPoints = [...scopeTableGrowingRows, ...scopeTableStableControls, ...sitesBeyondTheScopeTable];
 
-    for (const [name, text] of fixedPoints) {
+    for (const [name, text, formNote] of fixedPoints) {
       it(`fixed point: ${name}`, () => {
         const once = YamlFormat.formatToString(text);
-        assert.strictEqual(once, text);
-        // Idempotence is implied by the fixed point, but assert the second
-        // pass explicitly so a future non-fixed-point normalization of one
-        // of these shapes still has to prove it converges.
-        assert.strictEqual(YamlFormat.formatToString(once), once);
+        assert.strictEqual(
+          once,
+          text,
+          formNote ??
+            "under `+` chomping the trailing line breaks are part of the scalar's value; the composer's blank-line-fidelity capture must not ALSO record them as spaceBefore (or a leading-blank embed on a terminal comment run), or emission renders both and the document grows one newline per format pass; rows follow the downstream scope table (savvy-web-systems, 2026-08-12) plus the shapes the diagnosis found beyond it"
+        );
+        assert.strictEqual(
+          YamlFormat.formatToString(once),
+          once,
+          "idempotence is implied by the fixed point, but the second pass is asserted explicitly so a future non-fixed-point normalization of one of these shapes still has to prove it converges"
+        );
       });
     }
 

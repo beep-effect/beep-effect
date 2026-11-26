@@ -26,8 +26,6 @@ const Sample = S.Struct({
   dialect: S.Literals(["commonmark", "gfm"]),
 });
 
-// Source positions describe each rendering, so trees are compared after the
-// mdast boundary synthesizes sentinel positions for every node.
 const unpositioned = (value: unknown): unknown => {
   if (A.isArray(value)) return A.map(value, unpositioned);
   if (P.isObject(value))
@@ -62,7 +60,11 @@ describe("blockParser properties", () => {
         const reparsed = parseBlocks(rendered, { dialect: sample.dialect });
         const stringify1 = yield* Markdown.stringify(reparsed.root);
         assert.strictEqual(stringify1, rendered);
-        assert.deepStrictEqual(unpositioned(Mdast.toMdast(reparsed.root)), unpositioned(Mdast.toMdast(first.root)));
+        assert.deepStrictEqual(
+          unpositioned(Mdast.toMdast(reparsed.root)),
+          unpositioned(Mdast.toMdast(first.root)),
+          "source positions describe each rendering, so trees compare after the mdast boundary synthesizes sentinel positions"
+        );
         assert.isTrue(Str.startsWith(`${sample.heading} ${text}`)(rendered));
         assert.isTrue(Str.includes(`${sample.marker} ${text}`)(rendered));
         assert.strictEqual(first.root.position.end.offset, source.length);
@@ -79,28 +81,15 @@ describe("blockParser properties", () => {
   );
 });
 
-/**
- * The commonmark.js oracle's one known defect, corrected on its side exactly
- * as the corpus-level differential suite does (`oracle.property.test.ts`):
- * an emptied reference-only paragraph renders as `<p></p>` there.
- */
+// decision: oracle-empty-paragraph-corrected
 const correctOracleDefect = Str.replaceAll("<p></p>", "");
 
-/** Our HTML for `markdown` under the CommonMark dialect, or `undefined` on a guard trip. */
+// decision: commonmark-js-differential-oracle
 const renderOurs = (markdown: string): string | undefined => {
   const result = Markdown.parseResult(markdown, { dialect: "commonmark" });
   return Result.isFailure(result) ? undefined : normalizeHtml(renderHtml(result.success));
 };
 
-/**
- * Leaf-construct-dense block lines: list markers of every spelling and
- * padding (tabs, five spaces, empty items, ordered starts other than 1 under
- * a paragraph), fences with info strings and indented closers, the seven
- * HTML block kinds, multi-line link reference definitions, indented code
- * with trailing blank lines, and setext underlines — the constructs whose
- * scanners `incorporateLine`, `parseListMarker`, the code `continue`, the
- * HTML block start and `extractDefinitions` were split into helpers for.
- */
 const leafish = Arbitrary.schema(
   S.Array(
     S.Literals([
@@ -158,8 +147,6 @@ const leafish = Arbitrary.schema(
 ).pipe(Arbitrary.map((lines) => `${A.join(lines, "\n")}\n`));
 
 describe("blockParser differential oracle: commonmark.js 0.31.2", () => {
-  // A fixed seed and a high run count, so a refactor of the block scanners is
-  // checked against the same large input set on every run.
   it.prop(
     "agrees with the reference implementation on leaf-construct-dense documents",
     [leafish],

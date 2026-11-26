@@ -20,7 +20,6 @@ const Sample = S.Struct({ text: S.String, code: S.String, label: S.String });
 
 type Block = Root["children"][number] | undefined;
 
-/** The first text child's value of a paragraph block. */
 const paragraphText = (block: Block): string | undefined => {
   const first = block?.type === "paragraph" ? block.children[0] : undefined;
   return first?.type === "text" ? first.value : undefined;
@@ -30,7 +29,6 @@ const codeValue = (block: Block): string | undefined => (block?.type === "code" 
 
 const definitionUrl = (block: Block): string | undefined => (block?.type === "definition" ? block.url : undefined);
 
-/** A code value as the engine carries it: the final line terminator restored (CR content keeps its LF). */
 const carriedCodeValue = (code: string): string =>
   code === "" ? "" : `${code}${Str.endsWith("\r")(code) ? "\r\n" : "\n"}`;
 
@@ -70,7 +68,11 @@ describe("Mdast properties", () => {
         assert.deepStrictEqual(Mdast.toMdast(fromMdast1), plain);
         const [paragraph, code, definition] = admitted.children;
         assert.strictEqual(paragraphText(paragraph), sample.text);
-        assert.strictEqual(codeValue(code), carriedCodeValue(sample.code));
+        assert.strictEqual(
+          codeValue(code),
+          carriedCodeValue(sample.code),
+          "the engine carries a code value with its final line terminator restored, and CR content keeps its LF"
+        );
         assert.strictEqual(definitionUrl(definition), "./target");
       }),
     runs

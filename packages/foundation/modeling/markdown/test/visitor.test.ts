@@ -1,15 +1,4 @@
-// The visitor stream walk: enter/exit events in document pre-order over the
-// parsed tree, path/depth context, early termination, and the depth-guard
-// posture on decoded foreign trees.
-//
-// Sibling contract: the event union is an S.TaggedUnion of three tagged
-// structs (jsonc precedent) and the statics class exposes a single visit. Deviation, recorded: yaml and toml visit TEXT (their event
-// source is the parse itself), while this visitor walks an already-parsed
-// tree — that is what lets it stay infallible at the type level. The guard
-// posture mirrors stringify: a decoded foreign tree deeper than
-// MAX_NESTING_DEPTH surfaces deliberately (an Error event ending the walk),
-// never a defect — and the same tree fails stringifyResult typed, pinned
-// here as the posture link.
+// decision: visitor-walks-parsed-tree
 
 import { Markdown } from "@beep/markdown/Markdown";
 import { Blockquote, Paragraph, Point, Position, Root, Text } from "@beep/markdown/MarkdownNode";
@@ -39,7 +28,6 @@ const collect = Effect.fn("test.collect")(function* (root: Root) {
   return yield* MarkdownVisitor.visit(root).pipe(Stream.runCollect);
 });
 
-/** A plain-mdast tree of `depth` nested blockquotes around one paragraph. */
 const deepForeignTree = (depth: number): unknown => {
   let node: unknown = { type: "paragraph", children: [{ type: "text", value: "x" }] };
   for (let i = 0; i < depth; i++) {
@@ -115,28 +103,25 @@ describe("MarkdownVisitor", () => {
       const root = parse(source, { dialect: "gfm", frontmatter: true });
       const events = yield* collect(root);
 
-      // Balanced: every Enter has a matching LIFO Exit, and no Error events.
       const stack: Array<string> = [];
       for (const event of events) {
-        assert.notStrictEqual(event._tag, "Error");
+        assert.notStrictEqual(event._tag, "Error", "a parsed tree walks with no Error events");
         if (event._tag === "Enter") {
           stack.push(event.node.type);
         } else if (event._tag === "Exit") {
           assert.strictEqual(event.node.type, stack.pop());
         }
       }
-      assert.strictEqual(stack.length, 0);
+      assert.strictEqual(stack.length, 0, "balanced: every Enter has a matching LIFO Exit");
 
-      // Document order: frontmatter is the first child entered, and the gfm
-      // node types all appear.
       const entered = A.map(
         A.filter(events, (event) => event._tag === "Enter"),
         (event) => event.node.type
       );
       assert.strictEqual(entered[0], "root");
-      assert.strictEqual(entered[1], "frontmatter");
+      assert.strictEqual(entered[1], "frontmatter", "document order: frontmatter is the first child entered");
       for (const expected of ["heading", "listItem", "delete", "table", "tableRow", "tableCell", "footnoteReference"]) {
-        assert.include(entered, expected);
+        assert.include(entered, expected, "every gfm node type appears");
       }
     })
   );
@@ -151,8 +136,11 @@ describe("MarkdownVisitor", () => {
       );
       assert.isDefined(text);
       if (text !== undefined && text._tag === "Enter") {
-        // root > blockquote[0] > list[0] > listItem[0] > paragraph[0] > text[0]
-        assert.deepStrictEqual([...text.path], [0, 0, 0, 0, 0]);
+        assert.deepStrictEqual(
+          [...text.path],
+          [0, 0, 0, 0, 0],
+          "root > blockquote[0] > list[0] > listItem[0] > paragraph[0] > text[0]"
+        );
         assert.strictEqual(text.depth, 5);
       }
     })
@@ -191,9 +179,12 @@ describe("MarkdownVisitor", () => {
           { _tag: "Enter", node: root, path: [], depth: 0 },
           { _tag: "Enter", node: paragraph, path: [0], depth: 1 },
         ]);
-        // fromIterable pulls a whole chunk even when take requests only two events.
         assert.isAbove(consumed, 0);
-        assert.isAtMost(consumed, Stream.DefaultChunkSize);
+        assert.isAtMost(
+          consumed,
+          Stream.DefaultChunkSize,
+          "fromIterable pulls a whole chunk even when take requests only two events"
+        );
         if (previousReads !== undefined) {
           assert.strictEqual(consumed, previousReads);
         }
@@ -215,15 +206,17 @@ describe("MarkdownVisitor", () => {
   it.effect(
     "walks a tree exactly at the depth cap without an Error event",
     Effect.fnUntraced(function* () {
-      // Root(0) + 255 blockquotes + paragraph + text: max depth 257... keep
-      // below the cap: 254 blockquotes puts text at depth 256 == cap, legal.
-      const result = Mdast.fromMdastResult(deepForeignTree(254));
+      const blockquotesPuttingTextAtCap = 254;
+      const result = Mdast.fromMdastResult(deepForeignTree(blockquotesPuttingTextAtCap));
       assertSuccess(
         Result.map(result, () => undefined),
         undefined
       );
       const events = yield* result.pipe(Result.getOrThrow, collect);
-      assert.isFalse(A.some(events, (event) => event._tag === "Error"));
+      assert.isFalse(
+        A.some(events, (event) => event._tag === "Error"),
+        "254 blockquotes put the text at depth 256, exactly the cap, which is legal"
+      );
     })
   );
 
@@ -244,14 +237,14 @@ describe("MarkdownVisitor", () => {
       if (last !== undefined && last._tag === "Error") {
         assert.strictEqual(last.diagnostic.code, "NestingDepthExceeded");
       }
-      // The Error event is terminal — exactly one, nothing after it.
-      assert.strictEqual(A.filter(events, (event) => event._tag === "Error").length, 1);
-
-      // Posture link: the same tree fails stringify typed, never a defect.
-      assertFailure(
-        Result.mapError(Markdown.stringifyResult(tree), () => undefined),
-        undefined
+      assert.strictEqual(
+        A.filter(events, (event) => event._tag === "Error").length,
+        1,
+        "the Error event is terminal: exactly one, nothing after it"
       );
+
+      const stringifyFailsTyped = Result.mapError(Markdown.stringifyResult(tree), () => undefined);
+      assertFailure(stringifyFailsTyped, undefined);
     })
   );
 

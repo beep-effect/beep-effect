@@ -1,7 +1,3 @@
-// Source-offset lookups for position assertions. A test that asks where a
-// needle sits expects it to be there, so a miss throws instead of yielding
-// the `-1` a native `indexOf` would let slip into an offset comparison.
-
 import { dual, identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -17,7 +13,10 @@ export const offsetOf: {
 } = dual(2, (source: string, needle: string): number =>
   O.getOrThrowWith(
     Str.indexOf(needle)(source),
-    () => new Error(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(needle), identity)} does not occur`)
+    () =>
+      new Error(
+        `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(needle), identity)} does not occur; a native indexOf -1 would slip into the offset comparison`
+      )
   )
 );
 
@@ -28,6 +27,9 @@ export const lastOffsetOf: {
 } = dual(2, (source: string, needle: string): number =>
   O.getOrThrowWith(
     Str.lastIndexOf(needle)(source),
-    () => new Error(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(needle), identity)} does not occur`)
+    () =>
+      new Error(
+        `${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(needle), identity)} does not occur; a native indexOf -1 would slip into the offset comparison`
+      )
   )
 );

@@ -344,13 +344,12 @@ describe("g8 effective tag validation", () => {
   });
 
   it("does not validate tag-shaped text on an absorbed line that the lexer keeps as tokens", () => {
-    // The lexer lexes a tag-led continuation line as plain text, except one
-    // whose run ends at a `: ` value indicator: that line keeps its tag
-    // token, and the composer folds the raw line into the scalar without
-    // consuming the tag as a node property.
     const parsed = Yaml.parseAllResult("safe: text\n  !bad%GG key: v\n");
     const diagnostics = Result.isFailure(parsed) ? parsed.failure.diagnostics : [];
-    assert.isFalse(A.some(diagnostics, (diagnostic) => diagnostic.code === "UnresolvedTag"));
+    assert.isFalse(
+      A.some(diagnostics, (diagnostic) => diagnostic.code === "UnresolvedTag"),
+      "the lexer lexes a tag-led continuation line as plain text, except one whose run ends at a `: ` value indicator: that line keeps its tag token, and the composer folds the raw line into the scalar without consuming the tag as a node property"
+    );
   });
 });
 

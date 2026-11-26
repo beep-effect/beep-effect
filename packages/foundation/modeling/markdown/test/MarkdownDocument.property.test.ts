@@ -37,14 +37,12 @@ describe("MarkdownDocument schema property floor", () => {
   roundTrips("MarkdownDocument", Subject.MarkdownDocument);
 });
 
-// Mdast projection drops concrete marker extras; positions are source-relative
-// and must be excluded when comparing parses of different serializations.
-const semantic = (value: unknown): unknown => {
-  if (A.isArray(value)) return A.map(value, semantic);
+const withoutPositions = (value: unknown): unknown => {
+  if (A.isArray(value)) return A.map(value, withoutPositions);
   if (P.isObject(value))
     return R.map(
       R.filter(value, (_, key) => key !== "position"),
-      semantic
+      withoutPositions
     );
   return value;
 };
@@ -71,7 +69,11 @@ describe("MarkdownDocument parser laws", () => {
         const first = yield* Subject.MarkdownDocument.parse(source);
         const rendered = yield* Markdown.stringify(first.root);
         const second = yield* Subject.MarkdownDocument.parse(rendered);
-        assert.deepStrictEqual(semantic(Mdast.toMdast(second.root)), semantic(Mdast.toMdast(first.root)));
+        assert.deepStrictEqual(
+          withoutPositions(Mdast.toMdast(second.root)),
+          withoutPositions(Mdast.toMdast(first.root)),
+          "mdast drops marker extras, and positions are source-relative so two serializations never share them"
+        );
         assert.deepStrictEqual(
           A.map(second.headings, (entry) => [entry.text, entry.depth, entry.node.headingStyle]),
           A.map(first.headings, (entry) => [entry.text, entry.depth, entry.node.headingStyle])
@@ -98,7 +100,10 @@ describe("MarkdownDocument parser laws", () => {
         const formatted = MarkdownFormat.formatToString(source, undefined, options);
         assert.strictEqual(MarkdownFormat.formatToString(formatted, undefined, options), formatted);
         const parsed = yield* Subject.MarkdownDocument.parse(formatted);
-        assert.deepStrictEqual(semantic(Mdast.toMdast(parsed.root)), semantic(Mdast.toMdast(original.root)));
+        assert.deepStrictEqual(
+          withoutPositions(Mdast.toMdast(parsed.root)),
+          withoutPositions(Mdast.toMdast(original.root))
+        );
       }),
     runs
   );

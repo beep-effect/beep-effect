@@ -18,11 +18,14 @@ describe("indexed diagnostic batches", () => {
       const records = A.makeBy(count - 1, (i) =>
         RawDiagnostic.make({ code: "DuplicateKey", message: "Repeated key", offset: (i + 1) * 5, length: 1 })
       );
-      // The index scans with one global line-break RegExp: one exec per break plus the final miss.
       const reads = vi.spyOn(RegExp.prototype, "exec");
       try {
         const index = YamlDiagnostic.positionIndex(text);
-        assert.strictEqual(reads.mock.calls.length, count + 1);
+        assert.strictEqual(
+          reads.mock.calls.length,
+          count + 1,
+          "the index scans with one global line-break RegExp: one exec per break plus the final miss"
+        );
         const diagnostics = YamlDiagnostic.fromRawBatch(records, text, index);
         assert.strictEqual(diagnostics.length, count - 1);
         assert.deepStrictEqual(

@@ -23,8 +23,6 @@ import type {
   MaterializedBlock,
 } from "@beep/markdown/internal/blockTypes";
 
-// Each parse receives a fresh dialect composition. The shared registry's
-// construct table and ordered starts are never mutated by boundary tests.
 const withDialect = (dialect: BlockDialect, run: () => void): void => {
   const lookup = vi.spyOn(BlockRegistry, "blockDialect").mockReturnValue(dialect);
   try {
@@ -33,7 +31,6 @@ const withDialect = (dialect: BlockDialect, run: () => void): void => {
     lookup.mockRestore();
   }
 };
-/** `base` with the construct for `type` materializing through `materialize` instead. */
 const withMaterialize = (
   base: BlockDialect,
   type: BlockType,
@@ -114,8 +111,11 @@ describe("blockParser scanner boundary", () => {
         assert.isFalse(A.contains(container.children, replacement));
         scanner.setLastLineLength(100);
         scanner.finalizeBlock(attachedReplacement, 0);
-        // Restore the scan tip to the document before the core starts run.
-        assert.strictEqual(scanner.tip, container);
+        assert.strictEqual(
+          scanner.tip,
+          container,
+          "the scan tip is restored to the document before the core starts run"
+        );
       });
     })
   );
@@ -130,7 +130,11 @@ describe("blockParser scanner boundary", () => {
           assert.throws(() => parseBlocks(""), /document construct did not materialize a root/);
         });
       }
-      assert.strictEqual(blockDialect("commonmark"), dialect);
+      assert.strictEqual(
+        blockDialect("commonmark"),
+        dialect,
+        "each parse gets a fresh composition; the shared registry's construct table and starts are never mutated"
+      );
     })
   );
   it.effect("tries the dialect's own starts after an injected start declines", () =>
@@ -144,11 +148,13 @@ describe("blockParser scanner boundary", () => {
 it.effect("omits unmaterialized extension blocks and nested roots", () =>
   Effect.sync(() => {
     withStart((scanner, container) => {
-      const missing = scanner.insertBefore(container, "definition");
-      // insertBefore a root intentionally returns a detached block; the
-      // extension owns attaching that block to the document.
-      container.children.push(missing);
-      assert.strictEqual(missing.open, false);
+      const detachedBeforeRoot = scanner.insertBefore(container, "definition");
+      container.children.push(detachedBeforeRoot);
+      assert.strictEqual(
+        detachedBeforeRoot.open,
+        false,
+        "insertBefore a root returns a detached block on purpose; the extension owns attaching it"
+      );
     });
     const dialect = blockDialect("commonmark");
     withDialect(withMaterialize(dialect, "heading", materializeTo(undefined)), () => {

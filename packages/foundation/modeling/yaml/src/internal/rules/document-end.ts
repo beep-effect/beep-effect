@@ -98,7 +98,6 @@ const finalDocumentStart = (ctx: LintContext, tail: YamlToken): number => {
 
 const isRemovableEndMarker = (ctx: LintContext, tail: YamlToken): boolean => {
   const lineText = ctx.lines[tail.line]?.text ?? "";
-  // Compose only the final document: ctx.document is the first one.
   const finalDocument = composeFirstDocument(
     Str.slice(finalDocumentStart(ctx, tail))(ctx.text),
     ParseOptionsInput.make({ uniqueKeys: false })
