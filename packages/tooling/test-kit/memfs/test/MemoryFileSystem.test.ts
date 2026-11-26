@@ -36,9 +36,7 @@ const watchEvents = Effect.fnUntraced(function* (
     .watch(path)
     .pipe(Stream.take(count), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
 
-  // PORT NOTE: upstream mutates immediately after the fork; the port yields
-  // once so the child provably registers its subscription first (the FIFO
-  // scheduler runs it to its first real suspension, past `watchers.add`).
+  // decision: watch-collectors-yield-before-mutating
   yield* Effect.yieldNow;
   yield* mutation;
   const join1 = yield* Fiber.join(events);
@@ -165,13 +163,15 @@ layer(MemoryFileSystem.layer, { timeout: "30 seconds" })("FileSystem (memory-spe
       const writeExit = yield* Effect.exit(file.writeAll(new Uint8Array([1])));
       assertExitFailure(writeExit, Cause.fail(writeExit.pipe(Exit.findError, Result.getOrThrow)));
 
-      // A negative length is NOT invalid: node clamps it to 0 (pinned in
-      // ErrnoParityContract.ts), so only non-integers and unsafe integers stay here.
       for (const size of [1.5, Number.MAX_SAFE_INTEGER + 1]) {
         const exit = yield* Effect.exit(file.truncate(size));
         const error = exit.pipe(Exit.findError, Result.getOrThrow);
         assertExitFailure(exit, Cause.fail(error));
-        assert.strictEqual(error.reason._tag, "BadArgument");
+        assert.strictEqual(
+          error.reason._tag,
+          "BadArgument",
+          "only non-integers and unsafe integers are BadArgument; a negative length clamps to 0, as on node"
+        );
         assert.strictEqual(error.reason.method, "truncate");
       }
 
