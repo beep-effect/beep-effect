@@ -76,8 +76,10 @@ describe("vault sync status subscription", () => {
       yield* Deferred.succeed(finish, undefined);
       yield* reaches(finished);
       const seen = yield* Ref.get(calls);
-      // One subscription delivered both frames; no status re-read was issued.
-      expect(seen).toEqual(["WatchVaultSyncStatus", "WatchVaultSyncStatus"]);
+      expect(seen, "one subscription delivered both frames; no status re-read was issued").toEqual([
+        "WatchVaultSyncStatus",
+        "WatchVaultSyncStatus",
+      ]);
     })
   );
 
@@ -104,7 +106,6 @@ describe("vault sync status subscription", () => {
       const reconnected = yield* status(true, null);
       const probed = yield* Deferred.make<void>();
       const calls = yield* Ref.make<ReadonlyArray<string>>([]);
-      // The sidecar pushes the availability change itself: the panel issues no status re-read.
       const client = DesktopSyncClient.of(((tag: string) =>
         tag === "WatchVaultSyncStatus"
           ? Stream.concat(
@@ -132,7 +133,10 @@ describe("vault sync status subscription", () => {
       const after = yield* reaches(true);
       assertNone(after.disconnectReason);
       const seen = yield* Ref.get(calls);
-      expect(seen).toEqual(["WatchVaultSyncStatus", "WatchVaultSyncStatus"]);
+      expect(seen, "the sidecar pushes the availability change itself: the panel issues no status re-read").toEqual([
+        "WatchVaultSyncStatus",
+        "WatchVaultSyncStatus",
+      ]);
     })
   );
 });

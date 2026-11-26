@@ -25,11 +25,6 @@ describe("persisted code blocks", { concurrent: false }, () => {
   it.effect(
     "are copyable, and scroll rather than wrap",
     Effect.fnUntraced(function* () {
-      // Lexical renders code inside a contenteditable whose `white-space` is
-      // `pre-wrap`, so a long line folded back on itself instead of scrolling — code
-      // that wraps at an arbitrary column has to be reassembled in the reader's head.
-      // And there was no way to take it: the only way to use a snippet the assistant
-      // wrote was to select it by hand and hope the selection missed the prose.
       const { container } = render(<EditorViewer state={state} />);
       const screen = within(container);
 
@@ -38,10 +33,13 @@ describe("persisted code blocks", { concurrent: false }, () => {
       expect(block).toHaveTextContent("const result = await fetch");
       expect(screen.getByTestId("code-block-copy")).toBeInTheDocument();
 
-      // The code does not wrap, and its container is what scrolls.
       const code = block.querySelector("code");
-      expect(code?.className).toContain("whitespace-pre");
-      expect(block.querySelector("pre")?.className).toContain("overflow-x-auto");
+      expect(code?.className, "Lexical's pre-wrap contenteditable would fold long lines; code must not wrap").toContain(
+        "whitespace-pre"
+      );
+      expect(block.querySelector("pre")?.className, "the code's container is what scrolls").toContain(
+        "overflow-x-auto"
+      );
     })
   );
 });

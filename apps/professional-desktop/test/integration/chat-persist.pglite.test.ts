@@ -46,9 +46,6 @@ import { UsageRecordSink, UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
 import { migrateOnBoot } from "@/runtime/Migrations";
 
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
-// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
-// database has to register the bundled extension exactly as the sidecar's
-// `makeBundledPgliteLayer` does.
 const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
@@ -83,17 +80,15 @@ if (!shouldRunPgliteIntegration) {
           const workspaceId = yield* decodeWorkspaceId(2);
           const thread = yield* ops.createThread(workspaceId, "Persisted matter");
 
-          // The stream must complete (the finalize defect previously hung it),
-          // emitting the fixture's four blocks: heading, paragraph, list, code.
           const blocks = yield* ops
             .sendMessage(thread.id, userDocument("Hello persistence"))
             .pipe(Stream.runCollect, Effect.map(Chunk.fromIterable));
-          expect(Chunk.size(blocks)).toBe(4);
+          expect(Chunk.size(blocks), "the stream completes with the fixture's heading, paragraph, list and code").toBe(
+            4
+          );
 
-          // The assistant turn must be persisted and round-trip back through the
-          // jsonb column on read.
           const timeline = yield* ops.getTimeline(thread.id);
-          expect(timeline.turns.length).toBe(2);
+          expect(timeline.turns.length, "the assistant turn persists and round-trips through the jsonb column").toBe(2);
 
           const roles = A.flatMap(timeline.turns, (turn) =>
             A.flatMap(turn.items, (item) => (item.kind === "message" ? [item.role] : []))
@@ -108,8 +103,9 @@ if (!shouldRunPgliteIntegration) {
             );
             expect(codeBlock?._tag).toBe("pre");
             if (codeBlock?._tag === "pre") {
-              // The Option-bearing field survived the jsonb round-trip.
-              expect(O.isOption(codeBlock.language)).toBe(true);
+              expect(O.isOption(codeBlock.language), "the Option-bearing field survives the jsonb round-trip").toBe(
+                true
+              );
               expect(O.getOrNull(codeBlock.language)).toBe("text");
             }
           }

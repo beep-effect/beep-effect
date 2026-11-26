@@ -34,8 +34,6 @@ export interface IntakeHandlers {
   readonly SetWorkspaceVault?: (payload: unknown) => Effect.Effect<WorkspaceVaultConfig, IntakeRpcError>;
 }
 
-// A fake RPC client: an RPC with no handler is a test defect, not a failure the
-// machine should recover from.
 export const intakeClient = (handlers: IntakeHandlers): DesktopIntakeClient["Service"] =>
   DesktopIntakeClient.of(((tag: keyof IntakeHandlers, payload: unknown) => {
     const handler = handlers[tag];
@@ -58,8 +56,6 @@ const startIntakeWithRetryBase = (configRetryBaseMillis: number) => (client: Des
 
 export const startIntake = startIntakeWithRetryBase(2000);
 
-// A retry test advances its own TestClock, so it runs outside the shared layer
-// block and brings a Reactivity service of its own.
 export const startIntakeIsolated = (configRetryBaseMillis: number) => (client: DesktopIntakeClient["Service"]) =>
   startIntakeWithRetryBase(configRetryBaseMillis)(client).pipe(
     Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make)
@@ -67,12 +63,10 @@ export const startIntakeIsolated = (configRetryBaseMillis: number) => (client: D
 
 type IntakeActor = Effect.Success<ReturnType<typeof startIntake>>;
 
-// Emitted events reach listeners after the snapshot that produced them, so a
-// test waits on this queue instead of reading an array right after `waitFor`.
 export const recordOutcomes = Effect.fnUntraced(function* (actor: IntakeActor) {
-  const outcomes = yield* Queue.unbounded<VaultSelectionOutcome>();
-  actor.on("vault.outcome", (event) => Queue.offerUnsafe(outcomes, event.outcome));
-  return outcomes;
+  const emittedAfterTheirSnapshot = yield* Queue.unbounded<VaultSelectionOutcome>();
+  actor.on("vault.outcome", (event) => Queue.offerUnsafe(emittedAfterTheirSnapshot, event.outcome));
+  return emittedAfterTheirSnapshot;
 });
 
 export const recordSettledBatches = Effect.fnUntraced(function* (actor: IntakeActor) {

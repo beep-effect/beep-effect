@@ -25,10 +25,6 @@ describe("the viewer encodes a message once", { concurrent: false }, () => {
   it.effect(
     "does not re-serialize an unchanged state on every render",
     Effect.fnUntraced(function* () {
-      // A transcript re-renders on every streamed block, and the viewer re-encoded on
-      // each one — every message already on screen serialized again, from scratch, to
-      // produce a string identical to the one it produced last time. The cost scaled
-      // with the length of the conversation and was paid per frame of the answer.
       const state = yield* documentToEditorState(document);
       const encodedState = yield* encodeEditorState(state);
       const spy = vi.spyOn(JSON, "stringify");
@@ -42,7 +38,6 @@ describe("the viewer encodes a message once", { concurrent: false }, () => {
       const subjectAfterFirst = countSubjectEncodes();
       expect(subjectAfterFirst).toBeGreaterThan(0);
 
-      // Re-render with the SAME state, the way a streaming transcript does.
       rerender(<EditorViewer state={state} />);
       rerender(<EditorViewer state={state} />);
       rerender(<EditorViewer state={state} />);
@@ -51,10 +46,11 @@ describe("the viewer encodes a message once", { concurrent: false }, () => {
       const subjectAfterRerenders = countSubjectEncodes();
       spy.mockRestore();
 
-      // Some stringify calls come from Lexical itself; what must not happen is the
-      // viewer serializing this state again, once per render, forever.
-      expect(afterRerenders - afterFirst).toBeLessThan(afterFirst);
-      expect(subjectAfterRerenders).toBe(subjectAfterFirst);
+      expect(afterRerenders - afterFirst, "some stringify calls come from Lexical itself").toBeLessThan(afterFirst);
+      expect(
+        subjectAfterRerenders,
+        "a streaming transcript re-renders the same state per block; the viewer must not serialize it again each time"
+      ).toBe(subjectAfterFirst);
 
       yield* Effect.void;
     })

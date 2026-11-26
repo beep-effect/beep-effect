@@ -114,11 +114,8 @@ const IpcStdioLive = Layer.unwrap(
       (path) => fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
     );
 
-    // This child scope closes after process termination, draining stderr before
-    // either temporary directory is removed.
     const scope1 = yield* Effect.scope;
-    const stderrScope = yield* Scope.fork(scope1);
-    // Boot the real sidecar; join its exit when the scope closes.
+    const stderrDrainedAfterExit = yield* Scope.fork(scope1);
     const sidecarBinaryPath = yield* resolveSidecarBinaryPath;
     const proc = yield* Effect.acquireRelease(
       Effect.sync(() =>
@@ -138,10 +135,8 @@ const IpcStdioLive = Layer.unwrap(
       ),
       (child) => Effect.sync(() => child.kill()).pipe(Effect.andThen(Effect.promise(() => child.exited)))
     );
-    yield* waitForSidecarBoot(proc.stderr).pipe(Scope.provide(stderrScope), Effect.timeout("20 seconds"));
+    yield* waitForSidecarBoot(proc.stderr).pipe(Scope.provide(stderrDrainedAfterExit), Effect.timeout("20 seconds"));
 
-    // Bridge the child's stdio into an Effect Socket: stdout → inbound frames,
-    // stdin ← outbound frames (verbatim ndjson, encoded UTF-8 by fromTransformStream).
     const writable = new WritableStream<Uint8Array>({
       write(chunk) {
         proc.stdin.write(chunk);
@@ -175,7 +170,6 @@ if (!shouldRun) {
 } else {
   describe("Professional desktop sidecar ipc stdio", { concurrent: false }, () => {
     it.layer(IpcStdioLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
-      // Boot retains its 20-second deadline; RPC work retains its 30-second deadline.
       it.effect("streams a fixture turn over the stdio rpc transport", () =>
         ipcStdioProgram.pipe(Effect.timeout("30 seconds"))
       );

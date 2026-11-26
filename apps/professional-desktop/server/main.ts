@@ -23,9 +23,6 @@
  * @since 0.0.0
  */
 
-// Guard IPC stdout before application and sidecar service modules load. The
-// prelude's functional utility imports are covered by the IPC stdio integration
-// test, which proves startup emits only protocol frames on stdout.
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
@@ -60,23 +57,16 @@ import type { ServeError } from "effect/http/HttpServerError";
 import type * as Redacted from "effect/Redacted";
 import type { DesktopStartupError } from "@/runtime/Layer";
 
-// Loopback rpc port; defaults to 3939 (the desktop chat surface's sidecar
-// port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
 const PORT = Effect.runSync(Config.Port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
+// decision: http-idle-timeout-at-bun-max
+const bunMaxIdleTimeoutSeconds = 255;
 
-// The full desktop group includes write-capable workspace vault, document
-// intake, vault sync, ontology workbench, and contradiction-triage RPCs. HTTP only exposes that
-// group when the per-launch bearer token is configured; otherwise dev HTTP falls back to
-// chat-only RPCs so loopback HTTP never exposes non-chat writes without an
-// unguessable shell-issued token.
-// IPC keeps the full group because it is reachable only through the Tauri shell
-// bridge, where `sidecar_send` also requires the same per-launch token.
+// decision: http-desktop-rpcs-require-launch-token
 const DesktopRpcServer = RpcServer.layer(DesktopRpcs).pipe(Layer.provide(RuntimeLive));
 const ChatOnlyRpcServer = RpcServer.layer(ChatRpcs).pipe(Layer.provide(RuntimeLive));
 
-// HTTP transport (default): one HttpRouter carries the rpc protocol and the CORS
-// middleware via layer memoization, served by HttpRouter.serve.
+// decision: http-rpc-handlers-inside-served-app
 const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
   const RpcCors = HttpRouter.middleware(
     HttpMiddleware.cors({
@@ -107,16 +97,10 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
         Layer.provide(OntologyMcpConfigLive),
         Layer.provide(ExecutionLedgerDrizzle),
         Layer.provide(ExecutionAuthorityConfigLive),
-        // The same module-level const RuntimeLive provides: layer memoization
-        // builds one PGlite instance shared by the rpc handlers and the
-        // governed MCP gate's execution ledger.
         Layer.provide(PgliteDrizzleLive),
         Layer.provide(HttpRouter.layer)
       ),
   });
-  // HTTP, the gated `/vault-sync/rpc` remote CLI protocol and MCP over the same hosted Model the
-  // desktop RPC handlers use: the host and its store are the same module-level layer values, so
-  // memoization builds one Model and one PGlite. Without a launch token none of them is mounted.
   const VaultSyncTransport = O.match(RPC_SESSION_TOKEN, {
     onNone: () => Layer.empty,
     onSome: (token: Redacted.Redacted<string>) =>
@@ -126,7 +110,7 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
         Layer.provide(PgliteDrizzleLive),
         Layer.provide(BunServices.layer),
         Layer.provide(HttpRouter.layer),
-        // A refused admission leaves vault sync without a writer; the rest of the sidecar still serves.
+        // decision: vault-sync-transport-failure-is-non-fatal
         Layer.catchCause((cause) =>
           Layer.effectDiscard(
             Effect.logError("vault sync transport is unavailable").pipe(
@@ -137,26 +121,14 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
       ),
   });
   const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp, VaultSyncTransport);
-  // HttpRouter.serve builds its app in a forked layer memo map and serves only the
-  // router built there, so the rpc handlers must sit inside the served app: a
-  // sibling `RpcServerLive.pipe(Layer.provideMerge(App))` outside `serve` would
-  // build a second, unserved protocol (and a second PGlite runtime) and register
-  // the handlers on that one.
   return HttpRouter.serve(RpcServerLive.pipe(Layer.provideMerge(App))).pipe(
-    // Bun's default 10s idleTimeout severs streamed responses during the silent
-    // tail of a turn (no bytes flow while the kernel thinks); 255s is Bun's max
-    // and covers the turn budget. Mirrors the POC.
-    Layer.provide(BunHttpServer.layer({ hostname: "127.0.0.1", port: PORT, idleTimeout: 255 })),
+    Layer.provide(BunHttpServer.layer({ hostname: "127.0.0.1", port: PORT, idleTimeout: bunMaxIdleTimeoutSeconds })),
     Layer.provide(RpcSerialization.layerNdjson),
     Layer.provide(BunCrypto.layer)
   );
 };
 
-// IPC transport: ndjson rpc frames ride stdin/stdout (bridged to the webview by
-// the Tauri Rust shell). Logs are pinned to stderr so they never interleave with
-// the stdout frame stream the bridge parses. `mergeWithExisting: false` drops the
-// default stdout console logger; `Logger.tracerLogger` is re-added so log lines
-// still land as events on the current span.
+// decision: ipc-stdout-reserved-for-protocol-frames
 const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
   DesktopRpcServer.pipe(
     Layer.provide(RpcServer.layerProtocolStdio),
@@ -170,9 +142,6 @@ const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
 const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
   Layer.tap(
     Effect.fnUntraced(function* () {
-      // Read the declaration rather than the OntologyMcpConfig service: the IPC
-      // branch never mounts the MCP transport, so requiring the service here
-      // would infect a transport that has no ontology MCP surface at all.
       const ontologyMcpMutationsEnabled = yield* OntologyMcpMutationsEnabledConfig;
       yield* Effect.logInfo("professional desktop sidecar ready").pipe(
         Effect.annotateLogs({

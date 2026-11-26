@@ -1,6 +1,3 @@
-// Seeding: makeWith and layerWith seeds, the tagged entries (files with modes
-// and mtimes, directories, symlinks) and the seed options (root).
-
 import { MemoryFileSystem } from "@beep/memfs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
@@ -41,18 +38,20 @@ describe("MemoryFileSystem.makeWith", () => {
 
   it.effect("fails typed — never a defect — when the seed contradicts itself", () =>
     Effect.gen(function* () {
-      // "/a" is seeded as a FILE, then "/a/b" needs it as a directory.
       const error = yield* Effect.flip(MemoryFileSystem.makeWith({ "/a": "file content", "/a/b": "child" }));
       assert.strictEqual(error._tag, "PlatformError");
-      assert.strictEqual(error.reason._tag, "AlreadyExists");
+      assert.strictEqual(
+        error.reason._tag,
+        "AlreadyExists",
+        '"/a" is seeded as a file, then "/a/b" needs it as a directory'
+      );
     })
   );
 });
 
 describe("tagged seed entries — directories, symlinks and modes", () => {
-  it.effect("one seed literal describes a whole tree — files, empty dirs, symlinks, modes", () =>
+  it.effect("one seed literal describes the whole downstream lockdown tree — files, empty dirs, symlinks, modes", () =>
     Effect.gen(function* () {
-      // The downstream lockdown fixture, expressed as a single literal.
       const fs = yield* MemoryFileSystem.makeWith({
         "/root/.repos/blocked/src/a.ts": "export {}\n",
         "/root/.git/modules/.repos/blocked": MemoryFileSystem.directory(),
@@ -90,8 +89,11 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
       assert.strictEqual(readLink9, "/target.txt");
       const readFileString10 = yield* fs.readFileString("/link.txt");
       assert.strictEqual(readFileString10, "pointed-at");
-      // stat follows the link; the entry itself is a SymbolicLink to readLink.
-      assert.strictEqual((yield* fs.stat("/link.txt")).type, "File");
+      assert.strictEqual(
+        (yield* fs.stat("/link.txt")).type,
+        "File",
+        "stat follows the link; the entry itself is a SymbolicLink to readLink"
+      );
     })
   );
 
@@ -138,9 +140,8 @@ describe("tagged seed entries — directories, symlinks and modes", () => {
         "/repo/src": MemoryFileSystem.directory({ mode: 0o555 }),
       });
       assert.strictEqual((yield* fs.stat("/repo/src")).mode & 0o7777, 0o555);
-      // The earlier child is untouched.
       const readFileString14 = yield* fs.readFileString("/repo/src/index.ts");
-      assert.strictEqual(readFileString14, "export {}\n");
+      assert.strictEqual(readFileString14, "export {}\n", "the earlier child is untouched");
     })
   );
 

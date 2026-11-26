@@ -53,8 +53,10 @@ it.effect("applied seed contracts require seed and root while accepting undefine
     const isApplied = S.is(AppliedSeed);
     assert.isTrue(isApplied({ seed: {}, root: undefined }));
     assert.isTrue(isApplied({ seed: { "/hello.txt": "hello" }, root: "/repo" }));
-    // Schema ownership preserves the string domain; applyRoot owns path validation.
-    assert.isTrue(isApplied({ seed: {}, root: "relative" }));
+    assert.isTrue(
+      isApplied({ seed: {}, root: "relative" }),
+      "the schema keeps the whole string domain; applyRoot owns path validation"
+    );
     assert.isTrue(isApplied({ seed: {}, root: "" }));
     assert.isFalse(isApplied({ seed: {} }));
     assert.isFalse(isApplied({ root: undefined }));

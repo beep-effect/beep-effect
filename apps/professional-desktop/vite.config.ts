@@ -4,7 +4,6 @@ import * as Str from "effect/String";
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 
-// Lexical 0.46 emits two prod bundles with a pure annotation before `return`.
 const lexicalReactProdModule =
   /node_modules[\\/]@lexical[\\/]react[\\/]dist[\\/]Lexical(ContentEditable|ErrorBoundary)\.prod\.mjs(?:\?.*)?$/;
 const misplacedPureAnnotationBeforeReturn = /\/\*#__PURE__\*\/\s*(?=return\b)/g;
@@ -23,8 +22,6 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
   },
 });
 
-// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
-// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
 // fallow-ignore-next-line code-duplication -- the `.ts`-to-`.tsx` resolver is copied into both Vite composition roots (Storybook is the other). Owner: @beep/professional-desktop. Exit: import it from a shared Vite tooling module once one exists, or delete when Vite applies the TypeScript source fallback.
 const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   name: "beep:resolve-uniform-typescript-source-specifiers",
@@ -42,6 +39,19 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   },
 });
 
+const htmlFamilySplitsUnder750kB = [
+  {
+    name: "html-schema-model",
+    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]src[\\/]Html\.model\.ts$/,
+    priority: 34,
+  },
+  {
+    name: "html-metadata",
+    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]src[\\/](?:Html\.meta|internal[\\/]Html\.language-tag-registry\.generated)\.ts$/,
+    priority: 34,
+  },
+];
+
 const initialChunkGroups = [
   {
     name: "iana-media-types",
@@ -57,25 +67,12 @@ const initialChunkGroups = [
     test: /node_modules[\\/](sonner|tailwind-merge|clsx|class-variance-authority|@base-ui|@phosphor-icons)[\\/]/,
     priority: 30,
   },
-  // These eagerly loaded workspace families remain part of startup; the groups
-  // only give their stable dependency boundaries separate cacheable outputs.
   {
     name: "storage-vendor",
     test: /(?:node_modules[\\/]drizzle-orm[\\/]|packages[\\/]ecosystem[\\/]effect-drizzle[\\/])/,
     priority: 34,
   },
-  // Html.model and the generated metadata tables are independently addressable
-  // modules and would otherwise make the HTML family exceed the 750 kB cap.
-  {
-    name: "html-schema-model",
-    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]src[\\/]Html\.model\.ts$/,
-    priority: 34,
-  },
-  {
-    name: "html-metadata",
-    test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]src[\\/](?:Html\.meta|internal[\\/]Html\.language-tag-registry\.generated)\.ts$/,
-    priority: 34,
-  },
+  ...htmlFamilySplitsUnder750kB,
   {
     name: "html-modeling",
     test: /packages[\\/]foundation[\\/]modeling[\\/]html[\\/]/,
@@ -99,32 +96,27 @@ const initialChunkGroups = [
   { name: "pretext-vendor", test: /node_modules[\\/]@chenglou[\\/]pretext[\\/]/, priority: 25 },
 ];
 
+// decision: vite-dependency-resolution-overrides
+const optimizeDeps = {
+  exclude: ["@cosmos.gl/graph", "oxigraph", "effect/schema"],
+  include: ["seedrandom", "three", "three/addons/controls/TrackballControls.js"],
+};
+
+// decision: vite-dependency-resolution-overrides
+const domFreeDecodeNamedCharacterReference = NodeURL.fileURLToPath(
+  import.meta.resolve("decode-named-character-reference")
+);
+const aboveMermaidElkModuleKb = 1_500;
+const sidecarLoopbackOrigin = "http://127.0.0.1:3939";
+const otelCollectorOrigin = "http://localhost:4318";
+const inotifyHeavyCargoTarget = "**/src-tauri/target/**";
+
 export default defineConfig({
   clearScreen: false,
   plugins: [resolveUniformTypeScriptSourceSpecifiers(), stripMisplacedLexicalPureAnnotations(), react()],
-  optimizeDeps: {
-    // @cosmos.gl/graph imports CJS/UMD deps that need explicit handling:
-    // keep cosmos itself un-prebundled and interop-wrap seedrandom. Since
-    // @cosmos.gl/graph 3.4.2 it imports gl-bench's shipped ESM build by its
-    // deep path, so no gl-bench alias is needed (and a bare alias would be
-    // prefix-rewritten into a doubled, nonexistent path).
-    // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
-    // initialize or prebundle it if a future webview path imports the package.
-    // effect/schema (the promoted barrel) and effect/Schema pre-bundle to entry
-    // names that differ only by case; rolldown dedupes one and Vite's optimizer
-    // loses it. Keep the barrel unbundled (plain ESM, workspace-imported only).
-    exclude: ["@cosmos.gl/graph", "oxigraph", "effect/schema"],
-    // three is only reached through @beep/graph-3d's lazy import on the first
-    // 3D-toggle; without pre-bundling, Vite discovers it mid-session,
-    // re-optimizes, and the stale hashed chunk URL 404s ("Failed to fetch
-    // dynamically imported module: .../.vite/deps/three.js").
-    include: ["seedrandom", "three", "three/addons/controls/TrackballControls.js"],
-  },
+  optimizeDeps,
   build: {
-    // Mermaid's lazy ELK layout engine ships as one generated ~1.46 MB module.
-    // Keep the cap above that upstream module; our startup dependencies retain
-    // their separate cacheable chunks below.
-    chunkSizeWarningLimit: 1_500,
+    chunkSizeWarningLimit: aboveMermaidElkModuleKb,
     rolldownOptions: {
       output: {
         codeSplitting: {
@@ -136,49 +128,27 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": NodeURL.fileURLToPath(new URL("./src", import.meta.url)),
-      // micromark dependency whose `browser` build calls document.createElement
-      // at module top level — a ReferenceError if any barrel leaks it into a
-      // module worker (vite resolves workers with browser conditions). The
-      // default build is DOM-free and behaves identically on the main thread.
-      "decode-named-character-reference": NodeURL.fileURLToPath(
-        import.meta.resolve("decode-named-character-reference")
-      ),
+      "decode-named-character-reference": domFreeDecodeNamedCharacterReference,
     },
   },
   server: {
-    // Port and strictPort come from the portless-wrapped `dev` script
-    // (`--port "${PORT:-1421}" --strictPort`): portless assigns PORT for the
-    // named route, and the 1421 fallback keeps the PORTLESS=0 diagnostic
-    // bypass on the port tauri and the ontology MCP allowlist already accept.
     proxy: {
-      // Same-origin rpc: the vite dev server is the single origin, so the
-      // webview's `/rpc` calls (see @beep/agents-client Chat.atoms.ts SERVER_URL)
-      // ride this proxy to the loopback bun sidecar on :3939 (server/main.ts
-      // CHAT_SIDECAR_PORT default). Dev runs the sidecar via `bun run dev:sidecar`.
       "/rpc": {
-        target: "http://127.0.0.1:3939",
+        target: sidecarLoopbackOrigin,
         changeOrigin: true,
       },
-      // The sidecar's vault-sync Api (offline intents replay here, same origin and token).
       "/vault-sync": {
-        target: "http://127.0.0.1:3939",
+        target: sidecarLoopbackOrigin,
         changeOrigin: true,
       },
-      // Same-origin OTLP for the webview's effect-native exporter (the client
-      // observability global layer in @beep/agents-client). Vite proxies it to
-      // the standard OTel collector so the browser needs no CORS setup; without
-      // a collector listening the export just fails silently.
       "/otlp": {
-        target: "http://localhost:4318",
+        target: otelCollectorOrigin,
         changeOrigin: true,
         rewrite: (path) => Str.replace(/^\/otlp/, "")(path),
       },
     },
-    // Cargo can materialize tens of thousands of generated files under target.
-    // They never affect the web bundle and exhausting inotify there prevents the
-    // canonical portless dev server from starting.
     watch: {
-      ignored: ["**/src-tauri/target/**"],
+      ignored: [inotifyHeavyCargoTarget],
     },
   },
   envPrefix: ["VITE_", "TAURI_"],

@@ -58,8 +58,6 @@ const encodeOntologySparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQue
 const decodeOntologySparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
 const encodeProposeChangeBatchRequest = S.encodeUnknownEffect(ProposeChangeBatchRequest);
 const decodeProposeChangeBatchResponse = S.decodeUnknownEffect(ProposeChangeBatchResponse);
-// rc.117 projects declared tool failures as tool errors whose encoded payload
-// travels in `content[].text`; `structuredContent` describes successes only.
 const decodeOntologyToolFailureFromText = S.decodeEffect(S.fromJsonString(OntologyToolFailure));
 const firstTextContent = (call: {
   readonly content: ReadonlyArray<{ readonly type: string; readonly text?: string }>;
@@ -83,10 +81,6 @@ interface LedgerProbe {
   readonly outcomes: Ref.Ref<ReadonlyArray<ExecutionOutcomeRecord>>;
 }
 
-// A test-local execution-ledger stub: the ledger's real guarantees are the
-// database's (proven in the epistemic pglite suites); here the stub observes
-// what the governed gate writes through the real MCP server and injects
-// decision-write failures for the fail-closed proof.
 const makeLedgerProbe = Effect.fnUntraced(function* () {
   const decisions = yield* Ref.make<ReadonlyArray<ExecutionDecisionRecord>>([]);
   const outcomes = yield* Ref.make<ReadonlyArray<ExecutionOutcomeRecord>>([]);
@@ -246,18 +240,19 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             });
             const refusal = yield* decodeOntologyToolFailureFromText(firstTextContent(call));
 
-            expect(call.isError).toBe(true);
+            expect(
+              call.isError,
+              "a declared tool failure is a tool error whose payload rides content[].text, never structuredContent"
+            ).toBe(true);
             expect(refusal._tag).toBe("OntologyTierGateRefusal");
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);
-        // A refused dispatch produces exactly one ledger row — the denied
-        // decision. There was no execution to settle, so no outcome row exists.
         const decisions = yield* Ref.get(probe.decisions);
-        expect(decisions).toHaveLength(1);
+        expect(decisions, "a refused dispatch writes exactly one ledger row, the denied decision").toHaveLength(1);
         expect(decisions[0]!.verdict).toBe("denied");
         expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("principal-not-granted");
         const got4 = yield* Ref.get(probe.outcomes);
-        expect(got4).toHaveLength(0);
+        expect(got4, "a refused dispatch has no execution to settle, so no outcome row").toHaveLength(0);
       })
     );
 
@@ -303,23 +298,20 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             expect(secondCall.isError).toBe(false);
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);
-        // Two rows per allowed dispatch — a write-ahead decision and its
-        // settlement — and both dispatches belong to ONE run. That last part is
-        // the session-keying proof: the HTTP protocol mints a fresh clientId per
-        // request, so a gate keyed on clientId would produce two runs, each a
-        // lone genesis row, and this chain assertion would fail. The read-only
-        // open/inspect call is ungated and writes nothing.
         const decisions = yield* Ref.get(probe.decisions);
         const outcomes = yield* Ref.get(probe.outcomes);
-        expect(decisions).toHaveLength(2);
+        expect(decisions, "the read-only open/inspect call is ungated and writes no decision").toHaveLength(2);
         const runKey = decisions[0]!.runKey;
         expect(decisions[1]!.runKey).toBe(runKey);
         expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1]);
         expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "allowed"]);
         expect(decisions[0]!.sinkClass).toBe("mcp-write");
         expect(decisions[0]!.audience).toBe("local-workspace");
-        expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
-        expect(outcomes).toHaveLength(2);
+        expect(
+          verifyExecutionDecisionChain(decisions, runKey).result,
+          "keyed on the MCP session, not the per-request clientId, both dispatches chain into one run"
+        ).toBe("chain-intact");
+        expect(outcomes, "each allowed dispatch settles its write-ahead decision").toHaveLength(2);
         expect(A.map(outcomes, (record) => record.settlement)).toEqual(["completed", "completed"]);
         expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
         expect(verifyOutcomeBinding(outcomes[1]!, decisions[1]!)).toBe(true);
@@ -358,17 +350,15 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             });
             const refusal = yield* decodeOntologyToolFailureFromText(firstTextContent(call));
 
-            // The operation is granted, but the write-ahead decision could
-            // not be written: no record, no action. The refusal reaching the
-            // agent is reason-free — the same typed envelope as any refusal.
             expect(call.isError).toBe(true);
-            expect(refusal._tag).toBe("OntologyTierGateRefusal");
+            expect(refusal._tag, "a failed decision write reaches the agent as the reason-free refusal envelope").toBe(
+              "OntologyTierGateRefusal"
+            );
 
             const after = yield* fileSystem.readFileString(path.join(root, "ontology.ttl"));
-            expect(after).toBe(before);
-            // No provenance sidecar was produced either: the mutation never ran.
+            expect(after, "no decision record, no action").toBe(before);
             const readDirectory5 = yield* fileSystem.readDirectory(root);
-            expect(readDirectory5).toEqual(["ontology.ttl"]);
+            expect(readDirectory5, "no provenance sidecar: the mutation never ran").toEqual(["ontology.ttl"]);
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);
         const got6 = yield* Ref.get(probe.decisions);
@@ -402,11 +392,6 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
     it.effect("carries a publication from a real tool handler through the governed egress fetch", () =>
       Effect.gen(function* () {
         const probe = yield* makeLedgerProbe();
-        // The base fetch the governed boundary delegates to when it allows a
-        // request. Nothing here reaches the network; being called at all is the
-        // proof that the policy Fetch was the one in force, because an
-        // un-overridden Fetch would have used the platform fetch instead. A plain
-        // array, not a Ref: `fetch` has no fiber to run an Effect on.
         const delivered: Array<string> = [];
         const egressFetch = ((input: RequestInfo | URL, init?: RequestInit) => {
           delivered.push(`${String(init?.method ?? "GET")} ${String(input)}`);
@@ -417,9 +402,6 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
           const context = yield* Layer.build(
             makeHttpServerLayer({
               mutationsEnabled: true,
-              // Publication is granted; the change-batch tool is registered but
-              // deliberately ungranted, so the test has a real gate refusal to
-              // compare the egress refusal against.
               approvedMutationTools: [ExportProvenanceTool.name, PublishProvenanceTool.name],
               egressFetch,
               ledger: probe.layer,
@@ -477,27 +459,27 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
 
             expect(deniedCall.isError).toBe(true);
             expect(refusal._tag).toBe("OntologyTierGateRefusal");
-            // A destination denial must be indistinguishable from an operation
-            // denial. This is the only place both are visible: the guidance
-            // string is restated in the ontology slice because slices cannot
-            // import each other, so this assertion is what keeps them in sync.
-            expect(gateRefusal._tag).toBe("OntologyTierGateRefusal");
-            expect(refusal._tag === "OntologyTierGateRefusal" && refusal.guidance).toBe(
-              gateRefusal._tag === "OntologyTierGateRefusal" && gateRefusal.guidance
+            expect(gateRefusal._tag, "the ungranted change-batch tool gives a real gate refusal to compare").toBe(
+              "OntologyTierGateRefusal"
             );
+            expect(
+              refusal._tag === "OntologyTierGateRefusal" && refusal.guidance,
+              "a destination denial matches an operation denial; the slices restate the guidance, so this keeps them in sync"
+            ).toBe(gateRefusal._tag === "OntologyTierGateRefusal" && gateRefusal.guidance);
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);
 
-        // The allowlisted destination was delivered; the other never reached the
-        // network side of the boundary at all.
-        expect(delivered).toEqual([`POST ${fixtureAllowedDestination}/v1/provenance`]);
+        expect(
+          delivered,
+          "only the allowlisted destination reached the base fetch, proving the policy Fetch was in force"
+        ).toEqual([`POST ${fixtureAllowedDestination}/v1/provenance`]);
 
         const decisions = yield* Ref.get(probe.decisions);
         const egressDecisions = A.filter(decisions, (record) => record.sinkClass === "network-egress");
-        // Two decisions per publication attempt: the gate's (may this session
-        // publish) and the egress boundary's (may this destination be reached).
-        // The denied attempt is refused by the second, not the first.
-        expect(A.length(egressDecisions)).toBeGreaterThanOrEqual(3);
+        expect(
+          A.length(egressDecisions),
+          "each publication writes a gate decision and an egress decision; the denied one is refused by egress"
+        ).toBeGreaterThanOrEqual(3);
         expect(A.some(egressDecisions, (record) => record.verdict === "denied")).toBe(true);
         expect(A.some(egressDecisions, (record) => record.verdict === "allowed")).toBe(true);
       })

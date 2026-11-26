@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/git",
-  "root": "packages/drivers/git",
-  "scopes": ["."]
-}

@@ -26,10 +26,10 @@ describe("the width the user gave the sidebar", () => {
   });
 
   it("cannot restore a sidebar too wide to drag back", () => {
-    // The stored value outlives the build that wrote it. A width persisted before the
-    // bounds existed — or typed into localStorage by hand — must not be able to hand
-    // the user a pane they cannot recover from.
-    expect(clampSidebarPercent(95)).toBe(SIDEBAR_MAX_PERCENT);
+    expect(
+      clampSidebarPercent(95),
+      "a width stored before the bounds existed, or typed in by hand, must not leave an unrecoverable pane"
+    ).toBe(SIDEBAR_MAX_PERCENT);
     assertNone(decodeSidebarPercent(95));
   });
 
@@ -41,10 +41,10 @@ describe("the width the user gave the sidebar", () => {
 
 describe("the size the panes are given", () => {
   it("carries its unit", () => {
-    // react-resizable-panels reads a bare `number` as PIXELS. Handing it these
-    // percentages by their number pinned the sidebar into a fourteen-to-forty *pixel*
-    // range — a sliver too narrow to read, with a handle that would not move.
-    expect(sidebarSize(SIDEBAR_DEFAULT_PERCENT)).toBe(`${SIDEBAR_DEFAULT_PERCENT}%`);
+    expect(
+      sidebarSize(SIDEBAR_DEFAULT_PERCENT),
+      "react-resizable-panels reads a bare number as pixels, so the percent carries its unit"
+    ).toBe(`${SIDEBAR_DEFAULT_PERCENT}%`);
     expect(sidebarSize(SIDEBAR_MIN_PERCENT)).toBe(`${SIDEBAR_MIN_PERCENT}%`);
     expect(sidebarSize(SIDEBAR_MAX_PERCENT)).toBe(`${SIDEBAR_MAX_PERCENT}%`);
   });

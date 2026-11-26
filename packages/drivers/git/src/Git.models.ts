@@ -286,7 +286,6 @@ export class CommitLogEntry extends S.Opaque<CommitLogEntry, { readonly brand: u
   )
 ) {}
 
-/** One two-letter porcelain v1 status axis code. */
 const porcelainCode = LiteralKit([" ", "M", "T", "A", "D", "R", "C", "U", "?", "!"]).pipe(
   $I.annoteSchema("PorcelainCode", { description: "One porcelain v1 status axis code." })
 );
@@ -1060,10 +1059,8 @@ export const MergeTreeResult = S.TaggedUnion({
  */
 export type MergeTreeResult = typeof MergeTreeResult.Type;
 
-/** 16 MiB, the same per-stream ceiling `@beep/commands` applies to a collected run. */
 const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 
-/** git's own ceiling: a run that has not answered in 30 s is not going to. */
 const DEFAULT_TIMEOUT = Duration.seconds(30);
 
 /**
