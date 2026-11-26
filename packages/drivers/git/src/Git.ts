@@ -2448,6 +2448,24 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     return yield* runVoid("Git.worktreePrune", GitCommand.worktreePrune(), cwd, "worktrees");
   });
 
+  const worktreeLock: GitShape["worktreeLock"] = dual(
+    stringAt(1),
+    Effect.fn("Git.worktreeLock")(function* (cwd: string, path: string, options?: { readonly reason?: string }) {
+      yield* Effect.annotateCurrentSpan({ cwd, path });
+      yield* rejectOptionLikeRefs(cwd, [path]);
+      return yield* runVoid("Git.worktreeLock", GitCommand.worktreeLock(path, options?.reason), cwd, path);
+    })
+  );
+
+  const worktreeUnlock: GitShape["worktreeUnlock"] = dual(
+    stringAt(1),
+    Effect.fn("Git.worktreeUnlock")(function* (cwd: string, path: string) {
+      yield* Effect.annotateCurrentSpan({ cwd, path });
+      yield* rejectOptionLikeRefs(cwd, [path]);
+      return yield* runVoid("Git.worktreeUnlock", GitCommand.worktreeUnlock(path), cwd, path);
+    })
+  );
+
   const worktreeRemove: GitShape["worktreeRemove"] = dual(
     stringAt(1),
     Effect.fn("Git.worktreeRemove")(function* (cwd: string, path: string, options?: { readonly force?: boolean }) {
@@ -2587,6 +2605,8 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     worktreeList,
     worktreeRemove,
     worktreePrune,
+    worktreeLock,
+    worktreeUnlock,
   };
 };
 
@@ -4569,6 +4589,22 @@ export interface GitShape {
     cwd: string
   ) => Effect.Effect<ReadonlyArray<WorktreeEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
+   * Mutating: `git worktree lock [--reason <reason>] <path>` — keeps a
+   * linked working tree's registration through `worktree prune` even while
+   * its directory is missing. Locking a locked worktree fails loudly.
+   */
+  readonly worktreeLock: {
+    (
+      cwd: string,
+      path: string,
+      options?: { readonly reason?: string }
+    ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      path: string,
+      options?: { readonly reason?: string }
+    ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
    * Mutating: `git worktree prune` — drops the registrations of linked
    * working trees whose directory no longer exists. Directories still on
    * disk are never touched, so it is safe to run after every removal.
@@ -4589,6 +4625,15 @@ export interface GitShape {
       path: string,
       options?: { readonly force?: boolean }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
+   * Mutating: `git worktree unlock <path>` — lifts a lock so
+   * `worktree prune` may drop the registration again. Unlocking an unlocked
+   * worktree fails loudly.
+   */
+  readonly worktreeUnlock: {
+    (cwd: string, path: string): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (path: string): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
 }
 
@@ -4945,6 +4990,8 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     worktreeList: stubOf(overrides, "worktreeList"),
     worktreeRemove: dual(stringAt(1), stubOf(overrides, "worktreeRemove")),
     worktreePrune: stubOf(overrides, "worktreePrune"),
+    worktreeLock: dual(stringAt(1), stubOf(overrides, "worktreeLock")),
+    worktreeUnlock: dual(stringAt(1), stubOf(overrides, "worktreeUnlock")),
     lsFiles: dual(hasStringSubject, stubOf(overrides, "lsFiles")),
     diffPatch: dual(hasStringSubject, stubOf(overrides, "diffPatch")),
   });

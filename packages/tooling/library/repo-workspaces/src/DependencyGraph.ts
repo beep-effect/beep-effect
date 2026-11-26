@@ -86,15 +86,12 @@ export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError, 
 }
 
 const Edges = S.Struct({
-  /** Vertex order, independent of the hash map's iteration order. */
   order: S.Array(S.String).pipe(
     $I.annoteKey("Edges.order", { description: "Vertex order, independent of the hash map's iteration order." })
   ),
-  /** name → the workspace packages it depends on. */
   forward: S.HashMap(S.String, S.HashSet(S.String)).pipe(
     $I.annoteKey("Edges.forward", { description: "Each workspace package's direct workspace dependencies." })
   ),
-  /** name → the workspace packages that depend on it. */
   reverse: S.HashMap(S.String, S.HashSet(S.String)).pipe(
     $I.annoteKey("Edges.reverse", { description: "Each workspace package's direct workspace dependents." })
   ),
@@ -105,31 +102,6 @@ const Edges = S.Struct({
 );
 
 type Edges = typeof Edges.Type;
-
-// Core's `Graph` is already adopted in this file — `stronglyConnectedComponents`
-// for the cycle payload, and `directed`/`addNode`/`addEdge`/`toMermaid` over the
-// `materialize` helper below. What stays local is the *substrate* (the
-// string-keyed forward/reverse index) plus `levels`, `affectedBy` and
-// `sortSubset`.
-//
-// Why those three do not move onto core:
-//
-//   1. Core's `topo` **throws** `GraphError` on a cyclic graph (`Graph.ts:8084`)
-//      rather than failing typed, and carries only a message — no cycle members.
-//      `levels()` fails with `CyclicDependencyError` naming the offending
-//      packages, so adopting `topo` would mean catching a defect and recomputing
-//      the members anyway. Note this is a reason to pick call sites, not to avoid
-//      the module: `stronglyConnectedComponents` throws only for *undirected*
-//      graphs (`Graph.ts:5640`) and `materialize` builds `Graph.directed`, so the
-//      adopted site above cannot throw on any graph this class can hold.
-//   2. Core's `topo` yields a **flat** order. The product here is parallel build
-//      *levels* — level n depends only on levels below it — which is the whole
-//      reason this type exists and is not derivable from a flat order.
-//   3. `affectedBy` (reverse reachability) has no core equivalent, and both it
-//      and `sortSubset` need the reverse-edge index maintained below.
-//
-// Revisit only if core grows a level-partitioning traversal with a non-throwing
-// error channel.
 
 /**
  * **Details**
@@ -218,7 +190,6 @@ export class DependencyGraph extends S.Class<DependencyGraph, { readonly brand: 
   #index(): Edges {
     if (this.#edges !== undefined) return this.#edges;
     const names = MutableHashSet.fromIterable(A.map(this.packages, (pkg) => pkg.name));
-    // Every package sharing a name contributes its workspace dependencies to that name.
     const declared = MutableHashMap.empty<string, ReadonlyArray<string>>();
     for (const pkg of this.packages) {
       const internal = A.filter(
@@ -607,15 +578,6 @@ export class DependencyGraph extends S.Class<DependencyGraph, { readonly brand: 
   }
 }
 
-/**
- * Materializes the forward map into a transient core `Graph`: nodes in
- * sorted-name order (so `NodeIndex` *i* is `names[i]`) and each node's edges
- * in sorted-target order, making the graph — and everything derived from it —
- * deterministic for a given edge index.
- *
- * @param edges - The graph's indexes.
- * @returns The graph and its node names, in index order.
- */
 const materialize = (
   edges: Edges
 ): { readonly graph: Graph.DirectedGraph<string, string>; readonly names: ReadonlyArray<string> } => {
@@ -637,15 +599,6 @@ const materialize = (
   return { graph, names };
 };
 
-/**
- * The packages participating in a dependency cycle — the sorted union of every
- * strongly connected component with more than one member, via core's
- * `Graph.stronglyConnectedComponents`. Self-edges are dropped at index time,
- * so a single-member component is never cyclic here.
- *
- * @param edges - The graph's indexes.
- * @returns The cycle members, sorted.
- */
 const cycleMembers = (edges: Edges): ReadonlyArray<string> => {
   const { graph, names } = materialize(edges);
   const members = MutableHashSet.empty<string>();
@@ -659,37 +612,15 @@ const cycleMembers = (edges: Edges): ReadonlyArray<string> => {
   return A.sort(A.fromIterable(members), Str.Order);
 };
 
-/**
- * The dependencies recorded for `name` so far; none when it has no entry.
- *
- * @param declared - The dependencies recorded so far.
- * @param name - A captured package's `name` field.
- * @returns The recorded dependencies.
- */
 const dependenciesIn = (
   declared: MutableHashMap.MutableHashMap<string, ReadonlyArray<string>>,
   name: string
 ): ReadonlyArray<string> => O.getOrElse(MutableHashMap.get(declared, name), (): ReadonlyArray<string> => []);
 
-/**
- * A node's direct dependencies in the forward index; none for an unknown node.
- *
- * @param forward - The forward index.
- * @param node - The package name.
- * @returns The node's direct dependencies.
- */
 const dependenciesOf = (forward: Edges["forward"], node: string): Array<string> => [
   ...O.getOrElse(HashMap.get(forward, node), HashSet.empty<string>),
 ];
 
-/**
- * The forward and reverse indexes over `order`, from each node's dependencies,
- * every one of which is itself in `order`.
- *
- * @param order - The vertices, in order.
- * @param dependenciesOfNode - Each vertex's dependencies.
- * @returns The indexes.
- */
 const edgesOver = (order: ReadonlyArray<string>, dependenciesOfNode: (node: string) => Iterable<string>): Edges => {
   let forward = HashMap.empty<string, HashSet.HashSet<string>>();
   let reverse = HashMap.fromIterable(A.map(order, (node) => [node, HashSet.empty<string>()] as const));
@@ -701,13 +632,6 @@ const edgesOver = (order: ReadonlyArray<string>, dependenciesOfNode: (node: stri
   return { order, forward, reverse };
 };
 
-/**
- * Every node `roots` reach through the forward index, the roots included.
- *
- * @param forward - The forward index.
- * @param roots - The starting packages.
- * @returns The roots and everything they reach.
- */
 const closureOf = (forward: Edges["forward"], roots: ReadonlyArray<string>): MutableHashSet.MutableHashSet<string> => {
   const needed = MutableHashSet.empty<string>();
   const queue = [...roots];
@@ -719,20 +643,6 @@ const closureOf = (forward: Edges["forward"], roots: ReadonlyArray<string>): Mut
   return needed;
 };
 
-/**
- * Whether a depth-first walk from `start` meets a node still on its stack.
- *
- * **Details**
- *
- * Each frame is a node plus the iterator position into its dependencies. The
- * `visited` and `onStack` sets are shared across starts, so a node finished by
- * an earlier start is never walked again.
- *
- * @param forward - The forward index.
- * @param start - The node the walk starts from.
- * @param marks - The visited and on-stack sets shared across starts.
- * @returns `true` when the walk meets a cycle.
- */
 const reachesCycle = (
   forward: Edges["forward"],
   start: string,
@@ -765,15 +675,6 @@ const reachesCycle = (
   return false;
 };
 
-/**
- * Retire one completed level, returning the next: every dependent whose last
- * outstanding dependency the level held, sorted.
- *
- * @param edges - The graph's indexes.
- * @param remaining - Each unprocessed node's outstanding dependency count.
- * @param level - The level just completed.
- * @returns The next level, sorted.
- */
 const completeLevel = (
   edges: Edges,
   remaining: MutableHashMap.MutableHashMap<string, number>,
@@ -791,20 +692,6 @@ const completeLevel = (
   return A.sort(next, Str.Order);
 };
 
-/**
- * Kahn's algorithm. `forward[A] = {B}` reads "A depends on B", so level 0 is
- * the set with an out-degree of zero and each completed level decrements its
- * dependents through the reverse index.
- *
- * **Details**
- *
- * A non-empty `stalled` only signals *that* a cycle exists — it holds every
- * unprocessed node, including ones merely downstream of a cycle. The error
- * payload names the actual members via `cycleMembers`.
- *
- * @param edges - The graph's indexes.
- * @returns The levels in build order, and every node left unprocessed.
- */
 const kahn = (
   edges: Edges
 ): { readonly levels: ReadonlyArray<ReadonlyArray<string>>; readonly stalled: ReadonlyArray<string> } => {

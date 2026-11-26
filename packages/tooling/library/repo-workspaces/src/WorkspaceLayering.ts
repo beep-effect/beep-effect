@@ -275,19 +275,16 @@ const offence: {
   return fromLayerOffence(from.index, to);
 });
 
-// An edge into a package the policy leaves unconstrained or does not classify.
 const intoOffence = (to: Place): OffenceReason | undefined => {
   if (to.kind === "unconstrained") return "intoUnconstrained";
   return to.kind === "unclassified" ? "intoUnclassified" : undefined;
 };
 
-// An edge from layer `index` into a layer at or above it; one into tooling or a lower layer is allowed.
 const fromLayerOffence = (index: number, to: Place): OffenceReason | undefined => {
   if (to.kind !== "layer" || to.index > index) return undefined;
   return to.index === index ? "sameLayer" : "upward";
 };
 
-/** The sorted members of every strongly connected component larger than one (cf. `DependencyGraph.ts` `cycleMembers`). */
 const cycleOf: {
   (names: ReadonlyArray<string>, edges: ReadonlyArray<LayerEdge>): O.Option<ReadonlyArray<string>>;
   (edges: ReadonlyArray<LayerEdge>): (names: ReadonlyArray<string>) => O.Option<ReadonlyArray<string>>;

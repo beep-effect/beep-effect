@@ -1177,6 +1177,9 @@ describe("GitCommand", () => {
       assertGitCommand(GitCommand.worktreeRemove("../wt"), ["worktree", "remove", "../wt"]);
       assertGitCommand(GitCommand.worktreeRemove("../wt", true), ["worktree", "remove", "--force", "../wt"]);
       assertGitCommand(GitCommand.worktreePrune(), ["worktree", "prune"]);
+      assertGitCommand(GitCommand.worktreeLock("../wt"), ["worktree", "lock", "../wt"]);
+      assertGitCommand(GitCommand.worktreeLock("../wt", "fenced"), ["worktree", "lock", "--reason", "fenced", "../wt"]);
+      assertGitCommand(GitCommand.worktreeUnlock("../wt"), ["worktree", "unlock", "../wt"]);
     });
 
     it("lsFiles pins --stage -z and scopes to a -- pathspec when given", () => {
