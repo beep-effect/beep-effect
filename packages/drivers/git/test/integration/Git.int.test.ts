@@ -362,6 +362,30 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       })
     );
 
+    it.effect("worktreeLock keeps a missing worktree's registration through prune until worktreeUnlock", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const parent = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-lock-" });
+        const linked = path.join(parent, "linked");
+        yield* git.worktreeAdd(fixture.dir, linked, { ref: fixture.commit1, detach: true });
+        const realLinked = yield* fs.realPath(linked);
+        yield* git.worktreeLock(fixture.dir, linked, { reason: "fenced" });
+        yield* fs.rename(linked, `${linked}.aside`);
+        yield* git.worktreePrune(fixture.dir);
+        const locked = yield* git.worktreeList(fixture.dir);
+        assert.deepStrictEqual(
+          A.findFirst(locked, (entry) => entry.path === realLinked).pipe(O.map((entry) => entry.locked)),
+          O.some("fenced")
+        );
+        yield* git.worktreeUnlock(fixture.dir, linked);
+        yield* git.worktreePrune(fixture.dir);
+        const after = yield* git.worktreeList(fixture.dir);
+        assert.isFalse(A.some(after, (entry) => entry.path === realLinked));
+      })
+    );
+
     it.effect("changedFiles across the two commits names exactly the changed and deleted files", () =>
       Effect.gen(function* () {
         const git = yield* Git;

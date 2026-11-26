@@ -1,7 +1,3 @@
-// Block-scalar text helpers shared by the lexer (which decodes block scalar
-// tokens while scanning) and the composer (which re-decodes a CST block
-// scalar from its raw source). One copy keeps the two readings identical.
-
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as Str from "effect/String";
@@ -51,19 +47,15 @@ export const findKeyIndent: {
 } = dual(2, (text: string, colonPos: number): number => {
   const lineStart = lineStartOf(text, colonPos);
   const spaces = countSpaces(text, lineStart);
-  // A compact sequence entry (`- key:`) puts the key after the "- ".
   return isCompactEntryAt(text, lineStart + spaces) ? spaces + 2 : spaces;
 });
 
-// The separator before a content line that follows earlier content: a
-// transition to or from a more-indented line keeps its line break; otherwise
-// adjacent base-indent lines fold to a space, and a line after preserved empty
-// lines joins directly.
-const foldSeparator = (result: string, touchesMoreIndented: boolean): string => {
+const separatorBeforeLaterContentLine = (result: string, touchesMoreIndented: boolean): string => {
   if (touchesMoreIndented) {
     return "\n";
   }
-  return Str.endsWith("\n")(result) ? "" : " ";
+  const joinsDirectlyAfterPreservedEmptyLine = Str.endsWith("\n")(result);
+  return joinsDirectlyAfterPreservedEmptyLine ? "" : " ";
 };
 
 /**
@@ -85,18 +77,18 @@ const foldSeparator = (result: string, touchesMoreIndented: boolean): string => 
  */
 export const foldBlockLines = (lines: ReadonlyArray<string>): string => {
   let result = "";
-  // Tracks the last CONTENT line's type; empty lines leave it unchanged.
-  let prevMoreIndented = false;
+  let lastContentLineMoreIndented = false;
   let hadContent = false;
   for (const ln of lines) {
     if (ln === "") {
-      // Empty line — preserved as newline.
       result += "\n";
       continue;
     }
     const isMoreIndented = isIndentChar(ln[0]);
-    result += hadContent ? `${foldSeparator(result, isMoreIndented || prevMoreIndented)}${ln}` : ln;
-    prevMoreIndented = isMoreIndented;
+    result += hadContent
+      ? `${separatorBeforeLaterContentLine(result, isMoreIndented || lastContentLineMoreIndented)}${ln}`
+      : ln;
+    lastContentLineMoreIndented = isMoreIndented;
     hadContent = true;
   }
   return result;

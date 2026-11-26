@@ -1,10 +1,3 @@
-// key-duplicates: duplicate mapping keys, reported at every
-// occurrence AFTER the first. Detection walks the composed AST with the same
-// key identity the engine's own duplicate check uses (type AND value — an
-// `!!int 1` never collides with the string `"1"`), and runs on the lint
-// context's uniqueKeys-disabled compose so the policy is fully owned here.
-// No fix: dropping a pair changes what the document means.
-
 import { $YamlId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -55,7 +48,6 @@ export class keyDuplicatesOptions extends S.Opaque<keyDuplicatesOptions, { reado
   )
 ) {}
 
-/** Record a scalar key's identity, reporting it when the mapping already holds it. */
 const checkKey = (
   key: YamlScalar,
   seen: MutableHashSet.MutableHashSet<string>,
@@ -80,7 +72,6 @@ const checkKey = (
   MutableHashSet.add(seen, id);
 };
 
-/** Check one mapping's keys, then descend into every pair. */
 const walkMap = (node: YamlMap, text: string, out: Array<YamlLintDiagnostic>, ctx: LintContext): void => {
   const seen = MutableHashSet.empty<string>();
   for (const pair of node.items) {

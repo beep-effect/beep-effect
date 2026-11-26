@@ -70,19 +70,6 @@ const byName = Order.make<WorkspacePackage>((a, b) => {
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-/**
- * Each package's `value`, keyed by name.
- *
- * **Details**
- *
- * First-write-wins, matching the `all.find` the indexes built on it replaced:
- * discovery does not reject duplicate names, and a plain
- * `new Map(all.map(...))` would keep the last.
- *
- * @param all - The discovered packages.
- * @param value - What to index for each package.
- * @returns The index, the first package of each name winning.
- */
 const firstByName = <V>(
   all: ReadonlyArray<WorkspacePackage>,
   value: (pkg: WorkspacePackage) => V
@@ -94,13 +81,6 @@ const firstByName = <V>(
   return index;
 };
 
-/**
- * The distinct packages owning `filePaths`, sorted by name; a path no package owns contributes nothing.
- *
- * @param filePaths - The paths to attribute.
- * @param ownerOf - The owner lookup.
- * @returns The owning packages, sorted by name.
- */
 const ownersOf = (
   filePaths: ReadonlyArray<string>,
   ownerOf: (filePath: string) => O.Option<WorkspacePackage>
@@ -690,7 +670,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
-    /** Read one `package.json` into the tolerant discovery projection. */
     const readPackage: {
       (root: string, directory: string, relativePath: string): Effect.Effect<WorkspacePackage, WorkspaceDiscoveryError>;
       (
@@ -718,13 +697,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
           )
         );
 
-        // `JSON.parse` never returns `undefined`, so a guard on `undefined`
-        // alone does not cover a manifest whose entire content is `null`, `42`
-        // or `"x"` — all of which parse fine. Reading `.name` off `null` would
-        // throw a TypeError, i.e. malformed input escaping as a DEFECT.
-        //
-        // This is `invalidShape`, NOT `invalidJson`: the text is perfectly valid
-        // JSON. What is wrong is that it does not denote an object.
         if (!P.isObject(parsed)) {
           return yield* WorkspaceDiscoveryError.make({
             root,
@@ -753,53 +725,23 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
             cause: WorkspaceDiscoveryCause.make({ message: version.failure }),
           });
         }
-        // The tolerant projection: decoded through the schema, so a malformed
-        // field fails typed rather than corrupting the model — but never
-        // through package-json's strict semver `Package`, which would fail
-        // discovery for the whole repo over one odd version string. `version`
-        // rides through as the manifest has it: absent stays absent (pnpm
-        // accepts a version-less private package; a private root without one
-        // is the ordinary shape), a non-empty string verbatim.
         return yield* S.decodeEffect(WorkspacePackage)({
           name,
           ...O.getSomesStruct({ version: O.fromUndefinedOr(version.success) }),
           path: directory,
           packageJsonPath,
           relativePath,
-          // The root the ascent already resolved, carried rather than dropped
-          // for consumers to reconstruct by segment arithmetic.
           workspaceRoot: root,
-          // The as-read record rides along so consumers reach fields outside
-          // the discovery slice without a second file read.
           manifestRecord: raw,
           ...tolerantFieldsOf(raw),
         }).pipe(
-          Effect.catchTag(
-            "SchemaError",
-            // A well-formed JSON document whose SHAPE the schema rejects — not a
-            // syntax error. A consumer branching on `kind` must be able to tell
-            // "this file is not JSON" from "this file is JSON I cannot use".
-            (cause) => WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidShape", cause })
+          Effect.catchTag("SchemaError", (cause) =>
+            WorkspaceDiscoveryError.make({ root, path: packageJsonPath, kind: "invalidShape", cause })
           )
         );
       })
     );
 
-    /**
-     * Discovery for ONE already-resolved root — the whole read, with the root
-     * as a parameter rather than a closed-over constant.
-     *
-     * **Details**
-     *
-     * Everything derived here (patterns, member manifests, names, versions) is
-     * read beneath `root`, which is what makes the per-call-root methods
-     * honest: re-rooting an already-discovered package list onto a different
-     * directory rewrites paths but keeps the ORIGINAL root's manifests, so a
-     * branch that adds or removes a package stays invisible. This re-reads.
-     *
-     * @param root - The resolved workspace root.
-     * @returns The root's discovery state.
-     */
     const discoverAt = Effect.fnUntraced(
       function* (root: string) {
         const patterns = yield* WorkspacePatterns.read(root).pipe(
@@ -865,34 +807,13 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
       { readonly info: WorkspaceInfo; readonly packages: ReadonlyArray<WorkspacePackage> },
       WorkspaceDiscoveryFailure
     > = Effect.gen(function* () {
-      // The ambient cwd is read at first use, not at layer construction
-      // (`findLayerRoot` suspends).
       const root = yield* findLayerRoot(roots, options);
       return yield* discoverAt(root);
     });
 
-    // Success-only memoization. See the class remarks: a bare `Effect.cached`
-    // would memoize an interrupt and permanently brick the layer.
     const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(discover, Duration.infinity);
     const memo = Effect.onError(resolveOnce, () => invalidate);
 
-    /**
-     * Per-resolved-root memos for the `…In` methods, each success-only on the
-     * same discipline as the layer-bound one above.
-     *
-     * **Details**
-     *
-     * Deliberately SEPARATE from that memo rather than replacing it: the
-     * layer-bound path resolves its root once, at first use, and folding it
-     * into this map would make every call re-run the root ascent. A caller
-     * that asks for the layer's own root through `listPackagesIn` pays one
-     * extra discovery — the honest price for not changing what the existing
-     * methods do.
-     *
-     * The map grows one entry per distinct root, which is the point for a
-     * long-lived host serving many worktrees, and is why `refresh()` clears
-     * it wholesale rather than invalidating one cell.
-     */
     const rootMemos = MutableHashMap.empty<
       string,
       {
@@ -904,18 +825,12 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
       }
     >();
 
-    /** The memoized discovery for the workspace root containing `directory`. */
     const memoIn = Effect.fn("WorkspaceDiscovery.memoIn")(function* (directory: string) {
-      // Resolved FIRST, so two directories inside one workspace share a
-      // single memo — keying on the caller's path would discover the same
-      // workspace once per subdirectory it happens to ask from.
       const root = yield* roots.find(directory);
       const existing = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
       if (existing !== undefined) return yield* existing.memo;
       const [resolveOnce, invalidateOne] = yield* Effect.cachedInvalidateWithTTL(discoverAt(root), Duration.infinity);
       const built = Effect.onError(resolveOnce, () => invalidateOne);
-      // Re-check under the benign concurrent-miss race: keep whichever cell
-      // landed first so callers dedupe onto one.
       const raced = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
       if (raced !== undefined) return yield* raced.memo;
       MutableHashMap.set(rootMemos, root, { memo: built, invalidate: invalidateOne });
@@ -924,9 +839,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
     const packages = memo.pipe(Effect.map((state) => state.packages));
 
-    // Each service owns only its latest snapshot's indexes. Reference equality
-    // detects refresh without changing equality on caller-owned arrays.
-    const indexOwner: {
+    const latestSnapshotIndexesByIdentity: {
       ownerIndex:
         | {
             readonly snapshot: ReadonlyArray<WorkspacePackage>;
@@ -944,7 +857,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     const owners = (
       all: ReadonlyArray<WorkspacePackage>
     ): ReadonlyArray<{ readonly prefix: string; readonly package: WorkspacePackage }> => {
-      const cached = indexOwner.ownerIndex;
+      const cached = latestSnapshotIndexesByIdentity.ownerIndex;
       if (cached !== undefined && cached.snapshot === all) return cached.entries;
       const index = A.sort(
         A.map(all, (pkg) => ({
@@ -953,7 +866,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
         })),
         Order.mapInput(Order.Number, (entry: { readonly prefix: string }) => -entry.prefix.length)
       );
-      indexOwner.ownerIndex = { snapshot: all, entries: index };
+      latestSnapshotIndexesByIdentity.ownerIndex = { snapshot: all, entries: index };
       return index;
     };
 
@@ -981,10 +894,10 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     const packagesByName = (
       all: ReadonlyArray<WorkspacePackage>
     ): MutableHashMap.MutableHashMap<string, WorkspacePackage> => {
-      const cached = indexOwner.packageIndex;
+      const cached = latestSnapshotIndexesByIdentity.packageIndex;
       if (cached !== undefined && cached.snapshot === all) return cached.entries;
       const index = firstByName(all, (pkg) => pkg);
-      indexOwner.packageIndex = { snapshot: all, entries: index };
+      latestSnapshotIndexesByIdentity.packageIndex = { snapshot: all, entries: index };
       return index;
     };
 
@@ -1041,10 +954,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
         const root = yield* roots.find(directory);
         const cell = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
         if (cell === undefined) return;
-        // Invalidate the cell BEFORE dropping the reference: a fiber already
-        // holding this memo keeps its own reference, and leaving the cached
-        // value live would let that fiber replay a discovery this call was
-        // asked to discard.
         yield* cell.invalidate;
         MutableHashMap.remove(rootMemos, root);
       }),
@@ -1059,8 +968,8 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
             MutableHashMap.clear(rootMemos);
             return Effect.tap(invalidate, () =>
               Effect.sync(() => {
-                indexOwner.ownerIndex = undefined;
-                indexOwner.packageIndex = undefined;
+                latestSnapshotIndexesByIdentity.ownerIndex = undefined;
+                latestSnapshotIndexesByIdentity.packageIndex = undefined;
               })
             );
           }
@@ -1154,8 +1063,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
   static readonly makeTest = (overrides: Partial<WorkspaceDiscoveryShape> = {}): WorkspaceDiscoveryShape => {
     const listPackages = overrides.listPackages ?? Effect.succeed([]);
 
-    // POSIX-terminated longest-prefix ownership, mirroring the live
-    // `resolveFile` semantics minus the platform `Path` service.
     const ownerOf: {
       (filePath: string, all: ReadonlyArray<WorkspacePackage>): O.Option<WorkspacePackage>;
       (all: ReadonlyArray<WorkspacePackage>): (filePath: string) => O.Option<WorkspacePackage>;
@@ -1195,12 +1102,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
       resolveFile: (filePath: string) => Effect.map(listPackages, (all) => ownerOf(filePath, all)),
       resolveFiles: (filePaths: ReadonlyArray<string>) =>
         Effect.map(listPackages, (all) => ownersOf(filePaths, (filePath) => ownerOf(filePath, all))),
-      // Both per-root methods DIE unstubbed rather than deriving from
-      // `listPackages`. Deriving would model a world in which every root holds
-      // the same members — which is exactly the confusion these methods exist to
-      // remove, so a double that fabricated it could not discriminate a consumer
-      // calling the wrong one. There is no honest default for "what does that
-      // OTHER workspace contain".
       infoIn: () =>
         Effect.die(
           WorkspaceDiscoveryCause.make({
@@ -1216,8 +1117,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
           })
         ),
       refresh: Effect.suspend(() => Effect.void),
-      // Nothing is memoized in a double, so dropping one root's memo is honestly
-      // a no-op — unlike the two reads above, which have no honest default.
       refreshIn: () => Effect.void,
       ...overrides,
     };
@@ -1290,9 +1189,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     WorkspaceResolver,
     Effect.gen(function* () {
       const discovery = yield* WorkspaceDiscovery;
-      // Name → version, where a version-less member is present with `undefined`:
-      // membership and version are two different questions here, and `has` is
-      // what tells them apart.
       const resolverOwner: {
         versionIndex:
           | {
@@ -1320,11 +1216,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
               if (!MutableHashMap.has(index, packageName)) return Effect.succeed(O.none<string>());
               const version = O.getOrUndefined(MutableHashMap.get(index, packageName));
               return version === undefined
-                ? Effect.fail(
-                    // A domain condition read from structured data, not a foreign
-                    // failure: typed by `reason`, with nothing to carry as `cause`.
-                    DependencyResolutionError.make({ specifier, reason: "no-version", cause: undefined })
-                  )
+                ? Effect.fail(DependencyResolutionError.make({ specifier, reason: "no-version", cause: undefined }))
                 : Effect.succeedSome(version);
             })
           );
@@ -1334,14 +1226,6 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
   );
 }
 
-/**
- * The manifest fields discovery carries only when they have the expected
- * shape: `private` as a boolean, each dependency block as a name-to-range
- * record, and `publishConfig` when present at all.
- *
- * @param raw - The parsed manifest.
- * @returns The usable optional fields.
- */
 const tolerantFieldsOf = (raw: { readonly [key: string]: unknown }) => ({
   ...(P.isBoolean(raw.private) ? { private: raw.private } : {}),
   ...dependencyBlocksOf(raw),

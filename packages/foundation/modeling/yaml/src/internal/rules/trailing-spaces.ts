@@ -1,8 +1,3 @@
-// trailing-spaces: no trailing whitespace at line ends — except
-// inside scalar content, where trailing whitespace is part of the parsed
-// value (a recorded divergence from yamllint, which flags content too; a
-// layout rule must not corrupt values, and its fix certainly must not).
-
 import { $YamlId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -81,7 +76,7 @@ export const trailingSpaces = YamlRule.make({
       const match = /[ \t]+$/.exec(line.text);
       if (match === null) continue;
       const runOffset = line.offset + match.index;
-      // Trailing whitespace inside scalar content is the value's business.
+      // decision: layout-rules-skip-scalar-content
       if (insideScalarSpan(ctx.tokens, runOffset)) continue;
       out.push(
         YamlLintDiagnostic.make({

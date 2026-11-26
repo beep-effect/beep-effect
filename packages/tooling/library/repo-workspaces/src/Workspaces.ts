@@ -168,17 +168,6 @@ export type WorkspacesServices =
   | LockfileReader
   | WorkspaceCatalogs;
 
-// Shared composition helper for Workspaces.layer,
-// Workspaces.layerWithConfigDependencies and
-// Workspaces.layerWithConfigDependenciesSubprocess; the public contracts live
-// on those statics. It takes the ConfigDependencyHooks layer EXPLICITLY —
-// built once per composite and handed to WorkspaceCatalogs here and, by
-// `withGit`, to WorkspaceSnapshots — so both services replay through ONE
-// hooks reference (layer memoization is by reference) while the composite's
-// OUTPUT never carries ConfigDependencyHooks: `WorkspacesServices` is
-// unchanged. Generic in R so a hooks layer carrying an extra requirement (the
-// subprocess variant's ChildProcessSpawner) threads it through to the
-// composite's R.
 const compose: {
   <R = never>(
     options: WorkspacesOptions | undefined,
@@ -208,35 +197,15 @@ const compose: {
       Layer.provide(lockfiles)
     );
 
-    // PublishabilityDetector is deliberately ABSENT from this merge. Supplying a
-    // default here made the npm-semantics choice invisible and, because
-    // `Layer.mergeAll` is last-wins, made the natural spelling of an override —
-    // `Layer.mergeAll(myDetector, Workspaces.layer())` — silently lose to it.
-    // For the service that decides whether a package publishes and where, a
-    // silent revert to "publishes to the public registry" is the worst failure
-    // available. Note the composite does not REQUIRE a detector either — nothing
-    // inside it consumes one, so `R` stays `FileSystem | Path`. The requirement
-    // surfaces in the R of each operation that asks a publishability question
-    // (`VersioningStrategy.detect`, e.g.), which is where unwired programs fail
-    // to compile; a consumer that never asks never supplies a policy.
     return Layer.mergeAll(roots, detector, discovery, lockfiles, catalogs);
   }
 );
 
-// Implementation of Workspaces.layer; the public contract lives on the static.
 const layer = (
   options?: WorkspacesOptions
 ): Layer.Layer<WorkspacesServices, never, FileSystem.FileSystem | Path.Path> =>
   compose(options, ConfigDependencyHooks.layerNoop);
 
-/**
- * The core composite widened with the git tier: `Git`, `ChangeDetector` and
- * `WorkspaceSnapshots`. It builds the core over `hooks` ITSELF, so the SAME
- * hooks layer reaches `WorkspaceCatalogs` (through `compose`) and
- * `WorkspaceSnapshots` by construction — `at(ref)` replays a ref's config
- * dependencies exactly as the live assembler replays the worktree's: one
- * reference, one memo, one policy for both sides of a diff.
- */
 const withGit: {
   <R = never>(
     hooks: Layer.Layer<ConfigDependencyHooks, never, R>,
@@ -276,7 +245,6 @@ const withGit: {
   }
 );
 
-// Implementation of Workspaces.layerWithGit; the public contract lives on the static.
 const layerWithGit = (
   options?: WorkspacesGitOptions
 ): Layer.Layer<
@@ -285,17 +253,14 @@ const layerWithGit = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > => withGit(ConfigDependencyHooks.layerNoop, options);
 
-// Implementation of Workspaces.resolvers; the public contract lives on the static.
 const resolvers: Layer.Layer<CatalogResolver | WorkspaceResolver, never, WorkspaceCatalogs | WorkspaceDiscovery> =
   Layer.mergeAll(WorkspaceCatalogs.catalogResolver, WorkspaceDiscovery.workspaceResolver);
 
-// Implementation of Workspaces.layerWithConfigDependencies; the public contract lives on the static.
 const layerWithConfigDependencies = (
   options?: WorkspacesOptions
 ): Layer.Layer<WorkspacesServices, never, FileSystem.FileSystem | Path.Path> =>
   compose(options, ConfigDependencyHooks.layerLive);
 
-// Implementation of Workspaces.layerWithConfigDependenciesSubprocess; the public contract lives on the static.
 const layerWithConfigDependenciesSubprocess = (
   options?: WorkspacesOptions
 ): Layer.Layer<
@@ -304,8 +269,6 @@ const layerWithConfigDependenciesSubprocess = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > => compose(options, ConfigDependencyHooks.layerSubprocess);
 
-// Implementation of Workspaces.layerWithGitAndConfigDependencies; the public
-// contract lives on the static.
 const layerWithGitAndConfigDependencies = (
   options?: WorkspacesGitOptions
 ): Layer.Layer<
@@ -314,8 +277,6 @@ const layerWithGitAndConfigDependencies = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > => withGit(ConfigDependencyHooks.layerLive, options);
 
-// Implementation of Workspaces.layerWithGitAndConfigDependenciesSubprocess; the
-// public contract lives on the static.
 const layerWithGitAndConfigDependenciesSubprocess = (
   options?: WorkspacesGitOptions
 ): Layer.Layer<
@@ -324,13 +285,11 @@ const layerWithGitAndConfigDependenciesSubprocess = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > => withGit(ConfigDependencyHooks.layerSubprocess, options);
 
-// Implementation of Workspaces.resolverLayer; the public contract lives on the static.
 const resolverLayer = (
   options?: WorkspacesOptions
 ): Layer.Layer<CatalogResolver | WorkspaceResolver, never, FileSystem.FileSystem | Path.Path> =>
   resolvers.pipe(Layer.provide(layerWithConfigDependencies(options)));
 
-// Implementation of Workspaces.resolveManifest; the public contract lives on the static.
 const resolveManifest: {
   (
     manifest: Manifest,
@@ -359,7 +318,6 @@ const resolveManifest: {
   })
 );
 
-// Implementation of Workspaces.localExecLayer; the public contract lives on the static.
 const localExecLayer = (options?: {
   readonly cwd?: string;
   readonly stopAt?: string | undefined;
@@ -371,15 +329,9 @@ const localExecLayer = (options?: {
       const detector = yield* PackageManagerDetector;
 
       const context = Effect.gen(function* () {
-        // `Effect.suspend` inside `find` is not enough — the ambient read has
-        // to happen per call, not at layer construction, so a `process.chdir`
-        // between provide and first use is honoured. The house `{ cwd }`
-        // convention, applied here too.
         const cwd = options?.cwd === undefined ? yield* ambientCwd : options.cwd;
         const stopAt = options?.stopAt;
 
-        // A ceiling that finds no root is the ordinary None case, like any
-        // other absent root: nothing project-local to run here.
         const root = yield* roots
           .find(cwd, stopAt === undefined ? undefined : { stopAt })
           .pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
@@ -387,14 +339,7 @@ const localExecLayer = (options?: {
 
         const detected = yield* detector.detect(root.value).pipe(
           Effect.asSome,
-          // A detection REFUSAL is not a mechanism failure: the detector
-          // found no evidence and declined to guess, which is exactly "no
-          // identifiable project-local launcher" — the None case. A
-          // WorkspaceManifestError is different in kind and must escape.
           Effect.catchTag("PackageManagerDetectionError", () => Effect.succeed(O.none<DetectedPackageManager>())),
-          // Everything left is a broken manifest. Wrap it in the contract's
-          // error, preserving the original structurally rather than
-          // flattening it to a message.
           Effect.mapError((cause) => LocalExecError.make({ directory: root.value, cause }))
         );
         if (O.isNone(detected)) return O.none<ExecContext>();

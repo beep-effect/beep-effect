@@ -1207,6 +1207,11 @@ const worktreeList = (): GitInvocation => git(["worktree", "list", "--porcelain"
 // Implementation of GitCommand.worktreePrune; the public contract lives on the static.
 const worktreePrune = (): GitInvocation => git(["worktree", "prune"]);
 
+const worktreeLock = (path: string, reason?: string): GitInvocation =>
+  git(["worktree", "lock", ...(reason !== undefined ? ["--reason", reason] : []), path]);
+
+const worktreeUnlock = (path: string): GitInvocation => git(["worktree", "unlock", path]);
+
 // Implementation of GitCommand.worktreeRemove; the public contract lives on the static.
 const worktreeRemove: {
   (path: string, force?: boolean): GitInvocation;
@@ -3952,6 +3957,55 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly worktreePrune = worktreePrune;
+
+  /**
+   * Builds an invocation to lock a linked working tree against pruning.
+   *
+   * **Details**
+   *
+   * Mutating: `git worktree lock [--reason <reason>] <path>` — writes the
+   * entry's `locked` file, so `git worktree prune` keeps its registration
+   * even while the directory is missing. Git refuses a worktree that is
+   * already locked.
+   *
+   * **Example** (Inspect worktree lock argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.worktreeLock("../review", "moving to a new disk");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // worktree lock --reason moving to a new disk ../review
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly worktreeLock = worktreeLock;
+
+  /**
+   * Builds an invocation to unlock a linked working tree.
+   *
+   * **Details**
+   *
+   * Mutating: `git worktree unlock <path>` — removes the entry's lock so
+   * `git worktree prune` may drop it again. Git refuses a worktree that is
+   * not locked.
+   *
+   * **Example** (Inspect worktree unlock argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.worktreeUnlock("../review");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // worktree unlock ../review
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly worktreeUnlock = worktreeUnlock;
 
   /**
    * Builds an invocation to list staged index entries.

@@ -36,17 +36,6 @@ import { CatalogSet, ImporterVersions } from "./WorkspaceCatalogs.ts";
 
 const $I = $RepoWorkspacesId.create("WorkspaceStateSnapshot");
 
-/**
- * A snapshot's `version` field: absent when the manifest declared none, and
- * never `""`.
- *
- * **Details**
- *
- * The Type side is a `NonEmptyString`, so `make` rejects `""` outright. The
- * encoded side stays a plain optional string so that a stored value carrying
- * `""` still decodes, to the absent key it meant — a stored value and a fresh
- * capture of the same manifest compare equal.
- */
 const SnapshotVersion = S.optionalKey(S.String).pipe(
   S.decodeTo(
     S.optionalKey(S.NonEmptyString),
@@ -167,13 +156,6 @@ export class PackageStateSnapshot extends S.Class<PackageStateSnapshot, { readon
   }
 }
 
-/**
- * The name-to-version index over the versioned packages, a later duplicate
- * name overwriting an earlier one, and the names in first-seen order.
- *
- * @param packages - The captured packages.
- * @returns The index and the names in first-seen order.
- */
 const versionIndexOf = (
   packages: ReadonlyArray<PackageStateSnapshot>
 ): { readonly index: HashMap.HashMap<string, string>; readonly names: ReadonlyArray<string> } => {
@@ -656,9 +638,6 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot, { re
         const fromCatalogs = this.#catalogRange(dependency, catalog.name);
         return O.isSome(fromCatalogs) ? fromCatalogs : onUnresolvedCatalog();
       }),
-      // A version-less member is absent from the index, so it resolves to
-      // `none` exactly as a non-member does — there is nothing to substitute
-      // for `workspace:^`.
       Match.tag("workspace", () => HashMap.get(this.#versions(), dependency)),
       Match.orElse(O.none<string>)
     );
@@ -826,14 +805,6 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot, { re
       before: WorkspaceStateSnapshot,
       after: WorkspaceStateSnapshot
     ): readonly [WorkspaceStateSnapshot, WorkspaceStateSnapshot] => {
-      // A seed already on the receiver is KEPT, beneath the other side's
-      // catalogs. `withSeededCatalogs` replaces, and `WorkspaceSnapshots` applies
-      // a layer-level `seedCatalogs` to every snapshot it returns — so a
-      // replace-only cross-seed dropped that seed on BOTH sides at once and
-      // silently reopened the hook-catalog gap these surfaces exist to close.
-      // The other ref's committed declaration still outranks the carried seed,
-      // which is the whole point of cross-seeding; the carried seed only answers
-      // what neither ref declared.
       const seedFor: {
         (self: WorkspaceStateSnapshot, other: WorkspaceStateSnapshot): CatalogSet;
         (other: WorkspaceStateSnapshot): (self: WorkspaceStateSnapshot) => CatalogSet;
@@ -885,9 +856,6 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot, { re
   get catalogResolver(): Layer.Layer<CatalogResolver> {
     if (this.#catalogResolver === undefined) {
       this.#catalogResolver = Layer.succeed(CatalogResolver, {
-        // The same precedence `resolve` applies — own catalogs, then the seed.
-        // A resolver that ignored the seed would answer differently from
-        // `resolve` on the very snapshot it is bound to.
         rangeOf: Effect.fn("WorkspaceStateSnapshot.catalogRangeOf")((packageName: string, catalog: O.Option<string>) =>
           Effect.succeed(this.#catalogRange(packageName, catalog))
         ),
@@ -924,9 +892,6 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot, { re
   get workspaceResolver(): Layer.Layer<WorkspaceResolver> {
     if (this.#workspaceResolver === undefined) {
       this.#workspaceResolver = Layer.succeed(WorkspaceResolver, {
-        // The contract reserves `none` for a NON-member, so a known member that
-        // declared no version fails typed — the same answer the discovery-backed
-        // resolver gives.
         versionOf: Effect.fn("WorkspaceStateSnapshot.workspaceVersionOf")(
           (packageName: string): Effect.Effect<O.Option<string>, DependencyResolutionError> => {
             const member = O.getOrUndefined(HashMap.get(this.#packages(), packageName));

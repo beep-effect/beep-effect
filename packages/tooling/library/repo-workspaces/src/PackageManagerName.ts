@@ -101,19 +101,13 @@ export type PackageManagerName = typeof PackageManagerName.Type;
  * @since 0.0.0
  */
 export const PackageManagerEvidence = LiteralKit([
-  // The workspace tier: which manager runs this WORKSPACE.
   "pnpm-workspace.yaml",
   "bun.lock",
   "bun.lockb",
   "yarn.lock",
   "package.json#workspaces",
-  // The standalone tier: which manager runs this single-package repo.
   "pnpm-lock.yaml",
   "package-lock.json",
-  // The declaration tier: which manager is MEANT to run, before any install.
-  // devEngines first: it is authoritative for the name (`declaredName`
-  // believes it over the top-level field), so the union order IS the decision
-  // precedence — the same rule that orders every other member.
   "package.json#devEngines.packageManager",
   "package.json#packageManager",
 ]).pipe(
@@ -214,10 +208,6 @@ export declare namespace DetectedPackageManager {
   export type Encoded = typeof DetectedPackageManager.Encoded;
 }
 
-/**
- * A manager named by one of the two manifest fields: the name, plus the exact
- * version when the field carries one that parses.
- */
 const ManagerHint = S.Struct({
   name: S.String.pipe($I.annoteKey("ManagerHint.name", { description: "The manager name declared by the manifest." })),
   version: S.Option(S.String).pipe(
@@ -231,7 +221,6 @@ const ManagerHint = S.Struct({
 
 type ManagerHint = typeof ManagerHint.Type;
 
-/** What the manifest declares about its manager: the `devEngines` and `packageManager` hints. */
 interface Hints {
   readonly corepack: O.Option<ManagerHint>;
   readonly devEngines: O.Option<ManagerHint>;
@@ -280,18 +269,6 @@ export type JsonObject = typeof JsonObject.Type;
  */
 export const isPlainObject = S.is(JsonObject);
 
-/**
- * The exact version a `name` + `version` pair denotes, or none when the version
- * is not an exact version.
- *
- * **Details**
- *
- * Reuses the corepack `name@version+integrity` grammar rather than a second
- * parser, so a `devEngines` version carrying a hash (`11.11.0+sha512.…`)
- * normalizes to the same `11.11.0` the
- * top-level field reports — and a *range* (`^11`, `11.x`) yields none, because a
- * range is not a version and corepack will not run one either.
- */
 const exactVersionOf: {
   (name: string, version: string): O.Option<string>;
   (version: string): (name: string) => O.Option<string>;
@@ -301,21 +278,6 @@ const exactVersionOf: {
     S.decodeOption(PackageManager.FromString)(`${name}@${version}`).pipe(O.map((pm) => pm.version))
 );
 
-/**
- * The `devEngines.packageManager` hint, or none.
- *
- * **Details**
- *
- * Every malformed shape corepack itself tolerates is tolerated here by *ignoring
- * the field*, never by failing detection: a non-object `devEngines`, a
- * non-object `packageManager`, an **array** of them (corepack does not support
- * arrays in this slot and falls back), a missing or non-string `name`, and a
- * `name` containing `@`. A version that is not an exact version is dropped on its
- * own, keeping the name — the name is still a valid disambiguator.
- *
- * @param manifest - The parsed root manifest.
- * @returns The declared manager name and exact version, or none.
- */
 const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
   const devEngines = manifest.devEngines;
   if (!isPlainObject(devEngines)) return O.none();
@@ -333,12 +295,6 @@ const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint
   });
 };
 
-/**
- * The corepack top-level `packageManager` hint, or none when absent or malformed.
- *
- * @param manifest - The parsed root manifest.
- * @returns The `packageManager` field's name and exact version, or none.
- */
 const corepackHint = (manifest: Record<string, unknown>): O.Option<ManagerHint> => {
   const raw = manifest.packageManager;
   if (!P.isString(raw)) return O.none();
@@ -412,11 +368,7 @@ export class PackageManagerDetectionError extends S.TaggedError<
   }
 }
 
-/**
- * The markers probed, in priority order. Derived from the evidence vocabulary so
- * the failure path's `checked` and the success path's `evidence` cannot drift.
- */
-const CHECKED = PackageManagerEvidence.literals;
+const MARKERS_IN_PRIORITY_ORDER = PackageManagerEvidence.literals;
 
 /**
  * Every failure {@link PackageManagerDetector} can surface: no manager could be
@@ -558,17 +510,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         fs.exists(path.join(root, file)).pipe(Effect.orElseSucceed(() => false))
     );
 
-    /**
-     * The root manifest, read and parsed **once** per detection.
-     *
-     * **Details**
-     *
-     * An absent manifest is `Option.none()` — a bun or yarn repo with no root
-     * `package.json` is unusual but not an error. A manifest that is present but
-     * unreadable, unparseable, or not a JSON object fails typed: those are
-     * corrupt-manifest conditions, and swallowing them would report "no manager
-     * declared" for a repo whose manifest is simply broken.
-     */
     const manifestOf = Effect.fnUntraced(function* (
       root: string
     ): Effect.fn.Return<O.Option<Record<string, unknown>>, WorkspaceManifestError> {
@@ -594,17 +535,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
       return O.some(parsed);
     });
 
-    /**
-     * The manager name the manifest declares, if any.
-     *
-     * **Details**
-     *
-     * `devEngines` first — it is authoritative for the name, and corepack errors
-     * when the top-level field contradicts it.
-     *
-     * @param hints - The manifest's manager hints.
-     * @returns The declared manager name, or none.
-     */
     const declaredName = (hints: Hints): O.Option<string> =>
       O.map(
         O.orElse(hints.devEngines, () => hints.corepack),
@@ -616,16 +546,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
       (name: PackageManagerName): (hints: Hints) => boolean;
     } = dual(2, (hints: Hints, name: PackageManagerName): boolean => O.contains(declaredName(hints), name));
 
-    /**
-     * The version to report for the manager that was detected — none unless a
-     * field naming *that* manager carries one.
-     *
-     * **Details**
-     *
-     * The top-level `packageManager` wins when it names the manager, because it
-     * is the field carrying the integrity hash; `devEngines` supplies the version
-     * when it does not.
-     */
     const versionFor: {
       (hints: Hints, name: PackageManagerName): O.Option<string>;
       (name: PackageManagerName): (hints: Hints) => O.Option<string>;
@@ -635,14 +555,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
       return O.orElse(fromCorepack, () => O.flatMap(hints.devEngines, (hint) => hint.version));
     });
 
-    /**
-     * A detection of `name`, with the version a field naming it carries.
-     *
-     * @param hints - The manifest's manager hints.
-     * @param name - The manager that was detected.
-     * @param evidence - The marker or field that decided the name.
-     * @returns The detection.
-     */
     const detected = (hints: Hints, name: PackageManagerName, evidence: PackageManagerEvidence) =>
       DetectedPackageManager.make({
         name,
@@ -651,18 +563,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         evidence,
       });
 
-    /**
-     * A marker-file rung: `marker` at the root decides `name`. A lockfile a
-     * stray copy of which is common (yarn, bun) also needs the manifest to name
-     * its manager, and that cheaper check runs first.
-     *
-     * @param root - The workspace root.
-     * @param hints - The manifest's manager hints.
-     * @param marker - The marker file the rung probes.
-     * @param name - The manager the marker decides.
-     * @param needsDeclaration - Whether the manifest must also name the manager.
-     * @returns The detection when the rung decides, or none.
-     */
     const markerRung = (
       root: string,
       hints: Hints,
@@ -674,13 +574,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         ? Effect.succeedNone
         : Effect.map(has(root, marker), (present) => (present ? O.some(detected(hints, name, marker)) : O.none()));
 
-    /**
-     * The npm workspace rung: a root manifest with a `workspaces` field.
-     *
-     * @param manifest - The parsed root manifest, when one exists.
-     * @param hints - The manifest's manager hints.
-     * @returns An npm detection when the manifest has a `workspaces` field, or none.
-     */
     const workspacesRung = (
       manifest: O.Option<Record<string, unknown>>,
       hints: Hints
@@ -690,15 +583,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         () => detected(hints, "npm", "package.json#workspaces")
       );
 
-    /**
-     * The declaration rung: no lockfile at all, but the manifest names a
-     * known manager. The evidence is the field that supplied the name —
-     * `declaredName` believes devEngines first, so the evidence mirrors that
-     * precedence.
-     *
-     * @param hints - The manifest's manager hints.
-     * @returns The detection the declaration supports, or none.
-     */
     const declarationRung = (hints: Hints): O.Option<DetectedPackageManager> =>
       O.map(O.filter(declaredName(hints), S.is(PackageManagerName)), (name) =>
         detected(
@@ -715,35 +599,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         corepack: O.flatMap(manifest, corepackHint),
       };
 
-      // The rungs in priority order; the first that decides a name wins.
-      //
-      // ── the workspace tier ─────────────────────────────────────────────
-      //
-      // Which bun lockfile is present is probed in priority order — the
-      // marker itself is the evidence a success reports.
-      //
-      // ── the standalone tier ────────────────────────────────────────────
-      //
-      // Every workspace marker has missed, so this is not a workspace. Most
-      // repos are not: a single-package repo with a pnpm-lock.yaml and no
-      // `workspaces` field must still be detectable.
-      //
-      // It runs after the workspace tier on purpose, so no input that
-      // already resolved there can change its answer, and a stray package-lock.json
-      // cannot turn a pnpm workspace into an npm repo.
-      //
-      // The conjunctions mirror the workspace tier exactly rather than
-      // inventing a looser second rule inside one service: a pnpm or npm
-      // lockfile is written by exactly one manager and stands alone, while a
-      // yarn or bun lockfile still needs the manifest to name its manager,
-      // because a stray yarn.lock is as common here as in a workspace.
-      //
-      // ── the declaration tier ───────────────────────────────────────────
-      //
-      // No lockfile at all. A fresh clone before its first install has none to
-      // read, but its manifest still says plainly which manager is meant to
-      // run — weaker evidence than a lockfile, which is why it is consulted
-      // last, but evidence nonetheless.
+      const yarnLockWrittenMidDetection = markerRung(root, hints, "yarn.lock", "yarn", true);
       const rungs: ReadonlyArray<Effect.Effect<O.Option<DetectedPackageManager>>> = [
         markerRung(root, hints, "pnpm-workspace.yaml", "pnpm", false),
         markerRung(root, hints, "bun.lock", "bun", true),
@@ -751,9 +607,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         markerRung(root, hints, "yarn.lock", "yarn", true),
         Effect.sync(() => workspacesRung(manifest, hints)),
         markerRung(root, hints, "pnpm-lock.yaml", "pnpm", false),
-        // Probed again, not skipped: a lockfile written while detection runs
-        // is recognized by the standalone tier's own probe.
-        markerRung(root, hints, "yarn.lock", "yarn", true),
+        yarnLockWrittenMidDetection,
         markerRung(root, hints, "package-lock.json", "npm", false),
         Effect.sync(() => declarationRung(hints)),
       ];
@@ -762,10 +616,7 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         if (O.isSome(decided)) return decided.value;
       }
 
-      // Nothing matched, and the package REFUSES TO GUESS: a default is policy,
-      // not detection. A caller who wants one writes `Effect.orElseSucceed`
-      // where a reader can see it.
-      return yield* PackageManagerDetectionError.make({ root, checked: CHECKED });
+      return yield* PackageManagerDetectionError.make({ root, checked: MARKERS_IN_PRIORITY_ORDER });
     });
 
     return {
