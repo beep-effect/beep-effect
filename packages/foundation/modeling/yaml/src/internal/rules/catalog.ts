@@ -1,11 +1,3 @@
-// The built-in rule catalog: the ordered rule array the facade
-// exposes as `YamlLint.builtins`, and the per-rule options schemas the
-// config layer validates against. Aggregates VALUES (an array and a map) —
-// not a re-export barrel; rules are imported from their own modules.
-//
-// Rules accrete here batch by batch; `indentation` lands last (see the
-// design doc).
-
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import { colonSpacing, colonSpacingOptions } from "./colon-spacing.ts";
@@ -25,11 +17,7 @@ import { truthy, truthyOptions } from "./truthy.ts";
 import type * as S from "effect/Schema";
 import type { YamlRule } from "../../YamlLintRule.ts";
 
-// ONE ordered source of rule/options-schema pairs: deriving both exports
-// from it makes a schema-less built-in unrepresentable — a rule registered
-// in one list only would otherwise validate as a CUSTOM rule with opaque
-// options, and a typo'd option would decode silently.
-const catalog: ReadonlyArray<readonly [YamlRule, S.Codec<unknown, unknown>]> = [
+const schemaPairedRuleCatalog: ReadonlyArray<readonly [YamlRule, S.Codec<unknown, unknown>]> = [
   [parseValidity, parseValidityOptions],
   [lineLength, lineLengthOptions],
   [trailingSpaces, trailingSpacesOptions],
@@ -60,7 +48,7 @@ const catalog: ReadonlyArray<readonly [YamlRule, S.Codec<unknown, unknown>]> = [
  * @category constants
  * @since 0.0.0
  */
-export const builtinRules: ReadonlyArray<YamlRule> = A.map(catalog, ([rule]) => rule);
+export const builtinRules: ReadonlyArray<YamlRule> = A.map(schemaPairedRuleCatalog, ([rule]) => rule);
 
 /**
  * Per-rule options schemas in catalog order, matching {@link builtinRules}.
@@ -77,7 +65,7 @@ export const builtinRules: ReadonlyArray<YamlRule> = A.map(catalog, ([rule]) => 
  * @since 0.0.0
  */
 export const builtinOptionsEntries: ReadonlyArray<readonly [string, S.Codec<unknown, unknown>]> = A.map(
-  catalog,
+  schemaPairedRuleCatalog,
   ([rule, options]) => [rule.id, options]
 );
 

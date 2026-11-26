@@ -1,7 +1,3 @@
-// line-length: lines must not exceed the configured maximum. No fix —
-// a line can only be shortened by reflowing content, and reflowing is
-// formatting, not fixing.
-
 import { $YamlId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -111,10 +107,6 @@ export const lineLength = YamlRule.make({
     }
     return out;
   }),
-  // Inference: line length is inferable only as a FLOOR — the
-  // longest observed line proves `max` is at least that long, never what
-  // it is. The floor rides in the evidence for callers that want it; the
-  // option stays default-driven under both resolvers.
   infer: (ctx) => {
     let longest = 0;
     for (const line of ctx.lines) {

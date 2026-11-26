@@ -1,8 +1,3 @@
-// colon-spacing: spaces around the block-mapping `:` indicator —
-// none before it (a `key :` reads as a key containing a space), at most one
-// after it. An explicit-value `:` at the head of its line is structure, not
-// spacing, and a comment after the colon belongs to comments-spacing.
-
 import { $YamlId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -61,22 +56,15 @@ export class colonSpacingOptions extends S.Opaque<colonSpacingOptions, { readonl
   )
 ) {}
 
-/** The configured space limits around `:`. */
 const readColonLimits = (options: unknown): { readonly maxBefore: number; readonly maxAfter: number } => {
   const opts = P.isObject(options) ? options : {};
+  const separationSafeMaxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
   return {
     maxBefore: P.isNumber(opts.maxSpacesBefore) ? opts.maxSpacesBefore : 0,
-    // Clamped so a hand-built options object cannot bypass the schema and
-    // delete the separation space.
-    maxAfter: Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1),
+    maxAfter: separationSafeMaxAfter,
   };
 };
 
-/**
- * Spaces before: count the run, but only when non-space content
- * precedes it on the line — a `:` opening an explicit value sits
- * after indentation, which is not "space before the colon".
- */
 const spacesBeforeFinding = (text: string, token: YamlToken, maxBefore: number): YamlLintDiagnostic | undefined => {
   let i = token.offset - 1;
   while (i >= 0 && text[i] === " ") i--;
@@ -100,18 +88,14 @@ const spacesBeforeFinding = (text: string, token: YamlToken, maxBefore: number):
   });
 };
 
-/**
- * Spaces after: at most maxAfter before the value — unless the line
- * ends (value on the next line) or a comment follows (that spacing
- * is comments-spacing's business).
- */
 const spacesAfterFinding = (text: string, token: YamlToken, maxAfter: number): YamlLintDiagnostic | undefined => {
   const start = token.offset + token.length;
   let j = start;
   while (j < text.length && text[j] === " ") j++;
   const after = j - start;
   const next = text[j];
-  if (next === undefined || next === "\n" || next === "\r" || next === "#") return undefined;
+  const valueOnNextLineOrCommentSpacingOwnsIt = next === undefined || next === "\n" || next === "\r" || next === "#";
+  if (valueOnNextLineOrCommentSpacingOwnsIt) return undefined;
   if (after <= maxAfter) return undefined;
   return YamlLintDiagnostic.make({
     rule: "colon-spacing",

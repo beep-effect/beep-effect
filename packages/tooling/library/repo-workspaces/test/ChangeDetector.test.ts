@@ -16,9 +16,7 @@ import * as Layer from "effect/Layer";
 import { manifest, platform, rootManifest } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
-// a → b → c: `web` depends on `beta`, `beta` depends on `alpha`. Touching a file
-// in `alpha` must therefore affect `beta` AND `web`.
-const tree: Tree = {
+const webOnBetaOnAlphaChain: Tree = {
   "/repo/package.json": rootManifest(["packages/*", "apps/*"]),
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
   "/repo/packages/beta/package.json": manifest("@x/beta", { dependencies: { "@x/alpha": "1.0.0" } }),
@@ -35,26 +33,17 @@ type WorkingChanges = (
   options?: { readonly relative?: boolean }
 ) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError>;
 
-/**
- * A `Git` stub with only the two methods `ChangeDetector` exercises supplied;
- * every other method fails loudly as a defect if the detector ever reaches it,
- * so the test proves no repository is touched. `Git.layerTest` — the shipped
- * double git.md documents for change-detection consumers.
- */
 const stubGit = (impl: {
   readonly changedFiles?: ChangedFiles;
   readonly workingChanges?: WorkingChanges;
 }): Layer.Layer<Git> =>
-  // Git.layerTest fills every unstubbed method with a defect naming itself,
-  // so the test still proves no repository is touched — without this file
-  // re-enumerating (and drifting from) the full GitShape surface.
   Git.layerTest({
     changedFiles: impl.changedFiles ?? (() => Effect.succeed([])),
     workingChanges: impl.workingChanges ?? (() => Effect.succeed([])),
   });
 
 const detectorOver = (git: Layer.Layer<Git>) => {
-  const base = platform(tree);
+  const base = platform(webOnBetaOnAlphaChain);
   const roots = WorkspaceRoot.layer.pipe(Layer.provide(base));
   const discovery = WorkspaceDiscovery.layer({ cwd: "/repo" }).pipe(Layer.provide(roots), Layer.provide(base));
   return Layer.mergeAll(discovery, git, ChangeDetector.layer.pipe(Layer.provide(git), Layer.provide(discovery))).pipe(
@@ -92,20 +81,16 @@ describe("ChangeDetector — committed changes", () => {
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
         const affected = yield* detector.affectedPackages();
-        // `@x/web` is two hops from `@x/alpha`. A one-hop implementation
-        // returns only alpha and beta and passes a lazier assertion.
         assert.deepStrictEqual(
           A.map(affected, (pkg: WorkspacePackage) => pkg.name),
-          ["@x/alpha", "@x/beta", "@x/web"]
+          ["@x/alpha", "@x/beta", "@x/web"],
+          "@x/web is two hops from @x/alpha; a one-hop walk returns only alpha and beta"
         );
       })
     );
   });
 });
 
-// `includeUncommitted` must fold in the working tree via `Git.workingChanges`.
-// A stub whose `workingChanges` returns three distinct files proves all three
-// sources (unstaged, staged, untracked) are unioned into the result.
 const withWorkingTree = stubGit({
   changedFiles: (_cwd, { base }) =>
     base === "HEAD~1" ? Effect.succeed(["packages/alpha/committed.ts"]) : Effect.succeed([]),
@@ -119,12 +104,16 @@ describe("ChangeDetector — includeUncommitted", () => {
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
         const files = yield* detector.changedFiles(ChangeDetectionOptions.make({ includeUncommitted: true }));
-        assert.deepStrictEqual(files, [
-          "apps/web/untracked.ts",
-          "packages/alpha/committed.ts",
-          "packages/beta/staged.ts",
-          "packages/beta/unstaged.ts",
-        ]);
+        assert.deepStrictEqual(
+          files,
+          [
+            "apps/web/untracked.ts",
+            "packages/alpha/committed.ts",
+            "packages/beta/staged.ts",
+            "packages/beta/unstaged.ts",
+          ],
+          "unstaged, staged and untracked working changes are all unioned in"
+        );
       })
     );
 
@@ -150,20 +139,19 @@ describe("ChangeDetector — includeUncommitted", () => {
 });
 
 describe("ChangeDetector — a custom base ref reaches git", () => {
-  // The stub answers ONLY `origin/main`; a detector that ignored the option and
-  // used the default range would see an empty diff.
-  const custom = stubGit({
+  const originMainOnly = stubGit({
     changedFiles: (_cwd, { base }) =>
       base === "origin/main" ? Effect.succeed(["packages/beta/x.ts"]) : Effect.succeed([]),
   });
-  layer(detectorOver(custom), { timeout: "30 seconds" })((it) => {
+  layer(detectorOver(originMainOnly), { timeout: "30 seconds" })((it) => {
     it.effect("the base option is threaded into the git range", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
         const changed = yield* detector.changedPackages(ChangeDetectionOptions.make({ base: "origin/main" }));
         assert.deepStrictEqual(
           A.map(changed, (pkg: WorkspacePackage) => pkg.name),
-          ["@x/beta"]
+          ["@x/beta"],
+          "the stub answers only origin/main; the default range would see an empty diff"
         );
       })
     );
@@ -171,8 +159,6 @@ describe("ChangeDetector — a custom base ref reaches git", () => {
 });
 
 describe("ChangeDetector — the working tree is not a git repository", () => {
-  // `Git` surfaces a non-repository directly as NotARepositoryError — the
-  // v1 `available()` pre-check that synthesized a `GitCommandError` is gone.
   const notARepo = stubGit({
     changedFiles: (cwd) => Effect.fail(NotARepositoryError.make({ cwd })),
   });
@@ -216,8 +202,6 @@ describe("ChangeDetector — a git command that fails", () => {
     );
   });
 });
-
-// ── Publishability, which is pure and swappable ────────────────────────────
 
 const location = {
   version: "1.0.0",
@@ -290,16 +274,6 @@ describe("PublishabilityDetector — the npm semantics", () => {
   });
 });
 
-// ── a workspace NESTED inside a larger git repository ──────────────────────
-//
-// The `--relative` correctness now lives inside `@effected/git`: `Git` runs
-// `git diff --relative` and returns workspace-root-relative paths. What the
-// detector owns is REQUESTING that mode. This stub proves the detector passes
-// `relative: true` — it returns workspace-relative paths for `relative: true`
-// and the (wrong, repository-relative) paths otherwise, so a detector that
-// forgot to ask for relative mode resolves the wrong package (or none). Real
-// `--relative` behavior against a real nested tree is git's own integration test.
-
 const nestedGit = stubGit({
   changedFiles: (_cwd, { relative }) =>
     relative === true
@@ -307,15 +281,17 @@ const nestedGit = stubGit({
       : Effect.succeed(["repo/packages/alpha/src/index.ts", "outside/tooling.ts"]),
 });
 
-describe("ChangeDetector — a workspace nested inside a larger git repository", () => {
+describe("ChangeDetector — a workspace nested inside a larger git repository: the detector requests git's relative mode", () => {
   layer(detectorOver(nestedGit), { timeout: "30 seconds" })((it) => {
     it.effect("requests relative mode, so paths are workspace-relative", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
-        // If the detector forgot `relative: true`, this would be
-        // ["outside/tooling.ts", "repo/packages/alpha/src/index.ts"].
         const changedFiles3 = yield* detector.changedFiles();
-        assert.deepStrictEqual(changedFiles3, ["packages/alpha/src/index.ts"]);
+        assert.deepStrictEqual(
+          changedFiles3,
+          ["packages/alpha/src/index.ts"],
+          "without relative: true these would be outside/tooling.ts and repo/packages/alpha/src/index.ts"
+        );
       })
     );
 
@@ -324,9 +300,11 @@ describe("ChangeDetector — a workspace nested inside a larger git repository",
         const detector = yield* ChangeDetector;
         const changedPackages4 = yield* detector.changedPackages();
         const names = A.map(changedPackages4, (pkg) => pkg.name);
-        // A repository-relative path joined onto the workspace root yields
-        // /repo/repo/packages/alpha/... — which owns nothing. Silent and wrong.
-        assert.deepStrictEqual(names, ["@x/alpha"]);
+        assert.deepStrictEqual(
+          names,
+          ["@x/alpha"],
+          "a repository-relative path joined onto the root (/repo/repo/packages/alpha) silently owns nothing"
+        );
       })
     );
 

@@ -1,21 +1,3 @@
-import { identity } from "effect/Function";
-// Parent-side plumbing of `ConfigDependencyHooks.layerSubprocess`, over the
-// public `ScriptedSpawner` double from `@effected/commands`.
-//
-// The child-process semantics (real hook replay, per-name load failures) live
-// in `integration/ConfigDependencyHooksSubprocess.int.test.ts`, which spawns a
-// real `node`; the declared-version resolution ladder the parent runs BEFORE
-// spawning is pinned in `integration/ConfigDependencyResolution.int.test.ts`.
-// This suite pins everything else the PARENT decides: when a spawn happens at
-// all, the exact argv contract, and how each transport outcome maps onto the
-// typed error taxonomy.
-//
-// The ladder reads through the provided FileSystem, so the root here is a
-// `@beep/memfs` volume whose `.pnpm-config/<name>` entries are installed at
-// `1.0.0` with a pnpmfile the scripted spawner never actually loads. The real
-// child running the emitted script and argv is
-// `integration/ConfigDependencyHooksSubprocess.int.test.ts`.
-
 import { ScriptedSpawner } from "@beep/commands";
 import { MemoryFileSystem } from "@beep/memfs";
 import { CatalogAssemblyError } from "@beep/npm-spec/CatalogAssemblyError";
@@ -27,6 +9,7 @@ import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -41,13 +24,10 @@ const ROOT = "/repo";
 const SEED = { default: { effect: "^4.0.0" }, named: { "left-pad": "^1.0.0" } } as const;
 const INSTALLED = ["dep", "dep-a", "@scope/dep-b", "@scope/pkg", "broken-dep"] as const;
 
-/** The pnpmfile path the parent resolves for an installed fixture. */
 const pnpmfileOf = (name: string): string => `${ROOT}/node_modules/.pnpm-config/${name}/pnpmfile.mjs`;
-/** The `file:` URL the child receives for a resolved pnpmfile — the parent converts, the child only imports. */
 const pnpmfileUrlOf = (name: string): string => `file://${pnpmfileOf(name)}`;
 
-/** The installed `.pnpm-config` tree, every entry at `1.0.0`. */
-const installed = R.fromEntries(
+const installedAt100 = R.fromEntries(
   A.flatMap(INSTALLED, (name) => [
     [
       `${ROOT}/node_modules/.pnpm-config/${name}/package.json`,
@@ -57,23 +37,21 @@ const installed = R.fromEntries(
   ])
 );
 
-/** A payload the subprocess protocol would print, framed as the final stdout line. */
 const emitted = (payload: unknown, noise = ""): string =>
   `${noise}\n${Result.getOrThrowWith(S.encodeUnknownResult(JsonValue)(payload), identity)}\n`;
 
-/** The layer under test over a scripted spawner, plus the spawn log. */
-const harness = (script: Parameters<typeof ScriptedSpawner.make>[0]) => {
+const parentSideOverScriptedSpawner = (script: Parameters<typeof ScriptedSpawner.make>[0]) => {
   const spawner = ScriptedSpawner.make(script);
   const layer = ConfigDependencyHooks.layerSubprocess.pipe(
     Layer.provide(spawner.layer),
-    Layer.provide(Layer.merge(MemoryFileSystem.layerWith(installed), Path.layer))
+    Layer.provide(Layer.merge(MemoryFileSystem.layerWith(installedAt100), Path.layer))
   );
   return { spawner, layer };
 };
 
 describe("ConfigDependencyHooks.layerSubprocess — no-spawn fast paths", () => {
   {
-    const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: {} }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("empty configDependencies returns the seed without spawning anything", () =>
         Effect.gen(function* () {
@@ -88,15 +66,18 @@ describe("ConfigDependencyHooks.layerSubprocess — no-spawn fast paths", () => 
               replays: {},
             })
           );
-          // The discriminating half: nothing was spawned to produce that answer.
-          assert.strictEqual(spawner.spawns.length, 0);
+          assert.strictEqual(
+            spawner.spawns.length,
+            0,
+            "the discriminating half: nothing was spawned to produce that answer"
+          );
         })
       );
     });
   }
 
   {
-    const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: {} }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("a '..' path segment in a name fails typed BEFORE any spawn", () =>
         Effect.gen(function* () {
@@ -105,15 +86,14 @@ describe("ConfigDependencyHooks.layerSubprocess — no-spawn fast paths", () => 
           assert.instanceOf(error, CatalogAssemblyError);
           assert.strictEqual(error.source, "hooks");
           assert.strictEqual(error.path, "../../evil");
-          // The malicious name never reached a subprocess.
-          assert.strictEqual(spawner.spawns.length, 0);
+          assert.strictEqual(spawner.spawns.length, 0, "the malicious name never reached a subprocess");
         })
       );
     });
   }
 
   {
-    const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: {} }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("a scoped name (a legitimate '/') is not rejected and DOES spawn", () =>
         Effect.gen(function* () {
@@ -128,7 +108,7 @@ describe("ConfigDependencyHooks.layerSubprocess — no-spawn fast paths", () => 
 
 describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
   {
-    const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: {} }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("spawns node with the static script and seed/rules/resolved pairs via argv, never interpolated", () =>
         Effect.gen(function* () {
@@ -141,30 +121,30 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
           assert.strictEqual(spawn.args[1], "-e");
           const script = spawn.args[2];
           assert.isDefined(script);
-          // The script is a STATIC constant: no runtime value is spliced into the
-          // program text — seed, rules and the resolved pairs travel exclusively
-          // as argv.
-          assert.isFalse(Str.includes(ROOT)(script));
+          assert.isFalse(
+            Str.includes(ROOT)(script),
+            "the script is a static constant: seed, rules and resolved pairs travel only as argv"
+          );
           assert.isFalse(Str.includes("dep-a")(script));
           assert.strictEqual(spawn.args[3], "beep-replay");
           assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[4] ?? "")), SEED);
-          // The rules seed rides the same argv channel, in its own slot ahead of
-          // the pairs — never spliced into the program text either.
           assert.deepStrictEqual(
             Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[5] ?? "")),
             PeerDependencyRules.make({
               allowedVersions: {},
               ignoreMissing: [],
               allowAny: [],
-            })
+            }),
+            "the rules seed rides argv in its own slot ahead of the pairs, never spliced into the script"
           );
-          // The PARENT resolved each declared version to a pnpmfile and converted
-          // it to a `file:` URL; the child receives `[name, fileUrl]` pairs as ONE
-          // JSON argument and performs no lookup or path conversion of its own.
-          assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[6] ?? "")), [
-            ["dep-a", pnpmfileUrlOf("dep-a")],
-            ["@scope/dep-b", pnpmfileUrlOf("@scope/dep-b")],
-          ]);
+          assert.deepStrictEqual(
+            Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[6] ?? "")),
+            [
+              ["dep-a", pnpmfileUrlOf("dep-a")],
+              ["@scope/dep-b", pnpmfileUrlOf("@scope/dep-b")],
+            ],
+            "the parent resolves each pnpmfile to a file: URL; the child gets the pairs as one JSON argument and looks nothing up"
+          );
           assert.strictEqual(spawn.args.length, 7);
         })
       );
@@ -172,16 +152,15 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
   }
 
   {
-    const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: {} }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("a declared version the ladder cannot resolve fails typed BEFORE any spawn", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // `dep` is installed at 1.0.0; declaring 2.0.0 finds nothing anywhere.
           const error = yield* Effect.flip(hooks.inject(ROOT, { dep: "2.0.0" }, SEED));
           assert.instanceOf(error, CatalogAssemblyError);
           assert.strictEqual(error.source, "hooks");
-          assert.strictEqual(error.path, "dep");
+          assert.strictEqual(error.path, "dep", "dep is installed at 1.0.0, so a declared 2.0.0 is found nowhere");
           assert.strictEqual(spawner.spawns.length, 0);
         })
       );
@@ -189,7 +168,7 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
   }
 
   {
-    const { spawner, layer } = harness(() => ({ stdout: emitted({ ok: true, config: {} }) }));
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: {} }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("carries the supplied peer-dependency rules through argv, not the empty default", () =>
         Effect.gen(function* () {
@@ -202,10 +181,11 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
           yield* hooks.inject(ROOT, { "dep-a": "1.0.0" }, SEED, rules);
           const spawn = spawner.spawns[0];
           assert.isDefined(spawn);
-          // Seeded, not merged by us: the workspace file's rules go INTO the
-          // threaded config so the hooks merge onto them, exactly as pnpm seeds
-          // its own config.
-          assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[5] ?? "")), rules);
+          assert.deepStrictEqual(
+            Result.getOrThrow(S.decodeResult(JsonValue)(spawn.args[5] ?? "")),
+            rules,
+            "seeded, not merged by us: the hooks merge onto the threaded rules, exactly as pnpm seeds its own config"
+          );
           assert.isFalse(Str.includes("1.2.3")(spawn.args[2] ?? ""));
         })
       );
@@ -215,7 +195,7 @@ describe("ConfigDependencyHooks.layerSubprocess — the argv contract", () => {
 
 describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed, never defects", () => {
   {
-    const { layer } = harness((command) => ScriptedSpawner.notFound(command));
+    const { layer } = parentSideOverScriptedSpawner((command) => ScriptedSpawner.notFound(command));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("a spawn failure (node not found) fails typed as a hooks-source CatalogAssemblyError", () =>
         Effect.gen(function* () {
@@ -230,7 +210,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
   }
 
   {
-    const { layer } = harness(() => ({ stdout: "", stderr: "boom from node", exit: 7 }));
+    const { layer } = parentSideOverScriptedSpawner(() => ({ stdout: "", stderr: "boom from node", exit: 7 }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("a non-zero exit with no result payload fails typed, carrying exit code and stderr", () =>
         Effect.gen(function* () {
@@ -239,10 +219,12 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
           assert.instanceOf(error, CatalogAssemblyError);
           assert.strictEqual(error.source, "hooks");
           assert.strictEqual(error.path, ROOT);
-          // The cause is Run.jsonLine's CommandOutputError, whose message carries
-          // the exit code and the stderr tail as context.
           if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-          assert.include(String(error.cause.message), "exit 7");
+          assert.include(
+            String(error.cause.message),
+            "exit 7",
+            "the cause is Run.jsonLine's CommandOutputError, carrying the exit code and stderr tail"
+          );
           assert.include(String(error.cause.message), "boom from node");
         })
       );
@@ -250,7 +232,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
   }
 
   {
-    const { layer } = harness(() => ({ stdout: "definitely not json\nnor this\n" }));
+    const { layer } = parentSideOverScriptedSpawner(() => ({ stdout: "definitely not json\nnor this\n" }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("unparseable stdout (a zero exit, but no JSON line) fails typed", () =>
         Effect.gen(function* () {
@@ -264,38 +246,39 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
   }
 
   {
-    // A pnpmfile that loops or awaits forever presents as a child that never
-    // exits: `hang: true` makes the scripted handle's exitCode never resolve.
-    // The replay's hard-coded timeout must kill it and surface through the
-    // same typed `hooks`-source path as any other transport failure — never a
-    // hang of the memoized assemble pass, never a defect.
     const started = Deferred.makeUnsafe<void>();
-    const { spawner, layer } = harness(() => {
+    const { spawner, layer } = parentSideOverScriptedSpawner(() => {
       Deferred.doneUnsafe(started, Effect.void);
       return { hang: true };
     });
-    // Built per test, not as a shared `it.layer` block: the test advances the
-    // clock, so it must own the TestClock its subject runs on.
-    it.effect("a replay that never settles fails typed at the thirty-second ceiling", () =>
-      Effect.gen(function* () {
-        const context = yield* Layer.build(layer);
-        const hooks = Context.get(context, ConfigDependencyHooks);
-        const fiber = yield* hooks.inject(ROOT, { dep: "1.0.0" }, SEED).pipe(Effect.flip, Effect.forkChild);
-        // Wait for resolution to spawn, or for an early typed failure, so a
-        // failed resolution still reaches the spawn assertion.
-        yield* Deferred.await(started).pipe(Effect.raceFirst(Fiber.join(fiber)));
-        assert.strictEqual(spawner.spawns.length, 1, "the replay child was never spawned — did resolution fail first?");
-        yield* TestClock.adjust("31 seconds");
-        const error = yield* Fiber.join(fiber);
-        assert.instanceOf(error, CatalogAssemblyError);
-        assert.strictEqual(error.source, "hooks");
-        assert.strictEqual(error.path, ROOT);
-      })
+    it.effect(
+      "a replay whose pnpmfile never settles fails typed through the hooks source at the thirty-second ceiling",
+      () =>
+        Effect.gen(function* () {
+          const builtPerTestToOwnTheAdvancedTestClock = yield* Layer.build(layer);
+          const hooks = Context.get(builtPerTestToOwnTheAdvancedTestClock, ConfigDependencyHooks);
+          const fiber = yield* hooks.inject(ROOT, { dep: "1.0.0" }, SEED).pipe(Effect.flip, Effect.forkChild);
+          yield* Deferred.await(started).pipe(Effect.raceFirst(Fiber.join(fiber)));
+          assert.strictEqual(
+            spawner.spawns.length,
+            1,
+            "the replay child was never spawned — did resolution fail first? The wait races the fiber so an early typed failure lands here rather than hanging"
+          );
+          yield* TestClock.adjust("31 seconds");
+          const error = yield* Fiber.join(fiber);
+          assert.instanceOf(
+            error,
+            CatalogAssemblyError,
+            "a typed failure, never a hang of the memoized assemble or a defect"
+          );
+          assert.strictEqual(error.source, "hooks");
+          assert.strictEqual(error.path, ROOT);
+        })
     );
   }
 
   {
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({
         ok: false,
         name: "broken-dep",
@@ -310,8 +293,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
           const error = yield* Effect.flip(hooks.inject(ROOT, { "broken-dep": "1.0.0" }, SEED));
           assert.instanceOf(error, CatalogAssemblyError);
           assert.strictEqual(error.source, "hooks");
-          // Per-name attribution survives the process boundary.
-          assert.strictEqual(error.path, "broken-dep");
+          assert.strictEqual(error.path, "broken-dep", "per-name attribution survives the process boundary");
           if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
           const cause = error.cause;
           assert.strictEqual(cause.message, "Unexpected token");
@@ -324,7 +306,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
 
 describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent", () => {
   {
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted(
         {
           ok: true,
@@ -335,33 +317,36 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
             minimumReleaseAgeExclude: ["@scope/b"],
           },
         },
-        // A hook's own console noise on stdout: the parent reads the LAST line.
         "hook says hello\n{not json either"
       ),
     }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
-      it.effect("the returned config slice folds through the same normalization as layerLive", () =>
-        Effect.gen(function* () {
-          const hooks = yield* ConfigDependencyHooks;
-          const result = yield* hooks.inject(ROOT, { dep: "1.0.0" }, SEED);
-          // The default catalog is re-folded under "default", named catalogs kept.
-          assert.strictEqual(result.catalogs.default?.["hooked-dep"], "^9.9.9");
-          assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
-          assert.strictEqual(result.catalogs.named?.["left-pad"], "^1.0.0");
-          assert.strictEqual(result.catalogs.extra?.["extra-dep"], "^1.2.3");
-          // Release-age keys map onto the partial gate's field names.
-          assert.deepStrictEqual(result.releaseAge, { ageMinutes: 1440, exclude: ["@scope/b"] });
-        })
+      it.effect(
+        "the config slice on the LAST stdout line past a hook's console noise folds through layerLive's normalization",
+        () =>
+          Effect.gen(function* () {
+            const hooks = yield* ConfigDependencyHooks;
+            const result = yield* hooks.inject(ROOT, { dep: "1.0.0" }, SEED);
+            assert.strictEqual(
+              result.catalogs.default?.["hooked-dep"],
+              "^9.9.9",
+              "the default catalog is re-folded under default, named catalogs kept"
+            );
+            assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
+            assert.strictEqual(result.catalogs.named?.["left-pad"], "^1.0.0");
+            assert.strictEqual(result.catalogs.extra?.["extra-dep"], "^1.2.3");
+            assert.deepStrictEqual(
+              result.releaseAge,
+              { ageMinutes: 1440, exclude: ["@scope/b"] },
+              "release-age keys map onto the partial gate's field names"
+            );
+          })
       );
     });
   }
 
   {
-    // The measured behaviour this design rests on: pnpm seeds its own config
-    // and takes back what the hooks return, so a hook that merges leaves the
-    // seeded rules in place beside its own. The kit therefore never merges the
-    // two sources itself.
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({
         ok: true,
         config: {
@@ -401,9 +386,7 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
   }
 
   {
-    // Stated as behaviour so nobody "fixes" it into a merger: a hook that
-    // replaces the block replaces it for pnpm too.
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({
         ok: true,
         config: { peerDependencyRules: { allowedVersions: { "only>hook": "3.0.0" } } },
@@ -430,9 +413,7 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
   }
 
   {
-    // Wrong in exactly one way: `ignoreMissing` alone is garbage, and it must
-    // not take a well-formed `allowedVersions` down with it.
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({
         ok: true,
         config: { peerDependencyRules: { allowedVersions: { "a>b": "1.0.0" }, ignoreMissing: "not-an-array" } },
@@ -460,12 +441,7 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
   }
 
   {
-    // The sibling of the test above, on the axis it does not cover: the block
-    // IS an object, so an object-shaped check accepts it, but one entry is a
-    // number. The public contract is name→RANGE, and a non-string value
-    // reaches range parsing as a rule nobody can evaluate — so the whole axis
-    // is malformed and the prior value stands.
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({
         ok: true,
         config: { peerDependencyRules: { allowedVersions: { "a>b": 1 }, ignoreMissing: ["from-hook"] } },
@@ -485,19 +461,23 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
               allowAny: [],
             })
           );
-          assert.deepStrictEqual(result.peerDependencyRules.allowedVersions, { "seeded>peer": "1.0.0" });
-          // And it does not blank its siblings, exactly as the array axes do not.
-          assert.deepStrictEqual(result.peerDependencyRules.ignoreMissing, ["from-hook"]);
+          assert.deepStrictEqual(
+            result.peerDependencyRules.allowedVersions,
+            { "seeded>peer": "1.0.0" },
+            "the contract is name→range, so an object holding a non-string entry is malformed and the prior value stands"
+          );
+          assert.deepStrictEqual(
+            result.peerDependencyRules.ignoreMissing,
+            ["from-hook"],
+            "and it does not blank its siblings, exactly as the array axes do not"
+          );
         })
       );
     });
   }
 
   {
-    // The regression guard for the test above, wrong in exactly one way
-    // against it: the same shape with a string value. A check that fired on
-    // the block's presence rather than on its entries would fail here.
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({
         ok: true,
         config: { peerDependencyRules: { allowedVersions: { "a>b": "1" } } },
@@ -517,14 +497,18 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
               allowAny: [],
             })
           );
-          assert.deepStrictEqual(result.peerDependencyRules.allowedVersions, { "a>b": "1" });
+          assert.deepStrictEqual(
+            result.peerDependencyRules.allowedVersions,
+            { "a>b": "1" },
+            "a check on the block's presence rather than its entries would fail this"
+          );
         })
       );
     });
   }
 
   {
-    const { layer } = harness(() => ({ stdout: emitted({ ok: true, config: { catalog: {} } }) }));
+    const { layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: { catalog: {} } }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("hooks that touch no rules return the seeded rules unchanged", () =>
         Effect.gen(function* () {
@@ -542,7 +526,7 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
   }
 
   {
-    const { layer } = harness(() => ({ stdout: emitted({ ok: true, config: "garbage" }) }));
+    const { layer } = parentSideOverScriptedSpawner(() => ({ stdout: emitted({ ok: true, config: "garbage" }) }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("a malformed returned config slice falls back to the seed — data is never fatal", () =>
         Effect.gen(function* () {
@@ -556,7 +540,7 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
   }
 
   {
-    const { layer } = harness(() => ({
+    const { layer } = parentSideOverScriptedSpawner(() => ({
       stdout: emitted({ ok: true, config: { catalog: {}, catalogs: {} } }),
     }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
