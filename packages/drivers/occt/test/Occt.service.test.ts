@@ -859,7 +859,7 @@ describe("@beep/occt service", () => {
         expect(
           sha256Hex2,
           "SHA-256 of each view's visible, hidden and shading JSON, recorded at 6e390049ca; re-recorded once a " +
-            "boundary two parts share was drawn once in hidden lines"
+            "boundary two parts share was drawn once (49 front-view hidden duplicates); visible and shading unchanged"
         ).toBe(LEGACY_SHA256);
       })
     );
@@ -1124,7 +1124,10 @@ describe("@beep/occt service", () => {
                 "as projected, a board's bottom face is two lines that would print as one 0.7 mm emphasis line"
               ).toBeLessThan(0.5);
               expect(A.length(after), "every edge is drawn on the sheet").toBe(A.length(before));
-              expect(gapsOf(after, 0.7), "on the sheet no two lines print closer than 0.7 mm").toEqual([]);
+              expect(
+                gapsOf(after, 0.7),
+                "on the sheet no two lines print closer than 0.7 mm, even where an unmoved line follows a moved one"
+              ).toEqual([]);
               const pairs = pairsOf(A.length(before));
               const at = (segments: ReadonlyArray<Segment2>, i: number) => A.getUnsafe(segments, i);
               const close = A.filter(pairs, ([i, j]) =>

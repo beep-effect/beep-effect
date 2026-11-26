@@ -171,7 +171,7 @@ describe("@beep/occt primitive line style", () => {
         );
         expect(
           plan.shading.length,
-          "the merged plate-and-tab top face is solid and shaded; the tab's end and sides skip as broken-part before any rule reads them"
+          "the merged plate-and-tab top face is solid and shaded; the tab's end and sides skip as broken-part before any rule reads them (edge-on here; the solid tab's count as back-facing)"
         ).toBeGreaterThan(1);
         expect(
           A.filter(plan.shading, ([, y1, , y2]) => Math.min(y1, y2) < 0),

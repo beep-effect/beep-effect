@@ -386,7 +386,7 @@ describe("@beep/occt shading", () => {
     );
 
     it.effect(
-      "records coverage by skip reason: square-on front faces lit under the uniform default, the hole wall curved",
+      "records coverage by skip reason: square-on front faces skip as lit under the uniform default, the hole wall curved",
       Effect.fnUntraced(function* () {
         const occt = yield* Occt;
         const [plain, shaded] = yield* occt
@@ -917,7 +917,7 @@ describe("@beep/occt shading", () => {
         });
         expect(
           toneOf(-viewFactsOf(camera).light[1]),
-          "turned 35° off the wall, its front face (normal -y) is lit; square-on it would take the light recipe"
+          "turned 35° off the wall, its front face (normal -y) is lit; square-on it takes the light recipe, and at 45° its rows need no redraw"
         ).toBe("faint");
         const [view] = yield* occt.project(
           ProjectionRequest.make({
@@ -1819,7 +1819,7 @@ describe("@beep/occt shading", () => {
         );
         expect(
           banded?.shading.length,
-          "the 2-thick front edge, about 1.4 wide on the view plane, is a bare sliver with or without a minimum span"
+          "the 2-thick front edge, about 1.4 wide on the view plane, has no room for two legible strokes: a bare sliver, never a shaded face"
         ).toBeLessThanOrEqual(all?.shading.length ?? 0);
       })
     );
