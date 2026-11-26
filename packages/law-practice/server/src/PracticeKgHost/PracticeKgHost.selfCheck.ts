@@ -121,7 +121,7 @@ const firstCount = (rows: A.NonEmptyReadonlyArray<CountRow>) => A.headNonEmpty(r
 
 const isString = S.is(S.String);
 const lineBreaks = /\s*[\r\n]+\s*/g;
-const MAX_CAUSE_DEPTH = 5;
+const MAX_CAUSE_DEPTH_SO_A_CYCLIC_CHAIN_CANNOT_SPIN = 5;
 
 const bareOrOptionDriverErrorFieldOf = (error: unknown, key: "cause" | "message"): unknown => {
   const value = P.hasProperty(error, key) ? error[key] : undefined;
@@ -130,7 +130,7 @@ const bareOrOptionDriverErrorFieldOf = (error: unknown, key: "cause" | "message"
 
 type CauseStep = readonly [cause: unknown, depth: number];
 const nextLink = ([current, depth]: CauseStep): O.Option<readonly [O.Option<string>, CauseStep]> =>
-  depth < MAX_CAUSE_DEPTH && P.isObject(current)
+  depth < MAX_CAUSE_DEPTH_SO_A_CYCLIC_CHAIN_CANNOT_SPIN && P.isObject(current)
     ? O.some([
         O.liftPredicate(bareOrOptionDriverErrorFieldOf(current, "message"), isString),
         [bareOrOptionDriverErrorFieldOf(current, "cause"), depth + 1],

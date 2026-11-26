@@ -164,7 +164,7 @@ export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(f
   yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { concurrency: 1, discard: true });
   expect(
     rows,
-    "smoke rows keep connectors, digit rejection, combining marks, v/plaintiff edges, punctuation, years and surrogates"
+    "smoke rows keep connectors, digit rejection, combining marks, plaintiff edges, punctuation, native years, parentheses, special tokens, surrogates"
   ).toHaveLength(full ? 64 : 54);
   const processCount = A.filter(rows, (row) => row.calls.length > 0).length;
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);

@@ -785,7 +785,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
   });
 });
 
-describe("UFO-L power-subjection competency questions in this runtime's terms; CQ1 and CQ7 have no text on disk", () => {
+describe("UFO-L power-subjection CQs in this runtime's terms, numbered as the cited table; CQ1 and CQ7 lack text, never guessed", () => {
   it.layer(RecordedPracticeBuiltPerLayerBlock, { timeout: "10 seconds" })((it) => {
     it.effect(
       "CQ2 — which norm-prescribed roles does each recorded relation hold between?",

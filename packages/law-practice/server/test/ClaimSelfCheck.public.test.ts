@@ -175,7 +175,7 @@ const publicProvenanceJson = S.fromJsonString(
   })
 );
 
-describe("Current strict public claim slice over a pre-prediction reference witness, not a new label or held-out result", () => {
+describe("Current strict public claim slice over a pre-prediction reference witness: no new label, benchmark or held-out result", () => {
   it.layer(brushChecker.pipe(Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))), {
     timeout: "30 seconds",
   })((it) => {
