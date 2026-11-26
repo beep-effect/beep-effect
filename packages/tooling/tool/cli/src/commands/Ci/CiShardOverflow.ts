@@ -106,7 +106,7 @@ export const SHARD_OVERFLOW_RUNNER_GROUP = "beep-shard-overflow";
  * **Details**
  *
  * The account's standard Spot quota is 512 vCPU and the heavy pool draws on
- * it too; `infra/src/CiShardOverflowPool.ts` checks the sum.
+ * it too; the CiRunners stack's Spot budget checks the sum.
  *
  * **Example** (Print the pool size)
  *

@@ -1,6 +1,6 @@
 # Reference workspace (`.repos/effect`)
 
-First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
+First-party work lives under `packages/`, `apps/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree. Everything under
 `.repos/` is a gitignored link into a reference workspace that agents validate
 Effect APIs against; nothing there is part of the tracked tree.

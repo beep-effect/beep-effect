@@ -205,13 +205,11 @@ describe("quality tsgo inheritance", () => {
     ).toEqual(["packages/shared/example/tsconfig.json: tsconfig extends chain does not reach tsconfig.base.json"]);
   });
 
-  it("excludes deliberate fixture and standalone infrastructure configs", () => {
+  it("excludes deliberate fixture and docs example configs", () => {
     expect(
       collectTsconfigInheritanceDiagnosticsForTesting([
         ["packages/tooling/example/test/fixtures/project/tsconfig.json", {}],
         ["packages/shared/example/docs/examples/tsconfig.json", {}],
-        ["infra/lambda/turbo-cache/tsconfig.json", {}],
-        ["infra/ci-runners/sdks/ghaRunners/tsconfig.json", {}],
       ])
     ).toEqual([]);
   });

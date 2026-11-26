@@ -239,7 +239,7 @@ export class RetiredIriAuthoritiesScope extends S.Opaque<
 export const retiredIriAuthoritiesScope: RetiredIriAuthoritiesScope = RetiredIriAuthoritiesScope.make({
   exemptDirectorySegments: ["history"],
   exemptRootPrefixes: ["research/"],
-  originSourceRoots: ["packages/", "apps/", "scripts/", "tools/", "infra/"],
+  originSourceRoots: ["packages/", "apps/", "scripts/", "tools/"],
   originSourceExtensions: [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"],
   originOwnerPrefixes: ["packages/foundation/modeling/identity/", "packages/foundation/modeling/public-site/"],
   originTestDirectorySegments: ["test", "tests", "__tests__", "fixtures"],

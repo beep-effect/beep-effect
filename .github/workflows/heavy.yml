@@ -344,8 +344,8 @@ jobs:
         if: always() && inputs.admitted
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   check:
@@ -613,9 +613,9 @@ jobs:
         run: |
           set -euo pipefail
           # The official Zig release tarball and the reviewed cargo-zigbuild wheel, each
-          # pinned (URL, sha256, version) in infra/r2-cache/policy-build-tools.txt and
+          # pinned (URL, sha256, version) in packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt and
           # verified against its sha256 before extraction. No Python interpreter is involved.
-          pins=infra/r2-cache/policy-build-tools.txt
+          pins=packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt
           pin() {
             local value
             value="$(sed -n "s/^$1=//p" "$pins")"
@@ -653,9 +653,9 @@ jobs:
           umask 077
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --quiet HEAD
-          infra/r2-cache/policy.sh cargo-build-musl
+          packages/tooling/infra/turbo-cache/r2-pilot/policy.sh cargo-build-musl
           # Recheck the entire reviewed upstream patch after compilation too.
-          infra/r2-cache/policy.sh prepare
+          packages/tooling/infra/turbo-cache/r2-pilot/policy.sh prepare
           candidate="$CARGO_TARGET_DIR/x86_64-unknown-linux-musl/release/decay"
           test -x "$candidate"
           readelf -lW "$candidate" > "$BEEP_CACHE_PRODUCER_BUILD_ROOT/program-headers.txt"
@@ -679,8 +679,8 @@ jobs:
           chmod 0500 "$binary"
           # Every value is captured by its own assignment, so any failing command fails the step.
           inputs='{}'
-          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
-            infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
+          for input in packages/tooling/infra/turbo-cache/r2-pilot/policy.sh packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt \
+            packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.patch packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.json; do
             digest="$(sha "$input")"
             inputs="$(jq -c --arg path "$input" --arg sha256 "$digest" '. + {($path): $sha256}' <<< "$inputs")"
           done
@@ -706,7 +706,7 @@ jobs:
           jq -n -a --arg repository "$GITHUB_REPOSITORY" --arg sourceCommit "$GITHUB_SHA" \
             --arg workflowRef "$GITHUB_WORKFLOW_REF" --arg workflowCommit "$GITHUB_WORKFLOW_SHA" \
             --arg runId "$GITHUB_RUN_ID" --arg runAttempt "$GITHUB_RUN_ATTEMPT" \
-            --slurpfile pins infra/r2-cache/patches/4.0.20-signed-policy.json \
+            --slurpfile pins packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.json \
             --argjson size "$size" --arg binarySha256 "$binary_sha256" --argjson sourceInputs "$inputs" \
             --argjson toolExecutables "$executables" --argjson tools "$versions" '
             $pins[0] as $pin | if ($pin | has("upstreamCommit") and has("patchSha256")) then . else error("missing pins") end |
@@ -864,8 +864,8 @@ jobs:
             '.binary == {file: "decay", bytes: $bytes, sha256: $sha256}' "$manifest" > /dev/null ||
             fail 'Candidate manifest does not describe the selected executable.'
           inputs='{}'
-          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
-            infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
+          for input in packages/tooling/infra/turbo-cache/r2-pilot/policy.sh packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt \
+            packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.patch packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.json; do
             input_sha256="$(sha "$input")"
             inputs="$(jq -c --arg path "$input" --arg sha256 "$input_sha256" '. + {($path): $sha256}' <<< "$inputs")"
           done

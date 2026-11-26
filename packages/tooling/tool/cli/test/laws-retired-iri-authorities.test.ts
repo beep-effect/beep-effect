@@ -396,7 +396,6 @@ describe("retired IRI authority law", () => {
           "apps/web/.storybook/main.mjs",
           "scripts/build.cjs",
           "tools/a.js",
-          "infra/deploy.mts",
         ]) {
           expect(isPublicOriginScoped(file), file).toBe(true);
         }

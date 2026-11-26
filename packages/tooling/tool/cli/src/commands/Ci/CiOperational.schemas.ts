@@ -598,8 +598,8 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
  * and planning surfaces, including temporary goal helpers and verifier inputs.
  * Root goal governance inventories, the goal paths tests consume ({@link ciGoalDataConsumers})
  * and the root documents tests read ({@link ciTestedDocumentPatterns}) retain verification. `.changeset/*.md` and Markdown
- * outside product roots also qualify. Paths under `packages/`, `apps/` and
- * `infra/` retain verification, including their Markdown files. The tier-1
+ * outside product roots also qualify. Paths under `packages/` and `apps/`
+ * retain verification, including their Markdown files. The tier-1
  * change profile and Yeet publication reuse this same schema-owned path rule.
  *
  * **Example** (Classify two paths)

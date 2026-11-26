@@ -55,7 +55,7 @@ A conflicting state root stops provisioning.
 Use the reference-only management environment produced by the credential handoff:
 
 ```sh
-op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- infra/r2-cache/alchemy.sh plan
+op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- packages/tooling/infra/turbo-cache/r2-pilot/alchemy.sh plan
 ```
 
 Inspect the plan before `deploy`. Do not use `destroy` until the owned bucket's
@@ -106,8 +106,8 @@ references still use the CLI's existing secret-session path; include that overhe
 in whole-command measurements. No quality command needs a Cloudflare login.
 
 ```sh
-infra/r2-cache/workstation.sh install
-infra/r2-cache/workstation.sh enable /absolute/path/to/the/checkout
+packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh install
+packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh enable /absolute/path/to/the/checkout
 ```
 
 The installed unprivileged `beep-turbo-r2.service` binds `127.0.0.1:9427` and limits
@@ -166,8 +166,8 @@ pilot comparison into a production percentage.
 2. Restore each enrolled checkout while its adapter is still available:
 
    ```sh
-   infra/r2-cache/workstation.sh rollback /absolute/path/to/the/checkout
-   infra/r2-cache/workstation.sh stop
+   packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh rollback /absolute/path/to/the/checkout
+   packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh stop
    ```
 
 3. Revoke only the cohort's grants after consumers have returned to AWS/local.
@@ -210,7 +210,7 @@ bun run beep cache r2 fleet "$HOME/YeeBois/projects" --apply \
 ```
 
 Run it from a checkout root; it enrolls through that checkout's
-`infra/r2-cache/workstation.sh`.
+`packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh`.
 
 Enrollment writes only ignored cache references and retains per-checkout rollback
 receipts. Current resolvers receive trusted read/write mode; historical resolvers
@@ -260,10 +260,10 @@ Preview the ordinary bucket, then the separate credentials with an explicit UTC
 expiry from the rollout receipt:
 
 ```sh
-op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- infra/r2-cache/alchemy.sh plan
+op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- packages/tooling/infra/turbo-cache/r2-pilot/alchemy.sh plan
 R2_SIGNED_TRIAL_EXPIRES_ON="2026-11-28T00:00:00Z" \
   op run --env-file="$HOME/.config/beep/r2-cache/provisioning.env" -- \
-  infra/r2-cache/alchemy.sh plan-signed-credentials
+  packages/tooling/infra/turbo-cache/r2-pilot/alchemy.sh plan-signed-credentials
 ```
 
 Refresh the example cutoff before execution. Expiry must use whole-second UTC
@@ -335,7 +335,7 @@ trust-readiness, deployment authority or an accepted task profile.
 Prepare and check the reproducible source input:
 
 ```sh
-RUSTUP_TOOLCHAIN=1.96.0 infra/r2-cache/policy.sh test-domain
+RUSTUP_TOOLCHAIN=1.96.0 packages/tooling/infra/turbo-cache/r2-pilot/policy.sh test-domain
 ```
 
 Run `policy.sh cargo-test`, `policy.sh cargo-build` or
@@ -432,5 +432,5 @@ policy fields. It receives no artifact signing key. Ordinary `serve` and
 This command supplies exec only. Its parent still owns private launch storage,
 the process/listener identity, the existing resource caps and bounded cleanup.
 Real signed exchanges, immutable producer publication and rollout require their
-own current proof. Run `infra/r2-cache/check.sh` for the synthetic exec-boundary
+own current proof. Run `packages/tooling/infra/turbo-cache/r2-pilot/check.sh` for the synthetic exec-boundary
 and existing lifecycle checks; these checks make no R2 requests.

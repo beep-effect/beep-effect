@@ -48,7 +48,7 @@ const allowedFixtures = [
   ".cursor/install.sh",
   "goals/demo/ops/replay.sh",
   "explorations/demo/assets/fetch.sh",
-  "infra/r2-cache/check.sh",
+  "packages/tooling/infra/turbo-cache/r2-pilot/check.sh",
   "scripts/cloud/bootstrap.sh",
   "packages/tooling/tool/cli/test/fixtures/models/locators.sh",
   "packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh",

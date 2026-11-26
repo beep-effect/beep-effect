@@ -69,7 +69,7 @@ const regenerationCommand = "bun run beep lint package-test-typecheck --write-ba
 const checkCommand = "bun run beep lint package-test-typecheck";
 // Mirrors the repo-wide `beep quality test-tsgo` lane's search roots; the
 // pruned directories every workspace lint shares live in expandWorkspaceFiles.
-const packageSearchRoots = ["apps", "infra", "packages"] as const;
+const packageSearchRoots = ["apps", "packages"] as const;
 const testDirectoryName = "test";
 const testSourcePattern = /\.(?:cts|mts|ts|tsx)$/u;
 const newPackageHandling =

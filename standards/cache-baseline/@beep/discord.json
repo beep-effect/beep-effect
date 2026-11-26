@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/discord",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P6 retire lane)",
+    "reason": "Re-record the subjects whose Turbo inputs named the deleted infra/ workspace, and drop the @beep/infra subject; configuration review only, no qualification granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/infra-alchemy-p6-retire-cache-review-2026-11-25.md",
+      "sha256": "449a682ef1c70c6d316f5b30da98056bcfab1aad7ba0cd2f2987ed10acc9c466"
     }
   },
   "nodes": [
@@ -289,8 +289,6 @@
           "../../../.oxlintrc.deprecated-apis.jsonc",
           "../../../apps/**/package.json",
           "../../../apps/**/tsconfig*.json",
-          "../../../infra/**/tsconfig*.json",
-          "../../../infra/package.json",
           "../../../packages/**/package.json",
           "../../../packages/**/tsconfig*.json",
           "../../../standards/root-package.projection.generated.json",

@@ -77,7 +77,7 @@ const renderReport = (report: BakeReport): string =>
       `base AMI: ${report.baseAmiId}`,
       `lockfile sha256: ${report.lockfileSha256}`,
       `bun version: ${report.bunVersion}`,
-      `pin: ${report.pulumiPinCommand}`,
+      `pinned in: ${report.pinFile}`,
     ],
     "\n"
   );

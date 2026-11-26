@@ -34,7 +34,7 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
   return yield* createWorkspaceOwnerResolver({
     root: base,
     fallbackOwner: "@beep/root",
-    fallbackPrefixes: [{ prefix: "infra/", owner: "@beep/infra" }],
+    fallbackPrefixes: [],
   });
 });
 

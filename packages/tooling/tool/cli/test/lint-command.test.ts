@@ -101,7 +101,7 @@ const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")
     '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"oxlint"}'
   );
   yield* Effect.forEach(
-    ["apps", "packages", "infra", ...(omitLabs ? [] : ["apps/labs"])],
+    ["apps", "packages", ...(omitLabs ? [] : ["apps/labs"])],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
     { concurrency: 1 }
   );
@@ -298,8 +298,6 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     const probes = [
       "apps/oip-web/src/index.ts",
       "apps/labs/ciops/src/index.ts",
-      "infra/src/CiFleetController.ts",
-      "infra/lambda/turbo-cache/src/handler.ts",
       "packages/foundation/capability/walker/src/index.ts",
       "packages/tooling/tool/cli/src/bin.ts",
       "packages/drivers/acp/src/AcpAgent.service.ts",
@@ -317,14 +315,14 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       expect(A.sort(names, Order.String)).toEqual(A.sort(DeprecatedApiPartitionName.literals, Order.String));
     });
 
-    it("covers every file under the three roots with exactly one partition", () => {
+    it("covers every file under the two roots with exactly one partition", () => {
       for (const probe of probes) {
         expect({ probe, owners: A.length(covering(probe)) }).toEqual({ probe, owners: 1 });
       }
     });
 
-    it("covers nothing outside the three roots", () => {
-      for (const outside of ["goals/x/README.md", "scripts/cloud/bootstrap.ts", "appsx/a.ts", "infrastructure/a.ts"]) {
+    it("covers nothing outside the two roots", () => {
+      for (const outside of ["goals/x/README.md", "scripts/cloud/bootstrap.ts", "appsx/a.ts", "infra/src/a.ts"]) {
         expect(covering(outside)).toEqual([]);
       }
     });
@@ -335,7 +333,6 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       const targets = A.flatMap(deprecatedApiSweepPartitions, (partition) => partition.targets);
       const excludes = A.flatMap(deprecatedApiSweepPartitions, (partition) => partition.excludes);
       expect(A.every([...targets, ...excludes], underRoot)).toBe(true);
-      // Every root is a target of some partition, so the union reaches all three.
       expect(A.every(deprecatedApiSweepRoots, (root) => A.contains(targets, root))).toBe(true);
       // An exclude is a directory another partition targets, never a hole in the cover.
       expect(A.every(excludes, (exclude) => A.contains(targets, exclude))).toBe(true);
@@ -344,9 +341,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     it("renders excludes as oxlint ignore patterns after the targets", () => {
       expect(
         deprecatedApiPartitionArgs(
-          DeprecatedApiPartition.make({ name: "remainder", targets: ["infra", "packages"], excludes: ["packages/a"] })
+          DeprecatedApiPartition.make({ name: "remainder", targets: ["apps", "packages"], excludes: ["packages/a"] })
         )
-      ).toEqual(["infra", "packages", "--ignore-pattern", "packages/a/**"]);
+      ).toEqual(["apps", "packages", "--ignore-pattern", "packages/a/**"]);
     });
   });
 
@@ -355,7 +352,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     const partitionPaths = [
       "packages/foundation packages/tooling",
       "packages/drivers apps",
-      "infra packages --ignore-pattern packages/foundation/** --ignore-pattern packages/tooling/** --ignore-pattern packages/drivers/**",
+      "packages --ignore-pattern packages/foundation/** --ignore-pattern packages/tooling/** --ignore-pattern packages/drivers/**",
     ];
     it.effect("executes one bounded native process per full-sweep partition without ESLint caching", () =>
       Effect.gen(function* () {
@@ -404,7 +401,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const calls = yield* nativeInvocations();
         expect(calls).toHaveLength(1);
         expect(calls[0]).toContain(`--disable-nested-config ${oxlintThreadsArg} packages`);
-        expect(calls[0]).not.toContain("apps packages infra");
+        expect(calls[0]).not.toContain("apps packages");
       })
     );
     // The changed-scope policy plan hands every Turbo-selected package directory to one process.
@@ -467,7 +464,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       `${encodeJson({
         version: 1,
         generatedOn: "2026-06-08",
-        scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
+        scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
         entries: [
           {
             file: "packages/example/src/Example.ts",
@@ -647,7 +644,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             `${encodeJson({
               version: 1,
               generatedOn: "2026-10-14",
-              scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"],
+              scope: ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
               entries: [
                 exception("packages/example/src/Example.ts", "Plain", "plain-data-schema-class"),
                 exception("packages/example/src/Example.ts", "Plain", "unbranded-schema-class"),

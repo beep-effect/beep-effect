@@ -37,7 +37,6 @@ const codecFor = (kind: PackageKind) => {
 };
 const codecs = {
   app: codecFor("app"),
-  infra: codecFor("infra"),
   library: codecFor("library"),
   lab: codecFor("lab"),
   tool: codecFor("tool"),
@@ -101,10 +100,10 @@ describe("package scripts policy", () => {
 
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "retains app and infra docgen, optional parallel tasks, implementation values and extras",
+      "retains app docgen, optional parallel tasks, implementation values and extras",
       Effect.fnUntraced(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
-        for (const kind of ["app", "infra", "library"] as const) {
+        for (const kind of ["app", "library"] as const) {
           const codec = O.getOrThrow(R.get(codecs, kind));
           const actual = yield* codec.decode({
             ...base,
@@ -119,11 +118,8 @@ describe("package scripts policy", () => {
           expect(record["beep:build"]).toBe("owned build");
           expect(record["beep:custom"]).toBe("owned extra");
           expect(record.dev).toBe("owned dev");
-          expect(record.coverage).toBe(kind === "infra" ? "bun run beep:coverage" : "custom coverage");
-          if (kind === "infra") {
-            expect(record["beep:coverage"]).toBe("custom coverage");
-          }
-          if (kind !== "infra") expect(record["test:integration:parallel"]).toBe("bun run beep:test:integration");
+          expect(record.coverage).toBe("custom coverage");
+          expect(record["test:integration:parallel"]).toBe("bun run beep:test:integration");
           expect(record["lint:laws"]).toBe("beep-cli lint laws --package .");
           expect(record["lint:deprecated-apis"]).toBe("beep-cli lint deprecated-apis --package .");
           expect(policy.diff(expected, policy.expected(kind, expected, noEvidence))).toEqual([]);
@@ -163,7 +159,7 @@ describe("package scripts policy", () => {
       "writes idempotently, ignores non-workspaces and fixture markers, preserves exempt bytes",
       Effect.fnUntraced(function* () {
         const root = yield* fixture({
-          "package.json": { name: "root", workspaces: ["packages/*", "apps/*", "infra", "scratchpad"] },
+          "package.json": { name: "root", workspaces: ["packages/*", "apps/*", "scratchpad"] },
           "packages/a/package.json": { name: "@beep/a", scripts: base },
           "packages/a/turbo.json": checkOffOwnBuild,
           "packages/a/src/index.ts": "export const x = 1;",
@@ -173,18 +169,18 @@ describe("package scripts policy", () => {
           "packages/b/turbo.json": checkOffOwnBuild,
           "packages/b/src/index.ts": "// import.meta.vitest",
           "packages/b/vitest.config.ts": "import shared from '../../../vitest.shared.ts'",
-          "infra/package.json": { name: "@beep/infra", scripts: base },
-          "infra/turbo.json": checkOffOwnBuild,
-          "infra/lambda/x/package.json": { scripts: { docgen: "out of domain" } },
+          "packages/c/package.json": { name: "@beep/c", scripts: base },
+          "packages/c/turbo.json": checkOffOwnBuild,
+          "packages/c/lambda/x/package.json": { scripts: { docgen: "out of domain" } },
           "scratchpad/package.json": { name: "scratchpad", scripts: { docgen: "exempt", "lint:laws": "owned" } },
         });
         const fs = yield* FileSystem.FileSystem;
         const before = yield* fs.readFileString(`${root}/scratchpad/package.json`);
         const policy = yield* PackageScriptsPolicy.make(root);
-        const pipe1 = yield* policy.kindOf("infra/lambda/x/package.json").pipe(Effect.isFailure);
+        const pipe1 = yield* policy.kindOf("packages/c/lambda/x/package.json").pipe(Effect.isFailure);
         expect(pipe1).toBe(true);
-        const kindOf2 = yield* policy.kindOf("infra/package.json");
-        expect(kindOf2).toBe("infra");
+        const kindOf2 = yield* policy.kindOf("packages/c/package.json");
+        expect(kindOf2).toBe("library");
         const initial = yield* policy.check(root);
         expect(initial.manifests).toBe(4);
         expect(HashMap.size(initial.drift)).toBe(3);
@@ -200,7 +196,7 @@ describe("package scripts policy", () => {
         expect(b).toContain('"beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run"');
         const readFileString3 = yield* fs.readFileString(`${root}/scratchpad/package.json`);
         expect(readFileString3).toBe(before);
-        const readFileString4 = yield* fs.readFileString(`${root}/infra/lambda/x/package.json`);
+        const readFileString4 = yield* fs.readFileString(`${root}/packages/c/lambda/x/package.json`);
         expect(readFileString4).toContain("out of domain");
       })
     );

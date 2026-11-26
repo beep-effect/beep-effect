@@ -33,7 +33,7 @@ const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
 const PRIVATE_DOCS_MODULES_SEGMENTS = [".jsdoc-loop", "generated-docs", "modules"] as const;
 
-const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.json", "infra/docgen.json"] as const;
+const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.json"] as const;
 const DOCGEN_CONFIG_SCAN_IGNORES = [
   // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab templates omit
   // docgen.json, and a stray one below apps/labs must never be scanned or

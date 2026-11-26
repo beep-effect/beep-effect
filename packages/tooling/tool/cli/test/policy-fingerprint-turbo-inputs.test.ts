@@ -535,11 +535,11 @@ describe("Documentation task inputs", { concurrent: false }, () => {
             "scratchpad/check.ts",
             "apps/labs/probe/check.ts",
             "packages/probe/.context/check.ts",
+            "infra/standalone/check.ts",
           ],
           (file) => assertMutation(file, [false, false, false]),
           { concurrency: 1 }
         );
-        yield* assertMutation("infra/standalone/check.ts", [false, false, true]);
         yield* assertMutation("packages/unrelated/package.json", [true, false, true]);
         yield* assertMutation("packages/unrelated/src/index.ts", [false, false, true]);
         yield* assertMutation("packages/dependency/src/index.ts", [true, false, true]);

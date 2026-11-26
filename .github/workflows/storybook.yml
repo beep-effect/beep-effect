@@ -223,6 +223,6 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi

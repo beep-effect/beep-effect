@@ -79,8 +79,8 @@ const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, SchemaC
 
 /**
  * Resolve the schema-crispening wave family for a repo-relative source file
- * path by prefix. `packages/shared/**` and `infra/**` are unassigned until
- * their P1 wave assignment lands and resolve to `O.none` (non-blocking).
+ * path by prefix. `packages/shared/**` is unassigned until
+ * its P1 wave assignment lands and resolves to `O.none` (non-blocking).
  *
  * **Example** (Resolve crispening family)
  *

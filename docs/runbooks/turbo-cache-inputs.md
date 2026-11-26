@@ -210,9 +210,9 @@ Two refinements from quality audit M9 (2026-11-02):
   `policy-fingerprint-turbo-inputs.test.ts` re-derives every live chain's reads
   from its declared modules and fails on a missing file. Design and soundness replay:
 `goals/beep-cli-composition/research/g4-task-fingerprint.md`. Root task inputs must match the command's scan scope; the root JSDoc
-scanner reads `apps/**/*.{ts,tsx}`, `packages/**/*.{ts,tsx}` and `infra/**/*.ts`,
+scanner reads `apps/**/*.{ts,tsx}` and `packages/**/*.{ts,tsx}`,
 excluding `apps/labs`, `.context` directories and dynamically discovered workspace
-directories. The static Turbo inputs retain those three source roots and the
+directories. The static Turbo inputs retain those two source roots and the
 source-only lab/context exclusions. Scripts, tools and scratchpad sources do not
 invalidate this task. Package manifests remain inputs, including lab manifests,
 because they affect workspace discovery.
@@ -388,10 +388,6 @@ editors and direct runs, and a failed build falls back to it.
 
 `packages/tooling/policy-pack/repo-configs` builds regenerate tracked allowlist
 source. Its build remains fresh and includes the root allowlist as an input.
-
-`infra/lambda/turbo-cache` is not a root workspace. Its standalone artifact
-publisher is not an active Turbo build task, so adding a Turbo override there
-would not fix any root task.
 
 ## Verify a suspected miss
 

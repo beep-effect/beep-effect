@@ -1154,7 +1154,7 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
     return yield* AiMetricsCommandError.make({
       cause: "install apply",
       message:
-        "AI metrics CLI install apply is dry-run-only. Pass --dry-run; real dankserver mutation is owned by the Pulumi P5b stack.",
+        "AI metrics CLI install apply is dry-run-only. Pass --dry-run; real dankserver mutation is owned by the HostsAiMetrics Alchemy stack.",
     });
   }
 

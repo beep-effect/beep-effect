@@ -27,7 +27,7 @@
     "primaryLibrary": "@beep/repo-ai-metrics",
     "primaryCli": "@beep/repo-cli",
     "observabilityPackage": "@beep/observability",
-    "infraPackage": "@beep/infra"
+    "infraPackage": "@beep/infra-hosts"
   },
   "livePhoenix": {
     "access": "read-only-default-confirmation-gated-writes-available",

@@ -308,8 +308,8 @@ export class NetworkSettings extends S.Opaque<NetworkSettings, { readonly brand:
  * **Details**
  *
  * `amiId` is the baked Amazon Linux 2023 image `beep runners bake` last
- * recorded in `infra/ci-runners/runner-image.json` and pinned in
- * `infra/ci-runners/Pulumi.production.yaml` (`ciFleetController:amiId`).
+ * recorded in this package's `runner-image.json` and wrote into
+ * `productionConfig.image.amiId` below.
  * Pinning the id, not an SSM parameter, keeps an unrelated deploy from
  * changing the image. AL2023 registers its root device as `/dev/xvda`;
  * runners run as `ec2-user`.
@@ -594,9 +594,9 @@ export const productionRepository = "beep-effect/beep-effect";
  *
  * **Details**
  *
- * Instance types, caps, groups, the AMI and the root disk come from
- * `infra/src/CiRunnerPool.ts`, `infra/src/CiFleetController.ts` and
- * `infra/ci-runners/Pulumi.production.yaml`; the Spot quota (512, "All
+ * Instance types, caps, groups, the AMI and the root disk were ported from
+ * the retired Pulumi program (`infra/src/CiRunnerPool.ts`,
+ * `infra/src/CiFleetController.ts` and its production stack); the Spot quota (512, "All
  * Standard Spot Instance Requests") was read on 2026-11-14. The live
  * reserve, 480 vCPU, is the live fleet at the overlap's agreed burst cap:
  * the heavy pool at 6 × 16 plus the overflow pool at 48 × 8. With this

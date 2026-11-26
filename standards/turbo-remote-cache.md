@@ -12,7 +12,7 @@ pull-request jobs remain readers only; forks stay local-only. The existing AWS
 trusted-write token is never distributed to workstations.
 
 The opted-in R2 path uses a checksum-pinned upstream loopback adapter and an
-Alchemy-managed private bucket; see [the R2 runbook](../infra/r2-cache/README.md).
+Alchemy-managed private bucket; see [the R2 runbook](../packages/tooling/infra/turbo-cache/r2-pilot/README.md).
 AWS remains the fallback and comparison baseline until retirement is separately
 qualified. The R2 enable flag does not change task cacheability.
 

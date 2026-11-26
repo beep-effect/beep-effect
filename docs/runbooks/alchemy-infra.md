@@ -217,13 +217,17 @@ stack: the program still declares the component and would plan it again.
 4. The PR deleting the component from the program merges after `live` has
    been green for 24 hours, and before the next `pulumi preview` of that
    stack. It keeps `accountCostControls:notificationEmailAddresses` and
-   `decodeNotificationRecipients` (now `infra/src/NotificationRecipients.ts`),
+   `decodeNotificationRecipients` (then `infra/src/NotificationRecipients.ts`, removed in P6),
    which the AWS turbo cache's throttle alarm reads. After it merges, the
    first `pulumi preview --expect-no-changes` must be clean. The cutover's
    export archives stay until the packet closes: the rollback imports the
    BEFORE export and compares against the AFTER export.
 
-Rollback (decision "Cost controls cutover from Pulumi"):
+Rollback (decision "Cost controls cutover from Pulumi"). This is the record: the
+stack `beep-ci-runners/production` was destroyed at the CI runners cutover's
+step 6, and the program left the repository with `infra/` in P6, so a Pulumi
+step below needs a checkout of a commit before P6, such as `dd10bba55d3`.
+
 
 - Before step 3, leave `live`: one PR back to `silent`. Its plan deletes the
   stack's own `AnomalyAlerts` subscription, the only delete the gate allows
@@ -969,9 +973,12 @@ boots and completes a real job.
 
 Workflow move (cutover step 4, option A; decision "CI runners workflows end
 on the beep-fleet labels"). Every workflow job that ran on the Pulumi fleet
-requests the fleet's labels: `heavy.yml`'s nine jobs, `cache-warm.yml`,
-`fleet-shadow-check.yml` and the `fleet-lane-probe.yml` default request
-`beep-fleet-heavy`, and `shard-overflow.yml` requests `beep-fleet-overflow`.
+requests the fleet's labels: `heavy.yml`'s nine jobs, `cache-warm.yml` and the
+`fleet-lane-probe.yml` default request `beep-fleet-heavy`, and
+`shard-overflow.yml` requests `beep-fleet-overflow`. `fleet-shadow-check.yml`
+probed the overlap and was deleted with the Pulumi program in P6 (decision
+"fleet-shadow-check is repointed for the overlap and deleted at the Pulumi
+cleanup").
 The runner groups keep their names, so a label and its group differ: the
 CLI's `SHARD_OVERFLOW_RUNNER_LABEL` is `beep-fleet-overflow` and
 `SHARD_OVERFLOW_RUNNER_GROUP` is `beep-shard-overflow`, and
@@ -988,6 +995,14 @@ Outside IaC, owned by the operator: the org runner groups `beep-ec2-heavy` and
 `beep-fleet-heavy` and `beep-fleet-overflow`) and the GitHub App and webhook
 that deliver `workflow_job` events to the fleet's function URL. Cutover order,
 checks and rollback: decision "CI runners cutover from the Pulumi fleet".
+
+Runner image. `productionConfig.image.amiId` in `src/Config.ts` pins the AMI.
+`bun run beep runners bake` writes a fresh image's id there and its receipt to
+`runner-image.json` beside it; the merge of that pin deploys it through the
+workflow above, and `check.yml`'s Repo Sanity job warns when the receipt does not match the pin
+or the current lockfile and Bun (`bake --check --manifest`). The Pulumi fleet
+(`beep-ci-runners/production`) was destroyed at cutover step 6, and its program
+left the repository with `infra/` in P6.
 
 ## Acceptance evidence
 

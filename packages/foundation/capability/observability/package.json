@@ -90,6 +90,7 @@
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/opentelemetry": "catalog:",
+    "@opentelemetry/api-logs": "catalog:",
     "@opentelemetry/exporter-logs-otlp-proto": "catalog:",
     "@opentelemetry/exporter-metrics-otlp-proto": "catalog:",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",

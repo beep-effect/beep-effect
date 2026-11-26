@@ -32,26 +32,6 @@ import { fakeWebhookSecret, productionCredentialEnv } from "./support/Credential
 
 const isRehearsalRepository = S.is(RehearsalRepository);
 
-/**
- * The live fleet's own instance selection, ported from `tagFilter` in
- * `lambdas/functions/termination-watcher/src/ec2.ts` of
- * github-aws-runners/terraform-aws-github-runner v7.10.1: an instance is
- * selected when, for every configured tag filter, it carries that tag with a
- * value that STARTS WITH the filter value.
- *
- * The tests below model only the module's default filter,
- * `{ "ghr:environment": <prefix> }`. That holds only while the live fleet sets
- * no override: `infra/src/CiFleetController.ts` passes
- * `instance_termination_watcher` without tag filters, and the generated
- * `@pulumi/gharunners` 7.10.1 bridge has no input to carry one. This package
- * cannot import that Pulumi program (`@beep/infra` is not a dependency, and
- * reading its source from here would sit outside this package's cache
- * inputs), so the pin lives where the program is importable under Pulumi
- * mocks: `infra/test/CiShardOverflowPool.test.ts` asserts that both live
- * controllers' watcher inputs carry exactly `enable`,
- * `enable_runner_deregistration`, `features` and `zip`, and that no module
- * input names a tag filter.
- */
 const upstreamTagFilter = (
   instanceTags: Readonly<Record<string, string>>,
   tagFilters: Readonly<Record<string, string>>

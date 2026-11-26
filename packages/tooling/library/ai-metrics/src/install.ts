@@ -382,7 +382,7 @@ export class AiMetricsInstallSpec extends S.Opaque<AiMetricsInstallSpec, { reado
     target: AiMetricsDeployTarget,
   }).pipe(
     $I.annoteSchema("AiMetricsInstallSpec", {
-      description: "Resolved install/deploy contract shared by the CLI installer and Pulumi orchestration.",
+      description: "Resolved install/deploy contract shared by the CLI installer and the HostsAiMetrics Alchemy stack.",
     })
   )
 ) {}
@@ -423,7 +423,7 @@ export const AiMetricsInstallPlanStepKind = LiteralKit([
   "label_queue",
   "retention_drill",
   "weekly_report",
-  "pulumi",
+  "alchemy",
 ]).pipe(
   $I.annoteSchema("AiMetricsInstallPlanStepKind", {
     description: "Typed step categories emitted by the AI metrics P5a install planner.",
@@ -1029,7 +1029,7 @@ const makeInstallPlanSteps = (
       command:
         spec.target === AiMetricsDeployTarget.Enum.local
           ? "beep-cli ai-metrics install compose --target local"
-          : "cd infra && pulumi preview --stack beep-ai-metrics-dankserver",
+          : "cd packages/tooling/infra/infra-hosts && op run -- bunx alchemy plan --stage prod --env-file /dev/null",
       description: "Render or preview the Phoenix-only backend deployment.",
       kind: AiMetricsInstallPlanStepKind.Enum.backend,
       mutatesHost: false,
@@ -1554,7 +1554,8 @@ export const makeAiMetricsInstallDoctorResult: (
     }),
     AiMetricsInstallDoctorCheck.make({
       checkId: "apply.mode",
-      message: "CLI install apply remains dry-run-only; real dankserver mutation is owned by the Pulumi P5b stack.",
+      message:
+        "CLI install apply remains dry-run-only; real dankserver mutation is owned by the HostsAiMetrics Alchemy stack.",
       status: AiMetricsInstallDoctorCheckStatus.Enum.passed,
     }),
   ];
@@ -1596,7 +1597,7 @@ export const makeAiMetricsInstallDoctorResult: (
  * ```
  *
  * @param input - Operator install preferences for the dry-run apply.
- * @returns A dry-run-only apply result listing the CLI-safe steps around the Pulumi P5b stack.
+ * @returns A dry-run-only apply result listing the CLI-safe steps around the HostsAiMetrics Alchemy stack.
  * @category constructors
  * @since 0.0.0
  */
@@ -1608,7 +1609,7 @@ export const makeAiMetricsInstallApplyDryRunResult: (
   const plan = yield* makeAiMetricsInstallPlan(input);
 
   return AiMetricsInstallApplyDryRunResult.make({
-    message: "CLI install apply is dry-run-only; run the Pulumi P5b stack for real remote mutation.",
+    message: "CLI install apply is dry-run-only; deploy the HostsAiMetrics Alchemy stack for real remote mutation.",
     plan,
     target: plan.target,
   });

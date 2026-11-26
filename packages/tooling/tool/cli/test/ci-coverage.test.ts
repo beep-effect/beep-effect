@@ -568,14 +568,14 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         name: entry.packageName,
         scripts: {
           coverage: "bun run beep:coverage",
-          "beep:coverage": "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage",
+          "beep:coverage": "bun run --cwd node_modules/@example/generated-sdk build && bunx vitest run --coverage",
           test: "bun run beep:test",
           "beep:test": "bunx --bun vitest run --passWithNoTests && bun run test:lambda",
           "test:lambda": `bun -e 'require("node:fs").appendFileSync("lambda.log", "called\\n")'`,
         },
       });
       yield* fs.writeFileString(manifestPath, encoded);
-      const preparationRoot = path.join(root, "infra/node_modules/@pulumi/gharunners");
+      const preparationRoot = path.join(root, "infra/node_modules/@example/generated-sdk");
       yield* fs.makeDirectory(preparationRoot, { recursive: true });
       const argument6 = path.join(preparationRoot, "package.json");
       const encoded6 = yield* encode({
@@ -618,7 +618,10 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
       expect(readFileString3).toBe("called\n");
       expect(mocks.run).toHaveBeenCalledTimes(4);
       expect(mocks.run).toHaveBeenNthCalledWith(2, "ci:test:@beep/infra:0:prepare", [
-        expect.objectContaining({ command: "bun", args: ["run", "--cwd", "node_modules/@pulumi/gharunners", "build"] }),
+        expect.objectContaining({
+          command: "bun",
+          args: ["run", "--cwd", "node_modules/@example/generated-sdk", "build"],
+        }),
       ]);
       expect(mocks.run).toHaveBeenNthCalledWith(3, "ci:test:@beep/infra:0", [
         expect.objectContaining({
@@ -634,7 +637,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         expect.objectContaining({
           packages: [
             expect.objectContaining({
-              preparationCommands: [["bun", "run", "--cwd", "node_modules/@pulumi/gharunners", "build"]],
+              preparationCommands: [["bun", "run", "--cwd", "node_modules/@example/generated-sdk", "build"]],
               continuationScripts: ["test:lambda"],
             }),
           ],

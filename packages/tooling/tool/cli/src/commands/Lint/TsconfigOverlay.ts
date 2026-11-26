@@ -61,7 +61,7 @@ const checkCommand = "bun run beep lint tsconfig-overlay";
 const syncCommand = "bun run beep tsconfig-sync --write";
 // Mirrors the package test-typecheck lint's search roots so every overlay a
 // package owns is judged; expandWorkspaceFiles prunes build outputs.
-const overlaySearchRoots = ["apps", "infra", "packages"] as const;
+const overlaySearchRoots = ["apps", "packages"] as const;
 const renderedViolationLimit = 40;
 
 /**

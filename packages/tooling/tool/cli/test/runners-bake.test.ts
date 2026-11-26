@@ -14,6 +14,7 @@ import {
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
   makeBakeScriptForTesting,
   pendingWhileNotFoundForTesting,
+  RUNNER_IMAGE_PIN_FILE,
   RunnersCommandError,
   RunnersService,
   RunnersServiceLive,
@@ -51,7 +52,30 @@ const decodeBakeConfig = S.decodeEffect(BakeConfig);
 
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f");
-const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
+const pinnedAmiId = "ami-0123456789abcdef0";
+const bakedAmiId = "ami-0badc0de0badc0de";
+const pinSource = (amiId: string) =>
+  `export const productionConfig = {\n  image: { amiId: "${amiId}", rootDeviceName: "/dev/xvda" },\n};\n`;
+const isPinFile = Str.endsWith(RUNNER_IMAGE_PIN_FILE);
+const PinnedFileSystem = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const pin = yield* Ref.make(pinSource(pinnedAmiId));
+    return FileSystem.FileSystem.of({
+      ...fs,
+      readFileString: Effect.fn("RunnerBakeTest.readFileString")(
+        (...[file, encoding]: Parameters<typeof fs.readFileString>) =>
+          isPinFile(file) ? Ref.get(pin) : fs.readFileString(file, encoding)
+      ),
+      writeFileString: Effect.fn("RunnerBakeTest.writeFileString")(
+        (...[file, data, options]: Parameters<typeof fs.writeFileString>) =>
+          isPinFile(file) ? Ref.set(pin, data) : fs.writeFileString(file, data, options)
+      ),
+    });
+  })
+).pipe(Layer.provide(NodeFileSystem.layer));
+const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, PinnedFileSystem, NodePath.layer);
 
 // `Git` is built over the scripted spawner, so the kit's `HEAD` read reaches the stub's answer (W2).
 const withGit = <ROut, E, RIn>(spawner: ScriptedSpawner, platform: Layer.Layer<ROut, E, RIn>) =>
@@ -75,8 +99,7 @@ const report = (priorPin: O.Option<string>) =>
     bunVersion: "1.3.14",
     baseAmiId: "ami-0fedcba9876543210",
     priorPin,
-    pulumiPinCommand:
-      "cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
+    pinFile: RUNNER_IMAGE_PIN_FILE,
     startedAt: "2026-08-13T12:00:00.000Z",
     completedAt: "2026-08-13T12:10:00.000Z",
   });
@@ -219,7 +242,7 @@ const makeBakeSpawner = (
           Match.when(A.contains("run-instances"), () => ({ stdout: '{"Instances":[{"InstanceId":"i-bake"}]}' })),
           Match.when(A.contains("describe-instances"), () => ({ stdout: '["stopped"]' })),
           Match.when(A.contains("get-console-output"), () => ({ stdout: `{"Output":"${consoleOutput}"}` })),
-          Match.when(A.contains("create-image"), () => ({ stdout: '{"ImageId":"ami-baked"}' })),
+          Match.when(A.contains("create-image"), () => ({ stdout: `{"ImageId":"${bakedAmiId}"}` })),
           Match.when(A.contains("describe-images"), () => ({ stdout: '["available"]' })),
           Match.when(A.contains("terminate-instances"), () => ({ stdout: "{}" })),
           Match.orElse(() => ({ exit: 1, stderr: `unexpected aws command: ${A.join(args, " ")}` }))
@@ -302,26 +325,7 @@ describe("runner image manifest checks", () => {
               ? { stdout: A.contains(args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567" }
               : { exit: 1, stderr: "manifest checks must never invoke AWS" }
           );
-          const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(
-              withGit(
-                spawner,
-                Layer.mergeAll(
-                  Layer.succeed(FileSystem.FileSystem, {
-                    ...fs,
-                    readFileString: Effect.fn("RunnerBakeTest.readFileString")(
-                      (...[file, options]: Parameters<typeof fs.readFileString>) =>
-                        Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
-                          ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
-                          : fs.readFileString(file, options)
-                    ),
-                  }),
-                  NodePath.layer,
-                  NodeCrypto.layer
-                )
-              )
-            )
-          );
+          const testLayer = RunnersServiceLive.pipe(Layer.provide(withGit(spawner, PlatformLayer)));
           yield* Effect.gen(function* () {
             const service = yield* RunnersService;
             const inputs = yield* service.plan;
@@ -451,7 +455,7 @@ describe("runner bake planning and argv", () => {
       expect(logLines7).toStrictEqual([
         "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group\nresolve-base-ami: aws ssm get-parameter",
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
-        "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
+        "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npinned in: packages/tooling/infra/ci-runners/src/Config.ts",
       ]);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
@@ -657,7 +661,7 @@ describe("runner bake planning and argv", () => {
         "terminate-instance",
       ]);
       expect(check.fresh).toBe(true);
-      expect(check.amiId).toBe("ami-live");
+      expect(check.amiId).toBe(pinnedAmiId);
       expect(
         A.some(spawnArgv(spawner), (argv) => A.contains(argv, "describe-images") && A.contains(argv, "us-west-2"))
       ).toBe(true);
@@ -691,7 +695,9 @@ describe("runner bake planning and argv", () => {
             O.match({ onNone: () => Effect.die("missing create-image"), onSome: Effect.succeed })
           );
 
-          expect(baked.amiId).toBe("ami-baked");
+          expect(baked.amiId).toBe(bakedAmiId);
+          assertSome(baked.priorPin, pinnedAmiId);
+          expect(baked.pinFile).toBe(RUNNER_IMAGE_PIN_FILE);
           expect(
             pipe(
               argumentAfter(runInstances, "--tag-specifications"),

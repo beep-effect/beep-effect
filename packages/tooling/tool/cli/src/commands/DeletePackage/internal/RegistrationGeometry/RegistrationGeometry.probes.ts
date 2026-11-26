@@ -40,17 +40,7 @@ import type {
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
-const SCAN_ROOTS = [
-  "packages",
-  "apps",
-  "infra",
-  "scratchpad",
-  "standards",
-  "goals",
-  "research",
-  ".changeset",
-  ".github",
-];
+const SCAN_ROOTS = ["packages", "apps", "scratchpad", "standards", "goals", "research", ".changeset", ".github"];
 // `.beep` holds machine-local operator state (yeet run artifacts, CI mirrors);
 // the runtime-artifact probe scans `.beep/ci` deliberately from inside that
 // root, so excluding the top-level entry here never reaches it. The git-visible

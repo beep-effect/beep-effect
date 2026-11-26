@@ -219,7 +219,7 @@ const PRODUCER_BUILD_TOOL_PIN_KEYS = [
 // The pins file is the single source of the installed producer build tools and is digested into build.json.
 const expectPinnedProducerBuildTools = (installRun: string, buildTools: string): void => {
   expect(installRun).not.toMatch(/python3|pip install|venv/u);
-  expect(installRun).toContain("pins=infra/r2-cache/policy-build-tools.txt");
+  expect(installRun).toContain("pins=packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt");
   for (const key of PRODUCER_BUILD_TOOL_PIN_KEYS) expect(installRun).toContain(`"$(pin ${key})"`);
   expect(installRun).not.toMatch(/https:\/\/|[0-9a-f]{64}/u);
   expect(installRun).toContain('fetch zig.tar.xz "$zig_url"');
@@ -2754,7 +2754,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-missed-event-check.yml:Fleet Missed-Event Check",
-        "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",
         // Native Windows verification consumes only the sparse script artifact;
@@ -4353,11 +4352,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(hostSetup).toContain("perl --version");
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
-      const buildTools = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-tools.txt`);
+      const buildTools = yield* fs.readFileString(
+        `${root}/packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt`
+      );
       expectPinnedProducerBuildTools(stepRun(steps, "Install pinned portable build tools"), buildTools);
       const build = stepByName(steps, "Build pinned portable candidate");
-      expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
-      expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
+      expect(build.run).toContain("packages/tooling/infra/turbo-cache/r2-pilot/policy.sh cargo-build-musl");
+      expect(build.run).toContain("packages/tooling/infra/turbo-cache/r2-pilot/policy.sh prepare");
       expect(build.run).toContain("readelf -lW");
       expect(build.run).not.toContain("python");
       expect(build.run).toContain("size + manifest > 16*1024*1024");

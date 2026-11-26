@@ -15,7 +15,7 @@ import * as Struct from "effect/Struct";
 const $I = $RepoCliId.create("commands/Runners/Runners.schemas");
 
 /**
- * Public AL2023 parameter shared with the CI fleet controller.
+ * Public AL2023 parameter the runner image bakes from.
  *
  * **Example** (Inspect the public base AMI parameter)
  *
@@ -32,20 +32,41 @@ export const DEFAULT_RUNNER_BASE_AMI_PARAMETER =
   "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64";
 
 /**
- * SSM parameter through which the controller publishes the active runner image.
+ * Repository file whose production stage pins the runner image.
  *
- * **Example** (Inspect the runner AMI pin parameter)
+ * **Details**
+ *
+ * `beep runners bake` rewrites `productionConfig.image.amiId` in this file, and
+ * the merge of that change deploys the image through the CiRunners stack.
+ *
+ * **Example** (Inspect the runner image pin file)
  *
  * ```ts
- * import { RUNNER_AMI_PIN_PARAMETER } from "@beep/repo-cli/commands/Runners"
+ * import { RUNNER_IMAGE_PIN_FILE } from "@beep/repo-cli/commands/Runners"
  *
- * console.log(RUNNER_AMI_PIN_PARAMETER)
+ * console.log(RUNNER_IMAGE_PIN_FILE)
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const RUNNER_AMI_PIN_PARAMETER = "/beep-ci/controller/runner-ami-id";
+export const RUNNER_IMAGE_PIN_FILE = "packages/tooling/infra/ci-runners/src/Config.ts";
+
+/**
+ * Bake receipt describing the image the production stage pins.
+ *
+ * **Example** (Inspect the runner image manifest path)
+ *
+ * ```ts
+ * import { RUNNER_IMAGE_MANIFEST_FILE } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(RUNNER_IMAGE_MANIFEST_FILE)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const RUNNER_IMAGE_MANIFEST_FILE = "packages/tooling/infra/ci-runners/runner-image.json";
 
 /**
  * Execution modes accepted by `runners bake`.
@@ -152,7 +173,7 @@ export class BakeConfig extends S.Opaque<BakeConfig, { readonly brand: unique sy
  *   bunVersion: "1.2.20",
  *   baseAmiId: "ami-0fedcba9876543210",
  *   priorPin: O.none(),
- *   pulumiPinCommand: "pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
+ *   pinFile: "packages/tooling/infra/ci-runners/src/Config.ts",
  *   startedAt: "2026-08-13T12:00:00.000Z",
  *   completedAt: "2026-08-13T12:10:00.000Z",
  * })
@@ -170,7 +191,7 @@ export class BakeReport extends S.Opaque<BakeReport, { readonly brand: unique sy
     bunVersion: S.NonEmptyString,
     baseAmiId: S.NonEmptyString,
     priorPin: S.OptionFromOptionalKey(S.NonEmptyString),
-    pulumiPinCommand: S.NonEmptyString,
+    pinFile: S.NonEmptyString,
     startedAt: S.NonEmptyString,
     completedAt: S.NonEmptyString,
   }).pipe(

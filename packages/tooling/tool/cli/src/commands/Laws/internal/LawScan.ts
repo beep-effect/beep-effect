@@ -57,7 +57,7 @@ export class LawScanProject extends Context.Service<
  * @category constants
  * @since 0.0.0
  */
-export const LAW_SCAN_INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+export const LAW_SCAN_INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"] as const;
 
 const ECOSYSTEM_MEMBER_SOURCE_PREFIX = "packages/ecosystem/";
 

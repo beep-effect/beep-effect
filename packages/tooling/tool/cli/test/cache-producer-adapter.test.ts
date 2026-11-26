@@ -103,7 +103,12 @@ const fixture = Effect.fn("ProducerAdapterTest.fixture")(function* (fault: typeo
   const root = path.join(parent, "runner");
   const source = path.join(parent, "source");
   const dependencies = path.join(parent, "dependencies");
-  for (const directory of [root, source, dependencies, path.join(root, "infra/r2-cache")]) {
+  for (const directory of [
+    root,
+    source,
+    dependencies,
+    path.join(root, "packages/tooling/infra/turbo-cache/r2-pilot"),
+  ]) {
     yield* fs.makeDirectory(directory, { recursive: true });
   }
   const tool = path.join(parent, "adapter");

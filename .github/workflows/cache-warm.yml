@@ -73,7 +73,7 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.TURBO_R2_WRITE_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY }}
           R2_CACHE_MODE: local:rw,remote:rw
-        run: infra/r2-cache/adapter.sh start-ci
+        run: packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh start-ci
 
       - name: Qualify R2 credentials and exact-hash reuse
         if: inputs.r2_probe
@@ -113,4 +113,4 @@ jobs:
       - name: Stop R2 cache adapter
         if: always()
         shell: bash
-        run: infra/r2-cache/adapter.sh stop-ci
+        run: packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci

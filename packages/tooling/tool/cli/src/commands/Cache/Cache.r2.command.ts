@@ -105,7 +105,7 @@ const cacheR2FleetCommand = Command.make(
         roots,
         apply,
         output,
-        workstation: path.join(process.cwd(), "infra/r2-cache/workstation.sh"),
+        workstation: path.join(process.cwd(), "packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh"),
       })
     );
     yield* Console.log(A.join(result.lines, "\n"));

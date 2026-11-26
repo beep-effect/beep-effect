@@ -204,20 +204,24 @@ const readerAdapter = (live: Live) =>
     const readerKey = yield* requiredEnvironment(live, "R2_READ_ACCESS_KEY_ID");
     const readerSecret = yield* requiredEnvironment(live, "R2_READ_SECRET_ACCESS_KEY");
     // The scoped handle terminates the adapter, then kills it after five seconds.
-    const handle = yield* ChildProcess.make(live.path.join(live.target.root, "infra/r2-cache/adapter.sh"), ["serve"], {
-      cwd: live.target.root,
-      extendEnv: false,
-      env: {
-        ...live.environment,
-        R2_ACCESS_KEY_ID: readerKey,
-        R2_SECRET_ACCESS_KEY: readerSecret,
-        R2_ADAPTER_PORT: `${port}`,
-      },
-      stdin: "ignore",
-      stdout: "pipe",
-      stderr: "pipe",
-      forceKillAfter: Duration.seconds(5),
-    });
+    const handle = yield* ChildProcess.make(
+      live.path.join(live.target.root, "packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh"),
+      ["serve"],
+      {
+        cwd: live.target.root,
+        extendEnv: false,
+        env: {
+          ...live.environment,
+          R2_ACCESS_KEY_ID: readerKey,
+          R2_SECRET_ACCESS_KEY: readerSecret,
+          R2_ADAPTER_PORT: `${port}`,
+        },
+        stdin: "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+        forceKillAfter: Duration.seconds(5),
+      }
+    );
     yield* Stream.run(handle.all, live.fs.sink(live.path.join(live.out, "reader.private.log"), { mode: 0o600 })).pipe(
       Effect.ignore,
       Effect.forkScoped
@@ -281,7 +285,7 @@ const makeLayerCacheR2ProbeIo = (target: CacheR2ProbeTarget, environment: ProbeE
  * bound. Tasks run `bun run --bun turbo run <task> --summarize` with vault and
  * storage variables (`OP_*`, `R2_*`, `CLOUDFLARE_*`) removed and their output
  * captured only in a private log under `.beep/r2-cache`. The reader adapter is
- * `infra/r2-cache/adapter.sh serve` with the read-only storage grant on an
+ * `packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh serve` with the read-only storage grant on an
  * ephemeral loopback port. The command passes `process.env` as the
  * environment; tests pass a fixed record.
  *

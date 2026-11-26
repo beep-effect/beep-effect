@@ -35,16 +35,11 @@
     "**/*.d.ts",
     "**/typetests/**/*.tst.ts",
     "**/src-tauri/target/**",
-    "infra/lambda/**/build/**",
     "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
   ],
   "overrides": [
     {
-      "files": [
-        "apps/**/*.{ts,tsx}",
-        "packages/**/*.{ts,tsx}",
-        "infra/**/*.ts"
-      ],
+      "files": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
       "rules": {
         "typescript/no-deprecated": "error"
       }

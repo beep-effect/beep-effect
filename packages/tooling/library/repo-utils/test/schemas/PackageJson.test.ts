@@ -380,11 +380,11 @@ describe("PackageJson schema", () => {
 
     it("decodes Bun trusted dependencies", () => {
       const result = decodePackageJson({
-        name: "@beep/infra",
-        trustedDependencies: ["@pulumi/ghaRunners"],
+        name: "@beep/example",
+        trustedDependencies: ["@biomejs/biome"],
       });
 
-      expect(result.trustedDependencies).toEqual(["@pulumi/ghaRunners"]);
+      expect(result.trustedDependencies).toEqual(["@biomejs/biome"]);
     });
 
     it("decodes repo-local beep package metadata", () => {

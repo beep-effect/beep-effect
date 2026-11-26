@@ -21,13 +21,13 @@ const $I = $RepoCliId.create("commands/Lint/LintDeprecatedApis.schemas");
  * ```ts
  * import { deprecatedApiSweepRoots } from "@beep/repo-cli/commands/Lint/LintDeprecatedApis.schemas"
  *
- * console.log(deprecatedApiSweepRoots) // ["apps", "packages", "infra"]
+ * console.log(deprecatedApiSweepRoots) // ["apps", "packages"]
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const deprecatedApiSweepRoots: A.NonEmptyReadonlyArray<string> = ["apps", "packages", "infra"];
+export const deprecatedApiSweepRoots: A.NonEmptyReadonlyArray<string> = ["apps", "packages"];
 
 /**
  * **Example** (Check a partition name)
@@ -69,7 +69,7 @@ export type DeprecatedApiPartitionName = typeof DeprecatedApiPartitionName.Type;
  * **Details**
  *
  * tsrs-lint keeps every TypeScript program it builds alive until the process exits, so one
- * process over all three roots peaks at the sum of every program (about 27 GiB at four threads).
+ * process over every root peaks at the sum of every program (about 27 GiB at four threads).
  * Sequential partitions peak at the largest partition instead.
  *
  * **Example** (Build a partition)
@@ -77,8 +77,8 @@ export type DeprecatedApiPartitionName = typeof DeprecatedApiPartitionName.Type;
  * ```ts
  * import { DeprecatedApiPartition } from "@beep/repo-cli/commands/Lint/LintDeprecatedApis.schemas"
  *
- * const partition = DeprecatedApiPartition.make({ name: "remainder", targets: ["infra"], excludes: [] })
- * console.log(partition.targets) // ["infra"]
+ * const partition = DeprecatedApiPartition.make({ name: "remainder", targets: ["packages"], excludes: [] })
+ * console.log(partition.targets) // ["packages"]
  * ```
  *
  * @category models
@@ -145,7 +145,7 @@ export const deprecatedApiSweepPartitions: A.NonEmptyReadonlyArray<DeprecatedApi
   }),
   DeprecatedApiPartition.make({
     name: "remainder",
-    targets: ["infra", "packages"],
+    targets: ["packages"],
     excludes: [...claimedFamilies.foundationTooling, ...claimedFamilies.driversApps],
   }),
 ];

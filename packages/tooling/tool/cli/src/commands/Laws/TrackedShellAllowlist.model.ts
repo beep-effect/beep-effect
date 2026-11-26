@@ -28,8 +28,8 @@ const $I = $RepoCliId.create("commands/Laws/TrackedShellAllowlist.model");
  *
  * Each root is a repository-relative directory prefix ending in `/`. The hook
  * directories run inside the agent harness before any toolchain; `goals/` and
- * `explorations/` hold packet evidence; `infra/` stays until
- * `infra-alchemy-rebuild` retires it.
+ * `explorations/` hold packet evidence; the R2 cache pilot keeps its
+ * scripts until its paused goals decide its future.
  *
  * **Example** (Check an allowed root)
  *
@@ -48,7 +48,7 @@ export const TrackedShellAllowedRoot = LiteralKit([
   ".cursor/",
   "goals/",
   "explorations/",
-  "infra/",
+  "packages/tooling/infra/turbo-cache/r2-pilot/",
 ]).pipe(
   $I.annoteSchema("TrackedShellAllowedRoot", {
     description: "Repository-relative directory prefix whose tracked shell scripts the law allows.",

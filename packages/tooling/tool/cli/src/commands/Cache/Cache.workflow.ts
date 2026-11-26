@@ -152,7 +152,7 @@ const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args:
 const declaredSourcePaths = [
   "packages",
   "scripts",
-  "infra/r2-cache",
+  "packages/tooling/infra/turbo-cache/r2-pilot",
   "package.json",
   "bun.lock",
   "bunfig.toml",

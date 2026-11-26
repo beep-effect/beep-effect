@@ -2262,7 +2262,6 @@ const isDocgenGlobalInput = (file: string): boolean =>
 const isDocgenRelevantInput = (file: string): boolean =>
   Str.startsWith("apps/")(file) ||
   Str.startsWith("packages/")(file) ||
-  Str.startsWith("infra/")(file) ||
   Str.endsWith("/docgen.json")(file) ||
   O.isSome(Str.match(/\.(?:ts|tsx|mts|cts|md)$/u)(file));
 

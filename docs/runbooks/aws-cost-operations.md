@@ -298,16 +298,20 @@ changed enrollment or a clean no-change preview. Revisit it when the provider
 supports this readback; do not repeatedly apply merely to clear the preview.
 
 For image freshness, reuse the freshness fields of the existing `BakeReport`
-as a tracked intended-image receipt. `infra/ci-runners/runner-image.json` now
+as a tracked intended-image receipt. `packages/tooling/infra/ci-runners/runner-image.json`
 records the September 9 Bun 1.4.2 bake and its intended production pin. It
 supersedes the initial receipt copied from the stale Bun 1.4.0 image's tags.
 The existing runner check compares that receipt with Bun,
-archive and lockfile keys plus the intended Pulumi AMI pin without AWS access.
+archive and lockfile keys plus the intended AMI pin
+(`productionConfig.image.amiId` in `packages/tooling/infra/ci-runners/src/Config.ts`)
+without AWS access.
 Emit an advisory warning in the existing hosted Repo Sanity job, outside the
 heavy dependency chain. This warns about intended-image drift; the live AWS
 check remains required after an attended rollout. The bake command creates an
-image and report but does not activate it. Activation follows the existing YAML
-AMI pin, attended Pulumi apply, controller SSM parameter and runner module.
+image, writes its id into `productionConfig.image.amiId` and writes the report;
+it does not deploy. Activation is the reviewed PR that carries the pin: its merge
+deploys the CiRunners stack through the Deploy CI runners workflow, whose checked
+plan must show only the launch template update.
 Coalesce lockfile churn and measure bake payback rather than rebuilding for
 every edit.
 
@@ -592,16 +596,16 @@ The image refresh follows a separate validation and activation sequence:
    verify termination. Console output can lag shutdown and regress to an older
    capture; retain the most complete result and bound the capture wait. The
    September 9 final probe allowed 20 minutes after stop before cleanup.
-4. Review the intended manifest, AMI pin and refreshed Pulumi preview. Apply
-   the saved plan only with the operator present. Prove the live SSM pin and
-   verify a newly launched production worker. Before merge, use the PR's
+4. Review the intended manifest and the AMI pin in the stack config. Its merge
+   deploys through the Deploy CI runners workflow; read the checked plan (only
+   the launch template changes) and verify a newly launched production worker. Before merge, use the PR's
    required Heavy / Check job: `check.yml` calls the approved reusable
    `heavy.yml@main` definition while checking out the PR source. Correlate its
    GitHub runner name with the EC2 image ID, then require a baked fast-path hit
    and successful verification. Retain the old image for rollback.
 5. Fleet Lane Probe must be dispatched from `main`. The runner group restricts
    allowed workflow definitions to that ref. A feature-branch dispatch can
-   reach the controller queue yet remain ineligible for assignment; do not
+   reach the fleet's webhook yet remain ineligible for assignment; do not
    mistake that for a launch failure or relax the group restriction. Use this
    probe after merge to verify deployed main, and inspect the group's allowed
    workflow refs before choosing another dispatch ref.
@@ -624,7 +628,7 @@ alone does not establish that production uses the new image.
 
 | Stack | Ownership | Cost treatment |
 | --- | --- | --- |
-| CI production, `infra/ci-runners` | AWS fleet, network, cache; account controls composed alongside them. | Preserve reliability; account controls are protected against stack deletion. |
+| CI production, `packages/tooling/infra/ci-runners` (the `CiRunners` Alchemy stack) | AWS runner fleet, network and reaper; cost controls live in their own stack. | Preserve reliability; account controls are protected against stack deletion. |
 | OIP staging/production, `apps/oip-web/alchemy.run.ts` (the `OipWeb` Alchemy stack; the Pulumi `opip-web` stacks were removed 2026-11-14) | Vercel hosting, Cloudflare DNS, AWS S3 assets bucket `oip-law-web-assets-<stage>`. | Current resources retained; the old `assets.oip.law` and `staging-assets.oip.law` buckets were deleted empty. |
 | Storybook | Vercel deployment and shared CI/cache usage. | No dedicated AWS compute service found. |
 | OpenClaw workstation | Local generation applicator and managed workstation services. | Outside AWS workload retirement. |
@@ -643,9 +647,9 @@ distributions, WAF ACLs, old DynamoDB tables or manual RDS snapshots remain in
 the audited account. The current CI encryption key remains Enabled.
 
 Refresh the tracked receipt through the existing bake path with
-`--report infra/ci-runners/runner-image.json`. Review and update the corresponding
-`ciFleetController:amiId` only after the image and canary are proven; apply the
-saved Pulumi plan with the operator present. Then run the live
+`--report packages/tooling/infra/ci-runners/runner-image.json`; the bake also
+writes the new id into `productionConfig.image.amiId`. Merge that pin only after
+the image and canary are proven, and read the deploy's checked plan. Then run the live
 `bun run beep runners bake --check --region us-east-1` in addition to the
 AWS-free manifest check. A matching intended manifest never proves deployment.
 

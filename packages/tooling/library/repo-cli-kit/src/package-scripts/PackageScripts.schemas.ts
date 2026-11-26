@@ -54,7 +54,7 @@ export type PackageScriptsRuleVersion = typeof PackageScriptsRuleVersion.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const PackageKind = LiteralKit(["library", "tool", "ecosystem", "app", "lab", "infra", "exempt"]).pipe(
+export const PackageKind = LiteralKit(["library", "tool", "ecosystem", "app", "lab", "exempt"]).pipe(
   $I.annoteSchema("PackageKind", { description: "Workspace classifications selecting task presence." })
 );
 /**
@@ -273,7 +273,7 @@ export class ImplScriptDefault extends S.Opaque<ImplScriptDefault, { readonly br
 export const DECLARATION_ONLY_BUILD_FLAG = "--emitDeclarationOnly";
 
 /**
- * Generated `beep:build` of the library, tool, ecosystem, and infra kinds.
+ * Generated `beep:build` of the library, tool, and ecosystem kinds.
  *
  * **Details**
  *
@@ -954,13 +954,13 @@ export const CodegenGeneratorPackage = LiteralKit([
 export type CodegenGeneratorPackage = typeof CodegenGeneratorPackage.Type;
 
 /**
- * Canonical presence table in library, tool, ecosystem, app, lab, infra, and exempt order.
+ * Canonical presence table in library, tool, ecosystem, app, lab, and exempt order.
  *
  * **Example** (Inspect taskScriptRules)
  *
  * ```ts
  * import { taskScriptRules } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
- * console.log(taskScriptRules.length) // 112
+ * console.log(taskScriptRules.length) // 96
  * ```
  *
  * @category policies
@@ -993,12 +993,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "build",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "build",
     presence: { _tag: "required" },
     binding: { _tag: "indirection", impl: "beep:build", ifPresent: false },
@@ -1059,13 +1053,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
       via: PACKAGE_CHECK_GATE_COMMAND,
     },
   }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "check",
-    presence: { _tag: "required" },
-    // No gate: the infra check runs `tsrs -b`, which builds the referenced projects itself.
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
-  }),
   TaskScriptRule.make({ kind: "exempt", name: "check", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
@@ -1093,12 +1080,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "lint",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "lint",
     presence: { _tag: "required" },
     binding: { _tag: "indirection", impl: "beep:lint", ifPresent: false },
@@ -1134,12 +1115,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     presence: { _tag: "required" },
     binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
   }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "test",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
-  }),
   TaskScriptRule.make({ kind: "exempt", name: "test", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
@@ -1167,12 +1142,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "lint:fix",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "lint:fix",
     presence: { _tag: "required" },
     binding: { _tag: "indirection", impl: "beep:lint:fix", ifPresent: false },
@@ -1209,12 +1178,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
   }),
   TaskScriptRule.make({
-    kind: "infra",
-    name: "test:property",
-    presence: { _tag: "absent" },
-    binding: { _tag: "indirection", impl: "beep:test", ifPresent: false },
-  }),
-  TaskScriptRule.make({
     kind: "exempt",
     name: "test:property",
     presence: { _tag: "optional" },
@@ -1251,12 +1214,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
   }),
   TaskScriptRule.make({
-    kind: "infra",
-    name: "test:integration",
-    presence: { _tag: "absent" },
-    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
-  }),
-  TaskScriptRule.make({
     kind: "exempt",
     name: "test:integration",
     presence: { _tag: "optional" },
@@ -1288,12 +1245,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "test:integration:parallel",
-    presence: { _tag: "absent" },
-    binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "test:integration:parallel",
     presence: { _tag: "absent" },
     binding: { _tag: "indirection", impl: "beep:test:integration", ifPresent: false },
@@ -1320,12 +1271,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   TaskScriptRule.make({ kind: "app", name: "coverage", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "coverage",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:coverage", ifPresent: false },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "coverage",
     presence: { _tag: "required" },
     binding: { _tag: "indirection", impl: "beep:coverage", ifPresent: false },
@@ -1361,12 +1306,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     presence: { _tag: "absent" },
     binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
   }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "docgen",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:docgen", ifPresent: false },
-  }),
   TaskScriptRule.make({ kind: "exempt", name: "docgen", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
@@ -1394,12 +1333,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "package-test-typecheck",
-    presence: { _tag: "required" },
-    binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "package-test-typecheck",
     presence: { _tag: "required" },
     binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
@@ -1436,12 +1369,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "codegen",
-    presence: { _tag: "derived", rule: "codegen-generator" },
-    binding: { _tag: "owned" },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "codegen",
     presence: { _tag: "derived", rule: "codegen-generator" },
     binding: { _tag: "owned" },
@@ -1478,12 +1405,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
   }),
   TaskScriptRule.make({
-    kind: "infra",
-    name: "lint:deprecated-apis",
-    presence: { _tag: "required" },
-    binding: { _tag: "cli", command: "beep-cli lint deprecated-apis --package ." },
-  }),
-  TaskScriptRule.make({
     kind: "exempt",
     name: "lint:deprecated-apis",
     presence: { _tag: "absent" },
@@ -1519,12 +1440,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     presence: { _tag: "absent" },
     binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
   }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "lint:jsdoc",
-    presence: { _tag: "required" },
-    binding: { _tag: "cli", command: "beep-cli lint jsdoc --package ." },
-  }),
   TaskScriptRule.make({ kind: "exempt", name: "lint:jsdoc", presence: { _tag: "absent" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
@@ -1552,12 +1467,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   }),
   TaskScriptRule.make({
     kind: "lab",
-    name: "lint:laws",
-    presence: { _tag: "required" },
-    binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
     name: "lint:laws",
     presence: { _tag: "required" },
     binding: { _tag: "cli", command: "beep-cli lint laws --package ." },
@@ -1593,12 +1502,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     presence: { _tag: "derived", rule: "doctest-sources" },
     binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
   }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "doctest",
-    presence: { _tag: "absent" },
-    binding: { _tag: "indirection", impl: "beep:doctest", ifPresent: false },
-  }),
   TaskScriptRule.make({ kind: "exempt", name: "doctest", presence: { _tag: "absent" }, binding: { _tag: "owned" } }),
 ];
 /**
@@ -1608,7 +1511,7 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
  *
  * ```ts
  * import { implScriptDefaults } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
- * console.log(implScriptDefaults.length) // 50
+ * console.log(implScriptDefaults.length) // 41
  * ```
  *
  * @category configuration
@@ -1720,32 +1623,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: DECLARATION_ONLY_BUILD_COMMAND }),
-  ImplScriptDefault.make({
-    kind: "infra",
-    name: "beep:check",
-    value: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
-  }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:lint", value: "biome check ." }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:lint:fix", value: "biome check . --write" }),
-  ImplScriptDefault.make({
-    kind: "infra",
-    name: "beep:test",
-    value: "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
-  }),
-  ImplScriptDefault.make({
-    kind: "infra",
-    name: "beep:test:integration",
-    value: "bunx --bun vitest run test/integration --passWithNoTests",
-  }),
-  ImplScriptDefault.make({
-    kind: "infra",
-    name: "beep:coverage",
-    value:
-      "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage --exclude=test/integration/**",
-  }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
 ];
 
 // Every policy-managed kind. Apps and labs generate a no-emit build, but three apps

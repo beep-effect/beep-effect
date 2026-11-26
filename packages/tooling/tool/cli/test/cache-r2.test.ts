@@ -569,7 +569,7 @@ describe("R2 live probe layer", () => {
         const api = yield* Effect.scoped(h.io.readerAdapter);
         expect(api).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
         const adapter = O.getOrThrow(A.head(h.spawned));
-        expect(adapter.command).toBe(h.path.join(h.root, "infra/r2-cache/adapter.sh"));
+        expect(adapter.command).toBe(h.path.join(h.root, "packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh"));
         expect(adapter.args).toEqual(["serve"]);
         expect(adapter.options.env).toMatchObject({
           R2_ACCESS_KEY_ID: "reader-key",
@@ -727,7 +727,7 @@ describe("R2 command surface", () => {
           const policy = path.join(main, "packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts");
           yield* fs.makeDirectory(path.dirname(policy), { recursive: true });
           yield* fs.writeFileString(policy, 'const mode = "local:rw,remote:r"; // BEEP_TURBO_TRUSTED_WRITER\n');
-          const workstation = path.join(process.cwd(), "infra/r2-cache/workstation.sh");
+          const workstation = path.join(process.cwd(), "packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh");
           const spawner = ScriptedSpawner.make((command) =>
             command === workstation ? ScriptedSpawner.notFound(workstation) : { exit: 0 }
           );

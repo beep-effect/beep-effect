@@ -358,7 +358,6 @@ export const EffectImportsCodeGlobs = [
   "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "apps/storybook/.storybook/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "packages/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
-  "infra/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "goals/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "explorations/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
@@ -401,7 +400,7 @@ const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
  *
  * **Details**
  *
- * `build` holds bundler output such as `infra/lambda/turbo-cache/build`;
+ * `build` holds bundler output such as a bundled package's `build`;
  * `coverage` and `storybook-static` hold test-coverage reports (lcov HTML plus
  * its `prettify.js` and `sorter.js`) and static Storybook bundles. All are
  * gitignored output the repository never tracks (a `git ls-files` count of

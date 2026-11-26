@@ -335,7 +335,6 @@ const lawsEffectImportsCommand = Command.make(
         promotedFamilyPrefixes: [
           "apps",
           "packages",
-          "infra",
           "scripts",
           "goals",
           "explorations",

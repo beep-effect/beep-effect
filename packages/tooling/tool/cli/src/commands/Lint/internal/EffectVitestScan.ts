@@ -589,7 +589,7 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
   const ownerOf = yield* createWorkspaceOwnerResolver({
     root,
     fallbackOwner: "@beep/root",
-    fallbackPrefixes: [{ prefix: "infra/", owner: "@beep/infra" }],
+    fallbackPrefixes: [],
   });
   const sourcePaths = yield* discoverEffectVitestSourcePaths(root);
   const browserModePaths = yield* discoverEffectVitestBrowserModePaths(root);

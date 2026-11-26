@@ -143,7 +143,6 @@ const kindForDirectory = (dir: string): PackageKind =>
     Match.when(Str.startsWith("apps/"), () => "app" as const),
     Match.when(Str.startsWith("packages/tooling/tool/"), () => "tool" as const),
     Match.when(Str.startsWith("packages/ecosystem/"), () => "ecosystem" as const),
-    Match.when("infra", () => "infra" as const),
     Match.when("scratchpad", () => "exempt" as const),
     Match.when(Str.startsWith("tools/"), () => "exempt" as const),
     Match.orElse(() => "library" as const)

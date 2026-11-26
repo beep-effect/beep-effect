@@ -109,7 +109,7 @@ const OPTION_MATCH_HANDLER_NAMES = ["onNone", "onSome"] as const;
 
 const BOOL_MATCH_HANDLER_NAMES = ["onFalse", "onTrue"] as const;
 
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
+const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 
 const findingText = (sourceFile: import("ts-morph").SourceFile, filePath: string, kind: string, node: Node): string => {

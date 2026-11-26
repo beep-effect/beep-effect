@@ -37,7 +37,8 @@ export {
   BakeReport,
   BakeReportJson,
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
-  RUNNER_AMI_PIN_PARAMETER,
+  RUNNER_IMAGE_MANIFEST_FILE,
+  RUNNER_IMAGE_PIN_FILE,
 } from "./Runners.schemas.ts";
 /**
  * @category services

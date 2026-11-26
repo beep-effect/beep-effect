@@ -11,9 +11,8 @@
  * so they are testable without touching a machine. The OpenClaw stack runs
  * the applicator steps as ordered `Command.Exec` resources.
  *
- * Moved from the Pulumi program (`infra/src/OpenClaw.ts`) by
- * goals/infra-alchemy-rebuild P4; the Pulumi program imports it from here
- * until `infra/` is deleted.
+ * Moved from the retired Pulumi program (`infra/src/OpenClaw.ts`) by
+ * goals/infra-alchemy-rebuild P4.
  *
  * @packageDocumentation
  * @since 0.0.0

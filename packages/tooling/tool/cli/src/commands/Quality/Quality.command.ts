@@ -359,10 +359,10 @@ const { githubCheckLaneWaves, githubCheckOrderedLaneWaves } = githubCheckLanePla
 const moduleTagScannedRoots = [".patterns", "apps", "packages", "tooling"] as const;
 const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
 // Scratchpad is an unshipped lab; its compiler diagnostic experiments are intentionally local.
-const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra"] as const;
+const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling"] as const;
 const effectDiagnosticsDirectiveScannedExtensions = [".cts", ".mts", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
-const tsgoProfileScannedRoots = ["apps", "packages", "infra", "scratchpad"] as const;
+const tsgoProfileScannedRoots = ["apps", "packages", "scratchpad"] as const;
 const effectTsgoDiagnosticsTableStartMarker = "<!-- diagnostics-table:start -->";
 const effectTsgoDiagnosticsTableEndMarker = "<!-- diagnostics-table:end -->";
 const effectTsgoExampleConfigStartMarker = "<!-- example-config:start -->";
@@ -1628,8 +1628,7 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
     trackedFiles,
     A.map(Str.trim),
     A.filter(Str.isNonEmpty),
-    A.filter(P.not(Str.startsWith(".repos/"))),
-    A.filter(P.not(Str.startsWith("infra/ci-runners/sdks/")))
+    A.filter(P.not(Str.startsWith(".repos/")))
   );
   const semgrepFiles = yield* Effect.forEach(
     candidateFiles,
@@ -2662,15 +2661,8 @@ const collectPluginProfileDiagnostics = (
       ),
   });
 
-const excludedStandaloneTsconfigs = [
-  "infra/ci-runners/sdks/ghaRunners/tsconfig.json",
-  "infra/lambda/turbo-cache/tsconfig.json",
-] as const;
-
 const isExcludedTsgoProfileTsconfig = (file: string): boolean =>
-  Str.includes("/test/fixtures/")(file) ||
-  Str.includes("/docs/examples/")(file) ||
-  A.contains(excludedStandaloneTsconfigs, file);
+  Str.includes("/test/fixtures/")(file) || Str.includes("/docs/examples/")(file);
 
 const resolveRelativeTsconfigPath = (file: string, extended: string): string => {
   let segments = A.dropRight(Str.split(file, "/"), 1);

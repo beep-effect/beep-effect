@@ -225,7 +225,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           for (const directory of [
             "node_modules",
             "dist",
-            "infra/lambda/demo/build",
+            "packages/bundle/build",
             "vendor",
             "packages/demo/.repos",
             "packages/demo/coverage",
@@ -1052,14 +1052,14 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         Effect.gen(function* () {
           yield* writeTsconfig;
           const source = 'import { Effect, FutureModule } from "effect";\nexport const value = Effect.void;\n';
-          yield* writeProjectFile("infra/example.ts", source);
+          yield* writeProjectFile("scripts/example.ts", source);
 
           const summary = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
               write: true,
               strictCheck: true,
               excludePaths: [],
-              promotedFamilyPrefixes: ["infra"],
+              promotedFamilyPrefixes: ["scripts"],
             })
           );
 
@@ -1068,7 +1068,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.manualReviews).toHaveLength(1);
           expect(summary.manualReviews[0]?.binding).toBe("FutureModule");
           expect(summary.strictFailure).toBe(true);
-          const readProjectFile24 = yield* readProjectFile("infra/example.ts");
+          const readProjectFile24 = yield* readProjectFile("scripts/example.ts");
           expect(readProjectFile24).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1446,14 +1446,14 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             ],
             "\n"
           );
-          yield* writeProjectFile("infra/manual.ts", source);
+          yield* writeProjectFile("scripts/manual.ts", source);
 
           const summary = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
               write: true,
               strictCheck: true,
               excludePaths: [],
-              promotedFamilyPrefixes: ["infra"],
+              promotedFamilyPrefixes: ["scripts"],
             })
           );
 
@@ -1465,7 +1465,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(A.map(summary.manualReviews, (review) => review.line)).toEqual([1, 2, 3]);
           expect(summary.rootSpecifierCounts).toEqual({ effect: 3 });
           expect(summary.strictFailure).toBe(true);
-          const readProjectFile29 = yield* readProjectFile("infra/manual.ts");
+          const readProjectFile29 = yield* readProjectFile("scripts/manual.ts");
           expect(readProjectFile29).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1511,13 +1511,13 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             ],
             "\n"
           );
-          yield* writeProjectFile("infra/planted.ts", source);
+          yield* writeProjectFile("scripts/planted.ts", source);
 
           const summary = yield* runEffectImportRules(
             EffectImportRulesOptions.make({
               strictCheck: true,
               excludePaths: [],
-              promotedFamilyPrefixes: ["infra"],
+              promotedFamilyPrefixes: ["scripts"],
             })
           );
 
@@ -1529,7 +1529,7 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           ): EffectImportManualReview =>
             EffectImportManualReview.make({
               kind,
-              file: "infra/planted.ts",
+              file: "scripts/planted.ts",
               line,
               moduleSpecifier: "effect",
               binding,
@@ -1569,10 +1569,10 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.rootImportsRewritten).toBe(3);
           expect(summary.emittedImports).toBe(3);
           expect(summary.rootExportsRewritten).toBe(0);
-          expect(summary.changedFiles).toEqual(["infra/planted.ts"]);
+          expect(summary.changedFiles).toEqual(["scripts/planted.ts"]);
           expect(summary.parserWarnings).toEqual([]);
           expect(summary.strictFailure).toBe(true);
-          const unchanged = yield* readProjectFile("infra/planted.ts");
+          const unchanged = yield* readProjectFile("scripts/planted.ts");
           expect(unchanged).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

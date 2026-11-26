@@ -82,7 +82,7 @@ const writeFile = Effect.fn("BuildTurboOutputsTest.writeFile")(function* (root: 
 // The generated library `beep:build`, split into the compiler and its arguments, so the
 // fixtures below build exactly what every library package builds.
 const [BUILD_COMPILER, ...BUILD_ARGS] = Str.split(DECLARATION_ONLY_BUILD_COMMAND, " ");
-const EMITTING_KINDS = ["library", "tool", "ecosystem", "infra"] as const;
+const EMITTING_KINDS = ["library", "tool", "ecosystem"] as const;
 // The fixture's public subpaths, each pointing at its source like every workspace `exports` map.
 const FIXTURE_EXPORTS = {
   ".": "./src/index.ts",

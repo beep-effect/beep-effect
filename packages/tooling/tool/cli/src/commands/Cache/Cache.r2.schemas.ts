@@ -411,7 +411,7 @@ export class CacheR2ProbeTarget extends S.Opaque<CacheR2ProbeTarget, { readonly 
  *   roots: ["/home/me/projects"],
  *   apply: false,
  *   output: O.none(),
- *   workstation: "/repo/infra/r2-cache/workstation.sh"
+ *   workstation: "/repo/packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh"
  * })
  * console.assert(request.apply === false)
  * ```
