@@ -67,11 +67,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P8 closeout, in the final PR. P0 to P7 are complete: P0 merged as
-`dcf6b16a77d` (PR #3420), P1 to P6 merged in their own PRs (P6 is #3558,
-`6265d739bb6`), and P7 ships in this final PR with P8 (see `PLAN.md`). The
-reflection is `history/reflections/2026-11-25-claude.md`. P9 runs
-`goals completion refresh` after the merge. The Practice KG bundle rebuild over
+Closed. P0 to P9 are complete: P0 merged as `dcf6b16a77d` (PR #3420), P1 to
+P6 merged in their own PRs (P6 is #3558, `6265d739bb6`), and P7 and P8 shipped
+in the final PR #3562 (`dbbd0720e85`, see `PLAN.md`). The reflection is
+`history/reflections/2026-11-25-claude.md`. P9 ran
+`goals completion refresh` after the merge, which printed verified. The Practice KG bundle rebuild over
 the corpus and the operator grants configuration run in the operational
 environment, outside the repo (#3555); the semantica gold regeneration needs the
 corpus and billed embeddings (#3554).
