@@ -1683,6 +1683,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const script = stepRun(actionSteps, "Install apt packages with retries");
       assertPrunesAptSourcesBefore(script, 'apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update');
       assert.include(script, "-o Acquire::Retries=3");
+      assert.include(script, "-o APT::Keep-Downloaded-Packages=true");
 
       // setup-monorepo-ci installs poppler-utils through the same action.
       const setupText = yield* fs.readFileString(`${repoRoot}/.github/actions/setup-monorepo-ci/action.yml`);
@@ -1707,6 +1708,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         if (debCache === "on") {
           yield* fs.makeDirectory(`${work}/debs`, { recursive: true });
           yield* fs.writeFileString(`${work}/debs/cached.deb`, "cached");
+          yield* fs.writeFileString(`${work}/debs/superseded.deb`, "superseded");
+          yield* fs.writeFileString(`${work}/archives/image.deb`, "image");
         }
         yield* fs.writeFileString(
           `${work}/sources.list`,
@@ -1733,6 +1736,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           A.join(
             [
               'echo "apt-get $*" >> "$APT_LOG"',
+              'for arg in "$@"; do [[ "$arg" == autoclean ]] && { rm -f "$APT_STATE/archives/superseded.deb"; exit 0; }; done',
               'for arg in "$@"; do case "$arg" in update) phase=update ;; install) phase=install ;; esac; done',
               'count_file="$APT_STATE/$phase"',
               'count=$(( $(cat "$count_file" 2>/dev/null || echo 0) + 1 ))',
@@ -1843,14 +1847,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       const cachedDebs = yield* runCase(0, 0, "true", "2", "1500", "on");
       assert.strictEqual(cachedDebs.status, 0);
-      assert.include(cachedDebs.stdout, "apt-install: restored 1 cached .deb archives into ");
+      assert.include(cachedDebs.stdout, "apt-install: restored 2 cached .deb archives into ");
       assert.include(cachedDebs.stdout, "apt-install: kept 2 .deb archives in ");
-      assert.deepStrictEqual(cachedDebs.archives, ["cached.deb", "fetched.deb"]);
+      assert.notInclude(cachedDebs.stdout, "kept no .deb archives");
+      assertTrue(A.some(aptCalls(cachedDebs.log), Str.endsWith(" autoclean")));
+      assert.deepStrictEqual(cachedDebs.archives, ["cached.deb", "fetched.deb", "image.deb"]);
       assert.deepStrictEqual(cachedDebs.kept, ["cached.deb", "fetched.deb"]);
 
       const cachedFailure = yield* runCase(99, 0, "true", "2", "70", "on");
       assert.strictEqual(cachedFailure.status, 1);
-      assert.deepStrictEqual(cachedFailure.kept, ["cached.deb"]);
+      assert.deepStrictEqual(cachedFailure.kept, ["cached.deb", "superseded.deb"]);
 
       const keyStep = stepByName(actionSteps, "Resolve apt deb cache key");
       const restoreStep = stepByName(actionSteps, "Restore apt deb cache");

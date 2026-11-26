@@ -22,9 +22,15 @@ description: >-
 # archives also persist across jobs through the Actions cache, keyed on the
 # runner image and the package list: a hit copies them into apt's archive
 # directory before the first attempt, so install fetches only what the index
-# moved past, and a miss saves them after a successful install. apt checks
+# moved past, and a miss saves them after a successful install. The save keeps
+# only archives the image did not already ship, after `apt-get autoclean`
+# drops versions the current index no longer offers.
+# APT::Keep-Downloaded-Packages keeps apt's own post-install cleanup off; an
+# image hook that still empties the archive directory shows as a warning
+# that no archives were kept. apt checks
 # every archive against the signed index's SHA256 before using it, so a stale
-# or foreign cache entry is downloaded again, never installed. Requires the beep CI binary on PATH
+# or foreign cache entry is downloaded again, never installed. Requires the
+# beep CI binary on PATH
 # (./.github/actions/fetch-beep-ci) for `beep ci prune-apt`.
 
 inputs:
@@ -142,6 +148,7 @@ runs:
           -o Acquire::http::Timeout=10
           -o Acquire::https::Timeout=10
           -o DPkg::Lock::Timeout=30
+          -o APT::Keep-Downloaded-Packages=true
         )
         deadline=$(( SECONDS + APT_INSTALL_BUDGET_SECONDS ))
         bounded() {
@@ -182,10 +189,14 @@ runs:
         }
         deb_cache="${APT_INSTALL_DEB_CACHE_DIR:-}"
         archives=""
+        declare -A preexisting=()
         shopt -s nullglob
         if [[ -n "$deb_cache" ]]; then
           eval "$(apt-config shell archives Dir::Cache::archives/d)"
           mkdir -p "$deb_cache"
+          for deb in "${archives%/}"/*.deb; do
+            preexisting["${deb##*/}"]=1
+          done
           cached=("$deb_cache"/*.deb)
           if (( ${#cached[@]} > 0 )); then
             "${privilege[@]}" cp -- "${cached[@]}" "$archives"
@@ -196,10 +207,21 @@ runs:
           if [[ -z "$deb_cache" ]]; then
             return 0
           fi
-          local fetched=("${archives%/}"/*.deb)
+          if ! bounded 120 apt-get "${apt_options[@]}" autoclean; then
+            echo "::warning::apt-install: apt-get autoclean failed; the cache may keep superseded .deb archives."
+          fi
+          local fetched=() deb
+          for deb in "${archives%/}"/*.deb; do
+            if [[ -z "${preexisting["${deb##*/}"]:-}" ]]; then
+              fetched+=("$deb")
+            fi
+          done
           rm -f -- "$deb_cache"/*.deb
           if (( ${#fetched[@]} > 0 )); then
             cp -- "${fetched[@]}" "$deb_cache"/
+          fi
+          if (( ${#fetched[@]} == 0 )); then
+            echo "::warning::apt-install: kept no .deb archives in ${deb_cache}; something emptied ${archives} after the install, so the saved cache entry is empty."
           fi
           echo "apt-install: kept ${#fetched[@]} .deb archives in ${deb_cache} for the cache."
         }
