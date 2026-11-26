@@ -59,8 +59,7 @@ import type * as Digest from "effect/crypto/Digest";
 
 const $I = $ProfessionalDesktopId.create("runtime/Pglite");
 
-// Bun resolves `type: "file"` imports while compiling the sidecar executable;
-// Vite exposes the same files through `/@fs/` during integration tests.
+// decision: pglite-assets-ride-file-imports
 
 const chatDbDataUrl = new URL("../../../../.beep/professional-desktop/chat-db", import.meta.url);
 
@@ -333,21 +332,7 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
 
 const DataDirPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
-// The bundled migrations issue `CREATE EXTENSION btree_gist` (the epistemic
-// bitemporal edge exclusion constraint), so the extension has to be registered
-// on every PGlite instance this app opens — the compatibility probe as much as
-// the live database. Caller-supplied extensions merge on top rather than
-// replace.
-//
-// The bundle rides a `type: "file"` asset import rather than the
-// `@electric-sql/pglite/contrib/btree_gist` export: that export resolves its
-// tarball relative to its own module URL, which does not exist inside the
-// compiled sidecar's single-file executable. PGlite's extension loader reads
-// `file://` bundles through node:fs, which cannot open the executable's
-// embedded `$bunfs` assets either, so the bytes are materialized once per boot
-// into a private unpredictable temp directory and PGlite is handed that URL.
-// Exclusive creation prevents another local process from pre-positioning or
-// swapping the loadable extension path.
+// decision: pglite-assets-ride-file-imports
 const materializeBtreeGistBundle = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -414,7 +399,6 @@ export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle | SqlClient.SqlClien
       Layer.tap((context: Context.Context<PostgresDrizzle>) =>
         Effect.provide(migrateOnBoot, context).pipe(Effect.andThen(markAfterMigration))
       ),
-      // The vault-sync Model hosts its event store on the same client.
       Layer.provideMerge(makeBundledPgliteLayer({ dataDir }))
     );
   })

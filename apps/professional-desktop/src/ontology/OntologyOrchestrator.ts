@@ -61,9 +61,6 @@ const toOntologyActionError = (context: string) =>
     return yield* OntologyActionError.failEffect(context);
   });
 
-/**
- * Build ontology sidecar operations over the session use-case service.
- */
 const makeOntologyOperations = (
   useCases: SessionUseCases["Service"],
   reasoner: OntologyReasoner["Service"],
@@ -155,9 +152,6 @@ const makeOntologyOperations = (
       ),
 });
 
-/**
- * Runtime type for the ontology orchestration operations.
- */
 type OntologyHandlerOperations = ReturnType<typeof makeOntologyOperations>;
 
 /**

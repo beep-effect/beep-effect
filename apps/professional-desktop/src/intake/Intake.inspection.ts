@@ -38,7 +38,6 @@ import type { InspectableActor } from "@beep/xstate";
  * @since 0.0.0
  */
 export const statelyInspectEnabled = (): boolean => {
-  // Vite types DEV as a boolean; tooling without the Vite client types sees a string.
   // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV and VITE_* on import.meta.env. Owner: @beep/professional-desktop. Exit: Biome recognizes Vite's built-in import.meta.env keys (#1855).
   const dev: unknown = import.meta.env.DEV;
   return (dev === true || dev === "true") && import.meta.env.VITE_STATELY_INSPECT === "1";
@@ -105,7 +104,6 @@ export const inspectIntakeActor = Effect.fn("professional_desktop.intake.inspect
     )
   );
   const inspector = Context.get(services, driver.StatelyInspector);
-  // Attach before the relay answers so the transitions made meanwhile reach the timeline.
   const scope1 = yield* Effect.scope;
   const attachment = yield* Scope.fork(scope1);
   yield* inspector.attach(actor).pipe(Scope.provide(attachment));

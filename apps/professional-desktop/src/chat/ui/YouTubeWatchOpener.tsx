@@ -72,8 +72,6 @@ const openYouTubeWatchAtom = professionalBrowserRuntime.fn<YouTubeWatchRequest>(
 
 const decodeWatchRequest = S.decodeUnknownOption(YouTubeWatchRequest);
 
-// The package-level embed emits a cancelable typed request. Only a real Tauri
-// runtime claims it; an unclaimed request is opened explicitly by the browser.
 const youtubeWatchOpenerBindingAtom = Atom.make((get) => {
   get.mount(openYouTubeWatchAtom);
   const onWatch = (event: Event): void => {
