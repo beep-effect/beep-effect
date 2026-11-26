@@ -16,7 +16,6 @@ import type { Tree } from "./support/fixtures.ts";
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-/** The full workspaces stack over a virtual tree, rooted at `/repo`. */
 const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(tree)));
 
 describe("CatalogSet.fromManifestWorkspaces", () => {
@@ -83,8 +82,8 @@ describe("CatalogSet.fromManifestWorkspaces", () => {
         )
       );
       assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
-      // The named catalog, not just the default — a bug keeping only one passes on the other.
-      assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
+      const namedCatalogRange = set.rangeOf("typescript", O.some("build"));
+      assertSome(namedCatalogRange, "^6.0.0");
     })
   );
 
@@ -142,8 +141,8 @@ describe("CatalogSet.fromLockfile", () => {
         { format: "bun" }
       );
       const set = CatalogSet.fromLockfile(lockfile);
-      // The bun default catalog normalizes under "default".
-      assertSome(set.rangeOf("react", O.none()), "^18.0.0");
+      const bunDefaultCatalogRange = set.rangeOf("react", O.none());
+      assertSome(bunDefaultCatalogRange, "^18.0.0");
       assertSome(set.rangeOf("typescript", O.some("build")), "^5.0.0");
     })
   );
@@ -219,7 +218,7 @@ describe("WorkspaceCatalogs.set — a malformed workspaces shape through the sta
   });
 });
 
-const bunWorkspace: Tree = {
+const bunWorkspaceStaleLockfile: Tree = {
   "/repo/package.json": Result.getOrThrowWith(
     S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
       name: "root",
@@ -235,8 +234,6 @@ const bunWorkspace: Tree = {
     identity
   ),
   "/repo/packages/a/package.json": manifest("@x/a", { dependencies: { effect: "catalog:" } }),
-  // The bun lockfile records react (default) and a STALE typescript in `build`.
-  // Inline must win on typescript; react must survive from the lockfile.
   "/repo/bun.lock": Result.getOrThrowWith(
     S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
       lockfileVersion: 1,
@@ -248,7 +245,7 @@ const bunWorkspace: Tree = {
 };
 
 describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml", () => {
-  it.layer(workspacesOver(bunWorkspace), { timeout: "30 seconds" })((it) => {
+  it.layer(workspacesOver(bunWorkspaceStaleLockfile), { timeout: "30 seconds" })((it) => {
     it.effect("reads inline catalogs from the package.json workspaces block", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
@@ -261,8 +258,8 @@ describe("WorkspaceCatalogs.set — a bun workspace with no pnpm-workspace.yaml"
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         const set = yield* catalogs.set;
-        // react comes only from bun.lock — proof the BunExtension is assembled.
-        assertSome(set.rangeOf("react", O.none()), "^18.0.0");
+        const reactOnlyInBunLock = set.rangeOf("react", O.none());
+        assertSome(reactOnlyInBunLock, "^18.0.0");
       })
     );
 

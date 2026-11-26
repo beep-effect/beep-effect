@@ -64,13 +64,12 @@ describe("ConfigDependencySpec.parseResult over real SRI values from savvy-web/s
   });
 
   it("rejects a malformed integrity half with reason 'integrity'", () => {
-    // corepack form is a valid IntegrityHash, but never a config-dep integrity
-    const corepackIntegrityForm = "0.11.1+sha512.deadbeef";
+    const corepackValidIntegrityHash = "0.11.1+sha512.deadbeef";
     const semverBuildMetadata = "0.11.1+build.5";
     for (const input of [
       "0.11.1+",
       "0.11.1+garbage",
-      corepackIntegrityForm,
+      corepackValidIntegrityHash,
       semverBuildMetadata,
       "0.11.1+sha512-not base64",
     ]) {

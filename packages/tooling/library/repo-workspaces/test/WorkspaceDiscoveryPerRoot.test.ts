@@ -1,14 +1,3 @@
-// `WorkspaceDiscovery.listPackagesIn` / `infoIn` — discovery against a root the
-// caller names, not the one the layer was bound to.
-//
-// The fixture is built around the case under dispute, not around the happy
-// path: the two workspaces DISAGREE about membership and about versions. A
-// re-rooting implementation — take the layer-bound package list, rewrite each
-// path onto the caller's directory — produces plausible output for every
-// assertion about paths and fails only these, which is exactly why they are
-// here. The trap is that re-rooting looks correct in any fixture whose two
-// roots hold the same packages.
-
 import { WorkspaceDiscovery, WorkspaceRoot, WorkspaceRootNotFoundError } from "@beep/repo-workspaces";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertExitFailure, assertSome } from "@effect/vitest/utils";
@@ -21,10 +10,7 @@ import * as O from "effect/Option";
 import { manifest, platform, rootManifest } from "./support/fixtures.ts";
 import type { Tree } from "./support/fixtures.ts";
 
-// `/primary` is the long-lived host's startup checkout; `/worktree` is a git
-// worktree of the same repo on a different branch. `alpha` exists in both at
-// DIFFERENT versions, `beta` only in primary, `gamma` only in the worktree.
-const TREE: Tree = {
+const primaryAndDivergedWorktree: Tree = {
   "/primary/package.json": rootManifest(["packages/*"]),
   "/primary/packages/alpha/package.json": manifest("@x/alpha", { version: "1.0.0" }),
   "/primary/packages/beta/package.json": manifest("@x/beta", { version: "1.0.0" }),
@@ -34,8 +20,7 @@ const TREE: Tree = {
   "/worktree/packages/gamma/package.json": manifest("@x/gamma", { version: "2.0.0" }),
 };
 
-/** Discovery bound to `/primary`, as a host that resolved its root at startup. */
-const discoveryOver = (tree: Tree) => {
+const discoveryBoundToPrimary = (tree: Tree) => {
   const base = platform(tree);
   const roots = WorkspaceRoot.layer.pipe(Layer.provide(base));
   return Layer.mergeAll(
@@ -48,7 +33,7 @@ const names = (packages: ReadonlyArray<{ readonly name: string }>): ReadonlyArra
   [...A.map(packages, (pkg) => pkg.name)].sort();
 
 describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound to", () => {
-  layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
+  layer(discoveryBoundToPrimary(primaryAndDivergedWorktree), { timeout: "30 seconds" })((it) => {
     it.effect("reads the named root's own membership, not the layer-bound root's", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
@@ -57,9 +42,11 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
         assert.deepStrictEqual(names(primary), ["@x/alpha", "@x/beta", "root"]);
 
         const worktree = yield* discovery.listPackagesIn("/worktree");
-        // `@x/gamma` exists ONLY in the worktree and `@x/beta` ONLY in primary.
-        // Re-rooting the layer's list would report beta here and never gamma.
-        assert.deepStrictEqual(names(worktree), ["@x/alpha", "@x/gamma", "root"]);
+        assert.deepStrictEqual(
+          names(worktree),
+          ["@x/alpha", "@x/gamma", "root"],
+          "the roots disagree on membership: re-rooting the layer's list would report beta here and never gamma"
+        );
       })
     );
 
@@ -68,10 +55,11 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
         const discovery = yield* WorkspaceDiscovery;
         const worktree = yield* discovery.listPackagesIn("/worktree");
         const alpha = O.getOrUndefined(A.findFirst(worktree, (pkg) => pkg.name === "@x/alpha"));
-        // The limitation the re-rooting workaround could not lift: names and
-        // versions came from the layer-bound root's manifests even after paths
-        // were rewritten.
-        assert.strictEqual(alpha?.version, "2.0.0");
+        assert.strictEqual(
+          alpha?.version,
+          "2.0.0",
+          "re-rooting rewrote paths but kept the layer-bound root's manifest names and versions"
+        );
       })
     );
 
@@ -90,10 +78,12 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
         yield* discovery.listPackagesIn("/worktree");
-        // A per-call root that leaked into the shared memo would make the
-        // host's own workspace change under it between calls.
         const info = yield* discovery.info;
-        assert.strictEqual(info.root, "/primary");
+        assert.strictEqual(
+          info.root,
+          "/primary",
+          "a per-call root leaking into the shared memo would change the host's own workspace between calls"
+        );
         const listPackages1 = yield* discovery.listPackages;
         assert.deepStrictEqual(names(listPackages1), ["@x/alpha", "@x/beta", "root"]);
       })
@@ -112,10 +102,11 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
         const discovery = yield* WorkspaceDiscovery;
         const fromRoot = yield* discovery.listPackagesIn("/worktree");
         const fromSubdirectory = yield* discovery.listPackagesIn("/worktree/packages/alpha");
-        // Identity, not equality: keying the memo on the caller's path instead
-        // of the resolved root would re-discover per subdirectory and still
-        // pass a deep-equality check.
-        assert.strictEqual(fromRoot, fromSubdirectory);
+        assert.strictEqual(
+          fromRoot,
+          fromSubdirectory,
+          "identity, not equality: a memo keyed on the caller's path re-discovers per subdirectory yet deep-equals"
+        );
       })
     );
 
@@ -140,7 +131,7 @@ describe("WorkspaceDiscovery.listPackagesIn — a root the layer was not bound t
 });
 
 describe("WorkspaceDiscovery.infoIn", () => {
-  layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
+  layer(discoveryBoundToPrimary(primaryAndDivergedWorktree), { timeout: "30 seconds" })((it) => {
     it.effect("reports the named root and its own patterns", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
@@ -163,16 +154,18 @@ describe("WorkspaceDiscovery.infoIn", () => {
 });
 
 describe("WorkspaceDiscovery.refresh — with per-root memos live", () => {
-  layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
+  layer(discoveryBoundToPrimary(primaryAndDivergedWorktree), { timeout: "30 seconds" })((it) => {
     it.effect("drops the per-root memos too, not only the layer-bound one", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
         const before = yield* discovery.listPackagesIn("/worktree");
         yield* discovery.refresh;
         const after = yield* discovery.listPackagesIn("/worktree");
-        // A refresh that cleared only the layer-bound memo would leave a
-        // long-lived host serving stale worktree state with no way to reset it.
-        assert.notStrictEqual(before, after);
+        assert.notStrictEqual(
+          before,
+          after,
+          "clearing only the layer-bound memo leaves a long-lived host serving stale worktree state"
+        );
         assert.deepStrictEqual(names(after), names(before));
       })
     );
@@ -180,7 +173,7 @@ describe("WorkspaceDiscovery.refresh — with per-root memos live", () => {
 });
 
 describe("WorkspaceDiscovery.refreshIn", () => {
-  layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
+  layer(discoveryBoundToPrimary(primaryAndDivergedWorktree), { timeout: "30 seconds" })((it) => {
     it.effect("drops only the named root's memo", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
@@ -189,13 +182,14 @@ describe("WorkspaceDiscovery.refreshIn", () => {
 
         yield* discovery.refreshIn("/worktree");
 
-        // The named root re-discovers...
         const listPackagesIn3 = yield* discovery.listPackagesIn("/worktree");
-        assert.notStrictEqual(listPackagesIn3, worktreeBefore);
-        // ...and its siblings do not. A `refreshIn` that cleared the whole map
-        // would be indistinguishable from `refresh` and pass the line above.
+        assert.notStrictEqual(listPackagesIn3, worktreeBefore, "the named root re-discovers");
         const listPackagesIn4 = yield* discovery.listPackagesIn("/primary");
-        assert.strictEqual(listPackagesIn4, primaryBefore);
+        assert.strictEqual(
+          listPackagesIn4,
+          primaryBefore,
+          "its siblings do not; clearing the whole map would be refresh and pass the line above"
+        );
       })
     );
 
@@ -220,19 +214,17 @@ describe("WorkspaceDiscovery.refreshIn", () => {
       })
     );
 
-    it.effect("is a no-op for a root with no memo", () =>
+    it.effect("is a no-op, not an error, for a root with no memo", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
-        // The precondition is stated rather than inherited: `layer(...)` builds
-        // ONE service for the whole block, so without this the test only holds
-        // because a sibling happened to end with a refresh — and a reorder or
-        // an inserted test would make it pass vacuously.
         yield* discovery.refresh;
-        // Never discovered, so there is nothing to drop — an ordinary fact,
-        // not an error.
         yield* discovery.refreshIn("/worktree");
         const listPackagesIn7 = yield* discovery.listPackagesIn("/worktree");
-        assert.deepStrictEqual(names(listPackagesIn7), ["@x/alpha", "@x/gamma", "root"]);
+        assert.deepStrictEqual(
+          names(listPackagesIn7),
+          ["@x/alpha", "@x/gamma", "root"],
+          "the refresh states the precondition: layer(...) shares one service, so a sibling's order must not hold it"
+        );
       })
     );
 
@@ -252,19 +244,15 @@ describe("WorkspaceDiscovery.makeTest — the per-root methods", () => {
       const double = WorkspaceDiscovery.makeTest({
         listPackages: Effect.suspend(() => Effect.succeed([])),
       });
-      // Deriving would model every root as identical — the exact confusion
-      // `listPackagesIn` exists to remove — so a test that forgets to stub it
-      // must fail loudly rather than quietly agree with `listPackages`.
-      // A DIE specifically: a bare failure check also passes for a typed error
-      // or an interrupt, which would not discriminate the behaviour the test
-      // name claims — and a double that failed typed instead of dying is
-      // exactly the absorbable-by-catch mistake this default exists to avoid.
       const exit = yield* Effect.exit(double.listPackagesIn("/anywhere"));
       assertExitFailure(
         exit,
         O.getOrElse(Exit.getCause(exit), () => Cause.empty)
       );
-      assert.isTrue(Cause.hasDies(exit.cause));
+      assert.isTrue(
+        Cause.hasDies(exit.cause),
+        "a DIE: deriving would model every root as identical, and a typed failure could be absorbed by a catch"
+      );
       const infoExit = yield* Effect.exit(double.infoIn("/anywhere"));
       assertExitFailure(
         infoExit,
@@ -274,22 +262,22 @@ describe("WorkspaceDiscovery.makeTest — the per-root methods", () => {
     })
   );
 
-  it.effect("uses the override when one is supplied", () =>
-    Effect.gen(function* () {
-      const double = WorkspaceDiscovery.makeTest({
-        listPackagesIn: () => Effect.succeed([]),
-      });
-      const listPackagesIn8 = yield* double.listPackagesIn("/anywhere");
-      assert.deepStrictEqual(listPackagesIn8, []);
-      // `refreshIn` DOES have an honest default: a double memoizes nothing, so
-      // dropping one root's memo really is a no-op.
-      yield* WorkspaceDiscovery.makeTest({}).refreshIn("/anywhere");
-    })
+  it.effect(
+    "uses the override when one is supplied; refreshIn defaults to a no-op since a double memoizes nothing",
+    () =>
+      Effect.gen(function* () {
+        const double = WorkspaceDiscovery.makeTest({
+          listPackagesIn: () => Effect.succeed([]),
+        });
+        const listPackagesIn8 = yield* double.listPackagesIn("/anywhere");
+        assert.deepStrictEqual(listPackagesIn8, []);
+        yield* WorkspaceDiscovery.makeTest({}).refreshIn("/anywhere");
+      })
   );
 });
 
 describe("WorkspaceDiscovery.resolveFile — unchanged by the per-root memos", () => {
-  layer(discoveryOver(TREE), { timeout: "30 seconds" })((it) => {
+  layer(discoveryBoundToPrimary(primaryAndDivergedWorktree), { timeout: "30 seconds" })((it) => {
     it.effect("still answers against the layer-bound root", () =>
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;

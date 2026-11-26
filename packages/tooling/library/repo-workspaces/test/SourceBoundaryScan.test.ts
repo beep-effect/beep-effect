@@ -21,8 +21,7 @@ const SEED = {
 };
 const RULES = ["process", "node:process"] as const;
 
-/** A `Path` that reports backslash separators, standing in for win32. */
-const BackslashPath = Layer.effect(
+const Win32BackslashPath = Layer.effect(
   Path.Path,
   Effect.gen(function* () {
     const posix = yield* Path.Path;
@@ -34,14 +33,9 @@ const BackslashPath = Layer.effect(
   })
 ).pipe(Layer.provide(Path.layer));
 
-/**
- * A layer's `it` has no `it.live`, so the suites run without the test services
- * instead: the 3-second `Effect.timeout` guards then run on the real clock and
- * fail as a `TimeoutException` when a walk never ends.
- */
 const LIVE_CLOCK = { excludeTestServices: true } as const;
 
-describe("SourceBoundary.scan over a virtual tree", () => {
+describe("SourceBoundary.scan over a virtual tree, on the real clock so a walk that never ends hits its 3s timeout", () => {
   layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Path.layer), { ...LIVE_CLOCK, timeout: "30 seconds" })(
     (it) => {
       it.effect("the loop seed really is a symlink to a directory, so the loop test exercises a loop", () =>
@@ -127,18 +121,16 @@ describe("SourceBoundary.scan over a virtual tree", () => {
     }
   );
 
-  // A dangling link: its target never existed, so stat (which follows links) fails NotFound.
   const DANGLING = { ...SEED, "/repo/src/dangling.ts": MemoryFileSystem.symlink("/repo/gone.ts") };
   layer(Layer.mergeAll(MemoryFileSystem.layerWith(DANGLING), Path.layer), { ...LIVE_CLOCK, timeout: "30 seconds" })(
     (it) => {
       it.effect("a dangling symlink under the root is skipped, not fatal, and every real file is still scanned", () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          // Positive control: the seed really is a link whose target stat cannot reach.
           const readLink2 = yield* fs.readLink("/repo/src/dangling.ts");
-          assert.strictEqual(readLink2, "/repo/gone.ts");
+          assert.strictEqual(readLink2, "/repo/gone.ts", "positive control: the seed really is a link");
           const stat = yield* Effect.flip(fs.stat("/repo/src/dangling.ts"));
-          assert.strictEqual(stat.reason._tag, "NotFound");
+          assert.strictEqual(stat.reason._tag, "NotFound", "stat follows the link to a target that never existed");
           const scan = yield* SourceBoundary.scan({ root: "/repo/src", rules: RULES });
           assert.deepStrictEqual(scan.files, ["a.ts", "index.ts", "nested/b.mts", "version.ts"]);
           assert.deepStrictEqual(scan.violations, [
@@ -150,7 +142,6 @@ describe("SourceBoundary.scan over a virtual tree", () => {
     }
   );
 
-  // A NotFound on an entry that is NOT a link (a file removed mid-scan, a broken volume) still fails.
   const vanished = MemoryFileSystem.layerWith(SEED, {
     faults: {
       stat: (path) =>
@@ -175,8 +166,6 @@ describe("SourceBoundary.scan over a virtual tree", () => {
     );
   });
 
-  // okfit's LSP policy: main.ts may hold a bare process.stdout handle for a
-  // transport, yet must still never call .write() on it.
   const LSP = {
     "/lsp/src/main.ts": 'const transport = listen(process.stdout);\nprocess.stdout.write("x");\n',
     "/lsp/src/server.ts": "export const cwd = process.cwd();\n",
@@ -207,11 +196,15 @@ describe("SourceBoundary.scan over a virtual tree", () => {
         });
         assert.deepStrictEqual(scan.files, ["io.ts", "main.ts", "server.ts"]);
         assert.deepStrictEqual(scan.allowed, []);
-        assert.deepStrictEqual(scan.violations, [
-          "io.ts:1:26 forbidImports node:fs",
-          "main.ts:2:9 stdout-write stdout.write",
-          "server.ts:1:20 process process",
-        ]);
+        assert.deepStrictEqual(
+          scan.violations,
+          [
+            "io.ts:1:26 forbidImports node:fs",
+            "main.ts:2:9 stdout-write stdout.write",
+            "server.ts:1:20 process process",
+          ],
+          "okfit's LSP policy: main.ts may hold a bare process.stdout transport handle yet never call .write() on it"
+        );
         assert.deepStrictEqual(
           A.map(scan.waived, (offence) => offence.label),
           ["main.ts:1:26 process process", "main.ts:2:1 process process"]
@@ -261,14 +254,13 @@ describe("SourceBoundary.scan over a virtual tree", () => {
     );
   });
 
-  // The house rule a carrier keeps: the build-time version define appears in version.ts and nowhere else.
-  const TOKEN = "process.env.__PACKAGE_VERSION__";
+  const VERSION_DEFINE = "process.env.__PACKAGE_VERSION__";
   const CONFINED = {
-    "/pkg/src/version.ts": `export const version = ${TOKEN};\n`,
-    "/pkg/src/commands/about.ts": `export const about = () => ${TOKEN};\n`,
+    "/pkg/src/version.ts": `export const version = ${VERSION_DEFINE};\n`,
+    "/pkg/src/commands/about.ts": `export const about = () => ${VERSION_DEFINE};\n`,
     "/pkg/src/main.ts": 'import { version } from "./version.ts";\nexport const v = version;\n',
   };
-  const CONFINE_RULES = ["process", { forbidTokens: [TOKEN] }] as const;
+  const CONFINE_RULES = ["process", { forbidTokens: [VERSION_DEFINE] }] as const;
   layer(Layer.mergeAll(MemoryFileSystem.layerWith(CONFINED), Path.layer), { ...LIVE_CLOCK, timeout: "30 seconds" })(
     (it) => {
       it.effect(
@@ -281,10 +273,10 @@ describe("SourceBoundary.scan over a virtual tree", () => {
               allowRules: { forbidTokens: ["version.ts"] },
             });
             assert.deepStrictEqual(scan.files, ["commands/about.ts", "main.ts", "version.ts"]);
-            assert.deepStrictEqual(scan.violations, [`commands/about.ts:1:28 forbidTokens ${TOKEN}`]);
+            assert.deepStrictEqual(scan.violations, [`commands/about.ts:1:28 forbidTokens ${VERSION_DEFINE}`]);
             assert.deepStrictEqual(
               A.map(scan.waived, (offence) => offence.label),
-              [`version.ts:1:24 forbidTokens ${TOKEN}`],
+              [`version.ts:1:24 forbidTokens ${VERSION_DEFINE}`],
               "the confinement is live: the one permitted use is reported, not dropped"
             );
           }).pipe(Effect.timeout("3 seconds"))
@@ -299,15 +291,15 @@ describe("SourceBoundary.scan over a virtual tree", () => {
           });
           assert.deepStrictEqual(scan.waived, []);
           assert.deepStrictEqual(scan.violations, [
-            `commands/about.ts:1:28 forbidTokens ${TOKEN}`,
-            `version.ts:1:24 forbidTokens ${TOKEN}`,
+            `commands/about.ts:1:28 forbidTokens ${VERSION_DEFINE}`,
+            `version.ts:1:24 forbidTokens ${VERSION_DEFINE}`,
           ]);
         }).pipe(Effect.timeout("3 seconds"))
       );
     }
   );
 
-  layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), BackslashPath), { ...LIVE_CLOCK, timeout: "30 seconds" })(
+  layer(Layer.mergeAll(MemoryFileSystem.layerWith(SEED), Win32BackslashPath), { ...LIVE_CLOCK, timeout: "30 seconds" })(
     (it) => {
       it.effect("reports POSIX paths, and allow globs still match, under a backslash Path", () =>
         Effect.gen(function* () {

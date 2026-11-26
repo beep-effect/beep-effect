@@ -202,9 +202,6 @@ describe("WorkspaceLayering.checkWorkspace", () => {
 });
 
 describe("WorkspaceLayering: what a policy entry matches", () => {
-  // okfit's shape: a private root named "okfit" at relativePath ".", and members
-  // whose relativePath differs from their name. Every policy entry is matched
-  // against WorkspacePackage.name, never relativePath.
   const at = (name: string, relativePath: string, dependencies: Record<string, string> = {}): WorkspacePackage =>
     WorkspacePackage.make({
       name,
@@ -234,7 +231,11 @@ describe("WorkspaceLayering: what a policy entry matches", () => {
           })
         );
         assert.strictEqual(report.edgeCount, 2);
-        assert.deepStrictEqual(report.violations, []);
+        assert.deepStrictEqual(
+          report.violations,
+          [],
+          'okfit\'s shape: a root named okfit at ".", members whose relativePath differs from their name'
+        );
       })
     );
 

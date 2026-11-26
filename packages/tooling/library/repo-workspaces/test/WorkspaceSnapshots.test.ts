@@ -29,12 +29,6 @@ import type { GitStubs } from "@beep/git";
 import type { HookInjection } from "@beep/repo-workspaces";
 import type { Tree } from "./support/fixtures.ts";
 
-// ── A scripted `Git` over a per-ref, root-relative content map ──────────────
-//
-// No repository on disk: `show` and `lsTree` read from the map; `Git.layerTest`
-// makes every other method die with a named defect, so a test proves nothing
-// else is touched.
-
 type RefTrees = Readonly<Record<string, Readonly<Record<string, string>>>>;
 
 const scriptGit = (
@@ -45,11 +39,8 @@ const scriptGit = (
 ): Layer.Layer<Git> =>
   Git.layerTest({
     show: (_cwd: string, ref: string, path: string) => {
-      // The reader passes `<ref>:./<path>` to make git resolve relative to cwd;
-      // with the fixture map keyed root-relative and cwd == root, that is exactly
-      // the bare-path lookup — so strip a leading `./`, as real git does.
-      const relative = Str.startsWith("./")(path) ? Str.slice(2)(path) : path;
-      const content = trees[ref]?.[relative];
+      const gitCwdResolvedPath = Str.startsWith("./")(path) ? Str.slice(2)(path) : path;
+      const content = trees[ref]?.[gitCwdResolvedPath];
       return Effect.succeed(content === undefined ? O.none() : O.some(content));
     },
     lsTree:
@@ -62,12 +53,6 @@ const scriptGit = (
         )),
   });
 
-/**
- * Wire `WorkspaceSnapshots` over a scripted `Git` and a virtual filesystem. The
- * filesystem carries the root marker (`WorkspaceRoot` walks the live tree); the
- * ref content comes from `git`. The hooks layer defaults to `layerNoop`, the
- * same policy the default composite wires.
- */
 const snapshotsLayer = (
   git: Layer.Layer<Git>,
   tree: Tree,
@@ -85,8 +70,7 @@ const snapshotsLayer = (
   return Layer.mergeAll(core, snapshots).pipe(Layer.provideMerge(base));
 };
 
-/** Project the virtual (absolute-path) tree into a root-relative "HEAD" ref map. */
-const refFromTree = (tree: Tree, root = "/repo"): RefTrees => {
+const headRefFromTree = (tree: Tree, root = "/repo"): RefTrees => {
   const prefix = `${root}/`;
   const rel: Record<string, string> = {};
   for (const [abs, content] of R.toEntries(tree)) {
@@ -94,13 +78,6 @@ const refFromTree = (tree: Tree, root = "/repo"): RefTrees => {
   }
   return { HEAD: rel };
 };
-
-// ── The c594ff1 regression: a bun/npm workspace must NOT collapse to root ────
-//
-// No `pnpm-workspace.yaml` at the ref, so the globs MUST fall back to the root
-// `package.json` `workspaces` field. Without that fallback the snapshot would
-// carry the root package alone, and a consumer diffing two refs would see every
-// declared dependency as newly added.
 
 const npmRefTrees: RefTrees = {
   HEAD: {
@@ -110,22 +87,25 @@ const npmRefTrees: RefTrees = {
   },
 };
 
-// The live filesystem only needs the root marker so `WorkspaceRoot.find`
-// resolves `/repo`; the member manifests are read from git, not disk.
-const npmMarkerOnly: Tree = { "/repo/package.json": rootManifest(["packages/*"]) };
+const npmRootMarkerOnlyOnDisk: Tree = { "/repo/package.json": rootManifest(["packages/*"]) };
 
 describe("WorkspaceSnapshots.at — the c594ff1 fallback", () => {
-  it.layer(snapshotsLayer(scriptGit(npmRefTrees), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
+  it.layer(snapshotsLayer(scriptGit(npmRefTrees), npmRootMarkerOnlyOnDisk), { timeout: "30 seconds" })((it) => {
     it.effect("a bun/npm workspace at a ref discovers its members, not the root alone", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
         const snapshot = yield* snapshots.at("HEAD");
         const names = [...HashMap.keys(snapshot.versions)].sort();
-        // Root PLUS both members. A collapse-to-root bug returns just ["root"].
-        assert.deepStrictEqual(names, ["@x/alpha", "@x/beta", "root"]);
-        // No pnpm-workspace.yaml at the ref: config dependencies do not exist on
-        // this path, so the replay record is empty — set on every fresh read.
-        assert.deepStrictEqual(snapshot.hookReplays, {});
+        assert.deepStrictEqual(
+          names,
+          ["@x/alpha", "@x/beta", "root"],
+          "without the package.json workspaces fallback this collapses to root, and every dependency looks new"
+        );
+        assert.deepStrictEqual(
+          snapshot.hookReplays,
+          {},
+          "no pnpm-workspace.yaml at the ref means no config dependencies: an empty replay record, set every fresh read"
+        );
       })
     );
 
@@ -141,36 +121,30 @@ describe("WorkspaceSnapshots.at — the c594ff1 fallback", () => {
   });
 });
 
-// ── A directory that does NOT match the globs is excluded ───────────────────
-
 const scopedRefTrees: RefTrees = {
   HEAD: {
     "package.json": rootManifest(["packages/*"]),
     "packages/alpha/package.json": manifest("@x/alpha"),
-    "tools/gen/package.json": manifest("@x/gen"), // outside packages/* — must be dropped
+    "tools/gen/package.json": manifest("@x/gen"),
   },
 };
 
 describe("WorkspaceSnapshots.at — glob filtering over ls-tree", () => {
-  it.layer(snapshotsLayer(scriptGit(scopedRefTrees), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
+  it.layer(snapshotsLayer(scriptGit(scopedRefTrees), npmRootMarkerOnlyOnDisk), { timeout: "30 seconds" })((it) => {
     it.effect("only package.json directories the glob set accepts become members", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
         const snapshot = yield* snapshots.at("HEAD");
         const names = [...HashMap.keys(snapshot.versions)].sort();
-        // `tools/gen` is a package.json but outside `packages/*`; the root is
-        // always included.
-        assert.deepStrictEqual(names, ["@x/alpha", "root"]);
+        assert.deepStrictEqual(
+          names,
+          ["@x/alpha", "root"],
+          "tools/gen has a package.json outside packages/* and is dropped; the root is always included"
+        );
       })
     );
   });
 });
-
-// ── at("HEAD") vs worktree() parity on a clean tree ─────────────────────────
-//
-// A pnpm workspace with an inline catalog and no lockfile: worktree assembles
-// catalogs over the live filesystem, at("HEAD") over the same content via git.
-// A clean tree means they must agree.
 
 const parityTree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\ncatalog:\n  effect: ^4.0.0\n",
@@ -185,8 +159,7 @@ const parityTree: Tree = {
   }),
 };
 
-/** The observable state of a snapshot, normalized for comparison. */
-const projected = (snapshot: WorkspaceStateSnapshot) => ({
+const observableState = (snapshot: WorkspaceStateSnapshot) => ({
   versions: [...HashMap.entries(snapshot.versions)].sort(),
   catalogs: snapshot.catalogs.entries,
   effectResolved: snapshot.resolve("effect", "catalog:"),
@@ -194,32 +167,27 @@ const projected = (snapshot: WorkspaceStateSnapshot) => ({
 });
 
 describe("WorkspaceSnapshots — at('HEAD') and worktree() parity on a clean tree", () => {
-  it.layer(snapshotsLayer(scriptGit(refFromTree(parityTree)), parityTree), { timeout: "30 seconds" })((it) => {
+  it.layer(snapshotsLayer(scriptGit(headRefFromTree(parityTree)), parityTree), { timeout: "30 seconds" })((it) => {
     it.effect("the two snapshots agree on packages, catalogs and resolution", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
         const atHead = yield* snapshots.at("HEAD");
         const worktree = yield* snapshots.worktree;
-        assert.deepStrictEqual(projected(atHead), projected(worktree));
-        // And that resolution is non-trivial: the catalog and workspace
-        // indirections actually resolved.
-        assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
-        assertSome(atHead.resolve("@x/alpha", "workspace:*"), "1.0.0");
-        assertSome(atHead.resolve("@x/beta", "workspace:^"), "2.0.0");
+        assert.deepStrictEqual(
+          observableState(atHead),
+          observableState(worktree),
+          "worktree() reads the inline catalog from disk and at('HEAD') from git; a clean tree must agree"
+        );
+        const effectViaCatalog = atHead.resolve("effect", "catalog:");
+        assertSome(effectViaCatalog, "^4.0.0");
+        const alphaViaWorkspaceStar = atHead.resolve("@x/alpha", "workspace:*");
+        assertSome(alphaViaWorkspaceStar, "1.0.0");
+        const betaViaWorkspaceCaret = atHead.resolve("@x/beta", "workspace:^");
+        assertSome(betaViaWorkspaceCaret, "2.0.0");
       })
     );
   });
 });
-
-// ── bun inline catalogs at a ref with NO bun.lock: at('HEAD') vs worktree() ──
-//
-// A bun-style workspace declares its catalogs in the root `package.json`
-// `workspaces.catalog` block and has NO committed `bun.lock` at the ref.
-// `worktree()` reads the inline block unconditionally (via `fromManifestWorkspaces`);
-// gating the at-ref inline read on `bun.lock` presence reintroduced c594ff1 one
-// layer up — the two snapshots disagreed, and a consumer diffing them saw every
-// catalog dependency as newly added. Against the pre-fix (gated) code the inline
-// read returns empty, so this parity assertion fails.
 
 const bunNoLockTree: Tree = {
   "/repo/package.json": Result.getOrThrowWith(
@@ -236,23 +204,25 @@ const bunNoLockTree: Tree = {
 };
 
 describe("WorkspaceSnapshots — bun inline catalogs at a ref with NO bun.lock (parity)", () => {
-  it.layer(snapshotsLayer(scriptGit(refFromTree(bunNoLockTree)), bunNoLockTree), { timeout: "30 seconds" })((it) => {
-    it.effect("at('HEAD') reads inline bun catalogs without a lockfile, matching worktree()", () =>
-      Effect.gen(function* () {
-        const snapshots = yield* WorkspaceSnapshots;
-        const atHead = yield* snapshots.at("HEAD");
-        const worktree = yield* snapshots.worktree;
-        // The two catalog sets must agree — the gated code returned an EMPTY set
-        // from at('HEAD') while worktree() carried `effect: ^4.0.0`.
-        assert.deepStrictEqual(atHead.catalogs.entries, worktree.catalogs.entries);
-        assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
-        assertSome(worktree.resolve("effect", "catalog:"), "^4.0.0");
-      })
-    );
-  });
+  it.layer(snapshotsLayer(scriptGit(headRefFromTree(bunNoLockTree)), bunNoLockTree), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect("at('HEAD') reads inline bun catalogs without a lockfile, matching worktree()", () =>
+        Effect.gen(function* () {
+          const snapshots = yield* WorkspaceSnapshots;
+          const atHead = yield* snapshots.at("HEAD");
+          const worktree = yield* snapshots.worktree;
+          assert.deepStrictEqual(
+            atHead.catalogs.entries,
+            worktree.catalogs.entries,
+            "gating the at-ref inline read on bun.lock returned an empty set here: c594ff1 again, one layer up"
+          );
+          assertSome(atHead.resolve("effect", "catalog:"), "^4.0.0");
+          assertSome(worktree.resolve("effect", "catalog:"), "^4.0.0");
+        })
+      );
+    }
+  );
 });
-
-// ── TTL-cache discipline: a failed at(ref) init is RETRIED, not memoized ─────
 
 describe("WorkspaceSnapshots.at — a failed init is retried", () => {
   let lsTreeCalls = 0;
@@ -270,24 +240,24 @@ describe("WorkspaceSnapshots.at — a failed init is retried", () => {
     );
   };
 
-  it.layer(snapshotsLayer(scriptGit(npmRefTrees, { lsTree: flakyLsTree }), npmMarkerOnly), { timeout: "30 seconds" })(
-    (it) => {
-      it.effect("the first call fails; the second recomputes and succeeds", () =>
-        Effect.gen(function* () {
-          const snapshots = yield* WorkspaceSnapshots;
-          const first = yield* Effect.result(snapshots.at("HEAD"));
-          assert.strictEqual(first._tag, "Failure");
-          // A bare `Effect.cached` would replay the failure here. The success-only
-          // memo invalidated its cell, so the second call re-runs the init.
-          const second = yield* snapshots.at("HEAD");
-          assert.deepStrictEqual([...HashMap.keys(second.versions)].sort(), ["@x/alpha", "@x/beta", "root"]);
-        })
-      );
-    }
-  );
+  it.layer(snapshotsLayer(scriptGit(npmRefTrees, { lsTree: flakyLsTree }), npmRootMarkerOnlyOnDisk), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("the first call fails; the second recomputes and succeeds", () =>
+      Effect.gen(function* () {
+        const snapshots = yield* WorkspaceSnapshots;
+        const first = yield* Effect.result(snapshots.at("HEAD"));
+        assert.strictEqual(first._tag, "Failure");
+        const second = yield* snapshots.at("HEAD");
+        assert.deepStrictEqual(
+          [...HashMap.keys(second.versions)].sort(),
+          ["@x/alpha", "@x/beta", "root"],
+          "a bare Effect.cached would replay the failure; the success-only memo re-runs the init"
+        );
+      })
+    );
+  });
 });
-
-// ── Snapshot-scoped resolution and resolver layers (pure, no git) ───────────
 
 const resolveSnapshot = WorkspaceStateSnapshot.make({
   packages: [
@@ -314,17 +284,19 @@ describe("WorkspaceStateSnapshot.resolve", () => {
 
   it.effect("an unmatched specifier is Option.none(), never an error", () =>
     Effect.sync(() => {
-      assertNone(resolveSnapshot.resolve("nope", "workspace:*")); // not a member
-      assertNone(resolveSnapshot.resolve("effect", "catalog:missing")); // unknown catalog
-      assertNone(resolveSnapshot.resolve("effect", "^4.0.0")); // plain range: nothing to resolve
-      assertNone(resolveSnapshot.resolve("effect", "not a specifier")); // unparseable
+      const nonMember = resolveSnapshot.resolve("nope", "workspace:*");
+      assertNone(nonMember);
+      const unknownCatalog = resolveSnapshot.resolve("effect", "catalog:missing");
+      assertNone(unknownCatalog);
+      const plainRangeNothingToResolve = resolveSnapshot.resolve("effect", "^4.0.0");
+      assertNone(plainRangeNothingToResolve);
+      const unparseableSpecifier = resolveSnapshot.resolve("effect", "not a specifier");
+      assertNone(unparseableSpecifier);
     })
   );
 });
 
-// A snapshot holding a version-less member — the key simply absent, the shape
-// `snapshotOf` and the worktree snapshot both write (#613).
-const bareVersionSnapshot = WorkspaceStateSnapshot.make({
+const versionlessMemberSnapshot = WorkspaceStateSnapshot.make({
   packages: [
     PackageStateSnapshot.make({ name: "@x/bare", relativePath: "packages/bare" }),
     PackageStateSnapshot.make({ name: "@x/alpha", version: "1.2.3", relativePath: "packages/alpha" }),
@@ -346,8 +318,7 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
       })
     );
     assert.isFalse("version" in legacy);
-    assert.isTrue(Equal.equals(legacy, bareVersionSnapshot.packages[0]));
-    // Control: a real version survives the same decode.
+    assert.isTrue(Equal.equals(legacy, versionlessMemberSnapshot.packages[0]));
     const versioned = Result.getOrThrow(
       S.decodeResult(PackageStateSnapshot)({
         name: "@x/alpha",
@@ -355,59 +326,58 @@ describe('WorkspaceStateSnapshot — a version-less member is absent, never `""`
         relativePath: "packages/alpha",
       })
     );
-    assert.strictEqual(versioned.version, "1.2.3");
+    assert.strictEqual(versioned.version, "1.2.3", "control: a real version survives the same decode");
   });
 
   it("encoding omits the key rather than writing a placeholder", () => {
-    const pkg = bareVersionSnapshot.packages[0];
+    const pkg = versionlessMemberSnapshot.packages[0];
     if (pkg === undefined) return assert.fail("expected a snapshot package");
     const encoded = Result.getOrThrow(S.encodeResult(PackageStateSnapshot)(pkg));
-    assert.isFalse("version" in encoded);
+    assert.isFalse(
+      "version" in encoded,
+      "the key is absent: the shape snapshotOf and the worktree snapshot write (#613)"
+    );
   });
 
   it("versions lists only members that declared a version; package() still answers membership", () => {
-    assert.deepStrictEqual([...HashMap.entries(bareVersionSnapshot.versions)], [["@x/alpha", "1.2.3"]]);
-    const bare = bareVersionSnapshot.package("@x/bare");
+    assert.deepStrictEqual([...HashMap.entries(versionlessMemberSnapshot.versions)], [["@x/alpha", "1.2.3"]]);
+    const bare = versionlessMemberSnapshot.package("@x/bare");
     assertSome(bare, O.getOrThrow(bare));
   });
 
-  it.effect('a version-less member resolves to none, never some("")', () =>
+  it.effect('a version-less member resolves to none, never a some("") that rewrites workspace:^ as a bare ^', () =>
     Effect.sync(() => {
-      // Answering `some("")` would rewrite `workspace:^` as a bare `"^"`.
-      assertNone(bareVersionSnapshot.resolve("@x/bare", "workspace:^"));
-      // The positive control: a member that HAS a version still resolves, so
-      // this cannot pass by resolving nothing at all.
-      assertSome(bareVersionSnapshot.resolve("@x/alpha", "workspace:^"), "1.2.3");
+      assertNone(versionlessMemberSnapshot.resolve("@x/bare", "workspace:^"));
+      const versionedPositiveControl = versionlessMemberSnapshot.resolve("@x/alpha", "workspace:^");
+      assertSome(versionedPositiveControl, "1.2.3");
     })
   );
 
-  it.layer(bareVersionSnapshot.workspaceResolver, { timeout: "30 seconds" })((it) => {
+  it.layer(versionlessMemberSnapshot.workspaceResolver, { timeout: "30 seconds" })((it) => {
     it.effect("the snapshot's WorkspaceResolver fails typed for a version-less member, like discovery's", () =>
       Effect.gen(function* () {
         const workspace = yield* WorkspaceResolver;
-        // A known member with nothing to resolve: the contract reserves `none`
-        // for a NON-member, so this is the typed-failure outcome.
         const error = yield* Effect.flip(workspace.versionOf("@x/bare"));
-        assert.strictEqual(error._tag, "DependencyResolutionError");
+        assert.strictEqual(
+          error._tag,
+          "DependencyResolutionError",
+          "a known member with nothing to resolve fails typed: the contract reserves none for a non-member"
+        );
         assert.strictEqual(error.specifier, "workspace:@x/bare");
-        // The branch a `_tag` check cannot pin: this is the version-less case,
-        // raised from structured data with no foreign failure to wrap.
-        assert.strictEqual(error.reason, "no-version");
+        assert.strictEqual(
+          error.reason,
+          "no-version",
+          "the branch a _tag check cannot pin: raised from structured data with no foreign failure to wrap"
+        );
         assert.isUndefined(error.cause);
-        // Positive and negative controls on the same layer.
-        const versionOf1 = yield* workspace.versionOf("@x/alpha");
-        assertSome(versionOf1, "1.2.3");
-        const versionOf2 = yield* workspace.versionOf("nope");
-        assertNone(versionOf2);
+        const versionedPositiveControl = yield* workspace.versionOf("@x/alpha");
+        assertSome(versionedPositiveControl, "1.2.3");
+        const nonMemberNegativeControl = yield* workspace.versionOf("nope");
+        assertNone(nonMemberNegativeControl);
       })
     );
   });
 });
-
-// ── a version-less member at a ref AND in the worktree (#613) ──────────────
-//
-// Both capture paths must omit the key for the same manifest, so a diff of a
-// clean tree reads no change — and neither side may present `""` as a version.
 
 const versionlessTree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
@@ -423,7 +393,7 @@ const versionlessTree: Tree = {
 };
 
 describe("WorkspaceSnapshots — version-less manifests at a ref and in the worktree", () => {
-  it.layer(snapshotsLayer(scriptGit(refFromTree(versionlessTree)), versionlessTree), { timeout: "30 seconds" })(
+  it.layer(snapshotsLayer(scriptGit(headRefFromTree(versionlessTree)), versionlessTree), { timeout: "30 seconds" })(
     (it) => {
       it.effect("both sides omit version, agree structurally, and resolve workspace: to none", () =>
         Effect.gen(function* () {
@@ -433,21 +403,24 @@ describe("WorkspaceSnapshots — version-less manifests at a ref and in the work
           for (const snapshot of [atHead, worktree]) {
             const bare = O.getOrThrow(snapshot.package("@x/bare"));
             const root = O.getOrThrow(snapshot.package("root"));
-            assert.isFalse("version" in bare);
+            assert.isFalse("version" in bare, 'neither side may present "" as a version');
             assert.isFalse("version" in root);
             assert.deepStrictEqual(snapshot.versionNames, ["@x/alpha"]);
             assertNone(snapshot.resolve("@x/bare", "workspace:^"));
           }
-          // The two sides are the same value, member for member, so a diff of a
-          // clean tree reports nothing — the reason the key must match.
           const byName = (snapshot: WorkspaceStateSnapshot) =>
             [...snapshot.packages].sort((a, b) => Str.localeCompare(b.name)(a.name));
           const [left, right] = [byName(atHead), byName(worktree)];
           assert.strictEqual(left.length, right.length);
-          for (const [index, pkg] of left.entries()) assert.isTrue(Equal.equals(pkg, right[index]), pkg.name);
-          // Control: the versioned member is captured on both sides.
-          assertSome(atHead.resolve("@x/alpha", "workspace:*"), "1.0.0");
-          assertSome(worktree.resolve("@x/alpha", "workspace:*"), "1.0.0");
+          for (const [index, pkg] of left.entries())
+            assert.isTrue(
+              Equal.equals(pkg, right[index]),
+              `${pkg.name}: both capture paths omit the key alike, so a clean-tree diff reports nothing`
+            );
+          const atHeadVersionedControl = atHead.resolve("@x/alpha", "workspace:*");
+          assertSome(atHeadVersionedControl, "1.0.0");
+          const worktreeVersionedControl = worktree.resolve("@x/alpha", "workspace:*");
+          assertSome(worktreeVersionedControl, "1.0.0");
         })
       );
     }
@@ -482,16 +455,6 @@ describe("WorkspaceStateSnapshot — snapshot-scoped resolver layers", () => {
   });
 });
 
-// ── at(ref) and worktree() must answer a hook-injected catalog IDENTICALLY ───
-//
-// The symmetry requirement is the whole reason the lockfile-importer fallback
-// was chosen over replaying the ref's pnpmfile. `at(ref)` reads through
-// `git show` with no checkout and can never execute a past ref's config
-// dependency, so any fix that resolves the injected catalog on ONLY the
-// worktree side manufactures a bogus row — `from: "catalog:effect:peers"`,
-// `to: "4.0.0-beta.101"` — on every single run. Both sides read a committed
-// lockfile, so both must land on the same concrete version.
-
 const HOOK_LOCK = `lockfileVersion: '9.0'
 
 importers:
@@ -505,9 +468,7 @@ importers:
 packages: {}
 `;
 
-// The peer is declared through a catalog NO committed source defines: the
-// workspace declares no catalogs, and the lockfile records no `catalogs:` block.
-const hookManifest = Result.getOrThrowWith(
+const hookOnlyCatalogManifest = Result.getOrThrowWith(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
     name: "root",
     version: "1.0.0",
@@ -518,14 +479,14 @@ const hookManifest = Result.getOrThrowWith(
 );
 
 const hookTree: Tree = {
-  "/repo/package.json": hookManifest,
+  "/repo/package.json": hookOnlyCatalogManifest,
   "/repo/pnpm-workspace.yaml": "packages: []\n",
   "/repo/pnpm-lock.yaml": HOOK_LOCK,
 };
 
 const hookRefTrees: RefTrees = {
   HEAD: {
-    "package.json": hookManifest,
+    "package.json": hookOnlyCatalogManifest,
     "pnpm-workspace.yaml": "packages: []\n",
     "pnpm-lock.yaml": HOOK_LOCK,
   },
@@ -543,8 +504,11 @@ describe("WorkspaceSnapshots — hook-injected catalog symmetry", () => {
         const fromLive = live.resolve("effect", "catalog:effect:peers");
 
         assertSome(fromRef, "4.0.0-beta.101");
-        // Asymmetry here is the bogus-row bug: the two sides MUST agree.
-        assert.deepStrictEqual(fromLive, fromRef);
+        assert.deepStrictEqual(
+          fromLive,
+          fromRef,
+          "both sides read the committed lockfile importer; resolving on one side only is a bogus row every run"
+        );
       })
     );
 
@@ -560,13 +524,6 @@ describe("WorkspaceSnapshots — hook-injected catalog symmetry", () => {
   });
 });
 
-// ── The `seedCatalogs` option: the ref side of the hook-catalog gap ─────────
-//
-// A catalog injected by a config-dependency pnpmfile hook is declared in no
-// committed source, so under `layerNoop` (the default) `at(ref)` cannot see
-// it. The layer-level seed lets a consumer who already holds the live set
-// share it with the ref side without executing anything.
-
 const HOOKED_MARKER: Tree = {
   "/repo/pnpm-workspace.yaml": A.join(["packages:", "  - packages/*", "catalog:", "  effect: ^4.0.0", ""], "\n"),
   "/repo/package.json": rootManifest(["packages/*"]),
@@ -575,13 +532,9 @@ const HOOKED_MARKER: Tree = {
   }),
 };
 
-// Derived, never a second spelling. The suite asserts that `at("HEAD")` and
-// `worktree()` AGREE about `hooked-dep`; two hand-written copies of the same
-// tree could drift and make that agreement pass for the wrong reason.
-const HOOKED_REF: RefTrees = refFromTree(HOOKED_MARKER);
+const HOOKED_REF: RefTrees = headRefFromTree(HOOKED_MARKER);
 
-// What a config-dependency hook injects — the shape `hook-pnpmfile.cjs` adds.
-const HOOK_INJECTED = CatalogSet.make({ entries: { default: { "hooked-dep": "^9.9.9" } } });
+const HOOK_PNPMFILE_INJECTED_CATALOG = CatalogSet.make({ entries: { default: { "hooked-dep": "^9.9.9" } } });
 
 describe("WorkspaceSnapshots — under layerNoop, the hook-injected catalog is invisible at a ref", () => {
   it.layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER), { timeout: "30 seconds" })((it) => {
@@ -589,60 +542,50 @@ describe("WorkspaceSnapshots — under layerNoop, the hook-injected catalog is i
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
         const atRef = yield* snapshots.at("HEAD");
-        // The control: committed catalogs work, so a `none` below is about the
-        // hook, not about assembly having silently failed.
-        assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
+        const committedCatalogControl = atRef.resolve("effect", "catalog:");
+        assertSome(committedCatalogControl, "^4.0.0");
         assertNone(atRef.resolve("hooked-dep", "catalog:"));
       })
     );
   });
 });
 
-describe("WorkspaceSnapshots — seedCatalogs", () => {
-  it.layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER, "/repo", HOOK_INJECTED), { timeout: "30 seconds" })(
-    (it) => {
-      it.effect("reaches at(ref)", () =>
-        Effect.gen(function* () {
-          const snapshots = yield* WorkspaceSnapshots;
-          const atRef = yield* snapshots.at("HEAD");
-          assertSome(atRef.resolve("hooked-dep", "catalog:"), "^9.9.9");
-        })
-      );
+describe("WorkspaceSnapshots — seedCatalogs hand a held live set to the ref side, executing nothing", () => {
+  it.layer(snapshotsLayer(scriptGit(HOOKED_REF), HOOKED_MARKER, "/repo", HOOK_PNPMFILE_INJECTED_CATALOG), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("reaches at(ref)", () =>
+      Effect.gen(function* () {
+        const snapshots = yield* WorkspaceSnapshots;
+        const atRef = yield* snapshots.at("HEAD");
+        assertSome(atRef.resolve("hooked-dep", "catalog:"), "^9.9.9");
+      })
+    );
 
-      it.effect("reaches worktree() too, so the two sides of a diff agree", () =>
-        Effect.gen(function* () {
-          const snapshots = yield* WorkspaceSnapshots;
-          const atRef = yield* snapshots.at("HEAD");
-          const live = yield* snapshots.worktree;
-          // Asymmetry here is the bogus-row bug in the other direction: a seeded
-          // `at` diffed against an unseeded `worktree` reports the hook-injected
-          // catalog as newly removed on every run.
-          assert.deepStrictEqual(live.resolve("hooked-dep", "catalog:"), atRef.resolve("hooked-dep", "catalog:"));
-        })
-      );
+    it.effect("reaches worktree() too, so the two sides of a diff agree", () =>
+      Effect.gen(function* () {
+        const snapshots = yield* WorkspaceSnapshots;
+        const atRef = yield* snapshots.at("HEAD");
+        const live = yield* snapshots.worktree;
+        assert.deepStrictEqual(
+          live.resolve("hooked-dep", "catalog:"),
+          atRef.resolve("hooked-dep", "catalog:"),
+          "a seeded at against an unseeded worktree reports the catalog removed every run; HOOKED_REF derives from HOOKED_MARKER"
+        );
+      })
+    );
 
-      it.effect("never overrides what the ref itself committed", () =>
-        Effect.gen(function* () {
-          const snapshots = yield* WorkspaceSnapshots;
-          const atRef = yield* snapshots.at("HEAD");
-          assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
-          // And the field still reports the ref's own declaration alone.
-          assertNone(atRef.catalogs.rangeOf("hooked-dep", O.none()));
-        })
-      );
-    }
-  );
+    it.effect("never overrides what the ref itself committed", () =>
+      Effect.gen(function* () {
+        const snapshots = yield* WorkspaceSnapshots;
+        const atRef = yield* snapshots.at("HEAD");
+        assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
+        const refOwnCatalogsOnly = atRef.catalogs.rangeOf("hooked-dep", O.none());
+        assertNone(refOwnCatalogsOnly);
+      })
+    );
+  });
 });
-
-// ── at(ref) replays the REF's declared config dependencies ─────────────────
-//
-// The defect this pins: `at(ref)` used to skip the hook replay entirely, so a
-// catalog that exists only through a hook resolved identically at both refs
-// of a diff even when the config dependency was bumped between them. Now the
-// ref's own `configDependencies` (from that ref's `pnpm-workspace.yaml`) are
-// handed to the hooks layer in scope, and the injected catalogs merge in at
-// the live assembler's precedence. A recording hooks layer proves WHICH
-// declarations reached the seam and lets the test answer per declared version.
 
 interface InjectCall {
   readonly configDependencies: Readonly<Record<string, string>>;
@@ -651,7 +594,6 @@ interface InjectCall {
   readonly seed: Readonly<Record<string, Readonly<Record<string, string>>>>;
 }
 
-/** A hooks layer that records every `inject` and answers from a per-version table. */
 const recordingHooks = (answers: Readonly<Record<string, Readonly<Record<string, string>>>>) => {
   const calls: Array<InjectCall> = [];
   const layer = Layer.succeed(ConfigDependencyHooks, {
@@ -703,10 +645,7 @@ const replayWorkspaceYaml = (spec: string): string =>
 
 const REPLAY_MEMBER = manifest("@x/alpha", { dependencies: { effect: "catalog:", "hooked-dep": "catalog:" } });
 
-// Two refs declaring two different versions of the same config dependency —
-// one with the `+integrity` suffix pnpm writes, one bare (pnpm 12 in a fresh
-// workspace). The live tree needs only the root marker.
-const replayRefTrees: RefTrees = {
+const suffixedBeforeBareAfterRefs: RefTrees = {
   before: {
     "package.json": rootManifest(["packages/*"]),
     "pnpm-workspace.yaml": replayWorkspaceYaml("1.0.0+sha512-abc"),
@@ -718,7 +657,7 @@ const replayRefTrees: RefTrees = {
     "packages/alpha/package.json": REPLAY_MEMBER,
   },
 };
-const replayMarker: Tree = {
+const replayRootMarkerOnly: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/pnpm-workspace.yaml": replayWorkspaceYaml("2.0.0"),
 };
@@ -728,9 +667,12 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
     "@scope/plugin@1.0.0": { "hooked-dep": "^1.0.0" },
     "@scope/plugin@2.0.0": { "hooked-dep": "^2.0.0" },
   });
-  it.layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, hooks.layer), {
-    timeout: "30 seconds",
-  })((it) => {
+  it.layer(
+    snapshotsLayer(scriptGit(suffixedBeforeBareAfterRefs), replayRootMarkerOnly, "/repo", undefined, hooks.layer),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("hands the hooks layer THAT ref's configDependencies and inline seed", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
@@ -738,13 +680,13 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
         const call = O.getOrUndefined(
           A.findFirst(hooks.calls, (entry) => entry.configDependencies["@scope/plugin"] === "1.0.0+sha512-abc")
         );
-        assert.isDefined(call);
+        assert.isDefined(call, "the recording hooks layer proves which declarations reached the seam");
         assert.strictEqual(call?.root, "/repo");
-        // The seed is the ref's inline catalogs, the rules the ref's (none).
-        assert.deepStrictEqual(call?.seed, { default: { effect: "^4.0.0" } });
+        assert.deepStrictEqual(call?.seed, { default: { effect: "^4.0.0" } }, "the seed is the ref's inline catalogs");
         assert.deepStrictEqual(
           call?.rules,
-          PeerDependencyRules.make({ allowedVersions: {}, ignoreMissing: [], allowAny: [] })
+          PeerDependencyRules.make({ allowedVersions: {}, ignoreMissing: [], allowAny: [] }),
+          "the rules are the ref's own, here none"
         );
       })
     );
@@ -753,11 +695,11 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
         const before = yield* snapshots.at("before");
-        // The ref's OWN catalogs carry the injected range — not the seed field.
-        assertSome(before.catalogs.rangeOf("hooked-dep", O.none()), "^1.0.0");
+        const ownCatalogsInjectedRange = before.catalogs.rangeOf("hooked-dep", O.none());
+        assertSome(ownCatalogsInjectedRange, "^1.0.0");
         assertSome(before.resolve("hooked-dep", "catalog:"), "^1.0.0");
-        // The control: the inline catalog survived the merge.
-        assertSome(before.resolve("effect", "catalog:"), "^4.0.0");
+        const inlineCatalogControl = before.resolve("effect", "catalog:");
+        assertSome(inlineCatalogControl, "^4.0.0");
       })
     );
 
@@ -768,16 +710,17 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
         const after = yield* snapshots.at("after");
         assertSome(before.resolve("hooked-dep", "catalog:"), "^1.0.0");
         assertSome(after.resolve("hooked-dep", "catalog:"), "^2.0.0");
-        // Each snapshot records WHICH version it replayed from — the evidence
-        // that the row came from a config-dependency bump. Versions only: the
-        // live record's `source` is machine-local and stays off the value.
-        assert.deepStrictEqual(before.hookReplays, { "@scope/plugin": "1.0.0" });
+        assert.deepStrictEqual(
+          before.hookReplays,
+          { "@scope/plugin": "1.0.0" },
+          "the replayed version evidences a config-dependency bump; the machine-local source stays off the value"
+        );
         assert.deepStrictEqual(after.hookReplays, { "@scope/plugin": "2.0.0" });
-        // And cross-seeding does not blur it: own catalogs outrank the seed.
         const [seededBefore, seededAfter] = WorkspaceStateSnapshot.crossSeed(before, after);
         assert.notDeepEqual(
           seededBefore.resolve("hooked-dep", "catalog:"),
-          seededAfter.resolve("hooked-dep", "catalog:")
+          seededAfter.resolve("hooked-dep", "catalog:"),
+          "own catalogs outrank the seed; at(ref) once skipped the replay and resolved both refs of a bump alike"
         );
       })
     );
@@ -785,22 +728,25 @@ describe("WorkspaceSnapshots.at — replays the ref's configDependencies at the 
 });
 
 describe("WorkspaceSnapshots.at — under layerNoop the ref read executes nothing and sees no injection", () => {
-  it.layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker), { timeout: "30 seconds" })((it) => {
-    it.effect("both refs abstain on the hook-only catalog, exactly as before", () =>
-      Effect.gen(function* () {
-        const snapshots = yield* WorkspaceSnapshots;
-        const before = yield* snapshots.at("before");
-        const after = yield* snapshots.at("after");
-        assertNone(before.resolve("hooked-dep", "catalog:"));
-        assertNone(after.resolve("hooked-dep", "catalog:"));
-        assertSome(before.resolve("effect", "catalog:"), "^4.0.0");
-        // A pnpm-workspace.yaml was read, so the record is PRESENT — and empty,
-        // because the no-op layer resolved nothing. "Replayed nothing" is
-        // distinguishable from "no config dependencies exist here".
-        assert.deepStrictEqual(before.hookReplays, {});
-      })
-    );
-  });
+  it.layer(snapshotsLayer(scriptGit(suffixedBeforeBareAfterRefs), replayRootMarkerOnly), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect("both refs abstain on the hook-only catalog, exactly as before", () =>
+        Effect.gen(function* () {
+          const snapshots = yield* WorkspaceSnapshots;
+          const before = yield* snapshots.at("before");
+          const after = yield* snapshots.at("after");
+          assertNone(before.resolve("hooked-dep", "catalog:"));
+          assertNone(after.resolve("hooked-dep", "catalog:"));
+          assertSome(before.resolve("effect", "catalog:"), "^4.0.0");
+          assert.deepStrictEqual(
+            before.hookReplays,
+            {},
+            "a pnpm-workspace.yaml was read, so the record is present and empty: replayed nothing, not no config dependencies"
+          );
+        })
+      );
+    }
+  );
 });
 
 describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces typed", () => {
@@ -818,7 +764,7 @@ describe("WorkspaceSnapshots.at — a hook replay failure at the ref surfaces ty
       )
     ),
   });
-  it.layer(snapshotsLayer(scriptGit(replayRefTrees), replayMarker, "/repo", undefined, failing), {
+  it.layer(snapshotsLayer(scriptGit(suffixedBeforeBareAfterRefs), replayRootMarkerOnly, "/repo", undefined, failing), {
     timeout: "30 seconds",
   })((it) => {
     it.effect("fails at(ref) with the hooks-source CatalogAssemblyError, never a silent skip", () =>
@@ -874,7 +820,7 @@ const tolerantJsonRefs: RefTrees = {
 };
 
 describe("WorkspaceSnapshots.at — tolerant JSON schema decoding", () => {
-  it.layer(snapshotsLayer(scriptGit(tolerantJsonRefs), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
+  it.layer(snapshotsLayer(scriptGit(tolerantJsonRefs), npmRootMarkerOnlyOnDisk), { timeout: "30 seconds" })((it) => {
     it.effect("keeps valid own keys and degrades corrupt, non-object and malformed fields", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;
@@ -940,7 +886,7 @@ const ownNameTree: Tree = {
   "/repo/pnpm-workspace.yaml": "packages: []\n",
 };
 const ownNameDependencies = Layer.mergeAll(
-  scriptGit(refFromTree(ownNameTree)),
+  scriptGit(headRefFromTree(ownNameTree)),
   WorkspaceRoot.layerTest("/repo"),
   WorkspaceDiscovery.layerTest({ listPackages: Effect.succeed([]) }),
   WorkspaceCatalogs.layerTest({
@@ -1031,7 +977,7 @@ for (const control of bunCatalogCases) {
     }),
   };
   describe("Bun top-level snapshot catalogs", () => {
-    it.layer(snapshotsLayer(scriptGit(refFromTree(tree)), tree), { timeout: "30 seconds" })((it) => {
+    it.layer(snapshotsLayer(scriptGit(headRefFromTree(tree)), tree), { timeout: "30 seconds" })((it) => {
       it.effect(control.name, () =>
         Effect.gen(function* () {
           const snapshots = yield* WorkspaceSnapshots;
@@ -1039,7 +985,7 @@ for (const control of bunCatalogCases) {
           const live = yield* snapshots.worktree;
           assert.deepStrictEqual(atRef.catalogs.entries, control.expected);
           assert.deepStrictEqual(live.catalogs.entries, control.expected);
-          assert.deepStrictEqual(projected(atRef), projected(live));
+          assert.deepStrictEqual(observableState(atRef), observableState(live));
           assertSome(atRef.resolve("effect", "catalog:"), "^4.0.0");
           assertSome(live.resolve("effect", "catalog:"), "^4.0.0");
           assertSome(atRef.resolve("typescript", "catalog:build"), "^6.0.0");
@@ -1065,7 +1011,7 @@ const malformedBunTrees: RefTrees = {
   },
 };
 describe("historical Bun catalogs retain tolerant malformed-input degradation", () => {
-  it.layer(snapshotsLayer(scriptGit(malformedBunTrees), npmMarkerOnly), { timeout: "30 seconds" })((it) => {
+  it.layer(snapshotsLayer(scriptGit(malformedBunTrees), npmRootMarkerOnlyOnDisk), { timeout: "30 seconds" })((it) => {
     it.effect("malformed blocks and entries do not hide usable top-level or nested catalogs", () =>
       Effect.gen(function* () {
         const snapshots = yield* WorkspaceSnapshots;

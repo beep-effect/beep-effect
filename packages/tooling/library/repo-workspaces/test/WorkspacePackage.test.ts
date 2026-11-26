@@ -92,10 +92,11 @@ describe("WorkspacePackage", () => {
   });
 
   it("hasAnyDependencyOn covers every kind, including the LAST one checked", () => {
-    // `fsevents` is optional — the last kind in the chain. A short-circuit bug
-    // that forgets the final clause still passes on `effect`.
     assert.isTrue(utils.hasAnyDependencyOn("effect"));
-    assert.isTrue(utils.hasAnyDependencyOn("fsevents"));
+    assert.isTrue(
+      utils.hasAnyDependencyOn("fsevents"),
+      "fsevents is optional, the last kind checked; a short-circuit that forgets it still passes on effect"
+    );
     assert.isFalse(utils.hasAnyDependencyOn("react"));
   });
 
@@ -104,8 +105,6 @@ describe("WorkspacePackage", () => {
     assertSome(utils.dependencyVersion("fsevents"), "^2.0.0");
     assertNone(utils.dependencyVersion("react"));
   });
-
-  // ── matchesDependency: the minimatch call site, now over @effected/glob ────
 
   it("matchesDependency accepts a compiled GlobPattern", () => {
     const pattern = GlobPattern.make({ source: "@types/*" });
@@ -118,10 +117,8 @@ describe("WorkspacePackage", () => {
   });
 
   it("matchesDependency honours the full minimatch dialect, not a regex approximation", () => {
-    // v3's hand-rolled glob had no brace expansion and no extglobs. These are
-    // exactly the patterns it would silently fail to match.
-    assert.isTrue(utils.matchesDependency("{effect,react}"));
-    assert.isTrue(utils.matchesDependency("+(vite|vitest)"));
+    assert.isTrue(utils.matchesDependency("{effect,react}"), "v3's hand-rolled glob had no brace expansion");
+    assert.isTrue(utils.matchesDependency("+(vite|vitest)"), "v3's hand-rolled glob had no extglobs");
     assert.isTrue(utils.matchesDependency("v?test"));
   });
 
@@ -182,12 +179,13 @@ describe("WorkspacePackage", () => {
   });
 
   it("publishConfig.linkDirectory round-trips through decode and encode", () => {
-    // The pnpm dist-linking field: `directory` says what publishes,
-    // `linkDirectory` says workspace links point there during development.
     const decoded = Result.getOrThrow(
       S.decodeResult(PublishConfig)({ directory: "dist/dev/pkg", linkDirectory: true })
     );
-    assert.isTrue(decoded.linkDirectory);
+    assert.isTrue(
+      decoded.linkDirectory,
+      "pnpm dist-linking: directory is what publishes, linkDirectory points workspace links there in development"
+    );
     assert.strictEqual(decoded.directory, "dist/dev/pkg");
 
     const encoded = Result.getOrThrow(S.encodeUnknownResult(PublishConfig)(decoded));
@@ -219,18 +217,17 @@ describe("WorkspacePackage.dependencyVersion — inherited names are not depende
     optionalDependencies: {},
   });
 
-  // A plain-object dependency map inherits from Object.prototype, so a bare
-  // `this.dependencies[name]` lookup answers for names nobody declared. The
-  // sibling predicates (hasDependency and friends) already used Object.hasOwn;
-  // dependencyVersion did not, and it is typed Option<string> — so it would hand
-  // back Option.some(<Function>) and lie about its own type.
   for (const inherited of ["constructor", "toString", "valueOf", "hasOwnProperty", "__proto__"]) {
     it(`dependencyVersion(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is none`, () => {
-      assertNone(pkg.dependencyVersion(inherited));
+      const inheritedNameVersion = pkg.dependencyVersion(inherited);
+      assertNone(inheritedNameVersion);
     });
 
     it(`hasAnyDependencyOn(${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(inherited), identity)}) is false`, () => {
-      assert.isFalse(pkg.hasAnyDependencyOn(inherited));
+      assert.isFalse(
+        pkg.hasAnyDependencyOn(inherited),
+        "a bare dependencies[name] lookup answers for names inherited from Object.prototype"
+      );
     });
   }
 
@@ -246,9 +243,6 @@ describe("WorkspacePackage.manifestRecord", () => {
   });
 
   it("round-trips a non-trivial record through JSON serialization", () => {
-    // The snapshot path: encode, stringify, parse, decode — what a consumer
-    // persisting discovery output actually does. The record must survive
-    // byte-for-byte, including nested unknowns outside the discovery slice.
     const pkg = WorkspacePackage.make({
       name: "@my-org/utils",
       ...base,
@@ -271,13 +265,15 @@ describe("WorkspacePackage.manifestRecord", () => {
       Result.getOrThrowWith(identity)
     );
     const decoded = Result.getOrThrow(S.decodeUnknownResult(WorkspacePackage)(wire));
-    assert.deepStrictEqual(decoded.manifestRecord, pkg.manifestRecord);
+    assert.deepStrictEqual(
+      decoded.manifestRecord,
+      pkg.manifestRecord,
+      "a consumer persisting discovery output keeps nested unknowns outside the discovery slice"
+    );
     assert.deepStrictEqual(decoded.dependencies, { effect: "^4.0.0" });
   });
 
   it("a previously-serialized value WITHOUT the field decodes to an empty record", () => {
-    // Snapshots serialized before the field existed must stay valid — the
-    // decoding default, not an error and not `undefined`.
     const legacy = {
       name: "old",
       version: "1.0.0",
@@ -287,18 +283,15 @@ describe("WorkspacePackage.manifestRecord", () => {
       workspaceRoot: "/repo",
     };
     const decoded = Result.getOrThrow(S.decodeResult(WorkspacePackage)(legacy));
-    assert.deepStrictEqual(decoded.manifestRecord, {});
+    assert.deepStrictEqual(
+      decoded.manifestRecord,
+      {},
+      "snapshots from before the field stay valid: the decoding default, not an error or undefined"
+    );
   });
 
+  // decision: workspace-root-has-no-decoding-default
   it("a value serialized BEFORE workspaceRoot existed fails decode, loudly", () => {
-    // The deliberate exception to the compat posture the test above states, and
-    // the reason it is asserted rather than left implicit: `manifestRecord`
-    // could default to `{}` honestly, but there is no honest default root. A
-    // placeholder would hand back a WRONG absolute path, and every consumer of
-    // this field resolves config against it — an empty string or a guessed root
-    // silently reads the wrong `.changeset/config.json`, which is the exact
-    // class of bug the field was added to eliminate. Failing decode is the
-    // conservative direction: re-run discovery, which is cheap.
     const preField = {
       name: "old",
       version: "1.0.0",
