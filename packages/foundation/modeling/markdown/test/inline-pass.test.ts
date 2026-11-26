@@ -256,11 +256,7 @@ describe("inline pass", () => {
       const children = inlinesOf(source);
       const [, code] = children;
       assert.strictEqual(code?.type, "inlineCode");
-      assert.strictEqual(
-        Str.slice(code?.position.start.offset ?? 0, code?.position.end.offset ?? 0)(source),
-        "`code`",
-        "the inline pass sees the content with blockquote markers stripped, so a naive offset lands two characters early"
-      );
+      assert.strictEqual(Str.slice(code?.position.start.offset ?? 0, code?.position.end.offset ?? 0)(source), "`code`");
     });
 
     it("positions an inline inside a container against the original source", () => {
@@ -272,7 +268,11 @@ describe("inline pass", () => {
       const paragraph = quote?.type === "blockquote" ? quote.children[0] : undefined;
       const code = paragraph?.type === "paragraph" ? paragraph.children[1] : undefined;
       assert.strictEqual(code?.type, "inlineCode");
-      assert.strictEqual(Str.slice(code?.position.start.offset ?? 0, code?.position.end.offset ?? 0)(source), "`code`");
+      assert.strictEqual(
+        Str.slice(code?.position.start.offset ?? 0, code?.position.end.offset ?? 0)(source),
+        "`code`",
+        "the inline pass sees the content with blockquote markers stripped, so a naive offset lands two characters early"
+      );
     });
 
     it("keeps every inline position inside the source and ordered", () => {

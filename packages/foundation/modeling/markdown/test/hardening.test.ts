@@ -22,32 +22,34 @@ import { renderHtml } from "./support/htmlWriter.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-it.effect(
-  "retains positions when promoting a 150,000-line setext heading under Node's argument limit, which Bun lacks",
-  () =>
-    Effect.sync(() => {
-      const lines = 150_000;
-      const source = `${Str.repeat(lines)("x\n")}---\n`;
-      const parsed = Markdown.parseResult(source);
-      assertSuccess(parsed, parseBlocks(source).root);
-      const heading = parsed.success.children[0];
-      assert.strictEqual(parsed.success.children.length, 1);
-      assert.ok(heading?.type === "heading");
-      if (heading?.type === "heading") {
-        assert.strictEqual(heading.depth, 2);
-        assert.deepStrictEqual({ ...heading.position.start }, { line: 1, column: 1, offset: 0 });
-        assert.deepStrictEqual({ ...heading.position.end }, { line: lines + 1, column: 4, offset: source.length - 1 });
-        const text = heading.children[0];
-        assert.strictEqual(heading.children.length, 1);
-        assert.ok(text?.type === "text");
-        if (text?.type === "text") {
-          assert.strictEqual(text.value, Str.slice(0, lines * 2 - 1)(source));
-          assert.deepStrictEqual({ ...text.position.start }, { line: 1, column: 1, offset: 0 });
-          assert.deepStrictEqual({ ...text.position.end }, { line: lines, column: 2, offset: lines * 2 - 1 });
-        }
+it.effect("retains positions when promoting a 150,000-line setext heading", () =>
+  Effect.sync(() => {
+    const lines = 150_000;
+    const source = `${Str.repeat(lines)("x\n")}---\n`;
+    const parsed = Markdown.parseResult(source);
+    assertSuccess(parsed, parseBlocks(source).root);
+    const heading = parsed.success.children[0];
+    assert.strictEqual(
+      parsed.success.children.length,
+      1,
+      "Vitest's threads pool runs this in Node, whose argument limit rejects the former segment spread that Bun accepts"
+    );
+    assert.ok(heading?.type === "heading");
+    if (heading?.type === "heading") {
+      assert.strictEqual(heading.depth, 2);
+      assert.deepStrictEqual({ ...heading.position.start }, { line: 1, column: 1, offset: 0 });
+      assert.deepStrictEqual({ ...heading.position.end }, { line: lines + 1, column: 4, offset: source.length - 1 });
+      const text = heading.children[0];
+      assert.strictEqual(heading.children.length, 1);
+      assert.ok(text?.type === "text");
+      if (text?.type === "text") {
+        assert.strictEqual(text.value, Str.slice(0, lines * 2 - 1)(source));
+        assert.deepStrictEqual({ ...text.position.start }, { line: 1, column: 1, offset: 0 });
+        assert.deepStrictEqual({ ...text.position.end }, { line: lines, column: 2, offset: lines * 2 - 1 });
       }
-      assert.strictEqual(parsed.success.position.end.offset, source.length);
-    })
+    }
+    assert.strictEqual(parsed.success.position.end.offset, source.length);
+  })
 );
 
 describe("recursion surfaces", () => {

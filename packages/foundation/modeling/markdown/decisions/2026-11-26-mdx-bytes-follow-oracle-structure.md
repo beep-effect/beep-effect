@@ -6,13 +6,10 @@ governs:
   - src/internal/stringify.ts#serializeMdxJsxFlow
   - src/internal/stringify.ts#serializeMdxAttribute
   - src/internal/stringify.ts#mdxExpression
-  - test/mdx.test.ts#leadingTextElement
 enforcedBy: []
 ---
 
 Serialization expectations in `mdx.test.ts` are lifted from the oracle suites of `mdast-util-mdx-jsx` (`mdxJsxToMarkdown`), `mdast-util-mdx-expression` and `mdast-util-mdxjs-esm` at the oracle defaults: quote `"`, no quoteSmart, spaced self-closing, and attributes wrapped onto their own lines only when one carries a line ending.
-
-The oracle's `inferDepth` breaks only at `blockquote` and `listItem`: a list item's hanging indent owns indentation from there in, while a footnote definition keeps counting its JSX ancestor. Its `indentLines` splits on `\r\n`, `\n` and bare `\r`, keeps every terminator verbatim and never indents a blank line.
 
 Where a case's child block content is ordinary markdown, the bytes follow this package's canonical table (bullet `-`, tight lists), not the oracles' to-markdown defaults: the MDX structure is the oracle contract, the markdown inside it is ours.
 

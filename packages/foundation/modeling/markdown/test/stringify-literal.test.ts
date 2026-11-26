@@ -288,16 +288,12 @@ describe("Text escapeStyle: literal", () => {
     for (const [value, expected] of blockOpeners) {
       it(`escapes the line-start opener in ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`, () => {
         const emitted = out(paragraphOf(literal(value)));
-        assert.strictEqual(
-          emitted,
-          `${expected}\n`,
-          "only text that can open a block at a line start is escaped: a marker needs its trailing space, tab or end of line, a break or fence its run"
-        );
+        assert.strictEqual(emitted, `${expected}\n`);
         const reparsed = parse(emitted);
         assert.strictEqual(
           reparsed.children.length,
           1,
-          `each emitted line parses back to one paragraph carrying the exact value; emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+          `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
         );
         assert.strictEqual(
           reparsed.children[0]?.type,
@@ -353,7 +349,11 @@ describe("Text escapeStyle: literal", () => {
     for (const [value, expected] of lineStarts) {
       it(`emits the line start of ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)} as ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(expected), identity)}`, () => {
         const emitted = out(paragraphOf(literal(value)));
-        assert.strictEqual(emitted, `${expected}\n`);
+        assert.strictEqual(
+          emitted,
+          `${expected}\n`,
+          "only text that can open a block at a line start is escaped: a marker needs its trailing space, tab or end of line, a break or fence its run"
+        );
         const reparsed = parse(emitted);
         assert.strictEqual(
           reparsed.children.length,
@@ -372,7 +372,8 @@ describe("Text escapeStyle: literal", () => {
               A.map(paragraph.children, (child) => child.value),
               ""
             ),
-            value
+            value,
+            "each emitted line parses back to one paragraph carrying the exact value"
           );
         }
       });

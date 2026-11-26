@@ -7,7 +7,6 @@ governs:
   - src/internal/inlineParser.ts#InlineParser
   - src/internal/limits.ts#MAX_NESTING_DEPTH
   - src/internal/inlines/link.ts#plainTextOf
-  - test/hardening.test.ts#UnknownJson
 enforcedBy: []
 ---
 

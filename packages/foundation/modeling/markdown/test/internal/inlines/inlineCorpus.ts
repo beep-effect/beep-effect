@@ -2,18 +2,6 @@
 
 import * as A from "effect/Array";
 
-/**
- * The tokens a generated source is spelled from.
- *
- * **Details**
- *
- * `𐄀` (U+10100) is astral punctuation (Po), `🎉` an astral symbol (So) and
- * `𝐀` (U+1D400) an astral letter: one-character strings of these are half a
- * surrogate pair, which is what the flanking rules must not see.
- *
- * @category testing
- * @since 0.0.0
- */
 const INLINE_TOKENS: ReadonlyArray<string> = [
   "a",
   "b",

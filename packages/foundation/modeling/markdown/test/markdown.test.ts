@@ -134,8 +134,8 @@ describe("Markdown.parseResult", () => {
       undefined,
       "only the engine's own carriers become typed failures: a programmer error in the guarded block pass escapes untouched"
     );
-    const parseWithoutTheSeam = Markdown.parseResult("a paragraph\n");
-    assertSuccess(parseWithoutTheSeam, Result.getOrThrow(parseWithoutTheSeam));
+    const positiveControlWithoutSeam = Markdown.parseResult("a paragraph\n");
+    assertSuccess(positiveControlWithoutSeam, Result.getOrThrow(positiveControlWithoutSeam));
   });
 });
 
@@ -312,12 +312,13 @@ describe("Markdown parse invariants", () => {
     { arbitrary: { runs: 250, size: 40 } }
   );
 
-  const coverageContentionTimeout = 30_000;
-  it("never throws on a ~500KB input (totality only; the pathological suite owns timing)", {
-    timeout: coverageContentionTimeout,
-  }, () => {
+  it("never throws on a large input", { timeout: 30_000 }, () => {
     const large = Str.repeat(20_000)("para *em* [ref][a] `code`\n\n");
-    assert.isAbove(large.length, 500_000);
+    assert.isAbove(
+      large.length,
+      500_000,
+      "totality, not a performance budget: 30s absorbs coverage runs sharing cores, where 5s flakes; the pathological suite owns timing"
+    );
     const result = Markdown.parseResult(large);
     assertSuccess(result, Result.getOrThrow(result));
   });

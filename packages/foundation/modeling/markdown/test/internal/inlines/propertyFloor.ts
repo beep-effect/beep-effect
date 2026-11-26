@@ -34,13 +34,6 @@ export type FloorParse = (source: string, dialect: MarkdownDialect) => Effect.Ef
  */
 export const floorRuns = { arbitrary: fcRuns(100) };
 
-/**
- * A generated word mixing ASCII, a combining-free accented letter, an astral
- * emoji and a digit, always starting with `x` so it is never empty.
- *
- * @category testing
- * @since 0.0.0
- */
 const floorWord = S.Literals(["a", "b", "é", "😀", "9"]).pipe(
   S.Array,
   Arbitrary.schema,
@@ -68,14 +61,6 @@ export const codePointWord = (prefix: string) =>
 const isArray = S.is(S.Array(S.Unknown));
 const isRecord = S.is(S.Record(S.String, S.Unknown));
 
-/**
- * `value` with every `position` field removed, recursively: positions refer
- * to different source spellings after canonical serialization, so a round
- * trip compares every other mdast field.
- *
- * @category testing
- * @since 0.0.0
- */
 const withoutPositions = (value: unknown): unknown => {
   if (isArray(value)) return A.map(value, withoutPositions);
   if (isRecord(value)) return R.map(R.remove(value, "position"), withoutPositions);
@@ -149,7 +134,11 @@ export const describePropertyFloor = ({
             const parsed = yield* parse(source, dialect);
             const rendered = yield* Markdown.stringify(parsed);
             const reparsed = yield* parse(rendered, dialect);
-            assert.deepStrictEqual(withoutPositions(Mdast.toMdast(reparsed)), withoutPositions(Mdast.toMdast(parsed)));
+            assert.deepStrictEqual(
+              withoutPositions(Mdast.toMdast(reparsed)),
+              withoutPositions(Mdast.toMdast(parsed)),
+              "positions refer to different source spellings after canonical serialization, so the round trip compares every other mdast field"
+            );
           }
         }),
       floorRuns
@@ -168,12 +157,6 @@ const RESPELLED_FIELDS: ReadonlyArray<string> = [
   "breakStyle",
 ];
 
-/**
- * A tree's inline meaning: its JSON with every respelled field dropped.
- *
- * @category testing
- * @since 0.0.0
- */
 const inlineMeaning = (root: unknown): string =>
   Result.getOrThrowWith(
     S.encodeUnknownResult(
