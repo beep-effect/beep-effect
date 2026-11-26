@@ -18,7 +18,6 @@ import type { Paragraph, Root, Table, TableAlign, TableCell } from "@beep/markdo
 
 const runs = { arbitrary: fcRuns(100) };
 
-/** `dialect` with the table header start's trigger wrapped by `trigger`. */
 const replaceHeaderTrigger = (dialect: BlockDialect, trigger: (start: BlockStart) => BlockStartTrigger): BlockDialect =>
   new BlockDialect(
     dialect.constructs,
@@ -26,7 +25,6 @@ const replaceHeaderTrigger = (dialect: BlockDialect, trigger: (start: BlockStart
     dialect.mayStartBlock
   );
 
-/** Run `parse` with the GFM dialect's table header trigger wrapped by `trigger`. */
 const withHeaderTrigger = <A>(trigger: (start: BlockStart) => BlockStartTrigger, parse: () => A): A => {
   const lookup = vi
     .spyOn(BlockRegistry, "blockDialect")
@@ -38,11 +36,9 @@ const withHeaderTrigger = <A>(trigger: (start: BlockStart) => BlockStartTrigger,
   }
 };
 
-/** Whether the scanner sits on the `| --- |` delimiter line under the paragraph being promoted. */
 const isDelimiterUnderParagraph = (scanner: BlockScanner, container: BlockNode): boolean =>
   container.type === "paragraph" && scanner.currentLine === "| --- |";
 
-/** Replace `container`'s provenance runs with copies that count every field read. */
 const countSegmentReads = (container: BlockNode, reads: { count: number }): void => {
   const measured = A.map(container.segments, (segment) => ({
     get textOffset() {
@@ -62,11 +58,9 @@ const countSegmentReads = (container: BlockNode, reads: { count: number }): void
   for (const segment of measured) container.segments.push(segment);
 };
 
-/** The `index`th child block of `block`, failing the test when it is absent. */
 const blockAt = (block: BlockNode | undefined, index: number): BlockNode =>
   block?.children[index] ?? assert.fail(`expected child block ${index}`);
 
-/** A top-level block of a parsed document. */
 type TopLevel = Root["children"][number];
 
 const asTable = (node: TopLevel | undefined): Table =>
@@ -75,24 +69,20 @@ const asTable = (node: TopLevel | undefined): Table =>
 const asParagraph = (node: TopLevel | undefined): Paragraph =>
   node !== undefined && node.type === "paragraph" ? node : assert.fail(`expected a paragraph, got ${node?.type}`);
 
-/** The `index`th cell of `table`'s header row, failing the test when it is absent. */
 const headerCell = (table: Table, index: number): TableCell =>
   table.children[0]?.children[index] ?? assert.fail(`expected header cell ${index}`);
 
-/** The value of a node's first child when that child is text. */
 const firstText = (node: Paragraph | TableCell): string | undefined => {
   const first = node.children[0];
   return first?.type === "text" ? first.value : undefined;
 };
 
-// Positions refer to different byte strings after canonical serialization.
-// Compare every semantic mdast field, recursively, excluding only positions.
-const semantic = (value: unknown): unknown => {
-  if (A.isArray(value)) return A.map(value, semantic);
+const withoutPositions = (value: unknown): unknown => {
+  if (A.isArray(value)) return A.map(value, withoutPositions);
   if (P.isObject(value))
     return R.map(
       R.filter(value, (_, key) => key !== "position"),
-      semantic
+      withoutPositions
     );
   return value;
 };
@@ -267,7 +257,11 @@ describe("table parser properties", () => {
         const parsed = yield* Markdown.parse(source);
         const serialized = yield* Markdown.stringify(parsed);
         const reparsed = yield* Markdown.parse(serialized);
-        assert.deepStrictEqual(semantic(reparsed), semantic(parsed));
+        assert.deepStrictEqual(
+          withoutPositions(reparsed),
+          withoutPositions(parsed),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
         const stringify8 = yield* Markdown.stringify(reparsed);
         assert.strictEqual(stringify8, serialized);
       }),
@@ -282,9 +276,13 @@ describe("table parser properties", () => {
         const once = MarkdownFormat.formatToString(source, undefined, options);
         assert.strictEqual(MarkdownFormat.formatToString(once, undefined, options), once);
         const parsed9 = yield* Markdown.parse(once);
-        const argument = semantic(Mdast.toMdast(parsed9));
+        const argument = withoutPositions(Mdast.toMdast(parsed9));
         const parsed1 = yield* Markdown.parse(source);
-        assert.deepStrictEqual(argument, semantic(Mdast.toMdast(parsed1)));
+        assert.deepStrictEqual(
+          argument,
+          withoutPositions(Mdast.toMdast(parsed1)),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
       }),
     runs
   );
@@ -308,17 +306,16 @@ describe("table parser properties", () => {
         assert.ok(Str.startsWith(prefix)(formatted));
         assert.ok(Str.endsWith(suffix)(formatted));
         const parsed10 = yield* Markdown.parse(formatted);
-        assert.deepStrictEqual(semantic(Mdast.toMdast(parsed10)), semantic(Mdast.toMdast(parsed)));
+        assert.deepStrictEqual(
+          withoutPositions(Mdast.toMdast(parsed10)),
+          withoutPositions(Mdast.toMdast(parsed)),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
       }),
     runs
   );
 });
 
-// A reference model of the row scanner and cell splitter: rows are built from
-// known cells, so the expected table is known without re-implementing the
-// scanner. Covers the split scanners (`scanDelimiterRowLine`,
-// `scanRowSource`, `cellContent`) on escaped pipes, code spans, alignment
-// colons, whitespace around markers, and short and long body rows.
 const Cell = S.Literals(["a", "b c", "x\\|y", "`c`", "é", "1\\|2\\|3", "q!"]);
 const Marker = S.Literals(["---", ":---", "---:", ":-:", " - ", "  :--  "]);
 const TableShape = S.Struct({
@@ -330,7 +327,6 @@ const TableShape = S.Struct({
 const rowLine = (cells: ReadonlyArray<string>, outerPipes: boolean): string =>
   outerPipes ? `| ${A.join(cells, " | ")} |` : A.join(cells, " | ");
 
-/** The plain text of a cell as the parser should see it: escaped pipes unescaped, code spans unwrapped. */
 const expectedText = (cell: string): string => Str.replaceAll("`", "")(Str.replaceAll("\\|", "|")(cell));
 
 const alignOf = (marker: string): TableAlign | null => {
@@ -385,7 +381,11 @@ describe("table scanner reference model", () => {
             )
           ),
         ];
-        assert.deepStrictEqual(texts, expectedRows, source);
+        assert.deepStrictEqual(
+          texts,
+          expectedRows,
+          `rows built from known cells give the expected table without re-implementing the scanner; source: ${source}`
+        );
       }),
     { arbitrary: { ...fcRuns(1000), seed: 0x746162 } }
   );

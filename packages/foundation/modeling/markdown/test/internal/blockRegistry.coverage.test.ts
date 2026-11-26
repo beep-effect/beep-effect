@@ -50,17 +50,16 @@ describe("blockRegistry dialect contract", () => {
 
   it.effect("lets the GFM starts see the lines the CommonMark fast path hides", () =>
     Effect.sync(() => {
-      // `[`: a footnote definition.
-      assert.deepStrictEqual(typesOf("[^a]: note\n"), ["footnoteDefinition"]);
-      // `|`: a delimiter row that begins with a pipe.
-      assert.deepStrictEqual(typesOf("a\n| - |\n"), ["table"]);
-      // `:`: a delimiter row that begins with a colon.
-      assert.deepStrictEqual(typesOf("a\n:-:\n"), ["table"]);
-      // Any line under an open table is offered to the row start.
+      assert.deepStrictEqual(typesOf("[^a]: note\n"), ["footnoteDefinition"], "`[` starts a footnote definition");
+      assert.deepStrictEqual(typesOf("a\n| - |\n"), ["table"], "`|` starts a delimiter row that begins with a pipe");
+      assert.deepStrictEqual(typesOf("a\n:-:\n"), ["table"], "`:` starts a delimiter row that begins with a colon");
       const table = parseBlocks("| a |\n| - |\nplain\n", { dialect: "gfm" }).root.children[0];
-      assert.strictEqual(table?.type === "table" ? table.children.length : 0, 2);
-      // Plain text under a paragraph stays paragraph text.
-      assert.deepStrictEqual(typesOf("a\nplain\n"), ["paragraph"]);
+      assert.strictEqual(
+        table?.type === "table" ? table.children.length : 0,
+        2,
+        "any line under an open table is offered to the row start"
+      );
+      assert.deepStrictEqual(typesOf("a\nplain\n"), ["paragraph"], "plain text under a paragraph stays paragraph text");
     })
   );
 });

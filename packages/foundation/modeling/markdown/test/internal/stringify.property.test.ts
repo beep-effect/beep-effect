@@ -55,11 +55,8 @@ describe("stringify property floor and README fidelity", () => {
   );
 });
 
-// The per-character escapers (canonical and literal) were split into small
-// dispatch functions; these differentials pin them against commonmark.js
-// 0.31.2 with fixed seeds and high run counts, so the same large input set is
-// checked on every run.
-describe("text escaping against the reference implementation", () => {
+// decision: commonmark-js-differential-oracle
+describe("text escaping against commonmark.js 0.31.2 with fixed seeds and high run counts", () => {
   const Fragment = S.Literals([
     "a",
     "Z",
@@ -112,14 +109,13 @@ describe("text escaping against the reference implementation", () => {
     "canonical escaping renders, under the oracle, to exactly the text the node holds",
     [textValue],
     ([raw]) => {
-      // Paragraph parsing strips edge whitespace, so the text sits inside it.
-      const value = `x${raw}x`;
-      const tree = paragraphOf(value);
+      const framedText = `x${raw}x`;
+      const tree = paragraphOf(framedText);
       const emitted = stringifyTree(tree);
       assert.strictEqual(
         oracle(emitted),
         normalizeHtml(renderHtml(tree)),
-        `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+        `paragraph parsing strips edge whitespace, so the text is framed in x; emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
       );
       assert.strictEqual(
         ours(emitted),
