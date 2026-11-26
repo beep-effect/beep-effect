@@ -60,15 +60,12 @@ type AnyShape = replicad.AnyShape;
 
 const CURVE_SAMPLES = 24;
 
-// Model units: a claimed stretch of a stroke shorter than this is not made (the kernel refuses an edge between
-// coincident points).
 const SHORTEST_STROKE = 1e-6;
 const DECIMALS = 3;
 
 const round = (value: number): number => {
-  const rounded = N.round(DECIMALS)(value);
-  // -0 and 0 must hash alike.
-  return rounded === 0 ? 0 : rounded;
+  const possiblyNegativeZero = N.round(DECIMALS)(value);
+  return possiblyNegativeZero === 0 ? 0 : possiblyNegativeZero;
 };
 
 const place = (shape: Shape3D, rotate: ReadonlyArray<Rotation>, translate: readonly [number, number, number]) =>
@@ -102,8 +99,6 @@ const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primit
     rest,
     A.reduce(buildPrimitive(first), (acc, p) => acc.fuse(buildPrimitive(p)))
   );
-  // Booleans leave seam edges where coplanar faces met; merge them so the
-  // hidden-line pass does not draw a line the article does not have.
   return pipe(
     subtract,
     A.reduce(fused, (acc, p) => acc.cut(buildPrimitive(p)))
@@ -135,15 +130,11 @@ export interface BuiltModel {
   readonly styles: O.Option<Styles>;
 }
 
-// A primitive's own line style inside its part: its own when set, else the part's.
 const styleIn =
   (part: Part) =>
   (primitive: Primitive): PartLineStyle =>
     O.getOrElse(primitive.lineStyle, () => part.lineStyle);
 
-// The unclaimed matter of a built solid part with broken add primitives: its surface outside every solid add
-// primitive. None for a broken part, for a solid part without a broken primitive, and for one whose broken primitives
-// lie wholly inside its solid ones.
 const unclaimedIn = (part: Part, shape: Shape3D): O.Option<Unclaimed> => {
   const style = styleIn(part);
   if (part.lineStyle === "broken" || !A.some(part.add, (primitive) => style(primitive) === "broken")) {
@@ -158,11 +149,10 @@ const unclaimedIn = (part: Part, shape: Shape3D): O.Option<Unclaimed> => {
   const solids = built("solid");
   const broken = built("broken");
   try {
-    // a face is cut by the solid primitives, which must be solids for the cut to keep what lies outside them
     if (!A.every(solids, (solid) => solid instanceof replicad.Solid)) {
       throw OcctError.make({
         reason: "solid-build",
-        message: `Part "${part.name}" has a primitive that is not a solid.`,
+        message: `Part "${part.name}" has a primitive that is not a solid, so its faces cannot be cut by it.`,
       });
     }
     return pipe(
@@ -186,6 +176,14 @@ const unclaimedIn = (part: Part, shape: Shape3D): O.Option<Unclaimed> => {
  * is then cut out face by face. Without a primitive-level broken style the
  * parts and their output are exactly what they were before primitive styles
  * existed.
+ *
+ * **Gotchas**
+ *
+ * Booleans leave seam edges where coplanar faces met, so each part is
+ * simplified after its booleans; otherwise the hidden-line pass draws a line
+ * the article does not have. `unclaimed` is none for a broken part, for a
+ * solid part without a broken primitive, and for one whose broken primitives
+ * lie wholly inside its solid ones.
  *
  * @internal
  */
@@ -213,8 +211,6 @@ const shapesIn = (parts: ReadonlyArray<BuiltPart>, lineStyle: PartLineStyle): Re
     A.map((part) => part.shape)
   );
 
-// What the projection needs of the parts' per-primitive styles, read before compounding: the faces and edges are the
-// parts' own, which the compound keeps. None when no solid part has unclaimed matter.
 const stylesOf = (parts: ReadonlyArray<BuiltPart>): O.Option<Styles> =>
   A.some(parts, (part) => O.isSome(part.unclaimed))
     ? O.some({
@@ -245,6 +241,11 @@ const stylesOf = (parts: ReadonlyArray<BuiltPart>): O.Option<Styles> =>
  * styles are read from the parts first. With no broken parts the solid
  * compound is exactly the compound the kernel always built.
  *
+ * **Gotchas**
+ *
+ * The styles hold the parts' own faces and edges, which the compound keeps,
+ * so they stay valid after compounding.
+ *
  * @internal
  */
 export const compoundParts = (parts: ReadonlyArray<BuiltPart>): BuiltModel => {
@@ -263,10 +264,7 @@ export const compoundParts = (parts: ReadonlyArray<BuiltPart>): BuiltModel => {
  */
 export const buildCompound: (spec: ModelSpec) => BuiltModel = flow(buildParts, compoundParts);
 
-// Common volume, in cubic model units, above which two parts overlap. Parts
-// modelled to touch (zero clearance) share only a face, whose volume is zero
-// up to the boolean's numerical noise.
-const OVERLAP_TOLERANCE = 1e-6;
+const TOUCHING_PARTS_VOLUME_NOISE = 1e-6;
 
 const boxesMeet = (a: Shape3D, b: Shape3D): boolean => {
   const [aMin, aMax] = a.boundingBox.bounds;
@@ -297,7 +295,7 @@ export const countOverlaps = (parts: ReadonlyArray<BuiltPart>): number => {
   let count = 0;
   for (const [index, part] of A.entries(parts)) {
     for (const other of A.drop(parts, index + 1)) {
-      if (boxesMeet(part.shape, other.shape) && commonVolume(part.shape, other.shape) > OVERLAP_TOLERANCE) {
+      if (boxesMeet(part.shape, other.shape) && commonVolume(part.shape, other.shape) > TOUCHING_PARTS_VOLUME_NOISE) {
         count++;
       }
     }
@@ -367,7 +365,6 @@ const passOrigin = (camera: Camera): O.Option<V3> =>
     target: () => O.some(camera.target),
   });
 
-// A shape as the hidden-line pass holds it: moved by −origin, or itself about the model's own origin.
 const heldAbout =
   (oc: OpenCascadeInstance, origin: O.Option<V3>) =>
   (shape: TopoDS_Shape): TopoDS_Shape =>
@@ -440,10 +437,8 @@ const canonical = (a: readonly [number, number], b: readonly [number, number]): 
   return pFirst ? [p[0], p[1], q[0], q[1]] : [q[0], q[1], p[0], p[1]];
 };
 
-// A projected segment before rounding: [x1, y1, x2, y2] on the view plane, in edge order.
-type RawSegment = readonly [number, number, number, number];
+type RawSegment = readonly [x1: number, y1: number, x2: number, y2: number];
 
-// Every projected edge as straight segments (one per straight edge, several per curve), unrounded.
 const sampled = (edges: ReadonlyArray<replicad.Edge>): ReadonlyArray<RawSegment> =>
   A.flatMap(edges, (edge) => {
     const samples = edge.geomType === "LINE" ? 1 : CURVE_SAMPLES;
@@ -454,19 +449,18 @@ const sampled = (edges: ReadonlyArray<replicad.Edge>): ReadonlyArray<RawSegment>
     });
   });
 
-// Rounded, direction-normalised, sorted, each segment once.
+const isSharedBoundaryRepeat = (a: Segment2, b: Segment2): boolean =>
+  a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+
 const canonicalSegments: (segments: ReadonlyArray<RawSegment>) => ReadonlyArray<Segment2> = flow(
   A.map(([x1, y1, x2, y2]: RawSegment) => canonical([x1, y1], [x2, y2])),
   A.filter((s) => !(s[0] === s[2] && s[1] === s[3])),
   A.sort(segmentOrder),
-  // two parts meeting on a shared plane each report the boundary: one line, drawn once
-  A.dedupeAdjacentWith((a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3])
+  A.dedupeAdjacentWith(isSharedBoundaryRepeat)
 );
 
 const toSegments = flow(sampled, canonicalSegments);
 
-// The chords of one run of an edge's parameter range: one for a straight edge, else one per `CURVE_SAMPLES`-th of the
-// whole range (at least one). The whole range gives exactly the chords `sampled` gives.
 const chordsOf =
   (edge: replicad.Edge) =>
   (run: Run): ReadonlyArray<RawSegment> => {
@@ -485,34 +479,21 @@ const visibleEdges = (shapes: HLRBRep_HLRToShape, own: TopoDS_Shape, oc: OpenCas
   ...edgesOf(shapes.OutLineVCompound(own), oc),
 ];
 
-// A model segment's line on the view plane: where its first end lands, the unit direction to its second end and the
-// projected length between them.
 type ViewedLine = {
   readonly point: readonly [number, number];
   readonly along: readonly [number, number];
   readonly length: number;
-  // the two ends' distances from the eye along the view direction under a
-  // perspective camera (both 1 for an orthographic one), for walking back
-  // from a view-plane fraction to a fraction of the segment in space
-  readonly depth: readonly [number, number];
+  readonly depth: readonly [startDistanceFromEye: number, endDistanceFromEye: number];
 };
 
 type ProbeLine = ViewedLine & { readonly probe: ShadingProbe };
 
-// A planned stroke of a band as the stroke pass hands it over, with its line's planned extent and rank.
 type PlannedStroke = HatchedFace<ProbeLine>["stretches"][number]["planned"][number];
 
-// A visible stretch the stroke pass skipped by design, with its reason and whether its measured room fits a band.
 type SkippedStretch = HatchedFace<ProbeLine>["skipped"][number];
 
-// A chord along a glimpsed area's lines, for the hidden-line pass to measure the area's room for a stroke.
 type RoomColumn = ReturnType<typeof roomColumns>[number];
 
-// A model segment's line on the view plane, in the projector's own frame (the
-// frame the hidden-line pass reports its edges in) and under its own
-// projection: a camera with a focus projects in perspective, the eye `focus`
-// along the view direction from the target, exactly as `makeProjector` sets
-// the HLR up. None when the segment projects to a point.
 const viewedLine = (camera: Camera, from: V3, to: V3): O.Option<ViewedLine> => {
   const direction = normalize(camera.eye);
   const right = normalize(cross(normalize(camera.up), direction));
@@ -545,12 +526,9 @@ const viewedLine = (camera: Camera, from: V3, to: V3): O.Option<ViewedLine> => {
       });
 };
 
-// A probe's line on the view plane; none when the probe projects to a point.
 const projectedProbe = (camera: Camera, probe: ShadingProbe): O.Option<ProbeLine> =>
   O.map(viewedLine(camera, probe.from, probe.to), (line) => ({ probe, ...line }));
 
-// Where a model point lands on the view plane, in the projector's own frame and under its own projection (as
-// `projectedProbe` reads a probe's ends), with its nearness to the eye along the view direction.
 const viewOf = (camera: Camera): ((p: V3) => Viewed) => {
   const direction = normalize(camera.eye);
   const right = normalize(cross(normalize(camera.up), direction));
@@ -567,35 +545,25 @@ const viewOf = (camera: Camera): ((p: V3) => Viewed) => {
   };
 };
 
-// Fraction of a segment in space at the point of its line nearest a view-plane point. A fraction of the projected
-// line is a fraction of the segment in space only under an orthographic camera; under perspective the far end is
-// foreshortened, so the fraction is walked back through the two ends' depths.
 const fractionAt = (line: ViewedLine, x: number, y: number): number => {
-  const t = Math.min(
+  const viewPlaneFraction = Math.min(
     Math.max(((x - line.point[0]) * line.along[0] + (y - line.point[1]) * line.along[1]) / line.length, 0),
     1
   );
   const [near, far] = line.depth;
-  return (t * near) / (t * near + (1 - t) * far);
+  return (viewPlaneFraction * near) / (viewPlaneFraction * near + (1 - viewPlaneFraction) * far);
 };
 
-// Offset along the face's step, from its shadow anchor, of the point of a probe's line nearest a view-plane point.
 const offsetAt = (line: ProbeLine, x: number, y: number): number =>
   line.probe.start + fractionAt(line, x, y) * (line.probe.end - line.probe.start);
 
-// The visible areas of every probed face along its shading step: each visible
-// run of a probe mapped back to offsets from the face's shadow anchor, and the
-// runs of neighbouring probe rows grouped into connected areas (below). The
-// hatch planner bands each area on its own.
-// Two visible runs of one probe closer than this along the step are one run cut at a piece boundary.
-const JOIN_TOLERANCE = 1e-6;
+const PIECE_BOUNDARY_GAP = 1e-6;
 
 const regionsOf = (options: {
   readonly camera: Camera;
   readonly probes: ReadonlyArray<{ readonly probe: ShadingProbe; readonly pieces: ReadonlyArray<Segment2> }>;
   readonly outlines: ReadonlyArray<Segment2>;
 }): HashMap.HashMap<number, ReadonlyArray<A.NonEmptyReadonlyArray<StretchPiece<ProbeLine>>>> => {
-  // a piece also keeps its two ends on the view plane with their offsets, for the link test below
   type End = readonly [x: number, y: number, offset: number];
   type Piece = Omit<StretchPiece<ProbeLine>, "row"> & {
     readonly face: number;
@@ -605,8 +573,7 @@ const regionsOf = (options: {
   const pieces: ReadonlyArray<Piece> = A.flatMap(options.probes, ({ probe, pieces }) =>
     O.getOrElse(
       O.map(projectedProbe(options.camera, probe), (line): ReadonlyArray<Piece> => {
-        // each visible piece as a run along the step, its lower end first; the probe went through the pass in
-        // short pieces, so the runs that touch are joined again
+        // decision: probes-pass-as-short-pieces
         type Span = { readonly from: number; readonly to: number; readonly ends: readonly [End, End] };
         const runs = pipe(
           pieces,
@@ -623,7 +590,7 @@ const regionsOf = (options: {
             (joined: ReadonlyArray<Span>, run): ReadonlyArray<Span> =>
               pipe(
                 A.last(joined),
-                O.filter((last) => run.from - last.to <= JOIN_TOLERANCE),
+                O.filter((last) => run.from - last.to <= PIECE_BOUNDARY_GAP),
                 O.match({
                   onNone: () => A.append(joined, run),
                   onSome: (last): ReadonlyArray<Span> => {
@@ -651,16 +618,14 @@ const regionsOf = (options: {
       A.empty<Piece>
     )
   );
-  // the point of a piece at an offset inside its range
   const pointAt = (piece: Piece, offset: number): readonly [number, number] => {
     const [[x1, y1, o1], [x2, y2, o2]] = piece.ends;
     const t = Math.abs(o2 - o1) < 1e-12 ? 0.5 : (offset - o1) / (o2 - o1);
     return [x1 + (x2 - x1) * t, y1 + (y2 - y1) * t];
   };
-  // whether the straight link between two points crosses a drawn outline (touching does not count)
   const side = (ax: number, ay: number, bx: number, by: number, px: number, py: number) =>
     (bx - ax) * (py - ay) - (by - ay) * (px - ax);
-  const blocked = ([px, py]: readonly [number, number], [qx, qy]: readonly [number, number]): boolean =>
+  const crossesOutline = ([px, py]: readonly [number, number], [qx, qy]: readonly [number, number]): boolean =>
     A.some(options.outlines, ([ax, ay, bx, by]) => {
       if (
         Math.max(ax, bx) < Math.min(px, qx) ||
@@ -676,9 +641,7 @@ const regionsOf = (options: {
       );
     });
   type Rowed = Piece & { readonly row: number };
-  // Pieces of neighbouring rows belong to one visible area when their ranges overlap and the link between them, at
-  // the middle of the overlap, crosses no drawn outline: a slanting wall in front of the face makes the pieces on its
-  // two sides overlap in range from one row to the next, and only the link test keeps them apart.
+  // decision: bands-keep-to-their-visible-area
   const linked = (p: Rowed, q: Rowed): boolean => {
     if (Math.abs(p.row - q.row) !== 1) {
       return false;
@@ -689,9 +652,8 @@ const regionsOf = (options: {
       return false;
     }
     const middle = (lo + hi) / 2;
-    return !blocked(pointAt(p, middle), pointAt(q, middle));
+    return !crossesOutline(pointAt(p, middle), pointAt(q, middle));
   };
-  // a face's rows are its probe heights, lowest first; its areas are the connected groups of linked pieces
   const areasOf = (group: ReadonlyArray<Piece>): ReadonlyArray<A.NonEmptyReadonlyArray<StretchPiece<ProbeLine>>> => {
     const heights = pipe(
       A.map(group, (piece) => piece.height),
@@ -735,10 +697,6 @@ const regionsOf = (options: {
   );
 };
 
-// Whether a probe's line on the view plane crosses a drawn piece: the probe
-// saw the face visible there, so the piece belongs to the window the probe
-// stands for. Pieces at the same offsets in other cells of a lattice are not
-// crossed by this window's probes and are left to theirs.
 const crosses = (line: ProbeLine, piece: Segment2, tolerance: number): boolean => {
   const [x1, y1, x2, y2] = piece;
   const ex = x2 - x1;
@@ -751,20 +709,15 @@ const crosses = (line: ProbeLine, piece: Segment2, tolerance: number): boolean =
   }
   const qx = x1 - line.point[0];
   const qy = y1 - line.point[1];
-  // probe parameter s in [0, 1], piece parameter u in [0, 1] (within tolerance along the piece)
-  const s = (qx * ey - qy * ex) / denominator;
-  const u = (qx * dy - qy * dx) / denominator;
+  const alongProbe = (qx * ey - qy * ex) / denominator;
+  const alongPiece = (qx * dy - qy * dx) / denominator;
   const slack = tolerance / Math.max(Math.hypot(ex, ey), 1e-9);
-  return s >= -1e-6 && s <= 1 + 1e-6 && u >= -slack && u <= 1 + slack;
+  return alongProbe >= -1e-6 && alongProbe <= 1 + 1e-6 && alongPiece >= -slack && alongPiece <= 1 + slack;
 };
 
-// An overlay line with a facing is drawn only where its face turns toward the
-// eye by more than this cosine: a line on a face seen edge-on or from behind
-// would otherwise print over an outline.
+// decision: overlay-facing-cull
 const OVERLAY_MIN_FACING = 0.2;
 
-// Whether an overlay line is drawn in this camera's view: its facing is read against the camera's sight when it
-// carries one (a two-point camera's level eye would turn every level face edge-on).
 const facesEye =
   (camera: Camera) =>
   (overlay: OverlayLine): boolean =>
@@ -777,9 +730,7 @@ const facesEye =
       },
     });
 
-// An overlay polyline as one compound of line edges, moved `lift` along its
-// facing so hidden-line removal sees it in front of the face it lies on; none
-// when every pair of consecutive points coincides.
+// decision: lines-lifted-off-their-face
 const overlayShape = (overlay: OverlayLine): O.Option<AnyShape> => {
   const lift: V3 = O.match(overlay.facing, {
     onNone: () => [0, 0, 0],
@@ -794,17 +745,11 @@ const overlayShape = (overlay: OverlayLine): O.Option<AnyShape> => {
   return A.isReadonlyArrayNonEmpty(edges) ? O.some(replicad.makeCompound([...edges])) : O.none();
 };
 
-// A shared edge is sampled at this many points along its length to read how much of it the view shows.
-const NEIGHBOUR_SAMPLES = 16;
+const SHARED_EDGE_SAMPLES = 16;
 
 const vecOf = (v: replicad.Vector): V3 => [v.x, v.y, v.z];
 
-// The pairs of faces of the solid (indices into `solid.faces`, lower first) that share an edge the view shows for at
-// least `least` on the view plane: an edge both faces bound topologically (found by hash and confirmed with
-// `isSame`), whose samples lie within `tolerance` of the outline the probe pass drew. Only faces the probes `seen`
-// are paired. Faces of separate parts never share an edge, so parts that merely meet are not neighbours. The test is
-// read on the sheet alone: a drawn edge of a part in front that projects exactly onto a hidden shared edge (a post's
-// corner on the sight line through a ridge) passes for that edge.
+// decision: ink-neighbours-share-a-visible-edge
 const visibleNeighbours = (options: {
   readonly solid: Shape3D;
   readonly view: (p: V3) => Viewed;
@@ -828,7 +773,6 @@ const visibleNeighbours = (options: {
       A.append(O.getOrElse(HashMap.get(acc, bound.edge.hashCode), A.empty<number>), position)
     )
   );
-  // how long a stretch of the edge the view shows: the share of its samples on a drawn outline, times its length
   const shownLength = (edge: replicad.Edge): number => {
     const a = options.view(vecOf(edge.startPoint));
     const b = options.view(vecOf(edge.endPoint));
@@ -843,14 +787,14 @@ const visibleNeighbours = (options: {
     );
     const shown = A.length(
       A.filter(
-        A.makeBy(NEIGHBOUR_SAMPLES, (i) => (i + 0.5) / NEIGHBOUR_SAMPLES),
+        A.makeBy(SHARED_EDGE_SAMPLES, (i) => (i + 0.5) / SHARED_EDGE_SAMPLES),
         (t) => {
           const p = options.view(vecOf(edge.pointAt(t)));
           return nearestOutlineDistance({ x: p.x, y: p.y, outlines: near }) <= reach;
         }
       )
     );
-    return (shown / NEIGHBOUR_SAMPLES) * Math.hypot(b.x - a.x, b.y - a.y);
+    return (shown / SHARED_EDGE_SAMPLES) * Math.hypot(b.x - a.x, b.y - a.y);
   };
   return byHash.pipe(
     HashMap.values,
@@ -870,7 +814,6 @@ const visibleNeighbours = (options: {
         )
       )
     ),
-    // two faces may share several collinear edges: what the view shows of them is summed per pair
     A.reduce(HashMap.empty<string, { readonly pair: readonly [number, number]; readonly shown: number }>(), (acc, s) =>
       HashMap.set(acc, `${s.pair[0]}:${s.pair[1]}`, {
         pair: s.pair,
@@ -893,12 +836,9 @@ const visibleNeighbours = (options: {
   );
 };
 
-// Without a ladder reach on the plan, drawn lines within five thirds of the minimum pitch beyond a band's edge (2.5 mm
-// at a 1.5 mm pitch, the validator's reach) can read with the band as one ladder.
+// decision: band-gutter-from-the-ladder-reading
 const LADDER_REACH_PITCHES = 5 / 3;
 
-// A planned stroke as the legibility pass draws it: drawn back `inset` from both ends on the view plane, or none when
-// nothing of it is left.
 const drawnBack =
   (inset: number) =>
   ([x1, y1, x2, y2]: Segment2): O.Option<Segment2> => {
@@ -911,12 +851,6 @@ const drawnBack =
     return O.some([x1 + dx, y1 + dy, x2 - dx, y2 - dy]);
   };
 
-// The kernel's reading beside a band's first line (review loop 3, O-04): each planned stroke of the line and the band's
-// edge beside it are projected onto the view plane, and `ladderPitch` reads the spacing from the edge to the nearest
-// drawn line within the plan's ladder reach that runs alongside the edge beyond the band. The stroke is read as the
-// legibility pass will draw it, a pitch shorter at each end, and the lines are the ones the sheet draws (outlines and
-// overlays), so the kernel decides on the stroke and the lines the validator's ladder check reads. The least spacing
-// over the line's strokes is the band's.
 const groupBeyondOf =
   (input: {
     readonly view: (p: V3) => Viewed;
@@ -956,10 +890,9 @@ const groupBeyondOf =
     );
   };
 
-// A stretch of a line, as positions along it.
 type Interval = { readonly from: number; readonly to: number };
 
-// Intervals joined where they touch or overlap: a line that went through the hidden-line pass in short pieces.
+// decision: probes-pass-as-short-pieces
 const joinedIntervals = (intervals: ReadonlyArray<Interval>): ReadonlyArray<Interval> =>
   pipe(
     intervals,
@@ -969,7 +902,7 @@ const joinedIntervals = (intervals: ReadonlyArray<Interval>): ReadonlyArray<Inte
       (joined: ReadonlyArray<Interval>, next): ReadonlyArray<Interval> =>
         pipe(
           A.last(joined),
-          O.filter((last) => next.from - last.to <= JOIN_TOLERANCE),
+          O.filter((last) => next.from - last.to <= PIECE_BOUNDARY_GAP),
           O.match({
             onNone: () => A.append(joined, next),
             onSome: (last) => A.append(A.dropRight(joined, 1), { from: last.from, to: Math.max(last.to, next.to) }),
@@ -978,8 +911,6 @@ const joinedIntervals = (intervals: ReadonlyArray<Interval>): ReadonlyArray<Inte
     )
   );
 
-// The room one column measured: the longest run of its visible pieces along it, in model units, each piece's ends
-// walked back from the view plane to the column in space.
 const columnRoom = (camera: Camera, column: RoomColumn, pieces: ReadonlyArray<Segment2>): number => {
   const length = Math.hypot(
     column.to[0] - column.from[0],
@@ -1004,8 +935,6 @@ const columnRoom = (camera: Camera, column: RoomColumn, pieces: ReadonlyArray<Se
 
 const roomKey = (face: number, area: number): string => `${face}:${area}`;
 
-// The measured room of every glimpsed visible area, keyed by face and area: at each offset of its columns the longest
-// visible run any of the columns there showed, in offset order.
 const measuredRooms = (
   camera: Camera,
   columns: ReadonlyArray<RoomColumn>,
@@ -1040,10 +969,8 @@ const measuredRooms = (
     HashMap.fromIterable
   );
 
-// A legible run of a band redrawn on its whole chords, with the planned extent and rank of the stroke it was cut from.
 type RedrawnRun = { readonly run: Segment2; readonly extent: number; readonly rank: number };
 
-// Distance on the view plane from a run's middle to the line through a planned stroke.
 const offLine =
   (run: Segment2) =>
   (line: { readonly a: Viewed; readonly b: Viewed }): number => {
@@ -1055,8 +982,7 @@ const offLine =
     return length < 1e-12 ? Number.POSITIVE_INFINITY : Math.abs(dx * (my - line.a.y) - dy * (mx - line.a.x)) / length;
   };
 
-// Each legible run of a band redrawn on its whole chords, matched to the planned stroke whose line on the view plane it
-// lies on: the nearest by the run's middle. The strokes of one band are parallel and at least a pitch apart.
+// decision: redraw-emptied-tapered-bands
 const matchedRuns = (input: {
   readonly runs: ReadonlyArray<Segment2>;
   readonly strokes: ReadonlyArray<PlannedStroke>;
@@ -1084,7 +1010,6 @@ const matchedRuns = (input: {
 
 const segmentLength = ([x1, y1, x2, y2]: Segment2): number => Math.hypot(x2 - x1, y2 - y1);
 
-// A run cut to `length`, centred on it and never longer than the run, its ends rounded like every drawn line.
 const cutTo = (run: Segment2, length: number): Segment2 => {
   const [x1, y1, x2, y2] = run;
   const whole = Math.hypot(x2 - x1, y2 - y1);
@@ -1097,8 +1022,7 @@ const cutTo = (run: Segment2, length: number): Segment2 => {
   ];
 };
 
-// The runs of a redrawn band cut back to the band's taper, measured against the band's longest run so runs of unequal
-// length keep the taper's order (review loop 4, K-08, R4-07, F11-05: `bandRunLengths`).
+// decision: redraw-emptied-tapered-bands
 /**
  * Retaper projected whole-chord runs without rebuilding their kernel edges.
  *
@@ -1133,8 +1057,7 @@ export const retapered = (options: {
     (run, length) => cutTo(run.run, length)
   );
 
-// The runs of a redrawn band stepped to the lit floor: the two lines nearest its shadow edge only, at the floor's
-// taper (0.6 and 0.4, `gradedExtents` with no full-length line), cut like any redrawn band.
+// decision: ink-order-on-drawn-ink
 const litFloorOf = (runs: ReadonlyArray<RedrawnRun>, minStroke: number): ReadonlyArray<Segment2> => {
   const ranks = pipe(
     A.map(runs, (run) => run.rank),
@@ -1159,10 +1082,7 @@ const litFloorOf = (runs: ReadonlyArray<RedrawnRun>, minStroke: number): Readonl
   });
 };
 
-// One planned stretch as the sheet draws it: its face, whether it lacked planned room for a band (a sliver, bare by
-// design), its drawn strokes, the legible runs of a tapered band drawn on its whole chords (`relaxed`: by the planner,
-// whose taper alone left no room, or `redrawn` by the kernel, where the hidden-line and legibility passes emptied the
-// tapered band), whether it was left bare to keep the ink order, and whether its measured room fits a band.
+// decision: redraw-emptied-tapered-bands
 type DrawnStretch = {
   readonly index: number;
   readonly sliver: boolean;
@@ -1173,22 +1093,16 @@ type DrawnStretch = {
   readonly fits: boolean;
 };
 
-// A stretch drawn on whole chords cut back to its taper that drew something.
 const isRelaxed = (stretch: DrawnStretch): boolean =>
   O.isSome(stretch.relaxed) && A.isReadonlyArrayNonEmpty(stretch.segments);
 
 const isRedrawn = (stretch: DrawnStretch): boolean => stretch.redrawn && A.isReadonlyArrayNonEmpty(stretch.segments);
 
-// A drawn stroke and the place of the stretch that drew it among the stretches with ink.
 type BandStroke = { readonly segment: Segment2; readonly band: number };
 
 const strokeOrder = Order.mapInput(segmentOrder, (stroke: BandStroke) => stroke.segment);
 const bandOrder = Order.mapInput(Order.Number, (stroke: { readonly band: number }) => stroke.band);
 
-// The view's strokes in canonical order, and one band per stretch that drew ink: its face and its strokes' places in
-// that order. The sort is stable, so the strokes are those the kernel drew before bands, in the same order. A pass
-// after projection (the sheet's re-clip beside separated outlines, PR #1842) reads through the bands which stretch
-// and which face it left bare.
 const bandedShading = (
   stretches: ReadonlyArray<DrawnStretch>
 ): { readonly shading: ReadonlyArray<Segment2>; readonly bands: ReadonlyArray<ShadingBand> } => {
@@ -1198,8 +1112,7 @@ const bandedShading = (
     A.flatMap((stretch, band) => A.map(stretch.segments, (segment): BandStroke => ({ segment, band }))),
     A.sort(strokeOrder)
   );
-  // every inked stretch draws at least one stroke, so the groups, in band order, pair with the inked stretches
-  const groups = A.match(
+  const strokePlacesPerInkedStretch = A.match(
     A.sort(
       A.map(strokes, (stroke, at) => ({ band: stroke.band, at })),
       bandOrder
@@ -1211,14 +1124,12 @@ const bandedShading = (
   );
   return {
     shading: A.map(strokes, (stroke) => stroke.segment),
-    bands: A.zipWith(inked, groups, (stretch, group) =>
+    bands: A.zipWith(inked, strokePlacesPerInkedStretch, (stretch, group) =>
       ShadingBand.make({ face: stretch.index, strokes: A.map(group, (stroke) => stroke.at) })
     ),
   };
 };
 
-// Each face's drawn ink, as the planner reads planned ink: the length of its drawn strokes on the view plane times the
-// minimum pitch, over its visible area on the view plane.
 const drawnInkOf = (
   faces: ReadonlyArray<Pick<HatchedFace<ProbeLine>, "seen" | "exposure">>,
   stretches: ReadonlyArray<DrawnStretch>,
@@ -1240,10 +1151,7 @@ const drawnInkOf = (
     A.getSomes
   );
 
-// A band drawn on whole chords and cut back to its taper can still carry more ink than the darker face beside it, since
-// the tapers were settled on planned ink (review loop 4, K-08). The ink order is checked again on drawn ink: a face with
-// such a band that out-inks a darker neighbour has that band stepped to the lit floor, and, when it still out-inks the
-// neighbour, left bare as a planned skip.
+// decision: ink-order-on-drawn-ink
 /**
  * Restore drawn light-to-dark ink order after whole-chord rescue.
  *
@@ -1291,7 +1199,6 @@ export const settleRedrawnInk = (input: {
 }): ReadonlyArray<DrawnStretch> => {
   const { faces, neighbours, plan } = input;
   const relaxedFaces = HashSet.fromIterable(A.map(A.filter(input.stretches, isRelaxed), (stretch) => stretch.index));
-  // drawn ink is compared across shared edges and between faces of one seen area a tone step apart (F11-04)
   const outInking = (stretches: ReadonlyArray<DrawnStretch>): HashSet.HashSet<number> => {
     const bands = drawnInkOf(faces, stretches, plan.minPitch);
     const seen = (face: number) => O.match(A.get(faces, face), { onNone: () => 0, onSome: (hatched) => hatched.seen });
@@ -1322,8 +1229,6 @@ export const settleRedrawnInk = (input: {
   }));
 };
 
-// The view's skipped stretches per reason, in reason order with zero counts left out, each with how many had measured
-// room for a band.
 const stretchSkipsOf = (skips: ReadonlyArray<SkippedStretch>): ReadonlyArray<ShadingStretchSkip> =>
   pipe(
     ShadingStretchSkipReason.literals,
@@ -1345,11 +1250,6 @@ type Lines = {
   readonly extras: ReadonlyArray<ReadonlyArray<replicad.Edge>>;
 };
 
-// One hidden-line pass over the solid and broken-line compounds, with extra
-// shapes (one stroke set per planned stretch, one probe, or one overlay line
-// each) whose visible pieces come back per shape, in order. Every part hides
-// what lies behind it whatever its style; only the broken compound's visible
-// edges are read.
 const hiddenLines = (options: {
   readonly oc: OpenCascadeInstance;
   readonly built: BuiltModel;
@@ -1358,7 +1258,6 @@ const hiddenLines = (options: {
   readonly extras: ReadonlyArray<AnyShape>;
 }): Lines => {
   const { oc, built, camera } = options;
-  // every shape as the pass holds it, about its origin; the edges come back in the projector's frame either way
   const held = heldAbout(oc, passOrigin(camera));
   const solid = O.map(built.solid, (s) => held(s.wrapped));
   const broken = O.map(built.broken, (s) => held(s.wrapped));
@@ -1405,10 +1304,8 @@ type ProjectOptions = {
 
 const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSet => {
   const { oc, built, camera, withHidden } = options;
-  // faces only broken primitives own: never probed nor shaded
   const isBrokenFace = (face: replicad.Face): boolean =>
     O.exists(built.styles, (styles) => A.some(styles.brokenFaces, (broken) => broken.isSame(face)));
-  // a face merged across a solid and a broken primitive is shaded only where it is claimed
   const claimedOf = (face: replicad.Face): O.Option<(edge: replicad.Edge) => ReadonlyArray<replicad.Edge>> =>
     pipe(
       built.styles,
@@ -1418,9 +1315,7 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
       )
     );
   const onView = viewOf(camera);
-  // Overlay lines culled by their facing are never built; the rest go through the hidden-line passes as shapes of
-  // their own: the probe pass, where a band's first line reads them beside its edge, and the final pass, after the
-  // strokes.
+  // decision: overlay-facing-cull
   const overlays = pipe(
     options.overlays,
     A.filter(facesEye(camera)),
@@ -1450,13 +1345,11 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
             onNone: A.empty<ReadonlyArray<replicad.Edge>>,
             onSome: (p) => A.take(p.extras, A.length(probing)),
           });
-          // the overlays' visible pieces, drawn on the sheet beside the outlines (emphasis, broken)
           const overlaid = O.match(pass, {
             onNone: A.empty<Segment2>,
             onSome: (p) => toSegments(A.flatten(A.drop(p.extras, A.length(probing)))),
           });
           const outline = O.match(pass, { onNone: A.empty<Segment2>, onSome: (p) => toSegments(p.visible) });
-          // the outlines the probes were seen past, solid and broken
           const drawnOutlines = O.match(pass, {
             onNone: A.empty<Segment2>,
             onSome: (p) => [...outline, ...toSegments(p.broken)],
@@ -1464,12 +1357,9 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
           const regions = regionsOf({
             camera,
             probes: A.zipWith(probing, pieces, (p, edges) => ({ probe: p.probe, pieces: toSegments(edges) })),
-            // a link between two pieces that crosses a drawn outline is not a link
             outlines: drawnOutlines,
           });
-          // One more hidden-line pass, run only when some visible area was glimpsed by fewer than three probe rows,
-          // measures the room each such area leaves a stroke at offsets across it: the rows' cells can overstate a
-          // pointed glimpse of a face by up to a cell (review loop 4, G-01).
+          // decision: measured-room-rescues-glimpses
           const columns = roomColumns({
             oc,
             shape: solid,
@@ -1498,8 +1388,7 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
           return {
             regions,
             rooms,
-            // a band's first line reads every line the sheet draws beyond its edge: the outlines and the overlays,
-            // as the validator's ladder check does
+            // decision: band-gutter-from-the-ladder-reading
             groupBeyond: groupBeyondOf({ view: onView, outlines: [...drawnOutlines, ...overlaid], plan }),
             neighbours: visibleNeighbours({
               solid,
@@ -1515,8 +1404,6 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
     )
   );
   const regions = O.map(probed, (p) => p.regions);
-  // A planned stroke's length on the view plane, under the camera's own projection: the stroke pass and the
-  // stretch-room test below judge a stretch's room by this one measure.
   const viewedLength = ([a, b]: readonly [V3, V3]): number => {
     const p = onView(a);
     const q = onView(b);
@@ -1534,11 +1421,8 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
           isBrokenFace,
           claimedOf,
           viewedLength,
-          // the room measured across each glimpsed visible area, by face and area
           rooms: (face, area) => O.flatMap(probed, (p) => HashMap.get(p.rooms, roomKey(face, area))),
-          // the faces that share a visible edge: a lighter face's band must not out-ink its darker neighbour's
           neighbours: O.match(probed, { onNone: A.empty, onSome: (p) => p.neighbours }),
-          // a band whose edge has drawn lines running alongside it just beyond starts behind a gutter
           groupBeyond: O.match(probed, {
             onNone: (): GroupBeyond => () => O.none(),
             onSome: (p) => p.groupBeyond,
@@ -1552,16 +1436,11 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
       )
     )
   );
-  // Each planned stretch's strokes go through the hidden-line pass as a shape
-  // of their own, so a stretch left with a single stroke can be emptied (one
-  // line beside an outline reads as a doubled edge, never as shading) and a
-  // face whose every stroke is lost can be counted.
   const faces: ReadonlyArray<HatchedFace<ProbeLine>> = O.match(shaded, {
     onNone: () => [],
     onSome: (view) => view.faces,
   });
   const stroked = A.flatMap(faces, (face, index) => A.map(face.stretches, (stretch) => ({ index, ...stretch })));
-  // the overlays go through the same pass as the strokes, after them
   const lines = hiddenLines({
     oc,
     built,
@@ -1580,9 +1459,6 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
       A.filter((piece) => piece.style === style),
       A.flatMap((piece) => piece.edges)
     );
-  // With unclaimed matter in a solid part, every piece of the solid compound's outline is traced back to the parts'
-  // edges and split where it turns unclaimed: a visible unclaimed run joins the broken layer, a hidden one is dropped
-  // (a broken part's hidden edges are never drawn either). Without it the pieces are drawn whole, as they always were.
   const traced = pipe(
     built.styles,
     O.flatMap((styles) =>
@@ -1620,13 +1496,8 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
     }
   })();
   const visible = canonicalSegments(outline.claimed);
-  // broken overlay pieces are drawn exactly like a broken part's edges
   const broken = canonicalSegments([...sampled([...lines.broken, ...overlayEdges("broken")]), ...outline.unclaimed]);
   const emphasis = toSegments(overlayEdges("emphasis"));
-  // Graded shading is tidied after the hidden-line pass, stretch by stretch:
-  // fragments under the minimum stroke, the shorter of two lines inside half
-  // the minimum pitch, and strokes touching or riding a drawn line go; the
-  // uniform style is left exactly as the legacy golden records it.
   const legible = (segments: ReadonlyArray<Segment2>): ReadonlyArray<Segment2> =>
     O.match(options.shading, {
       onNone: () => segments,
@@ -1638,30 +1509,19 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
               minSpacing: plan.minPitch / 2,
               inset: plan.minPitch,
               outlines: [...visible, ...broken, ...emphasis],
-              // the sheet carries the validator's floor on the plan; a bare plan clears half a pitch
               clearance: O.getOrElse(plan.clearance, () => plan.minPitch / 2),
             })
           : segments,
     });
   const graded = O.exists(options.shading, (plan) => plan.style === "graded");
   const tolerance = O.match(options.shading, { onNone: () => 0, onSome: (plan) => plan.minPitch });
-  // a stretch keeps only the pieces its own probes crossed: a stroke planned
-  // for one cell of a lattice is cut across the whole face and shows in the
-  // neighbouring cells at the same offsets, where it would read as a band on
-  // the wrong side; a stretch planned over the whole face (no probes) keeps all its pieces.
-  // A stretch planned with room for fewer than two legible strokes (a stroke survives the legibility pass only when it
-  // is at least the minimum stroke plus an inset of one pitch at each end, `legibleStrokeLength`, measured on the view
-  // plane before hidden-line removal) is a sliver glimpsed through a gap, such as a far wall seen through a star cell:
-  // it stays bare like a sliver face and is never counted lost. Room is measured from the plan, never from what
-  // survived the pass, so a band planned with room and hidden all the same is the loss the coverage reports (review
-  // loop 2, K-03). The stroke pass asks the same `hasBandRoom` before it hands a stretch over, so a band its taper
-  // alone would empty arrives re-planned or untapered (review loop 3, J-01).
+  // decision: band-room-from-the-plan
   const hasRoom = (planned: ReadonlyArray<PlannedStroke>): boolean =>
     O.exists(options.shading, (plan) =>
       hasBandRoom({ plan, viewedLength, planned: A.map(planned, (stroke) => stroke.ends) })
     );
   type Stroked = (typeof stroked)[number];
-  // a stretch's strokes as the sheet draws them: its own pieces, kept legible, and none at all below two strokes
+  // decision: bands-keep-to-their-visible-area
   const strokesOf = (stretch: Stroked, edges: ReadonlyArray<replicad.Edge>): ReadonlyArray<Segment2> => {
     const pieces = toSegments(edges);
     const own = A.isReadonlyArrayNonEmpty(stretch.probes)
@@ -1671,7 +1531,7 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
     return graded && A.length(segments) < 2 ? A.empty<Segment2>() : segments;
   };
   const minStroke = O.match(options.shading, { onNone: () => 0, onSome: (plan) => plan.minStroke });
-  // a tapered band the planner drew on its whole clipped chords is cut back to its taper, like a redrawn one (below)
+  // decision: redraw-emptied-tapered-bands
   const firstPassOf = (stretch: Stroked, edges: ReadonlyArray<replicad.Edge>): DrawnStretch => {
     const sliver = graded && !hasRoom(stretch.planned);
     const segments = sliver ? A.empty<Segment2>() : strokesOf(stretch, edges);
@@ -1690,16 +1550,7 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
     };
   };
   const tapered = A.zipWith(stroked, strokePieces, firstPassOf);
-  // The taper may shorten a band but never empty it (review loop 3, J-01), and the planner judges a tapered band's room
-  // on its rows' cells, as if each showed in full wherever its probe saw the face. A part in front can cut a cell
-  // anywhere between the probe that saw the face and the row beyond that did not: each stroke, centred on the cell,
-  // then shows only its near end, and the legibility pass drops what is left (the two-point bottom view of a wall
-  // glimpsed at its foot through an opening in a plate in front of it). A stretch planned with room that drew nothing
-  // that way is drawn again on its whole clipped chords, through one more hidden-line pass that runs only when such a
-  // stretch exists; the pass cuts the chords to what shows. Each legible run is then cut back to its planned stroke's
-  // taper, centred on the run and never below the minimum stroke, so the redraw keeps the band's taper and its order
-  // of lengths (review loop 4, K-08). Room still comes from the plan, so a stretch whose whole chords draw nothing too
-  // stays a lost stretch (K-03), never a sliver.
+  // decision: redraw-emptied-tapered-bands
   const emptied = graded
     ? pipe(
         tapered,
@@ -1739,7 +1590,7 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
       }),
     })
   );
-  // the ink order checked again on drawn ink, where a band was redrawn
+  // decision: ink-order-on-drawn-ink
   const drawn = pipe(
     options.shading,
     O.filter(() => graded && A.some(redrawnFirst, isRelaxed)),
@@ -1754,7 +1605,6 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
         }),
     })
   );
-  // a planned stretch that drew nothing: its band was hidden, or clipped below two legible strokes
   const lostStretches = graded
     ? A.length(
         A.filter(
@@ -1768,9 +1618,7 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
     A.map((stretch) => stretch.index),
     HashSet.fromIterable
   );
-  // The graded faces given lines that draw nothing by design: every stretch they handed over is bare by design (vacuously
-  // so when the planner skipped every visible area itself, each with its verdict in the coverage), and none drew.
-  const bareBy = (byDesign: (stretch: DrawnStretch) => boolean): HashSet.HashSet<number> =>
+  const facesBareBy = (byDesign: (stretch: DrawnStretch) => boolean): HashSet.HashSet<number> =>
     graded
       ? pipe(
           faces,
@@ -1780,12 +1628,8 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
           HashSet.fromIterable
         )
       : HashSet.empty<number>();
-  // a face whose every planned stretch turned out a sliver is bare by design, not lost: its rules gave it lines, but
-  // it draws nothing, so the coverage counts it a sliver, never a shaded face (review loop 3, J-01)
-  const sliverFaces = bareBy((stretch) => stretch.sliver);
-  // a face whose redrawn band was left bare to keep the ink order is bare by design too, but still a shaded face
-  const bareFaces = bareBy((stretch) => stretch.sliver || stretch.inkOrder);
-  // only graded faces are planned per visible stretch; a uniform face hidden behind another part is not lost
+  const sliverFaces = facesBareBy((stretch) => stretch.sliver);
+  const bareFaces = facesBareBy((stretch) => stretch.sliver || stretch.inkOrder);
   const lostFaces = graded
     ? pipe(
         faces,
@@ -1796,8 +1640,6 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
         A.length
       )
     : 0;
-  // every visible stretch of a face given lines that drew no band by design: the planner's skips, the slivers the
-  // kernel finds without room, and the bands left bare to keep the ink order (review loop 4, A-01, K-08)
   const skippedStretches = stretchSkipsOf([
     ...A.flatMap(faces, (face) => face.skipped),
     ...pipe(
@@ -1880,10 +1722,23 @@ const drawView = (options: ProjectOptions, surveyor: O.Option<Surveyor>): EdgeSe
  * strokes come in one canonical order, with one band per stretch that drew
  * ink naming its face and its strokes' places in that order.
  *
+ * **Gotchas**
+ *
+ * `viewedLine` and `viewOf` re-derive the projector's frame and projection
+ * by hand (the eye `focus` along the view direction from the target under
+ * perspective), so they must change with `makeProjector`. The canonical
+ * stroke sort is stable, so the shading strokes are those drawn before bands
+ * existed, in the same order; a pass after projection reads through the
+ * bands which stretch and which face it left bare. A run's chords over the
+ * whole parameter range are exactly the samples of an unsplit edge. The
+ * uniform style skips the legibility pass, so its output stays exactly as
+ * the legacy goldens record it, and only graded faces can be lost: a uniform
+ * face is not planned per visible stretch, so one hidden behind another part
+ * is not lost.
+ *
  * @internal
  */
 export const project = (options: ProjectOptions): EdgeSet => {
-  // one extrema tool answers every distance query of the view's per-primitive styles
   const surveyor = O.map(options.built.styles, makeSurveyor);
   try {
     return drawView(options, surveyor);
