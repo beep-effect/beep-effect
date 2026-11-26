@@ -183,12 +183,11 @@ export abstract class MarkdownVisitor {
    * @since 0.0.0
    */
   static visit(root: Root): Stream.Stream<MarkdownVisitorEvent> {
-    return Stream.fromIterable(walkIterable(root));
+    return Stream.fromIterable(rewalkingIterable(root));
   }
 }
 
-/** Lazy per-subscription iterable so each run of the stream walks afresh. */
-function walkIterable(root: Root): Iterable<MarkdownVisitorEvent> {
+function rewalkingIterable(root: Root): Iterable<MarkdownVisitorEvent> {
   return {
     [Symbol.iterator]() {
       return walkNode(root, [], 0);
@@ -198,11 +197,6 @@ function walkIterable(root: Root): Iterable<MarkdownVisitorEvent> {
 
 const childrenOf = (node: MarkdownNode): ReadonlyArray<MarkdownNode> => ("children" in node ? node.children : []);
 
-/**
- * The terminal depth-guard event. The diagnostic's zero-based line/character
- * derive from the node's own 1-based position (there is no source text in a
- * tree walk); foreign sentinel positions collapse to 0,0.
- */
 const depthExceeded = (node: MarkdownNode, path: MarkdownPath, depth: number): MarkdownVisitorEvent => ({
   _tag: "Error",
   diagnostic: MarkdownDiagnostic.make({
@@ -217,28 +211,30 @@ const depthExceeded = (node: MarkdownNode, path: MarkdownPath, depth: number): M
   depth,
 });
 
-/** Walk `node`'s subtree; returns `true` when the terminal `Error` event ended the whole walk. */
-function* walkNode(node: MarkdownNode, path: MarkdownPath, depth: number): Generator<MarkdownVisitorEvent, boolean> {
+type WalkAborted = boolean;
+
+function* walkNode(
+  node: MarkdownNode,
+  path: MarkdownPath,
+  depth: number
+): Generator<MarkdownVisitorEvent, WalkAborted> {
   if (depth > MAX_NESTING_DEPTH) {
     yield depthExceeded(node, path, depth);
     return true;
   }
   yield { _tag: "Enter", node, path, depth };
   if (yield* walkChildren(node, path, depth)) {
-    // Terminal: abort the whole walk, mirroring stringify's whole-operation
-    // typed failure.
     return true;
   }
   yield { _tag: "Exit", node, path, depth };
   return false;
 }
 
-/** Walk each child in order, stopping at the first that ends the walk. */
 function* walkChildren(
   node: MarkdownNode,
   path: MarkdownPath,
   depth: number
-): Generator<MarkdownVisitorEvent, boolean> {
+): Generator<MarkdownVisitorEvent, WalkAborted> {
   const children = childrenOf(node);
   for (let index = 0; index < children.length; index += 1) {
     if (yield* walkNode(A.getUnsafe(children, index), A.append(path, index), depth + 1)) {

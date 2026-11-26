@@ -53,7 +53,6 @@ import type {
 
 const $I = $MarkdownId.create("MarkdownDocument");
 
-/** The document navigation depth guard was exceeded. */
 class DocumentNavigationError extends S.TaggedError<DocumentNavigationError, { readonly brand: unique symbol }>(
   $I`DocumentNavigationError`
 )(
@@ -103,7 +102,10 @@ export class DocumentHeading extends S.Opaque<DocumentHeading, { readonly brand:
       $I.annoteKey("DocumentHeading.depth", { description: "Heading level used for outline navigation" })
     ),
     text: S.String.pipe(
-      $I.annoteKey("DocumentHeading.text", { description: "Plain-text projection of the heading's phrasing content" })
+      $I.annoteKey("DocumentHeading.text", {
+        description:
+          "Plain-text projection of the heading's phrasing content; a JSX text wrapper contributes its children's text, and a text expression, being code, contributes none",
+      })
     ),
   }).pipe(
     $I.annoteSchema("DocumentHeading", {
@@ -318,10 +320,6 @@ export class DocumentLink extends S.Opaque<DocumentLink, { readonly brand: uniqu
   )
 ) {}
 
-// The accessor walks recurse over the tree, so they share the engine's depth
-// cap. A getter has no typed error channel, so — like `applyAll`'s overlap
-// guard — an over-deep tree (reachable only via a hand-built or foreign
-// decoded tree; the parser refuses deeper input) is a thrown defect.
 type NavigationNode = Frontmatter | MarkdownNode;
 
 const walkTree: {
@@ -341,11 +339,6 @@ const walkTree: {
   }
 });
 
-// The inline text the block pass handed to the inline parser for each heading, keyed by the
-// heading's start offset. The block pass strips every continuation line's container prefix
-// (indentation, blockquote markers, list-item indentation) before inline parsing, so this is the
-// heading content exactly as the parser read it, still in source syntax. The document keeps only
-// the tree, so the pass runs again with the same dialect and frontmatter capture.
 const headingInlineTexts = (source: string, dialect: MarkdownDialect, root: Root): HashMap.HashMap<number, string> =>
   Result.match(
     parsePassResult(source, {
@@ -363,10 +356,7 @@ const headingInlineTexts = (source: string, dialect: MarkdownDialect, root: Root
     }
   );
 
-// Depth-guarded pre-order search with early exit — `walkTree`'s visit callback
-// cannot stop the walk, and `find` should not pay for the rest of the tree
-// once it has its match.
-const findInTree: {
+const findWithEarlyExit: {
   (node: NavigationNode, depth: number, predicate: (node: MarkdownNode) => boolean): MarkdownNode | undefined;
   (depth: number, predicate: (node: MarkdownNode) => boolean): (node: NavigationNode) => MarkdownNode | undefined;
 } = dual(
@@ -382,7 +372,7 @@ const findInTree: {
     }
     if ("children" in node) {
       for (const child of node.children) {
-        const found = findInTree(child, depth + 1, predicate);
+        const found = findWithEarlyExit(child, depth + 1, predicate);
         if (found !== undefined) {
           return found;
         }
@@ -392,17 +382,11 @@ const findInTree: {
   }
 );
 
-/** Normalize a find/findAll selector — a `type` tag or a predicate — to a predicate. */
 const selectorPredicate = (
   selector: MarkdownNodeType | ((node: MarkdownNode) => boolean)
 ): ((node: MarkdownNode) => boolean) =>
   P.isString(selector) ? (node: MarkdownNode): boolean => node.type === selector : selector;
 
-// The plain-text projection of phrasing content, for DocumentHeading.text and
-// DocumentSection.text. MDX policy: a JSX text wrapper is transparent — its
-// children's text comes through, so `<span>Title</span>` reads "Title" — while
-// a text EXPRESSION contributes nothing: its value is code, not prose, and no
-// rendering of it is faithful plain text.
 const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
   let out = "";
   for (const node of nodes) {
@@ -434,9 +418,6 @@ const phrasingText = (nodes: ReadonlyArray<PhrasingContent>): string => {
   return out;
 };
 
-// One root-level heading and its index among the root's blocks: the unit the
-// section boundary pass works over, so it scans heading to heading instead of
-// re-walking every block for each section.
 interface RootHeading {
   readonly index: number;
   readonly node: Heading;
@@ -448,8 +429,6 @@ const rootHeadings = (blocks: Root["children"]): ReadonlyArray<RootHeading> =>
     (block, index): ReadonlyArray<RootHeading> => (block.type === "heading" ? [{ index, node: block }] : [])
   );
 
-// The nearest later heading (an index into `headings`) recorded at any depth
-// from 1 through `depth`: the first heading of equal or shallower depth.
 const nearestBoundary: {
   (nextByDepth: ReadonlyArray<number | undefined>, depth: HeadingDepth): number | undefined;
   (depth: HeadingDepth): (nextByDepth: ReadonlyArray<number | undefined>) => number | undefined;
@@ -459,8 +438,6 @@ const nearestBoundary: {
   )
 );
 
-// For each root heading, the index of the heading that closes its section, by
-// one reverse pass that remembers the nearest later heading at each depth.
 const sectionBoundaries = (headings: ReadonlyArray<RootHeading>): ReadonlyArray<number | undefined> => {
   const nextByDepth = A.makeBy(7, (): number | undefined => undefined);
   const boundaries = A.makeBy(headings.length, (): number | undefined => undefined);
@@ -483,9 +460,6 @@ const makeSection = (
 ): DocumentSection => {
   const block = current.node;
   const start = block.position.start.offset;
-  // The body starts where the heading NODE ends, which is what makes this
-  // correct for setext headings too: their node span covers the underline,
-  // so the body never begins mid-`---`.
   const bodyStart = block.position.end.offset;
   const bodyLength = Math.max(0, boundary.offset - bodyStart);
   return DocumentSection.make({
@@ -511,9 +485,6 @@ const headingMatcher = (match: SectionHeadingMatch): ((section: DocumentSection)
   }
   if (P.isRegExp(match)) {
     return (section) => {
-      // A `/g/` or `/y/` regex carries `lastIndex` between calls, so reusing
-      // one across sections would test from the wrong offset and skip
-      // matches.
       match.lastIndex = 0;
       return match.test(Str.trim(section.text));
     };
@@ -1016,7 +987,7 @@ export class MarkdownDocument extends S.Class<MarkdownDocument, { readonly brand
   find<T extends MarkdownNode>(selector: (node: MarkdownNode) => node is T): T | undefined;
   find(selector: (node: MarkdownNode) => boolean): MarkdownNode | undefined;
   find(selector: MarkdownNodeType | ((node: MarkdownNode) => boolean)): MarkdownNode | undefined {
-    return findInTree(this.root, 0, selectorPredicate(selector));
+    return findWithEarlyExit(this.root, 0, selectorPredicate(selector));
   }
 
   /**
