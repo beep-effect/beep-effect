@@ -319,7 +319,10 @@ const LockfileRecord = S.Struct({
     })
   ),
 }).pipe(
-  $I.annoteSchema("LockfileRecord", { description: "The plain-object contribution of a single lockfile parse." })
+  $I.annoteSchema("LockfileRecord", {
+    description:
+      "The plain-object contribution of a single lockfile parse, so its catalogs and importer versions cannot disagree and at(ref) reads the lockfile once.",
+  })
 );
 type LockfileRecord = typeof LockfileRecord.Type;
 

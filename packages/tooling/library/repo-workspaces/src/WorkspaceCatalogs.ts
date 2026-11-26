@@ -985,7 +985,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
           catalogs: CatalogSet.fromLockfile(lockfile),
           importerVersions: importerVersionsOf(lockfile),
         })),
-        Effect.catch((_failure: LockfileReadFailure) =>
+        Effect.catch((_unreadableLockfileRecordContributesNothing: LockfileReadFailure) =>
           Effect.succeed({ catalogs: CatalogSet.empty(), importerVersions: {} })
         )
       );

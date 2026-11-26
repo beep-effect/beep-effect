@@ -636,9 +636,6 @@ const fileUrlOf: {
   })
 );
 
-const importRuntimePathUnbundled = (url: string): Promise<Readonly<Record<string, unknown>>> =>
-  import(/* webpackIgnore: true */ url);
-
 const replayInProcess: {
   (
     pnpmfiles: ReadonlyArray<ResolvedPnpmfile>,
@@ -661,7 +658,8 @@ const replayInProcess: {
       if (path === undefined) continue;
       const url = yield* fileUrlOf(name, path);
       const loaded = yield* Effect.tryPromise({
-        try: () => importRuntimePathUnbundled(url),
+        // decision: in-process-pnpmfile-import-bypasses-bundlers
+        try: (): Promise<Readonly<Record<string, unknown>>> => import(/* webpackIgnore: true */ url),
         catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
       });
       const updateConfig = updateConfigOf(loaded);

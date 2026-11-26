@@ -839,7 +839,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
     const packages = memo.pipe(Effect.map((state) => state.packages));
 
-    const indexOwner: {
+    const latestSnapshotIndexesByIdentity: {
       ownerIndex:
         | {
             readonly snapshot: ReadonlyArray<WorkspacePackage>;
@@ -857,7 +857,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     const owners = (
       all: ReadonlyArray<WorkspacePackage>
     ): ReadonlyArray<{ readonly prefix: string; readonly package: WorkspacePackage }> => {
-      const cached = indexOwner.ownerIndex;
+      const cached = latestSnapshotIndexesByIdentity.ownerIndex;
       if (cached !== undefined && cached.snapshot === all) return cached.entries;
       const index = A.sort(
         A.map(all, (pkg) => ({
@@ -866,7 +866,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
         })),
         Order.mapInput(Order.Number, (entry: { readonly prefix: string }) => -entry.prefix.length)
       );
-      indexOwner.ownerIndex = { snapshot: all, entries: index };
+      latestSnapshotIndexesByIdentity.ownerIndex = { snapshot: all, entries: index };
       return index;
     };
 
@@ -894,10 +894,10 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     const packagesByName = (
       all: ReadonlyArray<WorkspacePackage>
     ): MutableHashMap.MutableHashMap<string, WorkspacePackage> => {
-      const cached = indexOwner.packageIndex;
+      const cached = latestSnapshotIndexesByIdentity.packageIndex;
       if (cached !== undefined && cached.snapshot === all) return cached.entries;
       const index = firstByName(all, (pkg) => pkg);
-      indexOwner.packageIndex = { snapshot: all, entries: index };
+      latestSnapshotIndexesByIdentity.packageIndex = { snapshot: all, entries: index };
       return index;
     };
 
@@ -968,8 +968,8 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
             MutableHashMap.clear(rootMemos);
             return Effect.tap(invalidate, () =>
               Effect.sync(() => {
-                indexOwner.ownerIndex = undefined;
-                indexOwner.packageIndex = undefined;
+                latestSnapshotIndexesByIdentity.ownerIndex = undefined;
+                latestSnapshotIndexesByIdentity.packageIndex = undefined;
               })
             );
           }
