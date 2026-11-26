@@ -27,25 +27,21 @@ import type { GitConfigEditError, GitConfigParseError } from "./GitConfig.ts";
 
 const $I = $GitId.create("Gitmodules");
 
-/** `dual` dispatch for the optional-parameter setters: a `GitConfig` first argument marks the data-first call. */
 const isGitConfig = S.is(GitConfig);
 const DiagnosticJsonString = S.fromJsonString(S.String).pipe(
   $I.annoteSchema("DiagnosticJsonString", { description: "JSON quoting for synchronous submodule field diagnostics." })
 );
 const encodeDiagnosticJsonString = S.encodeResult(DiagnosticJsonString);
 
-/** A value that can be rendered and scanned without a NUL-byte diagnostic. */
 const GitmodulesValue = S.String.check(S.isPattern(/^[^\0]*$/u)).pipe(
   $I.annoteSchema("GitmodulesValue", { description: "A NUL-free git-config field value." })
 );
 
-/** Git's case-folded submodule status-ignore policies. */
 const SubmoduleIgnore = LiteralKit(["all", "dirty", "untracked", "none"]).pipe(
-  $I.annoteSchema("SubmoduleIgnore", { description: "The supported submodule status-ignore policies." })
+  $I.annoteSchema("SubmoduleIgnore", { description: "Git's case-folded submodule status-ignore policies." })
 );
 const isSubmoduleIgnore = S.is(SubmoduleIgnore);
 
-/** Git's base-zero integer syntax, with an optional binary size suffix. */
 const GitIntegerText = S.String.check(
   S.isPattern(/^[ \t\n\r\v\f]*[+-]?(?:0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)[kKmMgG]?$/)
 ).pipe(
@@ -59,7 +55,6 @@ const GIT_TRUE_WORDS = ["true", "yes", "on"];
 const GIT_FALSE_WORDS = ["", "false", "no", "off"];
 const GIT_INTEGER_MULTIPLIERS: Readonly<Record<string, number>> = { k: 1024, m: 1048576, g: 1073741824 };
 
-/** The signed value of already-validated Git integer text, size suffix applied. */
 const gitIntegerValue = (value: string): number => {
   const trimmed = Str.trimStart(Str.toLowerCase(value));
   const integer = Str.replace(/^[+-]/, "")(trimmed);
@@ -69,7 +64,6 @@ const gitIntegerValue = (value: string): number => {
   return N.Number(normalized) * multiplier * (Str.startsWith("-")(trimmed) ? -1 : 1);
 };
 
-/** Git integers used as booleans must fit a signed 32-bit int. */
 const isOutsideInt32 = (value: number): boolean => value < -2147483648 || value > 2147483647;
 
 const invalidGitBoolean = (value: string): Effect.Effect<boolean, SchemaIssue.Issue> =>
@@ -77,14 +71,12 @@ const invalidGitBoolean = (value: string): Effect.Effect<boolean, SchemaIssue.Is
     new SchemaIssue.InvalidValue({ message: "Expected a Git boolean or a signed 32-bit Git integer" }, value)
   );
 
-/** Decodes a Git integer spelling as a boolean (non-zero is true). */
 const decodeGitIntegerBoolean = (value: string): Effect.Effect<boolean, SchemaIssue.Issue> => {
   if (!isGitIntegerText(value)) return invalidGitBoolean(value);
   const signed = gitIntegerValue(value);
   return isOutsideInt32(signed) ? invalidGitBoolean(value) : Effect.succeed(signed !== 0);
 };
 
-/** Decode Git boolean text and bare keys; this private schema is read-only. */
 const GitBoolean = S.UndefinedOr(S.String).pipe(
   S.decodeTo(S.Boolean, {
     decode: SchemaGetter.transformEffect(
@@ -258,7 +250,6 @@ export class GitmodulesDecodeError extends S.TaggedError<GitmodulesDecodeError, 
   }
 }
 
-/** Raw `[submodule]` fields: key (lowercased) → raw value; `null` marks git's bare boolean-true shorthand. */
 type RawSubmoduleFields = MutableHashMap.MutableHashMap<string, string | null>;
 
 interface CollectedSubmodule {
@@ -266,7 +257,6 @@ interface CollectedSubmodule {
   readonly name: string;
 }
 
-/** Merges every `[submodule "<name>"]` section by name with git's last-wins read semantics. */
 const collectSubmodules = (config: GitConfig): MutableHashMap.MutableHashMap<string, CollectedSubmodule> => {
   const byName = MutableHashMap.empty<string, CollectedSubmodule>();
   for (const section of config.sections) {
@@ -295,7 +285,6 @@ const invalidSubmoduleField = (name: string, field: string, value: string | null
     reason: "invalidValue",
   });
 
-/** `path` and `url` must be recorded with a value. */
 const requiredSubmoduleField = (
   { fields, name }: CollectedSubmodule,
   field: "path" | "url",
@@ -307,7 +296,6 @@ const requiredSubmoduleField = (
     : Result.succeed(value);
 };
 
-/** Optional free-text fields refuse git's bare-key shorthand. */
 const textSubmoduleField = (
   { fields, name }: CollectedSubmodule,
   field: "branch" | "update"
@@ -356,7 +344,6 @@ const fetchRecurseSubmoduleField = ({
   return booleanSubmoduleValue(name, "fetchRecurseSubmodules", raw);
 };
 
-/** Decodes one collected submodule; fields are checked in a fixed order so the first failure is stable. */
 const decodeSubmodule = (collected: CollectedSubmodule): Result.Result<GitmodulesEntry, GitmodulesDecodeError> =>
   Result.gen(function* () {
     const path = yield* requiredSubmoduleField(collected, "path", "missingPath");
@@ -388,22 +375,14 @@ const decodeSubmodule = (collected: CollectedSubmodule): Result.Result<Gitmodule
  */
 export type GitmodulesParseError = GitConfigParseError | GitmodulesDecodeError;
 
-/**
- * Renders entry fields as a canonical `.gitmodules` document — shared by the
- * instance `stringify` and `FromString`'s encode direction so the two cannot
- * drift. Accepts the ENCODED field shape, which a decoded instance satisfies
- * structurally.
- */
 const renderGitBoolean = (value: boolean): string => (value ? "true" : "false");
 
 const renderFetchRecurse = (value: boolean | "on-demand"): string =>
   value === "on-demand" ? "on-demand" : renderGitBoolean(value);
 
-/** Maps a recorded optional field to its rendered text; `undefined` stays unrecorded. */
 const renderOptional = <A>(value: A | undefined, show: (value: A) => string): string | undefined =>
   value === undefined ? undefined : show(value);
 
-/** The optional `key = value` fields of one entry, in canonical order; unrecorded fields are `undefined`. */
 const optionalFieldValues = (
   entry: (typeof Gitmodules)["Encoded"]["entries"][number]
 ): ReadonlyArray<readonly [string, string | undefined]> => [
@@ -505,7 +484,6 @@ export class Gitmodules extends S.Class<Gitmodules, { readonly brand: unique sym
    * @since 0.0.0
    */
   static fromConfigResult(config: GitConfig): Result.Result<Gitmodules, GitmodulesDecodeError> {
-    // Lazily decoded: the first failing submodule (in first-appearance order) short-circuits the rest.
     return pipe(
       collectSubmodules(config),
       MutableHashMap.values,
@@ -617,10 +595,6 @@ export class Gitmodules extends S.Class<Gitmodules, { readonly brand: unique sym
   static readonly FromString: S.Codec<Gitmodules, string> = S.String.pipe(
     S.decodeTo(
       Gitmodules,
-      // The type parameters are pinned to the ENCODED side explicitly:
-      // `decodeTo` unifies the transformation against the target's Encoded
-      // type, which no longer satisfies the method-bearing instance type
-      // once the class carries `stringify`.
       SchemaTransformation.transformEffect<(typeof Gitmodules)["Encoded"], string>({
         decode: (text: string) => {
           const result = Gitmodules.parseResult(text);

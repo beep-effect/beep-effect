@@ -134,54 +134,26 @@ const NonNegativeInteger = S.Finite.check(S.isMultipleOf(1), S.isGreaterThanOrEq
   })
 );
 const isNonNegativeInteger = S.is(NonNegativeInteger);
-/** `--find-renames=<n>%`'s domain: a whole percent, 1..100. */
 const RenameScorePercent = S.Finite.check(S.isInt(), S.isBetween({ minimum: 1, maximum: 100 })).pipe(
-  $I.annoteSchema("RenameScorePercent", { description: "A rename-detection similarity threshold as a whole percent." })
+  $I.annoteSchema("RenameScorePercent", {
+    description: "A `--find-renames` similarity threshold, a whole percent from 1 to 100.",
+  })
 );
 const isRenameScorePercent = S.is(RenameScorePercent);
-/** `--diff-filter=<letters>`'s domain: git's status letters (lower case excludes), or `*`. */
 const DiffFilter = S.String.check(S.isPattern(/^[ACDMRTUXB*]+$/i)).pipe(
-  $I.annoteSchema("DiffFilter", { description: "A non-empty `--diff-filter` letter set, lower case excluding." })
+  $I.annoteSchema("DiffFilter", {
+    description: "A non-empty `--diff-filter` set of git status letters or `*`, lower case excluding.",
+  })
 );
 const isDiffFilter = S.is(DiffFilter);
 
-/**
- * `dual` dispatch for a member whose subject is a string (`cwd`, or a
- * method label) and whose data-last argument list never starts with one:
- * a string first argument marks the data-first call. Used instead of an
- * arity count wherever trailing parameters are optional.
- */
 const hasStringSubject = (args: IArguments): boolean => P.isString(args[0]);
 
-/**
- * `dual` dispatch for a member shaped `(cwd, ...strings, options?)`: the call
- * is data-first when the LAST required positional (at `index`) is a string.
- * In a data-last call that slot holds the optional options object or nothing,
- * so omitting the trailing options never flips the dispatch.
- */
 const stringAt =
   (index: number) =>
   (args: IArguments): boolean =>
     P.isString(args[index]);
 
-/**
- * Refuse a caller-supplied ref or range that git would parse as an option.
- *
- * **Details**
- *
- * Refs are caller-controlled and land in git's argv as positional entries; a
- * value beginning with `-` is read as a flag instead — `checkout("-b")` would
- * CREATE a branch. A bare `--` separator is not a safe fix for every command
- * (it switches `checkout` into pathspec mode), so option-like values are
- * refused outright, before any spawn, as a typed {@link GitCommandError}.
- * `show`'s `path` needs no guard: it is fused after the ref into one
- * `ref:path` token, which cannot begin with `-` unless the ref does.
- *
- * `sensitive` values get the same check but a REDACTED report: a refused
- * sensitive positional (a `configSet` value) must not leak into
- * `GitCommandError.args`/`detail` any more than a spawned one may — the
- * redaction policy applies to guard rejections too.
- */
 /** `values` followed by `optional` when it is defined — the argv refs a call actually passes. */
 const withDefined = (values: ReadonlyArray<string>, optional: string | undefined): ReadonlyArray<string> =>
   optional === undefined ? values : [...values, optional];
@@ -230,18 +202,6 @@ const rejectOptionLikeRefs: {
   }
 );
 
-/**
- * Refuse a caller-supplied numeric index/limit that is not a non-negative
- * integer.
- *
- * **Details**
- *
- * Every relational comparison against `NaN` is `false`, so a bare
- * `value < 0` guard admits `NaN` (and a fractional value truncates nothing —
- * it rides straight into the argv as `stash@{1.5}` / `--max-count=NaN`).
- * Integrality and range are therefore checked together, pre-spawn, as a
- * typed refusal.
- */
 const rejectNonNaturalNumber: {
   (cwd: string, label: string, value: number | undefined): Effect.Effect<void, GitCommandError>;
   (label: string, value: number | undefined): (cwd: string) => Effect.Effect<void, GitCommandError>;
@@ -261,10 +221,6 @@ const rejectNonNaturalNumber: {
         )
 );
 
-/**
- * Refuse a `--find-renames` threshold outside git's domain (a whole percent
- * 1..100) before any spawn. Shared by every member that renders the flag.
- */
 const rejectRenameScore = (cwd: string, findRenames: number | undefined): Effect.Effect<void, GitCommandError> =>
   findRenames === undefined || isRenameScorePercent(findRenames)
     ? Effect.void
@@ -278,12 +234,6 @@ const rejectRenameScore = (cwd: string, findRenames: number | undefined): Effect
         })
       );
 
-/**
- * Refuse a `--diff-filter` letter set git does not accept (`[ACDMRTUXB*]`,
- * lower case excluding, never empty) before any spawn. Shared by every member
- * that renders the flag; the rejected value is JSON-quoted in `detail` so
- * whitespace and an empty string stay visible.
- */
 const rejectDiffFilter = (cwd: string, diffFilter: string | undefined): Effect.Effect<void, GitCommandError> =>
   diffFilter === undefined || isDiffFilter(diffFilter)
     ? Effect.void
@@ -302,11 +252,6 @@ const rejectDiffFilter = (cwd: string, diffFilter: string | undefined): Effect.E
         )
       );
 
-/**
- * Refuse an option combination git rejects, or would silently misread, before
- * any spawn: a typed `"refused"` {@link GitCommandError} whose `args` name the
- * offending flags. Shared by every member whose options exclude each other.
- */
 const rejectCombination = (
   cwd: string,
   refused: boolean,
@@ -317,49 +262,27 @@ const rejectCombination = (
     ? Effect.fail(GitCommandError.make({ kind: "refused", args, cwd, stderr: "", detail: `refused: ${detail}` }))
     : Effect.void;
 
-/** The walk, filter and body-shape options `Git.log` accepts; the full contract is on `GitShape["log"]`. */
 type LogOptions = {
-  /** A git pathspec scoping the walk; `--follow` requires exactly one entry. */
   readonly paths?: ReadonlyArray<string>;
-  /** Follow the single path across renames (git's `--follow`). Default `false`. */
   readonly follow?: boolean;
-  /** `--max-count`: at most this many commits. `0` is the empty listing. */
   readonly limit?: number;
-  /** `--diff-merges=first-parent`: give merge commits a path listing. Default `false`. */
   readonly firstParentDiffMerges?: boolean;
-  /** `--name-status` instead of `--name-only`: populate each entry's `changes`. Default `false`. */
   readonly nameStatus?: boolean;
-  /** `--diff-filter=<letters>`: keep only the named status letters (lower case excludes). */
   readonly diffFilter?: string;
-  /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
   readonly findRenames?: number;
-  /** `--no-renames`: no rename detection, so no blob is read to pair a move. Excludes `findRenames`. Default `false`. */
   readonly noRenames?: boolean;
-  /** `--no-walk=unsorted`: list exactly `revisions`, in the given order, without their ancestry. Default `false`. */
   readonly noWalk?: boolean;
-  /** `false` prepends the global `-c core.quotePath=false`. */
   readonly quotePath?: false;
-  /** Start the walk here instead of `HEAD`: refs, ranges, `^`-exclusions. */
   readonly revisions?: ReadonlyArray<string>;
-  /** `--no-merges`: leave merge commits out of the walk. Default `false`. */
   readonly noMerges?: boolean;
-  /** `--reverse`: oldest first, applied after `limit`. Default `false`. */
   readonly reverse?: boolean;
-  /** `--since=<when>`: only commits newer than git's approxidate `when`. */
   readonly since?: string;
-  /** List no paths: each entry's `paths` is empty. Excludes `nameStatus`. Default `false`. */
   readonly omitPaths?: boolean;
-  /** Read each commit's raw message body into `body`. Default `false`. */
   readonly includeBody?: boolean;
 };
 
-/** The compare-and-swap change `Git.updateRef` makes: create a new ref, or delete one that still points at a value. */
 type UpdateRefChange = { readonly create: string } | { readonly delete: string };
 
-/**
- * The comparison and rendering options `Git.diffPatch` accepts; the combination
- * and number guards run before the constructor sees them.
- */
 type DiffPatchOptions = {
   readonly base?: string;
   readonly head?: string;
@@ -372,11 +295,6 @@ type DiffPatchOptions = {
   readonly pathspec?: ReadonlyArray<string>;
 };
 
-/**
- * Every pre-spawn refusal `Git.diffPatch` makes: option-like revisions, paths
- * and files; a `unified` that is not a natural number; a rename score outside
- * 1..100; and the three option combinations git rejects or would misread.
- */
 const rejectDiffPatchOptions = Effect.fnUntraced(function* (cwd: string, options: DiffPatchOptions) {
   const { base, cached = false, findRenames, head, noIndex, noRenames = false, pathspec = [] } = options;
   yield* rejectOptionLikeRefs(cwd, [...withDefined(withDefined([], base), head), ...pathspec, ...(noIndex ?? [])]);
@@ -402,55 +320,32 @@ const rejectDiffPatchOptions = Effect.fnUntraced(function* (cwd: string, options
   );
 });
 
-/**
- * The change-selection options the `--name-only` diff members share:
- * `diffFilter` keeps only the named status letters, `noRenames` turns rename
- * detection off, `pathspec` scopes the diff behind `--`.
- */
 type DiffListOptions = {
   readonly diffFilter?: string;
   readonly noRenames?: boolean;
   readonly pathspec?: ReadonlyArray<string>;
 };
 
-/** {@link DiffListOptions} plus `head`, a commit to diff against instead of the member's default. */
 type WorkingDiffOptions = DiffListOptions & { readonly head?: string };
 
-/** The `{ index }` option the stash pop/apply/drop members accept. */
 type StashIndexOptions = { readonly index?: number };
 
-/** Records the stash index on the current span and refuses one that is not a natural number. */
 const guardStashIndex = (cwd: string, index: number | undefined): Effect.Effect<void, GitCommandError> =>
   Effect.andThen(
     Effect.annotateCurrentSpan({ cwd, index: index ?? 0 }),
     rejectNonNaturalNumber(cwd, "a stash index", index)
   );
 
-/**
- * The two outcome arms every classification mode maps identically: a missing
- * repository fails `NotARepositoryError`, and a classified failure fails with
- * its own `GitCommandError`.
- */
 const repositoryFailureArms = (cwd: string) => ({
   notARepository: () => Effect.fail(NotARepositoryError.make({ cwd })),
   failure: (classified: { readonly error: GitCommandError }) => Effect.fail(classified.error),
 });
 
-/**
- * {@link repositoryFailureArms} plus the common `unknownRef` arm, which fails
- * `UnknownRefError` naming `ref` as the reference that did not resolve.
- */
 const refFailureArms = (cwd: string, ref: string) => ({
   ...repositoryFailureArms(cwd),
   unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
 });
 
-/**
- * Lifts a parser's `Result` into the member's error channel: a failure
- * becomes a `GitCommandError` of kind `"failed"` whose `detail` reads
- * `unparseable <what> output: <reason>`, carrying the invocation's redacted
- * argv. Every entry parser fails closed through this one helper.
- */
 const failClosed =
   (invocation: GitInvocation, cwd: string, what: string) =>
   <A>(parsed: Result.Result<A, string>): Effect.Effect<A, GitCommandError> =>
@@ -466,7 +361,6 @@ const failClosed =
         )
       : Effect.succeed(parsed.success);
 
-/** Builds repository operations over bound local and network execution capabilities. */
 const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const show: GitShape["show"] = dual(
     3,
@@ -511,9 +405,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         success: () => Effect.succeed(true),
         refMissing: () => Effect.succeed(false),
         ...repositoryFailureArms(cwd),
-        unknownRef: // A ref that doesn't resolve IS the negative answer this method
-          // promises — never an error, and never a defect.
-          () => Effect.succeed(false),
+        unknownRef: () => Effect.succeed(false),
       });
     })
   );
@@ -536,11 +428,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.mergeBaseOption")(function* (cwd: string, a: string, b: string) {
       yield* Effect.annotateCurrentSpan({ cwd, a, b });
       yield* rejectOptionLikeRefs(cwd, [a, b]);
-      // "quiet" kind: no common ancestor is a SILENT exit 1 (probed against
-      // git 2.54) — the legitimate "these histories are disjoint" answer,
-      // degraded to Option.none. An unknown ref still exits 128 with a
-      // `Not a valid object name` stderr and stays UnknownRefError; a NOISY
-      // exit 1 stays a loud GitCommandError.
       const classified = yield* runFor(GitCommand.mergeBase(a, b), cwd, "quiet");
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeedSome(Str.trim(classified.output)),
@@ -556,10 +443,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       yield* Effect.annotateCurrentSpan({ cwd, base, head });
       yield* rejectOptionLikeRefs(cwd, [base, head]);
       const invocation = GitCommand.mergeTree(base, head);
-      // "differs" kind: a conflict is a SILENT exit 1 whose stdout carries the
-      // conflicted tree, which is data rather than a failure. A revision git
-      // cannot resolve also exits 1, but names itself on stderr and stays an
-      // UnknownRefError.
       const classified = yield* runFor(invocation, cwd, "differs");
       return yield* Match.valueTags(classified, {
         success: (classified) => failClosed(invocation, cwd, "merge-tree")(parseMergeTree(classified.output, false)),
@@ -574,10 +457,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.isAncestor")(function* (cwd: string, ancestor: string, descendant: string) {
       yield* Effect.annotateCurrentSpan({ cwd, ancestor, descendant });
       yield* rejectOptionLikeRefs(cwd, [ancestor, descendant]);
-      // "quiet" kind: a non-ancestor is a SILENT exit 1 — the negative
-      // answer this member promises, never an error. An unknown object still
-      // exits 128 with a `Not a valid object name` stderr and stays
-      // UnknownRefError; a NOISY exit 1 stays a loud GitCommandError.
       const classified = yield* runFor(GitCommand.isAncestor(ancestor, descendant), cwd, "quiet");
       return yield* Match.valueTags(classified, {
         success: () => Effect.succeed(true),
@@ -632,11 +511,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  // Runs a NUL-separated working-tree path listing and classifies through the
-  // shared path. `ref` labels an `unknownRef` failure: the two diffs pass their
-  // caller-supplied `head` (git rejects a missing one as an unknown revision),
-  // while `untrackedFiles` and a head-less diff are ref-free and pass
-  // `"working tree"`, where the arm only keeps the match exhaustive.
   const collectPaths: {
     (
       ref: string,
@@ -658,11 +532,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  /**
-   * The pre-spawn guards and constructor options the two working-tree diffs
-   * share: `head` and the pathspec through the option-like guard, the filter
-   * through its domain check, and the validated options in constructor shape.
-   */
   const workingDiffOptions = Effect.fnUntraced(function* (cwd: string, options: WorkingDiffOptions) {
     const { diffFilter, head, noRenames = false, pathspec = [] } = options;
     yield* rejectOptionLikeRefs(cwd, [...withDefined([], head), ...pathspec]);
@@ -793,8 +662,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     ) {
       yield* Effect.annotateCurrentSpan({ cwd, ref, quiet: options?.quiet ?? false });
       yield* rejectOptionLikeRefs(cwd, [ref]);
-      // The "revParse" kind reads `--verify`'s own unknown-ref shapes: the
-      // `Needed a single revision` diagnostic, and `--quiet`'s silent exit 1.
       const classified = yield* runFor(GitCommand.revParse(ref, options), cwd, "revParse");
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeed(Str.trim(classified.output)),
@@ -933,8 +800,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     yield* Effect.annotateCurrentSpan({ cwd });
     const classified = yield* runFor(GitCommand.isShallow(), cwd, "generic");
     return yield* Match.valueTags(classified, {
-      success: // rev-parse --is-shallow-repository prints exactly "true" or "false".
-        (classified) => Effect.succeed(Str.trim(classified.output) === "true"),
+      success: (classified) => Effect.succeed(Str.trim(classified.output) === "true"),
       ...refFailureArms(cwd, "HEAD"),
     });
   });
@@ -991,11 +857,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       });
       yield* rejectOptionLikeRefs(cwd, withDefined([remote], ref));
       yield* rejectNonNaturalNumber(cwd, "a fetch depth", depth);
-      // `git fetch <remote> tag` with no name is a usage error; refused typed.
       yield* rejectCombination(cwd, tag && O.isNone(target), ["tag"], "fetch needs a ref to fetch as a tag");
-      // git itself rejects the pair (`--depth and --unshallow cannot be used
-      // together`, exit 128) — refused typed pre-spawn, the submoduleDeinit
-      // constraint-refusal precedent.
       yield* rejectCombination(
         cwd,
         unshallow && depth !== undefined,
@@ -1007,7 +869,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         cwd,
         "generic"
       );
-      // Without a ref the label stays generic: `remote` may be a URL carrying credentials.
       return yield* Match.valueTags(classified, {
         success: () => Effect.void,
         ...refFailureArms(cwd, refLabel),
@@ -1028,15 +889,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     ) {
       yield* Effect.annotateCurrentSpan({ cwd, ref: options.ref });
       return yield* fetch(cwd, { ...options, tag: true }).pipe(
-        // UnknownRefError is the typed "not a tag on the remote" signal; a
-        // GitCommandError keeps unclassified tag-form stderr shapes on the
-        // fallback path too. NotARepositoryError deliberately propagates —
-        // the plain form would fail identically, so the retry is pure waste.
-        // A refused GitCommandError (kind "refused") is a pre-spawn guard
-        // rejection — an option-like remote or ref — that the plain form's own
-        // guard would reproduce identically: it short-circuits here rather than
-        // routing through a phantom fallback and re-rejecting. Routing on `kind`
-        // is why fetchAny no longer duplicates the guard up front.
         Effect.catchTag(["UnknownRefError", "GitCommandError"], (error) =>
           error._tag === "GitCommandError" && error.kind === "refused" ? Effect.fail(error) : fetch(cwd, options)
         )
@@ -1077,8 +929,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
           remote,
           recursive,
           force,
-          // exactOptionalPropertyTypes: `fetch` only exists when the caller
-          // asked for --no-fetch; an explicit undefined is not assignable.
           ...(fetch === false ? { fetch: false as const } : {}),
         }),
         cwd,
@@ -1101,8 +951,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly depth?: number;
       }
     ) {
-      // The url is deliberately NOT annotated: a URL can embed userinfo, and
-      // span annotations carry stable identifiers only (the redaction policy).
       yield* Effect.annotateCurrentSpan({ cwd, path: options.path });
       yield* rejectNonNaturalNumber(cwd, "a submodule add depth", options.depth);
       const classified = yield* runForNetwork(
@@ -1145,12 +993,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const file = O.fromUndefinedOr(options.file);
       const add = options.add === true;
       yield* Effect.annotateCurrentSpan({ cwd, key, file: O.getOrElse(file, () => "(repository config)"), add });
-      // git config has no documented -- separator, so key, value AND file are all
-      // guarded — a leading-dash value is refused typed rather than risking git
-      // reading it as a flag. Recorded limitation: a legitimate "-..." config
-      // value cannot be written through this method. The value rides the
-      // SENSITIVE arm: a refused config value is reported as <redacted>, never
-      // echoed into the error (the redaction policy).
       yield* rejectOptionLikeRefs(cwd, [key, ...O.toArray(file)], [value]);
       const classified = yield* runFor(GitCommand.configSet(key, value, O.getOrUndefined(file), add), cwd, "generic");
       return yield* Match.valueTags(classified, {
@@ -1206,10 +1048,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       return yield* Match.valueTags(classified, {
         success: (classified) => {
           const name = Str.trim(classified.output);
-          // A detached HEAD answers with the literal string "HEAD" under
-          // --abbrev-ref and with an EMPTY line under --show-current (both
-          // exit 0) — "no current branch" is the honest typed answer either
-          // way, not a fake name.
           return Effect.succeed(name === "HEAD" || name === "" ? O.none() : O.some(name));
         },
         ...refFailureArms(cwd, "HEAD"),
@@ -1226,12 +1064,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     });
   });
 
-  /**
-   * Runs one `rev-parse --path-format=absolute` query and answers its path.
-   * `what` names the output in the old-git failure detail and `method` names
-   * the member in the defensive unknown-ref defect, which no path query can
-   * reach through git's own stderr.
-   */
   const absolutePathQuery = Effect.fnUntraced(function* (
     method: string,
     what: string,
@@ -1241,11 +1073,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     const classified = yield* runFor(invocation, cwd, "generic");
     return yield* Match.valueTags(classified, {
       success: Effect.fnUntraced(function* (classified) {
-        // Strip only git's terminating newline, never `trim`: the answer is an
-        // identity, and a directory name may end in whitespace.
         const answer = Str.replace(/\n$/, "")(classified.output);
-        // git before 2.31 does not know --path-format: rev-parse echoes the flag
-        // to stdout, answers the relative form on the next line, and exits 0.
         if (Str.startsWith("-")(answer)) {
           return yield* GitCommandError.make({
             kind: "failed",
@@ -1364,8 +1192,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         revisions = [],
         since,
       } = options ?? {};
-      // Path VALUES are stable identifiers, but a pathspec can be long and is
-      // caller-controlled; the count is what a trace needs to correlate.
       yield* Effect.annotateCurrentSpan({
         cwd,
         paths: paths.length,
@@ -1409,9 +1235,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       });
       const parse = parseLogFor({ includeBody, nameStatus });
       if (follow && paths.length !== 1) {
-        // git's own restriction, refused pre-spawn: `--follow` walks ONE
-        // path's history, and git's own diagnostic for the violation is an
-        // unclassifiable usage error.
         return yield* GitCommandError.make({
           kind: "refused",
           args: invocation.redactedArgs,
@@ -1424,19 +1247,11 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       return yield* Match.valueTags(classified, {
         success: (classified) => failClosed(invocation, cwd, "log")(parse(classified.output)),
         absent: () => {
-          // An unborn HEAD — however this git spells it — has no history,
-          // which is the empty log, never a failure. `Git.log` takes no ref,
-          // so there is no ref for an UnknownRefError to name and the error
-          // is absent from this member's union by construction.
           const empty: ReadonlyArray<CommitLogEntry> = [];
           return Effect.succeed(empty);
         },
         ...repositoryFailureArms(cwd),
         unknownRef: () => {
-          // A walk from HEAD names no ref of its own, so an unborn HEAD,
-          // however this git spells it, has no history: the empty log. A walk
-          // from caller revisions names them, and one that does not resolve
-          // is the caller's typed UnknownRefError.
           const empty: ReadonlyArray<CommitLogEntry> = [];
           return A.isReadonlyArrayNonEmpty(revisions)
             ? Effect.fail(UnknownRefError.make({ ref: A.join(revisions, " "), cwd }))
@@ -1542,8 +1357,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const all = options.all ?? false;
       yield* Effect.annotateCurrentSpan({ cwd, all, count: paths.length });
       if (!all && paths.length === 0) {
-        // git itself refuses deinit with neither --all nor a pathspec; refusing
-        // pre-spawn keeps the contract explicit and spawn-free.
         return yield* GitCommandError.make({
           kind: "refused",
           args: ["submodule", "deinit"],
@@ -1588,8 +1401,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const submoduleSetUrl: GitShape["submoduleSetUrl"] = dual(
     3,
     Effect.fn("Git.submoduleSetUrl")(function* (cwd: string, path: string, url: string) {
-      // The url is deliberately NOT annotated: a URL can embed userinfo, and
-      // span annotations carry stable identifiers only (the redaction policy).
       yield* Effect.annotateCurrentSpan({ cwd, path });
       const classified = yield* runFor(GitCommand.submoduleSetUrl(path, url), cwd, "generic");
       return yield* Match.valueTags(classified, {
@@ -1646,8 +1457,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         recursive: options?.recursive ?? false,
         quiet: options?.quiet ?? false,
       });
-      // The command is a positional git would read as a flag if it led with a
-      // dash — the same option-injection guard as refs.
       yield* rejectOptionLikeRefs(cwd, [command]);
       const classified = yield* runFor(
         GitCommand.submoduleForeach(command, options?.recursive ?? false, options?.quiet ?? false),
@@ -1661,9 +1470,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  // Runs a void-returning invocation and classifies through the shared path,
-  // mapping `unknownRef` to the given ref label — the shared shape of every
-  // mutating method with no method-specific classification rows.
   const runVoid: {
     (
       method: string,
@@ -1687,9 +1493,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  // Runs a parse-returning invocation and classifies through the shared path.
-  // `absent` handles the `"quiet"` kind's silent-exit-1 degrade (an unset
-  // config key, a no-paths-ignored check-ignore run).
   const runParsed: {
     <A>(
       method: string,
@@ -1717,7 +1520,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       refLabel: string,
       kind: "generic" | "quiet",
       parse: (output: string) => A,
-      /** Whether this member reaches a remote and so needs the ssh pin resolved. */
       network = false
     ) {
       const classified = yield* (network ? runForNetwork : runFor)(invocation, cwd, kind);
@@ -1729,8 +1531,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  // `runParsed` for a parser that can FAIL: `what` names the output in the
-  // `unparseable <what> output: …` detail the failure is mapped to.
   const runParsedChecked = Effect.fnUntraced(function* <A>(
     method: string,
     invocation: GitInvocation,
@@ -1754,8 +1554,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly patterns?: ReadonlyArray<string>;
       }
     ) {
-      // The remote is deliberately NOT annotated: it may be a URL embedding
-      // userinfo, and span annotations carry stable identifiers only.
       const { heads = false, patterns = [], tags = false } = options ?? {};
       yield* Effect.annotateCurrentSpan({ cwd, heads, tags, patterns: patterns.length });
       yield* rejectOptionLikeRefs(cwd, [remote, ...patterns]);
@@ -1774,7 +1572,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const remoteAdd: GitShape["remoteAdd"] = dual(
     3,
     Effect.fn("Git.remoteAdd")(function* (cwd: string, name: string, url: string) {
-      // The url is deliberately NOT annotated.
       yield* Effect.annotateCurrentSpan({ cwd, name });
       yield* rejectOptionLikeRefs(cwd, [name, url]);
       return yield* runVoid("Git.remoteAdd", GitCommand.remoteAdd(name, url), cwd, name);
@@ -1793,7 +1590,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const remoteSetUrl: GitShape["remoteSetUrl"] = dual(
     3,
     Effect.fn("Git.remoteSetUrl")(function* (cwd: string, name: string, url: string) {
-      // The url is deliberately NOT annotated.
       yield* Effect.annotateCurrentSpan({ cwd, name });
       yield* rejectOptionLikeRefs(cwd, [name, url]);
       return yield* runVoid("Git.remoteSetUrl", GitCommand.remoteSetUrl(name, url), cwd, name);
@@ -1822,7 +1618,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  /** The data-first form of a merge-shaped stash member (`stashPop`, `stashApply`). */
   type StashRestore = (
     cwd: string,
     options?: { readonly index?: number }
@@ -1831,8 +1626,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     GitCommandError | NotARepositoryError | UnknownRefError | MergeConflictError | DirtyWorktreeError
   >;
 
-  // The shared body of stashPop and stashApply — the two merge-shaped stash
-  // operations, whose conflict/dirty stderr classifies exactly like a pull's.
   const stashRestore: {
     (method: string, invocation: (index?: number) => GitInvocation): StashRestore;
     (invocation: (index?: number) => GitInvocation): (method: string) => StashRestore;
@@ -1974,8 +1767,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       return yield* Match.valueTags(classified, {
         success: (classified) =>
           failClosed(invocation, cwd, "upstream")(parseUpstream(classified.output, `refs/heads/${branch}`)),
-        // for-each-ref resolves no revision, so git's own stderr never
-        // carries an unknown-ref shape here.
         unknownRef: () => Effect.die('Git.upstream: unexpected classification "unknownRef"'),
         ...repositoryFailureArms(cwd),
       });
@@ -2027,8 +1818,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.notesList")(function* (cwd: string, ref: string) {
       yield* Effect.annotateCurrentSpan({ cwd, ref });
       yield* rejectOptionLikeRefs(cwd, [ref]);
-      // A missing notes ref lists nothing and exits 0, so it reads as an
-      // empty list here — the same answer as a ref that holds no notes.
       return yield* runParsedChecked(
         "Git.notesList",
         GitCommand.notesList(ref),
@@ -2090,15 +1879,11 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const hashObject: GitShape["hashObject"] = dual(
     2,
     Effect.fn("Git.hashObject")(function* (cwd: string, content: string) {
-      // The content is deliberately NOT annotated: it may be large, and span
-      // annotations carry stable identifiers only.
       yield* Effect.annotateCurrentSpan({ cwd, bytes: content.length });
       const invocation = GitCommand.hashObject(content);
       const classified = yield* runFor(invocation, cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: (classified) => failClosed(invocation, cwd, "hash-object")(parseObjectId(classified.output)),
-        // hash-object resolves no revision, so git's own stderr never carries
-        // an unknown-ref shape here.
         unknownRef: () => Effect.die('Git.hashObject: unexpected classification "unknownRef"'),
         ...repositoryFailureArms(cwd),
       });
@@ -2111,8 +1896,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const value = "create" in change ? change.create : change.delete;
       yield* Effect.annotateCurrentSpan({ cwd, ref, change: "create" in change ? "create" : "delete" });
       yield* rejectOptionLikeRefs(cwd, [ref, value]);
-      // git's own refname rules decide validity, before update-ref could
-      // write a ref that every later git command would refuse to read.
       const format = yield* runFor(GitCommand.checkRefFormat(ref), cwd, "quiet");
       yield* Match.valueTags(format, {
         success: () => Effect.void,
@@ -2184,7 +1967,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         setUpstream = false,
         tags = false,
       } = options ?? {};
-      // The remote is deliberately NOT annotated: it may be a URL.
       yield* Effect.annotateCurrentSpan({ cwd, refspec: refspec ?? "(current branch)", forceWithLease });
       yield* rejectOptionLikeRefs(cwd, withDefined([remote], refspec));
       const classified = yield* runForNetwork(
@@ -2213,7 +1995,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       }
     ) {
       const { ffOnly = false, rebase = false, ref, remote = "origin" } = options ?? {};
-      // The remote is deliberately NOT annotated: it may be a URL.
       yield* Effect.annotateCurrentSpan({ cwd, ref: ref ?? "(upstream)", rebase });
       yield* rejectOptionLikeRefs(cwd, withDefined([remote], ref));
       const classified = yield* runForNetwork(GitCommand.pull(remote, ref, rebase, ffOnly), cwd, "merge");
@@ -2249,9 +2030,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  // Annotates a single-key config call and refuses option-like argv: the key
-  // and file as reported refs, a config value (when passed) on the redacted
-  // sensitive arm, since git config has no documented `--` separator.
   const guardConfigKey = Effect.fnUntraced(function* (
     cwd: string,
     key: string,
@@ -2306,8 +2084,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         section,
         file: options?.file ?? "(repository config)",
       });
-      // git config has no documented -- separator, so section AND file are both
-      // guarded — the configSet/configUnset posture.
       yield* rejectOptionLikeRefs(cwd, [section, ...(options?.file !== undefined ? [options.file] : [])]);
       return yield* runVoid(
         "Git.configRemoveSection",
@@ -2415,7 +2191,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       const { detach = false, force = false, newBranch, ref } = options ?? {};
       yield* Effect.annotateCurrentSpan({ cwd, path, ref: ref ?? "(default)", newBranch: newBranch ?? "(none)" });
       yield* rejectOptionLikeRefs(cwd, [...withDefined([path], ref), ...withDefined([], newBranch)]);
-      // git rejects `-b` together with `--detach`; refused typed pre-spawn.
       yield* rejectCombination(
         cwd,
         detach && newBranch !== undefined,
@@ -2507,8 +2282,6 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       });
       yield* rejectDiffPatchOptions(cwd, resolved);
       const invocation = GitCommand.diffPatch(resolved);
-      // "differs" only under --no-index, where a silent exit 1 means the two
-      // files differ; every other diff form exits 0 with or without changes.
       const classified = yield* runFor(invocation, cwd, noIndex === undefined ? "generic" : "differs");
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeed(classified.output),
@@ -4671,11 +4444,6 @@ export type GitStubs = {
     : GitShape[K];
 };
 
-/**
- * The default for every {@link Git.makeTest} method a test did not stub: a
- * defect naming the method, so an unexercised call fails loudly instead of
- * succeeding with a lie or failing with a dishonest typed error.
- */
 const notStubbed =
   (method: string) =>
   (..._args: ReadonlyArray<unknown>) =>
@@ -4685,7 +4453,6 @@ const notStubbed =
       })
     );
 
-/** The caller's stub for `method`, or the defect-raising placeholder that names it. */
 const stubOf = <K extends keyof GitStubs>(
   overrides: Partial<GitStubs>,
   method: K
