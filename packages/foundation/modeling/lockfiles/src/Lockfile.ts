@@ -454,8 +454,9 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
    * **Gotchas**
    *
    * Importers pass through untouched: they are keyed by importer path, not by
-   * package name. Every unchanged entry is kept by reference, so the rewrite
-   * never re-validates the whole lockfile.
+   * package name. `ResolvedPackage`, `WorkspaceDependency` and
+   * `LockfileImporter` stay `S.Class`, so every unchanged entry is kept by
+   * reference and the rewrite never re-validates the whole lockfile.
    *
    * **Example** (Name a pnpm workspace importer)
    *

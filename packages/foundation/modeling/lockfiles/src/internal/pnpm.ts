@@ -75,7 +75,7 @@ const PnpmImporter = S.Struct({
   publishDirectory: S.optionalKey(S.String).pipe(
     $I.annoteKey("PnpmImporter.publishDirectory", {
       description:
-        "Importer-relative `publishConfig.directory` that workspace links point at, so a link to it names its importer",
+        "Importer-relative `publishConfig.directory` that workspace links point at, so a link to it names its importer; the root importer owns no package row, so its links stay unresolved",
     })
   ),
 }).pipe(
