@@ -30,8 +30,6 @@ const $I = $PackageJsonId.create("PackageJsonFile");
 
 const Json = S.fromJsonString(S.Unknown);
 
-// ── Errors ────────────────────────────────────────────────────────────────────
-
 /**
  * **Example** (Inspect PackageJsonReadError details)
  *
@@ -415,7 +413,6 @@ export interface PackageJsonFileShape {
   };
 }
 
-/** Every failure {@link PackageJsonFileShape.modify} can raise. */
 type PackageJsonModifyFailure =
   | PackageJsonReadError
   | PackageJsonNotFoundError
@@ -424,7 +421,6 @@ type PackageJsonModifyFailure =
   | JsoncStringifyError
   | PackageJsonWriteError;
 
-/** Data-first dispatch for the path-first members: the subject is the file path. */
 const isPathFirst = (args: IArguments): boolean => P.isString(args[0]);
 
 /**
@@ -473,11 +469,7 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
-      // Read the file's text directly — no `exists` pre-check (that TOCTOU
-      // race reports a file deleted between the two calls as
-      // PackageJsonReadError). The core FileSystem fails with a
-      // PlatformError whose `reason._tag` is "NotFound" for a missing file;
-      // route only that to NotFound.
+      // decision: read-without-exists-precheck
       const readText = (target: string) =>
         fs
           .readFileString(target)
@@ -496,9 +488,6 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
         );
       });
 
-      // `indent: "preserve"` with no source text in hand: detect the
-      // indentation from the file being overwritten. Any read failure (most
-      // commonly a fresh file) falls back to the default indent.
       const withPreservedSource: {
         (
           target: string,
@@ -579,17 +568,10 @@ export class PackageJsonFile extends Context.Service<PackageJsonFile, PackageJso
           const source = yield* readText(target);
           let text = source;
           for (const edit of edits) {
-            // Each edit re-navigates the current text, so a later edit may
-            // target a key an earlier one inserted; overlap cannot arise.
             text = yield* PackageJsonFormat.modifyToString(text, edit.path, edit.value).pipe(
-              // The service's invalid-JSON tag is PackageJsonParseError,
-              // whichever entry point met it — normalize the text-level
-              // syntax error at this boundary.
               Effect.catchTag("PackageJsonSyntaxError", (cause) => PackageJsonParseError.make({ path: target, cause }))
             );
           }
-          // A no-op edit set leaves the bytes alone entirely — no write, no
-          // mtime churn.
           if (text !== source) {
             yield* writeText(target, text);
           }

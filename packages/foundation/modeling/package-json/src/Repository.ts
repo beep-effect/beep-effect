@@ -39,51 +39,30 @@ import type * as SchemaIssue from "effect/SchemaIssue";
 
 const $I = $PackageJsonId.create("Repository");
 
-/** The shorthand hosts npm resolves without a scheme. */
 const SHORTHAND_HOSTS = HashMap.fromIterable([
   ["github", "https://github.com"],
   ["gitlab", "https://gitlab.com"],
   ["bitbucket", "https://bitbucket.org"],
 ]);
 
-/** `owner/name`, the bare GitHub shorthand. Deliberately strict about segment shape. */
 const BARE_SHORTHAND = /^[\w.-]+\/[\w.-]+$/;
 
-/** `github:owner/name`, `gist:id`, … */
 const PREFIXED_SHORTHAND = /^([a-z]+):(.+)$/;
 
-/** The scp-like form git accepts: `git@host:owner/name.git`. */
 const SCP_LIKE = /^(?:([\w.-]+)@)?([\w.-]+):(.+)$/;
 
-/**
- * How each known forge spells "browse this subdirectory". `HEAD` is used
- * rather than a branch name because the default branch is not knowable from a
- * manifest, and every one of these hosts resolves `HEAD` to it.
- */
 const DIRECTORY_PATHS = HashMap.fromIterable([
   ["github.com", "tree/HEAD"],
-  // GitLab routes repository browsing under `/-/` to keep it clear of group
-  // and project namespaces, which can otherwise collide with `tree`.
   ["gitlab.com", "-/tree/HEAD"],
   ["bitbucket.org", "src/HEAD"],
 ]);
 
 const stripGitSuffix = (value: string): string => (Str.endsWith(".git")(value) ? Str.slice(0, -4)(value) : value);
 
-/**
- * The browsable `https://host/path` form of a repository reference, or none
- * when the value is not one this model recognizes.
- *
- * **Details**
- *
- * Total by construction: `repository` is caller data, and a value that cannot
- * be interpreted is a missing answer rather than a failure.
- */
 const browseUrlOf = (raw: string): O.Option<string> => {
   const url = Str.trim(raw);
   if (url === "") return O.none();
 
-  // `owner/name` — GitHub is npm's default host for the bare form.
   if (BARE_SHORTHAND.test(url)) return O.some(`https://github.com/${url}`);
 
   const prefixed = PREFIXED_SHORTHAND.exec(url);
@@ -93,7 +72,6 @@ const browseUrlOf = (raw: string): O.Option<string> => {
       onSome: (colon) => {
         const scheme = Str.slice(0, colon)(url);
         const rest = Str.slice(colon + 1)(url);
-        // `gist:id` resolves to a different host than the code-forge shorthands.
         if (scheme === "gist") return O.some(`https://gist.github.com/${stripGitSuffix(rest)}`);
         return O.map(HashMap.get(SHORTHAND_HOSTS, scheme), (host) => `${host}/${stripGitSuffix(rest)}`);
       },
@@ -101,9 +79,6 @@ const browseUrlOf = (raw: string): O.Option<string> => {
     if (O.isSome(browseUrl)) return browseUrl;
   }
 
-  // Anything with a scheme: normalize the transport away and keep host + path.
-  // `git+ssh://git@github.com/o/n.git` and `git://github.com/o/n.git` both
-  // browse at `https://github.com/o/n`.
   const withoutGitPlus = Str.startsWith("git+")(url) ? Str.slice(4)(url) : url;
   const schemeMatch = /^([a-z][a-z0-9+.-]*):\/\/(.*)$/i.exec(withoutGitPlus);
   if (schemeMatch !== null) {
@@ -111,14 +86,12 @@ const browseUrlOf = (raw: string): O.Option<string> => {
       onNone: O.none,
       onSome: (colon) => {
         const authorityAndPath = Str.slice(colon + 3)(withoutGitPlus);
-        // Drop any `user@` credential prefix — it is transport, not identity.
         const withoutCredentials = Str.replace(/^[^/@]+@/, "")(authorityAndPath);
         return withoutCredentials === "" ? O.none() : O.some(`https://${stripGitSuffix(withoutCredentials)}`);
       },
     });
   }
 
-  // The scp-like form has no scheme: `git@github.com:owner/name.git`.
   const scp = SCP_LIKE.exec(withoutGitPlus);
   if (scp !== null) {
     return O.match(Str.indexOf(":")(withoutGitPlus), {
@@ -135,18 +108,12 @@ const browseUrlOf = (raw: string): O.Option<string> => {
   return O.none();
 };
 
-/** The wire value a repository or bugs entry was decoded from. */
 type FieldWire = string | { readonly [k: string]: unknown };
 
 const KNOWN_REPOSITORY_KEYS = HashSet.make("type", "url", "directory");
 const KNOWN_BUGS_KEYS = HashSet.make("url", "email");
 
-// The documented keys of each object form, validated by the same route
-// `Funding` and `Person` use: the struct produces the issue tree, so a missing
-// or non-string `url` (or a malformed `type`, `directory` or `email`) fails the
-// decode as a schema issue instead of being rewritten or dropped. A value the
-// model cannot hold must not decode to one it can; `LenientManifest` is the tier
-// that keeps such a field verbatim.
+// decision: provenance-codecs-construct-in-transform
 const RepositoryFields = S.Struct({
   type: S.optionalKey(S.String),
   url: S.String,
@@ -159,34 +126,11 @@ const BugsFields = S.Struct({
 const decodeRepositoryFields = S.decodeUnknownEffect(RepositoryFields);
 const decodeBugsFields = S.decodeUnknownEffect(BugsFields);
 
-// A remembered OBJECT wire is replayed only while it still describes the value
-// faithfully — the same discipline `Person` already applies, and for the same
-// reason. An unguarded replay hands back the bytes that were read, so a value
-// edited after decoding re-encodes as the stale original and the edit is
-// silently lost. `Person` guarded this; `Repository` and `Bugs` did not.
-// The rest comparison is `sameRest`: sensitive to JSON key order, nullish as {}.
+// decision: wire-replay-guarded-by-faithfulness
 
-/**
- * Whether the shorthand string can still carry everything this value holds.
- *
- * **Gotchas**
- *
- * A shorthand is only a `url` — it has no syntax for `type`, `directory` or an
- * unknown key. So a repository decoded from a string that later GAINS one of
- * those is no longer described by the wire it remembers, and replaying that
- * wire drops the addition silently. This is the same stale-provenance class the
- * object branch guards, reached through the one field the shorthand cannot
- * express, and `Person.isShorthandExpressible` / `Funding.isStringExpressible`
- * already gate their own string branches this way.
- *
- * `directory` is the live case: this package ships `Repository.directoryUrl`,
- * so a consumer reading a bare-string `repository` and making it a monorepo
- * member is the natural mutator.
- */
 const isStringExpressibleRepository = (repository: Repository): boolean =>
   repository.type === undefined && repository.directory === undefined && R.isEmptyRecord(repository.rest ?? {});
 
-/** Whether the bare URL string can still carry everything this `bugs` entry holds. */
 const isStringExpressibleBugs = (bugs: Bugs): boolean => bugs.email === undefined && R.isEmptyRecord(bugs.rest ?? {});
 
 const isFaithfulRepository: {
@@ -264,7 +208,6 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
   },
   $I.annote("Repository", { description: "Where a package's source lives." })
 ) {
-  // Private instance provenance never enters schema data, equality or object spreads.
   /**
    * Retains the original wire spelling on this instance without exposing it as schema data.
    *
@@ -360,6 +303,13 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
    * A `directory` that escapes the repository (any `..` segment) is refused the
    * same way. One that resolves to the root itself (`"."`, `"/"`) is the root.
    *
+   * **Gotchas**
+   *
+   * The descended URL browses `HEAD` rather than a branch name: a manifest does
+   * not name its default branch, and GitHub, GitLab and Bitbucket all resolve
+   * `HEAD` to it. GitLab routes browsing under `/-/` so a `tree` segment cannot
+   * collide with its group and project namespaces.
+   *
    * **Example** (Browse a package directory within a monorepo)
    *
    * ```ts
@@ -385,9 +335,7 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
       A.map(Str.split(directory, "/"), Str.trim),
       (segment) => segment !== "" && segment !== "."
     );
-    // `..` would climb out of the repository the manifest names.
     if (A.some(segments, (segment) => segment === "..")) return O.none();
-    // `"."`, `"/"`, `""` — the member is the root after all.
     if (segments.length === 0) return this.browseUrl;
 
     return O.flatMap(this.browseUrl, (url) => {
@@ -425,9 +373,7 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
   ]).pipe(
     S.decodeTo(
       S.instanceOf(Repository),
-      // `transformEffect` rather than `transform`: this transform constructs
-      // the instance itself, so it carries the field validation the class
-      // factory would otherwise perform, including the required `url`.
+      // decision: provenance-codecs-construct-in-transform
       SchemaTransformation.transformEffect({
         decode: (input: string | { readonly [k: string]: unknown }): Effect.Effect<Repository, SchemaIssue.Issue> => {
           if (P.isString(input)) {
@@ -449,8 +395,7 @@ export class Repository extends S.Class<Repository, { readonly brand: unique sym
         },
         encode: (repository: Repository) => {
           const wire = repository.#wire;
-          // Replay the shorthand only while it still describes this value —
-          // an edited url must not re-encode as the stale original.
+          // decision: wire-replay-guarded-by-faithfulness
           if (P.isString(wire) && wire === repository.url && isStringExpressibleRepository(repository)) {
             return Effect.succeed<FieldWire>(wire);
           }
@@ -506,7 +451,6 @@ export class Bugs extends S.Class<Bugs, { readonly brand: unique symbol }>($I`Bu
   },
   $I.annote("Bugs", { description: "Where to report problems with a package." })
 ) {
-  // Private instance provenance never enters schema data, equality or object spreads.
   /**
    * Retains the original wire spelling on this instance without exposing it as schema data.
    *
@@ -547,8 +491,7 @@ export class Bugs extends S.Class<Bugs, { readonly brand: unique symbol }>($I`Bu
   ]).pipe(
     S.decodeTo(
       S.instanceOf(Bugs),
-      // `transformEffect` for the same reason as `Repository.FromValue`: a
-      // malformed `url` or `email` is a schema issue, not a silent drop.
+      // decision: provenance-codecs-construct-in-transform
       SchemaTransformation.transformEffect({
         decode: (input: string | { readonly [k: string]: unknown }): Effect.Effect<Bugs, SchemaIssue.Issue> => {
           if (P.isString(input)) {

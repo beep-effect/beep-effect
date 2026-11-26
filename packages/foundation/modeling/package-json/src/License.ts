@@ -156,7 +156,6 @@ export const SpdxLicense = S.String.pipe(
     ])
   ),
   S.brand("SpdxLicense"),
-  // Identity annotates the group, retaining the SPDX filter's own metadata.
   $I.annoteSchema("SpdxLicense", {
     description: "A valid SPDX license identifier, expression, UNLICENSED, or SEE LICENSE IN <file>.",
   })
@@ -210,8 +209,4 @@ export type SpdxLicense = string & Brand.Brand<"SpdxLicense">;
  * @since 0.0.0
  */
 export const licenseExpressionOf = (license: SpdxLicense): O.Option<SpdxExpression> =>
-  // No explicit screen for npm's two spellings: the grammar already declines
-  // them, so discarding the parse failure IS the screen. The absence is
-  // load-bearing — it is why a future third npm special case needs no change
-  // here.
   Result.getSuccess(SpdxExpressionOps.parseResult(license));

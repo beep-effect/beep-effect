@@ -104,8 +104,6 @@ export declare namespace DevEnginePackageManagerEntry {
   export type Encoded = typeof DevEnginePackageManagerEntry.Encoded;
 }
 
-// A single exact, caret or tilde comparator over a pinnable version: the only
-// range shapes whose operator can be carried onto a new version unambiguously.
 const SINGLE_COMPARATOR_RE = /^([\^~]?)(.+)$/;
 
 const singleComparator = (range: string): O.Option<{ readonly operator: "" | "^" | "~"; readonly version: string }> => {
@@ -117,11 +115,8 @@ const singleComparator = (range: string): O.Option<{ readonly operator: "" | "^"
   return SemVer.isPinnable(version) ? O.some({ operator, version }) : O.none();
 };
 
-// The name half of the grammar — identical latitude to `PackageManager`'s
-// (any lowercase name); see that class's remarks for the evidence.
 const PACKAGE_MANAGER_NAME_RE = /^[a-z]+$/;
 
-/** `Schema.String` refined to parse as a semver range (`Range.parseResult` succeeds). The check is erased from the built type. */
 const SemVerRangeString: S.String = S.String.pipe(
   S.check(
     // The `message` annotation is the issue message under effect 4.0.6; the label is the title.
@@ -221,11 +216,6 @@ export class InvalidPackageManagerRangeError extends S.TaggedError<
   }
 }
 
-/**
- * The shared component validation behind both entry points: `name`, and the
- * `<range>[+<integrity>]` tail split on its FIRST `+`. `input` is only the
- * text the error reports.
- */
 const fromParts: {
   (input: string, name: string, tail: string): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError>;
   (name: string, tail: string): (input: string) => Result.Result<PackageManagerRange, InvalidPackageManagerRangeError>;
@@ -235,24 +225,17 @@ const fromParts: {
     if (!PACKAGE_MANAGER_NAME_RE.test(name)) {
       return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "name" }));
     }
-    // The first `+` begins the integrity component, unconditionally — the
-    // version position of this field never carries build metadata.
     const plus = Str.indexOf("+")(tail);
     const range = O.match(plus, {
       onNone: () => tail,
       onSome: (at) => Str.slice(0, at)(tail),
     });
-    // An empty range (`pnpm@`) is a range error, not the `*` node-semver
-    // coerces an empty string to — coercion would be a silent edit.
     if (range.length === 0 || Result.isFailure(Range.parseResult(range))) {
       return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "range" }));
     }
     return O.match(plus, {
       onNone: () => Result.succeed(PackageManagerRange.make({ name, range, integrity: O.none() })),
       onSome: (at): Result.Result<PackageManagerRange, InvalidPackageManagerRangeError> => {
-        // Validate the integrity through the corepack-restricted schema so a
-        // malformed hash is a typed failure, not the defect `make` would throw on
-        // a value the field schema rejects.
         const decoded = S.decodeExit(CorepackIntegrityHash)(Str.slice(at + 1)(tail));
         if (Exit.isFailure(decoded)) {
           return Result.fail(InvalidPackageManagerRangeError.make({ input, reason: "integrity" }));
@@ -390,6 +373,11 @@ export class PackageManagerRange extends S.Class<PackageManagerRange, { readonly
    * `@beep/semver`'s `Range.parseResult`, the integrity through
    * `CorepackIntegrityHash`. {@link PackageManagerRange.parse} is defined in
    * terms of this function.
+   *
+   * **Gotchas**
+   *
+   * An empty range (`pnpm@`) fails as a `range` error. node-semver would read
+   * it as `*`, and that coercion would be a silent edit.
    *
    * **Example** (Inspect a missing separator failure)
    *
