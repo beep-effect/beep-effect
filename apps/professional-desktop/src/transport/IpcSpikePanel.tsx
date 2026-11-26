@@ -31,26 +31,14 @@ import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import { IpcChatProtocolLive } from "./IpcChatClient.ts";
 import type { JSX } from "react";
 
-// Runtime that provides the IPC transport (`RpcClient.Protocol`) plus a Scope to
-// the spike effect. The runtime owns the socket lifecycle and the fiber driving
-// each run, replacing the component-local `Layer.build` + `Effect.runFork`.
 const ipcSpikeRuntime = professionalBrowserRuntime.factory(IpcChatProtocolLive);
 
-// Streamed log buffer (client state, replaces `useState`). The run effect writes
-// lines as they arrive via `ctx.set`; "Cancel"/re-run reset it through the
-// registry-backed setter.
 const linesAtom = Atom.make<ReadonlyArray<string>>([]);
 
-// One self-contained run: open the IPC socket, create a thread, and stream a
-// turn. The runtime Scope discharges the socket on completion/interrupt; typed
-// errors and interrupts are surfaced to the log buffer (a `stopped: …` line) via
-// `catchCause` rather than bubbling out of the atom.
+// decision: fn-atom-writes-outlive-the-node
 const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
   Effect.fn("professional_desktop.ipc.run_spike")(function* () {
     const registry = yield* AtomRegistry.AtomRegistry;
-    // The fn node is interrupted on re-run/Cancel before this fiber unwinds, so
-    // its `ctx` may already be disposed; go through the registry-backed setter,
-    // which outlives the node, to append/reset log lines.
     const log = Effect.fnUntraced(function* (line: string) {
       registry.set(linesAtom, [...registry.get(linesAtom), line]);
     });

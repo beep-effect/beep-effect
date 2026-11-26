@@ -18,7 +18,6 @@ import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 const text = (value: string) => Md.Text.make({ value });
 const $I = $ProfessionalDesktopId.create("editor-proof/EditorProof.atoms");
 
-// App-local canonical proof fixture, independent from Storybook source files.
 const editorProofDocument = Md.Document.make({
   children: [
     Md.Heading.make({ level: 1, children: [text("Capability proof")] }),
@@ -55,7 +54,6 @@ const editorProofDocument = Md.Document.make({
   ],
 });
 
-// Canonical JSON codec for the proof document (encode for the drawer, decode on import).
 const EditorProofDocumentJson = S.fromJsonString(Md.Document).pipe(
   $I.annoteSchema("EditorProofDocumentJson", {
     description: "Canonical JSON text for the local editor proof document.",
@@ -78,7 +76,6 @@ const nextRevision = (revision: number): number => revision + 1;
  * @since 0.0.0
  */
 export const editorProofProfileIdAtom = Atom.make(referenceProfiles.minimal.id);
-// The canonical document the composer is remounted over.
 const editorProofCanonicalAtom = Atom.make(editorProofDocument);
 /** Serialized editor state derived from the canonical atom for each remount.
  *

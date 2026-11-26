@@ -79,9 +79,7 @@ const vaultSyncIntentRuntime = professionalBrowserRuntime.factory((get) =>
   Layer.merge(Layer.fresh(get(vaultSyncIntentTransportLayerAtom)), SecureRandom.layerWebCrypto)
 );
 
-// Built per call: storage is read at call time, so a cleared or swapped localStorage is seen.
-// Built per call: storage is read at call time, so a cleared or swapped localStorage is seen.
-const storageStore = <Schema extends S.ConstraintCodec<unknown, unknown>>(schema: Schema) =>
+const freshStorageStore = <Schema extends S.ConstraintCodec<unknown, unknown>>(schema: Schema) =>
   KeyValueStore.toSchemaStore(
     Context.get(
       KeyValueStore.layerStorage(() => globalThis.localStorage).pipe(Layer.build, Effect.scoped, Effect.runSync),
@@ -90,28 +88,21 @@ const storageStore = <Schema extends S.ConstraintCodec<unknown, unknown>>(schema
     schema
   );
 
-// Storage is synchronous, so reads and writes are synchronous too: every change is on disk
-// before the next one, in order, and nothing is lost between them.
 const readStored = <Schema extends S.ConstraintCodec<unknown, unknown>>(
   schema: Schema,
   key: string,
   fallback: () => Schema["Type"]
 ): Schema["Type"] =>
-  storageStore(schema)
+  freshStorageStore(schema)
     .get(key)
-    .pipe(
-      Effect.map(O.getOrElse(fallback)),
-      // An unreadable or undecodable entry is dropped rather than wedging the panel.
-      Effect.orElseSucceed(fallback),
-      Effect.runSync
-    );
+    .pipe(Effect.map(O.getOrElse(fallback)), Effect.orElseSucceed(fallback), Effect.runSync);
 
 const writeStored = <Schema extends S.ConstraintCodec<unknown, unknown>>(
   schema: Schema,
   key: string,
   value: Schema["Type"]
 ): void =>
-  storageStore(schema)
+  freshStorageStore(schema)
     .set(key, value)
     .pipe(
       Effect.catchCause((cause) =>
@@ -163,8 +154,7 @@ const VAULT_SYNC_SNAPSHOT_KEY = "vault-sync:server-snapshot:v1";
 
 const VaultSyncStoredSnapshot = S.NullOr(VaultSyncServerState);
 
-// Path claims are item bookkeeping the panel's commands never read; keep the snapshot small.
-const slimSnapshot = (state: VaultSyncServerState) =>
+const snapshotWithoutPathClaims = (state: VaultSyncServerState) =>
   state.destination._tag === "Registered"
     ? VaultSyncServerState.make({ ...state, destination: { ...state.destination, paths: H.empty() } })
     : state;
@@ -195,7 +185,7 @@ export const vaultSyncSnapshotAtom = Atom.family((workspaceId: WorkspaceIdentity
   return Atom.writable(
     () => O.fromNullOr(readStored(VaultSyncStoredSnapshot, key, () => null)),
     (ctx, snapshot: O.Option<VaultSyncServerState>) => {
-      const slim = O.map(snapshot, slimSnapshot);
+      const slim = O.map(snapshot, snapshotWithoutPathClaims);
       writeStored(VaultSyncStoredSnapshot, key, O.getOrNull(slim));
       ctx.setSelf(slim);
     }
@@ -265,11 +255,10 @@ class VaultSyncConfirming extends S.Opaque<VaultSyncConfirming, { readonly brand
  * @since 0.0.0
  */
 const VAULT_SYNC_CONFIRM_READS = 10;
+const CONFIRM_REREAD_DELAY = "150 millis";
 
 const sameDestination = S.toEquivalence(V.DestinationState);
 
-// Views are eventually consistent: an accepted intent is shown once deciding it again against the
-// fresh server state changes nothing, i.e. its effect is already in what the server reports.
 const reflected = (server: VaultSyncServerState, intent: VaultSyncIntent, now: DateTime.Utc) => {
   const step = predictIntent(server.destination, server.conflicts, intent, now);
   return step.outcome !== "accepted" || sameDestination(step.destination, server.destination);
@@ -316,12 +305,10 @@ export const vaultSyncConfirmingAtom = Atom.make<ReadonlyArray<VaultSyncConfirmi
 export const vaultSyncServerStateAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   vaultSyncIntentRuntime.atom(
     Effect.fnUntraced(function* (get) {
-      // Tracked: an accepted intent re-reads the server until the read shows its effect.
       const confirming = get(vaultSyncConfirmingAtom);
       const transport = yield* VaultSyncIntentTransport;
       const registry = yield* AtomRegistry.AtomRegistry;
-      // A re-read after one that did not show the effect yet gives the projection a moment.
-      if (A.some(confirming, (entry) => entry.reads > 0)) yield* Effect.sleep("150 millis");
+      if (A.some(confirming, (entry) => entry.reads > 0)) yield* Effect.sleep(CONFIRM_REREAD_DELAY);
       const state = yield* transport.read(workspaceId).pipe(
         Effect.tap((fresh) =>
           Effect.sync(() => {
@@ -377,7 +364,6 @@ export const vaultSyncServerStateAtom = Atom.family((workspaceId: WorkspaceIdent
  */
 export const vaultSyncPredictionAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   Atom.make((get): O.Option<O.Option<VaultSyncPrediction>> => {
-    // Before the first answer after a reload, predict on the last known snapshot.
     const server = O.orElse(AsyncResult.value(get(vaultSyncServerStateAtom(workspaceId))), () =>
       O.map(get(vaultSyncSnapshotAtom(workspaceId)), O.some)
     );
@@ -402,9 +388,7 @@ const appendRefusal = (refusals: ReadonlyArray<VaultSyncRefusal>, refusal: Vault
 
 const flushSemaphore = Semaphore.makeUnsafe(1);
 
-// Reads and writes go through the registry service, never a fn's own context: a concurrent fn's
-// context is torn down when the fn is triggered again, and its later writes would be dropped.
-// The server-state re-read is driven by vaultSyncConfirmingAtom (accepted) or the refusal path.
+// decision: vault-sync-replay-writes-through-registry
 const refreshLegacyReads = (registry: AtomRegistry.AtomRegistry, workspaceId: WorkspaceIdentity.WorkspaceId) => {
   registry.refresh(vaultSyncStatusAtom(workspaceId));
   registry.refresh(vaultSyncConflictsAtom(workspaceId));
@@ -467,6 +451,7 @@ const deliverHead = Effect.fn("documents.vault_sync.intent.deliver")(function* (
  * @category atoms
  * @since 0.0.0
  */
+// decision: vault-sync-replay-writes-through-registry
 export const vaultSyncFlushAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   vaultSyncIntentRuntime.fn<void>()(
     Effect.fnUntraced(function* () {
@@ -482,23 +467,18 @@ export const vaultSyncFlushAtom = Atom.family((workspaceId: WorkspaceIdentity.Wo
               registry.set(vaultSyncLinkAtom, "offline");
               return Effect.succeed(0);
             }
-            // Answered: drop it from the persisted queue first, so nothing can resend it.
             registry.set(
               vaultSyncIntentQueueAtom,
               removeIntent(registry.get(vaultSyncIntentQueueAtom), intent.commandId)
             );
             registry.set(vaultSyncLinkAtom, "online");
             if (delivery._tag === "accepted") {
-              // Accepted: keep predicting it until a server read shows its effect.
               registry.set(
                 vaultSyncConfirmingAtom,
                 A.append(registry.get(vaultSyncConfirmingAtom), VaultSyncConfirming.make({ intent, reads: 0 }))
               );
-              // An accepted probe re-reads the connection with a forced probe, so the
-              // disconnect note reflects Box now rather than the sidecar's cached answer.
               if (intent.action.kind === "probe") registry.set(vaultSyncRetryConnectionAtoms(workspaceId), undefined);
             } else {
-              // Refused: the queue no longer predicts it; re-read the authority now.
               registry.refresh(vaultSyncServerStateAtom(workspaceId));
             }
             return Effect.map(drain, (rest) => rest + 1);
@@ -513,10 +493,9 @@ export const vaultSyncFlushAtom = Atom.family((workspaceId: WorkspaceIdentity.Wo
   )
 );
 
-const allocateCommandId = Effect.gen(function* () {
+const allocateCommandRequestToken = Effect.gen(function* () {
   const random = yield* SecureRandom.SecureRandom;
   const id = yield* random.uuidV7();
-  // A RequestToken: the command id doubles as the request id the destination records.
   return `vault-sync_${id}`;
 });
 
@@ -548,7 +527,7 @@ export const vaultSyncSubmitAtom = Atom.family((workspaceId: WorkspaceIdentity.W
         const registry = yield* AtomRegistry.AtomRegistry;
         const prediction = O.flatten(registry.get(vaultSyncPredictionAtom(workspaceId)));
         if (O.isNone(prediction)) return yield* Effect.logWarning("vault sync intent has no destination");
-        const commandId = yield* allocateCommandId;
+        const commandId = yield* allocateCommandRequestToken;
         const now = yield* DateTime.now;
         const intent = VaultSyncIntent.make({
           commandId,

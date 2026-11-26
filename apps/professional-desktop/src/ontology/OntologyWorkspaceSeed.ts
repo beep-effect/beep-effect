@@ -75,13 +75,6 @@ export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutor
   const codec = yield* TurtleCodec;
   const path = yield* decodeOntologyFilePath(PIZZA_TUTORIAL_PATH);
 
-  // An existing document wins: this seeds a starting point, it does not reset the
-  // user's workspace on every launch.
-  //
-  // Only *absence* means "seed it". Treating any read failure as absence — which
-  // an unqualified `Effect.option` does — would overwrite a document that exists
-  // but could not be read (a permissions error, a transient fault) with the
-  // starter fixture, destroying the user's work.
   const absent = yield* fileStore.read(ReadOntologyFileRequest.make({ path })).pipe(
     Effect.as(false),
     Effect.catchIf(P.Struct({ reason: Eq.equals("notFound") }), () => Effect.succeed(true))

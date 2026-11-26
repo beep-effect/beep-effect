@@ -50,8 +50,7 @@ const statusCounts = (status: VaultSyncStatus) => [
   { key: "open-conflicts", label: "Open conflicts", value: status.openConflicts },
 ];
 
-// While the sidecar is unreachable the Box state is only the last answer it gave, so the badge
-// drops its live colour and says so instead of claiming a healthy connection.
+// decision: vault-sync-panel-states-are-honest
 const ConnectionBadge = ({
   connected,
   lastKnown,
@@ -75,6 +74,7 @@ const ConnectionBadge = ({
   </span>
 );
 
+// decision: vault-sync-panel-states-are-honest
 const VaultSyncStatusView = ({
   status,
   onRetry,
@@ -89,11 +89,6 @@ const VaultSyncStatusView = ({
       </p>
     ),
     onFailure: (failure) => (
-      // The status query had no retry and nothing invalidates it, so a sidecar that
-      // restarted -- or a single dropped request -- left this reading "unavailable"
-      // for the rest of the session, long after sync had come back. A dead end with
-      // no way out is not a state; it is an abandonment. The waiting flag makes the
-      // retry visibly do something even when the refresh fails again immediately.
       <div className="mt-2 flex items-center gap-2" data-testid="vault-sync-status">
         <p className="text-xs text-destructive">Sync status is unavailable.</p>
         <Button
@@ -122,15 +117,11 @@ const VaultSyncStatusView = ({
     ),
   });
 
-// Disconnected copy keyed on the sidecar's honest disconnect reason. Telling
-// the operator to set CLOUD_BOX_TOKEN when the token IS set (but the probe
-// failed) sent QA chasing configuration that was never the problem — and one
-// generic note for every probe failure hid whether the fix was a fresh token,
-// the mirror root folder, or simply waiting Box out.
 const probeFailedCopy =
   "Box credentials are configured, but the provider probe failed. The token may be expired or the mirror root " +
   "folder is unreachable. Sync stays paused until Box answers.";
 
+// decision: vault-sync-panel-states-are-honest
 const DisconnectedNote = ({
   onRetry,
   probedAt,
@@ -142,11 +133,6 @@ const DisconnectedNote = ({
   readonly reason: O.Option<DmsMirrorDisconnectReason>;
   readonly waiting: boolean;
 }): JSX.Element => {
-  // Dark mode needs the brighter warning text tier: amber-600 on the tinted
-  // alert surface fell below readable contrast on the near-black theme (QA
-  // round 104, R104-02). `warning-text` carries that high-contrast tier in its
-  // dark value; the retry button uses the design system's `warning` variant,
-  // which paints the same tier on its own border, label and hover wash.
   const probeNote = (message: string) => (
     <div
       className="mt-2 rounded-sm border border-warning/40 bg-warning/10 p-2 text-xs text-warning-text dark:border-warning/50"
@@ -155,8 +141,6 @@ const DisconnectedNote = ({
       <p>{message}</p>
       {pipe(
         probedAt,
-        // The probe timestamp makes "Retry connection" visibly do something
-        // even when the outcome is unchanged: the last honest ask of Box moves.
         O.map((value) => (
           <p className="mt-1 opacity-80" data-testid="vault-sync-probed-at">
             Last checked {DateTime.formatLocal(value, { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
@@ -178,8 +162,6 @@ const DisconnectedNote = ({
     </div>
   );
   return O.match(reason, {
-    // A disconnected status without a reason is an older sidecar; the probe
-    // path is the only honest guess that does not claim the token is unset.
     onNone: () => probeNote(probeFailedCopy),
     onSome: (value) =>
       DmsMirrorDisconnectReason.match(value, {
@@ -192,10 +174,6 @@ const DisconnectedNote = ({
             CLOUD_BOX_TOKEN. Restart the app after changing credentials.
           </p>
         ),
-        // The renderer cannot see which auth mode the sidecar selected, so the
-        // copy names the fix for each: only developer tokens expire on their
-        // own; CCG self-refreshes, so an auth failure there means the client
-        // credentials or subject are wrong.
         "auth-failed": () =>
           probeNote(
             "Box rejected the credentials. A developer token (CLOUD_BOX_TOKEN) lasts about 60 minutes. Restart the " +
@@ -228,9 +206,7 @@ const refusalReason = (refusal: VaultSyncRefusal): string =>
     ? Str.replaceAll("-", " ")(refusal.reason.rule)
     : "this session may not act on the workspace";
 
-// A refusal is the typed rejection the server's decide returned (or that the
-// same decide predicted locally): its prediction is already reverted, so the
-// notice says which action did not happen and why.
+// decision: vault-sync-panel-states-are-honest
 const VaultSyncRefusals = ({
   refusals,
   onDismiss,
@@ -266,9 +242,6 @@ const VaultSyncRefusals = ({
     </ul>
   ) : null;
 
-// Queued intents are what the operator asked for and the sidecar has not
-// answered yet. Offline they wait; the panel already shows their predicted
-// effect, and a replay sends each one again with the same command id.
 const VaultSyncPendingIntents = ({
   intents,
   offline,
@@ -327,7 +300,6 @@ const DestinationSummary = ({
       <span className="font-medium text-foreground">{prediction.destination.name}</span>
       <DestinationStateBadge paused={prediction.destination.paused} />
       {pending ? <span data-testid="vault-sync-destination-predicted">(pending confirmation)</span> : null}
-      {/* After a reload with the sidecar unreachable the row is the cached last answer. */}
       {lastKnown ? <span data-testid="vault-sync-destination-last-known">last known</span> : null}
     </p>
   ) : null;
@@ -335,6 +307,7 @@ const DestinationSummary = ({
 const healOperationFor = (publicId: string) =>
   S.decodeOption(V.OperationId)(Str.replace("documents_sync_conflict_", "documents_sync_operation_")(publicId));
 
+// decision: vault-sync-panel-states-are-honest
 const VaultSyncConflictsList = ({
   conflicts,
   onRetry,
@@ -348,9 +321,6 @@ const VaultSyncConflictsList = ({
   readonly onReview: (conflict: SyncConflict) => void;
   readonly reviewQueued: (conflict: SyncConflict) => boolean;
 }): JSX.Element | null => {
-  // A failed conflict query used to render as `null` — exactly like "no
-  // conflicts" — so an operator could be told everything was clean while the
-  // listing was actually unavailable.
   if (AsyncResult.isFailure(conflicts)) {
     return (
       <div className="mt-3 flex items-center gap-2" role="alert" data-testid="vault-sync-conflicts-failed">
@@ -444,8 +414,6 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
   const flush = useAtomSet(vaultSyncFlushAtom(workspaceId));
   const dismissRefusal = useAtomSet(vaultSyncDismissRefusalAtom);
 
-  // The last status the sidecar sent stays authoritative for Box connectivity
-  // while the sidecar itself is unreachable; intents queue meanwhile.
   const lastStatus = AsyncResult.value(status);
   const connected = O.exists(lastStatus, (value) => value.connected);
   const paused = O.exists(prediction, (value) => value.destination._tag === "Registered" && value.destination.paused);
@@ -523,7 +491,6 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
         <Button
           type="button"
           size="sm"
-          // Disabled for long stretches (paused, Box down): muted reads better than a faded primary.
           disabledTone="muted"
           title={O.getOrUndefined(syncBlockedReason)}
           onClick={() => submit(VaultSyncAction.cases["request-sync"].make({}))}

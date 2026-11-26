@@ -56,10 +56,7 @@ import type { ComposerSafetyRefusal } from "./ComposerPolicy.ts";
 
 type ThreadId = WorkspaceIdentity.ThreadId;
 
-// v1 mention source — a small app-injected set demonstrating ephemeral `@`
-// mentions. Real entity / prior-art / persona sources land with the knowledge
-// graph; mentions serialize to plain text, so swapping the source is additive.
-const MENTION_CANDIDATES: ReadonlyArray<MentionOption> = [
+const STATIC_MENTION_CANDIDATES: ReadonlyArray<MentionOption> = [
   MentionOption.make({ id: "assistant", label: "assistant", hint: "the workspace agent" }),
   MentionOption.make({ id: "workspace", label: "workspace", hint: "the active workspace" }),
   MentionOption.make({ id: "thread", label: "thread", hint: "this conversation" }),
@@ -67,13 +64,11 @@ const MENTION_CANDIDATES: ReadonlyArray<MentionOption> = [
 
 const mentionSource: MentionSource = (query) => {
   const q = Str.toLowerCase(query);
-  return A.filter(MENTION_CANDIDATES, (candidate) => Str.includes(q)(Str.toLowerCase(candidate.label)));
+  return A.filter(STATIC_MENTION_CANDIDATES, (candidate) => Str.includes(q)(Str.toLowerCase(candidate.label)));
 };
 
 const emptyDocument = Md.Document.make({ children: [] });
 
-// Visible safety refusal banner shared by the seed-time gate and send-time
-// refusals. Message-only; refused content itself is never echoed back.
 function ComposerSafetyWarning({ message }: { readonly message: string }): JSX.Element {
   return (
     <div
@@ -100,14 +95,10 @@ function ComposerSafetyWarning({ message }: { readonly message: string }): JSX.E
  * @category components
  * @since 0.0.0
  */
+// decision: workbench-shell-owns-viewport-and-theme
 export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Element {
   const shell = useAtomValue(composerShellAtoms(threadId));
 
-  // keep the report + turn fibers subscribed — unobserved fn atoms get
-  // interrupted by the registry (POC lesson, ported verbatim). ChatComposer
-  // already drops out-of-schema states internally, so onSerializedChange only
-  // ever sees valid content; the decode-failure fiber stays mounted as the
-  // contracted observability sink for that path.
   useAtomMount(reportDecodeFailureAtom);
   useAtomMount(runTurnAtom);
 
@@ -120,12 +111,6 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   };
 
   return (
-    // Capped at half the chat surface: in a short dock panel the toolbar,
-    // editor, and send row otherwise consume the whole panel and starve the
-    // transcript to a ~20px strip (QA closeout P0). The flex column lets the
-    // ChatComposer shrink into the cap — its editable region scrolls
-    // internally while the send row stays visible — rather than scrolling the
-    // whole composer (which pushed Send out of view on short panes).
     <div
       className="flex max-h-1/2 shrink-0 flex-col border-t bg-background/80 p-3 backdrop-blur"
       data-testid="composer"
@@ -183,12 +168,6 @@ function AttachmentTransportNotice(): JSX.Element | null {
   });
 }
 
-// Resolves the optional seed document to a serialized editor state through the
-// shared documentEditorStateAtom family (no runSyncExit). documentToEditorState is
-// a pure codec, so the runtime atom resolves to Success synchronously on first
-// read — the editor mounts WITH the seed (no empty frame); a codec failure
-// degrades to an empty editor. The send handler receives the editor's live state
-// at send time, so there is no latest-state mirror to seed here.
 function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: ThreadComposerProps): JSX.Element {
   const safetySeed = content.pipe(O.getOrElse(() => emptyDocument));
   const surface = useAtomValue(composerSurfaceAtoms(threadId)(safetySeed));
@@ -222,6 +201,4 @@ function ThreadComposer({ content, onStop, sendLabel, streaming, threadId }: Thr
   );
 }
 
-// A stable initial AsyncResult for the no-seed branch, so the hook in
-// ThreadComposer stays unconditional.
 const emptyEditorStateAtom = Atom.make(AsyncResult.initial<SerializedEditorState>());
