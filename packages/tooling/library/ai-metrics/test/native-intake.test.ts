@@ -300,7 +300,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const files = yield* sql`SELECT file FROM pragma_database_list WHERE name='main'`.pipe(
         Effect.flatMap(decodeArguments)
       );
-      const freshConnectionLikeARealRestartSinceDropColumnLeftATempSchema = yield* SqliteClient.make({
+      const freshConnection = yield* SqliteClient.make({
         filename: files[0].file,
       }).pipe(Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make));
       yield* Effect.gen(function* () {
@@ -309,14 +309,14 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         expect(acceptBatch25).toEqual(original);
         const readBatch26 = yield* reopened.readBatch(original.page.receiptId);
         assertSome(readBatch26, projected);
-        const value27 =
-          yield* freshConnectionLikeARealRestartSinceDropColumnLeftATempSchema`SELECT evidence_epoch FROM observation_intake_pages`;
-        expect(value27).toEqual([{ evidence_epoch: 0 }]);
-        const value28 = yield* freshConnectionLikeARealRestartSinceDropColumnLeftATempSchema`PRAGMA integrity_check`;
+        const value27 = yield* freshConnection`SELECT evidence_epoch FROM observation_intake_pages`;
+        expect(
+          value27,
+          "read on a fresh connection, like a real restart, since DROP COLUMN left a temp schema"
+        ).toEqual([{ evidence_epoch: 0 }]);
+        const value28 = yield* freshConnection`PRAGMA integrity_check`;
         expect(value28).toEqual([{ integrity_check: "ok" }]);
-      }).pipe(
-        Effect.provideService(SqlClient.SqlClient, freshConnectionLikeARealRestartSinceDropColumnLeftATempSchema)
-      );
+      }).pipe(Effect.provideService(SqlClient.SqlClient, freshConnection));
     })
   )
 );

@@ -157,10 +157,10 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
       const original = yield* f.capture(`${f.directory}/backup`);
       const originalSource = yield* f.fs.readFile(`${f.directory}/source.sqlite`);
       yield* Effect.gen(function* () {
-        const olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution = yield* SqliteClient.make({
+        const olderCapture = yield* SqliteClient.make({
           filename: `${f.directory}/backup/journal.sqlite`,
         });
-        yield* olderPermissiveCaptureWithACorrectChecksumNotAnUntrustedSubstitution`CREATE TABLE unexpected_historical_table (value TEXT)`;
+        yield* olderCapture`CREATE TABLE unexpected_historical_table (value TEXT)`;
       }).pipe(Effect.scoped);
       const bytes = yield* f.fs.readFile(`${f.directory}/backup/journal.sqlite`);
       const manifest = ObservationBackupManifest.make({
@@ -178,7 +178,7 @@ it.layer(layers, { timeout: "30 seconds", excludeTestServices: true })("Independ
         `${f.directory}/refused`,
         receipt
       ).pipe(Effect.provideService(SqlClient.SqlClient, verifier), Effect.isFailure);
-      expect(pipe10).toBe(true);
+      expect(pipe10, "an older permissive capture with a correct checksum, not an untrusted substitution").toBe(true);
       const exists11 = yield* f.fs.exists(`${f.directory}/refused/restore.json`);
       expect(exists11).toBe(false);
       const readFile12 = yield* f.fs.readFile(`${f.directory}/source.sqlite`);

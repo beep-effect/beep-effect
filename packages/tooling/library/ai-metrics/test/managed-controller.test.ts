@@ -234,16 +234,16 @@ it.layer(NodeCrypto.layer)((it) => {
         const original = O.getOrThrow(
           A.head(O.getOrThrow(A.head(O.getOrThrow(A.head(value.resourceSpans)).scopeSpans)).spans)
         );
-        const mutatedSyntheticDecodedTransportNeverARealSourceBody = independentOtlpFixtureWire
+        const mutatedBody = independentOtlpFixtureWire
           .encode({
             resourceSpans: [
               { scopeSpans: [{ spans: [{ ...original, attributes: [...original.attributes, attribute] }] }] },
             ],
           })
           .finish();
-        const batch = yield* projectNativeTraceRequest(request(mutatedSyntheticDecodedTransportNeverARealSourceBody));
+        const batch = yield* projectNativeTraceRequest(request(mutatedBody));
         expect(batch.spans).toHaveLength(0);
-        expect(batch.rejections).toHaveLength(1);
+        expect(batch.rejections, "a mutated synthetic decoded transport, never a real source body").toHaveLength(1);
       }
       const fixture = yield* projectNativeTraceRequest(
         NativeTraceRequest.make({ ...request(body), syntheticFixtureMetadata: O.some(true) })
@@ -424,11 +424,9 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
         const other = ManagedControllerObservation.make({ ...observation, launchId: id("6") });
         const first = yield* encodeManagedControllerObservation(observation);
         const second = yield* encodeManagedControllerObservation(other);
-        const concatenationMergesRepeatedResourceSpansIntoOneTwoSpanRequest = new Uint8Array([...first, ...second]);
-        const healthy = yield* projectNativeTraceRequest(
-          request(concatenationMergesRepeatedResourceSpansIntoOneTwoSpanRequest)
-        );
-        expect(healthy.spans).toHaveLength(2);
+        const twoSpanRequest = new Uint8Array([...first, ...second]);
+        const healthy = yield* projectNativeTraceRequest(request(twoSpanRequest));
+        expect(healthy.spans, "concatenation merges repeated resourceSpans into one two-span request").toHaveLength(2);
         const digest = globalThis.crypto.subtle.digest.bind(globalThis.crypto.subtle);
         let failedCalls = 0;
         yield* Effect.acquireRelease(
@@ -443,9 +441,7 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
           ),
           (mock) => Effect.sync(() => mock.mockRestore())
         );
-        const error = yield* Effect.flip(
-          projectNativeTraceRequest(request(concatenationMergesRepeatedResourceSpansIntoOneTwoSpanRequest))
-        );
+        const error = yield* Effect.flip(projectNativeTraceRequest(request(twoSpanRequest)));
         expect(error).toEqual(NativeTraceError.make({ reason: "hash-failure" }));
         expect(failedCalls).toBe(1);
         expect(String(error)).not.toContain("PRIVATE_CRYPTO_FAILURE");
