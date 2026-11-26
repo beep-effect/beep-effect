@@ -48,9 +48,16 @@ class PrSizeLabelDiff extends S.Opaque<PrSizeLabelDiff, { readonly brand: unique
 ) {}
 const textRecord = S.Record(S.String, S.Unknown);
 class WorkflowStep extends S.Opaque<WorkflowStep, { readonly brand: unique symbol }>()(
-  S.Struct({ uses: S.optionalKey(S.String), with: S.optionalKey(textRecord), env: S.optionalKey(textRecord) }).pipe(
+  S.Struct({
+    uses: S.optionalKey(S.String),
+    with: S.optionalKey(textRecord),
+    env: S.optionalKey(textRecord),
+    run: S.optionalKey(S.String),
+    if: S.optionalKey(S.String),
+    "continue-on-error": S.optionalKey(S.Union([S.Boolean, S.String])),
+  }).pipe(
     $I.annoteSchema("WorkflowStep", {
-      description: "Workflow step fields inspected by credential and artifact policy.",
+      description: "Workflow step fields inspected by credential, artifact and gate-report policy.",
     })
   )
 ) {}
@@ -350,7 +357,44 @@ const artifactRetentionDiagnostics = (id: string, step: WorkflowStep) =>
   Str.startsWith("actions/upload-artifact@")(step.uses ?? "") && step.with?.["retention-days"] === undefined
     ? [`${id}: artifact retention-days missing`]
     : [];
+const GATE_REPORTS_ACTION = "./.github/actions/gate-reports";
+const GATE_REPORTS_STAGE = "${{ runner.temp }}/gate-reports/";
+const GATE_REPORTS_RETENTION_DAYS = 30;
+const isUploadStep = (step: WorkflowStep): boolean => Str.startsWith("actions/upload-artifact@")(step.uses ?? "");
+const runsCiLane = (step: WorkflowStep): boolean => Str.includes("ci lane ")(step.run ?? "");
+const rendersGateReports = (step: WorkflowStep): boolean => step.uses === GATE_REPORTS_ACTION;
+const uploadsGateReports = (step: WorkflowStep): boolean =>
+  isUploadStep(step) && step.with?.path === GATE_REPORTS_STAGE;
+const runsAsMeasurement = (step: WorkflowStep): boolean =>
+  Str.includes("always()")(step.if ?? "") && step["continue-on-error"] === true;
+const reportStepDiagnostics = (id: string, step: WorkflowStep) =>
+  runsAsMeasurement(step) ? [] : [`${id}: gate report step must run on always() and continue on error`];
+const reportUploadDiagnostics = (id: string, step: WorkflowStep) => [
+  ...(runsAsMeasurement(step) ? [] : [`${id}: gate report upload must run on always() and continue on error`]),
+  ...(O.exists(strings(step.with?.name), Str.startsWith("task-outcomes-"))
+    ? []
+    : [`${id}: gate report upload must be named task-outcomes-<run>-<attempt>-<job>-<partition>`]),
+  ...(step.with?.["include-hidden-files"] === true ? [] : [`${id}: gate report upload must include hidden files`]),
+  ...(step.with?.["retention-days"] === GATE_REPORTS_RETENTION_DAYS
+    ? []
+    : [`${id}: gate report upload must keep retention-days ${GATE_REPORTS_RETENTION_DAYS}`]),
+];
+const gateReportDiagnostics = (id: string, job: WorkflowJob) => {
+  const steps = job.steps ?? [];
+  if (!A.some(steps, (step) => runsCiLane(step) || rendersGateReports(step) || uploadsGateReports(step))) return [];
+  return [
+    ...O.match(A.findFirst(steps, rendersGateReports), {
+      onNone: () => [`${id}: gate job does not render gate reports through ${GATE_REPORTS_ACTION}`],
+      onSome: (step) => reportStepDiagnostics(id, step),
+    }),
+    ...O.match(A.findFirst(steps, uploadsGateReports), {
+      onNone: () => [`${id}: gate job does not upload ${GATE_REPORTS_STAGE}`],
+      onSome: (step) => reportUploadDiagnostics(id, step),
+    }),
+  ];
+};
 const jobWorkflowDiagnostics = (file: string, id: string, job: WorkflowJob) => [
+  ...gateReportDiagnostics(id, job),
   ...(A.some(jobCredentialRecords(job), hasWriteToken) &&
   (!writerEnvironmentAllowed(job) || !isMatrixWriter(job, file, id))
     ? [`${id}: write token requires the trusted Turbo writer environment`]
@@ -365,7 +409,7 @@ const jobWorkflowDiagnostics = (file: string, id: string, job: WorkflowJob) => [
 ];
 
 /**
- * Check parsed workflow policy, including cache writer isolation and artifact lifetime.
+ * Check parsed workflow policy, including cache writer isolation, artifact lifetime and gate-report uploads.
  *
  * **Example** (Reject a write token without an environment)
  *
@@ -782,7 +826,7 @@ const ciWorkflowPolicyCommand = Command.make(
       return yield* CiCommandError.make({ message: A.join(diagnostics, "\n") });
     yield* Console.log("workflow-lint: clean");
   })
-).pipe(Command.withDescription("Lint trusted cache writers, push concurrency and artifact retention"));
+).pipe(Command.withDescription("Lint cache writers, push concurrency, artifact retention and gate-report uploads"));
 
 /**
  * Register the hosted-settings, held-group, size-label and workflow-policy commands.
