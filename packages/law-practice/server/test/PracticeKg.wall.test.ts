@@ -2,6 +2,7 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { MailFolderBinding, PracticeKgFamilyKey } from "@beep/law-practice-domain/values/MatterScope";
 import {
   buildDuckDb,
+  currentPracticeKgReadScope,
   GraphTextSourceSpec,
   indexDuckDbDocuments,
   PracticeKgCatalogRow,
@@ -30,6 +31,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { matterWallGrantingLayer } from "./MatterWall.fixtures.ts";
 
 const archive = `sha256:${Str.repeat(64)("c")}`;
 const digests = {
@@ -345,6 +347,47 @@ describe("Practice KG matter wall", () => {
       })
     );
   });
+});
+
+const grantedAlphaAndBeta = GrantedScopes.make({
+  scopeRefs: HashSet.empty(),
+  familyKeys: HashSet.make(betaKey, alphaKey),
+  mailFolders: HashSet.make(
+    MailFolderBinding.make({ archive, folderPrefix: "Inbox/Beta" }),
+    MailFolderBinding.make({ archive, folderPrefix: "Inbox/Alpha" })
+  ),
+});
+
+describe("Practice KG matter wall read scope", () => {
+  it.layer(matterWallGrantingLayer(grantedAlphaAndBeta))("under a granted principal", (it) => {
+    it.effect(
+      "walls the host principal to its granted family keys and mail folders in a stable order",
+      Effect.fnUntraced(function* () {
+        const scope = yield* currentPracticeKgReadScope;
+        const read = PracticeKgReadScope.match(scope, {
+          Unwalled: () => ({ families: [], folders: [] }),
+          Walled: ({ familyKeys, mailFolders }) => ({
+            families: A.map(familyKeys, (key) => `${key.client}.${key.family}`),
+            folders: A.map(mailFolders, (binding) => binding.folderPrefix),
+          }),
+        });
+        expect(scope._tag).toBe("Walled");
+        expect(read).toStrictEqual({
+          families: ["11111.20001", "22222.20001"],
+          folders: ["Inbox/Alpha", "Inbox/Beta"],
+        });
+      })
+    );
+  });
+
+  it.effect(
+    "lets a system read through the client filter and grants it every family",
+    Effect.fnUntraced(function* () {
+      expect(practiceKgClientFilter(unwalled, "client")).toBe("TRUE");
+      expect(practiceKgGrantsFamily(unwalled)("33333.20001")).toBe(true);
+      expect(practiceKgGrantsFamily(walledAlpha)("33333.20001")).toBe(false);
+    })
+  );
 });
 
 const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
