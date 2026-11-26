@@ -83,7 +83,11 @@ describe("CST parser coverage", () => {
   it.effect("standalone repeated end markers do not create extra documents", () =>
     Effect.sync(() => {
       const documents = parseCSTAll("a\n...\n...\n");
-      assert.strictEqual(documents.length, 1);
+      assert.strictEqual(
+        documents.length,
+        1,
+        "a bare ... with no content before it opens no document in the YAML stream grammar"
+      );
       assert.strictEqual(A.getUnsafe(documents, 0).source, "a\n...\n");
     })
   );

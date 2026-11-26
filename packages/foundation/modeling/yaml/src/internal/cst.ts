@@ -1,5 +1,3 @@
-// Internal CST schemas preserve raw source and plain-object construction.
-
 import { $YamlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
@@ -45,8 +43,6 @@ const CstNodeFields = S.Struct({
   ),
 }).pipe($I.annoteSchema("CstNodeFields", { description: "Non-recursive fields of a concrete syntax node." }));
 
-// The recursive knot gives suspend a concrete return type; all other fields
-// and the exported node type are inferred from the structural schemas.
 type RecursiveCstNode = typeof CstNodeFields.Type & {
   readonly children?: ReadonlyArray<RecursiveCstNode>;
 };
