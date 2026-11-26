@@ -42,8 +42,8 @@ const spanShard = (owner: string) => `standards/instrumentation-catalog/${owner}
 const standardPath = "standards/architecture/12-observability.md";
 const sourceA = "packages/a/src/A.ts";
 const sourceB = "packages/b/src/B.ts";
-const sourceInfra = "infra/src/Stack.ts";
-const sourceInfraLambda = "infra/lambda/Handler.ts";
+const sourceC = "packages/c/src/Stack.ts";
+const sourceCDocs = "packages/c/docs/Example.ts";
 const sourceA2Instrumented = "packages/a/src/Extra.ts";
 
 const schemaModule = (name: string) =>
@@ -71,7 +71,7 @@ const writeFixture = Effect.fn("CatalogShardScopeTest.writeFixture")(function* (
   yield* writeProjectFile("bun.lock", "");
   yield* writeProjectFile(
     "package.json",
-    '{\n  "name": "@beep/test-root",\n  "private": true,\n  "type": "module",\n  "workspaces": ["infra", "packages/*"]\n}\n'
+    '{\n  "name": "@beep/test-root",\n  "private": true,\n  "type": "module",\n  "workspaces": ["packages/*"]\n}\n'
   );
   yield* writeProjectFile(
     "tsconfig.json",
@@ -85,14 +85,12 @@ const writeFixture = Effect.fn("CatalogShardScopeTest.writeFixture")(function* (
     "packages/b/package.json",
     '{\n  "name": "@beep/b",\n  "version": "0.0.0",\n  "type": "module"\n}\n'
   );
-  // `infra` is a workspace member whose directory holds code the schema-first globs leave out
-  // (`infra/lambda`); a scoped run must still match the full scan, which reads only `infra/{src,test}`.
   yield* writeProjectFile(
-    "infra/package.json",
-    '{\n  "name": "@beep/infra",\n  "version": "0.0.0",\n  "type": "module"\n}\n'
+    "packages/c/package.json",
+    '{\n  "name": "@beep/c",\n  "version": "0.0.0",\n  "type": "module"\n}\n'
   );
-  yield* writeProjectFile(sourceInfra, schemaModule("Infra"));
-  yield* writeProjectFile(sourceInfraLambda, schemaModule("Lambda"));
+  yield* writeProjectFile(sourceC, schemaModule("C"));
+  yield* writeProjectFile(sourceCDocs, schemaModule("CDocs"));
   yield* writeProjectFile(sourceA, schemaModule("A"));
   yield* writeProjectFile(sourceB, schemaModule("B"));
   yield* writeProjectFile(standardPath, `# 12\n\n${STANDARD_SECTION_BEGIN}\n${STANDARD_SECTION_END}\n`);
@@ -149,7 +147,7 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             const ownerOf = yield* makeSchemaFirstOwnerResolver(root);
             const scope = yield* resolveShardScope(
               root,
-              [sourceB, "packages/a/src/Gone.ts", sourceA, "scripts/root-only.ts", sourceInfra],
+              [sourceB, "packages/a/src/Gone.ts", sourceA, "scripts/root-only.ts", sourceC],
               ownerOf
             );
 
@@ -157,7 +155,7 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             expect(A.map(scope.owners, (owner) => `${owner.owner} ${owner.directory}`)).toEqual([
               "@beep/a packages/a",
               "@beep/b packages/b",
-              "@beep/infra infra",
+              "@beep/c packages/c",
             ]);
             expect(scope.skipped).toEqual(["scripts/root-only.ts"]);
           })
@@ -207,14 +205,14 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
           Effect.gen(function* () {
             yield* writeFixture();
             yield* runLint(["schema-catalog", "--write"]);
-            const fullInfra = yield* readProjectFile(schemaShard("@beep/infra"));
-            expect(fullInfra).toContain(sourceInfra);
-            expect(fullInfra).not.toContain(sourceInfraLambda);
+            const fullC = yield* readProjectFile(schemaShard("@beep/c"));
+            expect(fullC).toContain(sourceC);
+            expect(fullC).not.toContain(sourceCDocs);
 
             // A staged file the full scan never reads contributes nothing to its owner's shard.
-            yield* runLint(["schema-catalog", "--write", sourceInfraLambda]);
-            const readProjectFile6 = yield* readProjectFile(schemaShard("@beep/infra"));
-            expect(readProjectFile6).toBe(fullInfra);
+            yield* runLint(["schema-catalog", "--write", sourceCDocs]);
+            const readProjectFile6 = yield* readProjectFile(schemaShard("@beep/c"));
+            expect(readProjectFile6).toBe(fullC);
           })
         );
       })
@@ -413,7 +411,7 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             const restoredB = yield* readProjectFile(schemaShard("@beep/b"));
             expect(restoredB).toBe(fullB);
             const spanningLogs = yield* TestConsole.logLines;
-            expect(spanningLogs).toContain("[schema-catalog] 2 shard(s) changed for @beep/a, @beep/b");
+            expect(spanningLogs).toContain("[schema-catalog] 2 shard(s) changed for @beep/a, @beep/b, @beep/c");
 
             yield* runLint(["schema-catalog", "--write", "packages/a"]);
             const currentLogs = yield* TestConsole.logLines;

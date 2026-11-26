@@ -52,7 +52,7 @@ print('ExecStart='+' '.join(quoted))
 PYUNIT
 )"
     cat > "$unit" <<EOF
-# Managed by beep infra/r2-cache/workstation.sh
+# Managed by beep packages/tooling/infra/turbo-cache/r2-pilot/workstation.sh
 [Unit]
 Description=Beep Turbo R2 loopback cache adapter
 After=network-online.target

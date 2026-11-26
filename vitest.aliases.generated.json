@@ -39,7 +39,6 @@
   "@beep/chalk/*": ["./packages/foundation/capability/chalk/src/*"],
   "@beep/repo-docgen": ["./packages/tooling/tool/docgen/src/index.ts"],
   "@beep/repo-docgen/*": ["./packages/tooling/tool/docgen/src/*"],
-  "@beep/infra": ["./infra/src/index.ts"],
   "@beep/md": ["./packages/foundation/modeling/md/src/index.ts"],
   "@beep/agents-domain": ["./packages/agents/domain/src/index.ts"],
   "@beep/agents-domain/values": [

@@ -3,7 +3,7 @@
 Ephemeral self-hosted GitHub Actions runners on EC2 Spot, declared with Alchemy and run by
 Effect Lambdas. The Lambdas are a port of the `lambdas/functions/*` handlers of
 [`github-aws-runners/terraform-aws-github-runner`](https://github.com/github-aws-runners/terraform-aws-github-runner)
-v7.10.1, the version `infra/ci-runners/Pulumi.yaml` pins for the live fleet.
+v7.10.1, the version the retired Pulumi fleet pinned.
 
 ## Status
 

@@ -4,13 +4,13 @@
     "id": "infra-alchemy-rebuild",
     "packetId": "goal-packet/v1:27553117a9c5b24fb276b8ff69509ff5c4df2eb1558704ab2e059a1685b2c00c",
     "title": "Rebuild beep-effect infrastructure on Alchemy and distilled, Pulumi retired",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-06",
-    "updated": "2026-11-09",
+    "updated": "2026-11-26",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/infra-alchemy-rebuild",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Rebuild beep-effect infrastructure on Alchemy and distilled, Pulumi retired (graduated from explorations/pulumi-to-alchemy).",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3567,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -187,27 +193,27 @@
     {
       "id": "P4",
       "name": "OIP and hosts",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Runner fleet",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Retire",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Yeet: final PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -221,5 +227,10 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3567
+  },
+  "retentionReason": "Runbooks and the infra packages cite this packet: its decisions hold the Pulumi-to-Alchemy cutover procedures, the rollback-after-destroy paths that restore the archived Pulumi exports, and the census of credentials each destroyed stack retired."
 }

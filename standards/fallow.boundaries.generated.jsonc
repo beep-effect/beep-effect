@@ -534,12 +534,6 @@
         ]
       },
       {
-        "name": "@beep/infra",
-        "patterns": [
-          "infra/src/**"
-        ]
-      },
-      {
         "name": "@beep/infra-ci-runners",
         "patterns": [
           "packages/tooling/infra/ci-runners/src/**"
@@ -3203,31 +3197,6 @@
           "@beep/identity",
           "@beep/test-runner",
           "@beep/types"
-        ]
-      },
-      {
-        "from": "@beep/infra",
-        "allow": [
-          "@beep/identity",
-          "@beep/infra",
-          "@beep/infra-hosts",
-          "@beep/openclaw",
-          "@beep/repo-ai-metrics",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/infra",
-          "@beep/infra-hosts",
-          "@beep/openclaw",
-          "@beep/repo-ai-metrics",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
         ]
       },
       {

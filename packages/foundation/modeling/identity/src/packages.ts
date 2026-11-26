@@ -52,9 +52,6 @@ import * as Identity from "./Id.ts";
 export const $I = Identity.make("beep", { authority: IdentityAuthority, prefix: "beep" }).$BeepId;
 
 const generatedComposers = /*#__PURE__*/ $I.compose(
-  // IaC Infra Package
-  "infra",
-
   // Foundation Packages
   "chalk",
   "colors",
@@ -883,22 +880,6 @@ export const $ChalkId: Identity.IdentityComposer<"@beep/chalk"> = /*#__PURE__*/ 
  * @since 0.0.0
  */
 export const $RepoDocgenId: Identity.IdentityComposer<"@beep/repo-docgen"> = /*#__PURE__*/ $I.create("repo-docgen");
-
-/**
- * Identity composer for the `@beep/infra` package.
- *
- * **Example** (Make infra package ID)
- *
- * ```ts import.meta.vitest name="Make infra package ID"
- * import { $InfraId } from "@beep/identity/packages"
- *
- * const id = $InfraId.make("Deploy")
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $InfraId: Identity.IdentityComposer<"@beep/infra"> = /*#__PURE__*/ $I.create("infra");
 
 // --- p3 professional runtime proof ---
 
