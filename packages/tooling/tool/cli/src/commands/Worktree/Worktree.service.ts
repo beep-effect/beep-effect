@@ -107,6 +107,7 @@ import {
   WorktreeUpstreamState,
   worktreeListEntriesFromGit,
 } from "./Worktree.schemas.ts";
+import type { WorktreeEntry as GitWorktreeEntry } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type { PullRequestInfo } from "@beep/github/PullRequest";
 import type { Repo } from "@beep/github/Repo";
@@ -1620,7 +1621,7 @@ const assertSameCommonDirectory = Effect.fnUntraced(function* (
 const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemovalRequest")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
-  void,
+  O.Option<string>,
   WorktreeCommandError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
@@ -1635,21 +1636,23 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   const target = path.resolve(request.targetPath);
   const candidates = yield* rootedRemovalCandidates(request);
   const git = yield* Git;
-  const entries = yield* git.worktreeList(request.mainCheckout).pipe(
-    Effect.mapBoth({
-      onFailure: adaptGitKitError(
-        GitCommand.worktreeList(),
-        worktreeGitErrorAdapter("Could not revalidate worktree registration."),
-        O.some(invalid)
-      ),
-      onSuccess: worktreeListEntriesFromGit,
-    })
-  );
-  if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
+  const gitEntries = yield* git
+    .worktreeList(request.mainCheckout)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.worktreeList(),
+          worktreeGitErrorAdapter("Could not revalidate worktree registration."),
+          O.some(invalid)
+        )
+      )
+    );
+  if (!A.some(worktreeListEntriesFromGit(gitEntries), (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
   const canonicalTarget = yield* canonicalRootedTarget(request, candidates);
   yield* assertSameCommonDirectory(request, canonicalTarget);
+  return registeredLockReason(gitEntries, path.resolve, target);
 });
 
 const makeRemovalReceipt = (
@@ -1884,6 +1887,93 @@ const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(functi
       )
     );
 });
+
+const FENCE_LOCK_REASON_PREFIX = "beep worktree retirement fenced this checkout at ";
+
+const registeredLockReason = (
+  entries: ReadonlyArray<GitWorktreeEntry>,
+  resolve: (path: string) => string,
+  target: string
+): O.Option<string> =>
+  A.findFirst(entries, (entry) => resolve(entry.path) === target).pipe(
+    O.flatMap((entry) => O.fromUndefinedOr(entry.locked))
+  );
+
+const lockFencedWorktree = Effect.fn("WorktreeRemovalService.lockFencedWorktree")(function* (
+  request: WorktreeRemovalRequest,
+  reason: string
+): Effect.fn.Return<void, WorktreeCommandError, Git | Path.Path> {
+  const git = yield* Git;
+  const path = yield* Path.Path;
+  const target = path.resolve(request.targetPath);
+  yield* git
+    .worktreeLock(request.mainCheckout, target, { reason })
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.worktreeLock(target, reason),
+          worktreeGitErrorAdapter(`Failed to lock ${request.targetPath} against pruning before fencing it.`)
+        )
+      )
+    );
+});
+
+const unlockFencedWorktree = Effect.fn("WorktreeRemovalService.unlockFencedWorktree")(function* (
+  request: WorktreeRemovalRequest
+): Effect.fn.Return<void, WorktreeCommandError, Git | Path.Path> {
+  const git = yield* Git;
+  const path = yield* Path.Path;
+  const target = path.resolve(request.targetPath);
+  yield* git
+    .worktreeUnlock(request.mainCheckout, target)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.worktreeUnlock(target),
+          worktreeGitErrorAdapter(`Failed to unlock ${request.targetPath}; run git worktree unlock on it.`)
+        )
+      )
+    );
+});
+
+const liftRegisteredLock = Effect.fn("WorktreeRemovalService.liftRegisteredLock")(function* (
+  request: WorktreeRemovalRequest
+): Effect.fn.Return<void, WorktreeCommandError, Git | Path.Path> {
+  const git = yield* Git;
+  const path = yield* Path.Path;
+  const entries = yield* git
+    .worktreeList(request.mainCheckout)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.worktreeList(),
+          worktreeGitErrorAdapter(`Could not read the lock on ${request.targetPath}.`)
+        )
+      )
+    );
+  yield* O.match(registeredLockReason(entries, path.resolve, path.resolve(request.targetPath)), {
+    onNone: () => Effect.void,
+    onSome: () => unlockFencedWorktree(request),
+  });
+});
+
+const releaseFenceLock = (request: WorktreeRemovalRequest, fenceOwnsLock: boolean) =>
+  Bool.match(fenceOwnsLock, {
+    onFalse: () => Effect.void,
+    onTrue: () => liftRegisteredLock(request),
+  });
+
+const refuseConcurrentFence = (request: WorktreeRemovalRequest, existingLock: O.Option<string>) =>
+  O.match(O.filter(existingLock, Str.startsWith(FENCE_LOCK_REASON_PREFIX)), {
+    onNone: () => Effect.void,
+    onSome: (reason) =>
+      Effect.fail(
+        WorktreeCommandError.make({
+          message: `${request.targetPath} is locked by another retirement's fence (${reason}). If no retirement is running, put that fenced copy back at ${request.targetPath}, run git worktree unlock on it and retry.`,
+          path: request.targetPath,
+        })
+      ),
+  });
 
 const pruneWorktreeMetadata = Effect.fn("WorktreeRemovalService.pruneWorktreeMetadata")(function* (
   mainCheckout: string
@@ -2465,31 +2555,43 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   const now6 = yield* DateTime.now;
   const stamp = DateTime.toEpochMillis(now6);
   const retirePath = `${request.targetPath}.retiring-${stamp}`;
-  yield* validateRemovalRequest(request);
-  yield* fs
-    .rename(request.targetPath, retirePath)
-    .pipe(
-      Effect.mapError((cause) =>
-        WorktreeCommandError.make({ message: `Failed to fence ${request.targetPath} for retirement: ${cause.message}` })
+  const existingLock = yield* validateRemovalRequest(request);
+  yield* refuseConcurrentFence(request, existingLock);
+  const fenceOwnsLock = O.isNone(existingLock);
+  yield* Bool.match(fenceOwnsLock, {
+    onFalse: () => Effect.void,
+    onTrue: () => lockFencedWorktree(request, `${FENCE_LOCK_REASON_PREFIX}${retirePath}`),
+  });
+  yield* fs.rename(request.targetPath, retirePath).pipe(
+    Effect.mapError((cause) =>
+      WorktreeCommandError.make({ message: `Failed to fence ${request.targetPath} for retirement: ${cause.message}` })
+    ),
+    Effect.tapError(() =>
+      fs.exists(request.targetPath).pipe(
+        Effect.flatMap((inPlace) => releaseFenceLock(request, fenceOwnsLock && inPlace)),
+        Effect.ignore
       )
-    );
+    )
+  );
   const fenced = WorktreeRemovalRequest.make({ ...request, targetPath: retirePath });
   const planned = yield* Effect.exit(fencedArchivePlan(request, fenced, journalStore));
   if (Exit.isFailure(planned)) {
     // A refusal inside the fence restores the checkout exactly where it was; a failed
     // restore must name the fenced path loudly so nothing is presumed lost.
     const lateWrites = yield* restoreFencedCheckout(request.targetPath, retirePath, stamp);
+    const released = yield* Effect.exit(releaseFenceLock(request, fenceOwnsLock));
+    const refusal = Exit.isFailure(released) ? Cause.combine(planned.cause, released.cause) : planned.cause;
     return yield* O.match(lateWrites, {
-      onNone: () => Effect.failCause(planned.cause),
+      onNone: () => Effect.failCause(refusal),
       onSome: (lateWritesPath) =>
         Effect.fail(
           WorktreeCommandError.make({
             message: `${A.join(
-              A.map(Cause.prettyErrors(planned.cause), (error) => error.message),
+              A.map(Cause.prettyErrors(refusal), (error) => error.message),
               "; "
             )} The checkout is restored at ${request.targetPath}; files written to that path while it was fenced are preserved at ${lateWritesPath}.`,
             path: request.targetPath,
-            cause: planned.cause,
+            cause: refusal,
           })
         ),
     });
@@ -2504,6 +2606,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // stays open, which no one-time check on a POSIX tree can close.
   const reQuiescent = yield* Effect.result(assertQuiescentFence(request, retirePath, O.some(quietShells)));
   if (Result.isFailure(reQuiescent)) {
+    yield* liftRegisteredLock(request);
     yield* pruneWorktreeMetadata(request.mainCheckout);
     return yield* WorktreeCommandError.make({
       message: `Archived ${request.targetPath}, but a process attached to it, or a desktop Terminal panel shell standing in it became active, during capture; the fenced copy is preserved at ${retirePath} rather than deleted so no late write is lost.`,
@@ -2516,6 +2619,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
       })
     )
   );
+  yield* liftRegisteredLock(request);
   yield* pruneWorktreeMetadata(request.mainCheckout);
   // New commits can never be orphaned by any of the above: directory removal leaves
   // the shared object store intact, and the branch ref falls only to this
