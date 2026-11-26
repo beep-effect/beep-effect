@@ -42,6 +42,7 @@ export interface FileSystemOptions {
   readonly unreadableStat?: ReadonlyArray<string>;
 }
 
+// decision: test-fixtures-over-real-memfs-volume
 const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<FileSystem.FileSystem> => {
   const { unreadable = [], unreadableFiles = [], unreadableExists = [], unreadableStat = [] } = options;
 

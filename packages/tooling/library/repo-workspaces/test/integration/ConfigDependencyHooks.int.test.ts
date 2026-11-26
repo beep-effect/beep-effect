@@ -198,7 +198,7 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
                 peerDependencyRules: NoPeerDependencyRules,
                 replays: { [NO_PNPMFILE_DEP]: HookReplay.make({ version: "1.0.0", source: "installed" }) },
               }),
-              "the directory exists at the declared version with no pnpmfile candidate, the one legitimate skip: resolved, so recorded, and contributing nothing"
+              "the directory holds its package.json at the declared version, since one holding no manifest is nothing installed, and no pnpmfile candidate, the one legitimate skip: resolved, so recorded, and contributing nothing"
             );
           })
       );
@@ -418,14 +418,16 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
       ),
       { timeout: "30 seconds" }
     )((it) => {
-      it.effect("layerWithGit over the same tree sees no hook-injected catalog — the control", () =>
-        Effect.gen(function* () {
-          const catalogs = yield* WorkspaceCatalogs;
-          const set = yield* catalogs.set;
-          assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
-          const defaultRunsNoConfigDependencyCode = set.rangeOf("hooked-dep", O.none());
-          assertNone(defaultRunsNoConfigDependencyCode);
-        })
+      it.effect(
+        "layerWithGit over the same tree sees no hook-injected catalog, the control keeping it free of config-dependency code",
+        () =>
+          Effect.gen(function* () {
+            const catalogs = yield* WorkspaceCatalogs;
+            const set = yield* catalogs.set;
+            assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
+            const hookedCatalogUnderLayerWithGit = set.rangeOf("hooked-dep", O.none());
+            assertNone(hookedCatalogUnderLayerWithGit);
+          })
       );
     });
 
@@ -586,7 +588,11 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
         Effect.gen(function* () {
           const catalogs = yield* WorkspaceCatalogs;
           const gate = yield* catalogs.releaseAgeGate;
-          assert.strictEqual(gate.ageMinutes, 4320, "inline 1440 vs hook 4320: the max is the hook's 4320");
+          assert.strictEqual(
+            gate.ageMinutes,
+            4320,
+            "inline 1440 vs hook 4320: the max is the hook's 4320, which arrives because mirroredInstall gives the ladder, reading the provided FileSystem, the declared version in a tree keyed to the real temp root while import() loads the real pnpmfile under root"
+          );
           assert.deepStrictEqual(
             [...gate.exclude].sort(),
             ["@scope/a", "inline-excl", "typescript"],

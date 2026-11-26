@@ -419,7 +419,11 @@ it.layer(FixtureLayer, { timeout: "30 seconds" })((it) => {
           Effect.gen(function* () {
             const catalogs = yield* WorkspaceCatalogs;
             const gate = yield* catalogs.releaseAgeGate;
-            assert.strictEqual(gate.ageMinutes, 1440, "inline 720 vs the hook's 1440: the strictest (max) wins");
+            assert.strictEqual(
+              gate.ageMinutes,
+              1440,
+              "inline 720 vs the hook's 1440: the strictest (max) wins; 1440 arrives because the tree mirrors the real install under root, so the ladder, reading the provided FileSystem, finds it while the child imports the real pnpmfile"
+            );
             assert.deepStrictEqual([...gate.exclude], ["@scope/b"]);
             const set = yield* catalogs.set;
             assert.strictEqual(

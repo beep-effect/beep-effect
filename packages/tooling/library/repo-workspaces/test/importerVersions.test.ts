@@ -41,14 +41,16 @@ packages: {}
 const parse = (text: string) => Lockfile.parse(text, { format: "pnpm" });
 
 describe("importerVersionsOf", () => {
-  it.effect(
-    "indexes an importer's recorded versions by dependency name across fields, since a catalog peer has no importer row",
-    () =>
-      Effect.gen(function* () {
-        const lockfile = yield* parse(reproductionDevDepsLock("4.0.0-beta.99", "4.0.0-beta.99"));
-        const index = importerVersionsOf(lockfile);
-        assert.strictEqual(index["."]?.effect, "4.0.0-beta.99");
-      })
+  it.effect("indexes an importer's recorded versions by dependency name across fields", () =>
+    Effect.gen(function* () {
+      const lockfile = yield* parse(reproductionDevDepsLock("4.0.0-beta.99", "4.0.0-beta.99"));
+      const index = importerVersionsOf(lockfile);
+      assert.strictEqual(
+        index["."]?.effect,
+        "4.0.0-beta.99",
+        "the lockfile records effect only as a devDependency, as pnpm wrote it for the reproduction repo, and the catalog:effect:peers peer has no importer row of its own, so the fallback joins by name across fields"
+      );
+    })
   );
 
   it.effect("strips pnpm's peer-disambiguation suffix", () =>
