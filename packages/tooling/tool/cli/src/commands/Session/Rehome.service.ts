@@ -1,37 +1,38 @@
 /**
  * `session rehome`: copy a checkout's session history (ledger, presence,
  * register, rulings) from one repository partition to another, rewriting each
- * row's `repository`. The source files are never modified; they stay as the
- * backup, and deleting the target files reverses an apply.
+ * row's `repository`. The source files are never modified and stay as the
+ * backup. Apply only appends: when a target file did not exist before it,
+ * deleting that file reverses the apply; when it did (the report counts the
+ * rows already there), copy it aside before `--apply`, because the source
+ * cannot restore rows only the target held.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
+import { checkoutRepositoryStateKey } from "../../internal/state/WorkstationState.ts";
 import { SessionPresenceStore, sessionPresenceFileName } from "./Presence.service.ts";
-import { RegisterRow, RegisterRowJson } from "./Register.schemas.ts";
+import { RegisterRow } from "./Register.schemas.ts";
 import { OrchestratorRegister, orchestratorStateDirectory, registerFileName } from "./Register.service.ts";
 import { SessionRehomeReport, SessionRehomeStorePlan } from "./Rehome.schemas.ts";
-import { SessionPresence, SessionPresenceJson } from "./Route.schemas.ts";
-import { RulingRow, RulingRowJson } from "./Rulings.schemas.ts";
+import { SessionPresence } from "./Route.schemas.ts";
+import { RulingRow } from "./Rulings.schemas.ts";
 import { OrchestratorRulings, rulingsFileName } from "./Rulings.service.ts";
 import { SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
-import { SessionLedgerRow, SessionLedgerRowJson } from "./Session.schemas.ts";
+import { SessionLedgerRow } from "./Session.schemas.ts";
 import { SessionLedger, sessionLedgerFileName, sessionStateDirectory } from "./SessionLedger.service.ts";
+import type * as Equivalence from "effect/Equivalence";
+import type { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 import type { SessionRehomeRequest, SessionStoreName } from "./Rehome.schemas.ts";
-
-const equivalentRepository = S.toEquivalence(CheckoutRepository);
 
 interface RehomeStoreBinding<Row> {
   readonly append: (row: Row) => Effect.Effect<void, SessionLedgerError>;
   readonly directory: string;
-  readonly encode: (row: Row) => Effect.Effect<string, S.SchemaError>;
+  readonly equivalence: Equivalence.Equivalence<Row>;
   readonly fileName: (repository: CheckoutRepository) => string;
   readonly list: (repository: CheckoutRepository) => Effect.Effect<ReadonlyArray<Row>, SessionLedgerError>;
   readonly rewrite: (row: Row, to: CheckoutRepository) => Row;
@@ -40,22 +41,12 @@ interface RehomeStoreBinding<Row> {
 
 const rehomeStore = Effect.fnUntraced(function* <Row>(binding: RehomeStoreBinding<Row>, request: SessionRehomeRequest) {
   const path = yield* Path.Path;
-  const encodeRow = flow(
-    binding.encode,
-    Effect.mapError((cause) =>
-      SessionLedgerError.make({ reason: "decode", message: `Failed to encode a ${binding.store} row.`, cause })
-    )
-  );
   const source = yield* binding.list(request.from);
   const target = yield* binding.list(request.to);
-  const targetLines = yield* Effect.forEach(target, encodeRow, { concurrency: 1 });
-  const held = HashSet.fromIterable(targetLines);
-  const fresh = yield* Effect.filter(
+  const held = A.containsWith(binding.equivalence);
+  const fresh = A.filter(
     A.map(source, (row) => binding.rewrite(row, request.to)),
-    flow(
-      encodeRow,
-      Effect.map((line) => !HashSet.has(held, line))
-    )
+    (row) => !held(target, row)
   );
   if (request.apply) {
     yield* Effect.forEach(fresh, binding.append, { concurrency: 1, discard: true });
@@ -106,8 +97,8 @@ const stateDirectoryError = (cause: unknown) =>
  * @since 0.0.0
  */
 export const rehomeSessionStores = Effect.fn("SessionRehome.run")(function* (request: SessionRehomeRequest) {
-  if (equivalentRepository(request.from, request.to)) {
-    return yield* sessionUsageError("--from and --to name the same repository; nothing to rehome.");
+  if (checkoutRepositoryStateKey(request.from) === checkoutRepositoryStateKey(request.to)) {
+    return yield* sessionUsageError("--from and --to name the same repository partition; nothing to rehome.");
   }
   const ledger = yield* SessionLedger;
   const presence = yield* SessionPresenceStore;
@@ -122,7 +113,7 @@ export const rehomeSessionStores = Effect.fn("SessionRehome.run")(function* (req
       fileName: sessionLedgerFileName,
       list: ledger.list,
       append: ledger.append,
-      encode: SessionLedgerRowJson.encode,
+      equivalence: S.toEquivalence(SessionLedgerRow),
       rewrite: (row: SessionLedgerRow, to) => SessionLedgerRow.make({ ...row, repository: to }),
     },
     request
@@ -134,7 +125,7 @@ export const rehomeSessionStores = Effect.fn("SessionRehome.run")(function* (req
       fileName: sessionPresenceFileName,
       list: presence.list,
       append: presence.append,
-      encode: SessionPresenceJson.encode,
+      equivalence: S.toEquivalence(SessionPresence),
       rewrite: (row: SessionPresence, to) => SessionPresence.make({ ...row, repository: to }),
     },
     request
@@ -146,7 +137,7 @@ export const rehomeSessionStores = Effect.fn("SessionRehome.run")(function* (req
       fileName: registerFileName,
       list: register.list,
       append: register.append,
-      encode: RegisterRowJson.encode,
+      equivalence: S.toEquivalence(RegisterRow),
       rewrite: (row: RegisterRow, to) => RegisterRow.make({ ...row, repository: to }),
     },
     request
@@ -158,7 +149,7 @@ export const rehomeSessionStores = Effect.fn("SessionRehome.run")(function* (req
       fileName: rulingsFileName,
       list: rulings.list,
       append: rulings.append,
-      encode: RulingRowJson.encode,
+      equivalence: S.toEquivalence(RulingRow),
       rewrite: (row: RulingRow, to) => RulingRow.make({ ...row, repository: to }),
     },
     request

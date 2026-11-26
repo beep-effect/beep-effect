@@ -244,12 +244,8 @@ export const CheckoutRepositorySlug = S.String.pipe(
     CheckoutRepository,
     SchemaTransformation.transform({
       decode: (slug: string): CheckoutRepositoryKey => {
-        const parts = Str.split(Str.toLowerCase(Str.trim(slug)), "/");
-        return {
-          host: O.getOrElse(A.get(parts, 0), () => ""),
-          owner: O.getOrElse(A.get(parts, 1), () => ""),
-          name: A.join(A.drop(parts, 2), "/"),
-        };
+        const [host, ...path] = Str.split(Str.toLowerCase(Str.trim(slug)), "/");
+        return { host, owner: O.getOrElse(A.head(path), () => ""), name: A.join(A.drop(path, 1), "/") };
       },
       encode: (repository: CheckoutRepositoryKey): string =>
         `${repository.host}/${repository.owner}/${repository.name}`,
@@ -294,9 +290,46 @@ export const resolveWorkstationStateDir = Effect.fn("WorkstationState.resolveDir
   return `${stateHome}/beep/${options.store}`;
 });
 
+const delimiterAmbiguous = (segment: string): boolean =>
+  Str.includes("__")(segment) || Str.startsWith("_")(segment) || Str.endsWith("_")(segment);
+
+const stateKeySegment = (segment: string): string =>
+  delimiterAmbiguous(segment) ? Str.replaceAll("_", "%5F")(segment) : segment;
+
 /**
- * The JSON Lines file name for a repository: `host__owner__name.jsonl`, with
- * no local data in it.
+ * The key every per-repository state file and directory shares:
+ * `host__owner__name`, distinct for every distinct repository.
+ *
+ * **Details**
+ *
+ * A segment that could blur the `__` delimiter (one containing `__`, or
+ * starting or ending with `_`) has each `_` written as `%5F`, so
+ * `team__app/repo` and `team/app__repo` get different keys. Segments cannot
+ * contain `%`, so an escaped key never equals a plain one, and every other
+ * repository, GitHub's included, keeps its plain `host__owner__name` key.
+ *
+ * **Example** (Key a plain and an ambiguous repository)
+ *
+ * ```ts
+ * import { checkoutRepositoryStateKey } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(checkoutRepositoryStateKey({ host: "github.com", owner: "beep-effect", name: "beep-effect" }))
+ * // "github.com__beep-effect__beep-effect"
+ * console.log(checkoutRepositoryStateKey({ host: "gitlab.example.com", owner: "team", name: "app__repo" }))
+ * // "gitlab.example.com__team__app%5F%5Frepo"
+ * ```
+ *
+ * @param repository - The repository the state belongs to.
+ * @returns The state key, with no local data in it.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const checkoutRepositoryStateKey = (repository: CheckoutRepositoryKey): string =>
+  A.join(A.map([repository.host, repository.owner, repository.name], stateKeySegment), "__");
+
+/**
+ * The JSON Lines file name for a repository: `host__owner__name.jsonl` (the
+ * {@link checkoutRepositoryStateKey}), with no local data in it.
  *
  * **Example** (Name a file)
  *
@@ -313,7 +346,7 @@ export const resolveWorkstationStateDir = Effect.fn("WorkstationState.resolveDir
  * @since 0.0.0
  */
 export const repositoryJsonLinesFileName = (repository: CheckoutRepositoryKey): string =>
-  `${repository.host}__${repository.owner}__${repository.name}.jsonl`;
+  `${checkoutRepositoryStateKey(repository)}.jsonl`;
 
 /**
  * Treat a missing state file as empty history and map every other platform

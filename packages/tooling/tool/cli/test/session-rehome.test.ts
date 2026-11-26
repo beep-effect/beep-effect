@@ -2,6 +2,7 @@ import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
 import {
   CheckoutRepository,
+  CheckoutRepositorySlug,
   ClaudePeerRoute,
   makeOrchestratorRegisterLive,
   makeOrchestratorRulingsLive,
@@ -14,17 +15,24 @@ import {
   RulingRow,
   registerFileName,
   rehomeSessionStores,
+  renderSessionRehomeReport,
   rulingsFileName,
   SessionLedger,
   SessionLedgerRow,
   SessionPresence,
   SessionPresenceStore,
+  SessionRehomeReport,
   SessionRehomeRequest,
+  SessionRehomeStorePlan,
   sessionLedgerFileName,
   sessionPresenceFileName,
 } from "@beep/repo-cli/test/Session";
+import { checkoutRepositoryStateKey } from "@beep/repo-cli/test/SharedInternals";
+import { fleetRepositoryKey } from "@beep/repo-cli/test/Worktree";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
@@ -36,6 +44,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -200,6 +209,88 @@ describe("checkout repository partitions", () => {
     expect(rulingsFileName(repository)).toBe("github.com__beep-effect__beep-effect.rulings.jsonl");
   });
 
+  it("keys repositories apart where an underscore could blur the __ delimiter", () => {
+    const key = (owner: string, name: string) =>
+      checkoutRepositoryStateKey({ host: "gitlab.example.com", owner, name });
+    expect(key("team__app", "repo")).toBe("gitlab.example.com__team%5F%5Fapp__repo");
+    expect(key("team", "app__repo")).toBe("gitlab.example.com__team__app%5F%5Frepo");
+    expect(key("team_", "_api")).toBe("gitlab.example.com__team%5F__%5Fapi");
+    expect(key("team", "__api")).toBe("gitlab.example.com__team__%5F%5Fapi");
+    expect(key("beep-effect", "beep_effect")).toBe("gitlab.example.com__beep-effect__beep_effect");
+    const split = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team__app", name: "repo" });
+    const joined = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "app__repo" });
+    expect(sessionLedgerFileName(split)).not.toBe(sessionLedgerFileName(joined));
+    expect(sessionPresenceFileName(split)).not.toBe(sessionPresenceFileName(joined));
+    expect(fleetRepositoryKey(split)).toBe(checkoutRepositoryStateKey(split));
+  });
+
+  it.effect.prop(
+    "gives two repositories one state key only when they are the same repository",
+    [CheckoutRepository, CheckoutRepository],
+    ([left, right]) =>
+      Effect.sync(() => {
+        const sameRepository = left.host === right.host && left.owner === right.owner && left.name === right.name;
+        expect(checkoutRepositoryStateKey(left) === checkoutRepositoryStateKey(right)).toBe(sameRepository);
+      }),
+    { arbitrary: fcRuns(200) }
+  );
+
+  it.effect.prop(
+    "round-trips any lower-cased repository through its slug",
+    [CheckoutRepository],
+    ([repository]) =>
+      Effect.gen(function* () {
+        const lowered = CheckoutRepository.make({
+          host: repository.host,
+          owner: Str.toLowerCase(repository.owner),
+          name: Str.toLowerCase(repository.name),
+        });
+        const slug = yield* S.encodeEffect(CheckoutRepositorySlug)(lowered);
+        const decoded = yield* S.decodeEffect(CheckoutRepositorySlug)(slug);
+        expect(decoded).toEqual(lowered);
+      }),
+    { arbitrary: fcRuns(100) }
+  );
+
+  it.effect("round-trips a repository slug and refuses one without an owner", () =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(CheckoutRepositorySlug)(gitlab);
+      const decoded = yield* S.decodeEffect(CheckoutRepositorySlug)(" GitLab.Example.com/Team/Beep-Effect-Private ");
+      expect(encoded).toBe("gitlab.example.com/team/beep-effect-private");
+      expect(decoded).toEqual(gitlab);
+      assertNone(S.decodeOption(CheckoutRepositorySlug)("github.com"));
+    })
+  );
+
+  it("renders an applied rehome with the copied total", () => {
+    const plan = (store: "ledger" | "presence", newRows: number) =>
+      SessionRehomeStorePlan.make({
+        store,
+        sourceFile: "/state/a.jsonl",
+        sourceRows: 2,
+        targetFile: "/state/b.jsonl",
+        targetRows: 1,
+        newRows,
+      });
+    const report = SessionRehomeReport.make({
+      from: github,
+      to: gitlab,
+      applied: true,
+      stores: [plan("ledger", 1), plan("presence", 2)],
+    });
+    expect(renderSessionRehomeReport(report)).toBe(
+      A.join(
+        [
+          "[session] rehome github.com/beep-effect/beep-effect-private -> gitlab.example.com/team/beep-effect-private",
+          "- ledger: 2 row(s) in /state/a.jsonl -> /state/b.jsonl (1 already there, 1 copied)",
+          "- presence: 2 row(s) in /state/a.jsonl -> /state/b.jsonl (1 already there, 2 copied)",
+          "[session] copied 3 row(s); the source files stay in place as the backup.",
+        ],
+        "\n"
+      )
+    );
+  });
+
   it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
     it.effect("writes a GitLab-origin checkout's note to its own partition", () =>
       withStateRoot(({ tmp, sessions }) =>
@@ -355,7 +446,7 @@ describe("session rehome", () => {
             SessionRehomeRequest.make({ from: github, to: github, apply: true })
           ).pipe(withStores, Effect.flip);
           expect(same._tag).toBe("SessionLedgerError");
-          expect(same.message).toBe("--from and --to name the same repository; nothing to rehome.");
+          expect(same.message).toBe("--from and --to name the same repository partition; nothing to rehome.");
           const sameCli = yield* runSession([
             "rehome",
             "--from",
@@ -363,11 +454,28 @@ describe("session rehome", () => {
             "--to",
             "GitHub.com/beep-effect/beep-effect-private",
           ]).pipe(Effect.flip);
-          expect(sameCli.message).toBe("[session] --from and --to name the same repository; nothing to rehome.");
+          expect(sameCli.message).toBe(
+            "[session] --from and --to name the same repository partition; nothing to rehome."
+          );
           const malformed = yield* runSession(["rehome", "--from", "beep-effect/beep-effect", "--to", "a/b/c"]).pipe(
             Effect.flip
           );
           expect(malformed.message).toBe('[session] --from must be host/owner/name; got "beep-effect/beep-effect".');
+        })
+      )
+    );
+
+    it.effect("fails typed when no state root resolves", () =>
+      withStateRoot(() =>
+        Effect.gen(function* () {
+          const error = yield* rehomeSessionStores(
+            SessionRehomeRequest.make({ from: github, to: gitlab, apply: false })
+          ).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} })),
+            withStores,
+            Effect.flip
+          );
+          expect(error.message).toBe("Failed to resolve the session state directory.");
         })
       )
     );

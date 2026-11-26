@@ -26,6 +26,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   checkoutRepositoryFromRemoteUrl,
+  checkoutRepositoryStateKey,
   resolveWorkstationStateDir,
 } from "../../../internal/state/WorkstationState.ts";
 import { canonicalRepositoryIdentity } from "../../Yeet/internal/ArtifactPaths.ts";
@@ -115,8 +116,7 @@ export const parseFleetRootsPathList = (
  * @category formatting
  * @since 0.0.0
  */
-export const fleetRepositoryKey = (repository: CheckoutRepositoryKey): string =>
-  `${repository.host}__${repository.owner}__${repository.name}`;
+export const fleetRepositoryKey: (repository: CheckoutRepositoryKey) => string = checkoutRepositoryStateKey;
 
 /**
  * Resolve `<state>/beep/fleet/<repo-key>`, honoring `BEEP_FLEET_STATE_ROOT`.
