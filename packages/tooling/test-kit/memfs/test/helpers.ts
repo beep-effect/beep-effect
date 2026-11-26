@@ -1,6 +1,3 @@
-// Kit-owned test helpers shared across suites. The upstream-ported
-// MemoryFileSystem.test.ts keeps its own watch collector.
-
 import { assert } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -10,7 +7,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import type * as FileSystem from "effect/FileSystem";
 
-// The optional errno metadata shared by host errors, injected errors and defects.
 export const ErrnoFields = S.Struct({
   code: S.optionalKey(S.String),
   errno: S.optionalKey(S.Finite),

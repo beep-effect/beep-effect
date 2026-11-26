@@ -1,6 +1,3 @@
-// Adaptation-ledger entry: watch honors core's WatchOptions.recursive, where
-// upstream ignored it.
-
 import { MemoryFileSystem } from "@beep/memfs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
@@ -52,14 +49,11 @@ describe("watch readiness", () => {
   );
 });
 
-describe("watch honors WatchOptions.recursive — the port adaptation", () => {
+describe("watch honors WatchOptions.recursive, which upstream ignored — an adaptation-ledger entry", () => {
   it.effect("a non-recursive directory watch reports direct children only", () =>
     Effect.gen(function* () {
       const fs = yield* MemoryFileSystem.makeWith({ "/root/sub/existing.txt": "x" });
 
-      // The nested write happens FIRST: if non-recursive delivered nested
-      // events, it would be the collected one. Collecting the later direct
-      // event proves the nested write was skipped.
       const events = yield* collectWatch(
         fs,
         "/root",
@@ -71,7 +65,11 @@ describe("watch honors WatchOptions.recursive — the port adaptation", () => {
         })
       );
 
-      assert.deepStrictEqual(events, [{ _tag: "Create", path: "/root/direct.txt" }]);
+      assert.deepStrictEqual(
+        events,
+        [{ _tag: "Create", path: "/root/direct.txt" }],
+        "the nested write runs first, so collecting the later direct event proves the nested one was skipped"
+      );
     })
   );
 
