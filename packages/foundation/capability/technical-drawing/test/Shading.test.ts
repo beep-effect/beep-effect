@@ -1151,7 +1151,7 @@ describe("band gutter beside a ladder of outlines", () => {
     assertNone(pitchBeside(edgeAlone));
   });
 
-  it("reads no ladder where the outline beyond the edge only steps out around a tabInEdgeGap", () => {
+  it("reads no ladder where the outline beyond the edge only steps out around a tab", () => {
     const tabInEdgeGap: ReadonlyArray<Segment2> = [
       [1.5, 0, 1.5, 13],
       [1.5, 13, 3.3, 13],

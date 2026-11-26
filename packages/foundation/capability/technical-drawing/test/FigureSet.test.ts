@@ -325,12 +325,12 @@ const flatten = (d: string): ReadonlyArray<readonly [Pt, Pt]> =>
   );
 const inkBox = (d: string, keep: (piece: ReadonlyArray<Pt>) => boolean = () => true) => {
   const kept: ReadonlyArray<ReadonlyArray<Pt>> = A.filter(pathPieces(d), (piece: ReadonlyArray<Pt>) => keep(piece));
-  const samplesTooManyToSpread = A.flatMap(
+  const sampledOutlinePoints = A.flatMap(
     kept,
     (piece): ReadonlyArray<Pt> => (piece.length === 2 ? piece : A.map(A.range(0, 2000), (k) => quadAt(piece, k / 2000)))
   );
   return A.reduce(
-    samplesTooManyToSpread,
+    sampledOutlinePoints,
     {
       minX: Number.POSITIVE_INFINITY,
       minY: Number.POSITIVE_INFINITY,
@@ -877,7 +877,7 @@ describe("@beep/technical-drawing", () => {
         ).toBeCloseTo(Math.tan(az), 12);
         expect(sightOf(top)[2], "the top sight's end stands above the box centre").toBeCloseTo(top.target[2] - 10, 9);
         expect(sightOf(bottom)[2]).toBeCloseTo(bottom.target[2] - 10, 9);
-        expect(sightOf(bottom)[2]).toBeLessThan(0);
+        expect(sightOf(bottom)[2], "the bottom sight's end stands below the box centre").toBeLessThan(0);
         expect(
           top.hiddenLinePassAbout,
           "its hidden-line pass runs about its target, which stands well clear of the model"
@@ -1000,7 +1000,10 @@ describe("@beep/technical-drawing", () => {
             Math.abs(ink.minY - g.labels.top),
             '"n/8": the slash rises above the cap height, and the ink top still lands on the label line'
           ).toBeLessThan(0.01);
-          expect(Math.abs(ink.maxY - g.labels.bottom)).toBeLessThan(0.01);
+          expect(
+            Math.abs(ink.maxY - g.labels.bottom),
+            "inkBox reduces a label's hundreds of thousands of sampled points: spread into one call they exceed its argument limit"
+          ).toBeLessThan(0.01);
           const top = inkBox(d, (piece) => piece[0]![1] < g.page.height / 2);
           expect(
             Math.abs((top.minX + top.maxX) / 2 - centreX),
