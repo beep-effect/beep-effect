@@ -60,44 +60,24 @@ const minus = (a: V3, b: V3): V3 => plus(a, times(b, -1));
 
 const MODEL_UP: V3 = [0, 0, 1];
 const MODEL_X: V3 = [1, 0, 0];
-// One degree either side decides level, upright, and square-on.
 const ANGLE_TOLERANCE = Math.sin(Math.PI / 180);
 const COS_TOLERANCE = Math.cos(Math.PI / 180);
-// Below this fraction of a step surviving on the sheet, a face is nearly
-// edge-on to its hatch step and lines would merge however far apart they are
-// on the model.
 const MIN_SPREAD = 0.2;
 const BACK_FACING = 1e-9;
-// Below this share of the light along a face's step the face is lit edge-on
-// to its lines and the shadow side is read from the sheet instead (the lower
-// right): a wall the sheet light runs straight across in an isometric would
-// otherwise flip sides on rounding. The switch stays a hard edge: through the
-// default camera sets no two views that light an upright face within 0.01 of
-// each other put its band on different sides (the camera sweep in the tests,
-// review loop 3, K-07), so it has no ramp. Within one view a face whose share
-// sits near 0.2 can still change sides with a turn of under a degree.
+// decision: edge-on-light-switch-is-hard
 const EDGE_ON_LIGHT = 0.2;
-// Graded gaps grow by this factor from the shadow edge toward the lit side.
 const GROWTH = 1.4;
-// Graded strokes: this many full-length lines at the shadow edge, then a taper.
 const FULL_LINES = 2;
 const TAPER_FROM = 0.6;
 const TAPER_TO = 0.4;
-// A graded band turns from the light recipe into the faint one over this ramp of exposure rather than at one
-// exposure. At a single edge, a face a degree or two off square, or a face two views light almost alike, lost 43% of
-// its band's ink to a 0.006 change of exposure (review loop 3, K-07). No face an orthographic view shows square-on or
-// turned 30° or 60° about the sheet vertical has its exposure inside the ramp (the nearest are 1/√3 = 0.577 and 0.789),
-// so those faces keep the recipe they had.
 const FAINT_FROM = 0.6;
 const FAINT_TO = 0.7;
 
-// A parallel view's frame looking back along `eye`, with sheet-up toward `upHint`.
 const frameOf = (eye: V3, upHint: V3): { readonly eye: V3; readonly right: V3; readonly up: V3 } => {
   const right = unitOf(crossOf(unitOf(upHint), eye));
   return { eye, right, up: crossOf(eye, right) };
 };
 
-// The 1.84(m) light of a frame: from the upper left of its sheet, toward the viewer, at 45°.
 const lightOf = (frame: { readonly eye: V3; readonly right: V3; readonly up: V3 }): V3 =>
   unitOf(plus(plus(times(frame.right, -1), frame.up), frame.eye));
 
@@ -158,8 +138,6 @@ export const viewFactsOf = (camera: Camera): ViewFacts => {
   });
 };
 
-// The sheet-plane part of the 1.84(m) light: its component along the picture-plane normal (the eye, unless the view
-// has a separate picture plane) dropped, so it falls at 45° from the sheet's upper left.
 const sheetLightOf = (view: ViewFacts): V3 => {
   const normal = O.getOrElse(view.picture, () => view.eye);
   return minus(view.light, times(normal, dot(view.light, normal)));
@@ -191,9 +169,6 @@ const onSheet =
   (view: ViewFacts) =>
   (point: V3): readonly [number, number] => [dot(point, view.right), dot(point, view.up)];
 
-// Narrowest width of the face's projected outline: the extent across each
-// projected straight edge (where a convex outline's width is smallest) and
-// across every 5° direction, whichever is least.
 const projectedSpan = (face: FaceFacts, view: ViewFacts): number => {
   const points = A.map(face.outline, onSheet(view));
   const edgeDirections = pipe(
@@ -317,13 +292,6 @@ const clampShare = (share: number): number => Math.max(0, Math.min(1, share));
  */
 export const faintShareOf = (exposure: number): number => clampShare((exposure - FAINT_FROM) / (FAINT_TO - FAINT_FROM));
 
-// How much of a face a tone covers from its shadow edge, and how many lines:
-// the 1993 Guide's flat-face examples (Appendix 4, Examples 32 and 36) put a
-// few strokes at the shadow edge, the last within about a third of the span,
-// and leave a face square to the light nearly bare. The light and faint
-// recipes are the ends of the faint ramp: `faintShare` (0 light, 1 faint)
-// sets where between them a light or faint band sits, each tone defaulting
-// to its own end.
 const LIGHT_SPACING = { coverage: 0.3, maxLines: 5 };
 const FAINT_SPACING = { coverage: 0.15, maxLines: 4 };
 const faintRamp = (share: number) => {
@@ -341,10 +309,6 @@ const toneSpacing = (tone: ShadingTone, faintShare: O.Option<number>) =>
     dark: () => ({ coverage: 0.35, maxLines: 8 }),
   });
 
-// A band is at least two lines (one reads as a doubled outline); past the second
-// line the tone's share of the span always wins, so a narrow dark face keeps its
-// band within the Guide's third of the span instead of reaching across half of it
-// (review loop 2, O-03).
 const BAND_FLOOR = 2;
 
 /**
@@ -368,6 +332,15 @@ const BAND_FLOOR = 2;
  * {@link faintShareOf}) sets the share and count between the light recipe
  * (0) and the faint one (1); each of the two tones defaults to its own end,
  * and `medium` and `dark` ignore it.
+ *
+ * The light recipe (a share of 0.3, at most five lines) and the faint one
+ * (0.15, at most four) follow the 1993 Guide's flat-face examples (Appendix 4,
+ * Examples 32 and 36): a few strokes at the shadow edge, the last within about
+ * a third of the span, and a face square to the light left nearly bare. A
+ * band is at least two lines, since one reads as a doubled outline; past the
+ * second line the share always wins, so a narrow dark face keeps its band
+ * within that third instead of reaching across half of it (review loop 2,
+ * O-03).
  *
  * **Example** (A light 30-wide face)
  *
@@ -412,7 +385,6 @@ export const gradedOffsets = (input: {
   const lead = Math.max(minPitch, input.lead ?? minPitch);
   const { coverage, maxLines } = toneSpacing(input.tone, O.fromUndefinedOr(input.faintShare));
   const limit = span - minPitch;
-  // `gap` is the step that reached `offset`: a kept line grows the next step, a rejected position repeats it
   const next = (offsets: ReadonlyArray<number>, offset: number, gap: number): ReadonlyArray<number> => {
     const drawn = A.length(offsets);
     if (offset > limit || drawn >= maxLines || (drawn >= BAND_FLOOR && offset > coverage * span)) {
@@ -424,8 +396,6 @@ export const gradedOffsets = (input: {
   return next([], lead, minPitch);
 };
 
-// A band whose edge has drawn lines close beyond it starts behind a gutter this many times the larger of its own first
-// gap and the spacing from its edge to those lines (review loop 3, O-04).
 const GUTTER_RATIO = 1.5;
 
 /**
@@ -462,9 +432,6 @@ export const bandLead = (input: { readonly minPitch: number; readonly groupPitch
     onSome: (pitch) => Math.max(input.minPitch, GUTTER_RATIO * Math.max(input.minPitch * GROWTH, pitch)),
   });
 
-// Length of the chord a cut at `offset` along the anchor's step makes across
-// the face, from its straight edges (a curved face answers infinity and keeps
-// every position); the hull across a notch, which is what a stroke spans.
 const chordAt =
   (face: FaceFacts, anchor: FaceAnchor, direction: V3) =>
   (offset: number): number => {
@@ -532,7 +499,6 @@ export const gradedExtents = (input: {
   const share = clampShare(input.faintShare ?? 0);
   const tapered = (full: number, index: number): number =>
     index < full ? 1 : TAPER_FROM - (TAPER_FROM - TAPER_TO) * ((index - full) / Math.max(1, count - full - 1));
-  // at either end of the ramp the blend is exactly that end's taper
   return count <= 0
     ? A.empty()
     : A.makeBy(count, (index) => (1 - share) * tapered(fullLines, index) + share * tapered(0, index));
@@ -566,10 +532,6 @@ export const gradedExtents = (input: {
  */
 export const legibleStrokeLength = (plan: ShadingPlan): number => plan.minStroke + 2 * plan.minPitch;
 
-// Two shading segments sit side by side when they run within two degrees of
-// each other and overlap along their length by more than the minimum spacing;
-// collinear pieces (one line split by a hidden part) are 0.01 apart or less
-// and do not count.
 const PARALLEL_SINE = Math.sin((2 * Math.PI) / 180);
 const COLLINEAR = 0.01;
 
@@ -676,22 +638,14 @@ export const nearestOutlineDistance = (input: {
     A.reduce(Number.POSITIVE_INFINITY, (least, d) => Math.min(least, d))
   );
 
-// A drawn line runs beside a stroke, for the ladder test, within five degrees of parallel on the sheet: a perspective
-// view tilts an outline a little against the strokes beside it.
 const LADDER_SINE = Math.sin((5 * Math.PI) / 180);
 
-// A stretch along a stroke, from its first point.
 type Span = readonly [number, number];
 
-// One drawn line beside a stroke: its distance from the stroke's line, signed (positive on the stroke's left, seen
-// from its first point), and the stretch of the stroke it runs beside.
 type Beside = { readonly distance: number; readonly from: number; readonly to: number };
 
-// A line beside a stroke, measured from a reference line on one side of it (the stroke itself, or a band's edge).
 type Beyond = { readonly beyond: number; readonly from: number; readonly to: number };
 
-// The drawn lines that run beside a stroke: within five degrees of parallel and overlapping it along its length, each
-// with its signed distance at the middle of the stretch it runs beside.
 const besideOf = (stroke: Segment2, lines: ReadonlyArray<Segment2>): ReadonlyArray<Beside> => {
   const [px, py, qx, qy] = stroke;
   const length = Math.hypot(qx - px, qy - py);
@@ -714,7 +668,6 @@ const besideOf = (stroke: Segment2, lines: ReadonlyArray<Segment2>): ReadonlyArr
       if (!(to > from)) {
         return O.none();
       }
-      // the line overlaps the stroke (to > from), so its ends differ along it
       const f = ((from + to) / 2 - ta) / (tb - ta);
       const x = x1 + f * (x2 - x1);
       const y = y1 + f * (y2 - y1);
@@ -724,7 +677,6 @@ const besideOf = (stroke: Segment2, lines: ReadonlyArray<Segment2>): ReadonlyArr
   );
 };
 
-// The stretches a set of runs covers along a stroke, in order, with runs that overlap or touch merged.
 type Run = { readonly from: number; readonly to: number };
 const spansOf: (runs: ReadonlyArray<Run>) => ReadonlyArray<Span> = flow(
   A.sort(Order.mapInput(Order.Number, (run: Run) => run.from)),
@@ -741,14 +693,11 @@ const spansOf: (runs: ReadonlyArray<Run>) => ReadonlyArray<Span> = flow(
 
 const spannedLength = (spans: ReadonlyArray<Span>): number => A.reduce(spans, 0, (sum, [lo, hi]) => sum + (hi - lo));
 
-// How long two sets of stretches along one stroke run side by side.
 const sharedLength = (a: ReadonlyArray<Span>, b: ReadonlyArray<Span>): number =>
   A.reduce(a, 0, (sum, [lo1, hi1]) =>
     A.reduce(b, sum, (acc, [lo2, hi2]) => acc + Math.max(0, Math.min(hi1, hi2) - Math.max(lo1, lo2)))
   );
 
-// Lines beside a stroke, nearest first, with the runs that lie within `tolerance` of the one before them taken as one
-// line (an outline drawn in pieces, or drawn twice): each at its nearest run's distance, with the stretches it covers.
 const linesBeyond = (
   runs: ReadonlyArray<Beyond>,
   tolerance: number
@@ -778,7 +727,9 @@ const linesBeyond = (
  * segment along the band's edge (the side of the stroke away from the rest
  * of the band). The edge's own drawn lines are the `outlines` within
  * `tolerance` of it. A line counts when it lies more than `tolerance` and at
- * most `reach` beyond the edge, within five degrees of parallel, and runs
+ * most `reach` beyond the edge, within five degrees of parallel (a
+ * perspective view tilts an outline a little against the strokes beside
+ * it), and runs
  * beside the edge's own lines for at least half the stroke's length; pieces
  * within `tolerance` of each other are one line. An outline that steps out
  * around a tab fills the gap in the edge instead of running beside it, so it
@@ -816,15 +767,14 @@ export const ladderPitch = (input: {
   if (length < COLLINEAR) {
     return O.none();
   }
-  // the edge's signed distance from the stroke's line, read at the edge's middle
-  const toEdge =
+  const edgeMidDistance =
     ((stroke[2] - stroke[0]) * ((edge[1] + edge[3]) / 2 - stroke[1]) -
       (stroke[3] - stroke[1]) * ((edge[0] + edge[2]) / 2 - stroke[0])) /
     length;
-  const side = toEdge < 0 ? -1 : 1;
+  const side = edgeMidDistance < 0 ? -1 : 1;
   const runs = A.map(
     besideOf(stroke, input.outlines),
-    (run): Beyond => ({ beyond: run.distance * side - Math.abs(toEdge), from: run.from, to: run.to })
+    (run): Beyond => ({ beyond: run.distance * side - Math.abs(edgeMidDistance), from: run.from, to: run.to })
   );
   const edgeSpans = spansOf(A.filter(runs, (run) => Math.abs(run.beyond) <= tolerance));
   return pipe(
@@ -934,9 +884,6 @@ export const legibleShading = (input: {
     const uy = (s[3] - s[1]) / length;
     return [s[0] + ux * inset, s[1] + uy * inset, s[2] - ux * inset, s[3] - uy * inset];
   };
-  // an end that met an outline at a shallow angle sits almost on it after the
-  // inset along the stroke: each end is drawn back further, half a clearance
-  // at a time and at most two clearances, until it stands clear of every outline
   const nearest = (x: number, y: number): number => nearestOutlineDistance({ x, y, outlines });
   const cleared = (s: Segment2): Segment2 => {
     const length = segmentLength(s);
@@ -953,9 +900,6 @@ export const legibleShading = (input: {
     const b = back(s[2], s[3], -ux, -uy, 0);
     return a + b >= length ? [s[0], s[1], s[0], s[1]] : [s[0] + ux * a, s[1] + uy * a, s[2] - ux * b, s[3] - uy * b];
   };
-  // a stroke running beside a drawn outline closer than the clearance (a
-  // board's edge seen on edge next to the face it bounds) reads as a doubled
-  // line and goes
   const besideOutline = (s: Segment2): boolean =>
     clearance > 0 && A.some(outlines, (o) => O.isSome(sideBySideGap({ first: s, second: o, minSpacing: clearance })));
   const long = pipe(
@@ -971,11 +915,9 @@ export const legibleShading = (input: {
   return A.filter(long, (s, i) => !A.some(long, yieldsTo(s, i)));
 };
 
-// A point on the sheet, and a stretch of a stroke by distance from its first point.
 type Planar = readonly [number, number];
 type Stretch = readonly [number, number];
 
-// A trimmed end lands this share past the clearance, so a unit conversion never measures it a hair under.
 const REACH_MARGIN = 1e-9;
 
 const byStart = Order.mapInput(Order.Number, (stretch: Stretch) => stretch[0]);
@@ -985,7 +927,6 @@ const overlapOf = (x: Stretch, y: Stretch): O.Option<Stretch> => {
   return lo < hi ? O.some([lo, hi]) : O.none();
 };
 
-// Where along the line from `from` in unit direction `u` it runs closer than `reach` to `centre`.
 const nearPoint = (from: Planar, u: Planar, centre: Planar, reach: number): O.Option<Stretch> => {
   const [dx, dy] = [from[0] - centre[0], from[1] - centre[1]];
   const b = u[0] * dx + u[1] * dy;
@@ -993,7 +934,6 @@ const nearPoint = (from: Planar, u: Planar, centre: Planar, reach: number): O.Op
   return discriminant > 0 ? O.some([-b - Math.sqrt(discriminant), -b + Math.sqrt(discriminant)]) : O.none();
 };
 
-// Where `offset + t * rate` lies strictly inside `bounds`.
 const insideFor = (offset: number, rate: number, bounds: Stretch): O.Option<Stretch> => {
   if (rate === 0) {
     return offset > bounds[0] && offset < bounds[1]
@@ -1004,8 +944,6 @@ const insideFor = (offset: number, rate: number, bounds: Stretch): O.Option<Stre
   return O.some([Math.min(t1, t2), Math.max(t1, t2)]);
 };
 
-// Where the line from `from` in direction `u` runs closer than `reach` to a segment's straight run, between the
-// perpendiculars at its ends.
 const nearRun = (from: Planar, u: Planar, line: Segment2, reach: number): O.Option<Stretch> => {
   const length = segmentLength(line);
   const v: Planar = length > 0 ? [(line[2] - line[0]) / length, (line[3] - line[1]) / length] : [1, 0];
@@ -1032,7 +970,6 @@ const nearSegment = (from: Planar, u: Planar, line: Segment2, reach: number): O.
     })
   );
 
-// The stretches of `[0, length]` outside every blocked stretch, in order.
 const stretchesOutside = (length: number, blocked: ReadonlyArray<Stretch>): ReadonlyArray<Stretch> => {
   const swept = A.reduce(A.sort(blocked, byStart), { kept: A.empty<Stretch>(), from: 0 }, (acc, [lo, hi]) => ({
     kept: lo > acc.from ? A.append(acc.kept, [acc.from, lo] as const) : acc.kept,
@@ -1041,8 +978,6 @@ const stretchesOutside = (length: number, blocked: ReadonlyArray<Stretch>): Read
   return swept.from < length ? A.append(swept.kept, [swept.from, length] as const) : swept.kept;
 };
 
-// The pieces of a stroke that keep `reach` from every line and are at least `minStroke` long; none when no line
-// comes within reach of the stroke.
 const clearPieces = (
   stroke: Segment2,
   lines: ReadonlyArray<Segment2>,
@@ -1069,13 +1004,10 @@ const clearPieces = (
     : O.none();
 };
 
-// The strokes of every band the clip leaves with fewer than two pieces where it had more: a graded band below two
-// strokes draws none, as the engine's legibility pass rules, so a lone stroke is never left to read as a stray line.
 const thinnedStrokes = (
   bands: ReadonlyArray<ShadingBand>,
   clipped: ReadonlyArray<O.Option<ReadonlyArray<Segment2>>>
 ): HashSet.HashSet<number> => {
-  // a stroke no moved line came near keeps its one piece
   const piecesAt = (at: number): number =>
     O.match(O.flatten(A.get(clipped, at)), { onNone: () => 1, onSome: A.length });
   return pipe(
@@ -1115,7 +1047,9 @@ const thinnedStrokes = (
  * `trimmed` counts strokes cut back that kept a piece, `dropped` strokes that
  * kept none (a thinned band's included), and `droppedAt` lists those strokes'
  * indices in `segments`, in order, for {@link reclippedCoverage}. Without
- * `bands` every stroke is clipped on its own.
+ * `bands` every stroke is clipped on its own. A trimmed end lands a hair
+ * (a 1e-9 share of the clearance) past it, so a unit conversion never
+ * measures it under the clearance.
  *
  * **Example** (A line moved up under a band of two strokes)
  *
@@ -1229,16 +1163,12 @@ export const reclippedCoverage = (input: {
     : input.coverage;
 };
 
-// Lengths are compared to the micrometre so the equal edges of a regular face
-// tie instead of ordering by floating-point noise.
-const lineLength = (edge: FaceEdge): number => Math.round(edge.length * 1e3) / 1e3;
+const micrometreLength = (edge: FaceEdge): number => Math.round(edge.length * 1e3) / 1e3;
 
 const rise = (edge: FaceEdge): number => Math.abs(edge.end[2] - edge.start[2]);
 
-// Longest first; among equals the most level edge, so a regular face (an
-// equilateral lid flap) is hatched along its horizontal edge in every view.
 const hatchEdgeOrder = Order.combine(
-  Order.flip(Order.mapInput(Order.Number, lineLength)),
+  Order.flip(Order.mapInput(Order.Number, micrometreLength)),
   Order.mapInput(Order.Number, rise)
 );
 
@@ -1250,14 +1180,8 @@ const longestEdgeDirection = (face: FaceFacts): O.Option<V3> =>
     O.map((edge) => unitOf(plus(edge.end, times(edge.start, -1))))
   );
 
-// The straight edge of a level or inclined face whose outward side faces most
-// away from the light: strokes along it bunch on the face's darkest edge.
-// Only edges at least a quarter as long as the face's longest count, so a tab
-// notch or chamfer cannot turn a flap's strokes into a row of ticks; among
-// equals the longer edge wins, so a regular lid keeps one direction per set.
 const MAJOR_EDGE_SHARE = 0.25;
 
-// Within 15 degrees of the sheet's vertical, where upright faces hatch.
 const WALL_HATCH_COS = Math.cos((15 * Math.PI) / 180);
 
 const majorEdgesOf = (face: FaceFacts): ReadonlyArray<FaceEdge> => {
@@ -1269,15 +1193,6 @@ const majorEdgesOf = (face: FaceFacts): ReadonlyArray<FaceEdge> => {
   return A.filter(face.edges, (edge) => edge.length > 0 && edge.length >= MAJOR_EDGE_SHARE * longest);
 };
 
-// The edge of a face whose outward side faces most away from the 1.84(m)
-// light, read on the sheet: the edge's outward normal drops its component
-// along the sight line and the light its component along the picture-plane
-// normal, because the light is a sheet convention (from the upper left of the
-// page) and an inclined face seen obliquely can turn a sheet-dark edge into a
-// model-lit one. Ties go to the
-// edge least aligned with the sheet's vertical (upright faces hatch
-// vertically, and a level face's band must not run on from a wall's), then
-// to the longer edge.
 const darkestEdge = (face: FaceFacts, view: ViewFacts): O.Option<FaceEdge> => {
   const normal = unitOf(face.normal);
   const onSheet = (v: V3): V3 => minus(v, times(view.eye, dot(v, view.eye)));
@@ -1300,14 +1215,10 @@ const darkestEdge = (face: FaceFacts, view: ViewFacts): O.Option<FaceEdge> => {
     Order.flip(Order.mapInput(Order.Number, (edge: FaceEdge) => Math.round(darkness(edge) * 1e6) / 1e6)),
     Order.combine(
       Order.mapInput(Order.Number, (edge: FaceEdge) => Math.round(verticality(edge) * 1e6) / 1e6),
-      Order.flip(Order.mapInput(Order.Number, lineLength))
+      Order.flip(Order.mapInput(Order.Number, micrometreLength))
     )
   );
   const majors = majorEdgesOf(face);
-  // An inclined face never hatches within 15 degrees of the sheet's vertical in a view where upright faces hatch (any
-  // view not looking straight down or up): its strokes would run on from the band of a wall below it and read the
-  // flap as part of the wall (review loop 2, O-01; round 2, R2-02). It takes its darkest other major edge that still
-  // faces away from the light, when it has one.
   const wallsHatch = Math.abs(dot(view.eye, MODEL_UP)) < COS_TOLERANCE;
   const offWall =
     wallsHatch && surfaceClassOf(face.normal) === "inclined"
@@ -1332,6 +1243,24 @@ const darkestEdgeDirection = (face: FaceFacts, view: ViewFacts): O.Option<V3> =>
  * (`normal × Z`) on an inclined face and the longest edge on a level one (+X
  * on a level face without straight edges, such as a peg's top). None for a
  * `longest-edge` face without straight edges.
+ *
+ * Edge lengths compare to the micrometre, so the equal edges of a regular
+ * face tie instead of ordering by floating-point noise, and among equals the
+ * most level edge wins: an equilateral lid flap hatches along its horizontal
+ * edge in every view. The darkest edge is read on the sheet: the edge's
+ * outward normal drops its component along the sight line and the light its
+ * component along the picture-plane normal, because the light is a sheet
+ * convention and an inclined face seen obliquely can turn a sheet-dark edge
+ * into a model-lit one. Only major edges count, at least a quarter as long as
+ * the face's longest, so a tab notch or chamfer cannot turn a flap's strokes
+ * into a row of ticks. Ties go to the edge least aligned with the sheet's
+ * vertical, then to the longer edge, so a regular lid keeps one direction per
+ * set. In a view where upright faces hatch (any view not looking straight
+ * down or up), an inclined face never hatches within 15° of the sheet's
+ * vertical, since its strokes would run on from the band of a wall below it
+ * and read the flap as part of the wall (review loop 2, O-01; round 2,
+ * R2-02); it takes its darkest other major edge that still faces away from
+ * the light, when it has one.
  *
  * **Example** (A wall hatches vertically)
  *
@@ -1376,12 +1305,8 @@ export const hatchDirectionOf = (input: {
   });
 };
 
-// Fraction of a step along `step` that survives projection toward `eye`: 1
-// when the step lies in the picture plane, 0 when it runs along the sight line.
 const spread = (step: V3, eye: V3): number => Math.sqrt(Math.max(0, 1 - dot(step, eye) ** 2));
 
-// Distance on the sheet between two lines running along `direction` one unit
-// apart along `step`: the projected step's component across the projected lines.
 const sheetSpacing = (direction: V3, step: V3, view: ViewFacts): number => {
   const [dx, dy] = onSheet(view)(direction);
   const [sx, sy] = onSheet(view)(step);
@@ -1397,7 +1322,9 @@ const sign = (value: number): number => (value < 0 ? -1 : 1);
  * **Details**
  *
  * The sheet-plane part of the 1.84(m) light (its component along the
- * picture-plane normal dropped, since the shadow side is read on the sheet),
+ * picture-plane normal dropped, since the shadow side is read on the sheet:
+ * the component toward the viewer makes faces lit but must not pick the near
+ * end of a receding wall),
  * projected into the face plane, points to the lit side; the anchor is the outline point
  * farthest the other way along `step`, and
  * the returned step points from it into the face. When the light has no
@@ -1439,16 +1366,11 @@ export const anchorOf = (input: {
   const { face, view, direction } = input;
   const normal = unitOf(face.normal);
   const across = unitOf(crossOf(normal, direction));
-  // The shadow side is read on the sheet: the light's component toward the
-  // viewer makes faces lit but must not pick the near end of a receding wall.
   const sheetLight = sheetLightOf(view);
   const inPlaneLight = minus(sheetLight, times(normal, dot(sheetLight, normal)));
   const toLight = dot(across, inPlaneLight);
-  // lit edge-on to its lines, a face shades its sheet-right side, or its
-  // bottom when its step runs straight up the sheet
   const sheetRight = dot(across, view.right);
   const sheetShadow = Math.abs(sheetRight) > 1e-6 ? sheetRight : -dot(across, view.up);
-  // lines that follow the face's darkest edge bunch on that edge's side
   const edgeSide = O.map(O.fromNullishOr(input.shadowEdge), (edge) =>
     sign(dot(across, minus(times(plus(edge.start, edge.end), 0.5), face.center)))
   );
@@ -1456,8 +1378,6 @@ export const anchorOf = (input: {
     Math.abs(toLight) > EDGE_ON_LIGHT ? -sign(toLight) : sign(sheetShadow)
   );
   const shadow = times(across, toShadow);
-  // the anchor is read from the face's major edges, so a tab or chamfer that
-  // sticks out past the face's side cannot pull the band outside it
   const majors = majorEdgesOf(face);
   const candidates = A.isReadonlyArrayNonEmpty(majors) ? A.flatMap(majors, (e) => [e.start, e.end]) : face.outline;
   const point = pipe(
@@ -1484,12 +1404,9 @@ export const anchorOf = (input: {
 
 const skipped = (reason: ShadingSkipReason): FaceTreatment => ShadingSkipped.make({ reason });
 
-// Under the surface-class axis a level or inclined face follows its darkest edge, and its band bunches there.
 const shadowEdgeOf = (face: FaceFacts, view: ViewFacts, plan: ShadingPlan): O.Option<FaceEdge> =>
   plan.axis === "surface-class" && surfaceClassOf(face.normal) !== "upright" ? darkestEdge(face, view) : O.none();
 
-// Exposure → pitch of the uniform style: `minPitch` at -1, `maxPitch` at the
-// lit threshold, none above it.
 const uniformPitch = (exposure: number, plan: ShadingPlan): O.Option<number> => {
   if (exposure > plan.litThreshold) {
     return O.none();
@@ -1498,8 +1415,8 @@ const uniformPitch = (exposure: number, plan: ShadingPlan): O.Option<number> => 
   return O.some(plan.minPitch + (plan.maxPitch - plan.minPitch) * Math.max(0, Math.min(1, t)));
 };
 
-// Lines centred on the face with a half-pitch phase so none lands on the
-// face's own boundary, reaching the kernel bounding box's diagonal each way.
+const OFF_BOUNDARY_PHASE = 0.5;
+
 const centredLines = (face: FaceFacts, step: V3, pitch: number): FaceTreatment => {
   const { min, max } = face.bounds;
   const reach = Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
@@ -1507,12 +1424,10 @@ const centredLines = (face: FaceFacts, step: V3, pitch: number): FaceTreatment =
   return ShadingLines.make({
     origin: face.center,
     step,
-    cuts: A.makeBy(count + 1, (i) => ShadingCut.make({ offset: -reach + pitch * (i + 0.5) })),
+    cuts: A.makeBy(count + 1, (i) => ShadingCut.make({ offset: -reach + pitch * (i + OFF_BOUNDARY_PHASE) })),
   });
 };
 
-// The original hatch: lines along the longest edge, stepped across it unless
-// that step is too foreshortened, in which case along it.
 const legacyTreatment = (face: FaceFacts, view: ViewFacts, pitch: number): FaceTreatment =>
   pipe(
     longestEdgeDirection(face),
@@ -1532,7 +1447,6 @@ const legacyTreatment = (face: FaceFacts, view: ViewFacts, pitch: number): FaceT
 
 const byRoomOffset = Order.mapInput(Order.Number, (sample: ShadingRoom) => sample.offset);
 
-// The room a window measured for its stretch, in offset order; none when it measured none.
 const measuredRoomOf = (window: O.Option<ShadingWindow>): O.Option<A.NonEmptyReadonlyArray<ShadingRoom>> =>
   pipe(
     window,
@@ -1546,7 +1460,6 @@ const roomBetween = (before: ShadingRoom, after: ShadingRoom, offset: number): n
     ? after.length
     : before.length + ((after.length - before.length) * (offset - before.offset)) / (after.offset - before.offset);
 
-// The measured room at an offset: read linearly between the samples either side, held flat past the first and last.
 const measuredRoomAt =
   (samples: A.NonEmptyReadonlyArray<ShadingRoom>) =>
   (offset: number): number =>
@@ -1559,9 +1472,6 @@ const measuredRoomAt =
       )
     );
 
-// A stroke's room at an offset along the anchor's step, in model units along the lines: the face's chord there, or,
-// where the window measured what the view shows of its stretch, the lesser of the two (review loop 4, G-01). A part in
-// front can leave a stretch a pointed glimpse of the face whose chord runs the face's whole height.
 const roomOf = (
   face: FaceFacts,
   anchor: FaceAnchor,
@@ -1578,8 +1488,6 @@ const roomOf = (
   });
 };
 
-// A band of one line reads as a doubled outline, never as shading, so a stretch with room for exactly one is a planned
-// skip rather than a face that later loses its line; a stretch with room for none is a sliver.
 const bandTreatment = (
   anchor: FaceAnchor,
   cuts: ReadonlyArray<{ readonly offset: number; readonly extent: number }>
@@ -1614,40 +1522,20 @@ const gradedTreatment = (input: {
     A.map((point) => dot(minus(point, anchor.point), anchor.step)),
     A.reduce(0, (most, r) => Math.max(most, r))
   );
-  // a visible stretch of the face is shaded as a face of its own, from the side nearest the shadow
-  // anchor; a stretch cannot start before the anchor, which the major edges set: a probe through a
-  // tab or chamfer that sticks out past the face's shadow side sees the face begin inside the
-  // appendage, and a band measured from there would put its first stroke in the tab
   const start = O.match(window, { onNone: () => 0, onSome: (w) => Math.max(0, w.start) });
   const span =
     O.match(window, { onNone: () => reach, onSome: (w) => w.span - (Math.max(0, w.start) - w.start) }) * factor;
   const exposure = dot(face.normal, view.light);
   const tone = toneOf(exposure);
-  // a face turned toward the light carries short strokes only (Example 32: lit faces are nearly bare); its band
-  // turns from the light recipe into the faint one over the faint ramp, so the full-length lines shorten to the taper
-  // and the band thins as the exposure rises instead of all at once at one exposure (review loop 3, K-07)
   const faintShare = faintShareOf(exposure);
-  // a stroke needs the face wide enough where it is cut to keep the minimum
-  // stroke, at the fraction of the chord its line would draw, after the kernel
-  // draws both its ends back one pitch from the outline
   const measured = measuredRoomOf(window);
   const room = roomOf(face, anchor, direction, measured);
   const seen = spread(direction, view.eye);
   const needed = legibleStrokeLength(plan);
-  // a band cut back because it out-inks a darker neighbour has no full-length line at all (review loop 3, O-02); the
-  // room each position needs follows the taper, a full-length line's shortened by the faint ramp. Where the window
-  // measured what the view shows of its stretch, a position needs room for a whole chord only: the engine draws a
-  // tapered band its strokes cannot show on whole chords cut back to the taper and never below the minimum stroke, so
-  // the taper may shorten a band there but never decide where it goes or empty it (review loop 3, J-01; review loop 4,
-  // G-01, K-08). A lit band whose shadow side is a glimpsed pointed tip then moves inward to where the glimpse is tall
-  // enough for a stroke.
   const fullLines = taper === "full" ? FULL_LINES : 0;
   const fullExtent = 1 - faintShare + faintShare * TAPER_TO;
   const taperedExtent = (index: number): number => (index < fullLines ? fullExtent : TAPER_TO);
   const extentOf = O.isSome(measured) ? (): number => 1 : taperedExtent;
-  // the band's positions where each line, drawn at its extent of the room there, keeps the legible length; a stretch
-  // whose edge has drawn lines close beyond it starts behind the gutter the engine measured (review loop 3, O-04), and
-  // offsets are on the sheet, like the lead (no lead is a lead of one pitch)
   const offsets = gradedOffsets({
     span,
     minPitch: plan.minPitch,
@@ -1660,7 +1548,6 @@ const gradedTreatment = (input: {
     ),
     faintShare,
   });
-  // at the floor a band keeps only the lines a band needs, the ones nearest its shadow edge
   const band = taper === "lit-floor" ? A.take(offsets, BAND_FLOOR) : offsets;
   const extents = gradedExtents({ count: A.length(band), fullLines, faintShare });
   return bandTreatment(
@@ -1766,15 +1653,10 @@ export const treatmentFor = (input: {
   );
 };
 
-// A band needs this many minimum pitches across on the sheet: its first line a pitch in, the second 1.4 pitches past
-// it, and a pitch to spare before the stretch's far side (review loop 4, A-01).
 const BAND_ROOM_PITCHES = 1 + GROWTH + 1;
 
-// Where the room of a stretch is read across it, in quarter pitches on the sheet.
 const ROOM_READINGS_PER_PITCH = 4;
 
-// Width on the sheet of the part of a window whose room, as the window measured it (or the chord cut to the window's
-// range along the lines), reaches the legible stroke length, read at quarter pitches across it.
 const legibleWidthOf = (input: {
   readonly face: FaceFacts;
   readonly anchor: FaceAnchor;
@@ -1870,7 +1752,6 @@ export const stretchFitsBand = (input: {
   );
 };
 
-// Two faces whose exposures differ by no more than this are equally lit, and neither has to carry less ink.
 const EXPOSURE_TIE = 1e-3;
 
 /**
@@ -1924,10 +1805,7 @@ export const inkOrderSteps = (input: {
   );
 };
 
-// Two banded faces whose seen areas agree within this share compare by density as neighbours do: a band's density
-// rises as its face narrows, so only faces of one size compare off a shared edge (review loop 4, F11-04).
 const TWIN_AREA_SHARE = 0.1;
-// Twins are compared only when their exposures differ by more than one tone step.
 const TWIN_EXPOSURE_STEP = 0.2;
 
 /**
@@ -1984,7 +1862,6 @@ export const inkTwins = (input: {
   );
 };
 
-// The longest length each rank of a band may keep: its own longest cut, never longer than a rank nearer the shadow edge.
 const rankCeilings = (cuts: ReadonlyArray<{ readonly rank: number; readonly length: number }>) =>
   pipe(
     A.dedupe(A.map(cuts, (cut) => cut.rank)),
@@ -2113,7 +1990,6 @@ export const settleBandTapers = (input: {
     O.getOrElse(HashMap.get(tapers, face), (): BandTaper => "full");
   const densities = (bands: ReadonlyArray<BandInk>): HashMap.HashMap<number, number> =>
     HashMap.fromIterable(A.map(bands, (band) => [band.face, band.density] as const));
-  // the tapers left for a face to step to, nearest first
   const laterTapers = (taper: BandTaper): ReadonlyArray<BandTaper> =>
     O.match(nextBandTaper(taper), { onNone: A.empty, onSome: (next) => [next, ...laterTapers(next)] });
   type Trying = { readonly face: number; readonly later: ReadonlyArray<BandTaper> };
@@ -2130,8 +2006,6 @@ export const settleBandTapers = (input: {
       return tapers;
     }
     const before = densities(bands);
-    // every named face tries its next taper at once; a step that leaves the face banded and thinner than at the
-    // round's start is taken, and a refused face tries the taper after it, until it has none left and holds
     const attempt = (
       taken: HashMap.HashMap<number, BandTaper>,
       trying: ReadonlyArray<Trying>,
