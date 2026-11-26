@@ -118,7 +118,10 @@ describe("document intake statechart model, serial: CPU-bound path generation un
         })
       );
       expect(A.every(results, (result) => result.passed)).toBe(true);
-      expect(results.length).toBeGreaterThan(0);
+      expect(
+        results.length,
+        "paths stop at the picker, since synthesized done events carry no output, and merge by chart position, since results grow unbounded"
+      ).toBeGreaterThan(0);
       const visited = A.join(coverage.states.covered, "\n");
       for (const state of ["loadFailed", "loading", "unconfigured", "sidecar", "configured", "dragging"]) {
         expect(visited).toContain(state);

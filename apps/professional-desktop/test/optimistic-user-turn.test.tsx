@@ -259,11 +259,11 @@ function EditFallbackThread(): JSX.Element {
   );
 }
 
-const jsdomHasNoLayoutToScroll = () => undefined;
+const jsdomScrollIntoViewStub = () => undefined;
 
 describe("the message you just sent", { concurrent: false }, () => {
   beforeAll(() => {
-    Element.prototype.scrollIntoView = jsdomHasNoLayoutToScroll;
+    Element.prototype.scrollIntoView = jsdomScrollIntoViewStub;
   });
   afterEach(() => {
     cleanup();

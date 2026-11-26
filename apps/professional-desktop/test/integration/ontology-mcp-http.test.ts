@@ -240,7 +240,10 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             });
             const refusal = yield* decodeOntologyToolFailureFromText(firstTextContent(call));
 
-            expect(call.isError).toBe(true);
+            expect(
+              call.isError,
+              "a declared tool failure is a tool error whose payload rides content[].text, never structuredContent"
+            ).toBe(true);
             expect(refusal._tag).toBe("OntologyTierGateRefusal");
           }).pipe(Effect.provide(context));
         }).pipe(Effect.scoped);

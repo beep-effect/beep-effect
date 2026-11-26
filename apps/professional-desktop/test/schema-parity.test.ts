@@ -212,9 +212,9 @@ describe("@beep/professional-desktop schema parity", () => {
       expect(encodedVaultSyncStatus1).toStrictEqual(activeStatusWire);
 
       const { disconnectReason: _dropped, probedAt: _droppedProbedAt, ...olderSidecarStatusWire } = bootstrapStatusWire;
-      const missingKeysDecodeToNone = yield* decodeVaultSyncStatus(olderSidecarStatusWire);
-      assertNone(missingKeysDecodeToNone.disconnectReason);
-      assertNone(missingKeysDecodeToNone.probedAt);
+      const decodedOlderSidecarStatus = yield* decodeVaultSyncStatus(olderSidecarStatusWire);
+      assertNone(decodedOlderSidecarStatus.disconnectReason);
+      assertNone(decodedOlderSidecarStatus.probedAt);
     })
   );
 

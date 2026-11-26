@@ -266,7 +266,10 @@ SELECT ?destination WHERE {
               ),
             });
 
-            expect(firstDeniedCall.isError).toBe(true);
+            expect(
+              firstDeniedCall.isError,
+              "a declared tool failure is a tool error whose payload rides content[].text, never structuredContent"
+            ).toBe(true);
             expect(secondDeniedCall.isError).toBe(true);
             const firstRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(firstDeniedCall));
             const secondRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(secondDeniedCall));

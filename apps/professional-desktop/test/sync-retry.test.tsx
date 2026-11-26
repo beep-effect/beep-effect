@@ -48,13 +48,13 @@ describe("a failed sync query is not a dead end, serial: shared jsdom localStora
   it.effect(
     "shows the retry in flight for both the status and the conflicts",
     Effect.fnUntraced(function* () {
-      const clickedRetryLeavesCallsPending = MutableRef.make(false);
+      const retryClicked = MutableRef.make(false);
       const client = DesktopSyncClient.of(((tag: string) =>
         tag === "WatchVaultSyncStatus"
-          ? MutableRef.get(clickedRetryLeavesCallsPending)
+          ? MutableRef.get(retryClicked)
             ? Stream.never
             : Stream.unwrap(VaultSyncActionError.failEffect("sync status unavailable"))
-          : MutableRef.get(clickedRetryLeavesCallsPending)
+          : MutableRef.get(retryClicked)
             ? Effect.never
             : VaultSyncActionError.failEffect("sync query unavailable")) as unknown as DesktopSyncClient["Service"]);
       const clientLayer = Layer.mergeAll(Layer.succeed(DesktopSyncClient, client), Reactivity.layer);
@@ -73,13 +73,16 @@ describe("a failed sync query is not a dead end, serial: shared jsdom localStora
       expect(statusRetry).toHaveTextContent("Retry");
       expect(conflictsRetry).toHaveTextContent("Retry");
 
-      MutableRef.set(clickedRetryLeavesCallsPending, true);
+      MutableRef.set(retryClicked, true);
       fireEvent.click(statusRetry);
       fireEvent.click(conflictsRetry);
       yield* Effect.promise(() =>
         waitFor(
           () => {
-            expect(screen.getByTestId("vault-sync-status-retry")).toHaveTextContent("Retrying…");
+            expect(
+              screen.getByTestId("vault-sync-status-retry"),
+              "every call after the click stays pending, so the refresh never settles and Retrying… renders on every run"
+            ).toHaveTextContent("Retrying…");
             expect(screen.getByTestId("vault-sync-conflicts-retry")).toHaveTextContent("Retrying…");
           },
           { timeout: 4_000 }
