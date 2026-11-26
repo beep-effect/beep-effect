@@ -67,8 +67,7 @@ const assertEscapedBlockIndentation = Effect.fn(function* (
   }
 });
 
-/** Flow collections carrying `value` as an item, a key and a value, via both the value and node paths. */
-const assertFlowEscapes = Effect.fn(function* (
+const assertFlowEscapesViaValueAndNodePaths = Effect.fn(function* (
   defaultScalarStyle: ScalarStyle,
   forceDefaultStyles: boolean,
   value: string
@@ -191,8 +190,6 @@ describe("canonical preprocessing nesting limit", () => {
   });
   it("throws the same typed error for a 50,000-deep AST in normal and canonical modes", () => {
     let node: YamlNode = scalar;
-    // Each node is well-shaped; skip recursive validation while building the
-    // deliberately excessive tree so the stringifier owns the limit check.
     for (let i = 0; i < 50_000; i++) {
       node = YamlSeq.make({ items: [node], style: "block", offset: 0, length: 0 }, { disableChecks: true });
     }
@@ -200,7 +197,10 @@ describe("canonical preprocessing nesting limit", () => {
       const error = captureFailure(() =>
         stringifyDocument(document(node), StringifyOptionsInput.make({ forceDefaultStyles }))
       );
-      assert.isTrue(isDepthFailure(error));
+      assert.isTrue(
+        isDepthFailure(error),
+        "each node is well-shaped, so the deliberately excessive tree skips recursive validation and the stringifier owns the limit check"
+      );
       if (isDepthFailure(error)) {
         assert.strictEqual(error.name, "StringifyDepthExceeded");
         assert.strictEqual(error.message, `Nesting depth exceeded maximum of ${MAX_NESTING_DEPTH}`);
@@ -279,13 +279,15 @@ describe("stable key ordering", () => {
 
 describe("compact explicit key round trip", () => {
   it("keeps a newline key in a nested sequence stable across re-composition", () => {
-    // Shrunk counterexample from the "stringifyDocument is idempotent" property:
-    // its `- - ? "\n"` output lost the key's mapping on the next composition.
     const value = [[{ "\n": [""] }]];
     const input = stringifyValue(value);
     const text = stringifyDocument(composeFirstDocument(input));
     assert.deepStrictEqual(parse(text), value);
-    assert.strictEqual(stringifyDocument(composeFirstDocument(text)), text);
+    assert.strictEqual(
+      stringifyDocument(composeFirstDocument(text)),
+      text,
+      'shrunk counterexample from the "stringifyDocument is idempotent" property: its `- - ? "\\n"` output lost the key\'s mapping on the next composition'
+    );
   });
 });
 
@@ -333,13 +335,13 @@ describe("scalar rendering fidelity", () => {
     })
   );
   it("matches af7566a9 oracle bytes for representable canonical trailing-newline strings", () => {
-    // Pinned upstream stringifier.ts returns renderSingleQuotedMultiline unchanged.
     const value = "first\nsecond\n";
     const oracleBytes = "'first\n\n  second\n\n'\n";
     for (const style of ["plain", "single-quoted"] as const) {
       assert.strictEqual(
         stringifyValue(value, StringifyOptionsInput.make({ defaultScalarStyle: style, forceDefaultStyles: true })),
-        oracleBytes
+        oracleBytes,
+        "the pinned upstream stringifier.ts returns renderSingleQuotedMultiline unchanged"
       );
       const node = YamlScalar.make({ value, style, offset: 0, length: value.length });
       assert.strictEqual(
@@ -351,7 +353,6 @@ describe("scalar rendering fidelity", () => {
   });
   it.effect("uses escaped quotes for nested trailing-newline canonical scalars", () =>
     Effect.gen(function* () {
-      // af7566a9 emits an unindented closing quote here, rejected by yaml@2.9.0.
       for (const style of ["plain", "single-quoted"] as const) {
         const value = "first\nsecond\n";
         const leaf = YamlScalar.make({ value, style, offset: 0, length: value.length });
@@ -368,13 +369,21 @@ describe("scalar rendering fidelity", () => {
             input,
             StringifyOptionsInput.make({ defaultScalarStyle: style, forceDefaultStyles: true })
           );
-          assert.deepStrictEqual(parse(text), input);
+          assert.deepStrictEqual(
+            parse(text),
+            input,
+            "af7566a9 emits an unindented closing quote here, rejected by yaml@2.9.0"
+          );
           const parsed5 = yield* Yaml.parse(text);
           assert.deepStrictEqual(parsed5, input);
         }
         for (const node of [sequence, mapping]) {
           const text = stringifyDocument(document(node), StringifyOptionsInput.make({ forceDefaultStyles: true }));
-          assert.deepStrictEqual(parse(text), node.toValue());
+          assert.deepStrictEqual(
+            parse(text),
+            node.toValue(),
+            "af7566a9 emits an unindented closing quote here, rejected by yaml@2.9.0"
+          );
           const parsed6 = yield* Yaml.parse(text);
           assert.deepStrictEqual(parsed6, node.toValue());
         }
@@ -392,7 +401,7 @@ describe("scalar rendering fidelity", () => {
       ] as const) {
         for (const forceDefaultStyles of [false, true]) {
           for (const value of ["a\nb", "a \n b", "one line"]) {
-            yield* assertFlowEscapes(defaultScalarStyle, forceDefaultStyles, value);
+            yield* assertFlowEscapesViaValueAndNodePaths(defaultScalarStyle, forceDefaultStyles, value);
           }
         }
       }
