@@ -1644,6 +1644,11 @@ export class MemoryFileSystem {
    * `code`, `syscall` and `path` — when the seed contradicts itself or the
    * `root` is invalid (`EINVAL`).
    *
+   * The root and seed keys are checked before anything is built, ahead of the
+   * same check inside the build, so the thrown `EINVAL` names the offending
+   * key in its `path` and message: the build's own failure is a typed
+   * `BadArgument` that carries no path and would surface as `seed ''`.
+   *
    * The handle reads the real clock, so writes do not follow `TestClock`.
    *
    * **Example** (Write and inspect one synchronous handle)
@@ -1665,7 +1670,6 @@ export class MemoryFileSystem {
     seed: MemoryFileSystemSeed = {},
     options?: MemoryFileSystemOptionsInput
   ): MemoryFileSystemHandle => {
-    // decision: make-sync-validates-seed-root-first
     const applied = applyRoot(seed, options?.root);
     if (applied._tag === "Failure") throw nodeErrno("EINVAL", "seed", applied.failure.subject);
     return runNode(buildHandle(seed, options), (error) => ({

@@ -1687,7 +1687,8 @@ const validateCopyChild = Effect.fnUntraced(function* (
   // top-level AlreadyExists, so a kind mismatch anywhere in the tree wins.
 });
 
-// beep: shared destination subtrees already passed the depth and kind checks; new subtrees keep cloneInode's bound.
+// Shared destination subtrees have already passed the depth and kind validation;
+// new subtrees retain cloneInode's independent depth bound.
 const copyDirectoryContents: {
   (
     state: State,
@@ -3799,6 +3800,9 @@ const makeReadyVolume: (options: EngineOptions) => Effect.Effect<Volume> = Effec
  *   raises no errno for it.
  * - `truncate` validates the length as an integer, then clamps a negative one
  *   to 0, as node does: `truncate(path, -1)` empties the file.
+ * - A directory opens only read-only, as on Linux (to `fsync` it): `stat`
+ *   and `sync` on its descriptor read the inode, and every data operation on
+ *   it fails `EISDIR`.
  * - `glob` is the engine's own walker (case folding, root errno fidelity); it
  *   replaces the member `FileSystem.make` derives from `readDirectoryEntries`.
  *
