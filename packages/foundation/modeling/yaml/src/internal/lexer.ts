@@ -954,7 +954,8 @@ export function createScanner(text: string): YamlScanner {
   }
 
   function endsBlockBody(spaces: number, blank: boolean, contentIndent: number): boolean {
-    if (spaces === 0 && isDocumentMarkerAt(text, pos)) return true;
+    const columnZeroMarkerEndsBodyAtAnyIndent = spaces === 0 && isDocumentMarkerAt(text, pos);
+    if (columnZeroMarkerEndsBodyAtAnyIndent) return true;
     return !blank && spaces < contentIndent;
   }
 
