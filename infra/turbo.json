@@ -6,7 +6,7 @@
     },
     "check": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/tsconfig.tsbuildinfo"]
+      "outputs": [".beep/gates/check/**", "dist/tsconfig.tsbuildinfo"]
     }
   }
 }
