@@ -164,6 +164,50 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("git adoption sites", (it) =>
     )
   );
 
+  it.effect("takes the GitHub repository a mirror origin pushes to", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        const mirror = "git@mirror.invalid:owner/repo.git";
+        yield* runGit(repoRoot, ["remote", "add", "origin", mirror]);
+        yield* runGit(repoRoot, ["remote", "set-url", "--push", "origin", mirror]);
+        yield* runGit(repoRoot, ["remote", "set-url", "--add", "--push", "origin", "git@github.com:Owner/Repo.git"]);
+        yield* runGit(repoRoot, ["remote", "set-url", "--add", "--push", "origin", "https://github.com/owner/repo"]);
+        const detected = yield* detectPrRepository(repoRoot);
+        expect([detected.owner, detected.name]).toEqual(["owner", "repo"]);
+      })
+    )
+  );
+
+  it.effect("prefers a GitHub fetch URL over GitHub push URLs", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        yield* runGit(repoRoot, ["remote", "add", "origin", "https://github.com/Owner/Repo.git"]);
+        yield* runGit(repoRoot, ["remote", "set-url", "--push", "origin", "https://github.com/other/fork.git"]);
+        const detected = yield* detectPrRepository(repoRoot);
+        expect([detected.owner, detected.name]).toEqual(["owner", "repo"]);
+      })
+    )
+  );
+
+  it.effect("fails typed when a mirror origin pushes to two GitHub repositories", () =>
+    withRepository((_root, repoRoot) =>
+      Effect.gen(function* () {
+        yield* runGit(repoRoot, ["remote", "add", "origin", "https://gitlab.invalid/owner/repo.git"]);
+        yield* runGit(repoRoot, ["remote", "set-url", "--push", "origin", "https://github.com/owner/repo.git"]);
+        yield* runGit(repoRoot, [
+          "remote",
+          "set-url",
+          "--add",
+          "--push",
+          "origin",
+          "https://github.com/other/fork.git",
+        ]);
+        const ambiguous = yield* detectPrRepository(repoRoot).pipe(Effect.flip);
+        expect(ambiguous.message).toBe("Expected origin's push URLs to name one github.com repository.");
+      })
+    )
+  );
+
   it.effect("turns the provenance labels off only for an off value", () =>
     withRepository((root, repoRoot) =>
       Effect.gen(function* () {

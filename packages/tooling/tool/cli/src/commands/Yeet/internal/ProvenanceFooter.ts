@@ -572,8 +572,29 @@ export const readProvenanceLabels = (repoRoot: string) =>
     Effect.orElseSucceed(thunkTrue)
   );
 
+const toPrRepository = (url: string): O.Option<PrRepository> =>
+  pipe(
+    Str.match(repositoryPattern)(url),
+    O.flatMap(([, owner, name]) =>
+      owner === undefined || name === undefined
+        ? O.none()
+        : PrRepository.makeOption({ host: "github.com", owner: Str.toLowerCase(owner), name: Str.toLowerCase(name) })
+    )
+  );
+
+const sameRepository = (self: PrRepository, that: PrRepository) => self.owner === that.owner && self.name === that.name;
+
 /**
  * Resolve the current GitHub repository from the origin URL.
+ *
+ * **Details**
+ *
+ * `remote.origin.url` decides when it names a `github.com` repository. When
+ * origin fetches from a mirror instead, the repository comes from origin's
+ * push URLs (`remote.origin.pushurl`), provided they name exactly one
+ * `github.com` repository: a checkout that fetches from a self-hosted mirror
+ * and pushes to both the mirror and GitHub still publishes to GitHub. Both
+ * reads use the configured values, never an `insteadOf` rewrite.
  *
  * **Example** (Build repository detection)
  *
@@ -595,15 +616,32 @@ export const detectPrRepository = Effect.fn("ProvenanceFooter.detectRepository")
       YeetCommandError.new("Failed to read the origin URL.", { command: "git config --get remote.origin.url" })
     )
   );
-  const match = O.flatMap(origin, Str.match(repositoryPattern));
-  if (O.isNone(match) || match.value[1] === undefined || match.value[2] === undefined) {
-    return yield* YeetCommandError.make({ message: "Expected a github.com origin URL." });
+  const fetched = O.flatMap(origin, toPrRepository);
+  if (O.isSome(fetched)) {
+    return fetched.value;
   }
-  return PrRepository.make({
-    host: "github.com",
-    owner: Str.toLowerCase(match.value[1]),
-    name: Str.toLowerCase(match.value[2]),
-  });
+  const pushUrls = yield* Git.use((git) => git.configGetAll(cwd, "remote.origin.pushurl")).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
+    Effect.mapError(
+      YeetCommandError.new("Failed to read the origin push URLs.", {
+        command: "git config --get-all remote.origin.pushurl",
+      })
+    )
+  );
+  return yield* pipe(
+    A.map(pushUrls, toPrRepository),
+    A.getSomes,
+    A.dedupeWith(sameRepository),
+    A.match({
+      onEmpty: () => Effect.fail(YeetCommandError.make({ message: "Expected a github.com origin URL." })),
+      onNonEmpty: ([repository, ...others]) =>
+        A.isArrayEmpty(others)
+          ? Effect.succeed(repository)
+          : Effect.fail(
+              YeetCommandError.make({ message: "Expected origin's push URLs to name one github.com repository." })
+            ),
+    })
+  );
 });
 
 /**
