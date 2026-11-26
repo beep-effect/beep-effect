@@ -491,6 +491,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
         <Button
           type="button"
           size="sm"
+          // Disabled for long stretches (paused, Box down): muted reads better than a faded primary.
           disabledTone="muted"
           title={O.getOrUndefined(syncBlockedReason)}
           onClick={() => submit(VaultSyncAction.cases["request-sync"].make({}))}

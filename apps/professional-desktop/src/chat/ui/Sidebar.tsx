@@ -153,6 +153,10 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
               onClick={() => select(thread.id)}
               data-testid="sidebar-item"
             >
+              {/* `w-full` is what makes `truncate` mean anything. The button lays its
+                  children out with `items-start`, so without it the title sizes itself
+                  to its own text — a thread whose title is the first line of a long
+                  prompt simply ran off the side, ellipsis rule and all. */}
               <span className="w-full truncate font-medium">{thread.title}</span>
               <span className="text-xs text-muted-foreground">
                 {DateTime.formatLocal(thread.updatedAt, { month: "short", day: "numeric" })}

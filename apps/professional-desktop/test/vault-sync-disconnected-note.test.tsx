@@ -511,6 +511,10 @@ describe("vault sync panel", { concurrent: false }, () => {
         const statusWith8 = yield* statusWith(false, O.some(reason));
         const { container, unmount } = renderWithStatus(statusWith8);
         expect(within(container).getByTestId("vault-sync-setup-note")).toBeInTheDocument();
+        expect(
+          within(container).getByTestId("vault-sync-setup-note").className,
+          "amber-600 fell below readable contrast on the dark theme, so notes use the warning-text tier"
+        ).toContain("text-warning-text");
         unmount();
       }
     })

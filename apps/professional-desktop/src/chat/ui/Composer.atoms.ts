@@ -287,6 +287,7 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
   Atom.family((seed: Md.Document) =>
     Atom.make((get) => {
       const updateDraft = updateComposerDraftAtoms(threadId)(seed);
+      // decision: fn-atom-writes-outlive-the-node
       const registry = get.registry;
       get.mount(updateDraft);
       return (state: SerializedEditorState): void => registry.set(updateDraft, state);
@@ -299,6 +300,7 @@ const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
     Atom.make((get) => {
       const submit = submitComposerAtoms(threadId);
       const gateAtom = composerDocumentSafetyGateAtoms(threadId)(seed);
+      // decision: fn-atom-writes-outlive-the-node
       const registry = get.registry;
       get.mount(composerNoticeAtom);
       get.mount(submit);
@@ -330,6 +332,7 @@ const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
   )
 );
 
+// decision: fn-atom-writes-outlive-the-node
 const composerStopHandlerAtom = Atom.make((get) => {
   const registry = get.registry;
   get.mount(stopComposerAtom);

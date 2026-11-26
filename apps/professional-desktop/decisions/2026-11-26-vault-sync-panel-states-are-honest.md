@@ -12,9 +12,7 @@ governs:
 enforcedBy: []
 ---
 
-While the sidecar is unreachable, the last status it sent stays authoritative for Box connectivity, intents queue, and the connection badge and destination row say "last known" and drop the live colour instead of claiming a healthy connection.
-A failed status or conflict query renders its own failure with a retry, never the empty state: a status query that nothing invalidates otherwise read "unavailable" for the rest of the session after one dropped request, and a failed conflict listing read as "no conflicts". A pending flag and the probe timestamp make a retry visibly do something even when the outcome is unchanged.
-Disconnected copy is keyed on the sidecar's disconnect reason. A status with no reason comes from an older sidecar and gets the probe-failed copy, the one guess that does not claim the token is unset. The renderer cannot see the sidecar's auth mode, so the auth-failed copy names the fix for both: developer tokens expire, CCG self-refreshes.
-A refusal notice says which action did not happen and why; its prediction is already reverted.
-Warning copy uses the `warning-text` tier (amber-600 fell below readable contrast on the dark theme), and the long-disabled sync button uses the muted disabled tone.
+The panel never presents an unknown as healthy or empty. While the sidecar is unreachable, its last status stays authoritative for Box connectivity, intents queue, and the badge and destination row say "last known" without the live colour.
+A failed status or conflict query renders its own failure with a retry: a status query that nothing invalidates otherwise read "unavailable" for the rest of the session after one dropped request, and a failed conflict listing read as "no conflicts". A pending flag and the probe timestamp make a retry visibly do something even when the outcome is unchanged.
+Disconnected copy is keyed on the sidecar's disconnect reason. A status with no reason comes from an older sidecar and gets the probe-failed copy, the one guess that does not claim the token is unset. The renderer cannot see the sidecar's auth mode, so the auth-failed copy names the fix for both: developer tokens expire, CCG self-refreshes. A refusal notice names the action that did not happen and why; its prediction is already reverted.
 Rejected: one generic note for every probe failure (it told QA to set CLOUD_BOX_TOKEN when the token was set, and hid whether the fix was a fresh token, the mirror root folder, or waiting Box out); `null` for a failed listing; no retry on the status query.
