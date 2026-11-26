@@ -12,9 +12,7 @@ import type { MarkdownNode } from "@beep/markdown/MarkdownNode";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// The walk hands out its nodes by reference, so expected events are plain
-// values of the union type: a case `make` would validate and copy the node.
-const visitorEvent = (
+const uncopiedEvent = (
   _tag: "Enter" | "Exit",
   node: MarkdownNode,
   path: MarkdownPath,
@@ -43,10 +41,14 @@ describe("MarkdownVisitor traversal properties", () => {
         for (const enter of entered) {
           assert.strictEqual(enter.depth, enter.path.length);
           const exit = A.findFirst(exited, (event) => event.node === enter.node);
-          assertSome(exit, visitorEvent("Exit", enter.node, enter.path, enter.depth));
+          assertSome(exit, uncopiedEvent("Exit", enter.node, enter.path, enter.depth));
         }
         const resultCollect1 = yield* Stream.runCollect(Stream.take(stream, 1));
-        assert.deepStrictEqual(resultCollect1, [visitorEvent("Enter", root, [], 0)]);
+        assert.deepStrictEqual(
+          resultCollect1,
+          [uncopiedEvent("Enter", root, [], 0)],
+          "the walk hands out nodes by reference, so expected events are plain values: a case make would copy the node"
+        );
       }),
     runs
   );

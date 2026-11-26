@@ -1,19 +1,10 @@
-import { identity } from "effect/Function";
-// Unit coverage for the GFM table block construct.
-//
-// Semantics authority is cmark-gfm 0.29.0.gfm.13 — `extensions/table.c` and
-// the row/delimiter scanners in `extensions/ext_scanners.re`. The conformance
-// corpora assert the spec examples; these assert the rules those examples only
-// sample: the delimiter-row grammar, the paragraph reclaim, cell-count
-// mismatch handling, escaped pipes and the source offsets they shift, and that
-// the `commonmark` dialect never sees a table at all.
-
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { Markdown } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -23,24 +14,20 @@ import type { PhrasingContent, Table, TableAlign } from "@beep/markdown/Markdown
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** The first block of a source parsed under a dialect. */
 const firstBlock = (source: string, dialect: "commonmark" | "gfm" = "gfm") =>
   parseBlocks(source, { dialect: dialect }).root.children[0];
 
-/** The table a source parses to, or `undefined` if it produced anything else. */
 const tableOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): Table | undefined => {
   const block = A.findFirst(parseBlocks(source, { dialect: dialect }).root.children, (child) => child.type === "table");
   return O.isSome(block) && block.value.type === "table" ? block.value : undefined;
 };
 
-/** The table a source must parse to; fails the test if it did not form one. */
 const requireTable = (source: string, dialect: "commonmark" | "gfm" = "gfm"): Table => {
   const table = tableOf(source, dialect);
   assert.isDefined(table, "expected the source to parse as a table");
   return table;
 };
 
-/** A compact rendering of a table: rows of cells, cells as their text. */
 const sketchInline = (nodes: ReadonlyArray<PhrasingContent>): string =>
   A.join(
     A.map(nodes, (node) => {
@@ -68,7 +55,6 @@ const sketchInline = (nodes: ReadonlyArray<PhrasingContent>): string =>
     ","
   );
 
-/** `row|row`, each row `cell/cell`, each cell its compact inline shape. */
 const grid = (table: Table): string =>
   A.join(
     A.map(table.children, (row) =>
@@ -80,14 +66,13 @@ const grid = (table: Table): string =>
     "|"
   );
 
-/** The alignment array, with `null` spelled `-` so a test reads as one string. */
 const alignOf = (table: Table): string =>
   A.join(
     A.map(table.align ?? [], (entry: TableAlign | null) => entry ?? "-"),
     ","
   );
 
-describe("gfm tables", () => {
+describe("gfm tables: rules the spec examples only sample, per cmark-gfm 0.29.0.gfm.13", () => {
   it.effect("parses a 150,000-escaped-pipe cell in Node with its original source span", () =>
     Effect.sync(() => {
       const repetitions = 150_000;
@@ -199,11 +184,11 @@ describe("gfm tables", () => {
     });
 
     it("splits on an unescaped pipe even inside a code span", () => {
-      // Cell splitting runs before inline parsing, so the backtick pair
-      // cannot protect a bare pipe — cmark-gfm's documented behavior.
-      // Three cells split out of the row, truncated to the header's two,
-      // and neither surviving backtick has a partner left to pair with.
-      assert.strictEqual(grid(requireTable("| a | b |\n| - | - |\n| `x|y` | z |\n")), '"a"/"b"|"`x"/"y`"');
+      assert.strictEqual(
+        grid(requireTable("| a | b |\n| - | - |\n| `x|y` | z |\n")),
+        '"a"/"b"|"`x"/"y`"',
+        "cells split before inline parsing (cmark-gfm's documented behavior): three cells truncate to two, each backtick unpaired"
+      );
     });
 
     it("leaves a doubled backslash alone", () => {
@@ -262,9 +247,11 @@ describe("gfm tables", () => {
     });
 
     it("absorbs a following pipe-less line as a one-cell row", () => {
-      // cmark-gfm's row scanner accepts any non-blank line as a row, so a
-      // plain line under a table is a padded row, not a paragraph.
-      assert.strictEqual(grid(requireTable("| a | b |\n| - | - |\ntext\n")), '"a"/"b"|"text"/');
+      assert.strictEqual(
+        grid(requireTable("| a | b |\n| - | - |\ntext\n")),
+        '"a"/"b"|"text"/',
+        "cmark-gfm's row scanner accepts any non-blank line as a row, so a plain line is a padded row"
+      );
     });
   });
 
@@ -280,11 +267,12 @@ describe("gfm tables", () => {
     });
 
     it("forms a reference link in a header cell against a later definition", () => {
-      // References are emitted unresolved by design (P1): what matters
-      // here is that a cell consults the refmap at all, which is what
-      // makes the reference a `linkReference` and not literal text.
       const table = requireTable("| [ref][] |\n| - |\n| x |\n\n[ref]: /url\n");
-      assert.strictEqual(grid(table), 'ref(ref)["ref"]|"x"');
+      assert.strictEqual(
+        grid(table),
+        'ref(ref)["ref"]|"x"',
+        "references stay unresolved by design: consulting the refmap at all makes the cell a linkReference, not literal text"
+      );
     });
 
     it("does not parse a block construct inside a cell", () => {
@@ -311,10 +299,12 @@ describe("gfm tables", () => {
       const [first, second] = table.children[1]?.children ?? [];
       assert.isDefined(first);
       assert.isDefined(second);
-      // The cell text is `x|y` — one character shorter than the source it
-      // came from, so the end offset must clear the escape, not the text.
       assert.strictEqual(first.position.start.offset, offsetOf(source, "x\\|y"));
-      assert.strictEqual(first.position.end.offset, offsetOf(source, "x\\|y") + 4);
+      assert.strictEqual(
+        first.position.end.offset,
+        offsetOf(source, "x\\|y") + 4,
+        "the cell text x|y is one character shorter than its source, so the end offset clears the escape, not the text"
+      );
       assert.strictEqual(second.position.start.offset, lastOffsetOf(source, "z"));
     });
 

@@ -1,21 +1,3 @@
-// Unit coverage for GFM footnotes: the `[^label]:` block definition and the
-// `[^label]` inline reference.
-//
-// Semantics authority is cmark-gfm 0.29.0.gfm.13. Footnotes are the one GFM
-// construct that lives in cmark-gfm's CORE rather than `extensions/` — it is
-// gated by `CMARK_OPT_FOOTNOTES`, not by an extension registration — so the
-// files to read are `src/footnotes.c` (the label map), `src/blocks.c` (the
-// definition block start, its continuation prefix, and `process_footnotes`)
-// and `src/inlines.c` (the reference, formed in `handle_close_bracket`'s
-// `noMatch` fallthrough).
-//
-// The three `extensions.txt` conformance examples sample the happy path and
-// one unmatched reference; these assert the rules behind them: the definition
-// label grammar (which forbids spaces, unlike a link label), the four-space
-// continuation prefix and the blank-line rule, lazy paragraph continuation,
-// reference formation and its literal fallback, label normalization, and that
-// the `commonmark` dialect never sees either construct.
-
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { MAX_NESTING_DEPTH } from "@beep/markdown/internal/limits";
 import { assert, describe, it } from "@effect/vitest";
@@ -33,22 +15,18 @@ import type {
 
 type Dialect = "commonmark" | "gfm";
 
-/** Every node in a source's flow tree, in document order, however deeply nested. */
 const flowNodesOf = (source: string, dialect: Dialect = "gfm"): ReadonlyArray<FlowContent> =>
   flowNodes(parseBlocks(source, { dialect: dialect }).root.children);
 
-/** Every footnote definition in a source, in document order. */
 const definitionsOf = (source: string, dialect: Dialect = "gfm"): ReadonlyArray<FootnoteDefinition> =>
   A.filter(flowNodesOf(source, dialect), (node): node is FootnoteDefinition => node.type === "footnoteDefinition");
 
-/** The first footnote definition a source produces; fails the test if it produced none. */
 const firstDefinition = (source: string, dialect: Dialect = "gfm"): FootnoteDefinition => {
   const definition = definitionsOf(source, dialect)[0];
   assert.isDefined(definition, "expected the source to parse a footnote definition");
   return definition;
 };
 
-/** Every phrasing node in a source, in document order, however deeply nested. */
 const phrasingNodes = (source: string, dialect: Dialect = "gfm"): ReadonlyArray<PhrasingContent> => {
   const found: PhrasingContent[] = [];
   const walk = (nodes: ReadonlyArray<PhrasingContent>): void => {
@@ -73,11 +51,9 @@ const phrasingNodes = (source: string, dialect: Dialect = "gfm"): ReadonlyArray<
   return found;
 };
 
-/** Every footnote reference in a source, in document order. */
 const referencesOf = (source: string, dialect: Dialect = "gfm"): ReadonlyArray<FootnoteReference> =>
   A.filter(phrasingNodes(source, dialect), (node): node is FootnoteReference => node.type === "footnoteReference");
 
-/** The first footnote reference a source produces; fails the test if it produced none. */
 const firstReference = (source: string, dialect: Dialect = "gfm"): FootnoteReference => {
   const reference = referencesOf(source, dialect)[0];
   assert.isDefined(reference, "expected the source to parse a footnote reference");
@@ -86,14 +62,12 @@ const firstReference = (source: string, dialect: Dialect = "gfm"): FootnoteRefer
 
 const isText = (node: PhrasingContent): node is Text => node.type === "text";
 
-/** The concatenated text of every top-level paragraph in a source. */
 const paragraphText = (source: string, dialect: Dialect = "gfm"): string =>
   A.join(
     A.map(A.filter(phrasingNodes(source, dialect), isText), (node) => node.value),
     ""
   );
 
-/** A definition's child paragraph at `index`, asserted to be one. */
 const definitionParagraph = (definition: FootnoteDefinition, index = 0): Paragraph => {
   const child = definition.children[index];
   assert.isDefined(child, `expected a child at ${String(index)}`);
@@ -102,14 +76,13 @@ const definitionParagraph = (definition: FootnoteDefinition, index = 0): Paragra
   return child;
 };
 
-/** A paragraph's flattened text. */
 const textOf = (paragraph: Paragraph): string =>
   A.join(
     A.map(A.filter(paragraph.children, isText), (node) => node.value),
     ""
   );
 
-describe("gfm footnotes", () => {
+describe("gfm footnotes: the rules the three extensions.txt examples only sample, per the cmark-gfm 0.29.0.gfm.13 core", () => {
   describe("the definition block start", () => {
     it("opens a definition on an unindented marker", () => {
       const definition = firstDefinition("[^a]: bravo");
@@ -118,49 +91,47 @@ describe("gfm footnotes", () => {
     });
 
     it("keeps the definition in the tree at its source position", () => {
-      // The port delta: cmark-gfm's `process_footnotes` physically moves
-      // every definition to the end of the document and DROPS the ones
-      // nothing references. Definitions here stay where they were written,
-      // on the same terms as a link reference definition, because this
-      // package edits markdown and a relocated node is a lost edit.
       const nodes = flowNodesOf("alpha\n\n[^a]: bravo\n\ncharlie");
       assert.deepStrictEqual(
         A.map(nodes, (node) => node.type),
-        ["paragraph", "footnoteDefinition", "paragraph", "paragraph"]
+        ["paragraph", "footnoteDefinition", "paragraph", "paragraph"],
+        "a port delta: cmark-gfm's process_footnotes moves every definition to the end and drops unreferenced ones; here they stay, as link reference definitions do, since a relocated node is a lost edit"
       );
     });
 
     it("keeps an unreferenced definition in the tree", () => {
-      // cmark-gfm unlinks a definition with no `ix` (nothing referenced
-      // it). Here it survives; a renderer that wants cmark's output emits
-      // nothing for it, which the test writer does.
-      assert.strictEqual(definitionsOf("[^unused]: nobody points here").length, 1);
+      assert.strictEqual(
+        definitionsOf("[^unused]: nobody points here").length,
+        1,
+        "cmark-gfm unlinks a definition nothing referenced; here it survives, and a renderer wanting cmark's output emits nothing for it, as the test writer does"
+      );
     });
 
     it("takes the label verbatim as `label` and normalized as `identifier`", () => {
-      // mdast's Association contract: `identifier` is the normalized
-      // label, `label` is the source text. cmark-gfm normalizes with
-      // `normalize_map_label` — the same case fold link references use.
       const definition = firstDefinition("[^Alpha]: bravo");
-      assert.strictEqual(definition.identifier, "alpha");
+      assert.strictEqual(
+        definition.identifier,
+        "alpha",
+        "mdast's Association contract: identifier is the normalized label and label the source text; cmark-gfm normalizes with normalize_map_label, the link-reference case fold"
+      );
       assert.strictEqual(definition.label, "Alpha");
     });
 
     it("always carries a label, never an explicitly absent one", () => {
-      // `label` is an `optionalKey`, and the P1 discipline is that an
-      // absent optional field is genuinely absent rather than present and
-      // `undefined`. A parsed definition always has a source label, so
-      // the key is always there.
       const definition = firstDefinition("[^a]: bravo");
-      assert.isTrue("label" in definition);
+      assert.isTrue(
+        "label" in definition,
+        "label is an optionalKey, and an absent optional field is genuinely absent, never present and undefined; a parsed definition always has a source label"
+      );
       assert.strictEqual(definition.label, "a");
     });
 
     it("case folds the identifier the way link references do", () => {
-      // `normalize_map_label` runs `cmark_utf8proc_case_fold`, which is
-      // full case folding and not `toLowerCase` — the same fold that makes
-      // a link reference label match across it.
-      assert.strictEqual(firstDefinition("[^ẞ]: bravo").identifier, "ss");
+      assert.strictEqual(
+        firstDefinition("[^ẞ]: bravo").identifier,
+        "ss",
+        "normalize_map_label runs cmark_utf8proc_case_fold, full case folding rather than toLowerCase, the same fold link reference labels match across"
+      );
     });
 
     it("accepts a numeric label", () => {
@@ -172,11 +143,12 @@ describe("gfm footnotes", () => {
     });
 
     it("strips the spaces and tabs after the colon", () => {
-      // `_scan_footnote_definition` consumes `[ \t]*` after `]:`, so the
-      // content starts at the first non-space — eight spaces here would
-      // otherwise open an indented code block.
       const definition = firstDefinition("[^a]:       no code block here");
-      assert.strictEqual(definitionParagraph(definition).type, "paragraph");
+      assert.strictEqual(
+        definitionParagraph(definition).type,
+        "paragraph",
+        "_scan_footnote_definition consumes [ \\t]* after ]:, so content starts at the first non-space; eight spaces would otherwise open indented code"
+      );
       assert.strictEqual(textOf(definitionParagraph(definition)), "no code block here");
     });
 
@@ -185,14 +157,16 @@ describe("gfm footnotes", () => {
     });
 
     it("refuses a label holding a space", () => {
-      // The scanner's label class is `[^\] \r\n\x00\t]+` — a footnote
-      // label may not hold whitespace at all, which is where it parts
-      // company with a link reference label.
-      // `bravo charlie` keeps the line from being a LINK reference
-      // definition with the label `^a b` instead, which is what a footnote
-      // label holding a space falls back to.
-      assert.strictEqual(definitionsOf("[^a b]: bravo charlie").length, 0);
-      assert.strictEqual(paragraphText("[^a b]: bravo charlie"), "[^a b]: bravo charlie");
+      assert.strictEqual(
+        definitionsOf("[^a b]: bravo charlie").length,
+        0,
+        "the scanner's label class [^\\] \\r\\n\\x00\\t]+ admits no whitespace at all, where it parts company with a link reference label"
+      );
+      assert.strictEqual(
+        paragraphText("[^a b]: bravo charlie"),
+        "[^a b]: bravo charlie",
+        "bravo charlie keeps the line from being a link reference definition labelled ^a b, the fallback for a spaced footnote label"
+      );
     });
 
     it("refuses a label holding a tab", () => {
@@ -208,12 +182,11 @@ describe("gfm footnotes", () => {
     });
 
     it("refuses a marker indented four spaces", () => {
-      // The block start is guarded by `!indented`, so four spaces make it
-      // an indented code block instead.
       const nodes = flowNodesOf("    [^a]: bravo");
       assert.deepStrictEqual(
         A.map(nodes, (node) => node.type),
-        ["code"]
+        ["code"],
+        "the block start is guarded by !indented, so four spaces make an indented code block instead"
       );
     });
 
@@ -222,23 +195,20 @@ describe("gfm footnotes", () => {
     });
 
     it("interrupts a paragraph", () => {
-      // The footnote branch in `open_new_blocks` carries no
-      // `cont_type == PARAGRAPH && !all_matched` guard, unlike the
-      // thematic break above it, so it interrupts.
       const nodes = flowNodesOf("alpha\n[^a]: bravo");
       assert.deepStrictEqual(
         A.map(nodes, (node) => node.type),
-        ["paragraph", "footnoteDefinition", "paragraph"]
+        ["paragraph", "footnoteDefinition", "paragraph"],
+        "the footnote branch in open_new_blocks lacks the cont_type == PARAGRAPH && !all_matched guard the thematic break carries, so it interrupts"
       );
     });
 
     it("opens inside a blockquote", () => {
-      // `cmark_node_can_contain_type` lets any block container hold a
-      // footnote definition.
       const nodes = flowNodesOf("> [^a]: bravo");
       assert.deepStrictEqual(
         A.map(nodes, (node) => node.type),
-        ["blockquote", "footnoteDefinition", "paragraph"]
+        ["blockquote", "footnoteDefinition", "paragraph"],
+        "cmark_node_can_contain_type lets any block container hold a footnote definition"
       );
     });
 
@@ -253,19 +223,20 @@ describe("gfm footnotes", () => {
 
   describe("the definition continuation prefix", () => {
     it("continues a block indented four spaces", () => {
-      // `parse_footnote_definition_block_prefix`: four columns of indent
-      // continue the definition, anything less ends it.
       const definition = firstDefinition("[^a]: alpha\n\n    bravo");
-      assert.strictEqual(definition.children.length, 2);
+      assert.strictEqual(
+        definition.children.length,
+        2,
+        "parse_footnote_definition_block_prefix: four columns of indent continue the definition, anything less ends it"
+      );
       assert.strictEqual(textOf(definitionParagraph(definition, 1)), "bravo");
     });
 
     it("reads eight spaces as an indented code block inside the definition", () => {
-      // Four for the continuation prefix, four for the code block.
       const definition = firstDefinition("[^a]:\n        alpha");
       const child = definition.children[0];
       assert.isDefined(child);
-      assert.strictEqual(child.type, "code");
+      assert.strictEqual(child.type, "code", "four columns for the continuation prefix, four for the code block");
     });
 
     it("continues across a blank line", () => {
@@ -283,21 +254,23 @@ describe("gfm footnotes", () => {
     });
 
     it("takes an unindented line with no blank line as lazy paragraph continuation", () => {
-      // The prefix fails, but the open paragraph inside is a lazy
-      // continuation target exactly as it would be inside a blockquote.
       const definition = firstDefinition("[^a]: alpha\nbravo");
-      assert.strictEqual(definition.children.length, 1);
+      assert.strictEqual(
+        definition.children.length,
+        1,
+        "the prefix fails, but the open paragraph inside is a lazy continuation target, exactly as inside a blockquote"
+      );
       assert.strictEqual(textOf(definitionParagraph(definition)), "alpha\nbravo");
     });
 
     it("holds a blockquote, a code block and paragraphs at once", () => {
-      // The shape of the `extensions.txt` `[^footnote]` case.
       const definition = firstDefinition(
         "[^a]:\n    > quoted\n\n        code\n\n    or, naturally, simple paragraphs.\n"
       );
       assert.deepStrictEqual(
         A.map(definition.children, (child) => child.type),
-        ["blockquote", "code", "paragraph"]
+        ["blockquote", "code", "paragraph"],
+        "the shape of the extensions.txt [^footnote] case"
       );
     });
 
@@ -318,27 +291,28 @@ describe("gfm footnotes", () => {
     });
 
     it("forms a reference against a definition that appears LATER", () => {
-      // The map is built from the whole block tree before the inline pass
-      // runs, so document order does not matter — cmark-gfm's
-      // `process_footnotes` collects every definition before it resolves
-      // any reference, for the same reason.
-      assert.strictEqual(referencesOf("alpha[^a]\n\n[^a]: bravo").length, 1);
+      assert.strictEqual(
+        referencesOf("alpha[^a]\n\n[^a]: bravo").length,
+        1,
+        "the label map is built from the whole block tree before the inline pass, as cmark-gfm's process_footnotes collects every definition before resolving any reference"
+      );
     });
 
     it("leaves a reference with no matching definition as literal text", () => {
-      // cmark-gfm forms the node unconditionally and REWRITES it back to
-      // `[^label]` text in `process_footnotes` when the lookup misses.
-      // Consulting the map at formation time reaches the same tree in one
-      // pass, and this is the observable half.
-      assert.strictEqual(referencesOf("alpha[^nope]").length, 0);
+      assert.strictEqual(
+        referencesOf("alpha[^nope]").length,
+        0,
+        "cmark-gfm forms the node unconditionally and rewrites it to [^label] text on a lookup miss; consulting the map at formation reaches the same tree in one pass"
+      );
       assert.strictEqual(paragraphText("alpha[^nope]"), "alpha[^nope]");
     });
 
     it("discards the inner inline structure of an unmatched reference", () => {
-      // The fallback text is rebuilt from the RAW source span between the
-      // brackets (`cmark_chunk_dup` off the text node following the
-      // opener), so emphasis that had already been paired inside is lost.
-      assert.strictEqual(paragraphText("[^*a*]"), "[^*a*]");
+      assert.strictEqual(
+        paragraphText("[^*a*]"),
+        "[^*a*]",
+        "the fallback text is rebuilt from the raw source span between the brackets (cmark_chunk_dup off the text after the opener), so emphasis paired inside is lost"
+      );
       assert.strictEqual(phrasingNodes("[^*a*]").length, 1);
     });
 
@@ -349,9 +323,11 @@ describe("gfm footnotes", () => {
     });
 
     it("does not form on an empty marker", () => {
-      // `(literal->len > 1 || opener->inl_text->next->next)`: there has to
-      // be something between the caret and the closing bracket.
-      assert.strictEqual(referencesOf("[^]\n\n[^]: bravo").length, 0);
+      assert.strictEqual(
+        referencesOf("[^]\n\n[^]: bravo").length,
+        0,
+        "(literal->len > 1 || opener->inl_text->next->next): something must sit between the caret and the closing bracket"
+      );
       assert.strictEqual(paragraphText("[^]"), "[^]");
     });
 
@@ -360,10 +336,12 @@ describe("gfm footnotes", () => {
     });
 
     it("loses to an inline link", () => {
-      // The footnote branch is the `noMatch` fallthrough, so everything
-      // `handle_close_bracket` tries first still wins.
       const nodes = phrasingNodes("[^a](/url)\n\n[^a]: bravo");
-      assert.strictEqual(nodes[0]?.type, "link");
+      assert.strictEqual(
+        nodes[0]?.type,
+        "link",
+        "the footnote branch is handle_close_bracket's noMatch fallthrough, so everything it tries first still wins"
+      );
     });
 
     it("loses to a full link reference", () => {
@@ -401,11 +379,12 @@ describe("gfm footnotes", () => {
 
   describe("positions", () => {
     it("spans the whole definition, marker included", () => {
-      // A port delta from cmark-gfm, which starts the node AFTER the
-      // marker (`add_child(..., first_nonspace + matched + 1)`) for its
-      // own column bookkeeping. mdast positions span the construct.
       const definition = firstDefinition("[^a]: bravo");
-      assert.strictEqual(definition.position.start.offset, 0);
+      assert.strictEqual(
+        definition.position.start.offset,
+        0,
+        "a port delta: cmark-gfm starts the node after the marker (first_nonspace + matched + 1) for its column bookkeeping; mdast positions span the construct"
+      );
       assert.strictEqual(definition.position.start.line, 1);
       assert.strictEqual(definition.position.start.column, 1);
       assert.strictEqual(definition.position.end.offset, 11);
@@ -433,11 +412,11 @@ describe("gfm footnotes", () => {
 
   describe("the commonmark dialect sees neither construct", () => {
     it("reads a definition line as a paragraph", () => {
-      // `bravo charlie` cannot be a link destination followed by a title,
-      // so the line is not a link reference definition either — it is
-      // plain paragraph text, which is what `commonmark` must keep
-      // producing now that `gfm` reads it as a footnote.
-      assert.strictEqual(definitionsOf("[^a]: bravo charlie", "commonmark").length, 0);
+      assert.strictEqual(
+        definitionsOf("[^a]: bravo charlie", "commonmark").length,
+        0,
+        "bravo charlie cannot be a destination plus title, so the line is no link reference definition: commonmark must keep producing paragraph text"
+      );
       assert.strictEqual(paragraphText("[^a]: bravo charlie", "commonmark"), "[^a]: bravo charlie");
     });
 
@@ -447,24 +426,23 @@ describe("gfm footnotes", () => {
     });
 
     it("still reads a link reference definition whose label starts with a caret", () => {
-      // Under `commonmark` the line is a link reference definition with
-      // the label `^a`; under `gfm` the footnote block start claims it
-      // first. Both dialects have to keep their own answer.
       const nodes = flowNodesOf("[^a]: /url", "commonmark");
       assert.deepStrictEqual(
         A.map(nodes, (node) => node.type),
-        ["definition"]
+        ["definition"],
+        "under commonmark the line is a link reference definition labelled ^a; under gfm the footnote block start claims it first"
       );
     });
   });
 
   describe("hardening", () => {
     it("trips the nesting guard on definition-in-definition recursion", () => {
-      // A footnote definition is a container, so it shares `addChild`'s
-      // `MAX_NESTING_DEPTH` cap with every other one. cmark-gfm guards the
-      // same shape with its own `depth < MAX_LIST_DEPTH` test on the block
-      // start.
-      assert.throws(() => parseBlocks(Str.repeat(MAX_NESTING_DEPTH + 4)("[^a]: "), { dialect: "gfm" }));
+      assert.throws(
+        () => parseBlocks(Str.repeat(MAX_NESTING_DEPTH + 4)("[^a]: "), { dialect: "gfm" }),
+        undefined,
+        undefined,
+        "a footnote definition is a container sharing addChild's MAX_NESTING_DEPTH cap; cmark-gfm guards it with depth < MAX_LIST_DEPTH"
+      );
     });
 
     it("parses a definition nested just under the cap", () => {

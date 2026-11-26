@@ -1,9 +1,3 @@
-// The anchor-slug rule, pinned against `@effect/markdown-toc` 0.1.0: every
-// expected value here was produced by that package's `slugify`, `titleize`
-// and `querystring.escape`, except the lone-surrogate anchor, which the kit
-// pins on its own (the R5b differential in `goals/effected-promotion/research/`
-// covers the repo's own headings; these are the rule's edges).
-
 import { HeadingSlug, MarkdownSlug } from "@beep/markdown/MarkdownSlug";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
@@ -13,7 +7,7 @@ import * as S from "effect/Schema";
 
 const decodeSlug = S.decodeUnknownResult(HeadingSlug);
 
-describe("MarkdownSlug", () => {
+describe("MarkdownSlug edges, each expected value produced by @effect/markdown-toc 0.1.0 except the lone surrogate", () => {
   describe("linkText", () => {
     it("takes the text of a heading that opens with an inline link", () => {
       assert.strictEqual(MarkdownSlug.linkText("[Guide](./guide.md) and more"), "Guide");
@@ -39,7 +33,9 @@ describe("MarkdownSlug", () => {
       assert.strictEqual(MarkdownSlug.slugify("Goal *Title*\nsecond line"), "goal-title-second-line");
       assert.strictEqual(MarkdownSlug.slugify("one\r\ntwo\rthree"), "one-two-three");
       assertSuccess(decodeSlug(MarkdownSlug.slugify("a\nb")), "a-b");
-      // JavaScript `$` without the m flag matches only at the end of input, so a trailing newline fails too.
+    });
+
+    it("HeadingSlug rejects a line break anywhere, a trailing one included (JavaScript `$` without the m flag)", () => {
       A.forEach(["a\nb", "a\n", "a\r\n"], (slug) =>
         assertFailure(
           Result.mapError(decodeSlug(slug), (error) => error._tag),
@@ -77,8 +73,11 @@ describe("MarkdownSlug", () => {
       assert.strictEqual(MarkdownSlug.slugify("Straße über Ærø"), "strasse-uber-aero");
       assert.strictEqual(MarkdownSlug.slugify("Đ ı Ŋ Œ ĸ ŉ Ħ ŀ Ł Ŧ ĳ þ ð ß"), "d-i-n-oe-q-n-h-l-l-t-ij-th-d-ss");
       assert.strictEqual(MarkdownSlug.slugify("Éé Ññ Çç Žž Ůů Őő"), "ee-nn-cc-zz-uu-oo");
-      // U+017F (ſ) is the first code point past the fold range; a combining mark on an ASCII letter is not folded either.
-      assert.strictEqual(MarkdownSlug.slugify("ſ é"), "ſ-é");
+      assert.strictEqual(
+        MarkdownSlug.slugify("ſ é"),
+        "ſ-é",
+        "U+017F is the first code point past the fold range, and a combining mark on an ASCII letter is not folded"
+      );
     });
 
     it("slugs the leading link's text and appends a positive ordinal", () => {

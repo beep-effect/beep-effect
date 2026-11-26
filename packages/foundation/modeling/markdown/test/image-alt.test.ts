@@ -1,6 +1,3 @@
-// Regressions for the upstream image-alt flattening bug: leaf HTML and hard
-// breaks must survive, for inline images and reference images in both dialects.
-
 import { Markdown } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
@@ -18,7 +15,6 @@ const descriptions = [
 
 type Dialect = "commonmark" | "gfm";
 
-/** The single phrasing node of a one-paragraph document. */
 const onlyInline = (markdown: string, dialect: Dialect) => {
   const result = Markdown.parseResult(markdown, { dialect });
   assertSuccess(
@@ -37,7 +33,7 @@ const cases = A.flatMap(["commonmark", "gfm"] as const, (dialect) =>
   ])
 );
 
-describe("image alt leaf content", () => {
+describe("image alt keeps leaf HTML and hard breaks, a regression for the upstream flattening bug", () => {
   for (const { name, source, alt, dialect, reference } of cases) {
     if (reference) {
       it(`${dialect}: ${name} in a reference image`, () => {

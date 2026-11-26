@@ -1,11 +1,8 @@
-import { identity } from "effect/Function";
-// The string-level frontmatter surface: split raw source at the closed fence
-// grammar without parsing anything, and join back byte-exactly.
-
 import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "@beep/markdown/FrontmatterSource";
 import { Markdown, MarkdownParseOptions } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -15,7 +12,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const split = FrontmatterSource.split;
 const join = FrontmatterSource.join;
 
-/** The format of the parser's head frontmatter capture, when it captured one. */
 const capturedFormat = (source: string): string | undefined => {
   const parsed = Markdown.parseResult(source, MarkdownParseOptions.make({ frontmatter: true }));
   assertSuccess(parsed, Result.getOrThrow(parsed));
@@ -38,15 +34,15 @@ describe("FrontmatterSource", () => {
     it("recognizes the whole closed fence set and nothing else", () => {
       assert.strictEqual(split("+++\na = 1\n+++\nb\n").frontmatter?.format, "toml");
       assert.strictEqual(split('---json\n{"a":1}\n---\nb\n').frontmatter?.format, "json");
-      // Not fences: wrong spelling, indentation, unknown language hints.
-      for (const source of [
+      const misspelledIndentedOrHinted = [
         "----\nx\n----\n",
         "---- \nx\n---\n",
         "---yaml\nx\n---\n",
         " ---\nx\n---\n",
         "---\nx\n ---\n",
         "--- x\nx\n---\n",
-      ]) {
+      ];
+      for (const source of misspelledIndentedOrHinted) {
         assert.strictEqual(split(source).frontmatter, undefined, source);
       }
     });

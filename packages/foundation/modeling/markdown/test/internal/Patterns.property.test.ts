@@ -43,12 +43,13 @@ it.effect.prop(
         assert.strictEqual(unitAt(subject, index), Str.slice(index, index + 1)(subject));
         assert.strictEqual(unitAt(index)(subject), unitAt(subject, index));
       }
-      // The EOF and out-of-range guard: never `undefined`, which a regex
-      // would test as the string "undefined".
       assert.strictEqual(unitAt(subject, subject.length), "");
       assert.strictEqual(unitAt(subject.length)(subject), "");
       assert.strictEqual(unitAt(subject, -1), "");
-      assert.isFalse(/^u/.test(unitAt(subject, subject.length + 1)));
+      assert.isFalse(
+        /^u/.test(unitAt(subject, subject.length + 1)),
+        "the EOF and out-of-range guard never returns undefined, which a regex would test as the string undefined"
+      );
     }),
   runs
 );
