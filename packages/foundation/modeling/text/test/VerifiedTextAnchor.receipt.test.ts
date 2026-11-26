@@ -12,7 +12,7 @@ import {
   verifyTextAnchor,
 } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { expect } from "@effect/vitest";
+import { expect, expectTypeOf } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -108,10 +108,8 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("stored text anchor receipts
         expect(S.isSchemaError(refused), json).toBe(true);
       }
 
-      // @ts-expect-error a receipt is not a proof
-      expect(() => toTextAnchorVerificationReceipt(receipt)).toThrow();
-      // @ts-expect-error an anchors row is not a proof
-      expect(() => toTextAnchorVerificationReceipt(anchored)).toThrow();
+      expectTypeOf<typeof receipt>().not.toExtend<Parameters<typeof toTextAnchorVerificationReceipt>[0]>();
+      expectTypeOf<typeof anchored>().not.toExtend<Parameters<typeof toTextAnchorVerificationReceipt>[0]>();
 
       const reverified = yield* verify(sourceText);
       expect(isProof(reverified), "re-verification against the text the receipt names yields a proof").toBe(true);

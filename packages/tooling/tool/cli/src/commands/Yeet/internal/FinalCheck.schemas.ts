@@ -46,6 +46,7 @@ export const FinalCheckGate = LiteralKit([
   "repo-sanity",
   "check",
   "docgen",
+  "doctest",
   "fallow",
   "coverage",
 ]).pipe(

@@ -1,0 +1,12 @@
+---
+title: "P7: delete-package runs only on a base where the checks of its repo-wide writers are green, and its writer diffs may only remove the target's lines"
+date: 2026-11-24
+lane: "p7"
+reversal: "Run delete-package with --skip-baselines, subtract the coverage rows by another route and invoke only the writers whose checks are green"
+---
+
+`delete-package` does more than remove a tree. After removing it (`packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts:846`) it subtracts the target's coverage rows in-process and then re-runs eight repo-wide writers in write mode (`BASELINE_WRITER_STEPS`, `:489-515`, run at `:567-598`): fallow boundaries, the fallow health and dead-code baselines, `lint schema-first --write`, `lint package-test-typecheck --write-baseline`, `lint schema-catalog --write`, `observability catalog --write` and `lint package-scripts --write`. A failing writer leaves the tree half-deleted. On a red base the writers do harm: `lint schema-first --write` drops missing entries from the failure set and writes the merged inventory (`Lint/internal/SchemaFirstScan.ts:694`, `:748`), which would admit P4's seven violations (S31 growth), and `lint package-scripts --write` would rewrite the P5 drift in `packages/law-practice/domain/package.json`. At f30c183f20a both checks are red, and the P4 fix (531313589c2) is an ancestor of neither the P7 HEAD nor the P6 head c678aee89be.
+
+Rows 1 and 3 therefore start only when, on the merged base, all seven matching checks are green: `bun run beep lint schema-first`, `bun run beep lint package-scripts --check`, `bun run fallow:health:baseline:check`, `bun run fallow:dead-code:check`, `bun run beep lint schema-catalog`, `bun run beep observability catalog --check` and `bun run beep lint package-test-typecheck` (fallow boundaries through `bun run fallow:boundaries:check`). A red check holds the row until the owning layer's fix reaches the lane; P7 never repairs a lower layer's red. `--skip-baselines` is not used: it skips the coverage subtraction too (`:571-575`, `:860`), and nothing else performs that subtraction.
+
+Each row's gate adds that `git diff` of every writer output under `standards/` shows only removed lines naming the target package or its path. Together with the per-file S31 delta of row 7 (decision `s31-is-counted-per-package-and-inherited-reds-go-to-their-layers`), a writer that admitted another package's entry is caught in the row that ran it.

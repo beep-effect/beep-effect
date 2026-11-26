@@ -121,14 +121,14 @@
       <a class="tab on" href="PROSE_TO_PROOF_GRAPH.html">Graph</a>
       <a class="tab" href="PROSE_TO_PROOF_CHAT.html">Chat</a>
     </div>
-    <span class="conn">local · on device</span>
+    <span class="conn">one practice · one workbench</span>
   </nav>
 
   <div class="wrap">
     <header>
       <div class="eyebrow">the <b>logic</b> family · one graph, walled by matter</div>
       <h1>The knowledge <span class="b">graph</span></h1>
-      <p class="thesis">Everything the practice has proven, in one place. A document is a provenance-coloured set of edges; a matter is a named subgraph — joinable for conflict checks, sealed for substantive reads. <b>Green is proven, amber is proposed, grey is context.</b> Drag a node, scroll to zoom, search to focus, click for its edges. This is a dummy of the live Graph-RAG view.</p>
+      <p class="thesis">Everything the practice has proven, in one place. A document is a provenance-coloured set of edges; a matter is walled by authorization — joinable for conflict checks only under an explicit grant, sealed for substantive reads. <b>Green is proven, amber is proposed, grey is context.</b> Drag a node, scroll to zoom, search to focus, click for its edges. This is a dummy of the live Graph-RAG view.</p>
     </header>
 
     <div class="toolbar">
@@ -138,8 +138,8 @@
         <option value="24">top 24</option>
         <option value="16">top 16</option>
       </select>
-      <button class="tbtn on" id="labels">Labels</button>
-      <button class="tbtn" id="reseed" title="re-run layout">↻ Relayout</button>
+      <button type="button" class="tbtn on" id="labels">Labels</button>
+      <button type="button" class="tbtn" id="reseed" title="re-run layout">↻ Relayout</button>
       <div class="counts"><span class="chip"><b id="ncount">0</b> nodes</span><span class="chip"><b id="ecount">0</b> edges</span></div>
     </div>
 
@@ -160,7 +160,7 @@
       one logical graph · the Aanstoot matter sits in a cluster with the practice's other matters · the attorney node connects them all — which is exactly how a conflict check becomes a single query
     </div>
 
-    <footer>green proves · amber proposes · grey grounds · one graph, walled by matter · everything on device · <a href="PROSE_TO_PROOF_CHAT.html" style="color:var(--logic-soft)">see it ground an answer →</a></footer>
+    <footer>green proves · amber proposes · grey grounds · signals route to review · admission needs a grounding witness and a human token · every matter walled by authorization · <a href="PROSE_TO_PROOF_CHAT.html" style="color:var(--logic-soft)">see it ground an answer →</a></footer>
   </div>
 
   <div class="gtip" id="gtip"></div>
@@ -258,7 +258,8 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
   const ctx = canvas.getContext('2d');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   let DPR = Math.min(window.devicePixelRatio||1, 2);
-  let W=0, H=0;
+  let W=0;
+  let H=0;
   const nodes = rawNodes.map(n => ({ id:n[0], label:n[1], type:n[2],
     x:(Math.random()-0.5)*240, y:(Math.random()-0.5)*240, vx:0, vy:0 }));
   const byId = new Map(nodes.map(n=>[n.id,n]));
@@ -267,10 +268,20 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
   nodes.forEach(n=>n.degree=0);
   links.forEach(l=>{ l.source.degree++; l.target.degree++; });
 
-  let scale = 1, tx = 0, ty = 0, centered=false;
+  let scale = 1;
+  let tx = 0;
+  let ty = 0;
+  let centered=false;
   let alpha = 1;
   let visible = true;
-  let hover=null, selected=null, dragging=null, panning=false, last=null, query='', showLabels=true, focusSet=null;
+  let hover=null;
+  let selected=null;
+  let dragging=null;
+  let panning=false;
+  let last=null;
+  let query='';
+  let showLabels=true;
+  let focusSet=null;
   let visibleIds=null;
 
   const radius = n => Math.max(4, Math.sqrt(n.degree+1)*3.1);
@@ -290,15 +301,24 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
       const a=act[i];
       for(let j=i+1;j<act.length;j++){
         const b=act[j];
-        let dx=a.x-b.x, dy=a.y-b.y, d2=dx*dx+dy*dy; if(d2<0.01)d2=0.01;
-        const d=Math.sqrt(d2), f=2800/d2, fx=f*dx/d, fy=f*dy/d;
+        const dx=a.x-b.x;
+        const dy=a.y-b.y;
+        let d2=dx*dx+dy*dy; if(d2<0.01)d2=0.01;
+        const d=Math.sqrt(d2);
+        const f=2800/d2;
+        const fx=f*dx/d;
+        const fy=f*dy/d;
         a.vx+=fx; a.vy+=fy; b.vx-=fx; b.vy-=fy;
       }
     }
     for(const l of links){
       if(visibleIds && (!visibleIds.has(l.source.id)||!visibleIds.has(l.target.id))) continue;
-      const dx=l.target.x-l.source.x, dy=l.target.y-l.source.y, d=Math.hypot(dx,dy)||0.01;
-      const f=0.045*(d-78), fx=f*dx/d, fy=f*dy/d;
+      const dx=l.target.x-l.source.x;
+      const dy=l.target.y-l.source.y;
+      const d=Math.hypot(dx,dy)||0.01;
+      const f=0.045*(d-78);
+      const fx=f*dx/d;
+      const fy=f*dy/d;
       l.source.vx+=fx; l.source.vy+=fy; l.target.vx-=fx; l.target.vy-=fy;
     }
     for(const n of act){
@@ -334,19 +354,29 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
       if(visibleIds && (!visibleIds.has(l.source.id)||!visibleIds.has(l.target.id))) continue;
       const st = (stateOf(l.source)==='dim'&&stateOf(l.target)==='dim')?'dim':'on';
       const hi = hover && (l.source===hover||l.target===hover) || selected && (l.source===selected||l.target===selected);
-      const sx=l.source.x, sy=l.source.y, tx2=l.target.x, ty2=l.target.y;
-      const mx=(sx+tx2)/2, my=(sy+ty2)/2;
-      const nx=-(ty2-sy), ny=(tx2-sx); const nl=Math.hypot(nx,ny)||1;
-      const cx=mx+nx/nl*Math.hypot(tx2-sx,ty2-sy)*0.10, cy=my+ny/nl*Math.hypot(tx2-sx,ty2-sy)*0.10;
+      const sx=l.source.x;
+      const sy=l.source.y;
+      const tx2=l.target.x;
+      const ty2=l.target.y;
+      const mx=(sx+tx2)/2;
+      const my=(sy+ty2)/2;
+      const nx=-(ty2-sy);
+      const ny=(tx2-sx); const nl=Math.hypot(nx,ny)||1;
+      const cx=mx+nx/nl*Math.hypot(tx2-sx,ty2-sy)*0.10;
+      const cy=my+ny/nl*Math.hypot(tx2-sx,ty2-sy)*0.10;
       ctx.beginPath(); ctx.moveTo(sx,sy); ctx.quadraticCurveTo(cx,cy,tx2,ty2);
       ctx.lineWidth=(hi?1.9:1.3)/scale;
       ctx.strokeStyle = st==='dim' ? 'rgba(124,194,147,0.06)' : (hi?'rgba(174,230,238,0.55)':'rgba(124,194,147,0.26)');
       ctx.stroke();
       // arrowhead at ~0.86 along the curve
-      const t=0.86, it=1-t;
-      const ax=it*it*sx+2*it*t*cx+t*t*tx2, ay=it*it*sy+2*it*t*cy+t*t*ty2;
-      const dxx=2*it*(cx-sx)+2*t*(tx2-cx), dyy=2*it*(cy-sy)+2*t*(ty2-cy); const dl=Math.hypot(dxx,dyy)||1;
-      const ang=Math.atan2(dyy,dxx), asz=6/scale;
+      const t=0.86;
+      const it=1-t;
+      const ax=it*it*sx+2*it*t*cx+t*t*tx2;
+      const ay=it*it*sy+2*it*t*cy+t*t*ty2;
+      const dxx=2*it*(cx-sx)+2*t*(tx2-cx);
+      const dyy=2*it*(cy-sy)+2*t*(ty2-cy); const dl=Math.hypot(dxx,dyy)||1;
+      const ang=Math.atan2(dyy,dxx);
+      const asz=6/scale;
       if(st!=='dim'){
         ctx.fillStyle = hi?'rgba(174,230,238,0.85)':'rgba(174,209,174,0.7)';
         ctx.beginPath(); ctx.moveTo(ax,ay);
@@ -373,7 +403,7 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
       const alphaN = st==='dim'?0.18 : st==='near'?0.7 : 1;
       ctx.globalAlpha=alphaN;
       // halo for focal / selected / matches
-      if(n===selected||n===hover|| (focusSet&&focusSet.has(n.id)) || (query&&st==='match')){
+      if(n===selected||n===hover|| (focusSet?.has(n.id)) || (query&&st==='match')){
         ctx.beginPath(); ctx.arc(x,y,r+5/scale,0,7); ctx.fillStyle=fill; ctx.globalAlpha=alphaN*0.18; ctx.fill(); ctx.globalAlpha=alphaN;
       }
       ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fillStyle=fill; ctx.fill();
@@ -395,16 +425,20 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
 
   function pick(sx,sy){
     const [wx,wy]=s2w(sx,sy);
-    let best=null,bd=1e9;
+    let best=null;
+    let bd=1e9;
     for(const n of nodes){ if(visibleIds&&!visibleIds.has(n.id))continue;
-      const d=Math.hypot(n.x-wx,n.y-wy), rr=radius(n)+6/scale;
+      const d=Math.hypot(n.x-wx,n.y-wy);
+      const rr=radius(n)+6/scale;
       if(d<rr && d<bd){bd=d;best=n;} }
     return best;
   }
 
   // events
   window.addEventListener('mousemove', e=>{
-    const r=canvas.getBoundingClientRect(), sx=e.clientX-r.left, sy=e.clientY-r.top;
+    const r=canvas.getBoundingClientRect();
+    const sx=e.clientX-r.left;
+    const sy=e.clientY-r.top;
     if(dragging){ const [wx,wy]=s2w(sx,sy); dragging.x=wx; dragging.y=wy; dragging.vx=0; dragging.vy=0; reheat(0.5); if(reduced) draw(); return; }
     if(panning&&last){ tx+=sx-last[0]; ty+=sy-last[1]; last=[sx,sy]; if(reduced||!visible) draw(); return; }
     const inB = sx>=0 && sy>=0 && sx<=r.width && sy<=r.height;
@@ -414,12 +448,14 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
     if(n!==hover){ hover=n; if(reduced) draw(); }
     canvas.classList.toggle('onnode',!!n);
     if(n){ tip.innerHTML=`<div class="tt"><i style="background:${n.type==='matter'?COL.matter:COL[n.type]}"></i>${n.label}</div><div class="tm">${ntype(n)} · ${n.degree} edge${n.degree===1?'':'s'}</div>`;
-      tip.style.left=Math.min(e.clientX+14,window.innerWidth-250)+'px'; tip.style.top=(e.clientY+14)+'px'; tip.classList.add('show'); }
+      tip.style.left=`${Math.min(e.clientX+14,window.innerWidth-250)}px`; tip.style.top=`${e.clientY+14}px`; tip.classList.add('show'); }
     else tip.classList.remove('show');
   });
   canvas.addEventListener('mouseleave',()=>{ hover=null; document.getElementById('gtip').classList.remove('show'); });
   canvas.addEventListener('mousedown', e=>{
-    const r=canvas.getBoundingClientRect(), sx=e.clientX-r.left, sy=e.clientY-r.top;
+    const r=canvas.getBoundingClientRect();
+    const sx=e.clientX-r.left;
+    const sy=e.clientY-r.top;
     const n=pick(sx,sy);
     if(n){ dragging=n; canvas.classList.add('grabbing'); }
     else { panning=true; last=[sx,sy]; canvas.classList.add('grabbing'); }
@@ -429,14 +465,18 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
     dragging=null; panning=false; canvas.classList.remove('grabbing');
   });
   canvas.addEventListener('click', e=>{
-    const r=canvas.getBoundingClientRect(), sx=e.clientX-r.left, sy=e.clientY-r.top;
+    const r=canvas.getBoundingClientRect();
+    const sx=e.clientX-r.left;
+    const sy=e.clientY-r.top;
     const n=pick(sx,sy);
-    if(n){ selected=n; opts.onSelect&&opts.onSelect(n, edgesOf(n)); }
-    else { selected=null; opts.onSelect&&opts.onSelect(null); }
+    if(n){ selected=n; opts.onSelect?.(n, edgesOf(n)); }
+    else { selected=null; opts.onSelect?.(null); }
   });
   canvas.addEventListener('wheel', e=>{
     e.preventDefault();
-    const r=canvas.getBoundingClientRect(), sx=e.clientX-r.left, sy=e.clientY-r.top;
+    const r=canvas.getBoundingClientRect();
+    const sx=e.clientX-r.left;
+    const sy=e.clientY-r.top;
     const [wx,wy]=s2w(sx,sy);
     const f=e.deltaY<0?1.12:0.89; scale=Math.max(0.3,Math.min(4.2,scale*f));
     tx=sx-wx*scale; ty=sy-wy*scale; if(reduced) draw();
@@ -444,7 +484,8 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
 
   function ntype(n){ return n.type==='matter'?'matter':n.type==='entity'?'proven entity':n.type==='claim'?'proposed':n.type==='artifact'?'evidence':'external'; }
   function edgesOf(n){
-    const out=[],inc=[];
+    const out=[];
+    const inc=[];
     for(const l of links){ if(l.source===n) out.push({label:l.label,node:l.target}); if(l.target===n) inc.push({label:l.label,node:l.source}); }
     return {out,inc};
   }
@@ -462,7 +503,7 @@ function ForceGraph(canvas, rawNodes, rawLinks, opts={}){
       reheat(0.7); },
     reseed(){ nodes.forEach(n=>{ n.x=(Math.random()-0.5)*240; n.y=(Math.random()-0.5)*240; n.vx=0; n.vy=0; }); centered=false; resize(); reheat(1); },
     focus(ids){ focusSet=ids?new Set(ids):null; query=''; reheat(0.3); },
-    select(id){ const n=byId.get(id); if(n){ selected=n; opts.onSelect&&opts.onSelect(n, edgesOf(n)); } },
+    select(id){ const n=byId.get(id); if(n){ selected=n; opts.onSelect?.(n, edgesOf(n)); } },
     counts(){ return {n:nodes.length, e:links.length}; },
     byId
   };
@@ -480,7 +521,7 @@ document.getElementById('ecount').textContent=c.e;
 function showDetail(n,edges){
   if(!n){ detail.classList.remove('show'); return; }
   const col = n.type==='matter'?COL.matter:COL[n.type];
-  const kind = n.type==='matter'?'matter · named subgraph':n.type==='entity'?'proven entity':n.type==='claim'?'proposed / claim':n.type==='artifact'?'evidence / artifact':'external context';
+  const kind = n.type==='matter'?'matter · walled':n.type==='entity'?'proven entity':n.type==='claim'?'proposed / claim':n.type==='artifact'?'evidence / artifact':'external context';
   const rows = (arr,dir)=>arr.map(e=>`<div class="erow" data-id="${e.node.id}"><span class="dir">${dir}</span><span class="rel">${e.label}</span><span>${e.node.label}</span></div>`).join('') || `<div class="erow" style="color:var(--ink-faint)">— none —</div>`;
   detail.innerHTML =
     `<div class="dh"><i style="background:${col}"></i><div><div class="dt">${n.label}</div><div class="dk">${kind} · ${n.degree} edges</div></div><span class="dx" id="dclose">✕</span></div>`+

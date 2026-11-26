@@ -7,14 +7,13 @@ person grants. Every object the stack names (source text, anchor, annotation,
 term, claim, activity) has one denotation, one owner, and lawful arrows to its
 neighbours.
 
-This chapter states target doctrine. The code reaches it over phases P1 to P7
-of the goal packet `goals/text-knowledge-stack-rebuild`, which tracks each
-phase, its exit criteria and its law tests. A rule marked **Pending Pn** is
-the target that phase n makes true; new code follows the target, and existing
-code is brought to it by the named phase. A rule with no marker holds at the
-packet's P0 base or was made true by a phase that has landed: P1 made the L0
-rules true, with the one exception section 4 names, and P2 made the L1 rules
-true. The decisions behind the chapter are the 2026-11-19 entries
+This chapter states the doctrine the code holds. Phases P1 to P7 of the goal
+packet `goals/text-knowledge-stack-rebuild`, which records each phase, its exit
+criteria and its law tests, have landed: P1 made the L0 rules true, with the
+one exception section 4 names, P2 the L1 rules, P3 the L2 rules, P4 the L4
+rules, P5 the L3 and L6 rules, P6 the L5 and L7 rules, and P7 retired the
+former nlp and schema-org packages. A phase named beside a rule records when it
+landed. The decisions behind the chapter are the 2026-11-19 entries
 in [`DECISIONS.md`](DECISIONS.md); the vocabulary is in
 [`GLOSSARY.md`](GLOSSARY.md).
 
@@ -53,12 +52,12 @@ lands in the phase of its layer.
 | --- | --- | --- | --- |
 | L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | P1 |
 | L1 | Text identity and anchoring | `@beep/text` | P2 |
-| L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | Implemented in P3 lane |
-| L3 | Taxonomy and alignments | `@beep/ontology` | Implemented in P5 lane |
-| L4 | Claims | `@beep/epistemics` | Implemented in P4 lane |
-| L5 | Operations | `@beep/nlp-processing` (capability) | Implemented in P6 lane |
-| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Implemented in P5 lane |
-| L7 | Agent surface | a contract, not a package | Implemented in P6 lane |
+| L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | P3 |
+| L3 | Taxonomy and alignments | `@beep/ontology` | P5 |
+| L4 | Claims | `@beep/epistemics` | P4 |
+| L5 | Operations | `@beep/nlp-processing` (capability) | P6 |
+| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | P5 |
+| L7 | Agent surface | a contract, not a package | P6 |
 
 ### L0 · Identity
 
@@ -383,12 +382,15 @@ unassessed), `L4-7` (acceptance: `Absent{reason}` never coerces to a number).
 ### L5 · Operations
 
 **Owner.** `@beep/nlp-processing`, an existing `foundation/capability`
-package. It took the linguistic engine contract `nlp/Core` and the graph node
-schemas from `@beep/nlp` in P6. `nlp/Operations` and `nlp/Algebra` had no
-consumer and the `effect/Combiner` and `effect/Reducer` census left no needed
-instance uncovered, so both were deleted rather than moved; `Operation.ts` is
-the one operation arrow, `Graph/TypeClass.ts` is deleted and the graph
-operations are `Operation`s named by their declared terms.
+package. It took the linguistic engine contract `Core` and the graph node
+schemas from the former nlp package in P6. The graph node schemas are its
+carriers for backend output; an entity or relation participant carries an
+optional `@beep/text` `Position`, set only when `resolve` returns `Unique`
+(`L1-5`). The former `Operations` and `Algebra` modules had no consumer and
+the `effect/Combiner` and `effect/Reducer` census left no needed instance
+uncovered, so both were deleted rather than moved, with `GraphOps`;
+`Operation.ts` is the one operation arrow, `Graph/TypeClass.ts` is deleted and
+the graph operations are `Operation`s named by their declared terms.
 
 **Denotes.** Effectful transformations as arrows, with provenance recorded by
 construction.
@@ -408,7 +410,9 @@ what is known then (section 2, L0).
 **Laws.** `L5-1` (Kleisli identity and associativity for fixed channels under a
 declared observation), `L5-2` (only `Pure` operations commute with every
 operation; the throwing `sync` counterexample is the acceptance case), `L5-3`
-(`generated` is never earlier than `used`, and every output is attributed).
+(`generated` is never earlier than `used`, and every output is attributed),
+`L5-4` (acceptance: an unsupported backend operation fails with the typed
+`BackendNotSupported`, never a defect and never a partial result).
 
 ### L6 · Interchange
 
@@ -558,13 +562,14 @@ digest, extractor name and version, normalization version, offset unit, start,
 end and quote. It is the only text-occurrence identity in the repository. The
 five non-canonical anchor encodings are deleted in the phase that owns each:
 the `@beep/rdf` selector schemas and the `TextSpan` case of the party-domain
-`EvidenceAnchor` were deleted in P2, and the `@beep/nlp` Handoff and Graph spans
+`EvidenceAnchor` were deleted in P2, and the former nlp package's Handoff and Graph spans
 were deleted in P3, and the epistemics `EvidenceSpan` in P4. The party union keeps its three non-text
 cases and points at text through a `TextOccurrence` case that holds an
 `Anchored`, and its record identifier is `ArtifactOccurrenceId`, so the name
 `OccurrenceId` belongs to `@beep/text` alone. The cli knowledge-base `Selector`
-has a text-quote case and is kept, because it is repo tooling with no consumer
-in the stack; P7 re-checks it.
+keeps its text-quote case: no stack package consumes it, its stored rows carry
+the case, it mints no identity, and it validates through `@beep/text`;
+re-checked in P7.
 
 The stack is occurrence-first, not quote-first, because legal text repeats
 itself. Claim language, examiner boilerplate and headers share quote and
@@ -787,19 +792,21 @@ Rules:
 
 ## 14. The categorical narrative
 
-`packages/foundation/modeling/nlp/THEORY.md` described `@beep/nlp` as algebra
-over a typed text graph and claimed "full categorical fidelity". The stack
-keeps category theory only where it predicts a law a test can falsify. That
-file is deleted with its package in P7; what stays true of it is below.
+The former nlp package's `THEORY.md` described that package as algebra over a
+typed text graph and claimed "full categorical fidelity". The stack keeps
+category theory only where it predicts a law a test can falsify. That file was
+deleted with its package in P7; what stays true of it is below, and
+the claims it made that no law backs are withdrawn after the table.
 
 | Kept claim | Restated as | Ledger |
 | --- | --- | --- |
 | Operations are arrows in the Kleisli category of `Effect`; identity is the unit and composition is associative. | Only for fixed error and requirement channels, and only under a declared observation. | `L5-1` |
 | `product` is the monoidal tensor of the pipeline category. | `product` is sequential; interchange needs a commutation witness, and only `Pure` operations are central. | `L5-2` |
-| Merging independent annotation passes is order-independent. | `merge` is a join over one text capture: idempotent, commutative and associative on content, with attribution unioned. Merging across captures is a refusal. | `L2-1` |
+| Merging independent annotation passes is order-independent. | `merge` is a join over one text capture: idempotent, commutative and associative on content, with attribution unioned. Merging across captures is a refusal. No colimit is claimed. | `L2-1` |
 | Text strata are distinct typed objects that operations cannot confuse. | Kinds come from a caller-supplied registry; containment between annotations is a strict order derived from range inclusion with non-decreasing levels and a level tie-break, not a closure over kinds. | `L2-5` |
 | Provenance is stamped by construction, from `Clock`, never from the wall clock. | Every run emits a `prov:Activity`; `generated` is never earlier than `used`, and every output is attributed. | `L5-3` |
-| Graph theory comes from Effect's `Graph` module, not a local re-derivation. | The duplicate graph-operation module retires; acyclicity of derivation is checked with `effect/Graph`. | `L4-3` |
+| Graph theory comes from Effect's `Graph` module, not a local re-derivation. | The duplicate graph-operation module was deleted in P6; acyclicity of derivation is checked with `effect/Graph`. | `L4-3` |
+| Operations a backend cannot perform fail with a typed error rather than throwing. | An unsupported backend operation fails with the typed `BackendNotSupported`, never a defect and never a partial result. | `L5-4` |
 
 Withdrawn claims:
 
@@ -807,12 +814,21 @@ Withdrawn claims:
   `Provenance` types are deleted. Candidates are annotations; the consuming
   slice promotes them into its own proposition union, as the 2026-10-21 ruling
   requires. No universal property is claimed, and the downstream owner the
-  file named no longer exists.
+  file named no longer exists. Chunk-and-reassemble is withdrawn with the
+  deleted handoff; attribution completeness is `L2-3`.
 - **Monoid and typeclass laws as stack laws.** They test the carrier, not this
-  repository's functions; surviving instances are judged by the
-  `effect/Combiner` and `effect/Reducer` census.
+  repository's functions. The `effect/Combiner` and `effect/Reducer` census
+  left one surviving reducer, `ActivityLogReducer`, whose laws are upstream
+  behaviour, so it has no ledger row.
+- **F-algebra folds as doctrine.** `cata` and `ana` remain helpers of the
+  nlp-processing graph module with example tests; no catalogue row names a
+  defect a fold law would catch.
 - **Triangle identities for structure and projection and for query and
-  index.** No catalogue row names a defect they would catch.
+  index**, and the coherence of normalizing produced tokens against
+  normalizing the source, which is engine behaviour (section 13). The index
+  direction fed a downstream knowledge-graph initiative that was deleted. No
+  catalogue row names a defect they would catch.
+- **Backends as a category of functors.** No law follows from the framing.
 - **Confidence inside provenance.** A single confidence value with a default is
   replaced by the five typed signals with `Absent{reason}`.
 

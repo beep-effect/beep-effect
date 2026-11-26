@@ -2934,7 +2934,8 @@ re-minting.
 
 ## 2026-11-19: `@beep/nlp` Splits Into `@beep/annotation` Schemas And `@beep/nlp-processing` Operations, Then Retires
 
-- **Status:** Active
+- **Status:** Active, amended by 2026-11-25 "L3 To L7 Land; The nlp And
+  schema-org Packages Retire"
 
 Decision:
 
@@ -3169,7 +3170,7 @@ corrected in P7 of `goals/text-knowledge-stack-rebuild`. Its BeepGraph status
 line is settled in P7 from the code that exists then; no status is chosen
 here.
 
-`packages/foundation/modeling/nlp/THEORY.md` is absorbed by section 14 of
+The retired `@beep/nlp` package's `THEORY.md` is absorbed by section 14 of
 `16-knowledge-stack.md`, which keeps each still-true claim tied to a ledger id
 and lists the withdrawn ones. The file is deleted with `@beep/nlp` in P7.
 
@@ -3192,7 +3193,7 @@ chapter section stays the doctrine unless that entry also removes it.
 
 ## 2026-11-19: Scoped Amendment To Chapter 11 Persisted-Bytes Rule For The Text-Knowledge Stack Rebuild
 
-- **Status:** Active (expires when `goals/text-knowledge-stack-rebuild` reaches
+- **Status:** Expired (expired when `goals/text-knowledge-stack-rebuild` reached
   `completed-retained`)
 - **Amends:** rule 5 ("Persisted and served bytes do not change") of
   "Upstream-first retirement in `foundation/modeling`" in
@@ -3371,3 +3372,68 @@ langextract, with the frozen semantica replay and office-action flow.
 
 Reversal: supersede the P3 decisions and bump affected preimage domains; restore
 retired facets from history only with migrated consumers and replacement laws.
+
+## 2026-11-25: L3 To L7 Land; The nlp And schema-org Packages Retire
+
+- **Status:** Active
+- **Amends:** "`@beep/nlp` Splits Into `@beep/annotation` Schemas And
+  `@beep/nlp-processing` Operations, Then Retires" (2026-11-19), as amended, not
+  as delivered: the split deviated in the facets the table below names. Records
+  "Vision Documents: Local-First Posture Withdrawn As Architecture; `THEORY.md`
+  Absorbed" (2026-11-19) as delivered.
+
+Decision:
+
+Phases P4 to P7 of `goals/text-knowledge-stack-rebuild` land layers L4
+(`@beep/epistemics`), L3 and L6 (`@beep/ontology`, `@beep/rdf`), L5
+(`@beep/nlp-processing`) and the L7 agent-surface contract, as chapter 16
+states them. Two private `foundation/modeling` packages retire through
+`bun run beep delete-package`, each in its own commit with no alias and no
+consumer left: `@beep/schema-org`, which had no importer or dependent, is
+deleted whole, and `@beep/nlp`, whose four text helpers had no consumer,
+retires after its facets were rehomed. Either source can be recovered from
+commit 6265d739bb6 on `main`. Both names are reserved in
+`standards/changesets.retired-packages.json`.
+
+The split was delivered as follows:
+
+| Facet | Ruled | Delivered | Evidence |
+| --- | --- | --- | --- |
+| handoff contract, `Kind` | `@beep/annotation` | `@beep/annotation` (P3) | the packet's P3 decisions |
+| graph schema | `@beep/annotation` kinds | the graph node schemas moved with `Core` to `@beep/nlp-processing`; spans became an optional `Position` | the packet's decisions `2026-11-22-p3-graph-span-becomes-an-optional-position` and `2026-11-24-p6-core-and-graph-schema-move-to-nlp-processing-in-p6` |
+| `Core` | `@beep/nlp-processing` | `@beep/nlp-processing` (P6) | commit 4bd2dbd4c3e |
+| `Operations`, `Algebra` | moved to `@beep/nlp-processing` | replaced, nothing moved: `Operation` and `ActivityLogReducer` after the `effect/Combiner` and `effect/Reducer` census; both modules and their tests deleted | the packet's decision `2026-11-24-p6-nlp-operations-and-algebra-are-replaced-not-moved` |
+| `GraphOps`, the four text helpers | retire | deleted (P6, P7) | commit 62385cf48d1 and 66a3513e3d6 |
+
+The package's `THEORY.md` is absorbed by section 14 of
+`16-knowledge-stack.md`: each kept claim names its ledger id, including the new
+acceptance row `L5-4` (an unsupported backend operation fails with the typed
+`BackendNotSupported`), and the claims no law backs are withdrawn. The cli
+knowledge-base `Selector` keeps its text-quote case after the P7 re-check. The
+vision document names chapter 16 as its architecture, marks BeepGraph as
+Proposed, and drops local-first, on-device and named-subgraph framing as
+architecture, with its companion documents.
+
+Rationale:
+
+The 2026-11-19 split ruling asked for a new dated entry before a deviating
+phase. None was written when P3 and P6 placed the graph schema and replaced the
+operations, so this entry records the delivered split once, with the facets
+that deviated. Chapter 11 says this log records every retirement; P4 to P6 added
+no entry, and one entry for the stack's merge is its history. Evidence: the
+packet's `decisions/2026-11-24-p7-*` files and
+`goals/text-knowledge-stack-rebuild/research/2026-11-24-p7-design.md`.
+
+Rejected:
+
+- Citing the split ruling as delivered. The graph schema and the operations did
+  not land where it ruled.
+- Moving the four text helpers or the schema.org vocabulary into a kept
+  package. Neither had a consumer; moving dead code would add coverage and
+  catalog rows for the next sweep to delete.
+
+Reversal:
+
+Mark this entry superseded by a new dated entry. Restore a retired package from
+its recovery commit only with a consumer, migrated callers and replacement laws,
+and remove its name from the retired-name registry in the same change.

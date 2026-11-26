@@ -25,6 +25,7 @@ const GATE_DOC_NAMES: { readonly [Gate in FinalCheckGate]: ReadonlyArray<string>
   "repo-sanity": ["Repo Sanity"],
   check: ["Check"],
   docgen: ["Docgen"],
+  doctest: ["Doctest"],
   fallow: ["Fallow"],
   coverage: ["Coverage"],
 };
@@ -95,7 +96,8 @@ const DOC_TEXT: Readonly<Record<string, string>> = import.meta.glob<string>(
 const readRepoFile = (file: string): O.Option<string> => R.get(DOC_TEXT, `../../../../../${file}`);
 
 describe("final-check gate list judge", () => {
-  const exact = "Lint Policy, Lint, Check, Docgen, Repo Sanity, Fallow, Coverage, and rewritten test expectations";
+  const exact =
+    "Lint Policy, Lint, Check, Docgen, Doctest, Repo Sanity, Fallow, Coverage, and rewritten test expectations";
 
   it("accepts a list naming exactly the gates the cheap tier skips", () => {
     expect(judgeGateList(exact)).toStrictEqual([]);
@@ -107,7 +109,7 @@ describe("final-check gate list judge", () => {
   });
 
   it("refuses a list that omits a gate", () => {
-    const problems = judgeGateList("Lint Policy, Lint, Check, Docgen, Repo Sanity, Fallow, and Coverage");
+    const problems = judgeGateList("Lint Policy, Lint, Check, Docgen, Doctest, Repo Sanity, Fallow, and Coverage");
     expect(problems).toStrictEqual(["omits the expectation-rewrite gate"]);
   });
 

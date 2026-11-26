@@ -409,9 +409,6 @@
       "path": "packages/foundation/modeling/md"
     },
     {
-      "path": "packages/foundation/modeling/nlp"
-    },
-    {
       "path": "packages/foundation/modeling/npm-spec"
     },
     {
@@ -434,9 +431,6 @@
     },
     {
       "path": "packages/foundation/modeling/schema"
-    },
-    {
-      "path": "packages/foundation/modeling/schema-org"
     },
     {
       "path": "packages/foundation/modeling/semver"

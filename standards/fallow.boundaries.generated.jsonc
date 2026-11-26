@@ -696,12 +696,6 @@
         ]
       },
       {
-        "name": "@beep/nlp",
-        "patterns": [
-          "packages/foundation/modeling/nlp/src/**"
-        ]
-      },
-      {
         "name": "@beep/nlp-mcp",
         "patterns": [
           "packages/drivers/nlp-mcp/src/**"
@@ -1065,12 +1059,6 @@
         "name": "@beep/schema",
         "patterns": [
           "packages/foundation/modeling/schema/src/**"
-        ]
-      },
-      {
-        "name": "@beep/schema-org",
-        "patterns": [
-          "packages/foundation/modeling/schema-org/src/**"
         ]
       },
       {
@@ -3863,25 +3851,6 @@
         ]
       },
       {
-        "from": "@beep/nlp",
-        "allow": [
-          "@beep/identity",
-          "@beep/nlp",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/nlp",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
-        ]
-      },
-      {
         "from": "@beep/nlp-mcp",
         "allow": [
           "@beep/file-processing",
@@ -5556,21 +5525,6 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
-        ]
-      },
-      {
-        "from": "@beep/schema-org",
-        "allow": [
-          "@beep/fc-runs",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/schema-org"
-        ],
-        "allowTypeOnly": [
-          "@beep/fc-runs",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/schema-org"
         ]
       },
       {

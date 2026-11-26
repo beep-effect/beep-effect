@@ -7,14 +7,8 @@
  * {@link TextEdge} relationships, integrating with the package's
  * {@link Tokenization} service for sentence/token extraction.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - node-creating constructors (`singleton`/`fromDocument`/`tokenizeNodes`) are
- *   EFFECTFUL, reading `Clock` for the node timestamp (was `Date.now()`).
- * - `fromDocument`/`tokenizeNodes` consume the existing `Core/Tokenization` service
- *   (mapping `Sentence.text` / `Token.text`).
- * - `addChildren` fails with a tagged {@link GraphCycleError} instead of `throw`.
- * - native `Array.from`/`forEach` become `effect/Array`; the `@effect/printer`
- *   formatter is dropped (`show` renders plain text).
+ * Node-creating constructors read `Clock` for the node timestamp, and `addChildren`
+ * fails with a tagged {@link GraphCycleError} instead of throwing.
  *
  * @since 0.0.0
  * @packageDocumentation

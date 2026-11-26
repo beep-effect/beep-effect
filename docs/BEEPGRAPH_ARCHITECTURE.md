@@ -19,7 +19,7 @@ shell. The synthesis is named *BeepGraph*.**
 - **effect-ontology (EO) wins the spine** — Effect-native, schema-first *typed* authority,
   ontology-*guided* extraction, evidence/provenance, monoid-fold merge, SHACL validation, a
   single durable in-repo app. That is beep-effect's DNA. TrustGraph is schema-light Python
-  pub/sub microservices over external graph DBs — the opposite of local-first typed authority.
+  pub/sub microservices over external graph DBs — the opposite of single-app typed authority.
 - **TrustGraph (TG) wins the shell** — pluggable graph **projection** (FalkorDB/Cypher),
   **GraphRAG** subgraph retrieval + **explainability DAG**, graph-vs-document embeddings,
   portable **Knowledge Cores**, and the **Librarian** curated-doc/processing-queue. EO has no
@@ -104,7 +104,7 @@ packets. The spine must satisfy them.
    foundation; semantic memory is a bounded, managed cache (`00-no-escape-theorem.md`).
 4. **Four-layer taxonomy.** L1 durable · L2 session · L3 procedural · L4 relational
    (`01-memory-layer-taxonomy.md`).
-5. **Local-first, single-app.** No required message broker, no Cassandra; SQLite/Postgres-local
+5. **Single-app, in-process.** No required message broker, no Cassandra; SQLite/Postgres-local
    first (`trustgraph-port/SPEC.md` "intentionally not ported: gateway/flow topology, Cassandra").
 6. **OWL is design-time only; runtime validation is bounded SHACL.** *No OWL reasoner in the
    runtime dependency graph* (`ip-law-knowledge-graph/SPEC.md` ADR; `@beep/semantic-web`
@@ -123,7 +123,7 @@ packets. The spine must satisfy them.
 | 2. Authority/projection/cache fit | Extraction core = authority; store is incidental | Store *is* the system; authority is the graph DB | **EO** (clean authority separation) |
 | 3. No-Escape alignment | Deterministic ontology-guided extraction + SHACL gate | Semantic triples into a store; weaker determinism story | **EO** |
 | 4. Layer fit | Slots as L4 relational atop L1 claims | Whole-system; doesn't decompose into the layers | **EO** |
-| 5. Local-first single-app | One Effect app, in-process | Requires broker + external stores | **EO** |
+| 5. Single-app, in-process | One Effect app, in-process | Requires broker + external stores | **EO** |
 | 6. OWL design-time + bounded SHACL | Has SHACL; OWL reasoning is *adaptable down* to design-time | No OWL/SHACL at all | **EO** |
 | 7. Effect Schema authority + projections | Effect-native, schema-first | Python dataclasses / `S.Struct` triples, no typed authority | **EO** |
 | **Projection: pluggable graph store** | In-memory N3 only (gap) | FalkorDB/Cypher, 4 backends | **TG** |
@@ -298,7 +298,7 @@ retrieval + packaging SHELL.
 4. ip-law-knowledge-graph P0 resolved: FalkorDB is a projection, not a second source of truth.
 
 **Rationale:** beep-effect's non-negotiables (typed schema-first authority, evidence/provenance,
-local-first single-app, OWL design-time only + bounded SHACL, EventLog) are effect-ontology's
+single-app in-process, OWL design-time only + bounded SHACL, EventLog) are effect-ontology's
 DNA, not TrustGraph's schema-light pub/sub-over-external-stores design. TrustGraph supplies the
 multi-store projection, retrieval, and packaging that effect-ontology lacks.
 

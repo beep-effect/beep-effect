@@ -70,15 +70,18 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    `standards/architecture/`, the nine rulings of report section 7 plus the
    scoped amendment to the persisted-bytes clause of chapter 11 as dated
    `DECISIONS.md` entries with reversal clauses, the glossary entries of report
-   section 5, and `packages/foundation/modeling/nlp/THEORY.md` rewritten as a
-   narrative that links each structural claim to its test.
+   section 5, and the retired `@beep/nlp` package's `THEORY.md` absorbed by
+   section 14 of the knowledge-stack chapter, which links each kept claim to its
+   ledger id and lists the withdrawn ones; the file is deleted with its package.
 9. One complete office-action flow runs end to end on synthetic fixtures with
    law-owned claim structure, per-authority-type assessment profiles and an
    attorney admission bound to actor, action and revision, and it stays green
    at every phase exit from P3 on.
 10. Package topology is executed, not deferred: `@beep/text` replaces
     `@beep/provenance`, `@beep/annotation` exists, `@beep/nlp-processing`
-    absorbs `nlp/Operations` and `nlp/Algebra`, `@beep/nlp` is retired, and
+    replaces `nlp/Operations` and `nlp/Algebra` with `Operation` and
+    `ActivityLogReducer` after the census, and takes `Core` and the graph node
+    schemas, `@beep/nlp` is retired, and
     `@beep/schema-org` is retired whole (census: no consumer), each through
     `bun run beep create-package` and the retirement procedure with the
     consumer migration in the same PR.
@@ -196,7 +199,7 @@ and the phase order is `PLAN.md`), this file is normative.
   capability negative-gate clauses (`standards/ARCHITECTURE.md`): pure schemas
   belong in `foundation/modeling`; the named consumers are the langextract
   handoff, the semantica projection and the law-practice office-action flow.
-- `packages/foundation/modeling/nlp` (retired in P7 after L2 and L5 absorb it).
+- the retired `@beep/nlp` package (retired in P7 after L2 and L5 absorb it).
 - `packages/foundation/capability/nlp-processing` (existing capability package,
   the L5 home: absorbs `nlp/Operations` and `nlp/Algebra` after the upstream
   census of `effect/Combiner` and `effect/Reducer`; its instrumentation shard
@@ -218,7 +221,7 @@ and the phase order is `PLAN.md`), this file is normative.
   non-empty node. `pandoc-ast`, `lexical-schema` and `html` record no text
   positions; each gains a source map over `@beep/text` when a phase needs one
   (decision `2026-11-22-p2-ast-source-maps-md-only`).
-- `packages/foundation/modeling/schema-org`: retired whole in P7 (census: no consumer).
+- the retired `@beep/schema-org` package: retired whole in P7 (census: no consumer).
 - `packages/foundation/capability/langextract/src/Handoff` (verified receipts
   first, lossless handoff), `apps/labs/semantica/src/layers` (projection and
   the `1` default), `packages/law-practice/use-cases` (`OfficeActionReview`
@@ -231,7 +234,7 @@ and the phase order is `PLAN.md`), this file is normative.
 - `standards/architecture/` (new knowledge-stack chapter, `DECISIONS.md`
   entries including the scoped chapter-11 amendment, `GLOSSARY.md` entries),
   `docs/PROSE_TO_PROOF_VISION.md` (local-first posture, BeepGraph status),
-  `packages/foundation/modeling/nlp/THEORY.md` (its narrative moves into the
+  the retired `@beep/nlp` package's `THEORY.md` (its narrative moves into the
   chapter, then the file is retired with the package), `standards/instrumentation-catalog/` shards for every package
   that gains spans.
 
@@ -375,7 +378,7 @@ decision file) and the law-test ledger:
 
 ## Acceptance Criteria
 
-- [ ] P0: decision files confirm or reverse each resolved question; the
+- [x] P0: decision files confirm or reverse each resolved question; the
       section 4 sketches compile under `tsrs` as a checked module that follows
       the Constraints idioms (`S.Opaque` with annotations for non-factory data,
       correct discriminator constructors, `LiteralKit` without `as const`);
@@ -392,14 +395,14 @@ decision file) and the law-test ledger:
       rulings are drafted; the scoped chapter-11 amendment is merged on
       `origin/main` (in P0's PR or its own) before P2 opens, and P2 to P7 hold
       until it is.
-- [ ] L0: `TermBinding` and the term-stability snapshot exist; a test renames
+- [x] L0: `TermBinding` and the term-stability snapshot exist; a test renames
       a module and proves no published IRI changes; the registry expands and
       contracts `prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` CURIEs;
       `@beep/identity` still depends on `effect` only; one
       canonical JSON implementation; path-derived IRIs are gone and the
       test-runner's pinned IRIs are re-published from the registry; `L0-1` to
       `L0-3` are green.
-- [ ] L1: `@beep/text` exists and `@beep/provenance` is retired with every
+- [x] L1: `@beep/text` exists and `@beep/provenance` is retired with every
       consumer migrated; `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`,
       `Reanchoring` and unit conversion are exported from `@beep/text`; the
       citation mention identifier is minted over `OccurrenceId` and a frozen
@@ -421,7 +424,7 @@ decision file) and the law-test ledger:
       over the annotation document on synthetic fixtures (P4 adds the signal
       assertions, P6 the law-owned structure, assessment profiles and
       admission); `L2-1` to `L2-6` are green.
-- [ ] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
+- [x] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
       `Assessments<K>` exist; `makeClaimEnvelope`, `ClaimVersion` and
       `EvidenceSpan` are retired with every consumer migrated, and stored
       `epistemic_evidence.span` and `ClaimVersion` rows keep their bytes behind
@@ -444,7 +447,7 @@ decision file) and the law-test ledger:
       `ClaimGate.two-claims-one-occurrence.test.ts` in the law-practice use-cases
       tests (the proof `goals/attributed-multi-claim-span` promised); `L4-1` to
       `L4-7` are green.
-- [ ] L3 and L6: legal seeds and their seed data files move to the
+- [x] L3 and L6: legal seeds and their seed data files move to the
       law-practice asset pack with IRIs and approval metadata preserved and
       every consumer migrated; the FOLIO DTOs are deleted;
       `fold -> Dataset` is the only serialization path; `Dataset` equality is a
@@ -455,7 +458,7 @@ decision file) and the law-test ledger:
       `@beep/rdf` asserts license and digest on every external namespace's
       `NamespacePin`; the gUFO class typing is a record in `@beep/ontology`;
       `L3-1` to `L3-4` and `L6-1` to `L6-2` are green.
-- [ ] L5 and L7: `@beep/nlp-processing` holds `Operation` with
+- [x] L5 and L7: `@beep/nlp-processing` holds `Operation` with
       `withActivity`, Kleisli laws hold under the declared observation, every
       run emits a `prov:Activity` and the package's instrumentation shard is
       regenerated; MCP tool schemas are the Effect schemas and write tools
@@ -468,7 +471,7 @@ decision file) and the law-test ledger:
       assertion per access path listed in Constraints) passes and P6's goal
       includes the authorization work the P0 access-path map scopes; `L5-1` to
       `L5-3` are green.
-- [ ] Cut-over: `@beep/nlp` is retired and `@beep/schema-org` is retired
+- [x] Cut-over: `@beep/nlp` is retired and `@beep/schema-org` is retired
       whole (census: no consumer) through the retirement procedure with
       consumers migrated in the same PR; `research/consumer-census.md` records each
       disposition; every package under `packages/foundation/modeling` and
@@ -476,14 +479,14 @@ decision file) and the law-test ledger:
       and `bun run beep lint identity-registry` (the create-package contract);
       no S31 inventory grew, by the Constraints definition, checked per file
       against the P0 base commit.
-- [ ] Doctrine: the knowledge-stack chapter, the nine rulings, the chapter-11
+- [x] Doctrine: the knowledge-stack chapter, the nine rulings, the chapter-11
       amendment (merged before P2 and confirmed in force), the glossary entries
       and the chapter section that absorbs the `THEORY.md` narrative are merged on
       `origin/main`; `rg -n "local-first|on-device" docs/PROSE_TO_PROOF_VISION.md`
       returns no sentence stating it as architecture.
-- [ ] Every row of `research/law-test-plan.md` is `green` with a test file
+- [x] Every row of `research/law-test-plan.md` is `green` with a test file
       and test name, or `deleted` with its reason.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -3383,6 +3386,207 @@ Lane p6
 
 Reverse: Narrow the test to claim_propose only and move it into the law-practice server tests
 
+### P7: the typed BackendNotSupported failure becomes acceptance row L5-4, falsified by the wink backend test; only the functor framing of THEORY section 7 is withdrawn, 2026-11-24
+
+the retired `@beep/nlp` package's `THEORY.md` §7 calls backends a category of functors. The framing predicts no law and is withdrawn. Its still-true structural claim, that an operation a backend does not support fails with the typed `BackendNotSupported` and never throws, is kept. The first draft moved it to the nlp-processing README with no ledger id, arguing that no bug could be named. That was wrong on both counts. Chapter 16 section 13 requires a README or chapter stating a structural property to cite the ledger id (`standards/architecture/16-knowledge-stack.md:756-758`), and the vision ruling keeps each still-true claim tied to one (`standards/architecture/DECISIONS.md:3171-3174`). The bug is nameable: a backend that throws a defect, or returns an empty or partial result, for an operation it does not support.
+
+Row 2 adds `L5-4` to `research/law-test-plan.md`: layer L5, kind acceptance, statement "an unsupported backend operation fails with `BackendNotSupported`, never a defect or a partial result", package `@beep/nlp-processing` (the contract, `packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts:300-310`), status green. The test is the production one, `packages/drivers/wink/test/Backend/WinkBackend.test.ts:102-120`: it runs `Effect.flip` over `parseDependencies` and `extractRelations` on the real wink layer, so a success or a defect fails it. The constructor test at `nlp-processing/test/Backend/NLPBackend.test.ts:71-77` only checks a value built by `notSupported` and is not the falsifier. The wink titles gain the `L5-4 ` prefix. The chapter's L5 **Laws** paragraph and the section 14 kept table list `L5-4`, and the nlp-processing README sentence cites it.
+
+This amends the "no new ledger row" clause of decision `theory-claims-the-chapter-did-not-name-are-withdrawn`.
+
+Lane p7
+
+Reverse: Delete the L5-4 row and its title prefix, drop the README sentence and list the backend claim among the withdrawn ones
+
+### P7: delete-package runs only on a base where the checks of its repo-wide writers are green, and its writer diffs may only remove the target's lines, 2026-11-24
+
+`delete-package` does more than remove a tree. After removing it (`packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts:846`) it subtracts the target's coverage rows in-process and then re-runs eight repo-wide writers in write mode (`BASELINE_WRITER_STEPS`, `:489-515`, run at `:567-598`): fallow boundaries, the fallow health and dead-code baselines, `lint schema-first --write`, `lint package-test-typecheck --write-baseline`, `lint schema-catalog --write`, `observability catalog --write` and `lint package-scripts --write`. A failing writer leaves the tree half-deleted. On a red base the writers do harm: `lint schema-first --write` drops missing entries from the failure set and writes the merged inventory (`Lint/internal/SchemaFirstScan.ts:694`, `:748`), which would admit P4's seven violations (S31 growth), and `lint package-scripts --write` would rewrite the P5 drift in `packages/law-practice/domain/package.json`. At f30c183f20a both checks are red, and the P4 fix (531313589c2) is an ancestor of neither the P7 HEAD nor the P6 head c678aee89be.
+
+Rows 1 and 3 therefore start only when, on the merged base, all seven matching checks are green: `bun run beep lint schema-first`, `bun run beep lint package-scripts --check`, `bun run fallow:health:baseline:check`, `bun run fallow:dead-code:check`, `bun run beep lint schema-catalog`, `bun run beep observability catalog --check` and `bun run beep lint package-test-typecheck` (fallow boundaries through `bun run fallow:boundaries:check`). A red check holds the row until the owning layer's fix reaches the lane; P7 never repairs a lower layer's red. `--skip-baselines` is not used: it skips the coverage subtraction too (`:571-575`, `:860`), and nothing else performs that subtraction.
+
+Each row's gate adds that `git diff` of every writer output under `standards/` shows only removed lines naming the target package or its path. Together with the per-file S31 delta of row 7 (decision `s31-is-counted-per-package-and-inherited-reds-go-to-their-layers`), a writer that admitted another package's entry is caught in the row that ran it.
+
+Lane p7
+
+Reverse: Run delete-package with --skip-baselines, subtract the coverage rows by another route and invoke only the writers whose checks are green
+
+### P7: final-check runs once on the row-8 head, forced and uncached, with coverage skipped for hosted CI, and row 9 stays inside the refresh allowlist, 2026-11-24
+
+The final PR runs `bun run beep yeet final-check` once, on the row-8 head, before `bun run beep yeet open`. Three facts shape that run.
+
+- The receipt must cover the pushed head (`PLAN.md:32`). Row 9 is pushed after `yeet open`, and the refresh rule accepts only own changes to four standards inventories and the goal packet's `SPEC.md`, `PLAN.md`, `README.md`, `ops/manifest.json` and reuse ledgers (`packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheckRefresh.ts:100-121`, refusal at `:199-205`). So row 9 holds only what `goals set-status` writes to the manifest and README, and the amendment status edit in `standards/architecture/DECISIONS.md` moves to row 8 (decision `one-decisions-entry-records-the-landings-and-the-amendment-expires-at-closeout`).
+- `bun.lock` changes in P7, so the run sets `TURBO_FORCE` and nothing is served from cache (`Yeet/internal/TurboForce.ts:6-10`).
+- Rows 1 and 3 touch `@beep/repo-cli`, so an unskipped coverage gate would run whole-package repo-cli coverage locally, which the workstation rules forbid. The run is `nice -n 19 ionice -c3 bun run beep yeet final-check --skip coverage="hosted Coverage Regression proves repo-cli; no local whole-package coverage"`, run alone. If scheduler admission or a gate waits 10 minutes, the AGENTS.md constrained-compute rule applies: keep the package-scoped checks that passed and record each further skipped gate with `--skip <gate>=<reason>` on the receipt.
+
+Lane p7
+
+Reverse: Run final-check unskipped on the row-9 head after yeet open, accepting a second forced run and local repo-cli coverage
+
+### P7: the nlp and schema-org packages retire through delete-package, one commit each, with every live reference edited in that commit, 2026-11-24
+
+Both packages have no code consumer: no import outside their own trees and no `package.json` dependent (`bun run beep delete-package --dry-run` prints "direct: (none)", "transitive: (none)" for each at f30c183f20a). Each retires through `bun run beep delete-package <name> --allow-stale-packets`, in one commit per package. Every live reference the dry run refuses is edited in that same commit. Each retirement commit gates on the apply ending with exit 0, or with "post-apply doctor found residue" and a residue list that is a subset of `standards/cache-baseline/` and `standards/policy-tools.fingerprint.json` (the P2 gate shape), and on its scoped `rg` exit. `delete-package <name> --allow-stale-packets --check` must print clean for both names once row 7 has re-stamped the cache baselines without the retired subjects, which is the P2 order (decision `2026-11-22-p2-retired-name-leaves-live-standards`). `--allow-stale-packets` answers only the soft refusal over dated packet records and this packet's own plan text. They are history (decision `2026-11-22-p2-delete-package-doctor-reads-dated-records-as-history`), and that includes the completed manifests that name the nlp package as a phase subject or a `reuseGate.preferredHome` (`goals/langextract-capability/ops/manifest.json:122-126`). No tooling reads `preferredHome`.
+
+Order. schema-org goes first (row 1): it has no coupling to nlp or to the chapter. nlp goes after the chapter absorbs the remaining THEORY claims (rows 2 and 3), because its owned tree holds `THEORY.md`.
+
+Calls inside the two commits:
+
+- The lexical exit `rg -l "@beep/schema-org" packages apps` also matches non-consumer string fixtures: `packages/tooling/library/repo-cli-kit/src/WholeToken.ts:9,54,64` (the JSDoc look-alike of `@beep/schema`) and `packages/tooling/tool/cli/test/delete-package.test.ts:1297,1300,1307,1310,1354` (changeset-pruning siblings). They take the fictional name `@beep/schema-extras`, which still extends `@beep/schema` as a prefix and matches no live or retired workspace. The docgen example output stays `false`.
+- The dependency-review capture `packages/tooling/tool/cli/test/fixtures/dependency-review/manifest-inventory.json` loses the two production rows (`:672-676`, `:697-701`). Its README allows trimming and forbids editing (`README.md:24`); P2 trimmed the provenance row the same way in `010f21e3934`. The test counts only synthetic-fixture rows (`test/ci-dependency-review.test.ts:337-346`), so no expectation changes.
+- The registration tables drop their entries: `CiLanePartitions.ts:412,827` (nlp) and `:619` (schema-org), and `CoverageScope.ts:394` and `:452`. `unit-a`'s `weightSeconds: 594` (`CiLanePartitions.ts:595`) is a measured serial sum and stays; the next calibration run re-measures it, as after P2. The ten-shard fixture loses `"@beep/nlp"` (`test/quality-tasks.test.ts:9343`). Its assertions (`:9358-9360`) are qualitative (two long poles, the rest under 300 s), and a 3.4 s weight cannot move them, so no re-calibration is needed.
+- The thirteen "Effect v4 `@beep/nlp` implementation notes:" blocks (twelve nlp-processing module docs and `packages/drivers/wink/src/WinkBackend.service.ts:13`) and the categorical narrative in nlp-processing JSDoc are handled by decision `the-categorical-narrative-and-the-port-notes-leave-nlp-processing-jsdoc`: the port history is deleted and current behaviour moves under **Details**. The `@beep/nlp-processing` changelog heading (`CHANGELOG.md:1`) is corrected and its entries stay. The wink README and `AGENTS.md` (the `CLAUDE.md` symlink follows) and `docs/PROSE_TO_PROOF_ARCHITECTURE_MAP.md:121` name `@beep/nlp-processing` or drop the retired name. In nlp-mcp, `src/Server.ts:2` and `src/bin.ts:2` describe the driver itself and name `@beep/nlp-mcp`; `src/Server.ts:8` and `test/Server.test.ts:12` describe `NlpToolkit` and name `@beep/nlp-processing`; the manifest description (`package.json:4`, the one manifest field P7 edits) and `README.md:3` name `@beep/nlp-processing` operations and drop the "generic IR handoff contract" clause, because the handoff was deleted in P3.
+- `_typos.toml` is edited by hand, because neither plan models it: the `vocabulary.ts` exclude (`:118-120`) and the `fnd` word with its comment clause (`:14-17`) leave. The `raison` word stays. Both are reductions.
+- The `turbo.json` policy-fingerprint input line of each package is stripped by hand before its run, and `bun run beep lint policy-fingerprint --write` rewrites `standards/policy-tools.fingerprint.json` after it, then `--check` proves both (decision `the-turbo-policy-input-line-is-stripped-before-each-delete-package-run`; the writer cannot remove the line while the manifest exists).
+- `standards/changesets.retired-packages.json` gains a row for each name, with the recovery commit in the rationale, as for `@beep/provenance`. The registry guards name reuse and is not an S31 inventory. Because the nlp row matches the lexical exit, the exit excludes the registry (decision `the-nlp-exit-excludes-the-retired-name-registry-and-row-3-defers-cache-baselines`).
+- Map C's question D8 assumed the nlp plan lacked a `coverage-baseline` step. Re-measured, the nlp inverse plan lists `coverage-baseline`, `fallow-health-baseline`, `fallow-dead-code-baseline`, `schema-first-inventory`, `schema-catalog`, `instrumentation-catalog` and `test-typecheck-baseline`, so nothing is regenerated by hand. Those writers run in write mode over the whole repository, so each apply starts only on a base where their checks are green (decision `delete-package-runs-only-on-a-green-writer-base-and-its-writers-only-remove`).
+
+Semantic loss. The offline schema.org conformance check (933 classes, 1,521 properties at v30.0) has no consumer and leaves without a successor. `apps/oip-web/src/content/OipSeo.ts:40-77` hand-writes its schema.org graph and never used the package, so nothing it does changes. A later need starts from the pinned 30.1 artifact in `@beep/rdf` (`rdf/src/Vocab/generated/namespace-pins.data.json:250-266`). The census disposition records the v30.0 against v30.1 skew in one clause, and the four nlp text helpers are recorded as deleted with no successor.
+
+Lane p7
+
+Reverse: Restore either package tree from its recovery commit, re-run tsconfig-sync, the identity segment and the baseline writers, and drop its retired-name row
+
+### P7: one dated DECISIONS entry records L3 to L7 landing and both retirements, amends the split ruling to its delivered routing, and the scoped amendment is marked expired in the closeout rows, 2026-11-24
+
+Three calls the sources leave open (map questions N3, S5 and D7).
+
+Chapter 11's five-step procedure, which ends in a dated DECISIONS entry (`standards/architecture/11-evolution-and-deprecation.md:9-16`), governs slices. The two P7 packages are `foundation/modeling` concepts. For those, the upstream-first rules put the census and the disposition in the owning goal packet's decision log (`:136-137`, `:156-157`). The dispositions already stand there: `2026-11-19-p0-census-dispositions` and the SPEC census paragraph (`SPEC.md:590`). The 2026-11-19 ruling "`@beep/nlp` Splits Into `@beep/annotation` Schemas And `@beep/nlp-processing` Operations, Then Retires" (`DECISIONS.md:2935`) names the retirement, and its reversal clause names P7 as the phase that executes it. Goal decision files carry each call. Chapter 11's See also adds that `DECISIONS.md` "records every retirement" (`:197`), so the two retirements are also recorded there, in the landing entry below.
+
+The chapter's own log still records only two landings, L1 (`DECISIONS.md:3283`, P2) and L2 (`:3358`, P3). P4, P5 and P6 added no entry. Once P7 merges, chapter 16 states every layer as landed, so a reader of `DECISIONS.md` needs one entry that dates the end of the program. Row 5 of the P7 design adds a single dated entry, "L3 To L7 Land; The nlp And schema-org Packages Retire". It names the four phases, the two retirements with their recovery commits, the Kb `Selector` re-check, the vision correction and the THEORY absorption. It cites the vision ruling under **Amends** as delivered. No entry is added per phase: one dated entry is the history of one merge.
+
+The 2026-11-19 split ruling is cited as amended, not as delivered, because the split was not delivered as ruled. The ruling sends the graph schema to `@beep/annotation` kinds (`DECISIONS.md:2942-2944`, `:2953-2956`) and moves the operations and algebra to `@beep/nlp-processing` (`:2946-2949`). In fact the graph node schemas moved with `Core` to `@beep/nlp-processing` (`decisions/2026-11-22-p3-graph-span-becomes-an-optional-position.md:7`, `decisions/2026-11-24-p6-core-and-graph-schema-move-to-nlp-processing-in-p6.md`), and `Operations` and `Algebra` were replaced by `Operation` and `ActivityLogReducer` with nothing moved (`decisions/2026-11-24-p6-nlp-operations-and-algebra-are-replaced-not-moved.md:7`). The ruling's reversal clause asks for a new dated entry before a deviating phase (`:2979-2983`), and none was written. The landing entry therefore carries a facet table (ruled, delivered, evidence) for the handoff and `Kind`, the graph schema, `Core`, `Operations` and `Algebra`, and `GraphOps` with the four text helpers, and the same commit changes the split ruling's status line to `Active, amended by 2026-11-24 "L3 To L7 Land; The nlp And schema-org Packages Retire"`, the form `DECISIONS.md` already uses for amended rulings. Without this the live, Active ruling would describe a routing the code does not have. Row 2 rewords SPEC success criterion 10 (`SPEC.md:80-81`) to the delivered routing in the same spirit. The entry spells the retired names only as `` `@beep/nlp` ``, never `"@beep/nlp"` or `@beep/nlp/...`, so the lexical nlp exit stays empty.
+
+The scoped chapter-11 amendment (`DECISIONS.md:3193-3281`) reads "Active (expires when `goals/text-knowledge-stack-rebuild` reaches `completed-retained`)". The packet reaches that status in the commit that writes the closeout record, P8's row 9 in the same final PR. The amendment's status line changes to "Expired (the packet reached completed-retained in the final PR)" in row 8, before `bun run beep yeet final-check`, not in row 9: the final-check refresh allowlist does not cover `standards/architecture/DECISIONS.md` (`packages/tooling/tool/cli/src/commands/Yeet/internal/FinalCheckRefresh.ts:100-121`, `:199-205`), so a row-9 edit would leave the pushed head without a valid receipt. Row 9 then holds only the manifest and README that `goals set-status` writes. The squash merge lands rows 8 and 9 together, so `origin/main` never shows an active amendment for a closed packet or an expired one for an open packet. Rule 5's in-place pointer (`11-evolution-and-deprecation.md:164-167`) already says "until that packet reaches `completed-retained`" and is left unchanged.
+
+Lane p7
+
+Reverse: Drop the landing entry and add one dated entry per phase instead, restore the split ruling status to Active, or leave the amendment status as Active and let its expiry clause speak for itself
+
+### P7: the cut-over ships as one PR stacked on P6, and P8 drives that same PR as the packet's final PR, 2026-11-24
+
+PLAN.md says each of P1 to P7 is its own PR or PR stack and that P8 names the last of them. P8's goal is to publish the final PR through Yeet, run `bun run beep yeet final-check` on its pushed head, drive it to mergeable and put the `closeout` record and the reflection on board. P8 has no code surface. P7 is the top layer of the P4 to P7 stack, so its PR merges last and is the final PR that the closeout names.
+
+A separate P8 PR would hold only the closeout commit, the amendment expiry and the reflection. It would be a fourth open PR in a stack whose packet limit is three (operator 2026-11-05), and between the two merges P7 would sit on `origin/main` with no closeout, which `goals doctor --online` and `yeet sweep --retire` report. So the P7 PR carries rows 0 to 7 of the P7 design (`research/2026-11-24-p7-design.md` section 11) and the P8 rows 8 and 9. The P7 lane opens it at content-final once the packet has fewer than three open PRs, and runs `bun run beep goals set-status text-knowledge-stack-rebuild completed-retained` after it is open, so the closeout names it.
+
+The lane merges the P6 head after each parent layer merges (the stack's base-merge rule) and re-runs both delete-package dry runs on the merged head before rows 1 and 3. P7 changes no registry term, so it does not rewrite the term snapshot. Closure inputs: `bun.lock`, the root `tsconfig.json` and `packages/foundation/modeling/identity/src/packages.ts` all move, so the PR takes one CI binary closure release and pin cycle at merge. No row needs money or operator input, so P7 has no HOLD.
+
+Lane p7
+
+Reverse: Open P8 as its own docs-only PR stacked on the P7 branch, carrying the closeout record, the amendment expiry and the reflection, and merge it last
+
+### P7: S31 is counted per package against the census base, a type-test ts-expect-error counts, and inherited reds are fixed on the layer that introduced them, 2026-11-24
+
+S31 counting rule (map question D6). The SPEC defines S31 per inventory and per package: "for every inventory or allowlist named in `research/consumer-census.md`, the entry count at a phase head is at or below its count at the P0 base commit, with moved packages carrying entries by rename only" (`SPEC.md:281-285`). The census counts lines that name `packages/foundation/(modeling|capability)/<pkg>/` at base f9982f3b5e6 (`research/consumer-census.md:539-563`). P7 measures the same way against the same base. Whole-file totals are not the ceiling: the coverage baseline and the effect-vitest inventory grew on `main` between the base and the merge base 9a4f7b0258d (map C section 3.1), and this packet cannot be held to growth it did not make. Every per-package count at f9982f3b5e6 equals the count at the P0 merge dcf6b16a77d, so the choice between those two refs changes nothing.
+
+The SPEC Cut-over row also says "checked per file against the P0 base commit" (`SPEC.md:476-478`). Per file is therefore measured too, as P7's own contribution: for every inventory and allowlist the census names, the net entry delta of P7's rows 1 to 7 against the merged P6 head they start from is at most 0. Growth that `main` or a lower layer brought in lies outside that diff and is subtracted by construction, so no whole-file total is held against this packet. Row 7 re-counts the per-package rows for every package of the census table, not only the three P7 touches, because `delete-package` runs repo-wide writers that could change any package's entries.
+
+The suppression row counts `@ts-expect-error` by its regex (`consumer-census.md` "Reproduce a row"). A negative type test written with it is therefore an entry. P6 row 4 added one at `packages/foundation/capability/nlp-processing/test/Operation.test.ts:133`, which takes nlp-processing from 2 to 3 against its base of 2. That is growth. It is fixed in the P6 layer by the repo's non-suppressing form, `expectTypeOf<...>().not.toExtend<...>()` from `@effect/vitest`, as `packages/party/domain/test/Admission.test.ts:80` already does. The P7 gate re-measures after merging the P6 head.
+
+Inherited reds go to the layer that introduced them, never to P7, and P7 never clears a red by admitting an inventory entry:
+
+- `bun run beep lint schema-first` was red at f30c183f20a on seven P4 schemas (map C section 3.2). The P4 head 2913ccb2a3e reworks them (`KbAssertionV1Row` and `HoldProbeRunV1Row` are `S.Opaque` there since 531313589c2, and `KbClaimEvent`, `HoldClaimEvent` and `LedgerEvidenceV1Outcome` are unions). Neither 531313589c2 nor the P5 merge of it at 58faa083b27 is an ancestor of the P7 HEAD or of the P6 head c678aee89be, so the fix reaches P7 only when the P6 lane merges its base. `lint schema-first --write` is never the remedy, because it admits entries, and `delete-package` runs it itself, so rows 1 and 3 hold until the check is green on the merged base (decision `delete-package-runs-only-on-a-green-writer-base-and-its-writers-only-remove`).
+- `bun run beep lint package-scripts --check` is red today: "219 manifests, 1 drifting", `packages/law-practice/domain/package.json: doctest: missing-task` and `beep:doctest: missing-impl`. This was re-run here and still holds on the P5 head 58faa083b27. P5's new doctest-bearing modules caused it, so `lint package-scripts --write` belongs in the P5 layer.
+- `THIRD_PARTY_NOTICES.md` "Pinned RDF vocabularies" lists the 11 pins that `origin/main` carries (`:235-257` at f30c183f20a); the P4 head 2913ccb2a3e adds the nanopub pin's entry. The nine pins P5 added in `bc544bbd707` ("feat(rdf): pin every external namespace the registry holds") (`dcat`, `dcterms`, `owl`, `rdf`, `rdfs`, `schema` under CC-BY-SA-3.0, `semapv`, `sh`, `void`) have no notice entry, although each pin row records its license and attribution (`packages/foundation/modeling/rdf/src/Vocab/generated/namespace-pins.data.json`). The notice entries belong in the P5 layer.
+
+If a layer has already merged with its red when P7 runs, the red is fixed once on `main` in one small PR and the stack merges `main` (AGENTS.md "Inherited reds"). The orchestrator routes each item; this lane writes nothing outside its own files.
+
+Lane p7
+
+Reverse: Count S31 by whole-file totals against the P0 merge commit instead, exempt type-level ts-expect-error from the suppression row, and let P7 carry the inherited fixes in its own rows
+
+### P7: the categorical narrative and the v3-to-v4 port notes leave nlp-processing and wink JSDoc in the commit that retires the nlp package, 2026-11-24
+
+Chapter 16 section 14 withdraws the F-algebra, functor and category framing of `THEORY.md`, but the same narrative stays live in `@beep/nlp-processing` JSDoc. Measured at f30c183f20a (`np/` is `packages/foundation/capability/nlp-processing/`): `np/src/Graph/EffectGraph.ts:2-12` ("a categorical approach", "morphisms in a category", "Composition preserves the DAG property", "catamorphism", "F-algebra") and the dividers `:513`, `:655`; `Graph/index.ts:16`; `Graph/AnnotatedTextGraph.ts:10-11`; `Graph/Schema.ts:315`, `:345`, `:382`; `Backend/NLPBackend.ts:8-9`, `:308-310`, `:349-365`; `Backend/Composition.ts:1-3`; `NLPService.ts:6`; `Graph/GraphOperations/Types.ts:7`, `:139`, `:557`; `Graph/GraphOperations/Operation.ts:249`. Leaving them would keep the two drifting narratives the vision ruling rejected (`standards/architecture/DECISIONS.md:3183-3184`).
+
+Row 3 already edits these module docs, so it rewrites the lines as plain behaviour ("part-of-speech annotation for a token", "splits text into tokens", "combinators that wrap one backend in another for fallback"). "Composition preserves the DAG property" is dropped, because no ledger row backs it. The `//` dividers are removed under the delete-comment skill's grouping class. The README's Kleisli wording (`np/README.md:16`) stays: it names a kept claim tested by `L5-1`. Gate: `rg -n -i -e categorical -e categorically -e functor -e F-algebra -e morphism -e monoid -e 'in a category' -e 'form a category' packages/foundation/capability/nlp-processing/src` is empty after the P6 head is merged (`@category` tags and the `category` operation field do not match).
+
+The same commit deletes the thirteen "Effect v4 `@beep/nlp` implementation notes:" blocks (twelve `np/src` files and `packages/drivers/wink/src/WinkBackend.service.ts:13`) instead of renaming their heading. They are v3-to-v4 port history (`NLPService.ts:12-14`: "`Context.GenericTag` becomes the `Context.Service` class form"), and touched JSDoc follows the canonical grammar of one lead paragraph and only the **When to use**, **Details**, **Gotchas** and **Example** sections (`.patterns/jsdoc-documentation.md:21`, `:27-49`). A note that states current behaviour, such as failing with a tagged `GraphCycleError` instead of throwing, moves into the block's **Details** section. Gate: `rg -n -i 'implementation notes:' packages/foundation/capability/nlp-processing/src packages/drivers/wink/src` is empty. This replaces the heading rename in decision `nlp-and-schema-org-retire-through-delete-package-one-commit-each`.
+
+Lane p7
+
+Reverse: Restore the module docs from the row-3 parent and rename only the implementation-notes heading
+
+### P7: the cli knowledge-base Selector keeps its TextQuote case, and its stored v1 and v2 rows read unchanged, 2026-11-24
+
+Chapter 16 section 5 kept the cli knowledge-base `Selector` (`packages/tooling/tool/cli/src/commands/Kb/Kb.schemas.ts:113-120`) "because it is repo tooling with no consumer in the stack; P7 re-checks it" (`standards/architecture/16-knowledge-stack.md:562-564`, census `research/consumer-census.md:345`). Re-checked at f30c183f20a, the case is kept:
+
+- It has stored rows in two declared formats: the `kb-assertion/v2` `Assertion.selector` (`Kb.schemas.ts:144-163`) and the frozen v1 row `KbAssertionV1Row.selector` (`Kb/internal/KbStore.ts:60-65`), written to `assertions.jsonl` under the caller's `--root`. `@beep/repo-cli` is not a package named in the scoped chapter-11 amendment (`standards/architecture/DECISIONS.md:3211-3219`), so rule 5 and the stored-format law apply unchanged. Deleting the case would make every stored text assertion undecodable.
+- It mints no identity. Assertions are keyed by `RegistryId`, and nothing derives an id from the selector, so "`OccurrenceId` is the only text-occurrence identity" (`16-knowledge-stack.md:552-554`) is not contested.
+- It already validates through L1: `TextAnchor.isInternallyConsistent` and `isUtf16Boundary` from `@beep/text/TextAnchor` (`Kb.service.ts:9`, `:73-80`), so no second offset semantics exists.
+- No stack package imports the module; it imports the stack (`@beep/text`, `@beep/epistemics`, `@beep/rdf`, `@beep/jsonc`; `Kb.schemas.ts:6-11`, `Kb.projection.ts:7-8`). The chapter sentence is restated as "no stack package consumes it".
+
+The projection emits local `urn:beep:kb:` predicates (`Kb.projection.ts:69-83`) instead of `oa:` terms through `rdf/src/Adapters/WebAnnotation.ts`. That is accepted: the kb graph is a local projection with no interchange consumer, and section 1 of the chapter already treats graphs as disposable projections.
+
+The alternative under "best core over compatibility" is the reversal: decode the stored cases into the `@beep/text` `Selector` at read time. It is not taken because it changes only the in-memory shape of a tooling module outside the stack's layers, while the stored bytes, the identity rule and the L1 validation stay exactly as they are now.
+
+A free prose comment at `Kb.projection.ts:33` (also on `origin/main`, from #2724) breaks the comment law. The P7 PR does not otherwise touch that file, so it is removed in a small PR off `origin/main` (P7 design section 13), not in the stack.
+
+Lane p7
+
+Reverse: Adapt instead: decode the stored TextQuote and MediaFragment cases into the @beep/text Selector at read time, drop the local union, keep the stored bytes and project oa: terms through the WebAnnotation adapter
+
+### P7: the lexical nlp exit excludes the retired-name registry, and row 3 also excludes the cache baselines that row 7 re-stamps, 2026-11-24
+
+The PLAN P7 exit `rg -l '@beep/nlp["/]' packages apps standards tsconfig.json` (`PLAN.md:31`) searches `standards/`, unlike the P2 and schema-org exits, which search only `packages apps`. Row 3 adds the name-reuse guard row for the nlp package to `standards/changesets.retired-packages.json`, in the shape of the `@beep/provenance` row (`:39-42`), and its `"name": "@beep/nlp",` line matches the `@beep/nlp"` alternative. As written, row 3's gate and the P7 exit could never both pass.
+
+The exit is scoped to live files: `rg -l '@beep/nlp["/]' packages apps standards tsconfig.json --glob '!standards/changesets.retired-packages.json'`. The registry is a historical record that the delete-package doctor already reads as history (`packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts:59-61`); `rg` cannot know that. Row 6 rewords the PLAN P7 exit (authored text) and writes the scoped command into the census P7 outcome. `standards/architecture/DECISIONS.md` is not excluded: the row-5 landing entry spells the name only as `` `@beep/nlp` ``, never as `"@beep/nlp"` or `@beep/nlp/...`, so the exit stays empty without a second exclusion.
+
+Row 3 also excludes `standards/cache-baseline/**`. `standards/cache-baseline/@beep/nlp.json:3` matches the exit today, `delete-package` has no cache-baseline step (`rg -n cache-baseline packages/tooling/tool/cli/src/commands/DeletePackage` is empty), and the file is dropped only by row 7's `bun run beep cache baseline` (decision `2026-11-22-p2-cache-request-names-the-retired-package-in-previous-only`). Row 7 runs the full scoped exit. The apply gate of rows 1 and 3 copies P2's shape (`research/2026-11-20-p2-design.md:379-382`): exit 0, or "post-apply doctor found residue" with a residue list that is a subset of `standards/cache-baseline/` and `standards/policy-tools.fingerprint.json`; the fingerprint is rewritten after the apply in the same row.
+
+Dropping the nlp registry row instead was rejected: name reuse would then be unguarded.
+
+Lane p7
+
+Reverse: Drop the nlp row from standards/changesets.retired-packages.json and run the unscoped PLAN exit, accepting an unguarded name
+
+### P7: each package's turbo.json policy-fingerprint input line is stripped by hand before its delete-package run, and the writer then proves the result, 2026-11-24
+
+Both delete-package dry runs list `turbo.json` as a hard `file-path` hit: one input line each in the `//#lint:policy-fingerprint` task (`turbo.json:210`), the retired `@beep/nlp` manifest at `:400` and the schema-org manifest at `:410`. The first draft said `bun run beep lint policy-fingerprint --write` rewrites them before the run. It cannot: the writer derives those inputs from "the manifests that declare policy scripts" and reads every workspace manifest (`packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts:20-22`, `:372`), and both manifests still declare `lint:jsdoc`, `lint:laws` and `lint:deprecated-apis`, so while either tree exists `--write` writes its line back. `delete-package` has no turbo step of its own.
+
+The line is therefore stripped by hand in the deleting commit, before the run, as P2's deleting commit removed the provenance line (`010f21e3934`, `turbo.json` 1 line out). After the run, with the manifest gone, `bun run beep lint policy-fingerprint --write` rewrites `standards/policy-tools.fingerprint.json` and cannot restore the line, and `--check` proves the result.
+
+The alternative, a committed `--acknowledge` JSONC naming the one occurrence (`packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts:680-694`, schema in `DeletePackage.schemas.ts`), was rejected: it adds a committed file whose `target` field names the retired package, which the nlp exit would then have to exclude too, and the line still has to leave afterwards.
+
+Lane p7
+
+Reverse: Commit a delete-package acknowledgement file naming the turbo.json occurrence and remove the line after the run with the fingerprint writer
+
+### P7: the vision correction covers the vision document and every companion sentence, Markdown or HTML, that states local-first as a goal or a matter as a named subgraph, and BeepGraph is stated as Proposed, 2026-11-24
+
+The 2026-11-19 ruling (`standards/architecture/DECISIONS.md:3157-3191`) withdraws the local-first, on-device framing as architecture: "no standard, packet or design states local-only or on-device inference as a constraint". It sends the correction of `docs/PROSE_TO_PROOF_VISION.md` to P7 and leaves the BeepGraph status line to be "settled in P7 from the code that exists then". The SPEC gate (`SPEC.md:482-483`) is `rg -n "local-first|on-device" docs/PROSE_TO_PROOF_VISION.md`, which must return no sentence stating either as architecture.
+
+Scope. "Corrected" means the vision document is brought to the delivered stack, not only the gate lines (P7 design section 7 lists every line). The same posture appears in companion documents. A companion sentence is rewritten when it states local-first, local-only or on-device inference as a goal, requirement, principle, constraint or architecture, or when it defines a matter wall as a named subgraph. The census is `rg -n -i -e local-first -e local-only -e on-device -e 'on device' -e 'named subgraph' docs README.md --glob '!docs/reports/**' --glob '!docs/agent-memory-infra/**' --glob '!docs/runbooks/**' --glob '!docs/history/**'` (runbooks describe infrastructure caching and staging, and `docs/history/` is a commit-message record). It covers `docs/product/prose-to-proof.md:21`, `:47`, `:56` (G4), `:131` (NFR-1), `:133` (NFR-3, "matter = named subgraph") and `:172`; `README.md:168` ("A matter is a named subgraph and an ethical wall"); `docs/product/citation-grounding.md:56-60` (the v1 path stated as local-only), whose requirement becomes exact equality against the identified source without the local-only framing; `docs/product/ontology-workbench.md:6`; `docs/product/ip-attorney-time-tracking.md:31`; `docs/PROSE_TO_PROOF_ARCHITECTURE_MAP.md:54`, `:100` and `:123`; and the HTML companions linked from the vision's Companion docs line (`docs/PROSE_TO_PROOF_VISION.md:9`): `docs/PROSE_TO_PROOF_VISUALIZATION.html:258`, `:394`, `docs/PROSE_TO_PROOF_GRAPH.html:124`, `:131`, `:163`, `:483` and `docs/PROSE_TO_PROOF_CHAT.html:125`, whose promise, footer and node labels are reworded to match. A matter wall becomes "authorization at every access path" (`standards/architecture/16-knowledge-stack.md:703`). Sentences that describe other products or a shipped component stay and form the gate's allowlist: `README.md:65`, `docs/ROADMAP.md:129` and `docs/product/prose-to-proof.md:42`. `docs/BEEPGRAPH_ARCHITECTURE.md` uses "local-first single-app" for process topology (no broker, no external stores, `:107`, `:126`, `:301`, `:22`), not for where inference runs. Its label becomes "single-app, in-process" so the withdrawn phrase no longer appears as a principle. Its content is unchanged.
+
+The vision line `:86` describes the desktop app, not the architecture. It is still reworded to "a desktop chat app" so that the gate returns no line at all and needs no per-line reading. The gate is case-insensitive, `rg -n -i -e local-first -e local-only -e on-device -e 'on device' docs/PROSE_TO_PROOF_VISION.md`, because the document spells "Local-first" (`:55`, `:62`) and "On-device" (`:62`); a case-sensitive pattern would pass with both still present. Gate commands use `-e` patterns, never a `|` alternation that a markdown table would escape to a literal `\|`.
+
+Doctrine errors fixed in the same rewrite: the matter wall is authorization at seven access paths, not a named subgraph (`16-knowledge-stack.md:701-720`); admission is approval for a stated use with a grounding witness and a human token, not a SHACL gate plus a consistency proof (`:610-628`), and not proof of truth (`:618-619`), so `:15`'s "proves those claims sound against a formal legal ontology, and admits only what survives" becomes "proposes structured claims, verifies each against its exact source text, and makes usable only what an attorney admits for a stated use"; signals never cross an admission and never coerce (`:631-644`), and "confidence inside provenance" is withdrawn (`:799-800`), so `:40`'s "confidence becomes provenance" and "only proof gets you across" and `:94`'s "the boundary converts confidence into provenance" become "signals route to review; admission needs a grounding witness and a human token"; the stack is occurrence-first, and `GroundedExtraction` carries `anchor: TextAnchor` (`packages/foundation/capability/langextract/src/Extraction/Extraction.model.ts:190`), not `span`, so `:65`, `:86` ("span-grounded extraction") and `:88` ("ground claims to spans") say anchored occurrences; the owners are `@beep/text`, `@beep/annotation`, `@beep/epistemics` and `@beep/rdf` (`16-knowledge-stack.md:52-61`); and the vocabulary list matches section 10 (gUFO, not BFO; LKIF and ELI as candidates with no commitment).
+
+Cross-matter conflict checks (`:51`) stay a product goal. They are restated as a query that runs only under an explicit cross-matter authority grant checked by the section 11 port. Identical bytes never grant it, and no grant shape is designed here.
+
+BeepGraph status. `docs/BEEPGRAPH_ARCHITECTURE.md:4` reads "Proposed". The memory-architecture log narrowed BeepGraph to the provenance and verification layers (`standards/memory-architecture/04-decision-log.md:325`). No package or app is named BeepGraph. The vision's status line therefore reads: architecture, the knowledge stack of chapter 16; BeepGraph, Proposed. The vision's "settled in BeepGraph" (`:90`) becomes "proposed in BeepGraph". `BEEPGRAPH_ARCHITECTURE.md`'s own status line is already true and is not changed.
+
+Lane p7
+
+Reverse: Restore the vision and companion wording from history by a new dated DECISIONS entry that reinstates the posture; the chapter stays the doctrine unless that entry also removes it
+
+### P7: the THEORY claims chapter 16 did not name are withdrawn, and SPEC criterion 8 reads absorbed and deleted, 2026-11-24
+
+Chapter 16 section 14 (`standards/architecture/16-knowledge-stack.md:771-800`) keeps six claims of the retired `@beep/nlp` package's `THEORY.md` with ledger ids and withdraws four. Measured at f30c183f20a, four claims are neither kept nor withdrawn, and two sections are stale (maps `research/2026-11-24-p7-map-nlp-residue.md` section 5 and `research/2026-11-24-p7-map-doctrine-and-gates.md` section 1.4):
+
+- §5 (`THEORY.md:73-86`), `cata` and `ana` as first-class recursion schemes. Both helpers exist in `packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts:560` and `:633`, with example tests at `nlp-processing/test/Graph/EffectGraph.test.ts:80,96`. The doctrine-and-gates map's "no `cata` or `ana` exists" is a search miss; the nlp-residue map has them right. No catalogue row names a defect that a fold law would catch, so the claim is withdrawn as doctrine and the helpers stay as library functions.
+- §6.1 (`:92-99`), the structure-and-projection coherence law ("normalizing tokens you just produced agrees with normalizing the source"). No catalogue row backs it, and lemmatization is the wink engine's behaviour, which chapter section 13 excludes ("Library behaviour is not a law of this repository"). Withdrawn. §6.2 (`:101-110`) names a downstream knowledge-graph initiative that no longer exists and joins the existing triangle-identities withdrawal.
+- §7 (`:112-126`), backends as a category of functors. "Functor" predicts no law, so the framing is withdrawn. The still-true claim, that an unsupported operation fails with the typed `BackendNotSupported` and never throws, names a bug (a backend that throws a defect or returns a partial result for an operation it does not support), so it is kept with acceptance row `L5-4`, falsified by `packages/drivers/wink/test/Backend/WinkBackend.test.ts:102-120`, and the nlp-processing README cites that id (decision `backend-not-supported-becomes-acceptance-row-l5-4`, which amends this bullet's first draft).
+- §9 (`:135-148`), the handoff round-trip proof ("chunk ↔ reassemble, and provenance completeness"). The handoff was deleted in P3. Chunk-and-reassemble is withdrawn with it: no ledger row covers chunking or reassembly (`grep -i chunk research/law-test-plan.md` is empty), so no replacement is claimed. Attribution completeness is `L2-3`. The claim joins the free-object withdrawal.
+- §1 (`:17-29`): the strata claim is kept as `L2-5`, but its graph-carrier paragraph (node schemas whose spans are optional `/text` positions present only on a unique resolve) is not containment. It lands in the chapter's L5 owner text, which names the graph node schemas in `/nlp-processing` and their `Position`, set only when `resolve` returns `Unique` (`L1-5`).
+- §4 and §2: the monoid bullet of section 14 states the P6 census result (one surviving reducer, `ActivityLogReducer`, whose laws are upstream behaviour), and the `L4-3` restatement goes to the past tense, because the duplicate graph-operation module was deleted in P6.
+- §10 (`:150-160`) is stale: the streaming tools shipped (`packages/drivers/nlp-mcp/src/StreamingTools.ts`). §11 (`:162-175`) is superseded by the chapter's layer table (`:52-61`). Neither is a structural claim, so both are dropped with the file.
+- The "colimit" wording of §2 is not carried. The `L2-1` row's restatement already describes a join over one capture.
+
+SPEC success criterion 8 (`SPEC.md:73-75`) still asks for `THEORY.md` "rewritten as a narrative that links each structural claim to its test". That contradicts `SPEC.md:234-235`, `PLAN.md:31` and the 2026-11-19 ruling (`DECISIONS.md:3171-3174`), all of which say the chapter absorbs the narrative and the file is deleted with its package. Criterion 8 is authored SPEC text, not a generated block, so row 2 of the P7 design rewords it to "absorbed by section 14 of the knowledge-stack chapter, which links each kept claim to its ledger id and lists the withdrawn ones; the file is deleted with its package".
+
+Lane p7
+
+Reverse: Restore THEORY.md from history beside the chapter, add ledger rows with tests for the fold and coherence claims, and restore criterion 8's rewritten-file wording
+
 ### The P5 registration commit clears its own lint debt and re-records the inherited cache drift, 2026-11-24
 
 Row 16 found P5-introduced findings the design did not foresee and fixed them in place rather than growing an inventory (S31). Rdf.ts coverage had fallen in row 2 (lines 97.43 to 95, branches 100 to 87.5): Literal.fromParts gains refusal tests and the escapeIri helper is deleted, because RFC 3987 IRIs cannot contain a character it escapes and the encoded-quad order only ever sees encoded valid IRIs or input that fails decoding. Twenty-four effect-vitest findings in P5 tests become @effect/vitest/utils assertions, an Exit in the parity property, an explicit layer timeout and realPath resolution of committed fixtures. Six plain-data S.Class schemas in Canonical.ts and Rdfc10.ts become S.Opaque over annotated structs. MappingSet.profile and DocumentAnnotation (whose property moved to md in row 6) gain schema-derived properties. Three terse-effect advisories in rdf and ontology are rewritten. The cache re-record names all seven drifted subjects because the tool refuses a partial set; root, epistemics and party-server drifted in P4 (2ced3e0a632, 97b2de8a43b) and the review report says so. Full docgen is not run locally: docgen:local demands it because global inputs differ from origin/main on this stale stack base, and every edited package passed its own docgen through package-verify.
@@ -3398,6 +3602,54 @@ Row 17 found P6-introduced findings the design did not foresee and fixed them in
 Lane p6
 
 Reverse: Revert the row 17 commit; the coverage, cache and fingerprint files return to their row 16 values and the tests and source fixes go with it.
+
+### P7: delete-package writer outputs keep only the retired package's removals, 2026-11-25
+
+The schema-org apply on the merged P6 head left two outputs outside the design's gate shape. First, the retired schema-org package's comment-law pending shard was residue: the comment law reached the lane after the design. `bun run beep laws comments --write` pruned that one stale scope (`--check` named only it) and `--check` then read findings=0; the nlp row prunes its shard the same way. Second, the fallow health baseline writer rewrote the whole file: it added 36 and dropped 4 `target_keys` entries for other packages and dropped 5 improved `finding_counts`, while schema-org had no entry in it. The dead-code baseline changed only its timestamp and sha. Both are S31 or regression inventories, so the rows restore them to the parent commit; `fallow:health:baseline:check` and `fallow:dead-code:check` (BEEP_PROOF_BASE=origin/main) stay green against the restored files, so P7's net delta in them is 0. The schema-first inventory keeps the writer's output: it removes the `Person.email` entry and refreshes line numbers of carried entries, adding none.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Re-run the fallow health and dead-code baseline writers and commit their full output; restore a pruned comment-law shard from the parent commit.
+
+### S31 amendment: the typos exclude for the vendored nanopublication licence is admitted, 2026-11-25
+
+P4 commit 81f51e566b4 added one `_typos.toml` exclude, `packages/foundation/modeling/rdf/data/vocab/nanopub-nschema/LICENSE`, and a `vendored-attribution` file type that allows two upstream author surnames in `VENDORED.md`. Against the P0 base f9982f3b5e6 that is one new inventory entry, which SPEC Constraints S31 forbids without an admitting decision. The operator ruled on 2026-11-23 that the nschema.html notice covers the TTL, so the schema is vendored byte-for-byte with its CC BY-SA 3.0 legal code (decision `2026-11-23-p4-nanopub-vendored-under-cc-by-sa`). The licence must stay byte-faithful to upstream, so its spelling cannot be corrected and the file cannot be renamed to escape the scan without breaking the attribution `VENDORED.md` records. This decision admits the exclude, and the surname allowlist with it, as an explicit S31 amendment, scoped to that one vendored file and that one attribution file type. Nothing else in the vendored tree is excluded.
+
+Lane p7
+
+Reverse: Drop the LICENSE line and the vendored-attribution type from _typos.toml together with the vendored nanopub-nschema directory, if the operator withdraws the 2026-11-23 vendoring ruling
+
+### P7: the cut-over S31 criterion is measured against the P0 base for the whole program, not against P7's parent, 2026-11-25
+
+The SPEC Cut-over criterion ends "no S31 inventory grew, by the Constraints definition, checked per file against the P0 base commit" (`SPEC.md:480-481`). Decision `2026-11-24-p7-s31-is-counted-per-package-and-inherited-reds-go-to-their-layers` read the per-file part as P7's own net delta against the merged P6 head, which subtracts growth that P1 to P6 brought in. A closeout acceptance check found five entries that P2, P4 and P5 added with no admitting decision, which that reading could not see. This decision replaces that reading. The criterion is measured against the P0 base f9982f3b5e6 for the whole program: for every inventory and allowlist the census names, and for every census package plus `@beep/text` and `@beep/annotation`, the entry count at the final head is at or below the base count, unless a decision admits the entry. Admitting decisions are entries moved by rename (`2026-11-19-p1-s31-rows-move-with-the-file`), coverage rows at full coverage (`2026-11-22-p2-coverage-rows-at-full-coverage-are-registration`) and explicit S31 amendments. P7 runs this count at its head and records it in the census P7 outcome paragraph. A lower layer's growth that no decision admits is fixed or admitted before the final PR merges, in whichever lane holds the program head.
+
+Lane p7
+
+Reverse: Restore the per-file reading of decision 2026-11-24-p7-s31-is-counted-per-package-and-inherited-reds-go-to-their-layers (P7's own net delta against the merged P6 head) and drop the program-wide recount from the census P7 outcome
+
+### P8: attributed-multi-claim-span's retention is lifted, so the packet becomes archivable, 2026-11-25
+
+SPEC Relationships keeps `goals/attributed-multi-claim-span` retained on `main` until P4's acceptance item `ClaimGate.two-claims-one-occurrence.test.ts` is green, and archives it only then. That test is on `main` at `packages/foundation/modeling/epistemics/test/ClaimGate.two-claims-one-occurrence.test.ts`, landed by #3540 (`b288d08e014`), and hosted CI ran it green at the merge. Its manifest's `retentionReason` is the one thing that keeps `goals archive` from selecting a `superseded` packet (`Archive.service.ts` selects `completed-retained` or `superseded` goals with no `archive` block and no `retentionReason`), so the final PR removes it. Moving the packet to the archive repository is the routine `goals archive --plan` / `--write --expect` batch, which moves packets across repositories in planned batches; this packet does not run it on its own.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Restore the retentionReason in goals/attributed-multi-claim-span/ops/manifest.json
+
+### P8 SPEC amendment: the L0 exit's 'path-derived IRIs are gone' reads 'no published IRI is path-derived', 2026-11-25
+
+SPEC.md:398-404 (L0) says path-derived IRIs are gone. Decision 2026-11-20-p1-composer-stays-registry-free kept the composer deriving its IRI, because `@beep/identity` is bundled into the CI runner Lambda handlers and removing `.iri` from `Id.ts` changes every handler code hash. It deferred the deletion and did not amend the SPEC; the closeout acceptance check found the contradiction. What L0 delivers is the property the clause protects: every published IRI comes from a registry binding. The kept read sites read `@beep/identity/Registry`, `IdentityEntry.fromComposer` is deleted so an entry is built only from a binding, the test runner and research library read the registry, and `TermStability.test.ts` (L0-3) proves a module rename changes no published IRI. The clause therefore reads: no published IRI is path-derived; the composer's derived IRI stays as an internal, unpublished surface until a decision accepts the handler redeploy. The other L0 subclauses are unchanged.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Restore the SPEC wording and delete the composer IRI surface from Id.ts by a decision that accepts one CiRunners handler redeploy, as decision 2026-11-20-p1-composer-stays-registry-free names
+
+### P8 SPEC amendment: the L3/L6 exit's semantica gold fixture regeneration moves to operational follow-up #3554, 2026-11-25
+
+The L3/L6 exit (SPEC.md:450-460) includes "the semantica gold fixture is regenerated". P5 held that row (row 14, checkpoint `2026-11-23-p5-l3-l6-exits-recorded`): the gold projection is pinned by its canonical dataset digest, and the digest comes from an operational C1 measure run over a C0 ledger. That ledger needs the out-of-repo corpus and hosted embeddings that bill, so it is blocked on the operator and on money, which the autonomy charter escalates rather than decides. No placeholder digest was written. The code it needs is on `main`: `Dataset` equality is a quotient with an RDFC-1.0 canonical digest (`@beep/rdf` `Canonical`). The subclause leaves the PR completion proof and becomes operational follow-up issue #3554, which names its done condition. The other L3/L6 subclauses are unchanged. The P6 operational step (the Practice KG bundle rebuild and the matter-wall grants) is in no acceptance clause; it is tracked as issue #3555.
+
+Lane goals/text-knowledge-stack-rebuild-p7-retirement
+
+Reverse: Restore the subclause to the L3/L6 exit and hold the goal open until the C1 measure has run
 
 <!-- beep:decisions:end -->
 

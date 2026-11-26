@@ -679,6 +679,26 @@ The P6 design lane wrote three maps and the design under `research/` without run
 `bun run beep goals manifest --write`, so `researchReports` drifted by four files until the
 implementation lane's row 0 ran it (`researchReports drifts from research/: +4 unlisted`). A design
 lane that adds research files should run the manifest writer before it hands off.
+
+# P7 rows 1 to 7: the P6 merge and the writer base
+
+The regenerate merge driver left `ops/manifest.json` marked conflicted with no conflict markers in
+the file when the P7 lane merged the P6 head 8dd3c233e66 ("regenerate merge driver left
+goals/text-knowledge-stack-rebuild/ops/manifest.json conflicted; regenerate it after Git installs the
+merged tree"). Taking the P6 side and re-running `goals manifest --write` and
+`goals decisions write` resolved it. The driver could stage its own regenerated output.
+
+On the merged base, four of the seven writer checks that `delete-package` re-runs in write mode
+were red, all inherited: `lint schema-first` (seven P4 schemas already reworked by #3540 on `main`
+but not yet in the P6 base, plus two P6 schemas in nlp-processing `src/Activity.ts`),
+`lint package-scripts --check` (doctest pairs in law-practice domain from P5 and in jsonc from P6),
+`fallow:health:baseline:check` and `fallow:dead-code:check` (P4, P5 and P6 findings; one is the
+unused `@beep/text` dependency of the nlp package that row 3 deletes). Rows 1 and 3 hold until the
+P6 lane merges its base and fixes its own reds. A stack whose top layer runs repo-wide writers needs
+each lower layer's writer checks green before the top layer starts, not only at its own exit.
+
+The design's row-7 gate names `bun run beep laws comments`, which this lane's CLI does not have
+("Unknown subcommand \"comments\" for \"beep-cli laws\""); it reaches the lane with a later base merge.
 ## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
 
 - **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.

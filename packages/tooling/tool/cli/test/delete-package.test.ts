@@ -1294,20 +1294,20 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("keeps a sibling whose name extends the deleted package name", () =>
       Effect.gen(function* () {
         const read = yield* pruneChangesets("@beep/schema", [
-          ["multi.md", '---\n"@beep/schema": patch\n"@beep/schema-org": minor\n---\n\nTouches @beep/schema.\n'],
+          ["multi.md", '---\n"@beep/schema": patch\n"@beep/schema-extras": minor\n---\n\nTouches @beep/schema.\n'],
         ]);
         const read3 = yield* read("multi.md");
-        assertSome(read3, '---\n"@beep/schema-org": minor\n---\n\nTouches @beep/schema.\n');
+        assertSome(read3, '---\n"@beep/schema-extras": minor\n---\n\nTouches @beep/schema.\n');
       })
     );
 
     it.effect("matches single-quoted and unquoted frontmatter keys exactly", () =>
       Effect.gen(function* () {
         const readQuoted = yield* pruneChangesets("@beep/schema", [
-          ["quoted.md", "---\n'@beep/schema': minor\n'@beep/schema-org': patch\n---\n\nSingle-quoted keys.\n"],
+          ["quoted.md", "---\n'@beep/schema': minor\n'@beep/schema-extras': patch\n---\n\nSingle-quoted keys.\n"],
         ]);
         const readQuoted4 = yield* readQuoted("quoted.md");
-        assertSome(readQuoted4, "---\n'@beep/schema-org': patch\n---\n\nSingle-quoted keys.\n");
+        assertSome(readQuoted4, "---\n'@beep/schema-extras': patch\n---\n\nSingle-quoted keys.\n");
 
         const readUnquoted = yield* pruneChangesets("probe", [
           ["unquoted.md", "---\nprobe: patch\nprobe-extra: minor\n---\n\nUnquoted keys.\n"],
@@ -1351,7 +1351,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("removes a single-package changeset and leaves a sibling-only changeset untouched", () =>
       Effect.gen(function* () {
-        const sibling = '---\n"@beep/schema-org": minor\n---\n\nSibling only.\n';
+        const sibling = '---\n"@beep/schema-extras": minor\n---\n\nSibling only.\n';
         const read = yield* pruneChangesets("@beep/schema", [
           ["single.md", '---\n"@beep/schema": patch\n---\n\nOnly schema.\n'],
           ["sibling.md", sibling],

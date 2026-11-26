@@ -1012,16 +1012,6 @@
       "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Recursive Pandoc AST: children are typed by hand-written namespace Types (S.suspend needs them to break the class/base-type cycle), which must stay structurally equal to the node classes. Follow-up: brand nominally once the blocker above is removed."
     },
     {
-      "file": "packages/foundation/modeling/schema-org/src/Person.ts",
-      "symbol": "Person.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 58,
-      "owner": "@beep/schema-org",
-      "reason": "External protocol: schema.org `email` is a Text property, and node values are copied verbatim from upstream metadata (package manifests, author records) that may carry `mailto:` URIs or non-strict addresses; a strict email schema would reject valid JSON-LD. Surfaced, not introduced, by the exact-optional-keys migration (the detector did not read the previous `S.optional` spelling)."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
       "symbol": "SemanticVersionSchema",
       "kind": "exported-interface",

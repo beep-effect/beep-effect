@@ -360,11 +360,7 @@
       ".claude/skills/shadcn/**",
       // Preserve the generator's existing clone-scoring exclusion while its
       // imports participate in dependency analysis.
-      "packages/foundation/modeling/html/scripts/generate.ts",
-      // The identity registry data is generated from the namespace shards that the
-      // pinned-vocabularies sync writes from its pin table, so it restates that table's
-      // term lists by construction. Dead-code analysis still covers it.
-      "packages/foundation/modeling/identity/src/internal/generated/Registry.data.ts"
+      "packages/foundation/modeling/html/scripts/generate.ts"
     ]
   },
   "health": {

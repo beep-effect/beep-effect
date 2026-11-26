@@ -172,9 +172,9 @@ describe("WinkBackend", () => {
     }
   );
 
-  it.layer(TestLayer, { timeout: "30 seconds" })("fails parseDependencies with BackendNotSupported", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("L5-4 fails parseDependencies with BackendNotSupported", (it) => {
     it.effect(
-      "fails parseDependencies with BackendNotSupported",
+      "L5-4 fails parseDependencies with BackendNotSupported",
       Effect.fnUntraced(function* () {
         const backend = yield* Backend.NLPBackend;
         const result = yield* Effect.flip(backend.parseDependencies("a sentence"));
@@ -183,9 +183,9 @@ describe("WinkBackend", () => {
     );
   });
 
-  it.layer(TestLayer, { timeout: "30 seconds" })("fails extractRelations with BackendNotSupported", (it) => {
+  it.layer(TestLayer, { timeout: "30 seconds" })("L5-4 fails extractRelations with BackendNotSupported", (it) => {
     it.effect(
-      "fails extractRelations with BackendNotSupported",
+      "L5-4 fails extractRelations with BackendNotSupported",
       Effect.fnUntraced(function* () {
         const backend = yield* Backend.NLPBackend;
         const result = yield* Effect.flip(backend.extractRelations("a sentence"));

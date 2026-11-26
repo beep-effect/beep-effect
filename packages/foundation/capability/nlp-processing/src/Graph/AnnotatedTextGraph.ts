@@ -7,20 +7,12 @@
  * {@link Backend.NLPBackend}: {@link POSNode} (part-of-speech),
  * {@link EntityNode} (named entities), {@link LemmaNode} (lemmas),
  * {@link DependencyNode} (syntactic dependencies), and
- * {@link RelationNode} (semantic relations). Categorically this is a
- * richer category whose objects include both structural and annotation nodes.
+ * {@link RelationNode} (semantic relations).
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - the heterogeneous node union is discriminated by schema-aware `S.is` guards
- *   over the plain `Schema.Class` node types.
- * - document/sentence `TextNode`s are built EFFECTFULLY, reading `Clock` for the
- *   timestamp (was `Date.now()`); annotation nodes arrive pre-built from the
- *   backend.
- * - native `Array.from`/`forEach`/`Object.keys`/`Array#push` become `effect/Array`
- *   (`A.*`), and `getNode`'s `Option` is consumed with `effect/Option`.
- * - `addDependencyAnnotations` is implemented and wired to
- *   `backend.parseDependencies`; it stays off by default in
- *   {@link fromDocumentAnnotated}.
+ * Document and sentence `TextNode`s are built effectfully, reading `Clock` for the
+ * timestamp; annotation nodes arrive pre-built from the backend.
+ * `addDependencyAnnotations` is wired to `backend.parseDependencies` and stays off
+ * by default in {@link fromDocumentAnnotated}.
  *
  * @since 0.0.0
  * @packageDocumentation

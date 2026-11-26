@@ -6,7 +6,7 @@
  *
  * The delete-package path, its registration-geometry probes and the identity
  * registry rewrite all search source text for one package. A plain substring
- * search lets `@beep/schema` match `@beep/schema-org` and `$SchemaId` match
+ * search lets `@beep/schema` match `@beep/schema-extras` and `$SchemaId` match
  * `$SchemaIdentityId`, so this module owns the token rule once.
  *
  * A path has one more collision: a short root path such as `deploy` also
@@ -51,7 +51,7 @@ import * as Regex from "effect/RegExp";
  * The characters directly before and after the needle must not continue an
  * identifier or a package name (`[A-Za-z0-9_$-]`). Dots, slashes, quotes and
  * whitespace end a token, so `$SchemaId.create` and `@beep/schema/sub` match
- * while `$SchemaIdentityId` and `@beep/schema-org` do not. The pattern is built
+ * while `$SchemaIdentityId` and `@beep/schema-extras` do not. The pattern is built
  * once per needle.
  *
  * **Example** (Reject a prefix-sharing sibling)
@@ -61,7 +61,7 @@ import * as Regex from "effect/RegExp";
  *
  * const mentionsSchema = mentionsToken("@beep/schema")
  * console.log(mentionsSchema('"@beep/schema": patch')) // true
- * console.log(mentionsSchema('"@beep/schema-org": patch')) // false
+ * console.log(mentionsSchema('"@beep/schema-extras": patch')) // false
  * ```
  *
  * @internal

@@ -10,6 +10,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -22,7 +23,7 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -1037,7 +1038,11 @@ const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (
     );
   }
   yield* Effect.forEach(lines, (line) => Console.log(line), { concurrency: 1, discard: true });
-  yield* Console.log(write ? `[schema-catalog] wrote ${scopeLabel}` : `[schema-catalog] ${scopeLabel} is current`);
+  yield* Console.log(
+    write
+      ? `[schema-catalog] ${A.length(lines)} shard(s) changed for ${scopeLabel}`
+      : `[schema-catalog] ${scopeLabel} is current`
+  );
 });
 
 // Shared tail of the full and scoped runs: stage what a write changed, then summarize.
@@ -1076,6 +1081,32 @@ const readShardEntries = Effect.fn("SchemaCatalog.readShardEntries")(function* (
   );
 });
 
+const isUnderScopeRoot = (root: string, absolute: string): boolean =>
+  absolute === root || Str.startsWith(`${root}/`)(absolute);
+
+const expandScopeRoot = Effect.fn("SchemaCatalog.expandScopeRoot")(function* (
+  repoRoot: string,
+  matched: ReadonlyArray<string>,
+  root: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const isDirectory = yield* fs.stat(root).pipe(
+    Effect.map((info) => info.type === "Directory"),
+    Effect.orElseSucceed(() => false)
+  );
+  if (!isDirectory) {
+    return A.of(root);
+  }
+  const files = A.filter(matched, (absolute) => isUnderScopeRoot(root, toPosixPath(absolute)));
+  if (A.isReadonlyArrayEmpty(files)) {
+    yield* Console.log(
+      `[schema-catalog] directory ${toPosixPath(path.relative(repoRoot, root))} holds no scanned source file`
+    );
+  }
+  return files;
+});
+
 /**
  * Splice the entries of `paths` into the shards of the packages that own them.
  *
@@ -1093,27 +1124,38 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
   options: SchemaCatalogOptions,
   repoRoot: string
 ) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const ownerResolver = yield* makeSchemaFirstOwnerResolver(repoRoot);
-  const scope = yield* resolveShardScope(repoRoot, options.paths, ownerResolver);
+  const matched = yield* schemaCatalogSourcePaths(repoRoot);
+  const scopeRoots = A.map(options.paths, (candidate) => toPosixPath(path.resolve(repoRoot, candidate)));
+  const expanded = yield* Effect.forEach(scopeRoots, (root) => expandScopeRoot(repoRoot, matched, root), {
+    concurrency: 1,
+  });
+  const workspaces = yield* workspaceDirectories(repoRoot);
+  const coveredWorkspaces = workspaces.pipe(
+    HashMap.values,
+    A.fromIterable,
+    A.map(toPosixPath),
+    A.filter((directory) => A.some(scopeRoots, (root) => isUnderScopeRoot(root, directory)))
+  );
+  const scope = yield* resolveShardScope(
+    repoRoot,
+    A.map(A.flatten([...expanded, scopeRoots, coveredWorkspaces]), (absolute) =>
+      toPosixPath(path.relative(repoRoot, absolute))
+    ),
+    ownerResolver
+  );
   const owners = A.map(scope.owners, (owner) => owner.owner);
   if (A.isReadonlyArrayEmpty(owners)) {
     yield* Console.log(`[schema-catalog] no owning package for the given paths; nothing to regenerate`);
     return SchemaCatalogSummary.make({ entries: 0, shards: 0, wroteCatalog: options.write, changed: [] });
   }
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const inScope = shardScopeIncludes(scope, ownerResolver);
-  const stagedAbsolute = HashSet.fromIterable(
-    A.filter(
-      A.map(options.paths, (candidate) => path.resolve(repoRoot, candidate)),
-      inScope
-    )
-  );
-  const stagedFiles = HashSet.map(stagedAbsolute, (absolute) => toPosixPath(path.relative(repoRoot, absolute)));
+  const covered = (absolute: string): boolean => A.some(scopeRoots, (root) => isUnderScopeRoot(root, absolute));
   const committed = yield* Effect.forEach(owners, (owner) => readShardEntries(repoRoot, owner), { concurrency: 1 });
-  const kept = A.filter(A.flatten(committed), (entry) => !HashSet.has(stagedFiles, entry.file));
-  const matched = yield* schemaCatalogSourcePaths(repoRoot);
-  const sourcePaths = A.filter(matched, (absolute) => HashSet.has(stagedAbsolute, absolute));
+  const kept = A.filter(A.flatten(committed), (entry) => !covered(toPosixPath(path.resolve(repoRoot, entry.file))));
+  const sourcePaths = A.filter(matched, (absolute) => inScope(absolute) && covered(toPosixPath(absolute)));
   const fresh = collectCatalogEntriesFromPaths(path, repoRoot, ownerResolver, sourcePaths);
   const document = SchemaCatalogDocument.make({
     schemaVersion: "schema-catalog/v1",
@@ -1142,7 +1184,8 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
  * package owns any more, including the retired single-file catalog. Check
  * mode reports every stale, missing or orphaned shard and fails when any
  * exists. With `paths`, only the shards of the packages owning those paths
- * are generated and compared; with `stage`, a write run adds the shards it
+ * are generated and compared (a directory path stands for the scanned source
+ * files under it); with `stage`, a write run adds the shards it
  * changed to the git index.
  *
  * **Example** (Wrap catalog runner Effect)
@@ -1204,7 +1247,7 @@ export const lintSchemaCatalogCommand = Command.make(
     paths: Argument.String("paths").pipe(
       Argument.variadic,
       Argument.withDescription(
-        "Source paths whose owning packages' shards are regenerated; omit to scan the whole repository"
+        "Source files or directories whose owning packages' shards are regenerated; omit to scan the whole repository"
       )
     ),
   },
