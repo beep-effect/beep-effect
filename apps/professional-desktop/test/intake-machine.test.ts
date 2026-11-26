@@ -43,8 +43,7 @@ afterEach(() => {
 const unconfigured = () => Effect.succeed(unconfiguredVault);
 const configured = () => Effect.succeed(configuredVault);
 
-// The Tauri `invoke` mock and `__TAURI_INTERNALS__` are process globals.
-describe("document intake machine", { concurrent: false }, () => {
+describe("document intake machine, serial: the Tauri invoke mock is a process global", { concurrent: false }, () => {
   it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
     describe("vault configuration", () => {
       it.effect(
@@ -146,8 +145,10 @@ describe("document intake machine", { concurrent: false }, () => {
           const awaiting = yield* waitFor(actor, (current) =>
             current.matches({ vault: { watching: { unconfigured: "awaitingConfig" } } })
           );
-          // Persisted, but the card keeps saving until the feed confirms the root.
-          expect(vaultSelectionOf(awaiting).kind).toBe("saving");
+          expect(
+            vaultSelectionOf(awaiting).kind,
+            "persisted, but the card keeps saving until the feed confirms the root"
+          ).toBe("saving");
           expect(vaultStatusOf(awaiting)).toBe("needs-onboarding");
 
           yield* Deferred.succeed(confirm, void 0);
@@ -408,12 +409,14 @@ describe("document intake machine", { concurrent: false }, () => {
           );
           yield* waitFor(actor, (current) => current.matches({ vault: { watching: { unconfigured: "idle" } } }));
           yield* send(actor, { type: "SUBMIT_MANUAL_PATH", rawPath: selectedPath });
-          // The next event is processed after the ignored one, so reaching the
-          // picker proves the submission was dropped without saving.
           yield* send(actor, { type: "CHOOSE_VAULT" });
-          yield* waitFor(actor, (current) =>
+          const reachedPicker = yield* waitFor(actor, (current) =>
             current.matches({ vault: { watching: { unconfigured: { picker: "sidecar" } } } })
           );
+          expect(
+            reachedPicker.matches({ vault: { watching: { unconfigured: { picker: "sidecar" } } } }),
+            "the next event runs after the ignored one, so reaching the picker proves nothing was saved"
+          ).toBe(true);
         })
       );
     });
@@ -431,7 +434,6 @@ describe("document intake machine", { concurrent: false }, () => {
           );
           expect(documentIntakeStateOf(dragging).isDragging).toBe(true);
 
-          // Leaving towards a child of the surface keeps the highlight.
           yield* send(actor, { type: "DRAG_LEAVE", leftSurface: false });
           yield* send(actor, { type: "DRAG_LEAVE", leftSurface: true });
           const idle = yield* waitFor(actor, (current) =>
@@ -510,9 +512,10 @@ describe("document intake machine", { concurrent: false }, () => {
   });
 });
 
-// A retry test advances its own TestClock, so these run outside the shared layer
-// block with a Reactivity service of their own.
-describe("document intake configuration retry", () => {
+const baseRetryDelay = "2 seconds";
+const retryDelayCap = "30 seconds";
+
+describe("document intake configuration retry, outside the shared layer: each case advances its own TestClock", () => {
   it.effect(
     "retries a failed configuration read on a doubling backoff",
     Effect.fnUntraced(function* () {
@@ -533,8 +536,7 @@ describe("document intake configuration retry", () => {
       expect(vaultStatusOf(failed)).toBe("unavailable");
       expect(failed.context.configAttempt).toBe(0);
 
-      // First retry after the base delay.
-      yield* TestClock.adjust("2 seconds");
+      yield* TestClock.adjust(baseRetryDelay);
       yield* waitFor(
         actor,
         (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
@@ -542,13 +544,12 @@ describe("document intake configuration retry", () => {
       const got8 = yield* Ref.get(attempts);
       expect(got8).toBe(2);
 
-      // The second delay doubled: two more seconds are not enough.
-      yield* TestClock.adjust("2 seconds");
+      yield* TestClock.adjust(baseRetryDelay);
       const got9 = yield* Ref.get(attempts);
-      expect(got9).toBe(2);
+      expect(got9, "the second delay doubled: another base delay is not enough").toBe(2);
       expect(actor.getSnapshot().matches({ vault: "loadFailed" })).toBe(true);
 
-      yield* TestClock.adjust("2 seconds");
+      yield* TestClock.adjust(baseRetryDelay);
       const recovered = yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
       const got10 = yield* Ref.get(attempts);
       expect(got10).toBe(3);
@@ -578,8 +579,7 @@ describe("document intake configuration retry", () => {
         actor,
         (current) => current.matches({ vault: "loadFailed" }) && current.context.configAttempt === 1
       );
-      // Doubling would wait forty seconds; the cap is thirty.
-      yield* TestClock.adjust("30 seconds");
+      yield* TestClock.adjust(retryDelayCap);
       yield* waitFor(actor, (current) => current.matches({ vault: { watching: "configured" } }));
     })
   );

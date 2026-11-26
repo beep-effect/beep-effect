@@ -310,9 +310,8 @@ it.layer(TestServices, { timeout: vitestCoverageRunActive || fcDeepSweepActive ?
                   const dataDir = path.join(root, "chat-db");
                   const mode = (yield* fs.stat(dataDir)).mode & 0o777;
                   yield* Deferred.succeed(modeBeforeCleanup, mode);
-                  // Observe the permission bracket first, then guarantee cleanup even
-                  // when a mutation removes its restoration finalizer.
-                  yield* fs.chmod(dataDir, 0o700);
+                  const forceWritableBeforeRemove = fs.chmod(dataDir, 0o700);
+                  yield* forceWritableBeforeRemove;
                   yield* fs.remove(root, { recursive: true });
                 }).pipe(Effect.orDie)
             );

@@ -21,10 +21,6 @@ const codec = TurtleCodec.of({
   ),
 });
 
-// The seed decides to write from a *read failure*. Treating every read failure as
-// "the file is absent" — which an unqualified `Effect.option` does — overwrites a
-// document that exists but could not be read (a permissions error, a transient
-// fault) with the starter fixture, destroying the user's work.
 const store = (readError: OntologyFileStoreError["reason"], writes: Ref.Ref<number>) =>
   OntologyFileStore.of({
     read: Effect.fn("OntologyWorkspaceSeedTest.OntologyFileStore.read")(() =>
@@ -83,7 +79,10 @@ describe("ontology workspace seed", () => {
       );
       expect(exit._tag).toBe("Failure");
       const got2 = yield* Ref.get(writes);
-      expect(got2).toBe(0);
+      expect(
+        got2,
+        "only notFound means absent; an unqualified Effect.option would overwrite an unreadable document with the starter"
+      ).toBe(0);
     })
   );
 });

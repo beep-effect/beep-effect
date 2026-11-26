@@ -21,8 +21,7 @@ const startBatch = (client: DesktopIntakeClient["Service"], files: ReadonlyArray
     input: IntakeBatchInput.make({ intakeBatchId: batchIdFor(files, 1), workspaceId, files }),
   }).pipe(Effect.provideService(DesktopIntakeClient, client));
 
-// `join` types its failure as `unknown`; waiting for the final snapshot keeps the error channel typed.
-const settled = Effect.fnUntraced(function* (actor: Effect.Success<ReturnType<typeof startBatch>>) {
+const settledWithTypedError = Effect.fnUntraced(function* (actor: Effect.Success<ReturnType<typeof startBatch>>) {
   const done = yield* waitFor(actor, (snapshot) => snapshot.status === "done");
   if (done.output === undefined) {
     throw new TypeError("a settled batch has an output");
@@ -77,7 +76,7 @@ describe("intake batch machine", () => {
         expect(actor.getSnapshot().matches("reading")).toBe(true);
 
         gate.resolve(new Uint8Array([1, 2, 3]).buffer);
-        const output = yield* settled(actor);
+        const output = yield* settledWithTypedError(actor);
 
         expect(output.intakeBatchId).toBe(batchIdFor(files, 1));
         expect(A.map(output.entries, (entry) => entry.kind)).toEqual(["document", "failure", "failure", "failure"]);
@@ -104,7 +103,7 @@ describe("intake batch machine", () => {
       "completes at once for a batch without files",
       Effect.fnUntraced(function* () {
         const actor = yield* startBatch(intakeClient({}), []);
-        const output = yield* settled(actor);
+        const output = yield* settledWithTypedError(actor);
         expect(output).toEqual({ intakeBatchId: batchIdFor([], 1), entries: [] });
       })
     );
@@ -127,7 +126,7 @@ describe("intake batch machine", () => {
         const actor = yield* startBatch(intakeClient({ IntakeDroppedFile: () => Effect.succeed(document) }), [
           intakeFile("filed.txt"),
         ]);
-        yield* settled(actor);
+        yield* settledWithTypedError(actor);
         const take3 = yield* Queue.take(reads);
         expect(take3).toBe(2);
       })

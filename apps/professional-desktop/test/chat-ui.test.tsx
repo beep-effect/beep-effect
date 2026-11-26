@@ -168,21 +168,18 @@ describe("StreamingBlocks", { concurrent: false }, () => {
 
   it("bounds the key derived from megabyte-scale untrusted content (CSF-004)", () => {
     const huge = Str.repeat(2_000_000)("x");
-    // boundedKey hashes only a capped prefix + appends length, so the key never
-    // grows with content size and the full body is never hashed each render.
-    expect(boundedKey(huge).length).toBeLessThan(64);
-    // a multi-MB code block derives a bounded render key without materializing
-    // the whole body into the key string.
+    expect(
+      boundedKey(huge).length,
+      "boundedKey hashes a capped prefix and appends the length, so the key never grows with content"
+    ).toBeLessThan(64);
     const codeRenderKey = blockRenderKey(CodeBlock.make({ type: "code", code: huge }));
-    expect(codeRenderKey.length).toBeLessThan(8192);
+    expect(codeRenderKey.length, "a multi-MB code block's render key never materializes the whole body").toBeLessThan(
+      8192
+    );
     expect(boundedKey(codeRenderKey).length).toBeLessThan(64);
   });
 
   it("bounds a paragraph's key without first materializing the paragraph", () => {
-    // The code block was bounded; the prose was not. `boundedKey` hashes a capped
-    // prefix — but the string it was handed had already been built in full, because
-    // the inline key concatenated every text node's whole body first. The guard
-    // against a megabyte paragraph allocated the megabyte in order to bound it.
     const huge = Str.repeat(2_000_000)("x");
 
     const paragraphKey = blockRenderKey(
@@ -192,13 +189,14 @@ describe("StreamingBlocks", { concurrent: false }, () => {
       })
     );
 
-    expect(paragraphKey.length).toBeLessThan(8192);
+    expect(
+      paragraphKey.length,
+      "the inline key must not concatenate every text node's whole body before boundedKey caps it"
+    ).toBeLessThan(8192);
     expect(boundedKey(paragraphKey).length).toBeLessThan(64);
   });
 
   it("keeps two huge paragraphs distinct when they share an opening", () => {
-    // A truncated sample alone would collide. The count and the true length -- both
-    // computed without concatenating anything -- are what keep them apart.
     const shared = Str.repeat(1_000)("z");
     const first = blockRenderKey(
       ParagraphBlock.make({ type: "paragraph", children: [TextInline.make({ type: "text", text: shared })] })
@@ -210,7 +208,10 @@ describe("StreamingBlocks", { concurrent: false }, () => {
       })
     );
 
-    expect(first).not.toBe(second);
+    expect(
+      first,
+      "a truncated sample alone would collide; the count and true length, computed without concatenation, keep them apart"
+    ).not.toBe(second);
   });
 
   it("disambiguates duplicate content with stable #n occurrence suffixes (CSF-004)", () => {
@@ -240,11 +241,7 @@ describe("MessageView", { concurrent: false }, () => {
   });
 });
 
-// Shell renders must not depend on the host: against the real HTTP protocol the
-// thread query fails fast where nothing listens and stays pending where the
-// connection hangs, so which arm the empty state rendered varied by machine
-// (and so did this file's branch coverage). Each shell render names its client.
-const shellChatClient = (listThreads: Effect.Effect<ReadonlyArray<never>, ChatActionError>) =>
+const hostIndependentShellClient = (listThreads: Effect.Effect<ReadonlyArray<never>, ChatActionError>) =>
   Layer.mergeAll(
     Layer.succeed(
       ChatClient,
@@ -256,7 +253,7 @@ const shellChatClient = (listThreads: Effect.Effect<ReadonlyArray<never>, ChatAc
 
 const renderShell = (listThreads: Effect.Effect<ReadonlyArray<never>, ChatActionError>) =>
   render(
-    <RegistryProvider initialValues={[[ChatClient.runtime.layer, shellChatClient(listThreads)]]}>
+    <RegistryProvider initialValues={[[ChatClient.runtime.layer, hostIndependentShellClient(listThreads)]]}>
       <ChatApp />
     </RegistryProvider>
   );
@@ -265,15 +262,12 @@ describe("ChatApp", { concurrent: false }, () => {
   it("renders the chat shell in its loading state while the thread list is pending", () => {
     const { getByTestId, queryByTestId, unmount } = renderShell(Effect.never);
 
-    // shell chrome: sidebar (with the New thread control) and the app frame.
     expect(getByTestId("chat-app")).toBeInTheDocument();
     expect(getByTestId("sidebar")).toBeInTheDocument();
     expect(getByTestId("sidebar-new")).toBeInTheDocument();
-    // with no selection and the list still loading, no thread is active and
-    // the sidebar shows neither the empty nor the failed state.
     expect(getByTestId("chat-no-thread")).toHaveTextContent("Starting your first thread");
-    expect(queryByTestId("sidebar-load-failed")).toBeNull();
-    expect(queryByTestId("sidebar-empty")).toBeNull();
+    expect(queryByTestId("sidebar-load-failed"), "a still-loading list shows no failed state").toBeNull();
+    expect(queryByTestId("sidebar-empty"), "a still-loading list shows no empty state").toBeNull();
     unmount();
   });
 

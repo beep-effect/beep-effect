@@ -36,7 +36,6 @@ import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
 import { RuntimeTest } from "@/runtime/Layer";
 import { pgliteFixtureTimeout } from "./PgliteFixtureBudget.ts";
 
-// RuntimeTest provides SyncDatabaseInMemory: a cold bundled PGlite plus the boot migrations.
 const fixtureTimeout = pgliteFixtureTimeout;
 const shouldRun = Bun.env.BEEP_TEST_SIDECAR_SMOKE === "1";
 
@@ -60,7 +59,6 @@ const smokeProgram = Effect.gen(function* () {
   expect(roles).toContain("assistant");
 });
 
-// Own the configured runtime and workspace in the public fixture layer.
 const SmokeLive = Layer.unwrap(
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;

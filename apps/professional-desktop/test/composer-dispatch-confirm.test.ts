@@ -37,19 +37,14 @@ const content: SafeDocument = Result.getOrThrow(
   )
 );
 
-// The confirm window is real time (a detached fiber outside any registry), so
-// the tests shrink it and await the owned confirmation fiber.
-const confirmTimeout = Duration.millis(50);
+const shrunkRealTimeConfirmWindow = Duration.millis(50);
 
 const emptyTimeline = ThreadTimeline.make({ threadId, turns: [] });
 
 const deadClient = ChatClient.of(((tag: string) =>
   Effect.die(`unexpected chat RPC: ${tag}`)) as unknown as ChatClient["Service"]);
 
-// Mount the persistent atoms up front: unmounted nodes are transient in a
-// bare registry (a later `get` re-creates them at their defaults), and the
-// production tree keeps all three mounted anyway.
-const makeRegistry = (): AtomRegistry.AtomRegistry => {
+const makeMountedPersistentRegistry = (): AtomRegistry.AtomRegistry => {
   const registry = AtomRegistry.make({
     initialValues: [
       [ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, deadClient), Reactivity.layer)],
@@ -76,19 +71,19 @@ describe("dispatchTurnWithConfirm", () => {
   it.live(
     "restores the draft when the dispatch is swallowed",
     Effect.fnUntraced(function* () {
-      // A submit whose write is silently dropped — the zombie-node failure
-      // mode the QA 2026-08-26 P0 found: the closure runs, nothing happens.
       const swallowedSubmit = Atom.writable(
         () => 0,
         (_ctx, _value: SafeDocument) => void 0
       );
-      const registry = yield* Effect.acquireRelease(Effect.sync(makeRegistry), (registry) =>
+      const registry = yield* Effect.acquireRelease(Effect.sync(makeMountedPersistentRegistry), (registry) =>
         Effect.sync(() => registry.dispose())
       );
       const revisionBefore = registry.get(draftRevisionAtoms(threadId));
 
       const confirmation = yield* Effect.acquireRelease(
-        Effect.sync(() => dispatchTurnWithConfirm(registry, threadId, content, swallowedSubmit, confirmTimeout)),
+        Effect.sync(() =>
+          dispatchTurnWithConfirm(registry, threadId, content, swallowedSubmit, shrunkRealTimeConfirmWindow)
+        ),
         Fiber.interrupt
       );
       yield* Fiber.join(confirmation).pipe(Effect.timeout(Duration.millis(200)));
@@ -101,29 +96,30 @@ describe("dispatchTurnWithConfirm", () => {
   it.live(
     "never restores over a synchronous turn start (subscription races the dispatch)",
     Effect.fnUntraced(function* () {
-      // A submit whose write starts the turn synchronously inside the set —
-      // the fastest possible acceptance. The confirm must arm its turn
-      // subscription BEFORE dispatching or this transition is missed and the
-      // draft is falsely restored after the timeout.
       const synchronousSubmit = Atom.writable(
         () => 0,
         (ctx, value: SafeDocument) => {
           ctx.set(runTurnAtom, SendTurnRequest.make({ threadId, content: value }));
         }
       );
-      const registry = yield* Effect.acquireRelease(Effect.sync(makeRegistry), (registry) =>
+      const registry = yield* Effect.acquireRelease(Effect.sync(makeMountedPersistentRegistry), (registry) =>
         Effect.sync(() => registry.dispose())
       );
       const revisionBefore = registry.get(draftRevisionAtoms(threadId));
 
       const confirmation = yield* Effect.acquireRelease(
-        Effect.sync(() => dispatchTurnWithConfirm(registry, threadId, content, synchronousSubmit, confirmTimeout)),
+        Effect.sync(() =>
+          dispatchTurnWithConfirm(registry, threadId, content, synchronousSubmit, shrunkRealTimeConfirmWindow)
+        ),
         Fiber.interrupt
       );
       yield* Fiber.join(confirmation).pipe(Effect.timeout(Duration.millis(200)));
 
       assertNone(registry.get(draftAtoms(threadId)));
-      expect(registry.get(draftRevisionAtoms(threadId))).toBe(revisionBefore);
+      expect(
+        registry.get(draftRevisionAtoms(threadId)),
+        "the confirm arms its turn subscription before dispatching, or a synchronous start is missed and the draft restored"
+      ).toBe(revisionBefore);
     })
   );
 
@@ -191,7 +187,7 @@ describe("dispatchTurnWithConfirm", () => {
   it.effect(
     "releases confirmation subscriptions on interruption without restoring the draft",
     Effect.fnUntraced(function* () {
-      const registry = yield* Effect.acquireRelease(Effect.sync(makeRegistry), (registry) =>
+      const registry = yield* Effect.acquireRelease(Effect.sync(makeMountedPersistentRegistry), (registry) =>
         Effect.sync(() => registry.dispose())
       );
       const submit = Atom.writable(

@@ -15,13 +15,13 @@ describe("Professional Desktop app", { concurrent: false }, () => {
     const { container, unmount } = render(<App />);
     const screen = within(container);
 
-    // the app is now a thin wrapper over the chat surface: the sidebar,
-    // composer-creation control, and chat frame render in the empty/loading
-    // state without a live sidecar.
     return screen
       .findByTestId("chat-app")
       .then((chatApp) => {
-        expect(chatApp).toBeInTheDocument();
+        expect(
+          chatApp,
+          "the app is a thin wrapper whose chat shell renders without a live sidecar"
+        ).toBeInTheDocument();
         expect(chatApp.querySelector('[data-slot="orb-background"]')).toBeNull();
         expect(screen.getByTestId("sidebar")).toBeInTheDocument();
         expect(screen.getByTestId("sidebar-new")).toBeInTheDocument();
@@ -37,9 +37,10 @@ describe("Professional Desktop app", { concurrent: false }, () => {
       .findByTestId("chat-no-thread")
       .then((noThread) => {
         expect(noThread).toBeInTheDocument();
-        // Without a reachable sidecar the state names the problem (a failed
-        // thread load) instead of pretending the workspace is merely empty.
-        expect(within(noThread).getByText(/first thread|Chat is unavailable/, { selector: "h2" })).toBeInTheDocument();
+        expect(
+          within(noThread).getByText(/first thread|Chat is unavailable/, { selector: "h2" }),
+          "without a reachable sidecar the state names the failed load instead of pretending the workspace is empty"
+        ).toBeInTheDocument();
       })
       .finally(unmount);
   });

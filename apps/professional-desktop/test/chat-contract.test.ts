@@ -43,7 +43,6 @@ import type { TurnHistoryItem as TurnHistoryItemType } from "@beep/agents-use-ca
 
 const chatLayerTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 
-// Build the chat operations + the usage Ref over the provided in-memory stack.
 const makeStack = Effect.gen(function* () {
   const store = yield* Thread.ThreadStore;
   const kernel = yield* AgentTurnKernel;
@@ -113,23 +112,23 @@ describe("@beep/professional-desktop chat contract", () => {
         const expectedBlocks = fixtureBlocksFor([UserTurnHistoryItem.make({ role: "user", text: "Hi" })]);
         const emitted = yield* Stream.runCollect(operations.sendMessage(thread.id, content));
 
-        // 1) the stream emits the fixture's deterministic blocks
         expect(emitted).toHaveLength(expectedBlocks.length);
         expect(emitted[0]).toStrictEqual(expectedBlocks[0]);
-        expect([...emitted]).toStrictEqual([...expectedBlocks]);
+        expect([...emitted], "the stream emits the fixture's deterministic blocks").toStrictEqual([...expectedBlocks]);
 
-        // 2) the timeline shows a user turn then an assistant turn whose content
-        // is the lifted Document
         const timeline = yield* operations.getTimeline(thread.id);
         const items = messageItems(timeline);
         expect(A.map(items, (m) => m.role)).toEqual(["user", "assistant"]);
         expect(items[0]?.content).toStrictEqual(content);
-        expect(items[1]?.content).toStrictEqual(assistantContentToDocument([...expectedBlocks]));
+        expect(items[1]?.content, "the assistant turn's content is the lifted Document").toStrictEqual(
+          assistantContentToDocument([...expectedBlocks])
+        );
 
-        // 3) exactly one finalized usage row with the fixture kernel's exact
-        // provider accounting and an explicit absent Activity link.
         const usage = yield* Ref.get(usageRef);
-        expect(usage).toHaveLength(1);
+        expect(
+          usage,
+          "exactly one finalized usage row, with the fixture's exact provider accounting and an absent Activity link"
+        ).toHaveLength(1);
         const record = O.getOrThrow(A.head(usage));
         expect(record.provider).toBe("fixture");
         expect(record.model).toBe("fixture");
@@ -143,8 +142,6 @@ describe("@beep/professional-desktop chat contract", () => {
         expect(record.metadata.activityLinkStatus).toBe("unavailable_no_activity_store");
         expect(record.metadata.stopReason).toBe("stop");
 
-        // The successful stream records completion and duration telemetry in the
-        // same Effect runtime that executed the contract.
         const metrics = yield* Metric.snapshot;
         const completed = O.getOrThrow(
           A.findFirst(
@@ -159,7 +156,10 @@ describe("@beep/professional-desktop chat contract", () => {
           )
         );
         expect(completed.type).toBe("Counter");
-        expect(completed.type === "Counter" ? completed.state.count : 0).not.toBe(0);
+        expect(
+          completed.type === "Counter" ? completed.state.count : 0,
+          "the stream records completion telemetry in the runtime that executed the contract"
+        ).not.toBe(0);
         expect(duration.type).toBe("Histogram");
         expect(duration.type === "Histogram" ? duration.state.count : 0).toBeGreaterThan(0);
       })
@@ -334,21 +334,15 @@ describe("@beep/professional-desktop chat contract", () => {
 
     const text = documentToPlainText(content);
 
-    // Structured nodes are projected by the canonical @beep/md plain-text
-    // renderer (not a bespoke walker): tables stay tab-separated, youtube embeds
-    // surface their watch URL, blockquotes recurse, and task items keep their text.
-    expect(text).toContain("Feature\tStatus");
+    expect(text, "the canonical @beep/md plain-text renderer keeps table cells tab-separated").toContain(
+      "Feature\tStatus"
+    );
     expect(text).toContain("Rich blocks\tReady");
     expect(text).toContain("https://www.youtube.com/watch?v=M7lc1UVf-VE");
     expect(text).toContain("Quoted note");
     expect(text).toContain("Ship docs");
   });
 
-  // Cancelling still keeps no partial model output and bills nothing. What it no
-  // longer does is erase the turn entirely: persisting nothing left the user's
-  // prompt with no answer, so a reload orphaned it and — because the kernel is
-  // handed the whole conversation — the next prompt arrived after an unanswered
-  // request and the model answered the abandoned one instead.
   it.layer(StackLayer, { timeout: chatLayerTimeout })("isolated chat stack", (it) => {
     it.effect(
       "cancel records a stopped turn, keeps no partial content, and bills nothing",
@@ -360,9 +354,7 @@ describe("@beep/professional-desktop chat contract", () => {
         const firstBlockSeen = yield* Deferred.make<void>();
         const release = yield* Deferred.make<void>();
 
-        // Park the stream after the first block so it never reaches onEnd; the
-        // test interrupts it before completion.
-        const parked = operations.sendMessage(thread.id, userDocument("Hi")).pipe(
+        const parkedAfterFirstBlock = operations.sendMessage(thread.id, userDocument("Hi")).pipe(
           Stream.tap(() =>
             Effect.gen(function* () {
               yield* Deferred.succeed(firstBlockSeen, void 0);
@@ -371,23 +363,23 @@ describe("@beep/professional-desktop chat contract", () => {
           )
         );
 
-        const fiber = yield* parked.pipe(Stream.runDrain, Effect.forkChild);
+        const fiber = yield* parkedAfterFirstBlock.pipe(Stream.runDrain, Effect.forkChild);
         yield* Deferred.await(firstBlockSeen);
         yield* Fiber.interrupt(fiber);
 
-        // the prompt is answered by a turn that says it was stopped
         const timeline = yield* operations.getTimeline(thread.id);
         const items = messageItems(timeline);
-        expect(A.map(items, (m) => m.role)).toEqual(["user", "assistant"]);
+        expect(
+          A.map(items, (m) => m.role),
+          "a stopped turn answers the prompt, so a reload or the next turn never meets an unanswered request"
+        ).toEqual(["user", "assistant"]);
 
-        // the stopped turn carries the marker and none of the streamed content
         const stopped = items[1];
         const stoppedText = Str.trim(renderPlainTextUnsafe(stopped!.content));
-        expect(stoppedText).toBe("(stopped)");
+        expect(stoppedText, "the stopped turn carries the marker and none of the streamed content").toBe("(stopped)");
 
-        // still no usage record on interrupt
         const usage = yield* Ref.get(usageRef);
-        expect(usage).toHaveLength(0);
+        expect(usage, "an interrupted turn bills nothing").toHaveLength(0);
       })
     );
   });
@@ -520,8 +512,10 @@ describe("@beep/professional-desktop chat contract", () => {
         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("second")));
 
         const timeline = yield* operations.getTimeline(thread.id);
-        // user, assistant, user, assistant — strictly increasing turn indices
-        expect(A.map(timeline.turns, (t) => t.turnIndex)).toEqual([0, 1, 2, 3]);
+        expect(
+          A.map(timeline.turns, (t) => t.turnIndex),
+          "turn indices strictly increase"
+        ).toEqual([0, 1, 2, 3]);
         const items = messageItems(timeline);
         expect(A.map(items, (m) => m.role)).toEqual(["user", "assistant", "user", "assistant"]);
         expect(documentToPlainText(items[2]!.content)).toBe("second");
@@ -573,16 +567,6 @@ describe("@beep/professional-desktop chat contract", () => {
     assertSchemaArbitraryDecodesToSelf(TurnHistoryItem, { runs: 25 });
   });
 
-  // A turn appends the user message, reads the whole conversation back, and asks
-  // the kernel to continue it. Two turns in flight on one thread interleave: both
-  // prompts land with no answer between them, so each kernel is handed a history
-  // ending in two unanswered requests — and both answer the *first*. Two windows
-  // on one thread produced two copies of the reply to the first message and none
-  // to the second, and the corruption was persisted.
-  //
-  // The kernel here blocks until released, which is what forces the two turns to
-  // actually overlap; the assertion is on the history each kernel call is given,
-  // because that is where the corruption originates.
   it.layer(ThreadStoreTestLayer, { timeout: chatLayerTimeout })("isolated thread store", (it) => {
     it.effect(
       "never hands the kernel a history ending in an unanswered prompt",
@@ -610,13 +594,11 @@ describe("@beep/professional-desktop chat contract", () => {
         const first = yield* operations
           .sendMessage(thread.id, userDocument("ALPHA"))
           .pipe(Stream.runDrain, Effect.forkChild);
-        // Wait until the first turn is inside the kernel (holding the thread).
         yield* Effect.repeat(Ref.get(histories), { until: (all) => all.length === 1 });
 
         const second = yield* operations
           .sendMessage(thread.id, userDocument("BRAVO"))
           .pipe(Stream.runDrain, Effect.forkChild);
-        // Give the second turn every chance to barge in ahead of the first.
         yield* Effect.yieldNow;
         yield* Effect.yieldNow;
 
@@ -627,12 +609,12 @@ describe("@beep/professional-desktop chat contract", () => {
         const seen = yield* Ref.get(histories);
         expect(seen).toHaveLength(2);
 
-        // The second turn's history must already contain the first turn's answer:
-        // it must never end in two prompts in a row.
         const secondHistory = seen[1]!;
-        expect(A.map(secondHistory, (item) => item.role)).toEqual(["user", "assistant", "user"]);
-        // ...and the prompt it is being asked to answer is its own.
-        expect(secondHistory[2]!.text).toContain("BRAVO");
+        expect(
+          A.map(secondHistory, (item) => item.role),
+          "two in-flight turns serialize: the second history already holds the first answer, never two prompts in a row"
+        ).toEqual(["user", "assistant", "user"]);
+        expect(secondHistory[2]!.text, "the second turn answers its own prompt, not the first").toContain("BRAVO");
       })
     );
   });
