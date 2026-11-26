@@ -743,3 +743,24 @@ P6, outside P7's diff. The lexical nlp exit is scoped to live files, because the
 retired-name registry is history the doctor already reads:
 `rg -l '@beep/nlp["/]' packages apps standards tsconfig.json --glob '!standards/changesets.retired-packages.json'`
 (decision `2026-11-24-p7-the-nlp-exit-excludes-the-retired-name-registry-and-row-3-defers-cache-baselines`).
+
+Program-wide S31 at the P7 head, against the P0 base f9982f3b5e6 (decision
+`2026-11-25-p7-s31-per-file-is-measured-against-the-p0-base-for-the-whole-program`),
+by the reproduce rules above, base to head, for the census packages plus `text` and
+`annotation`. A cell not listed is unchanged.
+
+| Inventory | change, base to head | admitted by |
+| --- | --- | --- |
+| `standards/coverage.regression-baseline.jsonc` | provenance 4 to 0, nlp 29 to 0, schema-org 15 to 0, ontology 13 to 15, rdf 38 to 50, identity 8 to 15, epistemics 36 to 44, nlp-processing 50 to 63, langextract 23 to 25, text 0 to 16, annotation 0 to 11 | rows move with the file (`2026-11-19-p1-s31-rows-move-with-the-file`); rows at full coverage are registration (`2026-11-22-p2-coverage-rows-at-full-coverage-are-registration`) |
+| `standards/schema-first.inventory.jsonc` | nlp 1 to 0, schema-org 1 to 0, ontology 5 to 4, epistemics 1 to 0 | no growth |
+| `standards/effect-laws.allowlist.jsonc` and its generated snapshot | provenance 1 to 0, text 0 to 1 | the provenance entry moved with the package to `@beep/text` |
+| `standards/fallow.health.regression-baseline.jsonc` | rdf 1 to 0, identity 1 to 2 | the IRI module moved from rdf to identity in P1 |
+| `standards/fallow.boundaries.provenance.jsonc` | provenance 1 to 0, nlp 1 to 0, text 0 to 1 | one generated rule per package; text takes the provenance rule |
+| `.fallowrc.jsonc` | rdf 1 to 0, identity 1 to 2 | the `Iri.ts` health override moved with the module; the generated identity registry data has no clone-scoring exclusion (its one clone, with the pinned-vocabularies term list, is inherited and non-blocking) |
+| `_typos.toml` | schema-org 1 to 0, rdf 0 to 1 | the vendored nanopublication licence (`2026-11-25-p7-s31-amendment-admits-the-vendored-nanopub-licence-typos-exclude`) |
+| `biome.jsonc` and `biome.identity.jsonc` | none: the canonical annotation document fixture is stored as `canonical-document-v1.jcs`, which no formatter reads, so it needs no exclude | no growth |
+| `no-manual-effect-runtime-in-tests.ts` allowance | nlp 3 to 0 | no growth |
+| in-package suppressions | schema-org 3 to 0, rdf 8 to 1, identity 8 to 7; text and annotation 0 (their negative type tests use `expectTypeOf().not.toExtend()`, as does epistemics) | no growth |
+
+Every other inventory the table above names is 0 to 0 for every package. No inventory grew
+without an admitting decision.
