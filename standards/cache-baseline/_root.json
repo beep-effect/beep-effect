@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
-    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
+    "reviewer": "Codex on @slop/11-25-26",
+    "reason": "Record the reviewed build info output for @beep/infra#check and its Turbo configuration source.",
     "basis": {
-      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
-      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
+      "path": "docs/reports/infra-check-build-info-cache-review-2026-11-26.md",
+      "sha256": "0bda68eb945098802cde168a71dacb2a596cfa3c269c5716c5ca9298d782e4b9"
     }
   },
   "globalConfiguration": {
@@ -168,7 +168,7 @@
     },
     {
       "path": "infra/turbo.json",
-      "sha256": "ebedf0760b0b9d24b4ba8f577506cdad5ae4ded4ba229c1289d5817afb4dbc97"
+      "sha256": "f71c708e7d70f6552a517b3486a06b084f3a94db3f5840dac7ec153cb49f870f"
     },
     {
       "path": "packages/drivers/eyecite/turbo.json",

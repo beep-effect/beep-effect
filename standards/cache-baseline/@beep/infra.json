@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/infra",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Codex on @slop/11-25-26",
+    "reason": "Record the reviewed build info output for @beep/infra#check and its Turbo configuration source.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/infra-check-build-info-cache-review-2026-11-26.md",
+      "sha256": "0bda68eb945098802cde168a71dacb2a596cfa3c269c5716c5ca9298d782e4b9"
     }
   },
   "nodes": [
@@ -102,7 +102,8 @@
         "env": [],
         "passThroughEnv": [],
         "outputs": [
-          ".beep/gates/check/**"
+          ".beep/gates/check/**",
+          "dist/tsconfig.tsbuildinfo"
         ],
         "dependsOn": [
           "^build"
