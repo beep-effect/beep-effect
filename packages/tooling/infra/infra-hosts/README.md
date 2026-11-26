@@ -46,12 +46,13 @@ Docker.Context "Host" (host=ssh://<sshDestination>)
   ├─ Docker.Network "Network"            beep-ai-metrics, bridge, owned
   ├─ Docker.Volume.lookup                beep-ai-metrics-dankserver_phoenix_data, never created or removed
   └─ Docker.Container "Phoenix"          beep-ai-metrics-phoenix, pinned image, restart unless-stopped,
-                                         127.0.0.1:6006 -> 6006, /data, healthcheck /healthz
+                                         127.0.0.1:6006 -> 6006, /data, no Docker healthcheck (no shell),
+                                         also joins <composeProject>_default (the OTLP collector's network)
 Command.Exec "Preflight"     tools, engine, tailnet, data volume present
 Command.Exec "RetireCompose" disable the Compose unit (compose down keeps the volume), archive it
   └─▶ Phoenix (label edge)
 Command.Exec "TailscaleServe" HTTPS 8447 -> 127.0.0.1:6006 (after Phoenix)
-Command.Exec "Health"        Docker health, loopback, Serve, public URL (after Serve)
+Command.Exec "Health"        running + /healthz on its own port, Serve, public URL (after Serve)
 ```
 
 Mapping from the Pulumi deployment: the Compose service and its

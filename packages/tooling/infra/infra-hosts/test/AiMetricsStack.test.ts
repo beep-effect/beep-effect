@@ -72,7 +72,9 @@ const containerProps = (recording: Recording) =>
     readonly ports: ReadonlyArray<{ readonly external: string; readonly internal: number }>;
     readonly volumes: ReadonlyArray<{ readonly hostPath: string; readonly containerPath: string }>;
     readonly networks: ReadonlyArray<{ readonly name: string }>;
-    readonly healthcheck: { readonly cmd: ReadonlyArray<string> };
+    readonly healthcheck?: unknown;
+    readonly environment: Readonly<Record<string, string>>;
+    readonly stopTimeout?: string;
   };
 
 describe("AI metrics host stack", () => {
@@ -105,8 +107,19 @@ describe("AI metrics host stack", () => {
       expect(phoenix.restart).toBe("unless-stopped");
       expect(phoenix.ports).toEqual([{ external: "127.0.0.1:6006", internal: 6006 }]);
       expect(phoenix.volumes).toEqual([{ hostPath: dataVolume, containerPath: "/data" }]);
-      expect(phoenix.networks).toEqual([{ name: "beep-ai-metrics" }]);
-      expect(phoenix.healthcheck.cmd[0]).toBe("CMD");
+      expect(phoenix.networks).toEqual([{ name: "beep-ai-metrics" }, { name: "beep-ai-metrics-dankserver_default" }]);
+      expect(phoenix.stopTimeout).toBe("2 minutes");
+      expect(phoenix.healthcheck).toBeUndefined();
+      expect(phoenix.environment).toEqual({
+        PHOENIX_WORKING_DIR: "/data",
+        PHOENIX_ENABLE_AUTH: "false",
+        PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER: "false",
+        PHOENIX_ENABLE_MCP_SERVER: "true",
+        PHOENIX_ENABLE_MCP_CODE_MODE: "false",
+        PHOENIX_DISABLE_AGENT_ASSISTANT: "true",
+        PHOENIX_ALLOWED_SANDBOX_PROVIDERS: "NONE",
+        PHOENIX_TELEMETRY_ENABLED: "false",
+      });
 
       const commands = A.map(recording.commands, ({ command }) => command);
       expect(commands).toHaveLength(4);

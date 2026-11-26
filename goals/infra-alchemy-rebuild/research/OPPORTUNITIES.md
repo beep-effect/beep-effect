@@ -851,3 +851,29 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it (owner: the binary-route lane):** (a) the App re-syncs the pin PR only when it is
   `CONFLICTING`, or when its base is more than a set number of commits or hours stale; (b) the merge gate holds
   main merges while a pin PR is green-pending. The orchestrator did (b) by hand that day.
+
+## 2026-11-26: `alchemy plan` printed a generic update that hid a container replace, and the apply logged the replace as "updated"
+
+- **Doing:** the P4 AI metrics cutover on dankserver (`HostsAiMetrics`, stage `prod`). The plan for attempt 3 was meant to show exactly one Phoenix replace.
+- **Evidence:** the plan from `f096be4dca8` printed `Plan: 5 to update`, with Phoenix, Preflight, RetireCompose, TailscaleServe and Health all marked update.
+  - The Phoenix container's props hold a label that is an Output of an upstream Exec hash, unresolved at plan time. `@alchemy.run/docker` `Container.ts` `diff` returns `undefined` while props are unresolved, so the engine prints a generic update.
+  - At apply, the changed env and networks made the create args differ. The provider then stopped, removed and re-created the container: old id `f76ded48…` gone, new id `65dddd16…` on the same volume. The log still said `[Phoenix] updated (5.9s)`; no line said replace.
+  - The four Exec steps re-ran because their env keys on the Preflight hash and the Phoenix id.
+  - The mismatch stopped the cutover for a ruling: about 10 minutes lost inside a capped degraded window.
+- **Would have prevented it:**
+  - a plan mode that resolves upstream Exec hashes before diffing, or a printer that says "update (may replace)" when the provider diff was skipped for unresolved props;
+  - an apply log that names a recreate ("replaced, delete first") when the container id changes.
+
+## 2026-11-26: the host stack assumed Compose facts the live deployment no longer had
+
+- **Doing:** the same cutover.
+- **Evidence:** the live Compose service had drifted from the Pulumi program the stack was ported from, and each drift cost one failed or degraded attempt:
+  - the image had been hand-bumped to `phoenix:22.0.1@sha256:…`, while the runbook pinned `15.5.0`;
+  - the data volume and network were `external: true`, so they carried no Compose project label, and Preflight refused;
+  - `ExecStop` was `docker compose stop`, not `down`;
+  - seven Phoenix env settings, including auth off, were missing from the stack;
+  - the OTLP collector reached Phoenix by name on the Compose network, which the new container left.
+
+  Ingestion was degraded from 02:40:46Z to 02:54:35Z, and the collector dropped 91 spans when their retry budget ran out.
+- **Would have prevented it:** a field-by-field diff of the live Compose service (`docker compose config` plus `docker inspect` of the running container and its network peers) against the stack's container props, run before the first rehearsal and gating the prod plan.
+
