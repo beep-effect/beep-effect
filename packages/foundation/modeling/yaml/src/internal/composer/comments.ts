@@ -1,57 +1,13 @@
+// decision: comments-on-nodes
 import { $YamlId } from "@beep/identity/packages";
-import { dual } from "effect/Function";
-import * as Str from "effect/String";
-
-// Comment-fidelity helpers shared by the block and flow composers: blank-line
-// detection between source spans, and immutable node rebuilds that merge the
-// comment field triple (`commentBefore` / `comment` / `spaceBefore`) onto an
-// already-composed node.
-//
-// Attribution semantics (the NODE-LEVEL model, prior art: the `yaml` npm
-// package). Comments live on NODES; `YamlPair` carries none. An own-line
-// comment attaches FORWARD to the following entry's KEY node as
-// `commentBefore`; a comment on the same line as the end of an entry attaches
-// to that entry's VALUE node as the trailing `comment`; own-line comments
-// after a collection's last entry become the collection's own `comment` when
-// at (or beyond) the collection's content column and escape to the outer
-// scope when shallower; `spaceBefore` is set on the key node when a blank
-// line precedes the entry (and its `commentBefore` block); blank lines
-// within/after a comment run embed as extra `\n`s in the joined string;
-// comment text is the RAW post-`#` slice (see `rawCommentText`).
-//
-// Two node slots per entry rather than one pair slot is the whole point: a
-// key-line comment (`a: # kc`) and a value's trailing comment are different
-// fields, so neither has to relocate onto the other's line.
-//
-// ── Recorded divergences from the reference `yaml` npm package ─────────────
-//
-// The one place the divergences live; each is deliberate, and the emitted
-// bytes remain reparse-stable in every case. The list used to have six
-// entries. Four of them — pair-level placement, the alias drop, the
-// multi-line complex-key drop, and the document field naming — were all
-// symptoms of storing comments on the pair, and went away with the move to
-// node-level fields rather than being patched one at a time.
-//
-// 1. ABSENT-value placement. A trailing comment on an entry with no value
-//    (`a: # kc`) lands on the KEY node; the reference materializes `a:` as
-//    `Scalar(null)` and puts it on that. Our `value` is `null` for an absent
-//    value, and making it always-a-node for parity would silently break every
-//    consumer's `pair.value === null` check at RUNTIME rather than at compile
-//    time. The emitted bytes are identical, so this is invisible to a
-//    formatter and visible only to a consumer reading the field.
-// 2. PRE-`#` spacing normalizes to one space on trailing comments
-//    (`a: 1   # t` → `a: 1 # t`) — the post-`#` storage form cannot carry
-//    it. The reference behaves identically.
-// 3. MULTI-document `...` trailers. A comment after a `...` marker in a
-//    multi-document stream may attach to the following document's header
-//    rather than the preceding document's trailer, depending on CST document
-//    splitting.
-
 import * as O from "@beep/utils/Option";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { YamlAlias, YamlMap, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import type { YamlNode } from "../../YamlNode.ts";
 
+const isYamlAlias = S.is(YamlAlias);
 const isYamlMap = S.is(YamlMap);
 const isYamlScalar = S.is(YamlScalar);
 const isYamlSeq = S.is(YamlSeq);
@@ -320,14 +276,13 @@ export const isAfterIndicatorOnly: {
   (offset: number): (text: string) => boolean;
   (text: string, offset: number): boolean;
 } = dual(2, (text: string, offset: number): boolean => {
-  const indicatorAt = skipHorizontalSpaceBackward(text, offset - 1);
+  const indicatorAt = lastNonHorizontalSpaceAtOrBefore(text, offset - 1);
   if (indicatorAt < 0 || !isBlockIndicatorChar(text[indicatorAt])) return false;
-  const beforeIndicator = skipHorizontalSpaceBackward(text, indicatorAt - 1);
+  const beforeIndicator = lastNonHorizontalSpaceAtOrBefore(text, indicatorAt - 1);
   return beforeIndicator < 0 || isLineBreakChar(text[beforeIndicator]);
 });
 
-/** Index of the last non-space/tab character at or before `from` (or `-1`). */
-const skipHorizontalSpaceBackward = (text: string, from: number): number => {
+const lastNonHorizontalSpaceAtOrBefore = (text: string, from: number): number => {
   let i = from;
   while (i >= 0 && (text[i] === " " || text[i] === "\t")) i--;
   return i;
@@ -394,22 +349,16 @@ export const blankLineAboveStart: {
   return Str.isEmpty(Str.trim(prevLine)) ? prevBreak + 1 : -1;
 });
 
-/**
- * The deepest trailing scalar reached by descending last-child edges from
- * `node` (a map's last pair's value, a seq's last item) — the node whose
- * token span a textually-following blank line could fall inside.
- */
 function deepestTrailingScalar(node: YamlNode): YamlScalar | undefined {
   let current: YamlNode | undefined = node;
   while (current !== undefined) {
     if (isYamlScalar(current)) return current;
-    if (!isYamlMap(current) && !isYamlSeq(current)) return undefined; // alias — carries no chomp
+    if (isYamlAlias(current)) return undefined;
     current = lastCollectionChild(current);
   }
   return undefined;
 }
 
-/** A map's last pair's value (or key when value-less), or a seq's last item. */
 function lastCollectionChild(node: YamlMap | YamlSeq): YamlNode | undefined {
   if (isYamlSeq(node)) return node.items[node.items.length - 1];
   const last = node.items[node.items.length - 1];
@@ -679,10 +628,8 @@ export const withCommentFields: {
   });
 });
 
-/** The structural comment-field view every YAML node satisfies. */
 type CommentFieldsView = S.Struct.Type<typeof CommentFields.fields>;
 
-/** A collection's non-item fields with `fields` merged into its comment triple. */
 const collectionFieldsWithComments = (node: YamlMap | YamlSeq, fields: CommentFields) => ({
   style: node.style,
   ...O.getSomesStruct({

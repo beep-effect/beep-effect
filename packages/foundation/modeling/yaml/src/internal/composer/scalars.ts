@@ -1,16 +1,9 @@
+import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
-import * as Str from "effect/String";
-
-// Scalar resolution and decoding: YAML 1.2 Core Schema type resolution
-// (spec chapter 10.3.2), flow/block scalar decoding, multi-line plain-scalar
-// collection, and the CST-scanning helpers those routines share with the
-// block/flow/document seams (placed here because this is the lowest seam
-// that uses them — everything above already imports this module).
-
-import * as O from "@beep/utils/Option";
 import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import { YamlScalar } from "../../YamlNode.ts";
 import { findKeyIndent, foldBlockLines, hasBlockContent } from "../block-scalar.ts";
 import { RawDiagnostic } from "../diagnostics.ts";
@@ -22,10 +15,6 @@ import type { ScalarStyle } from "../../YamlNode.ts";
 import type { CstNode } from "../cst.ts";
 import type { ComposerState, NodeMeta } from "./state.ts";
 
-// ---------------------------------------------------------------------------
-// YAML 1.2 Core Schema type resolution
-// ---------------------------------------------------------------------------
-
 const NULL_RE = /^(?:null|Null|NULL|~)$/;
 const TRUE_RE = /^(?:true|True|TRUE)$/;
 const FALSE_RE = /^(?:false|False|FALSE)$/;
@@ -36,17 +25,12 @@ const FLOAT_RE = /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)(?:[eE][-+]?[0-9]+)?$/;
 const INF_RE = /^[-+]?\.(?:inf|Inf|INF)$/;
 const NAN_RE = /^\.(?:nan|NaN|NAN)$/;
 
-/**
- * Parses an integer string, returning `bigint` when the value exceeds
- * `Number.MAX_SAFE_INTEGER` to avoid silent precision loss.
- */
 const safeParseInt: {
   (value: string, radix: number): number | bigint;
   (radix: number): (value: string) => number | bigint;
 } = dual(2, (value: string, radix: number): number | bigint => {
   const n = Number.parseInt(value, radix);
   if (Number.isSafeInteger(n)) return n;
-  // Fall back to BigInt for values that exceed safe integer range
   const prefix = radix === 16 ? "0x" : radix === 8 ? "0o" : "";
   return BigInt(`${prefix}${value}`);
 });
@@ -83,15 +67,10 @@ export function classifyPlainNumeric(raw: string): O.Option<"int" | "float"> {
   return O.none();
 }
 
-/** `.inf` / `-.inf` as a signed JS infinity. */
 const signedInfinity = (value: string): number =>
   Str.startsWith("-")(value) ? -Number.POSITIVE_INFINITY : Number.POSITIVE_INFINITY;
 
-/**
- * The Core Schema plain-scalar resolution rules, in precedence order: the
- * first pattern that matches decides the resolved value.
- */
-const PLAIN_SCALAR_RULES: ReadonlyArray<readonly [pattern: RegExp, resolve: (value: string) => unknown]> = [
+const PLAIN_SCALAR_RULES_IN_ORDER: ReadonlyArray<readonly [pattern: RegExp, resolve: (value: string) => unknown]> = [
   [NULL_RE, () => null],
   [TRUE_RE, () => true],
   [FALSE_RE, () => false],
@@ -105,7 +84,7 @@ const PLAIN_SCALAR_RULES: ReadonlyArray<readonly [pattern: RegExp, resolve: (val
 
 function resolvePlainScalar(value: string): unknown {
   if (value === "") return null;
-  for (const [pattern, resolve] of PLAIN_SCALAR_RULES) {
+  for (const [pattern, resolve] of PLAIN_SCALAR_RULES_IN_ORDER) {
     if (pattern.test(value)) return resolve(value);
   }
   return value;
@@ -179,10 +158,6 @@ export const resolveScalar: {
   return resolvePlainScalar(rawValue);
 });
 
-// ---------------------------------------------------------------------------
-// Scalar decoding
-// ---------------------------------------------------------------------------
-
 /**
  * Identifies plain, quoted, literal, or folded scalar syntax from a CST source slice.
  *
@@ -234,12 +209,9 @@ export function getScalarStyle(node: CstNode): ScalarStyle {
  */
 export function getBlockChomp(node: CstNode): O.Option<"strip" | "clip" | "keep"> {
   if (node.type !== "block-scalar") return O.none();
-  // Inspect only the INDICATOR RUN directly after `|`/`>` — never the rest
-  // of the header line, where a `+`/`-` inside a header comment
-  // (`| # keep+this`) would misread as a chomp indicator.
-  const indicators = O.getOrNull(Str.match(/^[|>]([0-9+-]*)/)(Str.trimStart(node.source)))?.[1] ?? "";
-  if (Str.includes("+")(indicators)) return O.some("keep");
-  if (Str.includes("-")(indicators)) return O.some("strip");
+  const headerIndicatorRun = O.getOrNull(Str.match(/^[|>]([0-9+-]*)/)(Str.trimStart(node.source)))?.[1] ?? "";
+  if (Str.includes("+")(headerIndicatorRun)) return O.some("keep");
+  if (Str.includes("-")(headerIndicatorRun)) return O.some("strip");
   return O.some("clip");
 }
 
@@ -273,24 +245,15 @@ export function getBlockIndent(node: CstNode): O.Option<number> {
   return O.map(O.fromUndefinedOr(O.getOrNull(Str.match(/[1-9]/)(indicators))?.[0]), Number);
 }
 
-/**
- * The trailing comment on a block scalar's HEADER line (`key: | # c`,
- * `- >-2 # c`) as stored raw-slice text, or `undefined` when the header
- * carries none. The header is the only line of a block scalar that can carry
- * a `#` comment — body lines absorb `#` as content — and the lexer packs the
- * whole scalar (header comment included) into one CST token, so the comment
- * never surfaces as a sibling comment token for the ordinary attribution
- * pass.
- */
 function blockScalarHeaderComment(cst: CstNode): string | undefined {
   const src = Str.trimStart(cst.source);
   const nl = O.getOrElse(constant(-1))(Str.search(/[\r\n]/)(src));
   const header = nl < 0 ? src : Str.slice(0, nl)(src);
   const hash = O.getOrElse(constant(-1))(Str.indexOf("#")(header));
   if (hash < 1) return undefined;
-  // A header comment requires separation whitespace after the indicators.
   const before = header[hash - 1];
-  if (before !== " " && before !== "\t") return undefined;
+  const separatedFromIndicators = before === " " || before === "\t";
+  if (!separatedFromIndicators) return undefined;
   return rawCommentText(Str.slice(hash)(header));
 }
 
@@ -329,32 +292,14 @@ export const getScalarValue: {
   }
 );
 
-/**
- * YAML 1.2 §6.5 flow line folding for plain scalars.
- * - Bare newline between non-empty lines becomes a space (fold)
- * - Empty line(s) preserved as newline characters
- * - Leading whitespace on continuation lines trimmed
- * - Trailing whitespace before newlines trimmed
- */
 function decodePlainScalar(raw: string): string {
   const trimmed = plainSourceText(raw);
   if (!Str.includes("\n")(trimmed)) return trimmed;
   return foldFlowLines(trimmed);
 }
 
-/**
- * A plain scalar's trimmed source with every line break normalized to `\n`.
- * One plain token can span lines (the lexer runs it on across a continuation
- * line that starts with a quote or block-scalar indicator), CRLF breaks
- * included.
- */
 const plainSourceText = (raw: string): string => Str.replace(/\r\n?/g, "\n")(Str.trim(raw));
 
-/**
- * Decode single-quoted scalar with flow folding.
- * Only escape: '' → '
- * Bare newlines follow flow folding rules.
- */
 function decodeSingleQuoted(raw: string): string {
   const inner = Str.slice(1, -1)(raw);
   const unescaped = Str.replace(/''/g, "'")(inner);
@@ -362,7 +307,6 @@ function decodeSingleQuoted(raw: string): string {
   return foldFlowLines(unescaped);
 }
 
-/** Single-character double-quoted escapes and the text each one produces. */
 const SIMPLE_ESCAPES: { readonly [escape: string]: string | undefined } = {
   "\\": "\\",
   '"': '"',
@@ -383,40 +327,27 @@ const SIMPLE_ESCAPES: { readonly [escape: string]: string | undefined } = {
   P: " ",
 };
 
-/** Hex escapes: the digit count each one reads and how the digits decode. */
+const lastUnicodeCodePoint = 0x10ffff;
+
 const HEX_ESCAPES: {
   readonly [escape: string]: readonly [width: number, decode: (code: number) => string] | undefined;
 } = {
   x: [2, (code) => String.fromCharCode(code)],
   u: [4, (code) => String.fromCodePoint(code)],
-  // Defensive: the lexer already rejects `\U` escapes above U+10FFFF with an
-  // error token, but guard the composer's re-decode too so a stray code point
-  // can never throw a RangeError as a defect.
-  U: [8, (code) => (code <= 0x10ffff ? String.fromCodePoint(code) : "�")],
+  U: [8, (code) => (code <= lastUnicodeCodePoint ? String.fromCodePoint(code) : "�")],
 };
 
-/**
- * Mutable cursor for {@link decodeDoubleQuoted}. `significantEnd` is the
- * position in `result` beyond which only raw whitespace was added;
- * escape-produced content always advances it, so it is never trimmed.
- */
-const makeDoubleQuotedCursor = (inner: string) => ({ inner, result: "", significantEnd: 0, i: 0 });
+const makeDoubleQuotedCursor = (inner: string) => ({ inner, result: "", untrimmableEnd: 0, i: 0 });
 type DoubleQuotedCursor = ReturnType<typeof makeDoubleQuotedCursor>;
 
-/** The index of the first character at or after `i` that is not a space or tab. */
 const skipBlanks = (text: string, i: number): number => {
   let j = i;
   while (text[j] === " " || text[j] === "\t") j++;
   return j;
 };
 
-/** True when `text[i]` is a line break character. */
 const isBreakAt = (text: string, i: number): boolean => text[i] === "\n" || text[i] === "\r";
 
-/**
- * The text an escape (the character after `\`) produces. Hex escapes also
- * advance the cursor past their digits.
- */
 const escapeText = (cur: DoubleQuotedCursor, esc: string | undefined): string => {
   if (esc === undefined) return "\\";
   const simple = SIMPLE_ESCAPES[esc];
@@ -429,43 +360,33 @@ const escapeText = (cur: DoubleQuotedCursor, esc: string | undefined): string =>
   return decode(Number.parseInt(digits, 16));
 };
 
-/** Decodes the escape starting at the `\` under the cursor. */
 const decodeEscape = (cur: DoubleQuotedCursor): void => {
   cur.i++;
   const esc = cur.inner[cur.i];
-  if (esc === "\n" || esc === "\r") {
-    // Escaped line break: a line continuation that drops the break and the
-    // next line's indentation.
+  const escapedLineBreak = esc === "\n" || esc === "\r";
+  if (escapedLineBreak) {
     cur.i = skipBlanks(cur.inner, skipLineBreak(cur.inner, cur.i));
     return;
   }
   cur.result += escapeText(cur, esc);
-  // Escape-produced content is always significant (never trimmed)
-  cur.significantEnd = cur.result.length;
+  cur.untrimmableEnd = cur.result.length;
   cur.i++;
 };
 
-/**
- * Bare newline: apply flow folding (YAML 1.2 §6.5). Trims only raw trailing
- * whitespace (not escape-produced content), skips the next line's
- * indentation, and keeps each following empty line as `\n` — or folds to a
- * single space when the next line has content.
- */
 const foldBareNewline = (cur: DoubleQuotedCursor, ch: string): void => {
-  cur.result = Str.slice(0, cur.significantEnd)(cur.result);
+  cur.result = Str.slice(0, cur.untrimmableEnd)(cur.result);
   cur.i = skipBlanks(cur.inner, cur.i + (ch === "\r" ? 2 : 1));
   if (!isBreakAt(cur.inner, cur.i)) cur.result += " ";
   while (isBreakAt(cur.inner, cur.i)) {
     cur.result += "\n";
     cur.i = skipBlanks(cur.inner, skipLineBreak(cur.inner, cur.i));
   }
-  cur.significantEnd = cur.result.length;
+  cur.untrimmableEnd = cur.result.length;
 };
 
-/** Appends one literal character; blanks stay trimmable. */
 const appendLiteral = (cur: DoubleQuotedCursor, ch: string | undefined): void => {
   cur.result += ch;
-  if (ch !== " " && ch !== "\t") cur.significantEnd = cur.result.length;
+  if (ch !== " " && ch !== "\t") cur.untrimmableEnd = cur.result.length;
   cur.i++;
 };
 
@@ -503,30 +424,18 @@ function decodeDoubleQuoted(raw: string): string {
  */
 export function foldFlowLines(text: string): string {
   const lines = Str.split("\n")(text);
-  // First line: trim trailing whitespace only
   let result = Str.replace(/[ \t]+$/, "")(lines[0] ?? "");
   const last = lines.length - 1;
   for (let i = 1; i < lines.length; i++) result = foldContinuationLine(result, lines[i] ?? "", i === last);
   return result;
 }
 
-/**
- * Folds one continuation line onto the text folded so far. Leading
- * whitespace (indentation) is trimmed; trailing whitespace only on non-last
- * lines (before a line break).
- */
-const foldContinuationLine = (result: string, line: string, isLast: boolean): string => {
-  const trimmed = isLast ? Str.trimStart(line) : Str.trim(line);
-  const afterBreak = result[result.length - 1] === "\n";
-  // Non-empty continuation line: fold (previous non-empty → space → this),
-  // unless the result already ends in \n (from empty lines)
-  if (trimmed !== "") return (result.length > 0 && !afterBreak ? `${result} ` : result) + trimmed;
-  // Empty line → newline
-  if (!isLast) return `${result}\n`;
-  // Last line empty after trimming indentation — just the closing delimiter's
-  // line; fold the preceding newline to a space if no empty lines came before
-  // it, otherwise drop silently.
-  return afterBreak ? result : `${result} `;
+const foldContinuationLine = (result: string, line: string, isClosingDelimiterLine: boolean): string => {
+  const trimmed = isClosingDelimiterLine ? Str.trimStart(line) : Str.trim(line);
+  const endsInEmptyLineBreak = result[result.length - 1] === "\n";
+  if (trimmed !== "") return (result.length > 0 && !endsInEmptyLineBreak ? `${result} ` : result) + trimmed;
+  if (!isClosingDelimiterLine) return `${result}\n`;
+  return endsInEmptyLineBreak ? result : `${result} `;
 };
 
 /**
@@ -560,8 +469,7 @@ export const collectMultilineKey: {
     return { value: Str.trim(first?.source ?? ""), nextIdx: startIdx + 1 };
   }
 
-  // A plain first token can span lines (the lexer runs it on across a
-  // quote-led continuation line), so it folds like the parts after it.
+  // decision: plain-continuation-lines
   const plain = isPlainFlowScalar(first);
   const seed = plain ? plainSourceText(first.source) : Str.trim(first.source);
   const parts: string[] = [seed];
@@ -569,21 +477,13 @@ export const collectMultilineKey: {
   return { value: parts.length === 1 && !plain ? seed : foldFlowLines(A.join(parts, "\n")), nextIdx: idx };
 });
 
-/** True for a plain (unquoted) flow scalar. */
 const isPlainFlowScalar = (c: CstNode): boolean => c.type === "flow-scalar" && getScalarStyle(c) === "plain";
 
-/** True for a newline or a blank whitespace child. */
 const isBlankTrivia = (c: CstNode): boolean =>
   c.type === "newline" || (c.type === "whitespace" && Str.trim(c.source) === "");
 
-/** True for the `:` value separator or the `,` entry separator (a segment boundary). */
 const isSegmentBoundary = (c: CstNode): boolean => c.type === "whitespace" && (c.source === ":" || c.source === ",");
 
-/**
- * Pushes the plain scalars that continue a multi-line key onto `parts`,
- * skipping blank trivia and stopping at a segment boundary or any other node.
- * Returns the index of the first child not consumed.
- */
 const collectKeyContinuation = (children: readonly CstNode[], startIdx: number, parts: string[]): number => {
   let idx = startIdx;
   for (; idx < children.length; idx++) {
@@ -595,20 +495,14 @@ const collectKeyContinuation = (children: readonly CstNode[], startIdx: number, 
   return idx;
 };
 
-/**
- * Extract the trimmed content of the line at `offset` in `text`.
- * Returns the trimmed text and the offset of the next line (or EOF).
- */
 const extractLineContent: {
   (text: string, offset: number): { lineText: string; lineEndOffset: number };
   (offset: number): (text: string) => { lineText: string; lineEndOffset: number };
 } = dual(2, (text: string, offset: number): { lineText: string; lineEndOffset: number } => {
-  // Find start of line
   let lineStart = offset;
   while (lineStart > 0 && text[lineStart - 1] !== "\n" && text[lineStart - 1] !== "\r") {
     lineStart--;
   }
-  // Find end of line
   let lineEnd = offset;
   while (lineEnd < text.length && text[lineEnd] !== "\n" && text[lineEnd] !== "\r") {
     lineEnd++;
@@ -616,10 +510,6 @@ const extractLineContent: {
   return { lineText: Str.trim(Str.slice(lineStart, lineEnd)(text)), lineEndOffset: lineEnd };
 });
 
-/**
- * Skip all children whose offset falls on the same line as `lineOffset`.
- * Returns the index of the first child that is past the line end.
- */
 const skipChildrenOnLine: {
   (children: readonly CstNode[], startIdx: number, lineEndOffset: number): number;
   (startIdx: number, lineEndOffset: number): (children: readonly CstNode[]) => number;
@@ -628,10 +518,10 @@ const skipChildrenOnLine: {
   while (idx < children.length) {
     const c = children[idx];
     if (c === undefined) break;
-    // Children that start at or before the line end belong to this line.
-    // But newlines at the line end separate lines — stop before the newline.
-    if (c.type === "newline" && c.offset >= lineEndOffset) break;
-    if (c.offset > lineEndOffset) break;
+    const newlineEndingThisLine = c.type === "newline" && c.offset >= lineEndOffset;
+    if (newlineEndingThisLine) break;
+    const startsPastLineEnd = c.offset > lineEndOffset;
+    if (startsPastLineEnd) break;
     idx++;
   }
   return idx;
@@ -697,7 +587,6 @@ export const collectMultilinePlainScalar: {
     const first = children[startIdx];
     if (first === undefined || !isPlainFlowScalar(first)) return singleScalarFragment(first, startIdx);
 
-    // Only plain scalars (not quoted) merge continuation lines
     const cur = makePlainScalarCursor(children, first, startIdx, minContinuationColumn, sourceText);
     while (cur.idx < children.length) {
       const child = children[cur.idx];
@@ -708,7 +597,6 @@ export const collectMultilinePlainScalar: {
       return { value: decodePlainScalar(first.source), nextIdx: cur.idx, partsCount: 1, endOffset: cur.endOffset };
     }
 
-    // Apply flow folding to the collected parts
     return {
       value: foldFlowLines(A.join(cur.parts, "\n")),
       nextIdx: cur.idx,
@@ -718,23 +606,16 @@ export const collectMultilinePlainScalar: {
   }
 );
 
-/** The one-fragment result for a start child that cannot merge continuation lines. */
 const singleScalarFragment = (
   first: CstNode | undefined,
   startIdx: number
 ): { value: string; nextIdx: number; partsCount: number; endOffset: number } => {
   if (first === undefined) return { value: "", nextIdx: startIdx + 1, partsCount: 1, endOffset: 0 };
   const endOffset = first.offset + first.length;
-  // A quoted flow scalar decodes on its own; any other node keeps its source.
   const value = first.type === "flow-scalar" ? getScalarValue(first) : Str.trim(first.source);
   return { value, nextIdx: startIdx + 1, partsCount: 1, endOffset };
 };
 
-/**
- * Mutable cursor for {@link collectMultilinePlainScalar}. `emptyLines`
- * counts newlines since the last merged content and `sawNewline` tracks
- * whether one was seen at all (for continuation detection).
- */
 const makePlainScalarCursor = (
   children: readonly CstNode[],
   first: CstNode,
@@ -753,17 +634,8 @@ const makePlainScalarCursor = (
 });
 type PlainScalarCursor = ReturnType<typeof makePlainScalarCursor>;
 
-/**
- * Structural tokens that end a multi-line plain scalar: the block indicators
- * and the `,` entry separator, which the lexer emits only in flow context. A
- * comma ends the entry, so `{a, b}` holds two value-less keys, not `a b`.
- */
 const plainRunTerminators: ReadonlyArray<string> = [":", "?", "-", ","];
 
-/**
- * Consumes one child of a multi-line plain scalar. Returns `false` when the
- * child ends the scalar (and is not consumed).
- */
 const stepPlainContinuation = (cur: PlainScalarCursor, child: CstNode): boolean => {
   if (child.type === "newline") {
     cur.emptyLines++;
@@ -776,110 +648,64 @@ const stepPlainContinuation = (cur: PlainScalarCursor, child: CstNode): boolean 
     cur.idx++;
     return true;
   }
-  // Comments terminate plain scalar continuation
   if (child.type === "comment") return false;
   return isPlainFlowScalar(child) ? mergePlainScalar(cur, child) : absorbMistokenizedLine(cur, child);
 };
 
-/**
- * Merges a fragment into the scalar: empty lines between content become
- * `\n` parts, otherwise the fragments fold to a space. `emptyLines` counts all
- * newlines including the one ending the previous line, so one is subtracted.
- */
 const pushPlainScalarPart = (cur: PlainScalarCursor, part: string, endOffset: number): void => {
-  for (let e = 0; e < cur.emptyLines - 1; e++) cur.parts.push("");
+  const emptyLinesBetween = cur.emptyLines - 1;
+  for (let e = 0; e < emptyLinesBetween; e++) cur.parts.push("");
   cur.parts.push(part);
   cur.endOffset = endOffset;
   cur.emptyLines = 0;
   cur.sawNewline = false;
 };
 
-/** True when a source column check applies and `child` sits left of the minimum continuation column. */
 const isBelowContinuationColumn = (cur: PlainScalarCursor, child: CstNode): boolean =>
   cur.minContinuationColumn !== undefined &&
   cur.sourceText !== undefined &&
   cur.sourceText !== "" &&
   lineCol(cur.sourceText, child.offset).column < cur.minContinuationColumn;
 
-/** Merges a following plain scalar unless it starts a key or sits too far left. */
 const mergePlainScalar = (cur: PlainScalarCursor, child: CstNode): boolean => {
-  // A scalar followed by `:` is a key; one followed by a block-map is the
-  // first key of a nested mapping — i.e., an implicit key, not a value
-  // continuation. EW3V: `k1: v1\n k2: v2` — k2 is a key, don't merge.
   if (hasValueSepAfterInList(cur.children, cur.idx + 1) || hasBlockMapAfterInList(cur.children, cur.idx + 1)) {
     return false;
   }
-  // Don't merge scalars below the minimum continuation indent (236B).
-  // This prevents merging e.g. "bar" (col 2) with "invalid" (col 0)
-  // when the block mapping key is at col 0.
   if (isBelowContinuationColumn(cur, child)) return false;
   pushPlainScalarPart(cur, plainSourceText(child.source), child.offset + child.length);
   cur.idx++;
   return true;
 };
 
-/**
- * The source text of a continuation line that may hold mis-tokenized plain
- * scalar text, or `undefined` when `child` cannot start one. Excludes
- * flow-scalar and block-scalar nodes — the lexer correctly identifies these
- * (e.g., quoted scalars like '' should not be merged as plain scalar
- * continuation text).
- */
 const continuationSourceText = (cur: PlainScalarCursor, child: CstNode): string | undefined =>
   cur.sawNewline && child.type !== "flow-scalar" && child.type !== "block-scalar" && cur.sourceText !== ""
     ? cur.sourceText
     : undefined;
 
-/**
- * True when a node at `childCol` sits on a continuation line. Directive nodes
- * (e.g., %YAML 1.2) inside document content are always continuations since
- * real directives only appear before `---` (XLQ9). Other nodes must be
- * indented (`column > 0`) and, when the caller specifies an implicit-mapping
- * continuation indent, at least that deep (ZVH3: `key: value\n - item1` — the
- * nested block-seq at col 1 isn't a continuation of the value at col 7+).
- */
 const isContinuationColumn = (cur: PlainScalarCursor, child: CstNode, childCol: number): boolean => {
   if (child.type === "directive") return true;
   if (cur.minContinuationColumn !== undefined && childCol < cur.minContinuationColumn) return false;
   return childCol > 0;
 };
 
-/** The index of the last non-blank character before `end`, plus one. */
 const trimTrailingBlanks = (text: string, end: number): number => {
   let contentEnd = end;
   while (contentEnd > 0 && (text[contentEnd - 1] === " " || text[contentEnd - 1] === "\t")) contentEnd--;
   return contentEnd;
 };
 
-/**
- * Non-scalar node (anchor, tag, alias, directive, block-seq, etc.): on a
- * continuation line these may be mis-tokenized plain scalar text (3MYT, FBC9,
- * XLQ9, AB8U), so the raw source line is merged and every child on it
- * skipped.
- */
+// decision: plain-continuation-lines
 const absorbMistokenizedLine = (cur: PlainScalarCursor, child: CstNode): boolean => {
   const sourceText = continuationSourceText(cur, child);
   if (sourceText === undefined) return false;
   if (!isContinuationColumn(cur, child, lineCol(sourceText, child.offset).column)) return false;
   const { lineText, lineEndOffset } = extractLineContent(sourceText, child.offset);
   if (lineText.length === 0) return false;
-  // The span end is the last non-whitespace character of the absorbed line,
-  // not the raw line end.
   pushPlainScalarPart(cur, lineText, trimTrailingBlanks(sourceText, lineEndOffset));
-  // Skip all children on this line
   cur.idx = skipChildrenOnLine(cur.children, cur.idx, lineEndOffset);
   return true;
 };
 
-// ---------------------------------------------------------------------------
-// CST scanning helpers (shared by the block/flow/document seams)
-// ---------------------------------------------------------------------------
-
-/**
- * The index of the first child from `startIdx` that is not trivia: newlines
- * and comments are always skipped, whitespace children unless `stopAt` holds
- * for them. `-1` when the list runs out.
- */
 const scanPastTrivia = (
   children: readonly CstNode[],
   ...[startIdx, stopAt]: [startIdx: number, stopAt: (whitespace: CstNode) => boolean]
@@ -891,11 +717,9 @@ const scanPastTrivia = (
   return -1;
 };
 
-/** True for a newline, a comment, or a whitespace child that `stopAt` does not hold for. */
 const isSkippedTrivia = (c: CstNode, stopAt: (whitespace: CstNode) => boolean): boolean =>
   c.type === "newline" || c.type === "comment" || (c.type === "whitespace" && !stopAt(c));
 
-/** True for the whitespace child holding a `:` value separator. */
 const isValueSepChild = (c: CstNode): boolean => c.source === ":";
 
 /**
@@ -1063,7 +887,6 @@ export function blockMapStartsWithValueSep(blockMap: CstNode): boolean {
   return first?.type === "whitespace" && first.source === ":";
 }
 
-/** True for a child whose source is not blank. */
 const isNonBlankChild = (c: CstNode): boolean => Str.trim(c.source) !== "";
 
 /**
@@ -1109,19 +932,12 @@ export const hasValueSepThroughPlainScalars: {
   return false;
 });
 
-/**
- * One step of {@link hasValueSepThroughPlainScalars}: `true` at the `:`,
- * `false` where the search stops, `undefined` to keep scanning.
- */
 const valueSepThroughPlainVerdict = (c: CstNode, sawNewline: boolean): boolean | undefined => {
   if (c.type === "newline" || c.type === "comment") return undefined;
-  // Commas delimit segments — stop looking across them
   if (c.type === "whitespace") return whitespaceSepVerdict(c.source);
-  // Only skip plain scalars on continuation lines (after a newline)
   return sawNewline && isPlainFlowScalar(c) ? undefined : false;
 };
 
-/** `true` for a `:` value separator, `false` for a `,` segment boundary, `undefined` for other whitespace. */
 const whitespaceSepVerdict = (source: string): boolean | undefined => {
   if (source === ":") return true;
   return source === "," ? false : undefined;
@@ -1316,28 +1132,13 @@ export const hasValueSepAfter: {
   return false;
 });
 
-/**
- * One step of {@link hasValueSepAfter}: `true` at the `:`, `false` at any
- * node other than whitespace or a newline, `undefined` to keep scanning.
- */
 const valueSepAfterVerdict = (c: CstNode | undefined): boolean | undefined => {
   if (c === undefined || c.type === "newline") return undefined;
   if (c.type !== "whitespace") return false;
   return c.source === ":" ? true : undefined;
 };
 
-// ---------------------------------------------------------------------------
-// Block scalar decoding
-// ---------------------------------------------------------------------------
-
-/**
- * Scan backward in the full document text from a block scalar indicator's
- * position to find the parent context indentation level n. This handles:
- * - Same-line ":" (mapping value): n = key's column indent
- * - Same-line "-" (seq entry): n = column of "-"
- * - Own-line (preceded by newline, tag, anchor): scan further back across
- *   lines to find the ":" or "-" that introduced this value
- */
+// decision: block-scalar-indentation
 const findParentIndent: {
   (fullText: string, indicatorOffset: number): number;
   (indicatorOffset: number): (fullText: string) => number;
@@ -1350,11 +1151,6 @@ const findParentIndent: {
   return 0;
 });
 
-/**
- * One backward step of {@link findParentIndent}: the parent indent once the
- * introducing `:` or `-` is found, otherwise `undefined` after moving
- * `cur.scanBack` further back.
- */
 const parentIndentStep = (text: string, cur: { scanBack: number; lineStart: number }): number | undefined => {
   if (cur.scanBack < cur.lineStart && !enterLineBackward(text, cur)) return undefined;
   const ch = text[cur.scanBack];
@@ -1362,9 +1158,9 @@ const parentIndentStep = (text: string, cur: { scanBack: number; lineStart: numb
     cur.scanBack--;
     return undefined;
   }
-  // Properties are opaque tokens: URI punctuation is never structure.
   const tokenStart = tokenStartOf(text, cur.scanBack);
-  if (text[tokenStart] === "!" || text[tokenStart] === "&") {
+  const opaquePropertyToken = text[tokenStart] === "!" || text[tokenStart] === "&";
+  if (opaquePropertyToken) {
     cur.scanBack = tokenStart - 1;
     return undefined;
   }
@@ -1373,11 +1169,6 @@ const parentIndentStep = (text: string, cur: { scanBack: number; lineStart: numb
   return indent;
 };
 
-/**
- * Moves the backward scan onto the line holding `cur.scanBack`, cutting off
- * that line's trailing comment. Returns `false` when nothing of the line is
- * left to scan.
- */
 const enterLineBackward = (text: string, cur: { scanBack: number; lineStart: number }): boolean => {
   cur.lineStart = lineStartOf(text, cur.scanBack);
   const hash = findLineCommentStart(text, cur.lineStart, cur.scanBack);
@@ -1385,17 +1176,12 @@ const enterLineBackward = (text: string, cur: { scanBack: number; lineStart: num
   return cur.scanBack >= cur.lineStart;
 };
 
-/** The start of the whitespace-delimited token that ends at `pos`. */
 const tokenStartOf = (text: string, pos: number): number => {
   let tokenStart = pos;
   while (tokenStart > 0 && !/[ \t\r\n]/.test(text[tokenStart - 1] ?? "")) tokenStart--;
   return tokenStart;
 };
 
-/**
- * The parent indent introduced by a separated `:` (the key's indent) or a
- * token-initial separated `-` (its column) at `pos`, or `undefined`.
- */
 const indicatorParentIndent = (text: string, pos: number, tokenStart: number): number | undefined => {
   const after = text[pos + 1];
   if (after !== undefined && !/[ \t\r\n]/.test(after)) return undefined;
@@ -1404,11 +1190,6 @@ const indicatorParentIndent = (text: string, pos: number, tokenStart: number): n
   return ch === "-" && pos === tokenStart ? findColOnLine(text, pos) : undefined;
 };
 
-/**
- * The index of the `#` that starts a comment on the line `[lineStart, end]`,
- * or `-1`. Quoted scalars are skipped so a `#` inside them is never a
- * comment; a quote only opens at a token start.
- */
 const findLineCommentStart = (text: string, lineStart: number, end: number): number => {
   const scan: { quote: string | undefined; tokenStart: boolean } = { quote: undefined, tokenStart: true };
   for (let i = lineStart; i <= end; i++) {
@@ -1421,22 +1202,14 @@ const findLineCommentStart = (text: string, lineStart: number, end: number): num
   return -1;
 };
 
-/** True when a `#` at `i` starts a comment: at the line start or after a space or tab. */
 const isCommentStartAt = (text: string, lineStart: number, i: number): boolean =>
   text[i] === "#" && (i === lineStart || /[ \t]/.test(text[i - 1] ?? ""));
 
-/** True for a quote character that opens a quoted scalar. */
 const isQuoteChar = (c: string | undefined): c is string => c === "'" || c === '"';
 
-/** True for a character after which a new token (and so a quote) may start. */
 const isTokenBoundaryChar = (c: string | undefined): boolean =>
   c === " " || c === "\t" || c === "[" || c === "{" || c === ",";
 
-/**
- * Advances over the character at `i` inside a quoted scalar: skips a
- * double-quoted escape or a doubled single quote, and closes the quote at its
- * delimiter. Returns the index of the last character consumed.
- */
 const advanceInQuote = (text: string, i: number, scan: { quote: string | undefined }): number => {
   const c = text[i];
   if (scan.quote === '"' && c === "\\") return i + 1;
@@ -1446,43 +1219,36 @@ const advanceInQuote = (text: string, i: number, scan: { quote: string | undefin
   return i;
 };
 
-/** The index of the first character of the line holding `pos`. */
 const lineStartOf = (text: string, pos: number): number => {
   let lineStart = pos;
   while (lineStart > 0 && text[lineStart - 1] !== "\n" && text[lineStart - 1] !== "\r") lineStart--;
   return lineStart;
 };
 
-/** Find the column of a character on its line. */
 const findColOnLine: {
   (text: string, pos: number): number;
   (pos: number): (text: string) => number;
 } = dual(2, (text: string, pos: number): number => pos - lineStartOf(text, pos));
 
-/** The index of the line break (or end of input) at or after `i`. */
 const lineEndFrom = (raw: string, i: number): number => {
   let j = i;
   while (j < raw.length && raw[j] !== "\n" && raw[j] !== "\r") j++;
   return j;
 };
 
-/** The index past the line break at `i` (CRLF as one break); `i` itself at the end of input. */
 const skipLineBreak = (raw: string, i: number): number => {
   if (i >= raw.length) return i;
   return raw[i] === "\r" && raw[i + 1] === "\n" ? i + 2 : i + 1;
 };
 
-/** The number of consecutive spaces starting at `i`. */
 const countLeadingSpaces = (raw: string, i: number): number => {
   let j = i;
   while (j < raw.length && raw[j] === " ") j++;
   return j - i;
 };
 
-/** True when `i` is at a line break or the end of input. */
 const isLineEnd = (raw: string, i: number): boolean => i >= raw.length || raw[i] === "\n" || raw[i] === "\r";
 
-/** A block scalar header: its chomping, explicit indentation digit (0 when absent), and the body start. */
 const makeBlockHeader = (
   bodyStart: number
 ): { chomp: "clip" | "strip" | "keep"; explicitIndent: number; i: number } => ({
@@ -1492,7 +1258,6 @@ const makeBlockHeader = (
 });
 type BlockHeader = ReturnType<typeof makeBlockHeader>;
 
-/** Reads one chomping or indentation indicator at `header.i`; `false` when none is there. */
 const readHeaderIndicator = (raw: string, header: BlockHeader): boolean => {
   const ch = raw[header.i];
   if (ch === "-" || ch === "+") {
@@ -1506,11 +1271,6 @@ const readHeaderIndicator = (raw: string, header: BlockHeader): boolean => {
   return true;
 };
 
-/**
- * Parses the header after the `|`/`>` indicator at `indicatorAt`: up to two
- * chomping/indentation indicators, then the rest of the header line.
- * `header.i` ends at the first body line.
- */
 const parseBlockHeader = (raw: string, indicatorAt: number): BlockHeader => {
   const header = makeBlockHeader(indicatorAt + 1);
   let count = 0;
@@ -1519,20 +1279,6 @@ const parseBlockHeader = (raw: string, indicatorAt: number): BlockHeader => {
   return header;
 };
 
-/**
- * The content indentation of a block scalar body, or `undefined` when the
- * body has no content line to auto-detect it from.
- *
- * When an explicit indentation indicator is present (e.g., |2), the digit
- * specifies additional spaces relative to the parent block indent n
- * (YAML 1.2 §8.1.1.1). The raw CST source includes the full absolute
- * indentation, so we need contentIndent = n + m. We compute n by scanning
- * backward in the full text to find the parent context (past whitespace,
- * newlines, tags, anchors, and comments to the ":" or "-" that introduces this
- * value), using the same logic as the lexer's scanBlockScalar. When
- * fullText/nodeOffset are not available, fall back to the explicit digit
- * alone (works for top-level).
- */
 const resolveContentIndent = (
   raw: string,
   header: BlockHeader,
@@ -1544,7 +1290,6 @@ const resolveContentIndent = (
   return findParentIndent(fullText, nodeOffset) + header.explicitIndent;
 };
 
-/** Auto-detects the content indentation from the first non-empty line at or after `start`. */
 const detectContentIndent = (raw: string, start: number): number | undefined => {
   let scanAhead = start;
   while (scanAhead < raw.length) {
@@ -1556,11 +1301,6 @@ const detectContentIndent = (raw: string, start: number): number | undefined => 
   return undefined;
 };
 
-/**
- * The number of empty lines a keep-chomped block scalar without content
- * retains: every trailing empty/whitespace-only line after the header, with
- * whitespace-only content at EOF counting as one empty line.
- */
 const countKeptEmptyLines = (raw: string, start: number): number => {
   let count = 0;
   let j = start;
@@ -1573,35 +1313,22 @@ const countKeptEmptyLines = (raw: string, start: number): number => {
   return count;
 };
 
-/** The index past the line break at `j`, where a non-`\n` break followed by `\n` counts as one. */
 const skipKeptBreak = (raw: string, j: number): number => (raw[j] !== "\n" && raw[j + 1] === "\n" ? j + 2 : j + 1);
 
-/**
- * The body lines of a block scalar with their content indentation removed.
- * Empty lines (at or below the content indent) are deferred as `trailing`
- * until a later content line flushes them.
- */
 const makeBlockBody = (): { lines: string[]; trailing: number } => ({ lines: [], trailing: 0 });
 type BlockBody = ReturnType<typeof makeBlockBody>;
 
-/** Appends a content line, first flushing the deferred empty lines. */
 const pushBlockLine = (body: BlockBody, line: string): void => {
   for (let k = 0; k < body.trailing; k++) body.lines.push("");
   body.trailing = 0;
   body.lines.push(line);
 };
 
-/**
- * Records a whitespace-only line. With spaces beyond the content indent
- * (`extra > 0`) it is content (not an empty line); at or below it, the line
- * is deferred as an empty line.
- */
 const pushBlankBlockLine = (body: BlockBody, extra: number): void => {
   if (extra > 0) pushBlockLine(body, Str.repeat(extra)(" "));
   else body.trailing++;
 };
 
-/** Collects the body lines from `start` until a line indented less than `contentIndent`. */
 const collectBlockBody = (raw: string, start: number, contentIndent: number): BlockBody => {
   const body = makeBlockBody();
   let i = start;
@@ -1621,20 +1348,10 @@ const collectBlockBody = (raw: string, start: number, contentIndent: number): Bl
   return body;
 };
 
-/**
- * The line breaks chomping appends after the body. The break terminating the
- * last CONTENT line exists only when there was content; a body of nothing but
- * empty lines contributes exactly one break per empty line under keep (and
- * nothing under clip — the spec excludes the final break when there are no
- * non-empty lines). Without the content gate, `>2+` over an empty body
- * counted one break too many — a value that then GREW on every format
- * round-trip; likewise `|2+\n\n` is one kept break, not two, and `|2\n\n`
- * under clip is the empty string.
- */
 const chompSuffix = (chomp: BlockHeader["chomp"], hasContent: boolean, trailing: number): string => {
   if (chomp === "strip") return "";
-  const terminator = hasContent ? "\n" : "";
-  return chomp === "keep" ? terminator + Str.repeat(trailing)("\n") : terminator;
+  const finalBreakOnlyAfterContent = hasContent ? "\n" : "";
+  return chomp === "keep" ? finalBreakOnlyAfterContent + Str.repeat(trailing)("\n") : finalBreakOnlyAfterContent;
 };
 
 function decodeBlockScalar(raw: string, fullText?: string, nodeOffset?: number): string {
@@ -1651,42 +1368,26 @@ function decodeBlockScalar(raw: string, fullText?: string, nodeOffset?: number):
   return A.join(lines, "\n") + chompSuffix(header.chomp, lines.length > 0, trailing);
 }
 
-// ---------------------------------------------------------------------------
-// Scalar node construction
-// ---------------------------------------------------------------------------
-
-/**
- * 5LLU, S98Z, W9L4: per YAML 1.2 §8.1.1, leading empty lines preceding the
- * first content line in a block scalar must satisfy l-empty(n,c) — at most
- * n leading spaces, where n is the content indent. When the indent indicator
- * is auto-detected from the first non-empty line, that line establishes n;
- * any preceding empty line with more than n spaces is malformed.
- */
 const validateBlockScalarLeadingEmpties: {
   (cst: CstNode, state: ComposerState): void;
   (state: ComposerState): (cst: CstNode) => void;
 } = dual(2, (cst: CstNode, state: ComposerState): void => {
   const raw = cst.source;
-  // Skip header line (e.g. ">", "|", "|+2", etc.)
   let i = skipLineBreak(raw, lineEndFrom(raw, 0));
-  // Walk lines, tracking offsets of leading-empty lines and their indent.
   const emptyIndents: { indent: number; offsetInRaw: number }[] = [];
   while (i < raw.length) {
     const lineStart = i;
     const spaces = countLeadingSpaces(raw, i);
     i += spaces;
-    // First non-empty line found: its indent is the content indent.
     if (!isLineEnd(raw, i)) {
       reportOverIndentedEmpty(cst, state, emptyIndents, spaces);
       return;
     }
-    // Empty (whitespace-only) line.
     emptyIndents.push({ indent: spaces, offsetInRaw: lineStart });
     i = skipLineBreak(raw, i);
   }
 });
 
-/** Reports the first leading empty line indented beyond `contentIndent`, if any. */
 const reportOverIndentedEmpty = (
   cst: CstNode,
   state: ComposerState,
@@ -1798,8 +1499,6 @@ export const makeScalar: {
   (cst: CstNode, state: ComposerState, meta?: NodeMeta): YamlScalar => {
     const style = getScalarStyle(cst);
     const isBlock = style === "block-literal" || style === "block-folded";
-    // 5LLU, S98Z, W9L4: leading empty lines in a block scalar must not be
-    // indented beyond the first content line's indent.
     if (isBlock) validateBlockScalarLeadingEmpties(cst, state);
     const rawValue = getScalarValue(cst, state.text);
     const value = resolveScalar(rawValue, [style, meta?.tag, state, meta?.tagSpan]);
@@ -1816,13 +1515,7 @@ export const makeScalar: {
   }
 );
 
-/**
- * The optional scalar fields: pending tag and anchor, comment, and block
- * scalar indicators. A block scalar's header-line comment (`| # c`) lives
- * inside the CST token, so it is captured here as the SCALAR's trailing
- * `comment` (reference `yaml` parity) rather than by the sibling attribution
- * pass.
- */
+// decision: comments-on-nodes
 const scalarDecorations = (cst: CstNode, meta: NodeMeta | undefined, isBlock: boolean) => {
   const chomp = getBlockChomp(cst);
   const blockIndent = getBlockIndent(cst);
@@ -1836,12 +1529,6 @@ const scalarDecorations = (cst: CstNode, meta: NodeMeta | undefined, isBlock: bo
   });
 };
 
-/**
- * Preserve the source representation when the resolved value is non-string
- * (number/bool/null) and the source form is not the canonical JS output —
- * e.g. `0xFFEEBB` resolves to 16772795 but should round-trip as hex, `450.00`
- * resolves to 450 but should keep the trailing zeros.
- */
 const rawSpelling = (style: ScalarStyle, rawValue: string, value: unknown): { raw?: string } =>
   style === "plain" && !P.isString(value) && shouldPreserveRaw(rawValue, value) ? { raw: rawValue } : {};
 

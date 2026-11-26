@@ -1,8 +1,3 @@
-// Tag-handle resolution and directive parsing/validation local to tags.
-// `parseDirective` lives here (not in `document.ts`) because
-// `validateTagHandlesInDocument` needs it and `document.ts` already imports
-// this module — the reverse import would be a cycle.
-
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -105,36 +100,28 @@ export const isPrimaryHandleTag = (tag: string): boolean =>
 export function resolveTagHandle(
   ...[tag, state, span]: [tag: string, state: ComposerState, span?: NodeMeta["tagSpan"]]
 ): string {
-  // Verbatim tags: !<...> — return the content as-is
-  if (Str.startsWith("!<")(tag) && Str.endsWith(">")(tag)) {
+  const isVerbatimTag = Str.startsWith("!<")(tag) && Str.endsWith(">")(tag);
+  if (isVerbatimTag) {
     return Str.slice(2, -1)(tag);
   }
-  // Secondary tag handle: !!suffix
   if (Str.startsWith("!!")(tag)) {
     const prefix = tagPrefixFor(state.tagMap, "!!");
-    // Default secondary tag handle: tag:yaml.org,2002:
-    return O.getOrElse(prefix, () => "tag:yaml.org,2002:") + decodeTagSuffix(Str.slice(2)(tag), tag, state, span);
+    return O.getOrElse(prefix, () => defaultSecondaryPrefix) + decodeTagSuffix(Str.slice(2)(tag), tag, state, span);
   }
-  // Named tag handle: !name!suffix
   const named = splitNamedHandle(tag);
   if (O.isSome(named)) {
     const [handle, suffix] = named.value;
     const prefix = tagPrefixFor(state.tagMap, handle);
     if (O.isSome(prefix)) return prefix.value + decodeTagSuffix(suffix, tag, state, span);
   }
-  // Primary tag handle: !suffix (non-empty suffix)
   if (isPrimaryHandleTag(tag)) {
-    // Default primary: local tag
-    return (
-      O.getOrElse(tagPrefixFor(state.tagMap, "!"), () => "!") + decodeTagSuffix(Str.slice(1)(tag), tag, state, span)
-    );
+    const primaryPrefix = tagPrefixFor(state.tagMap, "!");
+    return O.getOrElse(primaryPrefix, () => localTagPrefix) + decodeTagSuffix(Str.slice(1)(tag), tag, state, span);
   }
-  // Non-specific tag: ! alone
   return tag;
 }
 
-// Depth-first, document-order inventory of every `tag` CST node in `text`.
-const collectTagNodes = (text: string): CstNode[] => {
+const tagNodesInDocumentOrder = (text: string): CstNode[] => {
   const tags: CstNode[] = [];
   const stack = A.reverse(parseCSTAll(text));
   for (let node = stack.pop(); node !== undefined; node = stack.pop()) {
@@ -144,18 +131,18 @@ const collectTagNodes = (text: string): CstNode[] => {
   return tags;
 };
 
+const defaultSecondaryPrefix = "tag:yaml.org,2002:";
+const localTagPrefix = "!";
+
 const isUnflaggedTagOccurrence = (node: CstNode, tag: string, state: ComposerState): boolean =>
   node.source === tag &&
   !A.some(state.errors, (error) => error.code === "UnresolvedTag" && error.offset === node.offset);
 
-// Composition always supplies its pending tag's CST span. Standalone callers
-// retain their original next-occurrence behavior through a cached CST inventory,
-// avoiding repeated lexical scans and leaving unrelated diagnostics untouched.
 const standaloneTagSpan: {
   (tag: string, state: ComposerState): NodeMeta["tagSpan"];
   (state: ComposerState): (tag: string) => NodeMeta["tagSpan"];
 } = dual(2, (tag: string, state: ComposerState): NodeMeta["tagSpan"] => {
-  if (state.tagCstCache === undefined) state.tagCstCache = collectTagNodes(state.text);
+  if (state.tagCstCache === undefined) state.tagCstCache = tagNodesInDocumentOrder(state.text);
   return O.getOrUndefined(A.findFirst(state.tagCstCache, (node) => isUnflaggedTagOccurrence(node, tag, state)));
 });
 
@@ -223,16 +210,14 @@ export function parseDirective(source: string): O.Option<RawDirective> {
   const parts = Str.split(/\s+/)(Str.slice(1)(trimmed));
   const name = parts[0];
   if (!(name !== undefined && name !== "")) return O.none();
-  // Strip trailing comments from parameters (e.g. `%FOO bar # comment`).
-  const parameters: string[] = [];
+  const parametersBeforeComment: string[] = [];
   for (const p of parts.slice(1)) {
     if (Str.startsWith("#")(p)) break;
-    parameters.push(p);
+    parametersBeforeComment.push(p);
   }
-  return RawDirective.makeOption({ name, parameters });
+  return RawDirective.makeOption({ name, parameters: parametersBeforeComment });
 }
 
-// The handle a `%TAG` directive child declares, when it declares one.
 const declaredTagHandle = (child: CstNode): O.Option<string> =>
   child.type !== "directive"
     ? O.none()
@@ -242,7 +227,6 @@ const declaredTagHandle = (child: CstNode): O.Option<string> =>
           : O.none()
       );
 
-// Build the document-local handle set from its `%TAG` directives.
 const collectLocalHandles = (children: ReadonlyArray<CstNode>): MutableHashSet.MutableHashSet<string> => {
   const localHandles = MutableHashSet.empty<string>();
   for (const child of children) {
@@ -255,15 +239,12 @@ const collectLocalHandles = (children: ReadonlyArray<CstNode>): MutableHashSet.M
 const namedTagPattern = /^(![\w-]*!)(.*)$/;
 const namedHandlePattern = /^(![\w-]*!)/;
 
-// The percent-encoded suffix portion of a non-verbatim tag source.
-const tagSuffixOf = (src: string): string => {
+const percentEncodedSuffixOf = (src: string): string => {
   if (Str.startsWith("!!")(src)) return Str.slice(2)(src);
   const named = O.getOrNull(Str.match(namedTagPattern)(src));
   return named !== null ? A.getUnsafe(named, 2) : Str.slice(1)(src);
 };
 
-// Verbatim tags `!<...>` and `!!`-prefixed (default secondary handle)
-// and bare `!` are always valid.
 const isAlwaysDeclaredTag = (src: string): boolean =>
   Str.startsWith("!<")(src) || Str.startsWith("!!")(src) || src === "!";
 
@@ -285,9 +266,6 @@ const reportUndeclaredHandle = (
   );
 };
 
-// Plain continuation collectors can absorb tag-shaped CST tokens.
-// Composition validates only the offsets it consumed as properties.
-// Standalone CST validation retains its exhaustive default.
 const isOutsideValidationScope = (
   node: CstNode,
   state: ComposerState,
@@ -302,7 +280,7 @@ const validateTagNode = (
 ): void => {
   if (isOutsideValidationScope(node, state, mode)) return;
   const src = node.source;
-  if (mode !== "handles" && !Str.startsWith("!<")(src)) decodeTagSuffix(tagSuffixOf(src), src, state, node);
+  if (mode !== "handles" && !Str.startsWith("!<")(src)) decodeTagSuffix(percentEncodedSuffixOf(src), src, state, node);
   if (mode !== "percent") reportUndeclaredHandle(node, state, localHandles);
 };
 
@@ -343,7 +321,6 @@ export function validateTagHandlesInDocument(
   ]
 ): void {
   const localHandles = collectLocalHandles(docCst.children ?? []);
-  // Walk the doc's CST nodes for `tag` children and validate references.
   const stack: CstNode[] = [docCst];
   for (let node = stack.pop(); node !== undefined; node = stack.pop()) {
     if (node.type === "tag") validateTagNode(node, state, mode, localHandles);
