@@ -20,9 +20,7 @@ const DependencyBlock = S.Record(S.String, S.String).pipe(
 
 const isDependencyBlock = S.is(DependencyBlock);
 
-// A readonly empty record shared as the default for every absent dependency
-// record, so an omitted record round-trips as `{}` rather than `undefined`.
-const EMPTY: Readonly<Record<string, string>> = R.fromEntries([]);
+const ABSENT_DEPENDENCY_RECORD_ROUND_TRIPS_AS_EMPTY: Readonly<Record<string, string>> = R.fromEntries([]);
 
 /**
  * A model's dependency-record field: names to specifiers, defaulting to `{}`
@@ -42,8 +40,8 @@ const EMPTY: Readonly<Record<string, string>> = R.fromEntries([]);
  * @since 0.0.0
  */
 export const DependencyMap = DependencyBlock.pipe(
-  S.withDecodingDefaultKey(Effect.succeed(EMPTY)),
-  S.withConstructorDefault(Effect.succeed(EMPTY))
+  S.withDecodingDefaultKey(Effect.succeed(ABSENT_DEPENDENCY_RECORD_ROUND_TRIPS_AS_EMPTY)),
+  S.withConstructorDefault(Effect.succeed(ABSENT_DEPENDENCY_RECORD_ROUND_TRIPS_AS_EMPTY))
 );
 
 /**

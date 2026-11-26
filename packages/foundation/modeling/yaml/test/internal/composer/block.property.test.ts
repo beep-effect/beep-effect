@@ -29,7 +29,6 @@ const Sample = S.Struct({
 
 const sampleKey = YamlScalar.make({ value: "key", style: "plain", offset: 0, length: 3 });
 
-/** Hand-built CST for `- <value> # <comment>` (sequence) or `key: <value> # <comment>` (map). */
 const sampleCst = (sequence: boolean, sample: typeof Sample.Type) => {
   const prefix = sequence ? "- " : "key: ";
   const text = `${prefix}${sample.value} # ${sample.comment}\n`;
@@ -58,7 +57,6 @@ const sampleCst = (sequence: boolean, sample: typeof Sample.Type) => {
   return { text, children, cst };
 };
 
-/** The flat-map, flatten and pair-building paths agree with the composed mapping. */
 const assertFlatMapAgreement = (
   text: string,
   children: CstNode[],

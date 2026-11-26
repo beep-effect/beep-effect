@@ -114,21 +114,6 @@ export class YamlToken extends S.Opaque<YamlToken, { readonly brand: unique symb
   }).pipe($I.annoteSchema("YamlToken", { description: "A single positioned YAML lexical token." }))
 ) {}
 
-/**
- * Promote the internal lexer tokens to the public shape.
- *
- * **Details**
- *
- * `line`/`character` are DERIVED from each token's offset against a
- * line-start index rather than copied from the internal token: the internal
- * `column` is a CST-parser vocabulary that carries the construct's INDENT on
- * the synthetic `block-map-start`/`block-seq-start` markers, not the token's
- * own position — the public surface promises the position. `text` is the RAW
- * source slice for the same reason: the internal `value` is the PROCESSED
- * form on quoted scalars (content without the quotes), while the public
- * contract is byte fidelity — the corpus conformance suite pins the tokens
- * tiling the source exactly.
- */
 const promoteAll: {
   (text: string, tokens: ReadonlyArray<InternalToken.Data>): ReadonlyArray<YamlToken>;
   (tokens: ReadonlyArray<InternalToken.Data>): (text: string) => ReadonlyArray<YamlToken>;
@@ -140,25 +125,20 @@ const promoteAll: {
       lineStarts.push(i + 1);
     } else if (text[i] === "\n") lineStarts.push(i + 1);
   }
-  // Tokens arrive in offset order, so a monotone cursor resolves positions
-  // in one pass.
-  let line = 0;
+  let monotoneLineCursor = 0;
   return A.map(tokens, (token) => {
-    let nextStart = lineStarts[line + 1];
+    let nextStart = lineStarts[monotoneLineCursor + 1];
     while (nextStart !== undefined && nextStart <= token.offset) {
-      line++;
-      nextStart = lineStarts[line + 1];
+      monotoneLineCursor++;
+      nextStart = lineStarts[monotoneLineCursor + 1];
     }
-    // Hot path: tokenizing a large document materializes thousands of
-    // instances, so construction uses `new` (the engine's recorded
-    // hot-path exception) rather than the validating `make`.
     return YamlToken.make({
       kind: token.kind,
       text: Str.slice(token.offset, token.offset + token.length)(text),
       offset: token.offset,
       length: token.length,
-      line,
-      character: token.offset - A.getUnsafe(lineStarts, line),
+      line: monotoneLineCursor,
+      character: token.offset - A.getUnsafe(lineStarts, monotoneLineCursor),
     });
   });
 });

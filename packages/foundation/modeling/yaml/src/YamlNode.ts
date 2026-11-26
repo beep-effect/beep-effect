@@ -885,10 +885,6 @@ const isScalar = S.is(YamlScalar);
 const isMap = S.is(YamlMap);
 const isSeq = S.is(YamlSeq);
 
-// ── Shared method implementations ───────────────────────────────────────────
-// Module-level so the four union classes share one body each. Declared after
-// the classes; function declarations hoist.
-
 const findByPath: {
   (root: YamlNode, path: YamlPath): O.Option<YamlNode>;
   (path: YamlPath): (root: YamlNode) => O.Option<YamlNode>;
@@ -902,7 +898,6 @@ const findByPath: {
   return O.some(current);
 });
 
-/** Navigate by key — requires a YamlMap whose matching pair has a value. */
 const childByKey = (current: YamlNode, segment: string): YamlNode | undefined => {
   if (!isMap(current)) return undefined;
   const pair: O.Option<YamlPair> = A.findFirst(
@@ -912,14 +907,9 @@ const childByKey = (current: YamlNode, segment: string): YamlNode | undefined =>
   return O.isNone(pair) || pair.value.value === null ? undefined : pair.value.value;
 };
 
-/** Navigate by index — requires a YamlSeq. */
 const childByIndex = (current: YamlNode, segment: number): YamlNode | undefined =>
   isSeq(current) ? current.items[segment] : undefined;
 
-/**
- * Half-open interval test `[offset, offset + length)` so a cursor positioned
- * immediately after a node is NOT considered inside it.
- */
 const containsOffset: {
   (node: YamlNode, offset: number): boolean;
   (offset: number): (node: YamlNode) => boolean;
@@ -933,25 +923,21 @@ const findDeepestAtOffset: {
     return O.none();
   }
   const child = deepestInChildren(node, offset);
-  // This node contains the offset but no child does — this is the deepest
   return O.isSome(child) ? child : O.some(node);
 });
 
-/** The deepest node at `offset` within a pair: its key first, then its value. */
 const deepestInPair = (pair: YamlPair, offset: number): O.Option<YamlNode> => {
   const keyResult = findDeepestAtOffset(pair.key, offset);
   if (O.isSome(keyResult) || pair.value === null) return keyResult;
   return findDeepestAtOffset(pair.value, offset);
 };
 
-/** The first child (in document order) holding a deepest node at `offset`. */
 const deepestInChildren = (node: YamlNode, offset: number): O.Option<YamlNode> => {
   if (isMap(node)) return firstDeepest(node.items, (pair) => deepestInPair(pair, offset));
   if (isSeq(node)) return firstDeepest(node.items, (item) => findDeepestAtOffset(item, offset));
   return O.none<YamlNode>();
 };
 
-/** The first `Some` produced by `search` over `children`, in order. */
 const firstDeepest = <C>(children: ReadonlyArray<C>, search: (child: C) => O.Option<YamlNode>): O.Option<YamlNode> => {
   for (const child of children) {
     const result = search(child);
@@ -968,12 +954,6 @@ const pathToNode: {
   return descendToNode(root, target, path) ? O.some(path) : O.none();
 });
 
-/**
- * Depth-first identity search accumulating mapping-key/sequence-index
- * segments. Only scalar string keys produce navigable segments (matching
- * `find`); descendants reachable only through complex keys are not
- * addressable by path.
- */
 const descendToNode: {
   (node: YamlNode, target: YamlNode, path: Array<string | number>): boolean;
   (target: YamlNode, path: Array<string | number>): (node: YamlNode) => boolean;
@@ -1007,7 +987,6 @@ const descendThroughItems = (
   return false;
 };
 
-/** Push `segment`, search `node`, and pop the segment again on a miss. */
 const descendWithSegment = (
   node: YamlNode,
   target: YamlNode,
@@ -1022,7 +1001,6 @@ const descendWithSegment = (
   return false;
 };
 
-/** Search one pair; only scalar string keys produce navigable segments. */
 const descendThroughPair = (pair: YamlPair, target: YamlNode, path: Array<string | number>): boolean => {
   if (!isScalar(pair.key) || !P.isString(pair.key.value)) return false;
   if (pair.key === target) {
@@ -1032,7 +1010,6 @@ const descendThroughPair = (pair: YamlPair, target: YamlNode, path: Array<string
   return pair.value !== null && descendWithSegment(pair.value, target, path, pair.key.value);
 };
 
-/** Set a mapping key as an own data property — `__proto__` included. */
 const setOwnProperty: {
   (obj: Record<string, unknown>, key: string, value: unknown): void;
   (key: string, value: unknown): (obj: Record<string, unknown>) => void;
@@ -1099,14 +1076,6 @@ export class AliasExpansionBudgetExceeded extends S.TaggedError<
   override readonly name = "AliasExpansionBudgetExceeded";
 }
 
-/**
- * Multiplier converting a `maxAliasCount` budget into a cap on the number of
- * output nodes materialized *through alias expansion*. Deliberately generous:
- * alias-free content never ticks the counter (see {@link nodeToValue}), so a
- * large but benign document — or a single alias referencing a large alias-free
- * block — stays far under the cap, while an exponential alias chain accumulates
- * across the shared budget and trips it long before the heap is exhausted.
- */
 const ALIAS_EXPANSION_FACTOR = 10_000;
 
 /**
@@ -1126,10 +1095,8 @@ export function aliasExpansionLimit(maxAliasCount: number): number {
   return (maxAliasCount + 1) * ALIAS_EXPANSION_FACTOR;
 }
 
-/** Default cap for a direct `toValue()` call, matching the default `maxAliasCount` of 100. */
 const DEFAULT_ALIAS_EXPANSION_LIMIT = aliasExpansionLimit(100);
 
-/** Mutable counter carried through one value-extraction walk. */
 const ExpansionBudget = S.Struct({
   count: S.Finite.pipe(
     $I.annoteKey("ExpansionBudget.count", {
@@ -1149,7 +1116,6 @@ const ExpansionBudget = S.Struct({
 );
 type ExpansionBudget = Omit<typeof ExpansionBudget.Type, "count"> & Mutable<Pick<typeof ExpansionBudget.Type, "count">>;
 
-/** A fresh default budget for a direct `toValue()` call. */
 function defaultBudget(): ExpansionBudget {
   return { count: 0, limit: DEFAULT_ALIAS_EXPANSION_LIMIT };
 }
@@ -1205,10 +1171,10 @@ const nodeToValue: {
     budget: ExpansionBudget = defaultBudget(),
     counting?: boolean,
     ancestors: ReadonlyArray<YamlNode> = []
-  ): unknown => (node === null ? null : walkValue(node, { anchors, budget, counting: counting === true, ancestors }))
+  ): unknown =>
+    node === null ? null : walkTypedNode(node, { anchors, budget, counting: counting === true, ancestors })
 );
 
-/** The shared state of one value-extraction walk. */
 type ValueWalk = {
   readonly anchors: MutableHashMap.MutableHashMap<string, YamlNode> | undefined;
   readonly budget: ExpansionBudget;
@@ -1216,12 +1182,6 @@ type ValueWalk = {
   readonly ancestors: ReadonlyArray<YamlNode>;
 };
 
-/**
- * Count only nodes materialized *through* an alias expansion (counting=true).
- * Alias-free content never ticks the counter, so large but benign documents
- * are not falsely rejected; an exponential alias chain accumulates across the
- * shared budget and trips the cap before the heap is exhausted.
- */
 const tickBudget = (budget: ExpansionBudget): void => {
   budget.count++;
   if (budget.count > budget.limit) {
@@ -1231,22 +1191,13 @@ const tickBudget = (budget: ExpansionBudget): void => {
   }
 };
 
-/**
- * Register this node's anchor incrementally so aliases resolve to the most
- * recent anchor at the point of reference (not the last definition in the
- * entire document).
- */
 const registerLiveAnchor = (walk: ValueWalk, node: YamlNode): void => {
   if (walk.counting || walk.anchors === undefined || node._tag === "YamlAlias" || node.anchor === undefined) return;
   MutableHashMap.set(walk.anchors, node.anchor, node);
 };
 
-/**
- * The input is already a typed AST node. Dispatch on its schema tag here;
- * revalidating recursive schemas for every expanded node makes the budget
- * guard itself expensive under coverage instrumentation.
- */
-const walkValue = (node: YamlNode, walk: ValueWalk): unknown => {
+// decision: value-walk-dispatches-on-node-tag
+const walkTypedNode = (node: YamlNode, walk: ValueWalk): unknown => {
   if (walk.counting) tickBudget(walk.budget);
   registerLiveAnchor(walk, node);
   if (node._tag === "YamlScalar") return node.value;
@@ -1256,16 +1207,13 @@ const walkValue = (node: YamlNode, walk: ValueWalk): unknown => {
   return aliasToValue(node, walk);
 };
 
-/** The own-property key a mapping key extracts to. */
-const pairKeyString = (key: YamlNode, walk: ValueWalk): string => {
+const pairKeyRegisteringAnchor = (key: YamlNode, walk: ValueWalk): string => {
   if (key._tag === "YamlScalar") {
-    // Register key anchor before resolving value
     if (!walk.counting && walk.anchors !== undefined && key.anchor !== undefined) {
       MutableHashMap.set(walk.anchors, key.anchor, key);
     }
     return String(key.value ?? "");
   }
-  // Resolving an alias key uses the same historical binding and cycle guard.
   if (key._tag === "YamlAlias") return String(nodeToValue(key, walk.anchors, walk.budget, false, walk.ancestors) ?? "");
   return "";
 };
@@ -1273,7 +1221,7 @@ const pairKeyString = (key: YamlNode, walk: ValueWalk): string => {
 const mapToValue = (node: YamlMap, walk: ValueWalk): Record<string, unknown> => {
   const result: Record<string, unknown> = {};
   for (const pair of node.items) {
-    const key = pairKeyString(pair.key, walk);
+    const key = pairKeyRegisteringAnchor(pair.key, walk);
     setOwnProperty(result, key, nodeToValue(pair.value, walk.anchors, walk.budget, walk.counting, walk.ancestors));
   }
   return result;
@@ -1282,12 +1230,11 @@ const mapToValue = (node: YamlMap, walk: ValueWalk): Record<string, unknown> => 
 const aliasToValue = (node: YamlAlias, walk: ValueWalk): unknown => {
   const resolved = node.resolveTarget(walk.anchors, walk.budget);
   if (resolved === undefined) return null;
-  // Identity is essential here: structurally equal sibling nodes are not cycles.
-  if (A.some(walk.ancestors, (ancestor) => ancestor === resolved)) {
+  const isIdentityCycle = A.some(walk.ancestors, (ancestor) => ancestor === resolved);
+  if (isIdentityCycle) {
     throw AliasExpansionBudgetExceeded.make({
       message: `Alias expansion exceeded budget of ${walk.budget.limit} nodes (cyclic alias)`,
     });
   }
-  // Historical expansion reuses bindings without changing the live anchor map.
   return nodeToValue(resolved, walk.anchors, walk.budget, true, [...walk.ancestors, resolved]);
 };

@@ -1,14 +1,7 @@
 import { $RepoWorkspacesId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
-// What the config-dependency ladder (`configDependencyResolution.ts`) and its
-// fetch rung (`configDependencyFetch.ts`) share: the typed `hooks` failure,
-// the absent-or-typed filesystem read, the manifest-version reading and the
-// message helpers. It imports neither of them, so both can import it without
-// a cycle.
-//
-// Every read goes through the caller's `FileSystem` and `Path` services. The
-// store is a real directory, so a replaying layer needs a real `FileSystem`;
-// a virtual one simply finds no store.
+// decision: shared-internal-leaves
+// decision: config-dependency-reads-through-caller-filesystem
 
 import { CatalogAssemblyError } from "@beep/npm-spec/CatalogAssemblyError";
 import * as O from "@beep/utils/Option";
@@ -89,7 +82,6 @@ export const messageOf = (cause: unknown): string => (cause instanceof Error ? c
 export const sideLabel = (side: HookReplayContext.Encoded): string =>
   side.ref === undefined ? "the working tree" : `ref ${side.ref}`;
 
-/** Whether a filesystem failure means "nothing there" (as opposed to a real IO failure). */
 const isAbsent = (error: PlatformError.PlatformError): boolean =>
   error.reason._tag === "NotFound" || (P.hasProperty(error.cause, "code") && error.cause.code === "ENOTDIR");
 

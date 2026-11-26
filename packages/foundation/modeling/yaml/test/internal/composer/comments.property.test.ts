@@ -9,9 +9,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
-// Restrict generated document comments to printable ASCII and tabs; YAML
-// rejects control characters. Hashes and spaces-only spellings remain legal.
-const tokenText = Str.replaceAll(/[^\x20-\x7e\t]/g, " ");
+const withoutYamlRejectedControls = Str.replaceAll(/[^\x20-\x7e\t]/g, " ");
 
 describe("composer comment property floor", () => {
   it.effect.prop(
@@ -43,7 +41,7 @@ describe("composer comment property floor", () => {
     [Arbitrary.schema(S.String)],
     ([input]) =>
       Effect.gen(function* () {
-        const raw = tokenText(input);
+        const raw = withoutYamlRejectedControls(input);
         const stored = rawCommentText(`#${raw}`);
         const rendered = `#${/^ +$/.test(stored) ? Str.slice(0, -1)(stored) : stored}`;
         assert.strictEqual(rendered, `#${raw}`);
@@ -65,8 +63,8 @@ describe("composer comment property floor", () => {
     [Arbitrary.schema(S.String), Arbitrary.schema(S.String)],
     ([a, b]) =>
       Effect.gen(function* () {
-        const first = tokenText(a);
-        const second = tokenText(b);
+        const first = withoutYamlRejectedControls(a);
+        const second = withoutYamlRejectedControls(b);
         const joined = joinComments(rawCommentText(`#${first}`), rawCommentText(`#${second}`));
         assert.strictEqual(joined, `${rawCommentText(`#${first}`)}\n${rawCommentText(`#${second}`)}`);
         const source = `#${first}\n#${second}\nkey: 1\n`;

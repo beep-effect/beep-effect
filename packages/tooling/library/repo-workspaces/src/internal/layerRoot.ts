@@ -1,16 +1,8 @@
 import { $RepoWorkspacesId } from "@beep/identity/packages";
-import { dual } from "effect/Function";
-import * as S from "effect/Schema";
-// The layer-bound root lookup every root-consuming service shares.
-//
-// `WorkspaceDiscovery`, `LockfileReader`, `WorkspaceCatalogs` and
-// `WorkspaceSnapshots` each resolve their workspace root from a layer-level
-// `cwd` and optional `stopAt`. One implementation means the four cannot
-// disagree about which root a layer's options name — discovery refusing an
-// enclosing workspace while the lockfile and catalog reads adopt it.
-
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { WorkspaceRootNotFoundError, WorkspaceRootShape } from "../WorkspaceRoot.ts";
 
 const $I = $RepoWorkspacesId.create("internal/layerRoot");

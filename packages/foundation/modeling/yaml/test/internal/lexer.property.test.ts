@@ -57,9 +57,8 @@ describe("lexer property floor", () => {
           end = token.offset + token.length;
           assert.isAtMost(end, source.length);
         }
-        // Error recovery may consume separation spaces before emitting an error.
-        // Complete raw-span fidelity applies to inputs without lexical errors.
-        if (A.every(tokens, (token) => token.kind !== "error")) {
+        const noRecoveryConsumedSeparationSpaces = A.every(tokens, (token) => token.kind !== "error");
+        if (noRecoveryConsumedSeparationSpaces) {
           const rendered = reconstruct(source, tokens);
           assert.strictEqual(render(rendered), rendered);
           assert.deepStrictEqual(lexAll(rendered), tokens);

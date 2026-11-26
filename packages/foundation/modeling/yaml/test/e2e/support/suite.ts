@@ -17,15 +17,9 @@ import * as Str from "effect/String";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** Glob-key prefix shared by every suite fixture. */
 const SUITE_PREFIX = "../../fixtures/yaml-test-suite/";
 
-/**
- * Raw text of every case file, keyed by its glob path. The four-character
- * top-level class keeps the `name/` and `tags/` symlink indexes out, exactly as
- * the former directory walk skipped symlinked entries.
- */
-const suiteFiles: Record<string, string> = {
+const caseFilesWithoutSymlinkIndexes: Record<string, string> = {
   ...import.meta.glob<string>(
     "../../fixtures/yaml-test-suite/[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]/{===,in.yaml,in.json,out.yaml,test.event,error}",
     { query: "?raw", import: "default", eager: true }
@@ -56,15 +50,11 @@ export interface TestCase {
   yaml: string;
 }
 
-/** Result of parsing a JSON fixture file. */
 interface ParsedJson {
-  /** True if the file contained multiple top-level JSON values. */
   isMultiDocument: boolean;
-  /** The parsed value: single value for single-doc, array for multi-doc. */
   value: unknown;
 }
 
-/** Mutable scanner state for a composite (object/array) JSON value. */
 interface CompositeScan {
   depth: number;
   inString: boolean;
@@ -85,7 +75,6 @@ function stepInString(state: CompositeScan, c: string | undefined): void {
   else if (c === '"') state.inString = false;
 }
 
-/** Advance the scanner over one character outside strings; true when the value closes. */
 function stepOutsideString(state: CompositeScan, c: string | undefined): boolean {
   if (c === '"') {
     state.inString = true;
@@ -100,7 +89,6 @@ function stepOutsideString(state: CompositeScan, c: string | undefined): boolean
   return state.depth === 0;
 }
 
-/** End index (exclusive) of the object/array starting at `start`, or -1 when unterminated. */
 function compositeEnd(src: string, start: number): number {
   const state: CompositeScan = { depth: 0, inString: false, isEscaped: false };
   for (let i = start; i < src.length; i++) {
@@ -111,7 +99,6 @@ function compositeEnd(src: string, start: number): number {
   return -1;
 }
 
-/** End index (exclusive) of the quoted string starting at `start`. */
 function quotedEnd(src: string, start: number): number {
   let i = start + 1;
   while (i < src.length) {
@@ -126,14 +113,12 @@ function quotedEnd(src: string, start: number): number {
   return i;
 }
 
-/** End index (exclusive) of an unquoted token: number, true, false, null. */
 function bareEnd(src: string, start: number): number {
   let i = start;
   while (i < src.length && !isWhitespace(src, i)) i++;
   return i;
 }
 
-/** End index (exclusive) of the JSON value starting at `start`, or -1 when unterminated. */
 function valueEnd(src: string, start: number): number {
   const ch = src[start];
   if (ch === "{" || ch === "[") return compositeEnd(src, start);
@@ -141,11 +126,6 @@ function valueEnd(src: string, start: number): number {
   return bareEnd(src, start);
 }
 
-/**
- * Parse a JSON file that may contain multiple top-level JSON values
- * (one per YAML document in multi-document streams).
- * Returns a single value if there's only one, or an array of values for multi-doc.
- */
 function parseMultiJson(text: string): ParsedJson {
   const values: unknown[] = [];
   const src = Str.trim(text);
@@ -165,10 +145,9 @@ function parseMultiJson(text: string): ParsedJson {
   };
 }
 
-/** Raw text of `file` inside the case directory `id`, when the file exists. */
-const caseFile = (id: string, file: string): O.Option<string> => R.get(suiteFiles, `${SUITE_PREFIX}${id}/${file}`);
+const caseFile = (id: string, file: string): O.Option<string> =>
+  R.get(caseFilesWithoutSymlinkIndexes, `${SUITE_PREFIX}${id}/${file}`);
 
-/** Build the test case whose files live under the case directory `id`. */
 function loadCase(id: string, yaml: string): TestCase {
   const parsed = O.map(caseFile(id, "in.json"), parseMultiJson);
   return {
@@ -191,7 +170,7 @@ function loadCase(id: string, yaml: string): TestCase {
  */
 export function loadAllTestCases(): TestCase[] {
   const cases = A.map(
-    A.filter(R.toEntries(suiteFiles), ([path]) => Str.endsWith("/in.yaml")(path)),
+    A.filter(R.toEntries(caseFilesWithoutSymlinkIndexes), ([path]) => Str.endsWith("/in.yaml")(path)),
     ([path, text]) => loadCase(Str.slice(SUITE_PREFIX.length, -"/in.yaml".length)(path), text)
   );
   if (A.isReadonlyArrayEmpty(cases)) {
