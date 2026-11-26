@@ -364,8 +364,6 @@ export class EntityNode extends S.Opaque<EntityNode, { readonly brand: unique sy
 ) {}
 
 /**
- * Lemmatized (canonical) form of a token.
- *
  * **Example** (Build lemma annotation node)
  *
  * ```ts import.meta.vitest name="Build lemma annotation node"

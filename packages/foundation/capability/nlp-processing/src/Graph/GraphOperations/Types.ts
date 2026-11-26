@@ -537,8 +537,6 @@ export class ValidationResult extends S.Opaque<ValidationResult, { readonly bran
 // =============================================================================
 
 /**
- * Operation category vocabulary describing a graph operation's shape.
- *
  * **Example** (Check expansion category tag)
  *
  * ```ts import.meta.vitest name="Check expansion category tag"
