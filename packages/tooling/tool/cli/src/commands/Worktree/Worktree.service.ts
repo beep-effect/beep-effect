@@ -1936,9 +1936,9 @@ const unlockFencedWorktree = Effect.fn("WorktreeRemovalService.unlockFencedWorkt
     );
 });
 
-const liftRegisteredLock = Effect.fn("WorktreeRemovalService.liftRegisteredLock")(function* (
+const currentLockReason = Effect.fn("WorktreeRemovalService.currentLockReason")(function* (
   request: WorktreeRemovalRequest
-): Effect.fn.Return<void, WorktreeCommandError, Git | Path.Path> {
+): Effect.fn.Return<O.Option<string>, WorktreeCommandError, Git | Path.Path> {
   const git = yield* Git;
   const path = yield* Path.Path;
   const entries = yield* git
@@ -1951,17 +1951,59 @@ const liftRegisteredLock = Effect.fn("WorktreeRemovalService.liftRegisteredLock"
         )
       )
     );
-  yield* O.match(registeredLockReason(entries, path.resolve, path.resolve(request.targetPath)), {
+  return registeredLockReason(entries, path.resolve, path.resolve(request.targetPath));
+});
+
+const unlockUnlessAlreadyLifted = (request: WorktreeRemovalRequest) =>
+  unlockFencedWorktree(request).pipe(
+    Effect.catch((unlockFailure) =>
+      currentLockReason(request).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.void,
+            onSome: () => Effect.fail(unlockFailure),
+          })
+        )
+      )
+    )
+  );
+
+const liftLockWhen = Effect.fn("WorktreeRemovalService.liftLockWhen")(function* (
+  request: WorktreeRemovalRequest,
+  lifts: (reason: string) => boolean
+): Effect.fn.Return<void, WorktreeCommandError, Git | Path.Path> {
+  const reason = yield* currentLockReason(request);
+  yield* O.match(O.filter(reason, lifts), {
     onNone: () => Effect.void,
-    onSome: () => unlockFencedWorktree(request),
+    onSome: () => unlockUnlessAlreadyLifted(request),
   });
 });
 
-const releaseFenceLock = (request: WorktreeRemovalRequest, fenceOwnsLock: boolean) =>
-  Bool.match(fenceOwnsLock, {
-    onFalse: () => Effect.void,
-    onTrue: () => liftRegisteredLock(request),
+const liftRegisteredLock = (request: WorktreeRemovalRequest) => liftLockWhen(request, () => true);
+
+const releaseOwnedFenceLock = (request: WorktreeRemovalRequest, ownedLock: O.Option<string>) =>
+  O.match(ownedLock, {
+    onNone: () => Effect.void,
+    onSome: (owned) => liftLockWhen(request, (reason) => reason === owned),
   });
+
+const assertRegistrationSurvivedFence = Effect.fn("WorktreeRemovalService.assertRegistrationSurvivedFence")(function* (
+  request: WorktreeRemovalRequest,
+  adminDir: string
+): Effect.fn.Return<void, WorktreeCommandError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const survived = yield* fs.exists(adminDir).pipe(Effect.orElseSucceed(() => false));
+  yield* Bool.match(survived, {
+    onTrue: () => Effect.void,
+    onFalse: () =>
+      Effect.fail(
+        WorktreeCommandError.make({
+          message: `The git registration of ${request.targetPath} (${adminDir}) was removed while the checkout was fenced: a git worktree prune that began before the fence lock deleted it. The checkout is restored, but git no longer tracks it; register it again with git worktree add or remove it by hand.`,
+          path: request.targetPath,
+        })
+      ),
+  });
+});
 
 const refuseConcurrentFence = (request: WorktreeRemovalRequest, existingLock: O.Option<string>) =>
   O.match(O.filter(existingLock, Str.startsWith(FENCE_LOCK_REASON_PREFIX)), {
@@ -2468,7 +2510,8 @@ const nameInotifyWatchers = (
 const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(function* (
   request: WorktreeRemovalRequest,
   fenced: WorktreeRemovalRequest,
-  journalStore: AttemptJournalStoreLocation
+  journalStore: AttemptJournalStoreLocation,
+  adminDir: string
 ): Effect.fn.Return<
   ArchiveRemovalPlan & {
     readonly head: GitObjectId;
@@ -2489,6 +2532,7 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   // An inotify watcher holds no handle at all, so it never blocks; its walk of
   // the renamed tree, which does open directories, is waited out (`settleFence`).
   const { quietShells } = yield* assertQuiescentFence(request, fenced.targetPath, O.none());
+  yield* assertRegistrationSurvivedFence(request, adminDir);
   const changes = yield* inspectRemovalChanges(
     fenced.targetPath,
     preservationErrorAdapter("inspect-residue", `Failed to inspect ${fenced.targetPath}.`, fenced.targetPath)
@@ -2557,10 +2601,24 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   const retirePath = `${request.targetPath}.retiring-${stamp}`;
   const existingLock = yield* validateRemovalRequest(request);
   yield* refuseConcurrentFence(request, existingLock);
-  const fenceOwnsLock = O.isNone(existingLock);
-  yield* Bool.match(fenceOwnsLock, {
-    onFalse: () => Effect.void,
-    onTrue: () => lockFencedWorktree(request, `${FENCE_LOCK_REASON_PREFIX}${retirePath}`),
+  const git = yield* Git;
+  const adminDir = yield* git
+    .gitDir(request.targetPath)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(
+          GitCommand.gitDir(),
+          worktreeGitErrorAdapter(`Could not resolve the git registration of ${request.targetPath}.`)
+        )
+      )
+    );
+  const ownedLock = O.match(existingLock, {
+    onNone: () => O.some(`${FENCE_LOCK_REASON_PREFIX}${retirePath}`),
+    onSome: () => O.none<string>(),
+  });
+  yield* O.match(ownedLock, {
+    onNone: () => Effect.void,
+    onSome: (reason) => lockFencedWorktree(request, reason),
   });
   yield* fs.rename(request.targetPath, retirePath).pipe(
     Effect.mapError((cause) =>
@@ -2568,18 +2626,23 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
     ),
     Effect.tapError(() =>
       fs.exists(request.targetPath).pipe(
-        Effect.flatMap((inPlace) => releaseFenceLock(request, fenceOwnsLock && inPlace)),
+        Effect.flatMap((inPlace) =>
+          releaseOwnedFenceLock(
+            request,
+            O.filter(ownedLock, () => inPlace)
+          )
+        ),
         Effect.ignore
       )
     )
   );
   const fenced = WorktreeRemovalRequest.make({ ...request, targetPath: retirePath });
-  const planned = yield* Effect.exit(fencedArchivePlan(request, fenced, journalStore));
+  const planned = yield* Effect.exit(fencedArchivePlan(request, fenced, journalStore, adminDir));
   if (Exit.isFailure(planned)) {
     // A refusal inside the fence restores the checkout exactly where it was; a failed
     // restore must name the fenced path loudly so nothing is presumed lost.
     const lateWrites = yield* restoreFencedCheckout(request.targetPath, retirePath, stamp);
-    const released = yield* Effect.exit(releaseFenceLock(request, fenceOwnsLock));
+    const released = yield* Effect.exit(releaseOwnedFenceLock(request, ownedLock));
     const refusal = Exit.isFailure(released) ? Cause.combine(planned.cause, released.cause) : planned.cause;
     return yield* O.match(lateWrites, {
       onNone: () => Effect.failCause(refusal),
@@ -2606,7 +2669,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // stays open, which no one-time check on a POSIX tree can close.
   const reQuiescent = yield* Effect.result(assertQuiescentFence(request, retirePath, O.some(quietShells)));
   if (Result.isFailure(reQuiescent)) {
-    yield* releaseFenceLock(request, fenceOwnsLock);
+    yield* releaseOwnedFenceLock(request, ownedLock);
     yield* pruneWorktreeMetadata(request.mainCheckout);
     return yield* WorktreeCommandError.make({
       message: `Archived ${request.targetPath}, but a process attached to it, or a desktop Terminal panel shell standing in it became active, during capture; the fenced copy is preserved at ${retirePath} rather than deleted so no late write is lost.`,

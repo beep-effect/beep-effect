@@ -22,6 +22,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -268,7 +269,7 @@ const quickSettle = (attempts: number) => WorktreeFenceSettlePolicy.make({ inter
 const concurrentPruneTable = Effect.fn("WorktreeRemoveFenceTest.concurrentPruneTable")(function* (
   repoRoot: string,
   lane: string,
-  unlockFromOutsideAfterPrune: boolean
+  gitCommandsAfterPrune: ReadonlyArray<ReadonlyArray<string>>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -287,10 +288,12 @@ const concurrentPruneTable = Effect.fn("WorktreeRemoveFenceTest.concurrentPruneT
     );
     const survived = yield* fs.exists(adminDir);
     yield* Ref.set(adminDirAfterPrune, O.some(survived));
-    yield* runGit(repoRoot, ["worktree", "unlock", lane]).pipe(
+    yield* Effect.forEach(gitCommandsAfterPrune, (args) => runGit(repoRoot, args), {
+      concurrency: 1,
+      discard: true,
+    }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-      Effect.provideService(Scope.Scope, scope),
-      Effect.when(Effect.succeed(unlockFromOutsideAfterPrune))
+      Effect.provideService(Scope.Scope, scope)
     );
   }).pipe(Effect.orDie);
   const table: ProcessTableShape = {
@@ -632,7 +635,7 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
     withScratchRepo(({ repoRoot, lane }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const race = yield* concurrentPruneTable(repoRoot, lane, false);
+        const race = yield* concurrentPruneTable(repoRoot, lane, []);
         const output = yield* captureOutput(remove(repoRoot)).pipe(Effect.provideService(ProcessTable, race.table));
         const raceSurvived = yield* Ref.get(race.adminDirAfterPrune);
         assertSome(raceSurvived, true);
@@ -650,7 +653,7 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
     withScratchRepo(({ repoRoot, lane }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const race = yield* concurrentPruneTable(repoRoot, lane, false);
+        const race = yield* concurrentPruneTable(repoRoot, lane, []);
         const holder = yield* spawnSleepIn(lane);
         const error = yield* Effect.flip(remove(repoRoot)).pipe(
           Effect.provideService(ProcessTable, race.table),
@@ -676,7 +679,7 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         yield* runGit(repoRoot, ["worktree", "lock", "--reason", "operator hold", lane]);
-        const refusedRace = yield* concurrentPruneTable(repoRoot, lane, false);
+        const refusedRace = yield* concurrentPruneTable(repoRoot, lane, []);
         const holder = yield* spawnSleepIn(lane);
         const error = yield* Effect.flip(remove(repoRoot)).pipe(
           Effect.provideService(ProcessTable, refusedRace.table),
@@ -688,7 +691,7 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         const heldListing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
         expect(heldListing).toContain("locked operator hold");
         yield* holder.exitCode.pipe(Effect.ignore);
-        const retiredRace = yield* concurrentPruneTable(repoRoot, lane, false);
+        const retiredRace = yield* concurrentPruneTable(repoRoot, lane, []);
         const output = yield* captureOutput(remove(repoRoot)).pipe(
           Effect.provideService(ProcessTable, retiredRace.table)
         );
@@ -705,7 +708,7 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
     withScratchRepo(({ repoRoot, lane }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const race = yield* concurrentPruneTable(repoRoot, lane, true);
+        const race = yield* concurrentPruneTable(repoRoot, lane, [["worktree", "unlock", lane]]);
         const output = yield* captureOutput(remove(repoRoot)).pipe(Effect.provideService(ProcessTable, race.table));
         expect(output).toContain(`Worktree retirement complete: ${lane}`);
         expect(output).toContain("branch deleted: claude/lane");
@@ -764,6 +767,52 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         expect(failureMessage(error)).toContain("the fenced copy is preserved");
         const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
         expect(listing).toContain("locked operator hold");
+      })
+    )
+  );
+
+  it.effect("keeps a lock an operator swapped in for the fence lock when a refusal restores the lane", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const race = yield* concurrentPruneTable(repoRoot, lane, [
+          ["worktree", "unlock", lane],
+          ["worktree", "lock", "--reason", "operator hold", lane],
+        ]);
+        const holder = yield* spawnSleepIn(lane);
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, race.table),
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        expect(failureMessage(error)).toContain("still hold it");
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).toContain("locked operator hold");
+      })
+    )
+  );
+
+  it.effect("refuses and restores the lane loudly when a prune already in flight removed its registration", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const adminDir = path.join(repoRoot, ".git", "worktrees", path.basename(lane));
+        const removedOnce = yield* Ref.make(false);
+        const table: ProcessTableShape = {
+          ...procProcessTable,
+          pids: Ref.getAndSet(removedOnce, true).pipe(
+            Effect.flatMap((removed) =>
+              Bool.match(removed, {
+                onTrue: () => Effect.void,
+                onFalse: () => fs.remove(adminDir, { recursive: true }).pipe(Effect.orDie),
+              })
+            ),
+            Effect.andThen(procProcessTable.pids)
+          ),
+        };
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(Effect.provideService(ProcessTable, table));
+        expect(failureMessage(error)).toContain("was removed while the checkout was fenced");
+        const laneLeft = yield* fs.exists(lane);
+        expect(laneLeft).toBe(true);
       })
     )
   );
