@@ -224,7 +224,7 @@
     "sonner": "^2.0.8",
     "sql-formatter": "^15.10.0",
     "storybook": "^10.6.9",
-    "statelyai": "0.23.5",
+    "statelyai": "0.21.14",
     "string-width": "9.0.0",
     "syncpack": "15.3.4",
     "tailwind-merge": "^3.7.1",
