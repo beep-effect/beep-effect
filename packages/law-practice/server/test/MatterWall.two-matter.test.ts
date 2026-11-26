@@ -569,6 +569,7 @@ const graphReads = Effect.fn("TwoMatterTest.graphReads")(function* () {
   const found = yield* toolRows("kg_find", { query: "shared" });
   const provenance = yield* toolRows("kg_provenance", { natural_key: digests.shared });
   const betaProvenance = yield* toolRows("kg_provenance", { natural_key: digests.betaOnly });
+  const bundleStatus = yield* toolRows("kg_provenance", {});
   const bareFamily = yield* toolRows("kg_docket_family", { family });
   const matters = yield* toolRows("kg_matter_lookup", { reference: family });
   const candidate = yield* toolRows("kg_candidate_claims", {});
@@ -582,6 +583,7 @@ const graphReads = Effect.fn("TwoMatterTest.graphReads")(function* () {
     found: A.dedupe(columnValues(found, "naturalKey")),
     provenance: columnValues(provenance, "naturalKey"),
     betaProvenance: columnValues(betaProvenance, "naturalKey"),
+    bundleStatusCounted: A.map(bundleStatus, P.hasProperty("count")),
     families: A.dedupe(columnValues(bareFamily, "family")),
     matters: A.dedupe(columnValues(matters, "familyKey")),
     candidates: A.sort(A.filter(columnValues(candidate, "claimText"), P.isString), Order.String),
@@ -783,6 +785,7 @@ describe("MatterWall two matters with identical bytes", () => {
         expect(underA.matters).toEqual([`${clients.a}.${family}`]);
         expect(underA.provenance).toEqual([`${digests.shared}@${clients.a}.${family}US01`]);
         expect(underA.betaProvenance).toEqual([]);
+        expect(underA.bundleStatusCounted).toEqual([false]);
         expect(A.some(underA.found, (key) => P.isString(key) && Str.includes(`${clients.b}.`)(key))).toBe(false);
         expect(underA.candidates).toEqual(["claim shared-a"]);
         expect(underA.found).not.toEqual([]);

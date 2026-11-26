@@ -64,7 +64,7 @@ import {
   decodePracticeKgGraphRows,
   toToolRecord,
 } from "./PracticeKg.rows.ts";
-import { practiceKgReadScopeOf } from "./PracticeKg.wall.ts";
+import { PracticeKgReadScope, practiceKgReadScopeOf } from "./PracticeKg.wall.ts";
 import type {
   PracticeKgCorrespondentLink,
   PracticeKgCorrespondentLookupResult,
@@ -611,7 +611,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             const statusRow = PracticeKgGraphToolRow.make({
               attributionSource: null,
               client: null,
-              count: bundle.manifest.counts.nodes,
+              count: PracticeKgReadScope.match(scope, {
+                Unwalled: () => bundle.manifest.counts.nodes,
+                Walled: () => null,
+              }),
               docketFamily: null,
               epistemicStatus: spineStatus,
               iri: "",
