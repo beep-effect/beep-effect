@@ -1,6 +1,3 @@
-// eof-newline: a non-empty document must end with a newline. The fix
-// inserts one — a zero-length surgical edit at end-of-input.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -55,7 +52,6 @@ const isBlankText = (text: string): boolean => /^[ \t]*$/.test(text);
 const isBlockStyle = (scalar: YamlScalar): boolean =>
   scalar.style === "block-literal" || scalar.style === "block-folded";
 
-/** True when a keep-chomped block scalar with a string value spans the line. */
 const isKeptBlockSpanning = (scalar: YamlScalar, lastLine: LintLine): boolean =>
   scalar.chomp === "keep" &&
   isBlockStyle(scalar) &&
@@ -69,11 +65,11 @@ const leadingSpaceCount = (text: string): number => {
   return spaces;
 };
 
-/**
- * Whether completing the trailing line adds a content break to `scalar`:
- * `undefined` when the scalar does not decide it.
- */
-const scalarBreakEffect = (ctx: LintContext, lastLine: LintLine, scalar: YamlScalar): boolean | undefined => {
+const contentBreakDecidedByScalarOrUndefined = (
+  ctx: LintContext,
+  lastLine: LintLine,
+  scalar: YamlScalar
+): boolean | undefined => {
   if (!isKeptBlockSpanning(scalar, lastLine)) return undefined;
   const firstContent = A.findFirst(
     ctx.lines,
@@ -87,20 +83,18 @@ const scalarBreakEffect = (ctx: LintContext, lastLine: LintLine, scalar: YamlSca
   if (O.isNone(firstValueContent)) return undefined;
   const sourceSpaces = leadingSpaceCount(firstContent.value.text);
   const valueSpaces = leadingSpaceCount(firstValueContent.value);
-  // Extra spaces beyond the content indent are scalar text: completing
-  // that line already has the same implicit final content break. A
-  // blank line within the indent instead gains a keep-chomp break.
-  return lastLine.text.length <= sourceSpaces - valueSpaces ? true : undefined;
+  const contentIndentBeyondWhichSpacesAreScalarText = sourceSpaces - valueSpaces;
+  const blankWithinContentIndentGainsKeepBreak = lastLine.text.length <= contentIndentBeyondWhichSpacesAreScalarText;
+  return blankWithinContentIndentGainsKeepBreak ? true : undefined;
 };
 
-/** Fold every scalar's effect in walk order; the last deciding scalar wins. */
 const completingAddsContentBreak = (ctx: LintContext, lastLine: LintLine): boolean => {
-  let addsContentBreak = false;
+  let lastDecidingScalarInWalkOrderWins = false;
   walkScalars(ctx.document.contents, "root", (scalar) => {
-    const effect = scalarBreakEffect(ctx, lastLine, scalar);
-    if (effect !== undefined) addsContentBreak = effect;
+    const effect = contentBreakDecidedByScalarOrUndefined(ctx, lastLine, scalar);
+    if (effect !== undefined) lastDecidingScalarInWalkOrderWins = effect;
   });
-  return addsContentBreak;
+  return lastDecidingScalarInWalkOrderWins;
 };
 
 /**
