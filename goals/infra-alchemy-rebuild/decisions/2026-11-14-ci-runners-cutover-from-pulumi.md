@@ -116,7 +116,7 @@ Rollback after (d). `pulumi stack import` of the archive restores state only, an
 | `.github/workflows/cache-warm.yml` | `runs-on: beep-ec2-heavy` | `beep-fleet-heavy` | — |
 | `.github/workflows/shard-overflow.yml` (called from `check.yml`) | `runs-on: beep-shard-overflow`; comment on the group | `beep-fleet-overflow`; comment | — |
 | `.github/workflows/check.yml` | comment naming the overflow label; `beep runners bake --check --manifest infra/ci-runners/runner-image.json` | comment | bake check reads the stack config instead (AMI item) |
-| `.github/workflows/fleet-shadow-check.yml` | `runs-on: beep-ec2-heavy`; reads SSM `/github-action-runners/app/<parameter>` to prove the runner cannot read App secrets | `beep-fleet-heavy` and `/beep-fleet/prod/app/<parameter>`, if kept | delete with the old fleet unless the denial proof is wanted for the new fleet (then keep it, repointed) |
+| the retired `fleet-shadow-check` workflow (deleted by P6, #3567) | `runs-on: beep-ec2-heavy`; reads SSM `/github-action-runners/app/<parameter>` to prove the runner cannot read App secrets | `beep-fleet-heavy` and `/beep-fleet/prod/app/<parameter>`, if kept | delete with the old fleet unless the denial proof is wanted for the new fleet (then keep it, repointed) |
 | `.github/workflows/fleet-lane-probe.yml` | default input `beep-ec2-heavy` (the shadow-fleet probe) | default `beep-fleet-heavy`, if kept | delete with the old fleet (it probed the live shadow pool) |
 | `.github/workflows/rerun-runner-loss.yml` | comment on `beep-ec2-heavy` Spot evictions | comment | — |
 | `packages/foundation/capability/config-file/test/fixtures/codec-corpus/yaml/fleet-lane-probe.yml` | a YAML fixture copy | none (fixture text) | keep, or drop with the probe |
