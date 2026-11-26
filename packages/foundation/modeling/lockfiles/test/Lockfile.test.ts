@@ -776,7 +776,7 @@ describe("instance identity and resolved edges", () => {
         assert.deepStrictEqual(
           redux.unresolvedEdges,
           ["react"],
-          "the recorded link:vendor/react-stub edge is named, or its absence from resolved reads as an unsatisfied peer"
+          "the recorded link:vendor/react-stub edge (the class of this repo's dist/dev/pkg dogfood overrides) is named, or its absence from resolved reads as an unsatisfied peer"
         );
         assert.isUndefined(redux.resolved.react);
 
@@ -821,7 +821,7 @@ describe("instance identity and resolved edges", () => {
         assert.strictEqual(
           app?.resolved["@scope/lib"],
           "packages/lib",
-          "publishConfig.linkDirectory records the link against the build-output publish directory; unnamed, the workspace is unverifiable downstream"
+          "publishConfig.linkDirectory records the link against the build-output publish directory; unnamed, the workspace is permanently unverifiable downstream on a lockfile pnpm reports clean"
         );
         assert.deepStrictEqual(app?.unresolvedEdges, []);
       })
@@ -850,7 +850,7 @@ describe("instance identity and resolved edges", () => {
         assert.deepStrictEqual(
           app?.unresolvedEdges,
           ["@scope/stub"],
-          "a hand-written link: may hold a vendored stub with its own identity, so the enclosing importer must not answer for it"
+          "a hand-written link: may hold a vendored stub with its own identity, so the enclosing importer must not answer for it with the wrong package's peers"
         );
       })
     );
@@ -989,7 +989,11 @@ describe("instance identity and resolved edges", () => {
           "typescript@6.0.3",
           "the recorded alias version is the referenced instance's key; composing typescript-classic@typescript@6.0.3 matches nothing"
         );
-        assert.deepStrictEqual(app?.unresolvedEdges, []);
+        assert.deepStrictEqual(
+          app?.unresolvedEdges,
+          [],
+          "an unresolved alias edge would be a false fail-closed marker on a lockfile pnpm reports clean"
+        );
       })
     );
 
@@ -1745,7 +1749,7 @@ describe("supported lockfile versions", () => {
       assert.strictEqual(
         cause.minimumSupported,
         9,
-        "the gate is on the lockfile format version, the only version a lockfile records; older input fails typed"
+        "the gate is on the lockfile format version, the only version a lockfile records; older input fails typed rather than parsing into a model that cannot answer resolution questions"
       );
     })
   );
