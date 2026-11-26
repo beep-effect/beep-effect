@@ -167,6 +167,8 @@ const writeHead = Effect.fnUntraced(function* (nodeId: NodeId, revisionId: Revis
   yield* sql`INSERT INTO agent_memory_heads ${sql.insert({ node_id: nodeId, revision_id: revisionId })}`;
 });
 
+// Numbers the entry after every entry this replica committed before it; the
+// handlers run in input order, so a batch is numbered in batch order.
 const recordOrder = Effect.fnUntraced(function* (entry: Entry) {
   const sql = yield* SqlClient.SqlClient;
   yield* sql`
@@ -199,6 +201,8 @@ const fileOfNode = Effect.fnUntraced(function* (nodeId: NodeId) {
   return O.map(A.head(rows), (row) => row.file_path);
 });
 
+// A created node is placed after a predecessor of its own file, or opens the
+// file; earlier events of the same batch are already in the nodes table.
 const checkPlacement = Effect.fnUntraced(function* (payload: {
   readonly nodeId: NodeId;
   readonly filePath: MemoryFilePath;

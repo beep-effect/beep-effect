@@ -297,6 +297,7 @@ const make = Effect.gen(function* () {
   });
 
   // decision: fence-rows-land-before-the-bytes
+  // decision: folder-file-rows-insert-in-chunks-of-300
   const recordFolderFiles = (
     operation: string,
     key: string,
