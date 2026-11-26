@@ -1133,8 +1133,11 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
     concurrency: 1,
   });
   const workspaces = yield* workspaceDirectories(repoRoot);
-  const coveredWorkspaces = A.filter(A.map(A.fromIterable(HashMap.values(workspaces)), toPosixPath), (directory) =>
-    A.some(scopeRoots, (root) => isUnderScopeRoot(root, directory))
+  const coveredWorkspaces = workspaces.pipe(
+    HashMap.values,
+    A.fromIterable,
+    A.map(toPosixPath),
+    A.filter((directory) => A.some(scopeRoots, (root) => isUnderScopeRoot(root, directory)))
   );
   const scope = yield* resolveShardScope(
     repoRoot,
