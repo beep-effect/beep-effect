@@ -329,6 +329,34 @@ describe("vitestReplayArgs", () => {
     expect(vitestReplayArgs(manifestWith({ test: script }), file)).toEqual(expected);
   });
 
+  it("replays a file beep:test excludes under the beep:test:* script that collects it", () => {
+    const manifest = manifestWith({
+      test: "bun run beep:test",
+      "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
+      "beep:test:integration": "bunx --bun vitest run --config vitest.integration.config.ts --passWithNoTests",
+    });
+    const integration = "test/integration/chat-persist.pglite.test.ts";
+    expect(vitestReplayArgs(manifest, integration)).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      integration,
+    ]);
+    expect(vitestReplayArgs(manifest, file)).toEqual(["--bun", "vitest", "run", file]);
+  });
+
+  it("keeps the beep:test segment when no script collects the excluded file", () => {
+    const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --exclude test/slow/**" });
+    expect(vitestReplayArgs(manifest, "test/slow/a.test.ts")).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "test/slow/a.test.ts",
+    ]);
+  });
+
   it("takes the config of the segment that runs the file, not another segment's", () => {
     const manifest = manifestWith({
       test: "vitest run --config vitest.unit.ts && vitest run test/a.test.ts --config vitest.a.ts",

@@ -27,6 +27,7 @@
 
 import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
@@ -38,8 +39,10 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { adaptGitKitError, patientGit, readGitRenames } from "../../../internal/repo-run/index.ts";
@@ -59,6 +62,8 @@ const HUNK_HEADER_PATTERN = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 const BUN_VITEST_PATTERN = /\bbunx?\s+--bun\s+vitest\b/;
 const VITEST_PATTERN = /\bvitest\b/;
 const CONFIG_FLAG_PATTERN = /(?:^|\s)(?:--config|-c)(?:=|\s+)(\S+)/;
+const EXCLUDE_FLAG_PATTERN = /(?:^|\s)--exclude(?:=|\s+)(\S+)/g;
+const excludeGlobOptions = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const parsePackageJson = manifestParser(["scripts"]);
 
 const isAssertionLine = (line: string): boolean => ASSERTION_PATTERN.test(line);
@@ -280,16 +285,54 @@ const segmentConfigArguments = (segment: string): ReadonlyArray<string> =>
     O.match({ onNone: A.empty<string>, onSome: (config) => ["--config", config] })
   );
 
+const segmentExcludesFile = (segment: string, testPath: string): boolean =>
+  A.some(A.fromIterable(Str.matchAll(EXCLUDE_FLAG_PATTERN)(segment)), (match) =>
+    pipe(
+      O.fromUndefinedOr(match[1]),
+      O.flatMap(flow(GlobPattern.compileResult(excludeGlobOptions), Result.getSuccess)),
+      O.exists((pattern) => pattern.matches(Str.replace(/^\.\//, "")(testPath)))
+    )
+  );
+
+const collectingSegment = (script: string, testPath: string): O.Option<string> =>
+  O.filter(replaySegment(script, testPath), (segment) => !segmentExcludesFile(segment, testPath));
+
+const replayScriptOrder = (scripts: R.ReadonlyRecord<string, string>): ReadonlyArray<string> =>
+  A.getSomes([
+    R.get(scripts, "beep:test"),
+    R.get(scripts, "test"),
+    ...pipe(
+      R.keys(scripts),
+      A.filter(Str.startsWith("beep:test:")),
+      A.sort(Order.String),
+      A.map((key) => R.get(scripts, key))
+    ),
+  ]);
+
+const replayScriptSegment = (scripts: R.ReadonlyRecord<string, string>, testPath: string): O.Option<string> =>
+  O.orElse(
+    A.findFirst(replayScriptOrder(scripts), (script) => collectingSegment(script, testPath)),
+    () =>
+      pipe(
+        O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test")),
+        O.flatMap((script) => replaySegment(script, testPath))
+      )
+  );
+
 /**
  * Build the `bunx` arguments that replay one test file on its package's own
  * test runtime.
  *
  * **Details**
  *
- * Reads the package's `beep:test` script, falling back to `test`, and splits
- * it on `&&`. The vitest segment that names the test file as an argument
- * decides the runtime; when none names it, the vitest segment with no file
- * argument does. A segment that runs vitest under Bun (`bunx --bun vitest`
+ * Reads the package's `beep:test` script, then `test`, then each other
+ * `beep:test:*` script in name order, and splits each on `&&`. The vitest
+ * segment that names the test file as an argument decides the runtime; when
+ * none names it, the vitest segment with no file argument does. A segment
+ * whose `--exclude` glob matches the file does not collect it, so the next
+ * script is tried: an integration test excluded from `beep:test` replays
+ * under `beep:test:integration` and its config. When no script collects the
+ * file, the first `beep:test` or `test` segment is used as before. A segment that runs vitest under Bun (`bunx --bun vitest`
  * or `bun --bun vitest`) makes the replay pass `--bun`; anything else runs
  * plain `bunx vitest`, which uses Node. The segment's `--config` (or `-c`)
  * file is carried over, so the replay collects the file the way the package's
@@ -320,8 +363,7 @@ export const vitestReplayArgs: {
   (manifest: LenientManifest, testPath: string): ReadonlyArray<string> =>
     pipe(
       O.fromUndefinedOr(manifest.scripts),
-      O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
-      O.flatMap((script) => replaySegment(script, testPath)),
+      O.flatMap((scripts) => replayScriptSegment(scripts, testPath)),
       O.match({
         onNone: () => ["vitest", "run", testPath],
         onSome: (segment) => [
