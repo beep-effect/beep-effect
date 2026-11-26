@@ -1,7 +1,3 @@
-// The serial arithmetic at each edge of its calendar, stated by example. The property tests reach the fictitious
-// days, the days before 1904 and the days a calendar does not have only when an arbitrary lands on one, so these
-// fix every branch of the conversion in both directions.
-
 import { XlsxCalendar } from "@beep/xlsx/XlsxSerial.schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -13,7 +9,7 @@ const calendar = (year: number, month: number, day: number, hour = 0) =>
 const ymd = (serial: number, system: "1900" | "1904") =>
   O.map(XlsxCalendar.fromSerial(serial, system), (c) => [c.year, c.month, c.day, c.hour] as const);
 
-describe("XlsxCalendar.fromSerial", () => {
+describe("XlsxCalendar.fromSerial at each edge of its calendar", () => {
   it("reads the 1900 system's fictitious days and the days around them", () => {
     assertSome(ymd(0, "1900"), [1900, 1, 0, 0]);
     assertSome(ymd(1, "1900"), [1900, 1, 1, 0]);
@@ -33,7 +29,7 @@ describe("XlsxCalendar.fromSerial", () => {
   });
 });
 
-describe("XlsxCalendar.toSerial", () => {
+describe("XlsxCalendar.toSerial at each edge of its calendar", () => {
   it("gives the 1900 system's fictitious days their serials", () => {
     assertSome(XlsxCalendar.toSerial(calendar(1900, 2, 29), "1900"), 60);
     assertSome(XlsxCalendar.toSerial(calendar(1900, 1, 0), "1900"), 0);
@@ -60,7 +56,10 @@ describe("XlsxCalendar.toSerial", () => {
   it("reads back every serial it gives", () => {
     for (const serial of [0, 1, 59, 60, 61, 45_292.5]) {
       const back = O.flatMap(XlsxCalendar.fromSerial(serial, "1900"), (c) => XlsxCalendar.toSerial(c, "1900"));
-      expect(O.getOrThrow(back)).toBe(serial);
+      expect(
+        O.getOrThrow(back),
+        "an edge day the property tests reach only when an arbitrary lands on it converts in both directions"
+      ).toBe(serial);
     }
   });
 });

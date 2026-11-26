@@ -25,7 +25,6 @@ import { partsOf, SerialParts } from "./serial.ts";
 import type { XlsxFormatKind } from "../XlsxFormatKind.schema.ts";
 import type { XlsxDateSystem } from "../XlsxSerial.schema.ts";
 
-/** The format codes Excel has built in (ECMA-376 part 1, 18.8.30), as far as a file may leave them unwritten. */
 const builtins: ReadonlyArray<readonly [id: number, code: string]> = [
   [0, "General"],
   [1, "0"],
@@ -57,7 +56,12 @@ const builtins: ReadonlyArray<readonly [id: number, code: string]> = [
   [49, "@"],
 ];
 
-/** The code Excel has built in under each id. */
+/**
+ * The code Excel has built in under each id.
+ *
+ * **Details**
+ * The ids are ECMA-376 part 1, 18.8.30, as far as a file may leave them unwritten.
+ */
 export const builtinFormats: HashMap.HashMap<number, string> = HashMap.fromIterable(builtins);
 
 /** Excel's own id for each built-in code; the list runs in rising id order, so the lowest id is the last one set. */
@@ -69,47 +73,38 @@ const isGeneralAt = (code: string, at: number): boolean => Str.toLowerCase(Str.s
 const elapsed = /^\[(h+|m+|s+)\]$/i;
 const numberRun = "0#?.,E+-%";
 
-/** The end of the bracketed block that opens at `at`, one past its `]`. */
 const blockEnd = (code: string, at: number): number => {
   let i = at + 1;
   while (i < code.length && code[i] !== "]") i += 1;
   return i + 1;
 };
 
-/** The index of the first `"` from `from` on, the code's length when there is none. */
 const quoteAt = (code: string, from: number): number => {
   let i = from;
   while (i < code.length && code[i] !== '"') i += 1;
   return i;
 };
 
-// crispen: the scanners of a format code (`isDateFormat`, `literalFrom`, `firstSection`, `dateTokens`) are cursor
-// loops: a code is read once per style and once per displayed value, and each step depends on the character before.
-// Each loop hands the character at its cursor to a step that says where the next one starts.
+// decision: hot-paths-are-mutable-loops
+type NextPieceStart = (code: string, at: number) => number;
 
-/** A step of a scanner: where the next piece of `code` starts after the one at `at`. */
-type Step = (code: string, at: number) => number;
-
-/** What a step of `isDateFormat` returns when the code shows a date. */
-const DATED = -1;
+const SHOWS_DATE = -1;
 
 const past =
-  (width: number): Step =>
+  (width: number): NextPieceStart =>
   (_code, at) =>
     at + width;
 
-/** The steps of `isDateFormat` for each character that opens something other than a single letter. */
-const dateMarkSteps: { readonly [character: string]: Step } = {
+const dateMarkSteps: { readonly [character: string]: NextPieceStart } = {
   G: (code, at) => (isGeneralAt(code, at) ? at + 7 : at + 1),
-  // The word General is read without regard to case, as `classify` reads it; a lone `g` is an era, so a date.
-  g: (code, at) => (isGeneralAt(code, at) ? at + 7 : DATED),
+  g: (code, at) => (isGeneralAt(code, at) ? at + 7 : SHOWS_DATE),
   '"': (code, at) => quoteAt(code, at + 1) + 1,
   "\\": past(2),
   _: past(2),
   "*": past(2),
   "[": (code, at) => {
     const end = blockEnd(code, at);
-    return elapsed.test(Str.slice(at, end)(code)) ? DATED : end;
+    return elapsed.test(Str.slice(at, end)(code)) ? SHOWS_DATE : end;
   },
   "0": (code, at) => numberRunEnd(code, at + 1),
   "#": (code, at) => numberRunEnd(code, at + 1),
@@ -120,36 +115,38 @@ const dateMarkSteps: { readonly [character: string]: Step } = {
   b: (code, at) => eraMark(code, at),
 };
 
-const numberRunEnd: Step = (code, at) => {
+const numberRunEnd: NextPieceStart = (code, at) => {
   let i = at;
   while (i < code.length && Str.includes(code[i] ?? " ")(numberRun)) i += 1;
   return i;
 };
 
-const ampmMark: Step = (code, at) => {
+const ampmMark: NextPieceStart = (code, at) => {
   const upper = Str.toUpperCase(Str.slice(at, at + 5)(code));
-  return upper === "AM/PM" || Str.startsWith("A/P")(upper) ? DATED : at + 1;
+  return upper === "AM/PM" || Str.startsWith("A/P")(upper) ? SHOWS_DATE : at + 1;
 };
 
-const eraMark: Step = (code, at) => (code[at + 1] === "1" || code[at + 1] === "2" ? DATED : at + 1);
+const eraMark: NextPieceStart = (code, at) => (code[at + 1] === "1" || code[at + 1] === "2" ? SHOWS_DATE : at + 1);
 
-/** One step of `isDateFormat`: a date or time letter outside everything else marks the code as dated. */
-const dateMarkStep: Step = (code, at) => {
+const dateMarkStep: NextPieceStart = (code, at) => {
   const c = code[at] ?? "";
   const step = dateMarkSteps[c];
   if (step !== undefined) return step(code, at);
-  return Str.includes(c)("MDYHSEmdyhseg") ? DATED : at + 1;
+  return Str.includes(c)("MDYHSEmdyhseg") ? SHOWS_DATE : at + 1;
 };
 
 /**
  * Whether a format code shows its number as a date or a time: it has a year, month, day, hour or second letter, an
  * AM/PM mark or an elapsed-time block outside quotes, escapes and the word General.
+ *
+ * **Gotchas**
+ * The word General is read without regard to case, as `classify` reads it; a lone `g` is an era, so a date.
  */
 export const isDateFormat = (code: string): boolean => {
   let i = 0;
   while (i < code.length) {
     i = dateMarkStep(code, i);
-    if (i === DATED) return true;
+    if (i === SHOWS_DATE) return true;
   }
   return false;
 };
@@ -158,12 +155,10 @@ const zeroPadded = /^0{2,}$/;
 const plain = /^(#,##0|0)(?:\.(0+))?(%?)$/;
 const bareLiteral = "$-+/():!^&'~{}<>= €";
 
-/** A piece of literal text and where it ends; an end of -1 means no literal text starts there. */
 type Piece = readonly [text: string, next: number];
 
 const noLiteral: Piece = ["", -1];
 
-/** The literal piece at `at`: quoted, escaped, a currency block or a bare sign. */
 const literalAt = (code: string, at: number): Piece => {
   const c = code[at] ?? "";
   if (c === '"') return quotedAt(code, at);
@@ -172,13 +167,11 @@ const literalAt = (code: string, at: number): Piece => {
   return Str.includes(c)(bareLiteral) ? [c, at + 1] : noLiteral;
 };
 
-/** A quoted piece, none when its closing quote is missing. */
 const quotedAt = (code: string, at: number): Piece => {
   const close = quoteAt(code, at + 1);
   return close >= code.length ? noLiteral : [Str.slice(at + 1, close)(code), close + 1];
 };
 
-/** A currency block such as `[$€-407]`: its symbol, the text before any dash. */
 const currencyAt = (code: string, at: number): Piece => {
   const end = blockEnd(code, at);
   const inside = Str.slice(at + 2, end - 1)(code);
@@ -188,7 +181,6 @@ const currencyAt = (code: string, at: number): Piece => {
   ];
 };
 
-/** Reads the literal text at the start of `code` from `at`: quoted, escaped, a currency block or bare signs. */
 const literalFrom = (code: string, at: number): readonly [text: string, next: number] => {
   let text = "";
   let i = at;
@@ -214,14 +206,12 @@ export const classify = (code: string): XlsxFormatKind => {
   return fixedOf(code);
 };
 
-/** The end of the digit pattern of a plain number format that starts at `start`. */
 const patternEnd = (code: string, start: number): number => {
   let end = start;
   while (end < code.length && Str.includes(code[end] ?? " ")("#,0.%")) end += 1;
   return end;
 };
 
-/** A code as a plain number pattern between literal texts, `Other` when it is not one. */
 const fixedOf = (code: string): XlsxFormatKind => {
   const [prefix, start] = literalFrom(code, 0);
   const end = patternEnd(code, start);
@@ -257,7 +247,6 @@ export const renderGeneral = (value: number): string => {
   return stripDecimal(normalizeExponent(Str.toUpperCase(generalText(value))));
 };
 
-/** The General text of a number that is not a small integer, before its exponent and decimals are tidied. */
 const generalText = (value: number): string => {
   const width = value < 0 ? 12 : 11;
   const magnitude = Math.floor(Math.log10(Math.abs(value)));
@@ -267,7 +256,6 @@ const generalText = (value: number): string => {
   return farText(value, width);
 };
 
-/** A number of magnitude -9 to 9: exact when it fits, else to ten significant digits, else in scientific form. */
 const nearText = (value: number, width: number): string => {
   const exact = stripDecimal(value.toFixed(12));
   if (exact.length <= width) return exact;
@@ -275,7 +263,6 @@ const nearText = (value: number, width: number): string => {
   return rounded.length <= width ? rounded : value.toExponential(5);
 };
 
-/** A number of magnitude past 10 or below -9: exact when it fits and is not zero, else to six significant digits. */
 const farText = (value: number, width: number): string => {
   const exact = stripDecimal(value.toFixed(11));
   return exact.length > width || exact === "0" || exact === "-0" ? value.toPrecision(6) : exact;
@@ -315,9 +302,7 @@ const fixedText = (kind: XlsxFixedFormat, value: number): O.Option<string> => {
   return O.some(`${signOf(value)}${kind.prefix}${shown}${decimals}${kind.percent ? "%" : ""}${kind.suffix}`);
 };
 
-// crispen: kept as plain types, not schemas — a token list is built and thrown away on every displayed date (the
-// oracle test renders 100k+), and nothing outside this file sees a token; make it a `LiteralKit` tagged union if a
-// token ever crosses a module boundary.
+// decision: hot-paths-are-mutable-loops
 type DateField = "y" | "m" | "d" | "h" | "M" | "s";
 
 type DateToken =
@@ -342,8 +327,7 @@ const months = [
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const dateLiteral = ",$-+/():!^&'~{}<>=€ ";
 
-/** Where the piece of a code at `at` ends, a quoted text, an escape or a bracketed block read whole. */
-const sectionStep: Step = (code, at) => {
+const sectionStep: NextPieceStart = (code, at) => {
   const c = code[at];
   if (c === '"') return quoteAt(code, at + 1) + 1;
   if (c === "\\") return at + 2;
@@ -351,14 +335,9 @@ const sectionStep: Step = (code, at) => {
   return at + 1;
 };
 
-/** Whether a condition block such as `[>=2]` opens at `at`. */
 const isConditionAt = (code: string, at: number): boolean =>
   code[at] === "[" && Str.includes(code[at + 1] ?? " ")("<>=");
 
-/**
- * The first section of a format code (what a positive number is shown with), how many sections the code has, and
- * whether any section has a condition, which chooses the section by the number instead.
- */
 const firstSection = (code: string): readonly [section: string, sections: number, conditional: boolean] => {
   let cut = -1;
   let sections = 1;
@@ -372,13 +351,11 @@ const firstSection = (code: string): readonly [section: string, sections: number
   return [cut === -1 ? code : Str.slice(0, cut)(code), sections, conditional];
 };
 
-/** What a step of `DateScan` returns when the section holds something this package does not render. */
 const UNRENDERED = -1;
 
-/** The tokens of one date format section, read with a cursor; `last` is the field letter read before. */
 class DateScan {
   readonly out: Array<DateToken> = [];
-  private last = "";
+  private previousField = "";
   private readonly section: string;
 
   constructor(section: string) {
@@ -433,7 +410,7 @@ class DateScan {
 
   private ampm(at: number, c: string): number {
     const upper = Str.toUpperCase(Str.slice(at, at + 5)(this.section));
-    this.last = "a";
+    this.previousField = "a";
     if (upper === "AM/PM") return this.token({ t: "ampm", short: false, am: "AM", pm: "PM" }, at + 5);
     if (Str.startsWith("A/P")(upper)) {
       return this.token({ t: "ampm", short: true, am: c, pm: this.section[at + 2] ?? "P" }, at + 3);
@@ -444,13 +421,12 @@ class DateScan {
   private field(at: number, lower: "y" | "m" | "d" | "h" | "s"): number {
     let j = at + 1;
     while (j < this.section.length && Str.toLowerCase(this.section[j] ?? "") === lower) j += 1;
-    this.out.push({ t: lower === "m" && this.last === "h" ? "M" : lower, n: j - at });
-    this.last = lower;
+    this.out.push({ t: lower === "m" && this.previousField === "h" ? "M" : lower, n: j - at });
+    this.previousField = lower;
     return j;
   }
 }
 
-/** A month letter just before seconds is minutes: "mm:ss". */
 const minutesBeforeSeconds = (out: Array<DateToken>): void => {
   let after = "";
   for (let k = out.length - 1; k >= 0; k -= 1) {
@@ -461,7 +437,6 @@ const minutesBeforeSeconds = (out: Array<DateToken>): void => {
   }
 };
 
-/** The tokens of a date format, none when it holds something this package does not render. */
 const dateTokens = (section: string): O.Option<ReadonlyArray<DateToken>> => new DateScan(section).run();
 
 const isDateLetter = (letter: string): letter is "y" | "m" | "d" | "h" | "s" =>
@@ -469,11 +444,7 @@ const isDateLetter = (letter: string): letter is "y" | "m" | "d" | "h" | "s" =>
 
 const padded = (value: number, width: number): string => Str.padStart(width, "0")(String(value));
 
-/**
- * The calendar fields rounded to the second from the millisecond `partsOf` keeps, and carried, as a format with a
- * time in it shows them.
- */
-const rounded = (parts: SerialParts, system: XlsxDateSystem): SerialParts => {
+const roundedToShownSecond = (parts: SerialParts, system: XlsxDateSystem): SerialParts => {
   if (parts.millisecond < 500) return parts;
   let { hour, minute, second } = parts;
   second += 1;
@@ -489,10 +460,8 @@ const rounded = (parts: SerialParts, system: XlsxDateSystem): SerialParts => {
   return SerialParts.make({ ...partsOf(parts.days + 1, system), hour: 0, minute, second, millisecond: 0 });
 };
 
-/** A two-digit-at-most time field, none when the format asks for more digits than Excel shows. */
 const twoDigits = (value: number, n: number): O.Option<string> => (n > 2 ? O.none() : O.some(padded(value, n)));
 
-/** One token's text for the calendar fields, none for a token this package does not render. */
 const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => O.Option<string>) =>
   Match.type<DateToken>().pipe(
     Match.discriminatorsExhaustive("t")({
@@ -525,6 +494,10 @@ const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => 
  * A serial as a date format shows it, none for a format this package does not render (elapsed time, fractions of a
  * second, eras, a condition such as `[>=2]` that chooses the section by the serial, or a zero under a format with a
  * section of its own for zero) and none past the system's last serial, where Excel shows `#####`.
+ *
+ * **Details**
+ * Only the code's first section, the one a positive number is shown with, is rendered. A time is shown rounded to
+ * the second from the millisecond `partsOf` keeps, carried into the minute, hour and day.
  */
 export const renderDate: {
   (serial: number, system: XlsxDateSystem): (code: string) => O.Option<string>;
@@ -536,7 +509,7 @@ export const renderDate: {
     const timed = A.some(tokens, (token) => token.t === "h" || token.t === "M" || token.t === "s");
     const twelve = A.some(tokens, (token) => token.t === "ampm");
     const exact = partsOf(serial, system);
-    const parts = timed ? rounded(exact, system) : exact;
+    const parts = timed ? roundedToShownSecond(exact, system) : exact;
     return O.map(O.all(A.map(tokens, tokenText(parts, twelve))), A.join(""));
   });
 });

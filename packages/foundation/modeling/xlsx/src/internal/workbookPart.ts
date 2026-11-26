@@ -1,5 +1,3 @@
-// The workbook part and what hangs off it: the sheets with their names, states and paths, the date system, the
-// number format of every style, the shared text table, and the names of the parts that are not modelled.
 import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -69,8 +67,7 @@ export class StyleFormat extends S.Opaque<StyleFormat, { readonly brand: unique 
 export class Opened extends S.Opaque<Opened, { readonly brand: unique symbol }>()(
   S.Struct({
     bytes: S.Uint8Array.pipe(S.annotateKey({ description: "The file's bytes, for the passes that read the sheets" })),
-    // `annotateKey` on the Opaque itself would drop its brand. An opened workbook is built, never decoded or
-    // encoded, so its decoded side (`toType`) is all of it and keeps the brand under the key's description.
+    // decision: opaque-fields-take-no-key-annotation
     caps: S.toType(Caps).pipe(S.annotateKey({ description: "The caps of the read, as plain numbers" })),
     dateSystem: XlsxDateSystem.pipe(S.annotateKey({ description: "The day the workbook's date serials count from" })),
     dropped: S.Array(XlsxDroppedPart).pipe(S.annotateKey({ description: "Parts the file held that are not modelled" })),
@@ -95,31 +92,27 @@ export const styleOf = (format: XlsxNumberFormat): StyleFormat => {
 const malformed = (path: string, reason: string) =>
   stop(DamagedXml.make({ path: Str.slice(0, 1024)(path), line: 0, column: 0, reason }));
 
-/** The content types part, by its `partKey`. */
 const contentTypes = partKey("[Content_Types].xml");
 
 const endsWith = (type: string, kind: string): boolean => Str.endsWith(`/${kind}`)(type);
 
-/** Whether a number format id is one a workbook may write: a whole number from 0 to 65535. */
 const isFormatId = (id: number): boolean => Number.isInteger(id) && id >= 0 && id <= 65_535;
 
-/** The elements named `name` under the child `parent` of `root`, none when it has no such child. */
 const grandchildren = (root: XmlElement, parent: string, name: string): ReadonlyArray<XmlElement> =>
   O.match(child(root, parent), { onNone: A.empty<XmlElement>, onSome: children(name) });
 
-/** The custom number format codes a styles part writes, by id. */
 const customCodes = (root: XmlElement): HashMap.HashMap<number, string> => {
-  let codes = HashMap.empty<number, string>();
-  // crispen: a fold into a persistent HashMap; a later `numFmt` of an id replaces an earlier one, as Excel reads it.
+  let lastCodeById = HashMap.empty<number, string>();
+  // decision: hot-paths-are-mutable-loops
   for (const numFmt of grandchildren(root, "numFmts", "numFmt")) {
     const id = Number(numFmt.attributes.numFmtId);
     const code = numFmt.attributes.formatCode ?? "";
-    if (isFormatId(id) && code.length <= MAX_FORMAT_CHARS && isXmlSafe(code)) codes = HashMap.set(codes, id, code);
+    if (isFormatId(id) && code.length <= MAX_FORMAT_CHARS && isXmlSafe(code))
+      lastCodeById = HashMap.set(lastCodeById, id, code);
   }
-  return codes;
+  return lastCodeById;
 };
 
-/** The format a number format id names: a custom code, a built-in one, or General under that id. */
 const formatOfId = (codes: HashMap.HashMap<number, string>, id: number): StyleFormat =>
   O.match(
     O.orElse(HashMap.get(codes, id), () => HashMap.get(builtinFormats, id)),
@@ -129,8 +122,7 @@ const formatOfId = (codes: HashMap.HashMap<number, string>, id: number): StyleFo
     }
   );
 
-/** Whether a styles part styles more than number formats: a second font or border, a fill, a differential style. */
-const stylesMore = (root: XmlElement): boolean => {
+const stylesBeyondNumberFormats = (root: XmlElement): boolean => {
   const countOf = (name: string): number =>
     O.match(child(root, name), {
       onNone: () => 0,
@@ -139,7 +131,6 @@ const stylesMore = (root: XmlElement): boolean => {
   return countOf("fonts") > 1 || countOf("fills") > 2 || countOf("borders") > 1 || countOf("dxfs") > 0;
 };
 
-/** The number format of each style index, from the styles part. */
 const stylesOf = Effect.fnUntraced(function* (input: {
   readonly path: string;
   readonly bytes: Uint8Array;
@@ -159,31 +150,23 @@ const stylesOf = Effect.fnUntraced(function* (input: {
     const id = Number(xf.attributes.numFmtId ?? "0");
     return isFormatId(id) ? formatOf(id) : general;
   });
-  return { styles, more: stylesMore(root) };
+  return { styles, more: stylesBeyondNumberFormats(root) };
 });
 
-/** How many bytes of a held part the XML reader is handed at a time. */
 const sliceBytes = 65_536;
 
-/**
- * A held part's bytes as a stream of slices, each a view into the part and each its own pull. The XML reader hands
- * on every event a slice completes before the reader can stop, so a whole part in one piece would be read to its end
- * before a cap on its entries could stop it; in slices, a read stops within a slice of the cap.
- */
 const slicesOf = (bytes: Uint8Array): Stream.Stream<Uint8Array> =>
   Stream.fromIterable(
     A.makeBy(Math.ceil(bytes.length / sliceBytes), (i) => bytes.subarray(i * sliceBytes, (i + 1) * sliceBytes)),
     { chunkSize: 1 }
   );
 
-/** The shared text table: each entry's text, its formatted runs joined and its phonetic runs left out. */
 const stringsOf = Effect.fnUntraced(function* (input: {
   readonly path: string;
   readonly bytes: Uint8Array;
   readonly caps: Caps;
 }) {
-  // crispen: a state machine over every event of the shared text table, which can run to millions of entries; the
-  // depths and the text so far are its state, kept in locals for the hot loop.
+  // decision: hot-paths-are-mutable-loops
   const strings: Array<string> = [];
   let depth = 0;
   let entryAt = -1;
@@ -232,10 +215,6 @@ const stringsOf = Effect.fnUntraced(function* (input: {
   return strings;
 });
 
-/**
- * What a part the read leaves out holds, by the pieces of its name as OPC compares them; the first that matches
- * names it.
- */
 const droppedKinds: ReadonlyArray<readonly [pieces: ReadonlyArray<string>, kind: XlsxDroppedKind]> = A.map(
   [
     [["/theme/"], "theme"],
@@ -252,7 +231,6 @@ const droppedKinds: ReadonlyArray<readonly [pieces: ReadonlyArray<string>, kind:
 
 const docProps = partKey("docProps/");
 
-/** What a part the read leaves out holds, from its name as OPC compares it. */
 const droppedKindOf = (path: string): XlsxDroppedKind => {
   const key = partKey(path);
   return O.getOrElse(
@@ -264,24 +242,20 @@ const droppedKindOf = (path: string): XlsxDroppedKind => {
   );
 };
 
-/** The parts a pass held, by their `partKey`. */
-type Kept = MutableHashMap.MutableHashMap<string, Uint8Array>;
+type HeldByPartKey = MutableHashMap.MutableHashMap<string, Uint8Array>;
 
 const missing = (path: string) => stop(MissingPart.make({ path: Str.slice(0, 1024)(path) }));
 
-const partOf = Effect.fnUntraced(function* (kept: Kept, path: string) {
+const partOf = Effect.fnUntraced(function* (kept: HeldByPartKey, path: string) {
   const found = MutableHashMap.get(kept, partKey(path));
   return O.isSome(found) ? found.value : yield* Effect.fail(missing(path));
 });
 
-/** Every small XML part is held on the census, so the workbook part, the styles and the shared text are usually in
- * hand without a second pass; a sheet's own XML is not held, wherever the workbook says it is. */
 const heldOnCensus = (key: string): boolean =>
   Str.endsWith(".rels")(key) ||
   key === contentTypes ||
   (Str.endsWith(".xml")(key) && !Str.includes("/worksheets/")(key));
 
-/** Refuses a file that is too large or is not a workbook, before any part is inflated. */
 const admitted = (bytes: Uint8Array, caps: Caps): Effect.Effect<void, XlsxFatal> => {
   if (bytes.length > caps.inputBytes) return Effect.fail(stop(LimitExceeded.make({ limit: "inputBytes", path: "" })));
   const container = sniffContainer(bytes);
@@ -290,16 +264,14 @@ const admitted = (bytes: Uint8Array, caps: Caps): Effect.Effect<void, XlsxFatal>
     : Effect.fail(stop(NotAWorkbook.make({ container })));
 };
 
-/** The relationships a part names, read from its relationships part. */
-const relationshipsFrom = Effect.fnUntraced(function* (kept: Kept, part: string, caps: Caps) {
+const relationshipsFrom = Effect.fnUntraced(function* (kept: HeldByPartKey, part: string, caps: Caps) {
   const path = relationshipsPath(part);
   const root = yield* rootOf({ path, bytes: yield* partOf(kept, path), cellChars: caps.cellChars });
   return relationshipsOf(root, part);
 });
 
-/** Where the workbook part is: as the package's relationships name it, else where Excel writes it. */
 const workbookPathOf = Effect.fnUntraced(function* (input: {
-  readonly kept: Kept;
+  readonly kept: HeldByPartKey;
   readonly present: MutableHashSet.MutableHashSet<string>;
   readonly caps: Caps;
 }) {
@@ -315,20 +287,16 @@ const workbookPathOf = Effect.fnUntraced(function* (input: {
   );
 });
 
-/**
- * Each sheet names its relationship by id. The file decides how many of each there are, so the links are indexed
- * once, the first of an id kept, and every sheet's lookup is one hash probe rather than a scan of the links.
- */
+// decision: hot-paths-are-mutable-loops
 const linksById = (links: ReadonlyArray<Relationship>): MutableHashMap.MutableHashMap<string, Relationship> => {
   const byId = MutableHashMap.empty<string, Relationship>();
   for (const link of links) if (!MutableHashMap.has(byId, link.id)) MutableHashMap.set(byId, link.id, link);
   return byId;
 };
 
-/** The parts of the census, with those `wanted` that it did not hold read in a second pass. */
 const withWanted = Effect.fnUntraced(function* (input: {
   readonly bytes: Uint8Array;
-  readonly kept: Kept;
+  readonly kept: HeldByPartKey;
   readonly wanted: ReadonlyArray<string>;
 }) {
   const wanted = MutableHashSet.fromIterable(
@@ -340,7 +308,6 @@ const withWanted = Effect.fnUntraced(function* (input: {
   return second;
 });
 
-/** What a workbook's sheets are read against: the parts present, the workbook part's path and its links. */
 interface SheetContext {
   readonly linkById: MutableHashMap.MutableHashMap<string, Relationship>;
   readonly present: MutableHashSet.MutableHashSet<string>;
@@ -350,7 +317,6 @@ interface SheetContext {
 const isSheetName = S.is(XlsxSheetName);
 const isSheetState = S.is(XlsxSheetState);
 
-/** A listed sheet as an entry, none when its link is not a worksheet; a sheet that cannot be read stops the open. */
 const sheetEntryOf = Effect.fnUntraced(function* (
   sheet: XmlElement,
   context: SheetContext,
@@ -369,7 +335,6 @@ const sheetEntryOf = Effect.fnUntraced(function* (
   return SheetEntry.makeOption({ name, state: isSheetState(state) ? state : "visible", path: link.value.path });
 });
 
-/** A sheet's name, `Sheet<position>` when it writes none; one that cannot be read or repeats another stops the open. */
 const sheetNameOf = Effect.fnUntraced(function* (
   written: string,
   position: number,
@@ -385,9 +350,8 @@ const sheetNameOf = Effect.fnUntraced(function* (
   return name;
 });
 
-/** The workbook's sheets, in its order; each listed sheet can stop the open with its own finding. */
 const sheetsOf = Effect.fnUntraced(function* (root: XmlElement, context: SheetContext, caps: Caps) {
-  // crispen: each listed sheet can stop the open with its own finding, so this is a loop with early returns.
+  // decision: hot-paths-are-mutable-loops
   const sheets: Array<SheetEntry> = [];
   const names = MutableHashSet.empty<string>();
   for (const sheet of grandchildren(root, "sheets", "sheet")) {
@@ -400,10 +364,6 @@ const sheetsOf = Effect.fnUntraced(function* (root: XmlElement, context: SheetCo
   return sheets;
 });
 
-/**
- * A part the census saw that the read leaves out, none for one that is read or is plumbing. The styles part is
- * read, and is also listed as dropped when `moreStyles` names it: what it styles beyond number formats is not kept.
- */
 const droppedPartOf = (
   path: string,
   read: MutableHashSet.MutableHashSet<string>,
@@ -420,12 +380,22 @@ const droppedPartOf = (
 /**
  * Opens a workbook: checks what the file is, counts every part against the caps, and reads the workbook part, the
  * styles and the shared text. The sheets' own XML is left for the pass that reads rows.
+ *
+ * **Details**
+ * Every part is looked up by its `partKey`, as OPC compares names; a finding names the part as it was written. Every
+ * small XML part is held on the census, so the workbook part, the styles and the shared text are usually in hand
+ * without a second pass; a sheet's own XML is not held, wherever the workbook says it is. The styles part is read,
+ * and is also listed as dropped when it styles more than number formats, which are all a read keeps of it.
+ *
+ * **Gotchas**
+ * The shared text table reaches the XML reader in slices, each a view into the part and its own pull. The reader
+ * hands on every event a slice completes before it can stop, so a whole part in one piece would be read to its end
+ * before a cap on its entries could stop it; in slices, a read stops within a slice of the cap.
  */
 export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8Array; readonly caps: Caps }) {
   const { bytes, caps } = input;
   yield* admitted(bytes, caps);
   const first = yield* census({ bytes, caps, keep: heldOnCensus });
-  // Every part is looked up by its `partKey`, as OPC compares names; a finding names the part as it was written.
   const present = MutableHashSet.fromIterable(A.map(first.paths, partKey));
   const workbookPath = yield* workbookPathOf({ kept: first.kept, present, caps });
   if (!MutableHashSet.has(present, partKey(workbookPath))) return yield* Effect.fail(missing(workbookPath));
@@ -464,8 +434,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
   });
   const moreStyles = O.filter(stylesPath, () => styled.more);
   const dropped = A.getSomes(A.map(first.paths, (path) => droppedPartOf(path, read, moreStyles)));
-  // `disableChecks` keeps the shape checked and skips the filters: the shared text table can hold millions of
-  // entries, each already held to the caps as it was read.
+  // decision: engine-makes-skip-filters
   return Opened.make(
     { bytes, caps, dateSystem, sheets, styles: styled.styles, strings, dropped },
     { disableChecks: true }

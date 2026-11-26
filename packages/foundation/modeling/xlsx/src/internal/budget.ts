@@ -1,7 +1,3 @@
-// What one read may still keep beside the rows, counted once across every sheet it reads, and the warnings it has
-// kept. Every sheet reader of a read is handed the same budget, so a file that names one part from many sheets, or
-// holds many parts, still meets one cap on each list (`XlsxLimits`). An item past its list's cap is dropped and
-// counted, and the warnings end with one `ListTruncated` per list that dropped any.
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
 import { ListTruncated, XlsxKeptList, XlsxWarning } from "../XlsxDiagnostic.schema.ts";
@@ -9,9 +5,16 @@ import type { Caps } from "./container.ts";
 
 /**
  * One read's caps on the lists it keeps, what each has used, and the warnings kept so far.
+ *
+ * **Details**
+ * Every sheet reader of a read is handed the same budget, so a file that names one part from many sheets, or holds
+ * many parts, still meets one cap on each list (`XlsxLimits`). An item past its list's cap is dropped and counted,
+ * and the warnings end with one `ListTruncated` per list that dropped any.
+ *
+ * **Gotchas**
+ * One budget belongs to one read and is never shared between reads.
  */
-// crispen: counters bumped once per warning, merge, span and shared formula of every sheet, and the column stamps of
-// the row in hand; one mutable ledger per read, never shared between reads, is the cheapest exact count.
+// decision: hot-paths-are-mutable-loops
 export class ReadBudget {
   /** The stamp each column was last given; a column holding the current row's stamp already has a cell. */
   private readonly stamps: Uint32Array;

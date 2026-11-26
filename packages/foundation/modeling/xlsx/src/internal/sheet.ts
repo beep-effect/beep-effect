@@ -1,8 +1,3 @@
-// One worksheet part, read event by event: its rows of cells, its merged ranges, its hidden columns and the extent
-// it declares. A reader is fed the part's XML events and hands back each row as its end tag arrives, so a sheet of
-// any length costs one row of memory until the caller keeps the rows. Nothing here trusts the file: a reference
-// that cannot be read is placed after the one before it, and a value that cannot be read is kept as what was
-// written and reported.
 import { $XlsxId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -75,12 +70,10 @@ export class SheetLayout extends S.Opaque<SheetLayout, { readonly brand: unique 
   }).pipe($I.annoteSchema("SheetLayout", { description: "What a sheet's XML says beside its rows" }))
 ) {}
 
-/**
- * The cell types the reader tells apart (the `t` attribute). Any other is read as `n`, a number, which is what Excel
- * does with a cell that has none.
- */
 const CellType = LiteralKit(["n", "s", "str", "b", "e", "d", "inlineStr"]).pipe(
-  $I.annoteSchema("CellType", { description: "A cell's `t` attribute as the reader tells it apart" })
+  $I.annoteSchema("CellType", {
+    description: "A cell's `t` attribute as the reader tells it apart; any other is read as `n`, as Excel reads none",
+  })
 );
 
 type CellType = typeof CellType.Type;
@@ -94,34 +87,25 @@ const byColumn = Order.mapInput(Order.Number, (cell: CellInput) => cell.column);
 const byStart = Order.mapInput(Order.Number, (span: readonly [first: number, last: number]) => span[0]);
 const numberText = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
 const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d+)?)?Z?)?$/;
-/** A style index as a cell may write one: digits only, nine at most, so it is read exactly and names a style or none. */
 const styleIndex = /^\d{1,9}$/;
-/** A shared text index as a cell may write one: digits only, so no other text (`0x1`, `1e0`, nothing) names an entry. */
 const sharedIndex = /^\d{1,15}$/;
 const general = StyleFormat.general;
 const shortDate: StyleFormat = styleOf(XlsxNumberFormat.shortDate);
 const blank = XlsxBlank.make({});
-// The reader builds every value from parts it has just checked (a finite number, text within the cap, an error code
-// from the list), so its constructors skip the filters and keep the shape checked. Every workbook a test reads, from
-// a fixture, a generated file or a hostile one, is held to `S.is(XlsxWorkbook)`, which runs them all.
+// decision: engine-makes-skip-filters
 const checked = { disableChecks: true } as const;
 
-/**
- * The hidden columns that `<col>` spans cover, each once and in rising order, as many as the read's cap on hidden
- * columns leaves room for; the columns past it are counted as dropped.
- */
 const columnsOf = (spans: ReadonlyArray<readonly [first: number, last: number]>, budget: ReadBudget): Array<number> => {
-  // crispen: a sweep over the spans sorted by start; `next` is the first column not yet given, so a column covered
-  // by many spans is given once and the work is the spans plus the columns kept, whatever the spans repeat.
+  // decision: hot-paths-are-mutable-loops
   const columns: Array<number> = [];
   const room = budget.room("hiddenColumns");
   let covered = 0;
-  let next = 0;
+  let firstColumnNotGiven = 0;
   for (const [first, last] of A.sort(spans, byStart)) {
-    const from = Math.max(first, next);
+    const from = Math.max(first, firstColumnNotGiven);
     if (from <= last) covered += last - from + 1;
     for (let column = from; column <= last && columns.length < room; column += 1) columns.push(column);
-    next = Math.max(next, last + 1);
+    firstColumnNotGiven = Math.max(firstColumnNotGiven, last + 1);
   }
   budget.takeUpTo("hiddenColumns", covered);
   return columns;
@@ -133,35 +117,28 @@ const letters: { readonly [letter: string]: number } = R.fromEntries(
   A.map(A.fromIterable("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), (letter, index) => [letter, index + 1] as const)
 );
 
-/**
- * The 0-based column of a cell reference such as `B7`, or -1 when it is not one. The row comes from the row element.
- */
-// crispen: read for every cell of every sheet, so a loop over the letters with no pattern and no allocation, and -1
-// rather than an Option; `XlsxAddress.parse` is the pattern-based reading for anything that is not this hot path.
-const columnOf = (reference: string): number => {
+// decision: hot-paths-are-mutable-loops
+const columnOfIgnoringRow = (reference: string): number => {
   const start = reference[0] === "$" ? 1 : 0;
   const end = lettersEnd(reference, start);
-  const column = lettersValue(reference, start, end);
+  const column = oneBasedColumnOf(reference, start, end);
   if (end === start || end - start > 3 || column > MAX_COLUMN + 1) return -1;
   const digits = reference[end] === "$" ? end + 1 : end;
   return digits < reference.length && allDigits(reference, digits) ? column - 1 : -1;
 };
 
-/** The index past the column letters of `reference` that begin at `from`. */
 const lettersEnd = (reference: string, from: number): number => {
   let i = from;
   while (letters[reference[i] ?? ""] !== undefined) i += 1;
   return i;
 };
 
-/** The 1-based column the letters of `reference` from `from` up to `to` name. */
-const lettersValue = (reference: string, from: number, to: number): number => {
+const oneBasedColumnOf = (reference: string, from: number, to: number): number => {
   let column = 0;
   for (let i = from; i < to; i += 1) column = column * 26 + (letters[reference[i] ?? ""] ?? 0);
   return column;
 };
 
-/** Whether every character of `reference` from `from` on is a digit. */
 const allDigits = (reference: string, from: number): boolean => {
   for (let i = from; i < reference.length; i += 1) {
     const digit = reference[i] ?? "";
@@ -173,23 +150,16 @@ const allDigits = (reference: string, from: number): boolean => {
 const isCellType = S.is(CellType);
 const isErrorCode = S.is(XlsxErrorCode);
 
-/** A cell's `t` attribute as the reader tells it apart: `n` when it has none or one the reader does not know. */
 const cellTypeOf = (written: string | undefined): CellType => {
   const type = written ?? "n";
   return isCellType(type) ? type : "n";
 };
 
-/**
- * The style index a cell's `s` attribute names: -1 when it has none and -2 when what it writes is not a whole number.
- * A style index is a whole number the styles table could hold; anything else (a fraction, a sign, an exponent, digits
- * past a safe integer) is no index at all, and is reported as the cell wrote it.
- */
 const styleIndexOf = (written: string | undefined): number => {
   if (written === undefined) return -1;
   return styleIndex.test(written) ? Number(written) : -2;
 };
 
-/** What a cell reads as when its value cannot be read, for the reason given; the reason is reported. */
 type Unreadable = (reason: UnreadableCell["reason"]) => XlsxValue;
 
 const textValue = (value: string): XlsxValue => XlsxText.make({ text: value }, checked);
@@ -206,9 +176,29 @@ const errorOf = (raw: string, unreadable: Unreadable): XlsxValue =>
 /**
  * Reads one worksheet part. Feed it the part's events with `push`; each call returns the rows that ended in it.
  * `failed` holds the finding that stopped the read, after which events are ignored.
+ *
+ * **Details**
+ * The reader reads one worksheet part: its rows of cells, its merged ranges, its hidden columns and the extent it
+ * declares. It hands back each row as its end tag arrives, so a sheet of any length costs one row of memory until
+ * the caller keeps the rows. Nothing here trusts the file: a reference that cannot be read is placed after the one
+ * before it, and a value that cannot be read is kept as what was written and reported.
+ *
+ * **Gotchas**
+ * - A shared text index is digits only, so no other text (`0x1`, `1e0`, nothing) names an entry.
+ * - A hidden `<col>` span is kept as its two ends, never as its columns: one `<col>` of a few bytes may name every
+ *   column.
+ * - Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as the
+ *   formula, so that text is counted against the read's cap before it is moved. A group already kept takes its new
+ *   text in place; a new group needs room under the read's cap, and a group with none is dropped and counted, its
+ *   cells keeping the empty formula they wrote.
+ * - A date read from an ISO cell under a format that is not a date format is shown as Excel's short date; a number
+ *   becomes a date only under a date format, so this touches the ISO case alone.
+ * - The calendar schema holds each field of an ISO date to its range (an hour 0 to 23, a minute 0 to 59), so an
+ *   impossible time such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone
+ *   ("January 0, 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the
+ *   system's last serial.
  */
-// crispen: a mutable state machine fed one XML event at a time, for every element of every sheet; the fields are the
-// parser's position and the row and cell in hand. A reducer over immutable state would allocate per event.
+// decision: hot-paths-are-mutable-loops
 export class SheetReader {
   failed: O.Option<XlsxFatal> = O.none();
 
@@ -257,7 +247,7 @@ export class SheetReader {
   private cellStyle = -1;
   private cellStyleText = "";
   private cellReference = "";
-  // crispen: the text the next event belongs to; a plain union read on every text event of the sheet.
+  // decision: hot-paths-are-mutable-loops
   private target: "" | "v" | "f" | "t" = "";
   private targetDepth = -1;
   private skipDepth = -1;
@@ -300,7 +290,7 @@ export class SheetReader {
   /** Takes one event of the part and returns the rows that ended with it. */
   push(event: XmlEvent): ReadonlyArray<RowInput> {
     if (O.isSome(this.failed)) return none;
-    // crispen: one test per event of every sheet, in place of a matcher run on each one.
+    // decision: hot-paths-are-mutable-loops
     if (event._tag === "EndElement") return this.end();
     if (event._tag === "Text") this.text(event.text);
     else if (event._tag === "StartElement") {
@@ -425,7 +415,6 @@ export class SheetReader {
 
   /** Keeps a hidden `<col>` span, clamped to the column cap. */
   private addHiddenSpan(attributes: Readonly<Record<string, string>>): void {
-    // A span is kept as its two ends, never as its columns: one `<col>` of a few bytes may name every column.
     const first = Math.max(Number(attributes.min), 1);
     const last = Math.min(Number(attributes.max), this.caps.columns);
     if (Number.isInteger(first) && Number.isInteger(last) && first <= last && this.budget.take("hiddenSpans")) {
@@ -508,7 +497,7 @@ export class SheetReader {
   private cellColumnOf(written: string | undefined): number {
     const next = this.precedingColumn + 1;
     if (written === undefined) return next;
-    const parsed = columnOf(written);
+    const parsed = columnOfIgnoringRow(written);
     if (parsed >= 0) return parsed;
     this.warn(BadAddress.make({ sheet: this.sheet, row: this.rowNumber, raw: Str.slice(0, 255)(written) }));
     return next;
@@ -565,8 +554,6 @@ export class SheetReader {
     }
     const value = this.cellValue(raw, style.dated, (reason) => this.unreadable(raw, reason, address));
     if (value.kind === "Blank" && O.isNone(formula)) return;
-    // A date read from an ISO cell under a format that is not a date format is shown as Excel's short date; a number
-    // becomes a date only under a date format, so this touches the ISO case alone.
     const shown = value.kind === "Date" && !style.dated ? shortDate : style;
     this.note(value, shown, address);
     this.place(column, value, formula, shown.format);
@@ -593,8 +580,6 @@ export class SheetReader {
     }
     const master = MutableHashMap.get(this.masters, this.formulaShared);
     if (O.isNone(master)) return text;
-    // Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as the
-    // formula, so that text is counted against the read's cap before it is moved.
     if (!this.budget.spendSharedFormula(master.value.text.length)) {
       this.fail("sharedFormulaChars");
       return text;
@@ -603,8 +588,6 @@ export class SheetReader {
   }
 
   private keepMaster(text: string, column: number, row: number): void {
-    // A group already kept takes its new text in place; a new group needs room under the read's cap, and a group
-    // with none is dropped and counted, its cells keeping the empty formula they wrote.
     if (MutableHashMap.has(this.masters, this.formulaShared) || this.budget.take("sharedFormulas")) {
       MutableHashMap.set(this.masters, this.formulaShared, { text, column, row });
     }
@@ -637,10 +620,6 @@ export class SheetReader {
   }
 
   private isoDate(raw: string, unreadable: Unreadable): XlsxValue {
-    // The calendar schema holds each field to its range (an hour 0 to 23, a minute 0 to 59), so an impossible time
-    // such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone ("January 0,
-    // 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the system's last
-    // serial.
     const serial = O.fromNullishOr(isoDate.exec(Str.trim(raw))).pipe(
       O.filter((found) => found[3] !== "00"),
       O.flatMap((found) => this.serialOfIso(found)),
@@ -692,8 +671,6 @@ export class SheetReader {
 
   /** Adds the cell to its row, unless its column is already used there. */
   private place(column: number, value: XlsxValue, formula: O.Option<string>, format: XlsxNumberFormat): void {
-    // A column already used in this row is a repeat, found by its stamp in one step whatever order the cells
-    // came in: the first cell written there is kept and the repeat reported.
     if (!this.budget.claim(column)) {
       this.warn(
         BadAddress.make({ sheet: this.sheet, row: this.rowNumber, raw: Str.slice(0, 255)(this.cellReference) })

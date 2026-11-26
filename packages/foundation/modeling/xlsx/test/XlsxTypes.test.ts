@@ -1,7 +1,3 @@
-// The decoded side keeps every nominal type: a field or an array element of an Opaque schema is that Opaque, never
-// the struct inside it. `annotateKey` on an Opaque rebuilds the inner struct and drops the brand, so this file fails
-// to type-check if one comes back.
-
 import { XlsxCalendar } from "@beep/xlsx/XlsxSerial.schema";
 import { XlsxRow, XlsxWorkbook } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expectTypeOf, it } from "@effect/vitest";
@@ -14,7 +10,7 @@ import type { XlsxOutline, XlsxRead, XlsxSheetOutline } from "@beep/xlsx/XlsxRea
 import type { XlsxDroppedPart, XlsxSheetCount, XlsxSheetInfo, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import type * as O from "effect/Option";
 
-describe("the decoded side keeps its nominal types", () => {
+describe("the decoded side keeps its nominal types: an Opaque field or element is that Opaque, not its struct", () => {
   it("in the workbook", () => {
     expectTypeOf<XlsxWorkbook["sheets"][number]>().toEqualTypeOf<XlsxWorksheet>();
     expectTypeOf<XlsxWorkbook["dropped"][number]>().toEqualTypeOf<XlsxDroppedPart>();
