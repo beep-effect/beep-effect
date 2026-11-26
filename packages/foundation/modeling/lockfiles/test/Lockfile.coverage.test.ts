@@ -117,13 +117,16 @@ it.effect("name rewrites preserve metadata and handle absent, empty, identical a
       assert.strictEqual(rewritten.packages[1], noPath);
       assert.strictEqual(rewritten.packages[2], external);
       assert.deepStrictEqual(rewritten.importers, model.importers);
-      // W3-h: `PnpmExtension` is a branded `S.Opaque`, so `Lockfile.make`
-      // admits an equal copy of it, not the receiver's own object.
-      assert.deepStrictEqual(rewritten.extension, extension);
-      // W3-g bench fallback: packages, edges and importers stay `S.Class`, so
-      // `Lockfile.make` keeps unchanged entries by reference instead of
-      // re-validating the whole lockfile.
-      assert.strictEqual(rewritten.importers[0], importer);
+      assert.deepStrictEqual(
+        rewritten.extension,
+        extension,
+        "PnpmExtension is a branded S.Opaque, so Lockfile.make admits an equal copy, not the receiver's object"
+      );
+      assert.strictEqual(
+        rewritten.importers[0],
+        importer,
+        "S.Class entries are kept by reference instead of re-validating the whole lockfile"
+      );
     }
   })
 );

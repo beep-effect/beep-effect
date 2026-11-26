@@ -1,21 +1,3 @@
-// Document framing: a lockfile file is a YAML *stream*, not necessarily a
-// single document. pnpm 11 writes a config-dependencies ("env") preamble
-// document ahead of the lockfile whenever the workspace uses
-// `configDependencies` — the effected repo's own pnpm-lock.yaml is exactly
-// that shape.
-//
-// Both documents declare lockfileVersion, importers and packages, so the
-// preamble *validates* against the pnpm schema. A single-document parse
-// therefore succeeded and handed back a Lockfile describing an empty
-// workspace: the worst failure shape there is, because it looks like an
-// answer. These tests pin the deterministic framing rule (the lockfile is the
-// last document — pnpm composes the preamble as a prefix) and prove that an
-// unlocatable lockfile now fails typed instead of returning an empty model.
-// A preamble followed by an empty main document is AMBIGUOUS: pnpm writes
-// those exact bytes both for a config-dependency-only workspace with no root
-// package.json (effected#845) and for a workspace whose first install failed.
-// It reads as an empty model only when the caller asserts `configOnly`.
-
 import { Lockfile, LockfileFramingError, LockfileParseError } from "@beep/lockfiles/Lockfile";
 import { PnpmEnvLockfile } from "@beep/lockfiles/PnpmEnvLockfile";
 import { PnpmCatalogPin } from "@beep/lockfiles/PnpmExtension";
@@ -28,7 +10,6 @@ import * as Str from "effect/String";
 import { fixture } from "./support/fixtures.ts";
 import type { LockfileFormat } from "@beep/lockfiles/LockfileFormat";
 
-/** Flip a failing parse and hand back the typed framing error. */
 const framingError = Effect.fn("framingError")(function* (content: string, format: LockfileFormat) {
   const error = yield* Effect.flip(Lockfile.parse(content, { format }));
   assert.instanceOf(error, LockfileFramingError);
@@ -36,8 +17,7 @@ const framingError = Effect.fn("framingError")(function* (content: string, forma
   return error;
 });
 
-/** A pnpm config-dependencies preamble document, verbatim in shape. */
-const preamble = A.join(
+const configDependenciesPreamble = A.join(
   [
     "---",
     "lockfileVersion: '9.0'",
@@ -63,23 +43,24 @@ const preamble = A.join(
   "\n"
 );
 
-describe("document framing", () => {
+describe("document framing: a pnpm lockfile is the last document of its YAML stream", () => {
   describe("pnpm: a two-document lockfile parses the lockfile, not the preamble", () => {
     it.effect("reads the real workspace out of the second document", () =>
       Effect.gen(function* () {
         const lockfile = yield* Lockfile.parse(fixture("pnpm/multidoc/pnpm-lock.yaml"), { format: "pnpm" });
 
-        // The preamble also declares lockfileVersion/importers/packages, so
-        // these assertions are what tell the two documents apart.
         assert.deepStrictEqual(
           A.map(lockfile.workspacePackages, (p) => p.name),
-          ["packages/core", "packages/utils"]
+          ["packages/core", "packages/utils"],
+          "the preamble also declares lockfileVersion, importers and packages; only their contents differ"
         );
         assert.strictEqual(lockfile.packages.length, 5);
 
-        // The decisive one: the preamble's config-dependency package must NOT
-        // appear. Before the fix this was the *only* package in the model.
-        assert.deepStrictEqual(lockfile.packagesNamed("@effected/pnpm-plugin-effect"), []);
+        assert.deepStrictEqual(
+          lockfile.packagesNamed("@effected/pnpm-plugin-effect"),
+          [],
+          "a parse of the validating preamble yields its config dependency as the only package"
+        );
 
         const chalk = lockfile.packagesNamed("chalk");
         assert.strictEqual(chalk.length, 1);
@@ -93,10 +74,11 @@ describe("document framing", () => {
 
         assert.strictEqual(lockfile.extension?._tag, "pnpm");
         if (lockfile.extension?._tag === "pnpm") {
-          // The preamble has no catalogs at all — 0 catalogs was a symptom.
-          assert.deepStrictEqual(lockfile.extension.catalogs?.effect, {
-            effect: PnpmCatalogPin.make({ specifier: "4.0.0-beta.94", version: "4.0.0-beta.94" }),
-          });
+          assert.deepStrictEqual(
+            lockfile.extension.catalogs?.effect,
+            { effect: PnpmCatalogPin.make({ specifier: "4.0.0-beta.94", version: "4.0.0-beta.94" }) },
+            "the preamble declares no catalogs, so zero catalogs means the preamble was read"
+          );
           assert.deepStrictEqual(lockfile.extension.overrides, { lodash: "4.17.21" });
           assert.strictEqual(lockfile.extension.settings?.autoInstallPeers, true);
         }
@@ -131,33 +113,26 @@ describe("document framing", () => {
 
     it.effect("a lone document carrying a leading '---' marker is still the lockfile", () =>
       Effect.gen(function* () {
-        // pnpm's own byte-level reader keys off a leading "---" and would call
-        // this env-only. Selecting by document position rather than by prefix
-        // byte keeps a normalized single-document lockfile readable.
         const content = `---\n${fixture("pnpm/v1/pnpm-lock.yaml")}`;
         const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
 
-        assert.strictEqual(lockfile.packages.length, 5);
+        assert.strictEqual(
+          lockfile.packages.length,
+          5,
+          "selection by document position, not pnpm's leading '---' byte check, keeps a lone document the lockfile"
+        );
       })
     );
   });
 
-  describe("pnpm: a preamble followed by an empty main document is ambiguous", () => {
-    // pnpm 11 and 12 write these bytes for a workspace with no root
-    // package.json and only configDependencies (effected#845) — AND pnpm 12
-    // writes the very same bytes when a workspace WITH a root package.json
-    // fails its first install after the config dependencies went in
-    // (`pnpm/unsupported-interrupted-pnpm12`). The parser cannot tell them
-    // apart, so by default it fails closed, and reads the stream as an empty
-    // lockfile only on the caller's `configOnly` assertion.
+  describe("pnpm: a preamble followed by an empty main document is ambiguous, so it fails closed unless configOnly", () => {
     const configOnly = { format: "pnpm", configOnly: true } as const;
 
     it("the interrupted-install capture is byte-identical to the config-only capture", () => {
-      // The evidence the whole opt-in rests on: were these ever to differ, the
-      // parser could decide by content and the flag would be unnecessary.
       assert.strictEqual(
         fixture("pnpm/unsupported-interrupted-pnpm12/pnpm-lock.yaml"),
-        fixture("pnpm/env-configonly-pnpm12/pnpm-lock.yaml")
+        fixture("pnpm/env-configonly-pnpm12/pnpm-lock.yaml"),
+        "were these bytes to differ, the parser could decide by content and configOnly would be unnecessary"
       );
     });
 
@@ -194,9 +169,11 @@ describe("document framing", () => {
           assert.deepStrictEqual(lockfile.importers, []);
           assert.deepStrictEqual(lockfile.workspaceDependencies, []);
           assert.deepStrictEqual(lockfile.workspacePackages, []);
-          // The decisive one: the preamble records a config dependency, and it
-          // must not surface as a workspace package.
-          assert.deepStrictEqual(lockfile.packagesNamed("@effected/pnpm-plugin-effect"), []);
+          assert.deepStrictEqual(
+            lockfile.packagesNamed("@effected/pnpm-plugin-effect"),
+            [],
+            "the preamble's config dependency must not surface as a workspace package"
+          );
           assert.strictEqual(lockfile.extension?._tag, "pnpm");
         })
       );
@@ -204,7 +181,10 @@ describe("document framing", () => {
 
     it.effect("configOnly: the version is the preamble's, not a constant", () =>
       Effect.gen(function* () {
-        const lockfile = yield* Lockfile.parse(`${Str.replace("'9.0'", "'9.5'")(preamble)}\n---\n`, configOnly);
+        const lockfile = yield* Lockfile.parse(
+          `${Str.replace("'9.0'", "'9.5'")(configDependenciesPreamble)}\n---\n`,
+          configOnly
+        );
 
         assert.strictEqual(lockfile.lockfileVersion, "9.5");
         assert.deepStrictEqual(lockfile.packages, []);
@@ -214,7 +194,7 @@ describe("document framing", () => {
     it.effect("configOnly: a preamble below the supported version still fails the gate", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
-          Lockfile.parse(`${Str.replace("'9.0'", "'6.0'")(preamble)}\n---\n`, configOnly)
+          Lockfile.parse(`${Str.replace("'9.0'", "'6.0'")(configDependenciesPreamble)}\n---\n`, configOnly)
         );
 
         assert.instanceOf(error, LockfileParseError);
@@ -255,20 +235,22 @@ describe("document framing", () => {
 
       it.effect("more than two documents still fail 'unexpectedDocuments'", () =>
         Effect.gen(function* () {
-          // A preamble, an empty document, then a third: the config-only shape
-          // with one document too many is still outside the writer contract.
-          const error = yield* Effect.flip(Lockfile.parse(`${preamble}\n---\n---\n`, configOnly));
+          const error = yield* Effect.flip(Lockfile.parse(`${configDependenciesPreamble}\n---\n---\n`, configOnly));
 
           assert.instanceOf(error, LockfileFramingError);
           assert.strictEqual(error.reason, "unexpectedDocuments");
-          assert.strictEqual(error.documents, 3);
+          assert.strictEqual(
+            error.documents,
+            3,
+            "a preamble, an empty document and a third is outside pnpm's writer contract"
+          );
         })
       );
 
       it.effect("a non-empty main document declaring no importers still fails 'noImporters'", () =>
         Effect.gen(function* () {
           const error = yield* Effect.flip(
-            Lockfile.parse(`${preamble}\n---\nlockfileVersion: '9.0'\nimporters: {}\n`, configOnly)
+            Lockfile.parse(`${configDependenciesPreamble}\n---\nlockfileVersion: '9.0'\nimporters: {}\n`, configOnly)
           );
 
           assert.instanceOf(error, LockfileFramingError);
@@ -319,18 +301,23 @@ describe("document framing", () => {
 
     it.effect("more than two documents fail 'unexpectedDocuments', the same limit the env reader holds", () =>
       Effect.gen(function* () {
-        // Outside pnpm's writer contract, so no position identifies the
-        // lockfile. One splitter serves Lockfile.parse and PnpmEnvLockfile, so
-        // both refuse this stream the same way.
         const v1 = fixture("pnpm/v1/pnpm-lock.yaml");
-        const content = `${preamble}\n---\n${v1}---\n${v1}`;
+        const content = `${configDependenciesPreamble}\n---\n${v1}---\n${v1}`;
         const error = yield* framingError(content, "pnpm");
 
-        assert.strictEqual(error.reason, "unexpectedDocuments");
+        assert.strictEqual(
+          error.reason,
+          "unexpectedDocuments",
+          "outside pnpm's writer contract no document position identifies the lockfile"
+        );
         assert.strictEqual(error.documents, 3);
         const envError = yield* Effect.flip(PnpmEnvLockfile.configDependencies(content));
         assert.instanceOf(envError, LockfileFramingError);
-        assert.strictEqual(envError.reason, "unexpectedDocuments");
+        assert.strictEqual(
+          envError.reason,
+          "unexpectedDocuments",
+          "one splitter serves Lockfile.parse and PnpmEnvLockfile, so both refuse this stream alike"
+        );
         assert.strictEqual(envError.documents, 3);
       })
     );
@@ -344,12 +331,13 @@ describe("document framing", () => {
 
     it.effect("a lockfile document declaring no importers fails 'noImporters'", () =>
       Effect.gen(function* () {
-        // pnpm always records at least the root importer ".", so an empty
-        // importers map describes no workspace. Failing typed here is what
-        // keeps "empty workspace" from ever being a successful answer.
         const error = yield* framingError("lockfileVersion: '9.0'\nimporters: {}\n", "pnpm");
 
-        assert.strictEqual(error.reason, "noImporters");
+        assert.strictEqual(
+          error.reason,
+          "noImporters",
+          "pnpm always records the root importer '.', so an empty importers map describes no workspace"
+        );
       })
     );
 
@@ -387,16 +375,16 @@ describe("document framing", () => {
   });
 
   describe("npm and bun define no document framing and never shared the assumption", () => {
-    // JSON and JSONC are single-value by construction: a second top-level
-    // value is a syntax error, not a silently-ignored second document. These
-    // pin that, so the formats' framing posture is asserted rather than
-    // assumed.
     it.effect("npm: a second JSON value is a syntax error", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(Lockfile.parse('{"lockfileVersion":3}\n{"a":1}', { format: "npm" }));
 
         assert.instanceOf(error, LockfileParseError);
-        assert.strictEqual(error.stage, "syntax");
+        assert.strictEqual(
+          error.stage,
+          "syntax",
+          "JSON is single-value: a second top-level value is not an ignored document"
+        );
       })
     );
 
@@ -405,7 +393,11 @@ describe("document framing", () => {
         const error = yield* Effect.flip(Lockfile.parse('{"lockfileVersion":1}\n{"a":1}', { format: "bun" }));
 
         assert.instanceOf(error, LockfileParseError);
-        assert.strictEqual(error.stage, "syntax");
+        assert.strictEqual(
+          error.stage,
+          "syntax",
+          "JSONC is single-value: a second top-level value is not an ignored document"
+        );
       })
     );
   });

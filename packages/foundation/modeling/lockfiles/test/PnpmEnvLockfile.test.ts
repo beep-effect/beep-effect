@@ -1,24 +1,3 @@
-// PnpmEnvLockfile.packageManager: the package manager a pnpm-lock.yaml pins,
-// read out of the env preamble (the FIRST of two YAML documents), and
-// PnpmEnvLockfile.configDependencies: the config dependencies it records.
-//
-// The real fixtures are pnpm's own output, captured by probe on 2026-09-27:
-//   env-pnpm12     pnpm 12.6.0, devEngines.packageManager only (no configDependencies)
-//   env-pnpm11     pnpm 11.27.1, devEngines.packageManager only
-//   env-configdeps pnpm 12.6.0, a +sha512 specifier and a configDependency
-//   env-configdeps-pnpm11 / -pnpm12  pnpm 11.27.1 / 12.6.0, one bare
-//                  configDependency beside an ordinary dependency: the shape
-//                  the base side of effected#842 records
-//   env-configonly-pnpm11 / -pnpm12  pnpm 11.28.0 / 12.7.0, a workspace with
-//                  no package.json and one configDependency: the preamble
-//                  then an EMPTY main document (effected#845)
-// Both majors write the preamble with no configDependencies at all; a legacy
-// `packageManager` field (or no declaration) writes a single document.
-//
-// The failure cases use a hand-built preamble whose default renders a valid
-// lock (the positive control), then break exactly one edge per test — so each
-// failure is the mutation's doing, not a broken builder.
-
 import { ConfigDependencyLock } from "@beep/lockfiles/ConfigDependencyLock";
 import { LockfileFramingError, LockfileParseError } from "@beep/lockfiles/Lockfile";
 import { PackageManagerLock } from "@beep/lockfiles/PackageManagerLock";
@@ -44,7 +23,6 @@ const PLUGIN_0_11_1_SRI =
 const EXE_LINUX_X64_12_SRI =
   "sha512-qFWBneHJAJ73W4whtbaFOL1M/7DBC6ILHXuxc7ZPtEhfPuT1zeZiGrmKHoMAfJA+mcm6xhOFljqVTUS+00Jabw==";
 
-/** A well-formed SRI string, distinct per seed. */
 const sri = (seed: string): string => `sha512-${Str.slice(0, 86)(Str.repeat(86)(seed))}==`;
 
 interface PreambleOptions {
@@ -55,11 +33,6 @@ interface PreambleOptions {
   readonly pnpmSnapshot?: string | null;
 }
 
-/**
- * Render a two-document pnpm-lock.yaml. Defaults describe a valid pnpm 12.6.0
- * lock with one native; each option replaces (or, with `null`, deletes) one
- * part of it.
- */
 const preamble = (options: PreambleOptions = {}): string => {
   const pmDeps =
     options.pmDeps ??
@@ -121,13 +94,12 @@ const validationError = Effect.fn("validationError")(function* (content: string)
 
 const causeMessage = (error: LockfileParseError): string => (error.cause instanceof Error ? error.cause.message : "");
 
-describe("PnpmEnvLockfile.packageManager", () => {
+describe("PnpmEnvLockfile.packageManager reads the package manager pinned in the first-document env preamble", () => {
   describe("real pnpm output", () => {
     it.effect("pnpm 12: pnpm's integrity plus one native per platform, keyed without a version", () =>
       Effect.gen(function* () {
         const lock = yield* lockOf(fixture("env-pnpm12"));
-        // W3-h: a branded `S.Opaque` record is checked structurally.
-        assert.isTrue(S.is(PackageManagerLock)(lock));
+        assert.isTrue(S.is(PackageManagerLock)(lock), "a branded S.Opaque record is checked structurally");
         assert.strictEqual(lock.name, "pnpm");
         assert.strictEqual(lock.specifier, "12.6.0");
         assert.strictEqual(lock.version, "12.6.0");
@@ -162,7 +134,7 @@ describe("PnpmEnvLockfile.packageManager", () => {
   });
 
   describe("no package manager recorded → none", () => {
-    it.effect("a single-document lockfile has no preamble", () =>
+    it.effect("a single-document lockfile, as a legacy packageManager field writes, has no preamble", () =>
       Effect.gen(function* () {
         const result = yield* PnpmEnvLockfile.packageManager(fixture("v1"));
         assertNone(result);
@@ -171,10 +143,12 @@ describe("PnpmEnvLockfile.packageManager", () => {
 
     it.effect("a single document is not a preamble even when it declares packageManagerDependencies", () =>
       Effect.gen(function* () {
-        // The first document of a real two-document lockfile, alone: position,
-        // not content, is what makes a document the preamble.
         const onlyPreamble = Str.split(preamble(), "\n---\n")[0] ?? "";
-        assert.include(onlyPreamble, "packageManagerDependencies");
+        assert.include(
+          onlyPreamble,
+          "packageManagerDependencies",
+          "the lone document is a real preamble's content, yet position alone makes a preamble"
+        );
         const result = yield* PnpmEnvLockfile.packageManager(onlyPreamble);
         assertNone(result);
       })
@@ -315,11 +289,6 @@ describe("PnpmEnvLockfile.packageManager", () => {
   });
 });
 
-/**
- * Render a two-document pnpm-lock.yaml recording config dependencies only.
- * The default records one valid entry; `importer` and `packages` replace the
- * two halves a test breaks.
- */
 const configPreamble = (options: { readonly importer?: string; readonly packages?: string } = {}): string =>
   A.join(
     [
@@ -345,7 +314,7 @@ const configValidationError = Effect.fn("configValidationError")(function* (cont
   return error;
 });
 
-describe("PnpmEnvLockfile.configDependencies", () => {
+describe("PnpmEnvLockfile.configDependencies reads the config dependencies the env preamble records", () => {
   describe("real pnpm output", () => {
     for (const major of ["pnpm11", "pnpm12"]) {
       it.effect(`${major}, a bare configDependency: the integrity lives only in the preamble`, () =>
@@ -358,8 +327,7 @@ describe("PnpmEnvLockfile.configDependencies", () => {
             true
           );
           const lock = O.getOrThrow(recorded);
-          // W3-h: a branded `S.Opaque` record is checked structurally.
-          assert.isTrue(S.is(ConfigDependencyLock)(lock));
+          assert.isTrue(S.is(ConfigDependencyLock)(lock), "a branded S.Opaque record is checked structurally");
           assert.strictEqual(lock.name, "@effected/pnpm-plugin-effect");
           assert.strictEqual(lock.specifier, "0.11.1");
           assert.strictEqual(lock.version, "0.11.1");
@@ -378,9 +346,8 @@ describe("PnpmEnvLockfile.configDependencies", () => {
             O.map(HashMap.get(locks, "@effected/pnpm-plugin-effect"), (lock) => lock.integrity),
             PLUGIN_0_11_1_SRI
           );
-          // No devEngines, so the preamble records no package manager.
-          const packageManager1 = yield* PnpmEnvLockfile.packageManager(content);
-          assertNone(packageManager1);
+          const noDevEnginesPackageManager = yield* PnpmEnvLockfile.packageManager(content);
+          assertNone(noDevEnginesPackageManager);
         })
       );
     }
