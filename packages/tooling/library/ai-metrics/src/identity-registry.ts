@@ -360,7 +360,7 @@ const firstMatch = (pattern: RegExp, content: string): O.Option<string> =>
 
 const isNotFound = (error: PlatformError.PlatformError): boolean => Eq.equals(error.reason._tag, "NotFound");
 
-const readFileNoneOnlyWhenAbsentNeverWhenUnreadable = Effect.fn("AiMetrics.identityRegistry.readFileOption")(function* (
+const readFileOption = Effect.fn("AiMetrics.identityRegistry.readFileOption")(function* (
   filePath: string
 ): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
@@ -404,7 +404,7 @@ const probeGitRoot = Effect.fn("AiMetrics.identityRegistry.probeGitRoot")(functi
     });
   }
 
-  const readFileOption1 = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(gitPath);
+  const readFileOption1 = yield* readFileOption(gitPath);
   const pointer = pipe(
     readFileOption1,
     O.flatMap((content) => firstMatch(gitDirPointerPattern, content)),
@@ -453,7 +453,7 @@ const resolveRepositoryIdHash = Effect.fn("AiMetrics.identityRegistry.resolveRep
   hashSalt: string | undefined
 ): Effect.fn.Return<string, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
   const pathApi = yield* Path.Path;
-  const config = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(commonGitDir, "config"));
+  const config = yield* readFileOption(pathApi.join(commonGitDir, "config"));
   const originUrl = pipe(
     config,
     O.flatMap((content) => firstMatch(originUrlPattern, content)),
@@ -475,7 +475,7 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
   commonGitDir: string
 ): Effect.fn.Return<O.Option<string>, AiMetricsIdentityRegistryError, FileSystem.FileSystem | Path.Path> {
   const pathApi = yield* Path.Path;
-  const readFileOption2 = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(gitDir, "HEAD"));
+  const readFileOption2 = yield* readFileOption(pathApi.join(gitDir, "HEAD"));
   const head = pipe(readFileOption2, O.map(Str.trim));
 
   if (O.isNone(head)) {
@@ -491,13 +491,13 @@ const resolveRevision = Effect.fn("AiMetrics.identityRegistry.resolveRevision")(
     return O.none<string>();
   }
 
-  const readFileOption3 = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(commonGitDir, ref.value));
+  const readFileOption3 = yield* readFileOption(pathApi.join(commonGitDir, ref.value));
   const loose = pipe(readFileOption3, O.map(Str.trim));
   if (O.isSome(loose) && commitShaPattern.test(loose.value)) {
     return loose;
   }
 
-  const packed = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(pathApi.join(commonGitDir, "packed-refs"));
+  const packed = yield* readFileOption(pathApi.join(commonGitDir, "packed-refs"));
 
   return pipe(
     packed,
@@ -726,7 +726,7 @@ export const readAiMetricsIdentityRegistry: (
   Effect.fn("AiMetrics.readAiMetricsIdentityRegistry")(function* (dataRoot) {
     const pathApi = yield* Path.Path;
     const nowEpochMillis = yield* Clock.currentTimeMillis;
-    const content = yield* readFileNoneOnlyWhenAbsentNeverWhenUnreadable(identityRegistryPath(pathApi, dataRoot));
+    const content = yield* readFileOption(identityRegistryPath(pathApi, dataRoot));
 
     if (O.isNone(content)) {
       return AiMetricsIdentityRegistry.make({
@@ -944,25 +944,20 @@ export const upsertAiMetricsIdentityRegistry: (
         rootPath: input.rootPath,
       })
     );
-    const homeDirResolvedAsDiscoveryResultDoesSoTheirDigestsJoin = pathApi.resolve(input.homeDir);
-    const homeDirHash = yield* hashPrivate(homeDirResolvedAsDiscoveryResultDoesSoTheirDigestsJoin, input.hashSalt);
+    const resolvedHomeDir = pathApi.resolve(input.homeDir);
+    const homeDirHash = yield* hashPrivate(resolvedHomeDir, input.hashSalt);
     const rootPath = pathApi.resolve(input.rootPath);
     const instances = yield* Effect.forEach(
       input.sourceKinds,
       (sourceKind) =>
-        Effect.map(
-          hashPrivate(
-            `${homeDirResolvedAsDiscoveryResultDoesSoTheirDigestsJoin} ${rootPath} ${sourceKind}`,
-            input.hashSalt
-          ),
-          (instanceIdHash) =>
-            AiMetricsSourceInstance.make({
-              homeDirHash,
-              instanceIdHash,
-              lastSeenAtEpochMillis: nowEpochMillis,
-              rootId: root.rootId,
-              sourceKind,
-            })
+        Effect.map(hashPrivate(`${resolvedHomeDir} ${rootPath} ${sourceKind}`, input.hashSalt), (instanceIdHash) =>
+          AiMetricsSourceInstance.make({
+            homeDirHash,
+            instanceIdHash,
+            lastSeenAtEpochMillis: nowEpochMillis,
+            rootId: root.rootId,
+            sourceKind,
+          })
         ),
       { concurrency: 1 }
     );

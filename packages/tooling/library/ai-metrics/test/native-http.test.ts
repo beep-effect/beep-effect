@@ -123,7 +123,7 @@ const spanBody = (invalid = false) =>
       },
     ],
   });
-const independentResponseWireCheckingFieldNumbersAnd64BitCounts = Protobuf.parse(`syntax = "proto3";
+const responseWire = Protobuf.parse(`syntax = "proto3";
 message ExportTraceServiceResponse { PartialSuccess partial_success = 1; }
 message PartialSuccess { int64 rejected_spans = 1; string error_message = 2; }
 message Status { int32 code = 1; string message = 2; }`).root;
@@ -197,9 +197,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         .finish();
       const partial = yield* post(NodeZlib.gzipSync(encoded), "application/x-protobuf", "gzip");
       expect(partial.status).toBe(200);
-      const response =
-        independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("ExportTraceServiceResponse");
-      expect(response.toObject(response.decode(partial.bytes), { longs: String })).toEqual({
+      const response = responseWire.lookupType("ExportTraceServiceResponse");
+      expect(
+        response.toObject(response.decode(partial.bytes), { longs: String }),
+        "an independent response wire checks field numbers and 64-bit counts"
+      ).toEqual({
         partialSuccess: {
           rejectedSpans: "1",
           errorMessage: "Some spans were rejected by local admission",
@@ -230,7 +232,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const invalidProto = yield* post(new Uint8Array([255]), "application/x-protobuf");
       expect((yield* health).counts).toMatchObject({ malformed: 3, unsupported: 2, oversized: 2 });
       expect(invalidProto.status).toBe(400);
-      const status = independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("Status");
+      const status = responseWire.lookupType("Status");
       expect(status.toObject(status.decode(invalidProto.bytes))).toEqual({
         code: 3,
         message: "Local intake refused the request",
@@ -565,7 +567,7 @@ for (const reason of LaunchFacts.ObservationLaunchFactsError.fields.reason.liter
         expect(read).toHaveBeenCalledTimes(1);
         expect(refused.status).toBe(expectedStatus);
         expect(refused.headers.get("x-observation-receipt")).toBeNull();
-        const status = independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("Status");
+        const status = responseWire.lookupType("Status");
         expect(status.toObject(status.decode(refused.bytes))).toEqual({
           code: expectedCode,
           message: expectedMessage,
@@ -662,7 +664,7 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
         expect(failedCalls).toBe(1);
         expect(refused.status).toBe(503);
         expect(refused.headers.get("x-observation-receipt")).toBeNull();
-        const status = independentResponseWireCheckingFieldNumbersAnd64BitCounts.lookupType("Status");
+        const status = responseWire.lookupType("Status");
         expect(status.toObject(status.decode(refused.bytes))).toEqual({
           code: 14,
           message: "Local intake refused the request",

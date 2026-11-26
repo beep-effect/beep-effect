@@ -1276,7 +1276,7 @@ const presenceOnlyOwnedFieldValue = (
   field: HookPulseEventOwnedField
 ): O.Option<unknown> => input[field];
 
-const ownedSurfaceStampElseDigestDerivedOnlyForTheOwningEvent = (input: HookPulseRawEventInput) =>
+const ownedSurface = (input: HookPulseRawEventInput) =>
   O.getOrElse(
     O.map(
       filterHookPulseEventOwnedField(HookPulseEventOwnedField.Enum.surface, input.event.hook_event_name, input.surface),
@@ -1694,7 +1694,7 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
                   })
               )
             ),
-            surface: ownedSurfaceStampElseDigestDerivedOnlyForTheOwningEvent(input),
+            surface: ownedSurface(input),
           },
           { concurrency: 1 }
         ).pipe(

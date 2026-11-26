@@ -208,24 +208,36 @@ it.layer(
 });
 
 /** One home-variable environment: only a set `HOME` or `USERPROFILE` names the home-based store roots. */
-const homeStoreCase = Effect.fnUntraced(function* (environment: Readonly<Record<string, string>>, expected: string) {
+const homeStoreCase = Effect.fnUntraced(function* (
+  environment: Readonly<Record<string, string>>,
+  expected: string,
+  why: string
+) {
   const failure = yield* Effect.flip(resolvePnpmfiles(ROOT, { config: "1.0.0" })).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
     Effect.provideService(HostProcessPlatform, "linux")
   );
   assert.strictEqual(failure.reason, "notInstalled");
-  assert.include(failure.cause instanceof Error ? failure.cause.message : "", expected);
+  assert.include(failure.cause instanceof Error ? failure.cause.message : "", expected, why);
 });
 
 it.layer(counted({ "/home/u/.local/share/pnpm/store/v10": MemoryFileSystem.directory() }).layer, {
   timeout: "30 seconds",
 })((it) => {
   it.effect(
-    "off Windows the XDG store under HOME is searched without PNPM_HOME, as a standalone-script pnpm on macOS or an unexported shell needs; with HOME and USERPROFILE unset no home-based root exists (no passwd fallback)",
+    "off Windows the XDG store under HOME is searched without PNPM_HOME, and with HOME and USERPROFILE unset no root exists",
     () =>
       Effect.gen(function* () {
-        yield* homeStoreCase({}, "no pnpm store directory could be located");
-        yield* homeStoreCase({ HOME: "/home/u" }, "searched /home/u/.local/share/pnpm/store/v10");
+        yield* homeStoreCase(
+          {},
+          "no pnpm store directory could be located",
+          "with HOME and USERPROFILE unset no home-based root exists (no passwd fallback)"
+        );
+        yield* homeStoreCase(
+          { HOME: "/home/u" },
+          "searched /home/u/.local/share/pnpm/store/v10",
+          "a standalone-script pnpm on macOS or an unexported shell needs the XDG store without PNPM_HOME"
+        );
       })
   );
 });

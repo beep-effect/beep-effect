@@ -47,7 +47,7 @@ export const KeywordFamily = LiteralKit(["close", "fix", "resolve", "ref"]).pipe
  */
 export type KeywordFamily = typeof KeywordFamily.Type;
 
-const FAMILY_BY_KEYWORD_TOTAL_SO_A_MISSING_ENTRY_FAILS_TO_COMPILE: Record<ListKeyword, KeywordFamily> = {
+const FAMILY_BY_KEYWORD: Record<ListKeyword, KeywordFamily> = {
   close: "close",
   closes: "close",
   closed: "close",
@@ -86,5 +86,4 @@ const FAMILY_BY_KEYWORD_TOTAL_SO_A_MISSING_ENTRY_FAILS_TO_COMPILE: Record<ListKe
  * @category mapping
  * @since 0.0.0
  */
-export const keywordFamily = (keyword: ListKeyword): KeywordFamily =>
-  FAMILY_BY_KEYWORD_TOTAL_SO_A_MISSING_ENTRY_FAILS_TO_COMPILE[keyword];
+export const keywordFamily = (keyword: ListKeyword): KeywordFamily => FAMILY_BY_KEYWORD[keyword];

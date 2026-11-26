@@ -272,13 +272,15 @@ describe("@beep/skill-contract SkillProjection", () => {
   );
 
   it.effect.prop(
-    "allows every schema-derived contract after render and verification, unless a derived string holds an unpaired surrogate the canonical JSON frontmatter refuses",
+    "allows every schema-derived contract after render and verification, unless a derived string holds an unpaired surrogate",
     [Arbitrary.schema(SkillContract)],
     ([candidate]) =>
       Result.match(renderSkillMarkdown(candidate), {
         onFailure: (error) =>
           Effect.sync(() => {
-            expect(error.message).toMatch(rfc8785FrontmatterLoneSurrogateRefusal);
+            expect(error.message, "the canonical JSON frontmatter refuses an unpaired surrogate").toMatch(
+              rfc8785FrontmatterLoneSurrogateRefusal
+            );
           }),
         onSuccess: Effect.fnUntraced(function* (committed) {
           const verdict = yield* verifySkillArtifact(VerifySkillArtifactInput.make({ committed, contract: candidate }));
@@ -289,28 +291,27 @@ describe("@beep/skill-contract SkillProjection", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.effect(
-    "denies a well-typed contract when Md.render's adapter throws: canonical RFC 8785 JSON frontmatter refuses an unpaired surrogate",
-    () =>
-      Effect.gen(function* () {
-        const unrenderable = SkillContract.make({ ...contract, promise: "Validate one QA inventory \ud800." });
-        const verdict = yield* verifySkillArtifact(
-          VerifySkillArtifactInput.make({ committed: renderFixture(), contract: unrenderable })
-        );
+  it.effect("denies a well-typed contract when Md.render's adapter throws on an unpaired surrogate", () =>
+    Effect.gen(function* () {
+      const unrenderable = SkillContract.make({ ...contract, promise: "Validate one QA inventory \ud800." });
+      const verdict = yield* verifySkillArtifact(
+        VerifySkillArtifactInput.make({ committed: renderFixture(), contract: unrenderable })
+      );
 
-        expect(verdict.verdict).toBe("denied");
-        expect(
-          SkillArtifactVerdict.match(verdict, {
-            allowed: () => [],
-            denied: ({ reasons }) => reasons,
-          })
-        ).toContain("rerender-mismatch");
-        expect(
-          SkillArtifactVerdict.match(verdict, {
-            allowed: () => "",
-            denied: ({ checks }) => checks[0].detail,
-          })
-        ).toMatch(rfc8785FrontmatterLoneSurrogateRefusal);
-      })
+      expect(verdict.verdict).toBe("denied");
+      expect(
+        SkillArtifactVerdict.match(verdict, {
+          allowed: () => [],
+          denied: ({ reasons }) => reasons,
+        })
+      ).toContain("rerender-mismatch");
+      expect(
+        SkillArtifactVerdict.match(verdict, {
+          allowed: () => "",
+          denied: ({ checks }) => checks[0].detail,
+        }),
+        "canonical RFC 8785 JSON frontmatter refuses an unpaired surrogate"
+      ).toMatch(rfc8785FrontmatterLoneSurrogateRefusal);
+    })
   );
 });

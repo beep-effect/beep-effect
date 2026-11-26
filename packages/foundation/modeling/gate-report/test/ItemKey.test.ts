@@ -17,11 +17,11 @@ import * as Str from "effect/String";
 
 const equivalent = S.toEquivalence(ItemKey);
 
-describe("stable item keys (SPEC): file and full name for a test; file, code or rule, and normalized message shape for a diagnostic", () => {
+describe("stable item keys: file and full name for a test; file, code or rule, and normalized message shape for a diagnostic", () => {
   it("keeps same-named tests in two files distinct", () => {
     const a = ItemKey.cases.TestKey.make({ file: "src/a.test.ts", fullName: "math > adds" });
     const b = ItemKey.cases.TestKey.make({ file: "src/b.test.ts", fullName: "math > adds" });
-    assert.isFalse(equivalent(a, b));
+    assert.isFalse(equivalent(a, b), "item keys are stable as the SPEC defines them");
     assert.notStrictEqual(fingerprint(a), fingerprint(b));
   });
 

@@ -39,7 +39,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
-const fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty =
+const fakeXdgOpen =
   '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n';
 
 const decodeUnknownSequenceBreakDampingV1Result = S.decodeUnknownResult(SequenceBreakDampingV1);
@@ -647,10 +647,7 @@ esac
         `${store.fakeBin}/notify-send`,
         '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
       );
-      yield* fs.writeFileString(
-        `${store.fakeBin}/xdg-open`,
-        fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
-      );
+      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpen);
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       const resultNotifier18 = yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri);
       expectSilentSuccess(resultNotifier18);
@@ -661,7 +658,9 @@ esac
           Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
           TestClock.withLive
         );
-      expect(opened).toBe(`${uri}\n`);
+      expect(opened, "the fake xdg-open renames a temp capture, so a poller never sees opened.txt empty").toBe(
+        `${uri}\n`
+      );
       const readFileString19 = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
       expect(readFileString19).toContain("--action=default=Open task");
       const notificationRows20 = yield* notificationRows(store);
@@ -748,10 +747,7 @@ esac
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
             );
-            yield* fs.writeFileString(
-              `${store.fakeBin}/xdg-open`,
-              fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
-            );
+            yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpen);
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             const resultNotifier25 = yield* runNotifier(
               store,
@@ -856,10 +852,7 @@ esac
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
             );
-            yield* fs.writeFileString(
-              `${store.fakeBin}/xdg-open`,
-              fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
-            );
+            yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpen);
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             const argument1 = { ...store, hookPath: prePath };
             const writerPermissionRequestInput1 = yield* writerPermissionRequestInput(rawSessionId, rawCwd);
@@ -906,9 +899,9 @@ printf '77\\n'
       const store = yield* makeNotifierStore();
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
-      const notifySendWhoseOperatorAnswersAsSoonAsTheCardAppears = `${store.fakeBin}/notify-send`;
+      const notifySend = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        notifySendWhoseOperatorAnswersAsSoonAsTheCardAppears,
+        notifySend,
         `#!/usr/bin/env bash\ncat "$HOME/resolve.ndjson" >>'${store.hookPath}'\nprintf '77\\n'\n`
       );
       yield* fs.writeFileString(
@@ -919,7 +912,9 @@ printf '77\\n'
       const resultNotifier31 = yield* runNotifier(store, "", "", "urgent", "/workspace/clone");
       expectSilentSuccess(resultNotifier31);
       const closed = yield* fs.readFileString(`${store.stateHome}/gdbus.txt`);
-      expect(closed).toContain("org.freedesktop.Notifications.CloseNotification 77");
+      expect(closed, "the fake operator answers as soon as the card appears").toContain(
+        "org.freedesktop.Notifications.CloseNotification 77"
+      );
       const decodedNotifications32 = yield* decodedNotifications(store);
       expect(
         A.map(
@@ -1041,9 +1036,9 @@ done
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
-      const notifySendListenerEndingAtOnceAsATimedOutOneWould = `${store.fakeBin}/notify-send`;
+      const notifySend = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        notifySendListenerEndingAtOnceAsATimedOutOneWould,
+        notifySend,
         `#!/usr/bin/env bash
 case " $* " in *" --replace-id=42 "*) echo replace ;; *) echo new ;; esac >>"$HOME/listeners.txt"
 printf '42\\n'
@@ -1069,7 +1064,9 @@ printf '42\\n'
       expectSilentSuccess(resultNotifier41);
       yield* waitForNotificationRows(store, 6);
       const readFileString42 = yield* fs.readFileString(`${store.stateHome}/listeners.txt`);
-      expect(readFileString42).toBe("new\nreplace\nreplace\n");
+      expect(readFileString42, "the fake listener ends at once, as a timed-out one would").toBe(
+        "new\nreplace\nreplace\n"
+      );
     })
   );
 
@@ -1079,9 +1076,9 @@ printf '42\\n'
       const store = yield* makeNotifierStore();
       yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
-      const slowNotifySendWhoseOperatorAnswersBeforeTheCardIdIsKnown = `${store.fakeBin}/notify-send`;
+      const slowNotifySend = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        slowNotifySendWhoseOperatorAnswersBeforeTheCardIdIsKnown,
+        slowNotifySend,
         `#!/usr/bin/env bash
 cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
 sleep 2
@@ -1112,7 +1109,9 @@ done
       );
       expectSilentSuccess(resultNotifier43);
       const readFileString44 = yield* fs.readFileString(`${store.stateHome}/gdbus.txt`);
-      expect(readFileString44).toContain("org.freedesktop.Notifications.CloseNotification 42");
+      expect(readFileString44, "the slow fake operator answers before the card ID is known").toContain(
+        "org.freedesktop.Notifications.CloseNotification 42"
+      );
     })
   );
 
@@ -1129,9 +1128,9 @@ done
       );
       yield* fs.chmod(`${store.fakeBin}/timeout`, 0o755);
       yield* fs.writeFileString(`${store.stateHome}/resolve.ndjson`, `${yield* postToolUseLine}\n`);
-      const notifySendWhoseClickLandsBeforeTheWaitResolvesSinceTheHarnessEndsOnWorkerExit = `${store.fakeBin}/notify-send`;
+      const notifySend = `${store.fakeBin}/notify-send`;
       yield* fs.writeFileString(
-        notifySendWhoseClickLandsBeforeTheWaitResolvesSinceTheHarnessEndsOnWorkerExit,
+        notifySend,
         `#!/usr/bin/env bash
 printf "%s\\n" "$@" >"$HOME/desktop.txt"
 printf "42\\ndefault\\n"
@@ -1139,10 +1138,7 @@ sleep 0.5
 cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
 `
       );
-      yield* fs.writeFileString(
-        `${store.fakeBin}/xdg-open`,
-        fakeXdgOpenRenamingATempCaptureSoAPollerNeverSeesOpenedTxtEmpty
-      );
+      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpen);
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       yield* fs.writeFileString(`${store.fakeBin}/gdbus`, "#!/usr/bin/env bash\nexit 0\n");
       yield* fs.chmod(`${store.fakeBin}/gdbus`, 0o755);
@@ -1158,7 +1154,9 @@ cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
           Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
           TestClock.withLive
         );
-      expect(opened).toBe(`${uri}\n`);
+      expect(opened, "the click lands before the wait resolves, since the harness ends on worker exit").toBe(
+        `${uri}\n`
+      );
       const desktop = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
       expect(desktop).toContain("--action=default=Open parent task");
       expect(desktop).toContain("Headless child of a ChatGPT Desktop task");

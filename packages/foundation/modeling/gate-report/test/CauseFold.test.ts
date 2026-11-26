@@ -46,7 +46,7 @@ describe("cause folding", () => {
     assert.strictEqual(defaultCauseFolds[0].code, "TS6305");
   });
 
-  it("folds the TS6305 cascade to one line with its count, cause and supplied fix command, and the projection is at most five lines (AC-L7); the list is synthetic and the repository-generated fixture arrives with the type-checker adapter", () => {
+  it("folds the TS6305 cascade to one line with its count, cause and supplied fix command, in at most five lines (AC-L7)", () => {
     const report = makeReport({
       gate: "check",
       itemKind: "diagnostic",
@@ -57,7 +57,11 @@ describe("cause folding", () => {
     });
     const lines = projectWith({ report, fixes: { TS6305: FIX } });
     assert.isAtMost(lines.length, 5);
-    assert.include(lines, `TS6305 x701: upstream declarations are not built. Fix: ${FIX}`);
+    assert.include(
+      lines,
+      `TS6305 x701: upstream declarations are not built. Fix: ${FIX}`,
+      "the cascade list is synthetic; the repository-generated fixture arrives with the type-checker adapter"
+    );
     assert.strictEqual(lines[0], lines[lines.length - 1]);
   });
 

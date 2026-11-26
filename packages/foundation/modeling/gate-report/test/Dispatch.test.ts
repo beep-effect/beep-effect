@@ -62,7 +62,7 @@ declare global {
   }
 }
 
-const UPSTREAM_MCP_TOOLS_BUILT_FROM_PARTS_SO_THIS_FILE_NEVER_MATCHES = new RegExp(
+const UPSTREAM_MCP_TOOLS = new RegExp(
   A.join(
     A.map(
       [
@@ -421,7 +421,11 @@ describe("pointers come only from the supplied table (AC-L9)", () => {
     const sources = import.meta.glob<string>("../src/**/*.ts", { eager: true, import: "default", query: "?raw" });
     assert.isAbove(R.keys(sources).length, 10);
     for (const [file, text] of R.toEntries(sources)) {
-      assert.notMatch(text, UPSTREAM_MCP_TOOLS_BUILT_FROM_PARTS_SO_THIS_FILE_NEVER_MATCHES, file);
+      assert.notMatch(
+        text,
+        UPSTREAM_MCP_TOOLS,
+        `${file} names an upstream MCP tool; the pattern is built from parts so this test file never matches`
+      );
     }
   });
 });

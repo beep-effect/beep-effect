@@ -552,7 +552,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
     );
     for (const kind of ["valid", "malformed", "oversized"]) {
       it.effect(
-        `production Cowork preparation projects metadata and validates ${kind} synthetic ACK from a transport-only server with no journal`,
+        `production Cowork preparation projects metadata and validates ${kind} synthetic ACK from a transport-only server`,
         () =>
           Effect.gen(function* () {
             const good = yield* encode({ receiptId: id, accepted: 1, rejected: 0 });
@@ -577,7 +577,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
               "PRIVATE-secret",
             ])
               expect(Str.includes(marker)(forwarded)).toBe(false);
-            expect(Str.includes("synthetic-ack-occurrence")(forwarded)).toBe(true);
+            expect(
+              Str.includes("synthetic-ack-occurrence")(forwarded),
+              "the transport-only server has no journal"
+            ).toBe(true);
           })
       );
     }
@@ -1124,7 +1127,7 @@ for (const selector of ["cli", "local-agent"]) {
     )
   );
 }
-const guardedServeFailingAfterBindSignalledOnLstatInsideSocketCleanupHarness = `import ast, json, os, signal, socket, sys
+const guardedServeHarness = `import ast, json, os, signal, socket, sys
 config = json.load(sys.stdin)
 tree = ast.parse(config["source"])
 guarded = [node for node in tree.body if isinstance(node, ast.Try)]
@@ -1153,17 +1156,13 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
       const f = yield* fixture();
       const fs = yield* FileSystem.FileSystem;
       const body = yield* encode({ source: coworkPeerSource, socketPath: f.policy.socketPath });
-      const child = yield* ChildProcess.make(
-        f.policy.pythonExecutable,
-        ["-I", "-B", "-c", guardedServeFailingAfterBindSignalledOnLstatInsideSocketCleanupHarness],
-        {
-          extendEnv: false,
-          stdin: Stream.make(new TextEncoder().encode(body)),
-          stderr: "ignore",
-        }
-      );
+      const child = yield* ChildProcess.make(f.policy.pythonExecutable, ["-I", "-B", "-c", guardedServeHarness], {
+        extendEnv: false,
+        stdin: Stream.make(new TextEncoder().encode(body)),
+        stderr: "ignore",
+      });
       const exitCode = yield* child.exitCode;
-      expect(exitCode).toBe(2);
+      expect(exitCode, "the guarded serve fails after bind, signalled on lstat inside socket cleanup").toBe(2);
       const present = yield* fs.exists(f.policy.socketPath);
       assertFalse(present);
     })
