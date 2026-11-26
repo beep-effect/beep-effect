@@ -1,6 +1,3 @@
-// Internal lexical tokens retain processed values and parser indentation columns.
-// The lexer constructs typed literals without validating each token.
-
 import { $YamlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";

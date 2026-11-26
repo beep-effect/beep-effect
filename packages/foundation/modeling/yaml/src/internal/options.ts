@@ -1,8 +1,3 @@
-// Internal option shapes consumed by the engine. The public facade owns the
-// option schemas (`YamlParseOptions`, `YamlStringifyOptions`,
-// `YamlFormattingOptions`); the engine takes these plain records so it never
-// imports the facade. Defaults are applied where consumed (`?? default`).
-
 import { $YamlId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
@@ -10,7 +5,6 @@ import { CollectionStyle, QuoteCompat, QuoteStyle, ScalarStyle } from "../YamlNo
 
 const $I = $YamlId.create("internal/options");
 
-/** A facade options bag: every engine field optional, explicit `undefined` allowed. */
 type OptionsBag<A> = { readonly [K in keyof A]?: A[K] | undefined };
 
 /**
