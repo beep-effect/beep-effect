@@ -55,7 +55,7 @@ export class AttemptJournalExported extends S.Opaque<AttemptJournalExported, { r
  *
  * **Details**
  *
- * The store is partitioned by the GitHub repository the owning clone's
+ * The store is partitioned by the checkout repository the owning clone's
  * `origin` names, the key `yeet economics --fleet` reads it by. A clone with no
  * such origin has no partition and no fleet reader, so its journals stay in
  * the checkout and are removed with it.
@@ -79,7 +79,7 @@ export class AttemptJournalExportUnpartitioned extends S.Opaque<
     journals: S.Natural,
   }).pipe(
     $I.annoteSchema("AttemptJournalExportUnpartitioned", {
-      description: "Attempt journals left in a checkout whose clone's origin names no GitHub repository.",
+      description: "Attempt journals left in a checkout whose clone's origin names no repository.",
     })
   )
 ) {}
@@ -163,7 +163,7 @@ export class AttemptJournalStoreUnpartitioned extends S.Opaque<
 >()(
   S.TaggedStruct("unpartitioned", {}).pipe(
     $I.annoteSchema("AttemptJournalStoreUnpartitioned", {
-      description: "A checkout whose clone's origin names no GitHub repository, so its journals have no partition.",
+      description: "A checkout whose clone's origin names no repository, so its journals have no partition.",
     })
   )
 ) {}

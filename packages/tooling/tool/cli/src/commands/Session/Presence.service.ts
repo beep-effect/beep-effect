@@ -15,8 +15,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeJsonLinesStore, makeMemoryJsonLinesStore, newestPerKey } from "../../internal/state/JsonLinesStore.ts";
-import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
-import { PrProvenanceEntrypoint, PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository, checkoutRepositoryStateKey } from "../../internal/state/WorkstationState.ts";
+import { PrProvenanceEntrypoint } from "../Yeet/internal/Provenance.ts";
 import {
   ClaudePeerRoute,
   SessionPresence,
@@ -26,13 +26,13 @@ import {
 } from "./Route.schemas.ts";
 import { localT3EnvironmentId, nonBlankConfig } from "./RouteProbe.service.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
-import { sessionHarness } from "./SessionLedger.service.ts";
+import { sessionHarness, sessionStateDirectory } from "./SessionLedger.service.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 import type { SessionRoute } from "./Route.schemas.ts";
 import type { SessionCheckoutFacts } from "./SessionLedger.service.ts";
 
 const $I = $RepoCliId.create("commands/Session/Presence.service");
-const equivalentRepository = S.toEquivalence(PrRepository);
+const equivalentRepository = S.toEquivalence(CheckoutRepository);
 const decodeEntrypoint = S.decodeUnknownOption(PrProvenanceEntrypoint);
 
 /**
@@ -41,10 +41,10 @@ const decodeEntrypoint = S.decodeUnknownOption(PrProvenanceEntrypoint);
  * **Example** (Describe a list)
  *
  * ```ts
- * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import type { SessionPresenceStoreShape } from "@beep/repo-cli/test/Session"
  *
- * const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
+ * const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
  * const listAll = (store: SessionPresenceStoreShape) => store.list(repository)
  * console.log(listAll.length) // 1
  * ```
@@ -54,7 +54,7 @@ const decodeEntrypoint = S.decodeUnknownOption(PrProvenanceEntrypoint);
  */
 export interface SessionPresenceStoreShape {
   readonly append: (row: SessionPresence) => Effect.Effect<void, SessionLedgerError>;
-  readonly list: (repository: PrRepository) => Effect.Effect<ReadonlyArray<SessionPresence>, SessionLedgerError>;
+  readonly list: (repository: CheckoutRepository) => Effect.Effect<ReadonlyArray<SessionPresence>, SessionLedgerError>;
 }
 
 /**
@@ -82,19 +82,19 @@ export class SessionPresenceStore extends Context.Service<SessionPresenceStore, 
  * **Example** (Name the file)
  *
  * ```ts
- * import { PrRepository, sessionPresenceFileName } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, sessionPresenceFileName } from "@beep/repo-cli/test/Session"
  *
- * console.log(sessionPresenceFileName(PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
+ * console.log(sessionPresenceFileName(CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
  * // "github.com__beep-effect__beep-effect.presence.jsonl"
  * ```
  *
- * @param repository - The GitHub repository the presence rows belong to.
+ * @param repository - The checkout repository the presence rows belong to.
  * @returns A JSON Lines file name with no local data in it.
  * @category formatting
  * @since 0.0.0
  */
-export const sessionPresenceFileName = (repository: PrRepository): string =>
-  `${repository.host}__${repository.owner}__${repository.name}.presence.jsonl`;
+export const sessionPresenceFileName = (repository: CheckoutRepository): string =>
+  `${checkoutRepositoryStateKey(repository)}.presence.jsonl`;
 
 /**
  * Build the filesystem-backed presence store in the session state directory.
@@ -113,7 +113,7 @@ export const sessionPresenceFileName = (repository: PrRepository): string =>
  */
 export const makeSessionPresenceStoreLive = Effect.fn("SessionPresenceStore.makeLive")(function* () {
   const store = yield* makeJsonLinesStore({
-    directory: yield* resolveWorkstationStateDir({ override: "BEEP_SESSION_STATE_ROOT", store: "sessions" }),
+    directory: yield* sessionStateDirectory,
     fileName: sessionPresenceFileName,
     partitionOf: (row: SessionPresence) => row.repository,
     encode: flow(
@@ -270,11 +270,11 @@ export const routesFor = (input: {
  * **Example** (Build the capture effect)
  *
  * ```ts
- * import { capturePresence, PrRepository } from "@beep/repo-cli/test/Session"
+ * import { capturePresence, CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  *
  * const facts = {
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   clone: "/work/beep-effect",
  *   checkout: "/work/beep-effect",
  *   lane: "beep-effect",
@@ -325,11 +325,11 @@ export const capturePresence = Effect.fn("SessionPresence.capture")(function* (f
  * **Example** (Build the record effect)
  *
  * ```ts
- * import { PrRepository, recordPresence } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, recordPresence } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  *
  * const facts = {
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   clone: "/work/beep-effect",
  *   checkout: "/work/beep-effect",
  *   lane: "beep-effect",

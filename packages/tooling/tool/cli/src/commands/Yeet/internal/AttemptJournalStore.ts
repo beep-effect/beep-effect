@@ -50,7 +50,7 @@ import {
 } from "./AttemptJournalStore.schemas.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./Planner.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";
-import type { PrRepository } from "./Provenance.ts";
+import type { CheckoutRepositoryKey } from "../../../internal/state/WorkstationState.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/AttemptJournalStore");
 
@@ -163,10 +163,11 @@ const fileJournal = Effect.fnUntraced(function* (storeRunsDirectory: string, jou
  * **Example** (Locate a repository's retained journals)
  *
  * ```ts
- * import { attemptJournalStoreRunsDirectory, PrRepository } from "@beep/repo-cli/test/Yeet"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/SharedInternals"
+ * import { attemptJournalStoreRunsDirectory } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect"
  *
- * const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
+ * const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
  * console.log(Effect.isEffect(attemptJournalStoreRunsDirectory(repository))) // true
  * ```
  *
@@ -176,7 +177,7 @@ const fileJournal = Effect.fnUntraced(function* (storeRunsDirectory: string, jou
  * @since 0.0.0
  */
 export const attemptJournalStoreRunsDirectory = Effect.fn("AttemptJournalStore.runsDirectory")(function* (
-  repository: PrRepository
+  repository: CheckoutRepositoryKey
 ): Effect.fn.Return<string, AttemptJournalStoreError, Path.Path> {
   const path = yield* Path.Path;
   const root = yield* resolveWorkstationStateDir({ override: yeetStateRootEnvVar, store: "yeet" }).pipe(
@@ -317,7 +318,7 @@ export interface AttemptJournalStoreShape {
    * Resolve and validate where a checkout's journals go, before anything is removed or renamed.
    *
    * @param checkout - The checkout at its own path; the `origin` of the clone its git metadata names is the partition.
-   * @returns The validated partition, or `unpartitioned` when the clone names no GitHub repository.
+   * @returns The validated partition, or `unpartitioned` when the clone names no repository.
    * @since 0.0.0
    */
   readonly locate: (checkout: string) => Effect.Effect<AttemptJournalStoreLocation, AttemptJournalStoreError>;
@@ -356,7 +357,7 @@ export interface AttemptJournalStoreShape {
  * readable `.beep/yeet/runs/<runId>/attempts.ndjson` of the checkout and
  * appends each row its store journal does not hold yet, so
  * exporting the same journals twice, or a restored lane's grown journal,
- * stores each row once. The partition is the GitHub repository named by the
+ * stores each row once. The partition is the checkout repository named by the
  * `origin` of the clone the checkout's git metadata points to; a clone with no
  * such origin has no partition, so its journals are reported `unpartitioned`
  * and not copied. Any read or write failure fails the call, as do git metadata
@@ -426,5 +427,5 @@ export const renderAttemptJournalExport: (journalExport: AttemptJournalExport) =
   exported: ({ journals, runsDirectory, appendedRows, retainedRows }) =>
     `attempt journals: ${journals} exported to ${runsDirectory} (${appendedRows} new rows, ${retainedRows} already retained)`,
   unpartitioned: ({ journals }) =>
-    `attempt journals: ${journals} not exported; the owning clone's origin names no GitHub repository to file them under`,
+    `attempt journals: ${journals} not exported; the owning clone's origin names no repository to file them under`,
 });

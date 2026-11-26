@@ -3,6 +3,7 @@ import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
 import { parseProcStatStartTime } from "@beep/repo-cli/commands/Worktree";
 import {
+  CheckoutRepository,
   ClaudePeerRoute,
   capturePresence,
   claimsFor,
@@ -14,7 +15,6 @@ import {
   localT3EnvironmentId,
   makeSessionPresenceStoreLive,
   makeSessionRouteProbeLive,
-  PrRepository,
   RouteReading,
   recordPresence,
   renderPeerSend,
@@ -57,7 +57,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 const hookPath = NodeURL.fileURLToPath(new URL("../../../../../.claude/hooks/session-ledger.sh", import.meta.url));
 const decodeRoute = S.decodeUnknownEffect(SessionRoute);
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
