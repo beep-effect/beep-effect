@@ -531,7 +531,7 @@ describe("Pandoc.mapping", () => {
   );
 
   it.effect(
-    "emits a well-formed YouTube watch URL from the bare 11-character id the Md model admits (CSF-026), so a mapped id cannot contain reserved characters, and placeholders empty tables",
+    "emits a well-formed YouTube watch URL from the bare 11-character id the Md model admits, and placeholders empty tables",
     () =>
       Effect.gen(function* () {
         const document = Md.Document.make({
@@ -544,9 +544,10 @@ describe("Pandoc.mapping", () => {
           expect.arrayContaining(["Table", "YouTube"])
         );
         expect(expectStr(expectPara(result.pandoc.blocks[0]).children[0]).text).toBe("[table]");
-        expect(expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url).toBe(
-          "https://www.youtube.com/watch?v=ab-CD_12xyz"
-        );
+        expect(
+          expectLink(expectPara(result.pandoc.blocks[1]).children[0]).target.url,
+          "CSF-026: the bare id the Md model admits means a mapped id cannot contain reserved characters"
+        ).toBe("https://www.youtube.com/watch?v=ab-CD_12xyz");
       })
   );
 

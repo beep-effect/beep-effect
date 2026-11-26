@@ -536,13 +536,13 @@ const legacyAgentSessionIdExpression = (tableAlias: string): string =>
 const currentAgentSessionIdExpression = (tableAlias: string): string =>
   `concat('session-', sha256(concat('session', chr(0), ${tableAlias}.source_kind, chr(0), ${tableAlias}.source_path_hash)))`;
 
-const repointTurnsWhileTheLegacySessionRowsTheyMapThroughStillExist = `UPDATE ai_metrics_turns AS turns
+const repointLegacyTurns = `UPDATE ai_metrics_turns AS turns
    SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
    FROM ai_metrics_sessions AS sessions
    WHERE turns.agent_session_id = sessions.agent_session_id
      AND sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`;
 
-const dropPerRunDuplicatesBeforeRekeyingKeepingTheGreatestLegacyDigest = `DELETE FROM ai_metrics_sessions AS legacy
+const dropPerRunDuplicates = `DELETE FROM ai_metrics_sessions AS legacy
    WHERE legacy.agent_session_id = ${legacyAgentSessionIdExpression("legacy")}
      AND EXISTS (
        SELECT 1
@@ -559,15 +559,15 @@ const dropPerRunDuplicatesBeforeRekeyingKeepingTheGreatestLegacyDigest = `DELETE
          )
      )`;
 
-const rekeySurvivingLegacySessionsToTheirContentId = `UPDATE ai_metrics_sessions AS sessions
+const rekeyLegacySessions = `UPDATE ai_metrics_sessions AS sessions
    SET agent_session_id = ${currentAgentSessionIdExpression("sessions")}
    WHERE sessions.agent_session_id = ${legacyAgentSessionIdExpression("sessions")}`;
 
 // decision: ingest-run-is-lineage-not-identity
 const legacyAgentSessionIdMigrationStatements = [
-  repointTurnsWhileTheLegacySessionRowsTheyMapThroughStillExist,
-  dropPerRunDuplicatesBeforeRekeyingKeepingTheGreatestLegacyDigest,
-  rekeySurvivingLegacySessionsToTheirContentId,
+  repointLegacyTurns,
+  dropPerRunDuplicates,
+  rekeyLegacySessions,
 ] as const;
 
 const legacyAgentTaskIdMigrationStatements = [

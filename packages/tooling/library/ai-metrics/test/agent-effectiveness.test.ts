@@ -342,7 +342,7 @@ const phoenixRejectsAggregateQueryWithHttp500: PhoenixAggregateOutcome = (reques
     )
   );
 
-const phoenixAnswers200WithNodeMissingEveryCountField: PhoenixAggregateOutcome = (request) =>
+const phoenix200WithoutCountFields: PhoenixAggregateOutcome = (request) =>
   Effect.succeed(
     HttpClientResponse.fromWeb(
       request,
@@ -633,7 +633,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
             pipe(Str.includes("could not be decoded")(report.phoenix.message), assertTrue);
             assertFalse(
               Str.includes("HTTP")(report.phoenix.message),
-              "a 200 with an unreadable body is not a rejection"
+              "a 200 whose node lacks every count field is an unreadable body, not a rejection"
             );
             assertFalse(
               Str.includes("budget")(report.phoenix.message),
@@ -643,7 +643,7 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
             provideScopedLayer(
               phoenixAggregatesUnavailableRuntimeLayer(
                 path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
-                phoenixAnswers200WithNodeMissingEveryCountField
+                phoenix200WithoutCountFields
               )
             )
           );

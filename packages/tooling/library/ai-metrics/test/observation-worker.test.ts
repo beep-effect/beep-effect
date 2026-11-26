@@ -509,7 +509,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   )
 );
 
-const ownNativeBundleMemoMapPreservingThePreviousFreshBuildAndScope = Layer.makeMemoMapUnsafe();
+const nativeBundleMemoMap = Layer.makeMemoMapUnsafe();
 
 it.layer(
   Layer.mergeAll(
@@ -521,11 +521,11 @@ it.layer(
   {
     timeout: "30 seconds",
     excludeTestServices: true,
-    memoMap: ownNativeBundleMemoMapPreservingThePreviousFreshBuildAndScope,
+    memoMap: nativeBundleMemoMap,
   }
 )((it) =>
   it.effect(
-    "gates real filesystem discovery behind worker admission, because a memory filesystem would change the observed source, and the spawner stays limited to the existing discovery implementation",
+    "gates real discovery behind worker admission; own native-bundle memo map preserves the previous fresh build and scope",
     () =>
       Effect.gen(function* () {
         const f = yield* fixture();
@@ -547,7 +547,10 @@ it.layer(
         );
         const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
         const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe25).toMatchObject({ reason: "paused" });
+        expect(
+          pipe25,
+          "real filesystem discovery, because a memory filesystem would change the observed source, and the spawner stays limited to the existing discovery implementation"
+        ).toMatchObject({ reason: "paused" });
         expect((yield* f.worker.stats).pages).toBe(0);
         yield* f.worker.resume;
         const result = yield* f.worker.discover(discovery, policy);

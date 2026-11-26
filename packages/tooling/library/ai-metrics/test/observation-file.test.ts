@@ -9,17 +9,14 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 
-const MemoryFileSystemModelingTheOwnerModeAndLinkMetadataTheseChecksRead = Layer.merge(
-  MemoryFileSystem.layer,
-  Path.layer
-);
+const MemoryFileSystemLayer = Layer.merge(MemoryFileSystem.layer, Path.layer);
 
 const errors = {
   readFailed: ObservationLaunchError.make({ reason: "directory" }),
   oversize: ObservationLaunchError.make({ reason: "configuration" }),
   encodingFailed: ObservationLaunchError.make({ reason: "namespace" }),
 };
-it.layer(MemoryFileSystemModelingTheOwnerModeAndLinkMetadataTheseChecksRead, { timeout: "20 seconds" })((it) => {
+it.layer(MemoryFileSystemLayer, { timeout: "20 seconds" })((it) => {
   it.effect("enforces the byte ceiling before decoding and preserves each caller-owned refusal", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -53,7 +50,10 @@ it.layer(MemoryFileSystemModelingTheOwnerModeAndLinkMetadataTheseChecksRead, { t
       yield* fs.writeFileString(file, "synthetic", { mode: 0o600 });
       const info = yield* fs.lstat(file);
       const uid = O.getOrThrow(info.uid);
-      expect(isPrivateObservationFile(info, uid)).toBe(true);
+      expect(
+        isPrivateObservationFile(info, uid),
+        "the memory file system models the owner, mode and link metadata these checks read"
+      ).toBe(true);
       expect(isPrivateObservationFile(uid)(info)).toBe(true);
       expect(isPrivateObservationFile(info, uid + 1)).toBe(false);
       expect(isPrivateObservationFile({ ...info, uid: O.none() }, -1)).toBe(false);

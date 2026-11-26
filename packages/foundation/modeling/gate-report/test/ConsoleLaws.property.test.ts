@@ -98,14 +98,18 @@ describe("console laws as properties over the report schema's arbitrary", () => 
   );
 
   it.effect.prop(
-    "AC-L3: a note-only document with no tail fits the budget and opens and closes on its verdict, so a kept note brings the closing verdict back inside the budget",
+    "AC-L3: a note-only document with no tail fits the budget and opens and closes on its verdict",
     [noteOnlyTaillessDocuments, budgets],
     ([{ verdict, notes }, budget]) =>
       Effect.sync(() => {
         const document = ConsoleDocument.make({ verdict, entries: notes, folds: [] });
         const lines = projectLines({ document, budget });
         assert.isAtMost(size(lines), budget.maxChars);
-        assert.strictEqual(lines[0], lines[lines.length - 1]);
+        assert.strictEqual(
+          lines[0],
+          lines[lines.length - 1],
+          "a kept note brings the closing verdict back inside the budget"
+        );
         assertNone(fitDocument({ document, budget }).cap);
       }),
     runs

@@ -58,9 +58,12 @@ import type {
 
 const $I = $TomlId.create("TomlFormat");
 
-class TomlFormatInvariantError extends S.TaggedError<TomlFormatInvariantError, { readonly brand: unique symbol }>(
-  $I`TomlFormatInvariantError`
-)(
+class TomlFormatInvariantError extends S.TaggedError<
+  TomlFormatInvariantError,
+  {
+    readonly brand: unique symbol;
+  }
+>($I`TomlFormatInvariantError`)(
   "TomlFormatInvariantError",
   {
     message: S.String.pipe(
@@ -84,7 +87,12 @@ class TomlFormatInvariantError extends S.TaggedError<TomlFormatInvariantError, {
  * @category type-level
  * @since 0.0.0
  */
-export type TomlRangeLike = TomlRange | { readonly offset: number; readonly length: number };
+export type TomlRangeLike =
+  | TomlRange
+  | {
+      readonly offset: number;
+      readonly length: number;
+    };
 
 /**
  * **Example** (Select CRLF formatting)
@@ -100,7 +108,12 @@ export type TomlRangeLike = TomlRange | { readonly offset: number; readonly leng
  * @category configuration
  * @since 0.0.0
  */
-export class TomlFormattingOptions extends S.Opaque<TomlFormattingOptions, { readonly brand: unique symbol }>()(
+export class TomlFormattingOptions extends S.Opaque<
+  TomlFormattingOptions,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     newline: S.optionalKey(S.Literals(["\n", "\r\n"])).pipe(
       $I.annoteKey("TomlFormattingOptions.newline", {
@@ -134,9 +147,12 @@ export class TomlFormattingOptions extends S.Opaque<TomlFormattingOptions, { rea
  * @category errors
  * @since 0.0.0
  */
-export class TomlModificationError extends S.TaggedError<TomlModificationError, { readonly brand: unique symbol }>(
-  $I`TomlModificationError`
-)(
+export class TomlModificationError extends S.TaggedError<
+  TomlModificationError,
+  {
+    readonly brand: unique symbol;
+  }
+>($I`TomlModificationError`)(
   "TomlModificationError",
   {
     diagnostic: TomlDiagnostic.pipe(
@@ -256,18 +272,31 @@ const collectProtectedMultilineStringSpans: {
 class NonRedundantFormatEmitter {
   readonly edits: Array<TaggedEdit> = [];
   private readonly source: string;
+
   constructor(source: string) {
     this.source = source;
   }
 
-  push(expr: TomlExpression, offset: number, length: number, newText: string): void {
+  readonly push: {
+    (expr: TomlExpression, offset: number, length: number, newText: string): void;
+    (offset: number, length: number, newText: string): (expr: TomlExpression) => void;
+  } = dual(4, (expr: TomlExpression, offset: number, length: number, newText: string): void => {
     if (Str.slice(offset, offset + length)(this.source) !== newText) {
-      this.edits.push({ offset, length, newText, exprOffset: expr.offset, exprEnd: expr.offset + expr.length });
+      this.edits.push({
+        offset,
+        length,
+        newText,
+        exprOffset: expr.offset,
+        exprEnd: expr.offset + expr.length,
+      });
     }
-  }
+  });
 }
 
-const skipBom = (source: string, lineStart: number): number => (lineStart === 0 && source[0] === BOM ? 1 : lineStart);
+const skipBom: {
+  (source: string, lineStart: number): number;
+  (lineStart: number): (source: string) => number;
+} = dual(2, (source: string, lineStart: number): number => (lineStart === 0 && source[0] === BOM ? 1 : lineStart));
 
 const formatLeading: {
   (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void;
@@ -299,7 +328,10 @@ const formatCommentBody: {
   }
 );
 
-const newlineStart = (source: string, exprEnd: number, contentEnd: number): number => {
+const newlineStart: {
+  (source: string, exprEnd: number, contentEnd: number): number;
+  (exprEnd: number, contentEnd: number): (source: string) => number;
+} = dual(3, (source: string, exprEnd: number, contentEnd: number): number => {
   let nlStart = exprEnd;
   if (nlStart > contentEnd && source[nlStart - 1] === LF) {
     nlStart -= 1;
@@ -308,7 +340,7 @@ const newlineStart = (source: string, exprEnd: number, contentEnd: number): numb
     }
   }
   return nlStart;
-};
+});
 
 const formatTail: {
   (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression, contentEnd: number): void;
@@ -326,41 +358,47 @@ const formatTail: {
   formatCommentBody(source, emit, expr, boundedTailCommentStart + 1, nlStart);
 });
 
-const scanLineEnd = (source: string, pos: number, end: number): number => {
+const scanLineEnd: {
+  (source: string, pos: number, end: number): number;
+  (pos: number, end: number): (source: string) => number;
+} = dual(3, (source: string, pos: number, end: number): number => {
   let j = pos;
   while (j < end && source[j] !== LF && source[j] !== CR) {
     j++;
   }
   return j;
-};
+});
 
-const skipNewline = (source: string, pos: number, end: number): number => {
+const skipNewline: {
+  (source: string, pos: number, end: number): number;
+  (pos: number, end: number): (source: string) => number;
+} = dual(3, (source: string, pos: number, end: number): number => {
   if (pos >= end) {
     return pos;
   }
   const isCrlf = source[pos] === CR && pos + 1 < end && source[pos + 1] === LF;
   return pos + (isCrlf ? 2 : 1);
-};
+});
 
-const formatTriviaLine = (
-  source: string,
-  emit: NonRedundantFormatEmitter,
-  expr: TomlTrivia,
-  start: number,
-  lineEnd: number
-): void => {
-  const wsEnd = scanWs(source, start, lineEnd);
-  if (wsEnd >= lineEnd) {
-    if (lineEnd > start) {
-      emit.push(expr, start, lineEnd - start, "");
+const formatTriviaLine: {
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlTrivia, start: number, lineEnd: number): void;
+  (emit: NonRedundantFormatEmitter, expr: TomlTrivia, start: number, lineEnd: number): (source: string) => void;
+} = dual(
+  5,
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlTrivia, start: number, lineEnd: number): void => {
+    const wsEnd = scanWs(source, start, lineEnd);
+    if (wsEnd >= lineEnd) {
+      if (lineEnd > start) {
+        emit.push(expr, start, lineEnd - start, "");
+      }
+      return;
     }
-    return;
+    if (wsEnd > start) {
+      emit.push(expr, start, wsEnd - start, "");
+    }
+    formatCommentBody(source, emit, expr, wsEnd + 1, lineEnd);
   }
-  if (wsEnd > start) {
-    emit.push(expr, start, wsEnd - start, "");
-  }
-  formatCommentBody(source, emit, expr, wsEnd + 1, lineEnd);
-};
+);
 
 const formatTrivia: {
   (source: string, emit: NonRedundantFormatEmitter, expr: TomlTrivia): void;
@@ -375,7 +413,10 @@ const formatTrivia: {
   }
 });
 
-const firstSpanEndingAfter = (spans: ReadonlyArray<readonly [number, number]>, p: number, pos: number): number => {
+const firstSpanEndingAfter: {
+  (spans: ReadonlyArray<readonly [number, number]>, p: number, pos: number): number;
+  (p: number, pos: number): (spans: ReadonlyArray<readonly [number, number]>) => number;
+} = dual(3, (spans: ReadonlyArray<readonly [number, number]>, p: number, pos: number): number => {
   let index = p;
   let span = spans[index];
   while (span !== undefined && span[1] <= pos) {
@@ -383,28 +424,47 @@ const firstSpanEndingAfter = (spans: ReadonlyArray<readonly [number, number]>, p
     span = spans[index];
   }
   return index;
-};
+});
 
-const normalizeNewlineAt = (
-  source: string,
-  emit: NonRedundantFormatEmitter,
-  expr: TomlExpression,
-  i: number,
-  end: number,
-  target: "\n" | "\r\n"
-): number => {
-  const code = source[i];
-  if (code === CR && i + 1 < end && source[i + 1] === LF) {
-    if (target === "\n") {
-      emit.push(expr, i, 2, "\n");
+const normalizeNewlineAt: {
+  (
+    source: string,
+    emit: NonRedundantFormatEmitter,
+    expr: TomlExpression,
+    i: number,
+    end: number,
+    target: "\n" | "\r\n"
+  ): number;
+  (
+    emit: NonRedundantFormatEmitter,
+    expr: TomlExpression,
+    i: number,
+    end: number,
+    target: "\n" | "\r\n"
+  ): (source: string) => number;
+} = dual(
+  6,
+  (
+    source: string,
+    emit: NonRedundantFormatEmitter,
+    expr: TomlExpression,
+    i: number,
+    end: number,
+    target: "\n" | "\r\n"
+  ): number => {
+    const code = source[i];
+    if (code === CR && i + 1 < end && source[i + 1] === LF) {
+      if (target === "\n") {
+        emit.push(expr, i, 2, "\n");
+      }
+      return i + 2;
     }
-    return i + 2;
+    if (code === LF && target === "\r\n") {
+      emit.push(expr, i, 1, "\r\n");
+    }
+    return i + 1;
   }
-  if (code === LF && target === "\r\n") {
-    emit.push(expr, i, 1, "\r\n");
-  }
-  return i + 1;
-};
+);
 
 const normalizeNewlines: {
   (
@@ -452,7 +512,10 @@ const headerContentEnd: {
   return bracket + (P.isTagged(expr, "TomlArrayTableHeader") ? 2 : 1);
 });
 
-const formatExpressionLayout = (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void => {
+const formatExpressionLayout: {
+  (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void;
+  (emit: NonRedundantFormatEmitter, expr: TomlExpression): (source: string) => void;
+} = dual(3, (source: string, emit: NonRedundantFormatEmitter, expr: TomlExpression): void => {
   if (P.isTagged(expr, "TomlTrivia")) {
     formatTrivia(source, emit, expr);
     return;
@@ -466,7 +529,7 @@ const formatExpressionLayout = (source: string, emit: NonRedundantFormatEmitter,
     return;
   }
   formatTail(source, emit, expr, headerContentEnd(source, expr));
-};
+});
 
 const protectedSpansOf = (expr: TomlExpression): ReadonlyArray<readonly [number, number]> => {
   const spans: Array<readonly [number, number]> = [];
@@ -476,18 +539,33 @@ const protectedSpansOf = (expr: TomlExpression): ReadonlyArray<readonly [number,
   return spans;
 };
 
-const formatFinalNewline = (
-  source: string,
-  emit: NonRedundantFormatEmitter,
-  expressions: ReadonlyArray<TomlExpression>,
-  target: "\n" | "\r\n" | undefined
-): void => {
-  if (expressions.length === 0 || source[source.length - 1] === LF) {
-    return;
+const formatFinalNewline: {
+  (
+    source: string,
+    emit: NonRedundantFormatEmitter,
+    expressions: ReadonlyArray<TomlExpression>,
+    target: "\n" | "\r\n" | undefined
+  ): void;
+  (
+    emit: NonRedundantFormatEmitter,
+    expressions: ReadonlyArray<TomlExpression>,
+    target: "\n" | "\r\n" | undefined
+  ): (source: string) => void;
+} = dual(
+  4,
+  (
+    source: string,
+    emit: NonRedundantFormatEmitter,
+    expressions: ReadonlyArray<TomlExpression>,
+    target: "\n" | "\r\n" | undefined
+  ): void => {
+    if (expressions.length === 0 || source[source.length - 1] === LF) {
+      return;
+    }
+    const last = A.getUnsafe(expressions, expressions.length - 1);
+    emit.push(last, source.length, 0, target ?? dominantNewline(source));
   }
-  const last = A.getUnsafe(expressions, expressions.length - 1);
-  emit.push(last, source.length, 0, target ?? dominantNewline(source));
-};
+);
 
 const computeFormatEdits: {
   (source: string, options: TomlFormattingOptions | undefined): Array<TaggedEdit>;
@@ -570,7 +648,12 @@ const intoTable = (node: ResNode | undefined): ResTable => {
 const buildSemanticIndex = (
   expressions: ReadonlyArray<TomlExpression>
 ): { readonly root: ResTable; readonly sections: ReadonlyArray<Section> } => {
-  const sections: Array<Section> = [{ header: undefined, insertAfter: undefined }];
+  const sections: Array<Section> = [
+    {
+      header: undefined,
+      insertAfter: undefined,
+    },
+  ];
   for (const expr of expressions) {
     if (P.isTagged(expr, "TomlTableHeader") || P.isTagged(expr, "TomlArrayTableHeader")) {
       sections.push({ header: expr, insertAfter: expr.offset + expr.length });
@@ -641,13 +724,22 @@ const buildSemanticIndex = (
         current = intoTable(child);
       }
       const name = A.getUnsafe(names, names.length - 1);
-      MutableHashMap.set(current.entries, name, { kind: "value", node: expr.value, expr });
+      MutableHashMap.set(current.entries, name, {
+        kind: "value",
+        node: expr.value,
+        expr,
+      });
     },
   });
   return { root, sections };
 };
 
-class ModifyFailure extends S.TaggedError<ModifyFailure, { readonly brand: unique symbol }>($I`ModifyFailure`)(
+class ModifyFailure extends S.TaggedError<
+  ModifyFailure,
+  {
+    readonly brand: unique symbol;
+  }
+>($I`ModifyFailure`)(
   "ModifyFailure",
   {
     code: TomlErrorCode.pipe(
@@ -710,13 +802,25 @@ interface Candidate {
 
 type DeleteTarget =
   | { readonly kind: "expression"; readonly expr: TomlKeyValue }
-  | { readonly kind: "inline-entry"; readonly table: TomlInlineTable; readonly index: number }
-  | { readonly kind: "array-item"; readonly array: TomlArray; readonly index: number };
+  | {
+      readonly kind: "inline-entry";
+      readonly table: TomlInlineTable;
+      readonly index: number;
+    }
+  | {
+      readonly kind: "array-item";
+      readonly array: TomlArray;
+      readonly index: number;
+    };
 
 type Cursor =
   | { readonly t: "table"; readonly table: ResTable }
   | { readonly t: "array-tables"; readonly node: ResArrayTables }
-  | { readonly t: "cst"; readonly node: TomlValueNode; readonly del: DeleteTarget }
+  | {
+      readonly t: "cst";
+      readonly node: TomlValueNode;
+      readonly del: DeleteTarget;
+    }
   | {
       readonly t: "inline";
       readonly table: TomlInlineTable;
@@ -731,7 +835,12 @@ const cstCursor: {
   2,
   (node: TomlValueNode, del: DeleteTarget): Cursor =>
     P.isTagged(node, "TomlInlineTable")
-      ? { t: "inline", table: node, candidates: A.map(node.entries, (entry, index) => ({ entry, index })), depth: 0 }
+      ? {
+          t: "inline",
+          table: node,
+          candidates: A.map(node.entries, (entry, index) => ({ entry, index })),
+          depth: 0,
+        }
       : { t: "cst", node, del }
 );
 
@@ -739,7 +848,10 @@ const stepInline: {
   (
     cur: Extract<Cursor, { t: "inline" }>,
     key: string
-  ): { readonly matches: ReadonlyArray<Candidate>; readonly full: Candidate | undefined };
+  ): {
+    readonly matches: ReadonlyArray<Candidate>;
+    readonly full: Candidate | undefined;
+  };
   (
     key: string
   ): (cur: Extract<Cursor, { t: "inline" }>) => {
@@ -751,7 +863,10 @@ const stepInline: {
   (
     cur: Extract<Cursor, { t: "inline" }>,
     key: string
-  ): { readonly matches: ReadonlyArray<Candidate>; readonly full: Candidate | undefined } => {
+  ): {
+    readonly matches: ReadonlyArray<Candidate>;
+    readonly full: Candidate | undefined;
+  } => {
     const matches = A.filter(cur.candidates, (candidate) => candidate.entry.keyPath[cur.depth]?.value === key);
     const first = matches[0];
     const full =
@@ -799,9 +914,18 @@ const stepInlineScope = (cur: InlineCursor, key: string): Cursor => {
     );
   }
   if (full !== undefined) {
-    return cstCursor(full.entry.value, { kind: "inline-entry", table: cur.table, index: full.index });
+    return cstCursor(full.entry.value, {
+      kind: "inline-entry",
+      table: cur.table,
+      index: full.index,
+    });
   }
-  return { t: "inline", table: cur.table, candidates: matches, depth: cur.depth + 1 };
+  return {
+    t: "inline",
+    table: cur.table,
+    candidates: matches,
+    depth: cur.depth + 1,
+  };
 };
 
 const stepCst = (node: TomlValueNode, segment: TomlSegment): Cursor => {
@@ -855,11 +979,19 @@ const spliceArrayItem: {
   const current = A.getUnsafe(items, index);
   if (index < items.length - 1) {
     const next = A.getUnsafe(items, index + 1);
-    return { offset: current.offset, length: next.offset - current.offset, newText: "" };
+    return {
+      offset: current.offset,
+      length: next.offset - current.offset,
+      newText: "",
+    };
   }
   const previous = A.getUnsafe(items, index - 1);
   const prevEnd = previous.offset + previous.length;
-  return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
+  return {
+    offset: prevEnd,
+    length: current.offset + current.length - prevEnd,
+    newText: "",
+  };
 });
 
 const spliceInlineEntry: {
@@ -873,11 +1005,19 @@ const spliceInlineEntry: {
   const current = A.getUnsafe(entries, index);
   if (index < entries.length - 1) {
     const next = A.getUnsafe(entries, index + 1);
-    return { offset: current.offset, length: next.offset - current.offset, newText: "" };
+    return {
+      offset: current.offset,
+      length: next.offset - current.offset,
+      newText: "",
+    };
   }
   const previous = A.getUnsafe(entries, index - 1);
   const prevEnd = previous.offset + previous.length;
-  return { offset: prevEnd, length: current.offset + current.length - prevEnd, newText: "" };
+  return {
+    offset: prevEnd,
+    length: current.offset + current.length - prevEnd,
+    newText: "",
+  };
 });
 
 const rootInsertOffset = (ctx: ModifyContext): number => {
@@ -905,7 +1045,11 @@ const insertEdit: {
   const line = `${pipe(keyPath, A.map(renderKey), A.join("."))} = ${renderInlineValue(value)}`;
   const offset = table.sectionIndex === 0 ? rootInsertOffset(ctx) : sectionInsertOffset(ctx, table.sectionIndex);
   const needLeading = offset > 0 && ctx.source[offset - 1] !== LF;
-  return { offset, length: 0, newText: `${needLeading ? ctx.nl : ""}${line}${ctx.nl}` };
+  return {
+    offset,
+    length: 0,
+    newText: `${needLeading ? ctx.nl : ""}${line}${ctx.nl}`,
+  };
 });
 
 const deleteTableValue = (key: string, existing: ResNode | undefined): Array<RawEdit> => {
@@ -915,7 +1059,13 @@ const deleteTableValue = (key: string, existing: ResNode | undefined): Array<Raw
   if (existing.kind !== "value") {
     return failResolve("DottedKeyConflict", `"${key}" is a table section, not a deletable value`);
   }
-  return [{ offset: existing.expr.offset, length: existing.expr.length, newText: "" }];
+  return [
+    {
+      offset: existing.expr.offset,
+      length: existing.expr.length,
+      newText: "",
+    },
+  ];
 };
 
 const terminalTable = (table: ResTable, key: string, value: unknown, ctx: ModifyContext): Array<RawEdit> => {
@@ -929,7 +1079,13 @@ const terminalTable = (table: ResTable, key: string, value: unknown, ctx: Modify
   if (existing.kind !== "value") {
     return failResolve("DottedKeyConflict", `"${key}" is already defined as a table and cannot become a value`);
   }
-  return [{ offset: existing.node.offset, length: existing.node.length, newText: renderInlineValue(value) }];
+  return [
+    {
+      offset: existing.node.offset,
+      length: existing.node.length,
+      newText: renderInlineValue(value),
+    },
+  ];
 };
 
 const terminalArrayTables = (node: ResArrayTables, segment: TomlSegment, value: unknown): Array<RawEdit> => {
@@ -972,7 +1128,13 @@ const terminalInline = (cur: InlineCursor, key: string, value: unknown): Array<R
     );
   }
   const entry = requireFullEntry(cur, key, full).entry;
-  return [{ offset: entry.value.offset, length: entry.value.length, newText: renderInlineValue(value) }];
+  return [
+    {
+      offset: entry.value.offset,
+      length: entry.value.length,
+      newText: renderInlineValue(value),
+    },
+  ];
 };
 
 const terminalCst = (node: TomlValueNode, segment: TomlSegment, value: unknown): Array<RawEdit> => {
@@ -993,7 +1155,13 @@ const terminalCst = (node: TomlValueNode, segment: TomlSegment, value: unknown):
     );
   }
   const item = A.getUnsafe(node.items, idx);
-  return [{ offset: item.offset, length: item.length, newText: renderInlineValue(value) }];
+  return [
+    {
+      offset: item.offset,
+      length: item.length,
+      newText: renderInlineValue(value),
+    },
+  ];
 };
 
 const terminal: {
@@ -1098,7 +1266,11 @@ export class TomlFormat {
               (edit) => Math.max(edit.exprOffset, range.offset) <= Math.min(edit.exprEnd, range.offset + range.length)
             );
       return A.map(filtered, (edit) =>
-        TomlEdit.make({ offset: edit.offset, length: edit.length, content: edit.newText })
+        TomlEdit.make({
+          offset: edit.offset,
+          length: edit.length,
+          content: edit.newText,
+        })
       );
     }
   );
@@ -1200,7 +1372,14 @@ export class TomlFormat {
       } = dual(
         (args) => P.isString(args[1]),
         (code: TomlErrorCodeRaw, message: string, offset = 0, length = 0): TomlModificationError =>
-          TomlModificationError.make({ diagnostic: TomlDiagnostic.fromRaw(text, { code, message, offset, length }) })
+          TomlModificationError.make({
+            diagnostic: TomlDiagnostic.fromRaw(text, {
+              code,
+              message,
+              offset,
+              length,
+            }),
+          })
       );
       if (path.length === 0) {
         return yield* failWith("DottedKeyConflict", "an empty path does not address a value");
@@ -1217,7 +1396,11 @@ export class TomlFormat {
         return yield* TomlModificationError.make({ diagnostic });
       }
       const { root, sections } = buildSemanticIndex(doc.expressions);
-      const ctx: ModifyContext = { source: text, sections, nl: options?.newline ?? dominantNewline(text) };
+      const ctx: ModifyContext = {
+        source: text,
+        sections,
+        nl: options?.newline ?? dominantNewline(text),
+      };
       const raw = yield* Effect.try({
         try: () => {
           let cursor: Cursor = { t: "table", table: root };
@@ -1247,7 +1430,13 @@ export class TomlFormat {
           throw defect;
         },
       });
-      return A.map(raw, (edit) => TomlEdit.make({ offset: edit.offset, length: edit.length, content: edit.newText }));
+      return A.map(raw, (edit) =>
+        TomlEdit.make({
+          offset: edit.offset,
+          length: edit.length,
+          content: edit.newText,
+        })
+      );
     })
   );
 

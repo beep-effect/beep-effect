@@ -442,7 +442,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
 
   it.layer(GitKitOverPlatformSpawnerForIndexReads, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "never starves the session-scope root agent docs, whose loss would move sessionHash, when a non-git config root exhausts the file budget",
+      "never starves the session-scope root agent docs when a non-git config root exhausts the file budget",
       () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -465,7 +465,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
           );
           const paths = snapshotPaths(result.files);
 
-          expect(paths).toContain("AGENTS.md");
+          expect(paths, "losing the session-scope root agent docs would move sessionHash").toContain("AGENTS.md");
           expect(paths).toContain("CLAUDE.md");
           expect(paths).toContain(".mcp.json");
           pipe(result.bounds.truncated, assertTrue);
