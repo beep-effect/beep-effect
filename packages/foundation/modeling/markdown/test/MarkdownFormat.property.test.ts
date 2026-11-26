@@ -68,11 +68,7 @@ describe("MarkdownFormat surgical fidelity", () => {
   );
 });
 
-// `format` was split into per-node formatters and its guards into small
-// predicates; this differential pins the conservative contract — a format
-// pass never changes what the document renders to — against commonmark.js
-// 0.31.2, with a fixed seed and a high run count.
-describe("MarkdownFormat against the reference implementation", () => {
+describe("MarkdownFormat against the commonmark.js 0.31.2 reference implementation", () => {
   const Line = S.Literals([
     "",
     "",

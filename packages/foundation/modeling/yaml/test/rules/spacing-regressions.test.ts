@@ -7,9 +7,7 @@ import { dual } from "effect/Function";
 import { builtin } from "./harness.ts";
 import type { LintContext, YamlLintDiagnostic } from "@beep/yaml/YamlLintRule";
 
-// The wrapper passes unknown options straight to the rule's check, bypassing
-// config validation while retaining the engine's real token/document context.
-const directCheck = (text: string, rule: YamlRule, options: unknown) =>
+const checkBypassingConfigValidation = (text: string, rule: YamlRule, options: unknown) =>
   YamlLint.run(
     text,
     [
@@ -49,7 +47,7 @@ describe("comment spacing at a leading BOM", () => {
   });
 
   it("still treats an inline BOM as preceding line content", () => {
-    const diagnostics = directCheck("a: \uFEFF # c\n", rule, { minSpacesBefore: 3 });
+    const diagnostics = checkBypassingConfigValidation("a: \uFEFF # c\n", rule, { minSpacesBefore: 3 });
     assert.strictEqual(diagnostics.length, 1);
     assert.strictEqual(diagnostics[0]?.message, "Too few spaces before comment (1 < 3)");
   });
@@ -63,7 +61,7 @@ describe("independent direct-call rule options", () => {
     { minSpacesBefore: 3, requireSpaceAfter: "invalid" },
   ]) {
     it(`keeps valid before-spacing with invalid ${"severity" in options ? "severity" : "requireSpaceAfter"}`, () => {
-      const diagnostics = directCheck("a: 1 # c\n", comments, options);
+      const diagnostics = checkBypassingConfigValidation("a: 1 # c\n", comments, options);
       assert.strictEqual(diagnostics.length, 1);
       assert.strictEqual(diagnostics[0]?.message, "Too few spaces before comment (1 < 3)");
       assert.strictEqual(diagnostics[0]?.fix?.content, "  ");
@@ -75,12 +73,15 @@ describe("independent direct-call rule options", () => {
     { requireSpaceAfter: false, minSpacesBefore: "invalid" },
   ]) {
     it(`keeps requireSpaceAfter: false with invalid ${"severity" in options ? "severity" : "minSpacesBefore"}`, () => {
-      assert.deepStrictEqual(directCheck("a: 1 #tight\n", comments, options), []);
+      assert.deepStrictEqual(checkBypassingConfigValidation("a: 1 #tight\n", comments, options), []);
     });
   }
 
   it("defaults an invalid after-spacing field without discarding before-spacing", () => {
-    const diagnostics = directCheck("a: 1 #tight\n", comments, { minSpacesBefore: 3, requireSpaceAfter: 0 });
+    const diagnostics = checkBypassingConfigValidation("a: 1 #tight\n", comments, {
+      minSpacesBefore: 3,
+      requireSpaceAfter: 0,
+    });
     assert.sameMembers(
       A.map(diagnostics, (diagnostic) => diagnostic.message),
       ['Missing space after "#"', "Too few spaces before comment (1 < 3)"]
@@ -94,15 +95,15 @@ describe("independent direct-call rule options", () => {
     const rule = builtin(id);
     it(`${id} preserves present: false despite invalid severity`, () => {
       const options = { present: false, severity: "invalid" };
-      assert.deepStrictEqual(directCheck(unmarked, rule, options), []);
-      const diagnostics = directCheck(marked, rule, options);
+      assert.deepStrictEqual(checkBypassingConfigValidation(unmarked, rule, options), []);
+      const diagnostics = checkBypassingConfigValidation(marked, rule, options);
       assert.strictEqual(diagnostics.length, 1);
       assert.include(diagnostics[0]?.message ?? "", "Forbidden");
       assert.isDefined(diagnostics[0]?.fix);
     });
     it(`${id} defaults an invalid present field independently`, () => {
-      assert.deepStrictEqual(directCheck(marked, rule, { present: 0, severity: "invalid" }), []);
-      const diagnostics = directCheck(unmarked, rule, { present: 0, severity: "invalid" });
+      assert.deepStrictEqual(checkBypassingConfigValidation(marked, rule, { present: 0, severity: "invalid" }), []);
+      const diagnostics = checkBypassingConfigValidation(unmarked, rule, { present: 0, severity: "invalid" });
       assert.strictEqual(diagnostics.length, 1);
       assert.include(diagnostics[0]?.message ?? "", "Missing");
     });

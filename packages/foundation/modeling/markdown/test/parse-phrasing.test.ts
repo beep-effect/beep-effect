@@ -1,6 +1,3 @@
-// The phrasing-level parse entry point: a text fragment parsed as a single
-// paragraph's inline content, with positions correct relative to the input.
-
 import { MAX_NESTING_DEPTH } from "@beep/markdown/internal/limits";
 import { Markdown } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
@@ -18,7 +15,6 @@ const phrasing = (text: string, options?: MarkdownParseOptions.Encoded) => {
   return Result.isSuccess(result) ? result.success : [];
 };
 
-/** The paragraph-splice the consumer hand-rolls today, as the oracle. */
 const splicedFromFullParse = (text: string): ReadonlyArray<PhrasingContent> => {
   const parsed = Markdown.parseResult(text);
   assertSuccess(parsed, Result.getOrThrow(parsed));

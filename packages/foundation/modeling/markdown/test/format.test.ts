@@ -1,15 +1,3 @@
-// The format/modify offset-splice layer: marker normalization as guarded
-// edits, and node-identity surgical replacement.
-//
-// Two postures pinned here. `format` is conservative by construction: an
-// edit is emitted only when the rewrite is provably safe against re-parse
-// hazards (setext underlines, list merges, intraword `_`, container
-// prefixes); hazardous conversions are skipped, never attempted. `modify`
-// is toml-strict: replacements are node fragments or plain text — both
-// rendered through the canonical stringifier — so every modified document
-// re-parses cleanly by construction; raw markdown replacement is
-// deliberately not offered day one.
-
 import { trustedNode } from "@beep/markdown/internal/nodes";
 import { Markdown } from "@beep/markdown/Markdown";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
@@ -41,8 +29,7 @@ import * as Str from "effect/String";
 import { renderHtml } from "./support/htmlWriter.ts";
 import type { MarkdownNode, PhrasingContent } from "@beep/markdown/MarkdownNode";
 
-/** A throwaway span for hand-built fragments; modify never reads fragment offsets. */
-const span = (): Position =>
+const unreadSpan = (): Position =>
   Position.make({
     start: Point.make({ line: 1, column: 1, offset: 0 }),
     end: Point.make({ line: 1, column: 1, offset: 0 }),
@@ -53,7 +40,6 @@ const fmt = (text: string, options: Parameters<typeof MarkdownFormattingOptions.
 
 const parseDoc = (text: string) => MarkdownDocument.parse(text);
 
-/** Render-equivalence: the formatted text parses to the same HTML as the original. */
 const assertEquivalent = (original: string, formatted: string): void => {
   const before = Markdown.parseResult(original);
   const after = Markdown.parseResult(formatted);
@@ -514,9 +500,6 @@ describe("MarkdownFormat round-3 boundary regressions", () => {
     })
   );
 
-  // A target equal to the tree's node at the same span — a copy from a
-  // document view or a `make` re-wrap — must reach every check the tree's own
-  // node does, including the following-sibling check.
   it.effect("rejects the list-merging empty replacement for a copied heading target", () =>
     Effect.gen(function* () {
       const doc = yield* parseDoc("- before\n# separator\n- after\n");
@@ -531,7 +514,11 @@ describe("MarkdownFormat round-3 boundary regressions", () => {
         if (target === undefined) assert.fail(`expected ${label}`);
         assert.notStrictEqual(target, found, label);
         const error = yield* Effect.flip(MarkdownFormat.modify(doc, target, ""));
-        assert.strictEqual(error.code, "UnsupportedTarget", label);
+        assert.strictEqual(
+          error.code,
+          "UnsupportedTarget",
+          `${label}: a copy equal to the tree's node at the same span reaches every check that node does`
+        );
         assert.strictEqual(error.detail, "the flow replacement would absorb or change its following sibling", label);
       }
     })
@@ -631,18 +618,21 @@ describe("MarkdownFormat round-3 boundary regressions", () => {
 
   it.effect("returns FragmentUnrenderable for an over-deep fragment inside a link", () =>
     Effect.gen(function* () {
-      // `Emphasis.make` validates and copies its children (D-22), which is
-      // quadratic and overflows the stack at this depth, so the over-deep
-      // fragment is assembled the way the parser assembles trees (D-39).
-      let fragment: PhrasingContent = Text.make({ value: "new" });
+      let trustedDeepFragment: PhrasingContent = Text.make({ value: "new" });
       for (let depth = 0; depth < 30000; depth++) {
-        fragment = trustedNode<Emphasis>({ type: "emphasis", children: [fragment], position: Position.synthetic });
+        trustedDeepFragment = trustedNode<Emphasis>({
+          type: "emphasis",
+          children: [trustedDeepFragment],
+          position: Position.synthetic,
+        });
       }
       for (const source of ["[old](/a)\n", "[old][a]\n\n[a]: /a\n"]) {
         const doc = yield* parseDoc(source);
         const target = doc.find("text");
         if (target === undefined) assert.fail("expected link text");
-        const error: MarkdownModificationError = yield* Effect.flip(MarkdownFormat.modify(doc, target, fragment));
+        const error: MarkdownModificationError = yield* Effect.flip(
+          MarkdownFormat.modify(doc, target, trustedDeepFragment)
+        );
         assert.instanceOf(error, MarkdownModificationError);
         assert.strictEqual(error.code, "FragmentUnrenderable");
         assert.include(error.detail, "NestingDepthExceeded");
@@ -710,8 +700,8 @@ describe("MarkdownFormat.modify", () => {
       const doc = yield* parseDoc("p one\n\np two\n");
       const fragment = Heading.make({
         depth: 2,
-        children: [Text.make({ value: "t", position: span() })],
-        position: span(),
+        children: [Text.make({ value: "t", position: unreadSpan() })],
+        position: unreadSpan(),
       });
       const out = yield* MarkdownFormat.modifyToString(doc, firstChild(doc), fragment);
       assert.strictEqual(out, "## t\n\np two\n");
@@ -789,7 +779,10 @@ describe("MarkdownFormat.modify", () => {
   it.effect("fails typed when the node is not in the document", () =>
     Effect.gen(function* () {
       const doc = yield* parseDoc("p\n");
-      const stranger = Paragraph.make({ children: [Text.make({ value: "x", position: span() })], position: span() });
+      const stranger = Paragraph.make({
+        children: [Text.make({ value: "x", position: unreadSpan() })],
+        position: unreadSpan(),
+      });
       const error = yield* Effect.flip(MarkdownFormat.modify(doc, stranger, "y"));
       assert.instanceOf(error, MarkdownModificationError);
       assert.strictEqual(error.code, "NodeNotInDocument");
@@ -799,7 +792,7 @@ describe("MarkdownFormat.modify", () => {
   it.effect("fails typed on a fragment category mismatch", () =>
     Effect.gen(function* () {
       const doc = yield* parseDoc("p\n");
-      const phrasing = Text.make({ value: "x", position: span() });
+      const phrasing = Text.make({ value: "x", position: unreadSpan() });
       const error = yield* Effect.flip(MarkdownFormat.modify(doc, firstChild(doc), phrasing));
       assert.instanceOf(error, MarkdownModificationError);
       assert.strictEqual(error.code, "FragmentCategoryMismatch");
@@ -828,10 +821,10 @@ describe("MarkdownFormat.modify", () => {
       if (target === undefined) assert.fail("expected a blockquote child");
       const fragment = Blockquote.make({
         children: [
-          Paragraph.make({ children: [Text.make({ value: "a", position: span() })], position: span() }),
-          Paragraph.make({ children: [Text.make({ value: "b", position: span() })], position: span() }),
+          Paragraph.make({ children: [Text.make({ value: "a", position: unreadSpan() })], position: unreadSpan() }),
+          Paragraph.make({ children: [Text.make({ value: "b", position: unreadSpan() })], position: unreadSpan() }),
         ],
-        position: span(),
+        position: unreadSpan(),
       });
       const error: MarkdownModificationError = yield* Effect.flip(MarkdownFormat.modify(doc, target, fragment));
       assert.instanceOf(error, MarkdownModificationError);

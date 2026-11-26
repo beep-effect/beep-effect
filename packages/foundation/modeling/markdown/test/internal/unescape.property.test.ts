@@ -9,8 +9,6 @@ const runs = { arbitrary: fcRuns(100) };
 import { unescapeString } from "@beep/markdown/internal/unescape";
 import { replaceWith } from "@beep/utils/Str";
 
-// Decoding is deliberately one-pass: &amp;amp; is not idempotent. These
-// properties apply idempotence to canonical encoded spellings, not raw decode.
 const encode = (value: string): string => replaceWith(value, /[\\&]/g, (char) => (char === "&" ? "&amp;" : "\\\\"));
 describe("unescape property floor", () => {
   it.effect.prop(
@@ -21,7 +19,11 @@ describe("unescape property floor", () => {
         const encoded = encode(value);
         const decoded = unescapeString(encoded);
         assert.strictEqual(decoded, value);
-        assert.strictEqual(encode(decoded), encoded);
+        assert.strictEqual(
+          encode(decoded),
+          encoded,
+          "decoding is deliberately one-pass (&amp;amp; is not idempotent), so idempotence holds on canonical encoded spellings, not raw decode"
+        );
         assert.strictEqual(encode(unescapeString(encode(unescapeString(encoded)))), encoded);
         assert.strictEqual(unescapeString(`\\*${encoded}&#65;&#x42;&amp;`), `*${value}AB&`);
       }),

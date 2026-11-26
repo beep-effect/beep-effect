@@ -1,19 +1,13 @@
-// Tree-walking and narrowing helpers shared by the suites. Assertions read a
-// node by position and type once, here, instead of re-checking optional
-// chains at every use.
-
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { MdxjsEsm } from "@beep/markdown/MarkdownMdx";
 import type { FlowContent, Frontmatter } from "@beep/markdown/MarkdownNode";
 
-/** A node discriminated by its `type` field. */
 interface Typed {
   readonly type: string;
 }
 
-/** Narrows a node to the union member whose discriminator is `type`. */
 const hasType = <N extends Typed, T extends N["type"]>(node: N, type: T): node is Extract<N, { readonly type: T }> =>
   node.type === type;
 
@@ -45,7 +39,6 @@ export const childOfType: {
 /** A top-level child of a document: flow content, or a head node the parser or a builder put first. */
 export type DocumentChild = Frontmatter | MdxjsEsm | FlowContent;
 
-/** The flow children nested directly inside a container node, list items flattened in order. */
 const nestedFlow = (node: FlowContent): ReadonlyArray<DocumentChild> => {
   if (node.type === "blockquote" || node.type === "footnoteDefinition") return node.children;
   return node.type === "list" ? A.flatMap(node.children, (item) => item.children) : [];

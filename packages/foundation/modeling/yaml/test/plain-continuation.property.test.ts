@@ -1,11 +1,4 @@
-// Plain-scalar continuation lines against an independent parser.
-//
-// YAML 1.2 s-ns-plain-next-line admits any ns-plain-char at the start of a
-// continuation line. A line led by a quote or a block-scalar indicator used
-// to lex as a new quoted or block scalar, which split the value into stray
-// keys with no diagnostic (effected-promotion wave 3, W3-d). The oracle is
-// the `yaml` devDependency, so a shared-defect round-trip cannot go green.
-
+// decision: plain-continuation-lines
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Yaml } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
@@ -29,8 +22,9 @@ const ContinuationLine = S.Struct({
   tail: S.Array(Word).check(S.isMaxLength(2)),
   blankBefore: S.Boolean,
   extraIndent: S.Literals([0, 1, 2]),
-  // Separation blanks after the indentation: YAML 1.2 allows tabs there.
-  separation: S.Literals(["", "\t", " \t"]),
+  separation: S.Literals(["", "\t", " \t"]).annotate({
+    description: "Separation blanks after the indentation: YAML 1.2 allows tabs there.",
+  }),
 });
 
 const Layout = S.Literals(["map", "nested-map", "seq", "compact-map", "root", "flow-seq"]);
@@ -38,19 +32,18 @@ const Layout = S.Literals(["map", "nested-map", "seq", "compact-map", "root", "f
 type ContinuationLine = typeof ContinuationLine.Type;
 type Layout = typeof Layout.Type;
 
-/**
- * Per layout: the fewest spaces a continuation line needs (the parent
- * collection's indent plus one), and the document around the scalar.
- */
 const layouts: Readonly<
-  Record<Layout, { readonly indent: number; readonly wrap: (value: string, body: string) => string }>
+  Record<
+    Layout,
+    { readonly parentIndentPlusOne: number; readonly wrapInDocument: (value: string, body: string) => string }
+  >
 > = {
-  map: { indent: 1, wrap: (value, body) => `k: ${value}\n${body}z: 1\n` },
-  "nested-map": { indent: 3, wrap: (value, body) => `p:\n  k: ${value}\n${body}  z: 1\n` },
-  seq: { indent: 1, wrap: (value, body) => `- ${value}\n${body}- w\n` },
-  "compact-map": { indent: 3, wrap: (value, body) => `- k: ${value}\n${body}  z: 1\n` },
-  root: { indent: 0, wrap: (value, body) => `${value}\n${body}` },
-  "flow-seq": { indent: 1, wrap: (value, body) => `[${value}\n${body}, w]\n` },
+  map: { parentIndentPlusOne: 1, wrapInDocument: (value, body) => `k: ${value}\n${body}z: 1\n` },
+  "nested-map": { parentIndentPlusOne: 3, wrapInDocument: (value, body) => `p:\n  k: ${value}\n${body}  z: 1\n` },
+  seq: { parentIndentPlusOne: 1, wrapInDocument: (value, body) => `- ${value}\n${body}- w\n` },
+  "compact-map": { parentIndentPlusOne: 3, wrapInDocument: (value, body) => `- k: ${value}\n${body}  z: 1\n` },
+  root: { parentIndentPlusOne: 0, wrapInDocument: (value, body) => `${value}\n${body}` },
+  "flow-seq": { parentIndentPlusOne: 1, wrapInDocument: (value, body) => `[${value}\n${body}, w]\n` },
 };
 
 const renderLine = (indent: number, line: ContinuationLine): string => {
@@ -64,11 +57,11 @@ const renderLine = (indent: number, line: ContinuationLine): string => {
 };
 
 const render = (layout: Layout, first: ReadonlyArray<string>, lines: ReadonlyArray<ContinuationLine>): string => {
-  const { indent, wrap } = layouts[layout];
-  return wrap(
+  const { parentIndentPlusOne: fewestContinuationSpaces, wrapInDocument } = layouts[layout];
+  return wrapInDocument(
     A.join(first, ""),
     A.join(
-      A.map(lines, (line) => renderLine(indent, line)),
+      A.map(lines, (line) => renderLine(fewestContinuationSpaces, line)),
       ""
     )
   );
@@ -76,7 +69,7 @@ const render = (layout: Layout, first: ReadonlyArray<string>, lines: ReadonlyArr
 
 describe("plain-scalar continuation lines", () => {
   it.effect.prop(
-    "quote- and block-indicator-led continuation lines match the yaml oracle",
+    "quote- and block-indicator-led continuation lines match the independent yaml oracle, so a shared defect cannot pass",
     [
       Arbitrary.schema(Layout),
       Arbitrary.schema(Word),

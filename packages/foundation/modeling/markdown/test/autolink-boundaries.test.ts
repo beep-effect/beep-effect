@@ -113,9 +113,11 @@ describe("email autolink source boundaries", () => {
       assert.strictEqual(links[index]?.start, index * 9);
       assert.strictEqual(links[index]?.end, index * 9 + 8);
     }
-    // Every piece is visited once as the boundary cursor advances, plus
-    // a fixed number of reads per match and during initial concatenation.
-    assert.isAtMost(reads, count * 20);
+    assert.isAtMost(
+      reads,
+      count * 20,
+      "each piece is visited once as the boundary cursor advances, plus fixed reads per match and during initial concatenation"
+    );
   });
 
   it("preserves the existing interior-index mapping within a decoded piece", () => {

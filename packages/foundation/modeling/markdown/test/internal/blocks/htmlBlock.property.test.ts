@@ -19,17 +19,15 @@ const Sample = S.Struct({
   fence: S.Literals(["`", "~"]),
   length: S.Int.check(S.isBetween({ minimum: 3, maximum: 8 })),
 });
-// Source positions and inline marker choices may normalize for representability.
-// Content, structure and the owned block fidelity fields must survive.
-const withoutPositions = (value: unknown): unknown => {
+const withoutPositionsOrMarkers = (value: unknown): unknown => {
   if (A.isArray(value)) {
-    return A.map(value, withoutPositions);
+    return A.map(value, withoutPositionsOrMarkers);
   }
   if (P.isObject(value)) {
     return R.fromEntries(
       A.map(
         A.filter(R.toEntries(value), ([key]) => key !== "position" && key !== "markerChar"),
-        ([key, field]): readonly [string, unknown] => [key, withoutPositions(field)]
+        ([key, field]): readonly [string, unknown] => [key, withoutPositionsOrMarkers(field)]
       )
     );
   }
@@ -48,9 +46,13 @@ describe("htmlBlock parser property floor", () => {
         const emitted = yield* Markdown.stringify(first);
         const second = yield* Markdown.parse(emitted, options);
         const value1 = yield* S.encodeEffect(Root)(second);
-        const argument = withoutPositions(value1);
+        const argument = withoutPositionsOrMarkers(value1);
         const value2 = yield* S.encodeEffect(Root)(first);
-        assert.deepStrictEqual(argument, withoutPositions(value2));
+        assert.deepStrictEqual(
+          argument,
+          withoutPositionsOrMarkers(value2),
+          "positions and inline marker choices may normalize for representability; content, structure and owned block fidelity fields must survive"
+        );
         const stringify2 = yield* Markdown.stringify(second);
         assert.strictEqual(stringify2, emitted);
       }),
@@ -76,9 +78,13 @@ describe("htmlBlock parser property floor", () => {
         const emitted = yield* Markdown.stringify(tree);
         const again = yield* Markdown.parse(emitted, options);
         const value3 = yield* S.encodeEffect(Root)(again);
-        const argument1 = withoutPositions(value3);
+        const argument1 = withoutPositionsOrMarkers(value3);
         const value4 = yield* S.encodeEffect(Root)(tree);
-        assert.deepStrictEqual(argument1, withoutPositions(value4));
+        assert.deepStrictEqual(
+          argument1,
+          withoutPositionsOrMarkers(value4),
+          "positions and inline marker choices may normalize for representability; content, structure and owned block fidelity fields must survive"
+        );
         assert.strictEqual(emitted, source);
         const html = again.children[0];
         if (html?.type !== "html") {

@@ -1,6 +1,3 @@
-// Batch-5 scalar-style rules (#129): quoted-strings and truthy — each
-// through the shared fixture harness (which carries the mutation proofs).
-
 import { builtin, testRule } from "./harness.ts";
 
 testRule(builtin("quoted-strings"), [
@@ -26,10 +23,7 @@ testRule(builtin("quoted-strings"), [
     fixed: "a: 'one'\n",
   },
   {
-    name: "a swap that would change the value ships no fix",
-    // The content contains a double quote: swapping single→double cannot
-    // preserve the value, so the diagnostic has no fix and fix() is a
-    // no-op for it.
+    name: "a single→double swap that cannot preserve an embedded double quote ships no fix, and fix() is a no-op",
     input: `a: 'say "hi"'\n`,
     expected: [{ line: 0, character: 3 }],
     fixed: `a: 'say "hi"'\n`,
@@ -85,12 +79,10 @@ testRule(builtin("truthy"), [
     expected: [],
   },
   {
-    name: "a custom allowed list is honored",
+    name: "a custom allowed list is honored, and a boolean with no allowed respelling of its truth value takes no fix",
     input: "a: yes\nb: true\n",
     setting: { allowed: ["yes", "no"] },
     expected: [{ line: 1, character: 3 }],
-    // `true` is a real boolean and `true` is not in allowed — no allowed
-    // respelling of the same truth value exists, so no fix applies.
     fixed: "a: yes\nb: true\n",
   },
   {
