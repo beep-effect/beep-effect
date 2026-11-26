@@ -344,9 +344,6 @@ export class YamlDocument extends S.Class<YamlDocument, { readonly brand: unique
             value: this,
           });
         }
-        // A synthetic AST nested deeper than the stringifier's cap overflowed
-        // the node-path recursion — surface it typed, not as a stack-overflow
-        // defect.
         if (isStringifyDepthExceeded(defect)) {
           return YamlStringifyError.make({
             diagnostics: [
@@ -444,7 +441,6 @@ const fromRawDocument: {
     })
 );
 
-/** Project the public class back onto the raw shape the engine consumes. */
 function toRawDocument(doc: YamlDocument): RawYamlDocument {
   return RawYamlDocument.make({
     contents: doc.contents,

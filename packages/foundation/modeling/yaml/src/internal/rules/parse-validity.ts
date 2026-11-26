@@ -1,11 +1,3 @@
-// parse-validity: the always-on rule #1. Bridges the engine's
-// recovered diagnostics into the lint layer — the reason `YamlLint.run`
-// works on documents that do not parse.
-//
-// Not configurable: it cannot be demoted or disabled ("off" and severity
-// overrides are rejected at config-validation time by YamlLint's config),
-// and its options schema accepts no options.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -69,10 +61,6 @@ export const parseValidity = YamlRule.make({
   check: dual(
     2,
     (ctx: LintContext, _options: unknown): Iterable<YamlLintDiagnostic> => [
-      // Engine errors are lint errors; engine warnings stay warnings.
-      // (Duplicate keys never reach this bridge: the lint context composes
-      // with uniqueKeys disabled because duplicate-key POLICY belongs to
-      // the configurable `key-duplicates` rule.)
       ...A.map(ctx.document.errors, (d) =>
         YamlLintDiagnostic.make({
           rule: "parse-validity",

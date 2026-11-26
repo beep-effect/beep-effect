@@ -46,7 +46,6 @@ const PACKAGES = [
     peerDependencies: { "@x/peer": "workspace:^" },
     devDependencies: { "@x/tool": "workspace:*" },
   }),
-  // lib -> deep is transitive-only, deep -> lib closes a cycle, lib -> devonly is dev-only.
   pkg("@x/lib", { dependencies: { "@x/deep": "workspace:^" }, devDependencies: { "@x/devonly": "workspace:*" } }),
   pkg("@x/peer"),
   pkg("@x/tool"),
@@ -143,18 +142,17 @@ describe("consumerFiles", () => {
     const files = fileMap(consumerFiles({ ...INPUT, manager: "pnpm", version: "12.5.1" }));
     const manifest = Result.getOrThrow(S.decodeResult(JsonObject)(files["package.json"] ?? "{}"));
     assert.isUndefined(manifest.overrides);
-    // pnpm resolves a `packageManager` pin from the registry even when it names
-    // the running version, which fails an offline install; devEngines with
-    // onFail "ignore" declares the same version and never fetches.
-    assert.isUndefined(manifest.packageManager);
+    assert.isUndefined(
+      manifest.packageManager,
+      "pnpm fetches a packageManager pin from the registry even for the running version, failing offline; devEngines onFail ignore never fetches"
+    );
     assert.deepStrictEqual(manifest.devEngines, {
       packageManager: { name: "pnpm", version: "12.5.1", onFail: "ignore" },
     });
-    // pnpm 12's default release-age gate is non-strict: without minimumReleaseAge: 0
-    // it rewrites this file with exclusions and can pick an older, mature match for a range.
     assert.strictEqual(
       files["pnpm-workspace.yaml"],
-      'minimumReleaseAge: 0\noverrides:\n  "@x/lib": "file:/t/lib.tgz"\n'
+      'minimumReleaseAge: 0\noverrides:\n  "@x/lib": "file:/t/lib.tgz"\n',
+      "without minimumReleaseAge: 0, pnpm 12's non-strict release-age gate rewrites this file and can pick an older match"
     );
     const empty = fileMap(consumerFiles({ ...INPUT, overrides: {}, manager: "pnpm", version: "12.5.1" }));
     assert.strictEqual(empty["pnpm-workspace.yaml"], "minimumReleaseAge: 0\noverrides: {}\n");
@@ -180,18 +178,16 @@ describe("consumerFiles", () => {
         version
       );
     }
-    // Berry fails every command on a setting it does not know, and 4.9 predates this one.
     for (const version of ["4.9.4", "3.8.7", "2.4.3"]) {
       assert.notInclude(
         fileMap(consumerFiles({ ...INPUT, manager: "yarn", version }))[".yarnrc.yml"] ?? "",
         "npmMinimalAgeGate",
-        version
+        `${version}: Berry fails every command on a setting it does not know, and 4.9 predates this one`
       );
     }
   });
 
   it("a consumer dependency naming a packed package is written as that package's tarball, for every manager", () => {
-    // npm refuses an override that differs from a direct spec (EOVERRIDE); the same file: spec in both is accepted.
     for (const [manager, version] of [
       ["npm", "11.19.1"],
       ["pnpm", "12.5.1"],
@@ -210,7 +206,7 @@ describe("consumerFiles", () => {
       assert.deepStrictEqual(
         manifest.dependencies,
         { "@x/carrier": "file:/t/carrier.tgz", "@x/lib": "file:/t/lib.tgz", effect: "4.0.0-rc.117" },
-        manager
+        `${manager}: npm refuses an override that differs from a direct spec (EOVERRIDE)`
       );
     }
   });
@@ -285,8 +281,11 @@ describe("readPackedManifest", () => {
     assert.deepStrictEqual(read({ name: "@x/tool", bin: "./cli.js" }), Result.succeed(["@x/tool", ["tool"]]));
     assert.deepStrictEqual(read({ name: "plain", bin: "./cli.js" }), Result.succeed(["plain", ["plain"]]));
     assert.deepStrictEqual(read({ name: "none" }), Result.succeed(["none", []]));
-    // A nameless string bin names nothing; a name that is not a string is no name.
-    assert.deepStrictEqual(read({ name: 1, bin: "./cli.js" }), Result.succeed([undefined, []]));
+    assert.deepStrictEqual(
+      read({ name: 1, bin: "./cli.js" }),
+      Result.succeed([undefined, []]),
+      "a name that is not a string is no name, and a nameless string bin names nothing"
+    );
   });
 
   it("a manifest that is not a JSON object fails", () => {
@@ -343,14 +342,13 @@ describe("fileOverridesOf", () => {
   });
 
   it("skips __proto__ and keeps constructor and prototype as own entries of a prototype-free map", () => {
-    // JSON.parse makes `__proto__` an own key, as a YAML parse of the workspace file can.
-    const document: unknown = Result.getOrThrowWith(
+    const ownProtoKeyAsJsonParseAndAYamlParseLeaveIt: unknown = Result.getOrThrowWith(
       S.decodeResult(UnknownJson)(
         '{"overrides":{"__proto__":"file:../evil","constructor":"file:../ctor","prototype":"file:../proto"}}'
       ),
       identity
     );
-    const out = fileOverridesOf(document);
+    const out = fileOverridesOf(ownProtoKeyAsJsonParseAndAYamlParseLeaveIt);
     assert.deepStrictEqual(R.toEntries(out), [
       ["constructor", "../ctor"],
       ["prototype", "../proto"],

@@ -70,10 +70,6 @@ export const YamlLintRuleSetting = S.Union([
  */
 export type YamlLintRuleSetting = typeof YamlLintRuleSetting.Type;
 
-/**
- * Always-on rule #1: it cannot be demoted, disabled or configured. Failing
- * loud beats silently ignoring an entry that looks like it does something.
- */
 const validateParseValidityEntry = (entry: YamlLintRuleSetting): string | undefined => {
   if (entry === "off" || entry === "warning") {
     return `Rule "parse-validity" is always-on and cannot be set to "${entry}"`;
@@ -81,26 +77,16 @@ const validateParseValidityEntry = (entry: YamlLintRuleSetting): string | undefi
   return P.isObjectOrArray(entry) ? `Rule "parse-validity" accepts no options` : undefined;
 };
 
-/**
- * Custom rule ids carry opaque options the custom rule validates itself;
- * built-in options are validated against the rule's own exported schema so
- * a typo'd option fails here, typed, instead of travelling as `unknown` into
- * the rule.
- */
 const validateBuiltinOptions = (id: string, entry: YamlLintRuleSetting): string | undefined => {
   if (!P.isObjectOrArray(entry)) return undefined;
   const optionsSchema = HashMap.get(builtinOptionsSchemas, id);
   if (O.isNone(optionsSchema)) return undefined;
-  // onExcessProperty: "error" — a typo'd option KEY fails loudly with
-  // an UnexpectedKey issue naming the key, instead of decoding to {}
-  // (v4 Structs strip unknown keys by default).
   const decoded = S.decodeResult(optionsSchema.value, {
     onExcessProperty: "error",
   })(entry);
   return Result.isFailure(decoded) ? `Invalid options for rule "${id}": ${String(decoded.failure)}` : undefined;
 };
 
-/** Rule-aware validation of the config `rules` map (undefined = valid). */
 const validateRulesMap = (rules: { readonly [id: string]: YamlLintRuleSetting }): string | undefined => {
   for (const [id, entry] of R.toEntries(rules)) {
     const error = id === "parse-validity" ? validateParseValidityEntry(entry) : validateBuiltinOptions(id, entry);
@@ -217,20 +203,12 @@ export class YamlLintConfig extends S.Opaque<YamlLintConfig, { readonly brand: u
   });
 }
 
-/**
- * Split `text` into positioned lines. Line text excludes the terminator
- * whole — for CRLF input the `\r` is part of the terminator and is stripped
- * too, so every rule sees the same line content regardless of line-ending
- * style. Empty input has no lines: rules that count blank lines must not see
- * a phantom first line.
- */
 const buildLines = (text: string): ReadonlyArray<LintLine> => {
   if (text === "") return [];
   const lines: Array<LintLine> = [];
   let offset = 0;
   let number = 0;
   while (offset <= text.length) {
-    // The final empty segment after a trailing newline is not a line.
     if (offset === text.length && number > 0) break;
     const end = lineContentEnd(text, offset);
     lines.push(LintLine.make({ text: Str.slice(offset, end)(text), offset, number }));
@@ -241,33 +219,23 @@ const buildLines = (text: string): ReadonlyArray<LintLine> => {
   return lines;
 };
 
-/** The offset of the first line terminator at or after `offset`, or the text end. */
 const lineContentEnd = (text: string, offset: number): number => {
   let end = offset;
   while (end < text.length && text[end] !== "\r" && text[end] !== "\n") end++;
   return end;
 };
 
-/** Width of the line terminator at `end`: two for CRLF, otherwise one. */
 const lineTerminatorWidth = (text: string, end: number): number =>
   text[end] === "\r" && text[end + 1] === "\n" ? 2 : 1;
 
-/**
- * Build the eager lint context: tokenize once, compose once (through the
- * RECOVERED path, so the context exists for malformed input too — the
- * `parse-validity` rule reports what went wrong).
- */
 const buildContext = (text: string): LintContext => {
-  // Tokenization always succeeds; malformed syntax is composer diagnostics.
-  const tokens = Result.getOrThrow(YamlTokens.tokenize(text));
+  const tokensEvenForMalformedSyntax = Result.getOrThrow(YamlTokens.tokenize(text));
+  const keyDuplicatesRuleOwnsDuplicatePolicy = ParseOptionsInput.make({ uniqueKeys: false });
   return LintContext.make({
     text,
     lines: buildLines(text),
-    tokens,
-    // uniqueKeys: false — duplicate-key POLICY belongs to the configurable
-    // `key-duplicates` rule, so the engine's own duplicate warnings are
-    // switched off here and `parse-validity` never double-reports them.
-    document: documentFromRaw(composeFirstDocument(text, ParseOptionsInput.make({ uniqueKeys: false })), text),
+    tokens: tokensEvenForMalformedSyntax,
+    document: documentFromRaw(composeFirstDocument(text, keyDuplicatesRuleOwnsDuplicatePolicy), text),
   });
 };
 
@@ -384,11 +352,9 @@ export class StyleFloorTally extends S.Opaque<StyleFloorTally, { readonly brand:
   )
 ) {}
 
-/** Canonical histogram key for a vote value — type-discriminating (`"2"` ≠ `2`, `"true"` ≠ `true`). */
-const valueKey = (value: string | number | boolean): string =>
+const typeDiscriminatingValueKey = (value: string | number | boolean): string =>
   `${P.isString(value) ? "string" : P.isNumber(value) ? "number" : "boolean"}:${value}`;
 
-// JSON tuples are injective even when unrestricted rule/dimension strings contain NUL.
 const encodeVoteKey = S.encodeResult(S.fromJsonString(S.Tuple([S.String, S.String, S.String])));
 const encodeFloorKey = S.encodeResult(S.fromJsonString(S.Tuple([S.String, S.String])));
 
@@ -396,7 +362,7 @@ const accumulateVote: {
   (votes: MutableHashMap.MutableHashMap<string, StyleVoteTally>, tally: StyleVoteTally): void;
   (tally: StyleVoteTally): (votes: MutableHashMap.MutableHashMap<string, StyleVoteTally>) => void;
 } = dual(2, (votes: MutableHashMap.MutableHashMap<string, StyleVoteTally>, tally: StyleVoteTally): void => {
-  const key = Result.getOrThrow(encodeVoteKey([tally.rule, tally.dimension, valueKey(tally.value)]));
+  const key = Result.getOrThrow(encodeVoteKey([tally.rule, tally.dimension, typeDiscriminatingValueKey(tally.value)]));
   const seen = MutableHashMap.get(votes, key);
   MutableHashMap.set(
     votes,
@@ -485,7 +451,7 @@ const byTallyOrder = Order.make<{ readonly rule: string; readonly dimension: str
 
 const byVoteOrder = Order.combine(
   byTallyOrder,
-  Order.mapInput(Order.String, (tally: StyleVoteTally) => valueKey(tally.value))
+  Order.mapInput(Order.String, (tally: StyleVoteTally) => typeDiscriminatingValueKey(tally.value))
 );
 
 const byDescendingCount = Order.mapInput(Order.flip(Order.Number), (tally: StyleVoteTally) => tally.count);
@@ -737,7 +703,6 @@ export class YamlStyleConflictError extends S.TaggedError<YamlStyleConflictError
   }
 }
 
-/** Group canonical vote tallies by rule, then dimension (order-preserving). */
 const groupVotes = (
   evidence: StyleEvidence
 ): MutableHashMap.MutableHashMap<string, MutableHashMap.MutableHashMap<string, Array<StyleVoteTally>>> => {
@@ -753,12 +718,6 @@ const groupVotes = (
   return byRule;
 };
 
-/**
- * Overlay resolved option picks onto the base config. A base entry keeps its
- * severity (a bare `"warning"` becomes `{ severity: "warning", ...picks }`);
- * an explicit `"off"` outranks inference and is left untouched; a rule the
- * base does not mention is added as a plain options entry.
- */
 const overlayConfig: {
   (
     base: YamlLintConfig,
@@ -782,7 +741,6 @@ const overlayConfig: {
   }
 );
 
-/** Overlay inferred dimension picks onto one existing (non-"off") rule entry. */
 const mergeRuleEntry = (
   entry: YamlLintRuleSetting | undefined,
   dims: MutableHashMap.MutableHashMap<string, string | number | boolean>
@@ -805,7 +763,6 @@ const setPick = (
   MutableHashMap.set(picks, ruleId, dimPicks);
 };
 
-/** The observation loop shared by `observe` and the infer conveniences. */
 const observeContext: {
   (ctx: LintContext, rules: ReadonlyArray<YamlRule>): StyleEvidence;
   (rules: ReadonlyArray<YamlRule>): (ctx: LintContext) => StyleEvidence;
@@ -837,18 +794,14 @@ const resolveStrictEvidence: {
         );
         continue;
       }
-      // groupVotes creates each group by inserting its first tally.
-      setPick(picks, ruleId, dimension, A.getUnsafe(tallies, 0).value);
+      const soleTallyGroupVotesInserted = A.getUnsafe(tallies, 0);
+      setPick(picks, ruleId, dimension, soleTallyGroupVotesInserted.value);
     }
   }
   if (conflicts.length > 0) return Result.fail(YamlStyleConflictError.make({ conflicts }));
   return Result.succeed(overlayConfig(base, picks));
 });
 
-/**
- * Dominant = plurality: highest count wins; a tie breaks to the first
- * tally in canonical (value-key) order, so the pick is deterministic.
- */
 const dominantTally = <T extends { readonly count: number }>(tallies: ReadonlyArray<T>): T => {
   let dominant = A.getUnsafe(tallies, 0);
   for (const tally of tallies) {
@@ -914,7 +867,6 @@ const byPosition = Order.make<YamlLintDiagnostic>(
   (a, b) => Order.Number(a.offset, b.offset) || Order.Number(a.length, b.length) || Order.String(a.rule, b.rule)
 );
 
-/** Run one configured rule, re-stamping its findings with the configured severity. */
 const runRule = (ctx: LintContext, rule: YamlRule, config: YamlLintConfig, out: Array<YamlLintDiagnostic>): void => {
   const alwaysOn = rule.id === "parse-validity";
   const entry = alwaysOn ? "error" : O.getOrUndefined(R.get(config.rules, rule.id));
@@ -928,10 +880,6 @@ const runRule = (ctx: LintContext, rule: YamlRule, config: YamlLintConfig, out: 
   }
 };
 
-/**
- * The rule loop shared by `run` and `fix` over one already-built context —
- * `fix` must not tokenize and compose the same input twice.
- */
 const runRules: {
   (ctx: LintContext, rules: ReadonlyArray<YamlRule>, config: YamlLintConfig): ReadonlyArray<YamlLintDiagnostic>;
   (rules: ReadonlyArray<YamlRule>, config: YamlLintConfig): (ctx: LintContext) => ReadonlyArray<YamlLintDiagnostic>;
@@ -1080,21 +1028,15 @@ export class YamlLint {
   } = dual(
     3,
     (text: string, rules: ReadonlyArray<YamlRule>, config: YamlLintConfig): Result.Result<string, YamlParseError> => {
-      // One context serves both the fatal-parse gate and the rule loop —
-      // tokenize once, compose once. DuplicateKey is not a fatal code, so the
-      // context's uniqueKeys-disabled compose sees the same fatal set the
-      // default compose would.
-      const ctx = buildContext(text);
-      const fatal = A.filter(ctx.document.errors, (e) => isFatalCode(e.code));
-      if (fatal.length > 0) {
-        return Result.fail(YamlParseError.make({ diagnostics: fatal, input: text }));
+      const gateAndRulesContext = buildContext(text);
+      const fatalEvenWithUniqueKeysOff = A.filter(gateAndRulesContext.document.errors, (e) => isFatalCode(e.code));
+      if (fatalEvenWithUniqueKeysOff.length > 0) {
+        return Result.fail(YamlParseError.make({ diagnostics: fatalEvenWithUniqueKeysOff, input: text }));
       }
       const fixes: Array<YamlEdit> = [];
-      for (const diagnostic of runRules(ctx, rules, config)) {
+      for (const diagnostic of runRules(gateAndRulesContext, rules, config)) {
         const fix = diagnostic.fix;
         if (fix === undefined) continue;
-        // Diagnostic order need not match fix offsets. Compare every accepted
-        // interval; overlapping and same-offset edits keep the earlier diagnostic.
         if (
           A.some(
             fixes,

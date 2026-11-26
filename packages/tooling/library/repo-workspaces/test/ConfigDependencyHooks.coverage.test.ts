@@ -11,8 +11,6 @@ import type { PeerDependencyRules } from "@beep/repo-workspaces/ConfigDependency
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-// The resolution ladder intentionally reads real disk. Its public result is
-// supplied here so the tests isolate replay and protocol behavior without IO.
 vi.doMock("../src/internal/configDependencyResolution.ts", (original) =>
   original<typeof import("@beep/repo-workspaces/internal/configDependencyResolution")>().then((actual) => ({
     ...actual,
@@ -80,7 +78,7 @@ const rules: PeerDependencyRules = Hooks.PeerDependencyRules.make({
   allowAny: ["seeded"],
 });
 
-describe("ConfigDependencyHooks replay coverage", () => {
+describe("ConfigDependencyHooks replay coverage, with the disk-reading resolution ladder mocked so replay runs without IO", () => {
   it.layer(replayLayer, { timeout: "30 seconds" })((it) => {
     it.effect("empty and malformed peer axes retain the prior rules", () =>
       Effect.gen(function* () {

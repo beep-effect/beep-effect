@@ -51,12 +51,6 @@ import type { TraversalFrame } from "./internal/traverse.ts";
 
 const isDependencyMap = S.is(WorkspacePackage.fields.dependencies);
 
-/**
- * A manifest dependency block, or the empty block when it is not a name-to-range record.
- *
- * @param value - A manifest field that should map names to ranges.
- * @returns The block, or `{}` when it has another shape.
- */
 const dependencyMapOf = (value: unknown): Readonly<Record<string, string>> => (isDependencyMap(value) ? value : {});
 
 const $I = $RepoWorkspacesId.create("WorkspacesSync");
@@ -66,9 +60,6 @@ const JsonValue = S.fromJsonString(S.Unknown).pipe(
 );
 const decodeJson = S.decodeResult(JsonValue);
 
-/**
- * A malformed synchronous workspace manifest, preserving its diagnostic message.
- */
 class WorkspaceSyncManifestError extends S.TaggedError<WorkspaceSyncManifestError, { readonly brand: unique symbol }>(
   $I`WorkspaceSyncManifestError`
 )(
@@ -363,12 +354,6 @@ export const WorkspaceDiscoverySkipKind = WorkspaceDiscoveryError.fields.kind
  */
 export type WorkspaceDiscoverySkipKind = typeof WorkspaceDiscoverySkipKind.Type;
 
-/**
- * Builds one existing plain failure case without a constructor default.
- *
- * @param kind - The skip kind the case carries.
- * @returns The skip schema for that kind.
- */
 const workspaceDiscoverySkipCase = <const Kind extends WorkspaceDiscoverySkipKind>(kind: S.Literal<Kind>) => {
   const identifier: string = `WorkspaceDiscoverySkip.${kind.literal}`;
   return S.Struct({
@@ -439,9 +424,6 @@ export const WorkspaceDiscoverySkip = WorkspaceDiscoverySkipKind.mapMembers(
  */
 export type WorkspaceDiscoverySkip = typeof WorkspaceDiscoverySkip.Type;
 
-/**
- * A manifest read that either yields the parsed record or names why it cannot.
- */
 const ManifestRead = S.Union([
   S.Struct({
     raw: S.Record(S.String, S.mutableKey(S.Unknown)).pipe(
@@ -473,16 +455,6 @@ const ManifestRead = S.Union([
 );
 type ManifestRead = typeof ManifestRead.Type;
 
-/**
- * Read one `package.json` into a plain record, or say why not. Never throws.
- *
- * **Details**
- *
- * The three failures are kept apart — a throwing consumer `readFile`, a JSON
- * syntax error, and valid JSON that is not an object — because the skip report
- * carries the distinction; the two other callers of {@link readJson} do not
- * need it and keep the collapsed form.
- */
 const readManifest: {
   (fileSystem: SyncFileSystem, file: string): ManifestRead;
   (file: string): (fileSystem: SyncFileSystem) => ManifestRead;
@@ -492,8 +464,6 @@ const readManifest: {
   const decoded = decodeJson(text.success);
   if (Result.isFailure(decoded)) return { kind: "invalidJson", cause: decoded.failure };
   const parsed = decoded.success;
-  // JSON decoding returns `null` / a number / a string for VALID input; only a
-  // non-null, non-array object is a manifest.
   return P.isObject(parsed)
     ? { raw: parsed }
     : {
@@ -502,20 +472,6 @@ const readManifest: {
       };
 });
 
-/**
- * Read and JSON-parse a file into a plain object, or `undefined`. Never throws.
- *
- * **Details**
- *
- * The non-object check is load-bearing, not defensive noise. `JSON.parse`
- * returns `undefined` for *nothing* — a `package.json` whose entire content is
- * `null`, `42` or `"x"` parses successfully to that value, so a caller guarding
- * only on `undefined` sails straight into `raw.name` and throws a `TypeError`.
- * These functions are documented as total and are reached from a Vitest config,
- * which has nowhere to put a crash: malformed input must be *skipped*, never a
- * defect. A throwing consumer `readFile` and a JSON codec failure both collapse
- * to an unusable manifest.
- */
 const readJson: {
   (fileSystem: SyncFileSystem, file: string): Record<string, unknown> | undefined;
   (file: string): (fileSystem: SyncFileSystem) => Record<string, unknown> | undefined;
@@ -524,9 +480,6 @@ const readJson: {
   return P.hasProperty(manifest, "raw") ? manifest.raw : undefined;
 });
 
-/**
- * Whether `dir` is a directory. Never throws — a throwing consumer op reads as `false`.
- */
 const isDirectory: {
   (fileSystem: SyncFileSystem, dir: string): boolean;
   (dir: string): (fileSystem: SyncFileSystem) => boolean;
@@ -537,9 +490,6 @@ const isDirectory: {
   )
 );
 
-/**
- * One enumerated child, with directory-ness resolved under `stat` semantics.
- */
 const ResolvedEntry = S.Struct({
   name: S.String.pipe($I.annoteKey("ResolvedEntry.name", { description: "The enumerated child entry's own name." })),
   directory: S.Boolean.pipe(
@@ -554,15 +504,6 @@ const ResolvedEntry = S.Struct({
 );
 type ResolvedEntry = typeof ResolvedEntry.Type;
 
-/**
- * The entries of `absoluteDir`, each carrying whether it is a directory, or
- * `undefined` when the directory could not be read at all (the degraded-skip
- * case). Uses {@link SyncFileSystem.readDirectoryWithTypes} when the consumer
- * supplied it and the four-operation fallback otherwise — the two agree by
- * construction, including on symbolic links, which are always re-resolved
- * through `isDirectory` because a `Dirent` describes the link and not its
- * target.
- */
 const readResolvedEntries: {
   (options: WorkspacesSyncOptions, absoluteDir: string): ReadonlyArray<ResolvedEntry> | undefined;
   (absoluteDir: string): (options: WorkspacesSyncOptions) => ReadonlyArray<ResolvedEntry> | undefined;
@@ -590,9 +531,6 @@ const readResolvedEntries: {
   }));
 });
 
-/**
- * Whether `dir` holds a `package.json`.
- */
 const isPackage: {
   (options: WorkspacesSyncOptions, dir: string): boolean;
   (dir: string): (options: WorkspacesSyncOptions) => boolean;
@@ -725,12 +663,7 @@ export const findWorkspaceRootSync: {
 } = dual(2, (cwd: string, options: FindWorkspaceRootSyncOptions): string | null => {
   const { fileSystem, path } = options;
   let current = path.resolve(cwd);
-  // Resolved at lookup time, exactly as `WorkspaceRoot.find` resolves it: the
-  // comparison below is string equality, so an unresolved ceiling would never
-  // match and would silently degrade to the unbounded ascent it exists to stop.
   const ceiling = options.stopAt === undefined ? undefined : path.resolve(options.stopAt);
-  // Bounded twice over: `dirname` is a fixpoint at the filesystem root, and the
-  // depth cap guards a pathological path implementation that never reaches one.
   for (let depth = 0; depth < MAX_ENUMERATION_DEPTH * 8; depth++) {
     if (declaresWorkspace(fileSystem, path, current)) return current;
     const parent = ascentFrom(path, current, ceiling);
@@ -740,44 +673,18 @@ export const findWorkspaceRootSync: {
   return null;
 });
 
-/**
- * Whether `directory` declares a workspace: a `pnpm-workspace.yaml`, or a
- * `package.json` with a `workspaces` field.
- *
- * @param fileSystem - The consumer's file operations.
- * @param path - The consumer's path operations.
- * @param directory - The directory to probe.
- * @returns `true` when the directory declares a workspace.
- */
 const declaresWorkspace = (fileSystem: SyncFileSystem, path: SyncPath, directory: string): boolean => {
   if (fileSystem.exists(path.join(directory, "pnpm-workspace.yaml"))) return true;
   const manifest = readJson(fileSystem, path.join(directory, "package.json"));
   return manifest?.workspaces !== undefined && manifest.workspaces !== null;
 };
 
-/**
- * The next directory the ascent probes, or `undefined` where it stops.
- *
- * **Details**
- *
- * Inclusive: the ceiling itself was just probed. A ceiling naming no ancestor
- * never matches and the ascent runs to the filesystem root — walker's rule,
- * which the Effect surface inherits.
- *
- * @param path - The consumer's path operations.
- * @param current - The directory just probed.
- * @param ceiling - The resolved `stopAt` ceiling, when one was given.
- * @returns The parent directory, or `undefined` at the ceiling or the filesystem root.
- */
 const ascentFrom = (path: SyncPath, current: string, ceiling: string | undefined): string | undefined => {
   if (current === ceiling) return undefined;
   const parent = path.dirname(current);
   return parent === current ? undefined : parent;
 };
 
-/**
- * The workspace `packages:` patterns for `root`, matching `WorkspacePatterns.read`'s precedence.
- */
 const readPatternsSync: {
   (options: WorkspacesSyncOptions, root: string): ReadonlyArray<string>;
   (root: string): (options: WorkspacesSyncOptions) => ReadonlyArray<string>;
@@ -789,9 +696,6 @@ const readPatternsSync: {
       Result.try(() => fileSystem.readFile(workspaceYaml)),
       () => ""
     );
-    // `Yaml.parse` is an Effect and this function is not; the parse is pure and
-    // synchronous underneath, so running it to an Exit here is the one honest
-    // bridge. A parse failure is an empty pattern list, not a throw.
     const exit = Effect.runSyncExit(Yaml.parse(text));
     if (Exit.isSuccess(exit)) {
       const patterns = WorkspacePatterns.fromPnpmWorkspace(exit.value);
@@ -801,11 +705,6 @@ const readPatternsSync: {
   return WorkspacePatterns.fromManifest(readJson(fileSystem, path.join(root, "package.json")) ?? {});
 });
 
-/**
- * Build a `WorkspacePackage` from a directory, or a {@link WorkspaceDiscoverySkip}
- * saying why its manifest is unusable — never `null`, so a skip cannot go
- * unreported.
- */
 const readPackageSync: {
   (
     options: WorkspacesSyncOptions,
@@ -853,16 +752,12 @@ const readPackageSync: {
       path: directory,
       packageJsonPath,
       relativePath,
-      // Carried exactly as the Effect enumerator carries it — the two entry
-      // points must not disagree about what a discovered package knows.
       workspaceRoot: root,
       private: raw.private === true,
       dependencies: dependencyMapOf(raw.dependencies),
       devDependencies: dependencyMapOf(raw.devDependencies),
       peerDependencies: dependencyMapOf(raw.peerDependencies),
       optionalDependencies: dependencyMapOf(raw.optionalDependencies),
-      // The as-read record rides along, exactly as the Effect enumerator's
-      // projection does — one read, tolerant access to the rest of the manifest.
       manifestRecord: raw,
       ...(Exit.isSuccess(config) ? { publishConfig: config.value } : {}),
     });
@@ -1018,15 +913,10 @@ export const getWorkspacePackagesSync: {
   (root: string, options: GetWorkspacePackagesSyncOptions): ReadonlyArray<WorkspacePackage>;
 } = dual(2, (root: string, options: GetWorkspacePackagesSyncOptions): ReadonlyArray<WorkspacePackage> => {
   const maxDepth = options.maxDepth ?? MAX_ENUMERATION_DEPTH;
-  // A bad bound is a PROGRAMMER error, not a data condition. This function is
-  // total over *data*, not over caller mistakes — so it throws here, mirroring
-  // the enumerator's `Effect.die`. Same predicate, same message, one rule.
   if (!isValidMaxDepth(maxDepth)) {
     throw WorkspaceEnumerationDepthError.make({ message: `getWorkspacePackagesSync: ${badMaxDepthMessage(maxDepth)}` });
   }
 
-  // The same GlobSet the async enumerator compiles. An uncompilable set yields
-  // no members rather than throwing — see the totality note above.
   const compiled = Effect.runSyncExit(GlobSet.compile(WorkspacePatterns.forMatching(readPatternsSync(options, root))));
   if (Exit.isFailure(compiled)) return [];
   const globs = compiled.value;
@@ -1054,9 +944,6 @@ export const getWorkspacePackagesSync: {
   return [...admitted(options, [readPackageSync(options, root, root, ".")]), ...members];
 });
 
-/**
- * What one sync enumeration shares across its literal and wildcard passes.
- */
 interface SyncScope {
   readonly included: MutableHashMap.MutableHashMap<string, string>;
   readonly isExcluded: (relative: string) => boolean;
@@ -1065,13 +952,6 @@ interface SyncScope {
   readonly root: string;
 }
 
-/**
- * The packages among `reads`, reporting every skip to `onSkip` in order.
- *
- * @param options - The caller's options, for `onSkip`.
- * @param reads - The manifest reads, in order.
- * @returns The packages, in order.
- */
 const admitted = (
   options: GetWorkspacePackagesSyncOptions,
   reads: ReadonlyArray<WorkspacePackage | WorkspaceDiscoverySkip>
@@ -1084,32 +964,12 @@ const admitted = (
   return members;
 };
 
-/**
- * A literal include: an exact lookup, no directory read at all.
- *
- * @param scope - The enumeration's shared state.
- * @param literal - A `packages:` entry with no wildcard, relative to the root.
- */
 const includeLiteralSync = (scope: SyncScope, literal: string): void => {
   if (scope.isExcluded(literal)) return;
   const absolute = scope.options.path.join(scope.root, literal);
   if (isPackage(scope.options, absolute)) MutableHashMap.set(scope.included, literal, absolute);
 };
 
-/**
- * One wildcard include, walked with THE shared traversal — the same state
- * machine `internal/enumerate.ts` drives.
- *
- * **Details**
- *
- * The ONLY difference between the two entry points is what happens to a
- * `TraversalStop`: the Effect path fails typed, this one truncates, because a
- * Vitest config has nowhere to put an error. Depth, budget, prune and dequeue
- * are not re-decided here.
- *
- * @param scope - The enumeration's shared state.
- * @param wildcard - A compiled `packages:` pattern with a wildcard.
- */
 const enumerateWildcardSync = (scope: SyncScope, wildcard: GlobPattern): void => {
   const base = Str.replace(/\/$/, "")(wildcard.enumerationPrefix);
   const absoluteBase = scope.options.path.join(scope.root, base);
@@ -1123,23 +983,6 @@ const enumerateWildcardSync = (scope: SyncScope, wildcard: GlobPattern): void =>
   }
 };
 
-/**
- * One listed entry, returning `false` when the depth cap stops the walk.
- *
- * **Details**
- *
- * Depth BEFORE acceptance, exactly as the Effect enumerator does it. Gating
- * only the descent is what made this function return a package one level
- * beyond the cap that the Effect API rejected on the same tree — the drift
- * that motivated the shared traversal.
- *
- * @param scope - The enumeration's shared state.
- * @param wildcard - The wildcard being walked.
- * @param traversal - The shared traversal.
- * @param frame - The directory the entry was listed in.
- * @param entry - The listed entry.
- * @returns `false` when the depth cap stops the walk, `true` otherwise.
- */
 const visitEntrySync = (
   scope: SyncScope,
   wildcard: GlobPattern,

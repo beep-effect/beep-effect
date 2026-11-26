@@ -51,7 +51,6 @@ const assertCommentLayoutRoundtrip = (input: string) => {
   assert.strictEqual(stringifyDocument(composeFirstDocument(text)), text);
 };
 
-/** A commented nested map and seq sharing one leaf, for the given style, metadata and lead comment. */
 const commentedCollections = (
   style: CollectionStyle,
   extra: CollectionMetadata,
@@ -80,11 +79,12 @@ const commentedCollections = (
   return [nestedMap, nestedSeq];
 };
 
-/** Every parent position a collection is checked in: root, mapping value, explicit-key value, sequence item. */
+const KEY_LONG_ENOUGH_TO_SPILL_EXPLICIT = Str.repeat(1025)("k");
+
 const parentPositions = (node: YamlMap | YamlSeq): ReadonlyArray<YamlNode> => [
   node,
   map(scalar("outer"), node),
-  map(scalar(Str.repeat(1025)("k")), node),
+  map(scalar(KEY_LONG_ENOUGH_TO_SPILL_EXPLICIT), node),
   YamlSeq.make({ items: [node], style: "block", offset: 0, length: 1 }),
 ];
 

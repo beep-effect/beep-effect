@@ -616,7 +616,7 @@ describe("YamlFormat", () => {
       })
     );
 
-    it("format keeps the BOM", () => {
+    it("format re-attaches the BOM the stringifier never emits, instead of a delete-at-offset-0 edit", () => {
       assert.strictEqual(YamlFormat.formatToString("\uFEFFa:   1\nb: 2\n"), "\uFEFFa: 1\nb: 2\n");
       assert.deepStrictEqual(YamlFormat.format("\uFEFFa: 1\nb: 2\n"), []);
     });

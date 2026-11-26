@@ -1,5 +1,3 @@
-// This engine adapter is an internal test helper with a direct-call contract.
-
 import { buildAnchorMap, getNodeValue } from "@beep/yaml/internal/composer/anchors";
 import { composeAllDocuments, composeFirstDocument } from "@beep/yaml/internal/composer/document";
 import { isFatalCode } from "@beep/yaml/internal/diagnostics";
@@ -114,8 +112,6 @@ export function parse(
               return Effect.fail({ errors: dupErrors });
             }
           }
-          // Use an empty map so getNodeValue registers anchors incrementally,
-          // ensuring aliases resolve to the most recent anchor at the point of use.
           const anchors = MutableHashMap.empty<string, YamlNode>();
           return Effect.succeed(getNodeValue(doc.contents, anchors));
         })

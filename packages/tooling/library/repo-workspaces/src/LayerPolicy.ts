@@ -34,7 +34,6 @@ const JsonValue = S.fromJsonString(S.Unknown);
 
 const REQUIRED_EDGE = /^\S+ -> \S+$/u;
 
-/** `input` without `keys`, when it is a plain object; anything else passes through for the schema to reject. */
 const withoutKeys: {
   (input: unknown, keys: ReadonlyArray<string>): unknown;
   (keys: ReadonlyArray<string>): (input: unknown) => unknown;
@@ -103,9 +102,8 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError, { readonly
       Match.when("read", () => `Could not read the layer policy${at}`),
       Match.when("json", () => `The layer policy${at} is not valid JSON`),
       Match.when("decode", () => {
-        // The schema issue names every offending key and field; a bare "wrong shape" sends the reader hunting.
-        const detail = this.cause instanceof Error && this.cause.message !== "" ? `: ${this.cause.message}` : "";
-        return `The layer policy${at} does not match the LayerPolicy shape${detail}`;
+        const issueDetail = this.cause instanceof Error && this.cause.message !== "" ? `: ${this.cause.message}` : "";
+        return `The layer policy${at} does not match the LayerPolicy shape${issueDetail}`;
       }),
       Match.exhaustive
     );

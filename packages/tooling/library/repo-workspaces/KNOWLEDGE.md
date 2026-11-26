@@ -1136,9 +1136,10 @@ numerically, so `v11` outranks a `v10` a pnpm upgrade left behind. In the
 resolved directory the first of `pnpmfile.mjs`, `pnpmfile.cjs`,
 `pnpmfile.js` present in one directory listing is loaded; a listed but
 unreadable file fails typed at import time, never as "ships no hook", and
-a dependency shipping none contributes nothing. The ladder reads the real disk through `node:fs`
-rather than the effect `FileSystem`, because the store is real even when a
-caller's filesystem is virtual; `layerFrom` is the seam for that case,
+a dependency shipping none contributes nothing. The ladder reads only through the caller's
+`FileSystem` and `Path` (decision `config-dependency-reads-through-caller-filesystem`),
+so a replaying layer needs a real `FileSystem` to see the store; over a virtual
+one the ladder fails typed, naming what it searched. `layerFrom` is the seam for that case,
 keyed `"<name>@<version>"` to an absolute path and consulting nothing else.
 
 ### The fetch rung (subprocess layer only)

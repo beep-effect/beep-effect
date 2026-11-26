@@ -15,7 +15,6 @@ import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import type { RawYamlDocument } from "@beep/yaml/internal/raw-document";
 
-/** Escape sequences for the characters with a short double-quoted form. */
 const DQ_SHORT_ESCAPES: Readonly<Record<string, string>> = {
   "\\": "\\\\",
   '"': '\\"',
@@ -24,28 +23,24 @@ const DQ_SHORT_ESCAPES: Readonly<Record<string, string>> = {
   "\t": "\\t",
 };
 
-/** Control-character escapes are built once, outside the per-character render loop. */
 const DQ_CONTROL_ESCAPES = R.fromEntries(
   A.makeBy(0x20, (code) => [String.fromCharCode(code), `\\x${Str.padStart(2, "0")(code.toString(16))}`])
 );
 
-/** Escape one UTF-16 code unit for a YAML double-quoted scalar. */
-function escapeDoubleQuotedChar(ch: string): string {
+function escapeDoubleQuotedCodeUnit(ch: string): string {
   const short = DQ_SHORT_ESCAPES[ch];
   if (short !== undefined) return short;
   return DQ_CONTROL_ESCAPES[ch] ?? ch;
 }
 
-/** Render a string as a YAML double-quoted single-line scalar. */
-function renderDoubleQuoted(s: string): string {
+function renderSingleLineDoubleQuoted(s: string): string {
   let out = "";
   for (let i = 0; i < s.length; i++) {
-    out += escapeDoubleQuotedChar(s[i] ?? "");
+    out += escapeDoubleQuotedCodeUnit(s[i] ?? "");
   }
   return `"${out}"`;
 }
 
-/** Inputs shared by every single-doc canonical rule. */
 interface SingleDocContext {
   readonly doc: RawYamlDocument;
   readonly output: string;
@@ -53,7 +48,6 @@ interface SingleDocContext {
   readonly source: string;
 }
 
-/** A single-doc canonical rule: the rewritten output, or undefined when the rule does not apply. */
 type SingleDocRule = (ctx: SingleDocContext) => string | undefined;
 
 const isYamlScalar = Schema.is(YamlScalar);
@@ -65,14 +59,6 @@ const isNonEmpty = (value: string | undefined): boolean => value !== undefined &
 const isBlockScalarStyle = (style: YamlScalar["style"]): boolean =>
   style === "block-literal" || style === "block-folded";
 
-/**
- * 2LFX: scalar root with reserved (non-YAML/TAG) directives, where the source
- * has `---` on its own line. libyaml's canonical emitter preserves the source
- * `---<newline>` placement only when reserved directives are present. Known
- * directives (%YAML, %TAG) get normalized to inline `--- <body>` form (see
- * BEC7, RTP8). Source-shape detection: scan for `---` followed by a newline
- * (rather than a space) before the scalar body.
- */
 const reservedDirectiveOwnLineStart: SingleDocRule = ({ doc, output, root, source }) =>
   isYamlScalar(root) &&
   !isNonEmpty(root.tag) &&
@@ -84,15 +70,6 @@ const reservedDirectiveOwnLineStart: SingleDocRule = ({ doc, output, root, sourc
     ? `---\n${Str.slice(4)(output)}`
     : undefined;
 
-/**
- * 4WA9: top-level block-seq whose first item is a YamlMap whose first pair's
- * value is a block scalar with an explicit indent indicator (`|N`, `>N`).
- * libyaml's canonical emitter prepends `---` for this shape because the
- * explicit indicator suggests the source authored a non-trivial block layout
- * that benefits from explicit document framing. Other block-seq shapes
- * (R4YG: items are bare block scalars; M6YH/735Y: mixed items) stay
- * unchanged.
- */
 const explicitIndentBlockSeqStart: SingleDocRule = ({ output, root, source }) =>
   isYamlSeq(root) &&
   root.style === "block" &&
@@ -101,38 +78,16 @@ const explicitIndentBlockSeqStart: SingleDocRule = ({ output, root, source }) =>
     ? `---\n${output}`
     : undefined;
 
-/**
- * 652Z: top-level flow-source map converted to block form whose first key
- * is a plain scalar that begins with a YAML indicator (e.g. `?foo`). Without
- * `---`, the leading `?foo:` would parse ambiguously (the `?` could be read
- * as an explicit-key indicator). libyaml's canonical emitter prepends `---`
- * in this case. Detection: source contains a flow opener (`{` or `[`) at
- * root level AND output's first non-leading-space content starts with `?`
- * followed by an alpha char (key starts with `?`).
- */
 const flowMapIndicatorKeyStart: SingleDocRule = ({ output, root, source }) =>
   isYamlMap(root) && sourceHasFlowAtRoot(source) && !Str.startsWith("---")(output) && /^[?][A-Za-z]/.test(output)
     ? `---\n${output}`
     : undefined;
 
-/**
- * VJP3/01: source has a flow collection where the key/value separator `:`
- * is alone on its own line, indicating extreme spread-out flow formatting.
- * libyaml's canonical emitter prepends `---` for this stylistic outlier.
- * Common multi-line flow (87E4, 8UDB, DBG4) keeps tokens together on lines,
- * so it does not match this pattern.
- */
 const isolatedFlowColonStart: SingleDocRule = ({ output, root, source }) =>
   (isYamlMap(root) || isYamlSeq(root)) && sourceHasFlowWithIsolatedColon(source) && !Str.startsWith("---")(output)
     ? `---\n${output}`
     : undefined;
 
-/**
- * B3HG: block-folded `>` scalar at root with single-line folded content,
- * where the source has 2+ trailing blank lines beyond what chomp preserves.
- * libyaml's canonical emitter drops the redundant `---` here. The companion
- * fixture 96L6 has only 1 trailing newline and keeps `---`.
- */
 const foldedTrailingBlanksDrop: SingleDocRule = ({ output, root, source }) =>
   isYamlScalar(root) &&
   root.style === "block-folded" &&
@@ -143,24 +98,16 @@ const foldedTrailingBlanksDrop: SingleDocRule = ({ output, root, source }) =>
     ? Str.slice(4)(output)
     : undefined;
 
-/** A rule for a scalar root whose output starts with `--- `. */
 type ScalarRootRule = (root: YamlScalar, output: string, firstAfter: string) => string | undefined;
 
-/** Block scalar at root with `\n\t` content → libyaml emits DQ instead. */
 const tabbedBlockScalarToDoubleQuoted: ScalarRootRule = (root, _output, firstAfter) =>
   (firstAfter === "|" || firstAfter === ">") &&
   typeof root.value === "string" &&
   /\n\t/.test(root.value) &&
   isBlockScalarStyle(root.style)
-    ? `${renderDoubleQuoted(root.value)}\n`
+    ? `${renderSingleLineDoubleQuoted(root.value)}\n`
     : undefined;
 
-/**
- * Single-quoted scalar at root whose content begins with `---`: the quoted
- * form is unambiguous on its own line, so libyaml drops the redundant
- * document-start marker. Limited to single-line content because multi-line
- * quoted scalars are handled by the general multi-line drop below.
- */
 const singleQuotedDashesDrop: ScalarRootRule = (root, output, firstAfter) =>
   firstAfter === "'" &&
   typeof root.value === "string" &&
@@ -169,15 +116,6 @@ const singleQuotedDashesDrop: ScalarRootRule = (root, output, firstAfter) =>
     ? Str.slice(4)(output)
     : undefined;
 
-/**
- * 9MQT/00: a multi-line DQ scalar at root whose folded value is plain-safe
- * renders as `--- <plain>` in single-doc canonical output. libyaml drops
- * the quotes when the resolved value can stand as a plain scalar (no
- * indicator chars, no leading/trailing whitespace, no `:` etc.). Limited
- * to single-doc streams (this helper is only invoked from the single-doc
- * test harness path) so multi-doc fixtures like KSS4 doc 1 keep their DQ
- * quoting.
- */
 const plainSafeDoubleQuotedUnquote: ScalarRootRule = (root, output) =>
   root.style === "double-quoted" &&
   root.sourceMultiline === true &&
@@ -187,12 +125,12 @@ const plainSafeDoubleQuotedUnquote: ScalarRootRule = (root, output) =>
     ? `--- ${root.value}${Str.endsWith("\n")(output) ? "\n" : ""}`
     : undefined;
 
-/** Multi-line quoted scalar at root: libyaml drops the document-start marker. */
 const multiLineQuotedDrop: ScalarRootRule = (root, output, firstAfter) =>
   typeof root.value === "string" && Str.includes("\n")(root.value) && (firstAfter === "'" || firstAfter === '"')
     ? Str.slice(4)(output)
     : undefined;
 
+// decision: canonical-normalizer-emulates-libyaml
 const SCALAR_ROOT_RULES: ReadonlyArray<ScalarRootRule> = [
   tabbedBlockScalarToDoubleQuoted,
   singleQuotedDashesDrop,
@@ -200,7 +138,6 @@ const SCALAR_ROOT_RULES: ReadonlyArray<ScalarRootRule> = [
   multiLineQuotedDrop,
 ];
 
-/** Scalar-root conventions, applied when the output opens with `--- `. */
 const scalarRootCanonical: SingleDocRule = ({ output, root }) => {
   if (!isYamlScalar(root) || !Str.startsWith("--- ")(output)) return undefined;
   const firstAfter = output[4] ?? "";
@@ -211,7 +148,7 @@ const scalarRootCanonical: SingleDocRule = ({ output, root }) => {
   return undefined;
 };
 
-/** Single-doc rules in priority order; the first rule that applies wins. */
+// decision: canonical-normalizer-emulates-libyaml
 const SINGLE_DOC_RULES: ReadonlyArray<SingleDocRule> = [
   reservedDirectiveOwnLineStart,
   explicitIndentBlockSeqStart,
@@ -223,8 +160,8 @@ const SINGLE_DOC_RULES: ReadonlyArray<SingleDocRule> = [
 
 /**
  * Apply canonical single-doc conventions: libyaml's canonical emitter
- * differs from a direct `stringifyDocument` in several cases. See the
- * fixture-ID comments on each rule for the specific shapes.
+ * differs from a direct `stringifyDocument` in several cases. See the decision
+ * `canonical-normalizer-emulates-libyaml` for the fixture IDs behind each rule.
  */
 export function applySingleDocCanonical(output: string, doc: RawYamlDocument, source: string): string;
 export function applySingleDocCanonical(doc: RawYamlDocument, source: string): (output: string) => string;
@@ -262,12 +199,7 @@ export function applyMultiDocCanonical(
   >(2, function applyMultiDocCanonical(output: string, docs: ReadonlyArray<RawYamlDocument>): string {
     let result = output;
 
-    // 6WLZ: multi-doc stream where every doc has explicit `---` AND at least
-    // one doc has a `%TAG` directive that uses the primary handle (`!`).
-    // libyaml's canonical emitter splits `---` from tagged scalar bodies in
-    // this case to make the per-doc directive scope unambiguous. Companion
-    // fixture 9WXW (doc 1 has no `---`) does not match, so the rule is
-    // specific to this all-explicit-with-private-tags shape.
+    // decision: canonical-normalizer-emulates-libyaml
     if (
       docs.length >= 2 &&
       A.every(docs, (d) => d.hasDocumentStart) &&
@@ -286,11 +218,6 @@ export function applyMultiDocCanonical(
       }
     }
 
-    // PUW8: an empty trailing document with explicit `---` gets a `...`
-    // terminator appended when at least one prior document had content.
-    // Without the terminator, the trailing `---` is ambiguous when the
-    // stream is concatenated. Doesn't apply to all-empty streams (6XDY,
-    // MUS6/02-06) where there is no preceding content.
     if (docs.length >= 2) {
       const last = docs[docs.length - 1];
       if (
@@ -309,11 +236,6 @@ export function applyMultiDocCanonical(
   })(...args);
 }
 
-/**
- * Split the joined multi-doc output into per-doc segments by finding `---\n`
- * boundaries (preserving leading and trailing parts). Returns null if the
- * boundary count doesn't match the doc count.
- */
 function splitMultiDocOutput(output: string, docs: ReadonlyArray<RawYamlDocument>): string[] | null {
   const segments: string[] = [];
   let pos = 0;
@@ -335,12 +257,6 @@ function splitMultiDocOutput(output: string, docs: ReadonlyArray<RawYamlDocument
   return segments;
 }
 
-/**
- * Transform a single doc's output of form `--- <tag> <body>\n` to either:
- *  - `---\n<tag> <body>\n` (shorthand tag, e.g. `!foo`)
- *  - `--- <tag>\n<body>\n` (verbatim tag, e.g. `!<...>`)
- * Untagged or non-scalar outputs are returned unchanged.
- */
 function splitDocStartFromTaggedScalar(segment: string): string {
   const verbatimMatch = O.getOrNull(Str.match(/^(---) (!<[^>]+>) (.*)$/m)(segment));
   if (verbatimMatch !== null) {
@@ -359,12 +275,6 @@ function hasReservedDirective(doc: RawYamlDocument): boolean {
   return A.some(doc.directives, (d) => d.name !== "YAML" && d.name !== "TAG");
 }
 
-/**
- * Scan source for `---` at the start of a line, then check if the next
- * non-whitespace character on the same line is a newline (own-line) vs a
- * content character (inline). Returns true for `---\n<body>`, false for
- * `--- <body>`.
- */
 function hadDocStartOnOwnLine(source: string): boolean {
   const lines = Str.split("\n")(source);
   for (const line of lines) {
@@ -374,11 +284,6 @@ function hadDocStartOnOwnLine(source: string): boolean {
   return false;
 }
 
-/**
- * Returns true if the YamlSeq has an item that is a YamlMap whose value is
- * a block-scalar with an explicit indent indicator (`|N`, `>N`) detected
- * via the scalar's source-text region.
- */
 function hasExplicitIndentInMapValue(seq: YamlSeq, source: string): boolean {
   return A.some(
     seq.items,
@@ -386,18 +291,12 @@ function hasExplicitIndentInMapValue(seq: YamlSeq, source: string): boolean {
   );
 }
 
-/** True when `value` is a block scalar whose source header carries an explicit indent indicator. */
 function isExplicitIndentBlockScalar(value: unknown, source: string): boolean {
   if (!isYamlScalar(value) || !isBlockScalarStyle(value.style)) return false;
   const region = Str.slice(value.offset, value.offset + Math.min(value.length, 6))(source);
   return /^[|>][1-9]/.test(region);
 }
 
-/**
- * Returns true when the source begins with a flow opener (`{` or `[`) at
- * column 0 (root level), suggesting the root collection is flow-style.
- * Walks past leading directives, document-start, and comments.
- */
 function sourceHasFlowAtRoot(source: string): boolean {
   const lines = Str.split("\n")(source);
   for (const line of lines) {
@@ -410,12 +309,6 @@ function sourceHasFlowAtRoot(source: string): boolean {
   return false;
 }
 
-/**
- * Returns true if the source has a flow collection (`{...}` or `[...]`)
- * containing a line that is only a `:` (with optional surrounding
- * whitespace). Detects VJP3/01-style spread-out flow formatting where the
- * key/value separator is on its own line.
- */
 function sourceHasFlowWithIsolatedColon(source: string): boolean {
   const flowOpen = O.getOrElse(constant(-1))(Str.search(/[{[]/)(source));
   if (flowOpen < 0) return false;
@@ -426,7 +319,6 @@ function sourceHasFlowWithIsolatedColon(source: string): boolean {
   return false;
 }
 
-/** Mutable scanner state for {@link sourceHasFlowWithIsolatedColon}. */
 interface FlowColonScan {
   depth: number;
   escapeNext: boolean;
@@ -436,7 +328,6 @@ interface FlowColonScan {
   text: string;
 }
 
-/** Advance the flow scanner by one character; true once an isolated-colon flow collection closes. */
 function stepFlowColonScan(scan: FlowColonScan, ch: string): boolean {
   if (scan.inString) {
     stepQuotedFlowChar(scan, ch);
@@ -457,7 +348,6 @@ function stepFlowColonScan(scan: FlowColonScan, ch: string): boolean {
   return (ch === "}" || ch === "]") && closeFlowCollection(scan);
 }
 
-/** Track escapes and the closing quote inside a quoted scalar. */
 function stepQuotedFlowChar(scan: FlowColonScan, ch: string): void {
   if (scan.escapeNext) {
     scan.escapeNext = false;
@@ -472,7 +362,6 @@ function appendFlowText(scan: FlowColonScan, ch: string): void {
   if (scan.inFlow) scan.text += ch;
 }
 
-/** Close one flow level; true when the outermost collection held an isolated `:` line. */
 function closeFlowCollection(scan: FlowColonScan): boolean {
   scan.depth--;
   if (scan.depth !== 0) return false;
@@ -482,32 +371,17 @@ function closeFlowCollection(scan: FlowColonScan): boolean {
   return false;
 }
 
-/**
- * Returns true when source has 2+ trailing newlines (multiple trailing
- * blank lines beyond the single chomp-preserved one). Used to discriminate
- * B3HG (`\n\n\n` at EOF) from 96L6 (`\n` at EOF).
- */
 function sourceHasMultipleTrailingBlanks(source: string): boolean {
   const m = O.getOrNull(Str.match(/\n+$/)(source));
   return m !== null && m[0].length >= 3;
 }
 
-/** Characters that cannot open a plain scalar in canonical block form. */
 const PLAIN_UNSAFE_FIRST_CHARS = "?:-{}[],#&*!|>'\"%@`";
 
-/**
- * Conservative "is this string plain-safe in block context" check. Rejects
- * leading/trailing whitespace, indicator characters at the start, and chars
- * that would force quoting in canonical block form. Matches the discriminator
- * libyaml uses to decide whether to drop DQ quotes on a folded scalar root.
- */
 function isPlainSafe(s: string): boolean {
   if (s.length === 0) return false;
-  // Leading/trailing whitespace requires quoting
   if (/^[ \t]|[ \t]$/.test(s)) return false;
-  // Leading YAML indicator chars require quoting
   if (Str.includes(s[0] ?? "")(PLAIN_UNSAFE_FIRST_CHARS)) return false;
-  // `:` followed by space, or trailing `:` — would parse as mapping key;
-  // ` #` would start a comment
-  return !/:(?: |$)/.test(s) && !Str.includes(" #")(s);
+  const parsesAsKeyOrComment = /:(?: |$)/.test(s) || Str.includes(" #")(s);
+  return !parsesAsKeyOrComment;
 }

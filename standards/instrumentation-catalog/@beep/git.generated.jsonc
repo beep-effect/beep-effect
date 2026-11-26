@@ -88,8 +88,10 @@
     {"name":"Git.workingChanges","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.worktreeAdd","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.worktreeList","owner":"@beep/git","family":"driver","conforms":true},
+    {"name":"Git.worktreeLock","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.worktreePrune","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Git.worktreeRemove","owner":"@beep/git","family":"driver","conforms":true},
+    {"name":"Git.worktreeUnlock","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"GitBoolean.decode","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"GitConfig.parse","owner":"@beep/git","family":"driver","conforms":true},
     {"name":"Gitmodules.parse","owner":"@beep/git","family":"driver","conforms":true}

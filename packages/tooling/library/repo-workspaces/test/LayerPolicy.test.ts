@@ -29,12 +29,15 @@ describe("LayerPolicy.decode", () => {
 
   it.effect("rejects every key it does not model, naming each one, so a typo cannot drop a guard", () =>
     Effect.gen(function* () {
-      // requiredEdge (singular) would otherwise vanish, and the non-vacuity guard with it.
       const error = yield* Effect.flip(
         LayerPolicy.decode({ ...VALID, requiredEdge: ["app -> core"], fieldList: ["dependencies"] })
       );
       assert.strictEqual(error.reason, "decode");
-      assert.include(error.message, "requiredEdge");
+      assert.include(
+        error.message,
+        "requiredEdge",
+        "a dropped singular requiredEdge would take the non-vacuity guard with it"
+      );
       assert.include(error.message, "fieldList");
     })
   );
@@ -45,9 +48,10 @@ describe("LayerPolicy.decode", () => {
       assert.deepStrictEqual(withSchema.layers, [["app"], ["core"]]);
       const allowed = yield* LayerPolicy.decode({ ...VALID, harness: ["@e2e/*"] }, { allowKeys: ["harness"] });
       assert.deepStrictEqual(allowed.unconstrained, ["@e2e/*"]);
-      // Control: the same input without the allowance fails.
-      const refused = yield* Effect.flip(LayerPolicy.decode({ ...VALID, harness: ["@e2e/*"] }));
-      assert.include(refused.message, "harness");
+      const sameInputRefusedWithoutAllowance = yield* Effect.flip(
+        LayerPolicy.decode({ ...VALID, harness: ["@e2e/*"] })
+      );
+      assert.include(sameInputRefusedWithoutAllowance.message, "harness");
     })
   );
 

@@ -22,6 +22,7 @@ import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -33,8 +34,10 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -263,6 +266,46 @@ const walkingWatcherTable = Effect.fn("WorktreeRemoveFenceTest.walkingWatcherTab
 // without advancing it.
 const quickSettle = (attempts: number) => WorktreeFenceSettlePolicy.make({ interval: Duration.zero, attempts });
 
+const concurrentPruneTable = Effect.fn("WorktreeRemoveFenceTest.concurrentPruneTable")(function* (
+  repoRoot: string,
+  lane: string,
+  gitCommandsAfterPrune: ReadonlyArray<ReadonlyArray<string>>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const scope = yield* Scope.Scope;
+  const adminDir = path.join(repoRoot, ".git", "worktrees", path.basename(lane));
+  const adminDirAfterPrune = yield* Ref.make(O.none<boolean>());
+  const pruneWhileFenced = Effect.gen(function* () {
+    const entries = yield* fs.readDirectory(path.dirname(lane));
+    expect(A.some(entries, Str.startsWith(`${path.basename(lane)}.retiring-`))).toBe(true);
+    const laneStillAtItsPath = yield* fs.exists(lane);
+    expect(laneStillAtItsPath).toBe(false);
+    yield* runGit(repoRoot, ["worktree", "prune"]).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provideService(Scope.Scope, scope)
+    );
+    const survived = yield* fs.exists(adminDir);
+    yield* Ref.set(adminDirAfterPrune, O.some(survived));
+    yield* Effect.forEach(gitCommandsAfterPrune, (args) => runGit(repoRoot, args), {
+      concurrency: 1,
+      discard: true,
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provideService(Scope.Scope, scope)
+    );
+  }).pipe(Effect.orDie);
+  const table: ProcessTableShape = {
+    ...procProcessTable,
+    pids: Ref.get(adminDirAfterPrune).pipe(
+      Effect.flatMap(O.match({ onNone: () => pruneWhileFenced, onSome: () => Effect.void })),
+      Effect.andThen(procProcessTable.pids)
+    ),
+  };
+  return { table, adminDir, adminDirAfterPrune };
+});
+
 const WORKTREE_REMOVE_FENCE_INVOKER = NodeURL.fileURLToPath(
   new URL("./support/WorktreeRemoveFenceInvoker.ts", import.meta.url)
 );
@@ -457,6 +500,9 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         const fenced = O.getOrThrow(A.findFirst(readDirectory12, Str.startsWith(`${path.basename(lane)}.retiring-`)));
         const readFileString13 = yield* fs.readFileString(path.join(path.dirname(lane), fenced, "late-data.txt"));
         expect(readFileString13).toBe("uncaptured data");
+        const listingAfterPreserve = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listingAfterPreserve).not.toContain("locked");
+        expect(listingAfterPreserve).not.toContain(path.basename(lane));
       })
     )
   );
@@ -581,6 +627,192 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
         expect(failureMessage(error)).toContain("(sh) via cwd");
         const exists21 = yield* fs.exists(lane);
         expect(exists21).toBe(true);
+      })
+    )
+  );
+
+  it.effect("keeps the lane registered through a concurrent prune while fenced and still retires it", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const race = yield* concurrentPruneTable(repoRoot, lane, []);
+        const output = yield* captureOutput(remove(repoRoot)).pipe(Effect.provideService(ProcessTable, race.table));
+        const raceSurvived = yield* Ref.get(race.adminDirAfterPrune);
+        assertSome(raceSurvived, true);
+        expect(output).toContain(`Worktree retirement complete: ${lane}`);
+        expect(output).toContain("branch deleted: claude/lane");
+        const laneLeft = yield* fs.exists(lane);
+        expect(laneLeft).toBe(false);
+        const adminDirLeft = yield* fs.exists(race.adminDir);
+        expect(adminDirLeft).toBe(false);
+      })
+    )
+  );
+
+  it.effect("restores a refused lane with its registration after a concurrent prune and lifts the fence lock", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const race = yield* concurrentPruneTable(repoRoot, lane, []);
+        const holder = yield* spawnSleepIn(lane);
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, race.table),
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        const raceSurvived = yield* Ref.get(race.adminDirAfterPrune);
+        assertSome(raceSurvived, true);
+        expect(failureMessage(error)).toContain("still hold it");
+        const adminDirLeft = yield* fs.exists(race.adminDir);
+        expect(adminDirLeft).toBe(true);
+        const realLane = yield* fs.realPath(lane);
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).toContain(`worktree ${realLane}`);
+        expect(listing).not.toContain("locked");
+        const status = yield* runGitText(lane, ["status", "--porcelain"]);
+        expect(status).toBe("");
+      })
+    )
+  );
+
+  it.effect("keeps a lock the lane already carried through a refusal and lifts it only on retirement", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* runGit(repoRoot, ["worktree", "lock", "--reason", "operator hold", lane]);
+        const refusedRace = yield* concurrentPruneTable(repoRoot, lane, []);
+        const holder = yield* spawnSleepIn(lane);
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, refusedRace.table),
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        expect(failureMessage(error)).toContain("still hold it");
+        const refusedRaceSurvived = yield* Ref.get(refusedRace.adminDirAfterPrune);
+        assertSome(refusedRaceSurvived, true);
+        const heldListing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(heldListing).toContain("locked operator hold");
+        yield* holder.exitCode.pipe(Effect.ignore);
+        const retiredRace = yield* concurrentPruneTable(repoRoot, lane, []);
+        const output = yield* captureOutput(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, retiredRace.table)
+        );
+        const retiredRaceSurvived = yield* Ref.get(retiredRace.adminDirAfterPrune);
+        assertSome(retiredRaceSurvived, true);
+        expect(output).toContain(`Worktree retirement complete: ${lane}`);
+        const adminDirLeft = yield* fs.exists(retiredRace.adminDir);
+        expect(adminDirLeft).toBe(false);
+      })
+    )
+  );
+
+  it.effect("finishes the retirement when the fence lock was lifted from outside during capture", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const race = yield* concurrentPruneTable(repoRoot, lane, [["worktree", "unlock", lane]]);
+        const output = yield* captureOutput(remove(repoRoot)).pipe(Effect.provideService(ProcessTable, race.table));
+        expect(output).toContain(`Worktree retirement complete: ${lane}`);
+        expect(output).toContain("branch deleted: claude/lane");
+        const adminDirLeft = yield* fs.exists(race.adminDir);
+        expect(adminDirLeft).toBe(false);
+      })
+    )
+  );
+
+  it.effect("refuses a lane that another retirement's fence still holds locked", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const reason = `beep worktree retirement fenced this checkout at ${lane}.retiring-1`;
+        yield* runGit(repoRoot, ["worktree", "lock", "--reason", reason, lane]);
+        const error = yield* Effect.flip(remove(repoRoot));
+        expect(failureMessage(error)).toContain("locked by another retirement's fence");
+        const laneLeft = yield* fs.exists(lane);
+        expect(laneLeft).toBe(true);
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).toContain(`locked ${reason}`);
+      })
+    )
+  );
+
+  it.effect("lifts the fence lock when the rename that fences the lane fails", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const occupied = `${lane}.retiring-0`;
+        yield* fs.makeDirectory(occupied);
+        yield* fs.writeFileString(path.join(occupied, "occupant.txt"), "blocks the rename");
+        const error = yield* Effect.flip(remove(repoRoot));
+        expect(failureMessage(error)).toContain(`Failed to fence ${lane} for retirement`);
+        const laneLeft = yield* fs.exists(lane);
+        expect(laneLeft).toBe(true);
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).not.toContain("locked");
+      })
+    )
+  );
+
+  it.effect("keeps a lock the lane already carried when a late attacher preserves the fenced copy", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* runGit(repoRoot, ["worktree", "lock", "--reason", "operator hold", lane]);
+        const walker = yield* spawnSleepIn(path.dirname(repoRoot));
+        const table = yield* walkingWatcherTable(walker.pid, lane, 2, 2);
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, table),
+          Effect.provideService(WorktreeFenceSettle, quickSettle(5)),
+          Effect.ensuring(Effect.ignore(walker.kill()))
+        );
+        expect(failureMessage(error)).toContain("the fenced copy is preserved");
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).toContain("locked operator hold");
+      })
+    )
+  );
+
+  it.effect("keeps a lock an operator swapped in for the fence lock when a refusal restores the lane", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const race = yield* concurrentPruneTable(repoRoot, lane, [
+          ["worktree", "unlock", lane],
+          ["worktree", "lock", "--reason", "operator hold", lane],
+        ]);
+        const holder = yield* spawnSleepIn(lane);
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, race.table),
+          Effect.ensuring(Effect.ignore(holder.kill()))
+        );
+        expect(failureMessage(error)).toContain("still hold it");
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).toContain("locked operator hold");
+      })
+    )
+  );
+
+  it.effect("refuses and restores the lane loudly when a prune already in flight removed its registration", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const adminDir = path.join(repoRoot, ".git", "worktrees", path.basename(lane));
+        const removedOnce = yield* Ref.make(false);
+        const table: ProcessTableShape = {
+          ...procProcessTable,
+          pids: Ref.getAndSet(removedOnce, true).pipe(
+            Effect.flatMap((removed) =>
+              Bool.match(removed, {
+                onTrue: () => Effect.void,
+                onFalse: () => fs.remove(adminDir, { recursive: true }).pipe(Effect.orDie),
+              })
+            ),
+            Effect.andThen(procProcessTable.pids)
+          ),
+        };
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(Effect.provideService(ProcessTable, table));
+        expect(failureMessage(error)).toContain("was removed while the checkout was fenced");
+        const laneLeft = yield* fs.exists(lane);
+        expect(laneLeft).toBe(true);
       })
     )
   );

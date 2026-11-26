@@ -31,7 +31,6 @@ const messages = (document: ReturnType<typeof compose>) => A.map(document.errors
 
 const isCollection = (value: unknown): value is YamlMap | YamlSeq => S.is(YamlMap)(value) || S.is(YamlSeq)(value);
 
-/** Without inner metadata the outer anchor lands on the collection key itself. */
 const expectOuterAnchoredKey = (key: unknown) => {
   expect(isCollection(key)).toBe(true);
   if (isCollection(key)) expect(key.anchor).toBe("outer");

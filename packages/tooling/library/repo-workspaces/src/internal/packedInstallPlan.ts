@@ -6,12 +6,6 @@ import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
-
-// Everything PackedInstall decides that does not need a process: which
-// variables leak the parent manager's context, what each manager's consumer
-// project looks like, and how each spells "skip lifecycle scripts". Pure, so
-// every per-manager trap is pinned without spawning one.
-
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -48,10 +42,8 @@ class PackedManifestError extends S.TaggedError<PackedManifestError, { readonly 
   $I.annoteError<PackedManifestError>("PackedManifestError", { description: "A packed package.json is not an object." })
 ) {}
 
-/** Variables that carry the PARENT run's context into a child package manager. */
 const TRAPS = MutableHashSet.make("CI", "INIT_CWD", "NODE_V8_COVERAGE", "PNPM_SCRIPT_SRC_DIR", "PNPM_PACKAGE_NAME");
 
-/** Prefixes of whole families of parent-run context: npm's, pnpm's config, and Yarn's. */
 const TRAP_PREFIXES = /^(npm_|pnpm_config_|yarn_)/i;
 
 /**
@@ -102,7 +94,6 @@ export const scrubEnv = (env: Readonly<Record<string, string | undefined>>): Rec
   return out;
 };
 
-/** A version-shaped `--version` line, its leading `v` outside the capture. */
 const VERSION_LINE = /^v?(\d+\.\d+\.\d+\S*)$/;
 
 /**
@@ -168,11 +159,9 @@ export const closureOf: {
   }
 );
 
-/** Every runtime dependency name a package declares, field by field, each field's names sorted. */
 const runtimeDependencyNames = (pkg: WorkspacePackage): ReadonlyArray<string> =>
   A.flatMap(RUNTIME_DEPENDENCY_FIELDS, (field) => A.sort(R.keys(pkg[field]), Str.Order));
 
-/** The carrier, then every workspace package its runtime fields reach, breadth first. */
 const autoClosure = (
   byName: MutableHashMap.MutableHashMap<string, WorkspacePackage>,
   root: WorkspacePackage
@@ -191,7 +180,6 @@ const autoClosure = (
   return ordered;
 };
 
-/** The carrier, then the named packages in order; the failure is the first name the workspace lacks. */
 const namedClosure = (
   byName: MutableHashMap.MutableHashMap<string, WorkspacePackage>,
   root: WorkspacePackage,
@@ -281,22 +269,11 @@ const minor = (version: string): number =>
 const YARNRC =
   "nodeLinker: node-modules\nenableImmutableInstalls: false\nenableScripts: false\nenableTelemetry: false\n";
 
-/**
- * Berry's release-age gate, off: the consumer installs packages its caller
- * has just released, so the gate only ever quarantines them. 4.10 introduced
- * the setting, and Berry fails every command on a setting it does not know.
- */
 const YARNRC_AGE_GATE = "npmMinimalAgeGate: 0\n";
 
 const yarnrc = (version: string): string =>
   major(version) > 4 || (major(version) === 4 && minor(version) >= 10) ? `${YARNRC}${YARNRC_AGE_GATE}` : YARNRC;
 
-/**
- * JSON strings are valid YAML double-quoted scalars. `minimumReleaseAge: 0`
- * switches off pnpm's release-age gate, on by default in pnpm 11 and 12 and
- * non-strict: it would rewrite this file with exclusions for fresh packages,
- * and resolve a range to an older, mature match where one exists.
- */
 const pnpmWorkspaceYaml = (specs: Readonly<Record<string, string>>): string => {
   const entries = R.toEntries(specs);
   return entries.length === 0
@@ -359,19 +336,17 @@ export const consumerFiles = (
       A.map(([name, spec]) => [name, O.getOrElse(R.get(specs, name), () => spec)] as const)
     )
   );
+  const managerPinWithoutPnpmRegistryFetch =
+    input.manager === "pnpm"
+      ? { devEngines: { packageManager: { name: "pnpm", version: input.version, onFail: "ignore" } } }
+      : { packageManager: `${input.manager}@${input.version}` };
+  const runtimeDependenciesOmitDevKeeps = { [input.carrier.name]: carrierSpec, ...extra };
   const manifest = {
     name: `packed-install-${input.manager}`,
     version: "0.0.0",
     private: true,
-    // pnpm resolves a `packageManager` pin from the registry even when it names the
-    // running version, which fails an offline install; devEngines with onFail
-    // "ignore" pins the same version without a fetch. Every other manager keeps
-    // `packageManager`, which is what corepack and yarn read.
-    ...(input.manager === "pnpm"
-      ? { devEngines: { packageManager: { name: "pnpm", version: input.version, onFail: "ignore" } } }
-      : { packageManager: `${input.manager}@${input.version}` }),
-    // dependencies, never devDependencies: a host NODE_ENV=production or omit=dev would skip a dev one.
-    dependencies: { [input.carrier.name]: carrierSpec, ...extra },
+    ...managerPinWithoutPnpmRegistryFetch,
+    dependencies: runtimeDependenciesOmitDevKeeps,
     ...(input.manager === "npm" || input.manager === "bun" ? { overrides: specs } : {}),
     ...(input.manager === "yarn" ? { resolutions: specs } : {}),
   };
@@ -404,9 +379,7 @@ export const installArgs: {
   (manager: PackageManagerName, version: string): ReadonlyArray<string> =>
     Match.value(manager).pipe(
       Match.when("npm", () => ["install", "--ignore-scripts", "--no-audit", "--no-fund"]),
-      // pnpm 12 fails an install that IGNORED a dependency build script; skipping them outright is the stable spelling.
       Match.when("pnpm", () => ["install", "--config.ignore-scripts=true"]),
-      // Berry has no --ignore-scripts; enableScripts: false in .yarnrc.yml is the equivalent.
       Match.when("yarn", () =>
         major(version) >= 2 ? ["install"] : ["install", "--ignore-scripts", "--non-interactive"]
       ),
@@ -415,11 +388,6 @@ export const installArgs: {
     )
 );
 
-/**
- * A specifier no consumer outside the workspace can resolve: `workspace:`,
- * `catalog:`, `link:`, or a relative `file:` path. An absolute `file:` path
- * is left alone: it resolves wherever the file exists.
- */
 const UNRESOLVABLE = /^(?:workspace:|catalog:|link:|file:(?!\/))/;
 
 /**
@@ -474,16 +442,13 @@ export declare namespace PackedManifest {
   export type Encoded = typeof PackedManifest.Encoded;
 }
 
-/** A package name without its `@scope/`, as npm links a `bin` string. */
 const unscoped = (name: string): string => Str.replace(/^@[^/]+\//, "")(name);
 
-/** The bin names a manifest's `bin` declares: an object's keys, or for a string the unscoped package name. */
 const binsOf = (bin: unknown, name: string | undefined): ReadonlyArray<string> => {
   if (P.isObject(bin)) return R.keys(bin);
   return P.isString(bin) && name !== undefined ? [unscoped(name)] : [];
 };
 
-/** Every runtime specifier in one dependency field that only the workspace could resolve, as `field.name: spec`. */
 const unresolvedIn = (field: string, block: unknown): ReadonlyArray<string> =>
   P.isObjectOrArray(block)
     ? pipe(
@@ -548,7 +513,6 @@ export const binTargetOf: {
   )
 );
 
-/** The file a `bin` field declares for `name`, given the manifest's `name`. */
 const binEntry = (bin: unknown, packageName: unknown, name: string): O.Option<string> => {
   if (P.isString(bin)) return P.isString(packageName) && unscoped(packageName) === name ? O.some(bin) : O.none();
   return P.isObject(bin) && R.has(bin, name) ? O.liftPredicate(bin[name], P.isString) : O.none();
@@ -625,8 +589,7 @@ export const binConflict: {
   }
 );
 
-/** A bare package name, scoped or not: an override key carrying a selector (`a>b`, `a@1`) is not one. */
-const BARE_NAME = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;
+const BARE_NAME_NOT_SELECTOR_KEY = /^(?:@[^/@\s>]+\/)?[^/@\s>]+$/;
 
 /**
  * The `file:` entries of a parsed `pnpm-workspace.yaml`'s `overrides:` map,
@@ -663,7 +626,7 @@ export const fileOverridesOf = (document: unknown): Record<string, string> => {
   if (!P.isObject(document) || !P.isObject(document.overrides)) return R.fromEntries([]);
   for (const [name, spec] of R.toEntries(document.overrides)) {
     if (name === "__proto__") continue;
-    if (P.isString(spec) && Str.startsWith("file:")(spec) && BARE_NAME.test(name)) {
+    if (P.isString(spec) && Str.startsWith("file:")(spec) && BARE_NAME_NOT_SELECTOR_KEY.test(name)) {
       out = HashMap.set(out, name, Str.slice(5)(spec));
       order.push(name);
     }

@@ -40,7 +40,6 @@ const options = { carrier: "@x/carrier", closure: "auto" } as const;
 const suite = (seed: Record<string, string>) =>
   layer(Layer.mergeAll(MemoryFileSystem.layerWith(seed), Path.layer, Discovery), { timeout: "30 seconds" });
 
-/** Run `self` with `env` as the only configuration, as a test stubs the environment. */
 const withEnv =
   (env: Record<string, string>) =>
   <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -61,11 +60,10 @@ describe("PackedInstall.preflight and gate", () => {
     );
   });
 
-  // Only the carrier is built; lib has only a dev build, which does not count.
   suite({
     [`/repo/packages/carrier/${PROD}/package.json`]: "{}",
     "/repo/packages/lib/dist/dev/pkg/package.json": "{}",
-  })("when one closure member has no prod build", (it) => {
+  })("when only the carrier has a prod build and lib's dev build does not count", (it) => {
     it.effect("names exactly the missing manifest", () =>
       Effect.gen(function* () {
         const result = yield* PackedInstall.preflight(options);

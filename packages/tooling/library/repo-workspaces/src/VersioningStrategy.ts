@@ -29,6 +29,8 @@ import type { TagFormatOptions, TagStyle } from "./ReleaseTag.ts";
 
 const $I = $RepoWorkspacesId.create("VersioningStrategy");
 
+const OVERLAPPING_PUBLISHABILITY_CHECKS = 10;
+
 /**
  * **Details**
  *
@@ -324,9 +326,7 @@ export class VersioningStrategy extends S.Class<VersioningStrategy, { readonly b
     const type: VersioningStrategyType =
       packages.length <= 1
         ? "single"
-        : // Lockstep means ONE group covers the whole publishable set. Two groups
-          // that cover it between them do not: those packages move separately.
-          A.some(fixedGroups, (group) => A.every(packages, (name) => group.includes(name)))
+        : A.some(fixedGroups, (group) => A.every(packages, (name) => group.includes(name)))
           ? "fixed-group"
           : "independent";
 
@@ -365,8 +365,6 @@ export class VersioningStrategy extends S.Class<VersioningStrategy, { readonly b
     const publishability = yield* PublishabilityDetector;
 
     const packages = yield* discovery.listPackages;
-    // `Effect.forEach` defaults to concurrency 1; this explicit bound is what
-    // makes independent publishability checks overlap at all.
     const detected = yield* Effect.forEach(
       packages,
       (candidate) =>
@@ -376,7 +374,7 @@ export class VersioningStrategy extends S.Class<VersioningStrategy, { readonly b
             publishable: targets.length > 0,
           }))
         ),
-      { concurrency: 10 }
+      { concurrency: OVERLAPPING_PUBLISHABILITY_CHECKS }
     );
     const publishable: Array<string> = [];
     for (const candidate of detected) {
@@ -385,8 +383,6 @@ export class VersioningStrategy extends S.Class<VersioningStrategy, { readonly b
 
     return VersioningStrategy.classify({
       packages: publishable,
-      // `exactOptionalPropertyTypes` is on: an explicit `undefined` does not
-      // satisfy an optional property, so this spreads or it does not appear.
       ...(options?.fixedGroups !== undefined && { fixedGroups: options.fixedGroups }),
     });
   });
