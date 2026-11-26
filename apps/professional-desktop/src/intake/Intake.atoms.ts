@@ -20,9 +20,6 @@ import { DocumentIntakeInput, DocumentIntakeState, DocumentIntakeVaultStatus } f
 import { inspectIntakeActor } from "./Intake.inspection.ts";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
-// The intake machine's actors need the RPC client and the registry's own
-// Reactivity service, so mutations they run invalidate the same keys every
-// other atom reads. `DesktopIntakeClient.runtime` alone only types the client.
 const documentIntakeRuntime = professionalBrowserRuntime.factory((get) =>
   Layer.merge(
     get(DesktopIntakeClient.runtime.layer),
@@ -138,9 +135,7 @@ const pendingView: Pick<DocumentIntakeSurface, "state" | "vaultStatus"> = {
   vaultStatus: DocumentIntakeVaultStatus.Enum.pending,
 };
 
-// One factory builds the actor atoms, the DOM adapters and the surface atom, so
-// the surface atom's closure is the only thing that has to stay alive: a second
-// `Atom.family` lookup could otherwise mint a second actor behind a WeakRef.
+// decision: intake-surface-is-one-factory-closure
 const makeDocumentIntakeSurface = (workspaceId: WorkspaceIdentity.WorkspaceId): Atom.Atom<DocumentIntakeSurface> => {
   const intake = createActorAtoms(documentIntakeRuntime, documentIntakeMachine, {
     input: DocumentIntakeInput.make({ workspaceId }),
@@ -153,8 +148,6 @@ const makeDocumentIntakeSurface = (workspaceId: WorkspaceIdentity.WorkspaceId): 
       DocumentIntakeVaultStatus.is.configured(vaultStatusOf(snapshot))
     );
 
-  // `send` is queued, so `preventDefault` and the `contains` check have to run
-  // here, synchronously inside the DOM event handler.
   const dragEnter = professionalBrowserRuntime.fn<{ readonly preventDefault: () => void }>()(
     Effect.fnUntraced(function* ({ preventDefault }, ctx) {
       if (!isVaultConfigured(ctx)) return;
@@ -188,9 +181,6 @@ const makeDocumentIntakeSurface = (workspaceId: WorkspaceIdentity.WorkspaceId): 
     })
   );
 
-  // The actions read no reactive state, so this atom computes once per
-  // workspace and every closure, including the file-input React ref callback,
-  // stays referentially stable across intake state changes.
   const actions = Atom.make((get): DocumentIntakeSurface["actions"] => {
     const openFilePickerAtom = openIntakeFilePickerAtoms(workspaceId);
     const setFileInputAtom = setIntakeFileInputAtoms(workspaceId);

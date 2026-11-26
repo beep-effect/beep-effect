@@ -29,7 +29,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-/** A node's structure with scalars reduced to their values and map pairs kept in order, since keys may be collections. */
 function shapeOf(node: unknown): unknown {
   if (S.is(YamlMap)(node)) return { map: A.map(node.items, (pair) => [shapeOf(pair.key), shapeOf(pair.value)]) };
   if (S.is(YamlSeq)(node)) return A.map(node.items, (item) => shapeOf(item));
@@ -37,8 +36,6 @@ function shapeOf(node: unknown): unknown {
 }
 
 describe("explicit keys holding a compact collection", () => {
-  // Expected shapes authored against yaml@2.9.1 `parseDocument`, whose `toJS`
-  // spelled these keys as `{ k: v }` and `[ k ]`.
   const entry = (key: unknown, value: unknown) => ({ map: [[key, value]] });
   const kv = entry("k", "v");
   const cases: ReadonlyArray<readonly [name: string, input: string, expected: unknown]> = [
@@ -67,7 +64,11 @@ describe("explicit keys holding a compact collection", () => {
     it(`composes ${name}`, () => {
       const document = composeFirstDocument(input);
       assert.deepStrictEqual(document.errors, []);
-      assert.deepStrictEqual(shapeOf(document.contents), expected);
+      assert.deepStrictEqual(
+        shapeOf(document.contents),
+        expected,
+        "expected shapes follow yaml@2.9.1 parseDocument, whose toJS spelled these keys as `{ k: v }` and `[ k ]`; scalars reduce to values and map pairs stay ordered, since keys may be collections"
+      );
     });
   }
 });

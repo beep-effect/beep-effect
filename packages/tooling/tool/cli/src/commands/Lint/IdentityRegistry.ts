@@ -666,7 +666,7 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
   const published = Result.getOrElse(baseSnapshot, () =>
     BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref: base })
   );
-  const undecodable = A.fromOption(Result.getFailure(baseSnapshot));
+  const undecodable = baseSnapshot.pipe(Result.getFailure, A.fromOption);
 
   if (fix && present && Result.isSuccess(baseSnapshot)) {
     yield* regenerateRegistry(repoRoot, layout, baseSnapshot.success);

@@ -1,10 +1,3 @@
-// The table-of-contents builder, pinned against `@effect/markdown-toc` 0.1.0
-// (`bullets: "-"`): every expected rendering here is that package's output
-// for the same source, except where a comment says otherwise. The docgen
-// module page is the adopted site (R5b), so the first fixture has its shape:
-// an intro section, the `<!-- toc -->` marker, category H1s, member H2s and
-// duplicate `make` headings.
-
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownToc, TocEntry, TocOptions } from "@beep/markdown/MarkdownToc";
 import { assert, describe, it } from "@effect/vitest";
@@ -20,7 +13,7 @@ const parse = (source: string): MarkdownDocument =>
 
 const lines = (...xs: ReadonlyArray<string>): string => A.join(xs, "\n");
 
-const modulePage = lines(
+const docgenModulePage = lines(
   "## Intro",
   "",
   "Added in v0.0.0",
@@ -61,7 +54,7 @@ const modulePage = lines(
   ""
 );
 
-const modulePageToc = lines(
+const docgenModulePageToc = lines(
   "- [constructors](#constructors)",
   "  - [make](#make)",
   "- [models](#models)",
@@ -77,10 +70,10 @@ const modulePageToc = lines(
   "          - [Deeper](#deeper)"
 );
 
-describe("MarkdownToc", () => {
+describe('MarkdownToc, each expected rendering @effect/markdown-toc 0.1.0 output with bullets "-" unless a message says', () => {
   describe("entries", () => {
     it("lists the headings after the marker with document-wide indices and duplicate ordinals", () => {
-      const entries = MarkdownToc.entries(parse(modulePage));
+      const entries = MarkdownToc.entries(parse(docgenModulePage));
       assert.deepStrictEqual(
         A.map(entries, (entry) => [entry.index, entry.depth, entry.occurrence, entry.slug]),
         [
@@ -154,12 +147,11 @@ describe("MarkdownToc", () => {
         ["after"]
       );
 
-      // The kit's own rule: remarkable's indented-code token swallows the blank lines after it, so
-      // markdown-toc also drops the heading right after an indented marker. Positions here are CommonMark's.
       const inIndentedCode = parse(lines("# Before", "", "    <!-- toc -->", "", "## After", ""));
       assert.deepStrictEqual(
         A.map(MarkdownToc.entries(inIndentedCode), (entry) => entry.slug),
-        ["after"]
+        ["after"],
+        "the kit's own rule on CommonMark positions: markdown-toc's remarkable indented-code token swallows the blank lines and drops After"
       );
 
       const twoMarkers = parse(lines("<!-- toc -->", "", "# Between", "", "<!--\ttoc\t-->", "", "## After", ""));
@@ -242,8 +234,8 @@ describe("MarkdownToc", () => {
   describe("renderEntries", () => {
     it("renders the docgen module page byte-identically to markdown-toc", () => {
       assert.strictEqual(
-        MarkdownToc.renderEntries(MarkdownToc.entries(parse(modulePage)), { bullet: "-" }),
-        modulePageToc
+        MarkdownToc.renderEntries(MarkdownToc.entries(parse(docgenModulePage)), { bullet: "-" }),
+        docgenModulePageToc
       );
     });
 
@@ -286,7 +278,7 @@ describe("MarkdownToc", () => {
   describe("renderResult and render", () => {
     it("parse and render in one step, with frontmatter capture on", () => {
       assertSuccess(MarkdownToc.renderResult("# One\n\n## Two\n"), lines("- [One](#one)", "  - [Two](#two)"));
-      assertSuccess(MarkdownToc.renderResult(modulePage, { bullet: "-" }), modulePageToc);
+      assertSuccess(MarkdownToc.renderResult(docgenModulePage, { bullet: "-" }), docgenModulePageToc);
       assertSuccess(MarkdownToc.renderResult(lines("---", "title: x", "---", "", "# One", "")), "- [One](#one)");
     });
 

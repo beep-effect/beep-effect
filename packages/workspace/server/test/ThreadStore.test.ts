@@ -464,16 +464,26 @@ describe("ThreadStore in-memory", () => {
         expect(DateTime.toEpochMillis(thread.createdAt)).toBe(createdTime);
         expect(DateTime.toEpochMillis(thread.updatedAt)).toBe(createdTime);
 
-        const { message, turn } = yield* store.appendTurn(
-          AppendTurnInput.make({
-            threadId: thread.id,
-            parentTurnId: O.none(),
-            role: "user",
-            content: docOf("Hello"),
-          })
-        );
-        expect(DateTime.toEpochMillis(turn.createdAt)).toBe(createdTime);
-        expect(DateTime.toEpochMillis(message.createdAt)).toBe(createdTime);
+        const clock = yield* Clock.Clock;
+        const appendTime = createdTime + 1_000;
+        const { message, turn } = yield* store
+          .appendTurn(
+            AppendTurnInput.make({
+              threadId: thread.id,
+              parentTurnId: O.none(),
+              role: "user",
+              content: docOf("Hello"),
+            })
+          )
+          .pipe(
+            Effect.provideService(Clock.Clock, {
+              ...clock,
+              currentTimeMillis: Effect.succeed(appendTime),
+              currentTimeMillisUnsafe: () => appendTime,
+            })
+          );
+        expect(DateTime.toEpochMillis(turn.createdAt)).toBe(appendTime);
+        expect(DateTime.toEpochMillis(message.createdAt)).toBe(appendTime);
 
         yield* TestClock.adjust("1 minute");
         const renameTime = yield* Clock.currentTimeMillis;

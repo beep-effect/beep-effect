@@ -131,8 +131,8 @@ export const makeCitationTestInvocationBinding = Effect.fn("CitationInvocationTe
     Effect.fnUntraced(function* (...args: Args) {
       const current = yield* Effect.serviceOption(CitationInvocation);
       const explicit = yield* CitationTestExplicitInvocation;
-      const reuseSharedLedgerInsteadOfAdmittingSecondRequest = explicit && O.isSome(current);
-      if (reuseSharedLedgerInsteadOfAdmittingSecondRequest) {
+      const reuseSharedLedger = explicit && O.isSome(current);
+      if (reuseSharedLedger) {
         if (O.isSome(observation)) yield* Ref.set(observation.value.current, current.value.budget);
         return yield* run(...args).pipe(Effect.provideService(CitationInvocation, current.value));
       }

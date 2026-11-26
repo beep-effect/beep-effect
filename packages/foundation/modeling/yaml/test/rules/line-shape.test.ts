@@ -1,7 +1,3 @@
-// Batch-3 line-shape rules (#129): line-length, trailing-spaces,
-// empty-lines, eof-newline — each through the shared fixture harness (which
-// carries the mutation proofs).
-
 import * as Str from "effect/String";
 import { builtin, testRule } from "./harness.ts";
 
@@ -23,9 +19,7 @@ testRule(builtin("line-length"), [
     expected: [{ line: 0, character: 8, length: 3, messageIncludes: "longer than 8" }],
   },
   {
-    // Line text excludes the terminator whole — CRLF's `\r` is not a
-    // 121st character.
-    name: "CRLF: an exactly-max-width line passes at the default 120",
+    name: "CRLF: line text excludes the whole terminator, and an exactly-max-width line passes at the default 120",
     input: `key: ${Str.repeat(115)("x")}\r\n`,
     expected: [],
   },

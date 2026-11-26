@@ -67,4 +67,8 @@ export const Paragraphize = Tool.make("Paragraphize", {
   failureMode: "return",
   parameters: ParagraphizeParameters,
   success: S.toEncoded(ParagraphizeSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

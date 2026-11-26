@@ -35,7 +35,6 @@ const commitC = Str.repeat(40)("d");
 const isSshProbe = (args: ReadonlyArray<string>): boolean =>
   args[0] === "config" && args[1] === "--get" && (args[2] === "core.sshCommand" || args[2] === "ssh.variant");
 
-/** Runs `program` against `Git.layer` over a scripted spawner that records every non-probe argv. */
 const run = <A, E>(
   program: Effect.Effect<A, E, Git>,
   byArgs: (args: ReadonlyArray<string>) => ScriptResult,

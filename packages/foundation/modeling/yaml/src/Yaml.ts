@@ -458,11 +458,8 @@ const toDiagnostics: {
     YamlDiagnostic.fromRawBatch(records, text)
 );
 
-/**
- * Build the fatal {@link YamlParseError} for an alias-expansion "billion
- * laughs" blow-up. The offending expansion has no source span, so the
- * diagnostic carries zero offsets.
- */
+const EXPANSION_HAS_NO_SOURCE_SPAN = { offset: 0, length: 0, line: 0, character: 0 } as const;
+
 const aliasCountExceededError: {
   (message: string, text: string): YamlParseError;
   (text: string): (message: string) => YamlParseError;
@@ -470,19 +467,11 @@ const aliasCountExceededError: {
   2,
   (message: string, text: string): YamlParseError =>
     YamlParseError.make({
-      diagnostics: [
-        YamlDiagnostic.make({ code: "AliasCountExceeded", message, offset: 0, length: 0, line: 0, character: 0 }),
-      ],
+      diagnostics: [YamlDiagnostic.make({ code: "AliasCountExceeded", message, ...EXPANSION_HAS_NO_SOURCE_SPAN })],
       input: text,
     })
 );
 
-/**
- * Map an internal stringifier throw to its typed {@link YamlStringifyError},
- * or return `undefined` for any other defect (which the caller re-throws).
- * Shared by the Effect and synchronous stringify paths so both surface the
- * hardening guards (circular reference, nesting-depth cap) identically.
- */
 const stringifyDefectToError: {
   (defect: unknown, value: unknown): YamlStringifyError | undefined;
   (value: unknown): (defect: unknown) => YamlStringifyError | undefined;
@@ -502,8 +491,6 @@ const stringifyDefectToError: {
       value,
     });
   }
-  // Deeply-nested acyclic value overflowed the stringifier's recursion budget —
-  // surface it as a fatal stringify error, not a stack-overflow defect.
   if (isStringifyDepthExceeded(defect)) {
     return YamlStringifyError.make({
       diagnostics: [
@@ -522,13 +509,6 @@ const stringifyDefectToError: {
   return undefined;
 });
 
-/**
- * Synchronous single-document parse returning a `Result`. The pure
- * engine bypasses the Effect runtime entirely: the composer, the failure
- * collection and the alias-expansion budget all run inline, and every failure
- * mode (fatal diagnostics, duplicate keys, a "billion laughs" blow-up) yields
- * a `Failure` carrying a typed {@link YamlParseError} — never a throw.
- */
 const parseResultImpl: {
   (options?: YamlParseOptions): (text: string) => Result.Result<unknown, YamlParseError>;
   (text: string, options?: YamlParseOptions): Result.Result<unknown, YamlParseError>;
@@ -540,8 +520,6 @@ const parseResultImpl: {
     if (failures.length > 0) {
       return Result.fail(YamlParseError.make({ diagnostics: toDiagnostics(text, failures), input: text }));
     }
-    // An empty map lets nodeToJsValue register anchors incrementally, so aliases
-    // resolve to the most recent anchor at the point of use.
     const anchors = MutableHashMap.empty<string, YamlNode>();
     return Result.try({
       try: () => nodeToJsValue(doc.contents, anchors, options?.maxAliasCount ?? 100),
@@ -555,14 +533,6 @@ const parseResultImpl: {
   }
 );
 
-/**
- * Synchronous multi-document parse returning a `Result`. Mirrors
- * {@link parseResultImpl} over the whole stream: stream-level
- * directive-placement errors and every document's failure records aggregate
- * into one {@link YamlParseError}; each document's value is extracted against
- * its own independent anchor map (anchors are document-scoped in a stream),
- * with the alias-expansion budget materialized as a typed failure.
- */
 const parseAllResultImpl: {
   (options?: YamlParseOptions): (text: string) => Result.Result<ReadonlyArray<unknown>, YamlParseError>;
   (text: string, options?: YamlParseOptions): Result.Result<ReadonlyArray<unknown>, YamlParseError>;
@@ -571,9 +541,6 @@ const parseAllResultImpl: {
   (text: string, options?: YamlParseOptions): Result.Result<ReadonlyArray<unknown>, YamlParseError> => {
     const { documents, streamErrors } = composeAllDocuments(text, ParseOptionsInput.fromOptions(options));
     const uniqueKeys = options?.uniqueKeys ?? true;
-    // Fatal stream-level errors use the SAME predicate as the format path's
-    // refusal (`isFatalCode`), so `parseAllResult` can never succeed on input
-    // `YamlFormat.format` refuses as stream-fatal.
     const failures = [
       ...A.filter(streamErrors, (e) => isFatalCode(e.code)),
       ...A.flatMap(documents, failureRecords(uniqueKeys)),
@@ -584,11 +551,6 @@ const parseAllResultImpl: {
     const maxAliasCount = options?.maxAliasCount ?? 100;
     const values: Array<unknown> = [];
     for (const d of documents) {
-      // Per-document anchor map (anchors are document-scoped in a stream). An
-      // empty map lets nodeToJsValue register anchors incrementally, exactly
-      // like parseResultImpl — a pre-built map would resolve aliases that
-      // extraction never re-registers (e.g. an anchor on a complex mapping
-      // key), diverging from the single-document result.
       const anchors = MutableHashMap.empty<string, YamlNode>();
       const value = Result.try({
         try: () => nodeToJsValue(d.contents, anchors, maxAliasCount),
@@ -606,12 +568,6 @@ const parseAllResultImpl: {
   }
 );
 
-/**
- * Synchronous stringify returning a `Result`. Mirrors {@link Yaml.stringify}
- * without the Effect wrapper: a circular reference or a value nested past the
- * recursion budget yields a `Failure` carrying a typed {@link YamlStringifyError},
- * never a thrown defect.
- */
 const stringifyResultImpl = (
   value: unknown,
   options?: YamlStringifyOptions
@@ -625,12 +581,6 @@ const stringifyResultImpl = (
     },
   });
 
-/**
- * Collect the raw diagnostics that make a composed document a parse failure:
- * every fatal-code error, plus DuplicateKey warnings promoted to errors when
- * `uniqueKeys` is in force. Order preserved:
- * fatals first, then promotions.
- */
 const failureRecords: {
   (doc: RawYamlDocument, uniqueKeys: boolean): ReadonlyArray<RawDiagnostic>;
   (uniqueKeys: boolean): (doc: RawYamlDocument) => ReadonlyArray<RawDiagnostic>;
@@ -683,19 +633,14 @@ export interface YamlBoundCodec<T, RD = never, RE = never> {
   readonly schema: S.Codec<T, string, RD, RE>;
 }
 
-/** A source span removed by {@link Yaml.stripComments}. */
 type CommentSpan = { readonly offset: number; readonly length: number };
 
 const isBlockScalarToken = (text: string, token: CommentSpan & { readonly kind: string }): boolean =>
   token.kind === "scalar" && (text[token.offset] === "|" || text[token.offset] === ">");
 
-/**
- * A block scalar token also owns its header. Lex the header after its
- * indicator separately, so its comment gets an actual token span.
- */
 const blockHeaderCommentSpans = (text: string, token: CommentSpan): ReadonlyArray<CommentSpan> => {
-  const raw = Str.slice(token.offset + 1, token.offset + token.length)(text);
-  const header = A.headNonEmpty(Str.split(/[\r\n]/)(raw));
+  const headerAndBodyOwnedByBlockToken = Str.slice(token.offset + 1, token.offset + token.length)(text);
+  const header = A.headNonEmpty(Str.split(/[\r\n]/)(headerAndBodyOwnedByBlockToken));
   const spans: Array<CommentSpan> = [];
   for (const part of lexAll(header)) {
     if (part.kind === "comment") spans.push({ offset: token.offset + 1 + part.offset, length: part.length });
@@ -703,7 +648,6 @@ const blockHeaderCommentSpans = (text: string, token: CommentSpan): ReadonlyArra
   return spans;
 };
 
-/** The comment spans a lexed token contributes, in source order. */
 const commentSpans = (text: string, token: CommentSpan & { readonly kind: string }): ReadonlyArray<CommentSpan> => {
   if (token.kind === "comment") return [token];
   return isBlockScalarToken(text, token) ? blockHeaderCommentSpans(text, token) : [];
@@ -1297,10 +1241,6 @@ export class Yaml {
   }
 }
 
-/**
- * Parse for `equals`/`equalsValue`: any recorded error — fatal or not — or a
- * DuplicateKey warning marks the input malformed (never equal to anything).
- */
 function parseForEquality(text: string): { readonly malformed: boolean; readonly value: unknown } {
   const doc = composeFirstDocument(text, ParseOptionsInput.make({}));
   if (doc.errors.length > 0 || A.some(doc.warnings, (w) => w.code === "DuplicateKey")) {
@@ -1310,9 +1250,6 @@ function parseForEquality(text: string): { readonly malformed: boolean; readonly
   return Result.getOrElse(
     Result.try(() => ({ malformed: false, value: nodeToJsValue(doc.contents, anchors, 100) })),
     (err) => {
-      // A "billion laughs" alias bomb parses clean but blows up on expansion;
-      // treat it as malformed (never equal to anything) rather than letting the
-      // budget guard escape as a defect.
       if (isAliasExpansionBudgetExceeded(err)) {
         return { malformed: true, value: undefined };
       }

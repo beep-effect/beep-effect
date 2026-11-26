@@ -67,4 +67,8 @@ export const Sentences = Tool.make("Sentences", {
   failureMode: "return",
   parameters: SentencesParameters,
   success: S.toEncoded(SentencesSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

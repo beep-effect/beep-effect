@@ -4,27 +4,11 @@ import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-// The ONE workspace traversal.
-//
-// Both entry points drive this state machine: the Effect enumerator
-// (`internal/enumerate.ts`) and the synchronous escape hatch (`WorkspacesSync.ts`).
-// They differ ONLY in how they do IO and in what they do with a `TraversalStop` —
-// the Effect path fails typed, the sync path is total and truncates. The
-// dequeue discipline, the depth rule, the visit budget and the prune list live
-// here, once.
-//
-// Two hand-written copies of one traversal is exactly how the two APIs came to
-// disagree: the sync copy accepted a child *before* checking its depth, so it
-// returned packages one level beyond the cap while the Effect copy failed with
-// `depthExceeded` on the very same tree. A shared state machine makes that class
-// of drift unrepresentable rather than merely fixed.
-
 import { MAX_ENUMERATION_ENTRIES, PRUNED_DIRECTORIES } from "./limits.ts";
 import type { GlobSet } from "@beep/glob";
 
 const $I = $RepoWorkspacesId.create("internal/traverse");
 
-/** A positive integer depth bound, including integers beyond the safe-integer range. */
 const MaxDepth = S.Finite.check(
   S.makeFilter(
     Number.isInteger,

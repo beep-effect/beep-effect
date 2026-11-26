@@ -1161,8 +1161,9 @@ const workspaceCoverageDispositionGaps = Effect.fn("CoverageRegression.workspace
   const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage policy.")
   );
-  const workspacePackages = pipe(
-    A.fromIterable(MutableHashMap.values(packageMap)),
+  const workspacePackages = packageMap.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
     A.filter((info) => info.path !== ".")
   );
 
@@ -1495,8 +1496,9 @@ const workspaceCoveragePackages = Effect.fn("CoverageRegression.workspaceCoverag
     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage.")
   );
 
-  return pipe(
-    A.fromIterable(MutableHashMap.values(packageMap)),
+  return packageMap.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
     A.filter(hasCoverageScript),
     A.sort(Order.mapInput(Order.String, (info: WorkspacePackageInfo) => info.name))
   );

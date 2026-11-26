@@ -38,7 +38,6 @@ const includeOverrides = [
   "@beep/ciops",
   "@beep/api-docs",
   "@beep/duckdb",
-  "@beep/infra",
 ];
 
 const ResolvedDoctestConfig = S.Struct({

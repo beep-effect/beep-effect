@@ -1,9 +1,3 @@
-// A stand-in for the inline parser, for tests that drive one construct
-// directly: a cursor over `subject` with empty stacks and reference maps.
-// Every node the construct appends — `append` and `appendText` alike — is
-// recorded in `emitted` by its value, so a refusal can be asserted as
-// "nothing emitted".
-
 import { makeInlineNode } from "@beep/markdown/internal/inlineNode";
 import { matchFrom, unitAt } from "@beep/markdown/internal/patterns";
 import { dual } from "effect/Function";

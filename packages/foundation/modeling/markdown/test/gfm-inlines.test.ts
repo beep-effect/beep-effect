@@ -1,15 +1,7 @@
-import { identity } from "effect/Function";
-// Unit coverage for the two GFM inline constructs: strikethrough (`~`/`~~`)
-// and autolink literals (`www.`, `http(s)`/`ftp`, and email/`mailto:`/`xmpp:`).
-//
-// Semantics authority is cmark-gfm 0.29.0.gfm.13 — `extensions/strikethrough.c`
-// and `extensions/autolink.c`. The conformance corpora assert the spec
-// examples; these assert the rules those examples only sample, and that the
-// `commonmark` dialect never sees either construct.
-
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -17,17 +9,11 @@ import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** The phrasing children of a source that parses to a single leaf block. */
 const inlinesOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): ReadonlyArray<PhrasingContent> => {
   const [first] = parseBlocks(source, { dialect: dialect }).root.children;
   return first?.type === "paragraph" || first?.type === "heading" ? first.children : [];
 };
 
-/**
- * A compact rendering of phrasing content, so a test reads as the shape it
- * asserts: text is quoted, containers bracket their children, and a link
- * carries its destination.
- */
 const sketch = (nodes: ReadonlyArray<PhrasingContent>): string =>
   A.join(
     A.map(nodes, (node) => {
@@ -55,10 +41,9 @@ const sketch = (nodes: ReadonlyArray<PhrasingContent>): string =>
     ","
   );
 
-/** The compact shape of a source's phrasing content under a dialect. */
 const shape = (source: string, dialect: "commonmark" | "gfm" = "gfm"): string => sketch(inlinesOf(source, dialect));
 
-describe("gfm strikethrough", () => {
+describe("gfm strikethrough rules the spec examples only sample, per cmark-gfm 0.29.0.gfm.13", () => {
   describe("tilde run lengths", () => {
     it("pairs a run of one", () => {
       assert.strictEqual(shape("~foo~"), 'del["foo"]');
@@ -69,10 +54,11 @@ describe("gfm strikethrough", () => {
     });
 
     it("never pairs a run of three", () => {
-      // cmark-gfm's `match` pushes a delimiter only for runs of one or
-      // two, so a longer run has nothing to pair with. The leading word
-      // keeps the line off a tilde code fence, which owns column zero.
-      assert.strictEqual(shape("a ~~~foo~~~"), '"a ~~~foo~~~"');
+      assert.strictEqual(
+        shape("a ~~~foo~~~"),
+        '"a ~~~foo~~~"',
+        "cmark-gfm's match pushes a delimiter only for runs of one or two; the leading word keeps the line off a tilde fence"
+      );
     });
 
     it("never pairs a run of five", () => {
@@ -80,8 +66,7 @@ describe("gfm strikethrough", () => {
     });
 
     it("refuses a mismatched pair", () => {
-      // `insert` bails when the two runs differ in length.
-      assert.strictEqual(shape("~one~~"), '"~one~~"');
+      assert.strictEqual(shape("~one~~"), '"~one~~"', "cmark-gfm's insert bails when the two runs differ in length");
       assert.strictEqual(shape("~~one~"), '"~~one~"');
     });
   });
@@ -100,9 +85,11 @@ describe("gfm strikethrough", () => {
     });
 
     it("allows intraword strikethrough", () => {
-      // `~` follows `*`'s flanking rules, not `_`'s, so it may sit
-      // inside a word.
-      assert.strictEqual(shape("a~b~c"), '"a",del["b"],"c"');
+      assert.strictEqual(
+        shape("a~b~c"),
+        '"a",del["b"],"c"',
+        "~ follows the flanking rules of *, not _, so it may sit inside a word"
+      );
     });
   });
 
@@ -126,22 +113,26 @@ describe("gfm strikethrough", () => {
   });
 });
 
-describe("gfm autolink literals", () => {
+describe("gfm autolink literal rules the spec examples only sample, per cmark-gfm 0.29.0.gfm.13", () => {
   describe("www. literals", () => {
     it("links a bare www. host", () => {
       assert.strictEqual(shape("www.commonmark.org"), 'link(http://www.commonmark.org)["www.commonmark.org"]');
     });
 
     it("requires a dot in the domain", () => {
-      // `check_domain` never examines the run's last character, so the
-      // trailing dot of a bare `www.` does not count and nothing links.
-      assert.strictEqual(shape("www."), '"www."');
+      assert.strictEqual(
+        shape("www."),
+        '"www."',
+        "check_domain never examines the run's last character, so the trailing dot of a bare www. does not count"
+      );
     });
 
     it("accepts a single-label host once a dot has been seen", () => {
-      // One dot is the whole requirement — cmark-gfm's comment says "a
-      // valid domain needs to have at least a dot", and it means it.
-      assert.strictEqual(shape("www.commonmark"), 'link(http://www.commonmark)["www.commonmark"]');
+      assert.strictEqual(
+        shape("www.commonmark"),
+        'link(http://www.commonmark)["www.commonmark"]',
+        "one dot is the whole requirement: cmark-gfm says a valid domain needs to have at least a dot"
+      );
     });
 
     it("rejects an underscore in either of the last two segments", () => {

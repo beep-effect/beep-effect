@@ -144,9 +144,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
 
     view.rerender(<ChatComposer mountConfig={{ features: { attachments: false } }} />);
 
-    // Mount config is intentionally uncontrolled. Changing it without changing
-    // the component key must not split plugin visibility from the seeded atoms.
-    expect(screen.getByRole("button", { name: "Attach files" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Attach files" }),
+      "mount config is uncontrolled: a change without a new key must not split plugin visibility from the seeded atoms"
+    ).toBeInTheDocument();
   });
 
   it("does not advertise a combobox when no typeahead plugin can mount", () => {
@@ -241,8 +242,6 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(screen.getByRole("button", { name: "Remove first.png" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Remove second.png" })).toBeInTheDocument();
 
-      // Settle the newer success first, then reject the older capture. Both
-      // fibers must still be live for the older batch to reach its rollback.
       secondPort.resolve(undefined);
       yield* Effect.promise(() => waitFor(() => expect(secondSettled).toHaveBeenCalledTimes(1)));
       firstPort.reject(new Error("private first-batch detail"));
@@ -253,16 +252,20 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(screen.getByRole("button", { name: "Remove second.png" })).toBeInTheDocument();
       expect(screen.getByRole("alert")).toHaveTextContent("Files could not be attached");
       expect(screen.getByRole("alert")).not.toHaveTextContent("private first-batch detail");
-      expect(revokeObjectUrl.mock.calls).toEqual([["blob:first-batch"]]);
+      expect(
+        revokeObjectUrl.mock.calls,
+        "with the newer batch settled first, the older capture's fiber is still live to reach its rollback"
+      ).toEqual([["blob:first-batch"]]);
 
-      // A later synchronous success clears the prior failure and remains
-      // removable alongside the earlier successful batch.
       fireEvent.change(input, {
         target: { files: [new File(["recovery"], "recovery.png", { type: "image/png" })] },
       });
       yield* Effect.promise(() => waitFor(() => expect(onAttach).toHaveBeenCalledTimes(3)));
       yield* Effect.promise(() => waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument()));
-      expect(screen.getByRole("button", { name: "Remove recovery.png" })).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Remove recovery.png" }),
+        "a later synchronous success clears the failure and stays removable beside the earlier batch"
+      ).toBeInTheDocument();
 
       fireEvent.click(screen.getByRole("button", { name: "Remove second.png" }));
       fireEvent.click(screen.getByRole("button", { name: "Remove recovery.png" }));
@@ -466,8 +469,6 @@ describe("editor contract hardening", { concurrent: false }, () => {
       expect(revokeObjectUrl).toHaveBeenCalledExactlyOnceWith("blob:rapid-remount");
       expect(registry.get(attachmentsAtom(editor))).toEqual([]);
 
-      // No lifecycle exists between the null transition and the remount, so an
-      // event captured in that window is rejected before minting an object URL.
       registry.set(captureAttachmentsFn, {
         editor,
         files: [new File(["orphan"], "orphan.png", { type: "image/png" })],
@@ -477,7 +478,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
       yield* Effect.addFinalizer(() => Effect.sync(() => editor.setRootElement(null)));
       const releaseSecondMount = registry.mount(binding);
       scheduler.flush();
-      expect(createObjectUrl).toHaveBeenCalledTimes(1);
+      expect(
+        createObjectUrl,
+        "a capture between the null root and the remount has no lifecycle and is rejected before minting a URL"
+      ).toHaveBeenCalledTimes(1);
       registry.set(captureAttachmentsFn, {
         editor,
         files: [new File(["new"], "new-mount.png", { type: "image/png" })],

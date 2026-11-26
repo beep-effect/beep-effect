@@ -20,13 +20,6 @@ import type { Tree } from "./support/fixtures.ts";
 
 const workspacesOver = (tree: Tree) => Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(platform(tree)));
 
-// The shape pnpm 11 actually writes when a workspace uses configDependencies:
-// a small config-dependency lockfile FIRST, then the real one. Framing is
-// `@effected/lockfiles`' job as of #58 — pnpm's writer always emits the
-// config-dependencies document as a PREFIX, so the real lockfile is
-// deterministically the LAST document. These tests pin that end-to-end through
-// the reader: a naive first-document parse reports an empty workspace rather
-// than a failure, which is the worst shape a bug can take.
 const multiDocument: Tree = {
   "/repo/pnpm-workspace.yaml": "packages:\n  - 'packages/*'\ncatalog:\n  effect: ^4.0.0\n",
   "/repo/package.json": Result.getOrThrowWith(
@@ -65,16 +58,18 @@ const multiDocument: Tree = {
   ),
 };
 
-describe("LockfileReader — a multi-document pnpm lockfile", () => {
+describe("LockfileReader — a multi-document pnpm lockfile, where pnpm 11 prefixes the configDependencies document", () => {
   it.layer(workspacesOver(multiDocument), { timeout: "30 seconds" })((it) => {
     it.effect("selects the REAL lockfile, not the configDependencies preamble", () =>
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
         const lockfile = yield* reader.read;
         const workspaces = A.filter(lockfile.packages, (pkg) => pkg.isWorkspace);
-        // The preamble document has zero workspace importers. Taking it would
-        // look like an empty workspace rather than a failure.
-        assert.isAbove(workspaces.length, 0);
+        assert.isAbove(
+          workspaces.length,
+          0,
+          "the preamble has zero workspace importers; taking it looks like an empty workspace, not a failure"
+        );
       })
     );
 
@@ -112,8 +107,11 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
         const report = yield* reader.integrity;
-        // No workspace declares a dependency on another, so nothing is missing.
-        assert.deepStrictEqual(report.unsatisfiedConstraints, []);
+        assert.deepStrictEqual(
+          report.unsatisfiedConstraints,
+          [],
+          "no workspace declares a dependency on another, so nothing is missing"
+        );
       })
     );
 
@@ -121,9 +119,6 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
       Effect.gen(function* () {
         const discovery = yield* WorkspaceDiscovery;
         const reader = yield* LockfileReader;
-        // The root importer is not a workspace *package* in the lockfile model
-        // (`@effected/lockfiles` emits only the non-root importers), so the
-        // comparison is against discovery's non-root members.
         const listPackages2 = yield* discovery.listPackages;
         const discovered = A.map(
           A.filter(listPackages2, (pkg) => !pkg.isRootWorkspace),
@@ -133,20 +128,17 @@ describe("LockfileReader — a multi-document pnpm lockfile", () => {
           A.filter((yield* reader.read).packages, (pkg) => pkg.isWorkspace),
           (pkg) => pkg.name
         ).sort();
-        assert.deepStrictEqual(locked, discovered);
+        assert.deepStrictEqual(
+          locked,
+          discovered,
+          "@effected/lockfiles emits only non-root importers, so compare against discovery's non-root members"
+        );
       })
     );
   });
 });
 
-// pnpm 12.7.0's own output, verbatim (`@effected/lockfiles` fixture
-// `pnpm/env-configonly-pnpm12`): an env preamble, then an EMPTY main document.
-// pnpm writes these exact bytes both for a config-dependency-only workspace with
-// no root package.json AND after a first install that failed once the config
-// dependencies were in (fixture `pnpm/unsupported-interrupted-pnpm12`, byte-
-// identical). Only the root package.json tells the two apart, and only this
-// reader can look at it.
-const configOnlyLockfile = A.join(
+const pnpm12EnvPreambleThenEmptyMainVerbatim = A.join(
   [
     "---",
     "lockfileVersion: '9.0'",
@@ -176,7 +168,7 @@ const configOnlyLockfile = A.join(
 
 const configOnlyWorkspace: Tree = {
   "/repo/pnpm-workspace.yaml": "configDependencies:\n  '@effected/pnpm-plugin-effect': 0.11.1\n",
-  "/repo/pnpm-lock.yaml": configOnlyLockfile,
+  "/repo/pnpm-lock.yaml": pnpm12EnvPreambleThenEmptyMainVerbatim,
 };
 
 const interruptedInstall: Tree = {
@@ -193,7 +185,7 @@ const interruptedInstall: Tree = {
 
 describe("LockfileReader — a config-dependency-only workspace (no root package.json)", () => {
   it.layer(workspacesOver(configOnlyWorkspace), { timeout: "30 seconds" })((it) => {
-    it.effect("reads the preamble-plus-empty-main stream as an empty lockfile", () =>
+    it.effect("reads the preamble-plus-empty-main stream as an empty lockfile without its config dependency", () =>
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
         const lockfile = yield* reader.read;
@@ -201,9 +193,8 @@ describe("LockfileReader — a config-dependency-only workspace (no root package
         assert.strictEqual(lockfile.lockfileVersion, "9.0");
         assert.deepStrictEqual(lockfile.packages, []);
         assert.deepStrictEqual(lockfile.importers, []);
-        // The preamble's config dependency is not a workspace package.
-        const resolvedVersion3 = yield* reader.resolvedVersion("@effected/pnpm-plugin-effect");
-        assertNone(resolvedVersion3);
+        const preambleConfigDepVersion = yield* reader.resolvedVersion("@effected/pnpm-plugin-effect");
+        assertNone(preambleConfigDepVersion);
       })
     );
   });
@@ -217,17 +208,18 @@ describe("LockfileReader — the same bytes under a root package.json (an interr
         const error = yield* Effect.flip(reader.read);
         assert.strictEqual(error._tag, "LockfileFramingError");
         if (error._tag !== "LockfileFramingError") return;
-        assert.strictEqual(error.reason, "noLockfileDocument");
+        assert.strictEqual(
+          error.reason,
+          "noLockfileDocument",
+          "only the root manifest, which only this reader sees, tells these bytes from a config-only workspace"
+        );
         assert.strictEqual(error.documents, 2);
       })
     );
   });
 });
 
-describe("LockfileReader — the root package.json probe itself fails", () => {
-  // `exists` answers NotFound as `false`, but re-fails PermissionDenied. The
-  // reader must not read "could not look" as "absent": configOnly is an
-  // assertion of absence, so it fails closed.
+describe("LockfileReader — the root package.json probe itself fails with PermissionDenied, so configOnly fails closed", () => {
   const deniedProbe = Workspaces.layer({ cwd: "/repo" }).pipe(
     Layer.provideMerge(platformWith({ unreadableExists: ["/repo/package.json"] })(configOnlyWorkspace))
   );
@@ -238,7 +230,7 @@ describe("LockfileReader — the root package.json probe itself fails", () => {
         const error = yield* Effect.flip(reader.read);
         assert.strictEqual(error._tag, "LockfileFramingError");
         if (error._tag !== "LockfileFramingError") return;
-        assert.strictEqual(error.reason, "noLockfileDocument");
+        assert.strictEqual(error.reason, "noLockfileDocument", "could not look is not absent");
       })
     );
   });
@@ -291,8 +283,11 @@ describe("LockfileReader — a malformed lockfile", () => {
         const result = yield* Effect.result(reader.read);
         assertFailure(result, Result.getFailure(result).pipe(O.getOrThrow));
         const error = yield* Effect.flip(reader.read);
-        // The parse error belongs to @effected/lockfiles and is NOT redefined here.
-        assert.strictEqual(error._tag, "LockfileParseError");
+        assert.strictEqual(
+          error._tag,
+          "LockfileParseError",
+          "the parse error belongs to @effected/lockfiles and is not redefined here"
+        );
       })
     );
   });

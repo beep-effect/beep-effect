@@ -1,16 +1,3 @@
-// The GFM conformance harness, over both vendored corpora.
-//
-// Same shape as `commonmark-spec.e2e.test.ts`: our tree, rendered by the
-// test-only HTML writer and normalized, must equal the expected HTML
-// normalized the same way. Two differences, both forced by the dialect —
-// parsing runs under `"gfm"`, and the writer runs with its `gfm` option so
-// the tagfilter applies.
-//
-// Every section of both corpora runs — the allowlists grew one entry per
-// construct task during P2 and are complete as of Task 7. They stay as
-// tripwires, the same posture as the CommonMark harness: the gate below
-// fails if a section ever leaves one, so coverage cannot quietly shrink.
-
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -21,7 +8,6 @@ import { renderHtml } from "../support/htmlWriter.ts";
 import { normalizeHtml } from "../support/normalizeHtml.ts";
 import type { SpecExample } from "../support/corpus.ts";
 
-/** The GFM spec's extension sections. All of them run. */
 const SPEC_SECTIONS_GREEN: ReadonlyArray<string> = [
   "Tables (extension)",
   "Strikethrough (extension)",
@@ -29,7 +15,6 @@ const SPEC_SECTIONS_GREEN: ReadonlyArray<string> = [
   "Disallowed Raw HTML (extension)",
 ];
 
-/** The `extensions.txt` sections. All of them run. */
 const EXTENSIONS_SECTIONS_GREEN: ReadonlyArray<string> = [
   "Tables",
   "Table cell count mismatches",
@@ -51,15 +36,8 @@ const EXTENSIONS_SECTIONS_GREEN: ReadonlyArray<string> = [
   "HTML tag filter",
 ];
 
-/**
- * `extensions.txt` example 20 is upstream's own crash regression and its
- * expected output is the literal `<IGNORE>` — cmark-gfm asserts only that it
- * terminates. There is nothing to compare against, so it is checked for
- * termination here instead of skipped outright.
- */
 const TERMINATION_ONLY: HashSet.HashSet<number> = HashSet.make(20);
 
-/** The examples grouped by section, sections in first-appearance order. */
 const bySection = (examples: ReadonlyArray<SpecExample>): Record<string, ReadonlyArray<SpecExample>> =>
   A.groupBy(examples, (example) => example.section);
 
@@ -79,11 +57,13 @@ const runCorpus = (
         }
       });
 
-      it("runs the number of examples this task turns on", () => {
-        // The silently-shrinking-corpus guard: a section quietly
-        // dropping examples would otherwise still look green.
+      it("runs every example of the allowlisted sections", () => {
         const running = A.reduce(green, 0, (total, section) => total + (sections[section]?.length ?? 0));
-        assert.strictEqual(running, expectedCount);
+        assert.strictEqual(
+          running,
+          expectedCount,
+          "silently-shrinking-corpus guard: a section dropping examples or leaving the allowlist would still look green"
+        );
       });
     });
 
@@ -92,9 +72,10 @@ const runCorpus = (
         for (const example of sections[section] ?? []) {
           it(`example ${example.example}`, () => {
             if (HashSet.has(TERMINATION_ONLY, example.example)) {
-              // No expected output to compare — the assertion is
-              // that rendering completes at all.
-              assert.isString(renderHtml(parseBlocks(example.markdown, { dialect: "gfm" }).root, { gfm: true }));
+              assert.isString(
+                renderHtml(parseBlocks(example.markdown, { dialect: "gfm" }).root, { gfm: true }),
+                "upstream's crash regression expects the literal <IGNORE>: cmark-gfm asserts only that it terminates"
+              );
               return;
             }
             const actual = normalizeHtml(
@@ -108,7 +89,7 @@ const runCorpus = (
   });
 };
 
-describe("GFM conformance", () => {
+describe("GFM conformance: gfm parse, rendered in the writer's gfm mode so the tagfilter applies, against normalized HTML", () => {
   runCorpus("spec.txt extension sections", loadGfmSpecExtensionExamples(), SPEC_SECTIONS_GREEN, 22);
   runCorpus("extensions.txt", loadGfmExtensionsExamples(), EXTENSIONS_SECTIONS_GREEN, 30);
 });

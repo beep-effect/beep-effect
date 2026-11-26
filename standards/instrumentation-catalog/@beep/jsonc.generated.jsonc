@@ -6,6 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"ActivityRecord.verify","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"ActivityStart.mintActivityId","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"Jsonc.parse","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"Jsonc.parseTree","owner":"@beep/jsonc","family":"foundation","conforms":true},

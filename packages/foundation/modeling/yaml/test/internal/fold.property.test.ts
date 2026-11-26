@@ -15,7 +15,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parse } from "yaml";
 
-/** Adapt an Option-returning renderer to its nullable reading for assertions. */
 const nullable =
   <Args extends ReadonlyArray<unknown>>(render: (...args: Args) => O.Option<string>) =>
   (...args: Args): string | null =>

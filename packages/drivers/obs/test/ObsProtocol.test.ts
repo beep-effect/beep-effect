@@ -24,6 +24,7 @@ import { it } from "@beep/test-runner";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { assert, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -182,10 +183,10 @@ describe("ObsProtocol.connectWith", () => {
 
       const identifies = yield* server.identifies;
       const identify = A.head(identifies);
-      assert(O.isSome(identify));
-      expect(identify.value.eventSubscriptions).toBe(79);
-      expect(identify.value.rpcVersion).toBe(1);
-      expect(O.isNone(identify.value.authentication)).toBe(true);
+      const identified = O.getOrThrow(identify);
+      expect(identified.eventSubscriptions).toBe(79);
+      expect(identified.rpcVersion).toBe(1);
+      expect(O.isNone(identified.authentication)).toBe(true);
     })
   );
 
@@ -204,10 +205,7 @@ describe("ObsProtocol.connectWith", () => {
       expect(protocol.identified.negotiatedRpcVersion).toBe(1);
       const identifies = yield* server.identifies;
       const identify = A.head(identifies);
-      assert(O.isSome(identify));
-      const authentication = identify.value.authentication;
-      assert(O.isSome(authentication));
-      expect(authentication.value).toBe(DOC_AUTHENTICATION);
+      assertSome(identify.pipe(O.flatMap((message) => message.authentication)), DOC_AUTHENTICATION);
     })
   );
 
@@ -251,8 +249,7 @@ describe("ObsProtocol.connectWith", () => {
 
       assert(ObsError.is(error));
       expect(error.operation).toBe("authenticate");
-      assert(O.isSome(error.closeCode));
-      expect(error.closeCode.value).toBe(4009);
+      assertSome(error.closeCode, 4009);
     })
   );
 
@@ -314,10 +311,8 @@ describe("ObsProtocol.connectWith", () => {
         concurrency: 2,
       });
 
-      assert(O.isSome(first));
-      expect(first.value).toEqual({ echoedRequestType: "GetVersion" });
-      assert(O.isSome(second));
-      expect(second.value).toEqual({ echoedRequestType: "GetRecordStatus" });
+      assertSome(first, { echoedRequestType: "GetVersion" });
+      assertSome(second, { echoedRequestType: "GetRecordStatus" });
     })
   );
 
@@ -348,12 +343,9 @@ describe("ObsProtocol.connectWith", () => {
 
       assert(ObsError.is(error));
       expect(error.operation).toBe("request");
-      assert(O.isSome(error.requestStatusCode));
-      expect(error.requestStatusCode.value).toBe(608);
-      assert(O.isSome(error.requestStatusComment));
-      expect(error.requestStatusComment.value).toBe("Parameter: sceneName");
-      assert(O.isSome(error.requestType));
-      expect(error.requestType.value).toBe("SetCurrentProgramScene");
+      assertSome(error.requestStatusCode, 608);
+      assertSome(error.requestStatusComment, "Parameter: sceneName");
+      assertSome(error.requestType, "SetCurrentProgramScene");
     })
   );
 
@@ -398,8 +390,7 @@ describe("ObsProtocol.connectWith", () => {
       const second = yield* PubSub.take(subscription);
       assert(ObsUnknownEvent.is(second));
       expect(second.eventType).toBe("StudioModeStateChanged");
-      assert(O.isSome(second.eventData));
-      expect(second.eventData.value).toEqual({ studioModeEnabled: true });
+      assertSome(second.eventData, { studioModeEnabled: true });
     })
   );
 
@@ -421,8 +412,7 @@ describe("ObsProtocol.connectWith", () => {
       yield* Effect.log("OBS protocol phase: await in-flight request failure after connection drop");
       const error = yield* Fiber.join(fiber).pipe(Effect.flip);
       assert(ObsError.is(error));
-      assert(O.isSome(error.closeCode));
-      expect(error.closeCode.value).toBe(1006);
+      assertSome(error.closeCode, 1006);
     })
   );
 });

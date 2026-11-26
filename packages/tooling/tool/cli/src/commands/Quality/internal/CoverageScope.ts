@@ -152,7 +152,6 @@ export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, 
   ...A.map(
     [
       "@beep/ai-sync",
-      "@beep/infra",
       "@beep/palantiri",
       "@beep/repo-ai-metrics",
       "@beep/repo-cli",
@@ -163,7 +162,7 @@ export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, 
   ),
   ["skills-lock.json", "skills-lock.json", "@beep/repo-cli"],
   ...A.map(
-    ["@beep/infra", "@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"],
+    ["@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"],
     (owner) => ["harness-ledger", "harness-ledger/**", owner] as const
   ),
   ["biome.identity.jsonc", "biome.identity.jsonc", "@beep/repo-cli"],
@@ -369,7 +368,6 @@ const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
   "@beep/html": 10.1,
   "@beep/hubspot": 2.5,
   "@beep/identity": 6.7,
-  "@beep/infra": 8.4,
   "@beep/jsonc": 4.9,
   "@beep/jsonl": 3.9,
   "@beep/langextract": 5.1,
@@ -391,7 +389,6 @@ const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
   "@beep/md": 33.6,
   "@beep/memfs": 4.2,
   "@beep/n3": 2.6,
-  "@beep/nlp": 3.4,
   "@beep/nlp-mcp": 3.3,
   "@beep/nlp-processing": 4,
   "@beep/npm-spec": 4.1,
@@ -449,7 +446,6 @@ const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
   "@beep/sanity": 2.4,
   "@beep/sbom": 4,
   "@beep/schema": 5.1,
-  "@beep/schema-org": 3,
   "@beep/semantic-web": 2.5,
   "@beep/semantica": 23,
   "@beep/semver": 5.7,
@@ -599,8 +595,9 @@ export const workspaceCoverageScopeOwners = Effect.fn("CoverageScope.workspaceCo
   );
   const workspaceNames = packageMap.pipe(MutableHashMap.keys, MutableHashSet.fromIterable);
 
-  return pipe(
-    A.fromIterable(MutableHashMap.values(packageMap)),
+  return packageMap.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
     // The repository root declares a `coverage` script (the aggregate runner)
     // and depends on workspace packages, so it would otherwise be selected as
     // a dependent of nearly everything and recurse into the root task.

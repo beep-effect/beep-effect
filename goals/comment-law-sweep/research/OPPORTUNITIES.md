@@ -70,3 +70,9 @@
 - Doing: #3515 Repo Sanity on a blobless hosted clone.
 - Evidence: `lint:comment-law` failed with `GitCommandError` on `git show <base>:<file>` (`fatal: unable to access ... 403`); setup-bun hit the same 403 in that job. A merge of main for a fresh run cleared it.
 - Prevention: fetch the base blobs the law needs in one `git fetch --filter` step before the law runs, with a retry, so a transient 403 does not red a required check.
+
+## 2026-11-26: the pre-commit comment-law hook measures against the previous commit, not main
+
+- Doing: committing the w25 (`@beep/memfs` src) verifier's repairs on top of the author's commit.
+- Evidence: the verifier restored two original comments as residue; the staged hook reported `introduced=2` against the author's commit, while `laws comments` against the merge base reported `introduced=0`.
+- Prevention: the staged hook should measure against the branch's merge base with main, as the full law does, so restored originals are not flagged as new.

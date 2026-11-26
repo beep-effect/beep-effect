@@ -7,21 +7,14 @@
  * {@link TextEdge} relationships, integrating with the package's
  * {@link Tokenization} service for sentence/token extraction.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - node-creating constructors (`singleton`/`fromDocument`/`tokenizeNodes`) are
- *   EFFECTFUL, reading `Clock` for the node timestamp (was `Date.now()`).
- * - `fromDocument`/`tokenizeNodes` consume the existing `Core/Tokenization` service
- *   (mapping `Sentence.text` / `Token.text`).
- * - `addChildren` fails with a tagged {@link GraphCycleError} instead of `throw`.
- * - native `Array.from`/`forEach` become `effect/Array`; the `@effect/printer`
- *   formatter is dropped (`show` renders plain text).
+ * Node-creating constructors read `Clock` for the node timestamp, and `addChildren`
+ * fails with a tagged {@link GraphCycleError} instead of throwing.
  *
  * @since 0.0.0
  * @packageDocumentation
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -34,6 +27,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tok from "../Core/Tokenization.ts";
 import * as Obs from "../internal/observability.ts";
+import { TextEdge, TextNode } from "./Schema.ts";
 
 const $I = $NlpProcessingId.create("Graph/TextGraph");
 
@@ -176,9 +170,9 @@ export const singleton: {
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
- * import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence"
- * import { TokenIndex } from "@beep/nlp/Core/Token"
+ * import { Document as NLPDocument, DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { Sentence, SentenceIndex } from "@beep/nlp-processing/Core/Sentence"
+ * import { TokenIndex } from "@beep/nlp-processing/Core/Token"
  * import { Tokenization } from "@beep/nlp-processing/Core/Tokenization"
  * import { fromDocument, nodeCount } from "@beep/nlp-processing/Graph/TextGraph"
  *
@@ -220,7 +214,7 @@ export const singleton: {
  * @category constructors
  * @since 0.0.0
  */
-export const fromDocument = Effect.fn("fromDocument")(function* (
+export const fromDocument = Effect.fn("TextGraph.fromDocument")(function* (
   text: string
 ): Effect.fn.Return<TextGraph, Tok.TokenizationError, Tok.Tokenization> {
   const attributes = {
@@ -257,7 +251,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
       sentence_count: `${A.length(sentenceModels)}`,
     });
     return graph;
-  }).pipe(Obs.observeNlpWorkflow("nlp.text_graph.from_document", attributes));
+  }).pipe(Obs.observeNlpWorkflow("TextGraph.fromDocument", attributes));
 });
 
 // =============================================================================
@@ -272,7 +266,7 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  * ```ts import.meta.vitest name="Add child under root"
  * import * as Effect from "effect/Effect";
  * import { addChildren, getRoots, nodeCount, singleton } from "@beep/nlp-processing/Graph/TextGraph"
- * import { TextNode } from "@beep/nlp/Graph/Schema"
+ * import { TextNode } from "@beep/nlp-processing/Graph/Schema"
  * import * as A from "effect/Array"
  * import * as O from "effect/Option"
  *
@@ -348,8 +342,9 @@ export const addChildren: {
  * import * as Chunk from "effect/Chunk";
  * import * as Effect from "effect/Effect";
  * import * as O from "effect/Option"
- * import { Document as NLPDocument, DocumentId } from "@beep/nlp/Core/Document"
- * import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token"
+ * import { Document as NLPDocument, DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token"
+ * import { Position } from "@beep/text/OffsetUnit"
  * import { Tokenization } from "@beep/nlp-processing/Core/Tokenization"
  * import { nodeCount, singleton, tokenizeNodes } from "@beep/nlp-processing/Graph/TextGraph"
  *
@@ -357,8 +352,7 @@ export const addChildren: {
  *   Token.make({
  *     text,
  *     index: TokenIndex.make(index),
- *     start: CharPosition.make(start),
- *     end: CharPosition.make(end),
+ *     span: Position.make({ unit: "utf16-code-unit", start, end }),
  *     pos: O.none(),
  *     lemma: O.none(),
  *     stem: O.none(),
@@ -401,7 +395,7 @@ export const addChildren: {
  * @category combinators
  * @since 0.0.0
  */
-export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
+export const tokenizeNodes = Effect.fn("TextGraph.tokenizeNodes")(function* (
   graph: TextGraph
 ): Effect.fn.Return<TextGraph, Tok.TokenizationError, Tok.Tokenization> {
   const attributes = {
@@ -413,8 +407,11 @@ export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
     let skippedSentenceCount = 0;
     let tokenCount = 0;
 
-    const sentenceEntries = A.getSomes(
-      A.map(A.fromIterable(graph.pipe(Graph.nodes, Graph.indices)), (idx) =>
+    const sentenceEntries = graph.pipe(
+      Graph.nodes,
+      Graph.indices,
+      A.fromIterable,
+      A.map((idx) =>
         O.flatMap(Graph.getNode(graph, idx), (node) =>
           node.type === "sentence"
             ? O.some({
@@ -423,7 +420,8 @@ export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
               })
             : O.none()
         )
-      )
+      ),
+      A.getSomes
     );
 
     for (const { idx, node } of sentenceEntries) {
@@ -461,7 +459,7 @@ export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
       token_count: `${tokenCount}`,
     });
     return result;
-  }).pipe(Obs.observeNlpWorkflow("nlp.text_graph.tokenize_nodes", attributes));
+  }).pipe(Obs.observeNlpWorkflow("TextGraph.tokenizeNodes", attributes));
 });
 
 const rebuild = (
@@ -715,7 +713,7 @@ export const findNodesByType: {
  * @since 0.0.0
  */
 export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "incoming" })));
+  graph.pipe(Graph.externals({ direction: "incoming" }), Graph.indices, A.fromIterable);
 
 /**
  * Return text-graph leaves, defined as nodes with no outgoing edges.
@@ -733,7 +731,7 @@ export const getRoots = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
  * @since 0.0.0
  */
 export const getLeaves = (graph: TextGraph): ReadonlyArray<Graph.NodeIndex> =>
-  A.fromIterable(Graph.indices(Graph.externals(graph, { direction: "outgoing" })));
+  graph.pipe(Graph.externals({ direction: "outgoing" }), Graph.indices, A.fromIterable);
 
 /**
  * Return direct child indices for a text node.

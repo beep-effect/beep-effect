@@ -1341,7 +1341,6 @@ const GOVERNED_BARE_ROOTS = HashSet.make(
   "docs",
   "explorations",
   "goals",
-  "infra",
   "packages",
   "plugins",
   "scripts",

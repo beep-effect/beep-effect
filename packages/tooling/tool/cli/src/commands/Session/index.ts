@@ -43,6 +43,21 @@ export * from "./Register.schemas.ts";
  */
 export * from "./Register.service.ts";
 /**
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Rehome.command.ts";
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Rehome.schemas.ts";
+/**
+ * @category commands
+ * @since 0.0.0
+ */
+export * from "./Rehome.service.ts";
+/**
  * Public orchestrator rulings service exports.
  *
  * @category cli-commands

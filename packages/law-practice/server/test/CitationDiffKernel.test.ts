@@ -37,7 +37,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer), { concurrent: false,
     for (const slice of A.range(0, Math.ceil(corpusRows / sliceRows) - 1)) {
       const from = slice * sliceRows;
       it.effect(
-        `preserves exact source edit sequences ${from}-${Math.min(from + sliceRows, corpusRows) - 1} through fresh scoped native instances, sliced so one slow runner cannot push a case past its budget`,
+        `preserves exact source edit sequences ${from}-${Math.min(from + sliceRows, corpusRows) - 1} through fresh scoped native instances`,
         () =>
           Effect.gen(function* () {
             const corpus = yield* readCitationDiffCorpus();
@@ -50,7 +50,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer), { concurrent: false,
                 maximumInputUtf16: 4000000,
                 maximumOutputBytes: 16000000,
               });
-              expect(actual).toEqual(row.steps);
+              expect(actual, "rows run in slices so one slow runner cannot push a case past its budget").toEqual(
+                row.steps
+              );
             }
           })
       );

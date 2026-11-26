@@ -37,6 +37,7 @@ import { assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { DeterministicCheckName } from "@beep/law-practice-use-cases/DocketIntake";
@@ -253,6 +254,9 @@ describe("@beep/law-practice-use-cases docket checks with unavailable document t
         result: { _tag: "Passed" },
         side: "critic",
       });
+      const [, fromV1] = StoredDeterministicCheck.members;
+      const rewritten = yield* S.encodeEffect(fromV1)(historical).pipe(Effect.exit);
+      rewritten.pipe(Exit.isFailure, assertTrue);
     })
   );
 });

@@ -1,11 +1,7 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-24",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/{src,test}/**/*.ts"
-  ],
+  "generatedOn": "2026-11-26",
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
   "entries": [
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
@@ -54,36 +50,6 @@
       "line": 28,
       "owner": "@beep/professional-desktop",
       "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
-    },
-    {
-      "file": "infra/src/CiRunnerPool.ts",
-      "symbol": "ciSpotVcpuBudget",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 306,
-      "owner": "@beep/infra",
-      "reason": "Exported function \"ciSpotVcpuBudget\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
-      "file": "infra/src/CiShardOverflowPool.ts",
-      "symbol": "ciShardOverflowWebhook",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 295,
-      "owner": "@beep/infra",
-      "reason": "Exported helper \"ciShardOverflowWebhook\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "infra/src/CiShardOverflowPool.ts",
-      "symbol": "declareCiShardOverflowController",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 263,
-      "owner": "@beep/infra",
-      "reason": "Exported function \"declareCiShardOverflowController\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
       "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
@@ -1046,16 +1012,6 @@
       "reason": "D4 structural-brand exception (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Recursive Pandoc AST: children are typed by hand-written namespace Types (S.suspend needs them to break the class/base-type cycle), which must stay structurally equal to the node classes. Follow-up: brand nominally once the blocker above is removed."
     },
     {
-      "file": "packages/foundation/modeling/schema-org/src/Person.ts",
-      "symbol": "Person.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 58,
-      "owner": "@beep/schema-org",
-      "reason": "External protocol: schema.org `email` is a Text property, and node values are copied verbatim from upstream metadata (package manifests, author records) that may carry `mailto:` URIs or non-strict addresses; a strict email schema would reject valid JSON-LD. Surfaced, not introduced, by the exact-optional-keys migration (the detector did not read the previous `S.optional` spelling)."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
       "symbol": "SemanticVersionSchema",
       "kind": "exported-interface",
@@ -1301,7 +1257,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 221,
+      "line": 218,
       "owner": "@beep/law-practice-server",
       "reason": "Replays owned host-origin and deceptive-presentation scenes through real host ports, preserving identity, dispatch and source events. Host capabilities are not schema-generatable fixture data. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
@@ -1491,7 +1447,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 84,
+      "line": 76,
       "owner": "@beep/law-practice-server",
       "reason": "Owner: @beep/law-practice-server. Fixed public USPTO integration witnesses verify native XML, exact operative-source text, recorded office-action identifiers/date/rejection phrases, and full frozen-tree equality. Generated arbitrary payloads cannot establish those real-record facts. This is intentionally golden/source-integrity coverage, not a new codec-law suite. Exit: retire when the detector recognizes native public-slice regression subjects or equivalent source-integrity property coverage becomes meaningful."
     },
@@ -1609,7 +1565,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 558,
+      "line": 581,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"depositionOutlineEntry\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1619,7 +1575,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 154,
+      "line": 164,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"attributeEvents\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1629,7 +1585,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 322,
+      "line": 332,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"chainOfCommand\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1639,7 +1595,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 190,
+      "line": 200,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"declaredLines\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1649,7 +1605,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 96,
+      "line": 101,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"identityView\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1659,7 +1615,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 254,
+      "line": 264,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"orgGraph\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1669,7 +1625,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 374,
+      "line": 384,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"orgMermaid\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -1679,7 +1635,7 @@
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-fn-schema",
-      "line": 477,
+      "line": 487,
       "owner": "@beep/party-domain",
       "reason": "Exported function \"selectorReach\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
@@ -2444,14 +2400,6 @@
       "line": 665,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
-      "symbol": "StateRepository",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Generic workstation state partition key shared by PR-session and session-ledger helpers. It accepts existing plain repository objects and PrRepository instances; S.Struct preserves that structural contract without a redundant class constructor."
     },
     {
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",

@@ -19,9 +19,6 @@ class SurfaceBoundaryTestOperationError extends S.TaggedError<
   { description: "A failed external operation in surface-boundary.test.tsx." }
 ) {}
 
-// A child that throws for its first `limit` renders, then renders healthy —
-// the deterministic stand-in for a surface tripped by a transient crash
-// (e.g. the upstream MUI X StrictMode disposable bug during dock moves).
 const makeCrashingChild = (limit: number, message = "surface boom", onRender: () => void = () => undefined) => {
   const state = { count: 0 };
   const CrashingChild = (): React.JSX.Element => {
@@ -36,9 +33,6 @@ const makeCrashingChild = (limit: number, message = "surface boom", onRender: ()
 };
 
 describe("SurfaceBoundary", { concurrent: false }, () => {
-  // Expected recoverable render errors from the crashing children are
-  // filtered at the vitest-config level (onUnhandledError); the console.error
-  // spies below keep React's boundary logging out of the output.
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
@@ -54,8 +48,10 @@ describe("SurfaceBoundary", { concurrent: false }, () => {
     );
     const screen = within(container);
 
-    // Two crashes consume the self-heal budget; the third mount succeeds.
-    expect(screen.getByTestId("healed")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("healed"),
+      "two crashes consume the self-heal budget; the third mount succeeds"
+    ).toBeInTheDocument();
     expect(screen.queryByText(/crashed while rendering/)).toBeNull();
   });
 
@@ -73,15 +69,17 @@ describe("SurfaceBoundary", { concurrent: false }, () => {
     expect(screen.getByText(/The Ontology surface crashed while rendering/)).toBeInTheDocument();
     const reload = screen.getByRole("button", { name: "Reload Ontology" });
     const rendersBeforeReload = onRender.mock.calls.length;
-    // React may replay the first failed concurrent render once before handing
-    // it to the boundary; the application itself performs only two remounts.
-    expect(rendersBeforeReload).toBeLessThanOrEqual(8);
+    expect(
+      rendersBeforeReload,
+      "two application remounts, plus React's possible replay of the first failed concurrent render"
+    ).toBeLessThanOrEqual(8);
 
-    // Reload restarts the cycle; a still-crashing surface lands back on the
-    // card instead of looping forever.
     fireEvent.click(reload);
-    expect(onRender.mock.calls.length).toBeGreaterThan(rendersBeforeReload);
-    expect(screen.getByRole("button", { name: "Reload Ontology" })).toBeInTheDocument();
+    expect(onRender.mock.calls.length, "reload restarts the cycle").toBeGreaterThan(rendersBeforeReload);
+    expect(
+      screen.getByRole("button", { name: "Reload Ontology" }),
+      "a still-crashing surface lands back on the card instead of looping forever"
+    ).toBeInTheDocument();
     expect(onRender.mock.calls.length - rendersBeforeReload).toBeLessThanOrEqual(8);
   });
 

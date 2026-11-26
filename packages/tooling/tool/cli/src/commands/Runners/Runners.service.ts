@@ -18,7 +18,6 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -44,7 +43,7 @@ import {
   BakeReport,
   BakeReportJson,
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
-  RUNNER_AMI_PIN_PARAMETER,
+  RUNNER_IMAGE_PIN_FILE,
 } from "./Runners.schemas.ts";
 import type { ConfigListEntry } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -421,19 +420,39 @@ const getParameter = Effect.fn("Runners.getParameter")(function* (region: string
   return response.Parameter.Value;
 });
 
-const getPriorPin = (
-  region: string
-): Effect.Effect<
-  O.Option<string>,
-  RunnersCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> =>
-  getParameter(region, RUNNER_AMI_PIN_PARAMETER).pipe(
-    Effect.asSome,
-    Effect.catchTag("RunnersCommandError", (error) =>
-      Str.includes("ParameterNotFound")(error.message) ? Effect.succeedNone : Effect.fail(error)
+const PRODUCTION_IMAGE_PIN = /^( {2}image: \{ amiId: ")(ami-[0-9a-f]{8,17})(")/gmu;
+
+const readImagePinSource = Effect.fn("Runners.readImagePinSource")(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = path.join(repoRoot, RUNNER_IMAGE_PIN_FILE);
+  const source = yield* fs
+    .readFileString(file)
+    .pipe(RunnersCommandError.mapError(`Failed to read the production runner image pin in ${RUNNER_IMAGE_PIN_FILE}.`));
+  const pins = A.fromIterable(Str.matchAll(PRODUCTION_IMAGE_PIN)(source));
+  const amiId = yield* pipe(
+    A.length(pins) === 1 ? A.head(pins) : O.none(),
+    O.flatMap((pin) => O.fromUndefinedOr(pin[2])),
+    Effect.fromOption,
+    Effect.mapError(() =>
+      runnersError(`${RUNNER_IMAGE_PIN_FILE} must hold exactly one production \`image: { amiId: "ami-..." }\` pin.`)
     )
   );
+  return { file, source, amiId };
+});
+
+const readImagePin = Effect.fn("Runners.readImagePin")(function* (repoRoot: string) {
+  const pin = yield* readImagePinSource(repoRoot);
+  return pin.amiId;
+});
+
+const writeImagePin = Effect.fn("Runners.writeImagePin")(function* (repoRoot: string, amiId: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const pin = yield* readImagePinSource(repoRoot);
+  yield* fs
+    .writeFileString(pin.file, Str.replace(PRODUCTION_IMAGE_PIN, `$1${amiId}$3`)(pin.source))
+    .pipe(RunnersCommandError.mapError(`Failed to write the production runner image pin to ${RUNNER_IMAGE_PIN_FILE}.`));
+});
 
 const makeBakeScript = (inputs: BakeLocalInputs): string => `#!/usr/bin/env bash
 set -euo pipefail
@@ -785,7 +804,7 @@ const tagValue = (tags: ReadonlyArray<AwsTag>, key: string): O.Option<string> =>
 
 const checkBake = Effect.fn("Runners.check")(function* (region: string) {
   const inputs = yield* loadLocalInputs();
-  const amiId = yield* getParameter(region, RUNNER_AMI_PIN_PARAMETER);
+  const amiId = yield* readImagePin(inputs.repoRoot);
   const output = yield* runAws(region, ["ec2", "describe-images", "--image-ids", amiId, "--output", "json"]);
   const response = yield* parseAws("EC2 describe-images", decodeDescribeImages, output);
   const tags = pipe(
@@ -830,13 +849,6 @@ const compareBakeInputs = (inputs: BakeLocalInputs, amiId: string, tags: Readonl
   });
 };
 
-const IntendedRunnerPin = S.Struct({
-  config: S.Struct({ "ciFleetController:amiId": S.NonEmptyString }),
-}).pipe(
-  $I.annoteSchema("IntendedRunnerPin", { description: "Production controller image pin read without AWS access." })
-);
-const decodeIntendedRunnerPin = S.decodeUnknownEffect(IntendedRunnerPin);
-
 const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifestPath: string) {
   const inputs = yield* loadLocalInputs();
   const fs = yield* FileSystem.FileSystem;
@@ -847,17 +859,8 @@ const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifest
   const manifest = yield* BakeManifestJson.decode(rawManifest).pipe(
     RunnersCommandError.mapError("Invalid intended runner bake manifest.")
   );
-  const rawConfig = yield* fs
-    .readFileString(path.join(inputs.repoRoot, "infra/ci-runners/Pulumi.production.yaml"))
-    .pipe(RunnersCommandError.mapError("Failed to read the production runner image pin."));
-  const parsedConfig = yield* Effect.try({
-    try: (): unknown => Yaml.parse(rawConfig),
-    catch: () => runnersError("Invalid production runner YAML configuration."),
-  });
-  const config = yield* decodeIntendedRunnerPin(parsedConfig).pipe(
-    RunnersCommandError.mapError("Production configuration has no controller image pin.")
-  );
-  if (!Str.Equivalence(manifest.amiId, config.config["ciFleetController:amiId"])) {
+  const pinnedAmiId = yield* readImagePin(inputs.repoRoot);
+  if (!Str.Equivalence(manifest.amiId, pinnedAmiId)) {
     return yield* runnersError("Runner bake manifest does not describe the intended production AMI pin.");
   }
   return compareBakeInputs(inputs, manifest.amiId, [
@@ -877,7 +880,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
   const startedAt = DateTime.formatIso(now1);
   const bakeDate = Str.slice(0, 10)(startedAt);
   const baseAmiId = yield* getParameter(config.region, config.baseAmiSsmParameter);
-  const priorPin = yield* getPriorPin(config.region);
+  const priorPin = yield* readImagePin(inputs.repoRoot).pipe(Effect.asSome);
   const userData = makeBakeScript(inputs);
   const amiId = yield* Effect.acquireUseRelease(
     runInstance(config, baseAmiId, userData),
@@ -889,7 +892,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
   );
   const now2 = yield* DateTime.now;
   const completedAt = DateTime.formatIso(now2);
-  const pulumiPinCommand = `cd infra/ci-runners && pulumi config set ciFleetController:amiId ${amiId} --stack production`;
+  yield* writeImagePin(inputs.repoRoot, amiId);
   const report = BakeReport.make({
     amiId,
     lockfileSha256: inputs.lockfileSha256,
@@ -897,7 +900,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
     bunVersion: inputs.bunVersion,
     baseAmiId,
     priorPin,
-    pulumiPinCommand,
+    pinFile: RUNNER_IMAGE_PIN_FILE,
     startedAt,
     completedAt,
   });

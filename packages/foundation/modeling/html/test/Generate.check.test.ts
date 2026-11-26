@@ -10,7 +10,7 @@ import * as Stream from "effect/Stream";
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) => {
   it.effect(
-    "runs the actual check CLI in a disposable package fixture outside the workspace census, not a Git checkout, without replacing an uncommitted generated edit",
+    "runs the actual check CLI in a disposable package fixture outside the workspace census, not a Git checkout",
     () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -52,7 +52,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) => {
         expect(exitCode).not.toBe(0);
         expect(stdout + stderr).toContain("Generated output drift detected");
         const retained = yield* fs.readFileString(target);
-        expect(retained).toBe(edited);
+        expect(retained, "the check never replaces an uncommitted generated edit").toBe(edited);
         const after = yield* Effect.forEach(
           siblings,
           (relative) => fs.readFileString(path.join(fixture, "src", relative)),

@@ -1,20 +1,3 @@
-// Coverage for the typed frontmatter write seam (`MarkdownFrontmatter.set` /
-// `setToString`) and the codecs' `encode` members.
-//
-// The write side mirrors the decode seam: schema-ENCODE the typed data,
-// serialize the encoded value through the codec, then splice — one
-// whole-block replacement when a capture of the codec's format exists, one
-// offset-0 insert when the document has none. The empty-object rulings are
-// pinned per codec: yaml encodes `{}` to the flow mapping body `{}\n`
-// (deliberately not an empty body, which would round-trip as `null`), toml
-// encodes `{}` to the empty body (the mirror of its empty-capture decode
-// ruling), json encodes `{}` to `{}`.
-//
-// Property strings are newline-free for the same reason the decode-side
-// round-trip constrains them: a multi-line string could legally place a bare
-// fence-closer at column zero inside the block, which the capture scanner
-// rightly treats as the closing fence — fence semantics, not a codec defect.
-
 import { fcRuns } from "@beep/fc-runs";
 import {
   FrontmatterEncodeError,
@@ -83,10 +66,9 @@ describe("codec encode", () => {
       assert.instanceOf(error, FrontmatterEncodeError);
       assert.strictEqual(error._tag, "FrontmatterEncodeError");
       assert.strictEqual(error.format, "json");
-      // The cause is the jsonc engine's typed stringify error, never a string.
       const cause = error.cause;
       if (!P.isObject(cause)) assert.fail("expected a structured cause");
-      assert.strictEqual(cause._tag, "JsoncStringifyError");
+      assert.strictEqual(cause._tag, "JsoncStringifyError", "the jsonc engine's typed stringify error, never a string");
     })
   );
 });
@@ -102,15 +84,17 @@ describe("MarkdownFrontmatter.set", () => {
       assert.strictEqual(edits.length, 1);
       assert.strictEqual(edits[0]?.offset, 0);
       const updated = MarkdownEdit.applyAll(source, edits);
-      // Everything after the closing fence survives byte-identical.
-      assert.isTrue(Str.endsWith(Str.slice(node?.position.end.offset ?? 0)(source))(updated));
-      // The re-parsed document decodes the new data with the same tree shape.
+      assert.isTrue(
+        Str.endsWith(Str.slice(node?.position.end.offset ?? 0)(source))(updated),
+        "everything after the closing fence survives byte-identical"
+      );
       const reparsed = yield* parseDoc(updated);
       const data = yield* MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(reparsed);
       assert.deepStrictEqual(data, { title: "New", count: 2 });
       assert.deepStrictEqual(
         A.map(reparsed.root.children, (child) => child.type),
-        A.map(document.root.children, (child) => child.type)
+        A.map(document.root.children, (child) => child.type),
+        "the re-parsed document keeps the same tree shape"
       );
     })
   );
@@ -151,8 +135,10 @@ describe("MarkdownFrontmatter.set", () => {
       assert.strictEqual(edits[0]?.offset, 0);
       assert.strictEqual(edits[0]?.length, 0);
       const updated = MarkdownEdit.applyAll(source, edits);
-      // The existing content survives byte-identical after the blank line.
-      assert.isTrue(Str.endsWith(`\n\n${source}`)(updated));
+      assert.isTrue(
+        Str.endsWith(`\n\n${source}`)(updated),
+        "the existing content survives byte-identical after the blank line"
+      );
       const reparsed = yield* parseDoc(updated);
       const data = yield* MarkdownFrontmatter.schema(Meta, TomlFrontmatter)(reparsed);
       assert.deepStrictEqual(data, { title: "Hi", count: 3 });
@@ -183,8 +169,7 @@ describe("MarkdownFrontmatter.set", () => {
           )
         );
         assert.instanceOf(error, FrontmatterValidationError);
-        // The issue is the structured v4 issue tree, never a string.
-        assert.isObject(error.issue);
+        assert.isObject(error.issue, "the structured v4 issue tree, never a string");
         const issue = error.issue;
         if (!P.isObject(issue)) assert.fail("expected a structured issue");
         assert.isString(issue._tag);
@@ -243,11 +228,11 @@ describe("MarkdownFrontmatter.setToString", () => {
 });
 
 describe("frontmatter write round-trip property", () => {
-  // Newline-free strings only — see the file header for why. The count stays
-  // in the 32-bit range every frontmatter codec represents exactly.
-  const Scalar = S.String.check(S.makeFilter((s) => !Str.includes("\n")(s) && !Str.includes("\r")(s)));
+  const recoversExactly =
+    "strings are newline-free: a multi-line string may put a bare fence-closer at column zero, which the capture rightly reads as the closing fence; counts stay in the 32-bit range every codec represents exactly";
+  const NewlineFreeScalar = S.String.check(S.makeFilter((s) => !Str.includes("\n")(s) && !Str.includes("\r")(s)));
   const MetaArb = S.Struct({
-    title: Scalar,
+    title: NewlineFreeScalar,
     count: S.Int.check(S.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
   });
   const bodyDoc = "# Title\n\nsome *emphasis* text\n";
@@ -258,8 +243,7 @@ describe("frontmatter write round-trip property", () => {
   ) {
     const document = yield* parseDoc(bodyDoc);
     const updated = yield* MarkdownFrontmatter.setToString(Meta, codec)(document, data);
-    // The pre-existing content survives byte-identical.
-    assert.isTrue(Str.endsWith(`\n\n${bodyDoc}`)(updated));
+    assert.isTrue(Str.endsWith(`\n\n${bodyDoc}`)(updated), "the pre-existing content survives byte-identical");
     const reparsed = yield* parseDoc(updated);
     return yield* MarkdownFrontmatter.schema(Meta, codec)(reparsed);
   });
@@ -270,7 +254,7 @@ describe("frontmatter write round-trip property", () => {
     ([data]) =>
       Effect.gen(function* () {
         const insertRoundTrip7 = yield* insertRoundTrip(YamlFrontmatter, data);
-        assert.deepStrictEqual(insertRoundTrip7, data);
+        assert.deepStrictEqual(insertRoundTrip7, data, recoversExactly);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -281,7 +265,7 @@ describe("frontmatter write round-trip property", () => {
     ([data]) =>
       Effect.gen(function* () {
         const insertRoundTrip8 = yield* insertRoundTrip(TomlFrontmatter, data);
-        assert.deepStrictEqual(insertRoundTrip8, data);
+        assert.deepStrictEqual(insertRoundTrip8, data, recoversExactly);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -292,7 +276,7 @@ describe("frontmatter write round-trip property", () => {
     ([data]) =>
       Effect.gen(function* () {
         const insertRoundTrip9 = yield* insertRoundTrip(JsonFrontmatter, data);
-        assert.deepStrictEqual(insertRoundTrip9, data);
+        assert.deepStrictEqual(insertRoundTrip9, data, recoversExactly);
       }),
     { arbitrary: fcRuns(60) }
   );

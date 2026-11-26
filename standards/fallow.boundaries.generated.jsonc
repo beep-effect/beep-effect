@@ -534,12 +534,6 @@
         ]
       },
       {
-        "name": "@beep/infra",
-        "patterns": [
-          "infra/src/**"
-        ]
-      },
-      {
         "name": "@beep/infra-ci-runners",
         "patterns": [
           "packages/tooling/infra/ci-runners/src/**"
@@ -699,12 +693,6 @@
         "name": "@beep/n3",
         "patterns": [
           "packages/drivers/n3/src/**"
-        ]
-      },
-      {
-        "name": "@beep/nlp",
-        "patterns": [
-          "packages/foundation/modeling/nlp/src/**"
         ]
       },
       {
@@ -1071,12 +1059,6 @@
         "name": "@beep/schema",
         "patterns": [
           "packages/foundation/modeling/schema/src/**"
-        ]
-      },
-      {
-        "name": "@beep/schema-org",
-        "patterns": [
-          "packages/foundation/modeling/schema-org/src/**"
         ]
       },
       {
@@ -3218,31 +3200,6 @@
         ]
       },
       {
-        "from": "@beep/infra",
-        "allow": [
-          "@beep/identity",
-          "@beep/infra",
-          "@beep/infra-hosts",
-          "@beep/openclaw",
-          "@beep/repo-ai-metrics",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/infra",
-          "@beep/infra-hosts",
-          "@beep/openclaw",
-          "@beep/repo-ai-metrics",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/utils"
-        ]
-      },
-      {
         "from": "@beep/infra-ci-runners",
         "allow": [
           "@beep/alchemy-aws-extras",
@@ -3334,6 +3291,7 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3341,6 +3299,7 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
@@ -3404,7 +3363,9 @@
       {
         "from": "@beep/law-practice-domain",
         "allow": [
+          "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/law-practice-domain",
           "@beep/md",
           "@beep/ontology",
@@ -3416,7 +3377,9 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/epistemics",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/law-practice-domain",
           "@beep/md",
           "@beep/ontology",
@@ -3435,9 +3398,8 @@
           "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemic-domain",
-          "@beep/epistemic-server",
           "@beep/epistemic-tables",
-          "@beep/epistemic-use-cases",
+          "@beep/epistemics",
           "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
@@ -3452,7 +3414,6 @@
           "@beep/mcp-kit",
           "@beep/md",
           "@beep/memfs",
-          "@beep/nlp",
           "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
@@ -3473,9 +3434,8 @@
           "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemic-domain",
-          "@beep/epistemic-server",
           "@beep/epistemic-tables",
-          "@beep/epistemic-use-cases",
+          "@beep/epistemics",
           "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
@@ -3490,7 +3450,6 @@
           "@beep/mcp-kit",
           "@beep/md",
           "@beep/memfs",
-          "@beep/nlp",
           "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
@@ -3531,21 +3490,19 @@
         "allow": [
           "@beep/annotation",
           "@beep/epistemic-domain",
-          "@beep/epistemic-use-cases",
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
           "@beep/mcp-kit",
           "@beep/n3",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3555,21 +3512,19 @@
         "allowTypeOnly": [
           "@beep/annotation",
           "@beep/epistemic-domain",
-          "@beep/epistemic-use-cases",
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
           "@beep/mcp-kit",
           "@beep/n3",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3896,27 +3851,6 @@
         ]
       },
       {
-        "from": "@beep/nlp",
-        "allow": [
-          "@beep/identity",
-          "@beep/nlp",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/text",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/nlp",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils",
-          "@beep/text",
-          "@beep/utils"
-        ]
-      },
-      {
         "from": "@beep/nlp-mcp",
         "allow": [
           "@beep/file-processing",
@@ -3947,7 +3881,7 @@
         "from": "@beep/nlp-processing",
         "allow": [
           "@beep/identity",
-          "@beep/nlp",
+          "@beep/jsonc",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
@@ -3958,7 +3892,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/nlp",
+          "@beep/jsonc",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
@@ -4202,6 +4136,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
+          "@beep/ontology",
           "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -4221,6 +4156,7 @@
           "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
+          "@beep/ontology",
           "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -4263,6 +4199,7 @@
         "allow": [
           "@beep/identity",
           "@beep/mcp-kit",
+          "@beep/ontology",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",
@@ -4276,6 +4213,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcp-kit",
+          "@beep/ontology",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",
@@ -5590,21 +5528,6 @@
         ]
       },
       {
-        "from": "@beep/schema-org",
-        "allow": [
-          "@beep/fc-runs",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/schema-org"
-        ],
-        "allowTypeOnly": [
-          "@beep/fc-runs",
-          "@beep/identity",
-          "@beep/schema",
-          "@beep/schema-org"
-        ]
-      },
-      {
         "from": "@beep/scratchpad",
         "allow": [
           "@beep/dock",
@@ -5619,7 +5542,6 @@
           "@beep/m365",
           "@beep/md",
           "@beep/n3",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/ontology",
           "@beep/oxigraph",
@@ -5651,7 +5573,6 @@
           "@beep/m365",
           "@beep/md",
           "@beep/n3",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/ontology",
           "@beep/oxigraph",
@@ -5706,7 +5627,6 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/langextract",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/openai",
           "@beep/oxigraph",
@@ -5730,7 +5650,6 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/langextract",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/openai",
           "@beep/oxigraph",
@@ -6223,7 +6142,6 @@
         "from": "@beep/wink",
         "allow": [
           "@beep/identity",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
@@ -6235,7 +6153,6 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",

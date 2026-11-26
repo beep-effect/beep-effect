@@ -76,8 +76,6 @@ const selectedVaultPath = (selected: O.Option<string>): O.Option<string> =>
 
 const outcome = (value: VaultSelectionOutcome) => ({ type: "vault.outcome" as const, outcome: value });
 
-// Re-reads the vault configuration whenever a mutation invalidates its key, so
-// saving a vault root or filing a document reaches the machine as an event.
 const vaultConfigFeed = createEffectStreamLogic({
   schemas: { input: VaultConfigFeedInput },
   stream: ({ input }: EffectSourceArgs<VaultConfigFeedInput>) =>
@@ -158,7 +156,6 @@ export const documentIntakeMachine = setupEffect({
     internalEvents: IntakeInternalEventPayloads,
     emitted: DocumentIntakeEmitted,
   },
-  // Declaring the whole tree types every transition target against real state paths.
   states: {
     vault: {
       states: {
@@ -331,9 +328,6 @@ export const documentIntakeMachine = setupEffect({
                             input: VaultSavingStateInput.make({ vaultRootPath: selected.value }),
                           };
                         },
-                        // A real in-card form, not `window.prompt`: the raw prompt was
-                        // unstyled, unlabeled, and cancelling it stranded the operator on
-                        // the vault gate with no visible way forward (QA closeout finding).
                         onError: (args, enq) => {
                           enq.emit(outcome("manual_path_form"));
                           enq(args.actions.logIntakeCause, {
@@ -441,8 +435,6 @@ export const documentIntakeMachine = setupEffect({
                           enq.emit(outcome("success"));
                           return { target: "saved" };
                         },
-                        // The submitted path stays in context, so the reopened form does
-                        // not force the operator to retype it.
                         onError: (args, enq) => {
                           enq.emit(outcome("save_failure"));
                           enq(args.actions.logIntakeCause, {
@@ -507,9 +499,6 @@ export const documentIntakeMachine = setupEffect({
             },
           },
         },
-        // A failed configuration read used to leave intake silently inert: neither
-        // configured nor in onboarding. This state makes the failure visible and
-        // retries it.
         loadFailed: {
           after: {
             configRetry: ({ context }) => ({

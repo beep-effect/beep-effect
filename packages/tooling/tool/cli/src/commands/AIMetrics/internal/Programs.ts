@@ -352,7 +352,7 @@ const resolveHashSaltSecretRef = Effect.fn("AIMetrics.resolveHashSaltSecretRef")
 
 const resolveRawArchiveKey = Effect.fn("AIMetrics.resolveRawArchiveKey")(function* () {
   const envKey = yield* readOptionalRedactedConfigString("BEEP_AI_METRICS_RAW_ARCHIVE_KEY");
-  if (O.isSome(envKey) && Str.isNonEmpty(Str.trim(Redacted.value(envKey.value)))) {
+  if (O.isSome(envKey) && envKey.value.pipe(Redacted.value, Str.trim, Str.isNonEmpty)) {
     return envKey.value;
   }
 
@@ -1154,7 +1154,7 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
     return yield* AiMetricsCommandError.make({
       cause: "install apply",
       message:
-        "AI metrics CLI install apply is dry-run-only. Pass --dry-run; real dankserver mutation is owned by the Pulumi P5b stack.",
+        "AI metrics CLI install apply is dry-run-only. Pass --dry-run; real dankserver mutation is owned by the HostsAiMetrics Alchemy stack.",
     });
   }
 

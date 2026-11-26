@@ -1266,7 +1266,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       ),
       Effect.catch(
         Effect.fnUntraced(function* (error) {
-          ctx.set(turnErrorAtom, O.some(toTurnError(error)));
+          ctx.set(turnErrorAtom, error.pipe(toTurnError, O.some));
           ctx.set(
             unreconciledTurnAtoms(turn.threadId),
             A.append(registry.get(unreconciledTurnAtoms(turn.threadId)), makeStreamingTurn(blocks))

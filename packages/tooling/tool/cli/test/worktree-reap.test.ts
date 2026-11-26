@@ -14,7 +14,7 @@ import {
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { decodeSessionLedger, PrRepository, sessionLedgerFileName } from "@beep/repo-cli/test/Session";
+import { CheckoutRepository, decodeSessionLedger, sessionLedgerFileName } from "@beep/repo-cli/test/Session";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
@@ -112,7 +112,7 @@ const useGithubOrigin = Effect.fn("WorktreeReapTest.useGithubOrigin")(function* 
 const lastLedgerRow = Effect.fn("WorktreeReapTest.lastLedgerRow")(function* (stateRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+  const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
   const ledger = yield* fs.readFileString(path.join(stateRoot, sessionLedgerFileName(repository)));
   return O.map(A.last(decodeSessionLedger(ledger).rows), (row) => [row.state, row.checkout, row.branch, row.next]);
 });

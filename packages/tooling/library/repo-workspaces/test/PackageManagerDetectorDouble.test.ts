@@ -1,17 +1,3 @@
-// `PackageManagerDetector.makeTest` / `layerTest` — the sanctioned double.
-//
-// The house pattern, matching `WorkspaceRoot` and `WorkspaceDiscovery` in this
-// package: `Partial<Shape>` overrides, and any member with no honest default
-// DIES rather than fabricating one.
-//
-// `detect` has no honest default. A stand-in that answered "pnpm" would hand a
-// consumer a fact nothing established, and the whole point of the live
-// detector is that it REFUSES to guess — a double that guesses would contradict
-// the service it stands in for. Contrast `@effected/commands`' `LocalExec`
-// double, which legitimately defaults because `Option.none()` is a real answer:
-// the test is "would a real implementation legitimately answer this?", not "is
-// it convenient".
-
 import { DetectedPackageManager, PackageManagerDetectionError, PackageManagerDetector } from "@beep/repo-workspaces";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -27,7 +13,7 @@ const pnpm = DetectedPackageManager.make({
   evidence: "pnpm-workspace.yaml",
 });
 
-describe("PackageManagerDetector.makeTest", () => {
+describe("PackageManagerDetector.makeTest, the house double whose detect has no honest default, so it dies unstubbed", () => {
   it.effect("uses a supplied `detect` override", () =>
     Effect.gen(function* () {
       const double = PackageManagerDetector.makeTest({ detect: () => Effect.succeed(pnpm) });
@@ -54,17 +40,14 @@ describe("PackageManagerDetector.makeTest", () => {
       const double = PackageManagerDetector.makeTest();
       const exit = yield* Effect.exit(double.detect("/repo"));
 
-      // Assert helpers are not type predicates, so narrow with a real `if`.
       if (!Exit.isFailure(exit)) {
-        assert.fail("expected the unstubbed member to die");
+        assert.fail("expected the unstubbed member to die; assert helpers do not narrow, so this `if` does");
       }
-      // A DEFECT, not a typed failure — the discriminating half. An
-      // implementation that returned `PackageManagerDetectionError` instead
-      // would look like a legitimate "no manager here" answer and pass a
-      // weaker assertion, while quietly teaching consumers that the double
-      // reports absence.
-      assert.isTrue(Cause.hasDies(exit.cause));
-      assert.isFalse(Cause.hasFails(exit.cause));
+      assert.isTrue(Cause.hasDies(exit.cause), "detect has no honest default, unlike LocalExec's real Option.none()");
+      assert.isFalse(
+        Cause.hasFails(exit.cause),
+        "a typed PackageManagerDetectionError would read as a legitimate no-manager answer and teach that the double reports absence"
+      );
     })
   );
 
@@ -110,16 +93,13 @@ describe("PackageManagerDetector.layerTest", () => {
 
   it.layer(PackageManagerDetector.layerTest(), { timeout: "30 seconds" })((it) => {
     it.effect("with no overrides, a consumer that calls detect still dies loudly", () =>
-      // The point of the die: a test that wires the double and then depends on
-      // detection is a wiring mistake, and it must fail rather than proceed on a
-      // fabricated manager.
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
         const exit = yield* Effect.exit(detector.detect("/repo"));
         if (!Exit.isFailure(exit)) {
           assert.fail("expected the unstubbed member to die");
         }
-        assert.isTrue(Cause.hasDies(exit.cause));
+        assert.isTrue(Cause.hasDies(exit.cause), "depending on detection through the double is a wiring mistake");
       })
     );
   });

@@ -148,8 +148,9 @@ const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
   const result = yield* stage.apply(row.request);
   expect(result.state, `source initialized scan ${row.id}`).toEqual(row.state);
 });
-const smokeRowsRetainingConnectorsDigitRejectionCombiningMarksPlaintiffBoundariesPunctuationNativeYearsParenthesesSpecialTokensAndScalarSurrogateDistinctions =
-  [5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58];
+const smokeBoundaryRows = [
+  5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58,
+];
 /** Smoke includes source branch controls, failures and no-call paths; the full original replay retired 2026-11-09. */
 export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
@@ -158,18 +159,13 @@ export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(f
   const setup = yield* install(kind);
   const rows = A.filter(
     setup.corpus.cases,
-    (row) =>
-      full ||
-      row.smoke ||
-      A.contains(
-        smokeRowsRetainingConnectorsDigitRejectionCombiningMarksPlaintiffBoundariesPunctuationNativeYearsParenthesesSpecialTokensAndScalarSurrogateDistinctions,
-        row.id
-      ) ||
-      row.error !== null ||
-      row.calls.length === 0
+    (row) => full || row.smoke || A.contains(smokeBoundaryRows, row.id) || row.error !== null || row.calls.length === 0
   );
   yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { concurrency: 1, discard: true });
-  expect(rows).toHaveLength(full ? 64 : 54);
+  expect(
+    rows,
+    "smoke rows keep connectors, digit rejection, combining marks, plaintiff edges, punctuation, native years, parentheses, special tokens, surrogates"
+  ).toHaveLength(full ? 64 : 54);
   const processCount = A.filter(rows, (row) => row.calls.length > 0).length;
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);
   expect(calls).toBe(full ? 313 : 198);

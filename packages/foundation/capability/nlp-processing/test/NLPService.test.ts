@@ -1,5 +1,5 @@
-import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { BackendCapabilities, NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend";
+import { Document, DocumentId } from "@beep/nlp-processing/Core/Document";
 import {
   sentences,
   Tokenization,
@@ -25,9 +25,9 @@ import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import type { Sentence } from "@beep/nlp/Core/Sentence";
-import type { Token } from "@beep/nlp/Core/Token";
 import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend";
+import type { Sentence } from "@beep/nlp-processing/Core/Sentence";
+import type { Token } from "@beep/nlp-processing/Core/Token";
 
 const noTokens: ReadonlyArray<Token> = [];
 const noSentences: ReadonlyArray<Sentence> = [];

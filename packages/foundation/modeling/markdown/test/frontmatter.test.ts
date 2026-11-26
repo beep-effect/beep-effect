@@ -1,13 +1,3 @@
-// Unit coverage for the frontmatter capture construct (P3 Task 1).
-//
-// The capture is an offset-0 pre-scan, not a registry construct: it can fire
-// at most once, before any block, and its content is raw. Grammar authorities
-// are recorded in `src/internal/blocks/frontmatter.ts` — gray-matter's
-// default `---`/yaml fences and `---json` language hint, remark-frontmatter's
-// `+++` toml preset. Capture is OFF by default (a P3 ruling): the spec
-// corpora contain documents opening with `---`, and those must keep parsing
-// exactly as CommonMark says they do unless a consumer opts in.
-
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { Markdown, MarkdownParseOptions } from "@beep/markdown/Markdown";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
@@ -22,7 +12,6 @@ import type { Frontmatter as FrontmatterNode } from "@beep/markdown/MarkdownNode
 
 const withFrontmatter = MarkdownParseOptions.make({ frontmatter: true });
 
-/** Parse with capture enabled and return the root. */
 const parseOn = (source: string): Root => {
   const result = Markdown.parseResult(source, withFrontmatter);
   assertSuccess(result, Result.getOrThrow(result));
@@ -32,7 +21,6 @@ const parseOn = (source: string): Root => {
   return result.success;
 };
 
-/** The head frontmatter node of a capture-enabled parse; fails if absent. */
 const captureOf = (source: string): FrontmatterNode => {
   const head = parseOn(source).children[0];
   assert.isDefined(head, "expected the document to have a head node");
@@ -51,9 +39,12 @@ describe("frontmatter capture", () => {
       if (!Result.isSuccess(result)) {
         return;
       }
-      // `---` is a thematic break; `a: 1` then `---` is a setext heading.
       const types = A.map(result.success.children, (child) => child.type);
-      assert.deepStrictEqual(types, ["thematicBreak", "heading"]);
+      assert.deepStrictEqual(
+        types,
+        ["thematicBreak", "heading"],
+        "--- is a thematic break, and a: 1 then --- is a setext heading"
+      );
     });
 
     it("is off by default at the engine level too", () => {
@@ -101,10 +92,12 @@ describe("frontmatter capture", () => {
     });
 
     it("other language hints are not recognized", () => {
-      // gray-matter would honor `---yaml`; this grammar is deliberately
-      // closed to three fences. `---yaml` is paragraph text.
       const types = A.map(parseOn("---yaml\na: 1\n---\n").children, (child) => child.type);
-      assert.notStrictEqual(types[0], "frontmatter");
+      assert.notStrictEqual(
+        types[0],
+        "frontmatter",
+        "gray-matter would honor ---yaml, but this grammar is deliberately closed to three fences"
+      );
     });
   });
 
@@ -152,9 +145,6 @@ describe("frontmatter capture", () => {
   });
 
   describe("fence trailing whitespace", () => {
-    // micromark-extension-frontmatter@2.0.0 (remark-frontmatter) lets both
-    // fence lines carry trailing spaces and tabs; @changesets/parse closes
-    // on `--- ` too. The grammar widens to match, for every fence style.
     const cases: ReadonlyArray<readonly [open: string, close: string, format: string]> = [
       ["---", "---", "yaml"],
       ["+++", "+++", "toml"],
@@ -184,11 +174,14 @@ describe("frontmatter capture", () => {
     });
 
     it("spans the padded closing fence and starts the body on the next line", () => {
-      // "---\na: 1\n--- \t\nrest\n": the closing fence line is 9-14.
       const root = parseOn("---\na: 1\n--- \t\nrest\n");
       const node = root.children[0];
       assert.strictEqual(node?.type, "frontmatter");
-      assert.deepStrictEqual({ ...node?.position.end }, { line: 3, column: 6, offset: 14 });
+      assert.deepStrictEqual(
+        { ...node?.position.end },
+        { line: 3, column: 6, offset: 14 },
+        "the padded closing fence line spans offsets 9-14"
+      );
       assert.strictEqual(root.children[1]?.type, "paragraph");
       assert.strictEqual(root.children[1]?.position.start.offset, 15);
     });
@@ -246,7 +239,6 @@ describe("frontmatter capture", () => {
 
   describe("positions", () => {
     it("spans the whole block including both fences", () => {
-      // "---\na: 1\n---\nrest\n" — fences at 0-3 and 9-12, rest at 13.
       const root = parseOn("---\na: 1\n---\nrest\n");
       const node = root.children[0];
       assert.strictEqual(node?.type, "frontmatter");
@@ -254,7 +246,11 @@ describe("frontmatter capture", () => {
         return;
       }
       assert.deepStrictEqual({ ...node.position.start }, { line: 1, column: 1, offset: 0 });
-      assert.deepStrictEqual({ ...node.position.end }, { line: 3, column: 4, offset: 12 });
+      assert.deepStrictEqual(
+        { ...node.position.end },
+        { line: 3, column: 4, offset: 12 },
+        "the fences sit at 0-3 and 9-12, and the rest starts at 13"
+      );
       const body = root.children[1];
       assert.strictEqual(body?.type, "paragraph");
       assert.strictEqual(body?.position.start.offset, 13);
@@ -316,11 +312,6 @@ describe("frontmatter capture", () => {
       assert.strictEqual(node.format, "yaml");
     });
 
-    // A constructor-defaulted field accepts a plain-object literal for
-    // `position`, matching what `~type.make.in` has always admitted: `make`
-    // deep-validates the literal into a `Position`/`Point` value rather than
-    // requiring the caller to pre-construct one. The guards are structural
-    // (D-22), so this asserts the validated shape, not class membership.
     it("make accepts a plain-object position and validates it into a Position", () => {
       const node = Frontmatter.make({
         type: "frontmatter",
@@ -331,7 +322,10 @@ describe("frontmatter capture", () => {
           end: { line: 3, column: 4, offset: 12 },
         },
       });
-      assert(S.is(Position)(node.position));
+      assert(
+        S.is(Position)(node.position),
+        "make deep-validates a plain-object position, as make.in admits; the guards are structural, so this checks shape, not class"
+      );
       assert(S.is(Point)(node.position.start));
       assert(S.is(Point)(node.position.end));
       assert.strictEqual(node.position.end.offset, 12);

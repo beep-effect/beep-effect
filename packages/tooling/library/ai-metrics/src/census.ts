@@ -450,7 +450,7 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     between = { count: 0, firstChars: 0 };
   };
 
-  const countApiCallOncePerMessageWhateverItsRecords = (assistant: AssistantFacts, inWindow: boolean) => {
+  const countApiCall = (assistant: AssistantFacts, inWindow: boolean) => {
     if (MutableHashSet.has(counted, assistant.messageId)) return;
     MutableHashSet.add(counted, assistant.messageId);
     if (inWindow) calls += 1;
@@ -488,7 +488,7 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
   };
 
   const onAssistant = (assistant: AssistantFacts, inWindow: boolean, beforeEnd: boolean) => {
-    countApiCallOncePerMessageWhateverItsRecords(assistant, inWindow);
+    countApiCall(assistant, inWindow);
     if (inWindow) MutableHashSet.add(inWindowCalls, assistant.messageId);
     O.map(assistant.usage, (usage) => {
       const firstUsageBearingRecordOfCall = !MutableHashMap.has(usageById, assistant.messageId);
@@ -519,8 +519,8 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     if (marker) {
       flush();
       resetCalibration();
-      const everyBoundaryOrASummaryNotFollowingAnotherMarker = facts.marker === "boundary" || !previousMarker;
-      if (facts.inWindow && everyBoundaryOrASummaryNotFollowingAnotherMarker) acc.boundaries += 1;
+      const countsAsCompaction = facts.marker === "boundary" || !previousMarker;
+      if (facts.inWindow && countsAsCompaction) acc.boundaries += 1;
     }
     previousMarker = marker;
   };

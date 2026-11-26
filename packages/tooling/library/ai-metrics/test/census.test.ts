@@ -335,14 +335,14 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
           `{"type":"assistant",${at("10:00:02")},"message":{"id":"a1","content":[]}}`,
           `{"type":"assistant",${at("10:00:03")},"message":{"id":"a1","usage":{"input_tokens":5},"content":[]}}`,
         ];
-        const largeResultThenSmallerContextIsNoCalibrationSample = [
+        const largeResultSmallerContext = [
           `{"type":"assistant",${at("10:00:04")},"message":{"id":"a2","usage":{"input_tokens":7},"content":[{"type":"tool_use","id":"e2","name":"Bash","input":{"command":"true"}}]}}`,
           `{"type":"user",${at("10:00:05")},"message":{"content":[{"type":"tool_result","tool_use_id":"e2","content":"${Str.repeat(3001)("x")}"}]}}`,
           `{"type":"assistant",${at("10:00:06")},"message":{"id":"a3","usage":{"input_tokens":1},"content":[]}}`,
         ];
-        const userContentNeitherTextNorBlocksContributesNothing = `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`;
-        const callWithoutUsageOnAnyRecordIsStillOneApiCall = `{"type":"assistant",${at("10:00:08")},"message":{"id":"a4","content":[]}}`;
-        const usageOnSecondRecordStillCalibratesPrecedingResult = [
+        const nonTextUserContent = `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`;
+        const callWithoutUsage = `{"type":"assistant",${at("10:00:08")},"message":{"id":"a4","content":[]}}`;
+        const secondRecordUsage = [
           `{"type":"assistant",${at("10:00:08")},"message":{"id":"b0","usage":{"input_tokens":10},"content":[{"type":"tool_use","id":"e3","name":"Bash","input":{"command":"true"}}]}}`,
           `{"type":"user",${at("10:00:08")},"message":{"content":[{"type":"tool_result","tool_use_id":"e3","content":"${Str.repeat(3001)("y")}"}]}}`,
           `{"type":"assistant",${at("10:00:08")},"message":{"id":"b1","content":[]}}`,
@@ -353,27 +353,24 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
           `{"type":"system","subtype":"compact_boundary",${at("10:00:10")}}`,
           `{"type":"user","isCompactSummary":true,${at("10:00:11")},"message":{"content":"summary"}}`,
         ];
-        const sameCallAfterWindowEndKeepsCallButAddsNoToolToTurn =
+        const sameCallAfterWindow =
           '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"a1","usage":{"input_tokens":900},"content":[{"type":"tool_use","id":"late","name":"Bash","input":{"command":"bun run check"}}]}}';
         const session = [
           ...openingCallAndResult,
           ...oneApiCallInTwoRecordsFirstWithoutUsage,
-          ...largeResultThenSmallerContextIsNoCalibrationSample,
-          userContentNeitherTextNorBlocksContributesNothing,
-          callWithoutUsageOnAnyRecordIsStillOneApiCall,
-          ...usageOnSecondRecordStillCalibratesPrecedingResult,
+          ...largeResultSmallerContext,
+          nonTextUserContent,
+          callWithoutUsage,
+          ...secondRecordUsage,
           ...twoBoundariesThenSummaryAreTwoCompactions,
-          sameCallAfterWindowEndKeepsCallButAddsNoToolToTurn,
+          sameCallAfterWindow,
         ];
-        const openedByMtimeButOnlyTimestampAfterWindowCountsNothing = [
+        const afterWindowOnly = [
           '{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"none","content":"leak"}]}}',
           '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"x","usage":{"input_tokens":1},"content":[]}}',
         ];
         yield* fs.writeFileString(path.join(project, "a.jsonl"), A.join(session, "\n"));
-        yield* fs.writeFileString(
-          path.join(project, "b.jsonl"),
-          A.join(openedByMtimeButOnlyTimestampAfterWindowCountsNothing, "\n")
-        );
+        yield* fs.writeFileString(path.join(project, "b.jsonl"), A.join(afterWindowOnly, "\n"));
         const nonTranscriptFile = path.join(project, "notes.txt");
         const uninspectableDanglingTranscript = path.join(project, "dangling.jsonl");
         const unlistableDirectory = path.join(project, "locked");
@@ -393,14 +390,32 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         );
         yield* fs.chmod(unlistableDirectory, 0o700);
         const sessions = O.getOrThrow(report.totals.claudeSessions);
-        expect([sessions.apiCalls, sessions.inputTokens]).toEqual([7, 2026]);
-        expect(report.corpus.claude).toMatchObject({ compactionBoundaries: 2 });
-        expect([report.turns.verificationRuns, turn(report, "run-verification").turns]).toEqual([0, 0]);
+        expect(
+          [sessions.apiCalls, sessions.inputTokens],
+          "a call without usage on any record is still one API call"
+        ).toEqual([7, 2026]);
+        expect(
+          report.corpus.claude,
+          "every boundary counts, and a summary only when it does not follow another marker"
+        ).toMatchObject({ compactionBoundaries: 2 });
+        expect(
+          [report.turns.verificationRuns, turn(report, "run-verification").turns],
+          "the same call after the window end keeps the call but adds no tool to the turn"
+        ).toEqual([0, 0]);
         expect(report.turns.contextTokens).toBe(2026);
-        expect(row(report, "search-read").claude).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 24 });
-        expect(report.calibration.samples).toBe(1);
+        expect(
+          row(report, "search-read").claude,
+          "user content that is neither text nor blocks contributes nothing; an API call counts once per message whatever its records"
+        ).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 24 });
+        expect(
+          report.calibration.samples,
+          "a large result then a smaller context is no calibration sample; usage on a second record still calibrates the preceding result"
+        ).toBe(1);
         expect(report.corpus.claude).toMatchObject({ unreadableFiles: 2 });
-        expect(row(report, "unmatched-result").claude).toMatchObject({ results: 0, chars: 0 });
+        expect(
+          row(report, "unmatched-result").claude,
+          "a file opened by mtime whose only timestamp is after the window counts nothing"
+        ).toMatchObject({ results: 0, chars: 0 });
         expect(report.corpus.claude).toMatchObject({ filesScanned: 1, contextsActive: 1 });
         const error = yield* service
           .report(

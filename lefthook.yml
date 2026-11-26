@@ -61,11 +61,10 @@ pre-commit:
     # regenerates the shards.
     schema-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
-      # Only infra/ is a workspace at its root; a file directly under apps/ or packages/ belongs to no
-      # workspace, so a scoped catalog run would have no shard to write for it.
+      # A file directly under apps/ or packages/ belongs to no workspace, so a scoped catalog run
+      # would have no shard to write for it.
       glob:
-        - "infra/*.{ts,tsx}"
-        - "{apps,packages,infra}/**/*.{ts,tsx}"
+        - "{apps,packages}/**/*.{ts,tsx}"
       exclude:
         - "**/docs/**"
         - "**/*.d.ts"

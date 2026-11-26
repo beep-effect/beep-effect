@@ -1,14 +1,3 @@
-// truthy: the YAML 1.1 boolean trap. `yes`/`no`/`on`/`off` parse as
-// STRINGS in YAML 1.2 but read as booleans to humans (the `on:` key of a
-// workflow file is the canonical victim), and `True`/`FALSE` are booleans in
-// spellings a config may not want. Flags plain scalars — keys included —
-// whose spelling is in the 1.1 boolean family but not in `allowed`.
-//
-// Two value-preserving fixes: a real boolean respells to the allowed
-// spelling of the same truth value; a string lookalike gets quoted so it
-// reads as the string it already is. A tagged scalar (`!!bool`, `!!str`) is
-// explicit intent and never flagged.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
@@ -70,8 +59,7 @@ export class truthyOptions extends S.Opaque<truthyOptions, { readonly brand: uni
   )
 ) {}
 
-/** The YAML 1.1 boolean family, per spelling case the 1.1 grammar admits. */
-const TRUTHY = HashSet.fromIterable([
+const YAML_1_1_BOOLEAN_FAMILY_SPELLINGS = HashSet.fromIterable([
   "yes",
   "Yes",
   "YES",
@@ -139,13 +127,11 @@ export const truthy = YamlRule.make({
       (scalar) => {
         if (scalar.style !== "plain" || scalar.tag !== undefined) return;
         const raw = Str.slice(scalar.offset, scalar.offset + scalar.length)(ctx.text);
-        if (!HashSet.has(TRUTHY, raw) || HashSet.has(allowed, raw)) return;
+        if (!HashSet.has(YAML_1_1_BOOLEAN_FAMILY_SPELLINGS, raw) || HashSet.has(allowed, raw)) return;
         const pos = positionAt(ctx.lines, scalar.offset);
         const isBool = P.isBoolean(scalar.value);
         const truth = HashSet.has(TRUE_SET, Str.toLowerCase(raw));
         const respell = truth ? "true" : "false";
-        // A real boolean respells when the canonical spelling is allowed; a
-        // string lookalike gets quoted. Both preserve the parsed value.
         const fix = isBool
           ? HashSet.has(allowed, respell)
             ? YamlEdit.make({ offset: scalar.offset, length: scalar.length, content: respell })

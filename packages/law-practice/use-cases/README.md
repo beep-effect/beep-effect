@@ -2,23 +2,32 @@
 
 Application-tier service-port contracts for the law-practice slice: the
 `IrToLaw` port (which maps the verified `@beep/annotation` extraction document and
-its per-candidate readings into law-practice domain entities) and the `OfficeActionReview` loop orchestrator port (which
-ingests an office action's source text and returns an epistemic
-`ClaimProjectionView`).
+its per-candidate readings into law-practice domain entities) and the
+`OfficeActionReview` loop, which runs Extract, MapToLaw and ProposeClaim as
+attributed operations, proposes the distinction claim in its capture scope
+behind the matter wall and returns an `OfficeActionReviewResult`: the law
+entities, the proposed record, its office-action assessments and the activity
+log.
 
-- `@beep/law-practice-use-cases/server` — the server-only service-port contracts
-  (`IrToLaw`, `OfficeActionReview`).
+- `@beep/law-practice-use-cases/ClaimStore` — the `LawClaimProposals` and
+  `LawClaimAdmissions` store ports, partitioned by capture scope.
+- `@beep/law-practice-use-cases/LawAdmission` — attorney admission: `open`
+  records the binding, `admit` checks the office-action gate and then the
+  epistemics admission. `AttorneyAttestation` verifies the token; no host
+  admits in P6.
+- `@beep/law-practice-use-cases/MatterWall` — `LawPrincipal`,
+  `MatterAuthority` and the access answers every walled path asks for.
+- `@beep/law-practice-use-cases/ProvenanceTraversal` — the
+  `ProvenanceTraversal` port behind `claim_provenance`: a claim's traversable
+  activity records, captures and admissions, or `Missing` for an absent or
+  denied claim.
 
-This tier owns CONTRACTS ONLY: typed `Context.Service` ports with no
-implementation bodies and no live Layers. Live Layers that resolve the
-ingestion (`@beep/file-processing` + `@beep/langextract`), the `IrToLaw`
-mapping, and the epistemic `ClaimGate` / `ClaimLifecycle` (plus the pure
-`projectClaims` fold) live in `@beep/law-practice-server`, never here.
-
-This is the slice's documented cross-slice bounded exception: importing
-`@beep/epistemic-*` is sanctioned at the use-cases tier per the spike SPEC
-Exception Ledger and `DECISIONS.md`. The law-practice DOMAIN tier stays clean —
-no epistemic dependency there.
+Live Layers that resolve the ingestion (`@beep/file-processing` +
+`@beep/langextract`), the `IrToLaw` mapping, the claim store and the matter
+authority live in `@beep/law-practice-server`. `extractCandidate` keeps the
+candidate and evidence rows the Practice KG claims batch stores, so this tier
+still depends on `@beep/epistemic-domain`; the law-practice DOMAIN tier has no
+epistemic slice dependency.
 
 Citation policy, operation names and the closed `CitationEngineFailure` union
 export only from `/server`. Its five error families are `CitationInputError`,

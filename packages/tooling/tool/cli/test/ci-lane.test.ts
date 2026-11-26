@@ -337,8 +337,9 @@ const liveTaskPackages = Effect.fn(function* (task: "lint" | "test") {
   const repoRoot = yield* findRepoRoot();
   const path = yield* Path.Path;
   const workspaces = yield* workspaceManifests(repoRoot);
-  return pipe(
-    A.fromIterable(HashMap.entries(workspaces)),
+  return workspaces.pipe(
+    HashMap.entries,
+    A.fromIterable,
     A.filter(([, workspace]) => {
       const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
       return !isLabsWorkspaceDir(relativeDir) && HashMap.has(workspace.manifest.scripts, task);
@@ -474,7 +475,7 @@ describe("CI lane partitions", () => {
       }))
     ).toEqual([
       { id: "lint-a", packages: 75, weightSeconds: 1132 },
-      { id: "lint-b", packages: 68, weightSeconds: 1134 },
+      { id: "lint-b", packages: 66, weightSeconds: 1134 },
       { id: "repo-cli-1", packages: 1, weightSeconds: 392 },
       { id: "repo-cli-2", packages: 1, weightSeconds: 392 },
       { id: "repo-cli-3", packages: 1, weightSeconds: 392 },
@@ -492,13 +493,13 @@ describe("CI lane partitions", () => {
       { id: "law-practice-6", packages: 1, weightSeconds: 364 },
       { id: "law-practice-7", packages: 1, weightSeconds: 364 },
       { id: "law-practice-8", packages: 1, weightSeconds: 364 },
-      { id: "unit-a", packages: 26, weightSeconds: 594 },
-      { id: "unit-b", packages: 28, weightSeconds: 593 },
+      { id: "unit-a", packages: 25, weightSeconds: 594 },
+      { id: "unit-b", packages: 27, weightSeconds: 593 },
       { id: "unit-c", packages: 27, weightSeconds: 594 },
       { id: "unit-d", packages: 27, weightSeconds: 594 },
       { id: "unit-e", packages: 27, weightSeconds: 593 },
       { id: "unit-f", packages: 28, weightSeconds: 593 },
-      { id: "unit-g", packages: 28, weightSeconds: 594 },
+      { id: "unit-g", packages: 27, weightSeconds: 594 },
       { id: "lps-int-1", packages: 1, weightSeconds: 422 },
       { id: "lps-int-2", packages: 1, weightSeconds: 400 },
       { id: "lps-int-3", packages: 1, weightSeconds: 391 },
@@ -1044,7 +1045,7 @@ describe("CI lane partitions", () => {
         const repoRoot = yield* findRepoRoot();
         const path = yield* Path.Path;
         const workspaces = yield* workspaceManifests(repoRoot);
-        const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
+        const workspaceEntries = workspaces.pipe(HashMap.entries, A.fromIterable);
         const workspacePackageNames = A.map(workspaceEntries, ([name]) => name);
 
         for (const [laneId, task, partition] of [

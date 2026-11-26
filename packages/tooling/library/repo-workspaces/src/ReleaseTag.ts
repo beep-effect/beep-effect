@@ -116,13 +116,6 @@ export declare namespace TagFormatOptions {
   export type Encoded = typeof TagFormatOptions.Encoded;
 }
 
-// The numeric core of a SemVer version, plus whether it carries a prerelease.
-//
-// Parsed here rather than through `@beep/semver` on purpose: the
-// tracking-tag grammar is deliberately NOT SemVer (a truncated `v1` is not a
-// version at all), and the only facts the derivation needs are the major and
-// minor segments and the presence of a prerelease. A dependency edge for that
-// is disproportionate; real semver *comparison* would justify one.
 const VersionCore = S.Struct({
   major: S.Finite.pipe($I.annoteKey("VersionCore.major", { description: "The parsed major version segment." })),
   minor: S.Finite.pipe($I.annoteKey("VersionCore.minor", { description: "The parsed minor version segment." })),
@@ -136,14 +129,8 @@ const VersionCore = S.Struct({
 );
 type VersionCore = typeof VersionCore.Type;
 
-/**
- * Digits only, and no leading zeros beyond `0` itself — SemVer's numeric identifier.
- */
 const NUMERIC_IDENTIFIER = /^(?:0|[1-9]\d*)$/;
 
-/**
- * Complete SemVer grammar, including non-empty prerelease and build identifiers.
- */
 const VersionText = S.String.check(
   S.isPattern(
     /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$(?![\s\S])/,
@@ -160,19 +147,6 @@ const VersionText = S.String.check(
 );
 const isVersionText = S.is(VersionText);
 
-/**
- * Read a version's numeric core, or nothing when it is not `X.Y.Z[-pre][+build]`.
- *
- * **Details**
- *
- * Build metadata is stripped **before** the prerelease test: `+build` carries
- * no precedence meaning in SemVer, so `1.2.3+sha.abc` is the stable `1.2.3`,
- * and treating any `-`-or-`+` suffix as a prerelease is the obvious wrong
- * reading.
- *
- * @param version - The version text to read.
- * @returns The major, minor and prerelease flag, or `undefined` for any other shape.
- */
 const versionCore = (version: string): VersionCore | undefined => {
   if (!isVersionText(version)) return undefined;
   const withoutBuild = O.match(Str.indexOf("+")(version), {
@@ -394,23 +368,9 @@ export class TrackingTag extends S.Class<TrackingTag, { readonly brand: unique s
   );
 }
 
-/**
- * The package prefix a tag carries: `""` for a single-style tag.
- *
- * @param packageName - The package a scoped tag names, or `undefined` for a single-style tag.
- * @returns The package name and the `<name>@` text to prefix.
- */
 const tagPrefix = (packageName: string | undefined): { readonly packageName?: string; readonly text: string } =>
   packageName === undefined ? { text: "" } : { packageName, text: `${packageName}@` };
 
-/**
- * A tracking alias `<prefix>v<suffix>` with its fields.
- *
- * @param prefix - The package prefix, from `tagPrefix`.
- * @param suffix - The version text after the `v`.
- * @param fields - The alias's major and optional minor.
- * @returns The tracking alias.
- */
 const trackingTagOf = (
   prefix: { readonly packageName?: string; readonly text: string },
   suffix: string,
@@ -422,15 +382,6 @@ const trackingTagOf = (
     ...fields,
   });
 
-/**
- * The `X.Y.Z` core a version derives aliases from: none for a version that is
- * not `X.Y.Z`, whose segments no alias can carry, or that is a prerelease the
- * caller did not opt into.
- *
- * @param version - The version being released.
- * @param includePrerelease - Whether a prerelease may derive aliases.
- * @returns The core to derive aliases from, or none.
- */
 const aliasableCore = (version: string, includePrerelease: boolean): O.Option<VersionCore> =>
   O.filter(
     O.fromUndefinedOr(versionCore(version)),
@@ -440,21 +391,14 @@ const aliasableCore = (version: string, includePrerelease: boolean): O.Option<Ve
       (includePrerelease || !core.prerelease)
   );
 
-/**
- * A tag string split into an optional package prefix and the version part.
- *
- * @param tag - Any tag string.
- * @returns The optional package name and the version part, or `undefined` for a scope with no version.
- */
 const splitTag = (tag: string): { readonly packageName?: string; readonly rest: string } | undefined => {
   const found = Str.lastIndexOf("@")(tag);
-  // No `@` at all: the whole string is the version part (a single-style tag).
   if (O.isNone(found)) return { rest: tag };
   const at = found.value;
-  // A leading `@` with nothing after it is a scope with no version.
   const packageName = Str.slice(0, at)(tag);
   const rest = Str.slice(at + 1)(tag);
-  if (packageName === "" || rest === "") return undefined;
+  const scopeWithoutVersion = packageName === "" || rest === "";
+  if (scopeWithoutVersion) return undefined;
   return { packageName, rest };
 };
 
@@ -499,7 +443,6 @@ export const classifyTag = (tag: string): TagClassification => {
   const hasV = Str.startsWith("v")(rest);
   const withoutV = hasV ? Str.slice(1)(rest) : rest;
 
-  // Three segments (plus optional prerelease/build) is a version.
   if (versionCore(withoutV) !== undefined) {
     return ReleaseTagClassification.make({
       tag: ReleaseTag.make({
@@ -511,7 +454,6 @@ export const classifyTag = (tag: string): TagClassification => {
     });
   }
 
-  // One or two numeric segments behind a `v` is a tracking alias.
   if (!hasV) return UNRECOGNIZED;
   return O.match(aliasFields(withoutV), {
     onNone: () => UNRECOGNIZED,
@@ -522,13 +464,6 @@ export const classifyTag = (tag: string): TagClassification => {
   });
 };
 
-/**
- * The fields of a `v`-less alias body: one or two numeric segments within the
- * alias bounds.
- *
- * @param alias - The alias text after its `v`.
- * @returns The alias's major and optional minor, or none.
- */
 const aliasFields = (alias: string): O.Option<{ readonly major: number; readonly minor?: number }> => {
   const segments = Str.split(alias, ".");
   if (segments.length > 2 || !A.every(segments, (segment) => NUMERIC_IDENTIFIER.test(segment))) return O.none();
@@ -789,7 +724,6 @@ export declare namespace UnrecognizedTagClassification {
   export type Encoded = typeof UnrecognizedTagClassification.Encoded;
 }
 
-/** The one shared `unrecognized` answer, admitted once. */
 const UNRECOGNIZED: UnrecognizedTagClassification = UnrecognizedTagClassification.make({});
 
 /**

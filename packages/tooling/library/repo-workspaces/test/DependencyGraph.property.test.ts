@@ -35,8 +35,11 @@ it.effect.prop(
     Effect.gen(function* () {
       const text = graph.toMermaid();
       assert.strictEqual(graph.toMermaid(), text);
-      // README: node and edge ordering must be independent of declaration order.
-      assert.strictEqual(DependencyGraph.make({ packages: A.reverse(graph.packages) }).toMermaid(), text);
+      assert.strictEqual(
+        DependencyGraph.make({ packages: A.reverse(graph.packages) }).toMermaid(),
+        text,
+        "node and edge ordering must be independent of declaration order"
+      );
       const argument = S.decodeEffect(DependencyGraph);
       const value2 = yield* S.encodeEffect(DependencyGraph)(graph);
       const decoded = yield* argument(value2);

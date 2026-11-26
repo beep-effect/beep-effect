@@ -6,7 +6,7 @@ import { ActivityPin } from "@beep/jsonc/ActivityStart";
 import { GroundedExtraction, LangExtractDiagnostics, LangExtractResult } from "@beep/langextract/Extraction";
 import { handoff, startExtraction } from "@beep/langextract/Handoff";
 import { buildPrompt, LangExtractService } from "@beep/langextract/Service";
-import { EntityNode } from "@beep/nlp/Graph/Schema";
+import { EntityNode } from "@beep/nlp-processing/Graph/Schema";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";

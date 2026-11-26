@@ -18,7 +18,19 @@ description: >-
 # step ends within that budget (plus one 15 s kill grace) whatever the
 # attempt count. A failed attempt waits and starts again from update; after
 # the last attempt, or when the budget cannot fit another one, the step fails
-# with an error annotation. Requires the beep CI binary on PATH
+# with an error annotation. With `deb-cache: "true"` the downloaded .deb
+# archives also persist across jobs through the Actions cache, keyed on the
+# runner image and the package list: a hit copies them into apt's archive
+# directory before the first attempt, so install fetches only what the index
+# moved past, and a miss saves them after a successful install. The save keeps
+# only archives the image did not already ship, after `apt-get autoclean`
+# drops versions the current index no longer offers.
+# APT::Keep-Downloaded-Packages keeps apt's own post-install cleanup off; an
+# image hook that still empties the archive directory shows as a warning
+# that no archives were kept. apt checks
+# every archive against the signed index's SHA256 before using it, so a stale
+# or foreign cache entry is downloaded again, never installed. Requires the
+# beep CI binary on PATH
 # (./.github/actions/fetch-beep-ci) for `beep ci prune-apt`.
 
 inputs:
@@ -45,6 +57,12 @@ inputs:
     description: Wall-clock budget for every attempt and pause together.
     required: false
     default: "1500"
+  deb-cache:
+    description: >-
+      Restore downloaded .deb archives from the Actions cache before the first
+      attempt, and save them after a successful install that missed it.
+    required: false
+    default: "false"
   fallback-attempt:
     description: >-
       First attempt that uses http://archive.ubuntu.com/ubuntu instead of the
@@ -55,6 +73,34 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Resolve apt deb cache key
+      id: deb-cache-key
+      if: inputs.deb-cache == 'true'
+      shell: bash
+      env:
+        APT_INSTALL_PACKAGES: ${{ inputs.packages }}
+        APT_INSTALL_NO_RECOMMENDS: ${{ inputs.no-install-recommends }}
+      run: |
+        set -euo pipefail
+        read -r -d '' -a packages <<< "$APT_INSTALL_PACKAGES" || true
+        digest="$(printf '%s\n' "no-install-recommends=${APT_INSTALL_NO_RECOMMENDS}" "${packages[@]}" | LC_ALL=C sort | sha256sum | cut -c1-16)"
+        image_os="${ImageOS:-$(. /etc/os-release && printf '%s%s' "$ID" "$VERSION_ID")}"
+        prefix="apt-debs-v1-${image_os}-${RUNNER_ARCH}-${digest}-"
+        {
+          echo "prefix=${prefix}"
+          echo "key=${prefix}${ImageVersion:-unversioned}"
+          echo "path=${RUNNER_TEMP}/apt-install-debs"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Restore apt deb cache
+      id: deb-cache
+      if: inputs.deb-cache == 'true'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.deb-cache-key.outputs.path }}
+        key: ${{ steps.deb-cache-key.outputs.key }}
+        restore-keys: ${{ steps.deb-cache-key.outputs.prefix }}
+
     - name: Install apt packages with retries
       shell: bash
       env:
@@ -65,6 +111,7 @@ runs:
         APT_INSTALL_TIMEOUT_SECONDS: ${{ inputs.install-timeout-seconds }}
         APT_INSTALL_BUDGET_SECONDS: ${{ inputs.budget-seconds }}
         APT_INSTALL_FALLBACK_ATTEMPT: ${{ inputs.fallback-attempt }}
+        APT_INSTALL_DEB_CACHE_DIR: ${{ inputs.deb-cache == 'true' && steps.deb-cache-key.outputs.path || '' }}
       run: |
         set -euo pipefail
         # -d '' reads every line, so a block-scalar package list works too.
@@ -98,9 +145,10 @@ runs:
         # mirror stalls, lock waits, or the complete operation.
         apt_options=(
           -o Acquire::Retries=3
-          -o Acquire::http::Timeout=20
-          -o Acquire::https::Timeout=20
+          -o Acquire::http::Timeout=10
+          -o Acquire::https::Timeout=10
           -o DPkg::Lock::Timeout=30
+          -o APT::Keep-Downloaded-Packages=true
         )
         deadline=$(( SECONDS + APT_INSTALL_BUDGET_SECONDS ))
         bounded() {
@@ -139,12 +187,51 @@ runs:
             "${sources[@]}"
           echo "::warning::apt-install: attempt ${attempt} of ${APT_INSTALL_ATTEMPTS} falls back from the regional mirror to ${fallback_mirror} (${sources[*]})."
         }
+        deb_cache="${APT_INSTALL_DEB_CACHE_DIR:-}"
+        archives=""
+        declare -A preexisting=()
+        shopt -s nullglob
+        if [[ -n "$deb_cache" ]]; then
+          eval "$(apt-config shell archives Dir::Cache::archives/d)"
+          mkdir -p "$deb_cache"
+          for deb in "${archives%/}"/*.deb; do
+            preexisting["${deb##*/}"]=1
+          done
+          cached=("$deb_cache"/*.deb)
+          if (( ${#cached[@]} > 0 )); then
+            "${privilege[@]}" cp -- "${cached[@]}" "$archives"
+          fi
+          echo "apt-install: restored ${#cached[@]} cached .deb archives into ${archives}."
+        fi
+        keep_debs() {
+          if [[ -z "$deb_cache" ]]; then
+            return 0
+          fi
+          if ! bounded 120 apt-get "${apt_options[@]}" autoclean; then
+            echo "::warning::apt-install: apt-get autoclean failed; the cache may keep superseded .deb archives."
+          fi
+          local fetched=() deb
+          for deb in "${archives%/}"/*.deb; do
+            if [[ -z "${preexisting["${deb##*/}"]:-}" ]]; then
+              fetched+=("$deb")
+            fi
+          done
+          rm -f -- "$deb_cache"/*.deb
+          if (( ${#fetched[@]} > 0 )); then
+            cp -- "${fetched[@]}" "$deb_cache"/
+          fi
+          if (( ${#fetched[@]} == 0 )); then
+            echo "::warning::apt-install: kept no .deb archives in ${deb_cache}; something emptied ${archives} after the install, so the saved cache entry is empty."
+          fi
+          echo "apt-install: kept ${#fetched[@]} .deb archives in ${deb_cache} for the cache."
+        }
         backoff="$APT_INSTALL_BACKOFF_SECONDS"
         for (( attempt = 1; attempt <= APT_INSTALL_ATTEMPTS; attempt++ )); do
           if (( attempt == APT_INSTALL_FALLBACK_ATTEMPT )); then
             use_fallback_mirror
           fi
           if apt_update && apt_install; then
+            keep_debs
             exit 0
           fi
           if (( attempt == APT_INSTALL_ATTEMPTS )); then
@@ -160,3 +247,10 @@ runs:
         done
         echo "::error::apt-install: apt-get update and install failed after ${APT_INSTALL_ATTEMPTS} attempts (packages: ${packages[*]})."
         exit 1
+
+    - name: Save apt deb cache
+      if: inputs.deb-cache == 'true' && steps.deb-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.deb-cache-key.outputs.path }}
+        key: ${{ steps.deb-cache-key.outputs.key }}

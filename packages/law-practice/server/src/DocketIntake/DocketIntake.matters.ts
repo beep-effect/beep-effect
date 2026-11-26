@@ -501,7 +501,7 @@ export class DocketKgBundle extends S.Opaque<DocketKgBundle, { readonly brand: u
  *
  * The directory, its `bundle.manifest.json` and `practice.duckdb` must exist,
  * the manifest must decode, and its DuckDB store format must be the one this
- * package's practice-KG code reads (`PracticeKgSchemaVersions`, `4` today);
+ * package's practice-KG code reads (`PracticeKgSchemaVersions`, `5` today);
  * otherwise this fails with a {@link DocketKgBundleError} that names the path.
  * Nothing is opened: the checks only read the manifest and look for the
  * database file.
@@ -562,7 +562,7 @@ export const openDocketKgBundle = Effect.fn("DocketMatterLookup.openBundle")(fun
  * **Details**
  *
  * Building the layer checks the bundle first: the directory, its
- * `bundle.manifest.json`, the DuckDB store format (`4`) and `practice.duckdb`
+ * `bundle.manifest.json`, the DuckDB store format (`5`) and `practice.duckdb`
  * must all be there, or the layer fails with a {@link DocketKgBundleError}
  * that names the path. The database is opened read-only, so the lookup runs
  * beside the practice-KG host and any other reader. The bundle's `kg.pglite`

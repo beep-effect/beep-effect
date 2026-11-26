@@ -40,17 +40,19 @@ const fakeHost = A.join(
     '  case "$1" in',
     "    version|logs) return 0 ;;",
     '    volume) printf "%s" "${FAKE_VOLUME_PROJECT-}" ;;',
+    '    network) [ -z "${FAKE_NO_PEER_NETWORK-}" ] ;;',
     '    container) printf "%s" "${FAKE_CONTAINER_PROJECT-}" ;;',
     '    ps) [ -n "${FAKE_PORT_HOLDER-}" ] && printf "%s\\n" "${FAKE_PORT_HOLDER}"; return 0 ;;',
-    "    inspect) printf healthy ;;",
+    '    inspect) printf "%s" "${FAKE_STATE-running}" ;;',
     '    port) printf "%s\\n" "${FAKE_PUBLISHED-}" ;;',
     "  esac",
     "}",
     'ss() { printf "%s" "${FAKE_SS-}"; }',
-    "curl() { return 0; }",
+    'curl() { [ -z "${FAKE_HEALTHZ_DOWN-}" ]; }',
+    "sleep() { return 0; }",
     "systemctl() { return 0; }",
     'tailscale() { [ "$1 $2" = "serve status" ] && printf "127.0.0.1:6006\\n"; return 0; }',
-    "export -f ssh docker ss curl systemctl tailscale",
+    "export -f ssh docker ss curl sleep systemctl tailscale",
   ],
   "\n"
 );
@@ -121,17 +123,22 @@ describe("AI metrics host step scripts", () => {
       })
     );
 
-    it.effect("prod Preflight refuses a data volume of another Compose project", () =>
+    it.effect("prod Preflight accepts an unlabelled external volume and refuses one of another Compose project", () =>
       Effect.gen(function* () {
         const config = yield* decodeConfig(configBody);
         const command = renderPreflightCommand({ config, containerName: "beep-ai-metrics-phoenix", kind: "prod" });
         const matching = yield* runStep(command, { FAKE_VOLUME_PROJECT: "beep-ai-metrics-dankserver" });
         expect(matching.exitCode).toBe(0);
+        const external = yield* runStep(command, { FAKE_VOLUME_PROJECT: "" });
+        expect(external.exitCode).toBe(0);
         const differing = yield* runStep(command, { FAKE_VOLUME_PROJECT: "other-project" });
         expect(differing.exitCode).toBe(1);
         expect(differing.stderr).toContain(
           'carries Compose project "other-project", expected "beep-ai-metrics-dankserver"'
         );
+        const isolated = yield* runStep(command, { FAKE_VOLUME_PROJECT: "", FAKE_NO_PEER_NETWORK: "1" });
+        expect(isolated.exitCode).toBe(1);
+        expect(isolated.stderr).toContain("peer network beep-ai-metrics-dankserver_default");
       })
     );
 
@@ -183,6 +190,24 @@ describe("AI metrics host step scripts", () => {
         const other = yield* runStep(command, { FAKE_PUBLISHED: "127.0.0.1:16007" });
         expect(other.exitCode).toBe(1);
         expect(other.stderr).toContain("is not published by container beep-ai-metrics-phoenix-dev_operator");
+      })
+    );
+
+    it.effect("Health fails when Phoenix stops running or never answers /healthz", () =>
+      Effect.gen(function* () {
+        const config = yield* decodeConfig(configBody);
+        const command = renderHealthCommand({
+          config,
+          containerName: "beep-ai-metrics-phoenix-dev_operator",
+          hostPort: 16006,
+          kind: "rehearsal",
+        });
+        const silent = yield* runStep(command, { FAKE_PUBLISHED: "127.0.0.1:16006", FAKE_HEALTHZ_DOWN: "1" });
+        expect(silent.exitCode).toBe(1);
+        expect(silent.stderr).toContain("is running and http://127.0.0.1:16006/healthz does not answer");
+        const exited = yield* runStep(command, { FAKE_PUBLISHED: "127.0.0.1:16006", FAKE_STATE: "exited" });
+        expect(exited.exitCode).toBe(1);
+        expect(exited.stderr).toContain("is exited and");
       })
     );
   });

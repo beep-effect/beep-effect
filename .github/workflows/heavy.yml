@@ -305,6 +305,32 @@ jobs:
         if: env.BEEP_CI_LANE_USES_TURBO == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error. The record's job is the name GitHub lists for
+      # this called job, `Heavy / <lane>`, so the feed lookup joins it. A pull request runs
+      # this workflow from main but the action from its own checkout, so a branch that
+      # predates the action skips both steps.
+      - name: Report gate records
+        if: always() && inputs.admitted && hashFiles('.github/actions/gate-reports/action.yml') != ''
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Heavy / ${{ env.BEEP_CI_LANE_NAME }}
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
+
+      - name: Upload gate reports and task outcomes
+        if: always() && inputs.admitted && hashFiles('.github/actions/gate-reports/action.yml') != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -318,8 +344,8 @@ jobs:
         if: always() && inputs.admitted
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   check:
@@ -587,9 +613,9 @@ jobs:
         run: |
           set -euo pipefail
           # The official Zig release tarball and the reviewed cargo-zigbuild wheel, each
-          # pinned (URL, sha256, version) in infra/r2-cache/policy-build-tools.txt and
+          # pinned (URL, sha256, version) in packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt and
           # verified against its sha256 before extraction. No Python interpreter is involved.
-          pins=infra/r2-cache/policy-build-tools.txt
+          pins=packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt
           pin() {
             local value
             value="$(sed -n "s/^$1=//p" "$pins")"
@@ -627,9 +653,9 @@ jobs:
           umask 077
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git diff --quiet HEAD
-          infra/r2-cache/policy.sh cargo-build-musl
+          packages/tooling/infra/turbo-cache/r2-pilot/policy.sh cargo-build-musl
           # Recheck the entire reviewed upstream patch after compilation too.
-          infra/r2-cache/policy.sh prepare
+          packages/tooling/infra/turbo-cache/r2-pilot/policy.sh prepare
           candidate="$CARGO_TARGET_DIR/x86_64-unknown-linux-musl/release/decay"
           test -x "$candidate"
           readelf -lW "$candidate" > "$BEEP_CACHE_PRODUCER_BUILD_ROOT/program-headers.txt"
@@ -653,8 +679,8 @@ jobs:
           chmod 0500 "$binary"
           # Every value is captured by its own assignment, so any failing command fails the step.
           inputs='{}'
-          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
-            infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
+          for input in packages/tooling/infra/turbo-cache/r2-pilot/policy.sh packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt \
+            packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.patch packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.json; do
             digest="$(sha "$input")"
             inputs="$(jq -c --arg path "$input" --arg sha256 "$digest" '. + {($path): $sha256}' <<< "$inputs")"
           done
@@ -680,7 +706,7 @@ jobs:
           jq -n -a --arg repository "$GITHUB_REPOSITORY" --arg sourceCommit "$GITHUB_SHA" \
             --arg workflowRef "$GITHUB_WORKFLOW_REF" --arg workflowCommit "$GITHUB_WORKFLOW_SHA" \
             --arg runId "$GITHUB_RUN_ID" --arg runAttempt "$GITHUB_RUN_ATTEMPT" \
-            --slurpfile pins infra/r2-cache/patches/4.0.20-signed-policy.json \
+            --slurpfile pins packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.json \
             --argjson size "$size" --arg binarySha256 "$binary_sha256" --argjson sourceInputs "$inputs" \
             --argjson toolExecutables "$executables" --argjson tools "$versions" '
             $pins[0] as $pin | if ($pin | has("upstreamCommit") and has("patchSha256")) then . else error("missing pins") end |
@@ -838,8 +864,8 @@ jobs:
             '.binary == {file: "decay", bytes: $bytes, sha256: $sha256}' "$manifest" > /dev/null ||
             fail 'Candidate manifest does not describe the selected executable.'
           inputs='{}'
-          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
-            infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
+          for input in packages/tooling/infra/turbo-cache/r2-pilot/policy.sh packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt \
+            packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.patch packages/tooling/infra/turbo-cache/r2-pilot/patches/4.0.20-signed-policy.json; do
             input_sha256="$(sha "$input")"
             inputs="$(jq -c --arg path "$input" --arg sha256 "$input_sha256" '. + {($path): $sha256}' <<< "$inputs")"
           done

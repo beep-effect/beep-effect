@@ -16,6 +16,7 @@ import {
   runPracticeKgClaimsBatch,
   writePracticeKgClaimsCarry,
 } from "@beep/law-practice-server";
+import { MatterWallLive } from "@beep/law-practice-server/MatterAuthority";
 import { makePracticeKgPgliteLayer } from "@beep/law-practice-server/PracticeKgHost";
 import { runMcpbEntrypoint } from "@beep/mcpb-kit";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -63,7 +64,11 @@ const carryClaims = Effect.fnUntraced(function* (sourceBundle: string, destinati
 const extractClaims = Effect.fnUntraced(function* (inputsDir: string, destinationBundle: string) {
   const path = yield* Path.Path;
   const claimsLayer = Layer.mergeAll(
-    LawPracticeServerLive.pipe(Layer.provide(AnthropicLanguageModelLive), Layer.provide(BunCrypto.layer)),
+    LawPracticeServerLive.pipe(
+      Layer.provide(AnthropicLanguageModelLive),
+      Layer.provide(BunCrypto.layer),
+      Layer.provide(MatterWallLive)
+    ),
     makePracticeKgPgliteLayer(path.join(destinationBundle, "kg.pglite")),
     BunCrypto.layer
   );

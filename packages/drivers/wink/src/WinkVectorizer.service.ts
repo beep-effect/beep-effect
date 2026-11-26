@@ -6,7 +6,7 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { BagOfWords, DefaultBM25Config, DocumentVector, TermFrequency } from "@beep/nlp/Core/Vectorization";
+import { BagOfWords, DefaultBM25Config, DocumentVector, TermFrequency } from "@beep/nlp-processing/Core/Vectorization";
 import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as Bool from "effect/Boolean";
@@ -25,8 +25,8 @@ import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { WinkStringArray } from "./Wink.models.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow } from "./WinkObservability.ts";
-import type { Document, DocumentId } from "@beep/nlp/Core/Document";
-import type { BM25Config } from "@beep/nlp/Core/Vectorization";
+import type { Document, DocumentId } from "@beep/nlp-processing/Core/Document";
+import type { BM25Config } from "@beep/nlp-processing/Core/Vectorization";
 import type { ItsHelpers } from "wink-nlp";
 import type { BM25VectorizerInstance, BM25VectorizerWithBowInstance } from "./internal/bm25.ts";
 
@@ -233,7 +233,7 @@ const makeWinkVectorizer = Effect.gen(function* () {
     Bool.match(document.tokenCount > 0, {
       onFalse: () => readNormalizedTokensFromWink(engine, document, its),
       onTrue: () =>
-        Effect.succeed(A.fromIterable(pipe(Chunk.toReadonlyArray(document.tokens), A.map(normalizeTokenText)))),
+        document.tokens.pipe(Chunk.toReadonlyArray, A.map(normalizeTokenText), A.fromIterable, Effect.succeed),
     });
 
   const getTerms = (vectorizer: BM25VectorizerInstance): Effect.Effect<ReadonlyArray<string>, VectorizerError> =>

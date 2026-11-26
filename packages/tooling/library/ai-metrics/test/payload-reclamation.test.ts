@@ -720,14 +720,16 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       const batch58 = yield* f.batch("2");
       yield* f.native.acceptBatch(batch58);
       const sql = yield* SqlClient.SqlClient;
-      const standaloneJournalThatNeverInstalledARetentionPolicy = sql`DROP TABLE observation_reclamation_config`;
-      yield* standaloneJournalThatNeverInstalledARetentionPolicy;
+      const dropRetentionConfig = sql`DROP TABLE observation_reclamation_config`;
+      yield* dropRetentionConfig;
       const pipe59 = yield* makePayloadReclaimer(
         f.intakeConfig,
         f.ledgerConfig,
         PayloadRetentionPolicy.make({ ...f.policy, maxDispositions: 1 })
       ).pipe(Effect.flip);
-      expect(pipe59).toMatchObject({ reason: "capacity" });
+      expect(pipe59, "a standalone journal that never installed a retention policy").toMatchObject({
+        reason: "capacity",
+      });
       expect((yield* f.native.stats).pages).toBe(2);
       const value60 = yield* sql`SELECT name FROM sqlite_master WHERE name='observation_reclamation_config'`;
       expect(value60).toHaveLength(0);

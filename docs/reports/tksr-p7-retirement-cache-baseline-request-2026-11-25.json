@@ -1,0 +1,33 @@
+{
+  "previous": {
+    "//": "8bc66bed8ece8499e656870a1858a13f04e18ef46b48182029b779519f4a44c3",
+    "@beep/identity": "672b1df72f70950c1c3b5886863385d32944cda34b30dd363a1754812f3061e8",
+    "@beep/nlp": "b30e146c4db331f448dc1877545d3f99689e3b00992bae2e04542f1cd0864bd4",
+    "@beep/nlp-mcp": "64de9b07b25d4b3457be5c30d7271837cc4abb58c6429b6fd3e6cec0e8eeb1e0",
+    "@beep/nlp-processing": "3d452ee4acea5cbca52a05ff7257fffdba174517c72ab4efdbe7bf736439530e",
+    "@beep/repo-cli": "b848f214c49127072e5ad3b8047aadf2049e2d99bccd24e0c6d11f18198ab843",
+    "@beep/repo-cli-kit": "f257fc0bda3fdcbd88199ce50271a37e08c4b4d3ee7c05885190b815d5d7a166",
+    "@beep/schema-org": "76bdb8ea413398358c8ba3689b1a44669ba9e6063f83093479974b1446bf36ef",
+    "@beep/wink": "5d588e625c973823eb528a866e3e3b65cd827a28dba1fe7981a9c70a29d5f0c5"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
+    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
+      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/identity",
+    "@beep/nlp-mcp",
+    "@beep/nlp-processing",
+    "@beep/repo-cli",
+    "@beep/repo-cli-kit",
+    "@beep/wink"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

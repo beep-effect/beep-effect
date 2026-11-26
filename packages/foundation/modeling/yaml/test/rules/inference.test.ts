@@ -1,10 +1,3 @@
-// Per-rule config inference (#345), through the shared harness's
-// testRuleInference runner: unanimous corpus → exact option, conflicting
-// corpus → strict error naming dimension/spellings/positions, lenient
-// dominant pick, unobserved → defaults — plus the honesty pins: the policy
-// rules carry NO infer hook, and the floor-only rules never fabricate an
-// option from what they measured.
-
 import { assert, describe, it } from "@effect/vitest";
 import { builtin, testRuleInference } from "./harness.ts";
 
@@ -21,10 +14,10 @@ describe("config inference (#345)", () => {
       strict: { kind: "options", options: { quoteType: "single" } },
     },
     {
-      name: "mixed quote styles conflict under strict, naming both spellings",
+      name: "mixed quote styles conflict under strict, naming both spellings; a 1-1 lenient tie breaks to canonical value order",
       inputs: ["a: \"x\"\nb: 'y'\n"],
       strict: { kind: "conflict", dimension: "quoteType", values: ["double", "single"] },
-      lenient: { quoteType: "double" }, // 1-1 tie breaks to canonical value order
+      lenient: { quoteType: "double" },
     },
     {
       name: "the dominant style wins under lenient",
@@ -66,10 +59,10 @@ describe("config inference (#345)", () => {
       strict: { kind: "options", options: { indentSequences: false } },
     },
     {
-      name: "mixed indent units conflict under strict",
+      name: "mixed indent units conflict under strict; a 1-1 lenient tie breaks to canonical value order",
       inputs: ["a:\n  b: 1\n", "c:\n    d: 2\n"],
       strict: { kind: "conflict", dimension: "spaces", values: [2, 4] },
-      lenient: { spaces: 2 }, // 1-1 tie breaks to canonical value order
+      lenient: { spaces: 2 },
     },
     {
       name: "the dominant unit wins under lenient",
@@ -96,16 +89,13 @@ describe("config inference (#345)", () => {
       strict: { kind: "options", options: { present: false } },
     },
     {
-      name: "a mixed corpus conflicts under strict",
+      name: "a mixed corpus conflicts under strict; a 1-1 lenient tie breaks to canonical value order",
       inputs: ["---\na: 1\n", "b: 2\n"],
       strict: { kind: "conflict", dimension: "present", values: [true, false] },
-      lenient: { present: false }, // 1-1 tie breaks to canonical value order
+      lenient: { present: false },
     },
     {
-      name: "a directive-headed unmarked stream observes nothing — the directive MANDATES the marker",
-      // `%YAML 1.2` without `---` is malformed input, not evidence of the
-      // no-marker style: voting `present: false` here would infer a config
-      // that forbids a marker the stream requires.
+      name: "a directive-headed unmarked stream is malformed, not no-marker evidence: it observes nothing, the directive MANDATES ---",
       inputs: ["%YAML 1.2\na: 1\n"],
       strict: { kind: "none" },
     },
@@ -169,8 +159,6 @@ describe("config inference (#345)", () => {
     },
   ]);
 
-  // Floor-only rules: the evidence carries what the corpus PROVES, and the
-  // resolvers never fabricate an option from it — default-driven under both.
   testRuleInference(builtin("line-length"), [
     {
       name: "the longest line is a floor, never an inferred max",
@@ -190,10 +178,14 @@ describe("config inference (#345)", () => {
   ]);
 
   it("the policy rules carry no infer hook — default-driven by construction", () => {
-    // truthy and key-duplicates: their only evidence is violations, so
-    // nothing about a clean corpus reveals what the policy should be.
-    assert.isUndefined(builtin("truthy").infer);
-    assert.isUndefined(builtin("key-duplicates").infer);
+    assert.isUndefined(
+      builtin("truthy").infer,
+      "truthy's only evidence is violations, so nothing about a clean corpus reveals what the policy should be"
+    );
+    assert.isUndefined(
+      builtin("key-duplicates").infer,
+      "key-duplicates' only evidence is violations, so nothing about a clean corpus reveals what the policy should be"
+    );
     assert.isUndefined(builtin("parse-validity").infer);
     assert.isUndefined(builtin("trailing-spaces").infer);
     assert.isUndefined(builtin("eof-newline").infer);

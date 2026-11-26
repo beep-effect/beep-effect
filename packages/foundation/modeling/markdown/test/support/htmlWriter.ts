@@ -44,8 +44,6 @@ import type {
 } from "@beep/markdown/MarkdownNode";
 import type { DocumentChild } from "./tree.ts";
 
-// --- escaping ---------------------------------------------------------------
-
 const reXmlSpecial = /[&<>"]/g;
 
 const XML_ESCAPES: Readonly<Record<string, string>> = Object.freeze({
@@ -63,17 +61,8 @@ const replaceUnsafeChar = (s: string): string => XML_ESCAPES[s] ?? s;
  */
 export const escapeXml = (s: string): string => BStr.replaceAllWith(s, reXmlSpecial, replaceUnsafeChar);
 
-// --- URL normalization ------------------------------------------------------
-
-// mdurl@2.0.0 `encode`, inlined. commonmark.js applies this to link and image
-// destinations, so a URL reaches its renderer already percent-encoded.
-//
-// THIS WRITER APPLIES IT AT RENDER TIME INSTEAD. mdast defines `url` as the
-// decoded destination (which is what `mdast-util-to-hast` assumes, normalizing
-// on the way out), and keeping the node faithful to mdast matters more than
-// matching commonmark.js's internal staging. The parser must therefore store
-// the UNESCAPED, UN-PERCENT-ENCODED destination; this is the only place the
-// encoding happens.
+// Ported from mdurl@2.0.0 encode (MIT).
+// decision: html-writer-departures-from-commonmark-js
 const ENCODE_DEFAULT_CHARS = ";/?:@&=+$,-_.!~*'()#";
 
 const ASCII_ALPHANUMERIC = /^[0-9a-z]$/i;
@@ -83,7 +72,6 @@ const encodeAsciiUnit = (ch: string, code: number): string =>
     ? ch
     : `%${pipe(code.toString(16), Str.toUpperCase, Str.padStart(2, "0"))}`;
 
-/** mdurl's per-character table for the 128 ASCII code units, keyed by the unit itself. */
 const ASCII_ENCODING: Readonly<Record<string, string>> = Object.freeze(
   R.fromEntries(
     A.makeBy(128, (code) => {
@@ -93,18 +81,14 @@ const ASCII_ENCODING: Readonly<Record<string, string>> = Object.freeze(
   )
 );
 
-// One token per mdurl decision, tried in mdurl's order: an already-valid
-// percent escape, a well-formed surrogate pair, a lone surrogate, then any
-// other single UTF-16 code unit. No `u` flag, so `[\s\S]` is one code unit.
 const URI_TOKEN = /%[0-9a-f]{2}|[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]|[\s\S]/gi;
 const PERCENT_ESCAPE = /^%[0-9a-f]{2}$/i;
 const LONE_SURROGATE = /^[\ud800-\udfff]$/;
+const encodedReplacementChar = "%EF%BF%BD";
 
 const encodeUriToken = (token: string): string => {
-  // An already-valid percent escape is passed through untouched.
   if (PERCENT_ESCAPE.test(token)) return token;
-  // A lone surrogate encodes as U+FFFD, never as an exception.
-  if (LONE_SURROGATE.test(token)) return "%EF%BF%BD";
+  if (LONE_SURROGATE.test(token)) return encodedReplacementChar;
   return ASCII_ENCODING[token] ?? encodeURIComponent(token);
 };
 
@@ -120,8 +104,6 @@ export const normalizeUri = (uri: string): string => {
   }
 };
 
-// --- reference labels -------------------------------------------------------
-
 const LABEL_WHITESPACE = /[ \t\r\n]+/g;
 
 /**
@@ -136,16 +118,7 @@ const LABEL_WHITESPACE = /[ \t\r\n]+/g;
 export const normalizeLabel = (label: string): string =>
   pipe(label, Str.trim, Str.replace(LABEL_WHITESPACE, " "), Str.toLowerCase, Str.toUpperCase);
 
-/**
- * Collects every definition of one kind in the tree, keyed by normalized
- * label.
- *
- * The parser deliberately leaves references unresolved and keeps definitions
- * in the tree, so resolution is the renderer's job. First definition wins,
- * matching CommonMark's rule that an earlier definition takes precedence. A
- * hash map, not an object: link labels are attacker-controlled, and a
- * `__proto__` label must be a key, not a prototype write.
- */
+// decision: html-writer-departures-from-commonmark-js
 const collectFirstByLabel = <N extends Definition | FootnoteDefinition>(
   root: Root,
   isKind: (node: FlowContent) => node is N
@@ -162,12 +135,7 @@ const isDefinition = (node: FlowContent): node is Definition => node.type === "d
 
 const isFootnoteDefinition = (node: FlowContent): node is FootnoteDefinition => node.type === "footnoteDefinition";
 
-// --- GFM tagfilter -----------------------------------------------------------
-
-/**
- * The nine raw-HTML tag names GFM's tagfilter extension disallows, ported
- * from cmark-gfm's `extensions/tagfilter.c` blacklist.
- */
+// Ported from cmark-gfm 0.29.0.gfm.13 extensions/tagfilter.c (BSD-2-Clause).
 const TAGFILTER_TAG_NAMES = [
   "title",
   "textarea",
@@ -180,13 +148,7 @@ const TAGFILTER_TAG_NAMES = [
   "plaintext",
 ] as const;
 
-// Matches the `<` that opens a disallowed tag (optionally a closing `/tag`),
-// requiring a boundary character to follow the tag name — a space, `>`, or
-// the `/>` of a self-closing tag — exactly as `tagfilter.c`'s `is_tag` scans
-// forward from each `<` and refuses to match if the tag name runs off the
-// end of the checked span. `$` is deliberately excluded from the boundary
-// class for that reason: a tag name at the very end of the string, with
-// nothing after it, is not filtered.
+// decision: html-writer-departures-from-commonmark-js
 const TAGFILTER_RE = new RegExp(`<(/?(?:${A.join(TAGFILTER_TAG_NAMES, "|")}))(?=[ \\t\\n\\v\\f\\r>]|/>)`, "gi");
 
 /**
@@ -200,19 +162,13 @@ const TAGFILTER_RE = new RegExp(`<(/?(?:${A.join(TAGFILTER_TAG_NAMES, "|")}))(?=
  */
 export const applyTagfilter = (value: string): string => Str.replace(TAGFILTER_RE, "&lt;$1")(value);
 
-// --- the writer -------------------------------------------------------------
-
 type Attr = readonly [name: string, value: string];
 
 type WriterStep = (writer: HtmlWriter) => void;
 
 const skip: WriterStep = () => {};
 
-// Both definition kinds render to nothing at their source position. They
-// stay in the tree because this package edits markdown; a `Definition` has
-// no place in HTML at all, and a `FootnoteDefinition`'s content moves to the
-// end-of-document footnotes section instead (`renderFootnoteSection`). The
-// MDX flow nodes are constructed-only and render to nothing as well.
+// decision: html-writer-departures-from-commonmark-js
 const flowStep = Match.type<FlowContent>().pipe(
   Match.discriminatorsExhaustive("type")({
     paragraph:
@@ -236,7 +192,6 @@ const flowStep = Match.type<FlowContent>().pipe(
       (node): WriterStep =>
       (writer) =>
         writer.codeBlock(node),
-    // html_block: surrounded by newlines, emitted raw.
     html:
       (node): WriterStep =>
       (writer) =>
@@ -254,9 +209,6 @@ const flowStep = Match.type<FlowContent>().pipe(
 
 const phrasingStep = Match.type<PhrasingContent>().pipe(
   Match.discriminatorsExhaustive("type")({
-    // mdast has no softbreak node: a soft line break is a raw newline inside
-    // a text value, which is exactly what commonmark.js's default
-    // `softbreak: "\n"` emits.
     text:
       (node): WriterStep =>
       (writer) =>
@@ -266,7 +218,6 @@ const phrasingStep = Match.type<PhrasingContent>().pipe(
       (node): WriterStep =>
       (writer) =>
         writer.inlineCode(node.value),
-    // html_inline: raw, no surrounding newlines.
     html:
       (node): WriterStep =>
       (writer) =>
@@ -316,22 +267,17 @@ const REFERENCE_SUFFIX: {
   full: (label) => `[${label}]`,
 };
 
-// Frontmatter and MDX ESM heads are metadata, not flow content; both render to nothing.
 const isFlowContent = (child: DocumentChild): child is FlowContent =>
   child.type !== "frontmatter" && child.type !== "mdxjsEsm";
 
 class HtmlWriter {
   private buffer = "";
-  // `lastOut` is the whole last string written, exactly as commonmark.js
-  // tracks it, because `cr()` compares it against "\n" by identity.
+  // decision: html-writer-departures-from-commonmark-js
   private lastOut = "\n";
   private disableTags = 0;
   private readonly definitions: MutableHashMap.MutableHashMap<string, Definition>;
   private readonly footnoteDefinitions: MutableHashMap.MutableHashMap<string, FootnoteDefinition>;
   private readonly gfm: boolean;
-  // Footnote numbering state, built lazily as references are encountered
-  // during the main-body render pass — see `footnoteReference` and
-  // `renderFootnoteSection`.
   private readonly footnoteIndex = MutableHashMap.empty<string, number>();
   private readonly footnoteRefCount = MutableHashMap.empty<string, number>();
   private readonly footnoteOrder: Array<FootnoteDefinition> = [];
@@ -378,8 +324,6 @@ class HtmlWriter {
   }
 
   render(root: Root): string {
-    // Frontmatter renders to nothing — gray-matter and remark both strip
-    // it from output; the head node is metadata, not content.
     this.renderFlow(A.filter(root.children, isFlowContent));
     this.renderFootnoteSection();
     return this.buffer;
@@ -394,9 +338,7 @@ class HtmlWriter {
   }
 
   paragraph(node: Paragraph, tight: boolean): void {
-    // commonmark.js suppresses <p> when the paragraph's grandparent is a
-    // tight list. Tightness is passed down here instead of read from a
-    // parent pointer, because mdast nodes carry no parent.
+    // decision: html-writer-departures-from-commonmark-js
     if (tight) {
       this.renderPhrasing(node.children);
       return;
@@ -441,11 +383,8 @@ class HtmlWriter {
 
   list(node: List): void {
     const tagname = node.ordered === true ? "ol" : "ul";
-    // commonmark.js: `start !== null && start !== 1`.
     const attrs: ReadonlyArray<Attr> =
       node.start !== undefined && node.start !== 1 ? [["start", String(node.start)]] : [];
-    // Absent `spread` means "unknown", which mdast and this writer both
-    // read as tight — the same default commonmark.js's `listTight` carries.
     const tight = node.spread !== true;
 
     this.cr();
@@ -461,8 +400,6 @@ class HtmlWriter {
 
   private listItem(node: ListItem, tight: boolean): void {
     this.tag("li");
-    // GFM task-list marker: cmark-gfm emits it unconditionally right after
-    // `<li>`, before any child content, regardless of tight/loose.
     if (node.checked !== undefined) {
       this.lit(
         node.checked ? '<input type="checkbox" checked="" disabled="" /> ' : '<input type="checkbox" disabled="" /> '
@@ -480,8 +417,6 @@ class HtmlWriter {
   }
 
   codeBlock(node: Code): void {
-    // commonmark.js takes the first whitespace-run-delimited word of the
-    // info string; `lang` IS that word after the parser's split.
     const attrs: ReadonlyArray<Attr> =
       node.lang !== undefined && node.lang.length > 0 ? [["class", languageClass(escapeXml(node.lang))]] : [];
     this.cr();
@@ -569,9 +504,7 @@ class HtmlWriter {
   }
 
   image(url: string, title: string | undefined, alt: string): void {
-    // commonmark.js builds alt by re-rendering the image's children with
-    // tags disabled. mdast Images have no children — the parser must have
-    // computed `alt` the same way (plain text of the bracket content).
+    // decision: html-writer-departures-from-commonmark-js
     if (this.disableTags === 0) {
       this.lit(`<img src="${escapeXml(normalizeUri(url))}" alt="`);
     }
@@ -588,9 +521,6 @@ class HtmlWriter {
 
   linkReference(node: LinkReference): void {
     O.match(MutableHashMap.get(this.definitions, normalizeLabel(node.identifier)), {
-      // No matching definition: CommonMark leaves the source text alone,
-      // so the brackets come back as literal text with the bracket
-      // content still rendered as inlines.
       onNone: () => {
         this.out("[");
         this.renderPhrasing(node.children);
@@ -611,28 +541,10 @@ class HtmlWriter {
     });
   }
 
-  // --- footnotes ------------------------------------------------------------
-  //
-  // Numbering mirrors cmark-gfm's `process_footnotes` (src/blocks.c): a
-  // footnote is assigned its number the first time a reference to it is
-  // encountered, in document order; every later reference to the same
-  // footnote reuses that number but gets its own `fnref-*` id, suffixed by
-  // how many times the footnote has been referenced so far. Because this
-  // writer already visits the tree in document order to produce the main
-  // body, that numbering falls out of a single pass — `footnoteReference`
-  // assigns as it goes, `footnoteOrder` accumulates the resolved
-  // definitions in assignment order, and the section at the end of the
-  // document (`renderFootnoteSection`) is rendered only once the main body
-  // is done, by which point every definition's final reference count is
-  // known. cmark-gfm instead does a dedicated pass before rendering and
-  // physically relocates the definition nodes; a `FootnoteDefinition`
-  // renders to nothing at its own tree position here (see `flowStep`)
-  // for the same reason `Definition` does.
-
+  // decision: html-writer-departures-from-commonmark-js
   footnoteReference(node: FootnoteReference): void {
     const key = normalizeLabel(node.identifier);
     O.match(MutableHashMap.get(this.footnoteDefinitions, key), {
-      // No matching definition: cmark-gfm leaves the source text alone.
       onNone: () => this.out(`[^${node.label ?? node.identifier}]`),
       onSome: (definition) => this.resolvedFootnoteReference(key, definition),
     });
@@ -665,12 +577,7 @@ class HtmlWriter {
     if (this.footnoteOrder.length === 0) {
       return;
     }
-    // Each segment gets its own `lit()` + `cr()` rather than one call with
-    // embedded newlines: `cr()` recognizes "already at a fresh line" by
-    // comparing the WHOLE last-written string against `"\n"`, so a `lit()`
-    // carrying an internal newline (e.g. `"<section>\n<ol>\n"`) would leave
-    // `lastOut` holding that whole string — never `"\n"` alone — and the
-    // next `cr()` would print a spurious blank line.
+    // decision: html-writer-departures-from-commonmark-js
     this.cr();
     this.lit('<section class="footnotes" data-footnotes>');
     this.cr();

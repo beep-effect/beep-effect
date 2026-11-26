@@ -1,22 +1,3 @@
-// Unit and property coverage for the frontmatter schema composition seam
-// (P3 Task 3): `MarkdownFrontmatter.schema` and the `MarkdownDocument`
-// frontmatter accessor.
-//
-// Naming note: the design doc's indicative spelling was `Frontmatter.schema`,
-// but `Frontmatter` names the mdast-shaped capture node class (the Task 1
-// co-location ruling), so the seam facade follows the package's
-// Markdown-prefix convention instead — `MarkdownFrontmatter.schema`.
-//
-// The round-trip property generates data, stringifies it through each format
-// package's public stringify surface (`Yaml.stringify`, `Toml.stringify`,
-// `Jsonc.stringify`), wraps it in fences, parses with capture on and decodes
-// back through the seam. Generated
-// strings are constrained newline-free: a multi-line string could legally
-// place a bare fence-closer at column zero inside the block (toml multi-line
-// basic strings do exactly that), which the capture scanner would rightly
-// treat as the closing fence — that is fence semantics, not a codec defect,
-// so the property excludes it.
-
 import { fcRuns } from "@beep/fc-runs";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { FrontmatterMissingError, FrontmatterValidationError, MarkdownFrontmatter } from "@beep/markdown/Frontmatter";
@@ -73,8 +54,7 @@ describe("MarkdownFrontmatter.schema", () => {
       const error = yield* Effect.flip(MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(document));
       assert.strictEqual(error._tag, "FrontmatterMissingError");
       assert.instanceOf(error, FrontmatterMissingError);
-      // Capture was ON here — the source genuinely carries no block.
-      assert.strictEqual(error.reason, "absent");
+      assert.strictEqual(error.reason, "absent", "capture was on, so the source genuinely carries no block");
     })
   );
 
@@ -84,21 +64,24 @@ describe("MarkdownFrontmatter.schema", () => {
       const error = yield* Effect.flip(MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(document));
       assert.strictEqual(error._tag, "FrontmatterMissingError");
       assert.instanceOf(error, FrontmatterMissingError);
-      // The distinction this reason exists for: the source visibly opens
-      // with a frontmatter block, but the parse ran with the toggle off.
-      assert.strictEqual(error.reason, "captureDisabled");
+      assert.strictEqual(
+        error.reason,
+        "captureDisabled",
+        "the source visibly opens with a frontmatter block, but the parse ran with the toggle off"
+      );
     })
   );
 
   it.effect("an unclosed fence is not frontmatter, so the reason is absent", () =>
     Effect.gen(function* () {
-      // An opening fence with no close IS a thematic break plus content —
-      // parsing with capture ON would capture nothing either, so
-      // captureDisabled would be a lie here.
       const document = yield* MarkdownDocument.parse("---\ntitle: Hello\n\n# Body\n");
       const error = yield* Effect.flip(MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(document));
       assert.instanceOf(error, FrontmatterMissingError);
-      assert.strictEqual(error.reason, "absent");
+      assert.strictEqual(
+        error.reason,
+        "absent",
+        "an unclosed opening fence is a thematic break plus content: capture on would capture nothing, so captureDisabled would lie"
+      );
     })
   );
 
@@ -124,8 +107,7 @@ describe("MarkdownFrontmatter.schema", () => {
       const error = yield* Effect.flip(MarkdownFrontmatter.schema(Meta, YamlFrontmatter)(document));
       assert.strictEqual(error._tag, "FrontmatterValidationError");
       assert.instanceOf(error, FrontmatterValidationError);
-      // The issue is the structured v4 issue tree, never a string.
-      assert.isObject(error.issue);
+      assert.isObject(error.issue, "the structured v4 issue tree, never a string");
       const issue = error.issue;
       if (!P.isObject(issue)) assert.fail("expected a structured issue");
       assert.isString(issue._tag);
@@ -141,9 +123,11 @@ describe("MarkdownDocument.frontmatter", () => {
       assert.isDefined(node);
       assert.strictEqual(node?.type, "frontmatter");
       assert.strictEqual(node?.format, "yaml");
-      // Task 1 pinned capture semantics: the value carries the raw text
-      // between the fences without the final line terminator.
-      assert.strictEqual(node?.value, "title: Hello");
+      assert.strictEqual(
+        node?.value,
+        "title: Hello",
+        "the value is the raw text between the fences without the final line terminator"
+      );
       assert.strictEqual(node, document.root.children[0]);
     })
   );
@@ -167,10 +151,11 @@ describe("MarkdownDocument.hasFrontmatterBlock", () => {
   it.effect("is true for a fenced document parsed with capture off — the disambiguating signal", () =>
     Effect.gen(function* () {
       const document = yield* MarkdownDocument.parse("---\ntitle: Hello\n---\n\nbody\n");
-      // The pair the accessor alone cannot distinguish: no capture node,
-      // but the source structurally opens with a frontmatter block.
       assert.isUndefined(document.frontmatter);
-      assert.isTrue(document.hasFrontmatterBlock);
+      assert.isTrue(
+        document.hasFrontmatterBlock,
+        "the pair the accessor alone cannot tell apart: no capture node, yet the source opens with a block"
+      );
     })
   );
 
@@ -214,15 +199,14 @@ describe("MarkdownDocument.hasFrontmatterBlock", () => {
 });
 
 describe("frontmatter round-trip property", () => {
-  // Newline-free strings only — see the file header for why. The count stays
-  // in the 32-bit range every frontmatter codec represents exactly.
-  const Scalar = S.String.check(S.makeFilter((s) => !Str.includes("\n")(s) && !Str.includes("\r")(s)));
+  const recoversExactly =
+    "strings are newline-free: a multi-line string may put a bare fence-closer at column zero, as toml multi-line basic strings do, which the capture rightly reads as the closing fence; counts stay in the 32-bit range every codec represents exactly";
+  const NewlineFreeScalar = S.String.check(S.makeFilter((s) => !Str.includes("\n")(s) && !Str.includes("\r")(s)));
   const MetaArb = S.Struct({
-    title: Scalar,
+    title: NewlineFreeScalar,
     count: S.Int.check(S.isBetween({ minimum: -(2 ** 31), maximum: 2 ** 31 - 1 })),
   });
 
-  /** Fence a stringified block, normalizing a missing trailing newline. */
   const fenced = (open: string, block: string, close: string): string =>
     `${open}\n${block}${Str.endsWith("\n")(block) ? "" : "\n"}${close}\n\nbody\n`;
 
@@ -236,7 +220,7 @@ describe("frontmatter round-trip property", () => {
       Effect.gen(function* () {
         const block = yield* Yaml.stringify(data);
         const decodedVia = yield* decodeVia(fenced("---", block, "---"), YamlFrontmatter);
-        assert.deepStrictEqual(decodedVia, data);
+        assert.deepStrictEqual(decodedVia, data, recoversExactly);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -248,7 +232,7 @@ describe("frontmatter round-trip property", () => {
       Effect.gen(function* () {
         const block = yield* Toml.stringify(data);
         const decodedVia1 = yield* decodeVia(fenced("+++", block, "+++"), TomlFrontmatter);
-        assert.deepStrictEqual(decodedVia1, data);
+        assert.deepStrictEqual(decodedVia1, data, recoversExactly);
       }),
     { arbitrary: fcRuns(60) }
   );
@@ -260,7 +244,7 @@ describe("frontmatter round-trip property", () => {
       Effect.gen(function* () {
         const block = yield* Jsonc.stringify(data);
         const decodedVia2 = yield* decodeVia(fenced("---json", block, "---"), JsonFrontmatter);
-        assert.deepStrictEqual(decodedVia2, data);
+        assert.deepStrictEqual(decodedVia2, data, recoversExactly);
       }),
     { arbitrary: fcRuns(60) }
   );

@@ -67,7 +67,9 @@ const composeProjectTemplate = '{{ with index .Config.Labels "com.docker.compose
 
 const volumeProjectTemplate = '{{ with index .Labels "com.docker.compose.project" }}{{ . }}{{ end }}';
 
-const healthStatusTemplate = "{{ if .State.Health }}{{ .State.Health.Status }}{{ else }}none{{ end }}";
+const containerStateTemplate = "{{ .State.Status }}";
+
+const phoenixPeerNetwork = (config: AiMetricsHostConfig): string => `${config.legacyCompose.composeProject}_default`;
 
 const tailnetPortStatePath = (config: AiMetricsHostConfig): string =>
   `${config.legacyCompose.configRoot}/phoenix-tailnet-https-port`;
@@ -101,9 +103,15 @@ export const phoenixPublicUrl = (config: AiMetricsHostConfig): string =>
 
 /**
  * Preflight on the host: the tools every later step needs, a reachable Docker
- * engine and tailnet; for `prod`, that the data volume exists and carries the
- * configured Compose project; for a rehearsal, that its loopback port is free
- * or already published by this stage's own container.
+ * engine and tailnet; for `prod`, that the data volume exists and belongs to no
+ * Compose project other than the configured one; for a rehearsal, that its
+ * loopback port is free or already published by this stage's own container.
+ *
+ * **Gotchas**
+ *
+ * The live Compose file declares the data volume `external: true`, and an
+ * external volume carries no `com.docker.compose.project` label. An unlabelled
+ * volume passes; a label naming another project refuses.
  *
  * **Example** (Render the prod preflight)
  * ```ts
@@ -146,7 +154,9 @@ export const renderPreflightCommand = ({
           `volume=${shellQuote(phoenixDataVolume(config))}`,
           `expected_project=${shellQuote(config.legacyCompose.composeProject)}`,
           `volume_project="$(docker volume inspect -f ${shellQuote(volumeProjectTemplate)} "\${volume}")"`,
-          '[ "${volume_project}" = "${expected_project}" ] || { printf \'data volume %s carries Compose project "%s", expected "%s"; refusing\\n\' "${volume}" "${volume_project}" "${expected_project}" >&2; exit 1; }',
+          '[ -z "${volume_project}" ] || [ "${volume_project}" = "${expected_project}" ] || { printf \'data volume %s carries Compose project "%s", expected "%s" or none; refusing\\n\' "${volume}" "${volume_project}" "${expected_project}" >&2; exit 1; }',
+          `peer_network=${shellQuote(phoenixPeerNetwork(config))}`,
+          'docker network inspect "${peer_network}" >/dev/null || { printf \'peer network %s, which the OTLP collector reaches Phoenix on, is missing; refusing\\n\' "${peer_network}" >&2; exit 1; }',
         ],
         // One rehearsal at a time per port on the engine: the port must be free
         // or already published by this stage's own container.
@@ -265,9 +275,17 @@ export const renderTailscaleServeCommand = (config: AiMetricsHostConfig): string
   });
 
 /**
- * Health gate: the container's Docker healthcheck reports healthy, Phoenix
- * answers on loopback and, for `prod`, Tailscale Serve fronts it and the public
- * URL answers. The step's exit status is the result: a failure fails the deploy.
+ * Health gate: the container is running and answers `/healthz` on its own
+ * published loopback port and, for `prod`, Tailscale Serve fronts it and the
+ * public URL answers. The step's exit status is the result: a failure fails the
+ * deploy.
+ *
+ * **Gotchas**
+ *
+ * The Phoenix image ships no shell, and the Docker provider sets a healthcheck
+ * through `docker run --health-cmd`, which always runs in `/bin/sh`. The
+ * container therefore carries no Docker healthcheck, and this gate probes
+ * `/healthz` from the host instead.
  *
  * **Example** (Render the rehearsal health gate)
  * ```ts
@@ -305,11 +323,12 @@ export const renderHealthCommand = ({
     lines: [
       "set -euo pipefail",
       `container=${shellQuote(containerName)}`,
+      `healthz=${shellQuote(`http://127.0.0.1:${hostPort}/healthz`)}`,
       "for attempt in $(seq 1 36); do",
-      `  status="$(docker inspect -f ${shellQuote(healthStatusTemplate)} "\${container}")"`,
-      '  [ "${status}" = "healthy" ] && break',
+      `  state="$(docker inspect -f ${shellQuote(containerStateTemplate)} "\${container}")"`,
+      '  [ "${state}" = "running" ] && curl -fsS --max-time 5 "${healthz}" >/dev/null 2>&1 && break',
       '  if [ "${attempt}" -eq 36 ]; then',
-      '    printf \'Phoenix container %s is %s\\n\' "${container}" "${status}" >&2',
+      '    printf \'Phoenix container %s is %s and %s does not answer\\n\' "${container}" "${state}" "${healthz}" >&2',
       '    docker logs --tail 80 "${container}" >&2 || true',
       "    exit 1",
       "  fi",
@@ -408,17 +427,17 @@ export const renderRollbackToComposeCommand = (config: AiMetricsHostConfig): str
     ],
   });
 
-const phoenixHealthcheck = (config: AiMetricsHostConfig): Docker.Container.Healthcheck => ({
-  cmd: [
-    "CMD",
-    "python3",
-    "-c",
-    `import urllib.request; urllib.request.urlopen('http://127.0.0.1:${config.phoenix.port}/healthz', timeout=5)`,
-  ],
-  interval: "30 seconds",
-  timeout: "10 seconds",
-  retries: 3,
-  startPeriod: "60 seconds",
+const phoenixStopTimeout = "2 minutes";
+
+const phoenixEnvironment = (config: AiMetricsHostConfig): Record<string, string> => ({
+  PHOENIX_WORKING_DIR: config.phoenix.dataDir,
+  PHOENIX_ENABLE_AUTH: "false",
+  PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER: "false",
+  PHOENIX_ENABLE_MCP_SERVER: "true",
+  PHOENIX_ENABLE_MCP_CODE_MODE: "false",
+  PHOENIX_DISABLE_AGENT_ASSISTANT: "true",
+  PHOENIX_ALLOWED_SANDBOX_PROVIDERS: "NONE",
+  PHOENIX_TELEMETRY_ENABLED: "false",
 });
 
 const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiMetricsHostConfig) {
@@ -454,11 +473,11 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
     image: config.phoenix.image,
     start: true,
     restart: "unless-stopped",
-    environment: { PHOENIX_WORKING_DIR: config.phoenix.dataDir },
+    environment: phoenixEnvironment(config),
     ports: [{ external: `127.0.0.1:${config.phoenix.port}`, internal: config.phoenix.port }],
     volumes: [{ hostPath: data.name, containerPath: config.phoenix.dataDir }],
-    networks: [{ name: network.name }],
-    healthcheck: phoenixHealthcheck(config),
+    networks: [{ name: network.name }, { name: phoenixPeerNetwork(config) }],
+    stopTimeout: phoenixStopTimeout,
     labels: { "beep.infra-hosts/compose-retired": Output.map(retire.hash, () => "true") },
   });
   const serve = yield* Command.Exec("TailscaleServe", {
@@ -509,11 +528,11 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
     image: config.phoenix.image,
     start: true,
     restart: "unless-stopped",
-    environment: { PHOENIX_WORKING_DIR: config.phoenix.dataDir },
+    environment: phoenixEnvironment(config),
     ports: [{ external: `127.0.0.1:${config.phoenix.rehearsalPort}`, internal: config.phoenix.port }],
     volumes: [{ hostPath: data.name, containerPath: config.phoenix.dataDir }],
     networks: [{ name: network.name }],
-    healthcheck: phoenixHealthcheck(config),
+    stopTimeout: phoenixStopTimeout,
     labels: { "beep.infra-hosts/preflight": Output.map(preflight.hash, () => "passed") },
   });
   yield* Command.Exec("Health", {

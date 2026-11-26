@@ -73,7 +73,9 @@ it.layer(GitKitOverPlatformSpawnerForIndexReads, { timeout: "30 seconds" })(
             Effect.provideService(FileSystem.FileSystem, filesystem),
             Effect.flip
           );
-          expect(failure.message).toBe(message);
+          expect(failure.message, "git ls-files never ran, overran the kit bound, or reported an exit code").toBe(
+            message
+          );
           expect(failure.cause).toBe(denied);
           const readFileString1 = yield* fs.readFileString(latestPath);
           expect(readFileString1).toBe("previous pointer\n");
@@ -141,12 +143,12 @@ it.layer(GitKitOverPlatformSpawnerForIndexReads, { timeout: "30 seconds" })(
         expect(exitCode3).toBe(0);
         const failed = (fields: { readonly kind: "failed" | "truncated"; readonly exitCode?: number }) =>
           GitCommandError.make({ ...fields, args: ["ls-files", "--stage", "-z"], cwd: root, stderr: "" });
-        const gitLsFilesNeverRanOverranKitBoundOrReportedExitCode = [
+        const lsFilesFailures = [
           { error: failed({ kind: "failed" }), message: "Cannot start Git index enumeration." },
           { error: failed({ kind: "truncated" }), message: "Cannot read Git snapshot index." },
           { error: failed({ kind: "failed", exitCode: 1 }), message: "Git index enumeration failed." },
         ];
-        for (const { error, message } of gitLsFilesNeverRanOverranKitBoundOrReportedExitCode) {
+        for (const { error, message } of lsFilesFailures) {
           const failure = yield* makeAiMetricsConfigSnapshot(
             AiMetricsConfigSnapshotInput.make({ repoRoot: root })
           ).pipe(Effect.provideService(Git, Git.makeTest({ lsFiles: () => Effect.fail(error) })), Effect.flip);

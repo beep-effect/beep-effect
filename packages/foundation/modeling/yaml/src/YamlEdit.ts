@@ -27,7 +27,6 @@ import * as Str from "effect/String";
 
 const $I = $YamlId.create("YamlEdit");
 
-/** A defect raised when a YAML helper invariant is violated. */
 class YamlEditFailure extends S.TaggedError<YamlEditFailure, { readonly brand: unique symbol }>($I`YamlEditFailure`)(
   "YamlEditFailure",
   {

@@ -7,26 +7,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// The one lexer behind SourceBoundary: a single pass that tells code from
-// comments and literals, so a scanner looking for real references never trips
-// on prose, a string, template text or a regex body — and never lets a "/*"
-// inside a string swallow real code behind it.
-//
-// Deliberately NOT a parser. It tracks exactly what decides whether a
-// character is code: comments, the three quote forms, template substitutions
-// nested to any depth, and regex literals by the classic previous-token rule.
-// Parentheses are tracked so a `/` after the `)` of an `if`/`while`/`for`/
-// `with` condition opens a regex while one after any other `)` divides; a `/`
-// after a postfix `++`/`--` or a TypeScript non-null `!` divides.
-// Keywords decide too, but only where they are keywords: a property name
-// (`x.of`, `a?.return`) is always an operand, and the contextual `of` is a
-// keyword only between a `for (` binding and its iterable, so a variable named
-// `of` divides like any other.
-// Documented misreads: a regex literal directly after a block-closing `}`
-// reads as division, JSX text reads as code, and `yield`/`await` always read
-// as keywords — right in module and strict code, where they are reserved,
-// wrong only for a sloppy-mode script that names a variable either word.
-
 const $I = $RepoWorkspacesId.create("internal/sourceText");
 
 /**
@@ -140,10 +120,7 @@ export declare namespace LexedSource {
 
 const IDENTIFIER = /[\p{ID_Continue}$\u200c\u200d]/u;
 const IDENTIFIER_NAME = /^(?:[\p{ID_Continue}$\u200c\u200d])+$/u;
-// Include malformed escapes in the raw token so they cannot expose a false
-// shorter identifier. Cooking below accepts only identifier code points.
 const IDENTIFIER_TOKEN = /(?:[\p{ID_Continue}$\u200c\u200d]|\\u\{[^}\s]*\}?|\\[^\s]?)+/gu;
-// One capture group each, so splitting on them keeps every escape at an odd index.
 const UNICODE_ESCAPE = /(\\u(?:[\dA-Fa-f]{4}|\{[\dA-Fa-f]+\}))/u;
 const STRING_ESCAPE =
   /(\\(?:\r\n|[\n\r\u2028\u2029]|x[\da-f]{2}|u[\da-f]{4}|u\{[\da-f]+\}|[0-3][0-7]{0,2}|[4-7][0-7]?|.))/iu;
@@ -152,7 +129,6 @@ const FLAG = /[a-z]/i;
 const HIGH_SURROGATE = /[\uD800-\uDBFF]/u;
 const LOW_SURROGATE = /[\uDC00-\uDFFF]/u;
 
-/** Keywords after which a `/` opens a regex literal rather than a division. */
 const REGEX_AFTER = MutableHashSet.fromIterable([
   "return",
   "typeof",
@@ -170,13 +146,10 @@ const REGEX_AFTER = MutableHashSet.fromIterable([
   "await",
 ]);
 
-/** Declaration keywords: the word after one is a binding name, so a `for (const of of xs)` binding named `of` is not the keyword. */
 const DECLARATIONS = MutableHashSet.fromIterable(["const", "let", "var", "using"]);
 
-/** Keywords whose parenthesized condition may be followed directly by a statement, so a `/` after its `)` opens a regex. */
 const CONTROL = MutableHashSet.fromIterable(["if", "while", "for", "with"]);
 
-/** Objects a member access on which still reaches a global. */
 const GLOBAL_OBJECTS = MutableHashSet.fromIterable(["globalThis", "global", "window", "self"]);
 
 /**
@@ -245,10 +218,9 @@ export const skipSpaceForward: {
   return k;
 });
 
-/** Every part of `text` split around `pattern`'s one capture group, each captured part passed through `cook`. */
-const cookMatches = (text: string, pattern: RegExp, cook: (match: string) => string): string =>
+const cookMatches = (text: string, oneCaptureGroup: RegExp, cook: (match: string) => string): string =>
   A.join(
-    A.map(Str.split(pattern)(text), (part, index) => (index % 2 === 1 ? cook(part) : part)),
+    A.map(Str.split(oneCaptureGroup)(text), (part, index) => (index % 2 === 1 ? cook(part) : part)),
     ""
   );
 
@@ -367,20 +339,11 @@ export const codePointBefore: {
     : last;
 });
 
-/** The four ECMAScript line terminators. */
 const isLineTerminator = (char: string | undefined): boolean =>
   char === "\n" || char === "\r" || char === "\u2028" || char === "\u2029";
 
-/** A regex character-class state after `char`: `[` opens a class, `]` closes it, anything else keeps it. */
 const classStateAfter = (inClass: boolean, char: string): boolean => (inClass ? char !== "]" : char === "[");
 
-/**
- * The single-pass lexer state: both output views, the literals, the open
- * template substitutions (one brace-depth counter each, innermost last), the
- * open parentheses (each with the if/while/for/with keyword whose condition
- * it opened, if any), and the code-view offsets of every `)` that closed such
- * a condition.
- */
 class Lexer {
   readonly kept: Array<string> = [];
   readonly code: Array<string> = [];
@@ -407,24 +370,20 @@ class Lexer {
     });
   }
 
-  /** The input unit at `at`, or `""` past either end. */
   at(at: number): string {
     return unitAt(this.text, at);
   }
 
-  /** The code-view unit at `at`, or `""` outside what has been emitted. */
   codeAt(at: number): string {
     return O.getOrElse(A.get(this.code, at), () => "");
   }
 
-  /** Emit one input character: `keep` for the comment-free view, `live` for the code view. */
-  emit(char: string, keep: boolean, live: boolean): void {
+  emit(char: string, keepInCommentFreeView: boolean, keepInCodeView: boolean): void {
     const blank = isLineTerminator(char) ? char : " ";
-    this.kept.push(keep ? char : blank);
-    this.code.push(live ? char : blank);
+    this.kept.push(keepInCommentFreeView ? char : blank);
+    this.code.push(keepInCodeView ? char : blank);
   }
 
-  /** Emit the current character as code and move past it. */
   plain(char: string): void {
     this.emit(char, true, true);
     this.i++;
@@ -453,7 +412,6 @@ class Lexer {
     else this.plain(char);
   }
 
-  /** Blank a comment from here to the end of the line (also the `#!` line). */
   lineComment(): void {
     while (this.i < this.length && !isLineTerminator(this.at(this.i))) {
       this.emit(this.at(this.i), false, false);
@@ -461,7 +419,6 @@ class Lexer {
     }
   }
 
-  /** Blank a block comment through its `*\/`, or to the end of the text when it never closes. */
   blockComment(): void {
     const body = this.i + 2;
     const end = O.match(Str.indexOf("*/")(Str.slice(body)(this.text)), {
@@ -510,14 +467,12 @@ class Lexer {
     else if (stop === "substitution") this.substitutions.push(0);
   }
 
-  /** The last non-space offset in the code view at or before `from`; `-1` when there is none. */
   lastCode(from: number): number {
     let j = from;
     while (j >= 0 && SPACE.test(this.codeAt(j))) j--;
     return j;
   }
 
-  /** The identifier ending at code offset `end`, or `""`. */
   wordAt(end: number): string {
     let start = end;
     let point = codePointBefore(this.code, start + 1);
@@ -528,16 +483,10 @@ class Lexer {
     return pipe(this.code, A.take(end + 1), A.drop(start + 1), A.join(""));
   }
 
-  /** Whether the code at `j` ends a spread's `...`. */
   isSpread(j: number): boolean {
     return this.codeAt(j - 1) === "." && this.codeAt(j - 2) === ".";
   }
 
-  /**
-   * Whether the code at offset `j` ends a binding a `for...of` head iterates
-   * into: a destructuring pattern, or a name that is neither a declaration
-   * keyword nor itself a keyword (`for (x in of / 2)` divides).
-   */
   endsBinding(j: number): boolean {
     const char = this.codeAt(j);
     if (char === "]" || char === "}") return true;
@@ -548,47 +497,38 @@ class Lexer {
     );
   }
 
-  /** Whether the identifier ending at code offset `j` is a keyword after which a `/` opens a regex. */
   isRegexKeyword(j: number): boolean {
     const word = this.wordAt(j);
     if (!MutableHashSet.has(REGEX_AFTER, word)) return false;
     const before = this.lastCode(j - word.length);
-    // A property name (`x.of`, `a?.return`) is never a keyword; a spread (`...new`) still is.
     if (this.codeAt(before) === "." && !this.isSpread(before)) return false;
-    // `of` is contextual: the keyword only between a `for (` binding and its iterable.
     if (word === "of") return O.contains(A.last(this.parens), "for") && before >= 0 && this.endsBinding(before);
     return true;
   }
 
-  /** Whether the code at offset `j` ends an operand (a value a postfix operator or a `/` division can follow). */
   endsOperand(j: number): boolean {
     const char = this.codeAt(j);
     if (char === ")") return !MutableHashSet.has(this.controlCloses, j);
     return char === "]" || (isIdentifierChar(codePointBefore(this.code, j + 1)) && !this.isRegexKeyword(j));
   }
 
-  /** Whether a `/` after the non-null `!` at `j` opens a regex: only when no operand precedes the run of `!`. */
   regexAfterBang(j: number): boolean {
     let operand = this.lastCode(j - 1);
     while (this.codeAt(operand) === "!") operand = this.lastCode(operand - 1);
     return !this.endsOperand(operand);
   }
 
-  /** Whether a `/` here opens a regex, judged by the last code token. */
   regexAllowed(): boolean {
     const j = this.lastCode(this.code.length - 1);
     if (j < 0) return true;
     const last = this.codeAt(j);
     if (isIdentifierChar(codePointBefore(this.code, j + 1))) return this.isRegexKeyword(j);
-    // Postfix assertions may be repeated or separated from their operand by comments or spaces.
     if (last === "!") return this.regexAfterBang(j);
-    // `i++` / `i--` is a postfix update: an operand, so `/` divides.
     if ((last === "+" || last === "-") && this.codeAt(j - 1) === last) return !this.endsOperand(this.lastCode(j - 2));
     if (last === ")") return MutableHashSet.has(this.controlCloses, j);
     return !Str.includes(last)("]}\"'`");
   }
 
-  /** The keyword ending at code offset `j`, looking one word further back past the `await` of `for await (`. */
   conditionWord(j: number): readonly [word: string, before: number] {
     const word = this.wordAt(j);
     const end = j - word.length;
@@ -598,7 +538,6 @@ class Lexer {
     return [outer, back - outer.length];
   }
 
-  /** The if/while/for/with keyword whose condition the `(` about to be emitted opens, if any. */
   opensCondition(): string | undefined {
     const j = this.lastCode(this.code.length - 1);
     if (j < 0 || !isIdentifierChar(codePointBefore(this.code, j + 1))) return undefined;
@@ -606,7 +545,6 @@ class Lexer {
     return MutableHashSet.has(CONTROL, word) && this.codeAt(this.lastCode(end)) !== "." ? word : undefined;
   }
 
-  /** The offset of the `/` that closes a regex opened at `i` on this line, or `-1`. */
   regexEnd(): number {
     let inClass = false;
     for (let j = this.i + 1; j < this.length; j++) {
@@ -619,7 +557,6 @@ class Lexer {
     return -1;
   }
 
-  /** Consume a regex literal at `i` if one closes on this line; `false` leaves `i` untouched. */
   regex(): boolean {
     const end = this.regexEnd();
     if (end < 0) return false;
@@ -631,7 +568,6 @@ class Lexer {
     return true;
   }
 
-  /** Consume a backslash escape inside a literal: the backslash, the escaped unit, and a CRLF as one break. */
   escape(): void {
     this.emit("\\", true, false);
     this.i++;
@@ -645,7 +581,6 @@ class Lexer {
     }
   }
 
-  /** Consume a `"` or `'` string starting at `i`. An unterminated one stops at the line break. */
   string(quote: string): void {
     const start = this.i;
     this.plain(quote);
@@ -670,7 +605,6 @@ class Lexer {
     this.literals.push({ start, value: Str.slice(start + 1, this.i - 1)(this.text) });
   }
 
-  /** Consume template text up to its closing backtick or the next `${`. */
   templateText(): "end" | "substitution" | "eof" {
     while (this.i < this.length) {
       const char = this.at(this.i);
@@ -718,19 +652,11 @@ class Lexer {
  */
 export const lex = (text: string): LexedSource => new Lexer(text).run();
 
-/** Whether the code at `j` ends a spread's `...` (the `.` at `j` is the last of three). */
 const isSpreadAt = (code: string, j: number): boolean => unitAt(code, j - 1) === "." && unitAt(code, j - 2) === ".";
 
-/** The offset where the receiver of the member access whose `.` sits at `dot` ends (`?.` included). */
 const receiverEnd = (code: string, dot: number): number =>
   skipSpaceBack(code, unitAt(code, dot - 1) === "?" ? dot - 2 : dot - 1);
 
-/**
- * Whether the identifier ending just before `after` is an object-literal key or
- * a type member (`{ process: 1 }`, `interface I { process?: string }`): the
- * previous code character (at `before`) is `{`, `,` or `;` and the next one is
- * `:` or `?:`. A ternary branch (`ok ? process : x`) follows `?`, so it still counts.
- */
 const isPropertyKey = (code: string, before: number, after: number): boolean => {
   if (before < 0 || !Str.includes(unitAt(code, before))("{,;")) return false;
   let k = skipSpaceForward(code, after);
@@ -740,7 +666,6 @@ const isPropertyKey = (code: string, before: number, after: number): boolean => 
 
 const cooksTo = (raw: string, name: string): boolean => O.contains(cookIdentifier(raw), name);
 
-/** Whether the identifier token is a free, global-member or spread reference to `name`. */
 const isReference = (code: string, token: RegExpExecArray, name: string): boolean => {
   const at = token.index;
   if (!cooksTo(token[0], name) || unitAt(code, at - 1) === "#") return false;
@@ -785,14 +710,12 @@ export const references: {
     )
 );
 
-/** The start of the `\u{...}` escape that ends at the `}` just before `start`, or `start` when there is none. */
 const braceEscapeStart = (code: string, start: number): number =>
   O.match(Str.lastIndexOf("\\u{")(Str.slice(0, start + 2)(code)), {
     onNone: () => start,
     onSome: (opening) => (/^[^\s{}]*$/u.test(Str.slice(opening + 3, start - 1)(code)) ? opening : start),
   });
 
-/** The start of the raw identifier unit (a code point or an escape piece) ending at `start`, or `start` when none does. */
 const unitStartBefore = (code: string, start: number): number => {
   if (start <= 0) return start;
   const point = codePointBefore(code, start);
@@ -803,7 +726,6 @@ const unitStartBefore = (code: string, start: number): number => {
   return previous === "{" && Str.slice(start - 3, start - 1)(code) === "\\u" ? start - 3 : start;
 };
 
-/** Raw start of the identifier ending immediately before `end`, including Unicode escapes. */
 const identifierStartBefore = (code: string, end: number): number => {
   let start = end;
   let next = unitStartBefore(code, start);
@@ -814,11 +736,9 @@ const identifierStartBefore = (code: string, end: number): number => {
   return start;
 };
 
-/** Whether the raw receiver cooks to a global object name. */
 const isGlobalObject = (raw: string): boolean =>
   O.exists(cookIdentifier(raw), (receiver) => MutableHashSet.has(GLOBAL_OBJECTS, receiver));
 
-/** Require every receiver in the chain to be a global object, ending at a free or spread reference. */
 const isGlobalReceiver = (code: string, end: number): boolean => {
   let cursor = end;
   while (cursor >= 0) {
@@ -832,7 +752,6 @@ const isGlobalReceiver = (code: string, end: number): boolean => {
   return false;
 };
 
-/** The cooked identifier ending at or before `end`; empty for member calls or invalid escapes. */
 const wordEndingAt = (code: string, end: number): string => {
   const j = skipSpaceBack(code, end);
   const start = identifierStartBefore(code, j + 1);
@@ -840,7 +759,6 @@ const wordEndingAt = (code: string, end: number): string => {
   return mark === "." || mark === "#" ? "" : O.getOrElse(cookIdentifier(Str.slice(start, j + 1)(code)), () => "");
 };
 
-/** One cooked `\uXXXX` or `\u{...}` escape, left raw when it names no code point. */
 const cookUnicodeEscape = (escape: string): string => {
   const digits = unitAt(escape, 2) === "{" ? Str.slice(3, -1)(escape) : Str.slice(2)(escape);
   const point = Number.parseInt(digits, 16);
@@ -875,7 +793,6 @@ const STRING_ESCAPES: Readonly<Record<string, string>> = {
   v: "\v",
 };
 
-/** One cooked string escape: a line continuation is nothing, hex, Unicode and octal escapes are their units. */
 const cookStringEscape = (escape: string): string => {
   const value = Str.slice(1)(escape);
   const head = unitAt(value, 0);
@@ -886,11 +803,9 @@ const cookStringEscape = (escape: string): string => {
   return O.getOrElse(R.get(STRING_ESCAPES, value), () => value);
 };
 
-/** Cook string escapes without evaluating source; the lexer's raw literal and offsets stay intact. */
 const cookSpecifier = (raw: string): string =>
   cookMatches(Str.replace(/\r\n?/gu, "\n")(raw), STRING_ESCAPE, cookStringEscape);
 
-/** Whether the literal is the whole first argument of an `import(`, `require(` or `require?.(` call whose `(` is at `paren`. */
 const isCallArgument = (code: string, literal: SourceLiteral, paren: number): boolean => {
   const end = skipSpaceBack(code, paren - 1);
   const optional = unitAt(code, end) === "." && unitAt(code, end - 1) === "?";
@@ -900,7 +815,6 @@ const isCallArgument = (code: string, literal: SourceLiteral, paren: number): bo
   return close === ")" || close === ",";
 };
 
-/** Whether the literal is a module specifier: after `from` or `import`, or a call's whole first argument. */
 const isSpecifierLiteral = (code: string, literal: SourceLiteral): boolean => {
   const j = skipSpaceBack(code, literal.start - 1);
   if (unitAt(code, j) === "(") return isCallArgument(code, literal, j);

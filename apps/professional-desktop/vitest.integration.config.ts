@@ -2,6 +2,9 @@ import * as NodeURL from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared from "../../vitest.shared.ts";
 
+const pgliteBunEmbeddedAssets = /^(.*\/@electric-sql\/pglite\/dist\/.*\.(?:wasm|data|tar\.gz))$/;
+const sharedIncludedJsdomSuites = ["test/*.test.{ts,tsx}"];
+
 export default mergeConfig(
   shared,
   defineConfig({
@@ -10,8 +13,7 @@ export default mergeConfig(
       alias: [
         { find: "@", replacement: NodeURL.fileURLToPath(new URL("./src", import.meta.url)) },
         {
-          // Bun embeds these file imports; Vite must return asset URLs under Node.
-          find: /^(.*\/@electric-sql\/pglite\/dist\/.*\.(?:wasm|data|tar\.gz))$/,
+          find: pgliteBunEmbeddedAssets,
           replacement: "$1?url",
         },
       ],
@@ -19,10 +21,7 @@ export default mergeConfig(
     test: {
       environment: "node",
       include: ["test/integration/**/*.test.{ts,tsx}"],
-      // The shared config contributes `test/**/*.test.{ts,tsx}` via mergeConfig
-      // array concatenation; exclude the jsdom suites so only the node-env
-      // integration tests run here.
-      exclude: ["test/*.test.{ts,tsx}"],
+      exclude: sharedIncludedJsdomSuites,
     },
   })
 );

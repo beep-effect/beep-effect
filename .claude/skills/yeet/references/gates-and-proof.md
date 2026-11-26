@@ -105,6 +105,7 @@ fits a 4-core worker. By default every gate runs and every red is collected;
 | `repo-sanity` | Repo Sanity | `beep ci lane repo-sanity --changeset-status` | #2207 | local |
 | `check` | Heavy / Check | `beep ci lane check --affected`; a declaration-only package's `check` includes its own `build` (Turbo edge) and leads `beep:check` with the build program, while bundler and no-emit packages keep `check` on `^build` only. After a green Turbo run the lane gates the check-census baseline (`beep quality check-census --gate-only --defer-stale-stamp`) on the rows whose packages that run checked: strict rows fail above 32 instantiations, band rows above 10% cumulative since the baseline (the failure names the baseline and is not the PR's growth alone) | #2208 | hosted-only |
 | `docgen` | Heavy / Docgen | `beep ci lane docgen --mode auto` | #2208 | hosted-only |
+| `doctest` | Heavy / Doctest | `TURBO_SCM_BASE=<merge-base> turbo run doctest --affected --concurrency=4`; hosted runs the whole fleet, where an unaffected package is a cache hit | — | hosted-only |
 | `fallow` | Fallow Advisory Envelopes | `beep ci lane fallow --validate-envelopes` | #2215 | hosted-only |
 | `coverage` | Coverage Regression, Test Unit | `TURBO_SCM_BASE=<merge-base> beep-cli coverage --affected` | #2215, #2221 | hosted-only |
 

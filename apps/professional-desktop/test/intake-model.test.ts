@@ -21,17 +21,12 @@ import type { DocumentIntakeSnapshot } from "@/intake/DocumentIntake.machine";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// `@xstate/test` 2.0.0-alpha.1 constrains its source to `ActorLogic<any, any, any>`,
-// which a machine declaring `schemas.emitted` does not satisfy.
-const intakeModel: AnyStateMachine = documentIntakeMachine;
+const xstateTestCompatibleModel: AnyStateMachine = documentIntakeMachine;
 
 const input = DocumentIntakeInput.make({ workspaceId });
 
 const noPayload = fc.constant({});
 
-// In pure mode nothing runs the invoked actors, so the model is driven by the
-// events those actors would cause: the configuration feed's internal event and
-// the two events a batch actor relays.
 const publicSurfaceEvents = {
   CHOOSE_VAULT: noPayload,
   SUBMIT_MANUAL_PATH: fc.record({ rawPath: fc.constantFrom("", "/vault") }),
@@ -49,15 +44,12 @@ const publicSurfaceEvents = {
   }),
 };
 
-// Events the machine declares internal. A hosted actor rejects them from
-// outside (`EventRejectedError` with reason `internalEvent`), so only the pure
-// model is driven with them.
-const internalEvents = {
+const pureModelOnlyInternalEvents = {
   VAULT_CONFIG_RESOLVED: fc.record({ vaultRootPath: fc.constantFrom(O.none<string>(), O.some("/vault")) }),
   BATCH_REQUESTED: fc.constant({ files: [] }),
 };
 
-const surfaceEvents = { ...publicSurfaceEvents, ...internalEvents };
+const surfaceEvents = { ...publicSurfaceEvents, ...pureModelOnlyInternalEvents };
 
 const fileEvents = {
   DROP: fc.record({ files: fc.constantFrom([], [intakeFile("dropped.txt")]) }),
@@ -69,7 +61,6 @@ const emptyFileEvents = {
   FILES_SELECTED: fc.constant({ files: [] }),
 };
 
-// What must hold in every reachable state, whatever sequence of events led there.
 const intakeInvariant = (snapshot: DocumentIntakeSnapshot): void => {
   const status = vaultStatusOf(snapshot);
   const view = documentIntakeStateOf(snapshot);
@@ -81,9 +72,28 @@ const intakeInvariant = (snapshot: DocumentIntakeSnapshot): void => {
   expect(view.activeBatches).toBe(A.length(snapshot.context.liveBatches));
 };
 
-// Path generation is synchronous CPU work, and the conformance run settles on
-// a wall-clock timeout, so these cases must not share the event loop.
-describe("document intake statechart model", { concurrent: false }, () => {
+const mergeStatesByChartPosition = (snapshot: { readonly value: unknown }) =>
+  Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(snapshot.value), identity);
+
+const stopWherePickerReadsDoneOutput = (snapshot: unknown) =>
+  (snapshot as DocumentIntakeSnapshot).matches({ vault: { watching: { unconfigured: "picker" } } });
+
+const neverAnsweringIntakeClient = Layer.merge(
+  Layer.succeed(
+    DesktopIntakeClient,
+    intakeClient({
+      GetWorkspaceVault: () => Effect.never,
+      IntakeDroppedFile: () => Effect.never,
+      PickVaultDirectory: () => Effect.never,
+      SetWorkspaceVault: () => Effect.never,
+    })
+  ),
+  Reactivity.layer
+) as Layer.Layer<never>;
+
+describe("document intake statechart model, serial: CPU-bound path generation under a wall-clock settle", {
+  concurrent: false,
+}, () => {
   it.effect("exports a Stately-compatible definition of both regions", () =>
     Effect.gen(function* () {
       const definition = toMachineJson(documentIntakeMachine);
@@ -98,23 +108,20 @@ describe("document intake statechart model", { concurrent: false }, () => {
   it.effect("every shortest path through the surface events keeps the view projection consistent", () =>
     Effect.gen(function* () {
       const { coverage, results } = yield* Effect.promise(() =>
-        testPaths(intakeModel, {
+        testPaths(xstateTestCompatibleModel, {
           events: { ...surfaceEvents, ...emptyFileEvents },
           input,
           samples: 6,
-          // Path generation synthesizes an invoked actor's done event without its
-          // output, so traversal stops where the picker would read that output.
-          // `results` and the batch sequence grow without bound, so states are
-          // merged by their position in the chart.
-          serializeState: (snapshot) =>
-            Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(snapshot.value), identity),
-          stopWhen: (snapshot) =>
-            (snapshot as DocumentIntakeSnapshot).matches({ vault: { watching: { unconfigured: "picker" } } }),
+          serializeState: mergeStatesByChartPosition,
+          stopWhen: stopWherePickerReadsDoneOutput,
           invariant: ({ snapshot }) => intakeInvariant(snapshot as DocumentIntakeSnapshot),
         })
       );
       expect(A.every(results, (result) => result.passed)).toBe(true);
-      expect(results.length).toBeGreaterThan(0);
+      expect(
+        results.length,
+        "paths stop at the picker, since synthesized done events carry no output, and merge by chart position, since results grow unbounded"
+      ).toBeGreaterThan(0);
       const visited = A.join(coverage.states.covered, "\n");
       for (const state of ["loadFailed", "loading", "unconfigured", "sidecar", "configured", "dragging"]) {
         expect(visited).toContain(state);
@@ -125,7 +132,7 @@ describe("document intake statechart model", { concurrent: false }, () => {
   it.effect("random event sequences never break the view projection", () =>
     Effect.gen(function* () {
       const { coverage } = yield* Effect.promise(() =>
-        propertyTest(intakeModel, {
+        propertyTest(xstateTestCompatibleModel, {
           seed: 11,
           numRuns: 120,
           maxCommands: 16,
@@ -143,27 +150,14 @@ describe("document intake statechart model", { concurrent: false }, () => {
 
   it.effect("the Effect-hosted actor agrees with the pure model", () =>
     Effect.promise(() =>
-      propertyTest(intakeModel, {
+      propertyTest(xstateTestCompatibleModel, {
         seed: 5,
         numRuns: 25,
         maxCommands: 10,
         events: { ...publicSurfaceEvents, ...fileEvents },
         input,
-        // No RPC ever answers, so the hosted actor only moves when the model does,
-        // and only public events reach it.
-        sut: effectActorSut(intakeModel, {
-          layer: Layer.merge(
-            Layer.succeed(
-              DesktopIntakeClient,
-              intakeClient({
-                GetWorkspaceVault: () => Effect.never,
-                IntakeDroppedFile: () => Effect.never,
-                PickVaultDirectory: () => Effect.never,
-                SetWorkspaceVault: () => Effect.never,
-              })
-            ),
-            Reactivity.layer
-          ) as Layer.Layer<never>,
+        sut: effectActorSut(xstateTestCompatibleModel, {
+          layer: neverAnsweringIntakeClient,
           settleTimeout: "5 seconds",
         }),
       })

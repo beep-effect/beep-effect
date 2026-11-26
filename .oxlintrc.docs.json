@@ -20,7 +20,6 @@
     "**/coverage/**",
     "**/dist/**",
     "**/docs/**",
-    "infra/ci-runners/sdks/ghaRunners/**",
     "**/node_modules/**",
     "**/storybook-static/**",
     "**/.turbo/**",
@@ -41,11 +40,7 @@
   "rules": {},
   "overrides": [
     {
-      "files": [
-        "apps/**/*.{ts,tsx}",
-        "packages/**/*.{ts,tsx}",
-        "infra/**/*.ts"
-      ],
+      "files": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
       "rules": {
         "beep/tsdoc-syntax": "warn"
       }

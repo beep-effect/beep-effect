@@ -6,8 +6,14 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { Document, DocumentId } from "@beep/nlp/Core/Document";
-import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
+import { Document, DocumentId } from "@beep/nlp-processing/Core/Document";
+import {
+  BM25Config,
+  BM25Norm,
+  DefaultBM25Config,
+  DocumentVector,
+  PositiveNumber,
+} from "@beep/nlp-processing/Core/Vectorization";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
@@ -471,7 +477,7 @@ const makeWinkCorpusManager = Effect.gen(function* () {
   ): Effect.Effect<ReadonlyArray<string>, CorpusManagerError> =>
     Bool.match(document.tokenCount > 0, {
       onFalse: () => readNormalizedTokensFromWink(engine, document, corpusId),
-      onTrue: () => Effect.succeed(pipe(Chunk.toReadonlyArray(document.tokens), A.map(normalizeTokenText))),
+      onTrue: () => document.tokens.pipe(Chunk.toReadonlyArray, A.map(normalizeTokenText), Effect.succeed),
     });
 
   const compileState = Effect.fnUntraced(function* (

@@ -1,26 +1,7 @@
-import { identity } from "effect/Function";
-// The re-parse equivalence property — what "canonical stringify" means
-// operationally: for EVERY vendored conformance example, parsing the
-// example, stringifying the tree and parsing the emission again must yield a
-// render-equivalent document under the same dialect. Both sides render
-// through the test writer and normalize through the P1 harness machinery, so
-// the comparison isolates stringify: the first parse already passed spec
-// conformance elsewhere, and any inequality here is a serialization bug.
-//
-// There is no skip list. The one special case is the extensions.txt crash
-// regression (example 20, `<IGNORE>` expected output), which asserts
-// round-trip termination the same way the conformance harness asserts parse
-// termination — rendering it is meaningless on both sides of the round trip
-// alike, so equivalence still holds and is still asserted.
-//
-// The tail of the file measures serialization cost against the design doc's
-// ~17µs/node Schema-construction flag: stringify builds strings, not Schema
-// nodes, so the flag must not bind here — the budget assertion pins that,
-// calibrated like the pathological suite.
-
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { stringifyTree } from "@beep/markdown/internal/stringify";
 import { assert, describe, it } from "@effect/vitest";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -62,16 +43,14 @@ const runCorpus = (
         assert.strictEqual(
           after,
           before,
-          `stringify round-trip diverged.\nsource:  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(example.markdown), identity)}\nemitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+          `stringify round-trip diverged; its output must not depend on constructs the reading dialect lacks, and no example is skipped: the extensions.txt <IGNORE> crash regression renders meaninglessly on both sides alike, so equivalence still holds.\nsource:  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(example.markdown), identity)}\nemitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
         );
       });
     }
   });
 };
 
-describe("stringify re-parse equivalence", () => {
-  // The 652 spec examples round-trip under BOTH dialects: stringify output
-  // must not depend on constructs the reading dialect lacks.
+describe("stringify re-parse equivalence: a render difference after parse, stringify, re-parse is a serialization bug", () => {
   runCorpus("CommonMark spec under commonmark", loadSpecExamples(), "commonmark", 652);
   runCorpus("CommonMark spec under gfm", loadSpecExamples(), "gfm", 652);
   runCorpus("GFM spec extensions", loadGfmSpecExtensionExamples(), "gfm", 22);
@@ -80,43 +59,30 @@ describe("stringify re-parse equivalence", () => {
 
 describe("stringify cost", () => {
   it("serialization is string-building, not schema construction", () => {
-    // Calibrate the same way the pathological suite does: measure a parse
-    // through the heaviest machinery and scale the budget by how far this
-    // environment (coverage instrumentation, hardware) is from the clean
-    // baseline. Stringify of the same tree must land well under the parse
-    // cost — it allocates strings, never Schema nodes.
     const input = Str.repeat(500)(
       "# heading\n\npara *em* **st** `code` [l](/u)\n\n- a\n- b\n\n> quote\n\n| a | b |\n| - | - |\n| 1 | 2 |\n"
     );
     const warm = parseBlocks(input, { dialect: "gfm" }).root;
     stringifyTree(warm);
 
-    // One sample of each is at the mercy of a GC pause or a CPU-contended
-    // slice under a parallel turbo run. Interleave rounds so both sides see
-    // the same load, and compare per-side minimums: the minimum is the
-    // estimator least inflated by scheduler and collector noise.
-    let parseMs = Number.POSITIVE_INFINITY;
-    let stringifyMs = Number.POSITIVE_INFINITY;
+    let minParseMs = Number.POSITIVE_INFINITY;
+    let minStringifyMs = Number.POSITIVE_INFINITY;
     let emitted = "";
     for (let round = 0; round < 5; round++) {
       const parseStart = performance.now();
       const tree = parseBlocks(input, { dialect: "gfm" }).root;
-      parseMs = Math.min(parseMs, performance.now() - parseStart);
+      minParseMs = Math.min(minParseMs, performance.now() - parseStart);
 
       const stringifyStart = performance.now();
       emitted = stringifyTree(tree);
-      stringifyMs = Math.min(stringifyMs, performance.now() - stringifyStart);
+      minStringifyMs = Math.min(minStringifyMs, performance.now() - stringifyStart);
     }
 
     assert.isAbove(emitted.length, input.length / 2);
-    // The flag would bind if serialization cost rivaled parse cost (which
-    // includes Schema materialization). Pin an order-of-magnitude margin
-    // rather than a wall-clock number: stringify must cost less than the
-    // parse of the same document in the same environment.
     assert.isBelow(
-      stringifyMs,
-      parseMs,
-      `stringify ${stringifyMs.toFixed(1)}ms should undercut parse ${parseMs.toFixed(1)}ms`
+      minStringifyMs,
+      minParseMs,
+      `stringify ${minStringifyMs.toFixed(1)}ms should undercut parse ${minParseMs.toFixed(1)}ms: it builds strings, not Schema nodes, so the design doc's ~17µs/node Schema-construction flag must not bind. Both run in the same environment, so coverage instrumentation and hardware cancel, and interleaved per-side minimums are the estimators least inflated by GC pauses and contended CPU slices`
     );
   });
 });

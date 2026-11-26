@@ -1,7 +1,3 @@
-// Batch-6 token-adjacency rules (#129): comments-spacing, colon-spacing,
-// hyphen-spacing — each through the shared fixture harness (which carries
-// the mutation proofs).
-
 import { builtin, testRule } from "./harness.ts";
 
 testRule(builtin("comments-spacing"), [
@@ -27,11 +23,7 @@ testRule(builtin("comments-spacing"), [
     expected: [],
   },
   {
-    // A ZERO-space trailing comment cannot exist — YAML 1.2 §6.6 requires
-    // whitespace before `#` (a glued `1# c` is a plain scalar), so the
-    // default minSpacesBefore of 1 is the grammar floor and the
-    // before-check only bites when configured higher.
-    name: "minSpacesBefore: 2 wants more breathing room",
+    name: "minSpacesBefore: 2 bites above the default of 1, the YAML 1.2 §6.6 floor (a glued `1# c` is a plain scalar)",
     input: "a: 1 # c\n",
     setting: { minSpacesBefore: 2 },
     expected: [{ line: 0, character: 4 }],

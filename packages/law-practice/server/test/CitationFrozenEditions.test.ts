@@ -170,20 +170,21 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
           editions: row.kind === "edition" ? O.getOrThrow(A.replace(bundle.editions, 0, altered)) : bundle.editions,
         };
         let authenticatedAlteredPayload = false;
-        const digestAuthenticatingAlteredBytesToIsolateStructuralValidation = makeTestCitationDigest(
-          (algorithm, bytes) => {
-            if (new TextDecoder().decode(bytes) === row.payload) {
-              authenticatedAlteredPayload = true;
-              return crypto.digest(algorithm, new TextEncoder().encode(row.original.payload));
-            }
-            return crypto.digest(algorithm, bytes);
+        const alteredBytesDigest = makeTestCitationDigest((algorithm, bytes) => {
+          if (new TextDecoder().decode(bytes) === row.payload) {
+            authenticatedAlteredPayload = true;
+            return crypto.digest(algorithm, new TextEncoder().encode(row.original.payload));
           }
-        );
+          return crypto.digest(algorithm, bytes);
+        });
         const failure = yield* makeCitationFrozenEditions(input).pipe(
-          Effect.provideService(Digest.Digest, digestAuthenticatingAlteredBytesToIsolateStructuralValidation),
+          Effect.provideService(Digest.Digest, alteredBytesDigest),
           Effect.flip
         );
-        expect(authenticatedAlteredPayload).toBe(true);
+        expect(
+          authenticatedAlteredPayload,
+          "the altered bytes are authenticated, isolating structural validation from the digest check"
+        ).toBe(true);
         expect(failure).toMatchObject({ _tag: "CitationFrozenEditionFailure", reason: "corrupt-artifact" });
         expect("cause" in failure).toBe(false);
       }

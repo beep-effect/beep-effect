@@ -78,6 +78,41 @@ export class PracticeKgDocumentAttribution extends S.Opaque<
 ) {}
 
 /**
+ * The identity of one attributed document: its digest qualified by the docket
+ * or family it is filed in.
+ *
+ * **Details**
+ *
+ * Identical bytes filed under two dockets are two documents, so the key is
+ * `<digest>@<docketKey>` for a docket document, `<digest>@<familyKey>` for a
+ * family-level document and the bare digest for a document filed nowhere. The
+ * Practice KG document node, the DuckDB `documents` row and the search index
+ * entry all use it.
+ *
+ * **Example** (Key a docket document)
+ *
+ * ```ts
+ * import { practiceKgDocumentKey } from "../../src/PracticeKg.families.ts"
+ *
+ * console.log(practiceKgDocumentKey({ digest: "sha256:9f2c", docketKey: "12345.10008US01", familyKey: "12345.10008" }))
+ * // "sha256:9f2c@12345.10008US01"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const practiceKgDocumentKey = (
+  attribution: Pick<PracticeKgDocumentAttribution, "digest" | "docketKey" | "familyKey">
+): string =>
+  O.match(
+    O.orElse(O.fromNullishOr(attribution.docketKey), () => O.fromNullishOr(attribution.familyKey)),
+    {
+      onNone: () => attribution.digest,
+      onSome: (placement) => `${attribution.digest}@${placement}`,
+    }
+  );
+
+/**
  * One USPTO anchor after dual-key reconciliation.
  *
  * **Details**
@@ -235,8 +270,8 @@ const ownDocketEvidenceNotCrossClientCitations = (
   references: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): ReadonlyArray<PracticeKgDocketReferenceRow> => {
   const { docket } = row;
-  const familyLevelDocumentCountsEveryFamilyReference = docket === null;
-  if (familyLevelDocumentCountsEveryFamilyReference) {
+  const familyLevelDocument = docket === null;
+  if (familyLevelDocument) {
     return references;
   }
   return A.filter(references, (reference) =>
@@ -244,42 +279,42 @@ const ownDocketEvidenceNotCrossClientCitations = (
   );
 };
 
-const clientsByDigestFor = (
-  rowsByDigest: MutableHashMap.MutableHashMap<string, PracticeKgCatalogRow>,
+const rowTextKey = (row: PracticeKgCatalogRow): string =>
+  `${row.digest}\u0000${row.docketFamily ?? ""}\u0000${row.docket ?? ""}`;
+
+const clientsByRowFor = (
+  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
   docketReferences: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>> => {
-  const rowWithOwnFamilyReferencesByDigest = MutableHashMap.empty<
-    string,
-    { readonly references: ReadonlyArray<PracticeKgDocketReferenceRow>; readonly row: PracticeKgCatalogRow }
-  >();
+  const referencesByDigest = MutableHashMap.empty<string, ReadonlyArray<PracticeKgDocketReferenceRow>>();
   A.forEach(docketReferences, (reference) => {
-    const row = pipe(
-      MutableHashMap.get(rowsByDigest, reference.digest),
-      O.filter((candidate) => candidate.docketFamily === reference.family)
-    );
-    if (O.isSome(row)) {
-      MutableHashMap.set(rowWithOwnFamilyReferencesByDigest, reference.digest, {
-        references: A.append(
-          pipe(
-            MutableHashMap.get(rowWithOwnFamilyReferencesByDigest, reference.digest),
-            O.map((entry) => entry.references),
-            O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)
-          ),
-          reference
-        ),
-        row: row.value,
-      });
-    }
-  });
-  const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
-  MutableHashMap.forEach(rowWithOwnFamilyReferencesByDigest, ({ references, row }, digest) => {
     MutableHashMap.set(
-      clients,
-      digest,
-      HashSet.fromIterable(
-        A.map(ownDocketEvidenceNotCrossClientCitations(row, references), (reference) => reference.client)
+      referencesByDigest,
+      reference.digest,
+      A.append(
+        pipe(
+          MutableHashMap.get(referencesByDigest, reference.digest),
+          O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)
+        ),
+        reference
       )
     );
+  });
+  const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+  A.forEach(catalogRows, (row) => {
+    const references = A.filter(
+      pipe(MutableHashMap.get(referencesByDigest, row.digest), O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)),
+      (reference) => reference.family === row.docketFamily
+    );
+    if (A.isReadonlyArrayNonEmpty(references)) {
+      MutableHashMap.set(
+        clients,
+        rowTextKey(row),
+        HashSet.fromIterable(
+          A.map(ownDocketEvidenceNotCrossClientCitations(row, references), (reference) => reference.client)
+        )
+      );
+    }
   });
   return clients;
 };
@@ -528,31 +563,31 @@ const fallbackClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
  * never overrides a document's own evidence, never votes, and does not apply
  * to a family whose documents already name a client, even when they disagree.
  *
- * Output is ordered by digest.
+ * Output follows catalog-row order, so the `n`th attribution is the `n`th
+ * row's. A digest filed under two dockets has two rows and two attributions.
  *
  * **Example** (Attribute an empty catalog)
  *
  * ```ts
- * import { attributeDocuments } from "../../src/PracticeKg.families.ts"
+ * import { attributeCatalogRows } from "../../src/PracticeKg.families.ts"
  *
  * import { PracticeKgAttributeDocumentsInput } from "../../src/PracticeKg.families.ts"
  *
- * console.log(attributeDocuments(PracticeKgAttributeDocumentsInput.make({ catalogRows: [], docketReferences: [] })).length) // 0
+ * console.log(attributeCatalogRows(PracticeKgAttributeDocumentsInput.make({ catalogRows: [], docketReferences: [] })).length) // 0
  * ```
  *
- * @param input - Digest-deduplicated catalog rows, the client-prefixed references scanned from them, and register rows.
- * @returns One attribution per catalog row, ordered by digest.
+ * @param input - Catalog rows, one per filed copy, the client-prefixed references scanned from them, and register rows.
+ * @returns One attribution per catalog row, in catalog-row order.
  * @category use-cases
  * @since 0.0.0
  */
-export const attributeDocuments = (
+export const attributeCatalogRows = (
   input: PracticeKgAttributeDocumentsInput
 ): ReadonlyArray<PracticeKgDocumentAttribution> => {
   const { catalogRows, docketReferences, registerRows } = input;
-  const rowsByDigest = MutableHashMap.fromIterable(A.map(catalogRows, (row) => [row.digest, row] as const));
-  const clientsByDigest = clientsByDigestFor(rowsByDigest, docketReferences);
+  const clientsByRow = clientsByRowFor(catalogRows, docketReferences);
   const textClient: ClientLookup = (row) =>
-    pipe(MutableHashMap.get(clientsByDigest, row.digest), O.flatMap(uniqueMember));
+    pipe(MutableHashMap.get(clientsByRow, rowTextKey(row)), O.flatMap(uniqueMember));
   const directClient = directClientLookup(textClient);
   const registerClient = registerClientLookup(registerRows);
   const votesByFamily = familyVotes(catalogRows, directClient);
@@ -594,11 +629,42 @@ export const attributeDocuments = (
     });
   };
 
-  return A.sort(
-    A.map(catalogRows, attributeRow),
-    Order.mapInput(Order.String, (attribution: PracticeKgDocumentAttribution) => attribution.digest)
-  );
+  return A.map(catalogRows, attributeRow);
 };
+
+/**
+ * Attribute every catalogued document, ordered by digest and then by document
+ * key.
+ *
+ * **Details**
+ *
+ * The attributions of {@link attributeCatalogRows}, sorted for stable output.
+ *
+ * **Example** (Attribute an empty catalog)
+ *
+ * ```ts
+ * import { attributeDocuments } from "../../src/PracticeKg.families.ts"
+ *
+ * import { PracticeKgAttributeDocumentsInput } from "../../src/PracticeKg.families.ts"
+ *
+ * console.log(attributeDocuments(PracticeKgAttributeDocumentsInput.make({ catalogRows: [], docketReferences: [] })).length) // 0
+ * ```
+ *
+ * @param input - Catalog rows, one per filed copy, the client-prefixed references scanned from them, and register rows.
+ * @returns One attribution per catalog row, ordered by digest, then document key.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const attributeDocuments = (
+  input: PracticeKgAttributeDocumentsInput
+): ReadonlyArray<PracticeKgDocumentAttribution> =>
+  A.sort(
+    attributeCatalogRows(input),
+    Order.combine(
+      Order.mapInput(Order.String, (attribution: PracticeKgDocumentAttribution) => attribution.digest),
+      Order.mapInput(Order.String, practiceKgDocumentKey)
+    )
+  );
 
 const splitList = (value: string): ReadonlyArray<string> =>
   A.filter(A.map(Str.split(value, " | "), Str.trim), Str.isNonEmpty);
@@ -760,7 +826,7 @@ const documentsByFamily = (mentions: ReadonlyArray<AnchorMention>): ReadonlyArra
             MutableHashMap.get(digests, familyKey),
             O.getOrElse(() => HashSet.empty<string>())
           ),
-          mention.attribution.digest
+          practiceKgDocumentKey(mention.attribution)
         )
       )
     )
@@ -772,7 +838,9 @@ const documentsByFamily = (mentions: ReadonlyArray<AnchorMention>): ReadonlyArra
 };
 
 const dominantAnchorMember = (mentions: ReadonlyArray<AnchorMention>): O.Option<AnchorMember> => {
-  const total = HashSet.size(HashSet.fromIterable(A.map(mentions, (mention) => mention.attribution.digest)));
+  const total = HashSet.size(
+    HashSet.fromIterable(A.map(mentions, (mention) => practiceKgDocumentKey(mention.attribution)))
+  );
   const filenameFamilies = filenameFamiliesOf(mentions);
   return pipe(
     A.head(documentsByFamily(mentions)),
@@ -825,9 +893,20 @@ const dominantAnchorMember = (mentions: ReadonlyArray<AnchorMention>): O.Option<
  */
 export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyArray<PracticeKgAnchorResolution> => {
   const { anchors, attributions, numberMentions } = input;
-  const attributionByDigest = MutableHashMap.fromIterable(
-    A.map(attributions, (attribution) => [attribution.digest, attribution] as const)
-  );
+  const attributionsByDigest = MutableHashMap.empty<string, ReadonlyArray<PracticeKgDocumentAttribution>>();
+  A.forEach(attributions, (attribution) => {
+    MutableHashMap.set(
+      attributionsByDigest,
+      attribution.digest,
+      A.append(
+        pipe(
+          MutableHashMap.get(attributionsByDigest, attribution.digest),
+          O.getOrElse(A.empty<PracticeKgDocumentAttribution>)
+        ),
+        attribution
+      )
+    );
+  });
   const mentionsByNumber = MutableHashMap.empty<string, ReadonlyArray<PracticeKgNumberMentionRow>>();
   A.forEach(numberMentions, (mention) => {
     MutableHashMap.set(
@@ -840,18 +919,21 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
     );
   });
   const anchorMentions = (anchor: PracticeKgAnchorRecord): ReadonlyArray<AnchorMention> =>
-    A.getSomes(
-      A.map(
-        A.flatMap(anchor.numbers, (number) =>
-          pipe(MutableHashMap.get(mentionsByNumber, number), O.getOrElse(A.empty<PracticeKgNumberMentionRow>))
-        ),
-        (mention) =>
-          pipe(
-            MutableHashMap.get(attributionByDigest, mention.digest),
-            O.filter((attribution) => attribution.familyKey !== null && !attribution.recycled),
-            O.map((attribution) => ({ attribution, source: mention.source }))
-          )
-      )
+    A.flatMap(
+      A.flatMap(anchor.numbers, (number) =>
+        pipe(MutableHashMap.get(mentionsByNumber, number), O.getOrElse(A.empty<PracticeKgNumberMentionRow>))
+      ),
+      (mention: PracticeKgNumberMentionRow): ReadonlyArray<AnchorMention> =>
+        A.map(
+          A.filter(
+            pipe(
+              MutableHashMap.get(attributionsByDigest, mention.digest),
+              O.getOrElse(A.empty<PracticeKgDocumentAttribution>)
+            ),
+            (attribution) => attribution.familyKey !== null && !attribution.recycled
+          ),
+          (attribution) => ({ attribution, source: mention.source })
+        )
     );
 
   return A.map(anchors, (anchor) => {

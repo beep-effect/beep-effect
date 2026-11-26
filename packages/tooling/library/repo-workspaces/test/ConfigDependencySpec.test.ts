@@ -1,9 +1,3 @@
-// The `configDependencies` spec model: `<version>[+<sri>]`.
-//
-// The SRI fixtures are real values from a consumer's `pnpm-workspace.yaml`
-// (savvy-web/silk-update-action) — note the `+` and `/` inside the base64,
-// which is why only the FIRST `+` may separate version from integrity.
-
 import { IntegrityHash, SriIntegrityHash } from "@beep/npm-spec/IntegrityHash";
 import { ConfigDependencySpec, InvalidConfigDependencySpecError } from "@beep/repo-workspaces/ConfigDependencySpec";
 import { lookupPnpmfiles } from "@beep/repo-workspaces/internal/configDependencyResolution";
@@ -24,7 +18,7 @@ const reasonOf = (input: string) => {
   return Result.isFailure(parsed) ? parsed.failure.reason : undefined;
 };
 
-describe("ConfigDependencySpec.parseResult", () => {
+describe("ConfigDependencySpec.parseResult over real SRI values from savvy-web/silk-update-action's pnpm-workspace.yaml", () => {
   it("parses the legacy inline SRI form", () => {
     const parsed = ConfigDependencySpec.parseResult(`0.11.1+${SRI}`);
     assertSuccess(parsed, Result.getOrThrow(parsed));
@@ -69,14 +63,14 @@ describe("ConfigDependencySpec.parseResult", () => {
     }
   });
 
-  it("rejects a malformed integrity half with reason 'integrity'", () => {
+  it("rejects a malformed integrity half with reason 'integrity', even the corepack form IntegrityHash accepts", () => {
+    const corepackIntegrityForm = "0.11.1+sha512.deadbeef";
+    const semverBuildMetadata = "0.11.1+build.5";
     for (const input of [
       "0.11.1+",
       "0.11.1+garbage",
-      // corepack form is a valid IntegrityHash, but never a config-dep integrity
-      "0.11.1+sha512.deadbeef",
-      // semver build metadata is not a config-dep integrity either
-      "0.11.1+build.5",
+      corepackIntegrityForm,
+      semverBuildMetadata,
       "0.11.1+sha512-not base64",
     ]) {
       assert.strictEqual(reasonOf(input), "integrity", input);
@@ -139,22 +133,19 @@ describe("ConfigDependencySpec construction", () => {
   });
 });
 
-// The consolidation guard, and it has to be an IDENTITY assertion: a
-// `Schema.check` is erased from the built type and a faithful private copy of
-// the SRI restriction behaves identically, so neither tsc nor the rejection
-// matrix above can see a re-fork. `Schema.Option(X)` keeps `X` on `.value`.
+// decision: config-dependency-integrity-identity-guard
 describe("ConfigDependencySpec.integrity", () => {
   it("IS @effected/npm's SriIntegrityHash, not a copy that agrees with it", () => {
     assert.strictEqual(ConfigDependencySpec.fields.integrity.value, SriIntegrityHash);
-    // The control: the assertion is not satisfied by the unrestricted brand.
-    assert.notStrictEqual<unknown>(ConfigDependencySpec.fields.integrity.value, IntegrityHash);
+    assert.notStrictEqual<unknown>(
+      ConfigDependencySpec.fields.integrity.value,
+      IntegrityHash,
+      "the control: the unrestricted brand does not satisfy the identity"
+    );
   });
 });
 
-// The hook-replay ladder shares the split but NOT the validation: it has always
-// accepted any spec text and matched the version half verbatim. Pin that the
-// strict model did not leak into it.
-describe("hook replay keeps its lenient reading", () => {
+describe("hook replay shares the split but keeps its lenient, verbatim reading: the strict model must not leak into it", () => {
   it.effect("resolves a spec whose integrity half the strict model rejects", () =>
     Effect.gen(function* () {
       assert.strictEqual(reasonOf("0.11.1+garbage"), "integrity");

@@ -1992,7 +1992,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       const commandOf = (lane: GithubCheckLaneSpec): string => A.join([lane.step.command, ...lane.step.args], " ");
       const idsByCommand = A.reduce(registered, HM.empty<string, ReadonlyArray<string>>(), (acc, lane) =>
         HM.modifyAt(acc, commandOf(lane), (ids) =>
-          O.some(A.dedupe(A.append(O.getOrElse(ids, A.empty<string>), lane.id)))
+          ids.pipe(O.getOrElse(A.empty<string>), A.append(lane.id), A.dedupe, O.some)
         )
       );
 
@@ -9354,7 +9354,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "@beep/law-practice-server",
           "@beep/lexical-schema",
           "@beep/lint-rules",
-          "@beep/nlp",
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/ontology-client",

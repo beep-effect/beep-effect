@@ -36,28 +36,23 @@ function shouldSkipAssertion(id: string, assertion: string): boolean {
   return SKIP_ASSERTIONS[id]?.includes(assertion) ?? false;
 }
 
-/**
- * Deep comparison that handles NaN equality.
- */
-function deepEqual(a: unknown, b: unknown): boolean {
-  // Object.is already treats NaN as equal to itself.
+function deepEqualWithNaN(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (A.isArray(a) || A.isArray(b)) return A.isArray(a) && A.isArray(b) && arraysEqual(a, b);
   return P.isObject(a) && P.isObject(b) && recordsEqual(a, b);
 }
 
 function arraysEqual(a: ReadonlyArray<unknown>, b: ReadonlyArray<unknown>): boolean {
-  return a.length === b.length && A.every(a, (v, i) => deepEqual(v, b[i]));
+  return a.length === b.length && A.every(a, (v, i) => deepEqualWithNaN(v, b[i]));
 }
 
 function recordsEqual(a: { readonly [x: PropertyKey]: unknown }, b: { readonly [x: PropertyKey]: unknown }): boolean {
   const keysA = R.keys(a);
-  return keysA.length === R.keys(b).length && A.every(keysA, (k) => deepEqual(a[k], b[k]));
+  return keysA.length === R.keys(b).length && A.every(keysA, (k) => deepEqualWithNaN(a[k], b[k]));
 }
 
 const parseOptions = () => ParseOptionsInput.make({ uniqueKeys: false });
 
-/** Parse every document of a multi-document stream to its plain value. */
 const parseDocumentValues = (yaml: string) =>
   parseAllDocuments(yaml, parseOptions()).pipe(
     Effect.map((docs) =>
@@ -71,10 +66,10 @@ const parseDocumentValues = (yaml: string) =>
 const assertJsonMatch = Effect.fn(function* (tc: TestCase) {
   if (tc.isMultiDocument) {
     const values = yield* parseDocumentValues(tc.yaml);
-    assert.isTrue(deepEqual(values, tc.json), `JSON mismatch for ${tc.id}`);
+    assert.isTrue(deepEqualWithNaN(values, tc.json), `JSON mismatch for ${tc.id}`);
   } else {
     const value = yield* parse(tc.yaml, parseOptions());
-    assert.isTrue(deepEqual(value, tc.json), `JSON mismatch for ${tc.id}`);
+    assert.isTrue(deepEqualWithNaN(value, tc.json), `JSON mismatch for ${tc.id}`);
   }
 });
 
@@ -95,7 +90,7 @@ const canonicalOutput = Effect.fn(function* (tc: TestCase) {
 const assertRoundtrip = Effect.fn(function* (tc: TestCase, value: unknown) {
   const stringified = stringify(value);
   const reparsed = yield* parse(stringified, parseOptions());
-  assert.isTrue(deepEqual(reparsed, value), `Roundtrip mismatch for ${tc.id}`);
+  assert.isTrue(deepEqualWithNaN(reparsed, value), `Roundtrip mismatch for ${tc.id}`);
 });
 
 const assertStringifyRoundtrip = Effect.fn(function* (tc: TestCase) {

@@ -1025,7 +1025,12 @@ export const hatchCompound = <P>(options: {
   const tapers = A.isReadonlyArrayNonEmpty(shared)
     ? settleBandTapers({
         shared,
-        inkOf: (stepped) => A.getSomes(A.map(shadedUnder(stepped), (face) => face.ink)),
+        inkOf: (stepped) =>
+          stepped.pipe(
+            shadedUnder,
+            A.map((face) => face.ink),
+            A.getSomes
+          ),
       })
     : HashMap.empty<number, BandTaper>();
   return {

@@ -1,7 +1,3 @@
-// Trigger precedence and node materialization remain stable now that the
-// inline registry keys its trigger table by character (a frozen record read
-// once per character) and the materializer compiles its matcher once.
-
 import { inlineDialect } from "@beep/markdown/internal/inlineRegistry";
 import { Markdown } from "@beep/markdown/Markdown";
 import { assert, describe, it } from "@effect/vitest";
@@ -22,7 +18,7 @@ const cases = [
   { source: "<https://example.com>", type: "link" },
 ];
 
-describe("inline dispatch", () => {
+describe("inline dispatch: trigger precedence and materialization over a per-character trigger table and once-compiled matcher", () => {
   it("keeps autolinks before raw HTML in each trigger bucket", () => {
     for (const dialect of ["commonmark", "gfm"] as const) {
       const registry = inlineDialect(dialect);

@@ -96,7 +96,7 @@ export const makeInMemoryWorkItemRepository = Effect.fn("ArchitectureLab.WorkIte
       }),
       list: Effect.gen(function* () {
         const workItems = yield* Ref.get(store);
-        return A.fromIterable(HashMap.values(workItems));
+        return workItems.pipe(HashMap.values, A.fromIterable);
       }).pipe(Effect.withSpan("ArchitectureLab.WorkItemRepository.list")),
       save: Effect.fn("ArchitectureLab.WorkItemRepository.save")(function* (workItem) {
         yield* getStoredWorkItem(store, workItem.id);

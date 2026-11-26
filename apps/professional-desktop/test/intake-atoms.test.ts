@@ -35,8 +35,6 @@ import type { IntakeHandlers } from "./support/IntakeHarness.ts";
 
 const surfaceAtom = documentIntakeSurfaceAtoms(workspaceId);
 
-// A registry whose intake runtime talks to the fake RPC client, with the
-// surface mounted the way `DocumentIntakeTarget` mounts it.
 const mountSurface = Effect.fnUntraced(function* (handlers: IntakeHandlers) {
   const registry = yield* Effect.acquireRelease(
     Effect.sync(() =>
@@ -71,8 +69,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// Spies are restored after each case, so cases must not interleave.
-describe("document intake surface", { concurrent: false }, () => {
+describe("document intake surface, serial: spies restore after each case", { concurrent: false }, () => {
   it.effect(
     "starts pending, opens onboarding, and enables intake once a picked vault is saved",
     Effect.fnUntraced(function* () {
@@ -97,8 +94,9 @@ describe("document intake surface", { concurrent: false }, () => {
       expect(ready.state.vaultSelection.kind).toBe("idle");
       const got = yield* Ref.get(saved);
       expect(got).toMatchObject([{ vaultRootPath: selectedPath, workspaceId }]);
-      // The file-input ref callback and every handler stay referentially stable.
-      expect(ready.actions).toBe(onboarding.actions);
+      expect(ready.actions, "the file-input ref callback and every handler stay referentially stable").toBe(
+        onboarding.actions
+      );
     })
   );
 
@@ -170,12 +168,13 @@ describe("document intake surface", { concurrent: false }, () => {
       yield* waitFor((current) => current.state.isDragging);
       expect(preventDefault).toHaveBeenCalledTimes(2);
 
-      // Moving onto a child of the surface must not drop the highlight; the
-      // result marker proves that leave event was processed before the assert.
       actions.dragLeave({ currentTarget: container, relatedTarget: child });
       actions.fileSelection([new File([], "marker.txt")]);
       const stillDragging = yield* waitFor((current) => A.length(current.state.results) === 1);
-      expect(stillDragging.state.isDragging).toBe(true);
+      expect(
+        stillDragging.state.isDragging,
+        "moving onto a child keeps the highlight; the marker result proves the leave was processed first"
+      ).toBe(true);
 
       actions.dragLeave({ currentTarget: container, relatedTarget: null });
       yield* waitFor((current) => !current.state.isDragging);
@@ -191,6 +190,10 @@ describe("document intake surface", { concurrent: false }, () => {
 
       actions.dragEnter({ preventDefault });
       actions.drop({ files: [new File([], "empty.txt")], preventDefault });
+      expect(
+        preventDefault,
+        "intake.send is queued, so preventDefault has to run synchronously inside the DOM handler"
+      ).toHaveBeenCalledTimes(2);
       const filed = yield* waitFor(
         (current) => A.length(current.state.results) === 1 && current.state.activeBatches === 0
       );
@@ -216,11 +219,13 @@ describe("document intake surface", { concurrent: false }, () => {
       actions.dragEnter({ preventDefault });
       actions.dragOver({ preventDefault });
       actions.drop({ files: [new File([], "empty.txt")], preventDefault });
-      // A later event the machine does handle orders this assert after the three above.
       actions.chooseVault();
       const choosing = yield* waitFor((current) => current.state.vaultSelection.kind === "choosing");
 
-      expect(preventDefault).not.toHaveBeenCalled();
+      expect(
+        preventDefault,
+        "the handled chooseVault orders this assert after the three ignored events"
+      ).not.toHaveBeenCalled();
       expect(choosing.state.isDragging).toBe(false);
       expect(choosing.state.results).toEqual([]);
     })
@@ -228,10 +233,8 @@ describe("document intake surface", { concurrent: false }, () => {
 });
 
 describe("intake file input", { concurrent: false }, () => {
-  // AtomRegistry arms its idle sweep with a native setTimeout against Date.now, which TestClock
-  // cannot advance, so this case waits in live time for the observed eviction.
   it.live(
-    "keeps the hidden file input available after the registry idle TTL",
+    "keeps the hidden file input available after the registry's native-setTimeout idle TTL, waited in live time",
     Effect.fnUntraced(function* () {
       const registry = yield* Effect.acquireRelease(
         Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: 10, timeoutResolution: 1 })),
@@ -248,28 +251,27 @@ describe("intake file input", { concurrent: false }, () => {
       yield* AtomRegistry.getResult(registry, setInput);
       releaseSetInput();
 
-      // The witness is armed after the release, so its eviction proves the native idle sweep has
-      // also passed every node the release left idle. The registry's removal hook signals the
-      // eviction itself; nothing polls or touches the witness while it is idle.
-      const idleWitness = Atom.make(0);
+      const witnessArmedAfterRelease = Atom.make(0);
       const witnessEvicted = yield* Deferred.make<void>();
       registry.onNodeRemoved = (node) => {
-        if (node.atom === idleWitness) Deferred.doneUnsafe(witnessEvicted, Effect.void);
+        if (node.atom === witnessArmedAfterRelease) Deferred.doneUnsafe(witnessEvicted, Effect.void);
       };
       const armedAt = yield* Clock.currentTimeMillis;
-      registry.set(idleWitness, 1);
-      expect(registry.get(idleWitness)).toBe(1);
-      expect(registry.getNodes().has(idleWitness)).toBe(true);
+      registry.set(witnessArmedAfterRelease, 1);
+      expect(registry.get(witnessArmedAfterRelease)).toBe(1);
+      expect(registry.getNodes().has(witnessArmedAfterRelease)).toBe(true);
       yield* Deferred.await(witnessEvicted).pipe(
         Effect.timeoutOrElse({
           duration: Duration.seconds(3),
           orElse: () => Effect.die("the idle witness was never evicted"),
         })
       );
-      // Present until the 10 ms TTL, evicted after it: neither early nor never.
-      expect((yield* Clock.currentTimeMillis) - armedAt).toBeGreaterThanOrEqual(10);
-      expect(registry.getNodes().has(idleWitness)).toBe(false);
-      expect(registry.get(idleWitness)).toBe(0);
+      expect(
+        (yield* Clock.currentTimeMillis) - armedAt,
+        "present until the 10 ms TTL, evicted after it: neither early nor never"
+      ).toBeGreaterThanOrEqual(10);
+      expect(registry.getNodes().has(witnessArmedAfterRelease)).toBe(false);
+      expect(registry.get(witnessArmedAfterRelease)).toBe(0);
       assertSome(registry.get(intakeFileInputAtoms(workspaceId)), input);
 
       const releaseOpenPicker = registry.mount(openPicker);

@@ -91,7 +91,8 @@ integration?
 - generic provenance, langextract, and modeling/NLP bricks in foundation; and
 - external PDF engines under `packages/drivers/*`.
 
-The live NLP modeling path is `packages/foundation/modeling/nlp`.
+The live NLP modeling package was `@beep/nlp`, retired since in P7 of
+`goals/text-knowledge-stack-rebuild`.
 
 **Rationale:** Office-action and contract structures are legal product
 language, not a product-neutral foundation capability. This overturns the

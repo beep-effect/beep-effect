@@ -3,7 +3,21 @@
     "prefix": "operation",
     "iri": "https://beep-effect.com/ns/operation/"
   },
-  "terms": ["Extract"],
+  "terms": [
+    "Extract",
+    "ExtractEntities",
+    "ExtractRelations",
+    "Lemmatize",
+    "MapToLaw",
+    "ParseDependencies",
+    "PosTag",
+    "ProposeClaim",
+    "Sentencize",
+    "ToLowerCase",
+    "ToUpperCase",
+    "Tokenize",
+    "Trim"
+  ],
   "bindings": [],
   "deprecations": []
 }

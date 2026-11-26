@@ -68,4 +68,8 @@ export const RemoveStopWords = Tool.make("RemoveStopWords", {
   failureMode: "return",
   parameters: RemoveStopWordsParameters,
   success: S.toEncoded(RemoveStopWordsSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

@@ -39,7 +39,8 @@ const platform = Layer.merge(BunFileSystem.layer, BunCrypto.layer);
 // strictEffectProvide bans Layer-provide outside composed entry layers: build the
 // platform layer in a scope and provide the resulting Context to the run.
 BunRuntime.runMain(
-  Layer.build(platform).pipe(
+  platform.pipe(
+    Layer.build,
     Effect.flatMap((context) => Effect.provide(generate, context)),
     Effect.scoped
   )

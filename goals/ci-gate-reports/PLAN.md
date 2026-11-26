@@ -2,13 +2,14 @@
 
 ## Status
 
-Status: `active`. P0, P1, P3 and P4 are complete (decision `report-carrier` and the P1, P3 and
-P4 checkpoints): the `task-outcomes/v2` feed record, the CI projection, `beep ci append-gate-reports`,
-the main-feed lookup, the CI-job adapter and `beep ci failures` are built, and the guidance names
-the command. P2 (workflow wiring) is in progress: part 1 (PR 3, `check.yml` and the four smaller
-workflows) is built (P2 part 1 checkpoint); PR 4 wires `heavy.yml`, and P2 completes on the hosted
-`main`-run proof. The seven-day census runs a week after the guidance merges, under census rules
-`2026-11-23`, which count `beep ci failures` as a CI-log read (P4 checkpoint).
+Status: `active`. P0 to P4 are complete (decision `report-carrier` and the P1 to P4
+checkpoints): the `task-outcomes/v2` feed record, the CI projection, `beep ci append-gate-reports`,
+the main-feed lookup, the CI-job adapter and `beep ci failures` are built, the guidance names
+the command, every gate job in the six gate workflows uploads its reports (P2 complete checkpoint,
+proved on `main` by run id), and `beep ci workflow-lint` rejects a gate job without the upload.
+The last open item is the seven-day census, whose window closes 2026-11-30T07:07:48Z, one week
+after the guidance merged (#3503), under census rules `2026-11-23`, which count `beep ci failures`
+as a CI-log read (P4 checkpoint). The closeout PR records that run and the reflection.
 
 ## Phases
 
@@ -16,10 +17,10 @@ workflows) is built (P2 part 1 checkpoint); PR 4 wires `heavy.yml`, and P2 compl
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the workflow census, choose the report carrier against the six criteria in `SPEC.md`, and fix the feed's record schema. | One decision file names the carrier with each criterion answered by evidence; the census table in `SPEC.md` matches the workflows at that head. |
 | P1 Projection and feed record | complete | The CI renderer (summary, grouped log, annotations) from gate reports, the planned CI subcommand that appends it, and the feed record schema. | The renderer, limit and neutralization tests pass. |
-| P2 Workflow wiring | in-progress | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
+| P2 Workflow wiring | complete | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
 | P3 Lookup, adapter and failing-region command | complete | The main-feed lookup, the CI-job adapter, the extracted log route and the failing-region command. | The lookup, adapter and command fixture tests pass; the monitor's tests pass unchanged; the ledger shows REST only. |
 | P4 Guidance and measurement | complete | Replace the raw `gh api` log recipe in `AGENTS.md` and the yeet skill; record the census or fixture numbers. | `bun run beep skills update --check` passes; the measurement is recorded as a checkpoint. |
-| P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P5 Yeet: PR to mergeable | in-progress | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Pull requests
@@ -143,5 +144,34 @@ Fixture stand-in, live and REST only: `bun run beep ci failures --run 4508382161
 Lane goals/ci-gate-reports-p4
 
 Reverse: Revert the P4 commit; the guidance names the raw logs endpoint again and the census baseline file is removed
+
+### P2 part 2 built: heavy.yml lanes upload gate reports, 2026-11-25
+
+P2 part 2 (PR 4) is built. The shared `heavy.yml` lane steps (`&heavy-lane-steps`) gain the same two steps as `check.yml`: the `gate-reports` composite action and the upload of `$RUNNER_TEMP/gate-reports` as `task-outcomes-<run>-<attempt>-<job>-<lane>` (`include-hidden-files: true`, `retention-days: 30`), red or green, continuing on error. One anchor wires all five lanes: Lint Policy, Check, Docgen, Doctest and Build. The producer and pilot jobs run no `ci lane` and are not wired.
+
+Two differences from `check.yml`. The record's job is `Heavy / <lane>`, the name GitHub lists for a job in the called workflow, so `beep ci failures` joins the record to its job by exact name. Both steps also require `hashFiles('.github/actions/gate-reports/action.yml')`: a pull request runs `heavy.yml` from `main` but resolves `./.github/actions/*` from its own checkout, so a branch that predates the action skips the steps instead of failing them, the same guard the Turbo build cache restore uses.
+
+`heavy.yml` runs from `main`, so this PR proves itself on the first `main` run after it merges, not in its own checks. P2 stays in progress until that run shows the projection and the artifact in every heavy lane, cited by run id.
+
+Lane goals/ci-gate-reports-p2-heavy
+
+Reverse: Revert the PR 4 workflow commit; the heavy lanes stop rendering and uploading gate reports
+
+### P2 complete: every gate job uploads its reports, proved on main and pinned by the upload lint, 2026-11-26
+
+P2 is complete.
+
+Hosted proof, the first `main` run after each workflow PR:
+- `check.yml` run 45688461000 at 3f869c6, after PR 3. 61 jobs carry the report steps. Report and Upload ran green in 60 and uploaded 60 `task-outcomes-*` artifacts. Test Plan skipped both steps because it skips its lane on a push.
+- `heavy.yml`, through the Heavy caller in `check.yml` run 45715773402 at 8f4208a, after PR 4 (#3552). Lint Policy, Check, Docgen, Doctest and Build each uploaded `task-outcomes-45715773402-1-<job>-<lane>`. `beep ci failures --run 45715773402` matched each record to its `Heavy / <lane>` job by exact name and printed the projection; the run was red from an unrelated `@beep/rdf-canonize` build error, fixed by #3557.
+- `storybook.yml` run 45722369383 at dd10bba: Storybook uploaded one artifact.
+- `property-laws-nightly.yml` run 45683312080 at f9b9d10, a descendant of a28db02: the Property Laws Sweep uploaded one artifact.
+- `shard-overflow.yml` and `fleet-lane-probe.yml` prove on their first run (decision `event-only-gate-workflows-prove-on-their-first-run`).
+
+Static proof: `beep ci workflow-lint` now rejects a job that runs `ci lane`, or stages gate reports, without the `gate-reports` action and a `task-outcomes-*` upload of `${{ runner.temp }}/gate-reports/` on `always()`, with `continue-on-error`, `include-hidden-files: true` and `retention-days: 30`. Fixture tests cover each diagnostic and a shared YAML anchor. A repository-workflow test pins all 25 gate job ids across the six workflows. The `hashFiles` guard's skip on a pull request branch that predates the action is read on the first such Heavy run.
+
+Lane goals/ci-gate-reports-upload-lint
+
+Reverse: Revert the upload-lint commit and set P2 back to in-progress in the manifest and PLAN table
 
 <!-- beep:decisions:end -->

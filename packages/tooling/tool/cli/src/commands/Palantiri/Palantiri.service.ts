@@ -57,7 +57,7 @@ import { ComputeProfileProbe } from "../../internal/repo-run/ComputeProfile.ts";
 import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
 import { MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
 import { writePrivateFile } from "../../internal/state/PrivateFile.ts";
-import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
+import { checkoutRepositoryStateKey, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import {
   AccountsStatusReport,
   AccountsStatusReportJson,
@@ -920,8 +920,7 @@ export const makeSinceLastCheckSource = Effect.fnUntraced(function* (facts: Chec
     const dir = yield* palantiriStateDir.pipe(
       Effect.mapError(() => sinceLastCheckFailed("state directory could not be resolved"))
     );
-    const { host, owner, name } = current.repository;
-    return path.join(dir, "cursors", `${host}__${owner}__${name}`, `${session}.json`);
+    return path.join(dir, "cursors", checkoutRepositoryStateKey(current.repository), `${session}.json`);
   });
 
   const read = Effect.fn("PalantiriSource.readSinceLastCheck")(function* (session: SessionKey) {

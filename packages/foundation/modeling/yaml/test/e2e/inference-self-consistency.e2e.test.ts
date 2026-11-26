@@ -1,10 +1,3 @@
-// The #345 dogfood pin: strict-mode config inference over our OWN
-// stringifier's emitted output must resolve without conflict — unanimous
-// evidence out of our own emit, or the stringifier is inconsistent with
-// itself. The corpus is value-path emission (Yaml.stringifyResult with
-// default options): the value path is where every presentation choice is the
-// stringifier's own, which is exactly what self-consistency is about.
-
 import { StyleEvidence, Yaml, YamlLint } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
@@ -20,7 +13,7 @@ const values: ReadonlyArray<unknown> = [
   { empty: {}, emptyList: [], nul: null, pi: 3.14 },
 ];
 
-describe("e2e: strict inference over the stringifier's own emit (#345)", () => {
+describe("e2e: strict inference over the stringifier's own value-path emit (#345)", () => {
   it("unanimous evidence out of our own emit — or the stringifier disagrees with itself", () => {
     let evidence = StyleEvidence.empty;
     for (const value of values) {
@@ -30,9 +23,6 @@ describe("e2e: strict inference over the stringifier's own emit (#345)", () => {
         evidence = StyleEvidence.combine(evidence, YamlLint.observe(emitted.success, YamlLint.builtins));
       }
     }
-    // Positive control: the corpus must actually exercise the inferable
-    // dimensions — an inference pass that observed nothing would resolve
-    // "without conflict" vacuously.
     const voted = new Set(A.map(evidence.votes, (v) => `${v.rule}.${v.dimension}`));
     assert.isTrue(voted.has("quoted-strings.quoteType"), "corpus must produce quote-style votes");
     assert.isTrue(voted.has("indentation.spaces"), "corpus must produce indent-unit votes");
@@ -43,9 +33,6 @@ describe("e2e: strict inference over the stringifier's own emit (#345)", () => {
     const resolved = YamlLint.resolveStrict(evidence);
     assertSuccess(resolved, Result.getOrThrow(resolved));
     if (Result.isSuccess(resolved)) {
-      // The inferred config is the stringifier's own documented voice:
-      // single-quote fallback, two-space indent, unindented sequences, no
-      // document markers.
       assert.deepStrictEqual(resolved.success.rules["quoted-strings"], { quoteType: "single" });
       assert.deepStrictEqual(resolved.success.rules.indentation, { indentSequences: false, spaces: 2 });
       assert.deepStrictEqual(resolved.success.rules["document-start"], { present: false });

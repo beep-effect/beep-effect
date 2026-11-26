@@ -25,9 +25,7 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 
 describe("ConfigDependencySpec property floor", () => {
   roundTrips("ConfigDependencySpec", ConfigDependencySpec);
-  // The codec's instanceOf declaration has no native arbitrary. Supply its
-  // existing class model as generation metadata without changing the codec.
-  const schema = ConfigDependencySpec.FromString.annotate({
+  const instanceOfCodecWithClassModelArbitrary = ConfigDependencySpec.FromString.annotate({
     toCodecArbitrary: () =>
       S.link<ConfigDependencySpec>()(ConfigDependencySpec, {
         decode: SchemaGetter.passthrough(),
@@ -36,7 +34,7 @@ describe("ConfigDependencySpec property floor", () => {
   });
   it.effect.prop(
     "FromString: decode(encode(x)) equals x and never fails",
-    [Arbitrary.schema(schema)],
+    [Arbitrary.schema(instanceOfCodecWithClassModelArbitrary)],
     ([value]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(ConfigDependencySpec.FromString)(value);

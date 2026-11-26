@@ -1,9 +1,3 @@
-// The W7 kit members (repo-cli-gh-git-consolidation SPEC D-17): revListCount,
-// mergeTree, upstream, updateRef, gitDir and diffPatch, plus the ten option
-// extensions. This suite pins argv shape, pre-spawn refusals and every
-// classification arm over a scripted spawner; the real-git semantics live in
-// integration/GitW7Kit.int.test.ts.
-
 import { Git, GitCommandError, MergeTreeResult, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { parseLogFor, parseMergeTree, parseRevListCount, parseUpstream } from "@beep/git/internal/parsers";
@@ -25,13 +19,11 @@ import type { ScriptResult } from "./fixtures.ts";
 const cwd = "/repo";
 const TREE = Str.repeat(40)("a");
 
-/** A parser failure's message, or `""` when the parse succeeded. */
 const failureText = <A>(result: Result.Result<A, string>): string => O.getOrElse(Result.getFailure(result), () => "");
 
 const isSshProbe = (args: ReadonlyArray<string>): boolean =>
   args[0] === "config" && args[1] === "--get" && (args[2] === "core.sshCommand" || args[2] === "ssh.variant");
 
-/** Runs `program` against the live service over a spawner that records every argv it is handed. */
 const run = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArray<string>) => ScriptResult) => {
   const seen: Array<ReadonlyArray<string>> = [];
   const spawner = scripted((args) => {
@@ -50,7 +42,6 @@ const run = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArr
   ).pipe(Effect.map((value) => ({ value, seen })));
 };
 
-/** The failure of `program`, which must fail. */
 const failure = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
   run(Effect.flip(program), byArgs).pipe(Effect.map(({ value, seen }) => ({ error: value, seen })));
 

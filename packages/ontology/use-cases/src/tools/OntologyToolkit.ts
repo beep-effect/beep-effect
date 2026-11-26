@@ -8,6 +8,7 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { annotateFourHints, destructiveWriteToolHints, readOnlyToolHints } from "@beep/mcp-kit";
+import { OntoViolation } from "@beep/ontology/Gufo";
 import { ChangeOperation, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
@@ -294,6 +295,108 @@ export class OntologyToolExecutionError extends S.TaggedError<
   })
 ) {}
 
+/** The SHACL violation counts before and after a proposed batch.
+ * **Example** (Usage)
+ * ```ts
+ * import { OntologyShaclWorsened } from "@beep/ontology-use-cases/tools"
+ * const lint = OntologyShaclWorsened.make({ before: 1, after: 3, truncated: false })
+ * console.log(lint._tag)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class OntologyShaclWorsened extends S.Opaque<OntologyShaclWorsened, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("ShaclWorsened", {
+    before: S.Natural,
+    after: S.Natural,
+    truncated: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("OntologyShaclWorsened", {
+      description: "The batch raised the session's SHACL violation count; truncated marks a capped after-count.",
+    })
+  )
+) {}
+
+/** The gUFO violations a proposed batch states on the terms it touches.
+ * **Example** (Usage)
+ * ```ts
+ * import { TermIri } from "@beep/identity/Term"
+ * import { RoleWithoutKind } from "@beep/ontology/Gufo"
+ * import { OntologyGufoViolated } from "@beep/ontology-use-cases/tools"
+ * const lint = OntologyGufoViolated.make({ violations: [RoleWithoutKind.make({ term: TermIri.make("https://example.test/Student") })] })
+ * console.log(lint._tag)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class OntologyGufoViolated extends S.Opaque<OntologyGufoViolated, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("GufoViolated", {
+    violations: S.NonEmptyArray(OntoViolation),
+  }).pipe(
+    $I.annoteSchema("OntologyGufoViolated", {
+      description: "The gUFO violations the batch's typings state on the terms it adds quads about.",
+    })
+  )
+) {}
+
+/** Why the proposed-term lint refused a batch.
+ * **Example** (Usage)
+ * ```ts
+ * import { OntologyProposedTermLint } from "@beep/ontology-use-cases/tools"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(OntologyProposedTermLint)({ _tag: "ShaclWorsened", before: 0, after: 1, truncated: false }))
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export const OntologyProposedTermLint = S.Union([OntologyShaclWorsened, OntologyGufoViolated]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("OntologyProposedTermLint", {
+    description: "A SHACL count the batch raised or the gUFO violations it states.",
+  })
+);
+
+/**
+ * **Example** (Usage)
+ * ```ts
+ * import type { OntologyProposedTermLint } from "@beep/ontology-use-cases/tools"
+ * const show = (lint: OntologyProposedTermLint) => lint._tag
+ * console.log(show)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export type OntologyProposedTermLint = typeof OntologyProposedTermLint.Type;
+
+/**
+ * **Example** (Usage)
+ * ```ts
+ * import { OntologyProposedTermRefusal, OntologyShaclWorsened } from "@beep/ontology-use-cases/tools"
+ * const error = OntologyProposedTermRefusal.make({
+ *   lint: OntologyShaclWorsened.make({ before: 0, after: 1, truncated: false }),
+ *   guidance: "Revise the batch so it adds no SHACL violation and retry.",
+ *   recoverable: true
+ * })
+ * console.log(error._tag)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class OntologyProposedTermRefusal extends S.TaggedError<
+  OntologyProposedTermRefusal,
+  { readonly brand: unique symbol }
+>($I`OntologyProposedTermRefusal`)(
+  "OntologyProposedTermRefusal",
+  {
+    lint: OntologyProposedTermLint,
+    guidance: S.NonEmptyString,
+    recoverable: S.tag(true),
+  },
+  $I.annoteError<OntologyProposedTermRefusal>("OntologyProposedTermRefusal", {
+    description: "Recoverable refusal of a batch whose proposed terms fail the SHACL or gUFO lint; nothing was saved.",
+  })
+) {}
+
 /** Returned ontology tool failure union.
  * **Example** (Usage)
  * ```ts
@@ -310,6 +413,7 @@ export const OntologyToolFailure = S.Union([
   OntologyNoOpRefusal,
   OntologyActorIdentityRefusal,
   OntologyTierGateRefusal,
+  OntologyProposedTermRefusal,
   OntologyToolExecutionError,
 ]).pipe($I.annoteSchema("OntologyToolFailure", { description: "Failure returned by the ontology agent toolkit." }));
 

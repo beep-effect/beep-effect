@@ -11,10 +11,8 @@ Mata = "Mata"
 virtua = "virtua"
 # @beep/markdown tests name the HTML entity "&curren;".
 curren = "curren"
-# @beep/commands quotes "raison d'etre"; @beep/schema-org tests reference the
-# vendored vocabulary's "fnd" namespace.
+# @beep/commands quotes "raison d'etre".
 raison = "raison"
-fnd = "fnd"
 optin = "optin" # Models manifest role muse.optin
 wdth = "wdth" # OpenType variable-font width axis tag (font-variation-settings)
 certifi = "certifi" # Python CA-bundle package in the #1882 dependency-review fixtures
@@ -116,8 +114,7 @@ extend-exclude = [
   "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/**",
   "packages/foundation/modeling/toml/test/fixtures/toml-test/**",
   # Vendored data lists promoted from the effected kit: byte-faithful upstream
-  # text (the schema.org vocabulary, the SPDX license and exception lists).
-  "packages/foundation/modeling/schema-org/src/internal/vocabulary.ts",
+  # text (the SPDX license and exception lists).
   "packages/foundation/modeling/spdx/src/internal/licenseIds.ts",
   "packages/foundation/modeling/spdx/src/internal/licenseMeta.ts",
   # The SPDX license-id schema vendored for @beep/sbom's CycloneDX oracle:
@@ -135,8 +132,6 @@ extend-exclude = [
   # kept byte-faithful to upstream, so their spelling is not ours to fix.
   "packages/drivers/*/openapi.json",
   "packages/drivers/*/spec/*.json",
-  # Generated Pulumi terraform-module bridge SDK — vendored upstream text.
-  "infra/ci-runners/sdks/**",
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",

@@ -39,6 +39,14 @@
     {
       "name": "@beep/provenance",
       "rationale": "Retired by goals/text-knowledge-stack-rebuild P2: its three modules moved to @beep/text with every consumer in the same commit and no alias. Name-reuse guard; recover the source from commit 79469596a0."
+    },
+    {
+      "name": "@beep/schema-org",
+      "rationale": "Retired by goals/text-knowledge-stack-rebuild P7: no importer or dependent, deleted whole with no successor. Name-reuse guard; recover the source from commit 6265d739bb6 on main."
+    },
+    {
+      "name": "@beep/nlp",
+      "rationale": "Retired by goals/text-knowledge-stack-rebuild P7: its facets were rehomed to @beep/annotation and @beep/nlp-processing in P3 and P6, and its four text helpers had no consumer. Name-reuse guard; recover the source from commit 6265d739bb6 on main."
     }
   ]
 }

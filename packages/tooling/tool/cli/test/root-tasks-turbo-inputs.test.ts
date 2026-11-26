@@ -56,7 +56,7 @@ const Strings = S.Array(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed([
 // input remain exact, including literal Markdown outside the accepted roots.
 const GeneratedSourceInput = S.String.check(
   S.isPattern(
-    /^\$TURBO_ROOT\$\/(?:apps|packages|infra|scratchpad|tools|scripts|goals|explorations|research|\.claude|\.github)\/.*\.(?:[cm]?[jt]sx?)$/u
+    /^\$TURBO_ROOT\$\/(?:apps|packages|scratchpad|tools|scripts|goals|explorations|research|\.claude|\.github)\/.*\.(?:[cm]?[jt]sx?)$/u
   ),
   S.isTrimmed()
 ).pipe(
@@ -66,7 +66,7 @@ const GeneratedSourceInput = S.String.check(
 );
 const GeneratedWorkspaceManifestInput = S.String.check(
   S.isPattern(
-    /^\$TURBO_ROOT\$\/(?:apps|packages|infra|scratchpad|tools)\/(?:[\p{L}\p{N}_-][\p{L}\p{N}_.-]*\/)*package\.json$/u
+    /^\$TURBO_ROOT\$\/(?:apps|packages|scratchpad|tools)\/(?:[\p{L}\p{N}_-][\p{L}\p{N}_.-]*\/)*package\.json$/u
   ),
   S.isTrimmed()
 ).pipe(
@@ -75,7 +75,7 @@ const GeneratedWorkspaceManifestInput = S.String.check(
   })
 );
 const SupportedWorkspacePattern = S.String.check(
-  S.isPattern(/^!?(?:apps|packages|infra|scratchpad|tools)(?:\/(?:[\p{L}\p{N}_-][\p{L}\p{N}_.-]*|\*|\*\*))*$/u),
+  S.isPattern(/^!?(?:apps|packages|scratchpad|tools)(?:\/(?:[\p{L}\p{N}_-][\p{L}\p{N}_.-]*|\*|\*\*))*$/u),
   S.isTrimmed()
 ).pipe(
   $I.annoteSchema("SupportedWorkspacePattern", {
@@ -220,7 +220,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
 
 const directInputs: Readonly<Record<string, string>> = {
   "lint:policy-fingerprint": "standards/policy-tools.fingerprint.json",
-  "lint:jsdoc:root": "infra/standalone/c3-probe.ts",
+  "lint:jsdoc:root": "apps/c3/src/c3-probe.ts",
   "lint:native-runtime:roots": "scratchpad/c3-probe.ts",
   "check:model-first-slices": "scratchpad/model-first-slices/c3-probe.ts",
   "lint:package-scripts": "packages/fixture/vitest.config.ts",
@@ -537,7 +537,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "08fb622c8ef78771b1501bba5cea9c083dc31e1c384f2462d0e25b974244f696"
+            "b3265be8948dea385f882a8be061c97016b495bab49b6d949e8d234e3a2309eb"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
@@ -549,7 +549,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-            "9138af0a1d46b36b519484967e66199f095bc4a0212f1c33550054c8519e7a22"
+            "e73c2de7cb083bd07718184b03a8cc78de2db2e0dc38ad4200f82b4b38019ee7"
           ),
           Tuple.make(
             "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
@@ -565,7 +565,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
-            "ed0556d6b78f97a61f848e66bb125516643945751419ced47594db3ee0672199"
+            "c0a652a216d4c9aa75e2a6a7298440625f9f7366159dfccba544c9e4c2541812"
           ),
         ];
         for (const [file, expected] of consumers) {
@@ -708,7 +708,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("f034d502e1c49b20b3538c81b5b381a4ace59d1f3333c6017f8e145e338b27e4");
+        expect(Hex.encode(bytes)).toBe("adb5bae39a3f8d2699940a2b9cddec47aa4b1ea5f99a6d66f86f94fe49318ebd");
       })
     );
   });
@@ -1008,7 +1008,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           Tuple.make("//#lint:circular", "packages/tooling/tool/cli/src/build/cycle.ts"),
           Tuple.make("//#lint:jsdoc:root", "packages/tooling/fixture/unit/src/build/check.ts"),
           Tuple.make("//#lint:jsdoc:root", "packages/tooling/fixture/unit/src/.beep/check.ts"),
-          Tuple.make("//#lint:jsdoc:root", "infra/standalone/src-tauri/gen/check.ts"),
+          Tuple.make("//#lint:jsdoc:root", "apps/standalone/src-tauri/gen/check.ts"),
           Tuple.make(
             "//#lint:effect-imports-markdown",
             "packages/foundation/primitive/fixture/src/generated/bindings.ts"
@@ -1038,7 +1038,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           Tuple.make("//#lint:effect-vitest", "apps/fixture/vitest.config.mts"),
           Tuple.make("//#lint:opaque-roundtrips", "packages/fixture/src/Nested.ts"),
           Tuple.make("//#lint:opaque-roundtrips", "apps/fixture/tsconfig.test.json"),
-          Tuple.make("//#lint:opaque-roundtrips", "infra/fixture/test/opaque.test.tsx"),
+          Tuple.make("//#lint:opaque-roundtrips", "apps/fixture/test/opaque.test.tsx"),
           Tuple.make("//#lint:opaque-roundtrips", "tsconfig.base.json"),
           Tuple.make("//#lint:opaque-roundtrips", "scratchpad/fixture/opaque.test.ts"),
           Tuple.make("//#lint:opaque-roundtrips", "goals/fixture/ops/opaque.test.ts"),

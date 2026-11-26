@@ -16,14 +16,12 @@ import * as Str from "effect/String";
 import type { BlockNode } from "@beep/markdown/internal/blockTypes";
 
 const runs = { arbitrary: fcRuns(100) };
-// Positions refer to different byte strings after canonical serialization.
-// Compare every semantic mdast field, recursively, excluding only positions.
-const semantic = (value: unknown): unknown => {
-  if (A.isArray(value)) return A.map(value, semantic);
+const withoutPositions = (value: unknown): unknown => {
+  if (A.isArray(value)) return A.map(value, withoutPositions);
   if (P.isObject(value))
     return R.map(
       R.filter(value, (_, key) => key !== "position"),
-      semantic
+      withoutPositions
     );
   return value;
 };
@@ -36,12 +34,6 @@ const styles = Arbitrary.schema(S.Literals(["one", "Two", "THREE"]));
 const sourceOf = (text: string, style: string) => `[${style}]: /target "title"\n\n[${text}][${style}]\n`;
 const options = MarkdownFormattingOptions.make({ headingStyle: "atx", bulletChar: "-" });
 
-/**
- * A paragraph of `size` definitions and a rejected suffix, between two
- * siblings, whose provenance runs (and their iteration) count every read.
- * Each source line sits two characters further on than its text, so offsets
- * prove the runs were consulted rather than assumed contiguous.
- */
 const countedDefinitionParagraph = (size: number) => {
   const reads = { count: 0 };
   const parent = makeBlockNode("document", 0, 1);
@@ -86,14 +78,17 @@ const countedDefinitionParagraph = (size: number) => {
   return { reads, parent, before, block, after, segments, lines, prefix, suffix };
 };
 
-/** Every split-out definition sits in order before the paragraph, at its own source span. */
 const assertSplitDefinitions = (parent: BlockNode, lines: ReadonlyArray<string>): void => {
   let offset = 0;
   A.forEach(lines, (line, index) => {
     const definition = parent.children[index + 1] ?? assert.fail(`expected definition ${index}`);
     assert.strictEqual(definition.data.definition?.identifier, `key${index}`);
     assert.strictEqual(definition.data.definition?.url, `/target${index}`);
-    assert.strictEqual(definition.startOffset, 100 + offset + index * 2);
+    assert.strictEqual(
+      definition.startOffset,
+      100 + offset + index * 2,
+      "each source line sits two characters further on than its text, so the offset proves the runs were consulted, not assumed contiguous"
+    );
     assert.strictEqual(definition.endOffset, 100 + offset + index * 2 + line.length - 1);
     assert.strictEqual(definition.startLine, 7 + index);
     assert.strictEqual(definition.endLine, 7 + index);
@@ -128,10 +123,7 @@ describe("linkReferenceDefinition parser properties", () => {
     assert.strictEqual(block.startOffset, 115);
   });
 
-  // In-process (D-45): the parse is pure, so no child runtime is needed to
-  // show that a 150,000-line paragraph after a definition neither overflows
-  // the stack nor loses provenance.
-  it("extracts a definition before 150,000 shallow paragraph lines", () => {
+  it("extracts a definition before 150,000 shallow paragraph lines in-process without stack overflow or lost provenance", () => {
     const size = 150_000;
     const source = `[a]: /b\n${Str.repeat(size)("x\n")}`;
     const parsed = parseBlocks(source);
@@ -192,7 +184,11 @@ describe("linkReferenceDefinition parser properties", () => {
         const parsed = yield* Markdown.parse(source);
         const serialized = yield* Markdown.stringify(parsed);
         const reparsed = yield* Markdown.parse(serialized);
-        assert.deepStrictEqual(semantic(reparsed), semantic(parsed));
+        assert.deepStrictEqual(
+          withoutPositions(reparsed),
+          withoutPositions(parsed),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
         const stringify1 = yield* Markdown.stringify(reparsed);
         assert.strictEqual(stringify1, serialized);
       }),
@@ -207,9 +203,13 @@ describe("linkReferenceDefinition parser properties", () => {
         const once = MarkdownFormat.formatToString(source, undefined, options);
         assert.strictEqual(MarkdownFormat.formatToString(once, undefined, options), once);
         const parsed2 = yield* Markdown.parse(once);
-        const argument = semantic(Mdast.toMdast(parsed2));
+        const argument = withoutPositions(Mdast.toMdast(parsed2));
         const parsed1 = yield* Markdown.parse(source);
-        assert.deepStrictEqual(argument, semantic(Mdast.toMdast(parsed1)));
+        assert.deepStrictEqual(
+          argument,
+          withoutPositions(Mdast.toMdast(parsed1)),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
       }),
     runs
   );
@@ -233,7 +233,11 @@ describe("linkReferenceDefinition parser properties", () => {
         assert.ok(Str.startsWith(prefix)(formatted));
         assert.ok(Str.endsWith(suffix)(formatted));
         const parsed3 = yield* Markdown.parse(formatted);
-        assert.deepStrictEqual(semantic(Mdast.toMdast(parsed3)), semantic(Mdast.toMdast(parsed)));
+        assert.deepStrictEqual(
+          withoutPositions(Mdast.toMdast(parsed3)),
+          withoutPositions(Mdast.toMdast(parsed)),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
       }),
     runs
   );

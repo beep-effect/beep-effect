@@ -1,14 +1,9 @@
-import { identity } from "effect/Function";
-// YamlToken / YamlTokens (#129): the public positioned token stream — the
-// sync Result primitive, the derived Stream form, the field reconciliation
-// (internal value/column → public text/character), and the total-tokenizer
-// contract (error-kind tokens in the success array, never a failure).
-
 import { YamlToken, YamlTokens } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -25,16 +20,23 @@ const tokensOf = (text: string): ReadonlyArray<YamlToken> => {
 
 describe("YamlTokens", () => {
   describe("tokenize (sync Result primitive)", () => {
-    it("produces positioned tokens with the public field vocabulary", () => {
+    it("produces positioned tokens whose text is the raw source slice, never the internal quote-stripped value", () => {
       const tokens = tokensOf("a: 1 # note\n");
       assert.isAbove(tokens.length, 0);
       for (const token of tokens) {
         assert.isTrue(S.is(YamlToken)(token));
-        // The reconciled spelling: text/character, never value/column.
         assert.isString(token.text);
         assert.isNumber(token.character);
-        assert.notProperty(token, "value");
-        assert.notProperty(token, "column");
+        assert.notProperty(
+          token,
+          "value",
+          "the reconciled spelling is text/character, never the internal value/column"
+        );
+        assert.notProperty(
+          token,
+          "column",
+          "the reconciled spelling is text/character, never the internal value/column"
+        );
         assert.strictEqual(Str.slice(token.offset, token.offset + token.length)("a: 1 # note\n"), token.text);
       }
     });
@@ -50,7 +52,7 @@ describe("YamlTokens", () => {
       assert.strictEqual(cursor, source.length);
     });
 
-    it("reports line/character zero-based, matching the diagnostic vocabulary", () => {
+    it("derives line/character from the token offset, never the internal column (the indent on synthetic block-start markers)", () => {
       const tokens = tokensOf("a: 1\nb: 2\n");
       const b = O.getOrUndefined(A.findFirst(tokens, (t) => t.text === "b"));
       assert.isDefined(b);
@@ -64,9 +66,7 @@ describe("YamlTokens", () => {
       assert.strictEqual(comment?.text, "# note");
     });
 
-    it("is TOTAL: malformed input succeeds with error-kind tokens, never a failure", () => {
-      // The reserved failure channel must not fire — linting has to run on
-      // documents that do not parse (parse-validity exists for exactly that).
+    it("is TOTAL: malformed input succeeds with error-kind tokens, never a failure, so linting runs on unparseable text", () => {
       const result = YamlTokens.tokenize("a: [unclosed\n\tb:\t:");
       assertSuccess(result, Result.getOrThrow(result));
     });

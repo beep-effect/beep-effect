@@ -1582,7 +1582,7 @@ const unpartitionedRefusal = (checkout: string) =>
     O.filter(AttemptJournalExport.guards.unpartitioned),
     O.map(
       (unpartitioned) =>
-        `${checkout} holds ${unpartitioned.journals} attempt journal(s) whose clone names no GitHub repository to file them under`
+        `${checkout} holds ${unpartitioned.journals} attempt journal(s) whose clone names no repository to file them under`
     )
   );
 

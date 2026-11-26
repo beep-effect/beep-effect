@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/wink",
   "review": {
-    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
-    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P6 retire lane)",
+    "reason": "Re-record the subjects whose Turbo inputs named the deleted infra/ workspace, after merging origin/main (#3561-#3563); configuration review only, no qualification granted.",
     "basis": {
-      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
-      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
+      "path": "docs/reports/infra-alchemy-p6-retire-cache-review-2026-11-25.md",
+      "sha256": "449a682ef1c70c6d316f5b30da98056bcfab1aad7ba0cd2f2987ed10acc9c466"
     }
   },
   "nodes": [
@@ -16,7 +16,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/schema#build",
@@ -77,7 +76,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/repo-gate-record#transit",
@@ -137,7 +135,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/schema#build",
@@ -269,7 +266,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -309,8 +305,6 @@
           "../../../.oxlintrc.deprecated-apis.jsonc",
           "../../../apps/**/package.json",
           "../../../apps/**/tsconfig*.json",
-          "../../../infra/**/tsconfig*.json",
-          "../../../infra/package.json",
           "../../../packages/**/package.json",
           "../../../packages/**/tsconfig*.json",
           "../../../standards/root-package.projection.generated.json",
@@ -474,7 +468,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",
@@ -525,7 +518,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/repo-gate-vitest#transit",
@@ -588,7 +580,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/schema#build",
@@ -636,7 +627,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",

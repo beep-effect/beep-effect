@@ -29,7 +29,6 @@ import type { Tree } from "./support/fixtures.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** The full workspaces stack over a virtual tree, rooted at `/repo`. */
 const workspacesOver = (tree: Tree) => {
   const base = platform(tree);
   return Workspaces.layer({ cwd: "/repo" }).pipe(Layer.provideMerge(base));
@@ -48,13 +47,12 @@ describe("CatalogSet", () => {
     })
   );
 
-  it.effect("reads named catalogs", () =>
+  it.effect("reads every named catalog, not only the first", () =>
     Effect.gen(function* () {
       const set = yield* CatalogSet.fromWorkspaceYaml(
         "catalogs:\n  build:\n    typescript: ^6.0.0\n  test:\n    vitest: ^3.0.0\n"
       );
       assert.deepStrictEqual(R.keys(set.entries).sort(), ["build", "test"]);
-      // The SECOND named catalog — a bug that keeps only the first passes on `build`.
       assertSome(set.rangeOf("vitest", O.some("test")), "^3.0.0");
       assertSome(set.rangeOf("typescript", O.some("build")), "^6.0.0");
     })
@@ -95,34 +93,33 @@ describe("CatalogSet", () => {
     })
   );
 
-  it("fromLockfileCatalogs unwraps the { specifier, version } lockfile shape", () => {
+  it("fromLockfileCatalogs unwraps { specifier, version } to the declared range, never pinning consumers to the version", () => {
     const set = CatalogSet.fromLockfileCatalogs({
       default: { effect: { specifier: "^4.0.0", version: "4.0.0-beta.97" } },
     });
-    // The SPECIFIER is the declared range, which is what a catalog resolves to;
-    // taking `version` would silently pin every consumer to an exact build.
-    assertSome(set.rangeOf("effect", O.none()), "^4.0.0");
+    const declaredSpecifierRange = set.rangeOf("effect", O.none());
+    assertSome(declaredSpecifierRange, "^4.0.0");
   });
 
-  it("merge lets a later set win per dependency", () => {
+  it("merge lets a later set win per dependency and keeps every un-overridden key", () => {
     const older = CatalogSet.fromLockfileCatalogs({ default: { effect: "^3.0.0", react: "^18.0.0" } });
     const newer = CatalogSet.fromLockfileCatalogs({ default: { effect: "^4.0.0" } });
     const merged = CatalogSet.merge(older, newer);
     assertSome(merged.rangeOf("effect", O.none()), "^4.0.0");
-    // The un-overridden key must SURVIVE the merge — a naive replace drops it.
-    assertSome(merged.rangeOf("react", O.none()), "^18.0.0");
+    const unOverriddenRange = merged.rangeOf("react", O.none());
+    assertSome(unOverriddenRange, "^18.0.0");
   });
 
   it("a __proto__ catalog key lands as an own property, not on the prototype", () => {
-    // It must come from JSON.parse, not an object literal — in a literal
-    // `__proto__:` sets the prototype and creates no own key, so the test would
-    // assert nothing. This is the shape a hostile lockfile actually produces.
     const hostile: unknown = Result.getOrThrowWith(
       S.decodeResult(UnknownJson)('{"__proto__": {"evil": "1.0.0"}}'),
       identity
     );
     const set = CatalogSet.fromLockfileCatalogs(hostile);
-    assert.isTrue(R.has(set.entries, "__proto__"));
+    assert.isTrue(
+      R.has(set.entries, "__proto__"),
+      "decoded from JSON as a hostile lockfile is: a literal __proto__: would set the prototype, not an own key"
+    );
     const empty: Record<string, unknown> = {};
     assert.isUndefined(empty.evil);
     const prototype: unknown = Object.prototype;
@@ -145,7 +142,7 @@ describe("CatalogSet", () => {
   });
 });
 
-const withLockfileAndInline: Tree = {
+const staleLockfileBesideInline: Tree = {
   "/repo/pnpm-workspace.yaml": A.join(
     [
       "packages:",
@@ -164,8 +161,6 @@ const withLockfileAndInline: Tree = {
     identity
   ),
   "/repo/packages/a/package.json": manifest("@x/a", { dependencies: { effect: "catalog:" } }),
-  // The lockfile records a STALE effect range and a react range the inline
-  // catalog says nothing about. Inline must win on effect; react must survive.
   "/repo/pnpm-lock.yaml": A.join(
     [
       "lockfileVersion: '9.0'",
@@ -189,7 +184,7 @@ const withLockfileAndInline: Tree = {
 };
 
 describe("WorkspaceCatalogs — assembly precedence", () => {
-  it.layer(workspacesOver(withLockfileAndInline), { timeout: "30 seconds" })((it) => {
+  it.layer(workspacesOver(staleLockfileBesideInline), { timeout: "30 seconds" })((it) => {
     it.effect("the inline pnpm-workspace.yaml catalog beats the lockfile's record", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
@@ -224,21 +219,18 @@ describe("WorkspaceCatalogs — assembly precedence", () => {
   });
 });
 
-// ── the @effected/npm resolver contracts, implemented for real ─────────────
-
 const resolversOver = (tree: Tree) => {
   const core = workspacesOver(tree);
   return Workspaces.resolvers.pipe(Layer.provide(core));
 };
 
 describe("the @effected/npm resolver contracts", () => {
-  it.layer(resolversOver(withLockfileAndInline), { timeout: "30 seconds" })((it) => {
+  it.layer(resolversOver(staleLockfileBesideInline), { timeout: "30 seconds" })((it) => {
     it.effect("CatalogResolver.rangeOf resolves against the real assembled catalogs", () =>
       Effect.gen(function* () {
         const resolver = yield* CatalogResolver;
-        // The no-op layer @effected/npm ships would return none here.
-        const rangeOf1 = yield* resolver.rangeOf("effect", O.none());
-        assertSome(rangeOf1, "^4.0.0");
+        const assembledEffectRange = yield* resolver.rangeOf("effect", O.none());
+        assertSome(assembledEffectRange, "^4.0.0");
         const rangeOf2 = yield* resolver.rangeOf("typescript", O.some("build"));
         assertSome(rangeOf2, "^6.0.0");
       })
@@ -269,10 +261,6 @@ describe("the @effected/npm resolver contracts", () => {
     );
   });
 
-  // A malformed inline catalog source must reach the CONTRACT's caller as the
-  // typed CatalogAssemblyError the contract names — not folded into a
-  // DependencyResolutionError's defect `cause`, which forced consumers to
-  // _tag-sniff `unknown` to tell assembly from resolution failures.
   const withMalformedInline: Tree = {
     "/repo/pnpm-workspace.yaml": A.join(["packages:", "  - 'packages/*'", "catalog:", "\t- [", ""], "\n"),
     "/repo/package.json": Result.getOrThrowWith(
@@ -286,15 +274,17 @@ describe("the @effected/npm resolver contracts", () => {
       Effect.gen(function* () {
         const resolver = yield* CatalogResolver;
         const error = yield* Effect.flip(resolver.rangeOf("effect", O.none()));
-        assert.instanceOf(error, CatalogAssemblyError);
+        assert.instanceOf(
+          error,
+          CatalogAssemblyError,
+          "not folded into a DependencyResolutionError defect cause that callers would have to _tag-sniff"
+        );
         assert.strictEqual(error._tag, "CatalogAssemblyError");
         assert.strictEqual(error.source, "manifest");
       })
     );
   });
 });
-
-// ── a non-pnpm workspace simply has no catalogs ────────────────────────────
 
 const npmWorkspace: Tree = {
   "/repo/package.json": Result.getOrThrowWith(
@@ -353,13 +343,8 @@ describe("WorkspaceCatalogs — a workspace with no pnpm-workspace.yaml", () => 
   });
 });
 
-// ── a probe FAILURE is not silent absence (Fix 4) ──────────────────────────
-
 const probeFailTree: Tree = {
   "/repo/pnpm-workspace.yaml": "catalog:\n  effect: ^4.0.0\n",
-  // The workspaces field makes package.json a root marker, so root discovery
-  // succeeds even when the pnpm-workspace.yaml presence probe fails — isolating
-  // the failure to catalog assembly's probe, which is what this exercises.
   "/repo/package.json": Result.getOrThrowWith(
     S.encodeUnknownResult(UnknownJson)({ name: "root", version: "0.0.0", workspaces: ["packages/*"] }),
     identity
@@ -369,11 +354,6 @@ const probeFailTree: Tree = {
 describe("WorkspaceCatalogs — a presence-probe failure is not silent absence", () => {
   it.layer(
     Workspaces.layer({ cwd: "/repo" }).pipe(
-      // The pnpm-workspace.yaml presence probe fails with PermissionDenied (a
-      // non-NotFound PlatformError, exactly what core's `exists` re-raises). Root
-      // discovery finds /repo via its package.json marker, so assembly runs and
-      // its probe must FAIL typed rather than silently selecting the package.json
-      // reader — the "every dependency looks newly added" bug.
       Layer.provideMerge(platformWith({ unreadableExists: ["/repo/pnpm-workspace.yaml"] })(probeFailTree))
     ),
     { timeout: "30 seconds" }
@@ -382,25 +362,22 @@ describe("WorkspaceCatalogs — a presence-probe failure is not silent absence",
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         const error = yield* Effect.flip(catalogs.set);
-        assert.instanceOf(error, CatalogAssemblyError);
-        assert.strictEqual(error.source, "manifest");
+        assert.instanceOf(
+          error,
+          CatalogAssemblyError,
+          "the workspaces field keeps root discovery alive, isolating the failure to the catalog probe"
+        );
+        assert.strictEqual(
+          error.source,
+          "manifest",
+          "a non-NotFound probe failure must not silently select the package.json reader (every dependency looks new)"
+        );
       })
     );
   });
 });
 
-// ── the SAME probe-failure guard on the bun/package.json branch (Fix 4) ─────
-
-// The bun branch's manifest probe and root discovery's marker are the same
-// `package.json`, so a `package.json` `exists` poison would also break discovery
-// (a WorkspaceRootNotFoundError, not the failure under test). To isolate the
-// assembly-side manifest probe, this stubs `WorkspaceRoot` to a fixed root and
-// `LockfileReader` to a failing read (⇒ empty lockfile catalogs), then poisons
-// only the `package.json` presence probe. With the old
-// `orElseSucceed(() => false)` the probe would collapse to "absent" and return
-// lockfile-only (empty) catalogs; with `probeExists` it fails typed.
-const bunProbeFailTree: Tree = {
-  // The file EXISTS but its `exists` probe is denied — the locked-down case.
+const existingButProbeDeniedTree: Tree = {
   "/repo/package.json": Result.getOrThrowWith(
     S.encodeUnknownResult(UnknownJson)({
       name: "root",
@@ -432,22 +409,28 @@ describe("WorkspaceCatalogs — a bun/package.json presence-probe failure is not
         ),
       })
     ),
-    Layer.provideMerge(platformWith({ unreadableExists: ["/repo/package.json"] })(bunProbeFailTree))
+    Layer.provideMerge(platformWith({ unreadableExists: ["/repo/package.json"] })(existingButProbeDeniedTree))
   );
   it.layer(bunProbeFailLayer, { timeout: "30 seconds" })((it) => {
     it.effect("a PermissionDenied on the package.json presence probe fails typed as CatalogAssemblyError", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         const error = yield* Effect.flip(catalogs.set);
-        assert.instanceOf(error, CatalogAssemblyError);
-        assert.strictEqual(error.source, "manifest");
+        assert.instanceOf(
+          error,
+          CatalogAssemblyError,
+          "WorkspaceRoot is stubbed because a poisoned package.json would also break root discovery"
+        );
+        assert.strictEqual(
+          error.source,
+          "manifest",
+          "with the lockfile read failing, a probe collapsed to absent would return empty catalogs instead"
+        );
         assert.strictEqual(error.path, "/repo/package.json");
       })
     );
   });
 });
-
-// ── the pnpm inline path hard-fails on malformed / duplicate-default (Fix 5) ─
 
 const duplicateDefaultTree: Tree = {
   "/repo/pnpm-workspace.yaml": A.join(
@@ -548,7 +531,7 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
     );
   });
 
-  it.layer(workspacesOver(withLockfileAndInline), { timeout: "30 seconds" })((it) => {
+  it.layer(workspacesOver(staleLockfileBesideInline), { timeout: "30 seconds" })((it) => {
     it.effect("is the inert zero gate when no release-age keys are declared", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
@@ -583,12 +566,6 @@ describe("WorkspaceCatalogs.releaseAgeGate — the inline pnpm-workspace.yaml so
   });
 });
 
-// ── refresh: the explicit memoization boundary ──────────────────────────────
-
-// The consumer story: a tool that MUTATES the workspace mid-run (installs,
-// bumps a config dependency) must read post-mutation state — release-age
-// gating wants the before-state, a post-install peer check the after-state,
-// and one infinite memo cannot serve both without an explicit boundary.
 const workspaceYamlWithRules = (allowedKey: string): string =>
   A.join(
     [
@@ -613,9 +590,6 @@ const refreshTree: Tree = {
 };
 
 describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () => {
-  // The whole before/pin/refresh/after sequence lives in ONE test: a `layer`
-  // block shares its service instance across tests, so splitting the sequence
-  // would order-couple the assertions.
   it.layer(workspacesOver(refreshTree), { timeout: "30 seconds" })((it) => {
     it.effect("a mutation is invisible to the memo until refresh() discards it", () =>
       Effect.gen(function* () {
@@ -623,34 +597,45 @@ describe("WorkspaceCatalogs.refresh — the explicit memoization boundary", () =
         const fs = yield* FileSystem.FileSystem;
 
         const before = yield* catalogs.peerDependencyRules;
-        assert.deepStrictEqual(before.allowedVersions, { "@x/before>effect": "^4.0.0" });
+        assert.deepStrictEqual(
+          before.allowedVersions,
+          { "@x/before>effect": "^4.0.0" },
+          "the sequence is one test: a layer block shares its service, so split tests would order-couple"
+        );
 
-        // The mid-run mutation: what a config-dependency bump rewrites.
-        yield* fs.writeFileString("/repo/pnpm-workspace.yaml", workspaceYamlWithRules("@x/after>effect"));
+        const configDependencyBumpYaml = workspaceYamlWithRules("@x/after>effect");
+        yield* fs.writeFileString("/repo/pnpm-workspace.yaml", configDependencyBumpYaml);
 
-        // Pins the memo: the pre-mutation assembly is STILL served — this is
-        // the assertion that fails if the memo is ever quietly dropped.
         const pinned = yield* catalogs.peerDependencyRules;
-        assert.deepStrictEqual(pinned.allowedVersions, { "@x/before>effect": "^4.0.0" });
+        assert.deepStrictEqual(
+          pinned.allowedVersions,
+          { "@x/before>effect": "^4.0.0" },
+          "the pre-mutation assembly is still served; this fails if the memo is quietly dropped"
+        );
 
         yield* catalogs.refresh;
 
-        // The next read re-assembles: same single read + hook replay, now
-        // over the post-mutation workspace.
         const after = yield* catalogs.peerDependencyRules;
-        assert.deepStrictEqual(after.allowedVersions, { "@x/after>effect": "^4.0.0" });
+        assert.deepStrictEqual(
+          after.allowedVersions,
+          { "@x/after>effect": "^4.0.0" },
+          "the next read re-assembles post-mutation: a mid-run mutating tool needs the after-state one memo cannot give"
+        );
       })
     );
   });
 
-  // A fresh layer block: the service must not have assembled yet.
   it.layer(workspacesOver(refreshTree), { timeout: "30 seconds" })((it) => {
     it.effect("refresh() before any read is harmless", () =>
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         yield* catalogs.refresh;
         const rules = yield* catalogs.peerDependencyRules;
-        assert.deepStrictEqual(rules.allowedVersions, { "@x/before>effect": "^4.0.0" });
+        assert.deepStrictEqual(
+          rules.allowedVersions,
+          { "@x/before>effect": "^4.0.0" },
+          "a fresh layer block has not assembled yet"
+        );
       })
     );
   });

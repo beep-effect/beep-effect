@@ -39,10 +39,11 @@ describe("YamlDocument", () => {
 
     it.effect("surfaces recoverable issues as warnings-as-data instead of failing", () =>
       Effect.gen(function* () {
-        // A duplicate mapping key is recorded as a warning on the document;
-        // only the value-level Yaml.parse promotes it under uniqueKeys.
         const doc = yield* YamlDocument.parse("a: 1\na: 2");
-        assert.isTrue(A.some(doc.warnings, (w) => w.code === "DuplicateKey"));
+        assert.isTrue(
+          A.some(doc.warnings, (w) => w.code === "DuplicateKey"),
+          "a duplicate mapping key is recorded as a warning on the document; only the value-level Yaml.parse promotes it under uniqueKeys"
+        );
         assert.isAbove(doc.warnings[0]?.line ?? -1, -1);
       })
     );
@@ -89,13 +90,9 @@ describe("YamlDocument", () => {
 
     it.effect("a synthetic AST deeper than the cap fails typed, never a stack-overflow defect", () =>
       Effect.gen(function* () {
-        // The node-path stringifier (stringifyNodeLines &co.) is mutually
-        // recursive with no natural bound. Parsed ASTs are composer-bounded to
-        // MAX_NESTING_DEPTH (256), but a hand-built tree nested past it would
-        // overflow the stack as a RangeError defect on this public boundary.
-        // Nest 300 YamlSeq nodes around a scalar leaf — beyond the 256 cap.
         let contents: YamlSeq | YamlScalar = YamlScalar.make({ value: 1, style: "plain", offset: 0, length: 0 });
-        for (let i = 0; i < 300; i++) {
+        const depthPastMaxNesting = 300;
+        for (let i = 0; i < depthPastMaxNesting; i++) {
           contents = YamlSeq.make({ items: [contents], style: "block", offset: 0, length: 0 });
         }
         const doc = YamlDocument.make({ contents, errors: [], warnings: [], directives: [] });
@@ -105,20 +102,23 @@ describe("YamlDocument", () => {
           assert.fail("a 300-deep synthetic AST must fail, not overflow the stack");
         }
         assert.instanceOf(result.failure, YamlStringifyError);
-        assert.strictEqual(result.failure.diagnostics[0]?.code, "NestingDepthExceeded");
+        assert.strictEqual(
+          result.failure.diagnostics[0]?.code,
+          "NestingDepthExceeded",
+          "the node-path stringifier (stringifyNodeLines &co.) is mutually recursive with no natural bound; parsed ASTs are composer-bounded to MAX_NESTING_DEPTH (256), but a hand-built tree nested past it would overflow the stack as a RangeError defect on this public boundary"
+        );
       })
     );
 
     it.effect("spills a >1024-char rendered key to explicit-key form on the node path (#323)", () =>
       Effect.gen(function* () {
-        // Our parser accepts an over-long IMPLICIT key (the 1024-char limit
-        // is a strict-parser restriction we do not enforce on read), but
-        // re-emitting it implicitly would produce output strict parsers
-        // reject — the node path must spill exactly like the value path.
         const key = `pkg-a@1.0.0(${Str.repeat(1100)("a")})`;
         const doc = yield* YamlDocument.parse(`${key}: value-one\n`);
         const text = yield* doc.stringify();
-        assert.isTrue(Str.startsWith(`? ${key}\n: value-one`)(text), "node path must spill to explicit form");
+        assert.isTrue(
+          Str.startsWith(`? ${key}\n: value-one`)(text),
+          "node path must spill to explicit form: our parser accepts an over-long IMPLICIT key (the 1024-char limit is a strict-parser restriction we do not enforce on read), but re-emitting it implicitly would produce output strict parsers reject, so the node path must spill exactly like the value path"
+        );
         const again = yield* YamlDocument.parse(text);
         assert.deepStrictEqual(again.toValue(), { [key]: "value-one" });
       })
@@ -126,12 +126,14 @@ describe("YamlDocument", () => {
 
     it.effect("node-path compact continuation alignment is structural — indent: 4 must still roundtrip", () =>
       Effect.gen(function* () {
-        // Same structural-pad contract as the value path: continuation
-        // lines after `: ` align at column 2 regardless of ctx.indent.
         const key = `pkg-a@1.0.0(${Str.repeat(1100)("a")})`;
         const seqDoc = yield* YamlDocument.parse(`${key}:\n  - first\n  - second\n`);
         const seqText = yield* seqDoc.stringify(YamlStringifyOptions.make({ indent: 4 }));
-        assert.include(seqText, ": - first\n  - second");
+        assert.include(
+          seqText,
+          ": - first\n  - second",
+          "same structural-pad contract as the value path: continuation lines after `: ` align at column 2 regardless of ctx.indent"
+        );
         const seqAgain = yield* YamlDocument.parse(seqText);
         assert.deepStrictEqual(seqAgain.toValue(), { [key]: ["first", "second"] });
 
@@ -149,8 +151,7 @@ describe("YamlDocument", () => {
         const source = A.join(["snapshots:", `  ? ${key}`, "  : dependencies:", "      dep-one: 1.2.3", ""], "\n");
         const doc = yield* YamlDocument.parse(source);
         const text = yield* doc.stringify();
-        // The explicit form survives re-emission (the key is still >1024).
-        assert.include(text, `? ${key}`);
+        assert.include(text, `? ${key}`, "the explicit form survives re-emission (the key is still >1024)");
         const again = yield* YamlDocument.parse(text);
         assert.deepStrictEqual(again.toValue(), {
           snapshots: { [key]: { dependencies: { "dep-one": "1.2.3" } } },
@@ -160,28 +161,25 @@ describe("YamlDocument", () => {
 
     it.effect("lineWidth is inert on the node path — pins the gap documented for #105", () =>
       Effect.gen(function* () {
-        // Column-based folding exists only on the value path; the node path
-        // threads lineWidth into its render context and never reads it. That
-        // gap is documented on YamlDocument#stringify (with the
-        // Yaml.stringify(doc.toValue(), options) workaround) and on
-        // YamlStringifyOptions.lineWidth. If node-path folding ever lands,
-        // this test MUST fail so those docs are rewritten with it rather
-        // than silently drifting.
         const long = "the quick brown fox jumps over the lazy dog and keeps running far away into the sunset";
         const doc = yield* YamlDocument.parse(`text: ${long}\n`);
 
         const viaNodePath = yield* doc.stringify(YamlStringifyOptions.make({ lineWidth: 30 }));
-        // Inert: the long scalar stays on one physical line, far past column 30.
-        assert.isTrue(A.some(Str.split("\n")(viaNodePath), (line) => line.length > 40));
+        assert.isTrue(
+          A.some(Str.split("\n")(viaNodePath), (line) => line.length > 40),
+          "inert: the long scalar stays on one physical line, far past column 30; column-based folding exists only on the value path, as the node path threads lineWidth into its render context and never reads it. The gap is documented on YamlDocument#stringify (with the Yaml.stringify(doc.toValue(), options) workaround) and on YamlStringifyOptions.lineWidth: if node-path folding ever lands, this MUST fail so those docs are rewritten with it rather than silently drifting"
+        );
 
-        // The documented workaround folds: render the plain value instead.
         const viaValuePath = yield* Yaml.stringify(doc.toValue(), YamlStringifyOptions.make({ lineWidth: 30 }));
         const foldedLines = Str.split("\n")(Str.trimEnd(viaValuePath));
-        assert.isAbove(foldedLines.length, 1);
+        assert.isAbove(foldedLines.length, 1, "the documented workaround folds: render the plain value instead");
         for (const line of foldedLines) assert.isAtMost(line.length, 40);
-        // The fold is semantically transparent: both spellings re-parse alike.
         const parsed1 = yield* Yaml.parse(viaValuePath);
-        assert.deepStrictEqual(parsed1, doc.toValue());
+        assert.deepStrictEqual(
+          parsed1,
+          doc.toValue(),
+          "the fold is semantically transparent: both spellings re-parse alike"
+        );
       })
     );
   });
@@ -355,11 +353,6 @@ describe("YamlDocument", () => {
       })
     );
 
-    // #643. The block composers already DISOWN a terminal comment sitting at
-    // a column shallower than the collection's content — it escapes to the
-    // outer scope and leads the following key. The raw CST span disagreed,
-    // ending after the comment line, so a caller splicing at the end of the
-    // collection inserted after a comment the collection does not own.
     it.effect("a shallower trailing comment ends the block-seq span rather than joining the last item", () =>
       Effect.gen(function* () {
         const text =
@@ -374,41 +367,47 @@ describe("YamlDocument", () => {
           return assert.fail("expected a sequence value");
         }
         const commentStart = O.getOrElse(constant(-1))(Str.indexOf("# reviewed before release")(text));
-        // The span ends where the last item's line ends — at the comment
-        // line's first character, never past it.
-        assert.strictEqual(seq.offset + seq.length, commentStart);
+        assert.strictEqual(
+          seq.offset + seq.length,
+          commentStart,
+          "the block composers DISOWN a terminal comment at a column shallower than the collection's content (it escapes to the outer scope and leads the following key), so the span ends where the last item's line ends, at the comment line's first character, never past it; the raw CST span used to end after the comment line, so a caller splicing at the collection's end inserted after a comment it does not own"
+        );
         assert.strictEqual(
           Str.slice(seq.offset, seq.offset + seq.length)(text),
           "- by: human:spencer\n    at: 2026-09-01T00:00:00Z\n"
         );
-        // The last item — the mapping the comment was swallowed into —
-        // ends there too.
         const item = seq.items[0];
         if (!S.is(YamlMap)(item)) {
           return assert.fail("expected a mapping item");
         }
-        assert.strictEqual(item.offset + item.length, commentStart);
-        // Splicing a new item at the seq's end lands BEFORE the comment.
+        assert.strictEqual(
+          item.offset + item.length,
+          commentStart,
+          "the last item, the mapping the comment was swallowed into, ends there too"
+        );
         const spliced = `${Str.slice(0, seq.offset + seq.length)(text)}  - by: human:other\n${Str.slice(seq.offset + seq.length)(text)}`;
-        assert.deepStrictEqual((yield* YamlDocument.parse(spliced)).toValue(), {
-          verified: [{ by: "human:spencer", at: "2026-09-01T00:00:00Z" }, { by: "human:other" }],
-          status: "stable",
-        });
-        // Attribution is unchanged: the comment still leads the next key.
+        assert.deepStrictEqual(
+          (yield* YamlDocument.parse(spliced)).toValue(),
+          {
+            verified: [{ by: "human:spencer", at: "2026-09-01T00:00:00Z" }, { by: "human:other" }],
+            status: "stable",
+          },
+          "splicing a new item at the seq's end lands BEFORE the comment"
+        );
         const statusKey = root.items[1]?.key;
         if (!S.is(YamlScalar)(statusKey)) {
           return assert.fail("expected a scalar key");
         }
-        assert.strictEqual(statusKey.commentBefore, " reviewed before release");
+        assert.strictEqual(
+          statusKey.commentBefore,
+          " reviewed before release",
+          "attribution is unchanged: the comment still leads the next key"
+        );
       })
     );
 
     it.effect("a trailing comment at or beyond the collection's own column stays inside its span", () =>
       Effect.gen(function* () {
-        // The mirror of the case above: `  # kept` sits at the sequence's
-        // own column, so the seq owns it and the span must still cover it
-        // — the trim keys on the comment model's partition, not on
-        // "ends in a comment line".
         const text = "verified:\n  - by: a\n  # kept\nstatus: stable\n";
         const doc = yield* YamlDocument.parse(text);
         const root = doc.contents;
@@ -419,14 +418,20 @@ describe("YamlDocument", () => {
         if (!S.is(YamlSeq)(seq)) {
           return assert.fail("expected a sequence value");
         }
-        assert.strictEqual(seq.offset + seq.length, O.getOrElse(constant(-1))(Str.indexOf("status")(text)));
-        // The nested mapping's content column IS deeper than the comment,
-        // so the item disowns it and its span stops at the comment line.
+        assert.strictEqual(
+          seq.offset + seq.length,
+          O.getOrElse(constant(-1))(Str.indexOf("status")(text)),
+          "the mirror of the shallower case: `  # kept` sits at the sequence's own column, so the seq owns it and the span must still cover it; the trim keys on the comment model's partition, not on \"ends in a comment line\""
+        );
         const item = seq.items[0];
         if (!S.is(YamlMap)(item)) {
           return assert.fail("expected a mapping item");
         }
-        assert.strictEqual(item.offset + item.length, O.getOrElse(constant(-1))(Str.indexOf("  # kept")(text)));
+        assert.strictEqual(
+          item.offset + item.length,
+          O.getOrElse(constant(-1))(Str.indexOf("  # kept")(text)),
+          "the nested mapping's content column IS deeper than the comment, so the item disowns it and its span stops at the comment line"
+        );
       })
     );
 
@@ -443,9 +448,11 @@ describe("YamlDocument", () => {
           return assert.fail("expected a mapping value");
         }
         assert.strictEqual(inner.offset + inner.length, O.getOrElse(constant(-1))(Str.indexOf("# tail")(text)));
-        // The ROOT map's own column is 0, so a column-0 comment is not
-        // shallower than its content and the root span is untouched.
-        assert.strictEqual(root.offset + root.length, text.length);
+        assert.strictEqual(
+          root.offset + root.length,
+          text.length,
+          "the ROOT map's own column is 0, so a column-0 comment is not shallower than its content and the root span is untouched"
+        );
       })
     );
 
@@ -461,11 +468,10 @@ describe("YamlDocument", () => {
         if (!S.is(YamlSeq)(seq)) {
           return assert.fail("expected a sequence value");
         }
-        // End of `  - by: a\n` — the blank line separating the entry from
-        // the disowned comment goes with the comment, not the entry.
         assert.strictEqual(
           seq.offset + seq.length,
-          O.getOrElse(constant(-1))(Str.indexOf("by: a")(text)) + "by: a\n".length
+          O.getOrElse(constant(-1))(Str.indexOf("by: a")(text)) + "by: a\n".length,
+          "the span ends at the end of `  - by: a\\n`: the blank line separating the entry from the disowned comment goes with the comment, not the entry"
         );
       })
     );

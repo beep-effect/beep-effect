@@ -1,6 +1,6 @@
 services:
   redis:
-    image: redis:8.10.3
+    image: redis:8.12.0
     container_name: beep-redis
     ports:
       - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"

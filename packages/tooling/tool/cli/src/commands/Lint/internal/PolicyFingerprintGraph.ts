@@ -706,8 +706,10 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
   const subcommandSpecifiers = Effect.fnUntraced(function* (node: PolicyCommandNode) {
     const syntax = yield* syntaxOf(node.module);
     const definition = yield* definitionOf(node.module, node.binding);
-    const subcommands = HashSet.fromIterable(
-      A.getSomes(O.match(definition, { onNone: () => [], onSome: (d) => d.subcommands }))
+    const subcommands = definition.pipe(
+      O.match({ onNone: () => [], onSome: (d) => d.subcommands }),
+      A.getSomes,
+      HashSet.fromIterable
     );
     const edges = O.match(syntax, { onNone: A.empty<ImportEdge>, onSome: (value) => value.edges });
     return HashSet.fromIterable(A.map(A.filter(edges, bindsOnly(subcommands)), (edge) => edge.specifier));
@@ -887,8 +889,12 @@ export const renderClosureInputs = Effect.fnUntraced(function* (
   covered: HashSet.HashSet<string>
 ) {
   const directories = A.sort(
-    A.dedupe(
-      A.map(A.getSomes(A.map(A.fromIterable(reached.modules), graph.workspaceOf)), (workspace) => workspace.directory)
+    reached.modules.pipe(
+      A.fromIterable,
+      A.map(graph.workspaceOf),
+      A.getSomes,
+      A.map((workspace) => workspace.directory),
+      A.dedupe
     ),
     Order.String
   );

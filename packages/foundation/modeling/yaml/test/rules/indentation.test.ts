@@ -1,7 +1,3 @@
-// Batch-7 (#129): indentation — built last, after the harness proved itself
-// on the twelve mechanical rules. Style only: structural legality is
-// parse-validity's business.
-
 import { builtin, testRule, testRuleInference } from "./harness.ts";
 import type { InferenceFixture, RuleFixture } from "./harness.ts";
 
@@ -45,18 +41,12 @@ testRule(builtin("indentation"), [
     expected: [{ line: 1, character: 0, messageIncludes: "should not be indented" }],
   },
   {
-    // Content lines stay ABOVE the detected block-scalar indent — a
-    // shallower line would terminate the scalar and reject the document,
-    // making the fixture vacuous.
-    name: "block-scalar content lines are the value's business",
+    name: "block-scalar content lines above the detected indent are the value's business",
     input: "a: |\n  deep\n   deeper\nb: 1\n",
     expected: [],
   },
   {
-    // The closer sits at column 2, NOT column 0 — this parser rejects a
-    // col-0 flow closer (pre-existing strictness), and a fixture on a
-    // rejected shape asserts nothing.
-    name: "flow collection continuation lines are flow syntax, not block indent",
+    name: "flow collection continuation lines with a column-2 closer are flow syntax, not block indent",
     input: "a: {\n      x: 1,\n      y: 2\n  }\nb: 1\n",
     expected: [],
   },
@@ -66,23 +56,17 @@ testRule(builtin("indentation"), [
     expected: [],
   },
   {
-    // `-5` is a plain scalar (YAML 1.2 §7.1), not a sequence entry — it
-    // must not train seqIndented=true and flag the valid unindented
-    // sequence below.
-    name: "a -leading plain scalar value does not train the sequence policy (indented first)",
+    name: "an indented -5 plain scalar (YAML 1.2 §7.1) does not train seqIndented=true against a later unindented sequence",
     input: "threshold:\n  -5\nallowed:\n- alice\n- bob\n",
     expected: [],
   },
   {
-    // Reverse polarity: unindented sequences first, then a `-5` scalar —
-    // which must not be flagged as an indented sequence entry.
-    name: "a -leading plain scalar value does not train the sequence policy (unindented first)",
+    name: "a -5 plain scalar after unindented sequences is not flagged as an indented sequence entry",
     input: "key1:\n- a\n- b\nkey2:\n  -5\n",
     expected: [],
   },
 ]);
 
-// Round-1 regressions: real marker tokens, quoted comments, and compact levels.
 testRule(builtin("indentation"), [
   {
     name: "---key retains its block indentation level",
@@ -97,13 +81,13 @@ testRule(builtin("indentation"), [
     expected: [],
   },
   {
-    name: "a quoted hash key still opens a sequence with a trailing comment",
+    name: "a quoted ` # ` key reads as one scalar token, not a comment, and still opens a sequence with a trailing comment",
     input: '"a # b": # real comment\n  - x\n',
     setting: { indentSequences: false },
     expected: [{ line: 1, character: 0, messageIncludes: "should not be indented" }],
   },
   {
-    name: "a quoted hash key still opens a sequence without a trailing comment",
+    name: "a quoted ` # ` key reads as one scalar token, not a comment, and still opens a sequence without a trailing comment",
     input: "'a # b':\n  - x\n",
     setting: { indentSequences: false },
     expected: [{ line: 1, character: 0, messageIncludes: "should not be indented" }],
@@ -170,7 +154,6 @@ testRuleInference(builtin("indentation"), [
   },
 ]);
 
-// Round-2 regressions: compact columns are stack context, not unit votes.
 testRule(builtin("indentation"), [
   {
     name: "a compact mapping has no four-space unit check on its separator",
@@ -308,7 +291,7 @@ for (const [name, input, strict] of [
   testRule(builtin("indentation"), [
     check,
     {
-      name: `${name} keeps structural indentation checks after the scalar`,
+      name: `${name}: the later ':' stays structural past key fragments the AST omits`,
       input: "? a long\n    key\n:\n    child: value\n",
       setting: { spaces: 2 },
       expected: [{ line: 3, messageIncludes: "expected 2" }],

@@ -27,10 +27,6 @@ import * as Tuple from "effect/Tuple";
 
 const $I = $ProfessionalDesktopId.create("intake/DocumentIntake.models");
 
-// Each intake data schema carries its own string-keyed nominal brand. The xstate machines map and intersect every
-// schema reachable from their contexts, inputs, outputs and events: an anonymous `brand: unique symbol` cannot be
-// named in declaration emit (TS2527), and two of them on the shared `brand` key intersect to never.
-
 const MAX_INTAKE_FILE_BYTES = 25 * 1024 * 1024;
 
 const formatMegabytes = (bytes: number): string => `${N.round(bytes / (1024 * 1024), 1)} MB`;
@@ -203,8 +199,6 @@ class VaultSelectionManual extends S.Opaque<
 >()(
   S.Struct({
     kind: S.tag("manual"),
-    // A rejected path is retained so the reopened form does not force the
-    // operator to retype it (the saving state unmounts the form in between).
     draftPath: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     message: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(

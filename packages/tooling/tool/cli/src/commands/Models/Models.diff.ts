@@ -292,18 +292,21 @@ export const diffSnapshots: {
   const after = catalogModelsById(next.models);
 
   return CatalogDiff.make({
-    added: pipe(
-      A.fromIterable(HashMap.keys(after)),
+    added: after.pipe(
+      HashMap.keys,
+      A.fromIterable,
       A.filter((id) => !HashMap.has(before, id)),
       A.sort(Order.String)
     ),
-    removed: pipe(
-      A.fromIterable(HashMap.keys(before)),
+    removed: before.pipe(
+      HashMap.keys,
+      A.fromIterable,
       A.filter((id) => !HashMap.has(after, id)),
       A.sort(Order.String)
     ),
-    levelsChanged: pipe(
-      A.fromIterable(HashMap.entries(before)),
+    levelsChanged: before.pipe(
+      HashMap.entries,
+      A.fromIterable,
       A.map(([id, previousModel]) =>
         pipe(
           HashMap.get(after, id),

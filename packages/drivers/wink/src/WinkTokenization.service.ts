@@ -6,10 +6,11 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { Document, DocumentId } from "@beep/nlp/Core/Document";
-import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence";
-import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
 import { Tokenization, TokenizationError } from "@beep/nlp-processing/Core";
+import { Document, DocumentId } from "@beep/nlp-processing/Core/Document";
+import { Sentence, SentenceIndex } from "@beep/nlp-processing/Core/Sentence";
+import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token";
+import { Position } from "@beep/text/OffsetUnit";
 import { A, thunkEmptyStr, thunkUndefined } from "@beep/utils";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
@@ -49,7 +50,7 @@ const observeTokenizer = (operation: string) =>
  * **Example** (Creating a span failure)
  *
  * ```ts
- * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
+ * import { SentenceIndex } from "@beep/nlp-processing/Core/Sentence"
  * import { SentenceSpanFailure } from "@beep/wink"
  *
  * const failure = SentenceSpanFailure.make({
@@ -176,7 +177,6 @@ const makeToken = (
       abbrevFlag: optionFromTokenBoolean(token, its.abbrevFlag),
       case: optionFromTokenString(token, its.case),
       contractionFlag: optionFromTokenBoolean(token, its.contractionFlag),
-      end: CharPosition.make(end),
       index: TokenIndex.make(index),
       lemma: optionFromTokenString(token, its.lemma),
       negationFlag: optionFromTokenBoolean(token, its.negationFlag),
@@ -185,7 +185,7 @@ const makeToken = (
       prefix: optionFromTokenString(token, its.prefix),
       precedingSpaces: precedingSpaces.length === 0 ? O.none() : O.some(precedingSpaces),
       shape: optionFromTokenString(token, its.shape),
-      start: CharPosition.make(start),
+      span: Position.make({ unit: "utf16-code-unit", start, end }),
       stem: optionFromTokenString(token, its.stem),
       stopWordFlag: optionFromTokenBoolean(token, its.stopWordFlag),
       suffix: optionFromTokenString(token, its.suffix),

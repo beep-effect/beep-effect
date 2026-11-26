@@ -1737,14 +1737,13 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const fs = yield* FileSystem.FileSystem;
   const { generatedAt, repoRoot } = yield* resolveJSDocInventoryOptions(options);
   const packageByName = yield* discoverWorkspacePackages(repoRoot, path);
-  const forbiddenRootImports = MutableHashSet.fromIterable(
-    pipe(
-      MutableHashMap.values(packageByName),
-      A.fromIterable,
-      A.filter((packageInfo) => Str.startsWith("packages/foundation/")(packageInfo.path)),
-      A.map((packageInfo) => packageInfo.name),
-      (packageNames) => A.prepend(packageNames, "effect")
-    )
+  const forbiddenRootImports = packageByName.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
+    A.filter((packageInfo) => Str.startsWith("packages/foundation/")(packageInfo.path)),
+    A.map((packageInfo) => packageInfo.name),
+    (packageNames) => A.prepend(packageNames, "effect"),
+    MutableHashSet.fromIterable
   );
   const topoNames = yield* topoSortPackageNames(repoRoot, path);
   const hasGitMetadata = yield* fs

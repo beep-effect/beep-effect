@@ -106,7 +106,8 @@ const program = Effect.gen(function* () {
 const platform = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
 BunRuntime.runMain(
-  Layer.build(platform).pipe(
+  platform.pipe(
+    Layer.build,
     Effect.flatMap((context) => Effect.provide(program, context)),
     Effect.scoped
   )

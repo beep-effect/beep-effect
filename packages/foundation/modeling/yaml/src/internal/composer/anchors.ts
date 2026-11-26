@@ -1,7 +1,3 @@
-// Anchor/alias machinery: alias node construction, anchor registration and
-// name scanning, plus the anchor-map/value-extraction helpers the facade and
-// compliance harness drive (`buildAnchorMap`, `getNodeValue`).
-
 import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
@@ -98,8 +94,6 @@ export function checkAnchorOnAlias(
 export function makeAlias(...[cst, state]: [cst: CstNode, state: ComposerState]): YamlAlias {
   const name = getAliasName(cst, state.text);
 
-  // Check existence first — an undefined alias is a more specific error
-  // than a count exceeded error.
   if (!MutableHashMap.has(state.anchors, name)) {
     state.errors.push(
       RawDiagnostic.make({
@@ -110,7 +104,6 @@ export function makeAlias(...[cst, state]: [cst: CstNode, state: ComposerState])
       })
     );
   } else {
-    // Only count valid (defined) aliases toward the limit.
     state.aliasCount++;
     if (state.aliasCount > state.options.maxAliasCount) {
       state.errors.push(
@@ -217,10 +210,6 @@ export function registerMetaAnchor(
  * @since 0.0.0
  */
 export function getAnchorName(...[cst, text]: [cst: CstNode, text: string]): string {
-  // The CST anchor node carries the lexer token's span, which covers the
-  // "&" sigil plus the name. Scan the name from the original text starting
-  // after the sigil rather than slicing by length, keeping this independent
-  // of the span arithmetic.
   const rawStart = text[cst.offset];
   if (rawStart === "&") {
     return scanName(text, cst.offset + 1);
@@ -276,10 +265,9 @@ export function getAliasName(...[cst, text]: [cst: CstNode, text: string]): stri
  */
 export function scanName(...[text, start]: [text: string, start: number]): string {
   let end = start;
-  // YAML 1.2 ns-anchor-char: any non-whitespace char except c-flow-indicator
   while (end < text.length) {
     const ch = text[end];
-    if (
+    const outsideNsAnchorChar =
       ch === " " ||
       ch === "\t" ||
       ch === "\n" ||
@@ -289,18 +277,14 @@ export function scanName(...[text, start]: [text: string, start: number]): strin
       ch === "[" ||
       ch === "]" ||
       ch === "," ||
-      ch === undefined
-    ) {
+      ch === undefined;
+    if (outsideNsAnchorChar) {
       break;
     }
     end++;
   }
   return Str.slice(start, end)(text);
 }
-
-// ---------------------------------------------------------------------------
-// Anchor map / value extraction
-// ---------------------------------------------------------------------------
 
 /**
  * Build an anchor map by walking the AST, collecting nodes that have anchors.
@@ -335,13 +319,11 @@ const collectAnchors: {
   (node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void;
   (anchors: MutableHashMap.MutableHashMap<string, YamlNode>): (node: YamlNode | null) => void;
 } = dual(2, (node: YamlNode | null, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void => {
-  // YamlAlias has no anchor field — it references one.
   if (node === null || !(isScalar(node) || isMap(node) || isSeq(node))) return;
   if (node.anchor !== undefined) MutableHashMap.set(anchors, node.anchor, node);
   collectChildAnchors(node, anchors);
 });
 
-/** Descend into a collection's children after its own anchor is registered. */
 const collectChildAnchors: {
   (node: YamlNode, anchors: MutableHashMap.MutableHashMap<string, YamlNode>): void;
   (anchors: MutableHashMap.MutableHashMap<string, YamlNode>): (node: YamlNode) => void;

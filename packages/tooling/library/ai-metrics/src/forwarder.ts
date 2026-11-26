@@ -137,7 +137,8 @@ const readSessionIdentityHash = Effect.fnUntraced(function* (
       },
     });
   }
-  const identity = complete && HashSet.size(identities) === 1 ? A.head(A.fromIterable(identities)) : O.none<string>();
+  const identity =
+    complete && HashSet.size(identities) === 1 ? identities.pipe(A.fromIterable, A.head) : O.none<string>();
   return yield* O.match(identity, {
     onNone: () => Effect.succeedNone,
     onSome: (value) => hashPrivateIdentifier(value, hashSalt).pipe(Effect.asSome),
@@ -1635,7 +1636,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       }),
       { concurrency: 1, discard: true }
     );
-    const sessionStampCompletenessDescribingCollectionOnly = aiMetricsSessionStampCompletenessFor(
+    const collectionCompleteness = aiMetricsSessionStampCompletenessFor(
       hookCollectionComplete,
       O.exists(stampGaps, (loaded) => loaded.rejectedRecords === 0)
     );
@@ -1650,7 +1651,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
         O.flatMap(kind, (agentKind) => {
           const key = `${agentKind}:${hookPathHash}`;
           const observedThrough = MutableHashMap.get(sessions, key).pipe(
-            O.flatMap((identities) => A.head(A.fromIterable(identities))),
+            O.flatMap((identities) => identities.pipe(A.fromIterable, A.head)),
             O.flatMap((identity) => MutableHashMap.get(sessionLastObserved, `${agentKind}:${identity}`))
           );
           const closedAt = O.filter(
@@ -1687,7 +1688,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
             ),
             O.flatMap(() => MutableHashMap.get(stamps, key)),
             O.filter((values) => HashSet.size(values) === 1 && !HashSet.has(values, "unknown")),
-            O.flatMap((values) => A.head(A.fromIterable(values)))
+            O.flatMap((values) => values.pipe(A.fromIterable, A.head))
           );
         });
       const join = sessionStampJoinFor({
@@ -1707,11 +1708,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           sessionTimeHarnessHashSeparateFromTheIngestSnapshotAbsentWhenUnknownOrMixedSoBackfillNeverReceivesTodaysRegime,
           HarnessHash.make
         ),
-        sessionStampCompleteness: sessionStampCompletenessDescribingCollectionOnly,
-        sessionStampQualification: aiMetricsSessionStampQualificationFor(
-          join,
-          sessionStampCompletenessDescribingCollectionOnly
-        ),
+        sessionStampCompleteness: collectionCompleteness,
+        sessionStampQualification: aiMetricsSessionStampQualificationFor(join, collectionCompleteness),
       });
     });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;

@@ -165,9 +165,9 @@ made once.
 
 - **Branded IDs.** `UserId` is not `string`. `OrganizationId` is not `string`.
   The type system remembers what you will forget.
-- **Matter walls.** A matter is a named subgraph and an ethical wall. Cross-
-  matter reads for conflict checks are a specific, bounded question, not
-  "the model has context."
+- **Matter walls.** A matter wall is authorization at every access path, not
+  a graph name. Cross-matter reads for conflict checks are a specific, bounded
+  question under an explicit grant, not "the model has context."
 - **Workspace as data.** Panels, splits, and documents are schema values, so
   an agent arranges the desk through the same kernel the mouse uses. See
   [`docs/product/workspace-substrate.md`](docs/product/workspace-substrate.md).
@@ -284,7 +284,7 @@ Human contribution and vulnerability reporting:
 [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`SECURITY.md`](SECURITY.md).
 Agent law: [`AGENTS.md`](AGENTS.md).
 
-First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
+First-party work lives under `packages/`, `apps/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree. The gitignored
 `.repos/` links point at a reference workspace that
 `bun run beep refs provision` sets up; see

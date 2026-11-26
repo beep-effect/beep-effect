@@ -3,16 +3,19 @@
 Provider-neutral NLP processing capability.
 
 This package owns live service contracts, backend abstractions, runtime graph
-execution, tokenization services, and AI tool contracts built on the shared
-models in `@beep/nlp`. It does not bind a concrete NLP engine; drivers such as
+execution, tokenization services, AI tool contracts, the document, token,
+pattern, vectorization and similarity models, and the text-graph node schemas. It
+does not bind a concrete NLP engine; drivers such as
 `@beep/wink` provide those layers.
 
 ## Modules
 
-- `@beep/nlp-processing/Backend` exposes the pluggable `NLPBackend` contract.
-- `@beep/nlp-processing/Core` exposes the `Tokenization` service.
-- `@beep/nlp-processing/Graph` exposes annotated/text graph carriers and runtime graph helpers.
-- `@beep/nlp-processing/Graph/GraphOperations` exposes graph operation catalog, executor, and result store services.
+- `@beep/nlp-processing/Backend` exposes the pluggable `NLPBackend` contract. An operation a backend cannot perform fails with the typed `BackendNotSupported`, never a defect (`L5-4`).
+- `@beep/nlp-processing/Core` exposes the document, sentence, token (with a UTF-16 `span: Position`), pattern, vectorization and similarity models and the `Tokenization` service.
+- `@beep/nlp-processing/Graph` exposes the node and edge schemas (`Graph/Schema`), annotated/text graph carriers and runtime graph helpers.
+- `@beep/nlp-processing/Activity` exposes `withActivity` and `composeLogged`: attributed runs that record one `ActivityRecord` (`prov:Activity`) on success and on typed failure.
+- `@beep/nlp-processing/Operation` exposes the named effectful arrow `Operation`, the `Pure` brand and the suspended Kleisli combinators (`compose`, `map`, `product`, `commute`, `traverse`).
+- `@beep/nlp-processing/Graph/GraphOperations` exposes graph operations (an `Operation` over nodes named by its registry term), the catalog, executor, and result store services.
 - `@beep/nlp-processing/NLPService` exposes product-neutral NLP workflows over a backend.
 - `@beep/nlp-processing/Tools` exposes AI tool schemas, `NlpToolkit`, and tool export helpers.
 

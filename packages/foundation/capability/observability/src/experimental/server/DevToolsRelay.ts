@@ -181,7 +181,7 @@ export const makeDevToolsRelayService: Effect.Effect<
     })
   );
   const latestSpans = Effect.fn("DevToolsRelayService.latestSpans")(() =>
-    Effect.sync(() => A.fromIterable(HashMap.values(MutableRef.get(state).spans)))
+    Effect.sync(() => MutableRef.get(state).spans.pipe(HashMap.values, A.fromIterable))
   );
   const latestMetrics = Effect.fn("DevToolsRelayService.latestMetrics")(() =>
     Effect.sync(() => MutableRef.get(state).metrics)

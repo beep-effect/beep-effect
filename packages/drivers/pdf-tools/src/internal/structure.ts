@@ -390,7 +390,7 @@ export const structureOf = (options: {
   return PdfStructure.make({
     headerVersion: headerVersion(bytes),
     pages,
-    fonts: pipe(A.fromIterable(MutableHashMap.values(fonts)), A.sort(fontOrder)),
+    fonts: fonts.pipe(MutableHashMap.values, A.fromIterable, A.sort(fontOrder)),
     annotationCount,
     hasOptionalContent: doc.catalog.has(PDFName.of("OCProperties")),
     encrypted: doc.isEncrypted,

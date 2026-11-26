@@ -6,7 +6,7 @@
  */
 
 import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
@@ -45,7 +45,7 @@ export const lintPolicyCommand = Command.make(
   },
   Effect.fn("Lint.policy")(function* ({ full, affected, base }) {
     if (full && affected) {
-      return yield* failWithReportedExit("lint policy: choose at most one of --full and --affected.");
+      return yield* failWithPrintedExit("lint policy: choose at most one of --full and --affected.");
     }
     return yield* runRootLintPolicyTask(full || (!affected && (yield* isCi)), base);
   })

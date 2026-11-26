@@ -42,8 +42,6 @@ import * as Result from "effect/Result";
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: CHAT_TRANSPORT is declared in turbo.json under global.passThroughEnv, which Biome cannot read. Owner: @beep/professional-desktop. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
 export const ipcTransport = pipe(Bun.env.CHAT_TRANSPORT, O.fromNullishOr, O.exists(Str.equivalence("ipc")));
 
-// Capture the genuine sinks before patching so the protocol writer can bypass the
-// guard on purpose and Bun.write can still fan out to stderr.
 const originalStdoutWrite: typeof process.stdout.write = process.stdout.write.bind(process.stdout);
 const originalBunWrite: typeof Bun.write = Bun.write.bind(Bun);
 

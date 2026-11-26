@@ -1,0 +1,9 @@
+---
+title: "P6 checkpoint: L5 and L7 are content-complete in the lane; the Practice KG operational step holds"
+date: 2026-11-24
+kind: checkpoint
+lane: "p6"
+reversal: "Reopen P6 by reverting the lane commits from f3ad9be1379 onward; the Practice KG reader refuses the version-5 bundle either way, so an operational host keeps its old bundle until the rebuild"
+---
+
+P6 rows 0 to 15 are committed on goals/text-knowledge-stack-rebuild-p6-operations (row 13 51ef2b589c3, row 14 e51ebfb3783, row 15 5793d961c02), plus b094fe0cc12, which asserts the Pure witness by type. L5-1 to L5-3 are green against the real test titles in research/law-test-plan.md (L5-1 and L5-2 in Operation.test.ts, L5-3 in Operation.activity.laws.test.ts). @beep/nlp-processing owns Core, the graph node schemas, the one Operation arrow and attributed ActivityRecord runs; nlp Operations, Algebra and GraphOps are deleted. L7: the claim toolkit emits proposed records only behind TierGate, tool schemas are the stack types on the wire, agent-proposed ontology terms are audited before the session save, and the matter wall covers all seven access paths, proved by MatterWall.two-matter.test.ts. The office-action flow runs through proposal, assessment and attorney admission. ops/design is deleted with its manifest command and opsScripts entries, and chapter 16 carries no Pending P6 note. Holds: the operational Practice KG bundle rebuild over the corpus and the operator grants configuration for apps/practice-kg-mcp and apps/practice-gateway run in the operational environment; until then those hosts refuse the old bundle and an unconfigured host denies every walled path. No app hosts LawClaimToolkit until a host binds a caller-independent principal per dispatch. Row 17 refreshes the catalogs and coverage registrations; the PR is opened only by the parent.

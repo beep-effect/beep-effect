@@ -1,7 +1,3 @@
-// `MarkdownDocument`: the lossless unit — source, tree, materialized
-// diagnostics and the definition index — plus the same parseResult/parse
-// parity and guard-materialization contract the bare-tree facade holds.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { MAX_NESTING_DEPTH } from "@beep/markdown/internal/limits";
 import { MarkdownParseOptions } from "@beep/markdown/Markdown";
@@ -35,7 +31,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FlowContent } from "@beep/markdown/MarkdownNode";
 
-/** The offset of `needle` in `text`; every needle here is known to occur. */
 const offsetOf = (text: string, needle: string): number => O.getOrThrow(Str.indexOf(needle)(text));
 
 const nestingBomb = `${Str.repeat(MAX_NESTING_DEPTH + 44)(">")} foo\n`;
@@ -68,16 +63,16 @@ describe("MarkdownDocument.parseResult", () => {
       assert.fail("expected the document to parse");
     }
     const { definitions } = result.success;
-    // An Effect HashMap, rather than a label-keyed object: link labels are attacker-controlled, so
-    // the index must not be prototype-pollutable.
-    assert.isTrue(HashMap.isHashMap(definitions));
+    assert.isTrue(
+      HashMap.isHashMap(definitions),
+      "link labels are attacker-controlled, so the index is an Effect HashMap that cannot be prototype-polluted"
+    );
     assert.strictEqual(HashMap.size(definitions), 2);
     for (const definition of HashMap.values(definitions)) {
       assert(S.is(Definition)(definition));
     }
-    // Labels fold case, so `[a]` and `[B]` land under one normalized key each.
     const urls = A.map([...HashMap.values(definitions)], (definition) => definition.url).sort();
-    assert.deepStrictEqual(urls, ["/a", "/b"]);
+    assert.deepStrictEqual(urls, ["/a", "/b"], "labels fold case, so [a] and [B] each land under one normalized key");
   });
 
   it("keeps the definitions in the tree as well as the index", () => {
@@ -89,24 +84,19 @@ describe("MarkdownDocument.parseResult", () => {
     assert.strictEqual(inTree.length, 2);
   });
 
-  it("reports no diagnostics, because P1 has no producers of them yet", () => {
-    // Not a coverage gap: the engine's carrier array is empty for every
-    // input the P1 parser accepts, since no construct emits a non-fatal
-    // diagnostic yet (they arrive with unresolved link references and P3
-    // frontmatter). The materialization path from carriers to this field
-    // is exercised by `materializes the carriers it is given` below, which
-    // does not depend on a producer existing.
+  it("reports no diagnostics: the engine's carrier array is empty for every input", () => {
     const result = MarkdownDocument.parseResult(source);
     if (Result.isFailure(result)) {
       assert.fail("expected the document to parse");
     }
-    assert.deepStrictEqual(result.success.diagnostics, []);
+    assert.deepStrictEqual(
+      result.success.diagnostics,
+      [],
+      "no construct emits a non-fatal diagnostic yet; the next test drives the carrier materialization without a producer"
+    );
   });
 
   it("materializes the carriers it is given, deriving line and character", () => {
-    // The producers are absent, so drive the materialization directly:
-    // this is the exact transformation `parseResult` applies to each
-    // carrier, and it is what will light up when producers land.
     const text = "alpha\nbravo charlie\n";
     const diagnostic = MarkdownDiagnostic.fromRaw(text, {
       code: "NestingDepthExceeded",
@@ -114,7 +104,7 @@ describe("MarkdownDocument.parseResult", () => {
       offset: offsetOf(text, "charlie"),
       length: 7,
     });
-    assert.strictEqual(diagnostic.line, 1);
+    assert.strictEqual(diagnostic.line, 1, "fromRaw is the exact transformation parseResult applies to each carrier");
     assert.strictEqual(diagnostic.character, "bravo ".length);
     assert.strictEqual(diagnostic.message, "synthetic carrier");
     assert.strictEqual(diagnostic.length, 7);
@@ -185,11 +175,9 @@ describe("MarkdownDocument.parse", () => {
 
   it.effect("diverges from an explicit commonmark parse exactly where extension syntax appears", () =>
     Effect.gen(function* () {
-      // No extension syntax: the dialects agree on the shared source.
       const gfmDoc = yield* MarkdownDocument.parse(source, { dialect: "gfm" });
       const commonmarkDoc = yield* MarkdownDocument.parse(source, { dialect: "commonmark" });
       assert.deepStrictEqual(gfmDoc.root, commonmarkDoc.root);
-      // Extension syntax: they must not agree.
       const struck = "~~struck~~\n";
       const viaDefault = yield* MarkdownDocument.parse(struck);
       const viaCommonmark = yield* MarkdownDocument.parse(struck, { dialect: "commonmark" });
@@ -322,10 +310,10 @@ describe("MarkdownDocument navigation accessors", () => {
     assert.isDefined(alpha);
     assert.isDefined(beta);
     assert.isDefined(gamma);
-    // Alpha runs to Gamma: body paragraph, the Beta subsection heading, its table.
     assert.deepStrictEqual(
       A.map(alpha.children, (child) => child.type),
-      ["paragraph", "heading", "table"]
+      ["paragraph", "heading", "table"],
+      "Alpha runs to Gamma: its body paragraph, the Beta subsection heading and Beta's table"
     );
     assert.deepStrictEqual(
       A.map(beta.children, (child) => child.type),
@@ -341,16 +329,18 @@ describe("MarkdownDocument navigation accessors", () => {
     const document = parseNav();
     const first = document.sections[0];
     assert.isDefined(first);
-    // The first section starts at the first heading: the frontmatter block and
-    // the intro paragraph before it belong to no section.
-    assert.strictEqual(first.range.offset, offsetOf(navSource, "# Alpha"));
-    // section.children is typed FlowContent — frontmatter is excluded by
-    // construction; assert the intro paragraph stayed out at runtime.
+    assert.strictEqual(
+      first.range.offset,
+      offsetOf(navSource, "# Alpha"),
+      "the first section starts at the first heading: the frontmatter and intro paragraph before it belong to no section"
+    );
     const sectioned = A.flatMap(document.sections, (section) => section.children);
     const intro = O.getOrUndefined(A.findFirst(document.root.children, (child) => child.type === "paragraph"));
     assert.isDefined(intro);
-    // Sections carry admitted copies of the tree's blocks, so compare by value.
-    assert.isFalse(A.some(sectioned, (child) => Equal.equals(child, intro)));
+    assert.isFalse(
+      A.some(sectioned, (child) => Equal.equals(child, intro)),
+      "FlowContent typing excludes frontmatter; sections hold admitted copies, so the intro is compared by value"
+    );
   });
 
   it("collects every link-bearing node in document order with its url", () => {
@@ -463,18 +453,19 @@ describe("definition index document order", () => {
       assert.strictEqual(definitions.length, 4);
       for (const [label, definition] of document.definitionOrder) {
         assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(Definition)(definition)), definition);
-        // `MarkdownDocument.make` validates and copies its fields (D-22, D-39), so
-        // the index and the tree hold equal nodes, not the same objects.
         const indexed = HashMap.get(document.definitions, label).pipe(O.getOrThrow);
-        assert.deepStrictEqual(indexed, definition);
+        assert.deepStrictEqual(
+          indexed,
+          definition,
+          "MarkdownDocument.make validates and copies its fields, so the index and the tree hold equal nodes, not the same objects"
+        );
         assert.isTrue(A.some(definitions, (node) => Equal.equals(node, definition)));
-        // Equal value at the same span is the same node to `modify`, so an
-        // index entry still targets the tree node it was copied from.
         for (const target of [indexed, definition]) {
           const edits = yield* MarkdownFormat.modify(document, target, "replaced");
           assert.deepStrictEqual(
             A.map(edits, ({ offset, length }) => [offset, length]),
-            [[target.position.start.offset, target.position.end.offset - target.position.start.offset]]
+            [[target.position.start.offset, target.position.end.offset - target.position.start.offset]],
+            "an equal value at the same span is the same node to modify, so an index entry targets the tree node it copies"
           );
         }
       }

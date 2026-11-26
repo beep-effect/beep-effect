@@ -98,7 +98,7 @@ export const makeRedactedConfigOptionReader: {
       );
       return pipe(
         value,
-        O.filter((secret) => Str.isNonEmpty(Str.trim(Redacted.value(secret))))
+        O.filter((secret) => secret.pipe(Redacted.value, Str.trim, Str.isNonEmpty))
       );
     })
 );

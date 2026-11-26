@@ -1,4 +1,5 @@
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
+import { MatterGrant, MatterScope } from "@beep/law-practice-domain/values/MatterScope";
 import {
   CitationOperationAdmission,
   makeCitationOperationAdmission,
@@ -13,7 +14,10 @@ import { CitationRegexOperation } from "@beep/law-practice-server/internal/Citat
 import { makeCitationResolverBoundary } from "@beep/law-practice-server/internal/Citation/RegisteredResolver";
 import { makeCitationResolverOperation } from "@beep/law-practice-server/internal/Citation/ResolverOperation";
 import { makeCitationSourceResolution } from "@beep/law-practice-server/internal/Citation/SourceResolution";
+import { EmptyMatterAuthorityConfig, MatterAuthorityConfig } from "@beep/law-practice-server/MatterAuthority";
+import { LawPrincipal } from "@beep/law-practice-use-cases/MatterWall";
 import { CitationEngineLimits, CitationEngineResolutionResult } from "@beep/law-practice-use-cases/server";
+import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -24,6 +28,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
@@ -31,6 +36,11 @@ import { CitationCallbackObservation, prepareCallbackObservation } from "./Citat
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
+import {
+  fixturePrincipal,
+  provideMatterAuthority,
+  provideMatterWallGrantingEveryScope,
+} from "./MatterWall.fixtures.ts";
 import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
 import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
 
@@ -87,7 +97,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
         })),
         Effect.provideService(CitationOperationAdmission, admission),
         Effect.provideService(CitationFrozenEditions, frozen),
-        Effect.provideService(SourceTextResolver, sourceResolver)
+        Effect.provideService(SourceTextResolver, sourceResolver),
+        provideMatterWallGrantingEveryScope
       );
       const invocation = stage.resolve(request);
       const closed: Effect.Effect<
@@ -143,7 +154,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
           })),
           Effect.provideService(CitationOperationAdmission, admission),
           Effect.provideService(CitationFrozenEditions, frozen),
-          Effect.provideService(SourceTextResolver, sourceResolver)
+          Effect.provideService(SourceTextResolver, sourceResolver),
+          provideMatterWallGrantingEveryScope
         );
       const stage = yield* install();
       const receipts = A.map(input.mentions, captureCitationMentionReceiptData);
@@ -193,6 +205,63 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       );
       const state = yield* admission.snapshot;
       expect(state).toMatchObject({ active: 0, queued: 0 });
+    })
+  );
+  it.effect("refuses anchor resolution on a scope the principal is not staffed on, before any source read", () =>
+    Effect.gen(function* () {
+      const fixtures = yield* loadCitationFrozenEditionFixtures();
+      const frozen = yield* makeCitationFrozenEditions(fixtures.bundle);
+      const input = yield* context("raw-resolution-walled");
+      const admission = yield* makeCitationOperationAdmission(input.limits);
+      let calls = 0;
+      const sourceResolver = SourceTextResolver.of({
+        resolve: Effect.fn("RawResolutionTest.walled")(function* () {
+          calls++;
+          return ResolvedSourceText.make({
+            identity: input.verifiedSource.source,
+            text: input.verifiedSource.sourceText,
+          });
+        }),
+      });
+      const scopeOfOtherMatter = MatterScope.make({
+        matter: LawPractice.MatterId.make(2),
+        scopeRefs: HashSet.make(input.verifiedSource.source.scopeRef),
+        familyKeys: HashSet.empty(),
+        mailFolders: HashSet.empty(),
+      });
+      const staffedOnOne = MatterGrant.make({
+        principal: fixturePrincipal,
+        matters: HashSet.make(LawPractice.MatterId.make(1)),
+      });
+      const request = {
+        source: input.verifiedSource.source,
+        sourceText: input.verifiedSource.sourceText,
+        mentions: A.map(input.mentions, captureCitationMentionReceiptData),
+      };
+      for (const config of [
+        EmptyMatterAuthorityConfig,
+        MatterAuthorityConfig.make({ scopes: [scopeOfOtherMatter], grants: [staffedOnOne] }),
+      ]) {
+        const stage = yield* ownCitationTestConfiguration(CitationEngineLimits, input.limits).pipe(
+          Effect.flatMap((owned) => makeCitationSourceResolution(owned, input.engineArtifact)),
+          Effect.zipWith(makeCitationTestScaffoldBinding(input.limits, "resolve"), (stage, bind) => ({
+            ...stage,
+            resolve: bind(stage.resolve),
+          })),
+          Effect.provideService(CitationOperationAdmission, admission),
+          Effect.provideService(CitationFrozenEditions, frozen),
+          Effect.provideService(SourceTextResolver, sourceResolver),
+          Effect.provideService(LawPrincipal, { principal: fixturePrincipal }),
+          provideMatterAuthority(config)
+        );
+        const refusal = yield* stage.resolve(request).pipe(Effect.flip);
+        expect(refusal).toMatchObject({
+          _tag: "CitationPrerequisiteError",
+          operation: "resolve",
+          dependency: "source-evidence",
+        });
+      }
+      expect(calls).toBe(0);
     })
   );
   it.effect("captures resolver policy/artifact and admission rather than caller replacements", () =>

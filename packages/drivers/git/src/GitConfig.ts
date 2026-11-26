@@ -150,7 +150,6 @@ export class GitConfigParseError extends S.TaggedError<GitConfigParseError, { re
 const editErrorAddress = (section: string, subsection: string | undefined): string =>
   subsection === undefined ? `[${section}]` : `[${section} "${subsection}"]`;
 
-/** The reason-specific tail of {@link GitConfigEditError}'s message, after `<op>: `. */
 const EDIT_ERROR_DETAILS: {
   readonly [Reason in GitConfigEditError["reason"]]: (
     section: string,
@@ -377,7 +376,6 @@ export class GitConfigInclude extends S.Opaque<GitConfigInclude, { readonly bran
   )
 ) {}
 
-/** The offset of every line start in `text`, ascending — computed once per parse so mapping many diagnostics stays linear. */
 const lineStarts = (text: string): readonly [number, ...Array<number>] => {
   const starts: [number, ...Array<number>] = [0];
   for (let i = 0; i < text.length; i += 1) {
@@ -386,7 +384,6 @@ const lineStarts = (text: string): readonly [number, ...Array<number>] => {
   return starts;
 };
 
-/** Computes the zero-based line/character of `offset` against a precomputed line index (binary search). */
 const positionOf: {
   (starts: readonly [number, ...Array<number>], offset: number): { readonly line: number; readonly character: number };
   (
@@ -452,7 +449,6 @@ const fromRaw: {
     })
 );
 
-/** A hand-built document violated the clean-text invariant. */
 class GitConfigInvariantError extends S.TaggedError<GitConfigInvariantError, { readonly brand: unique symbol }>(
   $I`GitConfigInvariantError`
 )(
@@ -467,12 +463,6 @@ class GitConfigInvariantError extends S.TaggedError<GitConfigInvariantError, { r
   })
 ) {}
 
-/**
- * Re-scans a document's text, which must be clean: `GitConfig` instances are
- * only ever built from text that scanned without diagnostics, so a failure
- * here is a wiring bug (a hand-built `GitConfig.make({ text, ... })` with
- * text that never parsed) and dies as a defect rather than failing typed.
- */
 const reparse = (text: string): RawParse => {
   const raw = scan(text);
   if (raw.diagnostics.length > 0) {
@@ -484,11 +474,9 @@ const reparse = (text: string): RawParse => {
   return raw;
 };
 
-/** The sections of `text` addressed by `(section, subsection)`, in source order. */
 const sectionsMatching = (text: string, section: string, subsection: string | undefined): ReadonlyArray<RawSection> =>
   A.filter(reparse(text).sections, matchesSection(section, subsection));
 
-/** The last entry matching `key` across `sections`, with its owning section. */
 const lastMatchingEntry: {
   (
     sections: ReadonlyArray<RawSection>,
@@ -518,22 +506,19 @@ const lastMatchingEntry: {
   }
 );
 
-/** Counts the backslashes immediately before `offset`. */
 const trailingBackslashes = (text: string, offset: number): number => {
   let slashStart = offset;
   while (text[slashStart - 1] === "\\") slashStart -= 1;
   return offset - slashStart;
 };
 
-/** The separator after a value whose significant span ends exactly at `offset`. */
 const valueEndSeparator = (text: string, offset: number, separator: string): string => {
-  // A significant value span reaching the newline consumed a continuation.
-  if (text[offset - 1] === "\n") return text[offset - 2] === "\r" ? "\r\n" : "\n";
-  // Paired backslashes decode literally; only an odd final backslash stays open.
-  return trailingBackslashes(text, offset) % 2 === 1 ? `${separator}\n` : separator;
+  const spanConsumedContinuation = text[offset - 1] === "\n";
+  if (spanConsumedContinuation) return text[offset - 2] === "\r" ? "\r\n" : "\n";
+  const finalBackslashOpen = trailingBackslashes(text, offset) % 2 === 1;
+  return finalBackslashOpen ? `${separator}\n` : separator;
 };
 
-/** True for `[include]` (no subsection) and `[includeIf "<condition>"]` sections. */
 const isIncludeSection = (section: RawSection): boolean => {
   const name = Str.toLowerCase(section.name);
   return name === "include"
@@ -541,7 +526,6 @@ const isIncludeSection = (section: RawSection): boolean => {
     : name === "includeif" && section.subsection !== undefined;
 };
 
-/** The `path` directives of one include section, in order; bare `path` keys are skipped. */
 const sectionIncludes = (section: RawSection): Array<GitConfigInclude> =>
   A.filterMap(section.entries, (entry) =>
     matchesKey(entry, "path") && entry.value !== undefined
@@ -554,13 +538,11 @@ const sectionIncludes = (section: RawSection): Array<GitConfigInclude> =>
       : Result.failVoid
   );
 
-/** Every value of `key` in `section`, bare keys decoded as `"true"`. */
 const sectionValues = (section: RawSection, key: string): Array<string> =>
   A.filterMap(section.entries, (entry) =>
     matchesKey(entry, key) ? Result.succeed(entry.value ?? "true") : Result.failVoid
   );
 
-/** One whole-line removal splice per `key` entry in `sections`, in document order. */
 const keyRemovalSplices = (text: string, sections: ReadonlyArray<RawSection>, key: string): Array<Splice> =>
   A.flatMap(sections, (candidate) =>
     A.filterMap(candidate.entries, (entry) =>
@@ -572,7 +554,6 @@ const keyRemovalSplices = (text: string, sections: ReadonlyArray<RawSection>, ke
     )
   );
 
-/** Separates inserted content from the preceding entry, including an open EOF continuation. */
 const insertionSeparator: {
   (text: string, offset: number, entry: RawEntry | undefined): string;
   (offset: number, entry: RawEntry | undefined): (text: string) => string;
@@ -582,7 +563,6 @@ const insertionSeparator: {
   return valueEndSeparator(text, offset, separator);
 });
 
-/** Appends `content` after terminating the last logical value, retaining the existing text. */
 const appendAtEof: {
   (text: string, content: string): string;
   (content: string): (text: string) => string;
@@ -1085,7 +1065,6 @@ const editError: {
     })
 );
 
-/** Validates the writable parts of an edit's address; returns the typed refusal, or nothing. */
 const validateAddress: {
   (
     op: GitConfigEditError["op"],
@@ -1109,11 +1088,6 @@ const validateAddress: {
     key: string | undefined,
     value: string | undefined
   ): GitConfigEditError | undefined => {
-    // A dot is legal in the header GRAMMAR but never in a writable section
-    // NAME: the scanner treats any unquoted dot as the deprecated
-    // `[section.subsection]` form and splits at the first dot, so a dotted
-    // name written here (`addSection("a.b")` → `[a.b]`) would re-parse as
-    // section "a" subsection "b" and never match its own address again.
     if (!isValidSectionName(section) || Str.includes(".")(section)) {
       return editError(op, "invalidSectionName", section, subsection, key);
     }
@@ -1127,32 +1101,24 @@ const validateAddress: {
   }
 );
 
-/** The splice that rewrites an existing entry's value region in place. */
 const replaceValueSplice: {
   (text: string, entry: RawEntry, value: string): Splice;
   (entry: RawEntry, value: string): (text: string) => Splice;
 } = dual(3, (text: string, entry: RawEntry, value: string): Splice => {
   const serialized = serializeValue(value);
-  if (entry.valueOffset === -1) {
-    // Bare boolean-true shorthand: insert ` = value` right after the key.
+  const isBareShorthand = entry.valueOffset === -1;
+  if (isBareShorthand) {
     return Splice.make({ offset: entry.keyEnd, length: 0, content: ` = ${serialized}` });
   }
-  // An empty value region directly followed by a comment needs a separating
-  // space, or the inserted value would fuse with the `#`.
   const following = text[entry.valueOffset + entry.valueLength];
-  const pad = entry.valueLength === 0 && (following === "#" || following === ";") ? " " : "";
+  const commentSeparatingPad = entry.valueLength === 0 && (following === "#" || following === ";") ? " " : "";
   return Splice.make({
     offset: entry.valueOffset,
     length: entry.valueLength,
-    content: serialized + pad,
+    content: serialized + commentSeparatingPad,
   });
 });
 
-/**
- * The shared skeleton of `set` and `append`: validate the address, then hand
- * the last entry for `key` to `onFound`, or insert a new line when no
- * matching section holds one.
- */
 const editLastEntry = (
   op: GitConfigEditError["op"],
   text: string,
@@ -1171,7 +1137,6 @@ const editLastEntry = (
   );
 };
 
-/** Inserts a new `key = value` line into the last matching section, creating the section at EOF when none matches. */
 const insertEntry: {
   (
     text: string,
@@ -1212,14 +1177,8 @@ const insertEntry: {
   }
 );
 
-/**
- * Rebuilds a `GitConfig` from freshly-spliced text. The text came from our
- * own serializer over a clean document, so a scan failure here is a bug in
- * the edit engine and dies as a defect.
- */
 const rebuild = (text: string): GitConfig => fromRaw(text, reparse(text));
 
-/** Retains a header-line entry's line ending when removing its entry span. */
 const removalSuffix: {
   (text: string, section: RawSection, entry: RawEntry): string;
   (section: RawSection, entry: RawEntry): (text: string) => string;

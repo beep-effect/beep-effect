@@ -174,6 +174,14 @@ export * from "./KgNodeKind/index.ts";
  */
 export * from "./KindCode/index.ts";
 /**
+ * Law distinction claim, its content id and the office-action assessment
+ * profile.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LawClaim/index.ts";
+/**
  * **Example** (Import the legal act content value objects)
  *
  * ```ts
@@ -233,6 +241,13 @@ export * from "./LibrarianLoop/index.ts";
  * @since 0.0.0
  */
 export * from "./MailTagging/index.ts";
+/**
+ * Matter scope bindings and staffing grants.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./MatterScope/index.ts";
 /**
  * @category value-objects
  * @since 0.0.0

@@ -1,0 +1,8 @@
+---
+title: "P6: extractCandidate and its CandidateClaim and Evidence result stay for the Practice KG claims batch; only the gate, lifecycle and projection leave the review"
+date: 2026-11-24
+lane: "p6"
+reversal: "Move the claims batch onto the new review result and add a read-side converter for the stored epistemic_* rows"
+---
+
+Independent review of the P6 design. extractCandidate returns OfficeActionCandidateExtraction { candidate: CandidateClaim, evidence: Evidence } (use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts:114-125), built with spikeEntityInput (OfficeActionReview.service.ts:17,35,90-113). runPracticeKgClaimsBatch calls it, spreads extracted.candidate and extracted.evidence into the stored epistemic_candidate_claim and epistemic_evidence rows and calls persistCandidate (server/src/PracticeKg.claims.ts:343,478-518,580); the batch is hosted by apps/practice-kg-mcp/src/claims.ts:63-70, whose carryClaims carries those rows between bundles. The first draft both kept extractCandidate's role and gated row 8 on CandidateClaim leaving OfficeActionReview. Option (a) is taken: extractCandidate, CandidateClaim, Evidence and spikeEntityInput stay for the batch, whose stored rows keep their DDL and shape, so the stored-format law needs no converter; makeClaimGate, makeClaimTransition, projectClaims, ClaimGateShape and ClaimTransitionShape leave the review. The row gate becomes rg -n 'makeClaimGate|makeClaimTransition|projectClaims|ClaimGateShape|ClaimTransitionShape' over OfficeActionReview, and PracticeKg.claims.ts, PracticeKg.projections.test.ts:2452,2604 and apps/practice-kg-mcp/src/claims.ts are in that row's files and gate. Moving the batch to law claims is left to the phase that persists law claims.

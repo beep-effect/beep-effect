@@ -1,4 +1,4 @@
-import { SentenceIndex } from "@beep/nlp/Core/Sentence";
+import { SentenceIndex } from "@beep/nlp-processing/Core/Sentence";
 import { BowCosineSimilarity } from "@beep/nlp-processing/Tools/BowCosineSimilarity";
 import { ChunkBySentences } from "@beep/nlp-processing/Tools/ChunkBySentences";
 import { CreateCorpus } from "@beep/nlp-processing/Tools/CreateCorpus";

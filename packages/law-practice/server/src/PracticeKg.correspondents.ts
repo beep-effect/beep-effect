@@ -41,7 +41,9 @@ import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { PracticeKgDocumentAttribution } from "./PracticeKg.families.ts";
 import { GraphTextSourceSpec } from "./PracticeKg.fts.ts";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
+import { practiceKgClientFilter, practiceKgFamilyKeyFilter } from "./PracticeKg.wall.ts";
 import type { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-use-cases/server";
+import type { PracticeKgReadScope } from "./PracticeKg.wall.ts";
 
 const $I = $LawPracticeServerId.create("PracticeKg.correspondents");
 
@@ -1025,33 +1027,44 @@ export const writePracticeKgCorrespondentTables = Effect.fn("PracticeKg.writeCor
   }).pipe(PracticeKgProjectionError.mapError("Failed writing correspondent tables."));
 });
 
-const contactsSql = `
-SELECT contact_id AS "contactId", display_name AS "displayName", organization, role_address AS "roleAddress"
-FROM contact_addresses WHERE address = $1 ORDER BY contact_id`;
+const grantedLink = (scope: PracticeKgReadScope, alias: string): string =>
+  `(${practiceKgFamilyKeyFilter(scope, `${alias}.family_key`)} OR (${alias}.family_key IS NULL AND ${practiceKgClientFilter(scope, `${alias}.client_number`)}))`;
 
-const linksSql = `
+const contactsSql = (scope: PracticeKgReadScope): string => `
+SELECT contact_id AS "contactId", display_name AS "displayName", organization, role_address AS "roleAddress"
+FROM contact_addresses
+WHERE address = $1 AND (
+  contact_id IN (SELECT l.contact_id FROM contact_client_links l WHERE ${grantedLink(scope, "l")})
+  OR EXISTS (
+    SELECT 1 FROM matter_correspondents c WHERE c.address = $1 AND ${practiceKgFamilyKeyFilter(scope, "c.family_key")}
+  )
+)
+ORDER BY contact_id`;
+
+const linksSql = (scope: PracticeKgReadScope): string => `
 SELECT l.contact_id AS "contactId", l.client_number AS "clientNumber", l.family_key AS "familyKey", l.source, l.evidence
 FROM contact_client_links l
-WHERE l.contact_id IN (SELECT contact_id FROM contact_addresses WHERE address = $1)
+WHERE l.contact_id IN (SELECT contact_id FROM contact_addresses WHERE address = $1) AND ${grantedLink(scope, "l")}
 ORDER BY l.contact_id, l.family_key NULLS LAST, l.client_number, l.source, l.evidence`;
 
-const candidatesSql = `
+const candidatesSql = (scope: PracticeKgReadScope): string => `
 SELECT c.family_key AS "familyKey", m.client, m.client_name AS "clientName",
   CAST(c.message_count AS DOUBLE) AS "messageCount", CAST(c.from_count AS DOUBLE) AS "fromCount",
   CAST(c.to_count AS DOUBLE) AS "toCount", CAST(c.cc_count AS DOUBLE) AS "ccCount",
   c.first_at AS "firstAt", c.last_at AS "lastAt"
 FROM matter_correspondents c LEFT JOIN matters m USING (family_key)
-WHERE c.address = $1
+WHERE c.address = $1 AND ${practiceKgFamilyKeyFilter(scope, "c.family_key")}
 ORDER BY c.message_count DESC, c.last_at DESC NULLS LAST, c.family_key`;
 
 const practiceAddressSql = `
 SELECT EXISTS (SELECT 1 FROM matter_correspondents WHERE address = $1 AND is_practice_address)
   OR EXISTS (SELECT 1 FROM contact_addresses WHERE address = $1 AND is_practice_address) AS "practiceAddress"`;
 
-const bundleMatterFamilyKeysLinkedToAddressContactsSql = `
+const bundleMatterFamilyKeysLinkedToAddressContactsSql = (scope: PracticeKgReadScope): string => `
 SELECT DISTINCT m.family_key AS "familyKey"
 FROM contact_client_links l JOIN matters m ON m.family_key = l.family_key
 WHERE l.contact_id IN (SELECT contact_id FROM contact_addresses WHERE address = $1)
+  AND ${practiceKgFamilyKeyFilter(scope, "m.family_key")}
 ORDER BY 1`;
 
 const decodeFamilyKeys = S.decodeUnknownEffect(S.Array(S.Struct({ familyKey: S.NonEmptyString })));
@@ -1122,19 +1135,24 @@ export const parsePracticeKgCorrespondentAddress = (
  * ```ts
  * import { PracticeKgCorrespondentLookupRequest } from "@beep/law-practice-use-cases/server"
  * import * as Effect from "effect/Effect";
- * import { lookupPracticeKgCorrespondents } from "@beep/law-practice-server"
+ * import { lookupPracticeKgCorrespondents, PracticeKgReadScope } from "@beep/law-practice-server"
  *
- * const lookup = lookupPracticeKgCorrespondents(PracticeKgCorrespondentLookupRequest.make({ address: "pat@example.com" }))
+ * const lookup = lookupPracticeKgCorrespondents(
+ *   PracticeKgCorrespondentLookupRequest.make({ address: "pat@example.com" }),
+ *   PracticeKgReadScope.cases.Walled.make({ familyKeys: [], mailFolders: [] })
+ * )
  * console.log(Effect.isEffect(lookup)) // true
  * ```
  *
  * @param request - The address to resolve.
+ * @param scope - The family keys whose links and matters the lookup may return, or a system read.
  * @returns Contacts, links, candidate matters, and the resolution.
  * @category use-cases
  * @since 0.0.0
  */
 export const lookupPracticeKgCorrespondents = Effect.fn("PracticeKg.lookupCorrespondents")(function* (
-  request: PracticeKgCorrespondentLookupRequest
+  request: PracticeKgCorrespondentLookupRequest,
+  scope: PracticeKgReadScope
 ): Effect.fn.Return<
   PracticeKgCorrespondentLookupResult,
   PracticeKgCorrespondentAddressError | PracticeKgMatterLookupError,
@@ -1153,10 +1171,10 @@ export const lookupPracticeKgCorrespondents = Effect.fn("PracticeKg.lookupCorres
         })
       )
     );
-  const argument = yield* read(candidatesSql, decodeCandidates);
-  const argument1 = yield* read(contactsSql, decodeContacts);
-  const argument2 = yield* read(linksSql, decodeLinks);
-  const read1 = yield* read(bundleMatterFamilyKeysLinkedToAddressContactsSql, decodeFamilyKeys);
+  const argument = yield* read(candidatesSql(scope), decodeCandidates);
+  const argument1 = yield* read(contactsSql(scope), decodeContacts);
+  const argument2 = yield* read(linksSql(scope), decodeLinks);
+  const read1 = yield* read(bundleMatterFamilyKeysLinkedToAddressContactsSql(scope), decodeFamilyKeys);
   const argument3 = A.map(read1, (row) => row.familyKey);
   const read2 = yield* read(practiceAddressSql, decodePracticeAddress);
   const evidence = PracticeKgCorrespondentEvidence.make({

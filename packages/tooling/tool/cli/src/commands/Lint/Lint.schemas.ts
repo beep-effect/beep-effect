@@ -53,9 +53,7 @@ export const SchemaFirstInventoryPath = "standards/schema-first.inventory.jsonc"
  * @since 0.0.0
  */
 export const SchemaCrispeningPolicyPath = "standards/schema-crispening.policy.jsonc";
-// infra/lambda/** stays out of scope: self-contained esbuild-bundled Lambda packages
-// (own package.json, no @beep/schema dependency) cannot carry annotated schemas.
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/{src,test}/**/*.ts"] as const;
+const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 
 /**
@@ -1706,17 +1704,17 @@ export const isEffectVitestTestFilePath = S.is(EffectVitestTestFilePath);
  * ```ts
  * import { EffectVitestSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(EffectVitestSourceFileGlobs[0]?.startsWith("{apps,packages,infra}")) // true
+ * console.log(EffectVitestSourceFileGlobs[0]?.startsWith("{apps,packages}")) // true
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
 export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable([
-  "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
-  "{apps,packages,infra}/**/test/**/*.ts",
-  "!{apps,packages,infra}/**/node_modules/**",
-  "!{apps,packages,infra}/**/.*/**",
+  "{apps,packages}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+  "{apps,packages}/**/test/**/*.ts",
+  "!{apps,packages}/**/node_modules/**",
+  "!{apps,packages}/**/.*/**",
   "!**/dist/**",
 ]);
 
@@ -1766,14 +1764,14 @@ export const isEffectVitestScopePath = (file: string): boolean => effectVitestSc
  * ```ts
  * import { EffectVitestConfigFileGlobs } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(EffectVitestConfigFileGlobs[0]) // "{apps,packages,infra}/**\/vitest*.config.{ts,mts,js,mjs}"
+ * console.log(EffectVitestConfigFileGlobs[0]) // "{apps,packages}/**\/vitest*.config.{ts,mts,js,mjs}"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
 export const EffectVitestConfigFileGlobs: ReadonlyArray<string> = A.fromIterable([
-  "{apps,packages,infra}/**/vitest*.config.{ts,mts,js,mjs}",
+  "{apps,packages}/**/vitest*.config.{ts,mts,js,mjs}",
 ]);
 
 /**

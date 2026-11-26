@@ -48,7 +48,6 @@ const JsonValue = S.fromJsonString(S.Unknown);
  */
 export const WORKSPACE_MARKERS: ReadonlyArray<string> = ["pnpm-workspace.yaml", "package.json"];
 
-/** How the not-found message names the `package.json` marker: only one with a `workspaces` field counts. */
 const PACKAGE_JSON_MARKER_PROSE = 'package.json with a "workspaces" field';
 
 /**
@@ -223,23 +222,11 @@ export class WorkspaceRootNotFoundError extends S.TaggedError<
    */
   override get message(): string {
     const bound = this.stopAt === undefined ? "" : ` up to ${this.stopAt}`;
-    // Worded here, not in `markers`: a bare `package.json` would claim the
-    // probe looked for a file a single-package repo plainly has, when only one
-    // carrying a `workspaces` field counts. `markers` keeps the raw filenames.
     const looked = A.map(this.markers, (marker) => (marker === "package.json" ? PACKAGE_JSON_MARKER_PROSE : marker));
     return `No workspace root above ${this.searchPath}${bound} (looked for ${A.join(looked, ", ")})`;
   }
 }
 
-/**
- * Whether `dir` is a workspace root: it holds a `pnpm-workspace.yaml`, or a
- * `package.json` with a `workspaces` field.
- *
- * **Details**
- *
- * A malformed root `package.json` is "not a root", not an error — the ascent
- * continues past it, matching walker's absorption contract.
- */
 const isWorkspaceRoot = Effect.fn("WorkspaceRoot.isWorkspaceRoot")(function* (
   dir: string
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
@@ -257,9 +244,6 @@ const isWorkspaceRoot = Effect.fn("WorkspaceRoot.isWorkspaceRoot")(function* (
   if (!hasManifest) return false;
 
   const content = yield* fs.readFileString(packageJson).pipe(Effect.orElseSucceed(() => "{}"));
-  // JSON.parse throws; inside a `never`-channelled effect that would be a
-  // defect, so it is wrapped at the point it can throw rather than trusted
-  // to a catch further out.
   const parsed = yield* Effect.try({
     try: (): unknown => Result.getOrThrow(S.decodeResult(JsonValue)(content)),
     catch: () => undefined,
@@ -305,7 +289,6 @@ export interface WorkspaceRootShape {
   };
 }
 
-/** Whether `descendant` is `ancestor` itself or lies beneath it, on POSIX or win32 separators. */
 const isAtOrBelow: {
   (descendant: string, ancestor: string): boolean;
   (ancestor: string): (descendant: string) => boolean;
@@ -387,15 +370,8 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
           options?: FindWorkspaceRootOptions.Encoded
         ): Effect.fn.Return<string, WorkspaceRootNotFoundError, FileSystem.FileSystem | Path.Path> {
           const start = path.resolve(cwd);
-          // Resolved, not passed through raw: walker compares the ceiling to each
-          // ancestor by string equality, so an unresolved `stopAt` would never
-          // match and would silently degrade to the unbounded ascent this option
-          // exists to prevent.
           const ceiling = options?.stopAt === undefined ? undefined : path.resolve(options.stopAt);
           const chain = yield* Walker.ascend(start, {
-            // Conditional spreads, not explicit `undefined`: walker reads these
-            // with `?? default`, and an explicit `undefined` is fine there, but
-            // the house rule keeps optional keys absent when unset.
             ...O.getSomesStruct({ stopAt: O.fromUndefinedOr(ceiling) }),
             ...O.getSomesStruct({ maxDepth: O.fromUndefinedOr(options?.maxDepth) }),
           });
@@ -501,10 +477,6 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
       find: dual(
         (args) => P.isString(args[0]),
         (cwd: string, options?: FindWorkspaceRootOptions.Encoded): Effect.Effect<string, WorkspaceRootNotFoundError> =>
-          // Resolve the ceiling through the injected `Path` exactly as the live
-          // `make` path does before the raw string comparison in `isAtOrBelow` —
-          // an unresolved ceiling (`..` segments) would match differently here
-          // than live, the divergence this double exists to prevent.
           options?.stopAt !== undefined && !isAtOrBelow(root, path.resolve(options.stopAt))
             ? Effect.fail(
                 WorkspaceRootNotFoundError.make({

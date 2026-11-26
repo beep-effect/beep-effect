@@ -241,11 +241,11 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
     offset: 0,
     limit: 512,
   });
-  const testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline = yield* TestClock.make({
+  const testClock = yield* TestClock.make({
     warningDelay: "30 seconds",
   });
   const currentTimeMillis4 = yield* Clock.currentTimeMillis;
-  yield* testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline.setTime(currentTimeMillis4);
+  yield* testClock.setTime(currentTimeMillis4);
   const reopen = () =>
     Effect.map(
       makeNativeDeliveryScheduler(
@@ -262,11 +262,7 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
         reader
       ),
       (scheduler) => ({
-        tick: Effect.provideService(
-          scheduler.tick,
-          Clock.Clock,
-          testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline
-        ),
+        tick: Effect.provideService(scheduler.tick, Clock.Clock, testClock),
       })
     );
   return {
@@ -280,7 +276,7 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
     posts,
     mode,
     sql,
-    clock: testClockSeededNowSoOnlyTheTestMovesDelayWindowsAndTheTickDeadline,
+    clock: testClock,
     reopen,
   };
 });
@@ -381,7 +377,10 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         const scheduler = yield* f.reopen();
         for (let n = 0; n < 3; n++) yield* scheduler.tick;
         const got16 = yield* Ref.get(f.posts);
-        expect(got16).toBe(2);
+        expect(
+          got16,
+          "the TestClock is seeded at now, so only the test moves delay windows and the tick deadline"
+        ).toBe(2);
         yield* Effect.forEach(
           f.frames,
           (frame) =>

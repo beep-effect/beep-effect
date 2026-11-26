@@ -98,8 +98,8 @@ const formatDocument = Effect.fn("CanonicalResolutionTest.formatDocument")(funct
     }),
     { concurrency: 1 }
   );
-  const lastDuplicateMatchedTextWinsAsInPythonDictComprehension = R.fromEntries(entries);
-  return lastDuplicateMatchedTextWinsAsInPythonDictComprehension;
+  const byMatchedText = R.fromEntries(entries);
+  return byMatchedText;
 });
 const referenceIndices = Effect.fn("CanonicalResolutionTest.referenceIndices")(function* (
   models: ReadonlyArray<S.JsonObject>,
@@ -155,7 +155,10 @@ export const makeCitationCanonicalResolutionComparison = Effect.fn("CanonicalRes
         ).toEqual(A.getUnsafe(models, A.getUnsafe(group.members, 0)));
       }
       const formatted = yield* formatDocument(document);
-      if (assertion.kind === "formatted") expect(formatted, id).toEqual(assertion.criterion.operands[1].value);
+      if (assertion.kind === "formatted")
+        expect(formatted, `${id}: the last duplicate matched-text key wins, as in a Python dict comprehension`).toEqual(
+          assertion.criterion.operands[1].value
+        );
       else {
         const indices = yield* referenceIndices(models, formatted, id);
         expect(indices, id).toEqual(assertion.criterion.operands[0].value);

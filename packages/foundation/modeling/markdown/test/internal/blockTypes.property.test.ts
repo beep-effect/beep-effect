@@ -211,9 +211,8 @@ it("mutable engine records start from their documented defaults", () => {
   assert.deepStrictEqual(ListType.literals, ["bullet", "ordered"]);
   const table = new TableData(["left", null], 2);
   assert.deepStrictEqual([table.align, table.columns, table.rows, table.nonemptyCells], [["left", null], 2, 0, 0]);
-  // Declared, not initialized: an unset field is absent, not `undefined`.
   const data = new BlockData();
-  assert.isFalse("lang" in data);
+  assert.isFalse("lang" in data, "declared, not initialized: an unset field is absent, not undefined");
   assert.isFalse("listData" in data);
   data.lang = "ts";
   assert.isTrue("lang" in data);

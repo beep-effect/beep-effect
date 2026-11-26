@@ -5,14 +5,8 @@
  *
  * Defines the abstract contract every NLP backend (wink-nlp, CoreNLP, spaCy, an
  * LLM adapter, ...) implements so the capability can swap engines while keeping a
- * stable API. Backends form a category: objects are backends, morphisms are
- * adapters/wrappers, and composition enables fallback strategies.
- *
- * Effect v4 `@beep/nlp` implementation notes:
- * `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped by a
- * `$NlpProcessingId` composer, `Context.GenericTag` becomes the
- * `Context.Service` class form used across this package, and `Object.keys`
- * becomes `Struct.keys`.
+ * stable API. The combinators in `Backend/Composition` wrap one backend in another
+ * for fallback.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -27,8 +21,8 @@ import * as Inspectable from "effect/Inspectable";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import type * as GraphSchema from "@beep/nlp/Graph/Schema";
 import type * as Effect from "effect/Effect";
+import type * as GraphSchema from "../Graph/Schema.ts";
 
 const $I = $NlpProcessingId.create("Backend/NLPBackend");
 
@@ -297,9 +291,8 @@ export class BackendCapabilities extends S.Opaque<BackendCapabilities, { readonl
  * **Details**
  *
  * Operations a backend does not support should fail with
- * {@link BackendNotSupported}. The annotation operations are functors over text:
- * `posTag`/`lemmatize` preserve token structure, `extractEntities`/
- * `extractRelations` surface semantic spans.
+ * {@link BackendNotSupported}. `posTag` and `lemmatize` keep one result per
+ * token; `extractEntities` and `extractRelations` surface semantic spans.
  *
  * **Example** (Implement minimal backend shape)
  *
@@ -338,23 +331,23 @@ export class BackendCapabilities extends S.Opaque<BackendCapabilities, { readonl
 export interface NLPBackendShape {
   /** Capabilities this backend supports. */
   readonly capabilities: BackendCapabilities;
-  /** Extract named entities (functor `Text -> [Entity]`). */
+  /** Extract named entities from text. */
   readonly extractEntities: (text: string) => Effect.Effect<ReadonlyArray<GraphSchema.EntityNode>, NLPBackendError>;
   /** Extract semantic relations between entities. */
   readonly extractRelations: (text: string) => Effect.Effect<ReadonlyArray<GraphSchema.RelationNode>, NLPBackendError>;
-  /** Lemmatize tokens to canonical forms (forgetful functor `[Token] -> [Lemma]`). */
+  /** Lemmatize tokens to canonical forms. */
   readonly lemmatize: (text: string) => Effect.Effect<ReadonlyArray<GraphSchema.LemmaNode>, NLPBackendError>;
   /** Backend name (e.g. `"wink-nlp"`, `"stanford-corenlp"`, `"spacy"`). */
   readonly name: string;
-  /** Parse syntactic dependencies (functor `Sentence -> Graph<Token, Dependency>`). */
+  /** Parse the syntactic dependencies of a sentence. */
   readonly parseDependencies: (
     sentence: string
   ) => Effect.Effect<ReadonlyArray<GraphSchema.DependencyNode>, NLPBackendError>;
-  /** Tag tokens with part-of-speech labels (functor `[Token] -> [POSNode]`). */
+  /** Part-of-speech annotation for each token. */
   readonly posTag: (text: string) => Effect.Effect<ReadonlyArray<GraphSchema.POSNode>, NLPBackendError>;
-  /** Split text into sentences (free functor `Text -> [Sentence]`). */
+  /** Split text into sentences. */
   readonly sentencize: (text: string) => Effect.Effect<ReadonlyArray<string>, NLPBackendError>;
-  /** Split text into tokens (free functor `Text -> [Token]`). */
+  /** Split text into tokens. */
   readonly tokenize: (text: string) => Effect.Effect<ReadonlyArray<string>, NLPBackendError>;
 }
 

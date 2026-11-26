@@ -472,6 +472,15 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expectReportedExit(both);
           const based = yield* Effect.exit(runIdentityCommand(["registry", "--check", "--base", "HEAD"]));
           expectReportedExit(based);
+          const defaultBased = yield* Effect.exit(runIdentityCommand(["registry", "--base", "HEAD"]));
+          expectReportedExit(defaultBased);
+          const refusals = yield* TestConsole.errorLines;
+          expect(refusals).toContain("identity registry: pass --write or --check, not both.");
+          expect(
+            A.filter(refusals, (line) =>
+              Str.startsWith("identity registry: --base applies only to --write;")(String(line))
+            )
+          ).toHaveLength(2);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

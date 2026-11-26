@@ -34,13 +34,19 @@ const cases = [
     ],
   },
   {
-    name: "document metadata and aliases",
-    // A column-0 `*ref` right after the root plain scalar would continue it
-    // (YAML 1.2 s-ns-plain-next-line), so the alias opens its own document.
+    name: "document metadata, and a column-0 alias after a root plain scalar opens its own document (s-ns-plain-next-line)",
     text: "&a !str true\n---\n*ref\n",
     expected: [
       ["CstScalarEvent", 1, "true"],
       ["CstAliasEvent", 1, "*ref"],
+    ],
+  },
+  {
+    name: "anchors and tags yield no events of their own, only the node they precede does",
+    text: "a: &x !t v\n",
+    expected: [
+      ["CstKeyEvent", 1, "a"],
+      ["CstValueEvent", 2, "v"],
     ],
   },
   { name: "block scalar source", text: "|\n  hello\n", expected: [["CstScalarEvent", 1, "|\n  hello\n"]] },

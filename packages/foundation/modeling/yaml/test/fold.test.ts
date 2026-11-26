@@ -18,7 +18,6 @@ import { parse } from "yaml";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** Adapt an Option-returning renderer to its nullable reading for assertions. */
 const nullable =
   <Args extends ReadonlyArray<unknown>>(render: (...args: Args) => O.Option<string>) =>
   (...args: Args): string | null =>
@@ -61,9 +60,6 @@ describe("plain data-first rendering helpers", () => {
 });
 
 describe("folded scalar more-indented transitions", () => {
-  // Verified against af7566a9: upstream emits ">2-\n   a\n\n  b" for " a\nb".
-  // The independent yaml parser resolves that output to " a\n\nb". YAML 1.2
-  // already preserves a break following a more-indented line; no blank is needed.
   for (const value of [" a\nb", "\ta\nb", "a\n b\nc", " a\n\nb", "a\nb", "a\n\nb", " a\nb\n", " a\nb\n\n"]) {
     it(`round-trips ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)} through an independent parser`, () => {
       const rendered = O.getOrNull(renderBlockFolded(value, "  "));
@@ -71,7 +67,11 @@ describe("folded scalar more-indented transitions", () => {
     });
   }
   it("emits no compensation blank after a more-indented line", () => {
-    assert.strictEqual(O.getOrNull(renderBlockFolded(" a\nb", "  ")), ">2-\n   a\n  b");
+    assert.strictEqual(
+      O.getOrNull(renderBlockFolded(" a\nb", "  ")),
+      ">2-\n   a\n  b",
+      'verified against af7566a9: upstream emits ">2-\\n   a\\n\\n  b" for " a\\nb", which the independent yaml parser resolves to " a\\n\\nb"; YAML 1.2 already preserves a break following a more-indented line, so no blank is needed'
+    );
   });
 });
 
@@ -89,8 +89,11 @@ describe("block and single-quoted representability regressions", () => {
     for (const value of ["a \nb", "a\t\nb", "a\n b", "a\n\tb", "a \n\nb"]) {
       assert.strictEqual(O.getOrNull(renderSingleQuotedMultiline(value, "  ")), null);
     }
-    // Whitespace on the last content line survives when no interior break follows it.
-    assert.strictEqual(parse(`${O.getOrNull(renderSingleQuotedMultiline("a\nb ", "  "))}\n`), "a\nb ");
+    assert.strictEqual(
+      parse(`${O.getOrNull(renderSingleQuotedMultiline("a\nb ", "  "))}\n`),
+      "a\nb ",
+      "whitespace on the last content line survives when no interior break follows it"
+    );
   });
   it("rejects out-of-range required indicators and preserves every valid width", () => {
     for (const render of [nullable(renderBlockLiteral), nullable(renderBlockFolded)]) {

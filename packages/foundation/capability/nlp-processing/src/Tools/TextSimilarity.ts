@@ -6,10 +6,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Tool from "effect/ai/Tool";
 import * as S from "effect/Schema";
+import { SimilarityMethod } from "../Core/Similarity.ts";
 import { AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/TextSimilarity");
@@ -79,4 +79,8 @@ export const TextSimilarity = Tool.make("TextSimilarity", {
   failureMode: "return",
   parameters: TextSimilarityParameters,
   success: S.toEncoded(TextSimilaritySuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

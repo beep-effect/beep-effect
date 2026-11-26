@@ -1,6 +1,3 @@
-// MemoryFileSystem.makeHandle (inside Effect) and makeSync (at describe
-// scope): every view over one volume, and the node-shaped mutators.
-
 import { MemoryFileSystem } from "@beep/memfs";
 import { UnknownFaultKeyError } from "@beep/memfs/internal/faults";
 import { runMutation } from "@beep/memfs/internal/ports";
@@ -79,8 +76,7 @@ describe("MemoryFileSystem.makeHandle — the volume half", () => {
 
       const seeded = yield* MemoryFileSystem.makeHandle({ "/seed.txt": "seeded" });
       assert.strictEqual(seeded.volume.text("/seed.txt"), "seeded");
-      // The two pairs are independent volumes.
-      assert.isFalse(seeded.volume.has("/direct.txt"));
+      assert.isFalse(seeded.volume.has("/direct.txt"), "the two pairs are independent volumes");
       assert.isFalse(bare.volume.has("/seed.txt"));
     })
   );
@@ -120,8 +116,7 @@ describe("MemoryFileSystem.makeSync", () => {
     const missing = thrown(() => vol.remove("/nope"));
     assert.strictEqual(missing.code, "ENOENT");
     assert.strictEqual(missing.path, "/nope");
-    // node's rmSync reports the lstat it fails in, not "rm".
-    assert.strictEqual(missing.syscall, "lstat");
+    assert.strictEqual(missing.syscall, "lstat", 'node\'s rmSync reports the lstat it fails in, not "rm"');
     assert.notStrictEqual(missing.name, "FiberFailure");
     const underFile = thrown(() => vol.write("/f/child.txt", ""));
     assert.strictEqual(underFile.code, "ENOTDIR");
@@ -132,12 +127,13 @@ describe("MemoryFileSystem.makeSync", () => {
   });
 
   it("a contradictory seed throws a node-shaped error synchronously", () => {
-    // Seeding "/a/b" needs "/a" as a directory; a recursive mkdir over the
-    // file "/a" is EEXIST, as `mkdirSync({ recursive: true })` reports it.
     const e = thrown(() => MemoryFileSystem.makeSync({ "/a": "x", "/a/b": "y" }));
-    assert.strictEqual(e.code, "EEXIST");
-    // node's syscall for the failing seed step, never the Effect method name.
-    assert.strictEqual(e.syscall, "mkdir");
+    assert.strictEqual(
+      e.code,
+      "EEXIST",
+      'seeding "/a/b" runs a recursive mkdir over the file "/a": EEXIST, as mkdirSync({ recursive: true }) reports it'
+    );
+    assert.strictEqual(e.syscall, "mkdir", "node's syscall for the failing seed step, never the Effect method name");
     assert.strictEqual(e.path, "/a");
     assert.notStrictEqual(e.name, "FiberFailure");
     assert.strictEqual(e._tag, "NodeErrno");
@@ -182,8 +178,11 @@ describe("MemoryFileSystem.makeSync", () => {
     vol.mkdir("sub/deep");
     assert.isTrue(vol.volume.isDirectory("/r/sub/deep"));
     vol.symlink("../target/text", "sub/link");
-    // Only the link path resolves; the target text is stored verbatim.
-    assert.strictEqual(vol.volume.readLink("/r/sub/link"), "../target/text");
+    assert.strictEqual(
+      vol.volume.readLink("/r/sub/link"),
+      "../target/text",
+      "only the link path resolves; the target text is stored verbatim"
+    );
     vol.remove("rel.ts");
     assert.isFalse(vol.volume.has("/r/rel.ts"));
   });
@@ -196,14 +195,20 @@ describe("MemoryFileSystem.makeSync", () => {
     assert.strictEqual(vol.volume.text("/elsewhere/x.txt"), "x");
     assert.strictEqual(vol.volume.text("/elsewhere/y.txt"), "y");
     assert.isFalse(vol.volume.has("/r/x.txt"));
-    // A missing parent reached through the link is created where the link leads.
     vol.write("link/../made/z.txt", "z");
-    assert.strictEqual(vol.volume.text("/elsewhere/made/z.txt"), "z");
+    assert.strictEqual(
+      vol.volume.text("/elsewhere/made/z.txt"),
+      "z",
+      "a missing parent reached through the link is created where the link leads"
+    );
     assert.isFalse(vol.volume.has("/r/made"));
-    // A parent that exists lexically but not after resolution is still created.
     vol.mkdir("/r/only-here");
     vol.write("link/../only-here/w.txt", "w");
-    assert.strictEqual(vol.volume.text("/elsewhere/only-here/w.txt"), "w");
+    assert.strictEqual(
+      vol.volume.text("/elsewhere/only-here/w.txt"),
+      "w",
+      "a parent that exists lexically but not after resolution is still created"
+    );
   });
 
   it("a dangling-link parent is ENOENT and a looping-link parent is ELOOP — never mkdir over the link", () => {
@@ -243,12 +248,14 @@ describe("MemoryFileSystem.makeSync", () => {
     assert.isFalse(vol.volume.has("/missing"));
     assert.strictEqual(vol.volume.readLink("/r/dang"), "/missing");
     assert.strictEqual(vol.volume.readLink("/r/loop"), "/r/loop");
-    // A genuinely absent ancestor chain is still created.
     vol.write("a/b/c/x.txt", "x");
-    assert.strictEqual(vol.volume.text("/r/a/b/c/x.txt"), "x");
-    // A file two levels up is still ENOTDIR, as writeFileSync reports.
+    assert.strictEqual(vol.volume.text("/r/a/b/c/x.txt"), "x", "a genuinely absent ancestor chain is still created");
     vol.write("f", "");
-    assert.strictEqual(thrown(() => vol.write("f/a/b.txt", "")).code, "ENOTDIR");
+    assert.strictEqual(
+      thrown(() => vol.write("f/a/b.txt", "")).code,
+      "ENOTDIR",
+      "a file two levels up is still ENOTDIR, as writeFileSync reports"
+    );
   });
 
   it("without a root, a relative mutator path resolves from / and creates nothing else", () => {
@@ -284,9 +291,8 @@ describe("MemoryFileSystem.makeSync", () => {
     });
     assert.strictEqual(thrown(() => sync.readFile("/a.txt")).code, "EACCES");
     assert.strictEqual(vol.sync.readFile("/a.txt"), "a");
-    // same volume: a later write is visible through the faulted pair
     vol.write("/b.txt", "b");
-    assert.isTrue(sync.exists("/b.txt"));
+    assert.isTrue(sync.exists("/b.txt"), "same volume: a later write is visible through the faulted pair");
     let pending: Promise<unknown> | undefined;
     try {
       pending = promises.stat("/a.txt");

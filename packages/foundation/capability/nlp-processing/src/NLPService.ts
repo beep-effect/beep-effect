@@ -3,15 +3,11 @@
  *
  * **Details**
  *
- * The main entry point for NLP in the categorical text-processing framework:
+ * The main entry point for NLP processing:
  * abstracts the backend behind a clean API ({@link NLPServiceShape.processText}
  * builds an annotated text graph; the other methods surface entities, relations,
  * and POS tags). The service depends on an {@link Backend.NLPBackend} provided via
  * a layer (e.g. `WinkBackendLive`).
- *
- * Effect v4 `@beep/nlp` implementation notes:
- * `Context.GenericTag` becomes the `Context.Service` class form; `getBackend`
- * becomes a bare `Effect` (no zero-arg thunk).
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -23,9 +19,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Backend from "./Backend/NLPBackend.ts";
 import * as ATG from "./Graph/AnnotatedTextGraph.ts";
-import type { EntityNode, POSNode, RelationNode } from "@beep/nlp/Graph/Schema";
 import type { NLPBackendError, NLPBackendShape } from "./Backend/NLPBackend.ts";
 import type { AnnotatedTextGraph } from "./Graph/AnnotatedTextGraph.ts";
+import type { EntityNode, POSNode, RelationNode } from "./Graph/Schema.ts";
 
 const $I = $NlpProcessingId.create("NLPService");
 

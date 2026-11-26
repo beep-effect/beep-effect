@@ -5,6 +5,7 @@ import {
   ClaimInputRecord,
   inspectClaimInput,
 } from "@beep/law-practice-domain/values/ClaimElement";
+import { MailFolderBinding, PracticeKgFamilyKey } from "@beep/law-practice-domain/values/MatterScope";
 import {
   normalizePatentApplicationDocument,
   normalizePatentClaims,
@@ -15,6 +16,7 @@ import {
   attributeDocuments,
   buildDuckDb,
   buildPracticeKgBundle,
+  indexDuckDbDocuments,
   LawPracticeServerLive,
   PRACTICE_KG_MCP_INSTRUCTIONS,
   PracticeKgAttributeDocumentsInput,
@@ -34,6 +36,7 @@ import {
   PracticeKgPatentDocumentInput,
   PracticeKgProjectionsLive,
   PracticeKgQueries,
+  PracticeKgReadScope,
   PracticeKgResolveAnchorsInput,
   PracticeKgToolkit,
   PracticeKgToolkitLayer,
@@ -53,6 +56,7 @@ import {
   ClaimInspectionPageRequest,
   ClaimSelfCheckInput,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import { GrantedScopes } from "@beep/law-practice-use-cases/MatterWall";
 import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import {
   ClaimSelfCheckReviewRequest,
@@ -72,7 +76,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
@@ -88,6 +92,7 @@ import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { identity, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
@@ -102,6 +107,7 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Tracer from "effect/Tracer";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
+import { matterWallGrantingEveryScopeLayer, matterWallGrantingLayer } from "./MatterWall.fixtures.ts";
 import type { DuckDbShape } from "@beep/duckdb";
 import type { TestContext } from "@effect/vitest";
 
@@ -276,7 +282,30 @@ const normalizedPatentFixture = Md.make([
   Md.p("Not applicable."),
 ]);
 
-const testLayer = Layer.merge(NodeServices.layer, NodeCrypto.layer);
+const fixtureMatterWall = matterWallGrantingLayer(
+  GrantedScopes.make({
+    scopeRefs: HashSet.empty(),
+    familyKeys: HashSet.fromIterable(
+      A.map(
+        [
+          ["11111", "20001"],
+          ["11111", "00012"],
+          ["22222", "20001"],
+          ["22222", "00003"],
+          ["22222", "30002"],
+          ["33333", "50005"],
+          ["44444", "40004"],
+        ] as const,
+        ([client, family]) => PracticeKgFamilyKey.make({ client, family })
+      )
+    ),
+    mailFolders: HashSet.make(
+      MailFolderBinding.make({ archive: `sha256:${Str.repeat(64)("c")}`, folderPrefix: "Inbox" })
+    ),
+  })
+);
+const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, fixtureMatterWall);
+const unwalledRead = PracticeKgReadScope.cases.Unwalled.make({});
 const realCorpusConfig = Config.option(Config.Boolean("BEEP_TEST_OPPOLD_CORPUS"));
 
 const withDuckDb =
@@ -358,9 +387,9 @@ const makeFixtureCatalog = Effect.fn("PracticeKgTest.makeFixtureCatalog")(functi
       "INSERT INTO corpus_organized VALUES ($1, 'fixture-source', $2, 'email-export', NULL, NULL, NULL, NULL, 'exported-message.txt', FALSE)",
       [fixtureDigests.email, `artifact:${Str.repeat(64)("c")}.export/Inbox/Message00001/Message.txt`]
     );
-    const mentionDerivedDocketFamiliesFanOutProjectionMustIgnore =
+    const docketFamiliesFanOut =
       "INSERT INTO corpus_enrichment VALUES ('87654321', 'resolved', '87654321', '12345678', 'Fixture implement', 'Fixture applicant', 'Fixture inventor', '20001 | 30002', '76543210')";
-    yield* db.run(mentionDerivedDocketFamiliesFanOutProjectionMustIgnore);
+    yield* db.run(docketFamiliesFanOut);
     yield* db.run(
       "INSERT INTO corpus_enrichment VALUES ('12345678', 'resolved', '87654321', '12345678', NULL, NULL, 'Fixture inventor', '20001', '')"
     );
@@ -513,10 +542,7 @@ const workingDigests = {
   textKeyed: `sha256:${Str.repeat(64)("7")}`,
 };
 const workingClients = { register: "33333", text: "44444" } as const;
-const secondCopyOfOrganizedFileAddsNoDocumentNorTakesOverRunSizeOrDate = [
-  fixtureDigests.family,
-  "Loose files/family-notes copy.txt",
-] as const;
+const secondCopy = [fixtureDigests.family, "Loose files/family-notes copy.txt"] as const;
 const workingFiles = [
   [
     workingDigests.keyed,
@@ -529,7 +555,7 @@ const workingFiles = [
   [workingDigests.textKeyed, "Loose files/40004ZA01/Notice.txt"],
   [workingDigests.registerMaySpeakNoPathTextOrFamilyClient, "Loose files/50005US01/Letter.txt"],
   [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
-  secondCopyOfOrganizedFileAddsNoDocumentNorTakesOverRunSizeOrDate,
+  secondCopy,
 ] as const;
 
 const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(function* (corpusRoot: string) {
@@ -549,20 +575,13 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
   }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
   const extractRoot = path.join(corpusRoot, "staging", `extract-${inventedWorkingFoldersRunOrganizerNeverSaw}`);
   yield* fs.makeDirectory(path.join(extractRoot, "text"), { recursive: true });
-  const textNamesOtherClientForFolderDocketFolderWins = [
+  const folderDocketText = [
     "keyed",
     workingDigests.keyed,
     `filing receipt for ${fixtureClients.beta}.20001US01`,
   ] as const;
-  const onlyTextNamesClientUnderCountryStageOldScanMissed = [
-    "text",
-    workingDigests.textKeyed,
-    `notice for ${workingClients.text}.40004ZA01`,
-  ] as const;
-  const texts = [
-    textNamesOtherClientForFolderDocketFolderWins,
-    onlyTextNamesClientUnderCountryStageOldScanMissed,
-  ] as const;
+  const countryStageText = ["text", workingDigests.textKeyed, `notice for ${workingClients.text}.40004ZA01`] as const;
+  const texts = [folderDocketText, countryStageText] as const;
   const sourceLines = yield* Effect.forEach(
     texts,
     ([name, digest]) =>
@@ -587,13 +606,13 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
     { concurrency: 1, discard: true }
   );
   const registerPath = path.join(corpusRoot, "docket-register.jsonl");
-  const registerListsOtherClientForBetaDocketItMustNotMove = `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`;
+  const betaRegisterLine = `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`;
   yield* fs.writeFileString(
     registerPath,
     A.join(
       [
         `{"client":"${fixtureClients.alpha}","docket":"20001US09","clientName":"Example Client"}`,
-        registerListsOtherClientForBetaDocketItMustNotMove,
+        betaRegisterLine,
         `{"client":"${workingClients.register}","docket":"50005US01","clientName":"Register Client"}`,
         `{"client":"${fixtureClients.beta}","docket":"30002BR01","clientName":"Second Client"}`,
         `{"client":"${fixtureClients.beta}","docket":"30002BR02","clientName":"Second Client LLC"}`,
@@ -604,7 +623,7 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
   return registerPath;
 });
 
-const inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication = "2026-10-mail";
+const mailRun = "2026-10-mail";
 const mailDigests = {
   answer: `sha256:${Str.repeat(64)("4")}`,
   dominantOne: `sha256:${Str.repeat(64)("3")}`,
@@ -630,7 +649,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
       ] as const,
       ([digest, relativePath], index) =>
         db.run(
-          `INSERT INTO corpus_source_files VALUES ('${inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication}', 'source-b', $1, $2, '2026-01-02T03:04:08.000Z', $3)`,
+          `INSERT INTO corpus_source_files VALUES ('${mailRun}', 'source-b', $1, $2, '2026-01-02T03:04:08.000Z', $3)`,
           [relativePath, index + 50, digest]
         ),
       { concurrency: 1, discard: true }
@@ -690,11 +709,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
     { concurrency: 1, discard: true }
   );
 
-  const mailRoot = path.join(
-    corpusRoot,
-    "staging",
-    `extract-${inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication}`
-  );
+  const mailRoot = path.join(corpusRoot, "staging", `extract-${mailRun}`);
   yield* fs.makeDirectory(path.join(mailRoot, "metadata"), { recursive: true });
   yield* fs.makeDirectory(path.join(mailRoot, "text"), { recursive: true });
   yield* fs.writeFileString(path.join(mailRoot, "text", "operation:op-mail-filing.txt"), "filing receipt attached");
@@ -808,14 +823,13 @@ const duckDump = Effect.fn("PracticeKgTest.duckDump")(function* (databasePath: s
   return yield* Effect.gen(function* () {
     const db = yield* DuckDb;
     const statements = [
-      "SELECT to_json(d)::VARCHAR AS line FROM documents d ORDER BY digest",
+      "SELECT to_json(d)::VARCHAR AS line FROM documents d ORDER BY document_key",
       "SELECT to_json(d)::VARCHAR AS line FROM document_text d ORDER BY digest",
       "SELECT to_json(e)::VARCHAR AS line FROM email_messages e ORDER BY archive_digest, folder_path, message_ord",
       "SELECT to_json(e)::VARCHAR AS line FROM enrichment e ORDER BY candidate",
       "SELECT to_json(d)::VARCHAR AS line FROM fts_docstats d ORDER BY doc_id",
       "SELECT to_json(p)::VARCHAR AS line FROM fts_postings p ORDER BY term, doc_id",
       "SELECT to_json(t)::VARCHAR AS line FROM fts_terms t ORDER BY term",
-      "SELECT to_json(b)::VARCHAR AS line FROM fts_bm25 b ORDER BY term, doc_id",
     ];
     const sections = yield* Effect.forEach(
       statements,
@@ -991,6 +1005,7 @@ describe("practice KG projections", () => {
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
           yield* buildDuckDb([], [], [], [], 2_097_152);
+          yield* indexDuckDbDocuments([]);
           const query1 = yield* db.query(
             "SELECT table_name FROM duckdb_tables() WHERE temporary AND table_name = 'fts_tokens'"
           );
@@ -1158,17 +1173,17 @@ describe("practice KG projections", () => {
             `https://beep-effect.com/ns/practice-kg/docket_family/${fixtureClients.alpha}.20001`,
             "https://beep-effect.com/ns/practice-kg/docket_family/20001",
             `https://beep-effect.com/ns/practice-kg/docket_family/${fixtureClients.beta}.20001`,
-            "https://beep-effect.com/ns/practice-kg/document/sha256:1111111111111111111111111111111111111111111111111111111111111111",
-            "https://beep-effect.com/ns/practice-kg/document/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "https://beep-effect.com/ns/practice-kg/document/sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "https://beep-effect.com/ns/practice-kg/document/sha256:1111111111111111111111111111111111111111111111111111111111111111@20001US03",
+            `https://beep-effect.com/ns/practice-kg/document/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@${fixtureClients.alpha}.20001US01`,
+            "https://beep-effect.com/ns/practice-kg/document/sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb@20001",
             "https://beep-effect.com/ns/practice-kg/document/sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
             "https://beep-effect.com/ns/practice-kg/document/sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-            "https://beep-effect.com/ns/practice-kg/document/sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            `https://beep-effect.com/ns/practice-kg/document/sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff@${fixtureClients.beta}.20001US02`,
           ]);
 
           const attributionLines = yield* sql
             .unsafe(
-              "SELECT row_to_json(x)::text AS line FROM (SELECT kind, natural_key, client, docket_family, attribution_source, epistemic_status FROM kg_node WHERE kind IN ('client', 'docket_family', 'docket', 'application', 'patent') OR natural_key IN ($1, $2, $3, $4) ORDER BY kind, natural_key) x",
+              "SELECT row_to_json(x)::text AS line FROM (SELECT kind, natural_key, client, docket_family, attribution_source, epistemic_status FROM kg_node WHERE kind IN ('client', 'docket_family', 'docket', 'application', 'patent') OR (kind = 'document' AND provenance_ref IN ($1, $2, $3, $4)) ORDER BY kind, natural_key) x",
               [fixtureDigests.docket, fixtureDigests.family, fixtureDigests.beta, fixtureDigests.recycle]
             )
             .pipe(Effect.flatMap(decodeDumpLines));
@@ -1188,10 +1203,10 @@ describe("practice KG projections", () => {
             `{"kind":"docket_family","natural_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             '{"kind":"docket_family","natural_key":"20001","client":null,"docket_family":"20001","attribution_source":"filename","epistemic_status":"derived-from-official-records"}',
             `{"kind":"docket_family","natural_key":"${fixtureClients.beta}.20001","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
-            `{"kind":"document","natural_key":"${fixtureDigests.recycle}","client":null,"docket_family":"20001","attribution_source":"restored-name","epistemic_status":"recycled-unverified"}`,
-            `{"kind":"document","natural_key":"${fixtureDigests.docket}","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
-            `{"kind":"document","natural_key":"${fixtureDigests.family}","client":null,"docket_family":"20001","attribution_source":"filename","epistemic_status":"derived-from-official-records"}`,
-            `{"kind":"document","natural_key":"${fixtureDigests.beta}","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
+            `{"kind":"document","natural_key":"${fixtureDigests.recycle}@20001US03","client":null,"docket_family":"20001","attribution_source":"restored-name","epistemic_status":"recycled-unverified"}`,
+            `{"kind":"document","natural_key":"${fixtureDigests.docket}@${fixtureClients.alpha}.20001US01","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
+            `{"kind":"document","natural_key":"${fixtureDigests.family}@20001","client":null,"docket_family":"20001","attribution_source":"filename","epistemic_status":"derived-from-official-records"}`,
+            `{"kind":"document","natural_key":"${fixtureDigests.beta}@${fixtureClients.beta}.20001US02","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"patent","natural_key":"12345678","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"official-record","epistemic_status":"derived-from-official-records"}`,
           ]);
           const anchorEdgeLines = yield* sql
@@ -1208,23 +1223,30 @@ describe("practice KG projections", () => {
           ]);
           const familyCountLines = yield* sql
             .unsafe(
-              `SELECT row_to_json(x)::text AS line FROM (SELECT DISTINCT family, "docketCount", "applicationCount", "documentCount" FROM (${PracticeKgQueries.family}) q ORDER BY family) x`,
+              `SELECT row_to_json(x)::text AS line FROM (SELECT DISTINCT family, "docketCount", "applicationCount", "documentCount" FROM (${PracticeKgQueries.family(unwalledRead)}) q ORDER BY family) x`,
               ["20001"]
             )
             .pipe(Effect.flatMap(decodeDumpLines));
-          expect(A.map(familyCountLines, (row) => row.line)).toStrictEqual([
+          expect(
+            A.map(familyCountLines, (row) => row.line),
+            "the docket_families fan-out is ignored: 87654321 is only ever mentioned by alpha's docket"
+          ).toStrictEqual([
             `{"family":"${fixtureClients.alpha}.20001","docketCount":1,"applicationCount":1,"documentCount":1}`,
             '{"family":"20001","docketCount":1,"applicationCount":0,"documentCount":1}',
             `{"family":"${fixtureClients.beta}.20001","docketCount":1,"applicationCount":0,"documentCount":1}`,
           ]);
           const bareDocketLines = yield* sql
             .unsafe(
-              `SELECT row_to_json(x)::text AS line FROM (SELECT "naturalKey" FROM (${PracticeKgQueries.application}) q WHERE kind = 'application' ORDER BY "naturalKey") x`,
+              `SELECT row_to_json(x)::text AS line FROM (SELECT "naturalKey" FROM (${PracticeKgQueries.application(unwalledRead)}) q WHERE kind = 'application' ORDER BY "naturalKey") x`,
               [null, null, "20001US01"]
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(bareDocketLines, (row) => row.line)).toContain('{"naturalKey":"87654321"}');
-          const wildcardDocketRows = yield* sql.unsafe(PracticeKgQueries.application, [null, null, "20001US%"]);
+          const wildcardDocketRows = yield* sql.unsafe(PracticeKgQueries.application(unwalledRead), [
+            null,
+            null,
+            "20001US%",
+          ]);
           expect(A.length(wildcardDocketRows)).toBe(0);
           const buildLines = yield* sql
             .unsafe(
@@ -1467,7 +1489,6 @@ describe("practice KG projections", () => {
           expect(A.dedupe(A.map(bareFamily.rows, (row) => row.resolution))).toStrictEqual(["ambiguous"]);
           expect(A.dedupe(A.map(bareFamily.rows, (row) => row.familyKey))).toStrictEqual([
             `${fixtureClients.alpha}.20001`,
-            "20001",
             `${fixtureClients.beta}.20001`,
           ]);
           const newCountryStage = yield* stableMatterLookupContractRows(`${fixtureClients.beta}.20001EP07`);
@@ -1537,6 +1558,17 @@ describe("practice KG projections", () => {
           );
           expect(missingProvenance.total).toBe(0);
           expect(missingProvenance.note).toContain("No graph node or document");
+          const sharedDigestProvenance = yield* callToolText("kg_provenance", {
+            natural_key: fixtureDigests.beta,
+          }).pipe(Effect.flatMap(decodeToolResultJson));
+          const naturalKeyColumn = O.getOrThrow(
+            A.findFirstIndex(sharedDigestProvenance.data.columns, (column) => column === "naturalKey")
+          );
+          expect(sharedDigestProvenance.data.rows).toHaveLength(1);
+          assertSome(
+            A.head(sharedDigestProvenance.data.rows).pipe(O.flatMap(A.get(naturalKeyColumn))),
+            `${fixtureDigests.beta}@${fixtureClients.beta}.20001US02`
+          );
           expect(searchRow.snippet).toContain(`alpha docket ${fixtureClients.alpha}.20001US01`);
           const familyKeysOf = (result: PracticeKgToolResult): ReadonlyArray<unknown> => {
             const familyColumn = O.getOrThrow(A.findFirstIndex(result.data.columns, (column) => column === "family"));
@@ -1544,7 +1576,6 @@ describe("practice KG projections", () => {
           };
           expect(familyKeysOf(O.getOrThrow(A.get(results, 1)))).toStrictEqual([
             `${fixtureClients.alpha}.20001`,
-            "20001",
             `${fixtureClients.beta}.20001`,
           ]);
           const keyedLookup = yield* callToolText("kg_docket_family", {
@@ -1671,7 +1702,7 @@ describe("practice KG projections", () => {
             PracticeKgOptions.make({
               ...graphOptions(corpusRoot, bundleOut),
               contactsPath,
-              includeRuns: [inventedMailRunFiledEmailAndThreeAlphaLettersCitingBetaApplication],
+              includeRuns: [mailRun],
               practiceDomains: [practiceDomain],
               skipEmails: true,
             }),
@@ -1682,8 +1713,8 @@ describe("practice KG projections", () => {
             .pipe(Effect.flatMap(decodeManifestJson));
           expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
             "2026-10-20-01",
-            "4",
-            "4",
+            "5",
+            "5",
           ]);
 
           yield* Effect.gen(function* () {
@@ -1740,7 +1771,10 @@ describe("practice KG projections", () => {
               "SELECT row_to_json(x)::text AS line FROM (SELECT n.attribution_source, e.predicate, o.natural_key FROM kg_node n JOIN kg_edge e ON e.subject_iri = n.iri JOIN kg_node o ON o.iri = e.object_iri WHERE n.natural_key = '11223344' ORDER BY e.predicate, o.natural_key) x"
             )
             .pipe(Effect.flatMap(decodeDumpLines));
-          expect(A.map(anchorLines, (row) => row.line)).toStrictEqual([
+          expect(
+            A.map(anchorLines, (row) => row.line),
+            "the invented mail run adds the filed email and three alpha letters citing beta's application"
+          ).toStrictEqual([
             '{"attribution_source":"mention-dominance","predicate":"continuation_of","natural_key":"87654321"}',
             `{"attribution_source":"mention-dominance","predicate":"mentioned_in_family","natural_key":"${fixtureClients.alpha}.20001"}`,
             `{"attribution_source":"mention-dominance","predicate":"mentioned_in_family","natural_key":"${fixtureClients.beta}.20001"}`,
@@ -1916,8 +1950,8 @@ describe("practice KG projections", () => {
           .pipe(Effect.flatMap(decodeManifestJson));
         expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
           "2026-10-06-09",
-          "4",
-          "4",
+          "5",
+          "5",
         ]);
         expect([
           manifest.sourceRuns.base,
@@ -1981,7 +2015,7 @@ describe("practice KG projections", () => {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           const documentLines = yield* sql
             .unsafe(
-              "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND natural_key IN ($1, $2, $3, $4, $5, $6) ORDER BY natural_key) x",
+              "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND provenance_ref IN ($1, $2, $3, $4, $5, $6) ORDER BY natural_key) x",
               [
                 workingDigests.registerMaySpeakNoPathTextOrFamilyClient,
                 workingDigests.ambiguous,
@@ -1992,7 +2026,10 @@ describe("practice KG projections", () => {
               ]
             )
             .pipe(Effect.flatMap(decodeDumpLines));
-          expect(A.map(documentLines, (row) => row.line)).toStrictEqual([
+          expect(
+            A.map(documentLines, (row) => row.line),
+            "the folder beats text naming another client; text alone places a country-stage docket the old scan missed"
+          ).toStrictEqual([
             '{"client":null,"docket_family":null,"attribution_source":"filename"}',
             `{"client":"${workingClients.register}","docket_family":"50005","attribution_source":"docket-register"}`,
             `{"client":"${workingClients.text}","docket_family":"40004","attribution_source":"text-reference"}`,
@@ -2098,7 +2135,7 @@ describe("practice KG projections", () => {
   });
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
-    const ownBundleClaimsStoreAndReaderPerConcurrentBlock = (bundleName: string) =>
+    const claimsReaderLayer = (bundleName: string) =>
       Layer.unwrap(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -2148,7 +2185,7 @@ describe("practice KG projections", () => {
         })
       );
 
-    it.layer(ownBundleClaimsStoreAndReaderPerConcurrentBlock("bundle-concurrent-claims-readers"), {
+    it.layer(claimsReaderLayer("bundle-concurrent-claims-readers"), {
       timeout: "120 seconds",
     })((it) => {
       it.effect(
@@ -2156,24 +2193,28 @@ describe("practice KG projections", () => {
         Effect.fnUntraced(function* () {
           const reader = yield* ConcurrentClaimsReader;
           const options = yield* ConcurrentClaimsOptions;
-          const openLazyIndependentReaderBeforeStandaloneLookup = reader.query(
-            "SELECT digest FROM documents ORDER BY digest"
-          );
-          yield* openLazyIndependentReaderBeforeStandaloneLookup;
+          const openReader = reader.query("SELECT digest FROM documents ORDER BY digest");
+          yield* openReader;
           const [summary, rows] = yield* Effect.all(
             [runPracticeKgClaimsBatch(options), reader.query("SELECT digest FROM documents ORDER BY digest")],
             { concurrency: 2 }
           );
           expect(summary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
-          expect(rows.length).toBeGreaterThan(0);
+          expect(
+            rows.length,
+            "opening is lazy, so the independent reader is established before the standalone lookup"
+          ).toBeGreaterThan(0);
           const query18 = yield* reader.query("SELECT digest FROM documents ORDER BY digest");
-          expect(query18).toStrictEqual(rows);
+          expect(
+            query18,
+            "each concurrent block owns its bundle, claims store and reader, so no block's claims reach another's counts"
+          ).toStrictEqual(rows);
         }),
         { timeout: 120_000 }
       );
     });
 
-    it.layer(ownBundleClaimsStoreAndReaderPerConcurrentBlock("bundle-shared-claims-reader"), {
+    it.layer(claimsReaderLayer("bundle-shared-claims-reader"), {
       timeout: "120 seconds",
     })((it) => {
       it.effect(
@@ -2198,7 +2239,7 @@ describe("practice KG projections", () => {
           const reader = yield* ConcurrentClaimsReader;
           const options = yield* ConcurrentClaimsOptions;
           const document = yield* normalizePatentApplicationDocument(normalizedPatentFixture);
-          const matchedToDocketFixtureCataloguedAsResponseOa = PracticeKgClaimsOptions.make({
+          const matched = PracticeKgClaimsOptions.make({
             bundleOut: options.bundleOut,
             inputs: options.inputs,
             patentDocuments: [
@@ -2210,11 +2251,9 @@ describe("practice KG projections", () => {
             ],
           });
 
-          const summary = yield* runPracticeKgClaimsBatch(matchedToDocketFixtureCataloguedAsResponseOa).pipe(
-            Effect.provideService(DuckDb, reader)
-          );
+          const summary = yield* runPracticeKgClaimsBatch(matched).pipe(Effect.provideService(DuckDb, reader));
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          const unsafe19 = yield* sql.unsafe(PracticeKgQueries.candidateClaims, [
+          const unsafe19 = yield* sql.unsafe(PracticeKgQueries.candidateClaims(unwalledRead), [
             null,
             `${fixtureClients.alpha}.20001`,
             null,
@@ -2222,7 +2261,10 @@ describe("practice KG projections", () => {
           const rows = yield* decodeCandidateClaimRows(unsafe19);
 
           expect(summary).toMatchObject({ failedFiles: 0, files: 1 });
-          expect(A.map(rows, (row) => row.sourceDocumentDigest)).toContain(fixtureDigests.docket);
+          expect(
+            A.map(rows, (row) => row.sourceDocumentDigest),
+            "the docket fixture is catalogued as Response OA - 20001US01.txt"
+          ).toContain(fixtureDigests.docket);
         }),
         { timeout: 120_000 }
       );
@@ -2324,7 +2366,7 @@ describe("practice KG projections", () => {
             ["20001US05", "20001US06"],
             (docket) =>
               sql
-                .unsafe(PracticeKgQueries.candidateClaims, [docket, null, null])
+                .unsafe(PracticeKgQueries.candidateClaims(unwalledRead), [docket, null, null])
                 .pipe(Effect.flatMap(decodeCandidateClaimRows)),
             { concurrency: 1 }
           ).pipe(Effect.map(A.flatten));
@@ -2381,7 +2423,7 @@ describe("practice KG projections", () => {
         });
 
         yield* fs.writeFileString(path.join(bundleOut, "practice.duckdb"), "not a DuckDB database");
-        const corruptCatalogReportsSourceResolutionNotLostProvenance = yield* runPracticeKgClaimsBatch(
+        const corruptCatalogFailure = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({
             bundleOut,
             inputs,
@@ -2394,9 +2436,10 @@ describe("practice KG projections", () => {
             ],
           })
         ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
-        expect(corruptCatalogReportsSourceResolutionNotLostProvenance.message).toContain(
-          "Failed resolving the source document"
-        );
+        expect(
+          corruptCatalogFailure.message,
+          "a corrupt catalog reports source resolution failure instead of losing provenance"
+        ).toContain("Failed resolving the source document");
         yield* fs.remove(path.join(bundleOut, "practice.duckdb"));
 
         const oversizedDocument = PatentApplicationDocument.make({
@@ -2477,7 +2520,8 @@ describe("practice KG projections", () => {
           Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })
         ).pipe(
           Layer.provide(fixtureLanguageModel),
-          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" })))
+          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" }))),
+          Layer.provide(matterWallGrantingEveryScopeLayer)
         );
         const summary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
           provideScopedLayer(claimsLayer)
@@ -2502,7 +2546,11 @@ describe("practice KG projections", () => {
         const recarried = yield* Effect.gen(function* () {
           yield* writePracticeKgClaimsCarry(carryWrite);
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          return yield* sql.unsafe(PracticeKgQueries.candidateClaims, [null, `${fixtureClients.alpha}.20001`, null]);
+          return yield* sql.unsafe(PracticeKgQueries.candidateClaims(unwalledRead), [
+            null,
+            `${fixtureClients.alpha}.20001`,
+            null,
+          ]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(carriedOut, "kg.pglite") })));
         const recarriedRows = yield* decodeCandidateClaimRows(recarried);
         expect(A.map(recarriedRows, (row) => [row.client, row.familyKey, row.sourceDocumentDigest])).toStrictEqual([
@@ -2576,7 +2624,7 @@ describe("practice KG projections", () => {
         yield* fs.remove(oversizedClaimsPath);
 
         yield* fs.writeFileString(oversizedClaimsPath, "bounded at stat time");
-        const grownBetweenStatAndReadRejectedOnActualPayload = yield* runPracticeKgClaimsBatch(
+        const grownClaimsFailure = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({ bundleOut, inputs })
         ).pipe(
           Effect.flip,
@@ -2587,7 +2635,10 @@ describe("practice KG projections", () => {
           }),
           provideScopedLayer(claimsLayer)
         );
-        expect(grownBetweenStatAndReadRejectedOnActualPayload.message).toContain("Claims input exceeds 2097152 bytes");
+        expect(
+          grownClaimsFailure.message,
+          "a file grown between stat and read is rejected on its actual payload"
+        ).toContain("Claims input exceeds 2097152 bytes");
         yield* fs.remove(oversizedClaimsPath);
 
         const insideClaimsTarget = path.join(inputs, "inside-claims-target.txt");
@@ -2629,7 +2680,8 @@ describe("practice KG projections", () => {
           Pglite.makeLayer({ dataDir: path.join(emptyBundleOut, "kg.pglite") })
         ).pipe(
           Layer.provide(fixtureLanguageModel),
-          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" })))
+          Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" }))),
+          Layer.provide(matterWallGrantingEveryScopeLayer)
         );
         const zeroClaimsFailure = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({ bundleOut: emptyBundleOut, inputs: emptyInputs })
@@ -2658,7 +2710,7 @@ describe("practice KG projections", () => {
               }),
             { concurrency: 1 }
           );
-          return yield* sql.unsafe(PracticeKgQueries.candidateClaims, ["20001US01", null, null]);
+          return yield* sql.unsafe(PracticeKgQueries.candidateClaims(unwalledRead), ["20001US01", null, null]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
         expect(A.length(persistedRows)).toBe(1);
 
@@ -2678,7 +2730,7 @@ describe("practice KG projections", () => {
           Effect.flatMap(decodeToolResultJson),
           provideScopedLayer(host)
         );
-        const familyAndDigestFiltersAndClaimsBearingAcceptanceSweep = yield* Effect.gen(function* () {
+        const filtered = yield* Effect.gen(function* () {
           const byFamily = yield* callToolText("kg_candidate_claims", {
             family: `${fixtureClients.alpha}.20001`,
           }).pipe(Effect.flatMap(decodeToolResultJson));
@@ -2688,19 +2740,17 @@ describe("practice KG projections", () => {
           const verified = yield* verifyPracticeKgBundle;
           return { byDigest: byDigest.total, byFamily: byFamily.total, verified };
         }).pipe(provideScopedLayer(host));
-        expect([
-          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.byFamily,
-          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.byDigest,
-        ]).toStrictEqual([1, 0]);
-        expect([
-          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.verified.ok,
-          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.verified.claims,
-          familyAndDigestFiltersAndClaimsBearingAcceptanceSweep.verified.claimsWithSourceDocument,
-        ]).toStrictEqual([true, 2, 1]);
+        expect([filtered.byFamily, filtered.byDigest], "family and digest filters reach the same claim").toStrictEqual([
+          1, 0,
+        ]);
+        expect(
+          [filtered.verified.ok, filtered.verified.claims, filtered.verified.claimsWithSourceDocument],
+          "a claims-bearing bundle still passes the acceptance sweep"
+        ).toStrictEqual([true, 2, 1]);
         expect(result.epistemic_status).toBe("candidate-unreviewed");
         expect(result.total).toBe(1);
         const row = R.fromEntries(A.zip(result.data.columns, O.getOrThrow(A.head(result.data.rows))));
-        expect(row.label).toBe("candidate — unreviewed");
+        expect(row.label).toBe("candidate-unreviewed");
         expect(row.claimText).toBe("A widget comprising a lid and a base.");
         expect(row.evidenceQuote).toBe("A Hinge Coupling The Lid To The Base");
         expect(row.sourceFile).toBe("1_Response OA - 20001US01.txt");
@@ -2744,12 +2794,12 @@ describe("practice KG projections", () => {
           candidates: [carriedCandidate("claim_malformed", "not-json", null)],
           evidence: [],
         });
-        const storeLevelFailureReportedAsCarryFailureNotRaw = yield* Effect.flip(
+        const storeFailure = yield* Effect.flip(
           writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut, carry: malformed })).pipe(
             provideScopedLayer(target)
           )
         );
-        expect(storeLevelFailureReportedAsCarryFailureNotRaw.message).toBe(
+        expect(storeFailure.message, "a store-level failure is reported as a carry failure, not leaked raw").toBe(
           "Failed carrying candidate claims into the bundle."
         );
 
@@ -2760,12 +2810,15 @@ describe("practice KG projections", () => {
           candidates: [carriedCandidate("claim_named", snapshot, "1_Response OA - 20001US01.txt")],
           evidence: [],
         });
-        const unreadableDuckDbNamesFileWhoseDocumentFailed = yield* Effect.flip(
+        const brokenBundleFailure = yield* Effect.flip(
           writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut: brokenBundle, carry: named })).pipe(
             provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(brokenBundle, "kg.pglite") }))
           )
         );
-        expect(unreadableDuckDbNamesFileWhoseDocumentFailed.message).toContain("Failed resolving the source document");
+        expect(
+          brokenBundleFailure.message,
+          "an unreadable DuckDB store names the file whose document could not be resolved"
+        ).toContain("Failed resolving the source document");
       }),
       { timeout: 120_000 }
     );
@@ -2813,9 +2866,7 @@ describe("practice KG projections", () => {
   });
 });
 
-const registrationOnlyHarnessBundleBridgeClearedByFinalizer = MutableRef.make<O.Option<PracticeKgBundleContext>>(
-  O.none()
-);
+const conformanceBundle = MutableRef.make<O.Option<PracticeKgBundleContext>>(O.none());
 
 const buildConformanceBundle = Effect.fn("PracticeKgTest.buildConformanceBundle")(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -2833,16 +2884,16 @@ const ConformanceBundleLive = Layer.effectDiscard(
   Effect.gen(function* () {
     const context = yield* buildConformanceBundle();
     yield* Effect.acquireRelease(
-      Effect.sync(() => MutableRef.set(registrationOnlyHarnessBundleBridgeClearedByFinalizer, O.some(context))),
-      () => Effect.sync(() => MutableRef.set(registrationOnlyHarnessBundleBridgeClearedByFinalizer, O.none()))
+      Effect.sync(() => MutableRef.set(conformanceBundle, O.some(context))),
+      () => Effect.sync(() => MutableRef.set(conformanceBundle, O.none()))
     );
   })
 ).pipe(Layer.provide(testLayer));
 
-const practiceKgToolkitRegistrationsTransportLeftToRunner = Layer.unwrap(
+const practiceKgConformanceRegistrations = Layer.unwrap(
   Effect.gen(function* () {
     const path = yield* Path.Path;
-    const bundle = yield* O.match(MutableRef.get(registrationOnlyHarnessBundleBridgeClearedByFinalizer), {
+    const bundle = yield* O.match(MutableRef.get(conformanceBundle), {
       onNone: () => Effect.die("the public conformance layer must own the bundle"),
       onSome: Effect.succeed,
     });
@@ -2857,20 +2908,23 @@ const practiceKgToolkitRegistrationsTransportLeftToRunner = Layer.unwrap(
   })
 ).pipe(Layer.provide(testLayer));
 
-it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bundle", (it) => {
-  conformance2026({
-    tester: it,
-    name: "beep-practice-kg-test",
-    version: "0.0.0",
-    instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
-    registrations: practiceKgToolkitRegistrationsTransportLeftToRunner,
-    tool: {
-      name: "corpus_search_text",
-      arguments: { query: "alpha" },
-      invalidArguments: { query: 1 },
-    },
-  });
-});
+it.layer(ConformanceBundleLive, { timeout: "2 minutes" })(
+  "native conformance bundle: registrations over one shared bundle, transport left to the runner, cleared on finalize",
+  (it) => {
+    conformance2026({
+      tester: it,
+      name: "beep-practice-kg-test",
+      version: "0.0.0",
+      instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
+      registrations: practiceKgConformanceRegistrations,
+      tool: {
+        name: "corpus_search_text",
+        arguments: { query: "alpha" },
+        invalidArguments: { query: 1 },
+      },
+    });
+  }
+);
 
 describe("family attribution fallback contracts", () => {
   const row = (digest: string, fields: Partial<PracticeKgCatalogRow> = {}) =>

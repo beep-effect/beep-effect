@@ -34,7 +34,7 @@ const makeRepository = (): WorkerServer.Worker.WorkerRepositoryShape => {
         HashMap.get(workers, id),
         Effect.fromOption(() => WorkerServer.Worker.WorkerRepositoryNotFound.make({ workerId: id }))
       ),
-    list: Effect.sync(() => A.fromIterable(HashMap.values(workers))),
+    list: Effect.sync(() => workers.pipe(HashMap.values, A.fromIterable)),
   };
 };
 

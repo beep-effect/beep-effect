@@ -389,10 +389,9 @@ const summaryStartOrder = Order.mapInput(Order.Number, (summary: TurboRunSummary
 
 // Rows arrive oldest first: a later row for the same task id overwrites the earlier hash.
 const newestRowsByTask = (rows: ReadonlyArray<TurboLaneTaskHash>): ReadonlyArray<TurboLaneTaskHash> =>
-  A.fromIterable(
-    HashMap.values(
-      A.reduce(rows, HashMap.empty<string, TurboLaneTaskHash>(), (acc, row) => HashMap.set(acc, row.taskId, row))
-    )
+  A.reduce(rows, HashMap.empty<string, TurboLaneTaskHash>(), (acc, row) => HashMap.set(acc, row.taskId, row)).pipe(
+    HashMap.values,
+    A.fromIterable
   );
 
 /**

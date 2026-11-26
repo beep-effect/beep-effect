@@ -436,16 +436,16 @@ export class PracticeKgEmailHeaderRow extends S.Opaque<PracticeKgEmailHeaderRow,
  *
  * The two stores version independently, so a reader can support a new DuckDB
  * layout without re-reading every PGlite bundle. Both are currently pinned at
- * `"4"`; a change to either is a breaking change for bundle consumers.
+ * `"5"`; a change to either is a breaking change for bundle consumers.
  *
  * **Example** (Pin both store versions)
  *
  * ```ts
  * import { PracticeKgSchemaVersions } from "@beep/law-practice-server"
  *
- * const versions = PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" })
+ * const versions = PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" })
  *
- * console.log(versions.duckdb) // "4"
+ * console.log(versions.duckdb) // "5"
  * ```
  *
  * @category models
@@ -453,8 +453,8 @@ export class PracticeKgEmailHeaderRow extends S.Opaque<PracticeKgEmailHeaderRow,
  */
 export class PracticeKgSchemaVersions extends S.Opaque<PracticeKgSchemaVersions, { readonly brand: unique symbol }>()(
   S.Struct({
-    duckdb: S.tag("4"),
-    pglite: S.tag("4"),
+    duckdb: S.tag("5"),
+    pglite: S.tag("5"),
   }).pipe(
     $I.annoteSchema("PracticeKgSchemaVersions", {
       description: "Independent schema versions for the two embedded graph stores.",
@@ -568,7 +568,7 @@ export class PracticeKgCounts extends S.Opaque<PracticeKgCounts, { readonly bran
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *
@@ -676,7 +676,7 @@ export class PracticeKgSummary extends S.Opaque<PracticeKgSummary, { readonly br
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *

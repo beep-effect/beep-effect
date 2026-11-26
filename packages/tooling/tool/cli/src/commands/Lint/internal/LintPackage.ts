@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { normalizePath } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as Flag from "effect/cli/Flag";
@@ -65,7 +65,7 @@ export const resolveLintPackage = Effect.fn("Lint.resolvePackage")(function* (ro
   const path = yield* Path.Path;
   const absolute = path.resolve(directory);
   if (!isContainedLintPath(path, root, absolute)) {
-    return yield* failWithReportedExit("Lint package directory must stay inside the repository.");
+    return yield* failWithPrintedExit("Lint package directory must stay inside the repository.");
   }
   return normalizePath(path.relative(root, absolute)) || ".";
 });

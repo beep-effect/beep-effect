@@ -2605,7 +2605,7 @@ export const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindow
   const indexed = A.reduce(A.flatten(eventRuns), HashMap.empty<number, CiWorkflowWindowRun>(), (runs, run) =>
     HashMap.set(runs, run.id, run)
   );
-  return A.sort(A.fromIterable(HashMap.values(indexed)), windowRunOrder);
+  return A.sort(indexed.pipe(HashMap.values, A.fromIterable), windowRunOrder);
 });
 
 const CI_WORKFLOW_JOBS_PAGE_SIZE = 100;
@@ -2732,7 +2732,7 @@ export const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(f
       Effect.flatMap((snapshot) =>
         Effect.forEach(
           A.filter(snapshot.state.rules, (rule) => Str.equivalence(rule.type, "required_status_checks")),
-          (rule) => decodeCiBranchRuleParameters(O.getOrUndefined(rule.parameters)),
+          (rule) => rule.parameters.pipe(O.getOrUndefined, decodeCiBranchRuleParameters),
           { concurrency: 1 }
         )
       ),
@@ -3848,8 +3848,9 @@ export const ciLaneTimingDayPeaks = (runs: ReadonlyArray<CiWorkflowWindowRun>): 
     { live: HashMap.empty(), liveRuns: 0, peaks: HashMap.empty() } as DayPeakState,
     applyInFlightEvent
   );
-  return pipe(
-    A.fromIterable(HashMap.entries(final.peaks)),
+  return final.peaks.pipe(
+    HashMap.entries,
+    A.fromIterable,
     A.map(([day, peak]) => CiLaneTimingDayPeak.make({ day, peakBranches: peak.peakBranches, peakRuns: peak.peakRuns })),
     A.sort(Order.mapInput(Order.String, (peak: CiLaneTimingDayPeak) => peak.day))
   );

@@ -27,7 +27,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("controlled source c
   it.effect("replays 40 non-HTML scenes with exact callback, iterator, hash and dispatch events", () =>
     Effect.gen(function* () {
       const citationResult1 = yield* replayControlledCleanerScenes(controlledLiteralScenes);
-      expect(citationResult1).toEqual({
+      expect(
+        citationResult1,
+        "construction seeds registry identities without builtins; the observer runs after the serializer captures the owner"
+      ).toEqual({
         scenes: 40,
         runs: 42,
         events: 114,
@@ -38,7 +41,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("controlled source c
   it.effect("uses the actual builtin function handle as a mutable registry key without invoking native HTML", () =>
     Effect.gen(function* () {
       const citationResult2 = yield* replayControlledCleanerScenes(["registry-function-key"]);
-      expect(citationResult2).toEqual({
+      expect(citationResult2, "the real builtin handle is captured under the first operation's work").toEqual({
         scenes: 1,
         runs: 1,
         events: 4,

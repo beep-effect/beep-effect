@@ -35,7 +35,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { layerSessionLedgerLive } from "../Session/SessionLedger.service.ts";
-import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
+import { detectCheckoutRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { FleetMirrorService, FleetMirrorServiceLive } from "./Fleet.service.ts";
 import {
   FleetCheckoutDescription,
@@ -53,8 +53,8 @@ import {
 } from "./internal/FleetRegistry.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
 import { FleetScanOptions } from "./Worktree.schemas.ts";
+import type { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 import type { SessionLedgerRow } from "../Session/Session.schemas.ts";
-import type { PrRepository } from "../Yeet/internal/Provenance.ts";
 import type { ConfiguredFleetRoots } from "./internal/FleetRoots.schemas.ts";
 import type {
   FleetCheckout,
@@ -450,8 +450,10 @@ const resolveRepository = Effect.fn("Fleet.resolveRepository")(function* () {
   const repoRoot = yield* findRepoRoot().pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
   );
-  return yield* detectPrRepository(repoRoot).pipe(
-    Effect.mapError(WorktreeCommandError.new("The fleet registry needs a github.com origin for its repository key."))
+  return yield* detectCheckoutRepository(repoRoot).pipe(
+    Effect.mapError(
+      WorktreeCommandError.new("The fleet registry needs an origin URL naming host/owner/name for its repository key.")
+    )
   );
 });
 
@@ -471,10 +473,10 @@ const printJson = (value: unknown, what: string) =>
  *
  * ```ts
  * import { FleetScanOptions, printFleetJoin } from "@beep/repo-cli/commands/Worktree"
- * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  *
- * const view = printFleetJoin(FleetScanOptions.make({}), PrRepository.make({ host: "github.com", owner: "o", name: "r" }), false)
+ * const view = printFleetJoin(FleetScanOptions.make({}), CheckoutRepository.make({ host: "github.com", owner: "o", name: "r" }), false)
  * console.log(Effect.isEffect(view)) // true
  * ```
  *
@@ -487,7 +489,7 @@ const printJson = (value: unknown, what: string) =>
  */
 export const printFleetJoin = Effect.fn("Fleet.printFleetJoin")(function* (
   options: FleetScanOptions,
-  repository: PrRepository,
+  repository: CheckoutRepository,
   json: boolean
 ) {
   const join = yield* loadFleetJoin(options, repository);
@@ -546,12 +548,12 @@ const DEFAULT_DESCRIBE_LEDGER_ROWS = 5;
  *
  * ```ts
  * import { FleetScanOptions, printFleetCheckoutDescription } from "@beep/repo-cli/commands/Worktree"
- * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  *
  * const view = printFleetCheckoutDescription(
  *   FleetScanOptions.make({}),
- *   PrRepository.make({ host: "github.com", owner: "o", name: "r" }),
+ *   CheckoutRepository.make({ host: "github.com", owner: "o", name: "r" }),
  *   { checkout: "/p/beep-effect0", ledgerRows: 5, json: false }
  * )
  * console.log(Effect.isEffect(view)) // true
@@ -566,7 +568,7 @@ const DEFAULT_DESCRIBE_LEDGER_ROWS = 5;
  */
 export const printFleetCheckoutDescription = Effect.fn("Fleet.printFleetCheckoutDescription")(function* (
   options: FleetScanOptions,
-  repository: PrRepository,
+  repository: CheckoutRepository,
   request: { readonly checkout: string; readonly ledgerRows: number; readonly json: boolean }
 ) {
   const { ledgerRows, json } = request;
@@ -616,11 +618,11 @@ const derivedOwningSeat = Effect.fn("Fleet.derivedOwningSeat")(function* (checko
  *
  * ```ts
  * import { FleetScanOptions, registerFleetCheckout } from "@beep/repo-cli/commands/Worktree"
- * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
- * const register = registerFleetCheckout(FleetScanOptions.make({}), PrRepository.make({ host: "github.com", owner: "o", name: "r" }), {
+ * const register = registerFleetCheckout(FleetScanOptions.make({}), CheckoutRepository.make({ host: "github.com", owner: "o", name: "r" }), {
  *   checkout: "/p/beep/seats/main",
  *   role: "main",
  *   owningSeat: O.none(),
@@ -638,7 +640,7 @@ const derivedOwningSeat = Effect.fn("Fleet.derivedOwningSeat")(function* (checko
  */
 export const registerFleetCheckout = Effect.fn("Fleet.registerFleetCheckout")(function* (
   scan: FleetScanOptions,
-  repository: PrRepository,
+  repository: CheckoutRepository,
   options: {
     readonly checkout: string;
     readonly role: FleetSeatRole;

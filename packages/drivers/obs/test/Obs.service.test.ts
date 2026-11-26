@@ -11,6 +11,7 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O, P, pipe } from "@beep/utils";
 import { assert, describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
@@ -152,8 +153,7 @@ describe("Obs", () => {
         expect(result.inputCreated).toBe(true);
         expect(result.sceneName).toBe("beep-qa");
         expect(result.inputName).toBe("beep-qa-capture");
-        assert(O.isSome(result.restoreToken));
-        expect(result.restoreToken.value).toBe("portal-token-1");
+        assertSome(result.restoreToken, "portal-token-1");
         const calls1 = yield* calls;
         const requestTypes = calledTypes(calls1);
         expect(A.contains(requestTypes, "CreateScene")).toBe(true);
@@ -190,8 +190,7 @@ describe("Obs", () => {
         const result = yield* obs.ensureQaScene();
         expect(result.sceneCreated).toBe(false);
         expect(result.inputCreated).toBe(false);
-        assert(O.isSome(result.restoreToken));
-        expect(result.restoreToken.value).toBe("portal-token-2");
+        assertSome(result.restoreToken, "portal-token-2");
         const calls2 = yield* calls;
         const requestTypes = calledTypes(calls2);
         expect(A.contains(requestTypes, "CreateScene")).toBe(false);
@@ -234,9 +233,7 @@ describe("Obs", () => {
         const recorded = yield* calls;
         expect(A.contains(calledTypes(recorded), "CreateInput")).toBe(false);
         const createSceneItem = A.findFirst(recorded, (call) => call.requestType === "CreateSceneItem");
-        assert(O.isSome(createSceneItem));
-        assert(O.isSome(createSceneItem.value.requestData));
-        expect(createSceneItem.value.requestData.value).toEqual({
+        assertSome(createSceneItem.pipe(O.flatMap((call) => call.requestData)), {
           sceneName: "beep-qa",
           sourceName: "beep-qa-capture",
         });
@@ -270,9 +267,7 @@ describe("Obs", () => {
         expect(P.isNumber(result.recordStartEpochMs)).toBe(true);
         const recorded = yield* calls;
         const setDirectory = A.findFirst(recorded, (call) => call.requestType === "SetRecordDirectory");
-        assert(O.isSome(setDirectory));
-        assert(O.isSome(setDirectory.value.requestData));
-        expect(setDirectory.value.requestData.value).toEqual({ recordDirectory: "/tmp/beep-qa-video" });
+        assertSome(setDirectory.pipe(O.flatMap((call) => call.requestData)), { recordDirectory: "/tmp/beep-qa-video" });
       })
     );
   });
@@ -348,8 +343,7 @@ describe("Obs", () => {
         const error = yield* obs.recordStatus.pipe(Effect.flip);
         assert(ObsError.is(error));
         expect(error.operation).toBe("recordStatus");
-        assert(O.isSome(error.requestType));
-        expect(error.requestType.value).toBe("GetRecordStatus");
+        assertSome(error.requestType, "GetRecordStatus");
       })
     );
   });

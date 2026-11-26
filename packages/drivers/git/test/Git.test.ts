@@ -49,16 +49,7 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const cwd = "/repo";
 
-/**
- * Runs `program` (which requires `Git`) against `Git.layer` over a scripted
- * spawner.
- *
- * The EMPTY ConfigProvider is deliberate: `Git.layer` reads `GIT_SSH_COMMAND`
- * from the ambient provider, whose default resolves the host's real
- * environment. Without this, a stray `GIT_SSH_COMMAND` on a dev machine or a
- * runner would silently change the spawn environment of every test in this
- * file.
- */
+// decision: git-unit-tests-use-an-empty-config-provider
 const provideGit =
   (
     spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>,
@@ -79,7 +70,6 @@ const provideGit =
 const run = <A, E>(program: Effect.Effect<A, E, Git>, byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
   program.pipe(provideGit(scripted(withoutSshProbe(byArgs))));
 
-/** `run` against `Git.layerWith(options)` instead of the default layer. */
 const runWith = <A, E>(
   options: GitOptions,
   program: Effect.Effect<A, E, Git>,
@@ -87,36 +77,15 @@ const runWith = <A, E>(
 ) =>
   program.pipe(provideGit(scripted(withoutSshProbe(byArgs)), ConfigProvider.fromEnvRecord({}), Git.layerWith(options)));
 
-/**
- * The config keys a network-touching member probes before its own invocation,
- * to resolve the ssh command git would have used.
- */
 const SSH_PROBE_KEYS = ["core.sshCommand", "ssh.variant"];
 
-/**
- * Whether an argv is one of those probes.
- *
- * HAZARD: this matches by argv alone, so a future test that legitimately calls
- * `git.configGet(cwd, "core.sshCommand")` or `"ssh.variant"` through `run`
- * would be answered `{ exit: 1 }` by {@link withoutSshProbe} instead of by its
- * own `byArgs`. Nothing does today. If you write one, give it its own spawner
- * rather than widening this.
- */
+// decision: scripted-git-tests-hide-the-ssh-probe
 const isSshProbe = (args: ReadonlyArray<string>): boolean =>
   args.length === 3 && args[0] === "config" && args[1] === "--get" && SSH_PROBE_KEYS.includes(args[2] ?? "");
 
 const isSshProbeCommand = flow(commandArgs, isSshProbe);
 
-/**
- * Answers the ssh probe as "unset" (a silent exit 1, the `quiet` shape) and
- * keeps it out of `byArgs` entirely.
- *
- * Every network-touching member now spawns that probe first, which would
- * otherwise trip the argv assertion — and skew the spawn COUNT — of every
- * test written about the member's own invocation. Hiding it here keeps those
- * tests about what they were written to test; the probe itself is pinned
- * directly by the "spawn environment" suite, which does not use this helper.
- */
+// decision: scripted-git-tests-hide-the-ssh-probe
 const withoutSshProbe =
   (byArgs: (args: ReadonlyArray<string>) => ScriptResult) =>
   (args: ReadonlyArray<string>): ScriptResult =>
@@ -288,15 +257,16 @@ describe("Git", () => {
 
     it.effect("no common ancestor (silent exit 1) fails LOUDLY on mergeBase — absence is exceptional here", () =>
       Effect.gen(function* () {
-        // The 0.7.0 behavior, restored and pinned: installed consumers
-        // (@savvy-web/silk-effects) .trim() the string result directly, so
-        // this member must never grow an Option — mergeBaseOption is the probe.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.mergeBase(cwd, "main", "orphan");
         });
         const failure = yield* Effect.flip(run(program, () => ({ exit: 1 })));
-        assert.instanceOf(failure, GitCommandError);
+        assert.instanceOf(
+          failure,
+          GitCommandError,
+          "installed consumers such as @savvy-web/silk-effects .trim() the string, so mergeBase never grows an Option"
+        );
         if (S.is(GitCommandError)(failure)) {
           assert.strictEqual(failure.exitCode, 1);
         }
@@ -318,14 +288,16 @@ describe("Git", () => {
 
     it.effect("no common ancestor (silent exit 1) is the probe's Option.none, never an error", () =>
       Effect.gen(function* () {
-        // Disjoint histories — an orphan branch, a grafted CI clone — exit 1
-        // with silent stderr (probed against git 2.54): a legitimate answer.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.mergeBaseOption(cwd, "main", "orphan");
         });
         const result = yield* run(program, () => ({ exit: 1 }));
-        assert.deepStrictEqual(result, O.none());
+        assert.deepStrictEqual(
+          result,
+          O.none(),
+          "disjoint histories (an orphan branch, a grafted CI clone) exit 1 silently in git 2.54: a legitimate answer"
+        );
       })
     );
 
@@ -457,6 +429,53 @@ describe("Git", () => {
     );
   });
 
+  describe("worktreeLock / worktreeUnlock", () => {
+    it.effect("spawns `worktree lock --reason` and `worktree unlock`, data-first and data-last", () =>
+      Effect.gen(function* () {
+        const seen: Array<ReadonlyArray<string>> = [];
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          yield* git.worktreeLock(cwd, "../wt", { reason: "fenced" });
+          yield* git.worktreeLock("../wt")(cwd);
+          yield* git.worktreeUnlock(cwd, "../wt");
+          return yield* git.worktreeUnlock("../wt")(cwd);
+        });
+        yield* run(program, (args) => {
+          seen.push(args);
+          return { exit: 0 };
+        });
+        assert.deepStrictEqual(
+          A.filter(seen, (args) => args[0] === "worktree"),
+          [
+            ["worktree", "lock", "--reason", "fenced", "../wt"],
+            ["worktree", "lock", "../wt"],
+            ["worktree", "unlock", "../wt"],
+            ["worktree", "unlock", "../wt"],
+          ]
+        );
+      })
+    );
+
+    it.effect("refuses an option-like path before spawning and fails on a non-zero exit", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.worktreeLock(cwd, "../wt");
+        });
+        const failure = yield* Effect.flip(
+          run(program, () => ({ stderr: "fatal: '../wt' is already locked\n", exit: 128 }))
+        );
+        assert.instanceOf(failure, GitCommandError);
+        const optionLike = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.worktreeUnlock(cwd, "--force");
+        });
+        const refused = yield* Effect.flip(run(optionLike, () => ({ exit: 0 })));
+        assert.instanceOf(refused, GitCommandError);
+      })
+    );
+  });
+
   describe("revParse", () => {
     it.effect("returns the trimmed SHA", () =>
       Effect.gen(function* () {
@@ -484,8 +503,6 @@ describe("Git", () => {
   });
 
   describe("workingChanges", () => {
-    // Routes the scripted spawner by argv: `--cached` is the staged query,
-    // `ls-files` the untracked one, any other `diff` the unstaged one.
     const scriptWorkingTree =
       (byKind: {
         unstaged: string;
@@ -512,13 +529,14 @@ describe("Git", () => {
             untracked: "untracked.ts\0",
           })
         );
-        // `shared.ts` appears in both the unstaged and staged runs — the union
-        // must dedupe it to a single entry.
-        assert.deepStrictEqual([...result].sort(), ["shared.ts", "staged.ts", "unstaged.ts", "untracked.ts"]);
+        assert.deepStrictEqual(
+          [...result].sort(),
+          ["shared.ts", "staged.ts", "unstaged.ts", "untracked.ts"],
+          "shared.ts is in both the unstaged and staged runs; the union dedupes it to a single entry"
+        );
       })
     );
 
-    // Captures the argv of every spawned command for one workingChanges run.
     const argvOf = Effect.fn("argvOf")(function* (options: { readonly relative?: boolean }) {
       const seen: Array<ReadonlyArray<string>> = [];
       const program = Effect.gen(function* () {
@@ -541,12 +559,13 @@ describe("Git", () => {
         Effect.gen(function* () {
           const { diffs, lsFiles } = yield* argvOf({ relative: true });
           assert.strictEqual(diffs.length, 2);
-          // All three sources share the cwd-relative base: --relative on the diffs
-          // (and never --no-relative), plain ls-files (which is cwd-relative by default).
-          assert.isTrue(A.every(diffs, (args) => args.includes("--relative")));
+          assert.isTrue(
+            A.every(diffs, (args) => args.includes("--relative")),
+            "all three sources share the cwd-relative base: --relative on the diffs"
+          );
           assert.isTrue(A.every(diffs, (args) => !args.includes("--no-relative")));
           assert.strictEqual(lsFiles.length, 1);
-          assert.isFalse(lsFiles[0]?.includes("--relative"));
+          assert.isFalse(lsFiles[0]?.includes("--relative"), "plain ls-files is already cwd-relative by default");
           assert.isFalse(lsFiles[0]?.includes("--full-name"));
         })
     );
@@ -557,14 +576,16 @@ describe("Git", () => {
         Effect.gen(function* () {
           const { diffs, lsFiles } = yield* argvOf({ relative: false });
           assert.strictEqual(diffs.length, 2);
-          // All three sources share the repo-root base: an EXPLICIT --no-relative on
-          // the diffs (so an inherited diff.relative=true cannot make them
-          // cwd-relative), and --full-name on ls-files (which would otherwise be
-          // cwd-relative).
-          assert.isTrue(A.every(diffs, (args) => args.includes("--no-relative")));
+          assert.isTrue(
+            A.every(diffs, (args) => args.includes("--no-relative")),
+            "an explicit --no-relative keeps an inherited diff.relative=true from making the diffs cwd-relative"
+          );
           assert.isTrue(A.every(diffs, (args) => !args.includes("--relative")));
           assert.strictEqual(lsFiles.length, 1);
-          assert.isTrue(lsFiles[0]?.includes("--full-name"));
+          assert.isTrue(
+            lsFiles[0]?.includes("--full-name"),
+            "--full-name puts ls-files on the shared repo-root base; it is otherwise cwd-relative"
+          );
         })
     );
 
@@ -737,12 +758,12 @@ describe("Git", () => {
           const git = yield* Git;
           return yield* git.revParse(cwd, "HEAD");
         });
-        // The mock's exitCode effect is Effect.never — the operation only
-        // resolves once Effect.timeoutOrElse's own duration elapses. Fork so
-        // the current fiber can drive the virtual clock forward past it.
-        const fiber = yield* run(program, () => ({ hang: true })).pipe(Effect.flip, Effect.forkChild);
+        const fiberAwaitingVirtualClock = yield* run(program, () => ({ hang: true })).pipe(
+          Effect.flip,
+          Effect.forkChild
+        );
         yield* TestClock.adjust("31 seconds");
-        const failure = yield* Fiber.join(fiber);
+        const failure = yield* Fiber.join(fiberAwaitingVirtualClock);
         assert.instanceOf(failure, GitCommandError);
         if (S.is(GitCommandError)(failure)) {
           assert.strictEqual(failure.detail, "timed out after 30s");
@@ -752,9 +773,6 @@ describe("Git", () => {
   });
 
   describe("option-injection guard", () => {
-    // A spawner that fails the test if it is ever reached: the guard must
-    // refuse option-like refs BEFORE any spawn. A throw here would surface as
-    // a defect, and Effect.flip on a defect fails the test.
     const neverSpawn = (): ScriptResult => {
       throw new Error("spawned — the option-injection guard did not fire");
     };
@@ -982,8 +1000,6 @@ describe("Git", () => {
   });
 
   describe("nameStatus options (G5)", () => {
-    // A spawner that fails the test if it is ever reached: every guard below
-    // must refuse BEFORE any spawn (the option-injection guard's precedent).
     const neverSpawn = (): ScriptResult => {
       throw new Error("spawned — a nameStatus option guard did not fire");
     };
@@ -1015,10 +1031,11 @@ describe("Git", () => {
           ]);
           return { stdout: "R050\0src/a.ts\0src/b.ts\0", exit: 0 };
         });
-        assert.deepStrictEqual(result, [
-          // `R050` decodes to 50: leading zeros are git's padding, not part of the score.
-          NameStatusEntry.make({ status: "renamed", oldPath: "src/a.ts", path: "src/b.ts", score: 50 }),
-        ]);
+        assert.deepStrictEqual(
+          result,
+          [NameStatusEntry.make({ status: "renamed", oldPath: "src/a.ts", path: "src/b.ts", score: 50 })],
+          "R050 decodes to 50: leading zeros are git's padding, not part of the score"
+        );
       })
     );
 
@@ -1093,8 +1110,8 @@ describe("Git", () => {
           const git = yield* Git;
           return yield* git.nameStatus(cwd, { base: "HEAD" });
         });
-        // A line-delimited (non -z) listing: no NUL terminator anywhere.
-        const failure = yield* Effect.flip(run(program, () => ({ stdout: "M\tsrc/a.ts\n", exit: 0 })));
+        const lineDelimitedListing = "M\tsrc/a.ts\n";
+        const failure = yield* Effect.flip(run(program, () => ({ stdout: lineDelimitedListing, exit: 0 })));
         assert.instanceOf(failure, GitCommandError);
         if (S.is(GitCommandError)(failure)) {
           assert.strictEqual(failure.kind, "failed");
@@ -1258,15 +1275,18 @@ describe("Git", () => {
               "--",
               "packages",
             ]);
-            // --no-renames: a staged rename arrives as D + A, two ordinary records.
             return { stdout: "D  packages/old.ts\0A  packages/new.ts\0?? packages/loose/inner.txt\0", exit: 0 };
           }
         );
-        assert.deepStrictEqual(result, [
-          StatusEntry.make({ x: "D", y: " ", path: "packages/old.ts" }),
-          StatusEntry.make({ x: "A", y: " ", path: "packages/new.ts" }),
-          StatusEntry.make({ x: "?", y: "?", path: "packages/loose/inner.txt" }),
-        ]);
+        assert.deepStrictEqual(
+          result,
+          [
+            StatusEntry.make({ x: "D", y: " ", path: "packages/old.ts" }),
+            StatusEntry.make({ x: "A", y: " ", path: "packages/new.ts" }),
+            StatusEntry.make({ x: "?", y: "?", path: "packages/loose/inner.txt" }),
+          ],
+          "under --no-renames a staged rename arrives as D + A, two ordinary records"
+        );
       })
     );
 
@@ -1826,8 +1846,6 @@ describe("Git", () => {
       })
     );
 
-    // Only git's terminating newline is removed: a path is an identity, and a
-    // directory name may legitimately end in whitespace.
     it.effect("keeps trailing whitespace that belongs to the path", () =>
       Effect.gen(function* () {
         const program = Effect.gen(function* () {
@@ -1835,13 +1853,14 @@ describe("Git", () => {
           return yield* git.commonDir(cwd);
         });
         const result = yield* run(program, () => ({ stdout: "/repos/bare.git \n", exit: 0 }));
-        assert.strictEqual(result, "/repos/bare.git ");
+        assert.strictEqual(
+          result,
+          "/repos/bare.git ",
+          "only git's terminating newline is removed: a path is an identity, and a directory name may end in whitespace"
+        );
       })
     );
 
-    // git before 2.31 does not know --path-format: rev-parse echoes the flag to
-    // stdout, answers the relative form, and exits 0. That must not pass as an
-    // identity.
     it.effect("fails typed when git echoes --path-format back (git older than 2.31)", () =>
       Effect.gen(function* () {
         const program = Effect.gen(function* () {
@@ -1851,7 +1870,11 @@ describe("Git", () => {
         const failure = yield* Effect.flip(run(program, () => ({ stdout: "--path-format=absolute\n.git\n", exit: 0 })));
         assert.instanceOf(failure, GitCommandError);
         if (S.is(GitCommandError)(failure)) {
-          assert.strictEqual(failure.kind, "failed");
+          assert.strictEqual(
+            failure.kind,
+            "failed",
+            "git before 2.31 echoes --path-format, answers the relative form and exits 0: never an identity"
+          );
           assert.include(failure.detail ?? "", "2.31");
         }
       })
@@ -2016,7 +2039,6 @@ describe("Git", () => {
           const git = yield* Git;
           return yield* git.status(cwd);
         });
-        // R entries in porcelain -z order NEW path first, then ORIGINAL.
         const output = A.join(
           ["M  a.txt", "D  b.txt", "R  renamed.txt", "sub/c.txt", "A  staged.txt", "?? untracked.txt"],
           "\0"
@@ -2025,13 +2047,17 @@ describe("Git", () => {
           assert.deepStrictEqual(args, ["status", "--porcelain", "-z"]);
           return { stdout: `${output}\0`, exit: 0 };
         });
-        assert.deepStrictEqual(result, [
-          StatusEntry.make({ x: "M", y: " ", path: "a.txt" }),
-          StatusEntry.make({ x: "D", y: " ", path: "b.txt" }),
-          StatusEntry.make({ x: "R", y: " ", path: "renamed.txt", origPath: "sub/c.txt" }),
-          StatusEntry.make({ x: "A", y: " ", path: "staged.txt" }),
-          StatusEntry.make({ x: "?", y: "?", path: "untracked.txt" }),
-        ]);
+        assert.deepStrictEqual(
+          result,
+          [
+            StatusEntry.make({ x: "M", y: " ", path: "a.txt" }),
+            StatusEntry.make({ x: "D", y: " ", path: "b.txt" }),
+            StatusEntry.make({ x: "R", y: " ", path: "renamed.txt", origPath: "sub/c.txt" }),
+            StatusEntry.make({ x: "A", y: " ", path: "staged.txt" }),
+            StatusEntry.make({ x: "?", y: "?", path: "untracked.txt" }),
+          ],
+          "porcelain -z orders an R entry NEW path first, then ORIGINAL"
+        );
       })
     );
 
@@ -2056,15 +2082,21 @@ describe("Git", () => {
 
     it("toLine renders `XY <path>` — a rename emits the NEW path by default", () => {
       assert.strictEqual(entries[0]?.toLine(), "M  a.txt");
-      // The kit's decided rename convention: the entry's CURRENT path.
-      assert.strictEqual(entries[1]?.toLine(), "R  renamed.txt");
+      assert.strictEqual(
+        entries[1]?.toLine(),
+        "R  renamed.txt",
+        "the kit's rename convention renders the entry's CURRENT path"
+      );
       assert.strictEqual(entries[2]?.toLine(), "?? untracked.txt");
     });
 
     it("renames: 'arrow' opts into git's own non-`-z` `orig -> new` form", () => {
       assert.strictEqual(entries[1]?.toLine({ renames: "arrow" }), "R  sub/c.txt -> renamed.txt");
-      // Non-rename entries are unaffected by the option.
-      assert.strictEqual(entries[0]?.toLine({ renames: "arrow" }), "M  a.txt");
+      assert.strictEqual(
+        entries[0]?.toLine({ renames: "arrow" }),
+        "M  a.txt",
+        "non-rename entries are unaffected by the option"
+      );
     });
 
     it("format joins one line per entry with no trailing newline; an empty array is the empty string", () => {
@@ -2122,9 +2154,6 @@ describe("Git", () => {
 
     it.effect("a failed reset fails LOUDLY as GitCommandError — never a silent no-op", () =>
       Effect.gen(function* () {
-        // The binding posture from the consumer census: a reset that silently
-        // did nothing would hand a retry of a non-idempotent operation the
-        // same dirty tree. Non-zero exit MUST surface typed.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.reset(cwd, { mode: "hard" });
@@ -2132,7 +2161,11 @@ describe("Git", () => {
         const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: bad boom\n", exit: 128 })));
         assert.instanceOf(failure, GitCommandError);
         if (S.is(GitCommandError)(failure)) {
-          assert.strictEqual(failure.kind, "failed");
+          assert.strictEqual(
+            failure.kind,
+            "failed",
+            "a silently skipped reset would hand a retry of a non-idempotent operation the same dirty tree"
+          );
           assert.strictEqual(failure.exitCode, 128);
         }
       })
@@ -2389,9 +2422,6 @@ describe("Git", () => {
 
     it.effect("fetchUnshallow in a NON-shallow repo fails typed — the caller guards with isShallow", () =>
       Effect.gen(function* () {
-        // The documented posture: --unshallow is a distinct mode git rejects
-        // on a complete repository; this method does not tolerate it, so the
-        // pairing is isShallow -> fetchUnshallow.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.fetchUnshallow(cwd);
@@ -2404,7 +2434,11 @@ describe("Git", () => {
         );
         assert.instanceOf(failure, GitCommandError);
         if (S.is(GitCommandError)(failure)) {
-          assert.strictEqual(failure.kind, "failed");
+          assert.strictEqual(
+            failure.kind,
+            "failed",
+            "git rejects --unshallow on a complete repository and this method does not tolerate it: pair isShallow first"
+          );
           assert.strictEqual(failure.exitCode, 128);
         }
       })
@@ -2486,15 +2520,16 @@ describe("Git", () => {
 
     it.effect("fetch passes a full +src:dst refspec through verbatim — the single-branch-clone spelling", () =>
       Effect.gen(function* () {
-        // Under actions/checkout's single-branch clone a bare-ref fetch never
-        // creates the remote-tracking ref; the refspec is the fix, and the
-        // guard admits its legitimate leading + (only leading - is refused).
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.fetch(cwd, { ref: "+refs/heads/b:refs/remotes/origin/b" });
         });
         yield* run(program, (args) => {
-          assert.deepStrictEqual(args, ["fetch", "origin", "+refs/heads/b:refs/remotes/origin/b"]);
+          assert.deepStrictEqual(
+            args,
+            ["fetch", "origin", "+refs/heads/b:refs/remotes/origin/b"],
+            "in actions/checkout's single-branch clone only a refspec creates the tracking ref; the guard admits a leading +"
+          );
           return { exit: 0 };
         });
       })
@@ -2545,7 +2580,6 @@ describe("Git", () => {
         );
         assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
         if (Exit.isFailure(exit)) {
-          // Cause.failureOption does not exist at beta.98 — findFail returns a Result.
           const found = Cause.findFail(exit.cause);
           assertSuccess(found, Result.getOrThrow(found));
           assert.isTrue(S.is(UnknownRefError)(found.success.error));
@@ -2626,8 +2660,11 @@ describe("Git", () => {
           if (Result.isSuccess(found)) {
             const error = found.success.error;
             assert.instanceOf(error, GitCommandError);
-            // The plain attempt's failure surfaces; the tag attempt's is discarded.
-            assert.include(error.stderr, "plain-attempt failed");
+            assert.include(
+              error.stderr,
+              "plain-attempt failed",
+              "the plain attempt's failure surfaces; the tag attempt's is discarded"
+            );
             assert.isFalse(error.args.includes("tag"));
           }
         }
@@ -2677,9 +2714,6 @@ describe("Git", () => {
 
     it.effect("fetchAny short-circuits a refused ref to a single refused error, not a double rejection", () =>
       Effect.gen(function* () {
-        // The refused error must NOT route through the tag-then-plain fallback
-        // (which would re-reject through the plain form's guard). Routing on
-        // kind "refused" is what keeps it a single rejection.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.fetchAny(cwd, { ref: "--tags" });
@@ -2692,7 +2726,11 @@ describe("Git", () => {
           if (Result.isSuccess(found)) {
             const error = found.success.error;
             assert.instanceOf(error, GitCommandError);
-            assert.strictEqual(error.kind, "refused");
+            assert.strictEqual(
+              error.kind,
+              "refused",
+              "a refused ref skips the tag-then-plain fallback, whose plain form would reject it a second time"
+            );
             assert.deepStrictEqual([...error.args], ["--tags"]);
           }
         }
@@ -2714,16 +2752,16 @@ describe("Git", () => {
 
     it.effect("submoduleUpdate checkout: true emits --checkout — the update=none silent-no-op override", () =>
       Effect.gen(function* () {
-        // Against a `submodule.<name>.update = none` configuration, an
-        // --init update without --checkout skips the submodule while
-        // reporting success (probed against git 2.54). The flag on the
-        // argv IS the fix; this pins it.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.submoduleUpdate(cwd, { init: true, checkout: true, paths: ["V/vend"] });
         });
         yield* run(program, (args) => {
-          assert.deepStrictEqual(args, ["submodule", "update", "--init", "--checkout", "--", "V/vend"]);
+          assert.deepStrictEqual(
+            args,
+            ["submodule", "update", "--init", "--checkout", "--", "V/vend"],
+            "under update = none an --init update without --checkout skips the submodule yet reports success (git 2.54)"
+          );
           return { exit: 0 };
         });
       })
@@ -3134,8 +3172,7 @@ describe("Git", () => {
         });
         const failure = yield* Effect.flip(
           run(program, (args) => {
-            // The SPAWNED argv carries the real url — git needs it.
-            assert.include(args, secret);
+            assert.include(args, secret, "the SPAWNED argv carries the real url: git needs it");
             return { stderr: "fatal: no submodule mapping found\n", exit: 1 };
           })
         );
@@ -3274,8 +3311,7 @@ describe("Git — remaining tiers (round 2)", () => {
     throw new Error("spawned — the pre-spawn guard did not fire");
   };
 
-  // The ASCII unit separator stashList's fixed --format uses between fields.
-  const US = "\u001f";
+  const STASH_FIELD_SEPARATOR = "\u001f";
 
   describe("lsRemote", () => {
     it.effect("parses sha<TAB>refname lines, peeled ^{} entries included", () =>
@@ -3305,19 +3341,17 @@ describe("Git — remaining tiers (round 2)", () => {
         LsRemoteEntry.make({ sha: Str.repeat(40)("b"), ref: "refs/tags/4.0.0-beta.101-rc" }),
         LsRemoteEntry.make({ sha: Str.repeat(40)("c"), ref: "refs/heads/main" }),
       ];
-      // The systems#357 story: the caller wanted `4.0.0-beta.101`, the remote
-      // advertises `effect@4.0.0-beta.101` — a near miss behind a separator.
       const matches = LsRemoteEntry.nearMatches(entries, "4.0.0-beta.101");
       assert.deepStrictEqual(
         A.map(matches, (entry) => entry.ref),
-        ["refs/tags/effect@4.0.0-beta.101"]
+        ["refs/tags/effect@4.0.0-beta.101"],
+        "the caller wanted 4.0.0-beta.101, the remote advertises effect@4.0.0-beta.101: a near miss behind a separator"
       );
-      // An exact match is a MATCH, not a near miss.
       const exact = LsRemoteEntry.nearMatches(
         [LsRemoteEntry.make({ sha: Str.repeat(40)("d"), ref: "refs/tags/v1" })],
         "v1"
       );
-      assert.deepStrictEqual(exact, []);
+      assert.deepStrictEqual(exact, [], "an exact match is a MATCH, not a near miss");
     });
 
     it("shortName strips ref prefixes and the ^{} peel suffix", () => {
@@ -3425,8 +3459,8 @@ describe("Git — remaining tiers (round 2)", () => {
           return yield* git.stashList(cwd);
         });
         const output =
-          `stash@{0}${US}9082ed4f3a84eac9fe9f84f1792959f4e6704642${US}WIP on main: 9d41fb9 one\0` +
-          `stash@{1}${US}a5ba0f23294307d84952fdec58bd058d3c8d068c${US}On main: first msg\0`;
+          `stash@{0}${STASH_FIELD_SEPARATOR}9082ed4f3a84eac9fe9f84f1792959f4e6704642${STASH_FIELD_SEPARATOR}WIP on main: 9d41fb9 one\0` +
+          `stash@{1}${STASH_FIELD_SEPARATOR}a5ba0f23294307d84952fdec58bd058d3c8d068c${STASH_FIELD_SEPARATOR}On main: first msg\0`;
         const result = yield* run(program, () => ({ stdout: output, exit: 0 }));
         assert.deepStrictEqual(result, [
           StashEntry.make({
@@ -3462,8 +3496,6 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("stashApply maps a STDOUT conflict report to MergeConflictError", () =>
       Effect.gen(function* () {
-        // git's merge machinery reports conflicts on stdout (probed): the
-        // classification must read stdout, not just stderr.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.stashApply(cwd, { index: 0 });
@@ -3475,7 +3507,11 @@ describe("Git — remaining tiers (round 2)", () => {
             exit: 1,
           }))
         );
-        assert.instanceOf(failure, MergeConflictError);
+        assert.instanceOf(
+          failure,
+          MergeConflictError,
+          "git's merge machinery reports conflicts on stdout, so the classification reads stdout, not just stderr"
+        );
       })
     );
 
@@ -3720,8 +3756,6 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("the merge rows are GATED: checkout with conflict-shaped stderr stays GitCommandError", () =>
       Effect.gen(function* () {
-        // Zero-churn guarantee: an existing member's union never picks up the
-        // new classifications — only push/pull/stashPop/stashApply carry them.
         const program = Effect.gen(function* () {
           const git = yield* Git;
           return yield* git.checkout(cwd, "main");
@@ -3732,7 +3766,11 @@ describe("Git — remaining tiers (round 2)", () => {
             exit: 1,
           }))
         );
-        assert.instanceOf(failure, GitCommandError);
+        assert.instanceOf(
+          failure,
+          GitCommandError,
+          "zero churn: only push, pull, stashPop and stashApply carry the merge classifications"
+        );
       })
     );
 
@@ -3759,13 +3797,16 @@ describe("Git — remaining tiers (round 2)", () => {
         });
         const output = "a.b\none\0a.b\ntwo\0x.y\nline1\nline2\0shorthand.flag\0";
         const result = yield* run(program, () => ({ stdout: output, exit: 0 }));
-        assert.deepStrictEqual(result, [
-          ConfigListEntry.make({ key: "a.b", value: "one" }),
-          ConfigListEntry.make({ key: "a.b", value: "two" }),
-          ConfigListEntry.make({ key: "x.y", value: "line1\nline2" }),
-          // A valueless key is git's boolean-true shorthand.
-          ConfigListEntry.make({ key: "shorthand.flag", value: "" }),
-        ]);
+        assert.deepStrictEqual(
+          result,
+          [
+            ConfigListEntry.make({ key: "a.b", value: "one" }),
+            ConfigListEntry.make({ key: "a.b", value: "two" }),
+            ConfigListEntry.make({ key: "x.y", value: "line1\nline2" }),
+            ConfigListEntry.make({ key: "shorthand.flag", value: "" }),
+          ],
+          'a valueless key is git\'s boolean-true shorthand, listed with value ""'
+        );
       })
     );
 
@@ -4011,19 +4052,10 @@ describe("Git — remaining tiers (round 2)", () => {
   });
 
   describe("spawn environment (#647, #670)", () => {
-    /**
-     * Runs one member against a spawner that records every spawned command,
-     * and returns the options of the LAST one — the member's own invocation,
-     * after any `core.sshCommand` probe.
-     *
-     * `env` seeds the ambient ConfigProvider; `configured` and `variant` are
-     * what the probes report for `core.sshCommand` and `ssh.variant`
-     * (omitted = unset, a silent exit 1).
-     */
     const spawned = Effect.fn("spawned")(function* (options: {
       readonly env?: Record<string, string | undefined>;
-      readonly configured?: string;
-      readonly variant?: string;
+      readonly probedSshCommand?: string;
+      readonly probedSshVariant?: string;
       readonly network?: boolean;
     }) {
       const seen: Array<{
@@ -4039,7 +4071,11 @@ describe("Git — remaining tiers (round 2)", () => {
           const probe = isSshProbe(args);
           const asked = args[2];
           const answer =
-            asked === "core.sshCommand" ? options.configured : asked === "ssh.variant" ? options.variant : undefined;
+            asked === "core.sshCommand"
+              ? options.probedSshCommand
+              : asked === "ssh.variant"
+                ? options.probedSshVariant
+                : undefined;
           const unset = probe && answer === undefined;
           return Effect.succeed(
             ChildProcessSpawner.makeHandle({
@@ -4060,16 +4096,14 @@ describe("Git — remaining tiers (round 2)", () => {
       );
       yield* Effect.gen(function* () {
         const git = yield* Git;
-        // lsRemote is network-touching (it reads over the wire); revParse
-        // is not — the ssh pin is scoped to members that can invoke ssh.
         return options.network === false
           ? yield* git.revParse(cwd, "HEAD")
           : yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
       }).pipe(provideGit(recording, ConfigProvider.fromEnvRecord(options.env ?? {})));
       assert.isTrue(seen.length > 0);
-      const last = seen[seen.length - 1];
-      assert.isDefined(last);
-      return { seen, env: last.options.env, options: last.options };
+      const memberInvocationAfterProbes = seen[seen.length - 1];
+      assert.isDefined(memberInvocationAfterProbes);
+      return { seen, env: memberInvocationAfterProbes.options.env, options: memberInvocationAfterProbes.options };
     });
 
     it.effect("pins the classification, prompt and askpass keys on every spawn", () =>
@@ -4077,10 +4111,11 @@ describe("Git — remaining tiers (round 2)", () => {
         const { env } = yield* spawned({ network: false });
         assert.strictEqual(env?.LC_ALL, "C");
         assert.strictEqual(env?.GIT_TERMINAL_PROMPT, "0");
-        // Probed against git 2.55: an EMPTY GIT_ASKPASS is a hard stop, not a
-        // fall-through — it suppresses core.askPass and SSH_ASKPASS too.
-        // GIT_TERMINAL_PROMPT=0 alone closes none of those routes.
-        assert.strictEqual(env?.GIT_ASKPASS, "");
+        assert.strictEqual(
+          env?.GIT_ASKPASS,
+          "",
+          "git 2.55: an EMPTY GIT_ASKPASS also stops core.askPass and SSH_ASKPASS; GIT_TERMINAL_PROMPT=0 closes neither"
+        );
         assert.strictEqual(env?.SSH_ASKPASS_REQUIRE, "never");
       })
     );
@@ -4088,9 +4123,11 @@ describe("Git — remaining tiers (round 2)", () => {
     it.effect("keeps extendEnv true so the pins merge with the parent environment", () =>
       Effect.gen(function* () {
         const { options } = yield* spawned({ network: false });
-        // Without this, pinning env would REPLACE the environment and git
-        // would lose PATH, HOME and SSH_AUTH_SOCK.
-        assert.strictEqual(options.extendEnv, true);
+        assert.strictEqual(
+          options.extendEnv,
+          true,
+          "without extendEnv the pinned env would REPLACE the environment and git would lose PATH, HOME and SSH_AUTH_SOCK"
+        );
       })
     );
 
@@ -4098,18 +4135,21 @@ describe("Git — remaining tiers (round 2)", () => {
       Effect.gen(function* () {
         const { seen, env } = yield* spawned({ network: false });
         assert.isUndefined(env?.GIT_SSH_COMMAND);
-        // A member that never invokes ssh must not pay the config read.
-        assert.isFalse(A.some(seen, (spawn) => isSshProbe(spawn.args)));
+        assert.isFalse(
+          A.some(seen, (spawn) => isSshProbe(spawn.args)),
+          "a member that never invokes ssh must not pay the config read"
+        );
       })
     );
 
     it.effect("pins BatchMode when neither the environment nor git config names an ssh command", () =>
       Effect.gen(function* () {
         const { seen, env } = yield* spawned({});
-        // `-o BatchMode=yes` is the ONLY lever that stops ssh reading a
-        // passphrase or host-key confirmation from /dev/tty; no askpass pin
-        // reaches those (probed under a real pty).
-        assert.strictEqual(env?.GIT_SSH_COMMAND, "ssh -o BatchMode=yes");
+        assert.strictEqual(
+          env?.GIT_SSH_COMMAND,
+          "ssh -o BatchMode=yes",
+          "only -o BatchMode=yes stops ssh reading a passphrase or host-key answer from /dev/tty; no askpass pin reaches it"
+        );
         assert.isTrue(A.some(seen, (spawn) => isSshProbe(spawn.args)));
       })
     );
@@ -4117,66 +4157,72 @@ describe("Git — remaining tiers (round 2)", () => {
     it.effect("preserves a caller's GIT_SSH_COMMAND and appends BatchMode to it", () =>
       Effect.gen(function* () {
         const { seen, env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh -i /keys/id_ed25519 -p 2222" } });
-        // A hard pin would discard a working ssh configuration and turn
-        // "prompts for a passphrase" into "cannot reach the remote at all".
-        assert.strictEqual(env?.GIT_SSH_COMMAND, "ssh -i /keys/id_ed25519 -p 2222 -o BatchMode=yes");
-        // The environment variable already settles the COMMAND — git resolves
-        // it ahead of core.sshCommand — so that probe is skipped. The
-        // ssh.variant probe still runs: the variant decides the argument
-        // grammar and is a separate question from which command to run.
-        assert.isFalse(A.some(seen, (spawn) => spawn.args[2] === "core.sshCommand"));
-        assert.isTrue(A.some(seen, (spawn) => spawn.args[2] === "ssh.variant"));
+        assert.strictEqual(
+          env?.GIT_SSH_COMMAND,
+          "ssh -i /keys/id_ed25519 -p 2222 -o BatchMode=yes",
+          "a hard pin would discard a working ssh configuration and make a passphrase prompt an unreachable remote"
+        );
+        assert.isFalse(
+          A.some(seen, (spawn) => spawn.args[2] === "core.sshCommand"),
+          "git resolves the environment variable ahead of core.sshCommand, so it settles the COMMAND and that probe is skipped"
+        );
+        assert.isTrue(
+          A.some(seen, (spawn) => spawn.args[2] === "ssh.variant"),
+          "the ssh.variant probe still runs: the variant decides the argument grammar, not which command runs"
+        );
       })
     );
 
     it.effect("resolves core.sshCommand when the environment names none, and appends to THAT", () =>
       Effect.gen(function* () {
-        const { env } = yield* spawned({ configured: "ssh -i /keys/deploy_key -o IdentitiesOnly=yes" });
-        // The regression this guards: git resolves GIT_SSH_COMMAND ahead of
-        // core.sshCommand, so pinning a bare `ssh` here would silently drop a
-        // configured deploy key and fail auth on every ssh operation that
-        // worked before.
-        assert.strictEqual(env?.GIT_SSH_COMMAND, "ssh -i /keys/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes");
+        const { env } = yield* spawned({ probedSshCommand: "ssh -i /keys/deploy_key -o IdentitiesOnly=yes" });
+        assert.strictEqual(
+          env?.GIT_SSH_COMMAND,
+          "ssh -i /keys/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes",
+          "GIT_SSH_COMMAND outranks core.sshCommand, so pinning a bare ssh would drop the configured deploy key"
+        );
       })
     );
 
     it.effect("declines to touch an ssh command that is not OpenSSH", () =>
       Effect.gen(function* () {
-        // plink has no `-o KEY=VALUE` form at all (its switch is -batch), so
-        // appending would break a working PuTTY setup rather than degrade it.
         const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "plink -i C:\\keys\\id.ppk" } });
-        assert.isUndefined(env?.GIT_SSH_COMMAND);
+        assert.isUndefined(
+          env?.GIT_SSH_COMMAND,
+          "plink has no -o KEY=VALUE form (its switch is -batch), so appending would break a working PuTTY setup"
+        );
       })
     );
 
     it.effect("declines when the caller already decides BatchMode for themselves", () =>
       Effect.gen(function* () {
-        // OpenSSH takes the FIRST value obtained for a repeated option, so an
-        // appended BatchMode=yes after the caller's BatchMode=no is inert
-        // (verified with `ssh -G` against OpenSSH 10.3). The caller's decision
-        // stands rather than being papered over with a pin that does nothing.
         const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh -o BatchMode=no" } });
-        assert.isUndefined(env?.GIT_SSH_COMMAND);
+        assert.isUndefined(
+          env?.GIT_SSH_COMMAND,
+          "OpenSSH 10.3 takes the FIRST value of a repeated option (ssh -G), so an appended BatchMode=yes would be inert"
+        );
       })
     );
 
     it.effect("pins a quoted ssh path containing spaces — the program is read quote-aware", () =>
       Effect.gen(function* () {
-        // GIT_SSH_COMMAND is shell-interpreted, so quoting a path with spaces
-        // is a working setup (verified against git 2.55). Splitting on
-        // whitespace alone would read `"/opt/my` and silently skip the pin.
         const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: '"/opt/my tools/ssh" -i /keys/id' } });
-        assert.strictEqual(env?.GIT_SSH_COMMAND, '"/opt/my tools/ssh" -i /keys/id -o BatchMode=yes');
+        assert.strictEqual(
+          env?.GIT_SSH_COMMAND,
+          '"/opt/my tools/ssh" -i /keys/id -o BatchMode=yes',
+          'git 2.55 shell-interprets GIT_SSH_COMMAND; a whitespace split would read "/opt/my and skip the pin'
+        );
       })
     );
 
     it.effect("pins despite an incidental mention of BatchMode that decides nothing", () =>
       Effect.gen(function* () {
-        // `-F /tmp/BatchMode` names a config file. Treating the bare word as
-        // the caller's decision would skip the pin for someone who never
-        // asked to be prompted.
         const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh -F /tmp/BatchMode" } });
-        assert.strictEqual(env?.GIT_SSH_COMMAND, "ssh -F /tmp/BatchMode -o BatchMode=yes");
+        assert.strictEqual(
+          env?.GIT_SSH_COMMAND,
+          "ssh -F /tmp/BatchMode -o BatchMode=yes",
+          "-F /tmp/BatchMode names a config file; reading the bare word as a decision would skip the pin"
+        );
       })
     );
 
@@ -4189,15 +4235,16 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("declines to pin when GIT_SSH is the deciding rung, rather than displacing it", () =>
       Effect.gen(function* () {
-        // Git's order is GIT_SSH_COMMAND > core.sshCommand > GIT_SSH > ssh
-        // (verified against git 2.55). GIT_SSH names a PROGRAM and takes no
-        // arguments, so nothing can be appended to it — and because
-        // GIT_SSH_COMMAND outranks it, pinning even a bare `ssh` would
-        // silently replace the caller's working transport.
         const { env } = yield* spawned({ env: { GIT_SSH: "/opt/corp/ssh-wrapper" } });
-        assert.isUndefined(env?.GIT_SSH_COMMAND);
-        // The rest of the non-interactive pins still apply to that caller.
-        assert.strictEqual(env?.GIT_TERMINAL_PROMPT, "0");
+        assert.isUndefined(
+          env?.GIT_SSH_COMMAND,
+          "git 2.55 ranks GIT_SSH_COMMAND > core.sshCommand > GIT_SSH > ssh; GIT_SSH takes no args, a pin would replace it"
+        );
+        assert.strictEqual(
+          env?.GIT_TERMINAL_PROMPT,
+          "0",
+          "the rest of the non-interactive pins still apply to that caller"
+        );
       })
     );
 
@@ -4205,7 +4252,7 @@ describe("Git — remaining tiers (round 2)", () => {
       Effect.gen(function* () {
         const { env } = yield* spawned({
           env: { GIT_SSH: "/opt/corp/ssh-wrapper" },
-          configured: "ssh -i /keys/deploy_key",
+          probedSshCommand: "ssh -i /keys/deploy_key",
         });
         assert.strictEqual(env?.GIT_SSH_COMMAND, "ssh -i /keys/deploy_key -o BatchMode=yes");
       })
@@ -4213,11 +4260,11 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("declines when ssh.variant tells git the command is not OpenSSH", () =>
       Effect.gen(function* () {
-        // The basename inference is overridable: a program literally named
-        // `ssh` with ssh.variant=plink is invoked with plink's -P (verified
-        // against git 2.55), so the append would corrupt a working command.
-        const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh" }, variant: "plink" });
-        assert.isUndefined(env?.GIT_SSH_COMMAND);
+        const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh" }, probedSshVariant: "plink" });
+        assert.isUndefined(
+          env?.GIT_SSH_COMMAND,
+          "git 2.55 invokes a program named ssh with plink's -P under ssh.variant=plink, so an append would corrupt it"
+        );
       })
     );
 
@@ -4230,7 +4277,7 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("still pins under ssh.variant=auto, which just means 'infer from the basename'", () =>
       Effect.gen(function* () {
-        const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh -p 2222" }, variant: "auto" });
+        const { env } = yield* spawned({ env: { GIT_SSH_COMMAND: "ssh -p 2222" }, probedSshVariant: "auto" });
         assert.strictEqual(env?.GIT_SSH_COMMAND, "ssh -p 2222 -o BatchMode=yes");
       })
     );
@@ -4246,10 +4293,6 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("degrades a failing ConfigProvider to absent rather than escaping the layer", () =>
       Effect.gen(function* () {
-        // Git.layer's error channel is `never` by contract. Config.option
-        // covers ABSENT input only — a provider whose `load` fails still
-        // propagates — so the layer's Effect.catch is what actually holds that
-        // contract, and this is the only test that exercises it.
         const failing = ConfigProvider.make(() =>
           Effect.fail(new ConfigProvider.SourceError({ message: "provider unavailable" }))
         );
@@ -4280,16 +4323,14 @@ describe("Git — remaining tiers (round 2)", () => {
           const git = yield* Git;
           return yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
         }).pipe(provideGit(recording, failing));
-        // An unreadable provider is answered with the pin that cannot hang.
-        assert.strictEqual(captured?.env?.GIT_SSH_COMMAND, "ssh -o BatchMode=yes");
+        assert.strictEqual(
+          captured?.env?.GIT_SSH_COMMAND,
+          "ssh -o BatchMode=yes",
+          "Config.option covers absent input only, so the layer's Effect.catch answers a failing load with the safe pin"
+        );
       })
     );
 
-    // Each of the seven members that reaches a remote must route through
-    // `runForNetwork`. Nothing else pins that: a member reverted to `runFor`
-    // still passes its own tests, which only assert argv, and the vanished
-    // probe is invisible to them because `withoutSshProbe` swallows it by
-    // argv regardless of who emitted it. This table is the only guard.
     const NETWORK_MEMBERS: ReadonlyArray<{
       readonly name: string;
       readonly call: (
@@ -4354,7 +4395,11 @@ describe("Git — remaining tiers (round 2)", () => {
           );
           const invocation = O.getOrUndefined(A.findFirst(seen, (spawn) => !isSshProbe(spawn.args)));
           assert.isDefined(invocation);
-          assert.strictEqual(invocation.options.env?.GIT_SSH_COMMAND, "ssh -o BatchMode=yes");
+          assert.strictEqual(
+            invocation.options.env?.GIT_SSH_COMMAND,
+            "ssh -o BatchMode=yes",
+            `${member.name} must route through runForNetwork; its argv-only tests cannot see a vanished probe`
+          );
         })
       );
     }
@@ -4395,8 +4440,6 @@ describe("Git — remaining tiers (round 2)", () => {
 
     it.effect("reads the ambient environment ONCE, at layer construction", () =>
       Effect.gen(function* () {
-        // Two members off one service instance must carry the same pins: the
-        // environment read is a property of the instance, not of a call.
         let reads = 0;
         const counting = ConfigProvider.make((path) => {
           const key = A.join(
@@ -4408,13 +4451,14 @@ describe("Git — remaining tiers (round 2)", () => {
         });
         yield* Effect.gen(function* () {
           const git = yield* Git;
-          // Two NETWORK members: both enter resolveSshEnv, so `reads === 1`
-          // discriminates a per-call provider re-read. Two revParse calls
-          // would only prove the layer itself reads once.
           yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
           yield* git.lsRemote(cwd, "ssh://git@example.invalid/x.git");
         }).pipe(provideGit(scripted(withoutSshProbe(() => ({ stdout: "abc123\n" }))), counting));
-        assert.strictEqual(reads, 1);
+        assert.strictEqual(
+          reads,
+          1,
+          "the environment read belongs to the instance: two network members both enter resolveSshEnv yet read it once"
+        );
       })
     );
   });

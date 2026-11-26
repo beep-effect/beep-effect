@@ -351,7 +351,7 @@ const windowReport = (
   agentKind: HookPulseAgentKind,
   namespaceCutover: O.Option<number>
 ): ObservedSessionWindow => {
-  const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
+  const ranked = visited.pipe(MutableHashMap.values, A.fromIterable, A.sort(byNewestFirst));
   // A session that began before the dated namespace cutover was pseudonymized
   // under the previous regime. It stays readable and counted, but never fills
   // the current window: old observations are not folded into a zero-use claim.
@@ -907,7 +907,11 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
       ),
     });
   }
-  return A.map(A.fromIterable(MutableHashMap.values(selected)), (entry) => entry.candidate);
+  return selected.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
+    A.map((entry) => entry.candidate)
+  );
 });
 
 const ParentSessionSegment = S.String.check(S.isPattern(/^[0-9a-f-]{36}$/));
@@ -1135,14 +1139,20 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   const hookedByRegime = totals.hookedByRegime;
   const counts = agentKind === "claude-code" ? totals.sessions : totals.transcriptPaths;
   const matchedHooks = agentKind === "claude-code" ? totals.selectedSessionHooks : totals.selectedPathHooks;
-  const transcriptToolEvents = A.reduce(A.fromIterable(MutableHashMap.values(counts)), 0, (sum, count) => sum + count);
+  const transcriptToolEvents = counts.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
+    A.reduce(0, (sum, count) => sum + count)
+  );
   const hookedToolEvents = A.reduce(
     A.fromIterable(counts),
     0,
     (sum, [key]) => sum + O.getOrElse(MutableHashMap.get(matchedHooks, key), () => 0)
   );
-  const sessionsWithoutHooks = A.length(
-    A.filter(A.fromIterable(counts), ([key]) => !MutableHashMap.has(matchedHooks, key))
+  const sessionsWithoutHooks = counts.pipe(
+    A.fromIterable,
+    A.filter(([key]) => !MutableHashMap.has(matchedHooks, key)),
+    A.length
   );
   return HarnessTelemetryReconciliation.make({
     agentKind,

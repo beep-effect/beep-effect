@@ -41,7 +41,7 @@ import {
   loadCheckoutInventory,
   workspaceSubject,
 } from "@beep/repo-cli-kit/CheckoutSubject";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
 import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
@@ -996,7 +996,7 @@ export const lintPolicyFingerprintCommand = Command.make(
   },
   Effect.fn("lintPolicyFingerprint")(function* ({ check, write }) {
     if (check && write) {
-      return yield* failWithReportedExit("Choose --check or --write, not both.");
+      return yield* failWithPrintedExit("Choose --check or --write, not both.");
     }
     const root = yield* findRepoRoot();
     const policy = yield* PolicyToolsFingerprintPolicy.make(root);

@@ -33,6 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GithubRest } from "../../../internal/github/index.ts";
 import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
+import { checkoutRepositoryFromRemoteUrl } from "../../../internal/state/WorkstationState.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
@@ -572,8 +573,29 @@ export const readProvenanceLabels = (repoRoot: string) =>
     Effect.orElseSucceed(thunkTrue)
   );
 
+const toPrRepository = (url: string): O.Option<PrRepository> =>
+  pipe(
+    Str.match(repositoryPattern)(url),
+    O.flatMap(([, owner, name]) =>
+      owner === undefined || name === undefined
+        ? O.none()
+        : PrRepository.makeOption({ host: "github.com", owner: Str.toLowerCase(owner), name: Str.toLowerCase(name) })
+    )
+  );
+
+const sameRepository = (self: PrRepository, that: PrRepository) => self.owner === that.owner && self.name === that.name;
+
 /**
  * Resolve the current GitHub repository from the origin URL.
+ *
+ * **Details**
+ *
+ * `remote.origin.url` decides when it names a `github.com` repository. When
+ * origin fetches from a mirror instead, the repository comes from origin's
+ * push URLs (`remote.origin.pushurl`), provided they name exactly one
+ * `github.com` repository: a checkout that fetches from a self-hosted mirror
+ * and pushes to both the mirror and GitHub still publishes to GitHub. Both
+ * reads use the configured values, never an `insteadOf` rewrite.
  *
  * **Example** (Build repository detection)
  *
@@ -595,15 +617,72 @@ export const detectPrRepository = Effect.fn("ProvenanceFooter.detectRepository")
       YeetCommandError.new("Failed to read the origin URL.", { command: "git config --get remote.origin.url" })
     )
   );
-  const match = O.flatMap(origin, Str.match(repositoryPattern));
-  if (O.isNone(match) || match.value[1] === undefined || match.value[2] === undefined) {
-    return yield* YeetCommandError.make({ message: "Expected a github.com origin URL." });
+  const fetched = O.flatMap(origin, toPrRepository);
+  if (O.isSome(fetched)) {
+    return fetched.value;
   }
-  return PrRepository.make({
-    host: "github.com",
-    owner: Str.toLowerCase(match.value[1]),
-    name: Str.toLowerCase(match.value[2]),
-  });
+  const pushUrls = yield* Git.use((git) => git.configGetAll(cwd, "remote.origin.pushurl")).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
+    Effect.mapError(
+      YeetCommandError.new("Failed to read the origin push URLs.", {
+        command: "git config --get-all remote.origin.pushurl",
+      })
+    )
+  );
+  return yield* pipe(
+    A.map(pushUrls, toPrRepository),
+    A.getSomes,
+    A.dedupeWith(sameRepository),
+    A.match({
+      onEmpty: () => Effect.fail(YeetCommandError.make({ message: "Expected a github.com origin URL." })),
+      onNonEmpty: ([repository, ...others]) =>
+        A.isArrayEmpty(others)
+          ? Effect.succeed(repository)
+          : Effect.fail(
+              YeetCommandError.make({ message: "Expected origin's push URLs to name one github.com repository." })
+            ),
+    })
+  );
+});
+
+/**
+ * Resolve the checkout's canonical home from its origin fetch URL, on any Git host.
+ *
+ * **Details**
+ *
+ * Reads the configured `remote.origin.url` (never an `insteadOf` rewrite) and
+ * parses the SSH scp form, `ssh://` with an optional port and `https://`.
+ * Push URLs are not consulted: the fetch URL names the home. Use
+ * {@link detectPrRepository} for the GitHub repository pull requests live in.
+ *
+ * **Example** (Build checkout detection)
+ *
+ * ```ts
+ * import { detectCheckoutRepository } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const detection = detectCheckoutRepository("/worktrees/beep-effect10")
+ * console.log(Effect.isEffect(detection)) // true
+ * ```
+ *
+ * @param cwd - Checkout whose `origin` remote names its home.
+ * @returns The lower-cased checkout identity, or a typed error when origin is missing or unparsable.
+ * @category detection
+ * @since 0.0.0
+ */
+export const detectCheckoutRepository = Effect.fn("ProvenanceFooter.detectCheckoutRepository")(function* (cwd: string) {
+  const origin = yield* readGitConfig(cwd, "remote.origin.url").pipe(
+    Effect.mapError(
+      YeetCommandError.new("Failed to read the origin URL.", { command: "git config --get remote.origin.url" })
+    )
+  );
+  if (O.isNone(origin)) {
+    return yield* YeetCommandError.make({ message: "Expected an origin remote URL." });
+  }
+  return yield* checkoutRepositoryFromRemoteUrl(origin.value).pipe(
+    Effect.fromOption,
+    Effect.mapError(() => YeetCommandError.make({ message: "Expected the origin URL to name host/owner/name." }))
+  );
 });
 
 /**

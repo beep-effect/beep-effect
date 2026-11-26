@@ -24,7 +24,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
-import { PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 
 const $I = $RepoCliId.create("commands/Session/Register.schemas");
 
@@ -124,13 +124,13 @@ export type RegisterUnitState = typeof RegisterUnitState.Type;
  * **Example** (Make a row)
  *
  * ```ts
- * import { PrRepository, RegisterRow } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, RegisterRow } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  *
  * const row = RegisterRow.make({
  *   schemaVersion: "orchestrator-register/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   kind: "codex-lane",
  *   address: "PR #1468",
  *   name: O.some("yeet REST discovery lane"),
@@ -152,7 +152,7 @@ export type RegisterUnitState = typeof RegisterUnitState.Type;
 export class RegisterRow extends S.Opaque<RegisterRow, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("orchestrator-register/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     kind: RegisterUnitKind,
     address: S.NonEmptyString,
     name: S.OptionFromNullOr(S.String),
@@ -193,11 +193,11 @@ export const RegisterRowJson = JsonStringCodec(RegisterRow);
  * **Example** (An empty report)
  *
  * ```ts
- * import { PrRepository, RegisterReport } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, RegisterReport } from "@beep/repo-cli/test/Session"
  *
  * const report = RegisterReport.make({
  *   schemaVersion: "orchestrator-register-report/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   rows: [],
  * })
  * console.log(report.rows.length) // 0
@@ -209,7 +209,7 @@ export const RegisterRowJson = JsonStringCodec(RegisterRow);
 export class RegisterReport extends S.Opaque<RegisterReport, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("orchestrator-register-report/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     rows: S.Array(RegisterRow),
   }).pipe(
     $I.annoteSchema("RegisterReport", { description: "The newest non-retired register row per unit, newest first." })

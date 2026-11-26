@@ -1,28 +1,3 @@
-// Proves the whole @beep/git stack against a REAL git binary and a real
-// filesystem, through @effect/platform-node's NodeServices.layer. Every other
-// test in this package runs against the scripted spawner in ../fixtures.ts;
-// this is the only place that proves the argv, the LC_ALL=C classification,
-// the -z NUL-splitting, and runCollected's concurrent stream collection all
-// compose against something that isn't a mock.
-//
-// Two obligations accumulated from earlier reviews live here, and nowhere
-// else can regress them:
-//  - runCollected's { concurrency: "unbounded" } stdout/stderr/exitCode
-//    collection must not deadlock under SIMULTANEOUS pressure on both pipes
-//    (see src/internal/run.ts and the dedicated "runCollected drains stdout
-//    and stderr concurrently" test below) — no mock test can touch a real OS
-//    pipe buffer, and a large-output-on-ONE-stream case does not discriminate
-//    this: stdout is index 0 of the Effect.all array, so a sequential
-//    collector drains it first and never deadlocks unless the OTHER pipe is
-//    ALSO under pressure at the same time;
-//  - refExists against a real nonexistent branch must resolve Success(false),
-//    never a defect.
-//
-// The fixture is built with a mix of raw ChildProcess.make invocations (git
-// init/config/add/commit/branch/tag — deliberately not part of the Git
-// surface) and the real Git service itself for checkout, which IS part of
-// the surface this package owns.
-
 import {
   Git,
   GitCommandError,
@@ -61,7 +36,6 @@ class FixtureSetupError extends S.TaggedError<FixtureSetupError, { readonly bran
   $I.annote("FixtureSetupError", { description: "A real Git fixture command exited unsuccessfully." })
 ) {}
 
-/** Pins fixture configuration at the real spawner boundary without changing the host environment. */
 const FixtureServices = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
   Effect.gen(function* () {
@@ -72,29 +46,19 @@ const FixtureServices = Layer.effect(
   })
 ).pipe(Layer.provideMerge(NodeServices.layer));
 
-/**
- * The real Git service over the pinned real spawner. The layer harness builds
- * it once per block, and every fixture directory below is a scoped temporary
- * directory that the owning block's layer scope removes.
- */
 const TestLayer = Git.layer.pipe(Layer.provideMerge(FixtureServices));
 
 const encodeSshArgvJson = S.encodeEffect(S.fromJsonString(S.Array(S.String)));
 
-/** The locale and prompt pins the `Git` service applies to its own spawns (#670). */
-const FIXTURE_ENV = { LC_ALL: "C", GIT_TERMINAL_PROMPT: "0" } as const;
+const SERVICE_LOCALE_AND_PROMPT_PINS = { LC_ALL: "C", GIT_TERMINAL_PROMPT: "0" } as const;
 
-/**
- * Runs one raw `git` invocation for fixture setup — the operations that are
- * deliberately NOT part of the `Git` surface (init, config, add, commit,
- * branch, tag). Dies loudly (never cascades as a passed test) if git itself
- * could not be spawned, or if it ran and exited non-zero.
- */
 const runFixtureGit = (
   cwd: string,
   args: ReadonlyArray<string>
 ): Effect.Effect<string, never, ChildProcessSpawner.ChildProcessSpawner> =>
-  runCollected(ChildProcess.setCwd(ChildProcess.make("git", args, { env: FIXTURE_ENV, extendEnv: true }), cwd)).pipe(
+  runCollected(
+    ChildProcess.setCwd(ChildProcess.make("git", args, { env: SERVICE_LOCALE_AND_PROMPT_PINS, extendEnv: true }), cwd)
+  ).pipe(
     Effect.orDie,
     Effect.flatMap((result) =>
       result.exitCode === 0
@@ -109,80 +73,67 @@ const runFixtureGit = (
 
 interface RepoFixture {
   readonly bigContent: string;
-  /** The tip of `feature/git`, branched from commit1. */
   readonly branchCommit: string;
-  /** Adds a.txt ("one"), "file with space.txt", and deleted.txt. */
   readonly commit1: string;
-  /** Changes a.txt to "two" and removes deleted.txt. Tagged v1.0.0. */
   readonly commit2: string;
-  /** Adds the >1MiB big.txt, on top of commit2. */
   readonly commit3: string;
   readonly dir: string;
-  /** merge-base(main, feature/git) — expected to equal commit1. */
   readonly forkPoint: string;
   readonly tag: string;
 }
 
-/** Comfortably over any OS pipe buffer (64 KiB on Linux; historically ~16 KiB-64 KiB on darwin). */
-const BIG_FILE_SIZE = 1_500_000;
+const OVER_ANY_PIPE_BUFFER_BYTES = 1_500_000;
 
 const generateBigText = (size: number): string => {
   const line = "the quick brown fox jumps over the lazy dog\n";
   return pipe(line, Str.repeat(Math.ceil(size / line.length)), Str.slice(0, size));
 };
 
-/**
- * Builds one repository with branched history, a tag, a deleted file, a
- * changed file, a space-containing path, and an oversized file — everything
- * the assertion list needs from a single fixture.
- */
 const buildFixture = Effect.fnUntraced(function* (dir: string) {
-  const raw = (args: ReadonlyArray<string>) => runFixtureGit(dir, args);
+  const nonSurfaceGit = (args: ReadonlyArray<string>) => runFixtureGit(dir, args);
   const git = yield* Git;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
 
-  yield* raw(["-c", "init.defaultBranch=main", "init"]);
-  yield* raw(["config", "user.email", "git-integration@example.com"]);
-  yield* raw(["config", "user.name", "Git Integration"]);
+  yield* nonSurfaceGit(["-c", "init.defaultBranch=main", "init"]);
+  yield* nonSurfaceGit(["config", "user.email", "git-integration@example.com"]);
+  yield* nonSurfaceGit(["config", "user.name", "Git Integration"]);
 
   yield* fs.writeFileString(join(dir, "a.txt"), "one\n");
   yield* fs.writeFileString(join(dir, "file with space.txt"), "space content\n");
   yield* fs.writeFileString(join(dir, "deleted.txt"), "will be deleted\n");
-  yield* raw(["add", "-A"]);
-  yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
-  const raw1 = yield* raw(["rev-parse", "HEAD"]);
+  yield* nonSurfaceGit(["add", "-A"]);
+  yield* nonSurfaceGit(["-c", "commit.gpgsign=false", "commit", "-m", "commit1"]);
+  const raw1 = yield* nonSurfaceGit(["rev-parse", "HEAD"]);
   const commit1 = Str.trim(raw1);
 
-  yield* raw(["branch", "feature/git"]);
-  // checkout IS Git surface — dogfood the real service for the fixture's
-  // own branch switches, not a raw invocation.
+  yield* nonSurfaceGit(["branch", "feature/git"]);
   yield* git.checkout(dir, "feature/git").pipe(Effect.orDie);
   yield* fs.writeFileString(join(dir, "feature.txt"), "feature content\n");
-  yield* raw(["add", "-A"]);
-  yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "branch commit"]);
-  const raw2 = yield* raw(["rev-parse", "HEAD"]);
+  yield* nonSurfaceGit(["add", "-A"]);
+  yield* nonSurfaceGit(["-c", "commit.gpgsign=false", "commit", "-m", "branch commit"]);
+  const raw2 = yield* nonSurfaceGit(["rev-parse", "HEAD"]);
   const branchCommit = Str.trim(raw2);
 
   yield* git.checkout(dir, "main").pipe(Effect.orDie);
   yield* fs.writeFileString(join(dir, "a.txt"), "two\n");
   yield* fs.remove(join(dir, "deleted.txt"));
-  yield* raw(["add", "-A"]);
-  yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit2"]);
-  const raw3 = yield* raw(["rev-parse", "HEAD"]);
+  yield* nonSurfaceGit(["add", "-A"]);
+  yield* nonSurfaceGit(["-c", "commit.gpgsign=false", "commit", "-m", "commit2"]);
+  const raw3 = yield* nonSurfaceGit(["rev-parse", "HEAD"]);
   const commit2 = Str.trim(raw3);
 
-  yield* raw(["tag", "v1.0.0", commit2]);
+  yield* nonSurfaceGit(["tag", "v1.0.0", commit2]);
 
-  const bigContent = generateBigText(BIG_FILE_SIZE);
+  const bigContent = generateBigText(OVER_ANY_PIPE_BUFFER_BYTES);
   yield* fs.writeFileString(join(dir, "big.txt"), bigContent);
-  yield* raw(["add", "-A"]);
-  yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "commit3: add big file"]);
-  const raw4 = yield* raw(["rev-parse", "HEAD"]);
+  yield* nonSurfaceGit(["add", "-A"]);
+  yield* nonSurfaceGit(["-c", "commit.gpgsign=false", "commit", "-m", "commit3: add big file"]);
+  const raw4 = yield* nonSurfaceGit(["rev-parse", "HEAD"]);
   const commit3 = Str.trim(raw4);
 
-  const raw5 = yield* raw(["merge-base", "main", "feature/git"]);
+  const raw5 = yield* nonSurfaceGit(["merge-base", "main", "feature/git"]);
   const forkPoint = Str.trim(raw5);
 
   return { dir, commit1, commit2, commit3, branchCommit, forkPoint, tag: "v1.0.0", bigContent };
@@ -190,7 +141,6 @@ const buildFixture = Effect.fnUntraced(function* (dir: string) {
 
 let fixture: RepoFixture;
 
-/** Builds the shared repository fixture in a scoped temporary directory the block's layer scope removes. */
 const RepoFixtureLayer = Layer.effectDiscard(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -200,7 +150,7 @@ const RepoFixtureLayer = Layer.effectDiscard(
 );
 
 it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds" })(
-  "Git — real repository integration",
+  "Git against a real git binary and filesystem, beyond the scripted spawner",
   (it) => {
     it.effect("show at both commits: changed content differs", () =>
       Effect.gen(function* () {
@@ -233,7 +183,7 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
               const raw = yield* runCollected(
                 ChildProcess.setCwd(
                   ChildProcess.make("git", ["show", `${fixture.commit1}:missing.txt`], {
-                    env: FIXTURE_ENV,
+                    env: SERVICE_LOCALE_AND_PROMPT_PINS,
                     extendEnv: true,
                   }),
                   fixture.dir
@@ -306,10 +256,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         const git = yield* Git;
         const refExists6 = yield* git.refExists(fixture.dir, "v1.0.0");
         assert.isTrue(refExists6);
-        // ACCUMULATED OBLIGATION (G4): a real nonexistent branch must
-        // resolve Success(false), never a defect.
         const refExists7 = yield* git.refExists(fixture.dir, "no-such-branch");
-        assert.isFalse(refExists7);
+        assert.isFalse(refExists7, "a real nonexistent branch resolves Success(false), never a defect");
       })
     );
 
@@ -319,9 +267,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         const base = yield* git.mergeBase(fixture.dir, "main", "feature/git");
         assert.strictEqual(base, fixture.forkPoint);
         assert.strictEqual(base, fixture.commit1);
-        // The probe sibling answers the same sha, wrapped.
-        const probed = yield* git.mergeBaseOption(fixture.dir, "main", "feature/git");
-        assertSome(probed, fixture.forkPoint);
+        const probeSiblingWrapsSameSha = yield* git.mergeBaseOption(fixture.dir, "main", "feature/git");
+        assertSome(probeSiblingWrapsSameSha, fixture.forkPoint);
       })
     );
 
@@ -332,9 +279,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         assert.isTrue(isAncestor8);
         const isAncestor9 = yield* git.isAncestor(fixture.dir, fixture.commit1, "main");
         assert.isTrue(isAncestor9);
-        // A commit is its own ancestor.
-        const isAncestor10 = yield* git.isAncestor(fixture.dir, fixture.commit2, fixture.commit2);
-        assert.isTrue(isAncestor10);
+        const commitIsItsOwnAncestor = yield* git.isAncestor(fixture.dir, fixture.commit2, fixture.commit2);
+        assert.isTrue(commitIsItsOwnAncestor);
         const isAncestor11 = yield* git.isAncestor(fixture.dir, fixture.branchCommit, "main");
         assert.isFalse(isAncestor11);
         const isAncestor12 = yield* git.isAncestor(fixture.dir, fixture.commit2, "feature/git");
@@ -362,6 +308,30 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       })
     );
 
+    it.effect("worktreeLock keeps a missing worktree's registration through prune until worktreeUnlock", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const parent = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-lock-" });
+        const linked = path.join(parent, "linked");
+        yield* git.worktreeAdd(fixture.dir, linked, { ref: fixture.commit1, detach: true });
+        const realLinked = yield* fs.realPath(linked);
+        yield* git.worktreeLock(fixture.dir, linked, { reason: "fenced" });
+        yield* fs.rename(linked, `${linked}.aside`);
+        yield* git.worktreePrune(fixture.dir);
+        const locked = yield* git.worktreeList(fixture.dir);
+        assert.deepStrictEqual(
+          A.findFirst(locked, (entry) => entry.path === realLinked).pipe(O.map((entry) => entry.locked)),
+          O.some("fenced")
+        );
+        yield* git.worktreeUnlock(fixture.dir, linked);
+        yield* git.worktreePrune(fixture.dir);
+        const after = yield* git.worktreeList(fixture.dir);
+        assert.isFalse(A.some(after, (entry) => entry.path === realLinked));
+      })
+    );
+
     it.effect("changedFiles across the two commits names exactly the changed and deleted files", () =>
       Effect.gen(function* () {
         const git = yield* Git;
@@ -379,14 +349,6 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       })
     );
 
-    // Pins content fidelity for a large single-stream blob (stdout only) — it
-    // is NOT the concurrency guard. All of big.txt's ~1.5MiB lands on stdout,
-    // which is index 0 of runCollected's Effect.all array, so a sequential
-    // collector drains it first and completes without ever touching the
-    // deadlock case. The dedicated backpressure test below (dual-stream
-    // pressure on stdout AND stderr at once) is what discriminates
-    // { concurrency: "unbounded" }; this test stays only as a large-content
-    // round-trip check.
     it.effect(
       "show round-trips a file well over pipe-buffer size — content fidelity, not the concurrency guard",
       () =>
@@ -398,15 +360,15 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           assert.strictEqual(content.length, fixture.bigContent.length);
           assert.strictEqual(Str.slice(0, 200)(content), Str.slice(0, 200)(fixture.bigContent));
           assert.strictEqual(Str.slice(-200)(content), Str.slice(-200)(fixture.bigContent));
-          assert.strictEqual(content, fixture.bigContent);
+          assert.strictEqual(
+            content,
+            fixture.bigContent,
+            "stdout is index 0 of runCollected's Effect.all, so even a sequential collector drains this one-stream read"
+          );
         }),
       10_000
     );
 
-    // G6: the per-stream ceiling against a REAL pipe. big.txt (~1.5 MiB) lands
-    // on stdout; under a 64 KiB ceiling the collector must kill the child and
-    // fail typed instead of deadlocking on the half-drained pipe, and under
-    // the default ceiling the same read succeeds whole.
     it.effect(
       "show of big.txt under a 64 KiB maxOutputBytes fails kind truncated without deadlocking; the default succeeds",
       () =>
@@ -415,7 +377,11 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           const failure = yield* Effect.flip(bounded.show(fixture.dir, fixture.commit3, "big.txt"));
           assert.instanceOf(failure, GitCommandError);
           if (S.is(GitCommandError)(failure)) {
-            assert.strictEqual(failure.kind, "truncated");
+            assert.strictEqual(
+              failure.kind,
+              "truncated",
+              "past the ceiling the collector kills the child and fails typed, never deadlocking on a half-drained pipe"
+            );
             assert.include(failure.detail, "stdout");
             assert.include(failure.detail, `${64 * 1024} byte`);
           }
@@ -434,22 +400,11 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         if (S.is(UnknownRefError)(quiet)) assert.strictEqual(quiet.ref, "refs/heads/does-not-exist");
         const loud = yield* Effect.flip(git.revParse(fixture.dir, "refs/heads/does-not-exist"));
         assert.instanceOf(loud, UnknownRefError);
-        // peel: "commit" through the tag resolves to the commit it points at.
-        const revParse14 = yield* git.revParse(fixture.dir, fixture.tag, { peel: "commit", quiet: true });
-        assert.strictEqual(revParse14, fixture.commit2);
+        const tagPeeledToCommit = yield* git.revParse(fixture.dir, fixture.tag, { peel: "commit", quiet: true });
+        assert.strictEqual(tagPeeledToCommit, fixture.commit2);
       })
     );
 
-    // THE backpressure guard. Discriminates runCollected's
-    // { concurrency: "unbounded" } by putting simultaneous pressure on BOTH
-    // pipes: the child writes ~2MB to stderr FIRST, then ~2MB to stdout. Under
-    // a sequential collector (stdout is index 0 of the Effect.all array), the
-    // reader waits on stdout while the child is still blocked writing the full
-    // stderr pipe — neither side can proceed, and the run hangs to the
-    // per-test timeout below. Under concurrent collection both pipes drain and
-    // the run completes quickly. This is a plain `sh` subprocess, not git —
-    // the obligation guards runCollected's generic infra, not anything
-    // git-specific.
     it.effect(
       "runCollected drains stdout and stderr concurrently under simultaneous backpressure on both pipes",
       () =>
@@ -460,7 +415,11 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
               "head -c 2000000 /dev/zero | tr '\\0' 'e' >&2; head -c 2000000 /dev/zero | tr '\\0' 'o'",
             ])
           );
-          assert.strictEqual(result.exitCode, 0);
+          assert.strictEqual(
+            result.exitCode,
+            0,
+            "stderr fills first while a sequential collector would wait on stdout: only concurrent draining completes"
+          );
           assert.strictEqual(result.stdout.length, 2_000_000);
           assert.strictEqual(result.stderr.length, 2_000_000);
           assert.strictEqual(result.stdout[0], "o");
@@ -471,7 +430,6 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
 
     let dirtyDir = "";
 
-    /** A dirty repository of its own, in a scoped temporary directory. */
     const DirtyRepoLayer = Layer.effectDiscard(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -483,24 +441,17 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
         yield* raw(["-c", "init.defaultBranch=main", "init"]);
         yield* raw(["config", "user.email", "git-integration@example.com"]);
         yield* raw(["config", "user.name", "Git Integration"]);
-        // Pin diff.relative=true on this repo: this is the adverse config Fix 1
-        // guards against. Without the explicit --relative/--no-relative flags the
-        // diffs would silently follow this config and desync from ls-files'
-        // repo-root base — proven by the nested-cwd case below.
         yield* raw(["config", "diff.relative", "true"]);
         yield* fs.writeFileString(join(dirtyDir, "tracked.txt"), "one\n");
-        // A tracked file in a NESTED subdirectory, so a cwd nested under the
-        // repo root discriminates repo-root-relative from cwd-relative output.
         yield* fs.makeDirectory(join(dirtyDir, "pkg"), { recursive: true });
         yield* fs.writeFileString(join(dirtyDir, "pkg", "mod.txt"), "one\n");
         yield* raw(["add", "-A"]);
         yield* raw(["-c", "commit.gpgsign=false", "commit", "-m", "base"]);
-        // Dirty the tree three distinct ways so the union covers each source.
-        yield* fs.writeFileString(join(dirtyDir, "tracked.txt"), "two\n"); // unstaged
-        yield* fs.writeFileString(join(dirtyDir, "pkg", "mod.txt"), "two\n"); // unstaged, nested
+        yield* fs.writeFileString(join(dirtyDir, "tracked.txt"), "two\n");
+        yield* fs.writeFileString(join(dirtyDir, "pkg", "mod.txt"), "two\n");
         yield* fs.writeFileString(join(dirtyDir, "staged.txt"), "new\n");
-        yield* raw(["add", "staged.txt"]); // staged
-        yield* fs.writeFileString(join(dirtyDir, "untracked.txt"), "loose\n"); // untracked
+        yield* raw(["add", "staged.txt"]);
+        yield* fs.writeFileString(join(dirtyDir, "untracked.txt"), "loose\n");
       })
     );
 
@@ -519,25 +470,18 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           Effect.gen(function* () {
             const git = yield* Git;
             const path = yield* Path.Path;
-            // Run from the nested `pkg/` directory with the repo's diff.relative=true
-            // in force. The explicit --no-relative keeps the DIFFS repo-root-relative
-            // AND repo-wide, so `tracked.txt` and `staged.txt` (root files) appear
-            // alongside the nested `pkg/mod.txt`, all with their repo-root spelling.
-            // Without --no-relative, the inherited diff.relative would scope the diff
-            // to `pkg/` and emit a lone cwd-relative `mod.txt`, dropping the root
-            // files — the exact desync Fix 1 prevents. (The root `untracked.txt` is
-            // absent by design: `git ls-files` is cwd-scoped, so from `pkg/` it lists
-            // no untracked files above the subtree — a property of ls-files, not the
-            // --relative flag.)
             const changed = yield* git.workingChanges(path.join(dirtyDir, "pkg"), { relative: false });
-            assert.deepStrictEqual([...changed].sort(), ["pkg/mod.txt", "staged.txt", "tracked.txt"]);
+            assert.deepStrictEqual(
+              [...changed].sort(),
+              ["pkg/mod.txt", "staged.txt", "tracked.txt"],
+              "--no-relative keeps the diffs repo-wide and repo-root-spelled from pkg/, where an inherited diff.relative would leave a lone mod.txt; untracked.txt is absent because ls-files is cwd-scoped"
+            );
           })
       );
     });
 
     let cloneDir = "";
 
-    /** A clone of the shared fixture repository, in a scoped temporary directory. */
     const CloneLayer = Layer.effectDiscard(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -551,9 +495,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       it.effect("checkout moves HEAD, verified via revParse", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          // A fresh clone checks out the default branch (main), at commit3.
           const before = yield* git.revParse(cloneDir, "HEAD");
-          assert.strictEqual(before, fixture.commit3);
+          assert.strictEqual(before, fixture.commit3, "a fresh clone checks out the default branch, main, at commit3");
 
           yield* git.checkout(cloneDir, fixture.branchCommit);
 
@@ -605,8 +548,8 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           yield* raw(["-c", "init.defaultBranch=main", "init"]);
           yield* raw(["config", "user.email", "git-integration@example.com"]);
           yield* raw(["config", "user.name", "Git Integration"]);
-          // 300 notes is past the point where git notes fans the tree out into `ab/cdef…` directories.
-          for (const index of A.range(1, 300)) {
+          const notesPastFanOut = 300;
+          for (const index of A.range(1, notesPastFanOut)) {
             yield* raw(["-c", "commit.gpgsign=false", "commit", "--allow-empty", "-q", "-m", `c${index}`]);
           }
           const listed = yield* raw(["rev-list", "main"]);
@@ -627,14 +570,16 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           const reference = yield* git.revParse(dir, "refs/notes/reference^{tree}");
           assert.strictEqual(tree, reference);
           const topLevel = yield* raw(["ls-tree", "refs/notes/history"]);
-          assert.isTrue(Str.startsWith("040000 tree")(topLevel));
+          assert.isTrue(
+            Str.startsWith("040000 tree")(topLevel),
+            "past the fan-out point git notes splits the tree into ab/cdef… directories"
+          );
 
-          // A second run, and a run over a ref that held something else, land on the same commit.
           const second = yield* git.replaceNotes(dir, "refs/notes/history", A.reverse(notes), metadata);
           yield* raw(["update-ref", "refs/notes/history", "refs/notes/reference"]);
           const third = yield* git.replaceNotes(dir, "refs/notes/history", notes, metadata);
-          assert.strictEqual(second, first);
-          assert.strictEqual(third, first);
+          assert.strictEqual(second, first, "a second run lands on the same commit");
+          assert.strictEqual(third, first, "a run over a ref that held something else lands on the same commit");
           const parents = yield* raw(["rev-list", "--count", "refs/notes/history"]);
           assert.strictEqual(Str.trim(parents), "1");
 
@@ -642,7 +587,7 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           const shown = yield* raw(["log", "-1", "--notes=history", "--format=%N", head]);
           assert.strictEqual(shown, `fix: note for ${head}\n\n`);
           const listedNotes = yield* git.notesList(dir, "refs/notes/history");
-          assert.strictEqual(listedNotes.length, 300);
+          assert.strictEqual(listedNotes.length, notesPastFanOut);
         })
       );
     });
@@ -672,10 +617,6 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
     let sshDir = "";
     let argvLog = "";
 
-    /**
-     * A fresh Git service whose configuration carries a stand-in `ssh` as
-     * GIT_SSH_COMMAND. The stand-in lives in a scoped temporary directory.
-     */
     const SshGitLayer = Layer.fresh(Git.layer).pipe(
       Layer.provide(
         Layer.effect(
@@ -685,42 +626,36 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
             const path = yield* Path.Path;
             sshDir = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-ssh-" });
             argvLog = path.join(sshDir, "argv.txt");
-            // The basename MUST be `ssh`: the service only appends `-o` to a command it
-            // recognizes as OpenSSH, mirroring git's own basename-driven variant
-            // detection. A stand-in named anything else is correctly left untouched.
-            const fakeSsh = path.join(sshDir, "ssh");
-            yield* fs.writeFileString(fakeSsh, `#!/bin/sh\nprintf '%s\\n' "$@" >> "${argvLog}"\nexit 1\n`, {
-              mode: 0o755,
-            });
-            return ConfigProvider.fromEnvRecord({ GIT_SSH_COMMAND: fakeSsh });
+            const standInWithOpenSshBasename = path.join(sshDir, "ssh");
+            yield* fs.writeFileString(
+              standInWithOpenSshBasename,
+              `#!/bin/sh\nprintf '%s\\n' "$@" >> "${argvLog}"\nexit 1\n`,
+              {
+                mode: 0o755,
+              }
+            );
+            return ConfigProvider.fromEnvRecord({ GIT_SSH_COMMAND: standInWithOpenSshBasename });
           })
         )
       )
     );
 
-    // The mocked spawner proves the pins are COMPUTED; only a real git spawn
-    // proves they REACH git. A stand-in ssh records the argv git handed it, so
-    // the appended `-o BatchMode=yes` is observable without a network remote.
     it.layer(SshGitLayer, { timeout: "30 seconds" })("ssh pins reach a real git invocation (#670)", (it) => {
       it.effect("appends BatchMode to the caller's own GIT_SSH_COMMAND", () =>
         Effect.gen(function* () {
-          // lsRemote over an ssh URL routes through GIT_SSH_COMMAND. The
-          // stand-in exits 1, so the call fails; the assertion is on the argv
-          // git handed it, not on the outcome.
-          const outcome = yield* Effect.exit(
+          const failedLsRemoteViaStandIn = yield* Effect.exit(
             Effect.gen(function* () {
               const git = yield* Git;
               return yield* git.lsRemote(sshDir, "ssh://git@example.invalid/repo.git");
             })
           );
-          assertExitFailure(outcome, outcome.pipe(Exit.getCause, O.getOrThrow));
+          assertExitFailure(failedLsRemoteViaStandIn, failedLsRemoteViaStandIn.pipe(Exit.getCause, O.getOrThrow));
           const fs = yield* FileSystem.FileSystem;
           const recorded = yield* fs.readFileString(argvLog, "utf8");
           const argv = A.filter(Str.split(recorded, "\n"), (line) => line !== "");
-          // The pin arrived at a REAL git, which passed it through to ssh.
           assert.isTrue(
             A.some(argv, (token, index) => token === "-o" && argv[index + 1] === "BatchMode=yes"),
-            `expected "-o BatchMode=yes" in the ssh argv, got: ${yield* encodeSshArgvJson(argv)}`
+            `the mock proves the pin is computed; the stand-in is named ssh because only an OpenSSH basename gets it, and a REAL git must hand "-o BatchMode=yes" to ssh, got: ${yield* encodeSshArgvJson(argv)}`
           );
         })
       );

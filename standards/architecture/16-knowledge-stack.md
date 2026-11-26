@@ -7,14 +7,13 @@ person grants. Every object the stack names (source text, anchor, annotation,
 term, claim, activity) has one denotation, one owner, and lawful arrows to its
 neighbours.
 
-This chapter states target doctrine. The code reaches it over phases P1 to P7
-of the goal packet `goals/text-knowledge-stack-rebuild`, which tracks each
-phase, its exit criteria and its law tests. A rule marked **Pending Pn** is
-the target that phase n makes true; new code follows the target, and existing
-code is brought to it by the named phase. A rule with no marker holds at the
-packet's P0 base or was made true by a phase that has landed: P1 made the L0
-rules true, with the one exception section 4 names, and P2 made the L1 rules
-true. The decisions behind the chapter are the 2026-11-19 entries
+This chapter states the doctrine the code holds. Phases P1 to P7 of the goal
+packet `goals/text-knowledge-stack-rebuild`, which records each phase, its exit
+criteria and its law tests, have landed: P1 made the L0 rules true, with the
+one exception section 4 names, P2 the L1 rules, P3 the L2 rules, P4 the L4
+rules, P5 the L3 and L6 rules, P6 the L5 and L7 rules, and P7 retired the
+former nlp and schema-org packages. A phase named beside a rule records when it
+landed. The decisions behind the chapter are the 2026-11-19 entries
 in [`DECISIONS.md`](DECISIONS.md); the vocabulary is in
 [`GLOSSARY.md`](GLOSSARY.md).
 
@@ -53,12 +52,12 @@ lands in the phase of its layer.
 | --- | --- | --- | --- |
 | L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | P1 |
 | L1 | Text identity and anchoring | `@beep/text` | P2 |
-| L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | Implemented in P3 lane |
-| L3 | Taxonomy and alignments | `@beep/ontology` | Implemented in P5 lane |
-| L4 | Claims | `@beep/epistemics` | Implemented in P4 lane |
-| L5 | Operations | `@beep/nlp-processing` (capability) | Pending P6 |
-| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Implemented in P5 lane |
-| L7 | Agent surface | a contract, not a package | Pending P6 |
+| L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | P3 |
+| L3 | Taxonomy and alignments | `@beep/ontology` | P5 |
+| L4 | Claims | `@beep/epistemics` | P4 |
+| L5 | Operations | `@beep/nlp-processing` (capability) | P6 |
+| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | P5 |
+| L7 | Agent surface | a contract, not a package | P6 |
 
 ### L0 · Identity
 
@@ -302,8 +301,9 @@ domain, under the `law-practice` registry namespace.
 
 **Arrows.** The fold to an RDF `Dataset` as the only serialization path;
 `checkMappingCoherence` over a mapping set's SKOS closure against a gUFO
-typing; `audit` over the typed subset of terms, a function since P5 and run as
-a lint on any term an agent proposes from P6. The legal seeds and their seed
+typing; `audit` over the typed subset of terms, a function since P5, which
+the ontology session runs since P6 on every term an agent batch adds quads
+about, before the batch is saved. The legal seeds and their seed
 data files moved to the law-practice asset pack and load through
 `packages/foundation/modeling/ontology/src/TaxonomyLoader.ts`; the FOLIO HTTP
 DTOs and their data are deleted.
@@ -382,10 +382,15 @@ unassessed), `L4-7` (acceptance: `Absent{reason}` never coerces to a number).
 ### L5 · Operations
 
 **Owner.** `@beep/nlp-processing`, an existing `foundation/capability`
-package. It absorbs `nlp/Operations`, the `nlp/Algebra` instances an
-`effect/Combiner` and `effect/Reducer` census leaves uncovered and a consumer
-uses, and the linguistic engine contract `nlp/Core`; its own duplicated
-operation modules merge into one (Pending P6).
+package. It took the linguistic engine contract `Core` and the graph node
+schemas from the former nlp package in P6. The graph node schemas are its
+carriers for backend output; an entity or relation participant carries an
+optional `@beep/text` `Position`, set only when `resolve` returns `Unique`
+(`L1-5`). The former `Operations` and `Algebra` modules had no consumer and
+the `effect/Combiner` and `effect/Reducer` census left no needed instance
+uncovered, so both were deleted rather than moved, with `GraphOps`;
+`Operation.ts` is the one operation arrow, `Graph/TypeClass.ts` is deleted and
+the graph operations are `Operation`s named by their declared terms.
 
 **Denotes.** Effectful transformations as arrows, with provenance recorded by
 construction.
@@ -405,7 +410,9 @@ what is known then (section 2, L0).
 **Laws.** `L5-1` (Kleisli identity and associativity for fixed channels under a
 declared observation), `L5-2` (only `Pure` operations commute with every
 operation; the throwing `sync` counterexample is the acceptance case), `L5-3`
-(`generated` is never earlier than `used`, and every output is attributed).
+(`generated` is never earlier than `used`, and every output is attributed),
+`L5-4` (acceptance: an unsupported backend operation fails with the typed
+`BackendNotSupported`, never a defect and never a partial result).
 
 ### L6 · Interchange
 
@@ -471,8 +478,8 @@ with a `@beep/schema` primitive; any base entry of
 `@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
 `@beep/rdf` to `@beep/md`; any `foundation/modeling` package to a
 capability; a slice's `domain` or model package to a capability. These hold for `@beep/text` since P2, the annotation base since P3 and the
-epistemics base since P4 (its import-boundary test) and `@beep/rdf` since P5,
-and are Pending P6 for the packages that have not landed.
+epistemics base since P4 (its import-boundary test), `@beep/rdf` since P5 and
+`@beep/nlp-processing` since P6, whose only new edge is `@beep/jsonc`.
 
 ## 4. Identity regimes
 
@@ -555,13 +562,14 @@ digest, extractor name and version, normalization version, offset unit, start,
 end and quote. It is the only text-occurrence identity in the repository. The
 five non-canonical anchor encodings are deleted in the phase that owns each:
 the `@beep/rdf` selector schemas and the `TextSpan` case of the party-domain
-`EvidenceAnchor` were deleted in P2, and the `@beep/nlp` Handoff and Graph spans
+`EvidenceAnchor` were deleted in P2, and the former nlp package's Handoff and Graph spans
 were deleted in P3, and the epistemics `EvidenceSpan` in P4. The party union keeps its three non-text
 cases and points at text through a `TextOccurrence` case that holds an
 `Anchored`, and its record identifier is `ArtifactOccurrenceId`, so the name
 `OccurrenceId` belongs to `@beep/text` alone. The cli knowledge-base `Selector`
-has a text-quote case and is kept, because it is repo tooling with no consumer
-in the stack; P7 re-checks it.
+keeps its text-quote case: no stack package consumes it, its stored rows carry
+the case, it mints no identity, and it validates through `@beep/text`;
+re-checked in P7.
 
 The stack is occurrence-first, not quote-first, because legal text repeats
 itself. Claim language, examiner boilerplate and headers share quote and
@@ -714,30 +722,44 @@ access path calls it with a caller-independent principal:
 
 Identical bytes in two matters never grant cross-matter access. Comparing two
 caller-supplied scope values is a consistency check, not authorization. The
-proof is a two-matter adversarial test in the law-practice server tests that
-composes the real server layer widened to reach all seven paths, loads
-identical bytes into two matters with distinct decisions, and makes one
-assertion per path. Pending P6.
+proof is `packages/law-practice/server/test/MatterWall.two-matter.test.ts`: it
+loads identical bytes into two matters with distinct decisions and makes one
+assertion per path against the layer that owns the path. Paths 1 and 2 run the
+walled source resolver and citation source resolution, paths 3 and 4 serve two
+Practice KG bundles built from a two-matter corpus through the host toolkit,
+path 5 checks that each citation request keeps its own scope, path 6 checks
+that a notice carries no matter material, and path 7 runs `LawPracticeServerLive`.
+The Practice KG hosts provide the principal and `MatterAuthority` from their
+environment and deny every walled path when unconfigured; the operational
+bundle rebuild and the operator grants configuration run outside the repo.
 
 ## 12. The agent surface contract
 
 - **Schemas are the tool contract.** MCP tool input and output schemas are the
   same Effect schemas the layers export; `@beep/mcp-kit` derives tool JSON
-  Schema from them. Prompts render from schema annotations, not hand-written
-  prose beside the schema (Pending P6).
+  Schema from them, and a same-schemas property over the four toolkits checks
+  it on the wire. Rendering prompts from schema annotations is not done: the
+  langextract prompt bytes key semantica's hosted artifact hash and every
+  handoff's `promptDigest`, so the change needs a measured re-pin (decision
+  `2026-11-24-p6-chapter-12-pending-notes-close-as-delivered-or-scoped`).
 - **Write tools emit proposed records only.** A tool may write a `proposed`
-  record; it never mints an admission. The first claim-writing tool is defined
-  in the law-practice use-cases package, its success schema is a proposed-only
-  record schema exported by `@beep/epistemics`, and the test that write tools
-  emit proposed records lives in the law-practice use-cases tests. The
-  `TierGate` in `@beep/mcp-kit` stays the dispatch gate (Pending P6).
-- **Proposed terms are linted.** The L3 audit runs on any term an agent
-  proposes (Pending P6; P5 ships the audit as a function).
+  record; it never mints an admission. The first claim-writing tool,
+  `claim_propose` in `LawClaimToolkit`, is defined in the law-practice
+  use-cases package; its success schema is `LawProposedClaimRecord`, built by
+  `@beep/epistemics`'s `makeClaimRecords`, and `WriteTools.proposed-only.test.ts`
+  in the law-practice use-cases tests proves that every law-practice write tool
+  emits proposed records only. The `TierGate` in `@beep/mcp-kit` stays the
+  dispatch gate. No app hosts the toolkit until a host binds a
+  caller-independent principal per dispatch.
+- **Proposed terms are linted.** The ontology session runs the L3 audit on every
+  term an agent batch adds quads about and refuses the save on a finding.
 - **Attorney-facing output.** Every emitted quotation and citation has
   verified source evidence; every attributed factual assertion has evidence or
   a visible unresolved flag; original argument is labelled as proposed with
   its authorities and review status; approval binds to a versioned draft
-  revision (Pending P6).
+  revision. P6 delivers the approval half for claims: `LawAdmission` checks the
+  gate first and binds an attorney admission to the opened revision. The
+  drafting invariants wait for a drafting surface.
 
 ## 13. What counts as a law
 
@@ -770,19 +792,21 @@ Rules:
 
 ## 14. The categorical narrative
 
-`packages/foundation/modeling/nlp/THEORY.md` described `@beep/nlp` as algebra
-over a typed text graph and claimed "full categorical fidelity". The stack
-keeps category theory only where it predicts a law a test can falsify. That
-file is deleted with its package in P7; what stays true of it is below.
+The former nlp package's `THEORY.md` described that package as algebra over a
+typed text graph and claimed "full categorical fidelity". The stack keeps
+category theory only where it predicts a law a test can falsify. That file was
+deleted with its package in P7; what stays true of it is below, and
+the claims it made that no law backs are withdrawn after the table.
 
 | Kept claim | Restated as | Ledger |
 | --- | --- | --- |
 | Operations are arrows in the Kleisli category of `Effect`; identity is the unit and composition is associative. | Only for fixed error and requirement channels, and only under a declared observation. | `L5-1` |
 | `product` is the monoidal tensor of the pipeline category. | `product` is sequential; interchange needs a commutation witness, and only `Pure` operations are central. | `L5-2` |
-| Merging independent annotation passes is order-independent. | `merge` is a join over one text capture: idempotent, commutative and associative on content, with attribution unioned. Merging across captures is a refusal. | `L2-1` |
+| Merging independent annotation passes is order-independent. | `merge` is a join over one text capture: idempotent, commutative and associative on content, with attribution unioned. Merging across captures is a refusal. No colimit is claimed. | `L2-1` |
 | Text strata are distinct typed objects that operations cannot confuse. | Kinds come from a caller-supplied registry; containment between annotations is a strict order derived from range inclusion with non-decreasing levels and a level tie-break, not a closure over kinds. | `L2-5` |
 | Provenance is stamped by construction, from `Clock`, never from the wall clock. | Every run emits a `prov:Activity`; `generated` is never earlier than `used`, and every output is attributed. | `L5-3` |
-| Graph theory comes from Effect's `Graph` module, not a local re-derivation. | The duplicate graph-operation module retires; acyclicity of derivation is checked with `effect/Graph`. | `L4-3` |
+| Graph theory comes from Effect's `Graph` module, not a local re-derivation. | The duplicate graph-operation module was deleted in P6; acyclicity of derivation is checked with `effect/Graph`. | `L4-3` |
+| Operations a backend cannot perform fail with a typed error rather than throwing. | An unsupported backend operation fails with the typed `BackendNotSupported`, never a defect and never a partial result. | `L5-4` |
 
 Withdrawn claims:
 
@@ -790,12 +814,21 @@ Withdrawn claims:
   `Provenance` types are deleted. Candidates are annotations; the consuming
   slice promotes them into its own proposition union, as the 2026-10-21 ruling
   requires. No universal property is claimed, and the downstream owner the
-  file named no longer exists.
+  file named no longer exists. Chunk-and-reassemble is withdrawn with the
+  deleted handoff; attribution completeness is `L2-3`.
 - **Monoid and typeclass laws as stack laws.** They test the carrier, not this
-  repository's functions; surviving instances are judged by the
-  `effect/Combiner` and `effect/Reducer` census.
+  repository's functions. The `effect/Combiner` and `effect/Reducer` census
+  left one surviving reducer, `ActivityLogReducer`, whose laws are upstream
+  behaviour, so it has no ledger row.
+- **F-algebra folds as doctrine.** `cata` and `ana` remain helpers of the
+  nlp-processing graph module with example tests; no catalogue row names a
+  defect a fold law would catch.
 - **Triangle identities for structure and projection and for query and
-  index.** No catalogue row names a defect they would catch.
+  index**, and the coherence of normalizing produced tokens against
+  normalizing the source, which is engine behaviour (section 13). The index
+  direction fed a downstream knowledge-graph initiative that was deleted. No
+  catalogue row names a defect they would catch.
+- **Backends as a category of functors.** No law follows from the framing.
 - **Confidence inside provenance.** A single confidence value with a default is
   replaced by the five typed signals with `Absent{reason}`.
 

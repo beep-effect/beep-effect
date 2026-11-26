@@ -262,7 +262,7 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
       }
       writeNext(failure);
     };
-    const idle = A.isReadonlyArrayEmpty(MutableRef.get(queue));
+    const idle = queue.pipe(MutableRef.get, A.isReadonlyArrayEmpty);
     const start = (): void => writeNext(O.none());
     MutableRef.update(queue, A.append(start));
     if (idle) {

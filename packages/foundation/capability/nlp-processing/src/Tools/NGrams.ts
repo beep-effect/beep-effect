@@ -96,4 +96,8 @@ export const NGrams = Tool.make("NGrams", {
   failureMode: "return",
   parameters: NGramsParameters,
   success: S.toEncoded(NGramsSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

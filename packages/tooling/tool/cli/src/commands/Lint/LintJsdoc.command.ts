@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
@@ -68,7 +68,7 @@ export const lintJsdocCommand = Command.make(
   },
   Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
     if (O.isSome(directory) === rootOnly) {
-      return yield* failWithReportedExit("Choose exactly one of --package or --root-only.");
+      return yield* failWithPrintedExit("Choose exactly one of --package or --root-only.");
     }
     const root = yield* findRepoRoot();
     if (O.isSome(directory)) {
@@ -78,16 +78,17 @@ export const lintJsdocCommand = Command.make(
     const path = yield* Path.Path;
     const workspaces = yield* workspaceDirectories(root);
     const files = yield* fsUtils.globFiles(
-      ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+      ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
       GlobOptions.make({
         cwd: root,
         ignore: [
           "apps/labs/**",
           "**/node_modules/**",
           "**/.context/**",
-          ...A.map(
-            A.fromIterable(HashMap.values(workspaces)),
-            (dir) => `${normalizePath(path.relative(root, dir))}/**`
+          ...workspaces.pipe(
+            HashMap.values,
+            A.fromIterable,
+            A.map((dir) => `${normalizePath(path.relative(root, dir))}/**`)
           ),
         ],
       })

@@ -4,18 +4,13 @@
  * **Details**
  *
  * Execution strategies, metrics, cost estimation, validation results, options,
- * execution ids, and operation results. {@link ExecutionMetrics} forms a monoid
- * (its {@link ExecutionMetrics.combine} is associative with {@link ExecutionMetrics.empty}
- * as identity), which is how per-node results aggregate into a run total.
+ * execution ids, and operation results. Per-node results aggregate into a run
+ * total through {@link ExecutionMetrics.combine}, starting from
+ * {@link ExecutionMetrics.empty}.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - `ExecutionId` is a `Brand.nominal` branded string with an EFFECTFUL
- *   {@link generateExecutionId} (reads `Clock` + `effect/Random`) instead of an
- *   inline `crypto.randomUUID()`.
- * - {@link makeOperationResult} reads `Clock` for its timestamp instead of
- *   `Date.now()`.
- * - `timeout` is an `Option<Duration>` (no `null`); native array spreads become
- *   `effect/Array`.
+ * {@link generateExecutionId} reads `Clock` and `effect/Random`, {@link
+ * makeOperationResult} reads `Clock` for its timestamp, and `timeout` is an
+ * `Option<Duration>`.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -133,29 +128,18 @@ export const ExecutionStrategy = S.TaggedUnion({
  */
 export type ExecutionStrategy = typeof ExecutionStrategy.Type;
 
-// =============================================================================
-// Execution Metrics (Monoid)
-// =============================================================================
-
 /**
  * **Details**
  *
- * Metrics form a monoid: `empty` is the identity and `combine` adds counters
- * and durations. Executors use this to aggregate per-leaf applications into one
- * run summary.
+ * `empty` is the zero summary an execution over no leaves reports. Executors
+ * fold per-leaf applications into one run summary.
  *
- * **Example** (Combine empty metrics monoid)
+ * **Example** (Read empty metrics)
  *
- * ```ts import.meta.vitest name="Combine empty metrics monoid"
- * import * as S from "effect/Schema"
+ * ```ts import.meta.vitest name="Read empty metrics"
  * import { ExecutionMetrics } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
- * const combined = ExecutionMetrics.combine(
- *   ExecutionMetrics.empty(),
- *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: S.Natural.make(2) })
- * )
- *
- * combined.nodesProcessed // => 2
+ * ExecutionMetrics.empty().nodesProcessed // => 0
  * ```
  *
  * @category models
@@ -174,7 +158,7 @@ export class ExecutionMetrics extends S.Opaque<ExecutionMetrics, { readonly bran
     }),
   }).pipe(
     $I.annoteSchema("ExecutionMetrics", {
-      description: "Monoid of metrics accumulated while applying an operation to graph leaves.",
+      description: "Metrics accumulated while applying an operation to graph leaves.",
     })
   )
 ) {
@@ -187,22 +171,6 @@ export class ExecutionMetrics extends S.Opaque<ExecutionMetrics, { readonly bran
       nodesProcessed: S.Natural.make(0),
       tokensConsumed: S.Natural.make(0),
     });
-
-  static readonly combine: {
-    (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics;
-    (m2: ExecutionMetrics): (m1: ExecutionMetrics) => ExecutionMetrics;
-  } = dual(
-    2,
-    (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics =>
-      ExecutionMetrics.make({
-        cacheHits: S.Natural.make(m1.cacheHits + m2.cacheHits),
-        cacheMisses: S.Natural.make(m1.cacheMisses + m2.cacheMisses),
-        duration: Duration.sum(m1.duration, m2.duration),
-        nodesCreated: S.Natural.make(m1.nodesCreated + m2.nodesCreated),
-        nodesProcessed: S.Natural.make(m1.nodesProcessed + m2.nodesProcessed),
-        tokensConsumed: S.Natural.make(m1.tokensConsumed + m2.tokensConsumed),
-      })
-  );
 }
 
 // =============================================================================
@@ -569,8 +537,6 @@ export class ValidationResult extends S.Opaque<ValidationResult, { readonly bran
 // =============================================================================
 
 /**
- * Operation category vocabulary describing a graph morphism's shape.
- *
  * **Example** (Check expansion category tag)
  *
  * ```ts import.meta.vitest name="Check expansion category tag"

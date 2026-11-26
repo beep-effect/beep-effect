@@ -1,6 +1,6 @@
 /**
- * Backend composition - combinators that treat {@link NLPBackend}s as composable
- * morphisms.
+ * Backend composition - combinators that wrap one {@link NLPBackend} in another
+ * for fallback, caching and selection.
  *
  * **Details**
  *
@@ -10,9 +10,7 @@
  *   with a capacity bound and TTL.
  * - {@link selectByCapability}: pick the first backend supporting a capability.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * `withCaching` is a real per-operation `effect/Cache`. `backends.find(...)`
- * becomes `effect/Array` `A.findFirst` (returning `Option`).
+ * `withCaching` keeps one `effect/Cache` per operation.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -58,7 +56,7 @@ const fallbackOperation = <A, E, R>(
   };
   return primaryEffect.pipe(
     Effect.catchCause(flow(Obs.recordNlpBackendFallback(attributes), Effect.andThen(secondaryEffect))),
-    Obs.trackNlpDuration(`nlp.backend.fallback.${operation}`, attributes)
+    Obs.trackNlpDuration(attributes)
   );
 };
 
@@ -78,7 +76,7 @@ const cachedGet = <A, E, R>(
     const hit = yield* Cache.has(cache, key);
     yield* Obs.recordNlpCacheLookup(hit, attributes);
     return yield* Cache.get(cache, key);
-  }).pipe(Obs.trackNlpDuration(`nlp.backend.cached.${operation}`, attributes));
+  }).pipe(Obs.trackNlpDuration(attributes));
 };
 
 /**

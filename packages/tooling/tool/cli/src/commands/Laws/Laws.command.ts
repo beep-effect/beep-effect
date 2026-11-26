@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { printCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { BoolKeyDefaultFalse } from "@beep/schema/SchemaUtils/withKeyDefaults";
@@ -315,10 +315,10 @@ const lawsEffectImportsCommand = Command.make(
       includePrefix,
     });
     if (options.candidate && options.write) {
-      return yield* failWithReportedExit("effect-governance-imports: --candidate is dry-run only.");
+      return yield* failWithPrintedExit("effect-governance-imports: --candidate is dry-run only.");
     }
     if (options.candidate && options.include === "*" && options.includePrefix === "") {
-      return yield* failWithReportedExit(
+      return yield* failWithPrintedExit(
         "effect-governance-imports: --candidate requires an explicit --include or --include-prefix scope."
       );
     }
@@ -335,7 +335,6 @@ const lawsEffectImportsCommand = Command.make(
         promotedFamilyPrefixes: [
           "apps",
           "packages",
-          "infra",
           "scripts",
           "goals",
           "explorations",
@@ -1188,7 +1187,7 @@ const checkCommentLaw = Effect.fn("checkCommentLaw")(function* (
   push: boolean,
   json: boolean
 ) {
-  if (staged && push) return yield* failWithReportedExit("[comment-law] --staged and --push cannot be combined.");
+  if (staged && push) return yield* failWithPrintedExit("[comment-law] --staged and --push cannot be combined.");
   const summary = yield* runCommentLaw(
     CommentLawOptions.make({
       cwd,
@@ -1254,11 +1253,9 @@ const lawsCommentsCommand = Command.make(
       F.identity
     );
     if (A.length(modes) > 1)
-      return yield* failWithReportedExit(
-        "[comment-law] choose one of --census, --list, --ledger, --apply and --write."
-      );
+      return yield* failWithPrintedExit("[comment-law] choose one of --census, --list, --ledger, --apply and --write.");
     if (A.isReadonlyArrayNonEmpty(votes) && Str.isEmpty(apply))
-      return yield* failWithReportedExit("[comment-law] --votes is read only with --apply.");
+      return yield* failWithPrintedExit("[comment-law] --votes is read only with --apply.");
     if (census) return yield* printCommentCensus(cwd, json);
     if (Str.isNonEmpty(list)) return yield* printCommentList(cwd, list, json);
     if (Str.isNonEmpty(ledger)) return yield* writeCommentLedger(cwd, ledger, json);

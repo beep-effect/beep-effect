@@ -10,14 +10,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
-// Positions refer to different byte strings after canonical serialization.
-// Compare every semantic mdast field, recursively, excluding only positions.
-const semantic = (value: unknown): unknown => {
-  if (A.isArray(value)) return A.map(value, semantic);
+const withoutPositions = (value: unknown): unknown => {
+  if (A.isArray(value)) return A.map(value, withoutPositions);
   if (P.isObject(value))
     return R.map(
       R.filter(value, (_, key) => key !== "position"),
-      semantic
+      withoutPositions
     );
   return value;
 };
@@ -40,7 +38,11 @@ describe("list parser properties", () => {
         const parsed = yield* Markdown.parse(source);
         const serialized = yield* Markdown.stringify(parsed);
         const reparsed = yield* Markdown.parse(serialized);
-        assert.deepStrictEqual(semantic(reparsed), semantic(parsed));
+        assert.deepStrictEqual(
+          withoutPositions(reparsed),
+          withoutPositions(parsed),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
         const stringify1 = yield* Markdown.stringify(reparsed);
         assert.strictEqual(stringify1, serialized);
       }),
@@ -55,9 +57,13 @@ describe("list parser properties", () => {
         const once = MarkdownFormat.formatToString(source, undefined, options);
         assert.strictEqual(MarkdownFormat.formatToString(once, undefined, options), once);
         const parsed2 = yield* Markdown.parse(once);
-        const argument = semantic(Mdast.toMdast(parsed2));
+        const argument = withoutPositions(Mdast.toMdast(parsed2));
         const parsed1 = yield* Markdown.parse(source);
-        assert.deepStrictEqual(argument, semantic(Mdast.toMdast(parsed1)));
+        assert.deepStrictEqual(
+          argument,
+          withoutPositions(Mdast.toMdast(parsed1)),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
       }),
     runs
   );
@@ -81,7 +87,11 @@ describe("list parser properties", () => {
         assert.ok(Str.startsWith(prefix)(formatted));
         assert.ok(Str.endsWith(suffix)(formatted));
         const parsed3 = yield* Markdown.parse(formatted);
-        assert.deepStrictEqual(semantic(Mdast.toMdast(parsed3)), semantic(Mdast.toMdast(parsed)));
+        assert.deepStrictEqual(
+          withoutPositions(Mdast.toMdast(parsed3)),
+          withoutPositions(Mdast.toMdast(parsed)),
+          "positions refer to different byte strings after canonical serialization; every other mdast field must survive"
+        );
       }),
     runs
   );

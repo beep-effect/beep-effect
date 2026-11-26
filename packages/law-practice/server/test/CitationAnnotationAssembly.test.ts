@@ -180,7 +180,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
       )
     );
     it.effect(
-      "creates implicit source maps with actual placeholder and diff workers on Bun and Node, one invocation per request so no two requests share an extract deadline",
+      "creates implicit source maps with actual placeholder and diff workers on Bun and Node",
       () =>
         Effect.gen(function* () {
           const corpus = yield* loadMapping;
@@ -230,7 +230,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
                 }),
                 setup.limits
               ).pipe(Effect.provideContext(setup.provided));
-              expect(output).toEqual(row.result);
+              expect(output, "one invocation per request, so no two requests share an extract deadline").toEqual(
+                row.result
+              );
             }
             yield* assertCitationWorkerCompositionReleased(
               setup.operation,
