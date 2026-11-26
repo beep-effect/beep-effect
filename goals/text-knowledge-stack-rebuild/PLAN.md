@@ -193,7 +193,7 @@ P7 rows 2 to 6 are committed on the P7 lane, on top of the P6 merge 8bdd55d39f4:
 
 Lane p7
 
-Reverse: Reopen P7 by reverting the lane commits from 9f64252ca95 onward; the deleted packages recover from 8bdd55d39f4 (schema-org) and cb2ac027907 (nlp), and their retired-name rows are removed with the revert
+Reverse: Reopen P7 by reverting the #3562 squash on main; both deleted packages recover from 6265d739bb6 (the #3558 squash on main, which still holds them), and their retired-name rows are removed with the revert
 
 ### P8 checkpoint: the final PR waits on the P6 merge at the operator's return, 2026-11-26
 

@@ -730,7 +730,7 @@ retires with the package.
 
 P7 outcome (2026-11-25): `@beep/schema-org` (cb2ac027907) and `@beep/nlp` (66a3513e3d6)
 are deleted through `bun run beep delete-package`, one commit each, with no consumer
-left; recover the sources from 8bdd55d39f4 and cb2ac027907. Both names are reserved in
+left; recover both sources from 6265d739bb6 on `main`. Both names are reserved in
 `standards/changesets.retired-packages.json`. Every group b and c facet is now deleted,
 replaced or adapted, and the cli Kb `Selector` row of group f is kept by decision. S31
 per package after P7, against the base counts of the table above: nlp coverage baseline

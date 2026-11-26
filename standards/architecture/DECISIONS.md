@@ -3390,9 +3390,9 @@ Phases P4 to P7 of `goals/text-knowledge-stack-rebuild` land layers L4
 states them. Two private `foundation/modeling` packages retire through
 `bun run beep delete-package`, each in its own commit with no alias and no
 consumer left: `@beep/schema-org`, which had no importer or dependent, is
-deleted whole (recover the source from commit 8bdd55d39f4), and `@beep/nlp`,
-whose four text helpers had no consumer, retires after its facets were rehomed
-(recover the source from commit cb2ac027907). Both names are reserved in
+deleted whole, and `@beep/nlp`, whose four text helpers had no consumer,
+retires after its facets were rehomed. Either source can be recovered from
+commit 6265d739bb6 on `main`. Both names are reserved in
 `standards/changesets.retired-packages.json`.
 
 The split was delivered as follows:
