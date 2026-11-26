@@ -1,8 +1,4 @@
-// Readers over a parsed `pnpm-workspace.yaml` document that BOTH the live
-// assembler (`WorkspaceCatalogs`) and the at-ref reader (`WorkspaceSnapshots`)
-// need to feed the config-dependency hook replay: the `configDependencies`
-// map and the inline `peerDependencyRules` seed. One implementation, so the
-// two sides of a diff cannot disagree about what a ref declared.
+// decision: shared-internal-leaves
 
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -40,8 +36,7 @@ export const configDependenciesOf = (document: unknown): Record<string, string> 
   return out;
 };
 
-/** The string-valued entries of an `allowedVersions` block, in order; none for a non-object. */
-const stringEntriesOf = (value: unknown): Record<string, string> => {
+const stringEntriesOrEmptyForNonObject = (value: unknown): Record<string, string> => {
   const entries: Record<string, string> = {};
   if (!P.isObject(value)) return entries;
   for (const [key, range] of R.toEntries(value)) {
@@ -86,7 +81,7 @@ export const inlinePeerDependencyRules = (document: unknown): PeerDependencyRule
   if (!P.isObject(document) || !P.isObject(document.peerDependencyRules)) return NoPeerDependencyRules;
   const block = document.peerDependencyRules;
   return PeerDependencyRules.make({
-    allowedVersions: stringEntriesOf(block.allowedVersions),
+    allowedVersions: stringEntriesOrEmptyForNonObject(block.allowedVersions),
     ignoreMissing: O.getOrElse(WorkspacePatterns.stringsOf(block.ignoreMissing), () => []),
     allowAny: O.getOrElse(WorkspacePatterns.stringsOf(block.allowAny), () => []),
   });

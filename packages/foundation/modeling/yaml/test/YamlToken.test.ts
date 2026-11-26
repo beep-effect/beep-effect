@@ -25,7 +25,7 @@ const tokensOf = (text: string): ReadonlyArray<YamlToken> => {
 
 describe("YamlTokens", () => {
   describe("tokenize (sync Result primitive)", () => {
-    it("produces positioned tokens with the public field vocabulary", () => {
+    it("produces positioned tokens whose text is the raw source slice, never the internal quote-stripped value", () => {
       const tokens = tokensOf("a: 1 # note\n");
       assert.isAbove(tokens.length, 0);
       for (const token of tokens) {
@@ -50,7 +50,7 @@ describe("YamlTokens", () => {
       assert.strictEqual(cursor, source.length);
     });
 
-    it("reports line/character zero-based, matching the diagnostic vocabulary", () => {
+    it("derives line/character from the token offset, never the internal column (the indent on synthetic block-start markers)", () => {
       const tokens = tokensOf("a: 1\nb: 2\n");
       const b = O.getOrUndefined(A.findFirst(tokens, (t) => t.text === "b"));
       assert.isDefined(b);

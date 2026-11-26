@@ -220,10 +220,12 @@ const homeStoreCase = Effect.fnUntraced(function* (environment: Readonly<Record<
 it.layer(counted({ "/home/u/.local/share/pnpm/store/v10": MemoryFileSystem.directory() }).layer, {
   timeout: "30 seconds",
 })((it) => {
-  it.effect("with HOME and USERPROFILE both unset the home-based store roots are absent (no passwd fallback)", () =>
-    Effect.gen(function* () {
-      yield* homeStoreCase({}, "no pnpm store directory could be located");
-      yield* homeStoreCase({ HOME: "/home/u" }, "searched /home/u/.local/share/pnpm/store/v10");
-    })
+  it.effect(
+    "off Windows the XDG store under HOME is searched without PNPM_HOME, as a standalone-script pnpm on macOS or an unexported shell needs; with HOME and USERPROFILE unset no home-based root exists (no passwd fallback)",
+    () =>
+      Effect.gen(function* () {
+        yield* homeStoreCase({}, "no pnpm store directory could be located");
+        yield* homeStoreCase({ HOME: "/home/u" }, "searched /home/u/.local/share/pnpm/store/v10");
+      })
   );
 });

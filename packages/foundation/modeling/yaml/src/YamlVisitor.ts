@@ -134,7 +134,6 @@ const visitorEvent = S.TaggedUnion({
   },
   Error: {
     ...eventContext,
-    /** Positioned diagnostic recorded while composing the document. */
     diagnostic: YamlDiagnostic,
   },
 }).pipe(
@@ -310,13 +309,11 @@ function* walkDocument(
   yield YamlVisitorEvent.DocumentEnd({ path, depth });
 }
 
-/** A node's tag and anchor for its visitor event, omitting absent ones. */
 const nodeProperties = (node: YamlScalar | YamlMap | YamlSeq) =>
   O.getSomesStruct({ tag: O.fromUndefinedOr(node.tag), anchor: O.fromUndefinedOr(node.anchor) });
 
 function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<YamlVisitorEvent> {
-  // Every node's own comments precede its event: the leading block, then the trailing one.
-  yield* walkNodeComments(node, path, depth);
+  yield* walkCommentsBeforeNodeEvent(node, path, depth);
   if (isScalar(node)) {
     yield YamlVisitorEvent.Scalar({
       path,
@@ -334,7 +331,7 @@ function* walkNode(node: YamlNode, path: YamlPath, depth: number): Generator<Yam
   }
 }
 
-function* walkNodeComments(node: YamlNode, path: YamlPath, depth: number): Generator<YamlVisitorEvent> {
+function* walkCommentsBeforeNodeEvent(node: YamlNode, path: YamlPath, depth: number): Generator<YamlVisitorEvent> {
   if (node.commentBefore !== undefined) {
     yield YamlVisitorEvent.Comment({ path, depth, text: node.commentBefore, placement: "leading" });
   }
@@ -381,18 +378,10 @@ function* walkPair(pair: YamlPair, parentPath: YamlPath, depth: number): Generat
 
   const pairPath: YamlPath = [...parentPath, keySegment];
 
-  // An entry's comments live on its key and value NODES, and both walks below
-  // run at this same pairPath — so the Comment events a consumer sees are
-  // unchanged, and emitting them here as well would duplicate every one.
-
   yield YamlVisitorEvent.Pair({ path: pairPath, depth, key: resolvedKey, value: resolvedValue });
 
-  // Walk into the key node — emits a Scalar event for scalar keys, or
-  // sub-events for complex keys (e.g. a YamlMap used as a key).
   yield* walkNode(pair.key, pairPath, depth + 1);
 
-  // Walk into the value node — emits a Scalar event for scalar values, or
-  // sub-events for complex values (maps, sequences, aliases).
   if (pair.value !== null) {
     yield* walkNode(pair.value, pairPath, depth + 1);
   }

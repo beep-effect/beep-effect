@@ -29,8 +29,7 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const allCases = loadAllTestCases();
 
-/** Zero-based line/character of `offset` by direct scan. */
-function positionOf(text: string, offset: number): { line: number; character: number } {
+function positionByDirectScan(text: string, offset: number): { line: number; character: number } {
   let line = 0;
   let lineStart = 0;
   for (let i = 0; i < offset && i < text.length; i++) {
@@ -44,9 +43,6 @@ function positionOf(text: string, offset: number): { line: number; character: nu
 
 type CorpusCase = (typeof allCases)[number];
 
-// Ordered and non-overlapping; any gap must be horizontal
-// whitespace only. (Synthetic zero-length structural markers
-// sit AT the cursor.)
 function checkTokenTiling(tc: CorpusCase, token: YamlToken, cursor: number): void {
   if (token.offset < cursor) {
     assert.fail(`[${tc.id}] ${token.kind}@${token.offset}: overlaps previous token ending at ${cursor}`);
@@ -65,7 +61,7 @@ function checkTokenText(tc: CorpusCase, token: YamlToken): void {
 }
 
 function checkTokenPosition(tc: CorpusCase, token: YamlToken): void {
-  const pos = positionOf(tc.yaml, token.offset);
+  const pos = positionByDirectScan(tc.yaml, token.offset);
   if (pos.line !== token.line || pos.character !== token.character) {
     assert.fail(
       `[${tc.id}] ${token.kind}@${token.offset}: claimed ${token.line}:${token.character}, actual ${pos.line}:${pos.character}`
@@ -73,24 +69,20 @@ function checkTokenPosition(tc: CorpusCase, token: YamlToken): void {
   }
 }
 
-/** Check one fixture's token stream; returns the number of tokens checked. */
 function checkCaseTokens(tc: CorpusCase): number {
-  const result = YamlTokens.tokenize(tc.yaml);
-  // The tokenizer is total: error-kind tokens, never a failure.
-  assertSuccess(result, Result.getOrThrow(result));
+  const totalTokenization = YamlTokens.tokenize(tc.yaml);
+  assertSuccess(totalTokenization, Result.getOrThrow(totalTokenization));
   let cursor = 0;
-  for (const token of result.success) {
+  for (const token of totalTokenization.success) {
     checkTokenTiling(tc, token, cursor);
     checkTokenText(tc, token);
     checkTokenPosition(tc, token);
     cursor = token.offset + token.length;
   }
-  // Full coverage: nothing but horizontal whitespace may follow the
-  // last token.
   if (cursor < tc.yaml.length && !/^[ \t\r\n]*$/.test(Str.slice(cursor)(tc.yaml))) {
     assert.fail(`[${tc.id}] tokens cover ${cursor} of ${tc.yaml.length} source units`);
   }
-  return result.success.length;
+  return totalTokenization.success.length;
 }
 
 describe("token position fidelity (yaml-test-suite corpus)", () => {
@@ -99,9 +91,6 @@ describe("token position fidelity (yaml-test-suite corpus)", () => {
     for (const tc of allCases) {
       tokensChecked += checkCaseTokens(tc);
     }
-    // The corpus is large; a vacuous walk would be a false green. (The
-    // full suite yields ~6.4k tokens today; the floor only guards against
-    // an accidentally-empty walk, not an exact count.)
     assert.isAbove(tokensChecked, 5_000, "corpus walk must actually check tokens");
   });
 });

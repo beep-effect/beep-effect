@@ -67,7 +67,6 @@ const isYamlSeq = S.is(YamlSeq);
 const isFiniteIndex = S.is(S.Finite);
 const isStringifyDepthExceeded = S.is(StringifyDepthExceeded);
 
-/** A defect raised when a YAML helper invariant is violated. */
 class YamlFormatInvariantFailure extends S.TaggedError<YamlFormatInvariantFailure, { readonly brand: unique symbol }>(
   $I`YamlFormatInvariantFailure`
 )(
@@ -168,7 +167,6 @@ const NonFiniteIndexKind = LiteralKit(["NaN", "PositiveInfinity", "NegativeInfin
   })
 );
 
-/** A schema-safe echo of a non-finite path segment; navigation still receives the original number. */
 class NonFiniteIndex extends S.TaggedClass<NonFiniteIndex, { readonly brand: unique symbol }>($I`NonFiniteIndex`)(
   "NonFiniteIndex",
   {
@@ -177,7 +175,8 @@ class NonFiniteIndex extends S.TaggedClass<NonFiniteIndex, { readonly brand: uni
     ),
   },
   $I.annote("NonFiniteIndex", {
-    description: "Tagged representation of NaN or signed infinity in a failed modification's echoed path.",
+    description:
+      "Tagged representation of NaN or signed infinity in a failed modification's echoed path; only the error payload is normalized, navigation still receives the original number.",
   })
 ) {
   override toString(): string {
@@ -195,7 +194,6 @@ const nonFiniteIndexKind = Match.type<number>().pipe(
   Match.orElse(() => NonFiniteIndexKind.Enum.NaN)
 );
 
-/** Normalize only failure payloads, preserving the caller's path and navigation semantics. */
 const echoErrorPath = (path: YamlPath) =>
   A.map(path, (segment) =>
     P.isNumber(segment) && !isFiniteIndex(segment)
@@ -278,7 +276,6 @@ export class YamlModificationError extends S.TaggedError<YamlModificationError, 
   }
 }
 
-/** Categories raised by AST navigation and replacement conversion. */
 const ModifyFailureCode = LiteralKit([
   "EmptyDocument",
   "PathNotFound",
@@ -292,10 +289,6 @@ const ModifyFailureCode = LiteralKit([
   })
 );
 
-/**
- * Thrown by the pure AST-navigation helpers on a structural mismatch.
- * `modify` catches this and materializes {@link YamlModificationError}.
- */
 class ModifyFailure extends S.TaggedError<ModifyFailure, { readonly brand: unique symbol }>($I`ModifyFailure`)(
   "ModifyFailure",
   {
@@ -326,7 +319,6 @@ class ModifyFailure extends S.TaggedError<ModifyFailure, { readonly brand: uniqu
 
 const isModifyFailure = S.is(ModifyFailure);
 
-/** Normalize a `format`-positional range and the options-bag fallback into one plain shape (or `undefined`). */
 const resolveRange: {
   (
     positional: YamlRangeLike | undefined,
@@ -346,27 +338,14 @@ const resolveRange: {
   }
 );
 
-/** Copy only the defined entries of `fields` — never emits an explicit `undefined` into a v4 `optionalKey` field. */
-function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T> {
+function omitUndefinedForOptionalKeys<T extends Record<string, unknown>>(freshLiteral: T): Partial<T> {
   const out: Partial<T> = {};
-  // Every caller supplies a fresh object literal with own fields only.
-  for (const key in fields) {
-    if (fields[key] !== undefined) out[key] = fields[key];
+  for (const key in freshLiteral) {
+    if (freshLiteral[key] !== undefined) out[key] = freshLiteral[key];
   }
   return out;
 }
 
-/**
- * Walk a composed AST and flip the `style` of every scalar the shared
- * escaping-mode helper deems re-quotable to the target quote's style. The
- * stringifier then emits those scalars through the very renderers the helper
- * used to prove the replacement value-preserving, so flip-and-stringify and
- * the helper's replacement text cannot disagree. Everything the helper skips
- * — plain scalars, block scalars, tagged/anchored nodes, multi-line source
- * spans, impossible double→single escapes — keeps its node untouched, and
- * the surrounding diff keeps the edit surgical per scalar span.
- */
-/** The quote character and scalar style a re-quote of `scalar` targets under `quoteStyle`. */
 const requoteTarget = (
   scalar: YamlScalar,
   quoteStyle: QuoteStyle
@@ -385,7 +364,7 @@ const requoteNode: {
     return YamlScalar.make({
       value: node.value,
       style: target.style,
-      ...definedFields({
+      ...omitUndefinedForOptionalKeys({
         commentBefore: node.commentBefore,
         comment: node.comment,
         spaceBefore: node.spaceBefore,
@@ -413,7 +392,6 @@ const requoteNode: {
   return node;
 });
 
-/** Apply the opt-in re-quoting pass to a composed document's contents. */
 const requoteDocument: {
   (doc: RawYamlDocument, text: string, options: YamlFormattingOptions | undefined): RawYamlDocument;
   (text: string, options: YamlFormattingOptions | undefined): (doc: RawYamlDocument) => RawYamlDocument;
@@ -422,7 +400,6 @@ const requoteDocument: {
   return { ...doc, contents: requoteNode(doc.contents, text, options.quoteStyle ?? "single") };
 });
 
-/** Rebuild a composed document for re-emission, stripping comments when asked. */
 const toOutputDocument: {
   (doc: RawYamlDocument, preserveComments: boolean): RawYamlDocument;
   (preserveComments: boolean): (doc: RawYamlDocument) => RawYamlDocument;
@@ -433,31 +410,15 @@ const toOutputDocument: {
     errors: doc.errors,
     warnings: doc.warnings,
     directives: doc.directives,
-    ...(preserveComments ? definedFields({ commentBefore: doc.commentBefore, comment: doc.comment }) : {}),
+    ...(preserveComments
+      ? omitUndefinedForOptionalKeys({ commentBefore: doc.commentBefore, comment: doc.comment })
+      : {}),
     hasDocumentStart: doc.hasDocumentStart,
     hasDocumentEnd: doc.hasDocumentEnd,
     hasDocumentStartTab: doc.hasDocumentStartTab,
   });
 });
 
-/**
- * Format a document via the parse → stringify round-trip and diff the
- * output against the source, returning `undefined` when the input has a
- * fatal parse error (never corrupt malformed input) or carries
- * `%YAML`/`%TAG` directives — `stringifyDocument` does not re-emit
- * directive lines, and dropping a `%TAG` while keeping the shorthand tags
- * that depend on it would turn a valid document into an unparseable one.
- * A multi-document stream routes to {@link formatStream}, which formats
- * every document and shares the same directive refusal.
- */
-/**
- * Re-attach the source's leading byte-order mark to a whole-document
- * re-emission. The stringifier never emits a BOM (it is framing, not
- * content), so without this every `format` and whole-pipeline `modify` on a
- * BOM-prefixed file would produce a delete-at-offset-0 edit. Preserving it
- * keeps the file's encoding signature the author's business, in line with
- * the fidelity contract that leaves untouched bytes alone.
- */
 const withSourceBom: {
   (text: string, formatted: string): string;
   (formatted: string): (text: string) => string;
@@ -469,45 +430,18 @@ const formatDocument: {
   (text: string, options: YamlFormattingOptions | undefined): string | undefined;
   (options: YamlFormattingOptions | undefined): (text: string) => string | undefined;
 } = dual(2, (text: string, options: YamlFormattingOptions | undefined): string | undefined => {
-  // ONE composition serves both paths: the stream path receives the same
-  // documents and stream errors rather than composing the text a second
-  // time (behavior-neutral — each document keeps its single-document
-  // fields, `hasDocumentStart`/`hasDocumentEnd`/`hasDocumentStartTab`).
-  const { documents, streamErrors } = composeAllDocuments(text, ParseOptionsInput.make({}));
-  if (documents.length > 1) return formatStream(text, documents, streamErrors, options);
-  // Cross-document errors require multiple documents; the composer always
-  // supplies at least one document, including for empty input.
-  const doc = A.getUnsafe(documents, 0);
-  if (A.some(doc.errors, (e) => isFatalCode(e.code))) return undefined;
-  if (doc.directives.length > 0) return undefined;
+  const { documents, streamErrors: crossDocumentErrors } = composeAllDocuments(text, ParseOptionsInput.make({}));
+  if (documents.length > 1) return formatStream(text, documents, crossDocumentErrors, options);
+  const documentEvenForEmptyInput = A.getUnsafe(documents, 0);
+  if (A.some(documentEvenForEmptyInput.errors, (e) => isFatalCode(e.code))) return undefined;
+  if (documentEvenForEmptyInput.directives.length > 0) return undefined;
 
   return stringifyDocument(
-    toOutputDocument(requoteDocument(doc, text, options), options?.preserveComments ?? true),
+    toOutputDocument(requoteDocument(documentEvenForEmptyInput, text, options), options?.preserveComments ?? true),
     StringifyOptionsInput.fromOptions(options)
   );
 });
 
-/**
- * Format a multi-document stream: every document is re-emitted in order with
- * its own framing (`---`, `...`, leading/trailing comment blocks — all of
- * which `stringifyDocument` renders per document), so no document is ever
- * dropped. Receives the documents and stream errors from the ONE
- * composition {@link formatDocument} already performed. Returns `undefined`
- * — no edits — when the stream cannot be re-emitted faithfully:
- *
- * **Gotchas**
- *
- * - any document (or the stream itself) carries a fatal diagnostic, the same
- *   posture as the single-document path;
- * - any document carries `%YAML`/`%TAG` directives — `stringifyDocument`
- *   does not re-emit directive lines, and dropping a `%TAG` would change
- *   what the re-emitted document means.
- *
- * The single-document path ({@link formatDocument}) shares the directive
- * refusal: re-emitting a directive-carrying document without its directive
- * line while keeping the dependent shorthand tags produced unparseable
- * output (probe-verified downstream against an independent oracle).
- */
 const formatStream: {
   (
     text: string,
@@ -534,43 +468,20 @@ const formatStream: {
 
     const preserveComments = options?.preserveComments ?? true;
     const base = StringifyOptionsInput.fromOptions(options);
-    const parts: Array<string> = [];
+    const selfFramedDocuments: Array<string> = [];
     for (const [i, doc] of documents.entries()) {
-      // The composer guarantees each later document has its own `---` or
-      // follows its predecessor's `...`.
-      // Every document but the last must end in a newline for the next
-      // document's framing to start on its own line; the caller's
-      // `finalNewline` applies only to the last document.
-      const docOptions = i < documents.length - 1 ? { ...base, finalNewline: true } : base;
-      parts.push(
-        stringifyDocument(toOutputDocument(requoteDocument(doc, text, options), preserveComments), docOptions)
+      const newlineBeforeNextFramingOptions = i < documents.length - 1 ? { ...base, finalNewline: true } : base;
+      selfFramedDocuments.push(
+        stringifyDocument(
+          toOutputDocument(requoteDocument(doc, text, options), preserveComments),
+          newlineBeforeNextFramingOptions
+        )
       );
     }
-    return A.join(parts, "");
+    return A.join(selfFramedDocuments, "");
   }
 );
 
-/**
- * Lower a plain JavaScript value into synthetic AST nodes (offset/length are
- * irrelevant — the result is immediately re-stringified).
- *
- * **Details**
- *
- * Recursive by design: an array becomes a block {@link YamlSeq} and any other
- * non-null object a block {@link YamlMap} over its own enumerable string keys,
- * matching what `Yaml.stringify` does with the same value on the value path.
- * Before this was recursive, a mapping or sequence value fell through to the
- * node stringifier's `String(value)` fallback and landed in the document as
- * the literal text `[object Object]` — a silent corruption that only surfaced
- * on the next read.
- *
- * The two conditions with no finite rendering fail typed rather than hanging
- * or overflowing the stack: a cycle raises `CircularReference` and a graph
- * deeper than `MAX_NESTING_DEPTH` raises `NestingDepthExceeded`. `ancestors` holds
- * the ancestors of the value being lowered, so a value repeated across
- * siblings (a shared, acyclic sub-object) is lowered twice rather than
- * rejected.
- */
 const jsValueToNode: {
   (value: unknown, ancestors: Array<object>, depth: number): LoweredNode;
   (ancestors: Array<object>, depth: number): (value: unknown) => LoweredNode;
@@ -620,22 +531,13 @@ const jsValueToNode: {
   return YamlScalar.make({ value, style: "plain", offset: 0, length: 0 });
 });
 
-/** The nodes the lowering synthesizes: it never produces an alias. */
 type LoweredNode = YamlScalar | YamlSeq | YamlMap;
 
-/** Entry point for {@link jsValueToNode}: one ancestor stack per lowering. */
 function lowerValue(value: unknown): LoweredNode {
   return jsValueToNode(value, [], 0);
 }
 
-/**
- * Lower the replacement for an existing `previous` node, carrying its anchor
- * onto the fresh node. An alias elsewhere in the document that names the
- * anchor then resolves to the new value, where dropping the anchor would leave
- * the alias undefined and the edited text unparseable. Tags and comments are
- * not carried: they describe the replaced value, not the slot.
- */
-function lowerReplacement(previous: YamlNode | null, value: unknown): YamlNode {
+function lowerReplacementKeepingAnchor(previous: YamlNode | null, value: unknown): YamlNode {
   const lowered = lowerValue(value);
   const anchor = previous === null || previous._tag === "YamlAlias" ? undefined : previous.anchor;
   return anchor === undefined
@@ -682,21 +584,18 @@ const modifyNode: {
   });
 });
 
-/** A copy of `items` with the element at `index` replaced (index-assignment semantics). */
 function replaceAt<T>(items: ReadonlyArray<T>, index: number, item: T): Array<T> {
   const next = [...items];
   next[index] = item;
   return next;
 }
 
-/** A copy of `items` with the element at `index` removed (splice semantics). */
 function removeAt<T>(items: ReadonlyArray<T>, index: number): Array<T> {
   const next = [...items];
   next.splice(index, 1);
   return next;
 }
 
-/** Map step of {@link modifyNode}: set/remove at the last segment, otherwise descend. */
 function modifyMapNode(node: YamlMap, path: YamlPath, depth: number, value: unknown): YamlMap {
   const segment = path[depth];
   const pairIndex = A.findFirstIndex(node.items, (pair) => isYamlScalar(pair.key) && pair.key.value === segment);
@@ -712,24 +611,19 @@ function setMapEntry(
   value: unknown
 ): YamlMap {
   if (value === undefined) {
-    return O.isNone(pairIndex) ? node : rebuildMap(node, removeAt(node.items, pairIndex.value)); // Nothing to remove when absent
+    return O.isNone(pairIndex) ? node : rebuildMap(node, removeAt(node.items, pairIndex.value));
   }
   if (O.isSome(pairIndex)) {
     const oldPair = A.getUnsafe(node.items, pairIndex.value);
-    // Comments live on the key and value nodes, so the key carries its
-    // own through unchanged; the replacement value is a fresh node and
-    // deliberately starts with no comments of its own, but keeps the
-    // replaced value's anchor.
     return rebuildMap(
       node,
       replaceAt(
         node.items,
         pairIndex.value,
-        YamlPair.make({ key: oldPair.key, value: lowerReplacement(oldPair.value, value) })
+        YamlPair.make({ key: oldPair.key, value: lowerReplacementKeepingAnchor(oldPair.value, value) })
       )
     );
   }
-  // Insert new key — appends after the last pair.
   const keyNode = YamlScalar.make({ value: String(segment), style: "plain", offset: 0, length: 0 });
   return rebuildMap(node, [...node.items, YamlPair.make({ key: keyNode, value: lowerValue(value) })]);
 }
@@ -763,7 +657,6 @@ function descendMapEntry(
   return rebuildMap(node, replaceAt(node.items, pairIndex.value, YamlPair.make({ key: pair.key, value: newValue })));
 }
 
-/** Sequence step of {@link modifyNode}: validate the index, then set/remove or descend. */
 function modifySeqNode(node: YamlSeq, path: YamlPath, depth: number, value: unknown): YamlSeq {
   const segment = path[depth];
   const idx = P.isNumber(segment) ? segment : Number(segment);
@@ -780,14 +673,13 @@ function modifySeqNode(node: YamlSeq, path: YamlPath, depth: number, value: unkn
 
 function setSeqItem(node: YamlSeq, idx: number, value: unknown): YamlSeq {
   if (idx >= node.items.length) {
-    // Out of range: removal is a no-op; a value appends after the last element.
     return rebuildSeq(node, value === undefined ? [...node.items] : [...node.items, lowerValue(value)]);
   }
   return rebuildSeq(
     node,
     value === undefined
       ? removeAt(node.items, idx)
-      : replaceAt(node.items, idx, lowerReplacement(A.getUnsafe(node.items, idx), value))
+      : replaceAt(node.items, idx, lowerReplacementKeepingAnchor(A.getUnsafe(node.items, idx), value))
   );
 }
 
@@ -806,10 +698,9 @@ function descendSeqItem(node: YamlSeq, idx: number, path: YamlPath, depth: numbe
   return rebuildSeq(node, replaceAt(node.items, idx, modifyNode(child, path, depth + 1, value)));
 }
 
-/** A collection's non-item fields — style, span, properties and comment triple — for a rebuild. */
 const collectionShell = (node: YamlMap | YamlSeq) => ({
   style: node.style,
-  ...definedFields({
+  ...omitUndefinedForOptionalKeys({
     tag: node.tag,
     anchor: node.anchor,
     commentBefore: node.commentBefore,
@@ -845,14 +736,6 @@ const rebuildSeq: {
     })
 );
 
-/**
- * Whether a value carries characters single-quoted style cannot express (it
- * escapes only `'`): C0 controls — newline, carriage return, tab among them —
- * plus DEL and the C1 range, the same conservative set the requote helper
- * uses. A value carrying any of these keeps the whole-document pipeline
- * rather than switching quote style. Char-code based, mirroring the
- * stringifier's own control-character checks.
- */
 function isSingleQuoteUnsafe(s: string): boolean {
   for (let i = 0; i < s.length; i++) {
     const ch = Str.slice(i, i + 1)(s);
@@ -861,15 +744,6 @@ function isSingleQuoteUnsafe(s: string): boolean {
   return false;
 }
 
-/**
- * Read-only navigation twin of `modifyNode`: returns the EXISTING node at
- * `path` together with whether its parent collection is flow-styled, or
- * `undefined` whenever the path does not resolve to a node (missing
- * key/index, non-navigable node, empty path, null value mid-path).
- * `undefined` sends `modify` down its normal pipeline, which owns the
- * insert/append/remove semantics and the typed navigation errors — this
- * helper never throws and never guesses.
- */
 const findExistingTarget: {
   (contents: YamlNode | null, path: YamlPath): RegionalTarget | undefined;
   (path: YamlPath): (contents: YamlNode | null) => RegionalTarget | undefined;
@@ -878,17 +752,14 @@ const findExistingTarget: {
   return locatePath(contents, path, 0);
 });
 
-/** Walk `path` from `depth`; a null value mid-path resolves nothing. */
 function locatePath(current: YamlNode, path: YamlPath, depth: number): RegionalTarget | undefined {
   const step = locateChild(current, path[depth]);
   if (step === undefined || depth === path.length - 1) return step;
   return step.node === null ? undefined : locatePath(step.node, path, depth + 1);
 }
 
-/** An existing node located by {@link findExistingTarget}, with its parent's flow-ness. */
 type RegionalTarget = { readonly node: YamlNode | null; readonly inFlow: boolean };
 
-/** One navigation step of {@link findExistingTarget}; `undefined` when `segment` resolves nothing. */
 function locateChild(current: YamlNode, segment: YamlPath[number] | undefined): RegionalTarget | undefined {
   if (isYamlMap(current)) {
     const found = A.findFirst(current.items, (p) => isYamlScalar(p.key) && p.key.value === segment);
@@ -904,19 +775,6 @@ function locateSeqChild(current: YamlSeq, segment: YamlPath[number] | undefined)
   return child === undefined ? undefined : { node: child, inFlow: current.style === "flow" };
 }
 
-/**
- * Render the replacement text for a region-confined splice, or `undefined`
- * to fall back. A string keeps the target's quote style when that style can
- * express it (single-quoted escapes only `'`, so newlines/tabs/controls bail
- * out; double-quoted expresses everything); a non-string into a quoted
- * target renders through `stringifyValue` — quoting it would change the
- * resolved type — as does any plain target, so the stringifier's own
- * plain-safety rules decide whether the text needs quotes — under the
- * target's own context, so a flow indicator inside a value spliced into a
- * flow collection is quoted rather than corrupting the collection. A
- * rendering that spans lines (folding, block styles) bails out: the fast
- * path never introduces a line break inside the spliced region.
- */
 const renderRegionalScalarText: {
   (
     value: string | number | boolean,
@@ -944,28 +802,18 @@ const renderRegionalScalarText: {
     } else if (P.isString(value) && target.style === "double-quoted") {
       rendered = renderDoubleQuoted(value);
     } else {
-      // finalNewline: false — the splice renders a scalar, never a document.
-      rendered = stringifyValue(
-        value,
-        StringifyOptionsInput.make({ ...StringifyOptionsInput.fromOptions(options), finalNewline: false, inFlow })
-      );
+      const scalarNeverDocumentOptions = StringifyOptionsInput.make({
+        ...StringifyOptionsInput.fromOptions(options),
+        finalNewline: false,
+        inFlow,
+      });
+      rendered = stringifyValue(value, scalarNeverDocumentOptions);
     }
     if (/[\n\r]/.test(rendered)) return undefined;
     return rendered;
   }
 );
 
-/**
- * Prove the rendered text means exactly what the caller asked: re-compose a
- * one-pair probe document and compare the scalar with Effect equality and
- * its numeric zero sign.
- * The probe mirrors the target's context — `k: [rendered]` for a flow
- * parent. The renderers produce one syntactically valid scalar, and the
- * caller has already excluded line breaks, so the probe always has one
- * mapping pair and (in flow context) one sequence item. Schema decoding
- * checks those construction invariants; value drift (for example -0 rendered
- * as 0) still bails out to the whole-document pipeline.
- */
 const regionalRenderPreservesValue: {
   (rendered: string, value: string | number | boolean, inFlow: boolean): boolean;
   (value: string | number | boolean, inFlow: boolean): (rendered: string) => boolean;
@@ -981,16 +829,9 @@ const regionalRenderPreservesValue: {
   return Equal.equals(node.value, value) && (node.value !== 0 || value !== 0 || 1 / node.value === 1 / value);
 });
 
-/** Values the region-confined splice can render as one scalar. */
 const isRegionalValue = (value: unknown): value is string | number | boolean =>
   P.isString(value) || P.isNumber(value) || P.isBoolean(value);
 
-/**
- * Document-shaping options (sortKeys, indent, indentSequences, finalNewline)
- * and explicit style requests all steer the whole-document pipeline.
- * Silently dropping them on the fast path would change the output without
- * error, so their presence bails out to the compose → replace → re-stringify path.
- */
 const hasDocumentShapingOptions = (options: YamlStringifyOptions | undefined): boolean =>
   options !== undefined &&
   (options.defaultScalarStyle !== undefined ||
@@ -1003,13 +844,6 @@ const hasDocumentShapingOptions = (options: YamlStringifyOptions | undefined): b
 const isRegionalStyle = (style: YamlScalar["style"]): boolean =>
   style === "plain" || style === "single-quoted" || style === "double-quoted";
 
-/**
- * Whether `target` is a scalar whose byte range can be replaced in place: a
- * synthesised empty span (`key:` with no value) is an insertion site, not a
- * replaceable range; tags, block styles and multi-line sources keep the
- * whole-document pipeline. An anchor sits before the scalar's span, so the
- * splice leaves it (and every alias naming it) in place.
- */
 const isSpliceableScalar = (target: YamlNode | null): target is YamlScalar =>
   isYamlScalar(target) &&
   target.length > 0 &&
@@ -1017,15 +851,6 @@ const isSpliceableScalar = (target: YamlNode | null): target is YamlScalar =>
   isRegionalStyle(target.style) &&
   target.sourceMultiline !== true;
 
-/**
- * Attempt the region-confined scalar splice for `modify`: replace
- * only the target scalar's byte range, re-emitting its original quote
- * character and leaving line endings (and every other byte) elsewhere
- * untouched. Returns the single edit, an empty array for a no-op
- * replacement, or `undefined` when any precondition fails — the caller then
- * runs the existing compose → replace → re-stringify → diff pipeline
- * unchanged.
- */
 const tryRegionalScalarEdit: {
   (
     doc: RawYamlDocument,
@@ -1049,55 +874,26 @@ const tryRegionalScalarEdit: {
     value: unknown,
     options?: YamlStringifyOptions
   ): ReadonlyArray<{ offset: number; length: number; content: string }> | undefined => {
-    // `undefined` (removal), null, and object graphs keep the full pipeline:
-    // null renders as an empty scalar there (`a:` — the stringifier's own
-    // convention), and splicing an empty replacement would leave a trailing
-    // space instead. Document-shaping options and explicit style requests
-    // steer the whole-document pipeline too.
     if (!isRegionalValue(value) || hasDocumentShapingOptions(options)) return undefined;
     const found = findExistingTarget(doc.contents, path);
     if (found === undefined) return undefined;
     const { node: target, inFlow } = found;
     if (!isSpliceableScalar(target)) return undefined;
-    // The composer decorates every span containing a line break with
-    // sourceMultiline, already excluded by isSpliceableScalar.
     const span = Str.slice(target.offset, target.offset + target.length)(text);
     const rendered = renderRegionalScalarText(target, value, inFlow, options);
     if (rendered === undefined) return undefined;
-    if (rendered === span) return []; // no-op replace: the span already says exactly this
+    if (rendered === span) return [];
     if (!regionalRenderPreservesValue(rendered, value, inFlow)) return undefined;
     return [{ offset: target.offset, length: target.length, content: rendered }];
   }
 );
 
-/**
- * Directive, comment and blank lines up to and including the `---` marker that
- * ends them. A CRLF line's `\r` has one match path (the line body, or the lone
- * `\r` of a blank line), so a failed match stays linear.
- */
 const PROLOGUE_HEAD = "^(?:(?:%[^\\n]*|[ \\t]*(?:#[^\\n]*|\\r)?)\\n)*---";
 
-/** A prologue whose `---` line is bare: the marker, its trailing blanks and its line ending. */
 const BARE_DIRECTIVE_PROLOGUE = new RegExp(`${PROLOGUE_HEAD}[ \\t]*\\r?\\n`, "u");
 
-/**
- * The prologue head of a `---` line that ends the text or carries only a
- * comment. A marker line carrying anything else — a node property, a flow
- * collection, a block scalar header — matches neither pattern.
- */
 const SPLIT_DIRECTIVE_PROLOGUE = new RegExp(`${PROLOGUE_HEAD}(?=[ \\t]*$|[ \\t]+#[^\\n]*(?:\\r?\\n|$))`, "u");
 
-/**
- * The directive prologue of `text` (after any BOM), kept byte for byte by the
- * whole-document pipeline, or `undefined` when the `---` line that ends the
- * directives carries content that cannot be split from the body.
- *
- * A bare marker line keeps its own trailing blanks and line ending. A
- * comment on the marker line belongs to the body: the composer stores it as
- * the root's leading comment, which the body renders on its own line below
- * the marker, as the pipeline does for a directive-less `--- # comment`; the
- * prologue then ends at the marker and a newline.
- */
 const directivePrologue = (text: string): string | undefined => {
   const source = Str.replace(/^\uFEFF/u, "")(text);
   return pipe(
@@ -1108,29 +904,17 @@ const directivePrologue = (text: string): string | undefined => {
   );
 };
 
-/**
- * `doc` with `contents`, framed to render after a verbatim directive
- * prologue: the prologue already holds the comments before the marker and
- * the marker itself, so the body carries neither.
- */
 const bodyAfterPrologue = (doc: RawYamlDocument, contents: YamlNode | null): RawYamlDocument => {
   const { commentBefore: _commentBefore, ...framing } = doc;
   return { ...framing, contents, hasDocumentStart: false, hasDocumentStartTab: false };
 };
 
-/** The version a `%YAML` directive declares, or none without one. */
 const declaredYamlVersion = (directives: ReadonlyArray<RawDirective>): O.Option<string> =>
   pipe(
     A.findFirst(directives, (directive) => directive.name === "YAML"),
     O.flatMap((directive) => A.head(directive.parameters))
   );
 
-/**
- * Whether `scalar` is a fresh plain string — synthesized by the lowering,
- * so its span is empty and it carries no tag — that a YAML 1.1 reader would
- * resolve to a non-string (`on`, `yes`, `0777`, `1:30`, `2026-10-31`), or
- * the `<<` a 1.1 reader takes for a merge key.
- */
 const isCoercedFreshScalar11 = (scalar: YamlScalar): boolean =>
   scalar.length === 0 &&
   scalar.tag === undefined &&
@@ -1138,24 +922,17 @@ const isCoercedFreshScalar11 = (scalar: YamlScalar): boolean =>
   P.isString(scalar.value) &&
   (scalar.value === "<<" || wouldBeResolved11(scalar.value));
 
-/** `scalar` quoted per `quoteStyle` when a YAML 1.1 reader would coerce it, otherwise unchanged. */
 const quoteFreshScalar11 = (scalar: YamlScalar, quoteStyle: QuoteStyle): YamlScalar =>
   isCoercedFreshScalar11(scalar)
     ? YamlScalar.make({
         value: scalar.value,
         style: fallbackQuoteStyle(`${scalar.value}`, quoteStyle) === "double" ? "double-quoted" : "single-quoted",
-        ...definedFields({ anchor: scalar.anchor }),
+        ...omitUndefinedForOptionalKeys({ anchor: scalar.anchor }),
         offset: scalar.offset,
         length: scalar.length,
       })
     : scalar;
 
-/**
- * Give every fresh scalar under `node` (values and mapping keys) that a
- * YAML 1.1 reader would coerce an explicit quoted style, so the document
- * written under a `%YAML 1.1` directive reads back the strings the caller
- * wrote. Source nodes, which have real spans, are left alone.
- */
 const quoteFreshYaml11 = (node: YamlNode, quoteStyle: QuoteStyle): YamlNode =>
   Match.valueTags(node, {
     YamlScalar: (scalar) => quoteFreshScalar11(scalar, quoteStyle),
@@ -1177,7 +954,6 @@ const quoteFreshYaml11 = (node: YamlNode, quoteStyle: QuoteStyle): YamlNode =>
     YamlAlias: identity,
   });
 
-/** A typed `modify` refusal carrying one diagnostic at the start of `text`. */
 const modifyRefusal = (
   text: string,
   index: ReturnType<typeof YamlDiagnostic.positionIndex>,
@@ -1200,14 +976,6 @@ type WholeDocumentEdit = {
   readonly yaml11: boolean;
 };
 
-/**
- * The whole-document `modify` pipeline: apply the edit to the composed AST,
- * re-stringify, and diff against the source. Directives are not rendered:
- * the source's directive prologue is kept verbatim and the body rendered
- * after it. Under `%YAML 1.1` only the fresh nodes take the 1.1 quoting, so
- * a source plain `on` keeps its bytes, and with them its meaning to a 1.1
- * reader.
- */
 const rewriteWholeDocument = Effect.fnUntraced(function* ({
   text,
   index,
@@ -1482,9 +1250,9 @@ export class YamlFormat {
    * `indentSequences`, `finalNewline`) — falls back to re-serialising the
    * whole document, which normalises line endings to LF, applies those
    * options, and renders the replacement in the stringifier's styles.
-   * A replaced node's anchor (never its tag) is carried onto the
-   * replacement, so an alias that names it resolves to the new value instead
-   * of dangling.
+   * A replaced node's anchor (never its tag or comments, which describe the
+   * replaced value rather than the slot) is carried onto the replacement, so
+   * an alias that names it resolves to the new value instead of dangling.
    *
    * Two replacement values have no finite rendering and fail typed rather
    * than hanging or overflowing the stack: one containing a circular
@@ -1593,9 +1361,6 @@ export class YamlFormat {
           diagnostics: YamlDiagnostic.fromRawBatch(fatal, text, index),
         });
       }
-      // modify writes YAML 1.2; a `%YAML 1.1` document also needs every fresh
-      // string a 1.1 reader would coerce quoted, and any other declared
-      // version has no known resolution rules to write against.
       const version = declaredYamlVersion(doc.directives);
       if (O.isSome(version) && version.value !== "1.1" && version.value !== "1.2") {
         return yield* modifyRefusal(
@@ -1608,12 +1373,6 @@ export class YamlFormat {
       }
       const yaml11 = O.contains(version, "1.1");
 
-      // Region-confined scalar replacement: when the target is an
-      // existing single-line untagged scalar and the value is scalar-shaped,
-      // splice just its span — quote style preserved, CRLFs and every other
-      // byte outside the span untouched. Any precondition miss falls through
-      // to the whole-document pipeline, unchanged. The splice renders only
-      // the fresh value, so the 1.1 quoting rules apply to all of it.
       const regional = tryRegionalScalarEdit(
         text,
         doc,

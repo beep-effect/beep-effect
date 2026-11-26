@@ -5,7 +5,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 
-/** Block and quoted scalar content folding, one case per source. */
 const registerBlockScalarContentCases = (): void => {
   for (const [source, value] of [
     ["|+\n \t", "\t\n"],
