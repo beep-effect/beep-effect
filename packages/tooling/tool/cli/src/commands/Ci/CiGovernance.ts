@@ -361,16 +361,29 @@ const GATE_REPORTS_ACTION = "./.github/actions/gate-reports";
 const GATE_REPORTS_STAGE = "${{ runner.temp }}/gate-reports/";
 const GATE_REPORTS_RETENTION_DAYS = 30;
 const isUploadStep = (step: WorkflowStep): boolean => Str.startsWith("actions/upload-artifact@")(step.uses ?? "");
-const runsCiLane = (step: WorkflowStep): boolean => Str.includes("ci lane ")(step.run ?? "");
+const CI_LANE_COMMAND = /\bci\s+lane\s/u;
+const runsCiLane = (step: WorkflowStep): boolean => O.isSome(Str.match(CI_LANE_COMMAND)(step.run ?? ""));
 const rendersGateReports = (step: WorkflowStep): boolean => step.uses === GATE_REPORTS_ACTION;
 const uploadsGateReports = (step: WorkflowStep): boolean =>
   isUploadStep(step) && step.with?.path === GATE_REPORTS_STAGE;
+const SuppressingStatusCheck = LiteralKit(["success()", "failure()"]).pipe(
+  $I.annoteSchema("SuppressingStatusCheck", {
+    description: "Status-check functions that stop a gate-report step from running after its lane fails.",
+  })
+);
+const runsOnEveryOutcome = (condition: string): boolean =>
+  Str.includes("always()")(condition) &&
+  !A.some(SuppressingStatusCheck.literals, (check) => Str.includes(check)(condition));
 const runsAsMeasurement = (step: WorkflowStep): boolean =>
-  O.exists(strings(step.if), Str.includes("always()")) && step["continue-on-error"] === true;
+  O.exists(strings(step.if), runsOnEveryOutcome) && step["continue-on-error"] === true;
 const reportStepDiagnostics = (id: string, step: WorkflowStep) =>
-  runsAsMeasurement(step) ? [] : [`${id}: gate report step must run on always() and continue on error`];
+  runsAsMeasurement(step)
+    ? []
+    : [`${id}: gate report step must run on always(), without success() or failure(), and continue on error`];
 const reportUploadDiagnostics = (id: string, step: WorkflowStep) => [
-  ...(runsAsMeasurement(step) ? [] : [`${id}: gate report upload must run on always() and continue on error`]),
+  ...(runsAsMeasurement(step)
+    ? []
+    : [`${id}: gate report upload must run on always(), without success() or failure(), and continue on error`]),
   ...(O.exists(strings(step.with?.name), Str.startsWith("task-outcomes-"))
     ? []
     : [`${id}: gate report upload must be named task-outcomes-<run>-<attempt>-<job>-<partition>`]),
@@ -379,6 +392,19 @@ const reportUploadDiagnostics = (id: string, step: WorkflowStep) => [
     ? []
     : [`${id}: gate report upload must keep retention-days ${GATE_REPORTS_RETENTION_DAYS}`]),
 ];
+const stepOrderDiagnostics = (id: string, steps: ReadonlyArray<WorkflowStep>) => {
+  const lastLane = O.getOrElse(A.findLastIndex(steps, runsCiLane), () => -1);
+  const report = A.findFirstIndex(steps, rendersGateReports);
+  const upload = A.findFirstIndex(steps, uploadsGateReports);
+  return [
+    ...(O.exists(report, (index) => index < lastLane)
+      ? [`${id}: gate report step must follow the job's last ci lane step`]
+      : []),
+    ...(O.exists(upload, (index) => O.exists(report, (reportIndex) => index < reportIndex))
+      ? [`${id}: gate report upload must follow the gate report step`]
+      : []),
+  ];
+};
 const gateReportDiagnostics = (id: string, job: WorkflowJob) => {
   const steps = job.steps ?? [];
   if (!A.some(steps, (step) => runsCiLane(step) || rendersGateReports(step) || uploadsGateReports(step))) return [];
@@ -391,6 +417,7 @@ const gateReportDiagnostics = (id: string, job: WorkflowJob) => {
       onNone: () => [`${id}: gate job does not upload ${GATE_REPORTS_STAGE}`],
       onSome: (step) => reportUploadDiagnostics(id, step),
     }),
+    ...stepOrderDiagnostics(id, steps),
   ];
 };
 const jobWorkflowDiagnostics = (file: string, id: string, job: WorkflowJob) => [

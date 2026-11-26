@@ -342,6 +342,47 @@ describe("gate-report upload policy", () => {
       expect(diagnostics).toEqual([]);
     })
   );
+  it.effect("treats a lane command with extra whitespace as a lane", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow("      - run: bun run beep ci  lane\trepo-sanity\n")
+      );
+      expect(diagnostics).toEqual([
+        "lane: gate job does not render gate reports through ./.github/actions/gate-reports",
+        "lane: gate job does not upload ${{ runner.temp }}/gate-reports/",
+      ]);
+    })
+  );
+  it.effect("rejects a guard that adds success() or failure() to always()", () =>
+    Effect.gen(function* () {
+      const suppressed = Str.replace("        if: always()\n", "        if: always() && success()\n")(reportStep());
+      const failureOnly = uploadStep(
+        "          name: task-outcomes-1-1-lane-single\n          include-hidden-files: true\n          retention-days: 30\n",
+        "        if: always() && failure()\n        continue-on-error: true\n"
+      );
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(laneStep + suppressed + failureOnly)
+      );
+      expect(diagnostics).toEqual([
+        "lane: gate report step must run on always(), without success() or failure(), and continue on error",
+        "lane: gate report upload must run on always(), without success() or failure(), and continue on error",
+      ]);
+    })
+  );
+  it.effect("rejects report and upload steps that run before the lane or out of order", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(wiredUpload + laneStep + reportStep() + laneStep)
+      );
+      expect(diagnostics).toEqual([
+        "lane: gate report step must follow the job's last ci lane step",
+        "lane: gate report upload must follow the gate report step",
+      ]);
+    })
+  );
   it.effect("ignores a job that runs no ci lane and stages no gate reports", () =>
     Effect.gen(function* () {
       const diagnostics = yield* workflowPolicyDiagnostics(
@@ -374,8 +415,8 @@ describe("gate-report upload policy", () => {
           gateWorkflow(laneStep + gatedReport + badUpload)
         );
         expect(diagnostics).toEqual([
-          "lane: gate report step must run on always() and continue on error",
-          "lane: gate report upload must run on always() and continue on error",
+          "lane: gate report step must run on always(), without success() or failure(), and continue on error",
+          "lane: gate report upload must run on always(), without success() or failure(), and continue on error",
           "lane: gate report upload must be named task-outcomes-<run>-<attempt>-<job>-<partition>",
           "lane: gate report upload must include hidden files",
           "lane: gate report upload must keep retention-days 30",
