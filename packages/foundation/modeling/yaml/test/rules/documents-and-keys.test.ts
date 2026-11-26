@@ -1,7 +1,3 @@
-// Batch-4 rules (#129): document-start, document-end (stream head/tail
-// markers, opt-in) and key-duplicates — each through the shared fixture
-// harness (which carries the mutation proofs).
-
 import { Yaml, YamlLint, YamlLintConfig } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -29,9 +25,7 @@ testRule(builtin("document-start"), [
     fixed: "---\na: 1\n",
   },
   {
-    // Deliberately broken input: %YAML without --- is a parse error, and
-    // exactly the shape whose missing marker cannot be auto-fixed.
-    name: "a stream with directives takes no synthesized marker fix",
+    name: "a %YAML stream without --- is a parse error and takes no synthesized marker fix",
     input: "%YAML 1.2\na: 1\n",
     expected: [{ line: 0, messageIncludes: "Missing" }],
     expectsParseErrors: true,
@@ -44,9 +38,7 @@ testRule(builtin("document-start"), [
     fixed: "a: 1\n",
   },
   {
-    // A %-directive stream REQUIRES its marker: removing it would leave
-    // invalid YAML, so the diagnostic ships without a fix.
-    name: "present: false on a directive stream reports but takes no removal fix",
+    name: "present: false keeps the marker a %-directive stream requires: it reports but takes no removal fix",
     input: "%YAML 1.2\n---\na: 1\n",
     setting: { present: false },
     expected: [{ line: 1, character: 0, messageIncludes: "Forbidden" }],
@@ -146,10 +138,7 @@ testRule(builtin("document-end"), [
     expected: [],
   },
   {
-    // The diagnostic's offset is the text END (after the final newline), so
-    // line/character point at the head of the line that follows the last
-    // content line — the position the offset actually names.
-    name: "a missing end marker reports at the tail and fixes by appending",
+    name: "a missing end marker reports at the text end, the head of the line after the content, and fixes by appending",
     input: "a: 1\n",
     expected: [{ line: 1, character: 0, messageIncludes: "Missing" }],
     fixed: "a: 1\n...\n",
