@@ -1,8 +1,3 @@
-// KIT EXTENSION (volume inspection). The synchronous, literal view behind
-// `MemoryFileSystem.Volume`. Point queries go through the engine's O(depth)
-// literal lookup (which also owns case folding); only `snapshot` and `paths`
-// walk the whole tree, because that is what they answer.
-
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
@@ -18,8 +13,9 @@ const decoder = new TextDecoder();
  *
  * **Details**
  *
- * Point queries normalize absolute paths and use the engine's literal lookup,
- * including its case-folding policy. Snapshots and byte reads copy file data;
+ * Point queries normalize absolute paths and use the engine's O(depth) literal
+ * lookup, including its case-folding policy; only `snapshot` and `paths` walk
+ * the whole tree, because that is what they answer. Snapshots and byte reads copy file data;
  * `paths` lists file paths in string order. Directory reads retain stored names.
  *
  * **Gotchas**
@@ -69,7 +65,6 @@ export const makeVolumeService = (engine: InspectableFileSystem): MemoryFileSyst
         A.map((entry) => entry.path),
         A.sort(Order.String)
       ),
-    // Names under the MATCHED entry, so a folded query lists stored spellings.
     readDirectory: (path) => engine.list(normalizeAbsolute(path)),
     isDirectory: (path) => at(path)?.type === "Directory",
     mtime: (path) => at(path)?.mtime,

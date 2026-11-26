@@ -43,7 +43,6 @@ import type { LabelStyle, SheetOptions } from "./Sheet.schemas.ts";
 
 type Polyline = ReadonlyArray<readonly [number, number]>;
 
-// Single-stroke glyphs on a 4-wide × 6-tall cell (y up), advance 5.
 const GLYPHS: Readonly<Record<string, ReadonlyArray<Polyline>>> = {
   "0": [
     [
@@ -272,14 +271,7 @@ const startOf = ([x1, y1]: Segment2): Point => [x1, y1];
 const endOf = ([, , x2, y2]: Segment2): Point => [x2, y2];
 const pointKey = ([x, y]: Point): string => `${r3(x)} ${r3(y)}`;
 
-// SVG and PDF restart a dash pattern at every subpath, so a dashed polyline
-// written one subpath per segment inks every segment shorter than a dash in
-// full and prints solid. Segments that meet end to end on the sheet (either
-// way round: the engine stores each one in canonical direction) are joined
-// into one polyline, so the pattern runs on along it. Segments are taken in
-// their given order and a chain runs on into the first unused segment at its
-// end, so equal input yields an equal path, and a lone segment stays the
-// `M..L..` it always was.
+// decision: additions-keep-earlier-output-byte-identical
 const chainSegments = (lines: ReadonlyArray<Segment2>): ReadonlyArray<Polyline> => {
   const ends = MutableHashMap.empty<string, ReadonlyArray<Indexed>>();
   A.forEach(lines, (line, index) =>
@@ -291,7 +283,6 @@ const chainSegments = (lines: ReadonlyArray<Segment2>): ReadonlyArray<Polyline> 
   const used = MutableHashSet.empty<number>();
   const take = (key: string): O.Option<Indexed> =>
     pipe(MutableHashMap.get(ends, key), O.flatMap(A.findFirst(([index]: Indexed) => !MutableHashSet.has(used, index))));
-  // the points reached walking on from `from` through unused segments
   const walk = (from: Point): ReadonlyArray<Point> => {
     const points: Array<Point> = [];
     let tail = from;
@@ -350,9 +341,6 @@ export const viewExtents = (
   };
 };
 
-// How one label is lettered: the original stroke at `letterHeightCm`, the
-// stroke table at a style's size, a filled outline face, or embedded text
-// placed with a face's metrics.
 type LabelLettering =
   | { readonly _tag: "legacy"; readonly cap: number }
   | { readonly _tag: "stroke"; readonly cap: number; readonly halfStroke: number }
@@ -398,8 +386,6 @@ const faceExtent = ({ face, scale }: { readonly face: LabelFace; readonly scale:
   return (high - low) * scale;
 };
 
-// Height every label of a lettering fits in, whatever its digits: the band
-// under the top margin (and over the bottom one) is twice this.
 const letteringExtent = (lettering: LabelLettering): number =>
   Match.valueTags(lettering, {
     legacy: ({ cap }) => cap,
@@ -426,7 +412,6 @@ const geometryOf = (options: SheetOptions, faces: SheetLabelFaces) => {
     right: page.width - margins.right * PT_PER_CM - safety,
     bottom: page.height - margins.bottom * PT_PER_CM - safety,
   };
-  // Ink top of the sheet number and ink bottom of `FIG. n`.
   const labels = {
     top: margins.top * PT_PER_CM + labelGap,
     bottom: page.height - margins.bottom * PT_PER_CM - labelGap,
@@ -509,7 +494,6 @@ export const commonScale = (input: {
   return Math.floor(raw * 1e4) / 1e4;
 };
 
-// Ink box of a glyph run in font units, pen at 0, y up; blank glyphs add none.
 const runInk = (face: LabelFace, text: string): InkBox => {
   const placed = A.reduce(A.fromIterable(text), { pen: 0, boxes: A.empty<InkBox>() }, (acc, char) => {
     const glyph = face.glyphs[char];
@@ -532,7 +516,6 @@ const runInk = (face: LabelFace, text: string): InkBox => {
     : [0, 0, 0, 0];
 };
 
-// SVG path of a glyph run with its pen origin at (x, baseline), SVG y down.
 const runPath = (input: {
   readonly face: LabelFace;
   readonly text: string;
@@ -568,12 +551,9 @@ type LetteredLabel = {
   readonly text: string;
 };
 
-// Baseline that puts a glyph run's ink top (anchor "top") or ink bottom on `edge`.
 const inkBaseline = (ink: InkBox, scale: number, edge: number, anchor: "top" | "bottom"): number =>
   anchor === "top" ? edge + ink[3] * scale : edge + ink[1] * scale;
 
-// Letter one label centred at `centreX`, its ink edge on `edge`: the ink top
-// for the sheet number (`anchor: "top"`), the ink bottom for `FIG. n`.
 const letter = (input: {
   readonly lettering: LabelLettering;
   readonly text: string;
@@ -609,7 +589,6 @@ const letter = (input: {
         text: "",
       };
     },
-    // One user unit is one point, so `font-size` is the style's point size.
     text: ({ face, scale, family, sizePt }): LetteredLabel => ({
       strokes: [],
       fill: "",
@@ -618,10 +597,6 @@ const letter = (input: {
   });
 };
 
-// Smallest visible gap between broken-line dashes, after the round caps eat
-// half the line weight from each side. 0.4 mm survives two-thirds reduction.
-// The tolerance keeps decimal inputs such as 0.8 + 0.4 against 1.2 on the
-// right side of the floor despite binary rounding.
 const MIN_VISIBLE_BROKEN_GAP_MM = 0.4;
 const GAP_TOLERANCE_MM = 1e-9;
 
@@ -636,7 +611,13 @@ const GAP_TOLERANCE_MM = 1e-9;
  * visible gap is the drawn gap minus the line weight. The law is applied here,
  * where a broken layer is emitted, rather than on every `SheetOptions`: a
  * heavy line weight stays usable on a solid-only sheet, and an unclaimed
- * outline never prints as a solid line.
+ * outline never prints as a solid line. The 0.4 mm visible gap survives
+ * reduction to two-thirds size.
+ *
+ * **Gotchas**
+ *
+ * A gap that meets the floor in decimal (0.8 + 0.4 against 1.2) counts as
+ * meeting it despite binary rounding.
  *
  * **Example** (A heavy weight widens the default gap)
  *
@@ -743,7 +724,6 @@ export const composeSheet = (input: {
   const drawnH = (extents.maxY - extents.minY) * scale;
   const originX = (figure.left + figure.right) / 2 - drawnW / 2;
   const originY = (figure.top + figure.bottom) / 2 + drawnH / 2;
-  // Model y is up; SVG y is down.
   const toSheet = ([x1, y1, x2, y2]: Segment2): Segment2 => [
     originX + (x1 - extents.minX) * scale,
     originY - (y1 - extents.minY) * scale,
@@ -777,27 +757,19 @@ export const composeSheet = (input: {
   const attrsFor = (width: number) =>
     `fill="none" stroke="#000000" stroke-width="${r3(width)}" stroke-linecap="round" stroke-linejoin="round"`;
   const attrs = attrsFor(stroke);
-  // The shading layer is emitted only when present, so unshaded sheets stay
-  // byte-identical to sheets composed before shading existed.
+  // decision: additions-keep-earlier-output-byte-identical
   const shadingLayer =
     A.length(input.shading) === 0
       ? []
       : [`<path id="shading" d="${pathOf(input.shading)}" ${attrsFor(options.shadingWeightMm * PT_PER_MM)}/>`];
-  // the gap widens with a heavy line weight so the round caps never close it
   const dash = `${r3(options.brokenDashMm * PT_PER_MM)} ${r3(drawnBrokenGapMm(options) * PT_PER_MM)}`;
-  // one subpath per chain of touching segments, so the dashes run on along a
-  // polyline instead of restarting (and inking in full) at every short segment
   const brokenPath = pipe(broken, A.map(toSheet), chainSegments, A.map(polylinePath), A.join(""));
   const brokenLayer =
     A.length(broken) === 0 ? [] : [`<path id="broken" d="${brokenPath}" ${attrs} stroke-dasharray="${dash}"/>`];
-  // Emphasis lines go over the outlines they run along, and only when present,
-  // so a sheet without them stays byte-identical to one composed before them.
   const emphasisLayer =
     A.length(emphasis) === 0
       ? []
       : [`<path id="emphasis" d="${pathOf(emphasis)}" ${attrsFor(options.emphasisWeightMm * PT_PER_MM)}/>`];
-  // Each label layer is emitted only when it has marks, so a sheet without
-  // label styles keeps exactly the one stroked `labels` path it always had.
   const labelLayers = [
     ...(A.length(labels) === 0 ? [] : [`<path id="labels" d="${labelPath}" ${attrs}/>`]),
     ...(outlinePath === "" ? [] : [`<path id="label-outlines" d="${outlinePath}" fill="#000000" stroke="none"/>`]),

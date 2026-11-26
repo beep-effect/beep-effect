@@ -299,7 +299,8 @@ const LabelTypefaceBase = LiteralKit(["stroke", "sans", "serif"]);
  * **Details**
  *
  * `stroke` is the single-stroke glyph set the sheets were first lettered
- * with. `sans` and `serif` are filled outlines with the character widths of
+ * with; at a point size it takes the sans cap height, so one size reads alike
+ * in both. `sans` and `serif` are filled outlines with the character widths of
  * Arial and Times New Roman: a vendored subset of the label characters,
  * licensed OFL-1.1 (see the package's `licenses/OFL-1.1.txt`). On the default
  * `outline` route labels stay outlines either way, so a sheet PDF embeds no
@@ -339,7 +340,6 @@ export const LabelTypeface = LabelTypefaceBase.pipe(
  */
 export type LabelTypeface = typeof LabelTypeface.Type;
 
-// The stroke glyphs borrow the sans cap height, so one size reads alike in both.
 const capPerEm = (typeface: LabelTypeface): number =>
   LabelTypeface.match(typeface, {
     stroke: () => SANS_FACE.capHeight / SANS_FACE.unitsPerEm,

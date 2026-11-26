@@ -72,22 +72,15 @@ export type ViewName = typeof ViewName.Type;
 
 const PERSPECTIVE_EYE: Vec3 = [-1, -1.2, 0.85];
 const PERSPECTIVE_FOCUS_DIAGONALS = 2.5;
-// Horizontal reach of the legacy perspective eye; a set azimuth swings it.
 const PERSPECTIVE_REACH = Math.hypot(PERSPECTIVE_EYE[0], PERSPECTIVE_EYE[1]);
-// Isometric elevation: the angle at which a cube's three axes foreshorten equally.
 const ISOMETRIC_ELEVATION = Math.atan(1 / Math.SQRT2);
-// Isometric azimuth: at 45° (mod 90°) the model's own X, Y and Z axes foreshorten equally.
 const ISOMETRIC_AZIMUTH_DEG = 45;
 
 const orthographic = (eye: Vec3, up: Vec3) => Camera.make({ eye, up });
 
 const radians = (deg: number): number => (deg * Math.PI) / 180;
 
-// Default field of a two-point pictorial when the set gives none: low enough that a box of ordinary proportions,
-// walls included, stays near the 60° cone of vision.
 const TWO_POINT_ELEVATION_DEG = 20;
-// Half the 60° cone of vision. A two-point field above it puts the near top corner outside the cone, and the walls
-// below that corner further out still; moving the eye back does not bring them in.
 const TWO_POINT_MAX_ELEVATION_DEG = 30;
 
 const PictorialElevationDeg = S.Finite.check(
@@ -149,8 +142,9 @@ const PictorialProjectionBase = LiteralKit(["perspective", "isometric", "two-poi
  * above the top (below the bottom for the bottom figure) and looks
  * horizontally along the azimuth, so every vertical edge stays vertical and
  * parallel on the sheet while level edges run to two vanishing points on the
- * horizon. Its field defaults to 20° and may not exceed 30°, half the 60°
- * cone of vision. The view names `top-perspective` and `bottom-perspective`
+ * horizon. Its field defaults to 20°, low enough that a box of ordinary
+ * proportions, walls included, stays near the 60° cone of vision, and may not
+ * exceed 30°, half that cone. The view names `top-perspective` and `bottom-perspective`
  * stay figure-slot names whatever the projection.
  *
  * **Example** (Read the projections)
@@ -233,9 +227,12 @@ const elevationEye = (view: ElevationView): Vec3 =>
     right: () => [1, 0, 0] as const,
   });
 
-// Negate without minting −0, so a default plan camera stays byte-equal to the
-// one written before `planFacing` existed.
-const negate = (v: Vec3): Vec3 => [v[0] === 0 ? 0 : -v[0], v[1] === 0 ? 0 : -v[1], v[2] === 0 ? 0 : -v[2]];
+// decision: additions-keep-earlier-output-byte-identical
+const negateWithoutNegativeZero = (v: Vec3): Vec3 => [
+  v[0] === 0 ? 0 : -v[0],
+  v[1] === 0 ? 0 : -v[1],
+  v[2] === 0 ? 0 : -v[2],
+];
 
 /**
  * Whether a view is a perspective.
@@ -253,7 +250,6 @@ const negate = (v: Vec3): Vec3 => [v[0] === 0 ? 0 : -v[0], v[1] === 0 ? 0 : -v[1
  */
 export const isPerspectiveView = S.is(ViewName.pick(["top-perspective", "bottom-perspective"]));
 
-// A two-point pictorial's set field is at most half the 60° cone of vision; other views and projections take any.
 const twoPointFieldInCone = (input: {
   readonly view: ViewName;
   readonly projection: PictorialProjection;
@@ -402,7 +398,7 @@ const CameraForView = Fn({ input: CameraForViewInput, output: Camera }).pipe(
  */
 export const cameraForView: (input: typeof CameraForViewInput.Encoded) => Camera = CameraForView.implementSync(
   (input) => {
-    const planUp = negate(elevationEye(input.planFacing));
+    const planUp = negateWithoutNegativeZero(elevationEye(input.planFacing));
     return ViewName.match(input.view, {
       "top-plan": () => orthographic([0, 0, 1], planUp),
       "bottom-plan": () => orthographic([0, 0, -1], planUp),
@@ -428,11 +424,9 @@ const pictorial = (input: CameraForViewInput, zSign: 1 | -1): Camera =>
     "two-point": () => twoPoint(input, zSign),
   });
 
-// Without a set elevation, the isometric one.
 const pictorialElevation = ({ elevationDeg }: CameraForViewInput): number =>
   O.match(elevationDeg, { onNone: () => ISOMETRIC_ELEVATION, onSome: radians });
 
-// Without a set elevation, the two-point default field.
 const twoPointElevation = ({ elevationDeg }: CameraForViewInput): number =>
   radians(O.getOrElse(elevationDeg, () => TWO_POINT_ELEVATION_DEG));
 
@@ -442,7 +436,6 @@ const boxCentre = ({ min, max }: CameraForViewInput["box"]): Vec3 => [
   (min[2] + max[2]) / 2,
 ];
 
-// Eye distance of a converging pictorial; 2.5 diagonals unless set.
 const pictorialFocus = ({ box, focusDiagonals }: CameraForViewInput): number =>
   Math.max(
     Math.hypot(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]) *
@@ -451,7 +444,7 @@ const pictorialFocus = ({ box, focusDiagonals }: CameraForViewInput): number =>
   );
 
 const perspective = (input: CameraForViewInput, zSign: 1 | -1): Camera => {
-  // Without a set azimuth the legacy eye is used verbatim, so default goldens stay byte-equal.
+  // decision: additions-keep-earlier-output-byte-identical
   const [ex, ey] = O.match(input.azimuthDeg, {
     onNone: () => [PERSPECTIVE_EYE[0], PERSPECTIVE_EYE[1]] as const,
     onSome: (deg) =>
@@ -465,10 +458,6 @@ const perspective = (input: CameraForViewInput, zSign: 1 | -1): Camera => {
   });
 };
 
-// A level line of sight keeps every vertical edge vertical on the sheet. The projector stands the eye `focus` from
-// the target along `eye`, so with the target over the box centre the eye's depth to the bounding box's near top
-// (bottom) corner is `focus − reach`; lifting the target (and the eye with it) by that depth times tan(el) above the
-// top (below the bottom) sees that corner at `el` from the horizon, and every farther point of the box's top lower.
 const twoPoint = (input: CameraForViewInput, zSign: 1 | -1): Camera => {
   const { box } = input;
   const az = radians(O.getOrElse(input.azimuthDeg, () => ISOMETRIC_AZIMUTH_DEG));
@@ -483,9 +472,7 @@ const twoPoint = (input: CameraForViewInput, zSign: 1 | -1): Camera => {
     up: [0, 0, 1],
     target: [centre[0], centre[1], height],
     focus: O.some(focus),
-    // the eye point seen from the box centre: the direction a camera aimed at the box centre would carry as `eye`
     sight: O.some([eye[0] * focus, eye[1] * focus, height - centre[2]]),
-    // the target stands well clear of the model, so the pass runs about it to see the model from this eye
     hiddenLinePassAbout: HiddenLinePassAbout.Enum.target,
   });
 };
@@ -596,12 +583,9 @@ export class OmissionClaim extends S.Opaque<OmissionClaim, { readonly brand: uni
   )
 ) {}
 
-// Only the two pictorial slots have a projection choice.
 const projectionsFitViews = (figures: ReadonlyArray<FigureSpec>): boolean =>
   A.every(figures, (f) => f.projection === "perspective" || isPerspectiveView(f.view));
 
-// The projection each pictorial of a set is drawn in: a shown pictorial's own, an omitted one's from the figure it is
-// claimed from (as the renderer projects it).
 const pictorialProjectionsOf = (set: {
   readonly figures: ReadonlyArray<FigureSpec>;
   readonly omissions: ReadonlyArray<OmissionClaim>;
@@ -634,15 +618,12 @@ type PictorialChoices = {
   readonly pictorialFocusDiagonals: O.Option<number>;
 };
 
-// A set elevation is read by an isometric or two-point pictorial; a perspective alone would drop it unseen.
 const elevationIsRead = (set: PictorialChoices): boolean =>
   O.isNone(set.pictorialElevationDeg) || A.some(pictorialProjectionsOf(set), readsElevation);
 
-// A set focus is read by a perspective or two-point pictorial; an isometric alone would drop it unseen.
 const focusIsRead = (set: PictorialChoices): boolean =>
   O.isNone(set.pictorialFocusDiagonals) || A.some(pictorialProjectionsOf(set), readsFocus);
 
-// A set with a two-point pictorial keeps its elevation within half the 60° cone of vision.
 const twoPointElevationInCone = (set: PictorialChoices): boolean =>
   !A.contains(pictorialProjectionsOf(set), PictorialProjection.Enum["two-point"]) ||
   !O.exists(set.pictorialElevationDeg, (deg) => deg > TWO_POINT_MAX_ELEVATION_DEG);
