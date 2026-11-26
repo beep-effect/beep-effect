@@ -165,7 +165,7 @@ const failureAt = Effect.fn("failureAt")(function* (ref: string) {
   return error;
 });
 
-describe("effected#842 — the base side of a config-dependency bump the checkout never installed, over real git and a fake pnpm", () => {
+describe("the base side of a config-dependency bump the checkout never installed, over real git and a fake pnpm", () => {
   it.layer(Layer.unwrap(Effect.sync(Subprocess)), { timeout: "30 seconds" })((it) => {
     it.effect(
       "the subprocess composite fetches the bare-spec base version, lockfile-preamble integrity verified; the diff succeeds",

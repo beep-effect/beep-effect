@@ -456,7 +456,7 @@ describe("SyncFileSystem.readDirectoryWithTypes, a pure syscall saving: the four
   });
 });
 
-describe("SyncFileSystem over a memfs volume, a sanctioned backend for the consumer-supplied port (#445)", () => {
+describe("SyncFileSystem over a memfs volume, a sanctioned backend for the consumer-supplied port", () => {
   const symlinkedPackageB = MemoryFileSystem.symlink("/repo/real/b");
   const seed = {
     "/repo/package.json": `{ "name": "root", "version": "0.0.0", "private": true }`,
@@ -493,7 +493,7 @@ describe("SyncFileSystem over a memfs volume, a sanctioned backend for the consu
   );
 });
 
-describe("getWorkspacePackagesSync: version-less manifests are members, and every other skip is REPORTED (#605)", () => {
+describe("getWorkspacePackagesSync: version-less manifests are members, and every other skip is REPORTED", () => {
   const seed = {
     "/repo/package.json": PRIVATE_ROOT_WITHOUT_VERSION,
     "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
@@ -675,7 +675,7 @@ describe("getWorkspacePackagesSync: version-less manifests are members, and ever
   );
 });
 
-describe("the sync hatch and the Effect enumerator agree about `version` on a version-less tree (#605)", () => {
+describe("the sync hatch and the Effect enumerator agree about `version` on a version-less tree", () => {
   const paritySeed = {
     "/repo/pnpm-workspace.yaml": "packages:\n  - packages/*\n",
     "/repo/package.json": PRIVATE_ROOT_WITHOUT_VERSION,
