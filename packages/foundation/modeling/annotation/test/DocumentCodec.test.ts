@@ -59,7 +59,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation doc
       const document = yield* codec.assemble(fixtureParts);
       const bytes = yield* codec.encode(document).pipe(Effect.flatMap(canonical));
       yield* Effect.promise(() =>
-        context.expect(`${bytes}\n`).toMatchFileSnapshot("./fixtures/canonical-document-v1.json")
+        context.expect(`${bytes}\n`).toMatchFileSnapshot("./fixtures/canonical-document-v1.jcs")
       );
     })
   );

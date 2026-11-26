@@ -111,7 +111,7 @@ export const fixtureGeneration = {
  * The parts `assemble` takes for the fixture document over one fixed capture: every declared kind, a relation and a
  * coreference cluster over two Mentions, an astral character before the last word, and one generation per
  * annotation by one activity at one stated time. The committed canonical JSON of the assembled document is
- * `test/fixtures/canonical-document-v1.json`.
+ * `test/fixtures/canonical-document-v1.jcs`.
  */
 export const fixtureParts = {
   text: fixtureSource,
