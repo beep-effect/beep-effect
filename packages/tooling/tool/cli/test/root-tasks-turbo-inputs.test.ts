@@ -565,7 +565,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
-            "ed0556d6b78f97a61f848e66bb125516643945751419ced47594db3ee0672199"
+            "c0a652a216d4c9aa75e2a6a7298440625f9f7366159dfccba544c9e4c2541812"
           ),
         ];
         for (const [file, expected] of consumers) {
