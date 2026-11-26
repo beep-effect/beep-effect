@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import * as Runtime from "effect/Runtime";
 
 const main = Layer.effectDiscard(citationRecognizerWorkerProgram).pipe(Layer.provide(BunStdio.layer), Layer.launch);
-const writeDiagnosticAtTerminalIoBoundaryBeforeDefaultExit: Runtime.Teardown = (exit, onExit) => {
+const lateWarningTeardown: Runtime.Teardown = (exit, onExit) => {
   process.stderr.write("PRIVATE-LATE-WORKER-SENTINEL", () => Runtime.defaultTeardown(exit, onExit));
 };
-BunRuntime.runMain(main, { teardown: writeDiagnosticAtTerminalIoBoundaryBeforeDefaultExit });
+BunRuntime.runMain(main, { teardown: lateWarningTeardown });

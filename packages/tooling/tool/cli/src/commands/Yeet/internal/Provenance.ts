@@ -30,6 +30,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
+import { RepositorySegment } from "../../../internal/state/WorkstationState.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
 import { mergePrProvenancePackets, PrProvenancePacket, PUBLIC_PACKET_LIMIT, packetPath } from "./PacketProvenance.ts";
 import type * as Digest from "effect/crypto/Digest";
@@ -423,21 +424,11 @@ export const PrProvenanceModel = S.NonEmptyString.check(
  * @since 0.0.0
  */
 export type PrProvenanceModel = typeof PrProvenanceModel.Type;
-// `isPattern` (not a bare `makeFilter`) so derived arbitraries generate matching names
-// instead of discarding random strings until a property exhausts.
-const GitHubName = S.NonEmptyString.check(
-  S.isPattern(
-    /^[A-Za-z0-9_.-]+$/,
-    $I.annote("GitHubNameCheck", {
-      title: "GitHub name",
-      description: "GitHub owner or repository name.",
-      message: "Expected a GitHub name",
-    })
-  )
-);
 
 /**
- * GitHub repository identity used to partition workstation-local session records.
+ * GitHub repository a checkout's pull requests live in: the target of every
+ * GitHub API call and the partition of the PR-session registry. A checkout's
+ * workstation-state key is `CheckoutRepository`, which may name another host.
  *
  * **Example** (Construct a repository key)
  *
@@ -456,8 +447,8 @@ const GitHubName = S.NonEmptyString.check(
  * @since 0.0.0
  */
 export class PrRepository extends S.Opaque<PrRepository, { readonly brand: unique symbol }>()(
-  S.Struct({ host: S.tag("github.com"), owner: GitHubName, name: GitHubName }).pipe(
-    $I.annoteSchema("PrRepository", { description: "GitHub repository identity for local PR-session state." })
+  S.Struct({ host: S.tag("github.com"), owner: RepositorySegment, name: RepositorySegment }).pipe(
+    $I.annoteSchema("PrRepository", { description: "GitHub repository a checkout's pull requests live in." })
   )
 ) {}
 /**

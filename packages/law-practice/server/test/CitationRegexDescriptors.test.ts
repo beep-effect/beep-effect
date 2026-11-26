@@ -25,10 +25,9 @@ const makeCitationRegexDescriptorRegistry = Effect.fnUntraced(function* (
   return yield* makeOwnedCitationRegexDescriptorRegistry(a0, o1, a2);
 });
 
-const python3_11_15HashlibVectorOverWidthByteAndLittleEndianPointsNotATargetFingerprintHelper =
-  "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7";
+const hashlibVector = "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7";
 const descriptor = () => ({
-  patternSha256: python3_11_15HashlibVectorOverWidthByteAndLittleEndianPointsNotATargetFingerprintHelper,
+  patternSha256: hashlibVector,
   flags: 0,
   profile: {
     groups: 2,
@@ -162,7 +161,10 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
       source.profile.groups = 9;
       source.profile.names.maybe = 2;
       const bound = yield* registry.bind(pattern(), 0);
-      expect(bound.descriptor.profile).toEqual(descriptor().profile);
+      expect(
+        bound.descriptor.profile,
+        "the descriptor SHA-256 is a Python 3.11.15 hashlib vector over a width byte and little-endian points"
+      ).toEqual(descriptor().profile);
       expect(bound.program.groups).toBe(2);
       expect(bound.prepared.value.storage.bytes).toEqual(pattern().bytes);
       const invalidFlags = yield* registry.bind(pattern(), -1).pipe(Effect.flip);

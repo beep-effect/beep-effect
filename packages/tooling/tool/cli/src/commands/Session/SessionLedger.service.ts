@@ -25,9 +25,13 @@ import {
   makeMemoryJsonLinesStore,
   partitionJsonLines,
 } from "../../internal/state/JsonLinesStore.ts";
-import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
-import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
-import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
+import {
+  CheckoutRepository,
+  repositoryJsonLinesFileName,
+  resolveWorkstationStateDir,
+} from "../../internal/state/WorkstationState.ts";
+import { PrNumber } from "../Yeet/internal/Provenance.ts";
+import { detectCheckoutRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
 import {
   openSessionRows,
@@ -40,7 +44,7 @@ import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Session/SessionLedger.service");
-const equivalentRepository = S.toEquivalence(PrRepository);
+const equivalentRepository = S.toEquivalence(CheckoutRepository);
 
 /**
  * Service contract: append a row, or list every row of one repository.
@@ -48,10 +52,10 @@ const equivalentRepository = S.toEquivalence(PrRepository);
  * **Example** (Describe a list)
  *
  * ```ts
- * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import type { SessionLedgerShape } from "@beep/repo-cli/test/Session"
  *
- * const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
+ * const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })
  * const listAll = (ledger: SessionLedgerShape) => ledger.list(repository)
  * console.log(listAll.length) // 1
  * ```
@@ -61,7 +65,7 @@ const equivalentRepository = S.toEquivalence(PrRepository);
  */
 export interface SessionLedgerShape {
   readonly append: (row: SessionLedgerRow) => Effect.Effect<void, SessionLedgerError>;
-  readonly list: (repository: PrRepository) => Effect.Effect<ReadonlyArray<SessionLedgerRow>, SessionLedgerError>;
+  readonly list: (repository: CheckoutRepository) => Effect.Effect<ReadonlyArray<SessionLedgerRow>, SessionLedgerError>;
 }
 
 /**
@@ -115,18 +119,39 @@ export const decodeSessionLedger = (content: string): DecodedSessionLedger =>
  * **Example** (Name the file)
  *
  * ```ts
- * import { PrRepository, sessionLedgerFileName } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, sessionLedgerFileName } from "@beep/repo-cli/test/Session"
  *
- * console.log(sessionLedgerFileName(PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
+ * console.log(sessionLedgerFileName(CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
  * // "github.com__beep-effect__beep-effect.jsonl"
  * ```
  *
- * @param repository - The GitHub repository the ledger belongs to.
+ * @param repository - The checkout repository the ledger belongs to.
  * @returns A JSON Lines file name with no local data in it.
  * @category formatting
  * @since 0.0.0
  */
-export const sessionLedgerFileName: (repository: PrRepository) => string = repositoryJsonLinesFileName;
+export const sessionLedgerFileName: (repository: CheckoutRepository) => string = repositoryJsonLinesFileName;
+
+/**
+ * The session state directory the ledger and presence stores share:
+ * `BEEP_SESSION_STATE_ROOT`, else `<state>/beep/sessions`.
+ *
+ * **Example** (Build the resolver effect)
+ *
+ * ```ts
+ * import { sessionStateDirectory } from "@beep/repo-cli/test/Session"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(sessionStateDirectory)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const sessionStateDirectory = resolveWorkstationStateDir({
+  override: "BEEP_SESSION_STATE_ROOT",
+  store: "sessions",
+});
 
 /**
  * Build the filesystem-backed ledger.
@@ -145,7 +170,7 @@ export const sessionLedgerFileName: (repository: PrRepository) => string = repos
  */
 export const makeSessionLedgerLive = Effect.fn("SessionLedger.makeLive")(function* () {
   const store = yield* makeJsonLinesStore({
-    directory: yield* resolveWorkstationStateDir({ override: "BEEP_SESSION_STATE_ROOT", store: "sessions" }),
+    directory: yield* sessionStateDirectory,
     fileName: sessionLedgerFileName,
     partitionOf: (row: SessionLedgerRow) => row.repository,
     encode: flow(
@@ -217,11 +242,11 @@ const gitAdapter: GitCommandErrorAdapter<SessionLedgerError> = {
  * **Example** (Describe a checkout)
  *
  * ```ts
- * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import type { SessionCheckoutFacts } from "@beep/repo-cli/test/Session"
  *
  * const facts: SessionCheckoutFacts = {
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   clone: "/work/beep-effect",
  *   checkout: "/work/beep-effect-worktrees/lane",
  *   lane: "lane",
@@ -238,7 +263,7 @@ export const SessionCheckoutFacts = S.Struct({
   checkout: S.String,
   clone: S.String,
   lane: S.String,
-  repository: PrRepository,
+  repository: CheckoutRepository,
 }).pipe($I.annoteSchema("SessionCheckoutFacts", { description: "Repository and checkout facts probed from Git." }));
 
 /**
@@ -261,13 +286,13 @@ export type SessionCheckoutFacts = typeof SessionCheckoutFacts.Type;
  * ```
  *
  * @param cwd - Any directory inside the checkout.
- * @returns The facts, or a git error when the directory is not a GitHub checkout.
+ * @returns The facts, or a git error when the directory has no parsable origin.
  * @category utilities
  * @since 0.0.0
  */
 export const sessionCheckoutFacts = Effect.fn("SessionLedger.checkoutFacts")(function* (cwd: string) {
   const path = yield* Path.Path;
-  const repository = yield* detectPrRepository(cwd).pipe(
+  const repository = yield* detectCheckoutRepository(cwd).pipe(
     Effect.mapError((error) => SessionLedgerError.make({ reason: "git", message: error.message, cause: error }))
   );
   const git = yield* Git;
@@ -446,7 +471,7 @@ const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string):
  * has observed the pull request MERGED, and `worktree remove` calls it with
  * its own `next` line once the checkout is gone, so a removed lane never stays
  * in `session open` as a live row. Best effort: a missing ledger, a
- * non-GitHub origin, or an unreadable checkout never fails the caller.
+ * missing or unparsable origin, or an unreadable checkout never fails the caller.
  *
  * **Example** (Build the effect)
  *

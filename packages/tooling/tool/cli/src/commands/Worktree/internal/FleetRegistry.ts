@@ -44,8 +44,8 @@ import {
   FleetSeatRole,
 } from "./FleetRegistry.schemas.ts";
 import { fleetStateDirectory, readOptionalFleetStateFile } from "./FleetRoots.ts";
+import type { CheckoutRepository } from "../../../internal/state/WorkstationState.ts";
 import type { SessionLedgerRow } from "../../Session/Session.schemas.ts";
-import type { PrRepository } from "../../Yeet/internal/Provenance.ts";
 import type { FleetCheckout, FleetScanOptions } from "../Worktree.schemas.ts";
 import type { ConfiguredFleetRoots } from "./FleetRoots.schemas.ts";
 
@@ -422,7 +422,7 @@ export interface FleetRegistryStoreShape {
    *
    * @since 0.0.0
    */
-  readonly read: (repository: PrRepository) => Effect.Effect<FleetRegistryDocument, WorktreeCommandError>;
+  readonly read: (repository: CheckoutRepository) => Effect.Effect<FleetRegistryDocument, WorktreeCommandError>;
   /**
    * Read-modify-write a repository's registry under its lock file.
    *
@@ -436,7 +436,7 @@ export interface FleetRegistryStoreShape {
    * @since 0.0.0
    */
   readonly update: <A>(
-    repository: PrRepository,
+    repository: CheckoutRepository,
     transform: (current: FleetRegistryDocument) => readonly [FleetRegistryDocument, A]
   ) => Effect.Effect<readonly [FleetRegistryDocument, A], WorktreeCommandError>;
 }
@@ -467,13 +467,13 @@ const RegistryJson = S.fromJsonString(FleetRegistryDocument, { space: 2 });
 const decodeRegistry = S.decodeUnknownEffect(RegistryJson);
 const encodeRegistry = S.encodeEffect(RegistryJson);
 
-const registryFile = Effect.fn("FleetRegistry.file")(function* (repository: PrRepository) {
+const registryFile = Effect.fn("FleetRegistry.file")(function* (repository: CheckoutRepository) {
   const path = yield* Path.Path;
   const directory = yield* fleetStateDirectory(repository);
   return { directory, file: path.join(directory, "registry.json") };
 });
 
-const readRegistry = Effect.fn("FleetRegistryStore.read")(function* (repository: PrRepository) {
+const readRegistry = Effect.fn("FleetRegistryStore.read")(function* (repository: CheckoutRepository) {
   const { file } = yield* registryFile(repository);
   const content = yield* readOptionalFleetStateFile(file);
   if (O.isNone(content)) {
@@ -490,7 +490,7 @@ const encodeRegistryText = (document: FleetRegistryDocument, file: string) =>
   );
 
 const updateRegistry = Effect.fn("FleetRegistryStore.update")(function* <A>(
-  repository: PrRepository,
+  repository: CheckoutRepository,
   transform: (current: FleetRegistryDocument) => readonly [FleetRegistryDocument, A]
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -559,7 +559,7 @@ export const FleetRegistryStoreLive: Layer.Layer<
         readRegistry(repository).pipe(Effect.provide(context))
       ),
       update: Effect.fn("FleetRegistryStore.update")(function* <A>(
-        repository: PrRepository,
+        repository: CheckoutRepository,
         transform: (current: FleetRegistryDocument) => readonly [FleetRegistryDocument, A]
       ) {
         return yield* updateRegistry(repository, transform).pipe(Effect.provide(context), writer.withPermits(1));
@@ -595,7 +595,7 @@ export const FleetRegistryStoreLive: Layer.Layer<
  */
 export const loadFleetJoin = Effect.fn("FleetRegistry.loadJoin")(function* (
   options: FleetScanOptions,
-  repository: PrRepository
+  repository: CheckoutRepository
 ): Effect.fn.Return<
   FleetJoin,
   WorktreeCommandError,

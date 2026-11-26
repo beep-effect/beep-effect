@@ -29,7 +29,7 @@ import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 import { RegisterRow, renderRegisterMarkdown } from "./Register.schemas.ts";
 import { RulingRow, renderRulingsMarkdown, rulingsInForce } from "./Rulings.schemas.ts";
 import { SessionLedgerRow } from "./Session.schemas.ts";
@@ -257,12 +257,12 @@ const sectionKeyOf = (title: string): O.Option<HandoffSectionKey> =>
  * **Example** (Describe a first render)
  *
  * ```ts
- * import { HandoffRenderInput, PrRepository } from "@beep/repo-cli/test/Session"
+ * import { HandoffRenderInput, CheckoutRepository } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const input = HandoffRenderInput.make({
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   writtenAt: DateTime.makeUnsafe(0),
  *   holder: O.none(),
  *   rulings: [],
@@ -279,7 +279,7 @@ const sectionKeyOf = (title: string): O.Option<HandoffSectionKey> =>
  */
 export class HandoffRenderInput extends S.Opaque<HandoffRenderInput, { readonly brand: unique symbol }>()(
   S.Struct({
-    repository: PrRepository,
+    repository: CheckoutRepository,
     writtenAt: S.DateTimeUtcFromString,
     holder: S.Option(SessionLedgerRow),
     rulings: S.Array(RulingRow),
@@ -422,13 +422,13 @@ const renderPreamble = (input: HandoffRenderInput, existing: O.Option<HandoffDoc
  * **Example** (A first render has every section)
  *
  * ```ts
- * import { HandoffRenderInput, PrRepository, renderHandoff } from "@beep/repo-cli/test/Session"
+ * import { HandoffRenderInput, CheckoutRepository, renderHandoff } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const text = renderHandoff(
  *   HandoffRenderInput.make({
- *     repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *     repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *     writtenAt: DateTime.makeUnsafe(0),
  *     holder: O.none(),
  *     rulings: [],

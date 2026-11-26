@@ -104,11 +104,11 @@ const Corpus = S.fromJsonString(
     description: "Original get_citations documents and complete pre/post-filter state with original identity indices.",
   })
 );
-type ExpectedWithPinCiteRangeLeftToOccurrenceAdapter = Omit<typeof Model.Type, "spanWithPincite">;
+type Expected = Omit<typeof Model.Type, "spanWithPincite">;
 const isGenerated = S.is(CitationGeneratedReference);
 export const assertCitationExtractionLoopModel = Effect.fn("ExtractionLoopTest.model")(function* (
   entry: CitationExtractionLoopEntry,
-  expected: ExpectedWithPinCiteRangeLeftToOccurrenceAdapter,
+  expected: Expected,
   id: number
 ) {
   const model = entry.model;
@@ -119,7 +119,10 @@ export const assertCitationExtractionLoopModel = Effect.fn("ExtractionLoopTest.m
   expect(model.token).toEqual(expected.token);
   const metadata = yield* readCitationModelMetadata(state.metadata);
   expect(metadata).toEqual(expected.metadata);
-  expect(projected.span).toEqual(expected.span);
+  expect(
+    projected.span,
+    "pin-cite ranges are left to the occurrence adapter's comparison against the v2 corpus"
+  ).toEqual(expected.span);
   expect(projected.fullSpan).toEqual(expected.fullSpan);
   expect(state.fullSpanStart).toBe(expected.fullSpanStart);
   expect(state.fullSpanEnd).toBe(expected.fullSpanEnd);

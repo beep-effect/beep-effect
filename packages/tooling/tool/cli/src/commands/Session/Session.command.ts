@@ -27,6 +27,7 @@ import { sessionContinuityCommand } from "./Continuity.command.ts";
 import { sessionHandoffCommand } from "./Handoff.command.ts";
 import { layerSessionPresenceStoreLive, recordPresence } from "./Presence.service.ts";
 import { sessionRegisterCommand } from "./Register.command.ts";
+import { sessionRehomeCommand } from "./Rehome.command.ts";
 import { sessionPresenceCommand, sessionResolveCommand } from "./Resolve.command.ts";
 import { sessionRulingCommand } from "./Rulings.command.ts";
 import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
@@ -75,13 +76,13 @@ export const renderSessionOrchestrator = (holder: O.Option<SessionLedgerRow>): s
  * **Example** (Render a row)
  *
  * ```ts
- * import { PrRepository, renderSessionRow, SessionLedgerRow } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, renderSessionRow, SessionLedgerRow } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const row = SessionLedgerRow.make({
  *   schemaVersion: "session-ledger/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   clone: "/work/beep-effect",
  *   checkout: "/work/beep-effect-worktrees/lane",
  *   lane: "lane",
@@ -299,6 +300,7 @@ export const sessionCommand = Command.make("session", {}, () =>
         "- bun run beep session register add|list|convert",
         "- bun run beep session ruling add|list",
         "- bun run beep session handoff [--file <path>] [--gate-snapshot <file>] [--write]",
+        "- bun run beep session rehome --from <host/owner/name> --to <host/owner/name> [--apply]",
       ],
       "\n"
     )
@@ -314,5 +316,6 @@ export const sessionCommand = Command.make("session", {}, () =>
     sessionRulingCommand,
     sessionHandoffCommand,
     sessionContinuityCommand,
+    sessionRehomeCommand,
   ])
 );

@@ -28,13 +28,17 @@ import {
   renderParcelSpec,
 } from "@beep/repo-cli/test/Palantiri";
 import { ComputeProfileProbe, MemoryStats, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
-import { layerSessionLedgerMemory, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
+import {
+  CheckoutRepository,
+  layerSessionLedgerMemory,
+  SessionLedger,
+  SessionLedgerRow,
+} from "@beep/repo-cli/test/Session";
 import {
   ProofJobRecord,
   ProofJobRequest,
   ProofJobSubmitter,
   ProofJobUnit,
-  PrRepository,
   YeetAckState,
   YeetCheckFailedRow,
   YeetFailureCapsule,
@@ -67,7 +71,7 @@ import type { SessionCheckoutFacts } from "@beep/repo-cli/test/Session";
 
 const encodeInboxRowInputJson = S.encodeEffect(S.fromJsonString(InboxRowInput));
 const encodeParcelEnvelopeJson = S.encodeEffect(S.fromJsonString(ParcelEnvelope));
-const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
   const current = yield* Console.Console;

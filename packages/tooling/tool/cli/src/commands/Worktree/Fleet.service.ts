@@ -42,7 +42,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { parseAdmissionProcStatStartTime } from "../../internal/repo-run/index.ts";
-import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
+import { detectCheckoutRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { ConfiguredFleetRoots, FleetRootEntry } from "./internal/FleetRoots.schemas.ts";
 import { canonicalFleetOrigin, FleetRootsStore, FleetRootsStoreLive } from "./internal/FleetRoots.ts";
 import { selectFleetScannerDir } from "./internal/FleetScannerDir.ts";
@@ -1374,7 +1374,7 @@ const resolveFleetRoots = Effect.fn("Fleet.resolveFleetRoots")(function* (
     return singleRoot(options.fleetRoot);
   }
   const store = yield* FleetRootsStore;
-  const repository = yield* detectPrRepository(currentRoot).pipe(Effect.option);
+  const repository = yield* detectCheckoutRepository(currentRoot).pipe(Effect.option);
   const configured = yield* store.configured(repository);
   if (O.isSome(configured)) {
     return configured.value;

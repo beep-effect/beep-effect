@@ -10,7 +10,8 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { PrNumber, PrProvenanceEntrypoint, PrProvenanceHarness, PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
+import { PrNumber, PrProvenanceEntrypoint, PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 import { SessionLedgerState } from "./Session.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Session/Route.schemas");
@@ -275,13 +276,13 @@ export type SessionRoute = SessionRouteShape;
  * **Example** (Make a presence row)
  *
  * ```ts
- * import { ClaudePeerRoute, PrRepository, SessionPresence } from "@beep/repo-cli/test/Session"
+ * import { ClaudePeerRoute, CheckoutRepository, SessionPresence } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const presence = SessionPresence.make({
  *   schemaVersion: "session-presence/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   harness: "claude-code",
  *   entrypoint: "claude-desktop",
  *   sessionId: "5f0c2b8e",
@@ -299,7 +300,7 @@ export type SessionRoute = SessionRouteShape;
 export class SessionPresence extends S.Opaque<SessionPresence, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("session-presence/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     harness: PrProvenanceHarness,
     entrypoint: PrProvenanceEntrypoint,
     sessionId: S.NonEmptyString,
@@ -511,13 +512,13 @@ export class FallbackStep extends S.Opaque<FallbackStep, { readonly brand: uniqu
  * **Example** (Make an empty resolution)
  *
  * ```ts
- * import { PrRepository, SessionResolution } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, SessionResolution } from "@beep/repo-cli/test/Session"
  * import * as O from "effect/Option"
  *
  * const resolution = SessionResolution.make({
  *   schemaVersion: "session-resolution/v1",
  *   query: "3172",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   owner: O.none(),
  *   superseded: [],
  *   routes: [],
@@ -533,7 +534,7 @@ export class SessionResolution extends S.Opaque<SessionResolution, { readonly br
   S.Struct({
     schemaVersion: S.tag("session-resolution/v1"),
     query: S.String,
-    repository: PrRepository,
+    repository: CheckoutRepository,
     owner: S.OptionFromNullOr(SessionClaim),
     superseded: S.Array(SessionClaim),
     routes: S.Array(RouteReading),

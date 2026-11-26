@@ -6,7 +6,7 @@ import {
   processTableFromEntries,
   runRepoCommandCapture,
 } from "@beep/repo-cli/test/RepoRun";
-import { PrRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
+import { CheckoutRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
 import {
   layerResidueDrainProbeTest,
   layerResidueTerminalLaneProbeTest,
@@ -2598,7 +2598,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("retention fences", (i
 });
 const TERMINAL_LANE_PR = 1871;
 const TERMINAL_LANE_OWNER = `terminal-lane#${TERMINAL_LANE_PR}`;
-const fixtureRepository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const fixtureRepository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 const gitLine = Effect.fn("ResidueReapTest.gitLine")(function* (cwd: string, args: ReadonlyArray<string>) {
   const resultFixtureCommand = yield* runFixtureCommand(cwd, "git", args);

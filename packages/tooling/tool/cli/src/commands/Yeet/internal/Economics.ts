@@ -1103,7 +1103,7 @@ const makeYeetEconomicsSource: Effect.Effect<
  * symlinked root, a lane listed under two roots) is read once, under the
  * first path that reached it. Symlinked checkouts and run directories and stray
  * files under `runs/` are skipped without being counted. The fleet also reads
- * the attempt-journal store's partition for the clone's GitHub repository,
+ * the attempt-journal store's partition for the clone's checkout repository,
  * where removed checkouts' journals are filed, labelled `(retained)`; a
  * retained attempt that a live journal of the same run also holds is counted
  * once, from the live journal, and its retained rows add to the duplicate
@@ -1297,7 +1297,7 @@ const configuredFleetHosts = Effect.fnUntraced(function* (repoRoot: string) {
   const clone = yield* readCheckoutClone(root);
   const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => root));
   if (O.isNone(repository)) {
-    return yield* warnNoFleetHosts("the clone has no GitHub origin, so it has no hosts.json.");
+    return yield* warnNoFleetHosts("the clone's origin names no repository, so it has no hosts.json.");
   }
   const document = yield* readConfiguredFleetHosts(repository.value).pipe(
     Effect.catchTag("WorktreeCommandError", (error) => warnNoFleetHosts(error.message).pipe(Effect.as(O.none())))
@@ -1381,7 +1381,7 @@ const makeYeetFleetHostSource: Effect.Effect<
  * times out, cannot be reached, or whose wrapper refuses yields an
  * `unreachable` receipt and no journals, and the other hosts are still read.
  * Raw rows never leave the fold: the receipts carry counts only. A clone
- * without a GitHub origin, a missing `hosts.json` or one that does not decode
+ * whose origin names no repository, a missing `hosts.json` or one that does not decode
  * logs a warning and reads no host. `read` fails only with reason `run-id`
  * when a branch's run id cannot be derived.
  *

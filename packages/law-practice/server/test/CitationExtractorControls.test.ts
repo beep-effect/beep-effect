@@ -329,7 +329,10 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
         entry: new URL("./CitationRecognizerLateWarning.entry.ts", import.meta.url),
       });
       const failure = yield* control.extractor.extract(control.input).pipe(Effect.flip);
-      expect(failure).toMatchObject({ _tag: "CitationRecognitionError", reason: "transport-failed" });
+      expect(failure, "the entry's teardown waits for the diagnostic write before the default exit").toMatchObject({
+        _tag: "CitationRecognitionError",
+        reason: "transport-failed",
+      });
       yield* expectPrivateFailure(failure, control.cwd);
       yield* expectPhysical(control.snapshot, 1);
     })

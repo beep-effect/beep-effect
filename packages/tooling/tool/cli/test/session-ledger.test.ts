@@ -18,11 +18,11 @@ import {
 } from "@beep/repo-cli/commands/Goals";
 import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/commands/Worktree";
 import {
+  CheckoutRepository,
   decodeSessionLedger,
   layerSessionLedgerMemory,
   makeSessionLedgerLive,
   openSessionRows,
-  PrRepository,
   RegisterReport,
   RegisterReportJson,
   RegisterRow,
@@ -68,7 +68,7 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 const encodeGoalCompletionReceiptJson = S.encodeEffect(S.fromJsonString(GoalCompletionReceipt));
 
-const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 // `Git` rides beside the platform services: the checkout facts probe takes it from the context (W2).
 const testLayer = Layer.provideMerge(
@@ -1186,7 +1186,7 @@ describe("session ledger memory layer", () => {
         const elsewhere = (overrides: Partial<{ owner: string; name: string }>, next: string) =>
           SessionLedgerRow.make({
             ...row({ next }),
-            repository: PrRepository.make({
+            repository: CheckoutRepository.make({
               host: "github.com",
               owner: "beep-effect",
               name: "beep-effect",
@@ -1198,7 +1198,7 @@ describe("session ledger memory layer", () => {
         yield* ledger.append(elsewhere({ name: "other" }, "other name"));
         const list6 = yield* ledger.list(repository);
         expect(A.map(list6, (item) => item.next)).toStrictEqual(["ours"]);
-        const list7 = yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }));
+        const list7 = yield* ledger.list(CheckoutRepository.make({ ...repository, name: "missing" }));
         expect(list7).toStrictEqual([]);
       })
     );
