@@ -1,7 +1,3 @@
-// Fenced code blocks with source spans (R6): the shared owner behind docgen's
-// example extraction and the repo-cli Markdown laws. Every case pins the
-// spans by slicing the source, so an offset drift shows as a wrong slice.
-
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownFence } from "@beep/markdown/MarkdownFence";
 import { Code, Root } from "@beep/markdown/MarkdownNode";
@@ -28,7 +24,7 @@ const slice = (source: string, start: number, end: number): string => Str.slice(
 
 const tick3 = Str.repeat(3)("`");
 
-describe("MarkdownFence.fences", () => {
+describe("MarkdownFence.fences, shared by docgen example extraction and the repo-cli Markdown laws, pinned by slicing the source", () => {
   it.effect("spans the opening fence, the raw info string and the body of a closed fence", () =>
     Effect.sync(() => {
       const source = `before\n${tick3}ts  name='a' \nconst a = 1\n\nconst b = 2\n${tick3}  \nafter\n`;

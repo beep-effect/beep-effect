@@ -51,9 +51,12 @@ describe("preprocessing boundary behavior", () => {
 
   it.effect("leaves the shared terminator scan reusable after an early caller", () =>
     Effect.sync(() => {
-      // The scan shares one global regex; a second split must start at 0.
       assert.strictEqual(preprocessLines("a\nb\nc").length, 3);
-      assert.strictEqual(preprocessLines("x\ny").length, 2);
+      assert.strictEqual(
+        preprocessLines("x\ny").length,
+        2,
+        "the scan shares one global regex, so a second split must start at 0"
+      );
     })
   );
 });

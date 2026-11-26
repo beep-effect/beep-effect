@@ -29,7 +29,6 @@ it.effect.prop(
       const address = `ada${A.join(chars, "")}@example.org`;
       const source = `prefix ${address} suffix`;
       const root = makeInlineNode("emphasis", 0, source.length);
-      // The address straddles pieces; source coordinates remain those of the full input.
       appendChild(root, makeInlineNode("text", 0, 9, Str.slice(0, 9)(source)));
       appendChild(root, makeInlineNode("text", 9, source.length, Str.slice(9)(source)));
       linkifyEmails(root);
@@ -53,7 +52,11 @@ it.effect.prop(
         ["text", "link", "text"]
       );
       assert.strictEqual(once[1]?.url, `mailto:${address}`);
-      assert.strictEqual(once[1]?.start, 7);
+      assert.strictEqual(
+        once[1]?.start,
+        7,
+        "the address straddles pieces, yet source coordinates stay those of the full input"
+      );
       assert.strictEqual(once[1]?.end, 7 + address.length);
       assert.strictEqual(
         A.join(
