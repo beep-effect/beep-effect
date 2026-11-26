@@ -18,6 +18,7 @@
 
 import { $TomlId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -152,7 +153,10 @@ export class TomlParseError extends S.TaggedError<TomlParseError, { readonly bra
    * @category constructors
    * @since 0.0.0
    */
-  static readonly fromDefect = (text: string, defect: unknown): TomlParseError => {
+  static readonly fromDefect: {
+    (text: string, defect: unknown): TomlParseError;
+    (defect: unknown): (text: string) => TomlParseError;
+  } = dual(2, (text: string, defect: unknown): TomlParseError => {
     if (isRawTomlError(defect)) {
       return TomlParseError.make({ diagnostics: [TomlDiagnostic.fromRaw(text, defect.diagnostic)] });
     }
@@ -169,7 +173,7 @@ export class TomlParseError extends S.TaggedError<TomlParseError, { readonly bra
       });
     }
     throw defect;
-  };
+  });
 }
 
 /**
