@@ -11,7 +11,6 @@ const SpecJson = S.fromJsonString(ModelSpec);
 const encodeSpecJson = S.encodeEffect(SpecJson);
 const decodeSpecJson = S.decodeEffect(SpecJson);
 const decodeJson = S.decodeEffect(S.fromJsonString(S.Unknown));
-// the encoded line style of every add primitive, absent when the encoded primitive has no lineStyle key
 const PrimitiveKeys = S.Struct({
   parts: S.Array(S.Struct({ add: S.Array(S.Struct({ lineStyle: S.optionalKey(S.String) })) })),
 });
@@ -19,8 +18,7 @@ const decodePrimitiveKeys = S.decodeUnknownEffect(PrimitiveKeys);
 const encodeBox = S.encodeEffect(Box);
 const decodeBox = S.decodeUnknownEffect(Box);
 
-// A flap with a coplanar tab fused into it: the tab primitive alone is unclaimed.
-const flapInput = {
+const flapWithCoplanarTabInput = {
   parts: [
     {
       name: "flap",
@@ -46,18 +44,17 @@ describe("Geometry.schemas primitive line style", () => {
   it.effect(
     "decodes a primitive's own line style and leaves the others to their part",
     Effect.fnUntraced(function* () {
-      const spec = yield* decodeSpec(flapInput);
+      const spec = yield* decodeSpec(flapWithCoplanarTabInput);
       expect(A.map(spec.parts, (part) => part.lineStyle)).toEqual(["solid"]);
       const styles = A.flatMap(spec.parts, (part) => A.map(part.add, (primitive) => primitive.lineStyle));
       expect(A.map(styles, O.isNone)).toEqual([true, false, false]);
       expect(A.getSomes(styles)).toEqual(["broken", "solid"]);
-      // an unknown style is refused
       const refused = yield* Effect.flip(
         decodeSpec({
           parts: [{ name: "p", add: [{ kind: "box", min: [0, 0, 0], max: [1, 1, 1], lineStyle: "dotted" }] }],
         })
       );
-      expect(refused).toBeDefined();
+      expect(refused, "an unknown line style is refused").toBeDefined();
     })
   );
 
@@ -86,13 +83,12 @@ describe("Geometry.schemas primitive line style", () => {
       const encoded = yield* encodeSpec(plain);
       const keys = yield* decodePrimitiveKeys(encoded);
       expect(A.flatMap(keys.parts, (part) => A.filter(part.add, (primitive) => "lineStyle" in primitive))).toEqual([]);
-      // the key-less spec reads back to an equal spec, and a styled one keeps its style through JSON
       const decodedSpec = yield* decodeSpec(encoded);
-      expect(decodedSpec).toEqual(plain);
-      const styled = yield* decodeSpec(flapInput);
+      expect(decodedSpec, "the key-less spec reads back to an equal spec").toEqual(plain);
+      const styled = yield* decodeSpec(flapWithCoplanarTabInput);
       const text = yield* encodeSpecJson(styled);
       const decodedSpecJson = yield* decodeSpecJson(text);
-      expect(decodedSpecJson).toEqual(styled);
+      expect(decodedSpecJson, "a styled spec keeps its line styles through JSON").toEqual(styled);
       const decodedJson = yield* decodeJson(text);
       const styledKeys = yield* decodePrimitiveKeys(decodedJson);
       expect(A.map(styledKeys.parts[0]?.add ?? [], (primitive) => primitive.lineStyle)).toEqual([
