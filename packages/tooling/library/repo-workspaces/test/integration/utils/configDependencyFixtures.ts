@@ -1,10 +1,3 @@
-// On-disk fixtures for the config-dependency resolution ladder: a fake
-// `node_modules/.pnpm-config/<name>` install, a fake pnpm store `links/` tree,
-// and the `.modules.yaml` that points one at the other. Each helper is an
-// effect over the provided `FileSystem` and `Path`: the integration suites run
-// them on the real filesystem, because the replaying layers `import()` the
-// pnpmfiles and the fetch rung spawns a fake `pnpm` that must see the files.
-
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -12,10 +5,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
 
-/** A pnpmfile to write beside a manifest: `[filename, source]`. */
 type Pnpmfile = readonly [filename: string, source: string];
 
-/** The services every fixture writes through. */
 type FixtureServices = FileSystem.FileSystem | Path.Path;
 
 /** A pnpmfile whose hook injects `hooked-dep` at `range` into the default catalog — the value proves WHICH file ran. */
@@ -47,16 +38,12 @@ export const pnpmfileInjectingCjs = (range: string): string =>
     "\n"
   );
 
-/** A `package.json` naming a package, with or without a version. */
 const ManifestJson = S.fromJsonString(S.Struct({ name: S.String, version: S.optionalKey(S.String) }));
-/** A JSON-quoted string, as `.modules.yaml` spells its keys and values. */
-const JsonQuoted = S.fromJsonString(S.String);
+const ModulesYamlJsonQuoted = S.fromJsonString(S.String);
 
-/** A `package.json` naming `name` at `version`, or with no version at all. */
 const manifestText = (name: string, version: string | undefined): Effect.Effect<string, S.SchemaError> =>
   S.encodeEffect(ManifestJson)(version === undefined ? { name } : { name, version });
 
-/** Write `dir/package.json` with `name` and `version`, creating the directory, then the optional pnpmfile. */
 const writePackage = Effect.fnUntraced(function* (
   dir: string,
   name: string,
@@ -142,29 +129,10 @@ export const writeModulesYaml = Effect.fnUntraced(function* (
   yield* fs.makeDirectory(dir, { recursive: true });
   yield* fs.writeFileString(
     path.join(dir, ".modules.yaml"),
-    `"layoutVersion": 5\n"storeDir": ${yield* Effect.orDie(S.encodeEffect(JsonQuoted)(store))}\n`
+    `"layoutVersion": 5\n"storeDir": ${yield* Effect.orDie(S.encodeEffect(ModulesYamlJsonQuoted)(store))}\n`
   );
 });
 
-/**
- * The fake `pnpm` executable {@link writeFakePnpm} installs: a stand-in for
- * the fetch rung's `pnpm install --frozen-lockfile --dir <scratch>
- * [--store-dir <dir>]`, so no test drives a live package manager or reaches a
- * registry.
- *
- * It models the two things the rung relies on pnpm for. It reads the pinned
- * `<name>@<version>` and integrity out of the scratch lockfile, and refuses,
- * as pnpm does, when the "registry" (`FAKE_PNPM_PUBLISHED`, a JSON map of
- * `name@version` → the integrity of the tarball it serves) serves a tarball
- * that does not match. Otherwise it writes the version into
- * `<store-dir>/v11/links/<name>/<version>/<hash>/node_modules/<name>`, with a
- * pnpmfile injecting `hooked-dep` at `^<version>`, and links the scratch
- * workspace's `.pnpm-config/<name>` to it. Every run appends
- * `{ argv, lockfile, workspaceYaml, npmrc }` (`npmrc` null when the scratch
- * has none) as a JSON line to `FAKE_PNPM_LOG`. When `FAKE_PNPM_EXPECT_NPMRC` is
- * set, it refuses unless the scratch `.npmrc` holds exactly that text (the
- * empty string meaning "no `.npmrc` at all").
- */
 const FAKE_PNPM = `#!/usr/bin/env node
 const { appendFileSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } = require("node:fs");
 const { dirname, join } = require("node:path");
@@ -213,7 +181,28 @@ mkdirSync(dirname(link), { recursive: true });
 symlinkSync(dir, link, "dir");
 `;
 
-/** Write the fake `pnpm` executable (see {@link FAKE_PNPM}) into `binDir`, for prepending to `PATH`. */
+/**
+ * Write the fake `pnpm` executable into `binDir`, for prepending to `PATH`.
+ *
+ * **Details**
+ *
+ * The executable is a stand-in for the fetch rung's `pnpm install
+ * --frozen-lockfile --dir <scratch> [--store-dir <dir>]`, so no test drives a
+ * live package manager or reaches a registry.
+ *
+ * It models the two things the rung relies on pnpm for. It reads the pinned
+ * `<name>@<version>` and integrity out of the scratch lockfile, and refuses,
+ * as pnpm does, when the "registry" (`FAKE_PNPM_PUBLISHED`, a JSON map of
+ * `name@version` → the integrity of the tarball it serves) serves a tarball
+ * that does not match. Otherwise it writes the version into
+ * `<store-dir>/v11/links/<name>/<version>/<hash>/node_modules/<name>`, with a
+ * pnpmfile injecting `hooked-dep` at `^<version>`, and links the scratch
+ * workspace's `.pnpm-config/<name>` to it. Every run appends
+ * `{ argv, lockfile, workspaceYaml, npmrc }` (`npmrc` null when the scratch
+ * has none) as a JSON line to `FAKE_PNPM_LOG`. When `FAKE_PNPM_EXPECT_NPMRC` is
+ * set, it refuses unless the scratch `.npmrc` holds exactly that text (the
+ * empty string meaning "no `.npmrc` at all").
+ */
 export const writeFakePnpm = Effect.fnUntraced(function* (
   binDir: string
 ): Effect.fn.Return<void, PlatformError.PlatformError, FixtureServices> {

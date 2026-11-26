@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/repo-workspaces",
-  "root": "packages/tooling/library/repo-workspaces",
-  "scopes": ["."]
-}

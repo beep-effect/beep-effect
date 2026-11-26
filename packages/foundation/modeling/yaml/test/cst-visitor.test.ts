@@ -10,7 +10,6 @@ import type { Node } from "yaml";
 
 const isCollection = (node: unknown): node is Node => isMap(node) || isSeq(node);
 
-/** Project one oracle mapping pair: its key, its non-null scalar value, then any nested collection value. */
 function projectOraclePair(
   pair: { readonly key: unknown; readonly value: unknown },
   keys: unknown[],
@@ -21,7 +20,6 @@ function projectOraclePair(
   if (isCollection(pair.value)) projectOracle(pair.value, keys, values);
 }
 
-/** Independently project the oracle AST, including omitted flow values. */
 function projectOracle(node: Node | null | undefined, keys: unknown[], values: unknown[]): void {
   if (isMap(node)) {
     for (const pair of node.items) projectOraclePair(pair, keys, values);
@@ -30,7 +28,6 @@ function projectOracle(node: Node | null | undefined, keys: unknown[], values: u
   }
 }
 
-/** Recurse into the nested collections of an oracle sequence; scalar items carry no key/value events. */
 function projectOracleItems(items: ReadonlyArray<unknown>, keys: unknown[], values: unknown[]): void {
   for (const item of items) {
     if (isCollection(item)) projectOracle(item, keys, values);
@@ -84,16 +81,23 @@ describe("CST key/value projections", () => {
         const oracleKeys: unknown[] = [];
         const oracleValues: unknown[] = [];
         projectOracle(oracle.contents, oracleKeys, oracleValues);
-        assert.deepStrictEqual(oracleKeys, cstKeys);
-        assert.deepStrictEqual(oracleValues, cstValues);
-        // Compact/block projections also agree with the lab AST. The oracle
-        // above covers omitted flow values independently of the composer.
+        assert.deepStrictEqual(
+          oracleKeys,
+          cstKeys,
+          "the oracle AST is projected independently of the composer, including omitted flow values"
+        );
+        assert.deepStrictEqual(
+          oracleValues,
+          cstValues,
+          "the oracle projection recurses into nested collections; scalar sequence items carry no key/value events"
+        );
         if (!Str.startsWith("{")(source)) {
           const astEvents = yield* Stream.runCollect(YamlVisitor.visit(source));
           const pairs = A.filter(astEvents, YamlVisitorEvent.$is("Pair"));
           assert.deepStrictEqual(
             A.map(pairs, (pair) => pair.key),
-            cstKeys
+            cstKeys,
+            "compact/block projections also agree with the lab AST; the oracle covers omitted flow values"
           );
           assert.deepStrictEqual(
             A.map(
