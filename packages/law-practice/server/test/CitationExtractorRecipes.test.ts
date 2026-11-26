@@ -31,7 +31,7 @@ const makeCitationExtractorRecipes = Effect.fnUntraced(function* (
   return yield* makeOwnedCitationExtractorRecipes(a0, o1, o2);
 });
 
-const descriptorCheckedByIdentityNotRegexSemantics = (patternSha256: string, flags: number) => ({
+const descriptor = (patternSha256: string, flags: number) => ({
   patternSha256,
   flags,
   profile: { groups: 1, names: {}, minimumWidthFloor: 1, repeatedCaptures: false, nullableMultiRepeat: false },
@@ -66,11 +66,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const ids = HashMap.fromIterable(A.map(editionIds, (row) => Tuple.make(row.ref, row.id)));
         const registry = yield* makeCitationExtractorRecipes(limits, corpus.recipes, editionIds);
         for (const row of corpus.recipes) {
-          const actual = yield* registry.bind(
-            row.id,
-            descriptorCheckedByIdentityNotRegexSemantics(row.patternSha256, row.flags)
-          );
-          expect(actual).toEqual({
+          const actual = yield* registry.bind(row.id, descriptor(row.patternSha256, row.flags));
+          expect(actual, "the registry checks descriptor identity, not regex semantics or family safety").toEqual({
             kind: row.kind,
             extra:
               row.kind === "CitationToken"
@@ -83,15 +80,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           });
         }
         const first = A.getUnsafe(corpus.recipes, 0);
-        const snapshot = yield* registry.bind(
-          first.id,
-          descriptorCheckedByIdentityNotRegexSemantics(first.patternSha256, first.flags)
-        );
+        const snapshot = yield* registry.bind(first.id, descriptor(first.patternSha256, first.flags));
         if (snapshot.extra.exact_editions !== undefined) snapshot.extra.exact_editions.push(999999);
-        const fresh = yield* registry.bind(
-          first.id,
-          descriptorCheckedByIdentityNotRegexSemantics(first.patternSha256, first.flags)
-        );
+        const fresh = yield* registry.bind(first.id, descriptor(first.patternSha256, first.flags));
         expect(fresh.extra.exact_editions).not.toContain(999999);
       })
     );
@@ -110,14 +101,14 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         };
         const bindings = [{ ref, id: 7 }];
         const registry = yield* makeCitationExtractorRecipes(limits, [row], bindings);
-        const good = yield* registry.bind(0, descriptorCheckedByIdentityNotRegexSemantics(ref, 0));
+        const good = yield* registry.bind(0, descriptor(ref, 0));
         expect(good.extra).toEqual({ exact_editions: [7, 7], variation_editions: [7], short: false });
         for (const input of [
-          [-1, descriptorCheckedByIdentityNotRegexSemantics(ref, 0)],
-          [1, descriptorCheckedByIdentityNotRegexSemantics(ref, 0)],
+          [-1, descriptor(ref, 0)],
+          [1, descriptor(ref, 0)],
           [0, {}],
-          [0, descriptorCheckedByIdentityNotRegexSemantics(Str.repeat(64)("0"), 0)],
-          [0, descriptorCheckedByIdentityNotRegexSemantics(ref, 2)],
+          [0, descriptor(Str.repeat(64)("0"), 0)],
+          [0, descriptor(ref, 2)],
         ]) {
           const failed = yield* registry.bind(input[0], input[1]).pipe(Effect.flip);
           expect(failed).toMatchObject({ reason: input[0] !== 0 ? "unknown-extractor" : "program-mismatch" });

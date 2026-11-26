@@ -11,12 +11,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
   "native named cleaner source sequences",
   (it) => {
     it.effect(
-      "matches all 504 HTML sequences, builtin boundaries, failure categories, identities and final bindings; hosted integration runs real HTML bodies and encoding-declaration rejection stays before spawn",
+      "matches all 504 HTML sequences, builtin boundaries, failure categories, identities and final bindings",
       () =>
         Effect.gen(function* () {
           const native = yield* makeCitationObservedSpawner();
           const citationResult1 = yield* replayNamedCleanerScenes("html", native.spawner);
-          expect(citationResult1).toEqual({
+          expect(
+            citationResult1,
+            "real HTML bodies run in hosted integration; encoding-declaration rejection stays before spawn"
+          ).toEqual({
             cases: 504,
             successes: 304,
             parseFailures: 142,

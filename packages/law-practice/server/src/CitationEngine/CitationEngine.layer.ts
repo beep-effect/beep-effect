@@ -80,7 +80,7 @@ const installedOnceAtConstructionWithoutRequestValues = <A, E, R>(
     ? true
     : false
 ) => install;
-const requireNullPageIdentityOwnerAtInstallNotFirstUse = Effect.service(CitationMissingPageIdentityFactory);
+const requirePageIdentityFactory = Effect.service(CitationMissingPageIdentityFactory);
 const invalidConfiguration = () => CitationInputError.make({ operation: "extract" });
 const installFromAlreadyOwnedConfiguration = Effect.fn("Citation.installEngine")(function* (
   configuration: CitationOwned<CitationEngineConfiguration>
@@ -89,7 +89,7 @@ const installFromAlreadyOwnedConfiguration = Effect.fn("Citation.installEngine")
   const engineArtifact = configuration.extraction.engineArtifact;
   const hostSharedNativeAdmissionNoPrivateFallback = yield* CitationNativeProcessAdmission;
   const nativeSpawner = yield* ChildProcessSpawner;
-  yield* requireNullPageIdentityOwnerAtInstallNotFirstUse;
+  yield* requirePageIdentityFactory;
   const cleaner = yield* installedOnceAtConstructionWithoutRequestValues(
     makeCitationSourceCleaning(limits, engineArtifact),
     true

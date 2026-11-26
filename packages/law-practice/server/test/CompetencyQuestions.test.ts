@@ -297,7 +297,7 @@ const LINEAGE_TERMINUS_NORM_FOUNDED_GRANT_EXERCISE_INPUT = exerciseInput(GRANT_E
   ],
 });
 
-const EFFECTIVE_WRONG_WITHIN_POWER_AND_IN_BREACH_EXERCISE_INPUT = exerciseInput(ASSIGNMENT_EXERCISE, ASSIGNMENT_FRAME, {
+const ASSIGNMENT_EXERCISE_INPUT = exerciseInput(ASSIGNMENT_EXERCISE, ASSIGNMENT_FRAME, {
   authorityBasis: {
     claimedRole: role("assignor", LESSEE, "cl. 9.1"),
     exercisedPower: POWER_TO_ASSIGN,
@@ -516,7 +516,7 @@ const makeRecordedPractice = Effect.fnUntraced(function* () {
   yield* repository.recordFrame(decodedFrame1);
   const decodedExercise = yield* decodeExercise(LINEAGE_TERMINUS_NORM_FOUNDED_GRANT_EXERCISE_INPUT);
   yield* repository.recordExercise(decodedExercise);
-  const decodedExercise2 = yield* decodeExercise(EFFECTIVE_WRONG_WITHIN_POWER_AND_IN_BREACH_EXERCISE_INPUT);
+  const decodedExercise2 = yield* decodeExercise(ASSIGNMENT_EXERCISE_INPUT);
   yield* repository.recordExercise(decodedExercise2);
   const decodedExercise3 = yield* decodeExercise(VOID_EXERCISE_INPUT);
   yield* repository.recordExercise(decodedExercise3);
@@ -785,7 +785,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
   });
 });
 
-describe("UFO-L power-subjection competency questions — expressed in this runtime's terms, keyed to the cited table's numbering; CQ1 and CQ7 have no text on disk and are left out rather than guessed", () => {
+describe("UFO-L power-subjection competency questions in this runtime's terms; CQ1 and CQ7 have no text on disk", () => {
   it.layer(RecordedPracticeBuiltPerLayerBlock, { timeout: "10 seconds" })((it) => {
     it.effect(
       "CQ2 — which norm-prescribed roles does each recorded relation hold between?",
@@ -986,13 +986,13 @@ describe("FLINT's out-of-scope competency questions are excluded from porting, a
     );
   });
 
-  it("the twenty-two checked-in queries split cleanly into the ported subset and the surfaces this rung did not take, none a defect in the shipped vocabulary", () => {
+  it("the twenty-two checked-in queries split cleanly into the ported subset and the surfaces this rung did not take", () => {
     const ported = HashSet.fromIterable(PORTED_QUERIES);
     const notPorted = HashSet.fromIterable(flatten(NOT_PORTED_QUERIES));
 
     expect(A.length(FLINT_CHECKED_IN_QUERIES)).toBe(22);
     expect(HashSet.size(ported)).toBe(11);
-    expect(HashSet.size(notPorted)).toBe(11);
+    expect(HashSet.size(notPorted), "none of the eleven left behind is a defect in the shipped vocabulary").toBe(11);
     expect(HashSet.size(HashSet.intersection(ported, notPorted))).toBe(0);
     pipe(Equal.equals(HashSet.union(ported, notPorted), HashSet.fromIterable(FLINT_CHECKED_IN_QUERIES)), assertTrue);
   });
@@ -1077,7 +1077,10 @@ describe("competency questions that ask for a legal judgment are answered with t
         );
 
         const wrong = byId(exercises, ASSIGNMENT_EXERCISE);
-        expect(O.getOrThrow(wrong.result.constitution).outcome).toBe("constituted");
+        expect(
+          O.getOrThrow(wrong.result.constitution).outcome,
+          "only one of the frame's two conditions is addressed; the other is unaddressed by omission"
+        ).toBe("constituted");
         expect(
           O.getOrThrow(wrong.result.permission).status,
           "within power and in breach at once: the axes never merge, and the donor axiom that a power's exercise is necessarily permissible is not adopted"

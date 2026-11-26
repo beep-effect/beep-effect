@@ -17,10 +17,7 @@ import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { recordedApplication, recordedResponses } from "./UsptoClaims.fixture.ts";
 
-const inProcessHttpClientReplayingOnlyRecordedResponses = (
-  responses: typeof recordedResponses,
-  requests: Array<string>
-) =>
+const replayingHttpClient = (responses: typeof recordedResponses, requests: Array<string>) =>
   Layer.succeed(
     HttpClient.HttpClient,
     HttpClient.make((request) =>
@@ -43,7 +40,7 @@ const inProcessHttpClientReplayingOnlyRecordedResponses = (
 const claimsWithResponses = (responses: typeof recordedResponses, requests: Array<string>) =>
   UsptoClaimsLive.pipe(
     Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("synthetic-key") }))),
-    Layer.provide(inProcessHttpClientReplayingOnlyRecordedResponses(responses, requests))
+    Layer.provide(replayingHttpClient(responses, requests))
   );
 const recordedUsptoClaims = claimsWithResponses(recordedResponses, []);
 const tiedResponses = A.map(recordedResponses, ([suffix, body]): (typeof recordedResponses)[number] => [
@@ -86,7 +83,11 @@ describe("UsptoClaims adapter", () => {
             .pipe(Effect.flip);
           assert.strictEqual(error.reason, "not-found");
           assert.strictEqual(error.message, "The publication did not resolve to one matching USPTO application.");
-          assert.strictEqual(emptySearchRequests.length, 1);
+          assert.strictEqual(
+            emptySearchRequests.length,
+            1,
+            "the in-process client replays only recorded responses; nothing leaves the process"
+          );
           assert.isTrue(Str.includes("/applications/search?")(A.getUnsafe(emptySearchRequests, 0)));
         })
       );
@@ -136,7 +137,11 @@ describe("UsptoClaims adapter", () => {
           ],
           { concurrency: 1 }
         );
-        assert.deepStrictEqual(all1, ["no-full-text-claims", "not-found", "not-found"]);
+        assert.deepStrictEqual(
+          all1,
+          ["no-full-text-claims", "not-found", "not-found"],
+          "only an explicitly XML-labelled document qualifies; a PDF or OCR one is never a fallback"
+        );
       })
     );
 

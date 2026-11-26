@@ -45,16 +45,12 @@ const loadVocabulary = Effect.fnUntraced(function* () {
 const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimits> = {}) {
   const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
   const vocabulary = yield* loadVocabulary();
-  const realProjectionGivingTokenizerFreeShortcutItsMeaning = yield* makeCitationSemanticProjection(
-    setup.limits,
-    setup.runtime,
-    {
-      editions: [],
-      vocabulary,
-    }
-  ).pipe(Effect.provideContext(setup.provided));
+  const projection = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
+    editions: [],
+    vocabulary,
+  }).pipe(Effect.provideContext(setup.provided));
   const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
-  const citations = yield* Effect.forEach(models, realProjectionGivingTokenizerFreeShortcutItsMeaning.project, {
+  const citations = yield* Effect.forEach(models, projection.project, {
     concurrency: 1,
   });
   const stage = yield* makeCitationOccurrenceProjection({ ...setup.limits, ...narrow }, setup.runtime, {
@@ -81,28 +77,30 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("occurrence 
       })
     )
   );
-  it.effect("keeps every shortcut occurrence explicitly unverified against the shortcut source", () =>
-    withCitationTestInvocation(
-      Effect.gen(function* () {
-        const { stage, citations, shortcut } = yield* install();
-        const source = yield* citationFixtureSourceProof("eyecite");
-        const projected = yield* stage.project({ source, result: shortcut() });
-        deepStrictEqual(
-          {
-            mentions: projected.mentions,
-            unverified: projected.unverified,
-            unverifiedComponents: projected.unverifiedComponents,
-            unboundWarnings: projected.unboundWarnings,
-          },
-          {
-            mentions: [],
-            unverified: A.map(citations, (citation, index) => ({ index, citation, reason: "shortcut" as const })),
-            unverifiedComponents: [],
-            unboundWarnings: [],
-          }
-        );
-      })
-    )
+  it.effect(
+    "keeps every tokenizer-free shortcut occurrence unverified against its source through the real projection stage",
+    () =>
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const { stage, citations, shortcut } = yield* install();
+          const source = yield* citationFixtureSourceProof("eyecite");
+          const projected = yield* stage.project({ source, result: shortcut() });
+          deepStrictEqual(
+            {
+              mentions: projected.mentions,
+              unverified: projected.unverified,
+              unverifiedComponents: projected.unverifiedComponents,
+              unboundWarnings: projected.unboundWarnings,
+            },
+            {
+              mentions: [],
+              unverified: A.map(citations, (citation, index) => ({ index, citation, reason: "shortcut" as const })),
+              unverifiedComponents: [],
+              unboundWarnings: [],
+            }
+          );
+        })
+      )
   );
   it.effect("refuses shortcut results bound to another source or with mismatched model and meaning counts", () =>
     withCitationTestInvocation(

@@ -40,7 +40,7 @@ type PublicationSource = Extract<UsptoClaimSource, { readonly kind: "publication
 
 const CLAIMS_DOCUMENT_CODE = "CLM";
 
-const explicitlyXmlLabelledDownloadUrlNeverPdfFallback = (document: UsptoDocumentReference): O.Option<string> =>
+const xmlDownloadUrl = (document: UsptoDocumentReference): O.Option<string> =>
   O.fromUndefinedOr(document.downloadOptions).pipe(
     O.flatMap((options) =>
       A.findFirst(options, ({ mimeTypeIdentifier }) =>
@@ -139,7 +139,7 @@ const applicationDocument = Effect.fn("UsptoClaims.applicationDocument")(functio
     namedOrLatestClaimsDocumentOf(documents, O.fromUndefinedOr(source.documentIdentifier)),
     () => portError("not-found")(`Application ${source.applicationNumber} has no matching claims document.`)
   );
-  const downloadUrl = yield* Effect.fromOption(explicitlyXmlLabelledDownloadUrlNeverPdfFallback(document), () =>
+  const downloadUrl = yield* Effect.fromOption(xmlDownloadUrl(document), () =>
     portError("no-full-text-claims")(`Claims document ${document.documentIdentifier} has no XML download.`)
   );
   const bytes = yield* uspto.downloadDocument(downloadUrl).pipe(Effect.mapError(fromDriver));

@@ -197,7 +197,10 @@ export const assertCitationHtmlCaseNameRefusal = Effect.fn("HtmlCaseNameTest.ref
         Effect.provideContext(setup.provided)
       );
       const refused = yield* tight.extract(requestOf(row, prepared.geometry)).pipe(Effect.flip);
-      expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+      expect(
+        refused,
+        "a bound call in an explicit invocation reuses its shared ledger, never admitting a second request"
+      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
       const used = yield* budget.snapshot;
       expect(used).toBe(0);
     }),
