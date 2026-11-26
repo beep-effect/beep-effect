@@ -1450,6 +1450,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "build-essential",
         "pkg-config",
       ]);
+      assert.strictEqual(stepByName(steps, "Install Tauri Linux system dependencies").with?.["deb-cache"], "true");
       // The fetched binary is on PATH before the lane gate and the apt pruning.
       assert.strictEqual(stepByName(steps, "Fetch beep CI binary").uses, FETCH_BEEP_CI_ACTION);
       assert.isBelow(
@@ -1656,6 +1657,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "file",
         "libssl-dev",
       ]);
+      assert.strictEqual(stepByName(steps, install).with?.["deb-cache"], "true");
       assert.strictEqual(stepByName(steps, install).with?.["no-install-recommends"], "false");
       const checkoutIndex = O.getOrThrowWith(
         A.findFirstIndex(steps, (step) => Str.startsWith("actions/checkout@")(step.uses ?? "")),
@@ -1693,13 +1695,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         failInstalls: number,
         recommends: string,
         fallbackAttempt = "2",
-        budgetSeconds = "1500"
+        budgetSeconds = "1500",
+        debCache = "off"
       ) {
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
         const stubs = `${work}/bin`;
         yield* fs.makeDirectory(stubs, { recursive: true });
         yield* fs.makeDirectory(`${work}/sources.list.d`, { recursive: true });
+        yield* fs.makeDirectory(`${work}/archives`, { recursive: true });
+        if (debCache === "on") {
+          yield* fs.makeDirectory(`${work}/debs`, { recursive: true });
+          yield* fs.writeFileString(`${work}/debs/cached.deb`, "cached");
+        }
         yield* fs.writeFileString(
           `${work}/sources.list`,
           "deb http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble main\n"
@@ -1718,7 +1726,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* stub("timeout", 'echo "timeout $*" >> "$APT_LOG"\nshift 3\nexec "$@"');
         yield* stub(
           "apt-config",
-          "echo \"source_list='$APT_STATE/sources.list' source_parts='$APT_STATE/sources.list.d/'\""
+          "echo \"source_list='$APT_STATE/sources.list' source_parts='$APT_STATE/sources.list.d/' archives='$APT_STATE/archives/'\""
         );
         yield* stub(
           "apt-get",
@@ -1731,6 +1739,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               'echo "$count" > "$count_file"',
               'limit=APT_FAIL_UPDATES; [[ "$phase" == install ]] && limit=APT_FAIL_INSTALLS',
               '(( count > ${!limit} )) || { echo "E: Failed to fetch InRelease  503  Service Unavailable" >&2; exit 100; }',
+              'if [[ "$phase" == install ]]; then echo fetched > "$APT_STATE/archives/fetched.deb"; fi',
             ],
             "\n"
           )
@@ -1751,6 +1760,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               APT_INSTALL_TIMEOUT_SECONDS: "900",
               APT_INSTALL_BUDGET_SECONDS: budgetSeconds,
               APT_INSTALL_FALLBACK_ATTEMPT: fallbackAttempt,
+              APT_INSTALL_DEB_CACHE_DIR: debCache === "on" ? `${work}/debs` : "",
             },
             extendEnv: false,
             stdout: "pipe",
@@ -1765,7 +1775,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const log = A.filter(Str.split(logText, "\n"), Str.isNonEmpty);
         const sourcesList = yield* fs.readFileString(`${work}/sources.list`);
         const ubuntuSources = yield* fs.readFileString(`${work}/sources.list.d/ubuntu.sources`);
-        return { status: Number(status), stdout, log, sourcesList, ubuntuSources };
+        const archiveNames = yield* fs.readDirectory(`${work}/archives`);
+        const keptNames = debCache === "on" ? yield* fs.readDirectory(`${work}/debs`) : [];
+        const archives = A.sort(archiveNames, Order.String);
+        const kept = A.sort(keptNames, Order.String);
+        return { status: Number(status), stdout, log, sourcesList, ubuntuSources, archives, kept };
       });
       const aptCalls = (log: ReadonlyArray<string>) => A.filter(log, Str.startsWith("apt-get "));
       const updates = (log: ReadonlyArray<string>) => A.filter(aptCalls(log), Str.endsWith(" update")).length;
@@ -1823,6 +1837,40 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(installs(exhausted.log), 0);
       assert.deepStrictEqual(sleeps(exhausted.log), ["sleep 15", "sleep 30", "sleep 60", "sleep 120"]);
       assert.include(exhausted.stdout, "::error::apt-install: apt-get update and install failed after 5 attempts");
+
+      assert.notInclude(recovered.stdout, "cached .deb archives");
+      assert.deepStrictEqual(recovered.archives, ["fetched.deb"]);
+
+      const cachedDebs = yield* runCase(0, 0, "true", "2", "1500", "on");
+      assert.strictEqual(cachedDebs.status, 0);
+      assert.include(cachedDebs.stdout, "apt-install: restored 1 cached .deb archives into ");
+      assert.include(cachedDebs.stdout, "apt-install: kept 2 .deb archives in ");
+      assert.deepStrictEqual(cachedDebs.archives, ["cached.deb", "fetched.deb"]);
+      assert.deepStrictEqual(cachedDebs.kept, ["cached.deb", "fetched.deb"]);
+
+      const cachedFailure = yield* runCase(99, 0, "true", "2", "70", "on");
+      assert.strictEqual(cachedFailure.status, 1);
+      assert.deepStrictEqual(cachedFailure.kept, ["cached.deb"]);
+
+      const keyStep = stepByName(actionSteps, "Resolve apt deb cache key");
+      const restoreStep = stepByName(actionSteps, "Restore apt deb cache");
+      const saveStep = stepByName(actionSteps, "Save apt deb cache");
+      assert.strictEqual(keyStep.if, "inputs.deb-cache == 'true'");
+      assert.strictEqual(restoreStep.uses, "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(saveStep.uses, "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(saveStep.if, "inputs.deb-cache == 'true' && steps.deb-cache.outputs.cache-hit != 'true'");
+      assert.include(
+        stepRun(actionSteps, "Resolve apt deb cache key"),
+        'echo "key=${prefix}${ImageVersion:-unversioned}"'
+      );
+      assert.isBelow(
+        stepIndexByName(actionSteps, "Restore apt deb cache"),
+        stepIndexByName(actionSteps, "Install apt packages with retries")
+      );
+      assert.isBelow(
+        stepIndexByName(actionSteps, "Install apt packages with retries"),
+        stepIndexByName(actionSteps, "Save apt deb cache")
+      );
 
       const outOfBudget = yield* runCase(99, 0, "true", "2", "70");
       assert.strictEqual(outOfBudget.status, 1);
