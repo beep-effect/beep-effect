@@ -370,6 +370,40 @@ describe("vitestReplayArgs", () => {
     expect(vitestReplayEnv(manifest, "test/a.test.ts")).toEqual({});
   });
 
+  it.each([
+    "bunx --bun vitest run --exclude='test/integration/**'",
+    'bunx --bun vitest run --exclude="test/integration/**"',
+    "bunx --bun vitest run --exclude test/integration/**",
+  ])("reads a quoted or unquoted exclude glob: %s", (unit) => {
+    const manifest = manifestWith({
+      "beep:test": unit,
+      "beep:test:integration": "bunx --bun vitest run --config vitest.integration.config.ts",
+    });
+    expect(vitestReplayArgs(manifest, "test/integration/a.test.ts")).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      "test/integration/a.test.ts",
+    ]);
+  });
+
+  it("takes a later segment of the same script when an earlier one excludes the file", () => {
+    const manifest = manifestWith({
+      "beep:test":
+        "vitest run --config vitest.unit.ts --exclude=test/integration/** && vitest run --config vitest.integration.ts",
+    });
+    expect(vitestReplayArgs(manifest, "test/integration/a.test.ts")).toEqual([
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.ts",
+      "test/integration/a.test.ts",
+    ]);
+    expect(vitestReplayArgs(manifest, file)).toEqual(["vitest", "run", "--config", "vitest.unit.ts", file]);
+  });
+
   it("keeps the beep:test segment when no script collects the excluded file", () => {
     const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --exclude test/slow/**" });
     expect(vitestReplayArgs(manifest, "test/slow/a.test.ts")).toEqual([

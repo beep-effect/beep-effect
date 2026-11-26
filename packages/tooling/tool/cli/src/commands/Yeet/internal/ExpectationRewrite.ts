@@ -290,6 +290,7 @@ const segmentExcludesFile = (segment: string, testPath: string): boolean =>
   A.some(A.fromIterable(Str.matchAll(EXCLUDE_FLAG_PATTERN)(segment)), (match) =>
     pipe(
       O.fromUndefinedOr(match[1]),
+      O.map(Str.replace(/^(['"])(.*)\1$/, "$2")),
       O.flatMap(flow(GlobPattern.compileResult(excludeGlobOptions), Result.getSuccess)),
       O.exists((pattern) => pattern.matches(Str.replace(/^\.\//, "")(testPath)))
     )
@@ -301,8 +302,16 @@ const namingSegment = (script: string, testPath: string): O.Option<string> =>
     (segment) => VITEST_PATTERN.test(segment) && A.contains(segmentFileArguments(segment), testPath)
   );
 
-const collectingSegment = (script: string, testPath: string): O.Option<string> =>
-  O.filter(replaySegment(script, testPath), (segment) => !segmentExcludesFile(segment, testPath));
+const collectingSegment = (script: string, testPath: string): O.Option<string> => {
+  const collecting = A.filter(
+    Str.split(script, "&&"),
+    (segment) => VITEST_PATTERN.test(segment) && !segmentExcludesFile(segment, testPath)
+  );
+  return pipe(
+    A.findFirst(collecting, (segment) => A.contains(segmentFileArguments(segment), testPath)),
+    O.orElse(() => A.findFirst(collecting, flow(segmentFileArguments, A.isReadonlyArrayEmpty)))
+  );
+};
 
 const replayScriptOrder = (scripts: R.ReadonlyRecord<string, string>): ReadonlyArray<string> =>
   A.getSomes([
