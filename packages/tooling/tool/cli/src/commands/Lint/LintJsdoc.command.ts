@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { runToExit } from "@beep/repo-cli-kit/process/StepExec";
 import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
@@ -68,7 +68,7 @@ export const lintJsdocCommand = Command.make(
   },
   Effect.fn("Lint.jsdoc")(function* ({ package: directory, rootOnly }) {
     if (O.isSome(directory) === rootOnly) {
-      return yield* failWithReportedExit("Choose exactly one of --package or --root-only.");
+      return yield* failWithPrintedExit("Choose exactly one of --package or --root-only.");
     }
     const root = yield* findRepoRoot();
     if (O.isSome(directory)) {

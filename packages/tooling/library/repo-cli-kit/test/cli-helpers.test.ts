@@ -9,7 +9,7 @@ import {
 } from "@beep/repo-cli-kit/cli/CommandErrorFields";
 import { REPO_CLI_ENTRY_PATH } from "@beep/repo-cli-kit/cli/EntryPath";
 import { turboCacheSecretSessionEnvironment, turboSecretSessionStep } from "@beep/repo-cli-kit/cli/EnvConfig";
-import { CliReportedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { CliReportedExit, failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { CliJsonError, CommandJsonOutput, formatJsonValue, printCommandJson } from "@beep/repo-cli-kit/cli/Json";
 import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
@@ -86,6 +86,32 @@ describe("cli/ExitCodeError", () => {
 
       const dataLastDefault = yield* Effect.flip(pipe("piped", failWithReportedExit()));
       expect(dataLastDefault.exitCode).toBe(1);
+    })
+  );
+
+  it.effect("prints the refusal to stderr before the silent reported exit", () =>
+    Effect.gen(function* () {
+      const defaulted = yield* Effect.flip(failWithPrintedExit("pass --write or --check, not both."));
+      expect(defaulted).toBeInstanceOf(CliReportedExit);
+      expect(defaulted.exitCode).toBe(1);
+      expect(defaulted[Runtime.errorReported]).toBe(false);
+
+      const explicit = yield* Effect.flip(failWithPrintedExit("invalid lane", 64));
+      expect(explicit.exitCode).toBe(64);
+
+      const dataLast = yield* Effect.flip(pipe("piped refusal", failWithPrintedExit(2)));
+      expect(dataLast.exitCode).toBe(2);
+
+      const dataLastDefault = yield* Effect.flip(pipe("default refusal", failWithPrintedExit()));
+      expect(dataLastDefault.exitCode).toBe(1);
+
+      const printed = yield* TestConsole.errorLines;
+      expect(printed).toEqual([
+        "pass --write or --check, not both.",
+        "invalid lane",
+        "piped refusal",
+        "default refusal",
+      ]);
     })
   );
 });
