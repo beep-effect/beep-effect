@@ -7,51 +7,6 @@
  */
 
 /**
- * Algebraic structures (monoids) for NLP aggregation.
- *
- * **Example** (Fold number sum monoid)
- *
- * ```ts import.meta.vitest name="Fold number sum monoid"
- * import * as Algebra from "@beep/nlp/Algebra"
- *
- * Algebra.Monoid.fold(Algebra.Monoid.NumberSum)([1, 2, 3]) // => 6
- * ```
- *
- * @category combinators
- * @since 0.0.0
- */
-export * as Algebra from "./Algebra/index.ts";
-/**
- * Core NLP models, tokenization, and pattern utilities.
- *
- * **Example** (Make document identifier)
- *
- * ```ts
- * import * as Core from "@beep/nlp/Core"
- *
- * console.log(Core.DocumentId.make("doc-a"))
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * as Core from "./Core/index.ts";
-/**
- * Text-graph IR: linguistic node and edge schema classes.
- *
- * **Example** (Log text node schema)
- *
- * ```ts
- * import * as Graph from "@beep/nlp/Graph"
- *
- * console.log(Graph.Schema.TextNode)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * as Graph from "./Graph/index.ts";
-/**
  * Deterministic identifier tokenization and variant helpers.
  *
  * **Example** (Tokenize identifier text)

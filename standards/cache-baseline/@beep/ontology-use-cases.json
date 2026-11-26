@@ -17,6 +17,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/rdf#build",
         "@beep/schema#build",
@@ -79,6 +80,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/ontology-use-cases#build",
         "@beep/rdf#build",
@@ -140,6 +142,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/rdf#build",
         "@beep/schema#build",
@@ -273,6 +276,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -477,6 +481,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/schema#transit",
@@ -529,6 +534,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/repo-gate-vitest#transit",
@@ -593,6 +599,7 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/mcp-kit#build",
+        "@beep/ontology#build",
         "@beep/ontology-domain#build",
         "@beep/rdf#build",
         "@beep/schema#build",
@@ -642,6 +649,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/mcp-kit#transit",
+        "@beep/ontology#transit",
         "@beep/ontology-domain#transit",
         "@beep/rdf#transit",
         "@beep/schema#transit",

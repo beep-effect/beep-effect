@@ -1,11 +1,18 @@
 import { StreamingToolkit, StreamingToolkitHandlersLive } from "@beep/nlp-mcp";
+import { isUrl, loadJson, loadJsonl, loadLines, loadText } from "@beep/nlp-mcp/Streaming/DatasetLoader";
 import { readJsonl, streamJsonl } from "@beep/nlp-mcp/Streaming/Jsonl";
+import { processFile } from "@beep/nlp-mcp/Streaming/Pipeline";
 import {
   computeStats,
   countLines,
+  fileExists,
+  getFileSize,
+  head,
   readLines,
   StreamingAllowedRoots,
+  sampleLines,
   streamLines,
+  tail,
 } from "@beep/nlp-mcp/Streaming/TextStream";
 import { it } from "@beep/test-runner";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -71,6 +78,58 @@ it.layer(StreamingToolkitHandlersLive.pipe(Layer.provideMerge(TestLayer), Layer.
         assert.isDefined(first);
         assert.strictEqual(first.isFailure, true);
       }
+    })
+  );
+});
+
+it.layer(Layer.mergeAll(TestLayer, FetchHttpClient.layer))("local dataset loading", (it) => {
+  it.effect(
+    "loads text, lines, JSON and JSONL datasets and runs a line pipeline from a local file",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const scratch = yield* fs.makeTempDirectoryScoped();
+      const dir = yield* fs.realPath(scratch);
+      const textFile = path.join(dir, "lines.txt");
+      const jsonFile = path.join(dir, "record.json");
+      const jsonlFile = path.join(dir, "records.jsonl");
+      yield* fs.writeFileString(textFile, " Alpha, One \n\nBeta  Two\ngamma\n");
+      yield* fs.writeFileString(jsonFile, '{"id":1}');
+      yield* fs.writeFileString(jsonlFile, '{"id":1}\n{"id":2}\n');
+
+      yield* Effect.gen(function* () {
+        const text = yield* loadText(textFile);
+        const lines = yield* loadLines(textFile, { skipEmpty: true, trim: true });
+        const json = yield* loadJson(jsonFile);
+        const jsonl = yield* loadJsonl(jsonlFile);
+        const processed = yield* processFile(
+          textFile,
+          ["trim", "normalizeWhitespace", "removePunctuation", "lowercase"],
+          {
+            skipEmpty: true,
+          }
+        );
+        const first = yield* head(textFile, { n: 1 });
+        const last = yield* tail(textFile, { n: 1 });
+        const sample = yield* sampleLines(textFile, 10);
+        const exists = yield* fileExists(textFile);
+        const size = yield* getFileSize(textFile);
+        const refused = yield* loadText("http://127.0.0.1/private.txt").pipe(Effect.exit);
+
+        assert.strictEqual(text.meta.sourceType, "file");
+        assert.deepStrictEqual(lines.data, ["Alpha, One", "Beta  Two", "gamma"]);
+        assert.deepStrictEqual(json.data, { id: 1 });
+        assert.strictEqual(jsonl.meta.format, "jsonl");
+        assert.deepStrictEqual(processed.results, ["alpha one", "beta two", "gamma"]);
+        assert.strictEqual(first.length, 1);
+        assert.strictEqual(last.length, 1);
+        assert.isTrue(sample.length >= 3);
+        assert.isTrue(exists);
+        assert.isTrue(size > 0);
+        assert.isTrue(isUrl("https://example.test/data.txt"));
+        assert.isFalse(isUrl(textFile));
+        assert.isTrue(refused._tag === "Failure");
+      }).pipe(Effect.provideService(StreamingAllowedRoots, [dir]));
     })
   );
 });

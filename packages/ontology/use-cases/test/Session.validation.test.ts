@@ -223,6 +223,53 @@ describe("Ontology validation and provenance", () => {
         })
       );
     });
+    const markerViolation = (sourceShape: typeof shapeA) =>
+      ShaclValidationViolation.make({
+        focusNode: material.value,
+        path: marker,
+        message: "Expected a marker.",
+        severity: "violation",
+        sourceShape: O.some(sourceShape),
+        sourceConstraintComponent: O.some(SH_HAS_VALUE_COMPONENT),
+      });
+    const shiftingShacl = ShaclValidationService.of({
+      validate: Effect.fn("ShaclValidationService.validateShifting")((request) => {
+        const repaired = quadLines(request.dataset.quads).includes(serializeQuad(repairQuad));
+        return Effect.succeed(
+          ShaclValidationResult.make({
+            conforms: false,
+            truncated: false,
+            violations: [markerViolation(repaired ? shapeA : shapeB)],
+          })
+        );
+      }),
+    });
+    const shiftingLayer = OntologyValidationRunnerLive.pipe(
+      Layer.provide(
+        Layer.mergeAll(
+          Layer.succeed(ShaclValidationService, shiftingShacl),
+          Layer.succeed(TurtleCodec, turtle),
+          Layer.succeed(OntologyFileStore, fileStore)
+        )
+      )
+    );
+    it.layer(shiftingLayer, { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "verifies a repair that clears its own violation while another shape still fails",
+        Effect.fnUntraced(function* () {
+          const runner = yield* OntologyValidationRunner;
+          const result = yield* runner.run(RunOntologyValidationInput.make({ session }));
+
+          assertSome(
+            pipe(
+              A.head(result.repairs),
+              O.map((repair) => repair.verified)
+            ),
+            true
+          );
+        })
+      );
+    });
   }
   it.layer(ValidationTestLayer, { timeout: "30 seconds" })((it) => {
     it.effect(

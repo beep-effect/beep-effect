@@ -83,7 +83,6 @@
   "@beep/md/Md": ["./packages/foundation/modeling/md/src/Md.ts"],
   "@beep/md/Md.model": ["./packages/foundation/modeling/md/src/Md.model.ts"],
   "@beep/md/Md.render": ["./packages/foundation/modeling/md/src/Md.render.ts"],
-  "@beep/nlp/Core": ["./packages/foundation/modeling/nlp/src/Core/index.ts"],
   "@beep/nlp/IdentifierText": [
     "./packages/foundation/modeling/nlp/src/IdentifierText.ts"
   ],
@@ -704,13 +703,6 @@
   "@beep/schema/test/Markdown": [
     "./packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts"
   ],
-  "@beep/nlp/Algebra": [
-    "./packages/foundation/modeling/nlp/src/Algebra/index.ts"
-  ],
-  "@beep/nlp/Graph": ["./packages/foundation/modeling/nlp/src/Graph/index.ts"],
-  "@beep/nlp/Operations": [
-    "./packages/foundation/modeling/nlp/src/Operations/index.ts"
-  ],
   "@beep/langextract/Alignment": [
     "./packages/foundation/capability/langextract/src/Alignment/index.ts"
   ],
@@ -1211,12 +1203,6 @@
   ],
   "@beep/nlp-processing/Tools/*": [
     "./packages/foundation/capability/nlp-processing/src/Tools/*"
-  ],
-  "@beep/nlp/Algebra/*": ["./packages/foundation/modeling/nlp/src/Algebra/*"],
-  "@beep/nlp/Core/*": ["./packages/foundation/modeling/nlp/src/Core/*"],
-  "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
-  "@beep/nlp/Operations/*": [
-    "./packages/foundation/modeling/nlp/src/Operations/*"
   ],
   "@beep/repo-cli/commands/*": ["./packages/tooling/tool/cli/src/commands/*"],
   "@beep/repo-configs/internal/*": [
@@ -2422,6 +2408,45 @@
   ],
   "@beep/law-practice-domain/values/LibrarianLoop": [
     "./packages/law-practice/domain/src/values/LibrarianLoop/index.ts"
+  ],
+  "@beep/nlp-processing/Activity": [
+    "./packages/foundation/capability/nlp-processing/src/Activity.ts"
+  ],
+  "@beep/nlp-processing/Operation": [
+    "./packages/foundation/capability/nlp-processing/src/Operation.ts"
+  ],
+  "@beep/nlp-processing/NlpProcessing.instruments": [
+    "./packages/foundation/capability/nlp-processing/src/NlpProcessing.instruments.ts"
+  ],
+  "@beep/law-practice-domain/values/LawClaim": [
+    "./packages/law-practice/domain/src/values/LawClaim/index.ts"
+  ],
+  "@beep/law-practice-domain/values/MatterScope": [
+    "./packages/law-practice/domain/src/values/MatterScope/index.ts"
+  ],
+  "@beep/law-practice-server/MatterAuthority": [
+    "./packages/law-practice/server/src/MatterAuthority/index.ts"
+  ],
+  "@beep/law-practice-use-cases/MatterWall": [
+    "./packages/law-practice/use-cases/src/MatterWall/index.ts"
+  ],
+  "@beep/law-practice-server/ClaimStore": [
+    "./packages/law-practice/server/src/ClaimStore/index.ts"
+  ],
+  "@beep/law-practice-use-cases/ClaimProposal": [
+    "./packages/law-practice/use-cases/src/ClaimProposal/index.ts"
+  ],
+  "@beep/law-practice-use-cases/ClaimStore": [
+    "./packages/law-practice/use-cases/src/ClaimStore/index.ts"
+  ],
+  "@beep/law-practice-use-cases/LawAdmission": [
+    "./packages/law-practice/use-cases/src/LawAdmission/index.ts"
+  ],
+  "@beep/law-practice-server/ProvenanceTraversal": [
+    "./packages/law-practice/server/src/ProvenanceTraversal/index.ts"
+  ],
+  "@beep/law-practice-use-cases/ProvenanceTraversal": [
+    "./packages/law-practice/use-cases/src/ProvenanceTraversal/index.ts"
   ],
   "@beep/lint-rules/comment-grammar": [
     "./packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts"

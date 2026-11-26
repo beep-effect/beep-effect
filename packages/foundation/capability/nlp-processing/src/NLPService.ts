@@ -23,9 +23,9 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Backend from "./Backend/NLPBackend.ts";
 import * as ATG from "./Graph/AnnotatedTextGraph.ts";
-import type { EntityNode, POSNode, RelationNode } from "@beep/nlp/Graph/Schema";
 import type { NLPBackendError, NLPBackendShape } from "./Backend/NLPBackend.ts";
 import type { AnnotatedTextGraph } from "./Graph/AnnotatedTextGraph.ts";
+import type { EntityNode, POSNode, RelationNode } from "./Graph/Schema.ts";
 
 const $I = $NlpProcessingId.create("NLPService");
 

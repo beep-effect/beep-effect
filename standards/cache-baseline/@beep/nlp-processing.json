@@ -16,7 +16,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
+        "@beep/jsonc#build",
         "@beep/observability#build",
         "@beep/schema#build",
         "@beep/test-runner#build",
@@ -76,7 +76,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
+        "@beep/jsonc#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/repo-gate-record#transit",
@@ -135,7 +135,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
+        "@beep/jsonc#build",
         "@beep/observability#build",
         "@beep/schema#build",
         "@beep/test-runner#build",
@@ -232,7 +232,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
+        "@beep/jsonc#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",
         "@beep/test-runner#transit",
@@ -322,7 +322,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
+        "@beep/jsonc#transit",
         "@beep/observability#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
@@ -524,7 +524,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
+        "@beep/jsonc#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",
         "@beep/test-runner#transit",
@@ -574,7 +574,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
+        "@beep/jsonc#transit",
         "@beep/observability#transit",
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
@@ -636,7 +636,7 @@
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
+        "@beep/jsonc#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",
         "@beep/test-runner#transit",

@@ -24,8 +24,8 @@
  * @packageDocumentation
  */
 
-import * as Schema from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
+import * as Schema from "@beep/nlp-processing/Graph/Schema";
 import { Position } from "@beep/text/OffsetUnit";
 import { Resolution, resolve } from "@beep/text/Resolution";
 import { A } from "@beep/utils";

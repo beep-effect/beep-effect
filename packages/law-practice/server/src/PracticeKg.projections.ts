@@ -38,13 +38,14 @@ import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import {
   applyPracticeKgPathEvidence,
-  attributeDocuments,
+  attributeCatalogRows,
   PracticeKgAttributeDocumentsInput,
   PracticeKgResolveAnchorsInput,
+  practiceKgDocumentKey,
   reconcileAnchors,
   resolveAnchors,
 } from "./PracticeKg.families.ts";
-import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
+import { buildDuckDb, GraphTextSourceSpec, indexDuckDbDocuments } from "./PracticeKg.fts.ts";
 import { PracticeKgMailIndexInput, readPracticeKgMailIndex } from "./PracticeKg.mail-index.ts";
 import { buildMatterTables, PracticeKgMatterGraph, writeMatterTables } from "./PracticeKg.matters.ts";
 import { readReferenceScans } from "./PracticeKg.references.ts";
@@ -382,17 +383,27 @@ const projectDocumentNode = (
 ) => {
   const status = recycledStatus(attribution);
   sink.addNodeFirstWriteWins(
-    createNode("document", row.digest, row.effectiveName, "catalog-digest", row.digest, attribution.attributionSource, {
-      client: attribution.client,
-      docketFamily: attribution.family,
-      epistemicStatus: status,
-      payload: {
-        category: row.category,
-        mtimeIso: row.mtimeIso,
-        organizedRelativePath: row.organizedRelativePath,
-        sizeBytes: row.sizeBytes,
-      },
-    })
+    createNode(
+      "document",
+      practiceKgDocumentKey(attribution),
+      row.effectiveName,
+      "catalog-digest",
+      row.digest,
+      attribution.attributionSource,
+      {
+        client: attribution.client,
+        docketFamily: attribution.family,
+        epistemicStatus: status,
+        payload: {
+          category: row.category,
+          digest: row.digest,
+          docket: row.docket,
+          mtimeIso: row.mtimeIso,
+          organizedRelativePath: row.organizedRelativePath,
+          sizeBytes: row.sizeBytes,
+        },
+      }
+    )
   );
   if (row.category === "email-archive") {
     sink.addNodeFirstWriteWins(
@@ -432,7 +443,7 @@ const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
         familyKey,
         "family_document",
         "document",
-        row.digest,
+        practiceKgDocumentKey(attribution),
         "catalog-digest",
         row.digest,
         status
@@ -449,7 +460,16 @@ const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
   );
   sink.addEdge(createEdge("docket_family", familyKey, "has_docket", "docket", docketKey, "organize-row", row.docket));
   sink.addEdge(
-    createEdge("docket", docketKey, "has_document", "document", row.digest, "catalog-digest", row.digest, status)
+    createEdge(
+      "docket",
+      docketKey,
+      "has_document",
+      "document",
+      practiceKgDocumentKey(attribution),
+      "catalog-digest",
+      row.digest,
+      status
+    )
   );
 };
 
@@ -597,12 +617,14 @@ const projectAnchor = (sink: GraphSink, resolution: PracticeKgAnchorResolution) 
   }
 };
 
+type AttributedRow = { readonly attribution: PracticeKgDocumentAttribution; readonly row: PracticeKgCatalogRow };
+
 const projectArchiveLinks = (
   sink: GraphSink,
-  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
+  attributed: ReadonlyArray<AttributedRow>,
   archiveNodes: ReadonlyArray<PracticeKgNodeRow>
 ) => {
-  A.forEach(catalogRows, (row) => {
+  A.forEach(attributed, ({ attribution, row }) => {
     if (row.category !== "email-export") {
       return;
     }
@@ -616,7 +638,7 @@ const projectArchiveLinks = (
         sink.addEdge(
           createEdge(
             "document",
-            row.digest,
+            practiceKgDocumentKey(attribution),
             "archived_in",
             "email_archive",
             archive.naturalKey,
@@ -641,9 +663,6 @@ const buildGraphRows = (
 } => {
   const nodes = MutableHashMap.empty<string, PracticeKgNodeRow>();
   const edges = MutableHashMap.empty<string, PracticeKgEdgeRow>();
-  const attributionByDigest = MutableHashMap.fromIterable(
-    A.map(attributions, (attribution) => [attribution.digest, attribution] as const)
-  );
   const verifiedKeys = HashSet.fromIterable(
     A.flatMap(
       A.filter(attributions, (attribution) => !attribution.recycled),
@@ -672,15 +691,7 @@ const buildGraphRows = (
     },
   };
 
-  const attributed = A.map(catalogRows, (row) => ({
-    attribution: pipe(
-      MutableHashMap.get(attributionByDigest, row.digest),
-      O.getOrThrowWith(() =>
-        PracticeKgProjectionError.make({ message: `Graph build lost the attribution for "${row.digest}".` })
-      )
-    ),
-    row,
-  }));
+  const attributed = A.zipWith(catalogRows, attributions, (row, attribution): AttributedRow => ({ attribution, row }));
   A.forEach(attributed, ({ attribution, row }) => projectDocumentNode(sink, row, attribution));
   const verified = A.filter(attributed, ({ attribution }) => !attribution.recycled);
   const recycled = A.filter(attributed, ({ attribution }) => attribution.recycled);
@@ -692,7 +703,7 @@ const buildGraphRows = (
   A.forEach(resolutions, (resolution) => projectAnchor(sink, resolution));
   projectArchiveLinks(
     sink,
-    catalogRows,
+    attributed,
     nodes.pipe(
       MutableHashMap.values,
       A.fromIterable,
@@ -715,7 +726,7 @@ const projectGraph = (
   scans: PracticeKgReferenceScans,
   registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>
 ): ReturnType<typeof buildGraphRows> & { readonly attributions: ReadonlyArray<PracticeKgDocumentAttribution> } => {
-  const attributions = attributeDocuments(
+  const attributions = attributeCatalogRows(
     PracticeKgAttributeDocumentsInput.make({ catalogRows, docketReferences: scans.docketReferences, registerRows })
   );
   const resolutions = resolveAnchors(
@@ -924,7 +935,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     : yield* readEmailRows(path.join(options.corpusRoot, "staging", "extract", "children"));
   const duckDbPath = path.join(bundleOut, "practice.duckdb");
   const { duckCounts, graph } = yield* Effect.gen(function* () {
-    const duckCounts = yield* buildDuckDb(
+    yield* buildDuckDb(
       catalogRowsFiledUnderFolderDocketBeforeDuckDbWrite,
       enrichmentRows,
       emailRows,
@@ -933,6 +944,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     );
     const scans = yield* readReferenceScans();
     const graph = projectGraph(catalogRowsFiledUnderFolderDocketBeforeDuckDbWrite, enrichmentRows, scans, registerRows);
+    const duckCounts = yield* indexDuckDbDocuments(graph.attributions);
     const matterTables = buildMatterTables(
       PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows })
     );
@@ -988,7 +1000,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(

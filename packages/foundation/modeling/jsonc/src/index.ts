@@ -16,6 +16,13 @@
  */
 
 export {
+  ActivityOutcome,
+  ActivityRecord,
+  ActivityRecordInvalid,
+  ActivityRecordInvalidReason,
+  verifyActivityRecord,
+} from "./ActivityRecord.ts";
+export {
   ActivityPin,
   ActivityPreimage,
   ActivityStart,

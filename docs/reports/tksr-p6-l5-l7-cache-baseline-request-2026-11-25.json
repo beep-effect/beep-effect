@@ -1,0 +1,35 @@
+{
+  "previous": {
+    "//": "d299e1a80e9bcf8b07082fd575164ea4dc75ed2a93784683d6661598f1ded2d4",
+    "@beep/law-practice-domain": "f31272e61f5ad6c8132a617cd092fc204ca2008d5ec435eab5e66a33daabd332",
+    "@beep/law-practice-server": "c83dedbbc080c0decf7f9f81b85f5b709cbc719d7501d8fb488953affc82caa0",
+    "@beep/law-practice-use-cases": "31376890fbd2a9638e1c8c1a71357ace109f6bf738b044c0f413ad99288b222a",
+    "@beep/nlp-processing": "a643cd60e4df1a632dcc3549704829ec819de165172d7270becfd4713e1fe037",
+    "@beep/ontology-server": "765ed66ee59fa0953fc522af03c361e3f19dbb81e41f1312c9804b95d2a6c4c1",
+    "@beep/ontology-use-cases": "8cba3475471f49e89e79aee046c1416e9a4a9076b34fda3f5cd20da4b07fdb92",
+    "@beep/semantica": "a715c8ea32eb8c3c40b7a9a6233b6397afbaa5386a777f8d5e3f06bab9943b7c",
+    "@beep/wink": "60aed5d6cf1da5802228f54d5f1cc0452c8d083ce4d3dee336186f3fa6707e9f"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (P6 L5 and L7 implementation lane)",
+    "reason": "Record the P6 dependency edges of nlp-processing, wink, semantica, ontology server and use-cases, and law-practice domain, use-cases and server, plus the root policy fingerprint input. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p6-l5-l7-cache-review-2026-11-25.md",
+      "sha256": "fed2485257df7c6782354a329423d188df8b644718f2b7c37083d744e4967dcd"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/law-practice-domain",
+    "@beep/law-practice-server",
+    "@beep/law-practice-use-cases",
+    "@beep/nlp-processing",
+    "@beep/ontology-server",
+    "@beep/ontology-use-cases",
+    "@beep/semantica",
+    "@beep/wink"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

@@ -12,11 +12,32 @@ import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fie
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.values");
 
-const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).pipe(
+/**
+ * Patent statute section a rejection rests on, the discriminant of
+ * {@link RejectionGround}.
+ *
+ * **Example** (Check a statute section)
+ *
+ * ```ts import.meta.vitest name="Check a statute section"
+ * import { RejectionStatute } from "@beep/law-practice-domain/entities/Rejection"
+ *
+ * RejectionStatute.is["103"]("103") // => true
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).pipe(
   $I.annoteSchema("RejectionStatute", {
     description: "Patent statute sections supported by law-practice rejection grounds.",
   })
 );
+
+/**
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RejectionStatute = typeof RejectionStatute.Type;
 
 const RejectionGroundDefinition = RejectionStatute.toTaggedUnion("statute")({
   "101": {},

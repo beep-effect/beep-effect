@@ -140,22 +140,15 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
 /**
  * **Details**
  *
- * Metrics form a monoid: `empty` is the identity and `combine` adds counters
- * and durations. Executors use this to aggregate per-leaf applications into one
- * run summary.
+ * `empty` is the zero summary an execution over no leaves reports. Executors
+ * fold per-leaf applications into one run summary.
  *
- * **Example** (Combine empty metrics monoid)
+ * **Example** (Read empty metrics)
  *
- * ```ts import.meta.vitest name="Combine empty metrics monoid"
- * import * as S from "effect/Schema"
+ * ```ts import.meta.vitest name="Read empty metrics"
  * import { ExecutionMetrics } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
- * const combined = ExecutionMetrics.combine(
- *   ExecutionMetrics.empty(),
- *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: S.Natural.make(2) })
- * )
- *
- * combined.nodesProcessed // => 2
+ * ExecutionMetrics.empty().nodesProcessed // => 0
  * ```
  *
  * @category models
@@ -174,7 +167,7 @@ export class ExecutionMetrics extends S.Opaque<ExecutionMetrics, { readonly bran
     }),
   }).pipe(
     $I.annoteSchema("ExecutionMetrics", {
-      description: "Monoid of metrics accumulated while applying an operation to graph leaves.",
+      description: "Metrics accumulated while applying an operation to graph leaves.",
     })
   )
 ) {
@@ -187,22 +180,6 @@ export class ExecutionMetrics extends S.Opaque<ExecutionMetrics, { readonly bran
       nodesProcessed: S.Natural.make(0),
       tokensConsumed: S.Natural.make(0),
     });
-
-  static readonly combine: {
-    (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics;
-    (m2: ExecutionMetrics): (m1: ExecutionMetrics) => ExecutionMetrics;
-  } = dual(
-    2,
-    (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics =>
-      ExecutionMetrics.make({
-        cacheHits: S.Natural.make(m1.cacheHits + m2.cacheHits),
-        cacheMisses: S.Natural.make(m1.cacheMisses + m2.cacheMisses),
-        duration: Duration.sum(m1.duration, m2.duration),
-        nodesCreated: S.Natural.make(m1.nodesCreated + m2.nodesCreated),
-        nodesProcessed: S.Natural.make(m1.nodesProcessed + m2.nodesProcessed),
-        tokensConsumed: S.Natural.make(m1.tokensConsumed + m2.tokensConsumed),
-      })
-  );
 }
 
 // =============================================================================

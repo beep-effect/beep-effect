@@ -52,6 +52,14 @@ projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is n
 
 ## Latest Evidence
 
+2026-11-26: P2 complete. The first `main` run after each workflow PR shows every gate job
+uploading its reports: Check 45688461000, Heavy (through Check) 45715773402, Storybook
+45722369383 and Property Laws Sweep 45683312080. `beep ci workflow-lint` now rejects a gate job
+without the render and 30-day upload, and a test pins all 25 gate jobs in the six workflows;
+the two event-only workflows prove on their first run (decisions `p2-complete-…` and
+`event-only-gate-workflows-prove-on-their-first-run`). Open: the seven-day census, after
+2026-11-30T07:07:48Z.
+
 2026-11-25: P2 part 2 built: the shared `heavy.yml` lane steps render the gate-report projection
 and upload `task-outcomes-<run>-<attempt>-<job>-<lane>` for Lint Policy, Check, Docgen, Doctest
 and Build, with the record's job named `Heavy / <lane>` (decision

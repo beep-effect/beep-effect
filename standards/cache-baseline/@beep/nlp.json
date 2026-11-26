@@ -19,7 +19,6 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -79,7 +78,6 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -134,7 +132,6 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -229,7 +226,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -318,7 +314,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -517,7 +512,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -566,7 +560,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -625,7 +618,6 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],

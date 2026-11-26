@@ -12,7 +12,9 @@ import {
   PriorArtReference,
   Rejection,
 } from "@beep/law-practice-domain";
+import { OfficeActionDistinctionGate } from "@beep/law-practice-domain/values/LawClaim";
 import { LawPracticeServerLive } from "@beep/law-practice-server/layer";
+import { LawClaimProposals } from "@beep/law-practice-use-cases/ClaimStore";
 import { IrToLaw, IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, officeActionExtractionTargets } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { it } from "@beep/test-runner";
@@ -32,6 +34,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -43,6 +46,7 @@ import {
   makeOfficeActionReviewInput,
   OFFICE_ACTION_FIXTURE,
 } from "./fixture.ts";
+import { matterWallGrantingEveryScopeLayer } from "./MatterWall.fixtures.ts";
 
 const isIrToLawExtractionError = S.is(IrToLawExtractionError);
 const LawEntitiesJson = S.fromJsonString(
@@ -101,7 +105,7 @@ const makeLawPracticeServerTestLayer = (modelOutput: string) =>
   Layer.mergeAll(LawPracticeServerLive, TestLangExtractLayer).pipe(
     Layer.provide(makeLanguageModelLayer(modelOutput)),
     Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" }))),
-    Layer.provide(BunCrypto.layer)
+    Layer.provide(Layer.mergeAll(BunCrypto.layer, matterWallGrantingEveryScopeLayer))
   );
 
 const expectReviewExtractionError = Effect.fn("law_practice.server.test.expect_review_extraction_error")(function* (
@@ -178,20 +182,20 @@ describe("@beep/law-practice-server", () => {
       );
 
       it.effect(
-        "review admits the claim, advancing it to shape_valid",
+        "review proposes the distinction claim in its capture scope and passes the office-action gate",
         Effect.fnUntraced(function* () {
           const review = yield* OfficeActionReview;
+          const proposals = yield* LawClaimProposals;
           const input = yield* makeOfficeActionReviewInput();
 
-          const view = yield* review.review(input);
+          const result = yield* review.review(input);
+          const stored = yield* proposals.get(result.proposed.claim);
 
-          expect(view.total).toBe(1);
-          expect(view.counts.shape_valid, "the gate admits and the transition advances candidate to shape_valid").toBe(
-            1
-          );
-          expect(view.counts.candidate).toBe(0);
-          expect(view.counts.admitted, "per SPEC the lifecycle reaches shape_valid, not admitted").toBe(0);
-          expect([...view.admittedKeys], "no lifecycle-admitted claim, so no admitted key").toEqual([]);
+          expect(result.proposed.stance).toBe("proposed");
+          expect(result.proposed.core.scope).toBe(input.matterFixtureKey);
+          assertSome(stored, result.proposed);
+          expect(OfficeActionDistinctionGate.passes(result.assessments)).toBe(true);
+          expect(HashSet.size(result.activities)).toBe(3);
         })
       );
     }

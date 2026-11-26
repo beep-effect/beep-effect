@@ -15,7 +15,9 @@
       "command": "bun run beep:build",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/md#build",
         "@beep/ontology#build",
         "@beep/schema#build",
@@ -76,7 +78,9 @@
       "command": "beep-cli gate run check",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/law-practice-domain#build",
         "@beep/md#build",
         "@beep/ontology#build",
@@ -136,7 +140,9 @@
       "command": "bunx vitest run --coverage",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#build",
         "@beep/identity#build",
+        "@beep/jsonc#build",
         "@beep/md#build",
         "@beep/ontology#build",
         "@beep/schema#build",
@@ -234,7 +240,9 @@
       "command": "bun run beep:doctest",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/schema#transit",
@@ -325,7 +333,9 @@
       "command": "beep-cli lint deprecated-apis --package .",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -528,7 +538,9 @@
       "command": "beep-cli quality test-tsgo-package",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/schema#transit",
@@ -579,7 +591,9 @@
       "command": "bun run beep:test",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/repo-gate-vitest#transit",
@@ -642,7 +656,9 @@
       "command": "bun run beep:test",
       "commandDigest": "ef4e37d1f0dba9b62fe993fe5b55e1ea00f231c2f0a3775f0ce65739d1148701",
       "dependencies": [
+        "@beep/epistemics#transit",
         "@beep/identity#transit",
+        "@beep/jsonc#transit",
         "@beep/md#transit",
         "@beep/ontology#transit",
         "@beep/schema#transit",

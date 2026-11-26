@@ -1,0 +1,517 @@
+/**
+ * Graph node & edge schemas for the NLP text graph.
+ *
+ * **Details**
+ *
+ * Schema-first domain types for the text-graph IR: structural nodes
+ * ({@link TextNode}/{@link TextEdge}), the {@link NLPAnalysis} summary, and the
+ * linguistic-annotation node classes ({@link POSNode}, {@link EntityNode},
+ * {@link LemmaNode}, {@link DependencyNode}, {@link RelationNode}). These are the
+ * basis for the product-neutral handoff contract emitted to downstream consumers.
+ *
+ * Effect v4 `@beep/nlp` implementation notes:
+ * `Schema.Class("Name")` becomes `S.Class($I\`Name\`)(fields, $I.annote(...))\`,
+ * multi-arm `Schema.Literal(...)` becomes `S.Literals(...)`, `Schema.optional`
+ * becomes `S.optionalKey`, and `Schema.Record({key,value})` becomes the positional
+ * `S.Record(key, value)`. `timestamp` remains a plain field supplied by the graph
+ * producer (which reads `Clock`).
+ *
+ * @since 0.0.0
+ * @packageDocumentation
+ */
+
+import { $NlpProcessingId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import { Position } from "@beep/text/OffsetUnit";
+import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
+
+const $I = $NlpProcessingId.create("Graph/Schema");
+
+/**
+ * **Example** (Validate sentence node kind)
+ *
+ * ```ts import.meta.vitest name="Validate sentence node kind"
+ * import { TextNodeType } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * TextNodeType.is.sentence("sentence") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "document"]).pipe(
+  $I.annoteSchema("TextNodeType", {
+    description: "Structural text-graph node kind (document/paragraph/sentence/token).",
+  })
+);
+
+/**
+ * Runtime TypeScript union decoded by {@link TextNodeType}.
+ *
+ * **Example** (Assign TextNodeType union)
+ *
+ * ```ts
+ * import type { TextNodeType } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const kind: TextNodeType = "sentence"
+ * console.log(kind)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextNodeType = typeof TextNodeType.Type;
+
+/**
+ * **Example** (Validate contains edge relation)
+ *
+ * ```ts import.meta.vitest name="Validate contains edge relation"
+ * import { TextEdgeRelation } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * TextEdgeRelation.is.contains("contains") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TextEdgeRelation = LiteralKit([
+  // Structural relations
+  "contains",
+  "follows",
+  "derived-from",
+  "parent-of",
+  // Linguistic annotation relations
+  "tagged-as",
+  "lemma-of",
+  "head-of",
+  "dependent-of",
+  "entity-mention",
+  "relates-to",
+]).pipe(
+  $I.annoteSchema("TextEdgeRelation", {
+    description: "Text-graph edge relation (structural lineage + linguistic-annotation links).",
+  })
+);
+
+/**
+ * Runtime TypeScript union decoded by {@link TextEdgeRelation}.
+ *
+ * **Example** (Assign TextEdgeRelation union)
+ *
+ * ```ts
+ * import type { TextEdgeRelation } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const relation: TextEdgeRelation = "contains"
+ * console.log(relation)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextEdgeRelation = typeof TextEdgeRelation.Type;
+
+const textNodeFields = <T extends TextNodeType>(literal: S.Literal<T>) => ({
+  text: S.String,
+  type: S.tag(literal.literal),
+  operation: S.optionalKey(S.String),
+  timestamp: S.Finite,
+  metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+});
+
+/**
+ * Text node stored in the graph: a piece of text with processing metadata.
+ *
+ * **Example** (Decode TextNode schema)
+ *
+ * ```ts import.meta.vitest name="Decode TextNode schema"
+ * import * as S from "effect/Schema"
+ * import { TextNode } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const node = S.decodeUnknownSync(TextNode)({
+ *   text: "Hello world.",
+ *   type: "sentence",
+ *   timestamp: 0
+ * })
+ * node.type // => "sentence"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TextNode = TextNodeType.mapMembers(
+  Tuple.evolve([
+    (literal: S.Literal<"sentence">) =>
+      literal.pipe(
+        textNodeFields,
+        S.Struct,
+        $I.annoteSchema("SentenceTextNode", {
+          description: "Sentence text-graph node with processing metadata and a creation timestamp.",
+        })
+      ),
+    (literal: S.Literal<"token">) =>
+      literal.pipe(
+        textNodeFields,
+        S.Struct,
+        $I.annoteSchema("TokenTextNode", {
+          description: "Token text-graph node with processing metadata and a creation timestamp.",
+        })
+      ),
+    (literal: S.Literal<"paragraph">) =>
+      literal.pipe(
+        textNodeFields,
+        S.Struct,
+        $I.annoteSchema("ParagraphTextNode", {
+          description: "Paragraph text-graph node with processing metadata and a creation timestamp.",
+        })
+      ),
+    (literal: S.Literal<"document">) =>
+      literal.pipe(
+        textNodeFields,
+        S.Struct,
+        $I.annoteSchema("DocumentTextNode", {
+          description: "Document text-graph node with processing metadata and a creation timestamp.",
+        })
+      ),
+  ])
+).pipe(
+  $I.annoteSchema("TextNode", {
+    description: "Type-discriminated text-graph node with processing metadata and a creation timestamp.",
+  }),
+  S.toTaggedUnion("type")
+);
+
+/**
+ * **Example** (Read TextNode type field)
+ *
+ * ```ts
+ * import type { TextNode } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const typeName = (node: TextNode) => node.type
+ * console.log(typeName)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextNode = typeof TextNode.Type;
+
+const textEdgeFields = <T extends TextEdgeRelation>(literal: S.Literal<T>) => ({
+  relation: S.tag(literal.literal),
+  label: S.optionalKey(S.String),
+  weight: S.optionalKey(S.Finite),
+});
+
+const textEdgeMember = <T extends TextEdgeRelation>(literal: S.Literal<T>, name: string, description: string) =>
+  literal.pipe(textEdgeFields, S.Struct, $I.annoteSchema(name, { description }));
+
+/**
+ * Edge between text nodes, labeled with a structural or linguistic relation.
+ *
+ * **Example** (Decode TextEdge schema)
+ *
+ * ```ts import.meta.vitest name="Decode TextEdge schema"
+ * import * as S from "effect/Schema"
+ * import { TextEdge } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const edge = S.decodeUnknownSync(TextEdge)({ relation: "contains", weight: 1 })
+ * edge.relation // => "contains"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TextEdge = TextEdgeRelation.mapMembers(
+  ([contains, follows, derivedFrom, parentOf, taggedAs, lemmaOf, headOf, dependentOf, entityMention, relatesTo]) =>
+    Tuple.make(
+      textEdgeMember(contains, "ContainsTextEdge", "Structural text-graph edge indicating containment."),
+      textEdgeMember(follows, "FollowsTextEdge", "Structural text-graph edge indicating sequence order."),
+      textEdgeMember(derivedFrom, "DerivedFromTextEdge", "Structural text-graph edge indicating derivation lineage."),
+      textEdgeMember(parentOf, "ParentOfTextEdge", "Structural text-graph edge indicating parentage."),
+      textEdgeMember(
+        taggedAs,
+        "TaggedAsTextEdge",
+        "Linguistic text-graph edge linking a token to a part-of-speech tag."
+      ),
+      textEdgeMember(lemmaOf, "LemmaOfTextEdge", "Linguistic text-graph edge linking a lemma to its token."),
+      textEdgeMember(headOf, "HeadOfTextEdge", "Linguistic text-graph edge indicating a dependency head."),
+      textEdgeMember(
+        dependentOf,
+        "DependentOfTextEdge",
+        "Linguistic text-graph edge indicating a dependency dependent."
+      ),
+      textEdgeMember(
+        entityMention,
+        "EntityMentionTextEdge",
+        "Linguistic text-graph edge linking an entity mention to source text."
+      ),
+      textEdgeMember(relatesTo, "RelatesToTextEdge", "Linguistic text-graph edge linking related extracted entities.")
+    )
+).pipe(
+  $I.annoteSchema("TextEdge", {
+    description: "Text-graph edge labeled with a structural or linguistic-annotation relation.",
+  }),
+  S.toTaggedUnion("relation")
+);
+
+/**
+ * **Example** (Read TextEdge relation field)
+ *
+ * ```ts
+ * import type { TextEdge } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const relation = (edge: TextEdge) => edge.relation
+ * console.log(relation)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextEdge = typeof TextEdge.Type;
+
+/**
+ * Summary result of analyzing a piece of text.
+ *
+ * **Example** (Build NLPAnalysis summary)
+ *
+ * ```ts import.meta.vitest name="Build NLPAnalysis summary"
+ * import { NLPAnalysis } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const analysis = NLPAnalysis.make({
+ *   sentences: ["Hello world."],
+ *   text: "Hello world.",
+ *   tokens: ["Hello", "world"],
+ *   wordCount: 2
+ * })
+ * analysis.wordCount // => 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class NLPAnalysis extends S.Opaque<NLPAnalysis, { readonly brand: unique symbol }>()(
+  S.Struct({
+    text: S.String,
+    sentences: S.Array(S.String),
+    tokens: S.Array(S.String),
+    wordCount: S.Finite,
+    stats: S.optionalKey(S.Record(S.String, S.Finite)),
+  }).pipe(
+    $I.annoteSchema("NLPAnalysis", {
+      description: "Summary analysis of a text: detected sentences, tokens, word count, and optional stats.",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Build POS annotation node)
+ *
+ * ```ts import.meta.vitest name="Build POS annotation node"
+ * import { POSNode } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const node = POSNode.make({ position: 1, tag: "NOUN", text: "brief", timestamp: 0 })
+ * node.tag // => "NOUN"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class POSNode extends S.Opaque<POSNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    text: S.String,
+    tag: S.String,
+    description: S.optionalKey(S.String),
+    position: S.Finite,
+    timestamp: S.Finite,
+    metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+  }).pipe(
+    $I.annoteSchema("POSNode", {
+      description: "Part-of-speech annotation node (Penn Treebank tag) for a token at a sentence position.",
+    })
+  )
+) {}
+
+/**
+ * Named entity extracted from text (a functor `Text -> Entity`).
+ *
+ * **Example** (Build named entity node)
+ *
+ * ```ts import.meta.vitest name="Build named entity node"
+ * import { EntityNode } from "@beep/nlp-processing/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
+ *
+ * const node = EntityNode.make({
+ *   entityType: "ORG",
+ *   span: Position.makeOption({ unit: "utf16-code-unit", end: 9, start: 0 }),
+ *   text: "Acme Inc.",
+ *   timestamp: 0
+ * })
+ * node.entityType // => "ORG"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EntityNode extends S.Opaque<EntityNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    text: S.String,
+    entityType: S.String,
+    confidence: S.optionalKey(S.Finite),
+    span: S.OptionFromOptionalKey(Position),
+    normalizedForm: S.optionalKey(S.String),
+    timestamp: S.Finite,
+    metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+  }).pipe(
+    $I.annoteSchema("EntityNode", {
+      description: "Named-entity node with type label, character span, optional confidence, and normalized form.",
+    })
+  )
+) {}
+
+/**
+ * Lemmatized (canonical) form of a token (a forgetful functor `Token -> Lemma`).
+ *
+ * **Example** (Build lemma annotation node)
+ *
+ * ```ts import.meta.vitest name="Build lemma annotation node"
+ * import { LemmaNode } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const node = LemmaNode.make({ lemma: "run", position: 3, token: "running", timestamp: 0 })
+ * node.lemma // => "run"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LemmaNode extends S.Opaque<LemmaNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    token: S.String,
+    lemma: S.String,
+    pos: S.optionalKey(S.String),
+    position: S.Finite,
+    timestamp: S.Finite,
+    metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+  }).pipe(
+    $I.annoteSchema("LemmaNode", {
+      description: "Lemma node: the canonical/dictionary form of a token (idempotent under lemmatization).",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Build dependency token ref)
+ *
+ * ```ts import.meta.vitest name="Build dependency token ref"
+ * import { DependencyToken } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const token = DependencyToken.make({ text: "arrived", position: 2 })
+ * token.position // => 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DependencyToken extends S.Opaque<DependencyToken, { readonly brand: unique symbol }>()(
+  S.Struct({ text: S.String, position: S.Finite }).pipe(
+    $I.annoteSchema("DependencyToken", {
+      description: "Token reference (text + sentence position) used by dependency-arc endpoints.",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Build dependency arc node)
+ *
+ * ```ts import.meta.vitest name="Build dependency arc node"
+ * import { DependencyNode } from "@beep/nlp-processing/Graph/Schema"
+ *
+ * const node = DependencyNode.make({
+ *   dependent: { position: 1, text: "brief" },
+ *   distance: 1,
+ *   head: { position: 2, text: "arrived" },
+ *   relation: "nsubj",
+ *   timestamp: 0
+ * })
+ * node.relation // => "nsubj"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DependencyNode extends S.Opaque<DependencyNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    relation: S.String,
+    head: DependencyToken,
+    dependent: DependencyToken,
+    distance: S.Finite,
+    timestamp: S.Finite,
+    metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+  }).pipe(
+    $I.annoteSchema("DependencyNode", {
+      description: "Syntactic dependency arc (Universal Dependencies relation) between a head and dependent token.",
+    })
+  )
+) {}
+
+/**
+ * **Example** (Build relation participant)
+ *
+ * ```ts import.meta.vitest name="Build relation participant"
+ * import { RelationParticipant } from "@beep/nlp-processing/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
+ *
+ * const participant = RelationParticipant.make({
+ *   text: "Acme",
+ *   entityType: "ORG",
+ *   span: Position.makeOption({ unit: "utf16-code-unit", start: 0, end: 4 })
+ * })
+ * participant.entityType // => "ORG"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RelationParticipant extends S.Opaque<RelationParticipant, { readonly brand: unique symbol }>()(
+  S.Struct({ text: S.String, entityType: S.String, span: S.OptionFromOptionalKey(Position) }).pipe(
+    $I.annoteSchema("RelationParticipant", {
+      description: "Entity participant (text, type, and character span) referenced by a semantic relation.",
+    })
+  )
+) {}
+
+/**
+ * Semantic relation between two entities.
+ *
+ * **Example** (Build semantic relation node)
+ *
+ * ```ts import.meta.vitest name="Build semantic relation node"
+ * import { RelationNode } from "@beep/nlp-processing/Graph/Schema"
+ * import { Position } from "@beep/text/OffsetUnit"
+ *
+ * const node = RelationNode.make({
+ *   object: { entityType: "ORG", span: Position.makeOption({ unit: "utf16-code-unit", end: 15, start: 10 }), text: "Globex" },
+ *   relationType: "acquired",
+ *   subject: { entityType: "ORG", span: Position.makeOption({ unit: "utf16-code-unit", end: 4, start: 0 }), text: "Acme" },
+ *   timestamp: 0
+ * })
+ * node.relationType // => "acquired"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RelationNode extends S.Opaque<RelationNode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    relationType: S.String,
+    subject: RelationParticipant,
+    object: RelationParticipant,
+    trigger: S.optionalKey(S.String),
+    confidence: S.optionalKey(S.Finite),
+    timestamp: S.Finite,
+    metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+  }).pipe(
+    $I.annoteSchema("RelationNode", {
+      description: "Semantic relation node connecting a subject entity to an object entity via a typed predicate.",
+    })
+  )
+) {}

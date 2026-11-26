@@ -16,7 +16,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/schema#build",
@@ -77,7 +76,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/repo-gate-record#transit",
@@ -137,7 +135,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/schema#build",
@@ -269,7 +266,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -472,7 +468,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",
@@ -523,7 +518,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/repo-gate-vitest#transit",
@@ -586,7 +580,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/nlp#build",
         "@beep/nlp-processing#build",
         "@beep/observability#build",
         "@beep/schema#build",
@@ -634,7 +627,6 @@
       "commandDigest": "e7f0c166536d6c14ec100c2540841466e8519b43437533a25aff044cb5501aa4",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/nlp#transit",
         "@beep/nlp-processing#transit",
         "@beep/observability#transit",
         "@beep/schema#transit",

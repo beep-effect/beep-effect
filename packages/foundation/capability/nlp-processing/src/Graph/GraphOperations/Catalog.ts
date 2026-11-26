@@ -24,6 +24,8 @@
  * @packageDocumentation
  */
 
+import { iri } from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -32,7 +34,18 @@ import * as Struct from "effect/Struct";
 import * as Backend from "../../Backend/NLPBackend.ts";
 import { makeNode } from "../EffectGraph.ts";
 import * as Op from "./Operation.ts";
-import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } from "@beep/nlp/Graph/Schema";
+import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } from "../Schema.ts";
+
+const sentencizeTerm = TermIri.make(iri("operation:Sentencize"));
+const tokenizeTerm = TermIri.make(iri("operation:Tokenize"));
+const posTagTerm = TermIri.make(iri("operation:PosTag"));
+const lemmatizeTerm = TermIri.make(iri("operation:Lemmatize"));
+const extractEntitiesTerm = TermIri.make(iri("operation:ExtractEntities"));
+const parseDependenciesTerm = TermIri.make(iri("operation:ParseDependencies"));
+const extractRelationsTerm = TermIri.make(iri("operation:ExtractRelations"));
+const toLowerCaseTerm = TermIri.make(iri("operation:ToLowerCase"));
+const toUpperCaseTerm = TermIri.make(iri("operation:ToUpperCase"));
+const trimTerm = TermIri.make(iri("operation:Trim"));
 
 /**
  * Backend-backed operation that splits document text into sentence children.
@@ -55,14 +68,15 @@ import type { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode } fro
  * @since 0.0.0
  */
 export const sentencize: Op.GraphOperation<string, string, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
-  apply: Effect.fn("Catalog.sentencize")(function* (node) {
-    const backend = yield* Backend.NLPBackend;
-    const sentences = yield* backend.sentencize(node.data);
-    return yield* Effect.forEach(sentences, makeNode(O.some(node.id), O.some("sentencize")), { concurrency: 1 });
-  }),
   category: "expansion",
-  description: "Split text into sentences using sentence boundary detection.",
-  name: "sentencize",
+  operation: {
+    name: sentencizeTerm,
+    run: Effect.fn("Catalog.sentencize")(function* (node) {
+      const backend = yield* Backend.NLPBackend;
+      const sentences = yield* backend.sentencize(node.data);
+      return yield* Effect.forEach(sentences, makeNode(O.some(node.id), O.some(sentencizeTerm)), { concurrency: 1 });
+    }),
+  },
 });
 
 /**
@@ -85,14 +99,15 @@ export const sentencize: Op.GraphOperation<string, string, Backend.NLPBackend, B
  * @since 0.0.0
  */
 export const tokenize: Op.GraphOperation<string, string, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
-  apply: Effect.fn("Catalog.tokenize")(function* (node) {
-    const backend = yield* Backend.NLPBackend;
-    const tokens = yield* backend.tokenize(node.data);
-    return yield* Effect.forEach(tokens, makeNode(O.some(node.id), O.some("tokenize")), { concurrency: 1 });
-  }),
   category: "expansion",
-  description: "Split text into tokens using the backend tokenizer.",
-  name: "tokenize",
+  operation: {
+    name: tokenizeTerm,
+    run: Effect.fn("Catalog.tokenize")(function* (node) {
+      const backend = yield* Backend.NLPBackend;
+      const tokens = yield* backend.tokenize(node.data);
+      return yield* Effect.forEach(tokens, makeNode(O.some(node.id), O.some(tokenizeTerm)), { concurrency: 1 });
+    }),
+  },
 });
 
 /**
@@ -109,21 +124,22 @@ export const tokenize: Op.GraphOperation<string, string, Backend.NLPBackend, Bac
  * ```ts import.meta.vitest name="Log posTag name"
  * import { posTag } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * posTag.name // => "posTag"
+ * posTag.operation.name // => "https://beep-effect.com/ns/operation/PosTag"
  * ```
  *
  * @category use-cases
  * @since 0.0.0
  */
 export const posTag: Op.GraphOperation<string, POSNode, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
-  apply: Effect.fn("Catalog.posTag")(function* (node) {
-    const backend = yield* Backend.NLPBackend;
-    const tags = yield* backend.posTag(node.data);
-    return yield* Effect.forEach(tags, makeNode(O.some(node.id), O.some("posTag")), { concurrency: 1 });
-  }),
   category: "expansion",
-  description: "Tag each token with its part-of-speech label.",
-  name: "posTag",
+  operation: {
+    name: posTagTerm,
+    run: Effect.fn("Catalog.posTag")(function* (node) {
+      const backend = yield* Backend.NLPBackend;
+      const tags = yield* backend.posTag(node.data);
+      return yield* Effect.forEach(tags, makeNode(O.some(node.id), O.some(posTagTerm)), { concurrency: 1 });
+    }),
+  },
 });
 
 /**
@@ -139,21 +155,22 @@ export const posTag: Op.GraphOperation<string, POSNode, Backend.NLPBackend, Back
  * ```ts import.meta.vitest name="Log lemmatize name"
  * import { lemmatize } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * lemmatize.name // => "lemmatize"
+ * lemmatize.operation.name // => "https://beep-effect.com/ns/operation/Lemmatize"
  * ```
  *
  * @category use-cases
  * @since 0.0.0
  */
 export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend, Backend.NLPBackendError> = Op.make({
-  apply: Effect.fn("Catalog.lemmatize")(function* (node) {
-    const backend = yield* Backend.NLPBackend;
-    const lemmas = yield* backend.lemmatize(node.data);
-    return yield* Effect.forEach(lemmas, makeNode(O.some(node.id), O.some("lemmatize")), { concurrency: 1 });
-  }),
   category: "expansion",
-  description: "Reduce each token to its canonical lemma.",
-  name: "lemmatize",
+  operation: {
+    name: lemmatizeTerm,
+    run: Effect.fn("Catalog.lemmatize")(function* (node) {
+      const backend = yield* Backend.NLPBackend;
+      const lemmas = yield* backend.lemmatize(node.data);
+      return yield* Effect.forEach(lemmas, makeNode(O.some(node.id), O.some(lemmatizeTerm)), { concurrency: 1 });
+    }),
+  },
 });
 
 /**
@@ -168,7 +185,7 @@ export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend,
  * ```ts import.meta.vitest name="Log extractEntities name"
  * import { extractEntities } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * extractEntities.name // => "extractEntities"
+ * extractEntities.operation.name // => "https://beep-effect.com/ns/operation/ExtractEntities"
  * ```
  *
  * @category use-cases
@@ -176,14 +193,17 @@ export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend,
  */
 export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPBackend, Backend.NLPBackendError> =
   Op.make({
-    apply: Effect.fn("Catalog.extractEntities")(function* (node) {
-      const backend = yield* Backend.NLPBackend;
-      const entities = yield* backend.extractEntities(node.data);
-      return yield* Effect.forEach(entities, makeNode(O.some(node.id), O.some("extractEntities")), { concurrency: 1 });
-    }),
     category: "expansion",
-    description: "Extract named entities from text.",
-    name: "extractEntities",
+    operation: {
+      name: extractEntitiesTerm,
+      run: Effect.fn("Catalog.extractEntities")(function* (node) {
+        const backend = yield* Backend.NLPBackend;
+        const entities = yield* backend.extractEntities(node.data);
+        return yield* Effect.forEach(entities, makeNode(O.some(node.id), O.some(extractEntitiesTerm)), {
+          concurrency: 1,
+        });
+      }),
+    },
   });
 
 /**
@@ -199,7 +219,7 @@ export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPB
  * ```ts import.meta.vitest name="Log parseDependencies name"
  * import { parseDependencies } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * parseDependencies.name // => "parseDependencies"
+ * parseDependencies.operation.name // => "https://beep-effect.com/ns/operation/ParseDependencies"
  * ```
  *
  * @category use-cases
@@ -207,14 +227,17 @@ export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPB
  */
 export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backend.NLPBackend, Backend.NLPBackendError> =
   Op.make({
-    apply: Effect.fn("Catalog.parseDependencies")(function* (node) {
-      const backend = yield* Backend.NLPBackend;
-      const deps = yield* backend.parseDependencies(node.data);
-      return yield* Effect.forEach(deps, makeNode(O.some(node.id), O.some("parseDependencies")), { concurrency: 1 });
-    }),
     category: "expansion",
-    description: "Parse syntactic dependency arcs within a sentence.",
-    name: "parseDependencies",
+    operation: {
+      name: parseDependenciesTerm,
+      run: Effect.fn("Catalog.parseDependencies")(function* (node) {
+        const backend = yield* Backend.NLPBackend;
+        const deps = yield* backend.parseDependencies(node.data);
+        return yield* Effect.forEach(deps, makeNode(O.some(node.id), O.some(parseDependenciesTerm)), {
+          concurrency: 1,
+        });
+      }),
+    },
   });
 
 /**
@@ -231,7 +254,7 @@ export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backen
  * ```ts import.meta.vitest name="Log extractRelations name"
  * import { extractRelations } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * extractRelations.name // => "extractRelations"
+ * extractRelations.operation.name // => "https://beep-effect.com/ns/operation/ExtractRelations"
  * ```
  *
  * @category use-cases
@@ -239,16 +262,17 @@ export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backen
  */
 export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.NLPBackend, Backend.NLPBackendError> =
   Op.make({
-    apply: Effect.fn("Catalog.extractRelations")(function* (node) {
-      const backend = yield* Backend.NLPBackend;
-      const relations = yield* backend.extractRelations(node.data);
-      return yield* Effect.forEach(relations, makeNode(O.some(node.id), O.some("extractRelations")), {
-        concurrency: 1,
-      });
-    }),
     category: "expansion",
-    description: "Extract semantic relations between entities.",
-    name: "extractRelations",
+    operation: {
+      name: extractRelationsTerm,
+      run: Effect.fn("Catalog.extractRelations")(function* (node) {
+        const backend = yield* Backend.NLPBackend;
+        const relations = yield* backend.extractRelations(node.data);
+        return yield* Effect.forEach(relations, makeNode(O.some(node.id), O.some(extractRelationsTerm)), {
+          concurrency: 1,
+        });
+      }),
+    },
   });
 
 /**
@@ -266,9 +290,8 @@ export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.N
  * @since 0.0.0
  */
 export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
-  description: "Convert text to lowercase.",
   f: Str.toLowerCase,
-  name: "toLowerCase",
+  name: toLowerCaseTerm,
 });
 
 /**
@@ -286,9 +309,8 @@ export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
  * @since 0.0.0
  */
 export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
-  description: "Convert text to uppercase.",
   f: Str.toUpperCase,
-  name: "toUpperCase",
+  name: toUpperCaseTerm,
 });
 
 /**
@@ -306,9 +328,8 @@ export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
  * @since 0.0.0
  */
 export const trim: Op.GraphOperation<string, string> = Op.transform({
-  description: "Remove leading and trailing whitespace.",
   f: Str.trim,
-  name: "trim",
+  name: trimTerm,
 });
 
 /**
@@ -324,7 +345,7 @@ export const trim: Op.GraphOperation<string, string> = Op.transform({
  * ```ts import.meta.vitest name="Log tokenize operation name"
  * import { StandardOperations } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  *
- * StandardOperations.tokenize.name // => "tokenize"
+ * StandardOperations.tokenize.operation.name // => "https://beep-effect.com/ns/operation/Tokenize"
  * ```
  *
  * @category constants

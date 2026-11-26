@@ -21,6 +21,9 @@
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/ontology/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/rdf/tsconfig.json"
     },
     {

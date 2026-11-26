@@ -10,9 +10,10 @@ import {
   UsptoClaimInputs,
   UsptoClaimsError,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
-import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
+import { Token, TokenIndex } from "@beep/nlp-processing/Core/Token";
 import { Tokenization, TokenizationError } from "@beep/nlp-processing/Core/Tokenization";
 import { it } from "@beep/test-runner";
+import { Position } from "@beep/text/OffsetUnit";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -48,8 +49,7 @@ const tokensOf = (text: string): ReadonlyArray<Token> =>
     return Token.make({
       text: spelling,
       index: TokenIndex.make(index),
-      start: CharPosition.make(start),
-      end: CharPosition.make(start + spelling.length),
+      span: Position.make({ unit: "utf16-code-unit", start, end: start + spelling.length }),
       tags: [],
       pos: O.some(pos),
       lemma: O.some(lower),
@@ -123,6 +123,12 @@ describe("source-aligned lexical capability boundary", () => {
         (tokens: ReadonlyArray<Token>) => A.prepend(tokens, O.getOrThrow(A.head(tokens))),
         (tokens: ReadonlyArray<Token>) => A.map(tokens, (token) => Token.make({ ...token, pos: O.none() })),
         (tokens: ReadonlyArray<Token>) => A.map(tokens, (token) => Token.make({ ...token, pos: O.some("UNKNOWN") })),
+        (tokens: ReadonlyArray<Token>) => A.map(tokens, (token) => Token.make({ ...token, pos: O.some("") })),
+        (tokens: ReadonlyArray<Token>) =>
+          A.map(tokens, (token) =>
+            Token.make({ ...token, span: Position.make({ ...token.span, end: token.span.end + 10_000 }) })
+          ),
+        (tokens: ReadonlyArray<Token>) => A.map(tokens, (token) => Token.make({ ...token, text: `${token.text}x` })),
       ]) {
         const tokenize = Effect.fn("LexicalBoundary.badFacts")((text: string) =>
           Effect.succeed(mutate(tokensOf(text)))
@@ -136,6 +142,34 @@ describe("source-aligned lexical capability boundary", () => {
         assert.deepStrictEqual(row.findings, old.findings);
         assert.isTrue(row.status === "partial" && A.some(row.coverage, (issue) => issue.kind === "policy-uncovered"));
       }
+    })
+  );
+  it.effect(
+    "never tokenizes a record without context or a claim over the source work limit",
+    Effect.fnUntraced(function* () {
+      const oversized = `A system comprising ${Str.repeat(40_000)("a ")}sensor.`;
+      const input = ClaimInputCollection.make({
+        sourceKey: "lexical-boundary-test",
+        records: [
+          ClaimInputRecord.cases.unavailable.make({
+            sourceOrdinal: 1,
+            numberText: O.none(),
+            sourceText: "<claim/>",
+            reason: "empty-text",
+          }),
+          ClaimInputRecord.cases.text.make({
+            sourceOrdinal: 2,
+            numberText: O.some("2"),
+            sourceText: oversized,
+            canonicalText: oversized,
+          }),
+        ],
+      });
+      const tokenize = Effect.fn("LexicalBoundary.mustNotTokenize")((_text: string) =>
+        Effect.die("the boundary tokenized a record it must skip")
+      );
+      const report = yield* inspectWith(input, inspectionLayer(tokenize));
+      assert.strictEqual(report.records.length, 2);
     })
   );
   it.effect(

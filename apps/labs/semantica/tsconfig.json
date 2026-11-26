@@ -77,9 +77,6 @@
       "path": "../../../packages/foundation/modeling/jsonc/tsconfig.json"
     },
     {
-      "path": "../../../packages/foundation/modeling/nlp/tsconfig.json"
-    },
-    {
       "path": "../../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {

@@ -58,7 +58,7 @@ const fallbackOperation = <A, E, R>(
   };
   return primaryEffect.pipe(
     Effect.catchCause(flow(Obs.recordNlpBackendFallback(attributes), Effect.andThen(secondaryEffect))),
-    Obs.trackNlpDuration(`nlp.backend.fallback.${operation}`, attributes)
+    Obs.trackNlpDuration(attributes)
   );
 };
 
@@ -78,7 +78,7 @@ const cachedGet = <A, E, R>(
     const hit = yield* Cache.has(cache, key);
     yield* Obs.recordNlpCacheLookup(hit, attributes);
     return yield* Cache.get(cache, key);
-  }).pipe(Obs.trackNlpDuration(`nlp.backend.cached.${operation}`, attributes));
+  }).pipe(Obs.trackNlpDuration(attributes));
 };
 
 /**

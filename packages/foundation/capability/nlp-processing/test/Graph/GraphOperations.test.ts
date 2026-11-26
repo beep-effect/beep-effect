@@ -1,5 +1,7 @@
+import { iri } from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
-import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
+import { Catalog, Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
@@ -9,29 +11,20 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const tokenizeTerm = TermIri.make(iri("operation:Tokenize"));
+const toUpperCaseTerm = TermIri.make(iri("operation:ToUpperCase"));
+const trimTerm = TermIri.make(iri("operation:Trim"));
 
 const decodeResultStoreStoredResult = S.decodeEffect(ResultStore.StoredResult);
 const encodeResultStoreStoredResult = S.encodeEffect(ResultStore.StoredResult);
 const isResultStoreAnyOperationResult = S.is(ResultStore.AnyOperationResult);
 const isResultStoreStoredResult = S.is(ResultStore.StoredResult);
-
-const finiteNonNegativeMillis = (duration: Duration.Duration): Duration.Duration => {
-  const millis = Duration.toMillis(duration);
-  return Number.isFinite(millis) ? Duration.millis(Math.min(Math.abs(Math.trunc(millis)), 86_400_000)) : Duration.zero;
-};
-
-const arbMetrics: Arbitrary.Arbitrary<Types.ExecutionMetrics> = Arbitrary.schema(Types.ExecutionMetrics).pipe(
-  Arbitrary.map((metrics) =>
-    Types.ExecutionMetrics.make({
-      ...metrics,
-      duration: finiteNonNegativeMillis(metrics.duration),
-    })
-  )
-);
-const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
 
 const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   Schema extends S.Codec<unknown, unknown, never, never>,
@@ -41,44 +34,12 @@ const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
   expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
 });
 
-describe("ExecutionMetrics monoid laws", () => {
+describe("ExecutionMetrics", () => {
   it.effect.prop(
     "round-trips schema-derived metrics through encode/decode",
     { ExecutionMetrics: Arbitrary.schema(Types.ExecutionMetrics) },
     (values) => assertSchemaRoundTrip(Types.ExecutionMetrics, values.ExecutionMetrics, "Types.ExecutionMetrics"),
     { arbitrary: fcRuns(50) }
-  );
-
-  it.prop(
-    "satisfies left identity: empty ⊕ x = x",
-    [arbMetrics],
-    ([x]) => {
-      expect(metricsEqual(Types.ExecutionMetrics.combine(Types.ExecutionMetrics.empty(), x), x)).toBe(true);
-    },
-    { arbitrary: fcRuns() }
-  );
-
-  it.prop(
-    "satisfies right identity: x ⊕ empty = x",
-    [arbMetrics],
-    ([x]) => {
-      expect(metricsEqual(Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.empty()), x)).toBe(true);
-    },
-    { arbitrary: fcRuns() }
-  );
-
-  it.prop(
-    "satisfies associativity: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)",
-    [arbMetrics, arbMetrics, arbMetrics],
-    ([x, y, z]) => {
-      expect(
-        metricsEqual(
-          Types.ExecutionMetrics.combine(Types.ExecutionMetrics.combine(x, y), z),
-          Types.ExecutionMetrics.combine(x, Types.ExecutionMetrics.combine(y, z))
-        )
-      ).toBe(true);
-    },
-    { arbitrary: fcRuns() }
   );
 });
 
@@ -131,12 +92,11 @@ describe("Operation constructors", () => {
     "pure mints one child node per produced value",
     Effect.fnUntraced(function* () {
       const op = Operation.expand({
-        name: "chars",
-        description: "",
+        name: tokenizeTerm,
         f: (s: string) => (s.length === 0 ? [] : Str.split("")(s)),
       });
       const root = yield* EG.makeNode("ab");
-      const children = yield* op.apply(root);
+      const children = yield* op.operation.run(root);
       expect(children.length).toBe(2);
       expect(A.map(children, (n) => n.data)).toEqual(["a", "b"]);
       expect(O.getOrNull(children[0]!.parentId)).toBe(root.id);
@@ -146,9 +106,9 @@ describe("Operation constructors", () => {
   it.effect(
     "transform produces a single mapped child",
     Effect.fnUntraced(function* () {
-      const op = Operation.transform({ name: "len", description: "", f: (s: string) => s.length });
+      const op = Operation.transform({ name: tokenizeTerm, f: (s: string) => s.length });
       const root = yield* EG.makeNode("hello");
-      const children = yield* op.apply(root);
+      const children = yield* op.operation.run(root);
       expect(A.map(children, (n) => n.data)).toEqual([5]);
     })
   );
@@ -156,25 +116,13 @@ describe("Operation constructors", () => {
   it.effect(
     "filter keeps or drops based on the predicate",
     Effect.fnUntraced(function* () {
-      const op = Operation.filter({ name: "nonEmpty", description: "", predicate: (s: string) => s.length > 0 });
+      const op = Operation.filter({ name: trimTerm, predicate: (s: string) => s.length > 0 });
       const madeNode = yield* EG.makeNode("x");
-      const keep = yield* op.apply(madeNode);
+      const keep = yield* op.operation.run(madeNode);
       const madeNode1 = yield* EG.makeNode("");
-      const drop = yield* op.apply(madeNode1);
+      const drop = yield* op.operation.run(madeNode1);
       expect(keep.length).toBe(1);
       expect(drop.length).toBe(0);
-    })
-  );
-
-  it.effect(
-    "identity re-emits the node under a fresh id",
-    Effect.fnUntraced(function* () {
-      const op = Operation.identity<string>();
-      const root = yield* EG.makeNode("z");
-      const [child] = yield* op.apply(root);
-      expect(child!.data).toBe("z");
-      expect(child!.id).not.toBe(root.id);
-      expect(O.getOrNull(child!.parentId)).toBe(root.id);
     })
   );
 });
@@ -190,7 +138,7 @@ describe("ResultStore", () => {
       metrics: Types.ExecutionMetrics.empty(),
     });
     return {
-      key: ResultStore.ResultKey.new("op", node.id),
+      key: ResultStore.ResultKey.new(tokenizeTerm, node.id),
       result,
     };
   });
@@ -223,7 +171,7 @@ describe("ResultStore", () => {
         expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
         const store = yield* ResultStore.ResultStore;
         const nodeId = EG.NodeId.make("n1");
-        const key = ResultStore.ResultKey.new("op", nodeId);
+        const key = ResultStore.ResultKey.new(tokenizeTerm, nodeId);
         const result = yield* mkResult;
         const has3 = yield* store.has(key);
         expect(has3).toBe(false);
@@ -245,13 +193,13 @@ describe("ResultStore", () => {
       Effect.fnUntraced(function* () {
         expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
         const store = yield* ResultStore.ResultStore;
-        const key = ResultStore.ResultKey.new("op", EG.NodeId.make("n2"));
+        const key = ResultStore.ResultKey.new(tokenizeTerm, EG.NodeId.make("n2"));
         const mkResult5 = yield* mkResult;
         yield* store.store(key, mkResult5);
         yield* store.delete(key);
         const has6 = yield* store.has(key);
         expect(has6).toBe(false);
-        const argument = ResultStore.ResultKey.new("op", EG.NodeId.make("n3"));
+        const argument = ResultStore.ResultKey.new(tokenizeTerm, EG.NodeId.make("n3"));
         const mkResult1 = yield* mkResult;
         yield* store.store(argument, mkResult1);
         yield* store.clear;
@@ -262,7 +210,7 @@ describe("ResultStore", () => {
 });
 
 describe("GraphExecutor", () => {
-  const upper = Operation.transform({ name: "upper", description: "", f: (s: string) => Str.toUpperCase(s) });
+  const upper = Operation.transform({ name: toUpperCaseTerm, f: (s: string) => Str.toUpperCase(s) });
 
   it.layer(Executor.GraphExecutorTest)("applies an operation to leaf nodes, producing new nodes", (it) => {
     it.effect(
@@ -361,7 +309,6 @@ describe("GraphExecutor", () => {
         expect(cost.complexity).toBe("O(1)");
         const priced = Operation.make({
           ...upper,
-          name: "priced-upper",
           estimateCost: () =>
             Effect.succeed(
               Types.OperationCost.make({
@@ -395,13 +342,14 @@ describe("GraphExecutor", () => {
       Effect.fnUntraced(function* () {
         expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
         const boom = Operation.make<string, string, never, Errors.OperationError>({
-          name: "boom",
-          description: "",
           category: "transformation",
-          apply: (node) =>
-            Effect.fail(
-              Errors.OperationError.make({ cause: new Error("boom"), nodeId: node.id, operationName: "boom" })
-            ),
+          operation: {
+            name: trimTerm,
+            run: (node) =>
+              Effect.fail(
+                Errors.OperationError.make({ cause: new Error("boom"), nodeId: node.id, operationName: trimTerm })
+              ),
+          },
         });
         const graph = yield* EG.singleton("x");
         const executor = yield* Executor.GraphExecutor;
@@ -410,5 +358,13 @@ describe("GraphExecutor", () => {
         expect(result.errors.length).toBe(1);
       })
     );
+  });
+});
+
+describe("Catalog", () => {
+  it("names every standard step by a distinct operation term", () => {
+    const names = A.map(R.values(Catalog.StandardOperations), (step) => step.operation.name);
+    expect(HashSet.size(HashSet.fromIterable(names))).toBe(A.length(names));
+    expect(A.every(names, S.is(TermIri))).toBe(true);
   });
 });

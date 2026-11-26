@@ -89,4 +89,8 @@ export const LearnCorpus = Tool.make("LearnCorpus", {
   failureMode: "return",
   parameters: LearnCorpusParameters,
   success: S.toEncoded(LearnCorpusSuccess),
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, false)
+  .annotate(Tool.OpenWorld, false);

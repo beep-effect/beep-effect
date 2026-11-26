@@ -27,8 +27,8 @@ import * as Inspectable from "effect/Inspectable";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import type * as GraphSchema from "@beep/nlp/Graph/Schema";
 import type * as Effect from "effect/Effect";
+import type * as GraphSchema from "../Graph/Schema.ts";
 
 const $I = $NlpProcessingId.create("Backend/NLPBackend");
 

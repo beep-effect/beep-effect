@@ -27,16 +27,16 @@ export * as EffectGraph from "./EffectGraph.ts";
  */
 export * as GraphOperations from "./GraphOperations/index.ts";
 /**
+ * Text-graph node and edge schema classes.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export * as Schema from "./Schema.ts";
+/**
  * Text graph construction backed by tokenization services.
  *
  * @since 0.0.0
  * @category services
  */
 export * as TextGraph from "./TextGraph.ts";
-/**
- * Categorical type classes for effectful text operations on graphs.
- *
- * @since 0.0.0
- * @category services
- */
-export * as TypeClass from "./TypeClass.ts";

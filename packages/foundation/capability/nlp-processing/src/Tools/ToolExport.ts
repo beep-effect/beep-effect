@@ -234,12 +234,13 @@ const decodeToolParameters = (
   pipe(
     buildArgsObject(parameterNames, args),
     pipe(tool.parametersSchema, S.decodeEffect),
-    Obs.trackNlpDuration("nlp.tool.decode_parameters", {
+    Obs.trackNlpDuration({
       argument_count: `${A.length(args)}`,
       operation: "decodeToolParameters",
       parameter_count: `${A.length(parameterNames)}`,
       tool: tool.name,
     }),
+    Effect.withSpan("ToolExport.decodeParameters"),
     Effect.mapError((cause) =>
       ExportedToolError.fromCause(cause, tool.name, {
         message: `Invalid parameters for ${tool.name}: ${renderError(cause)}`,
@@ -290,7 +291,8 @@ const buildExportedTool: {
             phase: "start",
           });
           const stream = yield* handleTool(toolkit, tool, params).pipe(
-            Obs.trackNlpDuration("nlp.tool.start", attributes),
+            Obs.trackNlpDuration(attributes),
+            Effect.withSpan("ToolExport.start"),
             Effect.mapError((cause) =>
               ExportedToolError.fromCause(cause, tool.name, {
                 message: `Failed to start ${tool.name}: ${renderError(cause)}`,
@@ -302,7 +304,8 @@ const buildExportedTool: {
             phase: "stream",
           });
           const last = yield* Stream.runLast(stream).pipe(
-            Obs.trackNlpDuration("nlp.tool.stream", attributes),
+            Obs.trackNlpDuration(attributes),
+            Effect.withSpan("ToolExport.stream"),
             Effect.mapError((cause) =>
               ExportedToolError.fromCause(cause, tool.name, {
                 message: `Tool ${tool.name} failed: ${renderError(cause)}`,
@@ -346,7 +349,7 @@ const buildExportedTool: {
                     result_state: "success",
                   }).pipe(Effect.as(result.encodedResult)),
           });
-        }).pipe(Obs.observeNlpWorkflow("nlp.tool.handle", attributes));
+        }).pipe(Obs.observeNlpWorkflow("ToolExport.handle", attributes));
       },
       Effect.catchCause((cause) =>
         Obs.recordNlpFailure(cause, {
@@ -390,10 +393,11 @@ const exportToolsEffect: Effect.Effect<
 
   return exportedTools;
 }).pipe(
-  Obs.observeNlpWorkflow("nlp.tools.export", {
+  Obs.observeNlpWorkflow("ToolExport.exportTools", {
     operation: "exportTools",
     tool_count: `${A.length(NlpTools)}`,
   }),
+  Effect.withSpan("ToolExport.exportTools"),
   Effect.mapError((cause) =>
     ExportedToolError.fromCause(cause, "__init__", {
       message: `Failed to export NLP tools: ${renderError(cause)}`,

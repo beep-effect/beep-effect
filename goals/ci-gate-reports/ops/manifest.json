@@ -70,7 +70,7 @@
     {
       "id": "P2",
       "name": "Workflow wiring",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
@@ -85,7 +85,7 @@
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P6",

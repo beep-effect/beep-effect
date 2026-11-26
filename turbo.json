@@ -5175,6 +5175,7 @@
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/internal/schemaStatics.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/packages.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/jsonc/package.json",
+        "$TURBO_ROOT$/packages/foundation/modeling/jsonc/src/ActivityRecord.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/jsonc/src/ActivityStart.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/jsonc/src/Jsonc.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/jsonc/src/JsoncEdit.ts",

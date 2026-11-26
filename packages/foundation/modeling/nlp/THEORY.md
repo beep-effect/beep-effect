@@ -32,9 +32,8 @@ typed strata; the arrows are the operations that move between them.
 
 A document is not a list of passes' outputs but a single **annotated text
 graph**: nodes are typed text fragments, edges are typed relations (dependency,
-mention, coreference, semantic relation). `src/Graph/` holds the graph itself
-(`Schema.ts` for the carriers, `GraphOps.ts`/`Operation.ts` for the graph-level
-operations, `index.ts` for the public surface). Effect v4 ships a built-in
+mention, coreference, semantic relation). The carriers live in
+`@beep/nlp-processing` (`src/Graph/Schema.ts`, moved in P6). Effect v4 ships a built-in
 `Graph` module (topological sort, acyclicity, BFS/DFS, SCC), so the port leans
 on the platform for the graph theory instead of re-deriving it.
 
@@ -49,15 +48,12 @@ not support it), it needs services (a backend, a clock), and it produces a
 typed result. That is exactly a morphism in the **Kleisli category** of the
 Effect monad.
 
-- `src/Operations/Definition.ts` defines `OperationDefinition<A, B, R, E>`: an
-  operation parameterized by its decoded input/output value types together with
-  its requirement (`R`) and error (`E`) channels. The schemas travel with the
-  definition so inputs/outputs validate at the boundary.
-- `src/Operations/Composable.ts` gives the categorical combinators on these
-  arrows — `identity`, `compose`, `map`, `flatMap`, `product`/`zipWith`,
-  `traverse`, `aggregate`. These are the Kleisli category's structure:
-  `identity` is the unit, `compose` is associative arrow composition, `product`
-  is the monoidal tensor. Pipelines are just composites of arrows.
+The arrow and its combinators live in `@beep/nlp-processing`
+(`src/Graph/GraphOperations/`). The earlier `src/Operations` definitions and
+combinators here were deleted in P6 after a census found no consumer; the
+category's structure is unchanged: identity is the unit, compose is
+associative arrow composition, product is the monoidal tensor. Pipelines are
+just composites of arrows.
 
 Because composition is Kleisli composition, a pipeline's requirement and error
 channels are computed for you by the type system: wiring a backend-needing
@@ -67,8 +63,8 @@ no hidden global state — services compose through `R`.
 ## 4. Monoids and their laws
 
 Annotation results combine. Token streams concatenate; graphs merge; result
-stores union. `src/Graph/TypeClass.ts` carries the monoidal structure (and the
-rest of the typeclass hierarchy the port preserves). The laws — left/right
+stores union. Effect's own `Combiner` and `Reducer` modules carry the
+monoidal structure; the hand-rolled `src/Algebra` monoids here were deleted in P6. The laws — left/right
 identity and associativity — are not asserted in prose; they are **proven** as
 FastCheck property tests (§9). Monoid associativity is what makes "annotate in
 any order, merge" correct, and what lets the streaming/batch layers fold
@@ -168,11 +164,11 @@ faked:
 | Concept                                  | Module                                                        |
 | ---------------------------------------- | ------------------------------------------------------------- |
 | Typed text strata (objects)              | `@beep/annotation/Kinds`                                                |
-| Graph carriers (node/edge schemas)       | `src/Graph/Schema.ts`                                         |
-| Monoids + typeclass hierarchy            | `src/Graph/TypeClass.ts`                                      |
-| Graph-level operations, cata/ana         | `src/Graph/Operation.ts`, `src/Graph/GraphOps.ts`             |
+| Graph carriers (node/edge schemas)       | `@beep/nlp-processing/Graph/Schema`                           |
+| Monoids                                  | Effect `Combiner` / `Reducer`                                 |
+| Graph-level operations, cata/ana         | `@beep/nlp-processing/Graph/GraphOperations` + `effect/Graph` |
 | Operation spine (catalog/executor/store) | `src/Graph/GraphOperations/`                                  |
-| Kleisli category of operations           | `src/Operations/Definition.ts`, `src/Operations/Composable.ts` |
+| Kleisli category of operations           | `@beep/nlp-processing/Graph/GraphOperations`                  |
 | Backends as functors                     | `src/Backend/NLPBackend.ts`, `@beep/wink`                     |
 | Free IR at the boundary                  | `@beep/annotation`                                     |
 | Neutral contracts and models             | `src/Core`, `src/Tools`, `src/Backend`                        |

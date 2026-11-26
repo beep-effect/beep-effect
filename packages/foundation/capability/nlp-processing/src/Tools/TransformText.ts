@@ -103,4 +103,8 @@ export const TransformText = Tool.make("TransformText", {
   failureMode: "return",
   parameters: TransformTextParameters,
   success: S.toEncoded(TransformTextSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

@@ -349,6 +349,18 @@ Overflow routing reads its pool size from `BEEP_SHARD_OVERFLOW_POOL_SIZE`
 `webhookUrl` and finds the group by its name, `beep-shard-overflow`, not by the
 label.
 
+### Webhook delivery
+
+`workflow_job` events reach the fleet through one repository webhook,
+714397446, on the function URL. Cutover step 6b (2026-11-26T03:35Z) deleted the
+Pulumi controllers' two `execute-api` hooks, 663255260 (heavy) and 711445970
+(overflow), and set the runner App's webhook (`beep-ci-fleet-controller`)
+inactive. The App keeps minting installation tokens and JIT configs. The
+missed-event check reads repository hook deliveries; an App's deliveries need
+its JWT, which is why the App webhook was not moved to the function URL. The
+plan is
+`goals/infra-alchemy-rebuild/decisions/2026-11-25-ci-runners-6b-delete-execute-api-hooks.md`.
+
 Neither pool's `ghr:environment` value may start with the other's. The termination watcher matches
 instances whose `ghr:environment` tag starts with its own prefix, so an
 overlapping prefix lets one pool's handler deregister the other pool's runners.

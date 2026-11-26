@@ -15,6 +15,7 @@
     {"name":"ClaimElement.inspectPreparedRoles","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"ClaimElement.strictDecomposition","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"ClaimInspection.prepare","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
+    {"name":"LawClaim.mintDistinctionId","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"LegalVocabularyPack.intakeTaxonomy","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"LibrarianLoop.runLibrarianLoop","owner":"@beep/law-practice-domain","family":"slice","conforms":true},
     {"name":"OfficeActionFixture.source","owner":"@beep/law-practice-domain","family":"slice","conforms":true},

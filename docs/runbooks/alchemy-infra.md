@@ -549,11 +549,16 @@ hold machine facts and `op://` references, never a resolved secret; the schema
 rejects anything else before a resource is read.
 
 - AI metrics (`AiMetricsHostConfig`): `sshDestination` (the ssh_config alias of
-  the wrapped dankserver route), `phoenix.image` (pinned; the Pulumi stack
-  config pins `arizephoenix/phoenix:15.5.0`), `tailnet.fqdn`,
+  the wrapped dankserver route), `phoenix.image` (pinned; copy the `image:`
+  line of the live Compose file, tag and digest, so the cutover never runs an
+  older Phoenix against a volume a newer one migrated), `tailnet.fqdn`,
   `legacyCompose.configRoot` (the directory holding today's Compose file and the
-  Tailscale port state file), `secretRefs.hashSalt` and
-  `secretRefs.rawArchiveKey`. Container, network, unit and port fields default
+  Tailscale port state file; read it from the unit's `WorkingDirectory`,
+  `systemctl --user cat ai-metrics-phoenix.service`), `secretRefs.hashSalt` and
+  `secretRefs.rawArchiveKey` (`op://BEEP_SECRETS/ai-metrics/hash-salt` and
+  `op://BEEP_SECRETS/ai-metrics/raw-archive-key`; the agent service account
+  reads only `BEEP_SECRETS`, so the Pulumi stack's `op://TBK/...` references do
+  not resolve). Container, network, unit and port fields default
   to the Compose deployment's values; the data volume defaults to
   `<legacyCompose.composeProject>_phoenix_data`, today
   `beep-ai-metrics-dankserver_phoenix_data`.
@@ -600,18 +605,26 @@ references if a later step needs one.
 
 Cutover, in order:
 
-1. Snapshot the data with Phoenix stopped: on dankserver,
-   `systemctl --user stop ai-metrics-phoenix.service` (its `ExecStop` is
-   `docker compose down`, which keeps the named volume), then archive the volume
-   `beep-ai-metrics-dankserver_phoenix_data` with a throwaway container into a
-   dated tarball outside the volume. Record the tarball path and sha256.
+1. Snapshot the data with Phoenix stopped. On dankserver, run
+   `systemctl --user stop ai-metrics-phoenix.service`. Its `ExecStop` is
+   `docker compose stop`, which leaves the stopped container in place, so then
+   run `docker compose -f <legacy config root>/phoenix.compose.yaml down`
+   without `-v`, which removes the container and keeps the named volume.
+   RetireCompose refuses while a container of the Compose project survives.
+   Archive the volume `beep-ai-metrics-dankserver_phoenix_data` with a
+   throwaway container into a dated tarball outside the volume, and record the
+   tarball path and sha256.
 2. `op run -- bunx alchemy deploy --stage prod --yes --env-file /dev/null`.
    Preflight checks the volume exists; RetireCompose disables the unit, archives
    it under `<legacy config root>/retired-compose/` and refuses to continue if a
    Compose container named `beep-ai-metrics-phoenix` is still present; the
    container starts on the same volume; TailscaleServe re-points HTTPS 8447 at
-   loopback 6006; Health waits for the Docker healthcheck, then checks loopback,
-   Serve and the public URL. A failure in any step fails the deploy.
+   loopback 6006; the container also joins `<composeProject>_default`, where the
+   host's OTLP collector reaches it by name; Health waits until the container runs and answers `/healthz`
+   on its own published loopback port, then checks Serve and the public URL. A
+   failure in any step fails the deploy. The Phoenix image ships no shell, so
+   the container carries no Docker healthcheck (`docker ps` shows no health
+   column); the Health step is the gate.
 3. Verify by hand: the Phoenix UI at the stack's `phoenixUrl` lists the existing
    projects (the data survived), and a test span posted to `otlpTraceUrl`
    appears. Then `bunx alchemy drift --stage prod` exits 0.
@@ -627,7 +640,13 @@ name:
 2. Run the saved `operatorCommands.rollbackToCompose` command. It restores the
    archived unit and starts it; `docker compose up` reattaches the same volume.
 3. If the data itself is damaged, restore the step-1 snapshot into the volume
-   with Phoenix stopped.
+   with Phoenix stopped (`systemctl --user stop`, then `docker compose down`
+   without `-v`): empty the volume and extract the tarball into it with a
+   throwaway container, then `systemctl --user start ai-metrics-phoenix.service`.
+
+Before the destroy has run, a failed deploy rolls back with step 2 alone: the
+Compose root and files stay on disk (RetireCompose only disables the unit and
+moves the unit file into `retired-compose/`).
 
 To retire Phoenix entirely, run the saved `operatorCommands.tailscaleServeOff`
 after the destroy.

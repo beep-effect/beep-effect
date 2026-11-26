@@ -746,7 +746,7 @@ Both fleets keep running throughout.
 **Step 6, drain and destroy the old fleet; end-state delivery (gate, operator workstation, YubiKey route).**
 
 (a) Confirm the live fleet is idle: one `aws ec2 describe-instances --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf Name=instance-state-name,Values=pending,running` returns none, and `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` / `beep-ovf-` runner.
-(b) Move the App's webhook URL to the new function URL with `beep github app` (secret unchanged, step 2). Check: the App's recent deliveries show a 2xx from the new URL. Then delete the overlap repository webhook and the live overflow pool's repository webhook. Check: no repository or App webhook still targets an `execute-api` URL of the old controllers (`gh api repos/beep-effect/beep-effect/hooks` and the App's hook config list only the function URL), and the next deliveries leave no failed delivery to a dead URL. Rollback: follow the ordered procedure below ("If step 6b ran, restore the delivery paths in this order"). The overlap repository webhook comes back first, on the new fleet's function URL, and the App webhook moves back only after its 2xx.
+(b) Superseded 2026-11-25 by `2026-11-25-ci-runners-6b-delete-execute-api-hooks` (the CI goals driver ruled option B): hook 714397446 stays, the App webhook is set inactive and not moved, and only the two Pulumi repository webhooks are deleted. Follow that decision; the original text below is kept for the record. Move the App's webhook URL to the new function URL with `beep github app` (secret unchanged, step 2). Check: the App's recent deliveries show a 2xx from the new URL. Then delete the overlap repository webhook and the live overflow pool's repository webhook. Check: no repository or App webhook still targets an `execute-api` URL of the old controllers (`gh api repos/beep-effect/beep-effect/hooks` and the App's hook config list only the function URL), and the next deliveries leave no failed delivery to a dead URL. Rollback: follow the ordered procedure below ("If step 6b ran, restore the delivery paths in this order"). The overlap repository webhook comes back first, on the new fleet's function URL, and the App webhook moves back only after its 2xx.
 (c) Freeze lifted: the cost-controls component-removal PR has merged. Take a fresh export outside the repo, `pulumi stack export --stack production` to `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-<date>.json`, size and sha256 in a decision, with the program's commit sha; the passphrase only through `op run` from `op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE`. Older exports do not count.
 (d) Decide then, from a `pulumi preview --destroy`, between a whole-stack destroy (if only fleet, network, reaper, controller and AWS turbo-cache leftovers remain and the turbo cache has moved to the Worker) and a targeted destroy (`--target` per fleet URN, no `--target-dependents`) if anything else still lives in the stack. Record the choice and the preview's resource count in a decision, then destroy.
 (e) One PR deletes the program and its readers (inventory below): `infra/ci-runners/`, `infra/src/CiRunners.ts`, `CiFleetController.ts`, `CiRunnerPool.ts`, `CiShardOverflowPool.ts`, `infra/src/internal/ci-runners-entry.ts` and their tests, which also removes the duplicated post-install scripts.
@@ -2807,6 +2807,72 @@ The 300-second gap and the job listings (one per run created in the last two hou
 Lane fix/ci-missed-event-check-request-budget
 
 Reverse: Restore readDetails in FleetMissedEvent.command.ts to read every candidate id concurrently and drop the four delivery detail budget tests.
+
+### Step 6b deletes the Pulumi repository webhooks and keeps the fleet's, 2026-11-25
+
+Cutover step 6b (`2026-11-14-ci-runners-cutover-from-pulumi`, step 6 (b)) takes the Pulumi controllers off `workflow_job` delivery. Three repository webhooks deliver it today: 663255260 and 711445970 point at the Pulumi heavy and overflow controllers' `execute-api` URLs, and 714397446 is the overlap hook on the new fleet's function URL. The CI goals driver ruled option B on 2026-11-25. At T = 2026-11-26T16:00Z, hooks 663255260 and 711445970 are deleted, and 714397446 stays as the fleet's only delivery path. The runner App's webhook is not pointed at the function URL.
+
+**Why B.** The missed-event check reads repository hook deliveries with the fleet-watch App's `repository_hooks: read`. App webhook deliveries can be read only with the App's JWT. Moving delivery to the App (option A, the cutover decision's original step) would leave the check with no delivery evidence from T onward: its `MissedDelivery` and `Delivered` verdicts would end, and only `Gate` evidence would remain. B keeps them live. B also has fewer moving parts at T: no App URL change, no JWT, no overlap window. Repository and App webhooks use the same delivery machinery, and the fleet serves this one repository. Option C, keeping both paths onto the function URL, would deliver every event twice. The fleet's webhook path has no dedupe and its queued check is off in production, so C would need new dedupe code, and it was rejected. No code changes: the check's hook timeline keeps naming repository hook 714397446, and `ci shard-overflow-preflight` keeps requiring a live repository hook to the function URL.
+
+**The App webhook.** The runner App's settings page was read on 2026-11-25 at about 21:45Z, with the operator's sudo-mode access. The `beep-ci-fleet-controller` webhook is active, its URL host is the Pulumi fleet's `execute-api`, "Workflow job" is ticked under Subscribe to events, and "Workflow run" is not. The driver ruled at 21:40Z that at T, in the same step as the hook deletions, the operator sets this webhook inactive by unticking Active on the settings page. Deactivating it stops its deliveries and leaves the App's API use (installation tokens, JIT runner configs) unchanged. Re-ticking Active reverses it. The webhook is never pointed at the function URL. `beep github app` only mints an App, so the change goes through the settings page.
+
+**Preconditions at T.**
+
+- The driver's word naming T.
+- This PR merged by 2026-11-26T15:00Z, in a slot of its own. The infra-github README is in `deploy-infra-github.yml`'s push paths, so the merge opens a deploy first hour, which must end before T.
+- One green `fleet-missed-event-check` run at a `main` commit that contains #3539, within its request budget and with its token revoked. A scheduled run counts. If none has run by 2026-11-26T12:00Z, the driver may word one read-only `workflow_dispatch` on `main`.
+- An hour of its own: nothing merges, and the hour overlaps no other CI-behaviour change.
+- The Pulumi fleet idle (step 6 (a)), checked at T-5 min: `aws ec2 describe-instances --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf Name=instance-state-name,Values=pending,running` returns none, and `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` or `beep-ovf-` runner.
+- The `deploy-infra-github.yml` run that this PR's merge starts has finished, and its first hour has ended.
+- Each deleted hook's configuration (`gh api repos/beep-effect/beep-effect/hooks/<id>`: URL, events, content type, active; no secret is returned) is captured into the 6b log before the deletion, so a rollback uses the exact configuration.
+
+**Proof, in the hour after T.**
+
+- The next fleet job's queued delivery on 714397446 returns 2xx, and a `beep-fleet-*` runner picks the job up.
+- `gh api repos/beep-effect/beep-effect/hooks` lists only 714397446.
+- The App's settings page shows its webhook inactive.
+- Delivery on 714397446 for a fleet job queued after T: the hook's recent deliveries show a 2xx `queued` delivery whose payload names that job. If a job stays queued for five minutes or more, the next missed-event check prints `delivery <id> (2xx)` for it; a run with no such job prints no delivery line, so the hook's delivery list is the proof.
+
+**Rollback.** Before the Pulumi destroy (step 6 (d)): re-create the deleted hooks from the configuration captured at T, with the same secrets, and tick Active on the App webhook again. After the destroy the recorded `execute-api` URLs no longer reach anything: follow the cutover decision's "Rollback after (d)" (restore the stack from the archived export, read the recreated `controllerWebhook` and `shardOverflowWebhook` outputs), then re-create the hooks on those fresh URLs and re-activate the App webhook on `controllerWebhook`.
+
+Lane feat/ci-runners-6b-webhook-switch
+
+Reverse: Re-create repository webhooks 663255260 and 711445970 on the Pulumi controllers' recorded execute-api URLs with their events and secrets, and restore the App webhook's workflow_job delivery if step 6b stopped it.
+
+### AI metrics Phoenix runs without a Docker healthcheck; the Health step probes /healthz, 2026-11-26
+
+The 2026-11-26 dankserver rehearsal (stage `dev_<user>`) failed at Health: Docker ran the container's healthcheck as `CMD-SHELL`, and every probe ended with `stat /bin/sh: no such file or directory`. `arizephoenix/phoenix:22.0.1`, the image the live Compose deployment runs, ships no shell. `@alchemy.run/docker` sets healthchecks through `docker run --health-cmd`, which always runs its value in `/bin/sh`, so no command form reaches a shell-less image. The live Compose file avoids this with the API's exec form (`CMD /usr/bin/python3.13 -c ...`), which the CLI flag cannot express.
+
+Decision: the Phoenix container carries no Docker healthcheck. The Health Exec step is the gate. It waits up to 36 x 5 s for the container to be running and to answer `/healthz` on its own published loopback port, then keeps the published-port, Serve and public-URL checks. `restart: unless-stopped` acts on exit, not on health, so the only loss is the health column in `docker ps`.
+
+Config facts found live in the same session, now in the runbook:
+- The image pin copies the live Compose `image:` line, tag and digest. The `15.5.0` the runbook named would have run an older Phoenix against a volume that 22.0.1 migrated.
+- `legacyCompose.configRoot` comes from the unit's `WorkingDirectory`.
+- The secret references live in `BEEP_SECRETS`, the only vault the agent service account reads.
+- The data volume is `external: true` in the live Compose file and carries no `com.docker.compose.project` label (Pulumi created it 2026-08-06). The first prod apply (02:27Z) stopped at Preflight on that label, with nothing retired; the unit was restarted at once (74 s down). Preflight now accepts an unlabelled volume and still refuses one labelled with another project.
+- The live unit's `ExecStop` is `docker compose stop`, not `down`. The cutover runs `docker compose down` without `-v` after stopping the unit, because RetireCompose refuses while a container of the Compose project survives.
+
+Attempt 2 (02:40:36Z, from f0c12fcf150) deployed, but a field-by-field audit against the retired Compose service found three deltas the stack had never carried. All three now ride the stack:
+- Seven Phoenix settings in the Compose `environment`: `PHOENIX_ENABLE_AUTH=false`, `PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER=false`, `PHOENIX_ENABLE_MCP_SERVER=true`, `PHOENIX_ENABLE_MCP_CODE_MODE=false`, `PHOENIX_DISABLE_AGENT_ASSISTANT=true`, `PHOENIX_ALLOWED_SANDBOX_PROVIDERS=NONE` and `PHOENIX_TELEMETRY_ENABLED=false`. Without them, 22.0.1's defaults turned auth on (`/v1/projects` answered 401) and enabled telemetry and the agent assistant.
+- The external network `beep-ai-metrics-dankserver_default` (`<composeProject>_default`). The host's OTLP collector exports to `http://beep-ai-metrics-phoenix:6006/v1/traces` on that network, so it could no longer resolve Phoenix. The prod container now joins it, and Preflight refuses when it is missing.
+- `stop_grace_period: 2m`, now `stopTimeout: "2 minutes"`, so a stop does not kill Phoenix's SQLite writer at Docker's 10 s default.
+
+The same audit found the image, port binding, volume and restart policy matching. The healthcheck is dropped on purpose (above).
+
+Outcome of the cutover, applied as attempt 3 from `f096be4dca8`:
+- The export-failure window was 02:27:04Z (the attempt-1 stop) to 02:54:35Z, and ingestion was degraded from 02:40:46Z to 02:54:35Z.
+- The collector's persistent queue drained from 42 batches to 0 after attempt 3. Between 02:44:41Z and 02:54:09Z, 22 batches ran out of retries and 91 spans were dropped. The driver accepted that as the cost of the cutover.
+- Phoenix was down about 74 s, 52 s and 20 s across the three attempts.
+- The live state was proven at `f096be4dca8`; later commits on the P4 PR change only documentation.
+
+Rollback for the prod cutover (also in the runbook):
+- RetireCompose deletes nothing. It disables the unit and moves the unit file into `<legacy config root>/retired-compose/`; the Compose root and its files stay on disk.
+- To return to Compose, run `alchemy destroy --stage prod`, which keeps the looked-up volume, then the stack's `operatorCommands.rollbackToCompose`, which restores the unit and starts it on the same volume.
+- If the data is damaged, stop the unit, restore the pre-cutover snapshot tarball into the volume with a throwaway container, and start the unit.
+
+Lane fix/infra-hosts-phoenix-health-gate
+
+Reverse: Restore a Docker healthcheck on the Phoenix container once the Docker provider can set the exec form or the image ships a shell; the Health step keeps its probe either way.
 
 <!-- beep:decisions:end -->
 

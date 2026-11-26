@@ -7,7 +7,7 @@
 
 import * as NodeModule from "node:module";
 import { $WinkId } from "@beep/identity";
-import { SimilarityScore } from "@beep/nlp/Core/Similarity";
+import { SimilarityScore } from "@beep/nlp-processing/Core/Similarity";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Context from "effect/Context";
@@ -19,8 +19,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { observeWinkWorkflow } from "./WinkObservability.ts";
-import type { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity";
-import type { BagOfWords, DocumentVector } from "@beep/nlp/Core/Vectorization";
+import type { DocumentTermSet, TverskyParams } from "@beep/nlp-processing/Core/Similarity";
+import type { BagOfWords, DocumentVector } from "@beep/nlp-processing/Core/Vectorization";
 
 const $I = $WinkId.create("Wink/WinkSimilarity");
 const require = NodeModule.createRequire(import.meta.url);
@@ -276,8 +276,8 @@ const makeWinkSimilarity = Effect.gen(function* () {
  * ```ts
  * import * as Effect from "effect/Effect";
  * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { DocumentId } from "@beep/nlp/Core/Document"
- * import { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { DocumentTermSet, TverskyParams } from "@beep/nlp-processing/Core/Similarity"
  * import { WinkSimilarity, WinkSimilarityLive } from "@beep/wink"
  *
  * const compare = Effect.gen(function* () {
@@ -310,8 +310,8 @@ export class WinkSimilarity extends Context.Service<WinkSimilarity, WinkSimilari
  * ```ts
  * import * as Effect from "effect/Effect";
  * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import { DocumentId } from "@beep/nlp/Core/Document"
- * import { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity"
+ * import { DocumentId } from "@beep/nlp-processing/Core/Document"
+ * import { DocumentTermSet, TverskyParams } from "@beep/nlp-processing/Core/Similarity"
  * import { WinkSimilarity, WinkSimilarityLive } from "@beep/wink"
  *
  * const program = Effect.gen(function* () {

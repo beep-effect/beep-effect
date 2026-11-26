@@ -67,14 +67,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 L0 identity, in progress. P0 Design and grill is complete: PR #3420 merged
-as `dcf6b16a77d`. P1 follows the registry-first design
-(`research/2026-11-19-p1-design-registry-first.md`) with the grafts and the
-rulings recorded in `decisions/2026-11-19-p1-*.md`, and ships as three PRs
-opened one after another: PR A foundation, PR B registry and pins, PR C
-bindings and the break.
+P6 L5 and L7, content-complete in its lane. P0 merged as `dcf6b16a77d`
+(PR #3420); P1 to P5 ran in their own lanes (see `PLAN.md`). P6 follows
+`research/2026-11-24-p6-design.md` and its decisions
+(`decisions/2026-11-24-p6-*.md`) and ships as one PR stacked on P5. The
+Practice KG bundle rebuild over the corpus and the operator grants
+configuration run in the operational environment, outside the repo.
 
 ## Latest Evidence
+
+2026-11-24: P6 rows 0 to 15 committed in the P6 lane. L5-1 to L5-3 are green
+(`research/law-test-plan.md`); `@beep/nlp-processing` owns Core, the graph node
+schemas, the one `Operation` arrow and attributed `ActivityRecord` runs; the
+office-action flow runs through proposal, assessment and attorney admission;
+the claim toolkit emits proposed records only; agent-proposed ontology terms
+are audited before the save; and the matter wall covers all seven access
+paths, proved by `MatterWall.two-matter.test.ts`. The last design sketch left
+`ops/design`, which is deleted.
 
 2026-11-19: P1 opened. Three maps (identity derivation, registries and
 namespaces, the IRI schema move) and three competing designs are under

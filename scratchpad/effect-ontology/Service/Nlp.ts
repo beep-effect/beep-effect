@@ -12,8 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
-import type { BM25Config } from "@beep/nlp/Core/Vectorization";
-import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
+import type { BM25Config } from "@beep/nlp-processing/Core/Vectorization";
+import { DefaultBM25Config } from "@beep/nlp-processing/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { LiteralKit } from "@beep/schema";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";

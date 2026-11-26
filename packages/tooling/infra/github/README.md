@@ -42,7 +42,7 @@ Design order is schema, typed configuration, then resources.
 | All 26 labels | owned, adopted by name | `GitHub.Label` observes by name and updates |
 | Every secret (11 repository, 10 environment) | unmanaged | see "Secrets" |
 | Environment secret `INFRA_GITHUB_APP_PRIVATE_KEY` on `infra-github-prod` | operator-set, not managed by the stack | the deploy identity; only the token-mint step reads it (ruling 2026-11-14) |
-| Two repository webhooks (`workflow_job`) | unmanaged | runner fleet; their secret belongs to the ci-runners stack (P5) |
+| Three repository webhooks (`workflow_job`): 663255260 and 711445970 (the Pulumi heavy and overflow controllers), 714397446 (the new fleet's function URL) | unmanaged | runner fleets; the ci-runners stack (P5) owns their secret. Cutover step 6b deletes the two Pulumi hooks; 714397446 stays as the fleet's only delivery path |
 | Actions permissions | unmanaged | no `@alchemy.run/github` resource (verified gap) |
 
 Every resource is retained on removal (`RemovalPolicy.retain()` over the whole stack): a

@@ -70,4 +70,8 @@ export const PhoneticMatch = Tool.make("PhoneticMatch", {
   failureMode: "return",
   parameters: PhoneticMatchParameters,
   success: S.toEncoded(AiPhoneticMatch),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);
