@@ -525,10 +525,6 @@ describe("PackageManagerDetector — devEngines alone, with a +sha512 version", 
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
-      // The version carries the +sha512 hash, exactly as this repo's own
-      // devEngines does. With no top-level packageManager to fall back on, this
-      // is the ONLY place the devEngines version is normalized — so it is the
-      // test that pins the hash stripping.
       "/repo/package.json": manifestWith({
         devEngines: {
           packageManager: { name: "pnpm", version: "11.11.0+sha512.4463f65fd80ed80d69bc1", onFail: "error" },
@@ -537,7 +533,7 @@ describe("PackageManagerDetector — devEngines alone, with a +sha512 version", 
     }),
     { timeout: "30 seconds" }
   )((it) => {
-    it.effect("a devEngines-only manifest is visible to the version half of detection", () =>
+    it.effect("strips the +sha512 hash from a devEngines-only version, the one path that normalizes it", () =>
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
@@ -721,19 +717,20 @@ describe("PackageManagerDetector — devEngines.packageManager is an ARRAY and t
     }),
     { timeout: "30 seconds" }
   )((it) => {
-    it.effect("arrays are unsupported in this slot — corepack falls back, so do we", () =>
-      Effect.gen(function* () {
-        const detector = yield* PackageManagerDetector;
-        const detected = yield* detector.detect("/repo");
-        assert.strictEqual(
-          detected.name,
-          "pnpm",
-          "the array's element names the detected manager, since one naming another manager would be ignored anyway"
-        );
-        // Taking the array's first element would report 9.9.9 here.
-        const arraySlotVersion = detected.version;
-        assertNone(arraySlotVersion);
-      })
+    it.effect(
+      "arrays are unsupported in this slot — corepack falls back, so do we, never reporting the first element",
+      () =>
+        Effect.gen(function* () {
+          const detector = yield* PackageManagerDetector;
+          const detected = yield* detector.detect("/repo");
+          assert.strictEqual(
+            detected.name,
+            "pnpm",
+            "the array's element names the detected manager, since one naming another manager would be ignored anyway"
+          );
+          const arraySlotVersion = detected.version;
+          assertNone(arraySlotVersion);
+        })
     );
   });
 });

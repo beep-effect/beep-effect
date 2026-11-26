@@ -15,8 +15,7 @@ import * as S from "effect/Schema";
 const runs = { arbitrary: fcRuns(100) };
 const json = S.fromJsonString(S.Json);
 const jsonEntries = S.Array(S.Json).pipe(Arbitrary.schema);
-// Physical YAML files are UTF-8; lone UTF-16 surrogates cannot survive that boundary.
-const stringEntries = S.Array(S.String).pipe(
+const utf8SafeStringEntries = S.Array(S.String).pipe(
   Arbitrary.schema,
   Arbitrary.filter((entries) => A.every(entries, (entry) => entry.isWellFormed()))
 );
@@ -64,7 +63,7 @@ it.effect.prop(
 it.layer(Path.layer, { timeout: "30 seconds" })("WorkspacePatterns.read fidelity", (it) => {
   it.effect.prop(
     "WorkspacePatterns.read preserves YAML patterns, gives them precedence, and falls back to JSON for an empty list",
-    [stringEntries, stringEntries],
+    [utf8SafeStringEntries, utf8SafeStringEntries],
     ([patterns, fallback]) =>
       Effect.gen(function* () {
         const yaml = yield* Yaml.stringify({ packages: patterns });

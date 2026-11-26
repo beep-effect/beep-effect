@@ -185,7 +185,7 @@ const interruptedInstall: Tree = {
 
 describe("LockfileReader — a config-dependency-only workspace (no root package.json)", () => {
   it.layer(workspacesOver(configOnlyWorkspace), { timeout: "30 seconds" })((it) => {
-    it.effect("reads the preamble-plus-empty-main stream as an empty lockfile", () =>
+    it.effect("reads the preamble-plus-empty-main stream as an empty lockfile without its config dependency", () =>
       Effect.gen(function* () {
         const reader = yield* LockfileReader;
         const lockfile = yield* reader.read;
@@ -193,7 +193,6 @@ describe("LockfileReader — a config-dependency-only workspace (no root package
         assert.strictEqual(lockfile.lockfileVersion, "9.0");
         assert.deepStrictEqual(lockfile.packages, []);
         assert.deepStrictEqual(lockfile.importers, []);
-        // The preamble's config dependency is not a workspace package.
         const preambleConfigDepVersion = yield* reader.resolvedVersion("@effected/pnpm-plugin-effect");
         assertNone(preambleConfigDepVersion);
       })

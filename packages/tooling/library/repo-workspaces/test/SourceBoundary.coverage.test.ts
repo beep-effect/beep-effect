@@ -75,7 +75,6 @@ describe("SourceBoundary coverage controls", () => {
   it.layer(Layer.mergeAll(MemoryFileSystem.layerWith({ "/repo/a.ts": "process.cwd(); console.log(1);" }), Path.layer), {
     timeout: "10 seconds",
   })((it) => {
-    // W4-j: EF-40 (#2145) made rule waivers exact keys, so an absent waiver stands in for the old explicit undefined.
     it.effect("absent rule waivers do not waive offences", () =>
       Effect.gen(function* () {
         const report = yield* SourceBoundary.scan({
