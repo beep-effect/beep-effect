@@ -26,9 +26,7 @@ const subsectionText = valueText.pipe(
   Arbitrary.filter((text) => Str.includes("\n")(text) === false && Str.includes("\r")(text) === false)
 );
 
-// Offsets index the original spelling; semantic comparison intentionally drops
-// those positions when a canonical rendering changes whitespace or quoting.
-const semantics = (text: string) =>
+const semanticsWithoutOffsets = (text: string) =>
   A.map(scan(text).sections, (section) => ({
     name: section.name,
     subsection: section.subsection,
@@ -125,7 +123,11 @@ describe("git config property floor", () => {
         assert.strictEqual(entry.value, value);
         assertDefined(entry.value);
         assert.strictEqual(serializeValue(entry.value), rendered);
-        assert.deepStrictEqual(semantics(canonical(text)), semantics(text));
+        assert.deepStrictEqual(
+          semanticsWithoutOffsets(canonical(text)),
+          semanticsWithoutOffsets(text),
+          "offsets index the original spelling, so a canonical rendering that changes whitespace or quoting drops them"
+        );
         assert.strictEqual(canonical(canonical(text)), canonical(text));
       }),
     runs
@@ -145,7 +147,7 @@ describe("git config property floor", () => {
         assertTrue(matchesSection(section, "REMOTE", subsection));
         assert.strictEqual(serializeHeader(section.name, section.subsection), header);
         assert.strictEqual(serializeHeader(subsection)("remote"), header);
-        assert.deepStrictEqual(semantics(canonical(header)), semantics(header));
+        assert.deepStrictEqual(semanticsWithoutOffsets(canonical(header)), semanticsWithoutOffsets(header));
         assert.strictEqual(canonical(canonical(header)), canonical(header));
       }),
     runs

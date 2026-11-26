@@ -78,15 +78,18 @@ const parserLaw = <T, E>(
   );
 };
 
-// Process output is UTF-8: lone UTF-16 surrogates are replaced before parsing.
-// Restrict only wire-format properties; schema round trips above use full arbitraries.
-const noNul = (text: string): boolean => text.isWellFormed() && Str.includes("\0")(text) === false;
+const survivesUtf8Decoding = (text: string): boolean => text.isWellFormed();
+const noNul = (text: string): boolean => survivesUtf8Decoding(text) && Str.includes("\0")(text) === false;
 const lineField = (text: string): boolean =>
   noNul(text) && Str.includes("\n")(text) === false && Str.includes("\r")(text) === false;
 const atom = (text: string): boolean =>
   lineField(text) && Str.includes(" ")(text) === false && Str.includes("\t")(text) === false;
 const nonEmpty = (text: string): boolean => noNul(text) && text.length > 0;
 const nonEmptyAtom = (text: string): boolean => atom(text) && text.length > 0;
+const gitEmitsNoEmptyTreeField = (entries: ReadonlyArray<G.LsTreeEntry>): boolean =>
+  A.every(entries, (entry) => nonEmptyAtom(entry.mode) && nonEmptyAtom(entry.oid) && nonEmpty(entry.path));
+const isGitIndexStage = (stage: number): boolean =>
+  Number.isInteger(stage) && stage >= 0 && stage <= 3 && Object.is(stage, -0) === false;
 const nulStrings = S.String.pipe(
   S.Array,
   Arbitrary.schema,
@@ -145,13 +148,7 @@ describe("Git parser and formatter property floor", () => {
   parserLaw(
     "lsTree preserves raw path bytes",
     trees,
-    Arbitrary.schema(trees).pipe(
-      // Fail-closed parsers (G4) reject empty header fields and empty paths,
-      // which git never emits, so the wire-format arbitrary excludes them.
-      Arbitrary.filter((entries) =>
-        A.every(entries, (entry) => nonEmptyAtom(entry.mode) && nonEmptyAtom(entry.oid) && nonEmpty(entry.path))
-      )
-    ),
+    Arbitrary.schema(trees).pipe(Arbitrary.filter(gitEmitsNoEmptyTreeField)),
     (entries) => nulJoin(A.map(entries, (entry) => `${entry.mode} ${entry.type} ${entry.oid}\t${entry.path}`)),
     (git) => git.lsTree(cwd, "HEAD")
   );
@@ -165,14 +162,7 @@ describe("Git parser and formatter property floor", () => {
         A.every(
           entries,
           (entry) =>
-            nonEmptyAtom(entry.mode) &&
-            nonEmptyAtom(entry.oid) &&
-            nonEmpty(entry.path) &&
-            // git prints an index stage as one of 0..3; the parser refuses anything else.
-            Number.isInteger(entry.stage) &&
-            entry.stage >= 0 &&
-            entry.stage <= 3 &&
-            Object.is(entry.stage, -0) === false
+            nonEmptyAtom(entry.mode) && nonEmptyAtom(entry.oid) && nonEmpty(entry.path) && isGitIndexStage(entry.stage)
         )
       )
     ),
@@ -192,13 +182,11 @@ describe("Git parser and formatter property floor", () => {
     unmerged: "U",
     unknown: "X",
   };
-  /** Whether a name-status entry is one git's `-z` listing can carry: a rename/copy with its old path, anything else without. */
   const wireNameStatus = (entry: G.NameStatusEntry): boolean =>
     nonEmpty(entry.path) &&
     (entry.status === "renamed" || entry.status === "copied"
       ? entry.oldPath !== undefined && nonEmpty(entry.oldPath)
       : entry.oldPath === undefined && entry.score === undefined);
-  /** One entry's `-z` tokens: `<code><score>\0[<oldPath>\0]<path>\0`. */
   const nameStatusRecord = (entry: G.NameStatusEntry): string =>
     `${codes[entry.status]}${entry.score ?? ""}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`;
   parserLaw(
@@ -245,11 +233,16 @@ describe("Git parser and formatter property floor", () => {
   );
 
   const log = S.Array(G.CommitLogEntry);
-  /** The six NUL-terminated header fields every log record opens with, in `GitCommand.log`'s format order. */
   const logHeader = (entry: G.CommitLogEntry): string =>
     `\0${entry.sha}\0${DateTime.formatIso(entry.authoredAt)}\0${DateTime.formatIso(entry.committedAt)}\0${entry.authorName}\0${entry.authorEmail}\0${entry.subject}\0`;
   const wireLogHeader = (entry: G.CommitLogEntry): boolean =>
     noNul(entry.sha) && noNul(entry.authorName) && noNul(entry.authorEmail) && noNul(entry.subject);
+  const nameOnlyWithoutBody = (entry: G.CommitLogEntry): boolean =>
+    entry.changes === undefined && entry.body === undefined;
+  const withPathsDerivedFromChanges = (entries: ReadonlyArray<G.CommitLogEntry>) =>
+    A.map(entries, (entry) =>
+      G.CommitLogEntry.make({ ...entry, paths: A.map(entry.changes ?? [], (change) => change.path) })
+    );
   parserLaw(
     "log preserves empty authors, an empty subject, timestamp instants, and raw path bytes",
     log,
@@ -259,9 +252,7 @@ describe("Git parser and formatter property floor", () => {
           entries,
           (entry) =>
             wireLogHeader(entry) &&
-            // A --name-only read never answers `changes`, and a read without includeBody never answers `body`.
-            entry.changes === undefined &&
-            entry.body === undefined &&
+            nameOnlyWithoutBody(entry) &&
             A.every(entry.paths, (path) => noNul(path) && path.length > 0)
         )
       )
@@ -291,12 +282,7 @@ describe("Git parser and formatter property floor", () => {
             A.every(entry.changes, wireNameStatus)
         )
       ),
-      // In name-status mode `paths` is DERIVED: the new path of every change.
-      Arbitrary.map((entries) =>
-        A.map(entries, (entry) =>
-          G.CommitLogEntry.make({ ...entry, paths: A.map(entry.changes ?? [], (change) => change.path) })
-        )
-      )
+      Arbitrary.map(withPathsDerivedFromChanges)
     ),
     (entries) =>
       A.join(
@@ -490,12 +476,15 @@ describe("Git parser and formatter property floor", () => {
     ([entries]) =>
       Effect.gen(function* () {
         const rendered = G.StatusEntry.format(entries);
-        // A clean tree renders as "" and is the empty -z stream, not one empty record.
         const parsed = yield* parseWith(
           (git) => git.status(cwd),
           rendered === "" ? "" : nulJoin(Str.split("\n")(rendered))
         );
-        assert.strictEqual(G.StatusEntry.format(parsed), rendered);
+        assert.strictEqual(
+          G.StatusEntry.format(parsed),
+          rendered,
+          'a clean tree renders as "", the empty -z stream, not one empty record'
+        );
         assert.strictEqual(S.toEquivalence(status)(parsed, entries), true);
       }),
     runs

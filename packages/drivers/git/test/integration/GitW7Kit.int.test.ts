@@ -1,14 +1,3 @@
-// Proves the W7 kit members and extensions (repo-cli-gh-git-consolidation
-// SPEC D-17) against a REAL git binary and a real filesystem, through
-// @effect/platform-node's NodeServices.layer. ../GitW7Kit.test.ts pins the
-// argv and classification arms over a scripted spawner; this file is where the
-// semantics those arms assume meet real git.
-//
-// One fixture: a repository with two divergent branches (one conflicting with
-// main, one cleanly mergeable), a configured upstream, a tracked file an
-// ignore rule matches, and a clone of it to fetch into. Each lives in a scoped
-// temporary directory removed with the layer.
-
 import { Git, GitCommandError, MergeTreeResult, UnknownRefError } from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
@@ -35,7 +24,6 @@ class FixtureSetupError extends S.TaggedError<FixtureSetupError, { readonly bran
   $I.annote("FixtureSetupError", { description: "A real Git fixture command exited unsuccessfully." })
 ) {}
 
-/** Pins fixture configuration at the real spawner boundary without changing the host environment. */
 const FixtureServices = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
   Effect.gen(function* () {
@@ -60,7 +48,6 @@ const TestLayer = Git.layer.pipe(Layer.provideMerge(FixtureServices));
 
 const FIXTURE_ENV = { LC_ALL: "C", GIT_TERMINAL_PROMPT: "0" } as const;
 
-/** One raw fixture `git` call; dies loudly when git cannot spawn or exits non-zero. */
 const runFixtureGit = (
   cwd: string,
   args: ReadonlyArray<string>
@@ -78,18 +65,13 @@ const runFixtureGit = (
     )
   );
 
-it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository", (it) => {
+it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit against a real git binary and filesystem", (it) => {
   let dir = "";
   let clone = "";
   let root = "";
   let mainSha = "";
   let baseSha = "";
 
-  /**
-   * base: a.txt, .gitignore (`*.log`), tracked keep.log (force-added).
-   * main: a.txt changed, plus b.txt. conflict: a.txt changed differently.
-   * clean: c.txt only. `main` tracks `refs/remotes/origin/main`.
-   */
   const FixtureLayer = Layer.effectDiscard(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -125,7 +107,6 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
       yield* raw(["add", "c.txt"]);
       yield* raw(["commit", "-m", "clean change"]);
       yield* raw(["checkout", "-q", "main"]);
-      // %(upstream) maps branch.<b>.merge through the remote's fetch refspec, so the remote must exist.
       yield* raw(["remote", "add", "origin", dir]);
       yield* raw(["update-ref", "refs/remotes/origin/main", mainSha]);
       yield* raw(["config", "branch.main.remote", "origin"]);
@@ -169,8 +150,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit — real repository",
     it.effect("upstream reads the exact branch, never a prefix match", () =>
       Effect.gen(function* () {
         const git = yield* Git;
-        const observedUpstream = yield* git.upstream(dir, "main");
-        assertSome(observedUpstream, "refs/remotes/origin/main");
+        const upstreamViaOriginFetchRefspec = yield* git.upstream(dir, "main");
+        assertSome(upstreamViaOriginFetchRefspec, "refs/remotes/origin/main");
         const observedUpstream2 = yield* git.upstream(dir, "conflict");
         assertNone(observedUpstream2);
         const observedUpstream3 = yield* git.upstream(dir, "feat");
