@@ -168,6 +168,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: ./.github/actions/apt-install
         with:
+          deb-cache: "true"
           no-install-recommends: "false"
           packages: >-
             libwebkit2gtk-4.1-dev

@@ -152,7 +152,6 @@ export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, 
   ...A.map(
     [
       "@beep/ai-sync",
-      "@beep/infra",
       "@beep/palantiri",
       "@beep/repo-ai-metrics",
       "@beep/repo-cli",
@@ -163,7 +162,7 @@ export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, 
   ),
   ["skills-lock.json", "skills-lock.json", "@beep/repo-cli"],
   ...A.map(
-    ["@beep/infra", "@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"],
+    ["@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"],
     (owner) => ["harness-ledger", "harness-ledger/**", owner] as const
   ),
   ["biome.identity.jsonc", "biome.identity.jsonc", "@beep/repo-cli"],
@@ -369,7 +368,6 @@ const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
   "@beep/html": 10.1,
   "@beep/hubspot": 2.5,
   "@beep/identity": 6.7,
-  "@beep/infra": 8.4,
   "@beep/jsonc": 4.9,
   "@beep/jsonl": 3.9,
   "@beep/langextract": 5.1,

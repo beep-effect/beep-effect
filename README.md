@@ -284,7 +284,7 @@ Human contribution and vulnerability reporting:
 [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`SECURITY.md`](SECURITY.md).
 Agent law: [`AGENTS.md`](AGENTS.md).
 
-First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
+First-party work lives under `packages/`, `apps/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree. The gitignored
 `.repos/` links point at a reference workspace that
 `bun run beep refs provision` sets up; see

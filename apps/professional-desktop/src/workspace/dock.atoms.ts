@@ -233,18 +233,15 @@ export type DesktopDockGraph = DockAtomGraph;
  */
 export const desktopPanelId = (key: DesktopPanelKey): PanelId => PanelId.make(`surface-${key}`);
 
-// Per-panel minima (the M1 kernel capability): a split or edge insertion can
-// never squeeze a content-heavy panel below readability — QA round 1 showed
-// a full-width row insertion clipping Chat to ~155px (finding R1-06).
 const CONTENT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(180) });
-// Chat's height floor is taller than the rest: its tab strip (~35px) plus the
-// composer chrome (~104px) plus roughly three transcript lines must all stay
-// visible for the panel to read as a conversation.
-const CHAT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(260) });
+const CHAT_TAB_STRIP_PX = 35;
+const COMPOSER_CHROME_PX = 104;
+const THREE_TRANSCRIPT_LINES_PX = 121;
+const CHAT_MIN = PanelConstraints.make({
+  minWidth: O.some(220),
+  minHeight: O.some(CHAT_TAB_STRIP_PX + COMPOSER_CHROME_PX + THREE_TRANSCRIPT_LINES_PX),
+});
 
-// The kernel panel for a desktop panel key. Every panel is keep-alive
-// (`renderMode: "always"`): inactive tabs stay mounted so chat streams,
-// ontology session state, and sync progress survive tab switches.
 const desktopPanel = (key: DesktopPanelKey): Panel =>
   Panel.make({
     id: desktopPanelId(key),
@@ -281,12 +278,7 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
   root: SplitNode.make({
     splitId: SplitId.make("desktop-rows"),
     layout: VerticalSplitLayout.make({
-      // 56/44 rather than 62/38: the bottom shell row hosts Chat, whose 260px
-      // minHeight clamp engages only while top (180px ontology floor) + gap +
-      // bottom (260px) fit the viewport; below that feasibility floor the raw
-      // ratio governs, and 44% keeps the composer and a few transcript lines
-      // visible on short viewports (QA closeout P0/P1). The ontology cluster
-      // keeps the majority share.
+      // decision: desktop-rows-split-56-44-for-chat
       topRatio: SplitRatio.make(5_600),
       top: SplitNode.make({
         splitId: SplitId.make("desktop-ontology-columns"),
@@ -406,8 +398,6 @@ export const resetDockSnapshotAtom = makeResetDockSnapshotAtom(Effect.sync(() =>
 const storageFailure = (operation: DockPersistenceOperation): DockPersistenceError =>
   DockPersistenceError.make({ operation, message: "localStorage is unavailable in this environment." });
 
-// Snapshot store over `window.localStorage` (the `Atom.kvs` persistence
-// precedent, expressed as the kernel's `DockSnapshotStore` service).
 const DockSnapshotStoreLocalStorage = Layer.succeed(
   DockSnapshotStore,
   DockSnapshotStore.of({
@@ -461,8 +451,6 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
     Layer.mergeAll(DockEngineLive, DockSnapshotStoreLocalStorage),
     defaultDesktopWorkspace
   );
-  // Storage access is guarded end to end: an unreadable store means "nothing
-  // to restore", and a failed poison cleanup must not fail the boot either.
   const persisted = yield* Effect.try({
     try: () => O.fromNullishOr(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)),
     catch: () => storageFailure("load"),
@@ -505,11 +493,8 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
  * @category atoms
  * @since 0.0.0
  */
-// Deliberately never disposed: the graph's lifetime IS the page's. Tests that
-// build graphs directly use makeDesktopDockGraph and dispose them explicitly.
 export const desktopDockGraphAtom = professionalBrowserRuntime.atom(makeDesktopDockGraph).pipe(Atom.keepAlive);
 
-// Milliseconds of quiet between workspace changes before a snapshot save.
 const DOCK_SAVE_DEBOUNCE_MS = 400;
 
 /**
@@ -549,23 +534,15 @@ export const dockPersistenceBindingAtom = Atom.family((graph: DesktopDockGraph) 
 
 const firstGroupId = (root: DockNode): O.Option<GroupId> => O.map(A.head(DockNode.tabs(root)), (tabs) => tabs.groupId);
 
-// A root-recovery group id that cannot collide with any live group — the
-// reducer's uniqueness guard is workspace-scoped, so a floating group may
-// still own "desktop-shell" while the docked tree is empty.
-const recoveryRootGroupId = (workspace: DockWorkspace): GroupId =>
+const unusedShellGroupId = (workspace: DockWorkspace): GroupId =>
   O.getOrElse(
     A.findFirst(
       A.map(A.range(0, 64), (n) => (n === 0 ? GROUP_SHELL : GroupId.make(`desktop-shell-${n}`))),
       (candidate) => O.isNone(DockWorkspace.findTabs(workspace, candidate))
     ),
-    // 65 live desktop-shell groups would be required to exhaust the probe; the
-    // kernel then rejects the reopen with group-already-exists, retryably.
     () => GroupId.make("desktop-shell-overflow")
   );
 
-// The group a reopened panel should join: the group holding one of its
-// default-layout cluster siblings (SPARQL belongs beside Inspector), falling
-// back to the first docked group when the whole cluster is closed.
 const clusterAnchorGroup = (workspace: DockWorkspace, key: DesktopPanelKey): O.Option<GroupId> => {
   const cluster = panelSpec(key).cluster;
   const siblings = A.filter(DESKTOP_PANELS, (panel) => panel.cluster === cluster && panel.key !== key);
@@ -615,7 +592,7 @@ export const panelOperation: {
             ),
             (groupId) => TabPlacement.make({ groupId })
           ),
-          () => RootPlacement.make({ groupId: recoveryRootGroupId(workspace) })
+          () => RootPlacement.make({ groupId: unusedShellGroupId(workspace) })
         ),
       }),
   });

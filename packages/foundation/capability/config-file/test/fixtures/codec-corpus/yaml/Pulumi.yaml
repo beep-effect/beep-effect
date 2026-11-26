@@ -2,7 +2,7 @@ name: beep-effect-ai-metrics
 runtime:
   name: nodejs
   options:
-    # Classic TypeScript API for the Pulumi runtime: infra's TS6 (path from src/internal).
-    nodeargs: --require ../../pulumi-typescript6.cjs
+    # Preload a runtime shim before the entry point (path from src/internal).
+    nodeargs: --require ../../runtime-preload.cjs
 description: Target-agnostic AI metrics install orchestration for beep-effect.
 main: ./src/internal/ai-metrics-entry.ts

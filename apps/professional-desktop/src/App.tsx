@@ -123,10 +123,7 @@ const isDevMode = (): boolean => {
   return P.isBoolean(value) ? value : value === "true";
 };
 
-// Dev-only browser-mode session token: lets the agent-run browser smoke reach
-// the full desktop RPC group over HTTP (the shell normally injects this through
-// the Tauri `sidecar_transport` probe). Gated on Vite DEV so production web
-// builds never embed a token; without it browser HTTP stays chat-only.
+// decision: desktop-surfaces-gate-on-session-token
 const devRpcSessionToken = (): O.Option<string> => {
   const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
   return O.liftPredicate(token, (value): value is string => isDevMode() && P.isString(value) && value.length > 0);
@@ -138,15 +135,7 @@ const browserSidecarTransport = (): SidecarTransport =>
 const hasDesktopRpcAccess = (transport: SidecarTransport): boolean =>
   transport.ipc || O.isSome(transport.rpcSessionToken);
 
-// effect-first: probe which transport the sidecar speaks. In a Tauri webview
-// this invokes the Rust `sidecar_transport` command — bridged through Effect at
-// the Tauri Promise boundary and schema-decoded — and in a plain browser it is
-// HTTP. Packaged HTTP commands resolve only after the bundled sidecar reports
-// that its complete RPC runtime is live, so this existing gate also prevents
-// query atoms from racing a cold start. `Effect.suspend` defers the runtime
-// check to when the atom runs, keeping the original deferred semantics. A
-// rejected invoke or decode failure flows to the atom's `AsyncResult.Failure`
-// and renders the unavailable state.
+// decision: desktop-bootstrap-probe-then-bind
 const readSidecarTransport = Effect.suspend(() =>
   hasTauriRuntime()
     ? Effect.tryPromise({
@@ -156,23 +145,13 @@ const readSidecarTransport = Effect.suspend(() =>
     : Effect.sync(browserSidecarTransport)
 );
 
-// AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
-// Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTransport);
 
-// Write-capable surfaces (vault sync, ontology workbench, contradiction
-// triage) are served over HTTP only when the sidecar holds the per-launch
-// session token. Without it those panels used to mount anyway and fail RPC by
-// RPC — dead buttons, duplicated red errors, and a Vault panel that looked
-// "unauthenticated" with no explanation. The honest state is a gate that says
-// what this session is and how to unlock it.
 const DesktopSessionNotice = ({ label }: { readonly label: string }): JSX.Element => (
   <div
     className="grid h-full min-w-0 place-items-center overflow-hidden p-6 text-center text-sm text-muted-foreground"
     data-testid="desktop-session-required"
   >
-    {/* Env-var tokens have no break opportunities; let them wrap inside a
-        narrow pane instead of clipping at its edge. */}
     <div className="min-w-0 max-w-md wrap-anywhere">
       <p>{label} needs the desktop shell or an authenticated desktop HTTP session.</p>
       <p className="mt-2 text-xs">
@@ -212,7 +191,6 @@ const BrowserFailureReporter = ({
   return null;
 };
 
-// The toast portals every shell state renders, exactly once per state.
 const ShellChrome = ({ children }: { readonly children: ReactNode }): JSX.Element => (
   <>
     {children}
@@ -221,7 +199,6 @@ const ShellChrome = ({ children }: { readonly children: ReactNode }): JSX.Elemen
   </>
 );
 
-// One redacted failure card for every bootstrap failure surface.
 const ShellFailureCard = ({
   cause,
   heading,
@@ -246,10 +223,6 @@ const ShellFailureCard = ({
   );
 };
 
-// atom-first: when the probe resolves, point the rpc client at the matching
-// protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
-// binding rather than a useEffect; `chatProtocolLayerAtom` already defaults to
-// HTTP, so the layer is only rewritten once the transport is confirmed.
 const protocolLayerBindingAtom = professionalBrowserRuntime.atom(
   Effect.fnUntraced(function* (get) {
     const transport = yield* get.result(sidecarTransportAtom);
@@ -266,8 +239,6 @@ const protocolLayerBindingAtom = professionalBrowserRuntime.atom(
     );
     get.set(epistemicProtocolLayerAtom, protocolLayer);
     get.set(chatProtocolLayerAtom, protocolLayer);
-    // Vault-sync intents ride the sidecar's launch-token-gated Api over HTTP. An IPC sidecar
-    // serves no HTTP, so intents stay queued there instead of failing silently.
     get.set(
       vaultSyncIntentTransportLayerAtom,
       transport.ipc
@@ -303,9 +274,7 @@ const ShellLoading = ({ label }: { readonly label: string }): JSX.Element => (
   </div>
 );
 
-// Navigating to a panel must FOCUS its group as well as activate its tab —
-// a nav click on a panel already active in an unfocused group is otherwise
-// a visual no-op (and "current page" would not follow the click).
+// decision: nav-current-page-follows-focused-group
 const focusPanelGroup = (
   graph: DesktopDockGraph,
   api: O.Option<DockviewAdapterApi>,
@@ -319,8 +288,6 @@ const focusPanelGroup = (
     },
   });
 
-// The Home overview's launch tiles. Ontology's tile targets the Graph panel —
-// the workbench's center of gravity — rather than any single tool panel.
 const HOME_TILES = [
   {
     description: "Work with the professional assistant and your saved threads.",
@@ -339,8 +306,6 @@ const HOME_TILES = [
   },
 ] as const;
 
-// The navigation action's real input is one panel key; the dock graph, the
-// adapter api, and the workspace are registry state the action reads itself.
 const navigateDesktopPanelAtom = professionalBrowserRuntime.fn<DesktopPanelKey>()(
   Effect.fn("professional_desktop.workspace.navigate_panel")(function* (key, ctx) {
     const graph = yield* ctx.result(desktopDockGraphAtom);
@@ -415,13 +380,6 @@ const DockWatermark = (): JSX.Element => (
   </div>
 );
 
-// Panel content re-enters the APP registry: the adapter provides the dock
-// graph's private registry to everything it portals, but chat/ontology/sync
-// state (and the protocol-layer bindings that configure them) live in the
-// root RegistryProvider. Without this wrapper each surface would silently
-// instantiate detached copies of its atoms inside the graph registry.
-// A fixed retry budget absorbs transient third-party render incidents without
-// turning persistent faults into an unbounded remount loop.
 const SURFACE_RETRY_LIMIT = 2;
 
 const SurfaceRecoveryState = LiteralKit(["ready", "retrying", "failed"])
@@ -573,16 +531,15 @@ export const SurfaceBoundary = ({
   readonly label: string;
 }): JSX.Element => <RecoveryBoundary label={label}>{children}</RecoveryBoundary>;
 
+// decision: desktop-bootstrap-probe-then-bind
 const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
-  const wrap = (label: string, content: ReactNode): JSX.Element => (
+  const wrapInAppRegistry = (label: string, content: ReactNode): JSX.Element => (
     <RegistryContext.Provider value={appRegistry}>
       <SurfaceBoundary label={label}>{content}</SurfaceBoundary>
     </RegistryContext.Provider>
   );
-  // Desktop-RPC surfaces gate on the authenticated session instead of
-  // mounting into a transport that can only answer chat RPCs.
   const wrapDesktop = (label: string, content: ReactNode): JSX.Element =>
-    wrap(label, <DesktopSessionGate label={label}>{content}</DesktopSessionGate>);
+    wrapInAppRegistry(label, <DesktopSessionGate label={label}>{content}</DesktopSessionGate>);
   const wrapDesktopLazy = (label: string, content: ReactNode): JSX.Element =>
     wrapDesktop(
       label,
@@ -596,13 +553,10 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
         {content}
       </Suspense>
     );
-  // Each ontology region reads the same app-registry atoms it read inside
-  // the old monolith, so a region docked anywhere (or floated) stays wired
-  // to the same session.
   return {
-    home: () => wrap("Home", <HomeSurface />),
-    chat: () => wrap("Chat", <ChatApp />),
-    "editor-proof": () => wrap("Editor proof", <EditorProofPanel />),
+    home: () => wrapInAppRegistry("Home", <HomeSurface />),
+    chat: () => wrapInAppRegistry("Chat", <ChatApp />),
+    "editor-proof": () => wrapInAppRegistry("Editor proof", <EditorProofPanel />),
     sync: () =>
       wrapDesktop(
         "Vault sync",
@@ -623,15 +577,10 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
   };
 };
 
-// The family owns one renderer map per graph. Reading the professional registry
-// inside the atom keeps renderer identity stable without module-global state.
 const panelRendererAtoms = Atom.family((_graph: DesktopDockGraph) =>
   Atom.readable((get) => AsyncResult.map(get(professionalAtomRegistryAtom), makePanelRenderers))
 );
 
-// atom-first: the menu's open flag is an atom, not useState — shell chrome
-// state lives in the registry like everything else, and no React hook owns
-// it.
 const ontologyMenuOpenAtom = Atom.make(false).pipe(Atom.keepAlive);
 const ontologyMenuElementAtom = Atom.make<O.Option<HTMLDivElement>>(O.none());
 
@@ -679,7 +628,6 @@ const ontologyMenuDismissBindingAtom = professionalBrowserRuntime.atom((get) =>
   })
 );
 
-// One entry row of the ontology panel menu: open-state dot plus label.
 const OntologyMenuItem = ({
   current,
   onSelect,
@@ -708,7 +656,6 @@ const OntologyMenuItem = ({
   </button>
 );
 
-// The expanded nine-panel disclosure list under the Ontology rail entry.
 const OntologyMenuList = ({
   isCurrent,
   onNavigate,
@@ -739,12 +686,6 @@ const OntologyMenuList = ({
   </div>
 );
 
-// The nav rail's Ontology entry: expands to the nine-panel menu. An entry
-// click focuses an open panel or opens a closed one beside its cluster
-// siblings while the disclosure stays open for successive panel picks; the
-// menu dismisses on outside press and Escape (ARIA disclosure practices).
-// The menu element and dismissal listeners are owned by runtime atoms, so
-// opening and closing the menu scopes the listener lifecycle.
 const OntologyMenu = ({
   isCurrent,
   workspace,
@@ -770,8 +711,6 @@ const OntologyMenu = ({
         variant={anyCurrent ? "secondary" : "ghost"}
       >
         Ontology
-        {/* Launcher affordance: this entry opens a panel menu, unlike the
-            plain page buttons beside it (QA finding R1-08). */}
         <span aria-hidden className="ml-1 text-3xs opacity-70">
           ▾
         </span>
@@ -790,6 +729,10 @@ const OntologyMenu = ({
 
 const SHELL_NAV_PANELS = A.filter(DESKTOP_PANELS, (panel) => panel.cluster === "shell");
 
+const minGroupExtentBeforeFonts = 180;
+const stripChromeWithActionRail = 128;
+
+// decision: workbench-shell-owns-viewport-and-theme
 const DesktopShell = ({
   graph,
   transport,
@@ -802,8 +745,6 @@ const DesktopShell = ({
   const focusedGroup = useAtomValue(focusedDockGroupAtom(graph));
   const desktopRpcAvailable = hasDesktopRpcAccess(transport);
   const shellNavPanels = A.filter(SHELL_NAV_PANELS, ({ key }) => key !== "contradiction-triage" || desktopRpcAvailable);
-  // One current page: the panel active in the FOCUSED group. Before any
-  // focus interaction (or if focus clears) fall back to open-anywhere active.
   const isPanelCurrent = (key: DesktopPanelKey): boolean =>
     O.match(focusedGroup, {
       onNone: () => isPanelActive(workspace, key),
@@ -814,19 +755,11 @@ const DesktopShell = ({
     });
   const navigate = useAtomSet(navigateDesktopPanelAtom);
   const surfaceRenderers = useAtomValue(panelRendererAtoms(graph)).pipe(AsyncResult.getOrThrow);
-  // Debounced snapshot persistence for every workspace change (drag, split,
-  // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
 
   return (
     <>
       <DocumentIntakeTarget>
-        {/* The shell owns the viewport, and nothing outside it scrolls. `h-dvh` rather
-            than `h-screen` so a mobile browser's collapsing chrome cannot push the app
-            taller than the space it actually has, and `overflow-hidden` so a surface
-            that misjudges its height gets clipped instead of growing a second, outer
-            scrollbar over the top of the pane that was already scrolling. Everything
-            inside scrolls in its own pane. */}
         {/* Keep the viewport shell on one compositor layer. Software-rendered
             browser captures otherwise expose partial text-tile repaints for a
             frame when dock portals swap active content. */}
@@ -845,9 +778,6 @@ const DesktopShell = ({
               </Button>
             ))}
             <OntologyMenu isCurrent={isPanelCurrent} workspace={workspace} />
-            {/* Theming belongs to the shell, not to one surface. It used to live in
-                the chat header, so Home, Ontology and Vault sync had no way to reach
-                it at all. */}
             <div className="ml-auto">
               <ThemeToggle />
             </div>
@@ -861,13 +791,11 @@ const DesktopShell = ({
                 onReady={({ api }) => initializeDockApi({ api, graph })}
                 options={{
                   gap: 6,
-                  // Synchronous floor while font capture settles, and strip
-                  // chrome that includes the Float/Maximize action rail.
-                  minGroupExtent: 180,
+                  minGroupExtent: minGroupExtentBeforeFonts,
                   titleMinima: {
                     font: "12px ui-sans-serif, system-ui, sans-serif",
                     lineHeight: 16,
-                    chrome: TabChrome.make({ perTab: 44, strip: 128 }),
+                    chrome: TabChrome.make({ perTab: 44, strip: stripChromeWithActionRail }),
                   },
                 }}
               />
@@ -882,8 +810,6 @@ const DesktopShell = ({
   );
 };
 
-// The shell's bootstrap decision as data: registry, then transport probe,
-// then protocol binding, folded in order so an earlier failure short-circuits.
 const DesktopBootstrapState = LiteralKit(["preparing", "connecting", "binding", "failed", "ready"])
   .toTaggedUnion("kind")({
     preparing: {},
@@ -938,10 +864,6 @@ const desktopBootstrapAtom = Atom.make(
     })
 );
 
-// Inside the graph-registry provider: probe the transport, bind the protocol
-// layers into the SAME registry the panel content reads from, and gate the
-// shell on the probe. One registry for the whole app — a second one would let
-// panels read protocol atoms the bindings never wrote.
 const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element =>
   DesktopBootstrapState.match(useAtomValue(desktopBootstrapAtom), {
     preparing: () => (
@@ -983,8 +905,6 @@ const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Ele
  * @since 0.0.0
  */
 export function App(): JSX.Element {
-  // Hooks precede the spike check (rules-of-hooks); the dock graph atom
-  // starting on the spike route mirrors M2, where the transport probe did.
   const graphResult = useAtomValue(desktopDockGraphAtom);
 
   if (hasCosmosSpikeFlag()) {

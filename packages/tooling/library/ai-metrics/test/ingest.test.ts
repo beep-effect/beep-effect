@@ -1893,7 +1893,8 @@ it.layer(GitKitOverPlatformSpawnerForSnapshotIndexReads, { timeout: "30 seconds"
           expect(plan.steps).toEqual(
             expect.arrayContaining([
               expect.objectContaining({
-                command: "cd infra && pulumi preview --stack beep-ai-metrics-dankserver",
+                command:
+                  "cd packages/tooling/infra/infra-hosts && op run -- bunx alchemy plan --stage prod --env-file /dev/null",
                 stepId: "backend.phoenix.plan",
               }),
             ])

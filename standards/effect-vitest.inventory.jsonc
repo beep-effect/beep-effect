@@ -3,10 +3,10 @@
   "schemaVersion": "effect-vitest-inventory/v1",
   "effectVitestVersion": "4.1.5",
   "scope": [
-    "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
-    "{apps,packages,infra}/**/test/**/*.ts",
-    "!{apps,packages,infra}/**/node_modules/**",
-    "!{apps,packages,infra}/**/.*/**",
+    "{apps,packages}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+    "{apps,packages}/**/test/**/*.ts",
+    "!{apps,packages}/**/node_modules/**",
+    "!{apps,packages}/**/.*/**",
     "!**/dist/**"
   ],
   "findings": [
@@ -5026,28 +5026,6 @@
       "reason": "The database lifetime is deliberately shorter than the test: create/close/reopen persistence, production boot closure before verification, or extension cleanup before its assertion; the platform services stay in it.layer, and removing the extension scope makes its check fail (goals/effect-vitest-canon/research/desktop-pglite-lifetimes-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:infra/test/OpenClaw.test.ts:130:scoped@16#1",
-      "lens": "resource",
-      "ruleId": "EV004",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 130,
-      "endLine": 137,
-      "symbol": "scoped",
-      "occurrence": "v2:e65164bbdfd81dc82efa258cb86a905dd90a2bbafb130f7b1f755f79eb5eb564",
-      "class": "inner-helper-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const handle = yield* spawner.spawn(command); return yield* Effect.all([handle.stderr.pipe(Stream.decodeText(), Stream.mkString), handle.exitCode], { concurren",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "runCaptured closes the spawned handle after the concurrent stderr drain and exitCode join, before returning to its caller; the test scope does not replace that earlier process release. Owner: @beep/infra. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
-    },
-    {
       "id": "EV004:packages/drivers/cosmos/test/CosmosProjection.test.ts:190:scoped@15#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -7237,72 +7215,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The subject is the checked-in package.json and src/styles/globals.css relationship; reading the real files detects missing Tailwind source declarations, which copied content would not (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when the Tailwind source check runs as a lint over the committed files instead of a filesystem test."
-    },
-    {
-      "id": "EV010:infra/ci-runners/sdks/ghaRunners/test/build.test.js:2:node:fs@6#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/infra",
-      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
-      "line": 2,
-      "endLine": 2,
-      "symbol": "node:fs",
-      "occurrence": "v2:be62d66f92f1ab45f925dfb420df9b4a05878092ed1c8f4861e4e3f31bd1b253",
-      "class": "platform-filesystem-candidate",
-      "evidence": "fs = require(\"node:fs\")",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The standalone node:test build suite runs the selected real compiler, captures exact argv and cwd, and copies a manifest in real temporary directories with context.after cleanup. Owner: @beep/infra. Exit: retire when the build script takes an injected compiler runner and output directory."
-    },
-    {
-      "id": "EV010:infra/ci-runners/sdks/ghaRunners/test/build.test.js:3:node:os@6#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/infra",
-      "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
-      "line": 3,
-      "endLine": 3,
-      "symbol": "node:os",
-      "occurrence": "v2:7831c3fb3629cf5add9aaaf75ca20c7bb4284e877557bb38a1592e536ed766c4",
-      "class": "platform-filesystem-candidate",
-      "evidence": "os = require(\"node:os\")",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The standalone node:test build suite takes real temporary directories from os.tmpdir() for the compiler run, manifest copy and stale-compiler checks. Owner: @beep/infra. Exit: retire when the build script takes an injected output directory."
-    },
-    {
-      "id": "EV010:infra/test/OpenClaw.test.ts:37:@effect/platform-node/NodeServices@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 37,
-      "endLine": 37,
-      "symbol": "@effect/platform-node/NodeServices",
-      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native Node Crypto and ChildProcess are the subjects: only the rendered Bash missing-mode usage path executes (exit 1 with its usage diagnostic), and provider, secret and privileged modes stay unexecuted strings. Owner: @beep/infra. Exit: retire when the rendered script's usage path is checked by a scripted spawner."
     },
     {
       "id": "EV010:packages/_internal/db-admin/test/integration/ExecutionAuthorityLedgerMigration.pglite.test.ts:26:@effect/platform-node@0#1",

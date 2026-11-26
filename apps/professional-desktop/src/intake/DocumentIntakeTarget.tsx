@@ -62,10 +62,6 @@ const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
       }),
   });
 
-// The manual path form shown when no native folder picker is reachable. A
-// real labelled form replaces the old `window.prompt` fallback: submitting an
-// empty or unusable path keeps the form open with inline guidance, and Cancel
-// returns to the onboarding card instead of stranding the operator.
 const ManualVaultPathForm = ({
   draftPath,
   message,
@@ -269,9 +265,6 @@ const IntakeFileControls = ({
     </>
   ) : null;
 
-// A failed vault configuration read used to leave intake silently inert. The
-// intake actor retries it on a backoff; this notice says so and offers an
-// immediate retry.
 const IntakeVaultUnavailableNotice = ({
   onRetry,
   visible,

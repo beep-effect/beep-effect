@@ -521,6 +521,10 @@ describe("vault sync panel over one shared jsdom localStorage", { concurrent: fa
           within(container).getByTestId("vault-sync-setup-note"),
           `a new reason without panel copy must fail here, not fall through to a blank panel: ${reason}`
         ).toBeInTheDocument();
+        expect(
+          within(container).getByTestId("vault-sync-setup-note").className,
+          "amber-600 fell below readable contrast on the dark theme, so notes use the warning-text tier"
+        ).toContain("text-warning-text");
         unmount();
       }
     })

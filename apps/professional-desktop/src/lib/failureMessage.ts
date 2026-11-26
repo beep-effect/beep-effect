@@ -22,20 +22,11 @@ const MessageBearing = S.Struct({ message: S.NonEmptyString }).pipe(
 
 const isMessageBearing = S.is(MessageBearing);
 
-// Struct parsing reads fields with own-property semantics (`Object.hasOwn`), but
-// the failures that reach this boundary carry `message` on the prototype: every
-// `Error` subclass that overrides `get message()`, and Effect's own
-// `SchemaError` / `PlatformError` / `Config.Error`. Projecting the own-or-
-// inherited read into a fresh carrier keeps the schema as the message contract
-// without losing those causes to the fallback.
 const hasMessage = (cause: unknown): boolean =>
   P.isObject(cause) && isMessageBearing({ message: Reflect.get(cause, "message") });
 
-// `@xstate/effect` reports a failed Effect actor as an `EffectFailure` whose own
-// `message` is the full `Cause.pretty` rendering ("<error name>: <message>").
-// The client message belongs to the failure inside it, so read the squashed
-// cause, which is what the actor reported before it began wrapping failures.
-const reportedFailure = (cause: unknown): unknown => (EffectFailure.is(cause) ? Cause.squash(cause.cause) : cause);
+const squashEffectActorFailure = (cause: unknown): unknown =>
+  EffectFailure.is(cause) ? Cause.squash(cause.cause) : cause;
 
 /**
  * Best-effort human-readable message from an unknown failure cause, falling
@@ -66,6 +57,6 @@ const reportedFailure = (cause: unknown): unknown => (EffectFailure.is(cause) ? 
 export const failureMessageOr =
   (fallback: string) =>
   (cause: unknown): string => {
-    const failure = reportedFailure(cause);
+    const failure = squashEffectActorFailure(cause);
     return hasMessage(failure) ? redactCauseForClient(failure).message : fallback;
   };

@@ -37,8 +37,10 @@ import type { JSX } from "react";
 const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike");
 
 const CosmosWorkerInitializationErrorFields = {
-  // cause is an opaque defect: it stays payload and never takes part in declared identity.
-  cause: S.Unknown.annotate({ toEquivalence: () => () => true }),
+  cause: S.Unknown.annotate({
+    description: "Opaque defect payload, excluded from declared identity.",
+    toEquivalence: () => () => true,
+  }),
   message: S.NonEmptyString,
 } satisfies S.Struct.Fields;
 

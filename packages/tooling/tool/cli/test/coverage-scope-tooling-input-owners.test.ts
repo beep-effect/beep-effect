@@ -20,14 +20,13 @@ import { rowFixtureOwners, rowFixtureReaders } from "./support/CoverageOwnerRows
 
 const CLAUDE_READERS = [
   "@beep/ai-sync",
-  "@beep/infra",
   "@beep/palantiri",
   "@beep/repo-ai-metrics",
   "@beep/repo-cli",
   "@beep/repo-cli-kit",
   "@beep/repo-configs",
 ];
-const LEDGER_READERS = ["@beep/infra", "@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"];
+const LEDGER_READERS = ["@beep/palantiri", "@beep/repo-ai-metrics", "@beep/repo-cli"];
 const REPO_CLI = ["@beep/repo-cli"];
 
 const unrelated = CoverageScopeOwner.make({
@@ -190,7 +189,7 @@ describe("coverage owners for root tooling inputs", () => {
         {
           readerPath: "harness-ledger",
           rowOwners: LEDGER_READERS,
-          scannedOwners: ["@beep/infra", "@beep/palantiri", "@beep/repo-cli"],
+          scannedOwners: ["@beep/palantiri", "@beep/repo-cli"],
         },
       ]);
     });

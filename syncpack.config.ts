@@ -4,7 +4,6 @@ import type { RcFile } from "syncpack";
 const config = {
   source: [
     "package.json",
-    "infra/package.json",
     "scratchpad/package.json",
     "tools/tsgo-shim/package.json",
     "packages/_internal/*/package.json",
@@ -163,16 +162,6 @@ const config = {
         ]
       : [],
   versionGroups: [
-    {
-      // Pulumi's nodejs runtime needs the classic TypeScript API, so infra
-      // keeps its own nested TypeScript 6: infra/pulumi-typescript6.cjs points
-      // the runtime at it, and the ghaRunners SDK build guards a 6.x compiler.
-      label: "infra keeps TypeScript 6 for the Pulumi runtime and ghaRunners SDK",
-      packages: ["@beep/infra"],
-      dependencies: ["typescript"],
-      dependencyTypes: ["dev"],
-      pinVersion: "^6.0.3",
-    },
     {
       // The private workspace root is an orchestration manifest, not a
       // publishable package. Keep its intentionally absent version out of

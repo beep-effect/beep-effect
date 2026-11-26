@@ -190,6 +190,10 @@ describe("document intake surface, serial: spies restore after each case", { con
 
       actions.dragEnter({ preventDefault });
       actions.drop({ files: [new File([], "empty.txt")], preventDefault });
+      expect(
+        preventDefault,
+        "intake.send is queued, so preventDefault has to run synchronously inside the DOM handler"
+      ).toHaveBeenCalledTimes(2);
       const filed = yield* waitFor(
         (current) => A.length(current.state.results) === 1 && current.state.activeBatches === 0
       );

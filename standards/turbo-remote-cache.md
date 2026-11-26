@@ -1,39 +1,43 @@
 # Turbo Remote Cache — Operator Guide
 
-The repo runs its own Turbo remote cache: S3 behind API Gateway with three
-Lambdas (`infra/src/CiTurboCache.ts`). The deployment is deliberately
-asymmetric — either token may **read**, only the trusted token may **write**,
-and the writer is a separate function behind a signed invocation.
+The repo runs its own Turbo remote cache: a Cloudflare Worker serving the
+`/v8/artifacts` protocol over an R2 bucket, deployed by the Alchemy stack
+`TurboCache` ([`@beep/infra-turbo-cache`](../packages/tooling/infra/turbo-cache/README.md)).
+Every principal holds its own token of one access class: a `read` token may
+restore and query, and an upload with it is refused before it reaches the
+bucket; only `write` tokens publish. The AWS Lambda cache (Pulumi
+`CiTurboCache`) it replaced was destroyed at infra-alchemy-rebuild cutover
+step 6(d) on 2026-11-26.
 
 Workstations and agent checkouts are **readers by default**. Explicitly enrolled
-trusted R2 hosts may write with separate bucket-scoped credentials. The initial
-R2 cohort is the operator's Linux workstation and protected AWS CI. Same-repository
-pull-request jobs remain readers only; forks stay local-only. The existing AWS
-trusted-write token is never distributed to workstations.
+trusted hosts hold their own `write` principal. Protected `main` pushes write
+(`ci-main`), same-repository pull requests read (`ci-pr`), and forks stay
+local-only. Issuing, rotating and revoking tokens, and enrolling a host:
+`docs/runbooks/alchemy-infra.md`, section "Turbo cache".
 
-The opted-in R2 path uses a checksum-pinned upstream loopback adapter and an
-Alchemy-managed private bucket; see [the R2 runbook](../infra/r2-cache/README.md).
-AWS remains the fallback and comparison baseline until retirement is separately
-qualified. The R2 enable flag does not change task cacheability.
+The R2 pilot's scripts (a checksum-pinned upstream loopback adapter over a
+separate bucket) live in [the R2 pilot](../packages/tooling/infra/turbo-cache/r2-pilot/README.md)
+until its paused goals decide its future. The R2 enable flag does not change
+task cacheability.
 
 ## The per-checkout contract
 
 Remote reads require the whole quad, in one checkout's `.env`:
 
 ```dotenv
-TURBO_API=https://<id>.execute-api.<region>.amazonaws.com
+TURBO_API=https://beep-turbo-cache.beep-effect.workers.dev
 TURBO_TOKEN=op://<vault>/<item>/<field>
-TURBO_TEAM=<team-slug>
+TURBO_TEAM=beep
 TURBO_CACHE=local:rw,remote:r
 ```
 
-`TURBO_TOKEN` is a **1Password secret reference to the read-only token**, not a
-value. It stays a reference on disk; the CLI passes only the cache quad to
-`op run` when the lane spawns. The read-only token itself lives in the SSM
-parameter the `CiTurboCache` stack is configured with
-(`readOnlyTokenSsmParameterArn` in `infra/ci-runners/Pulumi.production.yaml`);
-mirror it into 1Password once and reference it from every checkout. `TURBO_API`
-and `TURBO_TEAM` are the same values CI uses (`gh variable list`).
+`TURBO_TOKEN` is a **1Password secret reference to the checkout's principal
+token**, not a value. It stays a reference on disk; the CLI passes only the
+cache quad to `op run` when the lane spawns. The token lives in the
+`TurboCache` stack's state; `token.ts` writes it once into the host's
+1Password item (runbook "Turbo cache", "Issue a token"). `TURBO_API` and
+`TURBO_TEAM` are the values CI reads as `vars.TURBO_CACHE_API` and
+`vars.TURBO_CACHE_TEAM`.
 
 ## Enabling one checkout
 
@@ -53,7 +57,9 @@ differ across dotenv consumers. It refuses a `TURBO_TOKEN_REF` that is not an
 
 A resolving secret reference proves only that 1Password can supply a value; it
 does not prove that the cache service authorizes that value. The canonical
-workstation credential is the infra-vault read-only item that is the SSM source.
+workstation credential is the host's own principal token, issued with `token.ts`.
+A checkout still pointing at the destroyed AWS endpoint only loses its remote
+reads: turbo falls back to the local cache.
 Correct an older reference by opting into replacement explicitly:
 
 ```sh
@@ -265,9 +271,9 @@ existing `--collect-all` compatibility spelling.
 - every hosted script lane except labs is a Turbo task (C3 target contract; the
   Stage D consumer migration completes root-task routing).
 
-- Keep the existing AWS trusted-write token and R2 provisioning authority out
-  of workstation cache consumers. Enrolled hosts use independently revocable R2
-  object-write credentials. A writer can publish results accepted by other
+- Keep the CI writer token (`ci-main`) and R2 provisioning authority out of
+  workstation cache consumers. Enrolled hosts hold their own independently
+  revocable `write` principal. A writer can publish results accepted by other
   consumers; enroll only explicitly trusted hosts.
 - Never commit a resolved secret. `op://` references are references — keep them
   that way in `.env`, scripts, and docs.
@@ -347,7 +353,8 @@ per-checkout default.
 ## Related
 
 - [goals/ship-velocity/research/c4-turbo-cache.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/c4-turbo-cache.md) — the audit this implements.
-- `infra/lambda/turbo-cache/README.md` — token/method matrix on the server.
+- `packages/tooling/infra/turbo-cache/README.md` — principals, access classes and
+  the protocol policy on the server.
 - `.github/workflows/check.yml` — push jobs write, same-repository PR jobs read,
   and fork PR jobs stay local-only.
 - `.github/workflows/cache-warm.yml` — protected scheduled/manual warm path.

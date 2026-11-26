@@ -475,7 +475,7 @@ describe("CI lane partitions", () => {
       }))
     ).toEqual([
       { id: "lint-a", packages: 75, weightSeconds: 1132 },
-      { id: "lint-b", packages: 67, weightSeconds: 1134 },
+      { id: "lint-b", packages: 66, weightSeconds: 1134 },
       { id: "repo-cli-1", packages: 1, weightSeconds: 392 },
       { id: "repo-cli-2", packages: 1, weightSeconds: 392 },
       { id: "repo-cli-3", packages: 1, weightSeconds: 392 },
@@ -494,7 +494,7 @@ describe("CI lane partitions", () => {
       { id: "law-practice-7", packages: 1, weightSeconds: 364 },
       { id: "law-practice-8", packages: 1, weightSeconds: 364 },
       { id: "unit-a", packages: 25, weightSeconds: 594 },
-      { id: "unit-b", packages: 28, weightSeconds: 593 },
+      { id: "unit-b", packages: 27, weightSeconds: 593 },
       { id: "unit-c", packages: 27, weightSeconds: 594 },
       { id: "unit-d", packages: 27, weightSeconds: 594 },
       { id: "unit-e", packages: 27, weightSeconds: 593 },

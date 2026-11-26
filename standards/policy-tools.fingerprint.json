@@ -494,7 +494,6 @@
     "apps/todox/package.json",
     "biome.jsonc",
     "fallow-plugin-manual-development-tools.json",
-    "infra/package.json",
     "package.json",
     "packages/**/package.json",
     "packages/_internal/db-admin/package.json",

@@ -30,7 +30,7 @@ import type { PhysicalNames } from "./Names.ts";
 
 /**
  * The live pools' job-retry policy: two re-checks, two minutes apart, with
- * backoff 2 (`infra/src/CiFleetController.ts`, `job_retry`).
+ * backoff 2, ported from the retired Pulumi controller's `job_retry`.
  *
  * **Example** (Read the attempts)
  *

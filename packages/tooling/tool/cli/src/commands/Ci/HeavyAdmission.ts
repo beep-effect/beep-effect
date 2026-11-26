@@ -699,7 +699,7 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
  * @category constants
  * @since 0.0.0
  */
-export const HEAVY_DOCGEN_RELEVANT_SOURCE = "(^apps/|^packages/|^infra/|/docgen\\.json$|\\.(ts|tsx|mts|cts|md)$)";
+export const HEAVY_DOCGEN_RELEVANT_SOURCE = "(^apps/|^packages/|/docgen\\.json$|\\.(ts|tsx|mts|cts|md)$)";
 
 /**
  * The Docgen relevance pattern: a pull-request path matching it (`grep -E`

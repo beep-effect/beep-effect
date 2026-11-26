@@ -27,13 +27,11 @@ const testTsgoPackageTaskName = "package-test-typecheck";
 const pathContainsSegment = (file: string, segments: ReadonlyArray<string>) =>
   A.some(segments, (segment) => Str.includes(segment)(file));
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
-// infra/lambda/**: self-contained esbuild-bundled Lambda packages typecheck
-// their own tests via tsc in build.sh; they are not workspace test surface.
-const ignoredTestPathSegments = ["/test/fixtures/", "/infra/lambda/"] as const;
+const ignoredTestPathSegments = ["/test/fixtures/"] as const;
 // No `tooling` root: tooling workspaces live under `packages/tooling/*`, which
 // the `packages` root already walks. A top-level `tooling/` directory has never
 // existed in this repo, so the entry only cost a wasted existence probe.
-const testSearchRoots = ["apps", "packages", "infra"] as const;
+const testSearchRoots = ["apps", "packages"] as const;
 class TestTsgoPackageManifest extends S.Opaque<TestTsgoPackageManifest, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.String,
