@@ -72,31 +72,28 @@ const runGit = Effect.fn("SessionRehomeTest.runGit")(function* (cwd: string, arg
   expect(exitCode).toBe(0);
 });
 
-const withStateRoot = <A, E, R>(
+const withStateRoot = Effect.fnUntraced(function* <A, E, R>(
   use: (root: { tmp: string; sessions: string; orchestrator: string }) => Effect.Effect<A, E, R>
-) =>
-  Effect.scoped(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const tmp = yield* fs.makeTempDirectoryScoped({ prefix: "session-rehome-test-" });
-      const sessions = path.join(tmp, "sessions");
-      const orchestrator = path.join(tmp, "orchestrator");
-      return yield* use({ tmp, sessions, orchestrator }).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({
-            env: {
-              BEEP_SESSION_STATE_ROOT: sessions,
-              BEEP_ORCHESTRATOR_STATE_ROOT: orchestrator,
-              HOME: tmp,
-              CODEX_THREAD_ID: "thread-1",
-            },
-          })
-        )
-      );
-    })
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const tmp = yield* fs.makeTempDirectoryScoped({ prefix: "session-rehome-test-" });
+  const sessions = path.join(tmp, "sessions");
+  const orchestrator = path.join(tmp, "orchestrator");
+  return yield* use({ tmp, sessions, orchestrator }).pipe(
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromEnv({
+        env: {
+          BEEP_SESSION_STATE_ROOT: sessions,
+          BEEP_ORCHESTRATOR_STATE_ROOT: orchestrator,
+          HOME: tmp,
+          CODEX_THREAD_ID: "thread-1",
+        },
+      })
+    )
   );
+});
 
 const ledgerRow = (repository: CheckoutRepository, next: string) =>
   SessionLedgerRow.make({

@@ -35,17 +35,6 @@ export const SessionStoreName = LiteralKit(["ledger", "presence", "register", "r
 );
 
 /**
- * A session store name decoded by {@link SessionStoreName}.
- *
- * **Example** (Type a store name)
- *
- * ```ts
- * import type { SessionStoreName } from "@beep/repo-cli/test/Session"
- *
- * const store: SessionStoreName = "ledger"
- * console.log(store) // "ledger"
- * ```
- *
  * @category models
  * @since 0.0.0
  */
