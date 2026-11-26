@@ -322,16 +322,14 @@ describe("comment fidelity (#127)", () => {
       roundtrips("a: 1 #tight\n#no-space\n#   aligned\n#\nb: 2\n")
     );
 
-    it.effect(
-      "the all-space capture escape keeps the `#` and `# ` spellings apart from an embedded blank line (PR #338)",
-      () =>
-        Effect.gen(function* () {
-          yield* roundtrips("a: 1\n#\nb: 2\n");
-          yield* roundtrips("a: 1\n# \nb: 2\n");
-          yield* roundtrips("a: 1 #\n");
-          yield* roundtrips("a: 1 # \n");
-          yield* roundtrips("# one\n\n# two\na: 1\n");
-        })
+    it.effect("the all-space capture escape keeps the `#` and `# ` spellings apart from an embedded blank line", () =>
+      Effect.gen(function* () {
+        yield* roundtrips("a: 1\n#\nb: 2\n");
+        yield* roundtrips("a: 1\n# \nb: 2\n");
+        yield* roundtrips("a: 1 #\n");
+        yield* roundtrips("a: 1 # \n");
+        yield* roundtrips("# one\n\n# two\na: 1\n");
+      })
     );
 
     it.effect("an empty document keeps its markers and trailing comment (PR #338)", () =>
@@ -464,7 +462,7 @@ describe("comment fidelity (#127)", () => {
       })
     );
 
-    describe("flow blank-line fidelity, closers indented past the block level for #340 strictness (PR #338 review)", () => {
+    describe("flow blank-line fidelity, closers indented past the block level", () => {
       it.effect("flow seq: the blank line before an own-line comment run survives", () =>
         Effect.gen(function* () {
           const source = "a: [\n  1,\n\n  # c\n  2\n  ]\n";
@@ -812,7 +810,7 @@ describe("comment fidelity (#127)", () => {
       );
     });
 
-    describe("distinct missing or mis-shared comment slots in legal consumer YAML (PR #384 review)", () => {
+    describe("distinct missing or mis-shared comment slots in legal consumer YAML", () => {
       it("keeps a blank line on the side of the marker it was written on", () => {
         const source = "# a\n---\n# b\n\nx: 1\n";
         const out = YamlFormat.formatToString(source);
