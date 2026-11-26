@@ -282,15 +282,12 @@ const environmentStoreRoots = Effect.fnUntraced(function* (): Effect.fn.Return<
   );
   const windows = platform === "win32";
   const homeDirectory = O.orElse(windows ? userProfile : home, () => (windows ? home : userProfile));
-  const standaloneScriptStoreWhenPnpmHomeUnexported = windows
-    ? O.none()
-    : O.map(homeDirectory, (dir) => path.join(dir, ".local", "share", "pnpm", "store"));
   return A.getSomes([
     O.map(pnpmHome, (dir) => path.join(dir, "store")),
     O.map(xdgDataHome, (dir) => path.join(dir, "pnpm", "store")),
     windows ? O.map(localAppData, (dir) => path.join(dir, "pnpm", "store")) : O.none(),
     O.map(homeDirectory, (dir) => PackageManagerCache.defaultDirectory("pnpm", { platform, home: dir })),
-    standaloneScriptStoreWhenPnpmHomeUnexported,
+    windows ? O.none() : O.map(homeDirectory, (dir) => path.join(dir, ".local", "share", "pnpm", "store")),
   ]);
 });
 
