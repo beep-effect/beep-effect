@@ -1127,9 +1127,11 @@ A trusted workstation's token goes into its 1Password item the same way: any
 receiver that reads the value from stdin and stores it works, and the vault
 write goes through the human `op-human` lane when the agent lane cannot write.
 
-The new secret names stand beside the retired `TURBO_TOKEN`/`TURBO_READ_TOKEN`
-until P6 removes the old caches. `@beep/infra-github` lists both sets as
-unmanaged (the values come from this stack's state, not from 1Password).
+P6 deleted the AWS cache's credentials (variables `TURBO_API` and `TURBO_TEAM`,
+secrets `TURBO_READ_TOKEN`, `TURBO_TEAM` and `turbo-cache-write/TURBO_TOKEN`)
+once cutover step 6(d) had destroyed that cache. `@beep/infra-github` lists the
+Worker's secrets as unmanaged (the values come from this stack's state, not
+from 1Password).
 
 ### Rotate or revoke a token
 
