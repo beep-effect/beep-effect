@@ -14,7 +14,6 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-/** A `/` that opens a regex blanks the body in the code view; one that divides leaves the code view untouched. */
 const divides = (text: string): boolean => lex(text).code === text;
 
 describe("lex: the contextual `of`", () => {
@@ -45,7 +44,11 @@ describe("lex: the contextual `of`", () => {
   for (const [name, text] of regexes) {
     it(`opens a regex after ${name}`, () => {
       assert.isFalse(divides(text), text);
-      assert.notInclude(lex(text).code, "a b", text);
+      assert.notInclude(
+        lex(text).code,
+        "a b",
+        `a regex slash blanks its body in the code view, a dividing one leaves it: ${text}`
+      );
     });
   }
 });

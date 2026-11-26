@@ -35,12 +35,10 @@ const request = FetchRequest.make({
 });
 const SCRATCH_LOCKFILE = `---\nlockfileVersion: '9.0'\n\nimporters:\n\n  .:\n    configDependencies:\n      "config":\n        specifier: "1.0.0"\n        version: "1.0.0"\n\npackages:\n\n  "config@1.0.0":\n    resolution: {integrity: "${sri}"}\n\nsnapshots:\n\n  "config@1.0.0": {}\n\n---\n`;
 
-/** A permission failure on `method`, the shape a real IO error takes. */
-const denied = (method: string, path: string): PlatformError.PlatformError =>
+const permissionDenied = (method: string, path: string): PlatformError.PlatformError =>
   PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method, pathOrDescriptor: path });
 
-/** A fake pnpm that links `.pnpm-config/config` at `relative` (under the scratch) holding `manifest`. */
-const linksAt =
+const fakePnpmLinkingConfigAt =
   (relative: string, manifest: string): ProcessAction =>
   (_command, args) =>
     Effect.gen(function* () {
@@ -60,7 +58,6 @@ const linksAt =
 const STORE_COPY = "store/links/config/1.0.0/hash/node_modules/config";
 const VERSIONED = '{"version":"1.0.0"}';
 
-/** The fake pnpm, the virtual volume it writes into, and the fetch rung's services, as one layer. */
 const fetchWorld = (
   act: ProcessAction,
   seed: Readonly<Record<string, string>> = {},
@@ -139,7 +136,7 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
 );
 
 {
-  const world = fetchWorld(linksAt(STORE_COPY, VERSIONED), {
+  const world = fetchWorld(fakePnpmLinkingConfigAt(STORE_COPY, VERSIONED), {
     [`${ROOT}/pnpm-workspace.yaml`]: 'registry: "https://example.test"\nregistries:\n  "@a": "https://scope.test"\n',
   });
   it.layer(world.layer, { timeout: "30 seconds" })((it) => {
@@ -148,18 +145,17 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
         const fs = yield* FileSystem.FileSystem;
         const resolved = yield* fetchOnce;
         assert.include(resolved, "/links/config/1.0.0/");
-        // The store copy lived under the scratch workspace, which is removed.
-        const exists3 = yield* fs.exists(resolved);
-        assert.isFalse(exists3);
+        const storeCopyExists = yield* fs.exists(resolved);
+        assert.isFalse(storeCopyExists, "the store copy lived under the scratch workspace, which is removed");
       })
     );
   });
 }
 
 {
-  const cause = denied("readFileString", `${ROOT}/pnpm-workspace.yaml`);
+  const cause = permissionDenied("readFileString", `${ROOT}/pnpm-workspace.yaml`);
   const world = fetchWorld(
-    linksAt(STORE_COPY, VERSIONED),
+    fakePnpmLinkingConfigAt(STORE_COPY, VERSIONED),
     {},
     {
       readFileString: (path) => (path === `${ROOT}/pnpm-workspace.yaml` ? Effect.fail(cause) : undefined),
@@ -178,7 +174,9 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
 }
 
 {
-  const world = fetchWorld(linksAt(STORE_COPY, VERSIONED), { [`${ROOT}/pnpm-workspace.yaml`]: "registry: [" });
+  const world = fetchWorld(fakePnpmLinkingConfigAt(STORE_COPY, VERSIONED), {
+    [`${ROOT}/pnpm-workspace.yaml`]: "registry: [",
+  });
   it.layer(world.layer, { timeout: "30 seconds" })((it) => {
     it.effect("malformed workspace YAML refuses to select a registry", () =>
       Effect.gen(function* () {
@@ -191,8 +189,8 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
 }
 
 {
-  const cause = denied("copyFile", `${ROOT}/.npmrc`);
-  const world = fetchWorld(linksAt(STORE_COPY, VERSIONED), {}, { copyFile: () => Effect.fail(cause) });
+  const cause = permissionDenied("copyFile", `${ROOT}/.npmrc`);
+  const world = fetchWorld(fakePnpmLinkingConfigAt(STORE_COPY, VERSIONED), {}, { copyFile: () => Effect.fail(cause) });
   it.layer(world.layer, { timeout: "30 seconds" })((it) => {
     it.effect("a non-absence npmrc copy failure fails closed", () =>
       Effect.gen(function* () {
@@ -206,10 +204,10 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
 
 {
   const world = fetchWorld(
-    linksAt(STORE_COPY, VERSIONED),
+    fakePnpmLinkingConfigAt(STORE_COPY, VERSIONED),
     {},
     {
-      remove: (path) => Effect.fail(denied("remove", path)),
+      remove: (path) => Effect.fail(permissionDenied("remove", path)),
     }
   );
   it.layer(world.layer, { timeout: "30 seconds" })((it) => {
@@ -227,7 +225,7 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
 }
 
 {
-  const world = fetchWorld(linksAt(STORE_COPY, "{"));
+  const world = fetchWorld(fakePnpmLinkingConfigAt(STORE_COPY, "{"));
   it.layer(world.layer, { timeout: "30 seconds" })((it) => {
     it.effect("invalid fetched manifest JSON fails with the manifest cause", () =>
       Effect.gen(function* () {
@@ -240,7 +238,7 @@ it.effect("string JSON quoting preserves hostile YAML scalar text and the final 
 }
 
 {
-  const world = fetchWorld(linksAt("unversioned", "{}"));
+  const world = fetchWorld(fakePnpmLinkingConfigAt("unversioned", "{}"));
   it.layer(world.layer, { timeout: "30 seconds" })((it) => {
     it.effect("a fetched unversioned copy is refused", () =>
       Effect.gen(function* () {
