@@ -71,8 +71,6 @@ describe("YouTube native opener bridge", { concurrent: false }, () => {
       const view = render(<YouTubeWatchOpener />);
       yield* Effect.sync(() => view.unmount());
 
-      // The atom finalizer runs when the registry releases the binding, so poll until a
-      // valid request is no longer claimed.
       yield* Effect.promise(() =>
         waitFor(() => {
           const afterUnmount = new CustomEvent(YOUTUBE_WATCH_EVENT, {
@@ -82,7 +80,10 @@ describe("YouTube native opener bridge", { concurrent: false }, () => {
             }),
           });
           window.dispatchEvent(afterUnmount);
-          expect(afterUnmount.defaultPrevented).toBe(false);
+          expect(
+            afterUnmount.defaultPrevented,
+            "the atom finalizer runs when the registry releases the binding, so this polls until unclaimed"
+          ).toBe(false);
         })
       );
     })

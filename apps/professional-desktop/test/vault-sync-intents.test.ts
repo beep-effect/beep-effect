@@ -76,8 +76,7 @@ const requestSync = VaultSyncAction.cases["request-sync"].make({});
 const server = (destination: V.DestinationState) =>
   VaultSyncServerState.make({ destinationId, destination, conflicts: H.empty() });
 
-// The desktop principal holds an active member grant on organization 1, workspace 1 only.
-const membership = Layer.succeed(
+const orgOneWorkspaceOneMembership = Layer.succeed(
   VaultSyncMembership,
   VaultSyncMembership.of({
     read: Effect.fn("test.membership")(function* (_userId, scope) {
@@ -88,12 +87,12 @@ const membership = Layer.succeed(
   })
 );
 
-// The vault-sync Api as the sidecar hosts it: the in-memory platform, the sidecar session
-// adapter and the live policy. Only the Box side (sagas) is absent.
-const hostLayer = VaultSyncSessionLive.pipe(
+const sidecarHostedVaultSyncApi = VaultSyncSessionLive.pipe(
   Layer.provideMerge(VaultSyncSidecarChannelLive),
   Layer.provideMerge(VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(Domain.InMemory))),
-  Layer.provideMerge(Layer.mergeAll(layerDesktopVaultSyncBinding(Redacted.make("launch-token")), membership))
+  Layer.provideMerge(
+    Layer.mergeAll(layerDesktopVaultSyncBinding(Redacted.make("launch-token")), orgOneWorkspaceOneMembership)
+  )
 );
 
 type Switch = {
@@ -102,9 +101,7 @@ type Switch = {
   readonly sent: Ref.Ref<ReadonlyArray<string>>;
 };
 
-// The renderer-to-sidecar hop: offline fails every call before it leaves the renderer, and a
-// lost answer delivers the command but drops the response, which is an unknown outcome.
-const switchable = (inner: VaultSyncIntentTransport["Service"], gate: Switch) =>
+const switchableRendererHop = (inner: VaultSyncIntentTransport["Service"], gate: Switch) =>
   VaultSyncIntentTransport.of({
     read: Effect.fn("test.read")(function* (id) {
       const online = yield* Ref.get(gate.online);
@@ -122,7 +119,7 @@ const switchable = (inner: VaultSyncIntentTransport["Service"], gate: Switch) =>
   });
 
 const host = Effect.gen(function* () {
-  const context = yield* Layer.build(hostLayer);
+  const context = yield* Layer.build(sidecarHostedVaultSyncApi);
   const destinations = Context.get(context, V.SyncDestination);
   yield* destinations.send(destinationId, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "Vault" }));
   const transportContext = yield* Layer.build(
@@ -132,7 +129,6 @@ const host = Effect.gen(function* () {
     )
   );
   const inner = Context.get(transportContext, VaultSyncIntentTransport);
-  // Views project asynchronously: wait until the destination is readable through the Api.
   yield* inner.read(1).pipe(
     Effect.repeat({
       until: (state) => O.exists(state, (value) => value.destination._tag === "Registered"),
@@ -144,12 +140,9 @@ const host = Effect.gen(function* () {
     loseNextAnswer: yield* Ref.make(false),
     sent: yield* Ref.make<ReadonlyArray<string>>([]),
   };
-  // Another actor (the CLI, a second window) acting on the server directly.
   const outOfBand = (command: V.PauseDestination | V.ResumeDestination) =>
     destinations.send(destinationId, command).pipe(Effect.asVoid);
-  // The aggregate's authoritative state, independent of View projection lag.
   const authority = destinations.get(destinationId).pipe(Effect.asSome);
-  // Wait until the Api's Views have projected the aggregate's current paused flag.
   const projected = Effect.flatMap(authority, (state) =>
     inner.read(1).pipe(
       Effect.repeat({
@@ -158,7 +151,7 @@ const host = Effect.gen(function* () {
       })
     )
   );
-  return { authority, gate, inner, outOfBand, projected, transport: switchable(inner, gate) };
+  return { authority, gate, inner, outOfBand, projected, transport: switchableRendererHop(inner, gate) };
 });
 
 const decodeStoredQueue = S.decodeEffect(S.fromJsonString(VaultSyncIntentQueue));
@@ -272,8 +265,7 @@ describe("vault sync intent prediction", () => {
   });
 });
 
-// The queue persists to the one jsdom localStorage, so these run one at a time.
-describe("vault sync intent queue", { concurrent: false }, () => {
+describe("vault sync intent queue over one shared jsdom localStorage", { concurrent: false }, () => {
   beforeEach(() => {
     globalThis.localStorage.clear();
   });
@@ -296,7 +288,6 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       const sentOffline = yield* Ref.get(gate.sent);
       expect(sentOffline).toEqual([]);
 
-      // The browser comes back online: the mounted replay atom flushes the queue.
       yield* Ref.set(gate.online, true);
       registry.mount(vaultSyncReplayOnReconnectAtom(workspaceId));
       globalThis.window.dispatchEvent(new Event("online"));
@@ -305,9 +296,10 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       const sent = yield* Ref.get(gate.sent);
       expect(A.dedupe(sent)).toEqual(queued);
       expect(registry.get(vaultSyncLinkAtom)).toBe("online");
-      // Pause, resume, pause applied in that order leaves the destination paused.
       const finalState = yield* authority;
-      expect(isPaused(finalState)).toBe(true);
+      expect(isPaused(finalState), "pause, resume, pause applied in that order leaves the destination paused").toBe(
+        true
+      );
     })
   );
 
@@ -330,10 +322,12 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       yield* waitFor(registry, vaultSyncConfirmingAtom, A.isReadonlyArrayEmpty);
       unsubscribe();
 
-      // Once predicted paused, the panel never flashes back to the stale active state.
       const firstPaused = seen.indexOf(true);
       expect(firstPaused).toBeGreaterThanOrEqual(0);
-      expect(A.drop(seen, firstPaused)).not.toContain(false);
+      expect(
+        A.drop(seen, firstPaused),
+        "once predicted paused, the panel never flashes back to the stale active state"
+      ).not.toContain(false);
       expect(queueOf(registry)).toEqual([]);
       const server = registry.get(vaultSyncServerStateAtom(workspaceId)).pipe(AsyncResult.value, O.flatten);
       expect(isPaused(O.map(server, (state) => state.destination))).toBe(true);
@@ -350,15 +344,12 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       registry.mount(vaultSyncIntentQueueAtom);
       yield* loadServerState(registry);
 
-      // The pause commits on the server but its answer never reaches the renderer.
       yield* Ref.set(gate.loseNextAnswer, true);
       yield* submit(registry, pause);
       yield* waitFor(registry, vaultSyncLinkAtom, (link) => link === "offline");
       const [lost] = queueOf(registry);
       expect(lost?.action.kind).toBe("pause");
 
-      // Someone resumes the destination meanwhile; a second decide of the lost pause would
-      // pause it again, the deduped replay must not.
       yield* outOfBand(V.ResumeDestination.make({}));
       yield* flush(registry);
 
@@ -367,7 +358,10 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       const resent = yield* Ref.get(gate.sent);
       expect(resent).toEqual([lost?.commandId, lost?.commandId]);
       const finalState = yield* authority;
-      expect(isPaused(finalState)).toBe(false);
+      expect(
+        isPaused(finalState),
+        "the deduped replay of a lost pause must not re-pause a destination resumed meanwhile"
+      ).toBe(false);
     })
   );
 
@@ -387,7 +381,6 @@ describe("vault sync intent queue", { concurrent: false }, () => {
         O.some(["accepted"])
       );
 
-      // The destination was paused elsewhere while the renderer was offline.
       yield* outOfBand(V.PauseDestination.make({}));
       yield* projected;
       yield* Ref.set(gate.online, true);
@@ -398,13 +391,13 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       expect(refusal?.source).toBe("server");
       expect(refusal?.intentKind).toBe("request-sync");
       expect(refusal?.reason._tag === "SyncRuleViolation" && refusal.reason.rule).toBe("destination-paused");
-      // The refreshed server state is the authority now: paused, nothing pending.
       yield* waitFor(registry, vaultSyncPredictionAtom(workspaceId), (value) =>
         O.exists(O.flatten(value), (p) => p.destination._tag === "Registered" && p.destination.paused)
       );
       deepStrictEqual(
         O.map(O.flatten(registry.get(vaultSyncPredictionAtom(workspaceId))), (p) => p.pending),
-        O.some([])
+        O.some([]),
+        "the refreshed server state is the authority: paused, nothing pending"
       );
     })
   );
@@ -443,8 +436,10 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       reloaded.mount(vaultSyncPredictionAtom(workspaceId));
       const server = yield* Effect.flip(loadServerState(reloaded));
       expect(server._tag).toBe("VaultSyncUnreachable");
-      // No answer since the reload, yet the destination and the queued pause are both shown.
-      expect(isPaused(destinationOf(reloaded))).toBe(true);
+      expect(
+        isPaused(destinationOf(reloaded)),
+        "with no answer since the reload, the destination and the queued pause are both shown"
+      ).toBe(true);
       deepStrictEqual(
         O.map(O.flatten(reloaded.get(vaultSyncPredictionAtom(workspaceId))), (p) => A.length(p.pending)),
         O.some(1)
@@ -470,12 +465,12 @@ describe("vault sync intent queue", { concurrent: false }, () => {
       expect(stored).toEqual(A.map(queued, (intent) => intent.commandId));
       first.dispose();
 
-      // A fresh registry is a renderer reload: the queue comes back from storage, same ids.
       const reloaded = yield* registryFor(transport);
       reloaded.mount(vaultSyncIntentQueueAtom);
-      expect(A.map(queueOf(reloaded), (intent) => intent.commandId)).toEqual(
-        A.map(queued, (intent) => intent.commandId)
-      );
+      expect(
+        A.map(queueOf(reloaded), (intent) => intent.commandId),
+        "a fresh registry is a renderer reload: the queue comes back from storage with the same ids"
+      ).toEqual(A.map(queued, (intent) => intent.commandId));
     })
   );
 });

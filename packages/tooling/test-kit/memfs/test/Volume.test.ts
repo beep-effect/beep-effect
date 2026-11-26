@@ -1,8 +1,3 @@
-// The volume-inspection kit extension (effected#383): an opt-in second service
-// publishing a synchronous, read-only view of the SAME volume backing the
-// FileSystem, so write-path tests can assert on what a program wrote without
-// routing every assertion through an Effect read.
-
 import { MemoryFileSystem } from "@beep/memfs";
 import * as internal from "@beep/memfs/internal/volume";
 import { assert, describe, it } from "@effect/vitest";
@@ -21,23 +16,24 @@ import { denied } from "./helpers.ts";
 
 const encoder = new TextEncoder();
 
-describe("MemoryFileSystem.layer — Volume", () => {
+describe("MemoryFileSystem.layer — Volume, a synchronous read-only view of the volume backing FileSystem", () => {
   it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
     it.effect("THE INVARIANT: within one build, Volume inspects the same volume backing FileSystem", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const volume = yield* MemoryFileSystem.Volume;
 
-        // A write through the FileSystem service is immediately visible to
-        // the inspection service — one underlying volume, two views.
         yield* fs.makeDirectory("/managed", { recursive: true });
         yield* fs.writeFileString("/managed/output.txt", "written through fs");
-        assert.strictEqual(volume.text("/managed/output.txt"), "written through fs");
+        assert.strictEqual(
+          volume.text("/managed/output.txt"),
+          "written through fs",
+          "a write through FileSystem is immediately visible to Volume: one volume, two views"
+        );
         assert.isTrue(volume.has("/managed"));
 
-        // And the view is live, not a copy taken at build: a removal shows.
         yield* fs.remove("/managed/output.txt");
-        assert.isUndefined(volume.text("/managed/output.txt"));
+        assert.isUndefined(volume.text("/managed/output.txt"), "the view is live, not a copy taken at build");
         assert.isFalse(volume.has("/managed/output.txt"));
       })
     );
@@ -49,11 +45,9 @@ describe("MemoryFileSystem.layer — Volume", () => {
         const context = yield* Layer.build(MemoryFileSystem.layer);
         const fs = Context.get(context, FileSystem.FileSystem);
         const volume = Context.get(context, MemoryFileSystem.Volume);
-        // The other build's write must not be here (fresh volume)…
-        assert.isFalse(volume.has("/scratch.txt"));
-        // …and this build's own write must be (consistent pair).
+        assert.isFalse(volume.has("/scratch.txt"), "the other build's write is absent: a fresh volume");
         yield* fs.writeFileString("/scratch.txt", "mine");
-        assert.strictEqual(volume.text("/scratch.txt"), "mine");
+        assert.strictEqual(volume.text("/scratch.txt"), "mine", "this build's own write is present: a consistent pair");
       });
 
       yield* probe();
@@ -77,24 +71,26 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
         const fs = yield* FileSystem.FileSystem;
         const volume = yield* MemoryFileSystem.Volume;
 
-        // Seeded files answer through both views.
-        assert.strictEqual(volume.text("/repo/package.json"), `{ "name": "fixture" }`);
+        assert.strictEqual(
+          volume.text("/repo/package.json"),
+          `{ "name": "fixture" }`,
+          "seeded files answer through both views"
+        );
         const readFileString1 = yield* fs.readFileString("/repo/package.json");
         assert.strictEqual(readFileString1, `{ "name": "fixture" }`);
         assert.strictEqual((yield* fs.stat("/repo/bin/run.sh")).mode & 0o777, 0o755);
 
-        // has(): files, directories and symlinks all count as present —
-        // the symlink itself, its target never consulted.
         assert.isTrue(volume.has("/repo/package.json"));
         assert.isTrue(volume.has("/repo/empty"));
         assert.isTrue(volume.has("/repo/latest"));
-        assert.isTrue(volume.has("/repo/dangling"));
+        assert.isTrue(volume.has("/repo/dangling"), "has() counts the symlink itself; its target is never consulted");
         assert.isFalse(volume.has("/repo/absent"));
 
-        // The literal view: a symlink has no content of its own (reading
-        // THROUGH it is the FileSystem API's job), a directory neither.
-        assert.isUndefined(volume.text("/repo/latest"));
-        assert.isUndefined(volume.bytes("/repo/empty"));
+        assert.isUndefined(
+          volume.text("/repo/latest"),
+          "the literal view: a symlink has no content of its own; reading through it is FileSystem's job"
+        );
+        assert.isUndefined(volume.bytes("/repo/empty"), "a directory has no content either");
         const readFileString2 = yield* fs.readFileString("/repo/latest");
         assert.strictEqual(readFileString2, `{ "name": "fixture" }`);
       })
@@ -117,8 +113,11 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
         ]);
         assert.deepStrictEqual(snapshot["/repo/written.txt"], encoder.encode("later"));
 
-        // paths() is exactly snapshot's key set, sorted lexicographically.
-        assert.deepStrictEqual(volume.paths(), ["/repo/bin/run.sh", "/repo/package.json", "/repo/written.txt"]);
+        assert.deepStrictEqual(
+          volume.paths(),
+          ["/repo/bin/run.sh", "/repo/package.json", "/repo/written.txt"],
+          "paths() is exactly snapshot's key set, sorted lexicographically"
+        );
       })
     );
   });
@@ -129,14 +128,14 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
         const fs = yield* FileSystem.FileSystem;
         const volume = yield* MemoryFileSystem.Volume;
 
-        // THE #249 CONTRACT, carried to the sync view: absence is undefined,
-        // never a fabricated "".
-        assert.isUndefined(volume.text("/absent/changesets/config.json"));
+        assert.isUndefined(
+          volume.text("/absent/changesets/config.json"),
+          'the honest-absence contract on the sync view: absence is undefined, never a fabricated ""'
+        );
         assert.isUndefined(volume.bytes("/absent.bin"));
 
-        // "" round-trips for a real empty file — distinguishable from absent.
         yield* fs.writeFileString("/empty.txt", "");
-        assert.strictEqual(volume.text("/empty.txt"), "");
+        assert.strictEqual(volume.text("/empty.txt"), "", '"" round-trips for a real empty file, distinct from absent');
         assert.deepStrictEqual(volume.bytes("/empty.txt"), new Uint8Array());
       })
     );
@@ -152,14 +151,18 @@ describe("MemoryFileSystem.layerWith — Volume", () => {
 
         assert.strictEqual(volume.text("/a//b/./c.txt"), "found");
         assert.strictEqual(volume.text("/a/x/../b/c.txt"), "found");
-        // Relative paths resolve from the virtual root, matching the engine.
-        assert.strictEqual(volume.text("a/b/c.txt"), "found");
-        // Symlinks stay literal — never followed, not even mid-path: the link
-        // itself is present, but nothing lives "under" it in this view.
+        assert.strictEqual(
+          volume.text("a/b/c.txt"),
+          "found",
+          "relative paths resolve from the virtual root, matching the engine"
+        );
         yield* fs.symlink("/a/b", "/link");
         assert.isTrue(volume.has("/link"));
         assert.isFalse(volume.isDirectory("/link"));
-        assert.isFalse(volume.has("/link/c.txt"));
+        assert.isFalse(
+          volume.has("/link/c.txt"),
+          "symlinks stay literal, never followed even mid-path: nothing lives under the link in this view"
+        );
         assert.isUndefined(volume.text("/link/c.txt"));
         assert.isUndefined(volume.readDirectory("/link"));
       })
@@ -203,14 +206,12 @@ describe("inspection composed under fault injection", () => {
         const fs = yield* FileSystem.FileSystem;
         const volume = yield* MemoryFileSystem.Volume;
 
-        // The delegating branch really writes — the spy pattern's guarantee.
         yield* fs.writeFileString("/allowed.txt", "landed");
-        assert.strictEqual(volume.text("/allowed.txt"), "landed");
+        assert.strictEqual(volume.text("/allowed.txt"), "landed", "the delegating branch really writes, as a spy must");
 
-        // The faulted branch fails typed AND leaves no trace in the volume.
         const error = yield* Effect.flip(fs.writeFileString("/blocked.txt", "never"));
         assert.strictEqual(error.reason._tag, "PermissionDenied");
-        assert.isFalse(volume.has("/blocked.txt"));
+        assert.isFalse(volume.has("/blocked.txt"), "the faulted branch fails typed and leaves no trace in the volume");
         assert.deepStrictEqual(volume.paths(), ["/allowed.txt", "/seed.txt"]);
       })
     );
@@ -221,9 +222,6 @@ describe("the templates-fixture acceptance sketch", () => {
   it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
     it.effect("write-then-read-back assertions become vol.text(path)", () =>
       Effect.gen(function* () {
-        // The downstream shape: code under test writes a managed file; the
-        // test asserts on final content synchronously — previously
-        // `fs.files.get(p)` on a hand-rolled Map double.
         const fs = yield* FileSystem.FileSystem;
         const vol = yield* MemoryFileSystem.Volume;
 
@@ -231,7 +229,11 @@ describe("the templates-fixture acceptance sketch", () => {
         yield* fs.makeDirectory("/repo/.github/workflows", { recursive: true });
         yield* fs.writeFileString(path, "# BEGIN managed\njobs: {}\n# END managed\n");
 
-        assert.strictEqual(vol.text(path), "# BEGIN managed\njobs: {}\n# END managed\n");
+        assert.strictEqual(
+          vol.text(path),
+          "# BEGIN managed\njobs: {}\n# END managed\n",
+          "the managed file's final content reads synchronously, replacing a hand-rolled Map double's files.get"
+        );
         assert.isTrue(vol.has("/repo/.github"));
         assert.deepStrictEqual(vol.paths(), [path]);
       })
@@ -239,10 +241,7 @@ describe("the templates-fixture acceptance sketch", () => {
   });
 });
 
-// Modification time on the inspection view (effected#396 item 6): the piece a
-// signature-diff test needs — "this file changed and that one did not" —
-// expressible in a seed and readable synchronously.
-describe("MemoryFileSystemVolume.mtime", () => {
+describe("MemoryFileSystemVolume.mtime: a seedable mtime read synchronously, as a signature-diff test needs", () => {
   it.effect("a seeded mtime is readable, and distinct files keep distinct times", () =>
     Effect.gen(function* () {
       const { volume } = yield* MemoryFileSystem.makeHandle({
@@ -259,11 +258,12 @@ describe("MemoryFileSystemVolume.mtime", () => {
       const { volume } = yield* MemoryFileSystem.makeHandle({
         "/epoch.txt": MemoryFileSystem.file("at the epoch", { mtime: 0 }),
       });
-      // 0 is a REAL modification time. A signature over mtimes must be able to
-      // tell it apart from a file that is not there at all — conflating them
-      // is the silent-green this contract exists to prevent.
-      assert.strictEqual(volume.mtime("/epoch.txt"), 0);
-      assert.strictEqual(volume.mtime("/absent.txt"), undefined);
+      assert.strictEqual(volume.mtime("/epoch.txt"), 0, "0 is a real modification time");
+      assert.strictEqual(
+        volume.mtime("/absent.txt"),
+        undefined,
+        "a signature over mtimes must tell 0 from absent; conflating them is a silent green"
+      );
     })
   );
 
@@ -274,18 +274,16 @@ describe("MemoryFileSystemVolume.mtime", () => {
       });
       assert.strictEqual(volume.mtime("/tracked.txt"), 1_000);
 
-      // The volume stamps writes from the Effect `Clock`, not `Date.now()`.
-      // That is what makes mtime drivable — but it also means the default
-      // test clock sits at the EPOCH, so a write reads as 0 and a seeded
-      // 1_000 looks like the FUTURE. A signature test that assumes writes
-      // move time forward is a false green waiting to happen.
       yield* fileSystem.writeFileString("/tracked.txt", "after");
-      assert.strictEqual(volume.mtime("/tracked.txt"), 0);
+      assert.strictEqual(
+        volume.mtime("/tracked.txt"),
+        0,
+        "writes stamp the Effect Clock, not Date.now(): at the test epoch a write reads 0 and a seeded 1_000 is the future"
+      );
 
-      // Advance the clock and the next write lands where it was moved to.
       yield* TestClock.adjust("5 seconds");
       yield* fileSystem.writeFileString("/tracked.txt", "later");
-      assert.strictEqual(volume.mtime("/tracked.txt"), 5_000);
+      assert.strictEqual(volume.mtime("/tracked.txt"), 5_000, "the next write lands where the clock was moved to");
     })
   );
 
@@ -294,14 +292,15 @@ describe("MemoryFileSystemVolume.mtime", () => {
       const { fileSystem, volume } = yield* MemoryFileSystem.makeHandle({
         "/a.txt": "contents",
       });
-      // `utimes` reads a NUMBER as Unix seconds, so 5_000 there means
-      // 5_000_000 ms — the unit trap the seed option converts away from.
       yield* fileSystem.utimes("/a.txt", 5_000, 5_000);
-      assert.strictEqual(volume.mtime("/a.txt"), 5_000_000);
-      // A Date is unambiguous and round-trips in milliseconds.
+      assert.strictEqual(
+        volume.mtime("/a.txt"),
+        5_000_000,
+        "utimes reads a number as Unix seconds: the unit trap the seed option converts away from"
+      );
       const stamp = DateTime.toDateUtc(DateTime.makeUnsafe(1_234_567));
       yield* fileSystem.utimes("/a.txt", stamp, stamp);
-      assert.strictEqual(volume.mtime("/a.txt"), 1_234_567);
+      assert.strictEqual(volume.mtime("/a.txt"), 1_234_567, "a Date is unambiguous and round-trips in milliseconds");
     })
   );
 
@@ -311,9 +310,12 @@ describe("MemoryFileSystemVolume.mtime", () => {
         "/a.txt": MemoryFileSystem.file("contents", { mtime: 4_242 }),
       });
       const info = yield* fileSystem.stat("/a.txt");
-      // One clock, two views — the sync accessor must not drift from `stat`.
       const fromStat = O.getOrThrow(info.mtime).getTime();
-      assert.strictEqual(volume.mtime("/a.txt"), fromStat);
+      assert.strictEqual(
+        volume.mtime("/a.txt"),
+        fromStat,
+        "one clock, two views: the sync accessor must not drift from stat"
+      );
     })
   );
 
@@ -371,11 +373,10 @@ describe("engine name ordering", () => {
       });
       yield* fs.copy("/source", "/new");
       yield* fs.copy("/source", "/existing", { overwrite: true });
-      // The host comparison is the pinned upstream comparator, independent of the engine Order.
-      const expected = ["Z", "ä", "a"].sort((left, right) => Str.localeCompare(right)(left));
+      const upstreamComparatorOrder = ["Z", "ä", "a"].sort((left, right) => Str.localeCompare(right)(left));
       for (const destination of ["/new", "/existing"]) {
         let previous = BigInt(-1);
-        for (const name of expected) {
+        for (const name of upstreamComparatorOrder) {
           const inode = (yield* fs.stat(`${destination}/${name}`)).ino;
           if (O.isNone(inode)) return assert.fail("copied entries must carry inode numbers");
           assert.isTrue(inode.value > previous, `inode ${inode.value} must be above ${previous}`);

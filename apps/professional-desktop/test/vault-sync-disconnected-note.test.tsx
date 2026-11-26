@@ -79,7 +79,6 @@ const serverState = (paused = false) =>
     conflicts: H.empty(),
   });
 
-// A transport that records every send and never answers, so a prediction stays pending.
 const pendingTransport = (sent: Ref.Ref<ReadonlyArray<VaultSyncIntent>>) =>
   Layer.succeed(
     VaultSyncIntentTransport,
@@ -112,8 +111,7 @@ const renderWithStatus = (
     </RegistryProvider>
   );
 
-// The panel persists its intent queue to the shared jsdom localStorage: one test at a time.
-describe("vault sync panel", { concurrent: false }, () => {
+describe("vault sync panel over one shared jsdom localStorage", { concurrent: false }, () => {
   afterEach(() => {
     cleanup();
     globalThis.localStorage.clear();
@@ -159,15 +157,19 @@ describe("vault sync panel", { concurrent: false }, () => {
       const screen = within(container);
 
       expect(screen.getByTestId("vault-sync-offline")).toHaveTextContent("sidecar offline");
-      // Box state is only the last answer while the sidecar is unreachable.
-      expect(screen.getByTestId("vault-sync-connection")).toHaveTextContent("connected (last known)");
+      expect(
+        screen.getByTestId("vault-sync-connection"),
+        "Box state is only the last answer while the sidecar is unreachable"
+      ).toHaveTextContent("connected (last known)");
       expect(screen.getByTestId("vault-sync-connection")).toHaveAttribute("data-last-known", "true");
       expect(screen.getByTestId("vault-sync-destination-last-known")).toBeInTheDocument();
       expect(screen.getByTestId("vault-sync-pending")).toHaveTextContent("Queued until the sidecar answers (1)");
       expect(screen.getByTestId("vault-sync-pending-intent")).toHaveTextContent("Pause sync");
       expect(screen.getByTestId("vault-sync-pending-retry")).toBeEnabled();
-      // The queued pause is already predicted: the destination reads paused, pending confirmation.
-      expect(screen.getByTestId("vault-sync-destination-state")).toHaveTextContent("paused");
+      expect(
+        screen.getByTestId("vault-sync-destination-state"),
+        "the queued pause is already predicted: paused, pending confirmation"
+      ).toHaveTextContent("paused");
       expect(screen.getByTestId("vault-sync-destination-predicted")).toBeInTheDocument();
       expect(screen.getByTestId("vault-sync-trigger")).toBeDisabled();
     })
@@ -191,10 +193,12 @@ describe("vault sync panel", { concurrent: false }, () => {
       );
       expect(screen.getByTestId("vault-sync-destination-predicted")).toBeInTheDocument();
       expect(screen.getByTestId("vault-sync-pause-toggle")).toHaveTextContent("Resume sync");
-      // The panel renders a queued intent before the flush hands it to the transport.
       yield* Effect.promise(() =>
         waitFor(() => {
-          expect(A.isReadonlyArrayNonEmpty(Ref.getUnsafe(sent))).toBe(true);
+          expect(
+            sent.pipe(Ref.getUnsafe, A.isReadonlyArrayNonEmpty),
+            "the panel renders a queued intent before the flush hands it to the transport"
+          ).toBe(true);
         })
       );
       const intents = yield* Ref.get(sent);
@@ -252,10 +256,12 @@ describe("vault sync panel", { concurrent: false }, () => {
         waitFor(() => expect(screen.getAllByTestId("vault-sync-pending-intent")).toHaveLength(2))
       );
 
-      // The pending rows render from the queue before the flush hands the head intent to the transport.
       yield* Effect.promise(() =>
         waitFor(() => {
-          expect(A.isReadonlyArrayNonEmpty(Ref.getUnsafe(sent))).toBe(true);
+          expect(
+            sent.pipe(Ref.getUnsafe, A.isReadonlyArrayNonEmpty),
+            "pending rows render from the queue before the flush hands the head intent to the transport"
+          ).toBe(true);
         })
       );
       const [review] = yield* Ref.get(sent);
@@ -275,7 +281,6 @@ describe("vault sync panel", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const sent = yield* Ref.make<ReadonlyArray<VaultSyncIntent>>([]);
       const online = yield* Ref.make(false);
-      // Unreachable until the test flips it, then every send is accepted.
       const transport = Layer.succeed(
         VaultSyncIntentTransport,
         VaultSyncIntentTransport.of({
@@ -304,10 +309,11 @@ describe("vault sync panel", { concurrent: false }, () => {
       const screen = within(container);
       expect(screen.getByTestId("vault-sync-pending-intent")).toHaveTextContent("Resume sync");
 
-      // The startup replay fails while the sidecar is unreachable; the retry stays offered.
-      const retry = yield* Effect.promise(() => waitFor(() => screen.getByTestId("vault-sync-pending-retry")));
+      const retryOfferedAfterFailedReplay = yield* Effect.promise(() =>
+        waitFor(() => screen.getByTestId("vault-sync-pending-retry"))
+      );
       yield* Ref.set(online, true);
-      fireEvent.click(retry);
+      fireEvent.click(retryOfferedAfterFailedReplay);
 
       yield* Effect.promise(() =>
         waitFor(() => {
@@ -383,9 +389,10 @@ describe("vault sync panel", { concurrent: false }, () => {
 
       const note = screen.getByTestId("vault-sync-setup-note");
       expect(note).toHaveTextContent("Box rejected the credentials");
-      // CCG self-refreshes, so "the token expired" would be the wrong diagnosis
-      // there; the copy must name the CCG fix too.
-      expect(note).toHaveTextContent("CCG refreshes automatically");
+      expect(
+        note,
+        "CCG self-refreshes, so a token-expired diagnosis is wrong there; the copy names the CCG fix"
+      ).toHaveTextContent("CCG refreshes automatically");
       expect(note).not.toHaveTextContent("Set CLOUD_BOX_TOKEN and restart the app");
       expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
     })
@@ -424,8 +431,6 @@ describe("vault sync panel", { concurrent: false }, () => {
       const called = yield* Deferred.make<void>();
       const sent = yield* Ref.make<ReadonlyArray<VaultSyncIntent>>([]);
       const rpcs = MutableRef.make<ReadonlyArray<string>>([]);
-      // Every desktop RPC is recorded when it is called; the status re-subscription after acceptance
-      // signals `called`. Every other RPC fails after being recorded.
       const client = DesktopSyncClient.of(((tag: string) => {
         MutableRef.update(rpcs, A.append(tag));
         return tag === "WatchVaultSyncStatus"
@@ -470,12 +475,16 @@ describe("vault sync panel", { concurrent: false }, () => {
       );
       yield* Deferred.await(called).pipe(Effect.timeout("4 seconds"));
       const intents = yield* Ref.get(sent);
-      // The click delivers one ProbeDestination intent. The accepted probe only re-subscribes the
-      // status stream; a `GetVaultSyncStatus` read with `forceProbe` would start a second probe workflow.
-      expect(A.map(intents, (intent) => intent.action.kind)).toEqual(["probe"]);
+      expect(
+        A.map(intents, (intent) => intent.action.kind),
+        "the click delivers one ProbeDestination intent"
+      ).toEqual(["probe"]);
       const calls = MutableRef.get(rpcs);
       expect(A.contains(calls, "WatchVaultSyncStatus")).toBe(true);
-      expect(A.filter(calls, (tag) => tag === "GetVaultSyncStatus")).toEqual([]);
+      expect(
+        A.filter(calls, (tag) => tag === "GetVaultSyncStatus"),
+        "the accepted probe only re-subscribes; a forceProbe status read would start a second probe workflow"
+      ).toEqual([]);
     })
   );
 
@@ -505,12 +514,13 @@ describe("vault sync panel", { concurrent: false }, () => {
   it.effect(
     "renders a setup note for every disconnect reason",
     Effect.fnUntraced(function* () {
-      // Totality over the reason union: a new member without panel copy must
-      // fail here, not silently fall through to a blank panel.
       for (const reason of DmsMirrorDisconnectReason.literals) {
         const statusWith8 = yield* statusWith(false, O.some(reason));
         const { container, unmount } = renderWithStatus(statusWith8);
-        expect(within(container).getByTestId("vault-sync-setup-note")).toBeInTheDocument();
+        expect(
+          within(container).getByTestId("vault-sync-setup-note"),
+          `a new reason without panel copy must fail here, not fall through to a blank panel: ${reason}`
+        ).toBeInTheDocument();
         expect(
           within(container).getByTestId("vault-sync-setup-note").className,
           "amber-600 fell below readable contrast on the dark theme, so notes use the warning-text tier"
@@ -534,17 +544,20 @@ describe("vault sync panel", { concurrent: false }, () => {
   it.effect(
     "treats a reasonless disconnect as a probe problem, not missing configuration",
     Effect.fnUntraced(function* () {
-      // An older sidecar can report connected: false without a reason; claiming
-      // the token is unset would be the exact lie this panel was fixed for.
       const statusWith10 = yield* statusWith(false, O.none());
       const { container } = renderWithStatus(statusWith10);
       const screen = within(container);
 
       const note = screen.getByTestId("vault-sync-setup-note");
-      expect(note).not.toHaveTextContent("Set CLOUD_BOX_TOKEN");
+      expect(
+        note,
+        "an older sidecar reports connected: false without a reason; claiming the token is unset would be a lie"
+      ).not.toHaveTextContent("Set CLOUD_BOX_TOKEN");
       expect(screen.getByTestId("vault-sync-reconnect")).toBeInTheDocument();
-      // No probe timestamp arrived, so no stale "Last checked" claim renders.
-      expect(screen.queryByTestId("vault-sync-probed-at")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("vault-sync-probed-at"),
+        "no probe timestamp arrived, so no stale Last checked claim renders"
+      ).not.toBeInTheDocument();
     })
   );
 

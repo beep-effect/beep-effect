@@ -45,7 +45,6 @@ const makeTestContext = Effect.gen(function* () {
   };
 });
 
-// The nested source tree the directory-listing cases read back.
 const writeSourceTree = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   path: (...segments: ReadonlyArray<string>) => string
@@ -121,9 +120,6 @@ const assertSystemError = (
   return error.reason;
 };
 
-// The contract's cases, registered into a harness that already serves
-// `FileSystem.FileSystem` — the suite's own `layer`, or a reference harness
-// that provides a wider platform layer.
 export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>): void => {
   describe("path operations", () => {
     it.effect("should preserve binary bytes when reading and writing files", () =>
@@ -1021,13 +1017,8 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       })
     );
 
-    // TODO: Define whether overwrite: false succeeds without changing an existing destination or fails with AlreadyExists.
-    // PORT NOTE: upstream asserted `pathOrDescriptor: source` here, matching an
-    // upstream 6573 engine bug (the one conflict arm blaming the source). The
-    // port fixes the engine to report the DESTINATION — the entry that
-    // actually conflicts — so the conditional assertion names it. The node
-    // adapter never enters this branch: node's `fs.cp` with `force: false`
-    // silently preserves the destination instead of failing.
+    // decision: contract-suite-keeps-upstream-open-questions
+    // decision: copy-conflict-blames-destination
     it.effect("should preserve an existing copy destination when overwrite is false", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;
@@ -1131,7 +1122,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       })
     );
 
-    // TODO: Add a deterministic synchronization point before covering stream and sink finalization after interruption.
+    // decision: contract-suite-keeps-upstream-open-questions
     it.effect("should finalize derived stream and sink handles when their operations succeed or fail", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;
@@ -1162,9 +1153,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
   });
 
   describe("adapter capabilities", () => {
-    // TODO: Define the public working-directory contract. Decide separately whether the memory adapter defaults to virtual `/`.
-    // it.effect("should resolve relative paths when the adapter working directory is defined", () => {})
-
+    // decision: contract-suite-keeps-upstream-open-questions
     it.effect("should normalize missing-path errors when primitive path operations fail", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;
@@ -1182,7 +1171,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
           ["rename", fs.rename(missing, destination)],
           ["stat", fs.stat(missing)],
           ["truncate", fs.truncate(missing)],
-          // TODO: Decide whether FileSystem.utimes failures report `utimes` or the host's `utime`. Node reports `utime`.
+          // decision: contract-suite-keeps-upstream-open-questions
           [undefined, fs.utimes(missing, 0, 0)],
         ] as const;
 
@@ -1193,7 +1182,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       })
     );
 
-    // TODO: Define what ok, readable, and writable mean for adapters without user identity or permission state.
+    // decision: contract-suite-keeps-upstream-open-questions
     it.effect("should check readable and writable access when no virtual identity is available", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;
@@ -1309,9 +1298,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       })
     );
 
-    // TODO: Add positive chmod and chown conformance in a POSIX-only metadata capability suite.
-    // it.effect("should change file permissions and ownership when POSIX metadata is supported", () => {})
-
+    // decision: contract-suite-keeps-upstream-open-questions
     it.effect("should report updated access and modification timestamps when metadata is available", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;
@@ -1332,7 +1319,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       })
     );
 
-    // TODO: Define whether preserveTimestamps guarantees only mtime or both atime and mtime. Node preserves mtime but resets atime.
+    // decision: contract-suite-keeps-upstream-open-questions
     it.effect("should preserve the modification timestamp when copying with metadata preservation", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;
@@ -1372,10 +1359,7 @@ export const fileSystemCases = (it: Vitest.MethodsNonLive<FileSystem.FileSystem>
       })
     );
 
-    // TODO: Add deterministic watcher-registration and subscription-control hooks before specifying event ordering,
-    // normalized paths, or watcher cleanup.
-    // it.effect("should emit normalized events when watching registered paths", () => {})
-
+    // decision: contract-suite-keeps-upstream-open-questions
     it.effect("should preserve error context when watching a missing path", () =>
       Effect.gen(function* () {
         const { fs, path } = yield* makeTestContext;

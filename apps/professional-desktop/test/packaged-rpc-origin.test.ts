@@ -5,8 +5,6 @@ import { describe, expect } from "@effect/vitest";
 const SIDECAR_RPC_URL = "http://127.0.0.1:3939/rpc";
 const runtimeAt = (origin: string) => ({ location: { origin } });
 
-// DesktopHttpProtocol.ts derives its SERVER_URL from this same resolver, so the
-// desktop transport is covered by these cases without a duplicate local copy.
 describe("packaged Tauri RPC origin routing", () => {
   it.each(["http", "https"])("routes the Windows %s packaged origin to the loopback sidecar", (scheme) => {
     expect(resolveChatRpcHttpUrl(runtimeAt(`${scheme}://tauri.localhost`))).toBe(SIDECAR_RPC_URL);

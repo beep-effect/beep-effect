@@ -15,7 +15,6 @@ import type * as Scope from "effect/Scope";
 
 const $I = $GitId.create("internal/run");
 
-/** 16 MiB: the ceiling {@link runCollected} applies when a caller names none. */
 const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 
 /**
@@ -52,14 +51,6 @@ export class OutputTooLarge extends S.TaggedError<OutputTooLarge, { readonly bra
   })
 ) {}
 
-/**
- * Collects one byte stream into a string, failing the moment more than
- * `limit` bytes have arrived.
- *
- * The budget is enforced DURING accumulation on raw bytes: checking a
- * finished string's length would mean the memory had already been spent,
- * which is the failure the ceiling exists to prevent.
- */
 const collectBounded = (
   stream: Stream.Stream<Uint8Array, PlatformError.PlatformError>,
   name: OutputTooLarge["stream"],
@@ -113,10 +104,11 @@ export class Collected extends S.Opaque<Collected, { readonly brand: unique symb
  *
  * **Details**
  *
- * The ceiling is per stream and enforced on raw bytes as they arrive. The
- * first stream to exceed it kills the child (so the other stream stops
- * growing too) and fails the run with {@link OutputTooLarge}; nothing
- * partial is returned.
+ * The ceiling is per stream and enforced on raw bytes as they arrive, never on
+ * a finished string whose memory would already be spent. The first stream to
+ * exceed it kills the child (so the other stream stops growing too) before
+ * the run fails with {@link OutputTooLarge}; nothing partial is returned. The
+ * kill is best-effort: the scope's release also signals the process group.
  *
  * **Gotchas**
  *
@@ -152,16 +144,6 @@ export const runCollected = Effect.fnUntraced(function* (
 > {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const handle = yield* spawner.spawn(command);
-  // { concurrency: "unbounded" } is load-bearing: collecting these three
-  // sequentially would deadlock the moment a real OS pipe buffer fills
-  // (upstream git blocks writing while nothing drains it, and the
-  // sequential reader that would drain it is still waiting on the other
-  // stream). No mock test can regress this — it needs a real pipe. The
-  // regression guard is the dedicated "runCollected drains stdout and
-  // stderr concurrently under simultaneous backpressure on both pipes"
-  // test in test/integration/Git.int.test.ts (G5) — it puts pressure
-  // on BOTH pipes at once, which is what actually discriminates this
-  // option; a large-output-on-one-stream case does not.
   const [stdout, stderr, exitCode] = yield* Effect.all(
     [
       collectBounded(handle.stdout, "stdout", maxOutputBytes),
@@ -170,11 +152,6 @@ export const runCollected = Effect.fnUntraced(function* (
     ],
     { concurrency: "unbounded" }
   ).pipe(
-    // The first stream over its ceiling fails the whole collection (the
-    // other two are interrupted) and the child is killed BEFORE the failure
-    // surfaces, so no caller sees a typed failure with a still-writing child.
-    // The kill is best-effort: the scope's own release signals the process
-    // group as well, and a child that already exited has nothing to kill.
     Effect.catchTag("OutputTooLarge", (error) => Effect.andThen(Effect.ignore(handle.kill()), Effect.fail(error)))
   );
   return Collected.make({ stdout, stderr, exitCode: Number(exitCode) });

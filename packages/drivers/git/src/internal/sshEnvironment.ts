@@ -52,22 +52,8 @@ export const BASE_ENV = {
   SSH_ASKPASS_REQUIRE: "never",
 } as const;
 
-/**
- * `ssh` reads a key passphrase and a host-key confirmation from `/dev/tty`
- * DIRECTLY, so neither `GIT_TERMINAL_PROMPT` nor any askpass pin reaches
- * them; `-o BatchMode=yes` is the only lever that makes `ssh` fail instead of
- * block. Probed against OpenSSH under a real pty: with the askpass chain
- * closed but no `BatchMode`, a first-contact host key hangs indefinitely;
- * with `BatchMode=yes` the same call fails immediately with
- * `"Host key verification failed."`.
- */
 const BATCH_MODE = "-o BatchMode=yes";
 
-/**
- * Matches an ssh command this package is willing to append an option to: the
- * program's basename is `ssh`, mirroring git's own basename-driven variant
- * detection.
- */
 const OPENSSH_PROGRAM = /(?:^|[\\/])ssh(?:\.exe)?$/i;
 
 /**
@@ -108,42 +94,8 @@ const OPENSSH_PROGRAM = /(?:^|[\\/])ssh(?:\.exe)?$/i;
  */
 export const OPENSSH_VARIANTS = HashSet.make("", "auto", "ssh");
 
-/**
- * Whether an ssh command line already decides `BatchMode` for itself.
- *
- * **Details**
- *
- * Deliberately matches `BatchMode` only where it is an OPTION — after a `-o`,
- * with or without intervening space or quoting, and taking either the
- * `Key=value` or the `"Key value"` spelling `ssh -o` accepts. A bare
- * occurrence of the word does not count: `ssh -F /tmp/BatchMode` names a
- * config file and decides nothing, and treating it as a decision would skip
- * the pin for a caller who never asked to be prompted.
- *
- * A miss in the other direction is harmless, which is why this errs toward
- * matching less: because OpenSSH honors the first value obtained, appending
- * after a spelling this does not recognize is inert rather than overriding —
- * the caller's own value still wins.
- */
 const DECIDES_BATCH_MODE = /(?:^|\s)-o\s*["']?\s*BatchMode\s*[=\s]/i;
 
-/**
- * The program an ssh command line invokes, as git's shell would see it.
- *
- * **Details**
- *
- * `GIT_SSH_COMMAND` is interpreted by the shell, so the program may be
- * QUOTED to carry spaces — `"/opt/my tools/ssh" -i key` is a working setup
- * (verified against git 2.55). Splitting on whitespace alone would read that
- * as `"/opt/my`, fail to recognize ssh, and silently skip the pin.
- *
- * This is quote-aware, not shell-aware: it does not expand variables, honor
- * escapes, or handle a command built by shell operators. Anything it cannot
- * read confidently comes back `undefined` and the caller's command is left
- * strictly alone — the safe direction, since declining only forgoes the new
- * protection where mangling would break a working remote.
- */
-/** A leading quoted program: the opening quote, then everything up to the first matching quote. */
 const QUOTED_PROGRAM = /^(["'])([\s\S]*?)\1/;
 
 const sshProgram = (command: string): string | undefined => {
@@ -155,27 +107,6 @@ const sshProgram = (command: string): string | undefined => {
   return Str.split(/\s+/)(command)[0];
 };
 
-/**
- * Appends `-o BatchMode=yes` to an ssh command line, or declines.
- *
- * **Gotchas**
- *
- * Declining is the important half, and it covers two cases where appending
- * would do harm rather than good:
- *
- * - **The program is not OpenSSH.** `plink` (PuTTY) has no `-o KEY=VALUE`
- *   form at all — its non-interactive switch is `-batch` — so appending two
- *   tokens breaks a previously working setup outright instead of degrading.
- *   The same goes for a wrapper script taking positional arguments. git
- *   itself dispatches on the program's basename; this mirrors that, and
- *   anything unrecognized is left strictly alone.
- * - **The caller already decides `BatchMode`.** OpenSSH takes the FIRST value
- *   obtained for a repeated option (`ssh_config(5)`; verified against
- *   OpenSSH 10.3 with `ssh -G`), so an append after the caller's own
- *   `-o BatchMode=no` is silently inert. Rather than pretend otherwise, the
- *   caller's decision stands and no pin is applied — a caller who explicitly
- *   asked to be prompted owns the resulting wait.
- */
 const withBatchMode = (command: string): O.Option<string> => {
   const trimmed = Str.trim(command);
   const program = sshProgram(trimmed);

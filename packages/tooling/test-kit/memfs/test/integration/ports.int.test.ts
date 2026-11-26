@@ -1,11 +1,3 @@
-// Differential oracle for the sync port: the same tree on a real tmpdir and in
-// memfs, compared call for call. node's synchronous node:fs API is the
-// reference — its thrown errno shapes are what the sync and promises ports
-// imitate, and Effect's FileSystem exposes neither that API nor its errors —
-// so node:fs is loaded for the calls under comparison only. Every host
-// fixture is built through the harness's FileSystem (NodeServices, the node
-// adapter) under a scoped temp directory.
-
 import { MemoryFileSystem } from "@beep/memfs";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, layer } from "@effect/vitest";
@@ -17,11 +9,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ErrnoFields } from "../helpers.ts";
 
-// node's synchronous fs API is the oracle under comparison; Effect's FileSystem
-// exposes neither those calls nor their thrown errno shapes.
 const { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } =
   process.getBuiltinModule("node:fs");
-// Fixture paths are plain POSIX segments under a scoped temp directory.
 const join = (...segments: ReadonlyArray<string>) => A.join(segments, "/");
 
 interface StatLike {
@@ -36,12 +25,13 @@ const isStatLike = (value: StatLike | string | ReadonlyArray<string>): value is 
 
 const statKind = (s: StatLike) => (s.isSymbolicLink() ? "symlink" : s.isDirectory() ? "directory" : "file");
 
-// `size` is compared for files only: a directory's size is host-defined.
-const valueOutcome = (value: StatLike | string | ReadonlyArray<string>) =>
-  isStatLike(value) ? { kind: statKind(value), size: value.isFile() ? value.size : -1 } : { value };
+const uncomparedHostDefinedSize = -1;
 
-// The message is compared too, with the host prefix mapped onto the
-// memory tree's "/r": node's text is "<CODE>: <description>, <syscall> '<path>'".
+const valueOutcome = (value: StatLike | string | ReadonlyArray<string>) =>
+  isStatLike(value)
+    ? { kind: statKind(value), size: value.isFile() ? value.size : uncomparedHostDefinedSize }
+    : { value };
+
 const errorOutcome = (host: string, e: unknown) => {
   assert(S.is(ErrnoFields)(e));
   const error = e;
@@ -62,9 +52,9 @@ const outcome = (host: string, f: () => StatLike | string | ReadonlyArray<string
   }
 };
 
-// String concatenation, NOT path.join: join folds `..` lexically, which would
-// hide the kernel's ENOTDIR for `file.txt/..`.
-const hostPath = (host: string, name: string) => `${host}/${name}`;
+const unnormalizedHostPath = (host: string, name: string) => `${host}/${name}`;
+
+const directoryAssertingCases = ["file.txt/", "dir/", "to-dir/"];
 
 const cases = [
   "file.txt",
@@ -79,11 +69,7 @@ const cases = [
   "dir/..",
   "file.txt/..",
   "nc-a",
-  // A trailing slash asserts "directory": node follows the final link and
-  // fails ENOTDIR for a non-directory (even lstat), and lists a directory.
-  "file.txt/",
-  "dir/",
-  "to-dir/",
+  ...directoryAssertingCases,
 ];
 
 const seed = {
@@ -99,8 +85,6 @@ const seed = {
 };
 
 layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
-  // The host tree the port cases compare against, built through the reference
-  // FileSystem under a scoped temp directory.
   const hostTree = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const host = yield* fs.makeTempDirectoryScoped({ prefix: "memfs-ports-" });
@@ -117,11 +101,10 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
     return host;
   });
 
-  // A scoped host temp directory, made through the reference FileSystem.
   const hostBase = (prefix: string) =>
     Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectoryScoped({ prefix }));
 
-  describe("sync port parity with node:fs", () => {
+  describe("sync port parity with node:fs, the synchronous API and errno shapes Effect's FileSystem lacks", () => {
     it.effect("agrees with statSync, lstatSync, readFileSync and readdirSync on every case", () =>
       Effect.gen(function* () {
         const host = yield* hostTree;
@@ -130,23 +113,23 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
         for (const c of cases) {
           assert.deepStrictEqual(
             outcome(host, () => sync.stat(`/r/${c}`)),
-            outcome(host, () => statSync(hostPath(host, c))),
-            `stat ${c}`
+            outcome(host, () => statSync(unnormalizedHostPath(host, c))),
+            `stat ${c}: code, syscall, path and "<CODE>: <description>, <syscall> '<path>'" message, host prefix as /r`
           );
           assert.deepStrictEqual(
             outcome(host, () => sync.lstat(`/r/${c}`)),
-            outcome(host, () => lstatSync(hostPath(host, c))),
-            `lstat ${c}`
+            outcome(host, () => lstatSync(unnormalizedHostPath(host, c))),
+            `lstat ${c}: a trailing slash follows the final link even here, ENOTDIR for a non-directory`
           );
           assert.deepStrictEqual(
             outcome(host, () => sync.readFile(`/r/${c}`)),
-            outcome(host, () => readFileSync(hostPath(host, c), "utf8")),
-            `readFile ${c}`
+            outcome(host, () => readFileSync(unnormalizedHostPath(host, c), "utf8")),
+            `readFile ${c}: an unnormalized path, so file.txt/.. keeps the kernel ENOTDIR path.join would fold away`
           );
           assert.deepStrictEqual(
             outcome(host, () => [...sync.readDirectory(`/r/${c}`)].sort()),
-            outcome(host, () => readdirSync(hostPath(host, c)).sort()),
-            `readDirectory ${c}`
+            outcome(host, () => readdirSync(unnormalizedHostPath(host, c)).sort()),
+            `readDirectory ${c}: a trailing slash asserts a directory and lists it`
           );
         }
       })
@@ -172,15 +155,24 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
         const real = readdirSync(host, { withFileTypes: true });
         assert.deepStrictEqual(A.map(memory, kinds).sort(), A.map(real, kinds).sort());
         for (const c of cases) {
-          // readFile without an encoding: bytes on both sides.
           const memoryBytes = yield* settled(() => fsp.readFile(`/r/${c}`).then((b) => [...b]));
-          const realBytes = yield* settled(() => Promise.resolve().then(() => [...readFileSync(hostPath(host, c))]));
-          assert.deepStrictEqual(memoryBytes, realBytes, `promises readFile (no encoding) ${c}`);
+          const realBytes = yield* settled(() =>
+            Promise.resolve().then(() => [...readFileSync(unnormalizedHostPath(host, c))])
+          );
+          assert.deepStrictEqual(
+            memoryBytes,
+            realBytes,
+            `promises readFile without an encoding: bytes on both sides ${c}`
+          );
           const memoryStat = yield* settled(() => fsp.stat(`/r/${c}`).then((s) => s.isFile()));
-          const realStat = yield* settled(() => Promise.resolve().then(() => statSync(hostPath(host, c)).isFile()));
+          const realStat = yield* settled(() =>
+            Promise.resolve().then(() => statSync(unnormalizedHostPath(host, c)).isFile())
+          );
           assert.deepStrictEqual(memoryStat, realStat, `promises stat ${c}`);
           const memoryDir = yield* settled(() => fsp.readdir(`/r/${c}`).then((names) => [...names].sort()));
-          const realDir = yield* settled(() => Promise.resolve().then(() => readdirSync(hostPath(host, c)).sort()));
+          const realDir = yield* settled(() =>
+            Promise.resolve().then(() => readdirSync(unnormalizedHostPath(host, c)).sort())
+          );
           assert.deepStrictEqual(memoryDir, realDir, `promises readdir ${c}`);
         }
       })
@@ -243,14 +235,15 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
           hostCode(() => writeFileSync(`${base}/loop/x.txt`, "")),
           "ELOOP"
         );
-        // A dangling or looping link ABOVE the direct parent.
         assert.strictEqual(
           hostCall(() => writeFileSync(`${base}/dang/sub/x.txt`, "")),
-          "ENOENT open"
+          "ENOENT open",
+          "a dangling link above the direct parent"
         );
         assert.strictEqual(
           hostCall(() => writeFileSync(`${base}/loop/sub/x.txt`, "")),
-          "ELOOP open"
+          "ELOOP open",
+          "a looping link above the direct parent"
         );
         assert.strictEqual(
           hostCall(() => symlinkSync("t", `${base}/dang/sub/x.txt`)),
@@ -311,10 +304,8 @@ layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
     );
   });
 
-  describe("handle mkdir through links, as mkdirSync(p, { recursive: true }) reports (#891)", () => {
-    // `mkdirSync` — not the adapter's callback `fs.mkdir` — is the reference
-    // here: a dangling link earlier in the path is ENOENT for it, ENOTDIR for
-    // the adapter (which the errno-parity contract pins for the engine).
+  // decision: engine-errno-reference-is-adapter-callback
+  describe("handle mkdir through links, as mkdirSync(p, { recursive: true }) reports, not the adapter's fs.mkdir", () => {
     const paths = [
       "dang",
       "dang/a/b",
