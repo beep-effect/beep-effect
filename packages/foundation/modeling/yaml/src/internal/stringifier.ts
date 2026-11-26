@@ -309,7 +309,6 @@ function hasAmbiguousPlainSyntax(s: string): boolean {
 }
 
 // decision: quote-fallback-defaults
-// A plain scalar cannot carry CR: the parser normalises it away (silent data corruption on round-trip).
 const c0ExceptLf = /[\x00-\x09\x0b-\x1f]/;
 const c0ExceptLfAndTab = /[\x00-\x08\x0b-\x1f]/;
 
@@ -596,9 +595,6 @@ function mustDoubleQuoteString(s: string, style: ScalarStyle, inFlow: boolean): 
 // decision: canonical-mode-libyaml-scalars
 function multilineNeedsDoubleQuote(s: string, style: ScalarStyle, canonical: boolean): boolean {
   const blockStyle = isBlockStyle(style);
-  // A value of only spaces and newlines (no text/tab content) cannot be
-  // represented faithfully by a block scalar — except when the source style is
-  // already a block style (newline-only is a valid `|+` body).
   const spacesAndNewlinesOnly = /^[\n ]*$/.test(s);
   if (!blockStyle && spacesAndNewlinesOnly) return true;
   return canonical && blockStyle && (hasInteriorTrailingWhitespace(s) || hasNewlineSpacesTab(s));
