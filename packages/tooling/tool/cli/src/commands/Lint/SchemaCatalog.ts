@@ -10,6 +10,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
+import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
@@ -22,6 +23,7 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -1130,9 +1132,15 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
   const expanded = yield* Effect.forEach(scopeRoots, (root) => expandScopeRoot(repoRoot, matched, root), {
     concurrency: 1,
   });
+  const workspaces = yield* workspaceDirectories(repoRoot);
+  const coveredWorkspaces = A.filter(A.map(A.fromIterable(HashMap.values(workspaces)), toPosixPath), (directory) =>
+    A.some(scopeRoots, (root) => isUnderScopeRoot(root, directory))
+  );
   const scope = yield* resolveShardScope(
     repoRoot,
-    A.map(A.flatten(expanded), (absolute) => toPosixPath(path.relative(repoRoot, absolute))),
+    A.map(A.flatten([...expanded, scopeRoots, coveredWorkspaces]), (absolute) =>
+      toPosixPath(path.relative(repoRoot, absolute))
+    ),
     ownerResolver
   );
   const owners = A.map(scope.owners, (owner) => owner.owner);

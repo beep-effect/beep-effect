@@ -447,9 +447,41 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             yield* runLint(["schema-catalog", "--write", "packages/a/empty"]);
             const emptyLogs = yield* TestConsole.logLines;
             expect(emptyLogs).toContain("[schema-catalog] directory packages/a/empty holds no scanned source file");
-            expect(emptyLogs).toContain(
+            expect(emptyLogs).toContain("[schema-catalog] 0 shard(s) changed for @beep/a");
+
+            yield* fs.makeDirectory(path.resolve(process.cwd(), "scripts/empty"), { recursive: true });
+            yield* runLint(["schema-catalog", "--write", "scripts/empty"]);
+            const unownedLogs = yield* TestConsole.logLines;
+            expect(unownedLogs).toContain(
               "[schema-catalog] no owning package for the given paths; nothing to regenerate"
             );
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "regenerates the owner of an existing directory whose scanned files were all removed",
+      Effect.fn("CatalogShardScopeTest.incrementalEmptiedDirectory")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* writeProjectFile("packages/a/src/nested/Deep.ts", schemaModule("Deep"));
+            yield* runLint(["schema-catalog", "--write"]);
+
+            yield* removeProjectFile("packages/a/src/nested/Deep.ts");
+            yield* runLint(["schema-catalog", "--write", "packages/a/src/nested"]);
+            const after = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(after).not.toContain(`"symbol":"DeepModel"`);
+            expect(after).toContain(`"symbol":"AModel"`);
+            yield* expectFullParity("@beep/a");
+
+            yield* removeProjectFile(sourceB);
+            yield* runLint(["schema-catalog", "--write", "packages"]);
+            const shardB = yield* projectFileExists(schemaShard("@beep/b"));
+            expect(shardB).toBe(false);
+            const shardA = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(shardA).toContain(`"symbol":"AModel"`);
           })
         );
       })
