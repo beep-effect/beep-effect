@@ -620,7 +620,7 @@ jobs:
           steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true'
           || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
           || steps.pin.outputs.relabel == 'true'
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         with:
           client-id: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
           private-key: ${{ secrets.KNOWLEDGE_MINT_APP_PRIVATE_KEY }}

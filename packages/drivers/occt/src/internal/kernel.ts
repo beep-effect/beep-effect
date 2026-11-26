@@ -852,8 +852,9 @@ const visibleNeighbours = (options: {
     );
     return (shown / NEIGHBOUR_SAMPLES) * Math.hypot(b.x - a.x, b.y - a.y);
   };
-  return pipe(
-    A.fromIterable(HashMap.values(byHash)),
+  return byHash.pipe(
+    HashMap.values,
+    A.fromIterable,
     A.map((positions) =>
       pipe(
         A.map(positions, (position) => A.get(bounds, position)),

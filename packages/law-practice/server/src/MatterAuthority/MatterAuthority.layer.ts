@@ -29,6 +29,14 @@ const $I = $LawPracticeServerId.create("MatterAuthority/MatterAuthority.layer");
 /**
  * Span attribute naming the access kind a walled path asked for.
  *
+ * **Example** (Name the access kind span attribute)
+ *
+ * ```ts
+ * import { MatterAccessKindAttribute } from "@beep/law-practice-server/MatterAuthority"
+ *
+ * console.log(MatterAccessKindAttribute) // "beep.law_practice.matter_access"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -37,6 +45,14 @@ export const MatterAccessKindAttribute = "beep.law_practice.matter_access";
 /**
  * Span attribute naming the matter wall's answer, `Granted` or `Denied`.
  *
+ * **Example** (Name the outcome span attribute)
+ *
+ * ```ts
+ * import { MatterAccessOutcomeAttribute } from "@beep/law-practice-server/MatterAuthority"
+ *
+ * console.log(MatterAccessOutcomeAttribute) // "beep.law_practice.matter_outcome"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -44,6 +60,14 @@ export const MatterAccessOutcomeAttribute = "beep.law_practice.matter_outcome";
 
 /**
  * Span attribute naming why the matter wall denied a path.
+ *
+ * **Example** (Name the denial reason span attribute)
+ *
+ * ```ts
+ * import { MatterDenialReasonAttribute } from "@beep/law-practice-server/MatterAuthority"
+ *
+ * console.log(MatterDenialReasonAttribute) // "beep.law_practice.matter_denial_reason"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -88,8 +112,6 @@ const MatterAuthorityConfigFields = S.Struct({
 });
 
 /**
- * The matter authority's configuration: scope bindings and staffing grants.
- *
  * **Details**
  *
  * A scope reference or family key bound to two matters, or a mail folder
@@ -136,6 +158,14 @@ export class MatterAuthorityConfig extends S.Opaque<MatterAuthorityConfig, { rea
  * The configuration that binds nothing and staffs no one: every walled path
  * is denied.
  *
+ * **Example** (Bind nothing and staff no one)
+ *
+ * ```ts
+ * import { EmptyMatterAuthorityConfig } from "@beep/law-practice-server/MatterAuthority"
+ *
+ * console.log(EmptyMatterAuthorityConfig.scopes.length, EmptyMatterAuthorityConfig.grants.length) // 0 0
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -144,6 +174,17 @@ export const EmptyMatterAuthorityConfig = MatterAuthorityConfig.make({ scopes: [
 /**
  * The matter authority configuration read from `BEEP_LAW_PRACTICE_MATTER_AUTHORITY`
  * as JSON, with the empty configuration as the default.
+ *
+ * **Example** (Read the configuration from a provider)
+ *
+ * ```ts
+ * import { MatterAuthorityConfigFromEnv } from "@beep/law-practice-server/MatterAuthority"
+ * import * as ConfigProvider from "effect/ConfigProvider"
+ * import * as Effect from "effect/Effect"
+ *
+ * const config = Effect.runSync(MatterAuthorityConfigFromEnv.parse(ConfigProvider.fromUnknown({})))
+ * console.log(config.grants.length) // 0
+ * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -231,6 +272,15 @@ export const MatterAuthorityLayer = (config: MatterAuthorityConfig): Layer.Layer
  * The matter authority over {@link MatterAuthorityConfigFromEnv}; an unset
  * variable denies every walled path.
  *
+ * **Example** (Provide the configured authority)
+ *
+ * ```ts
+ * import { MatterAuthorityLive } from "@beep/law-practice-server/MatterAuthority"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(MatterAuthorityLive)) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -304,6 +354,15 @@ export const MatterWallLive: Layer.Layer<MatterAuthority | LawPrincipal, Config.
  *
  * A denial fails with the `scope-unavailable` reason an absent scope already
  * gets, so a denial does not reveal that the scope exists.
+ *
+ * **Example** (Wall the source resolver)
+ *
+ * ```ts
+ * import { AuthorizedSourceTextResolver } from "@beep/law-practice-server/MatterAuthority"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(AuthorizedSourceTextResolver)) // true
+ * ```
  *
  * @category layers
  * @since 0.0.0

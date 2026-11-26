@@ -30,8 +30,6 @@ import type * as Layer from "effect/Layer";
 const $I = $LawPracticeUseCasesId.create("ClaimProposal/ClaimProposal.tools");
 
 /**
- * The tier gate refused the tool call before it ran.
- *
  * **Example** (Refuse an unapproved call)
  *
  * ```ts
@@ -49,8 +47,6 @@ export const ClaimToolGateRefused = S.TaggedStruct("TierGateRefused", { reason: 
 );
 
 /**
- * Type of {@link ClaimToolGateRefused}.
- *
  * @category errors
  * @since 0.0.0
  */
@@ -76,8 +72,6 @@ export const ClaimProposeFailure = S.Union([ClaimProposalRefused, ClaimToolGateR
 );
 
 /**
- * Type of {@link ClaimProposeFailure}.
- *
  * @category errors
  * @since 0.0.0
  */

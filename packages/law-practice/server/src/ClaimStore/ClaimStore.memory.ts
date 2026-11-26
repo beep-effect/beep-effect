@@ -32,6 +32,14 @@ import type {
 /**
  * Span attribute naming the claim store operation a span records.
  *
+ * **Example** (Name the store operation span attribute)
+ *
+ * ```ts
+ * import { LawClaimStoreOperationAttribute } from "@beep/law-practice-server/ClaimStore"
+ *
+ * console.log(LawClaimStoreOperationAttribute) // "beep.law_practice.claim_store_operation"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */

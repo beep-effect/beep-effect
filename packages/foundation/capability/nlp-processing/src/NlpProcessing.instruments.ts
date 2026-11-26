@@ -41,9 +41,6 @@ const owner = PackageName.make("@beep/nlp-processing");
 const spanAndMetric: A.NonEmptyReadonlyArray<SignalKind> = [SignalKind.Enum.span, SignalKind.Enum.metric];
 
 /**
- * Whether an NLP cache lookup found its entry, the value of
- * `beep.nlp.cache_result`.
- *
  * **Example** (Read a cache result spelling)
  *
  * ```ts import.meta.vitest name="Read a cache result spelling"
@@ -60,8 +57,6 @@ export const NlpCacheResult = LiteralKit(["hit", "miss"]).pipe(
 );
 
 /**
- * Type of {@link NlpCacheResult}.
- *
  * @category models
  * @since 0.0.0
  */

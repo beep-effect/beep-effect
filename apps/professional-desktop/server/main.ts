@@ -193,4 +193,4 @@ const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
   Layer.withSpan("professional_desktop.sidecar.runtime")
 );
 
-BunRuntime.runMain(Layer.launch(Main));
+Main.pipe(Layer.launch, BunRuntime.runMain);

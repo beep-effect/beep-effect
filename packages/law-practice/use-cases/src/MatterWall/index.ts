@@ -7,15 +7,11 @@
  */
 
 /**
- * Matter wall ports.
- *
  * @category ports
  * @since 0.0.0
  */
 export * from "./MatterWall.ports.ts";
 /**
- * Matter wall values.
- *
  * @category models
  * @since 0.0.0
  */

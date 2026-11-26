@@ -2926,7 +2926,7 @@ const resolvePartitionedLaneSelection = Effect.fn("CiLane.resolvePartitionedLane
     )
   );
   const path = yield* Path.Path;
-  const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
+  const workspaceEntries = workspaces.pipe(HashMap.entries, A.fromIterable);
   const workspacePackageNames = pipe(
     workspaceEntries,
     A.map(([name]) => name),

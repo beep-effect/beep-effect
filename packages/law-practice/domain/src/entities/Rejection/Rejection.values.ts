@@ -34,8 +34,6 @@ export const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).pipe(
 );
 
 /**
- * Type of {@link RejectionStatute}.
- *
  * @category value-objects
  * @since 0.0.0
  */

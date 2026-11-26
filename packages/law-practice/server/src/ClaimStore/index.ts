@@ -6,8 +6,6 @@
  */
 
 /**
- * The in-memory law claim store.
- *
  * @category layers
  * @since 0.0.0
  */

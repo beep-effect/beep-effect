@@ -28,8 +28,6 @@ const ProposalCandidates = CanonicalHashSet(AnnotationId).check(
 );
 
 /**
- * A request to propose one distinction claim from verified annotations.
- *
  * **Details**
  *
  * The document travels in its own encoding and passes the annotation

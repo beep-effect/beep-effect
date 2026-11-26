@@ -43,8 +43,6 @@ export const SupportAssessment = LiteralKit(["verified", "unverified"]).pipe(
 );
 
 /**
- * Type of {@link SupportAssessment}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -70,16 +68,12 @@ export const AlignmentAssessment = LiteralKit(["exact", "lesser", "fuzzy", "unal
 );
 
 /**
- * Type of {@link AlignmentAssessment}.
- *
  * @category value-objects
  * @since 0.0.0
  */
 export type AlignmentAssessment = typeof AlignmentAssessment.Type;
 
 /**
- * Whether the cited reference was identified.
- *
  * **Example** (Check a reference value)
  *
  * ```ts import.meta.vitest name="Check a reference value"
@@ -96,8 +90,6 @@ export const ReferenceAssessment = LiteralKit(["identified", "unidentified"]).pi
 );
 
 /**
- * Type of {@link ReferenceAssessment}.
- *
  * @category value-objects
  * @since 0.0.0
  */
@@ -128,6 +120,14 @@ export const OfficeActionAssessmentArrows = makeAssessmentArrows({ $I, coordinat
 /**
  * Every office-action coordinate, each assessed or carrying its absence
  * reason.
+ *
+ * **Example** (Read the office-action coordinates)
+ *
+ * ```ts
+ * import { OfficeActionAssessments } from "@beep/law-practice-domain/values/LawClaim"
+ *
+ * console.log(Object.keys(OfficeActionAssessments.fields)) // ["support", "alignment", "reference"]
+ * ```
  *
  * @category value-objects
  * @since 0.0.0

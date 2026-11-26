@@ -356,7 +356,7 @@ export const OntologyProposedTermLint = S.Union([OntologyShaclWorsened, Ontology
   })
 );
 
-/** Type for {@link OntologyProposedTermLint}.
+/**
  * **Example** (Usage)
  * ```ts
  * import type { OntologyProposedTermLint } from "@beep/ontology-use-cases/tools"
@@ -368,7 +368,7 @@ export const OntologyProposedTermLint = S.Union([OntologyShaclWorsened, Ontology
  */
 export type OntologyProposedTermLint = typeof OntologyProposedTermLint.Type;
 
-/** Recoverable refusal of a batch whose proposed terms fail the pre-save lint; nothing was saved.
+/**
  * **Example** (Usage)
  * ```ts
  * import { OntologyProposedTermRefusal, OntologyShaclWorsened } from "@beep/ontology-use-cases/tools"

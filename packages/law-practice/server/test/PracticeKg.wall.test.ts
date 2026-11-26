@@ -347,31 +347,35 @@ describe("Practice KG matter wall", () => {
   });
 });
 
-const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      S.encodeEffect(schema)(value).pipe(
-        Effect.flatMap(S.decodeEffect(schema)),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("Practice KG matter wall rows schema-derived values", () => {
-  it.effect("round-trips every generated MailFolderBinding through its encoding", () =>
-    roundTripsEveryGeneratedValue(MailFolderBinding)
+  it.effect.prop(
+    "round-trips every generated MailFolderBinding through its encoding",
+    [Arbitrary.schema(MailFolderBinding)],
+    ([value]) => roundTrips(MailFolderBinding, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated SearchRow through its encoding", () =>
-    roundTripsEveryGeneratedValue(SearchRow)
+  it.effect.prop(
+    "round-trips every generated SearchRow through its encoding",
+    [Arbitrary.schema(SearchRow)],
+    ([value]) => roundTrips(SearchRow, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated DocumentKeyRow through its encoding", () =>
-    roundTripsEveryGeneratedValue(DocumentKeyRow)
+  it.effect.prop(
+    "round-trips every generated DocumentKeyRow through its encoding",
+    [Arbitrary.schema(DocumentKeyRow)],
+    ([value]) => roundTrips(DocumentKeyRow, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated FolderRow through its encoding", () =>
-    roundTripsEveryGeneratedValue(FolderRow)
+  it.effect.prop(
+    "round-trips every generated FolderRow through its encoding",
+    [Arbitrary.schema(FolderRow)],
+    ([value]) => roundTrips(FolderRow, value),
+    { arbitrary: fcRuns(25) }
   );
 });

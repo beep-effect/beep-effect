@@ -167,8 +167,6 @@ export const ActivityFloor = Context.Reference<O.Option<DateTime.Utc>>($I`Activi
 });
 
 /**
- * Schema of a logged success: the value and the activities that produced it.
- *
  * **Example** (Build a logged number schema)
  *
  * ```ts
@@ -187,8 +185,6 @@ export const Logged = <Value extends S.Top>(value: Value) =>
   );
 
 /**
- * A value paired with the activities that produced it.
- *
  * @category models
  * @since 0.0.0
  */

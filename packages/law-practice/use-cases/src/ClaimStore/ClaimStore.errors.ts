@@ -12,8 +12,6 @@ import * as S from "effect/Schema";
 const $I = $LawPracticeUseCasesId.create("ClaimStore/ClaimStore.errors");
 
 /**
- * The claim store operation that failed.
- *
  * **Example** (Check a store operation)
  *
  * ```ts
@@ -34,8 +32,6 @@ export const LawClaimStoreOperation = LiteralKit([
 ]).pipe($I.annoteSchema("LawClaimStoreOperation", { description: "The claim store operation that failed." }));
 
 /**
- * Type of {@link LawClaimStoreOperation}.
- *
  * @category errors
  * @since 0.0.0
  */

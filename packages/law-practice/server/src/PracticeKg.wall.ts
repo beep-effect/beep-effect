@@ -21,8 +21,6 @@ import type { GrantedScopes } from "@beep/law-practice-use-cases/MatterWall";
 const $I = $LawPracticeServerId.create("PracticeKg.wall");
 
 /**
- * What a Practice KG read may return.
- *
  * **Details**
  *
  * `Walled` is a principal's read: only rows of the listed client-qualified
@@ -57,8 +55,6 @@ export const PracticeKgReadScope = S.TaggedUnion({
 );
 
 /**
- * Type of {@link PracticeKgReadScope}.
- *
  * @category models
  * @since 0.0.0
  */

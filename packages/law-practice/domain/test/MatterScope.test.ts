@@ -89,28 +89,29 @@ describe("MatterScope", () => {
   });
 });
 
-const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      S.encodeEffect(schema)(value).pipe(
-        Effect.flatMap(S.decodeEffect(schema)),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("MatterScope schema-derived values", () => {
-  it.effect("round-trips every generated PracticeKgFamilyKey through its encoding", () =>
-    roundTripsEveryGeneratedValue(PracticeKgFamilyKey)
+  it.effect.prop(
+    "round-trips every generated PracticeKgFamilyKey through its encoding",
+    [Arbitrary.schema(PracticeKgFamilyKey)],
+    ([value]) => roundTrips(PracticeKgFamilyKey, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated MatterGrant through its encoding", () =>
-    roundTripsEveryGeneratedValue(MatterGrant)
+  it.effect.prop(
+    "round-trips every generated MatterGrant through its encoding",
+    [Arbitrary.schema(MatterGrant)],
+    ([value]) => roundTrips(MatterGrant, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated MailFolderBinding through its encoding", () =>
-    roundTripsEveryGeneratedValue(MailFolderBinding)
+  it.effect.prop(
+    "round-trips every generated MailFolderBinding through its encoding",
+    [Arbitrary.schema(MailFolderBinding)],
+    ([value]) => roundTrips(MailFolderBinding, value),
+    { arbitrary: fcRuns(25) }
   );
 });

@@ -477,7 +477,7 @@ const makeWinkCorpusManager = Effect.gen(function* () {
   ): Effect.Effect<ReadonlyArray<string>, CorpusManagerError> =>
     Bool.match(document.tokenCount > 0, {
       onFalse: () => readNormalizedTokensFromWink(engine, document, corpusId),
-      onTrue: () => Effect.succeed(pipe(Chunk.toReadonlyArray(document.tokens), A.map(normalizeTokenText))),
+      onTrue: () => document.tokens.pipe(Chunk.toReadonlyArray, A.map(normalizeTokenText), Effect.succeed),
     });
 
   const compileState = Effect.fnUntraced(function* (

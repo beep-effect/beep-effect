@@ -29,6 +29,14 @@ import type { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 /**
  * Span attribute naming the traversal's answer, `Found` or `Missing`.
  *
+ * **Example** (Name the traversal outcome span attribute)
+ *
+ * ```ts
+ * import { ProvenanceOutcomeAttribute } from "@beep/law-practice-server/ProvenanceTraversal"
+ *
+ * console.log(ProvenanceOutcomeAttribute) // "beep.law_practice.provenance_outcome"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -36,6 +44,14 @@ export const ProvenanceOutcomeAttribute = "beep.law_practice.provenance_outcome"
 
 /**
  * Span attribute counting the activity records a traversal omitted.
+ *
+ * **Example** (Name the omitted activity count span attribute)
+ *
+ * ```ts
+ * import { ProvenanceOmittedActivitiesAttribute } from "@beep/law-practice-server/ProvenanceTraversal"
+ *
+ * console.log(ProvenanceOmittedActivitiesAttribute) // "beep.law_practice.provenance_omitted_activities"
+ * ```
  *
  * @category constants
  * @since 0.0.0

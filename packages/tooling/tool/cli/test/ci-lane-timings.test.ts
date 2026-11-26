@@ -279,8 +279,8 @@ const durationRowFor = (report: CiLaneTimingWindowReport, lane: string) =>
 
 const tsvCellFor = (tsv: string, rowPrefix: string, column: string) => {
   const lines = Str.split("\n")(tsv);
-  const header = Str.split("\t")(O.getOrThrow(A.findFirst(lines, Str.startsWith("population\t"))));
-  const cells = Str.split("\t")(O.getOrThrow(A.findFirst(lines, Str.startsWith(rowPrefix))));
+  const header = A.findFirst(lines, Str.startsWith("population\t")).pipe(O.getOrThrow, Str.split("\t"));
+  const cells = A.findFirst(lines, Str.startsWith(rowPrefix)).pipe(O.getOrThrow, Str.split("\t"));
   return cells[header.indexOf(column)];
 };
 

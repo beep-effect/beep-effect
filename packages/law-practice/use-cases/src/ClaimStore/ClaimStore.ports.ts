@@ -66,8 +66,6 @@ export class ProposedClaimEntry extends S.Opaque<ProposedClaimEntry, { readonly 
 ) {}
 
 /**
- * The key a proposal is found by: its scope, logical key and creation support.
- *
  * **Example** (Name the lookup fields)
  *
  * ```ts

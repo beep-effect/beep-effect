@@ -227,7 +227,7 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
             assertNone(disabled);
             expect(ciShardOverflowWebhook(disabled)).toBeUndefined();
             const declared = declareCiShardOverflowController({ heavy, overflow: enabled, network });
-            assertTrue(O.isSome(declared));
+            declared.pipe(O.isSome, assertTrue);
             expect(ciShardOverflowWebhook(declared)).toBeDefined();
           }),
         () =>
@@ -318,14 +318,14 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
       expect(o.instance_target_capacity_type).toBe("spot");
       expect(o.enable_runner_on_demand_failover_for_errors).toStrictEqual([]);
       // The controller's own resources and the termination-watcher grants are named by prefix.
-      const amiParameter = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-ami");
-      assertTrue(O.isSome(amiParameter));
-      expect(amiParameter.value.name).toBe("/beep-ovf/controller/runner-ami-id");
-      const imdsPolicy = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-imds-disable");
-      assertTrue(O.isSome(imdsPolicy));
-      expect(imdsPolicy.value.name).toBe("beep-ovf-runner-imds-disable");
-      expect(imdsPolicy.value.path).toBe("/beep-ovf/");
-      expect(imdsPolicy.value.policy).toBe(
+      const amiParameter = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-ami").pipe(O.getOrThrow);
+      expect(amiParameter.name).toBe("/beep-ovf/controller/runner-ami-id");
+      const imdsPolicy = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-imds-disable").pipe(
+        O.getOrThrow
+      );
+      expect(imdsPolicy.name).toBe("beep-ovf-runner-imds-disable");
+      expect(imdsPolicy.path).toBe("/beep-ovf/");
+      expect(imdsPolicy.policy).toBe(
         O.getOrUndefined(MutableHashMap.get(resources, "heavy-runner-imds-disable"))?.policy
       );
       expect(A.filter(lambdaNames, Str.startsWith("beep-ovf-"))).toStrictEqual([

@@ -35,8 +35,6 @@ export const ClaimProposalRefused = S.TaggedUnion({
 }).pipe($I.annoteSchema("ClaimProposalRefused", { description: "Why a proposal path wrote no proposed record." }));
 
 /**
- * Type of {@link ClaimProposalRefused}.
- *
  * @category errors
  * @since 0.0.0
  */

@@ -109,7 +109,7 @@ interface JsonEdit {
   readonly value: unknown;
 }
 
-const parseTree = (text: string): O.Option<JsoncNode> => O.flatten(Result.getSuccess(Jsonc.parseTreeResult(text)));
+const parseTree = (text: string): O.Option<JsoncNode> => Jsonc.parseTreeResult(text).pipe(Result.getSuccess, O.flatten);
 
 // The property names of the object at `path`, in document order.
 const propertyNames = (text: string, path: JsoncPath): O.Option<Array<string>> =>

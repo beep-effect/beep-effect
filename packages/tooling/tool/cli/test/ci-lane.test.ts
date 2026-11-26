@@ -337,8 +337,9 @@ const liveTaskPackages = Effect.fn(function* (task: "lint" | "test") {
   const repoRoot = yield* findRepoRoot();
   const path = yield* Path.Path;
   const workspaces = yield* workspaceManifests(repoRoot);
-  return pipe(
-    A.fromIterable(HashMap.entries(workspaces)),
+  return workspaces.pipe(
+    HashMap.entries,
+    A.fromIterable,
     A.filter(([, workspace]) => {
       const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
       return !isLabsWorkspaceDir(relativeDir) && HashMap.has(workspace.manifest.scripts, task);
@@ -1044,7 +1045,7 @@ describe("CI lane partitions", () => {
         const repoRoot = yield* findRepoRoot();
         const path = yield* Path.Path;
         const workspaces = yield* workspaceManifests(repoRoot);
-        const workspaceEntries = A.fromIterable(HashMap.entries(workspaces));
+        const workspaceEntries = workspaces.pipe(HashMap.entries, A.fromIterable);
         const workspacePackageNames = A.map(workspaceEntries, ([name]) => name);
 
         for (const [laneId, task, partition] of [

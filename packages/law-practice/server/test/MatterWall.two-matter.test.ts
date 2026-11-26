@@ -815,22 +815,17 @@ describe("MatterWall two matters with identical bytes", () => {
   });
 });
 
-const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      S.encodeEffect(schema)(value).pipe(
-        Effect.flatMap(S.decodeEffect(schema)),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("MatterWall draft notice schema-derived values", () => {
-  it.effect("round-trips every generated NoticeMessage through its encoding", () =>
-    roundTripsEveryGeneratedValue(NoticeMessage)
+  it.effect.prop(
+    "round-trips every generated NoticeMessage through its encoding",
+    [Arbitrary.schema(NoticeMessage)],
+    ([value]) => roundTrips(NoticeMessage, value),
+    { arbitrary: fcRuns(25) }
   );
 });

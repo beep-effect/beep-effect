@@ -68,25 +68,23 @@ describe("MatterWall schemas", () => {
   );
 });
 
-const roundTripsEveryGeneratedValue = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>) {
-  const equivalent = S.toEquivalence(schema);
-  const result = yield* Arbitrary.checkEffect(
-    Arbitrary.schema(schema),
-    (value) =>
-      S.encodeEffect(schema)(value).pipe(
-        Effect.flatMap(S.decodeEffect(schema)),
-        Effect.map((decoded) => equivalent(decoded, value))
-      ),
-    fcRuns(25)
-  );
-  expect(result._tag).toBe("Passed");
+const roundTrips = Effect.fnUntraced(function* <A, I>(schema: S.Codec<A, I>, value: A) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeEffect(schema)(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 });
 
 describe("MatterWall schema-derived values", () => {
-  it.effect("round-trips every generated MatterAccess through its encoding", () =>
-    roundTripsEveryGeneratedValue(MatterAccess)
+  it.effect.prop(
+    "round-trips every generated MatterAccess through its encoding",
+    [Arbitrary.schema(MatterAccess)],
+    ([value]) => roundTrips(MatterAccess, value),
+    { arbitrary: fcRuns(25) }
   );
-  it.effect("round-trips every generated GrantedScopes through its encoding", () =>
-    roundTripsEveryGeneratedValue(GrantedScopes)
+  it.effect.prop(
+    "round-trips every generated GrantedScopes through its encoding",
+    [Arbitrary.schema(GrantedScopes)],
+    ([value]) => roundTrips(GrantedScopes, value),
+    { arbitrary: fcRuns(25) }
   );
 });
