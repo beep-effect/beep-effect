@@ -1,14 +1,3 @@
-// The declared-version resolution ladder, driven through BOTH replaying layers
-// against one on-disk fixture — a fake `.pnpm-config` install and a fake pnpm
-// store `links/` tree — so `layerLive` and `layerSubprocess` are pinned to
-// resolve identically. And `layerFrom`, the hermetic seam that resolves
-// nothing.
-//
-// Real filesystem by necessity: the replaying layers `import()` the
-// pnpmfiles the ladder resolves, and the subprocess layer spawns a real
-// `node`. The fixture is built through Effect's FileSystem on the Node
-// platform services, and `$PNPM_HOME` reaches the ladder through `Config`.
-
 import { CatalogAssemblyError } from "@beep/npm-spec/CatalogAssemblyError";
 import { ConfigDependencyHooks, WorkspaceCatalogs, Workspaces } from "@beep/repo-workspaces";
 import { HookInjection, NoPeerDependencyRules, PeerDependencyRules } from "@beep/repo-workspaces/ConfigDependencyHooks";
@@ -42,53 +31,33 @@ import type { Tree } from "../support/fixtures.ts";
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
 const SEED = { default: { effect: "^4.0.0" } } as const;
 
-// The dependency under test: 1.0.0 installed under `.pnpm-config`, 2.0.0 only
-// in the store, 3.0.0 nowhere. Each pnpmfile injects a DIFFERENT range so the
-// injected catalog proves which file ran.
 const NAME = "cfg-ladder";
-// Installed at 2.0.0 with NO pnpmfile: the one legitimate skip.
 const NO_HOOK = "cfg-nohook";
-// A `.pnpm-config` directory with no package.json at all.
 const NO_MANIFEST = "cfg-nomanifest";
-// A `.pnpm-config` manifest with no `version` field, and one whose version is
-// the empty string: both carry no usable version (part of effected#613).
 const UNVERSIONED = "cfg-unversioned";
 const EMPTY_VERSION = "cfg-emptyversion";
-// Only in the store, shipping ONLY `pnpmfile.js`.
-const JS_ONLY = "cfg-js";
-// A scoped name, only in the store.
-const SCOPED = "@scope/cfg-scoped";
-// In the store TWICE at one version, under two hash directories, both honest.
+const STORE_ONLY_PNPMFILE_JS = "cfg-js";
+const STORE_ONLY_SCOPED = "@scope/cfg-scoped";
 const AMBIGUOUS = "cfg-ambiguous";
-// Only in a store reachable through `$PNPM_HOME/store` — rung 3 of discovery.
 const ENV_ONLY = "cfg-env";
-// Held by BOTH the workspace's store (rung 1) and the `$PNPM_HOME` store (rung 3).
 const TWO_STORES = "cfg-twostores";
-// Held by three store FORMATS under one `$PNPM_HOME` (`v9`, `v10`, `v11`).
 const FORMATS = "cfg-formats";
 
 let root: string;
 let store: string;
-/** The canonical spelling of `store`, as discovery reports it. */
 let storeReal: string;
-/** A second root with NO `.modules.yaml`, whose only `.pnpm-config` entry is a symlink into `store`. */
 let linkedRoot: string;
-/** A third root with nothing under node_modules at all. */
 let bareRoot: string;
-/** A fake `$PNPM_HOME` whose `store/v11` holds ENV_ONLY and a second TWO_STORES. */
 let envHome: string;
-/** A root whose `.modules.yaml` names `store` through a SYMLINK spelling, beside a `.pnpm-config` symlink that realpaths into it. */
 let aliasRoot: string;
 
 const HooksLive = ConfigDependencyHooks.layerLive.pipe(Layer.provide(nodeHost));
 const HooksSubprocess = ConfigDependencyHooks.layerSubprocess.pipe(Layer.provide(nodeHost));
 
-/** The ladder's environment rung sees `$PNPM_HOME` = `envHome`, and nothing else. */
-const withPnpmHome = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+const withOnlyPnpmHome = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ PNPM_HOME: envHome }));
 
-/** The on-disk fixture every case reads, built once on the real filesystem. */
-const Fixture = Layer.effectDiscard(
+const OnDiskFixtureBuiltOnce = Layer.effectDiscard(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -113,25 +82,19 @@ const Fixture = Layer.effectDiscard(
       "pnpmfile.mjs",
       pnpmfileInjecting("^2.0.0"),
     ]);
-    // A second hash directory for the same version whose manifest LIES (a
-    // different version) — the ladder must verify the inner manifest, not trust
-    // the path.
-    const liar = path.join(store, "links", NAME, "2.0.0", Str.repeat(64)("b"), "node_modules", NAME);
-    yield* fs.makeDirectory(liar, { recursive: true });
-    yield* fs.writeFileString(path.join(liar, "package.json"), `{"name":"${NAME}","version":"9.9.9"}`);
-    yield* fs.writeFileString(path.join(liar, "pnpmfile.mjs"), pnpmfileInjecting("^9.9.9"));
-    yield* storeConfigDependency(store, JS_ONLY, "1.0.0", Str.repeat(64)("c"), [
+    const lyingManifestCopy = path.join(store, "links", NAME, "2.0.0", Str.repeat(64)("b"), "node_modules", NAME);
+    yield* fs.makeDirectory(lyingManifestCopy, { recursive: true });
+    yield* fs.writeFileString(path.join(lyingManifestCopy, "package.json"), `{"name":"${NAME}","version":"9.9.9"}`);
+    yield* fs.writeFileString(path.join(lyingManifestCopy, "pnpmfile.mjs"), pnpmfileInjecting("^9.9.9"));
+    yield* storeConfigDependency(store, STORE_ONLY_PNPMFILE_JS, "1.0.0", Str.repeat(64)("c"), [
       "pnpmfile.js",
       pnpmfileInjectingCjs("^7.0.0"),
     ]);
-    yield* storeConfigDependency(store, SCOPED, "1.0.0", Str.repeat(64)("d"), [
+    yield* storeConfigDependency(store, STORE_ONLY_SCOPED, "1.0.0", Str.repeat(64)("d"), [
       "pnpmfile.mjs",
       pnpmfileInjecting("^5.0.0"),
     ]);
 
-    // Two HONEST copies of one version: neither manifest lies, so the version
-    // check cannot separate them — only an integrity the store does not record
-    // could, and the ladder must refuse to guess.
     yield* storeConfigDependency(store, AMBIGUOUS, "1.0.0", Str.repeat(64)("e"), [
       "pnpmfile.mjs",
       pnpmfileInjecting("^1.0.0"),
@@ -141,18 +104,13 @@ const Fixture = Layer.effectDiscard(
       pnpmfileInjecting("^1.0.1"),
     ]);
 
-    // The linked root: `.pnpm-config/cfg-ladder -> <store>/links/cfg-ladder/2.0.0/…`,
-    // the way pnpm installs, and no `.modules.yaml` to name the store.
     yield* linkConfigDependency(linkedRoot, NAME, stored);
 
-    // Rung 3: a store that ONLY `$PNPM_HOME/store` can name.
     envHome = yield* temp("effected-ladder-pnpmhome-");
     yield* storeConfigDependency(path.join(envHome, "store", "v11"), ENV_ONLY, "1.0.0", Str.repeat(64)("1"), [
       "pnpmfile.mjs",
       pnpmfileInjecting("^8.0.0"),
     ]);
-    // One version in TWO distinct stores, each with a different pnpmfile so the
-    // injected range proves which store answered.
     yield* storeConfigDependency(store, TWO_STORES, "1.0.0", Str.repeat(64)("2"), [
       "pnpmfile.mjs",
       pnpmfileInjecting("^3.0.0"),
@@ -162,8 +120,6 @@ const Fixture = Layer.effectDiscard(
       pnpmfileInjecting("^4.0.0"),
     ]);
 
-    // Three store formats side by side, as a pnpm major upgrade leaves them; the
-    // injected range names the format that answered.
     for (const [format, range] of [
       ["v9", "^9.0.0"],
       ["v10", "^10.0.0"],
@@ -175,9 +131,6 @@ const Fixture = Layer.effectDiscard(
       ]);
     }
 
-    // The alias root: `.modules.yaml` spells the store through a symlink while
-    // the `.pnpm-config` entry realpaths into the same store — one physical
-    // store, two spellings.
     aliasRoot = yield* temp("effected-ladder-alias-");
     const alias = path.join(aliasRoot, "store-alias");
     yield* fs.symlink(store, alias);
@@ -196,7 +149,11 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
           const result = yield* hooks.inject(root, { [NAME]: "1.0.0" }, SEED);
-          assert.strictEqual(hooked(result), "^1.0.0");
+          assert.strictEqual(
+            hooked(result),
+            "^1.0.0",
+            "each NAME pnpmfile injects a different range, so the injected catalog proves which file ran"
+          );
           assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
           assert.deepStrictEqual(result.replays, {
             [NAME]: HookReplay.make({ version: "1.0.0", source: "installed" }),
@@ -219,12 +176,17 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("declared version NOT installed but in the store → the store copy runs (candidate B)", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // `.pnpm-config` holds 1.0.0; the ref declares 2.0.0. The injected range
-          // is the STORE pnpmfile's, proving the installed one did not run.
           const result = yield* hooks.inject(root, { [NAME]: "2.0.0+sha512-xyz" }, SEED);
-          assert.strictEqual(hooked(result), "^2.0.0");
-          // The record names the DECLARED version (integrity stripped) and the rung.
-          assert.deepStrictEqual(result.replays, { [NAME]: HookReplay.make({ version: "2.0.0", source: "store" }) });
+          assert.strictEqual(
+            hooked(result),
+            "^2.0.0",
+            ".pnpm-config holds 1.0.0 and the ref declares 2.0.0: the store pnpmfile's range proves the installed one did not run"
+          );
+          assert.deepStrictEqual(
+            result.replays,
+            { [NAME]: HookReplay.make({ version: "2.0.0", source: "store" }) },
+            "the record names the declared version, integrity stripped, and the rung"
+          );
         })
       );
     });
@@ -233,11 +195,12 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("a store hash directory whose manifest carries another version is not trusted", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // Both `links/<name>/2.0.0/<hash>` entries exist; only the one whose
-          // inner package.json says 2.0.0 may run. Wrong-in-one-way: `^9.9.9`
-          // here means the ladder trusted the path.
           const result = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
-          assert.notStrictEqual(hooked(result), "^9.9.9");
+          assert.notStrictEqual(
+            hooked(result),
+            "^9.9.9",
+            "both links/<name>/2.0.0/<hash> entries exist and only the one whose inner package.json says 2.0.0 may run; ^9.9.9 means the ladder trusted the path"
+          );
           assert.strictEqual(hooked(result), "^2.0.0");
         })
       );
@@ -254,12 +217,9 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
           if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
           const message = error.cause.message;
           assert.include(message, `${NAME}@3.0.0`);
-          // What `.pnpm-config` holds instead.
-          assert.include(message, "version 1.0.0");
-          // Where the store was searched.
-          assert.include(message, store);
-          // And how to fix it.
-          assert.include(message, `pnpm add --config ${NAME}@3.0.0`);
+          assert.include(message, "version 1.0.0", "what .pnpm-config holds instead");
+          assert.include(message, store, "where the store was searched");
+          assert.include(message, `pnpm add --config ${NAME}@3.0.0`, "how to fix it");
         })
       );
     });
@@ -281,24 +241,31 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("a .pnpm-config manifest with no usable version is 'a package with no version', not a match", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // The subprocess layer would fetch, but a bare spec with no lockfile
-          // records no integrity, so it fails before any spawn — with the same
-          // not-installed diagnosis.
           const reason = Str.includes("layerSubprocess")(label) ? "integrityUnavailable" : "notInstalled";
           for (const name of [UNVERSIONED, EMPTY_VERSION]) {
             const error = yield* Effect.flip(hooks.inject(root, { [name]: "1.0.0" }, SEED));
             assert.instanceOf(error, CatalogAssemblyError);
             assert.strictEqual(error.path, name);
-            assert.strictEqual(error.reason, reason);
+            assert.strictEqual(
+              error.reason,
+              reason,
+              "the subprocess layer would fetch, but a bare spec with no lockfile records no integrity, so it fails before any spawn with the same not-installed diagnosis"
+            );
             if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
             const message = error.cause.message;
-            assert.include(message, `node_modules/.pnpm-config/${name} holds a package with no version,`);
-            // No version to compare, so no "declares a different version" diagnosis.
-            assert.notInclude(message, "declares a different version");
+            assert.include(
+              message,
+              `node_modules/.pnpm-config/${name} holds a package with no version,`,
+              "an unversioned manifest and an empty-version one both carry no usable version (effected#613)"
+            );
+            assert.notInclude(
+              message,
+              "declares a different version",
+              "no version to compare, so no different-version diagnosis"
+            );
           }
-          // Nor does an empty declared version match an unversioned manifest.
           const empty = yield* Effect.flip(hooks.inject(root, { [EMPTY_VERSION]: "" }, SEED));
-          assert.strictEqual(empty.reason, reason);
+          assert.strictEqual(empty.reason, reason, "nor does an empty declared version match an unversioned manifest");
         })
       );
     });
@@ -307,14 +274,14 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("a declared dependency that is not installed at all fails closed — never a silent skip", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // The pre-ladder behaviour was to skip an absent directory as "no
-          // pnpmfile". A declared config dependency that cannot be found is now
-          // an error: silently skipping it is exactly how a hook-only catalog
-          // went missing on one side of a diff.
           const error = yield* Effect.flip(hooks.inject(root, { "absent-dep": "1.0.0" }, SEED));
           assert.instanceOf(error, CatalogAssemblyError);
           assert.strictEqual(error.source, "hooks");
-          assert.strictEqual(error.path, "absent-dep");
+          assert.strictEqual(
+            error.path,
+            "absent-dep",
+            "the pre-ladder behaviour skipped an absent directory as no pnpmfile; a declared config dependency that cannot be found is an error, since a silent skip is how a hook-only catalog went missing on one side of a diff"
+          );
         })
       );
     });
@@ -323,13 +290,12 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("the store is found through a .pnpm-config symlink's realpath when .modules.yaml is absent", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // `linkedRoot` has no `.modules.yaml`; its only `.pnpm-config` entry is
-          // `cfg-ladder` symlinked into the fake store. Declaring a SIBLING that
-          // lives only in that store proves the store was discovered by walking
-          // the symlink up to its `links` ancestor — not by rung 1, and not by
-          // candidate A (cfg-js is not installed here at all).
-          const result = yield* hooks.inject(linkedRoot, { [JS_ONLY]: "1.0.0" }, SEED);
-          assert.strictEqual(hooked(result), "^7.0.0");
+          const result = yield* hooks.inject(linkedRoot, { [STORE_ONLY_PNPMFILE_JS]: "1.0.0" }, SEED);
+          assert.strictEqual(
+            hooked(result),
+            "^7.0.0",
+            "linkedRoot has no .modules.yaml and its only .pnpm-config entry is cfg-ladder symlinked into the store, so a sibling living only there proves the store was found by walking the symlink to its links ancestor, not by rung 1 or candidate A"
+          );
         })
       );
     });
@@ -348,7 +314,7 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("pnpmfile.js is accepted, after .mjs and .cjs", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          const result = yield* hooks.inject(root, { [JS_ONLY]: "1.0.0" }, SEED);
+          const result = yield* hooks.inject(root, { [STORE_ONLY_PNPMFILE_JS]: "1.0.0" }, SEED);
           assert.strictEqual(hooked(result), "^7.0.0");
         })
       );
@@ -358,7 +324,7 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("a scoped name resolves through the store's nested links directory", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          const result = yield* hooks.inject(root, { [SCOPED]: "1.0.0" }, SEED);
+          const result = yield* hooks.inject(root, { [STORE_ONLY_SCOPED]: "1.0.0" }, SEED);
           assert.strictEqual(hooked(result), "^5.0.0");
         })
       );
@@ -375,9 +341,9 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
               catalogs: SEED,
               releaseAge: {},
               peerDependencyRules: NoPeerDependencyRules,
-              // Still RECORDED: it was resolved, it just contributed nothing.
               replays: { [NO_HOOK]: HookReplay.make({ version: "2.0.0", source: "installed" }) },
-            })
+            }),
+            "still recorded: it was resolved, it just contributed nothing"
           );
         })
       );
@@ -387,12 +353,14 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("declaration order is replay order across installed and store copies", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // cfg-ladder@1.0.0 (installed) then cfg-js@1.0.0 (store): the later hook
-          // rewrites `hooked-dep`, last write wins — and swapping the order flips it.
-          const forward = yield* hooks.inject(root, { [NAME]: "1.0.0", [JS_ONLY]: "1.0.0" }, SEED);
-          const reverse = yield* hooks.inject(root, { [JS_ONLY]: "1.0.0", [NAME]: "1.0.0" }, SEED);
-          assert.strictEqual(hooked(forward), "^7.0.0");
-          assert.strictEqual(hooked(reverse), "^1.0.0");
+          const forward = yield* hooks.inject(root, { [NAME]: "1.0.0", [STORE_ONLY_PNPMFILE_JS]: "1.0.0" }, SEED);
+          const reverse = yield* hooks.inject(root, { [STORE_ONLY_PNPMFILE_JS]: "1.0.0", [NAME]: "1.0.0" }, SEED);
+          assert.strictEqual(
+            hooked(forward),
+            "^7.0.0",
+            "cfg-ladder@1.0.0 installed then cfg-js@1.0.0 from the store: the later hook rewrites hooked-dep, last write wins"
+          );
+          assert.strictEqual(hooked(reverse), "^1.0.0", "swapping the declaration order flips the winner");
         })
       );
     });
@@ -407,18 +375,25 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
           assert.strictEqual(error.path, AMBIGUOUS);
           if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
           const message = error.cause.message;
-          assert.include(message, "ambiguous");
+          assert.include(
+            message,
+            "ambiguous",
+            "two honest copies of one version: neither manifest lies, so the version check cannot separate them, only an integrity the store does not record could, and the ladder refuses to guess"
+          );
           assert.include(message, "2 copies");
-          // The store is named by its REALPATH (macOS's `/var` is `/private/var`):
-          // discovery canonicalizes spellings so one store never counts twice.
-          assert.include(message, `store at ${storeReal}`);
+          assert.include(
+            message,
+            `store at ${storeReal}`,
+            "the store is named by its realpath (macOS /var is /private/var): discovery canonicalizes spellings so one store never counts twice"
+          );
           assert.include(message, Str.repeat(64)("e"));
           assert.include(message, Str.repeat(64)("f"));
-          // The control that makes this discriminating: the SAME two-hash shape
-          // with one manifest lying (NAME@2.0.0) resolves fine — ambiguity is
-          // about two HONEST copies, not about a second directory existing.
-          const fine = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
-          assert.strictEqual(hooked(fine), "^2.0.0");
+          const lyingSecondCopyResolves = yield* hooks.inject(root, { [NAME]: "2.0.0" }, SEED);
+          assert.strictEqual(
+            hooked(lyingSecondCopyResolves),
+            "^2.0.0",
+            "the control: the same two-hash shape with one manifest lying resolves fine; ambiguity is about two honest copies, not a second directory existing"
+          );
         })
       );
     });
@@ -427,13 +402,15 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("one store reached by two spellings is ONE store — an aliased path is never 'ambiguous'", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // aliasRoot discovers `store` twice: once through the symlink spelling
-          // in .modules.yaml (rung 1) and once through the .pnpm-config
-          // realpath (rung 2). JS_ONLY lives ONLY in that store, under exactly
-          // one honest hash — so it must resolve from the store, once.
-          const result = yield* hooks.inject(aliasRoot, { [JS_ONLY]: "1.0.0" }, SEED);
-          assert.strictEqual(hooked(result), "^7.0.0");
-          assert.deepStrictEqual(result.replays, { [JS_ONLY]: HookReplay.make({ version: "1.0.0", source: "store" }) });
+          const result = yield* hooks.inject(aliasRoot, { [STORE_ONLY_PNPMFILE_JS]: "1.0.0" }, SEED);
+          assert.strictEqual(
+            hooked(result),
+            "^7.0.0",
+            "aliasRoot discovers one physical store twice, through the .modules.yaml symlink spelling (rung 1) and the .pnpm-config realpath (rung 2); STORE_ONLY_PNPMFILE_JS lives only there under one honest hash, so it resolves from the store once"
+          );
+          assert.deepStrictEqual(result.replays, {
+            [STORE_ONLY_PNPMFILE_JS]: HookReplay.make({ version: "1.0.0", source: "store" }),
+          });
         })
       );
     });
@@ -442,13 +419,14 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("a version held by two distinct stores resolves from the FIRST in discovery order", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          yield* withPnpmHome(
+          yield* withOnlyPnpmHome(
             Effect.gen(function* () {
-              // `root` names `store` in .modules.yaml (rung 1); $PNPM_HOME adds a
-              // second store (rung 3) that also holds TWO_STORES@1.0.0. Not
-              // ambiguous — the workspace's own store wins, and its pnpmfile ran.
               const result = yield* hooks.inject(root, { [TWO_STORES]: "1.0.0" }, SEED);
-              assert.strictEqual(hooked(result), "^3.0.0");
+              assert.strictEqual(
+                hooked(result),
+                "^3.0.0",
+                "root names store in .modules.yaml (rung 1) and PNPM_HOME adds a second store (rung 3) holding the same version with a different pnpmfile; not ambiguous, the workspace store wins"
+              );
             })
           );
         })
@@ -459,13 +437,14 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
       it.effect("store formats are consulted NEWEST first, numerically — v11 beats v10 beats v9", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          yield* withPnpmHome(
+          yield* withOnlyPnpmHome(
             Effect.gen(function* () {
-              // A lexical sort would put v10 first (and v9 last); the newest
-              // format must answer, or a pnpm upgrade that left the old store
-              // behind replays the stale copy.
               const result = yield* hooks.inject(bareRoot, { [FORMATS]: "1.0.0" }, SEED);
-              assert.strictEqual(hooked(result), "^11.0.0");
+              assert.strictEqual(
+                hooked(result),
+                "^11.0.0",
+                "v9, v10 and v11 side by side as a pnpm major upgrade leaves them, the injected range naming the format: a lexical sort would put v10 first, and an upgrade that left the old store behind would replay the stale copy"
+              );
             })
           );
         })
@@ -478,23 +457,27 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
         () =>
           Effect.gen(function* () {
             const hooks = yield* ConfigDependencyHooks;
-            yield* withPnpmHome(
+            yield* withOnlyPnpmHome(
               Effect.gen(function* () {
-                // bareRoot has no node_modules at all, so rungs 1 and 2 contribute
-                // no store; only the environment rung can answer.
                 const result = yield* hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED);
-                assert.strictEqual(hooked(result), "^8.0.0");
+                assert.strictEqual(
+                  hooked(result),
+                  "^8.0.0",
+                  "bareRoot has no node_modules at all, so rungs 1 and 2 contribute no store and only the environment rung can answer"
+                );
                 assert.deepStrictEqual(result.replays, {
                   [ENV_ONLY]: HookReplay.make({ version: "1.0.0", source: "store" }),
                 });
               })
             );
-            // The control: without the variable the same declaration fails closed
-            // and the message shows the env store was NOT among those searched.
             const error = yield* Effect.flip(hooks.inject(bareRoot, { [ENV_ONLY]: "1.0.0" }, SEED));
             assert.instanceOf(error, CatalogAssemblyError);
             if (!(error.cause instanceof Error)) return assert.fail("expected an Error cause");
-            assert.notInclude(error.cause.message, envHome);
+            assert.notInclude(
+              error.cause.message,
+              envHome,
+              "the control: without the variable the same declaration fails closed, the env store not among those searched"
+            );
           })
       );
     });
@@ -514,7 +497,7 @@ const ladderCases = (it: Vitest.MethodsNonLive, label: string, hooksLayer: Layer
   });
 };
 
-it.layer(Fixture, { timeout: "30 seconds" })((it) => {
+it.layer(OnDiskFixtureBuiltOnce, { timeout: "30 seconds" })((it) => {
   ladderCases(it, "ConfigDependencyHooks.layerLive", HooksLive);
   ladderCases(it, "ConfigDependencyHooks.layerSubprocess", HooksSubprocess);
 
@@ -530,17 +513,21 @@ it.layer(Fixture, { timeout: "30 seconds" })((it) => {
     it.layer(ComparisonLayers, { timeout: "30 seconds" })((it) => {
       it.effect("both layers produce identical injections across installed, store and skipped dependencies", () =>
         Effect.gen(function* () {
-          const deps = { [NAME]: "2.0.0+sha512-x", [NO_HOOK]: "2.0.0", [SCOPED]: "1.0.0" };
+          const deps = { [NAME]: "2.0.0+sha512-x", [NO_HOOK]: "2.0.0", [STORE_ONLY_SCOPED]: "1.0.0" };
           const liveHooks = yield* ConfigDependencyHooks;
           const subprocessHooks = yield* SubprocessHooks;
           const live = yield* liveHooks.inject(root, deps, SEED);
           const subprocess = yield* subprocessHooks.inject(root, deps, SEED);
-          assert.deepStrictEqual(subprocess, live);
+          assert.deepStrictEqual(
+            subprocess,
+            live,
+            "one on-disk fixture, a fake .pnpm-config install and a fake pnpm store links/ tree, pins both replaying layers to resolve identically"
+          );
           assert.strictEqual(hooked(live), "^5.0.0");
           assert.deepStrictEqual(live.replays, {
             [NAME]: HookReplay.make({ version: "2.0.0", source: "store" }),
             [NO_HOOK]: HookReplay.make({ version: "2.0.0", source: "installed" }),
-            [SCOPED]: HookReplay.make({ version: "1.0.0", source: "store" }),
+            [STORE_ONLY_SCOPED]: HookReplay.make({ version: "1.0.0", source: "store" }),
           });
         })
       );
@@ -559,14 +546,16 @@ it.layer(Fixture, { timeout: "30 seconds" })((it) => {
         timeout: "30 seconds",
       }
     )((it) => {
-      it.effect("a hit replays the mapped file for that declared version", () =>
+      it.effect("a hit replays the mapped file for that declared version, never looking at the root", () =>
         Effect.gen(function* () {
           const hooks = yield* ConfigDependencyHooks;
-          // The root is a path that does not exist: layerFrom must not look there.
-          const result = yield* hooks.inject("/nowhere/at/all", { "@scope/plugin": "1.0.0+sha512-abc" }, SEED);
-          // hook-pnpmfile.mjs injects `mjs-dep`; the .cjs would inject `hooked-dep`.
+          const rootThatDoesNotExist = "/nowhere/at/all";
+          const result = yield* hooks.inject(rootThatDoesNotExist, { "@scope/plugin": "1.0.0+sha512-abc" }, SEED);
           assert.strictEqual(result.catalogs.default?.["mjs-dep"], "^2.0.0");
-          assert.isUndefined(result.catalogs.default?.["hooked-dep"]);
+          assert.isUndefined(
+            result.catalogs.default?.["hooked-dep"],
+            "hook-pnpmfile.mjs injects mjs-dep; the .cjs would inject hooked-dep"
+          );
           assert.strictEqual(result.catalogs.default?.effect, "^4.0.0");
           assert.deepStrictEqual(result.replays, {
             "@scope/plugin": HookReplay.make({ version: "1.0.0", source: "supplied" }),

@@ -1,8 +1,3 @@
-// The config-inference facade (#345): the StyleEvidence monoid (laws proven
-// generatively over Schema-derived observation arbitraries), multi-file
-// merge-then-resolve, the strict and lenient resolvers over one evidence
-// type, the residual report, and the typed conflict error.
-
 import {
   StyleEvidence,
   StyleFloor,
@@ -35,8 +30,7 @@ const combineAll = (evidences: ReadonlyArray<StyleEvidence>): StyleEvidence =>
 type StyleConflict = YamlStyleConflictError["conflicts"][number];
 type StyleCandidate = StyleConflict["candidates"][number];
 
-/** Source text a conflict candidate points at (empty-window semantics preserved for a missing candidate). */
-const candidateSource = (text: string, candidate: StyleCandidate | undefined): string => {
+const candidateSourceOrEmpty = (text: string, candidate: StyleCandidate | undefined): string => {
   const offset = candidate?.offset ?? 0;
   return Str.slice(candidate?.offset, offset + (candidate?.length ?? 0))(text);
 };
@@ -49,8 +43,8 @@ const assertQuoteConflictCandidates = (text: string, conflict: StyleConflict | u
   );
   const single = O.getOrUndefined(A.findFirst(candidates, (c) => c.value === "single"));
   const double = O.getOrUndefined(A.findFirst(candidates, (c) => c.value === "double"));
-  assert.strictEqual(candidateSource(text, single), "'x'");
-  assert.strictEqual(candidateSource(text, double), '"y"');
+  assert.strictEqual(candidateSourceOrEmpty(text, single), "'x'");
+  assert.strictEqual(candidateSourceOrEmpty(text, double), '"y"');
 };
 
 describe("inference identity regressions", () => {
@@ -197,12 +191,15 @@ describe("StyleEvidence — the monoid", () => {
         ["single", 2],
       ]
     );
-    // The merge is fold-order independent (associativity, applied).
     const [e1, e2, e3] = A.map(parts, YamlLint.observe(YamlLint.builtins));
     assert.isDefined(e1);
     assert.isDefined(e2);
     assert.isDefined(e3);
-    assert.deepStrictEqual(merged, StyleEvidence.combine(e1, StyleEvidence.combine(e2, e3)));
+    assert.deepStrictEqual(
+      merged,
+      StyleEvidence.combine(e1, StyleEvidence.combine(e2, e3)),
+      "the merge is fold-order independent (associativity, applied)"
+    );
   });
 });
 
@@ -219,13 +216,22 @@ describe("YamlLint.resolveStrict", () => {
     const resolved = YamlLint.inferStrict("a: 'x'\nb: 'y'\n", YamlLint.builtins);
     assertSuccess(resolved, Result.getOrThrow(resolved));
     if (Result.isSuccess(resolved)) {
-      // The observed style overrides the base default's taste call...
-      assert.deepStrictEqual(resolved.success.rules["quoted-strings"], { quoteType: "single" });
-      // ...and observed rules absent from the base are added.
-      assert.deepStrictEqual(resolved.success.rules["document-start"], { present: false });
+      assert.deepStrictEqual(
+        resolved.success.rules["quoted-strings"],
+        { quoteType: "single" },
+        "the observed style overrides the base default's taste call"
+      );
+      assert.deepStrictEqual(
+        resolved.success.rules["document-start"],
+        { present: false },
+        "observed rules absent from the base are added"
+      );
       assert.deepStrictEqual(resolved.success.rules["document-end"], { present: false });
-      // Unobserved rules keep their base entries — unobserved ≠ conflicting.
-      assert.strictEqual(resolved.success.rules["comments-spacing"], "error");
+      assert.strictEqual(
+        resolved.success.rules["comments-spacing"],
+        "error",
+        "unobserved rules keep their base entries: unobserved is not conflicting"
+      );
       assert.strictEqual(resolved.success.rules.truthy, "error");
     }
   });
@@ -294,12 +300,6 @@ describe("YamlLint.resolveStrict", () => {
   });
 
   it("a PLAIN-OBJECT vote from a custom rule tallies as a vote, never as a floor", () => {
-    // A custom rule may yield a plain object literal cast to StyleVote
-    // instead of one built with StyleVote.make. StyleVote is an Opaque over a
-    // TaggedStruct, so the literal is a structurally valid vote; the evidence
-    // builder must branch on the `_tag` discriminator — an `instanceof`-style
-    // branch would drop it into the floor branch and feed a string `value` to
-    // StyleFloorTally.
     const plainVote = {
       _tag: "StyleVote",
       dimension: "style",
@@ -309,15 +309,26 @@ describe("YamlLint.resolveStrict", () => {
       line: 0,
       character: 0,
     } as StyleVote;
-    assert.strictEqual(Object.getPrototypeOf(plainVote), Object.prototype, "the fixture is a plain object literal");
-    assert.isTrue(S.is(StyleVote)(plainVote), "a plain object literal is a structurally valid StyleVote");
+    assert.strictEqual(
+      Object.getPrototypeOf(plainVote),
+      Object.prototype,
+      "the fixture is a plain object literal cast to StyleVote, as a custom rule may yield instead of StyleVote.make"
+    );
+    assert.isTrue(
+      S.is(StyleVote)(plainVote),
+      "a plain object literal is a structurally valid StyleVote, an Opaque over a TaggedStruct"
+    );
     const custom = YamlRule.make({
       id: "my-rule",
       check: dual(2, (_ctx: LintContext, _options: unknown): Iterable<YamlLintDiagnostic> => []),
       infer: () => [plainVote],
     });
     const evidence = YamlLint.observe("a: 1\n", [custom]);
-    assert.strictEqual(evidence.floors.length, 0, "a plain-object vote must not land in the floor tally");
+    assert.strictEqual(
+      evidence.floors.length,
+      0,
+      "a plain-object vote must not land in the floor tally: the evidence builder must branch on the `_tag` discriminator, as an instanceof-style branch would drop it into the floor branch and feed a string `value` to StyleFloorTally"
+    );
     assert.strictEqual(evidence.votes.length, 1);
     assert.strictEqual(evidence.votes[0]?.value, "x");
     const resolved = YamlLint.resolveStrict(evidence, YamlLintConfig.make({ rules: {} }));
@@ -333,9 +344,11 @@ describe("YamlLint.resolveLenient / inferLenient", () => {
     const text = "a: 'x'\nb: 'y'\nc: \"z\"\n";
     const { config, residual } = YamlLint.inferLenient(text, YamlLint.builtins);
     assert.deepStrictEqual(config.rules["quoted-strings"], { quoteType: "single" });
-    // The residual IS a plain run with the inferred config — reused, not
-    // reimplemented.
-    assert.deepStrictEqual(residual, YamlLint.run(text, YamlLint.builtins, config));
+    assert.deepStrictEqual(
+      residual,
+      YamlLint.run(text, YamlLint.builtins, config),
+      "the residual IS a plain run with the inferred config: reused, not reimplemented"
+    );
     const deviation = A.filter(residual, (d) => d.rule === "quoted-strings");
     assert.strictEqual(deviation.length, 1);
     assert.strictEqual(
@@ -356,8 +369,11 @@ describe("YamlLint.resolveLenient / inferLenient", () => {
   it("a tie breaks deterministically to canonical value order", () => {
     const evidence = YamlLint.observe("a: 'x'\nb: \"y\"\n", YamlLint.builtins);
     const config = YamlLint.resolveLenient(evidence);
-    // 1-1: "double" precedes "single" canonically, so the pick is stable.
-    assert.deepStrictEqual(config.rules["quoted-strings"], { quoteType: "double" });
+    assert.deepStrictEqual(
+      config.rules["quoted-strings"],
+      { quoteType: "double" },
+      '1-1: "double" precedes "single" canonically, so the pick is stable'
+    );
     assert.deepStrictEqual(YamlLint.resolveLenient(evidence), config);
   });
 

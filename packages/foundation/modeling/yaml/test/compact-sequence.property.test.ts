@@ -1,13 +1,3 @@
-// Compact block sequences in sequence-item mappings against an independent
-// parser.
-//
-// YAML 1.2 lets a block mapping value be a block sequence at the mapping's
-// own indent (l+block-sequence(n-1)). Inside a sequence item the mapping's
-// keys sit past the dash; a second key with such a value used to fail with
-// InvalidIndentation, and a block scalar item followed by a sibling key was
-// mis-nested into a mapping (#2131). The oracle is the `yaml`
-// devDependency, so a shared-defect round-trip cannot go green.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Yaml } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
@@ -39,14 +29,21 @@ type Entry = typeof Entry.Type;
 type Layout = typeof Layout.Type;
 type Trailer = typeof Trailer.Type;
 
-/** Per layout: the item's opening text, the keys' column, the dash column and the text an outer key renders. */
 const layouts: Readonly<
-  Record<Layout, { readonly open: string; readonly keys: number; readonly dash: number; readonly outer: string }>
+  Record<
+    Layout,
+    {
+      readonly itemOpening: string;
+      readonly keyColumn: number;
+      readonly dashColumn: number;
+      readonly outerKeyText: string;
+    }
+  >
 > = {
-  root: { open: "- ", keys: 2, dash: 0, outer: "" },
-  "nested-map": { open: "p:\n  - ", keys: 4, dash: 2, outer: "q: 1\n" },
-  "nested-seq": { open: "- - ", keys: 4, dash: 2, outer: "- w\n" },
-  "wide-entry": { open: "-   ", keys: 4, dash: 0, outer: "" },
+  root: { itemOpening: "- ", keyColumn: 2, dashColumn: 0, outerKeyText: "" },
+  "nested-map": { itemOpening: "p:\n  - ", keyColumn: 4, dashColumn: 2, outerKeyText: "q: 1\n" },
+  "nested-seq": { itemOpening: "- - ", keyColumn: 4, dashColumn: 2, outerKeyText: "- w\n" },
+  "wide-entry": { itemOpening: "-   ", keyColumn: 4, dashColumn: 0, outerKeyText: "" },
 };
 
 const spaces = (n: number): string => Str.repeat(n)(" ");
@@ -76,13 +73,13 @@ const renderEntry = (keys: number, entry: Entry, index: number): string => {
 };
 
 const render = (layout: Layout, entries: ReadonlyArray<Entry>, trailer: Trailer): string => {
-  const { open, keys, dash, outer } = layouts[layout];
+  const { itemOpening, keyColumn, dashColumn, outerKeyText } = layouts[layout];
   const body = A.join(
-    A.map(entries, (entry, index) => renderEntry(keys, entry, index)),
+    A.map(entries, (entry, index) => renderEntry(keyColumn, entry, index)),
     ""
   );
-  const tail = trailer === "next-item" ? `${spaces(dash)}- z: 1\n` : trailer === "outer-key" ? outer : "";
-  return `${open}${body}${tail}`;
+  const tail = trailer === "next-item" ? `${spaces(dashColumn)}- z: 1\n` : trailer === "outer-key" ? outerKeyText : "";
+  return `${itemOpening}${body}${tail}`;
 };
 
 describe("compact block sequences in sequence-item mappings", () => {
@@ -99,6 +96,27 @@ describe("compact block sequences in sequence-item mappings", () => {
         assertSuccess(Yaml.parseResult(input), parse(input));
       }),
     runs
+  );
+
+  it.effect(
+    "parses a block sequence at the mapping's own indent inside a sequence item (YAML 1.2 l+block-sequence(n-1))",
+    () =>
+      Effect.gen(function* () {
+        const secondKey = "- a: 1\n  b:\n  - 0\n";
+        const secondKeyValue = yield* Yaml.parse(secondKey);
+        assert.deepStrictEqual(
+          secondKeyValue,
+          parse(secondKey),
+          "inside a sequence item the mapping's keys sit past the dash; a second key with such a value used to fail with InvalidIndentation"
+        );
+        const blockScalarItem = "- a:\n  - |\n    t\n  b: 1\n";
+        const blockScalarItemValue = yield* Yaml.parse(blockScalarItem);
+        assert.deepStrictEqual(
+          blockScalarItemValue,
+          parse(blockScalarItem),
+          "a block scalar item followed by a sibling key used to be mis-nested into a mapping; the independent oracle is the yaml devDependency, so a shared-defect round-trip cannot go green"
+        );
+      })
   );
 
   it.effect("a sequence after a scalar value or left of the keys stays invalid", () =>

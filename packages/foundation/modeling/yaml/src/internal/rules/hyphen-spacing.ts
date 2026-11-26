@@ -158,8 +158,6 @@ const stepBackward = (
   const hyphenWouldRelocateCollection =
     scan.movesScalarParent || (scan.compact && scan.nextLineCharacter > token.character);
   scan.compact = scan.compact || A.getUnsafe(structure.compactEntries, index);
-  // The parent hyphen itself stays put when deleting spaces after it.
-  // Only earlier hyphens move that parent and must withhold their fix.
   scan.movesScalarParent = scan.movesScalarParent || A.getUnsafe(structure.explicitScalarParents, index);
   if (!isLayoutToken(token.kind)) scan.nextContentCharacter = token.character;
   return hyphenWouldRelocateCollection;

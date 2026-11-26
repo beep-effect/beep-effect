@@ -8,8 +8,6 @@ import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
 const roundTrips = <T, E, RD, RE>(name: string, schema: S.Codec<T, E, RD, RE>): void => {
-  // YamlDocument's suspended schema conservatively exposes unknown services;
-  // these pure data codecs round-trip with an empty service context.
   const services = Context.makeUnsafe<RD | RE>(Context.empty().mapUnsafe);
   it.effect.prop(
     `barrel ${name} round trip`,
@@ -18,7 +16,10 @@ const roundTrips = <T, E, RD, RE>(name: string, schema: S.Codec<T, E, RD, RE>): 
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(schema)(value).pipe(Effect.provideContext(services));
         const decoded = yield* S.decodeEffect(schema)(encoded).pipe(Effect.provideContext(services));
-        assert.isTrue(S.toEquivalence(schema)(decoded, value));
+        assert.isTrue(
+          S.toEquivalence(schema)(decoded, value),
+          "pure data codecs round-trip with an empty service context, though YamlDocument's suspended schema conservatively exposes unknown services"
+        );
         const pipe1 = yield* S.encodeEffect(schema)(decoded).pipe(Effect.provideContext(services));
         assert.deepStrictEqual(pipe1, encoded);
       }),
@@ -54,5 +55,4 @@ describe("YAML barrel schema property floor", () => {
   roundTrips("StyleVote", Y.StyleVote);
   roundTrips("YamlLintDiagnostic", Y.YamlLintDiagnostic);
   roundTrips("YamlLintSeverity", Y.YamlLintSeverity);
-  // Node vocabularies, classes and token schemas are checked in their own property files.
 });

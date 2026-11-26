@@ -115,8 +115,7 @@ describe("YamlVisitor", () => {
         const errors = A.filter(events, YamlVisitorEvent.$is("Error"));
         assert.isAbove(errors.length, 0);
         assert.isTrue(A.some(errors, (e) => e.diagnostic.code === "UndefinedAlias"));
-        // The stream must still complete normally.
-        assert.strictEqual(events[events.length - 1]?._tag, "DocumentEnd");
+        assert.strictEqual(events[events.length - 1]?._tag, "DocumentEnd", "the stream must still complete normally");
       })
     );
 
@@ -171,9 +170,8 @@ describe("YamlVisitor", () => {
           Stream.runCollect
         );
         assert.deepStrictEqual([...keys], ["name", "age"]);
-        // Sanity: parity with a full parse.
         const parsed = yield* Yaml.parse("name: x\nage: 1\n");
-        assert.deepStrictEqual(parsed, { name: "x", age: 1 });
+        assert.deepStrictEqual(parsed, { name: "x", age: 1 }, "sanity: parity with a full parse");
       })
     );
   });

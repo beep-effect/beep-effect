@@ -205,7 +205,6 @@ const stepLineToken = (scan: CrossLineContentScan, line: PerLineTokenScan, token
   line.opensKey = nextOpensKey(line, token.kind);
 };
 
-/** Read the significant tokens of one line, rather than treating quoted ` # ` as a comment. */
 const scanLineTokens = (
   scan: CrossLineContentScan,
   line: LintLine,

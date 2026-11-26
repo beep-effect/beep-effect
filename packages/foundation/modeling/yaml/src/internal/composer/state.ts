@@ -456,7 +456,6 @@ const OffsetSet = S.declare((u: unknown): u is MutableHashSet.MutableHashSet<num
   MutableHashSet.isMutableHashSet(u)
 ).pipe($I.annoteSchema("OffsetSet", { description: "Mutable set of consumed source offsets, held by reference." }));
 
-/** A cached run of CST nodes; named so declaration emit need not inline the recursive node type. */
 interface CstNodeRun extends ReadonlyArray<CstNode> {}
 
 const CstNodes: S.Codec<CstNodeRun> = S.declare((u: unknown): u is CstNodeRun => A.isArray(u)).pipe(

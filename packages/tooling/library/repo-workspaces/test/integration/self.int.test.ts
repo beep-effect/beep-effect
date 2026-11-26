@@ -1,15 +1,3 @@
-// The package discovering the repository it lives in.
-//
-// Everything else in the suite runs against a virtual filesystem. This runs
-// against the lab's real Bun workspace through `@effect/platform-node`:
-// root walk, workspace enumeration, per-package decode, dependency ordering,
-// the default catalog, and bun.lock with workspace paths resolved.
-//
-// It also pins the sync escape hatch, through the shipped `node-sync` preset,
-// against the async surface: `vitest-agent` calls the sync pair, and if the two
-// ever disagree its project list silently diverges from what the Effect API
-// would have found.
-
 import {
   DependencyGraph,
   findWorkspaceRootSync,
@@ -31,13 +19,12 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { nodeHost } from "./utils/nodeFixture.ts";
 
-/** This package's own directory — the repo root is somewhere above it. */
 const cwd = resolve(import.meta.dirname, "..", "..");
 const syncOps = nodeSyncOps;
 
 const Live = Workspaces.layer({ cwd }).pipe(Layer.provideMerge(nodeHost));
 
-describe("the lab Bun workspace, discovered by the package that lives in it", () => {
+describe("the lab Bun workspace on the real disk through @effect/platform-node, discovered by the package that lives in it", () => {
   layer(Live, { timeout: "30 seconds" })((it) => {
     it.effect("finds the workspace root and its bun workspace patterns", () =>
       Effect.gen(function* () {
@@ -89,8 +76,6 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
         assert.isFalse(graph.hasCycle, "the lab workspace graph must stay acyclic");
 
         const order = yield* graph.sort();
-        // The lab package depends on schema, utils and identity; all three
-        // must precede it in a topological order.
         assert.include(order, "@beep/repo-workspaces");
         const self = order.indexOf("@beep/repo-workspaces");
         for (const dependency of ["@beep/schema", "@beep/utils", "@beep/identity"]) {
@@ -104,13 +89,16 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
       Effect.gen(function* () {
         const catalogs = yield* WorkspaceCatalogs;
         const set = yield* catalogs.set;
-        // The lab pins Effect 4 in Bun's default catalog, consumed as catalog:.
         const range = set.rangeOf("effect", O.none());
         assertSome(
           O.map(range, () => undefined),
           undefined
         );
-        assert.match(O.getOrThrow(range), /^\^?4\./);
+        assert.match(
+          O.getOrThrow(range),
+          /^\^?4\./,
+          "the lab pins Effect 4 in Bun's default catalog, consumed as catalog:"
+        );
       })
     );
 
@@ -124,10 +112,12 @@ describe("the lab Bun workspace, discovered by the package that lives in it", ()
           A.filter(lockfile.packages, (pkg) => pkg.isWorkspace),
           (pkg) => pkg.name
         );
-        // Workspace entries must be exposed by their manifest names,
-        // rather than the paths of the lab workspace members.
         assert.include(workspaceNames, "@beep/utils");
-        assert.notInclude(workspaceNames, "packages/foundation/modeling/utils");
+        assert.notInclude(
+          workspaceNames,
+          "packages/foundation/modeling/utils",
+          "workspace entries are exposed by their manifest names, not the paths of the lab workspace members"
+        );
       })
     );
   });
@@ -150,9 +140,11 @@ describe("the sync escape hatch agrees with the Effect surface", () => {
         const listPackages2 = yield* discovery.listPackages;
         const async = A.map(listPackages2, (pkg) => pkg.name).sort();
         const sync = A.map(getWorkspacePackagesSync(info.root, syncOps), (pkg) => pkg.name).sort();
-        // The whole point of routing both through one GlobSet: if the sync
-        // enumerator ever grows a private pattern semantic again, this diverges.
-        assert.deepStrictEqual(sync, async);
+        assert.deepStrictEqual(
+          sync,
+          async,
+          "vitest-agent calls the sync pair through the node-sync preset, and its project list silently diverges if the two disagree; both route through one GlobSet, so a private pattern semantic regrown in the sync enumerator shows here"
+        );
       })
     );
 

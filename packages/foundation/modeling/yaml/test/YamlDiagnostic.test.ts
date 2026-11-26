@@ -45,7 +45,7 @@ describe("YamlDiagnostic", () => {
 
   describe("isFatal — the single fatal-code predicate", () => {
     it("declares exactly the union of the v3 fatal lists fatal", () => {
-      const fatal = [
+      const v3FatalCodes = [
         "UndefinedAlias",
         "DuplicateAnchor",
         "AliasCountExceeded",
@@ -55,11 +55,9 @@ describe("YamlDiagnostic", () => {
         "InvalidIndentation",
         "TabIndentation",
         "UnresolvedTag",
-        // Hardening additions beyond the v3 lists:
-        "UnexpectedCharacter",
-        "NestingDepthExceeded",
       ] as const;
-      for (const code of fatal) {
+      const hardeningBeyondV3Codes = ["UnexpectedCharacter", "NestingDepthExceeded"] as const;
+      for (const code of [...v3FatalCodes, ...hardeningBeyondV3Codes]) {
         assert.isTrue(YamlDiagnostic.isFatal(code), `${code} should be fatal`);
       }
       const nonFatal = [
