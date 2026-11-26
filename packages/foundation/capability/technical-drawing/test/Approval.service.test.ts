@@ -48,8 +48,7 @@ const sha256 = (bytes: Uint8Array) =>
     )
   );
 
-// Mail fake: replies keyed by message id, built once the sheet-set hash is known.
-const replies = new Map<string, (statement: string) => EmailConfirmation>([
+const mailRepliesByMessageId = new Map<string, (statement: string) => EmailConfirmation>([
   [
     "approved",
     (statement) =>
@@ -91,7 +90,7 @@ const MailFake = Layer.succeed(
   MailReader,
   MailReader.of({
     authoredText: Effect.fnUntraced(function* (messageId) {
-      const make = replies.get(messageId);
+      const make = mailRepliesByMessageId.get(messageId);
       return make === undefined
         ? yield* DrawingError.make({ reason: "io", message: `no message ${messageId}` })
         : make(current.statement);
@@ -168,10 +167,9 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         assertTrue(S.is(ApprovalRecord)(record));
         expect(record.confirmationLocator).toBe("<approved@example.com>");
         expect(record.matchedAddress).toBe("attorney@example.com");
-        // written and re-read: the stored event decodes back to the returned record
         const written = yield* fs.readFileString(path.join(dir, "approval.json"));
         const reread = yield* S.decodeEffect(ApprovalRecordJson)(written);
-        expect(reread).toEqual(record);
+        expect(reread, "the stored approval.json decodes back to the returned record").toEqual(record);
         expect(reread.sheetSetSha256).toBe(pdfSha256);
       })
     );
@@ -212,9 +210,11 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         expect(wrongPage.message).toContain("no line that is exactly");
         const outside = yield* Effect.flip(sign(manifestPath, pdf(2, path.join(dir, "elsewhere"))));
         expect(outside.message).toContain("not under the corpus root");
-        // the deliverer is the operator's attestation, checked against the recorded approver
         const stranger = yield* Effect.flip(sign(manifestPath, pdf(2, dir, EmailAddress.make("someone@example.com"))));
-        expect(stranger.reason).toBe("approval");
+        expect(
+          stranger.reason,
+          "the deliverer is the operator's attestation, checked against the recorded approver"
+        ).toBe("approval");
         expect(stranger.message).toContain("not attested as delivered by the recorded approver");
       })
     );
@@ -224,21 +224,24 @@ describe("@beep/technical-drawing sheet-set approval", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        // the spec recorded someone else; the reply that would otherwise pass is from attorney@example.com
         const other = yield* writeSheetSet(EmailAddress.makeOption("partner@example.com"));
         const wrongApprover = yield* Effect.flip(
           sign(other.manifestPath, ConfirmationSource.cases.email.make({ messageId: "approved" }))
         );
-        expect(wrongApprover.reason).toBe("approval");
+        expect(
+          wrongApprover.reason,
+          "the manifest records partner@example.com, so the attorney@example.com reply is refused"
+        ).toBe("approval");
         expect(wrongApprover.message).toContain("from/sender is not the recorded approver");
         const exists1 = yield* fs.exists(path.join(other.dir, "approval.json"));
         expect(exists1).toBe(false);
-        // a set rendered from a spec without an approver cannot be signed at all
         const unbound = yield* writeSheetSet(O.none());
         const noApprover = yield* Effect.flip(
           sign(unbound.manifestPath, ConfirmationSource.cases.email.make({ messageId: "approved" }))
         );
-        expect(noApprover.message).toContain("records no approver");
+        expect(noApprover.message, "a set rendered from a spec without an approver cannot be signed at all").toContain(
+          "records no approver"
+        );
         const exists2 = yield* fs.exists(path.join(unbound.dir, "approval.json"));
         expect(exists2).toBe(false);
       })
