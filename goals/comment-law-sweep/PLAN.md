@@ -85,9 +85,9 @@ Within a split package, the part boundaries are drawn by file when the wave star
 | # | Wave | Rows | Scopes |
 | ---: | --- | ---: | --- |
 | 1 | repo-workspaces tests part 2 (w14) | 683 | `packages/tooling/library/repo-workspaces` |
-| 2 | repo-workspaces tests part 3 (w15) | 817 | `packages/tooling/library/repo-workspaces` |
-| 3 | yaml tests part 1/2 | 437 | `packages/foundation/modeling/yaml` |
-| 4 | yaml tests part 2/2 | 437 | `packages/foundation/modeling/yaml` |
+| 2 | repo-workspaces tests part 3 (w15), with the 3 `vitest.config.ts` rows | 817 | `packages/tooling/library/repo-workspaces` |
+| 3 | yaml part 1/2: tests, plus the 13 src rows in `src/internal/composer` and `src/internal/rules` | 437 | `packages/foundation/modeling/yaml` |
+| 4 | yaml part 2/2: tests | 437 | `packages/foundation/modeling/yaml` |
 | 5 | markdown part 1/4 | 685 | `packages/foundation/modeling/markdown` |
 | 6 | professional-desktop part 1/2 | 555 | `apps/professional-desktop` |
 | 7 | professional-desktop part 2/2 | 555 | `apps/professional-desktop` |
@@ -132,7 +132,7 @@ Within a split package, the part boundaries are drawn by file when the wave star
 | 46 | tail: packages/tooling/infra | 507 | `packages/tooling/infra/ci-runners`, `packages/tooling/infra/github`, `packages/tooling/infra/infra-hosts`, `packages/tooling/infra/turbo-cache`, `packages/tooling/infra/cost-controls` |
 | 47 | tail: packages/tooling/library 1/2 | 713 | `packages/tooling/library/repo-cli-kit`, `packages/tooling/library/repo-utils`, `packages/tooling/library/repo-tsconfig` |
 | 48 | tail: packages/tooling/library 2/2 | 693 | `packages/tooling/library/alchemy-github-runners`, `packages/tooling/library/qa-capture`, `packages/tooling/library/repo-gate-run`, `packages/tooling/library/alchemy-vercel`, `packages/tooling/library/palantiri`, `packages/tooling/library/codegen-kit`, `packages/tooling/library/alchemy-aws-extras`, `packages/tooling/library/repo-gate-record`, `packages/tooling/library/mcpb-kit`, `packages/tooling/library/ai-sync` |
-| 49 | tail: packages/tooling/policy-pack + packages/tooling/test-kit + packages/tooling/tool + packages/workspace + tools | 511 | `packages/tooling/policy-pack/lint-rules`, `packages/tooling/policy-pack/repo-configs`, `packages/tooling/test-kit/repo-gate-vitest`, `packages/tooling/test-kit/test-utils`, `packages/tooling/test-kit/fc-runs`, `packages/tooling/test-kit/test-runner`, `packages/tooling/tool/docgen`, `packages/workspace/server`, `packages/workspace/use-cases`, `packages/workspace/tables`, `packages/workspace/domain`, `tools/tsgo-shim` |
+| 49 | tail: packages/tooling/policy-pack + packages/tooling/test-kit + packages/tooling/tool + packages/workspace + tools + the 224 root-level rows | 735 | `packages/tooling/policy-pack/lint-rules`, `packages/tooling/policy-pack/repo-configs`, `packages/tooling/test-kit/repo-gate-vitest`, `packages/tooling/test-kit/test-utils`, `packages/tooling/test-kit/fc-runs`, `packages/tooling/test-kit/test-runner`, `packages/tooling/tool/docgen`, `packages/workspace/server`, `packages/workspace/use-cases`, `packages/workspace/tables`, `packages/workspace/domain`, `tools/tsgo-shim` |
 | 50 | repo-cli part 1/22 | 794 | `packages/tooling/tool/cli` |
 | 51 | repo-cli part 2/22 | 794 | `packages/tooling/tool/cli` |
 | 52 | repo-cli part 3/22 | 794 | `packages/tooling/tool/cli` |
