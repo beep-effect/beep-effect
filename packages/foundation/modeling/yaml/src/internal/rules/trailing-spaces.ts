@@ -70,9 +70,6 @@ export const trailingSpaces = YamlRule.make({
   check: dual(2, (ctx: LintContext, _options: unknown): Iterable<YamlLintDiagnostic> => {
     const out: Array<YamlLintDiagnostic> = [];
     for (const line of ctx.lines) {
-      // Line text excludes the terminator (CRLF's `\r` included), so a
-      // plain end-of-text match sees exactly the trailing run; the fix span
-      // stays in source coordinates and never touches the terminator.
       const match = /[ \t]+$/.exec(line.text);
       if (match === null) continue;
       const runOffset = line.offset + match.index;

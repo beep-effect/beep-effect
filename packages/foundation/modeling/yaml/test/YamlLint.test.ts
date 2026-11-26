@@ -1,9 +1,3 @@
-// YamlLint facade + YamlLintConfig (#129): rule-aware config validation
-// (parse-validity locked always-on), severity resolution and precedence,
-// run() ordering, custom-rule registration, and the surgical fix pipeline
-// (comment-safe by construction via YamlEdit.applyAll, overlap-dropping,
-// fatal-parse failure).
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { YamlEdit, YamlLint, YamlLintConfig, YamlLintDiagnostic, YamlParseError, YamlRule } from "@beep/yaml";
 import { LintLine } from "@beep/yaml/YamlLintRule";
@@ -50,18 +44,19 @@ describe("YamlLintConfig", () => {
   });
 
   it("rejects demoting or disabling parse-validity, loudly", () => {
-    // Constructor validation fails loud (effect's `make` throws with a
-    // generic message)…
     assert.throws(() => YamlLintConfig.make({ rules: { "parse-validity": "off" } }));
     assert.throws(() => YamlLintConfig.make({ rules: { "parse-validity": "warning" } }));
     assert.throws(() => YamlLintConfig.make({ rules: { "parse-validity": { severity: "error" } } }));
-    // …and the schema decode path carries the typed error NAMING the entry.
     const messageOf = (input: unknown): string => {
       const r = S.decodeUnknownResult(YamlLintConfig)(input);
       assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
       return Result.isFailure(r) ? r.failure.message : "";
     };
-    assert.include(messageOf({ rules: { "parse-validity": "off" } }), 'Rule "parse-validity" is always-on');
+    assert.include(
+      messageOf({ rules: { "parse-validity": "off" } }),
+      'Rule "parse-validity" is always-on',
+      "constructor validation fails loud (effect's `make` throws with a generic message), and the schema decode path carries the typed error NAMING the entry"
+    );
     assert.include(messageOf({ rules: { "parse-validity": "warning" } }), 'Rule "parse-validity" is always-on');
     assert.include(messageOf({ rules: { "parse-validity": {} } }), 'Rule "parse-validity" accepts no options');
   });
@@ -72,18 +67,19 @@ describe("YamlLintConfig", () => {
   });
 
   it("rejects a typo'd option KEY on a built-in rule, naming the key and the rule", () => {
-    // The reviewer's probe: `mxa` must not silently decode to {}.
     assert.throws(() => YamlLintConfig.make({ rules: { "line-length": { mxa: 100 } } }));
     const r = S.decodeResult(YamlLintConfig)({ rules: { "line-length": { mxa: 100 } } });
     assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
     if (Result.isFailure(r)) {
       assert.include(r.failure.message, "line-length");
-      assert.include(r.failure.message, "mxa");
+      assert.include(r.failure.message, "mxa", "the reviewer's probe: `mxa` must not silently decode to {}");
     }
-    // Opaque options on a NON-catalog id keep working — custom rules
-    // validate their own options.
     const custom = YamlLintConfig.make({ rules: { "my-rule": { anything: true, extra: 1 } } });
-    assert.deepStrictEqual(custom.rules["my-rule"], { anything: true, extra: 1 });
+    assert.deepStrictEqual(
+      custom.rules["my-rule"],
+      { anything: true, extra: 1 },
+      "opaque options on a NON-catalog id keep working: custom rules validate their own options"
+    );
   });
 
   it("rejects out-of-domain numeric options, naming the field", () => {
@@ -95,40 +91,39 @@ describe("YamlLintConfig", () => {
         assert.include(r.failure.message, "non-negative integer");
       }
     }
-    // Every numeric option across the catalog takes the same bound.
-    for (const [rule, field] of [
+    const numericOptionsWithTheSameBound = [
       ["empty-lines", "maxStart"],
       ["comments-spacing", "minSpacesBefore"],
       ["colon-spacing", "maxSpacesAfter"],
       ["hyphen-spacing", "maxSpacesAfter"],
       ["indentation", "spaces"],
-    ] as const) {
+    ] as const;
+    for (const [rule, field] of numericOptionsWithTheSameBound) {
       const r = S.decodeResult(YamlLintConfig)({ rules: { [rule]: { [field]: -2 } } });
       assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
     }
-    // `maxSpacesAfter: 0` would make the fix delete the separation space
-    // and fuse the indicator with its content (`- item` → `-item`,
-    // `a: val` → `a:val`) — the floor is 1, not 0.
     for (const rule of ["colon-spacing", "hyphen-spacing"] as const) {
       const r = S.decodeResult(YamlLintConfig)({ rules: { [rule]: { maxSpacesAfter: 0 } } });
       assertFailure(r, r.pipe(Result.flip, Result.getOrThrow));
       if (Result.isFailure(r)) {
-        assert.include(r.failure.message, "greater than or equal to 1");
+        assert.include(
+          r.failure.message,
+          "greater than or equal to 1",
+          "`maxSpacesAfter: 0` would make the fix delete the separation space and fuse the indicator with its content (`- item` → `-item`, `a: val` → `a:val`): the floor is 1, not 0"
+        );
       }
     }
-    // `maxSpacesBefore: 0` stays legal — `key:` needs no space before the colon.
-    const before0 = S.decodeResult(YamlLintConfig)({
+    const zeroSpacesBeforeColonIsLegal = S.decodeResult(YamlLintConfig)({
       rules: { "colon-spacing": { maxSpacesBefore: 0 } },
     });
-    assertSuccess(before0, Result.getOrThrow(before0));
+    assertSuccess(zeroSpacesBeforeColonIsLegal, Result.getOrThrow(zeroSpacesBeforeColonIsLegal));
   });
 
   it("ships presets as statics", () => {
     assert.isTrue(S.is(YamlLintConfig)(YamlLintConfig.default));
     assert.isTrue(S.is(YamlLintConfig)(YamlLintConfig.relaxed));
-    // Composing a preset is object spread, not string resolution.
     const custom = YamlLintConfig.make({ rules: { ...YamlLintConfig.default.rules, "no-todo": "error" } });
-    assert.strictEqual(custom.rules["no-todo"], "error");
+    assert.strictEqual(custom.rules["no-todo"], "error", "composing a preset is object spread, not string resolution");
   });
 });
 
@@ -171,10 +166,12 @@ describe("YamlLint.run", () => {
   });
 
   it("reports nothing on empty input under the default preset", () => {
-    // Empty input has no lines — a phantom first line would make
-    // empty-lines report "too many blank lines" on "".
     const found = YamlLint.run("", YamlLint.builtins, YamlLintConfig.default);
-    assert.deepStrictEqual(found, []);
+    assert.deepStrictEqual(
+      found,
+      [],
+      'empty input has no lines: a phantom first line would make empty-lines report "too many blank lines" on ""'
+    );
   });
 
   it("sorts findings by position across rules", () => {
@@ -214,8 +211,6 @@ describe("YamlLint.fix", () => {
   });
 
   it("drops the later of two overlapping fixes (earlier wins)", () => {
-    // Two rules flag the same span: the first fix is applied, the second
-    // dropped rather than throwing applyAll's overlap defect.
     const rival = YamlRule.make({
       id: "rival",
       check: dual(
@@ -244,7 +239,11 @@ describe("YamlLint.fix", () => {
     );
     assertSuccess(result, Result.getOrThrow(result));
     if (Result.isSuccess(result)) {
-      assert.match(result.success, /^a: (DONE|RIVAL)\n$/);
+      assert.match(
+        result.success,
+        /^a: (DONE|RIVAL)\n$/,
+        "two rules flag the same span: the first fix is applied, the second dropped rather than throwing applyAll's overlap defect"
+      );
     }
   });
 
@@ -275,9 +274,11 @@ describe("YamlLint.fix", () => {
     );
     assertSuccess(result, Result.getOrThrow(result));
     if (Result.isSuccess(result)) {
-      // run() orders equal positions by rule id, so insert-a wins and
-      // insert-b is dropped — never both, never in arbitrary order.
-      assert.strictEqual(result.success, "a: 1\n# A\n");
+      assert.strictEqual(
+        result.success,
+        "a: 1\n# A\n",
+        "run() orders equal positions by rule id, so insert-a wins and insert-b is dropped: never both, never in arbitrary order"
+      );
     }
   });
 
@@ -290,15 +291,9 @@ describe("YamlLint.fix", () => {
   });
 });
 
-/**
- * Every import/export module specifier in `source`: comments stripped first
- * (a comment merely NAMING a module is not an import), then the `from "..."`
- * paths plus bare side-effect `import "..."` specifiers.
- */
 const importSpecifiers = (source: string): ReadonlyArray<string> => {
-  // Line comments first: a `/*` inside a `//` comment (a glob like
-  // `src/internal/rules/*`) must not open a phantom block comment.
-  const stripped = Str.replace(/\/\*[\s\S]*?\*\//g, "")(Str.replace(/\/\/[^\n]*/g, "")(source));
+  const withoutLineComments = Str.replace(/\/\/[^\n]*/g, "")(source);
+  const stripped = Str.replace(/\/\*[\s\S]*?\*\//g, "")(withoutLineComments);
   const out: Array<string> = [];
   for (const match of Str.matchAll(/\bfrom\s+["']([^"']+)["']|^\s*import\s+["']([^"']+)["']/gm)(stripped)) {
     const specifier = match[1] ?? match[2];
@@ -310,18 +305,22 @@ const importSpecifiers = (source: string): ReadonlyArray<string> => {
 describe("fix routes only through YamlEdit.applyAll — structural pin", () => {
   it("neither the facade nor any rule imports YamlFormat", () => {
     const files = ["YamlLint.ts", "YamlLintRule.ts", ...ruleSourcePaths];
-    // Positive control: the glob must reach the rule modules — an empty
-    // listing would pass vacuously.
-    assert.isAbove(ruleSourcePaths.length, 0, "the rule-source glob found no modules");
+    assert.isAbove(
+      ruleSourcePaths.length,
+      0,
+      "positive control: the rule-source glob found no modules, and an empty listing would pass vacuously"
+    );
     for (const file of files) {
       const specifiers = importSpecifiers(sourceText(file));
-      // Positive control: every checked module imports SOMETHING — a walker
-      // that finds no imports would pass vacuously.
-      assert.isAbove(specifiers.length, 0, `${file}: the import walker found no imports`);
+      assert.isAbove(
+        specifiers.length,
+        0,
+        `${file}: the import walker found no imports; a walker that finds none would pass vacuously, so line comments are stripped before block comments (a \`/*\` inside a \`//\` comment, a glob like \`src/internal/rules/*\`, must not open a phantom block comment)`
+      );
       for (const specifier of specifiers) {
         assert.isFalse(
           /(?:^|\/)YamlFormat(?:\.js|\.ts)?$/.test(specifier),
-          `${file} imports "${specifier}" — the lint layer must not reach for the formatter`
+          `${file} imports "${specifier}" — the lint layer must not reach for the formatter (comments are stripped first: a comment merely NAMING a module is not an import; the walker reads \`from "..."\` paths plus bare side-effect \`import "..."\` specifiers)`
         );
       }
     }

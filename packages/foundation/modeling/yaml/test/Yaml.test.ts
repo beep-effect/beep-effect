@@ -149,15 +149,16 @@ describe("Yaml", () => {
       })
     );
 
+    // decision: explicit-key-value-forms
     describe("explicit keys with compact collection values (regression)", () => {
-      // YAML 1.2 §8.2.2: l-block-map-explicit-value is `:` s-l+block-indented,
-      // and s-l+block-indented admits ns-l-compact-mapping — so a compact
-      // mapping starting on the `:` line IS the value. pnpm 11 writes lockfile
-      // snapshot keys longer than 1024 chars in exactly this form.
       it.effect("parses a compact mapping starting on the ':' line", () =>
         Effect.gen(function* () {
           const value = yield* Yaml.parse("? k1\n: dependencies:\n    x: 1\n");
-          assert.deepStrictEqual(value, { k1: { dependencies: { x: 1 } } });
+          assert.deepStrictEqual(
+            value,
+            { k1: { dependencies: { x: 1 } } },
+            "YAML 1.2 §8.2.2: l-block-map-explicit-value admits ns-l-compact-mapping, so a compact mapping starting on the `:` line IS the value; pnpm 11 writes lockfile snapshot keys longer than 1024 chars in exactly this form"
+          );
         })
       );
 
@@ -204,9 +205,6 @@ describe("Yaml", () => {
 
       it.effect("parses a pnpm-lockfile-shaped snapshots section with >1024-char explicit keys", () =>
         Effect.gen(function* () {
-          // pnpm emits `? 'key'` / `  : dependencies:` once the key exceeds
-          // the 1024-char implicit-key limit; the whole entry is indented
-          // inside the `snapshots:` mapping.
           const k1 = `pkg-a@1.0.0(${Str.repeat(1100)("a")})`;
           const k2 = `pkg-b@2.0.0(${Str.repeat(1100)("b")})`;
           const text = A.join(
@@ -224,24 +222,24 @@ describe("Yaml", () => {
             "\n"
           );
           const value = yield* Yaml.parse(text);
-          assert.deepStrictEqual(value, {
-            snapshots: {
-              [k1]: { dependencies: { "dep-one": "1.2.3", "dep-two": "4.5.6" } },
-              [k2]: { dependencies: { "dep-three": "7.8.9" } },
+          assert.deepStrictEqual(
+            value,
+            {
+              snapshots: {
+                [k1]: { dependencies: { "dep-one": "1.2.3", "dep-two": "4.5.6" } },
+                [k2]: { dependencies: { "dep-three": "7.8.9" } },
+              },
             },
-          });
+            "pnpm emits `? 'key'` / `  : dependencies:` once the key exceeds the 1024-char implicit-key limit; the whole entry is indented inside the `snapshots:` mapping"
+          );
         })
       );
     });
 
     describe("duplicate-key identity distinguishes YAML node type, not just JS value", () => {
-      // Keys are the same mapping key only when they are the same YAML node —
-      // same type and value. An !!int and an !!float that resolve to equal JS
-      // numbers are distinct keys; different presentations of the same !!int
-      // are the same key.
       const rejects = [
-        ["equal integers written differently", "{1: a, 0x1: b}"], // both !!int 1
-        ["equal integers, decimal vs octal", "{8: a, 0o10: b}"], // both !!int 8
+        ["equal integers written differently (both !!int 1)", "{1: a, 0x1: b}"],
+        ["equal integers, decimal vs octal (both !!int 8)", "{8: a, 0o10: b}"],
         ["the same float twice", "{1.5: a, 1.5: b}"],
         ["the same string twice", "{k: a, k: b}"],
         ["string vs quoted string", '{k: a, "k": b}'],
@@ -255,23 +253,20 @@ describe("Yaml", () => {
             });
             assert.isTrue(
               A.some(error.diagnostics, (d) => d.code === "DuplicateKey"),
-              doc
+              `${doc}: keys are the same mapping key only when they are the same YAML node (same type and value); an !!int and an !!float that resolve to equal JS numbers are distinct keys, while different presentations of the same !!int are the same key`
             );
           })
         );
       }
 
-      // These resolve to distinct YAML nodes, so the parse must NOT reject
-      // them as duplicate keys — even where the lossy JS object then collapses
-      // them onto one property (int vs float, int vs string).
-      const accepts = [
+      const distinctYamlNodes = [
         ["int vs float, unit value", "{1: a, 1.0: b}"],
         ["int vs float via exponent", "{1000: a, 1e3: b}"],
         ["int vs string of the same digits", '{1: a, "1": b}'],
         ["float vs a different float", "{1.5: a, 2.5: b}"],
       ] as const;
-      for (const [label, doc] of accepts) {
-        it.effect(`accepts ${label}`, () =>
+      for (const [label, doc] of distinctYamlNodes) {
+        it.effect(`accepts ${label} as distinct YAML nodes, even where the lossy JS object collapses them`, () =>
           Effect.gen(function* () {
             const result = yield* Yaml.parse(doc).pipe(Effect.asVoid, Effect.exit);
             assertExitSuccess(result, undefined);
@@ -283,9 +278,11 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           const value = yield* Yaml.parse("{1: int, 1.0: float}");
           assert.ok(P.isObject(value));
-          // The lossy JS object collapses both onto the "1" property (last
-          // wins), but the parse itself must not have rejected the document.
-          assert.strictEqual(value["1"], "float");
+          assert.strictEqual(
+            value["1"],
+            "float",
+            'the lossy JS object collapses both onto the "1" property (last wins), but the parse itself must not have rejected the document'
+          );
         })
       );
     });
@@ -351,11 +348,12 @@ describe("Yaml", () => {
 
     it.effect("a root mapping's terminal own-line comment survives behind a BOM", () =>
       Effect.gen(function* () {
-        // The composer's column helpers count the BOM too; with it counted
-        // the root mapping reads as nested and its tail comment escapes to
-        // document scope, where it is dropped.
         const doc = yield* YamlDocument.parse("\uFEFFa: 1\nb: 2\n# tail\n");
-        assert.strictEqual(doc.comment, " tail");
+        assert.strictEqual(
+          doc.comment,
+          " tail",
+          "the composer's column helpers count the BOM too; with it counted the root mapping reads as nested and its tail comment escapes to document scope, where it is dropped"
+        );
         const stringify7 = yield* doc.stringify();
         assert.strictEqual(stringify7, "a: 1\nb: 2\n# tail\n");
       })
@@ -363,10 +361,12 @@ describe("Yaml", () => {
 
     it.effect("a BOM opens the document prefix: directives and --- behind it stay in one document", () =>
       Effect.gen(function* () {
-        // The BOM used to land in the body, so a following %YAML was a
-        // misplaced directive and a following --- opened a second document.
         const parsed8 = yield* Yaml.parse("\uFEFF%YAML 1.2\n---\na: 1\n");
-        assert.deepStrictEqual(parsed8, { a: 1 });
+        assert.deepStrictEqual(
+          parsed8,
+          { a: 1 },
+          "the BOM used to land in the body, so a following %YAML was a misplaced directive and a following --- opened a second document"
+        );
         const parsed9 = yield* Yaml.parse("\uFEFF%YAML 1.2\r\n--- # c\r\na: 1\r\n");
         assert.deepStrictEqual(parsed9, { a: 1 });
         const parsed10 = yield* Yaml.parse("\uFEFF\n%TAG !e! tag:example.com,2000:\n---\na: !e!x 1\n");
@@ -422,14 +422,15 @@ describe("Yaml", () => {
     });
 
     it("an empty stream succeeds with one empty document, matching parse('')", () => {
-      // The engine composes "" as a single empty document (reference-`yaml`
-      // parity, and the same reading Yaml.parse gives: "" → null), so the
-      // stream form is [null] — success, never a failure.
       const result = Yaml.parseAllResult("");
       if (!Result.isSuccess(result)) {
         assert.fail("parseAllResult must succeed on an empty stream");
       }
-      assert.deepStrictEqual(result.success, [null]);
+      assert.deepStrictEqual(
+        result.success,
+        [null],
+        'the engine composes "" as a single empty document (reference-`yaml` parity, and the same reading Yaml.parse gives: "" → null), so the stream form is [null]: success, never a failure'
+      );
     });
 
     it("a single document yields a one-element array matching parseResult", () => {
@@ -473,28 +474,30 @@ describe("Yaml", () => {
     });
 
     it("an anchor on a complex mapping key resolves identically to parseResult (incremental registration)", () => {
-      // A pre-built anchor map would resolve `*x` to `["k"]` even though
-      // extraction never re-registers non-scalar mapping keys; parseResult's
-      // incremental registration yields null. The two paths must agree.
       const text = "{ &x [k]: *x }";
       const all = Yaml.parseAllResult(text);
       const one = Yaml.parseResult(text);
       if (!Result.isSuccess(all) || !Result.isSuccess(one)) {
         assert.fail("both parse paths must succeed on a complex-key anchor");
       }
-      assert.deepStrictEqual(all.success, [one.success]);
+      assert.deepStrictEqual(
+        all.success,
+        [one.success],
+        'a pre-built anchor map would resolve `*x` to `["k"]` even though extraction never re-registers non-scalar mapping keys; parseResult\'s incremental registration yields null, and the two paths must agree'
+      );
     });
 
     it("fails on the fatal stream errors the format path refuses — one predicate, one contract", () => {
-      // The stream-error filter is isFatalCode, the SAME predicate
-      // YamlFormat's refusal uses: parseAllResult can never succeed on
-      // input the formatter refuses as stream-fatal.
       const misplaced = "a: 1\n%YAML 1.2\n---\nb: 2\n";
       const result = Yaml.parseAllResult(misplaced);
       assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
       if (!Result.isFailure(result)) return;
       assert.isTrue(A.some(result.failure.diagnostics, (d) => d.code === "InvalidDirective"));
-      assert.deepStrictEqual(YamlFormat.format(misplaced), []);
+      assert.deepStrictEqual(
+        YamlFormat.format(misplaced),
+        [],
+        "the stream-error filter is isFatalCode, the SAME predicate YamlFormat's refusal uses: parseAllResult can never succeed on input the formatter refuses as stream-fatal"
+      );
     });
   });
 
@@ -523,9 +526,6 @@ describe("Yaml", () => {
 
     it.effect("a deeply nested acyclic value fails typed, never a stack-overflow defect", () =>
       Effect.gen(function* () {
-        // The value-stringifier trio is mutually recursive with no natural
-        // bound; a 50 000-deep acyclic array would overflow the stack as a
-        // RangeError defect. The depth cap must surface it on the typed channel.
         let value: unknown = 1;
         for (let i = 0; i < 50000; i++) value = [value];
 
@@ -533,24 +533,20 @@ describe("Yaml", () => {
         assertExitFailure(result, result.pipe(Exit.getCause, O.getOrThrow));
         const error = result.cause.pipe(Cause.findError, Result.getOrThrow);
         assert.instanceOf(error, YamlStringifyError);
-        assert.strictEqual(error.diagnostics[0]?.code, "NestingDepthExceeded");
+        assert.strictEqual(
+          error.diagnostics[0]?.code,
+          "NestingDepthExceeded",
+          "the value-stringifier trio is mutually recursive with no natural bound; a 50 000-deep acyclic array would overflow the stack as a RangeError defect, so the depth cap must surface it on the typed channel"
+        );
       })
     );
 
+    // decision: explicit-key-spill
     describe("explicit-key spill past the 1024-char implicit-key limit (#323)", () => {
-      // YAML 1.2 §8.1.3: the `:` of an implicit block-mapping key must sit at
-      // most 1024 characters after the key's start. A RENDERED key longer than
-      // 1024 must spill to explicit-key form (`? key` / `: value`) or strict
-      // parsers reject the output. The expected bytes are oracle-authored
-      // fixtures (yaml@2.9.0, generated once — see fixtures/explicit-key/
-      // ORACLE.md); the reference package is not a dependency of this run.
       const k1 = `pkg-a@1.0.0(${Str.repeat(1100)("a")})`;
       const k2 = `pkg-b@2.0.0(${Str.repeat(1100)("b")})`;
       const fixture = (name: string): string => fixtureText(`explicit-key/${name}.yaml`);
 
-      // Emit-side twins of PR #322's parse-side compact-value regression
-      // cases: every compact form the parser learned to read is a form the
-      // emitter is pinned against.
       const cases: ReadonlyArray<[name: string, value: unknown]> = [
         ["scalar-value", { [k1]: "value-one" }],
         ["null-value", { [k1]: null }],
@@ -575,30 +571,37 @@ describe("Yaml", () => {
         it.effect(`emits the oracle shape and roundtrips: ${name}`, () =>
           Effect.gen(function* () {
             const text = yield* Yaml.stringify(value);
-            assert.strictEqual(text, fixture(name));
-            // The spilled output must parse back through OUR parser to the
-            // same value (PR #322 taught the parser these compact forms).
+            assert.strictEqual(
+              text,
+              fixture(name),
+              "YAML 1.2 §8.1.3 caps an implicit key at 1024 characters, so a longer RENDERED key spills to `? key` / `: value`; the expected bytes are oracle-authored fixtures (yaml@2.9.0, generated once, see fixtures/explicit-key/ORACLE.md) and the reference package is not a dependency of this run"
+            );
             const parsed16 = yield* Yaml.parse(text);
-            assert.deepStrictEqual(parsed16, value);
+            assert.deepStrictEqual(
+              parsed16,
+              value,
+              "the spilled output must parse back through OUR parser to the same value: these cases are the emit-side twins of the parse-side compact-value regressions, so every compact form the parser learned to read is a form the emitter is pinned against"
+            );
           })
         );
       }
 
       it.effect("the threshold applies to the RENDERED key, not the source scalar", () =>
         Effect.gen(function* () {
-          // A leading space forces single-quoting under the default
-          // quoteStyle, so a 1023-char source key renders as 1025 chars
-          // (`'` + 1023 + `'`) and must spill…
           const quoted1025 = ` ${Str.repeat(1022)("a")}`;
           const spilled = yield* Yaml.stringify({ [quoted1025]: 1 });
-          assert.isTrue(Str.startsWith("? '")(spilled), "1025-char rendered key must spill");
+          assert.isTrue(
+            Str.startsWith("? '")(spilled),
+            "a leading space forces single-quoting under the default quoteStyle, so a 1023-char source key renders as 1025 chars (`'` + 1023 + `'`) and must spill"
+          );
           const parsed17 = yield* Yaml.parse(spilled);
           assert.deepStrictEqual(parsed17, { [quoted1025]: 1 });
-          // …while a 1022-char source key renders as exactly 1024 chars and
-          // stays implicit.
           const quoted1024 = ` ${Str.repeat(1021)("a")}`;
           const implicit = yield* Yaml.stringify({ [quoted1024]: 1 });
-          assert.isFalse(Str.startsWith("? ")(implicit), "1024-char rendered key stays implicit");
+          assert.isFalse(
+            Str.startsWith("? ")(implicit),
+            "a 1022-char source key renders as exactly 1024 chars and stays implicit"
+          );
           const parsed18 = yield* Yaml.parse(implicit);
           assert.deepStrictEqual(parsed18, { [quoted1024]: 1 });
         })
@@ -620,28 +623,33 @@ describe("Yaml", () => {
 
       it.effect("compact continuation alignment is structural — indent: 4 must still roundtrip", () =>
         Effect.gen(function* () {
-          // Compact continuation lines align with the first item after
-          // `? `/`: `, which always sits two columns in — padding them with
-          // ctx.indent instead silently re-nests the value on reparse once
-          // indent !== 2. (Deliberate divergence from yaml@2.9.0, whose
-          // indent-4 compact output fails its own strict reparse.)
           const seqVal = { [k1]: ["first", "second"] };
           const seqText = yield* Yaml.stringify(seqVal, YamlStringifyOptions.make({ indent: 4 }));
-          assert.include(seqText, ": - first\n  - second");
+          assert.include(
+            seqText,
+            ": - first\n  - second",
+            "compact continuation lines align with the first item after `? `/`: `, which always sits two columns in; padding them with ctx.indent instead silently re-nests the value on reparse once indent !== 2 (a deliberate divergence from yaml@2.9.0, whose indent-4 compact output fails its own strict reparse)"
+          );
           const parsed20 = yield* Yaml.parse(seqText);
           assert.deepStrictEqual(parsed20, seqVal);
 
-          // Flat two-pair map: sibling pairs must align at column 2.
           const mapVal = { [k1]: { "dep-one": "1.2.3", "dep-two": "4.5.6" } };
           const mapText = yield* Yaml.stringify(mapVal, YamlStringifyOptions.make({ indent: 4 }));
-          assert.include(mapText, ": dep-one: 1.2.3\n  dep-two: 4.5.6");
+          assert.include(
+            mapText,
+            ": dep-one: 1.2.3\n  dep-two: 4.5.6",
+            "flat two-pair map: sibling pairs must align at column 2"
+          );
           const parsed21 = yield* Yaml.parse(mapText);
           assert.deepStrictEqual(parsed21, mapVal);
 
-          // Nested map: children indent relative to the compact column.
           const nestedVal = { [k1]: { dependencies: { x: 1 } } };
           const nestedText = yield* Yaml.stringify(nestedVal, YamlStringifyOptions.make({ indent: 4 }));
-          assert.include(nestedText, ": dependencies:\n      x: 1");
+          assert.include(
+            nestedText,
+            ": dependencies:\n      x: 1",
+            "nested map: children indent relative to the compact column"
+          );
           const parsed22 = yield* Yaml.parse(nestedText);
           assert.deepStrictEqual(parsed22, nestedVal);
         })
@@ -649,12 +657,14 @@ describe("Yaml", () => {
 
       it.effect("a long-key entry with a compact sequence value still roundtrips (#322 twin)", () =>
         Effect.gen(function* () {
-          // The compact-sequence explicit-value branch is deliberately
-          // untouched by `indentSequences`; the spill routes into it.
           const value = { [k1]: ["a", "b"] };
           const spilledDefault = yield* Yaml.stringify(value);
           const spilledIndented = yield* Yaml.stringify(value, YamlStringifyOptions.make({ indentSequences: true }));
-          assert.strictEqual(spilledDefault, spilledIndented);
+          assert.strictEqual(
+            spilledDefault,
+            spilledIndented,
+            "the compact-sequence explicit-value branch is deliberately untouched by `indentSequences`; the spill routes into it"
+          );
           const parsed23 = yield* Yaml.parse(spilledDefault);
           assert.deepStrictEqual(parsed23, value);
         })
@@ -662,23 +672,27 @@ describe("Yaml", () => {
     });
 
     describe("indentSequences", () => {
-      // The `indentSequences: true` expected strings are byte-for-byte the
-      // `yaml` npm package's (2.9.0) default (`indentSeq: true`) output for
-      // the same values; the kit default (false) preserves the legacy
-      // unindented form (byte-compatible with yaml-effect 0.7).
       const indented = YamlStringifyOptions.make({ indentSequences: true });
 
       it.effect("default leaves a block sequence under a mapping key unindented", () =>
         Effect.gen(function* () {
           const stringify24 = yield* Yaml.stringify({ key: ["a", "b"] });
-          assert.strictEqual(stringify24, "key:\n- a\n- b\n");
+          assert.strictEqual(
+            stringify24,
+            "key:\n- a\n- b\n",
+            "the kit default (false) preserves the legacy unindented form (byte-compatible with yaml-effect 0.7)"
+          );
         })
       );
 
       it.effect("true indents a block sequence under a mapping key one level", () =>
         Effect.gen(function* () {
           const stringify25 = yield* Yaml.stringify({ key: ["a", "b"] }, indented);
-          assert.strictEqual(stringify25, "key:\n  - a\n  - b\n");
+          assert.strictEqual(
+            stringify25,
+            "key:\n  - a\n  - b\n",
+            "the `indentSequences: true` expected strings are byte-for-byte the `yaml` npm package's (2.9.0) default (`indentSeq: true`) output for the same values"
+          );
         })
       );
 
@@ -733,22 +747,27 @@ describe("Yaml", () => {
     });
 
     describe("quoteStyle", () => {
-      // The `quoteStyle: "double"` expected strings match the `yaml` npm
-      // package's `singleQuote: false` output for the same values; the kit
-      // default ("single") preserves the released byte-compatible form.
       const double = YamlStringifyOptions.make({ quoteStyle: "double" });
 
       it.effect("default falls back to single quotes for a scalar requiring quoting", () =>
         Effect.gen(function* () {
           const stringify35 = yield* Yaml.stringify({ version: "*" });
-          assert.strictEqual(stringify35, "version: '*'\n");
+          assert.strictEqual(
+            stringify35,
+            "version: '*'\n",
+            'the kit default ("single") preserves the released byte-compatible form'
+          );
         })
       );
 
       it.effect('"double" falls back to double quotes for a scalar requiring quoting', () =>
         Effect.gen(function* () {
           const stringify36 = yield* Yaml.stringify({ version: "*" }, double);
-          assert.strictEqual(stringify36, 'version: "*"\n');
+          assert.strictEqual(
+            stringify36,
+            'version: "*"\n',
+            'the `quoteStyle: "double"` expected strings match the `yaml` npm package\'s `singleQuote: false` output for the same values'
+          );
         })
       );
 
@@ -765,8 +784,6 @@ describe("Yaml", () => {
 
       it.effect("mapping keys requiring quoting honor the option", () =>
         Effect.gen(function* () {
-          // The pnpm-workspace.yaml shape from the reported regression: the
-          // keys are the scalars that require quoting, not the values.
           const value = {
             allowBuilds: { "@parcel/watcher": true },
             allowedDeprecatedVersions: { "@types/acorn": "*" },
@@ -774,7 +791,8 @@ describe("Yaml", () => {
           const stringify39 = yield* Yaml.stringify(value);
           assert.strictEqual(
             stringify39,
-            "allowBuilds:\n  '@parcel/watcher': true\nallowedDeprecatedVersions:\n  '@types/acorn': '*'\n"
+            "allowBuilds:\n  '@parcel/watcher': true\nallowedDeprecatedVersions:\n  '@types/acorn': '*'\n",
+            "the pnpm-workspace.yaml shape from the reported regression: the keys are the scalars that require quoting, not the values"
           );
           const stringify40 = yield* Yaml.stringify(value, double);
           assert.strictEqual(
@@ -810,11 +828,13 @@ describe("Yaml", () => {
 
       it.effect("a value needing YAML escapes stays double-quoted and round-trips", () =>
         Effect.gen(function* () {
-          // Tabs and control characters cannot be expressed in single-quoted
-          // YAML, so both settings must emit double-quoted output here.
           const value = { quoted: 'say "hi" now: ok', tabbed: "a\tb: c" };
           const emitted = yield* Yaml.stringify(value, double);
-          assert.strictEqual(emitted, 'quoted: "say \\"hi\\" now: ok"\ntabbed: "a\\tb: c"\n');
+          assert.strictEqual(
+            emitted,
+            'quoted: "say \\"hi\\" now: ok"\ntabbed: "a\\tb: c"\n',
+            "tabs and control characters cannot be expressed in single-quoted YAML, so both settings must emit double-quoted output here"
+          );
           const parsed44 = yield* Yaml.parse(emitted);
           assert.deepStrictEqual(parsed44, value);
         })
@@ -845,15 +865,15 @@ describe("Yaml", () => {
 
       it.effect("applies on the node path — YamlDocument#stringify honors the option (regression)", () =>
         Effect.gen(function* () {
-          // The document adapter dropped `quoteStyle` before forwarding
-          // options to the engine, so the node path always fell back to
-          // single quotes. `quoteCompat` is only the trigger that forces a
-          // parsed-plain scalar through the quoting fallback.
           const doc = yield* YamlDocument.parse("date: 2024-01-15\n");
           const stringify49 = yield* doc.stringify(
             YamlStringifyOptions.make({ quoteCompat: "yaml-1.1", quoteStyle: "double" })
           );
-          assert.strictEqual(stringify49, 'date: "2024-01-15"\n');
+          assert.strictEqual(
+            stringify49,
+            'date: "2024-01-15"\n',
+            "the document adapter dropped `quoteStyle` before forwarding options to the engine, so the node path always fell back to single quotes; `quoteCompat` is only the trigger that forces a parsed-plain scalar through the quoting fallback"
+          );
         })
       );
 
@@ -864,10 +884,6 @@ describe("Yaml", () => {
       });
 
       describe('"auto"', () => {
-        // Expected strings authored offline against `yaml@2.9.1`
-        // (`stringify({ k: value }, { lineWidth: 0 })`, its default
-        // `singleQuote: null`), the same convention as the oracle-differential
-        // suite: the committed literals are the contract.
         const auto = YamlStringifyOptions.make({ quoteStyle: "auto" });
         const cases: ReadonlyArray<readonly [string, string]> = [
           ['Effect: "v4" release', "k: 'Effect: \"v4\" release'\n"],
@@ -894,7 +910,11 @@ describe("Yaml", () => {
             cases,
             Effect.fnUntraced(function* ([value, expected]) {
               const emitted = yield* Yaml.stringify({ k: value }, auto);
-              assert.strictEqual(emitted, expected, Str.isEmpty(value) ? "<empty>" : value);
+              assert.strictEqual(
+                emitted,
+                expected,
+                `${Str.isEmpty(value) ? "<empty>" : value}: expected strings authored offline against yaml@2.9.1 (stringify({ k: value }, { lineWidth: 0 }), its default singleQuote: null), the oracle-differential convention; the committed literals are the contract`
+              );
               const parsed50 = yield* Yaml.parse(emitted);
               assert.deepStrictEqual(parsed50, { k: value });
             }),
@@ -930,19 +950,10 @@ describe("Yaml", () => {
       });
     });
 
+    // decision: yaml-1-1-compat-quotes-the-union
     describe('quoteCompat: "yaml-1.1"', () => {
-      // Expected strings derive from the YAML 1.1 implicit-resolver
-      // patterns (yaml.org/type: bool, int, float, timestamp): every value
-      // in `coercible` resolves to a non-string under a YAML 1.1 parser
-      // (js-yaml, PyYAML, libyaml) and must therefore be quoted; every
-      // value in `stillPlain` is a string in BOTH editions and must stay
-      // plain — the clean-output half of the contract.
       const compat = YamlStringifyOptions.make({ quoteCompat: "yaml-1.1" });
 
-      // One discriminating control per rule family rides along: a value
-      // wrong in exactly one way (case, digit count, range) that the 1.1
-      // resolver rejects, proving the predicate matches the rule and not a
-      // looser superset.
       const coercible: ReadonlyArray<readonly [family: string, value: string]> = [
         ["bool y", "y"],
         ["bool Y", "Y"],
@@ -960,9 +971,6 @@ describe("Yaml", () => {
         ["bool Off", "Off"],
         ["bool OFF", "OFF"],
         ["timestamp date-only", "2024-01-15"],
-        // The 1.1 spec's date-only (ymd) branch is strictly two-digit, but
-        // the reference `yaml` package's 1.1 schema resolves the one-digit
-        // spelling to a date too — the union policy quotes it.
         ["timestamp date-only 1-digit month", "2024-1-15"],
         ["timestamp ISO 8601", "2001-12-15T02:59:43.1Z"],
         ["timestamp lowercase t with offset", "2001-12-14t21:59:43.10-05:00"],
@@ -973,9 +981,6 @@ describe("Yaml", () => {
         ["float sexagesimal", "190:20:30.15"],
         ["int underscored", "1_000"],
         ["int underscored signed", "+1_000"],
-        // Not an octal (contains 9) and not a spec decimal (leading zero),
-        // but the reference `yaml` package's 1.1 schema resolves it to the
-        // int 9 — the union policy quotes it.
         ["int leading-zero underscored", "0_9"],
         ["float underscored", "12_345.678_9"],
         ["float underscored short", "1_0.5"],
@@ -1004,7 +1009,11 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           for (const [family, value] of coercible) {
             const stringify55 = yield* Yaml.stringify({ k: value }, compat);
-            assert.strictEqual(stringify55, `k: '${value}'\n`, `${family}: ${value}`);
+            assert.strictEqual(
+              stringify55,
+              `k: '${value}'\n`,
+              `${family}: ${value} resolves to a non-string under a YAML 1.1 parser (js-yaml, PyYAML, libyaml) per the yaml.org/type implicit-resolver patterns (bool, int, float, timestamp), so it must be quoted`
+            );
           }
         })
       );
@@ -1013,19 +1022,25 @@ describe("Yaml", () => {
         Effect.gen(function* () {
           for (const [family, value] of stillPlain) {
             const stringify56 = yield* Yaml.stringify({ k: value }, compat);
-            assert.strictEqual(stringify56, `k: ${value}\n`, `${family}: ${value}`);
+            assert.strictEqual(
+              stringify56,
+              `k: ${value}\n`,
+              `${family}: ${value} is a string in BOTH editions and must stay plain; one discriminating control per rule family, wrong in exactly one way (case, digit count, range), proves the predicate matches the rule and not a looser superset`
+            );
           }
         })
       );
 
       it.effect("is strictly additive over the 1.2 rules — their output is unchanged", () =>
         Effect.gen(function* () {
-          // Every value here is already quoted (or escaped) by the 1.2 Core
-          // Schema gate; the compat mode must not move a byte of it.
           const value = { a: "true", b: "null", c: "0x1F", d: "123", e: "1.5", f: "", g: "*star" };
           const stringify57 = yield* Yaml.stringify(value);
           const stringify85 = yield* Yaml.stringify(value, compat);
-          assert.strictEqual(stringify57, stringify85);
+          assert.strictEqual(
+            stringify57,
+            stringify85,
+            "every value here is already quoted (or escaped) by the 1.2 Core Schema gate; the compat mode must not move a byte of it"
+          );
         })
       );
 
@@ -1110,12 +1125,6 @@ describe("Yaml", () => {
     });
 
     describe("control characters force quoting (regression)", () => {
-      // Released 0.4.0 emitted CR and interior-tab scalars as PLAIN text
-      // because `requiresQuoting`'s control-char loop used `isControlChar`
-      // alone, which excludes TAB (0x09) and CR 0x0D. The CR case was
-      // silent data corruption: `has\rcarriage` round-tripped back as
-      // `has carriage`. Each case asserts BOTH that the scalar is quoted
-      // and that it survives a parse round-trip unchanged.
       const cases: ReadonlyArray<readonly [label: string, value: string]> = [
         ["carriage return", "has\rcarriage"],
         ["interior tab", "has\ttab"],
@@ -1133,23 +1142,25 @@ describe("Yaml", () => {
             const scalar = Str.trimEnd(Str.slice("key: ".length)(text));
             assert.ok(
               Str.startsWith('"')(scalar) || Str.startsWith("'")(scalar),
-              `expected a quoted scalar for ${label}, got plain: ${yield* S.encodeEffect(JsonString)(scalar)}`
+              `expected a quoted scalar for ${label}, got plain: ${yield* S.encodeEffect(JsonString)(scalar)}; released 0.4.0 emitted CR and interior-tab scalars as PLAIN text because \`requiresQuoting\`'s control-char loop used \`isControlChar\` alone, which excludes TAB (0x09) and CR 0x0D`
             );
             const parsed66 = yield* Yaml.parse(text);
-            assert.deepStrictEqual(parsed66, { key: value });
+            assert.deepStrictEqual(
+              parsed66,
+              { key: value },
+              "the CR case was silent data corruption: `has\\rcarriage` round-tripped back as `has carriage`"
+            );
           })
         );
       }
 
       it.effect("a multi-line value containing a tab still uses a block scalar", () =>
         Effect.gen(function* () {
-          // Guards the fix's scope: TAB is quoted only on the single-line
-          // plain path. Block scalars can carry tabs and must keep doing so.
           const value = { key: "line one\n\tindented line\n" };
           const text = yield* Yaml.stringify(value);
           assert.ok(
             Str.includes("|")(text),
-            `expected a block scalar, got: ${yield* S.encodeEffect(JsonString)(text)}`
+            `expected a block scalar, got: ${yield* S.encodeEffect(JsonString)(text)}; the fix's scope: TAB is quoted only on the single-line plain path, and block scalars can carry tabs and must keep doing so`
           );
           const parsed67 = yield* Yaml.parse(text);
           assert.deepStrictEqual(parsed67, value);
@@ -1204,14 +1215,19 @@ describe("Yaml", () => {
           const value = { text: long };
           const wrapped = yield* Yaml.stringify(value, YamlStringifyOptions.make({ lineWidth: 30 }));
           const lines = Str.split("\n")(Str.trimEnd(wrapped));
-          // Folding fired: the scalar spans several physical lines.
-          assert.isAbove(lines.length, 1);
-          // Each line stays near the target column (folding is approximate but
-          // bounded — never wildly over the requested width).
-          for (const line of lines) assert.isAtMost(line.length, 40);
-          // A fold is a semantically transparent break: it re-parses identically.
+          assert.isAbove(lines.length, 1, "folding fired: the scalar spans several physical lines");
+          for (const line of lines)
+            assert.isAtMost(
+              line.length,
+              40,
+              "each line stays near the target column: folding is approximate but bounded, never wildly over the requested width"
+            );
           const parsed74 = yield* Yaml.parse(wrapped);
-          assert.deepStrictEqual(parsed74, value);
+          assert.deepStrictEqual(
+            parsed74,
+            value,
+            "a fold is a semantically transparent break: it re-parses identically"
+          );
         })
       );
 
@@ -1246,11 +1262,12 @@ describe("Yaml", () => {
 
       it.effect("never folds block-literal content (literal blocks preserve bytes)", () =>
         Effect.gen(function* () {
-          // A multi-line string renders as a block literal (`|`); its long first
-          // line must survive uncut so the literal round-trips byte-for-byte.
           const value = { text: `${long}\nsecond line` };
           const out = yield* Yaml.stringify(value, YamlStringifyOptions.make({ lineWidth: 20 }));
-          assert.isTrue(A.some(Str.split("\n")(out), (l) => l.length > 40));
+          assert.isTrue(
+            A.some(Str.split("\n")(out), (l) => l.length > 40),
+            "a multi-line string renders as a block literal (`|`); its long first line must survive uncut so the literal round-trips byte-for-byte"
+          );
           const parsed78 = yield* Yaml.parse(out);
           assert.deepStrictEqual(parsed78, value);
         })
@@ -1264,19 +1281,20 @@ describe("Yaml", () => {
           const negative = yield* Yaml.stringify(value, YamlStringifyOptions.make({ lineWidth: -10 }));
           assert.strictEqual(zero, absent);
           assert.strictEqual(negative, absent);
-          // No-wrap keeps the long scalar on a single physical line.
-          assert.strictEqual(absent, `text: ${long}\n`);
+          assert.strictEqual(absent, `text: ${long}\n`, "no-wrap keeps the long scalar on a single physical line");
         })
       );
 
       it.effect("mutation guard: folding actually fires (wrapped differs from no-wrap)", () =>
         Effect.gen(function* () {
-          // Pins that the fold is not a no-op: were foldRenderedScalar inert,
-          // wrapped and unwrapped would be equal and this test would fail.
           const value = { text: long };
           const wrapped = yield* Yaml.stringify(value, YamlStringifyOptions.make({ lineWidth: 30 }));
           const unwrapped = yield* Yaml.stringify(value, YamlStringifyOptions.make({ lineWidth: 0 }));
-          assert.notStrictEqual(wrapped, unwrapped);
+          assert.notStrictEqual(
+            wrapped,
+            unwrapped,
+            "pins that the fold is not a no-op: were foldRenderedScalar inert, wrapped and unwrapped would be equal"
+          );
           assert.isAbove(Str.split("\n")(wrapped).length, Str.split("\n")(unwrapped).length);
         })
       );
@@ -1480,14 +1498,15 @@ describe("Yaml", () => {
 
     it.effect("a \\U escape above U+10FFFF fails with a typed error, never a defect", () =>
       Effect.gen(function* () {
-        // The largest valid Unicode code point is U+10FFFF; \U00110000 is one
-        // past it. It must surface as a YamlParseError, not a RangeError defect
-        // from String.fromCodePoint escaping the typed error channel.
         const error = yield* Effect.matchEffect(Yaml.parse('"\\U00110000"'), {
           onFailure: Effect.succeed,
           onSuccess: Effect.die,
         });
-        assert.strictEqual(error._tag, "YamlParseError");
+        assert.strictEqual(
+          error._tag,
+          "YamlParseError",
+          "the largest valid Unicode code point is U+10FFFF and \\U00110000 is one past it: it must surface as a YamlParseError, not a RangeError defect from String.fromCodePoint escaping the typed error channel"
+        );
         const valid = yield* Yaml.parse('"\\U0001F600"');
         assert.strictEqual(valid, "😀");
       })
@@ -1515,11 +1534,6 @@ describe("Yaml", () => {
 
     it.effect("an alias-expansion 'billion laughs' bomb under the token budget fails typed, not OOM", () =>
       Effect.gen(function* () {
-        // A chain of anchored flow sequences, each referencing the previous
-        // ten times: a1=[x×10], a2=[*a1×10], … a8=[*a7×10], top: *a8.
-        // Only 71 alias TOKENS (7×10 + 1) — under the default maxAliasCount of
-        // 100 — but *a8 expands to ~10^8 materialized nodes. The composer's
-        // per-token guard cannot catch it; the value-extraction budget must.
         const width = 10;
         const depth = 8;
         const lines: string[] = [
@@ -1543,15 +1557,15 @@ describe("Yaml", () => {
         assertExitFailure(result, result.pipe(Exit.getCause, O.getOrThrow));
         const error = result.cause.pipe(Cause.findError, Result.getOrThrow);
         assert.instanceOf(error, YamlParseError);
-        assert.isTrue(A.some(error.diagnostics, (d) => d.code === "AliasCountExceeded"));
+        assert.isTrue(
+          A.some(error.diagnostics, (d) => d.code === "AliasCountExceeded"),
+          "a chain of anchored flow sequences, each referencing the previous ten times (a1=[x×10], a2=[*a1×10], … a8=[*a7×10], top: *a8), has only 71 alias TOKENS (7×10 + 1), under the default maxAliasCount of 100, but *a8 expands to ~10^8 materialized nodes; the composer's per-token guard cannot catch it, so the value-extraction budget must"
+        );
       })
     );
 
     it.effect("a benign document with many small distinct aliases still parses (budget does not false-positive)", () =>
       Effect.gen(function* () {
-        // 90 distinct anchors, each a small scalar, each referenced once — well
-        // under any expansion bound. Proves the budget counts real expanded
-        // output, not raw alias tokens, so legitimate alias-heavy documents pass.
         const anchors = Array.from({ length: 90 }, (_, i) => `a${i}: &n${i} ${i}`);
         const refs = Array.from({ length: 90 }, (_, i) => `r${i}: *n${i}`);
         const doc = A.join([...anchors, ...refs], "\n");
@@ -1559,7 +1573,10 @@ describe("Yaml", () => {
         const result = yield* Effect.exit(Yaml.parse(doc));
         assertExitSuccess(result, result.pipe(Exit.getSuccess, O.getOrThrow));
         const value = result.value;
-        assert.ok(P.isObject(value));
+        assert.ok(
+          P.isObject(value),
+          "90 distinct anchors, each a small scalar referenced once, sit well under any expansion bound: the budget counts real expanded output, not raw alias tokens, so legitimate alias-heavy documents pass"
+        );
         assert.strictEqual(value.r0, 0);
         assert.strictEqual(value.r89, 89);
       })
@@ -1682,9 +1699,6 @@ describe("Yaml", () => {
   });
 
   describe("stringify ∘ parse roundtrip (property)", () => {
-    // `-0` is a valid `Int` the native generator does emit, and neither JSON nor
-    // YAML can carry it (`JSON.stringify(-0) === "0"`), so the round-trip domain
-    // excludes it explicitly rather than letting `deepStrictEqual` fail on +0/-0.
     const Sample = S.Struct({
       name: S.String,
       count: S.Int.check(S.makeFilter((n) => !Object.is(n, -0))),
@@ -1696,7 +1710,11 @@ describe("Yaml", () => {
       Effect.gen(function* () {
         const text = yield* Yaml.stringify(value);
         const parsed = yield* Yaml.parse(text);
-        assert.deepStrictEqual(parsed, value);
+        assert.deepStrictEqual(
+          parsed,
+          value,
+          '`-0` is a valid `Int` the native generator does emit, and neither JSON nor YAML can carry it (`JSON.stringify(-0) === "0"`), so the round-trip domain excludes it explicitly rather than letting deepStrictEqual fail on +0/-0'
+        );
       })
     );
   });

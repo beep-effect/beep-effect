@@ -1,14 +1,9 @@
-import { identity } from "effect/Function";
-// YamlToken / YamlTokens (#129): the public positioned token stream — the
-// sync Result primitive, the derived Stream form, the field reconciliation
-// (internal value/column → public text/character), and the total-tokenizer
-// contract (error-kind tokens in the success array, never a failure).
-
 import { YamlToken, YamlTokens } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -30,11 +25,18 @@ describe("YamlTokens", () => {
       assert.isAbove(tokens.length, 0);
       for (const token of tokens) {
         assert.isTrue(S.is(YamlToken)(token));
-        // The reconciled spelling: text/character, never value/column.
         assert.isString(token.text);
         assert.isNumber(token.character);
-        assert.notProperty(token, "value");
-        assert.notProperty(token, "column");
+        assert.notProperty(
+          token,
+          "value",
+          "the reconciled spelling is text/character, never the internal value/column"
+        );
+        assert.notProperty(
+          token,
+          "column",
+          "the reconciled spelling is text/character, never the internal value/column"
+        );
         assert.strictEqual(Str.slice(token.offset, token.offset + token.length)("a: 1 # note\n"), token.text);
       }
     });
@@ -65,10 +67,8 @@ describe("YamlTokens", () => {
     });
 
     it("is TOTAL: malformed input succeeds with error-kind tokens, never a failure", () => {
-      // The reserved failure channel must not fire — linting has to run on
-      // documents that do not parse (parse-validity exists for exactly that).
-      const result = YamlTokens.tokenize("a: [unclosed\n\tb:\t:");
-      assertSuccess(result, Result.getOrThrow(result));
+      const tokensParseValidityMustLint = YamlTokens.tokenize("a: [unclosed\n\tb:\t:");
+      assertSuccess(tokensParseValidityMustLint, Result.getOrThrow(tokensParseValidityMustLint));
     });
 
     it("tokenizes the empty string to an empty array", () => {

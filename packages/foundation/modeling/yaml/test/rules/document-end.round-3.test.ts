@@ -60,12 +60,11 @@ describe("document-end round-3 regressions", () => {
       const after = YAML.parseAllDocuments(fixed);
       assert.strictEqual(before.length, 1);
       assert.strictEqual(after.length, 1);
-      // The independent parser rejects a lone CR here, but still recovers
-      // the explicit empty document. Pin that error as well as the count.
       const errorCodes = input === "...\r" ? ["UNEXPECTED_TOKEN"] : [];
       assert.deepStrictEqual(
         A.map(before, (document) => A.map(document.errors, (error) => error.code)),
-        [errorCodes]
+        [errorCodes],
+        "the independent parser rejects a lone CR here, but still recovers the explicit empty document"
       );
       assert.deepStrictEqual(
         A.map(after, (document) => A.map(document.errors, (error) => error.code)),
@@ -145,7 +144,10 @@ describe("document-end round-3 regressions", () => {
       { input: "...\n---\na: 1\n...\n", fixed: "...\n---\na: 1\n", values: [null, { a: 1 }] },
       { input: "null\n...\n", fixed: "null\n", values: [null] },
     ]) {
-      assert.isDefined(YamlLint.run(input, [rule], forbidden)[0]?.fix);
+      assert.isDefined(
+        YamlLint.run(input, [rule], forbidden)[0]?.fix,
+        "the rule composes only the final document: ctx.document is the first one"
+      );
       assert.strictEqual(Result.getOrThrow(YamlLint.fix(input, [rule], forbidden)), fixed);
       const before = YAML.parseAllDocuments(input);
       const after = YAML.parseAllDocuments(fixed);
