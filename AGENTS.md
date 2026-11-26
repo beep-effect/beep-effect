@@ -268,7 +268,7 @@ needed only for the escalation list below.
   the review window (push-first-publish D1–D11).
 - "Final" means the head passed `bun run beep yeet final-check`: the scoped
   local replay of every hosted gate the cheap tier skips (Lint Policy, Lint,
-  Check, Docgen, Repo Sanity, Fallow, Coverage, and test expectations
+  Check, Docgen, Doctest, Repo Sanity, Fallow, Coverage, and test expectations
   rewritten to match new output). Do not wait for hosted heavy CI, which
   doubles as the review window.
 - Drafts are opt-in (`--draft` on `publish` or `open`) for work that needs a

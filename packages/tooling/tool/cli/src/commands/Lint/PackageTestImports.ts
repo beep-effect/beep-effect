@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { failWithPrintedExit, failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -390,14 +390,14 @@ const runLintPackageTestImports = Effect.fn("PackageTestImports.runLintPackageTe
   const packagesRoot = path.join(repoRoot, "packages");
   const sources = yield* collectPackageSourceRoots(packagesRoot);
   if (includePaths !== undefined && includeRoot !== undefined) {
-    return yield* failWithReportedExit(
+    return yield* failWithPrintedExit(
       "check-package-test-imports: --include and --include-root are mutually exclusive."
     );
   }
   const scanRoot = includeRoot === undefined ? packagesRoot : normalizePath(path.resolve(repoRoot, includeRoot));
   const relativeScanRoot = normalizePath(path.relative(packagesRoot, scanRoot));
   if (relativeScanRoot === ".." || Str.startsWith("../")(relativeScanRoot)) {
-    return yield* failWithReportedExit("check-package-test-imports: --include-root must stay under packages/.");
+    return yield* failWithPrintedExit("check-package-test-imports: --include-root must stay under packages/.");
   }
   const files =
     includePaths === undefined

@@ -8,6 +8,7 @@
 
 import { $RepoCliKitId } from "@beep/identity/packages";
 import { P } from "@beep/utils";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
@@ -70,4 +71,33 @@ export const failWithReportedExit: {
   (args: IArguments) => P.isString(args[0]),
   (message: string, exitCode = 1): Effect.Effect<never, CliReportedExit> =>
     Effect.fail(CliReportedExit.make({ message, exitCode }))
+);
+
+/**
+ * Print a refusal to stderr, then fail with a reported CLI exit sentinel.
+ *
+ * **Details**
+ *
+ * {@link CliReportedExit} exits without rendering its message, so a refusal
+ * raised before any other output (a usage error such as two exclusive flags)
+ * goes through this helper; otherwise the process exits non-zero in silence.
+ *
+ * **Example** (Refuse an exclusive flag pair)
+ *
+ * ```ts
+ * import { failWithPrintedExit } from "@beep/repo-cli-kit/cli/ExitCodeError"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(failWithPrintedExit("pass --write or --check, not both.")))
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const failWithPrintedExit: {
+  (exitCode?: number): (message: string) => Effect.Effect<never, CliReportedExit>;
+  (message: string, exitCode?: number): Effect.Effect<never, CliReportedExit>;
+} = dual(
+  (args: IArguments) => P.isString(args[0]),
+  (message: string, exitCode = 1): Effect.Effect<never, CliReportedExit> =>
+    Console.error(message).pipe(Effect.andThen(failWithReportedExit(message, exitCode)))
 );
