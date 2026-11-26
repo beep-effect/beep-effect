@@ -1,13 +1,10 @@
-// Character-level text diffing shared by the formatter and modifier: turns
-// (original, modified) into minimal raw edit records. The facade
-// materializes public `YamlEdit` instances from these.
-
 import { $YamlId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $YamlId.create("internal/diff");
+const lineSeparator = "\n";
 
 /**
  * A raw text-edit record: replace `[offset, offset + length)` with `content`.
@@ -74,23 +71,21 @@ export function computeEdits(original: string, ...[modified]: [modified: string]
 
   const minLen = Math.min(original.length, modified.length);
   const prefixLen = commonPrefixLength(original, modified, minLen);
-  // Common suffix, not overlapping with the prefix.
-  const suffixLen = commonSuffixLength(original, modified, minLen - prefixLen);
+  const lengthPastPrefix = minLen - prefixLen;
+  const suffixLen = commonSuffixLength(original, modified, lengthPastPrefix);
 
   const origStart = prefixLen;
   const origEnd = original.length - suffixLen;
   const modStart = prefixLen;
   const modEnd = modified.length - suffixLen;
 
-  // Try to split into line-level edits for better granularity
-  const origLines = Str.split("\n")(Str.substring(origStart, origEnd)(original));
-  const modLines = Str.split("\n")(Str.substring(modStart, modEnd)(modified));
+  const origLines = Str.split(lineSeparator)(Str.substring(origStart, origEnd)(original));
+  const modLines = Str.split(lineSeparator)(Str.substring(modStart, modEnd)(modified));
 
   if (origLines.length === modLines.length && origLines.length > 1) {
-    return lineEdits(origLines, modLines, origStart);
+    return changedLineEdits(origLines, modLines, origStart);
   }
 
-  // Fallback: single edit covering the entire changed region
   return [
     RawEdit.make({
       offset: origStart,
@@ -100,14 +95,12 @@ export function computeEdits(original: string, ...[modified]: [modified: string]
   ];
 }
 
-/** Length of the common prefix, up to `limit`. */
 const commonPrefixLength = (original: string, modified: string, limit: number): number => {
   let prefixLen = 0;
   while (prefixLen < limit && original[prefixLen] === modified[prefixLen]) prefixLen++;
   return prefixLen;
 };
 
-/** Length of the common suffix, up to `limit`. */
 const commonSuffixLength = (original: string, modified: string, limit: number): number => {
   let suffixLen = 0;
   while (suffixLen < limit && original[original.length - 1 - suffixLen] === modified[modified.length - 1 - suffixLen]) {
@@ -116,8 +109,7 @@ const commonSuffixLength = (original: string, modified: string, limit: number): 
   return suffixLen;
 };
 
-/** Same number of lines — emit per-line edits for changed lines only. */
-const lineEdits = (
+const changedLineEdits = (
   origLines: ReadonlyArray<string>,
   modLines: ReadonlyArray<string>,
   origStart: number
@@ -134,11 +126,7 @@ const lineEdits = (
         })
       );
     }
-    // +1 for the \n delimiter. For CRLF input, split("\n") leaves \r in each
-    // element so origLine.length already includes it; the +1 accounts for
-    // the \n only. This is correct because computeEdits operates on text
-    // produced by the stringifier which always uses LF endings.
-    offset += origLine.length + 1;
+    offset += origLine.length + lineSeparator.length;
   }
   return edits;
 };

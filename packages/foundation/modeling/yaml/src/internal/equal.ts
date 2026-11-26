@@ -1,6 +1,3 @@
-// Deep structural equality for plain JavaScript values — the primitive
-// behind the facade's semantic `equals`/`equalsValue` statics.
-
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -40,7 +37,6 @@ export function deepEqual(a: unknown, ...[b]: [b: unknown]): boolean {
   return P.isObject(a) && P.isObject(b) && recordsEqual(a, b);
 }
 
-// NaN !== NaN, but two parsed `.nan` values should compare as equal.
 const bothNaN = (a: unknown, b: unknown): boolean =>
   P.isNumber(a) && P.isNumber(b) && Number.isNaN(a) && Number.isNaN(b);
 
