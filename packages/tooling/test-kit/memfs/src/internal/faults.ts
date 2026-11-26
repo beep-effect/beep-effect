@@ -1,7 +1,3 @@
-// KIT EXTENSION (fault injection). The delegate-by-default wrapper behind
-// `makeFaulty`, `layerFaulty` and `options.faults`: handlers run first, and a
-// handler answering `undefined` delegates to the wrapped filesystem.
-
 import { $MemfsId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -104,6 +100,14 @@ export const assertKnownFaultKeys: {
  * at call time. Derived filesystem members are rebuilt from intercepted core
  * methods, so faults propagate to the operations that depend on them.
  *
+ * **Gotchas**
+ *
+ * The derived members (`exists`, `readFileString`, `writeFileString`,
+ * `stream`, `sink`) are dropped from the base before `FileSystem.make`
+ * re-derives them, so a fault on `readFile` or `open` reaches them as an
+ * OS-level failure would. `glob` is the exception: `make` would derive it, but
+ * the base keeps its own walker, so the base `glob` is intercepted instead.
+ *
  * **Example** (Construct a filesystem with a delegated read)
  *
  * ```ts
@@ -134,8 +138,6 @@ export const wrapFaulty: {
   ): FileSystem.FileSystem => {
     const faults = { ...(P.isFunction(registration) ? registration(base) : registration) };
     assertKnownFaultKeys(faults, base, "MemoryFileSystem faults");
-    // Each wrapper keeps its method's arguments, success and environment types.
-    // Transient state is armed once here, then consulted on every execution.
     const intercept: {
       <Args extends ReadonlyArray<unknown>, Value, Requirements>(
         target: (...args: Args) => Effect.Effect<Value, PlatformError.PlatformError, Requirements>,
@@ -172,7 +174,6 @@ export const wrapFaulty: {
           });
       }
     );
-    // Streams and sinks carry their own laziness; consult these handlers at call time.
     const interceptLazy: {
       <Args extends ReadonlyArray<unknown>, Value>(
         target: (...args: Args) => Value,
@@ -188,14 +189,6 @@ export const wrapFaulty: {
         fault: ((...args: Args) => Value | undefined) | undefined
       ): ((...args: Args) => Value) => (fault === undefined ? target : (...args) => fault(...args) ?? target(...args))
     );
-    // Rebuilding through FileSystem.make re-derives `exists`, `readFileString`,
-    // `writeFileString`, `stream` and `sink` from the intercepted core methods,
-    // so a fault registered on e.g. `readFile` or `open` propagates coherently
-    // into the members derived from it — exactly as an OS-level failure would.
-    // The derived members are destructured out of the spread so the contract
-    // is explicit rather than relying on `make` to overwrite them. `make` also
-    // derives `glob`, but the base keeps its own walker, so the base `glob`
-    // is restored (intercepted) after construction.
     const {
       exists: _exists,
       glob: _glob,
