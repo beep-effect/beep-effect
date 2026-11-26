@@ -31,27 +31,19 @@ type AnyShape = replicad.AnyShape;
 type Box3 = readonly [min: V3, max: V3];
 type Box2 = readonly [minX: number, minY: number, maxX: number, maxY: number];
 
-// Model units: a point this close to the unclaimed surface lies on it.
-const TOLERANCE = 1e-6;
+const ON_SURFACE_DISTANCE = 1e-6;
 
-// Share of a face's area below which the part of it left outside the solid primitives is a sliver of the boolean.
-const AREA_TOLERANCE = 1e-6;
+const SLIVER_AREA_SHARE = 1e-6;
 
-// Model units between samples along a stroke or a projected piece when looking for where its style changes.
-const SAMPLE_STEP = 0.1;
+const STYLE_SAMPLE_SPACING = 0.1;
 const MIN_SAMPLES = 8;
 const MAX_SAMPLES = 400;
 
-// Halvings of the step between two samples of different style.
-const BISECTIONS = 30;
+const STYLE_CHANGE_BISECTIONS = 30;
 
-// Chords per curve when tracing its projection, and golden-section steps refining the nearest point on it.
-const TRACE_STEPS = 64;
-const GOLDEN_STEPS = 60;
+const CHORDS_PER_TRACED_CURVE = 64;
+const NEAREST_POINT_GOLDEN_STEPS = 60;
 
-// View-plane distance (model units) within which a hidden-line piece lies on an edge's projection: the pass returns
-// lines and conics exactly, but approximates a curve seen in perspective by a spline that strays from the true
-// projection by up to about a hundredth of its size.
 const EXACT_MATCH = 1e-4;
 const APPROXIMATE_MATCH_SHARE = 0.01;
 const APPROXIMATE_MATCH_FLOOR = 1e-3;
@@ -116,12 +108,14 @@ const boundsOf = (shape: AnyShape): Box3 => {
 };
 
 const boxesMeet = ([aMin, aMax]: Box3, [bMin, bMax]: Box3): boolean =>
-  A.every([0, 1, 2] as const, (i) => aMin[i] <= bMax[i] + TOLERANCE && bMin[i] <= aMax[i] + TOLERANCE);
+  A.every(
+    [0, 1, 2] as const,
+    (i) => aMin[i] <= bMax[i] + ON_SURFACE_DISTANCE && bMin[i] <= aMax[i] + ON_SURFACE_DISTANCE
+  );
 
 const inBox = (p: V3, [min, max]: Box3): boolean =>
-  A.every([0, 1, 2] as const, (i) => p[i] >= min[i] - TOLERANCE && p[i] <= max[i] + TOLERANCE);
+  A.every([0, 1, 2] as const, (i) => p[i] >= min[i] - ON_SURFACE_DISTANCE && p[i] <= max[i] + ON_SURFACE_DISTANCE);
 
-// The part of a face outside every given solid: the face cut by each in turn.
 const outsideOf = (oc: OpenCascadeInstance, face: replicad.Face, solids: ReadonlyArray<Shape3D>) =>
   pipe(
     A.reduce(solids, face.wrapped as TopoDS_Shape, (rest, solid) => {
@@ -176,7 +170,8 @@ export const unclaimedOf = (options: {
     const outside = outsideOf(oc, face, near);
     const area = replicad.measureArea(face);
     const left = areaOf(outside);
-    const kind = left <= area * AREA_TOLERANCE ? "claimed" : left >= area * (1 - AREA_TOLERANCE) ? "broken" : "mixed";
+    const kind =
+      left <= area * SLIVER_AREA_SHARE ? "claimed" : left >= area * (1 - SLIVER_AREA_SHARE) ? "broken" : "mixed";
     return {
       face,
       kind,
@@ -214,7 +209,6 @@ export const claimedPartOf = (options: {
   const oc = replicad.getOC();
   const faces = options.shape.faces;
   return {
-    // a seam (where a closed surface meets itself) and a degenerate edge are never drawn
     edges: pipe(
       faces,
       A.flatMap((face) =>
@@ -234,6 +228,13 @@ export const claimedPartOf = (options: {
  * A run of a stroke or projected piece, as fractions of its parameter range,
  * and whether it is claimed.
  *
+ * **Gotchas**
+ *
+ * Runs are found by sampling the middles of equal steps and bisecting between
+ * neighbouring samples that differ. The ends are never sampled: each takes
+ * its nearest sample's value, since an end is often a vertex shared with an
+ * edge of the other style.
+ *
  * @internal
  */
 export type Run = {
@@ -242,15 +243,12 @@ export type Run = {
   readonly claimed: boolean;
 };
 
-// The runs of [0, 1] on which `claimedAt` holds or not: sampled at the middles of `count` equal steps, refined by
-// bisection between neighbouring samples that differ, the ends taking their nearest sample's value (an end is often a
-// vertex shared with an edge of the other style).
 const runsOf = (claimedAt: (t: number) => boolean, count: number): A.NonEmptyReadonlyArray<Run> => {
-  const at = (j: number) => (j + 0.5) / count;
-  const values = A.makeBy(count, (j) => claimedAt(at(j)));
+  const stepMiddle = (j: number) => (j + 0.5) / count;
+  const values = A.makeBy(count, (j) => claimedAt(stepMiddle(j)));
   const bisect = (low: number, high: number, lowValue: boolean): number =>
     pipe(
-      A.makeBy(BISECTIONS, (i) => i),
+      A.makeBy(STYLE_CHANGE_BISECTIONS, (i) => i),
       A.reduce([low, high] as const, ([a, b]) => {
         const middle = (a + b) / 2;
         return claimedAt(middle) === lowValue ? ([middle, b] as const) : ([a, middle] as const);
@@ -266,7 +264,7 @@ const runsOf = (claimedAt: (t: number) => boolean, count: number): A.NonEmptyRea
       if (here === next) {
         return runs;
       }
-      const cut = bisect(at(j), at(j + 1), here);
+      const cut = bisect(stepMiddle(j), stepMiddle(j + 1), here);
       const last = A.lastNonEmpty(runs);
       return A.append(A.appendAll(A.dropRight(runs, 1), [{ ...last, to: cut }]), { from: cut, to: 1, claimed: next });
     })
@@ -274,7 +272,7 @@ const runsOf = (claimedAt: (t: number) => boolean, count: number): A.NonEmptyRea
 };
 
 const samplesFor = (length: number): number =>
-  Math.min(MAX_SAMPLES, Math.max(MIN_SAMPLES, Math.ceil(length / SAMPLE_STEP)));
+  Math.min(MAX_SAMPLES, Math.max(MIN_SAMPLES, Math.ceil(length / STYLE_SAMPLE_SPACING)));
 
 /**
  * Distance queries from points to shapes, through one reusable extrema tool.
@@ -283,7 +281,6 @@ const samplesFor = (length: number): number =>
  */
 export interface Surveyor {
   readonly dispose: () => void;
-  // whether a point lies on any of the pieces
   readonly onAny: (pieces: ReadonlyArray<Piece>) => (point: V3) => boolean;
   readonly onShape: (shape: AnyShape) => (point: V3) => boolean;
 }
@@ -298,7 +295,7 @@ export const makeSurveyor = (): Surveyor => {
   const near = (shape: AnyShape, point: V3): boolean => {
     const vertex = replicad.makeVertex([...point]);
     try {
-      return tool.distanceBetween(vertex, shape) <= TOLERANCE;
+      return tool.distanceBetween(vertex, shape) <= ON_SURFACE_DISTANCE;
     } finally {
       vertex.delete();
     }
@@ -320,6 +317,11 @@ const lerp = (a: V3, b: V3, t: number): V3 => [
 /**
  * The claimed stretches of a straight stroke lying on a mixed face: the
  * stroke itself when all of it is claimed, else one line per claimed run.
+ *
+ * **Gotchas**
+ *
+ * OCCT refuses an edge between coincident points, so a claimed run shorter
+ * than `shortest` (model units) is not made.
  *
  * @internal
  */
@@ -371,12 +373,11 @@ export type Sight =
   | { readonly kind: "central"; readonly eye: V3 };
 
 type Curve = {
-  readonly at: (t: number) => V3;
+  readonly at: (fractionOfParameterRange: number) => V3;
   readonly line: boolean;
   readonly dispose: () => void;
 };
 
-// An edge's curve over fractions of its parameter range, as `pointAt` reads it, through one adaptor.
 const curveOf = (oc: OpenCascadeInstance, edge: replicad.Edge): Curve => {
   const adaptor = new oc.BRepAdaptor_Curve(edge.wrapped);
   const first = adaptor.FirstParameter();
@@ -395,12 +396,10 @@ const curveOf = (oc: OpenCascadeInstance, edge: replicad.Edge): Curve => {
   };
 };
 
-// A curve's projection: where each fraction lands, its polyline, how far the true projection strays from the
-// polyline, and its bounds on the view plane.
 type Trace = {
-  readonly at: (t: number) => Viewed;
-  readonly points: A.NonEmptyReadonlyArray<Viewed>;
-  readonly slack: number;
+  readonly at: (fraction: number) => Viewed;
+  readonly polyline: A.NonEmptyReadonlyArray<Viewed>;
+  readonly strayFromPolyline: number;
   readonly box: Box2;
 };
 
@@ -412,14 +411,14 @@ const chordDistance = (x: number, y: number, a: Viewed, b: Viewed): number => {
   return Math.hypot(a.x + t * dx - x, a.y + t * dy - y);
 };
 
-const traceOf = (at: (t: number) => Viewed, line: boolean): Trace => {
-  const steps = line ? 1 : TRACE_STEPS;
+const STRAY_BOUND_PER_MIDDLE_STRAY = 2;
+
+const traceOf = (at: (t: number) => Viewed, projectsStraight: boolean): Trace => {
+  const steps = projectsStraight ? 1 : CHORDS_PER_TRACED_CURVE;
   const points = A.makeBy(steps + 1, (i) => at(i / steps));
-  // a straight edge projects straight under either camera; a curve strays from its chords by at most twice what it
-  // does at their middles
-  const slack = line
+  const strayFromPolyline = projectsStraight
     ? 0
-    : 2 *
+    : STRAY_BOUND_PER_MIDDLE_STRAY *
       A.reduce(
         A.makeBy(steps, (i) => i),
         0,
@@ -432,13 +431,12 @@ const traceOf = (at: (t: number) => Viewed, line: boolean): Trace => {
       );
   return {
     at,
-    points,
-    slack,
+    polyline: points,
+    strayFromPolyline,
     box: box2Of(points),
   };
 };
 
-// The bounding box of points on the view plane.
 const box2Of = (points: ReadonlyArray<{ readonly x: number; readonly y: number }>): Box2 =>
   A.reduce(
     points,
@@ -454,25 +452,23 @@ const boxes2Meet = ([a0, b0, a1, b1]: Box2, [c0, d0, c1, d1]: Box2, slack: numbe
 
 const GOLDEN = (Math.sqrt(5) - 1) / 2;
 
-// The fraction of a traced curve whose projection is nearest a view-plane point, when within `tolerance` of it: the
-// nearest chord of the polyline, refined by golden-section search over that chord and half its neighbours.
 const nearestOn = (trace: Trace, x: number, y: number, tolerance: number): O.Option<number> => {
-  if (!inBox2(x, y, trace.box, tolerance + trace.slack)) {
+  if (!inBox2(x, y, trace.box, tolerance + trace.strayFromPolyline)) {
     return O.none();
   }
-  const steps = A.length(trace.points) - 1;
+  const steps = A.length(trace.polyline) - 1;
   const nearest: readonly [chord: number, gap: number] = [0, Number.POSITIVE_INFINITY];
   const [chord, gap] = A.reduce(
     A.makeBy(steps, (i) => i),
     nearest,
     (best, i) => {
-      const a = trace.points[i];
-      const b = trace.points[i + 1];
+      const a = trace.polyline[i];
+      const b = trace.polyline[i + 1];
       const d = a === undefined || b === undefined ? Number.POSITIVE_INFINITY : chordDistance(x, y, a, b);
       return d < best[1] ? ([i, d] as const) : best;
     }
   );
-  if (gap > tolerance + trace.slack) {
+  if (gap > tolerance + trace.strayFromPolyline) {
     return O.none();
   }
   const off = (t: number) => {
@@ -480,7 +476,7 @@ const nearestOn = (trace: Trace, x: number, y: number, tolerance: number): O.Opt
     return Math.hypot(p.x - x, p.y - y);
   };
   const [low, high] = A.reduce(
-    A.makeBy(GOLDEN_STEPS, (i) => i),
+    A.makeBy(NEAREST_POINT_GOLDEN_STEPS, (i) => i),
     [Math.max(0, (chord - 0.5) / steps), Math.min(1, (chord + 1.5) / steps)] as const,
     ([a, b]) => {
       const c = b - GOLDEN * (b - a);
@@ -492,20 +488,16 @@ const nearestOn = (trace: Trace, x: number, y: number, tolerance: number): O.Opt
   return off(t) <= tolerance ? O.some(t) : O.none();
 };
 
-// One curve a hidden-line piece may have come from: an edge of a solid part, or the silhouette of one of its
-// cylindrical faces (which must hold the point found on it), with the part's unclaimed pieces.
 type Candidate = {
   readonly at: (t: number) => V3;
   readonly trace: Trace;
   readonly pieces: ReadonlyArray<Piece>;
-  readonly face: O.Option<replicad.Face>;
+  readonly silhouetteFace: O.Option<replicad.Face>;
 };
 
 const dot = (a: V3, b: V3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const minus = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 
-// The silhouette rulings of a cylindrical face for a sight: where the surface normal is square to the line of sight,
-// over the face's axial range. A face seen along its axis has none.
 const silhouettesOf = (
   oc: OpenCascadeInstance,
   face: replicad.Face,
@@ -529,9 +521,10 @@ const silhouettesOf = (
     ];
     const angles: ReadonlyArray<number> =
       sight.kind === "parallel"
-        ? pipe([dot(xAxis, sight.direction), dot(yAxis, sight.direction)] as const, ([a, b]) =>
-            Math.hypot(a, b) < 1e-9 ? A.empty<number>() : [Math.atan2(-a, b), Math.atan2(-a, b) + Math.PI]
-          )
+        ? pipe([dot(xAxis, sight.direction), dot(yAxis, sight.direction)] as const, ([a, b]) => {
+            const seenAlongAxis = Math.hypot(a, b) < 1e-9;
+            return seenAlongAxis ? A.empty<number>() : [Math.atan2(-a, b), Math.atan2(-a, b) + Math.PI];
+          })
         : pipe(minus(origin, sight.eye), (q) => {
             const a = dot(xAxis, q);
             const b = dot(yAxis, q);
@@ -546,7 +539,6 @@ const silhouettesOf = (
     const period = 2 * Math.PI;
     return pipe(
       angles,
-      // into the face's angular range, when it reaches there
       A.map((u) => u0 + ((((u - u0) % period) + period) % period)),
       A.filter((u) => u <= u1 + 1e-9),
       A.map((u) => {
@@ -582,6 +574,15 @@ export interface PieceStyles {
  * piece also passes) lies there. Points away from every unclaimed piece's
  * projected bounds are claimed without a search.
  *
+ * **Gotchas**
+ *
+ * OCCT's hidden-line pass returns lines and conics exactly, but approximates
+ * a curve seen in perspective by a spline that strays from the true
+ * projection by up to about a hundredth of its size. A spline piece is
+ * therefore matched to an edge's projection within
+ * `APPROXIMATE_MATCH_SHARE` of its size (at least `APPROXIMATE_MATCH_FLOOR`)
+ * and every other piece within `EXACT_MATCH` model units.
+ *
  * @internal
  */
 export const pieceStyles = (options: {
@@ -598,8 +599,7 @@ export const pieceStyles = (options: {
     curves.push(curve);
     return curve;
   };
-  // the view-plane bounds of every unclaimed piece: nothing outside them can be unclaimed
-  const regions: ReadonlyArray<Box2> = pipe(
+  const unclaimedRegions: ReadonlyArray<Box2> = pipe(
     styles.parts,
     A.flatMap((part) => part.pieces),
     A.map(({ bounds: [min, max] }) =>
@@ -617,7 +617,7 @@ export const pieceStyles = (options: {
       )
     )
   );
-  const candidates: ReadonlyArray<Candidate> = pipe(
+  const candidatesNearUnclaimed: ReadonlyArray<Candidate> = pipe(
     styles.parts,
     A.flatMap((part) => [
       ...A.map(part.edges, (edge) => {
@@ -626,19 +626,18 @@ export const pieceStyles = (options: {
           at: curve.at,
           trace: traceOf((t) => view(curve.at(t)), curve.line),
           pieces: part.pieces,
-          face: O.none<replicad.Face>(),
+          silhouetteFace: O.none<replicad.Face>(),
         };
       }),
       ...A.flatMap(part.cylinders, (face) =>
         A.map(silhouettesOf(oc, face, options.sight), ([from, to]) => {
           const at = (t: number) => lerp(from, to, t);
-          return { at, trace: traceOf((t) => view(at(t)), true), pieces: part.pieces, face: O.some(face) };
+          return { at, trace: traceOf((t) => view(at(t)), true), pieces: part.pieces, silhouetteFace: O.some(face) };
         })
       ),
     ]),
-    // a curve whose projection keeps clear of every unclaimed region never decides a point that could be unclaimed
     A.filter((candidate) =>
-      A.some(regions, (region) => boxes2Meet(candidate.trace.box, region, APPROXIMATE_MATCH_FLOOR))
+      A.some(unclaimedRegions, (region) => boxes2Meet(candidate.trace.box, region, APPROXIMATE_MATCH_FLOOR))
     )
   );
   const flat =
@@ -647,7 +646,6 @@ export const pieceStyles = (options: {
       const [x, y] = curve.at(t);
       return { x, y, w: 0 };
     };
-  // the pass returns straight lines and conics exactly, splines (a curve seen in perspective) only approximately
   const toleranceOf = (piece: replicad.Edge, trace: Trace): number => {
     const type = piece.geomType;
     if (type === "LINE" || type === "CIRCLE" || type === "ELLIPSE") {
@@ -669,23 +667,22 @@ export const pieceStyles = (options: {
     });
   const visibleAt = (x: number, y: number, tolerance: number): boolean =>
     A.some(visiblePieces(), (piece) => O.isSome(nearestOn(piece.trace, x, y, Math.max(tolerance, piece.tolerance))));
-  // a point found on a curve projecting where a piece passes, with its nearness to the eye and its part's pieces
   type Match = { readonly point: V3; readonly w: number; readonly pieces: ReadonlyArray<Piece> };
   const byNearness = Order.flip(Order.mapInput(Order.Number, (match: Match) => match.w));
   const claimedAt =
     (layer: "visible" | "hidden", tolerance: number) =>
     (x: number, y: number): boolean => {
-      if (!A.some(regions, (region) => inBox2(x, y, region, tolerance))) {
+      if (!A.some(unclaimedRegions, (region) => inBox2(x, y, region, tolerance))) {
         return true;
       }
       const matches = pipe(
-        candidates,
+        candidatesNearUnclaimed,
         A.map((candidate) =>
           pipe(
             nearestOn(candidate.trace, x, y, tolerance),
             O.map(candidate.at),
             O.filter((point) =>
-              O.match(candidate.face, { onNone: () => true, onSome: (face) => surveyor.onShape(face)(point) })
+              O.match(candidate.silhouetteFace, { onNone: () => true, onSome: (face) => surveyor.onShape(face)(point) })
             ),
             O.map((point): Match => ({ point, w: view(point).w, pieces: candidate.pieces }))
           )
@@ -708,15 +705,15 @@ export const pieceStyles = (options: {
       const curve = keep(curveOf(oc, piece));
       const trace = traceOf(flat(curve), curve.line);
       const tolerance = toleranceOf(piece, trace);
-      if (!A.some(regions, (region) => boxes2Meet(trace.box, region, tolerance))) {
+      if (!A.some(unclaimedRegions, (region) => boxes2Meet(trace.box, region, tolerance))) {
         return A.of({ from: 0, to: 1, claimed: true });
       }
       const length = A.reduce(
-        A.makeBy(A.length(trace.points) - 1, (i) => i),
+        A.makeBy(A.length(trace.polyline) - 1, (i) => i),
         0,
         (total, i) => {
-          const a = trace.points[i];
-          const b = trace.points[i + 1];
+          const a = trace.polyline[i];
+          const b = trace.polyline[i + 1];
           return a === undefined || b === undefined ? total : total + Math.hypot(b.x - a.x, b.y - a.y);
         }
       );
