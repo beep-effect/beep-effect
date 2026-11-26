@@ -1,6 +1,6 @@
-import { EntityNode, LemmaNode, POSNode } from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend";
 import * as ATG from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
+import { EntityNode, LemmaNode, POSNode } from "@beep/nlp-processing/Graph/Schema";
 import { it } from "@beep/test-runner";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { Position } from "@beep/text/OffsetUnit";

@@ -31,7 +31,6 @@
     "@beep/m365": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/n3": "workspace:^",
-    "@beep/nlp": "workspace:^",
     "@beep/nlp-processing": "workspace:^",
     "@beep/ontology": "workspace:^",
     "@beep/oxigraph": "workspace:^",

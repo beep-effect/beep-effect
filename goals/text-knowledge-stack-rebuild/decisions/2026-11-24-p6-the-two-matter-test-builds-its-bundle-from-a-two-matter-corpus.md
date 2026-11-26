@@ -1,0 +1,8 @@
+---
+title: "P6: the two-matter test builds real bundles from a two-matter corpus and composes each path's production layer per principal"
+date: 2026-11-24
+lane: "p6"
+reversal: "Replace the built bundles with hand-written PGlite and DuckDB rows and the per-path layers with test doubles"
+---
+
+MatterWall.two-matter.test.ts follows section 8.3 with these choices. The Practice KG paths (3 and 4) read bundles built by buildPracticeKgBundle from a two-matter fixture corpus in a scoped temporary directory on the node file system, not MemoryFileSystem: PGlite and DuckDB need real files, and building the bundle exercises the (digest, docket) keys end to end. The corpus files identical bytes under 11111.20001US01 and 22222.20001US02 (two clients sharing the bare family 20001), one document only in each matter, and one mail archive with a folder per matter; a second bundle without matter B gives the with-and-without-B score comparison. The candidate-claim tables are seeded into the built graph store, so kg_candidate_claims returns the loaded result. Path 2 reuses the citation callback observation fixture, whose source scope is bound to matter B, because anchor resolution needs mentions captured against a verified source. Path 7 builds LawPracticeServerLive per principal with a stub language model and seeds its claim store. Paths 1 and 5 compose AuthorizedSourceTextResolver over identical office-action bytes; path 6 is the NoticeMessage structural case. Each walled case asserts the denial and the granted control. A mutation that replaces the walled family filter with TRUE fails paths 3 and 4.

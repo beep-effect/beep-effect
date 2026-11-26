@@ -73,6 +73,7 @@
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
+    "@beep/ontology": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",

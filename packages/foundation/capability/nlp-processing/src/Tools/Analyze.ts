@@ -57,4 +57,8 @@ export const Analyze = Tool.make("Analyze", {
   failureMode: "return",
   parameters: AnalyzeParameters,
   success: S.toEncoded(AiAnalysis),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

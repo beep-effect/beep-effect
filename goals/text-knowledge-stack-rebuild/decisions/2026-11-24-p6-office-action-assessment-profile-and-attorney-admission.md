@@ -1,0 +1,8 @@
+---
+title: "P6: the office-action assessment profile has support, alignment and reference; admission is a separate attorney action"
+date: 2026-11-24
+lane: "p6"
+reversal: "Drop LawClaim.policy.ts and the LawAdmission service, and let the review project its result through the legacy gate as before"
+---
+
+SPEC assigns P6 the assessment profiles and attorney admission of the flow (SPEC.md:418-420) without naming coordinates or the token source. LawAuthorityType is LiteralKit office-action and profiles are keyed by it, so a new authority type adds a literal and a profile. makeAssessments (epistemics/src/Assessments.ts:53) gets three coordinates: support (verified, unverified), alignment (exact, lesser, fuzzy, unaligned, the handoff's alignment vocabulary) and reference (identified, unidentified). OfficeActionDistinctionGate passes only when all three are assessed with support verified, reference identified and alignment not unaligned; Unassessed never passes (L4-6). Admission is not a step of review, because a review may run without a person and write tools never admit: LawAdmission.open records the binding from the authenticated principal, action and revision, and LawAdmission.admit checks the gate (GateNotPassed) and then calls makeAdmissionArrows(...).admit (Admission.ts:590) through LawAdmissionPorts: authenticate is LawPrincipal plus MatterAuthority (claim-admission), generation and resolveBinding read LawClaimStore, resolveCurrent and resolveAt use the authorized resolver, verifyToken is an AttorneyAttestation port with only a test layer in P6. No ReviewHub verdict projects to an admission. Answers F9.

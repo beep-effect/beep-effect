@@ -20,6 +20,7 @@
     "check": "beep-cli gate run check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run beep:docgen",
+    "doctest": "bun run beep:doctest",
     "lint": "bun run beep:lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
     "lint:fix": "bun run beep:lint:fix",
@@ -31,6 +32,7 @@
     "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
     "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
+    "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -69,6 +71,7 @@
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
+    "@beep/test-runner": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:",

@@ -2,9 +2,8 @@
  * Office-action review port: the typed contract for the loop orchestrator that
  * reviews a single office action end to end. Given the office action's fixture
  * identity and its source artifact, the review extracts text and spans, maps
- * them into law-practice entities, gates the resulting claims through the
- * epistemic admission lifecycle, and folds the authority into a deterministic
- * projection.
+ * them into law-practice entities, proposes the distinction claim in its
+ * capture scope and assesses it against the office-action gate.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -14,13 +13,16 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { ActivityRecord } from "@beep/jsonc/ActivityRecord";
 import { LangExtractError } from "@beep/langextract/Extraction";
+import { LawProposedClaimRecord, OfficeActionAssessments } from "@beep/law-practice-domain/values/LawClaim";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { IrToLawExtractionError } from "../IrToLaw/index.ts";
+import { ClaimProposalRefused } from "../ClaimProposal/index.ts";
+import { LawClaimStoreError } from "../ClaimStore/index.ts";
+import { IrToLawExtractionError, LawEntities } from "../IrToLaw/index.ts";
 import { PosInt } from "../internal/PosInt.ts";
-import type { ClaimProjectionView } from "@beep/epistemic-domain/values";
 
 const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.ports");
 
@@ -126,6 +128,36 @@ export class OfficeActionCandidateExtraction extends S.Opaque<
 ) {}
 
 /**
+ * What one office-action review produced: the law entities, the proposed
+ * claim record appended to its scope's partition, the office-action
+ * assessments and the activity log of the Extract, MapToLaw and ProposeClaim
+ * runs.
+ *
+ * **Example** (Name a review result field)
+ *
+ * ```ts
+ * import { OfficeActionReviewResult } from "@beep/law-practice-use-cases/OfficeActionReview"
+ *
+ * console.log(Object.keys(OfficeActionReviewResult.fields)) // ["law", "proposed", "assessments", "activities"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OfficeActionReviewResult extends S.Opaque<OfficeActionReviewResult, { readonly brand: unique symbol }>()(
+  S.Struct({
+    law: LawEntities,
+    proposed: LawProposedClaimRecord,
+    assessments: OfficeActionAssessments,
+    activities: S.HashSet(ActivityRecord),
+  }).pipe(
+    $I.annoteSchema("OfficeActionReviewResult", {
+      description: "Law entities, proposed claim record, assessments and activity log of one office-action review.",
+    })
+  )
+) {}
+
+/**
  * Failure raised by the office-action review loop while extracting source text,
  * extracting grounded law labels, or mapping those labels into law entities.
  *
@@ -152,6 +184,8 @@ export const OfficeActionReviewError = S.Union([
   FileProcessingOperationError,
   LangExtractError,
   IrToLawExtractionError,
+  ClaimProposalRefused,
+  LawClaimStoreError,
 ]).pipe(
   $I.annoteSchema("OfficeActionReviewError", {
     description: "Failure union for the law-practice office-action review loop.",
@@ -181,13 +215,14 @@ export type OfficeActionReviewError = typeof OfficeActionReviewError.Type;
 /**
  * Service shape for the office-action review loop: take an
  * {@link OfficeActionReviewInput} and return the epistemic
- * {@link ClaimProjectionView} folded from the reviewed claims.
+ * {@link OfficeActionReviewResult}: the proposed claim, its assessments and
+ * the activity log.
  *
  * **Details**
  *
  * The server Layer satisfying this contract composes `@beep/file-processing`,
- * `@beep/langextract`, the {@link IrToLaw} mapper, and the epistemic `ClaimGate`
- * / `ClaimLifecycle` services. The shape stays driver-neutral so tests can
+ * `@beep/langextract`, the {@link IrToLaw} mapper, the matter wall and the
+ * law claim store. The shape stays driver-neutral so tests can
  * inject deterministic fake extraction output without live provider credentials.
  *
  * **Example** (Stub failing review shape)
@@ -209,8 +244,8 @@ export type OfficeActionReviewError = typeof OfficeActionReviewError.Type;
  * ```
  *
  * @effects The `review` method runs the configured file-processing,
- * LangExtract, IR-to-law, claim-gate, and lifecycle services before returning a
- * projection or a typed workflow error.
+ * LangExtract and IR-to-law services, appends the proposed claim to its
+ * scope partition and returns the result or a typed workflow error.
  * @category services
  * @since 0.0.0
  */
@@ -218,7 +253,7 @@ export interface OfficeActionReviewShape {
   readonly extractCandidate: (
     input: OfficeActionReviewInput
   ) => Effect.Effect<OfficeActionCandidateExtraction, OfficeActionReviewError>;
-  readonly review: (input: OfficeActionReviewInput) => Effect.Effect<ClaimProjectionView, OfficeActionReviewError>;
+  readonly review: (input: OfficeActionReviewInput) => Effect.Effect<OfficeActionReviewResult, OfficeActionReviewError>;
 }
 
 /**

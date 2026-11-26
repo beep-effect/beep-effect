@@ -1,6 +1,6 @@
 {
   "version": "term-snapshot/v1",
-  "release": "2.3.0",
+  "release": "2.4.0",
   "namespaces": [
     {
       "prefix": "annotation",
@@ -582,6 +582,18 @@
     "https://beep-effect.com/ns/ontology/semantic-foundation/",
     "https://beep-effect.com/ns/operation/",
     "https://beep-effect.com/ns/operation/Extract",
+    "https://beep-effect.com/ns/operation/ExtractEntities",
+    "https://beep-effect.com/ns/operation/ExtractRelations",
+    "https://beep-effect.com/ns/operation/Lemmatize",
+    "https://beep-effect.com/ns/operation/MapToLaw",
+    "https://beep-effect.com/ns/operation/ParseDependencies",
+    "https://beep-effect.com/ns/operation/PosTag",
+    "https://beep-effect.com/ns/operation/ProposeClaim",
+    "https://beep-effect.com/ns/operation/Sentencize",
+    "https://beep-effect.com/ns/operation/ToLowerCase",
+    "https://beep-effect.com/ns/operation/ToUpperCase",
+    "https://beep-effect.com/ns/operation/Tokenize",
+    "https://beep-effect.com/ns/operation/Trim",
     "https://beep-effect.com/ns/practice-kg/",
     "https://beep-effect.com/ns/practice-kg/application",
     "https://beep-effect.com/ns/practice-kg/client",

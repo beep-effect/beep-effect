@@ -172,16 +172,18 @@ export const claimInspectionWithLexicalEvidence = (identity: ClaimLexicalProvide
                       (token) =>
                         O.isNone(token.pos) ||
                         O.exists(token.pos, Str.isEmpty) ||
-                        token.start < 0 ||
-                        token.end <= token.start ||
-                        token.end > qualifiedText.length ||
-                        Str.slice(token.start, token.end)(qualifiedText) !== token.text
+                        token.span.end > qualifiedText.length ||
+                        Str.slice(token.span.start, token.span.end)(qualifiedText) !== token.text
                     )
                   )
                     return unavailable("alignment-failed");
                   const facts = A.map(tokens, (token) =>
                     ClaimLexicalToken.make({
-                      anchor: TextAnchor.make({ startChar: token.start, endChar: token.end, quote: token.text }),
+                      anchor: TextAnchor.make({
+                        startChar: token.span.start,
+                        endChar: token.span.end,
+                        quote: token.text,
+                      }),
                       pos: O.getOrThrow(token.pos),
                       lemma: O.filter(token.lemma, Str.isNonEmpty),
                     })

@@ -78,6 +78,8 @@
     "./values/IntakeTaxonomy": "./src/values/IntakeTaxonomy/index.ts",
     "./values/LegalVocabularyPack": "./src/values/LegalVocabularyPack/index.ts",
     "./values/LibrarianLoop": "./src/values/LibrarianLoop/index.ts",
+    "./values/LawClaim": "./src/values/LawClaim/index.ts",
+    "./values/MatterScope": "./src/values/MatterScope/index.ts",
     "./test": "./src/test.ts",
     "./package.json": "./package.json"
   },
@@ -91,7 +93,9 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/epistemics": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/jsonc": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/ontology": "workspace:^",
     "@beep/schema": "workspace:^",

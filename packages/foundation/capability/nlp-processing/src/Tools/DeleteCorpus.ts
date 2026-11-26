@@ -66,4 +66,8 @@ export const DeleteCorpus = Tool.make("DeleteCorpus", {
   failureMode: "return",
   parameters: DeleteCorpusParameters,
   success: S.toEncoded(DeleteCorpusSuccess),
-});
+})
+  .annotate(Tool.Readonly, false)
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.Idempotent, false)
+  .annotate(Tool.OpenWorld, false);

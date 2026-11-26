@@ -20,6 +20,7 @@ import { ProfileStore } from "./ProfileStore.ts";
 import { profileSelects } from "./Requirements.ts";
 import { PRACTICE_GATEWAY_VERSION } from "./Version.ts";
 import type { PracticeKgToolkitLayer } from "@beep/law-practice-server";
+import type { MatterWallLive } from "@beep/law-practice-server/MatterAuthority";
 import type {
   loadPracticeKgBundleContext,
   makePracticeKgHostResourcesLayer,
@@ -42,6 +43,10 @@ export interface PracticeKgModules {
    * Read a bundle folder into the host's bundle context.
    */
   readonly loadPracticeKgBundleContext: typeof loadPracticeKgBundleContext;
+  /**
+   * The host's matter wall: its principal and the configured matter authority.
+   */
+  readonly MatterWallLive: typeof MatterWallLive;
   /**
    * Build the host resources (PGlite, DuckDB) over a bundle context.
    */
@@ -73,14 +78,17 @@ export interface PracticeKgModuleLoaderShape {
 // The modules pull in the DuckDB native binding and PGlite at evaluation time,
 // so they are imported dynamically, never from the gateway's static graph.
 const importPracticeKgModules = (): Promise<PracticeKgModules> =>
-  Promise.all([import("@beep/law-practice-server/PracticeKgHost"), import("@beep/law-practice-server")]).then(
-    ([host, server]) => ({
-      loadPracticeKgBundleContext: host.loadPracticeKgBundleContext,
-      makePracticeKgHostResourcesLayer: host.makePracticeKgHostResourcesLayer,
-      runPracticeKgSelfCheck: host.runPracticeKgSelfCheck,
-      PracticeKgToolkitLayer: server.PracticeKgToolkitLayer,
-    })
-  );
+  Promise.all([
+    import("@beep/law-practice-server/PracticeKgHost"),
+    import("@beep/law-practice-server"),
+    import("@beep/law-practice-server/MatterAuthority"),
+  ]).then(([host, server, wall]) => ({
+    loadPracticeKgBundleContext: host.loadPracticeKgBundleContext,
+    makePracticeKgHostResourcesLayer: host.makePracticeKgHostResourcesLayer,
+    MatterWallLive: wall.MatterWallLive,
+    runPracticeKgSelfCheck: host.runPracticeKgSelfCheck,
+    PracticeKgToolkitLayer: server.PracticeKgToolkitLayer,
+  }));
 
 /**
  * Loads the practice knowledge-graph host and toolkit modules on demand.
@@ -199,7 +207,9 @@ export const PracticeKgProviderLayer = Layer.unwrap(
     const modules = yield* PracticeKgModuleLoader.use((loader) => loader.load);
     yield* modules.runPracticeKgSelfCheck({ extensionVersion: PRACTICE_GATEWAY_VERSION, bundleDir, corpusRoot });
     const context = yield* modules.loadPracticeKgBundleContext(bundleDir, corpusRoot);
-    return modules.PracticeKgToolkitLayer.pipe(Layer.provide(modules.makePracticeKgHostResourcesLayer(context)));
+    return modules.PracticeKgToolkitLayer.pipe(
+      Layer.provide(Layer.merge(modules.makePracticeKgHostResourcesLayer(context), modules.MatterWallLive))
+    );
   })
 ).pipe(
   Layer.catchCause((cause) =>

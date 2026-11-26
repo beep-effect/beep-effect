@@ -69,6 +69,10 @@
     "research/2026-11-23-p5-map-interchange.md",
     "research/2026-11-23-p5-map-stored-and-consumers.md",
     "research/2026-11-23-p5-map-taxonomy.md",
+    "research/2026-11-24-p6-design.md",
+    "research/2026-11-24-p6-map-agent-surface.md",
+    "research/2026-11-24-p6-map-flow-and-consumers.md",
+    "research/2026-11-24-p6-map-operations.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/consumer-census.md",
@@ -158,8 +162,7 @@
     "bun run beep goals doctor",
     "bun run beep goals decisions check --slug text-knowledge-stack-rebuild",
     "bun run beep goals manifest --check",
-    "bunx tsrs -p goals/tsconfig.ops.json --noEmit",
-    "bunx tsrs -p goals/text-knowledge-stack-rebuild/ops/design/tsconfig.json --noEmit"
+    "bunx tsrs -p goals/tsconfig.ops.json --noEmit"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
@@ -168,14 +171,5 @@
     "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
   "statusNote": "P0 Design and grill merged as dcf6b16a77d (PR #3420). P1 L0 identity is a three-PR stack. P2 L1 text is content-final and pushed in its lane; its PR waits for PR C to merge, then opens against main. P3 L2 annotation is content-complete in its lane with local proof and inventory registration, and no P3 PR is open. P3 publication waits for P2 and the orchestrator, under the 2026-11-22 content-final checkpoints.",
-  "opsScripts": [
-    {
-      "path": "ops/design/index.ts",
-      "purpose": "Design index for L5; L0 to L4, L6, the OA adapter, the nanopublication codec, the gUFO audit and the mapping sets are production packages."
-    },
-    {
-      "path": "ops/design/L5.operations.ts",
-      "purpose": "L5 design: Operation, Activity, Association, mintActivityId, pure, compose and withActivity."
-    }
-  ]
+  "opsScripts": []
 }

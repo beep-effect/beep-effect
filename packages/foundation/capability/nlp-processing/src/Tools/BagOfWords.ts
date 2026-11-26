@@ -68,4 +68,8 @@ export const BagOfWords = Tool.make("BagOfWords", {
   failureMode: "return",
   parameters: BagOfWordsParameters,
   success: S.toEncoded(BagOfWordsSuccess),
-});
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true)
+  .annotate(Tool.OpenWorld, false);

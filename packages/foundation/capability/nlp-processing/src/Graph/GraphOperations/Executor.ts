@@ -182,15 +182,15 @@ const applyWithTimeout = <A, B, R, E>(
   timeout: O.Option<Duration.Duration>
 ): Effect.Effect<ReadonlyArray<GraphNode<B>>, E | TimeoutError, R> =>
   O.match(timeout, {
-    onNone: () => operation.apply(leafNode),
+    onNone: () => operation.operation.run(leafNode),
     onSome: (duration) =>
-      Effect.timeoutOrElse(operation.apply(leafNode), {
+      Effect.timeoutOrElse(operation.operation.run(leafNode), {
         duration,
         orElse: () =>
           Effect.fail(
             TimeoutError.make({
               nodeId: leafNode.id,
-              operationName: operation.name,
+              operationName: operation.operation.name,
               timeoutMs: Duration.toMillis(duration),
             })
           ),
@@ -214,7 +214,7 @@ const applyOne: {
   ): (store: ResultStore.ResultStoreShape) => Effect.Effect<Application, ExecutionError, R>;
 } = dual(
   5,
-  Effect.fn("applyOne")(function* <A, B, R, E>(
+  Effect.fn("GraphExecutor.applyOne")(function* <A, B, R, E>(
     store: ResultStore.ResultStoreShape,
     operation: GraphOperation<A, B, R, E>,
     cache: boolean,
@@ -224,11 +224,11 @@ const applyOne: {
     const attributes = {
       cache_enabled: `${cache}`,
       node_id: `${leafNode.id}`,
-      operation: operation.name,
+      operation: operation.operation.name,
     };
     yield* Obs.annotateNlpSpan(attributes);
 
-    const key = ResultStore.ResultKey.new(operation.name, leafNode.id);
+    const key = ResultStore.ResultKey.new(operation.operation.name, leafNode.id);
     const cached = cache
       ? yield* Effect.mapError(store.get(key), (e) =>
           ExecutionError.make({
@@ -298,7 +298,7 @@ const cacheResult: {
   ): (store: ResultStore.ResultStoreShape) => Effect.Effect<void, ExecutionError>;
 } = dual(
   3,
-  Effect.fn("cacheResult")(function* <B>(
+  Effect.fn("GraphExecutor.cacheResult")(function* <B>(
     store: ResultStore.ResultStoreShape,
     key: ResultStore.ResultKey,
     newNodes: ReadonlyArray<GraphNode<B>>
@@ -353,7 +353,7 @@ const runStrategy: {
   ): (store: ResultStore.ResultStoreShape) => Effect.Effect<ExecutionFold, ExecutionError, R>;
 } = dual(
   6,
-  Effect.fn("runStrategy")(function* <A, B, R, E>(
+  Effect.fn("GraphExecutor.runStrategy")(function* <A, B, R, E>(
     store: ResultStore.ResultStoreShape,
     leafNodes: ReadonlyArray<GraphNode<A>>,
     operation: GraphOperation<A, B, R, E>,
@@ -365,7 +365,7 @@ const runStrategy: {
       cache_enabled: `${cache}`,
       concurrency: `${concurrency}`,
       leaf_count: `${A.length(leafNodes)}`,
-      operation: operation.name,
+      operation: operation.operation.name,
       timeout_ms: O.match(timeout, {
         onNone: () => "none",
         onSome: (d) => `${Duration.toMillis(d)}`,
@@ -390,7 +390,7 @@ const runStrategy: {
         nodes_created: `${fold.metrics.nodesCreated}`,
       });
       return fold;
-    }).pipe(Obs.trackNlpDuration("nlp.graph_executor.run_strategy", attributes));
+    }).pipe(Obs.trackNlpDuration(attributes));
   })
 );
 
@@ -427,7 +427,7 @@ const execute: GraphExecutorShape["execute"] = dual(
       concurrency: `${concurrencyOf(opts.strategy)}`,
       execution_id: `${executionId}`,
       leaf_count: `${A.length(leafNodes)}`,
-      operation: operation.name,
+      operation: operation.operation.name,
       strategy: opts.strategy._tag,
       timeout_ms: O.match(opts.timeout, {
         onNone: () => "none",
@@ -460,7 +460,7 @@ const execute: GraphExecutorShape["execute"] = dual(
         errors: fold.errors,
         metrics: fold.metrics,
       });
-    }).pipe(Obs.observeNlpWorkflow("nlp.graph_executor.execute", attributes));
+    }).pipe(Obs.observeNlpWorkflow("GraphExecutor.execute", attributes));
   })
 );
 
@@ -508,13 +508,13 @@ const makeGraphExecutor = Effect.succeed(
  * import * as Effect from "effect/Effect";
  * import { GraphExecutorLive } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  * import { empty } from "@beep/nlp-processing/Graph/EffectGraph"
- * import { identity } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
+ * import { trim } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  * import { GraphExecutor } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  *
  * const cost = await Effect.runPromise(
  *   Effect.gen(function* () {
  *     const executor = yield* GraphExecutor
- *     return yield* executor.estimateCost(empty<string>(), identity<string>())
+ *     return yield* executor.estimateCost(empty<string>(), trim)
  *   }).pipe(Effect.provide(GraphExecutorLive))
  * )
  *
@@ -541,13 +541,13 @@ export const GraphExecutorLive: Layer.Layer<GraphExecutor> = Layer.effect(GraphE
  * import * as Effect from "effect/Effect";
  * import { GraphExecutorTest } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  * import { empty } from "@beep/nlp-processing/Graph/EffectGraph"
- * import { identity } from "@beep/nlp-processing/Graph/GraphOperations/Operation"
+ * import { trim } from "@beep/nlp-processing/Graph/GraphOperations/Catalog"
  * import { GraphExecutor } from "@beep/nlp-processing/Graph/GraphOperations/Executor"
  *
  * const validation = await Effect.runPromise(
  *   Effect.gen(function* () {
  *     const executor = yield* GraphExecutor
- *     return yield* executor.validate(empty<string>(), identity<string>())
+ *     return yield* executor.validate(empty<string>(), trim)
  *   }).pipe(Effect.provide(GraphExecutorTest))
  * )
  *

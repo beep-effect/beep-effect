@@ -672,6 +672,13 @@ reporting six extractDeadline failures in unchanged citation-regex boundary/case
 An exact-case retry in the same Bun runtime passed all six with one worker and unchanged 30-second
 extraction and 60-second operation limits. Preserve the successful audit components and retry only
 failed batches under lower contention; do not weaken production safety deadlines to green a gate.
+
+# P6 row 0: design packet commit
+
+The P6 design lane wrote three maps and the design under `research/` without running
+`bun run beep goals manifest --write`, so `researchReports` drifted by four files until the
+implementation lane's row 0 ran it (`researchReports drifts from research/: +4 unlisted`). A design
+lane that adds research files should run the manifest writer before it hands off.
 ## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
 
 - **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.

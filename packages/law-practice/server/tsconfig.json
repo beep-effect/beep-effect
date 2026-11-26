@@ -42,13 +42,7 @@
       "path": "../../epistemic/domain/tsconfig.json"
     },
     {
-      "path": "../../epistemic/server/tsconfig.json"
-    },
-    {
       "path": "../../epistemic/tables/tsconfig.json"
-    },
-    {
-      "path": "../../epistemic/use-cases/tsconfig.json"
     },
     {
       "path": "../../foundation/capability/file-processing/tsconfig.json"
@@ -63,6 +57,9 @@
       "path": "../../foundation/modeling/csv/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
@@ -70,9 +67,6 @@
     },
     {
       "path": "../../foundation/modeling/md/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/nlp/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"

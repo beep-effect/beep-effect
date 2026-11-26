@@ -30,6 +30,7 @@ import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { PracticeKgDocketRegisterRow, practiceKgRegisterClientNames } from "./PracticeKg.register.ts";
 import { PracticeKgEdgeRow, PracticeKgNodeRow } from "./PracticeKg.schemas.ts";
+import { PracticeKgReadScope, practiceKgFamilyKeyFilter } from "./PracticeKg.wall.ts";
 import type { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("PracticeKg.matters");
@@ -438,6 +439,11 @@ UNION ALL
 SELECT family_key, 'patent', docket_key FROM matter_dockets WHERE $2 <> '' AND list_contains(patent_numbers, $2)
 ORDER BY 1, 2, 3`;
 
+const grantedHits = (scope: PracticeKgReadScope, statement: string): string => `
+SELECT "familyKey", "matchedOn", "docketKey" FROM (${statement}) hits
+WHERE ${practiceKgFamilyKeyFilter(scope, '"familyKey"')}
+ORDER BY 1, 2, 3`;
+
 const familyFallbackHitsSql = `
 SELECT family_key AS "familyKey", 'family-key' AS "matchedOn", NULL AS "docketKey" FROM matters WHERE $1 <> '' AND family_key = $1
 UNION ALL
@@ -516,25 +522,31 @@ const lookupFailure =
  * import { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server"
  * import * as Effect from "effect/Effect";
  * import { lookupPracticeKgMatters } from "../../src/PracticeKg.matters.ts"
+ * import { PracticeKgReadScope } from "@beep/law-practice-server"
  *
- * const lookup = lookupPracticeKgMatters(PracticeKgMatterLookupRequest.make({ reference: "12345.10008US01" }))
+ * const lookup = lookupPracticeKgMatters(
+ *   PracticeKgMatterLookupRequest.make({ reference: "12345.10008US01" }),
+ *   PracticeKgReadScope.cases.Walled.make({ familyKeys: [], mailFolders: [] })
+ * )
  * console.log(Effect.isEffect(lookup)) // true
  * ```
  *
  * @param request - The reference to resolve.
+ * @param scope - The family keys the lookup may return, or a system read.
  * @returns Matching matters with their dockets and how each matched.
  * @category use-cases
  * @since 0.0.0
  */
 export const lookupPracticeKgMatters = Effect.fn("PracticeKg.lookupMatters")(function* (
-  request: PracticeKgMatterLookupRequest
+  request: PracticeKgMatterLookupRequest,
+  scope: PracticeKgReadScope
 ): Effect.fn.Return<PracticeKgMatterLookupResult, PracticeKgMatterLookupError, DuckDb | PracticeKgBundle> {
   const db = yield* DuckDb;
   const bundle = yield* PracticeKgBundle;
   const normalized = normalizeReference(request.reference);
   const queryHits = (statement: string, parameters: ReadonlyArray<string>) =>
     db
-      .query(statement, A.fromIterable(parameters))
+      .query(grantedHits(scope, statement), A.fromIterable(parameters))
       .pipe(
         Effect.flatMap(decodeHitRows),
         Effect.mapError(lookupFailure("Practice KG matter lookup could not read the matter tables."))
@@ -594,6 +606,13 @@ export const lookupPracticeKgMatters = Effect.fn("PracticeKg.lookupMatters")(fun
  * mail or a document into a practice matter. `lookup` is requirement-free: the
  * layer that provides this service has already captured the bundle's DuckDB
  * connection and manifest.
+ *
+ * **Gotchas**
+ *
+ * It is a system read outside the matter wall: docket intake resolves a
+ * reference before any principal is involved, so the lookup sees every
+ * matter. Never answer a principal's request through it; the `kg_matter_lookup`
+ * tool reads through the principal's granted scope instead.
  *
  * **Example** (Yield the service and look up)
  *
@@ -659,7 +678,7 @@ export const PracticeKgMatterLookupLive = Layer.effect(
     const dependencies = yield* Effect.context<DuckDb | PracticeKgBundle>();
     return PracticeKgMatterLookup.of({
       lookup: Effect.fn("PracticeKgMatterLookup.lookup")((request) =>
-        lookupPracticeKgMatters(request).pipe(Effect.provide(dependencies))
+        lookupPracticeKgMatters(request, PracticeKgReadScope.cases.Unwalled.make({})).pipe(Effect.provide(dependencies))
       ),
     });
   })

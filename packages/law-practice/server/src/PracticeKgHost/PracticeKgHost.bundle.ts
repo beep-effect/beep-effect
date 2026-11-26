@@ -12,15 +12,11 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { PracticeKgBundleContext } from "../PracticeKg.host.ts";
-import { PracticeKgBundleManifest } from "../PracticeKg.schemas.ts";
+import { PracticeKgBundleManifest, PracticeKgSchemaVersions } from "../PracticeKg.schemas.ts";
 import { PracticeKgHostError } from "./PracticeKgHost.errors.ts";
-import type { PracticeKgSchemaVersions } from "../PracticeKg.schemas.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-const storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout = {
-  duckdb: "4",
-  pglite: "4",
-} as const satisfies typeof PracticeKgSchemaVersions.Encoded;
+const storeVersionsBumpedWithBreakingKgNodeEdgeOrDuckDbLayout = PracticeKgSchemaVersions.make({});
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );

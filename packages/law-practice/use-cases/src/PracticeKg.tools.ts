@@ -481,7 +481,7 @@ export class PracticeKgCandidateClaimsNotLoadedResult extends S.Opaque<
   S.Struct({
     available: S.tag(false),
     bundle_version: S.NonEmptyString,
-    epistemic_status: S.tag("candidate-unreviewed"),
+    epistemic_status: PracticeKgEpistemicStatus,
     reason: S.tag("claims batch not yet loaded"),
   }).pipe(
     $I.annoteSchema("PracticeKgCandidateClaimsNotLoadedResult", {
@@ -682,7 +682,7 @@ export class PracticeKgCandidateClaimToolRow extends S.Opaque<
     evidenceQuote: S.String,
     family: S.String,
     familyKey: S.NullOr(S.String),
-    label: S.tag("candidate — unreviewed"),
+    label: PracticeKgEpistemicStatus,
     sourceDocumentDigest: S.NullOr(S.String),
     sourceFile: S.String,
     startChar: S.Natural,
@@ -1317,7 +1317,7 @@ export const EmailSearchTool = readTool(
  */
 export const KgCandidateClaimsTool = readTool(
   "kg_candidate_claims",
-  "Use this first for any question about an office action in a docket or family: what was rejected, which references were cited, how the response distinguished them. Returns candidate — unreviewed claims, each with its evidence quote, character span, and source document digest. Always repeat the candidate — unreviewed label when you report these. Returns a typed not-loaded result when the bundle carries no claims.",
+  "Use this first for any question about an office action in a docket or family: what was rejected, which references were cited, how the response distinguished them. Returns candidate-unreviewed claims, each with its evidence quote, character span, and source document digest. Always repeat the candidate-unreviewed label when you report these. Returns a typed not-loaded result when the bundle carries no claims.",
   CandidateClaimsParams,
   PracticeKgCandidateClaimsResult
 );

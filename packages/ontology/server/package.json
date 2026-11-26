@@ -80,6 +80,7 @@
   },
   "devDependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/ontology": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/test-runner": "workspace:^",

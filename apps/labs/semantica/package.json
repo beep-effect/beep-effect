@@ -44,7 +44,6 @@
     "@beep/identity": "workspace:^",
     "@beep/jsonc": "workspace:^",
     "@beep/langextract": "workspace:^",
-    "@beep/nlp": "workspace:^",
     "@beep/nlp-processing": "workspace:^",
     "@beep/openai": "workspace:^",
     "@beep/oxigraph": "workspace:^",

@@ -51,7 +51,25 @@ const missingExtraction = (label: OfficeActionExtractionLabelValue): IrToLawExtr
     message: `Office-action extraction output is missing required label "${label}".`,
   });
 
-const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction")(function* (
+/**
+ * The grounded extraction a label maps from: the first mention of that label
+ * by anchor position, with its annotation id, target occurrence, anchor, first
+ * reading text and alignment status.
+ *
+ * **Example** (Select the distinction extraction)
+ *
+ * ```ts
+ * import { requiredExtraction } from "@beep/law-practice-use-cases/IrToLaw"
+ * import type { ExtractionHandoff } from "@beep/langextract/Handoff"
+ *
+ * const distinction = (handoff: ExtractionHandoff) => requiredExtraction(handoff, "distinction")
+ * console.log(typeof distinction) // "function"
+ * ```
+ *
+ * @category mapping
+ * @since 0.0.0
+ */
+export const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction")(function* (
   handoff: ExtractionHandoff,
   label: OfficeActionExtractionLabelValue
 ) {
@@ -62,7 +80,13 @@ const requiredExtraction = Effect.fn("law_practice.ir_to_law.required_extraction
       const occurrence = annotation.targets.pipe(A.fromIterable, A.head, O.getOrThrow);
       const anchor = HashMap.getUnsafe(handoff.document.anchors, occurrence).receipt.anchor;
       const readings = HashMap.get(handoff.readings, id);
-      return O.map(readings, (readings) => ({ id, anchor, text: A.headNonEmpty(readings).text }));
+      return O.map(readings, (readings) => ({
+        id,
+        occurrence,
+        anchor,
+        text: A.headNonEmpty(readings).text,
+        alignment: A.headNonEmpty(readings).alignment,
+      }));
     }),
     A.getSomes
   );

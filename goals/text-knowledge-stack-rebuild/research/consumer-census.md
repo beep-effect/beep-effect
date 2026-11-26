@@ -158,17 +158,17 @@ lines in the 9 langextract and semantica files that construct a member.
 | Handoff `Contract.Relation` | 0 / 0 | none | 0 | 0 | 0 | (same file) | deleted in P3: replaced by annotation documents, kinds, readings and residuals | always emitted empty (`Handoff.behavior.ts:111`) |
 | Handoff, all `Contract` members | 40 / 10 (langextract 36 / 9, semantica 4 / 1) | none | 0 | 10 | 30 / 9 | 597 / 2 | deleted in P3: replaced by annotation documents, kinds, readings and residuals | rows above |
 | Handoff `UnitInterval` re-export | 24 / 8 (langextract 22 / 7, semantica 2 / 1) | covered: `@beep/schema/UnitInterval` (`Handoff/index.ts` re-exports it unchanged) | 3 | 0 | 21 / 8 | 1 line | deleted in P3: consumers use @beep/schema/UnitInterval | none |
-| Graph `Schema` (`TextNode` 55, `POSNode` 22, `TextEdge` 21, `EntityNode` 19, `LemmaNode` 11, `RelationNode` 10, `DependencyNode` 8) | 147 / 10 (nlp-processing 138 / 6, wink 7 / 2, semantica 2 / 2) | none | 0 | 121 | 26 / 6 | `Graph/Schema.ts` 552 | adapt in P6 with Core to @beep/nlp-processing; only its span changes in P3 | float span deleted in P3; optional Position resolves unique surfaces |
+| Graph `Schema` (`TextNode` 55, `POSNode` 22, `TextEdge` 21, `EntityNode` 19, `LemmaNode` 11, `RelationNode` 10, `DependencyNode` 8) | 147 / 10 (nlp-processing 138 / 6, wink 7 / 2, semantica 2 / 2) | none | 0 | 121 | 26 / 6 | `Graph/Schema.ts` 533 (re-measured at P6 design) | adapted in P6: moved with Core to @beep/nlp-processing by `git mv`; only its span changed in P3 | float span deleted in P3; optional Position resolves unique surfaces |
 | Graph `Span` (`Schema.ts:358`) | 0 direct; embedded in `EntityNode` (`:391`) and `RelationParticipant` (`:511`) | none | 0 | 0 | 0 | (same file) | deleted in P3; optional Position on EntityNode and RelationParticipant | `S.Finite` offsets, no `start <= end` check |
-| Graph `GraphOps` | 0 / 0 | `effect/Graph` (it is a layer over it, `GraphOps.ts:30`) | 0 | 0 | 0 | 1,184 / 1 | retire in P6; duplicate of `nlp-processing/src/Graph/EffectGraph.ts` (797 lines) [D] | none |
+| Graph `GraphOps` | 0 / 0 | `effect/Graph` (it is a layer over it, `GraphOps.ts:30`) | 0 | 0 | 0 | 1,184 / 1 | deleted in P6; `nlp-processing/src/Graph/EffectGraph.ts` is the surviving copy [D] | none |
 | Ontology `Kind` | 0 / 0 | none | 0 | 0 | 0 | 714 / 2 | deleted in P3; containment levels belong to annotation kinds | Document, Token and Character have no successor or consumer |
-| Operations (`Composable`, `Definition`) | 0 / 0 | none (`effect/Effect` Kleisli composition only) | 0 | 0 | 0 | 794 / 3 | adapt into `@beep/nlp-processing` in P6 (SPEC L5) [D] | three overlapping operation models exist (see below) |
-| Algebra `Monoid` | 0 / 0 | covered: `effect/Reducer` (`make`, `flip` for `Dual`), `effect/Combiner`, `Number.ReducerSum/Multiply/Max/Min`, `String.ReducerConcat`, `Boolean.ReducerAnd/Or`, `Array.makeReducerConcat`, `Option.makeReducer`, `Struct.makeReducer`, `Tuple.makeReducer` (all present in installed `dist/*.d.ts`). Uncovered: `SetUnion`, `SetIntersection`, `MultiSet` (no `HashSet`/`HashMap` reducer in 4.1.4), `VectorAdd`, `VectorAverage`, `StringDelimited`, `checkLaws` helpers | 0 | 0 | 0 | 882 / 1 | retire in P6 (0 vs 0 consumers; rule 2) [D] | none |
-| Algebra `NLPMonoid` | 0 / 0 | partly (string and array instances as above) | 0 | 0 | 0 | 873 / 1 (+37 index) | retire in P6 (0 consumers; an instance a P6 consumer needs and the Reducer census leaves uncovered is kept by its own decision) [D] | the non-associative instance (report §2.2 D7) disappears with it |
-| Core `Document`, `DocumentId`, `Sentence`, `SentenceIndex`, `Token`, `TokenIndex` | 135 / 26 (`DocumentId` 53, `Document` 32, `Token` 29, `Sentence` 9, `SentenceIndex` 7, `TokenIndex` 5; 133 unique lines) | none | 0 | 71 | 64 / 24 | `Core/*` 3,137 / 10 | adapt: moves to `@beep/nlp-processing` in P6 [D] | none |
-| Core `CharPosition` | 6 / 3 (wink 2, nlp-processing 2, law-practice use-cases 2) | none; target `@beep/text` position | 0 | 0 | 6 / 3 | (in Core) | retire in P6: deleted in favour of the text position [D] | `CharPosition` is a fourth offset type |
-| Core `Similarity`, `Vectorization` | 68 / 10 (wink 61 / 5, nlp-processing 7 / 5) | none | 0 | 47 | 21 / 4 | (in Core) | adapt: moves to `@beep/nlp-processing` in P6 with Core [D] | none |
-| Core `Pattern*` | 8 / 3 (wink 7 / 2, nlp-processing 1 / 1) | none | 0 | 8 | 0 | (in Core) | adapt: moves to `@beep/nlp-processing` in P6 with Core [D] | none |
+| Operations (`Composable`, `Definition`) | 0 / 0 | none (`effect/Effect` Kleisli composition only) | 0 | 0 | 0 | 794 / 3 | deleted in P6 and replaced by `nlp-processing/src/Operation.ts`, not moved: 0 consumers (decision `2026-11-24-p6-nlp-operations-and-algebra-are-replaced-not-moved`) [D] | three overlapping operation models exist (see below) |
+| Algebra `Monoid` | 0 / 0 | covered: `effect/Reducer` (`make`, `flip` for `Dual`), `effect/Combiner`, `Number.ReducerSum/Multiply/Max/Min`, `String.ReducerConcat`, `Boolean.ReducerAnd/Or`, `Array.makeReducerConcat`, `Option.makeReducer`, `Struct.makeReducer`, `Tuple.makeReducer` (all present in installed `dist/*.d.ts`). Uncovered: `SetUnion`, `SetIntersection`, `MultiSet` (no `HashSet`/`HashMap` reducer in 4.1.4), `VectorAdd`, `VectorAverage`, `StringDelimited`, `checkLaws` helpers | 0 | 0 | 0 | 882 / 1 | deleted in P6 (0 vs 0 consumers; rule 2) [D] | none |
+| Algebra `NLPMonoid` | 0 / 0 | partly (string and array instances as above) | 0 | 0 | 0 | 873 / 1 (+37 index) | deleted in P6 (0 consumers; no P6 consumer needed an instance the Reducer census leaves uncovered) [D] | the non-associative instance (report §2.2 D7) disappears with it |
+| Core `Document`, `DocumentId`, `Sentence`, `SentenceIndex`, `Token`, `TokenIndex` | 135 / 26 (`DocumentId` 53, `Document` 32, `Token` 29, `Sentence` 9, `SentenceIndex` 7, `TokenIndex` 5; 133 unique lines) | none | 0 | 71 | 64 / 24 | `Core/*` 3,137 / 10 | adapted in P6: moved to `@beep/nlp-processing` [D] | none |
+| Core `CharPosition` | 6 / 3 (wink 2, nlp-processing 2, law-practice use-cases 2) | none; target `@beep/text` position | 0 | 0 | 6 / 3 | (in Core) | deleted in P6 in favour of the text position; `Token.span` is a `@beep/text` position [D] | `CharPosition` is a fourth offset type |
+| Core `Similarity`, `Vectorization` | 68 / 10 (wink 61 / 5, nlp-processing 7 / 5) | none | 0 | 47 | 21 / 4 | (in Core) | adapted in P6: moved to `@beep/nlp-processing` with Core [D] | none |
+| Core `Pattern*` | 8 / 3 (wink 7 / 2, nlp-processing 1 / 1) | none | 0 | 8 | 0 | (in Core) | adapted in P6: moved to `@beep/nlp-processing` with Core [D] | none |
 | `IdentifierText`, `PathText`, `QueryText`, `VariantText` | 0 / 0 | none | 0 | 0 | 0 | 341 / 4 | retire in P7 (no consumer) [D] | none |
 | `THEORY.md` | 0 inbound links outside this packet | n/a | n/a | n/a | n/a | 194 / 1 | retire: absorbed by the chapter and deleted with the package [D] | `:72` cites `src/Graph/TypeClass.ts`, which is in `nlp-processing` |
 
@@ -181,7 +181,8 @@ Graph Schema 121, Handoff 10). Core construction is measured with
 Rule 2 verdict: the uncovered sum (257) exceeds the covered sum (3), so the `@beep/nlp`
 concept is ADAPT, not retire [D]. The package name retires once its facets are
 rehomed: Handoff is replaced by `@beep/annotation`, Ontology Kind is deleted, and
-Graph Schema, Core and Operations move to `@beep/nlp-processing` in P6. Only the covered `UnitInterval` re-export retires
+Graph Schema and Core moved to `@beep/nlp-processing` in P6, where `Operation.ts` replaced
+Operations. Only the covered `UnitInterval` re-export retires
 to its upstream, `@beep/schema/UnitInterval`.
 
 Consumers by package (files / src / test / usage lines): nlp-processing 14 / 12 / 2 /
@@ -718,3 +719,11 @@ removes 597 source lines and Ontology removes 714 from the P3 base. UnitInterval
 has zero nlp Handoff import sites. These deletions do not change the ADAPT verdict:
 Graph node carriers, Core and Operations remain for P6. No count is inferred for
 new annotation consumers from the historical P0 usage totals.
+
+P6 outcome (2026-11-24): Core and the Graph node schemas moved to `@beep/nlp-processing`
+by `git mv`, `CharPosition` is deleted and `Token.span` is a `@beep/text` position.
+Operations, Algebra and `GraphOps` are deleted from `@beep/nlp` with zero consumers;
+`nlp-processing/src/Operation.ts` is the one operation arrow and `Graph/TypeClass.ts` is
+deleted with it. `@beep/nlp` keeps only the four P7 text brands
+(`IdentifierText`, `PathText`, `QueryText`, `VariantText`) and `THEORY.md`, which P7
+retires with the package.

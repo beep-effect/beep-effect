@@ -37,7 +37,7 @@ const manifest = PracticeKgBundleManifest.make({
     emails: S.Natural.make(1),
     nodes: S.Natural.make(4),
   }),
-  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
+  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "5", pglite: "5" }),
   sourceRuns: PracticeKgSourceRuns.make({
     base: "included",
     includedRuns: ["2026-10-working-files"],
@@ -96,7 +96,7 @@ describe("@beep/law-practice-server PracticeKgHost bundle loading", () => {
         const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
         expect(error.message).toContain("store format pglite 1 / duckdb 1");
-        expect(error.message).toContain("reads pglite 4 / duckdb 4");
+        expect(error.message).toContain("reads pglite 5 / duckdb 5");
       })
     );
 
@@ -114,7 +114,7 @@ describe("@beep/law-practice-server PracticeKgHost bundle loading", () => {
         const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
         expect(error.message).toContain("store format pglite 2 / duckdb 2");
-        expect(error.message).toContain("reads pglite 4 / duckdb 4");
+        expect(error.message).toContain("reads pglite 5 / duckdb 5");
       })
     );
 
@@ -132,7 +132,25 @@ describe("@beep/law-practice-server PracticeKgHost bundle loading", () => {
         const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
         expect(error.message).toContain("store format pglite 3 / duckdb 3");
-        expect(error.message).toContain("reads pglite 4 / duckdb 4");
+        expect(error.message).toContain("reads pglite 5 / duckdb 5");
+      })
+    );
+
+    it.effect(
+      "refuses store format 4, which keys documents by digest alone, by naming both formats",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
+        yield* fs.writeFileString(
+          path.join(bundleDir, "bundle.manifest.json"),
+          '{"builtAt":"2026-10-06T00:00:00.000Z","bundleVersion":"2026-10-06-04","corpusRootExpected":true,"corpusSnapshotAt":"2026-10-05T00:00:00.000Z","counts":{"documents":1,"edges":1,"emails":1,"nodes":1},"schemaVersion":{"duckdb":"4","pglite":"4"},"sourceRuns":{"base":"included","includedRuns":[],"refresh202607":"excluded"}}'
+        );
+
+        const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
+
+        expect(error.message).toContain("store format pglite 4 / duckdb 4");
+        expect(error.message).toContain("reads pglite 5 / duckdb 5");
       })
     );
 

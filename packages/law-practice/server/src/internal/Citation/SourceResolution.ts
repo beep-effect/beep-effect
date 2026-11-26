@@ -3,6 +3,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationDocument, CitationDocumentReceipt } from "@beep/law-practice-domain/values";
+import { LawPrincipal, MatterAccess, MatterAuthority } from "@beep/law-practice-use-cases/MatterWall";
 import {
   CitationEngineReport,
   CitationEngineResolutionInput,
@@ -78,6 +79,18 @@ export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolu
     const editions = yield* makeCitationResolutionEditions();
     const resolver = yield* makeCitationResolverBoundary();
     const timing = yield* makeCitationRegexTiming(limits, true);
+    const authority = yield* MatterAuthority;
+    const { principal } = yield* LawPrincipal;
+    const authorizeAnchors = Effect.fn("Citation.authorizeAnchorResolution")(function* (
+      request: typeof InputType.Type
+    ) {
+      const access = yield* authority.authorize({
+        principal,
+        scope: request.source.scopeRef,
+        access: "anchor-resolution",
+      });
+      if (MatterAccess.guards.Denied(access)) return yield* evidenceFailure();
+    });
     const capture = Effect.fn("Citation.captureSourceResolutionInput")(function* (raw: unknown) {
       if (P.isObject(raw) && P.isString(raw.sourceText) && Str.length(raw.sourceText) > limits.sourceUtf16)
         return yield* CitationSafetyLimitExceeded.make({ operation: "resolve", limit: "sourceUtf16" });
@@ -93,6 +106,7 @@ export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolu
     const prepare = Effect.fn("Citation.resolveRawSource")(
       function* (raw: unknown) {
         const request = yield* capture(raw);
+        yield* authorizeAnchors(request);
         const source = yield* evidence.resolve(request);
         const mentions = yield* Effect.forEach(
           request.mentions,

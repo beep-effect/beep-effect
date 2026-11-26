@@ -29,12 +29,12 @@ describe("generated registry data", () => {
     expect(R.keys(RegistryDeprecations)).toHaveLength(113);
   });
 
-  it("publishes the term snapshot at release 2.3.0 with every term and namespace IRI", () => {
+  it("publishes the term snapshot at release 2.4.0 with every term and namespace IRI", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(snapshot));
     expect(
       decoded.release,
       "Main publishes 2.0.0, where every binding and deprecation records since 2.0.0. The annotation layer only adds terms, so it is a minor release."
-    ).toBe("2.3.0");
+    ).toBe("2.4.0");
     expect(
       A.dedupe(
         A.appendAll(
