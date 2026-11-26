@@ -24,13 +24,17 @@ const slice = (source: string, start: number, end: number): string => Str.slice(
 
 const tick3 = Str.repeat(3)("`");
 
-describe("MarkdownFence.fences, shared by docgen example extraction and the repo-cli Markdown laws, pinned by slicing the source", () => {
+describe("MarkdownFence.fences behind docgen example extraction and the repo-cli Markdown laws", () => {
   it.effect("spans the opening fence, the raw info string and the body of a closed fence", () =>
     Effect.sync(() => {
       const source = `before\n${tick3}ts  name='a' \nconst a = 1\n\nconst b = 2\n${tick3}  \nafter\n`;
       const fence = only(source);
       assert.strictEqual(fence.infoString, "ts  name='a' ");
-      assert.strictEqual(slice(source, fence.infoStart, fence.infoEnd), fence.infoString);
+      assert.strictEqual(
+        slice(source, fence.infoStart, fence.infoEnd),
+        fence.infoString,
+        "spans are pinned by slicing the source, so an offset drift shows as a wrong slice"
+      );
       assert.strictEqual(fence.body, "const a = 1\n\nconst b = 2\n");
       assert.strictEqual(fence.value, fence.body);
       assert.strictEqual(slice(source, fence.bodyStart, fence.bodyEnd), fence.body);

@@ -20,52 +20,54 @@ const throwsIdentity = (evaluate: () => unknown, expected: Error): void => {
   assert.strictEqual(caught, expected);
 };
 
-it.effect("raw diagnostics become typed failures while programmer defects retain identity", () =>
-  Effect.sync(() => {
-    const sharedDialect = inlineDialect("commonmark");
-    const text = sharedDialect.text;
-    const options = MarkdownParseOptions.make({ dialect: "commonmark" });
-    const raw = RawMarkdownError.make({ code: "NestingDepthExceeded", message: "raw guard", offset: 2, length: 1 });
-    const defect = new Error("extension defect");
-    try {
-      Object.assign(sharedDialect, {
-        text: {
-          ...text,
-          parse: () => {
-            throw raw;
+it.effect(
+  "raw diagnostics become typed failures, defects retain identity, and the shared table is restored before yielding",
+  () =>
+    Effect.sync(() => {
+      const sharedDialect = inlineDialect("commonmark");
+      const text = sharedDialect.text;
+      const options = MarkdownParseOptions.make({ dialect: "commonmark" });
+      const raw = RawMarkdownError.make({ code: "NestingDepthExceeded", message: "raw guard", offset: 2, length: 1 });
+      const defect = new Error("extension defect");
+      try {
+        Object.assign(sharedDialect, {
+          text: {
+            ...text,
+            parse: () => {
+              throw raw;
+            },
           },
-        },
-      });
-      const failed = parsePassResult(options)("abc");
-      assertFailure(
-        failed,
-        MarkdownParseError.make({
-          diagnostic: MarkdownDiagnostic.make({
-            code: "NestingDepthExceeded",
-            message: "raw guard",
-            offset: 2,
-            length: 1,
-            line: 0,
-            character: 2,
-          }),
-        })
-      );
-      Object.assign(sharedDialect, {
-        text: {
-          ...text,
-          parse: () => {
-            throw defect;
+        });
+        const failed = parsePassResult(options)("abc");
+        assertFailure(
+          failed,
+          MarkdownParseError.make({
+            diagnostic: MarkdownDiagnostic.make({
+              code: "NestingDepthExceeded",
+              message: "raw guard",
+              offset: 2,
+              length: 1,
+              line: 0,
+              character: 2,
+            }),
+          })
+        );
+        Object.assign(sharedDialect, {
+          text: {
+            ...text,
+            parse: () => {
+              throw defect;
+            },
           },
-        },
-      });
-      throwsIdentity(() => Markdown.parseResult("abc", options), defect);
-      throwsIdentity(() => Markdown.parsePhrasingResult("abc", options), defect);
-    } finally {
-      Object.assign(sharedDialect, { text });
-    }
-    const parseAfterTableRestored = Result.map(Markdown.parseResult("abc", options), (root) => root.type);
-    assertSuccess(parseAfterTableRestored, "root");
-  })
+        });
+        throwsIdentity(() => Markdown.parseResult("abc", options), defect);
+        throwsIdentity(() => Markdown.parsePhrasingResult("abc", options), defect);
+      } finally {
+        Object.assign(sharedDialect, { text });
+      }
+      const parseAfterTableRestored = Result.map(Markdown.parseResult("abc", options), (root) => root.type);
+      assertSuccess(parseAfterTableRestored, "root");
+    })
 );
 it.effect("stringify preserves programmer defects rather than converting them to parse failures", () =>
   Effect.sync(() => {

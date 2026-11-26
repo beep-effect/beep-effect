@@ -42,7 +42,7 @@ describe("conformance corpus guard: a truncated or emptied vendored corpus fails
     assert.isAtLeast(
       PATHOLOGICAL_CASES.length,
       MIN_PATHOLOGICAL_CASE_COUNT,
-      "the cmark-gfm suite minus the GFM-only tables case and the upstream-disabled many-references case"
+      "the cmark-gfm suite, its GFM tables case included, minus the upstream-disabled many-references case"
     );
   });
 
