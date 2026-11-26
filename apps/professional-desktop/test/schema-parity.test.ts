@@ -168,10 +168,11 @@ describe("@beep/professional-desktop schema parity", () => {
       const encodedGetVaultSyncStatusPayload = yield* encodeGetVaultSyncStatusPayload(statusRequest);
       expect(encodedGetVaultSyncStatusPayload).toStrictEqual(statusRequestWire);
 
-      // An older app omits forceProbe entirely; the sidecar must decode it as
-      // the cached-read default, not reject the request.
       const legacyStatusRequest = yield* decodeGetVaultSyncStatusPayload({ workspaceId: 1 });
-      expect(legacyStatusRequest.forceProbe).toBe(false);
+      expect(
+        legacyStatusRequest.forceProbe,
+        "an older app omits forceProbe; it decodes as the cached-read default"
+      ).toBe(false);
 
       const bootstrapStatusWire = {
         conflictItems: 0,
@@ -210,13 +211,10 @@ describe("@beep/professional-desktop schema parity", () => {
       const encodedVaultSyncStatus1 = yield* encodeVaultSyncStatus(activeStatus);
       expect(encodedVaultSyncStatus1).toStrictEqual(activeStatusWire);
 
-      // An older sidecar omits disconnectReason and probedAt entirely; the
-      // status must still decode (missing key -> none) instead of going
-      // unavailable.
-      const { disconnectReason: _dropped, probedAt: _droppedProbedAt, ...legacyStatusWire } = bootstrapStatusWire;
-      const legacyStatus = yield* decodeVaultSyncStatus(legacyStatusWire);
-      assertNone(legacyStatus.disconnectReason);
-      assertNone(legacyStatus.probedAt);
+      const { disconnectReason: _dropped, probedAt: _droppedProbedAt, ...olderSidecarStatusWire } = bootstrapStatusWire;
+      const missingKeysDecodeToNone = yield* decodeVaultSyncStatus(olderSidecarStatusWire);
+      assertNone(missingKeysDecodeToNone.disconnectReason);
+      assertNone(missingKeysDecodeToNone.probedAt);
     })
   );
 

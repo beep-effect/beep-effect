@@ -3,6 +3,11 @@ import * as Str from "effect/String";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { vitestDoctestActive } from "../../vitest.shared.ts";
 
+// decision: vitest-unit-files-run-isolated
+const isolateEachTestFile = true;
+const reactConcurrentRenderRecoveryNotice = "error during concurrent rendering";
+const extensionlessEsmImportFamilies = [/@mui\/x-/, /core-js-pure/];
+
 export default mergeConfig(
   shared,
   defineConfig({
@@ -12,26 +17,18 @@ export default mergeConfig(
       },
     },
     test: {
-      // Tests here mock modules, stub globals, or change the working directory; keep every file in
-      // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
-      isolate: true,
+      isolate: isolateEachTestFile,
       environment: "jsdom",
-      // The surface-boundary tests intentionally throw during render; React
-      // reports its "recovered by synchronous rendering" notice as an
-      // unhandled error under bun-run vitest. Everything else still fails.
       onUnhandledError(error: unknown): boolean | undefined {
         const message = error instanceof Error ? error.message : String(error);
-        return Str.includes("error during concurrent rendering")(message) ? false : undefined;
+        return Str.includes(reactConcurrentRenderRecoveryNotice)(message) ? false : undefined;
       },
       include: vitestDoctestActive ? [] : ["test/**/*.test.{ts,tsx}"],
       exclude: ["test/integration/**"],
       setupFiles: [NodeURL.fileURLToPath(new URL("./test/setup.dom.ts", import.meta.url))],
       server: {
         deps: {
-          // @mui/x-* packages reach core-js-pure via extensionless directory
-          // imports that Node's native ESM loader rejects; inline the family
-          // (importers included) so Vite resolves the imports instead.
-          inline: [/@mui\/x-/, /core-js-pure/],
+          inline: extensionlessEsmImportFamilies,
         },
       },
     },

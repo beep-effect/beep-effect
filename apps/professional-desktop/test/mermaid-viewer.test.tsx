@@ -67,11 +67,6 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
   it.effect(
     "renders the diagram as a Lexical node, leaving no hidden source behind",
     Effect.fnUntraced(function* () {
-      // The diagram used to be drawn by hiding the mermaid <code> and injecting a
-      // sibling <div> into the contenteditable subtree to portal into. Lexical owns
-      // and reconciles that subtree, so it removed the div: the source stayed hidden
-      // with nothing in its place, and a persisted diagram rendered as a blank gap.
-      // It rendered while streaming and vanished the moment it landed.
       const { container } = render(<EditorViewer state={state} />);
       const screen = within(container);
 
@@ -95,10 +90,10 @@ describe("persisted mermaid rendering", { concurrent: false }, () => {
       expect(svg?.querySelector("style")?.textContent).not.toContain("@keyframes");
       expect(screen.queryByText("Diagram output did not satisfy the desktop safety policy.")).not.toBeInTheDocument();
 
-      // The diagram IS the node now. A leftover <code> element means the old
-      // hide-and-inject path is back -- and that is the shape that renders a blank
-      // gap in a real browser, where Lexical reconciles the injected div away.
-      expect(container.querySelector("code[data-language='mermaid']")).toBeNull();
+      expect(
+        container.querySelector("code[data-language='mermaid']"),
+        "a leftover code element means hide-and-inject is back; Lexical reconciles the injected div into a blank gap"
+      ).toBeNull();
     })
   );
 

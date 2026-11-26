@@ -9,15 +9,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 
-// Tailwind v4 roots content detection at the app's CSS and skips node_modules, and
-// every @beep UI package reaches this app through a workspace symlink. A package that
-// is not declared here has the classes it *alone* uses tree-shaken away — and nothing
-// warns: ordinary utilities survive (the app uses them elsewhere too), so only the
-// package's distinctive classes vanish and the component simply renders wrong. That is
-// what happened to the ontology workbench: its three-column grid never generated, the
-// panes collapsed into one column and painted over each other, and the graph container
-// had no size for WebGL to mount into. It looked like a layout bug for as long as
-// anyone cared to look.
 const filesystemLayerTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
 
 const uiPackageSources: Record<string, string> = {
@@ -44,13 +35,16 @@ it.layer(BunFileSystem.layer, { timeout: filesystemLayerTimeout })("tailwind sou
 
       const rendered = A.filter(R.keys(uiPackageSources), (name) => manifest.dependencies?.[name] !== undefined);
 
-      // Guard the guard: were the app to stop depending on the UI packages entirely,
-      // this test would otherwise pass while asserting nothing.
-      expect(rendered.length).toBeGreaterThan(0);
+      expect(rendered.length, "with no UI package dependency this test would pass asserting nothing").toBeGreaterThan(
+        0
+      );
 
       const undeclared = A.filter(rendered, (name) => !Str.includes(uiPackageSources[name] ?? " ")(globals));
 
-      expect(undeclared).toStrictEqual([]);
+      expect(
+        undeclared,
+        "Tailwind v4 skips the node_modules symlinks, so an undeclared package silently loses the classes only it uses"
+      ).toStrictEqual([]);
     })
   );
 });

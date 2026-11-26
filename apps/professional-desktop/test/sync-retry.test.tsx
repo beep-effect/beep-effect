@@ -12,9 +12,9 @@ import * as MutableRef from "effect/MutableRef";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Stream from "effect/Stream";
 
-// The panel persists its intent queue to the shared jsdom localStorage, and each
-// cleanup unmounts every rendered tree, a concurrent sibling's included: one test at a time.
-describe("a failed sync query is not a dead end", { concurrent: false }, () => {
+describe("a failed sync query is not a dead end, serial: shared jsdom localStorage and global cleanup", {
+  concurrent: false,
+}, () => {
   afterEach(() => {
     cleanup();
     globalThis.localStorage.clear();
@@ -23,11 +23,6 @@ describe("a failed sync query is not a dead end", { concurrent: false }, () => {
   it.effect(
     "offers a way to ask again when the status cannot be loaded",
     Effect.fnUntraced(function* () {
-      // A failed sidecar status query had no retry, and
-      // nothing else invalidates it — so a sidecar that merely restarted, or a single
-      // dropped request, left the panel reading "unavailable" for the rest of the
-      // session, long after sync had come back. A state with no way out of it is not a
-      // state; it is an abandonment.
       const client = DesktopSyncClient.of((() =>
         VaultSyncActionError.failEffect("sync status unavailable")) as unknown as DesktopSyncClient["Service"]);
       const clientLayer = Layer.mergeAll(Layer.succeed(DesktopSyncClient, client), Reactivity.layer);
@@ -42,7 +37,10 @@ describe("a failed sync query is not a dead end", { concurrent: false }, () => {
         waitFor(() => screen.getByTestId("vault-sync-status-retry"), { timeout: 4_000 })
       );
 
-      expect(retry).toBeInTheDocument();
+      expect(
+        retry,
+        "nothing else invalidates a failed status query, so without a retry a restarted sidecar reads unavailable all session"
+      ).toBeInTheDocument();
       expect(retry).toHaveTextContent("Retry");
     })
   );
@@ -50,17 +48,13 @@ describe("a failed sync query is not a dead end", { concurrent: false }, () => {
   it.effect(
     "shows the retry in flight for both the status and the conflicts",
     Effect.fnUntraced(function* () {
-      // Every query fails until the test clicks Retry; every call after the click
-      // stays pending. The refresh a click starts therefore never settles, so the
-      // "Retrying…" label renders on every run instead of only when a render
-      // happens to land mid-refresh.
-      const retried = MutableRef.make(false);
+      const clickedRetryLeavesCallsPending = MutableRef.make(false);
       const client = DesktopSyncClient.of(((tag: string) =>
         tag === "WatchVaultSyncStatus"
-          ? MutableRef.get(retried)
+          ? MutableRef.get(clickedRetryLeavesCallsPending)
             ? Stream.never
             : Stream.unwrap(VaultSyncActionError.failEffect("sync status unavailable"))
-          : MutableRef.get(retried)
+          : MutableRef.get(clickedRetryLeavesCallsPending)
             ? Effect.never
             : VaultSyncActionError.failEffect("sync query unavailable")) as unknown as DesktopSyncClient["Service"]);
       const clientLayer = Layer.mergeAll(Layer.succeed(DesktopSyncClient, client), Reactivity.layer);
@@ -79,7 +73,7 @@ describe("a failed sync query is not a dead end", { concurrent: false }, () => {
       expect(statusRetry).toHaveTextContent("Retry");
       expect(conflictsRetry).toHaveTextContent("Retry");
 
-      MutableRef.set(retried, true);
+      MutableRef.set(clickedRetryLeavesCallsPending, true);
       fireEvent.click(statusRetry);
       fireEvent.click(conflictsRetry);
       yield* Effect.promise(() =>

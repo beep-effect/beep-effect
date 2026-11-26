@@ -65,8 +65,6 @@ const encodeSparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQueryReques
 const decodeSparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
 const encodePublishProvenanceRequest = S.encodeUnknownEffect(PublishProvenanceRequest);
-// rc.117 projects declared tool failures as tool errors whose encoded payload
-// travels in `content[].text`; `structuredContent` describes successes only.
 const decodeOntologyToolFailureFromText = S.decodeEffect(S.fromJsonString(OntologyToolFailure));
 const firstTextContent = (call: {
   readonly content: ReadonlyArray<{ readonly type: string; readonly text?: string }>;
@@ -234,9 +232,6 @@ SELECT ?destination WHERE {
             expect(firstRead.destination).toBe(firstInjectedDestination);
             expect(secondRead.destination).toBe(secondInjectedDestination);
 
-            // Make the fixture generators stale after decoding. A publish
-            // that bypasses the decoded MCP values now targets different
-            // destinations and fails the ledger assertions below.
             firstInjectedDestination = `${firstInjectedDestination}/stale`;
             secondInjectedDestination = `${secondInjectedDestination}/stale`;
 
@@ -289,7 +284,10 @@ SELECT ?destination WHERE {
         expect(A.contains(attemptedUrls, secondRead.destination)).toBe(false);
 
         const chains = yield* readNewChains(runKeysBefore);
-        expect(chains).toHaveLength(2);
+        expect(
+          chains,
+          "the generators went stale after decoding, so a publish bypassing the decoded MCP values fails these ledger checks"
+        ).toHaveLength(2);
         const firstInjectedDigest = destinationDigestOf(SinkDestination.make(firstRead.destination));
         const secondInjectedDigest = destinationDigestOf(SinkDestination.make(secondRead.destination));
         const injectedDigests = [firstInjectedDigest, secondInjectedDigest];
@@ -336,11 +334,10 @@ SELECT ?destination WHERE {
         const readUnsettledAllowed3 = yield* ledger.readUnsettledAllowed(egressRunKey);
         expect(readUnsettledAllowed3).toEqual([]);
 
-        // The two independent runs are correlated by ordering in time, not by
-        // inventing an MCP session inside the promise-returning Fetch boundary.
-        expect(DateTime.toEpochMillis(O.getOrThrow(A.last(egressChain)).decidedAt)).toBeGreaterThanOrEqual(
-          DateTime.toEpochMillis(O.getOrThrow(A.last(sessionChain)).decidedAt)
-        );
+        expect(
+          DateTime.toEpochMillis(O.getOrThrow(A.last(egressChain)).decidedAt),
+          "the two runs correlate by time order, not by an MCP session invented inside the promise-returning Fetch"
+        ).toBeGreaterThanOrEqual(DateTime.toEpochMillis(O.getOrThrow(A.last(sessionChain)).decidedAt));
       }),
       pgliteIntegrationTimeoutMillis
     );
@@ -467,12 +464,10 @@ SELECT ?value WHERE {
         expect(A.length(outcomeRows)).toBeGreaterThan(0);
 
         const serializedRows = yield* encodeJson(A.appendAll(decisionRows, outcomeRows));
-        expect(Str.includes(publishBodyCanary)(serializedRows)).toBe(false);
-
-        // The workspace canary reaches the MCP read boundary, but this publish
-        // call never reads the workspace file. The response body reaches the
-        // stub boundary, but production consumes only its status. Neither can
-        // reach the ledger write path, so neither is part of the canary claim.
+        expect(
+          Str.includes(publishBodyCanary)(serializedRows),
+          "the claim is the publish body only: the workspace and response canaries never reach the ledger write path"
+        ).toBe(false);
       }),
       pgliteIntegrationTimeoutMillis
     );
