@@ -3,11 +3,8 @@
  *
  * **Details**
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
- * by a `$NlpProcessingId` composer, `unknown` cause fields become
- * `S.Defect({ includeStack: true })` with an always-true equivalence override,
- * and node-scoped failures carry the `NodeId` schema.
+ * Each failure is a schema-backed tagged error. Node-scoped failures carry the
+ * `NodeId` schema, and `cause` fields hold the defect with its stack.
  *
  * @since 0.0.0
  * @packageDocumentation

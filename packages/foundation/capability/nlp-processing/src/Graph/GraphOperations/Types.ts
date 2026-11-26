@@ -4,18 +4,13 @@
  * **Details**
  *
  * Execution strategies, metrics, cost estimation, validation results, options,
- * execution ids, and operation results. {@link ExecutionMetrics} forms a monoid
- * (its {@link ExecutionMetrics.combine} is associative with {@link ExecutionMetrics.empty}
- * as identity), which is how per-node results aggregate into a run total.
+ * execution ids, and operation results. Per-node results aggregate into a run
+ * total through {@link ExecutionMetrics.combine}, starting from
+ * {@link ExecutionMetrics.empty}.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * - `ExecutionId` is a `Brand.nominal` branded string with an EFFECTFUL
- *   {@link generateExecutionId} (reads `Clock` + `effect/Random`) instead of an
- *   inline `crypto.randomUUID()`.
- * - {@link makeOperationResult} reads `Clock` for its timestamp instead of
- *   `Date.now()`.
- * - `timeout` is an `Option<Duration>` (no `null`); native array spreads become
- *   `effect/Array`.
+ * {@link generateExecutionId} reads `Clock` and `effect/Random`, {@link
+ * makeOperationResult} reads `Clock` for its timestamp, and `timeout` is an
+ * `Option<Duration>`.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -132,10 +127,6 @@ export const ExecutionStrategy = S.TaggedUnion({
  * @since 0.0.0
  */
 export type ExecutionStrategy = typeof ExecutionStrategy.Type;
-
-// =============================================================================
-// Execution Metrics (Monoid)
-// =============================================================================
 
 /**
  * **Details**
@@ -546,8 +537,6 @@ export class ValidationResult extends S.Opaque<ValidationResult, { readonly bran
 // =============================================================================
 
 /**
- * Operation category vocabulary describing a graph morphism's shape.
- *
  * **Example** (Check expansion category tag)
  *
  * ```ts import.meta.vitest name="Check expansion category tag"

@@ -6,15 +6,10 @@
  * Schema-first domain types for the text-graph IR: structural nodes
  * ({@link TextNode}/{@link TextEdge}), the {@link NLPAnalysis} summary, and the
  * linguistic-annotation node classes ({@link POSNode}, {@link EntityNode},
- * {@link LemmaNode}, {@link DependencyNode}, {@link RelationNode}). These are the
- * basis for the product-neutral handoff contract emitted to downstream consumers.
+ * {@link LemmaNode}, {@link DependencyNode}, {@link RelationNode}). They carry
+ * backend output.
  *
- * Effect v4 `@beep/nlp` implementation notes:
- * `Schema.Class("Name")` becomes `S.Class($I\`Name\`)(fields, $I.annote(...))\`,
- * multi-arm `Schema.Literal(...)` becomes `S.Literals(...)`, `Schema.optional`
- * becomes `S.optionalKey`, and `Schema.Record({key,value})` becomes the positional
- * `S.Record(key, value)`. `timestamp` remains a plain field supplied by the graph
- * producer (which reads `Clock`).
+ * `timestamp` is a plain field supplied by the graph producer, which reads `Clock`.
  *
  * @since 0.0.0
  * @packageDocumentation
@@ -332,7 +327,7 @@ export class POSNode extends S.Opaque<POSNode, { readonly brand: unique symbol }
 ) {}
 
 /**
- * Named entity extracted from text (a functor `Text -> Entity`).
+ * Named entity extracted from text.
  *
  * **Example** (Build named entity node)
  *
@@ -369,8 +364,6 @@ export class EntityNode extends S.Opaque<EntityNode, { readonly brand: unique sy
 ) {}
 
 /**
- * Lemmatized (canonical) form of a token (a forgetful functor `Token -> Lemma`).
- *
  * **Example** (Build lemma annotation node)
  *
  * ```ts import.meta.vitest name="Build lemma annotation node"

@@ -77,8 +77,6 @@
       "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
       // RFC 8785 concept schemes of the legal vocabulary pack; the manifest pins their SHA-256.
       "!packages/law-practice/domain/assets/vocabulary/*.json",
-      // The RFC 8785 bytes of one annotation document, compared byte-for-byte by DocumentCodec.test.ts.
-      "!packages/foundation/modeling/annotation/test/fixtures/canonical-document-v1.json",
       // Captured certainty corpora replayed byte-for-byte by ci-certainty.test.ts.
       "!packages/tooling/tool/cli/test/fixtures/ci-certainty/*.json",
       // Canonical Python payload bytes are hash-bound and deliberately retain

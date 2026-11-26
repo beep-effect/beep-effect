@@ -13,7 +13,7 @@
  */
 export * as AnnotatedTextGraph from "./AnnotatedTextGraph.ts";
 /**
- * The categorical text-graph engine and effectful node constructors.
+ * The text-graph engine and effectful node constructors.
  *
  * @since 0.0.0
  * @category services

@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/nlp-mcp",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
+    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
+      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
     }
   },
   "nodes": [

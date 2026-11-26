@@ -670,11 +670,6 @@
       "classification": "production"
     },
     {
-      "path": "packages/foundation/modeling/nlp/package.json",
-      "source": "dependency-graph",
-      "classification": "production"
-    },
-    {
       "path": "packages/foundation/modeling/ontology/package.json",
       "source": "dependency-graph",
       "classification": "production"
@@ -691,11 +686,6 @@
     },
     {
       "path": "packages/foundation/modeling/rdf/package.json",
-      "source": "dependency-graph",
-      "classification": "production"
-    },
-    {
-      "path": "packages/foundation/modeling/schema-org/package.json",
       "source": "dependency-graph",
       "classification": "production"
     },

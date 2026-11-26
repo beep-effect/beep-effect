@@ -1,0 +1,8 @@
+---
+title: "P7: the cut-over S31 criterion is measured against the P0 base for the whole program, not against P7's parent"
+date: 2026-11-25
+lane: "p7"
+reversal: "Restore the per-file reading of decision 2026-11-24-p7-s31-is-counted-per-package-and-inherited-reds-go-to-their-layers (P7's own net delta against the merged P6 head) and drop the program-wide recount from the census P7 outcome"
+---
+
+The SPEC Cut-over criterion ends "no S31 inventory grew, by the Constraints definition, checked per file against the P0 base commit" (`SPEC.md:480-481`). Decision `2026-11-24-p7-s31-is-counted-per-package-and-inherited-reds-go-to-their-layers` read the per-file part as P7's own net delta against the merged P6 head, which subtracts growth that P1 to P6 brought in. A closeout acceptance check found five entries that P2, P4 and P5 added with no admitting decision, which that reading could not see. This decision replaces that reading. The criterion is measured against the P0 base f9982f3b5e6 for the whole program: for every inventory and allowlist the census names, and for every census package plus `@beep/text` and `@beep/annotation`, the entry count at the final head is at or below the base count, unless a decision admits the entry. Admitting decisions are entries moved by rename (`2026-11-19-p1-s31-rows-move-with-the-file`), coverage rows at full coverage (`2026-11-22-p2-coverage-rows-at-full-coverage-are-registration`) and explicit S31 amendments. P7 runs this count at its head and records it in the census P7 outcome paragraph. A lower layer's growth that no decision admits is fixed or admitted before the final PR merges, in whichever lane holds the program head.

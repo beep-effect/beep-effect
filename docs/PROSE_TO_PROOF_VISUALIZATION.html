@@ -137,7 +137,7 @@
     font-family:var(--mono);font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;color:var(--inferred);
     padding:10px 12px;background:linear-gradient(180deg,rgba(10,13,16,.85),transparent);pointer-events:none}
   .cadwrap{height:280px;position:relative}
-  .cadwrap canvas{display:block;width:100%!important;height:100%!important;cursor:grab}
+  .cadwrap canvas{display:block;width:100%;height:100%;cursor:grab}
   .cadwrap canvas:active{cursor:grabbing}
   .cadfoot{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:8px;
     font-family:var(--mono);font-size:.64rem;color:var(--ink-faint);padding:9px 12px;
@@ -152,6 +152,7 @@
 
   /* ── subgraph scroll list ── */
   .subgraph{border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.012);display:flex;flex-direction:column;flex:1;min-height:0}
+  .mdot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
   .sghead{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
     color:var(--ink-faint);padding:12px 14px 10px;border-bottom:1px solid var(--line-soft)}
   .sghead .mdot{background:var(--logic)}
@@ -190,7 +191,6 @@
     color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:5px;padding:6px 10px;cursor:pointer;
     transition:border-color .15s,background .15s}
   .pop .act:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.09)}
-  .mdot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
 
   /* ── review queue ── */
   .queue{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -255,7 +255,7 @@
       <a class="tab" href="PROSE_TO_PROOF_GRAPH.html">Graph</a>
       <a class="tab" href="PROSE_TO_PROOF_CHAT.html">Chat</a>
     </div>
-    <span class="tbnet">local · on device</span>
+    <span class="tbnet">one practice · one workbench</span>
   </nav>
 <div class="wrap">
 
@@ -267,9 +267,9 @@
     <div class="lenses">
       <div class="lensrow">
         <span class="lbl">read it by</span>
-        <button class="lensbtn on" data-lens="stage">journey</button>
-        <button class="lensbtn" data-lens="trust">trust</button>
-        <button class="lensbtn" data-lens="loc">locality</button>
+        <button type="button" class="lensbtn on" data-lens="stage">journey</button>
+        <button type="button" class="lensbtn" data-lens="trust">trust</button>
+        <button type="button" class="lensbtn" data-lens="loc">locality</button>
       </div>
       <div class="legend" data-legend="stage">
         <span><i class="swatch" style="background:var(--retrieval)"></i> machine proposes</span>
@@ -321,12 +321,12 @@
       <div class="doc" id="doc" data-stage="portal" data-trust="proving" data-loc="local">
         <div class="docbar"><span class="dot3"><i></i><i></i><i></i></span> response-to-office-action.md · matter: Aanstoot · grinder burr sensor · illustrative</div>
         <h4>Remarks</h4>
-        <p>Claim 1 recites a <span class="link term" tabindex="0" data-card="term" id="span-sensor">burr alignment sensor</span> that registers alignment <em>prior to</em> grinding. Reference 1 (to <span class="link party" tabindex="0" data-card="party" id="span-halvorsen">Halvorsen</span>) instead teaches a sensor that measures grind size <span class="hl">downstream of the grinding operation</span> — a different function at a different stage of the apparatus.</p>
-        <p>Support for the recited limitation appears throughout the specification and is depicted in <span class="link fig" tabindex="0" data-card="fig" id="span-fig3">Figure&nbsp;3</span>, which shows the sensor positioned at the burr interface, registering relative burr position before any grinding occurs.</p>
+        <p>Claim 1 recites a <span class="link term" role="button" tabindex="0" data-card="term" id="span-sensor">burr alignment sensor</span> that registers alignment <em>prior to</em> grinding. Reference 1 (to <span class="link party" role="button" tabindex="0" data-card="party" id="span-halvorsen">Halvorsen</span>) instead teaches a sensor that measures grind size <span class="hl">downstream of the grinding operation</span> — a different function at a different stage of the apparatus.</p>
+        <p>Support for the recited limitation appears throughout the specification and is depicted in <span class="link fig" role="button" tabindex="0" data-card="fig" id="span-fig3">Figure&nbsp;3</span>, which shows the sensor positioned at the burr interface, registering relative burr position before any grinding occurs.</p>
         <h4>The rejection, restated</h4>
-        <p>The examiner rejected claims 1–8 under <span class="link party" tabindex="0" data-card="party" data-target="span-halvorsen">§103</span> as obvious over Halvorsen in view of a secondary reference. The combination is said to disclose every limitation of claim 1.</p>
+        <p>The examiner rejected claims 1–8 under <span class="link party" role="button" tabindex="0" data-card="party" data-target="span-halvorsen">§103</span> as obvious over Halvorsen in view of a secondary reference. The combination is said to disclose every limitation of claim 1.</p>
         <h4>Argument</h4>
-        <p>Applicant respectfully traverses. The <span class="link term" tabindex="0" data-card="term" data-target="span-sensor">alignment sensor</span> of claim 1 operates <em>before</em> grinding to set burr geometry; Halvorsen's sensor operates <em>after</em>, to characterize output. The references teach away from combination because Halvorsen's downstream placement presupposes a fixed burr geometry that the claimed sensor exists to establish. See <span class="link fig" tabindex="0" data-card="fig" data-target="span-fig3">Figure&nbsp;3</span> and specification ¶0021.</p>
+        <p>Applicant respectfully traverses. The <span class="link term" role="button" tabindex="0" data-card="term" data-target="span-sensor">alignment sensor</span> of claim 1 operates <em>before</em> grinding to set burr geometry; Halvorsen's sensor operates <em>after</em>, to characterize output. The references teach away from combination because Halvorsen's downstream placement presupposes a fixed burr geometry that the claimed sensor exists to establish. See <span class="link fig" role="button" tabindex="0" data-card="fig" data-target="span-fig3">Figure&nbsp;3</span> and specification ¶0021.</p>
         <h4>Conclusion</h4>
         <p>Claims 1–8 are believed to be in condition for allowance. Reconsideration and withdrawal of the rejection are respectfully requested.</p>
       </div>
@@ -347,14 +347,14 @@
         <div class="subgraph" data-stage="portal" data-loc="local">
           <div class="sghead"><i class="mdot"></i> subgraph · Aanstoot · burr sensor <span class="count" id="sgcount"></span></div>
           <ul class="sglist" id="sglist">
-            <li><button class="sgitem fig" data-action="cad"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Figure 3 — burr interface <span class="kind">figure → cad</span></span><span class="sgm">Generated from grinder_v3.step · frame in the 3D viewer</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem term" data-action="scroll" data-target="span-sensor"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">"burr alignment sensor" <span class="kind">defined term</span></span><span class="sgm">Spec ¶0021 · recited in claims 1, 4, 7</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem party" data-action="scroll" data-target="span-halvorsen"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Reference 1 — Halvorsen <span class="kind">prior art</span></span><span class="sgm">US 9,xxx,xxx · §103 rejection of claims 1–8</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem term" data-action="scroll" data-target="span-sensor"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Claim 1 <span class="kind">claim</span></span><span class="sgm">Recites the alignment sensor (independent)</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem party" data-action="cad"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Inventor email — sensor placement <span class="kind">email</span></span><span class="sgm">Aanstoot thread · 2026-02-11 · "before the grind, not after"</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem fig" data-action="cad"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">CAD source — grinder_v3.step <span class="kind">artifact</span></span><span class="sgm">12 revisions · last edited 2026-01-30</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem term" data-action="scroll" data-target="span-fig3"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Prior response — distinguished art <span class="kind">work product</span></span><span class="sgm">2025-09 · same teaching-away argument, allowed</span></span><span class="arw">↗</span></button></li>
-            <li><button class="sgitem party" data-action="scroll" data-target="span-halvorsen"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Deadline — respond by Apr 12 <span class="kind">docket</span></span><span class="sgm">Non-final action · ~3-month shortened period (extendable)</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem fig" data-action="cad"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Figure 3 — burr interface <span class="kind">figure → cad</span></span><span class="sgm">Generated from grinder_v3.step · frame in the 3D viewer</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem term" data-action="scroll" data-target="span-sensor"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">"burr alignment sensor" <span class="kind">defined term</span></span><span class="sgm">Spec ¶0021 · recited in claims 1, 4, 7</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem party" data-action="scroll" data-target="span-halvorsen"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Reference 1 — Halvorsen <span class="kind">prior art</span></span><span class="sgm">US 9,xxx,xxx · §103 rejection of claims 1–8</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem term" data-action="scroll" data-target="span-sensor"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Claim 1 <span class="kind">claim</span></span><span class="sgm">Recites the alignment sensor (independent)</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem party" data-action="cad"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Inventor email — sensor placement <span class="kind">email</span></span><span class="sgm">Aanstoot thread · 2026-02-11 · "before the grind, not after"</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem fig" data-action="cad"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">CAD source — grinder_v3.step <span class="kind">artifact</span></span><span class="sgm">12 revisions · last edited 2026-01-30</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem term" data-action="scroll" data-target="span-fig3"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Prior response — distinguished art <span class="kind">work product</span></span><span class="sgm">2025-09 · same teaching-away argument, allowed</span></span><span class="arw">↗</span></button></li>
+            <li><button type="button" class="sgitem party" data-action="scroll" data-target="span-halvorsen"><span class="sgicon">◆</span><span class="sgbody"><span class="sgt">Deadline — respond by Apr 12 <span class="kind">docket</span></span><span class="sgm">Non-final action · ~3-month shortened period (extendable)</span></span><span class="arw">↗</span></button></li>
           </ul>
         </div>
       </div>
@@ -391,7 +391,7 @@
     <div class="promise local" data-loc="local">
       <div class="pg">◆ promise one</div>
       <h3>It stays on your machine</h3>
-      <p>Local-first by default. Client files don't leave the device to be read; embeddings are computed on-device. A backup backend (Box · S3 · local) is a choice you make, never a default — and it holds copies, never identity.</p>
+      <p>Client content leaves the practice only through a model provider or backend the attorney configured, and every matter is walled by authorization at each access path. A backup backend (Box · S3 · local) is a choice you make, never a default — and it holds copies, never identity.</p>
     </div>
     <div class="promise proof" data-trust="proven">
       <div class="pg">⊢ promise two</div>
@@ -421,7 +421,7 @@
 
   const body = document.body;
   const setLens = (lens) => {
-    body.className = 'lens-' + lens;
+    body.className = `lens-${lens}`;
     $$('.lensbtn').forEach(b => b.classList.toggle('on', b.dataset.lens === lens));
     $$('.legend').forEach(l => l.classList.toggle('hidden', l.dataset.legend !== lens));
   };
@@ -447,7 +447,7 @@ function pulseCad(){
 
 /* subgraph list */
 document.getElementById('sgcount').textContent =
-  document.querySelectorAll('#sglist .sgitem').length + ' nodes';
+  `${document.querySelectorAll('#sglist .sgitem').length} nodes`;
 document.querySelectorAll('#sglist .sgitem').forEach(btn => {
   btn.addEventListener('click', () => {
     const action = btn.dataset.action;
@@ -459,7 +459,8 @@ document.querySelectorAll('#sglist .sgitem').forEach(btn => {
 /* ---------- real hover cards ---------- */
 (() => {
   const pop = document.getElementById('pop');
-  let hideTimer = null, current = null;
+  let hideTimer = null;
+  let current = null;
 
   const CARDS = {
     term: {
@@ -487,7 +488,7 @@ document.querySelectorAll('#sglist .sgitem').forEach(btn => {
 
   function buildCard(kind){
     const c = CARDS[kind]; if(!c) return;
-    pop.className = 'pop ' + c.cls;
+    pop.className = `pop ${c.cls}`;
     pop.innerHTML =
       '<div class="pk"><i class="mdot"></i> '+c.kind+'</div>'+
       '<div class="pt">'+c.title+'</div>'+
@@ -499,14 +500,16 @@ document.querySelectorAll('#sglist .sgitem').forEach(btn => {
   function place(target){
     const r = target.getBoundingClientRect();
     pop.style.visibility='hidden'; pop.classList.add('show');
-    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    const pw = pop.offsetWidth;
+    const ph = pop.offsetHeight;
     pop.classList.remove('show'); pop.style.visibility='';
-    let x = r.left, y = r.bottom + 9;
+    let x = r.left;
+    let y = r.bottom + 9;
     if (x + pw > window.innerWidth - 12) x = window.innerWidth - 12 - pw;
     if (x < 12) x = 12;
     if (y + ph > window.innerHeight - 12) y = r.top - ph - 9;   // flip above
     if (y < 12) y = 12;
-    pop.style.left = x + 'px'; pop.style.top = y + 'px';
+    pop.style.left = `${x}px`; pop.style.top = `${y}px`;
   }
   function show(target){
     const kind = target.dataset.card; if(!kind) return;
@@ -601,7 +604,8 @@ try {
   const N = 30;
   for (let i=0;i<N;i++){
     const t = new THREE.Mesh(toothGeo, toothMat);
-    const a = (i/N) * Math.PI*2, r = 0.66;
+    const a = (i/N) * Math.PI*2;
+    const r = 0.66;
     t.position.set(Math.cos(a)*r, 0.06, Math.sin(a)*r);
     t.lookAt(0, 0.06, 0); t.rotation.x += 0.30;
     group.add(t);
@@ -634,7 +638,8 @@ try {
 
   // ── resize ──
   function resize(){
-    const w = wrap.clientWidth, h = wrap.clientHeight;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
     if (!w || !h) return;
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
@@ -650,7 +655,8 @@ try {
   }
 
   // ── interactions exposed to the page ──
-  let kick = 0, sensorPulse = 0;
+  let kick = 0;
+  let sensorPulse = 0;
   window.__cadFrame = () => {
     controls.target.set(0, 0.05, 0);
     camera.position.copy(HOME);
@@ -672,7 +678,7 @@ try {
   view.dataset.ready = '1';
   clearTimeout(timeout);
 } catch (err) {
-  console.error('[cad] three.js failed to load:', err);
+  reportError(new Error('[cad] three.js failed to load', { cause: err }));
   clearTimeout(timeout);
   fail();
 }

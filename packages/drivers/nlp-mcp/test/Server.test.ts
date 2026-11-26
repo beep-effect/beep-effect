@@ -9,7 +9,7 @@ import * as R from "effect/Record";
 import * as Stream from "effect/Stream";
 
 describe("nlp-mcp tool surface", () => {
-  it("mounts the full @beep/nlp NlpToolkit", () => {
+  it("mounts the full @beep/nlp-processing NlpToolkit", () => {
     const names = A.map(NlpTools, (tool) => tool.name);
     assert.strictEqual(names.length, 25);
     assert.strictEqual(new Set(names).size, names.length);

@@ -1,5 +1,5 @@
 /**
- * stdio entrypoint for the `@beep/nlp` MCP server.
+ * stdio entrypoint for the `@beep/nlp-mcp` MCP server.
  *
  * **Details**
  *

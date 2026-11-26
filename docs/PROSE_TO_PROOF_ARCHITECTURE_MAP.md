@@ -51,7 +51,7 @@ entailment** (vectors + an LLM, revisable guesses); **right of it, everything do
 | **Reasoner (entailment)** | Compute what *follows*, soundly | OWL 2 EL/RL reasoning over the TBox (§4) | **Build** |
 | **AI librarian (ingest the corpus)** | The tireless filer | corpus lane over `goals/oppold-corpus-pipeline` output | **Build** |
 | **Sync engine + backups** | FS ↔ Box/S3/local, document-aware | per the system diagram; Box Events → ingest | **Build** |
-| **On-device embeddings** | Vectors computed locally, nothing sent out | Ollama (e.g. `mxbai-embed-large`) per the system diagram | **Build** |
+| **Embeddings** | Vectors from a configured provider, hosted or local | a configured embedding provider (e.g. Ollama `mxbai-embed-large`) | **Build** |
 
 ## 3. The four faces, mapped
 
@@ -97,7 +97,7 @@ The discipline that keeps the graph trustworthy at scale (full argument in
 |---|---|---|
 | **Authority** | Typed claims + evidence + provenance + lifecycle — the only source of truth | `@beep/epistemic-domain`, `@beep/semantic-web`, `@beep/rdf`; the EventLog/`Activity` record |
 | **Projection** | Rebuildable views for traversal/search/timeline | FalkorDB (Cypher), search index, GraphRAG packets — **rebuilt from authority, never a second source** |
-| **Cache** | Candidates and similarity | vectors / embeddings (on-device), the unasserted corpus |
+| **Cache** | Candidates and similarity | vectors / embeddings (from the configured provider), the unasserted corpus |
 
 This resolves the `ip-law-knowledge-graph` P0 directly: **FalkorDB is a projection**, not a
 second source of truth.
@@ -118,9 +118,9 @@ extraction, and emits candidate claims into the authority spine.
 
 | Status | Items |
 |---|---|
-| **Have today** | `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical-schema` (+`artifact-ref`), `@beep/langextract` (spans), `@beep/nlp-mcp`/`@beep/nlp`/`@beep/wink`, `@beep/epistemic-domain` (claims/evidence/provenance/usage) + `@beep/epistemic-tables`, `@beep/semantic-web` (PROV-O + bounded SHACL), `@beep/rdf`, `@beep/agents-*` chat kernel, `@beep/workspace-*`, the Tauri+React+Bun desktop chat app with local PGlite |
+| **Have today** | `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical-schema` (+`artifact-ref`), `@beep/langextract` (spans), `@beep/nlp-mcp`/`@beep/wink`, `@beep/epistemic-domain` (claims/evidence/provenance/usage) + `@beep/epistemic-tables`, `@beep/semantic-web` (PROV-O + bounded SHACL), `@beep/rdf`, `@beep/agents-*` chat kernel, `@beep/workspace-*`, the Tauri+React+Bun desktop chat app with local PGlite |
 | **Specced** | `ip-law-knowledge-graph` (7-ontology TBox, typed entities, FalkorDB projection, seed pipeline), the document-portal product slice, the runtime data loop (`runtime-data-loop.md`), approval policy, `trustgraph-port` extraction kernel, GraphRAG ask-and-check |
-| **Build (net-new)** | OWL 2 EL/RL reasoner integration, the AI librarian/ingestion lane over the corpus, the sync engine (FS ↔ backends, Box Events → ingest), on-device embeddings (Ollama), matter-as-named-subgraph wall enforcement, bitemporal instance store |
+| **Build (net-new)** | OWL 2 EL/RL reasoner integration, the AI librarian/ingestion lane over the corpus, the sync engine (FS ↔ backends, Box Events → ingest), embeddings from a configured provider, matter walls as authorization at every access path, bitemporal instance store |
 
 ## 8. Non-negotiable boundaries (inherited)
 
