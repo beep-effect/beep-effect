@@ -78,7 +78,7 @@ export const lintJsdocCommand = Command.make(
     const path = yield* Path.Path;
     const workspaces = yield* workspaceDirectories(root);
     const files = yield* fsUtils.globFiles(
-      ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+      ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}"],
       GlobOptions.make({
         cwd: root,
         ignore: [

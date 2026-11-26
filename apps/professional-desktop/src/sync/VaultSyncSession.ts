@@ -14,7 +14,6 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { DesktopRpcSessionToken } from "@/runtime/SessionToken";
 
-// The same user, organization and workspace the desktop already acts as for contradiction review.
 const desktopVaultSyncRequest = S.decodeEffect(V.VaultSyncRequest)({
   principal: { kind: "User", userId: 1 },
   principalKey: "User:1",

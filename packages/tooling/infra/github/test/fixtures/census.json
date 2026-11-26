@@ -430,8 +430,7 @@
       "secret_names": [
         "TURBO_CACHE_WRITE_TOKEN",
         "TURBO_R2_WRITE_ACCESS_KEY_ID",
-        "TURBO_R2_WRITE_SECRET_ACCESS_KEY",
-        "TURBO_TOKEN"
+        "TURBO_R2_WRITE_SECRET_ACCESS_KEY"
       ]
     },
     {
@@ -492,13 +491,11 @@
     "BEEP_SHARD_OVERFLOW",
     "KNOWLEDGE_MINT_APP_CLIENT_ID",
     "KNOWLEDGE_MINT_APP_SLUG",
-    "TURBO_API",
     "TURBO_CACHE_API",
     "TURBO_CACHE_TEAM",
     "TURBO_R2_BUCKET",
     "TURBO_R2_ENABLED",
-    "TURBO_R2_ENDPOINT",
-    "TURBO_TEAM"
+    "TURBO_R2_ENDPOINT"
   ],
   "variables_owned_values": [
     {
@@ -520,8 +517,6 @@
     "TURBO_CACHE_READ_TOKEN",
     "TURBO_R2_READ_ACCESS_KEY_ID",
     "TURBO_R2_READ_SECRET_ACCESS_KEY",
-    "TURBO_READ_TOKEN",
-    "TURBO_TEAM",
     "VERCEL_TOKEN"
   ],
   "labels": [
@@ -658,12 +653,7 @@
   ],
   "webhooks": [
     {
-      "name": "hook-663255260",
-      "events": ["workflow_job"],
-      "active": true
-    },
-    {
-      "name": "hook-711445970",
+      "name": "hook-714397446",
       "events": ["workflow_job"],
       "active": true
     }

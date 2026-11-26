@@ -129,8 +129,6 @@ const TurnRow = ({
               </Button>
             ),
           })}
-          {/* version selector affordance — only when this turn participates in
-              a branch point created by an edit. */}
           {hasSiblings ? (
             <span className="text-xs text-muted-foreground" data-testid="turn-versions">
               versions
@@ -199,7 +197,6 @@ const StreamingTurnView = ({
     onNone: thunkNull,
     onSome: (turn) => (
       <>
-        {/* The message you just sent, shown while the reply streams. */}
         <div className="mb-4 flex flex-col items-end" data-testid="turn-streaming-user">
           <div className="max-w-4/5 rounded-lg bg-primary/10 px-3 py-2">
             <MessageView content={turn.userContent} />
@@ -241,8 +238,6 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   const scrollThread = useAtomSet(scrollThreadAtoms(threadId));
   const setBottom = useAtomSet(setThreadBottomAtoms(threadId));
   const setViewport = useAtomSet(setThreadViewportAtoms(threadId));
-  // the turn fiber must stay subscribed for the lifetime of the thread view,
-  // otherwise the registry releases the fn atom and interrupts the stream.
   useAtomMount(runTurnAtom);
   useAtomSubscribe(threadTimelineAtoms(threadId), reconcileTimeline, { immediate: true });
   useAtomSubscribe(streamingTurnAtom, scrollThread);

@@ -2,7 +2,7 @@
 
 Use this runbook when a tool, an editor, or a dependency bump asks "which
 TypeScript is this repo on?" The root uses TypeScript 7 under two names; the only classic
-TypeScript 6 API left is the copy ts-morph bundles and infra's nested Pulumi compiler. The Effect compiler patches both the native Go binary and the installed tsrs
+TypeScript 6 API left is the copy ts-morph bundles. The Effect compiler patches both the native Go binary and the installed tsrs
 binary; the Effect-patched tsrs is the build/check gate.
 
 ## Installed compilers
@@ -622,19 +622,6 @@ Effect-patched tsrs.
 
 ## What still needs TS6
 
-- **infra/Pulumi:** Pulumi's nodejs runtime loads the classic compiler API at
-  deploy time (ts-node registration and the closure serializer) and declares a
-  `< 7` TypeScript peer. The requirement stays inside `infra/`: infra pins its
-  own nested `typescript: ^6.0.3`, and every infra `Pulumi.yaml` preloads
-  `infra/pulumi-typescript6.cjs` through `runtime.options.nodeargs`, which
-  resolves `typescript` to that nested copy (the hoisted `@pulumi/pulumi` would
-  otherwise find the root TypeScript 7). A local file-backend `pulumi preview`
-  logs "Found typescript version 6.0.3 at infra/node_modules/typescript". The
-  ghaRunners SDK build uses the same nested compiler through
-  `infra:prepare-gha-runners`. A narrowly scoped syncpack version group permits
-  only this package/dependency divergence. Remove the preload once Pulumi's
-  nodejs runtime supports TypeScript 7. An Alchemy migration was considered and
-  rejected (`explorations/pulumi-to-alchemy`).
 - **Classic API scripts:** the schema-opaque goal codemod/fixup use the
   TypeScript 6 `ts` namespace that ts-morph bundles (`import { ts } from
   "ts-morph"`), so no classic `typescript` package is declared at the root.

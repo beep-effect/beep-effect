@@ -9,30 +9,21 @@ is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
 pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
-**Cutover step 4 (2026-11):** the workflows request the Alchemy `CiRunners`
-fleet's labels, `beep-fleet-heavy` and `beep-fleet-overflow`, and no longer
-the Pulumi fleet's `beep-ec2-heavy` and `beep-shard-overflow`. The runner
-groups keep their names (`beep-ec2-heavy`, `beep-shard-overflow`), so a label
-and its group now differ. The Pulumi fleet stays deployed and idle as the
-rollback until the drain and destroy (cutover decision
-`goals/infra-alchemy-rebuild/decisions/2026-11-14-ci-runners-cutover-from-pulumi.md`,
-steps 4 to 6). Both fleets are described in
-[Shard overflow pool](#shard-overflow-pool); the Pulumi-era sections below
-still describe the Pulumi fleet.
+**Fleet (2026-11):** heavy CI runs on the Alchemy `CiRunners` fleet
+(`packages/tooling/infra/ci-runners`, stage `prod`), whose labels are
+`beep-fleet-heavy` and `beep-fleet-overflow`. The runner groups keep their
+older names (`beep-ec2-heavy`, `beep-shard-overflow`), so a label and its
+group differ. The Pulumi fleet it replaced (`beep-ci-runners/production`) was
+destroyed at cutover step 6 and its program left the repository with `infra/`
+in P6 (cutover decision
+`goals/infra-alchemy-rebuild/decisions/2026-11-14-ci-runners-cutover-from-pulumi.md`).
+Pool instance types, caps and the Spot budget live in `src/Config.ts`; the
+pools are listed in [Shard overflow pool](#shard-overflow-pool). The dated
+deployment evidence sections at the end record the Pulumi fleet.
 
-The Pulumi fleet's `beep-ec2-heavy` pool uses Spot capacity with
-`capacity-optimized` allocation across seven 64 GiB instance types and five
-availability zones, and automatic On-Demand fallback disabled. This is the
-October 1, 2026 pool spread
-(deployment evidence below, recorded with eight types), minus `r6a.2xlarge`,
-which was dropped on October 5, 2026 after 20 of its 69 launches that day
-ended `instance-terminated-no-capacity` while the other seven types lost 6 of
-86. A live scale-up Lambda listing seven types is the intended state, not
-drift. All of this sits on top of the September 15 containment that
-superseded the September 9 On-Demand posture. Keep the two-instance cap, 64 GiB
-instance choices and ephemeral one-job-per-VM teardown. A budget alert does not
-enforce a monthly worker-hour limit. Diagnose interrupted jobs before retrying;
-changing the alert does not change running workers.
+Keep 64 GiB instance choices and ephemeral one-job-per-VM teardown. A budget
+alert does not enforce a monthly worker-hour limit. Diagnose interrupted jobs
+before retrying; changing the alert does not change running workers.
 
 ## Admission and capacity
 
@@ -69,7 +60,7 @@ and is unchanged by admission (time-to-certainty ruling 57).
 
 A PR confined to `docs/`, goal packet folders (`goals/<packet>/`),
 `explorations/` and `research/` takes the shared documentation route
-(`docs_only`). Markdown outside `packages/`, `apps/` and `infra/` takes it too,
+(`docs_only`). Markdown outside `packages/` and `apps/` takes it too,
 including `standards/ARCHITECTURE.md` and `.changeset/*.md`. Goal diagrams,
 attachments, prose and data files belong to that route. Root-level goal doctor
 baselines, leases, promotions and compiler configuration keep verification,
@@ -179,8 +170,7 @@ A new output field (such as a new relevance lane) does, through a pin bump of
 2. Read the job's check annotations. A runner communication failure with an
    unfinished step identifies runner loss, not a source assertion.
 3. Remove the pool's runner-name prefix to obtain the EC2 instance ID:
-   `beep-fleet-heavy-` or `beep-fleet-ovf-` on the `CiRunners` fleet,
-   `beep-ci-` or `beep-ovf-` on the Pulumi fleet. Read
+   `beep-fleet-heavy-` or `beep-fleet-ovf-` on the `CiRunners` fleet. Read
    `aws ec2 describe-spot-instance-requests --filters Name=instance-id,Values=<instance-id>`.
    `instance-terminated-no-capacity` proves Spot reclamation. Compare its
    update time with GitHub's later failure time before inferring a timeout.
@@ -321,32 +311,12 @@ tracked as a follow-up.
 
 ## Termination credential access
 
-The pinned `github-aws-runners/github-runner/aws` v7.10.1 module grants its
-termination roles `ssm:GetParameter` but does not forward `kms_key_arn` to the
-termination watcher. With an externally managed customer-key-encrypted GitHub
-App credential, deregistration therefore fails with `kms:Decrypt` denied.
-
-`CiFleetController` owns six KMS grants, one per App parameter for each of
-these existing Lambda roles:
-
-- `beep-ci-spot-termination-notification`
-- `beep-ci-spot-termination-handler`
-- `beep-ci-deregister-retry`
-
-Each grant allows only `Decrypt` on the configured GitHub App key with an exact
-encryption context naming its App ID or App private-key parameter. It does not
-grant access to the webhook secret, unrelated parameter contexts, or other keys.
-KMS grants cannot enforce `kms:ViaService`: direct decryption of matching
-parameter ciphertext is also permitted. The notification Lambda consumes
-ordinary EC2 termination events, so this fix remains necessary on On-Demand.
-
-The upstream module still owns the roles and its existing policies. Key grants
-do not attach policies that could block the module from deleting a role. Each
-grant name includes the immutable IAM role ID, forcing fresh grants if a role
-is recreated under the same name. Lambda lookup and grant creation explicitly
-use the controller region. Keep the grants until an upstream upgrade supplies
-and validates equivalent access; do not hand-edit the generated SDK or broaden
-runner workload identity.
+The `CiRunners` termination watcher roles read the GitHub App parameters
+through an IAM inline policy that grants `kms:Decrypt` with a
+`kms:EncryptionContext:PARAMETER_ARN` condition, owned by
+`@beep/alchemy-github-runners`. The six KMS grants the Pulumi
+`CiFleetController` carried for the upstream module are gone with that fleet
+(decision D19, `KmsGrant` not needed).
 
 ## Shard overflow pool
 
@@ -379,102 +349,33 @@ Overflow routing reads its pool size from `BEEP_SHARD_OVERFLOW_POOL_SIZE`
 `webhookUrl` and finds the group by its name, `beep-shard-overflow`, not by the
 label.
 
-### Webhook delivery and the 6b switch
+### Webhook delivery
 
-`workflow_job` events reach the fleet through repository webhook 714397446 on
-the function URL. The Pulumi controllers have two more, 663255260 (heavy) and
-711445970 (overflow), on `execute-api` URLs. Cutover step 6b, at
-2026-11-26T16:00Z, deletes those two and keeps 714397446 as the only fleet
-path. The runner App's webhook is not moved to the function URL. The
-missed-event check reads repository hook deliveries, but an App's deliveries
-need its JWT.
-
-Before the switch:
-
-- the CI goals driver's word;
-- one green missed-event check run on a `main` commit that contains #3539;
-- an hour of its own, overlapping no other CI-behaviour change;
-- the 6b PR merged by 2026-11-26T15:00Z, and the `deploy-infra-github.yml`
-  run its merge started finished with its first hour over;
-- the Pulumi fleet idle at T-5 min (step 6(a)): `aws ec2 describe-instances
-  --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf
-  Name=instance-state-name,Values=pending,running` returns none, and
-  `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` or `beep-ovf-`
-  runner.
-
-The runner App's webhook (`beep-ci-fleet-controller`) still delivers
-`workflow_job` to the Pulumi heavy controller's `execute-api` URL. At T it is
-set inactive: untick Active on the App's settings page, which needs GitHub's
-sudo-mode re-authentication. This stops its deliveries and leaves the App's
-installation tokens and JIT configs working. `beep github app` only mints an
-App, so the change goes through the settings page.
-
-At T, the operator:
-
-1. Captures `gh api repos/beep-effect/beep-effect/hooks/<id>` for 663255260
-   and 711445970 into the 6b log (URL, events, content type, active; no secret
-   is returned).
-2. Deletes both hooks and sets the App webhook inactive.
-3. Checks that `gh api repos/beep-effect/beep-effect/hooks` lists only
-   714397446 and that the App's settings page shows its webhook inactive.
-4. Checks that the next fleet job's `queued` delivery on 714397446 returns 2xx
-   and a `beep-fleet-*` runner picks the job up. A job queued for five minutes
-   or more also shows in the next missed-event check as `delivery <id> (2xx)`;
-   with no such job, the hook's delivery list is the proof.
-
-To roll back before the Pulumi destroy, re-create the two hooks from the
-configuration captured at T and tick Active on the App webhook again. After
-the destroy the recorded URLs are dead: restore the stack first, as the
-cutover decision's "Rollback after (d)" says, and use the fresh
-`controllerWebhook` and `shardOverflowWebhook` outputs. The plan is
+`workflow_job` events reach the fleet through one repository webhook,
+714397446, on the function URL. Cutover step 6b (2026-11-26T03:35Z) deleted the
+Pulumi controllers' two `execute-api` hooks, 663255260 (heavy) and 711445970
+(overflow), and set the runner App's webhook (`beep-ci-fleet-controller`)
+inactive. The App keeps minting installation tokens and JIT configs. The
+missed-event check reads repository hook deliveries; an App's deliveries need
+its JWT, which is why the App webhook was not moved to the function URL. The
+plan is
 `goals/infra-alchemy-rebuild/decisions/2026-11-25-ci-runners-6b-delete-execute-api-hooks.md`.
 
-The Pulumi fleet (`infra/ci-runners`, stack `beep-ci-runners/production`),
-idle after step 4 and destroyed at step 6:
-
-| | Heavy pool | Overflow pool |
-| --- | --- | --- |
-| Module prefix and `ghr:environment` | `beep-ci` | `beep-ovf` |
-| Runner group and label | `beep-ec2-heavy` | `beep-shard-overflow` |
-| Runner names | `beep-ci-*` | `beep-ovf-*` |
-| Roles | `/beep-ci/beep-ci-*` | `/beep-ovf/beep-ovf-*` |
-| Webhook secret | `/github-action-runners/app/github_app_webhook_secret` | `/github-action-runners/shard-overflow/github_app_webhook_secret` |
-| Termination grants | `beep-ci-spot-termination-*`, `beep-ci-deregister-retry` | `beep-ovf-spot-termination-*`, `beep-ovf-deregister-retry` |
-
-Neither prefix may start with the other. The termination watcher matches
+Neither pool's `ghr:environment` value may start with the other's. The termination watcher matches
 instances whose `ghr:environment` tag starts with its own prefix, so an
 overlapping prefix lets one pool's handler deregister the other pool's runners.
 
-### Fleet permissions boundary
-
-Every role the module creates carries `beep-ci-fleet-boundary`, an IAM policy
-maintained by hand, outside Pulumi. Its `PassOwnRoles` statement is the one
-that constrains names: a fleet role may pass to EC2
-(`iam:PassedToService` `ec2.amazonaws.com`) only the roles it lists, and the
-scale-up Lambda must pass the runner role, `/<prefix>/<prefix>-runner-<hash>`,
-for every launch.
-
-- v4: `arn:aws:iam::832907639880:role/beep-ci/beep-ci-*`.
-- v5 (default since 2026-11-13): v4 plus
-  `arn:aws:iam::832907639880:role/beep-ovf/beep-ovf-*`, nothing else.
-
-A new pool prefix, or a `role_path` that moves a runner role, needs its entry in
-`PassOwnRoles` before the pool is applied. A wrong entry does not show in a
-Pulumi preview: the launch fails at run time. Roll back with
-`aws iam set-default-policy-version --policy-arn arn:aws:iam::832907639880:policy/beep-ci-fleet-boundary --version-id v4`,
-and only after the overflow pool is off. Record why in a
-`goals/ci-lane-economics/decisions/` file.
-
 ### After switching overflow on
 
-The first overflow VM launch is the first proof of the boundary entry; nothing
-earlier exercises `iam:PassRole`. On the first run that routes:
+The first overflow VM launch is the first proof that the scale-up function may
+pass the runner role; nothing earlier exercises `iam:PassRole`. On the first run
+that routes:
 
 1. Test Plan logs `shard-overflow: routed; ...`.
 2. The scale-up log shows the launch:
 
    ```sh
-   aws logs filter-log-events --log-group-name /aws/lambda/beep-ovf-scale-up \
+   aws logs filter-log-events --log-group-name /aws/lambda/beep-fleet-prod-overflow-scale-up \
      --start-time "$(( ($(date +%s) - 3600) * 1000 ))" \
      --filter-pattern '?"Created instance" ?"Create fleet" ?"PassRole"' \
      --query 'events[].message' --output text
@@ -482,62 +383,26 @@ earlier exercises `iam:PassRole`. On the first run that routes:
 
    Expect `Created instance(s): i-...`. A `Create fleet request failed.` or
    `Create fleet did not create every requested instance.` line naming
-   `iam:PassRole` means the boundary does not admit the runner role.
-3. `Test Unit (<partition>) / Overflow` jobs run on `beep-ovf-*` runners,
+   `iam:PassRole` means the scale-up role may not pass the runner role.
+3. `Test Unit (<partition>) / Overflow` jobs run on `beep-fleet-ovf-*` runners,
    Coverage Regression finds their evidence, and `Test Unit` passes.
 
 If the launch fails: `gh variable set BEEP_SHARD_OVERFLOW --body off`, cancel the
 runs whose overflow jobs are still queued (a self-hosted job with no runner
 waits rather than fails) and re-run them hosted, then compare the boundary's
-default version and the runner role's path with the table above.
+runner role's path with the table above.
 
 ## Deploy and verify
 
-A saved plan is made before the resources it plans exist. When a resource's dependencies are only
-known once another resource exists (for example the overflow pool's KMS decrypt grants, which look
-up Lambda functions the module creates and so depend on the module), `pulumi up --plan` refuses
-that resource with `violates plan: dependencies changed` after creating everything else. Nothing
-is rolled back. Expect a second pass: run a fresh
-`pulumi preview --diff --refresh --save-plan <new plan file>`, then compare every operation in it
-with the plan that was reviewed. A plan mismatch can stop an update before other planned operations
-run, so the second plan may hold more than the refused resources; each remaining operation must be
-one the reviewed plan already contained, and anything else is a stop. Apply it with
-`pulumi up --plan <new plan file>`, then `pulumi preview --refresh --expect-no-changes`. On
-2026-11-13 the first pass created 136 of 142 resources and the second plan held exactly the six
-refused grants.
+The `CiRunners` stack deploys only through `.github/workflows/deploy-ci-runners.yml`:
+a checked plan, then a deploy that applies the same plan object under the stage
+lease. The procedure, the arm variables and plan-only runs are in
+[Alchemy infrastructure](./alchemy-infra.md#ci-runners). Before merging a change
+to the pools, run `bun run beep quality package-verify @beep/infra-ci-runners`
+and read the plan rows: an unexpected network, IAM, AMI, cap or deletion change
+needs its own attribution first.
 
-
-1. Refresh AWS identity, the source branch, the current fleet cap, and running
-   jobs. Use the configured S3 Pulumi backend and production stack in
-   `infra/ci-runners`.
-2. For the existing `op://`-backed Pulumi env file, first test
-   `op run --env-file=<path> -- true >/dev/null`. Use that same wrapper for
-   Pulumi. Never print resolved credentials or export plaintext stack secrets.
-3. Run `bun run beep quality package-verify @beep/infra`. Review a saved Pulumi
-   preview: the purchase-model update and six narrow KMS grants are intended;
-   unexpected network, security-boundary, AMI, cap, or deletion changes need
-   separate attribution before apply.
-4. Apply the reviewed plan with the operator attending. When migrating the
-   initial three `github-app-ssm-decrypt` inline policies, create the six grants
-   first with a saved plan that excludes those three policy URNs. Allow five
-   minutes for KMS propagation,
-   then remove only those three policies with the reviewed remaining apply.
-   Inspect the live scale-up configuration for
-   On-Demand and cap 14. Newly launched matching EC2 instances must have no Spot
-   request ID. Let existing busy instances drain naturally.
-5. Inspect `kms list-grants` for exactly the six intended principals, operations,
-   and parameter contexts. IAM policy simulation does not evaluate KMS grants.
-   Require successful real SSM decryption and natural termination/deregistration
-   evidence after removing the initial policies.
-6. Confirm a heavy verification job succeeds on a newly launched On-Demand
-   runner. Re-read the target run and SHA before any failed-job rerun; do not
-   replay superseded branches or healthy jobs.
-
-This fixes Spot-specific interruption and the known cleanup permission defect.
-Normal host, network, application, or timeout failures still require diagnosis.
-The instance cap (14 in this September 9 procedure; two in source since
-September 15, raised only by a time-boxed burst) limits concurrency, not a
-monthly budget: billing continues
+The instance caps limit concurrency, not a monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
 
 ## Deployment evidence — 2026-10-06 (drop `r6a.2xlarge`)

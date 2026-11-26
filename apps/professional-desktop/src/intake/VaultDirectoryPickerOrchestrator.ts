@@ -45,8 +45,8 @@ const pickWith = Effect.fn("professional_desktop.intake.pick_vault_directory_pro
   const [stdout, exitCode] = yield* Effect.all([collectText(child.stdout), child.exitCode], {
     concurrency: "unbounded",
   });
-  // kdialog and zenity exit non-zero when the user cancels the dialog.
-  if (Number(exitCode) !== 0) return O.none<string>();
+  const dialogCancelled = Number(exitCode) !== 0;
+  if (dialogCancelled) return O.none<string>();
   const selected = Str.trim(stdout);
   return Str.isNonEmpty(selected) ? O.some(selected) : O.none<string>();
 }, Effect.scoped);
@@ -102,14 +102,7 @@ export const pickVaultDirectoryOnHost = (
     )
   );
 
-// Env flag that disables the sidecar's native folder dialog entirely.
-// kdialog reaches the operator's desktop through the D-Bus portal even when
-// DISPLAY/WAYLAND_DISPLAY are unset, so a headless or QA sidecar cannot
-// suppress the dialog by stripping display variables — an unattended run can
-// pop a folder picker on whatever desktop owns the session bus. Setting
-// BEEP_DESKTOP_VAULT_PICKER_DISABLED=true makes PickVaultDirectory fail with
-// the typed error immediately, which routes the renderer to its manual
-// vault-path form.
+// decision: vault-picker-disable-flag-for-unattended-runs
 const vaultPickerDisabled = Config.Boolean("BEEP_DESKTOP_VAULT_PICKER_DISABLED").pipe(Config.withDefault(false));
 
 /**

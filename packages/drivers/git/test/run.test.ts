@@ -60,7 +60,6 @@ describe("runCollected", () => {
                 }),
               stdin: Sink.drain,
               stdout: Stream.make(new TextEncoder().encode("ok\n")),
-              // Three 4-byte chunks: the ceiling is crossed mid-stream, not on a finished string.
               stderr: Stream.make(
                 new TextEncoder().encode("eeee"),
                 new TextEncoder().encode("eeee"),
@@ -78,7 +77,11 @@ describe("runCollected", () => {
       assert.isTrue(S.is(OutputTooLarge)(failure));
       if (S.is(OutputTooLarge)(failure)) {
         assert.strictEqual(failure.stream, "stderr");
-        assert.strictEqual(failure.limit, 10);
+        assert.strictEqual(
+          failure.limit,
+          10,
+          "three 4-byte stderr chunks cross the 10-byte ceiling mid-stream, not on a finished string"
+        );
       }
       assert.strictEqual(killed, 1);
     })

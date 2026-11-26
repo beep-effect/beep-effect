@@ -104,8 +104,6 @@ export const composerDocumentSafetyGateAtoms = Atom.family((_threadId: Workspace
   )
 );
 
-// Per-thread safety refusal shown beside the composer. A successful subsequent
-// refinement clears it; rejected drafts stay persisted as general documents.
 const composerSafetyRefusalAtoms = Atom.family((_threadId: WorkspaceIdentity.ThreadId) =>
   Atom.make<O.Option<ComposerSafetyRefusal>>(O.none())
 );
@@ -124,7 +122,6 @@ const composerNoticeAtom = professionalBrowserRuntime.fn<ComposerNotice>()(
   })
 );
 
-// Untracked draft seed, keyed by thread and failure-driven draft revision.
 const composerDraftSeedAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
   Atom.family((_revision: number) => Atom.make((get) => get.once(draftAtoms(threadId))))
 );
@@ -135,17 +132,12 @@ const updateComposerDraftAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
       Effect.fnUntraced(function* (serializedState, ctx) {
         const gateAtom = composerDocumentSafetyGateAtoms(threadId)(seed);
         const document = composerDocumentFromEditorState(seed, serializedState);
-        // A gate only opens at seed time; edits can close it once the draft no
-        // longer carries a violation, and never open a new one — send-time
-        // refinement owns violations introduced while editing.
-        const nextGate = O.flatMap(ctx(gateAtom), () => prepareComposerDocumentSafetyGate(document));
+        const seedGateRecheckedOnEdit = O.flatMap(ctx(gateAtom), () => prepareComposerDocumentSafetyGate(document));
 
         ctx.set(composerSafetyRefusalAtoms(threadId), O.none());
-        ctx.set(gateAtom, nextGate);
+        ctx.set(gateAtom, seedGateRecheckedOnEdit);
 
-        // An open gate keeps the original general document in draft storage;
-        // only a corrected draft resumes normal persistence.
-        if (O.isSome(nextGate)) return;
+        if (O.isSome(seedGateRecheckedOnEdit)) return;
         const editingThisThread = O.filter(ctx(editTargetAtom), (target) => target.threadId === threadId);
         if (O.isSome(editingThisThread)) return;
         ctx.set(draftAtoms(threadId), A.isReadonlyArrayEmpty(document.children) ? O.none() : O.some(document));
@@ -176,9 +168,6 @@ const submitComposerAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =
   )
 );
 
-// How long a dispatched send may stay invisible before it counts as dropped.
-// An accepted write flips the turn node within milliseconds, so the timeout
-// fires only when the dispatch chain never ran at all.
 const TURN_DISPATCH_CONFIRM_TIMEOUT = Duration.seconds(2);
 
 /**
@@ -238,8 +227,6 @@ export const dispatchTurnWithConfirm: {
     const unsubscribeTurn = registry.subscribe(
       runTurnAtom,
       (result) => {
-        // A freshly created node can notify once with its Initial value; only a
-        // real state transition counts as the turn starting.
         if (!AsyncResult.isInitial(result)) {
           sawTurnTransition = true;
         }
@@ -300,9 +287,7 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
   Atom.family((seed: Md.Document) =>
     Atom.make((get) => {
       const updateDraft = updateComposerDraftAtoms(threadId)(seed);
-      // The editor stores this closure and keeps calling it after the idle
-      // sweep may have disposed this atom's node, so dispatch through the
-      // registry handle, which outlives the node.
+      // decision: fn-atom-writes-outlive-the-node
       const registry = get.registry;
       get.mount(updateDraft);
       return (state: SerializedEditorState): void => registry.set(updateDraft, state);
@@ -310,18 +295,12 @@ export const composerSerializedChangeHandlerAtoms = Atom.family((threadId: Works
   )
 );
 
-// Stable send handler. Synchronous refusal decisions satisfy the editor
-// contract; notices and accepted state transitions execute through runtime
-// atoms.
 const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
   Atom.family((seed: Md.Document) =>
     Atom.make((get) => {
       const submit = submitComposerAtoms(threadId);
       const gateAtom = composerDocumentSafetyGateAtoms(threadId)(seed);
-      // The Lexical send binding keeps running this closure after the idle
-      // sweep may have disposed this atom's node; node-bound reads and writes
-      // are silently dropped then, so everything inside goes through the
-      // registry handle instead (QA 2026-08-26 P0).
+      // decision: fn-atom-writes-outlive-the-node
       const registry = get.registry;
       get.mount(composerNoticeAtom);
       get.mount(submit);
@@ -353,23 +332,19 @@ const composerSendHandlerAtoms = Atom.family((threadId: WorkspaceIdentity.Thread
   )
 );
 
-// Stable stop handler backed by a runtime action. Registry-dispatched for the
-// same zombie-closure reason as the send handler above.
+// decision: fn-atom-writes-outlive-the-node
 const composerStopHandlerAtom = Atom.make((get) => {
   const registry = get.registry;
   get.mount(stopComposerAtom);
   return (): void => registry.set(stopComposerAtom, void 0);
 });
 
-// Stable edit-cancellation handler backed by a runtime action.
 const composerCancelEditHandlerAtom = Atom.make((get) => {
   const registry = get.registry;
   get.mount(cancelComposerEditAtom);
   return (): void => registry.set(cancelComposerEditAtom, void 0);
 });
 
-// Derives the content to seed the editor with. Editing wins over the draft;
-// the draft seeds only on thread / edit-target switches.
 const contentToLoadFor = (editTarget: O.Option<EditTarget>, draft: O.Option<Md.Document>): O.Option<Md.Document> =>
   O.match(editTarget, {
     onNone: () => draft,
@@ -403,20 +378,17 @@ interface ComposerShellView {
  */
 export const composerShellAtoms = Atom.family((threadId: WorkspaceIdentity.ThreadId) =>
   Atom.make((get): ComposerShellView => {
-    // Edit state is global while the composer is per-thread: an edit target from
-    // another thread would otherwise seed this composer and submit that thread's
-    // turn id against this one.
-    const editTarget = O.filter(get(editTargetAtom), (target) => target.threadId === threadId);
+    const thisThreadEditTarget = O.filter(get(editTargetAtom), (target) => target.threadId === threadId);
     const draftRevision = get(draftRevisionAtoms(threadId));
     const draft = get(composerDraftSeedAtoms(threadId)(draftRevision));
     return {
       cancelEdit: get(composerCancelEditHandlerAtom),
-      composerKey: O.match(editTarget, {
+      composerKey: O.match(thisThreadEditTarget, {
         onNone: () => `thread:${threadId}:${draftRevision}`,
         onSome: (target) => `edit:${target.turnId}`,
       }),
-      contentToLoad: contentToLoadFor(editTarget, draft),
-      isEditing: O.isSome(editTarget),
+      contentToLoad: contentToLoadFor(thisThreadEditTarget, draft),
+      isEditing: O.isSome(thisThreadEditTarget),
       safetyRefusal: get(composerSafetyRefusalAtoms(threadId)),
       stop: get(composerStopHandlerAtom),
       streaming: get(turnActiveAtom),

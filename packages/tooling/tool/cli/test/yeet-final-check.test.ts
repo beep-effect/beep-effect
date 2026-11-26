@@ -43,6 +43,7 @@ import {
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
   vitestReplayArgs,
+  vitestReplayEnv,
   YEET_WORKER_PUBLISH_BODY_SENTENCE,
   YeetEnsuredPullRequest,
   YeetInboxRowJson,
@@ -327,6 +328,90 @@ describe("vitestReplayArgs", () => {
     ["vitest run -c ./vitest.memory.config.ts", ["vitest", "run", "--config", "./vitest.memory.config.ts", file]],
   ])("carries the replayed segment's config file: %s", (script, expected) => {
     expect(vitestReplayArgs(manifestWith({ test: script }), file)).toEqual(expected);
+  });
+
+  it("replays a file beep:test excludes under the beep:test:* script that collects it", () => {
+    const manifest = manifestWith({
+      test: "bun run beep:test",
+      "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
+      "beep:test:integration": "bunx --bun vitest run --config vitest.integration.config.ts --passWithNoTests",
+    });
+    const integration = "test/integration/chat-persist.pglite.test.ts";
+    expect(vitestReplayArgs(manifest, integration)).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      integration,
+    ]);
+    expect(vitestReplayArgs(manifest, file)).toEqual(["--bun", "vitest", "run", file]);
+  });
+
+  it("prefers a beep:test:* script that names the file, with its env flag, over one that only collects it", () => {
+    const manifest = manifestWith({
+      "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
+      "beep:test:integration": "bunx --bun vitest run --config vitest.integration.config.ts --passWithNoTests",
+      "beep:test:integration:ipc":
+        "bun run build:sidecar && BEEP_TEST_SIDECAR_IPC=1 bunx --bun vitest run --config vitest.integration.config.ts test/integration/sidecar-ipc-stdio.test.ts",
+    });
+    const ipc = "test/integration/sidecar-ipc-stdio.test.ts";
+    const other = "test/integration/chat-persist.pglite.test.ts";
+    expect(vitestReplayArgs(manifest, ipc)).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      ipc,
+    ]);
+    expect(vitestReplayEnv(manifest, ipc)).toEqual({ BEEP_TEST_SIDECAR_IPC: "1" });
+    expect(vitestReplayEnv(manifest, other)).toEqual({});
+    expect(vitestReplayEnv(manifest, "test/a.test.ts")).toEqual({});
+  });
+
+  it.each([
+    "bunx --bun vitest run --exclude='test/integration/**'",
+    'bunx --bun vitest run --exclude="test/integration/**"',
+    "bunx --bun vitest run --exclude test/integration/**",
+  ])("reads a quoted or unquoted exclude glob: %s", (unit) => {
+    const manifest = manifestWith({
+      "beep:test": unit,
+      "beep:test:integration": "bunx --bun vitest run --config vitest.integration.config.ts",
+    });
+    expect(vitestReplayArgs(manifest, "test/integration/a.test.ts")).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      "test/integration/a.test.ts",
+    ]);
+  });
+
+  it("takes a later segment of the same script when an earlier one excludes the file", () => {
+    const manifest = manifestWith({
+      "beep:test":
+        "vitest run --config vitest.unit.ts --exclude=test/integration/** && vitest run --config vitest.integration.ts",
+    });
+    expect(vitestReplayArgs(manifest, "test/integration/a.test.ts")).toEqual([
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.ts",
+      "test/integration/a.test.ts",
+    ]);
+    expect(vitestReplayArgs(manifest, file)).toEqual(["vitest", "run", "--config", "vitest.unit.ts", file]);
+  });
+
+  it("keeps the beep:test segment when no script collects the excluded file", () => {
+    const manifest = manifestWith({ "beep:test": "bunx --bun vitest run --exclude test/slow/**" });
+    expect(vitestReplayArgs(manifest, "test/slow/a.test.ts")).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "test/slow/a.test.ts",
+    ]);
   });
 
   it("takes the config of the segment that runs the file, not another segment's", () => {

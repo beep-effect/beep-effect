@@ -41,9 +41,6 @@ export function ThemeToggle(): JSX.Element {
   return (
     <Button variant="ghost" size="icon" onClick={() => toggleMode(void 0)} aria-label={label} title={label}>
       {isDark ? (
-        // Incidental cross-app sun glyph: oip-web's ThemeModeToggle draws the same icon.
-        // The correct dedup is a shared @beep/ui icon (which would also touch oip-web),
-        // out of this packet's scope.
         // fallow-ignore-next-line code-duplication -- sun glyph mirrors the oip-web theme toggle. Owner: @beep/professional-desktop. Exit: replace both copies with a shared @beep/ui icon.
         <svg
           className="size-4"

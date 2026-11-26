@@ -27,6 +27,7 @@
 
 import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
@@ -38,8 +39,10 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { adaptGitKitError, patientGit, readGitRenames } from "../../../internal/repo-run/index.ts";
@@ -59,6 +62,9 @@ const HUNK_HEADER_PATTERN = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 const BUN_VITEST_PATTERN = /\bbunx?\s+--bun\s+vitest\b/;
 const VITEST_PATTERN = /\bvitest\b/;
 const CONFIG_FLAG_PATTERN = /(?:^|\s)(?:--config|-c)(?:=|\s+)(\S+)/;
+const EXCLUDE_FLAG_PATTERN = /(?:^|\s)--exclude(?:=|\s+)(\S+)/g;
+const ENV_ASSIGNMENT_PATTERN = /^([A-Za-z_]\w*)=(\S*)$/;
+const excludeGlobOptions = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 const parsePackageJson = manifestParser(["scripts"]);
 
 const isAssertionLine = (line: string): boolean => ASSERTION_PATTERN.test(line);
@@ -280,16 +286,133 @@ const segmentConfigArguments = (segment: string): ReadonlyArray<string> =>
     O.match({ onNone: A.empty<string>, onSome: (config) => ["--config", config] })
   );
 
+const segmentExcludesFile = (segment: string, testPath: string): boolean =>
+  A.some(A.fromIterable(Str.matchAll(EXCLUDE_FLAG_PATTERN)(segment)), (match) =>
+    pipe(
+      O.fromUndefinedOr(match[1]),
+      O.map(Str.replace(/^(['"])(.*)\1$/, "$2")),
+      O.flatMap(flow(GlobPattern.compileResult(excludeGlobOptions), Result.getSuccess)),
+      O.exists((pattern) => pattern.matches(Str.replace(/^\.\//, "")(testPath)))
+    )
+  );
+
+const namingSegment = (script: string, testPath: string): O.Option<string> =>
+  A.findFirst(
+    Str.split(script, "&&"),
+    (segment) => VITEST_PATTERN.test(segment) && A.contains(segmentFileArguments(segment), testPath)
+  );
+
+const collectingSegment = (script: string, testPath: string): O.Option<string> => {
+  const collecting = A.filter(
+    Str.split(script, "&&"),
+    (segment) => VITEST_PATTERN.test(segment) && !segmentExcludesFile(segment, testPath)
+  );
+  return pipe(
+    A.findFirst(collecting, (segment) => A.contains(segmentFileArguments(segment), testPath)),
+    O.orElse(() => A.findFirst(collecting, flow(segmentFileArguments, A.isReadonlyArrayEmpty)))
+  );
+};
+
+const replayScriptOrder = (scripts: R.ReadonlyRecord<string, string>): ReadonlyArray<string> =>
+  A.getSomes([
+    R.get(scripts, "beep:test"),
+    R.get(scripts, "test"),
+    ...pipe(
+      R.keys(scripts),
+      A.filter(Str.startsWith("beep:test:")),
+      A.sort(Order.String),
+      A.map((key) => R.get(scripts, key))
+    ),
+  ]);
+
+const replayScriptSegment = (scripts: R.ReadonlyRecord<string, string>, testPath: string): O.Option<string> =>
+  pipe(
+    A.findFirst(replayScriptOrder(scripts), (script) => namingSegment(script, testPath)),
+    O.orElse(() => A.findFirst(replayScriptOrder(scripts), (script) => collectingSegment(script, testPath))),
+    O.orElse(() =>
+      pipe(
+        O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test")),
+        O.flatMap((script) => replaySegment(script, testPath))
+      )
+    )
+  );
+
+const manifestReplaySegment = (manifest: LenientManifest, testPath: string): O.Option<string> =>
+  pipe(
+    O.fromUndefinedOr(manifest.scripts),
+    O.flatMap((scripts) => replayScriptSegment(scripts, testPath))
+  );
+
+const segmentEnvAssignments = (segment: string): R.ReadonlyRecord<string, string> =>
+  pipe(
+    Str.split(Str.trim(segment), /\s+/),
+    A.takeWhile((token) => ENV_ASSIGNMENT_PATTERN.test(token)),
+    A.map((token) =>
+      pipe(
+        O.fromNullishOr(ENV_ASSIGNMENT_PATTERN.exec(token)),
+        O.flatMap((match) => O.all([O.fromUndefinedOr(match[1]), O.fromUndefinedOr(match[2])]))
+      )
+    ),
+    A.getSomes,
+    R.fromEntries
+  );
+
+/**
+ * The environment assignments that prefix the vitest segment replaying one
+ * test file, such as `BEEP_TEST_SIDECAR_IPC=1`.
+ *
+ * **Details**
+ *
+ * Picks the same segment as {@link vitestReplayArgs}. A file that only runs
+ * when its script sets a flag would otherwise skip on the replay and exit 0,
+ * which reads as a passing merge-base test.
+ *
+ * **Example** (Carry a script's flag into the replay)
+ *
+ * ```ts
+ * import { LenientManifest } from "@beep/package-json/LenientManifest"
+ * import { vitestReplayEnv } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const manifest = Effect.runSync(
+ *   LenientManifest.parse('{"scripts":{"beep:test:ipc":"FLAG=1 bunx --bun vitest run test/ipc.test.ts"}}')
+ * )
+ * console.log(vitestReplayEnv(manifest, "test/ipc.test.ts")) // { FLAG: "1" }
+ * ```
+ *
+ * @param manifest - Decoded `package.json` of the test file's owning package.
+ * @param testPath - Test file path relative to the package directory.
+ * @returns Variables the replay sets on top of the inherited environment.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const vitestReplayEnv: {
+  (testPath: string): (manifest: LenientManifest) => R.ReadonlyRecord<string, string>;
+  (manifest: LenientManifest, testPath: string): R.ReadonlyRecord<string, string>;
+} = dual(
+  2,
+  (manifest: LenientManifest, testPath: string): R.ReadonlyRecord<string, string> =>
+    pipe(
+      manifestReplaySegment(manifest, testPath),
+      O.match({ onNone: R.empty<string, string>, onSome: segmentEnvAssignments })
+    )
+);
+
 /**
  * Build the `bunx` arguments that replay one test file on its package's own
  * test runtime.
  *
  * **Details**
  *
- * Reads the package's `beep:test` script, falling back to `test`, and splits
- * it on `&&`. The vitest segment that names the test file as an argument
- * decides the runtime; when none names it, the vitest segment with no file
- * argument does. A segment that runs vitest under Bun (`bunx --bun vitest`
+ * Reads the package's `beep:test` script, then `test`, then each other
+ * `beep:test:*` script in name order, and splits each on `&&`. The vitest
+ * segment that names the test file as an argument decides the runtime; when
+ * none names it, the vitest segment with no file argument does. A script
+ * whose segment names the file wins over one that only collects it. A
+ * segment whose `--exclude` glob matches the file does not collect it, so
+ * the next script is tried: an integration test excluded from `beep:test` replays
+ * under `beep:test:integration` and its config. When no script collects the
+ * file, the first `beep:test` or `test` segment is used as before. A segment that runs vitest under Bun (`bunx --bun vitest`
  * or `bun --bun vitest`) makes the replay pass `--bun`; anything else runs
  * plain `bunx vitest`, which uses Node. The segment's `--config` (or `-c`)
  * file is carried over, so the replay collects the file the way the package's
@@ -319,9 +442,7 @@ export const vitestReplayArgs: {
   2,
   (manifest: LenientManifest, testPath: string): ReadonlyArray<string> =>
     pipe(
-      O.fromUndefinedOr(manifest.scripts),
-      O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
-      O.flatMap((script) => replaySegment(script, testPath)),
+      manifestReplaySegment(manifest, testPath),
       O.match({
         onNone: () => ["vitest", "run", testPath],
         onSome: (segment) => [
@@ -407,12 +528,11 @@ const classifyOnBase = Effect.fn("Yeet.ExpectationRewrite.classifyOnBase")(funct
     return verdict("unverified", "the owning package.json on the merge base could not be read or decoded");
   }
   yield* Console.log(`[yeet] final-check: replaying the merge-base version of ${baseFile} on the merge base`);
-  const exitCode = yield* runInherited(
-    "bunx",
-    vitestReplayArgs(manifest.value, path.relative(packageDir.value, path.join(baseRoot, baseFile))),
-    packageDir.value,
-    { CI: "true" }
-  ).pipe(Effect.catch((cause) => Console.error(`[yeet] final-check: ${cause.message}`).pipe(Effect.as(-1))));
+  const replayPath = path.relative(packageDir.value, path.join(baseRoot, baseFile));
+  const exitCode = yield* runInherited("bunx", vitestReplayArgs(manifest.value, replayPath), packageDir.value, {
+    ...vitestReplayEnv(manifest.value, replayPath),
+    CI: "true",
+  }).pipe(Effect.catch((cause) => Console.error(`[yeet] final-check: ${cause.message}`).pipe(Effect.as(-1))));
   return exitCode === 0
     ? verdict("follows-diff", "the old test passes on the merge base, so this diff's source change moved the output")
     : exitCode === -1

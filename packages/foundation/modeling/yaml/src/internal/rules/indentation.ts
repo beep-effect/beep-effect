@@ -233,11 +233,6 @@ const scanLineTokens = (
   return lineScan;
 };
 
-/**
- * Explicit plain keys can be composed from separate tokens while their
- * AST span still covers only the first fragment. Keep the later ':'
- * structural, but omit deeper scalar fragments until that indicator.
- */
 const isDeeperExplicitKeyFragment = (
   continuationKeyColumn: number | undefined,
   indent: number,

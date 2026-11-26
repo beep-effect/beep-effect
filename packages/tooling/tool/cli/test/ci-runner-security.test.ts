@@ -219,7 +219,7 @@ const PRODUCER_BUILD_TOOL_PIN_KEYS = [
 // The pins file is the single source of the installed producer build tools and is digested into build.json.
 const expectPinnedProducerBuildTools = (installRun: string, buildTools: string): void => {
   expect(installRun).not.toMatch(/python3|pip install|venv/u);
-  expect(installRun).toContain("pins=infra/r2-cache/policy-build-tools.txt");
+  expect(installRun).toContain("pins=packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt");
   for (const key of PRODUCER_BUILD_TOOL_PIN_KEYS) expect(installRun).toContain(`"$(pin ${key})"`);
   expect(installRun).not.toMatch(/https:\/\/|[0-9a-f]{64}/u);
   expect(installRun).toContain('fetch zig.tar.xz "$zig_url"');
@@ -1450,6 +1450,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "build-essential",
         "pkg-config",
       ]);
+      assert.strictEqual(stepByName(steps, "Install Tauri Linux system dependencies").with?.["deb-cache"], "true");
       // The fetched binary is on PATH before the lane gate and the apt pruning.
       assert.strictEqual(stepByName(steps, "Fetch beep CI binary").uses, FETCH_BEEP_CI_ACTION);
       assert.isBelow(
@@ -1656,6 +1657,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "file",
         "libssl-dev",
       ]);
+      assert.strictEqual(stepByName(steps, install).with?.["deb-cache"], "true");
       assert.strictEqual(stepByName(steps, install).with?.["no-install-recommends"], "false");
       const checkoutIndex = O.getOrThrowWith(
         A.findFirstIndex(steps, (step) => Str.startsWith("actions/checkout@")(step.uses ?? "")),
@@ -1681,6 +1683,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const script = stepRun(actionSteps, "Install apt packages with retries");
       assertPrunesAptSourcesBefore(script, 'apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update');
       assert.include(script, "-o Acquire::Retries=3");
+      assert.include(script, "-o APT::Keep-Downloaded-Packages=true");
 
       // setup-monorepo-ci installs poppler-utils through the same action.
       const setupText = yield* fs.readFileString(`${repoRoot}/.github/actions/setup-monorepo-ci/action.yml`);
@@ -1693,13 +1696,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         failInstalls: number,
         recommends: string,
         fallbackAttempt = "2",
-        budgetSeconds = "1500"
+        budgetSeconds = "1500",
+        debCache = "off"
       ) {
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
         const stubs = `${work}/bin`;
         yield* fs.makeDirectory(stubs, { recursive: true });
         yield* fs.makeDirectory(`${work}/sources.list.d`, { recursive: true });
+        yield* fs.makeDirectory(`${work}/archives`, { recursive: true });
+        if (debCache === "on") {
+          yield* fs.makeDirectory(`${work}/debs`, { recursive: true });
+          yield* fs.writeFileString(`${work}/debs/cached.deb`, "cached");
+          yield* fs.writeFileString(`${work}/debs/superseded.deb`, "superseded");
+          yield* fs.writeFileString(`${work}/archives/image.deb`, "image");
+        }
         yield* fs.writeFileString(
           `${work}/sources.list`,
           "deb http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble main\n"
@@ -1718,19 +1729,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* stub("timeout", 'echo "timeout $*" >> "$APT_LOG"\nshift 3\nexec "$@"');
         yield* stub(
           "apt-config",
-          "echo \"source_list='$APT_STATE/sources.list' source_parts='$APT_STATE/sources.list.d/'\""
+          "echo \"source_list='$APT_STATE/sources.list' source_parts='$APT_STATE/sources.list.d/' archives='$APT_STATE/archives/'\""
         );
         yield* stub(
           "apt-get",
           A.join(
             [
               'echo "apt-get $*" >> "$APT_LOG"',
+              'for arg in "$@"; do [[ "$arg" == autoclean ]] && { rm -f "$APT_STATE/archives/superseded.deb"; exit 0; }; done',
               'for arg in "$@"; do case "$arg" in update) phase=update ;; install) phase=install ;; esac; done',
               'count_file="$APT_STATE/$phase"',
               'count=$(( $(cat "$count_file" 2>/dev/null || echo 0) + 1 ))',
               'echo "$count" > "$count_file"',
               'limit=APT_FAIL_UPDATES; [[ "$phase" == install ]] && limit=APT_FAIL_INSTALLS',
               '(( count > ${!limit} )) || { echo "E: Failed to fetch InRelease  503  Service Unavailable" >&2; exit 100; }',
+              'if [[ "$phase" == install ]]; then echo fetched > "$APT_STATE/archives/fetched.deb"; fi',
             ],
             "\n"
           )
@@ -1751,6 +1764,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               APT_INSTALL_TIMEOUT_SECONDS: "900",
               APT_INSTALL_BUDGET_SECONDS: budgetSeconds,
               APT_INSTALL_FALLBACK_ATTEMPT: fallbackAttempt,
+              APT_INSTALL_DEB_CACHE_DIR: debCache === "on" ? `${work}/debs` : "",
             },
             extendEnv: false,
             stdout: "pipe",
@@ -1765,7 +1779,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const log = A.filter(Str.split(logText, "\n"), Str.isNonEmpty);
         const sourcesList = yield* fs.readFileString(`${work}/sources.list`);
         const ubuntuSources = yield* fs.readFileString(`${work}/sources.list.d/ubuntu.sources`);
-        return { status: Number(status), stdout, log, sourcesList, ubuntuSources };
+        const archiveNames = yield* fs.readDirectory(`${work}/archives`);
+        const keptNames = debCache === "on" ? yield* fs.readDirectory(`${work}/debs`) : [];
+        const archives = A.sort(archiveNames, Order.String);
+        const kept = A.sort(keptNames, Order.String);
+        return { status: Number(status), stdout, log, sourcesList, ubuntuSources, archives, kept };
       });
       const aptCalls = (log: ReadonlyArray<string>) => A.filter(log, Str.startsWith("apt-get "));
       const updates = (log: ReadonlyArray<string>) => A.filter(aptCalls(log), Str.endsWith(" update")).length;
@@ -1823,6 +1841,42 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(installs(exhausted.log), 0);
       assert.deepStrictEqual(sleeps(exhausted.log), ["sleep 15", "sleep 30", "sleep 60", "sleep 120"]);
       assert.include(exhausted.stdout, "::error::apt-install: apt-get update and install failed after 5 attempts");
+
+      assert.notInclude(recovered.stdout, "cached .deb archives");
+      assert.deepStrictEqual(recovered.archives, ["fetched.deb"]);
+
+      const cachedDebs = yield* runCase(0, 0, "true", "2", "1500", "on");
+      assert.strictEqual(cachedDebs.status, 0);
+      assert.include(cachedDebs.stdout, "apt-install: restored 2 cached .deb archives into ");
+      assert.include(cachedDebs.stdout, "apt-install: kept 2 .deb archives in ");
+      assert.notInclude(cachedDebs.stdout, "kept no .deb archives");
+      assertTrue(A.some(aptCalls(cachedDebs.log), Str.endsWith(" autoclean")));
+      assert.deepStrictEqual(cachedDebs.archives, ["cached.deb", "fetched.deb", "image.deb"]);
+      assert.deepStrictEqual(cachedDebs.kept, ["cached.deb", "fetched.deb"]);
+
+      const cachedFailure = yield* runCase(99, 0, "true", "2", "70", "on");
+      assert.strictEqual(cachedFailure.status, 1);
+      assert.deepStrictEqual(cachedFailure.kept, ["cached.deb", "superseded.deb"]);
+
+      const keyStep = stepByName(actionSteps, "Resolve apt deb cache key");
+      const restoreStep = stepByName(actionSteps, "Restore apt deb cache");
+      const saveStep = stepByName(actionSteps, "Save apt deb cache");
+      assert.strictEqual(keyStep.if, "inputs.deb-cache == 'true'");
+      assert.strictEqual(restoreStep.uses, "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(saveStep.uses, "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(saveStep.if, "inputs.deb-cache == 'true' && steps.deb-cache.outputs.cache-hit != 'true'");
+      assert.include(
+        stepRun(actionSteps, "Resolve apt deb cache key"),
+        'echo "key=${prefix}${ImageVersion:-unversioned}"'
+      );
+      assert.isBelow(
+        stepIndexByName(actionSteps, "Restore apt deb cache"),
+        stepIndexByName(actionSteps, "Install apt packages with retries")
+      );
+      assert.isBelow(
+        stepIndexByName(actionSteps, "Install apt packages with retries"),
+        stepIndexByName(actionSteps, "Save apt deb cache")
+      );
 
       const outOfBudget = yield* runCase(99, 0, "true", "2", "70");
       assert.strictEqual(outOfBudget.status, 1);
@@ -2754,7 +2808,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-missed-event-check.yml:Fleet Missed-Event Check",
-        "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
         "heavy-admit.yml:Heavy",
         // Native Windows verification consumes only the sparse script artifact;
@@ -4353,11 +4406,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(hostSetup).toContain("perl --version");
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
-      const buildTools = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-tools.txt`);
+      const buildTools = yield* fs.readFileString(
+        `${root}/packages/tooling/infra/turbo-cache/r2-pilot/policy-build-tools.txt`
+      );
       expectPinnedProducerBuildTools(stepRun(steps, "Install pinned portable build tools"), buildTools);
       const build = stepByName(steps, "Build pinned portable candidate");
-      expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
-      expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
+      expect(build.run).toContain("packages/tooling/infra/turbo-cache/r2-pilot/policy.sh cargo-build-musl");
+      expect(build.run).toContain("packages/tooling/infra/turbo-cache/r2-pilot/policy.sh prepare");
       expect(build.run).toContain("readelf -lW");
       expect(build.run).not.toContain("python");
       expect(build.run).toContain("size + manifest > 16*1024*1024");

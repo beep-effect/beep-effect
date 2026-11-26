@@ -1083,7 +1083,7 @@ it.layer(laneSkipsPlatform, { timeout: "30 seconds" })("HOST-06 heavy lane skips
     expect(decideHeavyLaneSkips("merge_group", O.some([]), patterns)).toEqual([]);
     for (const [path, relevant] of [
       ["apps/web/src/a.ts", true],
-      ["infra/r2-cache/adapter.sh", true],
+      ["packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh", true],
       ["packages/x/docgen.json", true],
       ["docgen.json", false],
       ["scripts/a.mts", true],

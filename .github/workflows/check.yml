@@ -453,7 +453,7 @@ jobs:
       - name: Warn when the intended runner image is stale
         if: always() && env.BEEP_CI_LANE_ID == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
         run: |
-          if ! bun run beep runners bake --check --manifest infra/ci-runners/runner-image.json; then
+          if ! bun run beep runners bake --check --manifest packages/tooling/infra/ci-runners/runner-image.json; then
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
           fi
 
@@ -710,8 +710,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   lint-shard:
@@ -834,8 +834,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   # Required-context aggregates (Lint, Test Unit, Heavy / Test Integration,
@@ -1234,8 +1234,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   # The overflow half of the plan: the same shard on a `beep-fleet-overflow`
@@ -1452,8 +1452,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   # Reports the required context the heavy pool used to own. It fails on any
@@ -1790,6 +1790,7 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'
         uses: ./.github/actions/apt-install
         with:
+          deb-cache: "true"
           packages: >-
             libwebkit2gtk-4.1-dev
             libgtk-3-dev
@@ -2004,8 +2005,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   # Keeps the single `Property Laws` context over both slices and fails on any
@@ -2210,8 +2211,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   jsdoc-ratchet:
@@ -2303,8 +2304,8 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [[ -x infra/r2-cache/adapter.sh ]]; then
-            infra/r2-cache/adapter.sh stop-ci
+          if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+            packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh stop-ci
           fi
 
   commitlint:

@@ -1,45 +1,4 @@
-// Oracle-differential semantic expectations for block-structure boundaries.
-//
-// WHY THIS FILE EXISTS: kit-round-trip tests (parse → format → parse with our
-// own engine) are structurally blind to parse bugs the formatter is faithful
-// to — when the parser mis-nests a document, the formatter faithfully re-emits
-// the mis-nesting and the round-trip matches. The shipped P0 (a trailing
-// comment on the LAST key of a nested block mapping swallowed the following
-// dedent, silently absorbing the next sibling key) survived every fixed-point
-// fixture for exactly that reason. These expectations were authored against an
-// INDEPENDENT reference parser, so a shared-defect round-trip cannot go green.
-//
-// Provenance (ORACLE.md convention, parity with fixtures/explicit-key):
-// - Oracle: `yaml@2.9.0` (`YAML.parse` defaults; `parseAllDocuments` for the
-//   multi-document case)
-// - Authored: 2026-08-12, offline, in a scratch script outside the test run
-// - Plain-scalar continuation group: authored 2026-10-23 against `yaml@2.9.1`
-//   the same way (effected-promotion wave 3, W3-d)
-// - Compact-sequence and block-scalar-item groups: authored 2026-10-23
-//   against `yaml@2.9.1` the same way (#2131)
-// - Value-less flow mapping key group: authored 2026-10-23 against
-//   `yaml@2.9.1` the same way (#2142); the `!!set` row expects this parser's
-//   plain-object projection of the oracle's two-member `Set`
-// - Compact explicit key group: authored 2026-11-08 against `yaml@2.9.1` the
-//   same way. Its deeper-`:` rows are invalid under the spec's s-indent(n) rule
-//   and pin the oracle's tolerance. A collection key has no comparable
-//   plain-object projection, so those shapes are pinned at the AST level in
-//   composer-regressions.test.ts.
-// - Case matrix extended from the savvy-web-systems dogfood sweep of the same
-//   date (51 cases, double-oracle: yaml@2.9.0 + js-yaml@4.3.1, a case counted
-//   only where both agreed)
-// - The oracles are NOT dependencies of this suite — the committed expected
-//   literals are the contract. Never regenerate them with our own parser.
-//
-// Coverage: a trailing comment in every structural position where a block
-// boundary follows — last key of a nested map before dedent-to-key, before
-// dedent-to-scalar, before EOF (with and without a final newline), before
-// `---`, before `...`, last item of a nested sequence before dedent, last key
-// before a deeper sibling, inside flow before `}` / `]`, around a
-// block-scalar body before dedent — plus the control rows that isolated the
-// P0 and hardening variants (CRLF, 4-space indent, quoted values, comment
-// text containing `:` / `#` / tab, blank line before the dedent).
-
+// decision: oracle-differential-expectations
 import { Yaml, YamlFormat } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import { assertSuccess } from "@effect/vitest/utils";
@@ -48,7 +7,6 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 
 interface OracleCase {
-  /** Expected parsed value, authored from `yaml@2.9.0` — see file header. */
   readonly expected: unknown;
   readonly input: string;
   readonly name: string;
@@ -187,12 +145,6 @@ const flowAndBlockScalarCases: ReadonlyArray<OracleCase> = [
     input: "s: [1, 2] # note\nsibling: 2\n",
     expected: { s: [1, 2], sibling: 2 },
   },
-  // The closing bracket sits INDENTED (YAML 1.2 §7.4 requires flow content
-  // in a block value to be indented past the block level). A `}`/`]` at
-  // column 0 in this position is a KNOWN pre-existing strictness divergence:
-  // our engine rejects it with a typed InvalidIndentation while yaml@2.9.0
-  // accepts it leniently. That divergence is comment-independent (the
-  // no-comment control fails identically) and is tracked as issue #340.
   {
     name: "comment inside a multi-line flow map before }",
     input: "m: {\n  a: 1 # note\n  }\nsibling: 2\n",
@@ -220,12 +172,6 @@ const flowAndBlockScalarCases: ReadonlyArray<OracleCase> = [
   },
 ];
 
-// The #339 family: an empty value whose pair ends at the line boundary. The
-// next line's key was composed as the VALUE of the empty pair, and the
-// orphaned `:` then paired with an empty-string key — the same shred
-// signature as the trailing-comment defect but a distinct mechanism (the
-// composer's consumeValueNode, not the CST parser's value loop; these fail
-// identically with and without a comment).
 const emptyValueCases: ReadonlyArray<OracleCase> = [
   {
     name: "empty value then a sibling key",
@@ -248,8 +194,6 @@ const emptyValueCases: ReadonlyArray<OracleCase> = [
     expected: { key: null, other: { x: 1 } },
   },
   {
-    // The GitHub-workflow trigger pattern: a nested empty value, then a
-    // dedent to the next top-level key.
     name: "nested empty value then dedent (workflow trigger shape)",
     input: "on:\n  workflow_dispatch:\njobs:\n  build: 1\n",
     expected: { on: { workflow_dispatch: null }, jobs: { build: 1 } },
@@ -265,8 +209,6 @@ const emptyValueCases: ReadonlyArray<OracleCase> = [
     expected: { a: { b: null } },
   },
   {
-    // The over-correction guard: a MORE-indented next line is this pair's
-    // legitimate nested value, not a sibling — must keep parsing as before.
     name: "empty-looking value whose next line is more indented (nested value)",
     input: "key:\n  nested: 1\n",
     expected: { key: { nested: 1 } },
@@ -275,12 +217,7 @@ const emptyValueCases: ReadonlyArray<OracleCase> = [
 
 const realWorldCases: ReadonlyArray<OracleCase> = [
   {
-    // The claude.yml workflow excerpt from the downstream P0 report:
-    // a trailing comment on the last key of a 5-entry nested map, then a
-    // dedent to a sibling key. The corrupted parse put `steps` INSIDE
-    // `permissions` and shredded its value; GitHub Actions, yaml@2.9.0 and
-    // js-yaml all agree on this structure.
-    name: "workflow permissions/steps excerpt",
+    name: "claude.yml permissions/steps excerpt from the downstream P0 report",
     input:
       "permissions:\n" +
       "  contents: read\n" +
@@ -303,11 +240,6 @@ const realWorldCases: ReadonlyArray<OracleCase> = [
   },
 ];
 
-// YAML 1.2 s-ns-plain-next-line admits any ns-plain-char at the start of a
-// continuation line, so a quote or another indicator there is scalar text.
-// The engine used to lex such a line as a new quoted scalar, block scalar or
-// flow collection, which split the value into stray keys or swallowed the
-// following siblings, with no diagnostic.
 const plainContinuationCases: ReadonlyArray<OracleCase> = [
   { name: "double-quote-led continuation", input: 'a: x\n  "y"\n', expected: { a: 'x "y"' } },
   { name: "single-quote-led continuation", input: "a: x\n  'y'\n", expected: { a: "x 'y'" } },
@@ -366,11 +298,6 @@ const plainContinuationCases: ReadonlyArray<OracleCase> = [
   },
 ];
 
-// YAML 1.2 lets a block mapping value be a block sequence at the mapping's
-// own indent (l+block-sequence(n-1), "compact" indentation). Inside a
-// sequence item the mapping's keys sit past the dash, and the lexer opens the
-// scope only for the first such sequence, so a second key with a compact
-// sequence value failed with InvalidIndentation (#2131).
 const compactSequenceInItemCases: ReadonlyArray<OracleCase> = [
   { name: "the #2131 repro", input: "- a:\n  - 0\n  b:\n  - false\n", expected: [{ a: [0], b: [false] }] },
   {
@@ -416,11 +343,6 @@ const compactSequenceInItemCases: ReadonlyArray<OracleCase> = [
   { name: "wide entry indentation", input: "-   a:\n    - 0\n    b:\n    - 1\n", expected: [{ a: [0], b: [1] }] },
 ];
 
-// A block scalar's token swallows the line breaks of its body, so the
-// implicit-mapping lookahead for a sequence item ran past it and took the
-// next line's `key:` for the item's own value indicator: `a:\n- >-\n  x\nb: 1`
-// parsed as `{a: [{x: null, b: 1}]}` with no diagnostic, and the indented
-// spelling failed (found by the #2131 corpus differential).
 const blockScalarItemCases: ReadonlyArray<OracleCase> = [
   { name: "folded strip item before a sibling", input: "a:\n- >-\n  x\nb: 1\n", expected: { a: ["x"], b: 1 } },
   { name: "literal item before a flow sibling", input: "a:\n- |\n  x\nb: []\n", expected: { a: ["x\n"], b: [] } },
@@ -440,11 +362,6 @@ const blockScalarItemCases: ReadonlyArray<OracleCase> = [
   },
 ];
 
-// YAML 1.2 ns-flow-map-implicit-entry: a `,` or `}` after a plain implicit
-// key ends the entry with an empty value. The plain-scalar collector ran on
-// across the comma, so `{a, b}` parsed as `{"a b": null}` and `{a: 1, b}` as
-// `{a: "1 b"}`; a `:` directly before the comma let the next key become its
-// value, so `{a: , b}` parsed as `{a: "b"}` (#2142).
 const flowValuelessKeyCases: ReadonlyArray<OracleCase> = [
   { name: "two value-less keys (the #2142 repro)", input: "{a, b}\n", expected: { a: null, b: null } },
   { name: "a value-less key after a pair", input: "{a: 1, b}\n", expected: { a: 1, b: null } },
@@ -486,8 +403,6 @@ const flowValuelessKeyCases: ReadonlyArray<OracleCase> = [
   { name: "tagged empty value (control)", input: "{a: !!str , b}\n", expected: { a: "", b: null } },
 ];
 
-// A `?` that opens its mapping mid-line, after a sequence indicator, and the
-// `:` that has to find it again from a later line.
 const compactExplicitKeyCases: ReadonlyArray<OracleCase> = [
   { name: "in a sequence item", input: "- ? k\n  : v\n", expected: [{ k: "v" }] },
   { name: "two entries in a sequence item", input: "- ? k\n  : v\n  ? l\n  : w\n", expected: [{ k: "v", l: "w" }] },
@@ -507,29 +422,57 @@ const compactExplicitKeyCases: ReadonlyArray<OracleCase> = [
   { name: "value-less key after a deeper value indicator", input: "? k\n  : v\n? l\n", expected: { k: "v", l: null } },
 ];
 
-const groups: ReadonlyArray<readonly [string, ReadonlyArray<OracleCase>]> = [
+const groups: ReadonlyArray<readonly [string, ReadonlyArray<OracleCase>, string?]> = [
   ["controls", controlCases],
   ["dedent after a trailing comment", dedentCases],
   ["stream boundaries", streamBoundaryCases],
   ["hardening variants", hardeningCases],
   ["flow and block-scalar boundaries", flowAndBlockScalarCases],
-  ["empty values before a sibling key", emptyValueCases],
-  ["real-world shapes", realWorldCases],
-  ["plain-scalar continuation lines", plainContinuationCases],
-  ["compact sequence values in sequence-item mappings", compactSequenceInItemCases],
-  ["block scalar sequence items before a sibling", blockScalarItemCases],
-  ["value-less flow mapping keys", flowValuelessKeyCases],
-  ["compact explicit keys", compactExplicitKeyCases],
+  [
+    "empty values before a sibling key",
+    emptyValueCases,
+    "the #339 family: an empty value whose pair ends at the line boundary once took the next line's key as its VALUE and paired the orphaned `:` with an empty-string key, the trailing-comment defect's shred signature from a distinct mechanism (the composer's consumeValueNode, not the CST parser's value loop) that fails identically with and without a comment; the over-correction guard keeps a MORE-indented next line as the pair's legitimate nested value, not a sibling",
+  ],
+  [
+    "real-world shapes",
+    realWorldCases,
+    "after a trailing comment on the last key of a 5-entry nested map and a dedent, the corrupted parse put `steps` INSIDE `permissions` and shredded its value; GitHub Actions, yaml@2.9.0 and js-yaml all agree on this structure",
+  ],
+  [
+    "plain-scalar continuation lines",
+    plainContinuationCases,
+    "YAML 1.2 s-ns-plain-next-line admits any ns-plain-char at the start of a continuation line, so a quote or another indicator there is scalar text; lexing it as a new quoted scalar, block scalar or flow collection split the value into stray keys or swallowed the following siblings, with no diagnostic",
+  ],
+  [
+    "compact sequence values in sequence-item mappings",
+    compactSequenceInItemCases,
+    "YAML 1.2 lets a block mapping value be a block sequence at the mapping's own indent (l+block-sequence(n-1), \"compact\" indentation); inside a sequence item the keys sit past the dash, and a lexer that opened the scope only for the first such sequence failed a second key's compact sequence with InvalidIndentation (#2131)",
+  ],
+  [
+    "block scalar sequence items before a sibling",
+    blockScalarItemCases,
+    "a block scalar's token swallows its body's line breaks, so the implicit-mapping lookahead for a sequence item ran past it and took the next line's `key:` for the item's own value indicator: `a:\\n- >-\\n  x\\nb: 1` parsed as `{a: [{x: null, b: 1}]}` with no diagnostic and the indented spelling failed (found by the #2131 corpus differential)",
+  ],
+  [
+    "value-less flow mapping keys",
+    flowValuelessKeyCases,
+    'YAML 1.2 ns-flow-map-implicit-entry: a `,` or `}` after a plain implicit key ends the entry with an empty value; a collector running on across the comma parsed `{a, b}` as `{"a b": null}` and `{a: 1, b}` as `{a: "1 b"}`, and a `:` directly before the comma made `{a: , b}` parse as `{a: "b"}` (#2142)',
+  ],
+  [
+    "compact explicit keys",
+    compactExplicitKeyCases,
+    "a `?` that opens its mapping mid-line, after a sequence indicator, and the `:` that has to find it again from a later line",
+  ],
 ];
 
 describe("oracle-differential (yaml@2.9.0 semantic expectations)", () => {
-  for (const [groupName, cases] of groups) {
+  for (const [groupName, cases, groupReason] of groups) {
     describe(groupName, () => {
       for (const { name, input, expected } of cases) {
         it.effect(name, () =>
           Effect.gen(function* () {
             const value = yield* Yaml.parse(input);
-            assert.deepStrictEqual(value, expected);
+            assert.deepStrictEqual(value, expected, groupReason);
           })
         );
       }
@@ -545,18 +488,6 @@ describe("oracle-differential (yaml@2.9.0 semantic expectations)", () => {
     );
   });
 
-  // ── Format properties over the whole battery ────────────────────────────
-  //
-  // A parse-only differential is structurally blind to format-round-trip
-  // defects (the keep-chomp growth shipped past this file untouched), so the
-  // two properties that WOULD have caught it — and the original P0's write
-  // side, and the %TAG orphaning — run here over every input above:
-  //
-  //   1. IDEMPOTENCE: format(format(x)) === format(x). A formatter that
-  //      moves on the second pass is rewriting content, not style.
-  //   2. MEANING-PRESERVATION: parse(format(x)) deep-equals parse(x). When
-  //      format refuses an input it returns it byte-identical, so the
-  //      property holds trivially — asserted, not skipped.
   describe("format properties", () => {
     const allInputs: ReadonlyArray<readonly [string, string]> = [
       ...A.flatMap(groups, ([groupName, cases]) => A.map(cases, (c) => [`${groupName}: ${c.name}`, c.input] as const)),
@@ -567,7 +498,11 @@ describe("oracle-differential (yaml@2.9.0 semantic expectations)", () => {
       it(`idempotence — ${name}`, () => {
         const once = YamlFormat.formatToString(input);
         const twice = YamlFormat.formatToString(once);
-        assert.strictEqual(twice, once);
+        assert.strictEqual(
+          twice,
+          once,
+          "IDEMPOTENCE: a formatter that moves on the second pass is rewriting content, not style; a parse-only differential is blind to format-round-trip defects such as the keep-chomp growth, the original P0's write side and the %TAG orphaning"
+        );
       });
 
       it(`meaning preservation — ${name}`, () => {
@@ -575,7 +510,11 @@ describe("oracle-differential (yaml@2.9.0 semantic expectations)", () => {
         const after = Yaml.parseAllResult(YamlFormat.formatToString(input));
         assertSuccess(before, Result.getOrThrow(before));
         assertSuccess(after, Result.getOrThrow(before));
-        assert.deepStrictEqual(Result.getOrThrow(after), Result.getOrThrow(before));
+        assert.deepStrictEqual(
+          Result.getOrThrow(after),
+          Result.getOrThrow(before),
+          "MEANING-PRESERVATION: when format refuses an input it returns it byte-identical, so the property holds trivially, asserted rather than skipped"
+        );
       });
     }
   });

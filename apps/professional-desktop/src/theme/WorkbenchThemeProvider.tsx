@@ -12,10 +12,6 @@ import { workbenchThemeModeAtom } from "./Theme.atoms.ts";
 import type { ThemeMode, ThemeOptions } from "@beep/ui/themes";
 import type { ComponentProps, ReactNode } from "react";
 
-// Green-workbench MUI color schemes layered over the shared `@beep/ui` base.
-// Dark is the near-black "workbench" surface (trustgraph aesthetic); light is
-// green-on-parchment (the oip-web parchment values). App-local overrides — the
-// `@beep/ui` defaults are untouched. Internal to this provider (not public API).
 const greenWorkbenchThemeOptions = {
   colorSchemes: {
     light: {
@@ -57,18 +53,12 @@ const greenWorkbenchThemeOptions = {
   },
 } satisfies ThemeOptions;
 
-// The green-workbench theme built from the options above. Internal to this
-// provider (not public API).
 const workbenchTheme = createAppTheme(greenWorkbenchThemeOptions);
 
 type ThemeStorageManager = NonNullable<ComponentProps<typeof AppThemeProvider>["storageManager"]>;
 
 const noop = (): void => undefined;
 
-// MUI owns CSS-variable application, while the Atom store remains the sole
-// preference owner. Replacing this adapter when the Atom mode changes causes
-// MUI's existing subscription effect to update its internal color-scheme state
-// without remounting the provider subtree.
 const atomThemeStorageManager =
   (mode: ThemeMode): ThemeStorageManager =>
   ({ key }) => {

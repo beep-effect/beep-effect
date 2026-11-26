@@ -13,8 +13,6 @@ import type { GitStubs } from "@beep/git/Git";
 
 const cwd = "/repo";
 
-// ── Git.makeTest: the shape value directly — no layer needed ────────────────
-
 describe("Git.makeTest", () => {
   it.effect("an overridden method runs the stub", () =>
     Effect.gen(function* () {
@@ -41,20 +39,24 @@ describe("Git.makeTest", () => {
           ),
         currentBranch: (_stubCwd, options) => Effect.succeedSome(options?.mode ?? "abbrev-ref"),
       });
-      // Fixed arity: dispatch on argument count.
       const pipe2 = yield* pipe(cwd, double.revParse("HEAD"));
-      assert.strictEqual(pipe2, "/repo@HEAD");
-      // Optional trailing options: dispatch on the string subject, so the
-      // data-first call without options still runs instead of returning a function.
+      assert.strictEqual(pipe2, "/repo@HEAD", "a fixed-arity member dispatches on argument count");
       yield* pipe(cwd, double.reset({ mode: "hard" }));
       const workingChanges3 = yield* double.workingChanges(cwd);
-      assert.deepStrictEqual(workingChanges3, ["/repo"]);
+      assert.deepStrictEqual(
+        workingChanges3,
+        ["/repo"],
+        "trailing options dispatch on the string subject, so data-first without options runs instead of returning a function"
+      );
       const pipe4 = yield* pipe(cwd, double.workingChanges());
       assert.deepStrictEqual(pipe4, ["/repo"]);
-      // `status` and `currentBranch` grew options in W2 and dispatch on the string subject too.
       yield* double.status(cwd);
       yield* pipe(cwd, double.status({ untrackedFiles: "all" }));
-      assert.deepStrictEqual(statusCalls, ["/repo:-", "/repo:all"]);
+      assert.deepStrictEqual(
+        statusCalls,
+        ["/repo:-", "/repo:all"],
+        "status and currentBranch take options and dispatch on the string subject too"
+      );
       const pipe5 = yield* pipe(cwd, double.currentBranch({ mode: "show-current" }));
       assertSome(pipe5, "show-current");
       const currentBranch6 = yield* double.currentBranch(cwd);
@@ -102,9 +104,6 @@ describe("Git.makeTest", () => {
 
   it.effect("an unstubbed method DIES with a defect naming the method", () =>
     Effect.gen(function* () {
-      // No honest default exists for an unstubbed method — a
-      // fabricated answer would leak into consumer logic as fact — so the
-      // default is a defect, not a typed failure a test could swallow.
       const double = Git.makeTest({ revParse: () => Effect.succeed("sha") });
       const exit7 = yield* Effect.exit(double.status(cwd));
       assertExitFailure(
@@ -121,9 +120,6 @@ describe("Git.makeTest", () => {
 
   it.effect("every method of an unstubbed double is present and dies — none is undefined", () =>
     Effect.gen(function* () {
-      // The motivating boilerplate (issue #170): a hand-rolled double had to
-      // stub all twenty-six methods to satisfy tsc. `makeTest()` with no
-      // overrides must fill every slot with a callable that dies.
       const double = Git.makeTest();
       const calls: Record<
         keyof typeof double,
@@ -230,16 +226,15 @@ describe("Git.makeTest", () => {
         const effect = calls[method]();
         const exit = yield* Effect.exit(effect);
         assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
-        assert.isTrue(Cause.hasDies(exit.cause), `${method} should die unstubbed`);
+        assert.isTrue(
+          Cause.hasDies(exit.cause),
+          `${method} should die unstubbed: makeTest() fills every slot, so no double stubs every method to satisfy tsc`
+        );
       }
     })
   );
 });
 
-// ── Git.layerTest: the double behind Layer.succeed ──────────────────────────
-
-// Bound to a const: layerTest is a parameterized layer factory and layers
-// memoize by reference.
 const TestGit = Git.layerTest({
   show: (_cwd: string, _ref: string, path: string) => Effect.succeed(path === "package.json" ? O.some("{}") : O.none()),
   lsTree: () =>

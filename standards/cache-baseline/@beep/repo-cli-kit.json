@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli-kit",
   "review": {
-    "reviewer": "Claude Opus 5.5 (P7 cut-over and retirement lane)",
-    "reason": "Re-record the root policy fingerprint input and the identity, repo-cli, repo-cli-kit, nlp-processing, wink and nlp-mcp subjects after the P7 cut-over removed two retired workspaces with no importer. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P6 retire lane)",
+    "reason": "Re-record the subjects whose Turbo inputs named the deleted infra/ workspace, after merging origin/main (#3561-#3563); configuration review only, no qualification granted.",
     "basis": {
-      "path": "docs/reports/tksr-p7-retirement-cache-review-2026-11-25.md",
-      "sha256": "0a3f79f25dfadc24a5814e1f2ec6ab710f9a610a1c5cc9e0a8cc211cf19bd339"
+      "path": "docs/reports/infra-alchemy-p6-retire-cache-review-2026-11-25.md",
+      "sha256": "449a682ef1c70c6d316f5b30da98056bcfab1aad7ba0cd2f2987ed10acc9c466"
     }
   },
   "nodes": [
@@ -345,8 +345,6 @@
           "../../../../.oxlintrc.deprecated-apis.jsonc",
           "../../../../apps/**/package.json",
           "../../../../apps/**/tsconfig*.json",
-          "../../../../infra/**/tsconfig*.json",
-          "../../../../infra/package.json",
           "../../../../packages/**/package.json",
           "../../../../packages/**/tsconfig*.json",
           "../../../../standards/root-package.projection.generated.json",
