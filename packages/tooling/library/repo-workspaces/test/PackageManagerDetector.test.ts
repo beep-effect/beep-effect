@@ -717,7 +717,11 @@ describe("PackageManagerDetector — devEngines.packageManager is an ARRAY and t
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
-        assert.strictEqual(detected.name, "pnpm");
+        assert.strictEqual(
+          detected.name,
+          "pnpm",
+          "the array's element names the detected manager, since one naming another manager would be ignored anyway"
+        );
         const noVersionThoughTheArraysFirstElementWouldReport999 = detected.version;
         assertNone(noVersionThoughTheArraysFirstElementWouldReport999);
       })

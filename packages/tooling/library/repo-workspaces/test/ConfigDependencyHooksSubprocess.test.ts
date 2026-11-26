@@ -262,7 +262,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
           assert.strictEqual(
             spawner.spawns.length,
             1,
-            "the replay child was never spawned — did resolution fail first?"
+            "the replay child was never spawned — did resolution fail first? The wait races the fiber so an early typed failure lands here rather than hanging"
           );
           yield* TestClock.adjust("31 seconds");
           const error = yield* Fiber.join(fiber);

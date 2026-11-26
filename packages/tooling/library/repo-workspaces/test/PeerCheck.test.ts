@@ -1444,11 +1444,14 @@ describe("PeerCheck.run — protocol-specifier provider versions, which semver c
   it.effect("fails closed on a `file:` provider whose own peers give it a suffixed key", () =>
     Effect.gen(function* () {
       const lockfile = yield* parse("filedep-suffixed");
-      const providerKeyedWithPeerSuffixAsInTheRealTree = O.getOrUndefined(
+      const provider = O.getOrUndefined(
         A.findFirst(lockfile.packages, (p) => p.instanceId === "react@file:vendor/react(js-tokens@4.0.0)")
       );
-      const provider = providerKeyedWithPeerSuffixAsInTheRealTree;
-      assert.strictEqual(provider?.name, "react");
+      assert.strictEqual(
+        provider?.name,
+        "react",
+        "the real-tree shape: a linked package that declares peers is keyed with its peer suffix"
+      );
       assert.strictEqual(
         provider?.version,
         "file:vendor/react",
