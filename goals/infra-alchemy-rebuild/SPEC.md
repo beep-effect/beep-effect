@@ -2849,6 +2849,7 @@ Config facts found live in the same session, now in the runbook:
 - The image pin copies the live Compose `image:` line, tag and digest. The `15.5.0` the runbook named would have run an older Phoenix against a volume that 22.0.1 migrated.
 - `legacyCompose.configRoot` comes from the unit's `WorkingDirectory`.
 - The secret references live in `BEEP_SECRETS`, the only vault the agent service account reads.
+- The data volume is `external: true` in the live Compose file and carries no `com.docker.compose.project` label (Pulumi created it 2026-08-06). The first prod apply (02:27Z) stopped at Preflight on that label, with nothing retired; the unit was restarted at once (74 s down). Preflight now accepts an unlabelled volume and still refuses one labelled with another project.
 - The live unit's `ExecStop` is `docker compose stop`, not `down`. The cutover runs `docker compose down` without `-v` after stopping the unit, because RetireCompose refuses while a container of the Compose project survives.
 
 Rollback for the prod cutover (also in the runbook):

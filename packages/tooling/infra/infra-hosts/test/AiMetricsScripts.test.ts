@@ -122,12 +122,14 @@ describe("AI metrics host step scripts", () => {
       })
     );
 
-    it.effect("prod Preflight refuses a data volume of another Compose project", () =>
+    it.effect("prod Preflight accepts an unlabelled external volume and refuses one of another Compose project", () =>
       Effect.gen(function* () {
         const config = yield* decodeConfig(configBody);
         const command = renderPreflightCommand({ config, containerName: "beep-ai-metrics-phoenix", kind: "prod" });
         const matching = yield* runStep(command, { FAKE_VOLUME_PROJECT: "beep-ai-metrics-dankserver" });
         expect(matching.exitCode).toBe(0);
+        const external = yield* runStep(command, { FAKE_VOLUME_PROJECT: "" });
+        expect(external.exitCode).toBe(0);
         const differing = yield* runStep(command, { FAKE_VOLUME_PROJECT: "other-project" });
         expect(differing.exitCode).toBe(1);
         expect(differing.stderr).toContain(

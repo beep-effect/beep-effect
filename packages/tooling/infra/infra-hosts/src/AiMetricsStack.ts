@@ -101,9 +101,15 @@ export const phoenixPublicUrl = (config: AiMetricsHostConfig): string =>
 
 /**
  * Preflight on the host: the tools every later step needs, a reachable Docker
- * engine and tailnet; for `prod`, that the data volume exists and carries the
- * configured Compose project; for a rehearsal, that its loopback port is free
- * or already published by this stage's own container.
+ * engine and tailnet; for `prod`, that the data volume exists and belongs to no
+ * Compose project other than the configured one; for a rehearsal, that its
+ * loopback port is free or already published by this stage's own container.
+ *
+ * **Gotchas**
+ *
+ * The live Compose file declares the data volume `external: true`, and an
+ * external volume carries no `com.docker.compose.project` label. An unlabelled
+ * volume passes; a label naming another project refuses.
  *
  * **Example** (Render the prod preflight)
  * ```ts
@@ -146,7 +152,7 @@ export const renderPreflightCommand = ({
           `volume=${shellQuote(phoenixDataVolume(config))}`,
           `expected_project=${shellQuote(config.legacyCompose.composeProject)}`,
           `volume_project="$(docker volume inspect -f ${shellQuote(volumeProjectTemplate)} "\${volume}")"`,
-          '[ "${volume_project}" = "${expected_project}" ] || { printf \'data volume %s carries Compose project "%s", expected "%s"; refusing\\n\' "${volume}" "${volume_project}" "${expected_project}" >&2; exit 1; }',
+          '[ -z "${volume_project}" ] || [ "${volume_project}" = "${expected_project}" ] || { printf \'data volume %s carries Compose project "%s", expected "%s" or none; refusing\\n\' "${volume}" "${volume_project}" "${expected_project}" >&2; exit 1; }',
         ],
         // One rehearsal at a time per port on the engine: the port must be free
         // or already published by this stage's own container.
