@@ -7,6 +7,8 @@ governs:
   - src/internal/kernel.ts#crosses
   - src/internal/kernel.ts#drawView
   - src/internal/shading.ts#clipTo
+  - src/internal/shading.ts#strokesOf
+  - src/internal/shading.ts#shadeFace
 enforcedBy: []
 ---
 

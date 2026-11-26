@@ -697,6 +697,7 @@ const regionsOf = (options: {
   );
 };
 
+// decision: bands-keep-to-their-visible-area
 const crosses = (line: ProbeLine, piece: Segment2, tolerance: number): boolean => {
   const [x1, y1, x2, y2] = piece;
   const ex = x2 - x1;

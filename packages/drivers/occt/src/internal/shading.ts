@@ -927,8 +927,7 @@ export const hatchCompound = <P>(options: {
     ...options.neighbours,
     ...inkTwins({
       bands: A.getSomes(A.map(full, (face) => face.ink)),
-      // inkTwins reads only the indices from the bands mapped from full above.
-      seen: (face) => A.getUnsafe(full, face).seen,
+      seen: (indexInFull) => A.getUnsafe(full, indexInFull).seen,
     }),
   ];
   const tapers = A.isReadonlyArrayNonEmpty(shared)

@@ -6,6 +6,7 @@ governs:
   - src/internal/kernel.ts#LADDER_REACH_PITCHES
   - src/internal/kernel.ts#groupBeyondOf
   - src/internal/kernel.ts#drawnBack
+  - src/internal/kernel.ts#drawView
   - src/internal/shading.ts#shadeFace
 enforcedBy: []
 ---

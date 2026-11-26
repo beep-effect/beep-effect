@@ -5,6 +5,7 @@ reversal: Return true from facesEye for every overlay.
 governs:
   - src/internal/kernel.ts#OVERLAY_MIN_FACING
   - src/internal/kernel.ts#facesEye
+  - src/internal/kernel.ts#drawView
 enforcedBy: []
 ---
 

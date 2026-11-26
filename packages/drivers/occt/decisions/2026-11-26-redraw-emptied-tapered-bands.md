@@ -6,6 +6,7 @@ governs:
   - src/internal/kernel.ts#drawView
   - src/internal/kernel.ts#matchedRuns
   - src/internal/kernel.ts#retapered
+  - src/internal/kernel.ts#DrawnStretch
   - src/internal/shading.ts#shadeFace
 enforcedBy: []
 ---
