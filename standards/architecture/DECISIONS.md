@@ -3193,7 +3193,7 @@ chapter section stays the doctrine unless that entry also removes it.
 
 ## 2026-11-19: Scoped Amendment To Chapter 11 Persisted-Bytes Rule For The Text-Knowledge Stack Rebuild
 
-- **Status:** Active (expires when `goals/text-knowledge-stack-rebuild` reaches
+- **Status:** Expired (expired when `goals/text-knowledge-stack-rebuild` reached
   `completed-retained`)
 - **Amends:** rule 5 ("Persisted and served bytes do not change") of
   "Upstream-first retirement in `foundation/modeling`" in

@@ -67,15 +67,24 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P7 cut-over and retirement, content-complete in its lane. P0 merged as
-`dcf6b16a77d` (PR #3420); P1 to P6 ran in their own lanes (see `PLAN.md`).
-P7 follows `research/2026-11-24-p7-design.md` and its decisions
-(`decisions/2026-11-24-p7-*.md`) and ships as one PR stacked on P6, which
-follows `research/2026-11-24-p6-design.md`. The
-Practice KG bundle rebuild over the corpus and the operator grants
-configuration run in the operational environment, outside the repo.
+P8 closeout, in the final PR. P0 to P7 are complete: P0 merged as
+`dcf6b16a77d` (PR #3420), P1 to P5 merged in their own PRs, P6 is PR #3558,
+and P7 ships in this final PR with P8 (see `PLAN.md`). The closeout
+reflection is `history/reflections/2026-11-25-claude.md`. P9 runs
+`goals completion refresh` after the merge. The Practice KG bundle rebuild over
+the corpus and the operator grants configuration run in the operational
+environment, outside the repo (#3555); the semantica gold regeneration needs the
+corpus and billed embeddings (#3554).
 
 ## Latest Evidence
+
+2026-11-25: P8 closes the packet in the final PR. Every `SPEC.md` acceptance
+criterion is met or amended by decision, all 32 rows of
+`research/law-test-plan.md` are green, and the chapter-11 scoped amendment is
+marked Expired. P6 merged `main` and passed `yeet final-check` at
+`79c7d727112` (PR #3558). After merging P6, P7 passes semantic-delta, the fallow
+audit, the comment law, the decisions and manifest checks, the cache audit, the
+identity registry check and the S31 recount against `f9982f3b5e6`.
 
 2026-11-25: P7 deletes `@beep/schema-org` (cb2ac027907) and `@beep/nlp`
 (66a3513e3d6) through `delete-package`, with both names reserved in the

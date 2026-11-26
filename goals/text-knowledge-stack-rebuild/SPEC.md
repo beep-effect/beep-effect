@@ -378,7 +378,7 @@ decision file) and the law-test ledger:
 
 ## Acceptance Criteria
 
-- [ ] P0: decision files confirm or reverse each resolved question; the
+- [x] P0: decision files confirm or reverse each resolved question; the
       section 4 sketches compile under `tsrs` as a checked module that follows
       the Constraints idioms (`S.Opaque` with annotations for non-factory data,
       correct discriminator constructors, `LiteralKit` without `as const`);
@@ -395,14 +395,14 @@ decision file) and the law-test ledger:
       rulings are drafted; the scoped chapter-11 amendment is merged on
       `origin/main` (in P0's PR or its own) before P2 opens, and P2 to P7 hold
       until it is.
-- [ ] L0: `TermBinding` and the term-stability snapshot exist; a test renames
+- [x] L0: `TermBinding` and the term-stability snapshot exist; a test renames
       a module and proves no published IRI changes; the registry expands and
       contracts `prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` CURIEs;
       `@beep/identity` still depends on `effect` only; one
       canonical JSON implementation; path-derived IRIs are gone and the
       test-runner's pinned IRIs are re-published from the registry; `L0-1` to
       `L0-3` are green.
-- [ ] L1: `@beep/text` exists and `@beep/provenance` is retired with every
+- [x] L1: `@beep/text` exists and `@beep/provenance` is retired with every
       consumer migrated; `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`,
       `Reanchoring` and unit conversion are exported from `@beep/text`; the
       citation mention identifier is minted over `OccurrenceId` and a frozen
@@ -424,7 +424,7 @@ decision file) and the law-test ledger:
       over the annotation document on synthetic fixtures (P4 adds the signal
       assertions, P6 the law-owned structure, assessment profiles and
       admission); `L2-1` to `L2-6` are green.
-- [ ] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
+- [x] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
       `Assessments<K>` exist; `makeClaimEnvelope`, `ClaimVersion` and
       `EvidenceSpan` are retired with every consumer migrated, and stored
       `epistemic_evidence.span` and `ClaimVersion` rows keep their bytes behind
@@ -447,7 +447,7 @@ decision file) and the law-test ledger:
       `ClaimGate.two-claims-one-occurrence.test.ts` in the law-practice use-cases
       tests (the proof `goals/attributed-multi-claim-span` promised); `L4-1` to
       `L4-7` are green.
-- [ ] L3 and L6: legal seeds and their seed data files move to the
+- [x] L3 and L6: legal seeds and their seed data files move to the
       law-practice asset pack with IRIs and approval metadata preserved and
       every consumer migrated; the FOLIO DTOs are deleted;
       `fold -> Dataset` is the only serialization path; `Dataset` equality is a
@@ -458,7 +458,7 @@ decision file) and the law-test ledger:
       `@beep/rdf` asserts license and digest on every external namespace's
       `NamespacePin`; the gUFO class typing is a record in `@beep/ontology`;
       `L3-1` to `L3-4` and `L6-1` to `L6-2` are green.
-- [ ] L5 and L7: `@beep/nlp-processing` holds `Operation` with
+- [x] L5 and L7: `@beep/nlp-processing` holds `Operation` with
       `withActivity`, Kleisli laws hold under the declared observation, every
       run emits a `prov:Activity` and the package's instrumentation shard is
       regenerated; MCP tool schemas are the Effect schemas and write tools
@@ -471,7 +471,7 @@ decision file) and the law-test ledger:
       assertion per access path listed in Constraints) passes and P6's goal
       includes the authorization work the P0 access-path map scopes; `L5-1` to
       `L5-3` are green.
-- [ ] Cut-over: `@beep/nlp` is retired and `@beep/schema-org` is retired
+- [x] Cut-over: `@beep/nlp` is retired and `@beep/schema-org` is retired
       whole (census: no consumer) through the retirement procedure with
       consumers migrated in the same PR; `research/consumer-census.md` records each
       disposition; every package under `packages/foundation/modeling` and
@@ -479,14 +479,14 @@ decision file) and the law-test ledger:
       and `bun run beep lint identity-registry` (the create-package contract);
       no S31 inventory grew, by the Constraints definition, checked per file
       against the P0 base commit.
-- [ ] Doctrine: the knowledge-stack chapter, the nine rulings, the chapter-11
+- [x] Doctrine: the knowledge-stack chapter, the nine rulings, the chapter-11
       amendment (merged before P2 and confirmed in force), the glossary entries
       and the chapter section that absorbs the `THEORY.md` narrative are merged on
       `origin/main`; `rg -n "local-first|on-device" docs/PROSE_TO_PROOF_VISION.md`
       returns no sentence stating it as architecture.
-- [ ] Every row of `research/law-test-plan.md` is `green` with a test file
+- [x] Every row of `research/law-test-plan.md` is `green` with a test file
       and test name, or `deleted` with its reason.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
