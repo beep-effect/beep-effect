@@ -333,6 +333,15 @@ describe("gate-report upload policy", () => {
       expect(shared).toEqual([]);
     })
   );
+  it.effect("decodes a literal boolean step condition instead of failing the file", () =>
+    Effect.gen(function* () {
+      const diagnostics = yield* workflowPolicyDiagnostics(
+        "fixture.yml",
+        gateWorkflow(`${laneStep}      - run: echo disabled\n        if: false\n${reportStep()}${wiredUpload}`)
+      );
+      expect(diagnostics).toEqual([]);
+    })
+  );
   it.effect("ignores a job that runs no ci lane and stages no gate reports", () =>
     Effect.gen(function* () {
       const diagnostics = yield* workflowPolicyDiagnostics(

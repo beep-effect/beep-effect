@@ -53,7 +53,7 @@ class WorkflowStep extends S.Opaque<WorkflowStep, { readonly brand: unique symbo
     with: S.optionalKey(textRecord),
     env: S.optionalKey(textRecord),
     run: S.optionalKey(S.String),
-    if: S.optionalKey(S.String),
+    if: S.optionalKey(S.Union([S.String, S.Boolean])),
     "continue-on-error": S.optionalKey(S.Union([S.Boolean, S.String])),
   }).pipe(
     $I.annoteSchema("WorkflowStep", {
@@ -366,7 +366,7 @@ const rendersGateReports = (step: WorkflowStep): boolean => step.uses === GATE_R
 const uploadsGateReports = (step: WorkflowStep): boolean =>
   isUploadStep(step) && step.with?.path === GATE_REPORTS_STAGE;
 const runsAsMeasurement = (step: WorkflowStep): boolean =>
-  Str.includes("always()")(step.if ?? "") && step["continue-on-error"] === true;
+  O.exists(strings(step.if), Str.includes("always()")) && step["continue-on-error"] === true;
 const reportStepDiagnostics = (id: string, step: WorkflowStep) =>
   runsAsMeasurement(step) ? [] : [`${id}: gate report step must run on always() and continue on error`];
 const reportUploadDiagnostics = (id: string, step: WorkflowStep) => [
