@@ -1250,9 +1250,9 @@ export class YamlFormat {
    * `indentSequences`, `finalNewline`) — falls back to re-serialising the
    * whole document, which normalises line endings to LF, applies those
    * options, and renders the replacement in the stringifier's styles.
-   * A replaced node's anchor (never its tag) is carried onto the
-   * replacement, so an alias that names it resolves to the new value instead
-   * of dangling.
+   * A replaced node's anchor (never its tag or comments, which describe the
+   * replaced value rather than the slot) is carried onto the replacement, so
+   * an alias that names it resolves to the new value instead of dangling.
    *
    * Two replacement values have no finite rendering and fail typed rather
    * than hanging or overflowing the stack: one containing a circular

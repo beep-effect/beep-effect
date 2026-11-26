@@ -1109,21 +1109,23 @@ describe("comment fidelity (#127)", () => {
   });
 
   describe("visitor", () => {
-    it.effect("Comment events discriminate leading from trailing placement", () =>
-      Effect.gen(function* () {
-        const events = yield* Stream.runCollect(
-          YamlVisitor.visit("# header\n# section\na: 1 # trailing\n...\n# tail\n")
-        );
-        const comments = A.filter([...events], (e) => e._tag === "Comment");
-        assert.deepStrictEqual(
-          A.map(comments, (c) => [c.placement, c.text]),
-          [
-            ["leading", " header\n section"],
-            ["trailing", " trailing"],
-            ["trailing", " tail"],
-          ]
-        );
-      })
+    it.effect(
+      "Comment events discriminate placement and come once from the key or value node, never again from the pair",
+      () =>
+        Effect.gen(function* () {
+          const events = yield* Stream.runCollect(
+            YamlVisitor.visit("# header\n# section\na: 1 # trailing\n...\n# tail\n")
+          );
+          const comments = A.filter([...events], (e) => e._tag === "Comment");
+          assert.deepStrictEqual(
+            A.map(comments, (c) => [c.placement, c.text]),
+            [
+              ["leading", " header\n section"],
+              ["trailing", " trailing"],
+              ["trailing", " tail"],
+            ]
+          );
+        })
     );
   });
 

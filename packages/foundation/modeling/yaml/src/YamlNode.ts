@@ -1196,6 +1196,7 @@ const registerLiveAnchor = (walk: ValueWalk, node: YamlNode): void => {
   MutableHashMap.set(walk.anchors, node.anchor, node);
 };
 
+// decision: value-walk-dispatches-on-node-tag
 const walkTypedNode = (node: YamlNode, walk: ValueWalk): unknown => {
   if (walk.counting) tickBudget(walk.budget);
   registerLiveAnchor(walk, node);

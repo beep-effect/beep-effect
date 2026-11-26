@@ -458,6 +458,8 @@ const toDiagnostics: {
     YamlDiagnostic.fromRawBatch(records, text)
 );
 
+const EXPANSION_HAS_NO_SOURCE_SPAN = { offset: 0, length: 0, line: 0, character: 0 } as const;
+
 const aliasCountExceededError: {
   (message: string, text: string): YamlParseError;
   (text: string): (message: string) => YamlParseError;
@@ -465,9 +467,7 @@ const aliasCountExceededError: {
   2,
   (message: string, text: string): YamlParseError =>
     YamlParseError.make({
-      diagnostics: [
-        YamlDiagnostic.make({ code: "AliasCountExceeded", message, offset: 0, length: 0, line: 0, character: 0 }),
-      ],
+      diagnostics: [YamlDiagnostic.make({ code: "AliasCountExceeded", message, ...EXPANSION_HAS_NO_SOURCE_SPAN })],
       input: text,
     })
 );

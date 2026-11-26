@@ -14,7 +14,7 @@ Single-document rules run in array order and the first rewrite wins. 2LFX `reser
 
 Scalar-root rules apply only to output opening with `--- `: a root block scalar holding a newline then a tab is emitted double-quoted; a single-line single-quoted root starting with `---`, and any multi-line quoted root, drop the marker; 9MQT/00 unquotes a plain-safe folded double-quoted root on the single-document path only (KSS4 document 1 keeps its quotes), with `isPlainSafe` mirroring libyaml's quote-drop discriminator.
 
-Multi-document rules: 6WLZ splits `---` from tagged scalar bodies when every document has an explicit start and a `%TAG` names the primary handle `!` (9WXW, whose first document has no `---`, does not match); PUW8 appends `...` after an empty trailing explicit document when an earlier document had content (the all-empty 6XDY and MUS6/02-06 do not).
+Multi-document rules: 6WLZ splits `---` from tagged scalar bodies, keeping each document's directive scope unambiguous, when every document has an explicit start and a `%TAG` names the primary handle `!` (9WXW, whose first document has no `---`, does not match); PUW8 appends `...` after an empty trailing explicit document when an earlier document had content, since a bare trailing `---` is ambiguous once streams are concatenated (the all-empty 6XDY and MUS6/02-06 do not).
 
 Reason: these are libyaml presentation choices; the conformance harness must accept them without leaking libyaml convention into the library's stringifier.
 
