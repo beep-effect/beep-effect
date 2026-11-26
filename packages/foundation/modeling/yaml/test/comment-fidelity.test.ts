@@ -598,14 +598,14 @@ describe("comment fidelity (#127)", () => {
         ["seq folded", "- > # hdr\n  body\n"],
         ["map strip-chomp", "a: |- # hdr\n  body\n"],
         ["seq strip-chomp", "- |- # hdr\n  body\n"],
-        ["map redundant keep-chomp (PR #338)", "a: |+ # hdr\n  body\n"],
-        ["seq redundant keep-chomp (PR #338)", "- |+ # hdr\n  body\n"],
-        ["map folded redundant keep-chomp (PR #338)", "a: >+ # hdr\n  body\n"],
-        ["map redundant indent indicator (PR #338)", "a: |2 # hdr\n  body\n"],
-        ["map folded redundant indent indicator (PR #338)", "a: >2 # hdr\n  body\n"],
-        ["map redundant indent indicator with keep (PR #338)", "a: |2+ # hdr\n  body\n"],
-        ["map redundant keep-chomp bare header (PR #338)", "a: |+\n  body\n"],
-        ["map redundant indent indicator bare header (PR #338)", "a: |2\n  body\n"],
+        ["map redundant keep-chomp", "a: |+ # hdr\n  body\n"],
+        ["seq redundant keep-chomp", "- |+ # hdr\n  body\n"],
+        ["map folded redundant keep-chomp", "a: >+ # hdr\n  body\n"],
+        ["map redundant indent indicator", "a: |2 # hdr\n  body\n"],
+        ["map folded redundant indent indicator", "a: >2 # hdr\n  body\n"],
+        ["map redundant indent indicator with keep", "a: |2+ # hdr\n  body\n"],
+        ["map redundant keep-chomp bare header", "a: |+\n  body\n"],
+        ["map redundant indent indicator bare header", "a: |2\n  body\n"],
       ];
       for (const [name, source] of roundtrips) {
         it.effect(`roundtrips byte-intact: ${name}`, () =>
