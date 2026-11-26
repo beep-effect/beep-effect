@@ -45,7 +45,11 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
-        assert.strictEqual(S.toEquivalence(schema)(decoded, value), true);
+        assert.strictEqual(
+          S.toEquivalence(schema)(decoded, value),
+          true,
+          "schema round trips draw the full arbitrary; only the wire-format parser laws below restrict their inputs"
+        );
         const value1 = yield* S.encodeEffect(schema)(decoded);
         assert.deepStrictEqual(value1, encoded);
       }),

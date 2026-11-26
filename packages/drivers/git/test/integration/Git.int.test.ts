@@ -474,17 +474,7 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
             assert.deepStrictEqual(
               [...changed].sort(),
               ["pkg/mod.txt", "staged.txt", "tracked.txt"],
-              "--no-relative keeps the diffs repo-wide and repo-root-spelled from pkg/, so the root files appear"
-            );
-            assert.notInclude(
-              changed,
-              "mod.txt",
-              "an inherited diff.relative would scope the diff to pkg/ as a lone mod.txt, dropping the root files"
-            );
-            assert.notInclude(
-              changed,
-              "untracked.txt",
-              "ls-files is cwd-scoped, so from pkg/ it lists no untracked file above the subtree"
+              "--no-relative keeps the diffs repo-wide and repo-root-spelled from pkg/, where an inherited diff.relative would leave a lone mod.txt; untracked.txt is absent because ls-files is cwd-scoped"
             );
           })
       );
@@ -665,7 +655,7 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           const argv = A.filter(Str.split(recorded, "\n"), (line) => line !== "");
           assert.isTrue(
             A.some(argv, (token, index) => token === "-o" && argv[index + 1] === "BatchMode=yes"),
-            `the mock proves the pin is computed; a REAL git must hand "-o BatchMode=yes" to ssh, got: ${yield* encodeSshArgvJson(argv)}`
+            `the mock proves the pin is computed; the stand-in is named ssh because only an OpenSSH basename gets it, and a REAL git must hand "-o BatchMode=yes" to ssh, got: ${yield* encodeSshArgvJson(argv)}`
           );
         })
       );

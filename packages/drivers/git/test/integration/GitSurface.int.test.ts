@@ -377,8 +377,8 @@ it.layer(Layer.provideMerge(FixtureBLayer, TestLayer), { timeout: "30 seconds" }
       () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          const localPathCloneWithoutDepth = { url: libDir, path: "vendor/lib" };
-          yield* git.submoduleAdd(superDir, localPathCloneWithoutDepth);
+          const localPathCloneIgnoresDepth = { url: libDir, path: "vendor/lib" };
+          yield* git.submoduleAdd(superDir, localPathCloneIgnoresDepth);
           const path = yield* Path.Path;
           yield* assertExists(path.join(vendoredSubmoduleDir, "lib.txt"));
 

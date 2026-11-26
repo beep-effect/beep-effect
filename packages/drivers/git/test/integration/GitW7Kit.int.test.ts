@@ -147,18 +147,20 @@ it.layer(TestLayer, { timeout: "60 seconds" })("Git W7 kit against a real git bi
       })
     );
 
-    it.effect("upstream reads the exact branch, never a prefix match", () =>
-      Effect.gen(function* () {
-        const git = yield* Git;
-        const upstreamViaOriginFetchRefspec = yield* git.upstream(dir, "main");
-        assertSome(upstreamViaOriginFetchRefspec, "refs/remotes/origin/main");
-        const observedUpstream2 = yield* git.upstream(dir, "conflict");
-        assertNone(observedUpstream2);
-        const observedUpstream3 = yield* git.upstream(dir, "feat");
-        assertNone(observedUpstream3);
-        const observedUpstream4 = yield* git.upstream(dir, "missing");
-        assertNone(observedUpstream4);
-      })
+    it.effect(
+      "upstream maps branch.<b>.merge through the remote's fetch refspec to the exact branch, never a prefix match",
+      () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const observedUpstream = yield* git.upstream(dir, "main");
+          assertSome(observedUpstream, "refs/remotes/origin/main");
+          const observedUpstream2 = yield* git.upstream(dir, "conflict");
+          assertNone(observedUpstream2);
+          const observedUpstream3 = yield* git.upstream(dir, "feat");
+          assertNone(observedUpstream3);
+          const observedUpstream4 = yield* git.upstream(dir, "missing");
+          assertNone(observedUpstream4);
+        })
     );
 
     it.effect("updateRef creates, refuses a second create and a bad name, and deletes only on a match", () =>
