@@ -107,8 +107,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         const afterImport = yield* snapshotFolder(folder);
         const entries = yield* store.log.entriesAfter(LogCursor.make(0));
 
-        // The import wrote nothing and recorded every file before any export ran.
-        expect(spy.writes).toBe(0);
+        expect(spy.writes, "the import writes nothing and records every file before any export runs").toBe(0);
         expect(afterImport).toEqual(before);
         expect(imported.files).toHaveLength(sample.files.length);
         expect(folderImportCount(entries)).toBe(1);
@@ -136,7 +135,6 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         const before = yield* snapshotFolder(folder);
         const store = yield* openStore(`${workspace}/memory.db`);
 
-        // Abort the import's journal transaction on its 5,000th committed entry.
         yield* store.sql.unsafe(`
           CREATE TRIGGER inject_import_failure BEFORE INSERT ON agent_memory_order
           WHEN NEW.sequence = 5000
@@ -152,13 +150,13 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         expect(cursor).toBe(LogCursor.make(0));
         expect(folderImportCount(entries)).toBe(0);
 
-        // With nothing claimed, the projector still refuses the folder, and a
-        // retry once the fault is gone imports it.
         const refused = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(folder)));
-        expect(refused).toBeInstanceOf(UnimportedFolderError);
+        expect(refused, "with nothing claimed, the projector still refuses the folder").toBeInstanceOf(
+          UnimportedFolderError
+        );
         yield* store.sql.unsafe("DROP TRIGGER inject_import_failure");
         const retried = yield* store.projector.importFolder(PosixPath.make(folder));
-        expect(retried.files).toHaveLength(sample.files.length);
+        expect(retried.files, "a retry once the fault is gone imports the folder").toHaveLength(sample.files.length);
       }),
       { timeout: 60_000 }
     );
@@ -197,17 +195,15 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         const spy = makeSpy();
         const store = yield* openStore(`${workspace}/memory.db`, spiedFileSystem(spy));
 
-        // An empty log has imported nothing, so even an existing folder is refused.
         const empty = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(folder)));
-        expect(empty).toBeInstanceOf(UnimportedFolderError);
+        expect(empty, "an empty log has imported nothing, so even an existing folder is refused").toBeInstanceOf(
+          UnimportedFolderError
+        );
         assertSome(S.is(UnimportedFolderError)(empty) ? empty.root : O.none(), PosixPath.make(folder));
         expect(spy.writes + spy.renames).toBe(0);
         const snapshot1 = yield* snapshotFolder(folder);
         expect(snapshot1).toEqual(before);
 
-        // Once the log holds this folder, a different folder is still refused:
-        // one file shares a path with an imported file but not its bytes, one
-        // matches an imported file exactly.
         yield* store.projector.importFolder(PosixPath.make(folder));
         const other = `${workspace}/other`;
         const shared = O.getOrThrow(A.findFirst(sample.files, (file) => file.text.length > 0));
@@ -217,7 +213,10 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         ]);
         const otherBefore = yield* snapshotFolder(other);
         const foreign = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(other)));
-        expect(foreign).toBeInstanceOf(UnimportedFolderError);
+        expect(
+          foreign,
+          "once the log holds this folder, a folder with a file that shares a path but not the bytes is still refused"
+        ).toBeInstanceOf(UnimportedFolderError);
         expect(spy.writes + spy.renames).toBe(0);
         const snapshot2 = yield* snapshotFolder(other);
         expect(snapshot2).toEqual(otherBefore);
@@ -229,22 +228,25 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         ]);
         const exactBefore = yield* snapshotFolder(exact);
         const partial = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(exact)));
-        expect(partial).toBeInstanceOf(UnimportedFolderError);
+        expect(
+          partial,
+          "a different folder with one file matching an imported file exactly is still refused"
+        ).toBeInstanceOf(UnimportedFolderError);
         expect(spy.writes + spy.renames).toBe(0);
         const snapshot3 = yield* snapshotFolder(exact);
         expect(snapshot3).toEqual(exactBefore);
 
-        // A different folder whose only memory file matches an imported file
-        // byte for byte is still not the imported folder: the fence is bound
-        // to the folder, so nothing is replaced and no file is created.
         const copy = `${workspace}/copy`;
         yield* writeFiles(copy, [[shared.path, shared.text]]);
         const copyBefore = yield* snapshotFolder(copy);
         const copied = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(copy)));
-        expect(copied).toBeInstanceOf(UnimportedFolderError);
+        expect(
+          copied,
+          "a folder whose only memory file matches an imported file byte for byte is still not the imported folder: the fence is bound to the folder"
+        ).toBeInstanceOf(UnimportedFolderError);
         expect(spy.writes + spy.renames).toBe(0);
         const snapshot5 = yield* snapshotFolder(copy);
-        expect(snapshot5).toEqual(copyBefore);
+        expect(snapshot5, "nothing is replaced and no file is created").toEqual(copyBefore);
       }),
       { timeout: 60_000 }
     );
@@ -288,8 +290,6 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         yield* writeFiles(folder, [["MEMORY.md", "# Index\n\n- one\n"]]);
         const database = `${workspace}/memory.db`;
         const winner = yield* openStore(database);
-        // The loser catches up on an empty log; the winner's import commits
-        // before the loser's first read, so the loser appends a second first import.
         let won = O.none<{ readonly cursor: LogCursor; readonly folderDigest: string }>();
         const loser = yield* openStore(
           database,
@@ -305,7 +305,10 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
           [lost.cursor, lost.folderDigest]
         );
         const entries = yield* loser.log.entriesAfter(LogCursor.make(0));
-        expect(folderImportCount(entries)).toBe(1);
+        expect(
+          folderImportCount(entries),
+          "the loser catches up on an empty log and the winner's import commits before the loser's first read, so the loser appends a second first import"
+        ).toBe(1);
         const created = yield* createdNodes(entries);
         expect(created).toHaveLength(4);
 
@@ -335,11 +338,12 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         const entries = yield* loser.log.entriesAfter(LogCursor.make(0));
         expect(folderImportCount(entries)).toBe(1);
 
-        // The refused batch rolled its fence rows back, so the log's folder is
-        // never written into the loser's folder.
         const before = yield* snapshotFolder(theirs);
         const exported = yield* Effect.flip(loser.projector.exportFolder(PosixPath.make(theirs)));
-        expect(exported).toBeInstanceOf(UnimportedFolderError);
+        expect(
+          exported,
+          "the refused batch rolled its fence rows back, so the log's folder is never written into the loser's folder"
+        ).toBeInstanceOf(UnimportedFolderError);
         const after = yield* snapshotFolder(theirs);
         expect(after).toEqual(before);
         expect(A.map(after, (file) => textOf(file.bytes))).toEqual(["# Theirs\n"]);
@@ -356,10 +360,11 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         yield* writeFiles(mine, [["MEMORY.md", "# Mine\n"]]);
         const database = `${workspace}/memory.db`;
         const store = yield* openStore(database);
-        // A missing heads table fails the NodeCreated handler inside the batch.
         yield* store.sql.unsafe("ALTER TABLE agent_memory_heads RENAME TO agent_memory_heads_away");
         const failed = yield* Effect.flip(store.projector.importFolder(PosixPath.make(failing)));
-        expect(failed).toBeInstanceOf(ProjectionError);
+        expect(failed, "a missing heads table fails the NodeCreated handler inside the batch").toBeInstanceOf(
+          ProjectionError
+        );
         const rows = yield* store.sql.unsafe<{ readonly rows: number }>(
           "SELECT COUNT(*) AS rows FROM agent_memory_folder_files"
         );
@@ -414,8 +419,6 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
           "Escaped."
         );
         yield* store.log.append(insert.event);
-        // Rewrite the committed payload in place, the way a writer that skips
-        // the schema or a damaged database would: the path now leaves the folder.
         yield* store.sql.unsafe(
           "UPDATE agent_memory_journal SET payload = CAST(replace(CAST(payload AS TEXT), 'aa/escape.md', '../escape.md') AS BLOB) WHERE event = 'NodeCreated'"
         );
@@ -423,7 +426,10 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
 
         const fresh = yield* openStore(database);
         const refused = yield* Effect.flip(fresh.projector.exportFolder(PosixPath.make(folder)));
-        expect(refused).toBeInstanceOf(ProjectionError);
+        expect(
+          refused,
+          "the payload was rewritten in place, as a writer that skips the schema or a damaged database would, so its path leaves the folder"
+        ).toBeInstanceOf(ProjectionError);
         expect(refused).toMatchObject({ operation: "exportFolder" });
         const after = yield* snapshotFolder(workspace);
         expect(A.map(after, (file) => file.path)).toEqual(A.map(before, (file) => file.path));
@@ -458,10 +464,12 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         const after = yield* snapshotFolder(theirs);
         expect(after).toEqual(before);
 
-        // The imported folder itself still exports, under any spelling of its path.
         yield* store.projector.exportFolder(PosixPath.make(`${workspace}/theirs/../mine`));
         const projected = yield* snapshotFolder(mine);
-        expect(A.map(projected, (file) => textOf(file.bytes))).toEqual(["# Memory of repo A\n", "Private note.\n"]);
+        expect(
+          A.map(projected, (file) => textOf(file.bytes)),
+          "the imported folder itself still exports, under any spelling of its path"
+        ).toEqual(["# Memory of repo A\n", "Private note.\n"]);
       })
     );
 
@@ -684,11 +692,10 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         const created = yield* createdNodes(entries);
         const separator = O.getOrThrow(A.findFirst(created, ([, node]) => node.text === "\n\n"))[1];
 
-        // One newline joins the two paragraphs into one.
         const revise = yield* reviseEvent(separator.nodeId, separator.revisionId, "\n");
         yield* store.log.append(revise.event);
         const refused = yield* Effect.flip(store.projector.projectNode(separator.nodeId));
-        expect(refused).toBeInstanceOf(ReparseRefusedError);
+        expect(refused, "one newline joins the two paragraphs into one").toBeInstanceOf(ReparseRefusedError);
         expect(refused).toMatchObject({ nodeId: separator.nodeId, path: separator.filePath, disturbed: [0, 2] });
       })
     );
@@ -706,11 +713,10 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         yield* store.log.append(insert.event);
         const refused = yield* Effect.flip(store.projector.projectNode(nodeId));
         expect(refused).toBeInstanceOf(UnimportedFolderError);
-        // projectNode names no folder, so the refusal names none.
-        const named = S.is(UnimportedFolderError)(refused)
+        const folderNamedByRefusal = S.is(UnimportedFolderError)(refused)
           ? O.orElse(refused.root, () => O.map(refused.folderDigest, String))
           : O.some("not an UnimportedFolderError");
-        assertNone(named);
+        assertNone(folderNamedByRefusal);
       })
     );
   });

@@ -19,8 +19,7 @@ import { baseTexts, writerText } from "./fixtures/goals-history-replay.ts";
 import type { ReplayableFixture, ReplayStatus } from "./admission-replay.ts";
 import type { GoalsHistoryReplay } from "./fixtures/goals-history-replay.ts";
 
-/** The goal phase status lifecycle, in the order of the repository's goals schemas. */
-const goalPhaseStatus = StatusLifecycle.make({
+const goalsSchemaPhaseStatus = StatusLifecycle.make({
   field: "status",
   order: [
     StatusValue.make("pending"),
@@ -32,11 +31,10 @@ const goalPhaseStatus = StatusLifecycle.make({
 
 /** The typed status fields the history replay admits with, and the lifecycle its oracle models. */
 export const historyStatus: ReplayStatus = {
-  fields: StatusFields.make({ lifecycles: [goalPhaseStatus] }),
-  lifecycle: goalPhaseStatus,
+  fields: StatusFields.make({ lifecycles: [goalsSchemaPhaseStatus] }),
+  lifecycle: goalsSchemaPhaseStatus,
 };
 
-/** The memory-folder path of cluster `index`: its own numbered folder, then the repository path. */
 const clusterPath = (index: number, path: string): string => `${Str.padStart(3, "0")(String(index))}/${path}`;
 
 /** The history replay's clusters as one folder of bases and the writers that edit them, in history order. */
