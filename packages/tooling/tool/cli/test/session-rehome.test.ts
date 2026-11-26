@@ -47,6 +47,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import type { CheckoutRepositoryKey } from "@beep/repo-cli/test/SharedInternals";
 
 const github = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect-private" });
 const gitlab = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "beep-effect-private" });
@@ -103,6 +104,11 @@ const withStateRoot = Effect.fnUntraced(function* <A, E, R>(
     )
   );
 });
+
+const StoreSuffix = S.Literals(["", ".presence", ".rulings"]);
+
+const storeFileName = (suffix: typeof StoreSuffix.Type) =>
+  suffix === ".presence" ? sessionPresenceFileName : suffix === ".rulings" ? rulingsFileName : sessionLedgerFileName;
 
 const ledgerRow = (repository: CheckoutRepository, next: string) =>
   SessionLedgerRow.make({
@@ -223,6 +229,39 @@ describe("checkout repository partitions", () => {
     expect(sessionPresenceFileName(split)).not.toBe(sessionPresenceFileName(joined));
     expect(fleetRepositoryKey(split)).toBe(checkoutRepositoryStateKey(split));
   });
+
+  it("keeps a repository named like a store suffix out of its sibling's variant file", () => {
+    const repo = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "repo" });
+    const presenceNamed = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "repo.presence" });
+    const rulingsNamed = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "repo.rulings" });
+    expect(sessionLedgerFileName(presenceNamed)).toBe("gitlab.example.com__team__repo%2Epresence.jsonl");
+    expect(sessionPresenceFileName(repo)).toBe("gitlab.example.com__team__repo.presence.jsonl");
+    expect(registerFileName(rulingsNamed)).toBe("gitlab.example.com__team__repo%2Erulings.jsonl");
+    expect(rulingsFileName(repo)).toBe("gitlab.example.com__team__repo.rulings.jsonl");
+    expect(checkoutRepositoryStateKey({ host: "gitlab.example.com", owner: "team", name: "repo.presenced" })).toBe(
+      "gitlab.example.com__team__repo.presenced"
+    );
+  });
+
+  it.effect.prop(
+    "gives two store files in one directory one name only for the same repository and store",
+    [CheckoutRepository, CheckoutRepository, StoreSuffix, StoreSuffix, StoreSuffix, StoreSuffix],
+    ([left, right, leftNameSuffix, rightNameSuffix, leftStore, rightStore]) =>
+      Effect.sync(() => {
+        const named = (repository: CheckoutRepositoryKey, suffix: string) =>
+          CheckoutRepository.make({ ...repository, name: `${repository.name}${suffix}` });
+        const leftRepository = named(left, leftNameSuffix);
+        const rightRepository = named(right, rightNameSuffix);
+        const sameRepository =
+          leftRepository.host === rightRepository.host &&
+          leftRepository.owner === rightRepository.owner &&
+          leftRepository.name === rightRepository.name;
+        expect(storeFileName(leftStore)(leftRepository) === storeFileName(rightStore)(rightRepository)).toBe(
+          sameRepository && leftStore === rightStore
+        );
+      }),
+    { arbitrary: fcRuns(200) }
+  );
 
   it.effect.prop(
     "gives two repositories one state key only when they are the same repository",
@@ -435,6 +474,74 @@ describe("session rehome", () => {
             return yield* ledger.list(gitlab);
           }).pipe(withStores);
           expect(A.map(ledgerRows, (row) => row.next)).toEqual(["first", "already-home", "second"]);
+        })
+      )
+    );
+
+    it.effect("rehomes between a repository and one named like its store suffix in both directions", () =>
+      withStateRoot(({ sessions, orchestrator }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repo = CheckoutRepository.make({ host: "gitlab.example.com", owner: "team", name: "repo" });
+          const presenceNamed = CheckoutRepository.make({ ...repo, name: "repo.presence" });
+          const rulingsNamed = CheckoutRepository.make({ ...repo, name: "repo.rulings" });
+          const pairs: ReadonlyArray<readonly [CheckoutRepository, CheckoutRepository]> = [
+            [repo, presenceNamed],
+            [presenceNamed, repo],
+            [repo, rulingsNamed],
+            [rulingsNamed, repo],
+          ];
+          const seed = Effect.fnUntraced(function* (repository: CheckoutRepository) {
+            const ledger = yield* SessionLedger;
+            const presence = yield* SessionPresenceStore;
+            const register = yield* OrchestratorRegister;
+            const rulings = yield* OrchestratorRulings;
+            yield* ledger.append(ledgerRow(repository, "seed"));
+            yield* presence.append(presenceRow(repository));
+            yield* register.append(registerRow(repository));
+            yield* rulings.append(rulingRow(repository));
+          });
+          yield* Effect.forEach(
+            pairs,
+            ([from, to]) =>
+              Effect.gen(function* () {
+                yield* seed(from).pipe(withStores);
+                const dryRun = yield* rehomeSessionStores(SessionRehomeRequest.make({ from, to, apply: false })).pipe(
+                  withStores
+                );
+                const sourceFiles = A.map(dryRun.stores, (plan) => plan.sourceFile);
+                const targetFiles = A.map(dryRun.stores, (plan) => plan.targetFile);
+                expect(A.intersection(sourceFiles, targetFiles)).toEqual([]);
+                const before = yield* Effect.forEach(sourceFiles, readText, { concurrency: 1 });
+                yield* rehomeSessionStores(SessionRehomeRequest.make({ from, to, apply: true })).pipe(withStores);
+                const after = yield* Effect.forEach(sourceFiles, readText, { concurrency: 1 });
+                expect(after).toEqual(before);
+              }),
+            { concurrency: 1 }
+          );
+          const sessionFiles = yield* fs.readDirectory(sessions);
+          const orchestratorFiles = yield* fs.readDirectory(orchestrator);
+          expect(A.sort(sessionFiles, Str.Order)).toEqual([
+            "gitlab.example.com__team__repo%2Epresence.jsonl",
+            "gitlab.example.com__team__repo%2Epresence.presence.jsonl",
+            "gitlab.example.com__team__repo%2Erulings.jsonl",
+            "gitlab.example.com__team__repo%2Erulings.presence.jsonl",
+            "gitlab.example.com__team__repo.jsonl",
+            "gitlab.example.com__team__repo.presence.jsonl",
+          ]);
+          expect(A.sort(orchestratorFiles, Str.Order)).toEqual([
+            "gitlab.example.com__team__repo%2Epresence.jsonl",
+            "gitlab.example.com__team__repo%2Epresence.rulings.jsonl",
+            "gitlab.example.com__team__repo%2Erulings.jsonl",
+            "gitlab.example.com__team__repo%2Erulings.rulings.jsonl",
+            "gitlab.example.com__team__repo.jsonl",
+            "gitlab.example.com__team__repo.rulings.jsonl",
+          ]);
+          const presenceNamedLedger = yield* Effect.gen(function* () {
+            const ledger = yield* SessionLedger;
+            return yield* ledger.list(presenceNamed);
+          }).pipe(withStores);
+          expect(A.every(presenceNamedLedger, (row) => row.repository.name === "repo.presence")).toBe(true);
         })
       )
     );

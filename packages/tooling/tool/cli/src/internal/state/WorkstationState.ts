@@ -8,11 +8,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { XdgBase } from "@beep/xdg/XdgBase";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -290,11 +291,45 @@ export const resolveWorkstationStateDir = Effect.fn("WorkstationState.resolveDir
   return `${stateHome}/beep/${options.store}`;
 });
 
+/**
+ * A per-repository state file kept beside the plain `<key>.jsonl` file in the
+ * same directory, named `<key>.<variant>.jsonl`.
+ *
+ * **Example** (List the variants)
+ *
+ * ```ts
+ * import { StateFileVariant } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(StateFileVariant.literals) // ["presence", "rulings"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const StateFileVariant = LiteralKit(["presence", "rulings"]).pipe(
+  $I.annoteSchema("StateFileVariant", {
+    description: "A per-repository state file named <key>.<variant>.jsonl beside the plain <key>.jsonl file.",
+  })
+);
+
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type StateFileVariant = typeof StateFileVariant.Type;
+
 const delimiterAmbiguous = (segment: string): boolean =>
   Str.includes("__")(segment) || Str.startsWith("_")(segment) || Str.endsWith("_")(segment);
 
+const variantAmbiguous = (segment: string): boolean =>
+  A.some(StateFileVariant.literals, (variant) => Str.endsWith(`.${variant}`)(segment));
+
 const stateKeySegment = (segment: string): string =>
-  delimiterAmbiguous(segment) ? Str.replaceAll("_", "%5F")(segment) : segment;
+  pipe(
+    segment,
+    delimiterAmbiguous(segment) ? Str.replaceAll("_", "%5F") : identity,
+    variantAmbiguous(segment) ? Str.replaceAll(".", "%2E") : identity
+  );
 
 /**
  * The key every per-repository state file and directory shares:
@@ -304,9 +339,12 @@ const stateKeySegment = (segment: string): string =>
  *
  * A segment that could blur the `__` delimiter (one containing `__`, or
  * starting or ending with `_`) has each `_` written as `%5F`, so
- * `team__app/repo` and `team/app__repo` get different keys. Segments cannot
- * contain `%`, so an escaped key never equals a plain one, and every other
- * repository, GitHub's included, keeps its plain `host__owner__name` key.
+ * `team__app/repo` and `team/app__repo` get different keys. A segment ending
+ * in a {@link StateFileVariant} suffix (`.presence`, `.rulings`) has each `.`
+ * written as `%2E`, so the plain file of `team/repo.presence` is not the
+ * presence file of `team/repo`. Segments cannot contain `%`, so an escaped
+ * key never equals a plain one, and every other repository, GitHub's
+ * included, keeps its plain `host__owner__name` key.
  *
  * **Example** (Key a plain and an ambiguous repository)
  *
@@ -317,6 +355,8 @@ const stateKeySegment = (segment: string): string =>
  * // "github.com__beep-effect__beep-effect"
  * console.log(checkoutRepositoryStateKey({ host: "gitlab.example.com", owner: "team", name: "app__repo" }))
  * // "gitlab.example.com__team__app%5F%5Frepo"
+ * console.log(checkoutRepositoryStateKey({ host: "gitlab.example.com", owner: "team", name: "repo.presence" }))
+ * // "gitlab.example.com__team__repo%2Epresence"
  * ```
  *
  * @param repository - The repository the state belongs to.
@@ -347,6 +387,31 @@ export const checkoutRepositoryStateKey = (repository: CheckoutRepositoryKey): s
  */
 export const repositoryJsonLinesFileName = (repository: CheckoutRepositoryKey): string =>
   `${checkoutRepositoryStateKey(repository)}.jsonl`;
+
+/**
+ * The file name of a {@link StateFileVariant} kept beside a repository's
+ * plain JSON Lines file: `host__owner__name.<variant>.jsonl`. No variant
+ * file of one repository shares a name with the plain or variant file of
+ * another.
+ *
+ * **Example** (Name a presence file)
+ *
+ * ```ts
+ * import { repositoryVariantFileName } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(repositoryVariantFileName("presence")({ host: "github.com", owner: "beep-effect", name: "beep-effect" }))
+ * // "github.com__beep-effect__beep-effect.presence.jsonl"
+ * ```
+ *
+ * @param variant - Which variant file to name.
+ * @returns A function from the repository to the file name.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const repositoryVariantFileName =
+  (variant: StateFileVariant) =>
+  (repository: CheckoutRepositoryKey): string =>
+    `${checkoutRepositoryStateKey(repository)}.${variant}.jsonl`;
 
 /**
  * Treat a missing state file as empty history and map every other platform
