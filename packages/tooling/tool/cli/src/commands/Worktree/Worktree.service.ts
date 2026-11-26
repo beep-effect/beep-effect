@@ -2606,7 +2606,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // stays open, which no one-time check on a POSIX tree can close.
   const reQuiescent = yield* Effect.result(assertQuiescentFence(request, retirePath, O.some(quietShells)));
   if (Result.isFailure(reQuiescent)) {
-    yield* liftRegisteredLock(request);
+    yield* releaseFenceLock(request, fenceOwnsLock);
     yield* pruneWorktreeMetadata(request.mainCheckout);
     return yield* WorktreeCommandError.make({
       message: `Archived ${request.targetPath}, but a process attached to it, or a desktop Terminal panel shell standing in it became active, during capture; the fenced copy is preserved at ${retirePath} rather than deleted so no late write is lost.`,

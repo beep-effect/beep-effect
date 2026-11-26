@@ -748,4 +748,23 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
       })
     )
   );
+
+  it.effect("keeps a lock the lane already carried when a late attacher preserves the fenced copy", () =>
+    withScratchRepo(({ repoRoot, lane }) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        yield* runGit(repoRoot, ["worktree", "lock", "--reason", "operator hold", lane]);
+        const walker = yield* spawnSleepIn(path.dirname(repoRoot));
+        const table = yield* walkingWatcherTable(walker.pid, lane, 2, 2);
+        const error = yield* Effect.flip(remove(repoRoot)).pipe(
+          Effect.provideService(ProcessTable, table),
+          Effect.provideService(WorktreeFenceSettle, quickSettle(5)),
+          Effect.ensuring(Effect.ignore(walker.kill()))
+        );
+        expect(failureMessage(error)).toContain("the fenced copy is preserved");
+        const listing = yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"]);
+        expect(listing).toContain("locked operator hold");
+      })
+    )
+  );
 });
