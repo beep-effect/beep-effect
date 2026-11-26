@@ -1,15 +1,3 @@
-// Section extraction: the finder layer over `MarkdownDocument.sections`.
-//
-// The sectioning itself already existed and is tested in `document.test.ts` —
-// nothing here re-implements it. What is new is the heading TEXT a section
-// carries, the body span excluding the heading, and the two finders.
-//
-// The motivating consumer is a CHANGELOG reader: silk-release-action's
-// `extract-release-notes.ts` scans lines for `^## `, which false-positives on
-// `## ` inside a fenced code block and misses setext headings entirely. Both
-// are regression cases below, and both are fixed by construction here: a
-// heading is a parsed node or it is not one.
-
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -51,38 +39,32 @@ const changelog = A.join(
 describe("DocumentSection.text", () => {
   it("carries the heading's plain-text content", () => {
     const document = parse(changelog);
-    // EVERY root-level heading opens a section, H3s included — the shipped
-    // `sections` contract, flat with `depth` carrying the hierarchy. The
-    // finders narrow by depth; they do not change what a section is.
     assert.deepStrictEqual(
       A.map(document.sections, (section) => section.text),
-      ["my-package", "1.2.30", "Patch changes", "1.2.3", "1.0.0"]
+      ["my-package", "1.2.30", "Patch changes", "1.2.3", "1.0.0"],
+      "every root-level heading opens a section, H3s included: the list is flat, depth carries the hierarchy, finders only narrow"
     );
   });
 
   it("flattens inline formatting in the heading", () => {
-    // `DocumentHeading.text` already did this; a section could not reach it
-    // because the derivation was module-private. That was the blocking gap.
     const document = parse("## **1.2.3** _(beta)_\n\nbody\n");
     assert.strictEqual(document.sections[0]?.text, "1.2.3 (beta)");
   });
 
   it("agrees with the matching DocumentHeading entry", () => {
-    // Every heading here is root-level, so the two lists must coincide exactly.
-    // If they ever diverge, one of the derivations drifted.
     const document = parse(changelog);
     assert.deepStrictEqual(
       A.map(document.sections, (section) => section.text),
-      A.map(document.headings, (entry) => entry.text)
+      A.map(document.headings, (entry) => entry.text),
+      "every heading here is root-level, so the lists coincide; a divergence means one derivation drifted"
     );
   });
 });
 
 describe("DocumentSection — source and body", () => {
-  /** Address sections by heading text, never by index — indices drift. */
   const sectionNamed = (source: string, text: string) => {
     const found = parse(source).sectionByHeading(text);
-    assert.isDefined(found);
+    assert.isDefined(found, "sections are addressed by heading text, never by index, since indices drift");
     return found;
   };
 
@@ -108,18 +90,19 @@ describe("DocumentSection — source and body", () => {
   it("`bodyRange` starts where the heading node ends", () => {
     const section = sectionNamed(changelog, "1.2.30");
     assert.strictEqual(section.bodyRange.offset, section.heading.position.end.offset);
-    // And ends exactly where the whole section does.
     assert.strictEqual(
       section.bodyRange.offset + section.bodyRange.length,
-      section.range.offset + section.range.length
+      section.range.offset + section.range.length,
+      "and ends exactly where the whole section does"
     );
   });
 
   it("`body` is UNTRIMMED — a published span must not silently drop bytes", () => {
-    // The consumer writes `.trim()`, visibly. A package that publishes offsets
-    // for a span and then hands back a different span is lying about it.
     const section = sectionNamed(changelog, "1.2.3");
-    assert.isTrue(Str.startsWith("\n")(section.body));
+    assert.isTrue(
+      Str.startsWith("\n")(section.body),
+      "the consumer writes .trim() visibly: publishing offsets for one span and handing back another would lie"
+    );
     assert.strictEqual(Str.trim(section.body), "- older entry");
   });
 
@@ -151,11 +134,12 @@ describe("MarkdownDocument.firstSection", () => {
   });
 
   it("a section runs THROUGH its deeper subsections", () => {
-    // The H3 inside the newest entry must not terminate it: `### Patch changes`
-    // is part of that release's notes, and cutting there is the classic
-    // changelog-extraction bug.
     const body = parse(changelog).firstSection({ depth: 2 })?.body ?? "";
-    assert.include(body, "### Patch changes");
+    assert.include(
+      body,
+      "### Patch changes",
+      "the H3 belongs to that release's notes; cutting there is the classic changelog-extraction bug"
+    );
     assert.include(body, "a nested subsection that must NOT terminate its release");
     assert.notInclude(body, "- older entry");
   });
@@ -177,31 +161,34 @@ describe("MarkdownDocument.sectionByHeading", () => {
   });
 
   it("`1.2.3` does NOT match `1.2.30` — the wrong-release hazard", () => {
-    // THE discriminating test for this surface. A substring default would
-    // return the 1.2.30 section here and publish the wrong release notes,
-    // silently. `1.2.30` sits EARLIER in the document than `1.2.3`, so a
-    // substring implementation returns it first.
     const section = parse(changelog).sectionByHeading("1.2.3");
     assert.strictEqual(section?.text, "1.2.3");
-    assert.notInclude(section?.body ?? "", "- newest entry");
+    assert.notInclude(
+      section?.body ?? "",
+      "- newest entry",
+      "1.2.30 sits earlier than 1.2.3, so a substring match would return it and silently publish the wrong release notes"
+    );
   });
 
   it("accepts a RegExp for the tagged-monorepo heading shape", () => {
-    // Real changelogs carry either `## 1.2.3` or `## @scope/pkg@1.2.3`.
     const source = "# pkg\n\n## @scope/pkg@0.9.5\n\n- scoped entry\n";
     const section = parse(source).sectionByHeading(/@0\.9\.5$/);
-    assert.strictEqual(section?.text, "@scope/pkg@0.9.5");
+    assert.strictEqual(
+      section?.text,
+      "@scope/pkg@0.9.5",
+      "real changelogs carry either ## 1.2.3 or ## @scope/pkg@1.2.3"
+    );
   });
 
   it("a /g/ RegExp is not derailed by its own lastIndex", () => {
-    // `RegExp.test` on a global pattern advances `lastIndex`, so the same regex
-    // reused across sections would resume from the wrong offset and skip
-    // matches. Reusing one pattern object is the natural call-site shape, so
-    // the reset has to live here rather than in a caveat.
     const pattern = /\d+\.\d+\.\d+/g;
     const document = parse(changelog);
     assert.strictEqual(document.sectionByHeading(pattern)?.text, "1.2.30");
-    assert.strictEqual(document.sectionByHeading(pattern)?.text, "1.2.30");
+    assert.strictEqual(
+      document.sectionByHeading(pattern)?.text,
+      "1.2.30",
+      "RegExp.test on a /g/ pattern advances lastIndex; reusing one pattern is the natural call shape, so the finder resets it"
+    );
   });
 
   it("accepts a predicate over the text and the section", () => {
@@ -226,10 +213,8 @@ describe("MarkdownDocument.sectionByHeading", () => {
   });
 });
 
-describe("section extraction — the line-scan regressions", () => {
+describe("section extraction — the regressions of a ^## changelog line scan", () => {
   it("`## ` inside a FENCED CODE BLOCK is not a section", () => {
-    // The headline fix. A `^## ` line scan opens a section here; a parser
-    // cannot, because the line is part of a `code` node.
     const source = A.join(
       [
         "# Title",
@@ -252,7 +237,8 @@ describe("section extraction — the line-scan regressions", () => {
     const document = parse(source);
     assert.deepStrictEqual(
       A.map(document.sections, (section) => section.text),
-      ["Title", "1.0.0"]
+      ["Title", "1.0.0"],
+      "a ^## line scan opens a section here; a parser cannot, because the line is part of a code node"
     );
     const release = document.firstSection({ depth: 2 });
     assert.include(release?.body ?? "", "## not a heading");
@@ -268,8 +254,6 @@ describe("section extraction — the line-scan regressions", () => {
   });
 
   it("a SETEXT H2 is a section — the line scan misses these entirely", () => {
-    // `Version\n---` is an H2. `/^## /` never matches it, so a line-scanning
-    // extractor reports "no H2 section" on a document that plainly has one.
     const source = A.join(["My Title", "========", "", "1.0.0", "-----", "", "- setext content", ""], "\n");
     const document = parse(source);
     assert.deepStrictEqual(
@@ -277,18 +261,18 @@ describe("section extraction — the line-scan regressions", () => {
       [
         [1, "My Title"],
         [2, "1.0.0"],
-      ]
+      ],
+      "a setext H2 never matches /^## /, so a line-scanning extractor reports no H2 section on a document with one"
     );
     assert.strictEqual(Str.trim(document.firstSection({ depth: 2 })?.body ?? ""), "- setext content");
   });
 
   it("a heading inside a blockquote does not open a section", () => {
-    // Already the shipped `sections` contract (root-level headings only); pinned
-    // here because the finders must inherit it rather than re-deciding.
     const source = "# Title\n\n> ## quoted\n\n## 1.0.0\n\n- content\n";
     assert.deepStrictEqual(
       A.map(parse(source).sections, (section) => section.text),
-      ["Title", "1.0.0"]
+      ["Title", "1.0.0"],
+      "root-level headings only, the shipped sections contract the finders inherit rather than re-decide"
     );
   });
 });

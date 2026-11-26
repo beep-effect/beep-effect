@@ -55,6 +55,9 @@ const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_d
   incremental: true,
 });
 
+const portlessDevOrigin = "http://professional-desktop.beep.localhost:1355";
+const portlessBypassViteOrigins = ["http://localhost:1421", "http://127.0.0.1:1421"];
+
 /**
  * Browser origins allowed to reach sidecar MCP routes.
  *
@@ -62,11 +65,8 @@ const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_d
  * @since 0.0.0
  */
 export const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
-  // Canonical portless dev origin; the 1421 entries cover the PORTLESS=0
-  // diagnostic bypass (vite falls back to --port 1421).
-  "http://professional-desktop.beep.localhost:1355",
-  "http://localhost:1421",
-  "http://127.0.0.1:1421",
+  portlessDevOrigin,
+  ...portlessBypassViteOrigins,
   "tauri://localhost",
   "http://tauri.localhost",
 ];
@@ -146,40 +146,27 @@ export const desktopMcpSecurityMiddleware = (token: Redacted.Redacted) =>
       )
     );
 
-// Every governed ontology mutation writes the local workspace; the sink triple
-// is a composition-root fact, so the boundary classifies its audience by
-// construction (the URL-parsing resolver is for network-egress destinations).
-// The raw destination never reaches the ledger — records carry its digest.
+// decision: ontology-mcp-publication-gated-apart
 const ontologyWorkspaceSink = ExecutionSink.make({
   audience: "local-workspace",
   destination: SinkDestination.make("workspace://ontology"),
   sinkClass: "mcp-write",
 });
 
-// The publication branch's sink names the *class* of egress, not a URL, and
-// that is deliberate: `ToolCallRequest` carries no parameters, so the gate
-// cannot see which destination a dispatch intends. The split is therefore
-// explicit — the gate decides whether this session may publish at all, the
-// governed egress `Fetch` decides which destination a request may reach, and
-// each writes its own decision row. Reading one row without the other tells
-// half the story.
 const ontologyEgressSink = ExecutionSink.make({
   audience: "external-network",
   destination: SinkDestination.make("network://governed-egress"),
   sinkClass: "network-egress",
 });
 
-// Generous against any interactive session length; a session's frozen grants
-// expire together and an expired run can only deny.
 const ontologySessionGrantTtl = Duration.hours(12);
 
-// A function value is a runtime capability held by reference: its schema only recognizes a
-// function and is never encoded or decoded.
 type OntologyMcpEgressFetch = typeof globalThis.fetch;
 
 const OntologyMcpEgressFetch = S.declare((u: unknown): u is OntologyMcpEgressFetch => P.isFunction(u)).pipe(
   $I.annoteSchema("OntologyMcpEgressFetch", {
-    description: "Transport function a test injects beneath the governed egress boundary.",
+    description:
+      "Transport function a test injects beneath the governed egress boundary; a capability held by reference, never encoded or decoded.",
   })
 );
 
@@ -253,18 +240,12 @@ export class OntologyMcpTransportOptions extends S.Opaque<
 export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptions) => {
   const approvedTools = options.approvedMutationTools ?? [];
   const security = desktopMcpSecurityMiddleware(options.token);
-  // `layerHttp` fails with `IllegalArgumentError` only on a malformed path or an
-  // empty protocol list, both of which are literals here — so a failure is a
-  // defect, not a startup condition the desktop shell can report.
+  // decision: mcp-layer-http-owns-origin-and-preflight
   const server = McpServer.layerHttp({
     name: "beep-ontology",
     version: "0.0.0",
     path: "/mcp",
     protocols: [McpProtocol.v2025_06_18],
-    // `layerHttp` now runs its own DNS-rebinding Origin check and answers 403 to
-    // any request carrying an Origin outside this list. Left unset it rejects
-    // every browser-origin request, so it must mirror the same allowlist the
-    // surrounding origin middleware and CORS layer enforce.
     allowedOrigins: ontologyMcpAllowedOrigins,
   }).pipe(Layer.provide(security.layer), Layer.orDie);
   const readOnly = sanitizedToolkit(OntologyReadOnlyToolkit).pipe(Layer.provide(OntologyMcpReadOnlyToolsLive));
@@ -274,9 +255,6 @@ export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptio
       GovernedTierGateLive(
         GovernedTierGateOptions.make({
           grantTtl: ontologySessionGrantTtl,
-          // Publication is governed by its own branch against a network sink;
-          // granting it here as well would be a second, unintended authority
-          // for it against the workspace sink.
           operations: A.map(
             A.filter(approvedTools, (tool) => tool !== PublishProvenanceTool.name),
             (tool) => GrantOperation.make(tool)
@@ -288,21 +266,7 @@ export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptio
       )
     )
   );
-  // Placement is load-bearing and is not type-checked: `Fetch` is a Reference,
-  // so a missing override silently resolves to the platform fetch instead of
-  // failing to compile. It goes into the graph that builds THIS client, which
-  // is the client the publication handler receives.
-  // `Layer.fresh` is load-bearing, not tidiness. `FetchHttpClient.layer` is a
-  // module-level object and layer builds are memoized by object identity across
-  // one graph, so without a fresh copy this governed client is the *same*
-  // instance the sidecar's other consumers resolve — `AnthropicLive`
-  // (`Anthropic.service.ts`) and `ObservabilityLive`'s OTLP exporter
-  // (`runtime/Observability.ts`) both provide into this very layer. Whichever
-  // builds first wins for all of them: the governed default-deny fetch would be
-  // applied to every Anthropic and OTLP request, failing them with
-  // `EgressDenied` and writing spurious denied rows into this boundary's
-  // hash chain. Nothing type-checks this — `Fetch` is a Reference, so the
-  // layer's output is `never`.
+  // decision: governed-egress-client-is-layer-fresh
   const governedHttpClient = Layer.fresh(FetchHttpClient.layer).pipe(
     Layer.provide(
       GovernedEgressLive({
@@ -323,10 +287,6 @@ export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptio
       GovernedTierGateLive(
         GovernedTierGateOptions.make({
           grantTtl: ontologySessionGrantTtl,
-          // Drawn from the same approval list as the workspace branch, so
-          // "registration is not authorization" holds here too: a test can
-          // register the publication tool while granting nothing, and every
-          // dispatch is refused before any destination is even considered.
           operations: A.map(
             A.filter(approvedTools, (tool) => tool === PublishProvenanceTool.name),
             (tool) => GrantOperation.make(tool)
@@ -338,14 +298,6 @@ export const makeOntologyMcpTransportLayer = (options: OntologyMcpTransportOptio
       )
     )
   );
-  // No explicit OPTIONS route: `McpServer.layerHttp` now declares one itself, and
-  // a second declaration on the same path is a hard router error. Nothing is lost
-  // — `HttpMiddleware.cors` in `security` short-circuits every OPTIONS request
-  // with a 204 plus CORS headers before any route handler is reached, so this
-  // route was already unreachable.
-  // The publication tool is registered only when an operator has named at least
-  // one destination. An empty allowlist is the default, so the tool does not
-  // exist on a stock install — the sink and its control ship together.
   const registration = Layer.unwrap(
     Effect.gen(function* () {
       const mcpConfig = yield* OntologyMcpConfig;

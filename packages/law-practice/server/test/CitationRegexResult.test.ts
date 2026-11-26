@@ -60,7 +60,11 @@ it.effect("retains empty, unmatched and lookaround captures with Python empty-th
     const citationResult4 = yield* parsed.capture(0, 1);
     expect(citationResult4).toEqual({ _tag: "Unmatched" });
     const citationResult5 = yield* parsed.capture(1, 1);
-    expect(citationResult5).toEqual({ _tag: "Range", start: 1, end: 2 });
+    expect(citationResult5, "a lookaround capture can lie outside its whole-match range").toEqual({
+      _tag: "Range",
+      start: 1,
+      end: 2,
+    });
     const citationResult6 = yield* parsed.capture(2, 1);
     expect(citationResult6).toEqual({ _tag: "Range", start: 1, end: 1 });
     const citationResult7 = yield* parsed.capture(3, 0).pipe(Effect.flip);

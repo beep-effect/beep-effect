@@ -39,11 +39,9 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const p = Position.synthetic;
 
-/** A document wrapping the given flow children. */
 const doc = (...children: ReadonlyArray<Parameters<typeof Root.make>[0]["children"][number]>): Root =>
   Root.make({ children, position: p });
 
-/** A paragraph of plain text. */
 const para = (value: string): Paragraph =>
   Paragraph.make({ children: [Text.make({ value, position: p })], position: p });
 
@@ -453,8 +451,6 @@ describe("renderHtml", () => {
 
   describe("gfm: delete", () => {
     it("renders a strikethrough, matching the spec-extensions fixture shape", () => {
-      // cmark-gfm test/spec.txt "Strikethrough (extension)" example 491:
-      // "~~Hi~~ Hello, world!" -> "<p><del>Hi</del> Hello, world!</p>\n"
       const tree = doc(
         Paragraph.make({
           children: [
@@ -464,7 +460,11 @@ describe("renderHtml", () => {
           position: p,
         })
       );
-      assert.strictEqual(renderHtml(tree), "<p><del>Hi</del> Hello, world!</p>\n");
+      assert.strictEqual(
+        renderHtml(tree),
+        "<p><del>Hi</del> Hello, world!</p>\n",
+        "cmark-gfm test/spec.txt Strikethrough (extension) example 491: ~~Hi~~ Hello, world!"
+      );
     });
   });
 
@@ -475,25 +475,24 @@ describe("renderHtml", () => {
       TableRow.make({ children: A.map(values, cell), position: p });
 
     it("renders a header and body, matching the extensions fixture shape", () => {
-      // data/conformance/gfm/extensions.json example 1.
       const table = Table.make({ children: [row("abc", "def"), row("ghi", "jkl"), row("mno", "pqr")], position: p });
       assert.strictEqual(
         renderHtml(doc(table)),
-        "<table>\n<thead>\n<tr>\n<th>abc</th>\n<th>def</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>ghi</td>\n<td>jkl</td>\n</tr>\n<tr>\n<td>mno</td>\n<td>pqr</td>\n</tr>\n</tbody>\n</table>\n"
+        "<table>\n<thead>\n<tr>\n<th>abc</th>\n<th>def</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>ghi</td>\n<td>jkl</td>\n</tr>\n<tr>\n<td>mno</td>\n<td>pqr</td>\n</tr>\n</tbody>\n</table>\n",
+        "data/conformance/gfm/extensions.json example 1"
       );
     });
 
     it("omits tbody entirely when there are no body rows", () => {
-      // data/conformance/gfm/spec-extensions.json example 205.
       const table = Table.make({ children: [row("abc", "def")], position: p });
       assert.strictEqual(
         renderHtml(doc(table)),
-        "<table>\n<thead>\n<tr>\n<th>abc</th>\n<th>def</th>\n</tr>\n</thead>\n</table>\n"
+        "<table>\n<thead>\n<tr>\n<th>abc</th>\n<th>def</th>\n</tr>\n</thead>\n</table>\n",
+        "data/conformance/gfm/spec-extensions.json example 205"
       );
     });
 
     it("emits align only for columns with a declared alignment", () => {
-      // data/conformance/gfm/extensions.json example 6.
       const table = Table.make({
         align: ["left", null, "center", null, "right"],
         children: [row("aaa", "bbb", "ccc", "ddd", "eee"), row("fff", "ggg", "hhh", "iii", "jjj")],
@@ -501,14 +500,14 @@ describe("renderHtml", () => {
       });
       assert.strictEqual(
         renderHtml(doc(table)),
-        '<table>\n<thead>\n<tr>\n<th align="left">aaa</th>\n<th>bbb</th>\n<th align="center">ccc</th>\n<th>ddd</th>\n<th align="right">eee</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td align="left">fff</td>\n<td>ggg</td>\n<td align="center">hhh</td>\n<td>iii</td>\n<td align="right">jjj</td>\n</tr>\n</tbody>\n</table>\n'
+        '<table>\n<thead>\n<tr>\n<th align="left">aaa</th>\n<th>bbb</th>\n<th align="center">ccc</th>\n<th>ddd</th>\n<th align="right">eee</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td align="left">fff</td>\n<td>ggg</td>\n<td align="center">hhh</td>\n<td>iii</td>\n<td align="right">jjj</td>\n</tr>\n</tbody>\n</table>\n',
+        "data/conformance/gfm/extensions.json example 6"
       );
     });
   });
 
   describe("gfm: task list items", () => {
     it("renders unchecked and checked markers, matching the extensions fixture shape", () => {
-      // data/conformance/gfm/extensions.json example 28.
       const list = List.make({
         spread: false,
         children: [
@@ -519,7 +518,8 @@ describe("renderHtml", () => {
       });
       assert.strictEqual(
         renderHtml(doc(list)),
-        '<ul>\n<li><input type="checkbox" disabled="" /> foo</li>\n<li><input type="checkbox" checked="" disabled="" /> bar</li>\n</ul>\n'
+        '<ul>\n<li><input type="checkbox" disabled="" /> foo</li>\n<li><input type="checkbox" checked="" disabled="" /> bar</li>\n</ul>\n',
+        "data/conformance/gfm/extensions.json example 28"
       );
     });
 
@@ -533,7 +533,6 @@ describe("renderHtml", () => {
     });
 
     it("renders the marker before a nested sublist, matching the extensions fixture shape", () => {
-      // data/conformance/gfm/extensions.json example 29 (outer list only).
       const inner = List.make({
         spread: false,
         children: [
@@ -552,17 +551,14 @@ describe("renderHtml", () => {
       });
       assert.strictEqual(
         renderHtml(doc(outer)),
-        '<ul>\n<li><input type="checkbox" checked="" disabled="" /> foo\n<ul>\n<li><input type="checkbox" disabled="" /> bar</li>\n<li><input type="checkbox" checked="" disabled="" /> baz</li>\n</ul>\n</li>\n<li><input type="checkbox" disabled="" /> bim</li>\n</ul>\n'
+        '<ul>\n<li><input type="checkbox" checked="" disabled="" /> foo\n<ul>\n<li><input type="checkbox" disabled="" /> bar</li>\n<li><input type="checkbox" checked="" disabled="" /> baz</li>\n</ul>\n</li>\n<li><input type="checkbox" disabled="" /> bim</li>\n</ul>\n',
+        "data/conformance/gfm/extensions.json example 29, outer list only"
       );
     });
   });
 
   describe("gfm: footnotes", () => {
     it("renders sup markers and an end-of-document section, matching the extensions fixture shape", () => {
-      // data/conformance/gfm/extensions.json example 23, as a hand-built
-      // tree (the parser doesn't exist yet — Task 6 builds it). Footnote
-      // definitions are placed at their mdast source positions, same as
-      // `Definition`; the writer relocates them to the section itself.
       const tree = doc(
         Paragraph.make({
           children: [
@@ -670,11 +666,14 @@ describe("renderHtml", () => {
         "\n"
       );
 
-      assert.strictEqual(renderHtml(tree), expected);
+      assert.strictEqual(
+        renderHtml(tree),
+        expected,
+        "data/conformance/gfm/extensions.json example 23: definitions sit at their mdast source positions, as Definition does, and the writer relocates them to the section"
+      );
     });
 
     it("inserts multiple backrefs when a footnote is referenced more than once, matching the extensions fixture shape", () => {
-      // data/conformance/gfm/extensions.json example 24.
       const tree = doc(
         Paragraph.make({
           children: [
@@ -716,11 +715,10 @@ describe("renderHtml", () => {
         "\n"
       );
 
-      assert.strictEqual(renderHtml(tree), expected);
+      assert.strictEqual(renderHtml(tree), expected, "data/conformance/gfm/extensions.json example 24");
     });
 
     it("href-escapes an identifier containing markup, matching the extensions fixture shape", () => {
-      // data/conformance/gfm/extensions.json example 25.
       const identifier = '"><script>alert(1)</script>';
       const tree = doc(
         Paragraph.make({
@@ -745,7 +743,7 @@ describe("renderHtml", () => {
         "\n"
       );
 
-      assert.strictEqual(renderHtml(tree), expected);
+      assert.strictEqual(renderHtml(tree), expected, "data/conformance/gfm/extensions.json example 25");
     });
 
     it("renders an unresolved footnote reference as literal bracket text", () => {
@@ -774,7 +772,6 @@ describe("renderHtml", () => {
 
   describe("gfm: tagfilter", () => {
     it("leaves the nine disallowed tags alone when the gfm option is off", () => {
-      // data/conformance/gfm/spec-extensions.json example 652, gfm: false.
       const tree = doc(
         Paragraph.make({
           children: [
@@ -789,11 +786,14 @@ describe("renderHtml", () => {
           position: p,
         })
       );
-      assert.strictEqual(renderHtml(tree), "<p><strong> <title> <style> <em></p>\n");
+      assert.strictEqual(
+        renderHtml(tree),
+        "<p><strong> <title> <style> <em></p>\n",
+        "data/conformance/gfm/spec-extensions.json example 652, gfm: false"
+      );
     });
 
     it("escapes the leading < of the nine disallowed tags when the gfm option is on", () => {
-      // data/conformance/gfm/spec-extensions.json example 652, gfm: true.
       const tree = doc(
         Paragraph.make({
           children: [
@@ -808,7 +808,11 @@ describe("renderHtml", () => {
           position: p,
         })
       );
-      assert.strictEqual(renderHtml(tree, { gfm: true }), "<p><strong> &lt;title> &lt;style> <em></p>\n");
+      assert.strictEqual(
+        renderHtml(tree, { gfm: true }),
+        "<p><strong> &lt;title> &lt;style> <em></p>\n",
+        "data/conformance/gfm/spec-extensions.json example 652, gfm: true"
+      );
     });
 
     it("filters case-insensitively and in an html block, not just inline", () => {
@@ -821,8 +825,7 @@ describe("renderHtml", () => {
     });
 
     it("leaves a tag that merely starts with a disallowed name alone", () => {
-      // "xmpp" is not "xmp" followed by a boundary character.
-      assert.strictEqual(applyTagfilter("<xmpp>"), "<xmpp>");
+      assert.strictEqual(applyTagfilter("<xmpp>"), "<xmpp>", "xmpp is not xmp followed by a boundary character");
     });
 
     it("leaves an allowed tag alone", () => {
@@ -881,45 +884,59 @@ describe("normalizeHtml", () => {
     assert.strictEqual(normalizeHtml("<!DOCTYPE html>"), "<!DOCTYPE html>");
   });
 
-  // Every expectation below was captured by running the real
-  // `.repos/commonmark-spec/test/normalize.py` on the same input. These are
-  // the forms where Python's HTMLParser does something non-obvious, and they
-  // are the cases this port got wrong first time — keep them pinned.
   describe("declaration forms, pinned against normalize.py", () => {
-    const cases: ReadonlyArray<readonly [input: string, expected: string]> = [
+    type DeclarationCase = readonly [input: string, expected: string];
+    const plainComments: ReadonlyArray<DeclarationCase> = [
       ["<!-- x -->", "<!-- x -->"],
       ["<!---->", "<!---->"],
-      // HTML5 abrupt-closing comments.
+    ];
+    const html5AbruptClosingComments: ReadonlyArray<DeclarationCase> = [
       ["<!-->", "<!---->"],
       ["<!--->", "<!---->"],
       ["<!----->", "<!----->"],
       ["<!>", "<!---->"],
-      // A bogus comment: anything `<!...>` that is not a doctype, a
-      // comment or CDATA comes back as a comment carrying the raw text.
+    ];
+    const bogusCommentsKeepRawText: ReadonlyArray<DeclarationCase> = [
       ["<!X>", "<!--X-->"],
       ["<!ELEMENT br EMPTY>", "<!--ELEMENT br EMPTY-->"],
       ["<![if x]>", "<!--[if x]-->"],
-      // Doctypes stay declarations, in whatever case they were written.
+    ];
+    const doctypesKeepWrittenCase: ReadonlyArray<DeclarationCase> = [
       ["<!DOCTYPE html>", "<!DOCTYPE html>"],
       ["<!doctype html>", "<!doctype html>"],
-      // CDATA survives verbatim; whitespace inside is NOT collapsed.
-      ["<![CDATA[x]]>", "<![CDATA[x]]>"],
-      // A comment may contain `>`, so the terminator cannot be found by
-      // splitting on `>`.
+    ];
+    const cdataKeepsInnerWhitespace: ReadonlyArray<DeclarationCase> = [["<![CDATA[x]]>", "<![CDATA[x]]>"]];
+    const commentsHoldingGreaterThan: ReadonlyArray<DeclarationCase> = [
       ["<!-- a > b -->", "<!-- a > b -->"],
       ["<p>x</p><!-- a > b --><p>y</p>", "<p>x</p><!-- a > b --><p>y</p>"],
       ["<!-- a --   >", "<!-- a --   >-->"],
-      // An unterminated comment loses its `<` to the chunker.
+    ];
+    const unterminatedCommentsLoseTheirLt: ReadonlyArray<DeclarationCase> = [
       ["<!--", "!--"],
       ["<!--a", "!--a"],
-      // Processing instructions pass through.
+    ];
+    const processingInstructions: ReadonlyArray<DeclarationCase> = [
       ["<?php echo 1; ?>", "<?php echo 1; ?>"],
       ["<?x>", "<?x>"],
+    ];
+    const cases: ReadonlyArray<DeclarationCase> = [
+      ...plainComments,
+      ...html5AbruptClosingComments,
+      ...bogusCommentsKeepRawText,
+      ...doctypesKeepWrittenCase,
+      ...cdataKeepsInnerWhitespace,
+      ...commentsHoldingGreaterThan,
+      ...unterminatedCommentsLoseTheirLt,
+      ...processingInstructions,
     ];
 
     for (const [input, expected] of cases) {
       it(`normalizes ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(input), identity)}`, () => {
-        assert.strictEqual(normalizeHtml(input), expected);
+        assert.strictEqual(
+          normalizeHtml(input),
+          expected,
+          "captured by running .repos/commonmark-spec/test/normalize.py, where Python's HTMLParser is non-obvious"
+        );
       });
     }
   });

@@ -42,9 +42,8 @@ import type {
 const UnknownJson = S.fromJsonString(S.Unknown);
 export const token = Redacted.make("ontology-mcp-http-test-token");
 export const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
+const streamableHttpRequiredAccept = "application/json, text/event-stream";
 const socketTransportConfig = Config.Boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
-// unary by contract: `options` stays reachable through `S.decodeUnknownEffect(OntologyFilePath)`;
-// a dual is undecidable here because `input` is `unknown`.
 export const decodeOntologyFilePath: (input: unknown) => Effect.Effect<OntologyFilePath, S.SchemaError> =
   S.decodeUnknownEffect(OntologyFilePath);
 const encodeOpenInspectRequest = S.encodeUnknownEffect(OpenInspectRequest);
@@ -64,7 +63,6 @@ export type TransportOptions = {
   readonly ledger?: Layer.Layer<ExecutionLedger> | undefined;
 };
 
-// Tests that make no ledger assertions still need one for the governed gate.
 const silentLedgerLayer = Layer.unwrap(
   Effect.gen(function* () {
     const decisions = yield* Ref.make<ReadonlyArray<ExecutionDecisionRecord>>([]);
@@ -104,12 +102,6 @@ const silentLedgerLayer = Layer.unwrap(
   })
 );
 
-// `mutationsEnabled` now travels the real config path (ConfigProvider ->
-// OntologyMcpConfigLive -> Layer.unwrap) rather than being handed to the
-// transport as a literal, so these tests exercise the wiring main.ts uses.
-// `approvedMutationTools` stays an explicit argument: registering the mutation
-// tools while approving none of them is the fail-closed proof, and it is a
-// state no environment variable can produce.
 const transportConfigProvider = (root: string, options: TransportOptions) =>
   ConfigProvider.layer(
     ConfigProvider.fromUnknown({
@@ -133,8 +125,6 @@ const transportLayer = (root: string, options: TransportOptions) =>
     Layer.orDie
   );
 
-// HttpRouter.serve owns the router it serves and re-exposes the app's services,
-// so the transport layer is built once, inside the entrypoint.
 const transportServer = (root: string, options: TransportOptions) =>
   HttpRouter.serve(transportLayer(root, options), { disableListenLog: true, disableLogger: true });
 
@@ -151,20 +141,17 @@ const mcpSessionClientLayer = Layer.effect(
   HttpClient.HttpClient,
   Effect.gen(function* () {
     const client = yield* HttpClient.HttpClient;
-    // `initialize` negotiates both a session id and a protocol version, and the
-    // streamable HTTP transport answers 400 to any later request that fails to
-    // echo them back. Capture whatever the server returns rather than pinning a
-    // literal, so the harness follows the negotiated revision.
     const sessionId = yield* Ref.make(O.none<string>());
     const protocolVersion = yield* Ref.make(O.none<string>());
-    const replay = (header: string, ref: Ref.Ref<O.Option<string>>) => (request: HttpClientRequest.HttpClientRequest) =>
-      Effect.map(
-        Ref.get(ref),
-        O.match({
-          onNone: () => request,
-          onSome: (value) => HttpClientRequest.setHeader(request, header, value),
-        })
-      );
+    const echoNegotiatedHeader =
+      (header: string, ref: Ref.Ref<O.Option<string>>) => (request: HttpClientRequest.HttpClientRequest) =>
+        Effect.map(
+          Ref.get(ref),
+          O.match({
+            onNone: () => request,
+            onSome: (value) => HttpClientRequest.setHeader(request, header, value),
+          })
+        );
     const capture = (header: string, ref: Ref.Ref<O.Option<string>>) => (headers: Record<string, string | undefined>) =>
       O.match(O.fromUndefinedOr(headers[header]), {
         onNone: () => Effect.void,
@@ -172,10 +159,10 @@ const mcpSessionClientLayer = Layer.effect(
       });
     return client.pipe(
       HttpClient.mapRequestEffect((request) =>
-        replay(
+        echoNegotiatedHeader(
           "mcp-session-id",
           sessionId
-        )(request).pipe(Effect.flatMap(replay("mcp-protocol-version", protocolVersion)))
+        )(request).pipe(Effect.flatMap(echoNegotiatedHeader("mcp-protocol-version", protocolVersion)))
       ),
       HttpClient.transformResponse(
         Effect.tap((response) =>
@@ -189,29 +176,17 @@ const mcpSessionClientLayer = Layer.effect(
   })
 );
 
-// The streamable HTTP transport upgrades a response to server-sent events
-// whenever it carries more than one message, and the server queues the
-// `notifications/tools/list_changed` raised by tool registration onto the
-// session's next response, so the first `tools/call` after `initialize` arrives
-// as `data:` frames. The generic JSON-RPC HTTP client decodes a JSON body only:
-// unwrap the frames back to the response messages, dropping notifications,
-// which sit outside this harness's request/response contract. A body that
-// cannot be read is a defect here, so the client's error channel stays as is.
+const dropOneLeadingSpace = Str.replace(/^ /, "");
+
 const unwrapServerSentEvents = (response: HttpClientResponse.HttpClientResponse) =>
   Str.startsWith("text/event-stream")(response.headers["content-type"] ?? "")
     ? Effect.map(Effect.orDie(response.text), (text) => {
-        // Events are delimited by a blank line and may spread one payload over
-        // several `data:` fields, which join with a newline. Lines may end with
-        // CRLF, LF, or CR, and a `data:` field drops at most one leading space
-        // from its value, so the endings are normalised before framing and that
-        // one space is stripped rather than required.
+        const lfOnlyText = Str.replaceAll(/\r\n?/g, "\n")(text);
+        const blankLineDelimitedEvents = Str.split("\n\n")(lfOnlyText);
         const payloads = A.filter(
-          A.map(Str.split("\n\n")(Str.replaceAll(/\r\n?/g, "\n")(text)), (event) =>
+          A.map(blankLineDelimitedEvents, (event) =>
             A.join(
-              A.map(
-                A.filter(Str.split("\n")(event), Str.startsWith("data:")),
-                flow(Str.slice(5), Str.replace(/^ /, ""))
-              ),
+              A.map(A.filter(Str.split("\n")(event), Str.startsWith("data:")), flow(Str.slice(5), dropOneLeadingSpace)),
               "\n"
             )
           ),
@@ -220,12 +195,16 @@ const unwrapServerSentEvents = (response: HttpClientResponse.HttpClientResponse)
         const messages = A.map(payloads, (payload): unknown =>
           Result.getOrThrowWith(S.decodeResult(UnknownJson)(payload), identity)
         );
-        const responses = A.filter(messages, P.hasProperty("id"));
+        const responsesWithoutNotifications = A.filter(messages, P.hasProperty("id"));
         return HttpClientResponse.fromWeb(
           response.request,
           new Response(
             Result.getOrThrowWith(
-              S.encodeUnknownResult(UnknownJson)(responses.length === 1 ? responses[0] : responses),
+              S.encodeUnknownResult(UnknownJson)(
+                responsesWithoutNotifications.length === 1
+                  ? responsesWithoutNotifications[0]
+                  : responsesWithoutNotifications
+              ),
               identity
             ),
             {
@@ -245,9 +224,7 @@ const makeMcpClientProtocol = (useSocketTransport: boolean) =>
         request.pipe(
           HttpClientRequest.appendUrl("/mcp"),
           HttpClientRequest.setHeaders({
-            // The streamable HTTP transport answers 406 unless the client accepts
-            // both media types, since any response may upgrade to an SSE stream.
-            accept: "application/json, text/event-stream",
+            accept: streamableHttpRequiredAccept,
             authorization: rpcSessionAuthorizationHeader(token),
             origin: allowedOrigin,
           })
@@ -319,12 +296,11 @@ export const makeHttpServerLayer = (options: TransportOptions) =>
         return Layer.merge(fixture, makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(client)));
       }
 
-      // The web handler starts its own runtime: bridge the public layer's services.
-      const routes = transportLayer(root, options).pipe(
+      const routesWithBridgedServices = transportLayer(root, options).pipe(
         Layer.provide(Layer.succeed(FileSystem.FileSystem, fileSystem)),
         Layer.provide(Layer.succeed(Path.Path, path))
       );
-      const { dispose, handler } = HttpRouter.toWebHandler(routes, { disableLogger: true });
+      const { dispose, handler } = HttpRouter.toWebHandler(routesWithBridgedServices, { disableLogger: true });
       yield* Effect.addFinalizer(() => Effect.promise(dispose));
       function customFetch(
         input: Parameters<typeof globalThis.fetch>[0],

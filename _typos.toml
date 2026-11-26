@@ -132,8 +132,6 @@ extend-exclude = [
   # kept byte-faithful to upstream, so their spelling is not ours to fix.
   "packages/drivers/*/openapi.json",
   "packages/drivers/*/spec/*.json",
-  # Generated Pulumi terraform-module bridge SDK — vendored upstream text.
-  "infra/ci-runners/sdks/**",
   # Exploration capture files are verbatim, append-only human dumps
   # (explorations/README.md conventions) — never spell-gated.
   "explorations/*/CAPTURE.md",

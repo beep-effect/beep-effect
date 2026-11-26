@@ -263,10 +263,10 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
       Effect.fnUntraced(function* (reporter) {
         const choices = A.filter(lookup.rows, (row) => row.reporter === reporter);
         expect(choices).toHaveLength(1);
-        const firstEditionInSourceLookupOrderEvenIfAliased = A.getUnsafe(A.getUnsafe(choices, 0).editions, 0);
+        const firstEdition = A.getUnsafe(A.getUnsafe(choices, 0).editions, 0);
         return yield* factory.create(profiles[0], {
           reporter,
-          reference: firstEditionInSourceLookupOrderEvenIfAliased,
+          reference: firstEdition,
           volume: "2",
           page: "4",
         });
@@ -278,7 +278,10 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
       (model, i) => compareCitationCanonicalModel(model, A.getUnsafe(context.citations, i), cohort.name),
       { concurrency: 1 }
     );
-    expect(A.map(equality.operands, (operand) => operand.value)).toEqual(context.citations);
+    expect(
+      A.map(equality.operands, (operand) => operand.value),
+      "each model takes the first edition in source lookup order, even an aliased one"
+    ).toEqual(context.citations);
     const hashes = yield* Effect.forEach(models, factory.hash, { concurrency: 1 });
     expect(equality.relation.equal).toBe(cohort.equal);
     expect(A.getUnsafe(hashes, 0).citationHash === A.getUnsafe(hashes, 1).citationHash).toBe(cohort.equal);

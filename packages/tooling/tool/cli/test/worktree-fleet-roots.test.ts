@@ -11,12 +11,13 @@ import {
 import { repoRunOutputBound, runCaptured } from "@beep/repo-cli/test/Process";
 import { acquireJournalFileLock, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
 import {
+  CheckoutRepository,
   layerSessionLedgerMemory,
   PrNumber,
-  PrRepository,
   SessionLedger,
   SessionLedgerRow,
 } from "@beep/repo-cli/test/Session";
+import { checkoutRepositoryFromRemoteUrl } from "@beep/repo-cli/test/SharedInternals";
 import {
   adoptFleetRegistryRows,
   canonicalFleetOrigin,
@@ -28,7 +29,6 @@ import {
   FleetRegistryStore,
   FleetRegistryStoreLive,
   FleetRootEntry,
-  fleetRepositoryFromOriginUrl,
   joinFleetRows,
   loadFleetJoin,
   originUrlFromGitConfig,
@@ -64,7 +64,7 @@ const testLayer = Layer.mergeAll(
   layerSessionLedgerMemory
 );
 
-const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+const repository = CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
 // Fixed identity and dates make every commit SHA, and so every snapshot byte, reproducible.
 const FIXTURE_GIT_ENV = {
@@ -703,10 +703,12 @@ describe("fleet roots and registry documents", () => {
       '[remote "origin"]\n\turl = https://github.com/Beep-Effect/beep-effect.git\n\tfetch = +refs/heads/*\n';
     const url = O.getOrThrow(originUrlFromGitConfig(config));
     expect(url).toBe("https://github.com/Beep-Effect/beep-effect.git");
-    const https = O.getOrThrow(fleetRepositoryFromOriginUrl(url));
-    const scp = O.getOrThrow(fleetRepositoryFromOriginUrl("git@github.com:beep-effect/beep-effect.git"));
+    const https = O.getOrThrow(checkoutRepositoryFromRemoteUrl(url));
+    const scp = O.getOrThrow(checkoutRepositoryFromRemoteUrl("git@github.com:beep-effect/beep-effect.git"));
     expect({ ...https }).toEqual({ ...scp });
-    expect(O.isNone(fleetRepositoryFromOriginUrl("/srv/git/beep-effect.git"))).toBe(true);
+    expect(O.isNone(checkoutRepositoryFromRemoteUrl("/srv/git/beep-effect.git"))).toBe(true);
+    const gitlab = O.getOrThrow(checkoutRepositoryFromRemoteUrl("git@gitlab.example.com:Team/App.git"));
+    expect([gitlab.host, gitlab.owner, gitlab.name]).toEqual(["gitlab.example.com", "team", "app"]);
   });
 
   it.effect(

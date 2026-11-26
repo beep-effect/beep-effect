@@ -1,19 +1,4 @@
-// KIT EXTENSION (errno fidelity). One module owns
-// errno for the whole package: the engine, the sync/promises ports and the
-// NodeSyncFileSystem subpath all build and classify failures here.
-//
-// - Where the errno lives: an Effect failure carries it on `reason.cause.code`
-//   (the `cause` is an `ErrnoException`) — `reason` itself has no `code`
-//   field, exactly as with @effect/platform-node, whose adapter puts node's
-//   own error on `cause`.
-// - Which errno: where Linux and macOS report different codes for the same
-//   call, the Linux one is modelled (the engine's POSIX profile is Linux's).
-// - Which tag: `errnoTag` mirrors the node adapter's `handleErrnoException`
-//   code → tag switch case for case, so matching on `_tag` behaves the same
-//   against either implementation.
-// - Thrown errors (the ports, `makeSync`): `nodeErrno` builds what a sync
-//   `node:fs` call throws — `code`, `syscall`, and `path` when the syscall is
-//   path-based — with node's message format.
+// decision: errno-modelled-on-linux-node-adapter
 
 import { $MemfsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -101,8 +86,6 @@ export const errnoMessages: { readonly [Code in ErrnoCode]: string } = {
   ERR_FS_EISDIR: "path is a directory",
 };
 
-// Mirrors `handleErrnoException` in @effect/platform-node-shared: only these
-// codes map to a specific tag, everything else is "Unknown".
 /**
  * Classifies an errno code with the same system-error tag as the Node adapter.
  *
@@ -134,10 +117,6 @@ export const errnoTag = Match.type<string | undefined>().pipe(
   Match.orElse((): SystemErrorTag => "Unknown")
 );
 
-// The code to REPORT for a failure that carries no errno of its own (an
-// injected fault, a model limit). NOT the inverse of `errnoTag`, which is
-// many-to-one (EISDIR/ENOTDIR/ELOOP all map to BadResource): only the three
-// tags with one obvious code get it, and everything else is `EIO`.
 /**
  * Chooses a reportable errno for a failure that carries no errno of its own.
  *
@@ -244,8 +223,6 @@ export class ErrnoException extends S.TaggedError<ErrnoException, { readonly bra
   );
 }
 
-// Keep description explicit (undefined when absent): three string arguments
-// would otherwise be ambiguous between direct and pipeable calls.
 /**
  * Builds a typed filesystem platform failure while retaining its errno cause.
  *
@@ -253,6 +230,10 @@ export class ErrnoException extends S.TaggedError<ErrnoException, { readonly bra
  *
  * Pass an explicit description, using `undefined` when absent. Three string
  * arguments would otherwise be ambiguous between direct and pipeable calls.
+ *
+ * The errno rides on `reason.cause.code`, the `cause` being an
+ * `ErrnoException`; `reason` itself has no `code` field, as with
+ * `@effect/platform-node`, whose adapter puts node's own error on `cause`.
  *
  * **Example** (Inspect a missing-file platform failure)
  *
@@ -291,8 +272,6 @@ export const errnoError: {
     })
 );
 
-// Node's POSIX errno values are negative. Its ERR_FS_* application codes
-// carry no numeric errno; retain that absence instead of inventing one.
 const nodeErrnos: Readonly<Record<ErrnoCode | "EIO", number | undefined>> = {
   EACCES: -13,
   EBADF: -9,
@@ -339,7 +318,9 @@ export class NodeErrno extends S.TaggedError<NodeErrno, { readonly brand: unique
     message: S.String.pipe($I.annoteKey("NodeErrno.message", { description: "The Node-compatible error message." })),
     code: S.String.pipe($I.annoteKey("NodeErrno.code", { description: "The Node errno or application code." })),
     errno: S.UndefinedOr(S.Finite).pipe(
-      $I.annoteKey("NodeErrno.errno", { description: "The numeric POSIX errno, when the code has one." })
+      $I.annoteKey("NodeErrno.errno", {
+        description: "Node's negative POSIX errno; undefined for its ERR_FS_* codes, which carry none.",
+      })
     ),
     syscall: S.String.pipe($I.annoteKey("NodeErrno.syscall", { description: "The failing Node syscall." })),
     path: S.optionalKey(S.String).pipe(

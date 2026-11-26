@@ -12,11 +12,7 @@ import type { InlineNode } from "@beep/markdown/internal/inlineNode";
 import type { Bracket, Delimiter } from "@beep/markdown/internal/inlineTypes";
 import type { Definition } from "@beep/markdown/MarkdownNode";
 
-/**
- * A scanner over `subject` that supports only what `scanDelims` reads: the
- * cursor and `peek`. Every other member is an inert stub.
- */
-class CursorScanner extends InlineScanner {
+class ScanDelimsCursorScanner extends InlineScanner {
   readonly refmap = HashMap.empty<string, Definition>();
   readonly footnoteLabels = HashSet.empty<string>();
   delimiters: Delimiter | undefined = undefined;
@@ -79,7 +75,7 @@ class CursorScanner extends InlineScanner {
 const scannerFor: {
   (subject: string, pos: number): InlineScanner;
   (pos: number): (subject: string) => InlineScanner;
-} = dual(2, (subject: string, pos: number): InlineScanner => new CursorScanner(subject, pos));
+} = dual(2, (subject: string, pos: number): InlineScanner => new ScanDelimsCursorScanner(subject, pos));
 
 describe("delimiter measurements", () => {
   it("returns the same schema payload in both call forms and restores the cursor", () => {

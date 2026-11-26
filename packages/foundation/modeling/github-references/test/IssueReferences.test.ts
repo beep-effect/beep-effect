@@ -73,7 +73,7 @@ describe("IssueReferences.harvestIssueReferences: pure classes get pure tests, w
     for (const [text, reason] of negatives) assert.lengthOf(harvestIssueReferences(text), 0, `${reason}: ${text}`);
   });
 
-  it("finds references wrapped in markdown and punctuation, which leave a word boundary before the keyword and stay out of the span", () => {
+  it("finds references wrapped in markdown and punctuation, which leave a word boundary before the keyword", () => {
     const cases: ReadonlyArray<readonly [string, string, number]> = [
       ["(fixes #3).", "fixes #3", 3],
       ["**Fixes #4**", "Fixes #4", 4],
@@ -85,15 +85,20 @@ describe("IssueReferences.harvestIssueReferences: pure classes get pure tests, w
       const found = harvestIssueReferences(text);
       assert.lengthOf(found, 1, text);
       assert.strictEqual(found[0]?.issueNumber, issueNumber, text);
-      assert.strictEqual(Str.slice(found[0]?.start, found[0]?.end)(text), span, text);
+      assert.strictEqual(
+        Str.slice(found[0]?.start, found[0]?.end)(text),
+        span,
+        `${text}: the wrapping stays out of the span`
+      );
     }
   });
 
-  it("skips a number too big to represent rather than misparsing it: 2^53 + 1 would round to a wrong issue, so the match drops and its neighbours stay", () => {
+  it("skips a number too big to represent rather than misparsing it, so the match drops and its neighbours stay", () => {
     const found = harvestIssueReferences("fixes #9007199254740993 and closes #2");
     assert.deepStrictEqual(
       A.map(found, (reference) => reference.issueNumber),
-      [2]
+      [2],
+      "2^53 + 1 would round to a wrong issue"
     );
   });
 

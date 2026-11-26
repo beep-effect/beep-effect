@@ -9,7 +9,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 
-/** Slice the source back out of a node's position — the offset round trip. */
 const sliceOf = (source: string, node: { readonly position: { start: { offset: number }; end: { offset: number } } }) =>
   Str.slice(node.position.start.offset, node.position.end.offset)(source);
 
@@ -80,12 +79,13 @@ describe("block pass", () => {
     });
 
     it("reads a tab and four spaces as the same code indent", () => {
-      // A tab at column 0 spans columns 1-4, which the code indent
-      // consumes exactly. Partially consumed tabs need a container prefix
-      // to straddle, so they arrive with blockquotes and lists in Task 7.
       const { root } = parseBlocks("    foo\n\tbar\n");
       const [code] = root.children;
-      assert.strictEqual(code?.type === "code" ? code.value : "", "foo\nbar\n");
+      assert.strictEqual(
+        code?.type === "code" ? code.value : "",
+        "foo\nbar\n",
+        "a tab at column 0 spans columns 1-4, which the code indent consumes exactly"
+      );
     });
 
     it("counts a tab inside an ATX heading as content, not indentation", () => {
@@ -108,11 +108,13 @@ describe("block pass", () => {
     });
 
     it("does not open indented code inside a paragraph", () => {
-      // An indented line after a paragraph is a lazy continuation, never
-      // a code block — the `tip.type !== "paragraph"` guard in the start.
       const { root } = parseBlocks("foo\n    bar\n");
       assert.strictEqual(root.children.length, 1);
-      assert.strictEqual(root.children[0]?.type, "paragraph");
+      assert.strictEqual(
+        root.children[0]?.type,
+        "paragraph",
+        "an indented line after a paragraph is a lazy continuation: indented code never starts while the tip is a paragraph"
+      );
     });
 
     it("does not open an ATX heading at four columns of indentation", () => {
@@ -171,12 +173,12 @@ describe("block pass", () => {
       const { root } = parseBlocks(source);
       const [code] = root.children;
       assert.strictEqual(code?.type, "code");
-      // The span starts at the line start: the four columns of code
-      // indentation are part of the block's source extent (the interop
-      // corpus pins mdast-util's convention); only the value excludes
-      // them. The end still excludes the trailing blank lines.
       assert.isDefined(code);
-      assert.strictEqual(sliceOf(source, code), "    foo");
+      assert.strictEqual(
+        sliceOf(source, code),
+        "    foo",
+        "the span keeps the four indent columns (mdast-util's convention, pinned by the interop corpus) and drops trailing blanks"
+      );
       assert.strictEqual(code?.type === "code" ? code.value : "", "foo\n");
     });
 
@@ -267,16 +269,17 @@ describe("block pass", () => {
 describe("container blocks", () => {
   describe("lazy continuation", () => {
     it("keeps an unmarked line inside the blockquote's paragraph", () => {
-      // The second line matches no container, but it is non-blank and the
-      // paragraph is open, so it continues that paragraph — and the
-      // blockquote is NOT closed.
       const { root } = parseBlocks("> foo\nbar\n");
       const [quote] = root.children;
       assert.strictEqual(quote?.type, "blockquote");
       if (quote?.type !== "blockquote") {
         return;
       }
-      assert.strictEqual(quote.children.length, 1);
+      assert.strictEqual(
+        quote.children.length,
+        1,
+        "a non-blank line matching no container continues the open paragraph, and the blockquote is not closed"
+      );
       assert.strictEqual(quote.children[0]?.type, "paragraph");
     });
 
@@ -440,7 +443,6 @@ describe("container blocks", () => {
       }
       assert.strictEqual(heading.depth, 1);
       assert.strictEqual(heading.headingStyle, "setext");
-      // The heading spans from the text down to the underline.
       assert.strictEqual(sliceOf(source, heading), "Foo\nbar\n===");
     });
 
@@ -536,10 +538,10 @@ describe("link reference definitions", () => {
       const { refmap } = parseBlocks("[__proto__]: /url\n");
       assert.isTrue(HashMap.has(refmap, "__PROTO__"));
       assert.strictEqual(O.getOrUndefined(HashMap.get(refmap, "__PROTO__"))?.url, "/url");
-      // The label round-trips as data because the refmap is an Effect HashMap:
-      // on a plain object the same assignment would have written a
-      // prototype instead of a key, and the lookup above would fail.
-      assert.isTrue(HashMap.isHashMap(refmap));
+      assert.isTrue(
+        HashMap.isHashMap(refmap),
+        "an Effect HashMap keeps the label as data: a plain object would write a prototype instead of a key"
+      );
       assert.isUndefined(Object.getOwnPropertyDescriptor(Object.prototype, "url"));
     });
 
@@ -577,10 +579,12 @@ describe("hardening", () => {
   });
 
   it("parses a document nested just under the cap", () => {
-    // The positive control: the guard must not fire early, or the test
-    // above would pass for the wrong reason.
     const { root } = parseBlocks(`${Str.repeat(MAX_NESTING_DEPTH - 2)(">")} foo\n`);
-    assert.strictEqual(root.children[0]?.type, "blockquote");
+    assert.strictEqual(
+      root.children[0]?.type,
+      "blockquote",
+      "positive control: the guard must not fire early, or the depth-cap tests pass for the wrong reason"
+    );
   });
 });
 

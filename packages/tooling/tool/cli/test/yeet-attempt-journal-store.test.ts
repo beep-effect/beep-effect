@@ -565,7 +565,7 @@ describe("attempt journal store", () => {
           yield* appendJournal(codexLane, OTHER_RUN_ID, attempt(attemptId("b"), OTHER_RUN_ID));
           const kept = yield* reapDirectories(fixture, ["codex-worktrees"], codexLane);
           deepStrictEqual(dispositions(kept), [[container, "skip", "journal-export-failed"]]);
-          assertTrue(A.some(kept.warnings, Str.includes("names no GitHub repository")));
+          assertTrue(A.some(kept.warnings, Str.includes("names no repository")));
           const containerKept = yield* fs.exists(container);
           assertTrue(containerKept);
         }).pipe(withHome(fixture.home));
@@ -666,7 +666,7 @@ describe("attempt journal store", () => {
     );
 
     it.effect(
-      "a clone whose origin names no GitHub repository keeps its journals unpartitioned",
+      "a clone whose origin names no repository keeps its journals unpartitioned",
       Effect.fnUntraced(function* () {
         const fixture = yield* scratchClone(O.none());
         yield* Effect.gen(function* () {

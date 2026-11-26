@@ -284,8 +284,11 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
         A.map(page.sources, (source) => source.path);
       const first = yield* d.next;
       expect(first.sources).toHaveLength(2);
-      const afterAnInterruptedCycleThatNeverRecordedItsReads = yield* d.next;
-      expect(paths(afterAnInterruptedCycleThatNeverRecordedItsReads)).toEqual(paths(first));
+      const afterInterrupt = yield* d.next;
+      expect(
+        paths(afterInterrupt),
+        "an interrupted cycle that never recorded its reads offers the same page again"
+      ).toEqual(paths(first));
       const recorded = yield* runDiscoveredTranscriptSweep(f.config, d, policy);
       expect(recorded.sweep.outcomes).toHaveLength(2);
       const later = yield* d.next;

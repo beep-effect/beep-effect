@@ -185,7 +185,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   );
   const rendered = yield* dump.render({ text: ownedPlain.storage, citations: rows });
   const output = yield* unicode.fromStorage(rendered);
-  const withOnlyTheFourFormatterColorsStrippedAndTrimmed = pipe(
+  const plain = pipe(
     output.text,
     Str.replaceAll("\x1b[32m", ""),
     Str.replaceAll("\x1b[94m", ""),
@@ -193,6 +193,9 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     Str.replaceAll("\x1b[0m", ""),
     Str.trim
   );
-  expect(withOnlyTheFourFormatterColorsStrippedAndTrimmed).toBe(criterion.operands[1].value);
+  expect(
+    plain,
+    "the original assertion strips only the four formatter colors, then trims; general re.sub is not claimed"
+  ).toBe(criterion.operands[1].value);
   yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
 });

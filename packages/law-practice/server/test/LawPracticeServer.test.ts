@@ -130,7 +130,7 @@ describe("@beep/law-practice-server", () => {
     "office-action review loop over service-backed extraction",
     (it) => {
       it.effect(
-        "IrToLaw grounds exactly one distinction to its source anchor through case-insensitive match_lesser alignment, never an unaligned fallback",
+        "IrToLaw grounds exactly one distinction to its source anchor through case-insensitive match_lesser alignment",
         Effect.fnUntraced(function* () {
           const langExtract = yield* LangExtractService;
           const irToLaw = yield* IrToLaw;

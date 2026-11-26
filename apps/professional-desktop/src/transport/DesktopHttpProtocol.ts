@@ -14,9 +14,6 @@ import * as Layer from "effect/Layer";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 
-// Packaged-origin detection (Windows `tauri.localhost` included) lives in
-// @beep/agents-client's resolver — one source of truth for the routing rule
-// whose divergence across copies caused the original Windows packaged-RPC bug.
 const SERVER_URL = resolveChatRpcHttpUrl();
 
 /**

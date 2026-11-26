@@ -76,9 +76,8 @@ describe("newline positions and scanner reset", () => {
         ]
       );
       const scanner = createScanner(source);
-      while (scanner.scan() !== null) {
-        /* Populate state before reset. */
-      }
+      let tokenBeforeReset = scanner.scan();
+      while (tokenBeforeReset !== null) tokenBeforeReset = scanner.scan();
       scanner.setPosition(O.getOrElse(constant(-1))(Str.indexOf("b")(source)));
       assert.strictEqual(scanner.getToken(), null);
       assert.strictEqual(scanner.scan(), "scalar");

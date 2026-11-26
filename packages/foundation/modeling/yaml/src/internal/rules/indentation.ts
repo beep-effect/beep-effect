@@ -205,7 +205,6 @@ const stepLineToken = (scan: CrossLineContentScan, line: PerLineTokenScan, token
   line.opensKey = nextOpensKey(line, token.kind);
 };
 
-/** Read the significant tokens of one line, rather than treating quoted ` # ` as a comment. */
 const scanLineTokens = (
   scan: CrossLineContentScan,
   line: LintLine,
@@ -234,11 +233,6 @@ const scanLineTokens = (
   return lineScan;
 };
 
-/**
- * Explicit plain keys can be composed from separate tokens while their
- * AST span still covers only the first fragment. Keep the later ':'
- * structural, but omit deeper scalar fragments until that indicator.
- */
 const isDeeperExplicitKeyFragment = (
   continuationKeyColumn: number | undefined,
   indent: number,

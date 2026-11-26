@@ -1,10 +1,3 @@
-// Synthesized-node construction: every node class's `make` fills the
-// zero-width `Position.synthetic` when `position` is omitted, so replacement
-// fragments for `MarkdownFormat.modify` construct in one line. The default is
-// make-only — the controls pin that decode (the mdast admission boundary)
-// still requires a full position and that parsed trees still carry real
-// spans, so the interop corpus's exact-emission contract is untouched.
-
 import { Markdown } from "@beep/markdown/Markdown";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
 import { MarkdownFormat } from "@beep/markdown/MarkdownFormat";
@@ -30,19 +23,17 @@ describe("Position.synthetic", () => {
   });
 });
 
-// Asserted by value. `make` validates and copies nested data (D-22, D-39), the
-// zero-width default included, so a synthesized node's position is
-// deep-equal to `Position.synthetic` and to an explicit position, never the
-// same object.
 describe("make fills the synthetic position", () => {
   it("constructs a Text fragment in one line", () => {
     const text = Text.make({ value: "shipped" });
     assert(S.is(Text)(text));
     assert.strictEqual(text.value, "shipped");
     assert.deepStrictEqual(text.position, Position.synthetic);
-    // `make` copies the default like any nested value (D-22): equal to the
-    // shared `Position.synthetic`, never the same object.
-    assert.notStrictEqual(text.position, Position.synthetic);
+    assert.notStrictEqual(
+      text.position,
+      Position.synthetic,
+      "make validates and copies the default like any nested value: equal to the shared Position.synthetic, never the same object"
+    );
   });
 
   it("constructs Paragraph and Heading fragments in one line", () => {
@@ -60,11 +51,12 @@ describe("make fills the synthetic position", () => {
     });
     const text = Text.make({ value: "placed", position: explicit });
     assert.deepStrictEqual(text.position, explicit);
-    // the point of the test: the default did NOT win
-    assert.notDeepEqual(text.position, Position.synthetic);
-    // `make` copies nested data (D-22): an explicit Position comes back
-    // deep-equal, never the same object
-    assert.notStrictEqual(text.position, explicit);
+    assert.notDeepEqual(text.position, Position.synthetic, "the point of the test: the default did NOT win");
+    assert.notStrictEqual(
+      text.position,
+      explicit,
+      "make copies nested data: an explicit Position comes back deep-equal, never the same object"
+    );
   });
 });
 
@@ -79,11 +71,11 @@ describe("synthesized trees flow through the render surfaces", () => {
     const rendered = Markdown.stringifyResult(root);
     assertSuccess(rendered, Result.getOrThrow(rendered));
     const out = Result.getOrThrow(rendered);
-    // Re-parses to the same shape — the canonical-stringify contract.
     const reparsed = parseDoc(out);
     assert.deepStrictEqual(
       A.map(reparsed.root.children, (child) => child.type),
-      ["heading", "paragraph"]
+      ["heading", "paragraph"],
+      "re-parses to the same shape: the canonical-stringify contract"
     );
   });
 
@@ -102,7 +94,7 @@ describe("synthesized trees flow through the render surfaces", () => {
   );
 });
 
-describe("the default is make-only (controls)", () => {
+describe("the default is make-only, leaving the interop corpus's exact-emission contract untouched (controls)", () => {
   it("decode still requires a full position", () => {
     const decoded = S.decodeUnknownResult(Text)({ type: "text", value: "x" });
     assertFailure(decoded, decoded.pipe(Result.flip, Result.getOrThrow));

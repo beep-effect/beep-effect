@@ -27,7 +27,7 @@ it.layer(
     Layer.provide(PackageManagerDetector.layerTest())
   ),
   { timeout: "30 seconds" }
-)((it) => {
+)("the process global is stubbed: the ambient process boundary has no injected service seam", (it) => {
   it.effect("ambient cwd is read per call and a runtime without one dies instead of searching from /", () =>
     Effect.gen(function* () {
       const exec = yield* LocalExec;
@@ -36,7 +36,6 @@ it.layer(
       const context1 = yield* exec.context;
       assertNone(context1);
       const noAmbientCwd = Cause.die("repo-workspaces: no ambient current directory; pass an explicit cwd");
-      // The ambient process boundary has no injected service seam.
       yield* Effect.gen(function* () {
         vi.stubGlobal("process", {});
         const exit2 = yield* Effect.exit(exec.context);

@@ -47,9 +47,13 @@ const report = {
   totals,
 };
 
-describe("widened schemas retargeted from vitest-agent 1cf1ab94 Common, AgentReport, RunEvent and RenderState tests; the console, package-manager, environment, executor and detail-level sets are not in this package", () => {
+describe("widened schemas retargeted from vitest-agent 1cf1ab94 Common, AgentReport, RunEvent and RenderState tests", () => {
   it("ItemOutcome accepts its members and rejects pending and unknown values", () => {
-    for (const value of ["passed", "failed", "warned", "skipped"]) assert.isTrue(accepts(ItemOutcome, value));
+    for (const value of ["passed", "failed", "warned", "skipped"])
+      assert.isTrue(
+        accepts(ItemOutcome, value),
+        "the console, package-manager, environment, executor and detail-level sets are not in this package"
+      );
     for (const value of ["pending", "unknown", 1]) assert.isFalse(accepts(ItemOutcome, value));
   });
 

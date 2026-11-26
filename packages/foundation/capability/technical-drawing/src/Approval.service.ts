@@ -156,8 +156,6 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
   const mail = yield* MailReader;
   const io = (what: string) => (cause: unknown) => DrawingError.fromUnknown("io", what, cause);
 
-  // Re-hash the sheet set on disk so an approval never attaches to a PDF that
-  // changed after rendering.
   const loadSheetSet = Effect.fn("SheetSetApproval.loadSheetSet")(function* (manifestPath: string) {
     const resolved = path.resolve(manifestPath);
     const text = yield* fs.readFileString(resolved).pipe(Effect.mapError(io(`Could not read "${resolved}".`)));
@@ -206,9 +204,8 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
   });
 
   const sign = Effect.fn("SheetSetApproval.sign")(function* (request: SignRequest) {
-    const { manifestDir, sheetSetSha256, approver: recorded } = yield* loadSheetSet(request.manifestPath);
-    // The approver is the one the spec recorded at render time, never one named at sign time.
-    const approver = yield* Effect.fromOption(recorded).pipe(
+    const { manifestDir, sheetSetSha256, approver: recordedAtRender } = yield* loadSheetSet(request.manifestPath);
+    const approver = yield* Effect.fromOption(recordedAtRender).pipe(
       Effect.mapError(() =>
         refused("Approval refused: the sheet set records no approver. Add `approver` to the spec and render again.")
       )

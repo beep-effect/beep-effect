@@ -69,7 +69,7 @@ const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegr
   makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../_internal/db-admin/drizzle", import.meta.url));
 
-const makeInProcessLayerBecauseSocketLaneCannotLoadMigrationBtreeGist = () =>
+const makeLegalPositionRepositoryLayer = () =>
   LegalPositionRecordRepositoryLive.pipe(
     Layer.provideMerge(makeDrizzleLayer()),
     Layer.provideMerge(
@@ -207,7 +207,7 @@ const candidateFixture = (seed: number, relators: ReadonlyArray<number>, org: nu
     verdictFamily: null,
   });
 
-const relatorPairSeedsADecadeApartBecauseSeedDerivedPublicIdsAreUnique = (seed: number) => ({
+const relatorPairSeeds = (seed: number) => ({
   claimSeed: seed * 10 + 1,
   privilegeSeed: seed * 10,
 });
@@ -223,7 +223,7 @@ const appendOpposedPositionInDependencyOrder = Effect.fnUntraced(function* (
   const exercise = yield* repository.recordExercise(exerciseFixture2);
   const correctionFixture3 = yield* correctionFixture(seed, frame.id, org);
   const correction = yield* repository.recordCorrection(correctionFixture3);
-  const { claimSeed, privilegeSeed } = relatorPairSeedsADecadeApartBecauseSeedDerivedPublicIdsAreUnique(seed);
+  const { claimSeed, privilegeSeed } = relatorPairSeeds(seed);
   const relatorFixture4 = yield* relatorFixture(privilegeSeed, "privilege", "act", exercise.id, org);
   const privilege = yield* repository.recordRelator(relatorFixture4);
   const relatorFixture5 = yield* relatorFixture(claimSeed, "claim", "omission", exercise.id, org);
@@ -242,7 +242,7 @@ const legalPositionTableNames: ReadonlyArray<string> = [
   "law_practice_power_exercise",
 ];
 
-const rewindIdSequencesSoHeapOrderDisagreesWithIdOrder = Effect.fnUntraced(function* (nextId: number) {
+const setNextRowId = Effect.fnUntraced(function* (nextId: number) {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
   yield* Effect.forEach(
@@ -252,7 +252,7 @@ const rewindIdSequencesSoHeapOrderDisagreesWithIdOrder = Effect.fnUntraced(funct
   );
 });
 
-const forceSequentialScansSoOnlyOrderByIdStandsBetweenCallerAndHeapOrder = Effect.fnUntraced(function* () {
+const forceSequentialScans = Effect.fnUntraced(function* () {
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
   yield* sql`SET enable_indexscan = off`;
@@ -275,7 +275,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("law-practice Drizzle legal position record repository PgLite integration", () => {});
 } else {
   describe("law-practice Drizzle legal position record repository PgLite integration", { concurrent: false }, () => {
-    it.layer(makeInProcessLayerBecauseSocketLaneCannotLoadMigrationBtreeGist(), { timeout: "5 minutes" })(
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })(
       "appending and reading each record kind",
       (it) => {
         it.effect(
@@ -297,7 +297,10 @@ if (!shouldRunPgliteIntegration) {
               recorded.frame.id,
               other.frame.id,
             ]);
-            expect(ids(exercises)).toEqual([recorded.exercise.id]);
+            expect(
+              ids(exercises),
+              "in-process lane with btree_gist registered: the socket lane cannot load that migration"
+            ).toEqual([recorded.exercise.id]);
             expect(ids(corrections)).toEqual([recorded.correction.id]);
             expect(ids(relators)).toEqual([
               recorded.privilege.id,
@@ -345,134 +348,129 @@ if (!shouldRunPgliteIntegration) {
       }
     );
 
-    it.layer(makeInProcessLayerBecauseSocketLaneCannotLoadMigrationBtreeGist(), { timeout: "5 minutes" })(
-      "tenant isolation in SQL",
-      (it) => {
-        it.effect(
-          "never returns another organization's records for the same act and norm",
-          Effect.fnUntraced(function* () {
-            yield* migrateLegalPositionTables();
-            const repository = yield* LegalPositionRecordRepository;
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("tenant isolation in SQL", (it) => {
+      it.effect(
+        "never returns another organization's records for the same act and norm",
+        Effect.fnUntraced(function* () {
+          yield* migrateLegalPositionTables();
+          const repository = yield* LegalPositionRecordRepository;
 
-            const first = yield* appendOpposedPositionInDependencyOrder(repository, 1, 1);
-            const foreign = yield* appendOpposedPositionInDependencyOrder(repository, 2, 2);
-            const third = yield* appendOpposedPositionInDependencyOrder(repository, 3, 1);
+          const first = yield* appendOpposedPositionInDependencyOrder(repository, 1, 1);
+          const foreign = yield* appendOpposedPositionInDependencyOrder(repository, 2, 2);
+          const third = yield* appendOpposedPositionInDependencyOrder(repository, 3, 1);
 
-            const tenantOneFrames = yield* repository.listFrames(tenant(1));
-            const tenantOneCandidates = yield* repository.listOppositionCandidates(tenant(1));
-            const tenantOneRelators = yield* repository.listRelators(tenant(1));
+          const tenantOneFrames = yield* repository.listFrames(tenant(1));
+          const tenantOneCandidates = yield* repository.listOppositionCandidates(tenant(1));
+          const tenantOneRelators = yield* repository.listRelators(tenant(1));
 
-            expect(
-              ids(tenantOneFrames),
-              "interleaved appends: tenant 1 reads id ascending across the gap tenant 2 owns"
-            ).toEqual([first.frame.id, third.frame.id]);
-            expect(
-              ids(tenantOneCandidates),
-              "interleaved appends: tenant 1 reads id ascending across the gap tenant 2 owns"
-            ).toEqual([first.candidate.id, third.candidate.id]);
-            expect(orgIds(tenantOneFrames)).toEqual([1, 1]);
-            expect(orgIds(tenantOneCandidates)).toEqual([1, 1]);
-            expect(orgIds(tenantOneRelators)).toEqual([1, 1, 1, 1]);
+          expect(
+            ids(tenantOneFrames),
+            "interleaved appends: tenant 1 reads id ascending across the gap tenant 2 owns"
+          ).toEqual([first.frame.id, third.frame.id]);
+          expect(
+            ids(tenantOneCandidates),
+            "interleaved appends: tenant 1 reads id ascending across the gap tenant 2 owns"
+          ).toEqual([first.candidate.id, third.candidate.id]);
+          expect(orgIds(tenantOneFrames)).toEqual([1, 1]);
+          expect(orgIds(tenantOneCandidates)).toEqual([1, 1]);
+          expect(orgIds(tenantOneRelators)).toEqual([1, 1, 1, 1]);
 
-            const listFrames9 = yield* repository.listFrames(tenant(2));
-            expect(ids(listFrames9)).toEqual([foreign.frame.id]);
-            const listFrames10 = yield* repository.listFrames(tenant(2));
-            expect(orgIds(listFrames10)).toEqual([2]);
-            const listOppositionCandidates11 = yield* repository.listOppositionCandidates(tenant(2));
-            expect(orgIds(listOppositionCandidates11)).toEqual([2]);
-            const listRelators12 = yield* repository.listRelators(tenant(2));
-            expect(orgIds(listRelators12)).toEqual([2, 2]);
+          const listFrames9 = yield* repository.listFrames(tenant(2));
+          expect(ids(listFrames9)).toEqual([foreign.frame.id]);
+          const listFrames10 = yield* repository.listFrames(tenant(2));
+          expect(orgIds(listFrames10)).toEqual([2]);
+          const listOppositionCandidates11 = yield* repository.listOppositionCandidates(tenant(2));
+          expect(orgIds(listOppositionCandidates11)).toEqual([2]);
+          const listRelators12 = yield* repository.listRelators(tenant(2));
+          expect(orgIds(listRelators12)).toEqual([2, 2]);
 
-            const listExercises13 = yield* repository.listExercises(underFrame(foreign.frame.id, 1));
-            expect(
-              ids(listExercises13),
-              "frame-keyed reads are tenant-scoped first: tenant 1 gets nothing for tenant 2's frame"
-            ).toEqual([]);
-            const listCorrections14 = yield* repository.listCorrections(underFrame(foreign.frame.id, 1));
-            expect(
-              ids(listCorrections14),
-              "frame-keyed reads are tenant-scoped first: tenant 1 gets nothing for tenant 2's frame"
-            ).toEqual([]);
-            const listExercises15 = yield* repository.listExercises(underFrame(foreign.frame.id, 2));
-            expect(ids(listExercises15)).toEqual([foreign.exercise.id]);
-            const listCorrections16 = yield* repository.listCorrections(underFrame(foreign.frame.id, 2));
-            expect(ids(listCorrections16)).toEqual([foreign.correction.id]);
-          }),
-          PgliteIntegrationTimeout
-        );
-      }
-    );
+          const listExercises13 = yield* repository.listExercises(underFrame(foreign.frame.id, 1));
+          expect(
+            ids(listExercises13),
+            "frame-keyed reads are tenant-scoped first: tenant 1 gets nothing for tenant 2's frame"
+          ).toEqual([]);
+          const listCorrections14 = yield* repository.listCorrections(underFrame(foreign.frame.id, 1));
+          expect(
+            ids(listCorrections14),
+            "frame-keyed reads are tenant-scoped first: tenant 1 gets nothing for tenant 2's frame"
+          ).toEqual([]);
+          const listExercises15 = yield* repository.listExercises(underFrame(foreign.frame.id, 2));
+          expect(ids(listExercises15)).toEqual([foreign.exercise.id]);
+          const listCorrections16 = yield* repository.listCorrections(underFrame(foreign.frame.id, 2));
+          expect(ids(listCorrections16)).toEqual([foreign.correction.id]);
+        }),
+        PgliteIntegrationTimeout
+      );
+    });
 
-    it.layer(makeInProcessLayerBecauseSocketLaneCannotLoadMigrationBtreeGist(), { timeout: "5 minutes" })(
-      "ordering reads of one scope",
-      (it) => {
-        it.effect(
-          "returns each kind by id ascending when the highest id was appended first",
-          Effect.fnUntraced(function* () {
-            yield* migrateLegalPositionTables();
-            const repository = yield* LegalPositionRecordRepository;
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })("ordering reads of one scope", (it) => {
+      it.effect(
+        "returns each kind by id ascending when the highest id was appended first",
+        Effect.fnUntraced(function* () {
+          yield* migrateLegalPositionTables();
+          const repository = yield* LegalPositionRecordRepository;
 
-            yield* rewindIdSequencesSoHeapOrderDisagreesWithIdOrder(101);
-            const later = yield* appendOpposedPositionInDependencyOrder(repository, 1, 1);
-            yield* rewindIdSequencesSoHeapOrderDisagreesWithIdOrder(1);
-            const earlier = yield* appendOpposedPositionInDependencyOrder(repository, 2, 1);
+          yield* setNextRowId(101);
+          const later = yield* appendOpposedPositionInDependencyOrder(repository, 1, 1);
+          yield* setNextRowId(1);
+          const earlier = yield* appendOpposedPositionInDependencyOrder(repository, 2, 1);
 
-            expect(later.frame.id, "setup: without the rewind the appends land ascending and prove nothing").toBe(101);
-            expect(earlier.frame.id, "setup: without the rewind the appends land ascending and prove nothing").toBe(1);
+          expect(later.frame.id, "setup: without the rewind the appends land ascending and prove nothing").toBe(101);
+          expect(earlier.frame.id, "setup: without the rewind the appends land ascending and prove nothing").toBe(1);
 
-            yield* forceSequentialScansSoOnlyOrderByIdStandsBetweenCallerAndHeapOrder();
+          yield* forceSequentialScans();
 
-            const listFrames17 = yield* repository.listFrames(tenant(1));
-            expect(ids(listFrames17)).toEqual([earlier.frame.id, later.frame.id]);
-            const listOppositionCandidates18 = yield* repository.listOppositionCandidates(tenant(1));
-            expect(ids(listOppositionCandidates18)).toEqual([earlier.candidate.id, later.candidate.id]);
-            const listRelators19 = yield* repository.listRelators(tenant(1));
-            expect(ids(listRelators19)).toEqual([
-              earlier.privilege.id,
-              earlier.claim.id,
-              later.privilege.id,
-              later.claim.id,
-            ]);
+          const listFrames17 = yield* repository.listFrames(tenant(1));
+          expect(
+            ids(listFrames17),
+            "with sequential scans forced, only ORDER BY id stands between the caller and heap order"
+          ).toEqual([earlier.frame.id, later.frame.id]);
+          const listOppositionCandidates18 = yield* repository.listOppositionCandidates(tenant(1));
+          expect(ids(listOppositionCandidates18)).toEqual([earlier.candidate.id, later.candidate.id]);
+          const listRelators19 = yield* repository.listRelators(tenant(1));
+          expect(
+            ids(listRelators19),
+            "relator seeds sit a decade apart, since the public ids seeds derive are uniquely indexed"
+          ).toEqual([earlier.privilege.id, earlier.claim.id, later.privilege.id, later.claim.id]);
 
-            const listExercises20 = yield* repository.listExercises(underFrame(earlier.frame.id, 1));
-            expect(
-              ids(listExercises20),
-              "each singleton frame keeps its own exercise before a multi-record frame is ordered"
-            ).toEqual([earlier.exercise.id]);
-            const listExercises21 = yield* repository.listExercises(underFrame(later.frame.id, 1));
-            expect(
-              ids(listExercises21),
-              "each singleton frame keeps its own exercise before a multi-record frame is ordered"
-            ).toEqual([later.exercise.id]);
+          const listExercises20 = yield* repository.listExercises(underFrame(earlier.frame.id, 1));
+          expect(
+            ids(listExercises20),
+            "each singleton frame keeps its own exercise before a multi-record frame is ordered"
+          ).toEqual([earlier.exercise.id]);
+          const listExercises21 = yield* repository.listExercises(underFrame(later.frame.id, 1));
+          expect(
+            ids(listExercises21),
+            "each singleton frame keeps its own exercise before a multi-record frame is ordered"
+          ).toEqual([later.exercise.id]);
 
-            const frameFixture22 = yield* frameFixture(3, 1);
-            const orderedFrame = yield* repository.recordFrame(frameFixture22);
-            yield* rewindIdSequencesSoHeapOrderDisagreesWithIdOrder(301);
-            const exerciseFixture23 = yield* exerciseFixture(301, orderedFrame.id, 1);
-            const highExercise = yield* repository.recordExercise(exerciseFixture23);
-            const correctionFixture24 = yield* correctionFixture(301, orderedFrame.id, 1);
-            const highCorrection = yield* repository.recordCorrection(correctionFixture24);
-            yield* rewindIdSequencesSoHeapOrderDisagreesWithIdOrder(201);
-            const exerciseFixture25 = yield* exerciseFixture(201, orderedFrame.id, 1);
-            const lowExercise = yield* repository.recordExercise(exerciseFixture25);
-            const correctionFixture26 = yield* correctionFixture(201, orderedFrame.id, 1);
-            const lowCorrection = yield* repository.recordCorrection(correctionFixture26);
+          const frameFixture22 = yield* frameFixture(3, 1);
+          const orderedFrame = yield* repository.recordFrame(frameFixture22);
+          yield* setNextRowId(301);
+          const exerciseFixture23 = yield* exerciseFixture(301, orderedFrame.id, 1);
+          const highExercise = yield* repository.recordExercise(exerciseFixture23);
+          const correctionFixture24 = yield* correctionFixture(301, orderedFrame.id, 1);
+          const highCorrection = yield* repository.recordCorrection(correctionFixture24);
+          yield* setNextRowId(201);
+          const exerciseFixture25 = yield* exerciseFixture(201, orderedFrame.id, 1);
+          const lowExercise = yield* repository.recordExercise(exerciseFixture25);
+          const correctionFixture26 = yield* correctionFixture(201, orderedFrame.id, 1);
+          const lowCorrection = yield* repository.recordCorrection(correctionFixture26);
 
-            expect(highExercise.id).toBe(301);
-            expect(lowExercise.id).toBe(201);
-            expect(highCorrection.id).toBe(301);
-            expect(lowCorrection.id).toBe(201);
-            const listExercises27 = yield* repository.listExercises(underFrame(orderedFrame.id, 1));
-            expect(ids(listExercises27)).toEqual([lowExercise.id, highExercise.id]);
-            const listCorrections28 = yield* repository.listCorrections(underFrame(orderedFrame.id, 1));
-            expect(ids(listCorrections28)).toEqual([lowCorrection.id, highCorrection.id]);
-          }),
-          PgliteIntegrationTimeout
-        );
-      }
-    );
+          expect(highExercise.id).toBe(301);
+          expect(lowExercise.id).toBe(201);
+          expect(highCorrection.id).toBe(301);
+          expect(lowCorrection.id).toBe(201);
+          const listExercises27 = yield* repository.listExercises(underFrame(orderedFrame.id, 1));
+          expect(ids(listExercises27)).toEqual([lowExercise.id, highExercise.id]);
+          const listCorrections28 = yield* repository.listCorrections(underFrame(orderedFrame.id, 1));
+          expect(ids(listCorrections28)).toEqual([lowCorrection.id, highCorrection.id]);
+        }),
+        PgliteIntegrationTimeout
+      );
+    });
 
-    it.layer(makeInProcessLayerBecauseSocketLaneCannotLoadMigrationBtreeGist(), { timeout: "5 minutes" })(
+    it.layer(makeLegalPositionRepositoryLayer(), { timeout: "5 minutes" })(
       "driver failures, on a database of their own because pglite rolls a failed session chain back",
       (it) => {
         it.effect(

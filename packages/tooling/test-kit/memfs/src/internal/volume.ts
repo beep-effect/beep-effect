@@ -70,10 +70,9 @@ import type { ErrnoCode } from "./errno.ts";
 
 const $I = $MemfsId.create("internal/volume");
 
-// localeCompare can return any negative/positive magnitude; Orders require -1/0/1.
 const LocaleNameOrder = Order.make<string>((left, right) => {
-  const compared = Str.localeCompare(right)(left);
-  return Order.Number(compared, 0);
+  const unnormalizedComparison = Str.localeCompare(right)(left);
+  return Order.Number(unnormalizedComparison, 0);
 });
 const InodeNameOrder = Order.mapInput(LocaleNameOrder, (entry: readonly [string, Inode]) => entry[0]);
 const ResolutionErrno = LiteralKit(["EISDIR", "ELOOP", "ENOTDIR"]).pipe(
@@ -109,10 +108,6 @@ const FIRST_INODE = 2;
 const FIRST_DESCRIPTOR = 3;
 const FIRST_TEMP = 1;
 const TEMP_DIR = "/tmp";
-
-// =============================================================================
-// models
-// =============================================================================
 
 const Inode = S.Finite.pipe(
   S.brand("MemoryFileSystemInode"),
@@ -185,7 +180,6 @@ const transitionResult = <A>(
 ): TransitionResult<A> => ({ state, value, events });
 
 interface State {
-  // KIT EXTENSION (case folding): fixed at build changed afterwards.
   readonly caseSensitive: boolean;
   readonly descriptors: HashMap.HashMap<FileDescriptor, OpenFileDescriptor>;
   readonly inodes: HashMap.HashMap<Inode, InodeEntry>;
@@ -196,10 +190,6 @@ interface State {
 
 interface Volume {
   readonly allocateSubscriptionId: () => number;
-  // Kit extension (volume inspection): the current committed state, readable
-  // synchronously. State values are immutable — each transition replaces the
-  // reference under the volume lock — so a sync read observes one consistent
-  // snapshot and can never see a half-applied transition.
   readonly currentState: () => State;
   readonly mutate: <A, E, R>(use: (state: State) => Effect.Effect<TransitionResult<A>, E, R>) => Effect.Effect<A, E, R>;
   readonly mutateInterruptibly: <A, E, R>(
@@ -245,10 +235,6 @@ interface CloneContext {
   readonly sourcePath: string;
 }
 
-// =============================================================================
-// state
-// =============================================================================
-
 const fileSystemError = (options: {
   readonly _tag: SystemErrorTag;
   readonly method: string;
@@ -267,8 +253,6 @@ const invalidData: {
     fileSystemError({ _tag: "InvalidData", method, pathOrDescriptor: path, description })
 );
 
-// Errno fidelity: the errno → tag mapping lives in ./errno.js.
-
 const alreadyExists: {
   (method: string, path: string): PlatformError;
   (path: string): (method: string) => PlatformError;
@@ -281,8 +265,6 @@ const badResource = (
   description?: string
 ): PlatformError => errnoError(method, pathOrDescriptor, code, description);
 
-// A limit of the in-memory model itself (nesting depth, allocation, position
-// range), with no errno the real platform would raise: BadResource, no cause.
 const volumeLimit: {
   (method: string, pathOrDescriptor: string | number, description: string): PlatformError;
   (pathOrDescriptor: string | number, description: string): (method: string) => PlatformError;
@@ -305,8 +287,7 @@ const argumentError: {
   (method: string, description: string): PlatformError => badArgument({ module: "FileSystem", method, description })
 );
 
-// node rejects a NUL byte in any path argument before touching the filesystem,
-// as a BadArgument (ERR_INVALID_ARG_VALUE), not a system error.
+// decision: errno-modelled-on-linux-node-adapter
 const nullBytePath = (method: string): PlatformError => argumentError(method, "path must not contain null bytes");
 
 const findInode: {
@@ -314,11 +295,7 @@ const findInode: {
   (inode: Inode): (state: State) => InodeEntry | undefined;
 } = dual(2, (state: State, inode: Inode): InodeEntry | undefined => O.getOrUndefined(HashMap.get(state.inodes, inode)));
 
-// KIT EXTENSION (case folding): a case-insensitive,
-// case-preserving volume looks a name up exactly first, then by folded
-// comparison, and answers the STORED key alongside the inode. Every mutation of
-// an existing entry keys on that stored name, so removal and rekeying hit the
-// real entry; path spellings a caller sees keep the queried component.
+// decision: case-folding-in-lookup-entry
 const lookupEntry: {
   (state: State, directory: DirectoryInode, name: string): readonly [string, Inode] | undefined;
   (directory: DirectoryInode, name: string): (state: State) => readonly [string, Inode] | undefined;
@@ -340,7 +317,6 @@ const findEntry: {
   3,
   (state: State, directory: DirectoryInode, name: string): Inode | undefined => lookupEntry(state, directory, name)?.[1]
 );
-// END KIT EXTENSION (case folding)
 
 const setInode: {
   (state: State, entry: InodeEntry): State;
@@ -426,11 +402,8 @@ const isDirectChildPath = (parent: string, path: string): boolean => path !== "/
 const watchedDirectoryIncludes = (watchedPath: string, recursive: boolean, eventPath: string): boolean =>
   recursive ? isDescendantPath(watchedPath, eventPath) : isDirectChildPath(watchedPath, eventPath);
 
-// PORT NOTE: upstream ignored `WatchOptions` and made every directory watch
-// recursive. Here a non-recursive directory watch reports the path itself and
-// its DIRECT children (node `fs.watch` semantics); `recursive: true` reports
-// all descendants; events on an ancestor of the watched path are always
-// reported (upstream behavior, kept).
+// beep: upstream made every directory watch recursive; a non-recursive one reports the path and its direct
+// beep: children (node `fs.watch`), `recursive: true` all descendants; ancestor events stay reported, as upstream.
 const includesWatchPath: {
   (watchedPath: string, directory: boolean, recursive: boolean, eventPath: string): boolean;
   (directory: boolean, recursive: boolean, eventPath: string): (watchedPath: string) => boolean;
@@ -442,7 +415,6 @@ const includesWatchPath: {
     isStrictAncestorPath(eventPath, watchedPath)
 );
 
-// A subscription whose stream has not started yet buffers the event.
 const deliverWatchEvent = (watcher: WatchSubscription, event: FileSystem.WatchEvent): void => {
   if (watcher.queue === undefined) {
     watcher.pending.push(event);
@@ -451,9 +423,7 @@ const deliverWatchEvent = (watcher: WatchSubscription, event: FileSystem.WatchEv
   }
 };
 
-// KIT EXTENSION (case folding): on a
-// case-insensitive volume a subscription and an event name one entry in any
-// spelling, so matching compares FOLDED paths; the delivered event keeps its own.
+// decision: case-folding-in-lookup-entry
 const publishWatchEvents: {
   (
     watchers: MutableHashMap.MutableHashMap<number, WatchSubscription>,
@@ -484,7 +454,6 @@ const publishWatchEvents: {
     })
 );
 
-// Records `path` when it names `inode`, and queues it for descent when it is a directory.
 const visitInodePathChild = (
   state: State,
   inode: Inode,
@@ -500,8 +469,7 @@ const visitInodePathChild = (
   }
 };
 
-// PORT NOTE: iterative worklist where upstream recursed. Callers sort the
-// result, so traversal order is not part of the contract.
+// beep: iterative worklist where upstream recursed; callers sort, so traversal order is not part of the contract.
 const collectInodePaths: {
   (state: State, inode: Inode, directory: DirectoryInode, parent?: string): Array<string>;
   (inode: Inode, directory: DirectoryInode, parent?: string): (state: State) => Array<string>;
@@ -526,10 +494,9 @@ const inodeUpdateEvents: {
 } = dual(2, (state: State, inode: Inode): ReadonlyArray<FileSystem.WatchEvent.Update> => {
   const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), InodeEntry.isAnyOf(["Directory"])));
   if (inode === RootInode) return [{ _tag: "Update", path: "/" }];
-  // NOTE: An inode may be reachable through multiple hard-link aliases, each of
-  // which must receive an update event.
+  const everyHardLinkPath = collectInodePaths(state, inode, root);
   return pipe(
-    A.sort(collectInodePaths(state, inode, root), Order.String),
+    A.sort(everyHardLinkPath, Order.String),
     A.map((path): FileSystem.WatchEvent.Update => ({ _tag: "Update", path }))
   );
 });
@@ -542,10 +509,6 @@ const reclaimInode: {
   (state: State, entry: InodeEntry): State =>
     entry.nlink === 0 && entry.openCount === 0 ? { ...state, inodes: HashMap.remove(state.inodes, entry.ino) } : state
 );
-
-// =============================================================================
-// inode creation and linking
-// =============================================================================
 
 const createFile: {
   (state: State, data?: Uint8Array): Effect.Effect<readonly [State, Inode]>;
@@ -654,15 +617,14 @@ const attachDirectory: {
   Effect.fnUntraced(function* (state: State, parent: Inode, name: string, inode: Inode, method = "makeDirectory") {
     yield* validateEntryName(method, name);
     const parentEntry = yield* getDirectory(state, parent, method, name);
-    // Callers attach only fresh clones or newly created directories to an absent name.
-    const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, inode), InodeEntry.isAnyOf(["Directory"])));
+    const freshDirectory = O.getOrThrow(O.filter(HashMap.get(state.inodes, inode), InodeEntry.isAnyOf(["Directory"])));
     const now = yield* DateTime.now;
     const nextParent = {
       ...parentEntry,
       entries: HashMap.set(parentEntry.entries, name, inode),
       nlink: parentEntry.nlink + 1,
     };
-    const nextEntry = { ...entry, nlink: entry.nlink + 1 };
+    const nextEntry = { ...freshDirectory, nlink: freshDirectory.nlink + 1 };
     return touchNamespaceMutation(state, nextParent, nextEntry, now);
   })
 );
@@ -675,7 +637,7 @@ const linkInode: {
   Effect.fnUntraced(function* (state: State, parent: Inode, name: string, inode: Inode, method = "link") {
     yield* validateEntryName(method, name);
     const parentEntry = yield* getDirectory(state, parent, method, name);
-    // KIT EXTENSION (case folding): a folded match exists.
+    // decision: case-folding-in-lookup-entry
     if (findEntry(state, parentEntry, name) !== undefined) {
       return yield* alreadyExists(method, name);
     }
@@ -690,12 +652,6 @@ const linkInode: {
   })
 );
 
-// =============================================================================
-// path resolution
-// =============================================================================
-
-// The mutable walk state of one `resolve`: the components still to visit,
-// the inode stack and queried names of the resolved prefix, and the link budget.
 interface ResolveCursor {
   components: Array<string>;
   readonly names: Array<string>;
@@ -714,9 +670,6 @@ const cursorDirectory = (
 ): Effect.Effect<DirectoryInode, PlatformError> =>
   getDirectory(state, O.getOrThrow(A.last(cursor.stack)), method, originalPath);
 
-// "", "." and ".." never name an entry: each asserts the resolved prefix is a
-// directory (an empty component only at the end of the path), and ".."
-// ascends — never above the root.
 const resolveDotComponent = Effect.fnUntraced(function* (
   state: State,
   cursor: ResolveCursor,
@@ -732,8 +685,6 @@ const resolveDotComponent = Effect.fnUntraced(function* (
   }
 });
 
-// Splices a followed link's target in front of the remaining components; an
-// absolute target restarts from the root.
 const followSymbolicLink = Effect.fnUntraced(function* (
   cursor: ResolveCursor,
   target: string,
@@ -763,9 +714,7 @@ const resolveNamedComponent = Effect.fnUntraced(function* (
 ) {
   const method = options.method;
   const parent = yield* cursorDirectory(state, cursor, method, originalPath);
-  // KIT EXTENSION (case folding): the lookup
-  // folds, but `names` keeps the queried component — node's realpath never
-  // canonicalizes case; only a link's target text supplies its own spelling.
+  // decision: case-folding-in-lookup-entry
   const inode = findEntry(state, parent, component);
   if (inode === undefined) {
     return yield* notFound(method, originalPath);
@@ -780,8 +729,6 @@ const resolveNamedComponent = Effect.fnUntraced(function* (
   cursor.names.push(component);
 });
 
-// NOTE: Relative paths resolve from the virtual POSIX root because `FileSystem` has
-// no `chdir` operation or mutable working-directory state.
 const resolve: {
   (state: State, path: string, options: ResolveOptions): Effect.Effect<ResolvedInode, PlatformError>;
   (path: string, options: ResolveOptions): (state: State) => Effect.Effect<ResolvedInode, PlatformError>;
@@ -815,9 +762,6 @@ const resolve: {
   })
 );
 
-// A trailing slash asserts the entry is a directory: the trimmed path must
-// resolve to one. The answer for a missing entry depends on the calling
-// operation, which passes `missingWithTrailingSlash`.
 const trimTrailingSlashParentPath = Effect.fnUntraced(function* (
   state: State,
   path: string,
@@ -855,10 +799,6 @@ interface OpenOptions {
   readonly mode?: number | undefined;
 }
 
-// =============================================================================
-// descriptors
-// =============================================================================
-
 const OpenFlag = LiteralKit(["r", "r+", "w", "wx", "w+", "wx+", "a", "ax", "a+", "ax+"]).pipe(
   $I.annoteSchema("OpenFlag", { description: "The supported file-open flags." })
 );
@@ -873,9 +813,7 @@ const openMode = (flag: FileSystem.OpenFlag): OpenMode => ({
   truncate: Str.startsWith("w")(flag),
 });
 
-// node reports a closed descriptor, or one lacking the access an operation
-// needs, as EBADF — except `ftruncate` on a descriptor not open for writing,
-// which is EINVAL on both Linux and macOS.
+// decision: errno-modelled-on-linux-node-adapter
 const descriptorError: {
   (fd: FileDescriptor, method: string, code: DescriptorErrno, description: string): PlatformError;
   (method: string, code: DescriptorErrno, description: string): (fd: FileDescriptor) => PlatformError;
@@ -897,7 +835,6 @@ const allocateBytes: {
     })
 );
 
-// The open descriptor `fd` and its inode: a file, or a directory opened read-only.
 const openDescriptorEntry = (
   state: State,
   fd: FileDescriptor,
@@ -940,7 +877,7 @@ const getOpenFile: {
         const code = method === "truncate" ? "EINVAL" : "EBADF";
         return Effect.fail(descriptorError(fd, method, code, `File descriptor is not ${access}`));
       }
-      // Linux opens a directory read-only (to fsync it); its data operations fail with EISDIR.
+      // decision: errno-modelled-on-linux-node-adapter
       if (entry._tag === "Directory") {
         return Effect.fail(descriptorError(fd, method, "EISDIR", "Is a directory"));
       }
@@ -948,7 +885,6 @@ const getOpenFile: {
     })
 );
 
-// `fstat` and `fsync` read only the inode, so they also accept a read-only directory descriptor.
 const getOpenInode = (
   state: State,
   fd: FileDescriptor,
@@ -1004,16 +940,7 @@ const symbolicLinkTargetPath: {
   return `${directory}/${target}`;
 });
 
-// =============================================================================
-// entry resolution and removal
-// =============================================================================
-
-// KIT EXTENSION (errno fidelity): a trailing slash asserts "this is a
-// directory". On an existing directory it is harmless and the entry is
-// addressed without it; on an existing non-directory it is ENOTDIR; on a
-// missing entry it is ENOENT, except where Linux reports otherwise for the
-// calling operation (EISDIR when creating a file, ENOTDIR when renaming a
-// non-directory onto it) — the caller passes that code.
+// decision: errno-modelled-on-linux-node-adapter
 const resolveParent: {
   (
     state: State,
@@ -1077,10 +1004,7 @@ const resolveEntry: {
   3,
   Effect.fnUntraced(function* (state: State, path: string, method: string) {
     const parent = yield* resolveParent(state, path, method);
-    // KIT EXTENSION (case folding): the entry is
-    // addressed by its STORED key, so `detachEntry` and `rename` mutate the real
-    // map entry rather than a folded spelling of it; `requestedName` keeps the
-    // queried leaf for rename's byte-identical no-op guard.
+    // decision: case-folding-in-lookup-entry
     const found = lookupEntry(state, parent.entry, parent.name);
     if (found === undefined) {
       return yield* notFound(method, path);
@@ -1128,8 +1052,7 @@ const validateMode: {
       : Effect.fail(argumentError(method, "mode must be an unsigned 32-bit integer"))
 );
 
-// PORT NOTE: `depth` bounds the recursion at MAX_NESTING_DEPTH, failing typed —
-// upstream recursed unbounded.
+// beep: `depth` bounds this recursion at MAX_NESTING_DEPTH, failing typed; upstream recursed unbounded.
 const detachEntry: {
   (
     state: State,
@@ -1199,11 +1122,6 @@ const detachEntry: {
   })
 );
 
-// =============================================================================
-// directory operations
-// =============================================================================
-
-// The per-component context of one `makeDirectory` walk.
 interface MakeDirectoryStep {
   readonly candidate: string;
   readonly final: boolean;
@@ -1213,15 +1131,11 @@ interface MakeDirectoryStep {
   readonly recursive: boolean;
 }
 
-// The state threaded through a `makeDirectory` walk and the paths it created.
 interface MakeDirectoryWalk {
   readonly createdPaths: Array<string>;
   state: State;
 }
 
-// An existing component: a non-directory as the FINAL component is EEXIST; one
-// earlier in the path cannot hold children — ENOTDIR. Answers `true` when the
-// walk ends here successfully (a recursive mkdir of an existing directory).
 const existingDirectoryComponent = Effect.fnUntraced(function* (entry: InodeEntry, step: MakeDirectoryStep) {
   if (entry._tag !== "Directory") {
     return yield* step.final ? alreadyExists(step.method, step.path) : badResource(step.method, step.path, "ENOTDIR");
@@ -1230,18 +1144,12 @@ const existingDirectoryComponent = Effect.fnUntraced(function* (entry: InodeEntr
   return step.recursive ? true : yield* alreadyExists(step.method, step.path);
 });
 
-// KIT EXTENSION (errno fidelity): the entry exists but does not resolve, so it
-// is a dangling or looping symbolic link. A recursive mkdir follows it and
-// reports why it failed (node's EEXIST → stat fallback): the final component
-// answers the resolution errno; earlier in the path the node adapter's callback
-// `fs.mkdir` turns a dangling ENOENT into ENOTDIR, while any other code (ELOOP)
-// is what the deeper mkdir syscall raised itself.
 const unresolvedDirectoryComponent = (step: MakeDirectoryStep, failure: PlatformError): PlatformError => {
   if (!step.recursive) return alreadyExists(step.method, step.path);
   const cause = O.getOrThrow(O.filter(O.some(failure.reason.cause), S.is(ErrnoException)));
-  return errnoError(step.method, step.path, !step.final && cause.code === "ENOENT" ? "ENOTDIR" : cause.code, undefined);
+  const adapterMkdirErrno = !step.final && cause.code === "ENOENT" ? "ENOTDIR" : cause.code;
+  return errnoError(step.method, step.path, adapterMkdirErrno, undefined);
 };
-// END KIT EXTENSION (errno fidelity)
 
 const applyCreatedDirectoryMode = Effect.fnUntraced(function* (state: State, inode: Inode, step: MakeDirectoryStep) {
   const entry = yield* getDirectory(state, inode, step.method, step.path);
@@ -1256,7 +1164,7 @@ const createDirectoryComponent = Effect.fnUntraced(function* (
   failure: PlatformError
 ) {
   const parent = yield* resolveParent(walk.state, step.candidate, step.method, step.path);
-  // KIT EXTENSION (case folding)
+  // decision: case-folding-in-lookup-entry
   if (findEntry(walk.state, parent.entry, parent.name) !== undefined) {
     return yield* unresolvedDirectoryComponent(step, failure);
   }
@@ -1266,7 +1174,6 @@ const createDirectoryComponent = Effect.fnUntraced(function* (
   walk.createdPaths.push(childPath(parent.path, parent.name));
 });
 
-// One component of the walk; answers `true` when the walk ends successfully early.
 const makeDirectoryComponent = Effect.fnUntraced(function* (walk: MakeDirectoryWalk, step: MakeDirectoryStep) {
   const existing = yield* Effect.result(resolve(walk.state, step.candidate, { method: step.method }));
   if (existing._tag === "Success") {
@@ -1279,7 +1186,6 @@ const makeDirectoryComponent = Effect.fnUntraced(function* (walk: MakeDirectoryW
   return false;
 });
 
-// Walks every component of a non-root path, creating what is missing.
 const makeDirectoryPieces = Effect.fnUntraced(function* (
   state: State,
   path: string,
@@ -1322,8 +1228,7 @@ const makeDirectory = (volume: Volume) =>
           return yield* notFound(method, path);
         }
         if (pieces.length === 0) {
-          // The root always exists: node answers `mkdir("/")` EEXIST, and a
-          // recursive `mkdir -p /` succeeds as a no-op.
+          // decision: errno-modelled-on-linux-node-adapter
           return recursive ? transitionResult(state, undefined) : yield* alreadyExists(method, path);
         }
         return yield* makeDirectoryPieces(state, path, pieces, recursive, options?.mode);
@@ -1409,9 +1314,7 @@ const remove = (volume: Volume) =>
           }
           return yield* target.failure;
         }
-        // KIT EXTENSION (errno fidelity): node's `fs.rm` refuses ANY directory
-        // without `recursive` — empty or not, `force` or not — with
-        // ERR_FS_EISDIR before it touches the entry.
+        // decision: errno-modelled-on-linux-node-adapter
         if (target.success.entry._tag === "Directory" && options?.recursive !== true) {
           return yield* errnoError(method, path, "ERR_FS_EISDIR", "Path is a directory");
         }
@@ -1422,8 +1325,7 @@ const remove = (volume: Volume) =>
     );
   });
 
-// PORT NOTE: iterative worklist where upstream recursed — a pathological tree
-// depth must never become a stack-overflow defect.
+// beep: iterative worklist where upstream recursed, so a pathological tree depth never overflows the stack.
 const containsDirectory: {
   (state: State, ancestor: Inode, candidate: Inode): boolean;
   (ancestor: Inode, candidate: Inode): (state: State) => boolean;
@@ -1451,14 +1353,12 @@ interface ResolvedParentDirectory {
   readonly path: string;
 }
 
-// Where a rename lands: the stored spelling it takes, and the inode it replaces.
 interface RenameDestination {
   readonly inode: Inode | undefined;
   readonly name: string;
 }
 
-// A directory may be renamed onto a trailing-slash path that does not exist
-// yet; a non-directory cannot (ENOTDIR on Linux).
+// decision: errno-modelled-on-linux-node-adapter
 const resolveRenameDestinationParent = (
   state: State,
   source: ResolvedSourceEntry,
@@ -1476,13 +1376,7 @@ const isCaseOnlyRename = (
 ): boolean =>
   found[1] === source.entry.ino && found[0] === source.name && source.parent.ino === destinationParent.inode;
 
-// KIT EXTENSION (case folding): one folded
-// lookup gives the destination's stored key and inode. A hit on the source
-// entry ITSELF (same directory, same stored key) is a case-only rename: it
-// rekeys the entry under the requested spelling, children attached, and
-// detaches nothing. Any other hit is replaced under its STORED spelling
-// (host-proven on APFS); a miss takes the requested spelling. `undefined`
-// means the rename is a no-op (another link to the same inode).
+// decision: case-folding-in-lookup-entry
 const renameDestination = (
   state: State,
   source: ResolvedSourceEntry,
@@ -1495,7 +1389,6 @@ const renameDestination = (
   if (found[1] === source.entry.ino) return undefined;
   return { name: found[0], inode: found[1] };
 };
-// END KIT EXTENSION (case folding)
 
 const validateRenameReplacement = Effect.fnUntraced(function* (
   source: InodeEntry,
@@ -1514,7 +1407,6 @@ const validateRenameReplacement = Effect.fnUntraced(function* (
   }
 });
 
-// The entry a rename replaces, validated against the source, if any.
 const resolveRenameReplacement = Effect.fnUntraced(function* (
   state: State,
   source: ResolvedSourceEntry,
@@ -1603,9 +1495,7 @@ const rename = (volume: Volume) =>
       Effect.fnUntraced(function* (state) {
         const source = yield* resolveEntry(state, oldPath, method);
         const destinationParent = yield* resolveRenameDestinationParent(state, source, newPath, method);
-        // KIT EXTENSION (case folding): the no-op
-        // guard compares the QUERIED source leaf — XNU skips a byte-identical
-        // rename, so `rename("dir", "dir")` over a stored `Dir` keeps `Dir`.
+        // decision: case-folding-in-lookup-entry
         if (source.parent.ino === destinationParent.inode && source.requestedName === destinationParent.name) {
           return transitionResult(state, undefined);
         }
@@ -1645,12 +1535,7 @@ const rename = (volume: Volume) =>
     );
   });
 
-// =============================================================================
-// copy operations
-// =============================================================================
-
-// PORT NOTE: `depth` bounds the recursion at MAX_NESTING_DEPTH, failing typed —
-// upstream recursed unbounded.
+// beep: `depth` bounds this recursion at MAX_NESTING_DEPTH, failing typed; upstream recursed unbounded.
 const cloneInode: {
   (
     state: State,
@@ -1716,8 +1601,7 @@ const cloneInode: {
   })
 );
 
-// PORT NOTE: `depth` bounds the recursion at MAX_NESTING_DEPTH, failing typed —
-// upstream recursed unbounded.
+// beep: `depth` bounds this recursion at MAX_NESTING_DEPTH, failing typed; upstream recursed unbounded.
 const validateCopyDirectoryContents: {
   (
     state: State,
@@ -1752,7 +1636,7 @@ const validateCopyDirectoryContents: {
     }
     for (const [name, sourceInode] of source.entries) {
       const sourceEntry = yield* getInode(state, sourceInode, method, path);
-      // KIT EXTENSION (case folding): folded lookup.
+      // decision: case-folding-in-lookup-entry
       const destinationInode = findEntry(state, destination, name);
       if (destinationInode !== undefined) {
         const destinationEntry = yield* getInode(state, destinationInode, method, path);
@@ -1762,7 +1646,6 @@ const validateCopyDirectoryContents: {
   })
 );
 
-// One source child against the existing destination child of the same name.
 const validateCopyChild = Effect.fnUntraced(function* (
   state: State,
   sourceEntry: InodeEntry,
@@ -1783,8 +1666,7 @@ const validateCopyChild = Effect.fnUntraced(function* (
       depth + 1
     );
   }
-  // KIT EXTENSION (errno fidelity): node's `fs.cp` checks entry kinds before
-  // it consults `force`, so a kind mismatch fails even without overwrite.
+  // decision: errno-modelled-on-linux-node-adapter
   if (sourceEntry._tag === "Directory") {
     return yield* errnoError(
       method,
@@ -1846,7 +1728,6 @@ const copyDirectoryContents: {
   })
 );
 
-// Clones `sourceEntry` and links it into `parent` under `name`.
 const attachCopiedClone = Effect.fnUntraced(function* (
   state: State,
   sourceEntry: InodeEntry,
@@ -1860,7 +1741,6 @@ const attachCopiedClone = Effect.fnUntraced(function* (
     : yield* linkInode(clonedState, parent, name, clone, context.method);
 });
 
-// Detaches the existing destination child `name` (its stored key) of `parent`.
 const detachCopyDestinationChild = Effect.fnUntraced(function* (
   state: State,
   parent: DirectoryInode,
@@ -1885,10 +1765,7 @@ const copyDirectoryChild = Effect.fnUntraced(function* (
   const { method, sourcePath: path, preserveTimestamps } = context;
   const sourceEntry = yield* getInode(state, sourceInode, method, path);
   const currentDestination = yield* getDirectory(state, destinationIno, method, path);
-  // KIT EXTENSION (case folding): a folded-equal
-  // destination child is detached by its STORED key and the copy linked under
-  // the SOURCE spelling — node's async `fs.cp` unlinks then recreates
-  // (host-proven: `x.txt` replaced from `X.txt` lists as `X.txt`).
+  // decision: case-folding-in-lookup-entry
   const found = lookupEntry(state, currentDestination, name);
   if (found === undefined) {
     return yield* attachCopiedClone(state, sourceEntry, context, destinationIno, name);
@@ -1918,8 +1795,6 @@ const copyDirectoryChild = Effect.fnUntraced(function* (
   return yield* attachCopiedClone(detached, sourceEntry, context, destinationIno, name);
 });
 
-// A missing destination is created in its parent; a trailing slash on a
-// missing destination is EISDIR.
 const missingCopyFileDestination = (
   state: State,
   failure: PlatformError,
@@ -1931,9 +1806,6 @@ const missingCopyFileDestination = (
     ? resolveParent(state, candidate, method, path, "EISDIR")
     : Effect.fail(withSystemErrorPath(failure, method, path));
 
-// A destination link is written THROUGH: a resolving link names its target's
-// parent; a dangling one continues at its target text (an empty target or any
-// other failure is final).
 const followCopyFileDestinationLink = Effect.fnUntraced(function* (
   state: State,
   candidate: string,
@@ -1951,7 +1823,6 @@ const followCopyFileDestinationLink = Effect.fnUntraced(function* (
   return symbolicLinkTargetPath(link.path, link.entry.target);
 });
 
-// One hop of the destination walk: the resolved parent, or the next candidate path.
 const copyFileDestinationStep = Effect.fnUntraced(function* (
   state: State,
   candidate: string,
@@ -2014,7 +1885,7 @@ const copyFileUnlocked: {
     }
     const sourceFile = source.entry;
     const destination = yield* resolveCopyFileDestination(state, toPath, method);
-    // KIT EXTENSION (case folding): folded lookup.
+    // decision: case-folding-in-lookup-entry
     const existingInode = findEntry(state, destination.entry, destination.name);
     if (existingInode === source.inode) return [state, false] as const;
 
@@ -2050,10 +1921,7 @@ const copyFileUnlocked: {
   })
 );
 
-// KIT EXTENSION (errno fidelity): node's `fs.cp` rejects a source and
-// destination that are one inode (the same path, or two hard links) and a
-// directory/non-directory mismatch BEFORE it consults `force`, with its own
-// ERR_FS_CP_* codes (tag Unknown).
+// decision: errno-modelled-on-linux-node-adapter
 const validateCopyEntryKinds = Effect.fnUntraced(function* (
   state: State,
   source: InodeEntry,
@@ -2073,7 +1941,6 @@ const validateCopyEntryKinds = Effect.fnUntraced(function* (
   }
 });
 
-// The existing destination entry, once the copy may replace or merge into it.
 const validateCopyEntryExisting = Effect.fnUntraced(function* (
   state: State,
   source: ResolvedInode,
@@ -2087,18 +1954,12 @@ const validateCopyEntryExisting = Effect.fnUntraced(function* (
     return yield* errnoError(method, toPath, "ERR_FS_CP_EINVAL", "Source and destination are the same entry");
   }
   yield* validateCopyEntryKinds(state, source.entry, existing, overwrite, method, toPath);
-  // PORT NOTE: upstream reported `fromPath` here — the one conflict arm in
-  // this function blaming the SOURCE while every sibling arm reports the
-  // destination. The conflict is the existing DESTINATION entry, so the
-  // error names `toPath` (upstream 6573 bug, fixed in this port).
-  // Known divergence, kept: node's `fs.cp` without `force` silently keeps
-  // an existing destination instead of failing.
+  // beep: upstream blamed `fromPath` here; the conflict is the existing destination, so the port reports `toPath`.
+  // decision: errno-modelled-on-linux-node-adapter
   if (!overwrite) return yield* alreadyExists(method, toPath);
   return existing;
 });
 
-// Clones the source, detaches any replaced destination, and links the clone
-// under the REQUESTED spelling.
 const replaceWithCopy = Effect.fnUntraced(function* (
   state: State,
   source: InodeEntry,
@@ -2166,10 +2027,7 @@ const copyEntryUnlocked: {
       return yield* errnoError(method, toPath, "ERR_FS_CP_EINVAL", "Cannot copy a directory into itself");
     }
 
-    // KIT EXTENSION (case folding): an existing
-    // folded-equal destination is detached by its STORED key and the copy linked
-    // under the REQUESTED spelling — node's async `fs.cp` unlinks then recreates
-    // (host-proven: `a.txt` copied onto `B.TXT` over `b.txt` lists as `B.TXT`).
+    // decision: case-folding-in-lookup-entry
     const found = lookupEntry(state, destination.entry, destination.name);
     const destinationName = found?.[0] ?? destination.name;
     const existing =
@@ -2249,11 +2107,6 @@ const copy = (volume: Volume) =>
     );
   });
 
-// =============================================================================
-// open file descriptors
-// =============================================================================
-
-// Allocates the next descriptor for `entry` and counts the open.
 const registerDescriptor = (
   state: State,
   entry: FileInode | DirectoryInode,
@@ -2302,7 +2155,6 @@ const applyCreatedFileMode = (state: State, inode: Inode, mode: number | undefin
   return mode === undefined ? state : setInode(state, { ...created, mode: FILE_TYPE_MODE | (mode & PERMISSION_MODE) });
 };
 
-// Creates the missing file `candidatePath` for an open with the create flag.
 const createOpenedFile = Effect.fnUntraced(function* (
   state: State,
   candidatePath: string,
@@ -2319,8 +2171,6 @@ const createOpenedFile = Effect.fnUntraced(function* (
 const nonEmptyLinkTarget = (entry: InodeEntry): string | undefined =>
   entry._tag === "SymbolicLink" && entry.target.length > 0 ? entry.target : undefined;
 
-// An existing entry that does not resolve: a creating open writes THROUGH a
-// dangling link (continuing at its target text); anything else fails.
 const openUnresolvedEntry = (
   link: ResolvedInode,
   failure: PlatformError,
@@ -2348,7 +2198,7 @@ const openExistingEntry = Effect.fnUntraced(function* (
     return yield* openUnresolvedEntry(link, resolved.failure, path, mode);
   }
   const entry = resolved.success.entry;
-  // Only a plain read-only open succeeds on a directory, as on Linux; any write or create flag is EISDIR.
+  // decision: errno-modelled-on-linux-node-adapter
   if (entry._tag === "Directory" && !mode.writable && !mode.create) {
     return [state, entry] as const;
   }
@@ -2358,7 +2208,6 @@ const openExistingEntry = Effect.fnUntraced(function* (
   return yield* truncateOnOpen(state, entry, mode.truncate);
 });
 
-// One hop of an open: the opened state and file, or the next candidate path.
 const openStep = Effect.fnUntraced(function* (
   state: State,
   candidatePath: string,
@@ -2608,10 +2457,6 @@ const writeDescriptor: {
     )
 );
 
-// =============================================================================
-// file handles
-// =============================================================================
-
 class MemoryFile implements FileSystem.File {
   readonly [FileSystem.FileTypeId]: typeof FileSystem.FileTypeId = FileSystem.FileTypeId;
   readonly fd: FileDescriptor;
@@ -2713,21 +2558,12 @@ const open = (volume: Volume) => (path: string, options?: OpenOptions) =>
     Effect.map((fd) => new MemoryFile(volume, fd))
   );
 
-// =============================================================================
-// filesystem operations
-// =============================================================================
-
-// NOTE: Permission bits are metadata only until the adapter models a virtual process
-// identity, so `access` deliberately checks existence rather than permissions.
 const access = (volume: Volume) =>
   Effect.fnUntraced(function* (path: string) {
     yield* volume.withState((state) => Effect.asVoid(resolve(state, path, { method: "access" })));
   });
 
-// PORT NOTE: iterative frame stack where upstream recursed, preserving the
-// pre-order, per-directory-sorted output order exactly. Shared by directory
-// listing and inspection snapshots: `visit` sees each entry below `directory`
-// with its joined path and answers whether a directory entry is descended.
+// beep: iterative frame stack where upstream recursed, keeping its pre-order, per-directory-sorted output order.
 const walkDirectory = (
   state: State,
   directory: DirectoryInode,
@@ -2753,7 +2589,7 @@ const walkDirectory = (
     const name = O.getOrThrow(A.get(frame.names, frame.index));
     frame.index += 1;
     const path = join(frame.prefix, name);
-    // KIT EXTENSION (case folding): `name` is a stored key; exact hit.
+    // decision: case-folding-in-lookup-entry
     const inode = O.getOrThrow(HashMap.get(frame.directory.entries, name));
     const entry = O.getOrThrow(HashMap.get(state.inodes, inode));
     if (visit(path, entry) && entry._tag === "Directory") {
@@ -2801,9 +2637,6 @@ const readDirectory = (volume: Volume) =>
     );
   });
 
-// One level of `readDirectory` with each entry's own type (a symbolic link
-// reports `SymbolicLink`, never its target's type), as node's
-// `readdir(path, { withFileTypes: true })` does.
 const readDirectoryEntries = (volume: Volume) =>
   Effect.fnUntraced(function* (path: string) {
     return yield* volume.mutate(
@@ -2837,8 +2670,6 @@ const readFile = (volume: Volume) =>
     );
   });
 
-// A new file is a Create; an existing one is an Update only when the write
-// changed it (truncated or wrote bytes).
 const writeFileEventTag = (existed: boolean, truncate: boolean, written: number): "Create" | "Update" | undefined => {
   if (!existed) return "Create";
   return truncate || written > 0 ? "Update" : undefined;
@@ -2871,8 +2702,6 @@ const writeFile =
       )
       .pipe(Effect.mapError(withOperationError("writeFile", path)));
 
-// node validates the length as an integer, then clamps a negative one to 0
-// (`truncate(path, -1)` empties the file rather than failing).
 const validateSize: {
   (method: string, size: number | undefined): Effect.Effect<number, PlatformError>;
   (size: number | undefined): (method: string) => Effect.Effect<number, PlatformError>;
@@ -2925,8 +2754,6 @@ const stat = (volume: Volume) =>
     );
   });
 
-// `lstat` resolves every intermediate link but reports a final symbolic link
-// as itself (type `SymbolicLink`, the link's own size and times).
 const lstat = (volume: Volume) =>
   Effect.fnUntraced(function* (path: string) {
     return yield* volume.withState((state) =>
@@ -3014,10 +2841,6 @@ const utimes = (volume: Volume) =>
     );
   });
 
-// =============================================================================
-// temporary resources
-// =============================================================================
-
 const validateTemporaryFragment: {
   (method: string, name: string, value: string): Effect.Effect<void, PlatformError>;
   (name: string, value: string): (method: string) => Effect.Effect<void, PlatformError>;
@@ -3059,7 +2882,7 @@ const allocateTempDirectory: {
       nextState = allocatedState;
       const name = `${prefix}${token}`;
       const currentParent = yield* getDirectory(nextState, parent.inode, method, parentPath);
-      // KIT EXTENSION (case folding)
+      // decision: case-folding-in-lookup-entry
       if (findEntry(nextState, currentParent, name) !== undefined) continue;
       const [createdState, inode] = yield* createDirectory(nextState);
       nextState = createdState;
@@ -3075,7 +2898,6 @@ const allocateTempDirectory: {
   })
 );
 
-// The upstream option bags, named once for every temporary-resource signature.
 type TempDirectoryOptions = NonNullable<Parameters<FileSystem.FileSystem["makeTempDirectory"]>[0]>;
 type TempFileOptions = NonNullable<Parameters<FileSystem.FileSystem["makeTempFile"]>[0]>;
 
@@ -3145,10 +2967,6 @@ const makeTempFileScoped = (volume: Volume) => (options?: TempFileOptions) =>
     const directory = Str.slice(0, separator)(path);
     return Effect.orDie(remove(volume)(directory, { recursive: true, force: true }));
   });
-
-// =============================================================================
-// globbing
-// =============================================================================
 
 const MAX_BRACE_EXPANSIONS = 256;
 
@@ -3220,15 +3038,12 @@ type GlobCharacterClassAtom = typeof GlobCharacterClassAtom.Type;
 
 const globSyntaxCharacters: HashSet.HashSet<string> = HashSet.make("*", "?", "[", "]", "{", "}", ",", "\\");
 
-// The mutable state of one brace-group scan.
 interface BraceGroupScan {
   characterClass: boolean;
   readonly commas: Array<number>;
   depth: number;
 }
 
-// Applies one structural character outside a character class; answers `true`
-// when it closes the group.
 const scanBraceStructure = (scan: BraceGroupScan, character: string, offset: number): boolean => {
   if (character === "{") {
     scan.depth += 1;
@@ -3242,7 +3057,6 @@ const scanBraceStructure = (scan: BraceGroupScan, character: string, offset: num
   return false;
 };
 
-// Applies one unescaped character; answers `true` when it closes the group.
 const scanBraceCharacter = (scan: BraceGroupScan, character: string, offset: number): boolean => {
   if (character === "[") {
     scan.characterClass = true;
@@ -3255,8 +3069,6 @@ const scanBraceCharacter = (scan: BraceGroupScan, character: string, offset: num
   return !scan.characterClass && scanBraceStructure(scan, character, offset);
 };
 
-// Scans the group opened at `start`: its closing offset and top-level comma
-// offsets, or `undefined` when the group never closes.
 const scanBraceGroup = (pattern: string, start: number): readonly [number, ReadonlyArray<number>] | undefined => {
   const scan: BraceGroupScan = { depth: 1, characterClass: false, commas: [] };
   for (let end = start + 1; end < pattern.length; end++) {
@@ -3270,7 +3082,6 @@ const scanBraceGroup = (pattern: string, start: number): readonly [number, Reado
   return undefined;
 };
 
-// The offset of the next unescaped "{" at or after `from`, or -1.
 const nextBraceOpen = (pattern: string, from: number): number => {
   for (let index = from; index < pattern.length; index++) {
     const character = Str.slice(index, index + 1)(pattern);
@@ -3298,8 +3109,6 @@ const braceAlternatives = (
   return { start, end, alternatives };
 };
 
-// A closed group with commas expands; a comma-free group expands the first
-// expandable group nested inside it, if any.
 const expansionOfBraceGroup = (
   pattern: string,
   start: number,
@@ -3325,7 +3134,6 @@ const findBraceExpansion = (pattern: string): BraceExpansion | undefined => {
   return undefined;
 };
 
-// The mutable state of the brace-nesting pre-scan.
 interface BraceNestingScan {
   characterClass: boolean;
   depth: number;
@@ -3351,11 +3159,8 @@ const trackBraceNesting = (scan: BraceNestingScan, character: string): void => {
   }
 };
 
-// PORT NOTE: a linear pre-scan bounds brace nesting at MAX_NESTING_DEPTH,
-// failing typed — upstream let `findBraceExpansion` recurse unbounded into
-// nested comma-free groups, so a deeply nested pattern was a stack-overflow
-// defect. Alternatives substitute substrings, so expansion never deepens
-// nesting and the one up-front scan bounds every later recursion.
+// beep: a linear pre-scan bounds brace nesting at MAX_NESTING_DEPTH, failing typed, where upstream's
+// beep: findBraceExpansion recursed unbounded; expansion never deepens nesting, so one up-front scan bounds it.
 const braceNestingDepth = (pattern: string): number => {
   const scan: BraceNestingScan = { depth: 0, maximum: 0, characterClass: false };
   for (let index = 0; index < pattern.length; index++) {
@@ -3398,13 +3203,11 @@ const expandBraces: {
   }
 });
 
-// The mutable state of one character-class scan.
 interface CharacterClassScan {
   readonly characters: Array<GlobCharacterClassAtom>;
   index: number;
 }
 
-// Reads one class atom at `scan.index`; an escape at the very end is an error.
 const readCharacterClassAtom = (
   method: string,
   segment: string,
@@ -3422,11 +3225,9 @@ const readCharacterClassAtom = (
   return undefined;
 };
 
-// A "]" closes the class only after at least one atom ("[]a]" holds "]").
 const closesCharacterClass = (segment: string, scan: CharacterClassScan): boolean =>
   segment[scan.index] === "]" && scan.characters.length > 0;
 
-// Reads the class atoms up to the closing "]", leaving `scan.index` on it.
 const scanCharacterClassAtoms = (
   method: string,
   segment: string,
@@ -3441,8 +3242,6 @@ const scanCharacterClassAtoms = (
     : undefined;
 };
 
-// The end of a range starting at `characterIndex` ("a-z"), if it starts one:
-// an unescaped "-" followed by anything but another "-".
 const characterClassRangeEnd = (
   characters: ReadonlyArray<GlobCharacterClassAtom>,
   characterIndex: number
@@ -3458,7 +3257,6 @@ const characterClassRangeEnd = (
     : undefined;
 };
 
-// Splits the atoms into literals and ascending ranges.
 const classifyCharacterClassAtoms = (
   method: string,
   characters: ReadonlyArray<GlobCharacterClassAtom>,
@@ -3513,8 +3311,6 @@ const parseCharacterClass: {
   }
 );
 
-// An escaped syntax character is a literal; any other escaped character keeps
-// its backslash literally and is then read again on its own.
 const readGlobEscape = (
   method: string,
   segment: string,
@@ -3529,14 +3325,12 @@ const readGlobEscape = (
     : Effect.succeed([GlobToken.cases.Literal.make({ value: "\\" }), index + 1] as const);
 };
 
-// "*" and "?" are wildcards; any other unescaped character is itself.
 const singleCharacterGlobToken = (character: string): GlobToken => {
   if (character === "*") return GlobToken.cases.Star.make({});
   if (character === "?") return GlobToken.cases.One.make({});
   return GlobToken.cases.Literal.make({ value: character });
 };
 
-// Reads the token at `index` and the offset after it.
 const readGlobToken = (
   method: string,
   segment: string,
@@ -3551,8 +3345,6 @@ const readGlobToken = (
 const characterClassIncludes = (token: GlobCharacterClass, candidate: string): boolean =>
   token.literals.includes(candidate) || A.some(token.ranges, ([start, end]) => start <= candidate && candidate <= end);
 
-// Whether a segment's first token can match a leading ".": a literal dot, or a
-// non-negated class that holds one.
 const tokenAdmitsLeadingDot = (token: GlobToken | undefined): boolean => {
   if (token?._tag === "Literal") return token.value === ".";
   if (token?._tag === "CharacterClass") return !token.negated && characterClassIncludes(token, ".");
@@ -3627,10 +3419,7 @@ const matchesCharacterClass = (token: GlobCharacterClass, value: string, fold: b
   return token.negated ? !matches : matches;
 };
 
-// KIT EXTENSION (case folding): `fold` matches
-// the way a case-insensitive regex does — a literal compares folded, and a
-// character class accepts the value in either case. Host-proven: node's
-// `fs.glob` on a folding volume matches `*.JSON` against a stored `docs.json`.
+// decision: case-folding-in-lookup-entry
 const matchesGlobToken: {
   (token: Exclude<GlobToken, GlobStar>, value: string, fold?: boolean): boolean;
   (value: string, fold?: boolean): (token: Exclude<GlobToken, GlobStar>) => boolean;
@@ -3646,7 +3435,6 @@ const matchesGlobToken: {
     )
 );
 
-// The backtracking state of one wildcard segment match.
 interface SegmentMatchCursor {
   patternIndex: number;
   starIndex: number;
@@ -3654,9 +3442,6 @@ interface SegmentMatchCursor {
   valueIndex: number;
 }
 
-// One step of the wildcard match: a star records a backtrack point, a matching
-// token advances both sides, and a mismatch retries from the last star with
-// one more character swallowed. Answers `false` when no backtrack point is left.
 const stepSegmentMatch = (pattern: GlobSegment, value: string, fold: boolean, cursor: SegmentMatchCursor): boolean => {
   const token = pattern.tokens[cursor.patternIndex];
   if (token?._tag === "Star") {
@@ -3680,7 +3465,6 @@ const stepSegmentMatch = (pattern: GlobSegment, value: string, fold: boolean, cu
   return true;
 };
 
-// KIT EXTENSION (case folding): `fold`, see matchesGlobToken.
 const matchesGlobSegment: {
   (pattern: GlobSegment, value: string, fold?: boolean): boolean;
   (value: string, fold?: boolean): (pattern: GlobSegment) => boolean;
@@ -3700,8 +3484,6 @@ const matchesGlobSegment: {
   }
 );
 
-// A globstar row: suffix `pathIndex` matches when the rest of the pattern
-// matches it, or when a non-dot component can be swallowed first.
 const globstarMatchRow = (path: ReadonlyArray<string>, next: ReadonlyArray<boolean>): Array<boolean> => {
   const current = A.makeBy(path.length + 1, () => false);
   for (let pathIndex = path.length; pathIndex >= 0; pathIndex--) {
@@ -3713,8 +3495,6 @@ const globstarMatchRow = (path: ReadonlyArray<string>, next: ReadonlyArray<boole
   return current;
 };
 
-// A segment row: suffix `pathIndex` matches when its first component matches
-// the segment and the rest of the pattern matches the remainder.
 const segmentMatchRow = (
   segment: GlobSegment,
   path: ReadonlyArray<string>,
@@ -3729,7 +3509,6 @@ const segmentMatchRow = (
   return current;
 };
 
-// KIT EXTENSION (case folding): `fold`, see matchesGlobToken.
 const matchesGlob: {
   (pattern: CompiledGlobPattern, path: ReadonlyArray<string>, directory: boolean, fold?: boolean): boolean;
   (path: ReadonlyArray<string>, directory: boolean, fold?: boolean): (pattern: CompiledGlobPattern) => boolean;
@@ -3746,7 +3525,6 @@ const matchesGlob: {
   }
 );
 
-// The shared state of one glob walk.
 interface GlobWalk {
   readonly excludes: ReadonlyArray<CompiledGlobPattern>;
   readonly fold: boolean;
@@ -3756,7 +3534,6 @@ interface GlobWalk {
   readonly state: State;
 }
 
-// An excluded entry is neither reported nor descended into.
 const visitGlobEntry = (
   walk: GlobWalk,
   directory: DirectoryInode,
@@ -3764,7 +3541,6 @@ const visitGlobEntry = (
   name: string
 ): void => {
   const path = [...parent, name];
-  // KIT EXTENSION (case folding): folded lookup.
   const inode = O.getOrThrow(HashMap.get(directory.entries, name));
   const entry = O.getOrThrow(HashMap.get(walk.state.inodes, inode));
   const isDirectory = entry._tag === "Directory";
@@ -3781,7 +3557,7 @@ const walkGlob = (
   includes: ReadonlyArray<CompiledGlobPattern>,
   excludes: ReadonlyArray<CompiledGlobPattern>
 ): Array<string> => {
-  // KIT EXTENSION (case folding)
+  // decision: case-folding-in-lookup-entry
   const fold = !state.caseSensitive;
   if (A.some(excludes, matchesGlob([], true, fold))) return [];
   const matches: Array<string> = A.some(includes, matchesGlob([], true, fold)) ? ["."] : [];
@@ -3809,10 +3585,7 @@ const glob = (volume: Volume) =>
     const rootPath = options?.root ?? "/";
     return yield* volume.withState(
       Effect.fnUntraced(function* (state) {
-        // KIT EXTENSION (errno fidelity): node's `fs.glob` answers an empty
-        // match set for a root that is missing, not a directory, or
-        // unresolvable — it never fails on the root. A malformed root (a NUL
-        // byte) is still a BadArgument.
+        // decision: errno-modelled-on-linux-node-adapter
         const root = yield* Effect.result(resolve(state, rootPath, { method: "glob" }));
         if (root._tag === "Failure") {
           if (root.failure.reason._tag === "BadArgument") return yield* root.failure;
@@ -3825,11 +3598,6 @@ const glob = (volume: Volume) =>
     );
   });
 
-// =============================================================================
-// volume
-// =============================================================================
-
-// KIT EXTENSION (case folding): the engine's build-time options.
 /**
  * Fixes the engine's path-matching policy when the volume is built.
  *
@@ -3931,10 +3699,6 @@ const makeVolume = Effect.fn("Volume.make")(function* (options: EngineOptions) {
   } satisfies Volume;
 });
 
-// =============================================================================
-// watching
-// =============================================================================
-
 const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptions) =>
   Stream.unwrap(
     Effect.map(
@@ -3977,13 +3741,6 @@ const watch = (volume: Volume) => (path: string, options?: FileSystem.WatchOptio
     )
   );
 
-// =============================================================================
-// exports
-// =============================================================================
-
-// `FileSystem.make` derives `glob` from `readDirectoryEntries`; the kit keeps
-// its own walker (case folding, root errno fidelity), so it replaces the
-// derived member after construction.
 const toFileSystem = (volume: Volume): FileSystem.FileSystem => ({
   ...FileSystem.make({
     access: access(volume),
@@ -4032,6 +3789,24 @@ const makeReadyVolume: (options: EngineOptions) => Effect.Effect<Volume> = Effec
  * The initial volume contains the root directory and `/tmp`. Each execution
  * creates independent state, file descriptors, and watch subscriptions.
  *
+ * **Gotchas**
+ *
+ * - Relative paths resolve from the virtual root `/`: `FileSystem` has no
+ *   `chdir` operation and no working-directory state.
+ * - Permission bits are metadata only, so `access` checks existence rather
+ *   than permissions until a virtual process identity is modelled.
+ * - A limit of the in-memory model itself (nesting depth, allocation,
+ *   position range) fails `BadResource` with no cause: the real platform
+ *   raises no errno for it.
+ * - `truncate` validates the length as an integer, then clamps a negative one
+ *   to 0, as node does: `truncate(path, -1)` empties the file.
+ * - A directory opens only read-only, as on Linux (to `fsync` it): `stat`
+ *   and `sync` on its descriptor read the inode. The access check runs
+ *   first, so a write on it fails `EBADF` and a truncate `EINVAL`; a data
+ *   operation that passes that check, such as a read, fails `EISDIR`.
+ * - `glob` is the engine's own walker (case folding, root errno fidelity); it
+ *   replaces the member `FileSystem.make` derives from `readDirectoryEntries`.
+ *
  * **Example** (Write and read text in a fresh file system)
  *
  * ```ts
@@ -4051,11 +3826,6 @@ export const make: Effect.Effect<FileSystem.FileSystem> = Effect.map(
   makeReadyVolume(defaultEngineOptions),
   toFileSystem
 );
-
-// Kit extension (volume inspection): a literal, synchronous walk of the tree
-// for test assertions. Symbolic links are reported as themselves (never
-// followed); hard links surface once per directory entry, each path carrying
-// the same underlying data reference.
 
 const SnapshotEntryType = LiteralKit(["File", "Directory", "SymbolicLink"]).pipe(
   $I.annoteSchema("SnapshotEntryType", { description: "The literal entry kind reported by volume inspection." })
@@ -4156,11 +3926,6 @@ const snapshotOf: {
 const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
   const output: Array<VolumeEntrySnapshot> = [];
   const root = O.getOrThrow(O.filter(HashMap.get(state.inodes, RootInode), InodeEntry.isAnyOf(["Directory"])));
-  // The root itself, which the walk below never reaches — it starts FROM the
-  // root and reports descendants. Emitting it lets the inspection view answer
-  // `has`/`isDirectory`/`mtime` for "/" from real state rather than a
-  // synthesized stand-in. `snapshot`/`paths` filter on `data`, so a directory
-  // entry does not disturb them.
   output.push(snapshotOf("/", root));
   walkDirectory(
     state,
@@ -4175,13 +3940,6 @@ const collectEntrySnapshots = (state: State): Array<VolumeEntrySnapshot> => {
   return output;
 };
 
-// KIT EXTENSION (inspection lookup): a literal, O(depth) lookup for the
-// inspection view, so a point query never walks the whole tree. Components
-// resolve through `lookupEntry` (so a case-insensitive volume folds for free)
-// and a symbolic link is NEVER followed — not even an
-// intermediate one: a component under a link is absent, which is the view's
-// literal contract. `components` is the already-normalized path split on "/",
-// "" segments removed.
 const lookupLiteral: {
   (state: State, components: ReadonlyArray<string>): InodeEntry | undefined;
   (components: ReadonlyArray<string>): (state: State) => InodeEntry | undefined;
@@ -4198,9 +3956,7 @@ const lookupLiteral: {
 
 const splitComponents = (path: string): ReadonlyArray<string> =>
   A.filter(Str.split("/")(path), (part) => part.length > 0);
-// END KIT EXTENSION (inspection lookup)
 
-// A member that is behavior: held by reference, recognized as a function.
 const declareFunction = <F>() => S.declare((u: unknown): u is F => P.isFunction(u));
 
 /**
@@ -4269,6 +4025,15 @@ export class InspectableFileSystem extends S.Opaque<InspectableFileSystem, { rea
  * state without acquiring the asynchronous mutation lock; each read sees one
  * consistent state. Lookup reports the supplied path, while directory listing
  * preserves stored spellings and sorts them in string order.
+ *
+ * **Gotchas**
+ *
+ * - State values are immutable and each transition replaces the reference
+ *   under the volume lock, so a synchronous read never sees a half-applied
+ *   transition.
+ * - `entries` includes the root `/` itself, which the tree walk never reaches,
+ *   so the view answers `has`, `isDirectory` and `mtime` for it from real
+ *   state; file-only queries filter on `data`, so it does not disturb them.
  *
  * **Example** (Inspect a file through case-insensitive lookup)
  *

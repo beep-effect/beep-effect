@@ -30,8 +30,8 @@ import { fleetStateDirectory, readOptionalFleetStateFile } from "../../Worktree/
 import { WorktreeCommandError } from "../../Worktree/Worktree.errors.ts";
 import { FleetHostRoot, FleetHostsDocument, FleetHostUnreachableReason } from "./FleetHosts.schemas.ts";
 import type * as FileSystem from "effect/FileSystem";
+import type { CheckoutRepository } from "../../../internal/state/WorkstationState.ts";
 import type { FleetHostEntry, FleetHostRoute } from "./FleetHosts.schemas.ts";
-import type { PrRepository } from "./Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FleetHostRead");
 
@@ -613,7 +613,7 @@ const decodeHostsDocument = S.decodeUnknownEffect(S.fromJsonString(FleetHostsDoc
  * @since 0.0.0
  */
 export const readConfiguredFleetHosts = Effect.fn("FleetHostRead.readConfigured")(function* (
-  repository: PrRepository
+  repository: CheckoutRepository
 ): Effect.fn.Return<O.Option<FleetHostsDocument>, WorktreeCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const directory = yield* fleetStateDirectory(repository);

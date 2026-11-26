@@ -748,7 +748,7 @@ Both fleets keep running throughout.
 (a) Confirm the live fleet is idle: one `aws ec2 describe-instances --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf Name=instance-state-name,Values=pending,running` returns none, and `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` / `beep-ovf-` runner.
 (b) Superseded 2026-11-25 by `2026-11-25-ci-runners-6b-delete-execute-api-hooks` (the CI goals driver ruled option B): hook 714397446 stays, the App webhook is set inactive and not moved, and only the two Pulumi repository webhooks are deleted. Follow that decision; the original text below is kept for the record. Move the App's webhook URL to the new function URL with `beep github app` (secret unchanged, step 2). Check: the App's recent deliveries show a 2xx from the new URL. Then delete the overlap repository webhook and the live overflow pool's repository webhook. Check: no repository or App webhook still targets an `execute-api` URL of the old controllers (`gh api repos/beep-effect/beep-effect/hooks` and the App's hook config list only the function URL), and the next deliveries leave no failed delivery to a dead URL. Rollback: follow the ordered procedure below ("If step 6b ran, restore the delivery paths in this order"). The overlap repository webhook comes back first, on the new fleet's function URL, and the App webhook moves back only after its 2xx.
 (c) Freeze lifted: the cost-controls component-removal PR has merged. Take a fresh export outside the repo, `pulumi stack export --stack production` to `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-<date>.json`, size and sha256 in a decision, with the program's commit sha; the passphrase only through `op run` from `op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE`. Older exports do not count.
-(d) Decide then, from a `pulumi preview --destroy`, between a whole-stack destroy (if only fleet, network, reaper, controller and AWS turbo-cache leftovers remain and the turbo cache has moved to the Worker) and a targeted destroy (`--target` per fleet URN, no `--target-dependents`) if anything else still lives in the stack. Record the choice and the preview's resource count in a decision, then destroy.
+(d) Decide then, from a `pulumi destroy --preview-only` (Pulumi 3.271 has no `preview --destroy`), between a whole-stack destroy (if only fleet, network, reaper, controller and AWS turbo-cache leftovers remain and the turbo cache has moved to the Worker) and a targeted destroy (`--target` per fleet URN, no `--target-dependents`) if anything else still lives in the stack. Record the choice and the preview's resource count in a decision, then destroy.
 (e) One PR deletes the program and its readers (inventory below): `infra/ci-runners/`, `infra/src/CiRunners.ts`, `CiFleetController.ts`, `CiRunnerPool.ts`, `CiShardOverflowPool.ts`, `infra/src/internal/ci-runners-entry.ts` and their tests, which also removes the duplicated post-install scripts.
 (f) The operator decides whether to delete the old SSM App parameters under `/github-action-runners/`, the key behind `alias/beep-ci-github-app` (schedule deletion, 30 days) and `beep-ci-fleet-boundary`.
 Rollback before (d), in order (amended 2026-11-18, #3386 review).
@@ -779,7 +779,7 @@ Rollback after (d). `pulumi stack import` of the archive restores state only, an
 | `.github/workflows/cache-warm.yml` | `runs-on: beep-ec2-heavy` | `beep-fleet-heavy` | — |
 | `.github/workflows/shard-overflow.yml` (called from `check.yml`) | `runs-on: beep-shard-overflow`; comment on the group | `beep-fleet-overflow`; comment | — |
 | `.github/workflows/check.yml` | comment naming the overflow label; `beep runners bake --check --manifest infra/ci-runners/runner-image.json` | comment | bake check reads the stack config instead (AMI item) |
-| `.github/workflows/fleet-shadow-check.yml` | `runs-on: beep-ec2-heavy`; reads SSM `/github-action-runners/app/<parameter>` to prove the runner cannot read App secrets | `beep-fleet-heavy` and `/beep-fleet/prod/app/<parameter>`, if kept | delete with the old fleet unless the denial proof is wanted for the new fleet (then keep it, repointed) |
+| the retired `fleet-shadow-check` workflow (deleted by P6, #3567) | `runs-on: beep-ec2-heavy`; reads SSM `/github-action-runners/app/<parameter>` to prove the runner cannot read App secrets | `beep-fleet-heavy` and `/beep-fleet/prod/app/<parameter>`, if kept | delete with the old fleet unless the denial proof is wanted for the new fleet (then keep it, repointed) |
 | `.github/workflows/fleet-lane-probe.yml` | default input `beep-ec2-heavy` (the shadow-fleet probe) | default `beep-fleet-heavy`, if kept | delete with the old fleet (it probed the live shadow pool) |
 | `.github/workflows/rerun-runner-loss.yml` | comment on `beep-ec2-heavy` Spot evictions | comment | — |
 | `packages/foundation/capability/config-file/test/fixtures/codec-corpus/yaml/fleet-lane-probe.yml` | a YAML fixture copy | none (fixture text) | keep, or drop with the probe |
@@ -2814,6 +2814,8 @@ Cutover step 6b (`2026-11-14-ci-runners-cutover-from-pulumi`, step 6 (b)) takes 
 
 **Why B.** The missed-event check reads repository hook deliveries with the fleet-watch App's `repository_hooks: read`. App webhook deliveries can be read only with the App's JWT. Moving delivery to the App (option A, the cutover decision's original step) would leave the check with no delivery evidence from T onward: its `MissedDelivery` and `Delivered` verdicts would end, and only `Gate` evidence would remain. B keeps them live. B also has fewer moving parts at T: no App URL change, no JWT, no overlap window. Repository and App webhooks use the same delivery machinery, and the fleet serves this one repository. Option C, keeping both paths onto the function URL, would deliver every event twice. The fleet's webhook path has no dedupe and its queued check is off in production, so C would need new dedupe code, and it was rejected. No code changes: the check's hook timeline keeps naming repository hook 714397446, and `ci shard-overflow-preflight` keeps requiring a live repository hook to the function URL.
 
+**Correction, 2026-11-26.** The settings-page read relayed on 2026-11-25 was wrong about the URL: the `beep-ci-fleet-controller` webhook URL is a GitHub pull request link, not the Pulumi fleet's `execute-api`. The App webhook was therefore not a live fleet delivery path at T, and setting it inactive (2026-11-26T03:38:19Z) was housekeeping. Step 6b's delivery change was exactly the two repository webhook deletions, and its proof rests on 714397446 alone: the hook list showed only 714397446, its deliveries after T were all 2xx, and Heavy / Doctest started on a `beep-fleet-heavy-i` runner at 03:45:00Z. Whether the App itself is retired, with its URL left as it is, is the cutover's step 6 (f) choice. The original paragraph is kept below for the record.
+
 **The App webhook.** The runner App's settings page was read on 2026-11-25 at about 21:45Z, with the operator's sudo-mode access. The `beep-ci-fleet-controller` webhook is active, its URL host is the Pulumi fleet's `execute-api`, "Workflow job" is ticked under Subscribe to events, and "Workflow run" is not. The driver ruled at 21:40Z that at T, in the same step as the hook deletions, the operator sets this webhook inactive by unticking Active on the settings page. Deactivating it stops its deliveries and leaves the App's API use (installation tokens, JIT runner configs) unchanged. Re-ticking Active reverses it. The webhook is never pointed at the function URL. `beep github app` only mints an App, so the change goes through the settings page.
 
 **Preconditions at T.**
@@ -2833,11 +2835,11 @@ Cutover step 6b (`2026-11-14-ci-runners-cutover-from-pulumi`, step 6 (b)) takes 
 - The App's settings page shows its webhook inactive.
 - Delivery on 714397446 for a fleet job queued after T: the hook's recent deliveries show a 2xx `queued` delivery whose payload names that job. If a job stays queued for five minutes or more, the next missed-event check prints `delivery <id> (2xx)` for it; a run with no such job prints no delivery line, so the hook's delivery list is the proof.
 
-**Rollback.** Before the Pulumi destroy (step 6 (d)): re-create the deleted hooks from the configuration captured at T, with the same secrets, and tick Active on the App webhook again. After the destroy the recorded `execute-api` URLs no longer reach anything: follow the cutover decision's "Rollback after (d)" (restore the stack from the archived export, read the recreated `controllerWebhook` and `shardOverflowWebhook` outputs), then re-create the hooks on those fresh URLs and re-activate the App webhook on `controllerWebhook`.
+**Rollback** (revised 2026-11-26). Re-create hooks 663255260 and 711445970 from the configurations captured before their deletion (URL, events, content type, active), with each secret from its store. Re-ticking the App webhook is not part of the rollback; anyone who re-enables it sets a real URL first or leaves it off. After the Pulumi destroy (step 6 (d), 2026-11-26) the recorded `execute-api` URLs no longer reach anything: follow the cutover decision's "Rollback after (d)" (restore the stack from the archived export, read the recreated `controllerWebhook` and `shardOverflowWebhook` outputs), then re-create the hooks on those fresh URLs.
 
 Lane feat/ci-runners-6b-webhook-switch
 
-Reverse: Re-create repository webhooks 663255260 and 711445970 on the Pulumi controllers' recorded execute-api URLs with their events and secrets, and restore the App webhook's workflow_job delivery if step 6b stopped it.
+Reverse: Re-create repository webhooks 663255260 and 711445970 from the configurations captured before their deletion, with each secret from its store. The App webhook is not part of the rollback.
 
 ### AI metrics Phoenix runs without a Docker healthcheck; the Health step probes /healthz, 2026-11-26
 
@@ -2873,6 +2875,60 @@ Rollback for the prod cutover (also in the runbook):
 Lane fix/infra-hosts-phoenix-health-gate
 
 Reverse: Restore a Docker healthcheck on the Phoenix container once the Docker provider can set the exec form or the image ships a shell; the Health step keeps its probe either way.
+
+### Step 6 (d) destroyed the whole Pulumi ci-runners stack; P6 retires the AWS cache's credentials, 2026-11-26
+
+Cutover step 6 (d) (`2026-11-14-ci-runners-cutover-from-pulumi`) asks for a choice, made from a destroy preview, between a whole-stack and a targeted destroy, with the preview's count on record. This file is that record, plus the receipt and what P6 retires around it.
+
+**Choice: whole stack.** `pulumi destroy --preview-only --stack production` from a checkout at `dd10bba55d35` listed 353 resources to delete. Only the fleet, its network, reaper and controllers, and the AWS turbo-cache leftovers (`CiTurboCache`) remained, and the Turbo cache had moved to the Worker (`@beep/infra-turbo-cache`, stage 2). The CI goals driver ruled "GO, whole stack, including CiTurboCache" on 2026-11-26 at 04:05Z. The program and its state readers were deleted by this PR, so the destroy ran from that pinned checkout and not from this branch.
+
+**Receipt.** The state export was taken at 04:00:21Z, outside the repo (354 resources, step 6 (c)).
+
+- Run 1, 04:04:46–04:12:07Z: 347 deleted and 2 errored. The AWS cache's artifact bucket refused deletion with `BucketNotEmpty`: it held 6111 Turbo artifacts (about 245 MB), the newest written 2026-11-09. Versioning had never been enabled, and nothing in `.github` read the bucket, `vars.TURBO_API` or `secrets.TURBO_READ_TOKEN`. The run stopped there, as the driver's word required.
+- The driver ruled at 04:57Z to empty the bucket and re-run the same destroy. The other option, `pulumi state delete` on the bucket, was rejected because it would leave an orphan bucket outside any IaC.
+- 04:57Z: a key manifest (key, size and modification time only, no contents) was written outside the repo, and the bucket was emptied. It then listed 0 keys, 0 versions and 0 delete markers.
+- Run 2, 04:58:19–04:58:26Z: 6 deleted and 0 errored.
+- Across both runs, 353 were deleted, matching the preview. `pulumi stack --show-urns` lists 0 resources and the bucket returns 404.
+- 04:58:47Z: no instance of the old fleet is in any state except terminated. Its VPC is gone. The only registered org runners are the new fleet's.
+- A `beep-fleet-*` runner picked up a Heavy job at 04:58:50Z.
+
+**Credentials P6 retires.** These belong to the destroyed AWS cache:
+
+- repository variables `TURBO_API` and `TURBO_TEAM`;
+- repository secrets `TURBO_READ_TOKEN` and `TURBO_TEAM`;
+- the `turbo-cache-write` environment's `TURBO_TOKEN`.
+
+They leave `@beep/infra-github`'s unmanaged lists and census fixture in this PR. The live objects are deleted, one name per command, right before the operator's hand merge, and a names-only list read follows. The `turbo-cache-write` environment stays, because it holds the Worker cache's `TURBO_CACHE_WRITE_TOKEN`. The two Pulumi repository webhooks, 663255260 and 711445970, were deleted at step 6 (b), so the webhook census keeps only 714397446. A workstation `.env` that still points `TURBO_API` at the AWS host only loses its remote cache reads.
+
+**After the merge.** `pulumi stack rm production` runs on its own word once nothing in the repository names the stack. Until then, the stack's history and config stay in the state backend beside the export. Step 6 (f), which covers the old SSM App parameters, the KMS key, the permissions boundary and whether to retire the `beep-ci-fleet-controller` App, takes the operator's word.
+
+**Reversal.** No reversal is needed for the credentials, which authenticated only against a cache that no longer exists. For the fleet, follow the cutover decision's "Rollback after (d)": restore the stack from the export at the pinned checkout, re-deploy it, and re-create the webhooks on its fresh URLs. The bucket's artifacts are rebuildable cache entries, and the manifest records which keys existed.
+
+Lane chore/infra-alchemy-p6-retire
+
+Reverse: Credentials: none needed, they served a destroyed cache. Fleet: the cutover decision's Rollback after (d), from the archived export at a checkout at or before dd10bba5.
+
+### The closeout rides the P6 Retire PR, 2026-11-26
+
+P7 and P8 need a final PR that carries the reflection and writes `closeout` naming itself. #3567 (P6 Retire) is that PR. It deletes the last repository surface the goal owns: `infra/`, the Pulumi catalog entries, the postinstall step and the destroyed AWS cache's credential census. Every phase's exit is met before it merges:
+
+- P4: AI metrics deploys through `@beep/infra-hosts` (#3560).
+- P5: the whole `beep-ci-runners` stack was destroyed and its export archived (`2026-11-26-ci-runners-6d-whole-stack-destroy`).
+- P6: `infra/` and Pulumi are gone with this PR.
+
+A separate closeout PR after #3567 would carry only these status edits. It would cost another review window and another merge in a window the CI goals driver keeps clear (the binary pin PR follows #3567 on 2026-11-27).
+
+**Steps after the merge.** They change no repository file, so they do not hold the closeout:
+
+1. Delete the five live credentials of the destroyed AWS cache right before the operator's hand merge, with a names-only list read. The repository side already left the census in this PR.
+2. Run `pulumi stack rm production` on its own word, once nothing in the repository names the stack.
+3. Make the cutover's step 6 (f) operator choices: the old SSM App parameters, the KMS key, the permissions boundary, and whether to retire the `beep-ci-fleet-controller` App.
+
+If a 6 (f) choice ever needs a repository change, it ships as its own small PR.
+
+Lane chore/infra-alchemy-p6-retire · PR #3567
+
+Reverse: Revert the closeout commit on main: goals set-status infra-alchemy-rebuild active, phases P6-P8 back to pending, and open a separate closeout PR.
 
 <!-- beep:decisions:end -->
 

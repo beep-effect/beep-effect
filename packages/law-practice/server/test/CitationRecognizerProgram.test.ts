@@ -21,9 +21,7 @@ import * as Str from "effect/String";
 import * as Socket from "effect/socket/Socket";
 
 const ioFailure = () => PlatformError.systemError({ module: "Stdio", method: "test", _tag: "Unknown" });
-const productionStdioProgramOverTestTransportLeavingRealProcessTestsSeparate = Effect.fnUntraced(function* (
-  maximum: number
-) {
+const fixture = Effect.fnUntraced(function* (maximum: number) {
   const requests = new TransformStream<Uint8Array, Uint8Array>();
   const responses = new TransformStream<string | Uint8Array, string | Uint8Array>();
   const diagnostic = yield* Deferred.make<string | Uint8Array>();
@@ -87,28 +85,29 @@ it.layer(Layer.empty, { excludeTestServices: true })("recognizer stdio boundary"
   );
   it.effect("runs actual recognition over supplied binary RPC and deterministic standard I/O", () =>
     Effect.gen(function* () {
-      const { client, program, writes } =
-        yield* productionStdioProgramOverTestTransportLeavingRealProcessTestsSeparate(262_144);
+      const { client, program, writes } = yield* fixture(262_144);
       const output = yield* client.Recognize({ source: "35 U.S.C. 101", sourceUtf16: 1000, candidates: 10 });
       expect(output.tokens).toHaveLength(1);
       expect(A.getUnsafe(output.tokens, 0)).toMatchObject({ type: "statute", title: 35, section: "101" });
       const count = yield* Ref.get(writes);
-      expect(count).toBeGreaterThan(0);
+      expect(
+        count,
+        "the production stdio program runs over test transport; real process tests stay separate"
+      ).toBeGreaterThan(0);
       yield* Fiber.interrupt(program);
     })
   );
   it.effect("refuses an amplified encoded reply before stdout and emits only the fixed diagnostic", () =>
     Effect.gen(function* () {
       const source = `${Str.repeat(50)("Alpha ")}v. Beta, 123 U.S. 100 (1900).`;
-      const probe = yield* productionStdioProgramOverTestTransportLeavingRealProcessTestsSeparate(262_144);
+      const probe = yield* fixture(262_144);
       const observed = yield* probe.client.Recognize({ source, sourceUtf16: 1000, candidates: 10 });
       expect(observed.tokens).toHaveLength(1);
       const requestBytes = yield* Ref.get(probe.requestMaximum);
       const responseBytes = yield* Ref.get(probe.responseMaximum);
       expect(responseBytes).toBeGreaterThan(requestBytes);
       yield* Fiber.interrupt(probe.program);
-      const { client, program, diagnostic, writes } =
-        yield* productionStdioProgramOverTestTransportLeavingRealProcessTestsSeparate(requestBytes);
+      const { client, program, diagnostic, writes } = yield* fixture(requestBytes);
       const pending = yield* client
         .Recognize({ source, sourceUtf16: 1000, candidates: 10 })
         .pipe(Effect.exit, Effect.forkChild);

@@ -59,17 +59,19 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-t
       Effect.gen(function* () {
         const { configuration, corpus, make, limits } = yield* install();
         const longestRawPinPattern = configuration.pin.pattern;
-        const oneUnitOverLongestRawPinBecauseEitherWrapAddsFive =
-          longestRawPinPattern.bytes.length / longestRawPinPattern.width + 1;
+        const pinHeadroomUtf16 = longestRawPinPattern.bytes.length / longestRawPinPattern.width + 1;
         const stage = yield* make(configuration, {
           ...limits,
-          patternUtf16: oneUnitOverLongestRawPinBecauseEitherWrapAddsFive,
+          patternUtf16: pinHeadroomUtf16,
         });
         const row = (kind: string) =>
           Effect.fromOption(A.findFirst(corpus.cases, (row) => row.expected.kind === kind && row.markup === null));
         const section = yield* row("UnknownCitation");
         const unknown = yield* stage.extract({ ...section, geometry: O.none() });
-        expect(unknown.outcome._tag).toBe("UnknownCitation");
+        expect(
+          unknown.outcome._tag,
+          "one unit over the longest raw pin pattern passes installation; either context wrap adds five units"
+        ).toBe("UnknownCitation");
         const id = yield* row("IdCitation");
         yield* refuses(stage.extract({ ...id, geometry: O.none() }), {
           _tag: "CitationSafetyLimitExceeded",

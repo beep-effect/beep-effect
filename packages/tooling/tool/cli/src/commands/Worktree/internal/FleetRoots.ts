@@ -24,12 +24,16 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { resolveWorkstationStateDir } from "../../../internal/state/WorkstationState.ts";
+import {
+  checkoutRepositoryFromRemoteUrl,
+  checkoutRepositoryStateKey,
+  resolveWorkstationStateDir,
+} from "../../../internal/state/WorkstationState.ts";
 import { canonicalRepositoryIdentity } from "../../Yeet/internal/ArtifactPaths.ts";
-import { PrRepository } from "../../Yeet/internal/Provenance.ts";
 import { WorktreeCommandError } from "../Worktree.errors.ts";
 import { ConfiguredFleetRoots, FleetRootEntry, FleetRootsDocument } from "./FleetRoots.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";
+import type { CheckoutRepository, CheckoutRepositoryKey } from "../../../internal/state/WorkstationState.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/FleetRoots");
 
@@ -112,8 +116,7 @@ export const parseFleetRootsPathList = (
  * @category formatting
  * @since 0.0.0
  */
-export const fleetRepositoryKey = (repository: PrRepository): string =>
-  `${repository.host}__${repository.owner}__${repository.name}`;
+export const fleetRepositoryKey: (repository: CheckoutRepositoryKey) => string = checkoutRepositoryStateKey;
 
 /**
  * Resolve `<state>/beep/fleet/<repo-key>`, honoring `BEEP_FLEET_STATE_ROOT`.
@@ -133,7 +136,9 @@ export const fleetRepositoryKey = (repository: PrRepository): string =>
  * @category utilities
  * @since 0.0.0
  */
-export const fleetStateDirectory = Effect.fn("FleetRoots.stateDirectory")(function* (repository: PrRepository) {
+export const fleetStateDirectory = Effect.fn("FleetRoots.stateDirectory")(function* (
+  repository: CheckoutRepositoryKey
+) {
   const root = yield* resolveWorkstationStateDir({ override: FLEET_STATE_ROOT_ENV, store: "fleet" }).pipe(
     Effect.mapError(WorktreeCommandError.new("Failed to resolve the fleet state directory."))
   );
@@ -172,7 +177,7 @@ export const readOptionalFleetStateFile = Effect.fn("FleetRoots.readOptionalStat
   );
 });
 
-const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: PrRepository) {
+const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: CheckoutRepository) {
   const path = yield* Path.Path;
   const directory = yield* fleetStateDirectory(repository);
   const file = path.join(directory, "roots.json");
@@ -212,7 +217,7 @@ const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: Pr
  * @since 0.0.0
  */
 export const readConfiguredFleetRoots = Effect.fn("FleetRoots.readConfigured")(function* (
-  repository: O.Option<PrRepository>
+  repository: O.Option<CheckoutRepository>
 ): Effect.fn.Return<O.Option<ConfiguredFleetRoots>, WorktreeCommandError, FileSystem.FileSystem | Path.Path> {
   const fromEnv = yield* Config.option(Config.String(FLEET_ROOTS_ENV)).pipe(
     Effect.mapError(WorktreeCommandError.new(`Failed to read ${FLEET_ROOTS_ENV}.`))
@@ -227,8 +232,6 @@ export const readConfiguredFleetRoots = Effect.fn("FleetRoots.readConfigured")(f
   return O.isSome(repository) ? yield* readRootsFile(repository.value) : O.none();
 });
 
-const decodeRepository = S.decodeUnknownOption(PrRepository);
-const GITHUB_REPOSITORY = /github\.com[/:]([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/u;
 // The `[remote "origin"]` section body runs to the next `[` section header or the end of the text.
 const ORIGIN_SECTION = /^\s*\[\s*remote\s+"origin"\s*\]\s*$([^[]*)/mu;
 const URL_ENTRY = /^\s*url\s*=\s*(.+?)\s*$/mu;
@@ -257,33 +260,6 @@ export const originUrlFromGitConfig = (config: string): O.Option<string> =>
     O.flatMap((section) => O.fromUndefinedOr(section[1])),
     O.flatMap(Str.match(URL_ENTRY)),
     O.flatMap((entry) => O.fromUndefinedOr(entry[1]))
-  );
-
-/**
- * Parse a github.com remote into the repository identity that keys fleet state.
- *
- * **Example** (SCP and HTTPS spellings key the same fleet)
- *
- * ```ts
- * import { fleetRepositoryFromOriginUrl } from "@beep/repo-cli/test/Worktree"
- * import * as O from "effect/Option"
- *
- * console.log(O.getOrNull(fleetRepositoryFromOriginUrl("https://github.com/Beep-Effect/beep-effect.git"))?.owner)
- * // "beep-effect"
- * ```
- *
- * @param url - A remote URL.
- * @returns The lowercased github.com identity, or `O.none()` for any other remote.
- * @category parsing
- * @since 0.0.0
- */
-export const fleetRepositoryFromOriginUrl = (url: string): O.Option<PrRepository> =>
-  pipe(
-    Str.match(GITHUB_REPOSITORY)(Str.trim(url)),
-    O.flatMap((match) => O.all({ owner: O.fromUndefinedOr(match[1]), name: O.fromUndefinedOr(match[2]) })),
-    O.flatMap(({ owner, name }) =>
-      decodeRepository({ host: "github.com", owner: Str.toLowerCase(owner), name: Str.toLowerCase(name) })
-    )
   );
 
 /**
@@ -380,7 +356,7 @@ export const readCloneFleetOrigin = Effect.fn("FleetRoots.readCloneOrigin")(func
  */
 export const readCloneFleetRepository = Effect.fn("FleetRoots.readCloneRepository")(function* (clone: string) {
   const url = yield* readCloneOriginUrl(clone);
-  return O.flatMap(url, fleetRepositoryFromOriginUrl);
+  return O.flatMap(url, checkoutRepositoryFromRemoteUrl);
 });
 
 const GIT_METADATA_NAME = ".git";
@@ -460,7 +436,7 @@ export const readCheckoutClone = Effect.fn("FleetRoots.readCheckoutClone")((chec
  *
  * The strict form of {@link readCheckoutClone} then {@link readCloneFleetRepository}:
  * a missing `.git` or `.git/config`, or a path that crosses a file, means no
- * repository (`O.none()`), as does an origin that names no GitHub repository.
+ * repository (`O.none()`), as does an origin that names no repository.
  * Any other read failure, such as a permission denial, fails, so a caller that
  * must not lose data can tell "no repository" from "could not tell".
  *
@@ -480,10 +456,10 @@ export const readCheckoutClone = Effect.fn("FleetRoots.readCheckoutClone")((chec
  */
 export const readCheckoutFleetRepository = Effect.fn("FleetRoots.readCheckoutRepository")(function* (
   checkout: string
-): Effect.fn.Return<O.Option<PrRepository>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<CheckoutRepository>, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
   const clone = yield* resolveCheckoutClone(checkout);
   const url = yield* readCloneOriginUrlStrict(O.getOrElse(clone, () => checkout));
-  return O.flatMap(url, fleetRepositoryFromOriginUrl);
+  return O.flatMap(url, checkoutRepositoryFromRemoteUrl);
 });
 
 /**
@@ -499,7 +475,7 @@ export interface FleetRootsStoreShape {
    * @since 0.0.0
    */
   readonly configured: (
-    repository: O.Option<PrRepository>
+    repository: O.Option<CheckoutRepository>
   ) => Effect.Effect<O.Option<ConfiguredFleetRoots>, WorktreeCommandError>;
 }
 

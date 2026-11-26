@@ -38,16 +38,17 @@ describe("stringify scalability", () => {
             },
           })
       );
-      // `make` copies its input (D-22) and would drop the read-counting
-      // proxies, so the tree is assembled the way the parser assembles it
-      // (D-39) and the serializer reads the proxies themselves.
       const paragraph = trustedNode<Paragraph>({ type: "paragraph", children, position: Position.synthetic });
       const before = paragraph.children;
       const root = trustedNode<Root>({ type: "root", children: [paragraph], position: Position.synthetic });
       reads = 0;
       assert.strictEqual(Result.getOrThrow(Markdown.stringifyResult(root)), `${Str.repeat(size)("x")}\n`);
       assert.isAtMost(reads, size * 4);
-      assert.isAtLeast(reads, size);
+      assert.isAtLeast(
+        reads,
+        size,
+        "make copies its input and would drop the read-counting proxies, so the tree is assembled as the parser does it and the serializer reads the proxies themselves"
+      );
       assert.strictEqual(paragraph.children, before);
       assert.strictEqual(paragraph.children.length, size);
       for (let index = 0; index < size; index += 1) {
@@ -89,8 +90,6 @@ describe("inline emission scales linearly", () => {
       assert.isAbove(medium, small);
       assert.strictEqual(large - medium, 2 * (medium - small));
 
-      // The former implementation inspected the whole growing output per child.
-      // Send that same input shape through the same seam as a negative control.
       const quadraticWork = (reps: number): number => {
         work = 0;
         let output = "";
@@ -104,16 +103,16 @@ describe("inline emission scales linearly", () => {
       const badMedium = quadraticWork(200);
       const badLarge = quadraticWork(400);
       assert.isAbove(badSmall, 0);
-      assert.isAbove(badLarge - badMedium, 2 * (badMedium - badSmall));
+      assert.isAbove(
+        badLarge - badMedium,
+        2 * (badMedium - badSmall),
+        "negative control: the former shape, inspecting the whole growing output per child, must read as superlinear"
+      );
     })
   );
 });
 
 describe("compiled serializer dispatch", () => {
-  // The serializer's Match dispatchers are compiled once, at module load: a
-  // `Match.type` or `Match.value` built per node would rebuild a matcher on
-  // every child. Pinned on the module source — every `Match.type` is the
-  // initializer of a module-level constant, and no `Match.value` exists.
   const source = O.getOrThrow(
     R.get(
       import.meta.glob<string>("../src/internal/stringify.ts", { query: "?raw", import: "default", eager: true }),
@@ -125,8 +124,12 @@ describe("compiled serializer dispatch", () => {
     const built = A.length(A.fromIterable(Str.matchAll(/Match\.type</g)(source)));
     const moduleLevel = A.length(A.fromIterable(Str.matchAll(/^const \w+ = Match\.type</gm)(source)));
     assert.isAtLeast(built, 3);
-    assert.strictEqual(moduleLevel, built);
-    assert.isFalse(Str.includes("Match.value(")(source));
+    assert.strictEqual(
+      moduleLevel,
+      built,
+      "every Match.type initializes a module-level constant: one built per node would rebuild a matcher on every child"
+    );
+    assert.isFalse(Str.includes("Match.value(")(source), "no Match.value exists: it would build a matcher per node");
   });
 
   it("serializes 10000 inline-code siblings through the compiled dispatch", () => {

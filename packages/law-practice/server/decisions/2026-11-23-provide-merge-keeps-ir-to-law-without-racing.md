@@ -3,7 +3,7 @@ title: Provide-merge keeps IrToLaw in the review-loop output without a sibling r
 date: 2026-11-23
 reversal: Satisfy IrToLaw with Layer.mergeAll beside the review loop instead of Layer.provideMerge.
 governs:
-  - src/Layer.ts#reviewLoopWithIrToLawProvidedAndKeptInOutput
+  - src/Layer.ts#reviewLoopWithIrToLaw
   - src/Layer.ts#LawPracticeServerLive
 enforcedBy: []
 ---

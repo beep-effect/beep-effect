@@ -1,21 +1,4 @@
-// `YamlFormat.modify` under a `%YAML 1.1` directive against the `yaml`
-// devDependency's YAML 1.1 reader.
-//
-// The kit composes and writes YAML 1.2, so a fresh plain string such as
-// `on`, `yes`, `0777` or `1:30` is safe in a 1.2 document but reads back as a
-// boolean, an int or a sexagesimal number under 1.1. Under a `%YAML 1.1`
-// directive `modify` quotes every fresh string the 1.1 schema would coerce,
-// on the splice and the whole-document path, values and inserted keys alike.
-// The oracle is `yaml`'s `parse` with `version: "1.1"` (its yaml-1.1 schema:
-// bool, null, binary/octal/decimal/hex/sexagesimal int, float, sexagesimal
-// float, `.inf`/`.nan`, timestamp and the `<<` merge key): every string the
-// kit writes must read back as that same string.
-//
-// The kit's 1.1 patterns are the union of the spec and lenient resolvers
-// (js-yaml's `0o` octals and dotless exponents among them), so it may quote a
-// string the oracle would read as a string; over-quoting reads back the same
-// string and is the safe direction, so only string identity is asserted.
-
+// decision: yaml-1-1-compat-quotes-the-union
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { YamlStringifyOptions } from "@beep/yaml";
 import { YamlFormat } from "@beep/yaml/YamlFormat";
@@ -33,7 +16,6 @@ const runs = { arbitrary: fcRuns(500) };
 
 const read11 = (text: string): unknown => parse(text, { version: "1.1" });
 
-// The characters the YAML 1.1 implicit resolvers key on.
 const ResolverChar = S.Literals([
   "0",
   "1",
@@ -63,11 +45,9 @@ const ResolverChar = S.Literals([
   "u",
   "~",
   "<",
-]);
+]).annotate({ description: "The characters the YAML 1.1 implicit resolvers key on." });
 const Chars = S.Array(ResolverChar).check(S.isMinLength(1), S.isMaxLength(6));
 
-// Every spelling the 1.1 schema resolves to a non-string that the 1.2 Core
-// Schema leaves a string, plus the shared nulls and booleans.
 const SPELLINGS: ReadonlyArray<string> = [
   "y",
   "Y",
@@ -157,18 +137,24 @@ const roundTrips = Effect.fnUntraced(function* (value: string, options?: YamlStr
   for (const edit of EDITS) {
     const written = yield* YamlFormat.modifyToString(edit.text, edit.path(value), value, options);
     const read = edit.read(read11(written));
-    deepStrictEqual(edit.name === "insert a key" ? read : [read], [value]);
+    deepStrictEqual(
+      edit.name === "insert a key" ? read : [read],
+      [value],
+      `${edit.name}: under a %YAML 1.1 directive modify quotes every fresh string the 1.1 schema would coerce (bool, null, binary/octal/decimal/hex/sexagesimal int, float, sexagesimal float, .inf/.nan, timestamp, the << merge key), so yaml's 1.1 parse reads back that same string; over-quoting is the safe direction, so only string identity is asserted`
+    );
   }
 });
 
 describe("YamlFormat.modify under %YAML 1.1", () => {
-  it.effect("writes every 1.1-coerced spelling so a 1.1 reader reads the string back", () =>
-    Effect.gen(function* () {
-      for (const value of SPELLINGS) {
-        yield* roundTrips(value);
-        yield* roundTrips(value, YamlStringifyOptions.make({ quoteStyle: "auto" }));
-      }
-    })
+  it.effect(
+    "writes every spelling 1.1 coerces where 1.2 Core keeps a string, plus shared nulls and booleans, as a string",
+    () =>
+      Effect.gen(function* () {
+        for (const value of SPELLINGS) {
+          yield* roundTrips(value);
+          yield* roundTrips(value, YamlStringifyOptions.make({ quoteStyle: "auto" }));
+        }
+      })
   );
 
   it.effect.prop(
@@ -182,9 +168,16 @@ describe("YamlFormat.modify under %YAML 1.1", () => {
     Effect.gen(function* () {
       for (const value of ["on", "yes", "0777", "1:30"]) {
         const inserted = yield* YamlFormat.modifyToString("%YAML 1.1\n---\na: on\n", ["b"], value);
-        strictEqual(inserted, `%YAML 1.1\n---\na: on\nb: '${value}'\n`);
-        // The source `a: on` keeps its bytes, and with them its 1.1 meaning.
-        deepStrictEqual(read11(inserted), { a: true, b: value });
+        strictEqual(
+          inserted,
+          `%YAML 1.1\n---\na: on\nb: '${value}'\n`,
+          "a fresh plain string such as on, yes, 0777 or 1:30 is safe in YAML 1.2 but reads back as a boolean, an int or a sexagesimal number under 1.1"
+        );
+        deepStrictEqual(
+          read11(inserted),
+          { a: true, b: value },
+          "the source `a: on` keeps its bytes, and with them its 1.1 meaning"
+        );
         const replaced = yield* YamlFormat.modifyToString("%YAML 1.1\n---\na: on\nb: x\n", ["b"], value);
         strictEqual(replaced, `%YAML 1.1\n---\na: on\nb: '${value}'\n`);
         deepStrictEqual(read11(replaced), { a: true, b: value });

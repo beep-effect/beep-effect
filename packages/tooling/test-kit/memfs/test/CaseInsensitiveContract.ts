@@ -1,9 +1,3 @@
-// The case-insensitive volume contract. It runs against the host filesystem
-// first (integration/case-insensitive.int.test.ts, on a case-folding volume
-// such as default APFS) so every expectation below is observed behaviour, not
-// assumed behaviour; the memory engine (CaseInsensitive.test.ts) must then
-// match it. Every case works under a scoped temp directory.
-
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -12,16 +6,12 @@ import type { Vitest } from "@effect/vitest";
 import type * as Layer from "effect/Layer";
 import type * as PlatformError from "effect/PlatformError";
 
-// The fixture several cases start from: a directory holding one file.
 const directoryWithFile = (fs: FileSystem.FileSystem, directory: string, file: string, content: string) =>
   Effect.andThen(fs.makeDirectory(directory), fs.writeFileString(`${directory}/${file}`, content));
 
-// The copy fixture: a source `a.txt` ("A") beside a target `b.txt` ("B").
 const sourceAndTarget = (fs: FileSystem.FileSystem, d: string) =>
   Effect.andThen(fs.writeFileString(`${d}/a.txt`, "A"), fs.writeFileString(`${d}/b.txt`, "B"));
 
-// `${d}/pkg/a.json` reached through a link at `${d}/links` to `target`:
-// `query` (relative to `d`) reads the file and realPaths to `resolved`.
 const linkedPackageResolves = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   d: string,
@@ -38,14 +28,8 @@ const linkedPackageResolves = Effect.fnUntraced(function* (
   assert.strictEqual(realPath2, `${realD}/${resolved}`);
 });
 
-// What a test body needs from vitest's context: a run-time skip, so a case
-// whose host precondition fails is reported skipped, never vacuously passed.
 type SkipContext = { readonly skip: (condition: boolean, note?: string) => void };
 
-// The contract's cases, registered into a harness that already serves
-// `FileSystem.FileSystem`. `foldsCase` is checked before every case: the memory
-// engine built case-insensitive always folds (`Effect.succeed(true)`); a host
-// volume may not, and then every case skips.
 type Harness = Vitest.MethodsNonLive<FileSystem.FileSystem>;
 type FoldsCase = Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem>;
 
@@ -57,7 +41,7 @@ export const caseInsensitiveCases: {
     ctx: SkipContext,
     body: (fs: FileSystem.FileSystem, d: string) => Effect.Effect<A, E2>
   ) {
-    ctx.skip(!(yield* foldsCase), "the volume under test does not fold case");
+    ctx.skip(!(yield* foldsCase), "the volume under test does not fold case: skipped, never vacuously passed");
     const fs = yield* FileSystem.FileSystem;
     const d = yield* fs.makeTempDirectoryScoped();
     return yield* body(fs, d);
@@ -174,9 +158,6 @@ export const caseInsensitiveCases: {
     )
   );
 
-  // The oracle is Effect's node adapter, which wraps the JS `fs.realpath`:
-  // it resolves links but never canonicalizes case, so components keep the
-  // queried spelling and only a link's target text contributes its own.
   it.effect("realPath keeps the queried spelling and resolves links to their target text", (ctx) =>
     run(ctx, (fs, d) =>
       Effect.gen(function* () {
@@ -184,7 +165,11 @@ export const caseInsensitiveCases: {
         yield* directoryWithFile(fs, `${d}/Pkg`, "Main.ts", "");
         yield* fs.symlink(`${d}/Pkg`, `${d}/alias`);
         const realPath15 = yield* fs.realPath(`${d}/pkg/main.TS`);
-        assert.strictEqual(realPath15, `${realD}/pkg/main.TS`);
+        assert.strictEqual(
+          realPath15,
+          `${realD}/pkg/main.TS`,
+          "the node adapter wraps the JS fs.realpath, which resolves links but never canonicalizes case"
+        );
         const realPath16 = yield* fs.realPath(`${d}/ALIAS/main.TS`);
         assert.strictEqual(realPath16, `${realD}/Pkg/main.TS`);
       })
@@ -202,8 +187,7 @@ export const caseInsensitiveCases: {
     )
   );
 
-  it.effect("a link whose target text differs in case from the stored name resolves", (ctx) =>
-    // The link's target text supplies its spelling; the rest stays as queried.
+  it.effect("a link whose target text differs in case resolves to the target's spelling, the rest as queried", (ctx) =>
     run(ctx, (fs, d) => linkedPackageResolves(fs, d, `${d}/PKG`, "links/A.JSON", "PKG/A.JSON"))
   );
 
@@ -257,14 +241,16 @@ export const caseInsensitiveCases: {
     )
   );
 
-  // node's `fs.cp` unlinks a replaced destination and recreates it, so the
-  // requested (or source-child) spelling wins — unlike rename and copyFile.
   it.effect("copy with overwrite onto a folded-equal file takes the requested spelling", (ctx) =>
     run(ctx, (fs, d) =>
       Effect.gen(function* () {
         yield* sourceAndTarget(fs, d);
         yield* fs.copy(`${d}/a.txt`, `${d}/B.TXT`, { overwrite: true });
-        assert.deepStrictEqual([...(yield* fs.readDirectory(d))].sort(), ["B.TXT", "a.txt"]);
+        assert.deepStrictEqual(
+          [...(yield* fs.readDirectory(d))].sort(),
+          ["B.TXT", "a.txt"],
+          "fs.cp unlinks a replaced destination and recreates it, so the requested spelling wins, unlike rename and copyFile"
+        );
         const readFileString21 = yield* fs.readFileString(`${d}/b.txt`);
         assert.strictEqual(readFileString21, "A");
       })

@@ -469,7 +469,6 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow", (it) => {
       expect(selfHosted).toStrictEqual([
         "cache-warm.yml:warm:beep-fleet-heavy",
         "fleet-lane-probe.yml:lane-probe:${{ inputs.target_label }}",
-        "fleet-shadow-check.yml:shadow-probe:beep-fleet-heavy",
         "heavy.yml:verify:beep-fleet-heavy",
         "heavy.yml:check:beep-fleet-heavy",
         "heavy.yml:docgen:beep-fleet-heavy",

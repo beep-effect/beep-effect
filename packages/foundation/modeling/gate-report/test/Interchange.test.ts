@@ -79,7 +79,7 @@ const rows: ReadonlyArray<
   ],
 ];
 
-describe("CTRF and SARIF table: status, level, rule id, region and partial fingerprint back to an equal item, extended to generated items by a property", () => {
+describe("CTRF and SARIF table: status, level, rule id, region and partial fingerprint back to an equal item", () => {
   for (const [name, item, ctrf, level, kind, ruleId] of rows) {
     it(`${name}: maps to CTRF ${ctrf} and SARIF ${level}/${kind}, and back to an equal item`, () => {
       const test = toCtrf(item);
@@ -140,7 +140,10 @@ describe("CTRF and SARIF table: status, level, rule id, region and partial finge
     [Arbitrary.schema(Item)],
     ([item]) =>
       Effect.sync(() => {
-        assert.isTrue(equivalent(fromCtrf(toCtrf(item)), item));
+        assert.isTrue(
+          equivalent(fromCtrf(toCtrf(item)), item),
+          "the table extends to generated items by this property"
+        );
         assert.isTrue(equivalent(fromSarif(toSarif(item)), item));
       }),
     { arbitrary: fcRuns(100) }

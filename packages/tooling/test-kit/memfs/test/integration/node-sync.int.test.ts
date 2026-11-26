@@ -1,9 +1,3 @@
-// The differential oracle for NodeSyncFileSystem: every read member it serves
-// must agree with @effect/platform-node's NodeFileSystem on the same real
-// directory — success values identical, failures identical in tag, method and
-// errno. The node adapter is the reference; a mismatch is a NodeSyncFileSystem
-// bug. Each case builds its own fixture under a scoped host temp directory.
-
 import { NodeSyncFileSystem } from "@beep/memfs/NodeSyncFileSystem";
 import { NodeServices } from "@effect/platform-node";
 import { assert, layer } from "@effect/vitest";
@@ -20,12 +14,8 @@ import * as P from "effect/Predicate";
 import { deliberatelyInvalid } from "../deliberatelyInvalid.ts";
 import type * as PlatformError from "effect/PlatformError";
 
-// Fixture paths are plain POSIX segments under a scoped temp directory.
 const join = (...segments: ReadonlyArray<string>) => A.join(segments, "/");
 
-// The subject, built once per use; its reads are compared with the harness's
-// own FileSystem, which NodeServices serves from @effect/platform-node's
-// NodeFileSystem — the reference implementation.
 const nodeSync = Effect.map(Layer.build(NodeSyncFileSystem.layer), Context.get(FileSystem.FileSystem));
 
 const failureShape = (exit: Exit.Exit<unknown, PlatformError.PlatformError>) => {
@@ -42,9 +32,10 @@ const failureShape = (exit: Exit.Exit<unknown, PlatformError.PlatformError>) => 
   };
 };
 
-layer(NodeServices.layer, { timeout: "30 seconds" })("NodeSyncFileSystem agrees with NodeFileSystem", (it) => {
-  // One fixture per case, under a scoped host temp directory, built through
-  // the reference FileSystem itself.
+const referenceAgreementTitle =
+  "NodeSyncFileSystem agrees with NodeFileSystem, the reference, in values, tags, methods and errnos";
+
+layer(NodeServices.layer, { timeout: "30 seconds" })(referenceAgreementTitle, (it) => {
   const fixture = Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const d = yield* fs.makeTempDirectoryScoped({ prefix: "memfs-node-sync-" });
@@ -56,7 +47,6 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("NodeSyncFileSystem agrees 
     return { fs, d };
   });
 
-  // Runs `op` against the reference (the harness FileSystem) and the subject.
   const both = Effect.fnUntraced(function* <A>(
     op: (fs: FileSystem.FileSystem) => Effect.Effect<A, PlatformError.PlatformError>
   ) {
@@ -65,15 +55,13 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("NodeSyncFileSystem agrees 
     return [yield* Effect.exit(op(reference)), yield* Effect.exit(op(subject))] as const;
   });
 
-  // Paths under test: fixture entries, plus two argument errors node rejects
-  // before any syscall (a NUL byte, a non-string) — BadArgument, not errno.
   const paths: ReadonlyArray<readonly [label: string, path: (d: string) => string]> = [
     ...A.map(
       ["f.txt", "dir", "to-dir", "dangling", "nope", "f.txt/child"],
       (p) => [p, (d: string) => join(d, p)] as const
     ),
-    ["NUL byte", (d: string) => join(d, "a\0b")],
-    ["non-string", () => deliberatelyInvalid<string>(42)],
+    ["NUL byte, a BadArgument before any syscall", (d: string) => join(d, "a\0b")],
+    ["non-string, a BadArgument before any syscall", () => deliberatelyInvalid<string>(42)],
   ];
   for (const [p, path] of paths) {
     it.effect(`stat ${p}: File.Info or failure identical`, () =>
@@ -164,15 +152,15 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("NodeSyncFileSystem agrees 
     })
   );
 
-  // The node adapter wraps the JS `fs.realpath`, which never canonicalizes
-  // case; `realpathSync.native` would. On a case-folding host (default APFS)
-  // this pins the JS form; on a case-sensitive host both fail NotFound alike.
   it.effect("realPath keeps the queried case, like the node adapter", () =>
     Effect.gen(function* () {
       const { d } = yield* fixture;
       const [a, b] = yield* both((fs) => fs.realPath(join(d, "DIR", "INNER.txt")));
-      if (Exit.isSuccess(a)) assert.deepStrictEqual(b, a);
-      else assert.deepStrictEqual(failureShape(b), failureShape(a));
+      if (Exit.isSuccess(a)) {
+        assert.deepStrictEqual(b, a, "a case-folding host: the JS fs.realpath never canonicalizes case; .native would");
+      } else {
+        assert.deepStrictEqual(failureShape(b), failureShape(a), "a case-sensitive host: both fail NotFound alike");
+      }
     })
   );
 
@@ -191,11 +179,11 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("NodeSyncFileSystem agrees 
         const context = yield* Layer.build(NodeSyncFileSystem.layer);
         return yield* Context.get(context, FileSystem.FileSystem).readFileString(join(d, "f.txt"));
       });
-      // Effect.runSync's own criterion: a fiber started immediately has already
-      // exited, because nothing in the build or the read ever suspended.
       const fiber = yield* Effect.forkChild(program, { startImmediately: true });
       const exit = fiber.pollUnsafe();
-      if (exit === undefined) return assert.fail("expected the build and read to finish without suspending");
+      if (exit === undefined) {
+        return assert.fail("Effect.runSync's criterion: a fiber started immediately has exited when nothing suspended");
+      }
       assertExitSuccess(exit, "hello");
     })
   );

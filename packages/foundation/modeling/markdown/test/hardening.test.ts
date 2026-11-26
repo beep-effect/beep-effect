@@ -1,59 +1,5 @@
 import { identity } from "effect/Function";
-// THE RECURSION-SURFACE ENUMERATION.
-//
-// Every self-recursive function in `src/` is listed here, with what bounds it.
-// The house rule is that malformed input yields a typed error or a diagnostic
-// and NEVER a defect, so an unbounded recursion reachable from parse input is
-// a bug — one of the entries below was exactly that when this file was
-// written (see "image alt flattening").
-//
-// GUARDED — depth is input-controlled, so a cap applies:
-//
-//  1. `blockParser.addChild` — not itself recursive, but it is where container
-//     nesting is capped. Every deeper surface below inherits its bound,
-//     because no tree deeper than the cap is ever built.
-//  2. `blockParser.materializeBlock` — walks the block tree. Bounded by (1):
-//     the tree it walks cannot be deeper than the cap that built it.
-//  3. `blockParser.collectReferences` — walks the same tree, same bound. It
-//     indexes link reference definitions AND GFM footnote definition labels,
-//     so a `[^a]: [^b]: ...` recursion is bounded by (1) like any other
-//     container nesting (pinned in `gfm-footnotes.test.ts`).
-//  4. `inlineParser.materialize` / `materializeNode` — mutually recursive over
-//     the inline tree, which nests as deeply as the input has balanced
-//     delimiters. Carries its own explicit depth counter and cap.
-//
-// ITERATIVE ON PURPOSE — no cap, and none wanted (the toml lesson: know what
-// NOT to guard):
-//
-//  5. `blockParser.incorporateLine` — the line loop. One pass per line.
-//  6. `inlineParser.parse` / `parseOne` — the cursor only moves forward.
-//  7. `inlineParser.processEmphasis` — the delimiter stack. Being iterative is
-//     the entire point: it is what makes emphasis linear instead of the
-//     quadratic blowup that is markdown's DoS vector.
-//  8. The bracket stack (`inlines/link.ts`) — same reasoning.
-//  9. `link.plainTextOf` — an image's alt flattening. THIS ONE WAS RECURSIVE
-//     AND UNGUARDED, and it died with a `RangeError` — a defect — on an image
-//     whose bracket content nested ten thousand emphasis markers. It runs
-//     while the brackets close, BEFORE materialization's guard can see the
-//     tree, so the guard could not save it. Rewritten with an explicit stack:
-//     a flattening has no reason to recurse. Pinned by a test below.
-// 10. `linkReferenceDefinition.extractDefinitions` — a `while` loop over one
-//     paragraph's leading definitions.
-// 11. `LineIndex.positionAt` — binary search, iterative.
-//
-// NOT A SURFACE:
-//
-// 12. `Schema.suspend` decode of `MarkdownNode` — recursive in principle, but
-//     the parser is the only producer in P1 and (1) and (4) bound what it
-//     produces. A hand-built tree decoded directly is the consumer's own
-//     depth to manage.
-// 13. The test HTML writer (`test/support/htmlWriter.ts`) — recursive
-//     over the tree, and deliberately left uncapped: it only ever sees trees
-//     this parser produced, which (1) and (4) already bound. It is test-only
-//     and ships in no artifact.
-//
-// The defect-passthrough test (a deliberate non-carrier throw escaping as a
-// defect) belongs with the facade and lands in Task 11.
+// decision: recursion-surfaces-bounded-at-two-caps
 
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { GuardExceeded, isGuardExceeded } from "@beep/markdown/internal/carriers";
@@ -76,8 +22,6 @@ import { renderHtml } from "./support/htmlWriter.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// Vitest's threads pool runs this regression in Node, whose argument limit
-// rejects the former segment spread even though Bun accepts it.
 it.effect("retains positions when promoting a 150,000-line setext heading", () =>
   Effect.sync(() => {
     const lines = 150_000;
@@ -85,7 +29,11 @@ it.effect("retains positions when promoting a 150,000-line setext heading", () =
     const parsed = Markdown.parseResult(source);
     assertSuccess(parsed, parseBlocks(source).root);
     const heading = parsed.success.children[0];
-    assert.strictEqual(parsed.success.children.length, 1);
+    assert.strictEqual(
+      parsed.success.children.length,
+      1,
+      "Vitest's threads pool runs this in Node, whose argument limit rejects the former segment spread that Bun accepts"
+    );
     assert.ok(heading?.type === "heading");
     if (heading?.type === "heading") {
       assert.strictEqual(heading.depth, 2);
@@ -127,16 +75,18 @@ describe("recursion surfaces", () => {
     });
 
     it("parses containers nested just under the cap", () => {
-      // The positive control. Without it the test above would pass even if
-      // the guard fired at depth 1.
       const { root } = parseBlocks(`${Str.repeat(MAX_NESTING_DEPTH - 2)(">")} foo\n`);
-      assert.strictEqual(root.children[0]?.type, "blockquote");
+      assert.strictEqual(
+        root.children[0]?.type,
+        "blockquote",
+        "positive control: without it the test above would pass even if the guard fired at depth 1"
+      );
     });
   });
 
   describe("inline nesting (surface 4)", () => {
-    // Delimiters pair two at a time, so n markers a side nest n/2 deep.
-    const markersFor = (depth: number): string => Str.repeat(depth * 2)("*");
+    const delimitersPerNestingLevel = 2;
+    const markersFor = (depth: number): string => Str.repeat(depth * delimitersPerNestingLevel)("*");
 
     it("trips the guard rather than overflowing on deep emphasis", () => {
       const markers = markersFor(MAX_NESTING_DEPTH + 10);
@@ -159,9 +109,13 @@ describe("recursion surfaces", () => {
     });
 
     it("counts container and inline nesting against the same cap", () => {
-      // Both guards use MAX_NESTING_DEPTH; neither leaks into the other.
       const source = `${Str.repeat(10)(">")} ${Str.repeat(20)("*")}a${Str.repeat(20)("*")}\n`;
-      assert.doesNotThrow(() => parseBlocks(source));
+      assert.doesNotThrow(
+        () => parseBlocks(source),
+        undefined,
+        undefined,
+        "both guards use MAX_NESTING_DEPTH; neither leaks into the other"
+      );
     });
   });
 
@@ -220,9 +174,6 @@ describe("recursion surfaces", () => {
 
   describe("image alt flattening (surface 9)", () => {
     it("flattens deeply nested alt content without overflowing the stack", () => {
-      // The regression: this ran before materialization's guard and died
-      // with a RangeError. Ten thousand levels is far past any cap — the
-      // point is that flattening does not recurse at all.
       const markers = Str.repeat(20000)("*");
       let caught: unknown;
       try {
@@ -231,7 +182,10 @@ describe("recursion surfaces", () => {
         caught = error;
       }
 
-      assert.isFalse(caught instanceof RangeError, "alt flattening must not recurse");
+      assert.isFalse(
+        caught instanceof RangeError,
+        "alt flattening must not recurse: it ran before materialization's guard and died with a RangeError; 10,000 levels is far past any cap"
+      );
       assert.isUndefined(caught);
     });
 
@@ -246,18 +200,17 @@ describe("recursion surfaces", () => {
 
 describe("the line index", () => {
   it("agrees with the parser about what a line is, for bare CR documents", () => {
-    // The two modules used to decide independently: `preprocessLines`
-    // splits on `\r\n`, `\n` AND a bare `\r`, while the index's own scan
-    // recognized only `\n`. A bare-CR document therefore reported line 1
-    // for everything. The parser now hands the index its own table.
     const source = "alpha\rbravo\rcharlie\n";
     const { root } = parseBlocks(source);
 
     assert.strictEqual(root.children.length, 1, "the three CR-separated lines are one paragraph");
     const paragraph = root.children[0];
-    assert.strictEqual(paragraph?.position.start.line, 1);
-    // `charlie` is the third line, so the paragraph ends there.
-    assert.strictEqual(paragraph?.position.end.line, 3);
+    assert.strictEqual(
+      paragraph?.position.start.line,
+      1,
+      "preprocessLines splits on CRLF, LF and a bare CR; the parser hands the line index that same table"
+    );
+    assert.strictEqual(paragraph?.position.end.line, 3, "charlie is the third line, so the paragraph ends there");
   });
 
   it("positions a block after a bare CR on the right line", () => {
@@ -311,11 +264,13 @@ describe("prototype pollution", () => {
       assert.strictEqual(O.getOrUndefined(HashMap.get(refmap, key))?.url, `/url-${label}`);
     }
 
-    // Each reference formed against its definition rather than staying
-    // literal — which is what proves the lookup went through the HashMap.
     const rendered = renderHtml(root);
     for (const label of DANGEROUS) {
-      assert.include(rendered, `href="/url-${label}"`, `the ${label} reference did not resolve`);
+      assert.include(
+        rendered,
+        `href="/url-${label}"`,
+        `the ${label} reference did not resolve: forming against its definition proves the lookup went through the HashMap`
+      );
     }
   });
 

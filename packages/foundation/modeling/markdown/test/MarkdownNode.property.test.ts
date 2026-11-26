@@ -67,9 +67,6 @@ describe("MarkdownNode schema property floor", () => {
   roundTrips("FlowContent", Subject.FlowContent);
   roundTrips("ListContent", Subject.ListContent);
   roundTrips("MdxJsxAttributeValueExpression", Mdx.MdxJsxAttributeValueExpression);
-  // The former `toCodecArbitrary` override is gone: the effect Arbitrary
-  // compiler honors it only on declarations, and the node is an `S.Opaque`
-  // struct now (D-22), so the native struct arbitrary drives it.
   roundTrips("MdxJsxAttribute", Mdx.MdxJsxAttribute);
   roundTrips("MdxJsxExpressionAttribute", Mdx.MdxJsxExpressionAttribute);
   roundTrips("MdxJsxAttributeContent", Mdx.MdxJsxAttributeContent);

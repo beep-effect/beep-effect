@@ -19,6 +19,7 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 const { createInspector, calls, relay } = vi.hoisted(() => {
   const recorded: Array<{ readonly method: string; readonly id?: string }> = [];
   const relay = { accept: true };
+  const markObservedRejectionHandled = () => undefined;
   return {
     calls: recorded,
     relay,
@@ -30,8 +31,7 @@ const { createInspector, calls, relay } = vi.hoisted(() => {
           method: `create:${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(options), identity)}`,
         });
         const ready = relay.accept ? Promise.resolve() : Promise.reject(new Error("relay refused"));
-        // The rejection is observed by the code under test; mark it handled so the runtime does not report it.
-        ready.catch(() => undefined);
+        ready.catch(markObservedRejectionHandled);
         return {
           inspectorUrl: "http://inspector.test/session",
           ready,
@@ -61,8 +61,7 @@ afterEach(() => {
   calls.length = 0;
 });
 
-// `import.meta.env` is process-wide, so these cases cannot interleave.
-describe("intake actor inspection", { concurrent: false }, () => {
+describe("intake actor inspection, serial: import.meta.env is process-wide", { concurrent: false }, () => {
   it.effect(
     "stays off unless the developer opts in",
     Effect.fnUntraced(function* () {
@@ -79,10 +78,9 @@ describe("intake actor inspection", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       vi.stubEnv("VITE_STATELY_INSPECT", "1");
       expect(statelyInspectEnabled()).toBe(true);
-      // The inspector gets a scope of its own, so closing it proves the connection is released.
-      const inspection = yield* Scope.make();
+      const inspectorOwnScope = yield* Scope.make();
       const actor = yield* createEffectActor(toggle);
-      const pipe2 = yield* inspectIntakeActor(actor).pipe(Scope.provide(inspection));
+      const pipe2 = yield* inspectIntakeActor(actor).pipe(Scope.provide(inspectorOwnScope));
       assertSome(pipe2, "http://inspector.test/session");
       yield* send(actor, { type: "FLIP" });
       yield* waitFor(actor, (snapshot) => snapshot.matches("on"));
@@ -92,7 +90,7 @@ describe("intake actor inspection", { concurrent: false }, () => {
       expect(methods).toContain("event");
       expect(methods).toContain("snapshot");
       expect(methods).not.toContain("destroy");
-      yield* Scope.close(inspection, Exit.void);
+      yield* Scope.close(inspectorOwnScope, Exit.void);
       expect(A.map(calls, (call) => call.method)).toContain("destroy");
     })
   );
@@ -106,13 +104,17 @@ describe("intake actor inspection", { concurrent: false }, () => {
       const inspectIntakeActor3 = yield* inspectIntakeActor(actor);
       assertNone(inspectIntakeActor3);
       expect(createInspector).toHaveBeenCalledTimes(1);
-      // The actor was registered while the registration was pending ...
-      expect(A.map(calls, (call) => call.method)).toContain("actor");
-      // ... and nothing is forwarded once the relay has rejected it.
+      expect(
+        A.map(calls, (call) => call.method),
+        "the actor was registered while the registration was pending"
+      ).toContain("actor");
       const forwarded = A.length(A.filter(calls, (call) => call.method === "event"));
       yield* send(actor, { type: "FLIP" });
       yield* waitFor(actor, (snapshot) => snapshot.matches("on"));
-      expect(A.length(A.filter(calls, (call) => call.method === "event"))).toBe(forwarded);
+      expect(
+        A.length(A.filter(calls, (call) => call.method === "event")),
+        "nothing is forwarded once the relay has rejected it"
+      ).toBe(forwarded);
     })
   );
 

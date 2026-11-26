@@ -98,19 +98,14 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
   spawner?: ChildProcessSpawner.ChildProcessSpawner["Service"]
 ) {
   let events = A.empty<S.Json>();
-  const observerRunningOnlyAfterSerializerCapturesOwner = yield* makeCitationBuiltinObservation(
+  const observe = yield* makeCitationBuiltinObservation(
     (value) => present(value),
     (event) =>
       Effect.sync(() => {
         events = A.append(events, event);
       })
   );
-  const h = yield* makeCitationCleanerRegistryHarness(
-    undefined,
-    undefined,
-    spawner,
-    observerRunningOnlyAfterSerializerCapturesOwner
-  );
+  const h = yield* makeCitationCleanerRegistryHarness(undefined, undefined, spawner, observe);
   let callbacks = HashMap.empty<number, Body>();
   let names = HashMap.empty<number, string>();
   let counts = HashMap.empty<number, number>();
@@ -419,8 +414,8 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         (candidate: string) => candidate === "builtin-function-step" || candidate === "registry-function-key",
         () =>
           Effect.gen(function* () {
-            const realBuiltinHandleCapturedUnderTheFirstOperationWork = A.empty<CitationCleanerObject>();
-            steps = realBuiltinHandleCapturedUnderTheFirstOperationWork;
+            const freshSteps = A.empty<CitationCleanerObject>();
+            steps = freshSteps;
           })
       ),
       Match.when(

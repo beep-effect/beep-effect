@@ -12,14 +12,15 @@ const config = YamlLintConfig.make({ rules: { "hyphen-spacing": "error" } });
 const headers = ["|2", ">2", "|2-", "|-2", ">2-", ">-2", "|2+", "|+2", ">2+", ">+2"];
 const properties = ["", "!!str ", "&ref ", "!!str &ref ", "&ref !!str "];
 
-/** Chomping indicator suffix: strip drops the final break, keep retains the trailing blank, clip keeps one. */
 const chompSuffix = (header: string): string => {
-  if (Str.includes("-")(header)) return "";
-  return Str.includes("+")(header) ? "\n\n" : "\n";
+  const stripDropsFinalBreak = Str.includes("-")(header);
+  if (stripDropsFinalBreak) return "";
+  const keepRetainsTrailingBlank = Str.includes("+")(header);
+  const clipKeepsOneBreak = "\n";
+  return keepRetainsTrailingBlank ? "\n\n" : clipKeepsOneBreak;
 };
 
-/** Decoded value of the `hello`/`world` block scalar under `header`. */
-const decodedHeaderValue = (header: string): string =>
+const decodedHelloWorldBlockValue = (header: string): string =>
   (header[0] === "|" ? "hello\nworld" : "hello world") + chompSuffix(header);
 
 const assertMappingValueFix = (header: string, property: string, value: string) => {
@@ -60,14 +61,14 @@ const assertDirectFixApplied = (header: string, property: string, value: string)
 describe("hyphen relocation safety", () => {
   it("fixes outer hyphens before explicit-indent mapping values without changing decoded values", () => {
     for (const header of headers) {
-      const value = decodedHeaderValue(header);
+      const value = decodedHelloWorldBlockValue(header);
       for (const property of properties) assertMappingValueFix(header, property, value);
     }
   });
 
   it("withholds only fixes that move the explicit-indent scalar's parent hyphen", () => {
     for (const header of headers) {
-      const value = decodedHeaderValue(header);
+      const value = decodedHelloWorldBlockValue(header);
       for (const property of properties) {
         assertNestedFixWithheld(header, property, value);
         assertDirectFixApplied(header, property, value);
@@ -89,14 +90,13 @@ describe("hyphen relocation safety", () => {
             check: dual(2, (ctx: LintContext, _options: unknown): Iterable<YamlLintDiagnostic> => {
               assert.isAbove(ctx.document.errors.length, 0);
               tokenCount = ctx.tokens.length;
-              // Count deterministic token-array operations, excluding parsing.
-              const tokens = new Proxy(ctx.tokens, {
+              const tokenReadCounter = new Proxy(ctx.tokens, {
                 get: (target, key, receiver) => {
                   reads++;
                   return Reflect.get(target, key, receiver);
                 },
               });
-              return hyphenSpacing.check({ ...ctx, tokens }, {});
+              return hyphenSpacing.check({ ...ctx, tokens: tokenReadCounter }, {});
             }),
           }),
         ],
@@ -104,7 +104,7 @@ describe("hyphen relocation safety", () => {
       );
       assert.strictEqual(diagnostics.length, size);
       assert.isTrue(A.every(diagnostics, (diagnostic) => diagnostic.fix !== undefined));
-      assert.isAtMost(reads, 12 * tokenCount);
+      assert.isAtMost(reads, 12 * tokenCount, "token-array reads count deterministic operations, excluding parsing");
       readsBySize.push(reads);
     }
     assert.isAtMost(A.getUnsafe(readsBySize, 1), 2 * A.getUnsafe(readsBySize, 0));

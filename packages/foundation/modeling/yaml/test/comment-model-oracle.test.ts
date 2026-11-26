@@ -1,34 +1,10 @@
-// Oracle-pinned contract for the NODE-LEVEL comment model (#348/#349 follow-on).
-//
-// WHY THIS FILE EXISTS: the comment fields used to live on `YamlPair`, which is
-// not where the reference puts them. That one placement decision was the root
-// of four separate recorded divergences — a relocated key-line comment, the
-// alias drop, the multi-line complex-key drop, and the explicit-key spelling —
-// because a pair has one comment slot where the reference has two independent
-// node slots. Moving the fields onto the key and value NODES dissolves all
-// four rather than patching each.
-//
-// Provenance (ORACLE.md convention, parity with oracle-differential.test.ts):
-// - Oracle: `yaml@2.9.0` (`YAML.parseDocument`, reading node.commentBefore /
-//   node.comment / node.spaceBefore; re-emission via `String(doc)`)
-// - Authored: 2026-08-16, offline, in a scratch script outside the test run
-// - The oracle is NOT a dependency of this suite — the committed literals below
-//   are the contract. Never regenerate them with our own parser.
-//
-// SCOPE OF PARITY: these literals pin comment ATTRIBUTION and comment
-// EMISSION. They deliberately do NOT pin reference behavior that is not a
-// comment decision — the reference drops a root block scalar's body indent,
-// respaces flow collections to `{ b: 1 }`, and does not spill an over-long
-// implicit key (#323). Those stay ours; see the divergence record at the head
-// of src/internal/composer/comments.ts.
-
+// decision: comment-oracle-literal-parity
 import { YamlAlias, YamlDocument, YamlMap, YamlScalar, YamlSeq } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { YamlNode } from "@beep/yaml";
 
-/** The comment triple, flattened for comparison against an oracle literal. */
 interface Comments {
   readonly comment?: string;
   readonly commentBefore?: string;
@@ -50,14 +26,12 @@ const rootMap = (doc: YamlDocument): YamlMap => {
   return doc.contents;
 };
 
-/** `key` / `value` comment triples of the pair at `index` of the root mapping. */
 const pairComments = (doc: YamlDocument, index = 0): { key: Comments; value: Comments } => {
   const pair = rootMap(doc).items[index];
   assert.isDefined(pair);
   return { key: commentsOf(pair.key), value: commentsOf(pair.value) };
 };
 
-/** Collect every scalar carrying a trailing comment, depth-first in document order. */
 const collectCommentedScalars = (node: YamlNode | null, found: YamlScalar[]): void => {
   if (node === null) return;
   if (S.is(YamlScalar)(node)) {
@@ -81,7 +55,11 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
       Effect.gen(function* () {
         const doc = yield* YamlDocument.parse("a: 1 # t\n# lead\nb: 2\n");
         for (const pair of rootMap(doc).items) {
-          assert.notProperty(pair, "commentBefore");
+          assert.notProperty(
+            pair,
+            "commentBefore",
+            "comment fields live on the key and value NODES: on `YamlPair`, where the reference puts none, one pair slot against the reference's two independent node slots was the root of four recorded divergences (a relocated key-line comment, the alias drop, the multi-line complex-key drop and the explicit-key spelling)"
+          );
           assert.notProperty(pair, "comment");
           assert.notProperty(pair, "spaceBefore");
         }
@@ -89,6 +67,7 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
     );
   });
 
+  // decision: comments-on-nodes
   describe("attribution: which node owns which comment", () => {
     it.effect("a trailing comment belongs to the VALUE node", () =>
       Effect.gen(function* () {
@@ -116,31 +95,24 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
 
     it.effect("a key-line comment with the value below trails the KEY — a deliberate divergence", () =>
       Effect.gen(function* () {
-        // The oracle folds this into the value's `commentBefore`, which makes
-        // `a: # kc` and `a:` + an own-line `# kc` above the value the same
-        // AST — so one of the two source shapes has to be rewritten on emit.
-        // Attaching it to the KEY, whose line it was written on, keeps them
-        // distinct and lets both round-trip byte-intact. Divergence 1 in
-        // composer/comments.ts.
         const doc = yield* YamlDocument.parse("a: # kc\n  1\n");
-        assert.deepStrictEqual(pairComments(doc), { key: { comment: " kc" }, value: {} });
+        assert.deepStrictEqual(
+          pairComments(doc),
+          { key: { comment: " kc" }, value: {} },
+          "the oracle folds this into the value's `commentBefore`, which makes `a: # kc` and `a:` + an own-line `# kc` above the value the same AST, so one of the two source shapes has to be rewritten on emit; attaching it to the KEY, whose line it was written on, keeps them distinct and lets both round-trip byte-intact"
+        );
 
-        // The own-line form keeps its own line, and neither shape moves.
         const spilled = yield* YamlDocument.parse("a:\n  # kc\n  1\n");
-        assert.deepStrictEqual(pairComments(spilled), { key: {}, value: { commentBefore: " kc" } });
+        assert.deepStrictEqual(
+          pairComments(spilled),
+          { key: {}, value: { commentBefore: " kc" } },
+          "the own-line form keeps its own line, and neither shape moves"
+        );
       })
     );
 
     it.effect("a key-line comment on an ABSENT value lands on the key — the one placement divergence", () =>
       Effect.gen(function* () {
-        // The oracle puts this on the value, because it materializes `a:`
-        // as Scalar(null) and every node it makes has a comment slot. Our
-        // `value` is `null` for an absent value, and making it always-a-node
-        // for parity's sake would silently break every consumer's
-        // `pair.value === null` check at RUNTIME rather than at compile
-        // time. The emitted bytes are identical either way (`a: # kc`), so
-        // the divergence is invisible to a formatter and visible only to a
-        // consumer reading the field. Recorded in composer/comments.ts.
         const doc = yield* YamlDocument.parse("a: # kc\nb: 2\n");
         assert.deepStrictEqual(pairComments(doc), { key: { comment: " kc" }, value: {} });
       })
@@ -181,23 +153,22 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
       })
     );
 
-    // Capture alone proves nothing: the fields existed on the node while three
-    // `instanceof YamlAlias` guards in the stringifier still skipped them, so
-    // every one of these round-tripped its comment straight out of existence.
-    // Emission is the assertion that has teeth.
     const aliasRoundtrips: ReadonlyArray<readonly [string, string]> = [
       ["trailing on a mapping value", "a: &x 1\nb: *x # ac\n"],
       ["leading on a mapping value", "a: &x 1\nb:\n  # lead\n  *x\n"],
-      // Sequence values render unindented under the default indentSequences.
-      ["trailing on a sequence item", "a: &x 1\nb:\n- *x # ac\n"],
-      ["leading on a sequence item", "a: &x 1\nb:\n# lead\n- *x\n"],
+      ["trailing on a sequence item, unindented under the default indentSequences", "a: &x 1\nb:\n- *x # ac\n"],
+      ["leading on a sequence item, unindented under the default indentSequences", "a: &x 1\nb:\n# lead\n- *x\n"],
     ];
     for (const [name, source] of aliasRoundtrips) {
       it.effect(`re-emits an alias comment byte-intact: ${name}`, () =>
         Effect.gen(function* () {
           const doc = yield* YamlDocument.parse(source);
           const out = yield* doc.stringify();
-          assert.strictEqual(out, source);
+          assert.strictEqual(
+            out,
+            source,
+            "capture alone proves nothing: the fields existed on the node while three `instanceof YamlAlias` guards in the stringifier still skipped them, so every one of these round-tripped its comment straight out of existence; emission is the assertion that has teeth"
+          );
           const again = yield* YamlDocument.parse(out);
           const stringify1 = yield* again.stringify();
           assert.strictEqual(stringify1, out);
@@ -209,11 +180,12 @@ describe("node-level comment model — oracle contract (yaml@2.9.0)", () => {
   describe("complex keys keep their pair's trailing comment", () => {
     it.effect("a block-scalar key's pair comment lands on the value", () =>
       Effect.gen(function* () {
-        // Previously dropped: a multi-line key has no line that can carry a
-        // `#`, and the single pair slot put the comment there. The value
-        // node has a line of its own.
         const doc = yield* YamlDocument.parse("? |\n  k\n: v # t\n");
-        assert.deepStrictEqual(commentsOf(rootMap(doc).items[0]?.value ?? null), { comment: " t" });
+        assert.deepStrictEqual(
+          commentsOf(rootMap(doc).items[0]?.value ?? null),
+          { comment: " t" },
+          "previously dropped: a multi-line key has no line that can carry a `#`, and the single pair slot put the comment there; the value node has a line of its own"
+        );
       })
     );
 

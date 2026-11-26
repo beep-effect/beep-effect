@@ -18,13 +18,8 @@ import {
 const textDocument = (value: string): Md.Document =>
   Md.Document.make({ children: [Md.P.make({ children: [Md.Text.make({ value })] })] });
 
-// A NUL character survives the Lexical round-trip as plain text and fails the
-// InvalidScalar safety check; URL-bearing fixtures do not work here because the
-// editor projection sanitizes unsafe hrefs before the policy ever sees them.
 const unsafeScalarDocument = textDocument("bad\u0000scalar");
 
-// Exhaustive by construction: adding a ComposerSendDecision variant fails these
-// tests at compile time instead of silently falling through a `.kind ===` guard.
 const decisionSummary = (decision: ComposerSendDecision): string =>
   ComposerSendDecision.match(decision, {
     gated: () => "gated",
@@ -97,7 +92,10 @@ describe("composerPolicy.decideSend", () => {
         state,
         turnActive: false,
       });
-      expect(decisionSummary(decision)).toBe("unsafe");
+      expect(
+        decisionSummary(decision),
+        "a NUL survives the Lexical round-trip and fails InvalidScalar; unsafe hrefs are sanitized before the policy"
+      ).toBe("unsafe");
     })
   );
 

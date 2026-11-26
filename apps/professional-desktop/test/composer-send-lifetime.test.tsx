@@ -10,11 +10,6 @@ import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 
-// The desktop registry sweeps atoms with an idle TTL (`ProfessionalAtomProvider`
-// sets 30s). Any node with no listeners and no dependents is disposed once its
-// TTL elapses, and a swept *state* atom comes back as its default — silently
-// discarding whatever was written into it. A tiny TTL reproduces in milliseconds
-// what took the real app thirty seconds.
 const IDLE_TTL_MS = 40;
 
 const draft = MdModel.Document.make({
@@ -31,13 +26,6 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
   it.effect(
     "still sends after the registry's idle TTL has elapsed",
     Effect.fnUntraced(function* () {
-      // `onSend` is seeded into a per-editor atom once at mount and is only ever
-      // read at send time, so nothing subscribed to it and the registry collected
-      // it 30 seconds later. It came back as the default unbound handler — and
-      // because `useAtomInitialValues` seeds an atom only once per registry, it was
-      // never re-seeded. The composer stopped sending, permanently and silently,
-      // with the user's draft still sitting in it. Enter and the Send button both
-      // did nothing; there was no error, no toast, and no log to find.
       const idleProbe = Atom.make(0);
       const registry = yield* Effect.acquireRelease(
         Effect.sync(() => AtomRegistry.make({ scheduleTask, defaultIdleTTL: IDLE_TTL_MS })),
@@ -53,15 +41,19 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
       );
       const screen = within(container);
 
-      // The draft must actually be in the editor before Send means anything — an
-      // empty composer is a legitimate no-op and would pass this test vacuously.
-      yield* Effect.promise(() => screen.findByText("hello"));
+      const draftInEditor = yield* Effect.promise(() => screen.findByText("hello"));
+      expect(draftInEditor, "an empty composer is a no-op and would pass this test vacuously").toBeInTheDocument();
       yield* sweep;
-      // An unmounted state atom has actually expired in this same registry.
-      expect(registry.get(idleProbe)).toBe(0);
+      expect(
+        registry.get(idleProbe),
+        "a tiny idle TTL sweeps an unlistened state atom back to its default, as the app's 30s TTL does"
+      ).toBe(0);
       fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-      expect(onSend).toHaveBeenCalledTimes(1);
+      expect(
+        onSend,
+        "onSend is read only at send time; a swept handler atom is never re-seeded by useAtomInitialValues"
+      ).toHaveBeenCalledTimes(1);
       unmount();
     })
   );
@@ -69,8 +61,6 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
   it.effect(
     "reports an unbound composer instead of silently discarding the send",
     Effect.fnUntraced(function* () {
-      // Defense in depth for the whole class: if the send handler is ever missing
-      // again, the composer must say so rather than look broken.
       const { container, unmount } = render(
         <RegistryProvider defaultIdleTTL={IDLE_TTL_MS}>
           <ChatComposer initialState={initialState} />
@@ -82,7 +72,7 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
       fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
       const promise1 = yield* Effect.promise(() => screen.findByText(/not connected to a conversation/i));
-      expect(promise1).toBeInTheDocument();
+      expect(promise1, "a missing send handler must say so rather than look broken").toBeInTheDocument();
       unmount();
     })
   );

@@ -23,7 +23,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
-import { PrRepository } from "../Yeet/internal/Provenance.ts";
+import { CheckoutRepository } from "../../internal/state/WorkstationState.ts";
 
 const $I = $RepoCliId.create("commands/Session/Rulings.schemas");
 
@@ -102,13 +102,13 @@ export const RulingId = S.String.check(S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u
  * **Example** (Make a row)
  *
  * ```ts
- * import { PrRepository, RulingRow } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, RulingRow } from "@beep/repo-cli/test/Session"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const row = RulingRow.make({
  *   schemaVersion: "orchestrator-ruling/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   id: "only-money-escalates",
  *   date: "2026-10-06",
  *   verbatim: "only money escalates",
@@ -128,7 +128,7 @@ export const RulingId = S.String.check(S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u
 export class RulingRow extends S.Opaque<RulingRow, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("orchestrator-ruling/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     id: RulingId,
     date: RulingDate,
     verbatim: S.NonEmptyString,
@@ -166,11 +166,11 @@ export const RulingRowJson = JsonStringCodec(RulingRow);
  * **Example** (An empty report)
  *
  * ```ts
- * import { PrRepository, RulingsReport } from "@beep/repo-cli/test/Session"
+ * import { CheckoutRepository, RulingsReport } from "@beep/repo-cli/test/Session"
  *
  * const report = RulingsReport.make({
  *   schemaVersion: "orchestrator-rulings-report/v1",
- *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   repository: CheckoutRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
  *   rulings: [],
  * })
  * console.log(report.rulings.length) // 0
@@ -182,7 +182,7 @@ export const RulingRowJson = JsonStringCodec(RulingRow);
 export class RulingsReport extends S.Opaque<RulingsReport, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("orchestrator-rulings-report/v1"),
-    repository: PrRepository,
+    repository: CheckoutRepository,
     rulings: S.Array(RulingRow),
   }).pipe($I.annoteSchema("RulingsReport", { description: "The newest row per ruling, newest date first." }))
 ) {}

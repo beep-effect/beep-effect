@@ -1,15 +1,3 @@
-// The hook-injected-catalog regression: a `catalog:` specifier that NO committed
-// catalog source declares must still resolve to a concrete version, or a real
-// dependency bump produces no diff row and no changeset.
-//
-// Reproduced from `spencerbeggs/type-registry-effect` (Actions run 30130459942),
-// where `effect` moved 4.0.0-beta.99 → 4.0.0-beta.101 and zero changesets were
-// written. The peer is declared `catalog:effect:peers`, a catalog injected by
-// `@effected/pnpm-plugin-effect`'s pnpmfile hook — so it appears in neither
-// `pnpm-workspace.yaml` (which declares no catalogs at all) nor the lockfile's
-// `catalogs:` block (pnpm does not record a peer-only catalog). Both sides of the
-// diff resolved it to the same raw string, so `from !== to` was false.
-
 import { Lockfile } from "@beep/lockfiles";
 import { CatalogSet, WorkspaceStateSnapshot } from "@beep/repo-workspaces";
 import { importerVersionsOf, unanimousVersionOf } from "@beep/repo-workspaces/internal/importerVersions";
@@ -21,13 +9,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-/**
- * A pnpm lockfile whose root importer records `effect` only as a
- * devDependency — exactly what pnpm writes for the reproduction repo. The
- * `catalog:effect:peers` peer declaration has NO importer row of its own,
- * which is why the fallback must join by name across fields.
- */
-const pnpmLock = (effectVersion: string, platformNodeVersion: string) => `lockfileVersion: '9.0'
+const reproductionDevDepsLock = (effectVersion: string, platformNodeVersion: string) => `lockfileVersion: '9.0'
 
 settings:
   autoInstallPeers: true
@@ -59,29 +41,34 @@ packages: {}
 const parse = (text: string) => Lockfile.parse(text, { format: "pnpm" });
 
 describe("importerVersionsOf", () => {
-  it.effect("indexes an importer's recorded versions by dependency name", () =>
+  it.effect("indexes an importer's recorded versions by dependency name across fields", () =>
     Effect.gen(function* () {
-      const lockfile = yield* parse(pnpmLock("4.0.0-beta.99", "4.0.0-beta.99"));
+      const lockfile = yield* parse(reproductionDevDepsLock("4.0.0-beta.99", "4.0.0-beta.99"));
       const index = importerVersionsOf(lockfile);
-      assert.strictEqual(index["."]?.effect, "4.0.0-beta.99");
+      assert.strictEqual(
+        index["."]?.effect,
+        "4.0.0-beta.99",
+        "the lockfile records effect only as a devDependency, as pnpm wrote it for the reproduction repo, and the catalog:effect:peers peer has no importer row of its own, so the fallback joins by name across fields"
+      );
     })
   );
 
   it.effect("strips pnpm's peer-disambiguation suffix", () =>
     Effect.gen(function* () {
-      // What pnpm actually writes for a package with peers — the raw string is
-      // stored verbatim by @effected/lockfiles, so an unstripped fallback would
-      // render this entire chain as the "version" in a changeset table.
-      const raw = "4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@8.1.1))";
-      const lockfile = yield* parse(pnpmLock("4.0.0-beta.101", raw));
+      const peerSuffixedVersion = "4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@8.1.1))";
+      const lockfile = yield* parse(reproductionDevDepsLock("4.0.0-beta.101", peerSuffixedVersion));
       const index = importerVersionsOf(lockfile);
-      assert.strictEqual(index["."]?.["@effect/platform-node"], "4.0.0-beta.101");
+      assert.strictEqual(
+        index["."]?.["@effect/platform-node"],
+        "4.0.0-beta.101",
+        "@effected/lockfiles stores the raw peer chain pnpm writes verbatim, so an unstripped fallback would print it as the version in a changeset table"
+      );
     })
   );
 
   it.effect("skips link: entries — a filesystem edge is not a version", () =>
     Effect.gen(function* () {
-      const lockfile = yield* parse(pnpmLock("4.0.0-beta.99", "4.0.0-beta.99"));
+      const lockfile = yield* parse(reproductionDevDepsLock("4.0.0-beta.99", "4.0.0-beta.99"));
       const index = importerVersionsOf(lockfile);
       assert.isUndefined(index["."]?.["local-link"]);
     })
@@ -109,37 +96,37 @@ describe("unanimousVersionOf", () => {
   });
 });
 
-/** A snapshot carrying no catalogs at all — the reproduction repo's shape. */
-const snapshot = (importerVersions: Record<string, Record<string, string>>) =>
+const catalogFreeSnapshot = (importerVersions: Record<string, Record<string, string>>) =>
   WorkspaceStateSnapshot.make({
     packages: [],
     catalogs: CatalogSet.empty(),
     importerVersions,
   });
 
-describe("WorkspaceStateSnapshot.resolve — the hook-injected catalog fallback", () => {
+describe("WorkspaceStateSnapshot.resolve — a hook-injected catalog no committed source declares still resolves to a version", () => {
   it("resolves an unresolvable catalog: specifier through the importer index", () => {
-    const before = snapshot({ ".": { effect: "4.0.0-beta.99" } });
-    const after = snapshot({ ".": { effect: "4.0.0-beta.101" } });
+    const before = catalogFreeSnapshot({ ".": { effect: "4.0.0-beta.99" } });
+    const after = catalogFreeSnapshot({ ".": { effect: "4.0.0-beta.101" } });
 
     const from = before.resolve("effect", "catalog:effect:peers");
     const to = after.resolve("effect", "catalog:effect:peers");
 
     assertSome(from, "4.0.0-beta.99");
     assertSome(to, "4.0.0-beta.101");
-    // The whole point: the two sides must now DIFFER, so a diff emits a row.
-    assert.notStrictEqual(O.getOrNull(from), O.getOrNull(to));
+    assert.notStrictEqual(
+      O.getOrNull(from),
+      O.getOrNull(to),
+      "the two sides must differ so a diff emits a row: in spencerbeggs/type-registry-effect (Actions run 30130459942) effect moved 4.0.0-beta.99 to 4.0.0-beta.101 and zero changesets were written, because catalog:effect:peers, injected by the @effected/pnpm-plugin-effect pnpmfile hook, is in neither pnpm-workspace.yaml (no catalogs at all) nor the lockfile catalogs: block (pnpm records no peer-only catalog), so both sides resolved the same raw string"
+    );
   });
 
   it("abstains when importers disagree rather than inventing an answer", () => {
-    const divergent = snapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
+    const divergent = catalogFreeSnapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
     assertNone(divergent.resolve("effect", "catalog:effect:peers"));
   });
 
-  it("leaves a plain range alone — it is already its own answer", () => {
-    // The consumer falls back to the raw specifier for these; a fallback here
-    // would replace a declared RANGE with an installed VERSION in the table.
-    const state = snapshot({ ".": { effect: "4.0.0-beta.99" } });
+  it("leaves a plain range alone for the consumer's raw-specifier fallback, never replacing it with an installed version", () => {
+    const state = catalogFreeSnapshot({ ".": { effect: "4.0.0-beta.99" } });
     assertNone(state.resolve("effect", "^4.0.0"));
   });
 
@@ -155,22 +142,19 @@ describe("WorkspaceStateSnapshot.resolve — the hook-injected catalog fallback"
 
 describe("WorkspaceStateSnapshot.resolveIn", () => {
   it("answers precisely where resolve must abstain", () => {
-    const divergent = snapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
+    const divergent = catalogFreeSnapshot({ ".": { effect: "1.0.0" }, "packages/a": { effect: "2.0.0" } });
     assertSome(divergent.resolveIn(".", "effect", "catalog:effect:peers"), "1.0.0");
     assertSome(divergent.resolveIn("packages/a", "effect", "catalog:effect:peers"), "2.0.0");
   });
 
   it("answers nothing for an unknown importer", () => {
-    const state = snapshot({ ".": { effect: "1.0.0" } });
+    const state = catalogFreeSnapshot({ ".": { effect: "1.0.0" } });
     assertNone(state.resolveIn("packages/nope", "effect", "catalog:effect:peers"));
   });
 });
 
 describe("WorkspaceStateSnapshot — wire compatibility", () => {
-  it("decodes a value serialized before importerVersions existed", () => {
-    // The field is optional precisely so older serialized snapshots survive; an
-    // absent index simply makes the fallback inert, which is the behavior those
-    // values were captured under.
+  it("decodes a value serialized before the optional importerVersions existed, its absent index leaving the fallback inert", () => {
     const decoded = Result.getOrThrow(
       S.decodeResult(WorkspaceStateSnapshot)({
         packages: [],
@@ -184,17 +168,17 @@ describe("WorkspaceStateSnapshot — wire compatibility", () => {
 describe("importer versions — own-key records", () => {
   for (const name of ["constructor", "toString", "__proto__"]) {
     it(`does not fabricate an inherited importer ${name}`, () => {
-      const state = snapshot({ ".": { effect: "1.0.0" } });
+      const state = catalogFreeSnapshot({ ".": { effect: "1.0.0" } });
       assertNone(state.resolveIn(name, "name", "catalog:missing"));
       assertNone(state.resolveIn(name, "effect", "catalog:missing"));
     });
     it(`does not fabricate an inherited dependency ${name}`, () => {
-      const state = snapshot({ ".": { effect: "1.0.0" } });
+      const state = catalogFreeSnapshot({ ".": { effect: "1.0.0" } });
       assertNone(state.resolveIn(".", name, "catalog:missing"));
       assertNone(state.resolve(name, "catalog:missing"));
       assert.isUndefined(unanimousVersionOf({ ".": { effect: "1.0.0" } }, name));
     });
-    it(`preserves own importer and dependency ${name}, first field wins since pnpm records one version across fields, so a conflict is a malformed lockfile`, () => {
+    it(`preserves own importer and dependency ${name}, first field wins since pnpm records one version across fields`, () => {
       const lockfile = Result.getOrThrow(
         S.decodeResult(Lockfile)({
           format: "pnpm",
@@ -217,8 +201,8 @@ describe("importer versions — own-key records", () => {
       const index = importerVersionsOf(lockfile);
       assert.deepStrictEqual(R.keys(index), [name, "packages/z", "packages/a"]);
       assertSome(O.flatMap(R.get(index, name), R.get(name)), "1.0.0");
-      assert.strictEqual(unanimousVersionOf(index, name), "1.0.0");
-      const state = snapshot(index);
+      assert.strictEqual(unanimousVersionOf(index, name), "1.0.0", "a conflict across fields is a malformed lockfile");
+      const state = catalogFreeSnapshot(index);
       assertSome(state.resolveIn(name, name, "catalog:missing"), "1.0.0");
     });
   }

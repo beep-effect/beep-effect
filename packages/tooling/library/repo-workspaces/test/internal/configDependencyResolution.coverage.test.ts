@@ -22,8 +22,7 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const ROOT = "/repo";
 
-/** A virtual volume over `seed`, counting every read the ladder makes. */
-const counted = (seed: MemoryFileSystemSeed = {}) => {
+const readCountingVolume = (seed: MemoryFileSystemSeed = {}) => {
   const reads = { count: 0 };
   const count = () => {
     reads.count += 1;
@@ -38,7 +37,6 @@ const counted = (seed: MemoryFileSystemSeed = {}) => {
   return { reads, layer };
 };
 
-/** A fetch rung that records how often it was asked. */
 const recordingFetch = (answer: string) => {
   const calls = { count: 0 };
   const fetch: FetchConfigDependency = () => {
@@ -49,7 +47,7 @@ const recordingFetch = (answer: string) => {
 };
 
 {
-  const volume = counted();
+  const volume = readCountingVolume();
   it.layer(volume.layer, { timeout: "30 seconds" })((it) => {
     it.effect("both resolvers reject traversal versions before filesystem reads or fetch", () =>
       Effect.gen(function* () {
@@ -116,7 +114,7 @@ const recordingFetch = (answer: string) => {
 }
 
 it.layer(
-  counted({
+  readCountingVolume({
     [`${ROOT}/node_modules/.pnpm-config/pkg/package.json`]: '{"name":"pkg","version":"1.0.0-beta..1"}',
   }).layer,
   { timeout: "30 seconds" }
@@ -141,27 +139,33 @@ it.layer(
 });
 
 for (const text of ["storeDir: [", "null", "storeDir: 42", 'storeDir: ""']) {
-  it.layer(counted({ [`${ROOT}/node_modules/.modules.yaml`]: text }).layer, { timeout: "30 seconds" })((it) => {
-    it.effect(
-      `malformed and unusable modules YAML contributes no store (${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)})`,
-      () =>
-        Effect.gen(function* () {
-          const failure = yield* Effect.flip(
-            resolvePnpmfiles({ config: "1.0.0" }, undefined, () =>
-              Effect.fail(FetchFailure.make({ reason: "integrityMismatch", message: "pins disagree" }))
-            )(ROOT)
-          );
-          assert.strictEqual(failure.reason, "integrityMismatch");
-          assert.include(failure.cause instanceof Error ? failure.cause.message : "", "pins disagree");
-          assert.notInclude(failure.cause instanceof Error ? failure.cause.message : "", "pnpm add --config");
-        })
-    );
-  });
+  it.layer(readCountingVolume({ [`${ROOT}/node_modules/.modules.yaml`]: text }).layer, { timeout: "30 seconds" })(
+    (it) => {
+      it.effect(
+        `malformed and unusable modules YAML contributes no store (${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(text), identity)})`,
+        () =>
+          Effect.gen(function* () {
+            const failure = yield* Effect.flip(
+              resolvePnpmfiles({ config: "1.0.0" }, undefined, () =>
+                Effect.fail(FetchFailure.make({ reason: "integrityMismatch", message: "pins disagree" }))
+              )(ROOT)
+            );
+            assert.strictEqual(failure.reason, "integrityMismatch");
+            assert.include(failure.cause instanceof Error ? failure.cause.message : "", "pins disagree");
+            assert.notInclude(failure.cause instanceof Error ? failure.cause.message : "", "pnpm add --config");
+          })
+      );
+    }
+  );
 }
 
-it.layer(counted({ [`${ROOT}/node_modules/.pnpm-config/stale`]: MemoryFileSystem.symlink(`${ROOT}/missing`) }).layer, {
-  timeout: "30 seconds",
-})((it) => {
+it.layer(
+  readCountingVolume({ [`${ROOT}/node_modules/.pnpm-config/stale`]: MemoryFileSystem.symlink(`${ROOT}/missing`) })
+    .layer,
+  {
+    timeout: "30 seconds",
+  }
+)((it) => {
   it.effect("a dangling config symlink is absence during best-effort store discovery", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(resolvePnpmfiles(ROOT, { config: "1.0.0" }));
@@ -170,7 +174,6 @@ it.layer(counted({ [`${ROOT}/node_modules/.pnpm-config/stale`]: MemoryFileSystem
   );
 });
 
-/** One platform and store-root value: only a non-empty root is searched. */
 const storeRootsCase = Effect.fnUntraced(function* (platform: string, value: string | undefined) {
   const environment = ConfigProvider.fromUnknown(
     {
@@ -187,12 +190,13 @@ const storeRootsCase = Effect.fnUntraced(function* (platform: string, value: str
   assert.strictEqual(failure.reason, "notInstalled");
   assert.include(
     failure.cause instanceof Error ? failure.cause.message : "",
-    value === ROOT ? `searched ${ROOT}/store/v11, ${ROOT}/pnpm/store/v10` : "no pnpm store directory could be located"
+    value === ROOT ? `searched ${ROOT}/store/v11, ${ROOT}/pnpm/store/v10` : "no pnpm store directory could be located",
+    "only a non-empty store root is searched"
   );
 });
 
 it.layer(
-  counted({
+  readCountingVolume({
     [`${ROOT}/store/v11`]: MemoryFileSystem.directory(),
     [`${ROOT}/pnpm/store/v10`]: MemoryFileSystem.directory(),
   }).layer,
@@ -207,25 +211,40 @@ it.layer(
   );
 });
 
-/** One home-variable environment: only a set `HOME` or `USERPROFILE` names the home-based store roots. */
-const homeStoreCase = Effect.fnUntraced(function* (environment: Readonly<Record<string, string>>, expected: string) {
+const homeStoreCase = Effect.fnUntraced(function* (
+  environment: Readonly<Record<string, string>>,
+  expected: string,
+  why: string
+) {
   const failure = yield* Effect.flip(resolvePnpmfiles(ROOT, { config: "1.0.0" })).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(environment)),
     Effect.provideService(HostProcessPlatform, "linux")
   );
   assert.strictEqual(failure.reason, "notInstalled");
-  assert.include(failure.cause instanceof Error ? failure.cause.message : "", expected);
+  assert.include(
+    failure.cause instanceof Error ? failure.cause.message : "",
+    expected,
+    `only a set HOME or USERPROFILE names the home-based store roots: ${why}`
+  );
 });
 
-it.layer(counted({ "/home/u/.local/share/pnpm/store/v10": MemoryFileSystem.directory() }).layer, {
+it.layer(readCountingVolume({ "/home/u/.local/share/pnpm/store/v10": MemoryFileSystem.directory() }).layer, {
   timeout: "30 seconds",
 })((it) => {
   it.effect(
-    "off Windows the XDG store under HOME is searched without PNPM_HOME, as a standalone-script pnpm on macOS or an unexported shell needs; with HOME and USERPROFILE unset no home-based root exists (no passwd fallback)",
+    "off Windows the XDG store under HOME is searched without PNPM_HOME, and with HOME and USERPROFILE unset no root exists",
     () =>
       Effect.gen(function* () {
-        yield* homeStoreCase({}, "no pnpm store directory could be located");
-        yield* homeStoreCase({ HOME: "/home/u" }, "searched /home/u/.local/share/pnpm/store/v10");
+        yield* homeStoreCase(
+          {},
+          "no pnpm store directory could be located",
+          "with HOME and USERPROFILE unset no home-based root exists (no passwd fallback)"
+        );
+        yield* homeStoreCase(
+          { HOME: "/home/u" },
+          "searched /home/u/.local/share/pnpm/store/v10",
+          "a standalone-script pnpm on macOS or an unexported shell needs the XDG store without PNPM_HOME"
+        );
       })
   );
 });

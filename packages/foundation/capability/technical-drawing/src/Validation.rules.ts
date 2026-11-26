@@ -43,8 +43,6 @@ const fileFinding = (code: SheetFinding["code"], message: string): SheetFinding 
 const pageFinding = (code: SheetFinding["code"], page: number, message: string): SheetFinding =>
   SheetFinding.make({ code, page: O.some(page), message });
 
-// Font names compared without case, spaces, or punctuation: `Times New Roman`
-// matches `TimesNewRomanPSMT`.
 const fontKey = (name: string): string => Str.replace(/[^a-z0-9]/g, "")(Str.toLowerCase(name));
 
 const within = (value: number, target: number, tolerance: number): boolean => Math.abs(value - target) <= tolerance;
@@ -61,8 +59,6 @@ const formatOf = (
     })
   );
 
-// A stream a strict reader refuses can fail intake although lenient viewers still show the page, and a check that
-// stopped at the inflate limit leaves the streams after it unverified, so either fails the file.
 const streamFindings = (facts: PdfFacts): ReadonlyArray<SheetFinding> => {
   const limitReached = facts.streamCheck === "limit-reached";
   if (A.isReadonlyArrayNonEmpty(facts.undecodableStreams)) {
@@ -119,7 +115,6 @@ const pageFindings = (facts: PdfFacts, options: ValidationOptions): ReadonlyArra
     O.map((expected) => fileFinding("page-count", `Expected ${expected} page(s), found ${facts.pages.length}.`)),
     O.toArray
   );
-  // A document without pages is never a sheet set, whatever count was expected.
   const noPages =
     A.length(facts.pages) === 0 && A.length(pageCount) === 0
       ? [fileFinding("page-count", "The PDF has no pages.")]
@@ -151,6 +146,15 @@ const pageFindings = (facts: PdfFacts, options: ValidationOptions): ReadonlyArra
 
 /**
  * Findings from the structural facts of a PDF.
+ *
+ * **Details**
+ *
+ * Embedded font names match the expected label families without case,
+ * spaces or punctuation, so `Times New Roman` matches `TimesNewRomanPSMT`. A
+ * FlateDecode stream a strict reader refuses fails the file although lenient
+ * viewers still show the page, since intake can refuse it, and a strict-inflate
+ * check that stopped at the inflate limit fails it too: the streams after the
+ * limit are unverified.
  *
  * **Example** (An encrypted file)
  *
@@ -201,8 +205,6 @@ export const structuralFindings = (input: {
   ];
 };
 
-// Text of one label standing alone: a whole whitespace-separated run, so
-// `FIG. 1` does not match inside `FIG. 10`.
 const carries = (text: string, label: string): boolean =>
   new RegExp(`(?:^|\\s)${Regex.escape(label)}(?:\\s|$)`).test(text);
 
@@ -214,7 +216,9 @@ const carries = (text: string, label: string): boolean =>
  *
  * Page `n` of `N` must carry `FIG. n` when the figure label is text and
  * `n/N` when the sheet number is. A converter that cannot find the label font
- * draws nothing and still succeeds, so this is the rule that catches it.
+ * draws nothing and still succeeds, so this is the rule that catches it. A
+ * label counts only as a whole whitespace-separated run, so `FIG. 1` does not
+ * match inside `FIG. 10`.
  *
  * **Example** (A page without its sheet number)
  *
@@ -407,8 +411,6 @@ export const shadingSpacingFindings = (input: {
     : [];
 };
 
-// A spacing in mm to three decimals, rounded down, so a pair a hair under the least spacing never prints as the
-// spacing itself (review loop 4, R4-06: 0.6997 printed as "0.70" under a 0.7 rule).
 const flooredMm = (mm: number): string => `${Math.floor(mm * 1000 + 1e-9) / 1000}`;
 
 /**
@@ -423,7 +425,9 @@ const flooredMm = (mm: number): string => `${Math.floor(mm * 1000 + 1e-9) / 1000
  * measured at its closer end. Pairs within 0.15 mm count as one line drawn
  * twice (an emphasis line over its own outline) and are not flagged. One
  * finding per sheet names the number of close pairs and the closest spacing,
- * in mm to three decimals rounded down (review loop 4, O-01).
+ * in mm to three decimals rounded down (review loop 4, O-01), so a pair a
+ * hair under the least spacing never prints as the spacing itself (0.6997
+ * would print as 0.70 under a 0.7 rule).
  *
  * **Example** (A board edge drawn 0.34 mm apart)
  *
@@ -466,8 +470,6 @@ export const outlineSpacingFindings = (input: {
     : [];
 };
 
-// A visible stretch skipped by design while its measured room fits a band is a band the planner failed to draw
-// (review loop 4, A-01): the bay of a far face glimpsed at its foot below a wall in front stayed bare, unreported.
 const skippedStretchFindings = (page: number, coverage: ShadingCoverage): ReadonlyArray<SheetFinding> => {
   const fitting = A.filter(coverage.skippedStretches, (skip) => skip.fitting > 0);
   return A.isReadonlyArrayNonEmpty(fitting)
@@ -668,21 +670,16 @@ export const shadingLoneLineFindings = (input: {
     : [];
 };
 
-// Drawn lines within this distance of each other on the sheet, in mm, are one line for the ladder check: an outline
-// drawn in pieces, or drawn twice (an emphasis line over a visible edge).
 const LADDER_TOLERANCE_MM = 0.15;
 
 const strokeLength = ([x1, y1, x2, y2]: Segment2): number => Math.hypot(x2 - x1, y2 - y1);
 
-// The side of a stroke the middle of another segment lies on: 1 for the stroke's left, seen from its first point, -1
-// for its right, 0 on its line.
 const sideOf = (stroke: Segment2, other: Segment2): number =>
   Math.sign(
     (stroke[2] - stroke[0]) * ((other[1] + other[3]) / 2 - stroke[1]) -
       (stroke[3] - stroke[1]) * ((other[0] + other[2]) / 2 - stroke[0])
   );
 
-// A stroke moved `distance` to its left (to its right when negative).
 const shifted = (stroke: Segment2, distance: number): Segment2 => {
   const length = strokeLength(stroke);
   const nx = (-(stroke[3] - stroke[1]) / length) * distance;
@@ -712,7 +709,9 @@ const shifted = (stroke: Segment2, distance: number): Segment2 => {
  * stroke (an outline that steps out around a tab and back does not), and the
  * stroke sits nearer its edge than `ladderGutterRatio` times the larger of
  * the band's first gap and the spacing from the edge to that line, however
- * far the edge is (review loop 3, O-04).
+ * far the edge is (review loop 3, O-04). Drawn lines within 0.15 mm of each
+ * other are one line throughout: an outline drawn in pieces, or drawn twice
+ * (an emphasis line over a visible edge).
  *
  * **Example** (A three-line band 1.5 mm inside a flap edge with a wall's two lines beyond it)
  *
@@ -751,8 +750,6 @@ export const shadingBandLadderFindings = (input: {
     ladderReachMm: reach,
     ladderGutterRatio: ratio,
   } = input.options;
-  // each stroke's companions: the other strokes beside half its length within the companion distance, with their gap
-  // and the side they lie on
   type Companion = { readonly gap: number; readonly side: number; readonly index: number };
   const strokes = A.map(input.shadingMm, (stroke, index) => ({
     stroke,
@@ -781,7 +778,6 @@ export const shadingBandLadderFindings = (input: {
   const companionsOf = (index: number): ReadonlyArray<Companion> =>
     O.match(A.get(strokes, index), { onNone: A.empty<Companion>, onSome: (s) => s.companions });
   const gapOf = (index: number): number => nearestGap(companionsOf(index));
-  // a band of two strokes, each the other's only companion: either end may be the one at the shadow edge
   const isPair = (index: number, companions: ReadonlyArray<Companion>): boolean =>
     A.length(companions) === 1 &&
     A.every(companions, (c) => A.every(companionsOf(c.index), (back) => back.index === index));
@@ -796,7 +792,6 @@ export const shadingBandLadderFindings = (input: {
     if (!isEdgeStroke) {
       return false;
     }
-    // the band's edge lies on the side away from its companions
     const side = -A.headNonEmpty(companions).side;
     return pipe(
       coveringOutlineDistance({

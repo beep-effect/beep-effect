@@ -1,27 +1,7 @@
-// A deterministic corpus of GFM inline sources, for the differential that
-// pins the inline pass across its complexity refactors. The generator is a
-// seeded mulberry32 stream over a token vocabulary chosen to reach every
-// branch of the autolink-literal scanners (www., scheme, mailto:/xmpp:
-// prefixes, re-anchoring `@`, trailing punctuation and entity trimming),
-// strikethrough, emphasis flanking beside astral punctuation and letters,
-// and link brackets. It depends on nothing but this file, so the same
-// sources come out of any engine version — which is what lets a digest of
-// the outputs recorded before a refactor gate the code after it.
+// decision: inline-refactor-differentials
 
 import * as A from "effect/Array";
 
-/**
- * The tokens a generated source is spelled from.
- *
- * **Details**
- *
- * `𐄀` (U+10100) is astral punctuation (Po), `🎉` an astral symbol (So) and
- * `𝐀` (U+1D400) an astral letter: one-character strings of these are half a
- * surrogate pair, which is what the flanking rules must not see.
- *
- * @category testing
- * @since 0.0.0
- */
 const INLINE_TOKENS: ReadonlyArray<string> = [
   "a",
   "b",

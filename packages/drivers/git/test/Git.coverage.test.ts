@@ -216,15 +216,14 @@ describe("Git service error contracts", () => {
   );
 });
 
-/** The fail-closed contract every entry parser shares: `kind: "failed"`, no exit code, a detail naming the output. */
 const assertUnparseable = (result: Result.Result<unknown, unknown>, what: string, reason: RegExp): void => {
   assert.strictEqual(Result.isFailure(result), true);
   if (!Result.isFailure(result)) return;
   const failure = result.failure;
   assert.strictEqual(S.is(GitModule.GitCommandError)(failure), true);
   if (!S.is(GitModule.GitCommandError)(failure)) return;
-  assert.strictEqual(failure.kind, "failed");
-  assert.strictEqual(failure.exitCode, undefined);
+  assert.strictEqual(failure.kind, "failed", "every entry parser shares the fail-closed contract: kind failed");
+  assert.strictEqual(failure.exitCode, undefined, "a fail-closed parse carries no exit code");
   assert.strictEqual(failure.cwd, cwd);
   assert.isTrue(
     Str.startsWith(`unparseable ${what} output: `)(failure.detail ?? ""),
@@ -234,33 +233,27 @@ const assertUnparseable = (result: Result.Result<unknown, unknown>, what: string
 };
 
 describe("Git parser edge contracts", () => {
-  // Inverted (G4): these inputs USED to parse fail-open — a missing path
-  // token became `""` and an unknown code became `"unknown"` — which is how
-  // a truncated `-z` stream or a non-`-z` run turned into plausible entries.
-  // Every entry parser now fails closed, naming the offending record.
-  it.effect("refuses incomplete name-status and rename tokens instead of inventing paths", () =>
+  it.effect("refuses truncated or non -z name-status and rename tokens instead of inventing plausible entries", () =>
     Effect.gen(function* () {
       const git = Effect.flatMap(Git, (git) => git.nameStatus(cwd, { base: "HEAD" }));
-      // No trailing NUL: a line-delimited (non -z) or truncated stream.
-      for (const text of ["Q", "R", "R\0old", "M"]) {
-        const pipe1 = yield* run(git, { stdout: text }).pipe(Effect.result);
+      for (const truncatedOrLineDelimited of ["Q", "R", "R\0old", "M"]) {
+        const pipe1 = yield* run(git, { stdout: truncatedOrLineDelimited }).pipe(Effect.result);
         assertUnparseable(pipe1, "name-status", /NUL terminator/);
       }
-      // Terminated, but the record is short of its path tokens or opens with a code git never emits.
-      const pipe2 = yield* run(git, { stdout: "M\0" }).pipe(Effect.result);
-      assertUnparseable(pipe2, "name-status", /fewer path tokens/);
-      const pipe3 = yield* run(git, { stdout: "R100\0old\0" }).pipe(Effect.result);
-      assertUnparseable(pipe3, "name-status", /fewer path/);
-      const pipe4 = yield* run(git, { stdout: "Q\0file\0" }).pipe(Effect.result);
-      assertUnparseable(pipe4, "name-status", /"Q"/);
-      // Well-formed input is unchanged, empty output stays the empty listing.
-      const result5 = yield* run(git, { stdout: "" });
-      assert.deepStrictEqual(result5, []);
-      const result6 = yield* run(git, { stdout: "M\0file\0" });
-      assert.deepStrictEqual(result6, [GitModule.NameStatusEntry.make({ status: "modified", path: "file" })]);
-      // A rename code without digits is still a rename, with no score to report.
-      const result7 = yield* run(git, { stdout: "R\0old\0new\0" });
-      assert.deepStrictEqual(result7, [
+      const shortOfPathTokens = yield* run(git, { stdout: "M\0" }).pipe(Effect.result);
+      assertUnparseable(shortOfPathTokens, "name-status", /fewer path tokens/);
+      const renameShortOfNewPath = yield* run(git, { stdout: "R100\0old\0" }).pipe(Effect.result);
+      assertUnparseable(renameShortOfNewPath, "name-status", /fewer path/);
+      const codeGitNeverEmits = yield* run(git, { stdout: "Q\0file\0" }).pipe(Effect.result);
+      assertUnparseable(codeGitNeverEmits, "name-status", /"Q"/);
+      const emptyListing = yield* run(git, { stdout: "" });
+      assert.deepStrictEqual(emptyListing, []);
+      const wellFormedUnchanged = yield* run(git, { stdout: "M\0file\0" });
+      assert.deepStrictEqual(wellFormedUnchanged, [
+        GitModule.NameStatusEntry.make({ status: "modified", path: "file" }),
+      ]);
+      const scorelessRename = yield* run(git, { stdout: "R\0old\0new\0" });
+      assert.deepStrictEqual(scorelessRename, [
         GitModule.NameStatusEntry.make({ status: "renamed", oldPath: "old", path: "new" }),
       ]);
       const status = Effect.flatMap(Git, (git) => git.status(cwd));
@@ -278,9 +271,8 @@ describe("Git parser edge contracts", () => {
   it.effect("refuses a blank worktree record that opens no block", () =>
     Effect.gen(function* () {
       const worktrees = Effect.flatMap(Git, (git) => git.worktreeList(cwd));
-      // A second blank record after a whole block flushes a draft that never named anything.
-      const pipe12 = yield* run(worktrees, { stdout: "worktree /repo\0bare\0\0\0" }).pipe(Effect.result);
-      assertUnparseable(pipe12, "worktree list", /no `worktree <path>` line: ""/);
+      const secondBlankAfterBlock = yield* run(worktrees, { stdout: "worktree /repo\0bare\0\0\0" }).pipe(Effect.result);
+      assertUnparseable(secondBlankAfterBlock, "worktree list", /no `worktree <path>` line: ""/);
     })
   );
 
@@ -298,8 +290,6 @@ describe("Git parser edge contracts", () => {
     })
   );
 
-  // Inverted (G4): a tree or index record missing header fields used to be
-  // back-filled with `type: "blob"`, `oid: ""` and `stage: 0`.
   it.effect("refuses tree and index records missing header fields; unterminated config values still parse", () =>
     Effect.gen(function* () {
       const tree = Effect.flatMap(Git, (git) => git.lsTree(cwd, "HEAD"));
@@ -322,12 +312,15 @@ describe("Git parser edge contracts", () => {
       assert.deepStrictEqual(result20, [
         GitModule.LsFilesEntry.make({ mode: "100644", oid: "abc", stage: 3, path: "file" }),
       ]);
-      // configGetAll is a value list, not an entry parser: it keeps its total contract.
       const result21 = yield* run(
         Effect.flatMap(Git, (git) => git.configGetAll(cwd, "a.b")),
         { stdout: "value" }
       );
-      assert.deepStrictEqual(result21, ["value"]);
+      assert.deepStrictEqual(
+        result21,
+        ["value"],
+        "configGetAll is a value list, not an entry parser: it keeps its total contract"
+      );
     })
   );
 
@@ -351,11 +344,14 @@ describe("Git parser edge contracts", () => {
           stdout: "worktree /a\0locked\0prunable\0\0worktree /b\0locked reason\0prunable stale\0unknown attribute\0\0",
         }
       );
-      // `prunable` is a boolean now (G4): the reason text git appends is dropped.
-      assert.deepStrictEqual(entries, [
-        GitModule.WorktreeEntry.make({ path: "/a", bare: false, detached: false, locked: "", prunable: true }),
-        GitModule.WorktreeEntry.make({ path: "/b", bare: false, detached: false, locked: "reason", prunable: true }),
-      ]);
+      assert.deepStrictEqual(
+        entries,
+        [
+          GitModule.WorktreeEntry.make({ path: "/a", bare: false, detached: false, locked: "", prunable: true }),
+          GitModule.WorktreeEntry.make({ path: "/b", bare: false, detached: false, locked: "reason", prunable: true }),
+        ],
+        "prunable is a boolean: the reason text git appends is dropped"
+      );
     })
   );
 

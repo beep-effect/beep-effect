@@ -13,9 +13,11 @@ it.effect("preserves diagnostic fields and guard details across raw error carrie
   Effect.sync(() => {
     const diagnostic = RawDiagnostic.make({ code: "NestingDepthExceeded", message: "too deep", offset: 7, length: 2 });
     const raw = RawMarkdownError.make(diagnostic);
-    // D-45: the schema carrier rebuilds its diagnostic from its own fields, so
-    // the record is equal to the one it was made from rather than identical.
-    assert.notStrictEqual(raw.diagnostic, diagnostic);
+    assert.notStrictEqual(
+      raw.diagnostic,
+      diagnostic,
+      "the schema carrier rebuilds its diagnostic from its own fields: equal to its source record, not identical"
+    );
     assert.deepStrictEqual(raw.diagnostic, diagnostic);
     assert.strictEqual(raw.message, diagnostic.message);
     assert.strictEqual(raw.name, "Error");

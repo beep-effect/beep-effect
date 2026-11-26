@@ -1,24 +1,4 @@
 import { currentHostPlatform, HostProcessPlatform } from "@beep/utils/HostProcess";
-// Kit-owned extension of the differential oracle (the vendored contract suite in
-// FileSystemContract.ts is upstream's and stays unedited). It pins the error
-// SHAPE of every failure the audit found memfs and the node adapter disagreeing
-// on — the `_tag`, the `method`, and the errno `code` on `reason.cause` — and
-// runs unchanged against BOTH MemoryFileSystem.layer and @effect/platform-node's
-// real filesystem. A case listed here is exercised on both; nothing in this file
-// is a disclaimer.
-//
-// Expectations come in three shapes:
-// - one outcome: both implementations, on every platform, agree on it;
-// - `{ linux, darwin }`: the real platform disagrees with itself. memfs models
-//   the Linux errno, and the node run asserts whichever platform it is on;
-// - `{ memory, node }`: a KNOWN divergence memfs deliberately keeps. Both sides
-//   are still asserted, so a change on either side fails here and forces the
-//   decision to be revisited.
-//
-// `pathOrDescriptor` is deliberately not asserted: node's adapter reports the
-// FIRST path argument of a two-path operation (rename, copy, copyFile, link,
-// symlink), memfs the one the conflict concerns.
-
 import { assert, describe, layer } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -37,7 +17,6 @@ import type * as Scope from "effect/Scope";
 type Implementation = "memory" | "node";
 
 interface Failure {
-  /** The errno `code` expected on `reason.cause`; absent for a BadArgument. */
   readonly code?: string;
   readonly method: string;
   readonly tag: PlatformError.SystemErrorTag | "BadArgument";
@@ -45,13 +24,13 @@ interface Failure {
 
 type Outcome = "success" | Failure;
 
+// decision: errno-parity-expectation-shapes
 type Expectation =
   | Outcome
   | { readonly linux: Outcome; readonly darwin: Outcome }
   | { readonly memory: Outcome; readonly node: Outcome };
 
 interface Case {
-  /** An extra assertion on the success value, when the value is the point. */
   readonly check?: (
     value: unknown,
     fs: FileSystem.FileSystem,
@@ -71,13 +50,11 @@ const fail = (tag: Failure["tag"], method: string, code?: string): Failure =>
 const resolveExpectation = (expectation: Expectation, implementation: Implementation, platform: string): Outcome => {
   if (expectation === "success" || "tag" in expectation) return expectation;
   if ("memory" in expectation) return expectation[implementation];
-  // memfs models Linux; the node run asserts the platform it runs on.
   if (implementation === "memory" || platform === "linux") return expectation.linux;
   if (platform === "darwin") return expectation.darwin;
   throw new Error(`no errno expectation for platform ${platform}`);
 };
 
-// The `type` of a `File.Info` success value, for `lstat` cases where the kind is the point.
 const infoType = (value: unknown) => (P.hasProperty(value, "type") ? value.type : undefined);
 
 const bytes = new Uint8Array([1, 2, 3, 4]);
@@ -89,15 +66,12 @@ const withHandle = (
   use: (handle: FileSystem.File) => Effect.Effect<unknown, PlatformError.PlatformError>
 ) => Effect.flatMap(fs.open(file, { flag }), use);
 
-// A handle whose scope has already closed: every operation on it is EBADF.
 const closedHandle = (fs: FileSystem.FileSystem, file: string) => Effect.scoped(fs.open(file, { flag: "r" }));
 
-// The success check of the truncate cases: the file at `p("file")` is now empty.
 const fileIsEmpty: NonNullable<Case["check"]> = (_, fs, p) =>
   Effect.map(fs.readFile(p("file")), (contents) => assert.strictEqual(contents.length, 0));
 
 const cases: ReadonlyArray<Case> = [
-  // readLink on an entry that is not a symbolic link: EINVAL, which node maps to Unknown.
   {
     name: "readLink on a regular file",
     run: (fs, p) => fs.readLink(p("file")),
@@ -119,7 +93,6 @@ const cases: ReadonlyArray<Case> = [
     expect: fail("BadResource", "readLink", "ELOOP"),
   },
 
-  // remove: fs.rm refuses every directory without `recursive`.
   {
     name: "remove a non-empty directory without recursive",
     run: (fs, p) => fs.remove(p("full")),
@@ -152,7 +125,6 @@ const cases: ReadonlyArray<Case> = [
     expect: fail("BadResource", "remove", "ENOTDIR"),
   },
 
-  // makeDirectory: a non-directory earlier in the path is ENOTDIR; as the final component, EEXIST.
   {
     name: "makeDirectory beneath a file",
     run: (fs, p) => fs.makeDirectory(p("file", "child")),
@@ -179,11 +151,7 @@ const cases: ReadonlyArray<Case> = [
     expect: "success",
   },
 
-  // makeDirectory through symbolic links (#891). The recursive walk follows a
-  // link component: a dangling one is ENOENT as the final component and — the
-  // node adapter's callback `fs.mkdir`, not `mkdirSync`, which says ENOENT —
-  // ENOTDIR earlier in the path; a loop is ELOOP either way. Without
-  // `recursive`, a link as the final component is simply an existing entry.
+  // decision: engine-errno-reference-is-adapter-callback
   {
     name: "makeDirectory recursively onto a dangling symlink",
     run: (fs, p) => fs.makeDirectory(p("dangling"), { recursive: true }),
@@ -251,7 +219,6 @@ const cases: ReadonlyArray<Case> = [
     check: (_, fs, p) => Effect.map(fs.exists(p("dir", "a", "b")), (exists) => assert.isTrue(exists)),
   },
 
-  // rename
   {
     name: "rename a directory into itself",
     run: (fs, p) => fs.rename(p("dir"), p("dir", "sub")),
@@ -298,7 +265,6 @@ const cases: ReadonlyArray<Case> = [
     expect: { linux: fail("BadResource", "rename", "ENOTDIR"), darwin: fail("NotFound", "rename", "ENOENT") },
   },
 
-  // copyFile
   {
     name: "copyFile from a directory",
     run: (fs, p) => fs.copyFile(p("dir"), p("out")),
@@ -315,7 +281,6 @@ const cases: ReadonlyArray<Case> = [
     expect: { linux: fail("BadResource", "copyFile", "EISDIR"), darwin: fail("NotFound", "copyFile", "ENOENT") },
   },
 
-  // copy (fs.cp): same-entry and kind mismatches fail before `overwrite` is consulted.
   {
     name: "copy a directory into itself",
     run: (fs, p) => fs.copy(p("full"), p("full", "sub")),
@@ -381,8 +346,6 @@ const cases: ReadonlyArray<Case> = [
       Effect.andThen(fs.makeDirectory(p("shadow", "a"), { recursive: true }), fs.copy(p("full"), p("shadow"))),
     expect: fail("Unknown", "copy", "ERR_FS_CP_NON_DIR_TO_DIR"),
   },
-  // Known divergence: without `overwrite`, fs.cp silently keeps an existing
-  // destination (and merges into an existing directory); memfs fails EEXIST.
   {
     name: "copy a file onto an existing file without overwrite",
     run: (fs, p) => fs.copy(p("file"), p("file2")),
@@ -393,21 +356,17 @@ const cases: ReadonlyArray<Case> = [
     run: (fs, p) => fs.copy(p("full"), p("full2")),
     expect: { memory: fail("AlreadyExists", "copy", "EEXIST"), node: "success" },
   },
-  // Known divergence: fs.cp creates missing destination parents; memfs does not.
   {
     name: "copy into a missing parent directory",
     run: (fs, p) => fs.copy(p("file"), p("missing", "out")),
     expect: { memory: fail("NotFound", "copy", "ENOENT"), node: "success" },
   },
 
-  // open, and the file handles it returns
   {
     name: "open a directory for writing",
     run: (fs, p) => fs.open(p("dir"), { flag: "w" }),
     expect: fail("BadResource", "open", "EISDIR"),
   },
-  // Known divergence: node opens a directory read-only and fails on the first
-  // read; memfs refuses at open. The tag and code agree, the method does not.
   {
     name: "open a directory for reading",
     run: (fs, p) => fs.open(p("dir"), { flag: "r" }),
@@ -469,7 +428,6 @@ const cases: ReadonlyArray<Case> = [
     expect: fail("Unknown", "stat", "EBADF"),
   },
 
-  // link and symlink
   {
     name: "link to a directory",
     run: (fs, p) => fs.link(p("dir"), p("dirlink")),
@@ -501,7 +459,6 @@ const cases: ReadonlyArray<Case> = [
     expect: fail("NotFound", "symlink", "ENOENT"),
   },
 
-  // writeFile / readFile / readDirectory / stat
   {
     name: "writeFile onto a directory named with a trailing slash",
     run: (fs, p) => fs.writeFileString(`${p("dir")}/`, "x"),
@@ -533,7 +490,6 @@ const cases: ReadonlyArray<Case> = [
     expect: fail("BadResource", "readDirectory", "ENOTDIR"),
   },
   { name: "stat a symlink loop", run: (fs, p) => fs.stat(p("loop1")), expect: fail("BadResource", "stat", "ELOOP") },
-  // lstat never follows the final link: a loop and a dangling link are both reported as links.
   {
     name: "lstat a symlink loop",
     run: (fs, p) => fs.lstat(p("loop1")),
@@ -575,7 +531,6 @@ const cases: ReadonlyArray<Case> = [
     check: fileIsEmpty,
   },
 
-  // glob never fails on its root: missing, non-directory and unresolvable roots match nothing.
   {
     name: "glob from a missing root",
     run: (fs, p) => fs.glob("*", { root: p("missing") }),
@@ -633,14 +588,15 @@ const assertOutcome = (exit: Exit.Exit<unknown, PlatformError.PlatformError>, ex
   assert.strictEqual(error.reason.method, expected.method);
   if (expected.code !== undefined) {
     const cause = error.reason.cause;
-    assert(P.hasProperty(cause, "code"));
-    assert.strictEqual(cause.code, expected.code);
+    assert(P.hasProperty(cause, "code"), "a system error carries its errno code on reason.cause; a BadArgument none");
+    assert.strictEqual(
+      cause.code,
+      expected.code,
+      "the errno node reports rides on reason.cause, as the node adapter sets it"
+    );
   }
 };
 
-// The contract's cases, registered into a harness that already serves
-// `FileSystem.FileSystem` — the suite's own `layer`, or a reference harness
-// that provides a wider platform layer.
 type Harness = Vitest.MethodsNonLive<FileSystem.FileSystem>;
 
 export const errnoCases: {

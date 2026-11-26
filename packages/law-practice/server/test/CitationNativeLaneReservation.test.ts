@@ -16,7 +16,7 @@ import {
 import { CitationNativeLaneFailure } from "@beep/law-practice-server/internal/Citation/NativeLane";
 import {
   makeCitationNativeProcessOwner,
-  CitationNativeProcessRuntime as NativeRuntimeFieldsWithoutFixtureCapabilities,
+  CitationNativeProcessRuntime as NativeRuntime,
 } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
@@ -174,9 +174,7 @@ const makeReservationFixture = Effect.fn("NativeReservationTest.fixture")(functi
   const runtime = yield* family === "xml"
     ? makeCitationXmlTestRuntime(kind)
     : makeCitationNativeWorkerFixture("busy", family, kind).pipe(
-        Effect.flatMap((runtime) =>
-          ownCitationTestConfiguration(NativeRuntimeFieldsWithoutFixtureCapabilities, runtime)
-        )
+        Effect.flatMap((runtime) => ownCitationTestConfiguration(NativeRuntime, runtime))
       );
   const provide = <A, E, R>(body: Effect.Effect<A, E, R>) =>
     body.pipe(
@@ -198,14 +196,14 @@ const makeReservationFixture = Effect.fn("NativeReservationTest.fixture")(functi
     killSignal: "SIGKILL",
     forceKillAfter: Duration.zero,
   });
-  const clockIsolatingStageTimerFromSameDurationInvocationTimer = yield* makeCitationNativeSleepClock((duration) =>
+  const enclosureClock = yield* makeCitationNativeSleepClock((duration) =>
     path === "job-deadline" && Duration.equals(duration, limits[jobLimit]) ? Effect.never : clock.sleep(duration)
   );
   const invoke = <A, E, R>(body: Effect.Effect<A, E, R | CitationInvocation>) =>
     openCitationInvocation(
       CitationInvocationPolicy.make({ limits, operation, deadlineStarts: "before-admission" }),
       body
-    ).pipe(Effect.provideService(Clock.Clock, clockIsolatingStageTimerFromSameDurationInvocationTimer), provide);
+    ).pipe(Effect.provideService(Clock.Clock, enclosureClock), provide);
   return {
     family,
     operation,
@@ -228,7 +226,10 @@ const proveJobDeadline = Effect.fn("NativeReservationTest.jobDeadline")(function
   const pending = yield* invoke(
     Effect.gen(function* () {
       const result = yield* job.pipe(Effect.flip);
-      expect(result).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation, limit: jobLimit });
+      expect(
+        result,
+        "the enclosing invocation timer of the same duration never fires, so the stage's own timer refuses"
+      ).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation, limit: jobLimit });
       const invocation = yield* CitationInvocation;
       const snapshot = yield* invocation.lane.snapshot;
       expect(snapshot).toMatchObject(

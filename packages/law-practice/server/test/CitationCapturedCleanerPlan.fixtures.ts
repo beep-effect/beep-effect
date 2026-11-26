@@ -69,10 +69,8 @@ const installHost = Effect.fn("CapturedCleanerTest.host")(function* (values: Cit
         const charge = yield* work.reserveText(units);
         charges.push(charge);
       }
-      const literalOneCharacterReplacementReadingNoOracle = yield* values.sourceText(
-        Str.replaceAll("’", "'")(text.text)
-      );
-      return CitationCleanerProduced.make({ value: literalOneCharacterReplacementReadingNoOracle, charges });
+      const replaced = yield* values.sourceText(Str.replaceAll("’", "'")(text.text));
+      return CitationCleanerProduced.make({ value: replaced, charges });
     }),
     open: Effect.fn("CapturedCleanerTest.open")(function* (name) {
       if (name !== planName) return yield* failed();
@@ -174,7 +172,10 @@ export const replayCitationCapturedCleanerPlan = Effect.fn("CapturedCleanerTest.
       removeAmbiguous: false,
     });
   const result = yield* engine.extract(input(planName));
-  expect(result.source._tag).toBe("Derived");
+  expect(
+    result.source._tag,
+    "the cleaner is a literal one-character replacement that reads no source oracle or expected model"
+  ).toBe("Derived");
   expect(result.source.parent).toEqual(proof.source);
   expect(result.source.source.sourceText).toBe(body.stages.document.plainText);
   expect(result.citations).toHaveLength(body.outcome.value.length);

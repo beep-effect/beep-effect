@@ -12,12 +12,8 @@ import * as S from "effect/Schema";
 const scalar = (value: unknown, offset: number, length: number) =>
   YamlScalar.make({ value, style: "plain", offset, length });
 
-/**
- * host: localhost
- * ports:
- *   - 8080
- *   - 8443
- */
+const treeSource = "host: localhost\nports:\n  - 8080\n  - 8443";
+
 const tree = () => {
   const host = scalar("localhost", 6, 9);
   const p0 = scalar(8080, 27, 4);
@@ -76,8 +72,8 @@ describe("YamlNode", () => {
       const host = O.getOrThrow(atHost);
       assert.ok(S.is(YamlScalar)(host));
       assert.strictEqual(host.value, "localhost");
-      // End offset is exclusive: offset 40 is outside the root span [0, 40).
-      assertNone(root.findAtOffset(40));
+      const rootSpanEndIsExclusive = root.findAtOffset(treeSource.length);
+      assertNone(rootSpanEndIsExclusive);
     });
 
     it("returns none outside the subtree", () => {
@@ -116,8 +112,11 @@ describe("YamlNode", () => {
         length: 16,
       });
       assert.deepStrictEqual(map.toValue(MutableHashMap.empty()), { base: 1, ref: 1 });
-      // Without an anchor map, aliases are unresolvable and yield null.
-      assert.deepStrictEqual(map.toValue(), { base: 1, ref: null });
+      assert.deepStrictEqual(
+        map.toValue(),
+        { base: 1, ref: null },
+        "without an anchor map, aliases are unresolvable and yield null"
+      );
     });
 
     it("builds __proto__ keys as own data properties", () => {

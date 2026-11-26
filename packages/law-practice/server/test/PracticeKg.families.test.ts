@@ -179,10 +179,7 @@ describe("practice KG family attribution", () => {
   it("ranks the folder path over text references, and keeps the register for families nobody has named", () => {
     const inFamily = (digest: string, docket: string, family: string, folderClient: string | null = null) =>
       PracticeKgCatalogRow.make({ ...catalogRow(digest, { docket }), docketFamily: family, folderClient });
-    const docketListedUnderTwoClientsRegisterCannotDecide = [
-      registerRow("11111", "30002US04"),
-      registerRow("55555", "30002US04"),
-    ];
+    const twoClientDocket = [registerRow("11111", "30002US04"), registerRow("55555", "30002US04")];
     const registerNotConsultedWhereFamilyHasConsensus = registerRow("77777", "40004US02");
     const attributions = attribute(
       [
@@ -199,11 +196,14 @@ describe("practice KG family attribution", () => {
       [
         registerRow("11111", "30002us01 "),
         registerRow("66666", "30002WO05"),
-        ...docketListedUnderTwoClientsRegisterCannotDecide,
+        ...twoClientDocket,
         registerNotConsultedWhereFamilyHasConsensus,
       ]
     );
-    expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
+    expect(
+      A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey]),
+      "a docket listed under two clients leaves the register unable to decide"
+    ).toStrictEqual([
       ["consensus", "family-consensus", "44444.40004"],
       ["consensus-voter", "folder-path", "44444.40004"],
       ["family-level-no-docket-for-register", "filename", "50005"],
@@ -215,7 +215,8 @@ describe("practice KG family attribution", () => {
     ]);
   });
 
-  it("never lets the register, which lists only a reused code's current holder, override or outvote a document's own client evidence", () => {
+  // decision: docket-register-attributes-last-and-never-votes
+  it("never lets the register override or outvote a document's own client evidence", () => {
     const register = [registerRow("11111", "20001US01"), registerRow("11111", "20001US07")];
     const attributions = attribute(
       [
@@ -325,14 +326,14 @@ describe("practice KG family attribution", () => {
 });
 
 describe("practice KG anchor membership by dominance", () => {
-  type FamilyOfCountDocumentsAllMentioningAnchorApplication = {
+  type FamilyMentions = {
     readonly client: string | null;
     readonly count: number;
     readonly family: string;
     readonly filename?: boolean;
     readonly patentToo?: boolean;
   };
-  const resolveOne = (families: ReadonlyArray<FamilyOfCountDocumentsAllMentioningAnchorApplication>) => {
+  const resolveOne = (families: ReadonlyArray<FamilyMentions>) => {
     const documents = A.flatMap(families, ({ client, count, family, filename, patentToo }) =>
       A.map(A.range(1, count), (index) => ({
         attribution: PracticeKgDocumentAttribution.make({
@@ -369,11 +370,10 @@ describe("practice KG anchor membership by dominance", () => {
   });
 
   it("keeps unanimous membership as it was", () => {
-    expect(resolveOne([{ client: "11111", count: 3, family: "20001" }])).toStrictEqual([
-      "text-reference",
-      "11111.20001",
-      ["11111.20001"],
-    ]);
+    expect(
+      resolveOne([{ client: "11111", count: 3, family: "20001" }]),
+      "each family holds count documents, all mentioning the anchor's application number"
+    ).toStrictEqual(["text-reference", "11111.20001", ["11111.20001"]]);
   });
 
   it("makes a dominant client-keyed family the member and keeps the other family as a mention", () => {
@@ -470,7 +470,7 @@ describe("practice KG matter tables", () => {
     const patent = node("patent", "12345678");
     const directPatent = node("patent", "55555555");
     const document = node("document", "sha256:a");
-    const oneClientNumberUnderTwoNamesLeftUnnamedNotGuessed = [
+    const twoNameClient = [
       registerRow("22222", "20001US04", "Second Client"),
       registerRow("22222", "20001US05", "Second Client LLC"),
     ];
@@ -503,12 +503,15 @@ describe("practice KG matter tables", () => {
           registerRow("11111", "20001US01", " Example Client "),
           registerRow("11111", "20001US02", "Example Client"),
           registerRow("11111", "20001US03"),
-          ...oneClientNumberUnderTwoNamesLeftUnnamedNotGuessed,
+          ...twoNameClient,
           registerRow("33333", "20001US06", "  "),
         ],
       })
     );
-    expect(A.map(tables.matters, (matter) => [matter.familyKey, matter.clientName])).toStrictEqual([
+    expect(
+      A.map(tables.matters, (matter) => [matter.familyKey, matter.clientName]),
+      "one client number under two names is left unnamed, not guessed"
+    ).toStrictEqual([
       ["11111.20001", "Example Client"],
       ["20001", null],
       ["22222.20001", null],

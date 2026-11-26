@@ -1,11 +1,4 @@
-// Run the side-effect-only stdout patch before application and sidecar services
-// load. The IPC stdio integration test proves its functional utility imports do
-
-// not leak bytes onto the protocol stream before the patch is installed.
 import * as P from "@beep/utils/Predicate";
-// Run the side-effect-only stdout patch before application and sidecar services
-// load. The IPC stdio integration test proves its functional utility imports do
-// not leak bytes onto the protocol stream before the patch is installed.
 import * as BunStdio from "@effect/platform-bun/BunStdio";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -13,8 +6,7 @@ import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import { ipcTransport, protocolStdout } from "./IpcStdoutGuard.prelude.ts";
 
-// Re-export the single transport flag so main.ts selects the transport from the
-// same value the stdout guard keys off, never a second CHAT_TRANSPORT read.
+// decision: ipc-stdout-reserved-for-protocol-frames
 export { ipcTransport };
 
 const writeProtocolStdout = (chunk: string | Uint8Array): Effect.Effect<void> =>

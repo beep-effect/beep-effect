@@ -19,9 +19,6 @@ import { migrateOnBoot } from "@/runtime/Migrations";
 import { migrationBundle } from "@/runtime/Migrations.gen";
 
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
-// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
-// database has to register the bundled extension exactly as the sidecar's
-// `makeBundledPgliteLayer` does.
 const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 

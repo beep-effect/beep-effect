@@ -33,6 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GithubRest } from "../../../internal/github/index.ts";
 import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
+import { checkoutRepositoryFromRemoteUrl } from "../../../internal/state/WorkstationState.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
@@ -641,6 +642,46 @@ export const detectPrRepository = Effect.fn("ProvenanceFooter.detectRepository")
               YeetCommandError.make({ message: "Expected origin's push URLs to name one github.com repository." })
             ),
     })
+  );
+});
+
+/**
+ * Resolve the checkout's canonical home from its origin fetch URL, on any Git host.
+ *
+ * **Details**
+ *
+ * Reads the configured `remote.origin.url` (never an `insteadOf` rewrite) and
+ * parses the SSH scp form, `ssh://` with an optional port and `https://`.
+ * Push URLs are not consulted: the fetch URL names the home. Use
+ * {@link detectPrRepository} for the GitHub repository pull requests live in.
+ *
+ * **Example** (Build checkout detection)
+ *
+ * ```ts
+ * import { detectCheckoutRepository } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const detection = detectCheckoutRepository("/worktrees/beep-effect10")
+ * console.log(Effect.isEffect(detection)) // true
+ * ```
+ *
+ * @param cwd - Checkout whose `origin` remote names its home.
+ * @returns The lower-cased checkout identity, or a typed error when origin is missing or unparsable.
+ * @category detection
+ * @since 0.0.0
+ */
+export const detectCheckoutRepository = Effect.fn("ProvenanceFooter.detectCheckoutRepository")(function* (cwd: string) {
+  const origin = yield* readGitConfig(cwd, "remote.origin.url").pipe(
+    Effect.mapError(
+      YeetCommandError.new("Failed to read the origin URL.", { command: "git config --get remote.origin.url" })
+    )
+  );
+  if (O.isNone(origin)) {
+    return yield* YeetCommandError.make({ message: "Expected an origin remote URL." });
+  }
+  return yield* checkoutRepositoryFromRemoteUrl(origin.value).pipe(
+    Effect.fromOption,
+    Effect.mapError(() => YeetCommandError.make({ message: "Expected the origin URL to name host/owner/name." }))
   );
 });
 
