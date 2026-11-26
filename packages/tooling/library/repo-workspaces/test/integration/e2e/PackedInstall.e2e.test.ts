@@ -1,24 +1,3 @@
-// PackedInstall against real package managers and a real fixture workspace.
-//
-// The unit suite (PackedInstall.test.ts) stops at the pack: the tarball lands
-// in a random temp directory that memfs cannot pre-seed. Everything past it —
-// a real `npm pack` and `pnpm pack`, reading the packed manifest with the
-// host's `tar`, the macOS /var -> /private/var realpath, the installs, the
-// bins, and the scratch directory's removal — is proven here.
-//
-// Hermetic by construction: the fixture has no external dependencies, and
-// every install runs with its network routed to a dead proxy and corepack's
-// network switched off. A manager that tried to reach the registry (an
-// override that missed) or to download itself (a `packageManager` pin that
-// did not match the running version) fails instead of quietly succeeding.
-//
-// Run it through Bun (`bunx --bun vitest run`): the first test asserts the
-// parent manager's context is present, so the scrub is exercised against the
-// real variables rather than a hand-written list. The fixtures are written
-// through Effect's FileSystem on the host platform before the suites are
-// declared, because each test's skip decision and timeout depend on the
-// managers the probe found.
-
 import { Run } from "@beep/commands";
 import { Workspaces } from "@beep/repo-workspaces";
 import { PackedInstall } from "@beep/repo-workspaces/testing";
@@ -56,29 +35,16 @@ const BIN = `#!/usr/bin/env node\nimport { greet } from "${LIB}";\nconsole.log(g
 const SHARED_CARRIER = "@effected/packed-install-fixture-shared-plugin";
 const SHARED_FRONT = "@effected/packed-install-fixture-shared-cli";
 const SHARED_BIN = "fixture-shared";
-/** The effected bundler's prod npm output, and PackedInstall's default pack source. */
-const PROD = "dist/prod/npm/pkg";
+const BUNDLER_NPM_OUTPUT = "dist/prod/npm/pkg";
 
-// The host edge, read once at module scope: the runner's environment and the
-// runtime binary that spawns the consumer-side imports.
 const HOST_ENV: Readonly<Record<string, string | undefined>> = process.env;
-const NODE = process.execPath;
-// `NODE` is this process's own binary: Bun under `bunx --bun`, Node otherwise. Each runtime words a
-// missing module its own way, so the expected wording is keyed by the runtime that spawns it.
+const THIS_RUNTIME = process.execPath;
 const MODULE_NOT_FOUND = process.versions.bun === undefined ? /ERR_MODULE_NOT_FOUND/ : /Cannot find module/;
-/** The parent manager's context this runner carries, which every spawn must lose. */
-const LEAKED = A.filter(R.keys(HOST_ENV), (key) => /^(npm_|pnpm_config_|PNPM_SCRIPT_SRC_DIR$)/i.test(key));
+const PARENT_MANAGER_CONTEXT = A.filter(R.keys(HOST_ENV), (key) =>
+  /^(npm_|pnpm_config_|PNPM_SCRIPT_SRC_DIR$)/i.test(key)
+);
 const USER_AGENT = O.getOrElse(O.fromUndefinedOr(HOST_ENV.npm_config_user_agent), () => "");
 
-// A port nothing listens on. Every manager honours HTTP(S)_PROXY, so a
-// registry fetch or a self-download fails fast with ECONNREFUSED.
-//
-// Assumes no proxy in the user's ~/.npmrc. HOME is inherited on purpose, so a
-// `proxy` or `https-proxy` set there may win over these variables (precedence
-// not verified). The dead-proxy control below would then fail with a proxy or
-// E404 error instead of ECONNREFUSED. The installs stay hermetic either way,
-// because the fixture has no external dependencies. The scrub strips every
-// `npm_config_*` variable, so an env override cannot pin it from here.
 const DEAD_PROXY = "http://127.0.0.1:9";
 const OFFLINE: Readonly<Record<string, string | undefined>> = {
   ...HOST_ENV,
@@ -90,17 +56,23 @@ const OFFLINE: Readonly<Record<string, string | undefined>> = {
   no_proxy: undefined,
   COREPACK_ENABLE_NETWORK: "0",
 };
-/** What the bins and the fixture's own spawns run under: the same scrub the installs get. */
-const CHILD_ENV = PackedInstall.scrubEnv(OFFLINE);
+const INSTALL_SCRUBBED_ENV = PackedInstall.scrubEnv(OFFLINE);
 
 const fixture = makeNodeFixture();
 afterAll(() => fixture.close());
 
-/** A child under the scrubbed environment, nothing inherited, stdin the null device. */
-const spawn = (executable: string, args: ReadonlyArray<string>, cwd: string, timeout: Duration.Input = "30 seconds") =>
-  Run.collect(ChildProcess.make(executable, args, { cwd, env: CHILD_ENV, extendEnv: false, stdin: "ignore" }), {
-    timeout,
-  });
+const spawnScrubbed = (
+  executable: string,
+  args: ReadonlyArray<string>,
+  cwd: string,
+  timeout: Duration.Input = "30 seconds"
+) =>
+  Run.collect(
+    ChildProcess.make(executable, args, { cwd, env: INSTALL_SCRUBBED_ENV, extendEnv: false, stdin: "ignore" }),
+    {
+      timeout,
+    }
+  );
 
 const write = Effect.fnUntraced(function* (root: string, file: string, content: string, mode?: number) {
   const fs = yield* FileSystem.FileSystem;
@@ -110,37 +82,27 @@ const write = Effect.fnUntraced(function* (root: string, file: string, content: 
   yield* fs.writeFileString(target, content);
   if (mode !== undefined) yield* fs.chmod(target, mode);
 });
-/** JSON text, two-space indented: a manifest document, or a quoted string inside a script or YAML. */
-const encodeJson = flow(S.encodeResult(S.fromJsonString(S.Unknown, { space: 2 })), Result.getOrThrowWith(identity));
-const json = (value: unknown): string => `${encodeJson(value)}\n`;
+const encodeIndentedJson = flow(
+  S.encodeResult(S.fromJsonString(S.Unknown, { space: 2 })),
+  Result.getOrThrowWith(identity)
+);
+const json = (value: unknown): string => `${encodeIndentedJson(value)}\n`;
 const decodeJson = S.decodeEffect(JsonValue);
 
-/** A realpath'd temporary directory, removed when the suite closes. */
-const scratchDirectory = Effect.fnUntraced(function* (prefix: string) {
+const realpathedScratchDirectory = Effect.fnUntraced(function* (prefix: string) {
   const fs = yield* FileSystem.FileSystem;
   const tempDirectory1 = yield* fixture.tempDirectory(prefix);
   return yield* fs.realPath(tempDirectory1);
 });
 
-/**
- * A three-package pnpm workspace. The source manifests carry `workspace:^`;
- * each `dist/prod/npm/pkg` is the publish-ready build with those specifiers
- * resolved, as the bundler writes it. `carrier/dist/raw` is a broken build
- * that still carries `workspace:^`.
- *
- * - lib: exports `greet`.
- * - carrier: a bin that prints lib's greeting (a runtime dependency on lib).
- * - plugin: a peer dependency on lib and no bin — P3's S1 shape, where the
- *   consumer itself imports the peer.
- */
-const writeFixture = Effect.fnUntraced(function* () {
-  const root = yield* scratchDirectory("packed-install-fixture-");
+const writeWorkspaceFixture = Effect.fnUntraced(function* () {
+  const root = yield* realpathedScratchDirectory("packed-install-fixture-");
   yield* write(root, "package.json", json({ name: "packed-install-fixture-root", version: "0.0.0", private: true }));
   yield* write(root, "pnpm-workspace.yaml", "packages:\n  - packages/*\n");
 
   const lib = { name: LIB, version: VERSION, type: "module", exports: { ".": "./index.js" }, files: ["index.js"] };
   const greet = `export const greet = () => "${GREETING}";\n`;
-  for (const dir of ["packages/lib", `packages/lib/${PROD}`]) {
+  for (const dir of ["packages/lib", `packages/lib/${BUNDLER_NPM_OUTPUT}`]) {
     yield* write(root, `${dir}/package.json`, json(lib));
     yield* write(root, `${dir}/index.js`, greet);
   }
@@ -153,12 +115,12 @@ const writeFixture = Effect.fnUntraced(function* () {
     files: ["bin.js"],
     dependencies: { [LIB]: dependency },
   });
-  const carriers: ReadonlyArray<readonly [string, string]> = [
+  const sourceProdAndBrokenRawCarriers: ReadonlyArray<readonly [string, string]> = [
     ["packages/carrier", "workspace:^"],
-    [`packages/carrier/${PROD}`, VERSION],
+    [`packages/carrier/${BUNDLER_NPM_OUTPUT}`, VERSION],
     ["packages/carrier/dist/raw", "workspace:^"],
   ];
-  for (const [dir, dependency] of carriers) {
+  for (const [dir, dependency] of sourceProdAndBrokenRawCarriers) {
     yield* write(root, `${dir}/package.json`, json(carrier(dependency)));
     yield* write(root, `${dir}/bin.js`, BIN, 0o755);
   }
@@ -174,14 +136,13 @@ const writeFixture = Effect.fnUntraced(function* () {
   const shout = `import { greet } from "${LIB}";\nexport const shout = () => greet().toUpperCase();\n`;
   for (const [dir, peer] of [
     ["packages/plugin", "workspace:^"],
-    [`packages/plugin/${PROD}`, VERSION],
+    [`packages/plugin/${BUNDLER_NPM_OUTPUT}`, VERSION],
   ] as const) {
     yield* write(root, `${dir}/package.json`, json(plugin(peer)));
     yield* write(root, `${dir}/index.js`, shout);
   }
 
-  // A carrier and a front end that BOTH declare fixture-shared: the mirror-bin shape allowSharedBins permits.
-  const shared = (name: string, printed: string, dependencies: Readonly<Record<string, string>>) => ({
+  const mirrorBinPackage = (name: string, printed: string, dependencies: Readonly<Record<string, string>>) => ({
     manifest: {
       name,
       version: VERSION,
@@ -190,13 +151,16 @@ const writeFixture = Effect.fnUntraced(function* () {
       files: ["bin.js"],
       dependencies,
     },
-    bin: `#!/usr/bin/env node\nconsole.log(${encodeJson(printed)});\n`,
+    bin: `#!/usr/bin/env node\nconsole.log(${encodeIndentedJson(printed)});\n`,
   });
   for (const [dir, pkg] of [
-    ["packages/shared-cli", shared(SHARED_FRONT, "front", {})],
-    [`packages/shared-cli/${PROD}`, shared(SHARED_FRONT, "front", {})],
-    ["packages/shared-plugin", shared(SHARED_CARRIER, "carrier", { [SHARED_FRONT]: "workspace:^" })],
-    [`packages/shared-plugin/${PROD}`, shared(SHARED_CARRIER, "carrier", { [SHARED_FRONT]: VERSION })],
+    ["packages/shared-cli", mirrorBinPackage(SHARED_FRONT, "front", {})],
+    [`packages/shared-cli/${BUNDLER_NPM_OUTPUT}`, mirrorBinPackage(SHARED_FRONT, "front", {})],
+    ["packages/shared-plugin", mirrorBinPackage(SHARED_CARRIER, "carrier", { [SHARED_FRONT]: "workspace:^" })],
+    [
+      `packages/shared-plugin/${BUNDLER_NPM_OUTPUT}`,
+      mirrorBinPackage(SHARED_CARRIER, "carrier", { [SHARED_FRONT]: VERSION }),
+    ],
   ] as const) {
     yield* write(root, `${dir}/package.json`, json(pkg.manifest));
     yield* write(root, `${dir}/bin.js`, pkg.bin, 0o755);
@@ -204,50 +168,45 @@ const writeFixture = Effect.fnUntraced(function* () {
   return root;
 });
 
-/** An empty directory outside any project, for spawns that must not pick up a project's pins. */
-const OUTSIDE = await fixture.runtime.runPromise(scratchDirectory("packed-install-outside-"));
+const OUTSIDE_ANY_PROJECT = await fixture.runtime.runPromise(realpathedScratchDirectory("packed-install-outside-"));
 
-/**
- * Whether a manager answers `--version` from outside any project. Bounded like PackedInstall's own
- * probe (30 seconds): a Yarn shim that tries to fetch itself would otherwise hang collection.
- *
- * Availability only, never the version: a host shim can answer differently here than in the run's
- * scratch root (the vite-plus `pnpm` shim answered 12.15.0 here while the consumer resolved
- * 12.16.1), so the version a consumer is pinned to is read from the consumer itself.
- */
-const answers = (pm: PackageManagerName) =>
-  spawn(pm, ["--version"], OUTSIDE).pipe(
+const SELF_FETCHING_YARN_SHIM_BOUND: Duration.Input = "30 seconds";
+const respondsToVersionProbe = (pm: PackageManagerName) =>
+  spawnScrubbed(pm, ["--version"], OUTSIDE_ANY_PROJECT, SELF_FETCHING_YARN_SHIM_BOUND).pipe(
     Effect.map((out) => out.succeeded),
     Effect.orElseSucceed(() => false)
   );
 const ON_PATH: Readonly<Record<PackageManagerName, boolean>> = await fixture.runtime.runPromise(
   Effect.all(
-    { npm: answers("npm"), pnpm: answers("pnpm"), yarn: answers("yarn"), bun: answers("bun") },
+    {
+      npm: respondsToVersionProbe("npm"),
+      pnpm: respondsToVersionProbe("pnpm"),
+      yarn: respondsToVersionProbe("yarn"),
+      bun: respondsToVersionProbe("bun"),
+    },
     { concurrency: 1 }
   )
 );
 const HAS_NPM = ON_PATH.npm;
 const HAS_PNPM = ON_PATH.pnpm;
 const HAS_YARN = ON_PATH.yarn;
-/** The managers of `managers` this machine has, in order. */
-const available = (managers: ReadonlyArray<PackageManagerName>): ReadonlyArray<PackageManagerName> =>
+const availableInOrder = (managers: ReadonlyArray<PackageManagerName>): ReadonlyArray<PackageManagerName> =>
   A.filter(managers, (pm) => ON_PATH[pm]);
 
-/** The first bun release observed to link a shared bin name to the consumer's direct dependency. */
-const BUN_CARRIER_SLOT_SINCE = SemVer.of(1, 4, 4);
+const FIRST_BUN_LINKING_DIRECT_DEP_BIN = SemVer.of(1, 4, 4);
 const bunGivesTheCarrierTheSlot = (version: string | undefined): boolean =>
   version !== undefined &&
   Result.match(SemVer.parseResult(version), {
     onFailure: () => false,
-    onSuccess: (parsed) => parsed.gte(BUN_CARRIER_SLOT_SINCE),
+    onSuccess: (parsed) => parsed.gte(FIRST_BUN_LINKING_DIRECT_DEP_BIN),
   });
 
-const ROOT = await fixture.runtime.runPromise(writeFixture());
-// P3 C8: pnpm packs a `workspace:` specifier only in an INSTALLED workspace.
-// No external dependencies, so the install is offline.
-const PREINSTALL = HAS_PNPM
+const ROOT = await fixture.runtime.runPromise(writeWorkspaceFixture());
+const OFFLINE_WORKSPACE_INSTALL = HAS_PNPM
   ? await fixture.runtime.runPromise(
-      spawn("pnpm", ["install", "--offline", "--config.ignore-scripts=true"], ROOT, "2 minutes").pipe(Effect.option)
+      spawnScrubbed("pnpm", ["install", "--offline", "--config.ignore-scripts=true"], ROOT, "2 minutes").pipe(
+        Effect.option
+      )
     )
   : O.none();
 
@@ -255,28 +214,20 @@ const Live = Workspaces.layer({ cwd: ROOT }).pipe(Layer.provideMerge(nodeHost));
 
 const LINKED = "@effected/packed-install-fixture-linked";
 const BRIDGE = "@effected/packed-install-fixture-bridge";
-/** Outside the workspace, and at a version no registry has: only an override can install it. */
 const EXTERNAL = "@effected/packed-install-fixture-external";
 const EXTERNAL_VERSION = "7.7.7-unpublished";
 const LINKED_BIN = "fixture-linked";
 const BRIDGED = "bridged from the unpublished external";
 
-/**
- * A second workspace for `overrides`: carrier `linked` -> closure member
- * `bridge` -> `external@7.7.7-unpublished`, which lives beside the workspace,
- * not in it. The root's `pnpm-workspace.yaml` links it the dogfood way,
- * `"<name>": "file:../external"`, and `externalTarball` is the same package
- * packed with npm. Nothing here is ever installed in the workspace itself.
- */
-const writeLinkedFixture = Effect.fnUntraced(function* () {
+const writeOverridesWorkspaceFixture = Effect.fnUntraced(function* () {
   const path = yield* Path.Path;
-  const base = yield* scratchDirectory("packed-install-linked-");
+  const base = yield* realpathedScratchDirectory("packed-install-linked-");
   const root = path.join(base, "workspace");
   yield* write(root, "package.json", json({ name: "packed-install-linked-root", version: "0.0.0", private: true }));
   yield* write(
     root,
     "pnpm-workspace.yaml",
-    `packages:\n  - packages/*\noverrides:\n  ${encodeJson(EXTERNAL)}: "file:../external"\n`
+    `packages:\n  - packages/*\noverrides:\n  ${encodeIndentedJson(EXTERNAL)}: "file:../external"\n`
   );
   const external = {
     name: EXTERNAL,
@@ -297,7 +248,7 @@ const writeLinkedFixture = Effect.fnUntraced(function* () {
     dependencies: { [EXTERNAL]: EXTERNAL_VERSION },
   };
   const bridged = `import { origin } from "${EXTERNAL}";\nexport const bridge = () => "bridged " + origin();\n`;
-  for (const dir of ["packages/bridge", `packages/bridge/${PROD}`]) {
+  for (const dir of ["packages/bridge", `packages/bridge/${BUNDLER_NPM_OUTPUT}`]) {
     yield* write(root, `${dir}/package.json`, json(bridge));
     yield* write(root, `${dir}/index.js`, bridged);
   }
@@ -311,7 +262,7 @@ const writeLinkedFixture = Effect.fnUntraced(function* () {
   });
   for (const [dir, dependency] of [
     ["packages/linked", "workspace:^"],
-    [`packages/linked/${PROD}`, VERSION],
+    [`packages/linked/${BUNDLER_NPM_OUTPUT}`, VERSION],
   ] as const) {
     yield* write(root, `${dir}/package.json`, json(linked(dependency)));
     yield* write(
@@ -326,7 +277,7 @@ const writeLinkedFixture = Effect.fnUntraced(function* () {
   const tarballs = path.join(base, "tarballs");
   yield* fs.makeDirectory(tarballs, { recursive: true });
   const packed = HAS_NPM
-    ? yield* spawn(
+    ? yield* spawnScrubbed(
         "npm",
         ["pack", "--ignore-scripts", "--pack-destination", tarballs],
         path.join(base, "external")
@@ -340,14 +291,10 @@ const writeLinkedFixture = Effect.fnUntraced(function* () {
   );
   return { base, root, externalTarball };
 });
-const LINKED_FIXTURE = await fixture.runtime.runPromise(writeLinkedFixture());
+const LINKED_FIXTURE = await fixture.runtime.runPromise(writeOverridesWorkspaceFixture());
 const LinkedLive = Workspaces.layer({ cwd: LINKED_FIXTURE.root }).pipe(Layer.provideMerge(nodeHost));
 
-/**
- * An outer `Effect.timeout` sized by the run's own ceilings, and vitest's guard a
- * minute above it, so a named PackedInstallError fires before either guard does.
- */
-const guards = (...runs: ReadonlyArray<PackedInstallBudget.Encoded>) => {
+const guardsLetNamedErrorFireFirst = (...runs: ReadonlyArray<PackedInstallBudget.Encoded>) => {
   const effect = A.reduce(A.map(runs, PackedInstall.timeoutBudget), Duration.zero, Duration.sum);
   return { effect, vitest: Duration.toMillis(effect) + 60_000 };
 };
@@ -358,39 +305,44 @@ const readJson = Effect.fnUntraced(function* (file: string) {
   return yield* decodeJson(readFileString2);
 });
 
-/** The `package/package.json` a tarball packs, read back with the host `tar` (bsdtar on macOS). */
-const packedManifest = Effect.fnUntraced(function* (tarball: string) {
-  const out = yield* spawn("tar", ["-xzOf", tarball, "package/package.json"], OUTSIDE);
-  assert.strictEqual(out.exitCode, 0, out.stderr);
+const packedManifestViaHostTar = Effect.fnUntraced(function* (tarball: string) {
+  const out = yield* spawnScrubbed("tar", ["-xzOf", tarball, "package/package.json"], OUTSIDE_ANY_PROJECT);
+  assert.strictEqual(out.exitCode, 0, `host tar (bsdtar on macOS) reading package/package.json: ${out.stderr}`);
   return yield* decodeJson(out.stdout);
 });
 
-/** The names a run packed, sorted. */
 const packedNames = (tarballs: Readonly<Record<string, string>>): ReadonlyArray<string> =>
   A.sort(R.keys(tarballs), Str.Order);
 
-/** Every consumer-side fact the install path promises, for one consumer. */
-const assertConsumer = Effect.fn("assertConsumer")(function* (
+const assertInstallPathPromises = Effect.fn("assertConsumer")(function* (
   consumer: InstalledConsumer,
   tarballs: Readonly<Record<string, string>>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const scratch = path.dirname(consumer.directory);
-  // The realpath'd scratch: file: specs and the install cwd agree.
   const realPath3 = yield* fs.realPath(consumer.directory);
-  assert.strictEqual(consumer.directory, realPath3, consumer.manager);
-  // The host platform comes from the HostProcessPlatform reference, which defaults to this runner's.
-  if ((yield* HostProcessPlatform) === "darwin") assert.match(consumer.directory, /^\/private\//, consumer.manager);
+  assert.strictEqual(
+    consumer.directory,
+    realPath3,
+    `${consumer.manager}: the scratch is realpath'd so file: specs and the install cwd agree`
+  );
+  if ((yield* HostProcessPlatform) === "darwin")
+    assert.match(
+      consumer.directory,
+      /^\/private\//,
+      `${consumer.manager}: darwin per the HostProcessPlatform reference, which defaults to this runner's`
+    );
   for (const tarball of R.values(tarballs)) assert.isTrue(Str.startsWith(`${scratch}/`)(tarball), tarball);
-  // The version the consumer resolves: its manager, run inside it under its own pin. The expected
-  // pin comes from here, never from a probe of the host PATH, which a shim can answer differently.
-  const inside = yield* spawn(consumer.manager, ["--version"], consumer.directory);
+  const inside = yield* spawnScrubbed(consumer.manager, ["--version"], consumer.directory);
   assert.strictEqual(inside.exitCode, 0, `${consumer.manager}: ${inside.stderr}`);
   const resolved = Str.replace(/^v/, "")(Str.trim(inside.stdout));
   assert.isTrue(Result.isSuccess(SemVer.parseResult(resolved)), `${consumer.manager} --version: ${resolved}`);
-  // The same manager, run inside the consumer, does not switch away from the version the run pinned.
-  assert.strictEqual(consumer.managerVersion, resolved, consumer.manager);
+  assert.strictEqual(
+    consumer.managerVersion,
+    resolved,
+    `${consumer.manager}, run inside the consumer under its own pin, keeps the version the run pinned; the pin is read here, never from a host PATH probe, which a shim can answer differently (the vite-plus pnpm shim answered 12.15.0 outside any project while the consumer resolved 12.16.1), so the probe checks availability only`
+  );
   const manifest = yield* readJson(path.join(consumer.directory, "package.json"));
   if (consumer.manager === "pnpm") {
     assert.deepInclude(manifest, {
@@ -400,55 +352,76 @@ const assertConsumer = Effect.fn("assertConsumer")(function* (
   } else {
     assert.deepInclude(manifest, { packageManager: `${consumer.manager}@${resolved}` });
   }
-  // The bin, run through binPath while the scope is open, reaches the packed lib.
-  const out = yield* spawn(consumer.binPath(BIN_NAME), [], OUTSIDE);
+  const out = yield* spawnScrubbed(consumer.binPath(BIN_NAME), [], OUTSIDE_ANY_PROJECT);
   assert.strictEqual(Str.trim(out.stdout), GREETING, `${consumer.manager}: ${out.stderr}`);
-  assert.strictEqual(out.exitCode, 0, consumer.manager);
-  // runBin, under the env the install carried, runs the same bin to the same result.
+  assert.strictEqual(
+    out.exitCode,
+    0,
+    `${consumer.manager}: the bin, run through binPath while the scope is open, reaches the packed lib`
+  );
   const ran = yield* consumer.runBin(BIN_NAME);
-  assert.deepStrictEqual([Str.trim(ran.stdout), ran.exitCode], [GREETING, 0], `${consumer.manager}: ${ran.stderr}`);
-  // A symlinking manager's .bin entry resolves into the carrier; pnpm's shim is not read.
+  assert.deepStrictEqual(
+    [Str.trim(ran.stdout), ran.exitCode],
+    [GREETING, 0],
+    `${consumer.manager}: runBin, under the env the install carried, runs the same bin to the same result: ${ran.stderr}`
+  );
   const provenance = yield* consumer.binProvenance(BIN_NAME);
   if (consumer.manager === "pnpm") {
-    assert.isUndefined(provenance);
+    assert.isUndefined(provenance, "pnpm's .bin shim is not read");
   } else {
-    assert.strictEqual(provenance?.package, CARRIER, consumer.manager);
+    assert.strictEqual(
+      provenance?.package,
+      CARRIER,
+      `${consumer.manager}: a symlinking manager's .bin entry resolves into the carrier`
+    );
     assert.isTrue(Str.startsWith(`${consumer.directory}/node_modules/`)(provenance?.target ?? ""), provenance?.target);
   }
 });
 
-describe("PackedInstall against a real fixture workspace", () => {
+describe("PackedInstall past the pack memfs cannot pre-seed: real packs, host tar, realpath, installs, bins, scratch removal", () => {
   layer(Live, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
     it.effect("runs under bun, and every manager spawn gets the parent's context scrubbed", () =>
       Effect.sync(() => {
-        // Positive control: the real Bun context is present in this process.
-        assert.isAbove(LEAKED.length, 0, "run this suite through bunx so its context is real");
+        assert.isAbove(
+          PARENT_MANAGER_CONTEXT.length,
+          0,
+          "positive control: run this suite through bunx --bun so the scrub meets the real parent context, not a hand-written list"
+        );
         assert.match(USER_AGENT, /^bun\//);
         assert.deepStrictEqual(
-          A.filter(R.keys(CHILD_ENV), (key) => A.contains(LEAKED, key)),
+          A.filter(R.keys(INSTALL_SCRUBBED_ENV), (key) => A.contains(PARENT_MANAGER_CONTEXT, key)),
           []
         );
-        assert.strictEqual(CHILD_ENV.HTTPS_PROXY, DEAD_PROXY);
+        assert.strictEqual(INSTALL_SCRUBBED_ENV.HTTPS_PROXY, DEAD_PROXY);
       })
     );
 
     it.effect.skipIf(!HAS_NPM)("the dead proxy the installs run behind really blocks the registry", () =>
       Effect.gen(function* () {
-        // Without this control, "installed with no network" would be vacuous.
-        const out = yield* spawn("npm", ["view", LIB, "version", "--prefer-online", "--fetch-retries=0"], OUTSIDE);
-        assert.isFalse(out.succeeded);
-        assert.include(out.stderr, "ECONNREFUSED");
+        const out = yield* spawnScrubbed(
+          "npm",
+          ["view", LIB, "version", "--prefer-online", "--fetch-retries=0"],
+          OUTSIDE_ANY_PROJECT
+        );
+        assert.isFalse(
+          out.succeeded,
+          "without this control, installed with no network would be vacuous: a manager reaching the registry (an override that missed) or downloading itself (a packageManager pin not matching the running version) must fail, not quietly succeed"
+        );
+        assert.include(
+          out.stderr,
+          "ECONNREFUSED",
+          "every manager honours HTTP(S)_PROXY and nothing listens on the dead proxy's port; assumes no proxy in ~/.npmrc: HOME is inherited on purpose, so a proxy or https-proxy there may win (precedence not verified) and this would fail with a proxy or E404 error instead, while the installs stay hermetic because the fixture has no external dependencies; the scrub strips every npm_config_* variable, so an env override cannot pin it from here"
+        );
       }).pipe(Effect.timeout("25 seconds"))
     );
 
-    const prodManagers = available(["npm", "pnpm", "bun"]);
+    const prodManagers = availableInOrder(["npm", "pnpm", "bun"]);
     it.effect.skipIf(!HAS_NPM)(
       "packs dist/prod/npm/pkg by default, installs under every available manager, runs the bin, then removes the scratch directory",
       () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          // The run's own scope, closed by hand so the removal is observed after it.
           const scope = yield* Scope.make();
           const seen = yield* Effect.gen(function* () {
             const result = yield* PackedInstall.run({
@@ -466,9 +439,9 @@ describe("PackedInstall against a real fixture workspace", () => {
               A.map(result.consumers, (consumer) => consumer.manager),
               prodManagers
             );
-            const manifest = yield* packedManifest(O.getOrElse(R.get(result.tarballs, CARRIER), () => ""));
+            const manifest = yield* packedManifestViaHostTar(O.getOrElse(R.get(result.tarballs, CARRIER), () => ""));
             assert.deepStrictEqual(manifest.dependencies, { [LIB]: VERSION });
-            for (const consumer of result.consumers) yield* assertConsumer(consumer, result.tarballs);
+            for (const consumer of result.consumers) yield* assertInstallPathPromises(consumer, result.tarballs);
             const scratch = path.dirname(O.getOrElse(A.head(A.map(result.consumers, (c) => c.directory)), () => ""));
             const exists4 = yield* fs.exists(scratch);
             assert.isTrue(exists4, "the scratch directory exists while the scope is open");
@@ -476,18 +449,25 @@ describe("PackedInstall against a real fixture workspace", () => {
           }).pipe(Scope.provide(scope));
           yield* Scope.close(scope, Exit.void);
           const exists5 = yield* fs.exists(seen);
-          assert.isFalse(exists5, `${seen} survived the scope`);
+          assert.isFalse(
+            exists5,
+            `${seen} survived the run's own scope, closed by hand so the removal is observed after it`
+          );
         }).pipe(Effect.timeout("150 seconds")),
       180_000
     );
 
-    const sourceManagers = available(["npm", "pnpm", "bun"]);
+    const sourceManagers = availableInOrder(["npm", "pnpm", "bun"]);
     it.effect.skipIf(!HAS_PNPM)(
       "packs from source in the installed workspace, rewriting workspace:^, and every available manager's bin runs",
       () =>
         Effect.gen(function* () {
-          const preinstall = O.getOrUndefined(PREINSTALL);
-          assert.strictEqual(preinstall?.exitCode, 0, `${preinstall?.stdout}\n${preinstall?.stderr}`);
+          const preinstall = O.getOrUndefined(OFFLINE_WORKSPACE_INSTALL);
+          assert.strictEqual(
+            preinstall?.exitCode,
+            0,
+            `pnpm packs a workspace: specifier only in an INSTALLED workspace (P3 C8), offline since the fixture has no external dependencies\n${preinstall?.stdout}\n${preinstall?.stderr}`
+          );
           const result = yield* PackedInstall.run({
             carrier: CARRIER,
             closure: "auto",
@@ -498,24 +478,23 @@ describe("PackedInstall against a real fixture workspace", () => {
             env: OFFLINE,
             installTimeout: "90 seconds",
           });
-          // pnpm rewrote workspace:^ to the lib's version.
-          const manifest = yield* packedManifest(O.getOrElse(R.get(result.tarballs, CARRIER), () => ""));
-          assert.deepStrictEqual(manifest.dependencies, { [LIB]: `^${VERSION}` });
+          const manifest = yield* packedManifestViaHostTar(O.getOrElse(R.get(result.tarballs, CARRIER), () => ""));
+          assert.deepStrictEqual(
+            manifest.dependencies,
+            { [LIB]: `^${VERSION}` },
+            "pnpm rewrote workspace:^ to the lib's version"
+          );
           assert.deepStrictEqual(
             A.map(result.consumers, (consumer) => consumer.manager),
             sourceManagers
           );
-          for (const consumer of result.consumers) yield* assertConsumer(consumer, result.tarballs);
+          for (const consumer of result.consumers) yield* assertInstallPathPromises(consumer, result.tarballs);
         }).pipe(Effect.timeout("150 seconds")),
       180_000
     );
 
-    // A machine without yarn skips this. It was run once (2026-09-23) with
-    // scratch installs of yarn 1.22.22 and 4.18.0 prepended to PATH, and passed
-    // under both; a machine with yarn on PATH (a GitHub-hosted runner ships
-    // yarn 1) runs it every time.
     it.effect.skipIf(!HAS_YARN)(
-      "yarn installs the packed carrier (skipped where yarn is not on PATH)",
+      "yarn installs the packed carrier (skipped without yarn on PATH; passed 2026-09-23 under yarn 1.22.22 and 4.18.0)",
       () =>
         Effect.gen(function* () {
           const result = yield* PackedInstall.run({
@@ -528,8 +507,12 @@ describe("PackedInstall against a real fixture workspace", () => {
             installTimeout: "90 seconds",
           });
           const yarn = A.head(result.consumers);
-          assert.strictEqual(O.getOrUndefined(yarn)?.manager, "yarn");
-          if (O.isSome(yarn)) yield* assertConsumer(yarn.value, result.tarballs);
+          assert.strictEqual(
+            O.getOrUndefined(yarn)?.manager,
+            "yarn",
+            "runs on every machine with yarn on PATH (a GitHub-hosted runner ships yarn 1); the 2026-09-23 pass prepended scratch yarn installs to PATH"
+          );
+          if (O.isSome(yarn)) yield* assertInstallPathPromises(yarn.value, result.tarballs);
         }).pipe(Effect.timeout("100 seconds")),
       120_000
     );
@@ -555,10 +538,9 @@ describe("PackedInstall against a real fixture workspace", () => {
       120_000
     );
 
-    /** Import the plugin AND its peer from the consumer ROOT, as the consumer's own code would. */
-    const importFromRoot = (consumer: InstalledConsumer) =>
-      spawn(
-        NODE,
+    const importPluginAndPeerFromRoot = (consumer: InstalledConsumer) =>
+      spawnScrubbed(
+        THIS_RUNTIME,
         [
           "--input-type=module",
           "-e",
@@ -567,10 +549,7 @@ describe("PackedInstall against a real fixture workspace", () => {
         consumer.directory
       );
 
-    // Every available manager, npm included: a consumerDependencies range for a
-    // packed package once met npm's EOVERRIDE (a direct spec that differs from
-    // the override), which a pnpm-only run could not see.
-    const s1Managers = available(["npm", "pnpm", "bun"]);
+    const s1Managers = availableInOrder(["npm", "pnpm", "bun"]);
     it.effect.skipIf(!HAS_NPM)(
       "P3 S1 under every available manager: a peer the consumer imports is declared through consumerDependencies",
       () =>
@@ -589,17 +568,17 @@ describe("PackedInstall against a real fixture workspace", () => {
           assert.deepStrictEqual(packedNames(result.tarballs), A.sort([LIB, PLUGIN], Str.Order));
           assert.deepStrictEqual(
             A.map(result.consumers, (consumer) => consumer.manager),
-            s1Managers
+            s1Managers,
+            "npm included: a consumerDependencies range for a packed package once met npm's EOVERRIDE (a direct spec that differs from the override), which a pnpm-only run could not see"
           );
           for (const consumer of result.consumers) {
-            // The range the caller passed became the packed tarball: the one spec npm accepts beside the override.
             const manifest = yield* readJson(path.join(consumer.directory, "package.json"));
             assert.deepInclude(
               manifest.dependencies,
               { [LIB]: `file:${O.getOrElse(R.get(result.tarballs, LIB), () => "")}` },
-              consumer.manager
+              `${consumer.manager}: the range the caller passed became the packed tarball, the one spec npm accepts beside the override`
             );
-            const out = yield* importFromRoot(consumer);
+            const out = yield* importPluginAndPeerFromRoot(consumer);
             assert.strictEqual(
               Str.trim(out.stdout),
               `${GREETING}|${Str.toUpperCase(GREETING)}`,
@@ -626,25 +605,32 @@ describe("PackedInstall against a real fixture workspace", () => {
           const pnpm = A.head(result.consumers);
           assert.strictEqual(O.getOrUndefined(pnpm)?.manager, "pnpm");
           if (O.isNone(pnpm)) return;
-          const out = yield* importFromRoot(pnpm.value);
+          const out = yield* importPluginAndPeerFromRoot(pnpm.value);
           assert.isFalse(out.succeeded);
-          // Node reports ERR_MODULE_NOT_FOUND; under `bunx --bun` the runner and `NODE` are Bun, which
-          // reports "Cannot find module". Either way the unresolved specifier is the peer.
-          assert.match(out.stderr, MODULE_NOT_FOUND);
-          assert.include(out.stderr, LIB);
+          assert.match(
+            out.stderr,
+            MODULE_NOT_FOUND,
+            "Node reports ERR_MODULE_NOT_FOUND; under bunx --bun the runner and THIS_RUNTIME are Bun, which reports Cannot find module"
+          );
+          assert.include(out.stderr, LIB, "either way the unresolved specifier is the peer");
         }).pipe(Effect.timeout("100 seconds")),
       120_000
     );
 
-    // A front end sharing the carrier's bin name: BinConflict by default; with allowSharedBins
-    // a flat layout can hand the .bin slot to the front end, and runCarrierBin still reaches the carrier.
-    const sharedManagers = available(["npm", "pnpm", "yarn", "bun"]);
-    const SHARED_GUARDS = guards(
-      // The refused run probes and packs, then stops before any install.
-      { managers: sharedManagers, installTimeout: "0 seconds", packages: 2, perConsumer: "0 seconds" },
-      // The allowed run: runBin and runCarrierBin per consumer, a minute each.
-      { managers: sharedManagers, installTimeout: "90 seconds", packages: 2, perConsumer: "2 minutes" }
-    );
+    const sharedManagers = availableInOrder(["npm", "pnpm", "yarn", "bun"]);
+    const refusedRunStopsBeforeInstall: PackedInstallBudget.Encoded = {
+      managers: sharedManagers,
+      installTimeout: "0 seconds",
+      packages: 2,
+      perConsumer: "0 seconds",
+    };
+    const allowedRunTwoBinsAMinuteEach: PackedInstallBudget.Encoded = {
+      managers: sharedManagers,
+      installTimeout: "90 seconds",
+      packages: 2,
+      perConsumer: "2 minutes",
+    };
+    const SHARED_GUARDS = guardsLetNamedErrorFireFirst(refusedRunStopsBeforeInstall, allowedRunTwoBinsAMinuteEach);
     it.effect.skipIf(!HAS_NPM)(
       "allowSharedBins: .bin may run the front end under a flat layout, runCarrierBin always runs the carrier",
       () =>
@@ -659,20 +645,29 @@ describe("PackedInstall against a real fixture workspace", () => {
             installTimeout: "90 seconds",
           } as const;
           const refused = yield* Effect.flip(PackedInstall.run(options));
-          assert.deepStrictEqual([refused.reason, refused.package], ["BinConflict", SHARED_FRONT]);
+          assert.deepStrictEqual(
+            [refused.reason, refused.package],
+            ["BinConflict", SHARED_FRONT],
+            "a front end sharing the carrier's bin name is a BinConflict by default"
+          );
 
           const result = yield* PackedInstall.run({ ...options, allowSharedBins: true });
           const seen: Array<readonly [PackageManagerName, string]> = [];
           for (const consumer of result.consumers) {
             const slot = Str.trim((yield* consumer.runBin(SHARED_BIN)).stdout);
             const provenance = yield* consumer.binProvenance(SHARED_BIN);
-            // What .bin ran agrees with who owns the slot. The flat layouts write .bin entries as
-            // symlinks, so their provenance is mandatory; only pnpm's shell shims carry none.
             if (consumer.manager === "pnpm") {
-              assert.isUndefined(provenance, consumer.manager);
+              assert.isUndefined(provenance, "only pnpm's shell shims carry no provenance");
             } else {
-              assert.isDefined(provenance, consumer.manager);
-              assert.strictEqual(slot, provenance?.package === SHARED_FRONT ? "front" : "carrier", consumer.manager);
+              assert.isDefined(
+                provenance,
+                `${consumer.manager}: the flat layouts write .bin entries as symlinks, so their provenance is mandatory`
+              );
+              assert.strictEqual(
+                slot,
+                provenance?.package === SHARED_FRONT ? "front" : "carrier",
+                `${consumer.manager}: what .bin ran agrees with who owns the slot`
+              );
             }
             seen.push([consumer.manager, slot]);
             const own = yield* consumer.runCarrierBin(SHARED_BIN);
@@ -682,13 +677,6 @@ describe("PackedInstall against a real fixture workspace", () => {
               `${consumer.manager}: ${own.stderr}`
             );
           }
-          // Observed with npm 11.19 to 12.2 and bun 1.4.0-1.4.3: the package whose name sorts first
-          // takes the slot, so shared-cli (the front end) beats shared-plugin (the carrier), as
-          // @vitest-agent/cli beats @vitest-agent/plugin; named the other way round, the carrier won
-          // both. Bun 1.4.4 gives the slot to the carrier, the consumer's direct dependency, so bun's
-          // row is keyed by the bun consumer's pinned version. Yarn 1.22 and 4.18 (node-modules linker)
-          // gave the slot to the carrier. pnpm links only the direct dependency. Every manager on
-          // PATH is asserted, yarn included.
           const bunVersion = pipe(
             A.findFirst(result.consumers, (consumer) => consumer.manager === "bun"),
             O.map((consumer) => consumer.managerVersion),
@@ -702,7 +690,8 @@ describe("PackedInstall against a real fixture workspace", () => {
           };
           assert.deepStrictEqual(
             R.fromEntries(seen),
-            R.fromEntries(A.map(sharedManagers, (pm) => [pm, winner[pm]] as const))
+            R.fromEntries(A.map(sharedManagers, (pm) => [pm, winner[pm]] as const)),
+            "every manager on PATH, yarn included: with npm 11.19 to 12.2 and bun 1.4.0-1.4.3 the name sorting first takes the slot, so shared-cli (the front end) beats shared-plugin (the carrier), as @vitest-agent/cli beats @vitest-agent/plugin, and named the other way round the carrier won both; bun 1.4.4 gives the slot to the carrier, the consumer's direct dependency, so bun's row is keyed by the bun consumer's pinned version; yarn 1.22 and 4.18 (node-modules linker) gave the slot to the carrier; pnpm links only the direct dependency"
           );
         }).pipe(Effect.timeout(SHARED_GUARDS.effect)),
       SHARED_GUARDS.vitest
@@ -750,23 +739,24 @@ describe("PackedInstall against a real fixture workspace", () => {
 });
 
 describe("PackedInstall overrides: a dependency no registry has, supplied from outside the workspace", () => {
-  /** Every manager on this machine: yarn joins wherever it is on PATH. */
-  const linkedManagers = available(["npm", "pnpm", "yarn", "bun"]);
+  const everyManagerOnMachine = availableInOrder(["npm", "pnpm", "yarn", "bun"]);
 
-  /** The bin reaches external through bridge, by runBin and by the command runBin builds, under every consumer. */
-  const assertLinked = Effect.fn("assertLinked")(function* (consumers: ReadonlyArray<InstalledConsumer>) {
+  const assertBinReachesExternal = Effect.fn("assertLinked")(function* (consumers: ReadonlyArray<InstalledConsumer>) {
     assert.deepStrictEqual(
       A.map(consumers, (consumer) => consumer.manager),
-      linkedManagers
+      everyManagerOnMachine
     );
     for (const consumer of consumers) {
       const ran = yield* consumer.runBin(LINKED_BIN);
       assert.deepStrictEqual([Str.trim(ran.stdout), ran.exitCode], [BRIDGED, 0], `${consumer.manager}: ${ran.stderr}`);
       const direct = yield* Run.collect(consumer.command(LINKED_BIN), { timeout: "30 seconds" });
-      assert.deepStrictEqual([Str.trim(direct.stdout), direct.exitCode], [BRIDGED, 0], `${consumer.manager}: command`);
-      // The external the bridge resolves is the supplied one, at the version no registry has.
-      const resolved = yield* spawn(
-        NODE,
+      assert.deepStrictEqual(
+        [Str.trim(direct.stdout), direct.exitCode],
+        [BRIDGED, 0],
+        `${consumer.manager}: the command runBin builds reaches external through bridge too`
+      );
+      const resolved = yield* spawnScrubbed(
+        THIS_RUNTIME,
         [
           "--input-type=module",
           "-e",
@@ -785,22 +775,23 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
         ],
         consumer.directory
       );
-      assert.strictEqual(Str.trim(resolved.stdout), EXTERNAL_VERSION, `${consumer.manager}: ${resolved.stderr}`);
+      assert.strictEqual(
+        Str.trim(resolved.stdout),
+        EXTERNAL_VERSION,
+        `${consumer.manager}: the external the bridge resolves is the supplied one, at the version no registry has: ${resolved.stderr}`
+      );
     }
   });
 
-  // bun gives up on the dead proxy at once; npm and pnpm retry until installTimeout fires (about 90 seconds).
   const CONTROL: PackageManagerName = ON_PATH.bun ? "bun" : "npm";
-  // The probe, both packs, the install to its ceiling, and the kill of the child it interrupts.
-  const CONTROL_GUARDS = guards({
+  const CONTROL_GUARDS_PAST_CHILD_KILL = guardsLetNamedErrorFireFirst({
     managers: [CONTROL],
     installTimeout: "90 seconds",
     packages: [LINKED, BRIDGE],
     perConsumer: "0 seconds",
   });
-  // Per consumer: runBin (a minute), the direct command and the resolve spawn (30 seconds each).
-  const LINKED_GUARDS = guards({
-    managers: linkedManagers,
+  const RUNBIN_COMMAND_RESOLVE_GUARDS = guardsLetNamedErrorFireFirst({
+    managers: everyManagerOnMachine,
     installTimeout: "90 seconds",
     packages: [LINKED, BRIDGE, EXTERNAL],
     perConsumer: "2 minutes",
@@ -823,10 +814,13 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
             })
           );
           assert.deepStrictEqual([error.reason, error.manager], ["InstallFailed", CONTROL]);
-          // It failed on the external, not on something else.
-          assert.include(`${error.message}\n${error.output ?? ""}`, CONTROL === "bun" ? EXTERNAL : "timed out");
-        }).pipe(Effect.timeout(CONTROL_GUARDS.effect)),
-      CONTROL_GUARDS.vitest
+          assert.include(
+            `${error.message}\n${error.output ?? ""}`,
+            CONTROL === "bun" ? EXTERNAL : "timed out",
+            "it failed on the external, not on something else: bun gives up on the dead proxy at once, npm and pnpm retry until installTimeout fires (about 90 seconds)"
+          );
+        }).pipe(Effect.timeout(CONTROL_GUARDS_PAST_CHILD_KILL.effect)),
+      CONTROL_GUARDS_PAST_CHILD_KILL.vitest
     );
 
     it.effect.skipIf(!HAS_NPM)(
@@ -837,7 +831,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
           const options = {
             carrier: LINKED,
             closure: "auto",
-            managers: linkedManagers,
+            managers: everyManagerOnMachine,
             require: "all",
             bins: [LINKED_BIN],
             env: OFFLINE,
@@ -853,9 +847,9 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
             LINKED_FIXTURE.externalTarball,
             "a tarball is used as it is"
           );
-          yield* assertLinked(result.consumers);
-        }).pipe(Effect.timeout(LINKED_GUARDS.effect)),
-      LINKED_GUARDS.vitest
+          yield* assertBinReachesExternal(result.consumers);
+        }).pipe(Effect.timeout(RUNBIN_COMMAND_RESOLVE_GUARDS.effect)),
+      RUNBIN_COMMAND_RESOLVE_GUARDS.vitest
     );
 
     it.effect.skipIf(!HAS_NPM)(
@@ -865,7 +859,7 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
           const result = yield* PackedInstall.run({
             carrier: LINKED,
             closure: "auto",
-            managers: linkedManagers,
+            managers: everyManagerOnMachine,
             require: "all",
             bins: [LINKED_BIN],
             env: OFFLINE,
@@ -873,12 +867,14 @@ describe("PackedInstall overrides: a dependency no registry has, supplied from o
             workspaceOverrides: true,
           });
           assert.deepStrictEqual(R.keys(result.tarballs), [LINKED, BRIDGE, EXTERNAL]);
-          // The directory was npm-packed into the scratch root, not used in place.
           const external = O.getOrElse(R.get(result.tarballs, EXTERNAL), () => "");
-          assert.isTrue(Str.startsWith(`${result.scratch}/`)(external), external);
-          yield* assertLinked(result.consumers);
-        }).pipe(Effect.timeout(LINKED_GUARDS.effect)),
-      LINKED_GUARDS.vitest
+          assert.isTrue(
+            Str.startsWith(`${result.scratch}/`)(external),
+            `${external}: the directory was npm-packed into the scratch root, not used in place`
+          );
+          yield* assertBinReachesExternal(result.consumers);
+        }).pipe(Effect.timeout(RUNBIN_COMMAND_RESOLVE_GUARDS.effect)),
+      RUNBIN_COMMAND_RESOLVE_GUARDS.vitest
     );
   });
 });

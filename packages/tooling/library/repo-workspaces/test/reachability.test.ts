@@ -1,15 +1,9 @@
-// The two driver edges, `@beep/commands` and `@beep/git`, are operational
-// adapters: this package is a tooling library, and tooling may reach a driver
-// only as a narrowly scoped adapter (`standards/architecture/DECISIONS.md`).
-// These cases confine them to the modules that run git or a child process, and
-// keep them out of the pure values and the discovery surface.
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { directImportersOf, reaches, runtimeImports, specifiersOf } from "./support/sourceGraph.ts";
 
-/** The pure values and the discovery surface, which never load either driver. */
 const DRIVER_FREE = [
   "DependencyGraph.ts",
   "DuplicateCheck.ts",
@@ -23,17 +17,6 @@ const DRIVER_FREE = [
   "node-sync.ts",
 ];
 
-/**
- * Every module that loads a driver, directly or through its imports. Beyond the
- * six direct importers, the catalog assembly and the values typed over its
- * schemas load the hook layers: `PeerCheck` and `WorkspaceStateSnapshot` take
- * `CatalogSet` from `WorkspaceCatalogs`, and `PeerCheck` and
- * `internal/workspaceYaml` take `PeerDependencyRules` from
- * `ConfigDependencyHooks`. They load the drivers and never run them. The
- * `./testing` entry loads `@beep/commands` through `PackedInstall`, which packs
- * and installs with real package managers. A new entry here is a new adapter
- * edge and needs a reason.
- */
 const DRIVER_LOADING = [
   "ChangeDetector.ts",
   "ConfigDependencyHooks.ts",
@@ -52,7 +35,7 @@ const DRIVER_LOADING = [
 
 const loadsADriver = (module: string): boolean => reaches(module, "@beep/git") || reaches(module, "@beep/commands");
 
-describe("driver edges stay operational adapters", () => {
+describe("driver edges @beep/git and @beep/commands stay adapters confined to the modules that run git or a child process", () => {
   it("the walker follows static, side-effect and literal dynamic imports, and skips type-only and comment imports", () => {
     const text = A.join("\n")([
       'import * as A from "effect/Array";',
@@ -65,7 +48,11 @@ describe("driver edges stay operational adapters", () => {
       'const driver = () => import("@beep/git");',
       "const computed = (url: string) => import(url);",
     ]);
-    assert.deepStrictEqual(specifiersOf(text), ["effect/Array", "side-effect", "./re-export.ts", "@beep/git"]);
+    assert.deepStrictEqual(
+      specifiersOf(text),
+      ["effect/Array", "side-effect", "./re-export.ts", "@beep/git"],
+      "edges are top-of-line import/export from, side-effect imports and literal dynamic imports; comment lines are dropped first, so JSDoc example imports never count, type-only statements are erased at runtime, and a computed import(url) has no literal to follow"
+    );
   });
 
   it("the walker reads every source module", () => {
@@ -91,17 +78,25 @@ describe("driver edges stay operational adapters", () => {
   });
 
   it("no pure value or discovery module loads either driver", () => {
-    assert.deepStrictEqual(A.filter(DRIVER_FREE, loadsADriver), []);
+    assert.deepStrictEqual(
+      A.filter(DRIVER_FREE, loadsADriver),
+      [],
+      "a tooling library reaches a driver only as a narrowly scoped adapter (standards/architecture/DECISIONS.md)"
+    );
   });
 
   it("the modules that load a driver are exactly the declared set", () => {
-    assert.deepStrictEqual(A.sort(A.filter(R.keys(runtimeImports), loadsADriver), Str.Order), DRIVER_LOADING);
+    assert.deepStrictEqual(
+      A.sort(A.filter(R.keys(runtimeImports), loadsADriver), Str.Order),
+      DRIVER_LOADING,
+      "beyond the six direct importers, PeerCheck and WorkspaceStateSnapshot take CatalogSet from WorkspaceCatalogs, PeerCheck and internal/workspaceYaml take PeerDependencyRules from ConfigDependencyHooks, and ./testing loads @beep/commands through PackedInstall, which packs and installs with real package managers; they load the drivers and never run them, and a new entry is a new adapter edge that needs a reason"
+    );
   });
 
   it("the closure is followed, not just the direct imports", () => {
-    // Positive controls: the walker finds a driver one relative edge away, so
-    // the empty result above is not the walker failing to look.
-    assert.isTrue(reaches("WorkspaceCatalogs.ts", "@beep/commands"));
-    assert.isTrue(reaches("index.ts", "@beep/git"));
+    const positiveControl =
+      "the walker finds a driver one relative edge away, so the empty result above is not the walker failing to look";
+    assert.isTrue(reaches("WorkspaceCatalogs.ts", "@beep/commands"), positiveControl);
+    assert.isTrue(reaches("index.ts", "@beep/git"), positiveControl);
   });
 });

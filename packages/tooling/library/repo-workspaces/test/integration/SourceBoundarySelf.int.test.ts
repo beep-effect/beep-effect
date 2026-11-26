@@ -1,7 +1,3 @@
-// The package's own source, scanned by the scanner it ships. Real disk, real
-// lexing: ConfigDependencyHooks.ts embeds a child script whose process.argv and
-// process.stdout.write sit in TEMPLATE TEXT, which must not count, while two
-// other modules really do read process.
 import { SourceBoundary } from "@beep/repo-workspaces/testing";
 import { resolve } from "@beep/utils/Path";
 import { assert, describe, layer } from "@effect/vitest";
@@ -23,24 +19,20 @@ const TESTING_MODULES = HashSet.make(
   "internal/dependencyFields.ts"
 );
 
-/**
- * The modules that legitimately read `process`: the ambient cwd read and the
- * Node sync binding. Wave 4-W-a moved the config-dependency ladder onto
- * Effect's FileSystem, Path and Config, so only these two remain: the four
- * root-resolving services and `Workspaces.ts`'s `LocalExec` share
- * `internal/layerRoot.ts`'s one `ambientCwd` read, and `node-sync.ts`
- * resolves `node:fs` lazily on first use.
- */
 const PROCESS_READERS: ReadonlyArray<string> = ["internal/layerRoot.ts", "node-sync.ts"];
 const PROCESS_READ_COUNT = 2;
 
-describe("@beep/repo-workspaces, scanned by SourceBoundary", () => {
+describe("@beep/repo-workspaces own source on real disk, scanned and lexed by the SourceBoundary it ships", () => {
   layer(nodeHost, { timeout: "30 seconds" })((it) => {
     it.effect("finds exactly the modules that read process, and not the replay script's template text", () =>
       Effect.gen(function* () {
         const scan = yield* SourceBoundary.scan({ root: SRC, rules: ["process"] });
         assert.include(scan.files, "ConfigDependencyHooks.ts", "the embedded script's module was read");
-        assert.deepStrictEqual(A.dedupe(A.map(scan.offences, (offence) => offence.file)), PROCESS_READERS);
+        assert.deepStrictEqual(
+          A.dedupe(A.map(scan.offences, (offence) => offence.file)),
+          PROCESS_READERS,
+          "since wave 4-W-a moved the config-dependency ladder onto Effect FileSystem, Path and Config, only the ambient cwd read and the Node sync binding read process: the four root-resolving services and Workspaces.ts LocalExec share internal/layerRoot.ts one ambientCwd read, and node-sync.ts resolves node:fs lazily on first use"
+        );
         assert.strictEqual(scan.offences.length, PROCESS_READ_COUNT);
       })
     );
