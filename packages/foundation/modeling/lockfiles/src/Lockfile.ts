@@ -258,8 +258,7 @@ const dispatch: {
     )
 );
 
-// A name mapped to the empty string is no name: the entry keeps its own.
-const lookupName = (names: HashMap.HashMap<string, string>, key: string): O.Option<string> =>
+const nonEmptyNameFor = (names: HashMap.HashMap<string, string>, key: string): O.Option<string> =>
   O.filter(HashMap.get(names, key), Str.isNonEmpty);
 
 /**
@@ -318,9 +317,6 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
       })
     ),
     importers: S.Array(LockfileImporter).pipe(
-      // The decoding default is the *encoded* empty array (a fresh `[]` literal,
-      // which is assignable to the encoded side); the constructor default is the
-      // decoded empty array. Both are empty, so the runtime value is identical.
       S.withDecodingDefaultKey(Effect.succeed([])),
       S.withConstructorDefault(Effect.succeed(EMPTY_IMPORTERS)),
       $I.annoteKey("Lockfile.importers", {
@@ -455,6 +451,12 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
    * key matches). Versions are not touched — pnpm workspace packages keep
    * `"0.0.0"` (the lockfile does not record their real versions).
    *
+   * **Gotchas**
+   *
+   * Importers pass through untouched: they are keyed by importer path, not by
+   * package name. Every unchanged entry is kept by reference, so the rewrite
+   * never re-validates the whole lockfile.
+   *
    * **Example** (Name a pnpm workspace importer)
    *
    * ```ts
@@ -473,18 +475,13 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
    * @since 0.0.0
    */
   withImporterNames(names: HashMap.HashMap<string, string>): Lockfile {
-    const nameOf = (key: string, fallback: string): string => O.getOrElse(lookupName(names, key), () => fallback);
+    const nameOf = (key: string, fallback: string): string => O.getOrElse(nonEmptyNameFor(names, key), () => fallback);
     const packages = A.map(this.packages, (pkg) =>
       pkg.isWorkspace && pkg.relativePath !== undefined ? pkg.withName(nameOf(pkg.relativePath, pkg.name)) : pkg
     );
     const workspaceDependencies = A.map(this.workspaceDependencies, (dep) =>
       dep.withEndpoints(nameOf(dep.from, dep.from), nameOf(dep.to, dep.to))
     );
-    // Importers stay untouched: they are keyed by importer path, not by
-    // package name, so a name-rewrite does not apply to them. `ResolvedPackage`,
-    // `WorkspaceDependency` and `LockfileImporter` stay `S.Class` (W3-g bench
-    // fallback), so this `make` keeps every unchanged entry by reference
-    // instead of re-validating the whole lockfile.
     return Lockfile.make({
       format: this.format,
       lockfileVersion: this.lockfileVersion,
@@ -594,13 +591,12 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
    */
   packageByInstanceId(instanceId: string): O.Option<ResolvedPackage> {
     if (this.#instanceIndex === undefined) {
-      const index = MutableHashMap.empty<string, ResolvedPackage>();
-      // First wins, so the answer is stable if a malformed lockfile repeats
-      // an id rather than depending on iteration order.
+      const firstByInstanceId = MutableHashMap.empty<string, ResolvedPackage>();
       for (const pkg of this.packages) {
-        if (!MutableHashMap.has(index, pkg.instanceId)) MutableHashMap.set(index, pkg.instanceId, pkg);
+        if (!MutableHashMap.has(firstByInstanceId, pkg.instanceId))
+          MutableHashMap.set(firstByInstanceId, pkg.instanceId, pkg);
       }
-      this.#instanceIndex = index;
+      this.#instanceIndex = firstByInstanceId;
     }
     return MutableHashMap.get(this.#instanceIndex, instanceId);
   }
@@ -676,10 +672,9 @@ export class Lockfile extends S.Class<Lockfile, { readonly brand: unique symbol 
                   )
                 );
               }
-              const resolution = `${version}${dependency.peerSuffix ?? ""}`;
-              // An aliased dependency records `<real>@<version>`, already the id.
-              return O.orElse(this.packageByInstanceId(`${name}@${resolution}`), () =>
-                this.packageByInstanceId(resolution)
+              const versionOrAliasId = `${version}${dependency.peerSuffix ?? ""}`;
+              return O.orElse(this.packageByInstanceId(`${name}@${versionOrAliasId}`), () =>
+                this.packageByInstanceId(versionOrAliasId)
               );
             })
         ),

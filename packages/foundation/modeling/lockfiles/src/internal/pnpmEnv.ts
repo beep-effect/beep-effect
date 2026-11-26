@@ -14,9 +14,6 @@ import type { ParseFailure } from "./shared.ts";
 
 const $I = $LockfilesId.create("internal/pnpmEnv");
 
-/**
- * A well-formed env preamble whose recorded dependency cannot be accounted for.
- */
 class PnpmEnvPreambleError extends S.TaggedError<PnpmEnvPreambleError, { readonly brand: unique symbol }>(
   $I`PnpmEnvPreambleError`
 )(
@@ -29,11 +26,10 @@ class PnpmEnvPreambleError extends S.TaggedError<PnpmEnvPreambleError, { readonl
     ),
   },
   $I.annoteError<PnpmEnvPreambleError>("PnpmEnvPreambleError", {
-    description: "An env preamble whose recorded dependency cannot be accounted for.",
+    description:
+      "A located, well-formed env preamble whose recorded dependency its packages section cannot account for; a validation failure, not a framing one.",
   })
 ) {}
-
-// ── Raw schema (permissive validation scaffolding, not API) ────────────────
 
 const PnpmEnvImporterDeps = S.optionalKey(
   S.Record(
@@ -138,14 +134,8 @@ type PnpmEnvRawType = typeof PnpmEnvRaw.Type;
 
 const decodePnpmEnvRaw = S.decodeUnknownEffect(PnpmEnvRaw);
 
-/**
- * The package-manager package this reader resolves.
- */
 const PNPM = "pnpm";
 
-/**
- * The importer pnpm records `packageManagerDependencies` under.
- */
 const ROOT_IMPORTER = ".";
 
 const JsonString = S.fromJsonString(S.String).pipe(
@@ -155,11 +145,6 @@ const JsonString = S.fromJsonString(S.String).pipe(
 );
 const encodeJsonString = S.encodeEffect(JsonString);
 
-/**
- * Own-property read of a decoded record. The records come from YAML, so a key
- * such as `constructor` or `__proto__` must never be answered by
- * `Object.prototype`.
- */
 const own: {
   <V>(record: Readonly<Record<string, V>> | undefined, key: string): O.Option<V>;
   (key: string): <V>(record: Readonly<Record<string, V>> | undefined) => O.Option<V>;
@@ -169,23 +154,12 @@ const own: {
     O.flatMap(O.fromUndefinedOr(record), R.get(key))
 );
 
-// A key named exactly, JSON-quoted, for a validation message.
 const quoted = (key: string): Effect.Effect<string, ParseFailure> =>
   encodeJsonString(key).pipe(Effect.mapError(validationFailure));
 
-/**
- * A located, well-formed preamble that does not hold what it promises: the
- * importer names a package the `packages:` section cannot account for. A
- * shape failure of a located document, so it rides the validation channel.
- */
 const unaccounted = (message: string): ParseFailure =>
   validationFailure(PnpmEnvPreambleError.make({ message: `pnpm-lock.yaml env preamble: ${message}` }));
 
-/**
- * The SRI integrity of `packages["<key>"]`, failing when the entry, its
- * integrity, or the SRI form of that integrity is missing. Never `undefined`:
- * the caller only asks for keys the lockfile's own graph names.
- */
 const integrityOf: {
   (raw: PnpmEnvRawType, key: string): Effect.Effect<string, ParseFailure>;
   (key: string): (raw: PnpmEnvRawType) => Effect.Effect<string, ParseFailure>;
@@ -205,12 +179,6 @@ const integrityOf: {
   })
 );
 
-/**
- * The SRI integrity of the `<name>@<version>` a preamble entry records,
- * failing first when the version is empty: an empty version names no
- * `packages` entry, and saying so beats reporting the malformed key.
- * `subject` is the entry as the empty-version message names it.
- */
 const recordedIntegrity: {
   (raw: PnpmEnvRawType, subject: string, name: string, version: string): Effect.Effect<string, ParseFailure>;
   (subject: string, name: string, version: string): (raw: PnpmEnvRawType) => Effect.Effect<string, ParseFailure>;
@@ -222,12 +190,6 @@ const recordedIntegrity: {
       : integrityOf(raw, `${name}@${version}`)
 );
 
-/**
- * Locate and decode the env preamble of a `pnpm-lock.yaml`: `None` when the
- * stream carries none, typed when it is malformed or below the supported
- * lockfile version. The one decode every preamble reader shares, so they
- * cannot disagree about which document is the preamble or what shape it has.
- */
 const decodePreamble = Effect.fn("PnpmEnvLockfile.decodePreamble")(function* (
   content: string
 ): Effect.fn.Return<O.Option<PnpmEnvRawType>, ParseFailure> {
@@ -240,7 +202,6 @@ const decodePreamble = Effect.fn("PnpmEnvLockfile.decodePreamble")(function* (
 
 type EnvDependency = { readonly specifier: string; readonly version: string };
 
-// The root importer's declared dependencies in one preamble section.
 const rootDeclarations = (
   raw: PnpmEnvRawType,
   section: "packageManagerDependencies" | "configDependencies"
@@ -289,8 +250,6 @@ export const readPnpmPackageManager = Effect.fn("PnpmEnvLockfile.readPackageMana
   );
 });
 
-// Native packages come from the lockfile's own graph — the optional
-// dependencies of the `pnpm@<version>` snapshot — not from a name pattern.
 const packageManagerLock = Effect.fnUntraced(function* (raw: PnpmEnvRawType, declared: EnvDependency) {
   const integrity = yield* recordedIntegrity(raw, PNPM, PNPM, declared.version);
   const key = `${PNPM}@${declared.version}`;
