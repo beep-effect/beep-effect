@@ -40,11 +40,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-/**
- * Python's `html.entities.name2codepoint` — the HTML 4 named entities, which
- * is the only set `normalize.py` decodes. An HTML5-only name is left as
- * literal text, exactly as upstream leaves it.
- */
+// decision: normalize-html-literal-port
 const NAME_TO_CODEPOINT: Readonly<Record<string, number>> = {
   AElig: 198,
   Aacute: 193,
@@ -300,7 +296,6 @@ const NAME_TO_CODEPOINT: Readonly<Record<string, number>> = {
   zwnj: 8204,
 };
 
-/** `normalize.py`'s `is_block_tag` list, verbatim. */
 const BLOCK_TAGS: HashSet.HashSet<string> = HashSet.make(
   "article",
   "header",
@@ -357,9 +352,7 @@ const BLOCK_TAGS: HashSet.HashSet<string> = HashSet.make(
 const TRAILING_WHITESPACE = /\s+$/u;
 const LEADING_WHITESPACE = /^\s+/u;
 
-/** Python `str.rstrip()` with no argument: strips all trailing whitespace. */
 const rstrip = Str.replace(TRAILING_WHITESPACE, "");
-/** Python `str.lstrip()` with no argument. */
 const lstrip = Str.replace(LEADING_WHITESPACE, "");
 
 const numericCodepoint = (ref: string): number =>
@@ -370,11 +363,6 @@ const fromCodepoint = (codepoint: number): O.Option<string> =>
     ? O.some(String.fromCodePoint(codepoint))
     : O.none();
 
-/**
- * Decodes the body of one character reference (`#38`, `#x26` or `amp`):
- * numeric references in range decode to their code point, named ones through
- * the HTML 4 table, and anything else is `None`.
- */
 const decodeCharRef = (ref: string): O.Option<string> =>
   Str.startsWith("#")(ref)
     ? fromCodepoint(numericCodepoint(ref))
@@ -382,20 +370,9 @@ const decodeCharRef = (ref: string): O.Option<string> =>
 
 const ATTRIBUTE_CHAR_REF = /&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g;
 
-/**
- * Decodes character references in an attribute value.
- *
- * Python's `HTMLParser` always unescapes attribute values, even with
- * `convert_charrefs=False`. It uses the full HTML5 table; this port uses the
- * HTML 4 table plus numeric references. The gap is inert for this corpus:
- * both sides of every comparison pass through this same function, so an
- * undecoded HTML5-only name in an attribute is undecoded identically on both
- * sides and still compares equal.
- */
 const unescapeAttributeValue = (value: string): string =>
   BStr.replaceAllWith(value, ATTRIBUTE_CHAR_REF, (match, ref) => O.getOrElse(decodeCharRef(String(ref)), () => match));
 
-/** Python's `html.escape(v, quote=True)`. Note `'` becomes `&#x27;`. */
 const escapeAttributeValue = (value: string): string =>
   pipe(
     value,
@@ -415,16 +392,9 @@ const toAttribute = ([, name = "", quoted, singleQuoted, bare]: RegExpMatchArray
   return [Str.toLowerCase(name), raw === undefined ? null : unescapeAttributeValue(raw)];
 };
 
-/**
- * Parses the attribute list of a start tag the way Python's `HTMLParser`
- * does: names lowercased, values unescaped, a valueless attribute carrying
- * `null` rather than an empty string.
- */
 const parseAttributes = (source: string): ReadonlyArray<Attribute> =>
   A.map(A.fromIterable(Str.matchAll(ATTRIBUTE)(source)), toAttribute);
 
-// Python's `list.sort()` on (name, value) tuples: name first, then value,
-// with `None` sorting before any string.
 const ATTRIBUTE_ORDER: Order.Order<Attribute> = Order.Tuple([
   Order.String,
   Order.mapInput(O.makeOrder(Order.String), O.fromNullOr),
@@ -435,7 +405,6 @@ type LastEvent = "starttag" | "endtag" | "data" | "comment" | "decl" | "pi" | "r
 const LEADING_NEWLINES = /^\n+/;
 const WHITESPACE_RUN = /\s+/gu;
 
-/** The four characters `normalize.py` re-emits as entities after decoding. */
 const REESCAPED: Readonly<Record<string, string>> = Object.freeze({
   "<": "&lt;",
   ">": "&gt;",
@@ -453,8 +422,6 @@ class Normalizer {
     return HashSet.has(BLOCK_TAGS, tag);
   }
 
-  // Whitespace around a block tag is stripped: after a start tag only the
-  // leading side, after an end tag both sides.
   private stripAroundBlock(text: string): string {
     return this.last === "starttag" ? lstrip(text) : lstrip(rstrip(text));
   }
@@ -481,11 +448,7 @@ class Normalizer {
     this.output += `<${tag}`;
     for (const [name, value] of A.sort(attrs, ATTRIBUTE_ORDER)) {
       this.output += ` ${name}`;
-      // Upstream quirk, preserved: normalize.py tests the VALUE against
-      // ['href','src'] where it plainly meant the name, so its
-      // percent-normalizing branch is dead code (and would crash on Python
-      // 3 if reached). The `else` is the only live path, so that is the
-      // only path ported.
+      // decision: normalize-html-literal-port
       if (value !== null) {
         this.output += `="${escapeAttributeValue(value)}"`;
       }
@@ -498,8 +461,7 @@ class Normalizer {
   handleEndTag(tag: string): void {
     if (tag === "pre") {
       this.inPre = false;
-      // Upstream quirk, preserved: this is an `elif`, so `</pre>` skips
-      // the rstrip that every other block end tag performs.
+      // decision: normalize-html-literal-port
     } else if (this.isBlockTag(tag)) {
       this.output = rstrip(this.output);
     }
@@ -509,7 +471,6 @@ class Normalizer {
   }
 
   handleStartEndTag(tag: string, attrs: ReadonlyArray<Attribute>): void {
-    // A self-closing tag emits its open form, then counts as an end tag.
     this.handleStartTag(tag, attrs);
     this.lastTag = tag;
     this.last = "endtag";
@@ -525,7 +486,6 @@ class Normalizer {
     this.last = "comment";
   }
 
-  /** A character reference: its decoded character (re-escaped if special), or `fallback` when it does not decode. */
   outputChar(c: O.Option<string>, fallback: string): void {
     this.output += O.match(c, { onNone: () => fallback, onSome: (char) => REESCAPED[char] ?? char });
     this.last = "ref";
@@ -538,7 +498,6 @@ class Normalizer {
 
 const TEXT_CHAR_REF = /&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][-.a-zA-Z0-9]*);/g;
 
-/** Splits text into literal runs and character references, as HTMLParser does. */
 const feedData = (normalizer: Normalizer, text: string): void => {
   let cursor = 0;
   for (const match of Str.matchAll(TEXT_CHAR_REF)(text)) {
@@ -557,7 +516,6 @@ const feedData = (normalizer: Normalizer, text: string): void => {
 
 const TAG_NAME = /^([a-zA-Z][^\s/>]*)/;
 
-/** A start tag, self-closing or not; a `<` chunk with no tag name is data. */
 const feedTag = (normalizer: Normalizer, text: string): void => {
   const inner = Str.slice(1, -1)(text);
   const selfClosing = Str.endsWith("/")(inner);
@@ -580,16 +538,11 @@ const DOCTYPE = /^<!doctype/i;
 
 type ChunkHandler = readonly [matches: (text: string) => boolean, feed: (normalizer: Normalizer, text: string) => void];
 
-// Every non-comment markup chunk, tested in normalize.py's order; a chunk no
-// handler claims is text.
+// decision: normalize-html-literal-port
 const CHUNK_HANDLERS: ReadonlyArray<ChunkHandler> = [
   [Str.startsWith("<![CDATA["), (normalizer, text) => normalizer.handleVerbatim(text, "data")],
   [(text) => DOCTYPE.test(text), (normalizer, text) => normalizer.handleVerbatim(text, "decl")],
-  // Everything else opening `<!` is an HTML5 "bogus comment": not a
-  // declaration, but a comment carrying the raw text. `<!X>` becomes
-  // `<!--X-->`, and `<!>` an empty comment.
   [Str.startsWith("<!"), (normalizer, text) => normalizer.handleComment(Str.slice(2, -1)(text))],
-  // Python emits `<?data>` — the trailing `?` is part of the data.
   [Str.startsWith("<?"), (normalizer, text) => normalizer.handleVerbatim(`<?${Str.slice(2, -1)(text)}>`, "pi")],
   [
     Str.startsWith("</"),
@@ -607,22 +560,13 @@ const feedMarkup = (normalizer: Normalizer, text: string): void =>
     }
   );
 
-/**
- * A comment chunk. A comment may contain `>`, which the chunker splits on,
- * so the terminator is searched for in the whole source rather than in this
- * chunk; HTMLParser gets this right by buffering incomplete constructs across
- * feeds, and this is the equivalent. Returns where the chunker resumes when
- * the comment ran past its chunk.
- */
+// decision: normalize-html-literal-port
 const feedComment = (normalizer: Normalizer, html: string, text: string, start: number): O.Option<number> => {
   if (start + 4 === html.length || text === "<!-->" || text === "<!--->") {
-    // HTML5's abrupt-closing forms are empty comments.
     normalizer.handleComment("");
     return O.none();
   }
   return O.match(Str.indexOf("-->")(Str.slice(start + 4)(html)), {
-    // Unterminated: everything left in the chunk is the body, closing `>`
-    // included, which is what HTMLParser's final flush produces.
     onNone: () => {
       normalizer.handleComment(Str.slice(4)(text));
       return O.none();
@@ -645,9 +589,6 @@ const feedComment = (normalizer: Normalizer, html: string, text: string, start: 
  */
 export const normalizeHtml = (html: string): string => {
   const normalizer = new Normalizer();
-  // normalize.py chunks the input first so CDATA survives HTMLParser, which
-  // cannot handle it. The chunker also silently drops a trailing unclosed
-  // `<`, and this port drops it too.
   const chunkPattern = /(<!\[CDATA\[[\s\S]*?\]\]>|<[^>]*>|[^<]+)/g;
   for (let chunk = chunkPattern.exec(html); chunk !== null; chunk = chunkPattern.exec(html)) {
     const text = chunk[0];

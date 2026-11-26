@@ -91,7 +91,6 @@ export const loadGfmSpecExtensionExamples = (): ReadonlyArray<SpecExample> => lo
  */
 export const loadGfmExtensionsExamples = (): ReadonlyArray<SpecExample> => loadExamples("gfm/extensions.json");
 
-/** One vendored mdast interop fixture: a source and its reference tree. */
 class MdastFixturePair extends S.Opaque<MdastFixturePair, { readonly brand: unique symbol }>()(
   S.Struct({
     markdown: S.String,

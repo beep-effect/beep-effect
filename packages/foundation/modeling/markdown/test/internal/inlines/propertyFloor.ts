@@ -1,16 +1,3 @@
-import { identity } from "effect/Function";
-// The property floors the inline construct suites share. Two shapes:
-//
-// - `describePropertyFloor`: for each source template, with `{w}` replaced by
-//   a generated word, surgical heading edits leave the untouched source
-//   byte-identical, canonical formatting is idempotent, and a stringify round
-//   trip preserves every semantic mdast field.
-// - `describeConstructFloor`: over a generated source, the round trip and
-//   canonical formatting preserve inline meaning, marker normalization is
-//   idempotent, and the README surgical-edit guarantee holds.
-//
-// The constructs differ only in the sources that exercise them.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Markdown, MarkdownDialect, MarkdownParseOptions } from "@beep/markdown/Markdown";
 import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
@@ -22,6 +9,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -169,10 +157,6 @@ export const describePropertyFloor = ({
   });
 };
 
-/**
- * The fields the canonical renderer may respell — positions and concrete
- * marker spelling — which inline meaning ignores.
- */
 const RESPELLED_FIELDS: ReadonlyArray<string> = [
   "position",
   "headingStyle",

@@ -12,16 +12,13 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
 
-/** The phrasing children of a source that parses to a single paragraph. */
 const inlinesOf = (source: string): ReadonlyArray<PhrasingContent> => {
   const [first] = parseBlocks(source).root.children;
   return first?.type === "paragraph" || first?.type === "heading" ? first.children : [];
 };
 
-/** The node types of a source's phrasing content, for shape assertions. */
 const shapeOf = (source: string): ReadonlyArray<string> => A.map(inlinesOf(source), (node) => node.type);
 
-/** The single phrasing child of a source, when there is exactly one. */
 const onlyInline = (source: string): PhrasingContent | undefined => {
   const children = inlinesOf(source);
   return children.length === 1 ? children[0] : undefined;
@@ -30,9 +27,11 @@ const onlyInline = (source: string): PhrasingContent | undefined => {
 describe("entities", () => {
   describe("the generated map", () => {
     it("holds every semicolon-terminated HTML5 name", () => {
-      // 2125 of the 2231 WHATWG names; the rest are the legacy forms
-      // without a semicolon, which CommonMark's grammar cannot match.
-      assert.strictEqual(HashMap.size(ENTITY_MAP), 2125);
+      assert.strictEqual(
+        HashMap.size(ENTITY_MAP),
+        2125,
+        "2125 of the 2231 WHATWG names; the rest are legacy forms without a semicolon, which CommonMark's grammar cannot match"
+      );
     });
 
     it("decodes the multi-codepoint names", () => {
@@ -170,14 +169,15 @@ describe("inline pass", () => {
 
     it("stores the decoded destination, leaving encoding to the renderer", () => {
       const node = onlyInline("<http://example.com/a b>\n");
-      // A space is not legal in an autolink, so this is not one.
-      assert.strictEqual(node?.type, "text");
+      assert.strictEqual(node?.type, "text", "a space is not legal in an autolink, so this is not one");
     });
 
     it("requires a scheme, leaving anything else to the other constructs", () => {
-      // `<5>` is neither an autolink nor a legal tag, so it falls all the
-      // way through to literal text and merges with what surrounds it.
-      assert.deepStrictEqual(shapeOf("a <5> b\n"), ["text"]);
+      assert.deepStrictEqual(
+        shapeOf("a <5> b\n"),
+        ["text"],
+        "`<5>` is neither an autolink nor a legal tag, so it falls through to literal text and merges with what surrounds it"
+      );
     });
   });
 
@@ -189,9 +189,6 @@ describe("inline pass", () => {
     });
 
     it("keeps closing tags, comments, declarations, instructions and CDATA", () => {
-      // Each source leads with text on purpose: the same constructs at the
-      // start of a line would open an HTML BLOCK instead, and there would
-      // be no paragraph to hold an inline.
       const sources: ReadonlyArray<readonly [string, string]> = [
         ["x </a>\n", "</a>"],
         ["x <!-- comment -->\n", "<!-- comment -->"],
@@ -201,7 +198,11 @@ describe("inline pass", () => {
       ];
       for (const [source, expected] of sources) {
         const [, html] = inlinesOf(source);
-        assert.strictEqual(html?.type === "html" ? html.value : "", expected, `failed for ${source}`);
+        assert.strictEqual(
+          html?.type === "html" ? html.value : "",
+          expected,
+          `each source leads with text: at a line start it would open an HTML block, leaving no paragraph; failed for ${source}`
+        );
       }
     });
 
@@ -255,13 +256,14 @@ describe("inline pass", () => {
       const children = inlinesOf(source);
       const [, code] = children;
       assert.strictEqual(code?.type, "inlineCode");
-      assert.strictEqual(Str.slice(code?.position.start.offset ?? 0, code?.position.end.offset ?? 0)(source), "`code`");
+      assert.strictEqual(
+        Str.slice(code?.position.start.offset ?? 0, code?.position.end.offset ?? 0)(source),
+        "`code`",
+        "the inline pass sees the content with blockquote markers stripped, so a naive offset lands two characters early"
+      );
     });
 
     it("positions an inline inside a container against the original source", () => {
-      // The blockquote markers are stripped from the content the inline
-      // pass sees, so a naive offset would land two characters early on
-      // the second line.
       const source = "> a\n> `code`\n";
       const children = inlinesOf(Str.replace(/^> /gm, "")(source));
       assert.isAtLeast(children.length, 1);
@@ -285,18 +287,17 @@ describe("inline pass", () => {
 
   describe("text runs", () => {
     it("merges adjacent runs into one node", () => {
-      // `*` has no construct until Task 9, so it becomes literal text and
-      // must not split the run around it.
       const node = onlyInline("a*b\n");
       assert.strictEqual(node?.type === "text" ? node.value : "", "a*b");
     });
 
     it("does not skip the run before an unclaimed character", () => {
-      // The regression the `m` flag caused: `^` matching at the NEXT line
-      // start silently swallowed everything in between. `?` claims no
-      // construct, so the run around it must survive intact.
       const node = onlyInline("?foo\nbar\n");
-      assert.strictEqual(node?.type === "text" ? node.value : "", "?foo\nbar");
+      assert.strictEqual(
+        node?.type === "text" ? node.value : "",
+        "?foo\nbar",
+        "the regression the m flag caused: ^ matching at the NEXT line start swallowed everything in between"
+      );
     });
 
     it("parses heading content as inlines too", () => {
@@ -311,7 +312,6 @@ describe("inline pass", () => {
 });
 
 describe("the delimiter stack", () => {
-  /** A compact shape rendering, for asserting nesting without HTML. */
   const treeOf = (nodes: ReadonlyArray<PhrasingContent>): string => A.join(A.map(nodes, nodeShape), "");
   const nodeShape: (node: PhrasingContent) => string = Match.type<PhrasingContent>().pipe(
     Match.discriminators("type")({
@@ -355,9 +355,11 @@ describe("the delimiter stack", () => {
     });
 
     it("applies the multiple-of-three rule", () => {
-      // A run that can both open and close cannot pair when the lengths
-      // sum to a multiple of three, unless both are multiples of three.
-      assert.strictEqual(shape("*foo**bar***\n"), "<em>foo<strong>bar</strong></em>");
+      assert.strictEqual(
+        shape("*foo**bar***\n"),
+        "<em>foo<strong>bar</strong></em>",
+        "a run that can both open and close cannot pair when the lengths sum to a multiple of three, unless both are multiples of three"
+      );
       assert.strictEqual(shape("foo***bar***baz\n"), "foo<em><strong>bar</strong></em>baz");
       assert.strictEqual(
         shape("foo******bar*********baz\n"),
@@ -393,22 +395,21 @@ describe("the delimiter stack", () => {
     });
 
     it("parses a bare destination holding 32 nested parens, the cmark bound", () => {
-      // The COMPLETE inline result: exactly one link consuming the whole
-      // destination, with no trailing nodes hiding after it.
       const url = `/${Str.repeat(32)("(")}a${Str.repeat(32)(")")}`;
-      assert.strictEqual(shape(`[foo](${url})\n`), `<a ${url}>foo</a>`);
+      assert.strictEqual(
+        shape(`[foo](${url})\n`),
+        `<a ${url}>foo</a>`,
+        "the complete inline result: exactly one link consuming the whole destination, no trailing nodes after it"
+      );
     });
 
     it("leaves the brackets literal past 32 nested parens, like cmark", () => {
-      // The spec sanctions the bound: "Implementations may impose limits
-      // on parentheses nesting to avoid performance issues, but at least
-      // three levels of nesting should be supported." Without it the
-      // bare-destination scan is quadratic on `"[a](b"` repeated — the
-      // pathological suite's "unclosed links B" (`references.ts`,
-      // MAX_LINK_DESTINATION_PARENS). The COMPLETE inline result is the
-      // source line verbatim: nothing formed a link, nothing was dropped.
       const destination = `/${Str.repeat(33)("(")}a${Str.repeat(33)(")")}`;
-      assert.strictEqual(shape(`[foo](${destination})\n`), `[foo](${destination})`);
+      assert.strictEqual(
+        shape(`[foo](${destination})\n`),
+        `[foo](${destination})`,
+        "the spec lets implementations limit parens nesting; unbounded, the bare-destination scan is quadratic on \"[a](b\" repeated (pathological 'unclosed links B'). The complete result is the line verbatim"
+      );
     });
 
     it("omits an absent title rather than storing undefined", () => {
@@ -445,9 +446,11 @@ describe("the delimiter stack", () => {
     });
 
     it("lets the inner link win when brackets nest", () => {
-      // The inner link forms first and spends every enclosing opener, so
-      // the outer brackets are left as literal text.
-      assert.strictEqual(shape("[a[b](/i)c](/o)\n"), "[a<a /i>b</a>c](/o)");
+      assert.strictEqual(
+        shape("[a[b](/i)c](/o)\n"),
+        "[a<a /i>b</a>c](/o)",
+        "the inner link forms first and spends every enclosing opener, so the outer brackets stay literal text"
+      );
     });
   });
 
@@ -488,9 +491,11 @@ describe("the delimiter stack", () => {
     });
 
     it("does not form a reference with no matching definition", () => {
-      // THE formation rule: a dangling label is literal text, brackets and
-      // all — not an unresolved reference node.
-      assert.strictEqual(shape("[nope]\n"), "[nope]");
+      assert.strictEqual(
+        shape("[nope]\n"),
+        "[nope]",
+        "THE formation rule: a dangling label is literal text, brackets and all, not an unresolved reference node"
+      );
       assert.strictEqual(shape("[text][nope]\n"), "[text][nope]");
       assert.strictEqual(shape("[nope][]\n"), "[nope][]");
       assert.strictEqual(shape("![nope]\n"), "![nope]");
@@ -507,13 +512,12 @@ describe("the delimiter stack", () => {
 
   describe("positions", () => {
     it("spans exactly the source each emphasis and link was built from", () => {
-      // unist positions cover the whole construct, markers included — the
-      // delimiters are part of the emphasis, not something around it.
       const source = "a *b* [c](/d) e\n";
       const [, emphasis, , link] = inlinesOf(source);
       assert.strictEqual(
         Str.slice(emphasis?.position.start.offset ?? 0, emphasis?.position.end.offset ?? 0)(source),
-        "*b*"
+        "*b*",
+        "unist positions cover the whole construct, markers included: the delimiters are part of the emphasis"
       );
       assert.strictEqual(
         Str.slice(link?.position.start.offset ?? 0, link?.position.end.offset ?? 0)(source),
@@ -536,31 +540,36 @@ describe("the delimiter stack", () => {
 
   describe("hardening", () => {
     it("handles a long run of unmatched delimiters without pairing them", () => {
-      // The pathological shape: the delimiter stack must not go quadratic
-      // or pair anything here. Task 10 pins the timing; this pins the
-      // result.
       const source = `${Str.repeat(500)("*a **a ")}\n`;
       const children = inlinesOf(source);
-      assert.isAtLeast(children.length, 1);
+      assert.isAtLeast(
+        children.length,
+        1,
+        "the delimiter stack must not go quadratic or pair anything here; the pathological suite pins the timing"
+      );
     });
 
     it("refuses emphasis nested past the depth cap", () => {
-      // The delimiter stack itself is iterative and unguarded; the tree it
-      // builds is what recurses, and it shares the block pass's cap.
-      // Delimiters pair two at a time, so a run of n on each side nests
-      // n/2 deep — the cap needs twice its own value in markers.
-      const markers = 2 * MAX_NESTING_DEPTH + 20;
+      const delimitersPerNestingLevel = 2;
+      const markers = delimitersPerNestingLevel * MAX_NESTING_DEPTH + 20;
       const source = `${Str.repeat(markers)("*")}a${Str.repeat(markers)("*")}\n`;
-      assert.throws(() => parseBlocks(source), GuardExceeded);
+      assert.throws(
+        () => parseBlocks(source),
+        GuardExceeded,
+        undefined,
+        "the delimiter stack is iterative and unguarded; the tree it builds recurses and shares the block pass's cap"
+      );
     });
 
     it("parses emphasis nested just under the cap", () => {
-      // The positive control: 500 markers a side nests 250 deep and must
-      // parse, or the test above would pass for the wrong reason.
       const markers = 2 * MAX_NESTING_DEPTH - 12;
       const source = `${Str.repeat(markers)("*")}a${Str.repeat(markers)("*")}\n`;
       const [node] = inlinesOf(source);
-      assert.strictEqual(node?.type, "strong");
+      assert.strictEqual(
+        node?.type,
+        "strong",
+        "positive control: 500 markers a side nest 250 deep and must parse, or the test above would pass for the wrong reason"
+      );
     });
   });
 });

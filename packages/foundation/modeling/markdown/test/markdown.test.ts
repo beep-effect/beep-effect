@@ -1,13 +1,3 @@
-// The `Markdown` facade: the pure `parseResult` primitive, the `Effect`
-// `parse` defined in terms of it, the options default, the `MarkdownFromString`
-// codec, and the two invariants that hold for EVERY input — parse never
-// throws, and every position is inside the source.
-//
-// The guard tests here assert MATERIALIZATION, not detection: that the
-// engine's `GuardExceeded` carrier becomes a typed `MarkdownParseError`
-// carrying a positioned diagnostic. Detection itself is covered by
-// `hardening.test.ts` at the carrier layer.
-
 import { MAX_NESTING_DEPTH } from "@beep/markdown/internal/limits";
 import { Markdown, MarkdownParseError, MarkdownParseOptions } from "@beep/markdown/Markdown";
 import { Paragraph, Root } from "@beep/markdown/MarkdownNode";
@@ -23,18 +13,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { MarkdownNode } from "@beep/markdown/MarkdownNode";
 
-/** An input nesting containers past the cap: the block pass's guard trip. */
 const nestingBomb = `${Str.repeat(MAX_NESTING_DEPTH + 44)(">")} foo\n`;
 
-/**
- * An input tripping the guard from the OTHER throw site — the inline pass's
- * emphasis materialization rather than the block pass's container stack.
- * Delimiters pair two at a time, so the run has to exceed twice the cap
- * before the nesting it would build does.
- */
-const emphasisBomb = `${Str.repeat(2 * MAX_NESTING_DEPTH + 20)("*")}a${Str.repeat(2 * MAX_NESTING_DEPTH + 20)("*")}`;
+const delimitersPerNestingLevel = 2;
+const emphasisBomb = `${Str.repeat(delimitersPerNestingLevel * MAX_NESTING_DEPTH + 20)("*")}a${Str.repeat(delimitersPerNestingLevel * MAX_NESTING_DEPTH + 20)("*")}`;
 
-/** Walk every node of a tree, children-first-agnostic, yielding each node. */
 const walk = (node: MarkdownNode, visit: (n: MarkdownNode) => void): void => {
   visit(node);
   const children = "children" in node ? node.children : undefined;
@@ -45,7 +28,6 @@ const walk = (node: MarkdownNode, visit: (n: MarkdownNode) => void): void => {
   }
 };
 
-/** Parse options whose `dialect` getter throws a plain Error: a non-carrier raised inside the block pass. */
 const throwingOptions = (): MarkdownParseOptions =>
   new Proxy(MarkdownParseOptions.make({}), {
     get(target, key, receiver) {
@@ -86,12 +68,14 @@ describe("Markdown.parseResult", () => {
   });
 
   it("materializes an inline-pass guard trip the same way as a block-pass one", () => {
-    // Same typed outcome from a different throw site: the facade must not
-    // have learned only the block pass's shape of carrier.
     const result = Markdown.parseResult(emphasisBomb);
     assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
     if (Result.isSuccess(result)) return;
-    assert.instanceOf(result.failure, MarkdownParseError);
+    assert.instanceOf(
+      result.failure,
+      MarkdownParseError,
+      "same typed outcome from a different throw site: the facade must not have learned only the block pass's carrier shape"
+    );
     assert.strictEqual(result.failure.diagnostic.code, "NestingDepthExceeded");
   });
 
@@ -100,11 +84,13 @@ describe("Markdown.parseResult", () => {
     assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
     if (Result.isSuccess(result)) return;
     const { line, character, offset } = result.failure.diagnostic;
-    // Third line (zero-based 2), and the offset accounts for the two
-    // preceding lines while `character` is measured from the line start.
-    assert.strictEqual(line, 2);
+    assert.strictEqual(line, 2, "third line, zero-based 2");
     assert.isAbove(character, 0);
-    assert.strictEqual(offset, character + "para\n\n".length);
+    assert.strictEqual(
+      offset,
+      character + "para\n\n".length,
+      "the offset accounts for the two preceding lines while character is measured from the line start"
+    );
   });
 
   it("populates line and character on the guard diagnostic", () => {
@@ -112,9 +98,11 @@ describe("Markdown.parseResult", () => {
     assertFailure(result, result.pipe(Result.flip, Result.getOrThrow));
     if (Result.isSuccess(result)) return;
     const { offset, line, character } = result.failure.diagnostic;
-    // Derived from the offset against the source, so the trip on line 3
-    // (zero-based 2) reports there and not at the document start.
-    assert.strictEqual(line, 2);
+    assert.strictEqual(
+      line,
+      2,
+      "derived from the offset against the source, so the trip on line 3 (zero-based 2) reports there, not at the document start"
+    );
     assert.isAbove(character, 0);
     assert.isAbove(offset, 0);
   });
@@ -140,17 +128,14 @@ describe("Markdown.parseResult", () => {
   });
 
   it("rethrows a non-carrier as a defect rather than converting it", () => {
-    // The defect-passthrough invariant: only the engine's own carriers
-    // become typed failures. A programmer error inside the guarded block pass
-    // — here a plain Error thrown by an options getter the pass reads — must
-    // escape untouched, never be laundered into MarkdownParseError. (The seam
-    // used to be a patched `Paragraph.make`; node schemas are `S.Opaque`
-    // now (D-22, D-39), the parser no longer calls `make` per node, and a
-    // schema's memoized `make` cannot be redefined.)
-    assert.throws(() => Markdown.parseResult("a paragraph\n", throwingOptions()), /boom: a programmer error/);
-    // And the seam is local to that call — otherwise the assertion above is vacuous.
-    const restored = Markdown.parseResult("a paragraph\n");
-    assertSuccess(restored, Result.getOrThrow(restored));
+    assert.throws(
+      () => Markdown.parseResult("a paragraph\n", throwingOptions()),
+      /boom: a programmer error/,
+      undefined,
+      "only the engine's own carriers become typed failures: a programmer error in the guarded block pass escapes untouched"
+    );
+    const parseWithoutTheSeam = Markdown.parseResult("a paragraph\n");
+    assertSuccess(parseWithoutTheSeam, Result.getOrThrow(parseWithoutTheSeam));
   });
 });
 
@@ -187,18 +172,19 @@ describe("Markdown.parse", () => {
           })
         )
       );
-      // A die, not a typed fail: no MarkdownParseError anywhere in the cause.
       const rendered = String(exit.cause);
       assert.include(rendered, "boom: a programmer error");
-      assert.notInclude(rendered, "MarkdownParseError");
+      assert.notInclude(
+        rendered,
+        "MarkdownParseError",
+        "a die, not a typed fail: no MarkdownParseError anywhere in the cause"
+      );
     })
   );
 });
 
 describe("MarkdownParseOptions", () => {
-  // A construct only the gfm dialect parses: under commonmark the tildes
-  // stay literal text, under gfm they become a `delete` node.
-  const gfmMarker = "~~struck~~\n";
+  const gfmOnlyStrikethrough = "~~struck~~\n";
 
   const firstChildTypes = (result: Result.Result<Root, MarkdownParseError>): ReadonlyArray<string> => {
     if (Result.isFailure(result)) {
@@ -210,9 +196,9 @@ describe("MarkdownParseOptions", () => {
   };
 
   it("defaults the dialect to gfm when options are omitted", () => {
-    const implicit = Markdown.parseResult(gfmMarker);
-    const explicit = Markdown.parseResult(gfmMarker, MarkdownParseOptions.make({ dialect: "gfm" }));
-    const empty = Markdown.parseResult(gfmMarker, MarkdownParseOptions.make({}));
+    const implicit = Markdown.parseResult(gfmOnlyStrikethrough);
+    const explicit = Markdown.parseResult(gfmOnlyStrikethrough, MarkdownParseOptions.make({ dialect: "gfm" }));
+    const empty = Markdown.parseResult(gfmOnlyStrikethrough, MarkdownParseOptions.make({}));
     assert.deepStrictEqual(firstChildTypes(implicit), ["delete"]);
     if (Result.isFailure(implicit) || Result.isFailure(explicit) || Result.isFailure(empty)) {
       assert.fail("expected every options form to parse");
@@ -222,7 +208,7 @@ describe("MarkdownParseOptions", () => {
   });
 
   it("honors an explicit commonmark dialect by disabling every extension", () => {
-    const commonmark = Markdown.parseResult(gfmMarker, MarkdownParseOptions.make({ dialect: "commonmark" }));
+    const commonmark = Markdown.parseResult(gfmOnlyStrikethrough, MarkdownParseOptions.make({ dialect: "commonmark" }));
     assert.deepStrictEqual(firstChildTypes(commonmark), ["text"]);
   });
 
@@ -268,10 +254,6 @@ describe("Markdown.MarkdownFromString", () => {
     })
   );
 
-  // D-39 single admission: the codec's decode target (`S.toType(Root)`) is the
-  // one checked admission of the parsed tree. Routing the transformation
-  // through `Markdown.parseResult` (or `Markdown.parse`, defined by it) would
-  // add its `Root.make` and walk — and copy — the tree a second time.
   it.effect("admits a decoded tree once, through the decode target alone", () =>
     Effect.gen(function* () {
       const parseResult = vi.spyOn(Markdown, "parseResult");
@@ -279,7 +261,11 @@ describe("Markdown.MarkdownFromString", () => {
       try {
         const root = yield* decode("# Title\n\n> para *em*\n");
         assert(S.is(Root)(root));
-        assert.strictEqual(parseResult.mock.calls.length, 0);
+        assert.strictEqual(
+          parseResult.mock.calls.length,
+          0,
+          "the decode target S.toType(Root) is the one checked admission; routing through parseResult would make, walk and copy the tree again"
+        );
         assert.strictEqual(parse.mock.calls.length, 0);
       } finally {
         parseResult.mockRestore();
@@ -290,14 +276,6 @@ describe("Markdown.MarkdownFromString", () => {
 });
 
 describe("Markdown parse invariants", () => {
-  /**
-   * Unicode-hostile text: lone surrogates (unpaired halves that break naive
-   * code-point scanning), U+0000 (preprocessed to U+FFFD), every line
-   * terminator form, the markdown punctuation set, and full-plane unicode
-   * as runs of scalar values (the whole plane minus the surrogate block),
-   * which reach the astral code points the ASCII string generator never
-   * emits. `size` lifts the length scale to the 40-part cap.
-   */
   const ScalarValue = S.Union([
     S.Int.check(S.isBetween({ minimum: 0, maximum: 0xd7ff })),
     S.Int.check(S.isBetween({ minimum: 0xe000, maximum: 0x10ffff })),
@@ -325,21 +303,19 @@ describe("Markdown parse invariants", () => {
   );
 
   it.prop(
-    "never throws, whatever the input",
+    "never throws on unicode-hostile text: lone surrogates, U+0000, every line terminator and full-plane scalars",
     [hostileText],
     ([text]) => {
       const result = Markdown.parseResult(text);
-      // Failure is legal (a guard trip); a throw is not.
       return Result.isSuccess(result) || Result.isFailure(result);
     },
     { arbitrary: { runs: 250, size: 40 } }
   );
 
-  // Invariant, not a performance budget: parsing ~500KB under coverage in a
-  // whole-workspace run shares cores with 18 other suites, so the default 5s
-  // timeout flakes on contention. The calibrated pathological suite owns
-  // timing; this test only asserts totality.
-  it("never throws on a large input", { timeout: 30_000 }, () => {
+  const coverageContentionTimeout = 30_000;
+  it("never throws on a ~500KB input (totality only; the pathological suite owns timing)", {
+    timeout: coverageContentionTimeout,
+  }, () => {
     const large = Str.repeat(20_000)("para *em* [ref][a] `code`\n\n");
     assert.isAbove(large.length, 500_000);
     const result = Markdown.parseResult(large);
@@ -395,7 +371,6 @@ describe("Markdown parse invariants", () => {
       assert.isAtMost(start.offset, end.offset);
       assert.isAtMost(end.offset, source.length);
     });
-    // Guard against a silently-empty walk.
-    assert.isAbove(count, 15);
+    assert.isAbove(count, 15, "guard against a silently-empty walk");
   });
 });

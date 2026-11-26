@@ -1,11 +1,3 @@
-import { identity } from "effect/Function";
-// `Text.escapeStyle: "literal"` (#489): the caller vouches a text value is
-// already safe markdown, so the emitter drops every inline-phase escape and
-// keeps only the ones defending block structure. The canonical path must not
-// move by a byte — the canonical-form suites in `stringify.test.ts` pin that,
-// and the "canonical is unchanged" cases here pin it for the exact shapes the
-// literal path touches.
-
 import { Markdown } from "@beep/markdown/Markdown";
 import { MdxFlowExpression } from "@beep/markdown/MarkdownMdx";
 import {
@@ -23,6 +15,7 @@ import { Mdast } from "@beep/markdown/Mdast";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { PhrasingContent } from "@beep/markdown/MarkdownNode";
@@ -47,7 +40,6 @@ const out = (root: Root): string => {
 
 const parse = (source: string): Root => Result.getOrThrow(Markdown.parseResult(source));
 
-/** The phrasing children of the root's first block, failing unless it is a paragraph. */
 const firstParagraphChildren = (root: Root, what: string): ReadonlyArray<PhrasingContent> => {
   const block = root.children[0];
   if (block?.type !== "paragraph") assert.fail(`expected ${what} paragraph`);
@@ -62,8 +54,6 @@ describe("adjacent text run boundaries", () => {
       [literal("a  "), canonical("\nb")],
     ]) {
       const tree = paragraphOf(...children);
-      // `make` copies its input (D-22), so pin the tree's own nodes: the
-      // serializer must neither merge nor replace them.
       const kids = [...firstParagraphChildren(tree, "built")];
       const emitted = out(tree);
       assert.strictEqual(emitted, "a  &#10;b\n");
@@ -74,7 +64,11 @@ describe("adjacent text run boundaries", () => {
       assert.strictEqual(text.value, "a  \nb");
       const original = firstParagraphChildren(tree, "original");
       A.forEach(children, (child, index) => {
-        assert.strictEqual(original[index], kids[index]);
+        assert.strictEqual(
+          original[index],
+          kids[index],
+          "make copies its input, so the tree's own nodes are pinned: the serializer must neither merge nor replace them"
+        );
         assert.deepStrictEqual(original[index], child);
       });
     }
@@ -82,8 +76,6 @@ describe("adjacent text run boundaries", () => {
 
   it("keeps canonical underscore boundaries and split entity defenses", () => {
     const children = [canonical("a"), canonical("_"), canonical("b &a"), canonical("mp;"), canonical("")];
-    // `make` copies its input (D-22), so pin the tree the serializer reads:
-    // it must neither merge nor replace the text nodes.
     const root = Root.make({ children: [Paragraph.make({ children })] });
     const paragraph = root.children[0];
     if (paragraph?.type !== "paragraph") assert.fail("expected paragraph");
@@ -92,7 +84,11 @@ describe("adjacent text run boundaries", () => {
     assert.strictEqual(out(root), "a\\_b \\&amp;\n");
     assert.strictEqual(paragraph.children, before);
     for (let index = 0; index < children.length; index += 1) {
-      assert.strictEqual(paragraph.children[index], kids[index]);
+      assert.strictEqual(
+        paragraph.children[index],
+        kids[index],
+        "make copies its input, so the tree the serializer reads is pinned: it must neither merge nor replace the text nodes"
+      );
       assert.deepStrictEqual(paragraph.children[index], children[index]);
     }
   });
@@ -152,7 +148,6 @@ const tableOf = (rows: ReadonlyArray<ReadonlyArray<ReadonlyArray<Text>>>): Root 
 const paragraphOf = (...children: ReadonlyArray<Paragraph["children"][number]>): Root =>
   Root.make({ children: [Paragraph.make({ children: [...children] })] });
 
-/** Every cell's concatenated text value, row by row, from a parsed table. */
 const cellValues = (root: Root): ReadonlyArray<ReadonlyArray<string>> => {
   const table = root.children[0];
   if (table?.type !== "table") {
@@ -168,8 +163,6 @@ const cellValues = (root: Root): ReadonlyArray<ReadonlyArray<string>> => {
   );
 };
 
-// The consumer's shape: savvy-web/systems silk-effects builds plain mdast
-// `tableCell > text` nodes and admits them through `Mdast.fromMdastResult`.
 const HEADER = ["Dependency", "Type", "Action", "From", "To"];
 const ROWS = [
   ["@scope/pkg", "dependency", "updated", "~0.2.1", "^1.0.0"],
@@ -202,7 +195,7 @@ const decodePlain = (input: unknown): Root => {
 };
 
 describe("Text escapeStyle: literal", () => {
-  describe("a dependency table (the #489 consumer shape)", () => {
+  describe("a dependency table in the silk-effects consumer shape: plain mdast tableCell > text admitted by fromMdastResult", () => {
     it("emits ranges and package names verbatim in cells", () => {
       assert.strictEqual(
         out(decodePlain(plainTable("literal"))),
@@ -295,12 +288,16 @@ describe("Text escapeStyle: literal", () => {
     for (const [value, expected] of blockOpeners) {
       it(`escapes the line-start opener in ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity)}`, () => {
         const emitted = out(paragraphOf(literal(value)));
-        assert.strictEqual(emitted, `${expected}\n`);
+        assert.strictEqual(
+          emitted,
+          `${expected}\n`,
+          "only text that can open a block at a line start is escaped: a marker needs its trailing space, tab or end of line, a break or fence its run"
+        );
         const reparsed = parse(emitted);
         assert.strictEqual(
           reparsed.children.length,
           1,
-          `emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
+          `each emitted line parses back to one paragraph carrying the exact value; emitted: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(emitted), identity)}`
         );
         assert.strictEqual(
           reparsed.children[0]?.type,
@@ -318,10 +315,6 @@ describe("Text escapeStyle: literal", () => {
       assert.strictEqual(reparsed.children[0]?.type, "paragraph");
     });
 
-    // Only text that can open a block at a line start is escaped: a marker
-    // needs its trailing space, tab or end of line, a break or fence its
-    // run. Each emitted line must parse back to one paragraph carrying the
-    // exact value.
     const lineStarts = [
       ["~0.2.1", "~0.2.1"],
       ["~~~x", "\\~~~x"],

@@ -24,29 +24,25 @@ describe("LineIndex", () => {
   });
 
   it("positions offsets around \\n boundaries", () => {
-    // "ab\ncd\nef"
-    //  01 2 34 5 67
     const index = LineIndex.make("ab\ncd\nef");
-    assert.deepStrictEqual(index.positionAt(0), { line: 1, column: 1 }); // 'a'
-    assert.deepStrictEqual(index.positionAt(1), { line: 1, column: 2 }); // 'b'
-    assert.deepStrictEqual(index.positionAt(2), { line: 1, column: 3 }); // '\n' itself
-    assert.deepStrictEqual(index.positionAt(3), { line: 2, column: 1 }); // 'c'
-    assert.deepStrictEqual(index.positionAt(6), { line: 3, column: 1 }); // 'e'
+    assert.deepStrictEqual(index.positionAt(0), { line: 1, column: 1 }, "offset 0 is 'a'");
+    assert.deepStrictEqual(index.positionAt(1), { line: 1, column: 2 }, "offset 1 is 'b'");
+    assert.deepStrictEqual(index.positionAt(2), { line: 1, column: 3 }, "offset 2 is the '\\n' itself");
+    assert.deepStrictEqual(index.positionAt(3), { line: 2, column: 1 }, "offset 3 is 'c'");
+    assert.deepStrictEqual(index.positionAt(6), { line: 3, column: 1 }, "offset 6 is 'e'");
   });
 
   it("treats a CRLF pair as a single boundary, keeping \\r on the prior line", () => {
-    // "ab\r\ncd"
-    //  01 2 3 45
     const index = LineIndex.make("ab\r\ncd");
-    assert.deepStrictEqual(index.positionAt(2), { line: 1, column: 3 }); // '\r'
-    assert.deepStrictEqual(index.positionAt(3), { line: 1, column: 4 }); // '\n'
-    assert.deepStrictEqual(index.positionAt(4), { line: 2, column: 1 }); // 'c'
+    assert.deepStrictEqual(index.positionAt(2), { line: 1, column: 3 }, "offset 2 is the '\\r'");
+    assert.deepStrictEqual(index.positionAt(3), { line: 1, column: 4 }, "offset 3 is the '\\n'");
+    assert.deepStrictEqual(index.positionAt(4), { line: 2, column: 1 }, "offset 4 is 'c'");
   });
 
   it("positions the final character and the one-past-end position", () => {
     const index = LineIndex.make("hello");
-    assert.deepStrictEqual(index.positionAt(4), { line: 1, column: 5 }); // 'o'
-    assert.deepStrictEqual(index.positionAt(5), { line: 1, column: 6 }); // one past end
+    assert.deepStrictEqual(index.positionAt(4), { line: 1, column: 5 }, "offset 4 is 'o'");
+    assert.deepStrictEqual(index.positionAt(5), { line: 1, column: 6 }, "offset 5 is one past the end");
   });
 
   it("clamps out-of-range offsets to the nearest valid position", () => {

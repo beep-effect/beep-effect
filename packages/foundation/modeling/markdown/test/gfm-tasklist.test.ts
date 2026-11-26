@@ -1,13 +1,4 @@
-// Unit coverage for the GFM task-list item construct.
-//
-// Semantics authority is cmark-gfm 0.29.0.gfm.13 — `extensions/tasklist.c`
-// and the generated `_scan_tasklist` in `extensions/ext_scanners.c`. The three
-// `extensions.txt` conformance examples only sample the happy path; these
-// assert the rules behind it: the marker grammar the scanner accepts, the
-// fact that the scan runs over the RAW LINE from column zero (which is what
-// keeps a task marker out of a blockquote or a same-line nested item), the
-// checked-state scan, the source offsets left behind once the marker is
-// consumed, and that the `commonmark` dialect never sees a task item at all.
+// decision: tasklist-reproduces-cmark-gfm-quirks
 
 import { parseBlocks } from "@beep/markdown/internal/blockParser";
 import { assert, describe, it } from "@effect/vitest";
@@ -18,7 +9,6 @@ import { offsetOf } from "./support/offsets.ts";
 import type { MdxjsEsm } from "@beep/markdown/MarkdownMdx";
 import type { FlowContent, Frontmatter, ListItem, Text } from "@beep/markdown/MarkdownNode";
 
-/** Every list item in a source, in document order, however deeply nested. */
 const itemsOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): ReadonlyArray<ListItem> => {
   const found: ListItem[] = [];
   const walk = (nodes: ReadonlyArray<Frontmatter | MdxjsEsm | FlowContent>): void => {
@@ -37,14 +27,12 @@ const itemsOf = (source: string, dialect: "commonmark" | "gfm" = "gfm"): Readonl
   return found;
 };
 
-/** The first list item a source produces; fails the test if it produced none. */
 const firstItem = (source: string, dialect: "commonmark" | "gfm" = "gfm"): ListItem => {
   const item = itemsOf(source, dialect)[0];
   assert.isDefined(item, "expected the source to parse as a list item");
   return item;
 };
 
-/** The first text node inside a list item, or `undefined` if it holds none. */
 const firstText = (item: ListItem): Text | undefined => {
   const paragraph = item.children[0];
   if (paragraph?.type !== "paragraph") {
@@ -54,7 +42,6 @@ const firstText = (item: ListItem): Text | undefined => {
   return text?.type === "text" ? text : undefined;
 };
 
-/** The first text node's value, or `""` when the item has no text at all. */
 const textOf = (item: ListItem): string => firstText(item)?.value ?? "";
 
 describe("gfm task-list items", () => {
@@ -68,10 +55,11 @@ describe("gfm task-list items", () => {
     });
 
     it("reads an uppercase checked marker as true", () => {
-      // The generated scanner accepts ` `, `x` AND `X` between the
-      // brackets, even though `ext_scanners.re`'s source rule lists only
-      // the first two; `tasklist.c` then tests for both cases.
-      assert.strictEqual(firstItem("- [X] foo").checked, true);
+      assert.strictEqual(
+        firstItem("- [X] foo").checked,
+        true,
+        "the generated scanner accepts ` `, `x` AND `X` though ext_scanners.re lists only the first two; tasklist.c tests both cases"
+      );
     });
 
     it("reads a marker on an ordered item", () => {
@@ -105,11 +93,11 @@ describe("gfm task-list items", () => {
     });
 
     it("does not match a marker that ends the line", () => {
-      // `spacechar+` is required after `]`, and the line terminator is
-      // not a `spacechar` — so an item whose whole content is a marker
-      // is not a task item.
       const item = firstItem("- [x]");
-      assert.isFalse(P.hasProperty(item, "checked"));
+      assert.isFalse(
+        P.hasProperty(item, "checked"),
+        "`spacechar+` is required after `]`, and the line terminator is not a `spacechar`"
+      );
       assert.strictEqual(textOf(item), "[x]");
     });
 
@@ -144,21 +132,22 @@ describe("gfm task-list items", () => {
 
   describe("the scan runs over the raw line from column zero", () => {
     it("does not match inside a blockquote", () => {
-      // `_scan_tasklist` is applied at offset 0 of the whole line, so a
-      // `>` prefix means the line never looks like a task item to
-      // cmark-gfm. Preserved deliberately.
       const item = firstItem("> - [x] foo");
-      assert.isFalse(P.hasProperty(item, "checked"));
+      assert.isFalse(
+        P.hasProperty(item, "checked"),
+        "`_scan_tasklist` runs at offset 0 of the whole line, so a `>` prefix never looks like a task item to cmark-gfm"
+      );
       assert.strictEqual(textOf(item), "[x] foo");
     });
 
     it("does not match a nested item opened on the same line", () => {
-      // `- - [x] foo` puts a second list marker between column zero and
-      // the bracket, which the scanner's grammar does not admit.
       const items = itemsOf("- - [x] foo");
       assert.strictEqual(items.length, 2);
       for (const item of items) {
-        assert.isFalse(P.hasProperty(item, "checked"));
+        assert.isFalse(
+          P.hasProperty(item, "checked"),
+          "a second list marker between column zero and the bracket is not admitted by the scanner's grammar"
+        );
       }
     });
 
@@ -177,13 +166,12 @@ describe("gfm task-list items", () => {
 
   describe("the checked state comes from a whole-line scan", () => {
     it("preserves cmark-gfm's whole-line search for a checked marker", () => {
-      // `tasklist.c` sets `checked` with `strstr(input, "[x]")` over the
-      // ENTIRE line rather than the bytes the scanner matched. A later
-      // `[x]` in the item's text therefore checks the box. This is an
-      // upstream quirk, reproduced on purpose: the reference
-      // implementation is the contract.
       const item = firstItem("- [ ] foo [x]");
-      assert.strictEqual(item.checked, true);
+      assert.strictEqual(
+        item.checked,
+        true,
+        "tasklist.c sets checked with strstr over the ENTIRE line, so a later [x] checks the box: an upstream quirk reproduced on purpose"
+      );
       assert.strictEqual(textOf(item), "foo [x]");
     });
   });
@@ -215,12 +203,13 @@ describe("gfm task-list items", () => {
     });
 
     it("stops the block-start scan the way cmark-gfm's break does", () => {
-      // `open_tasklist_item` returns NULL, and `open_new_blocks` breaks
-      // on a NULL container — so nothing after a task marker can open
-      // another block on that line.
       const item = firstItem("- [x] # foo");
       assert.strictEqual(item.checked, true);
-      assert.strictEqual(item.children[0]?.type, "paragraph");
+      assert.strictEqual(
+        item.children[0]?.type,
+        "paragraph",
+        "open_tasklist_item returns NULL and open_new_blocks breaks on it, so nothing after a task marker opens another block on that line"
+      );
       assert.strictEqual(textOf(item), "# foo");
     });
   });

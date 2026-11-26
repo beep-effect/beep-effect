@@ -1,15 +1,5 @@
-// The differential oracle: commonmark.js 0.31.2, the reference implementation
-// our engine is ported from, rendering the same input to HTML so the two can
-// be compared normalized.
-//
-// Test-only. `commonmark` is an exact-pinned devDependency and must never
-// appear under `src/` — the product owns its engine outright.
-//
-// The package ships no type declarations (and DefinitelyTyped's
-// `@types/commonmark` is pinned at 0.27, three minors behind the runtime we
-// installed, so it would describe a different API than the one we call).
-// Rather than depend on stale types, the two calls we make are declared
-// locally in commonmark.d.ts — the surface is two classes and two methods.
+// decision: commonmark-js-differential-oracle
+// decision: local-commonmark-declarations
 
 import * as commonmark from "commonmark";
 

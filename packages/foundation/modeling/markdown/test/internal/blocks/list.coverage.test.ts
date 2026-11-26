@@ -100,22 +100,17 @@ import * as Str from "effect/String";
 import type { BlockType, InlineHost, MaterializedBlock, PreparedInline } from "@beep/markdown/internal/blockTypes";
 import type { List, ListItem, Root } from "@beep/markdown/MarkdownNode";
 
-/** A materialized block, or a top-level block of a parsed document. */
 type AnyBlock = MaterializedBlock | Root["children"][number];
 
-/** `node` as a list, failing the test when it is anything else. */
 const asList = (node: AnyBlock | undefined): List =>
   node !== undefined && node.type === "list" ? node : assert.fail(`expected a list, got ${node?.type}`);
 
-/** `node` as a list item, failing the test when it is anything else. */
 const asListItem = (node: AnyBlock | undefined): ListItem =>
   node !== undefined && node.type === "listItem" ? node : assert.fail(`expected a list item, got ${node?.type}`);
 
-/** The top-level block types of a CommonMark parse. */
 const childTypes = (source: string): ReadonlyArray<string> =>
   A.map(parseBlocks(source).root.children, (child) => child.type);
 
-/** The first top-level block of a CommonMark parse. */
 const firstChild = (source: string): AnyBlock | undefined => parseBlocks(source).root.children[0];
 
 describe("list construct coverage", () => {
