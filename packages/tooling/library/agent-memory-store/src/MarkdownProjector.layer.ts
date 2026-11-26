@@ -136,14 +136,12 @@ export const MarkdownPartitionExtractor: SourceTextExtractor = SourceTextExtract
  */
 export const isMemoryFilePath: (relativePath: string) => relativePath is MemoryFilePath = S.is(MemoryFilePath);
 
-// A memory file as read from disk.
 interface DiskFile {
   readonly bytes: Uint8Array;
   readonly digest: Sha256Hex;
   readonly path: MemoryFilePath;
 }
 
-// A memory file as the log projects it.
 interface BuiltFile {
   readonly bytes: Uint8Array;
   readonly digest: Sha256Hex;
@@ -158,13 +156,9 @@ const FolderFileRows = S.Array(S.Struct({ file_path: S.String, file_digest: S.St
 const decodeFolderFileRows = S.decodeUnknownEffect(FolderFileRows);
 
 const utf8 = new TextEncoder();
-// `ignoreBOM` keeps a leading byte order mark in the text, so it becomes the
-// file's first gap node and the bytes round-trip; `fatal` refuses bytes that
-// are not UTF-8, which could not round-trip.
-const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const roundTripUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
-// Three bound parameters per row: 300 rows stay under the 999-parameter
-// limit of the oldest SQLite builds, and far under the 32,766 of current ones.
+// decision: folder-file-rows-insert-in-chunks-of-300
 const FOLDER_FILE_ROWS_PER_INSERT = 300;
 
 const knownKey = (path: string, digest: string): string => `${path}\u0000${digest}`;
@@ -175,8 +169,6 @@ const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
 const joinPath = (root: string, relative: string): string =>
   Str.endsWith("/")(root) ? `${root}${relative}` : `${root}/${relative}`;
 
-// A memory file path's folder (empty for a file at the folder's top) and its
-// file name.
 const splitFilePath = (path: MemoryFilePath): readonly [folder: string, name: string] =>
   O.match(Str.lastIndexOf("/")(path), {
     onNone: () => ["", path] as const,
@@ -188,8 +180,6 @@ const failure = (operation: string, path: O.Option<MemoryFilePath>) => (cause: u
 
 const createTables = Effect.fnUntraced(function* () {
   const sql = yield* SqlClient.SqlClient;
-  // Bytes this store imported from or wrote to each folder, keyed by the
-  // folder's resolved path.
   yield* sql`
     CREATE TABLE IF NOT EXISTS agent_memory_folder_files (
       root TEXT NOT NULL,
@@ -199,9 +189,6 @@ const createTables = Effect.fnUntraced(function* () {
     )`;
 });
 
-// The node run of `base` the raw slice [offset, offset + length) touches,
-// widened to node boundaries, with the replacement text for that run. An
-// insertion on a node boundary touches no node.
 const replacementRun = (
   base: MarkdownPartition,
   baseText: string,
@@ -252,8 +239,6 @@ const make = Effect.gen(function* () {
   const withServices = <A, E>(effect: Effect.Effect<A, E, Digest.Digest>) =>
     Effect.provideService(effect, Digest.Digest, digest);
 
-  // Folds every entry committed since the last operation, so the fold
-  // reflects writes by other processes.
   const catchUp = (operation: string) =>
     log.entriesAfter(projection.cursor).pipe(
       Effect.flatMap((entries) => applyEntries(projection, entries)),
@@ -289,19 +274,16 @@ const make = Effect.gen(function* () {
 
   const decodeText = (path: MemoryFilePath, bytes: Uint8Array) =>
     Effect.try({
-      try: () => strictUtf8.decode(bytes),
+      try: () => roundTripUtf8.decode(bytes),
       catch: failure("importFolder", O.some(path)),
     });
 
   const listingOf = (files: ReadonlyArray<{ readonly path: MemoryFilePath; readonly digest: Sha256Hex }>) =>
     A.map(files, (file) => [file.path, file.digest] as const);
 
-  // A folder is identified by its resolved path, so two spellings of one
-  // folder share their records and a copy elsewhere shares none.
   const folderKeyOf = (operation: string, root: PosixPath) =>
     fs.realPath(root).pipe(Effect.mapError(failure(operation, O.none())));
 
-  // Bytes this store imported from or wrote to the folder `key` names.
   const knownBytes = Effect.fnUntraced(function* (operation: string, key: string) {
     const rows = yield* sql`SELECT file_path, file_digest FROM agent_memory_folder_files WHERE root = ${key}`.pipe(
       Effect.flatMap(decodeFolderFileRows),
@@ -314,12 +296,7 @@ const make = Effect.gen(function* () {
     return known;
   });
 
-  // Records the bytes of `files` as known in the folder `key` names. The rows
-  // land before the bytes they describe, so a write cut short leaves every
-  // file at bytes the fence knows.
-  // The rows go in chunks of FOLDER_FILE_ROWS_PER_INSERT inside one
-  // transaction, so a folder of any size stays under SQLite's bound-parameter
-  // limit and its rows still land all or none.
+  // decision: fence-rows-land-before-the-bytes
   const recordFolderFiles = (
     operation: string,
     key: string,
@@ -339,10 +316,6 @@ const make = Effect.gen(function* () {
       )
       .pipe(Effect.mapError(failure(operation, O.none())));
 
-  // The fence of AC-8: the log imported a folder, and every memory file in
-  // this folder holds bytes this store imported from or wrote to this same
-  // folder. A folder with no memory files passes, so the log can be rebuilt
-  // into an empty folder.
   const isProjectedFolder = Effect.fnUntraced(function* (
     operation: string,
     root: PosixPath,
@@ -351,7 +324,8 @@ const make = Effect.gen(function* () {
     if (MutableHashSet.size(projection.folders) === 0) {
       return false;
     }
-    if (!A.isReadonlyArrayNonEmpty(disk)) {
+    const emptyFolderTakesARebuild = !A.isReadonlyArrayNonEmpty(disk);
+    if (emptyFolderTakesARebuild) {
       return true;
     }
     const key = yield* folderKeyOf(operation, root);
@@ -467,7 +441,6 @@ const make = Effect.gen(function* () {
       });
     }
     const folderDigest = yield* folderDigestOf("importFolder", listingOf(disk));
-    // The FolderImported event closes every import, so the batch is never empty.
     const folderImported: MemoryEvent = {
       _tag: "FolderImported",
       payload: FolderImported.make({
@@ -480,8 +453,6 @@ const make = Effect.gen(function* () {
     return A.append(events, folderImported);
   });
 
-  // Decision `second-import-is-idempotent-on-a-projected-folder`: the log
-  // already holds a folder, so the import appends nothing.
   const reimport = Effect.fnUntraced(function* (root: PosixPath, disk: ReadonlyArray<DiskFile>) {
     const projected = yield* isProjectedFolder("importFolder", root, disk);
     if (!projected) {
@@ -491,10 +462,7 @@ const make = Effect.gen(function* () {
     return yield* currentBase("importFolder");
   });
 
-  // A first import that lost the race to another writer's first import: the
-  // same folder bytes are the same import, so this folder's bytes are the
-  // log's and its fence rows are recorded now; any other folder is foreign
-  // and keeps none.
+  // decision: fence-rows-land-before-the-bytes
   const lostImport = Effect.fnUntraced(function* (
     root: PosixPath,
     key: string,
@@ -520,12 +488,7 @@ const make = Effect.gen(function* () {
     }
     const events = yield* importEvents(disk);
     const key = yield* folderKeyOf("importFolder", root);
-    // The fence rows and the import batch commit in one transaction: the
-    // journal's writer transaction runs on this fiber's connection as a
-    // savepoint inside it, so a refused or failed append rolls the rows back
-    // and a folder holds fence rows only when its import landed. The log
-    // refuses a second FolderImported in that transaction, so of two first
-    // imports racing on one database exactly one lands.
+    // decision: fence-rows-land-before-the-bytes
     const refused = yield* sql
       .withTransaction(Effect.andThen(recordFolderFiles("importFolder", key, disk), log.appendMany(events)))
       .pipe(
@@ -571,8 +534,7 @@ const make = Effect.gen(function* () {
           O.exists((current) => current.digest === file.digest && sameBytes(current.bytes, file.bytes))
         )
     );
-    // The fence rows land before the bytes, in one statement, so a write cut
-    // short leaves either the old bytes or the new ones, both known.
+    // decision: fence-rows-land-before-the-bytes
     if (A.isReadonlyArrayNonEmpty(changed)) {
       yield* fs.makeDirectory(root, { recursive: true }).pipe(Effect.mapError(failure("exportFolder", O.none())));
       const key = yield* folderKeyOf("exportFolder", root);
@@ -590,12 +552,9 @@ const make = Effect.gen(function* () {
       Effect.mapError(() => failure("projectNode", O.none())(`node ${nodeId} is not in the log`))
     );
     if (MutableHashSet.size(projection.folders) === 0) {
-      // projectNode names no folder, so the refusal names none either.
       return yield* UnimportedFolderError.make({});
     }
     const nodes = fileNodes(projection, node.filePath);
-    // The log refuses a NodeCreated whose predecessor is not in its file, so
-    // every logged node has a place in its file's node order.
     const index = yield* Effect.fromOption(A.findFirstIndex(nodes, (candidate) => candidate.nodeId === nodeId)).pipe(
       Effect.mapError(failure("projectNode", O.some(node.filePath)))
     );
@@ -603,8 +562,6 @@ const make = Effect.gen(function* () {
     const before = joinText(A.take(nodes, index));
     const after = joinText(A.drop(nodes, index + 1));
     const edit = MarkdownEdit.make({ offset: before.length, length: previousText.length, content: node.text });
-    // Decision `projectnode-refuses-a-disturbing-edit-in-p1`: the edit is
-    // applied only when no node outside the touched run changes its parse.
     const baseText = `${before}${previousText}${after}`;
     const base = partition(baseText);
     const replacement = replacementRun(base, baseText, edit.offset, edit.length, edit.content);
