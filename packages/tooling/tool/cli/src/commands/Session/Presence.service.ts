@@ -15,7 +15,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeJsonLinesStore, makeMemoryJsonLinesStore, newestPerKey } from "../../internal/state/JsonLinesStore.ts";
-import { CheckoutRepository, checkoutRepositoryStateKey } from "../../internal/state/WorkstationState.ts";
+import { CheckoutRepository, repositoryVariantFileName } from "../../internal/state/WorkstationState.ts";
 import { PrProvenanceEntrypoint } from "../Yeet/internal/Provenance.ts";
 import {
   ClaudePeerRoute,
@@ -93,8 +93,8 @@ export class SessionPresenceStore extends Context.Service<SessionPresenceStore, 
  * @category formatting
  * @since 0.0.0
  */
-export const sessionPresenceFileName = (repository: CheckoutRepository): string =>
-  `${checkoutRepositoryStateKey(repository)}.presence.jsonl`;
+export const sessionPresenceFileName: (repository: CheckoutRepository) => string =
+  repositoryVariantFileName("presence");
 
 /**
  * Build the filesystem-backed presence store in the session state directory.

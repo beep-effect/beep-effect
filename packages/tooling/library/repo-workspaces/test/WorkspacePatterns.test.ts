@@ -1,21 +1,8 @@
-import { identity } from "effect/Function";
-// `WorkspacePatterns.read` is tested directly, and deliberately so.
-//
-// Its two read failures are NOT distinguishable through `WorkspaceDiscovery`:
-// discovery reads the root `package.json` a second time to build the root
-// package, so an unreadable manifest fails there too, with the same `kind` and
-// the same `path`. A discovery-level test therefore passes whether or not
-// `read` swallows the error — it cannot fail for the right reason, which is
-// worse than not existing. This one can.
-//
-// The leaf is also the pattern reader repo-cli's CreatePackage, TsconfigSync,
-// ChangesetGraph and Quality tasks read through (4-A2), so the shape the
-// retired readers rejected is pinned here as the kit reads it.
-
 import { WorkspacePatternReadError, WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertInstanceOf, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { platform, platformWith } from "./support/fixtures.ts";
@@ -66,27 +53,23 @@ describe("WorkspacePatterns.read — an absent config is not an error", () => {
   layer(platform({ "/repo/README.md": "no config here" }), { timeout: "30 seconds" })((it) => {
     it.effect("a standalone directory declares no patterns", () =>
       Effect.gen(function* () {
-        // ABSENT is a real, distinguishable condition. Only UNREADABLE is the bug.
         const read3 = yield* WorkspacePatterns.read("/repo");
-        assert.deepStrictEqual(read3, []);
+        assert.deepStrictEqual(read3, [], "absent is a real, distinguishable condition; only unreadable is the bug");
       })
     );
   });
 });
-
-// ── the silent-degradation bug ─────────────────────────────────────────────
-//
-// The old code substituted "" for an unreadable pnpm-workspace.yaml and "{}" for
-// an unreadable package.json. That made an UNREADABLE file and an EMPTY file
-// produce byte-identical results, so the failure was invisible by construction:
-// a permission error yielded "this workspace declares no packages".
 
 describe("WorkspacePatterns.read — an unreadable pnpm-workspace.yaml", () => {
   layer(platformWith({ unreadableFiles: ["/repo/pnpm-workspace.yaml"] })(tree), { timeout: "30 seconds" })((it) => {
     it.effect("fails typed rather than reading as an empty document", () =>
       Effect.gen(function* () {
         const failure = yield* Effect.flip(WorkspacePatterns.read("/repo"));
-        assert.strictEqual(failure.kind, "read");
+        assert.strictEqual(
+          failure.kind,
+          "read",
+          'substituting "" made an unreadable file and an empty one identical: no packages declared'
+        );
         assert.strictEqual(failure.path, "/repo/pnpm-workspace.yaml");
       })
     );
@@ -94,8 +77,6 @@ describe("WorkspacePatterns.read — an unreadable pnpm-workspace.yaml", () => {
 });
 
 describe("WorkspacePatterns.read — an unreadable package.json", () => {
-  // The pnpm config parses but declares no `packages:`, so pattern reading falls
-  // through to the manifest — and THAT is the unreadable file.
   layer(
     platformWith({ unreadableFiles: ["/repo/package.json"] })({
       "/repo/pnpm-workspace.yaml": "onlyBuiltDependencies:\n  - esbuild\n",
@@ -109,8 +90,16 @@ describe("WorkspacePatterns.read — an unreadable package.json", () => {
     it.effect("fails typed rather than reading as `{}`", () =>
       Effect.gen(function* () {
         const failure = yield* Effect.flip(WorkspacePatterns.read("/repo"));
-        assert.strictEqual(failure.kind, "read");
-        assert.strictEqual(failure.path, "/repo/package.json");
+        assert.strictEqual(
+          failure.kind,
+          "read",
+          "read is tested directly: discovery re-reads package.json and fails the same way whether read swallows or not"
+        );
+        assert.strictEqual(
+          failure.path,
+          "/repo/package.json",
+          "the pnpm config declares no packages:, so reading falls through to the unreadable manifest"
+        );
       })
     );
   });
@@ -140,11 +129,6 @@ describe("WorkspacePatterns — the public leaf's failure is the kit's tagged er
   });
 });
 
-// Pinned shift (4-A2): the retired repo-cli readers (ChangesetGraph, Quality
-// tasks) failed on a present `workspaces` that was neither a string array nor
-// a `{ packages }` object. The kit reads such a field as the string entries it
-// carries, none for a scalar, the way `WorkspaceDiscovery` always has. These
-// cases are the inverted pins of that rejection.
 describe("WorkspacePatterns — a malformed `workspaces` field reads as no patterns", () => {
   layer(
     platform({
@@ -160,7 +144,11 @@ describe("WorkspacePatterns — a malformed `workspaces` field reads as no patte
     it.effect("a scalar `workspaces` is an empty list, not a failure", () =>
       Effect.gen(function* () {
         const read4 = yield* WorkspacePatterns.read("/repo");
-        deepStrictEqual(read4, []);
+        deepStrictEqual(
+          read4,
+          [],
+          "inverted pin (4-A2): the retired repo-cli readers rejected this; the kit reads it as WorkspaceDiscovery does"
+        );
       })
     );
   });
