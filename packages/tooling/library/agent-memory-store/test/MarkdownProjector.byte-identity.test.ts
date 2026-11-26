@@ -598,7 +598,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
         ).toBe(0);
         expect(
           fileMismatches,
-          "goal decision file-is-an-ordered-node-partition orders same-predecessor nodes newest first by journal entry id"
+          "goal decision file-is-an-ordered-node-partition orders same-predecessor nodes newest first by journal entry order, so the expected files come from the committed entry ids"
         ).toEqual([]);
       }),
       { timeout: 120_000 }

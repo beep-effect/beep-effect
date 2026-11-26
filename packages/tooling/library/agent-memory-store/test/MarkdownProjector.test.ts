@@ -307,7 +307,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         const entries = yield* loser.log.entriesAfter(LogCursor.make(0));
         expect(
           folderImportCount(entries),
-          "the loser catches up on an empty log and the winner's import commits before the loser's first read, so the loser appends a second first import"
+          "the loser catches up on an empty log and the winner's import commits before the loser's first read, so the loser would append a second first import"
         ).toBe(1);
         const created = yield* createdNodes(entries);
         expect(created).toHaveLength(4);

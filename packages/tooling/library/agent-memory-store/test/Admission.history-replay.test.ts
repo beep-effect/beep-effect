@@ -299,7 +299,7 @@ describe.skipIf(!isBunRuntime)("admission on the goals history replay (Bun runti
           const history = replay.verdicts[0] as RunVerdict;
           expect(
             [meetsResolverBar(history, replay.writes), meetsPerOpBar(history)],
-            "the judged run is the history order: 40 x 279 = 11,160 is above 26 x 275 = 7,150, and 3,267 x 100 = 326,700 is at or above 95 x 3,364 = 319,580"
+            "the judged run is the history order: resolver bar not met (40 x 279 = 11,160 above 26 x 275 = 7,150), per-op bar met (3,267 x 100 = 326,700 at or above 95 x 3,364 = 319,580)"
           ).toEqual([false, true]);
           expect(A.every(replay.verdicts, (verdict) => verdict.statusHeld === 0 && verdict.statusWrong === 0)).toBe(
             true

@@ -317,19 +317,13 @@ describe("captureBatch refusals", () => {
       ),
       refusal("anchorOutOfSequence")
     );
-    const anchorWiderThanQuote = baseNodeOf({
-      path,
-      nodeId: node.nodeId,
-      revisionId: node.revisionId,
-      offset: 0,
-      text: "- one",
-    });
-    const unchecked = BaseNode.make(
+    const wide = baseNodeOf({ path, nodeId: node.nodeId, revisionId: node.revisionId, offset: 0, text: "- one" });
+    const anchorWiderThanQuote = BaseNode.make(
       {
-        ...anchorWiderThanQuote,
+        ...wide,
         anchor: OccurrenceAnchor.make(
           {
-            ...anchorWiderThanQuote.anchor,
+            ...wide.anchor,
             anchor: TextAnchor.make({ startChar: 0, endChar: 9, quote: "- one" }, { disableChecks: true }),
           },
           { disableChecks: true }
@@ -337,7 +331,7 @@ describe("captureBatch refusals", () => {
       },
       { disableChecks: true }
     );
-    deepStrictEqual(capture([edited("x")], withNodes([unchecked])), refusal("anchorOutOfSequence"));
+    deepStrictEqual(capture([edited("x")], withNodes([anchorWiderThanQuote])), refusal("anchorOutOfSequence"));
   });
 
   it("refuses a minted id the base or the batch already holds", () => {
