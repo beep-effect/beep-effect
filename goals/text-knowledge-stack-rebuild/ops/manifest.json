@@ -174,6 +174,6 @@
     "The same blocker repeats after reasonable investigation.",
     "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
-  "statusNote": "P0 to P7 are complete. P0 #3420, P1 #3429/#3439/#3449, P2 #3511, P3 #3516, P4 #3540 and P5 #3550 merged; P6 #3558 is final at eac25bdcd3e and held by the driver until the operator returns on 2026-11-27, because its merge opens a pin PR only the operator can merge. P7 retires @beep/nlp and @beep/schema-org and lands the doctrine; it ships in the final PR with P8, the closeout reflection and the completed-retained record. Two operational steps are held on the out-of-repo corpus, billed embeddings and operator grants: #3554 and #3555. P9 is goals completion refresh after the merge.",
+  "statusNote": "P0 to P7 are complete. P0 #3420, P1 #3429/#3439/#3449, P2 #3511, P3 #3516, P4 #3540, P5 #3550 and P6 #3558 merged; P6 merged as 6265d739bb6 once the operator was present to hand-merge its CI pin PR. P7 retires @beep/nlp and @beep/schema-org and lands the doctrine; it ships in the final PR with P8, the closeout reflection and the completed-retained record. Two operational steps are held on the out-of-repo corpus, billed embeddings and operator grants: #3554 and #3555. P9 is goals completion refresh after the merge.",
   "opsScripts": []
 }
