@@ -43,6 +43,7 @@ import {
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
   vitestReplayArgs,
+  vitestReplayEnv,
   YEET_WORKER_PUBLISH_BODY_SENTENCE,
   YeetEnsuredPullRequest,
   YeetInboxRowJson,
@@ -345,6 +346,28 @@ describe("vitestReplayArgs", () => {
       integration,
     ]);
     expect(vitestReplayArgs(manifest, file)).toEqual(["--bun", "vitest", "run", file]);
+  });
+
+  it("prefers a beep:test:* script that names the file, with its env flag, over one that only collects it", () => {
+    const manifest = manifestWith({
+      "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
+      "beep:test:integration": "bunx --bun vitest run --config vitest.integration.config.ts --passWithNoTests",
+      "beep:test:integration:ipc":
+        "bun run build:sidecar && BEEP_TEST_SIDECAR_IPC=1 bunx --bun vitest run --config vitest.integration.config.ts test/integration/sidecar-ipc-stdio.test.ts",
+    });
+    const ipc = "test/integration/sidecar-ipc-stdio.test.ts";
+    const other = "test/integration/chat-persist.pglite.test.ts";
+    expect(vitestReplayArgs(manifest, ipc)).toEqual([
+      "--bun",
+      "vitest",
+      "run",
+      "--config",
+      "vitest.integration.config.ts",
+      ipc,
+    ]);
+    expect(vitestReplayEnv(manifest, ipc)).toEqual({ BEEP_TEST_SIDECAR_IPC: "1" });
+    expect(vitestReplayEnv(manifest, other)).toEqual({});
+    expect(vitestReplayEnv(manifest, "test/a.test.ts")).toEqual({});
   });
 
   it("keeps the beep:test segment when no script collects the excluded file", () => {
