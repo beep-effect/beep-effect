@@ -13,7 +13,7 @@ const pnpm = DetectedPackageManager.make({
   evidence: "pnpm-workspace.yaml",
 });
 
-describe("PackageManagerDetector.makeTest, the house double whose detect has no honest default (unlike LocalExec's real Option.none()), so it dies unstubbed", () => {
+describe("PackageManagerDetector.makeTest, the house double whose detect has no honest default, so it dies unstubbed", () => {
   it.effect("uses a supplied `detect` override", () =>
     Effect.gen(function* () {
       const double = PackageManagerDetector.makeTest({ detect: () => Effect.succeed(pnpm) });
@@ -44,7 +44,7 @@ describe("PackageManagerDetector.makeTest, the house double whose detect has no 
       if (!Exit.isFailure(exit)) {
         assert.fail("expected the unstubbed member to die");
       }
-      assert.isTrue(Cause.hasDies(exit.cause));
+      assert.isTrue(Cause.hasDies(exit.cause), "detect has no honest default, unlike LocalExec's real Option.none()");
       assert.isFalse(
         Cause.hasFails(exit.cause),
         "a typed PackageManagerDetectionError would read as a legitimate no-manager answer and teach that the double reports absence"
@@ -93,17 +93,15 @@ describe("PackageManagerDetector.layerTest", () => {
   });
 
   it.layer(PackageManagerDetector.layerTest(), { timeout: "30 seconds" })((it) => {
-    it.effect(
-      "with no overrides, a consumer that calls detect still dies loudly: depending on detection through the double is a wiring mistake",
-      () =>
-        Effect.gen(function* () {
-          const detector = yield* PackageManagerDetector;
-          const exit = yield* Effect.exit(detector.detect("/repo"));
-          if (!Exit.isFailure(exit)) {
-            assert.fail("expected the unstubbed member to die");
-          }
-          assert.isTrue(Cause.hasDies(exit.cause));
-        })
+    it.effect("with no overrides, a consumer that calls detect still dies loudly", () =>
+      Effect.gen(function* () {
+        const detector = yield* PackageManagerDetector;
+        const exit = yield* Effect.exit(detector.detect("/repo"));
+        if (!Exit.isFailure(exit)) {
+          assert.fail("expected the unstubbed member to die");
+        }
+        assert.isTrue(Cause.hasDies(exit.cause), "depending on detection through the double is a wiring mistake");
+      })
     );
   });
 });

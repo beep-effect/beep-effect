@@ -155,9 +155,9 @@ describe("PackedInstall.run", () => {
     );
   });
 
-  const bunPrintsAGoodVersionButExits1LikeACorepackRefusal: SpawnScript = (command, args) =>
+  const refusing: SpawnScript = (command, args) =>
     command === "bun" && args[0] === "--version" ? { exit: 1, stdout: "1.4.2\n" } : script()(command, args);
-  suite(ScriptedSpawner.make(bunPrintsAGoodVersionButExits1LikeACorepackRefusal))((it) => {
+  suite(ScriptedSpawner.make(refusing))((it) => {
     it.effect("a manager whose --version exits non-zero is unavailable", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
@@ -170,7 +170,11 @@ describe("PackedInstall.run", () => {
             env: ENV,
           })
         );
-        assert.deepStrictEqual([error.reason, error.manager], ["ManagerUnavailable", "bun"]);
+        assert.deepStrictEqual(
+          [error.reason, error.manager],
+          ["ManagerUnavailable", "bun"],
+          "bun prints a good version and exits 1, as a corepack refusal does: only the exit code rules it out"
+        );
       })
     );
   });
@@ -288,7 +292,7 @@ describe("PackedInstall.run", () => {
   });
 });
 
-describe("PackedInstall.run past the pack, with scratch pinned to /scratch by a fault handler so seeds stand in for npm pack output and install links", () => {
+describe("PackedInstall.run past the pack, with scratch pinned to /scratch so seeds stand in for pack output and install links", () => {
   const SCRATCH = "/scratch";
   const CARRIER_TGZ = "/scratch/tarballs/0/x-carrier-1.0.0.tgz";
   const LIB_TGZ = "/scratch/tarballs/1/x-lib-1.0.0.tgz";
@@ -912,11 +916,11 @@ describe("PackedInstall.run past the pack, with scratch pinned to /scratch by a 
     );
   });
 
-  const closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot = ScriptedSpawner.make(
+  const conflicting = ScriptedSpawner.make(
     packedManifests({ [LIB_TGZ]: { name: "@x/lib", bin: { "lib-only": "./l.js", x: "./mirror.js" } } })
   );
   rootedSuite(
-    closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot,
+    conflicting,
     overrideSeed()
   )((it) => {
     it.effect("a closure member declaring the carrier's bin fails BinConflict before any install", () =>
@@ -924,12 +928,14 @@ describe("PackedInstall.run past the pack, with scratch pinned to /scratch by a 
         const error = yield* Effect.flip(
           PackedInstall.run({ carrier: "@x/carrier", closure: "auto", managers: ["npm"], bins: [], env: ENV })
         );
-        assert.deepStrictEqual([error.reason, error.package], ["BinConflict", "@x/lib"]);
+        assert.deepStrictEqual(
+          [error.reason, error.package],
+          ["BinConflict", "@x/lib"],
+          "only the carrier declares its bins: a closure member declaring one could take the .bin slot"
+        );
         assert.include(error.message, "@x/lib declares the bin x, which the carrier @x/carrier declares");
         assert.include(error.message, "pass allowSharedBins: true", "the message names the way out");
-        assert.isFalse(
-          A.some(closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot.spawns, (spawn) => spawn.args[0] === "install")
-        );
+        assert.isFalse(A.some(conflicting.spawns, (spawn) => spawn.args[0] === "install"));
       })
     );
 
@@ -948,10 +954,7 @@ describe("PackedInstall.run past the pack, with scratch pinned to /scratch by a 
           ["npm"]
         );
         assert.isTrue(
-          A.some(
-            closureMemberDeclaringTheCarriersBinCouldTakeTheBinSlot.spawns,
-            (spawn) => spawn.args[0] === "install"
-          ),
+          A.some(conflicting.spawns, (spawn) => spawn.args[0] === "install"),
           "the install ran"
         );
         const missing = yield* Effect.flip(
@@ -1213,9 +1216,9 @@ describe("InstalledConsumer.binProvenance", () => {
   const NM = `${DIR}/node_modules`;
   const at = (manager: "npm" | "pnpm", directory = DIR) =>
     InstalledConsumer.make({ manager, managerVersion: "1.0.0", directory });
-  const namedManifestAtTheBoundAWalkPastWouldClaimTheOrphanFor = `${DIR}/package.json`;
+  const consumerManifestPath = `${DIR}/package.json`;
   const SEED: MemoryFileSystemSeed = {
-    [namedManifestAtTheBoundAWalkPastWouldClaimTheOrphanFor]: Result.getOrThrowWith(
+    [consumerManifestPath]: Result.getOrThrowWith(
       S.encodeUnknownResult(JsonValue)({ name: "the-consumer", private: true }),
       identity
     ),
@@ -1296,7 +1299,11 @@ describe("InstalledConsumer.binProvenance", () => {
     it.effect("a link into no named package inside the consumer fails UnownedBin, never the consumer's own name", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(at("npm").binProvenance("orphan"));
-        assert.deepStrictEqual([error.reason, error.manager], ["UnownedBin", "npm"]);
+        assert.deepStrictEqual(
+          [error.reason, error.manager],
+          ["UnownedBin", "npm"],
+          "a named manifest sits at the bound: a walk past the consumer directory would claim the orphan for it"
+        );
         assert.strictEqual(
           error.message,
           `npm: node_modules/.bin/orphan links to ${NM}/loose.js, which lies in no named package inside ${DIR}`
@@ -1407,7 +1414,7 @@ describe("PackedInstall.timeoutBudgetFor", () => {
           "12m 10s",
           "2 x (0.5 + 3 + 1) + 2 x (20s + 30s) + 0.5 untimed + 1 cleanup"
         );
-        const defaultFourMinuteInstallTwoMinutePackNoPerConsumer = yield* PackedInstall.timeoutBudgetFor({
+        const defaults = yield* PackedInstall.timeoutBudgetFor({
           carrier: options.carrier,
           managers: options.managers,
           bins: options.bins,
@@ -1415,8 +1422,9 @@ describe("PackedInstall.timeoutBudgetFor", () => {
           closure: [],
         });
         assert.strictEqual(
-          Duration.format(defaultFourMinuteInstallTwoMinutePackNoPerConsumer),
-          Duration.format(PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages: 1 }))
+          Duration.format(defaults),
+          Duration.format(PackedInstall.timeoutBudget({ managers: ["npm", "pnpm"], packages: 1 })),
+          "defaults: the run's own four-minute install and two-minute pack, no per-consumer work"
         );
       })
     );

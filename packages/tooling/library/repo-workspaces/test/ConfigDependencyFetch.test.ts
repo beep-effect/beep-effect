@@ -61,7 +61,7 @@ const failureWith = Effect.fn("failureWith")(function* (fake: FakeProcess) {
   return error;
 });
 
-describe("the fetch rung refuses what it cannot verify, over a scripted pnpm writing into the one memfs volume the ladder reads (#842 end to end: integration/ConfigDependencyFetch.int.test.ts)", () => {
+describe("the fetch rung refuses what it cannot verify, over a scripted pnpm writing into the one memfs volume the ladder reads", () => {
   {
     const rewrite: ProcessAction = Effect.fn("rewrite")(function* (command, args) {
       const fs = yield* FileSystem.FileSystem;

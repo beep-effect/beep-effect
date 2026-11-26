@@ -182,7 +182,7 @@ describe("PackageManagerDetector — npm", () => {
   });
 });
 
-describe("PackageManagerDetector — NO EVIDENCE AT ALL: a manifest declaring nothing and no lockfile, unlike a standalone repo with evidence but no workspace", () => {
+describe("PackageManagerDetector — NO EVIDENCE AT ALL: a manifest declaring nothing and no lockfile", () => {
   layer(
     detectorOver({
       "/repo/package.json": Result.getOrThrowWith(
@@ -198,7 +198,11 @@ describe("PackageManagerDetector — NO EVIDENCE AT ALL: a manifest declaring no
       Effect.gen(function* () {
         const detector = yield* PackageManagerDetector;
         const error = yield* Effect.flip(detector.detect("/repo"));
-        assert.instanceOf(error, PackageManagerDetectionError);
+        assert.instanceOf(
+          error,
+          PackageManagerDetectionError,
+          "unlike a standalone repo, which has evidence but no workspace"
+        );
         assert.strictEqual(error.root, "/repo");
         assert.include(error.checked, "pnpm-workspace.yaml");
         assert.include(error.checked, "yarn.lock");
@@ -517,10 +521,14 @@ describe("PackageManagerDetector — a malformed corepack field", () => {
   });
 });
 
-describe("PackageManagerDetector — devEngines alone, the only place a +sha512 devEngines version is normalized, so this pins the hash strip", () => {
+describe("PackageManagerDetector — devEngines alone, with a +sha512 version", () => {
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
+      // The version carries the +sha512 hash, exactly as this repo's own
+      // devEngines does. With no top-level packageManager to fall back on, this
+      // is the ONLY place the devEngines version is normalized — so it is the
+      // test that pins the hash stripping.
       "/repo/package.json": manifestWith({
         devEngines: {
           packageManager: { name: "pnpm", version: "11.11.0+sha512.4463f65fd80ed80d69bc1", onFail: "error" },
@@ -534,8 +542,8 @@ describe("PackageManagerDetector — devEngines alone, the only place a +sha512 
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        const hashStrippedAsIntegrityWhereNoneBeforeDevEnginesSupport = detected.version;
-        assertSome(hashStrippedAsIntegrityWhereNoneBeforeDevEnginesSupport, "11.11.0");
+        const devEnginesOnlyVersion = detected.version;
+        assertSome(devEnginesOnlyVersion, "11.11.0");
       })
     );
   });
@@ -561,8 +569,8 @@ describe("PackageManagerDetector — both fields, the effected repo's own shape"
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        const devEnginesHashStripsExactlyAsTheTopLevelFieldDoes = detected.version;
-        assertSome(devEnginesHashStripsExactlyAsTheTopLevelFieldDoes, "11.11.0");
+        const bothFieldsVersion = detected.version;
+        assertSome(bothFieldsVersion, "11.11.0");
       })
     );
   });
@@ -605,8 +613,8 @@ describe("PackageManagerDetector — the two fields disagree on the NAME", () =>
         const detector = yield* PackageManagerDetector;
         const detected = yield* detector.detect("/repo");
         assert.strictEqual(detected.name, "pnpm");
-        const noPnpmVersionSinceDevEnginesHasNoneAndTheTopLevelFieldNamesYarn = detected.version;
-        assertNone(noPnpmVersionSinceDevEnginesHasNoneAndTheTopLevelFieldNamesYarn);
+        const devEnginesPnpmVersion = detected.version;
+        assertNone(devEnginesPnpmVersion);
       })
     );
   });
@@ -703,7 +711,7 @@ describe("PackageManagerDetector — devEngines is not an object", () => {
   });
 });
 
-describe("PackageManagerDetector — devEngines.packageManager is an ARRAY and the only version source, so honouring its first element would report a version", () => {
+describe("PackageManagerDetector — devEngines.packageManager is an ARRAY and the only version source", () => {
   layer(
     detectorOver({
       "/repo/pnpm-workspace.yaml": "packages: []\n",
@@ -722,8 +730,9 @@ describe("PackageManagerDetector — devEngines.packageManager is an ARRAY and t
           "pnpm",
           "the array's element names the detected manager, since one naming another manager would be ignored anyway"
         );
-        const noVersionThoughTheArraysFirstElementWouldReport999 = detected.version;
-        assertNone(noVersionThoughTheArraysFirstElementWouldReport999);
+        // Taking the array's first element would report 9.9.9 here.
+        const arraySlotVersion = detected.version;
+        assertNone(arraySlotVersion);
       })
     );
   });

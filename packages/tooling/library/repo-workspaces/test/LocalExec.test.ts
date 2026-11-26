@@ -206,7 +206,7 @@ describe("Workspaces.localExecLayer — mechanism failure IS the typed error", (
 
 describe("Workspaces.localExecLayer — cwd", () => {
   const seen: Array<string> = [];
-  const recordingRootThatLogsWhenFindRunsNotWhenBuilt = Layer.succeed(WorkspaceRoot, {
+  const recordingRoot = Layer.succeed(WorkspaceRoot, {
     find: dual(
       (args) => P.isString(args[0]),
       Effect.fn("WorkspaceRoot.find")((cwd: string) =>
@@ -217,16 +217,15 @@ describe("Workspaces.localExecLayer — cwd", () => {
       )
     ),
   });
-  it.layer(
-    localExecOver(Layer.mergeAll(recordingRootThatLogsWhenFindRunsNotWhenBuilt, detects("npm")), "/somewhere/else"),
-    { timeout: "30 seconds" }
-  )((it) => {
-    it.effect("passes the configured cwd to root resolution", () =>
-      Effect.gen(function* () {
-        const context = yield* contextOf;
-        assertSome(context, O.getOrThrow(context));
-        assert.deepStrictEqual(seen, ["/somewhere/else"]);
-      })
-    );
-  });
+  it.layer(localExecOver(Layer.mergeAll(recordingRoot, detects("npm")), "/somewhere/else"), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect("passes the configured cwd to root resolution", () =>
+        Effect.gen(function* () {
+          const context = yield* contextOf;
+          assertSome(context, O.getOrThrow(context));
+          assert.deepStrictEqual(seen, ["/somewhere/else"], "the recorder logs when find runs, not when it is built");
+        })
+      );
+    }
+  );
 });

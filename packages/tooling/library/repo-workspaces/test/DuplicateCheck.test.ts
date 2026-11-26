@@ -27,7 +27,7 @@ const flatten = (row: DuplicatedPackage): Record<string, Record<string, Readonly
 const byName = (report: DuplicateCheck, name: string): DuplicatedPackage | undefined =>
   O.getOrUndefined(A.findFirst(report.duplicates, (row) => row.name === name));
 
-describe("DuplicateCheck.run, a pure value over hand-authored lockfiles with no oracle (#603), each differing from its neighbour in one way", () => {
+describe("DuplicateCheck.run, a pure value over hand-authored lockfiles that each differ from their neighbour in one way", () => {
   for (const [label, secondVersion] of [
     ["embedded-NUL collision", "y\0z"],
     ["non-collision control", "yz"],
@@ -390,24 +390,23 @@ describe("DuplicateCheck.run, a pure value over hand-authored lockfiles with no 
     })
   );
 
-  it.effect(
-    "finds the skew PeerCheck's own real-pnpm root-importer fixture carries: react at two versions, not react-dom twice by peer suffix",
-    () =>
-      Effect.gen(function* () {
-        const parsed12 = yield* Lockfile.parse(fixture("peers/rootimporter/pnpm-lock.yaml"), { format: "pnpm" });
-        const report = DuplicateCheck.run(parsed12);
+  it.effect("finds the skew PeerCheck's own real-pnpm root-importer fixture carries", () =>
+    Effect.gen(function* () {
+      const parsed12 = yield* Lockfile.parse(fixture("peers/rootimporter/pnpm-lock.yaml"), { format: "pnpm" });
+      const report = DuplicateCheck.run(parsed12);
 
-        assert.deepStrictEqual(
-          A.map(report.duplicates, (row) => row.name),
-          ["react"]
-        );
-        const react = byName(report, "react");
-        if (react === undefined) return assert.fail("expected react in duplicate report");
-        assert.deepStrictEqual(flatten(react), {
-          "17.0.2": { "react@17.0.2": ["importer:.", "package:react-dom@18.3.1"] },
-          "18.3.1": { "react@18.3.1": ["importer:packages/other", "package:react-dom@18.3.1"] },
-        });
-      })
+      assert.deepStrictEqual(
+        A.map(report.duplicates, (row) => row.name),
+        ["react"],
+        "react sits at two versions; react-dom twice by peer suffix is one version, not a duplicate"
+      );
+      const react = byName(report, "react");
+      if (react === undefined) return assert.fail("expected react in duplicate report");
+      assert.deepStrictEqual(flatten(react), {
+        "17.0.2": { "react@17.0.2": ["importer:.", "package:react-dom@18.3.1"] },
+        "18.3.1": { "react@18.3.1": ["importer:packages/other", "package:react-dom@18.3.1"] },
+      });
+    })
   );
 });
 

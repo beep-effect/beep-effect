@@ -108,16 +108,24 @@ describe("DependencyGraph", () => {
     );
   });
 
-  const stackSafetyNotLatencyHeadroomForCoverageAmplifiedWallTimeMs = 30_000;
+  // The explicit timeout: the claim is stack-safety, not latency. The walk
+  // is ~375ms uninstrumented, but v8 coverage on a shared CI runner
+  // amplifies wall time well past the 5s default (observed 18x elsewhere in
+  // this repo). A RangeError still fails instantly; only the legitimate
+  // walk needs the headroom.
+  const stackSafetyTimeoutMs = 30_000;
   it(
     "cycle detection does not overflow on a long chain",
     () => {
-      const twentyThousandLinksThatOverflowARecursiveDfs = Array.from({ length: 20_000 }, (_, i) =>
+      const twentyThousandLinkChain = Array.from({ length: 20_000 }, (_, i) =>
         i === 19_999 ? pkg(`p${i}`) : pkg(`p${i}`, { [`p${i + 1}`]: "1.0.0" })
       );
-      assert.isFalse(DependencyGraph.make({ packages: twentyThousandLinksThatOverflowARecursiveDfs }).hasCycle);
+      assert.isFalse(
+        DependencyGraph.make({ packages: twentyThousandLinkChain }).hasCycle,
+        "a recursive DFS throws RangeError on 20,000 links, an unhandled defect"
+      );
     },
-    stackSafetyNotLatencyHeadroomForCoverageAmplifiedWallTimeMs
+    stackSafetyTimeoutMs
   );
 
   it.effect("levels groups packages into parallel build tiers, leaves first", () =>
@@ -271,10 +279,14 @@ describe("DependencyGraph", () => {
     );
   });
 
-  it("make accepts a ReadonlyArray of packages without a spread copy, so narrowing Schema.Array's constructor input to a mutable Array stops this compiling", () => {
+  it("make accepts a ReadonlyArray of packages without a spread copy", () => {
     const packages: ReadonlyArray<WorkspacePackage> = [pkg("a", { b: "1.0.0" }), pkg("b")] as const;
     const graph = DependencyGraph.make({ packages });
-    assert.deepStrictEqual(graph.names, ["a", "b"]);
+    assert.deepStrictEqual(
+      graph.names,
+      ["a", "b"],
+      "the type-level half is the test: narrowing Schema.Array's constructor input to a mutable Array stops this compiling"
+    );
     assert.deepStrictEqual([...O.getOrElse(HashMap.get(graph.adjacency, "a"), HashSet.empty<string>)], ["b"]);
   });
 });

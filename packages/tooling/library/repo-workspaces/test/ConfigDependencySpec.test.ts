@@ -18,7 +18,7 @@ const reasonOf = (input: string) => {
   return Result.isFailure(parsed) ? parsed.failure.reason : undefined;
 };
 
-describe("ConfigDependencySpec.parseResult over real SRI values from a consumer's pnpm-workspace.yaml (savvy-web/silk-update-action)", () => {
+describe("ConfigDependencySpec.parseResult over real SRI values from savvy-web/silk-update-action's pnpm-workspace.yaml", () => {
   it("parses the legacy inline SRI form", () => {
     const parsed = ConfigDependencySpec.parseResult(`0.11.1+${SRI}`);
     assertSuccess(parsed, Result.getOrThrow(parsed));
@@ -64,13 +64,14 @@ describe("ConfigDependencySpec.parseResult over real SRI values from a consumer'
   });
 
   it("rejects a malformed integrity half with reason 'integrity'", () => {
-    const corepackFormIsAnIntegrityHashButNeverAConfigDepIntegrity = "0.11.1+sha512.deadbeef";
-    const semverBuildMetadataIsNotAConfigDepIntegrityEither = "0.11.1+build.5";
+    // corepack form is a valid IntegrityHash, but never a config-dep integrity
+    const corepackIntegrityForm = "0.11.1+sha512.deadbeef";
+    const semverBuildMetadata = "0.11.1+build.5";
     for (const input of [
       "0.11.1+",
       "0.11.1+garbage",
-      corepackFormIsAnIntegrityHashButNeverAConfigDepIntegrity,
-      semverBuildMetadataIsNotAConfigDepIntegrityEither,
+      corepackIntegrityForm,
+      semverBuildMetadata,
       "0.11.1+sha512-not base64",
     ]) {
       assert.strictEqual(reasonOf(input), "integrity", input);
@@ -133,7 +134,8 @@ describe("ConfigDependencySpec construction", () => {
   });
 });
 
-describe("ConfigDependencySpec.integrity consolidation guard is an identity assertion on the Option's .value, since Schema.check is erased from the type and a faithful re-fork would pass both tsc and the rejection matrix", () => {
+// decision: config-dependency-integrity-identity-guard
+describe("ConfigDependencySpec.integrity", () => {
   it("IS @effected/npm's SriIntegrityHash, not a copy that agrees with it", () => {
     assert.strictEqual(ConfigDependencySpec.fields.integrity.value, SriIntegrityHash);
     assert.notStrictEqual<unknown>(

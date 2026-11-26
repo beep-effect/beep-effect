@@ -91,7 +91,7 @@ describe("ChangeDetector — committed changes", () => {
   });
 });
 
-const workingChangesFromUnstagedStagedAndUntracked = stubGit({
+const withWorkingTree = stubGit({
   changedFiles: (_cwd, { base }) =>
     base === "HEAD~1" ? Effect.succeed(["packages/alpha/committed.ts"]) : Effect.succeed([]),
   workingChanges: () =>
@@ -99,17 +99,21 @@ const workingChangesFromUnstagedStagedAndUntracked = stubGit({
 });
 
 describe("ChangeDetector — includeUncommitted", () => {
-  layer(detectorOver(workingChangesFromUnstagedStagedAndUntracked), { timeout: "30 seconds" })((it) => {
+  layer(detectorOver(withWorkingTree), { timeout: "30 seconds" })((it) => {
     it.effect("folds the working tree in on top of the committed range", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
         const files = yield* detector.changedFiles(ChangeDetectionOptions.make({ includeUncommitted: true }));
-        assert.deepStrictEqual(files, [
-          "apps/web/untracked.ts",
-          "packages/alpha/committed.ts",
-          "packages/beta/staged.ts",
-          "packages/beta/unstaged.ts",
-        ]);
+        assert.deepStrictEqual(
+          files,
+          [
+            "apps/web/untracked.ts",
+            "packages/alpha/committed.ts",
+            "packages/beta/staged.ts",
+            "packages/beta/unstaged.ts",
+          ],
+          "unstaged, staged and untracked working changes are all unioned in"
+        );
       })
     );
 
@@ -135,18 +139,19 @@ describe("ChangeDetector — includeUncommitted", () => {
 });
 
 describe("ChangeDetector — a custom base ref reaches git", () => {
-  const answersOnlyOriginMainSoTheDefaultRangeIsEmpty = stubGit({
+  const originMainOnly = stubGit({
     changedFiles: (_cwd, { base }) =>
       base === "origin/main" ? Effect.succeed(["packages/beta/x.ts"]) : Effect.succeed([]),
   });
-  layer(detectorOver(answersOnlyOriginMainSoTheDefaultRangeIsEmpty), { timeout: "30 seconds" })((it) => {
+  layer(detectorOver(originMainOnly), { timeout: "30 seconds" })((it) => {
     it.effect("the base option is threaded into the git range", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;
         const changed = yield* detector.changedPackages(ChangeDetectionOptions.make({ base: "origin/main" }));
         assert.deepStrictEqual(
           A.map(changed, (pkg: WorkspacePackage) => pkg.name),
-          ["@x/beta"]
+          ["@x/beta"],
+          "the stub answers only origin/main; the default range would see an empty diff"
         );
       })
     );
@@ -269,15 +274,15 @@ describe("PublishabilityDetector — the npm semantics", () => {
   });
 });
 
-const repoRelativePathsUnlessTheDetectorRequestsRelativeMode = stubGit({
+const nestedGit = stubGit({
   changedFiles: (_cwd, { relative }) =>
     relative === true
       ? Effect.succeed(["packages/alpha/src/index.ts"])
       : Effect.succeed(["repo/packages/alpha/src/index.ts", "outside/tooling.ts"]),
 });
 
-describe("ChangeDetector — a workspace nested inside a larger git repository: the detector owns requesting git's relative mode, git owns honouring it", () => {
-  layer(detectorOver(repoRelativePathsUnlessTheDetectorRequestsRelativeMode), { timeout: "30 seconds" })((it) => {
+describe("ChangeDetector — a workspace nested inside a larger git repository: the detector requests git's relative mode", () => {
+  layer(detectorOver(nestedGit), { timeout: "30 seconds" })((it) => {
     it.effect("requests relative mode, so paths are workspace-relative", () =>
       Effect.gen(function* () {
         const detector = yield* ChangeDetector;

@@ -187,7 +187,7 @@ describe("consumerFiles", () => {
     }
   });
 
-  it("a consumer dependency naming a packed package is written as that package's tarball, for every manager, since npm refuses an override that differs from a direct spec (EOVERRIDE)", () => {
+  it("a consumer dependency naming a packed package is written as that package's tarball, for every manager", () => {
     for (const [manager, version] of [
       ["npm", "11.19.1"],
       ["pnpm", "12.5.1"],
@@ -206,7 +206,7 @@ describe("consumerFiles", () => {
       assert.deepStrictEqual(
         manifest.dependencies,
         { "@x/carrier": "file:/t/carrier.tgz", "@x/lib": "file:/t/lib.tgz", effect: "4.0.0-rc.117" },
-        manager
+        `${manager}: npm refuses an override that differs from a direct spec (EOVERRIDE)`
       );
     }
   });

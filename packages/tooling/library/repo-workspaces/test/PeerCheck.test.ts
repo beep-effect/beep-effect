@@ -108,7 +108,7 @@ const theirs = (dir: string, file = "peers-check.json"): ReadonlyArray<Row> => {
   );
 };
 
-describe("PeerCheck.run, a pure value over real pnpm lockfiles, checked against a committed pnpm peers check --json oracle (provenance: fixtures/peers/README.md)", () => {
+describe("PeerCheck.run, a pure value over real pnpm lockfiles, checked against a committed pnpm peers check --json oracle", () => {
   it.effect("agrees with pnpm peers check on a workspace mixing all four verdicts", () =>
     Effect.gen(function* () {
       const parsed1 = yield* parse("mixed");
@@ -167,8 +167,8 @@ describe("PeerCheck.run, a pure value over real pnpm lockfiles, checked against 
 
   it.effect("collapses a DIAMOND to one row per package, as pnpm does", () =>
     Effect.gen(function* () {
-      const useSyncExternalStoreReachedViaReactReduxAndZustand = yield* parse("diamond");
-      const report = PeerCheck.run(useSyncExternalStoreReachedViaReactReduxAndZustand);
+      const diamond = yield* parse("diamond");
+      const report = PeerCheck.run(diamond);
       assert.isTrue(report.supported);
       assert.deepStrictEqual(
         ours(report.unsatisfied),
@@ -233,21 +233,23 @@ describe("PeerCheck.run, a pure value over real pnpm lockfiles, checked against 
     })
   );
 
-  it.effect(
-    "agrees with pnpm peers check on a ROOT importer with real dependencies, the common case and the only fixture joining a root to instances productively",
-    () =>
-      Effect.gen(function* () {
-        const parsed8 = yield* parse("rootimporter");
-        const report = PeerCheck.run(parsed8);
-        assert.isTrue(report.supported);
-        assert.deepStrictEqual(report.unresolvedImporters, []);
-        assert.deepStrictEqual(ours(report.unsatisfied), theirs("rootimporter"));
+  it.effect("agrees with pnpm peers check on a ROOT importer with real dependencies", () =>
+    Effect.gen(function* () {
+      const parsed8 = yield* parse("rootimporter");
+      const report = PeerCheck.run(parsed8);
+      assert.isTrue(report.supported);
+      assert.deepStrictEqual(report.unresolvedImporters, []);
+      assert.deepStrictEqual(
+        ours(report.unsatisfied),
+        theirs("rootimporter"),
+        "the common case, and the only fixture joining a root to instances productively"
+      );
 
-        const row = O.getOrUndefined(A.findFirst(report.required, (r) => r.importer === "."));
-        assert.isDefined(row);
-        assert.strictEqual(row?.dependency, "react");
-        assert.strictEqual(row?.found, "17.0.2");
-      })
+      const row = O.getOrUndefined(A.findFirst(report.required, (r) => r.importer === "."));
+      assert.isDefined(row);
+      assert.strictEqual(row?.dependency, "react");
+      assert.strictEqual(row?.found, "17.0.2");
+    })
   );
 
   it.effect("disambiguates two peer variants of one name@version by the recorded suffix", () =>
@@ -383,7 +385,10 @@ describe("PeerCheck.run, a pure value over real pnpm lockfiles, checked against 
   );
 });
 
-describe("PeerCheck.run — peerDependencyRules and the unverified states: without pnpm's suppression policy a checker reports rows pnpm calls clean", () => {
+// pnpm's suppression policy, and the fail-closed states. pnpm computes the same
+// violations we do and then hides the ones `peerDependencyRules.allowedVersions`
+// permits, so a checker without the rules reports findings pnpm calls clean.
+describe("PeerCheck.run — peerDependencyRules and the unverified states", () => {
   const rules = (allowedVersions: Record<string, string>) => ({
     allowedVersions,
     ignoreMissing: [],
@@ -608,8 +613,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
 
   it.effect("fails closed on a link:-resolved parent whose peers the lockfile never records", () =>
     Effect.gen(function* () {
-      const effected800ProbeWherePnpmReadsTheLinkedManifestOnDisk = yield* parse("linkdeep");
-      const report = PeerCheck.run(effected800ProbeWherePnpmReadsTheLinkedManifestOnDisk, {
+      const linkdeep = yield* parse("linkdeep");
+      const report = PeerCheck.run(linkdeep, {
         peerDependencyRules: NoPeerDependencyRules,
       });
       assert.isTrue(report.supported);
@@ -625,7 +630,11 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
         "fail closed: the marker is the whole fix, and supplied rules keep peerRulesNotApplied out"
       );
       const knownDivergencePnpmReportsTheRow = theirs("linkdeep");
-      assert.strictEqual(knownDivergencePnpmReportsTheRow.length, 1);
+      assert.strictEqual(
+        knownDivergencePnpmReportsTheRow.length,
+        1,
+        "pnpm reads the linked manifest on disk (the effected#800 probe)"
+      );
       assert.strictEqual(knownDivergencePnpmReportsTheRow[0]?.importer, "packages/b");
       assert.strictEqual(knownDivergencePnpmReportsTheRow[0]?.dependency, "react");
       assert.strictEqual(knownDivergencePnpmReportsTheRow[0]?.wanted, "^18.0.0");
@@ -686,46 +695,44 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
     })
   );
 
-  it.effect(
-    "judges a joined parent's peers against the importer's OWN dependency set, since a workspace-wide name lookup is wrong both ways (pnpm 12.5.1 and 12.6.0)",
-    () =>
-      Effect.gen(function* () {
-        const parsed37 = yield* parse("linkdeep-provided");
-        const provided = PeerCheck.run(parsed37, {
-          peerDependencyRules: NoPeerDependencyRules,
-          workspacePackages: [probeA()],
-        });
-        assert.deepStrictEqual(
-          ours(provided.unsatisfied),
-          theirs("linkdeep-provided"),
-          "the consumer's own react@18.3.1 satisfies the linked parent's ^18.0.0 peer"
-        );
-        assert.deepStrictEqual(provided.unverified, []);
+  it.effect("judges a joined parent's peers against the importer's OWN dependency set (pnpm 12.5.1 and 12.6.0)", () =>
+    Effect.gen(function* () {
+      const parsed37 = yield* parse("linkdeep-provided");
+      const provided = PeerCheck.run(parsed37, {
+        peerDependencyRules: NoPeerDependencyRules,
+        workspacePackages: [probeA()],
+      });
+      assert.deepStrictEqual(
+        ours(provided.unsatisfied),
+        theirs("linkdeep-provided"),
+        "the consumer's own react@18.3.1 satisfies the linked parent's ^18.0.0 peer; a workspace-wide name lookup is wrong both ways"
+      );
+      assert.deepStrictEqual(provided.unverified, []);
 
-        const parsed38 = yield* parse("linkdeep-sibling");
-        const sibling = PeerCheck.run(parsed38, {
-          peerDependencyRules: NoPeerDependencyRules,
-          workspacePackages: [probeA()],
-        });
-        assert.deepStrictEqual(
-          ours(sibling.unsatisfied),
-          theirs("linkdeep-sibling"),
-          "the same version installed only by a sibling does not; a workspace-wide lookup would manufacture a clean report"
-        );
-        assert.deepStrictEqual(sibling.unverified, []);
+      const parsed38 = yield* parse("linkdeep-sibling");
+      const sibling = PeerCheck.run(parsed38, {
+        peerDependencyRules: NoPeerDependencyRules,
+        workspacePackages: [probeA()],
+      });
+      assert.deepStrictEqual(
+        ours(sibling.unsatisfied),
+        theirs("linkdeep-sibling"),
+        "the same version installed only by a sibling does not; a workspace-wide lookup would manufacture a clean report"
+      );
+      assert.deepStrictEqual(sibling.unverified, []);
 
-        const parsed39 = yield* parse("linkdeep-bad");
-        const bad = PeerCheck.run(parsed39, {
-          peerDependencyRules: NoPeerDependencyRules,
-          workspacePackages: [probeA()],
-        });
-        assert.deepStrictEqual(
-          ours(bad.unsatisfied),
-          theirs("linkdeep-bad"),
-          "the consumer's own react@17.0.2 is outside the range: a bad row carrying the version that resolved"
-        );
-        assert.deepStrictEqual(bad.unverified, []);
-      })
+      const parsed39 = yield* parse("linkdeep-bad");
+      const bad = PeerCheck.run(parsed39, {
+        peerDependencyRules: NoPeerDependencyRules,
+        workspacePackages: [probeA()],
+      });
+      assert.deepStrictEqual(
+        ours(bad.unsatisfied),
+        theirs("linkdeep-bad"),
+        "the consumer's own react@17.0.2 is outside the range: a bad row carrying the version that resolved"
+      );
+      assert.deepStrictEqual(bad.unverified, []);
+    })
   );
 
   it.effect("clears the marker for a supplied target without inventing rows from it", () =>
@@ -865,7 +872,7 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
   );
 
   it.effect(
-    "covers a link: into a publish directory, pnpm 12.6.0's default without linkDirectory: false and every savvy-web monorepo's shape, and agrees with pnpm",
+    "covers a link: into a publish directory, pnpm 12.6.0's default without linkDirectory: false, and agrees with pnpm",
     () =>
       Effect.gen(function* () {
         const parsed44 = yield* parse("linkdeep-directory");
@@ -874,7 +881,11 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
           workspacePackages: [probeA({ publishConfig: PublishConfig.make({ directory: "dist" }) })],
         });
         assert.strictEqual(theirs("linkdeep-directory").length, 1);
-        assert.deepStrictEqual(ours(report.unsatisfied), theirs("linkdeep-directory"));
+        assert.deepStrictEqual(
+          ours(report.unsatisfied),
+          theirs("linkdeep-directory"),
+          "every savvy-web monorepo has this shape"
+        );
         assert.deepStrictEqual(report.unverified, []);
       })
   );
@@ -1143,8 +1154,8 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
 
   it.effect("accepts a peer satisfied by a WORKSPACE package without version-comparing it", () =>
     Effect.gen(function* () {
-      const reactReduxResolvedToTheWorkspacePackageFakereact = yield* parse("workspacepeer");
-      const report = PeerCheck.run(reactReduxResolvedToTheWorkspacePackageFakereact, {
+      const workspacePeer = yield* parse("workspacepeer");
+      const report = PeerCheck.run(workspacePeer, {
         peerDependencyRules: NoPeerDependencyRules,
       });
 
@@ -1187,7 +1198,7 @@ describe("PeerCheck.run — peerDependencyRules and the unverified states: witho
   );
 });
 
-describe("PeerCheck.run — ignoreMissing and allowAny, each oracle one pnpm 12.5.1 run over the same lockfile so the rule is the variable (effected#430, provenance: fixtures/peers/README.md)", () => {
+describe("PeerCheck.run — ignoreMissing and allowAny, each oracle one pnpm 12.5.1 run over the same lockfile", () => {
   const withAllowAny = (allowAny: ReadonlyArray<string>) => ({
     peerDependencyRules: { allowedVersions: {}, ignoreMissing: [], allowAny },
   });
@@ -1211,13 +1222,12 @@ describe("PeerCheck.run — ignoreMissing and allowAny, each oracle one pnpm 12.
     assert.deepStrictEqual(
       ours(report.unsatisfied),
       theirs(dir, file),
-      "the fixture under this rule configuration agrees with its oracle file"
+      "the fixture under this rule configuration agrees with its oracle file; the lockfile is fixed across these oracles, so the rule is the variable"
     );
   });
 
-  it.effect(
-    "allowany control: with no rules both bad rows fire, required react (packages/unmet) and optional redux (packages/optional)",
-    () => agrees("allowany", { peerDependencyRules: NoPeerDependencyRules }, "peers-check.json")
+  it.effect("allowany control: with no rules both bad rows fire: required react and optional redux", () =>
+    agrees("allowany", { peerDependencyRules: NoPeerDependencyRules }, "peers-check.json")
   );
   it.effect("allowAny by bare name clears the bad required react and leaves redux", () =>
     agrees("allowany", withAllowAny(["react"]), "peers-check-bare-react.json")
@@ -1245,7 +1255,7 @@ describe("PeerCheck.run — ignoreMissing and allowAny, each oracle one pnpm 12.
   );
 
   it.effect(
-    "ignoremissing control: with no rules all three missing react rows for packages/lone fire, one transitive via react-redux > use-sync-external-store",
+    "ignoremissing control: with no rules all three missing react rows for packages/lone fire, one of them transitive",
     () => agrees("ignoremissing", { peerDependencyRules: NoPeerDependencyRules }, "peers-check.json")
   );
   it.effect("ignoreMissing by bare name clears every missing react, the transitive one included", () =>
@@ -1270,20 +1280,22 @@ describe("PeerCheck.run — ignoreMissing and allowAny, each oracle one pnpm 12.
     agrees("ignoremissing", withAllowAny(["react"]), "peers-check-allowany-react.json")
   );
 
-  it.effect(
-    "a pattern that matches no peer name leaves every row in place, a mutation discriminator that fails one test rather than an oracle batch",
-    () =>
-      Effect.gen(function* () {
-        const parsed67 = yield* parse("allowany");
-        const before = PeerCheck.run(parsed67, { peerDependencyRules: NoPeerDependencyRules });
-        const parsed68 = yield* parse("allowany");
-        const after = PeerCheck.run(parsed68, withAllowAny(["reactx", "!*"]));
-        assert.strictEqual(after.unsatisfied.length, before.unsatisfied.length);
-        assert.isTrue(before.unsatisfied.length > 0);
-        const parsed69 = yield* parse("ignoremissing");
-        const missing = PeerCheck.run(parsed69, withIgnoreMissing(["redux"]));
-        assert.strictEqual(missing.unsatisfied.length, 3);
-      })
+  it.effect("a pattern that matches no peer name leaves every row in place", () =>
+    Effect.gen(function* () {
+      const parsed67 = yield* parse("allowany");
+      const before = PeerCheck.run(parsed67, { peerDependencyRules: NoPeerDependencyRules });
+      const parsed68 = yield* parse("allowany");
+      const after = PeerCheck.run(parsed68, withAllowAny(["reactx", "!*"]));
+      assert.strictEqual(
+        after.unsatisfied.length,
+        before.unsatisfied.length,
+        "a mutation discriminator that fails one test rather than an oracle batch"
+      );
+      assert.isTrue(before.unsatisfied.length > 0);
+      const parsed69 = yield* parse("ignoremissing");
+      const missing = PeerCheck.run(parsed69, withIgnoreMissing(["redux"]));
+      assert.strictEqual(missing.unsatisfied.length, 3);
+    })
   );
 
   it.effect("the axes do not cross, stated on the row rather than the oracle", () =>
@@ -1333,7 +1345,7 @@ describe("PeerCheck.run — ignoreMissing and allowAny, each oracle one pnpm 12.
   );
 });
 
-describe("peerNameMatcher — @pnpm/matcher@1000.1.0 semantics, pinned on the helper because the react/redux-shaped fixtures give scoped-name and order cases no oracle row", () => {
+describe("peerNameMatcher — @pnpm/matcher@1000.1.0 semantics, pinned on the helper for cases the fixtures give no oracle row", () => {
   it("an empty list matches nothing", () => {
     assert.isFalse(peerNameMatcher([])("react"));
   });
@@ -1408,7 +1420,7 @@ describe("peerNameMatcher — @pnpm/matcher@1000.1.0 semantics, pinned on the he
   });
 });
 
-describe("PeerCheck.run — protocol-specifier provider versions, which semver cannot parse and which fail closed rather than skip as unparseable (pnpm 12.6.0 filedep* oracles)", () => {
+describe("PeerCheck.run — protocol-specifier provider versions, which semver cannot parse, fail closed rather than skip", () => {
   const reactProvider = (lockfile: Lockfile) => lockfile.packagesNamed("react")[0];
 
   it.effect("fails closed on a registry parent's peer provided by a `file:` directory", () =>

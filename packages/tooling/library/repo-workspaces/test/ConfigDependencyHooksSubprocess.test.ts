@@ -27,7 +27,7 @@ const INSTALLED = ["dep", "dep-a", "@scope/dep-b", "@scope/pkg", "broken-dep"] a
 const pnpmfileOf = (name: string): string => `${ROOT}/node_modules/.pnpm-config/${name}/pnpmfile.mjs`;
 const pnpmfileUrlOf = (name: string): string => `file://${pnpmfileOf(name)}`;
 
-const installedAt100WithPnpmfilesTheSpawnerNeverLoads = R.fromEntries(
+const installedAt100 = R.fromEntries(
   A.flatMap(INSTALLED, (name) => [
     [
       `${ROOT}/node_modules/.pnpm-config/${name}/package.json`,
@@ -44,7 +44,7 @@ const parentSideOverScriptedSpawner = (script: Parameters<typeof ScriptedSpawner
   const spawner = ScriptedSpawner.make(script);
   const layer = ConfigDependencyHooks.layerSubprocess.pipe(
     Layer.provide(spawner.layer),
-    Layer.provide(Layer.merge(MemoryFileSystem.layerWith(installedAt100WithPnpmfilesTheSpawnerNeverLoads), Path.layer))
+    Layer.provide(Layer.merge(MemoryFileSystem.layerWith(installedAt100), Path.layer))
   );
   return { spawner, layer };
 };
@@ -252,7 +252,7 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
       return { hang: true };
     });
     it.effect(
-      "a replay whose pnpmfile never settles fails typed through the hooks source at the thirty-second ceiling, never a hang of the memoized assemble or a defect",
+      "a replay whose pnpmfile never settles fails typed through the hooks source at the thirty-second ceiling",
       () =>
         Effect.gen(function* () {
           const builtPerTestToOwnTheAdvancedTestClock = yield* Layer.build(layer);
@@ -266,7 +266,11 @@ describe("ConfigDependencyHooks.layerSubprocess — transport failures are typed
           );
           yield* TestClock.adjust("31 seconds");
           const error = yield* Fiber.join(fiber);
-          assert.instanceOf(error, CatalogAssemblyError);
+          assert.instanceOf(
+            error,
+            CatalogAssemblyError,
+            "a typed failure, never a hang of the memoized assemble or a defect"
+          );
           assert.strictEqual(error.source, "hooks");
           assert.strictEqual(error.path, ROOT);
         })
@@ -318,7 +322,7 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
     }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect(
-        "the returned config slice, read from the LAST stdout line past a hook's console noise, folds through the same normalization as layerLive",
+        "the config slice on the LAST stdout line past a hook's console noise folds through layerLive's normalization",
         () =>
           Effect.gen(function* () {
             const hooks = yield* ConfigDependencyHooks;
@@ -480,23 +484,25 @@ describe("ConfigDependencyHooks.layerSubprocess — result folding in the parent
       }),
     }));
     it.layer(layer, { timeout: "30 seconds" })((it) => {
-      it.effect(
-        "an allowedVersions block whose entries are ALL strings still wins, which a check on the block's presence rather than its entries would fail",
-        () =>
-          Effect.gen(function* () {
-            const hooks = yield* ConfigDependencyHooks;
-            const result = yield* hooks.inject(
-              ROOT,
-              { dep: "1.0.0" },
-              SEED,
-              PeerDependencyRules.make({
-                allowedVersions: { "seeded>peer": "1.0.0" },
-                ignoreMissing: [],
-                allowAny: [],
-              })
-            );
-            assert.deepStrictEqual(result.peerDependencyRules.allowedVersions, { "a>b": "1" });
-          })
+      it.effect("an allowedVersions block whose entries are ALL strings still wins", () =>
+        Effect.gen(function* () {
+          const hooks = yield* ConfigDependencyHooks;
+          const result = yield* hooks.inject(
+            ROOT,
+            { dep: "1.0.0" },
+            SEED,
+            PeerDependencyRules.make({
+              allowedVersions: { "seeded>peer": "1.0.0" },
+              ignoreMissing: [],
+              allowAny: [],
+            })
+          );
+          assert.deepStrictEqual(
+            result.peerDependencyRules.allowedVersions,
+            { "a>b": "1" },
+            "a check on the block's presence rather than its entries would fail this"
+          );
+        })
       );
     });
   }
