@@ -74,18 +74,12 @@ export class GitInvocation extends S.Opaque<GitInvocation, { readonly brand: uni
   )
 ) {}
 
-/** The mask every whole-value sensitive positional is replaced with. */
 const REDACTED = "<redacted>";
 
 const GitArgRedaction = LiteralKit(["value", "url"]).pipe(
   $I.annoteSchema("GitArgRedaction", { description: "The mask applied to a sensitive Git argv segment." })
 );
 
-/**
- * One argv segment: a plain string, or a sensitive positional tagged with the
- * mask to apply in `redactedArgs` — `"value"` replaces the whole segment,
- * `"url"` masks only an embedded `scheme://userinfo@` credential.
- */
 const GitArg = S.Union([
   S.String,
   S.Struct({
@@ -97,59 +91,13 @@ const GitArg = S.Union([
 ]).pipe($I.annoteSchema("GitArg", { description: "A plain or sensitive Git argv segment." }));
 type GitArg = typeof GitArg.Type;
 
-// Tags a whole-value sensitive positional (a config value that may be a secret).
 const secretValue = (value: string): GitArg => ({ redact: GitArgRedaction.Enum.value, value });
 
-// Tags a URL positional whose embedded userinfo (if any) must be masked.
 const secretUrl = (value: string): GitArg => ({ redact: GitArgRedaction.Enum.url, value });
 
-/**
- * Masks the userinfo component of a URL (`scheme://user:token@host/...` →
- * `scheme://<redacted>@host/...`). A value carrying no embedded userinfo — a
- * remote name, a credential-free URL, an scp-style `host:path` — passes
- * through untouched, so the common case stays fully debuggable.
- *
- * **Details**
- *
- * The userinfo match is greedy (`[^/]*@` — everything through the LAST `@`
- * before the first path slash): URL authorities split at the last `@`, so a
- * password containing a literal `@` (`user:p\@ss\@host/...`) must be
- * consumed whole or its tail would survive into `redactedArgs`.
- */
 const redactUrlUserinfo = (value: string): string =>
   Str.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/]*@/i, `$1${REDACTED}@`)(value);
 
-/**
- * Builds a `git` {@link GitInvocation} with the argv this package classifies
- * against.
- *
- * **Details**
- *
- * The returned command carries neither `cwd` NOR any environment pin — every
- * `GitCommand` constructor produces a pure, context-free value. The caller
- * (the `Git` service) applies both per invocation, via `ChildProcess.setCwd`
- * and `ChildProcess.setEnv`, each of which returns a new command and leaves
- * this one unchanged. The environment pins that make git's stderr
- * classifiable and keep it from blocking on a prompt live in `Git.ts`
- * alongside the classifier and the timeout they exist to serve; one of them
- * is conditional on the caller's own environment, which a pure constructor
- * must not read.
- *
- * `extendEnv: true` is the one spawn option set here, and it is deliberately
- * NOT one of those pins: it declares that a git invocation inherits the
- * parent environment at all (git needs `PATH`, `HOME`, `SSH_AUTH_SOCK` and
- * the rest to function), rather than forcing any particular value. It must
- * be set at construction because core exposes no run-time combinator for it
- * — only `setCwd` and `setEnv` — and its default is owned by whichever
- * platform backend implements `ChildProcessSpawner`, not by core, so a
- * command that needs the merge must request it explicitly rather than rely
- * on an implementation-specific default.
- *
- * A consumer running one of these values directly gets a plain inherited
- * environment and no pins. That is the honest shape: such a caller is
- * running a custom command, and `Git`'s classification guarantees do not
- * travel with the argv.
- */
 const git: {
   (args: ReadonlyArray<GitArg>, stdin?: string): GitInvocation;
   (stdin?: string): (args: ReadonlyArray<GitArg>) => GitInvocation;
@@ -163,9 +111,6 @@ const git: {
     return GitInvocation.make({
       command: ChildProcess.make("git", raw, {
         extendEnv: true,
-        // stdin is baked into the pure command value (check-ignore's --stdin
-        // form): a single UTF-8 chunk, closed when done. Constructors without
-        // stdin leave the option unset entirely.
         ...O.getSomesStruct({
           stdin: O.map(O.fromUndefinedOr(stdin), (input) => Stream.make(new TextEncoder().encode(input))),
         }),
@@ -175,17 +120,14 @@ const git: {
   }
 );
 
-// Implementation of GitCommand.show; the public contract lives on the static.
 const show: {
   (ref: string, path: string): GitInvocation;
   (path: string): (ref: string) => GitInvocation;
 } = dual(2, (ref: string, path: string): GitInvocation => git(["show", `${ref}:${path}`]));
 
-/** The `--` separator plus `pathspec`, or nothing when there is no pathspec to scope by. */
 const pathspecArgs = (pathspec: ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
   pathspec !== undefined && pathspec.length > 0 ? ["--", ...pathspec] : [];
 
-// Implementation of GitCommand.lsTree; the public contract lives on the static.
 const lsTree: {
   (ref: string, pathspec?: ReadonlyArray<string>, fullTree?: boolean): GitInvocation;
   (pathspec?: ReadonlyArray<string>, fullTree?: boolean): (ref: string) => GitInvocation;
@@ -195,19 +137,13 @@ const lsTree: {
     git(["ls-tree", "-r", "-z", ...(fullTree === true ? ["--full-tree"] : []), ref, ...pathspecArgs(pathspec)])
 );
 
-// Implementation of GitCommand.refExists; the public contract lives on the static.
 const refExists = (ref: string): GitInvocation => git(["cat-file", "-e", ref]);
 
-// Implementation of GitCommand.mergeBase; the public contract lives on the static.
-// One builder backs BOTH Git.mergeBase (loud on no ancestor) and
-// Git.mergeBaseOption (silent exit 1 → Option.none) — the argv is identical;
-// only the service's classify kind differs.
 const mergeBase: {
   (a: string, b: string): GitInvocation;
   (b: string): (a: string) => GitInvocation;
 } = dual(2, (a: string, b: string): GitInvocation => git(["merge-base", a, b]));
 
-// Implementation of GitCommand.isAncestor; the public contract lives on the static.
 const isAncestor: {
   (ancestor: string, descendant: string): GitInvocation;
   (descendant: string): (ancestor: string) => GitInvocation;
@@ -216,38 +152,25 @@ const isAncestor: {
   (ancestor: string, descendant: string): GitInvocation => git(["merge-base", "--is-ancestor", ancestor, descendant])
 );
 
-/**
- * The change-selection options every `--name-only` diff constructor accepts.
- * The service validates `diffFilter` (git's `[ACDMRTUXB*]` letters, lower
- * case excluding) and the pathspec before any spawn; the constructor renders
- * them verbatim.
- */
 type DiffListOptions = {
   readonly diffFilter?: string;
   readonly noRenames?: boolean;
   readonly pathspec?: ReadonlyArray<string>;
 };
 
-/** `[--no-renames] [--diff-filter=<letters>]` — the flags {@link DiffListOptions} renders before the range. */
 const diffListFlags = (options: DiffListOptions): ReadonlyArray<string> => [
   ...(options.noRenames === true ? ["--no-renames"] : []),
   ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
 ];
 
-/** The two spellings of a two-ref diff range: merge-base `base...head`, or the plain tree-to-tree pair. */
 const rangeArgs = (base: string, head: string, twoDot: boolean | undefined): ReadonlyArray<string> =>
   twoDot === true ? [base, head] : [`${base}...${head}`];
 
-/**
- * {@link DiffListOptions} plus `twoDot`, which selects the plain `<base> <head>` pair over `<base>...<head>`,
- * and `ignoreSubmodules`, which overrides the configured submodule visibility.
- */
 type ChangedFilesOptions = DiffListOptions & {
   readonly twoDot?: boolean;
   readonly ignoreSubmodules?: StatusIgnoreSubmodules;
 };
 
-// Implementation of GitCommand.changedFiles; the public contract lives on the static.
 const changedFiles = (base: string, head: string, relative = false, options: ChangedFilesOptions = {}): GitInvocation =>
   git([
     "diff",
@@ -260,10 +183,8 @@ const changedFiles = (base: string, head: string, relative = false, options: Cha
     ...pathspecArgs(options.pathspec),
   ]);
 
-/** {@link DiffListOptions} plus `head`, the commit the working tree or index is compared against instead of the default. */
 type WorkingDiffOptions = DiffListOptions & { readonly head?: string };
 
-// Implementation of GitCommand.unstagedChanges; the public contract lives on the static.
 const unstagedChanges = (relative = false, options: WorkingDiffOptions = {}): GitInvocation =>
   git([
     "diff",
@@ -275,7 +196,6 @@ const unstagedChanges = (relative = false, options: WorkingDiffOptions = {}): Gi
     ...pathspecArgs(options.pathspec),
   ]);
 
-// Implementation of GitCommand.stagedChanges; the public contract lives on the static.
 const stagedChanges = (relative = false, options: WorkingDiffOptions = {}): GitInvocation =>
   git([
     "diff",
@@ -288,7 +208,6 @@ const stagedChanges = (relative = false, options: WorkingDiffOptions = {}): GitI
     ...pathspecArgs(options.pathspec),
   ]);
 
-// Implementation of GitCommand.untrackedFiles; the public contract lives on the static.
 const untrackedFiles = (relative = false, pathspec: ReadonlyArray<string> = []): GitInvocation =>
   git([
     "ls-files",
@@ -299,17 +218,11 @@ const untrackedFiles = (relative = false, pathspec: ReadonlyArray<string> = []):
     ...pathspecArgs(pathspec),
   ]);
 
-/**
- * The options {@link GitCommand.revParse} accepts: `peel` appends git's
- * `^{commit}` peel suffix to the ref, `quiet` adds `--quiet` so an unknown
- * ref exits 1 silently instead of printing `Needed a single revision`.
- */
 type RevParseOptions = {
   readonly peel?: "commit";
   readonly quiet?: boolean;
 };
 
-// Implementation of GitCommand.revParse; the public contract lives on the static.
 const revParse: {
   (ref: string, options?: RevParseOptions): GitInvocation;
   (options?: RevParseOptions): (ref: string) => GitInvocation;
@@ -327,7 +240,6 @@ const revParse: {
         ])
 );
 
-// Implementation of GitCommand.checkout; the public contract lives on the static.
 const checkout: {
   (ref: string, detach?: boolean): GitInvocation;
   (detach?: boolean): (ref: string) => GitInvocation;
@@ -336,18 +248,11 @@ const checkout: {
   (ref: string, detach?: boolean): GitInvocation => git(["checkout", ...(detach === true ? ["--detach"] : []), ref])
 );
 
-/**
- * The ref-update flags {@link GitCommand.fetch} accepts after its positional
- * shape: `noTags` adds `--no-tags` (no tag auto-follow), `noWriteFetchHead`
- * adds `--no-write-fetch-head` (leave `FETCH_HEAD` untouched for concurrent
- * readers).
- */
 type FetchFlags = {
   readonly noTags?: boolean;
   readonly noWriteFetchHead?: boolean;
 };
 
-// Implementation of GitCommand.fetch; the public contract lives on the static.
 const fetch = (
   remote: string,
   ref?: string,
@@ -369,7 +274,6 @@ const fetch = (
     ...(ref !== undefined ? [ref] : []),
   ]);
 
-// Implementation of GitCommand.submoduleUpdate; the public contract lives on the static.
 const submoduleUpdate = (
   init = false,
   depth?: number,
@@ -395,11 +299,9 @@ const submoduleUpdate = (
     ...(paths.length > 0 ? ["--", ...paths] : []),
   ]);
 
-// Implementation of GitCommand.submoduleAdd; the public contract lives on the static.
 const submoduleAdd = (url: string, path: string, depth?: number): GitInvocation =>
   git(["submodule", "add", ...(depth !== undefined ? ["--depth", String(depth)] : []), "--", secretUrl(url), path]);
 
-// Implementation of GitCommand.sparseCheckoutSet; the public contract lives on the static.
 const sparseCheckoutSet: {
   (patterns: ReadonlyArray<string>, cone: boolean): GitInvocation;
   (cone: boolean): (patterns: ReadonlyArray<string>) => GitInvocation;
@@ -409,19 +311,15 @@ const sparseCheckoutSet: {
     git(["sparse-checkout", "set", cone ? "--cone" : "--no-cone", ...patterns])
 );
 
-// Implementation of GitCommand.configSet; the public contract lives on the static.
 const configSet = (key: string, value: string, file?: string, add = false): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), ...(add ? ["--add"] : []), key, secretValue(value)]);
 
-// Implementation of GitCommand.add; the public contract lives on the static.
 const add = (paths: ReadonlyArray<string>, force = false): GitInvocation =>
   git(["add", ...(force ? ["--force"] : []), "--", ...paths]);
 
-// Implementation of GitCommand.reset; the public contract lives on the static.
 const reset = (mode: "soft" | "mixed" | "hard" = "mixed", ref?: string): GitInvocation =>
   git(["reset", `--${mode}`, ...(ref !== undefined ? [ref] : [])]);
 
-// Implementation of GitCommand.clean; the public contract lives on the static.
 const clean = (directories = false, ignored = false, paths: ReadonlyArray<string> = []): GitInvocation =>
   git([
     "clean",
@@ -431,7 +329,6 @@ const clean = (directories = false, ignored = false, paths: ReadonlyArray<string
     ...(paths.length > 0 ? ["--", ...paths] : []),
   ]);
 
-// Implementation of GitCommand.restore; the public contract lives on the static.
 const restore: {
   (paths: ReadonlyArray<string>, source?: string, staged?: boolean, worktree?: boolean): GitInvocation;
   (source?: string, staged?: boolean, worktree?: boolean): (paths: ReadonlyArray<string>) => GitInvocation;
@@ -448,14 +345,12 @@ const restore: {
     ])
 );
 
-// Implementation of GitCommand.branchCreate; the public contract lives on the static.
 const branchCreate = (name: string, startPoint?: string, checkout = false, force = false): GitInvocation => {
   const target = startPoint === undefined ? [name] : [name, startPoint];
   if (checkout) return git(["checkout", force ? "-B" : "-b", ...target]);
   return git(force ? ["branch", "-f", ...target] : ["branch", ...target]);
 };
 
-// Implementation of GitCommand.branchDelete; the public contract lives on the static.
 const branchDelete: {
   (name: string, force?: boolean): GitInvocation;
   (force?: boolean): (name: string) => GitInvocation;
@@ -464,18 +359,10 @@ const branchDelete: {
   (name: string, force?: boolean): GitInvocation => git(["branch", force === true ? "-D" : "-d", name])
 );
 
-// Implementation of GitCommand.isShallow; the public contract lives on the static.
 const isShallow = (): GitInvocation => git(["rev-parse", "--is-shallow-repository"]);
 
-// Implementation of GitCommand.fetchUnshallow; the public contract lives on the static.
 const fetchUnshallow = (remote = "origin"): GitInvocation => git(["fetch", "--unshallow", secretUrl(remote)]);
 
-/**
- * The detection and scoping options {@link GitCommand.nameStatus} accepts
- * beyond the range itself. The service validates `findRenames` (an integer
- * percent 1..100) and `diffFilter` (git's `[ACDMRTUXB*]` letters, lower-case
- * excluding) before any spawn; the constructor renders them verbatim.
- */
 type NameStatusOptions = {
   readonly findRenames?: number;
   readonly noRenames?: boolean;
@@ -484,7 +371,6 @@ type NameStatusOptions = {
   readonly twoDot?: boolean;
 };
 
-// Implementation of GitCommand.nameStatus; the public contract lives on the static.
 const nameStatus = (
   base: string,
   head: string | undefined,
@@ -503,7 +389,6 @@ const nameStatus = (
     ...pathspecArgs(options.pathspec),
   ]);
 
-// Implementation of GitCommand.defaultBranch; the public contract lives on the static.
 const defaultBranch = (remote = "origin"): GitInvocation =>
   git(["symbolic-ref", "--quiet", "--short", `refs/remotes/${remote}/HEAD`]);
 
@@ -544,56 +429,23 @@ export const CurrentBranchMode = LiteralKit(["abbrev-ref", "show-current"]).pipe
  */
 export type CurrentBranchMode = typeof CurrentBranchMode.Type;
 
-// Implementation of GitCommand.currentBranch; the public contract lives on the static.
 const currentBranch = (mode: CurrentBranchMode = "abbrev-ref"): GitInvocation =>
   mode === "show-current" ? git(["branch", "--show-current"]) : git(["rev-parse", "--abbrev-ref", "HEAD"]);
 
-// Implementation of GitCommand.repoRoot; the public contract lives on the static.
 const repoRoot = (): GitInvocation => git(["rev-parse", "--show-toplevel"]);
 
-// Implementation of GitCommand.commonDir; the public contract lives on the static.
 const commonDir = (): GitInvocation => git(["rev-parse", "--path-format=absolute", "--git-common-dir"]);
 
-// Implementation of GitCommand.gitDir; the public contract lives on the static.
 const gitDir = (path?: string): GitInvocation =>
   git(["rev-parse", "--path-format=absolute", ...(path === undefined ? ["--git-dir"] : ["--git-path", path])]);
 
-// Implementation of GitCommand.commitInfo; the public contract lives on the static.
 const commitInfo = (ref = "HEAD"): GitInvocation =>
   git(["log", "--no-show-signature", "-1", "--format=%H%x00%G?%x00%B", ref]);
 
-/**
- * The `git log` record format: a NUL record opener followed by the six
- * NUL-joined header fields the log listing decodes — `%H`, `%aI`, `%cI`,
- * `%an`, `%ae` and the subject `%s`.
- *
- * **Details**
- *
- * Paths and name-status codes are nonempty and cannot contain NUL, so the
- * empty token emitted before a header is an unambiguous boundary outside the
- * body space. The six header tokens are read by position before parsing the
- * body; `%s` is the message's first paragraph folded onto one line, so it
- * cannot carry a newline and, like every commit-message byte, cannot carry a
- * NUL.
- */
 const LOG_FORMAT = "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s";
 
-/**
- * {@link LOG_FORMAT} plus a seventh NUL-joined header field, the raw message
- * body `%b`. A body may carry newlines but, like every commit-message byte,
- * no NUL, so the field stays unambiguous.
- */
 const LOG_BODY_FORMAT = `${LOG_FORMAT}%x00%b`;
 
-/**
- * The body-shape options {@link GitCommand.log} accepts beyond the walk
- * itself. `nameStatus` swaps `--name-only` for `--name-status`; `diffFilter`
- * and `findRenames` select and detect changes in either body mode (the
- * service validates both pre-spawn); `noRenames` turns rename detection off
- * (the service refuses it with `findRenames`); `noWalk` lists exactly the
- * given revisions, in the given order; `quotePath: false` prepends the global
- * `-c core.quotePath=false`.
- */
 type LogOptions = {
   readonly nameStatus?: boolean;
   readonly diffFilter?: string;
@@ -609,18 +461,15 @@ type LogOptions = {
   readonly includeBody?: boolean;
 };
 
-/** The body-listing flag: `--name-only`, `--name-status`, or nothing under `omitPaths`. */
 const logBodyMode = (options: LogOptions): ReadonlyArray<string> =>
   options.omitPaths === true ? [] : [options.nameStatus === true ? "--name-status" : "--name-only"];
 
-/** `[--diff-filter=<letters>] [--no-renames] [--find-renames=<n>%]`: the diff selection and rename detection {@link LogOptions} renders after the body flag. */
 const logDiffOptions = (options: LogOptions): ReadonlyArray<string> => [
   ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
   ...(options.noRenames === true ? ["--no-renames"] : []),
   ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
 ];
 
-/** `[--no-merges] [--reverse] [--since=<when>] [--no-walk=unsorted]`: the commit filters and order {@link LogOptions} renders after the limit. */
 const logWalkFilters = (options: LogOptions): ReadonlyArray<string> => [
   ...(options.noMerges === true ? ["--no-merges"] : []),
   ...(options.reverse === true ? ["--reverse"] : []),
@@ -628,16 +477,9 @@ const logWalkFilters = (options: LogOptions): ReadonlyArray<string> => [
   ...(options.noWalk === true ? ["--no-walk=unsorted"] : []),
 ];
 
-/**
- * The walk's starting revisions and pathspec. With revisions, `--end-of-options`
- * keeps each one a revision and `--` always closes them, so a revision can
- * never be read as a path; without revisions the pathspec renders exactly as
- * before.
- */
 const logWalkArgs = (revisions: ReadonlyArray<string>, paths: ReadonlyArray<string>): ReadonlyArray<string> =>
   revisions.length > 0 ? ["--end-of-options", ...revisions, "--", ...paths] : pathspecArgs(paths);
 
-// Implementation of GitCommand.log; the public contract lives on the static.
 const log = (
   paths: ReadonlyArray<string> = [],
   follow = false,
@@ -696,15 +538,12 @@ export const GitConfigScope = LiteralKit(["local", "global", "system", "worktree
  */
 export type GitConfigScope = typeof GitConfigScope.Type;
 
-/** The scope flag, or nothing for the merged read. */
 const scopeArgs = (scope: GitConfigScope | undefined): ReadonlyArray<string> =>
   scope === undefined ? [] : [`--${scope}`];
 
-// Implementation of GitCommand.configGet; the public contract lives on the static.
 const configGet = (key: string, scope?: GitConfigScope): GitInvocation =>
   git(["config", ...scopeArgs(scope), "--get", key]);
 
-// Implementation of GitCommand.remoteUrl; the public contract lives on the static.
 const remoteUrl = (remote = "origin", push = false): GitInvocation =>
   git(["remote", "get-url", ...(push ? ["--push"] : []), remote]);
 
@@ -769,12 +608,6 @@ export const StatusIgnoreSubmodules = LiteralKit(["none", "untracked", "dirty", 
  */
 export type StatusIgnoreSubmodules = typeof StatusIgnoreSubmodules.Type;
 
-/**
- * The options {@link GitCommand.status} accepts. `noOptionalLocks` is the one
- * GLOBAL flag (`git --no-optional-locks status ...`), rendered before the
- * subcommand; the rest follow `--porcelain -z`, and the pathspec sits behind
- * `--`.
- */
 type StatusOptions = {
   readonly ignoreSubmodules?: StatusIgnoreSubmodules;
   readonly noOptionalLocks?: boolean;
@@ -783,7 +616,6 @@ type StatusOptions = {
   readonly untrackedFiles?: StatusUntrackedFiles;
 };
 
-// Implementation of GitCommand.status; the public contract lives on the static.
 const status = (options: StatusOptions = {}): GitInvocation =>
   git([
     ...(options.noOptionalLocks === true ? ["--no-optional-locks"] : []),
@@ -796,15 +628,12 @@ const status = (options: StatusOptions = {}): GitInvocation =>
     ...pathspecArgs(options.pathspec),
   ]);
 
-// Implementation of GitCommand.submoduleStatus; the public contract lives on the static.
 const submoduleStatus = (paths: ReadonlyArray<string> = [], recursive = false): GitInvocation =>
   git(["submodule", "status", ...(recursive ? ["--recursive"] : []), ...(paths.length > 0 ? ["--", ...paths] : [])]);
 
-// Implementation of GitCommand.submoduleInit; the public contract lives on the static.
 const submoduleInit = (paths: ReadonlyArray<string> = []): GitInvocation =>
   git(["submodule", "init", ...(paths.length > 0 ? ["--", ...paths] : [])]);
 
-// Implementation of GitCommand.submoduleDeinit; the public contract lives on the static.
 const submoduleDeinit: {
   (paths: ReadonlyArray<string>, all?: boolean, force?: boolean): GitInvocation;
   (all?: boolean, force?: boolean): (paths: ReadonlyArray<string>) => GitInvocation;
@@ -819,25 +648,20 @@ const submoduleDeinit: {
     ])
 );
 
-// Implementation of GitCommand.submoduleSync; the public contract lives on the static.
 const submoduleSync = (paths: ReadonlyArray<string> = [], recursive = false): GitInvocation =>
   git(["submodule", "sync", ...(recursive ? ["--recursive"] : []), ...(paths.length > 0 ? ["--", ...paths] : [])]);
 
-// Implementation of GitCommand.submoduleSetUrl; the public contract lives on the static.
 const submoduleSetUrl: {
   (path: string, url: string): GitInvocation;
   (url: string): (path: string) => GitInvocation;
 } = dual(2, (path: string, url: string): GitInvocation => git(["submodule", "set-url", "--", path, secretUrl(url)]));
 
-// Implementation of GitCommand.submoduleSetBranch; the public contract lives on the static.
 const submoduleSetBranch = (path: string, branch?: string): GitInvocation =>
   git(["submodule", "set-branch", ...(branch === undefined ? ["--default"] : ["--branch", branch]), "--", path]);
 
-// Implementation of GitCommand.submoduleAbsorbgitdirs; the public contract lives on the static.
 const submoduleAbsorbgitdirs = (paths: ReadonlyArray<string> = []): GitInvocation =>
   git(["submodule", "absorbgitdirs", ...(paths.length > 0 ? ["--", ...paths] : [])]);
 
-// Implementation of GitCommand.submoduleForeach; the public contract lives on the static.
 const submoduleForeach: {
   (command: string, recursive?: boolean, quiet?: boolean): GitInvocation;
   (recursive?: boolean, quiet?: boolean): (command: string) => GitInvocation;
@@ -853,7 +677,6 @@ const submoduleForeach: {
     ])
 );
 
-// Implementation of GitCommand.lsRemote; the public contract lives on the static.
 const lsRemote: {
   (remote: string, heads?: boolean, tags?: boolean, patterns?: ReadonlyArray<string>): GitInvocation;
   (heads?: boolean, tags?: boolean, patterns?: ReadonlyArray<string>): (remote: string) => GitInvocation;
@@ -869,28 +692,20 @@ const lsRemote: {
     ])
 );
 
-// Implementation of GitCommand.remoteAdd; the public contract lives on the static.
 const remoteAdd: {
   (name: string, url: string): GitInvocation;
   (url: string): (name: string) => GitInvocation;
 } = dual(2, (name: string, url: string): GitInvocation => git(["remote", "add", name, secretUrl(url)]));
 
-// Implementation of GitCommand.remoteRemove; the public contract lives on the static.
 const remoteRemove = (name: string): GitInvocation => git(["remote", "remove", name]);
 
-// Implementation of GitCommand.remoteSetUrl; the public contract lives on the static.
 const remoteSetUrl: {
   (name: string, url: string): GitInvocation;
   (url: string): (name: string) => GitInvocation;
 } = dual(2, (name: string, url: string): GitInvocation => git(["remote", "set-url", name, secretUrl(url)]));
 
-// Renders a stash index into git's reflog-style stash ref. The interpolation is
-// injection-safe by construction: the service refuses a non-integer index
-// before any spawn, and an integer cannot begin with `-`... a negative integer
-// can, which is exactly why the service guard requires a NON-NEGATIVE integer.
 const stashRef = (index: number): string => `stash@{${index}}`;
 
-// Implementation of GitCommand.stashPush; the public contract lives on the static.
 const stashPush = (
   message?: string,
   includeUntracked = false,
@@ -906,34 +721,26 @@ const stashPush = (
     ...(paths.length > 0 ? ["--", ...paths] : []),
   ]);
 
-// Implementation of GitCommand.stashPop; the public contract lives on the static.
 const stashPop = (index?: number): GitInvocation =>
   git(["stash", "pop", ...(index !== undefined ? [stashRef(index)] : [])]);
 
-// Implementation of GitCommand.stashApply; the public contract lives on the static.
 const stashApply = (index?: number): GitInvocation =>
   git(["stash", "apply", ...(index !== undefined ? [stashRef(index)] : [])]);
 
-// Implementation of GitCommand.stashDrop; the public contract lives on the static.
 const stashDrop = (index?: number): GitInvocation =>
   git(["stash", "drop", ...(index !== undefined ? [stashRef(index)] : [])]);
 
-// Implementation of GitCommand.stashList; the public contract lives on the static.
 const stashList = (): GitInvocation => git(["stash", "list", "-z", "--format=%gd%x1f%H%x1f%gs"]);
 
-// Implementation of GitCommand.branchList; the public contract lives on the static.
 const branchList = (remotes = false, all = false, contains?: string): GitInvocation =>
   git([
     "branch",
     "--list",
     ...(all ? ["--all"] : remotes ? ["--remotes"] : []),
-    // `--contains` takes an optional value; `--format` always follows, so the
-    // revision is never the last argument git could read as absent.
     ...(contains !== undefined ? ["--contains", contains] : []),
     "--format=%(HEAD)%00%(refname:short)%00%(objectname)",
   ]);
 
-// Implementation of GitCommand.tagCreate; the public contract lives on the static.
 const tagCreate = (name: string, ref?: string, message?: string, force = false): GitInvocation =>
   git([
     "tag",
@@ -943,18 +750,14 @@ const tagCreate = (name: string, ref?: string, message?: string, force = false):
     ...(ref !== undefined ? [ref] : []),
   ]);
 
-// Implementation of GitCommand.tagDelete; the public contract lives on the static.
 const tagDelete = (name: string): GitInvocation => git(["tag", "--delete", name]);
 
-// Implementation of GitCommand.tagList; the public contract lives on the static.
 const tagList = (pattern?: string): GitInvocation =>
   git(["tag", "--list", ...(pattern !== undefined ? [pattern] : [])]);
 
-// Implementation of GitCommand.forEachRef; the public contract lives on the static.
 const forEachRef = (patterns: ReadonlyArray<string> = []): GitInvocation =>
   git(["for-each-ref", "--format=%(refname)%00%(objectname)%00%(objecttype)", ...patterns]);
 
-// Implementation of GitCommand.revList; the public contract lives on the static.
 const revList: {
   (ref: string, limit?: number, firstParent?: boolean): GitInvocation;
   (limit?: number, firstParent?: boolean): (ref: string) => GitInvocation;
@@ -969,15 +772,8 @@ const revList: {
     ])
 );
 
-/**
- * The one compare-and-swap change {@link GitCommand.updateRef} makes:
- * `{ create: <new> }` points a NEW ref at `<new>` and fails when the ref
- * already exists; `{ delete: <expected> }` removes the ref only while it still
- * points at `<expected>`. Both values may be anything git resolves to an object.
- */
 type UpdateRefChange = { readonly create: string } | { readonly delete: string };
 
-// Implementation of GitCommand.revListCount; the public contract lives on the static.
 const revListCount: {
   (range: string, firstParent?: boolean): GitInvocation;
   (firstParent?: boolean): (range: string) => GitInvocation;
@@ -989,26 +785,16 @@ const revListCount: {
 
 const localOnlyCommitCount = (): GitInvocation => git(["rev-list", "--count", "--all", "--not", "--remotes", "--"]);
 
-// Implementation of GitCommand.notesList; the public contract lives on the static.
-// `--ref=<ref>` is one argv token, so the ref can never be read as a separate option.
 const notesList = (ref: string): GitInvocation => git(["notes", `--ref=${ref}`, "list"]);
 
-// Implementation of GitCommand.hashObject; the public contract lives on the static.
-// No `-w`: the object id is computed, never written to the object store.
 const hashObject = (content: string): GitInvocation => git(["hash-object", "--no-filters", "--stdin"], content);
 
-/** A fast-import `data` block: the exact UTF-8 byte count, the bytes, and the optional closing LF. */
 const fastImportData = (content: string): string => `data ${new TextEncoder().encode(content).length}\n${content}\n`;
 
-/** The `<name> <<email>> <seconds> +0000` identity line body fast-import's raw date format expects. */
 const fastImportIdent = (commit: NotesCommit): string => `${commit.name} <${commit.email}> ${commit.timestamp} +0000`;
 
 const byNoteObject = Order.mapInput(Order.String, (note: NoteWrite) => note.object);
 
-// Implementation of GitCommand.replaceNotes; the public contract lives on the static.
-// No `from`: the commit is parentless, so the same notes and metadata always
-// give the same commit id whatever the ref held before. `--done` makes a
-// truncated stream fail instead of committing a partial tree.
 const replaceNotes = (ref: string, notes: ReadonlyArray<NoteWrite>, commit: NotesCommit): GitInvocation =>
   git(
     ["fast-import", "--quiet", "--force", "--done"],
@@ -1025,7 +811,6 @@ const replaceNotes = (ref: string, notes: ReadonlyArray<NoteWrite>, commit: Note
     )
   );
 
-// Implementation of GitCommand.mergeTree; the public contract lives on the static.
 const mergeTree: {
   (base: string, head: string): GitInvocation;
   (head: string): (base: string) => GitInvocation;
@@ -1035,16 +820,11 @@ const mergeTree: {
     git(["merge-tree", "--write-tree", "-z", "--name-only", "--end-of-options", base, head])
 );
 
-// Implementation of GitCommand.upstream; the public contract lives on the static.
 const upstream = (branch: string): GitInvocation =>
   git(["for-each-ref", "--format=%(refname)%00%(upstream)", "--end-of-options", `refs/heads/${branch}`]);
 
-// Implementation of GitCommand.checkRefFormat; the public contract lives on the static.
 const checkRefFormat = (ref: string): GitInvocation => git(["check-ref-format", ref]);
 
-// Implementation of GitCommand.updateRef; the public contract lives on the static.
-// An empty old value asks git to verify that the ref does not exist yet,
-// whatever the repository's object format, so no zero oid has to be sized.
 const updateRef: {
   (ref: string, change: UpdateRefChange): GitInvocation;
   (change: UpdateRefChange): (ref: string) => GitInvocation;
@@ -1056,7 +836,6 @@ const updateRef: {
       : git(["update-ref", "-d", "--end-of-options", ref, change.delete])
 );
 
-// Implementation of GitCommand.commit; the public contract lives on the static.
 const commit: {
   (
     message: string,
@@ -1103,7 +882,6 @@ const commit: {
     ])
 );
 
-// Implementation of GitCommand.push; the public contract lives on the static.
 const push = (
   remote: string,
   refspec?: string,
@@ -1122,7 +900,6 @@ const push = (
     ...(refspec !== undefined ? [refspec] : []),
   ]);
 
-// Implementation of GitCommand.pull; the public contract lives on the static.
 const pull = (remote: string, ref?: string, rebase = false, ffOnly = false): GitInvocation =>
   git([
     "pull",
@@ -1132,15 +909,12 @@ const pull = (remote: string, ref?: string, rebase = false, ffOnly = false): Git
     ...(ref !== undefined ? [ref] : []),
   ]);
 
-// Implementation of GitCommand.configList; the public contract lives on the static.
 const configList = (file?: string, scope?: GitConfigScope): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), ...scopeArgs(scope), "--list", "-z"]);
 
-// Implementation of GitCommand.configGetAll; the public contract lives on the static.
 const configGetAll = (key: string, file?: string): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), "--get-all", "-z", key]);
 
-// Implementation of GitCommand.configUnset; the public contract lives on the static.
 const configUnset = (key: string, file?: string, all = false, value?: string): GitInvocation =>
   git([
     "config",
@@ -1149,15 +923,12 @@ const configUnset = (key: string, file?: string, all = false, value?: string): G
     ...(value !== undefined ? ["--fixed-value", key, secretValue(value)] : [key]),
   ]);
 
-// Implementation of GitCommand.configRemoveSection; the public contract lives on the static.
 const configRemoveSection = (section: string, file?: string): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), "--remove-section", section]);
 
-// Implementation of GitCommand.configRenameSection; the public contract lives on the static.
 const configRenameSection = (oldName: string, newName: string, file?: string): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), "--rename-section", oldName, newName]);
 
-// Implementation of GitCommand.rm; the public contract lives on the static.
 const rm: {
   (paths: ReadonlyArray<string>, cached?: boolean, recursive?: boolean, force?: boolean): GitInvocation;
   (cached?: boolean, recursive?: boolean, force?: boolean): (paths: ReadonlyArray<string>) => GitInvocation;
@@ -1174,11 +945,9 @@ const rm: {
     ])
 );
 
-// Implementation of GitCommand.mv; the public contract lives on the static.
 const mv = (source: string, destination: string, force = false): GitInvocation =>
   git(["mv", ...(force ? ["--force"] : []), "--", source, destination]);
 
-// Implementation of GitCommand.checkIgnore; the public contract lives on the static.
 const checkIgnore = (paths: ReadonlyArray<string>, noIndex = false): GitInvocation =>
   git(
     ["check-ignore", ...(noIndex ? ["--no-index"] : []), "-z", "--stdin"],
@@ -1189,7 +958,6 @@ const checkIgnore = (paths: ReadonlyArray<string>, noIndex = false): GitInvocati
     )
   );
 
-// Implementation of GitCommand.worktreeAdd; the public contract lives on the static.
 const worktreeAdd = (path: string, ref?: string, detach = false, force = false, newBranch?: string): GitInvocation =>
   git([
     "worktree",
@@ -1201,10 +969,8 @@ const worktreeAdd = (path: string, ref?: string, detach = false, force = false, 
     ...(ref !== undefined ? [ref] : []),
   ]);
 
-// Implementation of GitCommand.worktreeList; the public contract lives on the static.
 const worktreeList = (): GitInvocation => git(["worktree", "list", "--porcelain", "-z"]);
 
-// Implementation of GitCommand.worktreePrune; the public contract lives on the static.
 const worktreePrune = (): GitInvocation => git(["worktree", "prune"]);
 
 const worktreeLock = (path: string, reason?: string): GitInvocation =>
@@ -1212,7 +978,6 @@ const worktreeLock = (path: string, reason?: string): GitInvocation =>
 
 const worktreeUnlock = (path: string): GitInvocation => git(["worktree", "unlock", path]);
 
-// Implementation of GitCommand.worktreeRemove; the public contract lives on the static.
 const worktreeRemove: {
   (path: string, force?: boolean): GitInvocation;
   (force?: boolean): (path: string) => GitInvocation;
@@ -1222,16 +987,9 @@ const worktreeRemove: {
     git(["worktree", "remove", ...(force === true ? ["--force"] : []), path])
 );
 
-// Implementation of GitCommand.lsFiles; the public contract lives on the static.
 const lsFiles = (pathspec: ReadonlyArray<string> = []): GitInvocation =>
   git(["ls-files", "--stage", "-z", ...(pathspec.length > 0 ? ["--", ...pathspec] : [])]);
 
-/**
- * The comparison and rendering options {@link GitCommand.diffPatch} accepts.
- * The service validates every combination (a `head` needs a `base`, `noIndex`
- * excludes the revision and index forms, `noRenames` excludes `findRenames`)
- * and both numbers before any spawn; the constructor renders them verbatim.
- */
 type DiffPatchOptions = {
   readonly base?: string;
   readonly head?: string;
@@ -1244,7 +1002,6 @@ type DiffPatchOptions = {
   readonly pathspec?: ReadonlyArray<string>;
 };
 
-/** `[--cached] [--end-of-options <base> [<head>]] -- [<pathspec>...]`: the revision and index form of a patch. */
 const diffPatchTarget = (options: DiffPatchOptions): ReadonlyArray<string> => [
   ...(options.cached === true ? ["--cached"] : []),
   ...(options.base !== undefined
@@ -1254,7 +1011,6 @@ const diffPatchTarget = (options: DiffPatchOptions): ReadonlyArray<string> => [
   ...(options.pathspec ?? []),
 ];
 
-// Implementation of GitCommand.diffPatch; the public contract lives on the static.
 const diffPatch = (options: DiffPatchOptions = {}): GitInvocation =>
   git([
     "diff",
@@ -3104,7 +2860,8 @@ export class GitCommand {
    * Records are newline-separated, which is split-safe here: git refnames
    * cannot contain a newline (or a space), so the only NUL bytes are the
    * format's own field separators. `all` wins over `remotes` when both are
-   * set.
+   * set. `--format` always follows `--contains <rev>`, so git never reads the
+   * revision as an absent optional value.
    *
    * **Example** (Inspect branch list argv)
    *
@@ -3373,6 +3130,7 @@ export class GitCommand {
    * `git notes add` sequence would build. The commit has no parent, so the
    * same notes and {@link NotesCommit} always produce the same commit id;
    * `--force` lets that parentless commit replace whatever the ref held.
+   * `--done` makes a truncated stream fail instead of committing a partial tree.
    * Nothing touches the index or the work tree.
    *
    * **Gotchas**
