@@ -9,31 +9,27 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import type { GitInvocation } from "@beep/git/GitCommand";
 
-/**
- * Asserts the argv/env/extendEnv/no-cwd shape shared by every `GitCommand`
- * constructor. `expectedRedacted` defaults to the raw argv — a constructor
- * with no sensitive positional must produce an element-wise identical
- * `redactedArgs`.
- *
- * A constructor carries NO environment and NO cwd: both are run-time context
- * the `Git` service applies at its single spawn choke point (#670). The
- * `env` assertion here is therefore a purity guard — a pin that leaks back
- * onto a pure constructor fails every one of these cases at once.
- */
 const assertGitCommand = (
   invocation: GitInvocation,
   expectedArgs: ReadonlyArray<string>,
-  expectedRedacted: ReadonlyArray<string> = expectedArgs
+  expectedRedacted: ReadonlyArray<string> = expectedArgs,
+  message?: string
 ): void => {
   const command = invocation.command;
   assert.isTrue(ChildProcess.isStandardCommand(command));
   if (!ChildProcess.isStandardCommand(command)) return;
   assert.strictEqual(command.command, "git");
-  assert.deepStrictEqual(command.args, expectedArgs);
-  assert.deepStrictEqual(invocation.redactedArgs, expectedRedacted);
-  assert.isUndefined(command.options.env);
+  assert.deepStrictEqual(command.args, expectedArgs, message);
+  assert.deepStrictEqual(invocation.redactedArgs, expectedRedacted, message);
+  assert.isUndefined(
+    command.options.env,
+    "a pure constructor carries no env: the Git service applies it at its single spawn choke point"
+  );
   assert.strictEqual(command.options.extendEnv, true);
-  assert.isUndefined(command.options.cwd);
+  assert.isUndefined(
+    command.options.cwd,
+    "a pure constructor carries no cwd: the Git service applies it at its single spawn choke point"
+  );
 };
 
 describe("GitCommand", () => {
@@ -64,15 +60,12 @@ describe("GitCommand", () => {
   });
 
   it("changedFiles builds `git diff --name-only -z --no-relative <base>...<head>`", () => {
-    // --no-relative is explicit on the default branch so an inherited
-    // diff.relative=true config cannot silently make the output cwd-relative.
-    assertGitCommand(GitCommand.changedFiles("main", "feat/git"), [
-      "diff",
-      "--name-only",
-      "-z",
-      "--no-relative",
-      "main...feat/git",
-    ]);
+    assertGitCommand(
+      GitCommand.changedFiles("main", "feat/git"),
+      ["diff", "--name-only", "-z", "--no-relative", "main...feat/git"],
+      undefined,
+      "--no-relative is explicit so an inherited diff.relative=true cannot make the output cwd-relative"
+    );
   });
 
   it("changedFiles with relative passes --relative before the range", () => {
@@ -96,10 +89,18 @@ describe("GitCommand", () => {
   });
 
   it("untrackedFiles builds `git ls-files --others --exclude-standard -z`, adding --full-name when NOT relative", () => {
-    // Default (repo-root-relative, matching the un-`--relative` diffs) carries
-    // --full-name; the cwd-relative form (matching the --relative diffs) omits it.
-    assertGitCommand(GitCommand.untrackedFiles(), ["ls-files", "--others", "--exclude-standard", "-z", "--full-name"]);
-    assertGitCommand(GitCommand.untrackedFiles(true), ["ls-files", "--others", "--exclude-standard", "-z"]);
+    assertGitCommand(
+      GitCommand.untrackedFiles(),
+      ["ls-files", "--others", "--exclude-standard", "-z", "--full-name"],
+      undefined,
+      "the repo-root-relative default carries --full-name, matching the un-relative diffs"
+    );
+    assertGitCommand(
+      GitCommand.untrackedFiles(true),
+      ["ls-files", "--others", "--exclude-standard", "-z"],
+      undefined,
+      "the cwd-relative form omits --full-name, matching the --relative diffs"
+    );
   });
 
   it("revParse builds `git rev-parse --verify <ref>`", () => {
@@ -175,13 +176,12 @@ describe("GitCommand", () => {
   });
 
   it("fetch passes a full refspec through verbatim and places --unshallow before the remote", () => {
-    // The refspec is never transformed: under a single-branch clone it is the
-    // only spelling that creates the remote-tracking ref.
-    assertGitCommand(GitCommand.fetch("origin", "+refs/heads/b:refs/remotes/origin/b"), [
-      "fetch",
-      "origin",
-      "+refs/heads/b:refs/remotes/origin/b",
-    ]);
+    assertGitCommand(
+      GitCommand.fetch("origin", "+refs/heads/b:refs/remotes/origin/b"),
+      ["fetch", "origin", "+refs/heads/b:refs/remotes/origin/b"],
+      undefined,
+      "the refspec is never transformed: under a single-branch clone it alone creates the remote-tracking ref"
+    );
     assertGitCommand(GitCommand.fetch("origin", "main", undefined, false, true), [
       "fetch",
       "--unshallow",
@@ -204,13 +204,12 @@ describe("GitCommand", () => {
   });
 
   it("submoduleUpdate emits the full flag family in a pinned order, --no-fetch only on fetch: false", () => {
-    // --checkout is the documented override for submodule.<name>.update=none;
-    // each flag is independent and the emission order is stable.
-    assertGitCommand(GitCommand.submoduleUpdate(false, undefined, [], { checkout: true }), [
-      "submodule",
-      "update",
-      "--checkout",
-    ]);
+    assertGitCommand(
+      GitCommand.submoduleUpdate(false, undefined, [], { checkout: true }),
+      ["submodule", "update", "--checkout"],
+      undefined,
+      "--checkout is the documented override for submodule.<name>.update=none"
+    );
     assertGitCommand(GitCommand.submoduleUpdate(false, undefined, [], { fetch: false }), [
       "submodule",
       "update",
@@ -265,12 +264,11 @@ describe("GitCommand", () => {
   });
 
   it("configSet writes a key, optionally into an explicit file — and masks the value in redactedArgs", () => {
-    // The raw argv carries the real value (git needs it); the redacted argv
-    // masks it wholesale — a config value can be a secret (#86).
     assertGitCommand(
       GitCommand.configSet("user.name", "Test"),
       ["config", "user.name", "Test"],
-      ["config", "user.name", "<redacted>"]
+      ["config", "user.name", "<redacted>"],
+      "the raw argv carries the value git needs; the redacted argv masks it wholesale, as a config value can be a secret"
     );
     assertGitCommand(
       GitCommand.configSet("submodule.a.shallow", "true", ".gitmodules"),
@@ -331,7 +329,6 @@ describe("GitCommand", () => {
         "src",
       ]
     );
-    // An empty pathspec adds no `--`; each option is independent.
     assertGitCommand(GitCommand.nameStatus("HEAD", undefined, false, { pathspec: [] }), [
       "diff",
       "--name-status",
@@ -421,33 +418,39 @@ describe("GitCommand", () => {
   });
 
   it("log puts every flag before the `--` pathspec separator", () => {
-    // Order is load-bearing: git reads everything after `--` as a path, so a
-    // flag emitted late would be spawned as a filename.
-    assertGitCommand(GitCommand.log(["src/Git.ts"], true, 5, true), [
-      "log",
-      "--no-show-signature",
-      "-z",
-      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
-      "--name-only",
-      "--follow",
-      "--diff-merges=first-parent",
-      "--max-count=5",
-      "--",
-      "src/Git.ts",
-    ]);
+    assertGitCommand(
+      GitCommand.log(["src/Git.ts"], true, 5, true),
+      [
+        "log",
+        "--no-show-signature",
+        "-z",
+        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+        "--name-only",
+        "--follow",
+        "--diff-merges=first-parent",
+        "--max-count=5",
+        "--",
+        "src/Git.ts",
+      ],
+      undefined,
+      "git reads everything after -- as a path, so a flag emitted late would be spawned as a filename"
+    );
   });
 
   it("log emits --max-count=0 for limit 0 rather than dropping it", () => {
-    // `0` is falsy: a truthiness test here would silently ask for the WHOLE
-    // history when the caller asked for none of it.
-    assertGitCommand(GitCommand.log([], false, 0), [
-      "log",
-      "--no-show-signature",
-      "-z",
-      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
-      "--name-only",
-      "--max-count=0",
-    ]);
+    assertGitCommand(
+      GitCommand.log([], false, 0),
+      [
+        "log",
+        "--no-show-signature",
+        "-z",
+        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+        "--name-only",
+        "--max-count=0",
+      ],
+      undefined,
+      "0 is falsy: a truthiness test would ask for the whole history when the caller asked for none of it"
+    );
   });
 
   it("configGet builds `git config --get <key>`", () => {
@@ -729,32 +732,29 @@ describe("GitCommand", () => {
     });
 
     it("branchCreate with force builds `git branch -f`, and with checkout `git checkout -B`", () => {
-      // The four checkout x force combinations, exhaustively: force alone
-      // adds -f to the branch form; force + checkout swaps -b for -B (the
-      // one-invocation replacement for the delete-then-create longhand).
       assertGitCommand(GitCommand.branchCreate("feat/x", "origin/main", false, false), [
         "branch",
         "feat/x",
         "origin/main",
       ]);
-      assertGitCommand(GitCommand.branchCreate("feat/x", "origin/main", false, true), [
-        "branch",
-        "-f",
-        "feat/x",
-        "origin/main",
-      ]);
+      assertGitCommand(
+        GitCommand.branchCreate("feat/x", "origin/main", false, true),
+        ["branch", "-f", "feat/x", "origin/main"],
+        undefined,
+        "force alone adds -f to the branch form"
+      );
       assertGitCommand(GitCommand.branchCreate("feat/x", "origin/main", true, false), [
         "checkout",
         "-b",
         "feat/x",
         "origin/main",
       ]);
-      assertGitCommand(GitCommand.branchCreate("feat/x", "origin/main", true, true), [
-        "checkout",
-        "-B",
-        "feat/x",
-        "origin/main",
-      ]);
+      assertGitCommand(
+        GitCommand.branchCreate("feat/x", "origin/main", true, true),
+        ["checkout", "-B", "feat/x", "origin/main"],
+        undefined,
+        "force + checkout swaps -b for -B, the one-invocation replacement for delete-then-create"
+      );
     });
 
     it("branchDelete builds -d by default and -D when forced", () => {
@@ -1035,15 +1035,17 @@ describe("GitCommand", () => {
     });
 
     it("emits a scope flag only when one is asked for, so the default stays the merged read", () => {
-      // No scope must NOT become --local: the merged read is the documented
-      // default and silently narrowing it would change every existing
-      // caller's answer.
       assertGitCommand(GitCommand.configList(undefined, "local"), ["config", "--local", "--list", "-z"]);
       assertGitCommand(GitCommand.configList(undefined, "global"), ["config", "--global", "--list", "-z"]);
       assertGitCommand(GitCommand.configList(undefined, "system"), ["config", "--system", "--list", "-z"]);
       assertGitCommand(GitCommand.configList(undefined, "worktree"), ["config", "--worktree", "--list", "-z"]);
       assertGitCommand(GitCommand.configGet("user.name", "local"), ["config", "--local", "--get", "user.name"]);
-      assertGitCommand(GitCommand.configGet("user.name"), ["config", "--get", "user.name"]);
+      assertGitCommand(
+        GitCommand.configGet("user.name"),
+        ["config", "--get", "user.name"],
+        undefined,
+        "no scope must not become --local: narrowing the documented merged read would change every caller's answer"
+      );
       assertGitCommand(GitCommand.configGetAll("remote.origin.fetch"), [
         "config",
         "--get-all",
@@ -1142,9 +1144,6 @@ describe("GitCommand", () => {
       Effect.gen(function* () {
         const invocation = GitCommand.checkIgnore(["ig.txt", "path with space.txt"]);
         assertGitCommand(invocation, ["check-ignore", "-z", "--stdin"]);
-        // The paths ride stdin as NUL-TERMINATED records (every path,
-        // including the last, is followed by a NUL) — baked into the pure
-        // command value, never entering the argv.
         const stdin = invocation.command.options.stdin;
         assert.isDefined(stdin);
         assert.isFalse(typeof stdin === "string");
@@ -1159,7 +1158,11 @@ describe("GitCommand", () => {
             return merged;
           })
         );
-        assert.strictEqual(decoded, "ig.txt\0path with space.txt\0");
+        assert.strictEqual(
+          decoded,
+          "ig.txt\0path with space.txt\0",
+          "the paths ride the pure command's stdin as NUL-terminated records, the last one included"
+        );
       })
     );
 
@@ -1223,13 +1226,17 @@ describe("GitCommand", () => {
       );
     });
     it("fetch masks an embedded userinfo credential in the remote, and only then", () => {
-      // A plain remote name (the common case) is untouched — full debuggability.
-      assertGitCommand(GitCommand.fetch("origin", "main"), ["fetch", "origin", "main"]);
-      // A URL remote with embedded credentials keeps everything BUT the userinfo.
+      assertGitCommand(
+        GitCommand.fetch("origin", "main"),
+        ["fetch", "origin", "main"],
+        undefined,
+        "a plain remote name, the common case, stays untouched for full debuggability"
+      );
       assertGitCommand(
         GitCommand.fetch("https://x-access-token:ghp_secret@github.com/a/r.git", "main"),
         ["fetch", "https://x-access-token:ghp_secret@github.com/a/r.git", "main"],
-        ["fetch", "https://<redacted>@github.com/a/r.git", "main"]
+        ["fetch", "https://<redacted>@github.com/a/r.git", "main"],
+        "a URL remote with embedded credentials keeps everything but the userinfo"
       );
     });
 
@@ -1250,13 +1257,11 @@ describe("GitCommand", () => {
     });
 
     it("a password containing a literal @ is masked whole — no credential tail survives", () => {
-      // URL authorities split at the LAST @ before the first path slash; a
-      // first-@ mask would leave `ss@github.com...` (the password tail) in
-      // redactedArgs, which classify persists into GitCommandError.
       assertGitCommand(
         GitCommand.push("https://user:p@ss@github.com/a/r.git", "main"),
         ["push", "https://user:p@ss@github.com/a/r.git", "main"],
-        ["push", "https://<redacted>@github.com/a/r.git", "main"]
+        ["push", "https://<redacted>@github.com/a/r.git", "main"],
+        "authorities split at the last @ before the first path slash; a first-@ mask leaks the password tail into GitCommandError"
       );
     });
 
@@ -1286,8 +1291,11 @@ describe("GitCommand data-last (pipeable) forms", () => {
   });
 
   it("an optional-parameter constructor dispatches on the subject's type, not the argument count", () => {
-    // Data-first with the optional omitted still builds the invocation.
-    assert.deepStrictEqual(GitCommand.checkout("main").command.args, ["checkout", "main"]);
+    assert.deepStrictEqual(
+      GitCommand.checkout("main").command.args,
+      ["checkout", "main"],
+      "data-first with the optional omitted still builds the invocation"
+    );
     assert.deepStrictEqual(pipe("main", GitCommand.checkout(true)).command.args, ["checkout", "--detach", "main"]);
     assert.deepStrictEqual(pipe("main", GitCommand.checkout()).command.args, ["checkout", "main"]);
     assert.deepStrictEqual(pipe(["a.txt"], GitCommand.rm(true)).command.args, ["rm", "--cached", "--", "a.txt"]);

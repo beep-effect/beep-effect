@@ -125,14 +125,10 @@ const EditorProofComposer = (): JSX.Element => {
  * @category components
  * @since 0.0.0
  */
+// decision: workbench-shell-owns-viewport-and-theme
 export function EditorProofPanel(): JSX.Element {
   return (
-    // The editor region keeps a usable floor; when the dock box is shorter than
-    // controls + drawer + floor (narrow/touch layouts), the panel scrolls as a
-    // whole instead of collapsing the document.
     <section className="flex h-full min-h-0 flex-col overflow-y-auto" data-testid="editor-proof-panel">
-      {/* Sticky and opaque: focus-driven scrolling must never leave the mode and
-          import controls half-hidden under the dock's tab strip. */}
       <EditorProofControls />
       <ImportFailureAlert />
       <EditorProofComposer />

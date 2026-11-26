@@ -10,7 +10,6 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import type { GitConfigParseError } from "@beep/git/GitConfig";
 
-/** Unwraps a successful Result or fails the test with the failure's message. */
 const ok = <A, E>(result: Result.Result<A, E>): A => {
   if (Result.isFailure(result)) {
     assert.fail(`expected success, got failure: ${String(result.failure)}`);
@@ -27,14 +26,10 @@ const failure = (text: string): GitConfigParseError => {
   return result.failure;
 };
 
-/**
- * The conformance corpus: git-config edge cases (quoting, case, comments,
- * continuation, dotted headers) that must parse, answer the recorded
- * lookups, and round-trip BYTE-FOR-BYTE through stringify.
- */
 interface CorpusCase {
-  /** [section, subsection, key, expected values in order] */
-  readonly lookups: ReadonlyArray<readonly [string, string | undefined, string, ReadonlyArray<string>]>;
+  readonly lookups: ReadonlyArray<
+    readonly [section: string, subsection: string | undefined, key: string, expectedInOrder: ReadonlyArray<string>]
+  >;
   readonly name: string;
   readonly text: string;
 }
@@ -279,12 +274,13 @@ describe("GitConfig", () => {
     }
   });
 
-  describe("conformance corpus", () => {
+  describe("conformance corpus: git-config edge cases parse, answer lookups and round-trip byte-for-byte", () => {
     it("the corpus walk found the expected number of cases", () => {
-      // A silently-empty (or silently-shrunk) corpus would green every loop
-      // below. The exact count is the guard: adding a case updates it here
-      // AND in CLAUDE.md's test inventory.
-      assert.strictEqual(corpus.length, 27);
+      assert.strictEqual(
+        corpus.length,
+        27,
+        "an empty or shrunk corpus would green every loop below; adding a case updates this count"
+      );
     });
 
     for (const c of corpus) {
@@ -388,7 +384,6 @@ describe("GitConfig", () => {
     it("parseResult never throws on hostile input", () => {
       const hostile = [Str.repeat(10_000)('"'), Str.repeat(10_000)("["), `[a]\n${Str.repeat(5_000)("\tk = v\\\n")}x\n`];
       for (const text of hostile) {
-        // Must return a Result (either way), not throw.
         const result = GitConfig.parseResult(text);
         result.pipe(Result.isResult, assertTrue);
       }
@@ -519,12 +514,6 @@ describe("GitConfig", () => {
     });
 
     it("a dotted section NAME is refused on every write — it could never round-trip", () => {
-      // The scanner splits any unquoted dot in a header at the first dot
-      // (the deprecated [section.subsection] form), so `addSection("a.b")`
-      // would serialize `[a.b]` and re-parse as section "a" subsection "b" —
-      // an address the caller could never match again (and a repeated
-      // `set("x.y", ...)` would append duplicate sections forever). Address
-      // the dotted form as (name, subsection) instead.
       const doc = parse("");
       for (const rejected of [
         doc.addSection("a.b", undefined),
@@ -534,12 +523,19 @@ describe("GitConfig", () => {
       ]) {
         assertFailure(rejected, rejected.pipe(Result.getFailure, O.getOrThrow));
         if (Result.isFailure(rejected)) {
-          assert.strictEqual(rejected.failure.reason, "invalidSectionName");
+          assert.strictEqual(
+            rejected.failure.reason,
+            "invalidSectionName",
+            "[a.b] re-parses as section a, subsection b: an address never matched again, so set appends forever"
+          );
         }
       }
-      // The same address expressed as (name, subsection) works and round-trips.
       const edited = ok(doc.addSection("a", "b"));
-      assert.strictEqual(edited.stringify(), '[a "b"]\n');
+      assert.strictEqual(
+        edited.stringify(),
+        '[a "b"]\n',
+        "the dotted address as (name, subsection) works and round-trips"
+      );
       assert.deepStrictEqual(ok(edited.set("a", "b", "k", "v")).get("a", "b", "k"), O.some("v"));
     });
 

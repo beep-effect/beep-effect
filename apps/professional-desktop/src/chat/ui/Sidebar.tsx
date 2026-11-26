@@ -35,8 +35,6 @@ import type { JSX } from "react";
 
 type WorkspaceId = WorkspaceIdentity.WorkspaceId;
 
-// most-recent activity first: negate the epoch millis so a number ascending
-// order sorts newest threads to the top.
 const byUpdatedDesc = Order.mapInput(Order.Number, (thread: Thread) => -DateTime.toEpochMillis(thread.updatedAt));
 
 const selectThreadAtom = professionalBrowserRuntime.fn<WorkspaceIdentity.ThreadId>()(
@@ -92,14 +90,9 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
 
   const sorted = AsyncResult.isSuccess(threads) ? A.sort(threads.value, byUpdatedDesc) : [];
   const loadFailed = AsyncResult.isFailure(threads);
-  // Once the load settles with nothing to show, present a calm empty state;
-  // a failed load names the problem instead of masquerading as "no threads".
-  // `Initial` (still loading) renders nothing.
   const isEmpty = !AsyncResult.isInitial(threads) && !loadFailed && sorted.length === 0;
 
   return (
-    // The width belongs to the resizable panel this sits in, not to the sidebar. It
-    // used to pin itself to `w-64`, which a drag could not have moved.
     <aside
       className="flex h-full w-full min-w-0 flex-col border-r bg-background/30 backdrop-blur"
       data-testid="sidebar"
@@ -115,9 +108,6 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
           + New thread
         </Button>
       </div>
-      {/* `overflow-y-auto` alone computes the *other* axis to `auto` as well, so a title
-          that overflowed handed the sidebar a horizontal scrollbar. Nothing in a thread
-          list is ever meant to be reachable sideways. */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2" data-testid="sidebar-list">
         {loadFailed ? (
           <Empty className="h-full" data-testid="sidebar-load-failed">
