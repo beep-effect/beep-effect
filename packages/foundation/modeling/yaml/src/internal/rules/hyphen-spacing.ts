@@ -158,13 +158,14 @@ const stepBackward = (
   const hyphenWouldRelocateCollection =
     scan.movesScalarParent || (scan.compact && scan.nextLineCharacter > token.character);
   scan.compact = scan.compact || A.getUnsafe(structure.compactEntries, index);
-  const parentHyphenStaysPutSoOnlyEarlierHyphensMoveIt = A.getUnsafe(structure.explicitScalarParents, index);
-  scan.movesScalarParent = scan.movesScalarParent || parentHyphenStaysPutSoOnlyEarlierHyphensMoveIt;
+  // The parent hyphen itself stays put when deleting spaces after it.
+  // Only earlier hyphens move that parent and must withhold their fix.
+  scan.movesScalarParent = scan.movesScalarParent || A.getUnsafe(structure.explicitScalarParents, index);
   if (!isLayoutToken(token.kind)) scan.nextContentCharacter = token.character;
   return hyphenWouldRelocateCollection;
 };
 
-const suffixSummaryForConstantTimeRelocationQueries = (
+const relocationSuffixSummary = (
   tokens: ReadonlyArray<YamlToken>,
   structure: SameLineStructureByTokenIndex
 ): ReadonlyArray<boolean> => {
@@ -249,14 +250,8 @@ export const hyphenSpacing = YamlRule.make({
   id: "hyphen-spacing",
   check: dual(2, (ctx: LintContext, options: unknown): Iterable<YamlLintDiagnostic> => {
     const opts = P.isObject(options) ? options : {};
-    const maxAfterClampedSoHandBuiltOptionsKeepSeparation = Math.max(
-      1,
-      P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1
-    );
-    const relocatesCollections = suffixSummaryForConstantTimeRelocationQueries(
-      ctx.tokens,
-      indexSameLineStructureByTokenIndex(ctx.tokens)
-    );
+    const separationSafeMaxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
+    const relocatesCollections = relocationSuffixSummary(ctx.tokens, indexSameLineStructureByTokenIndex(ctx.tokens));
     const out: Array<YamlLintDiagnostic> = [];
     for (let tokenIndex = 0; tokenIndex < ctx.tokens.length; tokenIndex++) {
       const token = A.getUnsafe(ctx.tokens, tokenIndex);
@@ -264,7 +259,7 @@ export const hyphenSpacing = YamlRule.make({
       const finding = hyphenFinding(
         ctx.text,
         token,
-        maxAfterClampedSoHandBuiltOptionsKeepSeparation,
+        separationSafeMaxAfter,
         A.getUnsafe(relocatesCollections, tokenIndex)
       );
       if (finding !== undefined) out.push(finding);

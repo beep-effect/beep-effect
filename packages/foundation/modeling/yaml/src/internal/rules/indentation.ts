@@ -136,7 +136,7 @@ type PerLineTokenScan = {
   inlineFlowDepth: number;
 };
 
-const isLeaderOfCommentDirectiveOrParserRejectedTabLine = (firstChar: string): boolean =>
+const isCommentDirectiveOrTabLeader = (firstChar: string): boolean =>
   firstChar === "#" || firstChar === "%" || firstChar === "\t";
 
 const bomPrefixWidth = (line: LintLine): number => (line.offset === 0 && line.text[0] === "\uFEFF" ? 1 : 0);
@@ -205,7 +205,8 @@ const stepLineToken = (scan: CrossLineContentScan, line: PerLineTokenScan, token
   line.opensKey = nextOpensKey(line, token.kind);
 };
 
-const scanLineTokensSoQuotedHashIsNotComment = (
+/** Read the significant tokens of one line, rather than treating quoted ` # ` as a comment. */
+const scanLineTokens = (
   scan: CrossLineContentScan,
   line: LintLine,
   indent: number,
@@ -233,7 +234,12 @@ const scanLineTokensSoQuotedHashIsNotComment = (
   return lineScan;
 };
 
-const isDeeperFragmentOfMultiTokenExplicitPlainKey = (
+/**
+ * Explicit plain keys can be composed from separate tokens while their
+ * AST span still covers only the first fragment. Keep the later ':'
+ * structural, but omit deeper scalar fragments until that indicator.
+ */
+const isDeeperExplicitKeyFragment = (
   continuationKeyColumn: number | undefined,
   indent: number,
   firstToken: YamlToken | undefined,
@@ -271,7 +277,7 @@ const contentLine = (
   const indent = leadingSpaces(line.text, prefixWidth);
   const probeOffset = line.offset + prefixWidth + indent;
   const firstChar = line.text[prefixWidth + indent];
-  if (firstChar === undefined || isLeaderOfCommentDirectiveOrParserRejectedTabLine(firstChar)) return undefined;
+  if (firstChar === undefined || isCommentDirectiveOrTabLeader(firstChar)) return undefined;
   if (isNonStructuralLine(ctx, scan, flowDepths, line, probeOffset)) return undefined;
   const firstToken = coveringToken(ctx.tokens, probeOffset);
   if (isDocumentMarker(firstToken)) {
@@ -279,9 +285,8 @@ const contentLine = (
     return undefined;
   }
   const continuationKeyColumn = takeContinuationKeyColumn(scan, indent);
-  const lineScan = scanLineTokensSoQuotedHashIsNotComment(scan, line, indent, prefixWidth);
-  if (isDeeperFragmentOfMultiTokenExplicitPlainKey(continuationKeyColumn, indent, firstToken, lineScan))
-    return undefined;
+  const lineScan = scanLineTokens(scan, line, indent, prefixWidth);
+  if (isDeeperExplicitKeyFragment(continuationKeyColumn, indent, firstToken, lineScan)) return undefined;
   const { indents, opensKey, propertiesOnly } = lineScan;
   return { line, indent, firstChar, indents, opensKey, prefixWidth, propertiesOnly };
 };
@@ -361,9 +366,9 @@ const isKeyThenSeqEntry: {
   (prev: ContentLine, curr: ContentLine, unit: number): (ctx: LintContext) => boolean;
 } = dual(4, (ctx: LintContext, prev: ContentLine, curr: ContentLine, unit: number): boolean => {
   if (curr.firstChar !== "-") return false;
-  const lexedAsBlockSeqEntryNotDashLeadingPlainScalar =
+  const lexedAsSeqEntryNotDashScalar =
     coveringToken(ctx.tokens, curr.line.offset + curr.prefixWidth + curr.indent)?.kind === "block-seq-entry";
-  if (!lexedAsBlockSeqEntryNotDashLeadingPlainScalar) return false;
+  if (!lexedAsSeqEntryNotDashScalar) return false;
   if (!prev.opensKey) return false;
   const keyIndent = A.getUnsafe(prev.indents, prev.indents.length - 1);
   return curr.indent === keyIndent || curr.indent === keyIndent + unit;

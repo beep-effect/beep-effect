@@ -75,13 +75,10 @@ const contentBreakDecidedByScalarOrUndefined = (
     ctx.lines,
     (line) => line.offset > scalar.offset && line.offset < scalar.offset + scalar.length && !isBlankText(line.text)
   );
-  if (O.isNone(firstContent)) {
-    const blankScalarGainsBreakOnlyAfterEarlierCompletedLine = A.some(
-      ctx.lines,
-      (line) => line.offset > scalar.offset && line.offset < lastLine.offset
-    );
-    return blankScalarGainsBreakOnlyAfterEarlierCompletedLine;
-  }
+  // A wholly blank scalar gains a break only when an earlier body
+  // line was completed; its lone unfinished line already clips to one.
+  if (O.isNone(firstContent))
+    return A.some(ctx.lines, (line) => line.offset > scalar.offset && line.offset < lastLine.offset);
   const firstValueContent = A.findFirst(Str.split(String(scalar.value), "\n"), (line) => !isBlankText(line));
   if (O.isNone(firstValueContent)) return undefined;
   const sourceSpaces = leadingSpaceCount(firstContent.value.text);

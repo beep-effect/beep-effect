@@ -53,7 +53,7 @@ const TRIVIA = HashSet.fromIterable(["newline", "whitespace", "comment", "byte-o
 const lastNonTriviaToken = (ctx: LintContext): YamlToken | undefined =>
   O.getOrUndefined(A.findLast(ctx.tokens, (t) => !HashSet.has(TRIVIA, t.kind)));
 
-const endOfStreamPositionSharedByDiagnosticAndVote = (
+const endOfStreamPosition = (
   ctx: LintContext
 ): { readonly offset: number; readonly length: number; readonly line: number; readonly character: number } => {
   const lastLine = O.getOrUndefined(A.last(ctx.lines));
@@ -74,7 +74,7 @@ const missingEndMarker = (ctx: LintContext, tail: YamlToken | undefined): Readon
       rule: "document-end",
       severity: "error",
       message: 'Missing "..." document end marker',
-      ...endOfStreamPositionSharedByDiagnosticAndVote(ctx),
+      ...endOfStreamPosition(ctx),
       fix: YamlEdit.make({
         offset: ctx.text.length,
         length: 0,
@@ -92,19 +92,18 @@ const finalDocumentStart = (ctx: LintContext, tail: YamlToken): number => {
     A.findLast(ctx.tokens, (token) => token.offset < tail.offset && isDocumentMarker(token))
   );
   if (boundary === undefined) return 0;
-  const endMarkerClosesItsDocumentWhileStartMarkerOpensTheFinalOne = boundary.kind === "document-end";
-  return boundary.offset + (endMarkerClosesItsDocumentWhileStartMarkerOpensTheFinalOne ? boundary.length : 0);
+  const endMarkerClosesPriorDocument = boundary.kind === "document-end";
+  return boundary.offset + (endMarkerClosesPriorDocument ? boundary.length : 0);
 };
 
 const isRemovableEndMarker = (ctx: LintContext, tail: YamlToken): boolean => {
   const lineText = ctx.lines[tail.line]?.text ?? "";
-  const finalDocumentSinceCtxDocumentIsTheFirst = composeFirstDocument(
+  // Compose only the final document: ctx.document is the first one.
+  const finalDocument = composeFirstDocument(
     Str.slice(finalDocumentStart(ctx, tail))(ctx.text),
     ParseOptionsInput.make({ uniqueKeys: false })
   );
-  const preservesDocument =
-    finalDocumentSinceCtxDocumentIsTheFirst.contents !== null ||
-    finalDocumentSinceCtxDocumentIsTheFirst.hasDocumentStart === true;
+  const preservesDocument = finalDocument.contents !== null || finalDocument.hasDocumentStart === true;
   return preservesDocument && Str.trim(lineText) === "...";
 };
 
@@ -174,8 +173,6 @@ export const documentEnd = YamlRule.make({
         }),
       ];
     }
-    return [
-      StyleVote.make({ dimension: "present", value: false, ...endOfStreamPositionSharedByDiagnosticAndVote(ctx) }),
-    ];
+    return [StyleVote.make({ dimension: "present", value: false, ...endOfStreamPosition(ctx) })];
   },
 });

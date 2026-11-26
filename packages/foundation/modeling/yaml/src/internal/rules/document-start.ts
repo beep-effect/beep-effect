@@ -148,8 +148,8 @@ export const documentStart = YamlRule.make({
     if (O.isNone(head)) return [];
     const first = head.value;
     const headed = first.kind === "document-start";
-    const unmarkedDirectiveStreamIsMalformedNotStyleEvidence = !headed && hasDirectivesThatRequireStartMarker(ctx);
-    if (unmarkedDirectiveStreamIsMalformedNotStyleEvidence) return [];
+    const malformedUnmarkedDirectiveStream = !headed && hasDirectivesThatRequireStartMarker(ctx);
+    if (malformedUnmarkedDirectiveStream) return [];
     return [
       StyleVote.make(
         headed

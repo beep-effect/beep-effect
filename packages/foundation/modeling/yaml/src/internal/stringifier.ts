@@ -198,10 +198,10 @@ const NAN_RE = /^\.(?:nan|NaN|NAN)$/;
 const INDICATOR_CHARS = ":#{}[],&*?|-<>=!%@`\"'";
 
 function wouldCoreSchemaResolveAsNonString(s: string): boolean {
-  return matchesAny(CORE_SCHEMA_IMPLICIT_RESOLVERS_IN_TEST_ORDER, s);
+  return matchesAny(CORE_SCHEMA_RESOLVERS, s);
 }
 
-const CORE_SCHEMA_IMPLICIT_RESOLVERS_IN_TEST_ORDER: ReadonlyArray<RegExp> = [
+const CORE_SCHEMA_RESOLVERS: ReadonlyArray<RegExp> = [
   NULL_RE,
   TRUE_RE,
   FALSE_RE,
@@ -265,7 +265,7 @@ const YAML_11_RES: ReadonlyArray<RegExp> = [
   TIMESTAMP_11_RE,
 ];
 
-const C_FLOW_INDICATOR_UNSAFE_IN_FLOW_PLAIN_SECTION_7_3_3 = /[,[\]{}]/;
+const C_FLOW_INDICATOR_SECTION_7_3_3 = /[,[\]{}]/;
 
 const requiresQuoting: {
   (ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): (s: string) => boolean;
@@ -274,7 +274,7 @@ const requiresQuoting: {
   (args) => P.isString(args[0]),
   (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): boolean =>
     s === "" ||
-    (inFlow === true && C_FLOW_INDICATOR_UNSAFE_IN_FLOW_PLAIN_SECTION_7_3_3.test(s)) ||
+    (inFlow === true && C_FLOW_INDICATOR_SECTION_7_3_3.test(s)) ||
     wouldBeCoerced(s, ignoreType === true, quoteCompat) ||
     hasUnsafeLeadingIndicator(s) ||
     hasAmbiguousPlainSyntax(s) ||
@@ -309,11 +309,12 @@ function hasAmbiguousPlainSyntax(s: string): boolean {
 }
 
 // decision: quote-fallback-defaults
-const c0ExceptLfSoTabAndNormalisedCrAreQuoted = /[\x00-\x09\x0b-\x1f]/;
+// A plain scalar cannot carry CR: the parser normalises it away (silent data corruption on round-trip).
+const c0ExceptLf = /[\x00-\x09\x0b-\x1f]/;
 const c0ExceptLfAndTab = /[\x00-\x08\x0b-\x1f]/;
 
 function hasUnplainableChar(s: string, plainTab: boolean): boolean {
-  const unsafe = plainTab ? c0ExceptLfAndTab : c0ExceptLfSoTabAndNormalisedCrAreQuoted;
+  const unsafe = plainTab ? c0ExceptLfAndTab : c0ExceptLf;
   for (let i = 0; i < s.length; i++) {
     const ch = Str.slice(i, i + 1)(s);
     if (unsafe.test(ch)) return true;
@@ -357,12 +358,12 @@ export function renderDoubleQuoted(s: string, ...[canonical = false]: [canonical
     Str.replace(/\r/g, "\\r"),
     Str.replace(/\t/g, "\\t")
   );
-  return `"${replaceWith(canonical ? CANONICAL_ESCAPED_CODE_POINT_SURROGATE_PAIR_AWARE : C0_NOT_ALREADY_ESCAPED_BY_NAME, escapeDoubleQuotedChar)(escaped)}"`;
+  return `"${replaceWith(canonical ? CANONICAL_ESCAPED_CODE_POINT : C0_NOT_ALREADY_ESCAPED_BY_NAME, escapeDoubleQuotedChar)(escaped)}"`;
 }
 
 const C0_NOT_ALREADY_ESCAPED_BY_NAME = /[\x00-\x08\x0b\x0c\x0e-\x1f]/g;
 
-const CANONICAL_ESCAPED_CODE_POINT_SURROGATE_PAIR_AWARE = /[\x00-\x08\x0b\x0c\x0e-\x1f]|[^\x00-\x7e]/gu;
+const CANONICAL_ESCAPED_CODE_POINT = /[\x00-\x08\x0b\x0c\x0e-\x1f]|[^\x00-\x7e]/gu;
 
 const YAML_1_2_NAMED_C0_ESCAPES_BY_CODE: Readonly<Record<number, string>> = {
   0: "\\0",
@@ -583,8 +584,8 @@ const isBlockStyle = (style: ScalarStyle): boolean => style === "block-literal" 
 const crOrC0EscapedUnderEveryStyle = /[\x00-\x08\x0b-\x1f]/;
 
 function mustDoubleQuoteString(s: string, style: ScalarStyle, inFlow: boolean): boolean {
-  const flowJoinsRenderedLinesSoNoNewlineOrBlockHeader = inFlow && (Str.includes("\n")(s) || isBlockStyle(style));
-  if (flowJoinsRenderedLinesSoNoNewlineOrBlockHeader) return true;
+  const newlineOrBlockStyleInFlow = inFlow && (Str.includes("\n")(s) || isBlockStyle(style));
+  if (newlineOrBlockStyleInFlow) return true;
   for (let i = 0; i < s.length; i++) {
     const ch = Str.slice(i, i + 1)(s);
     if (crOrC0EscapedUnderEveryStyle.test(ch)) return true;
@@ -595,8 +596,11 @@ function mustDoubleQuoteString(s: string, style: ScalarStyle, inFlow: boolean): 
 // decision: canonical-mode-libyaml-scalars
 function multilineNeedsDoubleQuote(s: string, style: ScalarStyle, canonical: boolean): boolean {
   const blockStyle = isBlockStyle(style);
-  const spacesAndNewlinesOnlyFitOnlyASourceBlockStyle = /^[\n ]*$/.test(s);
-  if (!blockStyle && spacesAndNewlinesOnlyFitOnlyASourceBlockStyle) return true;
+  // A value of only spaces and newlines (no text/tab content) cannot be
+  // represented faithfully by a block scalar — except when the source style is
+  // already a block style (newline-only is a valid `|+` body).
+  const spacesAndNewlinesOnly = /^[\n ]*$/.test(s);
+  if (!blockStyle && spacesAndNewlinesOnly) return true;
   return canonical && blockStyle && (hasInteriorTrailingWhitespace(s) || hasNewlineSpacesTab(s));
 }
 
@@ -915,15 +919,10 @@ function pushBlockObjectValue(
     return;
   }
   lines.push(`${keyStr}:`);
-  const nonEmptySeqIsCompactUnlessIndentSequences = A.isArray(val) && val.length > 0;
+  const compactSeqValue = A.isArray(val) && val.length > 0;
   for (const vl of valLines) {
-    const blankBodyLineStaysUnpaddedSoNoTrailingWhitespace = vl === "";
-    lines.push(
-      !nonEmptySeqIsCompactUnlessIndentSequences ||
-        (ctx.indentSequences && !blankBodyLineStaysUnpaddedSoNoTrailingWhitespace)
-        ? `${pad}${vl}`
-        : vl
-    );
+    const isBlankBodyLine = vl === "";
+    lines.push(!compactSeqValue || (ctx.indentSequences && !isBlankBodyLine) ? `${pad}${vl}` : vl);
   }
 }
 
@@ -1134,10 +1133,9 @@ const isEmptySourceScalar = (node: YamlScalar): boolean =>
   node.length === 0 && (node.value === null || node.value === undefined || node.value === "");
 
 const rendersAsMetadataOnly = (node: YamlScalar): boolean => {
-  const tagFixesTheEmptyNodesValue = isNonEmptyText(node.tag);
-  const anchorAloneReadsNullSoAnchoredEmptyStringKeepsItsQuotes =
-    isNonEmptyText(node.anchor) && P.isNullish(node.value);
-  return tagFixesTheEmptyNodesValue || anchorAloneReadsNullSoAnchoredEmptyStringKeepsItsQuotes;
+  const tagFixesEmptyValue = isNonEmptyText(node.tag);
+  const anchorAloneReadsNull = isNonEmptyText(node.anchor) && P.isNullish(node.value);
+  return tagFixesEmptyValue || anchorAloneReadsNull;
 };
 
 function scalarMetadataOnly(node: YamlScalar): string {
@@ -1432,7 +1430,7 @@ type FlowEntry = {
   readonly leading: string | undefined;
   readonly trailing: string | undefined;
   readonly spaceBefore: boolean;
-  readonly sourceCommentedUngated: boolean;
+  readonly commented: boolean;
 };
 
 function mapFlowEntry(pair: YamlPair, flowCtx: StringifyContext, depth: number, emitComments: boolean): FlowEntry {
@@ -1444,8 +1442,7 @@ function mapFlowEntry(pair: YamlPair, flowCtx: StringifyContext, depth: number, 
     leading: emitComments ? pairLeading(pair) : undefined,
     trailing: emitComments ? (pair.key.comment ?? pairTrailing(pair)) : undefined,
     spaceBefore: emitComments && pairSpaceBefore(pair) === true,
-    sourceCommentedUngated:
-      pairLeading(pair) !== undefined || pairTrailing(pair) !== undefined || pairSpaceBefore(pair) === true,
+    commented: pairLeading(pair) !== undefined || pairTrailing(pair) !== undefined || pairSpaceBefore(pair) === true,
   };
 }
 
@@ -1454,7 +1451,7 @@ const seqFlowEntry = (item: YamlNode, lines: ReadonlyArray<string>, emitComments
   leading: emitComments ? item.commentBefore : undefined,
   trailing: emitComments ? item.comment : undefined,
   spaceBefore: emitComments && item.spaceBefore === true,
-  sourceCommentedUngated: item.commentBefore !== undefined || item.comment !== undefined || item.spaceBefore === true,
+  commented: item.commentBefore !== undefined || item.comment !== undefined || item.spaceBefore === true,
 });
 
 // decision: comments-on-nodes
@@ -1465,11 +1462,10 @@ function renderFlowCollectionLines(
   open: string,
   close: string
 ): string[] {
-  const oneEntryPerLineSoHashCannotSwallowBracket =
+  const flowHasComments =
     !ctx.forceDefaultStyles &&
-    (A.some(entries, (entry) => entry.sourceCommentedUngated) ||
-      (node.comment !== undefined && node.sourceMultiline === true));
-  if (oneEntryPerLineSoHashCannotSwallowBracket || A.some(entries, (entry) => entry.lines.length > 1)) {
+    (A.some(entries, (entry) => entry.commented) || (node.comment !== undefined && node.sourceMultiline === true));
+  if (flowHasComments || A.some(entries, (entry) => entry.lines.length > 1)) {
     return renderMultilineFlowLines(node, entries, ctx, open, close);
   }
   const inline = A.map(entries, (entry) => A.join(entry.lines, ""));

@@ -58,13 +58,10 @@ export class colonSpacingOptions extends S.Opaque<colonSpacingOptions, { readonl
 
 const readColonLimits = (options: unknown): { readonly maxBefore: number; readonly maxAfter: number } => {
   const opts = P.isObject(options) ? options : {};
-  const maxAfterClampedSoHandBuiltOptionsKeepSeparation = Math.max(
-    1,
-    P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1
-  );
+  const separationSafeMaxAfter = Math.max(1, P.isNumber(opts.maxSpacesAfter) ? opts.maxSpacesAfter : 1);
   return {
     maxBefore: P.isNumber(opts.maxSpacesBefore) ? opts.maxSpacesBefore : 0,
-    maxAfter: maxAfterClampedSoHandBuiltOptionsKeepSeparation,
+    maxAfter: separationSafeMaxAfter,
   };
 };
 

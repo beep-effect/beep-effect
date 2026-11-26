@@ -120,8 +120,8 @@ const allowedForRun = (ctx: LintContext, run: HalfOpenLayoutBlankRun, caps: Blan
 const runFinding = (ctx: LintContext, run: HalfOpenLayoutBlankRun, allowed: number): YamlLintDiagnostic | undefined => {
   const runLength = run.end - run.start;
   if (runLength <= allowed) return undefined;
-  const firstExcessIndexInsideRunSinceAllowedBelowLength = run.start + allowed;
-  const firstExcess = A.getUnsafe(ctx.lines, firstExcessIndexInsideRunSinceAllowedBelowLength);
+  const firstExcessIndex = run.start + allowed;
+  const firstExcess = A.getUnsafe(ctx.lines, firstExcessIndex);
   const nextLine = ctx.lines[run.end];
   const sourceEndThroughLastTerminatorFromNextLine = nextLine !== undefined ? nextLine.offset : ctx.text.length;
   return YamlLintDiagnostic.make({
@@ -177,13 +177,10 @@ export const emptyLines = YamlRule.make({
     return out;
   }),
   infer: (ctx) => {
-    let longestBodyRunIsOnlyAFloorForMax = 0;
+    let longest = 0;
     for (const run of blankRuns(ctx)) {
-      if (isBodyRun(ctx, run))
-        longestBodyRunIsOnlyAFloorForMax = Math.max(longestBodyRunIsOnlyAFloorForMax, run.end - run.start);
+      if (isBodyRun(ctx, run)) longest = Math.max(longest, run.end - run.start);
     }
-    return longestBodyRunIsOnlyAFloorForMax > 0
-      ? [StyleFloor.make({ dimension: "max", value: longestBodyRunIsOnlyAFloorForMax })]
-      : [];
+    return longest > 0 ? [StyleFloor.make({ dimension: "max", value: longest })] : [];
   },
 });
