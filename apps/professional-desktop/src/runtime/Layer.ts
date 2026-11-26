@@ -266,16 +266,7 @@ const ContradictionRequestContextLive = Layer.merge(
   )
 );
 
-/**
- * Resolve the Box driver auth layer for the live vault-sync engine. Prefers
- * Client Credentials Grant (`DMS_BOX_CLIENT_ID` + `DMS_BOX_CLIENT_SECRET`
- * plus a `DMS_BOX_ENTERPRISE_ID` or `DMS_BOX_USER_ID` subject): the SDK
- * refreshes CCG tokens itself, so a long-lived sidecar does not decay into
- * 401s the way the static ~60-minute `CLOUD_BOX_TOKEN` developer token does.
- * Falls back to the developer token, and `none` selects the app-local
- * disconnected mirror layers. Only the selected auth mode is logged — never
- * secret values.
- */
+// decision: box-auth-prefers-self-refreshing-ccg
 const boxAuthLayer = Effect.gen(function* () {
   const ccg = yield* Config.option(
     Config.all({
@@ -294,8 +285,6 @@ const boxAuthLayer = Effect.gen(function* () {
           "box.auth.subject": O.isSome(candidate.enterpriseId) ? "enterprise" : "user",
         })
       );
-      // makeCcgLayer is Layer.succeed under the hood; its declared BoxError
-      // channel never fires, so orDie only aligns the layer types.
       return O.some(Box.makeCcgLayer(BoxCcgConfig.make(candidate)).pipe(Layer.orDie));
     }
     yield* Effect.logWarning(
@@ -312,13 +301,11 @@ const boxAuthLayer = Effect.gen(function* () {
   return O.none<Layer.Layer<Box>>();
 });
 
-// The sidecar hosts one local organization; it owns every workspace's sync destination.
 const VaultSyncHostingLive = Layer.mergeAll(
   Layer.succeed(VaultSyncOwnership, {
     orgOf: Effect.fn("DesktopVaultSync.orgOf")(() => Effect.succeed(desktopOrganizationId)),
   }),
   VaultSyncMirrorRootLayer,
-  // A pass reads the vault root from the authorized workspace configuration every time it needs it.
   Layer.effect(
     VaultSyncWorkspaceRoots,
     Effect.gen(function* () {
@@ -366,8 +353,6 @@ const VaultSyncModelLive = selectByChatAgent(
         ),
       onSome: (boxDriver) =>
         DocumentsVaultSyncLive.pipe(
-          // The availability probe resolves the mirror root itself, so it needs
-          // the Box driver and mirror config just like the mirror layer.
           Layer.provideMerge(
             Layer.mergeAll(DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer)))
           ),
@@ -377,7 +362,6 @@ const VaultSyncModelLive = selectByChatAgent(
   })
 );
 
-// The desktop's signed-in owner and its workspace destination, seeded once and idempotently.
 const VaultSyncBootstrap = Layer.effectDiscard(
   Effect.gen(function* () {
     yield* ensureVaultSyncOwnerMembership(desktopReviewer.userId, desktopOrganizationId);
@@ -421,8 +405,6 @@ const VaultSyncMaintenanceRpcs = VaultSyncRpcs.toLayer(
   )
 );
 
-// The four desktop RPCs, served through the vault-sync Api with the legacy wire unchanged.
-// A refused admission leaves the store with no writer; the panel then reports maintenance.
 const vaultSyncRpcsOver = <E, R>(host: Layer.Layer<Layer.Success<typeof VaultSyncDesktopHostLive>, E, R>) =>
   VaultSyncRpcsApiLive.pipe(
     Layer.provide(
@@ -442,17 +424,15 @@ const vaultSyncRpcsOver = <E, R>(host: Layer.Layer<Layer.Success<typeof VaultSyn
     )
   );
 
-// The fixture runtime has no shared database, so vault sync gets a migrated in-memory PGlite of its own.
-const SyncDatabaseInMemory = makeDrizzleLayer().pipe(
+const SharedSyncDatabaseInMemory = makeDrizzleLayer().pipe(
   Layer.tap((context) => Effect.provide(migrateOnBoot, context)),
   Layer.provideMerge(makeBundledPgliteLayer()),
   Layer.orDie
 );
 
 const VaultSyncRpcsLive = vaultSyncRpcsOver(VaultSyncDesktopHostLive);
-const VaultSyncTestHost = DocumentsVaultSyncFixtureLive.pipe(hostOver, Layer.provideMerge(SyncDatabaseInMemory));
-// The same layer value is memoized, so the handlers and the host share one in-memory store.
-const VaultSyncRpcsTest = vaultSyncRpcsOver(VaultSyncTestHost).pipe(Layer.provide(SyncDatabaseInMemory));
+const VaultSyncTestHost = DocumentsVaultSyncFixtureLive.pipe(hostOver, Layer.provideMerge(SharedSyncDatabaseInMemory));
+const VaultSyncRpcsTest = vaultSyncRpcsOver(VaultSyncTestHost).pipe(Layer.provide(SharedSyncDatabaseInMemory));
 
 const DesktopHandlersLive = Layer.mergeAll(DesktopHandlersBase, EpistemicServerDesktopLive, VaultSyncRpcsLive);
 const DesktopHandlersTest = Layer.mergeAll(DesktopHandlersBase, EpistemicServerRpcLive, VaultSyncRpcsTest);
@@ -480,10 +460,6 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     ContradictionRequestContextLive,
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
-    // The workbench pre-fills a starter document path; seeding materializes it
-    // so a fresh workspace opens something instead of failing on Open. Keep the
-    // server services available to the handlers while also providing them to
-    // the seed's scoped startup effect.
     Layer.merge(OntologyServerLive, OntologyWorkspaceSeedLive.pipe(Layer.provide(OntologyServerLive))),
   ]),
   Layer.provide(PgliteDrizzleLive),

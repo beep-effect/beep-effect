@@ -59,22 +59,22 @@ const encodeAppResult = S.encodeResult(appCodec);
 const scriptsArbitrary = Arbitrary.schema(ScriptsRecord);
 
 const presenceRows: ReadonlyArray<readonly [string, string]> = [
-  ["build", "required required required required required required optional"],
-  ["check", "required required required required required required optional"],
-  ["lint", "required required required required required required optional"],
-  ["test", "required required required required required required optional"],
-  ["lint:fix", "required required optional required required required optional"],
-  ["test:property", "optional optional absent optional absent absent optional"],
-  ["test:integration", "optional absent required optional absent absent optional"],
-  ["test:integration:parallel", "optional absent optional optional absent absent optional"],
-  ["coverage", "required required required optional required required optional"],
-  ["docgen", "required required required optional absent required optional"],
-  ["package-test-typecheck", "required required required required required required optional"],
-  ["codegen", "derived derived derived derived derived derived optional"],
-  ["lint:deprecated-apis", "required required required required required required absent"],
-  ["lint:jsdoc", "required required required required absent required absent"],
-  ["lint:laws", "required required required required required required absent"],
-  ["doctest", "derived derived derived derived derived absent absent"],
+  ["build", "required required required required required optional"],
+  ["check", "required required required required required optional"],
+  ["lint", "required required required required required optional"],
+  ["test", "required required required required required optional"],
+  ["lint:fix", "required required optional required required optional"],
+  ["test:property", "optional optional absent optional absent optional"],
+  ["test:integration", "optional absent required optional absent optional"],
+  ["test:integration:parallel", "optional absent optional optional absent optional"],
+  ["coverage", "required required required optional required optional"],
+  ["docgen", "required required required optional absent optional"],
+  ["package-test-typecheck", "required required required required required optional"],
+  ["codegen", "derived derived derived derived derived optional"],
+  ["lint:deprecated-apis", "required required required required required absent"],
+  ["lint:jsdoc", "required required required required absent absent"],
+  ["lint:laws", "required required required required required absent"],
+  ["doctest", "derived derived derived derived derived absent"],
 ];
 
 describe("canonical package scripts schemas", () => {
@@ -102,11 +102,10 @@ describe("canonical package scripts schemas", () => {
     expect(HashMap.has(scripts, "beep:build")).toBe(false);
     expect(HashMap.size(scripts)).toBe(2);
   });
-  it("makes every generated check the check gate except infra's build-mode check", () => {
+  it("makes every generated check the check gate", () => {
     expect(scaffoldPackageScripts("library", []).check).toBe(PACKAGE_CHECK_GATE_COMMAND);
     expect(scaffoldPackageScripts("app", []).check).toBe("beep-cli gate run check");
     expect(PACKAGE_CHECK_GATE_SCRIPT).toBe("beep:check");
-    expect(scaffoldPackageScripts("infra", []).check).toBe("bun run beep:check");
     expect(
       renderTaskScriptBinding(TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }))
     ).toBe("bun run --if-present beep:build");
@@ -129,9 +128,9 @@ describe("canonical package scripts schemas", () => {
         A.filter(builds, (row) => row.value === DECLARATION_ONLY_BUILD_COMMAND),
         (row) => row.kind
       )
-    ).toEqual(["library", "tool", "ecosystem", "infra"]);
+    ).toEqual(["library", "tool", "ecosystem"]);
     expect(A.some(builds, (row) => pipe(row.value, Str.includes("babel")))).toBe(false);
-    for (const kind of ["library", "tool", "ecosystem", "infra"] as const) {
+    for (const kind of ["library", "tool", "ecosystem"] as const) {
       const scripts = scaffoldPackageScripts(kind, []);
       expect(scripts["beep:build"]).toBe(DECLARATION_ONLY_BUILD_COMMAND);
       expect(scripts).not.toHaveProperty("babel");
@@ -139,7 +138,7 @@ describe("canonical package scripts schemas", () => {
   });
   it("retires the Babel build, the JavaScript build and the babel script for every managed kind", () => {
     expect(RetiredScriptName.literals).toEqual(["babel"]);
-    expect(retiredImplScripts).toHaveLength(18);
+    expect(retiredImplScripts).toHaveLength(15);
     expect(A.some(retiredImplScripts, (row) => row.kind === "exempt")).toBe(false);
     expect(A.some(retiredImplScripts, (row) => pipe(row.replacement, Str.includes("babel")))).toBe(false);
     expect(A.dedupe(A.map(retiredImplScripts, (row) => row.value))).toEqual([
@@ -200,7 +199,7 @@ describe("canonical package scripts schemas", () => {
         checkLeadsWithBuild
       )
     ).toEqual([true, true, true, false, false, false]);
-    for (const kind of ["library", "tool", "ecosystem", "infra"] as const)
+    for (const kind of ["library", "tool", "ecosystem"] as const)
       expect(scaffoldPackageScripts(kind, [])["beep:check"], kind).toBe(served);
     for (const kind of ["app", "lab"] as const)
       expect(scaffoldPackageScripts(kind, [])["beep:check"], kind).toBe(OWN_SOURCE_CHECK_COMMAND);
@@ -252,7 +251,7 @@ describe("canonical package scripts schemas", () => {
   it.effect(
     "decodes every rule row and matches the ratified presence matrix literally",
     Effect.fnUntraced(function* () {
-      expect(taskScriptRules).toHaveLength(112);
+      expect(taskScriptRules).toHaveLength(96);
       yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule), { concurrency: 1 });
       for (const [name, expected] of presenceRows) {
         const actual = A.map(PackageKind.literals, (kind) =>
@@ -266,7 +265,7 @@ describe("canonical package scripts schemas", () => {
         ).toBe(expected);
       }
       expect(TaskScriptName.literals).toHaveLength(16);
-      expect(implScriptDefaults).toHaveLength(50);
+      expect(implScriptDefaults).toHaveLength(41);
     })
   );
   it.effect(

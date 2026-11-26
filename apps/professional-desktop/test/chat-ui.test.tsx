@@ -277,6 +277,16 @@ describe("ChatApp", { concurrent: false }, () => {
     unmount();
   });
 
+  it("never gives the thread list a horizontal scrollbar", () => {
+    const { getByTestId, unmount } = renderShell(Effect.never);
+
+    expect(
+      getByTestId("sidebar-list").className,
+      "overflow-y-auto alone computes overflow-x to auto, so an overflowing title adds a sideways scrollbar"
+    ).toContain("overflow-x-hidden");
+    unmount();
+  });
+
   it.effect(
     "names the failed thread load instead of pretending the workspace is empty",
     Effect.fnUntraced(function* () {

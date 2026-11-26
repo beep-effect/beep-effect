@@ -25,6 +25,11 @@ it.layer(TauriIpcSocketLive, { concurrent: false, timeout: socketLayerTimeout })
       const { write } = yield* socket.writer;
 
       yield* write(new Socket.CloseEvent());
+
+      expect(
+        invoke,
+        "the Rust shell closes the sidecar's stdin by killing the child, so a close is never sent in-band"
+      ).not.toHaveBeenCalledWith("sidecar_send", expect.anything());
     })
   );
 

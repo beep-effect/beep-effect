@@ -1,23 +1,10 @@
+import { StyleEvidence, YamlLint, YamlLintConfig, YamlLintDiagnostic, YamlRule } from "@beep/yaml";
+import { assert, describe, it } from "@effect/vitest";
+import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-
-// The shared per-rule fixture harness (#129): one harness, N rule fixture
-// sets, each fixture a triple — input → expected diagnostics → expected
-// fixed output where a fix exists. Uniform structure is the point: a
-// per-rule bespoke test file is how a rule set drifts into thirteen
-// dialects of "tested".
-//
-// The harness also carries the MUTATION PROOFS: for every rule it runs the
-// dead-rule mutant (no diagnostics) and — where fixes are expected — the
-// unfixing mutant (diagnostics without their fixes), and asserts each
-// mutant fails the fixture set. A rule whose fixtures cannot fail is not
-// tested.
-
-import { StyleEvidence, YamlLint, YamlLintConfig, YamlLintDiagnostic, YamlRule } from "@beep/yaml";
-import { assert, describe, it } from "@effect/vitest";
-import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Result from "effect/Result";
 import type { YamlLintRuleSetting, YamlStyleConflictError } from "@beep/yaml";
 import type { LintContext } from "@beep/yaml/YamlLintRule";
@@ -79,8 +66,6 @@ export const testRule: {
   describe(`rule ${rule.id}`, () => {
     for (const fixture of fixtures) {
       it(fixture.name, () => {
-        // Parse-clean guard: expectations against a rejected document
-        // assert nothing.
         const parseErrors = A.filter(
           YamlLint.run(
             fixture.input,
@@ -95,7 +80,7 @@ export const testRule: {
           assert.strictEqual(
             parseErrors.length,
             0,
-            `fixture input must parse cleanly (or declare expectsParseErrors): ${A.join(
+            `fixture input must parse cleanly (or declare expectsParseErrors), since an expectation against a rejected document asserts nothing: ${A.join(
               A.map(parseErrors, (d) => `${d.line}:${d.character} ${d.message}`),
               " | "
             )}`
@@ -126,9 +111,12 @@ export const testRule: {
           if (expected.messageIncludes !== undefined) {
             assert.include(actual.message, expected.messageIncludes, `diagnostic ${i} message`);
           }
-          // Every reported span must be inside the document.
-          assert.isAtLeast(actual.offset, 0);
-          assert.isAtMost(actual.offset + actual.length, fixture.input.length);
+          assert.isAtLeast(actual.offset, 0, `diagnostic ${i} span must start inside the document`);
+          assert.isAtMost(
+            actual.offset + actual.length,
+            fixture.input.length,
+            `diagnostic ${i} span must end inside the document`
+          );
         });
         if (fixture.fixed !== undefined) {
           const result = YamlLint.fix(fixture.input, [rule], configFor(rule, fixture.setting));
@@ -176,8 +164,6 @@ export const testRule: {
   });
 });
 
-// ── Inference harness (#345) ────────────────────────────────────────────────
-
 /** Expected strict-resolution outcome for one rule over an EMPTY base config. */
 export type InferenceExpectation =
   | { readonly kind: "options"; readonly options: Record<string, unknown> }
@@ -219,11 +205,9 @@ const assertFloors = (rule: YamlRule, evidence: StyleEvidence, floors: Record<st
   }
 };
 
-// Every named spelling carries a real occurrence: a count and
-// a position inside one of the observed inputs.
 const assertRealOccurrence = (inputs: ReadonlyArray<string>, candidate: StyleConflictCandidate): void => {
-  assert.isAtLeast(candidate.count, 1);
-  assert.isAtLeast(candidate.offset, 0);
+  assert.isAtLeast(candidate.count, 1, "every named spelling carries a real occurrence count");
+  assert.isAtLeast(candidate.offset, 0, "every named spelling carries a real occurrence position");
   assert.isTrue(
     A.some(inputs, (input) => candidate.offset <= input.length),
     "candidate position must fall inside an observed input"
@@ -261,17 +245,22 @@ const assertStrictResolved = (rule: YamlRule, expectation: InferenceExpectation,
   }
 };
 
-// Lenient: an explicit expected pick, else it must agree with the
-// strict outcome (unanimity implies the dominant IS the unanimous).
 const assertLenient = (rule: YamlRule, fixture: InferenceFixture, evidence: StyleEvidence): void => {
   const lenient = YamlLint.resolveLenient(evidence, emptyBase);
   const expectation = fixture.strict;
   if (fixture.lenient !== undefined) {
-    assert.deepStrictEqual(lenient.rules[rule.id], fixture.lenient);
+    assert.deepStrictEqual(lenient.rules[rule.id], fixture.lenient, "the fixture's explicit lenient pick");
   } else if (expectation.kind === "options") {
-    assert.deepStrictEqual(lenient.rules[rule.id], expectation.options);
+    assert.deepStrictEqual(
+      lenient.rules[rule.id],
+      expectation.options,
+      "lenient must agree with the strict outcome: unanimity implies the dominant IS the unanimous"
+    );
   } else if (expectation.kind === "none") {
-    assert.isUndefined(lenient.rules[rule.id]);
+    assert.isUndefined(
+      lenient.rules[rule.id],
+      "lenient must agree with the strict outcome: unanimity implies the dominant IS the unanimous"
+    );
   }
 };
 

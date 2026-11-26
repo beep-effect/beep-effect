@@ -2,9 +2,12 @@
 
 The repository's Turborepo remote cache: a Cloudflare Worker serving the
 `/v8/artifacts` protocol over an R2 bucket, deployed by the Alchemy stack
-`TurboCache` (`alchemy.run.ts`). It replaces the AWS Lambda cache
-(`infra/src/CiTurboCache.ts`) and the R2 pilot (`infra/r2-cache`) as the
-repo's only cache (goals/infra-alchemy-rebuild, D7). Deploying, issuing and
+`TurboCache` (`alchemy.run.ts`). It replaces the AWS Lambda cache (the
+retired Pulumi `CiTurboCache`) and the R2 pilot as the repo's only cache
+(goals/infra-alchemy-rebuild, D7). The pilot's scripts moved here from
+`infra/r2-cache` and live in `r2-pilot/` until its paused goals
+(turborepo-cache-trust-observability, turborepo-quality-cache-adoption)
+decide its future; the dispatch-only producer jobs and `beep cache r2` read them. Deploying, issuing and
 rotating tokens, and enrolling a client: `docs/runbooks/alchemy-infra.md`,
 section "Turbo cache".
 
@@ -47,7 +50,7 @@ so the token class it checks is the whole write boundary.
 
 ## Cache-input baseline review
 
-Carried from `infra/r2-cache/cache-input-review.md` (D7), unchanged in
+Carried from `r2-pilot/cache-input-review.md` (D7), unchanged in
 substance. Reviewed subject: `//#lint:effect-imports`.
 
 The Effect import source scanner already excludes `**/dist` and everything below

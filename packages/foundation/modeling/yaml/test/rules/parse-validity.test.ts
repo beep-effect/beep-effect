@@ -1,6 +1,3 @@
-// parse-validity (#129): the always-on bridge from engine diagnostics to
-// lint findings — the rule that makes malformed documents lintable.
-
 import { YamlLint, YamlLintConfig } from "@beep/yaml";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";

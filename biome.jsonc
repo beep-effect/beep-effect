@@ -49,7 +49,6 @@
       "!**/__snapshots__",
       "!./package.json",
       "!**/vendor",
-      "!infra/ci-runners/sdks",
       "!**/certificates",
       "!**/generated",
       "!**/node_modules",
@@ -388,7 +387,7 @@
       // no-bigint-literals: scope to source roots only. The repo uses bigint literals
       // legitimately as test/`LiteralKit` data (P0 counted 446 hits, ~423 in tests);
       // enforcing in `**/src/**` keeps the advisory signal on real source (~23).
-      "includes": ["**/src/**", "infra/**"],
+      "includes": ["**/src/**"],
       "plugins": [
         "./packages/tooling/policy-pack/lint-rules/rules/no-bigint-literals.grit"
       ]

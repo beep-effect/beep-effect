@@ -344,8 +344,8 @@ runs:
         R2_CACHE_MODE: ${{ github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r' }}
         TURBO_TEAM: ${{ inputs.turbo-team }}
       run: |
-        if [[ -x infra/r2-cache/adapter.sh ]]; then
-          infra/r2-cache/adapter.sh start-ci
+        if [[ -x packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh ]]; then
+          packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh start-ci
         else
           echo 'R2 helper absent in this checkout; retaining the existing cache posture.'
         fi

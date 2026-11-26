@@ -226,7 +226,7 @@ describe("thin lint workers", { concurrent: false }, () => {
     const partitionFiles = {
       "foundation-tooling": ["packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts"],
       "drivers-apps": ["packages/drivers/acp/src/AcpAgent.service.ts"],
-      remainder: ["infra/src/CiFleetController.ts"],
+      remainder: ["packages/law-practice/server/src/index.ts"],
     };
     const inventoryPartition = (args: ReadonlyArray<string>) =>
       A.contains(args, "--ignore-pattern")
@@ -274,9 +274,9 @@ describe("thin lint workers", { concurrent: false }, () => {
           "drivers-apps",
           "remainder",
         ]);
-        expect(
-          A.some(ownershipProofCalls(), ([call]) => Str.endsWith(" apps packages infra")(A.join(call.args, " ")))
-        ).toBe(true);
+        expect(A.some(ownershipProofCalls(), ([call]) => Str.endsWith(" apps packages")(A.join(call.args, " ")))).toBe(
+          true
+        );
       })
     );
     it.effect(
@@ -296,7 +296,9 @@ describe("thin lint workers", { concurrent: false }, () => {
       [
         "overlapping partitions",
         {
-          partitions: { remainder: ["infra/src/CiFleetController.ts", "packages/drivers/acp/src/AcpAgent.service.ts"] },
+          partitions: {
+            remainder: ["packages/law-practice/server/src/index.ts", "packages/drivers/acp/src/AcpAgent.service.ts"],
+          },
         },
         "partitions overlap",
       ],
@@ -677,7 +679,6 @@ describe("thin lint workers", { concurrent: false }, () => {
               ["packages/foundation", "packages/tooling"],
               ["packages/drivers", "apps"],
               [
-                "infra",
                 "packages",
                 "--ignore-pattern",
                 "packages/foundation/**",
@@ -837,7 +838,7 @@ describe("thin lint workers", { concurrent: false }, () => {
           workspaces: ["packages/*", "apps/*"],
         });
         yield* fs.writeFileString(argument, jsonStringifyPretty1);
-        for (const dir of ["packages/member", "packages/unowned", "apps/labs/orphan", "infra"]) {
+        for (const dir of ["packages/member", "packages/unowned", "apps/labs/orphan"]) {
           yield* fs.makeDirectory(`${fixtureRoot}/${dir}`, { recursive: true });
           yield* fs.writeFileString(`${fixtureRoot}/${dir}/example.ts`, "export {};\n");
         }
@@ -852,7 +853,6 @@ describe("thin lint workers", { concurrent: false }, () => {
               `${fixtureRoot}/.oxlintrc.docs.json`,
               "--max-warnings=0",
               "--no-error-on-unmatched-pattern",
-              "infra/example.ts",
               "packages/unowned/example.ts",
             ],
             cwd: fixtureRoot,
@@ -860,7 +860,6 @@ describe("thin lint workers", { concurrent: false }, () => {
             stdio: "inherit",
           });
           execution.mockClear();
-          yield* fs.remove(`${fixtureRoot}/infra/example.ts`);
           yield* fs.remove(`${fixtureRoot}/packages/unowned/example.ts`);
           yield* run(["jsdoc", "--root-only"]);
           expect(execution).not.toHaveBeenCalled();

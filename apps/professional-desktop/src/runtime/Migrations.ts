@@ -24,7 +24,6 @@ import type * as Digest from "effect/crypto/Digest";
 
 const $I = $ProfessionalDesktopId.create("runtime/Migrations");
 
-// Default schema for the Professional Desktop Drizzle migration journal.
 const migrationsSchema = "drizzle" as const;
 const legacyPreBaselineNames = A.make(
   "20260512000000_architecture_lab_work_item",

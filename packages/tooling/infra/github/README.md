@@ -42,7 +42,7 @@ Design order is schema, typed configuration, then resources.
 | All 26 labels | owned, adopted by name | `GitHub.Label` observes by name and updates |
 | Every secret (11 repository, 10 environment) | unmanaged | see "Secrets" |
 | Environment secret `INFRA_GITHUB_APP_PRIVATE_KEY` on `infra-github-prod` | operator-set, not managed by the stack | the deploy identity; only the token-mint step reads it (ruling 2026-11-14) |
-| Three repository webhooks (`workflow_job`): 663255260 and 711445970 (the Pulumi heavy and overflow controllers), 714397446 (the new fleet's function URL) | unmanaged | runner fleets; the ci-runners stack (P5) owns their secret. Cutover step 6b deletes the two Pulumi hooks; 714397446 stays as the fleet's only delivery path |
+| Repository webhook 714397446 (`workflow_job`, the CiRunners fleet's function URL) | unmanaged | the ci-runners stack owns its secret. Cutover step 6b (2026-11-26) deleted the Pulumi controllers' hooks 663255260 and 711445970; 714397446 is the fleet's only delivery path |
 | Actions permissions | unmanaged | no `@alchemy.run/github` resource (verified gap) |
 
 Every resource is retained on removal (`RemovalPolicy.retain()` over the whole stack): a
@@ -61,8 +61,8 @@ deploy can read its value. On day one the stack manages none:
   `CLOUD_VERCEL_API_TOKEN`) and no record of which one it holds.
 - No known source: `APP_ENV`, `APP_LOG_FORMAT`, `APP_LOG_LEVEL`, `APP_NAME`, `NEXT_PUBLIC_ENV`.
 - Produced by another stack (named, not duplicated): `TURBO_R2_READ_ACCESS_KEY_ID`,
-  `TURBO_R2_READ_SECRET_ACCESS_KEY`, `TURBO_READ_TOKEN`, `TURBO_TEAM` (secret),
-  `turbo-cache-write/{TURBO_R2_WRITE_ACCESS_KEY_ID,TURBO_R2_WRITE_SECRET_ACCESS_KEY,TURBO_TOKEN}`
+  `TURBO_R2_READ_SECRET_ACCESS_KEY`, `TURBO_CACHE_READ_TOKEN`,
+  `turbo-cache-write/{TURBO_R2_WRITE_ACCESS_KEY_ID,TURBO_R2_WRITE_SECRET_ACCESS_KEY,TURBO_CACHE_WRITE_TOKEN}`
   (turbo cache); `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` on
   `beep-effect-web-prod`, `storybook-prod`, `turbo-cache-prod` (each stack's deploy).
 

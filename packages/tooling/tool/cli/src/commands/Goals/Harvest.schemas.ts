@@ -177,7 +177,7 @@ export class HarvestRowDraft extends S.Opaque<HarvestRowDraft, { readonly brand:
  * **Details**
  *
  * `packet` is `null` for rows read from a ledger outside any packet (for
- * example `infra/<area>/research/OPPORTUNITIES.md`); `status` is `null` when
+ * example `packages/tooling/infra/turbo-cache/r2-pilot/research/OPPORTUNITIES.md`); `status` is `null` when
  * the row has no packet or the packet manifest names no status. `terminal`
  * marks rows from goals in `completed-retained` or `superseded` and
  * explorations in `graduated` or `killed`.

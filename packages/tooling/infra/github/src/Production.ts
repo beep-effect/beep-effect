@@ -270,8 +270,8 @@ export const productionConfig: StackConfig = StackConfig.make({
       "An operator switch the CI goals driver flips live (overflow pool); a deploy would revert the flip."
     )("BEEP_SHARD_OVERFLOW"),
     ...A.map(
-      ["TURBO_API", "TURBO_R2_BUCKET", "TURBO_R2_ENABLED", "TURBO_R2_ENDPOINT", "TURBO_TEAM"],
-      unmanaged("variable", "Turbo cache enrollment; @beep/infra-turbo-cache's cutover sets these.")
+      ["TURBO_R2_BUCKET", "TURBO_R2_ENABLED", "TURBO_R2_ENDPOINT"],
+      unmanaged("variable", "The R2 pilot's enrollment; @beep/infra-turbo-cache's r2-pilot reads these.")
     ),
     ...A.map(
       ["TURBO_CACHE_API", "TURBO_CACHE_TEAM"],
@@ -297,11 +297,8 @@ export const productionConfig: StackConfig = StackConfig.make({
       [
         "TURBO_R2_READ_ACCESS_KEY_ID",
         "TURBO_R2_READ_SECRET_ACCESS_KEY",
-        "TURBO_READ_TOKEN",
-        "TURBO_TEAM",
         "turbo-cache-write/TURBO_R2_WRITE_ACCESS_KEY_ID",
         "turbo-cache-write/TURBO_R2_WRITE_SECRET_ACCESS_KEY",
-        "turbo-cache-write/TURBO_TOKEN",
         "TURBO_CACHE_READ_TOKEN",
         "turbo-cache-write/TURBO_CACHE_WRITE_TOKEN",
       ],
@@ -314,8 +311,11 @@ export const productionConfig: StackConfig = StackConfig.make({
       )
     ),
     ...A.map(
-      ["hook-663255260", "hook-711445970"],
-      unmanaged("webhook", "Runner fleet workflow_job webhooks; their secret belongs to the ci-runners stack (P5).")
+      ["hook-714397446"],
+      unmanaged(
+        "webhook",
+        "The CiRunners fleet's workflow_job webhook on its function URL; its secret belongs to the ci-runners stack."
+      )
     ),
     ...A.map(
       ["enabled", "allowed_actions", "sha_pinning_required", "default_workflow_permissions"],

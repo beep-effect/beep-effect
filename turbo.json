@@ -115,10 +115,8 @@
         "$TURBO_ROOT$/tsconfig*.json",
         "$TURBO_ROOT$/packages/**/tsconfig*.json",
         "$TURBO_ROOT$/apps/**/tsconfig*.json",
-        "$TURBO_ROOT$/infra/**/tsconfig*.json",
         "$TURBO_ROOT$/packages/**/package.json",
         "$TURBO_ROOT$/apps/**/package.json",
-        "$TURBO_ROOT$/infra/package.json",
         "!node_modules/**",
         "!.beep/**",
         "!.fallow/**",
@@ -183,7 +181,6 @@
       "inputs": [
         "apps/**/*.{ts,tsx}",
         "packages/**/*.{ts,tsx}",
-        "infra/**/*.ts",
         "!apps/labs/**/*.{ts,tsx}",
         "!**/.context/**/*.{ts,tsx}",
         "!**/node_modules/**",
@@ -199,7 +196,7 @@
         "!**/src-tauri/target/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "**/package.json",
         "!**/.beep/**/package.json",
         "!**/build/**/package.json",
@@ -248,7 +245,6 @@
         "apps/todox/package.json",
         "biome.jsonc",
         "fallow-plugin-manual-development-tools.json",
-        "infra/package.json",
         "package.json",
         "packages/**/package.json",
         "packages/_internal/db-admin/package.json",
@@ -6260,7 +6256,6 @@
       "inputs": [
         "apps/**/*.{ts,tsx}",
         "packages/**/*.{ts,tsx}",
-        "infra/{src,test}/**/*.ts",
         "**/package.json",
         "**/tsconfig*.json",
         "standards/schema-first.inventory.jsonc",
@@ -6280,7 +6275,6 @@
       "inputs": [
         "apps/**/*.{ts,tsx}",
         "packages/**/*.{ts,tsx}",
-        "infra/{src,test}/**/*.ts",
         "**/package.json",
         "tsconfig.json",
         "standards/schema-catalog/**/*.generated.jsonc",
@@ -6298,7 +6292,7 @@
         "@beep/repo-cli#lint:policy-fingerprint:lint-identity-registry"
       ],
       "inputs": [
-        "{packages,apps,infra,tools,scratchpad}/**/*.{ts,tsx}",
+        "{packages,apps,tools,scratchpad}/**/*.{ts,tsx}",
         "**/package.json",
         "packages/foundation/modeling/identity/src/packages.ts",
         "packages/foundation/modeling/identity/registry/**/*.json",
@@ -6323,7 +6317,6 @@
         "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         "apps/storybook/.storybook/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         "packages/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
-        "infra/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         "scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         "goals/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         "explorations/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
@@ -6361,9 +6354,9 @@
         ".gitignore",
         "**/.gitignore",
         "*.{cts,mts,ts,tsx}",
-        "{apps,packages,tooling,infra}/**/*.{cts,mts,ts,tsx}",
+        "{apps,packages,tooling}/**/*.{cts,mts,ts,tsx}",
         "tsconfig*.json",
-        "{apps,packages,infra,scratchpad}/**/tsconfig*.json",
+        "{apps,packages,scratchpad}/**/tsconfig*.json",
         "vitest.aliases.generated.json",
         "!**/node_modules/**",
         "!**/dist/**",
@@ -6412,7 +6405,6 @@
         "scripts/**",
         "apps/**/*.{ts,tsx,js,jsx,mjs,cjs}",
         "packages/**/*.{ts,tsx,js,jsx,mjs,cjs}",
-        "infra/**/*.{ts,js,mjs}",
         "packages/tooling/policy-pack/lint-rules/src/**",
         "!**/node_modules/**",
         "!.claude/worktrees/**"
@@ -6426,10 +6418,8 @@
         "bun.lock",
         "apps/**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
         "packages/**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
-        "infra/**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
         "apps/**/package.json",
         "packages/**/package.json",
-        "infra/**/package.json",
         "!**/node_modules/**",
         "!**/dist/**",
         "!**/build/**",
@@ -6466,7 +6456,7 @@
       "inputs": [
         "standards/effect-laws.allowlist.jsonc",
         "packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts",
-        "{packages,apps,infra}/**/*.{ts,tsx}",
+        "{packages,apps}/**/*.{ts,tsx}",
         "!**/node_modules/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
@@ -6528,7 +6518,6 @@
         "!**/.turbo/**",
         "!packages/drivers/*/openapi.json",
         "!packages/drivers/*/spec/*.json",
-        "!infra/ci-runners/sdks/**",
         "!explorations/*/CAPTURE.md",
         "!apps/labs/semantica/fixtures/gold/**",
         "!patches/*.patch",
@@ -6585,7 +6574,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6599,7 +6587,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**"
+        "!{apps,packages}/**/docs/**"
       ]
     },
     "//#fallow:health:check": {
@@ -6624,7 +6612,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6638,7 +6625,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -6664,7 +6651,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6678,7 +6664,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -6704,7 +6690,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6718,7 +6703,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -6744,7 +6729,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6758,7 +6742,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -6784,7 +6768,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6798,7 +6781,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -6824,7 +6807,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -6838,7 +6820,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -6851,7 +6833,7 @@
       "inputs": [
         "**/docgen.json",
         "**/package.json",
-        "{packages,apps,infra}/**/*.{ts,tsx}",
+        "{packages,apps}/**/*.{ts,tsx}",
         "scratchpad/**/*.{ts,tsx}",
         "tools/**/*.{ts,tsx}",
         "tsdoc.json",
@@ -6876,7 +6858,7 @@
         "@beep/repo-cli#lint:policy-fingerprint:lint-tsconfig-overlay"
       ],
       "inputs": [
-        "{apps,infra,packages}/**/tsconfig*.json",
+        "{apps,packages}/**/tsconfig*.json",
         "!**/node_modules/**",
         "!**/.beep/**",
         "!**/.turbo/**",
@@ -6895,9 +6877,9 @@
         "@beep/repo-cli#lint:policy-fingerprint:lint-package-test-typecheck"
       ],
       "inputs": [
-        "{apps,infra,packages}/**/package.json",
-        "{apps,infra,packages}/**/tsconfig*.json",
-        "{apps,infra,packages}/**/test/**/*.{ts,tsx,mts,cts}",
+        "{apps,packages}/**/package.json",
+        "{apps,packages}/**/tsconfig*.json",
+        "{apps,packages}/**/test/**/*.{ts,tsx,mts,cts}",
         "standards/test-typecheck.blindspot-baseline.jsonc",
         "!**/node_modules/**",
         "!**/.beep/**",
@@ -6920,9 +6902,9 @@
       "inputs": [
         "**/*.test.{ts,tsx}",
         "scratchpad/**/*.{ts,tsx}",
-        "{apps,packages,infra,goals,explorations,tools}/**/test/**/*.{ts,tsx}",
-        "{apps,packages,infra,goals,explorations,tools}/**/src/**/*.{ts,tsx}",
-        "{apps,packages,infra,scratchpad,goals,explorations,tools}/**/tsconfig*.json",
+        "{apps,packages,goals,explorations,tools}/**/test/**/*.{ts,tsx}",
+        "{apps,packages,goals,explorations,tools}/**/src/**/*.{ts,tsx}",
+        "{apps,packages,scratchpad,goals,explorations,tools}/**/tsconfig*.json",
         "tsconfig*.json",
         "tsconfig.base.json",
         "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts",
@@ -6937,12 +6919,12 @@
         "@beep/repo-cli#lint:policy-fingerprint:lint-effect-vitest"
       ],
       "inputs": [
-        "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
-        "{apps,packages,infra}/**/test/**/*.ts",
-        "!{apps,packages,infra}/**/node_modules/**",
-        "!{apps,packages,infra}/**/.*/**",
+        "{apps,packages}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+        "{apps,packages}/**/test/**/*.ts",
+        "!{apps,packages}/**/node_modules/**",
+        "!{apps,packages}/**/.*/**",
         "!**/dist/**",
-        "{apps,packages,infra}/**/vitest*.config.{ts,mts,js,mjs}",
+        "{apps,packages}/**/vitest*.config.{ts,mts,js,mjs}",
         "standards/effect-vitest.inventory.jsonc",
         "standards/effect-vitest.primitives.jsonc"
       ]
@@ -7139,7 +7121,7 @@
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
       "passThroughEnv": ["BEEP_PROOF_BASE"],
       "inputs": [
-        "{apps,packages,infra,tools}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "{apps,packages,tools}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         "**/scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
         ".claude/**/*.ts",
         "*.{ts,mts,cts,js,mjs,cjs}",
@@ -7271,7 +7253,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -7285,7 +7266,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -7315,7 +7296,7 @@
         "!**/.jsdoc-loop/generated-docs/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!.claude/worktrees/**"
       ]
     },
@@ -7343,7 +7324,7 @@
         "!**/.jsdoc-loop/generated-docs/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!.claude/worktrees/**"
       ]
     },
@@ -7367,7 +7348,7 @@
         "!**/.jsdoc-loop/generated-docs/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!.claude/worktrees/**"
       ]
     },
@@ -7390,7 +7371,7 @@
         "!**/.jsdoc-loop/generated-docs/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!.claude/worktrees/**"
       ]
     },
@@ -7416,7 +7397,7 @@
         "!**/.jsdoc-loop/generated-docs/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!.claude/worktrees/**"
       ]
     },
@@ -7444,7 +7425,6 @@
         "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
         "apps/**",
         "packages/**",
-        "infra/**",
         "scripts/**",
         ".claude/skills/**",
         "!.claude/worktrees/**",
@@ -7458,7 +7438,7 @@
         "!**/storybook-static/**",
         "!**/src-tauri/target/**",
         "!**/src-tauri/gen/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
@@ -7481,7 +7461,7 @@
         "!**/.jsdoc-loop/generated-docs/**",
         "!docs/generated/**",
         "!docs/_internal/**",
-        "!{apps,packages,infra}/**/docs/**",
+        "!{apps,packages}/**/docs/**",
         "!.claude/worktrees/**"
       ]
     }

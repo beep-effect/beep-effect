@@ -210,7 +210,6 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
           "biome.jsonc",
           ".github/**/*.yml",
           "apps/storybook/**/*",
-          "infra/**/*",
           "goals/**/ops/manifest.json",
           "standards/**/*.jsonc",
         ],

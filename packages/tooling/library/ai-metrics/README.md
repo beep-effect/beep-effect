@@ -24,8 +24,8 @@ enrichment remains sparse.
 P5a keeps installer workflows contract-first: `plan`, `doctor`, and
 dry-run-only `apply` use typed schemas, stdout/JSON output, Phoenix-only
 concrete deployment steps, and no local or remote mutation. P5b keeps real
-dankserver mutation in `@beep/infra`, where Pulumi remote commands deploy
-Phoenix to the dedicated tailnet URL
+dankserver mutation in the `HostsAiMetrics` Alchemy stack (`@beep/infra-hosts`),
+which deploys Phoenix to the dedicated tailnet URL
 `https://dankserver.tailc7c348.ts.net:8447`.
 
 P6 keeps `forwarder run --otlp` additive: the forwarder still persists
