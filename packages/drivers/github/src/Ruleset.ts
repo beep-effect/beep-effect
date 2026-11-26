@@ -177,6 +177,9 @@ export interface RulesetShape {
    * assigned at creation — so this matches on `name`. Renaming a ruleset in a
    * caller's configuration therefore creates a second one rather than renaming
    * the first; removing the orphan is the caller's cleanup pass.
+   *
+   * The match reads every page of the listing: a truncated first page would
+   * hide an existing ruleset and turn the update into a create.
    */
   readonly upsert: (payload: RulesetPayload.Encoded) => Effect.Effect<void, GitHubError, Repo>;
 }

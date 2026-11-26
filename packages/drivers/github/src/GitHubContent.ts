@@ -56,7 +56,8 @@ export interface GitHubContentShape {
    *
    * Fails `notFound` when the path does not exist, and `rejected` when it is a
    * directory, is not a regular file, or is too large for the contents API
-   * (which answers an empty body above roughly a megabyte).
+   * (which answers an empty body above roughly a megabyte). That empty body is
+   * refused rather than decoded, because it would read as an empty file.
    */
   readonly getFile: {
     (path: string, options?: { readonly ref?: string | undefined }): Effect.Effect<string, GitHubError, Repo>;
