@@ -1044,7 +1044,11 @@ describe("BotIdentity", () => {
   });
 
   it("is reachable with no layer, no client and no credentials", () => {
-    assert.instanceOf(BotIdentity.forApp({ appSlug: "x" }), BotIdentity);
+    assert.instanceOf(
+      BotIdentity.forApp({ appSlug: "x" }),
+      BotIdentity,
+      "a consumer rendering a committer line needs none of the service machinery"
+    );
   });
 
   it("renders its own DCO sign-off trailer", () => {

@@ -712,7 +712,7 @@ describe("GitHubClient.layerFixture", () => {
               client.paginate("GET /repos/{owner}/{repo}/pulls", { owner: "o", repo: "r" })
             )
           );
-          assert.lengthOf(requested, 1);
+          assert.lengthOf(requested, 1, "paginate records before its checks, like every other surface");
           assert.strictEqual(requested[0]?.kind, "paginate");
           assert.deepStrictEqual(requested[0]?.params, { owner: "o", repo: "r" });
         })

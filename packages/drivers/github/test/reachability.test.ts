@@ -98,7 +98,7 @@ describe("bundle reachability: the tree-shaking invariant over the runtime impor
     assert.deepStrictEqual(
       runtimeSpecifiers(fixture),
       ["@octokit/core", "universal-github-app-jwt"],
-      "a /* in a line comment opens a phantom block unless line comments are stripped first"
+      "only a line-comment /* opens a phantom block (a block comment swallows it), so line comments are stripped first"
     );
   });
 
