@@ -8,7 +8,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-/** The subset of Vite's `import.meta.glob` signature the fixture loader uses. */
 interface RawGlobOptions {
   readonly eager: true;
   readonly import: "default";

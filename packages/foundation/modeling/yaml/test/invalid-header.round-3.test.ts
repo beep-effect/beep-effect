@@ -15,7 +15,6 @@ const quotedTails = [
   "\"hello\" 'again # not'",
 ];
 
-/** Expected tokens for an invalid header line: one error token, then the newline token when present. */
 const invalidHeaderTokens = (header: string, newline: string): Array<YamlToken> => {
   const expected: Array<YamlToken> = [
     YamlToken.make({ kind: "error", value: header, offset: 0, length: header.length, line: 0, column: 0 }),
