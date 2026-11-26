@@ -411,7 +411,7 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             const restoredB = yield* readProjectFile(schemaShard("@beep/b"));
             expect(restoredB).toBe(fullB);
             const spanningLogs = yield* TestConsole.logLines;
-            expect(spanningLogs).toContain("[schema-catalog] 2 shard(s) changed for @beep/a, @beep/b");
+            expect(spanningLogs).toContain("[schema-catalog] 2 shard(s) changed for @beep/a, @beep/b, @beep/c");
 
             yield* runLint(["schema-catalog", "--write", "packages/a"]);
             const currentLogs = yield* TestConsole.logLines;
