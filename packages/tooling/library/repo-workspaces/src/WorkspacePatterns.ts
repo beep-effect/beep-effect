@@ -139,41 +139,15 @@ export class WorkspacePatternReadError extends S.TaggedError<
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-// The string entries of `value` when it is an array, else none.
 const stringsOf = (value: unknown): O.Option<ReadonlyArray<string>> =>
   A.isArray(value) ? O.some(A.filter(value, P.isString)) : O.none();
 
-// `stringsOf`, with a non-array read as no strings.
 const stringsOrEmpty = (value: unknown): ReadonlyArray<string> => O.getOrElse(stringsOf(value), () => []);
 
-/**
- * A pattern body without its leading `./` segments and its trailing slashes.
- *
- * @param body - The pattern text after any `!`.
- * @returns The body as the enumerators match it.
- */
 const normalizedBody = (body: string): string => Str.replace(/\/+$/, "")(Str.replace(/^(?:\.\/+)+/, "")(body));
 
-/**
- * The directory a trailing `/**` descends from.
- *
- * @param body - A normalized pattern body.
- * @returns The base directory, or `""` when the body has no such suffix or no base.
- */
 const globstarBaseOf = (body: string): string => (Str.endsWith("/**")(body) ? Str.slice(0, -3)(body) : "");
 
-/**
- * One declared pattern as the enumerators match it.
- *
- * **Details**
- *
- * The `!` of an exclusion is kept and the body after it is normalized. A
- * `X/**` body is followed by `X`, so the base directory is selected (or
- * excluded) too. A body that normalizes to nothing keeps the declared text.
- *
- * @param pattern - One declared workspace pattern, `!` included.
- * @returns The one or two patterns the enumerators match in its place.
- */
 const forMatchingOne = (pattern: string): ReadonlyArray<string> => {
   const negation = Str.startsWith("!")(pattern) ? "!" : "";
   const body = normalizedBody(Str.slice(negation.length)(pattern));
@@ -182,7 +156,6 @@ const forMatchingOne = (pattern: string): ReadonlyArray<string> => {
   return Str.isEmpty(base) ? [`${negation}${body}`] : [`${negation}${body}`, `${negation}${base}`];
 };
 
-// Reads `path` and fails with a typed `read` failure instead of the platform error.
 const readConfigText = Effect.fnUntraced(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
@@ -359,12 +332,6 @@ export class WorkspacePatterns {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
-    // A config file that EXISTS but cannot be read is not a config file that
-    // declares no patterns. Substituting "" / "{}" made those two outcomes
-    // literally identical, so the failure was invisible by construction — the
-    // same silent-degradation family as absorbing a `readDirectory` error into
-    // an empty directory listing. An ABSENT file is still fine: that is a real,
-    // distinguishable condition meaning "no config here".
     const pnpmWorkspacePath = path.join(root, "pnpm-workspace.yaml");
     const hasPnpmWorkspace = yield* fs.exists(pnpmWorkspacePath).pipe(Effect.orElseSucceed(() => false));
     if (hasPnpmWorkspace) {

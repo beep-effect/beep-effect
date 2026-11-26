@@ -577,22 +577,11 @@ const byPosition = Order.combine(
 );
 
 const EXEMPT: ReadonlyArray<string> = ["process.env.__PACKAGE_VERSION__"];
-/**
- * The console methods Node writes to stderr. nodejs.org/api/console.html has
- * `error` and `trace` print to stderr and `warn` alias `error`; it names no
- * stream for `assert`, and a probe over a `Console` built on two capturing
- * streams sent a failing `assert` to stderr. Everything else that writes
- * (`log`, `info`, `debug`, `dir`, `dirxml`, `table`, `count`, `group`,
- * `time`) writes to stdout.
- */
 const STDERR_METHODS = MutableHashSet.fromIterable(["error", "warn", "trace", "assert"]);
-/** An `end(` call that passes a final chunk, which `Writable.end` writes before closing. */
 const END_WITH_CHUNK = /^\s*(?:\?\.\s*)?\(\s*[^\s)]/u;
 
-// Whether the reference at `at` is itself a member access (`globalThis.process`), which no ignore token exempts.
 const isMemberAccess = (code: string, at: number): boolean => unitAt(code, skipSpaceBack(code, at - 1)) === ".";
 
-// Whether `token` is written whole at `at`: it starts there and no identifier character continues it.
 const tokenAt = (code: string, at: number, token: string): boolean =>
   Str.startsWith(token, at)(code) && identifierAt(code, at + token.length) === undefined;
 
@@ -602,11 +591,9 @@ const processReads = (code: string, ignoreTokens: ReadonlyArray<string>): Readon
     (at) => isMemberAccess(code, at) || !A.some(ignoreTokens, (token) => tokenAt(code, at, token))
   );
 
-// The cooked member after the identifier reference at `at` and its raw end offset, through `.` or `?.`.
 const memberAfter = (code: string, at: number): O.Option<readonly [member: string, end: number]> =>
   O.flatMap(O.fromUndefinedOr(identifierAt(code, at)), (rawName) => memberFrom(code, at + rawName.length));
 
-// The cooked member a `.` or `?.` at or after `from` opens, with its raw end offset.
 const memberFrom = (code: string, from: number): O.Option<readonly [member: string, end: number]> => {
   let j = skipSpaceForward(code, from);
   if (unitAt(code, j) === "?" && unitAt(code, j + 1) === ".") j++;
@@ -617,11 +604,9 @@ const memberFrom = (code: string, from: number): O.Option<readonly [member: stri
   );
 };
 
-// Whether the member call writes: `write`, or an `end` that passes a chunk.
 const writes = (code: string, [method, end]: readonly [member: string, end: number]): boolean =>
   method === "write" || (method === "end" && END_WITH_CHUNK.test(Str.slice(end)(code)));
 
-// The stdout write the identifier token starts, if it is a `stdout` reference followed by a writing call.
 const stdoutWriteAt = (
   code: string,
   token: RegExpExecArray
@@ -638,24 +623,18 @@ const stdoutWriteAt = (
 const stdoutWrites = (code: string): ReadonlyArray<{ readonly at: number; readonly method: string }> =>
   A.getSomes(A.map(identifierTokens(code), (token) => stdoutWriteAt(code, token)));
 
-// The first offset at or after `from` where `token` occurs in `code`, or `-1`.
 const indexFrom = (code: string, token: string, from: number): number =>
   O.match(Str.indexOf(token)(Str.slice(from)(code)), { onNone: () => -1, onSome: (offset) => from + offset });
 
-// Every offset where `token` occurs in `code`, overlapping occurrences included.
 const occurrencesOf = (code: string, token: string): ReadonlyArray<number> => {
   const found: Array<number> = [];
   for (let at = indexFrom(code, token, 0); at >= 0; at = indexFrom(code, token, at + 1)) found.push(at);
   return found;
 };
 
-// Whether an occurrence at `at` continues an identifier (or follows a private `#`).
 const continuesIdentifier = (code: string, at: number): boolean =>
   isIdentifierChar(codePointBefore(code, at)) || unitAt(code, at - 1) === "#";
 
-// Every offset where `token` appears in `code` as whole text: a token that
-// starts with an identifier character must not continue one (nor follow `#`),
-// and one that ends with an identifier character must not run into another.
 const tokenOccurrences = (code: string, token: string): ReadonlyArray<number> => {
   if (Str.isEmpty(token)) return [];
   const guardStart = isIdentifierChar(codePointAt(token, 0));
@@ -684,14 +663,12 @@ const isNodeModule: {
   A.some([module, `node:${module}`], (name) => specifier === name || Str.startsWith(`${name}/`)(specifier))
 );
 
-/** One rule's match, before it is located and attributed to a file. */
 interface Finding {
   readonly detail: string;
   readonly offset: number;
   readonly rule: OffenceRule;
 }
 
-/** What every rule reads from one lexed file. */
 interface CheckInput {
   readonly code: string;
   readonly ignoreTokens: ReadonlyArray<string>;
@@ -744,12 +721,9 @@ const ruleFindings = (input: CheckInput, rule: BoundaryRule.Encoded): ReadonlyAr
     : importFindings(input.specifiers, rule.forbidImports);
 };
 
-// What a directory entry is once links are followed; `"Dangling"` for a link to nothing.
 const entryType = (fs: FileSystem.FileSystem, full: string) =>
   fs.stat(full).pipe(
     Effect.map((info): FileSystem.File.Type | "Dangling" => info.type),
-    // stat follows links, so a dangling one fails NotFound; it has nothing to scan, so skip it.
-    // A NotFound on an entry that is not a link still fails: nothing may drop out of the scan silently.
     Effect.catchIf(
       (error) => error.reason._tag === "NotFound",
       (error) =>
@@ -760,11 +734,9 @@ const entryType = (fs: FileSystem.FileSystem, full: string) =>
     )
   );
 
-// Whether a regular file named `name` is a scanned source: a listed extension and not a declaration file.
 const isSourceFile = (name: string, extensions: ReadonlyArray<string>): boolean =>
   !DECLARATION.test(name) && A.some(extensions, (extension) => Str.endsWith(extension)(name));
 
-/** One directory's subdirectories to walk and source files to scan, `node_modules` never entered. */
 const listDirectory = Effect.fnUntraced(function* (directory: string, extensions: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -789,10 +761,6 @@ const listDirectory = Effect.fnUntraced(function* (directory: string, extensions
   };
 });
 
-/**
- * Every source file under `root`, walked with an explicit stack and real-directory ancestry, so an
- * ancestor symlink cycle terminates while distinct logical paths are each listed.
- */
 const sourceFiles = Effect.fnUntraced(function* (root: string, extensions: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const found: Array<string> = [];
@@ -811,7 +779,6 @@ const sourceFiles = Effect.fnUntraced(function* (root: string, extensions: Reado
   return found;
 });
 
-/** Every `allowRules` entry compiled to its glob set, keyed by rule. */
 const compileWaivers = Effect.fnUntraced(function* (allowRules: Readonly<Record<string, ReadonlyArray<string>>>) {
   const waivers = MutableHashMap.empty<string, GlobSet>();
   for (const [rule, patterns] of R.toEntries(allowRules)) {
@@ -907,7 +874,6 @@ const FIXTURE_INPUTS: ReadonlyArray<BoundaryFixture.Encoded> = [
     rule: "process",
     flagged: false,
   },
-  // The lexer-ambiguity corpus: each snippet once hid a real read (or invented one).
   {
     name: "process: the version constant reached through globalThis",
     source: "const version = globalThis.process.env.__PACKAGE_VERSION__;",

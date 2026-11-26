@@ -97,15 +97,10 @@ export declare namespace PackDirectory {
   export type Encoded = typeof PackDirectory.Encoded;
 }
 
-/**
- * Any input Effect's `Duration` accepts, kept as written: `Duration.fromInput` is the judge, so the
- * schema and the run agree on what a ceiling may be.
- */
 const DurationInput = S.declare((input: unknown): input is Duration.Input =>
   O.isSome(Duration.fromInput(input as Duration.Input))
 ).pipe($I.annoteSchema("DurationInput", { description: "An Effect duration input, kept as written." }));
 
-// A ceiling an option bag may set; the operation applies its own default when it is absent.
 const optionalCeiling = (key: string, description: string) =>
   S.optionalKey(DurationInput).pipe($I.annoteKey(key, { description }));
 
@@ -561,7 +556,6 @@ export declare namespace BinCommandOptions {
   export type Encoded = typeof BinCommandOptions.Encoded;
 }
 
-/** A bin's piecewise stdin: a byte stream such as a framed LSP session. */
 const StdinStream = S.declare((input: unknown): input is Stream.Stream<Uint8Array, PlatformError.PlatformError> =>
   Stream.isStream(input)
 ).pipe($I.annoteSchema("StdinStream", { description: "A byte stream written to a bin's stdin." }));
@@ -630,10 +624,6 @@ export declare namespace RunBinOptions {
 
 const DEFAULT_BIN_TIMEOUT: Duration.Input = "1 minute";
 
-// Whether a failed `readLink` means "this entry is not a symlink". Node reports
-// that as `EINVAL`, which its platform layer tags `Unknown` with the errno on
-// the cause, and `@effected/memfs` raises the same shape. Anything else,
-// `PermissionDenied` and `BadResource` included, is a real failure.
 const isNotALink = (error: PlatformError.PlatformError): boolean =>
   error.reason._tag === "Unknown" &&
   P.isObjectKeyword(error.reason.cause) &&
@@ -1050,7 +1040,6 @@ export class InstalledConsumer extends S.Class<InstalledConsumer, { readonly bra
   }
 }
 
-/** The install's scrubbed environment with the caller's entries layered on after the scrub: a deliberate CI=true must survive it. */
 const layeredEnv: {
   (consumer: InstalledConsumer, options: BinCommandOptions.Encoded): Record<string, string>;
   (options: BinCommandOptions.Encoded): (consumer: InstalledConsumer) => Record<string, string>;
@@ -1063,7 +1052,6 @@ const layeredEnv: {
   return env;
 });
 
-// A bin's stdin as `ChildProcess` takes it: absent or `""` is the null device (immediate end of input), anything else is written and closed.
 const stdinOf = (stdin: RunBinOptions.Encoded["stdin"]): ChildProcess.CommandInput => {
   if (stdin === undefined || stdin === "") return "ignore";
   if (P.isString(stdin)) return Stream.make(new TextEncoder().encode(stdin));
@@ -1071,7 +1059,6 @@ const stdinOf = (stdin: RunBinOptions.Encoded["stdin"]): ChildProcess.CommandInp
   return stdin;
 };
 
-/** Run a bin's command to completion with `options.stdin` as its input (the null device when omitted), mapping a failed spawn or an expired ceiling to `BinFailed`. */
 const collectBin: {
   (
     command: ChildProcess.StandardCommand,
@@ -1399,27 +1386,17 @@ export declare namespace PackedInstallGate {
   export type Encoded = typeof PackedInstallGate.Encoded;
 }
 
-// npm-packing the prod output is byte-identical to the published tarball;
-// pnpm-packing the source packs the dev build.
 const DEFAULT_PACK_FROM: PackSource.Encoded = { directory: "dist/prod/npm/pkg" };
 const WORKSPACE_PROTOCOL_NOT_INSTALLED = "ERR_PNPM_CANNOT_RESOLVE_WORKSPACE_PROTOCOL";
 const TAIL = 2000;
 const tail = (text: string): string => (text.length <= TAIL ? text : Str.slice(-TAIL)(text));
 const DEFAULT_INSTALL_TIMEOUT: Duration.Input = "4 minutes";
 const PROBE_TIMEOUT: Duration.Input = "30 seconds";
-/** The `CI` values that count as unset, compared lower-cased. */
 const CI_UNSET: ReadonlyArray<string> = ["", "0", "false"];
 const DEFAULT_PACK_TIMEOUT: Duration.Input = "2 minutes";
 const MANIFEST_TIMEOUT: Duration.Input = "30 seconds";
-/** The untimed steps a budget allows for: discovery, the consumer files and the bin checks. */
 const UNTIMED_SLACK: Duration.Input = "30 seconds";
-/**
- * Cleanup a budget allows for: removing the scratch root, every consumer's
- * `node_modules` included, when the scope closes, and killing and reaping a
- * child after its ceiling interrupts it.
- */
 const CLEANUP_ALLOWANCE: Duration.Input = "1 minute";
-// A fired ceiling as a person reads it: `"4m"` for `"4 minutes"`; the timeout already decoded it.
 const describeDuration = (input: Duration.Input): string => Duration.format(Duration.fromInputUnsafe(input));
 
 const failure: {
@@ -1441,7 +1418,6 @@ const failure: {
   ): PackedInstallError => PackedInstallError.make({ reason, message, ...extra })
 );
 
-/** A package from outside the workspace that replaces registry resolution: where it is and how to get a tarball of it. */
 const ReplacementKind = LiteralKit(["directory", "tarball"]).pipe(
   $I.annoteSchema("ReplacementKind", {
     description: "Whether a replacement is packed from a directory or uses an existing tarball.",
@@ -1458,7 +1434,6 @@ const Replacement = S.Struct({
 
 type Replacement = typeof Replacement.Type;
 
-/** Everything a run packs, in the order it packs it: the carrier, the rest of the closure, then the replacements by name. */
 const ClosurePlan = S.Struct({
   closure: S.Array(WorkspacePackage).pipe(
     $I.annoteKey("ClosurePlan.closure", {
@@ -1483,7 +1458,6 @@ const namesOf = (plan: ClosurePlan): ReadonlyArray<string> => [
   ...A.map(plan.replacements, (replacement) => replacement.name),
 ];
 
-/** The workspace root's `pnpm-workspace.yaml` `file:` overrides, which `workspaceOverrides` adopts. */
 const workspaceFileOverrides = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1501,7 +1475,6 @@ const workspaceFileOverrides = Effect.fnUntraced(function* (root: string) {
   return fileOverridesOf(document);
 });
 
-/** One override resolved against the workspace root to a packable directory or an existing tarball. */
 const resolveReplacement = Effect.fnUntraced(function* (name: string, spec: string, root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1534,10 +1507,6 @@ const resolveReplacement = Effect.fnUntraced(function* (name: string, spec: stri
   return { name, source, kind: "directory" } satisfies Replacement;
 });
 
-/**
- * The one implementation of "what does this run pack", behind both
- * `PackedInstall.closure` and `PackedInstall.run`, so the two cannot drift.
- */
 const planClosure: {
   (
     carrier: string,
@@ -1567,12 +1536,10 @@ const planClosure: {
       R.toEntries(options.overrides ?? {}),
       ([name, spec]) => [name, overridePath(spec)] as const
     );
-    // The root is read only when something needs it: a double that answers only listPackages still plans.
     const needsRoot = options.workspaceOverrides === true || A.some(requested, ([, spec]) => !path.isAbsolute(spec));
     const root = needsRoot ? (yield* discovery.info.pipe(Effect.mapError(discoveryFailed))).root : "/";
     const linked =
       options.workspaceOverrides === true ? yield* Effect.map(workspaceFileOverrides(root), R.toEntries) : [];
-    // Explicit overrides come last, so they win over the workspace's own links.
     const wanted = MutableHashMap.fromIterable(A.appendAll(linked, requested));
     const packed = MutableHashSet.fromIterable(A.map(closure, (pkg) => pkg.name));
     const replacements = yield* Effect.forEach(
@@ -1593,7 +1560,6 @@ const planClosure: {
   })
 );
 
-/** What every step of one run shares: the services, the scrubbed environment and the realpath'd scratch root. */
 interface RunContext {
   readonly env: Record<string, string>;
   readonly fs: FileSystem.FileSystem;
@@ -1601,14 +1567,12 @@ interface RunContext {
   readonly scratch: string;
 }
 
-/** One packed package: its name, its tarball, and what its packed manifest says. */
 interface PackedEntry {
   readonly manifest: PackedManifest;
   readonly name: string;
   readonly tarball: string;
 }
 
-/** One manager that answered `--version`, with the version it reported. */
 interface AvailableManager {
   readonly manager: PackageManagerName;
   readonly version: string;
@@ -1616,7 +1580,6 @@ interface AvailableManager {
 
 const io = (message: string) => (cause: unknown) => failure("Io", message, { cause });
 
-// A child in `cwd` under the run's scrubbed environment, nothing inherited and stdin the null device.
 const runCommand = (
   context: RunContext,
   executable: string,
@@ -1625,11 +1588,9 @@ const runCommand = (
 ): ChildProcess.StandardCommand =>
   ChildProcess.make(executable, args, { cwd, env: context.env, extendEnv: false, stdin: "ignore" });
 
-// Whether a `Run` failure is the run's own ceiling firing, as opposed to a spawn that failed.
 const timedOut = (cause: CommandFailedError | CommandOutputError): boolean =>
   cause._tag === "CommandFailedError" && cause.kind === "timeout";
 
-// The version `manager --version` reports from the scratch root, or none when it does not answer.
 const probeManager = (context: RunContext, manager: PackageManagerName) =>
   Run.collect(runCommand(context, manager, ["--version"], context.scratch), { timeout: PROBE_TIMEOUT }).pipe(
     Effect.map((output) => (output.succeeded ? versionOf(output.stdout) : O.none<string>())),
@@ -1637,7 +1598,6 @@ const probeManager = (context: RunContext, manager: PackageManagerName) =>
     Effect.map((version) => ({ manager, version }))
   );
 
-/** `npm pack` or `pnpm pack` in `cwd` into an empty `destination`; the one tarball it wrote. */
 const pack = Effect.fn("PackedInstall.pack")(function* (
   context: RunContext,
   name: string,
@@ -1683,7 +1643,6 @@ const wrongTarballCount = (name: string, destination: string, count: number): Pa
     package: name,
   });
 
-// A pack that exited non-zero, naming the missing install when pnpm could not rewrite `workspace:`.
 const packFailed = (
   name: string,
   packer: "npm" | "pnpm",
@@ -1697,13 +1656,11 @@ const packFailed = (
       notInstalled
         ? `pnpm pack could not rewrite the workspace: specifiers of ${name} because the workspace is not installed; run pnpm install in the workspace first`
         : `${packer} pack exited ${output.exitCode} for ${name}`,
-      // Both streams: a pnpm WARN banner on stderr must not hide the real error on stdout.
       { package: name, output: tail(`${output.stdout}\n${output.stderr}`) }
     )
   );
 };
 
-/** The packed manifest, read with `tar` from `cwd`, refused if only a workspace could resolve it. */
 const inspect = Effect.fn("PackedInstall.inspect")(function* (
   context: RunContext,
   name: string,
@@ -1741,7 +1698,6 @@ const inspect = Effect.fn("PackedInstall.inspect")(function* (
   return manifest;
 });
 
-/** Pack one closure package from its pack source, refusing a prod build that is not there. */
 const packWorkspacePackage = Effect.fnUntraced(function* (
   context: RunContext,
   pkg: WorkspacePackage,
@@ -1770,7 +1726,6 @@ const requireBuilt = Effect.fnUntraced(function* (context: RunContext, name: str
   }
 });
 
-/** Pack one replacement: a directory is packed with npm like any publish-ready build; a tarball is used as it is. */
 const packReplacement = Effect.fnUntraced(function* (
   context: RunContext,
   replacement: Replacement,
@@ -1793,7 +1748,6 @@ const packReplacement = Effect.fnUntraced(function* (
   return { name: replacement.name, tarball, manifest } satisfies PackedEntry;
 });
 
-// Refuse a packed package other than the carrier that declares one of the carrier's bin names.
 const refuseSharedBins = (
   carrier: PackedEntry,
   rest: ReadonlyArray<PackedEntry>
@@ -1813,7 +1767,6 @@ const refuseSharedBins = (
       );
 };
 
-/** Install one consumer with lifecycle scripts skipped, failing on a spawn, a fired ceiling or a non-zero exit. */
 const installIn = Effect.fnUntraced(function* (
   context: RunContext,
   { manager, version }: AvailableManager,
@@ -1826,7 +1779,6 @@ const installIn = Effect.fnUntraced(function* (
     Effect.mapError((cause) =>
       failure(
         "InstallFailed",
-        // A ceiling that fired is not a spawn that failed: say which, so a slow registry is not read as a missing binary.
         timedOut(cause)
           ? `${manager} install timed out after ${describeDuration(installTimeout)}`
           : `${manager} install could not run`,
@@ -1842,7 +1794,6 @@ const installIn = Effect.fnUntraced(function* (
   }
 });
 
-// What `node_modules/.bin` holds, which separates a wrong bin name from a link that never happened.
 const binListing = (context: RunContext, directory: string): Effect.Effect<string> =>
   context.fs.readDirectory(context.path.join(directory, "node_modules", ".bin")).pipe(
     Effect.map((names) =>
@@ -1853,7 +1804,6 @@ const binListing = (context: RunContext, directory: string): Effect.Effect<strin
     Effect.orElseSucceed(() => "node_modules/.bin does not exist or cannot be listed")
   );
 
-/** Fail `MissingBin` unless the consumer's `.bin` entry exists and is executable. */
 const requireExecutableBin = Effect.fnUntraced(function* (
   context: RunContext,
   consumer: InstalledConsumer,
@@ -1870,7 +1820,6 @@ const requireExecutableBin = Effect.fnUntraced(function* (
   );
 });
 
-/** Write, install and check one consumer: the carrier tarball its only direct dependency beside the caller's. */
 const installConsumer = Effect.fnUntraced(function* (
   context: RunContext,
   options: PackedInstallOptions.Encoded,
@@ -2327,7 +2276,6 @@ export class PackedInstall {
         "PackedInstall drives POSIX .bin shims and tar; run it on macOS or Linux"
       );
     }
-    // One consumer directory per manager: a manager listed twice is installed once.
     const managers = A.fromIterable(MutableHashSet.fromIterable(options.managers));
     if (managers.length === 0) {
       return yield* failure(
@@ -2399,7 +2347,6 @@ export class PackedInstall {
   });
 }
 
-// How a `.bin` entry reads: a symlink, or a present entry that is not one (a pnpm shell shim).
 const binEntryKind = (
   fs: FileSystem.FileSystem,
   bin: string,
@@ -2418,7 +2365,6 @@ const binEntryKind = (
     })
   );
 
-/** The string `name` of the JSON manifest at `manifest`, when it exists and is an object that has one. */
 const manifestName = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   manifest: string,
@@ -2433,7 +2379,6 @@ const manifestName = Effect.fnUntraced(function* (
     : O.none<string>();
 });
 
-/** The nearest named package above `target` that stays inside `root`. */
 const ownerOf = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   path: Path.Path,
@@ -2474,7 +2419,6 @@ const binProvenance: {
     const missing = (why: string) => failure("MissingBin", `${manager}: ${entry} ${why}`, { manager });
     if ((yield* binEntryKind(fs, bin, manager, entry)) === "not-a-link") {
       const present = yield* fs.exists(bin).pipe(Effect.mapError(fail(`could not inspect ${bin}`)));
-      // A shim, not a link (pnpm writes these): its target is inside a script this does not parse.
       return present ? undefined : yield* missing("does not exist");
     }
     const target = yield* fs

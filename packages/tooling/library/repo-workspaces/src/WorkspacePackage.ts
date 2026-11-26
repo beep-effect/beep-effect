@@ -32,9 +32,6 @@ const $I = $RepoWorkspacesId.create("WorkspacePackage");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-// The readonly empty default for `manifestRecord`, shared like the dependency-map
-// default: construction sites and serialized values without the field decode to
-// `{}` rather than failing or carrying `undefined`.
 const EMPTY_MANIFEST: Readonly<Record<string, unknown>> = R.fromEntries([]);
 
 /**
