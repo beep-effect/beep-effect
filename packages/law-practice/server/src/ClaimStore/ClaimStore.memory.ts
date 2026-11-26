@@ -9,6 +9,7 @@
 import { TrustedClaimBinding } from "@beep/epistemics/Admission";
 import { LawClaimAdmissions, LawClaimProposals, LawClaimStoreError } from "@beep/law-practice-use-cases/ClaimStore";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -75,11 +76,17 @@ const makeMemoryLawClaimStore = Effect.fnUntraced(function* () {
     }),
     appendProposed: Effect.fn("LawClaimStore.appendProposed")(function* (entry: ProposedClaimEntry) {
       yield* Effect.annotateCurrentSpan(LawClaimStoreOperationAttribute, "append-proposed");
-      const map = yield* Ref.get(entries);
-      const stored = HashMap.get(map, entry.record.claim);
-      if (O.isSome(stored) && !Eq.equals(stored.value.generation.activity, entry.generation.activity))
-        return yield* LawClaimStoreError.make({ operation: "append-proposed" });
-      yield* Ref.set(entries, HashMap.set(map, entry.record.claim, entry));
+      const conflictsWithStoredGeneration = yield* Ref.modify(entries, (map) =>
+        O.match(HashMap.get(map, entry.record.claim), {
+          onNone: () => [false, HashMap.set(map, entry.record.claim, entry)] as const,
+          onSome: (stored) =>
+            Bool.match(Eq.equals(stored.generation.activity, entry.generation.activity), {
+              onFalse: () => [true, map] as const,
+              onTrue: () => [false, HashMap.set(map, entry.record.claim, entry)] as const,
+            }),
+        })
+      );
+      if (conflictsWithStoredGeneration) return yield* LawClaimStoreError.make({ operation: "append-proposed" });
     }),
     findProposed: Effect.fn("LawClaimStore.findProposed")(function* (lookup) {
       const stored = yield* storedEntries;

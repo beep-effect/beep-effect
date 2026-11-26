@@ -31,6 +31,7 @@ import { TextAnchor } from "@beep/text/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -115,6 +116,26 @@ describe("LawClaimStoreMemory", () => {
         const refused = yield* proposals.appendProposed(forged).pipe(Effect.flip);
         expect(same._tag).toBe("Success");
         expect(refused).toMatchObject({ _tag: "LawClaimStoreError", operation: "append-proposed" });
+      })
+    );
+
+    it.effect("keeps every proposal appended concurrently from different scopes", () =>
+      Effect.gen(function* () {
+        const proposals = yield* LawClaimProposals;
+        const entries = yield* Effect.forEach(
+          A.range(0, 7),
+          (index) => entryIn(ScopeRef.make(`matter:store-concurrent-${index}`), 1_000 + index, activityOf(`${index}`)),
+          { concurrency: 1 }
+        );
+        yield* Effect.forEach(
+          entries,
+          (entry) => proposals.withPartition(entry.record.core.scope, () => proposals.appendProposed(entry)),
+          {
+            concurrency: "unbounded",
+          }
+        );
+        const stored = yield* Effect.forEach(entries, (entry) => proposals.get(entry.record.claim), { concurrency: 1 });
+        expect(A.getSomes(stored)).toEqual(A.map(entries, (entry) => entry.record));
       })
     );
 

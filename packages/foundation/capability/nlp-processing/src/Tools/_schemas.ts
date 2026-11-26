@@ -152,12 +152,11 @@ export class AiToken extends S.Opaque<AiToken, { readonly brand: unique symbol }
  *   tokenCount: 3,
  *   tokens: [
  *     {
- *       end: 5,
  *       isPunctuation: false,
  *       isStopWord: false,
  *       lemma: "hello",
  *       pos: "INTJ",
- *       start: 0,
+ *       span: { _tag: "Position", unit: "utf16-code-unit", start: 0, end: 5 },
  *       stem: "hello",
  *       text: "Hello"
  *     }
