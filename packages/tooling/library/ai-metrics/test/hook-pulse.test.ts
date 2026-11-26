@@ -21,7 +21,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -104,7 +104,7 @@ const postToolUseSourceRead = rawInput("2026-08-01T08:50:02.000Z", {
   tool_input: { file_path: "packages/foo/src/x.ts" },
 });
 
-const postToolUseHookEditClassifiedFromTheStampedRootNotCwd = {
+const postToolUseHookEdit = {
   ...rawInput("2026-08-01T08:50:03.000Z", {
     hook_event_name: HookPulseEvent.Enum.PostToolUse,
     tool_name: "Edit",
@@ -254,7 +254,7 @@ const postToolUseFailure = rawInput("2026-08-01T08:47:00.000Z", {
   is_interrupt: true,
 });
 
-const postToolUseFailureErroredWithoutAHumanInterrupt = rawInput("2026-08-01T08:47:30.000Z", {
+const postToolUseFailureErrored = rawInput("2026-08-01T08:47:30.000Z", {
   hook_event_name: HookPulseEvent.Enum.PostToolUseFailure,
   tool_name: "Bash",
   tool_use_id: "tool-failed-2",
@@ -386,66 +386,67 @@ describe("HookPulseV1", () => {
     })
   );
 
-  it.effect(
-    "lets the native agent id win over the root transcript path Claude gives subagent hooks, reads an empty id as no signal like the shell writer, and records Cursor as explicitly unknown",
-    () =>
-      Effect.gen(function* () {
-        const claudeRoot = "/synthetic/12345678-1234-1234-1234-123456789abc.jsonl";
-        const codexRolloutTimestampThenThreadUuid =
-          "/synthetic/sessions/rollout-2026-11-06T12-00-00-12345678-1234-1234-1234-123456789abc.jsonl";
-        const cases = [
-          { agentKind: "claude-code", path: claudeRoot, agentId: O.some("agent-1"), role: O.some("subagent") },
-          { agentKind: "claude-code", path: claudeRoot, agentId: O.none(), role: O.some("primary") },
-          {
-            agentKind: "codex-cli",
-            path: codexRolloutTimestampThenThreadUuid,
-            agentId: O.none(),
-            role: O.some("primary"),
-          },
-          {
-            agentKind: "codex-cli",
-            path: codexRolloutTimestampThenThreadUuid,
-            agentId: O.some("thread-2"),
-            role: O.some("subagent"),
-          },
-          { agentKind: "codex-cli", path: claudeRoot, agentId: O.none(), role: O.none() },
-          {
-            agentKind: "codex-cli",
-            path: codexRolloutTimestampThenThreadUuid,
-            agentId: O.some(""),
-            role: O.some("primary"),
-          },
-          { agentKind: "cursor-cli", path: claudeRoot, agentId: O.none(), role: O.some("unknown") },
-        ] as const;
-        for (const { agentKind, path, agentId, role } of cases) {
-          const row = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
-            {},
-            decodeHookPulseFromRaw({
-              ...baseRawInputFixture,
-              agentKind,
-              ts: "2026-08-01T08:00:00.000Z",
-              event: {
-                ...baseRawEventFixture,
-                transcript_path: path,
-                hook_event_name: "PreToolUse",
-                ...O.getOrElse(
-                  O.map(agentId, (agent_id) => ({ agent_id })),
-                  () => ({})
-                ),
-              },
-            })
-          );
-          expect(row.sessionRole).toEqual(role);
-          const expectedAgentId = yield* Effect.transposeOption(
-            O.map(O.filter(agentId, Str.isNonEmpty), (value) => hashPrivateIdentifier(value, O.none()))
-          );
-          expect(row.agentId).toEqual(expectedAgentId);
-          const serialized = yield* encodeUnknownJsonEffect(row);
-          A.forEach(A.getSomes([O.filter(agentId, Str.isNonEmpty)]), (raw) =>
-            expect(serialized, "rows carry only the salted digest of the private agent id").not.toContain(raw)
-          );
-        }
-      })
+  it.effect("lets the native agent id win over the root transcript path Claude gives subagent hooks", () =>
+    Effect.gen(function* () {
+      const claudeRoot = "/synthetic/12345678-1234-1234-1234-123456789abc.jsonl";
+      const codexRolloutTimestampThenThreadUuid =
+        "/synthetic/sessions/rollout-2026-11-06T12-00-00-12345678-1234-1234-1234-123456789abc.jsonl";
+      const cases = [
+        { agentKind: "claude-code", path: claudeRoot, agentId: O.some("agent-1"), role: O.some("subagent") },
+        { agentKind: "claude-code", path: claudeRoot, agentId: O.none(), role: O.some("primary") },
+        {
+          agentKind: "codex-cli",
+          path: codexRolloutTimestampThenThreadUuid,
+          agentId: O.none(),
+          role: O.some("primary"),
+        },
+        {
+          agentKind: "codex-cli",
+          path: codexRolloutTimestampThenThreadUuid,
+          agentId: O.some("thread-2"),
+          role: O.some("subagent"),
+        },
+        { agentKind: "codex-cli", path: claudeRoot, agentId: O.none(), role: O.none() },
+        {
+          agentKind: "codex-cli",
+          path: codexRolloutTimestampThenThreadUuid,
+          agentId: O.some(""),
+          role: O.some("primary"),
+        },
+        { agentKind: "cursor-cli", path: claudeRoot, agentId: O.none(), role: O.some("unknown") },
+      ] as const;
+      for (const { agentKind, path, agentId, role } of cases) {
+        const row = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
+          {},
+          decodeHookPulseFromRaw({
+            ...baseRawInputFixture,
+            agentKind,
+            ts: "2026-08-01T08:00:00.000Z",
+            event: {
+              ...baseRawEventFixture,
+              transcript_path: path,
+              hook_event_name: "PreToolUse",
+              ...O.getOrElse(
+                O.map(agentId, (agent_id) => ({ agent_id })),
+                () => ({})
+              ),
+            },
+          })
+        );
+        expect(
+          row.sessionRole,
+          "an empty id reads as no signal, like the shell writer, and Cursor is recorded as explicitly unknown"
+        ).toEqual(role);
+        const expectedAgentId = yield* Effect.transposeOption(
+          O.map(O.filter(agentId, Str.isNonEmpty), (value) => hashPrivateIdentifier(value, O.none()))
+        );
+        expect(row.agentId).toEqual(expectedAgentId);
+        const serialized = yield* encodeUnknownJsonEffect(row);
+        A.forEach(A.getSomes([O.filter(agentId, Str.isNonEmpty)]), (raw) =>
+          expect(serialized, "rows carry only the salted digest of the private agent id").not.toContain(raw)
+        );
+      }
+    })
   );
 
   it.effect("rejects a native agent id on a row that is not a subagent", () =>
@@ -507,16 +508,12 @@ describe("HookPulseV1", () => {
 
   {
     const hasTheTranscriptPathTheRawCodecRequires = (value: HookPulseV1) => O.isSome(value.transcriptPath);
-    const isNotObservedSinceTheRawCodecClampsObservedToDerived = (value: HookPulseV1) =>
-      Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier));
-    const isNotARolelessCursorRowTheCodecWouldDeriveAsUnknown = (value: HookPulseV1) =>
+    const isNotObserved = (value: HookPulseV1) => Bool.not(HookPulseEvidenceTier.is.observed(value.evidenceTier));
+    const isNotARolelessCursorRow = (value: HookPulseV1) =>
       value.agentKind !== "cursor-cli" || O.isSome(value.sessionRole);
     const arbitrary = Arbitrary.filter(
-      Arbitrary.filter(
-        Arbitrary.filter(HookPulseV1Arbitrary, hasTheTranscriptPathTheRawCodecRequires),
-        isNotObservedSinceTheRawCodecClampsObservedToDerived
-      ),
-      isNotARolelessCursorRowTheCodecWouldDeriveAsUnknown
+      Arbitrary.filter(Arbitrary.filter(HookPulseV1Arbitrary, hasTheTranscriptPathTheRawCodecRequires), isNotObserved),
+      isNotARolelessCursorRow
     );
     it.prop(
       "round-trips arbitrary encodable canonical values through the raw-event codec",
@@ -526,7 +523,10 @@ describe("HookPulseV1", () => {
 
         const decoded = Result.getOrThrow(S.decodeResult(HookPulseV1FromRawEvent)(encoded));
 
-        pipe(hookPulseEquivalent(decoded, value), assertTrue);
+        assertTrue(
+          hookPulseEquivalent(decoded, value),
+          "the arbitrary excludes observed tiers, which the raw codec clamps to derived, and roleless Cursor rows, which the codec would derive as unknown"
+        );
       },
       { arbitrary: fcRuns(50) }
     );
@@ -731,7 +731,7 @@ describe("HookPulseV1", () => {
         {
           postToolUse: decodeHookPulseFromRaw(autoApprovedPostToolUse),
           postToolUseFailure: decodeHookPulseFromRaw(postToolUseFailure),
-          erroredFailure: decodeHookPulseFromRaw(postToolUseFailureErroredWithoutAHumanInterrupt),
+          erroredFailure: decodeHookPulseFromRaw(postToolUseFailureErrored),
         },
         { concurrency: 1 }
       );
@@ -745,7 +745,11 @@ describe("HookPulseV1", () => {
 
       assertNone(decoded.postToolUse.isInterrupt);
       assertSome(decoded.postToolUseFailure.isInterrupt, true);
-      assertSome(decoded.erroredFailure.isInterrupt, false);
+      deepStrictEqual(
+        decoded.erroredFailure.isInterrupt,
+        O.some(false),
+        "a failure that errored without a human interrupt carries isInterrupt false"
+      );
       pipe(reencoded.interrupted.event.is_interrupt, assertTrue);
       strictEqual(
         reencoded.errored.event.is_interrupt,
@@ -757,14 +761,18 @@ describe("HookPulseV1", () => {
         "a failed call ends its tool bracket, the one terminal event a call gets instead of PostToolUse, and is not a human wait"
       ).toBe(HookPulseWaitReason.Enum.none);
       const twoHopJoinNeedsThisClosingToolUseId = "tool-failed-1";
-      const twoHopJoinNeedsThisClosingDurationOrTheWaitIsUnmeasurable = 12;
+      const closingDurationMs = 12;
       assertSome(decoded.postToolUseFailure.toolUseId, twoHopJoinNeedsThisClosingToolUseId);
-      assertSome(decoded.postToolUseFailure.durationMs, twoHopJoinNeedsThisClosingDurationOrTheWaitIsUnmeasurable);
+      deepStrictEqual(
+        decoded.postToolUseFailure.durationMs,
+        O.some(closingDurationMs),
+        "the two-hop join needs this closing duration, or the wait is unmeasurable"
+      );
     })
   );
 
   it.effect(
-    "drops every event-owned field arriving on a foreign raw event exactly as encode does, so the owned-field invariant never fails the whole row",
+    "drops every event-owned field arriving on a foreign raw event exactly as encode does",
     Effect.fn("HookPulseTest.dropsMisownedRawFields")(function* () {
       const decoded = yield* Effect.all(
         {
@@ -775,7 +783,10 @@ describe("HookPulseV1", () => {
         { concurrency: 1 }
       );
 
-      expect(decoded.notificationType.hookEvent).toBe(HookPulseEvent.Enum.Stop);
+      expect(
+        decoded.notificationType.hookEvent,
+        "dropping misowned fields means the owned-field invariant never fails the whole row"
+      ).toBe(HookPulseEvent.Enum.Stop);
       assertNone(decoded.notificationType.notificationType);
       expect(decoded.notificationType.waitReason).toBe(HookPulseWaitReason.Enum.none);
       assertNone(decoded.reason.sessionEndReason);
@@ -1014,7 +1025,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "resolves the hash salt through the writer's ${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}} precedence; empty falls through, a blank value wins, and hashing then collapses that blank",
+    "resolves the hash salt through the writer's ${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}} precedence",
     Effect.fn("HookPulseTest.resolvesHashSaltPrecedence")(function* () {
       const cases: ReadonlyArray<{
         readonly env: Record<string, string>;
@@ -1051,26 +1062,26 @@ describe("HookPulseV1", () => {
           expectedSalt: "   ",
         },
       ];
-      const probeComparedAsDigestsSoAFailureNeverPrintsASalt = "hook-pulse-salt-precedence-probe";
+      const saltProbe = "hook-pulse-salt-precedence-probe";
       const resolved = yield* Effect.forEach(
         cases,
         ({ env }) =>
           withPinnedSaltProviderNeverTheAmbientOperatorSalt(
             env,
-            Effect.flatMap(hookPulseHashSalt, (hashSalt) =>
-              hashPrivateIdentifier(probeComparedAsDigestsSoAFailureNeverPrintsASalt, hashSalt)
-            )
+            Effect.flatMap(hookPulseHashSalt, (hashSalt) => hashPrivateIdentifier(saltProbe, hashSalt))
           ),
         { concurrency: 1 }
       );
       const expected = yield* Effect.forEach(
         cases,
-        ({ expectedSalt }) =>
-          hashPrivateIdentifier(probeComparedAsDigestsSoAFailureNeverPrintsASalt, O.fromUndefinedOr(expectedSalt)),
+        ({ expectedSalt }) => hashPrivateIdentifier(saltProbe, O.fromUndefinedOr(expectedSalt)),
         { concurrency: 1 }
       );
 
-      expect(resolved).toEqual(expected);
+      expect(
+        resolved,
+        "empty falls through, a blank value wins, and hashing then collapses that blank; the probe is compared as digests so a failure never prints a salt"
+      ).toEqual(expected);
       expect(
         A.dedupe(resolved).length,
         "the rungs must be distinguishable, or a codec returning one constant digest would pass"
@@ -1116,7 +1127,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "reads the ai-metrics rung when the hook-pulse rung is unset, keeping hook rows in the pseudonym namespace of every other ai-metrics producer",
+    "reads the ai-metrics rung when the hook-pulse rung is unset",
     Effect.fn("HookPulseTest.readsAiMetricsSaltRung")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
         { BEEP_AI_METRICS_HASH_SALT: AI_RUNG_SALT_NO_CLONE_WOULD_CONFIGURE },
@@ -1127,7 +1138,10 @@ describe("HookPulseV1", () => {
         )
       );
 
-      const expectation2 = expect(decoded.sessionId);
+      const expectation2 = expect(
+        decoded.sessionId,
+        "hook rows stay in the pseudonym namespace of every other ai-metrics producer"
+      );
       const hashPrivateIdentifier7 = yield* hashPrivateIdentifier(
         baseRawEventFixture.session_id,
         O.some(AI_RUNG_SALT_NO_CLONE_WOULD_CONFIGURE)
@@ -1140,7 +1154,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "falls back to the library default when neither salt is configured, byte-identical to the conformance corpus and every pre-cutover row",
+    "falls back to the library default when neither salt is configured",
     Effect.fn("HookPulseTest.fallsBackToLibraryDefaultSalt")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
         {},
@@ -1151,7 +1165,10 @@ describe("HookPulseV1", () => {
         )
       );
 
-      const expectation3 = expect(decoded.sessionId);
+      const expectation3 = expect(
+        decoded.sessionId,
+        "the default is byte-identical to the conformance corpus and every pre-cutover row"
+      );
       const hashPrivateIdentifier9 = yield* hashPrivateIdentifier(baseRawEventFixture.session_id, O.none());
       expectation3.toBe(hashPrivateIdentifier9);
       const expectation4 = expect(decoded.cwd);
@@ -1228,7 +1245,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "leaves an already-hashed 64-hex writer identifier untouched under any salt, so the live corpus is never double-hashed into digests no producer can reproduce",
+    "leaves an already-hashed 64-hex writer identifier untouched under any salt",
     Effect.fn("HookPulseTest.passesThroughHashedIdentifiers")(function* () {
       const decoded = yield* Effect.all(
         {
@@ -1248,9 +1265,10 @@ describe("HookPulseV1", () => {
         { concurrency: 1 }
       );
 
-      expect(A.map([decoded.hookRung, decoded.aiRung, decoded.unsalted], (row) => row.sessionId)).toEqual(
-        A.replicate(alreadyHashedRawEventFixture.session_id, 3)
-      );
+      expect(
+        A.map([decoded.hookRung, decoded.aiRung, decoded.unsalted], (row) => row.sessionId),
+        "the live corpus is never double-hashed into digests no producer can reproduce"
+      ).toEqual(A.replicate(alreadyHashedRawEventFixture.session_id, 3));
       expect(A.map([decoded.hookRung, decoded.aiRung, decoded.unsalted], (row) => row.cwd)).toEqual(
         A.replicate(alreadyHashedRawEventFixture.cwd, 3)
       );
@@ -1267,7 +1285,7 @@ describe("HookPulseV1", () => {
     expect(decoded.sessionId).toBe(alreadyHashedRawEventFixture.session_id);
   });
   it.effect(
-    "derives the unsalted kind:name context-surface digest only on PostToolUse, so it joins contextSurfaceId and a denied or failed call never counts as touched",
+    "derives the unsalted kind:name context-surface digest only on PostToolUse, so it joins contextSurfaceId",
     Effect.fn("HookPulseTest.derivesContextSurface")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
         {},
@@ -1276,7 +1294,7 @@ describe("HookPulseV1", () => {
             skill: decodeHookPulseFromRaw(postToolUseSkill),
             mcp: decodeHookPulseFromRaw(postToolUseMcp),
             sourceRead: decodeHookPulseFromRaw(postToolUseSourceRead),
-            hookEdit: decodeHookPulseFromRaw(postToolUseHookEditClassifiedFromTheStampedRootNotCwd),
+            hookEdit: decodeHookPulseFromRaw(postToolUseHookEdit),
             claudeMd: decodeHookPulseFromRaw(postToolUseClaudeMdWrite),
             preToolUse: decodeHookPulseFromRaw(preToolUseSkill),
           },
@@ -1291,13 +1309,20 @@ describe("HookPulseV1", () => {
       const hashPublicTextSha2566 = yield* hashPublicTextSha256("mcp-server:notion");
       assertSome(decoded.mcp.surface, hashPublicTextSha2566);
       assertNone(decoded.sourceRead.surface);
-      const hookSurfaceTheWriterStampsSinceAPureCodecCannotWalkTheDisk =
-        yield* hashPublicTextSha256("hook:law-pulse.sh");
-      assertSome(decoded.hookEdit.surface, hookSurfaceTheWriterStampsSinceAPureCodecCannotWalkTheDisk);
+      const hookSurface = yield* hashPublicTextSha256("hook:law-pulse.sh");
+      deepStrictEqual(
+        decoded.hookEdit.surface,
+        O.some(hookSurface),
+        "the hook edit is classified from the stamped root, not cwd; the writer stamps it since a pure codec cannot walk the disk"
+      );
       const claudeMdSymlinkSharesTheAgentsMdDigest = yield* hashPublicTextSha256("agents-md:AGENTS.md");
       assertSome(decoded.claudeMd.surface, claudeMdSymlinkSharesTheAgentsMdDigest);
-      const preToolUseCarriesNoSurfaceSincePostToolUseOwnsIt = decoded.preToolUse.surface;
-      assertNone(preToolUseCarriesNoSurfaceSincePostToolUseOwnsIt);
+      const preToolUseSurface = decoded.preToolUse.surface;
+      deepStrictEqual(
+        preToolUseSurface,
+        O.none(),
+        "PreToolUse carries no surface since PostToolUse owns it, so a denied or failed call never counts as touched"
+      );
       expect(serialized, "the raw skill name never reaches the row").not.toContain(surfaceSkillName);
       const encodedHook = yield* encodeHookPulse(decoded.hookEdit);
       const serializedHook = yield* encodeUnknownJsonEffect(encodedHook);
@@ -1325,7 +1350,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "passes a harnessHash stamp through on SessionStart, where the session's harness regime is fixed, and drops it on every other event",
+    "passes a harnessHash stamp through on SessionStart and drops it on every other event",
     Effect.fn("HookPulseTest.ownsHarnessHash")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
         {},
@@ -1341,10 +1366,18 @@ describe("HookPulseV1", () => {
       const raw = yield* encodeHookPulseToRaw(decoded.stamped);
       const roundTripped = yield* decodeHookPulseFromRaw(raw);
 
-      assertSome(decoded.stamped.harnessHash, harnessHashStamp);
+      deepStrictEqual(
+        decoded.stamped.harnessHash,
+        O.some(harnessHashStamp),
+        "SessionStart is where the session's harness regime is fixed"
+      );
       expect(decoded.stamped.waitReason).toBe(HookPulseWaitReason.Enum.none);
-      const unstampedHashStaysAbsentWithNoRepoRootToRecomputeFrom = decoded.unstamped.harnessHash;
-      assertNone(unstampedHashStaysAbsentWithNoRepoRootToRecomputeFrom);
+      const unstampedHash = decoded.unstamped.harnessHash;
+      deepStrictEqual(
+        unstampedHash,
+        O.none(),
+        "an unstamped hash stays absent, with no repo root to recompute it from"
+      );
       assertNone(decoded.misowned.harnessHash);
       expect(raw.harnessHash).toBe(harnessHashStamp);
       pipe(hookPulseEquivalent(roundTripped, decoded.stamped), assertTrue);
@@ -1369,7 +1402,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "round-trips a surface digest through the raw-event codec as a writer stamp, because a digest cannot be inverted into tool_input",
+    "round-trips a surface digest through the raw-event codec as a writer stamp",
     Effect.fn("HookPulseTest.roundTripsSurface")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
         {},
@@ -1379,7 +1412,7 @@ describe("HookPulseV1", () => {
       const roundTripped = yield* decodeHookPulseFromRaw(raw);
 
       expect(raw.surface).toBe(O.getOrThrow(decoded.surface));
-      expect(raw.event.tool_input).toBeUndefined();
+      expect(raw.event.tool_input, "a digest cannot be inverted into tool_input").toBeUndefined();
       pipe(hookPulseEquivalent(roundTripped, decoded), assertTrue);
     })
   );
@@ -1401,7 +1434,7 @@ describe("HookPulseV1", () => {
               postToolUse("Read", { file_path: "packages/../.claude/skills/surface-canary/SKILL.md" })
             ),
             agent: decodeHookPulseFromRaw(postToolUse("Edit", { file_path: ".claude/agents/reviewer.md" })),
-            settingsLocatedByPathAfterANonStringFilePath: decodeHookPulseFromRaw(
+            settingsAfterNonStringPath: decodeHookPulseFromRaw(
               postToolUse("MultiEdit", { file_path: 42, path: ".claude/settings.local.json" })
             ),
             notSettings: decodeHookPulseFromRaw(postToolUse("Write", { file_path: ".claude/keybindings.json" })),
@@ -1423,7 +1456,11 @@ describe("HookPulseV1", () => {
       const hashPublicTextSha25610 = yield* hashPublicTextSha256("agent-definition:reviewer.md");
       assertSome(decoded.agent.surface, hashPublicTextSha25610);
       const hashPublicTextSha25611 = yield* hashPublicTextSha256("settings:settings.local.json");
-      assertSome(decoded.settingsLocatedByPathAfterANonStringFilePath.surface, hashPublicTextSha25611);
+      deepStrictEqual(
+        decoded.settingsAfterNonStringPath.surface,
+        O.some(hashPublicTextSha25611),
+        "settings are located by path after a non-string file_path"
+      );
       assertNone(decoded.notSettings.surface);
       const hashPublicTextSha25612 = yield* hashPublicTextSha256("pattern:jsdoc-documentation.md");
       assertSome(decoded.pattern.surface, hashPublicTextSha25612);
@@ -1463,7 +1500,7 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "re-runs the canonical invariant before encoding a disableChecks pulse, the only Schema.make escape that can build a wait reason the invariant would have rejected",
+    "re-runs the canonical invariant before encoding a disableChecks pulse",
     Effect.fn("HookPulseTest.rejectsMismatchedWaitReason")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt({}, decodeHookPulseFromRaw(stop));
       const failure = yield* Effect.flip(
@@ -1476,7 +1513,10 @@ describe("HookPulseV1", () => {
       );
 
       expect(decoded.waitReason).not.toBe(HookPulseWaitReason.Enum["tool-permission"]);
-      expect(failure._tag).toBe("SchemaError");
+      expect(
+        failure._tag,
+        "disableChecks is the only Schema.make escape that can build a wait reason the invariant would have rejected"
+      ).toBe("SchemaError");
       expect(failure.message).toContain(
         "Expected waitReason to match the value derived from hookEvent, toolName, and notificationType"
       );
@@ -1511,12 +1551,12 @@ describe("HookPulseV1", () => {
   );
 
   it.effect(
-    "refuses an empty tool name on the raw event, where the shell reads it as absent but the codec would derive tool-permission, and on the canonical row, which could never encode back",
+    "refuses an empty tool name on the raw event and on the canonical row",
     Effect.fn("HookPulseTest.refusesEmptyToolName")(function* () {
       const canonical = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt({}, decodeHookPulseFromRaw(stop));
       const encoded = yield* encodeHookPulse(canonical);
 
-      pipe(
+      assertTrue(
         Result.isFailure(
           HookPulseRawEvent.decodeResult({
             ...baseRawEventFixture,
@@ -1524,14 +1564,17 @@ describe("HookPulseV1", () => {
             tool_name: "",
           })
         ),
-        assertTrue
+        "the shell reads an empty tool name as absent, but the codec would derive tool-permission"
       );
-      pipe(Result.isFailure(HookPulseV1.decodeResult({ ...encoded, toolName: "" })), assertTrue);
+      assertTrue(
+        Result.isFailure(HookPulseV1.decodeResult({ ...encoded, toolName: "" })),
+        "a canonical row with an empty tool name could never encode back"
+      );
     })
   );
 
   it.effect(
-    "keeps toolName, toolUseId and durationMs on any event, because a measured PermissionRequest carries tool_name without tool_use_id while PreToolUse and PostToolUse carry both, and rejecting that split would drop real telemetry",
+    "keeps toolName, toolUseId and durationMs on any event",
     Effect.fn("HookPulseTest.keepsEventAgnosticFields")(function* () {
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
         {},
@@ -1549,12 +1592,15 @@ describe("HookPulseV1", () => {
       assertSome(decoded.toolName, "Bash");
       assertSome(decoded.toolUseId, "tool-on-stop");
       assertSome(decoded.durationMs, 5);
-      expect([raw.event.tool_name, raw.event.tool_use_id, raw.event.duration_ms]).toEqual(["Bash", "tool-on-stop", 5]);
+      expect(
+        [raw.event.tool_name, raw.event.tool_use_id, raw.event.duration_ms],
+        "a measured PermissionRequest carries tool_name without tool_use_id while PreToolUse and PostToolUse carry both, and rejecting that split would drop real telemetry"
+      ).toEqual(["Bash", "tool-on-stop", 5]);
     })
   );
 
   it.effect(
-    "prefers a stamped surface digest over re-deriving one, only on the owning event, and refuses a newline-bearing key that shell command substitution would strip",
+    "prefers a stamped surface digest over re-deriving one, only on the owning event",
     Effect.fn("HookPulseTest.prefersSurfaceStamp")(function* () {
       const stamp = Str.repeat(64)("f");
       const decoded = yield* withPinnedSaltProviderNeverTheAmbientOperatorSalt(
@@ -1577,7 +1623,11 @@ describe("HookPulseV1", () => {
 
       assertSome(decoded.stamped.surface, stamp);
       assertNone(decoded.misowned.surface);
-      assertNone(decoded.newline.surface);
+      deepStrictEqual(
+        decoded.newline.surface,
+        O.none(),
+        "a newline-bearing key is refused, since shell command substitution would strip it"
+      );
     })
   );
 });

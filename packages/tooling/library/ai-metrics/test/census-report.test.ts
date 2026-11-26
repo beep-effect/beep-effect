@@ -9,7 +9,7 @@ import * as SchemaAST from "effect/SchemaAST";
 
 const keyOf = (name: PropertyKey) => (P.isString(name) ? name : "<symbol>");
 
-const textFreeDeclarationsTheCensusUsesUtcInstantsAndOptions: ReadonlyArray<string> = ["DateTime.Utc", "Option"];
+const textFreeDeclarations: ReadonlyArray<string> = ["DateTime.Utc", "Option"];
 const textFreeLeavesAnyOtherNodeFailsClosed: ReadonlyArray<string> = [
   "Number",
   "Boolean",
@@ -19,48 +19,39 @@ const textFreeLeavesAnyOtherNodeFailsClosed: ReadonlyArray<string> = [
   "Enum",
 ];
 
-const decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree = (
-  ast: SchemaAST.AST,
-  path: string
-): ReadonlyArray<string> =>
+const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> =>
   Match.value(ast).pipe(
     Match.tag("String", "TemplateLiteral", () => [path]),
     Match.tag("Objects", (objects) => [
       ...A.flatMap(objects.propertySignatures, (property) =>
-        decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(property.type, `${path}.${keyOf(property.name)}`)
+        freeTextPaths(property.type, `${path}.${keyOf(property.name)}`)
       ),
       ...A.flatMap(objects.indexSignatures, (index) => [
-        ...decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(index.parameter, `${path}[key]`),
-        ...decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(index.type, `${path}[value]`),
+        ...freeTextPaths(index.parameter, `${path}[key]`),
+        ...freeTextPaths(index.type, `${path}[value]`),
       ]),
     ]),
     Match.tag("Arrays", (arrays) =>
-      A.flatMap([...arrays.elements, ...arrays.rest], (element) =>
-        decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(element, `${path}[]`)
-      )
+      A.flatMap([...arrays.elements, ...arrays.rest], (element) => freeTextPaths(element, `${path}[]`))
     ),
-    Match.tag("Union", (union) =>
-      A.flatMap(union.types, (member) => decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(member, path))
-    ),
+    Match.tag("Union", (union) => A.flatMap(union.types, (member) => freeTextPaths(member, path))),
     Match.tag("Declaration", (declaration) => {
       const expected = String(declaration.annotations?.expected);
-      return A.contains(textFreeDeclarationsTheCensusUsesUtcInstantsAndOptions, expected)
-        ? A.flatMap(declaration.typeParameters, (parameter) =>
-            decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(parameter, `${path}<>`)
-          )
+      return A.contains(textFreeDeclarations, expected)
+        ? A.flatMap(declaration.typeParameters, (parameter) => freeTextPaths(parameter, `${path}<>`))
         : [`${path}:Declaration(${expected})`];
     }),
-    Match.tag("Suspend", (suspend) => decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(suspend.thunk(), path)),
+    Match.tag("Suspend", (suspend) => freeTextPaths(suspend.thunk(), path)),
     Match.orElse((leaf) =>
       A.contains(textFreeLeavesAnyOtherNodeFailsClosed, leaf._tag) ? [] : [`${path}:${leaf._tag}`]
     )
   );
 
-const walk = (schema: S.Top) => decodedPathsThatCanHoldFreeTextOrAreNotKnownTextFree(SchemaAST.toType(schema.ast), "$");
+const walk = (schema: S.Top) => freeTextPaths(SchemaAST.toType(schema.ast), "$");
 
 describe("census report schema (AC1)", () => {
   it("holds no free-text string anywhere in the report", () => {
-    expect(walk(CensusReport)).toEqual([]);
+    expect(walk(CensusReport), "the text-free declarations the census uses are UTC instants and options").toEqual([]);
   });
 
   it("holds no free-text string anywhere in the baseline file", () => {
@@ -76,17 +67,20 @@ describe("census report schema (AC1)", () => {
       later: S.suspend(() => S.String),
       loose: S.Unknown,
       link: S.URL,
-      declarationNamedLikeAnAllowedOneIsStillUnverified: S.URL.annotate({ expected: "OptionSecret" }),
+      lookalikeDeclaration: S.URL.annotate({ expected: "OptionSecret" }),
       count: S.Finite,
     });
-    expect(walk(leaky)).toEqual([
+    expect(
+      walk(leaky),
+      "lists decoded paths that can hold free text or are not known text-free; a declaration named like an allowed one is still unverified"
+    ).toEqual([
       "$.rows[].note",
       "$.tags[key]",
       "$.maybe<>",
       "$.later",
       "$.loose:Unknown",
       "$.link:Declaration(URL)",
-      "$.declarationNamedLikeAnAllowedOneIsStillUnverified:Declaration(OptionSecret)",
+      "$.lookalikeDeclaration:Declaration(OptionSecret)",
     ]);
   });
 

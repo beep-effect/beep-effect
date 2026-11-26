@@ -230,7 +230,7 @@ const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: str
 const sqlString = (value: string): string => `'${pipe(value, Str.replace(/'/gu, "''"))}'`;
 const AI_METRICS_LONG_TEST_TIMEOUT = 90_000;
 
-const injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff = (
+const recordingSpanSender = (
   delivered: Ref.Ref<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>
 ): Layer.Layer<AiMetricsOtlpSpanSender> =>
   Layer.succeed(AiMetricsOtlpSpanSender)(
@@ -447,7 +447,7 @@ const scenariosWhoseStampSurvivesTheJoin = [
   "unreadable",
   "rejected-refusal",
 ];
-const scenariosWhoseGapEvidenceFailedToLoadWithNoOwnContradiction = ["empty-sentinel", "custom-sentinel"];
+const unloadedGapScenarios = ["empty-sentinel", "custom-sentinel"];
 const pinnedCompletenessQualificationVerdict = (scenario: StampScenario): string =>
   ForwarderStampScenario.match(scenario, {
     qualified: () => "complete/qualified",
@@ -592,22 +592,23 @@ const assertScenarioCollection = (
     expect(status.stampGapRejectedRecords).toBe(1);
   }
 };
-const assertCompletenessFromCollectionOnlyAndQualificationFromJoinOnly = Effect.fnUntraced(function* (
+const assertStampVerdict = Effect.fnUntraced(function* (
   scenario: StampScenario,
   result: AiMetricsForwarderRunResult,
   expected: string | null
 ) {
   const db = yield* DuckDb;
   const completeness = result.hookCollectionComplete && result.stampGapCollectionComplete ? "complete" : "partial";
-  const unresolved = A.contains(scenariosWhoseGapEvidenceFailedToLoadWithNoOwnContradiction, scenario)
-    ? "unknown"
-    : "unqualified";
+  const unresolved = A.contains(unloadedGapScenarios, scenario) ? "unknown" : "unqualified";
   const qualification = expected === null ? unresolved : "qualified";
   for (const table of ["ai_metrics_sessions", "ai_metrics_source_files"]) {
     const query5 = yield* db.query(
       `SELECT session_stamp_completeness AS completeness, session_stamp_qualification AS qualification FROM ${table}`
     );
-    expect(query5).toEqual([{ completeness, qualification }]);
+    expect(
+      query5,
+      "completeness comes from collection only and qualification from the join only; a scenario whose gap evidence failed to load with no own contradiction is unknown"
+    ).toEqual([{ completeness, qualification }]);
   }
   for (const span of (yield* readAiMetricsOtlpSpanProjections).projections) {
     expect(span.attributes["ai_metrics.session_stamp_completeness"]).toBe(completeness);
@@ -641,7 +642,7 @@ const readLatestSourceVerdict = Effect.fnUntraced(function* () {
   );
 });
 const verifiedStampVerdict = { stamp: fixtureStamp, completeness: "complete", qualification: "qualified" };
-const assertStoredStampLifecycleInOrderEachStepReadingThePreviousState = Effect.fnUntraced(function* (
+const assertStampLifecycle = Effect.fnUntraced(function* (
   forwarderInput: AiMetricsForwarderInput,
   hookDir: string,
   mixedShard: string
@@ -656,7 +657,7 @@ const assertStoredStampLifecycleInOrderEachStepReadingThePreviousState = Effect.
   const readSessionVerdict5 = yield* readSessionVerdict();
   expect(
     readSessionVerdict5,
-    "(b) an undecodable unrelated line with no own evidence in the run is unevaluable, so the stored stamp stays"
+    "(b) an undecodable unrelated line with no own evidence in the run is unevaluable, so the stored stamp stays; the steps run in order, each reading the state the previous one left"
   ).toEqual([verifiedStampVerdict]);
   const readLatestSourceVerdict6 = yield* readLatestSourceVerdict();
   expect(readLatestSourceVerdict6).toEqual([{ completeness: "partial", qualification: "unknown" }]);
@@ -730,9 +731,7 @@ const makeScenarioPulses = Effect.fnUntraced(function* (scenario: StampScenario,
   });
   return { start, tool };
 });
-const runStampScenarioInItsOwnTempRepoHookRootAndDuckDbToItsVerdict = Effect.fnUntraced(function* (
-  scenario: StampScenario
-) {
+const runStampScenario = Effect.fnUntraced(function* (scenario: StampScenario) {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
   const tmpDir = yield* fs.makeTempDirectoryScoped();
@@ -774,18 +773,14 @@ const runStampScenarioInItsOwnTempRepoHookRootAndDuckDbToItsVerdict = Effect.fnU
     const status = yield* decodeForwarderRunResult(forwarderRunResultToJson11);
     assertScenarioCollection(scenario, result, status);
     const expected = A.contains(scenariosWhoseStampSurvivesTheJoin, scenario) ? fixtureStamp : null;
-    const verdict = yield* assertCompletenessFromCollectionOnlyAndQualificationFromJoinOnly(scenario, result, expected);
+    const verdict = yield* assertStampVerdict(scenario, result, expected);
     yield* assertScenarioStampStorage(expected);
     if (scenario === "qualified") {
       const encodedHookPulseRows6 = yield* encodeHookPulseRows([
         start,
         HookPulseV1.make({ ...start, harnessHash: O.some(fixtureOtherStamp) }),
       ]);
-      yield* assertStoredStampLifecycleInOrderEachStepReadingThePreviousState(
-        forwarderInput,
-        hookDir,
-        encodedHookPulseRows6
-      );
+      yield* assertStampLifecycle(forwarderInput, hookDir, encodedHookPulseRows6);
     }
     return verdict;
   }).pipe(
@@ -798,14 +793,15 @@ const runStampScenarioInItsOwnTempRepoHookRootAndDuckDbToItsVerdict = Effect.fnU
   );
 });
 
-it("pins stamp verdicts that each scenario run reaches exactly, so neither completeness nor qualification determines the other", () => {
+it("pins the exact stamp verdict each scenario run reaches", () => {
   expect(
     A.sort(
       A.fromIterable(
         HashSet.fromIterable(A.map(ForwarderStampScenario.literals, pinnedCompletenessQualificationVerdict))
       ),
       Order.String
-    )
+    ),
+    "neither completeness nor qualification determines the other"
   ).toEqual([
     "complete/qualified",
     "complete/unqualified",
@@ -1140,8 +1136,11 @@ it.layer(GitKitOverPlatformSpawnerForSnapshotIndexReads, { timeout: "30 seconds"
     it.effect(
       `binds session stamps through hook namespace, storage and OTLP without borrowing ambiguous identities: ${scenario}`,
       Effect.fnUntraced(function* () {
-        const resultStampScenario = yield* runStampScenarioInItsOwnTempRepoHookRootAndDuckDbToItsVerdict(scenario);
-        expect(resultStampScenario).toBe(pinnedCompletenessQualificationVerdict(scenario));
+        const resultStampScenario = yield* runStampScenario(scenario);
+        expect(
+          resultStampScenario,
+          "each scenario runs in its own temp repo, hook root and DuckDB to its verdict"
+        ).toBe(pinnedCompletenessQualificationVerdict(scenario));
       })
     );
   }
@@ -1622,7 +1621,7 @@ it.layer(GitKitOverPlatformSpawnerForSnapshotIndexReads, { timeout: "30 seconds"
             const beforePartialExport = yield* readAiMetricsOtlpSpanProjections;
             expect(
               beforePartialExport.turnIds.length,
-              "more than 512 sessions, the boundary where a session-only first request marked zero turns and every retry resent it"
+              "more than 512 sessions, the boundary where a session-only first request marked zero turns and every retry resent it; each session now sits beside its turns, so no chunk is session-only"
             ).toBe(514);
 
             const senderCalls = yield* Ref.make(0);
@@ -1634,15 +1633,18 @@ it.layer(GitKitOverPlatformSpawnerForSnapshotIndexReads, { timeout: "30 seconds"
             const afterPartialExport = yield* readAiMetricsOtlpSpanProjections;
             expect(
               afterPartialExport.turnIds.length,
-              "a chunk acknowledged before a later one failed stays closed, so retries do not starve the remaining turns"
+              "a chunk acknowledged before a later one failed stays closed, so retries do not starve the remaining turns; only the chunk just acknowledged is marked, so a retry resumes after it"
             ).toBe(258);
             const remainingTurnSpanIds = spanIdsByName(afterPartialExport.projections, "ai_metrics.agent.turn");
 
             const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
             const exported = yield* runAiMetricsOtlpExport(exportInput).pipe(
-              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
+              provideScopedLayer(recordingSpanSender(delivered))
             );
-            expect(exported.turnSpanCount, "remaining export turn count").toBe(258);
+            expect(
+              exported.turnSpanCount,
+              "remaining export turn count, delivered through an injected recording sender instead of dead-port retry backoff"
+            ).toBe(258);
 
             const afterSuccessfulExport = yield* readAiMetricsOtlpSpanProjections;
             expect(
@@ -1652,7 +1654,7 @@ it.layer(GitKitOverPlatformSpawnerForSnapshotIndexReads, { timeout: "30 seconds"
             expect(afterSuccessfulExport.projections).toEqual([]);
 
             const secondExport = yield* runAiMetricsOtlpExport(exportInput).pipe(
-              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
+              provideScopedLayer(recordingSpanSender(delivered))
             );
             expect(secondExport.turnSpanCount, "a second run over unchanged content delivers nothing").toBe(0);
             expect(secondExport.spanCount).toBe(0);
@@ -2151,12 +2153,12 @@ volumes:
             const delivered = yield* Ref.make<ReadonlyArray<ReadonlyArray<AiMetricsOtlpSpanProjection>>>([]);
             const batch = yield* readAiMetricsOtlpSpanProjections;
             const result = yield* runAiMetricsOtlpExport(input).pipe(
-              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
+              provideScopedLayer(recordingSpanSender(delivered))
             );
             const pipeableResult = yield* pipe(
               input,
               runAiMetricsOtlpProjectionBatchExport(batch),
-              provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered))
+              provideScopedLayer(recordingSpanSender(delivered))
             );
             const json = yield* otlpExportResultToJson(result);
 
@@ -2737,7 +2739,7 @@ volumes:
   );
 
   it.effect(
-    "backfills the OTLP export watermark on a store whose turns predate the column, without burying the last turn-bearing run",
+    "backfills the OTLP export watermark on a store whose turns predate the column",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -2815,7 +2817,7 @@ volumes:
 
             expect(
               watermarks,
-              "run-old, rescued by later runs, is marked; run-last-with-turns stays pending because the newer zero-turn run-empty-latest does not shadow it"
+              "the backfill never buries the last turn-bearing run: run-old, rescued by later runs, is marked; run-last-with-turns stays pending because the newer zero-turn run-empty-latest does not shadow it"
             ).toEqual([
               { exportedAt: null, turnId: "turn-at-risk" },
               { exportedAt: 0, turnId: "turn-old" },
@@ -2847,7 +2849,7 @@ volumes:
               readonly body: string;
               readonly contentType: string;
             }> = [];
-            const captureByteAddressableLatin1BodyThenAnswerWithoutAsyncFunction = (request: Request) =>
+            const captureLatin1Body = (request: Request) =>
               request.arrayBuffer().then((buffer) => {
                 A.appendInPlace(requests, {
                   body: Buffer.from(buffer).toString("latin1"),
@@ -2857,7 +2859,7 @@ volumes:
                 return new Response(null, { status: rejecting ? 415 : 200 });
               });
             const server = Bun.serve({
-              fetch: captureByteAddressableLatin1BodyThenAnswerWithoutAsyncFunction,
+              fetch: captureLatin1Body,
               hostname: "127.0.0.1",
               port: 0,
             });
@@ -2903,7 +2905,10 @@ volumes:
               provideScopedLayer(AiMetricsOtlpSpanSender.layer)
             );
 
-            expect(exported.spanCount).toBe(spansCrossingThe512SpanChunkBoundaryTwice);
+            expect(
+              exported.spanCount,
+              "the server captures each body as byte-addressable latin1, then answers without an async function"
+            ).toBe(spansCrossingThe512SpanChunkBoundaryTwice);
             expect(
               requests.length,
               "a large drain is chunked per 512 spans, never one backpressure-collapsing request"
@@ -2921,7 +2926,7 @@ volumes:
             ).toEqual([512, 512, 176]);
             expect(
               countWireField(eventEnd),
-              "OTLP Span field 8 carries event time as fixed64 nanoseconds, not the export clock"
+              "OTLP Span field 8 carries the same fixed64 event time as field 7, not the export clock: a point instant, since transcript records are not measured operations"
             ).toEqual([512, 512, 176]);
             expect(A.every(requests, (request) => Str.includes("ai_metrics.duration_known")(request.body))).toBe(true);
             assertTrue(
@@ -2929,7 +2934,10 @@ volumes:
               "the live protobuf exporter, since Phoenix answers OTLP/JSON with HTTP 415"
             );
 
-            expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
+            expect(
+              AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
+              "the export mirrors the agent-effectiveness project name without importing the reporting module"
+            ).toBe("beep-agent-effectiveness");
             assertTrue(
               A.every(
                 requests,
@@ -3006,7 +3014,7 @@ volumes:
 
             expect(
               rejected.message,
-              "a rejecting collector surfaces as a typed failure, the confirmation fire-and-forget span emission lacked"
+              "a rejecting collector surfaces as a typed failure: delivery is confirmed by the exporter callback, the confirmation fire-and-forget span emission lacked"
             ).toContain("did not accept the exported spans");
           }),
           ({ server }) => Effect.promise(() => server.stop(true))
@@ -3017,7 +3025,7 @@ volumes:
   });
 
   it.effect(
-    "keeps a session row whose turns outlive the run that last touched it, even when an out-of-order ingest left an early run as its last writer",
+    "keeps a session row whose turns outlive the run that last touched it",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3097,7 +3105,7 @@ volumes:
             expect(turns).toEqual([{ turnId: "turn-late" }]);
             expect(
               sessions,
-              "turn-late's session survives with it, or the exporter's INNER join drops turn-late from every future export"
+              "turn-late's session survives with it even though an out-of-order ingest left the early run as its last writer, or the exporter's INNER join drops turn-late from every future export"
             ).toEqual([{ agentSessionId: "session-shared" }]);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
@@ -3222,7 +3230,7 @@ volumes:
             const duckdb = yield* DuckDb;
             yield* ensureAiMetricsDerivedStorage;
 
-            const previousReleaseRowIdOfSessionRunKindPathHash = (ingestRunId: string) =>
+            const legacySessionId = (ingestRunId: string) =>
               hashPublicTextSha256(`session\u0000${ingestRunId}\u0000codex\u0000grown-transcript`).pipe(
                 Effect.map((digest) => `session-${digest}`)
               );
@@ -3237,7 +3245,7 @@ volumes:
                 { ingestRunId: "run-3", lineNumber: 3, turnId: "turn-3" },
               ],
               Effect.fnUntraced(function* (row) {
-                const agentSessionId = yield* previousReleaseRowIdOfSessionRunKindPathHash(row.ingestRunId);
+                const agentSessionId = yield* legacySessionId(row.ingestRunId);
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_sessions (
                      agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
@@ -3284,7 +3292,7 @@ volumes:
 
             expect(
               sessions,
-              "three rows collapse to one and the session of a different transcript is left alone"
+              "three previous-release rows, each id hashing session, run, kind and path, collapse to one and the session of a different transcript is left alone"
             ).toEqual([{ agentSessionId: expectedSessionId }, { agentSessionId: "session-untouched" }]);
             expect(
               turns,
@@ -3301,7 +3309,7 @@ volumes:
   );
 
   it.effect(
-    "reopens turns the shipped v1 watermark backfill buried, through a v2 id because the ledger skips v1 by id whatever its SQL",
+    "reopens turns the shipped v1 watermark backfill buried, through a v2 id",
     Effect.fn(function* () {
       yield* withTempDirectory(
         Effect.fn(function* (tmpDir) {
@@ -3328,12 +3336,12 @@ volumes:
               }),
               { concurrency: 1, discard: true }
             );
-            const turnsMarkedWithTheBackfillSentinelAsShippedV1LeftThem = [
+            const buriedTurns = [
               { ingestRunId: "run-old", turnId: "turn-old" },
               { ingestRunId: "run-last-with-turns", turnId: "turn-buried" },
             ];
             yield* Effect.forEach(
-              turnsMarkedWithTheBackfillSentinelAsShippedV1LeftThem,
+              buriedTurns,
               Effect.fnUntraced(function* (turn) {
                 yield* duckdb.run(
                   `INSERT INTO ai_metrics_turns (
@@ -3372,7 +3380,7 @@ volumes:
 
             expect(
               watermarks,
-              "v2 reopens only the newest backfilled run; run-old was rescued under the old scheme and stays marked"
+              "the turns carry the backfill sentinel as shipped v1 left them, and the fix needs a v2 id because the ledger skips v1 by id whatever its SQL; v2 reopens only the newest backfilled run; run-old was rescued under the old scheme and stays marked"
             ).toEqual([
               { exportedAt: null, turnId: "turn-buried" },
               { exportedAt: 0, turnId: "turn-old" },
@@ -3423,9 +3431,8 @@ volumes:
                 agent_session_id, ingest_run_id, source_kind, source_path_hash, source_role, config_snapshot_id
               ) VALUES ('session-1', 'run-1', 'codex', 'source-hash', 'primary', 'snapshot')`
             );
-            const dropWatermarkColumnBackToThePreviousReleaseTurnsShape =
-              "ALTER TABLE ai_metrics_turns DROP COLUMN otlp_exported_at_epoch_ms";
-            yield* duckdb.run(dropWatermarkColumnBackToThePreviousReleaseTurnsShape);
+            const dropWatermarkColumn = "ALTER TABLE ai_metrics_turns DROP COLUMN otlp_exported_at_epoch_ms";
+            yield* duckdb.run(dropWatermarkColumn);
             yield* duckdb.run("DELETE FROM ai_metrics_schema_migrations");
 
             const installSpec = yield* makeAiMetricsInstallSpec(
@@ -3447,9 +3454,12 @@ volumes:
                 endpoint: phoenix.value.otlp,
                 target: AiMetricsDeployTarget.Enum.local,
               })
-            ).pipe(provideScopedLayer(injectedRecordingSpanSenderInsteadOfDeadPortRetryBackoff(delivered)));
+            ).pipe(provideScopedLayer(recordingSpanSender(delivered)));
 
-            expect(exported.turnSpanCount).toBe(1);
+            expect(
+              exported.turnSpanCount,
+              "the watermark column was dropped back to the previous release's turns shape, and the export migrates it"
+            ).toBe(1);
             expect(exported.sessionSpanCount).toBe(1);
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
         })
@@ -3467,8 +3477,7 @@ volumes:
 
           yield* Effect.gen(function* () {
             const duckdb = yield* DuckDb;
-            const recordTheWatermarkBackfillSoRowsInsertedAfterStayPending = ensureAiMetricsDerivedStorage;
-            yield* recordTheWatermarkBackfillSoRowsInsertedAfterStayPending;
+            yield* ensureAiMetricsDerivedStorage;
 
             yield* Effect.forEach(
               [
@@ -3538,7 +3547,10 @@ volumes:
               traceIds.length,
               "two run-embedding agent_session_ids of one transcript share one trace; seeding from that column fragmented it per run"
             ).toBe(1);
-            expect(batch.turnSpanCount).toBe(2);
+            expect(
+              batch.turnSpanCount,
+              "storage is ensured first to record the watermark backfill, so rows inserted after it stay pending"
+            ).toBe(2);
 
             expect(
               batch.sessionSpanCount,
@@ -4255,18 +4267,14 @@ volumes:
 
           const forwarder1NewestMtimeAgainstFilenameOrder = 1_700_000_300;
           const forwarder2OldestMtime = 1_700_000_100;
-          const forwarder3MtimeHundredSecondsApartAgainstClockTies = 1_700_000_200;
+          const forwarder3Mtime = 1_700_000_200;
           yield* fs.utimes(
             path.join(parquetRoot, "forwarder-1"),
             forwarder1NewestMtimeAgainstFilenameOrder,
             forwarder1NewestMtimeAgainstFilenameOrder
           );
           yield* fs.utimes(path.join(parquetRoot, "forwarder-2"), forwarder2OldestMtime, forwarder2OldestMtime);
-          yield* fs.utimes(
-            path.join(parquetRoot, "forwarder-3"),
-            forwarder3MtimeHundredSecondsApartAgainstClockTies,
-            forwarder3MtimeHundredSecondsApartAgainstClockTies
-          );
+          yield* fs.utimes(path.join(parquetRoot, "forwarder-3"), forwarder3Mtime, forwarder3Mtime);
 
           const dryRun = yield* enforceAiMetricsRetentionPolicy(
             AiMetricsRetentionEnforcementPolicy.make({
@@ -4275,7 +4283,10 @@ volumes:
               maxSnapshotExports: 2,
             })
           );
-          expect(dryRun.deletedDerivedExportCount).toBe(1);
+          expect(
+            dryRun.deletedDerivedExportCount,
+            "forwarder-3's mtime sits a hundred seconds from each neighbour, so clock ties cannot order the snapshots"
+          ).toBe(1);
           expect(dryRun.keptDerivedExportCount).toBe(2);
           const readDirectory41 = yield* fs.readDirectory(parquetRoot);
           expect(forwarderCount(readDirectory41)).toBe(3);

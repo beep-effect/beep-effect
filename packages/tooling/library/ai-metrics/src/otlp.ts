@@ -648,12 +648,12 @@ const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMe
   );
   const sessionProjections = A.map(sessionGroupsDigestingIdsOncePerSession, (group) => group.session);
   const turnProjections = A.flatMap(sessionGroupsDigestingIdsOncePerSession, (group) => group.turns);
-  const eachSessionBesideItsTurnsSoNoChunkIsSessionOnly = A.flatMap(sessionGroupsDigestingIdsOncePerSession, (group) =>
+  const sessionsBesideTurns = A.flatMap(sessionGroupsDigestingIdsOncePerSession, (group) =>
     A.prepend(group.turns, group.session)
   );
 
   return AiMetricsOtlpSpanProjectionBatch.make({
-    projections: eachSessionBesideItsTurnsSoNoChunkIsSessionOnly,
+    projections: sessionsBesideTurns,
     sessionSpanCount: A.length(sessionProjections),
     turnIds: A.map(rows, (row) => row.turnId),
     turnSpanCount: A.length(turnProjections),
@@ -688,7 +688,7 @@ export const readAiMetricsOtlpSpanProjections: Effect.Effect<
   AiMetricsOtlpExportError,
   DuckDb
 > = Effect.gen(function* () {
-  const migrateTheStoreSoTheWatermarkColumnExistsWithoutWaitingForAnIngest = ensureAiMetricsDerivedStorage.pipe(
+  const migrateStore = ensureAiMetricsDerivedStorage.pipe(
     Effect.mapError((cause) =>
       exportFailure(
         "Failed to prepare the AI metrics derived DuckDB store for OTLP export; run an ingest first if it does not exist yet.",
@@ -696,7 +696,7 @@ export const readAiMetricsOtlpSpanProjections: Effect.Effect<
       )
     )
   );
-  yield* migrateTheStoreSoTheWatermarkColumnExistsWithoutWaitingForAnIngest;
+  yield* migrateStore;
   const rows = yield* readUnexportedTurnRows();
 
   return yield* spanProjectionsFor(rows);
@@ -770,14 +770,14 @@ export const markAiMetricsOtlpTurnsExported: (
 const AI_METRICS_OTLP_SCOPE_NAME = "@beep/repo-ai-metrics";
 const AI_METRICS_OTLP_SERVICE_NAME = "beep-ai-metrics";
 
-const PHOENIX_PROJECT_MIRRORING_AGENT_EFFECTIVENESS_WITHOUT_IMPORTING_THE_REPORTING_MODULE = "beep-agent-effectiveness";
+const PHOENIX_PROJECT_NAME = "beep-agent-effectiveness";
 const AI_METRICS_OTLP_SERVICE_VERSION = "0.0.0";
 const OTEL_SDK_DEFAULT_MAX_EXPORT_BATCH_SIZE = 512;
 
 const resourceRoutingSpansIntoTheirOwnPhoenixProjectUnlessOverridden = (input: AiMetricsOtlpExportInput): Resource =>
   resourceFromAttributes({
     deployment_environment: input.target,
-    "openinference.project.name": PHOENIX_PROJECT_MIRRORING_AGENT_EFFECTIVENESS_WITHOUT_IMPORTING_THE_REPORTING_MODULE,
+    "openinference.project.name": PHOENIX_PROJECT_NAME,
     ...input.endpoint.resourceAttributes,
     "service.name": AI_METRICS_OTLP_SERVICE_NAME,
     "service.version": AI_METRICS_OTLP_SERVICE_VERSION,
@@ -797,7 +797,7 @@ const readableSpanFor =
       O.flatMap(parseSourceEventTime),
       O.map((value): HrTime => [value.seconds, value.nanoseconds])
     );
-    const pointInstantSinceTranscriptRecordsAreNotMeasuredOperations = O.getOrElse(eventTime, () => observedAt);
+    const pointInstant = O.getOrElse(eventTime, () => observedAt);
     return {
       attributes: {
         ...R.remove(projection.attributes, "ai_metrics.timestamp"),
@@ -812,7 +812,7 @@ const readableSpanFor =
       droppedLinksCount: 0,
       duration: [0, 0],
       ended: true,
-      endTime: pointInstantSinceTranscriptRecordsAreNotMeasuredOperations,
+      endTime: pointInstant,
       events: [],
       instrumentationScope: {
         name: AI_METRICS_OTLP_SCOPE_NAME,
@@ -837,12 +837,12 @@ const readableSpanFor =
         traceFlags: TraceFlags.SAMPLED,
         traceId: projection.traceId,
       }),
-      startTime: pointInstantSinceTranscriptRecordsAreNotMeasuredOperations,
+      startTime: pointInstant,
       status: { code: SpanStatusCode.UNSET },
     };
   };
 
-const deliverSpansConfirmedByTheExporterCallbackNotFireAndForgetTracing = (
+const deliverConfirmedSpans = (
   exporter: OTLPTraceExporter,
   spans: ReadonlyArray<ReadableSpan>
 ): Effect.Effect<void, AiMetricsOtlpExportError> =>
@@ -865,7 +865,7 @@ const deliverSpansConfirmedByTheExporterCallbackNotFireAndForgetTracing = (
     );
   });
 
-const protobufExporterSincePhoenixAnswersOtlpJsonWith415 = (url: string) => new OTLPTraceExporter({ url });
+const protobufExporter = (url: string) => new OTLPTraceExporter({ url });
 
 const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
   input: AiMetricsOtlpExportInput,
@@ -881,9 +881,8 @@ const sendThroughOtlpProtoExporter = Effect.fnUntraced(function* (
   const toReadableSpan = readableSpanFor(resource, timestamp);
 
   yield* Effect.acquireUseRelease(
-    Effect.sync(() => protobufExporterSincePhoenixAnswersOtlpJsonWith415(input.endpoint.traceUrl)),
-    (exporter) =>
-      deliverSpansConfirmedByTheExporterCallbackNotFireAndForgetTracing(exporter, A.map(projections, toReadableSpan)),
+    Effect.sync(() => protobufExporter(input.endpoint.traceUrl)),
+    (exporter) => deliverConfirmedSpans(exporter, A.map(projections, toReadableSpan)),
     (exporter) => Effect.promise(() => exporter.shutdown()).pipe(Effect.ignore)
   );
 });
@@ -1131,17 +1130,11 @@ export const runAiMetricsOtlpExport: (
   function* (input) {
     const batch = yield* readAiMetricsOtlpSpanProjections;
     const duckdb = yield* DuckDb;
-    const markOnlyTheChunkJustAcknowledgedSoARetryResumesAfterIt = (
-      projections: ReadonlyArray<AiMetricsOtlpSpanProjection>
-    ) =>
+    const markAcknowledgedChunk = (projections: ReadonlyArray<AiMetricsOtlpSpanProjection>) =>
       markAiMetricsOtlpTurnsExported(AiMetricsOtlpSpanProjection.turnIdsFor(projections)).pipe(
         Effect.provideService(DuckDb, duckdb)
       );
-    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(
-      input,
-      batch,
-      markOnlyTheChunkJustAcknowledgedSoARetryResumesAfterIt
-    );
+    return yield* runAiMetricsOtlpProjectionBatchExportUntraced(input, batch, markAcknowledgedChunk);
   },
   (effect, input) => effect.pipe(withOtlpExportSpan(input))
 );

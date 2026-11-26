@@ -1636,7 +1636,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
       }),
       { concurrency: 1, discard: true }
     );
-    const sessionStampCompletenessDescribingCollectionOnly = aiMetricsSessionStampCompletenessFor(
+    const collectionCompleteness = aiMetricsSessionStampCompletenessFor(
       hookCollectionComplete,
       O.exists(stampGaps, (loaded) => loaded.rejectedRecords === 0)
     );
@@ -1708,11 +1708,8 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           sessionTimeHarnessHashSeparateFromTheIngestSnapshotAbsentWhenUnknownOrMixedSoBackfillNeverReceivesTodaysRegime,
           HarnessHash.make
         ),
-        sessionStampCompleteness: sessionStampCompletenessDescribingCollectionOnly,
-        sessionStampQualification: aiMetricsSessionStampQualificationFor(
-          join,
-          sessionStampCompletenessDescribingCollectionOnly
-        ),
+        sessionStampCompleteness: collectionCompleteness,
+        sessionStampQualification: aiMetricsSessionStampQualificationFor(join, collectionCompleteness),
       });
     });
     const ingestRunId = `forwarder-${startedAtEpochMillis}`;

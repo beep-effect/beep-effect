@@ -299,8 +299,8 @@ export const readHookPulseNamespaceProjection: Effect.Effect<
     Effect.mapError(HookPulseNamespaceError.wrap("Cannot resolve the hook-pulse namespace projection path."))
   );
   if (O.isNone(file)) return O.none<HookPulseNamespaceProjection>();
-  const linkReadBeforeExistsFollowsAndHidesADanglingOne = yield* fs.readLink(file.value).pipe(Effect.option);
-  if (O.isSome(linkReadBeforeExistsFollowsAndHidesADanglingOne)) {
+  const link = yield* fs.readLink(file.value).pipe(Effect.option);
+  if (O.isSome(link)) {
     return yield* HookPulseNamespaceError.new("Hook-pulse namespace projection must not be a symlink.", {
       kind: "symlink",
     });

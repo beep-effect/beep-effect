@@ -103,8 +103,12 @@ describe("ClosingList.parseClosingList: pure functions get pure tests, with no l
       assert.doesNotThrow(() => assertNone(parseClosingList(line)), `${reason}: ${line}`);
   });
 
-  it("rejects the WHOLE line when any item exceeds Number.MAX_SAFE_INTEGER, where the harvest skips one match: a partial list misrepresents the claim", () => {
-    assertNone(parseClosingList("closes #1, #9007199254740993, #2"));
+  it("rejects the WHOLE line when any item exceeds Number.MAX_SAFE_INTEGER, where the harvest skips one match", () => {
+    assert.deepStrictEqual(
+      parseClosingList("closes #1, #9007199254740993, #2"),
+      O.none(),
+      "a partial list misrepresents the claim"
+    );
     assertNone(parseClosingList("closes #9007199254740993"));
   });
 

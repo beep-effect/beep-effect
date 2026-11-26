@@ -441,13 +441,10 @@ for (const scenario of [
                 return Deferred.succeed(policySeen, undefined);
               })
             );
-            const successfulExitOnlyAfterConsumingTheDurableAck = ackSeen.pipe(
-              Deferred.await,
-              Effect.as(ChildProcessSpawner.ExitCode(0))
-            );
+            const exitAfterAck = ackSeen.pipe(Deferred.await, Effect.as(ChildProcessSpawner.ExitCode(0)));
             return ChildProcessSpawner.makeHandle({
               ...syntheticHandle(output, Sink.drain, false),
-              exitCode: successfulExitOnlyAfterConsumingTheDurableAck,
+              exitCode: exitAfterAck,
             });
           })
         );
@@ -481,7 +478,9 @@ for (const scenario of [
         } else assertFailure(result, CursorLifecycleError.make({ reason: "transport" }));
         expect(readyCount).toBe(expectedTimingCount(scenario.ready));
         expect(policies).toBe(expectedTimingCount(scenario.ready));
-        expect(acknowledgements).toBe(expectedTimingCount(scenario.success));
+        expect(acknowledgements, "the helper exits successfully only after consuming the durable ack").toBe(
+          expectedTimingCount(scenario.success)
+        );
         expect((yield* f.journal.stats).pages).toBe(expectedTimingCount(scenario.success));
         expect(releases).toBe(1);
       })
@@ -1125,9 +1124,9 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
         { helperSha256: id },
         { sourcePins: A.map(f.policy.sourcePins, (pin) => ({ ...pin, sha256: id })) },
       ]) {
-        const deliberatelyInvalidEnrollmentNotACallerAuthority = CursorLifecyclePolicy.make({ ...f.policy, ...change });
-        const result = yield* f.deliver(start, deliberatelyInvalidEnrollmentNotACallerAuthority);
-        expect(result.result._tag).toBe("Failure");
+        const invalidPolicy = CursorLifecyclePolicy.make({ ...f.policy, ...change });
+        const result = yield* f.deliver(start, invalidPolicy);
+        expect(result.result._tag, "a deliberately invalid enrollment, not a caller authority").toBe("Failure");
         expect(result.reply._tag).toBe("Failure");
       }
       expect((yield* f.journal.stats).pages).toBe(0);
@@ -1290,34 +1289,23 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
 );
 
 it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { timeout: "45 seconds" })((it) =>
-  it.effect("reports closed synthetic peer predicates without retaining callback or process values", () =>
-    Effect.gen(function* () {
-      const f = yield* fixture();
-      const observed = yield* inspectSyntheticPeer(f.policy, f.runtime);
-      const schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr = yield* diagnosticContext(observed);
-      yield* Effect.logInfo(schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr);
-      expect(observed.report.sourceHashMatches, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(
-        true
-      );
-      expect(
-        observed.report.predicateAstPreserved,
-        schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr
-      ).toBe(true);
-      expect(
-        observed.report.shortCircuitOrderPreserved,
-        schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr
-      ).toBe(true);
-      expect(
-        observed.report.projectedPrintSuppressed,
-        schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr
-      ).toBe(true);
-      expect(observed.report.ok, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(true);
-      expect(observed.diagnosticAckObserved, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(
-        true
-      );
-      expect(observed.helperExitZero, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(true);
-      expect((yield* f.journal.stats).pages, schemaClosedMetadataWithoutPathsPidsArgvEnvCallbackBodyOrStderr).toBe(0);
-    })
+  it.effect(
+    "reports closed synthetic peer predicates via schema-closed context: no paths, pids, argv, env, callback body or stderr",
+    () =>
+      Effect.gen(function* () {
+        const f = yield* fixture();
+        const observed = yield* inspectSyntheticPeer(f.policy, f.runtime);
+        const closedContext = yield* diagnosticContext(observed);
+        yield* Effect.logInfo(closedContext);
+        expect(observed.report.sourceHashMatches, closedContext).toBe(true);
+        expect(observed.report.predicateAstPreserved, closedContext).toBe(true);
+        expect(observed.report.shortCircuitOrderPreserved, closedContext).toBe(true);
+        expect(observed.report.projectedPrintSuppressed, closedContext).toBe(true);
+        expect(observed.report.ok, closedContext).toBe(true);
+        expect(observed.diagnosticAckObserved, closedContext).toBe(true);
+        expect(observed.helperExitZero, closedContext).toBe(true);
+        expect((yield* f.journal.stats).pages, closedContext).toBe(0);
+      })
   )
 );
 

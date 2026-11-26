@@ -96,7 +96,7 @@ const makeRecord = Effect.fn("SessionStampEvidenceTest.makeRecord")(function* (v
   });
 });
 
-const codexTranscriptStorageWhoseSessionRowEveryRunRewrites = AiMetricsStorageLayout.make({
+const codexStorage = AiMetricsStorageLayout.make({
   dataRoot: "/fixture/metrics",
   derivedDir: "/fixture/metrics/derived",
   duckDbPath: "/fixture/metrics/derived/ai-metrics.duckdb",
@@ -121,7 +121,7 @@ const writeVerdict = Effect.fn("SessionStampEvidenceTest.writeVerdict")(function
       records: [yield* makeRecord(verdict)],
       repoRootHash: "repo-root-hash",
       startedAtEpochMillis: 1,
-      storage: codexTranscriptStorageWhoseSessionRowEveryRunRewrites,
+      storage: codexStorage,
       target: AiMetricsDeployTarget.Enum.local,
     })
   );
@@ -252,7 +252,9 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
           const verified = { hash: stampX, completeness: "complete", qualification: "qualified", legacy: true };
           yield* writeVerdict("run-1", { completeness: "complete", hash: O.some(stampX), qualification: "qualified" });
           const readSession1 = yield* readSession();
-          expect(readSession1, "complete stamped").toEqual([verified]);
+          expect(readSession1, "complete stamped, in the one codex transcript session row every run rewrites").toEqual([
+            verified,
+          ]);
 
           yield* writeVerdict("run-2", { completeness: "partial", hash: O.none(), qualification: "unknown" });
           const readSession2 = yield* readSession();
@@ -315,12 +317,15 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
       Effect.fnUntraced(function* () {
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
-          const buildThePreSplitShapeWithoutTheTwoNewColumnsAndLedgerRow = ensureAiMetricsDerivedStorage.pipe(
+          const buildPreSplitShape = ensureAiMetricsDerivedStorage.pipe(
             Effect.andThen(rollbackAiMetricsSessionStampEvidence)
           );
-          yield* buildThePreSplitShapeWithoutTheTwoNewColumnsAndLedgerRow;
+          yield* buildPreSplitShape;
           const evidenceColumnCount9 = yield* evidenceColumnCount();
-          expect(evidenceColumnCount9).toEqual({ columns: [{ count: 0 }], ledger: [{ count: 0 }] });
+          expect(
+            evidenceColumnCount9,
+            "the pre-split shape is built without the two new columns and the ledger row"
+          ).toEqual({ columns: [{ count: 0 }], ledger: [{ count: 0 }] });
           const insert = (id: string, hash: string | null, legacy: boolean | null) =>
             db.run(
               `INSERT INTO ai_metrics_sessions (

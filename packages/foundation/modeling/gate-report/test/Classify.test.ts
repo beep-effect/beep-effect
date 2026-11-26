@@ -96,11 +96,15 @@ const glob = PolicyBreach.cases.CoverageBreach.make({
   pattern: O.some("src/**"),
 });
 
-describe("classifyOutcome: retargets vitest-agent 1cf1ab94 packages/ui/__test__/classify.test.ts onto the widened shapes and outcomes, and adds the extended precedence cases", () => {
+describe("classifyOutcome: retargeted vitest-agent cases on the widened shapes and outcomes, plus the extended precedence cases", () => {
   const passed = Totals.make({ collected: 2, passed: 2 });
 
   it("returns all-pass for a clean run with no policy", () => {
-    assert.strictEqual(classifyOutcome({ reason: "passed", totals: passed, policy: O.none() }), "all-pass");
+    assert.strictEqual(
+      classifyOutcome({ reason: "passed", totals: passed, policy: O.none() }),
+      "all-pass",
+      "retargets vitest-agent 1cf1ab94 packages/ui/__test__/classify.test.ts onto the widened shapes and outcomes"
+    );
   });
 
   it("returns some-fail when a failure total is non-zero", () => {

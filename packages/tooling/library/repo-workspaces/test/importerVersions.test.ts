@@ -194,7 +194,7 @@ describe("importer versions — own-key records", () => {
       assertNone(state.resolve(name, "catalog:missing"));
       assert.isUndefined(unanimousVersionOf({ ".": { effect: "1.0.0" } }, name));
     });
-    it(`preserves own importer and dependency ${name}, first field wins since pnpm records one version across fields, so a conflict is a malformed lockfile`, () => {
+    it(`preserves own importer and dependency ${name}, first field wins since pnpm records one version across fields`, () => {
       const lockfile = Result.getOrThrow(
         S.decodeResult(Lockfile)({
           format: "pnpm",
@@ -217,7 +217,7 @@ describe("importer versions — own-key records", () => {
       const index = importerVersionsOf(lockfile);
       assert.deepStrictEqual(R.keys(index), [name, "packages/z", "packages/a"]);
       assertSome(O.flatMap(R.get(index, name), R.get(name)), "1.0.0");
-      assert.strictEqual(unanimousVersionOf(index, name), "1.0.0");
+      assert.strictEqual(unanimousVersionOf(index, name), "1.0.0", "a conflict across fields is a malformed lockfile");
       const state = snapshot(index);
       assertSome(state.resolveIn(name, name, "catalog:missing"), "1.0.0");
     });

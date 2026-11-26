@@ -509,7 +509,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   )
 );
 
-const ownNativeBundleMemoMapPreservingThePreviousFreshBuildAndScope = Layer.makeMemoMapUnsafe();
+const nativeBundleMemoMap = Layer.makeMemoMapUnsafe();
 
 it.layer(
   Layer.mergeAll(
@@ -521,82 +521,86 @@ it.layer(
   {
     timeout: "30 seconds",
     excludeTestServices: true,
-    memoMap: ownNativeBundleMemoMapPreservingThePreviousFreshBuildAndScope,
+    memoMap: nativeBundleMemoMap,
   }
 )((it) =>
-  it.effect(
-    "gates real filesystem discovery behind worker admission, because a memory filesystem would change the observed source, and the spawner stays limited to the existing discovery implementation",
-    () =>
-      Effect.gen(function* () {
-        const f = yield* fixture();
-        const fs = yield* FileSystem.FileSystem;
-        const dir = yield* fs.makeTempDirectoryScoped();
-        yield* fs.writeFileString(
-          `${dir}/rollout-synthetic.jsonl`,
-          '{"type":"response_item","payload":{"type":"message"}}\n'
-        );
-        const discovery = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: dir, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 32,
-            maxCycleEntries: 128,
-          })
-        );
-        const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
-        const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe25).toMatchObject({ reason: "paused" });
-        expect((yield* f.worker.stats).pages).toBe(0);
-        yield* f.worker.resume;
-        const result = yield* f.worker.discover(discovery, policy);
-        expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
-        expect(result.discovery.activeHelpers).toBe(1);
-        expect((yield* f.worker.stats).pages).toBe(0);
-        yield* f.worker.pause;
-        const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
-        expect(pipe26).toMatchObject({ reason: "paused" });
-        yield* f.worker.resume;
-        const restarted = yield* f.worker.discover(discovery, policy);
-        expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
-        const accepted = yield* f.worker.discover(discovery, policy);
-        expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
-        expect((yield* f.worker.stats).pages).toBe(1);
-        const other = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: dir, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 1,
-            maxCycleEntries: 128,
-          })
-        );
-        const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
-        expect(pipe27).toMatchObject({ reason: "configuration" });
-        yield* f.worker.pause;
-        expect((yield* f.worker.stats).pages).toBe(1);
-        const alias = `${dir}/linked-root`;
-        yield* fs.symlink(dir, alias);
-        const linked = yield* makeTranscriptDiscovery(
-          TranscriptDiscoveryInput.make({
-            roots: [{ path: alias, source: "codex", retired: false }],
-            hashSalt: f.config.nativeHttp.hashSalt,
-            maxDepth: 2,
-            maxEntries: 1,
-            maxFiles: 32,
-            maxCycleEntries: 128,
-          })
-        ).pipe(Effect.flip);
-        expect(
-          linked,
-          "the scanner observes canonical paths and inodes, so a real symlink fails enrollment"
-        ).toMatchObject({
-          reason: "configuration",
-        });
-        expect((yield* f.worker.stats).pages, "the worker's already accepted page is unchanged").toBe(1);
-      })
+  it.effect("gates real filesystem discovery behind worker admission", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const dir = yield* fs.makeTempDirectoryScoped();
+      yield* fs.writeFileString(
+        `${dir}/rollout-synthetic.jsonl`,
+        '{"type":"response_item","payload":{"type":"message"}}\n'
+      );
+      const discovery = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: dir, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 32,
+          maxCycleEntries: 128,
+        })
+      );
+      const policy = TranscriptDiscoveryReadPolicy.make({ maxBytes: 512, maxLineBytes: 256, maxFrames: 1 });
+      const pipe25 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+      expect(
+        pipe25,
+        "real filesystem discovery, because a memory filesystem would change the observed source, and the spawner stays limited to the existing discovery implementation"
+      ).toMatchObject({ reason: "paused" });
+      expect((yield* f.worker.stats).pages).toBe(0);
+      yield* f.worker.resume;
+      const result = yield* f.worker.discover(discovery, policy);
+      expect(result.discovery.roots[0]).toMatchObject({ cycle: 1, state: "scanning" });
+      expect(
+        result.discovery.activeHelpers,
+        "this layer owns its native-bundle memo map, preserving the previous fresh build and scope"
+      ).toBe(1);
+      expect((yield* f.worker.stats).pages).toBe(0);
+      yield* f.worker.pause;
+      const pipe26 = yield* f.worker.discover(discovery, policy).pipe(Effect.flip);
+      expect(pipe26).toMatchObject({ reason: "paused" });
+      yield* f.worker.resume;
+      const restarted = yield* f.worker.discover(discovery, policy);
+      expect(restarted.discovery.roots[0]).toMatchObject({ cycle: 2, state: "scanning" });
+      const accepted = yield* f.worker.discover(discovery, policy);
+      expect(accepted.sweep.outcomes[0]?._tag).toBe("Accepted");
+      expect((yield* f.worker.stats).pages).toBe(1);
+      const other = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: dir, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 1,
+          maxCycleEntries: 128,
+        })
+      );
+      const pipe27 = yield* f.worker.discover(other, policy).pipe(Effect.flip);
+      expect(pipe27).toMatchObject({ reason: "configuration" });
+      yield* f.worker.pause;
+      expect((yield* f.worker.stats).pages).toBe(1);
+      const alias = `${dir}/linked-root`;
+      yield* fs.symlink(dir, alias);
+      const linked = yield* makeTranscriptDiscovery(
+        TranscriptDiscoveryInput.make({
+          roots: [{ path: alias, source: "codex", retired: false }],
+          hashSalt: f.config.nativeHttp.hashSalt,
+          maxDepth: 2,
+          maxEntries: 1,
+          maxFiles: 32,
+          maxCycleEntries: 128,
+        })
+      ).pipe(Effect.flip);
+      expect(
+        linked,
+        "the scanner observes canonical paths and inodes, so a real symlink fails enrollment"
+      ).toMatchObject({
+        reason: "configuration",
+      });
+      expect((yield* f.worker.stats).pages, "the worker's already accepted page is unchanged").toBe(1);
+    })
   )
 );
 
