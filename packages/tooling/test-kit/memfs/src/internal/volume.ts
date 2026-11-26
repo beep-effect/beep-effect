@@ -3801,8 +3801,9 @@ const makeReadyVolume: (options: EngineOptions) => Effect.Effect<Volume> = Effec
  * - `truncate` validates the length as an integer, then clamps a negative one
  *   to 0, as node does: `truncate(path, -1)` empties the file.
  * - A directory opens only read-only, as on Linux (to `fsync` it): `stat`
- *   and `sync` on its descriptor read the inode, and every data operation on
- *   it fails `EISDIR`.
+ *   and `sync` on its descriptor read the inode. The access check runs
+ *   first, so a write on it fails `EBADF` and a truncate `EINVAL`; a data
+ *   operation that passes that check, such as a read, fails `EISDIR`.
  * - `glob` is the engine's own walker (case folding, root errno fidelity); it
  *   replaces the member `FileSystem.make` derives from `readDirectoryEntries`.
  *
