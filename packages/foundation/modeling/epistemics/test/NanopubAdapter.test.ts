@@ -17,7 +17,7 @@ import * as Rdf from "@beep/rdf/Rdf";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { OccurrenceId } from "@beep/text/Occurrence";
-import { expect } from "@effect/vitest";
+import { expect, expectTypeOf } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -382,8 +382,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("nanopublication adap
   it.effect("requires an owner core that encodes to an object carrying assertedBy", () =>
     Effect.sync(() => {
       const stringCore = { ...Claims, ClaimCore: S.fromJsonString(Claims.ClaimCore) };
-      // @ts-expect-error -- a core encoded as a JSON string has no assertedBy field to name the agent. Owner: @beep/epistemics. Exit: remove if the codec binds the agent encoder itself.
-      expect(typeof makeNanopubCodec({ binding: stringCore }).encode).toBe("function");
+      expectTypeOf<typeof stringCore.ClaimCore>().not.toExtend<
+        Parameters<typeof makeNanopubCodec>[0]["binding"]["ClaimCore"]
+      >();
+      expectTypeOf<typeof Claims.ClaimCore>().toExtend<
+        Parameters<typeof makeNanopubCodec>[0]["binding"]["ClaimCore"]
+      >();
     })
   );
 
