@@ -796,14 +796,12 @@ export const AdmissionCoordinationProtocol = LiteralKit([
  */
 export type AdmissionCoordinationProtocol = typeof AdmissionCoordinationProtocol.Type;
 
-// Read by value only: no decoding default, so a row without the field decodes to `None`.
 const optionalCoordinationProtocol = AdmissionCoordinationProtocol.pipe(
   S.OptionFromOptionalKey,
   S.withConstructorDefault(Effect.succeedNone)
 );
 
-// Run-3 Ruling 11 surrogates (owner and checkout references) are salted 12-hex digests.
-const optionalSurrogateRef = S.String.check(S.isPattern(/^[0-9a-f]{12}$/)).pipe(
+const optionalSalted12HexRef = S.String.check(S.isPattern(/^[0-9a-f]{12}$/)).pipe(
   S.OptionFromOptionalKey,
   S.withConstructorDefault(Effect.succeedNone)
 );
@@ -818,8 +816,6 @@ interface OwnerCarrier {
   readonly pid: O.Option<number>;
 }
 
-// P2 Ruling 8 custody invariants. Each filter reads only the members it names,
-// so one filter instance serves every journal class whose struct carries them.
 const hasOneOwner = (row: OwnerCarrier): boolean => O.isSome(row.pid) !== O.isSome(row.ownerRef);
 
 const hasAtMostOneOwner = (row: OwnerCarrier): boolean => !(O.isSome(row.pid) && O.isSome(row.ownerRef));
@@ -850,7 +846,6 @@ const v3OneCheckout = S.makeFilter(hasOneCheckout, {
   message: "A v3 admission row carries exactly one of checkoutRoot or checkoutRef",
 });
 
-// A live queued row always carried its process start beside its pid; a surrogate never does.
 const hasPidPairedProcStart = (row: {
   readonly pid: O.Option<number>;
   readonly procStart: O.Option<string>;
@@ -933,7 +928,7 @@ export class AdmissionJournalAdmitted extends S.Opaque<AdmissionJournalAdmitted,
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
     procStart: S.OptionFromOptionalKey(S.String),
-    ownerRef: optionalSurrogateRef,
+    ownerRef: optionalSalted12HexRef,
     ownerRefVariant: optionalOwnerRefVariant,
     kind: AdmissionWorkKind,
     weightTokens: PosInt,
@@ -962,7 +957,7 @@ class AdmissionJournalReleased extends S.Opaque<AdmissionJournalReleased, { read
     schemaVersion: S.tag("yeet-admission-journal/v1"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
-    ownerRef: optionalSurrogateRef,
+    ownerRef: optionalSalted12HexRef,
     ownerRefVariant: optionalOwnerRefVariant,
     releasedAtMillis: S.Natural,
     memoryPeakBytes: S.OptionFromOptionalKey(S.Natural),
@@ -975,14 +970,12 @@ class AdmissionJournalReleased extends S.Opaque<AdmissionJournalReleased, { read
     )
 ) {}
 
-// Private vocabulary used to decode v2 lease-eviction rows.
 const AdmissionLeaseEvictionReason = LiteralKit(["owner-dead-or-reused"]).pipe(
   $I.annoteSchema("AdmissionLeaseEvictionReason", {
     description: "Reason a v2 admission lease was evicted.",
   })
 );
 
-// Private vocabulary used to decode v2 queued-ticket eviction rows.
 const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pipe(
   $I.annoteSchema("AdmissionTicketEvictionReason", {
     description: "Reason a v2 admission queue ticket was evicted.",
@@ -1000,7 +993,7 @@ class AdmissionJournalLeaseEvicted extends S.Opaque<AdmissionJournalLeaseEvicted
     schemaVersion: S.tag("yeet-admission-journal/v2"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
-    ownerRef: optionalSurrogateRef,
+    ownerRef: optionalSalted12HexRef,
     ownerRefVariant: optionalOwnerRefVariant,
     evictedAtMillis: S.Natural,
     reason: AdmissionLeaseEvictionReason,
@@ -1013,7 +1006,6 @@ class AdmissionJournalLeaseEvicted extends S.Opaque<AdmissionJournalLeaseEvicted
     )
 ) {}
 
-// Private schema retained in the public union so mixed v1/v2 journals decode.
 class AdmissionJournalTicketEvicted extends S.Opaque<
   AdmissionJournalTicketEvicted,
   { readonly brand: unique symbol }
@@ -1022,7 +1014,7 @@ class AdmissionJournalTicketEvicted extends S.Opaque<
     schemaVersion: S.tag("yeet-admission-journal/v2"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
-    ownerRef: optionalSurrogateRef,
+    ownerRef: optionalSalted12HexRef,
     ownerRefVariant: optionalOwnerRefVariant,
     evictedAtMillis: S.Natural,
     reason: AdmissionTicketEvictionReason,
@@ -1035,12 +1027,6 @@ class AdmissionJournalTicketEvicted extends S.Opaque<
     )
 ) {}
 
-// V3 rows carry either live owner and checkout attribution (`pid`, `checkoutRoot`)
-// or run-3 Ruling 11 surrogates (`ownerRef`, `checkoutRef`); legacy classes above
-// continue accepting the redacted S6 shape; no CLI internals cross this boundary.
-// `.extend` keeps these struct checks (effect 4.0.0 `makeClass.extend` re-applies
-// `struct.ast.checks`); spreading `.fields` does not, so the spread v3 classes
-// below re-apply the same filter instances (P2 Ruling 8).
 class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity, { readonly brand: unique symbol }>(
   $I`AdmissionJournalV3Identity`
 )(
@@ -1048,24 +1034,23 @@ class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity, { r
     schemaVersion: S.tag("yeet-admission-journal/v3"),
     nonce: S.String,
     pid: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    ownerRef: optionalSurrogateRef,
+    ownerRef: optionalSalted12HexRef,
     ownerRefVariant: optionalOwnerRefVariant,
     attemptId: S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }), S.isUUID()).pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone)
     ),
     checkoutRoot: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    checkoutRef: optionalSurrogateRef,
+    checkoutRef: optionalSalted12HexRef,
     branch: S.String,
     coordinationProtocol: optionalCoordinationProtocol,
   }).check(v3OneOwner, pairedOwnerVariant, v3OneCheckout),
   $I.annote("AdmissionJournalV3Identity", {
-    description: "V3 journal identity: exactly one live or surrogate owner and one checkout attribution.",
+    description:
+      "V3 journal identity has exactly one live (pid, checkoutRoot) or surrogate (ownerRef, checkoutRef) attribution; legacy rows retain redacted S6 shapes without CLI internals. Effect 4.0.0 makeClass.extend preserves struct.ast.checks; spreading fields loses them, so spread v3 classes reapply the same filter instances.",
   })
 ) {}
 
-// The extension restates the inherited `pid` (same schema, same key position) so its
-// own struct check can pair `procStart` with it; `.extend` appends that check.
 class AdmissionJournalQueuedIdentity extends AdmissionJournalV3Identity.extend<AdmissionJournalQueuedIdentity>(
   $I`AdmissionJournalQueuedIdentity`
 )(
@@ -1078,7 +1063,8 @@ class AdmissionJournalQueuedIdentity extends AdmissionJournalV3Identity.extend<A
     enqueuedAtMillis: S.Finite,
   }).check(v3PidPairedProcStart),
   $I.annote("AdmissionJournalQueuedIdentity", {
-    description: "Queued request identity carried by ledger-neutral enqueue and withdrawal events.",
+    description:
+      "Queued identity for ledger-neutral enqueue and withdrawal events. Restating inherited pid with the same schema and key position lets the own struct check pair procStart with it; extend appends that check.",
   })
 ) {}
 
@@ -1255,14 +1241,13 @@ export const LaneOrderRule = LiteralKit(["gate-order-lexicographic/v1"]).pipe(
  */
 export type LaneOrderRule = typeof LaneOrderRule.Type;
 
-// Ruling-28 lane ids are `family:name` segments; the set stays open, so this is a pattern, not a kit.
 const LaneId = S.NonEmptyString.check(
   S.isPattern(/^[a-z0-9-]+(:[a-z0-9-]+)+$/, {
     message: "Lane ids must be lowercase colon-separated segments such as quality:secrets",
   })
 ).pipe(
   $I.annoteSchema("LaneId", {
-    description: "Colon-separated verification lane id named by the gate-order handoff.",
+    description: "Open family:name verification lane identifier, checked by a pattern instead of a closed literal kit.",
   })
 );
 
@@ -1410,7 +1395,6 @@ const hasUniqueLaneIds = (lanes: ReadonlyArray<HandoffLane>): boolean =>
 const hasUniqueDeclarationIndexes = (lanes: ReadonlyArray<HandoffLane>): boolean =>
   HashSet.size(HashSet.fromIterable(A.map(lanes, (lane) => lane.declarationIndex))) === A.length(lanes);
 
-// Contract §8.1: the rank set is exactly 0..n-1 (no gap, no duplicate), whatever the array order.
 const hasCoherentRanks = (lanes: ReadonlyArray<HandoffLane>): boolean =>
   A.every(
     A.sort(
@@ -1495,7 +1479,6 @@ export class LaneStep extends S.Opaque<LaneStep, { readonly brand: unique symbol
 
 const lanePlanIdPrefix = "lane-plan-";
 
-// Contract §8.3: planId is minted from the handoff digest, never chosen by the caller.
 const hasDerivedPlanId = (plan: { readonly planId: string; readonly handoffSha256: string }): boolean =>
   plan.planId === `${lanePlanIdPrefix}${plan.handoffSha256}`;
 

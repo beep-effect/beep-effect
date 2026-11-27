@@ -69,7 +69,6 @@ const $I = $CiopsId.create("kpi/Fold");
  */
 export const starvationBoundMs: PosInt = PosInt.make(120_000);
 
-// Non-normative sensitivity bounds shown beside the declared one (15 and 60 minutes).
 const sensitivityBoundsMs: ReadonlyArray<PosInt> = [PosInt.make(900_000), PosInt.make(3_600_000)];
 
 /**
@@ -113,14 +112,12 @@ export const kpiWindows: readonly [WindowBounds, WindowBounds, WindowBounds] = [
 
 const [windowW, windowWa, windowWb] = kpiWindows;
 
-// M1's comparable modes and its 24 h `comparable24h` ceiling (TTC rulings 73-75).
 const m1Modes: ReadonlyArray<string> = ["verify", "repair", "publish"];
 const m1CeilingMs = 86_400_000;
 
 // Tiers that own an attempt subsequence; the merged-preview sub-partition shares TierLocalFullProof's.
 const subsequenceTiers: ReadonlyArray<KpiTier> = ["repair-green", "local-full-proof", "ci-merge-green", "unassigned"];
 
-// Tiers reported as percentile rows, in reading order.
 const reportedTiers: ReadonlyArray<KpiTier> = [
   "repair-green",
   "local-full-proof",
@@ -190,7 +187,6 @@ export class KpiFoldInput extends S.Opaque<KpiFoldInput, { readonly brand: uniqu
   )
 ) {}
 
-// One folded episode with the facts the reading needs beyond the contract's KpiEpisode.
 class FoldedEpisode extends S.Opaque<FoldedEpisode, { readonly brand: unique symbol }>()(
   S.Struct({ episode: KpiEpisode, head: S.Option(GitCommitSha), queueWaitMs: S.Option(S.Natural) }).pipe(
     $I.annoteSchema("FoldedEpisode", {
@@ -199,7 +195,6 @@ class FoldedEpisode extends S.Opaque<FoldedEpisode, { readonly brand: unique sym
   )
 ) {}
 
-// A streak of attempts: closed by a green attempt, or open at the end of the subsequence.
 class Streak extends S.Opaque<Streak, { readonly brand: unique symbol }>()(
   S.Struct({ members: S.NonEmptyArray(FleetAttempt), closing: S.Option(FleetAttempt) }).pipe(
     $I.annoteSchema("Streak", {
@@ -208,7 +203,6 @@ class Streak extends S.Opaque<Streak, { readonly brand: unique symbol }>()(
   )
 ) {}
 
-// Facts of one attempt journal the censoring rules read.
 class JournalFacts extends S.Opaque<JournalFacts, { readonly brand: unique symbol }>()(
   S.Struct({
     atWriterCap: S.Boolean,
@@ -340,7 +334,6 @@ const closeStreak = (state: StreakState, attempt: FleetAttempt): StreakState =>
       }),
   });
 
-// A lock bounce never opens a streak (KPI law §4) but stays inside an open one.
 const extendStreak = (state: StreakState, attempt: FleetAttempt): StreakState =>
   Eq.equals(attempt.outcome, "bounce") && A.isReadonlyArrayEmpty(state.open)
     ? state
@@ -418,20 +411,17 @@ const earliest = (map: HashMap.HashMap<string, number>, key: string, at: number)
     )
   );
 
-// A ticket is resolved by its admission, withdrawal or ticket eviction, whichever came first.
 const resolutionsByNonce = (rows: ReadonlyArray<KpiAdmissionRow>): HashMap.HashMap<string, number> =>
   A.reduce(rows, HashMap.empty<string, number>(), (resolved, row) =>
     O.match(resolutionInstant(row), { onNone: () => resolved, onSome: (at) => earliest(resolved, row.nonce, at) })
   );
 
-// One admission ticket naming an attempt: its nonce, the attempt and its enqueue instant.
 class AttemptTicket extends S.Opaque<AttemptTicket, { readonly brand: unique symbol }>()(
   S.Struct({ nonce: S.String, attemptId: S.String, enqueuedAtMillis: S.Finite }).pipe(
     $I.annoteSchema("AttemptTicket", { description: "One admission ticket joined to a pinned attempt id." })
   )
 ) {}
 
-// The joined tickets of every attempt id, and each ticket nonce's resolution.
 class TicketIndex extends S.Opaque<TicketIndex, { readonly brand: unique symbol }>()(
   S.Struct({
     byAttempt: S.HashMap(S.String, S.Array(AttemptTicket)),
@@ -443,8 +433,6 @@ class TicketIndex extends S.Opaque<TicketIndex, { readonly brand: unique symbol 
   )
 ) {}
 
-// Every row carrying an attempt id and an enqueue instant names a ticket: v3 enqueue and
-// withdrawal rows, and v1 admitted rows for granted work (KPI law v1.2 §7.4). One ticket per nonce.
 const ticketIndex = (rows: ReadonlyArray<KpiAdmissionRow>): TicketIndex => {
   const tickets = A.dedupeWith(
     A.getSomes(
@@ -464,7 +452,6 @@ const ticketIndex = (rows: ReadonlyArray<KpiAdmissionRow>): TicketIndex => {
   });
 };
 
-// The earliest enqueue of any ticket joined to an attempt: the seat-request candidate (§7.4).
 const seatRequestOf = (index: TicketIndex, attemptId: string): O.Option<number> =>
   O.flatMap(HashMap.get(index.byAttempt, attemptId), (tickets) =>
     O.map(
@@ -478,8 +465,6 @@ const seatRequestOf = (index: TicketIndex, attemptId: string): O.Option<number> 
     )
   );
 
-// An attempt's queue wait: the sum over its joined tickets of enqueue to resolution, observed
-// only when it has at least one ticket and every ticket resolved.
 const attemptQueueWait = (index: TicketIndex, attemptId: string): O.Option<number> =>
   O.flatMap(
     O.flatMap(HashMap.get(index.byAttempt, attemptId), A.match({ onEmpty: O.none, onNonEmpty: O.some })),
@@ -501,8 +486,6 @@ const joinDisagreement = (row: KpiAdmissionRow, attempt: FleetAttempt): O.Option
       ? O.some("checkout")
       : O.none();
 
-// A ticket joins an attempt by attempt id, checked against `branch` and the checkout label
-// where the row carries them; a disagreement fails closed (KPI law v1.2 §7.4).
 const checkTicketJoins = (
   rows: ReadonlyArray<KpiAdmissionRow>,
   attempts: HashMap.HashMap<string, FleetAttempt>
@@ -535,7 +518,6 @@ const establishingAttempt = (streak: Streak): FleetAttempt =>
 const isLeftCensored = (facts: JournalFacts, openedAt: DateTime.Utc): boolean =>
   O.exists(facts.cutoff, (cutoff) => DateTime.isGreaterThanOrEqualTo(cutoff, openedAt));
 
-// No receipt, an at-cap journal, and the streak opens at its first retained attempt (§7.5).
 const isPossiblyTruncated = (facts: JournalFacts, first: FleetAttempt): boolean =>
   facts.atWriterCap && O.isNone(facts.cutoff) && O.exists(facts.firstAttemptId, Eq.equals(first.attemptId));
 
@@ -557,8 +539,6 @@ const episodeTier = (tier: KpiTier, streak: Streak): KpiTier =>
     ? "local-full-proof-merged-preview"
     : tier;
 
-// An episode decomposes when every attempt in it (members and the closing attempt) has an
-// observed queue wait; its queue wait is then their sum (CQ-012, launch sitting Ruling 12d).
 const episodeQueueWait = (index: TicketIndex, streak: Streak): O.Option<number> =>
   O.map(
     O.all(
@@ -594,7 +574,6 @@ const foldStreak =
     });
   };
 
-// Groups attempts by (checkout, branch) in key order, so the fold is independent of input order.
 const pairGroups = (attempts: ReadonlyArray<FleetAttempt>): ReadonlyArray<ReadonlyArray<FleetAttempt>> => {
   const groups = R.toEntries(A.groupBy(attempts, pairKey));
   return A.map(
@@ -672,7 +651,6 @@ const hasCensor =
   (episode: KpiEpisode): boolean =>
     A.contains(episode.censoring, censor);
 
-// TierLocalFullProof's row includes its merged-preview sub-partition.
 const inTier =
   (tier: KpiTier) =>
   (episode: KpiEpisode): boolean =>
@@ -710,7 +688,6 @@ class SeatRequest extends S.Opaque<SeatRequest, { readonly brand: unique symbol 
   )
 ) {}
 
-// A request waits from its enqueue to its admission, withdrawal or ticket eviction, else to the capture (§7.6).
 const seatRequests = (
   rows: ReadonlyArray<KpiAdmissionRow>,
   captureInstant: DateTime.Utc
@@ -775,10 +752,6 @@ const isM1Attempt = (attempt: FleetAttempt): boolean =>
 const streakSpanMs = (streak: Streak, closing: FleetAttempt): number =>
   millis(stopInstant(closing)) - millis(A.headNonEmpty(streak.members).startedAt);
 
-// M1's red-to-green definition run over the fleet pin on `W-a` (launch sitting Ruling 5), never M1
-// itself: M1 modes, lock bounces excluded, no tiers, keyed by (checkout, branch), opened at the first
-// red start. Closed spans of at most 24 h form `comparable24h`; `uncut` drops the ceiling; open
-// streaks are only counted, as M1 counts them.
 const m1ReplicaRow = (
   attempts: ReadonlyArray<FleetAttempt>,
   journals: HashMap.HashMap<string, JournalFacts>
@@ -875,7 +848,6 @@ const attemptIndex = (attempts: ReadonlyArray<FleetAttempt>): HashMap.HashMap<st
 const untieredStarts = (attempts: ReadonlyArray<FleetAttempt>): number =>
   natural(A.countBy(attempts, (attempt) => O.isNone(attempt.stage) && inSlice(windowW, attempt.startedAt)));
 
-// Checks every ticket join, then folds every tier's attempt subsequence into episodes.
 const foldEpisodes = Effect.fnUntraced(function* (
   journals: ReadonlyArray<FleetJournal>,
   admissions: ReadonlyArray<KpiAdmissionRow>

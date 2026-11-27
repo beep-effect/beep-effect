@@ -33,17 +33,6 @@ import type {
 
 const $I = $CiopsId.create("projection/CiOpsProjection");
 
-/**
- * Typed failures the lane planner can return.
- *
- * **Details**
- *
- * Read, digest and decode failures cover the pinned handoff; `CyclicPlanError`
- * covers explicit precedence input.
- *
- * @category errors
- * @since 0.0.0
- */
 type PlanEpisodeError = HandoffReadError | HandoffDigestMismatchError | HandoffDecodeError | CyclicPlanError;
 
 /**
@@ -95,7 +84,6 @@ export class CiOpsProjection extends Context.Service<CiOpsProjection, CiOpsProje
 
 const digestHandoffBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 
-// Contract §8.1: raw bytes at repoRoot/path; the schema already refuses absolute paths and `..` segments.
 const readHandoffBytes = (fs: FileSystem.FileSystem, input: PlanEpisodeInput) =>
   fs
     .readFile(`${input.repoRoot}/${input.handoff.path}`)
@@ -133,8 +121,6 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
   never,
   FileSystem.FileSystem | Digest.Digest
 > {
-  // Contract §8: the layer captures the platform services at construction so
-  // planEpisode keeps a requirement-free signature.
   const fs = yield* FileSystem.FileSystem;
   const crypto = yield* Digest.Digest;
   const current = yield* TxRef.make<O.Option<ScheduleProposal>>(O.none());

@@ -24,8 +24,6 @@ const frozenRecord = "# frozen dated record — must survive every check run\n";
 
 const PlatformLive = Layer.merge(BunFileSystem.layer, BunCrypto.layer);
 
-// Each case gets a scratch copy of the evidence file so the committed record
-// under explorations/ is never the subject of a write.
 const scratchPaths = Effect.fn("EvidenceTest.scratchPaths")(function* (journal: string) {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "ciops-evidence-" });
@@ -91,7 +89,9 @@ describe("@beep/ciops replay evidence", () => {
         expect(EvidenceMode.is.check(run.mode)).toBe(true);
         expect(Str.includes("PASS")(run.rendered)).toBe(true);
         const readEvidence3 = yield* readEvidence(paths);
-        expect(readEvidence3).toBe(frozenRecord);
+        expect(readEvidence3, "scratch copies keep committed exploration evidence outside every test write").toBe(
+          frozenRecord
+        );
       })
     );
 

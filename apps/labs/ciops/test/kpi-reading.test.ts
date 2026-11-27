@@ -74,8 +74,6 @@ const sha256Of = Effect.fn("KpiTest.sha256Of")(function* (bytes: Uint8Array) {
   return Sha256Hex.make(Hex.encode(digest1));
 });
 
-// ---- synthetic fold fixtures (every instant inside W and W-b) ----
-
 const at = (iso: string) => DateTime.makeUnsafe(iso);
 const ms = (iso: string) => DateTime.toEpochMillis(at(iso));
 
@@ -180,8 +178,7 @@ const fold = (journals: ReadonlyArray<FleetJournal>, admissions: ReadonlyArray<K
 const rowOf = (reading: KpiReading, slice: "W" | "W-a" | "W-b", tier: KpiTier): PercentileRow =>
   O.getOrThrow(A.findFirst(reading.percentiles, (row) => row.slice === slice && row.tier === tier));
 
-// A red attempt then the green that closes it: one closed full-proof episode of `minutes`.
-const closedEpisode = (branch: string, minutes: number): FleetJournal =>
+const closedFullProofEpisode = (branch: string, minutes: number): FleetJournal =>
   journal(branch, [
     attempt({
       id: `${branch}-red`,
@@ -214,8 +211,7 @@ const OptionalScope = S.Option(ProofScope);
 const pairKey = (stage: O.Option<string>, scope: O.Option<string>) =>
   `${O.getOrElse(stage, () => "<absent>")}/${O.getOrElse(scope, () => "<absent>")}`;
 
-// Hoisted: the oxlint no-inline-schema-compile rule forbids compiling a codec inside a test body.
-const decodeAdoptionTable = S.decodeEffect(S.fromJsonString(AdoptionTable));
+const moduleAdoptionDecoder = S.decodeEffect(S.fromJsonString(AdoptionTable));
 
 describe("@beep/ciops KPI reading", () => {
   it.effect("nearest-rank picks the sorted value at ceil(p*n/100)-1", () =>
@@ -271,10 +267,10 @@ describe("@beep/ciops KPI reading", () => {
   it.effect("a synthetic fold reports the known nearest-rank percentiles, cut and uncut", () =>
     Effect.gen(function* () {
       const reading = yield* fold([
-        closedEpisode("p1", 10),
-        closedEpisode("p2", 20),
-        closedEpisode("p3", 30),
-        closedEpisode("p4", 40),
+        closedFullProofEpisode("p1", 10),
+        closedFullProofEpisode("p2", 20),
+        closedFullProofEpisode("p3", 30),
+        closedFullProofEpisode("p4", 40),
       ]);
       const row = rowOf(reading, "W-b", "local-full-proof");
       expect(row.cut.n).toBe(4);
@@ -289,7 +285,7 @@ describe("@beep/ciops KPI reading", () => {
   it.effect("a joined ticket enqueued before the first start opens the episode on the seat-request clock", () =>
     Effect.gen(function* () {
       const reading = yield* fold(
-        [closedEpisode("seat", 10)],
+        [closedFullProofEpisode("seat", 10)],
         enqueue("n-seat", "seat-red", "2026-10-02T09:55:00.000Z", "2026-10-02T09:59:00.000Z")
       );
       const row = rowOf(reading, "W-b", "local-full-proof");
@@ -319,7 +315,7 @@ describe("@beep/ciops KPI reading", () => {
   it.effect("must-fail: a compaction cutoff at or after the opening left-censors the episode", () =>
     Effect.gen(function* () {
       const compacted = FleetJournal.make({
-        ...closedEpisode("left", 10),
+        ...closedFullProofEpisode("left", 10),
         compactionCutoff: O.some(at("2026-10-02T10:00:00.000Z")),
       });
       const fold3 = yield* fold([compacted]);
@@ -330,7 +326,7 @@ describe("@beep/ciops KPI reading", () => {
 
   it.effect("must-fail: a streak opening at an at-cap journal's first retained attempt is possibly truncated", () =>
     Effect.gen(function* () {
-      const atCap = FleetJournal.make({ ...closedEpisode("cap", 10), atWriterCap: true });
+      const atCap = FleetJournal.make({ ...closedFullProofEpisode("cap", 10), atWriterCap: true });
       const fold4 = yield* fold([atCap]);
       const row = rowOf(fold4, "W", "local-full-proof");
       expect([row.cut.n, row.uncut.n, row.possiblyTruncated]).toStrictEqual([0, 1, 1]);
@@ -340,7 +336,7 @@ describe("@beep/ciops KPI reading", () => {
   it.effect("must-fail: an enqueue naming an unpinned attempt is counted as survivorship, never imputed", () =>
     Effect.gen(function* () {
       const reading = yield* fold(
-        [closedEpisode("kept", 10)],
+        [closedFullProofEpisode("kept", 10)],
         enqueue("n-lost", "retired-lane-attempt", "2026-10-02T11:00:00.000Z")
       );
       expect(reading.survivorshipUnjoinedRequests).toBe(1);
@@ -375,7 +371,7 @@ describe("@beep/ciops KPI reading", () => {
         enqueue("r", "full-red", "2026-10-02T10:00:10.000Z", "2026-10-02T10:00:40.000Z"),
         enqueue("g", "full-green", "2026-10-02T10:02:10.000Z", "2026-10-02T10:02:40.000Z"),
       ]);
-      const shares = (yield* fold([closedEpisode("full", 10)], tickets)).decomposition;
+      const shares = (yield* fold([closedFullProofEpisode("full", 10)], tickets)).decomposition;
       expect(shares.status).toBe("shares");
       expect(shares).toMatchObject({
         decomposedEpisodes: 1,
@@ -383,7 +379,8 @@ describe("@beep/ciops KPI reading", () => {
         queueWaitShare: 0.1,
         grandTotalMs: 600_000,
       });
-      const voided = (yield* fold([closedEpisode("full", 10), closedEpisode("bare", 10)], tickets)).decomposition;
+      const voided = (yield* fold([closedFullProofEpisode("full", 10), closedFullProofEpisode("bare", 10)], tickets))
+        .decomposition;
       expect(voided).toMatchObject({ status: "void", decomposedEpisodes: 1, windowEpisodes: 2 });
     })
   );
@@ -394,7 +391,7 @@ describe("@beep/ciops KPI reading", () => {
         ...O.getOrThrow(A.head(enqueue("n-x", "p1-red", "2026-10-02T09:59:00.000Z"))),
         branch: O.some("other"),
       });
-      const failure = yield* Effect.flip(fold([closedEpisode("p1", 10)], [mismatched]));
+      const failure = yield* Effect.flip(fold([closedFullProofEpisode("p1", 10)], [mismatched]));
       assertInstanceOf(failure, KpiAdmissionJoinMismatchError);
       expect(failure.nonce).toBe("n-x");
     })
@@ -426,7 +423,7 @@ describe("@beep/ciops KPI reading", () => {
 
   it.effect("synthetic episodes need no adoption probe without a resolved head", () =>
     Effect.gen(function* () {
-      const adoptionProbes5 = yield* adoptionProbes([closedEpisode("p1", 10)], [], changeEventTable);
+      const adoptionProbes5 = yield* adoptionProbes([closedFullProofEpisode("p1", 10)], [], changeEventTable);
       expect(adoptionProbes5).toStrictEqual([]);
       const probe = AdoptionProbe.make({
         changeEventId: "iv-1427-push-first-publish",
@@ -552,7 +549,7 @@ describe("@beep/ciops KPI reading", () => {
         const bytes = yield* fs.readFile(`${repoRoot}/${kpiOutputPaths.adoptionTable}`);
         const sha256Of12 = yield* sha256Of(bytes);
         expect(sha256Of12).toBe(adoptionTableSha256);
-        const table = yield* decodeAdoptionTable(new TextDecoder().decode(bytes));
+        const table = yield* moduleAdoptionDecoder(new TextDecoder().decode(bytes));
         const renderAdoptionTable13 = yield* renderAdoptionTable(table);
         expect(renderAdoptionTable13).toBe(new TextDecoder().decode(bytes));
         const probes = yield* (yield* CiOpsKpi).probes(kpiReadingInput(repoRoot));

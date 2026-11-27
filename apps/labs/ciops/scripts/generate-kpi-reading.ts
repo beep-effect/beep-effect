@@ -15,11 +15,11 @@ import { decodeEvidenceMode, EvidenceMode, EvidenceWriteScript } from "@/project
 // (`research/scripts/redact_journal_snapshot.py --check`) was removed with the repository's
 // Python (goal python-free-repo); recover it with `git show
 // 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:explorations/beep-ci-operational-ontology/research/scripts/redact_journal_snapshot.py`.
-// Check-by-default: the bare script compares the committed JSON and Markdown with the
-// recomputed render; only `--write` rewrites them.
+
 const repoRoot = "../../..";
 const writeScript = EvidenceWriteScript.Enum["evidence:kpi:write"];
 
+// decision: opt-in-evidence-writes
 const generate = Effect.gen(function* () {
   const mode = yield* decodeEvidenceMode(process.argv, writeScript);
   const reading = yield* (yield* CiOpsKpi).read(kpiReadingInput(repoRoot));

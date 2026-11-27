@@ -14,14 +14,9 @@ import {
 } from "@/projection/Evidence";
 import type { LiveEvidenceRun } from "@/projection/Evidence";
 
-// The pin's typed constants (P2 Ruling 9) live in `Evidence.ts`, shared with the
-// end-to-end test. The run asserts both digests against the files and the window
-// members against MANIFEST.yaml's `admission_roots[0].window` and
-// `loss_population.chain_counts` before replay.
 const paths = run4FleetLiveEvidencePaths;
 
-// Check-by-default: the bare script compares the committed evidence bytes with
-// the recomputed render; only `--write` rewrites the file.
+// decision: opt-in-evidence-writes
 const generate = Effect.gen(function* () {
   const mode: EvidenceMode = yield* decodeEvidenceMode(
     process.argv,

@@ -149,7 +149,6 @@ const requireCoherentLanes = Effect.fnUntraced(function* (
   }
 });
 
-// Contract §8.1/§3.3: nodes keyed by laneId in ascending declarationIndex, edges in precedence order.
 const buildLaneGraph = (
   lanes: ReadonlyArray<HandoffLane>,
   precedences: ReadonlyArray<LanePrecedence>
@@ -170,7 +169,6 @@ const buildLaneGraph = (
     });
   });
 
-// CycleResult.path repeats its first node at the end; drop it so a self-loop renders as [laneId].
 const cycleWitness = (graph: Graph.DirectedGraph<string, LanePrecedence>, cycle: Graph.CycleResult) =>
   A.getSomes(A.map(A.dropRight(cycle.path, 1), (index) => Graph.getNode(graph, index)));
 

@@ -15,10 +15,6 @@ import { ReplayArmSpec, ReplayEtaEstimator } from "@/backfill/Schemas";
 import { PosInt } from "@/projection/PosInt";
 import { AdmissionJournalEvent } from "@/projection/Schemas";
 
-// SCHE-06 tail-wait A/B harness (goals/local-proof-under-ten PLAN slice 12): the
-// replay joins admitted and released rows, declares causal ETAs, and runs every arm
-// on the same stream beside the recorded waits.
-
 const decodeRow = S.decodeUnknownEffect(AdmissionJournalEvent);
 const decodeAll = (rows: ReadonlyArray<unknown>) => Effect.forEach(rows, (row) => decodeRow(row), { concurrency: 1 });
 
@@ -152,21 +148,25 @@ describe("SCHE-06 journal replay", () => {
           ["legacy", 40_000, 1],
         ]
       );
-      // `d` enqueued when only `a` had released, `c` after `a` and `b`: the p90 of 10 s and 30 s.
+
       assertNone(A.getUnsafe(stream.arrivals, 2).etaMillis);
       assertSome(A.getUnsafe(stream.arrivals, 3).etaMillis, 30_000);
       strictEqual(A.getUnsafe(stream.arrivals, 4).checkoutKey, "legacy");
-      deepStrictEqual([stream.skipped, stream.spanMillis], [1, 40_000]);
+      deepStrictEqual(
+        [stream.skipped, stream.spanMillis],
+        [1, 40_000],
+        "d has only a released hold, below minSamples; c sees a and b, whose 10s and 30s p90 is 30s"
+      );
       deepStrictEqual(stream.recordedWaits, [0, 0, 1_000, 1_000, 0]);
       deepStrictEqual(arrivalsFromJournal([], estimator).arrivals, []);
-      // Chains enqueued in the same instant replay in nonce order.
+
       const twinRows = yield* decodeAll([
         ...chainRows({ nonce: "twin-b", enqueuedAt: 5, admittedAt: 5, releasedAt: 6 }),
         ...chainRows({ nonce: "twin-a", enqueuedAt: 5, admittedAt: 5, releasedAt: 6 }),
       ]);
-      const twins = arrivalsFromJournal(twinRows, estimator);
+      const nonceOrderedTwins = arrivalsFromJournal(twinRows, estimator);
       deepStrictEqual(
-        A.map(twins.arrivals, (arrival) => arrival.nonce),
+        A.map(nonceOrderedTwins.arrivals, (arrival) => arrival.nonce),
         ["twin-a", "twin-b"]
       );
     })
@@ -174,8 +174,7 @@ describe("SCHE-06 journal replay", () => {
 
   it.effect("finds the tail-wait gain backfill gives a mixed stream and none on a uniform one", () =>
     Effect.gen(function* () {
-      // Warm-up: three 9-token proofs, three 10-token previews and three 1-token fixes record their holds.
-      const warm = A.flatMap(
+      const recordedHoldWarmup = A.flatMap(
         A.makeBy(3, (index) => index),
         (index) => [
           ...chainRows({
@@ -204,7 +203,7 @@ describe("SCHE-06 journal replay", () => {
           }),
         ]
       );
-      // A 9-token proof holds the machine; a 10-token proof queues behind it, then a 1-token fix.
+
       const t = 10_000_000;
       const burst = [
         ...chainRows({
@@ -232,15 +231,15 @@ describe("SCHE-06 journal replay", () => {
           releasedAt: t + 510_000,
         }),
       ];
-      const mixed = yield* decodeAll([...warm, ...burst]);
+      const mixed = yield* decodeAll([...recordedHoldWarmup, ...burst]);
       const report = yield* replayTailWaits(mixed, estimator, [arm(10, "off"), arm(10, "easy")]);
       const [off, easy] = report.arms;
       strictEqual(report.chains, 12);
       strictEqual(off?.backfills, 0);
       strictEqual(easy?.backfills, 1);
       deepStrictEqual([off?.waits.maxMillis, easy?.waits.maxMillis], [498_000, 199_000]);
-      // The uniform stream (every unit three tokens) gives backfill nothing to pass.
-      const uniform = A.flatMap(
+
+      const threeTokenUniformStream = A.flatMap(
         A.makeBy(6, (index) => index),
         (index) =>
           chainRows({
@@ -250,7 +249,7 @@ describe("SCHE-06 journal replay", () => {
             releasedAt: index * 60_000 + 120_000,
           })
       );
-      const uniformRows = yield* decodeAll(uniform);
+      const uniformRows = yield* decodeAll(threeTokenUniformStream);
       const flat = yield* replayTailWaits(
         uniformRows,
         estimator,
