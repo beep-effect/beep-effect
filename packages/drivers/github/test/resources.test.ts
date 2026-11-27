@@ -28,7 +28,6 @@ describe("GitCommit", () => {
       it.effect("reads a commit's sha, tree and parents", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(GitCommit, (commit) => commit.get("c1"));
-          // The treeSha two consumers each wrote eight lines of cast to reach.
           assert.strictEqual(value.treeSha, "t1");
           assert.deepStrictEqual([...value.parents], ["p1", "p2"]);
           assert.include(script.calls[0]?.path ?? "", "/git/commits/c1");
@@ -54,12 +53,15 @@ describe("GitCommit", () => {
           );
           const body = yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
           assert.strictEqual(body.base_tree, "t1");
-          assert.deepStrictEqual(body.tree, [
-            { path: "a.txt", mode: "100644", type: "blob", content: "hello" },
-            // A null sha is how the Git Database API spells a removal.
-            { path: "gone.txt", mode: "100644", type: "blob", sha: null },
-            { path: "run.sh", mode: "100755", type: "blob", content: "#!/bin/sh" },
-          ]);
+          assert.deepStrictEqual(
+            body.tree,
+            [
+              { path: "a.txt", mode: "100644", type: "blob", content: "hello" },
+              { path: "gone.txt", mode: "100644", type: "blob", sha: null },
+              { path: "run.sh", mode: "100755", type: "blob", content: "#!/bin/sh" },
+            ],
+            "a null sha is how the Git Database API spells a removal"
+          );
         })
       );
     });
@@ -91,13 +93,15 @@ describe("GitCommit", () => {
           assert.deepStrictEqual((yield* Schema.decodeEffect(JsonObject)(script.calls[3]?.body ?? "{}")).parents, [
             "head",
           ]);
-          // Not forced: a branch that moved underneath you is a conflict worth
-          // hearing about.
           const value1 = yield* Schema.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}");
-          assert.deepStrictEqual(value1, {
-            sha: "newcommit",
-            force: false,
-          });
+          assert.deepStrictEqual(
+            value1,
+            {
+              sha: "newcommit",
+              force: false,
+            },
+            "not forced: a branch that moved underneath is a conflict worth hearing about"
+          );
         })
       );
     });
@@ -201,8 +205,7 @@ describe("GitTag", () => {
       it.effect("latestSemver picks the newest release across pages", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(GitTag, (tag) => tag.latestSemver());
-          // 1.10.0 > 1.9.0 — the comparison is semver's, not the string's.
-          assert.strictEqual(O.getOrThrow(value).tag, "v1.10.0");
+          assert.strictEqual(O.getOrThrow(value).tag, "v1.10.0", "1.10.0 > 1.9.0 by semver, not by string order");
         })
       );
     });
@@ -295,8 +298,6 @@ describe("GitHubRepository", () => {
     it.layer(GitHubRepository.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("defaultBranch is one expression", () =>
         Effect.gen(function* () {
-          // Before: an eight-line hand-written octokit interface plus eleven lines
-          // of code, to read one string.
           const value = yield* Effect.flatMap(GitHubRepository, (repo) => repo.defaultBranch);
           assert.strictEqual(value, "trunk");
         })
@@ -322,8 +323,6 @@ describe("GitHubRepository", () => {
       it.effect("settings hands back the faithful payload, not a re-declaration", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(GitHubRepository, (repo) => repo.settings);
-          // Typed straight off the OpenAPI description — the sixteen fields one
-          // consumer re-declared by hand are all here already.
           assert.strictEqual(value.allow_auto_merge, true);
           assert.strictEqual(value.name, "widget");
         })
@@ -460,9 +459,12 @@ describe("GitHubCommit", () => {
     it.layer(GitHubCommit.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("survives a commit GitHub cannot attribute", () =>
         Effect.gen(function* () {
-          // GitHub sends an empty object, not null, for an unattributed author.
           const value = yield* Effect.flatMap(GitHubCommit, (commits) => commits.get("c1"));
-          assert.strictEqual(value.author, "Unknown");
+          assert.strictEqual(
+            value.author,
+            "Unknown",
+            "GitHub sends an empty object, not null, for an unattributed author"
+          );
           assert.strictEqual(value.authorLogin, undefined);
         })
       );
