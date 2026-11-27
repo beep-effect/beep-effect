@@ -195,60 +195,108 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
   );
 
   it.effect(
-    "classifies with the checkout's pattern file and fails closed on an invalid one",
+    "classifies with the base commit's pattern file, never the head's",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const tempRoot = yield* fs.makeTempDirectoryScoped();
       const git = gitIn(tempRoot);
-      const patternFile = path.join(tempRoot, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json");
-      git(["init", "-q"]);
+      const patternPath = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
+      const patternFile = path.join(tempRoot, patternPath);
+      git(["init", "-q", "-b", "main"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
       git(["config", "commit.gpgsign", "false"]);
       git(["commit", "-q", "--allow-empty", "-m", "baseline"]);
-      const base = git(["rev-parse", "HEAD"]);
-      yield* fs.makeDirectory(path.join(tempRoot, "docs"));
-      yield* fs.writeFileString(path.join(tempRoot, "docs/notes.md"), "# notes\n");
-      git(["add", "docs"]);
-      git(["commit", "-q", "-m", "docs"]);
-      const head = git(["rev-parse", "HEAD"]);
-      const profile = () =>
-        run(["bun", path.join(repoRoot, CLI_ENTRY), "ci", "change-profile", base, head], tempRoot, {
+      const commitOn = Effect.fnUntraced(function* (parent: string, files: ReadonlyArray<readonly [string, string]>) {
+        git(["checkout", "-q", "--detach", parent]);
+        yield* Effect.forEach(
+          files,
+          ([relative, content]) =>
+            Effect.andThen(
+              fs.makeDirectory(path.dirname(path.join(tempRoot, relative)), { recursive: true }),
+              fs.writeFileString(path.join(tempRoot, relative), content)
+            ),
+          { concurrency: 1, discard: true }
+        );
+        git(["add", "-A"]);
+        git(["commit", "-q", "-m", "step"]);
+        return git(["rev-parse", "HEAD"]);
+      });
+      const empty = git(["rev-parse", "HEAD"]);
+      const docsOnEmpty = yield* commitOn(empty, [["docs/notes.md", "# notes\n"]]);
+      const profile = (base: string, head: string) => {
+        git(["checkout", "-q", "--detach", head]);
+        return run(["bun", path.join(repoRoot, CLI_ENTRY), "ci", "change-profile", base, head], tempRoot, {
           GITHUB_EVENT_NAME: "pull_request",
           GITHUB_OUTPUT: "",
           BEEP_CI_PR_BASE_SHA: "",
           BEEP_CI_PR_HEAD_SHA: "",
         });
-      // Absent: the compiled-in patterns, docs-only.
-      assert.include(profile().stdout, "docs_only=true");
-      // Present: the checkout's own patterns classify its tree.
-      yield* fs.makeDirectory(path.dirname(patternFile), { recursive: true });
-      const narrowedPatterns = yield* encodePatterns(
-        CiOperationalPatterns.make({ ...ciOperationalPatterns, docs: "^nothing/" })
+      };
+      const absent = profile(empty, docsOnEmpty);
+      assert.strictEqual(absent.exitCode, 0, absent.stderr);
+      assert.include(absent.stdout, "docs_only=true");
+      assert.include(absent.stderr, "classifying with the compiled-in patterns");
+
+      const canonical = yield* commitOn(empty, [[patternPath, yield* encodePatterns(ciOperationalPatterns)]]);
+      const widened = yield* encodePatterns(
+        CiOperationalPatterns.make({ ...ciOperationalPatterns, docs: ".", codeRoots: "^$" })
       );
-      yield* fs.writeFileString(patternFile, narrowedPatterns);
-      const narrowed = profile();
-      assert.strictEqual(narrowed.exitCode, 0, narrowed.stderr);
-      assert.include(narrowed.stdout, "docs_only=false");
-      // A pattern file that predates per-lane relevance (no `lanes` key) keeps every lane
-      // relevant: an old checkout never skips a lane it cannot describe.
+      const widenedHead = yield* commitOn(canonical, [
+        [patternPath, widened],
+        ["packages/example/src/index.ts", "export const value = 1;\n"],
+      ]);
+      assert.strictEqual(yield* fs.readFileString(patternFile), widened);
+      const widenedRun = profile(canonical, widenedHead);
+      assert.strictEqual(widenedRun.exitCode, 0, widenedRun.stderr);
+      assert.include(widenedRun.stdout, "docs_only=false");
+
+      const narrowed = yield* commitOn(empty, [
+        [
+          patternPath,
+          yield* encodePatterns(CiOperationalPatterns.make({ ...ciOperationalPatterns, docs: "^nothing/" })),
+        ],
+      ]);
+      const docsOnNarrowed = yield* commitOn(narrowed, [["docs/notes.md", "# notes\n"]]);
+      const narrowedRun = profile(narrowed, docsOnNarrowed);
+      assert.strictEqual(narrowedRun.exitCode, 0, narrowedRun.stderr);
+      assert.include(narrowedRun.stdout, "docs_only=false");
+
       const { lanes: _lanes, ...withoutLanes } = ciOperationalPatterns;
-      const undescribedPatterns = yield* encodePatterns(CiOperationalPatterns.make(withoutLanes));
-      yield* fs.writeFileString(patternFile, undescribedPatterns);
-      const undescribed = profile();
-      assert.strictEqual(undescribed.exitCode, 0, undescribed.stderr);
-      assert.include(undescribed.stdout, "docs_only=true");
+      const undescribed = yield* commitOn(empty, [
+        [patternPath, yield* encodePatterns(CiOperationalPatterns.make(withoutLanes))],
+      ]);
+      const docsOnUndescribed = yield* commitOn(undescribed, [["docs/notes.md", "# notes\n"]]);
+      const undescribedRun = profile(undescribed, docsOnUndescribed);
+      assert.strictEqual(undescribedRun.exitCode, 0, undescribedRun.stderr);
+      assert.include(undescribedRun.stdout, "docs_only=true");
       for (const lane of CI_RELEVANCE_LANE_VALUES) {
-        assert.include(undescribed.stdout, `${lane}_relevant=true`, lane);
+        assert.include(undescribedRun.stdout, `${lane}_relevant=true`, lane);
       }
-      // Present but missing a key: fail closed.
-      yield* fs.writeFileString(patternFile, '{ "goals": "^goals/" }\n');
-      const invalid = profile();
-      assert.notStrictEqual(invalid.exitCode, 0);
-      assert.include(invalid.stderr, "could not read the CI patterns");
-      assert.strictEqual(invalid.stdout, "");
+
+      const foreign = yield* commitOn(empty, [[patternPath, '{ "goals": "^goals/" }\n']]);
+      const docsOnForeign = yield* commitOn(foreign, [
+        [patternPath, yield* encodePatterns(ciOperationalPatterns)],
+        ["docs/notes.md", "# notes\n"],
+      ]);
+      const foreignRun = profile(foreign, docsOnForeign);
+      assert.strictEqual(foreignRun.exitCode, 0, foreignRun.stderr);
+      assert.include(foreignRun.stderr, "are unreadable; keeping every verification profile active");
+      assert.strictEqual(
+        foreignRun.stdout,
+        A.join(
+          [
+            "goals_only=false",
+            "docs_only=false",
+            "desktop_rust_relevant=true",
+            ...A.map(CI_RELEVANCE_LANE_VALUES, (lane) => `${lane}_relevant=true`),
+            "",
+          ],
+          "\n"
+        )
+      );
     })
   );
 

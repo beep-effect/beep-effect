@@ -1,0 +1,18 @@
+{
+  "$schema": "https://v2-11-13.turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/tooling/test-kit/repo-gate-vitest/src/**"
+      ]
+    },
+    "test:integration": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/tooling/test-kit/repo-gate-vitest/src/**"
+      ]
+    }
+  }
+}

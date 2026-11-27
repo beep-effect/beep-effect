@@ -6,6 +6,7 @@ import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
   ChangeClassifier,
   CiAdmissionInput,
+  CiOperationalPatterns,
   ciAdmissionCommand,
   ciOperationalPatterns,
   decideHeavyAdmission,
@@ -929,7 +930,8 @@ const payloadWithShas = (shas: { readonly base?: string; readonly head?: string 
   );
 // The pinned `git diff --name-only --no-renames <base>...<head>` the lane gate reads, as C-quoted
 // newline lines, or a non-zero exit when the base is unreadable; fetches and other git calls succeed.
-const pinnedDiffSpawner = (diff: O.Option<ReadonlyArray<string>>) =>
+const CANONICAL_PATTERNS_JSON = S.encodeSync(S.fromJsonString(CiOperationalPatterns))(ciOperationalPatterns);
+const pinnedDiffSpawner = (diff: O.Option<ReadonlyArray<string>>, patternsAtBase = CANONICAL_PATTERNS_JSON) =>
   ScriptedSpawner.make((_command, args) =>
     A.contains(args, "--no-renames")
       ? O.match(diff, {
@@ -941,7 +943,9 @@ const pinnedDiffSpawner = (diff: O.Option<ReadonlyArray<string>>) =>
             ),
           }),
         })
-      : { stdout: "" }
+      : A.contains(args, "show")
+        ? { stdout: patternsAtBase }
+        : { stdout: "" }
   );
 const pinnedDiffSpawns = (spawner: ScriptedSpawner) =>
   A.filter(spawner.spawns, (spawn) => A.contains(spawn.args, "--no-renames"));
@@ -1036,7 +1040,6 @@ it.layer(laneSkipsPlatform, { timeout: "30 seconds" })("HOST-06 heavy lane skips
   layerIt.effect("fails open: a missing SHA, an unreadable pattern file and a missing payload skip nothing", () =>
     temporary((root) =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
         // A goals-only path that is also Docgen-irrelevant (no `.md` suffix).
         const goals = O.some(["goals/x/ops/manifest.json"]);
         const read = (content: string, spawner: ScriptedSpawner) =>
@@ -1052,10 +1055,10 @@ it.layer(laneSkipsPlatform, { timeout: "30 seconds" })("HOST-06 heavy lane skips
         const headOnlySkips = yield* read(payloadWithShas({ head: "head-sha" }), headOnly);
         expect(headOnlySkips).toEqual([]);
         expect(pinnedDiffSpawns(headOnly)).toEqual([]);
-        // An unreadable pattern file drops only the goals-only reason; the Docgen reason stands.
-        yield* fs.makeDirectory(`${root}/packages/tooling/tool/cli/src/commands/Ci`, { recursive: true });
-        yield* fs.writeFileString(`${root}/packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json`, "{");
-        const unreadablePatternSkips = yield* read(payloadWithShas({ base: "b", head: "h" }), pinnedDiffSpawner(goals));
+        // An unreadable pattern file at the base drops only the goals-only reason; the Docgen reason stands.
+        const unreadableAtBase = pinnedDiffSpawner(goals, "{");
+        const unreadablePatternSkips = yield* read(payloadWithShas({ base: "b", head: "h" }), unreadableAtBase);
+        expect(A.filter(unreadableAtBase.spawns, (spawn) => A.contains(spawn.args, "show"))).toHaveLength(1);
         expect(unreadablePatternSkips).toEqual(["docgen"]);
         // A missing payload is an error the read swallows.
         const missing = yield* readHeavyLaneSkips(
