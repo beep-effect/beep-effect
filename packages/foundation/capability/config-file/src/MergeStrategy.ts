@@ -75,25 +75,9 @@ const firstMatch = <A>(): MergeStrategy<A> => ({
   resolve: (sources) => Effect.succeed(sources[0].value),
 });
 
-/**
- * Deep-merge every contributing source, higher priority winning on conflict.
- *
- * **Details**
- *
- * Two values merge only when both are plain records and share a prototype.
- * A document decoded through `Schema.Class` is atomic: the highest-priority
- * instance is returned intact, preserving its identity and private state.
- * `Date`, `Map`, `Set`, `RegExp`, arrays and nested class instances are also
- * taken whole from the highest-priority source that defines them.
- *
- * Compatible nested plain records (a `Schema.Struct` section) merge field-wise.
- * Own enumerable string and symbol keys participate; inherited fields,
- * non-enumerable fields and the string `__proto__` are excluded.
- */
 const layeredMerge = <A>(): MergeStrategy<A> => ({
   name: "layered-merge",
   resolve: (sources) => {
-    // Fold from lowest priority upward so higher-priority keys overwrite.
     const [lowest, ...higherSources] = A.reverse(sources);
     let merged = lowest.value;
     for (const source of higherSources) {
@@ -113,6 +97,15 @@ const layeredMerge = <A>(): MergeStrategy<A> => ({
  *
  * Strategies only combine sources; the walk up the directory tree belongs to
  * the `upwardWalk` resolver.
+ *
+ * Under `layeredMerge`, two values merge only when both are plain records and
+ * share a prototype. A document decoded through `Schema.Class` is atomic: the
+ * highest-priority instance is returned intact, preserving its identity and
+ * private state. `Date`, `Map`, `Set`, `RegExp`, arrays and nested class
+ * instances are also taken whole from the highest-priority source that defines
+ * them. Compatible nested plain records (a `Schema.Struct` section) merge
+ * field-wise. Own enumerable string and symbol keys participate; inherited
+ * fields, non-enumerable fields and the string `__proto__` are excluded.
  *
  * **Example** (Create a layered merge strategy)
  *
