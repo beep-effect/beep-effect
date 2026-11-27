@@ -4,7 +4,6 @@ import { GlobSet } from "@beep/glob";
 import {
   CiGoalDataConsumer,
   CiGoalDocument,
-  CiOperationalPatterns,
   ciBinaryCommand,
   ciGoalDataConsumers,
   ciOperationalPatterns,
@@ -347,13 +346,13 @@ const pullRequest = Effect.provideService(
 );
 
 // `beep ci change-profile` over a scripted one-path diff, read against the committed patterns file.
-const CHECKOUT_PATTERNS_JSON = S.encodeSync(S.fromJsonString(CiOperationalPatterns))(ciOperationalPatterns);
+const ABSENT_AT_BASE = `fatal: path 'packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json' does not exist in '${BASE_SHA}'\n`;
 const changeProfileFor = Effect.fnUntraced(function* (changed: string) {
   const spawner = ScriptedSpawner.make((command, args) =>
     command !== "git"
       ? { exit: 1 }
       : A.contains(args, "show")
-        ? { stdout: CHECKOUT_PATTERNS_JSON }
+        ? { exit: 128, stderr: ABSENT_AT_BASE }
         : { stdout: `${changed}\n` }
   );
   const earlier = yield* TestConsole.logLines;
