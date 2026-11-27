@@ -1,5 +1,12 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
-import { ciBinaryCommand, ciBinaryMain, ciCompileBinaryCommand, compileCiBinary } from "@beep/repo-cli/commands/Ci";
+import {
+  CiOperationalPatterns,
+  ciBinaryCommand,
+  ciBinaryMain,
+  ciCompileBinaryCommand,
+  ciOperationalPatterns,
+  compileCiBinary,
+} from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -12,7 +19,9 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -44,6 +53,35 @@ const PROFILE_FULL = A.join(
   "\n"
 );
 
+const BASE_SHA = Str.repeat(40)("a");
+const HEAD_SHA = Str.repeat(40)("b");
+const PATTERN_FILE = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
+const encodePatternsJson = S.encodeEffect(S.fromJsonString(CiOperationalPatterns));
+
+const pullRequestProfile = Effect.fnUntraced(function* (changed: string, patternsAtBase: O.Option<string>) {
+  const spawner = ScriptedSpawner.make((command, args) =>
+    command !== "git"
+      ? { exit: 1 }
+      : A.contains(args, "show")
+        ? O.match(patternsAtBase, {
+            onNone: () => ({ exit: 128, stderr: `fatal: path '${PATTERN_FILE}' does not exist in '${BASE_SHA}'\n` }),
+            onSome: (stdout) => ({ stdout }),
+          })
+        : { stdout: `${changed}\n` }
+  );
+  const before = yield* loggedLines;
+  yield* runCi(["ci", "change-profile"]).pipe(
+    withEnvironment({
+      GITHUB_EVENT_NAME: "pull_request",
+      BEEP_CI_PR_BASE_SHA: BASE_SHA,
+      BEEP_CI_PR_HEAD_SHA: HEAD_SHA,
+    }),
+    provideSpawner(spawner)
+  );
+  const after = yield* loggedLines;
+  return A.join(A.drop(after, A.length(before)), "\n");
+});
+
 it.layer(Layer.mergeAll(NodeServices.layer, Digest.layerWebCrypto), { timeout: "60 seconds" })(
   "CI binary commands in-process",
   (it) => {
@@ -60,6 +98,26 @@ it.layer(Layer.mergeAll(NodeServices.layer, Digest.layerWebCrypto), { timeout: "
         expect(logged).toContain("CI pattern projection is in sync.");
         expect(logged).toContain(PROFILE_FULL);
         expect(spawner.spawns).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "classifies a pull request's diff against the CI patterns at its base commit",
+      Effect.fnUntraced(function* () {
+        const recorded = yield* encodePatternsJson(ciOperationalPatterns);
+        const docsWithoutBaseFile = yield* pullRequestProfile("docs/README.md", O.none());
+        expect(docsWithoutBaseFile).toContain("docs_only=true");
+        const notices = yield* errorLines;
+        expect(A.some(notices, Str.includes("classifying with the compiled-in patterns"))).toBe(true);
+        const docsAtRecordedBase = yield* pullRequestProfile("docs/README.md", O.some(recorded));
+        expect(docsAtRecordedBase).toContain("docs_only=true");
+        const codeAtRecordedBase = yield* pullRequestProfile(
+          "packages/foundation/modeling/utils/src/Str.ts",
+          O.some(recorded)
+        );
+        expect(codeAtRecordedBase).toContain("docs_only=false");
+        const unreadableBase = yield* pullRequestProfile("docs/README.md", O.some("{"));
+        expect(unreadableBase).toBe(PROFILE_FULL);
       })
     );
 

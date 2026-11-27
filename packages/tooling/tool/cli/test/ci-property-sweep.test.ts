@@ -1,7 +1,3 @@
-/**
- * The nightly's second property step: its census of the tree, the receipts it
- * judges, its replay command, and the live workspace it runs over.
- */
 import { propertyTestMarker } from "@beep/fc-runs/PropertySelection";
 import {
   clearPropertySweepReceipts,
@@ -15,8 +11,6 @@ import {
   propertySweepPackages,
   propertySweepReplay,
 } from "@beep/repo-cli/commands/Ci";
-import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
-import { findRepoRoot } from "@beep/repo-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, it } from "@effect/vitest";
@@ -24,23 +18,13 @@ import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/v
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow, pipe } from "effect/Function";
-import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import * as Str from "effect/String";
 
 const UNIT = "bunx --bun vitest run --exclude=test/integration/**";
 const PROPERTY = 'it.effect.prop("law", [S.Int], check);\n';
 const PLAIN = 'it("adds", check);\n';
-// Only real call sites: the helper's own tests name it inside strings and assertions, so they are left out.
-const CAPPED_RUNS = /\barbitrary: fcRunsCapped\((\d+)\)/gu;
-// An I/O-heavy cache producer property, capped before this list.
-const PRE_EXISTING_CAPPED = ["packages/tooling/tool/cli/test/cache-private-producer-object.test.ts 20"];
-const FAST_CHECK_IMPORT = /^import [^;]*from "fast-check";$/mu;
-const SEED_LITERAL = /\bseed: (\d+)/gu;
 const replay = { seed: "7", runs: "1000" };
 
 const manifest = (name: string, scripts: Record<string, string>): string =>
@@ -64,13 +48,6 @@ const fixture = Effect.fnUntraced(function* (files: Record<string, string>) {
   );
   return root;
 });
-
-// Git's list of test files, not the census's own walk of the tree.
-const testFilesInGit = (root: string): ReadonlyArray<string> => {
-  const listed = Bun.spawnSync({ cmd: ["git", "-C", root, "ls-files", "*.test.ts", "*.test.tsx"], stdout: "pipe" });
-  assertTrue(listed.success, "git lists the tree");
-  return A.filter(Str.split(listed.stdout.toString(), "\n"), Str.isNonEmpty);
-};
 
 const receipt = (files: ReadonlyArray<readonly [file: string, executed: number]>): string =>
   `{"schemaVersion":"property-sweep/v1","files":[${A.join(
@@ -234,118 +211,6 @@ describe("property sweep", () => {
         const other = PropertySweepPackage.make({ name: "@t/b", dir: "packages/b", files: [], integration: [] });
         const error = yield* Effect.flip(judgePropertySweep(root, [other]));
         strictEqual(error.message, "Failed to read the property sweep's receipts.");
-      })
-    );
-
-    it.effect("covers, with the first step, every package of the live workspace that has a property file", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* findRepoRoot();
-        const workspaces = yield* Effect.map(workspaceManifests(root), flow(HashMap.entries, A.fromIterable));
-        const listed = testFilesInGit(root);
-        const marked = yield* Effect.filter(
-          A.filter(listed, (file) => !Str.includes("/fixtures/")(file)),
-          (file) => Effect.map(fs.readFileString(path.join(root, file)), (source) => propertyTestMarker.test(source)),
-          { concurrency: 16 }
-        );
-        const holding = A.filter(workspaces, ([, workspace]) => {
-          const tests = `${path.relative(root, workspace.dir)}/test/`;
-          return A.some(marked, Str.startsWith(tests));
-        });
-        const packages = yield* propertySweepPackages(root);
-        const second = A.map(packages, (entry) => entry.name);
-        const first = pipe(
-          workspaces,
-          A.filter(([, workspace]) => HashMap.has(workspace.manifest.scripts, "test:property")),
-          A.map(([name]) => name)
-        );
-        assertTrue(A.isReadonlyArrayNonEmpty(second), "the census is empty");
-        deepStrictEqual(
-          A.filter(second, (name) => A.contains(first, name)),
-          []
-        );
-        // @beep/scratchpad has no test script, so no hosted lane runs its tests.
-        deepStrictEqual(
-          pipe(
-            holding,
-            A.map(([name]) => name),
-            A.filter((name) => !A.contains(first, name) && !A.contains(second, name))
-          ),
-          ["@beep/scratchpad"]
-        );
-      })
-    );
-
-    it.effect(
-      "names every test file that draws from fast-check, which no shared seed reaches, with its own seeds",
-      () =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = yield* findRepoRoot();
-          const tracked = A.filter(testFilesInGit(root), (file) => !Str.startsWith("scratchpad/")(file));
-          const drawing = yield* Effect.filter(
-            tracked,
-            (file) => Effect.map(fs.readFileString(path.join(root, file)), (source) => FAST_CHECK_IMPORT.test(source)),
-            { concurrency: 16 }
-          );
-          const seeds = yield* Effect.forEach(
-            drawing,
-            (file) =>
-              Effect.map(
-                fs.readFileString(path.join(root, file)),
-                (source) =>
-                  [file, A.map(A.fromIterable(Str.matchAll(SEED_LITERAL)(source)), (match) => match[1] ?? "")] as const
-              ),
-            { concurrency: 1 }
-          );
-          // A new entry passes a literal seed to every draw; the nightly explores neither it nor these.
-          deepStrictEqual(R.fromEntries(seeds), {
-            "apps/professional-desktop/test/intake-model.test.ts": ["11", "5"],
-            "packages/drivers/xstate/test/ModelTesting.test.ts": ["7", "7", "7", "1", "3"],
-          });
-        })
-    );
-
-    it.effect("names every property the nightly floor does not raise, with its count and why", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* findRepoRoot();
-        const tracked = A.filter(testFilesInGit(root), (file) => !Str.startsWith("scratchpad/")(file));
-        const capped = yield* Effect.forEach(
-          tracked,
-          (file) =>
-            Effect.map(fs.readFileString(path.join(root, file)), (source) =>
-              A.map(A.fromIterable(Str.matchAll(CAPPED_RUNS)(source)), (match) => `${file} ${match[1] ?? ""}`)
-            ),
-          { concurrency: 16 }
-        );
-        // A new capped site fails until it is listed here with its reason; ms per run measured at its count.
-        deepStrictEqual(A.sort(A.flatten(capped), Order.String), [
-          // About 40 ms a run: simulates a train of up to 80 arrivals.
-          "apps/labs/ciops/test/backfill-fairness.test.ts 64",
-          // About 140 ms a run: spawns native worker processes.
-          "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts 20",
-          // About 90 ms a run: spawns native worker processes.
-          "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts 25",
-          // About 310 ms a run: spawns native worker processes.
-          "packages/law-practice/server/test/CitationRendering.test.ts 20",
-          ...PRE_EXISTING_CAPPED,
-        ]);
-      })
-    );
-
-    it.effect("names every property file of the live workspace it leaves to the integration lane", () =>
-      Effect.gen(function* () {
-        const root = yield* findRepoRoot();
-        const packages = yield* propertySweepPackages(root);
-        const left = A.flatMap(packages, (entry) => A.map(entry.integration, (file) => `${entry.dir}/${file}`));
-        // A new entry is a property file no nightly explores: name it here only if the integration lane runs it.
-        deepStrictEqual(left, ["packages/tooling/infra/turbo-cache/test/integration/Runtime.test.ts"]);
-        assertTrue(A.some(packages, (entry) => entry.name === "@beep/xlsx"));
-        assertTrue(A.every(packages, (entry) => A.every(entry.files, Str.startsWith("test/"))));
       })
     );
   });
