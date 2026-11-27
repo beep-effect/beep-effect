@@ -378,6 +378,8 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  * statement and increments the version inside SQL. Both
  * `makeRepository(model, options)` and `makeRepository(options)(model)` retain
  * model-specific locator inference.
+ * The update span keeps the static catalog name `EffectDrizzleRepository.updateOptimistic`; `spanPrefix`
+ * becomes the bounded `repository.entity` attribute rather than a span-name segment.
  *
  * **Gotchas**
  *
@@ -523,8 +525,6 @@ export const makeRepository: {
               })
             )
           ),
-          // Static span name per the instrumentation catalog; the per-repository prefix is a bounded
-          // attribute instead of a name segment.
           withSpan(
             "EffectDrizzleRepository.updateOptimistic",
             { attributes: { "repository.entity": options.spanPrefix, id, expectedVersion } },

@@ -52,16 +52,6 @@ const requireCredential = Effect.fn("UsptoMcp.requireCredential")(function* (too
   }
 });
 
-/**
- * Builds a diagnostic-handle minter for a `documentBag` projection too large
- * for even the `minimal` tier. This thin proving host has no out-of-band
- * payload store, so the handle is diagnostic only — callers cannot yet fetch
- * it back; a real store is a consumer concern the kit intentionally leaves
- * open (`FieldTier.ts` module doc). `handleId`/`expiresAt` are resolved via
- * `Random`/`DateTime` (Effect-injected, testable) ahead of the plain
- * synchronous mint callback `projectDocumentsWithinBudget` expects, rather
- * than calling `crypto.randomUUID()`/`Date.now()` directly.
- */
 const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFetchableHandleMinter")(function* () {
   const random = yield* Random.nextInt;
   const expiresAt = yield* DateTime.now.pipe(
@@ -83,6 +73,11 @@ const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFe
 
 /**
  * Live handler layer for the USPTO MCP toolkit.
+ *
+ * **Gotchas**
+ *
+ * A `documentBag` projection too large even for the `minimal` tier answers with a diagnostic `Fetchable`
+ * handle: this host keeps no payload store, so the handle cannot be fetched back.
  *
  * **Example** (Providing live layer dependencies)
  *

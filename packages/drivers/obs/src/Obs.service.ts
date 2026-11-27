@@ -127,6 +127,11 @@ export interface ObsShape {
   /**
    * Provision the QA capture scene idempotently and make it the program
    * scene, reading back the PipeWire portal `RestoreToken` when present.
+   *
+   * **Gotchas**
+   *
+   * `GetInputSettings` is a global lookup, so a capture input that exists but is attached to another scene is
+   * found there and still attached to the target scene.
    */
   readonly ensureQaScene: (request?: EnsureQaSceneRequest | undefined) => Effect.Effect<EnsureQaSceneResult, ObsError>;
   /**
@@ -203,9 +208,6 @@ const makeService = Effect.fn("Obs.make")(function* (
         sceneName: request.sceneName,
       });
     } else {
-      // GetInputSettings is a global lookup: the input can exist while being
-      // attached to a different scene, so cross-check the target scene's item
-      // list and attach the capture input when it is missing.
       const sceneItems = yield* protocol
         .request("GetSceneItemList", { sceneName: request.sceneName })
         .pipe(Effect.flatMap(decodeResponseData("ensureQaScene", "GetSceneItemList", ObsSceneItemList.decodeEffect)));
@@ -299,9 +301,6 @@ const spawnObsDetached = Effect.fn("Obs.spawnObsDetached")(function* (config: Ob
     stdin: "ignore",
     stdout: "ignore",
   });
-  // `Run.detach` unrefs the handle before its short-lived scope closes, so the
-  // scope releases the handle without killing the detached OBS process. The
-  // driver error keeps the platform failure as its cause, as before.
   yield* Run.detach(command).pipe(
     Effect.mapError((error) =>
       ObsError.fromUnknown(

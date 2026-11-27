@@ -62,6 +62,8 @@ const RequestArbitrary = Arbitrary.schema(OpenAiCompatChatCompletionRequest);
 const ResponseArbitrary = Arbitrary.schema(OpenAiCompatChatCompletionResponse);
 const ChunkArbitrary = Arbitrary.schema(OpenAiCompatChatCompletionChunk);
 
+const unflushedEventAboveSseMaxEventSize = (): string => `data: ${Str.repeat(10 * 1024 * 1024)("x")}`;
+
 const encodeClientOptions = S.encodeResult(OpenAiCompatClientOptions);
 const decodeClientOptions = S.decodeUnknownResult(OpenAiCompatClientOptions);
 const encodeLanguageModelConfig = S.encodeResult(OpenAiCompatLanguageModelConfig);
@@ -965,11 +967,10 @@ describe("OpenAiCompat language model", () => {
     );
   });
 
-  // `Sse.decode` fails only above its 10 MiB maxEventSize; no blank line flushes the event.
   it.layer(
     makeOpenAiCompatClientLayer(() =>
       Effect.succeed(
-        new Response(`data: ${Str.repeat(10 * 1024 * 1024)("x")}`, {
+        new Response(unflushedEventAboveSseMaxEventSize(), {
           headers: {
             "content-type": "text/event-stream",
           },
@@ -992,9 +993,9 @@ describe("OpenAiCompat language model", () => {
         expect(AiError.isAiError(error)).toBe(true);
         expect(error.method).toBe("streamChatCompletion");
         expect(error.reason._tag).toBe("InvalidOutputError");
-        // Proves the decoding reason survives the mapping rather than being
-        // flattened into a generic stream failure.
-        expect(String(error)).toContain("EventTooLarge");
+        expect(String(error), "the decoding reason survives the mapping, not a generic stream failure").toContain(
+          "EventTooLarge"
+        );
       })
     );
   });

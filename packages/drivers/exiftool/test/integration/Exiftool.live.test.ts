@@ -20,11 +20,9 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 
-// 8x8 single-color images generated once via `ffmpeg -f lavfi -i color=c=red`
-// and embedded so the live lane needs only the exiftool binary itself.
-const TINY_PNG_BASE64 =
+const RED_8X8_PNG_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACXBIWXMAAAABAAAAAQBPJcTWAAAAEklEQVR4nGP8y4AdsOAQH6QSANErARssm0F5AAAAAElFTkSuQmCC";
-const TINY_GIF_BASE64 =
+const RED_8X8_GIF_BASE64 =
   "R0lGODlhCAAIAPcfMQAAACQAAEgAAGwAAJAAALQAANgAAPwAAAAkACQkAEgkAGwkAJAkALQkANgkAPwkAABIACRIAEhIAGxIAJBIALRIANhIAPxIAABsACRsAEhsAGxsAJBsALRsANhsAPxsAACQACSQAEiQAGyQAJCQALSQANiQAPyQAAC0ACS0AEi0AGy0AJC0ALS0ANi0APy0AADYACTYAEjYAGzYAJDYALTYANjYAPzYAAD8ACT8AEj8AGz8AJD8ALT8ANj8APz8AAAAVSQAVUgAVWwAVZAAVbQAVdgAVfwAVQAkVSQkVUgkVWwkVZAkVbQkVdgkVfwkVQBIVSRIVUhIVWxIVZBIVbRIVdhIVfxIVQBsVSRsVUhsVWxsVZBsVbRsVdhsVfxsVQCQVSSQVUiQVWyQVZCQVbSQVdiQVfyQVQC0VSS0VUi0VWy0VZC0VbS0Vdi0Vfy0VQDYVSTYVUjYVWzYVZDYVbTYVdjYVfzYVQD8VST8VUj8VWz8VZD8VbT8Vdj8Vfz8VQAAqiQAqkgAqmwAqpAAqrQAqtgAqvwAqgAkqiQkqkgkqmwkqpAkqrQkqtgkqvwkqgBIqiRIqkhIqmxIqpBIqrRIqthIqvxIqgBsqiRsqkhsqmxsqpBsqrRsqthsqvxsqgCQqiSQqkiQqmyQqpCQqrSQqtiQqvyQqgC0qiS0qki0qmy0qpC0qrS0qti0qvy0qgDYqiTYqkjYqmzYqpDYqrTYqtjYqvzYqgD8qiT8qkj8qmz8qpD8qrT8qtj8qvz8qgAA/yQA/0gA/2wA/5AA/7QA/9gA//wA/wAk/yQk/0gk/2wk/5Ak/7Qk/9gk//wk/wBI/yRI/0hI/2xI/5BI/7RI/9hI//xI/wBs/yRs/0hs/2xs/5Bs/7Rs/9hs//xs/wCQ/ySQ/0iQ/2yQ/5CQ/7SQ/9iQ//yQ/wC0/yS0/0i0/2y0/5C0/7S0/9i0//y0/wDY/yTY/0jY/2zY/5DY/7TY/9jY//zY/wD8/yT8/0j8/2z8/5D8/7T8/9j8//z8/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQEZAAfACwAAAAACAAIAAAIFAAPCBxIsKDBgQYOKlzI8EBCgQEBADs=";
 
 const liveLayer = Layer.mergeAll(NodeServices.layer, Exiftool.makeLayer().pipe(Layer.provide(NodeServices.layer)));
@@ -95,7 +93,7 @@ it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep
         return ctx.skip("The exiftool executable was not found.");
       }
 
-      const read = yield* roundTrip("frame.png", TINY_PNG_BASE64, "sess-live-png");
+      const read = yield* roundTrip("frame.png", RED_8X8_PNG_BASE64, "sess-live-png");
       assertSome(read.metadata.fileType, "PNG");
       assertSome(read.metadata.imageWidth, 8);
     })
@@ -107,7 +105,7 @@ it.layer(liveLayer, { excludeTestServices: true, timeout: "30 seconds" })("@beep
         return ctx.skip("The exiftool executable was not found.");
       }
 
-      const read = yield* roundTrip("frame.gif", TINY_GIF_BASE64, "sess-live-gif");
+      const read = yield* roundTrip("frame.gif", RED_8X8_GIF_BASE64, "sess-live-gif");
       assertSome(read.metadata.fileType, "GIF");
     })
   );

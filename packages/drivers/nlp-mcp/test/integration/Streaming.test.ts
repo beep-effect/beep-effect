@@ -72,9 +72,6 @@ const withTempFixture = <A, E, R>(
         Effect.gen(function* () {
           const file = path.join(dir, name);
           yield* fs.writeFileString(file, content);
-          // Configure the fixture's temp directory as the streaming tools' only
-          // allowed read root, so the path-safety guard is exercised against a
-          // legitimate in-root read rather than blocking the test's temp file.
           return yield* use(file).pipe(Effect.provideService(StreamingAllowedRoots, [dir]));
         }),
       (dir) => Effect.orDie(fs.remove(dir, { force: true, recursive: true }))
@@ -424,13 +421,12 @@ it.layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
     Effect.fnUntraced(function* () {
       const requests = yield* HttpRequestCount;
       const tk = yield* StreamingToolkit;
-      // Exercise the injected client through the actual captured handler context.
       const probeStream = yield* tk.handle("stream_load_text", { location: "https://example.test/recording-probe" });
       const probeResults = yield* Stream.runCollect(probeStream);
       assert.isDefined(probeResults[0]);
       assert.strictEqual(probeResults[0].isFailure, true);
       const got = yield* Ref.get(requests);
-      assert.strictEqual(got, 1);
+      assert.strictEqual(got, 1, "the probe goes through the injected client in the captured handler context");
       yield* Ref.set(requests, 0);
       const assertBlocked = Effect.fn("assertBlocked")(function* (location: string, hostname: string) {
         const message = `Refusing to load from a loopback, link-local, or private host: ${hostname}`;

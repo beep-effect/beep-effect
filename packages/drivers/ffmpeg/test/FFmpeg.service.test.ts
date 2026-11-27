@@ -64,7 +64,6 @@ const assertRoundTrip = Effect.fn("FFmpegTest.assertRoundTrip")(function* <Schem
   expect(Equal.equals(decoded, value)).toBe(true);
 });
 
-// TODO(effect-native-migration): model schema
 const ffprobeJson = flow(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
   Result.getOrThrow

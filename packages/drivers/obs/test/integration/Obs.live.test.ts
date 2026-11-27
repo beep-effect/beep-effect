@@ -10,9 +10,6 @@ import type { TestContext } from "@effect/vitest";
 
 const OBS_WEBSOCKET_URL = "ws://127.0.0.1:4455";
 
-// Probe availability inside the instrumented test before acquiring its live
-// connection. Only transport absence/timeouts skip the case; constructor,
-// listener and cleanup defects still fail the test.
 const probeObsWebSocket = Effect.callback<boolean>((resume) => {
   const ws = new WebSocket(OBS_WEBSOCKET_URL, "obswebsocket.json");
   const cleanup = () => {
@@ -34,8 +31,6 @@ const probeObsWebSocket = Effect.callback<boolean>((resume) => {
   ws.addEventListener("open", onOpen, { once: true });
   ws.addEventListener("error", onError, { once: true });
   ws.addEventListener("close", onClose, { once: true });
-  // Effect.callback runs this finalizer on timeout/interruption; successful
-  // completion removes listeners and closes the socket through finish above.
   return Effect.sync(cleanup);
 }).pipe(
   Effect.timeoutOption("2 seconds"),
@@ -57,8 +52,6 @@ const LiveObsLayer = Layer.unwrap(
 );
 
 describe("Obs live integration", () => {
-  // This is a real external service: exclude TestClock/TestConsole while keeping
-  // the instrumented layer-owned connection and the original body timeout.
   it.layer(Layer.empty, { excludeTestServices: true, timeout: "30 seconds" })((liveIt) => {
     liveIt.effect(
       "connects to the live obs-websocket, verifies the version, and reads record status",

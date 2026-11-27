@@ -77,8 +77,9 @@ const inspectorOptions = (config: StatelyInspectorConfig): CreateInspectorOption
   });
 };
 
-// Wire snapshots stay JSON-safe: contexts routinely hold spawned actor references.
-const inspectorSnapshot = (snapshot: Snapshot<unknown>): { readonly status: unknown; readonly value?: unknown } =>
+const snapshotWithoutActorRefContext = (
+  snapshot: Snapshot<unknown>
+): { readonly status: unknown; readonly value?: unknown } =>
   "value" in snapshot ? { status: snapshot.status, value: snapshot.value } : { status: snapshot.status };
 
 const machineOption = (logic: unknown): { readonly machine?: unknown } =>
@@ -93,15 +94,13 @@ const sourceOption = (sessionId: string | undefined): { readonly source?: string
 const registerRoot = (inspector: Inspector, actor: InspectableActor): void => {
   if (P.isString(actor.sessionId)) {
     inspector.actor(actor.sessionId, {
-      snapshot: inspectorSnapshot(actor.getSnapshot()),
+      snapshot: snapshotWithoutActorRefContext(actor.getSnapshot()),
       ...machineOption(actor.logic),
     });
   }
 };
 
-// `/effect` re-materializes the root reference on every pure step, which the
-// SDK's own `inspect` hook reports as a duplicate session id. Forwarding the v6
-// inspection events by hand keeps session ids stable across those steps.
+// decision: hand-forwarded-inspection-events
 const forwardInspection =
   (inspector: Inspector) =>
   (event: InspectionEvent): void => {
@@ -110,14 +109,15 @@ const forwardInspection =
       return;
     }
     if (event.type === "@xstate.actor") {
-      inspector.actor(id, { snapshot: inspectorSnapshot(event.snapshot), ...parentOption(event.parentRef?.sessionId) });
+      inspector.actor(id, {
+        snapshot: snapshotWithoutActorRefContext(event.snapshot),
+        ...parentOption(event.parentRef?.sessionId),
+      });
       return;
     }
-    // Inspection may observe actor completion events whose payload is a document.
-    // Only the event name is useful for the timeline; never forward its data.
-    const occurred: AnyEventObject = { type: event.event.type };
-    inspector.event(id, occurred, sourceOption(event.sourceRef?.sessionId));
-    inspector.snapshot(id, inspectorSnapshot(event.snapshot), occurred);
+    const payloadStrippedEvent: AnyEventObject = { type: event.event.type };
+    inspector.event(id, payloadStrippedEvent, sourceOption(event.sourceRef?.sessionId));
+    inspector.snapshot(id, snapshotWithoutActorRefContext(event.snapshot), payloadStrippedEvent);
     if (event.snapshot.status !== "active") {
       inspector.stop(id);
     }

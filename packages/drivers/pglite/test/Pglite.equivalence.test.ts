@@ -15,7 +15,6 @@ describe("PgliteError declared-field equivalence", () => {
 
     expect(samePgliteError(a, b)).toBe(true);
     expect(samePgliteError(a, c)).toBe(false);
-    // the defect cause is payload, never identity
-    expect(samePgliteError(a, d)).toBe(true);
+    expect(samePgliteError(a, d), "the defect cause is payload, never identity").toBe(true);
   });
 });

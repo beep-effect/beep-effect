@@ -18,8 +18,6 @@ import * as Socket from "effect/socket/Socket";
 
 const SPAWN_FAILURE_MESSAGE = 'Failed to spawn "obs" — install OBS Studio or configure obsBinaryPath.';
 
-// A socket that is already closed: the probe fails with a "connect" error, so
-// the driver goes on to spawn OBS.
 const closedSocket: Socket.WebSocketLike = {
   readyState: 3,
   addEventListener: () => undefined,
@@ -53,9 +51,7 @@ const unrefFailingHandle = ChildProcessSpawner.makeHandle({
 const spawnerOf = (spawn: () => Effect.Effect<ChildProcessSpawner.ChildProcessHandle, PlatformError.PlatformError>) =>
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, ChildProcessSpawner.make(spawn));
 
-// The layer under test is the one that fails, so each case builds it in its
-// own test scope instead of through `it.layer`.
-const ObsOver = (spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>) =>
+const failingObsLayerOver = (spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>) =>
   Obs.makeLayer().pipe(Layer.provide(Layer.merge(UnreachableObs, spawner)));
 
 describe("@beep/obs detached spawn reason map", () => {
@@ -64,9 +60,11 @@ describe("@beep/obs detached spawn reason map", () => {
     Effect.fnUntraced(function* () {
       const spawnFailure = ScriptedSpawner.notFound("obs");
       const spawner = spawnerOf(() => Effect.fail(spawnFailure));
-      const error = yield* spawner.pipe(ObsOver, Layer.build, Effect.flip);
+      const error = yield* spawner.pipe(failingObsLayerOver, Layer.build, Effect.flip);
       assertInstanceOf(error, ObsError);
-      expect(error.operation).toBe("ensureRunning");
+      expect(error.operation, "the closed socket fails the connect probe, so the driver goes on to spawn OBS").toBe(
+        "ensureRunning"
+      );
       expect(error.message).toBe(SPAWN_FAILURE_MESSAGE);
       assertSome(error.cause, spawnFailure);
     })
@@ -76,7 +74,7 @@ describe("@beep/obs detached spawn reason map", () => {
     "reports an unref failure the same way, with the unref failure as its cause",
     Effect.fnUntraced(function* () {
       const spawner = spawnerOf(() => Effect.succeed(unrefFailingHandle));
-      const error = yield* spawner.pipe(ObsOver, Layer.build, Effect.flip);
+      const error = yield* spawner.pipe(failingObsLayerOver, Layer.build, Effect.flip);
       assertInstanceOf(error, ObsError);
       expect(error.operation).toBe("ensureRunning");
       expect(error.message).toBe(SPAWN_FAILURE_MESSAGE);

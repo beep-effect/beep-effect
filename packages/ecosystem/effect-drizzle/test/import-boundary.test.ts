@@ -263,9 +263,9 @@ layer(nativeLayer, { timeout: "30 seconds" })("native import boundaries", (it) =
           try: buildBundleConsumer,
           catch: (cause) => ImportBoundaryTestOperationError.make({ cause }),
         }).pipe(withSpan("EffectDrizzle.boundary.build"));
-        // A vacuous stub (the Bun.build shaker failure mode) cannot pass:
-        // the bundle must carry the real integer implementation.
-        expect(artifact.rawBytes).toBeGreaterThan(1000);
+        expect(artifact.rawBytes, "a vacuous stub, the Bun.build shaker failure mode, must not pass").toBeGreaterThan(
+          1000
+        );
         expect(artifact.text).toContain("integer");
         expect(artifact.text).not.toContain("Custom-column identity must agree");
         expect(artifact.text).not.toContain("Timestamp identity must agree");

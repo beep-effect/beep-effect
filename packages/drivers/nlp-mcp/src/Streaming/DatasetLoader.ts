@@ -418,10 +418,9 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
 export const isUrl = (location: string): boolean =>
   Str.startsWith("http://")(location) || Str.startsWith("https://")(location);
 
-// SSRF guard: the remote `location` is attacker-controllable through the MCP tool
-// parameters, so loopback, link-local, private, and cloud-metadata hosts are
-// refused before any request is issued.
-const assertAllowedRemote = (location: string): Effect.Effect<void, DatasetLoadError> =>
+const lineBreakLikeSplitLines = /\r?\n/;
+
+const refuseInternalRemoteHost = (location: string): Effect.Effect<void, DatasetLoadError> =>
   Effect.try({
     catch: () => DatasetLoadError.make({ location, message: `Invalid URL: ${location}` }),
     try: () => new URL(location).hostname,
@@ -442,7 +441,7 @@ const fetchText = (
   location: string,
   timeoutMs: number
 ): Effect.Effect<string, DatasetLoadError, HttpClient.HttpClient> =>
-  assertAllowedRemote(location).pipe(
+  refuseInternalRemoteHost(location).pipe(
     Effect.andThen(
       HttpClient.get(location).pipe(
         Effect.flatMap(HttpClientResponse.filterStatusOk),
@@ -546,10 +545,8 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
   const loadedAt = yield* Clock.currentTimeMillis;
   if (isUrl(location)) {
     const text = yield* fetchText(location, loadOptions.timeout);
-    // Split on CRLF or LF so remote datasets decode identically to local files
-    // (where `Stream.splitLines` already strips the trailing `\r`).
     const data = pipe(
-      Str.split(/\r?\n/)(text),
+      Str.split(lineBreakLikeSplitLines)(text),
       A.map((line) => (loadOptions.trim ? Str.trim(line) : line)),
       A.filter((line) => !loadOptions.skipEmpty || Str.isNonEmpty(line))
     );
@@ -565,16 +562,14 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
     });
   }
   const data = yield* readLines(location, { skipEmpty: loadOptions.skipEmpty, trim: loadOptions.trim });
-  // Read the raw text once more so file sources report `sizeBytes` like URL
-  // sources do, keeping the provenance record consistent across channels.
-  const rawText = yield* readTextFile(location, "utf-8");
+  const rawTextForSizeBytes = yield* readTextFile(location, "utf-8");
   return LinesDatasetResult.make({
     data,
     meta: DatasetMeta.make({
       format: "lines",
       loadedAt,
       location,
-      sizeBytes: O.some(byteLength(rawText)),
+      sizeBytes: O.some(byteLength(rawTextForSizeBytes)),
       sourceType: "file",
     }),
   });

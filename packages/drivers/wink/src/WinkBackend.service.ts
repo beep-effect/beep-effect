@@ -49,13 +49,7 @@ const capabilities: BackendCapabilities = BackendCapabilities.make({
 
 type CharSpan = { readonly end: number; readonly start: number };
 
-/**
- * Character offsets of every wink token, located in the original text with a
- * cursor that only moves forward; `None` when any token value is not found.
- *
- * Offsets are not rebuilt from wink's `precedingSpaces`: wink 2.4 caps a token's
- * stored preceding spaces at 65,534, so a rebuilt offset drifts after a longer run.
- */
+// decision: wink-offsets-located-in-source
 const tokenCharSpans = (text: string, values: ReadonlyArray<string>): O.Option<ReadonlyArray<CharSpan>> =>
   O.all(
     A.mapAccum(values, O.some(0), (cursor, value) => {
@@ -64,11 +58,13 @@ const tokenCharSpans = (text: string, values: ReadonlyArray<string>): O.Option<R
     })[1]
   );
 
-/** Map a wink `its.span` token range (`[first, last]`, inclusive) onto character offsets. */
-const entityCharSpan = (tokens: ReadonlyArray<CharSpan>, tokenRange: ReadonlyArray<number>): O.Option<CharSpan> =>
+const entityCharSpan = (
+  tokens: ReadonlyArray<CharSpan>,
+  inclusiveTokenRange: ReadonlyArray<number>
+): O.Option<CharSpan> =>
   O.zipWith(
-    O.flatMap(A.get(tokenRange, 0), (first) => A.get(tokens, first)),
-    O.flatMap(A.get(tokenRange, 1), (last) => A.get(tokens, last)),
+    O.flatMap(A.get(inclusiveTokenRange, 0), (first) => A.get(tokens, first)),
+    O.flatMap(A.get(inclusiveTokenRange, 1), (last) => A.get(tokens, last)),
     (first, last) => ({ end: last.end, start: first.start })
   );
 
@@ -122,7 +118,6 @@ const makeWinkBackend = Effect.gen(function* () {
       const its = yield* Effect.mapError(engine.its, toOpError("lemmatize"));
       const timestamp = yield* Clock.currentTimeMillis;
       const valueAccessor: ItsFunction<string> = its.value;
-      // `its.lemma` needs the model addons, so adapt it to the 4-arg token accessor shape.
       const lemmaAccessor: ItsFunction<string> = (index, token, _cache, addons) => its.lemma(index, token, addons);
       const tokens = doc.tokens().out(valueAccessor);
       const lemmas = doc.tokens().out(lemmaAccessor);

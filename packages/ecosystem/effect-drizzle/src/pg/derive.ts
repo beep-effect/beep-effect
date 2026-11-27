@@ -100,10 +100,6 @@ export { isEntityIdLike };
  */
 export type EntityIdLike = EntityIdLikeType;
 
-// ---------------------------------------------------------------------------
-// Type-level derivation
-// ---------------------------------------------------------------------------
-
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
 /**
@@ -129,9 +125,9 @@ type DeriveFromEncoded<E> =
             : [E] extends [number]
               ? PgColumn.DoublePrecision
               : [E] extends [Date]
-                ? never // Declarations require explicit metadata (pg.timestamp)
+                ? never
                 : [E] extends [Uint8Array]
-                  ? never // explicit pg.bytea
+                  ? never
                   : E extends ReadonlyArray<unknown>
                     ? PgColumn.Jsonb
                     : E extends { readonly [key: string]: unknown }
@@ -171,10 +167,6 @@ export type ResolvedColumn<I extends Field.Input> = Field.MetaFrom<I>["column"] 
         ? Derived<I>
         : never
       : never;
-
-// ---------------------------------------------------------------------------
-// Runtime derivation (mirrors the type-level policy exactly)
-// ---------------------------------------------------------------------------
 
 /**
  * Return the select-side schema used as the database representation.

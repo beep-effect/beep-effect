@@ -27,12 +27,10 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import type * as CommandLine from "effect/process/CommandLine";
 
-/** The plain text a real spawner hands the child for one argv or environment word. */
 const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 
 const encoder = new TextEncoder();
 
-// TODO(effect-native-migration): model schema
 const exiftoolJson = flow(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
   Result.getOrThrow
@@ -89,10 +87,9 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
               return makeHandle(exiftoolJson, "", exitCode);
             }
 
-            // Write invocation: args end with [..., "-o", outputPath, sourcePath].
-            const outputPath = A.get(command.args, A.length(command.args) - 2);
-            if (O.isSome(outputPath) && exitCode === 0) {
-              yield* fs.writeFileString(wordText(outputPath.value), "staged bytes");
+            const outputPathBeforeSource = A.get(command.args, A.length(command.args) - 2);
+            if (O.isSome(outputPathBeforeSource) && exitCode === 0) {
+              yield* fs.writeFileString(wordText(outputPathBeforeSource.value), "staged bytes");
             }
 
             return makeHandle("    1 image files created\n", "exiftool stderr", exitCode);

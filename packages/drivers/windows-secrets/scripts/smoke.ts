@@ -60,8 +60,7 @@ const program = Effect.gen(function* () {
   const nonce = yield* Random.nextIntBetween(100_000, 999_999);
   const now = yield* Clock.currentTimeMillis;
   const target = SecretTarget.make(`beep/smoke/run-${now}-${nonce}`);
-  // Non-ASCII content proves the UTF-16LE round trip; the value itself is never printed.
-  const first = `smoke-value-${nonce}-ü\u{1f511}`;
+  const nonAsciiFirstValue = `smoke-value-${nonce}-ü\u{1f511}`;
   const second = `smoke-value-${now}-second`;
   const plaintext = new TextEncoder().encode(`dpapi-payload-${nonce}`);
 
@@ -70,8 +69,8 @@ const program = Effect.gen(function* () {
       step("get before set is none", Effect.map(store.get(target), O.isNone)),
       step(
         "set then get round-trips",
-        Effect.andThen(store.set(target, Redacted.make(first)), store.get(target)).pipe(
-          Effect.map((value) => holds(value, first))
+        Effect.andThen(store.set(target, Redacted.make(nonAsciiFirstValue)), store.get(target)).pipe(
+          Effect.map((value) => holds(value, nonAsciiFirstValue))
         )
       ),
       step(
@@ -126,8 +125,6 @@ const program = Effect.gen(function* () {
   }
 });
 
-// Build the live layer into a Context and provide it at this entry point,
-// keeping scope lifetimes correct and satisfying effect(strictEffectProvide).
 const main = WindowsSecretStore.layerWindows.pipe(
   Layer.build,
   Effect.flatMap((context) => Effect.provide(program, context)),
