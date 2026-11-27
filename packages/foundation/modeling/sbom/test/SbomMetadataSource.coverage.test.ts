@@ -22,13 +22,11 @@ it.effect("projects maintainer contact names with and without an email", () =>
   })
 );
 
-// The private constructor prevents typed construction; JavaScript can still
-// construct reflectively, without acquiring any instance derivation methods.
 it.effect("keeps metadata derivation on the static facade after reflective construction", () =>
   Effect.sync(() => {
     const instance: unknown = Reflect.construct(SbomMetadataSource, []);
-    assertTrue(instance instanceof SbomMetadataSource);
-    assert.notProperty(instance, "fromPackage");
+    assertTrue(instance instanceof SbomMetadataSource, "the private constructor blocks only typed construction");
+    assert.notProperty(instance, "fromPackage", "reflective construction acquires no instance derivation methods");
     assert.notProperty(instance, "rootComponent");
     assert.notProperty(instance, "npmPurl");
     assert.strictEqual(SbomMetadataSource.npmPurl("example", "1.0.0"), "pkg:npm/example@1.0.0");

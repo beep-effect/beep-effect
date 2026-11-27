@@ -60,9 +60,7 @@ it.effect.prop(
   runs
 );
 
-// Copyright text has an unambiguous inverse for nonnegative calendar years;
-// the exported CopyrightYears codec separately covers its whole finite domain.
-const CopyrightSample = S.Struct({
+const CopyrightInCalendarYears = S.Struct({
   holder: S.String,
   year: S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 })),
   startYear: S.optionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 9999 }))),
@@ -70,7 +68,7 @@ const CopyrightSample = S.Struct({
 
 it.effect.prop(
   "copyright rendering is faithful and idempotent after parsing",
-  [Arbitrary.schema(CopyrightSample)],
+  [Arbitrary.schema(CopyrightInCalendarYears)],
   ([input]) =>
     Effect.gen(function* () {
       const rendered = SbomMetadataSource.formatCopyright(input.holder, input);
@@ -86,7 +84,11 @@ it.effect.prop(
       assert.strictEqual(year, input.year);
       assert.strictEqual(startYear, input.startYear === input.year ? undefined : input.startYear);
       const parsed = { year, ...(startYear !== undefined && { startYear }) };
-      assert.strictEqual(SbomMetadataSource.formatCopyright(holder, parsed), rendered);
+      assert.strictEqual(
+        SbomMetadataSource.formatCopyright(holder, parsed),
+        rendered,
+        "copyright text inverts for nonnegative calendar years; the CopyrightYears codec covers its whole domain"
+      );
       assert.strictEqual(SbomMetadataSource.formatCopyright(input.holder, input), rendered);
     }),
   runs
