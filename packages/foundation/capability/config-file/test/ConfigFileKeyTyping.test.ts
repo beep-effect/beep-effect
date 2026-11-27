@@ -15,14 +15,10 @@ import type * as Path from "effect/Path";
 class Settings extends S.Class<Settings, { readonly brand: unique symbol }>("Settings")({ port: S.Finite }) {}
 type SettingsEncoded = typeof Settings.Encoded;
 class SettingsFile extends ConfigFile.Service<SettingsFile, Settings>()("key-typing/SettingsFile") {}
-// A key over a WIDER shape: the layer could never supply `extra`.
 class WiderFile extends Context.Service<WiderFile, ConfigFileShape<Settings> & { readonly extra: string }>()(
   "@beep/config-file/test/ConfigFileKeyTyping.test/WiderFile"
 ) {}
 
-// The downstream regression shape: optional fields and a bare `firstMatch()`, whose
-// `A` comes only from the call's context. The tag must keep `A` inferable, or it
-// falls to `unknown` and the correctly shaped key below is rejected.
 class Optional extends S.Class<Optional, { readonly brand: unique symbol }>("Optional")({
   cacheDir: S.optionalKey(S.String),
   projectKey: S.optionalKey(S.String),
@@ -58,7 +54,6 @@ describe("ConfigFile key typing", () => {
       strategy: MergeStrategy.firstMatch(),
       resolvers: [ConfigResolver.upwardWalk({ filename: "optional.json" })],
     });
-    // RR is inferred from the resolvers, so the layer's requirements carry no stray `unknown`.
     const typed: Layer.Layer<OptionalFile, never, FileSystem.FileSystem | Path.Path> = layer;
     const testLayer = ConfigFile.testLayer(OptionalFile, {
       schema: Optional,
@@ -66,8 +61,11 @@ describe("ConfigFile key typing", () => {
       strategy: MergeStrategy.firstMatch(),
       files: {},
     });
-    assert.isDefined(typed);
-    assert.isDefined(testLayer);
+    assert.isDefined(typed, "RR comes from the resolvers, so the requirements carry no stray unknown");
+    assert.isDefined(
+      testLayer,
+      "the tag keeps A inferable under a bare firstMatch(), else A is unknown and this key fails"
+    );
   });
 
   it("still rejects a wider key when the strategy is a bare firstMatch()", () => {

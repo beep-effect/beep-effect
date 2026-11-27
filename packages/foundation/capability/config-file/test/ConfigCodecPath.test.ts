@@ -18,7 +18,6 @@ const Doc = S.Struct({ from: S.String });
 
 class DocConfig extends ConfigFile.Service<DocConfig, typeof Doc.Type>()("test/CodecPathConfig") {}
 
-/** A chain that finds whichever of the two files exists, never an explicit path. */
 const discovery = ConfigFile.layer(DocConfig, {
   schema: Doc,
   codec: JsonCodec,
@@ -34,7 +33,6 @@ const discovery = ConfigFile.layer(DocConfig, {
 
 class WriteConfig extends ConfigFile.Service<WriteConfig, typeof Doc.Type>()("test/CodecPathWriteConfig") {}
 
-/** A codec that parses like JSON but refuses to serialize anything. */
 const UnserializableCodec = {
   name: "json",
   parse: JsonCodec.parse,
@@ -56,8 +54,6 @@ const writing = ConfigFile.layer(WriteConfig, {
 });
 
 describe("ConfigCodecError.path", () => {
-  // The point of the field: under discovery the caller never named a path, so
-  // without this it cannot say WHICH of several candidates was malformed.
   it.layer(discovery.pipe(Layer.provide(platform({ "/repo/pkg/app.json": "{ not json" }))), { timeout: "30 seconds" })(
     (it) => {
       it.effect("names the discovered file that failed to parse", () =>
@@ -66,14 +62,21 @@ describe("ConfigCodecError.path", () => {
           const error = yield* Effect.flip(config.load);
           assert.instanceOf(error, ConfigCodecError);
           assert.isTrue(S.is(ConfigCodecError)(error));
-          assert.strictEqual(error.path, "/repo/pkg/app.json");
-          // The path travels in the FIELD, never in the rendered message: a wrapper
-          // that names the file too would otherwise print it twice.
-          assert.strictEqual(error.message, "json parse failed");
-          // Re-raising to attach `path` must carry the ORIGINAL cause through
-          // structurally. Asserting only `instanceOf ConfigCodecError` would still
-          // pass if the re-wrap stringified it.
-          assert.instanceOf(error.cause, S.SchemaError);
+          assert.strictEqual(
+            error.path,
+            "/repo/pkg/app.json",
+            "discovery named no path, so the field says which candidate was malformed"
+          );
+          assert.strictEqual(
+            error.message,
+            "json parse failed",
+            "the path rides in the field only, so a wrapper naming the file prints it once"
+          );
+          assert.instanceOf(
+            error.cause,
+            S.SchemaError,
+            "attaching the path keeps the original cause structurally, not stringified"
+          );
         })
       );
     }
