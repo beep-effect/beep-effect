@@ -36,27 +36,20 @@ import type { GitHubAppError } from "@beep/github/GitHubApp";
 import type { RateLimitObservation, RateLimitSinkShape } from "@beep/github/Resilience";
 import type { Reply } from "./support/fixtures.ts";
 
-/**
- * A real PKCS#8 RSA key, generated once. The JWT signer performs genuine RS256
- * signing, so there is nothing to stub — and this is what proves the signer
- * works at all, which a stubbed one could not.
- */
-const keyPair = await crypto.subtle.generateKey(
+const realRs256KeyPair = await crypto.subtle.generateKey(
   { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
   true,
   ["sign", "verify"]
 );
-const keyBytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", keyPair.privateKey));
-// The PEM banner is assembled so no literal key header sits in source (semgrep beep-hardcoded-private-key).
+const keyBytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", realRs256KeyPair.privateKey));
+// decision: test-pem-banner-is-assembled
 const pemBanner = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY-----`;
 const privateKey = `${pemBanner("BEGIN")}\n${Base64.encode(keyBytes)}\n${pemBanner("END")}`;
 
 const CREDENTIALS = { appId: "Iv1.test", privateKey: Redacted.make(privateKey) };
 
-/** The recorded JSON body of a scripted call. */
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
 
-/** The reviewer's down-scope: one repository, five permissions. */
 const REVIEWER_SCOPE = {
   repositories: ["beep-effect"],
   permissions: { checks: "write", pull_requests: "write", issues: "write", contents: "read", metadata: "read" },
@@ -72,21 +65,19 @@ class ScopedClient extends Context.Service<
   }
 >()("@beep/github/test/GitHubApp.test/ScopedClient") {}
 
-// The hook acquires the client; these lifecycle tests close its child scope before asserting revocation.
 const scopedClientLayer = (script: ReturnType<typeof scriptedFetch>) =>
   Layer.effect(
     ScopedClient,
     Effect.gen(function* () {
-      const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+      const childScope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
       const context = yield* Layer.buildWithScope(
         GitHubApp.clientLayer({ ...CREDENTIALS, installationId: 42 }, { fetch: script.fetch, retry: NO_RETRY }),
-        scope
+        childScope
       );
-      return { client: Context.get(context, GitHubClient), close: Scope.close(scope, Exit.void) };
+      return { client: Context.get(context, GitHubClient), close: Scope.close(childScope, Exit.void) };
     })
   );
 
-/** An installation-token payload as GitHub sends it. */
 const tokenReply = (options: { expiresAt?: string; token?: string } = {}): Reply => ({
   status: 201,
   body: {
@@ -95,6 +86,9 @@ const tokenReply = (options: { expiresAt?: string; token?: string } = {}): Reply
     permissions: { contents: "write", metadata: "read" },
   },
 });
+
+const revokeOfSpentToken: Reply = { status: 204 };
+const revokeOnScopeClose: Reply = { status: 204 };
 
 const withApp = <A, E>(
   name: string,
@@ -117,8 +111,7 @@ describe("GitHubApp.token", () => {
       assert.strictEqual(Redacted.value(token.token), "ghs_installation");
       assert.strictEqual(token.installationId, 42);
       assert.deepStrictEqual({ ...token.permissions }, { contents: "write", metadata: "read" });
-      // One call: a known installation id needs no discovery.
-      assert.strictEqual(script.count(), 1);
+      assert.strictEqual(script.count(), 1, "a known installation id needs no discovery");
       assert.include(script.calls[0]?.url ?? "", "/app/installations/42/access_tokens");
     })
   );
@@ -178,11 +171,12 @@ describe("GitHubApp.token", () => {
     Effect.gen(function* () {
       yield* app.token({ ...CREDENTIALS, installationId: 42 });
       const authorization = script.calls[0]?.headers.authorization ?? "";
-      // octokit's auth-token emits `bearer` for a three-segment JWT and
-      // `token` otherwise, which is exactly the distinction the app and
-      // installation credentials need — so no separate auth strategy exists.
       assert.isTrue(Str.startsWith("bearer ")(authorization), authorization);
-      assert.lengthOf(pipe(authorization, Str.slice("bearer ".length), Str.split(".")), 3);
+      assert.lengthOf(
+        pipe(authorization, Str.slice("bearer ".length), Str.split(".")),
+        3,
+        "octokit auth-token emits bearer for a three-segment JWT, so no separate auth strategy exists"
+      );
     })
   );
 
@@ -200,9 +194,12 @@ describe("GitHubApp.token", () => {
     ],
     (app, script) =>
       Effect.gen(function* () {
-        // Case-insensitive: GitHub's login casing is display casing.
         const token = yield* app.token({ ...CREDENTIALS, owner: "acme" });
-        assert.strictEqual(token.installationId, 7);
+        assert.strictEqual(
+          token.installationId,
+          7,
+          "owner matching is case-insensitive; GitHub login casing is display casing"
+        );
         assert.include(script.calls[1]?.url ?? "", "/app/installations/7/access_tokens");
       })
   );
@@ -305,12 +302,9 @@ describe("GitHubApp.revoke and scopedToken", () => {
   );
 
   withApp(
-    "a failed revoke does not fail the scope",
+    "a failed revoke does not fail the scope: revocation of an hour-long token is best-effort",
     [tokenReply(), { status: 500, body: { message: "boom" } }],
-    (app) =>
-      // Best-effort by design: a token GitHub would not revoke expires on its
-      // own within the hour, and failing the caller's program over it is worse.
-      app.scopedToken({ ...CREDENTIALS, installationId: 42 }).pipe(Effect.asVoid)
+    (app) => app.scopedToken({ ...CREDENTIALS, installationId: 42 }).pipe(Effect.asVoid)
   );
 });
 
@@ -375,9 +369,11 @@ describe("GitHubApp.identity", () => {
       Effect.gen(function* () {
         const identity = yield* app.identity({ ...CREDENTIALS, installationToken: Redacted.make("ghs_x") });
         assert.deepStrictEqual(identity, AppIdentity.make({ slug: "my-app", name: "My App", userId: 987654 }));
-        // The bot-user lookup rejects an app JWT, so it bears the
-        // installation token when one is supplied.
-        assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_x");
+        assert.strictEqual(
+          script.calls[1]?.headers.authorization,
+          "token ghs_x",
+          "the bot-user lookup rejects an app JWT, so it bears the installation token"
+        );
       })
   );
 
@@ -427,11 +423,10 @@ describe("GitHubApp.clientLayer", () => {
         blocked = true;
         const signal = init.signal;
         Deferred.doneUnsafe(started, Effect.succeed(signal));
-        // A request that never answers: it settles only by rejecting with the abort reason, as `fetch` does.
-        const { promise, reject } = Promise.withResolvers<Response>();
-        if (signal.aborted) reject(signal.reason);
-        else signal.addEventListener("abort", () => reject(signal.reason), { once: true });
-        return promise;
+        const unansweredRequest = Promise.withResolvers<Response>();
+        if (signal.aborted) unansweredRequest.reject(signal.reason);
+        else signal.addEventListener("abort", () => unansweredRequest.reject(signal.reason), { once: true });
+        return unansweredRequest.promise;
       }
       return script.fetch(input, init);
     }
@@ -449,14 +444,13 @@ describe("GitHubApp.clientLayer", () => {
           assert.isTrue(signal.aborted, "cancellation must abort the blocked HTTP request");
           const await1 = yield* Fiber.await(requesting);
           assert.isTrue(Exit.hasInterrupts(await1), "the requesting fiber must terminate");
-          // A subsequent request must acquire the released rotation permit;
-          // an acquired replacement is reused rather than minted again.
           const repo = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
-          assert.strictEqual(repo.default_branch, "main");
+          assert.strictEqual(repo.default_branch, "main", "a later request acquires the released rotation permit");
           yield* close;
           assert.deepStrictEqual(
             A.map(script.calls, (call) => call.method),
-            ["POST", "DELETE", "POST", "GET", "DELETE"]
+            ["POST", "DELETE", "POST", "GET", "DELETE"],
+            "an acquired replacement is reused rather than minted again"
           );
           assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_first");
           assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_second");
@@ -486,11 +480,10 @@ describe("GitHubApp.clientLayer", () => {
         blocked = true;
         const signal = init.signal;
         Deferred.doneUnsafe(started, Effect.succeed(signal));
-        // A request that never answers: it settles only by rejecting with the abort reason, as `fetch` does.
-        const { promise, reject } = Promise.withResolvers<Response>();
-        if (signal.aborted) reject(signal.reason);
-        else signal.addEventListener("abort", () => reject(signal.reason), { once: true });
-        return promise;
+        const unansweredRequest = Promise.withResolvers<Response>();
+        if (signal.aborted) unansweredRequest.reject(signal.reason);
+        else signal.addEventListener("abort", () => unansweredRequest.reject(signal.reason), { once: true });
+        return unansweredRequest.promise;
       }
       return script.fetch(input, init);
     }
@@ -531,12 +524,6 @@ describe("GitHubApp.clientLayer", () => {
       tokenReply({ token: "ghs_observed" }),
       { status: 204 },
     ]);
-    // The injected transport arms the cancellation when the replacement mint
-    // reaches GitHub. The interrupt then lands as the mint's span ends: span
-    // ends run as uninterruptible finalizers, so it is delivered at the first
-    // interruptible point after the token is decoded, before the rotation can
-    // hand it to a client. Only the credential the mint already owns can be
-    // revoked at that point.
     let armed = false;
     function fetch(input: string | URL | Request, init?: RequestInit): Promise<Response> {
       armed = armed || (script.count() === 2 && init?.method === "POST");
@@ -568,10 +555,15 @@ describe("GitHubApp.clientLayer", () => {
           yield* close;
           assert.deepStrictEqual(
             A.map(script.calls, (call) => call.method),
-            ["POST", "DELETE", "POST", "DELETE"]
+            ["POST", "DELETE", "POST", "DELETE"],
+            "uninterruptible span ends deliver the interrupt after decoding, before the rotation hands the token on"
           );
           assert.strictEqual(script.calls[1]?.headers.authorization, "token ghs_first");
-          assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_observed");
+          assert.strictEqual(
+            script.calls[3]?.headers.authorization,
+            "token ghs_observed",
+            "only the credential the mint already owns is revoked"
+          );
         })
       );
     });
@@ -583,13 +575,12 @@ describe("GitHubApp.clientLayer", () => {
         tokenReply({ token: "ghs_invalid_expiry", expiresAt: "not a date" }),
         { status: 204 },
       ]);
-      // A local scope closes the failed acquisition before the revocation is asserted.
-      const scope = yield* Scope.make();
+      const acquisitionScope = yield* Scope.make();
       const result = yield* Layer.buildWithScope(
         GitHubApp.clientLayer({ ...CREDENTIALS, installationId: 42 }, { fetch: script.fetch, retry: NO_RETRY }),
-        scope
+        acquisitionScope
       ).pipe(Effect.flip);
-      yield* Scope.close(scope, Exit.void);
+      yield* Scope.close(acquisitionScope, Exit.void);
       assert.strictEqual(result._tag, "GitHubAppError");
       assert.strictEqual(result.kind, "token");
       assert.deepStrictEqual(
@@ -646,10 +637,10 @@ describe("GitHubApp.clientLayer", () => {
       const expiresAt = DateTime.toDateUtc(DateTime.makeUnsafe(0)).toISOString();
       const script = scriptedFetch([
         tokenReply({ expiresAt, token: "ghs_first" }),
-        { status: 204 }, // revoke of the first
+        revokeOfSpentToken,
         tokenReply({ expiresAt: "2099-01-01T00:00:00Z", token: "ghs_second" }),
         { status: 200, body: { default_branch: "main" } },
-        { status: 204 }, // revoke on scope close
+        revokeOnScopeClose,
       ]);
       return Effect.gen(function* () {
         const context = yield* Layer.build(
@@ -686,9 +677,11 @@ describe("GitHubApp.clientLayer", () => {
       it.effect("fails layer construction with a GitHubAppError when credentials are bad", () =>
         Effect.gen(function* () {
           const error = yield* ConstructionError;
-          // At construction the caller gets the App error, which says what is
-          // actually wrong — not an opaque authorization failure on first use.
-          assert.strictEqual(error._tag, "GitHubAppError");
+          assert.strictEqual(
+            error._tag,
+            "GitHubAppError",
+            "construction names what is wrong, not an opaque auth failure on first use"
+          );
           assert.strictEqual(error.kind, "token");
         })
       );
@@ -739,8 +732,11 @@ describe("GitHubApp.token down-scope", () => {
   withApp("sends no body when the request narrows nothing", [tokenReply()], (app, script) =>
     Effect.gen(function* () {
       yield* app.token({ ...CREDENTIALS, installationId: 42 });
-      // The plain mint stays byte-identical to the wire before down-scoping existed.
-      assert.strictEqual(script.calls[0]?.body, undefined);
+      assert.strictEqual(
+        script.calls[0]?.body,
+        undefined,
+        "the plain mint is byte-identical to the pre-down-scoping wire"
+      );
     })
   );
 
@@ -791,7 +787,6 @@ describe("GitHubApp.token down-scope", () => {
         body: {
           token: "ghs_narrowed",
           expires_at: "2099-01-01T00:00:00Z",
-          // GitHub intersects the request with the installation: no checks, contents only read.
           permissions: { pull_requests: "write", issues: "write", contents: "read", metadata: "read" },
         },
       },
@@ -806,11 +801,11 @@ describe("GitHubApp.token down-scope", () => {
         assert.strictEqual(error.kind, "insufficient");
         assert.deepStrictEqual(
           A.map(error.result.missing, (gap) => `${gap.permission}:${gap.required}`),
-          ["checks:write", "contents:write"]
+          ["checks:write", "contents:write"],
+          "GitHub intersects the request with the installation: no checks, contents only read"
         );
-        // Narrower than asked is accepted when the caller only needs what was granted.
         const kept = yield* assertPermissions({ contents: "read" })(token);
-        assert.strictEqual(kept, token);
+        assert.strictEqual(kept, token, "narrower than asked is accepted when the caller needs only what was granted");
       })
   );
 
@@ -863,10 +858,10 @@ describe("GitHubApp.clientLayer down-scope and refresh", () => {
         tokenReply({ expiresAt: "1970-01-01T00:10:00Z", token: "ghs_first" }),
         { status: 200, body: { default_branch: "main" } },
         { status: 200, body: { default_branch: "main" } },
-        { status: 204 }, // revoke of the first, five minutes ahead of its expiry
+        revokeOfSpentToken,
         tokenReply({ expiresAt: "2099-01-01T00:00:00Z", token: "ghs_second" }),
         { status: 200, body: { default_branch: "main" } },
-        { status: 204 }, // revoke on scope close
+        revokeOnScopeClose,
       ]);
       return Effect.gen(function* () {
         const context = yield* Layer.build(
@@ -885,7 +880,8 @@ describe("GitHubApp.clientLayer down-scope and refresh", () => {
         yield* read;
         assert.deepStrictEqual(
           A.map(script.calls, (call) => call.method),
-          ["POST", "GET", "GET", "DELETE", "POST", "GET"]
+          ["POST", "GET", "GET", "DELETE", "POST", "GET"],
+          "the first token is revoked five minutes ahead of its expiry, then re-minted"
         );
         assert.strictEqual(script.calls[2]?.headers.authorization, "token ghs_first");
         assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_first");
@@ -990,15 +986,17 @@ describe("InstallationToken", () => {
 
   it.effect("encodes to JSON a process boundary can carry", () =>
     Effect.gen(function* () {
-      // A GitHub Actions step persists this through GITHUB_STATE, which is
-      // plaintext by GitHub's protocol — hence the raw string on the wire.
       const encoded = yield* S.encodeUnknownEffect(InstallationToken)(token);
-      assert.deepStrictEqual(encoded, {
-        token: "ghs_x",
-        expiresAt: "2026-01-01T00:00:00.000Z",
-        installationId: 1,
-        permissions: { contents: "write" },
-      });
+      assert.deepStrictEqual(
+        encoded,
+        {
+          token: "ghs_x",
+          expiresAt: "2026-01-01T00:00:00.000Z",
+          installationId: 1,
+          permissions: { contents: "write" },
+        },
+        "GITHUB_STATE is plaintext by protocol, so the token is a raw string on the wire"
+      );
       const decoded = yield* S.decodeEffect(InstallationToken)(encoded);
       assert.strictEqual(Redacted.value(decoded.token), "ghs_x");
       assert.isTrue(DateTime.toEpochMillis(decoded.expiresAt) === DateTime.toEpochMillis(token.expiresAt));
@@ -1009,12 +1007,10 @@ describe("InstallationToken", () => {
     "round-trips every schema-derived token through its JSON boundary",
     [Arbitrary.schema(InstallationToken)],
     Effect.fnUntraced(function* ([generated]) {
-      // Re-encoding the decoded value must reproduce the wire form exactly: the
-      // redacted token, the UTC expiry, the installation id and every optional field.
       const encoded = yield* S.encodeEffect(InstallationToken)(generated);
       const decoded = yield* S.decodeEffect(InstallationToken)(encoded);
       const value10 = yield* S.encodeEffect(InstallationToken)(decoded);
-      assert.deepStrictEqual(value10, encoded);
+      assert.deepStrictEqual(value10, encoded, "re-encoding the decoded value reproduces the wire form exactly");
       assert.strictEqual(Redacted.value(decoded.token), Redacted.value(generated.token));
     })
   );
@@ -1048,19 +1044,18 @@ describe("BotIdentity", () => {
   });
 
   it("is reachable with no layer, no client and no credentials", () => {
-    // The point of moving it off the service shape: a consumer rendering a
-    // committer line needs none of the machinery.
-    assert.instanceOf(BotIdentity.forApp({ appSlug: "x" }), BotIdentity);
+    assert.instanceOf(
+      BotIdentity.forApp({ appSlug: "x" }),
+      BotIdentity,
+      "a consumer rendering a committer line needs none of the service machinery"
+    );
   });
 
   it("renders its own DCO sign-off trailer", () => {
-    // Git Data API commits bypass `git commit -s`, so the trailer has no
-    // porcelain to come from — and a hand-built one that is subtly wrong
-    // surfaces as a red DCO check on someone else's PR. DCO 1.1's exact
-    // casing, spacing and angle brackets, from the type that owns the data.
     assert.strictEqual(
       BotIdentity.githubActions.signoff,
-      "Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+      "Signed-off-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+      "Git Data API commits bypass git commit -s, so the trailer follows DCO 1.1 exactly"
     );
     assert.strictEqual(
       BotIdentity.forApp({ appSlug: "my-app", appUserId: 42 }).signoff,
@@ -1118,7 +1113,6 @@ describe("GitHubApp rate-limit observations", () => {
   const LABEL = "app:1/42";
   const headers = rateLimitHeaders({ remaining: 4_000, limit: 5_000, resource: "core" });
 
-  /** A sink that keeps every observation, and a projection of each to credential and label. */
   const collecting = Effect.fnUntraced(function* () {
     const seen = yield* Ref.make<ReadonlyArray<RateLimitObservation>>([]);
     const sink: RateLimitSinkShape = { record: (observation) => Ref.update(seen, A.append(observation)) };

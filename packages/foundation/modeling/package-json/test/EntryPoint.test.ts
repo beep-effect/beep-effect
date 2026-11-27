@@ -7,13 +7,11 @@ import * as Result from "effect/Result";
 const resolve = (manifest: { exports?: unknown; main?: unknown }, conditions?: ReadonlyArray<string>) =>
   resolveEntryPoint(manifest, conditions === undefined ? undefined : { conditions });
 
-/** The resolved path, or `null` — keeps the assertions readable. */
 const entry = (manifest: { exports?: unknown; main?: unknown }, conditions?: ReadonlyArray<string>): string | null => {
   const result = resolve(manifest, conditions);
   return Result.isSuccess(result) ? result.success : null;
 };
 
-/** The reason resolution failed, or `null` when it succeeded. */
 const reason = (manifest: { exports?: unknown; main?: unknown }, conditions?: ReadonlyArray<string>): string | null => {
   const result = resolve(manifest, conditions);
   return Result.isFailure(result) ? result.failure.reason : null;
@@ -79,11 +77,13 @@ describe("resolveEntryPoint", () => {
 
   describe("condition priority is the caller's policy", () => {
     it("honours the requested order rather than the manifest's key order", () => {
-      // The same manifest resolves to different files under different
-      // condition lists, which is the entire point of the option.
       const manifest = { exports: { require: "./cjs.js", import: "./esm.js" } };
       assert.strictEqual(entry(manifest, ["import"]), "./esm.js");
-      assert.strictEqual(entry(manifest, ["require"]), "./cjs.js");
+      assert.strictEqual(
+        entry(manifest, ["require"]),
+        "./cjs.js",
+        "the same manifest resolves to different files under different condition lists"
+      );
     });
 
     it("prefers import over default by default", () => {
@@ -101,10 +101,11 @@ describe("resolveEntryPoint", () => {
 
   describe("exports encapsulates the package", () => {
     it("does NOT fall back to main when exports is present and nothing matched", () => {
-      // Node's rule, and the divergence from the lenient reading: falling
-      // through here answers a file the package deliberately does not
-      // export, which then loads and behaves plausibly instead of failing.
-      assert.strictEqual(entry({ exports: { require: "./cjs.js" }, main: "./legacy.js" }, ["import"]), null);
+      assert.strictEqual(
+        entry({ exports: { require: "./cjs.js" }, main: "./legacy.js" }, ["import"]),
+        null,
+        "Node's rule: falling through answers a file the package deliberately does not export"
+      );
     });
 
     it("answers nothing for an empty exports object, which exports nothing", () => {
@@ -116,11 +117,11 @@ describe("resolveEntryPoint", () => {
     });
 
     it("names WHICH shape blocked resolution, so a caller can log it", () => {
-      // Three different shapes, three different responses. Collapsing them
-      // into one sentinel is the same quiet wrong answer as an untyped
-      // error channel — a consumer debugging someone else's plugin at 3am
-      // needs to know which one it hit.
-      assert.strictEqual(reason({ exports: { require: "./cjs.js" } }, ["import"]), "noConditionMatched");
+      assert.strictEqual(
+        reason({ exports: { require: "./cjs.js" } }, ["import"]),
+        "noConditionMatched",
+        "one sentinel for all three shapes would hide which one a caller hit"
+      );
       assert.strictEqual(reason({ exports: { "./sub": "./sub.js" } }), "noRootExport");
       assert.strictEqual(reason({ exports: ["./a.js"] }), "unsupportedExportsForm");
     });
@@ -135,9 +136,11 @@ describe("resolveEntryPoint", () => {
     });
 
     it("answers nothing for an array fallback list rather than guessing", () => {
-      // Unimplemented, and said so honestly: a guess here would be
-      // indistinguishable from a correct answer at the call site.
-      assert.strictEqual(entry({ exports: ["./a.js", "./b.js"], main: "./legacy.js" }), null);
+      assert.strictEqual(
+        entry({ exports: ["./a.js", "./b.js"], main: "./legacy.js" }),
+        null,
+        "unimplemented: a guess would be indistinguishable from a correct answer at the call site"
+      );
     });
   });
 

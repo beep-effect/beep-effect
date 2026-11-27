@@ -32,7 +32,6 @@ import { PageOptions } from "./Rest.ts";
 
 const $I = $GithubId.create("GitTag");
 
-/** How many annotated-tag dereferences to follow before giving up. */
 const MAX_TAG_PEEL = 5;
 
 const TagName = S.Struct({ name: S.String }).pipe(
@@ -230,7 +229,7 @@ export interface GitTagShape {
   readonly latestSemver: (
     options?: LatestSemverOptions.Encoded
   ) => Effect.Effect<O.Option<SemverTag>, GitHubError, Repo>;
-  /** Every tag, in GitHub's order. `prefix` filters client-side. */
+  /** Every tag, in GitHub's order. `prefix` filters client-side: the endpoint has no server-side filter. */
   readonly list: (options?: {
     readonly prefix?: string | undefined;
     readonly page?: PageOptions | undefined;
@@ -357,7 +356,6 @@ const rejectEmpty: {
     : Effect.succeed(short);
 });
 
-/** The version a tag name offers under `options`, when it is a candidate at all. */
 const candidateVersion = (options: LatestSemverOptions.Encoded | undefined): ((name: string) => O.Option<SemVer>) => {
   const prefix = options?.prefix ?? "";
   const extract = options?.extract ?? versionFromTag;
@@ -370,7 +368,6 @@ const candidateVersion = (options: LatestSemverOptions.Encoded | undefined): ((n
   );
 };
 
-/** Whether `version` beats the best tag found so far. */
 const outranks = (version: SemVer, best: SemverTag | undefined): boolean =>
   best === undefined || version.compare(best.version) === 1;
 
@@ -421,9 +418,6 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, prefix: options?.prefix ?? "" });
     const tags = yield* Stream.runCollect(listStream(options));
-    // GitHub has no server-side ref-prefix filter for this endpoint, so the
-    // filter is client-side by necessity — which is exactly why latestSemver
-    // exists rather than leaving callers to list-then-sort.
     const prefix = options?.prefix;
     const refs = yield* Effect.forEach(
       tags,
@@ -495,8 +489,6 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
       yield* Effect.annotateCurrentSpan({ owner, repo, prefix: options?.prefix ?? "" });
       const candidate = candidateVersion(options);
       let best: SemverTag | undefined;
-      // One pass: parsing and comparison are synchronous; wire validation
-      // remains effectful so malformed selected candidates fail typed.
       yield* Stream.runForEach(listStream({ page: options?.page }), (entry) =>
         Effect.gen(function* () {
           const { name } = yield* S.decodeEffect(TagName)(entry);

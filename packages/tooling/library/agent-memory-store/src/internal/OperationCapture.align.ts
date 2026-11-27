@@ -40,8 +40,6 @@ export type AlignStep =
   | { readonly _tag: "Retire"; readonly base: BaseNode }
   | { readonly _tag: "Insert"; readonly edited: PartitionNode };
 
-// What the diff compares: a node's kind (unknown for a base node of a file
-// whose partition does not cut the base nodes) and its exact text.
 interface Item {
   readonly kind: O.Option<NodeKind>;
   readonly text: string;
@@ -57,8 +55,6 @@ export const baseText = (node: BaseNode): string => node.anchor.anchor.quote;
 /** The concatenated text of a base file's nodes. */
 export const joinBaseTexts = (nodes: ReadonlyArray<BaseNode>): string => A.join(A.map(nodes, baseText), "");
 
-// A base kind that is unknown agrees with any edited kind when matching kept
-// nodes by text.
 const kindsAgree = (base: O.Option<NodeKind>, edited: O.Option<NodeKind>): boolean =>
   O.match(base, { onNone: () => true, onSome: (kind) => O.contains(edited, kind) });
 
@@ -81,7 +77,6 @@ const insert = (edited: PartitionNode): AlignStep => ({ _tag: "Insert", edited }
 const pair = ([item, edited]: readonly [BaseItem, PartitionNode]): ReadonlyArray<AlignStep> =>
   O.contains(item.kind, edited.kind) ? [{ _tag: "Revise", base: item.node, edited }] : [retire(item), insert(edited)];
 
-// One changed region: base run replaced by edited run.
 const changeSteps = (
   baseRun: ReadonlyArray<BaseItem>,
   editedRun: ReadonlyArray<PartitionNode>

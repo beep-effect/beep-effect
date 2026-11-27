@@ -86,25 +86,21 @@ describe("Package.resolve", () => {
     }
   );
 
-  // The alias form gets the shared @beep/npm-spec publish semantics: the dep
-  // key is the alias, the TARGET package's version is looked up, and the
-  // published form is `npm:<target>@<projected>`.
   it.layer(Layer.mergeAll(workspaceOf({ "@x/charts": "2.0.0", charts: "1.5.0" }), CatalogResolver.noop), {
     timeout: "30 seconds",
   })((it) => {
-    it.effect("projects an alias-form workspace: specifier to pnpm's npm: publish alias", () =>
-      Effect.gen(function* () {
-        const pkg = yield* decodeDeps({ viz: "workspace:@x/charts@*", plot: "workspace:charts@^" });
-        const resolved = yield* Package.resolve(pkg);
-        assertSome(HashMap.get(resolved.dependencies, "viz"), "npm:@x/charts@2.0.0");
-        assertSome(HashMap.get(resolved.dependencies, "plot"), "npm:charts@^1.5.0");
-      })
+    it.effect(
+      "projects an alias-form workspace: specifier to npm:<target>@<projected>, keyed by the alias, versioned by the target",
+      () =>
+        Effect.gen(function* () {
+          const pkg = yield* decodeDeps({ viz: "workspace:@x/charts@*", plot: "workspace:charts@^" });
+          const resolved = yield* Package.resolve(pkg);
+          assertSome(HashMap.get(resolved.dependencies, "viz"), "npm:@x/charts@2.0.0");
+          assertSome(HashMap.get(resolved.dependencies, "plot"), "npm:charts@^1.5.0");
+        })
     );
   });
 
-  // The widened error channel: a CatalogResolver whose assembly failed
-  // surfaces its typed CatalogAssemblyError through Package.resolve untouched
-  // — never re-wrapped or defected. Mirrors @beep/npm-spec's identity pin.
   const assemblyFailure = CatalogAssemblyError.make({
     source: "manifest",
     path: "pnpm-workspace.yaml",
@@ -124,7 +120,11 @@ describe("Package.resolve", () => {
         const pkg = yield* decodeDeps({ effect: "catalog:" });
         const error = yield* Package.resolve(pkg).pipe(Effect.flip);
         assert.instanceOf(error, CatalogAssemblyError);
-        assert.strictEqual(error, assemblyFailure);
+        assert.strictEqual(
+          error,
+          assemblyFailure,
+          "Package.resolve surfaces the resolver's typed error untouched, never re-wrapped or defected"
+        );
       })
     );
   });

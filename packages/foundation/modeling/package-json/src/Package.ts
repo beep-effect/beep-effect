@@ -49,11 +49,6 @@ import type { InvalidVersionError } from "@beep/semver";
 
 const $I = $PackageJsonId.create("Package");
 
-// ── Field codecs ────────────────────────────────────────────────────────────
-// Exported @public as reusable field schemas: they compose the `Package` model
-// and are available for `.extend()`ed subclasses. Reach for `Package` and its
-// fields directly for ordinary use.
-
 const toHashMap = SchemaTransformation.transform({
   decode: (record: { readonly [x: string]: string }) => HashMap.fromIterable(R.toEntries(record)),
   encode: (map: HashMap.HashMap<string, string>) => map.pipe(HashMap.toEntries, R.fromEntries),
@@ -272,8 +267,6 @@ export const PeerDependenciesMetaField = S.Record(S.String, PeerDependencyMeta).
  */
 export type PeerDependenciesMetaField = typeof PeerDependenciesMetaField.Type;
 
-// ── Errors ──────────────────────────────────────────────────────────────────
-
 /**
  * **Details**
  *
@@ -354,8 +347,6 @@ export class PackageDecodeError extends S.TaggedError<PackageDecodeError, { read
     return (input) => decode(input).pipe(Effect.mapError((cause) => PackageDecodeError.make({ cause })));
   }
 }
-
-// ── Formatting options ──────────────────────────────────────────────────────
 
 const PackageIndentSchema = S.Union([S.Finite, S.Literals(["tab", "preserve"])]);
 
@@ -440,8 +431,6 @@ export declare namespace PackageFormatOptions {
   export type Encoded = typeof PackageFormatOptions.Encoded;
 }
 
-// ── Model ───────────────────────────────────────────────────────────────────
-
 /**
  * A patch over {@link Package}'s modeled fields — every field optional,
  * derived from the schema so it never drifts from the model.
@@ -454,10 +443,8 @@ export type PackagePatch = Partial<{
   readonly [K in keyof (typeof Package)["fields"]]: (typeof Package)["fields"][K]["Type"];
 }>;
 
-/** The string-to-string map fields the dependency and script setters edit. */
 type StringMapKey = "dependencies" | "devDependencies" | "peerDependencies" | "optionalDependencies" | "scripts";
 
-/** Build the dual setter that adds or replaces one entry of a string map field. */
 const mapEntrySetter = (
   key: StringMapKey
 ): {
@@ -468,7 +455,6 @@ const mapEntrySetter = (
     pkg.copyWith(R.singleton(key, HashMap.set(pkg[key], name, value)))
   );
 
-/** Build the dual setter that removes one entry of a string map field. */
 const mapEntryRemover = (
   key: StringMapKey
 ): {
@@ -768,13 +754,13 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
       "A package.json document as a rich `Schema.Class`: typed known fields, a `rest` catch-all preserving unknown top-level fields across a read/edit/write cycle, computed getters, and immutable mutation statics.",
   })
 ) {
-  // ── Pipeable ──────────────────────────────────────────────────────────
-  // `Schema.Class` instances are not `Pipeable` out of the box, so this manual
-  // overload block makes `pkg.pipe(Package.setVersion(v))` work alongside the
-  // dual statics' data-first and curried call styles.
-
   /**
    * Passes this package through transformations, including curried immutable mutation statics.
+   *
+   * **Details**
+   *
+   * `Schema.Class` instances are not `Pipeable`, so `Package` declares this
+   * overload block itself.
    *
    * **Example** (Pipe a package through a dependency update)
    *
@@ -798,8 +784,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
   pipe(this: unknown, ...fns: ReadonlyArray<(_: unknown) => unknown>): unknown {
     return A.reduce(fns, this, (value, f) => f(value));
   }
-
-  // ── Schema / wire transform ───────────────────────────────────────────
 
   /**
    * The default wire codec: an open JSON object ↔ a {@link Package} instance,
@@ -847,8 +831,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
     return makeWire(Class);
   }
 
-  // ── Construction ──────────────────────────────────────────────────────
-
   /**
    * Decode an unknown JSON value into a {@link Package}, normalizing schema
    * failures to a typed {@link PackageDecodeError} at the boundary.
@@ -875,8 +857,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
   static readonly decode = Effect.fn("Package.decode")(function* (input: unknown) {
     return yield* PackageDecodeError.decodeUnknown(Package.schema)(input);
   });
-
-  // ── Computed getters ──────────────────────────────────────────────────
 
   /**
    * Whether the package is marked private.
@@ -1051,8 +1031,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
       Dependency.make({ name, specifier, kind: "optional" })
     );
   }
-
-  // ── Immutable mutation ────────────────────────────────────────────────
 
   /**
    * Return a new {@link Package} with the given fields replaced.
@@ -1398,8 +1376,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
     (pkg: Package, name: string): Package;
   } = mapEntryRemover("scripts");
 
-  // ── Resolution ────────────────────────────────────────────────────────
-
   /**
    * Resolve `catalog:` and `workspace:` specifiers across all four dependency
    * maps using the `CatalogResolver` and `WorkspaceResolver` from context,
@@ -1449,8 +1425,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
     const workspace = yield* WorkspaceResolver;
     const catalog = yield* CatalogResolver;
 
-    // The alias form resolves the TARGET package's version; the plain form
-    // resolves the map key's. Specifiers of any other protocol stay as written.
     const resolveSpecifier = Effect.fnUntraced(function* (name: string, specifier: string) {
       if (DependencySpecifier.isWorkspace(specifier)) {
         const target = O.getOrElse(DependencySpecifier.workspaceTargetOf(specifier), () => name);
@@ -1481,8 +1455,6 @@ export class Package extends S.Class<Package, { readonly brand: unique symbol }>
       optionalDependencies: yield* resolveMap(pkg.optionalDependencies),
     });
   });
-
-  // ── Serialization ─────────────────────────────────────────────────────
 
   /**
    * Serialize to a formatted package.json string: encode through the wire

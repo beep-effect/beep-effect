@@ -1,0 +1,18 @@
+{
+  "$schema": "https://v2-11-13.turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/explorations/legal-ontology-landscape/assets/manifest.jsonl"
+      ]
+    },
+    "test:integration": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/explorations/legal-ontology-landscape/assets/manifest.jsonl"
+      ]
+    }
+  }
+}

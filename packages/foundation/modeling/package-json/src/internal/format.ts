@@ -10,22 +10,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Pure package.json serialization helpers: canonical top-level key ordering
-// (the `sort-package-json` order), map-field alphabetization and
-// empty-map stripping. These are pure `Record → Record` steps, surfaced
-// through `Package.toJsonString` and `PackageJsonFile.write` options.
-//
-// Private implementation module — never re-exported from `index.ts`.
-
-/**
- * Canonical top-level key order — `sort-package-json@4.0.0`'s default
- * `sortOrder`, taken verbatim so the kit's formatter byte-agrees with the
- * ecosystem tool on top-level placement (notably: `packageManager` before
- * `engines` / `devEngines`, and `sideEffects` after `publisher`, before
- * `type`). Keys not listed append after the known keys — public keys
- * alphabetically, then `_`-prefixed keys alphabetically — matching
- * `sort-package-json`'s unknown-key behavior.
- */
+// Ported from sort-package-json@4.0.0 index.js default sortOrder (MIT).
 const KEY_ORDER: ReadonlyArray<string> = [
   "$schema",
   "name",
@@ -142,24 +127,11 @@ const KEY_ORDER: ReadonlyArray<string> = [
 
 const KEY_INDEX = HashMap.fromIterable(A.map(KEY_ORDER, (k, i) => [k, i] as const));
 
-/**
- * Deterministic, locale-independent string comparison by code unit. A bare
- * `localeCompare` sorts differently across ICU builds/locales; package.json key
- * order must be stable everywhere.
- */
 const byCodePoint = Order.String;
 const byKnownIndex = Order.mapInput(Order.Number, (entry: [string, unknown, number]) => entry[2]);
 const byEntryKey = Order.mapInput(byCodePoint, (entry: [string, unknown]) => entry[0]);
 
-/**
- * Top-level map fields whose entries are alphabetized when sorting. The
- * dependency maps for canonical presentation; `scripts` / `engines` / `bin`
- * additionally because the `Package` model carries them as `HashMap`s, whose
- * encode order is hash order — source order is already gone, so a deterministic
- * alphabetical order is strictly better. `sort-package-json` sorts `engines`
- * and `bin` identically; its `scripts` sort is a grouped sort that agrees with
- * plain code-unit order except for `pre*`/`post*` script pairing.
- */
+// decision: hashmap-field-formatting
 const SORTED_MAP_KEYS = HashSet.make(
   "dependencies",
   "devDependencies",
@@ -171,7 +143,6 @@ const SORTED_MAP_KEYS = HashSet.make(
   "bin"
 );
 
-/** Alphabetize the entries of a plain-object map field. */
 const sortMapEntries = (value: Record<string, unknown>): Record<string, unknown> =>
   R.fromEntries(A.map(A.sort(R.keys(value), byCodePoint), (key) => [key, value[key]] as const));
 
@@ -219,9 +190,7 @@ export const sortKeys = (obj: Record<string, unknown>): Record<string, unknown> 
   );
 };
 
-// `scripts` joins the dependency maps here because the model decodes it with
-// the same empty-map default: an absent key would otherwise materialize as
-// `"scripts": {}` on encode.
+// decision: hashmap-field-formatting
 const STRIP_EMPTY_KEYS: ReadonlyArray<string> = [
   "dependencies",
   "devDependencies",
