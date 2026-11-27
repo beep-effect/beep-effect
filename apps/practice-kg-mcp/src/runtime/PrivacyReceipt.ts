@@ -219,13 +219,11 @@ const unreadPracticeKgReceiptSpool = (status: PracticeKgReceiptSpoolStatus): Pra
     refused: HashMap.empty(),
   });
 
-// Resource attributes the strict gate stamps from constants; they are names
-// the receipt may print even though the catalog does not declare them.
-const resourceKeys = ["service.name", "service.version", "beep.key_epoch"] as const;
+const printableResourceKeys = ["service.name", "service.version", "beep.key_epoch"] as const;
 
 const catalogAttributeKeys: HashSet.HashSet<string> = HashSet.fromIterable([
   ...A.map(PracticeKgTelemetryCatalog.attributes, (attribute) => attribute.key),
-  ...resourceKeys,
+  ...printableResourceKeys,
 ]);
 
 const catalogMetricNames: HashSet.HashSet<string> = HashSet.fromIterable(

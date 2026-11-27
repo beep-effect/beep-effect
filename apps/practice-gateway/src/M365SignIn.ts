@@ -426,6 +426,10 @@ const NOT_CONFIGURED =
  * console.log(Layer.isLayer(layer))
  * ```
  *
+ * **Gotchas**
+ *
+ * Prefer the authorizer’s recorded plain-language reason when present; the driver’s error is technical.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -505,7 +509,6 @@ export class M365SignIn extends Context.Service<M365SignIn, M365SignInShape>()($
           );
           const finished = yield* Context.get(services, M365Auth).acquireToken.pipe(
             Effect.timeoutOption(M365_SIGN_IN_TIMEOUT),
-            // The driver's error is technical; the authorizer recorded the plain reason when it saw one.
             Effect.catchTag("M365Error", () =>
               Effect.flatMap(
                 loopback.problem,

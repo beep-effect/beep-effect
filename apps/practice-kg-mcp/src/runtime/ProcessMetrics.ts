@@ -37,8 +37,6 @@ const windowMillis = Duration.toMillis(ProcessMetricsWindow);
 const microsPerMilli = 1_000;
 
 const NonNegative = S.Finite.check(S.isGreaterThanOrEqualTo(0));
-// A thousand cores at full load, and 256 TiB: far past any host, well inside
-// exact float arithmetic.
 const maxCpuPercent = 100_000;
 const maxRssBytes = 2 ** 48;
 const WindowCpuPercent = S.Finite.check(S.isBetween({ minimum: 0, maximum: maxCpuPercent }));

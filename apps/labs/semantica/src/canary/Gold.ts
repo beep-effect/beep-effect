@@ -422,8 +422,7 @@ const makeVerifiedGoldLabel = Effect.fnUntraced(function* (
   }).pipe(Effect.result, Effect.map(Result.getSuccess));
 });
 
-// A 2,000-character window tolerates roughly a page of PDF extraction drift
-// while preventing short evidence strings from re-anchoring across a paper.
+// decision: bounded-gold-quote-drift
 const GOLD_ANCHOR_DRIFT_WINDOW = 2_000;
 
 const anchorDistance = (candidate: number, claimed: number): number =>
@@ -769,6 +768,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
+  // decision: cache-replay-before-gold-writes
   const generated = yield* Effect.forEach(jobs, (job) => generateJobProposal(selection, job), { concurrency: 1 });
   yield* fs
     .remove(path.join(options.outputDirectory, "gold.json"), { force: true })

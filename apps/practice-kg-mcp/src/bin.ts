@@ -7,7 +7,6 @@
  * @since 0.0.0
  */
 
-// First import: DuckDB's native addon must resolve beside the executable (#1959).
 import "./NativeAddon.install.ts";
 import { loadPracticeKgBundleContext, PracticeKgHostError } from "@beep/law-practice-server/PracticeKgHost";
 import * as Bool from "effect/Boolean";

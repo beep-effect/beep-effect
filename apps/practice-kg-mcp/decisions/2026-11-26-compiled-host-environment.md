@@ -5,6 +5,7 @@ reversal: Inherit bundle overrides, NODE_PATH and the extension working director
 governs:
   - src/smoke.ts#compiledHostEnv
   - src/bin.ts#check
+  - src/smoke.ts#runCompiledHost
 enforcedBy: []
 ---
 

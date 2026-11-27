@@ -79,9 +79,6 @@ const DEFAULT_REVIEW = DocketReviewConfig.make({});
 
 const STATE_SUFFIX = "beep/docket-intake";
 
-// DOCKET_INTAKE_STATE_DIR, else the XDG state home (`XdgBase`: an absolute XDG_STATE_HOME, else the
-// default under an absolute HOME), its trailing slashes dropped before the suffix is joined. The
-// failure names HOME when neither is absolute.
 const stateDirectory = Config.NonEmptyString("DOCKET_INTAKE_STATE_DIR").pipe(
   Config.orElse(() =>
     XdgBase.require("state").pipe(Config.map((root) => `${Str.replace(/\/+$/u, "")(root)}/${STATE_SUFFIX}`))

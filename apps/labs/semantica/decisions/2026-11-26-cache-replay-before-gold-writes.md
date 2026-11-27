@@ -4,6 +4,7 @@ date: 2026-11-26
 reversal: Delete or rewrite the committed gold artifacts incrementally before checking all provider-cache entries.
 governs:
   - src/canary/Gold.ts#generateJobProposal
+  - src/canary/Gold.ts#proposeGold
 enforcedBy: []
 ---
 

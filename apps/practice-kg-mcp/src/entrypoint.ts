@@ -12,8 +12,6 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Runtime from "effect/Runtime";
 
-// The runtime's own failure report logs through the default logger, outside
-// any layer the program provides; this one runs inside the program's logger.
 const reportFailure = (cause: Cause.Cause<unknown>): Effect.Effect<void> =>
   Cause.hasInterruptsOnly(cause) || !cause.pipe(Cause.squash, Runtime.getErrorReported)
     ? Effect.void
@@ -40,6 +38,10 @@ const scopedMain = <A, E>(
  * import * as Effect from "effect/Effect";
  * runEntrypoint({ isMain: false, program: Effect.void })
  * ```
+ *
+ * **Gotchas**
+ *
+ * The runtime’s default failure reporter runs outside program-provided logger layers; scopedMain reports inside the program logger before handing control back.
  *
  * @param input - Entrypoint status, Effect program and optional logger layer.
  * @category utilities

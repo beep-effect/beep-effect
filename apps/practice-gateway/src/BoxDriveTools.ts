@@ -562,8 +562,6 @@ const sha256Hex = (bytes: Uint8Array) =>
     Effect.map((digest) => Hex.encode(new Uint8Array(digest)))
   );
 
-// PDF and DOCX text comes from the repo's JS-native driver, imported only when
-// such a file is read.
 const extractDocumentText = Effect.fnUntraced(function* (
   format: "pdf-text-layer" | "docx",
   name: string,

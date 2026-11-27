@@ -181,9 +181,6 @@ const MigratedRows = S.Array(LegacyRow).pipe(
   )
 );
 
-// The envelope rule: an item's current verdict is the row with the greatest
-// recordedAt, a tie going to the row appended last; lock rows never count as
-// verdicts. Revisions restart per batch, so they never break ties.
 const currentVerdictFor = (rows: ReadonlyArray<VerdictRow>, itemId: string): O.Option<VerdictRow> =>
   A.reduce(rows, O.none<VerdictRow>(), (latest, row) =>
     row.itemId !== itemId || O.isSome(row.lockedAt)
@@ -211,6 +208,10 @@ const batchLocked = (rows: ReadonlyArray<VerdictRow>, batchId: string): boolean 
  *
  * console.log(Effect.isEffect(makeVerdictLog)) // true
  * ```
+ *
+ * **Gotchas**
+ *
+ * An item’s current verdict has the greatest recordedAt, with append order breaking ties. Lock rows never count as verdicts; revisions restart per batch and cannot break ties.
  *
  * @category constructors
  * @since 0.0.0

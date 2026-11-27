@@ -82,7 +82,6 @@ const makeReviewHubLayerInternal = (allowedLogins: ReadonlyArray<string>, apiTok
     ),
     loginAllowList(allowedLogins, apiToken)
   ).pipe(
-    // `layerHttp` fails only on a malformed path or an empty protocol list, both literals here.
     Layer.provideMerge(
       McpServer.layerHttp({
         name: "practice-review-hub",

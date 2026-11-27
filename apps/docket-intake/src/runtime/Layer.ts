@@ -76,10 +76,6 @@ const trackedDatesLayer = (config: DocketIntakeAppConfig) =>
     onSome: (path) => makeDocketTrackedDatesCsvLayer(DocketTrackedDatesCsvOptions.make({ path })),
   });
 
-// The pipeline over the given mailbox and calendar ports, the two Anthropic-backed agents at
-// temperature 0 (so a dry run and a live run read a message the same way, D-46), the store, the
-// matter lookup and the docket sheet, with the review loop's round limit and threshold taken from
-// the configuration.
 const pipelineOver = <ROut, E, R>(config: DocketIntakeAppConfig, ports: Layer.Layer<ROut, E, R>) =>
   makeDocketIntakeLayer(
     DocketIntakeConfig.make({
@@ -102,10 +98,6 @@ const pipelineOver = <ROut, E, R>(config: DocketIntakeAppConfig, ports: Layer.La
     Layer.provide(BunCrypto.layer)
   );
 
-// The docket intake pipeline over the live Graph ports, with every calendar create and message
-// mark recorded in the write journal. The store and the journal are exposed beside the pipeline
-// so the service can seed its cursor and start a run each cycle; so is the question publisher when
-// the review hub is configured.
 const makeDocketIntakeAppLayer = (options: IntakeOptions) => {
   const storeOptions = DocketFileStoreOptions.make({ directory: options.config.stateDirectory });
   const journal = makeDocketFileJournalLayer(storeOptions).pipe(
@@ -139,6 +131,10 @@ const makeDocketDryRunAppLayer = (options: IntakeOptions & { readonly directory:
  *
  * console.log(Object.keys(liveWiring))
  * ```
+ *
+ * **Gotchas**
+ *
+ * Live and dry-run pipelines use the same Anthropic agents at temperature 0 so they interpret messages consistently, with review rounds and threshold from configuration. Live wiring journals every calendar create and message mark, exposes the store and journal for cursor seeding and cycle runs, and exposes the question publisher when a review hub is configured.
  *
  * @category layers
  * @since 0.0.0

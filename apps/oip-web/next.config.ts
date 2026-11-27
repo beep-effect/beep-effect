@@ -4,13 +4,9 @@ import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { oipRedirects } from "./src/config/OipRedirects.ts";
 
-// Transitional guard for the coverage lane's job-wide node wrapper (removed
-// from heavy.yml by this branch, but PR runs resolve heavy.yml@main): the
-// wrapper injects --js-float16array into every node process, and Next copies
-// process.execArgv into its build workers' NODE_OPTIONS, where V8 rejects
-// feature flags. Strip it before any worker spawns; once the wrapper is gone
-// from main this filter matches nothing.
-process.execArgv = A.filter(process.execArgv, (flag) => flag !== "--js-float16array");
+// decision: node-worker-feature-flags
+const blockedNodeWorkerFlag = "--js-float16array";
+process.execArgv = A.filter(process.execArgv, (flag) => flag !== blockedNodeWorkerFlag);
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../..", import.meta.url));
 
@@ -50,7 +46,8 @@ const securityHeaders = [
   },
 ];
 
-export default defineBeepNextConfig({
+// decision: browser-node-builtin-stubs
+const browserConfig = defineBeepNextConfig({
   repoRoot,
   allowedDevOrigins: ["oip-web.beep.localhost", "dankstation.tailc7c348.ts.net"],
   additionalTranspilePackages: ["@beep/hubspot", "@beep/sanity"],
@@ -60,12 +57,6 @@ export default defineBeepNextConfig({
       qualities: [50, 60, 75],
     },
     redirects: () => Promise.resolve(oipRedirects()),
-    // The production/PWA build uses webpack (`build:pwa`), which cannot bundle
-    // `node:*` builtins that leak into the client graph via @beep/schema ->
-    // @beep/utils (NodeUrl/Path). Those helpers are server-only and never run on
-    // the client, so for the client bundle we strip the `node:` scheme and stub
-    // the builtins to an empty module. Turbopack (`build`) resolves these
-    // natively and ignores this hook.
     webpack: (config, { isServer, webpack }) => {
       if (!isServer) {
         config.plugins = config.plugins ?? [];
@@ -95,3 +86,5 @@ export default defineBeepNextConfig({
   },
   env: process.env,
 });
+
+export default browserConfig;

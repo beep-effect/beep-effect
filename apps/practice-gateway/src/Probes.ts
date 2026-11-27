@@ -90,9 +90,6 @@ export interface GatewayProbe {
  */
 export type GatewayProbeRegistry = { readonly [Id in GatewayRequirementId]: GatewayProbe };
 
-// The sign-in marker in Claude Desktop's config.json (an undocumented internal):
-// a non-empty `lastKnownAccountUuid` appears once an account has signed in. Only
-// its presence is read; the value is never logged.
 const decodeClaudeAccountMarker = S.decodeUnknownOption(
   S.fromJsonString(S.Struct({ lastKnownAccountUuid: S.NonEmptyString }))
 );
@@ -132,6 +129,10 @@ const readOnly = (probe: Effect.Effect<ProbeResult, SetupProbeUnavailable>): Gat
  *
  * console.log(Effect.isEffect(makeGatewayProbes))
  * ```
+ *
+ * **Gotchas**
+ *
+ * Claude Desktop’s undocumented nonempty lastKnownAccountUuid marker indicates an earlier sign-in; read only its presence and never log its value. Admin and MDM installations may use the MSIX package instead of the per-user installer. Without an app id, report not configured rather than fail; consent depends on it so repair is offered only when sign-in can work.
  *
  * @category constructors
  * @since 0.0.0
@@ -180,7 +181,6 @@ export const makeGatewayProbes = Effect.gen(function* () {
         return satisfied;
       }
 
-      // Admin and MDM installs deploy the MSIX package instead of the per-user installer.
       const families = yield* host.appxPackageFamilies("Claude");
       return A.contains(families, CLAUDE_MSIX_PACKAGE_FAMILY)
         ? satisfied
@@ -244,9 +244,6 @@ export const makeGatewayProbes = Effect.gen(function* () {
     )
   );
 
-  // Without a configured app id the requirement reports "not configured" in
-  // plain language instead of failing; consent waits on it as a dependency,
-  // so the sign-in repair is never offered before it could work.
   const m365AppConfigured = m365.connection.pipe(
     Effect.match({ onFailure: (failure) => missing(failure.message), onSuccess: () => satisfied })
   );

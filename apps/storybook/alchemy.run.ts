@@ -17,14 +17,7 @@ const apexHost = new URL(PublicOrigin.literal).hostname;
 
 const siteDir = "site";
 
-/**
- * The shared Alchemy state store (goals/infra-alchemy-rebuild, D6 and D17):
- * one account-regional S3 bucket, `alchemy-state-<accountId>-<region>-an`,
- * SSE-KMS with the AWS-managed S3 key, bucket keys on, customer-provided keys
- * blocked. Account, region and credentials come from the process
- * environment: exported from aws-vault on a workstation, set by the GitHub
- * OIDC state role in CI. Runbook: docs/runbooks/alchemy-infra.md.
- */
+// decision: encrypted-shared-stack-state
 const state = AWS.state({
   backend: "s3",
   encryption: { sseAlgorithm: "aws:kms", bucketKeyEnabled: true, blockedEncryptionTypes: ["SSE-C"] },
@@ -46,6 +39,9 @@ const state = AWS.state({
  * that starts with the reserved slug, which the public route map already
  * denies the apex app. A request for a file the build did not produce is a
  * 404 from the asset layer and never falls through to the apex app.
+ * **Gotchas**
+ *
+ * Production deploys run in CI under alchemy-storybook-prod concurrency, with the S3 stage lease as the second guard. Local production plans or deploys fail on CI configuration.
  */
 export const Storybook = Cloudflare.Website.StaticSite(
   "Storybook",
@@ -73,9 +69,6 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const stack = yield* Alchemy.Stack;
 
-    // Every `prod` deploy runs in CI under the `alchemy-storybook-prod`
-    // concurrency group; the S3 store's stage lease is the second guard. A
-    // local `prod` plan/deploy fails here with a ConfigError on `CI`.
     if (stack.stage === productionStage) {
       yield* Config.Literal("true", "CI");
       yield* Storybook;

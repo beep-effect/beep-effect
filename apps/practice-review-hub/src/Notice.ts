@@ -42,9 +42,6 @@ import type * as Path from "effect/Path";
  */
 export const NOTICE_ENV_PREFIX = "PRACTICE_REVIEW_NOTICE";
 
-// The request the notice's Claude Code link types in the review folder; the attorney presses Enter to send it.
-// The hub's MCP server is registered at user scope on the attorney's PC, so Claude Code reaches the review
-// queue from the review folder, whose `CLAUDE.md` holds the rules for the walk-through.
 const REVIEW_QUESTIONS_PROMPT = "Walk me through my waiting review questions.";
 
 /**
@@ -60,6 +57,10 @@ const REVIEW_QUESTIONS_PROMPT = "Walk me through my waiting review questions.";
  *
  * console.log(Effect.isEffect(sendDailyNotice(DateTime.zoneMakeNamedUnsafe("America/Chicago")))) // true
  * ```
+ *
+ * **Gotchas**
+ *
+ * The Claude Code link types the review request into the review folder; the attorney presses Enter to send. The MCP server is registered at user scope, so that folder’s CLAUDE.md supplies the walkthrough rules while the queue remains reachable.
  *
  * @category workflows
  * @since 0.0.0

@@ -122,6 +122,10 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
  * console.log(Layer.isLayer(fake))
  * ```
  *
+ * **Gotchas**
+ *
+ * reg.exe exits 1 when the per-user uninstall key is absent.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -180,7 +184,6 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
           .exists(executable)
           .pipe(Effect.mapError(failWith("Claude's folder could not be checked.")));
 
-        // reg.exe exits 1 when the key is absent.
         return present || (yield* run("reg.exe", ["query", CLAUDE_UNINSTALL_KEY])).exitCode === 0;
       });
 

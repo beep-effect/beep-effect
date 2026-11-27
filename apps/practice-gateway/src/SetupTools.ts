@@ -246,15 +246,6 @@ export const SetupProfileGetTool = setupTool(
   readHints
 );
 
-/**
- * Accept a value either in its schema shape or JSON-encoded as a string.
- *
- * **Details**
- *
- * Some MCP clients send nested object or number arguments as JSON strings;
- * the onboarding proof (2026-10-14) saw the profile's IT limits rejected that
- * way. Decoding tries the plain shape first.
- */
 const plainOrJson = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) =>
   S.Union([schema, S.fromJsonString(schema)]);
 
@@ -299,6 +290,10 @@ export class SetupProfileSaveInput extends S.Opaque<SetupProfileSaveInput, { rea
  *
  * console.log(SetupProfileSaveTool.name) // "setup_profile_save"
  * ```
+ *
+ * **Gotchas**
+ *
+ * Some MCP clients JSON-encode nested object or number arguments as strings. Decode the plain schema shape first, then its JSON-string form.
  *
  * @category tools
  * @since 0.0.0

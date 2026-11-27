@@ -131,7 +131,6 @@ const timerWrites = Semaphore.makeUnsafe(1);
 const LockedText = "This answer is locked; the verdict was not saved.";
 const SaveFailedText = "The verdict could not be saved. Try again.";
 
-// A failed save is shown as a toast: a band press has no command reply.
 const toastText =
   ($: Engine) =>
   (text: string): Effect.Effect<string> =>

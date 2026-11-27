@@ -192,10 +192,6 @@ const findNextRawTextTag = (
 const NESTABLE_HIDDEN_ELEMENTS: Readonly<Record<string, true>> = { head: true };
 
 const consumeRawTextElement = (html: string, start: number, name: string): Result.Result<number, "truncated"> => {
-  // HTML5 raw-text elements (script, style) never nest: the element ends at the FIRST
-  // case-insensitive closing tag, so a same-name opening token inside raw content (for
-  // example the string "<script>" inside JavaScript) must not inflate any depth. Only
-  // markup-bearing hidden containers (head) track same-name nesting.
   const nestable = R.has(NESTABLE_HIDDEN_ELEMENTS, name);
   let depth = 1;
   let index = start;
@@ -269,6 +265,10 @@ const appendTagBoundary = (output: string, tag: ParsedTag): string =>
  * const extracted = extractHtmlText("<script>if (a < b) {}</script><p>visible</p>")
  * console.log(Result.getOrElse(extracted, () => "failed")) // "\nvisible\n"
  * ```
+ *
+ * **Gotchas**
+ *
+ * HTML5 script and style are raw-text elements: their first case-insensitive closing tag ends them, even when their content contains same-name opening tokens. Only markup-bearing hidden containers such as head track same-name nesting.
  *
  * @category encoding
  * @since 0.0.0

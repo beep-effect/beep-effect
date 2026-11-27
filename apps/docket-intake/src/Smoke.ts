@@ -120,7 +120,6 @@ const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketI
     ),
     (event) => `id=${event.id}`
   );
-  // Look the event up by its key even when the create reported a failure: it may still have landed.
   const found = yield* step(
     "find event by key",
     m365.findEventsByIdempotencyKey(M365FindEventsByIdempotencyKeyRequest.make({ idempotencyKey: key, userId })),
@@ -146,6 +145,10 @@ const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketI
  *
  * console.log(smoke)
  * ```
+ *
+ * **Gotchas**
+ *
+ * Find the event by its idempotency key even if creation reported failure: the remote write may already have landed.
  *
  * @category utilities
  * @since 0.0.0

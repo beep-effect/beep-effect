@@ -244,10 +244,6 @@ export const layerPracticeKgTelemetryFor = (
     layerPracticeKgProcessMetrics.pipe(Layer.provide(layerBunProcessSampler))
   ).pipe(Layer.provideMerge(layerStrictOtlp(config)));
 
-// The production telemetry with the in-memory salt and the in-memory egress
-// sink. The host falls back to it when it has no telemetry directory or its
-// root key cannot be loaded: exports are still gated, and the held-back bodies
-// stay in memory and die with the process.
 const layerPracticeKgTelemetryInMemory: Layer.Layer<StrictGate | OtlpExporter.Flusher> = layerPracticeKgTelemetryFor(
   PracticeKgStrictGateConfig
 ).pipe(Layer.provide(Layer.mergeAll(layerInMemoryStrictSalt, layerInMemoryEgressSink())));
@@ -334,6 +330,10 @@ export const layerPracticeKgTelemetrySpooled = (
  *
  * console.log(Layer.isLayer(layerPracticeKgTelemetryProduction)) // true
  * ```
+ *
+ * **Gotchas**
+ *
+ * When the telemetry directory is absent or its root key cannot be loaded, use in-memory salt and egress sink. Exports remain gated; held-back bodies stay only in memory and die with the process.
  *
  * @category layers
  * @since 0.0.0

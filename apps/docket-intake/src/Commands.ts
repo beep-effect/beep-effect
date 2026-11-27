@@ -130,11 +130,9 @@ type IntakeProgram = (
 
 const isDocketIntakeError = S.is(DocketIntakeError);
 
-// Pipeline and adapter failures end the process with their own exit code: 3 when Graph throttled.
 const asCommandError = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.catchIf(effect, isDocketIntakeError, (error) => Effect.fail(DocketIntakeCommandError.fromIntake(error)));
 
-// One JSON line on standard output; logs go to standard error.
 const printJson =
   <A>(encode: (value: A) => Effect.Effect<string, S.SchemaError>) =>
   (value: A) =>
@@ -180,6 +178,10 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
  * console.log(Object.keys(makeHandlers(liveWiring)))
  * ```
  *
+ * **Gotchas**
+ *
+ * Pipeline and adapter failures preserve their own exit codes, including 3 for Graph throttling. Reports use one JSON line on stdout and logs use stderr. Undo builds the file store before writing so its state lock covers journal changes.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -195,7 +197,6 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
     );
   });
 
-  // Undo writes under the state lock: the file store takes it when it is built.
   const lockedJournal = (config: DocketIntakeAppConfig) => {
     const options = DocketFileStoreOptions.make({ directory: config.stateDirectory });
     return makeDocketFileJournalLayer(options).pipe(Layer.provideMerge(makeDocketFileStoreLayer(options)));

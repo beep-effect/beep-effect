@@ -53,9 +53,6 @@ class SmokeServerInfo extends S.Opaque<SmokeServerInfo, { readonly brand: unique
   )
 ) {}
 
-// The 2026-07-28 `server/discover` result carries serverInfo under a `_meta`
-// key (`SERVER_INFO_META_KEY` in `@beep/mcp-kit/client`); the smoke inlines the
-// key so the compiled app keeps its dependency set.
 const SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo";
 const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
 const CLIENT_CAPABILITIES_META_KEY = "io.modelcontextprotocol/clientCapabilities";
@@ -63,7 +60,10 @@ const CLIENT_INFO_META_KEY = "io.modelcontextprotocol/clientInfo";
 const MCP_PROTOCOL_VERSION = "2026-07-28";
 class SmokeDiscoverMeta extends S.Opaque<SmokeDiscoverMeta, { readonly brand: unique symbol }>()(
   S.Struct({ [SERVER_INFO_META_KEY]: SmokeServerInfo }).pipe(
-    $I.annoteSchema("SmokeDiscoverMeta", { description: "Discover result metadata carrying the server identity." })
+    $I.annoteSchema("SmokeDiscoverMeta", {
+      description:
+        "MCP 2026-07-28 server/discover carries serverInfo under the SERVER_INFO_META_KEY metadata key; inline the key to preserve the compiled app dependency set.",
+    })
   )
 ) {}
 class SmokeDiscoverResult extends S.Opaque<SmokeDiscoverResult, { readonly brand: unique symbol }>()(
@@ -302,6 +302,7 @@ export const verifyCompiledClaimInspection = Effect.fn("PracticeKgSmoke.verifyCo
   yield* Effect.logInfo("COMPILED_CLAUSE_INSPECTION_OK", { records: page.records.length, terms: objectHeads.length });
 });
 
+// decision: compiled-host-environment
 const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   executable: string,
   bundleOut: string,
@@ -338,9 +339,6 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     `| "$1"`;
   const child = yield* Effect.try({
     try: () =>
-      // Desktop-faithful spawn: a neutral cwd (Desktop never launches from the extension
-      // dir, so resolution must not lean on cwd-adjacent node_modules) and configuration
-      // through the manifest env alone.
       Bun.spawn(["sh", "-c", pipeScript, "practice-kg-smoke", executable], {
         cwd: neutralCwd,
         env: {
@@ -413,15 +411,14 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   });
 });
 
-// Claude Desktop opens every server with a classic `initialize` handshake. The
-// first hand-off of a stateless-only host failed there with "initialize is not
-// supported by the configured MCP protocols", so the smoke proves the handshake
-// against the compiled artifact as well as the stateless framing above.
 const HANDSHAKE_PROTOCOL_VERSION = "2025-11-25";
 
 class SmokeInitializeResult extends S.Opaque<SmokeInitializeResult, { readonly brand: unique symbol }>()(
   S.Struct({ protocolVersion: S.tag(HANDSHAKE_PROTOCOL_VERSION), serverInfo: SmokeServerInfo }).pipe(
-    $I.annoteSchema("SmokeInitializeResult", { description: "Initialize result negotiated by the compiled MCP host." })
+    $I.annoteSchema("SmokeInitializeResult", {
+      description:
+        "Classic initialize handshake result required by Claude Desktop; compiled smoke verifies it alongside stateless framing.",
+    })
   )
 ) {}
 

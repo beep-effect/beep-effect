@@ -315,7 +315,6 @@ export const runSetup = Effect.gen(function* () {
   yield* writeReport(report).pipe(
     Effect.catchCause((cause) => Effect.logWarning("The setup report could not be written.", cause))
   );
-  // The console closes when the program exits, so hold it until the lawyer has read the last line.
   yield* O.match(failure, {
     onNone: () =>
       lawyer.tell("\nPress Enter to close this window.").pipe(Effect.andThen(Effect.ignore(lawyer.awaitEnter))),

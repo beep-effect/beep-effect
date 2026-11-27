@@ -149,13 +149,6 @@ const emptySummaryPattern = /^Plan:\s+no (?:resources|changes)$/;
 
 const countedSummaryPattern = /^Plan:\s+\d+ to [a-z]+(?:, \d+ to [a-z]+)*$/;
 
-/**
- * The per-action counts of a summary line, or `None` when the whole line is not one of the
- * supported shapes, so a truncated or reshaped summary (`Plan: 1 to`) never reads as empty.
- *
- * @param line - The summary line, color codes and logger prefix removed.
- * @returns The `[action, count]` pairs; empty for an explicit empty summary.
- */
 const readSummaryCounts = (line: string): O.Option<ReadonlyArray<readonly [string, number]>> => {
   if (emptySummaryPattern.test(line)) return O.some([]);
   if (!countedSummaryPattern.test(line)) return O.none();
@@ -188,6 +181,10 @@ const toEntry = (line: string): O.Option<PlanEntry> =>
  * const entries = parsePlanLog("Plan: 1 to update\n[Project] update\n")
  * console.log(entries) // [{ fqn: "Project", action: "update" }]
  * ```
+ *
+ * **Gotchas**
+ *
+ * Only complete supported summary shapes yield action counts. An explicit empty summary yields no counts; truncated or reshaped summaries such as Plan: 1 to must fail closed.
  *
  * @param log - The text `alchemy plan` printed.
  * @returns One entry per resource line, in log order.

@@ -98,7 +98,10 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       Effect.fnUntraced(function* (host, calls) {
         const claudeInstall3 = yield* host.claudeInstall;
         expect(claudeInstall3).toBe("per-user");
-        expect(A.map(calls, (call) => call.command)).toEqual(["reg.exe"]);
+        expect(
+          A.map(calls, (call) => call.command),
+          "Without the per-user executable, Explorer may open the file despite its nonzero exit."
+        ).toEqual(["reg.exe"]);
       })
     );
     for (const msix of [true, false]) {
@@ -156,10 +159,7 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
 
         yield* host.openInClaude("/fixture/bundle.mcpb");
         const text = "text with 'quotes'; $(not a command)";
-        expect(
-          (yield* host.openLink(text).pipe(Effect.result))._tag,
-          "Without the per-user executable, the file goes through Explorer; its nonzero exit is allowed because it may already have opened the file."
-        ).toBe("Failure");
+        expect((yield* host.openLink(text).pipe(Effect.result))._tag).toBe("Failure");
         expect((yield* host.copyToClipboard(text).pipe(Effect.result))._tag).toBe("Failure");
         expect(A.map(calls, (call) => call.command)).toEqual([
           "/fixture/setup.exe",

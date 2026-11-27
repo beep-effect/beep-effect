@@ -14,14 +14,7 @@ import * as Effect from "effect/Effect";
 import { configForStage } from "./stack/OipWebConfig.ts";
 import { oipWebProviders, oipWebResources, requireCiForLiveStage } from "./stack/OipWebStack.ts";
 
-/**
- * The shared Alchemy state store (goals/infra-alchemy-rebuild, D6 and D17):
- * one account-regional S3 bucket, `alchemy-state-<accountId>-<region>-an`,
- * SSE-KMS with the AWS-managed S3 key, bucket keys on, customer-provided keys
- * blocked. Account, region and credentials come from the process
- * environment: exported from aws-vault on a workstation, set by the GitHub
- * OIDC state role in CI. Runbook: docs/runbooks/alchemy-infra.md.
- */
+// decision: encrypted-shared-stack-state
 const state = AWS.state({
   backend: "s3",
   encryption: { sseAlgorithm: "aws:kms", bucketKeyEnabled: true, blockedEncryptionTypes: ["SSE-C"] },

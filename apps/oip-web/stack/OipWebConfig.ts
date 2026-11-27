@@ -341,12 +341,6 @@ export class OipWebStackConfig extends S.Opaque<OipWebStackConfig, { readonly br
     )
 ) {}
 
-/**
- * Config key the live stages read the HubSpot private-app token from. `op run`
- * resolves it from 1Password on a workstation; CI sets it from the deploy
- * environment's secret. It reaches Vercel only; Alchemy state keeps the key
- * name and a digest.
- */
 const hubSpotServiceKeyConfig = "CRM_HUBSPOT_SERVICE_KEY";
 
 const hubSpotAccountId = "246203876";
@@ -440,6 +434,10 @@ const personalStageConfig = (stage: string) => ({
  * const program = Effect.map(configForStage("prod"), (config) => config.projectName)
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
+ * **Gotchas**
+ *
+ * The HubSpot token is resolved by op run locally or the deploy environment in CI and sent only to Vercel; Alchemy state retains its config key name and digest.
  *
  * @param stage - The Alchemy stage.
  * @returns The decoded configuration, or a schema error naming the broken rule.

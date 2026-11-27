@@ -29,8 +29,6 @@ const selfCheck = Flag.Boolean("self-check").pipe(
   Flag.withDefault(false)
 );
 
-// stdout carries MCP frames (and the self-check's one JSON line), so logs,
-// such as a provider explaining why it did not mount, go to stderr.
 const StderrLogger = Layer.succeed(Logger.LogToStderr, true);
 
 const check = printGatewaySelfCheck(

@@ -213,18 +213,11 @@ const heroRotationDriverAtom = Atom.family((key: string) =>
     }, HERO_ROTATE_MS);
 
     get.addFinalizer(() => {
-      // Coverage/v8 disposes the atom registry after jsdom tears down `window`.
       globalThis.clearInterval(timer);
     });
   })
 );
 
-/**
- * A single hero clip layer. When `active`, the muted, looping background video is
- * mounted and its idle autoplay is scheduled; otherwise only the poster renders so
- * the crossfade between clips has something to fade. Poster/video opacity mirrors
- * the original single-clip behavior for the active clip.
- */
 function HeroClipLayer({
   active,
   index,
@@ -318,6 +311,10 @@ function HeroClipLayer({
  * )
  * console.log(hero.type)
  * ```
+ *
+ * **Gotchas**
+ *
+ * Coverage teardown may dispose the atom registry after jsdom tears down window; clear the rotation timer through globalThis.
  *
  * @category components
  * @since 0.0.0

@@ -106,7 +106,6 @@ const writeDayDigest = Effect.fn("DocketIntakeApp.writeDayDigest")(function* (di
   });
 });
 
-// Most digests one cycle writes. A longer gap is closed over the following cycles.
 const MAX_DIGESTS_PER_CYCLE = 62;
 
 const earliestProcessedDay = (state: DocketIntakeState): O.Option<LocalDate> =>
@@ -163,6 +162,10 @@ const writeOwedDigests: (
  * console.log(pollCycle)
  * ```
  *
+ * **Gotchas**
+ *
+ * Record every run, including runs without writes, so run listing and undo can find it.
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -176,7 +179,6 @@ export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (
   const today = docketDayInZone(now1, config.timeZone);
 
   const report = yield* intake.pollOnce(today, options);
-  // Every run gets a line, also one that wrote nothing, so `runs` lists it and `undo` finds it.
   yield* recordDocketRunCompleted(report);
 
   const store = yield* DocketIntakeStore;

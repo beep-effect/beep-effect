@@ -196,6 +196,10 @@ export class YesNoQuestion extends S.Opaque<YesNoQuestion, { readonly brand: uni
  * console.log(shape.isWindows) // false
  * ```
  *
+ * **Gotchas**
+ *
+ * Appx package names come only from gateway constants, never caller input. The Yes/No dialog receives BEEP_ASK_TITLE and BEEP_ASK_MESSAGE and prints yes only for Yes; No is the default so a stray Enter or Space declines. reg.exe exits 1 when a key or value is absent.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -365,15 +369,11 @@ export const tasklistHasImage: {
   )
 );
 
-// The package name comes from the gateway's own constants, never from input.
 const AppxFamilyScript = (name: string) => `Get-AppxPackage -Name '${name}' | ForEach-Object { $_.PackageFamilyName }`;
 
 const BitLockerScript = (drive: string) =>
   `(New-Object -ComObject Shell.Application).NameSpace('${drive}').Self.ExtendedProperty('System.Volume.BitLockerProtection')`;
 
-// Reads its input from BEEP_ASK_TITLE and BEEP_ASK_MESSAGE; prints "yes" only for Yes.
-// No is the default button, so a stray Enter or Space while the lawyer types
-// elsewhere declines, like every other way out of the dialog.
 const YesNoScript = A.join(
   [
     "Add-Type -AssemblyName System.Windows.Forms",
@@ -512,7 +512,6 @@ export class WindowsHost extends Context.Service<WindowsHost, WindowsHostShape>(
       const registryValue = ({ key, name }: RegistryValueQuery) =>
         isWindows
           ? run("reg.exe", ["query", key, "/v", name]).pipe(
-              // reg.exe exits 1 when the key or value is absent.
               Effect.map(({ exitCode, stdout }) =>
                 exitCode === 0 ? parseRegistryValue(stdout, name) : O.none<string>()
               )

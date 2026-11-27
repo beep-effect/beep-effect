@@ -46,8 +46,6 @@ const $I = $PracticeKgMcpId.create("runtime/TelemetryKey");
 
 const rootKeyBytes = 32;
 const ownerOnlyDirectory = 0o700;
-// DPAPI optional entropy: a blob wrapped by one path unwraps only with the
-// same entropy, so the FFI and PowerShell paths share it.
 const dpapiEntropy = "beep/practice-kg/telemetry/v1";
 const cryptprotectUiForbidden = 0x1;
 const dataBlobBytes = 16;
@@ -130,7 +128,6 @@ const layerDevPlaintextDpapi: Layer.Layer<DpapiPort> = Layer.succeed(
   DpapiPort.of({ protection: StrictKeyProtection.Enum["dev-file"], protect: Effect.succeed, unprotect: Effect.succeed })
 );
 
-// DATA_BLOB on x64: a 32-bit length, 4 bytes of padding, then a pointer.
 const dataBlob = (pointerOf: (bytes: Uint8Array) => number, bytes: Uint8Array): Uint8Array => {
   const blob = new Uint8Array(dataBlobBytes);
   const view = new DataView(blob.buffer);
@@ -364,6 +361,11 @@ const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildPro
  *
  * console.log(Layer.isLayer(layerPracticeKgDpapi("linux"))) // true
  * ```
+ *
+ * **Gotchas**
+ *
+ * DPAPI wrapping and unwrapping require identical optional entropy. The FFI and PowerShell paths therefore share beep/practice-kg/telemetry/v1.
+ * The x64 DATA_BLOB layout is a 32-bit length, four padding bytes, then a pointer.
  *
  * @param platform - `process.platform` of the host.
  * @category layers
