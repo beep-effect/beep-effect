@@ -143,7 +143,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 904,
+      "line": 905,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
@@ -153,7 +153,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 939,
+      "line": 940,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
@@ -163,7 +163,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 970,
+      "line": 971,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
@@ -173,7 +173,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 783,
+      "line": 784,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },

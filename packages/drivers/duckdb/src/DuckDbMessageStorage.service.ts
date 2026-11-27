@@ -81,8 +81,9 @@ const withTracerDisabled = Effect.withTracerEnabled(false);
  *   shorter keys are stored as-is, byte-compatible with rows written by
  *   earlier versions. A digest never contains "/" and a composed key always
  *   does, so the two encodings cannot collide. DuckDB's TEXT column does not
- *   enforce the width, so older rows may hold an over-length key in plaintext:
- *   lookups of a long key fall back to the plaintext key.
+ *   enforce the width, so rows written before digests were introduced may
+ *   hold an over-length key in plaintext: lookups of a long key fall back to
+ *   the plaintext key.
  * - `deleteProcessed` orders candidates by `last_reply_id` so the query stays
  *   on the `0005_retention_index` (`entity_type, processed, last_reply_id`),
  *   and selects and deletes them in one transaction on the single writer, so
