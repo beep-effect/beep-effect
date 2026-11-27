@@ -1,9 +1,3 @@
-// Differential against npm's own name validator, `validate-npm-package-name`
-// (exact catalog pin 7.0.2, a devDependency only). The W3-f rule is that every
-// name `PackageName` accepts is valid for npm's `validForOldPackages`; the
-// reverse does not hold, because `PackageName` is stricter (lowercase only, at
-// most 214 characters, no `~'!()*`).
-
 import { PackageName, ScopedPackageName, UnscopedPackageName } from "@beep/package-json/PackageName";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -11,9 +5,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import validate from "validate-npm-package-name";
 
-// Short strings over the characters that decide npm validity: case, the
-// leading-character rules, the scope separator and the special characters.
-const NameLike = S.String.check(S.isPattern(/^[@a-zA-Z0-9._~!()*'/ -]{0,12}$/));
+const ShortNameOverDecidingChars = S.String.check(S.isPattern(/^[@a-zA-Z0-9._~!()*'/ -]{0,12}$/));
 
 const CORNER_CASES = [
   "",
@@ -44,8 +36,8 @@ const CORNER_CASES = [
   Str.repeat(215)("a"),
 ];
 
-describe("PackageName against validate-npm-package-name@7.0.2", () => {
-  it.effect.prop("every accepted generated string is validForOldPackages", [NameLike], ([name]) =>
+describe("PackageName against validate-npm-package-name@7.0.2 (accepted implies validForOldPackages; PackageName is stricter)", () => {
+  it.effect.prop("every accepted generated string is validForOldPackages", [ShortNameOverDecidingChars], ([name]) =>
     Effect.sync(() => {
       if (PackageName.isValid(name)) {
         assert.isTrue(validate(name).validForOldPackages, name);

@@ -169,17 +169,14 @@ export class FrontmatterSourceSplit extends S.Opaque<FrontmatterSourceSplit, { r
   )
 ) {}
 
-/** A value whose last line already carries a line terminator (LF, or a CR ending a CR or CRLF). */
 const TERMINATED_VALUE = /[\n\r]$/;
 
-/** The opening fence line per format (the closed grammar's spellings). */
 const OPEN_FENCE: Record<FrontmatterFormat, string> = {
   yaml: "---",
   toml: "+++",
   json: "---json",
 };
 
-/** The closing fence line per format. */
 const CLOSE_FENCE: Record<FrontmatterFormat, string> = {
   yaml: "---",
   toml: "+++",

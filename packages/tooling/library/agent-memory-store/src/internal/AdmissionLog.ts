@@ -70,8 +70,6 @@ export const textAt: {
     )
 );
 
-// One node event: the revision it produced and the text it left, plus the
-// node's file and kind when the event created it.
 interface Step {
   readonly place: O.Option<{ readonly filePath: MemoryFilePath; readonly kind: NodeKind }>;
   readonly revisionId: RevisionId;
@@ -173,8 +171,6 @@ export const openHolds = (fold: HoldFold): ReadonlyArray<HoldRecord> =>
 /** An empty hold fold at cursor 0. */
 export const makeHoldFold = (): HoldFold => new HoldFold();
 
-// Decodes one entry and returns what folding it does to the holds; entries
-// other than hold events change nothing.
 const holdStep = (fold: HoldFold, entry: Entry): Effect.Effect<() => void, S.SchemaError> =>
   Match.value(entry.event).pipe(
     Match.when(WriteHeldEvent.tag, () =>

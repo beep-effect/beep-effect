@@ -8,14 +8,15 @@ import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// Rest keys are disjoint from typed fields: collisions deliberately normalize
-// to the typed member and therefore are not in the codec's identity domain.
-const Extras = S.Record(S.String.check(S.isPattern(/^(?:x-[a-z]+|__proto__|constructor|rest)$/)), S.Json);
+const ExtrasDisjointFromTypedFields = S.Record(
+  S.String.check(S.isPattern(/^(?:x-[a-z]+|__proto__|constructor|rest)$/)),
+  S.Json
+);
 
 class Manifest extends S.Class<Manifest, { readonly brand: unique symbol }>("WirePropertyManifest")({
   name: S.String,
   size: S.BigIntFromString,
-  rest: Extras,
+  rest: ExtrasDisjointFromTypedFields,
 }) {}
 
 class ExtendedManifest extends Manifest.extend<ExtendedManifest>("WirePropertyExtendedManifest")({
@@ -85,8 +86,6 @@ describe("makeWire property floor", () => {
     ([value, collision]) =>
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(extendedWire)(value);
-        // Feed collisions through a broad rest schema to test the factory's
-        // precedence independently of the identity-domain key restriction.
         const colliding = CollidingManifest.make({
           name: value.name,
           size: value.size,
@@ -94,7 +93,11 @@ describe("makeWire property floor", () => {
           rest: { ...value.rest, name: collision, size: collision, enabled: collision },
         });
         const value3 = yield* S.encodeEffect(collisionWire)(colliding);
-        assert.deepStrictEqual(value3, encoded);
+        assert.deepStrictEqual(
+          value3,
+          encoded,
+          "a broad rest schema tests the factory precedence apart from the identity-domain key restriction"
+        );
       }),
     runs
   );

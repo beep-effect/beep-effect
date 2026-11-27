@@ -32,15 +32,12 @@ import type { NodeKind } from "./NodeIdentity.models.ts";
 
 type Block = Root["children"][number];
 
-// A content node before gap filling: half-open UTF-16 range [start, end).
 interface Span {
   readonly end: number;
   readonly kind: NodeKind;
   readonly start: number;
 }
 
-// Source text plus the offset the parser's positions are shifted by (1 when a
-// leading byte order mark was stripped before parsing).
 interface Source {
   readonly shift: number;
   readonly text: string;
@@ -56,14 +53,10 @@ const startOf = (source: Source, node: { readonly position: Block["position"] })
 const endOf = (source: Source, node: { readonly position: Block["position"] }): number =>
   node.position.end.offset + source.shift;
 
-// UTF-16 code unit at `index`, or -1 past either end of the text.
 const codeAt = (text: string, index: number): number => O.getOrElse(Str.charCodeAt(text, index), () => -1);
 
 const isLineTerminator = (code: number): boolean => code === LINE_FEED || code === CARRIAGE_RETURN;
 
-// Pull a node's start back to the start of its line, never past `floor`, so
-// the indentation and container prefix of a node's first line ride inside
-// the node instead of a gap.
 const lineStart = (text: string, offset: number, floor: number): number => {
   let index = offset;
   while (index > floor && !isLineTerminator(codeAt(text, index - 1))) {
@@ -72,8 +65,6 @@ const lineStart = (text: string, offset: number, floor: number): number => {
   return index;
 };
 
-// A boundary between the halves of a surrogate pair would make two node texts
-// that are not valid UTF-16 on their own.
 const splitsSurrogatePair = (text: string, offset: number): boolean => {
   if (offset <= 0 || offset >= text.length) {
     return false;
@@ -83,10 +74,6 @@ const splitsSurrogatePair = (text: string, offset: number): boolean => {
   return before >= 0xd800 && before <= 0xdbff && after >= 0xdc00 && after <= 0xdfff;
 };
 
-// The kind a block takes when it is one node: its own construct, or the
-// coarse form of a list (`listItem`) or table (`tableRow`). Every other block
-// (block quotes, definitions, footnote definitions and the MDX blocks a
-// hand-built tree may hold) is a paragraph node.
 const coarseKind: (block: Block) => NodeKind = Match.type<Block>().pipe(
   Match.discriminators("type")({
     frontmatter: () => "frontmatter" as const,
@@ -100,14 +87,10 @@ const coarseKind: (block: Block) => NodeKind = Match.type<Block>().pipe(
   Match.orElse(() => "paragraph" as const)
 );
 
-// Blocks whose children are other blocks; a list item opening with one of
-// these is kept whole.
 const isContainerType = S.is(S.Literals(["list", "blockquote", "table", "footnoteDefinition", "mdxJsxFlowElement"]));
 
 const isContainer = (block: Block): boolean => isContainerType(block.type);
 
-// The end of a table's delimiter row: the line after the header row, bounded
-// by the next row's start or the table's end.
 const delimiterRowEnd = (text: string, headerEnd: number, bound: number): number => {
   let index = headerEnd;
   if (index < bound && codeAt(text, index) === CARRIAGE_RETURN) {
@@ -126,8 +109,6 @@ const leafSpans = (source: Source, block: Block, floor: number): ReadonlyArray<S
   { kind: coarseKind(block), start: lineStart(source.text, startOf(source, block), floor), end: endOf(source, block) },
 ];
 
-// Spans of a run of sibling blocks: each block's floor is the end of the
-// spans emitted before it.
 const runSpans = (source: Source, blocks: ReadonlyArray<Block>, floor: number): Array<Span> => {
   const spans: Array<Span> = [];
   let current = floor;
@@ -143,9 +124,6 @@ const runSpans = (source: Source, blocks: ReadonlyArray<Block>, floor: number): 
 const listItemSpans = (source: Source, item: ListItem, floor: number): ReadonlyArray<Span> => {
   const start = lineStart(source.text, startOf(source, item), floor);
   const [lead, ...rest] = item.children;
-  // An item with at most one child block, or one opening with a container, is
-  // one node; otherwise its marker and first block are the item node and each
-  // later child block is cut on its own.
   if (lead === undefined || rest.length === 0 || isContainer(lead)) {
     return [{ kind: "listItem", start, end: endOf(source, item) }];
   }
@@ -171,8 +149,6 @@ const tableSpans = (source: Source, table: Table, floor: number): ReadonlyArray<
     return leafSpans(source, table, floor);
   }
   const bound = body[0] === undefined ? endOf(source, table) : startOf(source, body[0]);
-  // The delimiter row rides with the header row: their column counts must
-  // agree, so they are one editing unit.
   const headerSpan: Span = {
     kind: "tableRow",
     start: lineStart(source.text, startOf(source, header), floor),
@@ -216,9 +192,6 @@ function blockSpans(source: Source, block: Block, floor: number): ReadonlyArray<
   return spansFor(block)(source, floor);
 }
 
-// Spans are usable when they are non-overlapping, in order, inside
-// [low, high] and never split a surrogate pair. Zero-width spans are dropped
-// first: they hold no bytes.
 const outOfBounds = (text: string, start: number, end: number, low: number, high: number): boolean =>
   start < low || end < start || end > high || splitsSurrogatePair(text, start) || splitsSurrogatePair(text, end);
 
@@ -245,8 +218,6 @@ const makeNode = (text: string, kind: NodeKind, start: number, end: number): Par
     { disableChecks: true }
   );
 
-// Interleave gap nodes between the ordered content spans so the node texts
-// cover the file exactly.
 const assemble = (text: string, spans: ReadonlyArray<Span>, fallback: PartitionFallback): MarkdownPartition => {
   const nodes: Array<PartitionNode> = [];
   let cursor = 0;
@@ -266,8 +237,6 @@ const assemble = (text: string, spans: ReadonlyArray<Span>, fallback: PartitionF
 const wholeFile = (text: string, fallback: PartitionFallback): MarkdownPartition =>
   assemble(text, [{ kind: "paragraph", start: 0, end: text.length }], fallback);
 
-// The spans of one in-bounds, non-empty block: its own spans when usable,
-// otherwise one coarse span over the block's whole line region.
 const regionSpans = (
   source: Source,
   block: Block,
@@ -425,7 +394,6 @@ const sameNodeAt = (
   );
 };
 
-// Length of the longest run 0, 1, ... below `limit` on which `matches` holds.
 const matchingRun = (limit: number, matches: (index: number) => boolean): number => {
   let length = 0;
   while (length < limit && matches(length)) {
@@ -434,7 +402,6 @@ const matchingRun = (limit: number, matches: (index: number) => boolean): number
   return length;
 };
 
-// The indices [from, to), empty when `to <= from`.
 const indexRun = (from: number, to: number): ReadonlyArray<number> =>
   to > from ? A.makeBy(to - from, (index) => from + index) : [];
 

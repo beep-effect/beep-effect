@@ -226,32 +226,13 @@ export declare namespace EntryPointManifest {
 
 const DEFAULT_CONDITIONS: ReadonlyArray<string> = ["import", "default"];
 
-/** A plain object — not an array, not `null`. */
 const isPlainObject: (value: unknown) => value is Record<string, unknown> = P.isObject;
 
-/**
- * Is this `exports` object a conditions map rather than a subpath map?
- *
- * **Details**
- *
- * Node's rule: the two forms cannot be mixed, and a subpath map is identified
- * by keys starting with `"."`. So an object with no `"."`-prefixed key is
- * conditions-only sugar for the `"."` subpath. An empty object is neither — it
- * exports nothing.
- */
 const isRootConditions = (exportsObject: Record<string, unknown>): boolean => {
   const keys = R.keys(exportsObject);
   return keys.length > 0 && !A.some(keys, Str.startsWith("."));
 };
 
-/**
- * Resolve a conditions object to a file, honouring `conditions` in order.
- *
- * **Details**
- *
- * Recurses, because conditions nest: `{ "import": { "node": "./n.js" } }` is
- * legal and a non-recursive reader answers an object where a path belongs.
- */
 const resolveConditions: {
   (conditionsObject: Record<string, unknown>, conditions: ReadonlyArray<string>): string | undefined;
   (conditions: ReadonlyArray<string>): (conditionsObject: Record<string, unknown>) => string | undefined;
@@ -271,7 +252,6 @@ const resolveConditions: {
   return undefined;
 });
 
-/** Resolve a conditions object, failing with the conditions tried when none matches. */
 const resolveConditionsResult = (
   conditionsObject: Record<string, unknown>,
   conditions: ReadonlyArray<string>
@@ -282,7 +262,6 @@ const resolveConditionsResult = (
     : Result.succeed(resolved);
 };
 
-/** Resolve the `"."` entry of a subpath map. */
 const resolveSubpathMap = (
   exportsObject: Record<string, unknown>,
   conditions: ReadonlyArray<string>
@@ -291,17 +270,11 @@ const resolveSubpathMap = (
   if (P.isString(dot)) {
     return Result.succeed(dot);
   }
-  // A subpath map with no usable "." entry exports no root entry point.
   return isPlainObject(dot)
     ? resolveConditionsResult(dot, conditions)
     : Result.fail(UnresolvedEntryPointError.make({ reason: "noRootExport" }));
 };
 
-/**
- * Resolve a present `exports` field. An array fallback list, or any other
- * non-string non-object value, is an `exports` this resolver does not
- * implement — encapsulation still applies.
- */
 const resolveExports = (
   exportsField: unknown,
   conditions: ReadonlyArray<string>
@@ -351,7 +324,8 @@ const resolveExports = (
  * `index.js` default, apply.
  *
  * A failure is also the answer for an `exports` form this resolver does not
- * implement — an array fallback list, or a subpath map with no `"."` entry.
+ * implement — an array fallback list, or a subpath map with no `"."` entry
+ * (an empty `{}` included).
  * Both are honest "this resolver cannot tell you", never a guess, and each
  * carries its own {@link UnresolvedEntryPointError} reason so a caller can log
  * which shape a package actually had rather than a flat "could not resolve".

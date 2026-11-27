@@ -55,8 +55,6 @@ const execute = Effect.fnUntraced(function* <A, E>(
 
 const poll = { interval: Duration.seconds(1), timeout: Duration.seconds(3) };
 
-// Model GitHub's route/event filtering: a repository-wide or unfiltered query
-// actually receives the conflicting run instead of just failing a URL assertion.
 const discover = Effect.fnUntraced(function* (conflicting: ReturnType<typeof runReply>) {
   const exact = scriptedFetch([{ status: 204 }, runsReply(runReply(42, "completed"))]);
   const unrelated = scriptedFetch([runsReply(conflicting)]);
@@ -87,7 +85,7 @@ const discover = Effect.fnUntraced(function* (conflicting: ReturnType<typeof run
       ).pipe(Effect.provideContext(context));
     })
   );
-  assert.strictEqual(unrelated.count(), 0);
+  assert.strictEqual(unrelated.count(), 0, "a repository-wide or unfiltered query would receive the conflicting run");
   return { value, script: exact };
 });
 

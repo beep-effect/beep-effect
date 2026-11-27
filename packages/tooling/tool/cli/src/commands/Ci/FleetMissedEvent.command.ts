@@ -16,6 +16,13 @@
  * service counted, and exits non-zero on any alert. It
  * never redelivers, cancels, reruns or writes: the remedies are printed.
  *
+ * `--guard` runs the workflow's guard instead: it reads the previous
+ * checking run (the newest earlier run of the workflow, from any event, that
+ * ran its check job, looking past guard-skipped runs) and writes `run=false`
+ * to `$GITHUB_OUTPUT` when that run's check started less than eight minutes
+ * ago, `run=true` otherwise. A `workflow_dispatch` always runs, and a read
+ * failure fails open.
+ *
  * Specification:
  * `goals/infra-alchemy-rebuild/decisions/2026-11-23-standing-missed-event-check.md`.
  *
@@ -38,6 +45,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
@@ -45,7 +53,10 @@ import { layerFleetGithubReadsLive } from "./FleetMissedEvent.live.ts";
 import {
   FLEET_RUNNER_READ_GAP,
   FLEET_THRESHOLDS,
+  FleetCheckJob,
   FleetDeliveryEvidence,
+  FleetGuardDecision,
+  FleetGuardInput,
   FleetHookSource,
   FleetMissedEventInput,
   FleetPreviousRun,
@@ -54,21 +65,26 @@ import {
 } from "./FleetMissedEvent.schemas.ts";
 import { FleetGithubReads, FleetReadError, FleetSleep, FleetWatchToken } from "./FleetMissedEvent.service.ts";
 import {
+  checkingRun,
   deliveryCandidates,
+  earlierFleetRuns,
   fleetAlerts,
   fleetCheckReport,
+  fleetGuardDecision,
   fleetJobFinding,
+  fleetPreviousRun,
   isSuccessfulDelivery,
   judgeDeliveryEvidence,
   needsDeliveryEvidence,
   observeFleetPool,
-  previousScheduledRun,
   productionFleetPools,
   queuedFleetJobs,
   renderFleetCheckSummary,
+  renderFleetGuardDecision,
 } from "./FleetMissedEvent.ts";
 import type * as HttpClient from "effect/http/HttpClient";
 import type {
+  FleetCheckingRun,
   FleetCheckReport,
   FleetDeliveryDetail,
   FleetDeliveryId,
@@ -421,6 +437,51 @@ const collectEvidence = Effect.fnUntraced(function* (
   return HashMap.fromIterable(A.appendAll(A.flatten(read), gate));
 });
 
+interface FleetRunReads {
+  readonly reads: FleetGithubReadsShape;
+  readonly retry: <A>(read: () => Effect.Effect<A, FleetReadError>) => Effect.Effect<A, FleetReadError>;
+}
+
+const previousCheckingRun = (
+  context: FleetRunReads,
+  workflowFile: string,
+  currentRunId: O.Option<number>
+): Effect.Effect<O.Option<FleetCheckingRun>, FleetReadError> =>
+  context
+    .retry(() => context.reads.workflowRuns(workflowFile))
+    .pipe(
+      Effect.flatMap((runs) =>
+        Effect.findFirstFilter(earlierFleetRuns(runs, currentRunId), (run) =>
+          context
+            .retry(() => context.reads.checkJob(run.id))
+            .pipe(Effect.map((job) => Result.fromOption(checkingRun(run, job), () => run)))
+        )
+      )
+    );
+
+const currentCheckStart = (
+  context: FleetRunReads,
+  currentRunId: O.Option<number>,
+  previous: O.Option<FleetCheckingRun>
+): Effect.Effect<O.Option<number>> =>
+  O.isNone(previous)
+    ? Effect.succeedNone
+    : O.match(currentRunId, {
+        onNone: () => Effect.succeedNone,
+        onSome: (runId) =>
+          context
+            .retry(() => context.reads.checkJob(runId))
+            .pipe(
+              Effect.map(
+                FleetCheckJob.match({
+                  Ran: ({ startedAt }) => O.some(startedAt),
+                  NotRan: () => O.none<number>(),
+                })
+              ),
+              Effect.orElseSucceed(O.none<number>)
+            ),
+      });
+
 /**
  * Run the check once: read, judge, print the summary, and append it to
  * `$GITHUB_STEP_SUMMARY` when that is set.
@@ -468,14 +529,16 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
   );
   const queued = queuedFleetJobs({ observations, jobs, lookbackRunIds, hookSources: input.hookSources, now });
   const evidence = yield* collectEvidence(context, queued, now);
-  const previousRun = yield* context
-    .retry(() => reads.scheduledRuns(input.workflowFile))
-    .pipe(
-      Effect.map((runs) => previousScheduledRun(runs, input.currentRunId)),
-      Effect.catchTag("FleetReadError", (error) =>
-        Effect.succeed(FleetPreviousRun.cases.Unreadable.make({ reason: error.message }))
+  const previousRun = yield* previousCheckingRun(context, input.workflowFile, input.currentRunId).pipe(
+    Effect.flatMap((previous) =>
+      Effect.map(currentCheckStart(context, input.currentRunId, previous), (currentStartedAt) =>
+        fleetPreviousRun({ previous, currentStartedAt, jobs, checkedAt: now })
       )
-    );
+    ),
+    Effect.catchTag("FleetReadError", (error) =>
+      Effect.succeed(FleetPreviousRun.cases.Unreadable.make({ reason: error.message }))
+    )
+  );
   const report = fleetCheckReport({
     repository: input.repository,
     checkedAt: now,
@@ -494,6 +557,64 @@ export const runFleetMissedEventCheck = Effect.fn("Ci.runFleetMissedEventCheck")
       .pipe(CiCommandError.mapError("Failed to append the missed-event check to $GITHUB_STEP_SUMMARY."));
   }
   return report;
+});
+
+/**
+ * Run the workflow's guard once: decide whether this run's check job runs,
+ * print the decision, and write `run=true` or `run=false` to
+ * `$GITHUB_OUTPUT` when asked.
+ *
+ * **Details**
+ *
+ * A `workflow_dispatch` reads nothing and runs. Otherwise the guard reads the
+ * previous checking run the check itself names, and any read failure, the
+ * token included, fails open to `run=true`.
+ *
+ * **Example** (Build a guard run)
+ *
+ * ```ts
+ * import { FleetGuardInput, runFleetMissedEventGuard } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const input = FleetGuardInput.make({
+ *   repository: "beep-effect/beep-effect",
+ *   workflowFile: "fleet-missed-event-check.yml",
+ *   currentRunId: O.none(),
+ *   event: "workflow_run",
+ *   githubOutput: false,
+ * })
+ * console.log(Effect.isEffect(runFleetMissedEventGuard(input))) // true
+ * ```
+ *
+ * @param input - The resolved guard inputs.
+ * @returns The guard's decision.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runFleetMissedEventGuard = Effect.fn("Ci.runFleetMissedEventGuard")(function* (
+  input: FleetGuardInput
+): Effect.fn.Return<FleetGuardDecision, CiCommandError, FleetGithubReads | FleetSleep | ActionOutputs> {
+  const reads = yield* FleetGithubReads;
+  const { sleep } = yield* FleetSleep;
+  const context: FleetRunReads = { reads, retry: retried(sleep) };
+  const previous =
+    input.event === "workflow_dispatch"
+      ? Result.succeed(O.none<FleetCheckingRun>())
+      : yield* previousCheckingRun(context, input.workflowFile, input.currentRunId).pipe(
+          Effect.result,
+          Effect.map(Result.mapError((error) => `${error.endpoint}: ${error.message}`))
+        );
+  const now = yield* Clock.currentTimeMillis;
+  const decision = fleetGuardDecision({ event: input.event, now, previous });
+  yield* Console.log(renderFleetGuardDecision(decision, now));
+  if (input.githubOutput) {
+    const outputs = yield* ActionOutputs;
+    yield* outputs
+      .set("run", FleetGuardDecision.guards.Skip(decision) ? "false" : "true")
+      .pipe(CiCommandError.mapError("Failed to append the guard decision to $GITHUB_OUTPUT."));
+  }
+  return decision;
 });
 
 /**
@@ -563,6 +684,18 @@ const resolveInput = Effect.fn("Ci.resolveFleetMissedEventInput")(function* (fla
   });
 });
 
+const resolveGuardInput = Effect.fn("Ci.resolveFleetGuardInput")(function* (input: FleetMissedEventInput) {
+  const event = yield* optionalEnv("GITHUB_EVENT_NAME");
+  const outputPath = yield* optionalEnv("GITHUB_OUTPUT");
+  return FleetGuardInput.make({
+    repository: input.repository,
+    workflowFile: input.workflowFile,
+    currentRunId: input.currentRunId,
+    event: O.getOrElse(event, () => "local"),
+    githubOutput: O.isSome(outputPath),
+  });
+});
+
 /**
  * The live services of one run: the GitHub reads over the minted token in
  * `GH_TOKEN`, and the real sleep.
@@ -614,7 +747,13 @@ export const ciFleetMissedEventCheckCommand = Command.make(
     ),
     workflowFile: Flag.String("workflow-file").pipe(
       Flag.withDefault("fleet-missed-event-check.yml"),
-      Flag.withDescription("The check's own workflow file, whose previous scheduled run the summary names")
+      Flag.withDescription("The check's own workflow file, whose previous check run the summary names")
+    ),
+    guard: Flag.Boolean("guard").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Run the workflow's guard: write run=false to GITHUB_OUTPUT when a check started less than 8 minutes ago"
+      )
     ),
   },
   (flags) =>
@@ -622,8 +761,12 @@ export const ciFleetMissedEventCheckCommand = Command.make(
       resolveInput(flags),
       Effect.flatMap((input) =>
         Effect.flatMap(Layer.build(layerFleetMissedEventLive(input.repository)), (context) =>
-          Effect.provideContext(runFleetMissedEventCheck(input), context)
-        ).pipe(Effect.scoped, Effect.flatMap(failOnFleetAlerts))
+          flags.guard
+            ? Effect.provideContext(Effect.flatMap(resolveGuardInput(input), runFleetMissedEventGuard), context).pipe(
+                Effect.asVoid
+              )
+            : Effect.provideContext(Effect.flatMap(runFleetMissedEventCheck(input), failOnFleetAlerts), context)
+        ).pipe(Effect.scoped)
       ),
       Effect.catchTag("CiCommandError", reportCiCommandError)
     )

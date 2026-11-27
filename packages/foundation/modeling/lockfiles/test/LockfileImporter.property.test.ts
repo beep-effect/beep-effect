@@ -10,10 +10,7 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-// Native schema derivation generates independent specifier tags and raw strings.
-// Classify a valid spelling before sampling the enclosing serialization model;
-// all other generated fields, optional keys and collections remain unchanged.
-const canonicalDependency = (dependency: ImporterDependency): ImporterDependency =>
+const withSpecifierReclassified = (dependency: ImporterDependency): ImporterDependency =>
   ImporterDependency.make({
     ...dependency,
     specifier: Result.getOrThrowWith(
@@ -25,18 +22,21 @@ const canonicalDependency = (dependency: ImporterDependency): ImporterDependency
   });
 
 const canonicalImporter = (importer: LockfileImporter): LockfileImporter =>
-  LockfileImporter.make({ ...importer, dependencies: A.map(importer.dependencies, canonicalDependency) });
+  LockfileImporter.make({ ...importer, dependencies: A.map(importer.dependencies, withSpecifierReclassified) });
 
 const runs = { arbitrary: fcRuns(100) };
 
 it.effect.prop(
-  "LockfileImporter: encoded values decode without failure and preserve the model",
+  "LockfileImporter: values with specifiers reclassified from their raw text round-trip and preserve the model",
   [Arbitrary.schema(LockfileImporter).pipe(Arbitrary.map(canonicalImporter))],
   ([value]) =>
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(LockfileImporter)(value);
       const decoded = yield* S.decodeEffect(LockfileImporter)(encoded);
-      assertTrue(S.toEquivalence(LockfileImporter)(decoded, value));
+      assertTrue(
+        S.toEquivalence(LockfileImporter)(decoded, value),
+        "schema derivation pairs a specifier tag with an unrelated raw, so the raw is reclassified first"
+      );
       const value1 = yield* S.encodeEffect(LockfileImporter)(decoded);
       assert.deepStrictEqual(value1, encoded);
     }),

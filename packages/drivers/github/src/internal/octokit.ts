@@ -249,24 +249,9 @@ const SILENT_LOG = {
   error: constVoid,
 };
 
-/**
- * Build the octokit instance.
- *
- * **Details**
- *
- * `auth` takes the raw token string. `@octokit/auth-token` inspects it and
- * emits `bearer` for a three-segment JWT and `token` otherwise — exactly the
- * distinction an app JWT and an installation token need, so the App path
- * requires no separate auth strategy.
- *
- * `log` is silenced. Retries log through `Effect.logDebug`, and an application
- * maps Effect's logs to whatever its runtime wants, so no GitHub Actions
- * knowledge lives in this client.
- */
+// decision: octokit-raw-token-auth
 const makeOctokit = (options: TransportOptions.Encoded): Octokit =>
   new Octokit({
-    // The one deliberate unwrap in this package: octokit needs the string.
-    // Nothing downstream re-exposes it — errors, spans and logs never carry it.
     ...O.getSomesStruct({ auth: O.map(O.fromUndefinedOr(options.token), Redacted.value) }),
     ...O.getSomesStruct({ baseUrl: O.fromUndefinedOr(options.baseUrl) }),
     ...O.getSomesStruct({ userAgent: O.fromUndefinedOr(options.userAgent) }),
@@ -281,6 +266,14 @@ const makeOctokit = (options: TransportOptions.Encoded): Octokit =>
  *
  * The rate-limit cell lives here, in the closure of the layer that writes it,
  * so the writer and the reader can never see different cells.
+ *
+ * Interrupting a call's fiber aborts its HTTP request: the `AbortSignal`
+ * `Effect.tryPromise` supplies is threaded into octokit's `request.signal`.
+ *
+ * GraphQL rate-limit headers are observed on success too, although
+ * `@octokit/graphql` keeps response headers only on a failure: each attempt
+ * wraps the fetch octokit would have used, read at call time (the caller's
+ * per-request `request.fetch`, then `options.fetch`, then the global one).
  *
  * **Example** (Read the initial rate-limit state without a request)
  *
@@ -316,20 +309,11 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
       ? yield* credentialFingerprint(options.token).pipe(Effect.asSome)
       : O.none();
 
-  /**
-   * Keep the latest snapshot and hand one observation to the sink.
-   *
-   * **Details**
-   *
-   * The sink call is bounded and every failure or defect it raises is logged
-   * at debug and dropped: observing the budget never fails or stalls a request.
-   */
   const record = Effect.fnUntraced(function* (
     headers: Readonly<Record<string, unknown>> | undefined,
     meta: RecordMeta
   ): Effect.fn.Return<void> {
     const parsed = O.flatMap(readRateLimitHeaders(headers), (raw) =>
-      // GraphQL always counts against `graphql`; a header that names a bucket still wins.
       S.decodeOption(RateLimitSnapshot)({ resource: DEFAULT_RESOURCE[meta.kind], ...raw })
     );
     if (O.isNone(parsed)) return;
@@ -344,16 +328,6 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
       );
   });
 
-  /**
-   * Run one promise-producing call, classifying whatever it throws.
-   *
-   * **Details**
-   *
-   * The `AbortSignal` `Effect.tryPromise` supplies is threaded into octokit's
-   * `request.signal`, so interrupting the fiber aborts the in-flight HTTP
-   * request rather than leaving it running unobserved. A throwable is
-   * classified before its headers are recorded, with the budget outcome.
-   */
   const attempt = <A, E>(
     observed: ObservedCall,
     call: (signal: AbortSignal) => Promise<A>,
@@ -371,10 +345,7 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
       )
     );
 
-  // A write GitHub may already have applied (a POST or PATCH, or a GraphQL mutation) is retried only
-  // when GitHub refused it before doing anything, a rate limit; an ambiguous transport failure fails
-  // at once instead of risking a second comment, reply or object. Reads and idempotent writes keep
-  // the full policy.
+  // decision: non-idempotent-writes-retry-rate-limits
   const withRetry = <A, E extends RetryableFailure.Encoded & { readonly kind: string }>(
     operation: string,
     write: WriteSafety,
@@ -402,7 +373,7 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
         writeSafetyOfRoute(route),
         attempt(
           { operation, kind: "rest" },
-          (signal) => octokit.request<A>({ ...routeOptions(route), ...withRequestOptions(params, { signal }) }),
+          (signal) => octokit.request<A>({ ...octokitRouteOptions(route), ...withRequestOptions(params, { signal }) }),
           (error, now) => GitHubError.fromOctokit(operation, error, now)
         ).pipe(Effect.tap((response) => record(response.headers, restSuccess(operation, response.status))))
       )
@@ -411,19 +382,10 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
   const pageSource: Transport["pageSource"] = dual(
     3,
     <A>(operation: string, route: string, params: Record<string, unknown>): PageSource<A> => {
-      // octokit's iterator advances its cursor only on a SUCCESSFUL page, so
-      // retrying `next()` re-requests the same page rather than skipping it.
-      // That is what makes per-page retry safe, and it is why this uses the
-      // iterator rather than a hand-rolled Link-header walk: the iterator also
-      // carries the compare endpoint's `total_commits` continuation, the
-      // search-shaped `{ total_count, items }` normalization, and the
-      // empty-repository 409 that GitHub answers commit listings with.
+      // decision: octokit-iterator-pagination
       const paginationOctokit = makeOctokit(options);
       let currentSignal: AbortSignal | undefined;
-      // The iterator retains only method, url and headers. Wrap its request
-      // method so each attempt keeps its signal and per-request options.
       paginationOctokit.hook.wrap("request", (request, pageOptions): Promise<OctokitResponse<unknown>> => {
-        // Hook wrappers bind this options object, including the auth hook.
         pageOptions.request = {
           ...pageOptions.request,
           ...requestOptions(params),
@@ -483,9 +445,6 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
         attempt(
           { operation, kind: "graphql" },
           (signal) => {
-            // `@octokit/graphql` keeps response headers only on a failure. A per-attempt fetch
-            // observes them on success too. It wraps the fetch octokit would have used, read at
-            // call time: the caller's per-request one, then the configured one, then the global.
             let seen: Record<string, string> | undefined;
             const base = callerFetchOf(variables) ?? options.fetch ?? globalThis.fetch;
             const fetch = (input: Parameters<typeof globalThis.fetch>[0], init?: RequestInit): Promise<Response> =>
@@ -510,34 +469,28 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
   return { request, pageSource, graphql, rateLimit: Ref.get(snapshot) };
 });
 
-/** How long the transport waits for the rate-limit sink before dropping an observation. */
 const SINK_TIMEOUT = Duration.millis(250);
 
-/** The bucket a snapshot names when the response sent no `x-ratelimit-resource`. */
 const DEFAULT_RESOURCE: Readonly<Record<RateLimitRequestKind, GitHubRateLimitResource>> = {
   rest: "unknown",
   graphql: "graphql",
 };
 
-/** What an attempt is, before it has an answer. */
 interface ObservedCall {
   readonly kind: RateLimitRequestKind;
   readonly operation: string;
 }
 
-/** What an answered attempt is, as far as the budget is concerned. */
 interface RecordMeta extends ObservedCall {
   readonly outcome: RateLimitOutcome;
   readonly status: number;
 }
 
-/** A non-empty token is a bearer `token`; none, or an empty one, is `unauthenticated`. */
 const credentialOfToken = (token: Redacted.Redacted<string> | undefined): RateLimitCredential =>
   O.exists(O.fromUndefinedOr(token), flow(Redacted.value, Str.isNonEmpty))
     ? RateLimitCredential.Enum.token
     : RateLimitCredential.Enum.unauthenticated;
 
-/** A successful REST answer: 304 is `not-modified`, anything else `ok`. */
 const restSuccess = (operation: string, status: number): RecordMeta => ({
   operation,
   kind: "rest",
@@ -545,17 +498,14 @@ const restSuccess = (operation: string, status: number): RecordMeta => ({
   outcome: status === 304 ? RateLimitOutcome.Enum["not-modified"] : RateLimitOutcome.Enum.ok,
 });
 
-/** The entries of a GraphQL `errors` array a throwable carried; an HTTP 200 with errors throws these. */
 const thrownGraphqlEntries = (error: unknown): ReadonlyArray<Readonly<Record<string, unknown>>> =>
   P.isObject(error) && A.isArray(error.errors) ? A.filter(error.errors, P.isObject) : [];
 
-/** A throwable's HTTP status: its own, 200 for a GraphQL response that carried errors, else 0. */
 const thrownStatus = (error: unknown): number => {
   if (P.isObject(error) && P.isNumber(error.status)) return error.status;
   return A.isReadonlyArrayNonEmpty(thrownGraphqlEntries(error)) ? 200 : 0;
 };
 
-/** Every message a failure carried: the throwable's own, a REST body's and each GraphQL entry's. */
 const thrownMessages = (error: unknown): ReadonlyArray<string> => {
   if (!P.isObject(error)) return [];
   const response = error.response;
@@ -572,7 +522,6 @@ const thrownMessages = (error: unknown): ReadonlyArray<string> => {
 
 const SECONDARY_RATE_LIMIT = /\bsecondary rate\b/iu;
 
-/** The facts {@link outcomeOf}'s rules read, gathered once. */
 interface ThrownFacts {
   readonly graphqlErrors: boolean;
   readonly graphqlTypes: ReadonlyArray<unknown>;
@@ -584,12 +533,6 @@ interface ThrownFacts {
 
 const isLimitStatus = (status: number): boolean => status === 403 || status === 429;
 
-/**
- * GitHub's documented classification, first match wins: an empty bucket on a 403 or 429 is a
- * primary limit; a 429, or a 403 with `retry-after`, is a secondary limit; a 403 body or a GraphQL
- * entry saying "secondary rate" is a secondary limit (the plugin-throttling detection); a GraphQL
- * `RATE_LIMITED` entry is a primary limit; a 304 is not-modified.
- */
 const OUTCOME_RULES: ReadonlyArray<readonly [(facts: ThrownFacts) => boolean, RateLimitOutcome]> = [
   [(facts) => isLimitStatus(facts.status) && facts.remaining === 0, "rate-limited"],
   [(facts) => facts.status === 429 || (facts.status === 403 && facts.retryAfter), "secondary-limited"],
@@ -598,7 +541,6 @@ const OUTCOME_RULES: ReadonlyArray<readonly [(facts: ThrownFacts) => boolean, Ra
   [(facts) => facts.status === 304, "not-modified"],
 ];
 
-/** How a thrown attempt ended, as far as the budget is concerned. */
 const outcomeOf = (error: unknown, headers: Readonly<Record<string, unknown>> | undefined): RateLimitOutcome => {
   const entries = thrownGraphqlEntries(error);
   const facts: ThrownFacts = {
@@ -618,31 +560,24 @@ const outcomeOf = (error: unknown, headers: Readonly<Record<string, unknown>> | 
   );
 };
 
-/** Whether a request may be repeated without repeating its effect on GitHub. */
 const WriteSafety = LiteralKit(["idempotent", "non-idempotent"]);
 type WriteSafety = typeof WriteSafety.Type;
 
 const NonIdempotentMethod = LiteralKit(["POST", "PATCH"]);
 
-/** A REST route's write safety, from the method Octokit would send (GET when the route names none). */
 const writeSafetyOfRoute = (route: string): WriteSafety => {
-  const options = routeOptions(route);
+  const options = octokitRouteOptions(route);
   return "method" in options && S.is(NonIdempotentMethod)(Str.toUpperCase(options.method))
     ? WriteSafety.Enum["non-idempotent"]
     : WriteSafety.Enum.idempotent;
 };
 
-/**
- * A GraphQL document's write safety: a mutation operation, first or after a fragment, is not
- * idempotent; a query is.
- */
-const writeSafetyOfDocument = (document: string): WriteSafety =>
-  /(?:^|\})(?:\s|#[^\n]*\n)*mutation\b/u.test(document)
-    ? WriteSafety.Enum["non-idempotent"]
-    : WriteSafety.Enum.idempotent;
+const MUTATION_OPERATION = /(?:^|\})(?:\s|#[^\n]*\n)*mutation\b/u;
 
-/** Keep Octokit's first-two-space-separated-token route parsing and GET defaults. */
-const routeOptions = (route: string) => {
+const writeSafetyOfDocument = (document: string): WriteSafety =>
+  MUTATION_OPERATION.test(document) ? WriteSafety.Enum["non-idempotent"] : WriteSafety.Enum.idempotent;
+
+const octokitRouteOptions = (route: string) => {
   const [methodOrUrl = "", url] = Str.split(route, " ");
   const normalized = Str.toUpperCase(methodOrUrl);
   return url !== undefined && Str.isNonEmpty(url)
@@ -653,13 +588,11 @@ const routeOptions = (route: string) => {
 const requestOptions = (params: Record<string, unknown>) =>
   P.isObjectKeyword(params.request) && !P.isFunction(params.request) ? params.request : {};
 
-/** The `request.fetch` a caller passed in its per-request options, when it is a function. */
 const callerFetchOf = (params: Record<string, unknown>): typeof globalThis.fetch | undefined => {
   const options = requestOptions(params);
   return P.hasProperty(options, "fetch") && S.is(FetchFunction)(options.fetch) ? options.fetch : undefined;
 };
 
-/** Merge our per-attempt request options (signal, fetch) into octokit's without clobbering the caller's. */
 const withRequestOptions: {
   (params: Record<string, unknown>, extra: Record<string, unknown>): Record<string, unknown>;
   (extra: Record<string, unknown>): (params: Record<string, unknown>) => Record<string, unknown>;
@@ -671,7 +604,6 @@ const withRequestOptions: {
   })
 );
 
-/** Response headers off a throwable, when it carried any. */
 const readThrownHeaders = (error: unknown): Record<string, unknown> | undefined => {
   if (!P.isObject(error)) return undefined;
   const response = error.response;
