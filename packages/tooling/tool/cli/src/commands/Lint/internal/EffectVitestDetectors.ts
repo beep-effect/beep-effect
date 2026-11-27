@@ -287,6 +287,7 @@ const makeLayerAnalysis = (sourceFile: SourceFile, imports: EffectVitestImports)
     MutableHashMap.set(contexts, key, collected);
     return collected;
   };
+  // A wrapped node outside any Project has no module resolution host, so nothing resolves.
   const resolveSource = (from: SourceFile, specifier: string): O.Option<SourceFile> =>
     O.flatMap(O.liftThrowable(() => from.getProject())(), (project) =>
       O.flatMap(
@@ -2751,7 +2752,6 @@ type HarnessEvidence = {
   readonly calls: ReadonlyArray<CallExpression>;
 };
 
-// The callback plus every same-file helper it reaches by name, each visited once;
 // for-of also visits the helpers appended while it runs.
 const harnessEvidence = (callback: MorphNode, imports: EffectVitestImports): HarnessEvidence => {
   const services = A.empty<VariableDeclaration>();
@@ -2892,7 +2892,6 @@ const harnessHasOpaquePlatformReferences = (harness: CallExpression, imports: Ef
           )
         )
       );
-      // Deduplicate this batch as well as previously queued regions, including recursive aliases.
       regions.push(
         ...A.filter(
           A.dedupeWith(reached, (left, right) => left === right),
@@ -4673,7 +4672,8 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  * statement of that body adjusts the TestClock or interrupts fibers. A fork holds a wait it reads
  * through test-body values unless the body also yields such a value itself; a clock call before
  * the fork, or a directly awaited wait, controls nothing. EV009 finds live time reads as Effect
- * value references, and `DateTime.now` and its forms read the same Clock.
+ * value references: `DateTime.now`, `nowAsDate` and `nowInCurrentZone` read the Clock service,
+ * `nowUnsafe` reads the host clock, and all four count as live reads.
  *
  * EV010 keeps a native filesystem import as a memory filesystem candidate unless every harness its
  * layers reach needs the real disk: it kills a process it spawned, opens a SQLite file other than
@@ -4682,7 +4682,8 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  * operation. A later memory filesystem operand in a merge replaces the bundle's FileSystem. A
  * provider replaces FileSystem unless its key is an imported tag provably naming another service,
  * and a same-file helper counts as the harness callback's own only when its value reaches a run
- * in the caller's context with no provider in between.
+ * in the caller's context with no provider in between. An `updateServiceScoped` anywhere in a
+ * harness region disqualifies every helper call in it, because it rewrites the rest of its scope.
  *
  * EV011 accepts a plain vitest import that only supplies the vi binding hoisted module mocks need.
  *
@@ -4710,8 +4711,11 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  * ship only as .d.ts: `Path.layer`, `TestClock.layer()`, `AtomRegistry.layer`,
  * `FetchHttpClient.layer`, `ConfigProvider.layer` over a provider value, `Logger.layer` over logger
  * values, `toolkit.toLayer` over `Toolkit.make` or `Toolkit.merge`, `LanguageModel.make` and the
- * per-family crypto layers. EV005 knows a fixed list of operations whose applied result is a fixed
- * tagged or Boolean value. An Effect bump that changes any of them changes these rows. A function
+ * per-family crypto layers. EV006 knows a fixed list of operations whose applied result is a fixed
+ * tagged or Boolean value. EV015 relies on `@effect/vitest` building each top-level `it.layer` in a
+ * fresh memo map, forking it for nested blocks, and building a nested layer as
+ * `Layer.provideMerge(nested, parentEnv)`, whose later context wins. An Effect or `@effect/vitest`
+ * bump that changes any of them changes these rows. A function
  * passed by an unresolved name to an `effect` helper, and extra pipeable arguments of `Effect.fn`,
  * are not followed.
  *

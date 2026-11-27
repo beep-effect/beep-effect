@@ -65,18 +65,6 @@ const lawSelectionFields = {
   include: S.String.pipe(S.withConstructorDefault(Effect.succeed("*")), S.withDecodingDefaultKey(Effect.succeed("*"))),
 };
 
-/**
- * CLI options for effect import governance command.
- *
- * **Example** (Reference the import command options)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 class EffectImportsCommandOptions extends S.Opaque<EffectImportsCommandOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     ...lawSelectionFields,
@@ -99,18 +87,6 @@ class EffectImportsCommandOptions extends S.Opaque<EffectImportsCommandOptions, 
   )
 ) {}
 
-/**
- * CLI options for terse Effect style command.
- *
- * **Example** (Reference the terse-effect command options)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 class TerseEffectCommandOptions extends S.Opaque<TerseEffectCommandOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     ...lawSelectionFields,
@@ -123,18 +99,6 @@ class TerseEffectCommandOptions extends S.Opaque<TerseEffectCommandOptions, { re
   )
 ) {}
 
-/**
- * CLI options for the Effect.fn supplemental law.
- *
- * **Example** (Reference the Effect.fn command options)
- *
- * ```ts
- * console.log("EffectFnCommandOptions")
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 class EffectFnCommandOptions extends S.Opaque<EffectFnCommandOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     ...lawSelectionFields,
@@ -145,18 +109,6 @@ class EffectFnCommandOptions extends S.Opaque<EffectFnCommandOptions, { readonly
   )
 ) {}
 
-/**
- * CLI options for the FrozenGrantSet construction law.
- *
- * **Example** (Reference the frozen-grant-set command options)
- *
- * ```ts
- * console.log("FrozenGrantSetCommandOptions")
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 class FrozenGrantSetCommandOptions extends S.Opaque<FrozenGrantSetCommandOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     ...lawSelectionFields,
@@ -167,18 +119,6 @@ class FrozenGrantSetCommandOptions extends S.Opaque<FrozenGrantSetCommandOptions
   )
 ) {}
 
-/**
- * CLI options for native runtime parity checks.
- *
- * **Example** (Reference the native-runtime command options)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category models
- * @since 0.0.0
- */
 class NoNativeRuntimeCommandOptions extends S.Opaque<
   NoNativeRuntimeCommandOptions,
   { readonly brand: unique symbol }
@@ -261,18 +201,6 @@ const logTerseEffectFileGroup = Effect.fn("Laws.logTerseEffectFileGroup")(functi
   }
 });
 
-/**
- * CLI command for effect import style migration/check.
- *
- * **Example** (Reference the import-governance subcommand)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsEffectImportsCommand = Command.make(
   "effect-imports",
   {
@@ -397,18 +325,6 @@ const lawsEffectImportsCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check or rewrite root imports into validated per-module imports"));
 
-/**
- * CLI command for terse Effect style migration/check.
- *
- * **Example** (Reference the terse-effect subcommand)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsTerseEffectCommand = Command.make(
   "terse-effect",
   {
@@ -482,18 +398,6 @@ const lawsTerseEffectCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check or rewrite terse Effect helper wrappers"));
 
-/**
- * CLI command for the Effect.fn supplemental law.
- *
- * **Example** (Reference the Effect.fn subcommand)
- *
- * ```ts
- * console.log("lawsEffectFnCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsEffectFnCommand = Command.make(
   "effect-fn",
   {
@@ -518,18 +422,6 @@ const lawsEffectFnCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check reusable Effect.gen-returning functions use Effect.fn or Effect.fnUntraced"));
 
-/**
- * CLI command for the FrozenGrantSet construction law.
- *
- * **Example** (Reference the frozen-grant-set subcommand)
- *
- * ```ts
- * console.log("lawsFrozenGrantSetCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsFrozenGrantSetCommand = Command.make(
   "frozen-grant-set",
   {
@@ -583,18 +475,6 @@ const reportLawSummary = Effect.fn("reportLawSummary")(function* (options: {
   yield* Effect.forEach(options.findings, (line) => Console.log(line), { concurrency: 1, discard: true });
 });
 
-/**
- * CLI command for the retired Effect module path law.
- *
- * **Example** (Reference the retired-effect-paths subcommand)
- *
- * ```ts
- * console.log("lawsRetiredEffectPathsCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsRetiredEffectPathsCommand = Command.make(
   "retired-effect-paths",
   lawCheckFlags("Fail when any git-tracked text file contains a retired Effect module path"),
@@ -622,18 +502,6 @@ const lawsRetiredEffectPathsCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check git-tracked text files for retired Effect module paths"));
 
-/**
- * CLI command for the entity kit freeze law.
- *
- * **Example** (Reference the entity-kit-freeze subcommand)
- *
- * ```ts
- * console.log("lawsEntityKitFreezeCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsEntityKitFreezeCommand = Command.make(
   "entity-kit-freeze",
   {
@@ -681,18 +549,6 @@ const lawsEntityKitFreezeCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check that no new file imports the frozen shared-domain entity kit"));
 
-/**
- * CLI command for the Markdown TypeScript fence typecheck law.
- *
- * **Example** (Reference the markdown-fences subcommand)
- *
- * ```ts
- * console.log("lawsMarkdownFencesCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsMarkdownFencesCommand = Command.make(
   "markdown-fences",
   {
@@ -746,18 +602,6 @@ const lawsMarkdownFencesCommand = Command.make(
   Command.provide(MarkdownFenceTypechecker.layer)
 );
 
-/**
- * CLI command for the retired IRI authority law.
- *
- * **Example** (Reference the retired-iri-authorities subcommand)
- *
- * ```ts
- * console.log("lawsRetiredIriAuthoritiesCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsRetiredIriAuthoritiesCommand = Command.make(
   "retired-iri-authorities",
   lawCheckFlags(
@@ -787,18 +631,6 @@ const lawsRetiredIriAuthoritiesCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check git-tracked files for retired IRI authorities and public-origin literals"));
 
-/**
- * CLI command for the private home path law.
- *
- * **Example** (Reference the private-home-paths subcommand)
- *
- * ```ts
- * console.log("lawsPrivateHomePathsCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsPrivateHomePathsCommand = Command.make(
   "private-home-paths",
   lawCheckFlags("Fail when any git-tracked text file records an absolute home path of a non-placeholder user"),
@@ -837,18 +669,6 @@ const lawsPrivateHomePathsCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check git-tracked text files for absolute home paths; record them relative to ~"));
 
-/**
- * CLI command for the schema tag idiom law.
- *
- * **Example** (Reference the schema-tag-idioms subcommand)
- *
- * ```ts
- * console.log("lawsSchemaTagIdiomsCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsSchemaTagIdiomsCommand = Command.make(
   "schema-tag-idioms",
   lawCheckFlags("Fail when any git-tracked file spells a fixed schema tag by hand"),
@@ -873,18 +693,6 @@ const lawsSchemaTagIdiomsCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check git-tracked TypeScript and Markdown for hand-spelled fixed schema tags"));
 
-/**
- * CLI command for the tracked shell allowlist law.
- *
- * **Example** (Reference the tracked-shell-allowlist subcommand)
- *
- * ```ts
- * console.log("lawsTrackedShellAllowlistCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsTrackedShellAllowlistCommand = Command.make(
   "tracked-shell-allowlist",
   lawCheckFlags("Fail when a git-tracked .sh file sits outside the allowed roots and files"),
@@ -911,18 +719,6 @@ const lawsTrackedShellAllowlistCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check that every git-tracked shell script is on the reviewed allowlist"));
 
-/**
- * CLI command for the no-tracked-python law.
- *
- * **Example** (Reference the no-tracked-python subcommand)
- *
- * ```ts
- * console.log("lawsNoTrackedPythonCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsNoTrackedPythonCommand = Command.make(
   "no-tracked-python",
   lawCheckFlags("Fail when the git index holds a .py, .pyi, .pyw or .ipynb file"),
@@ -944,18 +740,6 @@ const lawsNoTrackedPythonCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check that the git index holds no Python source, stub or notebook"));
 
-/**
- * CLI command for repo-local native runtime governance checks.
- *
- * **Example** (Reference the native-runtime subcommand)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsNativeRuntimeCommand = Command.make(
   "native-runtime",
   {
@@ -1006,18 +790,6 @@ const lawsNativeRuntimeCommand = Command.make(
   })
 ).pipe(Command.withDescription("Run repo-local no-native-runtime parity checks"));
 
-/**
- * CLI command for validating Effect governance allowlist integrity.
- *
- * **Example** (Reference the allowlist-check subcommand)
- *
- * ```ts
- * console.log("docgen metadata")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const lawsAllowlistCheckCommand = Command.make(
   "allowlist-check",
   {},

@@ -842,6 +842,8 @@ const foundationMappingsForFiles = Effect.fn("EffectImports.foundationMappingsFo
   effectExports: FlatPackageExports
 ) {
   const path = yield* Path.Path;
+  // Semantic export resolution belongs only to the foundation mapping phase.
+  // Never seed it with the complete executable corpus.
   const mappingProject = createRepoTsMorphProject({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     sourceFileGlobs: [],
@@ -1372,6 +1374,9 @@ const planRootExport = (mappings: RootImportMappings, file: string, declaration:
 
 type ModuleCallKind = "dynamic-import" | "require";
 
+// One parse-tree census per source text. `ts.forEachChild` never enters JSDoc, so
+// the attached blocks are read from `node.jsDoc` before the node's children, which
+// reproduces ts-morph's `getDescendantsOfKind` order for every collected kind.
 type SyntaxCensus = {
   readonly root: ts.SourceFile;
   readonly moduleCalls: ReadonlyArray<readonly [ModuleCallKind, ts.CallExpression]>;
@@ -1407,6 +1412,7 @@ const syntaxCensus = (root: ts.SourceFile): SyntaxCensus => {
   return { root, moduleCalls, importTypes, importEquals, jsDocs };
 };
 
+// ts-morph line numbers count only `\n`, unlike `getLineAndCharacterOfPosition`.
 const startLineNumber = (node: ts.Node, root: ts.SourceFile): number =>
   A.length(Str.split("\n")(Str.slice(0, node.getStart(root))(root.text)));
 
@@ -1682,6 +1688,7 @@ type JsDocUnit = {
 
 const JSDOC_OPEN = /^\/\*\*[^\S\n]*\n?/u;
 const JSDOC_CLOSE = /(\r?\n)?[^\S\n]*\*\/$/u;
+// ts-morph's whitespace set, narrower than `\s`, before an optional leading `*` and one space.
 const JSDOC_LINE_STAR = /^[ \f\r\t\v\u00A0\u2028\u2029]*\* ?/u;
 
 const jsDocInnerText: (text: string) => string = flow(
@@ -1930,6 +1937,11 @@ const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(funct
  * the per-run scope filter (`excludePaths`, deliberate exclusions, prefixes)
  * is applied by the runner, not here.
  *
+ * **Gotchas**
+ *
+ * `@beep/walker` lists a linked file even with `followSymlinks: false` (its `stat` follows the
+ * link), so every candidate is probed with `readLink` before it is kept.
+ *
  * **Example** (Reference the source discovery step)
  *
  * ```ts
@@ -2022,11 +2034,9 @@ export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discov
  *
  * **Gotchas**
  *
- * Check mode reads the raw TypeScript parse tree and write mode the ts-morph wrappers. Both visit
- * nodes and JSDoc blocks in the ts-morph descendant order, count lines by LF only and read JSDoc
- * inner text the way ts-morph does, so the two modes report the same findings. A rewritten
- * Markdown fence keeps the CRLF line endings of a CRLF body. A file removed between discovery and
- * reading, such as a parallel gate's temporary directory, is skipped rather than failing the run.
+ * Check mode and write mode report the same findings. A rewritten Markdown fence keeps the CRLF
+ * line endings of a CRLF body. A file removed between discovery and reading, such as a parallel
+ * gate's temporary directory, is skipped rather than failing the run.
  *
  * **Example** (Reference the import rules runner)
  *
@@ -2078,6 +2088,7 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     MutableHashSet.add(excludePaths, toPosixPath(excludePath));
   }
 
+  // Load only matches to avoid ts-morph recursively registering excluded directories.
   const discoveredSourceFiles = yield* discoverEffectImportSourceFiles(options).pipe(
     Effect.map(A.map((relativePath) => path.join(process.cwd(), relativePath)))
   );
@@ -2153,6 +2164,8 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     );
 
     for (const { filePath, relativePath } of sourcePaths) {
+      // These checks inspect syntax, not cross-file types. Retain only the current
+      // source tree; forgetting it releases ts-morph's descendant wrapper cache.
       const sourceFile = project.addSourceFileAtPathIfExists(filePath);
       if (P.isUndefined(sourceFile)) continue;
       scannedFiles += 1;

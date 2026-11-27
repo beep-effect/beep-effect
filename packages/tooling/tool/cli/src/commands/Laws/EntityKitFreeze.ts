@@ -68,7 +68,7 @@ const BINDING_TYPE_PREFIX_PATTERN = /^type\s+/u;
 
 const BINDING_ALIAS_PATTERN = /\s+as\s+/u;
 
-const PREFILTER_LITERAL = entityKitFreezeBarrelSpecifier;
+const LITERAL_IN_EVERY_FROZEN_SPECIFIER = entityKitFreezeBarrelSpecifier;
 
 const SCANNED_ROOTS = ["packages/", "apps/"];
 
@@ -201,7 +201,7 @@ const bareImports = (content: string): ReadonlyArray<RawImport> =>
  * @since 0.0.0
  */
 export const findEntityKitImports = (content: string): ReadonlyArray<EntityKitImport> => {
-  if (!F.pipe(content, Str.includes(PREFILTER_LITERAL))) {
+  if (!F.pipe(content, Str.includes(LITERAL_IN_EVERY_FROZEN_SPECIFIER))) {
     return A.empty();
   }
   const lineStarts = lineStartOffsets(content);

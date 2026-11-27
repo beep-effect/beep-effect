@@ -450,44 +450,6 @@ const proseSpans = (
   return A.appendAll(A.appendAll(assertions, inline), knowledgeDomainLineSpans(line.text));
 };
 
-/**
- * Extracts every reference-shaped span and historical marker from one decoded document.
- *
- * **Details**
- *
- * Spans come from the Stage-1 readers: inline code spans on prose lines (a `bun run beep` span is a
- * command, a governed repository spelling a path unless the prose introduces it as a branch, as in
- * "branch `goals/x`"; the refs the clone holds are never read) and `beep:assert path-exists`
- * markers that fill a whole prose line (a marker quoted in inline code or written mid-line asserts
- * nothing). Fenced content is never read as spans: an unmarked fence is a
- * decoy, and a fence whose info string carries `beep:generated=<producer-id>` is one
- * `generated-fence` span on its opening delimiter. A block marker scopes the next Markdown block
- * (a fence through its closing delimiter, or the run of non-blank prose lines that follows), a
- * frontmatter `beep-historical:` key scopes the document, and the block marker wins where both apply.
- *
- * **Gotchas**
- *
- * Block boundaries come from the Stage-1 line reader (fence verdicts plus blank lines), not a full
- * Markdown AST, so a loose list separated by blank lines is several blocks.
- *
- * **Example** (Extract one live path span)
- *
- * ```ts
- * import { extractKnowledgeDocumentSpans } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
- *
- * const extraction = extractKnowledgeDocumentSpans("docs/README.md", "See `goals/INDEX.md`.")
- *
- * console.log(extraction.spans.length) // 1
- * ```
- *
- * @param documentPath - Repository-relative path of the scanned document.
- * @param text - Decoded document text.
- * @param packages - Workspace export facts from the scanned tree, when available.
- * @param entries - Tracked entries used to prove the export targets.
- * @returns Source-ordered spans plus every historical marker in the document.
- * @category parsing
- * @since 0.0.0
- */
 const extractDocumentSpans = (
   documentPath: string,
   text: string,
@@ -554,6 +516,24 @@ const extractDocumentSpans = (
 
 /**
  * Extracts reference spans without tree-specific package export evidence.
+ *
+ * **Details**
+ *
+ * Spans come from the Stage-1 readers: inline code spans on prose lines (a `bun run beep` span is a
+ * command, a governed repository spelling a path unless the prose introduces it as a branch, as in
+ * "branch `goals/x`"; the refs the clone holds are never read) and `beep:assert path-exists`
+ * markers that fill a whole prose line (a marker quoted in inline code or written mid-line asserts
+ * nothing). Fenced content is never read as spans: an unmarked fence is a
+ * decoy, and a fence whose info string carries `beep:generated=<producer-id>` is one
+ * `generated-fence` span on its opening delimiter. A block marker scopes the next Markdown block
+ * (a fence through its closing delimiter, or the run of non-blank prose lines that follows), a
+ * frontmatter `beep-historical:` key scopes the document, and the block marker wins where both
+ * apply.
+ *
+ * **Gotchas**
+ *
+ * Block boundaries come from the Stage-1 line reader (fence verdicts plus blank lines), not a full
+ * Markdown AST, so a loose list separated by blank lines is several blocks.
  *
  * **Example** (Extract a relative path)
  * ```ts
@@ -1011,7 +991,8 @@ const withoutCommandWitness = (tree: KnowledgeDoctorTree, witness: CommandNodeWi
  * it removes that flag from the command, and from the global flags when the command is the root. A
  * producer witness unregisters the producer output. A manifest-field, export, or lock-entry witness
  * removes that one fact from the domain ({@link knowledgeDomainWithout}). Nothing else about the
- * tree changes.
+ * tree changes. Hiding a tree entry leaves `entryIndex` equal to `makeKnowledgeTreeEntryIndex`
+ * over the kept entries, without re-indexing the whole tree.
  *
  * **Gotchas**
  *

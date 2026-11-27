@@ -139,8 +139,13 @@ const ANSI_ESCAPE_PATTERN = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
 const OTHER_ESCAPE_PATTERN = /\u001B[@-Z\\-_]/gu;
 const DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN = /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/gu;
 const FORMAT_CHARACTER_PATTERN = /\p{Cf}/gu;
-const GREEDY_POSIX_ABSOLUTE_PATH_PATTERN =
-  /(?<![\p{L}\p{M}\p{N}\p{Pc}/])\/[^\s/"'`:]+(?:\/[^\s/"'`:]+)*(?::\d+(?::\d+)?)?/gu;
+// Segments consume any non-delimiter character (mirroring WINDOWS_ABSOLUTE_PATH_PATTERN's negated
+// class) so a path with non-ASCII, emoji, or punctuation segments is redacted whole instead of
+// leaking its tail — a redactor must over-swallow, never under-swallow. Colon stays a delimiter so
+// the trailing `:line(:col)` suffix keeps matching. The lookbehind blocks only Unicode word and
+// slash adjacency, preserving URLs and path-like word suffixes while admitting punctuation as a
+// diagnostic delimiter.
+const POSIX_ABSOLUTE_PATH_PATTERN = /(?<![\p{L}\p{M}\p{N}\p{Pc}/])\/[^\s/"'`:]+(?:\/[^\s/"'`:]+)*(?::\d+(?::\d+)?)?/gu;
 const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\(?:[^\\\s"'`]+\\)*[^\\\s"'`]+(?::\d+(?::\d+)?)?/gu;
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
@@ -174,7 +179,7 @@ const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiv
     Str.replace(OTHER_ESCAPE_PATTERN, ""),
     Str.replace(DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN, ""),
     Str.replace(FORMAT_CHARACTER_PATTERN, ""),
-    Str.replace(GREEDY_POSIX_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
+    Str.replace(POSIX_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
     Str.replace(WINDOWS_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
     sanitizeSensitiveText,
     Str.truncate(PROBE_DIAGNOSTIC_MAX_CHARS)
@@ -934,6 +939,10 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * receives the base inputs too and is observed first, so a current-code defect in a base-only
  * command fails as an operational error before a base-data incompatibility can degrade coverage;
  * only HEAD occurrences produce HEAD findings.
+ *
+ * The four probes share no scratch root or archive: each reads only its own side's data, so they
+ * run concurrently. Their exits are replayed in sequential order, so a failure is reported only
+ * when every step before it succeeded, as in a one-after-another run.
  *
  * **Example** (Scan two empty archives)
  *

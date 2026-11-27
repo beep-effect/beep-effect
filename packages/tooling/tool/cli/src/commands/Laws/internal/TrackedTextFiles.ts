@@ -59,8 +59,12 @@ const nulParity = (content: Uint8Array): { readonly even: number; readonly odd: 
   return { even, odd };
 };
 
+const HALF_PARITY_FILL_DIVISOR = 4;
+const MIN_HITS_PER_STRAY_NUL = 20;
+
 const isMostlyAt = (hits: number, other: number, content: Uint8Array): boolean =>
-  hits * 4 >= Math.min(content.length, UTF16_SAMPLE_BYTES) && other * 20 <= hits;
+  hits * HALF_PARITY_FILL_DIVISOR >= Math.min(content.length, UTF16_SAMPLE_BYTES) &&
+  other * MIN_HITS_PER_STRAY_NUL <= hits;
 
 const decodeNulBearingText = (content: Uint8Array): string => {
   if (content[0] === 0xff && content[1] === 0xfe) {

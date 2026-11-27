@@ -1811,6 +1811,7 @@ export type KnowledgeDocumentFenceLine = KnowledgeDocumentLine & {
  * @category parsing
  * @since 0.0.0
  */
+// decision: census-flattens-once
 export const knowledgeDocumentFenceLines = (text: string): ReadonlyArray<KnowledgeDocumentFenceLine> => {
   let fence = O.none<OpenFence>();
   return A.map(Str.split(/\r?\n/u)(text), (lineText, index) => {
@@ -2880,6 +2881,7 @@ const beepRefCandidates = (
   );
 };
 
+// decision: census-flattens-once
 const extractDocumentRefs = (
   documentPath: string,
   text: string,
@@ -3018,6 +3020,7 @@ const entryPathOrder = Order.mapInput(Order.String, (entry: KnowledgeTrackedEntr
  * @category use-cases
  * @since 0.0.0
  */
+// decision: census-flattens-once
 export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(function* (oracle: KnowledgeTreeOracle) {
   const commit = yield* decodeCommitSha(oracle.commit).pipe(
     KnowledgeOperationalError.mapError(
