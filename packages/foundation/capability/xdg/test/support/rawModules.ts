@@ -1,13 +1,8 @@
-// The package's own source and the frozen systemd-path fixture as module data.
-// Vite's raw glob inlines each file's text at transform time, so the closure and
-// golden suites read no filesystem at test time.
-
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-/** The subset of Vite's `import.meta.glob` signature these loaders use. */
 interface RawGlobOptions {
   readonly eager: true;
   readonly import: "default";

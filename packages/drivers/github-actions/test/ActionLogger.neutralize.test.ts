@@ -16,7 +16,6 @@ const Json = S.fromJsonString(S.Unknown);
 
 const ZWSP = String.fromCodePoint(0x200b);
 
-/** Everything written to `Console.log`, as strings, in order. */
 const lines = Effect.map(TestConsole.logLines, (captured) => A.map(captured, String));
 
 const HOSTILE = [

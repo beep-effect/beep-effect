@@ -751,6 +751,12 @@ export class McpHttpExchange extends S.Opaque<McpHttpExchange, { readonly brand:
  * conformance runner and the `_meta` guard tests drive; the RPC protocol
  * layer builds on it.
  *
+ * **Gotchas**
+ *
+ * `accept` and `content-type` are fixed and win over the given headers: the
+ * streamable HTTP transport answers 406 unless the client accepts both media
+ * types (any response may upgrade to an event stream), and 415 without JSON.
+ *
  * **Example** (Post a hand-built frame)
  *
  * ```ts
@@ -780,9 +786,6 @@ export const postJsonRpc = Effect.fn("McpKit.client.postJsonRpc")(function* (
     HttpClientRequest.post(url).pipe(
       HttpClientRequest.setHeaders({
         ...headers,
-        // Content negotiation is not caller-tunable: the streamable HTTP
-        // transport answers 406 unless the client accepts both media types
-        // (any response may upgrade to an SSE stream) and 415 without JSON.
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
       }),
@@ -860,6 +863,11 @@ export class McpHttpProtocolOptions extends S.Opaque<McpHttpProtocolOptions, { r
  * request is one POST carrying the `_meta` keys and routing headers, and the
  * response body (JSON or event stream) is decoded to the request's exit.
  *
+ * **Gotchas**
+ *
+ * The routing headers always describe the frame being sent: they are applied
+ * after `options.headers`, so a caller header can never shadow them.
+ *
  * **Example** (HTTP client layer)
  *
  * ```ts
@@ -882,8 +890,6 @@ export const layerProtocolHttp = (
       const httpClient = yield* HttpClient.HttpClient;
       const metadata = yield* Effect.orDie(requestMetadata(options.client ?? McpClientOptions.make({})));
       const post = (message: JsonRpcMessage) =>
-        // Routing mirrors always describe the frame being sent: caller headers
-        // (origin, authorization) go first so they can never shadow them.
         postJsonRpc(options.url, message, { ...options.headers, ...routingHeaders(message) }).pipe(
           Effect.provideService(HttpClient.HttpClient, httpClient)
         );
@@ -996,6 +1002,12 @@ export const decodeLines = <E, R>(bytes: Stream.Stream<Uint8Array, E, R>): Strea
  * as one line carrying the `_meta` keys, and responses are matched back by
  * id from the host's lines. Server notifications on the stream are dropped.
  *
+ * **Details**
+ *
+ * An interrupted call releases its pending entry before the cancellation is
+ * written, so it settles even when the host never acknowledges the
+ * cancellation.
+ *
  * **Example** (NDJSON client layer over queues)
  *
  * ```ts
@@ -1033,8 +1045,6 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
         }
       });
       yield* transport.lines.pipe(Stream.runForEach(route), Effect.forkScoped);
-      // A framed message always encodes; a failure here is a kit defect, not a
-      // transport error the protocol's `send` channel could carry.
       const writeMessage = (message: JsonRpcMessage) =>
         Effect.flatMap(Effect.orDie(encodeMessageLine(message)), transport.write);
       return yield* RpcClient.Protocol.make((writeResponse) =>
@@ -1056,15 +1066,9 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
                   const response = yield* Deferred.await(waiter);
                   const exit = yield* Effect.orDie(responseExit(request.id, O.some(response), ""));
                   yield* writeResponse(clientId, exit);
-                }).pipe(
-                  // The waiter never outlives its send: a late response, an
-                  // interrupt, or a transport failure all release the entry.
-                  Effect.ensuring(Effect.sync(() => MutableHashMap.remove(pending, key)))
-                );
+                }).pipe(Effect.ensuring(Effect.sync(() => MutableHashMap.remove(pending, key))));
               }),
               Match.tag("Interrupt", (interrupt) => {
-                // Release the waiter first so the interrupted call settles even
-                // if the host never acknowledges the cancellation.
                 const key = requestKey(interrupt.requestId);
                 const waiter = MutableHashMap.get(pending, key);
                 MutableHashMap.remove(pending, key);

@@ -97,8 +97,6 @@ describe("DescendError — compatible payloads and exact messages", () => {
   });
 });
 
-// The main tree: nesting, a dotfile, both default-pruned directories, and a
-// second top-level directory so sorted output diverges from walk order.
 const mainTree = {
   "/proj/readme.md": "",
   "/proj/dist/out.ts": "",
@@ -165,10 +163,12 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, magic patterns", 
   it.effect("descends a globstar pattern through every level, sorted by relative path", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
-      // Walk order is breadth-first (lib/util.ts before lib/deep/core.ts);
-      // sorted output pins deep/core.ts BEFORE util.ts.
       const descend4 = yield* descend(pattern, { cwd: "/proj" });
-      assert.deepStrictEqual(descend4, ["src/index.ts", "src/lib/deep/core.ts", "src/lib/util.ts"]);
+      assert.deepStrictEqual(
+        descend4,
+        ["src/index.ts", "src/lib/deep/core.ts", "src/lib/util.ts"],
+        "the walk is breadth-first, so only the sort puts deep/core.ts before util.ts"
+      );
     })
   );
 
@@ -198,13 +198,16 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, magic patterns", 
 
   it.effect("skips dotfiles under default options and matches them when the pattern carries dot", () =>
     Effect.gen(function* () {
-      // Dotfile semantics live in the COMPILED pattern, never in the walker.
       const plain = yield* GlobPattern.compile("src/*.ts");
       const dotted = yield* GlobPattern.compile("src/*.ts", GlobPatternOptions.make({ dot: true }));
       const descend7 = yield* descend(plain, { cwd: "/proj" });
       assert.deepStrictEqual(descend7, ["src/index.ts"]);
       const descend8 = yield* descend(dotted, { cwd: "/proj" });
-      assert.deepStrictEqual(descend8, ["src/.hidden.ts", "src/index.ts"]);
+      assert.deepStrictEqual(
+        descend8,
+        ["src/.hidden.ts", "src/index.ts"],
+        "dotfile semantics live in the compiled pattern, never in the walker"
+      );
     })
   );
 
@@ -216,16 +219,15 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, magic patterns", 
     })
   );
 
-  // `descend`'s defect posture is `ascend`'s: a bad bound is a programmer
-  // error, never a silently-empty result. Assert the DIE specifically — a
-  // typed DescendError is also a Failure exit, so `_tag` alone would let a
-  // regression from defect to typed failure pass.
   it.effect("dies when maxDepth is 0", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
       const exit = yield* Effect.exit(descend(pattern, { cwd: "/proj", maxDepth: 0 }));
       assertExitFailure(exit, Exit.isFailure(exit) ? exit.cause : Cause.empty);
-      assert.isTrue(Cause.hasDies(exit.cause));
+      assert.isTrue(
+        Cause.hasDies(exit.cause),
+        "a typed DescendError is also a Failure exit; only the die proves a bad bound is a defect"
+      );
     })
   );
 
@@ -249,20 +251,15 @@ layer(platform(mainTree), { timeout: "10 seconds" })("descend, magic patterns", 
 
   it.effect("a negated pattern matches files OUTSIDE its inner pattern's prefix", () =>
     Effect.gen(function* () {
-      // `!src/*.ts` matches every walked file that src/*.ts does not — the
-      // walk must start at cwd, not at the inner pattern's `src` prefix, or
-      // readme.md and dist/out.ts silently vanish from the answer.
       const pattern = yield* GlobPattern.compile("!src/*.ts");
       const found = yield* descend(pattern, { cwd: "/proj" });
-      assert.include(found, "readme.md");
+      assert.include(found, "readme.md", "a negated walk starts at cwd, not at the inner pattern's src prefix");
       assert.include(found, "dist/out.ts");
       assert.notInclude(found, "src/index.ts");
     })
   );
 });
 
-// Symlinks: a link to a file, a link to a directory, and a dangling link, all
-// inside the walked subtree.
 const symlinkTree = {
   "/proj/real/file.ts": "",
   "/proj/real/dir/inner.ts": "",
@@ -288,10 +285,12 @@ layer(platformWith(symlinkTree, symlinkOptions), { timeout: "10 seconds" })("des
   it.effect("never descends into a symlinked directory", () =>
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("src/**/*.ts");
-      // linkdir/inner.ts must NOT appear; the same file is reachable (and
-      // matched) only through its real path.
       const descend11 = yield* descend(pattern, { cwd: "/proj" });
-      assert.deepStrictEqual(descend11, ["src/a.ts", "src/link.ts"]);
+      assert.deepStrictEqual(
+        descend11,
+        ["src/a.ts", "src/link.ts"],
+        "linkdir/inner.ts is reachable only through its real path"
+      );
     })
   );
 
@@ -304,10 +303,6 @@ layer(platformWith(symlinkTree, symlinkOptions), { timeout: "10 seconds" })("des
   );
 });
 
-// followSymlinks: the opt-in that gives descend Node's recursive-readdir and
-// @actions/glob's default followSymbolicLinks behaviour — links to directories
-// are entered, and the cycle guard becomes @actions/glob's per-branch
-// traversalChain instead of the blanket refusal.
 const followTree = {
   "/proj/real/file.ts": "",
   "/proj/real/dir/inner.ts": "",
@@ -347,9 +342,6 @@ layer(platformWith(followTree, followOptions), { timeout: "10 seconds" })("desce
   );
 });
 
-// Two sibling links resolving to the SAME target: not a cycle — the guard is
-// per-branch (@actions/glob's traversalChain), so both enumerate. A
-// walk-global visited set would silently drop whichever came second.
 const siblingLinkTree = {
   "/proj/shared/inner.ts": "",
   "/proj/src/a.ts": "",
@@ -368,14 +360,16 @@ layer(platformWith(siblingLinkTree, siblingLinkOptions), { timeout: "10 seconds"
       Effect.gen(function* () {
         const pattern = yield* GlobPattern.compile("src/**/*.ts");
         const descend15 = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
-        assert.deepStrictEqual(descend15, ["src/a.ts", "src/one/inner.ts", "src/two/inner.ts"]);
+        assert.deepStrictEqual(
+          descend15,
+          ["src/a.ts", "src/one/inner.ts", "src/two/inner.ts"],
+          "a walk-global visited set would silently drop whichever link came second"
+        );
       })
     );
   }
 );
 
-// A link back to the walk base: the guard seeds the base's real path, so the
-// link is skipped instead of revisiting the whole tree through it.
 const baseCycleTree = {
   "/proj/real/file.ts": "",
   "/proj/src/a.ts": "",
@@ -394,16 +388,15 @@ layer(platformWith(baseCycleTree, baseCycleOptions), { timeout: "10 seconds" })(
         const pattern = yield* GlobPattern.compile("**/*.ts");
         const found = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
         assert.deepStrictEqual(found, ["real/file.ts", "src/a.ts"]);
-        assert.isFalse(A.some(found, Str.startsWith("src/up/")));
+        assert.isFalse(
+          A.some(found, Str.startsWith("src/up/")),
+          "the guard seeds the base's real path, so the link never revisits the tree"
+        );
       })
     );
   }
 );
 
-// A mutual link cycle between two real directories: a link is skipped only
-// when its real path is an ANCESTOR of the branch it sits on, so the walk
-// terminates and every file is matched through both of its link-reachable
-// paths.
 const mutualCycleTree = {
   "/proj/a/x.ts": "",
   "/proj/b/y.ts": "",
@@ -422,17 +415,16 @@ layer(platformWith(mutualCycleTree, mutualCycleOptions), { timeout: "10 seconds"
       Effect.gen(function* () {
         const pattern = yield* GlobPattern.compile("**/*.ts");
         const descend16 = yield* descend(pattern, { cwd: "/proj", followSymlinks: true });
-        assert.deepStrictEqual(descend16, ["a/to-b/y.ts", "a/x.ts", "b/to-a/x.ts", "b/y.ts"]);
+        assert.deepStrictEqual(
+          descend16,
+          ["a/to-b/y.ts", "a/x.ts", "b/to-a/x.ts", "b/y.ts"],
+          "a link is skipped only when its real path is an ancestor of its own branch"
+        );
       })
     );
   }
 );
 
-// A symlinked directory whose real path cannot be resolved. The walk never
-// enters it (the guard cannot reason about a link it cannot identify), and
-// the failure is VISIBLE under onUnreadable exactly as a failed readDirectory
-// is — a silent skip would hand back a smaller answer with nothing reporting
-// it, the failure "fail" exists to prevent. NotFound stays the benign race.
 const unresolvableTree = {
   "/proj/real/dir/inner.ts": "",
   "/proj/src/a.ts": "",
@@ -451,7 +443,11 @@ layer(platformWith(unresolvableTree, unresolvableOptions), { timeout: "10 second
         const error = yield* Effect.flip(descend(pattern, { cwd: "/proj", followSymlinks: true }));
         assert.strictEqual(error._tag, "DescendError");
         assert.strictEqual(error.reason, "unreadableDirectory");
-        assert.strictEqual(error.path, "src/linkdir");
+        assert.strictEqual(
+          error.path,
+          "src/linkdir",
+          "a silent skip of an unidentifiable link would hand back a smaller answer with nothing reporting it"
+        );
       })
     );
 
@@ -486,7 +482,6 @@ layer(platformWith(unresolvableTree, unresolvableOptions), { timeout: "10 second
   }
 );
 
-// The same link, vanishing between the listing and the resolve.
 const vanishedLinkOptions = {
   symlinks: { "/proj/src/linkdir": "/proj/real/dir" },
   unresolvable: { "/proj/src/linkdir": "NotFound" as const },
@@ -508,7 +503,6 @@ layer(platformWith(unresolvableTree, vanishedLinkOptions), { timeout: "10 second
   }
 );
 
-// An unreadable directory inside the walked subtree.
 const unreadableTree = {
   "/proj/src/a.ts": "",
   "/proj/src/locked/b.ts": "",
@@ -539,8 +533,6 @@ layer(platformWith(unreadableTree, unreadableOptions), { timeout: "10 seconds" }
 
     it.effect("a single-level pattern never reads the unreadable subdirectory at all", () =>
       Effect.gen(function* () {
-        // src/*.ts cannot match below one level, so descend never descends —
-        // and the unreadable directory cannot fail a walk that never reads it.
         const pattern = yield* GlobPattern.compile("src/*.ts");
         const descend19 = yield* descend(pattern, { cwd: "/proj" });
         assert.deepStrictEqual(descend19, ["src/a.ts"]);
@@ -555,10 +547,12 @@ layer(platformWith(unreadableTree, unreadableOptions), { timeout: "10 seconds" }
         assert.strictEqual(result.unreadable.length, 1);
         const [entry] = result.unreadable;
         assert.strictEqual(entry?.path, "src/locked");
-        // The cause is the very PlatformError the walk absorbed — the injected
-        // fault, not a re-read — so the caller never needs a second syscall.
         assert.strictEqual(entry?.cause._tag, "PlatformError");
-        assert.strictEqual(entry?.cause.reason._tag, "PermissionDenied");
+        assert.strictEqual(
+          entry?.cause.reason._tag,
+          "PermissionDenied",
+          "the cause is the injected fault the walk absorbed, not a re-read"
+        );
       })
     );
 
@@ -576,7 +570,6 @@ layer(platformWith(unreadableTree, unreadableOptions), { timeout: "10 seconds" }
   }
 );
 
-// Branches no pattern alternative can reach: an unreadable directory and a tree past the depth cap.
 const scopedTree = {
   "/proj/apps/x/package.json": "",
   "/proj/packages/a/test/x.test.ts": "",
@@ -654,7 +647,6 @@ layer(platformWith(scopedTree, scopedOptions), { timeout: "10 seconds" })("desce
   );
 });
 
-// A directory that vanishes between its parent's listing and its own read.
 const vanishedTree = { "/proj/src/a.ts": "" };
 const vanishedOptions = { vanished: HashSet.make("/proj/src/gone") };
 
@@ -677,8 +669,6 @@ layer(platformWith(vanishedTree, vanishedOptions), { timeout: "10 seconds" })("d
   );
 });
 
-// The walk BASE itself is unreadable: its cwd-relative path is the empty
-// string, so the record entry carries the `""` sentinel — with its cause.
 const unreadableBaseTree = { "/proj/src/a.ts": "" };
 const unreadableBaseOptions = { unreadable: HashSet.make("/proj") };
 
@@ -687,7 +677,6 @@ layer(platformWith(unreadableBaseTree, unreadableBaseOptions), { timeout: "10 se
   (it) => {
     it.effect("records the base as the empty-string path, carrying the cause, with no matches", () =>
       Effect.gen(function* () {
-        // No literal prefix, so the walk starts at cwd itself.
         const pattern = yield* GlobPattern.compile("**/*.ts");
         const result = yield* descend(pattern, { cwd: "/proj", onUnreadable: "record" });
         assert.deepStrictEqual(result.matches, []);
@@ -700,7 +689,6 @@ layer(platformWith(unreadableBaseTree, unreadableBaseOptions), { timeout: "10 se
   }
 );
 
-// A tree deep enough to trip a small maxDepth.
 const deepTree = { "/proj/a/b/c/d.ts": "" };
 
 layer(platform(deepTree), { timeout: "10 seconds" })("descend, depth cap", (it) => {
@@ -725,8 +713,6 @@ layer(platform(deepTree), { timeout: "10 seconds" })("descend, depth cap", (it) 
   );
 });
 
-// A readable tree ABOVE the walk root: escapes would find real files here, so
-// an empty answer proves confinement rather than accidental absence.
 const escapeTree = {
   "/secret/token.txt": "",
   "/proj/readme.md": "",
@@ -738,7 +724,7 @@ layer(platform(escapeTree), { timeout: "10 seconds" })("descend, cwd confinement
     Effect.gen(function* () {
       const pattern = yield* GlobPattern.compile("../secret/token.txt");
       const descend29 = yield* descend(pattern, { cwd: "/proj" });
-      assert.deepStrictEqual(descend29, []);
+      assert.deepStrictEqual(descend29, [], "/secret holds a real file, so [] proves confinement, not absence");
     })
   );
 
@@ -752,9 +738,6 @@ layer(platform(escapeTree), { timeout: "10 seconds" })("descend, cwd confinement
 
   it.effect("interior .. segments that stay under cwd are refused only when they climb above it", () =>
     Effect.gen(function* () {
-      // src/../readme.md never leaves /proj — matching is lexical and walked
-      // paths carry no "..", so this is still zero matches, but it must not
-      // be conflated with an escape defect: both answers are [] by contract.
       const pattern = yield* GlobPattern.compile("src/../../secret/token.txt");
       const descend31 = yield* descend(pattern, { cwd: "/proj" });
       assert.deepStrictEqual(descend31, []);
@@ -762,8 +745,6 @@ layer(platform(escapeTree), { timeout: "10 seconds" })("descend, cwd confinement
   );
 });
 
-// A FILE named .git — the submodule/worktree gitlink layout. Prune suppresses
-// directories only; the file stays matchable.
 const gitlinkTree = {
   "/proj/sub/.git": "",
   "/proj/sub/main.ts": "",
@@ -782,45 +763,35 @@ layer(platform(gitlinkTree), { timeout: "10 seconds" })("descend, prune is direc
   );
 });
 
-// The overloads are a type-level contract, and the thing that makes them safe
-// is what `DescendOptions` REFUSES: if it admitted `"record"`, a value widened
-// to it would pick the array-returning overload at compile time while the
-// implementation resolved a `DescendResult` at runtime, and every array method
-// on that result would fail with no type error anywhere. These assertions run
-// at typecheck, not at runtime — `types:check` is what enforces them.
 describe("descend — overload resolution", () => {
   it.effect("resolves each options shape to the right return type", () =>
     Effect.gen(function* () {
       type SuccessOf<T> = T extends Effect.Effect<infer A, unknown, unknown> ? A : never;
       const pattern = yield* GlobPattern.compile("**/*", GlobPatternOptions.make({}));
 
-      // An inline literal carrying "record" selects the DescendResult overload.
       const inline = descend(pattern, { cwd: "/x", onUnreadable: "record" });
       const _inline: SuccessOf<typeof inline> = DescendResult.make({ matches: [], unreadable: [] });
 
-      // So does a value annotated as DescendRecordOptions — the case a bare
-      // intersection got wrong, because widening erased the literal.
       const recordOpts: DescendRecordOptions.Encoded = { cwd: "/x", onUnreadable: "record" };
       const viaRecord = descend(pattern, recordOpts);
       const _viaRecord: SuccessOf<typeof viaRecord> = DescendResult.make({ matches: [], unreadable: [] });
 
-      // DescendOptions is the array contract and stays that way.
       const plainOpts: DescendOptions.Encoded = { cwd: "/x", onUnreadable: "skip" };
       const viaPlain = descend(pattern, plainOpts);
       const _viaPlain: SuccessOf<typeof viaPlain> = ["a.ts"];
       void [_inline, _viaRecord, _viaPlain];
 
-      // The guard itself: "record" is not a member of DescendOptions, so it
-      // cannot reach the array-returning overload by being widened first.
       const _refused: "record" extends DescendOptions.Encoded["onUnreadable"] ? true : false = false;
-      assert.isFalse(_refused);
+      assert.isFalse(
+        _refused,
+        'a widened DescendOptions must never carry "record" into the array overload; types:check enforces these annotations'
+      );
 
       assert.isFunction(descend);
     })
   );
 });
 
-// Faults target stat independently from directory reads at every descent entry point.
 for (const reason of ["PermissionDenied", "Unknown", "NotFound"] as const) {
   for (const { label, source, target, relative } of [
     { label: "pruned directory", source: "**/*.{ts,tsx}", target: "/proj/node_modules", relative: "node_modules" },

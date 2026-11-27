@@ -1,16 +1,3 @@
-// The JWT segment codec — read a payload, or frame an unsigned token — for the
-// two places this package reads a runner-issued token's claims.
-//
-// **No signature verification, deliberately.** Every token read here was
-// handed to this process by the runner that started it, and the claim read
-// scopes a request (`actionsResults`) or is republished for a verifier
-// elsewhere (`OidcTokenIssuer`); neither authorizes anything on the strength
-// of the claim alone. Do not "fix" it here.
-//
-// Core `Base64Url` does the base64url work, so no `Buffer` is involved: it is
-// strict about the alphabet where Node's decoder is forgiving, which is why
-// there is a test whose payload actually contains `-` and `_`.
-
 import { $GithubActionsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Base64Url from "effect/encoding/Base64Url";
@@ -152,6 +139,10 @@ const codecFailure = (cause: unknown): JwtPayloadFailure =>
 /**
  * The decoded payload of `token` — the middle segment, base64url JSON —
  * without any check on the signature.
+ *
+ * **Gotchas**
+ *
+ * Payload decoding deliberately does not verify signatures: runner-issued claims scope requests or are republished for another verifier and never authorize an action here. Keep core Base64Url's strict alphabet decoding, including - and _, rather than Node's forgiving decoder. unsignedJwt is the framing counterpart for token fixtures.
  *
  * **Example** (Read claims from an unsigned fixture)
  *

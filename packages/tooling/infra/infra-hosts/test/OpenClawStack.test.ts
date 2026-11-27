@@ -159,18 +159,16 @@ describe("OpenClaw host stack", () => {
       const sentinel = "resolved-passphrase-sentinel-9d2e";
       const recording = makeRecording();
       const path = yield* writeConfigFile(withBackup);
-      // The passphrase reaches the backup step only through the deploy process
-      // environment `op run` builds; here it sits in the stack's configuration
-      // surface, which the stack must never copy into props or state.
       const { stack, state } = makeStack(recording, {
         [openClawConfigEnvKey]: path,
         OPENCLAW_BACKUP_PASSPHRASE: sentinel,
       });
       yield* deploy(stack, { stage: "prod" });
 
-      // Step props carry only the ordering edge, never a credential variable.
       const envKeys = A.dedupe(A.flatMap(recording.commands, ({ env }) => R.keys(env)));
-      expect(envKeys).toEqual(["BEEP_HOSTS_AFTER"]);
+      expect(envKeys, "step props carry only the ordering edge, never a credential variable").toEqual([
+        "BEEP_HOSTS_AFTER",
+      ]);
 
       const persisted = yield* encodeJson({
         resources: state.store,
@@ -178,7 +176,10 @@ describe("OpenClaw host stack", () => {
         steps: recording.commands,
       });
       expect(persisted).toContain("op://beep-openclaw/backup/passphrase");
-      expect(persisted).not.toContain(sentinel);
+      expect(
+        persisted,
+        "the passphrase sits in the stack's configuration surface here, and the stack never copies it into props or state"
+      ).not.toContain(sentinel);
     })
   );
 });

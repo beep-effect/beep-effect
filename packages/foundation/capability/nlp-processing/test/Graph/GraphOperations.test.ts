@@ -237,10 +237,9 @@ describe("GraphExecutor", () => {
           expect((yield* (yield* ResultStore.ResultStore).stats).size).toBe(0);
           const graph = yield* EG.singleton("hello");
           const executor = yield* Executor.GraphExecutor;
-          // Far above MAX_PARALLEL_CONCURRENCY, so this exercises the clamp rather
-          // than the sequential default.
+          const farAboveMaxConcurrency = 1_000;
           const result = yield* executor.execute(graph, upper, {
-            strategy: Types.ExecutionStrategy.Parallel(1_000),
+            strategy: Types.ExecutionStrategy.Parallel(farAboveMaxConcurrency),
           });
 
           expect(A.map(result.newNodes, (n) => n.data)).toEqual(["HELLO"]);

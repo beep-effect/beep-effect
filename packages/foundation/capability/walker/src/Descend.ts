@@ -92,64 +92,29 @@ const DescendFailure = DescendErrorReason.mapMembers(
 );
 type DescendFailure = typeof DescendFailure.Type;
 
-/** Invalid descent wiring, raised as a defect rather than a recoverable failure. */
 class DescendDefect extends S.TaggedError<DescendDefect, { readonly brand: unique symbol }>($I`DescendDefect`)(
   "DescendDefect",
   { message: S.String },
   $I.annoteError<DescendDefect>("DescendDefect", { description: "Invalid downward traversal wiring." })
 ) {}
 
-/**
- * The traversal fields every `descend` options shape shares; `onUnreadable` is added per overload.
- */
 const descendOptionFields = {
-  /** Absolute directory the pattern is resolved against. Required — walker never reads `process.cwd()`. */
   cwd: S.String.pipe(
     $I.annoteKey("DescendOptions.cwd", { description: "Absolute directory the pattern is resolved against." })
   ),
-  /**
-   * Whether to descend into symlinked directories. Defaults to `false`: a
-   * symlinked directory is never entered (cycle safety). Under `true` links
-   * are followed with the cycle guard kept underneath, in `@actions/glob`'s
-   * `traversalChain` semantics: each descended directory records its real
-   * path on its own branch's ancestor chain (only the base and each link pay
-   * a `FileSystem.realPath`; a plain directory's is derived from its
-   * parent's), and a directory whose real path is already an ancestor of the
-   * current branch closes a cycle and is skipped — so link loops terminate
-   * while two sibling links resolving to the same target both enumerate. A
-   * link whose real path cannot be resolved is never entered, and the
-   * failure follows `onUnreadable` exactly as an unreadable directory does:
-   * `NotFound` is a benign race and stays silent, anything else fails typed
-   * by default, is recorded under `"record"`, and is forgotten under
-   * `"skip"`. Following links matches `@actions/glob`'s default
-   * `followSymbolicLinks: true` and Node's recursive
-   * `fs.promises.readdir` — but the cycle guard is `@actions/glob`'s
-   * alone: Node's recursive `readdir` keeps no traversal chain and recurses
-   * without bound on a link loop.
-   */
   followSymlinks: S.optionalKey(S.Boolean).pipe(
     $I.annoteKey("DescendOptions.followSymlinks", {
       description: "Whether symlinked directories are followed with per-branch cycle safety.",
     })
   ),
-  /**
-   * Whether a failed stat is skipped (the default) or fails typed with
-   * `reason: "statFailed"` and its original filesystem cause. `NotFound`
-   * remains zero matches in either mode. Independent of `onUnreadable`,
-   * which governs directory reads and symlink real-path resolution. Strict
-   * mode stats every listed entry before matching or directory pruning; it
-   * still never descends into pruned or unreachable directories.
-   */
   onStatError: S.optionalKey(OnStatError).pipe(
     $I.annoteKey("DescendOptions.onStatError", {
       description: "Whether non-NotFound stat failures are skipped (default) or fail typed.",
     })
   ),
-  /** Hard cap on directory depth below the pattern's literal prefix. Defaults to 256. */
   maxDepth: S.optionalKey(DepthCap).pipe(
     $I.annoteKey("DescendOptions.maxDepth", { description: "Hard cap on directory depth below the literal prefix." })
   ),
-  /** Directory names never descended into. Defaults to `["node_modules", ".git"]`; a custom list replaces the default. */
   prune: S.String.pipe(
     S.Array,
     S.optionalKey,
@@ -162,6 +127,14 @@ const descendOptionFields = {
  *
  * `onUnreadable` admits `"fail"` and `"skip"` only. `descend` accepts the
  * unbranded `DescendOptions.Encoded` shape, so a caller passes an object literal.
+ *
+ * `cwd` is required: the walk never reads `process.cwd()`. `maxDepth`
+ * defaults to 256 levels below the pattern's literal prefix. `prune` defaults
+ * to `["node_modules", ".git"]`, a custom list replaces that default, and it
+ * suppresses directories only, so a file named `.git` (a gitlink) stays
+ * matchable. `onStatError` is independent of `onUnreadable`: under `"fail"`
+ * every listed entry is stat'ed before matching or pruning, yet pruned and
+ * unreachable directories are still never entered.
  *
  * **Example** (Construct array-returning descent options)
  *
@@ -466,16 +439,8 @@ export class DescendError extends S.TaggedError<DescendError, { readonly brand: 
   }
 }
 
-/** Directory names never descended into unless the caller overrides `prune`. */
 const DEFAULT_PRUNE: ReadonlyArray<string> = ["node_modules", ".git"];
 
-/**
- * Whether a cwd-relative pattern path lexically climbs above `cwd` via `..`
- * segments. Walked paths never contain `..`, so such a pattern can never match
- * one — the answer is zero matches, and no filesystem access outside `cwd`
- * ever happens (a pattern must not enumerate the tree above its documented
- * root).
- */
 const escapesCwd = (relative: string): boolean =>
   pipe(
     Str.split(relative, "/"),
@@ -484,18 +449,8 @@ const escapesCwd = (relative: string): boolean =>
     A.some((depth) => depth < 0)
   );
 
-/** Shared empty ancestor chain: frames under `followSymlinks: false` never consult theirs. */
 const NO_ANCESTORS: ReadonlyArray<string> = [];
 
-/**
- * A directory queued for reading: its cwd-relative POSIX path, its absolute
- * path, its depth below the base, and — only under `followSymlinks` — the
- * real paths of this branch's ancestors, inherited from the parent frame.
- * The chain is per-branch, never walk-global: it is `@actions/glob`'s
- * `traversalChain` carried on the worklist, so a link is a cycle only when it
- * resolves to an ancestor of the branch it sits on, and two sibling links to
- * one target both enumerate.
- */
 const DescendFrame = S.Struct({
   relative: S.String.pipe($I.annoteKey("DescendFrame.relative", { description: "The cwd-relative POSIX path." })),
   absolute: S.String.pipe(
@@ -508,17 +463,10 @@ const DescendFrame = S.Struct({
 }).pipe($I.annoteSchema("DescendFrame", { description: "A queued directory and its per-branch cycle guard." }));
 type DescendFrame = typeof DescendFrame.Type;
 
-/**
- * The one options shape spanning all three modes. Not exported: the PUBLIC
- * types are deliberately split so `"record"` cannot reach the array-returning
- * overload, and this internal union is what the single implementation body
- * needs in order to still branch on all three values.
- */
 type DescendAnyOptions = Omit<DescendOptions.Encoded, "onUnreadable"> & {
   readonly onUnreadable?: OnUnreadable;
 };
 
-/** The resolved options of one walk, plus the record-mode sink its absorptions append to. */
 type DescendSettings = {
   readonly pattern: GlobPattern;
   readonly cwd: string;
@@ -527,14 +475,11 @@ type DescendSettings = {
   readonly onUnreadable: OnUnreadable;
   readonly onStatError: OnStatError;
   readonly followSymlinks: boolean;
-  /** Populated only under "record"; `finish` decides the return shape. */
   readonly unreadable: Array<UnreadableDirectory>;
 };
 
-/** How many entries of one directory are classified at once; each classification is a `stat`. */
 const ENTRY_CONCURRENCY = 16;
 
-/** The two growing outputs of the walk: matched files and the worklist of directories. */
 type DescendSinks = {
   readonly results: Array<string>;
   readonly frames: Array<DescendFrame>;
@@ -554,7 +499,6 @@ const settingsOf = (pattern: GlobPattern, options: DescendAnyOptions): DescendSe
 const isFileKind = (kind: FileSystem.File.Info["type"]): boolean => kind === "File";
 const isDirectoryKind = (kind: FileSystem.File.Info["type"]): boolean => kind === "Directory";
 
-/** The stat-resolved type; missing stays empty, other failures follow the explicit stat policy. */
 const typeOf = Effect.fnUntraced(function* (settings: DescendSettings, absolute: string, relative: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.stat(absolute).pipe(
@@ -570,7 +514,6 @@ const typeOf = Effect.fnUntraced(function* (settings: DescendSettings, absolute:
   );
 });
 
-/** Whether `absolute` is itself a symlink. `readLink` succeeds only on links; any failure means "not one". */
 const isSymbolicLink = Effect.fnUntraced(function* (absolute: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readLink(absolute).pipe(
@@ -579,13 +522,6 @@ const isSymbolicLink = Effect.fnUntraced(function* (absolute: string) {
   );
 });
 
-/**
- * The `onUnreadable` policy for a failed `readDirectory` or `realPath` on
- * `relative`, answering `empty` when the walk continues. A `NotFound` is the
- * benign vanished-directory race and stays silent in every mode; anything
- * else fails typed under `"fail"`, is recorded with its cause under
- * `"record"`, and is forgotten under `"skip"`.
- */
 const absorbUnreadable =
   <A>(settings: DescendSettings, relative: string, empty: A) =>
   (error: PlatformError.PlatformError): Effect.Effect<A, DescendError> => {
@@ -601,17 +537,7 @@ const absorbUnreadable =
     return Effect.succeed(empty);
   };
 
-/**
- * The real path of a directory the cycle guard must identify — the walk
- * base, or a symlinked directory — or None when the walk must not enter it.
- * A link the resolver cannot resolve is one the guard cannot reason about:
- * recording a stand-in (the link's own path) would make every hop around a
- * loop look unseen, so the subtree is never queued. Whether the caller HEARS
- * about it follows `onUnreadable` exactly as a failed `readDirectory` does
- * (see `absorbUnreadable`). A silent skip here would hand a caller a smaller
- * answer with nothing reporting it, which is the failure `"fail"` exists to
- * prevent.
- */
+// decision: descend-symlink-cycle-guard
 const realPathOf = Effect.fnUntraced(function* (settings: DescendSettings, absolute: string, relative: string) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
@@ -619,14 +545,6 @@ const realPathOf = Effect.fnUntraced(function* (settings: DescendSettings, absol
     .pipe(Effect.asSome, Effect.catch(absorbUnreadable(settings, relative, O.none<string>())));
 });
 
-/**
- * A directory's entries. A directory that vanished between its parent's
- * listing and this read is a benign race and reads as empty; any other
- * failure means a subtree we were asked to enumerate is unreadable, and
- * (unlike walker's upward per-probe absorption, where the scan can still
- * succeed above) a swallowed subtree down here is silently missing
- * membership, so the default fails typed.
- */
 const readEntries = Effect.fnUntraced(function* (settings: DescendSettings, frame: DescendFrame) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs
@@ -634,17 +552,11 @@ const readEntries = Effect.fnUntraced(function* (settings: DescendSettings, fram
     .pipe(Effect.catch(absorbUnreadable(settings, frame.relative, A.empty<string>())));
 });
 
-/** Wrap the walk's success value per `onUnreadable`: a plain array unless "record" asked for the pair. */
 const finish = (settings: DescendSettings, matches: ReadonlyArray<string>): ReadonlyArray<string> | DescendResult =>
   OnUnreadable.is.record(settings.onUnreadable)
     ? DescendResult.make({ matches, unreadable: settings.unreadable })
     : matches;
 
-/**
- * The literal fast path: a single stat of the one path the pattern names
- * decides. Missing is zero matches, and so is a literal that climbs above
- * `cwd` — never stat outside the documented root.
- */
 const literalMatches = Effect.fnUntraced(function* (settings: DescendSettings, literal: string) {
   const path = yield* Path.Path;
   if (escapesCwd(literal)) return A.empty<string>();
@@ -652,18 +564,6 @@ const literalMatches = Effect.fnUntraced(function* (settings: DescendSettings, l
   return O.exists(typeOf1, isFileKind) ? A.of(literal) : A.empty<string>();
 });
 
-/**
- * The root frame of a magic pattern's walk, or None when there is nothing to
- * walk. The walk starts at the literal prefix; an absent base directory is an
- * EMPTY result, not an error, because zero matches is a normal glob answer. A
- * NEGATED pattern matches everything its inner pattern does NOT, including
- * paths outside the inner pattern's literal prefix, so it walks from `cwd`
- * itself. A prefix that climbs above `cwd` yields zero matches for the same
- * reason the literal fast path refuses it. Under `followSymlinks` the base's
- * real path seeds the root frame's ancestor chain — the `@actions/glob`
- * traversalChain position for the search path — so a link resolving back to
- * the base is the cycle it is, on every branch.
- */
 const resolveBase = Effect.fnUntraced(function* (settings: DescendSettings) {
   const path = yield* Path.Path;
   const base = settings.pattern.negated ? "" : Str.replace(/\/+$/, "")(settings.pattern.enumerationPrefix);
@@ -677,20 +577,7 @@ const resolveBase = Effect.fnUntraced(function* (settings: DescendSettings) {
   return O.map(real, (real): DescendFrame => ({ relative: base, absolute, depth: 0, ancestors: A.of(real) }));
 });
 
-/**
- * The ancestor chain a child directory is queued with, or None when it must
- * not be entered. A symlinked directory is skipped unless `followSymlinks`
- * asked for it; when it does, the cycle guard is `@actions/glob`'s
- * traversalChain carried per branch: every descended directory records its
- * real path on the frame's ancestor chain, and a directory whose real path is
- * already an ancestor of the current branch closes a cycle and is skipped.
- * Sibling links resolving to one target sit on separate branches, so both
- * enumerate — the parity the runner's globber has, which a walk-global
- * visited set would break. Only a LINK pays a `realPath`: a plain directory's
- * real path is its parent's real path (the chain's last entry — the base was
- * resolved up front, and every link since was) plus its own name, derived
- * with no syscall and no failure mode.
- */
+// decision: descend-symlink-cycle-guard
 const childAncestors = Effect.fnUntraced(function* (
   settings: DescendSettings,
   frame: DescendFrame,
@@ -711,7 +598,6 @@ const childAncestors = Effect.fnUntraced(function* (
   );
 });
 
-/** The frame a child directory is queued as, or None when it is skipped. Depth exhaustion is a typed failure, not a truncation. */
 const enqueueChild = Effect.fnUntraced(function* (
   settings: DescendSettings,
   frame: DescendFrame,
@@ -732,20 +618,9 @@ const enqueueChild = Effect.fnUntraced(function* (
   return O.some<DescendFrame>({ relative, absolute, depth: frame.depth + 1, ancestors: ancestors.value });
 });
 
-/** Whether an entry, were it a directory, is one the walk enters: not pruned, and the pattern could match below it. */
 const isDescendable = (settings: DescendSettings, entry: string, relative: string): boolean =>
   !HashSet.has(settings.prune, entry) && settings.pattern.mayMatchBelow(relative);
 
-/**
- * Classify one directory entry: a matching file yields its path, a
- * descendable directory yields its frame, anything else yields None. An
- * entry the pattern can neither match nor descend through (by
- * `GlobPattern.mayMatchBelow`) is skipped before `stat` under the default
- * policy. Strict stat mode probes every listed entry before matching or
- * pruning, so a failure cannot hide behind its name or suffix. Prune
- * suppresses DIRECTORIES only, per the option's contract — a FILE named
- * `.git` (a submodule or worktree gitlink) stays matchable.
- */
 const classifyEntry = Effect.fnUntraced(function* (settings: DescendSettings, frame: DescendFrame, entry: string) {
   const relative = frame.relative === "" ? entry : `${frame.relative}/${entry}`;
   const file = settings.pattern.matches(relative);
@@ -759,7 +634,6 @@ const classifyEntry = Effect.fnUntraced(function* (settings: DescendSettings, fr
   return yield* enqueueChild(settings, frame, entry, relative, absolute);
 });
 
-/** Route each classified entry, in listing order, to the results or the worklist. */
 const collectOutcomes = (sinks: DescendSinks, outcomes: ReadonlyArray<O.Option<string | DescendFrame>>): void => {
   for (const outcome of outcomes) {
     if (O.isNone(outcome)) continue;
@@ -768,7 +642,6 @@ const collectOutcomes = (sinks: DescendSinks, outcomes: ReadonlyArray<O.Option<s
   }
 };
 
-/** Not exported — `descend`'s overloads below carry the public documentation. */
 const descendImpl: (
   pattern: GlobPattern,
   options: DescendAnyOptions
@@ -791,7 +664,6 @@ const descendImpl: (
   const root = yield* resolveBase(settings);
   if (O.isNone(root)) return finish(settings, A.empty());
   const sinks: DescendSinks = { results: [], frames: [root.value] };
-  // The worklist is dequeued by head index; `classifyEntry` appends to it.
   for (const frame of walkFrames(sinks.frames)) {
     const entries = yield* readEntries(settings, frame);
     const outcomes = yield* Effect.forEach(entries, (entry) => classifyEntry(settings, frame, entry), {

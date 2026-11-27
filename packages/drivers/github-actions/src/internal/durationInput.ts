@@ -1,14 +1,9 @@
-// The schema for an option that takes an Effect `Duration.Input`, for the
-// option bags whose time budget a caller spells however Effect accepts it.
-
 import { $GithubActionsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import type * as Duration from "effect/Duration";
 
 const $I = $GithubActionsId.create("internal/durationInput");
 
-// Finite counts only: an unbounded budget is spelled `Duration.infinity` or
-// `"Infinity"`, never a bare non-finite number.
 const DurationInputShape = S.Union([
   S.Duration,
   S.Finite,
@@ -22,6 +17,10 @@ const DurationInputShape = S.Union([
  * An Effect `Duration.Input`, kept in the representation the caller wrote:
  * a `Duration`, a millisecond count, a bigint of nanoseconds, a `"5 seconds"`
  * string, an `[seconds, nanos]` pair or a unit record.
+ *
+ * **Gotchas**
+ *
+ * Finite numeric counts only: an unlimited budget must be Duration.infinity or the string Infinity, never a bare non-finite number. This schema retains the caller's Duration.Input representation for option-bag budgets.
  *
  * **Example** (Accept a duration spelled as text)
  *

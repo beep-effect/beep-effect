@@ -163,6 +163,11 @@ export const layerConformanceHttp = <E>(host: ConformanceHost<E>): Layer.Layer<C
  * Connects the kit client to the harness host over HTTP (sends
  * `server/discover` first).
  *
+ * **Details**
+ *
+ * The protocol layer is built into the caller's scope rather than provided,
+ * so it outlives `connect` and later calls on the returned client still route.
+ *
  * @internal
  * @since 0.0.0
  */
@@ -171,8 +176,6 @@ export const connectHttp = (
 ): Effect.Effect<McpClientConnection, McpSchema.McpError, ConformanceHttp | Scope.Scope> =>
   Effect.gen(function* () {
     const http = yield* ConformanceHttp;
-    // Built into the ambient scope, not `Effect.provide`d: the protocol must
-    // outlive `connect` so later calls on the returned client still route.
     const protocol = yield* Layer.build(
       layerProtocolHttp(
         McpHttpProtocolOptions.make({ url: http.url, ...(options === undefined ? {} : { client: options }) })
@@ -203,8 +206,6 @@ const encoder = new TextEncoder();
 const toBytes = (chunk: string | Uint8Array): Uint8Array => (P.isString(chunk) ? encoder.encode(chunk) : chunk);
 const encodeLine = S.encodeEffect(JsonRpcMessageFromLine);
 const decodeLine = S.decodeEffect(JsonRpcMessageFromLine);
-// Harness framing: a line the runner builds or the host emits always codes, so
-// a codec failure is a harness defect rather than a conformance outcome.
 const encodeLineOrDie = (message: JsonRpcMessage) => Effect.orDie(encodeLine(message));
 const decodeLineOrDie = (line: string) => Effect.orDie(decodeLine(line));
 const defaultRequestMetadata = Effect.orDie(requestMetadata(McpClientOptions.make({})));
@@ -218,6 +219,11 @@ const defaultRequestMetadata = Effect.orDie(requestMetadata(McpClientOptions.mak
  * production layer (`makeServerLayer(...)`) can be driven here to prove the
  * versions it really answers. {@link withStdioHost} wraps a host's
  * registrations in the runner's stateless transport instead.
+ *
+ * `use` runs only once the whole server layer is built. The transport answers
+ * as soon as it is up, but registrations may open databases or read bundles
+ * while they build, so a slow host never answers "tool not found"; a layer
+ * that fails to build dies as a harness defect.
  *
  * @internal
  * @since 0.0.0
@@ -236,19 +242,14 @@ export const withStdioServer =
           stderr: () => Sink.drain,
         });
         const serverLayer = Layer.provide(server, stdioLayer);
-        // The transport answers as soon as it is up, but a host's registrations
-        // may open databases or read bundles while they build. Hand `io` to the
-        // caller only once the whole server layer is built, or fail with the
-        // build's own failure, so a slow host cannot answer "tool not found".
-        const ready = yield* Deferred.make<void>();
+        const serverLayerBuilt = yield* Deferred.make<void>();
         const serverFiber = yield* Layer.build(serverLayer).pipe(
-          Effect.tap(() => Deferred.succeed(ready, void 0)),
+          Effect.tap(() => Deferred.succeed(serverLayerBuilt, void 0)),
           Effect.andThen(Effect.never),
           Effect.scoped,
           Effect.forkScoped
         );
-        // A host that fails to build is a harness defect, not an arm outcome.
-        yield* Effect.raceFirst(Deferred.await(ready), Fiber.join(serverFiber)).pipe(Effect.orDie);
+        yield* Effect.raceFirst(Deferred.await(serverLayerBuilt), Fiber.join(serverFiber)).pipe(Effect.orDie);
         yield* Stream.fromQueue(stdout).pipe(
           Stream.map(toBytes),
           decodeLines,
@@ -298,13 +299,16 @@ export const withStdioHost = <E>(host: ConformanceHost<E>) =>
  * Connects the kit client to a stdio instance of the host through
  * {@link layerProtocolNdjson} (sends `server/discover` first).
  *
+ * **Details**
+ *
+ * As in {@link connectHttp}, the protocol layer is built into the caller's
+ * scope: the NDJSON router fiber lives in that layer's scope.
+ *
  * @internal
  * @since 0.0.0
  */
 export const connectStdio = (io: StdioHost): Effect.Effect<McpClientConnection, McpSchema.McpError, Scope.Scope> =>
   Effect.gen(function* () {
-    // Same as `connectHttp`: the NDJSON router fiber lives in the protocol
-    // layer's scope, so the layer is built into the ambient scope.
     const protocol = yield* Layer.build(
       layerProtocolNdjson({
         write: (line) => io.sendChunk(`${line}\n`),
@@ -317,8 +321,6 @@ export const connectStdio = (io: StdioHost): Effect.Effect<McpClientConnection, 
 const errorOf = (exchange: McpHttpExchange) =>
   O.flatMap(A.head(exchange.messages), (message) => O.fromNullishOr(message.error));
 
-// One assertion for "the host answered this JSON-RPC error code", optionally
-// with the HTTP status the stateless transport pairs it with.
 const assertErrorCode = (
   exchange: McpHttpExchange,
   code: number,
@@ -413,14 +415,12 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
 
       it.effect("projects invalid arguments as a tool error and malformed arguments as InvalidParams", () =>
         Effect.gen(function* () {
-          // rc.117's 2026-07-28 adapter projects a tool validation failure as
-          // `isError: true` with a scrubbed message (upstream ToolsTest
-          // "distinguishes malformed requests from tool validation errors by
-          // protocol revision"); the kit adapter still classifies it as
-          // `InvalidParams` underneath, which the direct-dispatch test proves.
           const { rpc } = yield* connectHttp();
           const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.invalidArguments });
-          assert.isTrue(result.isError);
+          assert.isTrue(
+            result.isError,
+            "the 2026-07-28 adapter projects a validation failure as a scrubbed tool error; the kit still classifies it InvalidParams"
+          );
           assert.isUndefined(result.structuredContent);
           const [first] = result.content;
           const text = first?.type === "text" ? first.text : "";

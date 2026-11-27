@@ -1,15 +1,3 @@
-// The Actions `CacheService` choreography — reserve, upload, finalize; look up
-// — spelled once for the two services that speak it.
-//
-// `ActionCache` files a tar archive under a path-derived version and
-// `BlobStore.githubCache` files an envelope under a constant one, but the
-// three RPCs between them and their conflict semantics are identical. Each
-// caller supplies its own per-key `call` and its own `refused` constructor, so
-// the errors stay the caller's; this module owns only the protocol. It reaches
-// `effect` and the Twirp client and nothing heavier — the Azure transfer of
-// the bytes between the two RPCs stays in the three modules licensed to import
-// it (`__test__/reachability.test.ts`).
-
 import { $GithubActionsId } from "@beep/identity/packages";
 import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
@@ -82,6 +70,10 @@ export interface CacheServiceOptions<E> {
  * The per-key client both cache-backed services speak through: every RPC
  * resolves the backend, calls the cache service, and maps a Twirp failure into
  * the caller's error naming the key.
+ *
+ * **Gotchas**
+ *
+ * Share reserve/upload/finalize and lookup choreography between archive caches and envelope caches, retaining each caller's per-key failure constructors. This protocol-only module depends on Effect and Twirp; Azure byte transfer remains in the three licensed consumers so lighter modules do not acquire the SDK.
  *
  * **Example** (Build a per-key client)
  *

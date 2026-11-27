@@ -1,6 +1,3 @@
-// The rendered acceptance script is executed once to prove its fail-closed
-// usage path through Effect's real Node child-process service.
-
 import {
   makeOpenClawBundleHash,
   makeOpenClawDeploymentIntent,
@@ -126,27 +123,17 @@ const parseDocument = (json: string): { readonly [key: string]: unknown } => {
   return validated.pipe(O.getOrThrow);
 };
 
-/**
- * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the
- * shell actually executes, so assertions read as the script an operator sees.
- */
 const scriptWrapperPrefix = "/bin/bash --noprofile --norc -p -c '";
 
 const scriptBody = (rendered: string): string =>
   pipe(rendered, Str.slice(scriptWrapperPrefix.length, -1), Str.replace(/'"'"'/gu, "'"));
 
-/** Index of the first line matching `needle`, or `-1` when absent. */
 const lineIndexOf = (script: string, needle: string): number =>
   O.getOrElse(
     A.findFirstIndex(Str.split("\n")(script), (line) => Str.includes(needle)(line)),
     () => -1
   );
 
-/**
- * The executed part of a script, with the leading shell function definitions
- * dropped, so ordering assertions read the sequence rather than the helpers a
- * failure path calls into.
- */
 const mainSequence = (script: string): string => {
   const lines = Str.split("\n")(script);
   const lastFunctionEnd = A.reduce(lines, -1, (acc, line, index) => (line === "}" ? index : acc));
@@ -482,10 +469,10 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       const script = scriptBody(renderOpenClawStageScript(defaultGeneration));
       const nodeBinDir = defaultGeneration.nodeBinDir;
 
-      // The privileged install must never resolve `npm` through PATH: a user-writable directory
-      // ahead of it would execute an attacker's package manager as root, and `--ignore-scripts`
-      // is no defense once the package manager binary itself is attacker-controlled.
-      expect(script).not.toMatch(/sudo -n env PATH=\S+ npm install/u);
+      expect(
+        script,
+        "the privileged install never resolves npm through PATH, where a user-writable entry would run as root"
+      ).not.toMatch(/sudo -n env PATH=\S+ npm install/u);
       expect(script).toContain('"${npm_bin}" install --prefix');
       expect(script).toContain(`node_dir="$(/usr/bin/readlink -f '${nodeBinDir}')"`);
       expect(script).toContain(`node_bin="$(/usr/bin/readlink -f '${nodeBinDir}/node')"`);
@@ -495,15 +482,15 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       expect(script).toContain("assert_trusted_path \"${npm_bin}\" 'pinned npm binary'");
       expect(script).toContain('[ "${owner}" = 0 ] || fail "${label} is not root-owned: ${probe}"');
       expect(script).toContain('[ "$(( 8#${mode} & 8#22 ))" -eq 0 ]');
-      // The walk must terminate at the root inode, so a writable ancestor cannot be swapped.
-      expect(script).toContain('if [ "${probe}" = / ]; then break; fi');
-      // The guard runs before any privileged mutation the stage script performs.
+      expect(script, "the walk ends at the root inode, so a writable ancestor cannot be swapped").toContain(
+        'if [ "${probe}" = / ]; then break; fi'
+      );
       const guard = lineIndexOf(script, 'assert_trusted_path "${npm_bin}"');
       const install = lineIndexOf(script, "/usr/bin/sudo -n install -d");
       const privilegedNpm = lineIndexOf(script, '"${npm_bin}" install --prefix');
 
       expect(guard).toBeGreaterThanOrEqual(0);
-      expect(guard).toBeLessThan(install);
+      expect(guard, "the guard runs before any privileged mutation the stage script performs").toBeLessThan(install);
       expect(guard).toBeLessThan(privilegedNpm);
     })
   );
@@ -541,23 +528,24 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       ];
 
       for (const command of rendered) {
-        // A login shell sources the user-writable ~/.bash_profile before the first rendered line,
-        // which lets an unprivileged user define a `sudo` function and hijack the armed ticket.
-        pipe(Str.startsWith(scriptWrapperPrefix)(command), assertTrue);
+        assertTrue(
+          Str.startsWith(scriptWrapperPrefix)(command),
+          "never a login shell, which sources ~/.bash_profile where a planted sudo function hijacks the ticket"
+        );
         expect(command).not.toContain("/bin/bash -lc");
 
         const body = scriptBody(command);
 
-        // Every privilege-granting call is absolute: a bare `sudo` is satisfied by any shim
-        // earlier on PATH, and PATH is attacker-influenced until the pinned export runs.
-        expect(body).not.toMatch(/(?<!\/usr\/bin\/)\bsudo -n\b/u);
+        expect(
+          body,
+          "every sudo is absolute: a bare sudo is satisfied by any shim on PATH before the pinned export runs"
+        ).not.toMatch(/(?<!\/usr\/bin\/)\bsudo -n\b/u);
         const pinnedPath = lineIndexOf(body, "export PATH=/usr/bin:/bin");
         const firstSudo = lineIndexOf(body, "/usr/bin/sudo");
 
         expect(pinnedPath).toBeGreaterThanOrEqual(0);
-        // PATH is pinned before the first privileged call, never after it.
         if (firstSudo >= 0) {
-          expect(pinnedPath).toBeLessThan(firstSudo);
+          expect(pinnedPath, "PATH is pinned before the first privileged call, never after it").toBeLessThan(firstSudo);
         }
       }
     })
@@ -586,9 +574,10 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       expect(script).toContain(`'${generationDir}/node_modules/.bin/openclaw' config validate`);
       expect(script).toContain(`OPENCLAW_CONFIG_PATH='${generationDir}/openclaw.json'`);
       expect(script).toContain("STAGE-OK");
-      // Staging renders the unit (which targets `current`) but never moves the
-      // pointer itself — switching generations is the apply step's job alone.
-      expect(script).not.toContain("mv -T");
+      expect(
+        script,
+        "staging never moves the current pointer: switching generations is the apply step's job"
+      ).not.toContain("mv -T");
       expect(script).not.toContain("ln -s");
     })
   );
@@ -718,9 +707,8 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       expect(script).toContain("restore a snapshot before switching");
       expect(script).toContain("exit 75");
       expect(script).toContain("downgrade guard read a malformed recorded user_version");
-      // The guard must refuse before any privileged mutation is even reachable.
       expect(guard).toBeGreaterThan(-1);
-      expect(guard).toBeLessThan(firstPrivilegedStep);
+      expect(guard, "the guard refuses before any privileged mutation is reachable").toBeLessThan(firstPrivilegedStep);
     })
   );
 
@@ -762,8 +750,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       expect(script).toContain("alert identity-machine-id");
       expect(script).toContain("alert identity-runtime-dir");
       expect(script).toContain("DRIFT-AUDIT-COMPLETE");
-      // Alert-only: the audit reports, an operator redeploys.
-      pipe(Str.endsWith("exit 0")(script), assertTrue);
+      assertTrue(Str.endsWith("exit 0")(script), "alert-only: the audit reports, an operator redeploys");
       expect(script).not.toContain("systemctl --user restart");
     })
   );
@@ -821,7 +808,7 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
 
   it.layer(TestPlatform, { timeout: "30 seconds" })("renders a separate fail-closed live acceptance command", (it) =>
     it.effect(
-      "executes the rendered Bash script for real",
+      "executes the rendered Bash script once through the real Node child-process service to prove its fail-closed usage path",
       Effect.fnUntraced(function* () {
         const defaultGeneration = yield* defaultGenerationEffect;
         const script = scriptBody(renderOpenClawLiveAcceptanceScript(defaultGeneration));
@@ -865,13 +852,11 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       expect(script).toContain("OPENCLAW_BACKUP_PASSPHRASE is unset");
       expect(script).toContain("op://beep-openclaw/backup/passphrase");
       expect(script).toContain("gpg --batch --yes --symmetric --cipher-algo AES256");
-      // The backup host is dumb storage: mkdir, scp, and a sha256 read-back, nothing else.
-      expect(script).toContain("scp -q");
+      expect(script, "the backup host is dumb storage: mkdir, scp and a sha256 read-back").toContain("scp -q");
       expect(script).toContain("mkdir -p /srv/backups/openclaw");
       expect(script).toContain("BACKUP-FAIL: receipt sha256 mismatch");
       expect(script).toContain("BACKUP-OK");
-      // The passphrase reference travels; the material never does.
-      expect(script).not.toContain("--passphrase ");
+      expect(script, "the passphrase reference travels; the material never does").not.toContain("--passphrase ");
     })
   );
 
@@ -914,10 +899,10 @@ describe("@beep/infra-hosts OpenClaw generation", () => {
       for (const artifact of artifacts) {
         expect(artifact).not.toContain("OPENCLAW_GATEWAY_TOKEN=");
       }
-      // The unit strips inherited credentials rather than carrying them.
-      expect(renderOpenClawUnit(defaultGeneration)).toContain(
-        "UnsetEnvironment=OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN"
-      );
+      expect(
+        renderOpenClawUnit(defaultGeneration),
+        "the unit strips inherited credentials rather than carrying them"
+      ).toContain("UnsetEnvironment=OP_SERVICE_ACCOUNT_TOKEN OP_SESSION OP_CONNECT_TOKEN OPENCLAW_GATEWAY_TOKEN");
     })
   );
 });

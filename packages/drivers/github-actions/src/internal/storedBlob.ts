@@ -6,11 +6,6 @@ import type * as S from "effect/Schema";
 import type { BlobEnvelopeError } from "../BlobEnvelope.ts";
 import type { BlobStoreError, BlobStoreShape, StoredBlob } from "../BlobStore.ts";
 
-// The envelope half of every `BlobStore` backend. A backend moves raw bytes
-// under a key — an S3 object, an Actions-cache entry — and this module frames
-// them on the way in and reads them back on the way out, so the `get` and
-// `put` members are spelled once and only the transport differs.
-
 /**
  * The `get` member over a backend's raw read: `Option.none()` is a miss, a
  * fetched envelope decodes through `schema`.

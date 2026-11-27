@@ -223,11 +223,7 @@ export const withSanitizedToolSpan: {
 
 type JsonObject = Readonly<Record<string, unknown>>;
 
-// The session header a stateful (pre-2026-07-28) transport mints at
-// `initialize` and echoes on every later request of that session
-// (`McpServer.ts` `mcpSessionIdHeader`, which upstream keeps private). The
-// stateless runtime never issues it; the read stays for hosts still on a
-// session-era adapter and is deleted with the last such host.
+// decision: legacy-session-caller-read
 const mcpSessionIdHeader = "mcp-session-id";
 
 const toolBoundaryFailureText = "Tool call failed before producing a structured result.";
@@ -244,13 +240,6 @@ const localDefsRefKey = (ref: string): O.Option<string> =>
     ? O.some(decodeJsonPointerSegment(Str.slice(localDefsRefPrefix.length)(ref)))
     : O.none();
 
-// rc.117 encodes a no-argument tool's params as the non-null wildcard
-// `{ not: { type: "null" } }`, which admits objects but carries no `type`;
-// a parameter class with no fields may also render as `anyOf: [object, array]`.
-// `McpSchema.ToolJson` requires a top-level `type: "object"`, and upstream
-// `registerToolkit` dies on that decode, so the object branch is recognized
-// and the root type added here (measured against the installed rc.117,
-// 2026-09-22, after upstream's own top-level `$ref` inlining).
 const isNonNullWildcard = (target: JsonObject): boolean =>
   !("type" in target) && isJsonObject(target.not) && target.not.type === "null";
 
@@ -278,9 +267,7 @@ const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
  */
 export const withTopLevelObjectInputSchemaForTesting = withTopLevelObjectInputSchema;
 
-// Mirrors rc.117 `McpServer.ts` `toolJsonSchema`: MCP requires an object
-// root, so a top-level `$ref` is inlined from the document's definitions
-// (`internal/structured-output.ts` `resolveTopLevelReference`).
+// Adapted from effect McpServer.ts toolJsonSchema and structured-output.ts resolveTopLevelReference (MIT).
 const inlineTopLevelReference = (
   document: JsonSchema.Document<"draft-2020-12">
 ): JsonSchema.Document<"draft-2020-12"> => {
@@ -301,9 +288,6 @@ const toolJsonSchema = (schema: S.Constraint, strict: boolean): JsonObject => {
   const document = inlineTopLevelReference(
     S.toJsonSchemaDocument(schema, {
       onExcessProperty: strict ? "error" : "ignore",
-      // Upstream's template-pattern compiler cannot resolve Reference parts.
-      // Keep scalar/union/template fragments inline; structured and recursive
-      // schemas still use references. Runtime codecs are unchanged.
       referencePolicy: ({ ast, identifier }) =>
         SchemaAST.isObjects(ast) || SchemaAST.isArrays(ast) || SchemaAST.isDeclaration(ast) ? identifier : undefined,
     })
@@ -311,10 +295,6 @@ const toolJsonSchema = (schema: S.Constraint, strict: boolean): JsonObject => {
   return R.isEmptyRecord(document.definitions) ? document.schema : { ...document.schema, $defs: document.definitions };
 };
 
-// Request services must come from the invocation, including when a handler
-// is registered during a request (rc.117 `McpServer.ts` `omitRequestServices`).
-// The dispatch anchor joins the list so a value app composition provides per
-// request is never shadowed by one captured at layer build.
 const omitRequestServices = Context.omit(
   McpRequestContext,
   McpServerClient,
@@ -336,11 +316,7 @@ const boundaryFailureResult = CallToolResult.make({
   content: [{ type: "text", text: toolBoundaryFailureText }],
 });
 
-// Dual-read of the caller: `McpRequestContext` is present on every rc.117
-// dispatch (stateless and legacy); `McpServerClient` only on an initialized
-// legacy session. The session header is a stateful-transport fact, so it is
-// read only when such a client exists; a stateless dispatch always reports
-// `sessionId: None`, whatever headers the POST carried.
+// decision: legacy-session-caller-read
 const readCaller = (
   requestContext: O.Option<McpRequestContext["Service"]>,
   client: O.Option<McpServerClient["Service"]>,
@@ -356,9 +332,6 @@ const readCaller = (
   return O.map(clientId, (id) => McpCallerIdentity.make({ clientId: S.Natural.make(id), sessionId }));
 };
 
-// What a handler can fail with: a declared failure (a tagged schema class or
-// an `Error`), or upstream's `AiError` for parameter validation. The
-// classifier below narrows with guards, so no wider channel is needed.
 type ToolHandlerError = Error | AiError.AiError | { readonly _tag: string };
 
 type ToolHandlerResult = {
@@ -378,9 +351,6 @@ const textContent = (encoded: unknown): CallToolResult["content"] =>
         },
       ];
 
-// Declared failures return their encoded payload; anything else is classified
-// by origin in `classifyToolFailure`. The `api_key_required` envelope is the
-// one declared failure translated to a non-error.
 const projectToolResult = (result: ToolHandlerResult): Effect.Effect<CallToolResult, ToolHandlerError> =>
   result.isFailure && result.failureOrigin !== "handler"
     ? Effect.failCause(
@@ -395,8 +365,6 @@ const projectToolResult = (result: ToolHandlerResult): Effect.Effect<CallToolRes
             ToolHandlerPayload.make({ result: result.result, encodedResult: result.encodedResult })
           ),
           () =>
-            // Effect 4.1.4 encodes a Schema.Void success as `null`; like
-            // upstream McpServer, an absent result has no content at all.
             !result.isFailure && result.result === undefined
               ? CallToolResult.make({ isError: false, content: [] })
               : CallToolResult.make({
@@ -409,8 +377,6 @@ const projectToolResult = (result: ToolHandlerResult): Effect.Effect<CallToolRes
         )
       );
 
-// Interruption propagates; anything else is logged, reported and scrubbed to
-// the boundary text so schema stacks and local paths never reach the wire.
 const makeInternalToolError =
   (services: Context.Context<never>) =>
   (cause: Cause.Cause<unknown>): Effect.Effect<CallToolResult, never> => {
@@ -423,9 +389,6 @@ const makeInternalToolError =
         );
   };
 
-// Upstream classification (rc.117 `registerToolkit` `handleCause`):
-// parameter-origin validation errors are JSON-RPC `InvalidParams`,
-// handler-origin declared failures are tool errors, the rest is internal.
 const makeToolFailureClassifier = <Tools extends Record<string, AiTool.Any>>(
   tool: AiTool.Any,
   internalToolError: (cause: Cause.Cause<unknown>) => Effect.Effect<CallToolResult, never>
@@ -456,9 +419,6 @@ const makeToolFailureClassifier = <Tools extends Record<string, AiTool.Any>>(
   };
 };
 
-// Wire schemas mirror rc.117: strict tools reject excess properties, dynamic
-// tools carry their raw JSON Schema, and the no-argument root patch applies
-// after upstream's top-level `$ref` inlining.
 const wireToolSchemas = Effect.fnUntraced(function* (tool: AiTool.Any) {
   const strict = AiTool.getStrictMode(tool) === true;
   const rawJsonSchema = AiTool.isDynamic(tool) ? tool.jsonSchema : undefined;
@@ -484,8 +444,6 @@ const wireToolFor = (
   const description = AiTool.getDescription(tool);
   return WireTool.make({
     name: tool.name,
-    // Optional wire fields decode as absent-or-valued, never as an explicit
-    // undefined, so they are spread in conditionally.
     ...O.getOrUndefined(O.map(O.fromUndefinedOr(description), (description) => ({ description }))),
     inputSchema: schemas.inputSchema,
     outputSchema: schemas.outputSchema,
@@ -503,10 +461,6 @@ const wireToolFor = (
   });
 };
 
-// Read the caller at the request boundary, not inside the handler:
-// `provideContext` below *merges* (provided services win on key collisions and
-// request-only services survive), so reading once here keeps the caller
-// identity a fact of the dispatch instead of something each handler rediscovers.
 const readRequestCaller = Effect.gen(function* () {
   const requestContext = yield* Effect.serviceOption(McpRequestContext);
   const client = yield* Effect.serviceOption(McpServerClient);
@@ -514,8 +468,6 @@ const readRequestCaller = Effect.gen(function* () {
   return readCaller(requestContext, client, httpRequest);
 });
 
-// `Toolkit.toLayer` keys each built handler by its tool id, so a key with that
-// string is the handler's runtime identity in the toolkit's context.
 const toolHandlerKey = (toolId: string): Context.Key<never, AiTool.Handler<string>> =>
   Context.Service<never, AiTool.Handler<string>>(toolId);
 
@@ -531,9 +483,6 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
     >
   ).pipe(
     Effect.updateContext((context: Context.Context<Exclude<AiTool.HandlersFor<Tools>, McpRequestContext>>) =>
-      // Toolkit handlers also retain the context in which their layer was
-      // built; each one is keyed by its tool id, so re-adding under the same
-      // key replaces it with a handler whose retained context is trimmed.
       A.reduce(R.values<string, AiTool.Any>(toolkit.tools), context, (services, tool) =>
         O.match(Context.getOption(services, toolHandlerKey(tool.id)), {
           onNone: () => services,
@@ -555,10 +504,6 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
     yield* registry.addTool({
       tool: wireToolFor(tool, schemas),
       annotations: tool.annotations,
-      // Contextually typed from `addTool`'s own `handle: (payload: any) => ...`
-      // parameter position (mirrors rc.117 McpServer.registerToolkit); dispatch
-      // is looked up by tool name at runtime, so no narrower parameter type is
-      // available here.
       handle: Effect.fn("McpKit.handle")(function* (payload) {
         const readRequestCaller2 = yield* readRequestCaller;
         const requestServices = Context.add(services, CurrentMcpCaller, readRequestCaller2) as Context.Context<
@@ -607,11 +552,19 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  *    `sessionId: None`.
  * 3. A no-argument tool's `inputSchema` gains its top-level `type: "object"`
  *    (rc.117 still renders an empty parameter class as a non-null wildcard,
- *    which `McpSchema.ToolJson` rejects).
+ *    or as an `anyOf` with an object branch, which `McpSchema.ToolJson`
+ *    rejects). Scalar, union and template fragments are inlined rather than
+ *    referenced, since upstream's template-pattern compiler cannot resolve
+ *    reference parts; objects, arrays and declarations keep their `$defs`.
  * 4. The `api_key_required` envelope is projected as a non-error result by
  *    `translateApiKeyRequired`; every other failure follows upstream
  *    (declared failures are tool errors, invalid arguments are `InvalidParams`).
- * 5. Internal failures are scrubbed to a fixed boundary text.
+ * 5. Internal failures are logged, reported and scrubbed to a fixed boundary
+ *    text, so schema stacks and local paths never reach the wire;
+ *    interruption propagates.
+ * 6. The dispatch anchor joins the request-scoped services omitted from the
+ *    context captured at layer build, and each built handler's retained
+ *    context is trimmed the same way, so a per-request value is never shadowed.
  *
  * **Example** (Register sanitized toolkit)
  *

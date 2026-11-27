@@ -331,6 +331,13 @@ export class AppDirOverrides extends S.Opaque<AppDirOverrides, { readonly brand:
  * representation, not an input format, so write `fallbackDir: ".myapp"` and
  * omit `dirs` when unused.
  *
+ * **Gotchas**
+ *
+ * The last two rungs, `$HOME/<fallbackDir>` and then `$HOME/.<namespace>`,
+ * are not the XDG spec's per-kind defaults (`~/.config`, `~/.local/share`, …):
+ * all four kinds collapse to the one directory. A CLI wanting spec defaults
+ * passes them as `dirs` overrides.
+ *
  * **Example** (Decode application directory options)
  *
  * ```ts
@@ -399,21 +406,6 @@ export class AppDirsOptions extends S.Opaque<AppDirsOptions, { readonly brand: u
   )
 ) {}
 
-/**
- * Resolve one directory kind through the five-level precedence.
- *
- * **Details**
- *
- * 1. an explicit `dirs.<kind>` override, absolute (checked at layer construction);
- * 2. the XDG environment variable, namespaced (`$XDG_CONFIG_HOME/<ns>`);
- * 3. the native directory, when `native: true` and the platform has one;
- * 4. `$HOME/<fallbackDir>` — all four kinds collapse to the one directory;
- * 5. `$HOME/.<namespace>`.
- *
- * Rungs 4 and 5 are deliberately **not** the XDG spec's per-kind defaults
- * (`~/.config`, `~/.local/share`, …): a CLI wanting spec defaults passes them as
- * `dirs` overrides.
- */
 const resolveDir = (input: {
   readonly override: string | undefined;
   readonly xdgHome: string | undefined;
@@ -430,7 +422,6 @@ const resolveDir = (input: {
   return path.join(home, `.${options.namespace}`);
 };
 
-/** The app's own directory, then each system directory, namespaced. Nearest first. */
 const searchPath: {
   (own: string, systemDirs: ReadonlyArray<string>, namespace: string, path: Path.Path): Array<string>;
   (systemDirs: ReadonlyArray<string>, namespace: string, path: Path.Path): (own: string) => Array<string>;
@@ -442,10 +433,8 @@ const searchPath: {
   ]
 );
 
-/** The four kinds with a fallback ladder; the runtime directory has none. */
 type LadderKind = Exclude<AppDirKind, "runtime">;
 
-/** The runtime directory: an override, or `$XDG_RUNTIME_DIR` namespaced, or nothing at all. */
 const runtimeDirOf = (options: typeof AppDirsOptions.Encoded, paths: XdgPaths, path: Path.Path): O.Option<string> =>
   O.orElse(O.fromUndefinedOr(options.dirs?.runtime), () =>
     O.map(O.fromUndefinedOr(paths.runtimeDir), (dir) => path.join(dir, options.namespace))
@@ -496,7 +485,6 @@ const resolveAll: {
       data,
       cache: forKind("cache"),
       state: forKind("state"),
-      // A present key holding `undefined` is not an absent key: v4 constructors validate.
       ...getSomesStruct({ runtime }),
       configSearchPath: searchPath(config, paths.configDirs, options.namespace, path),
       dataSearchPath: searchPath(data, paths.dataDirs, options.namespace, path),
@@ -533,12 +521,6 @@ const NamespaceComponent = S.String.check(
 const isNonEmptyNamespace = S.is(NonEmptyNamespace);
 const isNamespaceComponent = S.is(NamespaceComponent);
 
-/**
- * A namespace is a single path component. Anything else escapes the app's own
- * directories, so it **dies** rather than resolving somewhere surprising. This
- * is wiring, not input: only code supplies a namespace, so a bad one is a
- * programmer error and belongs on the defect channel, not in `E`.
- */
 const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
   if (!isNonEmptyNamespace(namespace)) {
     return AppDirsNamespaceError.make({ message: "AppDirs.layer: `namespace` must not be empty" });
@@ -551,7 +533,6 @@ const badNamespace = (namespace: string): AppDirsNamespaceError | undefined => {
   return undefined;
 };
 
-/** The first relative override in `AppDirKind` order, if any. Same discipline as the namespace: a defect. */
 const badOverride = (dirs: typeof AppDirOverrides.Encoded | undefined): AppDirsOverrideError | undefined =>
   pipe(
     AppDirKind.literals,

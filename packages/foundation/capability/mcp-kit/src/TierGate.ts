@@ -403,17 +403,9 @@ export class TierGatePolicy extends S.Opaque<TierGatePolicy, { readonly brand: u
   )
 ) {}
 
-// `Tool.Destructive` is a `Context.Reference` (default `constTrue`), so
-// `Context.get` already resolves the fail-closed default for unannotated
-// tools without throwing (references never raise "service not found",
-// unlike plain `Context.Service` keys). `Context.getOrElse` is used anyway
-// so the fail-closed default is explicit in this module's own source, not
-// only inherited silently from `effect/ai/Tool`'s definition.
 const isDestructive = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
 
-// `Tool.Readonly` defaults false. A non-destructive annotation alone is only
-// a weak hint; bypassing approval requires an explicit read-only assertion too.
 const isReadOnly = (tool: AiTool.Any): boolean => Context.getOrElse(tool.annotations, AiTool.Readonly, () => false);
 
 const isPolicyApproved = (policy: TierGatePolicy, tool: AiTool.Any): boolean =>
@@ -551,10 +543,6 @@ interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<
  */
 export const TierGateDispatchResult = Data.taggedEnum<TierGateDispatchResultDefinition>();
 
-// Collapses an Exit onto the bounded settlement domain. Success is completed;
-// a cause that is interrupts and nothing else is interrupted; every other
-// failure — typed or defect — is failed. The Exit itself never crosses this
-// boundary, so no failure payload can reach a gate implementation.
 const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
   if (Exit.isSuccess(exit)) {
     return TierGateSettlement.Enum.completed;
@@ -641,8 +629,6 @@ export const withEnabledWhenApprovedTool: {
   <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): AnnotatedTool<T>;
 } = dual(2, <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): AnnotatedTool<T> => {
   const predicate: P.Predicate<unknown> = () => isPolicyApproved(policy, tool);
-  // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
-  // shape rather than the caller's specific `T`; the annotation itself does
-  // not change `Name`/`Config`/`Requirements`, so re-narrowing here is sound.
+  // decision: annotate-results-renarrowed-to-input-tool
   return tool.annotate(McpSchema.EnabledWhen, predicate) as T;
 });

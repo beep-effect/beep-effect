@@ -75,7 +75,7 @@ export const layerStrictSpoolSink: Layer.Layer<StrictEgressSink, never, StrictSp
   StrictEgressSink,
   Effect.map(Effect.service(StrictSpool), (spool) =>
     StrictEgressSink.of({
-      // Untraced: it runs inside the exporter, like the spool behind it.
+      // decision: strict-spool-runs-untraced
       record: Effect.fnUntraced(function* (record: StrictEgressRecord) {
         return yield* spool
           .append(record)

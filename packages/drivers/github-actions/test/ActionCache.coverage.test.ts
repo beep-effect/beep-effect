@@ -30,7 +30,6 @@ interface Options {
   readonly responses?: Parameters<typeof twirpFetch>[0];
   readonly spawnFails?: boolean;
 }
-/** The fake `tar czPf <archive> -T <manifest>`: checks the manifest framing, then writes the archive. */
 const fakeTar = Effect.fn("fakeTar")(function* (
   fs: FileSystem.FileSystem,
   args: ReadonlyArray<string>,
