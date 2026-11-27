@@ -28,6 +28,10 @@ import type { ActionStateError } from "./ActionState.ts";
 const $I = $GithubActionsId.create("GitHubToken");
 
 /**
+ * **Gotchas**
+ *
+ * Bot identity lookup is best-effort: a GET /app failure must not fail a release, so retain the minted token without identity fields and log the lookup failure. Supply the installation token to GET /users/{slug}[bot], which rejects an app JWT and would otherwise consume the unauthenticated per-IP limit. Revocation failure must preserve the original action failure.
+ *
  * **Example** (Identify an expired persisted token)
  *
  * ```ts
@@ -85,7 +89,6 @@ export class GitHubTokenError extends S.TaggedError<GitHubTokenError, { readonly
   }
 }
 
-/** The default `GITHUB_STATE` key the token is filed under. */
 const DEFAULT_KEY = "githubToken";
 
 /**
@@ -279,21 +282,6 @@ export declare namespace ClientLayerOptions {
   export type Admitted = S.Struct.Type<typeof ClientLayerOptions.fields>;
 }
 
-/**
- * Resolve the app's identity onto a minted token, degrading rather than failing.
- *
- * **Details**
- *
- * The identity is what makes a commit say `my-app[bot]` instead of
- * `github-actions[bot]`. It is worth a request and it is **not** worth an
- * action: a `GET /app` hiccup must not fail a release, so the failure is logged
- * and the token comes back without the identity fields. `botIdentity()` then
- * falls back on its own.
- *
- * The installation token is supplied to the lookup on purpose:
- * `GET /users/{slug}[bot]` rejects an app JWT, so without one the request runs
- * unauthenticated against GitHub's sixty-per-hour-per-IP limit.
- */
 const identified: {
   (app: GitHubAppShape, options: ProvisionOptions.Encoded, minted: InstallationToken): Effect.Effect<InstallationToken>;
   (
@@ -328,8 +316,6 @@ const identified: {
       permissions: minted.permissions,
       appSlug: identity.slug,
       appName: identity.name,
-      // Never an explicit `undefined` on an `optionalKey` field: the class
-      // factory validates on construction and refuses one.
       ...O.getSomesStruct({ appUserId: O.fromUndefinedOr(identity.userId) }),
     });
   })
@@ -443,8 +429,6 @@ export abstract class GitHubToken {
       }),
       Effect.fnUntraced(function* (minted: InstallationToken) {
         if (options.required !== undefined) {
-          // Pure — no service, no request. The permissions GitHub granted
-          // came back with the token.
           yield* TokenPermissions.fromGitHub(minted.permissions).assertSufficient(options.required);
         }
         yield* Secret.forRunnerFile(minted.token);
@@ -455,7 +439,6 @@ export abstract class GitHubToken {
       (minted, exit) =>
         Exit.match(exit, {
           onSuccess: () => Effect.void,
-          // Preserve the original action failure even if revocation fails.
           onFailure: () => Effect.ignore(app.revoke(minted.token)),
         })
     );

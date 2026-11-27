@@ -42,23 +42,14 @@ class Boom extends S.TaggedError<Boom, { readonly brand: unique symbol }>()("Boo
   }
 }
 
-/**
- * The runner environment every capture installs, restored after each test.
- */
 const RUNNER_ENV: Readonly<Record<string, string>> = {
   GITHUB_REPOSITORY: "acme/example",
   GITHUB_JOB: "test-job",
-  // The runner uppercases an input name and replaces SPACES; dashes survive.
   "INPUT_MY-GREETING": "hello",
-  // What the runner writes for an input the workflow did NOT supply.
   INPUT_OMITTED: "",
-  // The false-green reproduction: a bare Config read of "dry-run" must reach
-  // this variable through the installed provider.
   "INPUT_DRY-RUN": "from-input",
-  // The shadowing pair: an input and an env var with the same bare name.
   INPUT_SHADOWED: "from-input",
   SHADOWED: "from-env",
-  // A plain variable with no corresponding input, for the fallback.
   PLAIN_VAR: "from-env",
 };
 
@@ -66,7 +57,6 @@ class Captured extends Context.Service<Captured, { readonly lines: ReadonlyArray
   "@beep/github-actions/test/Action.test/Captured"
 ) {}
 
-// Action.main owns its runtime, so its real console and runner environment are the subject.
 const captureLayer = (env: Readonly<Record<string, string | undefined>> = {}) =>
   Layer.effect(
     Captured,
@@ -97,40 +87,23 @@ const captureLayer = (env: Readonly<Record<string, string | undefined>> = {}) =>
     )
   );
 
-/**
- * The exit code `Runtime.defaultTeardown` — the teardown `Action.run` hands to
- * `NodeRuntime.runMain` — maps an `Exit` to.
- */
 const exitCodeOf = (exit: Exit.Exit<unknown, unknown>): number => {
   const codes: Array<number> = [];
   Runtime.defaultTeardown(exit, (code) => codes.push(code));
   return codes[0] ?? -1;
 };
 
-/**
- * Run `Action.main` and keep its `Exit`.
- *
- * **Details**
- *
- * On the real console, because `it.effect` installs a `TestConsole` and the
- * subject here is what the runner reads.
- */
 const mainExit = <E, R = never>(
   program: Effect.Effect<void, E, ActionServices | R>,
   options?: ActionRunOptions<R>
 ): Effect.Effect<Exit.Exit<void, ActionFailedError>> =>
   Action.main(program, options).pipe(Effect.provideService(Console.Console, console), Effect.exit);
 
-/** The exit code a `runMain` would give the process for `Action.main(program)`. */
 const verdict = <E, R = never>(
   program: Effect.Effect<void, E, ActionServices | R>,
   options?: ActionRunOptions<R>
 ): Effect.Effect<number> => Effect.map(mainExit(program, options), exitCodeOf);
 
-/**
- * Launch through `Action.run` itself, with a teardown that records the code
- * instead of exiting the process.
- */
 const runVerdict = (launch: (teardown: Runtime.Teardown) => void): Effect.Effect<number> =>
   Effect.callback<number>((resume) => {
     launch((exit, _onExit) => Runtime.defaultTeardown(exit, (code) => resume(Effect.succeed(code))));
@@ -138,11 +111,10 @@ const runVerdict = (launch: (teardown: Runtime.Teardown) => void): Effect.Effect
 
 describe("describeCause", () => {
   it("renders a typed failure as [Tag]: message", () => {
-    // What a human scanning a workflow log for the first red line actually
-    // needs: which error, and what it said.
     assert.strictEqual(
       Boom.make({ detail: "no token" }).pipe(Cause.fail, describeCause),
-      "[Boom]: it went wrong: no token"
+      "[Boom]: it went wrong: no token",
+      "What a human scanning a workflow log for the first red line actually needs: which error, and what it said."
     );
   });
 
@@ -153,10 +125,11 @@ describe("describeCause", () => {
   });
 
   it("says something rather than nothing for an interruption", () => {
-    // An interrupt carries no error and no message. The predecessor's fallback
-    // chain ended in a sentinel for exactly this case; the requirement is only
-    // that the line is never empty.
-    assert.notStrictEqual(Cause.interrupt(1).pipe(describeCause, Str.trim), "");
+    assert.notStrictEqual(
+      Cause.interrupt(1).pipe(describeCause, Str.trim),
+      "",
+      "An interrupt carries no error or message; the rendered diagnostic must still be nonempty."
+    );
   });
 
   it("renders a plain Error, which is what a thrown library failure is", () => {
@@ -226,8 +199,11 @@ describe("Action.main", () => {
         assert.strictEqual(failure.message, "Action failed: [Boom]: it went wrong: x");
         assert.strictEqual(Runtime.getErrorExitCode(failure), 1);
         assert.isFalse(Runtime.getErrorReported(failure));
-        // The rendered line and the error agree, so nothing needs a second say.
-        assert.include(lines, `::error::${failure.message}`);
+        assert.include(
+          lines,
+          `::error::${failure.message}`,
+          "Action.main owns its runtime, so its real console and runner environment are the subject. Run Action.main and keep its Exit. **Details** On the real console, because it.effect installs a TestConsole and the subject here is what the runner reads."
+        );
       })
     );
   });
@@ -259,7 +235,10 @@ describe("Action.main", () => {
             yield* Effect.log(`greeting=${greeting}`);
           })
         );
-        assert.isTrue(A.some(lines, (line) => Str.includes("greeting=hello")(line)));
+        assert.isTrue(
+          A.some(lines, (line) => Str.includes("greeting=hello")(line)),
+          "Runner input names are uppercased with spaces replaced; dashes survive, so my-greeting resolves through INPUT_MY-GREETING."
+        );
         assert.strictEqual(code, 0);
       })
     );
@@ -288,15 +267,15 @@ describe("Action.main", () => {
           const { lines } = yield* Captured;
           const code = yield* verdict(
             Effect.gen(function* () {
-              // The exact shipped defect: a bare read with a default. Before the
-              // runtime installed the provider, the plain-named lookup found
-              // nothing, the default fired, and a rehearsal flag silently read as
-              // its fallback on every run.
               const dryRun = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
               yield* Effect.logWarning(`dry-run=${dryRun}`);
             })
           );
-          assert.include(lines, "::warning::dry-run=from-input", "the default must NOT fire");
+          assert.include(
+            lines,
+            "::warning::dry-run=from-input",
+            'the default must NOT fire The false-green reproduction: a bare Config read of "dry-run" must reach this variable through the installed provider. The exact shipped defect: a bare read with a default. Before the runtime installed the provider, the plain-named lookup found nothing, the default fired, and a rehearsal flag silently read as its fallback on every run.'
+          );
           assert.strictEqual(code, 0);
         })
     );
@@ -323,14 +302,15 @@ describe("Action.main", () => {
         const { lines } = yield* Captured;
         yield* verdict(
           Effect.gen(function* () {
-            // Both INPUT_SHADOWED and SHADOWED are set. The input wins for a
-            // bare read in ANY casing, because the derivation uppercases; that
-            // is the documented trade for killing the false-green class.
             yield* Effect.logWarning(`upper=${yield* Config.String("SHADOWED")}`);
             yield* Effect.logWarning(`lower=${yield* Config.String("shadowed")}`);
           })
         );
-        assert.include(lines, "::warning::upper=from-input");
+        assert.include(
+          lines,
+          "::warning::upper=from-input",
+          "Both INPUT_SHADOWED and SHADOWED are set. The input wins for a bare read in ANY casing, because the derivation uppercases; that is the documented trade for killing the false-green class."
+        );
         assert.include(lines, "::warning::lower=from-input");
       })
     );
@@ -345,13 +325,13 @@ describe("Action.main", () => {
             const dryRun = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
             yield* Effect.logWarning(`dry-run=${dryRun}`);
           }),
-          // Normal layer precedence: the extra layer's context merges LAST in
-          // `Action.run`'s composition, so this replaces the installed provider
-          // wholesale. INPUT_DRY-RUN is set in the environment — seeing
-          // "from-caller" rather than "from-input" is what proves the override.
           { layer: ConfigProvider.layer(ConfigProvider.fromUnknown({ "dry-run": "from-caller" })) }
         );
-        assert.include(lines, "::warning::dry-run=from-caller");
+        assert.include(
+          lines,
+          "::warning::dry-run=from-caller",
+          'Normal layer precedence: the extra layer\'s context merges LAST in Action.run\'s composition, so this replaces the installed provider wholesale. INPUT_DRY-RUN is set in the environment — seeing "from-caller" rather than "from-input" is what proves the override.'
+        );
       })
     );
   });
@@ -429,11 +409,12 @@ describe("Action.main", () => {
   )((it) => {
     it.effect("programs composed over ActionRuntime.layer see the identical resolution", () =>
       Effect.gen(function* () {
-        // The same provider `Action.run` installs, reached through the layer a
-        // test composes directly — with the ambient environment injected as a
-        // provider BENEATH the runtime, so nothing touches the process.
         const pipe1 = yield* Config.String("dry-run").pipe(Config.withDefault("defaulted"));
-        assert.strictEqual(pipe1, "x");
+        assert.strictEqual(
+          pipe1,
+          "x",
+          "The same provider Action.run installs, reached through the layer a test composes directly — with the ambient environment injected as a provider BENEATH the runtime, so nothing touches the process."
+        );
         const String2 = yield* Config.String("PLAIN_VAR");
         assert.strictEqual(String2, "y");
       })
@@ -467,10 +448,11 @@ describe("Action.main", () => {
   });
 
   it("exposes the runtime as a bound layer, not a factory", () => {
-    // A layer-returning function mints a fresh layer per call and layers
-    // memoize by reference, so a factory would re-read `process.env` at every
-    // composition site.
-    assert.strictEqual(ActionRuntime.layer, ActionRuntime.layer);
+    assert.strictEqual(
+      ActionRuntime.layer,
+      ActionRuntime.layer,
+      "A layer-returning function mints a fresh layer per call and layers memoize by reference, so a factory would re-read process.env at every composition site."
+    );
   });
 });
 
@@ -496,10 +478,10 @@ describe("Action.run", () => {
           Action.run(Boom.make({ detail: "no token" }).pipe(Effect.fail), { teardown })
         );
         assert.strictEqual(resultVerdict4, 1);
-        // disableErrorReporting: runMain adds no second rendering of the cause.
         assert.lengthOf(
           A.filter(lines, (line) => Str.startsWith("::error::")(line)),
-          1
+          1,
+          "disableErrorReporting: runMain adds no second rendering of the cause."
         );
       })
     );
@@ -519,9 +501,6 @@ describe("Action.run", () => {
 });
 
 describe("Action.main step debugging", () => {
-  // Info goes out in both cases, so an absent debug line is a filtered entry
-  // and not a program that never ran — the positive control every "absent"
-  // assertion below leans on.
   const probe = Effect.gen(function* () {
     yield* Effect.logInfo("probe-info");
     yield* Effect.logDebug("probe-debug");
@@ -532,7 +511,11 @@ describe("Action.main step debugging", () => {
       Effect.gen(function* () {
         const { lines } = yield* Captured;
         yield* verdict(probe);
-        assert.include(lines, "probe-info");
+        assert.include(
+          lines,
+          "probe-info",
+          'Info goes out in both cases, so an absent debug line is a filtered entry and not a program that never ran — the positive control every "absent" assertion below leans on.'
+        );
         assert.include(lines, "::debug::probe-debug");
       })
     );

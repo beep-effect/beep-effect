@@ -206,9 +206,11 @@ describe("ActionEnvironment", () => {
         Effect.gen(function* () {
           const ctx = yield* (yield* ActionEnvironment).github;
           assertSome(ctx.headRef, "feat/topic");
-          // On a PR the short ref is the useless merge ref; branch is the
-          // human's branch — the headRef.
-          assert.strictEqual(ctx.branch, "feat/topic");
+          assert.strictEqual(
+            ctx.branch,
+            "feat/topic",
+            "On a PR the short ref is the useless merge ref; branch is the human's branch — the headRef."
+          );
         })
       );
     });
@@ -232,10 +234,12 @@ describe("ActionEnvironment", () => {
       it.effect("an empty GITHUB_HEAD_REF reads as absent — the runner writes it empty outside PRs", () =>
         Effect.gen(function* () {
           const ctx = yield* (yield* ActionEnvironment).github;
-          // The trap: a raw env read reports "" as present, and a cache key
-          // built from it gains an empty branch segment. The type refuses it.
           assertNone(ctx.headRef);
-          assert.strictEqual(ctx.branch, "main");
+          assert.strictEqual(
+            ctx.branch,
+            "main",
+            'The trap: a raw env read reports "" as present, and a cache key built from it gains an empty branch segment. The type refuses it.'
+          );
         })
       );
     });
@@ -291,14 +295,16 @@ describe("ActionEnvironment", () => {
       it.effect("reads and parses the event payload with R = never", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          // The type is the assertion: `payload` carries no FileSystem in R,
-          // so a caller never has to re-inject one.
           const payload: Effect.Effect<unknown, ActionEnvironmentError> = env.payload;
           const value = yield* payload;
           if (!S.is(ActionPayload)(value)) {
             assert.fail("expected an action payload");
           }
-          assert.strictEqual(value.action, "opened");
+          assert.strictEqual(
+            value.action,
+            "opened",
+            "The type is the assertion: payload carries no FileSystem in R, so a caller never has to re-inject one."
+          );
         })
       );
     });
@@ -383,17 +389,6 @@ describe("ActionEnvironment", () => {
       it.effect("is parallel-safe: concurrent fibers do not see each other's overrides", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          // Latches, not a sleep: `it.effect` installs a virtual TestClock, so
-          // `Effect.sleep` would hang to the vitest timeout rather than
-          // interleave.
-          //
-          // TWO latches, and the order is the whole test. A save/restore
-          // implementation over a shared global is LIFO-correct whenever the
-          // two overrides nest properly, so an interleaving where the inner
-          // one restores before the outer one reads passes for the wrong
-          // reason. This order forces LEFT TO READ WHILE RIGHT'S OVERRIDE IS
-          // STILL APPLIED AND UNRESTORED — which only a fiber-local
-          // implementation survives.
           const rightApplied = yield* Latch.make();
           const leftDone = yield* Latch.make();
           const [left, right] = yield* Effect.all(
@@ -419,7 +414,11 @@ describe("ActionEnvironment", () => {
             ],
             { concurrency: 2 }
           );
-          assert.strictEqual(left, "left");
+          assert.strictEqual(
+            left,
+            "left",
+            "Latches, not a sleep: it.effect installs a virtual TestClock, so Effect.sleep would hang to the vitest timeout rather than interleave.  TWO latches, and the order is the whole test. A save/restore implementation over a shared global is LIFO-correct whenever the two overrides nest properly, so an interleaving where the inner one restores before the outer one reads passes for the wrong reason. This order forces LEFT TO READ WHILE RIGHT'S OVERRIDE IS STILL APPLIED AND UNRESTORED — which only a fiber-local implementation survives."
+          );
           assert.strictEqual(right, "right");
         })
       );
@@ -432,8 +431,10 @@ describe("ActionEnvironment", () => {
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
           yield* env.withEnv({ EFFECTED_GHA_LEAK_PROBE: "leaked" }, Effect.void);
-          // Inspect the real Node environment: the service override must never write to it.
-          assert.isUndefined(processEnvironment.EFFECTED_GHA_LEAK_PROBE);
+          assert.isUndefined(
+            processEnvironment.EFFECTED_GHA_LEAK_PROBE,
+            "Inspect the real Node environment: the service override must never write to it."
+          );
         })
       );
     });
@@ -467,15 +468,16 @@ describe("ActionEnvironment", () => {
       it.effect("layerTest serves a payload directly, with no filesystem in R", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          // The type is half the assertion: an event-driven suite gets its payload
-          // from the STANDARD double, without dropping to makeTest and hand-rolling
-          // a filesystem stub at every site.
           const payload: Effect.Effect<unknown, ActionEnvironmentError> = env.payload;
           const value = yield* payload;
           if (!S.is(PullRequestPayload)(value)) {
             assert.fail("expected a pull request payload");
           }
-          assert.strictEqual(value.pull_request?.number, 42);
+          assert.strictEqual(
+            value.pull_request?.number,
+            42,
+            "The type is half the assertion: an event-driven suite gets its payload from the STANDARD double, without dropping to makeTest and hand-rolling a filesystem stub at every site."
+          );
         })
       );
     });
@@ -486,12 +488,12 @@ describe("ActionEnvironment", () => {
       it.effect("layerTest serves the payload without routing through GITHUB_EVENT_PATH", () =>
         Effect.gen(function* () {
           const env = yield* ActionEnvironment;
-          // The discriminating part: the layer hard-provides FileSystem.layerNoop,
-          // so a payload arriving through a file read would fail here. Seeding the
-          // path as WELL as the payload must change nothing — the served value
-          // replaces the read rather than backing it.
           const payload15 = yield* env.payload;
-          assert.deepStrictEqual(payload15, { served: true });
+          assert.deepStrictEqual(
+            payload15,
+            { served: true },
+            "The discriminating part: the layer hard-provides FileSystem.layerNoop, so a payload arriving through a file read would fail here. Seeding the path as WELL as the payload must change nothing — the served value replaces the read rather than backing it."
+          );
         })
       );
     });
@@ -499,11 +501,12 @@ describe("ActionEnvironment", () => {
     it.layer(ActionEnvironment.layerTest(), { timeout: "30 seconds" })((it) => {
       it.effect("an unserved payload fails typed and names the variable", () =>
         Effect.gen(function* () {
-          // TEST_DEFAULTS omits GITHUB_EVENT_PATH on purpose: a suite that forgot
-          // to arrange a payload gets a loud failure naming what is missing, not a
-          // plausible empty object.
           const error = yield* (yield* ActionEnvironment).payload.pipe(Effect.asVoid, Effect.flip);
-          assert.strictEqual(error.variable, "GITHUB_EVENT_PATH");
+          assert.strictEqual(
+            error.variable,
+            "GITHUB_EVENT_PATH",
+            "TEST_DEFAULTS omits GITHUB_EVENT_PATH on purpose: a suite that forgot to arrange a payload gets a loud failure naming what is missing, not a plausible empty object."
+          );
         })
       );
     });

@@ -16,10 +16,8 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { AnnotationProperties } from "@beep/github-commands";
 
-/** Everything written to `Console.log`, as strings, in order. */
 const lines = Effect.map(TestConsole.logLines, (captured) => A.map(captured, String));
 
-/** The lines a single buffer flushed, between its header and its footer. */
 const bufferedFor = (label: string, captured: ReadonlyArray<string>): ReadonlyArray<string> => {
   const start = O.getOrElse(
     A.findFirstIndex(captured, (line) => Str.includes(`Buffered output for "${label}"`)(line)),
@@ -248,8 +246,7 @@ describe("ActionLogger", () => {
             );
             assert.strictEqual(value, 7);
             const captured = yield* lines;
-            // A green step leaves NOTHING behind — no header, no footer, no body.
-            assert.deepStrictEqual(captured, []);
+            assert.deepStrictEqual(captured, [], "A green step leaves NOTHING behind — no header, no footer, no body.");
           })
         );
       }
@@ -266,9 +263,11 @@ describe("ActionLogger", () => {
               })
             );
             const captured = yield* lines;
-            // Discard is a statement about SUCCESS only; the failure transcript
-            // is exactly what the buffer was kept for.
-            assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
+            assert.deepStrictEqual(
+              bufferedFor("install", captured),
+              ["resolving"],
+              "Discard is a statement about SUCCESS only; the failure transcript is exactly what the buffer was kept for."
+            );
           })
         );
       }
@@ -300,8 +299,11 @@ describe("ActionLogger", () => {
               }
             );
             const captured = yield* lines;
-            // The warning went out live; only the Info transcript was discarded.
-            assert.deepStrictEqual(captured, ["::warning::deprecated"]);
+            assert.deepStrictEqual(
+              captured,
+              ["::warning::deprecated"],
+              "The warning went out live; only the Info transcript was discarded."
+            );
           })
         );
       }
@@ -317,9 +319,11 @@ describe("ActionLogger", () => {
               Effect.andThen(Effect.logWarning("deprecated"), Effect.logInfo("done"))
             );
             const captured = yield* lines;
-            // The warning is emitted before the flush header, so it is visible
-            // while the step is still running.
-            assert.strictEqual(captured[0], "::warning::deprecated");
+            assert.strictEqual(
+              captured[0],
+              "::warning::deprecated",
+              "The warning is emitted before the flush header, so it is visible while the step is still running."
+            );
             assert.deepStrictEqual(bufferedFor("install", captured), ["done"]);
           })
         );
@@ -373,12 +377,6 @@ describe("ActionLogger", () => {
         it.effect("keeps concurrent buffers separate", () =>
           Effect.gen(function* () {
             const logger = yield* ActionLogger;
-            // THREE latches, and the order is the whole test. A save/restore
-            // implementation over a shared "current buffer" global is LIFO-correct
-            // whenever two buffers nest, so the obvious interleaving passes for the
-            // wrong reason. This order forces LEFT TO LOG WHILE RIGHT'S BUFFER IS
-            // STILL APPLIED AND UNRESTORED — which only a fiber-local
-            // implementation survives.
             const leftInside = yield* Latch.make();
             const rightInside = yield* Latch.make();
             const leftDone = yield* Latch.make();
@@ -409,7 +407,11 @@ describe("ActionLogger", () => {
               { concurrency: 2 }
             );
             const captured = yield* lines;
-            assert.deepStrictEqual(bufferedFor("left", captured), ["left-first", "left-second"]);
+            assert.deepStrictEqual(
+              bufferedFor("left", captured),
+              ["left-first", "left-second"],
+              'THREE latches, and the order is the whole test. A save/restore implementation over a shared "current buffer" global is LIFO-correct whenever two buffers nest, so the obvious interleaving passes for the wrong reason. This order forces LEFT TO LOG WHILE RIGHT\'S BUFFER IS STILL APPLIED AND UNRESTORED — which only a fiber-local implementation survives.'
+            );
             assert.deepStrictEqual(bufferedFor("right", captured), ["right-only"]);
           })
         );
@@ -418,10 +420,6 @@ describe("ActionLogger", () => {
   });
 
   describe("steps", () => {
-    /** `withStep` renders its summary through `Effect.logInfo`, so the log-to-
-     * workflow-command logger has to be installed for the line to be observable
-     * — the same one `Action.run` installs. */
-
     it.layer(
       Layer.mergeAll(ActionLogger.layer.pipe(Layer.provide(ActionEnvironment.layerTest({}))), ActionLogger.layerLogger),
       { timeout: "30 seconds" }
@@ -434,11 +432,12 @@ describe("ActionLogger", () => {
             Effect.as(Effect.andThen(Effect.logInfo("resolving"), Effect.logInfo("done")), 7)
           );
           assert.strictEqual(value, 7);
-          // The whole point: two verbose lines in, one summary line out. This is
-          // the step `withBuffer({ onSuccess: "discard" })` alone cannot reach —
-          // it leaves ZERO lines, which is why the recipe kept coming out wrong.
           const lines12 = yield* lines;
-          assert.deepStrictEqual(lines12, ["✅ install"]);
+          assert.deepStrictEqual(
+            lines12,
+            ["✅ install"],
+            'withStep renders its summary through Effect.logInfo, so the log-to- workflow-command logger has to be installed for the line to be observable — the same one Action.run installs. The whole point: two verbose lines in, one summary line out. This is the step withBuffer({ onSuccess: "discard" }) alone cannot reach — it leaves ZERO lines, which is why the recipe kept coming out wrong.'
+          );
         })
       );
     });
@@ -476,9 +475,10 @@ describe("ActionLogger", () => {
           assert.isAtLeast(header, 0, "the failure header must be emitted");
           assert.isBelow(header, flushed, "the header introduces the transcript, so it cannot follow it");
           assert.deepStrictEqual(bufferedFor("install", captured), ["resolving"]);
-          // The success line is a statement about success; a failed step must not
-          // claim one. Mutating the `Effect.tap` to `Effect.onExit` fails here.
-          assert.isFalse(captured.includes("✅ install"));
+          assert.isFalse(
+            captured.includes("✅ install"),
+            "The success line is a statement about success; a failed step must not claim one. Mutating the Effect.tap to Effect.onExit fails here."
+          );
         })
       );
     });
@@ -492,9 +492,11 @@ describe("ActionLogger", () => {
           const logger = yield* ActionLogger;
           yield* logger.withStep("install", Effect.logInfo("resolving"));
           const captured = yield* lines;
-          // Emitting the summary INSIDE the buffered region would discard it
-          // along with the transcript, leaving a green step with no line at all.
-          assert.deepStrictEqual(captured, ["✅ install"]);
+          assert.deepStrictEqual(
+            captured,
+            ["✅ install"],
+            "Emitting the summary INSIDE the buffered region would discard it along with the transcript, leaving a green step with no line at all."
+          );
         })
       );
     });
@@ -524,10 +526,12 @@ describe("ActionLogger", () => {
         Effect.gen(function* () {
           const logger = yield* ActionLogger;
           yield* logger.withStep("install", Effect.logInfo("resolving"));
-          // Verbose output goes live AND the summary still lands: someone asking
-          // for debug output has not asked to lose the line naming what passed.
           const lines15 = yield* lines;
-          assert.deepStrictEqual(lines15, ["resolving", "✅ install"]);
+          assert.deepStrictEqual(
+            lines15,
+            ["resolving", "✅ install"],
+            "Verbose output goes live AND the summary still lands: someone asking for debug output has not asked to lose the line naming what passed."
+          );
         })
       );
     });
@@ -546,14 +550,11 @@ describe("ActionLogger", () => {
             logger.withStep("install", Effect.andThen(Effect.logInfo("resolving"), Effect.fail("boom")))
           );
           const captured = yield* lines;
-          // The documented ordering ("header first, then the transcript") is a
-          // property of the BUFFERED path only. With step debugging on,
-          // withBuffer returns the effect unbuffered, so its output has already
-          // gone out live by the time tapCause fires and the header lands LAST.
-          // Pinned rather than papered over: the docstring is qualified to
-          // match. The debug suite previously only exercised a successful step,
-          // so this ordering was undocumented and unverified.
-          assert.deepStrictEqual(captured, ["resolving", "❌ install"]);
+          assert.deepStrictEqual(
+            captured,
+            ["resolving", "❌ install"],
+            "Header-before-transcript ordering applies only to buffered failures. With step debugging, output is already live when tapCause runs, so the failure header lands last; the documentation qualifies that ordering."
+          );
         })
       );
     });

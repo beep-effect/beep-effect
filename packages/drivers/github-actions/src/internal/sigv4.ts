@@ -10,7 +10,6 @@ import { sha256Hex } from "./digest.ts";
 
 const $I = $GithubActionsId.create("internal/sigv4");
 
-// Effect Crypto cannot provide the synchronous HMAC required by SigV4.
 const { createHmac } = process.getBuiltinModule("node:crypto");
 
 /**
@@ -190,7 +189,6 @@ export declare namespace SigV4Request {
   export type Encoded = typeof SigV4Request.Encoded;
 }
 
-/** `20130524T000000Z` and `20130524`, the two forms the algorithm uses. */
 const timestamps = (now: Date): { readonly amzDate: string; readonly dateStamp: string } => {
   const amzDate = `${Function.pipe(now.toISOString(), Str.replace(/[:-]|\.\d{3}/g, ""), Str.slice(0, 15))}Z`;
   return { amzDate, dateStamp: Str.slice(0, 8)(amzDate) };
@@ -204,6 +202,10 @@ const timestamps = (now: Date): { readonly amzDate: string; readonly dateStamp: 
  * Exported separately from {@link sign} so a test can pin it against AWS's
  * **own documented** canonical request rather than against this
  * implementation's output.
+ *
+ * **Gotchas**
+ *
+ * Canonical headers must be lowercased, whitespace-collapsed and sorted by name. The signature covers this exact string; a different order yields SignatureDoesNotMatch with no more precise server diagnosis.
  *
  * **Example** (Inspect canonical signing headers)
  *
@@ -287,10 +289,6 @@ export const canonicalize: {
     };
     const headers = R.map(signingHeaders, Function.flow(Str.trim, Str.replace(/\s+/g, " ")));
 
-    // Canonical headers are lowercased, whitespace-collapsed and sorted by name.
-    // The sort is not cosmetic: the signature covers this exact string, so any
-    // other order produces a valid-looking signature the server will reject with
-    // nothing more informative than `SignatureDoesNotMatch`.
     const canonicalNames = A.sort(R.keys(headers), Order.String);
     const canonicalHeaders = A.join(
       A.map(canonicalNames, (name) => `${name}:${O.getOrThrow(R.get(headers, name))}\n`),
@@ -321,6 +319,10 @@ export const canonicalize: {
  *
  * Four nested HMACs over date, region, service and the literal `aws4_request`.
  * Exported so a test can reproduce AWS's documented derivation example.
+ *
+ * **Gotchas**
+ *
+ * SigV4 requires synchronous HMAC, which Effect Crypto cannot provide; derive signing keys through native crypto.
  *
  * **Example** (Derive a SHA-256 signing key)
  *

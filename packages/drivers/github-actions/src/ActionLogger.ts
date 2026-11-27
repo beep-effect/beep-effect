@@ -29,16 +29,6 @@ import type { AnnotationProperties } from "@beep/github-commands";
 
 const $I = $GithubActionsId.create("ActionLogger");
 
-/**
- * Render a log message, which arrives as an array of the values passed to
- * `Effect.log*`.
- *
- * **Details**
- *
- * `toStringUnknown` is called with zero indentation on purpose: a pretty-printed
- * object would span lines, and a workflow command escapes every newline, so the
- * indented form buys nothing and costs readability.
- */
 const formatMessage = (message: unknown): string => {
   const parts = A.isArray(message) ? message : [message];
   return pipe(
@@ -48,7 +38,6 @@ const formatMessage = (message: unknown): string => {
   );
 };
 
-/** A log annotation read as text, when it is text. */
 const textAnnotation: {
   (record: Readonly<Record<string, unknown>>, key: string): string | undefined;
   (key: string): (record: Readonly<Record<string, unknown>>) => string | undefined;
@@ -57,7 +46,6 @@ const textAnnotation: {
   return P.isString(value) ? value : undefined;
 });
 
-/** A log annotation read as a number, accepting the string form the runner produces. */
 const numericAnnotation: {
   (record: Readonly<Record<string, unknown>>, key: string): number | undefined;
   (key: string): (record: Readonly<Record<string, unknown>>) => number | undefined;
@@ -73,16 +61,6 @@ const numericAnnotation: {
   return undefined;
 });
 
-/**
- * Project log annotations onto the annotation vocabulary.
- *
- * **Details**
- *
- * The keys are the readable ones from {@link AnnotationProperties}, not GitHub's
- * abbreviated wire names — one vocabulary per package, with the abbreviation
- * confined to {@link WorkflowCommand}. Undefined fields are omitted rather than
- * set, so a caller that annotated nothing renders a bare command.
- */
 const readAnnotations = (record: Readonly<Record<string, unknown>>): AnnotationProperties.Encoded => {
   const title = textAnnotation(record, "title");
   const file = textAnnotation(record, "file");
@@ -100,27 +78,8 @@ const readAnnotations = (record: Readonly<Record<string, unknown>>): AnnotationP
   });
 };
 
-/**
- * The inverse: annotation fields as a record `Effect.annotateLogs` accepts.
- * A plain copy: `exactOptionalPropertyTypes` keeps an absent field absent
- * rather than present-and-`undefined`, and {@link readAnnotations} drops
- * anything that is not a string or number on the way back out.
- */
 const annotationRecord = (properties: AnnotationProperties.Encoded): Record<string, unknown> => ({ ...properties });
 
-/**
- * Map one log entry onto the line the runner should see.
- *
- * **Details**
- *
- * `Info` is deliberately plain text with no command prefix — it is ordinary
- * step output, and prefixing it would make every informational line an
- * annotation in the workflow summary. It is neutralized, though: the text is
- * whatever the program logged, and the runner reads every line of stdout, so a
- * message carrying `::add-mask::` or a `##[` would be a command. The levels that
- * render AS a command escape their data instead, and a line that starts `::` is
- * read by the runner as that command alone.
- */
 const renderEntry: {
   (level: LogLevel.LogLevel, message: unknown, annotations: Readonly<Record<string, unknown>>): string;
   (message: unknown, annotations: Readonly<Record<string, unknown>>): (level: LogLevel.LogLevel) => string;
@@ -135,15 +94,12 @@ const renderEntry: {
   return LogLevel.isGreaterThanOrEqualTo(level, "Info") ? CommandNeutralizer.text(text) : WorkflowCommand.debug(text);
 });
 
-/** The line the runner should see for one log event, with the fiber's annotations. */
 const renderLogger: Logger.Logger<unknown, string> = Logger.make((options) =>
   renderEntry(options.logLevel, options.message, options.fiber.getRef(References.CurrentLogAnnotations))
 );
 
-/** {@link renderLogger} written through core `Console`. */
 const commandLogger: Logger.Logger<unknown, void> = Logger.withConsoleLog(renderLogger);
 
-/** A step's captured transcript. Mutable by design — a logger callback is synchronous. */
 interface BufferState {
   readonly entries: Array<string>;
   readonly label: string;
@@ -165,13 +121,11 @@ const ActiveBuffer = Context.Reference<BufferState | null>($I`ActiveBuffer`, {
   defaultValue: () => null,
 });
 
-/** Drop a transcript without writing it, so a green step stays quiet. */
 const discard = (state: BufferState): Effect.Effect<void> =>
   Effect.sync(() => {
     state.entries.length = 0;
   });
 
-/** Write a transcript out and clear it, so a second flush is a no-op. */
 const flush = (state: BufferState): Effect.Effect<void> =>
   Effect.suspend(() => {
     if (state.entries.length === 0) {
@@ -183,7 +137,6 @@ const flush = (state: BufferState): Effect.Effect<void> =>
       `--- End buffered output for "${state.label}" ---`,
     ];
     state.entries.length = 0;
-    // The transcript is the program's own log text and the label a step name: neutralized, as the live lines were.
     return Effect.forEach(body, (line) => Console.log(CommandNeutralizer.text(line)), {
       concurrency: 1,
       discard: true,
@@ -374,6 +327,10 @@ export interface ActionLoggerShape {
   /**
    * Run an effect inside a collapsible log group.
    *
+   * **Gotchas**
+   *
+   * Flush an enclosing failed-step buffer before closing the workflow group so its transcript stays inside the collapsed section.
+   *
    * **Example** (Preserve a grouped result)
    *
    * ```ts
@@ -439,6 +396,10 @@ export interface ActionLoggerShape {
    * step-debug check still stands on its own for a program that opted out
    * with `stepDebugLogLevel: false` or runs outside `Action.run`.
    *
+   * **Gotchas**
+   *
+   * The synchronous logger appends to a mutable transcript. Capture at minimum level All so debug details survive for failed steps, and neutralize transcript text and labels when flushing. Clear after flush so a second flush is a no-op.
+   *
    * **Example** (Discard a successful buffer in a test)
    *
    * ```ts
@@ -496,6 +457,10 @@ export interface ActionLoggerShape {
    * The summary survives step debugging. Buffering is skipped when the runner
    * asks for verbose output, but the line naming what succeeded is still the
    * cheapest thing in the log.
+   *
+   * **Gotchas**
+   *
+   * Write the failure header directly through Console before flushing, rather than buffering it with Effect.logError or duplicating Action.run's error annotation. Emit the success summary outside the buffered region so discarding a successful transcript cannot discard its replacement line.
    *
    * **Example** (Preserve a named step result)
    *
@@ -559,15 +524,10 @@ const make = Effect.gen(function* () {
           return Effect.scopedWith((scope) =>
             Effect.flatMap(Layer.buildWithScope(Logger.layer([buffering]), scope), (context) =>
               effect.pipe(
-                // `All` so debug output is captured rather than dropped: the whole
-                // point of a buffer is that the verbose transcript exists if the step
-                // fails.
                 Effect.provideService(References.MinimumLogLevel, "All"),
                 Effect.provideContext(context),
                 Effect.provideService(ActiveBuffer, state),
                 Effect.onExit((exit) =>
-                  // Only a SUCCESS is ever discarded: a failure, a defect or an
-                  // interruption is exactly the moment the transcript was kept for.
                   Exit.isSuccess(exit) && options?.onSuccess === "discard" ? discard(state) : flush(state)
                 )
               )
@@ -584,11 +544,7 @@ const make = Effect.gen(function* () {
       <A, E, R>(name: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
         Effect.acquireUseRelease(
           Console.log(WorkflowCommand.group(name)),
-          () =>
-            // Flush the enclosing buffer before the group closes, so a failed
-            // step's transcript lands inside the collapsed section it belongs to
-            // rather than after it.
-            Effect.tapCause(effect, () => flushActive),
+          () => Effect.tapCause(effect, () => flushActive),
           () => Console.log(WorkflowCommand.endGroup())
         )
     ),
@@ -604,17 +560,9 @@ const make = Effect.gen(function* () {
       ): Effect.Effect<A, E, R> =>
         withBuffer(
           name,
-          // Written through `Console` rather than `Effect.logError`, so it lands
-          // ahead of the flush instead of into the buffer it is announcing — and
-          // so a failed step does not mint a second `::error::` beside the one
-          // `Action.run` already renders for the failure itself.
           Effect.tapCause(effect, () => Console.log(CommandNeutralizer.text(`❌ ${name}`))),
           { onSuccess: "discard" }
-        ).pipe(
-          // Outside the buffered region on purpose: a line emitted inside it is
-          // discarded with the transcript it was meant to replace.
-          Effect.tap(() => Effect.logInfo(options?.summary ?? `✅ ${name}`))
-        )
+        ).pipe(Effect.tap(() => Effect.logInfo(options?.summary ?? `✅ ${name}`)))
     ),
 
     notice: dual(
@@ -720,6 +668,10 @@ export class ActionLogger extends Context.Service<ActionLogger, ActionLoggerShap
    *
    * Bound to a constant so every composition site shares one layer;
    * `ActionRuntime.layer` already includes it.
+   *
+   * **Gotchas**
+   *
+   * Messages are rendered without pretty-print indentation because workflow commands escape newlines. Annotation inputs use readable AnnotationProperties names; only WorkflowCommand abbreviates them. Omit undefined fields and ignore non-string/non-number values when reading annotations, so an empty annotation set stays a bare command. Info is plain step output rather than a workflow annotation, but it must be neutralized against injected ::add-mask:: and ##[ commands; command-rendered levels escape their data instead.
    *
    * **Example** (Construct logging with workflow rendering)
    *

@@ -137,6 +137,11 @@ export interface StoredBlob<A> {
  * The members of the {@link BlobStore} service: `get`, `put` and `has` over
  * blobs that carry the caller's own metadata.
  *
+ *
+ * **Gotchas**
+ *
+ * S3 credentials are declassified once through the package Secret seam and registered with the log filter, rather than emitting a workflow command per object. Keep existing endpoint path escapes and encode only raw object segments; trim trailing separators without a backtracking regex.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -458,9 +463,6 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config.Encoded) {
     config.endpoint ?? `https://s3.${config.region}.amazonaws.com`
   );
 
-  // Declassified ONCE, here, through the package's only declassification
-  // seam — which also registers both values with the runner's log filter.
-  // Doing it per request would emit a workflow command per object.
   const secretAccessKey = yield* Secret.forSigning(config.secretAccessKey);
   const sessionToken = yield* O.match(O.fromUndefinedOr(config.sessionToken), {
     onNone: () => Effect.succeed(O.none<string>()),
@@ -493,8 +495,6 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config.Encoded) {
       body: Uint8Array,
       now: DateTime.Utc
     ): { readonly url: string; readonly headers: Record<string, string> } => {
-      // Keep the endpoint's existing escapes; only raw object segments are encoded.
-      // Strip trailing slashes without a backtracking regex.
       let encodedPathPrefix = endpoint.pathname;
       while (Str.endsWith("/")(encodedPathPrefix)) {
         encodedPathPrefix = Str.slice(0, -1)(encodedPathPrefix);
@@ -571,7 +571,6 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config.Encoded) {
     })
   );
 
-  /** Anything outside 2xx is the store refusing; a caller reads `404` first where a miss is an answer. */
   const accepted: {
     (key: string, status: number): Effect.Effect<void, BlobStoreError>;
     (status: number): (key: string) => Effect.Effect<void, BlobStoreError>;
@@ -588,7 +587,6 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config.Encoded) {
     get: framedGet(
       Effect.fnUntraced(function* (key: string) {
         const response = yield* send("GET", key, new Uint8Array(0));
-        // A miss is not a failure: it is the answer the caller asked for.
         if (response.status === 404) {
           return O.none();
         }

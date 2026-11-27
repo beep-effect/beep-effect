@@ -171,6 +171,13 @@ export interface ActionCacheShape {
    * the save used — no glob resolution happens here, because none is needed:
    * extraction consumes no path list (the archive already names its contents),
    * and `actions/cache` likewise hashes the un-resolved list on both sides.
+   *
+   * **Gotchas**
+   *
+   * Return the matched key rather than the requested primary key: a restore-key hit is partial, and the caller needs that distinction to re-save under the primary key and warm the cache.
+   *
+   * Run tar once and retain stderr from the same spawn handle. Windows extraction uses -k to skip open files: exit 1 is a warning there, while exit 2 and higher remain failures on every platform.
+   *
    * @since 0.0.0
    */
   readonly restore: {
@@ -213,6 +220,19 @@ export interface ActionCacheShape {
    *
    * A key that already exists is a **success**: cache entries are immutable, so
    * another job having written it first is the outcome the caller wanted.
+   *
+   * **Gotchas**
+   *
+   * Entry versions hash the caller's literal pattern list in its original order, with gzip and the upstream version salt. Never sort or hash resolved paths: actions/cache restore does no resolution and could never reproduce such a version, so sibling cache steps would miss every entry.
+   *
+   * Normalize separators only on produced paths; a caller pattern backslash remains a minimatch escape. Glob-escape expanded home/workspace directory names so brackets are literal, and keep exclusions in front of rooted patterns. Skip blank and # pattern members.
+   *
+   * Build search roots from each include's longest literal prefix and fold descendant roots into ancestors. GlobSet keeps whole-pattern exclusions separate from wildcards, and rooting guarantees a slash prefix. Track wildcard roots separately: a literal-only root is admitted by stat without recursively enumerating a pnpm-store-sized tree that could add no match, while a folded wildcard still makes its ancestor walk.
+   *
+   * Existence is the filter, including absent literal paths and missing prefix directories. stat follows links, so broken targets contribute nothing at root discovery. Selected real directories cover descendants even when enumerated later: collect them before filtering, but stop coverage at symlink ancestors because tar stores links without following them. A selected broken link remains a valid tar member and its target is never statted.
+   *
+   * Validate every resolved name before writing the manifest or spawning tar, even names later covered by a directory. Tar cannot represent line breaks in its one-line inputs, or a non-Windows backslash as a restore separator. An empty result is the toolkit Path Validation Error. Unlike toolkit globbing, this archive walk does not follow directory symlinks; implicitDescendants remains disabled because tar recurses into selected real directories.
+   *
    * @since 0.0.0
    */
   readonly save: {
@@ -221,31 +241,8 @@ export interface ActionCacheShape {
   };
 }
 
-/**
- * The entry version, byte-compatible with `actions/cache`.
- *
- * **Gotchas**
- *
- * A cache entry is keyed on `(key, version)`, and the version is a digest of
- * the archived paths plus the compression method. **The paths are not sorted**,
- * because upstream does not sort them: sorting here would compute a version no
- * other cache step in the workflow agrees with, and the entry a sibling step
- * wrote would simply never be found.
- *
- * **The digest covers the LITERAL pattern list, never the resolved paths.**
- * That is upstream's choice, not ours: `getCacheVersion` hashes the caller's
- * `paths` argument verbatim (`actions/toolkit`, `cache/src/internal/`
- * `cacheUtils.ts:136-159`), and both `saveCacheV2` (`cache/src/cache.ts:689`)
- * and `restoreCacheV2` (`cache.ts:361`) hand it the un-resolved list — restore
- * never resolves at all. Hashing the resolved list here would compute a
- * version the restore side cannot reproduce, and every save would be an entry
- * no restore ever finds.
- */
 const versionOf = (paths: ReadonlyArray<string>): string => sha256Hex(A.join([...paths, "gzip", "1.0"], "|"));
 
-/**
- * The primary key and the ladder to fall back through.
- */
 const ladder: {
   (
     key: string | CacheKey,
@@ -265,11 +262,6 @@ const ladder: {
       : { primary: key.key, fallbacks: restoreKeys ?? key.restoreKeys }
 );
 
-/**
- * What path resolution reads: the filesystem, the path dialect, the runner
- * environment (`GITHUB_WORKSPACE`, `HOME`, `USERPROFILE`) and whether the
- * runner is Windows.
- */
 interface PathResolution {
   readonly env: ActionEnvironmentShape;
   readonly fs: FileSystem.FileSystem;
@@ -277,9 +269,6 @@ interface PathResolution {
   readonly windows: boolean;
 }
 
-/**
- * Builds the `archiveFailed` error for one key, with an optional structural cause.
- */
 const pathFailure =
   (key: string) =>
   (detail: string, cause?: unknown): ActionCacheError =>
@@ -290,16 +279,8 @@ const pathFailure =
       ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
     });
 
-/**
- * Platform separators to the dialect's — applied to paths WE produce, never to
- * the caller's pattern text, where a backslash is minimatch's escape character.
- */
 const posixFor = (windows: boolean, value: string): string => (windows ? Str.replaceAll("\\", "/")(value) : value);
 
-/**
- * The caller's members with blank and `#` lines removed: the toolkit joins the
- * list with newlines, where both are inert.
- */
 const cleanPatterns = (patterns: ReadonlyArray<string>): ReadonlyArray<string> =>
   pipe(
     patterns,
@@ -307,19 +288,9 @@ const cleanPatterns = (patterns: ReadonlyArray<string>): ReadonlyArray<string> =
     A.filter((pattern) => Str.isNonEmpty(pattern) && !Str.startsWith("#")(pattern))
   );
 
-/**
- * The home directory a leading `~` expands to: `HOME`, then `USERPROFILE`.
- */
 const homeDirectory = (env: ActionEnvironmentShape): Effect.Effect<O.Option<string>> =>
   env.getOptional("HOME").pipe(Effect.filterOrElse(O.isSome, () => env.getOptional("USERPROFILE")));
 
-/**
- * One member rooted absolutely: a leading `~` expands to the home directory
- * with the expansion glob-escaped, and a relative member roots at the escaped
- * workspace `base`, as the toolkit escapes its own (`Pattern.globEscape`) — a
- * `[` in a directory name is a path here, not a character class. A leading
- * `!` (an exclusion) is kept in front of the rooted body.
- */
 const rootPattern = Effect.fnUntraced(function* (
   resolution: PathResolution,
   base: string,
@@ -340,31 +311,12 @@ const rootPattern = Effect.fnUntraced(function* (
   return excluded ? `!${rooted}` : rooted;
 });
 
-/**
- * Whether `child` lies strictly below `parent` (every path lies below `/`).
- */
 const isBelow = (child: string, parent: string): boolean =>
   parent === "/" ? child !== "/" : Str.startsWith(`${parent}/`)(child);
 
-/**
- * Where to look, and where a walk is worth its cost.
- *
- * **Details**
- *
- * Search roots are the longest literal prefix of every include — the same
- * derivation as `@actions/glob`'s search paths — with descendant roots folded
- * into their ancestors so nothing is walked twice. Wildcard roots are
- * remembered apart from literal ones, because only a wildcard can match BELOW
- * a root: a root that literals alone contributed is stat-and-admitted without
- * the recursive walk (a literal `~/.pnpm-store` must not cost a full store
- * enumeration that can admit nothing), while a folded-in wildcard root keeps
- * the toolkit-parity descent for the ancestor that absorbed it.
- */
 const searchPlan = (
   set: GlobSet
 ): { readonly roots: ReadonlyArray<string>; readonly needsWalk: (root: string) => boolean } => {
-  // GlobSet classifies whole-pattern negations as excludes, not wildcards, and
-  // every include was rooted, so its literal prefix contains at least "/".
   const wildcardRoots = A.map(set.wildcards, ({ enumerationPrefix }) =>
     enumerationPrefix === "/" ? "/" : Str.slice(0, -1)(enumerationPrefix)
   );
@@ -375,10 +327,6 @@ const searchPlan = (
   };
 };
 
-/**
- * `values` without repeats, first occurrence first, in one hashed pass (a
- * resolution at pnpm-store scale holds tens of thousands of paths).
- */
 const uniqueInOrder = (values: ReadonlyArray<string>): ReadonlyArray<string> => {
   const seen = MutableHashSet.empty<string>();
   return A.filter(values, (value) => {
@@ -388,20 +336,6 @@ const uniqueInOrder = (values: ReadonlyArray<string>): ReadonlyArray<string> => 
   });
 };
 
-/**
- * The candidates one search root contributes: nothing when it is not on disk,
- * the root itself, and — only where a wildcard can match below it — every
- * entry of its recursive listing.
- *
- * **Details**
- *
- * Existence IS the filter: a literal that is not on disk and a pattern whose
- * literal prefix directory is absent both contribute nothing, exactly as the
- * toolkit's globber skips an ENOENT search path. `stat` follows symlinks, so a
- * broken link is also nothing. A literal-only root admits itself (or not) at
- * the stat; every deeper candidate would fail the set anyway, so the walk
- * would be pure cost.
- */
 const rootCandidates = Effect.fnUntraced(function* (
   resolution: PathResolution,
   needsWalk: (root: string) => boolean,
@@ -424,11 +358,6 @@ const rootCandidates = Effect.fnUntraced(function* (
   );
 });
 
-/**
- * Why `candidate` cannot be one `tar` manifest line, if it cannot: a line is
- * one tar input, so a line break would split it, and off Windows a backslash
- * is not a separator the archive would restore.
- */
 const unusableCandidate = (windows: boolean, candidate: string): O.Option<string> => {
   if (!windows && Str.includes("\\")(candidate)) {
     return O.some(`cache path contains a backslash: "${candidate}"`);
@@ -438,19 +367,6 @@ const unusableCandidate = (windows: boolean, candidate: string): O.Option<string
     : O.none();
 };
 
-/**
- * `matched` without the paths a selected real directory already covers, in
- * resolution order.
- *
- * **Details**
- *
- * Every selected real directory is collected first, so a descendant that
- * precedes its parent in filesystem enumeration is covered too. Tar stores
- * symlinks without following them, unlike `fs.stat`: an enumerated broken link
- * is a valid member whose missing target is never stat'd, and a link between
- * a real ancestor and a path stops tar's recursion, so that path's explicitly
- * selected descendants still belong.
- */
 const dropCoveredPaths = Effect.fnUntraced(function* (
   resolution: PathResolution,
   failed: ReturnType<typeof pathFailure>,
@@ -479,9 +395,7 @@ const dropCoveredPaths = Effect.fnUntraced(function* (
     }),
     { concurrency: 1, discard: true }
   );
-  // Walk up from a candidate's parent: a symlinked ancestor ends the walk
-  // uncovered (its contents are not this tree's), a matched directory covers
-  // the candidate, and reaching the root ends it uncovered.
+
   const coveredFrom = (parent: string): Effect.Effect<boolean> =>
     Effect.flatMap(isSymlink(parent), (symlink) => {
       if (symlink) return Effect.succeed(false);
@@ -489,36 +403,12 @@ const dropCoveredPaths = Effect.fnUntraced(function* (
       const next = posixFor(windows, path.dirname(parent));
       return next === parent ? Effect.succeed(false) : coveredFrom(next);
     });
-  // A filesystem root ("/", "C:/") is its own parent and is never covered.
   return yield* Effect.filter(matched, (candidate) => {
     const parent = posixFor(windows, path.dirname(candidate));
     return parent === candidate ? Effect.succeed(true) : Effect.map(coveredFrom(parent), (covered) => !covered);
   });
 });
 
-/**
- * Resolve the caller's patterns to the concrete files and directories `tar`
- * will archive, with `actions/cache` parity.
- *
- * **Details**
- *
- * The toolkit resolves through `@actions/glob` with `implicitDescendants`
- * disabled (`cacheUtils.ts:48-70`): a matched directory is answered as itself
- * and `tar` recurses into it, a pattern that matches nothing — including a
- * literal path that is not on disk — contributes nothing
- * (`internal-globber.ts:90-100` existence-filters every search path), a
- * leading `~` expands to the home directory with the expansion glob-escaped
- * (`internal-pattern.ts:226-234`), and blank or `#` members are skipped. A
- * fully empty resolution is the toolkit's hard "Path Validation Error"
- * (`cache.ts:662-666`) and a typed failure here. Every resolved name is
- * checked before the manifest is written or `tar` spawns, including names a
- * directory later covers.
- *
- * Two knowing departures: matches stay ABSOLUTE for the `-P` archive posture
- * rather than being re-rooted at the workspace (the version hashes the
- * literal list, so the wire protocol never sees the difference), and the walk
- * does not follow directory symlinks, where the toolkit's globber does.
- */
 const resolvePaths = Effect.fnUntraced(function* (
   resolution: PathResolution,
   patterns: ReadonlyArray<string>,
@@ -526,9 +416,6 @@ const resolvePaths = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ReadonlyArray<string>, ActionCacheError> {
   const failed = pathFailure(key);
   const cleaned = cleanPatterns(patterns);
-  // The toolkit roots relative patterns at the process working directory and
-  // relativizes matches against GITHUB_WORKSPACE; on a runner the two are the
-  // same directory, and the variable is the one a test controls.
   const gotOptional = yield* resolution.env.getOptional("GITHUB_WORKSPACE");
   const workspace = O.getOrElse(gotOptional, () => ".");
   const base = posixFor(resolution.windows, resolution.path.resolve(workspace));
@@ -555,15 +442,12 @@ const resolvePaths = Effect.fnUntraced(function* (
   return yield* dropCoveredPaths(resolution, failed, matched);
 });
 
+// decision: portable-archive-command-builders
 const make = Effect.fn("make")(function* (
   transfer: FileBlobTransfer
 ): Effect.fn.Return<ActionCacheShape, never, RunnerServiceRequirements> {
-  // Resolved once, at construction, so every member's `R` is `never`.
   const { http, fs, path, spawner, env, windows } = yield* runnerServices;
 
-  /**
-   * A filesystem or subprocess failure on the way to or from the archive.
-   */
   const archiveFailed = (key: string) => (cause: unknown) =>
     ActionCacheError.make({ reason: "archiveFailed", key, cause });
 
@@ -573,25 +457,8 @@ const make = Effect.fn("make")(function* (
     )
   );
 
-  /**
-   * The cache service, for one key: every failure names it.
-   */
   const cacheService = cacheServiceFor({ http, backend, fail: (failure) => ActionCacheError.make(failure) });
 
-  /**
-   * Run `tar` ONCE, keeping its stderr.
-   *
-   * **Details**
-   *
-   * On Windows, extraction runs with `-k` so a file another process holds
-   * open is skipped rather than failing the whole restore — and `tar` then
-   * exits 1 to say so, which is a warning rather than an error. Exit 2 and
-   * above stays a failure on every platform.
-   *
-   * Output and exit code come from the SAME `spawn` handle
-   * (`internal/spawn.ts` — the spawner's convenience members each spawn
-   * independently, so reading both from them would run `tar` twice).
-   */
   const tar: {
     (args: ReadonlyArray<string>, key: string, tolerateWarnings: boolean): Effect.Effect<void, ActionCacheError>;
     (key: string, tolerateWarnings: boolean): (args: ReadonlyArray<string>) => Effect.Effect<void, ActionCacheError>;
@@ -607,10 +474,6 @@ const make = Effect.fn("make")(function* (
     })
   );
 
-  /**
-   * A scratch archive path — plus the scratch directory itself, where the
-   * save side writes its tar manifest — removed on every exit path.
-   */
   const withArchive: {
     <A>(
       key: string,
@@ -650,40 +513,19 @@ const make = Effect.fn("make")(function* (
             detail: "no paths were given to cache",
           });
         }
-        // The LITERAL list, before resolution — see `versionOf` for why.
         const version = versionOf(paths);
         const resolved = yield* resolvePaths(resolution, paths, primary);
         yield* withArchive(
           primary,
           Effect.fnUntraced(function* (archive: string, scratch: string) {
-            // The resolved list reaches tar through a MANIFEST FILE, never
-            // argv: resolution admits every matched descendant, so a pattern
-            // like `${workspace}/**` resolves to tens of thousands of
-            // absolute paths and overflows the kernel's argv limit (E2BIG)
-            // before tar ever runs. Same fix as the toolkit, which writes
-            // manifest.txt and passes `--files-from`
-            // (`cache/src/internal/tar.ts`). The flag is spelled `-T`: GNU
-            // tar (Linux runners) and bsdtar (macOS runners, and Windows'
-            // system tar.exe) both document `-T` and `--files-from` as
-            // synonyms — probed against bsdtar 3.5.3 with this exact
-            // invocation — and the short spelling sidesteps GNU's
-            // `--files-from=FILE` vs bsdtar's `--files-from FILE` split.
-            // GNU tar reads a manifest line starting with `-` as an option
-            // (its escape hatch, `--verbatim-files-from`, is GNU-only), but
-            // resolved paths here are always absolute, so no line can.
             const manifest = path.join(scratch, "manifest.txt");
             yield* fs
               .writeFileString(manifest, `${A.join(resolved, "\n")}\n`)
               .pipe(Effect.mapError(archiveFailed(primary)));
-            // `-P` keeps leading separators, so an absolute path is stored
-            // verbatim and restored where it came from rather than under the
-            // working directory of whichever step happens to restore it.
             yield* tar(["czPf", archive, "-T", manifest], primary, false);
             const size = yield* fs.stat(archive).pipe(Effect.mapError(archiveFailed(primary)));
 
             const service = cacheService(primary);
-            // None: another job saved this key first, and the cache already
-            // holds what the caller wanted.
             const url = yield* reserveUpload(service, primary, version);
             if (O.isNone(url)) {
               return;
@@ -715,9 +557,6 @@ const make = Effect.fn("make")(function* (
             yield* tar([windows ? "xzPkf" : "xzPf", archive], primary, windows);
           })
         );
-        // The matched key is what the caller branches on: a hit on a restore
-        // key is a partial hit, and re-saving under the primary key is the
-        // whole point of knowing the difference.
         return O.some(hit.value.matchedKey ?? primary);
       })
     ),

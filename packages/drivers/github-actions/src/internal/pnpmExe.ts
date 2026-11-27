@@ -1,20 +1,8 @@
-import * as HashSet from "effect/HashSet";
-// The pnpm native-binary layout: from pnpm 12 the `pnpm` registry package is a
-// thin wrapper whose `pnpm` bin is a shebang-less placeholder that the
-// package's own install script overwrites with the host's native executable,
-// fetched as an optional dependency named `@pnpm/exe.<os>-<arch>[-musl]`.
-// The installer never runs lifecycle scripts, so it performs that overlay
-// itself; the pure pieces of that live here, where they are testable without
-// a tarball.
-//
-// Detection is by LAYOUT (the manifest's `optionalDependencies` naming an
-// `@pnpm/exe.*` package), never by major version — pnpm 11 and earlier ship
-// no such dependency and keep their Node entry points.
-
 import * as A from "effect/Array";
 import * as Base64 from "effect/encoding/Base64";
 import * as Hex from "effect/encoding/Hex";
 import * as Function from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -37,11 +25,6 @@ import * as Str from "effect/String";
  */
 export const PNPM_EXE_PREFIX = "@pnpm/exe.";
 
-/**
- * The targets pnpm publishes a native binary for — the `PLATFORMS` table of
- * the wrapper's own `native-binary.mjs`, flattened to the spellings that
- * follow the prefix. Only linux x64/arm64 have a musl twin.
- */
 const PNPM_EXE_TARGETS = HashSet.fromIterable<string>([
   "linux-x64",
   "linux-arm64",
@@ -59,7 +42,6 @@ const PNPM_EXE_TARGETS = HashSet.fromIterable<string>([
   "android-arm64",
 ]);
 
-/** `RUNNER_OS` spellings (lower-cased) onto Node's `process.platform` spellings, which the targets use. */
 const RUNNER_OS_TO_PLATFORM: Readonly<Record<string, string>> = {
   linux: "linux",
   macos: "darwin",
@@ -75,6 +57,10 @@ const RUNNER_OS_TO_PLATFORM: Readonly<Record<string, string>> = {
  * `musl` only distinguishes on linux; an arch released for glibc alone
  * (riscv64, ppc64, s390x) answers `None` on a musl host, as upstream does —
  * the glibc binary cannot run there.
+ *
+ * **Gotchas**
+ *
+ * Detect native pnpm wrappers by optionalDependencies entries named @pnpm/exe.*, never by major version. pnpm 12's pnpm bin is a shebang-less placeholder normally overwritten by its lifecycle script; the installer runs no lifecycle scripts and must overlay the host executable itself. Older layouts retain Node entry points.
  *
  * **Example** (Select a Linux musl executable)
  *
@@ -151,7 +137,6 @@ export const detectMusl = (platform: string): boolean => {
   );
 };
 
-/** The SRI algorithms a registry may list, strongest first. */
 const SRI_ALGORITHMS: ReadonlyArray<string> = ["sha512", "sha384", "sha256", "sha1"];
 
 /**
@@ -187,7 +172,6 @@ export const strongestSri = (integrity: string): O.Option<{ readonly algorithm: 
       if (!SRI_ALGORITHMS.includes(algorithm)) {
         return [];
       }
-      // Options (`?opt`) may trail the digest per the SRI grammar; drop them.
       const digest = Function.pipe(entry, Str.slice(dash + 1), Str.replace(/\?.*$/s, ""));
       const decoded = Base64.decode(digest);
       return Result.isSuccess(decoded) ? [{ algorithm, hex: Hex.encode(decoded.success) }] : [];

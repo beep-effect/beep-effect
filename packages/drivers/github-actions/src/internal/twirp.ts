@@ -1,11 +1,3 @@
-// The Twirp JSON client the Actions results backend speaks.
-//
-// The cache, artifact and blob-store protocols are the same transport with a
-// different service segment, so the RPC, the conflict sentinel and the retry
-// policy live here once. Generic over nothing at all: each caller maps a
-// `TwirpFailure` into its own typed error, because the failure a caller
-// reports is about *its* operation, not about HTTP.
-
 import { $GithubActionsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "@beep/utils/Option";
@@ -192,7 +184,6 @@ export const isRetryable = (failure: TwirpFailure): boolean => {
   return failure.status >= 500 || failure.status === 408 || failure.status === 429;
 };
 
-/** How many times a retryable RPC is retried before giving up. */
 const RETRIES = 4;
 
 /**
@@ -258,6 +249,10 @@ export declare namespace TwirpCall {
  * without it. A non-retryable failure never sleeps, which is what keeps the
  * ordinary failure tests clock-free.
  *
+ * **Gotchas**
+ *
+ * Cache, artifact and blob-store protocols share this JSON transport, service-segment routing, conflict sentinel and retry policy. Each caller maps TwirpFailure to its own operation error. Keep the runtime token redacted: bearerToken renders it only at the request boundary.
+ *
  * **Example** (Construct an authenticated Twirp call)
  *
  * ```ts
@@ -284,8 +279,6 @@ export const twirpCall = (options: TwirpCall.Admitted): Effect.Effect<TwirpResul
   const { baseUrl, body, http, method, service, token } = options;
   const attempt = Effect.gen(function* () {
     const request = HttpClientRequest.post(`${baseUrl}twirp/${service}/${method}`).pipe(
-      // The runtime token is never declassified: `bearerToken` takes a
-      // `Redacted` and renders it at the boundary itself.
       HttpClientRequest.bearerToken(token),
       HttpClientRequest.bodyJsonUnsafe(body)
     );
@@ -306,7 +299,6 @@ export const twirpCall = (options: TwirpCall.Admitted): Effect.Effect<TwirpResul
   );
 };
 
-/** Check the property before reading an unknown JSON object, including inherited fields. */
 const hasField: {
   <Key extends string>(body: object, key: Key): body is object & Record<Key, unknown>;
   <Key extends string>(key: Key): (body: object) => body is object & Record<Key, unknown>;

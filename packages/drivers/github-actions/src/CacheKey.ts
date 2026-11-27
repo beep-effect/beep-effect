@@ -52,6 +52,10 @@ export class InvalidDigestLengthError extends S.TaggedError<
 ) {}
 
 /**
+ * **Gotchas**
+ *
+ * Hyphens separate key segments so prefix-based restore keys stop at meaningful boundaries, matching published Actions recipes. Refuse commas and newlines inside a segment because the runner uses them to split the restore-key list.
+ *
  * **Example** (Identify an unreadable lockfile)
  *
  * ```ts
@@ -172,28 +176,10 @@ export class CacheKeyBadPatternError extends S.TaggedError<CacheKeyBadPatternErr
  */
 export type CacheKeyError = CacheKeyReadError | CacheKeyBadPatternError;
 
-/**
- * The separator between key segments.
- *
- * **Details**
- *
- * `-` is not arbitrary: it is what every published Actions cache recipe uses,
- * and a restore key is a **prefix match**, so the separator is what makes a
- * partial key a meaningful boundary rather than a coincidence.
- */
 const SEPARATOR = "-";
 
-/** GitHub refuses a cache key longer than this. */
 const MAX_KEY_LENGTH = 512;
 
-/**
- * One component of a cache key.
- *
- * **Details**
- *
- * Commas and newlines are refused because the runner uses both to delimit the
- * restore-key list — a segment carrying one would silently become two keys.
- */
 const Segment = S.String.check(
   S.isPattern(
     /^[^,\n\r]+$/u,
@@ -214,10 +200,6 @@ const Segments = S.NonEmptyArray(Segment).check(
   )
 );
 
-/**
- * One explicit rung: how many leading segments it keeps. The upper bound is
- * cross-field (`segments.length - 1`) and lives on the class schema.
- */
 const RestoreDepth = S.Finite.check(
   S.isInt(
     $I.annote("RestoreDepthInteger", {
@@ -234,21 +216,8 @@ const RestoreDepth = S.Finite.check(
   )
 );
 
-/**
- * The explicit ladder: possibly empty, because **zero rungs is a policy** —
- * exact-match-only restores, spelled by {@link CacheKey.withoutRestoreKeys}.
- * Only *absence* means the default every-prefix ladder.
- */
 const RestoreDepths = S.Array(RestoreDepth);
 
-/**
- * The literal includes that name a file inside the workspace. A literal that
- * climbs above the workspace is not this workspace's file, whatever is there
- * (the wildcard walk is not so bounded: a symlinked directory targeting
- * outside the workspace is descended, matching `@actions/glob`'s out-of-tree
- * link following). Absent is a miss; unreadable is not, because a key computed
- * without a file the caller asked for silently restores the wrong cache.
- */
 const literalMatches = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   path: Path.Path,
@@ -270,13 +239,6 @@ const literalMatches = Effect.fnUntraced(function* (
   });
 });
 
-/**
- * The files each include wildcard expands to, walked from its own literal
- * prefix by `@beep/walker`: files only, `cwd`-relative posix paths, symlinked
- * directories followed with `@actions/glob`'s traversal-chain cycle guard
- * (the runner's `hashFiles()` default of `followSymbolicLinks: true`). A
- * whole-pattern negation only filters; it expands nothing.
- */
 const wildcardMatches = Effect.fnUntraced(function* (
   path: Path.Path,
   workspace: string,
@@ -654,6 +616,10 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
    * digest — it is the signal that the pattern is wrong, and a caller that
    * folds it into a key silently caches against a constant.
    *
+   * **Gotchas**
+   *
+   * Hash matched files with explicit bounded concurrency 8: Effect.all otherwise defaults to one and loses parallel IO, while an unbounded fiber per file can exhaust descriptors for large pattern sets.
+   *
    * **Example** (Construct a lockfile hashing effect)
    *
    * ```ts
@@ -678,15 +644,8 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
         fs
           .readFile(path)
           .pipe(Effect.mapBoth({ onFailure: (cause) => CacheKeyReadError.make({ path, cause }), onSuccess: sha256 })),
-      // The `concurrency` option is load-bearing, not a tuning knob: `Effect.all`
-      // defaults to `concurrency: 1`, so omitting it reads every file one at a
-      // time and this whole shape buys nothing over a sequential loop. Bounded rather than `"unbounded"` because a pattern set can
-      // match thousands of files and one fiber per file would exhaust the
-      // runner's descriptors; 8 is the width `ActionCache` and `Artifact`
-      // already use for their own IO fan-out.
       { concurrency: 8 }
     );
-    // The digest of the concatenated raw digests — the runner's own `hashFiles()` shape.
     return O.some(sha256Hex(Uint8Array.from(A.flatMap(digests, (digest) => [...digest]))));
   });
 
@@ -728,6 +687,12 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
    * The answer is sorted, so a caller cannot make its key depend on the order
    * the filesystem happened to report.
    *
+   * **Gotchas**
+   *
+   * A missing workspace fails with its path; treating it as zero matches would silently create a constant cache key. Expand each include from its literal prefix, stat literal files without walking, and follow symlinked directories with the toolkit traversal-chain cycle guard. Return cwd-relative POSIX file paths, including on Windows, with no implicit pruning. Reapply explicit ! exclusions across the include union; these are the runner hashFiles defaults.
+   *
+   * A literal include escaping the workspace is not a workspace file and is ignored; an unreadable requested file is a failure, since dropping it would restore the wrong cache. Wildcard symlink traversal may reach outside the workspace, matching the toolkit's followSymbolicLinks default. Whole-pattern exclusions filter without expanding; includes return files only and preserve cwd-relative POSIX spellings.
+   *
    * **Example** (Construct a lockfile discovery effect)
    *
    * ```ts
@@ -752,21 +717,8 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     const set = yield* GlobSet.compile(options.patterns).pipe(
       Effect.mapError((cause) => CacheKeyBadPatternError.make({ pattern: cause.pattern, cause }))
     );
-    // An absent workspace is a failure naming it, never an empty answer:
-    // `descend` reads a missing base as zero matches, which here would fold
-    // into a key that silently caches against a constant.
     yield* fs.stat(workspace).pipe(Effect.mapError((cause) => CacheKeyReadError.make({ path: workspace, cause })));
 
-    // The walk is `@effected/walker`'s: each include is expanded from its own
-    // literal prefix (a literal include is one stat, never a walk), files
-    // only, `cwd`-relative posix paths — so a Windows runner matches too.
-    // Nothing is pruned implicitly, matching the runner's own `hashFiles()`;
-    // an exclusion is the caller's `!pattern`, re-applied over the union
-    // below because each include is expanded alone. Under `followSymlinks`
-    // the walk follows symlinked directories with `@actions/glob`'s
-    // traversal-chain cycle guard, so files reachable only through a
-    // symlinked directory contribute to the key — matching the runner's
-    // `hashFiles()` default of `followSymbolicLinks: true`.
     const literalMatches1 = yield* literalMatches(fs, path, workspace, set.literals);
     const wildcardMatches3 = yield* wildcardMatches(path, workspace, set.wildcards);
     const candidates = A.appendAll(literalMatches1, wildcardMatches3);

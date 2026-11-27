@@ -50,7 +50,6 @@ export class MissingProcessIdError extends S.TaggedError<
   })
 ) {}
 
-// Effect ChildProcess cannot route detached output to native file descriptors.
 const { spawn: spawnChild } = process.getBuiltinModule("node:child_process");
 const { closeSync, openSync } = process.getBuiltinModule("node:fs");
 
@@ -668,7 +667,6 @@ export interface DetachedProcessOps {
   ) => Effect.Effect<ChildProcessSpawner.ProcessId, DetachedProcessError>;
 }
 
-/** See {@link DetachedProcess.makeTestOps}: an unstubbed member dies naming itself. */
 const dies = unstubbed("DetachedProcess.makeTestOps");
 
 /**
@@ -685,6 +683,12 @@ const dies = unstubbed("DetachedProcess.makeTestOps");
  * That last step is why this lives here rather than in a command runner. There
  * is no `ChildProcess` to `.kill()`; there is only a number that has been
  * through a text file. See {@link DetachedProcess.reap}.
+ *
+ * **Gotchas**
+ *
+ * Detached children need an error listener even after a startup failure was reported: an asynchronous unhandled error event would otherwise crash the action after its parent has let go. Errno classification reads the wrapped cause, because the tagged wrapper has no code and would never match ESRCH.
+ *
+ * Native detached spawning is required to route output into native file descriptors; Effect ChildProcess cannot express that routing.
  *
  * **Example** (Start a detached server and await readiness)
  *
@@ -753,12 +757,6 @@ export abstract class DetachedProcess {
             detached: true,
             stdio: ["ignore", descriptor, descriptor],
           });
-          // A `ChildProcess` with no `error` listener re-throws the event, so a
-          // missing binary would take down the ACTION rather than failing this
-          // call — the emit is asynchronous and lands after the guard below has
-          // already reported the failure properly. The parent has deliberately
-          // let go of this child, so there is nothing left for it to do with
-          // the event except not die of it.
           child.on("error", () => {});
           child.unref();
           if (child.pid === undefined) {
@@ -773,8 +771,6 @@ export abstract class DetachedProcess {
     });
 
     yield* Effect.annotateCurrentSpan({ pid });
-    // Core's nominal constructor: no runtime check, which is correct here
-    // because the operating system just handed us the number.
     return ChildProcessSpawner.ProcessId(pid);
   });
 
@@ -819,9 +815,6 @@ export abstract class DetachedProcess {
       probe: Effect.Effect<boolean, E, R>,
       options?: ReadinessOptions.Encoded
     ) {
-      // One initial probe plus `attempts` spaced retries, stopping early the
-      // moment one answers ready; the last answer is what remains when the
-      // budget runs out.
       const ready = yield* Effect.repeat(probe, {
         schedule: Schedule.spaced(options?.interval ?? "150 millis"),
         times: options?.attempts ?? 40,
@@ -931,8 +924,6 @@ export abstract class DetachedProcess {
         },
         catch: (cause) => DetachedSignalFailedError.make({ pid, cause }),
       }).pipe(
-        // Classify the errno the wrapper carries, not the wrapper itself: the
-        // tagged error has no `code`, so testing it never matched ESRCH.
         Effect.catch((error) =>
           Bool.match(isErrno(error.cause, "ESRCH"), {
             onTrue: () => Effect.succeed(false),
