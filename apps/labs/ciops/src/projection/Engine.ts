@@ -137,8 +137,9 @@ const admitInto =
   (policy: AdmissionPolicyParams) =>
   (state: AdmissionFold, request: PendingRequest): AdmissionFold => {
     const reviewFix = AdmissionWorkKind.is["review-fix"](request.kind);
-    // Class-cap deferral is skippable: it never arms head-of-line blocking.
-    if (reviewFix && state.activeReviewFixCount >= policy.reviewFixClassCap) {
+
+    const skippableReviewFixCap = reviewFix && state.activeReviewFixCount >= policy.reviewFixClassCap;
+    if (skippableReviewFixCap) {
       return { ...state, deferredTail: A.append(state.deferredTail, request) };
     }
     const nextTotal = state.activeTokenTotal + request.weightTokens;

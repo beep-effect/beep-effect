@@ -16,11 +16,9 @@ const HOST_HOME = Config.option(Config.String("HOME"));
 const FIXTURES = `${import.meta.dirname}/fixtures`;
 const BIN = `${FIXTURES}/exit3.mjs`;
 
-// The sandbox is laid out on memfs: the child reads its directories from the env and never visits them. The child runs
-// in the fixtures directory, so the real spawner, which touches its file system only to check an explicit cwd, gets a
-// noop one that grants that check.
+const grantsOnlyTheCwdCheck = FileSystem.layerNoop({ access: () => Effect.void });
 const Spawner = NodeChildProcessSpawner.layer.pipe(
-  Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ access: () => Effect.void }), NodePath.layer))
+  Layer.provide(Layer.mergeAll(grantsOnlyTheCwdCheck, NodePath.layer))
 );
 const Platform = Layer.mergeAll(Spawner, MemoryFileSystem.layer, NodePath.layer);
 
@@ -61,9 +59,8 @@ it.layer(Platform, { timeout: "30 seconds" })("CliTest", (it) => {
   it.effect("without a cwd the child runs in the sandbox root", () =>
     Effect.gen(function* () {
       const made = yield* CliTest.sandbox({ path: yield* HOST_PATH });
-      // A sandbox whose root is a real directory: the fixtures, which the child can run in.
-      const sandbox = { ...made, root: FIXTURES };
-      const result = yield* CliTest.run(BIN, [], { sandbox, execPath: process.execPath, stdin: "" });
+      const rootedAtFixtures = { ...made, root: FIXTURES };
+      const result = yield* CliTest.run(BIN, [], { sandbox: rootedAtFixtures, execPath: process.execPath, stdin: "" });
       assert.strictEqual(result.exitCode, 3);
     })
   );

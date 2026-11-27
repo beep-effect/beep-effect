@@ -506,9 +506,6 @@ const isSoleContact = (evidence: PracticeKgCorrespondentEvidence): boolean =>
     O.exists((contact) => A.length(evidence.contacts) === 1 && !contact.roleAddress)
   );
 
-// The link's family key must be keyed to the link's own client and name a
-// matter the bundle holds: the attorney's `<client>.<0NNNN>` matter numbers
-// share the dotted shape (D-20) and are never matters.
 const linkedMatterKey =
   (matterFamilyKeys: ReadonlyArray<string>) =>
   (link: PracticeKgCorrespondentLink): O.Option<string> =>
@@ -543,6 +540,12 @@ const attorneyFamilyKey = (evidence: PracticeKgCorrespondentEvidence): O.Option<
  * (`org-name-match`, `email-subject-ref`) never make a lookup `unique`;
  * they make it `ambiguous`, with the candidates to show a person. With no
  * candidate and no link the lookup is `none`.
+ *
+ * **Gotchas**
+ *
+ * The client-number prefix alone does not make a family key a matter: the
+ * attorney's `<client>.<0NNNN>` matter numbers share the dotted shape and are
+ * never matters, so the key must also be one of `matterFamilyKeys`.
  *
  * **Example** (Resolve from an attorney link)
  *

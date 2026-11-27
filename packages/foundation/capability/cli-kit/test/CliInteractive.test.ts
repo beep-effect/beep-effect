@@ -25,7 +25,6 @@ const decide = (
         )
       )
     ),
-    // The environment is fixed, never the host's, and provided outside the layer that reads it: TERM decides too.
     Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env))
   );
 
@@ -34,12 +33,11 @@ describe("CliInteractive.layer", () => {
   for (const kind of kinds) {
     for (const stdin of [true, false]) {
       for (const stdout of [true, false]) {
-        // Only a human with a terminal on both ends is interactive.
-        const expected = kind === "human" && stdin && stdout;
-        it.effect(`${kind}, stdin TTY ${stdin}, stdout TTY ${stdout} => ${expected}`, () =>
+        const humanOnBothTerminals = kind === "human" && stdin && stdout;
+        it.effect(`${kind}, stdin TTY ${stdin}, stdout TTY ${stdout} => ${humanOnBothTerminals}`, () =>
           Effect.gen(function* () {
             const decide1 = yield* decide(kind, stdin, stdout);
-            assert.strictEqual(decide1, expected);
+            assert.strictEqual(decide1, humanOnBothTerminals);
           })
         );
       }

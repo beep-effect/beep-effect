@@ -23,7 +23,6 @@ import type { Reply } from "./support/fixtures.ts";
 
 const TOKEN = Redacted.make("ghs_test");
 
-/** No sleeping between retries, so retry counts are testable without a clock. */
 const INSTANT_RETRY = RetryPolicy.make({
   maxRetries: 2,
   baseDelay: Duration.zero,
@@ -52,8 +51,11 @@ describe("GitHubClient.request", () => {
     (client) =>
       Effect.gen(function* () {
         const repo = yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
-        // `default_branch` is typed as string by the route alone — no cast.
-        assert.strictEqual(repo.default_branch, "main");
+        assert.strictEqual(
+          repo.default_branch,
+          "main",
+          "default_branch is typed as string by the route alone, with no cast"
+        );
         assert.strictEqual(repo.node_id, "R_1");
       })
   );
@@ -371,11 +373,10 @@ describe("GitHubClient.paginate", () => {
     (client, script) =>
       Effect.gen(function* () {
         const pulls = yield* client.paginate("GET /repos/{owner}/{repo}/pulls", { owner: "o", repo: "r" });
-        // The retried page must be page two, not page three: octokit's cursor
-        // only advances on success, which is what makes per-page retry safe.
         assert.deepStrictEqual(
           A.map(pulls, (pull) => pull.number),
-          [1, 2, 3, 4]
+          [1, 2, 3, 4],
+          "the retried page is page two: octokit's cursor advances only on success"
         );
         assert.strictEqual(script.count(), 3);
       }),
@@ -518,8 +519,7 @@ describe("GitHubClient.layerFromConfig", () => {
       it.effect("fails with a ConfigError when no token is configured", () =>
         Effect.gen(function* () {
           const error = yield* ConstructionError;
-          // No configured token fails construction rather than producing a wire failure.
-          assert.strictEqual(error._tag, "ConfigError");
+          assert.strictEqual(error._tag, "ConfigError", "a missing token fails construction, not on the wire");
         })
       );
     });
@@ -594,9 +594,7 @@ describe("GitHubClient.layerFixture", () => {
               PageOptions.make({ perPage: 100, maxPages: 2 })
             )
           );
-          // The double it replaces returned every recorded page regardless of what
-          // the caller asked for, which made this assertion impossible to write.
-          assert.lengthOf(pulls, 200);
+          assert.lengthOf(pulls, 200, "the fixture honours maxPages rather than returning every recorded page");
           assert.deepStrictEqual(requested, [
             RecordedCall.make({
               kind: "paginate",
@@ -619,9 +617,6 @@ describe("GitHubClient.layerFixture", () => {
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("records a request call WITH its params, not only paginated reads", () =>
         Effect.gen(function* () {
-          // Before this, `request` named its params `_params` and never appended,
-          // so a suite whose methods all go through `request` could assert nothing
-          // about them — the gap that made a consumer hand-roll its own harness.
           yield* Effect.flatMap(GitHubClient, (client) =>
             client.request("GET /repos/{owner}/{repo}", { owner: "acme", repo: "widgets" })
           );
@@ -655,19 +650,17 @@ describe("GitHubClient.layerFixture", () => {
   it.layer(GitHubClient.layerFixture({}), { timeout: "30 seconds" })((it) => {
     it.effect("DIES by default when a route has no recorded fixture", () =>
       Effect.gen(function* () {
-        // A missing fixture is test wiring, not a domain condition. It must not
-        // enter the error channel, because a consumer that catches GitHubError
-        // per resource would absorb it into a different execution path and the
-        // assertion would fail for a new reason with nothing naming a fixture.
         const exit = yield* Effect.exit(
           Effect.flatMap(GitHubClient, (client) =>
             client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
           )
         );
         assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
-        assert.include(String(exit), "no fixture for GET /repos/{owner}/{repo}");
-        // Proves it is a defect, not a typed failure: catching the error channel
-        // must NOT absorb it.
+        assert.include(
+          String(exit),
+          "no fixture for GET /repos/{owner}/{repo}",
+          "a missing fixture is test wiring, kept out of the GitHubError channel"
+        );
         const stillDies = yield* Effect.exit(
           Effect.flatMap(GitHubClient, (client) =>
             client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
@@ -694,9 +687,6 @@ describe("GitHubClient.layerFixture", () => {
     )((it) => {
       it.effect("records a graphql call under the document name, with its variables", () =>
         Effect.gen(function* () {
-          // The graphql surface records too, keyed by document name rather than a
-          // route. Nothing asserted it, so the recorder's claim to cover "every
-          // call" rested on three of four surfaces.
           yield* Effect.flatMap(GitHubClient, (client) => client.graphql(doc, { login: "acme" }));
           assert.deepStrictEqual(requested, [
             RecordedCall.make({ kind: "graphql", route: "ProbeDocument", params: { login: "acme" } }),
@@ -717,16 +707,12 @@ describe("GitHubClient.layerFixture", () => {
     )((it) => {
       it.effect("records a paginated read that FAILS, so a suite can tell it apart from one never made", () =>
         Effect.gen(function* () {
-          // Every other surface records before its checks; paginate used to record
-          // after, so a stubbed-error read left `requested` empty and a suite could
-          // not distinguish "not called" from "called and failed" — the one case
-          // the error-as-response fixture is for.
           yield* Effect.flip(
             Effect.flatMap(GitHubClient, (client) =>
               client.paginate("GET /repos/{owner}/{repo}/pulls", { owner: "o", repo: "r" })
             )
           );
-          assert.lengthOf(requested, 1);
+          assert.lengthOf(requested, 1, "paginate records before its checks, like every other surface");
           assert.strictEqual(requested[0]?.kind, "paginate");
           assert.deepStrictEqual(requested[0]?.params, { owner: "o", repo: "r" });
         })
@@ -741,17 +727,13 @@ describe("GitHubClient.layerFixture", () => {
   )((it) => {
     it.effect("a recorded GitHubError IS the response, which is how a 404 is stubbed deliberately", () =>
       Effect.gen(function* () {
-        // The mechanism the `unstubbed` docstring's advice depends on: absence
-        // means unwired, a recorded error means "this route fails, and here is
-        // why". Without this, "prefer stubbing the 404 explicitly" was advice
-        // with nothing behind it.
         const error = yield* Effect.flip(
           Effect.flatMap(GitHubClient, (client) =>
             client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" })
           )
         );
         assert.instanceOf(error, GitHubError);
-        assert.strictEqual(error.kind, "notFound");
+        assert.strictEqual(error.kind, "notFound", "absence means unwired; a recorded error means this route fails");
       })
     );
   });

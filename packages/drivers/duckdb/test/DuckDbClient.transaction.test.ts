@@ -24,7 +24,6 @@ const MULTI_STATEMENT_MESSAGE =
 
 const LONG_QUERY = "select count(*) from range(20000000000)";
 
-// `it.effect` installs TestClock, so wall-clock waits must run with the live clock.
 const liveSleep = (millis: number): Effect.Effect<void> => Effect.sleep(`${millis} millis`).pipe(TestClock.withLive);
 
 const countRows = (sql: SqlClient.SqlClient, table: string): Effect.Effect<number, SqlError> =>
@@ -268,12 +267,14 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         expectRefusedMultiStatement(whole);
         const countRows13 = yield* countRows(sql, "tx_multi_begin");
         expect(countRows13).toBe(0);
-        // Nothing ran: DuckDB is still in autocommit, so a raw BEGIN opens a fresh transaction.
         yield* sql.unsafe("BEGIN");
         yield* sql`insert into tx_multi_begin values (3)`;
         yield* sql.unsafe("COMMIT");
         const countRows14 = yield* countRows(sql, "tx_multi_begin");
-        expect(countRows14).toBe(1);
+        expect(
+          countRows14,
+          "nothing ran, so DuckDB stayed in autocommit and the raw BEGIN opened a fresh transaction"
+        ).toBe(1);
       })
     );
 
@@ -304,9 +305,8 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* sql.unsafe("BEGIN");
         yield* sql`insert into tx_multi_dollar_ident values (1)`;
         yield* sql`insert into tx_multi_dollar_ident values (1)`.pipe(Effect.ignore);
-        // `a$b$c` is an identifier, not the `$b$` dollar-quote opener.
-        const hidden = yield* sql.unsafe("select 1 as a$b$c; COMMIT").pipe(Effect.flip);
-        expectRefusedMultiStatement(hidden);
+        const dollarsInIdentifier = yield* sql.unsafe("select 1 as a$b$c; COMMIT").pipe(Effect.flip);
+        expectRefusedMultiStatement(dollarsInIdentifier);
         const unicodeHidden = yield* sql.unsafe("select 1 as aé$b$c; COMMIT").pipe(Effect.flip);
         expectRefusedMultiStatement(unicodeHidden);
         const astralHidden = yield* sql.unsafe("select 1 as a😀$b$c; COMMIT").pipe(Effect.flip);
@@ -329,11 +329,10 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           "insert into tx_multi_quoted values (1, 'BEGIN; COMMIT'); insert into tx_multi_quoted values (2, $$x; ROLLBACK$$); -- COMMIT"
         );
         yield* sql.unsafe("/* a /* b */ BEGIN */ insert into tx_multi_quoted values (3, 'c')");
-        // Neither text opened a transaction, so every row is already committed.
         yield* sql.unsafe("BEGIN");
         yield* sql.unsafe("ROLLBACK");
         const countRows17 = yield* countRows(sql, "tx_multi_quoted");
-        expect(countRows17).toBe(3);
+        expect(countRows17, "neither text opened a transaction, so every row is already committed").toBe(3);
       })
     );
 
@@ -351,13 +350,16 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
       "sends text with an unterminated block comment or dollar quote to DuckDB as one statement",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // The unterminated comment and dollar quote run to the end of the text, so the
-        // control keywords inside them are not statements and nothing is refused.
         const comment = yield* sql.unsafe("select 1 as one; /* BEGIN; COMMIT").pipe(Effect.flip);
         const dollar = yield* sql.unsafe("select $q$BEGIN; COMMIT").pipe(Effect.flip);
-        expect(comment.reason.message).not.toBe(MULTI_STATEMENT_MESSAGE);
-        expect(dollar.reason.message).not.toBe(MULTI_STATEMENT_MESSAGE);
-        // Neither text opened a transaction, so a raw BEGIN still opens a fresh one.
+        expect(
+          comment.reason.message,
+          "an unterminated comment runs to the end of the text, so its control keywords are not statements"
+        ).not.toBe(MULTI_STATEMENT_MESSAGE);
+        expect(
+          dollar.reason.message,
+          "an unterminated dollar quote runs to the end, and neither text opened a transaction for the BEGIN below"
+        ).not.toBe(MULTI_STATEMENT_MESSAGE);
         yield* sql.unsafe("BEGIN");
         yield* sql.unsafe("ROLLBACK");
         yield* expectUsable(sql);
@@ -372,11 +374,10 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
         yield* sql.unsafe("BEGIN TRANSACTION");
         yield* sql`insert into tx_raw_parser values (1)`;
         yield* sql.unsafe("frobnicate nonsense from").pipe(Effect.ignore);
-        // DuckDB 2.0 aborts even on parser errors; COMMIT would silently roll back.
         const error = yield* sql.unsafe("COMMIT").pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
         const countRows18 = yield* countRows(sql, "tx_raw_parser");
-        expect(countRows18).toBe(0);
+        expect(countRows18, "DuckDB 2.0 aborts even on parser errors; COMMIT would silently roll back").toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -406,7 +407,6 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`create table tx_parser (id INTEGER)`;
-        // DuckDB 2.0 aborts even on parser errors; retain the safe-COMMIT guarantee.
         const error = yield* sql
           .withTransaction(
             Effect.gen(function* () {
@@ -418,7 +418,7 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           .pipe(Effect.flip);
         expectRefusedCommit(error, ABORTED_MESSAGE);
         const countRows20 = yield* countRows(sql, "tx_parser");
-        expect(countRows20).toBe(0);
+        expect(countRows20, "DuckDB 2.0 aborts even on parser errors, so the guarded COMMIT is refused").toBe(0);
         yield* expectUsable(sql);
       })
     );
@@ -428,8 +428,6 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`create table tx_bind (id INTEGER)`;
-        // The bind fails before DuckDB runs anything, so the abort probe finds a
-        // healthy transaction and COMMIT proceeds.
         yield* sql.withTransaction(
           Effect.gen(function* () {
             yield* sql`insert into tx_bind values (1)`;
@@ -440,7 +438,9 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
           })
         );
         const countRows21 = yield* countRows(sql, "tx_bind");
-        expect(countRows21).toBe(1);
+        expect(countRows21, "the bind failed before DuckDB ran anything, so the abort probe let COMMIT proceed").toBe(
+          1
+        );
       })
     );
 
@@ -599,8 +599,7 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
       "fails reader setup when the writer session snapshot does not decode",
       Effect.fnUntraced(function* () {
         const instance = yield* acquireInstance;
-        // The writer answers the session-settings query with a row DuckDB never produces.
-        const connect = (): Promise<DuckDBConnection> =>
+        const connectWithUndecodableSettings = (): Promise<DuckDBConnection> =>
           instance.connect().then((connection) => {
             const runAndReadAll = connection.runAndReadAll.bind(connection);
             return Object.assign(connection, {
@@ -610,7 +609,9 @@ describe("DuckDbClient transactions", { concurrent: false }, () => {
                   : runAndReadAll(sqlText),
             }) as unknown as DuckDBConnection;
           });
-        const patched = Object.assign(Object.create(instance), { connect }) as DuckDBInstance;
+        const patched = Object.assign(Object.create(instance), {
+          connect: connectWithUndecodableSettings,
+        }) as DuckDBInstance;
 
         const error = yield* DuckDbClient.fromInstance({ instance: patched, readerConnections: 1 }).pipe(Effect.flip);
 

@@ -122,6 +122,10 @@ export interface EditorWireComposerProps extends Omit<EditorComposerProps, "init
  * Editable Lexical composer over the `@beep/lexical-schema` v1 node
  * vocabulary with markdown shortcuts.
  *
+ * **Gotchas**
+ *
+ * The contenteditable's direct parent must not compute to flex or inline-flex: Lexical warns about Chrome focus quirks. Its relative positioning also anchors the absolute placeholder to the editable box.
+ *
  * **Example** (Render draft editor)
  *
  * ```tsx
@@ -164,9 +168,6 @@ export function EditorComposer({
         onError: (error) => logEditorError(error),
       }}
     >
-      {/* Non-flex wrapper: Lexical warns when the content editable's direct
-          parent computes to flex/inline-flex (Chrome focus quirks); `relative`
-          also anchors the absolute placeholder overlay to the editable box. */}
       <div className="relative">
         <RichTextPlugin
           contentEditable={

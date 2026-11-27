@@ -124,15 +124,12 @@ export class InvalidSha256DigestError extends S.TaggedError<
   }
 }
 
-/** 64 hex characters, lowercase — the normalized form. */
 const SHA256_RE = /^[0-9a-f]{64}$/u;
 
-/** The `sha256:` prefix a caller may have carried in from a digest reference. */
 const SHA256_PREFIX_RE = /^sha256:/i;
 
 const normalizeDigest = (value: string): string => Str.toLowerCase(Str.replace(SHA256_PREFIX_RE, "")(value));
 
-/** Statics attached to the {@link (Sha256Digest:variable)} schema. */
 interface Sha256DigestStatics {
   /**
    * Whether the value is, or normalizes to, a SHA-256 digest.
@@ -189,8 +186,6 @@ const parseResult = (value: string): Result.Result<Sha256Digest, InvalidSha256Di
 };
 
 const sha256Digest = S.String.pipe(
-  // Put identity on the string AST, before the check, so JSON Schema retains
-  // its inline pattern while the base schema carries the canonical identity.
   $I.annoteSchema("Sha256Digest", {
     description: "A SHA-256 digest as 64 lowercase hexadecimal characters, without an algorithm prefix.",
   }),
@@ -198,8 +193,6 @@ const sha256Digest = S.String.pipe(
   S.brand("Sha256Digest")
 );
 
-// Widen only Opaque's unused constructor to string members: TypeScript cannot
-// extend a primitive. The schema's Type and runtime values stay branded strings.
 const Sha256DigestBase: Omit<S.Opaque<Sha256Digest, typeof sha256Digest, {}>, never> &
   (new (
     _: never
@@ -215,6 +208,15 @@ const Sha256DigestBase: Omit<S.Opaque<Sha256Digest, typeof sha256Digest, {}>, ne
  * types the same value structurally on its attestation surface, and dragging a
  * package across that seam to share one branded string would cost more than the
  * duplication does.
+ *
+ * **Gotchas**
+ *
+ * Values are branded strings, never instances: TypeScript cannot extend a
+ * primitive, so the class only carries the statics and its unused constructor
+ * is retyped to take `never` and return the string members. The identity
+ * annotation sits on the string before the pattern check, so the JSON Schema
+ * keeps its inline pattern while the base schema carries the canonical
+ * identity.
  *
  * **Example** (Normalize a prefixed uppercase digest)
  *
@@ -577,8 +579,6 @@ export class InTotoStatement extends S.Class<InTotoStatement, { readonly brand: 
    * @since 0.0.0
    */
   static forSubject(input: InTotoSubjectInput.Admitted): InTotoStatement {
-    // The admitted fields, not `Encoded`: `digest` stays a validated `Sha256Digest`,
-    // and the subject is a plain record that `of` admits with the statement.
     return InTotoStatement.of({
       subject: [{ name: input.name, digest: { sha256: input.digest } }],
       predicateType: input.predicateType,

@@ -35,9 +35,8 @@ const run = Effect.fn("run")(function* <A, E>(
       )
     )
   );
-  // The caller's test scope owns the layer, so its finalizers run when the test ends.
-  const context = yield* Layer.build(layer);
-  const value = yield* Effect.provideContext(effect, context);
+  const testScopedContext = yield* Layer.build(layer);
+  const value = yield* Effect.provideContext(effect, testScopedContext);
   return { value, requested };
 });
 
@@ -79,9 +78,6 @@ describe("Ruleset.upsert", () => {
       const { requested } = yield* runUpsert(
         Effect.flatMap(Ruleset, (r) => r.upsert(PAYLOAD)),
         {
-          // The repository's listing includes the org's. Matching on name
-          // alone would PUT at id 7 and rewrite policy for every repository
-          // the organization owns.
           "POST /repos/{owner}/{repo}/rulesets": rulesetFixture({}),
         },
         {
@@ -95,10 +91,10 @@ describe("Ruleset.upsert", () => {
         A.map(requested, (call) => call.route),
         ["GET /repos/{owner}/{repo}/rulesets", "POST /repos/{owner}/{repo}/rulesets"]
       );
-      // Nothing was written to the organization's ruleset.
       assert.strictEqual(
         A.some(requested, (call) => Str.includes("{ruleset_id}")(call.route)),
-        false
+        false,
+        "a name-only match would PUT the organization ruleset that governs every repository"
       );
       const value1 = yield* S.encodeEffect(JsonValue)(requested);
       assert.notInclude(value1, '"ruleset_id":7');
@@ -120,9 +116,11 @@ describe("Ruleset.upsert", () => {
         }
       );
 
-      // The org's comes FIRST in the listing, so a `find` without the filter
-      // would take it.
-      assert.strictEqual(requested[1]?.params.ruleset_id, 99);
+      assert.strictEqual(
+        requested[1]?.params.ruleset_id,
+        99,
+        "the organization ruleset is listed first and is skipped"
+      );
     })
   );
 

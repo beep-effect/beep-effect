@@ -38,13 +38,6 @@ export const BackfillMode = LiteralKit(["off", "easy"]).pipe(
   })
 );
 
-/**
- * Decoded backfill mode accepted by {@link BackfillMode}.
- *
- * @see {@link BackfillMode} for runtime decoding and literal helpers.
- * @category models
- * @since 0.0.0
- */
 type BackfillMode = typeof BackfillMode.Type;
 
 /**
@@ -72,13 +65,6 @@ export const FairnessMode = LiteralKit(["off", "origin-checkout"]).pipe(
   })
 );
 
-/**
- * Decoded fairness mode accepted by {@link FairnessMode}.
- *
- * @see {@link FairnessMode} for runtime decoding and literal helpers.
- * @category models
- * @since 0.0.0
- */
 type FairnessMode = typeof FairnessMode.Type;
 
 /**
@@ -307,12 +293,6 @@ export class SchedulerView extends S.Opaque<SchedulerView, { readonly brand: uni
   )
 ) {}
 
-/**
- * Path by which a unit was admitted.
- *
- * @category schemas
- * @since 0.0.0
- */
 const AdmissionRoute = LiteralKit(["head", "backfill"]).pipe(
   $I.annoteSchema("AdmissionRoute", {
     description: "Whether a unit was admitted as the queue head or by passing a blocked head.",
@@ -328,23 +308,6 @@ const AdmissionRoute = LiteralKit(["head", "backfill"]).pipe(
  */
 export type AdmissionRoute = typeof AdmissionRoute.Type;
 
-/**
- * Why a contender stays queued on this scan.
- *
- * **Details**
- *
- * - `capacity`: its own weight does not fit.
- * - `behind-head`: an earlier unit goes first (head-of-line, or backfill off).
- * - `behind-backfill`: an earlier non-head unit may backfill first.
- * - `backfill-disabled`: a waiting unit is past its deadline.
- * - `eta-unknown`: its own ETA, or a running lease's, is not declared or has
- *   been overrun, so the head's start cannot be projected.
- * - `ends-after-head-start`: its ETA would end after the head's projected start.
- * - `not-queued`: the nonce is not waiting.
- *
- * @category schemas
- * @since 0.0.0
- */
 const WaitReason = LiteralKit([
   "capacity",
   "behind-head",
@@ -361,6 +324,17 @@ const WaitReason = LiteralKit([
 
 /**
  * Decoded wait reason accepted by {@link WaitReason}.
+ *
+ * **Details**
+ *
+ * - `capacity`: its own weight does not fit.
+ * - `behind-head`: an earlier unit goes first (head-of-line, or backfill off).
+ * - `behind-backfill`: an earlier non-head unit may backfill first.
+ * - `backfill-disabled`: a waiting unit is past its deadline.
+ * - `eta-unknown`: its own ETA, or a running lease's, is not declared or has
+ *   been overrun, so the head's start cannot be projected.
+ * - `ends-after-head-start`: its ETA would end after the head's projected start.
+ * - `not-queued`: the nonce is not waiting.
  *
  * @see {@link WaitReason} for runtime decoding and literal helpers.
  * @category models
@@ -784,7 +758,8 @@ export class ReplayArmResult extends S.Opaque<ReplayArmResult, { readonly brand:
  * `chains` counts the admitted-and-released nonces replayed; `skipped` counts
  * nonces without both rows (withdrawn, evicted, or cut by the window); the
  * A/B script refuses a journal with rows its decoder rejects. `recorded` summarizes the waits the deployed scheduler
- * actually produced, so each arm can be read against it.
+ * actually produced, so each arm can be read against it. The report exposes
+ * only aggregate counts and wait quantiles, never paths, origins or nonces.
  *
  * @category schemas
  * @since 0.0.0

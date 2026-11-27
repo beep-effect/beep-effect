@@ -335,8 +335,7 @@ describe("Render.githubLog: document text cannot become a workflow command", () 
 });
 
 describe("Render.githubLog: annotations (okfit's trial)", () => {
-  /** The documented wire grammar, read independently of the renderer. */
-  const decode = (command: string) => {
+  const decodeDocumentedWireGrammar = (command: string) => {
     const match = /^::(error|warning|notice)(?: ([^:]*))?::([\s\S]*)$/.exec(command);
     if (match === null) return undefined;
     const data = (text: string): string =>
@@ -360,7 +359,7 @@ describe("Render.githubLog: annotations (okfit's trial)", () => {
         ),
       ]);
       assert.lengthOf(Str.split(out, LINE_BREAK), 1);
-      assert.deepStrictEqual(decode(out), {
+      assert.deepStrictEqual(decodeDocumentedWireGrammar(out), {
         level: "error",
         properties: { title: "Type error", file: "src/a.ts", line: "3", endLine: "4", col: "2", endColumn: "9" },
         message: "boom",
@@ -375,7 +374,7 @@ describe("Render.githubLog: annotations (okfit's trial)", () => {
       const out = yield* log([Doc.annotation({ level: "warning", file: "a,b:c.ts", title }, message)]);
       assert.lengthOf(commands(out), 1, out);
       assert.lengthOf(Str.split(out, LINE_BREAK), 1, "one line");
-      const decoded = decode(out);
+      const decoded = decodeDocumentedWireGrammar(out);
       assert.strictEqual(decoded?.message, message);
       assert.strictEqual(decoded?.properties.title, title);
       assert.strictEqual(decoded?.properties.file, "a,b:c.ts");

@@ -10,10 +10,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { OipSiteContent } from "./OipContent.model.ts";
 
-// Discord links are server invites rather than identity profiles, so they are
-// excluded from `sameAs` while still rendering as a footer link. Inactive
-// socials are hidden from the visible footer, so they must also be withheld
-// from public SEO output to keep the visibility policy consistent.
 const profileUrls = (content: OipSiteContent): ReadonlyArray<string> =>
   pipe(
     content.socials,
@@ -23,6 +19,10 @@ const profileUrls = (content: OipSiteContent): ReadonlyArray<string> =>
 
 /**
  * Builds conservative JSON-LD graph data for the OIP website.
+ *
+ * **Gotchas**
+ *
+ * Discord links are server invites rather than identity profiles and stay out of sameAs while remaining footer links. Inactive socials are omitted from both visible footer and public SEO output.
  *
  * **Example** (Building JSON-LD graph)
  *

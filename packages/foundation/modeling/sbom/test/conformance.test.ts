@@ -1,25 +1,9 @@
-import { identity } from "effect/Function";
-// Conformance against the CycloneDX 1.6 specification itself.
-//
-// This package declines the CycloneDX library (6.6 MB, seven optional peers)
-// and owns its emitter, so "the output is conformant" has to be checkable
-// rather than asserted. The published schema is vendored under `fixtures/` and
-// the expectations below are DERIVED FROM IT — `required` arrays, `enum`
-// members, property names — never hand-written. A wrong external-reference
-// type, a missing required field or a renamed property therefore fails against
-// the specification, not against a copy of our own assumptions.
-//
-// This is targeted conformance over the subset we emit. Full JSON Schema
-// validation of the same documents runs in `conformance.ajv.test.ts` with the
-// `ajv` devDependency, which adds no runtime weight, and resolves the SPDX
-// license-id enumeration through the vendored `spdx.SNAPSHOT.schema.json`; the
-// subset here stays because it names each rule it checks.
-
 import { Component, Contact, ExternalReference, Sbom, SbomMetadata, Supplier } from "@beep/sbom";
 import { isValidExpression, License } from "@beep/spdx";
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -51,6 +35,7 @@ assertTrue(
   )(SCHEMA)
 );
 
+// decision: conformance-against-the-vendored-schema
 const definition = (name: string): typeof JsonDefinition.Type => {
   const found = SCHEMA.definitions[name];
   assert.isDefined(found, `the vendored schema has no definition for ${name}`);
@@ -58,7 +43,6 @@ const definition = (name: string): typeof JsonDefinition.Type => {
   return found;
 };
 
-/** A document exercising every field the emitter can produce. */
 const fullDocument = () =>
   Sbom.generate({
     root: Component.make({
@@ -105,12 +89,14 @@ const emitted = (): typeof ConformanceDocument.Type => {
   return document;
 };
 
-describe("CycloneDX 1.6 conformance — derived from the vendored schema", () => {
+describe("CycloneDX 1.6 conformance — expectations derived from the vendored schema, never hand-written", () => {
   it("the vendored schema is the released 1.6 one", () => {
-    // Guards the oracle itself: if the fixture is swapped for another version,
-    // every assertion below silently changes meaning.
     const id = SCHEMA.$id;
-    assert.strictEqual(id, "http://cyclonedx.org/schema/bom-1.6.schema.json");
+    assert.strictEqual(
+      id,
+      "http://cyclonedx.org/schema/bom-1.6.schema.json",
+      "guards the oracle: a fixture of another version silently changes the meaning of every assertion"
+    );
   });
 
   it("satisfies the document's required properties", () => {
@@ -148,12 +134,10 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
   });
 
   it("every external-reference type is a member of the schema's 43-value enum", () => {
-    // The assertion most likely to catch an invented value: the model narrows
-    // to four of the specification's types, and each must really exist.
     const permitted = definition("externalReference").properties?.type?.enum ?? [];
     assert.isAbove(permitted.length, 40);
     const references = emitted().metadata.component.externalReferences;
-    assert.lengthOf(references, 4);
+    assert.lengthOf(references, 4, "the model narrows to four of the specification types, and each must really exist");
     for (const reference of references) {
       assert.include(permitted, reference.type, `${reference.type} is not a CycloneDX external-reference type`);
     }
@@ -168,9 +152,6 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
   });
 
   it("emits only property names the schema knows, at every level", () => {
-    // The `bom-ref` guard, generalized. A key the specification does not define
-    // is either a typo or an invention, and both produce a document that looks
-    // right to us and wrong to a verifier.
     const known = (name: string): ReadonlyArray<string> => R.keys(definition(name).properties ?? {});
     const document = emitted();
 
@@ -187,7 +168,10 @@ describe("CycloneDX 1.6 conformance — derived from the vendored schema", () =>
 
     const documentKeys = R.keys(SCHEMA.properties ?? {});
     for (const key of R.keys(document)) {
-      assert.isTrue(A.contains(documentKeys, key), `${key} is not a CycloneDX document property`);
+      assert.isTrue(
+        A.contains(documentKeys, key),
+        `${key} is not a CycloneDX document property: a typo or an invention looks right to us, wrong to a verifier`
+      );
     }
   });
 });
@@ -198,7 +182,6 @@ const LicenseDocument = S.Struct({
   }),
 });
 
-/** The `licenses` array a single-component document emits for these license strings. */
 const licensesOf = (...licenses: ReadonlyArray<string>): ReadonlyArray<Record<string, unknown>> => {
   const document = Sbom.generate({
     root: Component.make({ type: "library", name: "x", licenses }),
@@ -210,30 +193,22 @@ const licensesOf = (...licenses: ReadonlyArray<string>): ReadonlyArray<Record<st
 };
 
 describe("licenses — the three shapes the schema permits, chosen by @beep/spdx", () => {
-  // A manifest's `license` field is an SPDX EXPRESSION field: `MIT`,
-  // `MIT OR Apache-2.0` and `UNLICENSED` are all legal values of it, and the
-  // specification renders them through three different JSON shapes. Emitting
-  // every one as `{ license: { id } }` produces a document that looks right
-  // and fails validation, because `license.id` is constrained to the SPDX
-  // identifier enumeration. The id-versus-expression question is answered by
-  // `@beep/spdx` — the kit's one SPDX engine — never by a local regex.
-
   it("the schema's license object offers exactly an id branch and a name branch", () => {
     const branches = A.flatMap(definition("license").oneOf ?? [], (branch) => branch.required ?? []);
     assert.deepStrictEqual(branches, ["id", "name"]);
   });
 
   it("renders a catalog identifier through the id branch", () => {
-    assert.isTrue(License.isKnownId("MIT"), "the oracle must agree MIT is a catalog identifier");
+    assert.isTrue(
+      License.isKnownId("MIT"),
+      "@beep/spdx, the one SPDX engine and never a local regex, must agree MIT is a catalog identifier"
+    );
     assert.deepStrictEqual<unknown>(licensesOf("MIT"), [{ license: { id: "MIT" } }]);
   });
 
   it("renders an expression through the expression tuple, never as an id", () => {
-    // The discriminating case. `MIT OR Apache-2.0` is not an SPDX identifier,
-    // so `{ license: { id: "MIT OR Apache-2.0" } }` is invalid against the
-    // identifier enumeration the schema references.
-    assert.isFalse(License.isKnownId("MIT OR Apache-2.0"));
-    assert.isTrue(isValidExpression("MIT OR Apache-2.0"));
+    assert.isFalse(License.isKnownId("MIT OR Apache-2.0"), "as a license.id it would fail the identifier enumeration");
+    assert.isTrue(isValidExpression("MIT OR Apache-2.0"), "a manifest license field is an SPDX expression field");
 
     const expressionBranch = (definition("licenseChoice").oneOf ?? [])[1];
     assert.strictEqual(expressionBranch?.maxItems, 1, "the schema's expression branch is a one-element tuple");
@@ -247,8 +222,7 @@ describe("licenses — the three shapes the schema permits, chosen by @beep/spdx
   });
 
   it("renders a string that is neither identifier nor expression as a named license", () => {
-    // npm's own non-SPDX values: `UNLICENSED` and `SEE LICENSE IN <file>`.
-    assert.isFalse(isValidExpression("UNLICENSED"));
+    assert.isFalse(isValidExpression("UNLICENSED"), "UNLICENSED and SEE LICENSE IN <file> are npm values outside SPDX");
     assert.deepStrictEqual<unknown>(licensesOf("UNLICENSED"), [{ license: { name: "UNLICENSED" } }]);
     assert.deepStrictEqual<unknown>(licensesOf("SEE LICENSE IN LICENSE.txt"), [
       { license: { name: "SEE LICENSE IN LICENSE.txt" } },
@@ -256,12 +230,13 @@ describe("licenses — the three shapes the schema permits, chosen by @beep/spdx
   });
 
   it("never mixes an expression into a multi-entry list", () => {
-    // The schema's two branches are exclusive: a list of license objects, OR a
-    // single-element expression tuple. A second entry rules the tuple out, so
-    // an expression that cannot be an id degrades to a named license.
     const emitted = licensesOf("MIT", "MIT OR Apache-2.0");
     assert.lengthOf(emitted, 2);
-    assert.deepStrictEqual<unknown>(emitted, [{ license: { id: "MIT" } }, { license: { name: "MIT OR Apache-2.0" } }]);
+    assert.deepStrictEqual<unknown>(
+      emitted,
+      [{ license: { id: "MIT" } }, { license: { name: "MIT OR Apache-2.0" } }],
+      "the list and the one-element expression tuple are exclusive, so a second entry degrades it to a name"
+    );
   });
 
   it("emits only keys the schema's license object defines", () => {

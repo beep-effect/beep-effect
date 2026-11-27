@@ -146,6 +146,11 @@ export class UsptoClaimSet extends S.Opaque<UsptoClaimSet, { readonly brand: uni
  * imply any claim normalized or received a check. Its record identity binds
  * the exact document identifier and byte digest, including all-unusable input.
  *
+ * **Gotchas**
+ *
+ * `input` keeps the nominal `ClaimInputCollection` schema without
+ * `annotateKey`, because `annotateKey` rebuilds an Opaque as its structural base.
+ *
  * **Example** (Inspect acquired source fields)
  *
  * ```ts
@@ -158,7 +163,6 @@ export class UsptoClaimSet extends S.Opaque<UsptoClaimSet, { readonly brand: uni
  */
 export class UsptoClaimInputSet extends S.Opaque<UsptoClaimInputSet, { readonly brand: unique symbol }>()(
   S.Struct({
-    // Keep the nominal collection schema itself: annotateKey rebuilds an Opaque as its structural base.
     input: ClaimInputCollection,
     documentIdentifier: S.NonEmptyString.annotateKey({
       description: "Exact public USPTO document whose bytes were inspected.",

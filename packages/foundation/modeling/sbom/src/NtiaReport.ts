@@ -113,7 +113,6 @@ export declare namespace NtiaElement {
   export type Encoded = typeof NtiaElement.Encoded;
 }
 
-// Each verdict is a plain record; `NtiaReport.of` admits all seven at once.
 const element: {
   (id: NtiaElementId, value: string | undefined): NtiaElement.Encoded;
   (value: string | undefined): (id: NtiaElementId) => NtiaElement.Encoded;
@@ -136,52 +135,26 @@ const PackageIdentifier = PresentText.check(S.isStartingWith("pkg:")).pipe(
 );
 const isPackageIdentifier = S.is(PackageIdentifier);
 
-/** A string that carries something, or nothing. */
 const present = (value: string | undefined): string | undefined => {
   if (value === undefined) return undefined;
   const trimmed = Str.trim(value);
   return isPresentText(trimmed) ? trimmed : undefined;
 };
 
-/** Element 1: the entity that supplies the software. */
 const supplierName = (document: SbomDocument): NtiaElement.Encoded =>
   element("supplierName", present(document.metadata?.supplier?.name));
 
-/** Element 2: what the software is called. */
 const componentName = (document: SbomDocument): NtiaElement.Encoded =>
   element("componentName", present(document.metadata?.component?.name));
 
-/** Element 3: which release it is. */
 const componentVersion = (document: SbomDocument): NtiaElement.Encoded =>
   element("componentVersion", present(document.metadata?.component?.version));
 
-/**
- * Element 4: an identifier that is unique across suppliers — a package URL.
- *
- * **Details**
- *
- * Present-and-non-empty is not enough: a homepage URL in the `purl` field is a
- * string, and identifies the component to nobody.
- */
 const uniqueIdentifier = (document: SbomDocument): NtiaElement.Encoded => {
   const purl = present(document.metadata?.component?.purl);
   return element("uniqueIdentifier", isPackageIdentifier(purl) ? purl : undefined);
 };
 
-/**
- * Element 5: how the components relate to the thing the BOM is about.
- *
- * **Details**
- *
- * A flat component list plus a declared root IS that relationship in this
- * version — the CycloneDX `dependencies` graph is deferred until a consumer
- * needs one. What the element therefore requires is a declared **subject**: a
- * list of components with nothing saying what they are components OF relates
- * nothing to anything.
- *
- * An empty list is compliant. "This package has no dependencies" is an
- * assertion, not a gap.
- */
 const dependencyRelationship = (document: SbomDocument): NtiaElement.Encoded => {
   const count = document.components.length;
   return element(
@@ -190,14 +163,6 @@ const dependencyRelationship = (document: SbomDocument): NtiaElement.Encoded => 
   );
 };
 
-/**
- * Element 6: who assembled the BOM.
- *
- * **Details**
- *
- * Named authors first; a supplier or a publisher is the honest fallback, since
- * both identify an entity that stood behind the document.
- */
 const sbomAuthor = (document: SbomDocument): NtiaElement.Encoded => {
   const author = pipe(
     document.metadata?.authors ?? [],
@@ -212,14 +177,6 @@ const sbomAuthor = (document: SbomDocument): NtiaElement.Encoded => {
 
 const parseTimestamp = S.decodeUnknownResult(S.DateFromString);
 
-/**
- * Element 7: when the BOM was assembled.
- *
- * **Details**
- *
- * Parsed, not merely present — a field holding `last tuesday` records nothing,
- * and this is the cheapest place to notice.
- */
 const timestamp = (document: SbomDocument): NtiaElement.Encoded => {
   const stamped = present(document.metadata?.timestamp);
   return element(
@@ -307,6 +264,17 @@ export class NtiaReport extends S.Class<NtiaReport, { readonly brand: unique sym
    *
    * **Total** — a report is the answer for every input,
    * including a document that satisfies nothing.
+   *
+   * Present-and-non-empty is not always enough. `uniqueIdentifier` needs a
+   * `pkg:` package URL: a homepage URL in the `purl` field identifies the
+   * component to nobody. `dependencyRelationship` needs a declared root
+   * component: a flat component list plus that root is the relationship this
+   * version emits (the CycloneDX `dependencies` graph is deferred until a
+   * consumer needs one), and an empty component list is compliant, since "no
+   * dependencies" is an assertion, not a gap. `sbomAuthor` takes named authors
+   * first, then the supplier, then the publisher: each identifies an entity
+   * that stood behind the document. `timestamp` must parse as a date, not
+   * merely be present.
    *
    * **Example** (Report missing elements for a minimal document)
    *

@@ -26,7 +26,6 @@ type HomeProps = {
   readonly searchParams?: Promise<Record<string, ReadonlyArray<string> | string | undefined>>;
 };
 
-// TODO(effect-native-migration): model schema
 const safeJsonScript = (value: unknown) => Str.replaceAll("<", "\\u003c")(encodeUnknownJsonSync(value));
 
 /**

@@ -24,9 +24,12 @@ it.effect.prop(
       const input = `prefix ${text} suffix`;
       const once = renderGithubLog([Doc.verbatim(input)], ctx);
       const lines = pipe(sanitize(input), Str.replace(/\r\n|\r/g, "\n"), Str.split("\n"));
-      // github-log neutralization is a separate, intentional normalization of untrusted commands.
       assert.strictEqual(renderGithubLog([Doc.verbatim(once)], ctx), once);
-      assert.strictEqual(once, A.join(A.flatMap(lines, CommandNeutralizer.lines), "\n"));
+      assert.strictEqual(
+        once,
+        A.join(A.flatMap(lines, CommandNeutralizer.lines), "\n"),
+        "github-log neutralization is a separate, intentional normalization of untrusted commands"
+      );
       assert.deepStrictEqual(
         Str.split(once, "\n"),
         Str.split(renderGithubLog([Doc.verbatim(pipe(once, Str.split("\n"), A.join("\n")))], ctx), "\n")

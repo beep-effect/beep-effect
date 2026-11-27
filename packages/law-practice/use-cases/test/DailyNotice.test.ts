@@ -30,7 +30,6 @@ type MailboxState = {
   readonly failSend: boolean;
 };
 
-/** The in-memory mailbox's state, so a test can read what was sent and recorded. */
 class MailboxRecord extends Context.Service<MailboxRecord, Ref.Ref<MailboxState>>()(
   "@beep/law-practice-use-cases/test/DailyNotice.test/MailboxRecord"
 ) {}
@@ -39,7 +38,6 @@ const TestMailbox = Layer.effect(
   NoticeMailbox,
   Effect.map(MailboxRecord, (state) =>
     NoticeMailbox.of({
-      // One atomic step, as the adapters' exclusive create is: only the first claim of a day wins.
       claimDay: Effect.fn("TestMailbox.claimDay")((day: LocalDate) =>
         Ref.modify(state, (current): readonly [boolean, MailboxState] =>
           A.contains(current.claimed, day.toISOString())
@@ -120,7 +118,10 @@ describe("@beep/law-practice-use-cases daily notice", () => {
           )
         ).toStrictEqual(["already-sent", "sent"]);
         const sentSoFar2 = yield* sentSoFar;
-        expect(sentSoFar2).toHaveLength(1);
+        expect(
+          sentSoFar2,
+          "the test mailbox claims a day in one atomic step, as the adapters' exclusive create does: the first claim wins"
+        ).toHaveLength(1);
       })
     );
   });

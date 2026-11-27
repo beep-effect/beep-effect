@@ -47,8 +47,7 @@ const needsReview = DocketLedgerRecord.make({
 
 const RECEIVED = LocalDate.make({ year: 2030, month: 1, day: 9 });
 
-// A needs-review record that kept which email it is about.
-const identified = DocketLedgerRecord.make({
+const emailIdentifiedReview = DocketLedgerRecord.make({
   attempts: 1,
   outcome: DocketNeedsReview.make({
     candidateDates: [
@@ -78,7 +77,7 @@ const lineCount = (text: string) => A.length(A.filter(Str.split(text, "\n"), Str
 
 describe("@beep/docket-intake review hub questions", () => {
   it("maps a needs-review record's email, links, matter, docket and dates into the question input", () => {
-    const input = questionInput(identified);
+    const input = questionInput(emailIdentifiedReview);
 
     assertSome(input.subject, "Office action response");
     assertSome(input.sender, "examiner@example.com");
@@ -120,7 +119,7 @@ describe("@beep/docket-intake review hub questions", () => {
         const build2 = yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory })));
         const store = Context.get(build2, ReviewItemStore);
 
-        yield* publisher.publish(DocketIntakeState.make({ ledger: { "m-named": identified } }));
+        yield* publisher.publish(DocketIntakeState.make({ ledger: { "m-named": emailIdentifiedReview } }));
         const listed = yield* store.list;
         const [item] = A.filter(listed, isCurrentReviewItem);
 
@@ -145,7 +144,7 @@ describe("@beep/docket-intake review hub questions", () => {
           "handle-myself",
           "not-a-deadline",
         ]);
-        // Choosing the date moves the needs-review entry under the item's own title, not a generic one.
+
         assertSome(
           O.flatMap(A.head(options), ({ write }) => O.map(write, ({ dueOn, title }) => [dueOn.toISOString(), title])),
           ["2030-04-08", "Response to office action"]

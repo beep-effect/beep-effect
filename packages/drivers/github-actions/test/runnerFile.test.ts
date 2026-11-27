@@ -3,9 +3,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 
-// Follow FileCommandManager.ReadLine and its heredoc endIndex calculation,
-// rather than removing framing by fixed slices.
-// https://github.com/actions/runner/blob/main/src/Runner.Worker/FileCommandManager.cs
+// Adapted from actions/runner src/Runner.Worker/FileCommandManager.cs ReadLine and heredoc endIndex (MIT).
 const parseRunnerBlock = (body: string, windows: boolean): string => {
   let index = 0;
   const indexFrom = (needle: string): number =>

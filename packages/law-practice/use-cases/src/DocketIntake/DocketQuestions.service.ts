@@ -44,7 +44,6 @@ const textEncoder = new TextEncoder();
 
 const decodeItemId = S.decodeUnknownOption(DocketQuestionItemId);
 
-// The message part of a question's item id; see `docketQuestionDigest`.
 const digestWith = (crypto: Digest.Digest["Service"], messageId: string): Effect.Effect<string> =>
   crypto
     .digest(Digest.sha256, textEncoder.encode(messageId))
@@ -71,15 +70,12 @@ const longDate = (date: LocalDate): string =>
     () => date.toISOString()
   );
 
-// Subjects and senders are shown on one line, whatever whitespace the mail carried.
 const oneLine = (text: string): string => Str.trim(Str.replace(/\s+/gu, " ")(text));
 
-// A text a question shows: on one line, and none when nothing is left of it.
 const shown = (text: O.Option<string>): O.Option<string> => O.filter(O.map(text, oneLine), Str.isNonEmpty);
 
 const quoted = (subject: string): string => `"${subject}"`;
 
-// The question names the email by its subject when it is known, and says "a message" otherwise.
 const questionText = (reason: DocketNeedsReview["reason"], subject: O.Option<string>): string => {
   const named = (plain: string, withEmail: (email: string) => string): string =>
     O.match(subject, { onNone: () => plain, onSome: (value) => withEmail(`the email ${quoted(value)}`) });
@@ -126,7 +122,6 @@ const questionText = (reason: DocketNeedsReview["reason"], subject: O.Option<str
 const notADeadline = QuestionOption.make({ optionId: "not-a-deadline", label: "Not a deadline" });
 const handleMyself = (label: string) => QuestionOption.make({ optionId: "handle-myself", label });
 
-// The answers that write nothing; every question offers at least one.
 const nonWritingOptions = (reason: DocketNeedsReview["reason"]): ReadonlyArray<QuestionOption> =>
   DocketNeedsReviewReason.match(reason, {
     "no-usable-date": () => [handleMyself("I'll find the date and enter it"), notADeadline],
@@ -178,7 +173,6 @@ const candidateFact = ({ date, source }: DocketCandidateDate): string =>
 
 const byDate = Order.mapInput(LocalDateOrder, ({ date }: DocketCandidateDate) => date);
 
-// One option per distinct candidate date, earliest first, within the room the non-writing options leave.
 const dateOptions = (
   input: DocketQuestionInput,
   needsReview: DocketNeedsReview,
@@ -208,8 +202,6 @@ const EMAIL_WAS = "The email was ";
 const OPEN_EMAIL = "Open the email in Outlook: ";
 const NEEDS_REVIEW_ENTRY = "The message is on the calendar as a needs-review entry.";
 
-// What a question shows of an email: its texts on one line, without the ones that are blank, so a
-// subject of only spaces reads as no subject.
 const shownEmail = (email: DocketQuestionEmail): DocketQuestionEmail =>
   DocketQuestionEmail.make({
     messageLink: shown(email.messageLink),
@@ -218,12 +210,10 @@ const shownEmail = (email: DocketQuestionEmail): DocketQuestionEmail =>
     subject: shown(email.subject),
   });
 
-// "The email is "<subject>" from <sender>, received <date>.", leaving out the parts that are missing.
-// It takes an email `shownEmail` made.
-const emailSentence = (email: DocketQuestionEmail): O.Option<string> => {
-  const received = O.map(email.receivedDate, (date) => `received ${longDate(date)}`);
+const emailSentence = (oneLineEmail: DocketQuestionEmail): O.Option<string> => {
+  const received = O.map(oneLineEmail.receivedDate, (date) => `received ${longDate(date)}`);
   const named = A.join(
-    A.getSomes([O.map(email.subject, quoted), O.map(email.sender, (sender) => `from ${sender}`)]),
+    A.getSomes([O.map(oneLineEmail.subject, quoted), O.map(oneLineEmail.sender, (sender) => `from ${sender}`)]),
     " "
   );
   return Str.isNonEmpty(named)
@@ -231,7 +221,6 @@ const emailSentence = (email: DocketQuestionEmail): O.Option<string> => {
     : O.map(received, (when) => `${EMAIL_WAS}${when}.`);
 };
 
-// The facts that say which email a question is about and open it.
 const emailFacts = (email: DocketQuestionEmail): ReadonlyArray<QuestionFact> =>
   A.map(A.getSomes([emailSentence(email), O.map(email.messageLink, (link) => `${OPEN_EMAIL}${link}`)]), plainFact);
 
@@ -371,7 +360,6 @@ export const docketQuestionNamesEmail = (item: QuestionReviewItem): boolean =>
     ({ text }) => Str.startsWith(EMAIL_IS)(text) || Str.startsWith(EMAIL_WAS)(text) || Str.startsWith(OPEN_EMAIL)(text)
   );
 
-// A stored question with the facts naming its email first, asked again naming it by its subject.
 const namedQuestion = (item: QuestionReviewItem, email: DocketQuestionEmail): QuestionReviewItem =>
   ReviewItem.cases.question.make({
     itemId: item.itemId,

@@ -46,11 +46,11 @@ const $I = $PracticeKgMcpId.create("runtime/TelemetryKey");
 
 const rootKeyBytes = 32;
 const ownerOnlyDirectory = 0o700;
-// DPAPI optional entropy: a blob wrapped by one path unwraps only with the
-// same entropy, so the FFI and PowerShell paths share it.
 const dpapiEntropy = "beep/practice-kg/telemetry/v1";
 const cryptprotectUiForbidden = 0x1;
 const dataBlobBytes = 16;
+const dataBlobLengthOffset = 0;
+const dataBlobPointerOffset = 8;
 const textEncoder = new TextEncoder();
 
 const keyFailure =
@@ -125,19 +125,16 @@ export class PracticeKgTelemetryKeyFile extends S.Opaque<
 const decodeKeyFile = S.decodeUnknownEffect(S.fromJsonString(PracticeKgTelemetryKeyFile));
 const encodeKeyFile = S.encodeEffect(S.fromJsonString(PracticeKgTelemetryKeyFile));
 
-// Identity `DpapiPort` marked `dev-file`: the root key is stored
-// unwrapped. Not for production.
 const layerDevPlaintextDpapi: Layer.Layer<DpapiPort> = Layer.succeed(
   DpapiPort,
   DpapiPort.of({ protection: StrictKeyProtection.Enum["dev-file"], protect: Effect.succeed, unprotect: Effect.succeed })
 );
 
-// DATA_BLOB on x64: a 32-bit length, 4 bytes of padding, then a pointer.
 const dataBlob = (pointerOf: (bytes: Uint8Array) => number, bytes: Uint8Array): Uint8Array => {
   const blob = new Uint8Array(dataBlobBytes);
   const view = new DataView(blob.buffer);
-  view.setUint32(0, bytes.byteLength, true);
-  view.setBigUint64(8, BigInt(pointerOf(bytes)), true);
+  view.setUint32(dataBlobLengthOffset, bytes.byteLength, true);
+  view.setBigUint64(dataBlobPointerOffset, BigInt(pointerOf(bytes)), true);
   return blob;
 };
 
@@ -186,9 +183,9 @@ const loadCrypt32 = Effect.tryPromise({
             return O.none<Uint8Array>();
           }
           const view = new DataView(output.buffer);
-          const pointer = view.getBigUint64(8, true);
-          // Copy the result out, then zero DPAPI's buffer before freeing it.
-          const native = new Uint8Array(ffi.toArrayBuffer(pointer, 0, view.getUint32(0, true)));
+          const pointer = view.getBigUint64(dataBlobPointerOffset, true);
+
+          const native = new Uint8Array(ffi.toArrayBuffer(pointer, 0, view.getUint32(dataBlobLengthOffset, true)));
           const copy = native.slice();
           native.fill(0);
           kernel32.symbols.LocalFree(pointer);
@@ -201,7 +198,6 @@ const loadCrypt32 = Effect.tryPromise({
   )
 );
 
-// One crypt32 call; `None` is the call returning FALSE.
 const dpapiCall = (
   call: (protect: boolean, input: Uint8Array) => O.Option<Uint8Array>,
   protect: boolean,
@@ -215,9 +211,6 @@ const dpapiCall = (
   );
 };
 
-// DPAPI `DpapiPort` over `bun:ffi`, calling
-// `crypt32.CryptProtectData` / `CryptUnprotectData` for the current user
-// with the UI forbidden. Windows only; building it elsewhere fails.
 const layerDpapiFfi: Layer.Layer<DpapiPort, TelemetryKeyFailure> = Layer.effect(
   DpapiPort,
   Effect.map(loadCrypt32, (call) =>
@@ -345,8 +338,6 @@ export const roundTripDpapi = Effect.fn("PracticeKgTelemetryKey.roundTrip")(func
   return port.protection;
 });
 
-// The production DPAPI port: the `bun:ffi` path when it loads and passes a
-// round trip, otherwise the PowerShell path.
 const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildProcessSpawner.ChildProcessSpawner> =
   Layer.effect(
     DpapiPort,
@@ -363,6 +354,10 @@ const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildPro
 /**
  * The DPAPI port for a platform: production DPAPI on Windows, the dev
  * plaintext port elsewhere.
+ *
+ * **Gotchas**
+ *
+ * DPAPI wrapping and unwrapping require identical optional entropy. The FFI and PowerShell paths therefore share beep/practice-kg/telemetry/v1.
  *
  * **Example** (Pick the Linux port)
  *
@@ -456,8 +451,7 @@ const unwrapStored = Effect.fnUntraced(function* (
     );
 });
 
-// Key files are `key.<epoch>.dpapi`; a file is published once and never
-// overwritten, so the highest epoch on disk is the current key.
+// decision: atomic-telemetry-key-epochs
 const keyFilePattern = /^key\.(\d+)\.dpapi$/;
 const keyFileNameFor = (epoch: number): string => `key.${epoch}.dpapi`;
 const keyAttempts = 5;
@@ -465,7 +459,6 @@ const pendingNameBytes = 6;
 
 const isAlreadyExists = (error: PlatformError.PlatformError): boolean => error.reason._tag === "AlreadyExists";
 
-// The highest epoch present in the directory and its decoded file, if it decodes.
 const latestKeyFile = Effect.fnUntraced(function* (telemetryDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -489,10 +482,7 @@ const latestKeyFile = Effect.fnUntraced(function* (telemetryDir: string) {
   });
 });
 
-// Draws a new root key and publishes it as `key.<epoch>.dpapi`: the wrapped key
-// is written owner-only to a pending name, then hard-linked into place, which
-// fails when the name already exists. `None` means another process published
-// that epoch first.
+// decision: atomic-telemetry-key-epochs
 const publishKey = Effect.fnUntraced(function* (
   port: Context.Service.Shape<typeof DpapiPort>,
   telemetryDir: string,
@@ -522,8 +512,7 @@ const publishKey = Effect.fnUntraced(function* (
   return published ? O.some({ epoch, material }) : O.none<{ readonly epoch: number; readonly material: Uint8Array }>();
 });
 
-// Uses the highest-epoch key when it unwraps; otherwise publishes the next
-// epoch, and when another process wins that epoch, starts over and uses its key.
+// decision: atomic-telemetry-key-epochs
 const resolveKey = Effect.fnUntraced(function* (
   port: Context.Service.Shape<typeof DpapiPort>,
   telemetryDir: string,
@@ -622,8 +611,6 @@ export const layerPracticeKgSpoolKey = (
     })
   );
 
-// What a read-only look at the telemetry key found: a key that unwrapped, no
-// key file, or a key file that does not decode or unwrap.
 const PracticeKgKeyStatus = LiteralKit(["loaded", "missing", "unreadable"]).pipe(
   $I.annoteSchema("PracticeKgKeyStatus", {
     description: "Read-only telemetry key status: loaded, missing, or present but not decodable or unwrappable.",
@@ -686,7 +673,7 @@ export class PracticeKgKeyReport extends S.Opaque<PracticeKgKeyReport, { readonl
  */
 export const readPracticeKgSpoolKey = Effect.fn("PracticeKgTelemetryKey.read")(function* (telemetryDir: string) {
   const port = yield* DpapiPort;
-  // The same highest-epoch scan the host uses; it only lists and reads.
+
   const latest = yield* latestKeyFile(telemetryDir);
   return yield* O.match(latest, {
     onNone: () => Effect.succeed([PracticeKgKeyReport.make({ status: "missing" }), O.none()] as const),

@@ -9,6 +9,8 @@ import * as Str from "effect/String";
 
 const $I = $ConfigFileId.create("internal/crypto");
 
+const owaspPbkdf2Sha256Iterations = 600_000;
+
 /**
  * AES-GCM's standard IV length, in bytes.
  *
@@ -66,7 +68,6 @@ export class CryptoFailure extends S.Opaque<CryptoFailure, { readonly brand: uni
   )
 ) {}
 
-/** Tag a caught host failure with the phase that produced it, preserving it by identity. */
 const fail =
   (phase: CryptoPhase) =>
   (cause: unknown): CryptoFailure =>
@@ -134,11 +135,8 @@ export const deriveKey: {
             globalThis.crypto.subtle.deriveKey(
               {
                 name: "PBKDF2",
-                // Copy into ArrayBuffer-backed Uint8Array — required by PBKDF2Params.salt
                 salt: toArrayBufferView(salt),
-                // OWASP Password Storage Cheat Sheet, PBKDF2-HMAC-SHA256.
-                // Derivation is memoized per codec instance, so the cost is paid once.
-                iterations: 600_000,
+                iterations: owaspPbkdf2Sha256Iterations,
                 hash: "SHA-256",
               },
               keyMaterial,
@@ -194,7 +192,9 @@ export const PassphraseKeyDerivation = Context.Reference<
  *
  * **Details**
  *
- * `atob` is available in all modern environments (Node 20+, Bun, Deno).
+ * `atob` is available in all modern environments (Node 20+, Bun, Deno). It
+ * yields one character per byte (0-255), so every character's code is defined
+ * and decoding drops no byte.
  *
  * **Example** (Decode base64 bytes)
  *
@@ -215,8 +215,6 @@ export const fromBase64 = (raw: string): Effect.Effect<Uint8Array<ArrayBuffer>, 
     try: () => {
       const binary = atob(raw);
       const bytes = new Uint8Array(new ArrayBuffer(binary.length));
-      // `atob` yields one character per byte (0-255), so iterating the string
-      // visits each byte once and every `charCodeAt` is `Some`.
       bytes.set(A.getSomes(A.map(A.fromIterable(binary), (char) => Str.charCodeAt(char, 0))));
       return bytes;
     },

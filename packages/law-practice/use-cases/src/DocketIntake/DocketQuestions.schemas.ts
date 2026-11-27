@@ -14,10 +14,8 @@ import { DocketCandidateDate, DocketIntakeOutcome, DocketNeedsReviewReason } fro
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketQuestions.schemas");
 
-// An optional text key: absent when the pipeline does not know the value.
 const OptionalText = S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
-// An optional calendar day that exists in its month, encoded as `YYYY-MM-DD`.
 const OptionalDate = CalendarDate.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone));
 
 /**

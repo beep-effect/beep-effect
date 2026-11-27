@@ -1,7 +1,4 @@
-// Agent tests for `@beep/acp/agent` (generation 2). The core-request, id and dying-handler cases
-// port t3code effect-acp `agent.test.ts` (31dcc7c513); request contexts carry the raw JSON-RPC id
-// instead of t3code's encoded identity string. The property, layer smoke, resume-dispatch,
-// management, MCP-over-ACP and cancel-isolation cases are beep-specific.
+// Adapted from t3code packages/effect-acp agent.test.ts at 31dcc7c513 (MIT).
 import * as AcpAgent from "@beep/acp/agent";
 import * as AcpError from "@beep/acp/errors";
 import * as AcpProtocol from "@beep/acp/protocol";
@@ -94,7 +91,6 @@ class AgentTransport extends Context.Service<AgentTransport, Effect.Success<Retu
   $I`AgentTransport`
 ) {}
 
-// Each single-case registration owns a fresh transport and public agent layer.
 const agentFixtureLayer = Layer.unwrap(
   Effect.map(makeInMemoryStdio(), (transport) =>
     Layer.merge(AcpAgent.layer({ stdio: transport.stdio }), Layer.succeed(AgentTransport, transport))
@@ -195,10 +191,14 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
         result: { ok: true },
       });
       const got = yield* Ref.get(requestContexts);
-      assert.deepStrictEqual(got, [
-        AcpProtocol.AcpRequestContext.make({ method: "initialize", requestId: 2 }),
-        AcpProtocol.AcpRequestContext.make({ method: "x/test", requestId: "extension-3" }),
-      ]);
+      assert.deepStrictEqual(
+        got,
+        [
+          AcpProtocol.AcpRequestContext.make({ method: "initialize", requestId: 2 }),
+          AcpProtocol.AcpRequestContext.make({ method: "x/test", requestId: "extension-3" }),
+        ],
+        "request contexts carry the raw JSON-RPC id, not t3code's encoded identity string"
+      );
 
       const encodedJsonl6 = yield* encodeJsonl(SessionCancelNotification, {
         jsonrpc: "2.0",
@@ -241,10 +241,13 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       );
       const outboundExt = yield* decodeExtRequest(firstIsPermission ? secondOutbound : firstOutbound);
 
-      // Locally generated ids stay compatible with SDKs that decode signed int32.
       assert.strictEqual(outboundPermission.id, AcpProtocol.RPC_REQUEST_ID_START);
       assert.strictEqual(outboundPermission.id, 2 ** 30);
-      assert.isAtMost(AcpProtocol.RPC_REQUEST_ID_START, 2 ** 31 - 1);
+      assert.isAtMost(
+        AcpProtocol.RPC_REQUEST_ID_START,
+        2 ** 31 - 1,
+        "locally generated ids stay compatible with SDKs that decode signed int32"
+      );
       assert.strictEqual(outboundExt.id, 1);
 
       const encodedJsonl10 = yield* encodeJsonl(RequestPermissionResponse, {
@@ -288,7 +291,6 @@ it.effect.each([0, 2 ** 30, 2 ** 32])(
       Ref.update(contexts, (current) => [...current, context]).pipe(Effect.as(mockAgentInitializeResponse))
     );
 
-    // Opposite directions may reuse an id even while a request is pending.
     const outboundFiber = yield* agent.client.requestPermission(permissionRequest).pipe(Effect.forkScoped);
     const take15 = yield* Queue.take(output);
     const outbound = yield* decodeRequestPermissionRequest(take15);
@@ -297,11 +299,15 @@ it.effect.each([0, 2 ** 30, 2 ** 32])(
     yield* Queue.offer(input, initializeRequest16);
     const take45 = yield* Queue.take(output);
     const decodedInitializeResponse17 = yield* decodeInitializeResponse(take45);
-    assert.deepStrictEqual(decodedInitializeResponse17, {
-      jsonrpc: "2.0",
-      id: requestId,
-      result: mockAgentInitializeResponse,
-    });
+    assert.deepStrictEqual(
+      decodedInitializeResponse17,
+      {
+        jsonrpc: "2.0",
+        id: requestId,
+        result: mockAgentInitializeResponse,
+      },
+      "opposite directions may reuse an id even while a request is pending"
+    );
     const got18 = yield* Ref.get(contexts);
     assert.deepStrictEqual(got18, [AcpProtocol.AcpRequestContext.make({ method: "initialize", requestId })]);
 
@@ -323,21 +329,27 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
       const agent = yield* AcpAgent.AcpAgent;
       yield* agent.handleInitialize(() => Effect.die("handler bug"));
 
-      // A defect answers a generic internal error that does not carry the defect text.
       const initializeRequest20 = yield* initializeRequest(7);
       yield* Queue.offer(input, initializeRequest20);
       const take21 = yield* Queue.take(output);
       const died = yield* decodeErrorResponse(take21);
       assert.strictEqual(died.id, 7);
       assert.strictEqual(died.error.code, -32603);
-      assert.notInclude(died.error.message, "handler bug");
+      assert.notInclude(
+        died.error.message,
+        "handler bug",
+        "a defect answers a generic internal error without the defect text"
+      );
 
-      // The connection keeps serving after the defect.
       yield* agent.handleInitialize(() => Effect.succeed(mockAgentInitializeResponse));
       const initializeRequest22 = yield* initializeRequest(8);
       yield* Queue.offer(input, initializeRequest22);
       const take23 = yield* Queue.take(output);
-      assert.strictEqual((yield* decodeInitializeResponse(take23)).id, 8);
+      assert.strictEqual(
+        (yield* decodeInitializeResponse(take23)).id,
+        8,
+        "the connection keeps serving after the defect"
+      );
     })
   );
 });
@@ -357,37 +369,40 @@ it.layer(Layer.fresh(agentFixtureLayer), { timeout: "10 seconds" })((it) => {
           headers: [],
         });
 
-      // Without handlers the agent answers method-not-found.
       const resumeSession24 = yield* resumeSession(10, undefined);
       yield* Queue.offer(input, resumeSession24);
       const take25 = yield* Queue.take(output);
       const missing = yield* decodeErrorResponse(take25);
       assert.strictEqual(missing.id, 10);
-      assert.strictEqual(missing.error.code, -32601);
+      assert.strictEqual(missing.error.code, -32601, "without handlers the agent answers method-not-found");
 
-      // Only a resume handler: it serves both replay forms.
       yield* agent.handleResumeSession(() => Effect.succeed({ _meta: { handler: "resume" } }));
       const resumeSession26 = yield* resumeSession(11, { type: "start" });
       yield* Queue.offer(input, resumeSession26);
       const take27 = yield* Queue.take(output);
-      assert.deepStrictEqual((yield* decodeResumeSessionResponse(take27)).result, {
-        _meta: { handler: "resume" },
-      });
+      assert.deepStrictEqual(
+        (yield* decodeResumeSessionResponse(take27)).result,
+        { _meta: { handler: "resume" } },
+        "a lone resume handler serves a replay from the start too"
+      );
 
-      // With a load handler too, a replay from the start prefers it; other cursors keep resume.
       yield* agent.handleLoadSession(() => Effect.succeed({ _meta: { handler: "load" } }));
       const resumeSession28 = yield* resumeSession(12, { type: "start" });
       yield* Queue.offer(input, resumeSession28);
       const take29 = yield* Queue.take(output);
-      assert.deepStrictEqual((yield* decodeResumeSessionResponse(take29)).result, {
-        _meta: { handler: "load" },
-      });
+      assert.deepStrictEqual(
+        (yield* decodeResumeSessionResponse(take29)).result,
+        { _meta: { handler: "load" } },
+        "with a load handler registered too, a replay from the start prefers it"
+      );
       const resumeSession30 = yield* resumeSession(13, null);
       yield* Queue.offer(input, resumeSession30);
       const take31 = yield* Queue.take(output);
-      assert.deepStrictEqual((yield* decodeResumeSessionResponse(take31)).result, {
-        _meta: { handler: "resume" },
-      });
+      assert.deepStrictEqual(
+        (yield* decodeResumeSessionResponse(take31)).result,
+        { _meta: { handler: "resume" } },
+        "other replay cursors keep the resume handler"
+      );
     })
   );
 });

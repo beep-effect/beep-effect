@@ -1,7 +1,3 @@
-// The round-trip laws, over workbooks the schema generates. They are about values, never bytes, and are stated up
-// to `XlsxWorkbook.canonical`, the form a file gives a workbook back in: writing then reading returns the canonical
-// workbook, and the canonical form does not move under a second pass.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { MAX_COLUMN, XlsxAddress, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
 import {
@@ -34,7 +30,7 @@ import * as Str from "effect/String";
 const runs = { arbitrary: { runs: 150 } };
 const workbooks = Arbitrary.schema(XlsxWorkbook);
 
-describe("a workbook written and read back", () => {
+describe("a workbook written and read back is its `XlsxWorkbook.canonical` form, compared by value, never by bytes", () => {
   it.effect.prop(
     "is its canonical form",
     [workbooks],
@@ -60,7 +56,6 @@ describe("a workbook written and read back", () => {
     { arbitrary: { runs: 50 } }
   );
 
-  // The writer puts rows in rising order, so the stream of each sheet is the rows a whole read keeps.
   it.effect.prop(
     "streams every sheet as the rows a whole read gives",
     [workbooks],
@@ -70,7 +65,10 @@ describe("a workbook written and read back", () => {
         const read = yield* Xlsx.parse(bytes);
         for (const sheet of read.workbook.sheets) {
           const streamed = yield* Stream.runCollect(Xlsx.rows(bytes, sheet.info.name));
-          expect(streamed).toEqual(sheet.rows);
+          expect(
+            streamed,
+            "the writer puts rows in rising order, so a stream gives the rows a whole read keeps"
+          ).toEqual(sheet.rows);
         }
       }),
     { arbitrary: { runs: 50 } }
@@ -166,11 +164,10 @@ describe("a workbook written and read back", () => {
       ).toEqual(A.reverse(numbers));
       expect(first.merges).toEqual([{ first: { column: 1, row: 2 }, last: { column: 3, row: 4 } }]);
       expect(first.hiddenColumns).toEqual([2, 5]);
-      // What a file got wrong is written as the text it wrote, so it reads back as text, with nothing to report.
-      expect(A.map(read.warnings, (warning) => warning.finding.kind)).toEqual([
-        "FormulaWithoutResult",
-        "FormatNotShown",
-      ]);
+      expect(
+        A.map(read.warnings, (warning) => warning.finding.kind),
+        "what a file got wrong is written as the text it wrote, so it reads back as text with nothing to report"
+      ).toEqual(["FormulaWithoutResult", "FormatNotShown"]);
     })
   );
 
@@ -181,8 +178,7 @@ describe("a workbook written and read back", () => {
   });
 });
 
-/** A value as a file gives it back: what a file got wrong comes back as the text it wrote. */
-const asWritten = (value: XlsxCell["value"]): XlsxCell["value"] =>
+const asReadBack = (value: XlsxCell["value"]): XlsxCell["value"] =>
   XlsxCell.canonical(XlsxCell.make({ column: 0, value }), "1900").value;
 
 describe("the codecs", () => {
@@ -199,8 +195,6 @@ describe("the codecs", () => {
     { arbitrary: { runs: 50 } }
   );
 
-  // A read gives the cells of a shared formula it dropped an empty formula. That is no formula: it is written as none
-  // (an empty `<f>` is one Excel repairs) and comes back as none.
   it.effect("writes an empty formula as no formula", () =>
     Effect.gen(function* () {
       const cell = XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 1 }), formula: O.some("") });
@@ -214,7 +208,10 @@ describe("the codecs", () => {
         ],
       });
       const bytes = yield* Xlsx.stringify(workbook, XlsxWriteOptions.make({ compression: "store" }));
-      expect(Str.includes("<f>")(new TextDecoder().decode(bytes))).toBe(false);
+      expect(
+        Str.includes("<f>")(new TextDecoder().decode(bytes)),
+        "the empty formula a read gives a dropped shared formula's cells is no formula: Excel repairs an empty <f>"
+      ).toBe(false);
       const back = yield* Xlsx.parse(bytes);
       const readBack = back.workbook.sheets[0]?.rows[0]?.cells[0];
       assertTrue(readBack !== undefined);
@@ -261,8 +258,6 @@ describe("the codecs", () => {
     })
   );
 
-  // A record has nowhere to put a cell its header row has no heading for, so such a cell stops the decode rather
-  // than vanish: the same rule as a heading that is empty or used twice.
   it.effect("records refuse a cell with a value under a column the header row has no heading for", () =>
     Effect.gen(function* () {
       const header = XlsxRow.make({
@@ -282,7 +277,10 @@ describe("the codecs", () => {
         })
       );
       const error = yield* Effect.flip(S.decodeEffect(Xlsx.recordsFromBytes({ sheet: "S", header: "first" }))(bytes));
-      expect(error.message).toContain('the cell in column 2 of row 2 of "S" has no heading');
+      expect(
+        error.message,
+        "a record has nowhere to put the cell, so it stops the decode rather than vanish, as an empty or repeated heading does"
+      ).toContain('the cell in column 2 of row 2 of "S" has no heading');
       const gapOnly = XlsxRow.make({
         number: 2,
         cells: [XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 1 }) })],
@@ -330,9 +328,6 @@ describe("the codecs", () => {
     })
   );
 
-  // The records codec writes only what it reads back: a heading that is empty or longer than a cell, more headings
-  // than a sheet has columns, records with no heading at all (an empty header row, read back as no records), are
-  // each a schema issue on the way to bytes, never a defect and never dropped.
   it.effect("records refuse, as a schema issue, a heading or a count a sheet cannot hold", () =>
     Effect.gen(function* () {
       const codec = Xlsx.recordsFromBytes({ sheet: "S", header: "first" });
@@ -340,15 +335,15 @@ describe("the codecs", () => {
       const wide: XlsxRecord = R.fromEntries(A.map(A.range(0, MAX_COLUMN + 1), (i) => [`h${i}`, one] as const));
       for (const records of [[{ [Str.repeat(MAX_CELL_CHARS + 1)("h")]: one }], [{ "": one }], [wide], [{}], [{}, {}]]) {
         const exit = yield* Effect.exit(S.encodeUnknownEffect(codec)(records));
-        assertTrue(Exit.isFailure(exit) && !Cause.hasDies(exit.cause));
+        assertTrue(
+          Exit.isFailure(exit) && !Cause.hasDies(exit.cause),
+          "the codec writes only what it reads back; records with no heading would be an empty header row, read as none"
+        );
         if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBeInstanceOf(S.SchemaError);
       }
     })
   );
 
-  // Whatever records the codec writes, it reads back as themselves, each with every heading any record has: a record
-  // that lacks one reads it as blank. The only records it refuses here are records with no heading at all, which a
-  // header row cannot hold; no records at all are written as a sheet with no rows and read back as none.
   it.effect.prop(
     "records written are read back as the records, every heading filled",
     [Arbitrary.schema(XlsxRecord.pipe(S.Array))],
@@ -360,7 +355,10 @@ describe("the codecs", () => {
         if (Exit.isFailure(written)) {
           expect(Cause.hasDies(written.cause)).toBe(false);
           expect(Cause.squash(written.cause)).toBeInstanceOf(S.SchemaError);
-          expect(headings.length === 0 && records.length > 0).toBe(true);
+          expect(
+            headings.length === 0 && records.length > 0,
+            "the only records refused here have no heading at all, which a header row cannot hold"
+          ).toBe(true);
           return;
         }
         const back = yield* S.decodeEffect(codec)(written.value);
@@ -369,11 +367,14 @@ describe("the codecs", () => {
             A.map(
               headings,
               (heading) =>
-                [heading, asWritten(R.get(record, heading).pipe(O.getOrElse(() => XlsxBlank.make({}))))] as const
+                [heading, asReadBack(R.get(record, heading).pipe(O.getOrElse(() => XlsxBlank.make({}))))] as const
             )
           )
         );
-        expect(back).toEqual(filled);
+        expect(
+          back,
+          "a record lacking a heading reads it as blank; no records are a sheet with no rows, read back as none"
+        ).toEqual(filled);
       }),
     { arbitrary: { runs: 40 } }
   );

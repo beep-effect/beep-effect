@@ -17,7 +17,6 @@ export const draftReplyInitialState = Effect.runSync(
 
 const proofText = (value: string) => MdModel.Text.make({ value });
 
-// Canonical document used to prove readable content across capability profiles.
 const capabilityProofDocument = MdModel.Document.make({
   children: [
     MdModel.Heading.make({ level: 1, children: [proofText("Capability proof")] }),

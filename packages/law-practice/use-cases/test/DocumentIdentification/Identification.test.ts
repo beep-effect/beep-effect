@@ -108,17 +108,21 @@ describe("contacts and indexes", () => {
       card("Different Display", ["second@acme.example"]),
       card("One Person", ["info@acme.example"]),
       card("Other Person", ["info@acme.example"]),
-      // Nameless role-only cards: unrelated mailboxes must not collapse onto one id.
       card("", ["docketing@firma.example"]),
       card("", ["info@clientb.example"]),
     ];
     const contacts = I.normaliseContacts(cards);
-    // The count guards against role-address unions; the distinct-ids check alone would pass if cards wrongly merged.
-    expect(contacts).toHaveLength(5);
+    expect(
+      contacts,
+      "guards against role-address unions; the distinct-ids check alone would pass if cards wrongly merged"
+    ).toHaveLength(5);
     expect(A.dedupe(A.map(contacts, (c) => c.contactId))).toHaveLength(contacts.length);
     const idOf = (address: string) =>
       A.findFirst(contacts, (c) => A.some(c.emails, (e) => e.address === address)).pipe(O.map((c) => c.contactId));
-    expect(idOf("docketing@firma.example")).not.toEqual(idOf("info@clientb.example"));
+    expect(
+      idOf("docketing@firma.example"),
+      "nameless role-only cards: unrelated mailboxes must not collapse onto one id"
+    ).not.toEqual(idOf("info@clientb.example"));
     assertSome(A.findFirst(contacts, (c) => c.emails.length === 2).pipe(O.map((c) => c.sources)), [
       "outlook-csv",
       "vcard",
@@ -246,8 +250,10 @@ describe("resolver", () => {
       }),
     ];
     expect(resolve(document("Application 18/900,001", { uspto })).tier).toBe("identified");
-    // Cover-sheet layout: the number is followed by whitespace and a date, so whitespace must stay a boundary.
-    expect(resolve(document("APPLICATION NO. FILING DATE\n18/900,001 10/06/2025", { uspto })).tier).toBe("identified");
+    expect(
+      resolve(document("APPLICATION NO. FILING DATE\n18/900,001 10/06/2025", { uspto })).tier,
+      "cover-sheet layout: the number is followed by whitespace and a date, so whitespace must stay a boundary"
+    ).toBe("identified");
     expect(resolve(document("Application No. 18/900,001 12 pages", { uspto })).tier).toBe("identified");
     expect(resolve(document("Application 18/900,002", { uspto })).tier).toBe("unknown");
     expect(resolve(document("Application 118/900,001", { uspto })).tier).toBe("unknown");
@@ -261,10 +267,10 @@ describe("resolver", () => {
     expect(resolve(document(text, { extraction: O.some(extracted("Acme Widgets LLC", text, false)) }), c).tier).toBe(
       "candidate"
     );
-    // Text signals are capped at three, below the content threshold of five.
-    expect(resolve(document("alex@acme.example +12125550100"), context({ contacts: [linked()] })).tier).toBe(
-      "candidate"
-    );
+    expect(
+      resolve(document("alex@acme.example +12125550100"), context({ contacts: [linked()] })).tier,
+      "text signals are capped at three, below the content threshold of five"
+    ).toBe("candidate");
     expect(resolve(document("nothing here"), context({ contacts: [linked()] })).tier).toBe("unknown");
   });
   it("learns party names only from train files with independent hashes", () => {
@@ -273,9 +279,11 @@ describe("resolver", () => {
       truth(document(name)),
       truth(document(name, { contentHash: I.ContentHash.make(Str.repeat(64)("b")) })),
     ];
-    // No client index: the learned name is the only signal, worth the party's role weight.
     const c = context();
-    expect(resolve(document(name, { extraction: O.some(extracted(name, name)) }), c, train).tier).toBe("candidate");
+    expect(
+      resolve(document(name, { extraction: O.some(extracted(name, name)) }), c, train).tier,
+      "with no client index the learned name is the only signal, worth the party's role weight"
+    ).toBe("candidate");
     expect(resolve(document(name, { extraction: O.some(extracted(name, name)) }), c, [train[0]!, train[0]!]).tier).toBe(
       "unknown"
     );
@@ -345,12 +353,16 @@ describe("resolver", () => {
       });
     const text = "Client Acme Widgets LLC";
     const doc = document(text, { extraction: O.some(extracted("Acme Widgets LLC", text)) });
-    // Client name and contact each add the client role weight (6), text adds its cap (3): 9 against nothing.
     const single = context({ clients: [clientEntry], contacts: [contact("a", client)] });
-    expect(resolve(doc, single).tier).toBe("identified-content");
-    // A contact of the same name under another client scores 4: 9 clears twice that but not three times.
+    expect(
+      resolve(doc, single).tier,
+      "client name and contact each add the client role weight (6), text adds its cap (3): 9 against nothing"
+    ).toBe("identified-content");
     const shared = context({ clients: [clientEntry], contacts: [contact("a", client), contact("c", other)] });
-    expect(resolve(doc, shared).tier).toBe("candidate");
+    expect(
+      resolve(doc, shared).tier,
+      "a same-name contact under another client scores 4: 9 clears twice that but not three times"
+    ).toBe("candidate");
     const tie = context({ clients: [], contacts: [contact("a", client), contact("c", other)] });
     expect(resolve(doc, tie).tier).toBe("ambiguous");
   });
@@ -433,7 +445,6 @@ describe("evaluation and codecs", () => {
         }),
       ],
     });
-    // "fixture-6" holds the all-zero fixture hash out, so the copy would have scored without the switch.
     const report = I.evaluateHoldOut([truth(doc)], context(), "fixture-6");
     expect(report.testSize).toBe(1);
     expect(
@@ -441,7 +452,8 @@ describe("evaluation and codecs", () => {
         A.findFirst(report.tiers, (t) => t.tier === "identified"),
         O.map((t) => t.resolved),
         O.getOrUndefined
-      )
+      ),
+      '"fixture-6" holds the all-zero fixture hash out, so the copy would have scored without the switch'
     ).toBe(0);
   });
   it.effect("roundtrips the private document and resolution codecs", () =>
