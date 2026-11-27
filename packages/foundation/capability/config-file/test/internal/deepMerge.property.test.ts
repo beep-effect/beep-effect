@@ -257,7 +257,7 @@ describe("deepMerge structural properties", () => {
       assert.isTrue(R.has(payload, "__proto__"));
       assert.deepStrictEqual(R.get(payload, "__proto__"), O.some([]));
       assert.deepStrictEqual(deepMerge(once, value), once);
-      assert.strictEqual(once.items, value.items, "arbitrary JSON stays atomic inside arrays");
+      assert.strictEqual(once.items, value.items);
     })
   );
 
@@ -269,9 +269,13 @@ describe("deepMerge structural properties", () => {
         assert.isTrue(isPlainObject(value));
         assert.isTrue(canMerge(value, value));
         const once = deepMerge(value, value);
-        assert.deepStrictEqual(once, value, "recursively merged records filter __proto__");
+        assert.deepStrictEqual(
+          once,
+          value,
+          "Document holds arbitrary JSON only in arrays: merged records filter __proto__"
+        );
         assert.deepStrictEqual(deepMerge(once, value), once);
-        assert.strictEqual(once.items, value.items);
+        assert.strictEqual(once.items, value.items, "arbitrary JSON stays atomic inside arrays");
       }),
     runs
   );

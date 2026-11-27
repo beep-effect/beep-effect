@@ -141,14 +141,14 @@ describe("ConfigEvent source reporting", () => {
         const collected = yield* drain(sub);
         const loadedEvent = findEvent(collected, "Loaded");
         if (O.isNone(loadedEvent)) {
-          return assert.fail("expected a Loaded event");
+          return assert.fail("expected a Loaded event: two ConfigEvents layers would mint two PubSubs");
         }
         const loaded = loadedEvent.value;
 
         assert.deepStrictEqual(
           A.map(loaded.sources, (s) => s.path),
           ["/a/.apprc", "/etc/.apprc"],
-          "the subscriber and emit share one PubSub through sharedEventsLayer"
+          "Loaded names every layeredMerge source, not only the first"
         );
       })
     );

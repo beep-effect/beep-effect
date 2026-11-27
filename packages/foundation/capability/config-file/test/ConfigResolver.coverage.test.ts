@@ -75,7 +75,7 @@ const markers = Layer.mergeAll(
 );
 
 it.layer(markers, { timeout: "30 seconds" })((it) => {
-  describe("workspace-root markers and a present system config, on memfs for the coverage lane that skips test/integration", () => {
+  describe("workspace-root markers and a present system config, on memfs because the coverage lane skips the integration suite", () => {
     it.effect("a package.json with workspaces marks the root, from a nested cwd", () =>
       Effect.gen(function* () {
         const resolved5 = yield* ConfigResolver.workspaceRoot({ filename: ".apprc", cwd: "/npm/sub" }).resolve;

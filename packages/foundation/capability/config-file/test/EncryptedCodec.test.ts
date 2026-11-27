@@ -272,7 +272,7 @@ describe("EncryptedCodec", () => {
       assert.strictEqual(
         attempts,
         2,
-        "the first resolution parks on Effect.never and the failing sibling interrupts it, no TestClock needed"
+        "a failing sibling interrupts the parked first resolution; a sleep would never fire under the TestClock"
       );
     })
   );
