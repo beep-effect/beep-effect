@@ -58,8 +58,7 @@ const CORPUS_DIR = "goals/skillopt-training-pilot/corpus";
 const EMPTY_PLUGIN = "sep-empty";
 const SKILL_PLUGIN = "sep-skill";
 const ALLOWED_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "Skill"];
-// Matched against error text only, never against serialized metadata.
-const API_ERROR_PATTERN =
+const API_ERROR_TEXT_PATTERN =
   /api[ _-]?error|rate[ _-]?limit|overload|\b429\b|(?:status|code|error)[ :]+5\d\d\b|authentication|authenticate|unauthori[sz]ed|server error|credit balance|hit your (?:weekly|daily|monthly|session|usage) limit|usage limit|weekly limit/iu;
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/SkillProbe");
@@ -97,18 +96,14 @@ type ProbeEnv = FileSystem.FileSystem | Path.Path;
  */
 export const SKILL_PROBE_SCORER_PROFILE = "skill-probe-scorer/v3";
 
-// Completion patterns the archived corpus wrote before the current idiom; each
-// repair accepts the old spelling and the one the live skill teaches.
-const PATTERN_REPAIRS: ReadonlyArray<readonly [string, string]> = [
+const LEGACY_IDIOM_PATTERN_REPAIRS: ReadonlyArray<readonly [string, string]> = [
   ["extends\\s+S\\.Class\\b", "extends\\s+S\\.(?:Class|Opaque)\\b"],
   ["S\\.decode\\s*\\(", "S\\.decode(?:To)?\\s*\\("],
 ];
-// tsgo rules enabled after the corpus was written and stated by none of the
-// prompt, the Code Laws or the skill.
-const IGNORED_TSGO_RULES: ReadonlyArray<string> = ["missingPipeableSignature"];
+const UNTAUGHT_POST_CORPUS_TSGO_RULES: ReadonlyArray<string> = ["missingPipeableSignature"];
 
 const repairPattern = (pattern: string): string =>
-  A.reduce(PATTERN_REPAIRS, pattern, (current, [from, to]) => Str.replaceAll(from, to)(current));
+  A.reduce(LEGACY_IDIOM_PATTERN_REPAIRS, pattern, (current, [from, to]) => Str.replaceAll(from, to)(current));
 
 /**
  * Apply the probe's completion-pattern repairs to a task manifest; prompts,
@@ -192,7 +187,7 @@ export const redactSkillProbePath =
     Str.replaceAll(repoRoot, "<repo>")(message);
 
 const isIgnoredTsgoViolation = (message: string): boolean =>
-  A.some(IGNORED_TSGO_RULES, (rule) => Str.includes(`effect(${rule})`)(message));
+  A.some(UNTAUGHT_POST_CORPUS_TSGO_RULES, (rule) => Str.includes(`effect(${rule})`)(message));
 type ScoreEnv = ProbeEnv | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner;
 
 const decodeStage = S.decodeUnknownEffect(S.fromJsonString(SkillProbeStage));
@@ -400,8 +395,6 @@ export class SkillProbeStageOptions extends S.Opaque<SkillProbeStageOptions, { r
 const isWithin = (parent: string, child: string, separator: string): boolean =>
   child === parent || Str.startsWith(Str.endsWith(separator)(parent) ? parent : `${parent}${separator}`)(child);
 
-// Staging replaces its output directory, so it refuses one that holds or sits
-// inside an input, and one that exists with content but is not a prior stage.
 const guardStageOutDir = Effect.fn("SkillProbe.guardStageOutDir")(function* (
   outDir: string,
   inputs: ReadonlyArray<string>
@@ -742,7 +735,7 @@ export const traceExclusionReason = (trace: string): O.Option<string> => {
       (entry) =>
         entry.is_error === true &&
         entry.subtype !== "error_max_turns" &&
-        API_ERROR_PATTERN.test(resultText(entry.result))
+        API_ERROR_TEXT_PATTERN.test(resultText(entry.result))
     ),
     O.map((entry) => `The trace's final result is an API error: ${Str.slice(0, 200)(resultText(entry.result))}`)
   );
@@ -754,9 +747,8 @@ const traceApiError = Effect.fn("SkillProbe.traceApiError")(function* (tracePath
   return traceExclusionReason(text);
 });
 
-// Exclusions decided before any kept directory is read, in rule order.
 const runExclusionReason = (run: PluginEvalRun, traceError: O.Option<string>, keptDir: string): O.Option<string> => {
-  if (run.error !== null && API_ERROR_PATTERN.test(run.error)) return O.some(`Harness API error: ${run.error}`);
+  if (run.error !== null && API_ERROR_TEXT_PATTERN.test(run.error)) return O.some(`Harness API error: ${run.error}`);
   if (O.isSome(traceError)) return traceError;
   return Str.isEmpty(keptDir) ? O.some(`No kept directory: ${run.error ?? "the harness started no agent"}`) : O.none();
 };
@@ -1034,7 +1026,6 @@ export const readSkillProbeRecords = Effect.fn("SkillProbe.readRecords")(functio
   return A.flatten(perFile);
 });
 
-// Records the rule lets a report or a selection pool, or a failure naming every problem.
 const readPoolableRecords = Effect.fn("SkillProbe.readPoolableRecords")(function* (
   files: ReadonlyArray<string>,
   preflightPath: string

@@ -212,8 +212,6 @@ const PROPERTY_LAWS_PARTITION_PREFIX = ciLaneShardJobPrefix("property");
 const MAIN_HORIZON = Duration.days(CI_CERTAINTY_MAIN_HORIZON_DAYS);
 const LATE_VERDICT_AFTER = Duration.days(1);
 const PENDING_REPLACEMENT_SLACK = Duration.minutes(1);
-// Yeet-mergeable adds these lanes' contexts to the required set (D5); Coverage Regression keeps its conditional
-// name.
 const MERGEABLE_EXTRA_LANES: ReadonlyArray<CiLaneId> = ["lint-policy", "property", "fallow", "coverage"];
 const MERGEABLE_EXTRA_CONTEXTS: ReadonlyArray<ReadonlyArray<string>> = A.map(
   MERGEABLE_EXTRA_LANES,
@@ -236,7 +234,6 @@ const minutesBetween = (fromMillis: number, toMillis: number): number =>
 
 const roundMinutes = (minutes: number): number => Math.round(minutes * 100) / 100;
 
-/** One job with the workflow that produced it. */
 interface ProducedJob {
   readonly job: CiWorkflowJob;
   readonly producer: CiCertaintyProducer;
@@ -248,7 +245,6 @@ const jobStartMillis = (produced: ProducedJob): number =>
     () => 0
   );
 
-// Latest start wins; a rerun copy shares its original's start, so the higher attempt then the higher id breaks ties.
 const latestJobOrder: Order.Order<ProducedJob> = Order.combineAll([
   Order.mapInput(Order.Number, jobStartMillis),
   Order.mapInput(Order.Number, (produced: ProducedJob) => produced.job.run_attempt),
@@ -315,13 +311,9 @@ const headStateOf = (
 
 const completedMillis = (job: CiWorkflowJob): O.Option<number> => epochMillis(job.completed_at);
 
-// Green because the job ran, not because it was skipped.
 const ranGreen = (job: CiWorkflowJob): boolean =>
   Str.equivalence(jobContextState(job), "green") && job.conclusion !== "skipped";
 
-// A later label on a proven head makes heavy-admit.yml re-report the proof: heavy.yml called with
-// `admitted: false` reports every `Heavy / <lane>` skipped. That copy is not the lane's completion
-// while an earlier job of the same name ran green on the head, so it never moves the green instant.
 const isReReport =
   (jobs: ReadonlyArray<ProducedJob>) =>
   (produced: ProducedJob): boolean =>
@@ -336,7 +328,6 @@ const isReReport =
         Order.isLessThan(latestJobOrder)(earlier, produced)
     );
 
-// Every context group is green, and the latest job of each one finished: the instant the last one did.
 const groupsGreenAt = (
   jobs: ReadonlyArray<ProducedJob>,
   groups: ReadonlyArray<ReadonlyArray<string>>
@@ -468,15 +459,10 @@ const runCreatedMillis = (run: CiCertaintyRun): number => DateTime.toEpochMillis
 
 const isRunComplete = (run: CiCertaintyRun): boolean =>
   O.match(runStatus(run.run), {
-    // A captured run without a status is judged by its jobs.
     onNone: () => A.every(run.jobs, (job) => Str.equivalence(job.status, "completed")),
     onSome: (status) => Str.equivalence(status, "completed"),
   });
 
-// Two generations of check.yml mark a documentation-only head. Until 2026-11-13 its Heavy Admission
-// job ran the documentation-only admission step. Since then that job is skipped before runner
-// allocation on such a head, and Docs Policy, which only a docs_only change profile creates, is the
-// marker: any conclusion but `skipped` (a red or cancelled Docs Policy is still a docs head).
 const headClassOf = (jobs: ReadonlyArray<ProducedJob>): CiCertaintyHeadClass => {
   const checkJobs = A.filter(jobs, (produced) => Str.equivalence(produced.producer, PRODUCER_CHECK));
   const admittedAsDocs = O.exists(latestJobNamed(checkJobs, [HEAVY_ADMISSION_JOB]), (produced) =>
@@ -492,7 +478,6 @@ const headClassOf = (jobs: ReadonlyArray<ProducedJob>): CiCertaintyHeadClass => 
   return admittedAsDocs || ranDocsPolicy ? "docs" : "code";
 };
 
-/** A head's runs, its T0 and its branch, before judgement. */
 interface HeadRuns {
   readonly branch: O.Option<string>;
   readonly headSha: string;
@@ -514,7 +499,6 @@ const groupHeads = (runs: ReadonlyArray<CiCertaintyRun>): ReadonlyArray<HeadRuns
     A.flatMap(([headSha, headRuns]) => {
       const checkRuns = A.filter(headRuns, isCheckPullRequestRun);
       return A.match(checkRuns, {
-        // A head with no check.yml pull_request run has no T0 and is not judged.
         onEmpty: A.empty<HeadRuns>,
         onNonEmpty: (present) => [
           {
@@ -537,9 +521,6 @@ const groupHeads = (runs: ReadonlyArray<CiCertaintyRun>): ReadonlyArray<HeadRuns
   );
 };
 
-// The instant a non-green head's verdict was decided: the first red or cancelled required context's
-// completion, else the latest required job's completion. Jobs outside the required set never move it,
-// so a red head is judged against the same instant its green twin would be (D5 monotonicity).
 const verdictDecidedAt = (
   jobs: ReadonlyArray<ProducedJob>,
   requiredGroups: ReadonlyArray<ReadonlyArray<string>>,
@@ -593,8 +574,6 @@ const judgeHead = (
     successor,
     (next) =>
       Str.equivalence(state, "open") ||
-      // check.yml's cancel-in-progress cancels a head in the same second its successor's run is
-      // created, so a cancelled head ties with its successor; red stays strict (D5 monotonicity).
       (Str.equivalence(state, "cancelled") && next.t0 <= decidedAt) ||
       (!Str.equivalence(state, "green") && !Str.equivalence(state, "cancelled") && next.t0 < decidedAt) ||
       (Str.equivalence(state, "green") && O.exists(requiredGreen, (green) => next.t0 < green.at))
@@ -744,23 +723,16 @@ const admissionToHeavyMinutes = (run: CiCertaintyRun): O.Option<number> => {
   );
 };
 
-// A heavy-admit.yml run whose Heavy Admission was skipped (a label event that admitted nothing) is no
-// producer run; check.yml runs always are. A later label on an admitted head runs Heavy Admission and
-// re-reports the lanes as skipped (or skips the caller); it counts here, but its skipped lane copies
-// add no minutes and `isReReport` keeps them from moving a lane's green instant.
 const isAdmittedRun = (run: CiCertaintyRun): boolean =>
   isCheckPullRequestRun(run) ||
   A.some(run.jobs, (job) => Str.equivalence(job.name, HEAVY_ADMISSION_JOB) && job.conclusion !== "skipped");
 
-/** One check.yml run of a head with the admitted heavy-admit.yml runs it owns. */
 interface HeadAttempt {
   readonly check: CiCertaintyRun;
   readonly headSha: string;
   readonly jobs: ReadonlyArray<CiWorkflowJob>;
 }
 
-// Each admitted heavy-admit.yml run joins the latest check.yml run of its head created at or before it
-// (the first one when it came earlier), so a label-admitted head carries its heavy-pool minutes too.
 const headAttempts = (head: HeadRuns): ReadonlyArray<HeadAttempt> => {
   const checks = A.sort(A.filter(head.runs, isCheckPullRequestRun), Order.mapInput(Order.Number, runCreatedMillis));
   const admits = A.filter(
@@ -815,7 +787,6 @@ const mainVerdictOf = (runs: ReadonlyArray<CiWorkflowWindowRun>): CiCertaintyMai
   return A.isReadonlyArrayNonEmpty(runs) ? "cancelled" : "no-run";
 };
 
-// An incomplete push-run listing says nothing about a commit's runs, so it is unread, never no-run.
 const mainRowOf =
   (listingPartial: boolean) =>
   (commit: CiCertaintyMainCommit): CiCertaintyMainRow =>
@@ -1115,6 +1086,27 @@ export const ciCertaintyFleetLocalProof = (rows: ReadonlyArray<EconomicsModeDura
  * their commit time falls inside the window. The report is certified only when
  * no counted head is api-partial, the main listing was complete, and at least
  * one code head was counted.
+ *
+ * Time to Yeet-mergeable adds the Lint Policy, Property Laws, Fallow and Coverage contexts to the
+ * required set (D5); Coverage Regression keeps its conditional name. A rerun copy shares its
+ * original's start, so among equal starts the higher attempt, then the higher job id, wins. A
+ * context group is green at the instant its latest job finished, and the required-green instant is
+ * when the last group did. A heavy-admit.yml run whose Heavy Admission was skipped is no producer
+ * run; check.yml runs always are. Each admitted heavy-admit.yml run joins the latest check.yml run
+ * of its head created at or before it (the first one when it came earlier), so a label-admitted
+ * head carries its heavy-pool minutes too. A later label on a proven head makes heavy-admit.yml
+ * call heavy.yml with `admitted: false`, which reports every `Heavy / <lane>` skipped; such a copy
+ * adds no minutes and never moves a lane's green instant while an earlier job of that name ran, and
+ * did not skip, green.
+ *
+ * A captured run without a status is judged by its jobs, and a head with no check.yml pull_request
+ * run has no T0 and is not judged. A documentation-only head has two markers: before 2026-11-13 its
+ * Heavy Admission job ran the documentation-only admission step; since then that job is skipped
+ * before runner allocation and Docs Policy, which only a docs_only change profile creates, marks
+ * the head with any conclusion but `skipped`. check.yml cancels in-progress runs in the same second
+ * its successor's run is created, so a cancelled head is superseded on a tie while a red head keeps
+ * the strict comparison (D5 monotonicity, `goals/certainty-scorecard/SPEC.md`). An incomplete
+ * push-run listing leaves a main commit unread, never `no-run`.
  *
  * **Example** (Score an empty corpus)
  *
@@ -1568,9 +1560,7 @@ const gitLines = Effect.fn("Ci.certaintyGitLines")(
   function* (repoRoot: string, args: ReadonlyArray<string>) {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const handle = yield* spawner.spawn(
-      // KEEP (D-22): `Git.log` has no `--first-parent` or `--until`, and the per-commit `diff-tree` answers
-      // nothing for a merge commit, which no kit diff member reproduces (`changedFiles` compares two trees).
-      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: kit lacks --first-parent, --until, merge diff-tree (D-22)
       ChildProcess.make("git", ["-C", repoRoot, ...args], { stdin: "ignore", stdout: "pipe", stderr: "pipe" })
     );
     const [stdout, status] = yield* Effect.all(
@@ -1642,7 +1632,6 @@ const listRuns = (workflow: string, event: "pull_request" | "push", since: DateT
     })
   );
 
-// Count every read and stop at the bound: a refused read becomes a partial read, never a smaller census.
 const countingGithubClient = (
   inner: CiLaneTimingGithubClient["Service"],
   maxRequests: number,
@@ -1687,7 +1676,6 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
 > {
   const capturedAt = yield* DateTime.now;
   const horizonSince = DateTime.min(request.since, DateTime.subtractDuration(request.until, MAIN_HORIZON));
-  // The main push listing is a few pages; read it before the per-attempt job reads spend the bound.
   const mainRunsResult = yield* listRuns("check.yml", "push", horizonSince, capturedAt).pipe(Effect.result);
   const checkRuns = yield* listRuns("check.yml", "pull_request", request.since, capturedAt);
   const heavyAdmitRuns = yield* listRuns("heavy-admit.yml", "pull_request", request.since, capturedAt);
@@ -1705,7 +1693,6 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
     toCapture,
     Effect.fnUntraced(function* ({ run, workflow }) {
       if (!HashSet.has(windowHeadShas, run.head_sha)) {
-        // Runs of heads outside the window are kept only to detect supersession.
         return CiCertaintyRun.make({ jobs: [], run, workflow });
       }
       const read = yield* collectCiWorkflowRunAttemptJobs(run.id, run.run_attempt);
@@ -1778,6 +1765,14 @@ const readRequiredContexts = Effect.fn("Ci.certaintyReadRequiredContexts")(funct
 
 /**
  * The live certainty reader over the checkout's GitHub identity and local git.
+ *
+ * **Details**
+ *
+ * The main push
+ * listing, a few pages, is read before the per-attempt job reads spend the request bound. Every
+ * read is counted and the reader stops at the bound, so a refused read becomes a partial read,
+ * never a smaller census. Runs of heads outside the window are kept without jobs, only to detect
+ * supersession.
  *
  * **Example** (Reference the live layer)
  *
@@ -2044,7 +2039,6 @@ export const ciCertaintyCommand = Command.make(
         .pipe(CiCommandError.mapError(`Failed to write ${writeCorpus.value}.`));
     }
     const report = yield* buildCiCertaintyReport(captured);
-    // Written before the refusal below, so a refused night still publishes its stamped summary.
     if (O.isSome(summaryOut)) {
       yield* fs
         .writeFileString(summaryOut.value, `${renderCiCertaintySummaryMarkdown(report)}\n`)

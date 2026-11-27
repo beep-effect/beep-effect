@@ -62,6 +62,12 @@ const $I = $RepoCliId.create("commands/Ci/CiBinaryPinSync");
  *   holds more than the pin; the stale reason names the newer release that is
  *   waiting). The checkout is left as it was and the workflow reports it once.
  *
+ * A stale branch is bumped by create-pull-request, which force-updates it to main plus the pin
+ * commit. That update carries every workflow change main made since the branch was cut, which the
+ * pin-bump App (no `workflows` permission) may not push onto an existing branch, so a pin-only
+ * branch is superseded with the newest release instead. A branch holding anything else is blocked
+ * while that release waits, with or without workflow changes, because the rebuild would discard it.
+ *
  * **Example** (Check an outcome)
  *
  * ```ts
@@ -173,9 +179,6 @@ const createdAt = (releases: ReadonlyArray<BeepCiRelease>, tag: string) =>
     (release) => release.createdAt
   );
 
-// The creation time of a listed release. An unlisted tag, or a creation time another release shares,
-// cannot be ordered, so it fails closed instead of reading as "older" (which would let a reset move a
-// pin backwards).
 const orderedAt = Effect.fnUntraced(function* (releases: ReadonlyArray<BeepCiRelease>, tag: string) {
   const at = createdAt(releases, tag);
   if (O.isNone(at)) {
@@ -198,7 +201,6 @@ const orderedAt = Effect.fnUntraced(function* (releases: ReadonlyArray<BeepCiRel
   return at.value;
 });
 
-// The `git status` porcelain XY codes of an unmerged path (git-status(1), "Unmerged").
 const isUnmergedCode = S.is(S.Literals(["DD", "AU", "UD", "UA", "DU", "AA", "UU"]));
 const isUnmerged = (entry: { readonly x: string; readonly y: string }): boolean =>
   isUnmergedCode(`${entry.x}${entry.y}`);
@@ -240,14 +242,11 @@ export class CiBinaryPinSyncRequest extends S.Opaque<CiBinaryPinSyncRequest, { r
   }).pipe($I.annoteSchema("CiBinaryPinSyncRequest", { description: "The inputs of one pin-bump branch sync." }))
 ) {}
 
-// A git (or file system) failure keeps what went wrong: GitCommandError's message names the redacted argv
-// (a URL's userinfo never survives it), the exit code and git's stderr, and the sync sends no URL at all.
 const gitFailure =
   (request: CiBinaryPinSyncRequest) =>
   (cause: { readonly message: string }): CiCommandError =>
     CiCommandError.make({ cause, message: `git failed in ${request.cwd}: ${cause.message}` });
 
-// The checkout's pin file, or none when the branch deleted it.
 const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -260,16 +259,9 @@ const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest
   return O.some(text);
 });
 
-// The resolved release when the branch pins it exactly; the branch's own pin when it is a newer
-// release (the sync then only merges main under it); otherwise none, which is `stale`. A branch tag
-// the release list does not hold, or a tied creation time, fails: nothing is changed.
 const resolveSyncTarget = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
-  // The resolved release must be listed, with an unambiguous creation time, before anything is
-  // decided, the exact-match fast path included.
   const newestAt = yield* orderedAt(request.releases, request.pin.tag);
   const branchText = yield* readPinFile(request);
-  // A missing pin file, or one whose two lines do not parse, holds no release to keep: it is stale like
-  // an older one.
   if (O.isNone(branchText)) {
     return O.none<CiBinaryPin>();
   }
@@ -289,8 +281,6 @@ const resolveSyncTarget = Effect.fnUntraced(function* (request: CiBinaryPinSyncR
   return DateTime.isGreaterThan(branchAt, newestAt) ? branchPin : O.none<CiBinaryPin>();
 });
 
-// Merge the base ref in. Returns whether the merge stopped on conflicts and the conflicted paths
-// outside the pin file, which the sync cannot resolve.
 const mergeBase = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const git = yield* Git;
   const path = yield* Path.Path;
@@ -305,10 +295,6 @@ const mergeBase = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) 
   return { conflicted, outside: A.map(outside, (entry) => entry.path) };
 });
 
-// Set the pin file to the base's text with only the two pinned lines set to the target. After a conflict
-// this concludes the merge commit. A clean merge can still leave other pin lines: when the branch's pin
-// lines equal its merge base's and main then changed them, the merge takes main's (older) pin, so it
-// is rewritten and committed. Pin-only was checked first, so those two lines are the only difference.
 const commitResolvedPin = Effect.fnUntraced(function* (
   request: CiBinaryPinSyncRequest,
   target: CiBinaryPin,
@@ -335,15 +321,11 @@ const commitResolvedPin = Effect.fnUntraced(function* (
   yield* git.commit(request.cwd, message, { noVerify: true }).pipe(Effect.mapError(gitFailure(request)));
 });
 
-// Whether the branch's pin file differs from its merge-base version outside the two pinned lines (a
-// human edit). Rewriting both sides to the same pin leaves only those differences; a side whose pin
-// lines do not parse, or a pin file the merge base lacks, counts as differing.
 const pinFileBeyondPinLines = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const git = yield* Git;
   const forkPoint = yield* git.mergeBase(request.cwd, request.base, "HEAD").pipe(Effect.mapError(gitFailure(request)));
   const forkText = yield* git.show(request.cwd, forkPoint, request.file).pipe(Effect.mapError(gitFailure(request)));
   const branchFile = yield* readPinFile(request);
-  // A deleted or empty pin file is the pin itself, broken: it holds nothing beyond the pin.
   const branchText = O.filter(branchFile, (text) => Str.isNonEmpty(Str.trim(text)));
   if (O.isNone(branchText)) {
     return false;
@@ -361,8 +343,6 @@ const pinFileBeyondPinLines = Effect.fnUntraced(function* (request: CiBinaryPinS
 const beyondPinLinesReason = (request: CiBinaryPinSyncRequest) =>
   `${request.file} differs from its merge-base version outside the two pinned lines`;
 
-// What the branch holds beyond main: files changed since the merge base other than the pin file, plus
-// the pin file itself when it differs outside the two pinned lines.
 const branchExtras = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const git = yield* Git;
   const changed = yield* git
@@ -373,15 +353,8 @@ const branchExtras = Effect.fnUntraced(function* (request: CiBinaryPinSyncReques
   return beyond ? A.append(others, beyondPinLinesReason(request)) : others;
 });
 
-// A stale branch is bumped by create-pull-request, which force-updates it to main plus the pin commit.
-// That update carries every workflow change main made since the branch was cut, which the pin-bump App
-// (no `workflows` permission) may not push onto an existing branch: a pin-only branch is superseded
-// with the newest release instead. A branch holding anything else is blocked while that release waits,
-// with or without workflow changes, because the rebuild would discard it.
 const classifyStale = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const git = yield* Git;
-  // Any bump of a stale branch rebuilds it from main plus the pin, which would discard whatever else it
-  // holds: that is blocked whether or not the update carries workflow files.
   const extras = yield* branchExtras(request);
   if (A.isReadonlyArrayNonEmpty(extras)) {
     return syncResult(
@@ -400,8 +373,6 @@ const classifyStale = Effect.fnUntraced(function* (request: CiBinaryPinSyncReque
     : syncResult("supersede", O.some(request.pin), O.none(), true);
 });
 
-// After the merge: a merge that carries no workflow file is pushed as is. One that does can only
-// replace the branch, which is safe only while the branch holds nothing but the pin.
 const classifyMerge = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest, before: string, pin: CiBinaryPin) {
   const git = yield* Git;
   const workflows = yield* git
@@ -425,8 +396,6 @@ const classifyMerge = Effect.fnUntraced(function* (request: CiBinaryPinSyncReque
       );
 });
 
-// `key=value` lines for the workflow step; the pin is the one a superseding pull request carries. Line
-// breaks in a reason (a path may hold one) are flattened so it stays one `reason=` record.
 const renderSyncOutput = (result: CiBinaryPinSyncResult): string =>
   A.join(
     [
@@ -442,7 +411,6 @@ const renderSyncOutput = (result: CiBinaryPinSyncResult): string =>
     "\n"
   );
 
-// Append the decision to the requested output file, if any.
 const publish = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest, result: CiBinaryPinSyncResult) {
   if (O.isNone(request.output)) {
     return;
@@ -457,7 +425,6 @@ const publish = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest, re
 const finish = (request: CiBinaryPinSyncRequest, result: CiBinaryPinSyncResult) =>
   Effect.as(publish(request, result), result);
 
-// Merge the base in and decide; a conflict outside the pin file is `blocked` before anything commits.
 const mergeAndClassify = Effect.fnUntraced(function* (
   request: CiBinaryPinSyncRequest,
   before: string,
@@ -486,6 +453,12 @@ const mergeAndClassify = Effect.fnUntraced(function* (
  * adds no git operation of its own. A command that is not a plain `git`
  * invocation, such as a pipeline, passes through unchanged.
  *
+ * The sync's merge commit is a bot commit made in a separate checkout of the pin-bump branch, which
+ * has no `node_modules` for lefthook's commitlint-loading commit-msg hook, so `git pull` once
+ * stopped with "Not committing merge" (Beep CI Binary run 44657799060). Every sync git call runs
+ * through a `Git` whose spawner applies this, covering commit-msg, pre-merge-commit, post-merge and
+ * any other hook, whatever installed them.
+ *
  * **Example** (Disable hooks on one git command)
  *
  * ```ts
@@ -509,12 +482,6 @@ export const withHooksPath =
         ChildProcess.make("git", ["-c", `core.hooksPath=${hooks}`, ...command.args], command.options)
       : command;
 
-// The sync's merge commit is a bot commit with git's fixed message, made in a separate checkout of the
-// pin-bump branch. The repository's hooks are for people's commits: its lefthook commit-msg hook loads
-// commitlint's config from that checkout's own `node_modules`, which the bot checkout does not have, so
-// `git pull` stopped with "Not committing merge" (Beep CI Binary run 44657799060). Every git call here
-// runs through a `Git` whose spawner points `core.hooksPath` at an empty, scoped temporary directory,
-// which covers commit-msg, pre-merge-commit, post-merge and any other hook, whatever installed them.
 const withoutRepoHooks = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   Effect.scoped(
     Effect.gen(function* () {
@@ -555,6 +522,29 @@ const withoutRepoHooks = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
  * repository's lefthook commit-msg hook needs that checkout's own `node_modules`). The checkout needs `pull.rebase=false`, a committer
  * identity, and enough history for a merge base.
  *
+ * An unordered tag fails closed rather than reading as older, which would let a reset move a pin
+ * backwards, and the resolved release itself must be listed with an unambiguous creation time
+ * before anything is decided, the exact-match fast path included. A missing pin file, or one whose
+ * two lines do not parse, holds no release to keep and is stale like an older one. The sync refuses
+ * a checkout with any local change before touching it, because the restore is `reset --hard`. It
+ * stops before merging when the pin file differs from its merge-base version outside the two pinned
+ * lines (a human edit the resolution would overwrite or a supersede would delete); a side whose pin
+ * lines do not parse, or a pin file the merge base lacks, counts as differing, while a deleted or
+ * empty pin file is the broken pin itself and holds nothing beyond it. Git treats ignored files as
+ * expendable, so a file already at a path the base newly tracks is refused, and with rename
+ * detection off a file main moved shows its destination as an added path. Paths compare after
+ * normalization, so `./a/b` and `x/../a/b` equal git's `a/b`.
+ *
+ * The pin rewrite also concludes the merge commit after a conflict. A clean merge can still take
+ * main's older pin lines, when the branch's pin lines equal its merge base's and main then changed
+ * them, so the pin is rewritten and committed then too; pin-only was checked first, so those two
+ * lines are the only difference. A workflow-carrying merge can only replace the branch, which is
+ * safe only while the branch holds nothing but the pin: the files changed since the merge base
+ * other than the pin file, plus the pin file when it differs outside its pinned lines. A restore
+ * that fails too is reported with the typed failure. A git or file system failure keeps the
+ * redacted argv (a URL's userinfo never survives it), the exit code and git's stderr, and the sync
+ * sends no URL at all.
+ *
  * **Example** (Sync a branch checkout)
  *
  * ```ts
@@ -576,7 +566,6 @@ const syncBranch = Effect.fnUntraced(function* (input: CiBinaryPinSyncRequest) {
   const git = yield* Git;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // git reports repository-relative paths (`a/b`), so `./a/b` or `x/../a/b` must compare equal to them.
   const request = CiBinaryPinSyncRequest.make({
     cwd: input.cwd,
     base: input.base,
@@ -585,7 +574,6 @@ const syncBranch = Effect.fnUntraced(function* (input: CiBinaryPinSyncRequest) {
     file: path.relative(input.cwd, path.resolve(input.cwd, input.file)),
     output: input.output,
   });
-  // The restore below is `reset --hard`: refuse a checkout with any local change before touching it.
   const dirty = yield* git.status(request.cwd).pipe(Effect.mapError(gitFailure(request)));
   if (A.isReadonlyArrayNonEmpty(dirty)) {
     return yield* CiCommandError.make({
@@ -608,15 +596,10 @@ const syncBranch = Effect.fnUntraced(function* (input: CiBinaryPinSyncRequest) {
   if (containsBase) {
     return yield* finish(request, syncResult("current", target, O.none(), pinOnly));
   }
-  // A human edit to the pin file outside the two pinned lines would be overwritten by the resolution
-  // (or deleted by a supersede): stop before merging.
   const beyond = yield* pinFileBeyondPinLines(request);
   if (beyond) {
     return yield* finish(request, syncResult("blocked", target, O.some(beyondPinLinesReason(request))));
   }
-  // git treats ignored files as expendable: a merge silently replaces one at a path the base newly
-  // tracks (untracked ones were refused above). Refuse any file already at such a path. Rename
-  // detection is off, so a file main moved shows its destination as an added path too.
   const incoming = yield* git
     .changedFiles(request.cwd, { base: "HEAD", head: request.base, twoDot: true, diffFilter: "A", noRenames: true })
     .pipe(Effect.mapError(gitFailure(request)));
@@ -629,11 +612,7 @@ const syncBranch = Effect.fnUntraced(function* (input: CiBinaryPinSyncRequest) {
     });
   }
   const before = yield* git.revParse(request.cwd, "HEAD").pipe(Effect.mapError(gitFailure(request)));
-  // `reset --hard` to the pre-merge head also ends an unfinished merge (conflict markers, MERGE_HEAD).
   const restore = git.reset(request.cwd, { mode: "hard", ref: before }).pipe(Effect.mapError(gitFailure(request)));
-  // Any failure after the merge starts, a typed error, a defect or an interruption alike (including
-  // writing a `merged` decision), restores the pre-merge head. A restore that fails too is remembered, so
-  // a typed failure is reported with it.
   const restoreFailure = yield* Ref.make(O.none<CiCommandError>());
   const restoreOnExit = restore.pipe(Effect.catch((resetError) => Ref.set(restoreFailure, O.some(resetError))));
   const withRestoreReport = (error: CiCommandError) =>
@@ -702,6 +681,9 @@ const runBinaryPinSync = Effect.fn("Ci.binaryPinSync")(function* (options: {
  * `$GITHUB_OUTPUT` style file) when given. It never pushes: the workflow
  * pushes a `merged` head with the pin-bump App token, and supersedes or
  * reports the other outcomes.
+ *
+ * The pin written is the one a superseding pull request carries, and line breaks in a reason (a
+ * path may hold one) are flattened so it stays one `reason=` record.
  *
  * **Example** (Register the command)
  *

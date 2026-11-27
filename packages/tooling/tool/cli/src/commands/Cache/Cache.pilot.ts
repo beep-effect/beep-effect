@@ -181,8 +181,7 @@ const identityRecipe = PilotRecipe.make({
     "@beep/test-runner#lint": "packages/tooling/test-kit/test-runner",
   },
 });
-// Local observations only. Signed execution remains restricted to identity.
-const typesRecipe = PilotRecipe.make({
+const localOnlyTypesRecipe = PilotRecipe.make({
   selected: {
     computation: "@beep/types#lint",
     directory: "packages/foundation/primitive/types",
@@ -195,7 +194,6 @@ const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
 const InputEntries = S.Array(S.Tuple([S.String, S.String]));
 
-// External native summary fields are decoded before constructing domain observations.
 const NativeTask = S.Struct({
   taskId: S.NonEmptyString,
   task: S.NonEmptyString,
@@ -264,8 +262,7 @@ class PilotShadowScenario extends S.Opaque<PilotShadowScenario, { readonly brand
 ) {}
 
 const captureHost = Effect.fn("CachePilot.captureHost")(function* (root: string, args: ReadonlyArray<string>) {
-  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
-  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: producer trust (D-19): pinned /usr/bin/git, scrubbed env
   const result = yield* runCapturedStreams({
     command: "/usr/bin/git",
     args,
@@ -299,10 +296,9 @@ const copyPackage = Effect.fn("CachePilot.copyPackage")(function* (source: strin
     }
     const from = path.join(source, relative);
     const to = path.join(target, relative);
-    const link = yield* fs.readLink(from).pipe(Effect.option);
-    if (O.isSome(link)) {
-      // Portable copy rewrites relative links to host paths. Preserve their Git input bytes.
-      yield* fs.symlink(link.value, to);
+    const verbatimLink = yield* fs.readLink(from).pipe(Effect.option);
+    if (O.isSome(verbatimLink)) {
+      yield* fs.symlink(verbatimLink.value, to);
       return;
     }
     const info = yield* fs.stat(from);
@@ -480,7 +476,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         Effect.mapBoth({
           onSuccess: PilotComputation.match({
             "@beep/identity#lint": () => identityRecipe,
-            "@beep/types#lint": () => typesRecipe,
+            "@beep/types#lint": () => localOnlyTypesRecipe,
           }),
           onFailure: () => CacheCommandError.new("The pilot computation has no reviewed execution recipe."),
         })
@@ -515,9 +511,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       Order.String
     );
     const context = yield* resolveWorktreeContext(root);
-    // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
-    // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
     const verifySourceIssuerExclusion = Effect.fn("CachePilot.verifySourceIssuerExclusion")(function* () {
@@ -546,7 +540,6 @@ const runPilot = Effect.fn("CachePilot.run")(
             "A pilot source is not a distinct registered worktree at the current revision."
           );
         }
-        // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
         if ((yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "") {
           return yield* CacheCommandError.new("Pilot source worktrees must be clean before read-only execution.");
         }
@@ -580,7 +573,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           O.isSome(node.command) &&
           A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
       );
-      if (recipe.selected.computation === typesRecipe.selected.computation && needsProfile) {
+      if (recipe.selected.computation === localOnlyTypesRecipe.selected.computation && needsProfile) {
         return yield* CacheCommandError.new("Types pilot execution does not admit the identity scanner profile.");
       }
       if (needsProfile) {
@@ -686,7 +679,6 @@ const runPilot = Effect.fn("CachePilot.run")(
         yield* fs.makeDirectory(path.join(packageRoot, ".turbo"));
       }
       yield* writeContainedFileString(identity, "turbo.json", before);
-      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
       const gitDirectory = yield* captureHost(source, ["rev-parse", "--absolute-git-dir"]);
       if (path.dirname(gitDirectory) !== path.join(commonGit, "worktrees")) {
         return yield* CacheCommandError.new("Pilot source uses unsupported Git metadata placement.");
@@ -1049,8 +1041,6 @@ const runPilot = Effect.fn("CachePilot.run")(
       fixture: PilotRoot,
       dependencies: ReadonlyArray<CachePilotTask>
     ) {
-      // Removing the child config may remove its dependency edges. Any remaining
-      // dependency must still belong to the reviewed closure and execute fresh.
       if (
         (!fixture.omitChild &&
           !S.toEquivalence(S.Array(S.String))(
@@ -1062,7 +1052,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           )) ||
         A.some(dependencies, (task) => !A.contains(expectedDependencies, task.computation) || task.origin !== "fresh")
       ) {
-        return yield* CacheCommandError.new("Pilot dependency was unexpected or reused an unqualified artifact.");
+        return yield* CacheCommandError.new("Pilot dependency left the reviewed closure or skipped fresh execution.");
       }
     });
     const verifyReplayLog = Effect.fn("CachePilot.verifyReplayLog")(function* (
@@ -1312,7 +1302,6 @@ const runPilot = Effect.fn("CachePilot.run")(
       }
       for (const source of sourceRoots)
         if (
-          // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
           (yield* captureHost(source, ["status", "--porcelain", "--untracked-files=all"])) !== "" ||
           (yield* captureHost(source, ["rev-parse", "HEAD"])) !== revision
         ) {
@@ -1370,7 +1359,6 @@ const runPilot = Effect.fn("CachePilot.run")(
         sourceChange: "readme",
         expectedInputHash: "changed",
       }),
-      // Exercise a live shared declared environment input without the retired ESLint profile.
       PilotShadowScenario.make({
         ...unchanged,
         id: "declared-env",
@@ -1882,7 +1870,6 @@ const runPilot = Effect.fn("CachePilot.run")(
             const rightRoot = yield* prepare(sourceRootB, "root-b", `signed-fresh-${pair}-right`).pipe(
               Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
             );
-            // Each new root starts without a cache; native observations must still prove fresh execution.
             for (const fixture of [leftRoot, rightRoot])
               if (yield* fs.exists(path.join(fixture.directory, "cache"))) {
                 return yield* CacheCommandError.new("Signed fresh comparison requires a new isolated cache directory.");
@@ -1998,9 +1985,8 @@ const runPilot = Effect.fn("CachePilot.run")(
               });
               yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-seed`, fault: "none" }));
               const seed = yield* executeSignedProducer(producerRoot, `signed-${pair}-seed`);
-              // Deprecated-import verdicts belong to the root policy task.
-              // The package dependency mutation still requires hash invalidation.
-              const expectedExit = id === "root-lint-config" ? 1 : 0;
+              const rootPolicyOwnsDeprecatedImports = id === "root-lint-config";
+              const expectedExit = rootPolicyOwnsDeprecatedImports ? 1 : 0;
               if (
                 seed.graphExitCode !== expectedExit ||
                 seed.outcome.selected.exitCode !== expectedExit ||
@@ -2541,7 +2527,6 @@ export const runCachePilotExperiment = Effect.fn("Cache.runPilotExperiment")(fun
  * and requires clean registered
  * source roots. The caller owns admission and the outer namespace. Returned
  * observations do not establish protected-producer or qualification authority.
- *
  * **Example** (Reference the signed worker)
  * ```ts
  * import { runCacheSignedPilotWorker } from "@beep/repo-cli/commands/Cache"

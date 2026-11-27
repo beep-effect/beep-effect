@@ -338,7 +338,6 @@ const configuredInvocations = Effect.fn("CiCoverage.configuredInvocations")(func
   }));
 });
 
-/** Config-aware test discovery, without importing or executing the test bodies. */
 const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages")(function* (
   repoRoot: string,
   owners: ReadonlyArray<CoverageScopeOwner>,
@@ -390,10 +389,6 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
         { concurrency: 1 }
       );
     }),
-    // Discovery is one `vitest list` boot per invocation (about 1.4 s each on a hosted 4-vCPU
-    // runner). The Coverage Regression consumer discovers every owner (199 invocations took 139 s at
-    // two at a time on run 42554761567), so use the runner's cores; the boots are CPU-bound and
-    // small, and the producer side only ever discovers its own partition.
     { concurrency: CI_COVERAGE_DISCOVERY_CONCURRENCY }
   );
   return A.flatten(selections);
@@ -423,6 +418,11 @@ export const ciCoveragePlan = Effect.fn("CiCoverage.plan")(function* (repoRoot: 
 
 /**
  * Freshly execute one unit partition and then seal exactly its selected coverage packages.
+ *
+ * **Details**
+ *
+ * A bin's curated `startFirst` packages lead its two-at-a-time steps (`ciLaneStartOrder`), and
+ * a partition the table does not name, such as labs, keeps its order.
  *
  * **Example** (Inspect the unit producer)
  *
@@ -523,8 +523,6 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
   ).pipe(Effect.mapError(coverageCommandError(`Failed to seal coverage partition ${partitionId}`)));
 });
 
-// A bin's curated `startFirst` packages lead its two-at-a-time steps (ciLaneStartOrder); a partition
-// the table does not name, such as labs, keeps its order.
 const startFirstOrdered = (partitionId: string, packages: ReadonlyArray<CoverageProducerPackage>) =>
   ciLaneStartOrder(
     packages,
@@ -591,20 +589,16 @@ const runOrdinaryCoverageStep = Effect.fn("CiCoverage.runOrdinaryStep")(function
   ]);
 });
 
-// Hosted ubuntu runners expose 4 vCPUs; with `--maxWorkers=1` per producer, two producers fit beside the
-// step runner without exceeding the 16 GB the one-worker pin was sized for.
+// decision: coverage-runner-layout
 const CI_COVERAGE_COMPOUND_STEP_CONCURRENCY = 2;
 const CI_COVERAGE_ONE_WORKER_ARG = "--maxWorkers=1";
-// A sharded partition runs a single producer, so that producer takes both worker slots a unit bin
-// splits between its two producers: the same two Vitest workers and the same memory on the runner.
-// With one worker a shard used one of four vCPUs (run 42726850927, repo-cli-3: 562 s of Vitest for
-// 452 s of file time, strictly serial).
+// decision: coverage-shard-two-workers
 const CI_COVERAGE_SHARD_WORKERS_ARG = "--maxWorkers=2";
 const producerWorkersArg =
   (entry: CoverageProducerPackage) =>
   (arg: string): string =>
     entry.shard !== undefined && arg === CI_COVERAGE_ONE_WORKER_ARG ? CI_COVERAGE_SHARD_WORKERS_ARG : arg;
-/** Parallel `vitest list` discoveries: one per core of the hosted 4-vCPU runner. */
+// decision: coverage-runner-layout
 const CI_COVERAGE_DISCOVERY_CONCURRENCY = 4;
 
 const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(function* (
@@ -652,8 +646,6 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
       },
     })
   );
-  // Two packages at a time: each vitest process is pinned to one worker, so a 4-vCPU hosted runner has
-  // headroom for a second producer; the steps are buffered so the two logs do not interleave.
   yield* Effect.forEach(
     R.values(A.groupBy(A.zip(steps, packages), ([, entry]) => entry.packagePath)),
     (segmentsInScriptOrder) =>
@@ -740,6 +732,11 @@ export const runCiLabsCoverage = Effect.fn("CiCoverage.runLabs")(function* (
 /**
  * Artifact comparison only: no test producer or fallback can be reached through this route.
  *
+ * **Details**
+ *
+ * An affected (pull request) run pins the base through `TURBO_SCM_BASE` like every other affected
+ * coverage lane, so a row the pull request lowered is judged where it belongs.
+ *
  * **Example** (Inspect artifact comparison)
  *
  * ```ts
@@ -807,8 +804,6 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
       artifactRoot: options.coverageInput ?? ".beep/ci-coverage-inputs",
       identity: plan.identity,
       scoped: plan.scoped,
-      // Affected (pull request) runs pin the base like every other affected coverage lane does
-      // through TURBO_SCM_BASE, so a row the pull request lowered is judged where it belongs.
       ...(options.affected && Str.isNonEmpty(options.base) ? { base: options.base } : {}),
       expectedPartitions: A.append(
         expectedPartitions,

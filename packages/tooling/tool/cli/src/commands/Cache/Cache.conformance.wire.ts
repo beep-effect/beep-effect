@@ -147,7 +147,6 @@ type WireStep = {
   readonly abortAfter?: number;
   readonly neverWritten?: boolean;
   readonly strictScored?: boolean;
-  /** Send a PUT without the opaque `x-artifact-tag` every signing writer sends. */
   readonly untagged?: boolean;
 };
 
@@ -364,10 +363,7 @@ const buildRequest = (context: WireContext, step: WireStep) => {
 const optionalDigest = (present: boolean, bytes: Uint8Array) =>
   present ? hashBytes(bytes).pipe(Effect.asSome) : Effect.succeed(O.none<Sha256Hex>());
 
-// Signing clients send an opaque tag on every upload; a fresh random base64
-// value per PUT stands in for it unless the step is explicitly untagged or
-// supplies its own. Only the tag's digest reaches a receipt.
-const withWriterTag = Effect.fnUntraced(function* (step: WireStep) {
+const withStandInSigningTag = Effect.fnUntraced(function* (step: WireStep) {
   const explicit = O.fromUndefinedOr(step.headers?.["x-artifact-tag"]);
   if (step.method !== "PUT" || (step.untagged ?? false) || O.isSome(explicit)) return { step, sentTag: explicit };
   const randomBytes1 = yield* randomBytes(32);
@@ -422,7 +418,7 @@ export const readCacheConformanceReply = Effect.fnUntraced(function* (
 
 const send = Effect.fnUntraced(function* (context: WireContext, unsigned: WireStep) {
   const client = yield* HttpClient.HttpClient;
-  const { step, sentTag } = yield* withWriterTag(unsigned);
+  const { step, sentTag } = yield* withStandInSigningTag(unsigned);
   const started = yield* Clock.currentTimeMillis;
   const empty = new Uint8Array();
   const observed = yield* client.execute(buildRequest(context, step)).pipe(
@@ -993,9 +989,7 @@ const percentEncode = (value: string) =>
     ""
   );
 
-// Each probe names the valid hash a lax server could resolve it to, so the
-// follow-up writer HEAD proves no object was created there.
-const hashShapes = (hash: string) =>
+const hashProbesWithLaxResolution = (hash: string) =>
   [
     ["non-hex", { segment: "not-a-hex-hash", shape: "non-hex" }, O.none()],
     ["traversal", { segment: `..%2F${hash}`, shape: "traversal" }, O.some(hash)],
@@ -1007,9 +1001,9 @@ const hashShapes = (hash: string) =>
 const artifactHashes: WireCase = Effect.fnUntraced(function* (context: WireContext, recorder: Recorder) {
   const run = sendTracked(context, recorder);
   const body = yield* randomBytes(32);
-  for (const shape of A.map(hashShapes(""), ([name]) => name)) {
+  for (const shape of A.map(hashProbesWithLaxResolution(""), ([name]) => name)) {
     const freshHash3 = yield* freshHash;
-    const probes = hashShapes(freshHash3);
+    const probes = hashProbesWithLaxResolution(freshHash3);
     const [, hash, resolved] = A.findFirst(probes, ([name]) => name === shape).pipe(O.getOrThrow);
     const write = yield* run(putStep(`writer-put-hash-${shape}`, "writer", hash, body));
     expectPolicy(recorder, `hash-${shape}-write-fails-closed`, rejected(write), statusText(write));
@@ -1065,7 +1059,6 @@ const writeFaults: WireCase = Effect.fnUntraced(function* (context: WireContext,
   expectPolicy(recorder, "aborted-write-not-acknowledged", !succeeded(aborted), statusText(aborted));
   const intact = yield* run(readStep("reader-get-existing", "reader", "GET", valid(written.hash)));
   expectPolicy(recorder, "prior-object-intact", sameBody(intact, written.digest), statusText(intact));
-  // The one deliberately untagged write: an acknowledged upload must be readable.
   const unsignedHash = yield* freshHash;
   const unsignedBody = yield* randomBytes(512);
   const unsigned = yield* run(
@@ -1279,8 +1272,7 @@ const faultProbes = [
   ["truncated-body", "written", "truncated-body"],
 ] as const satisfies ReadonlyArray<readonly [CacheConformanceFault, "written" | "unwritten", CacheConformanceOutcome]>;
 
-/** Client deadline for the proxied fault probes; the proxy holds a `timeout` fault longer. */
-const faultProbeTimeoutMs = 1500;
+const probeDeadlineUnderLabHoldMs = 1500;
 
 const faultClasses: LabCase = Effect.fnUntraced(function* (
   context: WireContext,
@@ -1292,7 +1284,7 @@ const faultClasses: LabCase = Effect.fnUntraced(function* (
   const viaProxy: WireContext = {
     ...context,
     base: proxy.url,
-    target: CacheConformanceTarget.make({ ...context.target, requestTimeoutMs: faultProbeTimeoutMs }),
+    target: CacheConformanceTarget.make({ ...context.target, requestTimeoutMs: probeDeadlineUnderLabHoldMs }),
   };
   const run = sendTracked(viaProxy, recorder);
   const seen = A.empty<CacheConformanceOutcome>();
@@ -1320,16 +1312,14 @@ const faultClasses: LabCase = Effect.fnUntraced(function* (
     );
   }
   yield* proxy.setScenario("rc-023-done", "none");
-  // A held `timeout` response is only recorded once the proxy's hold ends,
-  // after the client deadline; wait (bounded) for that receipt.
-  const all = yield* proxy.events.pipe(
+  const eventsAfterTimeoutHold = yield* proxy.events.pipe(
     Effect.repeat({
       until: (events) => A.some(events, (event) => event.fault === "timeout"),
       times: 80,
       schedule: Schedule.spaced(Duration.millis(100)),
     })
   );
-  const receipts = A.filter(all, (event) => Str.startsWith("rc-023-")(event.scenario));
+  const receipts = A.filter(eventsAfterTimeoutHold, (event) => Str.startsWith("rc-023-")(event.scenario));
   for (const [fault, artifact] of faultProbes) {
     const scenario = `rc-023-${fault}-${artifact}`;
     expectObservable(
@@ -1378,7 +1368,6 @@ const measure = (
     writeMaxMs: quantile(latencies(writes), 1),
   });
 
-/** Sequential write-then-read rounds per payload size. */
 const payloadRounds = 6;
 
 const payloadEnvelope: LabCase = Effect.fnUntraced(function* (
@@ -1435,7 +1424,6 @@ const freshArtifacts = (count: number, size: number) =>
     { concurrency: 1 }
   );
 
-/** Concurrent rounds per concurrency step. */
 const concurrencyRounds = 2;
 
 const concurrencyEnvelope: LabCase = Effect.fnUntraced(function* (

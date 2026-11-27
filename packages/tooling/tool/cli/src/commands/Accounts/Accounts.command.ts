@@ -22,8 +22,7 @@ import { AccountsBoardLayout, renderAccountsBoard } from "./Accounts.view.ts";
 import { AccountsSecretsLayout, AccountsSecretsLayoutLive } from "./AccountsSecretsLayout.service.ts";
 import { layerAccountsUsageLive, loadAccountsReport } from "./AccountsUsage.service.ts";
 
-// Width used when the board is printed to something that is not a terminal.
-const PLAIN_WIDTH = 100;
+const PIPED_WIDTH = 100;
 
 const reportFailure = <A, R>(effect: Effect.Effect<A, AccountsError, R>) =>
   effect.pipe(Effect.catchTag("AccountsError", (error) => failWithReportedExit(`[accounts] ${error.message}`)));
@@ -62,19 +61,17 @@ export const accountsStatusCommand = Command.make(
         yield* Console.log(
           renderAccountsBoard(
             report,
-            AccountsBoardLayout.make({ width: columns === 0 ? PLAIN_WIDTH : columns, color: columns !== 0, status })
+            AccountsBoardLayout.make({ width: columns === 0 ? PIPED_WIDTH : columns, color: columns !== 0, status })
           )
         );
         return;
       }
-      // One document on the console, like the other `--json` surfaces that
-      // automation decodes as a whole.
-      const pipe1 = yield* AccountsStatusReportJson.encode(report).pipe(
+      const reportDocument = yield* AccountsStatusReportJson.encode(report).pipe(
         Effect.mapError((cause) =>
           AccountsError.make({ reason: "decode", message: "Failed to encode the accounts report.", cause })
         )
       );
-      yield* Console.log(pipe1);
+      yield* Console.log(reportDocument);
     });
     yield* reportFailure(program);
   })

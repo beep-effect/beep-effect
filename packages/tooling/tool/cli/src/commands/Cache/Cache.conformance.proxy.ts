@@ -64,6 +64,11 @@ const $I = $RepoCliId.create("commands/Cache/Cache.conformance.proxy");
  * Proxy configuration: the target to forward to, the run bearers used only to
  * label roles, and how long a `timeout` fault holds a response.
  *
+ * **Details**
+ *
+ * `holdMs` must outlast the fault probes' client deadline: the client then sees a
+ * timeout, and the held exchange is recorded only after that deadline passes.
+ *
  * **Example** (Inspect proxy options)
  * ```ts
  * import { CacheConformanceProxyOptions } from "@beep/repo-cli/commands/Cache"
@@ -122,10 +127,7 @@ const withoutHop = Headers.removeMany(hopHeaders);
 const ArtifactHash = S.String.check(S.isPattern(/^[0-9a-fA-F]{1,128}$/));
 const isArtifactHash = S.is(ArtifactHash);
 const empty = new Uint8Array();
-// Bun prints the error that ends a response body stream; the message says the
-// abort is the injected fault, not a proxy failure.
-// A plain string keeps Bun's print to one line (an Error adds a stack).
-const injectedAbort = (fault: "reset" | "truncated-body") =>
+const oneLineInjectedAbort = (fault: "reset" | "truncated-body") =>
   `conformance fault proxy: injected ${fault} (intentional connection abort, not a failure)`;
 
 type Delivered = {
@@ -188,8 +190,7 @@ const operationOf = HashMap.make<ReadonlyArray<readonly [string, CacheConformanc
   ["POST /v8/artifacts/events", "recordCacheEvents"],
   ["POST /v8/artifacts", "queryArtifacts"]
 );
-// Faults answered by the proxy itself: no upstream status exists for them.
-const syntheticFaults = HashSet.make<ReadonlyArray<CacheConformanceFault>>(
+const proxyAnsweredFaults = HashSet.make<ReadonlyArray<CacheConformanceFault>>(
   "status-429",
   "status-503",
   "timeout",
@@ -368,8 +369,7 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
   const reject = (status: number) => capture.invalidate.pipe(Effect.as(HttpServerResponse.empty({ status })));
   const written = yield* Ref.make(HashSet.empty<string>());
   const captures = yield* Ref.make(HashMap.empty<string, Captured>());
-  // Later entries win, so a single-token topology labels its bearer `writer`.
-  const roles = HashMap.make<ReadonlyArray<readonly [string, CacheConformanceCredentialRole]>>(
+  const rolesLastBearerWins = HashMap.make<ReadonlyArray<readonly [string, CacheConformanceCredentialRole]>>(
     [`Bearer ${Redacted.value(bearers.unknown)}`, "unknown"],
     [`Bearer ${Redacted.value(bearers.foreign)}`, "foreign"],
     [`Bearer ${Redacted.value(bearers.reader)}`, "reader"],
@@ -378,7 +378,7 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
   const roleOf = (authorization: O.Option<string>): CacheConformanceCredentialRole =>
     O.match(authorization, {
       onNone: () => "missing",
-      onSome: (value) => O.getOrElse(HashMap.get(roles, value), () => "unknown"),
+      onSome: (value) => O.getOrElse(HashMap.get(rolesLastBearerWins, value), () => "unknown"),
     });
   const selectorOf = (team: O.Option<string>): CacheConformanceSelectorShape =>
     O.match(team, {
@@ -392,7 +392,6 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
     });
 
   const forward = Effect.fnUntraced(function* (request: HttpServerRequest.HttpServerRequest, body: Uint8Array) {
-    // Server requests carry any method string; only standard methods can be replayed upstream.
     if (!HttpMethod.isHttpMethod(request.method)) {
       return { status: O.none<number>(), headers: Headers.empty, body: empty };
     }
@@ -416,7 +415,6 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
     );
   });
 
-  // Faults rewrite only a successful upstream read; any other reply passes through.
   const rewriteStatus = (
     fault: CacheConformanceFault,
     head: boolean,
@@ -450,8 +448,6 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
       Match.when("truncated-body", (): Delivered => {
         const partial = reply.body.subarray(0, Math.floor(reply.body.byteLength / 2));
         const kept = withoutHop(reply.headers);
-        // A chunk followed by a delayed failure ships headers and part of
-        // the body, then aborts: a client-visible truncated transfer.
         return {
           ...plain,
           body: partial,
@@ -461,7 +457,7 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
               Stream.make(partial),
               Stream.fromEffect(Duration.millis(50).pipe(Effect.sleep)).pipe(
                 Stream.drain,
-                Stream.concat(Stream.fail(injectedAbort("truncated-body")))
+                Stream.concat(Stream.fail(oneLineInjectedAbort("truncated-body")))
               )
             ),
             { status, headers: kept }
@@ -499,7 +495,7 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
           headers: Headers.empty,
           body: empty,
           outcome: O.some("transport-error"),
-          response: HttpServerResponse.stream(Stream.fail(injectedAbort("reset"))),
+          response: HttpServerResponse.stream(Stream.fail(oneLineInjectedAbort("reset"))),
         })
       ),
       Match.when("wrong-team", () =>
@@ -582,7 +578,7 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
     const event = CacheConformanceProxyEvent.make({
       scenario: current.id,
       fault,
-      upstreamStatus: HashSet.has(syntheticFaults, fault) ? O.none() : delivered.status,
+      upstreamStatus: HashSet.has(proxyAnsweredFaults, fault) ? O.none() : delivered.status,
       exchange,
     });
     return (yield* capture.record(event)) ? delivered.response : HttpServerResponse.empty({ status: 503 });

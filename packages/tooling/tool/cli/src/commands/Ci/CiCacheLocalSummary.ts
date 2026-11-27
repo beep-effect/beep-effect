@@ -69,7 +69,6 @@ const isSourceRevision = S.is(SourceRevision);
 const isChannel = S.is(CacheClientChannel);
 const isComputation = S.is(CiCachePilotComputation);
 
-// Python counts code points and hashes UTF-8, which a lone surrogate cannot encode.
 const CheckLabel = S.String.check(
   S.makeFilter((label: string) => {
     const points = A.length(A.fromIterable(label));
@@ -101,7 +100,6 @@ const ReceiptEnvelope = S.Struct({ client: S.Unknown });
 const decodeEnvelope = S.decodeUnknownEffect(ReceiptEnvelope);
 
 const refused = Effect.fail("refused" as const);
-// `bytes.decode()` in `json.loads`: strict UTF-8, with a leading BOM dropped.
 const decodeUtf8 = (bytes: Uint8Array) =>
   Effect.try({ try: () => decoder.decode(bytes), catch: () => "refused" as const });
 
@@ -117,6 +115,10 @@ const decodeUtf8 = (bytes: Uint8Array) =>
  * fully passing receipt must record runs, mutations and non-executions. The
  * result is the canonical sorted-key JSON line, at most
  * `CACHE_LOCAL_SUMMARY_LIMIT` bytes; any refusal fails with `"refused"`.
+ * It keeps the Python summarizer's semantics: a label counts code points and refuses a lone
+ * surrogate, which UTF-8 cannot encode; input decodes as strict UTF-8 with a leading BOM dropped,
+ * like `bytes.decode()` in `json.loads`; and the line matches `json.dumps(sort_keys=True)` with
+ * compact separators, every value ASCII by construction.
  *
  * **Example** (Refuse an unrelated receipt)
  *
@@ -171,8 +173,6 @@ export const summarizeCacheLocalObservation = Effect.fn("Ci.summarizeCacheLocalO
     if (A.isReadonlyArrayEmpty(failed) && (counts.runs === 0 || counts.mutations === 0 || counts.nonExecutions === 0))
       return yield* refused;
     const receiptSha256 = yield* hashBytes(reportBytes);
-    // Keys in sorted order with compact separators, as `json.dumps(sort_keys=True)`;
-    // every value is ASCII by construction.
     const json = yield* encodeJson({
       allChecksPassed: A.isReadonlyArrayEmpty(failed),
       authority: "local-observation-only",
@@ -194,9 +194,6 @@ export const summarizeCacheLocalObservation = Effect.fn("Ci.summarizeCacheLocalO
   Effect.mapError((): "refused" => "refused")
 );
 
-// node:fs is reached through the runtime's builtin registry: the FileSystem
-// service cannot open with O_NOFOLLOW | O_NONBLOCK, which keep a symlink or a
-// FIFO from being followed or blocking the read.
 const nodeFs = (): typeof import("node:fs") => process.getBuiltinModule("node:fs");
 
 /**
@@ -208,6 +205,8 @@ const nodeFs = (): typeof import("node:fs") => process.getBuiltinModule("node:fs
  * open and a FIFO never blocks; anything but a regular file, an empty or
  * oversized file, or a file whose device, inode, size, mtime or ctime changes
  * during the read fails with `"refused"`.
+ * A short read refuses too. The flags are why it reaches `node:fs` through the runtime's builtin
+ * registry: the FileSystem service cannot open with them.
  *
  * **Example** (Bound a receipt read)
  *
@@ -240,7 +239,6 @@ export const readBoundedRegularFile: {
             read = fs.readSync(descriptor, buffer, total, buffer.byteLength - total, null);
           const after = fs.fstatSync(descriptor, { bigint: true });
           const identity = (info: typeof before) => [info.dev, info.ino, info.size, info.mtimeNs, info.ctimeNs];
-          // A short read or a file changed while it was read both refuse.
           const settled = Equal.equals([before.size, ...identity(before)], [BigInt(total), ...identity(after)]);
           return O.filter(O.some(buffer.subarray(0, total)), constant(settled));
         } finally {
@@ -261,6 +259,8 @@ export const readBoundedRegularFile: {
  * {@link summarizeCacheLocalObservation} and creates `output` with mode
  * `0600`, refusing an existing file. Any refusal prints
  * `CACHE_LOCAL_SUMMARY_REFUSAL` to stderr and exits 1.
+ * Any failure prints only the fixed refusal line, never paths, field values, payloads or failure
+ * representations.
  *
  * **Example** (Publish a summary)
  *
@@ -303,7 +303,6 @@ export const writeCacheLocalSummary = Effect.fn("Ci.writeCacheLocalSummary")(fun
     );
     yield* fs.writeFile(options.output, summary, { flag: "wx", mode: 0o600 });
   });
-  // Do not print paths, field values, payloads or failure representations.
   return yield* program.pipe(
     Effect.catch(() =>
       Console.error(CACHE_LOCAL_SUMMARY_REFUSAL).pipe(Effect.andThen(failWithReportedExit(CACHE_LOCAL_SUMMARY_REFUSAL)))

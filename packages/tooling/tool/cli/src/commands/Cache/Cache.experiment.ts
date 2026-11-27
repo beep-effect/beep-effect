@@ -10,8 +10,7 @@ import { dual } from "effect/Function";
 import * as Str from "effect/String";
 import type { CacheCaptureViolation, CacheSyntheticRun } from "./Cache.experiment.schemas.ts";
 
-// Fixed adversarial data, never an operator credential.
-const secretCanary = "QUALIFICATION_SYNTHETIC_SECRET_629a94d2";
+const syntheticSecretCanary = "QUALIFICATION_SYNTHETIC_SECRET_629a94d2";
 const logLimit = 64 * 1024;
 
 /**
@@ -37,7 +36,7 @@ export const inspectCacheFixtureCapture: {
     ...(truncated || new TextEncoder().encode(text).byteLength > logLimit
       ? A.of<CacheCaptureViolation>("overflow")
       : []),
-    ...(Str.includes(secretCanary)(text) ? A.of<CacheCaptureViolation>("synthetic-secret") : []),
+    ...(Str.includes(syntheticSecretCanary)(text) ? A.of<CacheCaptureViolation>("synthetic-secret") : []),
     ...(Str.includes("/fixture/")(text) || Str.includes("/fixture-other/")(text)
       ? A.of<CacheCaptureViolation>("absolute-path")
       : []),

@@ -590,7 +590,6 @@ const forwarderRunCommand = Command.make(
     parquetExportMode: parquetExportModeFlag,
     rawArchiveKeySecretRef: rawArchiveKeySecretRefFlag,
     repoRoot: repoRootFlag,
-    // Inert backward-compat flag: parsed and ignored (run always enforces retention).
     retentionEnforce: forwarderRunRetentionEnforceCompatFlag,
     retentionMaxSnapshotExports: forwarderRunMaxSnapshotExportsFlag,
     since: sinceFlag,
@@ -632,9 +631,6 @@ const forwarderRunCommand = Command.make(
           parquetExportMode,
           rawArchiveKeySecretRef,
           repoRoot,
-          // Local forwarder runs always self-prune the per-run Parquet snapshots so the
-          // `<data-root>/derived/parquet` directory cannot grow unbounded; keep-N is tunable via
-          // --max-snapshot-exports. Snapshot retention history is opt-in on the `timer` command instead.
           retentionEnforce: true,
           retentionMaxSnapshotExports,
           since,

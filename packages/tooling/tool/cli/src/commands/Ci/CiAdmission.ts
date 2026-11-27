@@ -75,6 +75,7 @@ export const HeavyAdmissionJson = JsonStringCodec(HeavyAdmission);
  * environment variable supplied them; `githubOutput` is whether
  * `--github-output` asked for the verdict as step outputs (published through
  * `ActionOutputs` to `$GITHUB_OUTPUT`). `cwd` is the checkout to diff.
+ * A flag wins over its environment variable.
  *
  * **Example** (Construct an invocation)
  *
@@ -112,6 +113,12 @@ const decodeEventName = S.decodeUnknownEffect(HeavyAdmissionEventName);
 /**
  * Decide admission for the resolved inputs, print it, and append the
  * `$GITHUB_OUTPUT` lines when a path was resolved.
+ *
+ * **Details**
+ *
+ * The verdict carries the goals-only and Docgen lane skips (HOST-06), decided here so the caller
+ * skips those lanes at job level before a runner boots, since heavy.yml has no in-VM lane gate. A
+ * failed skip read fails open to no skip.
  *
  * **Example** (Reference the runner)
  *
@@ -159,8 +166,6 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
     cwd: input.cwd,
   });
   const route = yield* readHeavyAdmissionRoute(readInput);
-  // HOST-06: the goals-only and Docgen skips, decided here so the caller skips those lanes at job
-  // level before a runner boots (heavy.yml has no in-VM lane gate). Fails open to no skip.
   const laneSkips = yield* readHeavyLaneSkips(readInput);
   const admission = HeavyAdmission.make({ ...decideHeavyAdmission(event), route, laneSkips });
   yield* input.json
@@ -206,7 +211,6 @@ interface CiAdmissionFlags {
   readonly json: boolean;
 }
 
-// Flags win over the environment; the checkout is the repo root the command runs in.
 const resolveCiAdmissionInput = Effect.fn("Ci.resolveCiAdmissionInput")(function* (
   flags: CiAdmissionFlags
 ): Effect.fn.Return<CiAdmissionInput, CiCommandError, FileSystem.FileSystem> {

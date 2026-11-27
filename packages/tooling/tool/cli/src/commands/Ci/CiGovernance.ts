@@ -253,16 +253,13 @@ const policyFailure = (error: GitHubError) =>
   });
 
 const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string) {
-  // Capture the platform dependencies once; commands provide this implementation.
   const capture = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   const scope = yield* Effect.scope;
-  // Resolved on first use, so a client used only for `request` never reads a token.
   const github = yield* Effect.cached(
     Layer.buildWithScope(layerCiGithub(root), scope).pipe(Effect.provideContext(capture))
   );
   const request = Effect.fn("CiGovernance.request")(function* (args: ReadonlyArray<string>) {
-    // KEEP (D-19): reads gh's own exit code, error line and --include headers (#249b).
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: reads gh exit code, error line and --include headers (D-19)
     const result = yield* runRepoCommandCaptureSplit("gh", ["api", ...args], root).pipe(
       Effect.provide(capture),
       CiCommandError.mapError("GitHub policy request failed; state is unknown.")
@@ -291,6 +288,11 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
 /**
  * Live {@link GithubPolicyClient} running `gh api` from the repository root.
  *
+ * **Details**
+ *
+ * The client captures its platform dependencies once and builds its GitHub layer on first use, so a
+ * client used only for `request` never reads a token.
+ *
  * **Example** (Provide the live client)
  *
  * ```ts
@@ -315,9 +317,6 @@ const stringAt = (record: Readonly<Record<string, unknown>>, key: string): strin
     O.getOrElse(() => "")
   );
 const recordOption = S.decodeUnknownOption(textRecord);
-// Both references that carry the Turbo write token: the Worker cache's own secret
-// (turbo-cache stage 2) and the AWS cache's, which P6 retires. The writer-isolation
-// rules hold for either until then.
 const TurboWriteTokenSecret = LiteralKit(["secrets.TURBO_TOKEN", "secrets.TURBO_CACHE_WRITE_TOKEN"]).pipe(
   $I.annoteSchema("TurboWriteTokenSecret", {
     description: "A workflow secret reference that carries the Turbo remote-cache write token.",
@@ -437,6 +436,12 @@ const jobWorkflowDiagnostics = (file: string, id: string, job: WorkflowJob) => [
 
 /**
  * Check parsed workflow policy, including cache writer isolation, artifact lifetime and gate-report uploads.
+ *
+ * **Details**
+ *
+ * Two secret references carry the Turbo write token: `secrets.TURBO_TOKEN` (the Worker cache,
+ * turbo-cache stage 2) and `secrets.TURBO_CACHE_WRITE_TOKEN` (the AWS cache, which P6 retires). The
+ * writer-isolation rules hold for either.
  *
  * **Example** (Reject a write token without an environment)
  *
@@ -650,14 +655,14 @@ const requiredContexts = (ruleset: Ruleset): ReadonlyArray<string> =>
     A.dedupe,
     A.sort(Order.String)
   );
-// The dedicated reviewer App publishes this check outside the CI workflow lane inventory. It is
-// optional: `beep reviewer ruleset require|release` switches it on and off (D41).
 const REVIEWER_APP = { context: "beep-reviewer", integrationId: 5321138 } as const;
 /**
  * Verify that an optional reviewer context, when required, is pinned to its GitHub App producer.
  *
  * **Details**
  * The reviewer is advisory while the ruleset omits it, so an absent context passes.
+ * The reviewer App publishes its check outside the CI workflow lane inventory;
+ * `beep reviewer ruleset require|release` switches the requirement on and off.
  *
  * **Example** (Accept the reviewer App or its absence and reject an unpinned context)
  *

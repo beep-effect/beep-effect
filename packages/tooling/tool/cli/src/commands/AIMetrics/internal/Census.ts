@@ -85,9 +85,6 @@ export class CensusCommandOptions extends S.Opaque<CensusCommandOptions, { reado
   )
 ) {}
 
-// ---------------------------------------------------------------------------
-// Rendering
-
 const integer = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const scales: ReadonlyArray<readonly [number, string, number]> = [
   [1e9, "B", 2],
@@ -407,12 +404,8 @@ export const renderCensusReport: {
   )
 );
 
-// ---------------------------------------------------------------------------
-// Program
-
 const commandError = (message: string) => AiMetricsCommandError.make({ message, cause: message });
 
-// An ISO timestamp with a zone, whose calendar date exists: the platform parser would roll 02-30 into March.
 const IsoInstant = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 const calendarDate = (value: string): O.Option<string> =>
@@ -439,14 +432,12 @@ const resolveWindow = Effect.fn("AIMetrics.census.window")(function* (options: C
 });
 
 const resolveHome = Effect.fn("AIMetrics.census.home")(function* () {
-  // A provider that cannot answer is the same as no HOME: the roots must then be passed explicitly.
   const home = yield* ConfigProvider.ConfigProvider.use(pipe(Config.String("HOME"), Config.option).parse).pipe(
     Effect.option
   );
   return O.filter(O.flatten(home), Str.isNonEmpty);
 });
 
-// A root under the home directory is shown with `~`; any other root is not shown at all.
 const displayRoot = (home: O.Option<string>, root: string): string =>
   O.match(
     O.filter(home, (value) => root === value || Str.startsWith(`${value}/`)(root)),
@@ -481,7 +472,6 @@ const writeBaseline = Effect.fn("AIMetrics.census.writeBaseline")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const located = options.repoRoot.pipe(O.getOrUndefined, findRepoRoot);
-  // The repository root is needed only for the default directory, so an explicit one works outside a checkout.
   const root = O.isSome(options.baselineDirectory)
     ? yield* located.pipe(Effect.option)
     : yield* located.pipe(
@@ -497,18 +487,15 @@ const writeBaseline = Effect.fn("AIMetrics.census.writeBaseline")(function* (
   const name = censusBaselineFileName(report.window.until, report.ruleVersion);
   const file = path.join(target, name);
   const recordedAt = yield* DateTime.now;
-  // The report was built by its own schema, so encoding it cannot fail.
   const text = yield* encodeBaseline(
     CensusBaselineFile.make({ version: "agent-output-census-baseline/v1", recordedAt, report })
   ).pipe(Effect.orDie);
-  // `wx` refuses an existing file, so no run overwrites another's.
   yield* fs.makeDirectory(target, { recursive: true }).pipe(
     Effect.andThen(fs.writeFileString(file, `${text}\n`, { flag: "wx" })),
     Effect.mapError(() =>
       commandError("A census baseline file for this window end and rule version already exists, or cannot be written.")
     )
   );
-  // Shown relative to the repository when it is inside one; otherwise by name, never as an absolute path.
   return pipe(
     root,
     O.map((value) => path.relative(value, file)),
@@ -525,6 +512,12 @@ const writeBaseline = Effect.fn("AIMetrics.census.writeBaseline")(function* (
  *
  * An empty corpus (no harness root present, or no activity in the window) prints the report and then fails,
  * so a mistyped window or root never reads as zero activity.
+ *
+ * `since` and `until` must be zoned ISO timestamps on real calendar dates: `02-30` is refused, not
+ * rolled into March. Without a usable HOME the Claude and Codex roots must be passed explicitly. A
+ * root under the home directory prints with `~`; any other root prints as `(custom root)`. An
+ * explicit baseline directory works outside a checkout, and the printed baseline path is relative
+ * to the repository, or the bare file name outside it, never absolute.
  *
  * **Example** (Build a census program)
  *
@@ -556,7 +549,6 @@ export const makeCensusProgram = Effect.fn("AIMetrics.makeCensusProgram")(
       .report(CensusRequest.make({ window, claudeRoot, codexRoot, repository: options.repository }))
       .pipe(Effect.mapError((error) => commandError(error.message)));
     if (options.json) {
-      // The report was built by its own schema, so encoding it cannot fail.
       yield* encodeReport(report).pipe(Effect.orDie, Effect.flatMap(Console.log));
     } else {
       yield* Console.log(

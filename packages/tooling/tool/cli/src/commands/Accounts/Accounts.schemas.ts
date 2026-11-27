@@ -574,14 +574,11 @@ export class AccountsStatusReport extends S.Opaque<AccountsStatusReport, { reado
 export const AccountsStatusReportJson = JsonStringCodec(AccountsStatusReport);
 
 const MILLIS_PER_HOUR = 3_600_000;
-// A weekly window that has not started yet has no reset time: the provider
-// starts a seven-day clock on first use, so that is the time left to spend it.
 const UNSTARTED_WEEK_HOURS = 168;
-// Below this the reset is effectively now; clamp so the rate stays finite.
-const MIN_HOURS = 1 / 60;
+const FINITE_RATE_MIN_HOURS = 1 / 60;
 
 const hoursUntil = (now: DateTime.Utc, at: DateTime.Utc): number =>
-  Math.max((DateTime.toEpochMillis(at) - DateTime.toEpochMillis(now)) / MILLIS_PER_HOUR, MIN_HOURS);
+  Math.max((DateTime.toEpochMillis(at) - DateTime.toEpochMillis(now)) / MILLIS_PER_HOUR, FINITE_RATE_MIN_HOURS);
 
 const firstOfKind = (windows: ReadonlyArray<UsageWindow>, kind: UsageWindowKind): O.Option<UsageWindow> =>
   A.findFirst(windows, (window) => window.kind === kind);
@@ -605,8 +602,6 @@ const hasResetBy =
   (window: UsageWindow): boolean =>
     O.exists(window.resetsAt, (at) => DateTime.toEpochMillis(at) <= DateTime.toEpochMillis(now));
 
-// A window that reset after an older reading was taken starts over: its old
-// figure is gone and its next reset is unknown until the account is read again.
 const restarted = (window: UsageWindow): UsageWindow =>
   UsageWindow.make({ kind: window.kind, scope: window.scope, usedPercent: 0, resetsAt: O.none() });
 
@@ -619,7 +614,6 @@ const rankOk = (now: DateTime.Utc, usage: AccountUsage, ok: OkOutcome): AccountR
   const lapsed = hasResetBy(now);
   const estimated = O.isSome(ok.asOf) && A.some(ok.windows, lapsed);
   if (!estimated) return rankWindows(now, usage, ok.windows, ok.asOf, false);
-  // The row carries the restarted windows so every figure shown agrees.
   const windows = A.map(ok.windows, (window) => (lapsed(window) ? restarted(window) : window));
   const current = AccountUsage.make({
     account: usage.account,
@@ -635,8 +629,6 @@ const rankWindows = (
   asOf: O.Option<DateTime.Utc>,
   estimated: boolean
 ): AccountRanking => {
-  // The account-wide window that decides urgency: weekly, or the billing cycle
-  // for a provider that meters by cycle.
   const weekly = O.orElse(firstOfKind(windows, "weekly"), () => firstOfKind(windows, "cycle"));
   const remaining = O.map(weekly, (window) => Math.max(100 - window.usedPercent, 0));
   const hours = O.map(weekly, (window) =>
@@ -664,6 +656,14 @@ const rankWindows = (
 
 /**
  * Rank one polled account.
+ *
+ * **Details**
+ *
+ * Urgency comes from the weekly window, or from the billing-cycle window for a provider that
+ * meters by cycle. A weekly window with no reset time has not started: the provider starts a
+ * seven-day clock on first use, so it counts 168 hours left. A window that reset after the
+ * reading was taken (`asOf`) starts over at 0% used with no reset time until the account is read
+ * again; the row's `usage` carries those restarted windows and the row is marked `estimated`.
  *
  * **Example** (Rank an unreadable account)
  *
@@ -704,14 +704,8 @@ const availabilityRank: Record<AccountAvailability, number> = {
   unavailable: 3,
 };
 
-// An untouched window has not started its clock, or restarts it on first use:
-// none of its quota can expire while it waits, so it ranks after every window
-// that is already running down.
 const isUntouched = (row: AccountRanking): boolean => O.exists(row.weeklyRemainingPercent, (left) => left >= 100);
 
-// Ready accounts first; among them, windows already running down before
-// untouched ones; then the highest burn rate: the quota most at risk of
-// expiring unused. Labels break ties so the order is stable between polls.
 const mostUrgentFirst = Order.combineAll<AccountRanking>([
   Order.mapInput(Order.Number, (row) => availabilityRank[row.availability]),
   Order.mapInput(Order.Number, (row) => (isUntouched(row) ? 1 : 0)),
@@ -721,6 +715,14 @@ const mostUrgentFirst = Order.combineAll<AccountRanking>([
 
 /**
  * Rank polled accounts: the one whose weekly quota most needs spending first.
+ *
+ * **Details**
+ *
+ * Rows sort by availability (ready, session-capped, weekly-exhausted, unavailable). Within each,
+ * a window already running down ranks before an untouched one (100% left), whose clock has not
+ * started or restarts on first use, so none of its quota can expire while it waits. Then the
+ * highest burn rate comes first: the quota most at risk of expiring unused. Provider and label
+ * break ties, so the order is stable between polls.
  *
  * **Example** (Rank nothing)
  *

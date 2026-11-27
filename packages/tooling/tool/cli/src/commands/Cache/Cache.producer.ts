@@ -250,9 +250,7 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
   const bytes = Redacted.value(material);
   const key = Redacted.make(bytes.slice(32, 64));
   const issuer = Sha256Hex.make(Hex.encode(bytes.slice(0, 32)));
-  // Effect Crypto provides randomness/digests but no HMAC. Keep this standard
-  // Web Crypto operation at the effectful platform boundary; never export the key.
-  const secretKey = yield* Effect.tryPromise({
+  const nonExportableHmacKey = yield* Effect.tryPromise({
     try: () =>
       globalThis.crypto.subtle.importKey(
         "raw",
@@ -269,7 +267,7 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
       try: () =>
         globalThis.crypto.subtle.sign(
           "HMAC",
-          secretKey,
+          nonExportableHmacKey,
           new TextEncoder().encode(`beep/cache-producer-envelope/v2\0${text}`)
         ),
       catch: () => CacheCommandError.new("Producer authentication failed."),
@@ -315,7 +313,7 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
       try: () =>
         globalThis.crypto.subtle.verify(
           "HMAC",
-          secretKey,
+          nonExportableHmacKey,
           new Uint8Array(signature),
           new TextEncoder().encode(`beep/cache-producer-envelope/v2\0${body}`)
         ),
@@ -480,7 +478,6 @@ const readPrivateProducerMaterial = Effect.fn("Producer.readPrivateMaterial")(fu
 const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const uid = yield* inspectCacheProducerDirectory(directory);
-  // readDirectory detects even a dangling revocation marker; errors fail closed.
   const entries = yield* fs.readDirectory(directory);
   if (A.contains(entries, "revoked")) {
     return yield* CacheCommandError.new("Producer issuer is revoked.");
@@ -495,6 +492,7 @@ const readIssuerMaterial = Effect.fn("Producer.readIssuerMaterial")(function* (d
  * The directory must be canonical, owner-only and excluded from reader mounts.
  * The caller's expected binding must match the digest fixed at provisioning.
  * Every operation rechecks permissions, revocation and material replacement.
+ * A `revoked` marker counts even as a dangling link, and a failed listing fails closed.
  * The host operator is trusted; these checks do not defend against concurrent
  * malicious filesystem changes by the same uid. Independent workflow approval
  * at provisioning remains the caller's responsibility.

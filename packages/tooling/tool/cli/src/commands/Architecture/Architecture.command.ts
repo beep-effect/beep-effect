@@ -97,11 +97,6 @@ const decodeShape = (value: string): Effect.Effect<ArchitectureShape, DomainErro
     )
   );
 
-// `plan` resolves its shape so a bare `plan` stays the legacy lab plan:
-// - `--shape` decides when given; `--shape model-first` needs `--slice` and
-//   `--concept` and refuses `--stage` and `--domain-kind`.
-// - Without `--shape`, an explicit `--slice` and `--concept` with no legacy-only
-//   flag select model-first; anything else is legacy.
 const planFromFlags = Effect.fn(function* (flags: {
   readonly shape: O.Option<string>;
   readonly slice: O.Option<string>;
@@ -142,8 +137,6 @@ const planFromFlags = Effect.fn(function* (flags: {
   return yield* ArchitectureShape.match(resolved, { "model-first": modelFirst, legacy });
 });
 
-// With `--shape`, a plan file must describe that shape; without it, the plan's
-// roles decide.
 const ensurePlanShape = Effect.fn(function* (plan: CanonicalSliceOperationPlan, shape: O.Option<string>) {
   const actual = shapeOfOperationPlan(plan);
   if (O.isNone(shape)) return actual;
@@ -244,7 +237,6 @@ const ensureIdempotent = Effect.fn(function* (result: OperationPlanCheckResult) 
   }
 });
 
-// A model-first apply registers its packages the way `create-package` does.
 const registerModelFirstPackages = Effect.fn(function* (rootDir: string, packagePaths: ReadonlyArray<string>) {
   const { addedWorkspaces, registeredSlugs } = yield* registerScaffoldedWorkspaces(rootDir, packagePaths);
   yield* Console.log(
@@ -253,7 +245,6 @@ const registerModelFirstPackages = Effect.fn(function* (rootDir: string, package
       ","
     )}`
   );
-  // Registration refreshes bun.lock only; the workspace links come from an install.
   yield* Console.log(
     "architecture context registration: run `bun install` from the repository root before running the new packages' checks or tests."
   );
@@ -269,8 +260,6 @@ const registerLegacyIdentities = Effect.fn(function* (rootDir: string) {
 const applyAndRegister = Effect.fn(function* (plan: CanonicalSliceOperationPlan, register: boolean) {
   const rootDir = yield* findRepoRoot();
   const shape = shapeOfOperationPlan(plan);
-  // A saved model-first plan must name the packages it writes and carry the
-  // references the sync would write now, both checked before anything is written.
   const packagePaths = shape === "model-first" ? yield* modelFirstPackagePathsOf(plan) : [];
   if (shape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
   const result = yield* applyCanonicalSliceOperationPlan(rootDir, plan);
@@ -281,8 +270,6 @@ const applyAndRegister = Effect.fn(function* (plan: CanonicalSliceOperationPlan,
   });
 });
 
-// After an interrupted apply the files can all match while the packages were
-// never registered; check would then call the plan idempotent.
 const ensureModelFirstRegistration = Effect.fn(function* (rootDir: string, plan: CanonicalSliceOperationPlan) {
   const packagePaths = yield* modelFirstPackagePathsOf(plan);
   const { missingWorkspaces, missingIdentities } = yield* scaffoldedRegistrationGaps(rootDir, packagePaths);
@@ -352,8 +339,6 @@ const architectureCheckCommand = Command.make(
     const rootDir = yield* findRepoRoot();
     const plan = yield* readOperationPlanFile(file);
     const planShape = yield* ensurePlanShape(plan, shape);
-    // A model-first plan is checked like apply checks it, and its registration is
-    // checked too, all read-only; legacy plans check their files alone.
     if (planShape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
     const result = yield* checkCanonicalSliceOperationPlan(rootDir, plan);
     yield* reportCheckResult(result);
@@ -382,7 +367,6 @@ const createContextCommand = Command.make(
   )
 );
 
-// `create slice` and `add concept` plan and write the same legacy concept.
 const legacyConceptConfig = {
   slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
   concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
@@ -468,6 +452,12 @@ const architectureAddCommand = Command.make("add", {}, printAddIndex).pipe(
 const printArchitectureIndex = () => printLines(["architecture commands: create, add, plan, apply, check"]);
 /**
  * Architecture automation command group.
+ *
+ * **Gotchas**
+ *
+ * After an interrupted `apply`, every file of a model-first plan can match while its packages
+ * were never registered. `check` therefore also checks the registration, so it does not call such
+ * a plan applied.
  *
  * **Example** (Register architecture command)
  *

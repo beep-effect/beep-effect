@@ -36,15 +36,11 @@ import type {
   SkillProbeRunRecord,
 } from "./SkillProbeSchemas.ts";
 
-/** Effect threshold on the overall C-B all-lanes difference. */
 const EFFECT_THRESHOLD = 0.1;
-/** Tasks that must show an all-lanes pass in B or C before Effect or Null is read. */
 const SENSITIVE_TASK_FLOOR = 4;
-/** Fired-rate gate on counted cell C runs. */
 const FIRED_RATE_GATE = 0.8;
 const NORMAL_975 = 1.96;
-// Student t 0.975 quantiles for 1..30 degrees of freedom.
-const T_975 = [
+const STUDENT_T_975_DF_1_TO_30 = [
   12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.16, 2.145, 2.131, 2.12, 2.11,
   2.101, 2.093, 2.086, 2.08, 2.074, 2.069, 2.064, 2.06, 2.056, 2.052, 2.048, 2.045, 2.042,
 ];
@@ -52,9 +48,7 @@ const T_975 = [
 const SkillProbeCellOrder: ReadonlyArray<SkillProbeCell> = ["A", "B", "C"];
 const MEASURES: ReadonlyArray<SkillProbeMeasure> = ["all-lanes", "law-pass", "lane-fraction", "turns", "wall-seconds"];
 const PRIMARY_ORDER: ReadonlyArray<SkillProbePrimary> = ["all-lanes", "law-pass"];
-/** A primary qualifies with a pooled B or C pass on this many tasks... */
 const QUALIFYING_TASKS = 4;
-/** ...drawn from at least this many families. */
 const QUALIFYING_FAMILIES = 2;
 
 const isLawPass = (scored: typeof SkillProbeOutcome.cases.Scored.Type): boolean =>
@@ -88,7 +82,7 @@ export const tCritical975 = (degreesOfFreedom: number): number =>
   degreesOfFreedom < 1
     ? 0
     : pipe(
-        A.get(T_975, degreesOfFreedom - 1),
+        A.get(STUDENT_T_975_DF_1_TO_30, degreesOfFreedom - 1),
         O.getOrElse(() => NORMAL_975)
       );
 
@@ -444,8 +438,9 @@ const fingerprintKey = (fingerprint: SkillProbeFingerprint): string =>
  * Excluded runs are counted but never scored. Pairing is at the task level:
  * each task's difference is the later cell's mean minus the earlier cell's
  * mean. The overall interval clusters tasks by family. The verdict reads the
- * overall C-B all-lanes difference; the fired-rate gate reads counted cell C
- * runs. Values are rounded to six decimals before any threshold comparison.
+ * overall C-B all-lanes difference against a 0.1 effect threshold, once at least four counted
+ * tasks pass the primary measure in B or C; the fired-rate gate trips when counted cell C runs
+ * fire below 0.8. Values are rounded to six decimals before any threshold comparison.
  *
  * **Example** (Report an empty probe)
  *
@@ -526,9 +521,7 @@ export const buildSkillProbeReport: {
   });
 });
 
-/** Most tries of one planned run: the original and two reruns. */
 const MAX_ATTEMPTS_PER_SLOT = 3;
-/** Most scored-run attempts the probe may record, counted and excluded together. */
 const MAX_SCORED_ATTEMPTS = 216;
 
 const duplicatesOf = (keys: ReadonlyArray<string>): ReadonlyArray<string> =>
