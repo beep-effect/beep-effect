@@ -103,8 +103,9 @@ build a preamble in the test itself and break one edge per test.
 
 ## Fixtures with recorded provenance
 
-The test that reads each fixture records where it came from. These entries
-cite that record.
+These entries are the provenance record for these fixtures. The tests that
+read them keep only the reasons behind their assertions, not where the bytes
+came from.
 
 | Fixture | Provenance | Pins |
 | --- | --- | --- |

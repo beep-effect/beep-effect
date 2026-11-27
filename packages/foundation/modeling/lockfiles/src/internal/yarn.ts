@@ -24,14 +24,10 @@ import type { DependencyMap, ParseFailure, ResolvedEdges, WorkspaceEntry } from 
 
 const $I = $LockfilesId.create("internal/yarn");
 
-// ── Raw schemas (permissive validation scaffolding, not API) ───────────────
-
-// The top-level shape must be a string-keyed map. Classic (v1) yarn.lock
-// content that happens to YAML-parse produces scalar entry values, which
-// fail YarnEntry validation — Berry-only support exits typed either way.
 const YarnLockfileRaw = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("YarnLockfileRaw", {
-    description: "Yarn Berry entry map retaining unknown values for per-entry and metadata decoding",
+    description:
+      "Yarn Berry entry map retaining unknown values for per-entry and metadata decoding; a classic v1 file's scalar entries fail the entry decode",
   })
 );
 
@@ -102,13 +98,12 @@ const decodeYarnLockfileRaw = S.decodeUnknownEffect(YarnLockfileRaw);
 const decodeYarnEntry = S.decodeUnknownEffect(YarnEntry);
 
 const YarnMetadata = S.Struct({
-  // This ungated format preserves non-finite version numbers by stringifying them upstream.
   version: S.optionalKey(S.Union([S.String, S.Finite])).pipe(
     $I.annoteKey("YarnMetadata.version", { description: "Recorded package version or resolved dependency version" })
   ),
 }).pipe(
   $I.annoteSchema("YarnMetadata", {
-    description: "Optional Yarn Berry lockfile version metadata preserved without a finite-number restriction",
+    description: "Optional Yarn Berry lockfile version metadata; a non-finite number fails decoding",
   })
 );
 
@@ -138,12 +133,9 @@ const YarnMetadata = S.Struct({
 export const parseYarn = Effect.fn("YarnLockfile.parse")(function* (
   content: string
 ): Effect.fn.Return<LockfileFields, ParseFailure> {
-  // yarn defines no document framing, so a multi-document yarn.lock fails
-  // typed rather than being silently truncated to its first document.
   const { document } = yield* selectSoleDocument(content);
   const raw = yield* decodeYarnLockfileRaw(document).pipe(Effect.mapError(validationFailure));
   const lockfileVersion = yield* yarnLockfileVersion(raw.__metadata);
-  // Decode each entry once, skipping the metadata entry, and cache the results.
   const decoded = yield* Effect.forEach(
     A.filter(R.toEntries(raw), ([key]) => key !== "__metadata"),
     ([key, value]) =>
@@ -157,8 +149,6 @@ export const parseYarn = Effect.fn("YarnLockfile.parse")(function* (
 
 const decodeYarnMetadata = S.decodeUnknownEffect(YarnMetadata);
 
-// The lockfile version recorded in `__metadata`, or "unknown" without one. An
-// absent metadata entry reads like one that records no version.
 const yarnLockfileVersion = (metadata: unknown): Effect.Effect<string, ParseFailure> =>
   decodeYarnMetadata(metadata === undefined ? {} : metadata).pipe(
     Effect.mapBoth({
@@ -167,9 +157,6 @@ const yarnLockfileVersion = (metadata: unknown): Effect.Effect<string, ParseFail
     })
   );
 
-// ── Transform ──────────────────────────────────────────────────────────────
-
-/** One decoded entry whose key yields a package name. */
 type YarnRow = {
   readonly key: string;
   readonly entry: YarnEntryType;
@@ -177,9 +164,7 @@ type YarnRow = {
   readonly instanceId: string;
 };
 
-// yarn's own identity is the locator: the recorded resolution, or the first
-// descriptor of the key.
-const instanceIdOf = (key: string, entry: YarnEntryType): string =>
+const locatorOf = (key: string, entry: YarnEntryType): string =>
   entry.resolution ?? A.headNonEmpty(Str.split(key, ", "));
 
 /**
@@ -194,7 +179,7 @@ const locatorIndex = (
 ): MutableHashMap.MutableHashMap<string, string> =>
   MutableHashMap.fromIterable(
     A.flatMap(entries, ([key, entry]) => {
-      const locator = instanceIdOf(key, entry);
+      const locator = locatorOf(key, entry);
       return locator === ""
         ? []
         : A.flatMap(Str.split(key, ", "), (descriptor) => (descriptor === "" ? [] : [[descriptor, locator] as const]));
@@ -217,21 +202,16 @@ const toFields: {
   ): Effect.fn.Return<LockfileFields, ParseFailure> {
     const entries = A.fromIterable(decoded);
     const locators = locatorIndex(entries);
-    // Malformed descriptors are skipped, never thrown on.
     const rows = A.flatMap(entries, ([key, entry]) =>
       O.toArray(
-        O.map(
-          extractYarnPackageName(key),
-          (name): YarnRow => ({ key, entry, name, instanceId: instanceIdOf(key, entry) })
-        )
+        O.map(extractYarnPackageName(key), (name): YarnRow => ({ key, entry, name, instanceId: locatorOf(key, entry) }))
       )
     );
-    const instanceIds = HashSet.fromIterable(A.flatMap(rows, (row) => (row.instanceId === "" ? [] : [row.instanceId])));
+    const instanceIds = HashSet.fromIterable(A.flatMap(rows, (row) => (isEmittedRow(row) ? [row.instanceId] : [])));
     const packages = yield* Effect.forEach(rows, (row) => yarnPackage(row, locators, instanceIds), { concurrency: 1 });
-    // Only emitted workspace rows contribute dependency sections.
     const workspaceEntries = MutableHashMap.fromIterable(
       A.flatMap(rows, (row) =>
-        isSoftLink(row.entry) && row.instanceId !== "" ? [[row.name, yarnWorkspaceEntry(row.entry)] as const] : []
+        isSoftLink(row.entry) && isEmittedRow(row) ? [[row.name, yarnWorkspaceEntry(row.entry)] as const] : []
       )
     );
     return LockfileFields.make({
@@ -241,11 +221,12 @@ const toFields: {
         workspaceEntries,
         HashSet.fromIterable(A.flatMap(rows, (row) => (isSoftLink(row.entry) ? [row.name] : [])))
       ),
-      // yarn does not record importers; the field is always empty.
       importers: [],
     });
   })
 );
+
+const isEmittedRow = (row: YarnRow): boolean => row.instanceId !== "";
 
 const isSoftLink = (entry: YarnEntryType): boolean => entry.linkType === "soft";
 
@@ -277,11 +258,9 @@ const yarnPackage: {
     instanceIds: HashSet.HashSet<string>
   ) {
     const isWorkspace = isSoftLink(row.entry);
-    // Yarn Berry's `10c0/<hex>` cache checksums validate as an `IntegrityHash`
-    // (the yarn textual form), so they are preserved; a present but unparseable
-    // checksum fails typed at validation rather than being dropped.
     const integrity = yield* toIntegrityHash(row.entry.checksum);
-    if (row.instanceId === "") return A.empty(); // no identity, no row; skip, never throw
+    const plainPeerRanges = row.entry.peerDependencies;
+    if (!isEmittedRow(row)) return A.empty();
     return [
       ResolvedPackage.make({
         name: row.name,
@@ -292,9 +271,7 @@ const yarnPackage: {
           relativePath: isWorkspace ? extractYarnWorkspacePath(row.key) : O.none<string>(),
         }),
         isWorkspace,
-        // Peer ranges are recorded plainly (no `npm:` protocol prefix), so
-        // unlike the dependency sections they need no cleaning.
-        ...peerDeclarations(row.entry.peerDependencies, row.entry.peerDependenciesMeta, undefined),
+        ...peerDeclarations(plainPeerRanges, row.entry.peerDependenciesMeta, undefined),
         ...resolveYarnEdges(row.entry, locators, instanceIds),
       }),
     ];
@@ -386,7 +363,6 @@ const extractYarnPackageName = (key: string): O.Option<string> => {
 
 const isPositive = (index: number): boolean => index > 0;
 
-// The later of the descriptor's last `@npm:` and last `@workspace:`.
 const lastProtocolIndex = (descriptor: string): O.Option<number> =>
   A.match(A.getSomes([Str.lastIndexOf(NPM_PROTOCOL)(descriptor), Str.lastIndexOf(WORKSPACE_PROTOCOL)(descriptor)]), {
     onEmpty: O.none,

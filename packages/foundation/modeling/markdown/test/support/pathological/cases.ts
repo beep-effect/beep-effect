@@ -29,6 +29,8 @@ interface PathologicalCase {
 
 const TIMEOUT_MS = 8000;
 
+const quadraticTableScanInput = Str.repeat(30000)("aaa\rbbb\n-\u000b\n");
+
 const hashCollisions = (): { readonly document: string; readonly badKey: string } => {
   const REFMAP_SIZE = 16n;
   const MASK32 = 0xffffffffn;
@@ -210,11 +212,8 @@ export const PATHOLOGICAL_CASES: ReadonlyArray<PathologicalCase> = [
     timeoutMs: TIMEOUT_MS,
   },
   {
-    // Upstream's one GFM case: 30k CR-separated candidate header rows, each
-    // followed by a one-dash delimiter line ending in a vertical tab. A
-    // naive table scanner re-walks the accumulated paragraph on every line.
     name: "tables",
-    input: Str.repeat(30000)("aaa\rbbb\n-\u000b\n"),
+    input: quadraticTableScanInput,
     expectedPattern: new RegExp(
       "^<p>aaa</p>\\n<table>\\n<thead>\\n<tr>\\n<th>bbb</th>\\n</tr>\\n</thead>\\n<tbody>\\n" +
         "(<tr>\\n<td>aaa</td>\\n</tr>\\n<tr>\\n<td>bbb</td>\\n</tr>\\n<tr>\\n<td>-\\u000b</td>\\n</tr>\\n){29999}" +
