@@ -24,7 +24,9 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
             expect(script).toContain("__beepQa");
             expect(script).toContain("/events");
             expect(script, "the cancel-reset lens needs the pointercancel listener").toContain("pointercancel");
-            expect(script, "and the schema-modeled pointer-cancel kind").toContain("pointer-cancel");
+            expect(script, "the cancel-reset lens needs the schema-modeled pointer-cancel kind").toContain(
+              "pointer-cancel"
+            );
             const script1 = yield* witness.script;
             expect(script1).toBe(script);
             expect(passThroughBuildSpy).toHaveBeenCalledTimes(1);
@@ -53,7 +55,9 @@ describe("@beep/qa-capture witness bundling", { concurrent: false }, () => {
             expect(script).toContain("__beepQa");
             expect(script).toContain("/events");
             expect(script, "the cancel-reset lens needs the pointercancel listener").toContain("pointercancel");
-            expect(script, "and the schema-modeled pointer-cancel kind").toContain("pointer-cancel");
+            expect(script, "the cancel-reset lens needs the schema-modeled pointer-cancel kind").toContain(
+              "pointer-cancel"
+            );
             const script2 = yield* witness.script;
             expect(script2).toBe(script);
             expect(passThroughBuildSpy).toHaveBeenCalledTimes(1);

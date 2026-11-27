@@ -1935,7 +1935,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       const current = "export const retained = true;\n";
       yield* fs.writeFileString(target, current);
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-      const exitsSevenWithStdoutFormatter = ChildProcessSpawner.make(() =>
+      const exitSevenFormatter = ChildProcessSpawner.make(() =>
         spawner.spawn(
           ChildProcess.make(
             process.execPath,
@@ -1946,15 +1946,11 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       );
       const failure = yield* checkWithoutWrites([
         GeneratedModule.make({ path: target, content: "export const generated = true;\n" }),
-      ]).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, exitsSevenWithStdoutFormatter),
-        Effect.flip
-      );
+      ]).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, exitSevenFormatter), Effect.flip);
       expect(failure._tag).toBe("CodegenFormatError");
-      expect(
-        failure.message,
-        "the repository formatter accepts syntax errors, so a nonzero exit is rejected on its status alone"
-      ).toContain("exit code 7");
+      expect(failure.message, "a nonzero exit with nonempty stdout is rejected on its status alone").toContain(
+        "exit code 7"
+      );
       const actual = yield* fs.readFileString(target);
       expect(actual).toBe(current);
     })

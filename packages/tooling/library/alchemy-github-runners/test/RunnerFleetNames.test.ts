@@ -26,7 +26,7 @@ import type { ScratchStack } from "@alchemy.run/test/Vitest";
 
 const isPrefix = S.is(FleetNamePrefix);
 
-const physicalNamePropByResourceType: Readonly<Record<string, string>> = {
+const namePropOf: Readonly<Record<string, string>> = {
   "Lambda.Function": "functionName",
   "SQS.Queue": "queueName",
   "IAM.Role": "roleName",
@@ -37,7 +37,7 @@ const physicalNamePropByResourceType: Readonly<Record<string, string>> = {
 };
 
 const nameOf = (entry: { readonly type: string; readonly news: Readonly<Record<string, unknown>> }) =>
-  entry.news[physicalNamePropByResourceType[entry.type] ?? ""];
+  entry.news[namePropOf[entry.type] ?? ""];
 
 const environment = Layer.succeed(
   AWSEnvironment,
@@ -95,8 +95,7 @@ const fleet = (namePrefix: string | undefined) =>
     })
   );
 
-const namedEntries = (recorder: Recorder) =>
-  A.filter(recorder.reconciled, (entry) => R.has(physicalNamePropByResourceType, entry.type));
+const namedEntries = (recorder: Recorder) => A.filter(recorder.reconciled, (entry) => R.has(namePropOf, entry.type));
 
 const deploy = (stack: ScratchStack, namePrefix: string | undefined) => {
   const run: (definition: ReturnType<typeof fleet>) => Effect.Effect<unknown, { readonly _tag: string }> = stack.deploy;

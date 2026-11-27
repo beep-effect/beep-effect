@@ -162,6 +162,8 @@ export type OutputFormat = typeof OutputFormat.Type;
  * `examples` and `discriminator` included) stay on the resulting `anyOf` in either member order,
  * while an object member's only add the keys the union lacks; between two objects, or two unions,
  * the later member wins. A `$ref` beside annotation-only siblings is kept rather than inlined.
+ * Only a bare `allOf` wrapper is flattened into its parent; one with sibling keywords keeps
+ * their annotation or constraint scope and is reduced as a member first.
  *
  * **Example** (Select the ACP transform set)
  *

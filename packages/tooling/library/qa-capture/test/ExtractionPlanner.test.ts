@@ -352,7 +352,7 @@ describe("@beep/qa-capture extraction planner", () => {
       if (strip.kind === "extract-frames-at") {
         expect(
           strip.request.timestampsSeconds,
-          "a window past the end seeks the guarded bound, never the container endpoint"
+          "a seek at the exact container endpoint decodes no frame and fails the whole staged strip"
         ).toEqual([guarded]);
       }
     });

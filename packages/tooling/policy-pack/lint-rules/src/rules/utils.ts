@@ -42,32 +42,30 @@ const $I = $LintRulesId.create("rules/utils");
  */
 export const makeIdentifierShadowTracker = (names: ReadonlyArray<string>) => {
   const tracked = HashSet.fromIterable(names);
-  const ancestorScopesOutermostFirst: Array<MutableHashSet.MutableHashSet<string>> = [];
-  let innermostScope = MutableHashSet.empty<string>();
+  const ancestorsOutermostFirst: Array<MutableHashSet.MutableHashSet<string>> = [];
+  let innermost = MutableHashSet.empty<string>();
   const reset = () => {
-    ancestorScopesOutermostFirst.length = 0;
-    innermostScope = MutableHashSet.empty<string>();
+    ancestorsOutermostFirst.length = 0;
+    innermost = MutableHashSet.empty<string>();
   };
   const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
-    ancestorScopesOutermostFirst.push(innermostScope);
-    innermostScope = MutableHashSet.empty<string>();
+    ancestorsOutermostFirst.push(innermost);
+    innermost = MutableHashSet.empty<string>();
     for (const param of params) {
-      if (param.type === "Identifier" && HashSet.has(tracked, param.name))
-        MutableHashSet.add(innermostScope, param.name);
+      if (param.type === "Identifier" && HashSet.has(tracked, param.name)) MutableHashSet.add(innermost, param.name);
     }
   };
   const popScope = () => {
-    const parent = ancestorScopesOutermostFirst.pop();
-    if (parent !== undefined) innermostScope = parent;
+    const parent = ancestorsOutermostFirst.pop();
+    if (parent !== undefined) innermost = parent;
   };
   const recordDeclarator = (node: ESTree.VariableDeclarator) => {
     if (node.id.type === "Identifier" && HashSet.has(tracked, node.id.name)) {
-      MutableHashSet.add(innermostScope, node.id.name);
+      MutableHashSet.add(innermost, node.id.name);
     }
   };
   const isShadowed = (name: string): boolean =>
-    MutableHashSet.has(innermostScope, name) ||
-    A.some(ancestorScopesOutermostFirst, (scope) => MutableHashSet.has(scope, name));
+    MutableHashSet.has(innermost, name) || A.some(ancestorsOutermostFirst, (scope) => MutableHashSet.has(scope, name));
   const visitors = {
     FunctionDeclaration: (node: ESTree.Function) => pushScope(node.params),
     "FunctionDeclaration:exit": popScope,

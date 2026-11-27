@@ -187,12 +187,14 @@ const DomainClass = Resource<Domain>("Vercel.Domain");
  *
  * **Details**
  *
- * A domain belongs to one project at a time. Domains carry no ownership
- * marker, so a domain this stack did not create reads as foreign, on its own
- * project or on the `moveFrom` project, and needs `adopt(true)`. Adoption
- * from `moveFrom` moves the domain with `moveProjectDomain`. Each deploy asks
- * Vercel to verify an unverified domain; a domain whose DNS is not in place
- * yet stays `verified: false` with its challenges in `verification`.
+ * A domain belongs to one project at a time, so a same-name replacement
+ * deletes the old domain first, and reads that previous generation as owned.
+ * Domains carry no ownership marker, so a domain this stack did not create
+ * reads as foreign, on its own project or on the `moveFrom` project, and
+ * needs `adopt(true)`. Adoption from `moveFrom` moves the domain with
+ * `moveProjectDomain`. Each deploy asks Vercel to verify an unverified
+ * domain; a domain whose DNS is not in place yet stays `verified: false`
+ * with its challenges in `verification`.
  *
  * **Example** (Take over a domain from the old project)
  *

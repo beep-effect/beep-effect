@@ -112,13 +112,13 @@ const statementLambdaStoresForAdd = (body: AddPermissionBody, resource: string):
 interface FakeLambdaPolicy {
   readonly calls: Array<string>;
   readonly qualifiers: Array<string | null>;
+  readonly racingWrites: Array<GetPolicyStatement>;
   readonly statements: MutableHashMap.MutableHashMap<string, GetPolicyStatement>;
-  readonly writtenAfterNextGetPolicy: Array<GetPolicyStatement>;
 }
 
 const fakeLambdaPolicy = (...seed: ReadonlyArray<GetPolicyStatement>): FakeLambdaPolicy => ({
   calls: [],
-  writtenAfterNextGetPolicy: [],
+  racingWrites: [],
   qualifiers: [],
   statements: MutableHashMap.fromIterable(A.map(seed, (statement) => [statement.Sid, statement] as const)),
 });
@@ -140,8 +140,7 @@ const decoder = new TextDecoder();
 const getPolicy = Effect.fn("FakeLambdaPolicy.getPolicy")(function* (fake: FakeLambdaPolicy) {
   fake.calls.push("GetPolicy");
   const statements = fake.statements.pipe(MutableHashMap.values, A.fromIterable);
-  for (const statement of fake.writtenAfterNextGetPolicy.splice(0))
-    MutableHashMap.set(fake.statements, statement.Sid, statement);
+  for (const statement of fake.racingWrites.splice(0)) MutableHashMap.set(fake.statements, statement.Sid, statement);
   if (A.isArrayEmpty(statements)) return lambdaError(404, "ResourceNotFoundException");
   const policy = yield* encodeJson({ Version: "2012-10-17", Id: "default", Statement: statements });
   return { status: 200, body: { Policy: policy, RevisionId: "revision" } };
@@ -298,7 +297,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
     it.effect("an add that conflicts with an equal statement written meanwhile re-reads and writes nothing more", () =>
       Effect.gen(function* () {
         const fake = fakeLambdaPolicy();
-        fake.writtenAfterNextGetPolicy.push(accessStatement());
+        fake.racingWrites.push(accessStatement());
         yield* reconcile(fake);
         expect(fake.calls).toStrictEqual([
           "GetPolicy",
@@ -313,7 +312,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
     it.effect("an add that conflicts with a differing statement written meanwhile re-reads, removes and adds", () =>
       Effect.gen(function* () {
         const fake = fakeLambdaPolicy();
-        fake.writtenAfterNextGetPolicy.push({ ...accessStatement(), Action: "lambda:InvokeFunction" });
+        fake.racingWrites.push({ ...accessStatement(), Action: "lambda:InvokeFunction" });
         yield* reconcile(fake);
         expect(fake.calls).toStrictEqual([
           "GetPolicy",
@@ -432,24 +431,25 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
       expect(functionPolicyStatements('{"Statement":"x"}')).toBeUndefined();
     });
 
-    it.effect(
-      "is what this copy's own public function URL path runs, so a patch regenerated without that hunk fails here",
-      () =>
-        Effect.gen(function* () {
-          const source = yield* copyTextViaViteRawImport(copy);
-          const body = pipe(
-            source,
-            Str.split("const upsertPublicFunctionUrlPermissions = Effect.fn("),
-            A.get(1),
-            O.map(Str.split("const deleteFunctionUrl = ")),
-            O.flatMap(A.head),
-            O.getOrElse(() => "")
-          );
-          expect(Str.includes("yield* reconcileFunctionUrlPermissions({")(body)).toBe(true);
-          expect(Str.includes("declared: publicFunctionUrlPermissions")(body)).toBe(true);
-          expect(Str.includes("removePermission")(body)).toBe(false);
-          expect(Str.includes("yield* upsertPublicFunctionUrlPermissions(functionName, qualifier)")(source)).toBe(true);
-        })
+    it.effect("is what this copy of the provider runs for a public function URL", () =>
+      Effect.gen(function* () {
+        const source = yield* copyTextViaViteRawImport(copy);
+        const body = pipe(
+          source,
+          Str.split("const upsertPublicFunctionUrlPermissions = Effect.fn("),
+          A.get(1),
+          O.map(Str.split("const deleteFunctionUrl = ")),
+          O.flatMap(A.head),
+          O.getOrElse(() => "")
+        );
+        expect(
+          Str.includes("yield* reconcileFunctionUrlPermissions({")(body),
+          "a patch regenerated without this hunk keeps every reconcile test above green"
+        ).toBe(true);
+        expect(Str.includes("declared: publicFunctionUrlPermissions")(body)).toBe(true);
+        expect(Str.includes("removePermission")(body)).toBe(false);
+        expect(Str.includes("yield* upsertPublicFunctionUrlPermissions(functionName, qualifier)")(source)).toBe(true);
+      })
     );
   });
 });

@@ -155,7 +155,8 @@ export type ProjectGitRepository = typeof ProjectGitRepository.Type;
  * project's identity: changing either replaces the project, because the
  * project API has no call that moves a project between teams or relinks
  * its repository. Names are unique within a team, so a replacement that
- * keeps its team and name deletes the old project first.
+ * keeps its team and name deletes the old project first, and reads that
+ * previous generation as owned.
  *
  * **Example** (Next.js project props)
  *

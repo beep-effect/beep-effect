@@ -96,10 +96,10 @@ const parseHead = (head: string) => {
 
 interface FramedBody {
   readonly body: Uint8Array;
-  readonly bufferBytesConsumed: number;
+  readonly consumed: number;
 }
 
-const chunkSizeLineAt = (bytes: Uint8Array, offset: number) => {
+const chunkHeader = (bytes: Uint8Array, offset: number) => {
   const window = latin1.decode(bytes.subarray(offset, offset + 64));
   return O.map(Str.indexOf("\r\n")(window), (lineEnd) => ({
     size: Number.parseInt(Str.split(";")(Str.slice(0, lineEnd)(window))[0] ?? "", 16),
@@ -107,64 +107,42 @@ const chunkSizeLineAt = (bytes: Uint8Array, offset: number) => {
   }));
 };
 
-const trailerSectionEnd = (bytes: Uint8Array, offset: number): O.Option<number> => {
+const trailerEnd = (bytes: Uint8Array, offset: number): O.Option<number> => {
   const rest = latin1.decode(bytes.subarray(offset));
   return Str.startsWith("\r\n")(rest) ? O.some(offset + 2) : O.map(Str.indexOf(crlf2)(rest), (end) => offset + end + 4);
 };
 
-const dechunkWhenComplete = (
-  bytes: Uint8Array,
-  offset = 0,
-  parts: ReadonlyArray<Uint8Array> = []
-): O.Option<FramedBody> =>
-  O.flatMap(chunkSizeLineAt(bytes, offset), ({ size, data }) => {
+const dechunk = (bytes: Uint8Array, offset = 0, parts: ReadonlyArray<Uint8Array> = []): O.Option<FramedBody> =>
+  O.flatMap(chunkHeader(bytes, offset), ({ size, data }) => {
     if (size === 0) {
-      return O.map(trailerSectionEnd(bytes, data), (bufferBytesConsumed) => ({
-        body: joinParts(parts),
-        bufferBytesConsumed,
-      }));
+      return O.map(trailerEnd(bytes, data), (consumed) => ({ body: joinParts(parts), consumed }));
     }
     const end = data + size;
-    return bytes.byteLength < end + 2
-      ? O.none()
-      : dechunkWhenComplete(bytes, end + 2, A.append(parts, bytes.subarray(data, end)));
+    return bytes.byteLength < end + 2 ? O.none() : dechunk(bytes, end + 2, A.append(parts, bytes.subarray(data, end)));
   });
 
-const contentLengthBodyWhenComplete = (
-  bytes: Uint8Array,
-  headers: Readonly<Record<string, string>>
-): O.Option<FramedBody> => {
+const fixedBody = (bytes: Uint8Array, headers: Readonly<Record<string, string>>): O.Option<FramedBody> => {
   const size = O.match(R.get(headers, "content-length"), {
     onNone: () => 0,
     onSome: (value) => Number.parseInt(value, 10),
   });
-  return bytes.byteLength < size ? O.none() : O.some({ body: bytes.slice(0, size), bufferBytesConsumed: size });
+  return bytes.byteLength < size ? O.none() : O.some({ body: bytes.slice(0, size), consumed: size });
 };
 
 const isChunked = (headers: Readonly<Record<string, string>>) => R.has(headers, "transfer-encoding");
 
-const isRejectedWith501LikeS3 = (method: string, headers: Readonly<Record<string, string>>) =>
+const isS3Rejected = (method: string, headers: Readonly<Record<string, string>>) =>
   isChunked(headers) || (method === "PUT" && !R.has(headers, "content-length"));
 
-const firstCompleteRequest = (pending: Uint8Array) =>
+const nextRequest = (pending: Uint8Array) =>
   O.flatMap(Str.indexOf(crlf2)(latin1.decode(pending.subarray(0, 65_536))), (headEnd) => {
     const head = latin1.decode(pending.subarray(0, headEnd));
     const { method, target, headers } = parseHead(head);
     const rest = pending.subarray(headEnd + 4);
-    return O.map(
-      isChunked(headers) ? dechunkWhenComplete(rest) : contentLengthBodyWhenComplete(rest, headers),
-      ({ body, bufferBytesConsumed }) => ({
-        request: {
-          head,
-          method,
-          target,
-          headers,
-          body,
-          rejected: isRejectedWith501LikeS3(method, headers),
-        } satisfies WireRequest,
-        remaining: rest.slice(bufferBytesConsumed),
-      })
-    );
+    return O.map(isChunked(headers) ? dechunk(rest) : fixedBody(rest, headers), ({ body, consumed }) => ({
+      request: { head, method, target, headers, body, rejected: isS3Rejected(method, headers) } satisfies WireRequest,
+      remaining: rest.slice(consumed),
+    }));
   });
 
 const queryOf = (target: string) => (Str.includes("?")(target) ? (Str.split("?")(target)[1] ?? "") : "");
@@ -245,7 +223,7 @@ export const makeWireS3 = Effect.fn("WireS3.make")(function* (options: WireS3Opt
     sockets.push(socket);
     let pending: Uint8Array = new Uint8Array(0);
     const drain = () => {
-      for (let next = firstCompleteRequest(pending); O.isSome(next); next = firstCompleteRequest(pending)) {
+      for (let next = nextRequest(pending); O.isSome(next); next = nextRequest(pending)) {
         const { request, remaining } = next.value;
         pending = remaining;
         requests.push(request);

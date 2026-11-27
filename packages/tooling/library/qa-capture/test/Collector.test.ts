@@ -287,7 +287,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const handlePath = path.join(tmpDir, "current.json");
 
-        const aliveForeignParentHandle = CollectorHandle.make({
+        const aliveForeign = CollectorHandle.make({
           eventsPath: path.join(tmpDir, "round-1", "events.ndjson"),
           pid: process.ppid,
           port: 43117,
@@ -296,9 +296,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           sessionId: "qa-live-foreign",
           startedAtEpochMs: 1753838000000,
         });
-        yield* Effect.flatMap(encodeCollectorHandleJson(aliveForeignParentHandle), (json) =>
-          fs.writeFileString(handlePath, json)
-        );
+        yield* Effect.flatMap(encodeCollectorHandleJson(aliveForeign), (json) => fs.writeFileString(handlePath, json));
 
         const error = yield* Effect.scoped(
           Effect.gen(function* () {
@@ -399,7 +397,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         });
         yield* Effect.flatMap(encodeCollectorHandleJson(stale), (json) => fs.writeFileString(handlePath, json));
 
-        const takeoverWhileStillOpen = CollectorHandle.make({
+        const successor = CollectorHandle.make({
           eventsPath: path.join(tmpDir, "round-3", "events.ndjson"),
           pid: process.pid,
           port: 43118,
@@ -426,9 +424,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
             const written = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
             expect(written.sessionId).toBe("qa-reclaimer");
 
-            yield* Effect.flatMap(encodeCollectorHandleJson(takeoverWhileStillOpen), (json) =>
-              fs.writeFileString(handlePath, json)
-            );
+            yield* Effect.flatMap(encodeCollectorHandleJson(successor), (json) => fs.writeFileString(handlePath, json));
           })
         );
 

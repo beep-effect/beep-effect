@@ -105,13 +105,11 @@ describe("handleTerminationEvent", () => {
     Effect.gen(function* () {
       const world = new World();
       const foreign = seed(world, { ...tags, "ghr:environment": "someone-else" });
-      const extendsPoolEnvironment = seed(world, { ...tags, "ghr:environment": "beep-ci-heavy2" });
+      const extended = seed(world, { ...tags, "ghr:environment": "beep-ci-heavy2" });
       const ownerless = seed(world, { "ghr:environment": "beep-ci-heavy" });
       const run = (instanceId: string) =>
         handleTerminationEvent({ config, event: warning(instanceId) }).pipe(Effect.provideContext(worldContext(world)));
-      const outcomes = yield* Effect.forEach([foreign, extendsPoolEnvironment, ownerless, "i-unknown"], run, {
-        concurrency: 1,
-      });
+      const outcomes = yield* Effect.forEach([foreign, extended, ownerless, "i-unknown"], run, { concurrency: 1 });
       expect(
         outcomes,
         "exact match only: an environment extending the pool environment is another fleet's"

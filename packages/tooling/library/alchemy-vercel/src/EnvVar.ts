@@ -389,7 +389,10 @@ const EnvVarClass = Resource<EnvVar>("Vercel.EnvVar");
  * and Preview variables as `sensitive` whatever is requested); only a weaker
  * one is removed and created again. A missing `valueFrom` config key, or a
  * `value`/`valueFrom` mix-up, fails the plan before this variable or any
- * sibling resource is written or deleted.
+ * sibling resource is written or deleted. A storage-type change on the same
+ * project and key deletes the old variable first, since the two would
+ * collide; a renamed key or another project creates the new one first. A
+ * delete-first replacement reads its own previous generation as owned.
  *
  * **Example** (Sensitive production variable read at deploy time)
  *

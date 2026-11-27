@@ -643,6 +643,12 @@ export class GrokReasoningEffort extends S.Opaque<GrokReasoningEffort, { readonl
 ) {}
 
 /**
+ * **Gotchas**
+ *
+ * Every optional field also decodes an explicit `null`: the Grok cache writes
+ * `"description": null` on every live entry, where the Codex cache omits the
+ * field instead.
+ *
  * **Example** (Read a cached Grok model)
  *
  * ```ts

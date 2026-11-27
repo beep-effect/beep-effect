@@ -365,7 +365,7 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
     const runnerTags = { "ghr:Application": "github-action-runner", "ghr:Owner": "beep-effect", "ghr:Type": "Org" };
     const heavyRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-heavy" });
     const overflowRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-overflow" });
-    const sweepReadsLiveAtFirstTerminate = [
+    const sweepReadsAtTerminate = [
       "SSM.Parameter:Runners/AppId",
       "SSM.Parameter:Runners/AppKey",
       "KMS.Key:Runners/SecretsKey",
@@ -377,10 +377,8 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
     };
     yield* destroy(stack);
     expect(world.terminated).toStrictEqual([...heavyRunners, ...overflowRunners]);
-    expect(A.map(deletedBeforeSweep, A.intersection(sweepReadsLiveAtFirstTerminate))).toStrictEqual([[], []]);
-    expect(A.intersection(recorder.deleted, sweepReadsLiveAtFirstTerminate)).toHaveLength(
-      sweepReadsLiveAtFirstTerminate.length
-    );
+    expect(A.map(deletedBeforeSweep, A.intersection(sweepReadsAtTerminate))).toStrictEqual([[], []]);
+    expect(A.intersection(recorder.deleted, sweepReadsAtTerminate)).toHaveLength(sweepReadsAtTerminate.length);
   })
 );
 

@@ -154,27 +154,23 @@ describe("oxlint rules", () => {
 
 describe("no-manual-effect-runtime-in-tests legacy baseline", () => {
   it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) =>
-    it.effect(
-      "matches each listed file's live violation count; a row above it would silently admit new violations",
-      () =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
-          for (const [repoPath, count] of MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE) {
-            const absolutePath = path.join(repoRoot, repoPath);
-            const exists = yield* fs.exists(absolutePath);
-            expect(exists, `${repoPath} is listed but missing`).toBe(true);
-            const source = yield* fs.readFileString(absolutePath);
-            const underBareBasenameNoRowMatches = path.basename(repoPath);
-            const findings = yield* runOxlintRule(
-              "no-manual-effect-runtime-in-tests",
-              source,
-              underBareBasenameNoRowMatches
-            );
-            expect(findings.length, `${repoPath} live count`).toBe(count);
-          }
-        })
+    it.effect("matches each listed file's live violation count", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* path.fromFileUrl(new URL("../../../../../", import.meta.url));
+        for (const [repoPath, count] of MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE) {
+          const absolutePath = path.join(repoRoot, repoPath);
+          const exists = yield* fs.exists(absolutePath);
+          expect(exists, `${repoPath} is listed but missing`).toBe(true);
+          const source = yield* fs.readFileString(absolutePath);
+          const findings = yield* runOxlintRule("no-manual-effect-runtime-in-tests", source, path.basename(repoPath));
+          expect(
+            findings.length,
+            `${repoPath} live count, linted under its bare basename where no row matches: a row above it admits new violations`
+          ).toBe(count);
+        }
+      })
     )
   );
 });

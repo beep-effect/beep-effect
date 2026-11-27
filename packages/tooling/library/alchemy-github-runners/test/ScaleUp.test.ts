@@ -460,7 +460,7 @@ const ssmRefusal = (message: string) =>
     message,
   });
 
-const sdkConflictThroughLiveMapper = toAwsApiError("ssm")("putParameter")(new ssm.ParameterAlreadyExists({}));
+const liveMappedConflict = toAwsApiError("ssm")("putParameter")(new ssm.ParameterAlreadyExists({}));
 
 const jobRetryUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry";
 const buildDlqUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-build-dlq";
@@ -524,10 +524,7 @@ describe("handleScaleUp configure failures", () => {
     const rows = A.map(
       ConfigureOperation.literals,
       (operation) =>
-        [
-          operation,
-          A.map([sdkConflictThroughLiveMapper, bareAwsConflict, githubConflict], classifyFailure(operation)),
-        ] as const
+        [operation, A.map([liveMappedConflict, bareAwsConflict, githubConflict], classifyFailure(operation))] as const
     );
     expect(rows).toStrictEqual([
       ["resolveRunnerGroup", ["deterministic", "deterministic", "deterministic"]],
@@ -544,7 +541,7 @@ describe("handleScaleUp configure failures", () => {
   it.effect("retries a token put that conflicts with its own lost response, after cleaning up what landed", () =>
     Effect.gen(function* () {
       const world = new World();
-      world.putFailures = [["/beep-ci/heavy/tokens/", sdkConflictThroughLiveMapper]];
+      world.putFailures = [["/beep-ci/heavy/tokens/", liveMappedConflict]];
       const { retry } = yield* runLogged(world, [queued({ id: 1 })]);
       expect([retry, world.terminated, world.deletedRunners]).toStrictEqual([[], ["i-0001"], [1001]]);
       expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([jobRetryUrl]);
@@ -555,7 +552,7 @@ describe("handleScaleUp configure failures", () => {
     Effect.gen(function* () {
       const world = new World();
       const token = "/beep-ci/heavy/tokens/i-0001";
-      world.landedPutFailures = [[token, sdkConflictThroughLiveMapper]];
+      world.landedPutFailures = [[token, liveMappedConflict]];
       yield* runLogged(world, [queued({ id: 1 })]);
       expect(
         world.cleanupCalls,
@@ -648,17 +645,14 @@ describe("handleScaleUp configure failures", () => {
     Effect.gen(function* () {
       const world = new World();
       const secret = "jit-beep-ci-i-0001";
-      const longTokenLikeRunNotAKnownSecret = Str.repeat(6)("jitconfig");
+      const longSecret = Str.repeat(6)("jitconfig");
       world.putFailures = [
-        [
-          "/beep-ci/heavy/tokens/",
-          ssmRefusal(`Value '${secret}' at 'value' failed; also ${longTokenLikeRunNotAKnownSecret}`),
-        ],
+        ["/beep-ci/heavy/tokens/", ssmRefusal(`Value '${secret}' at 'value' failed; also ${longSecret}`)],
       ];
       const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
       const rendered = yield* encodeLines(lines);
       expect(
-        [Str.includes(secret)(rendered), Str.includes(longTokenLikeRunNotAKnownSecret)(rendered)],
+        [Str.includes(secret)(rendered), Str.includes(longSecret)(rendered)],
         "the known value is masked, and the long token-like run is masked by its shape"
       ).toStrictEqual([false, false]);
       expect(Str.includes("Value '<redacted>' at 'value' failed; also <redacted>")(rendered)).toBe(true);

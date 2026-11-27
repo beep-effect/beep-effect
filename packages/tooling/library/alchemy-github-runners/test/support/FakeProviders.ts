@@ -48,8 +48,7 @@ export class Recorder {
   }
 }
 
-const runtimeLaunchTemplateResourceClass =
-  RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
+const launchTemplateResourceClass = RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
 
 const compositeArnAccountAndRegion = Layer.succeed(
   AWSEnvironment,
@@ -191,7 +190,7 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
       })) as never
     ),
     Provider.succeed(
-      runtimeLaunchTemplateResourceClass,
+      launchTemplateResourceClass,
       lifecycle(recorder, "BeepAWS.EC2.RunnerLaunchTemplate", (fqn, news) => ({
         launchTemplateId: `lt-${slug(fqn)}`,
         launchTemplateArn: arn("ec2", `launch-template/${fqn}`),

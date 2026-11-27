@@ -33,10 +33,7 @@ const RootCatalog = S.Struct({
 const decodeRootCatalog = flow(S.decodeResult(S.fromJsonString(RootCatalog)), Result.getOrThrow);
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
-const SharedNativePlatformLayer = Layer.mergeAll(
-  PlatformLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer))
-);
+const TestLayer = Layer.mergeAll(PlatformLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)));
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
@@ -158,7 +155,7 @@ const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
   );
 });
 
-it.layer(SharedNativePlatformLayer, { timeout: "10 seconds" })((it) => {
+it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
   describe("TypeScript compiler routing", () => {
     it.effect("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
       Effect.gen(function* () {
