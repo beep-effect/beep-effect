@@ -73,7 +73,7 @@ export class ReactContextInvariantError extends S.TaggedError<
   })
 ) {}
 
-type DeferredContextIdentity<Value> = Value extends unknown ? Value : never;
+type RequiredReactContext<Value> = Value extends unknown ? Value : never;
 
 /**
  * Require that a React context hook has been called under its provider.
@@ -92,8 +92,8 @@ type DeferredContextIdentity<Value> = Value extends unknown ? Value : never;
  * @since 0.0.0
  */
 export const requireReactContext: {
-  <Value>(context: Value | null, options: ReactContextInvariantOptions): DeferredContextIdentity<Value>;
-  (options: ReactContextInvariantOptions): <Value>(context: Value | null) => DeferredContextIdentity<Value>;
+  <Value>(context: Value | null, options: ReactContextInvariantOptions): RequiredReactContext<Value>;
+  (options: ReactContextInvariantOptions): <Value>(context: Value | null) => RequiredReactContext<Value>;
 } = dual(2, <Value>(context: Value | null, options: ReactContextInvariantOptions): Value => {
   if (context === null) {
     throw ReactContextInvariantError.make({ message: options.message });

@@ -55,7 +55,7 @@ const decodeHtmlCharacterReferences = (value: string): string =>
     return isValidCodePoint(codePoint) ? globalThis.String.fromCodePoint(codePoint) : match;
   });
 
-const decodeAsciiPercentEscapes = (value: string): string => {
+const decodePercentEscapesBytewise = (value: string): string => {
   let decoded = value;
 
   for (let pass = 0; pass < maxDecodePasses; pass++) {
@@ -87,6 +87,12 @@ const normalizeHrefProtocolCandidate: (value: string) => string = flow(
 /**
  * Sanitize anchor href export.
  *
+ * **Details**
+ *
+ * Protocol detection decodes percent escapes byte by byte rather than as UTF-8.
+ * The blocked scheme names are ASCII-only, so normalizing an obfuscated prefix
+ * is enough, and arbitrary UTF-8 payloads are never fully decoded.
+ *
  * **Example** (Import sanitizeAnchorHref)
  *
  * ```ts
@@ -100,8 +106,8 @@ const normalizeHrefProtocolCandidate: (value: string) => string = flow(
  */
 export const sanitizeAnchorHref = (href: string): string => {
   const decodedHtml = decodeHtmlCharacterReferences(href);
-  const decodedPercent = decodeAsciiPercentEscapes(href);
-  const decodedHtmlAndPercent = decodeAsciiPercentEscapes(decodedHtml);
+  const decodedPercent = decodePercentEscapesBytewise(href);
+  const decodedHtmlAndPercent = decodePercentEscapesBytewise(decodedHtml);
   const decodedPercentAndHtml = decodeHtmlCharacterReferences(decodedPercent);
   const candidates = [href, decodedHtml, decodedPercent, decodedHtmlAndPercent, decodedPercentAndHtml];
 

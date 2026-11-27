@@ -56,6 +56,18 @@ export const positionOf = (event: PointerEvent): PointerPosition =>
     top: event.clientY,
   });
 
+/**
+ * Reads a pointer event as a position relative to the dock root container.
+ *
+ * **Gotchas**
+ *
+ * Geometry boxes are relative to the container, so drop hit-testing must use
+ * this and not `positionOf`: raw client coordinates mis-target by the root's
+ * viewport offset.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const relativePositionOf: Dual2<AdapterState, PointerEvent, PointerPosition> = dual(
   2,
   (state: AdapterState, event: PointerEvent): PointerPosition => {
@@ -124,7 +136,7 @@ export const releaseCapture: Dual2<HTMLElement, number, void> = dual(2, (node: H
 export const preventNativeSelection = (event: PointerEvent): void => event.preventDefault();
 
 const DRAG_PROMOTION_RADIUS_PX = 5;
-const ROOT_EDGE_BAND_PX = 8;
+const THIN_ROOT_BAND_SPARES_GROUP_EDGES_PX = 8;
 export const exceedsDragThreshold: Dual2<PointerPosition, PointerPosition, boolean> = dual(
   2,
   (origin: PointerPosition, pointer: PointerPosition): boolean => {
@@ -252,11 +264,7 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
     const geometry = graph.registry.get(state.geometry.geometryAtom);
     const container = graph.registry.get(state.containerAtom);
     const point = drag.pointer;
-    // A thin strip: any wider and the root band shadows the bottom/right
-    // quadrant of every edge-adjacent group, so hovers aimed at a group's
-    // own edge compile to a container-spanning root split (QA finding: the
-    // bottom drop preview spanned both panels instead of the target group).
-    const outer = Math.min(ROOT_EDGE_BAND_PX, Math.min(container.width, container.height) / 6);
+    const outer = Math.min(THIN_ROOT_BAND_SPARES_GROUP_EDGES_PX, Math.min(container.width, container.height) / 6);
     const rootSide: O.Option<DockSide> = Match.value(point).pipe(
       Match.when(
         ({ left }) => left <= container.left + outer,

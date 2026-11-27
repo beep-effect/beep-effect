@@ -182,10 +182,6 @@ const DockviewRoot = (
  * Adapter state is cached by graph identity and geometry inputs so portal
  * hosts remain stable across React remounts and dock topology changes.
  *
- * Title minima start from a synchronous estimate (title characters plus tab
- * chrome) so sash clamps hold from the first paint; measured minima replace the
- * estimate per group once font capture lands.
- *
  * **Gotchas**
  *
  * The adapter writes geometry as `--dock-*` custom properties and leaves every

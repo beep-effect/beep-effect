@@ -78,6 +78,18 @@ export type AdapterState = {
 
 // decision: adapter-state-cache-identity
 const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
+/**
+ * Per-character width, in pixels, of the synchronous tab-strip minima estimate.
+ *
+ * **Details**
+ *
+ * The estimate (title characters plus tab and strip chrome) is conservative so
+ * sash clamps hold from the first paint. Measured title minima replace it per
+ * group as soon as font capture lands.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const ESTIMATED_CHAR_WIDTH = 7;
 const estimateMinima = (workspace: DockWorkspace, chrome: TabChrome): Readonly<Record<string, number>> => {
   const groups = [

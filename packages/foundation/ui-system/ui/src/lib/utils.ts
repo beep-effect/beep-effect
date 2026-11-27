@@ -18,6 +18,7 @@ import { clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 import type { ClassValue } from "clsx";
 
+// decision: register-theme-tokens-with-twmerge
 const twMerge = extendTailwindMerge({
   extend: {
     theme: {
@@ -89,14 +90,8 @@ const twMerge = extendTailwindMerge({
  *
  * **Gotchas**
  *
- * tailwind-merge knows only the scale names registered here. An unregistered `text-<name>`
- * reads as a text color, and an unregistered radius, shadow or leading name never conflicts
- * with its stock siblings. A theme stylesheet that declares a new `--text-*`, `--radius-*`,
- * `--shadow-*`, `--leading-*`, `--tracking-*`, `--font-*`, `--ease-*`, `--animate-*`,
- * `--spacing-*`, `--gap-*` or `--background-image-*` token, or an `@utility` whose name collides
- * with a stock group (`border-indicator` reads as a border color), must be registered in this
- * module's tailwind-merge config. `text-anchor-middle` is applied only through d3 attributes,
- * never through `cn`, so it stays unregistered.
+ * tailwind-merge knows only the scale names registered here: an unregistered `text-<name>`
+ * merges as a text color.
  *
  * **Example** (Custom font size survives a color class)
  *

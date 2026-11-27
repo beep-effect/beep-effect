@@ -333,7 +333,8 @@ const formatExactToken = (value: DateTime.DateTime, locale: string, formatString
  * **Gotchas**
  *
  * `getInvalidDate` returns a NaN-epoch `DateTime`, the invalid-date sentinel the MUI
- * adapter contract requires instead of `null`.
+ * adapter contract requires instead of `null`. It is built with
+ * `DateTime.fromEpochSeconds`, because `DateTime.makeUnsafe` rejects NaN.
  *
  * **Example** (Verify month index boundary)
  *

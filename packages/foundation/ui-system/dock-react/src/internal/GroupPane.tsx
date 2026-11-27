@@ -164,10 +164,13 @@ const Tab = (props: {
         O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
       event.preventDefault();
     };
-    const down = (event: PointerEvent): void => {
+    const clearConcludedBeforeButtonGuard = (): void => {
       if (O.exists(props.graph.registry.get(props.state.dragAtom), (drag) => drag.concluded)) {
         props.graph.registry.set(props.state.dragAtom, O.none());
       }
+    };
+    const down = (event: PointerEvent): void => {
+      clearConcludedBeforeButtonGuard();
       if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
       preventNativeSelection(event);
       node.focus({ preventScroll: true });

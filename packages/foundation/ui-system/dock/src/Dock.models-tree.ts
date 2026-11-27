@@ -526,6 +526,7 @@ export class TabsNode extends S.Opaque<TabsNode, { readonly brand: unique symbol
       const panels = TabsNode.panels(tabs);
       const index = O.getOrElse(placement.index, () => A.length(panels));
       const clampedIndex = N.clamp(index, { minimum: 0, maximum: A.length(panels) });
+      // decision: clamped-insert-until-total-insert
       const inserted = O.getOrThrow(A.insertAt(panels, clampedIndex, panel));
       const activePanelId = Bool.match(placement.activate, {
         onTrue: () => panel.id,
