@@ -94,7 +94,6 @@ it.effect("version parsing tolerates unmatched regexes and JSON primitives while
   })
 );
 
-/** What an explicit source requirement must select when the two copies disagree. */
 const EXPLICIT_SOURCE_EXPECTATIONS = {
   global: { version: "1.0.0", command: "tool", args: ["arg"] },
   local: { version: "2.0.0", command: "pnpm", args: ["exec", "tool", "arg"] },

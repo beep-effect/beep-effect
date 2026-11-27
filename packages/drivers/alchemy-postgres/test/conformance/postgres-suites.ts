@@ -18,7 +18,6 @@ import { consumers } from "./consumers.ts";
 import { conformance } from "./scenarios.ts";
 import type * as Layer from "effect/Layer";
 
-/** Encodes any JSON value to its JSON text, compiled once. */
 const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 /** Register both suites for the Postgres platform over `base`, its tables under `tablePrefix`. */
@@ -88,7 +87,6 @@ export const postgresSuites = <E>({
     scheduleStatus,
   });
 
-  /** Write an `Order` event at schema version 1 (before `amount` existed), as an older deploy stored it. */
   const legacyOrder = Effect.fn("test.legacyOrder")(function* (model: string, id: string, json: unknown) {
     const sql = yield* SqlClient.SqlClient;
     const event = yield* encodeJsonText(json);
@@ -106,17 +104,11 @@ export const postgresSuites = <E>({
       VALUES (${model}, 'Order', ${id}, 1, 'OrderPlaced', ${event}::jsonb, ${envelope}::jsonb, 1, 'legacy', '{}'::jsonb, 0)`;
   }, Effect.orDie);
 
+  const pageSplittingBackfill = BackfillTuning.makeOption({ page: 2, nodePage: 2, apply: 2, leafSize: 1, depth: 1 });
   consumers({
     name,
     base,
-    // Catch-up in pages of two over 16 leaves that split at one instance, so a short history
-    // spans several reader pages, directory listings and node splits.
-    platform: AlchemyPostgresPlatform.layer(
-      AlchemyPostgresConfig.make({
-        ...config,
-        backfill: BackfillTuning.makeOption({ page: 2, nodePage: 2, apply: 2, leafSize: 1, depth: 1 }),
-      })
-    ),
+    platform: AlchemyPostgresPlatform.layer(AlchemyPostgresConfig.make({ ...config, backfill: pageSplittingBackfill })),
     legacyOrder,
     durable: true,
   });

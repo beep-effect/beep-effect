@@ -23,7 +23,6 @@ import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
   <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) =>
   <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
@@ -31,7 +30,6 @@ const withLayer =
       Effect.flatMap(Layer.buildWithScope(layer, scope), (context) => Effect.provideContext(program, context))
     );
 
-/** A local context: `pnpm exec <tool>` in /repo. */
 const pnpmLocal = LocalExec.layerContext(
   ExecContext.make({
     label: "pnpm",
@@ -42,10 +40,6 @@ const pnpmLocal = LocalExec.layerContext(
   })
 );
 
-/**
- * Scripts a world where the global tool and the pnpm-local tool answer
- * independently. `undefined` means "absent" (the spawn fails).
- */
 const world =
   (options: { readonly global?: string | undefined; readonly local?: string | undefined }) =>
   (command: string, _args: ReadonlyArray<string>): ScriptResult.Encoded => {
@@ -55,7 +49,6 @@ const world =
     return options.global === undefined ? ScriptedSpawner.notFound(command) : { stdout: options.global, exit: 0 };
   };
 
-/** Runs `program` against a scripted world plus a LocalExec layer. */
 const run = <A, E>(
   program: Effect.Effect<A, E, ToolDiscovery>,
   script: (command: string, args: ReadonlyArray<string>) => ScriptResult.Encoded,
@@ -246,11 +239,13 @@ describe("ToolDiscovery.resolve — version extraction", () => {
   );
 
   it.effect("a non-zero exit still proves the tool EXISTS", () =>
-    // `tool --version` exiting non-zero means the tool ran. Absence is a
-    // spawn failure, never an exit code.
     Effect.gen(function* () {
       const resolved = yield* run(resolve(Tool.named("weird")), () => ({ stderr: "usage", exit: 1 })).effect;
-      assert.instanceOf(resolved, ResolvedTool);
+      assert.instanceOf(
+        resolved,
+        ResolvedTool,
+        "a non-zero --version exit means the tool ran; absence is a spawn failure"
+      );
     })
   );
 });
@@ -361,10 +356,6 @@ describe("ToolDiscovery — caching", () => {
   );
 
   it.effect("the cache stores EVIDENCE, so a second Tool with different constraints is answered correctly", () =>
-    // v3 keyed the cache by tool name and stored the resolved answer, so a
-    // second definition with different constraints silently inherited the
-    // first one's policy decision. Evidence is cached; policy is applied per
-    // call.
     Effect.gen(function* () {
       const harness = run(
         Effect.gen(function* () {
@@ -377,17 +368,16 @@ describe("ToolDiscovery — caching", () => {
       );
       const { lenient, strict } = yield* harness.effect;
       assert.strictEqual(lenient.source, "local");
-      assert.instanceOf(strict, ToolNotFoundError);
+      assert.instanceOf(
+        strict,
+        ToolNotFoundError,
+        "policy is applied per call, so the stricter Tool does not inherit the lenient one's answer"
+      );
       assert.lengthOf(harness.spawner.spawns, 2, "the second resolve reuses the cached evidence");
     })
   );
 
   it.effect("ABSENCE is not memoized — a tool installed mid-process is found", () =>
-    // "Not found" is a *successful* lookup carrying negative evidence, so a
-    // naive success-TTL memoizes it and the tool stays absent for the process
-    // lifetime. An action that provisions a runtime and then uses it is the
-    // case that breaks. A tool that exists does not stop existing; a tool
-    // that does not exist very often starts to.
     Effect.gen(function* () {
       let alive = false;
       const harness = run(
@@ -402,7 +392,11 @@ describe("ToolDiscovery — caching", () => {
       );
       const { first, second } = yield* harness.effect;
       assert.instanceOf(first, ToolNotFoundError);
-      assert.instanceOf(second, ResolvedTool);
+      assert.instanceOf(
+        second,
+        ResolvedTool,
+        "not found is a successful lookup with negative evidence; memoized, a tool provisioned mid-process stays absent"
+      );
     })
   );
 });

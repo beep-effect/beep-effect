@@ -86,7 +86,9 @@ export const backupSyncTables = Effect.fn($I`backupSyncTables`)(function* (impor
  * Call only while all writers and workers are stopped and before new commands have
  * been admitted. Post-admission reversal requires a new current-state backup and
  * event high-water reconciliation; restoring this snapshot would lose accepted work.
- * The preserved backup remains available for diagnosis after restoration.
+ * The preserved backup remains available for diagnosis after restoration. Rows are
+ * cleared with DELETE, so each table keeps its contract, indexes, constraints and
+ * dependent readers.
  *
  * **Example** (Reverse an offline import)
  * ```ts
@@ -112,7 +114,6 @@ export const restoreSyncTables = Effect.fn($I`restoreSyncTables`)(function* (imp
       if (state[0].phase === "restored") return;
       yield* markSyncCutoverWriter;
       for (const entity of entities) yield* sql`LOCK TABLE ${sql(`documents_sync_${entity}`)} IN ACCESS EXCLUSIVE MODE`;
-      // DELETE retains the table contract, indexes, constraints, and dependent readers.
       for (const entity of ["conflict", "operation", "cursor", "item"])
         yield* sql`DELETE FROM ${sql(`documents_sync_${entity}`)}`;
       for (const entity of entities) {

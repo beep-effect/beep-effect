@@ -31,10 +31,7 @@ import * as S from "effect/Schema";
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../drizzle", import.meta.url));
 
-// The drizzle folder now contains `CREATE EXTENSION btree_gist`, which the
-// shared external pglite-socket lane cannot load. Migration proofs are
-// extension-dependent, so they are pinned to the in-process driver with the
-// bundled extension registered rather than gate-selected.
+// decision: migration-proofs-run-in-process
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
@@ -155,15 +152,10 @@ if (!shouldRunPgliteIntegration) {
             db.insert(DocumentsDbSchema.syncOperation).values(duplicateInsert)
           );
 
-          // The duplicate probe stays LAST: the migration property under test
-          // is the unique index rejecting the duplicate (asserted via the
-          // violation naming it). What happens to sibling rows afterwards is
-          // driver transaction semantics — implicit-transaction pglite hosts
-          // roll the whole session chain back — so no statement may follow the
-          // intentional failure.
-          expect(NodeUtil.inspect(uniqueViolation, { depth: 10 })).toContain(
-            "documents_sync_operation_idempotency_key_unique_idx"
-          );
+          expect(
+            NodeUtil.inspect(uniqueViolation, { depth: 10 }),
+            "the unique index names the duplicate; the duplicate probe runs last: PGlite rolls the session back after an intentional failure"
+          ).toContain("documents_sync_operation_idempotency_key_unique_idx");
         }),
         120_000
       );

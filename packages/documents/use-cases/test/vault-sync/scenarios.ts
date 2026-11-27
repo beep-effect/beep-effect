@@ -307,9 +307,11 @@ export const scenarios = <E>({
                   reason: "uploadFile",
                 })
               );
-              // Read each state right after its own failure, well before the 750 ms retry deadline fires.
               const failed = yield* ops.get(opId(n));
-              expect(failed).toMatchObject({ status: expected[n] });
+              expect(
+                failed,
+                "each state is read right after its own failure, before the 750 ms retry deadline fires"
+              ).toMatchObject({ status: expected[n] });
             }
             yield* eventually(ops.get(opId("retry")), (s) => s?.status === "queued");
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
@@ -574,7 +576,6 @@ export const scenarios = <E>({
           const receipt = yield* names.send(old, V.ClaimDestinationName.make({ claim }));
           const handler = yield* DestinationNames;
           const ref = V.DestinationNameReservation.ref(old);
-          // At-least-once replay must finish the rejected rename and retain the current name's claim.
           yield* handler({
             key: ref,
             source: ref,
@@ -591,7 +592,10 @@ export const scenarios = <E>({
             },
           });
           const retained = yield* names.get(old);
-          expect(retained).not.toBe(null);
+          expect(
+            retained,
+            "at-least-once replay finishes the rejected rename and retains the current name's claim"
+          ).not.toBe(null);
         })
       );
       it.effect("connection recovery with an empty operation queue is an idempotent no-op", () =>
@@ -700,15 +704,19 @@ export const scenarios = <E>({
               correlationId: "lease-replay",
             };
             yield* ops.send(id, V.CompleteOperation.make({ holder: "worker", attempt: event.attempt }));
-            // A late timer is already irrelevant after success. Execute its real command id,
-            // then redeliver the original lease event through the policy.
             const expired = yield* ops.send(id, V.ExpireLease.make({ attempt: event.attempt }), {
               commandId: `${receipt.stream}:${receipt.version}:deadline`,
             });
-            expect(expired.events).toEqual([]);
+            expect(expired.events, "a late timer is already irrelevant after success").toEqual([]);
             yield* deadline({ key: ref, source: ref, route: undefined, event, state: undefined, envelope });
             const state = yield* ops.get(id);
-            expect(state).toMatchObject({ status: "succeeded", attempts: 1 });
+            expect(
+              state,
+              "redelivering the original lease event after its real-id timer leaves the success intact"
+            ).toMatchObject({
+              status: "succeeded",
+              attempts: 1,
+            });
             yield* failures({
               key: ref,
               source: ref,
@@ -730,7 +738,6 @@ export const scenarios = <E>({
           const held = opId("owner");
           yield* items.send(owner, V.ObserveItem.make({ observation: observe("owner") }));
           yield* eventually(ops.get(held), (s) => s !== null);
-          // A replayed observation names an operation another item owns: QueueOperation refuses it permanently.
           yield* items.send(
             intruder,
             V.ObserveItem.make({ observation: { ...observe("intruder"), operationId: held } })
@@ -744,12 +751,20 @@ export const scenarios = <E>({
           );
           yield* eventually(items.get(intruder), (s) => s?.observation.generation === 2 && s.status === "error");
           const failed = yield* items.get(intruder);
-          expect(failed?.slots.pipe(H.get("uploadFile"))).toEqual(O.some(held));
-          // Healing the intruder queues a fresh operation and leaves the owner's operation alone.
+          expect(
+            failed?.slots.pipe(H.get("uploadFile")),
+            "QueueOperation permanently refuses a replayed observation naming an operation another item owns"
+          ).toEqual(O.some(held));
           yield* items.send(intruder, V.ReturnItemToPending.make({ operationId: opId("intruderheal") }));
           yield* eventually(ops.get(opId("intruderheal")), (s) => s?.status === "queued");
           const owned = yield* ops.get(held);
-          expect(owned).toMatchObject({ status: "queued", input: { itemId: owner, generation: 1 } });
+          expect(
+            owned,
+            "healing the intruder queues a fresh operation and leaves the owner's operation alone"
+          ).toMatchObject({
+            status: "queued",
+            input: { itemId: owner, generation: 1 },
+          });
         })
       );
       it.effect("a correction refused by its operation keeps the conflict open for another review", () =>
@@ -790,11 +805,16 @@ export const scenarios = <E>({
               })
             );
           yield* review(held);
-          // The second review only applies if the refused first one left the conflict open.
           yield* review(opId("refusedfresh"));
           yield* eventually(conflicts.get(id), (s) => s?.reviewed === true);
           const fresh = yield* ops.get(opId("refusedfresh"));
-          expect(fresh).toMatchObject({ status: "queued", input: { itemId: itemId("refusedreview") } });
+          expect(
+            fresh,
+            "the second review applies only because the refused first one left the conflict open"
+          ).toMatchObject({
+            status: "queued",
+            input: { itemId: itemId("refusedreview") },
+          });
           const untouched = yield* ops.get(held);
           expect(untouched).toMatchObject({ status: "queued", input: { itemId: itemId("refusedheld") } });
         })

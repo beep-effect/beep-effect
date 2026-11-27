@@ -57,6 +57,8 @@ const unavailable =
 
 const notFound = (id: Agents.ProviderInstanceId) => ProviderInstanceNotFound.make({ providerInstanceId: id });
 
+const firstRowVersionWithoutSqlDefault = RowVersion.make(1);
+
 const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFromCommand")(function* (
   publicId: Domain.ProviderInstance["publicId"],
   command: AddProviderInstanceCommand,
@@ -82,13 +84,17 @@ const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFro
     updatedByPrincipal: scope.principal,
   }).pipe(unavailable("construct ProviderInstance"));
   const encoded = yield* encodeProviderInstanceInsert(insert).pipe(unavailable("encode ProviderInstance"));
-  // Write the first version explicitly: `agents_provider_instance` is not under a
-  // db-admin migration, so an existing table may lack the kit's `DEFAULT 1`.
-  return { ...encoded, rowVersion: RowVersion.make(1) } satisfies ProviderInstanceInsert;
+  return { ...encoded, rowVersion: firstRowVersionWithoutSqlDefault } satisfies ProviderInstanceInsert;
 });
 
 /**
  *  Build the Drizzle-backed ProviderInstance repository.
+ *
+ * **Gotchas**
+ *
+ * A guarded save that matches no row reports a missing row and a row owned by
+ * another organization identically; a row another write advanced is a
+ * conflict.
  *
  * **Example** (Import repository factory)
  *
@@ -107,8 +113,6 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
   const inScope = (id: Agents.ProviderInstanceId) =>
     and(eq(providerInstanceTable.id, id), eq(providerInstanceTable.orgId, scope.orgId));
 
-  // A guarded save matched no row: the row is gone (or belongs to another
-  // organization, which must look the same), or another write advanced it.
   const rejectSave = Effect.fn("Agents.ProviderInstanceRepository.rejectSave")(function* (
     instance: Domain.ProviderInstance
   ) {

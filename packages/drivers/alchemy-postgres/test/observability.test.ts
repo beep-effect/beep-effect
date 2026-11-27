@@ -52,7 +52,6 @@ class Probe extends Domain.Aggregate("Probe", {
   evolve: { ProbeOpened: (_state, event) => ({ _tag: "Open" as const, note: event.note }) },
 }) {}
 
-/** Reaction runs by probe id; the first run for a `fail-*` probe dies with secret text. */
 const reactions = MutableHashMap.empty<string, number>();
 const reactionsOf = (id: string) => O.getOrElse(MutableHashMap.get(reactions, id), () => 0);
 const secretDefect = "secret defect text for /vault/client/matter.md";
@@ -68,7 +67,6 @@ const ProbeWatchLive = ProbeWatch.toLayer(
 );
 class Observed extends Domain.Model("Observed", { aggregates: [Probe], policies: [ProbeWatch] }) {}
 
-/** Every span the tracer started, in start order. */
 const spans: Array<Tracer.NativeSpan> = [];
 const tracer = Tracer.make({
   span: (options) => {
@@ -83,7 +81,6 @@ interface LoggedLine {
   readonly causeEmpty: boolean;
   readonly text: string;
 }
-/** Every line the driver logged, with its annotations. */
 const lines: Array<LoggedLine> = [];
 const recorder = Logger.make(({ cause, fiber, message }) => {
   const text = A.join(A.map(A.ensure(message), String), " ");
@@ -109,7 +106,6 @@ const parentIdOf = (span: Tracer.NativeSpan) =>
     O.map((parent) => parent.spanId),
     O.getOrNull
   );
-/** Wait until `done` holds, polling every 20 ms for up to 15 seconds. */
 const eventually = (done: () => boolean) =>
   Effect.sync(done).pipe(
     Effect.repeat({ until: P.isTruthy, schedule: Schedule.spaced(Duration.millis(20)) }),
@@ -157,7 +153,7 @@ describe("AlchemyPostgres observability", () => {
           [TargetKindAttribute]: "policy",
           [TargetNameAttribute]: "ProbeWatch",
         });
-        // The stored trace is the span current at commit: a descendant of the request.
+
         const byId = R.fromEntries(A.map(spans, (span) => [span.spanId, span] as const));
         const ancestors = (span: Tracer.NativeSpan): ReadonlyArray<string> =>
           O.match(
@@ -167,12 +163,19 @@ describe("AlchemyPostgres observability", () => {
               onSome: (parent) => [parent.spanId, ...ancestors(parent)],
             }
           );
-        strictEqual(A.contains(ancestors(deliver), request.spanId), true);
-        // Its direct parent is the kernel's decide span, whose trace the commit stored.
+        strictEqual(
+          A.contains(ancestors(deliver), request.spanId),
+          true,
+          "the stored trace is the span current at commit: a descendant of the request"
+        );
         const parent = yield* Effect.fromOption(
           O.flatMap(O.fromNullishOr(parentIdOf(deliver)), (parentId) => R.get(byId, parentId))
         );
-        strictEqual(parent.name, "Domain.decide Probe.OpenProbe");
+        strictEqual(
+          parent.name,
+          "Domain.decide Probe.OpenProbe",
+          "the direct parent is the kernel's decide span, whose trace the commit stored"
+        );
       })
     );
 

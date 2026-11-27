@@ -11,7 +11,6 @@ import * as Layer from "effect/Layer";
 import { makePracticeIdentifyCommand } from "@/PracticeIdentify.command";
 import { IdentificationStages, IdentificationStagesShape } from "@/PracticeIdentify.config";
 
-// The command environment the CLI needs, over an in-memory volume: no case reads a file.
 const CommandEnvironment = Layer.provideMerge(
   NodeChildProcessSpawner.layer,
   Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeStdio.layer, NodeTerminal.layer)

@@ -188,7 +188,6 @@ export class RunJournal extends S.Opaque<RunJournal, { readonly brand: unique sy
   )
 ) {}
 
-/** Technical failure codes; no private contact value is a failure message. */
 const ContactsFailureReason = LiteralKit([
   "input",
   "state",
@@ -200,7 +199,11 @@ const ContactsFailureReason = LiteralKit([
   "missing-version",
   "confirmation",
   "folder-ambiguous",
-]).pipe($I.annoteSchema("ContactsFailureReason", { description: "Sanitized contact job failure reasons." }));
+]).pipe(
+  $I.annoteSchema("ContactsFailureReason", {
+    description: "Sanitized contact job failure reasons: technical codes only, never a private contact value.",
+  })
+);
 /** Sanitized job failure.
  * **Example** (Construct a stopped run)
  * ```ts

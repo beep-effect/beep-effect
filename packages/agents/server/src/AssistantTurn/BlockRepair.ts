@@ -479,10 +479,6 @@ class PatchSummarization extends S.Opaque<PatchSummarization, { readonly brand: 
   static readonly decodeEffect = S.decodeEffect(PatchSummarization);
 }
 
-// Summarize a JSON patch into non-sensitive structural metadata: the operation
-// count and, per operation, the op kind plus a redacted/truncated JSON Pointer.
-// The `value` field of add/replace operations carries repaired assistant content
-// and is intentionally never logged.
 const summarizePatch = Effect.fn("agents.assistant_turn.summarize_patch")(function* (
   patch: JsonPatch.JsonPatch
 ): Effect.fn.Return<PatchSummarization, BlockRepairFailed> {

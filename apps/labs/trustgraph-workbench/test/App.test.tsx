@@ -29,10 +29,10 @@ describe("@beep/trustgraph-workbench", () => {
       }
     });
 
-    // Vite serves small assets as data URIs and larger ones by hashed path; both are valid icon hrefs.
-    expect(document.head.querySelector('link[rel="icon"][type="image/svg+xml"]')?.getAttribute("href")).toMatch(
-      /favicon\.svg$|^data:image\/svg\+xml/
-    );
+    expect(
+      document.head.querySelector('link[rel="icon"][type="image/svg+xml"]')?.getAttribute("href"),
+      "Vite inlines small assets as data URIs and serves larger ones by hashed path"
+    ).toMatch(/favicon\.svg$|^data:image\/svg\+xml/);
     expect(document.head.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe(
       beep.dark.brand["900"]
     );

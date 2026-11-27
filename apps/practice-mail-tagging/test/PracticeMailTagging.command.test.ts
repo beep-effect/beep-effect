@@ -41,7 +41,6 @@ const decodeStateSummary = S.decodeUnknownEffect(S.fromJsonString(MailTaggingSta
 
 const isPassOutput = S.is(MailTaggingPassOutput<number>());
 
-// The JSON line of the most recent command; the table follows it.
 const lastJsonLine = Effect.map(outputLines, (lines) => O.getOrElse(A.findLast(lines, Str.startsWith("{")), () => ""));
 
 const lastRunReport = Effect.flatMap(lastJsonLine, decodeRunReport);

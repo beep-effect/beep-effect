@@ -105,7 +105,6 @@ export class LaneRow extends S.Opaque<LaneRow, { readonly brand: unique symbol }
   }).pipe($I.annoteSchema("LaneRow", { description: "The newest non-done ledger row for one checkout." }))
 ) {}
 
-// The envelope keeps rows unknown so each one decodes, or fails, on its own.
 const ReportEnvelope = S.Struct({
   schemaVersion: S.tag("session-open/v1"),
   repository: LaneRepository,

@@ -113,8 +113,6 @@ export const VaultSyncMirrorRootLayer = Layer.effect(
   )
 );
 
-// Genesis sends carry their import principal in this request context, and Session-gated sends carry
-// the v1 request context (D17 F8); the driver stamps whichever is present on each event row.
 const platformConfig = AlchemyPostgresConfig.make({
   provenance: ProvenanceMapping.makeOption({
     contextKey: V.GenesisProvenance.key,
@@ -137,11 +135,9 @@ const ModelHost = VaultSyncPassModel.layer(
   Layer.provide(Layer.mergeAll(LegacySyncAuditLive, BoxMirrorNoEvidenceLive, VaultSyncRootFromWorkspaceLive)),
   Layer.provide(AlchemyPostgres.layer(platformConfig)),
   Layer.provide(SecureRandom.layerWebCrypto),
-  // A store whose event tables cannot be created is not a recoverable sync state.
   Layer.orDie
 );
 
-// Genesis and admission run once, after the host is built and before any consumer gets the Model.
 const Admission = Layer.effectDiscard(
   Effect.gen(function* () {
     const root = yield* VaultSyncMirrorRoot;
@@ -166,7 +162,11 @@ const Admission = Layer.effectDiscard(
  * provides the Model's aggregates and Views plus `LegacySyncReadModel`. The
  * layer finishes building only after genesis and admission succeed (a no-op
  * on an admitted store); a refusal fails the layer with its typed error so
- * the host can serve vault sync in maintenance instead. Requires the DMS
+ * the host can serve vault sync in maintenance instead. A store whose event
+ * tables cannot be created dies the layer instead: that is not a recoverable
+ * sync state. Each event row is stamped with the provenance of the request
+ * context its send carries: the import principal for genesis sends, the v1
+ * request context for Session-gated sends. Requires the DMS
  * mirror with its availability probe, `SqlClient`, `PostgresDrizzle`,
  * `VaultSyncOwnership`, `VaultSyncMirrorRoot`, `VaultSyncWorkspaceRoots`, and
  * platform filesystem and path.

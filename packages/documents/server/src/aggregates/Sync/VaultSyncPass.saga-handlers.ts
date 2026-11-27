@@ -100,14 +100,12 @@ const pumpable = (operation: V.OperationRecord, key: string) =>
   operation.status === "queued" ||
   operation.status === "succeeded" ||
   (operation.status === "leased" && operation.holder === key);
-// Only create operations may run before the item has a remote id.
 const remoteGateOpen = (input: V.OperationInput, item: V.ItemRecord) =>
   input.type === "ensureFolder" || input.type === "uploadFile" || item.remoteId !== null;
 const echoTokenIndex = (tokens: ReadonlyArray<typeof Echo.Type>, event: RemoteEvent) =>
   O.flatMap(S.is(DmsEventType)(event.kind) ? echoClassForEvent(event.kind) : O.none(), (kind) =>
     A.findFirstIndex(tokens, (echo) => echo.remoteId === event.remoteId && echo.kind === kind)
   );
-// Matching non-edit remote state is a duplicate echo of this pass's own push.
 const duplicateEcho = (echoes: ReadonlyArray<typeof Echo.Type>, event: RemoteEvent, rootId: V.RemoteItemId | null) => {
   const parent = event.parentRemoteId === rootId ? null : event.parentRemoteId;
   return (
@@ -118,8 +116,6 @@ const duplicateEcho = (echoes: ReadonlyArray<typeof Echo.Type>, event: RemoteEve
     )
   );
 };
-// One static span inside each activity: the activity's own span is named by its durable,
-// partly hashed name, which the catalog cannot list.
 const passStep =
   (step: VaultSyncPassStep, attributes: Readonly<Record<string, string>> = {}) =>
   <A, E, R>(execute: Effect.Effect<A, E, R>) =>
@@ -153,6 +149,12 @@ export const VaultSyncCheckpoint = Context.Reference<(phase: string) => Effect.E
  * Every command uses a deterministic receipt id. Each Box acknowledgement is
  * committed on the item before operation success. Receipt storage closes the
  * Box-response/activity-result crash window without blind remote retries.
+ * A pass resuming over its own lapsed lease expires it first, so the next
+ * lease takes a new epoch. A page's cursor advances only after every
+ * classification command for that page is durable. Each activity runs its
+ * work in one static `VaultSyncPass.step` span, because the activity's own
+ * span carries its durable, partly hashed name, which the span catalog
+ * cannot list.
  *
  * **Example** (Inspect hosting layer)
  * ```ts
@@ -205,8 +207,8 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer(
         O.liftPredicate(state, (s): s is Registered => s._tag === "Registered" && !s.paused)
       );
       const probe = Effect.fnUntraced(function* (destination: Registered) {
-        // Genesis keeps the legacy mirror root folder name apart from the destination name.
-        const root = yield* mirror.resolveRoot({ destinationId, name: destination.remoteRootName ?? destination.name });
+        const mirrorRootName = destination.remoteRootName ?? destination.name;
+        const root = yield* mirror.resolveRoot({ destinationId, name: mirrorRootName });
         yield* destinations.send(
           destinationId,
           V.ResolveDestinationRoot.make({ rootId: root.remoteId }),
@@ -270,9 +272,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer(
         }
         return planned;
       });
-      // The `ItemOperations` policy creates the operation from the item's event. After a host crash that
-      // delivery can stay leased to the dead host until the driver lease lapses (30 seconds by default), so
-      // the wait must outlast it, or a resumed pass dies before the policy runs.
+      // decision: pass-outlasts-policy-delivery-lease
       const awaitOperation = (operationId: V.OperationId) =>
         operations
           .get(operationId)
@@ -281,7 +281,6 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer(
             Effect.timeout("2 minutes"),
             Effect.orDie
           );
-      // An expired lease held by this pass is expired so the next lease takes a new epoch.
       const recoverLease = Effect.fnUntraced(function* (operationId: V.OperationId, operation: V.OperationRecord) {
         const now = yield* Clock.currentTimeMillis;
         if (operation.status !== "leased" || operation.holder !== key || operation.expiresAt > now) return operation;
@@ -334,7 +333,6 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer(
           }),
           options(`failure/${operationId}`)
         );
-      // The item acknowledgement commits before operation success.
       const acknowledge = Effect.fnUntraced(function* (
         itemId: V.ItemId,
         operationId: V.OperationId,
@@ -452,7 +450,6 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer(
         if (tracked !== null)
           yield* items.send(tracked, V.FlagItemDrift.make({}), options(`drift/${event.remoteEventId}`));
       });
-      // Returns the remaining echo tokens and whether the event recorded a conflict.
       const classify = Effect.fnUntraced(function* (
         destination: Registered,
         event: RemoteEvent,
@@ -475,7 +472,6 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer(
           V.RecordDestinationPoll.make({ position: null, error: failure.operation }),
           options(`poll-failed/${pageIndex}`)
         );
-      // Every classification command is durable before advancing this page.
       const advanceCursor = (pageIndex: number, page: Page) =>
         destinations.send(
           destinationId,

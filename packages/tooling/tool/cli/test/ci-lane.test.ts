@@ -2023,7 +2023,7 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toBeUndefined();
   });
 
-  it("runs only the home path law, the changeset checks and the skills lock on a documentation-only diff", () => {
+  it("runs only the home path law, the changeset checks, the repo-wide scans and the skills lock on a documentation-only diff", () => {
     // --docs-only wins over --changeset-status: the documentation path always validates changesets.
     const steps = ciLaneStepsForTesting(
       REPO_ROOT,
@@ -2034,12 +2034,14 @@ describe("ciLaneStepsForTesting", () => {
       "lint:private-home-paths",
       "ci:repo-sanity:changeset-graph",
       "ci:repo-sanity:changeset-status",
+      "ci:repo-sanity:repo-scans",
       "ci:repo-sanity:skills-lock",
     ]);
     expect(A.map(steps, (step) => [...step.args])).toEqual([
       ["run", "beep", "laws", "private-home-paths", "--check"],
       ["run", "beep", "quality", "changeset-graph"],
       ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
+      ["run", "--cwd", "packages/tooling/tool/cli", "vitest", "run", "--config", "vitest.repo-scans.config.ts"],
       // A SKILL.md edit is a documentation diff, so the lock check sits on this path too.
       // Offline: a hosted required step never calls the unauthenticated GitHub API.
       ["run", "beep", "skills", "update", "--check", "--offline"],
@@ -2116,7 +2118,7 @@ describe("ciLaneStepsForTesting", () => {
     expect([...lastOf(steps).args]).toEqual(["run", "beep", "knowledge", "doctor", "ci", "--base", "origin/release"]);
   });
 
-  it("always checks workflow policy, the schema catalog, catalog usage, the census compiler stamp, home paths, coverage owners and shadcn lint and appends changeset status on request", () => {
+  it("always checks workflow policy, the schema catalog, catalog usage, the census compiler stamp, home paths, coverage owners, shadcn lint and the repo-wide scans and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
       "ci:repo-sanity:workflow-lint",
@@ -2128,6 +2130,7 @@ describe("ciLaneStepsForTesting", () => {
       "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
+      "ci:repo-sanity:repo-scans",
       "ci:repo-sanity:skills-lock",
     ]);
     expect(firstOf(withoutFlag)).toMatchObject({
@@ -2178,6 +2181,7 @@ describe("ciLaneStepsForTesting", () => {
       "lint:coverage-owners",
       "ci:repo-sanity",
       "ci:repo-sanity:shadcn",
+      "ci:repo-sanity:repo-scans",
       "ci:repo-sanity:changeset-status",
       "ci:repo-sanity:skills-lock",
     ]);

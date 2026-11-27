@@ -337,8 +337,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
 
   const roots = yield* Effect.forEach(policy.roots, realRoot, { concurrency: 1 });
 
-  // Segment-wise containment: a sibling such as `/staging-evil` is not under `/staging`.
-  const isUnderRoot =
+  const isSegmentWiseUnderRoot =
     (real: string) =>
     (root: string): boolean => {
       const relative = path.relative(root, real);
@@ -357,7 +356,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
     const real = yield* fs
       .realPath(candidate)
       .pipe(Effect.mapError(() => refusal("unreadable", `Attachment does not exist or cannot be read: ${candidate}`)));
-    if (!A.some(roots, isUnderRoot(real))) {
+    if (!A.some(roots, isSegmentWiseUnderRoot(real))) {
       return yield* refuse("outside-roots", `Attachment is outside the configured attachment roots: ${candidate}`);
     }
     const info = yield* fs
@@ -383,7 +382,6 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
     const content = yield* fs
       .readFile(located.real)
       .pipe(Effect.mapError(() => refusal("unreadable", `Attachment cannot be read: ${located.candidate}`)));
-    // The file may have changed between the size check and the read.
     if (content.byteLength === 0 || content.byteLength > policy.maxAttachmentBytes) {
       return yield* refuse("too-large", `Attachment changed size while it was read: ${located.candidate}`);
     }
