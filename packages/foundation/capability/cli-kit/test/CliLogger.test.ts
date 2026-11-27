@@ -10,18 +10,6 @@ import * as Logger from "effect/Logger";
 import * as References from "effect/References";
 import type * as Fiber from "effect/Fiber";
 
-/**
- * A `Console` that keeps the two streams apart.
- *
- * @remarks
- * The whole point of reading the `Console` off the fiber is that this is
- * possible at all: a `process.stdout` write is untestable without stubbing a
- * global inside a runner that is itself writing to those streams, which is
- * exactly why nobody notices when the split regresses.
- *
- * `Object.create(console)` inherits the members neither the logger nor these
- * assertions touch, so the double stays a `Console` without restating one.
- */
 const capturing = (): { readonly console: Console.Console; readonly out: string[]; readonly err: string[] } => {
   const out: string[] = [];
   const err: string[] = [];
@@ -42,7 +30,7 @@ const capture = (
     return { out, err };
   });
 
-describe("CliLogger", () => {
+describe("CliLogger, through the fiber's Console: a double keeps stdout and stderr apart", () => {
   it.effect("dispatches data-first constructors and the required-action curried constructor", () =>
     Effect.gen(function* () {
       const acceptsEmptyCurriedArgs: [] extends Parameters<typeof makeCliLogger> ? true : false = false;
@@ -108,10 +96,12 @@ describe("CliLogger", () => {
         { stderrFrom: "Error" }
       );
 
-      // The discriminating mutant for this logger is "route everything to
-      // stdout". Warn is the boundary that catches it: it must NOT be stderr.
       assert.deepStrictEqual(err, ["error", "fatal"]);
-      assert.deepStrictEqual(out, ["debug", "info", "warn"]);
+      assert.deepStrictEqual(
+        out,
+        ["debug", "info", "warn"],
+        "Warn is the boundary that catches a route-everything mutant"
+      );
     })
   );
 
@@ -159,10 +149,6 @@ describe("CliLogger", () => {
 
   it.effect("honours LogToStderr by forcing everything to stderr", () =>
     Effect.gen(function* () {
-      // stderrFrom: "Error" so that, without the force, "progress" (Info)
-      // would land on stdout — the force is what has to move it to stderr.
-      // Under the default "All" this would already route Info to stderr on
-      // its own, making the LogToStderr force untested.
       const { out, err } = yield* capture(
         Effect.gen(function* () {
           yield* Effect.log("progress");
@@ -171,9 +157,12 @@ describe("CliLogger", () => {
         { stderrFrom: "Error" }
       );
 
-      assert.deepStrictEqual(err, ["progress", "broke"]);
-      // It forces one direction only: it must never move an error onto stdout.
-      assert.deepStrictEqual(out, []);
+      assert.deepStrictEqual(
+        err,
+        ["progress", "broke"],
+        "under stderrFrom Error only the force moves Info to stderr; the default All would leave the force untested"
+      );
+      assert.deepStrictEqual(out, [], "the force moves one direction only: never an error onto stdout");
     })
   );
 

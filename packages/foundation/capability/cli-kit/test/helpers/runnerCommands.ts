@@ -17,10 +17,7 @@ import * as Str from "effect/String";
 /** The runner's line breaks. */
 export const LINE_BREAK = /\r\n|\r|\n/;
 
-/**
- * .NET's `Char.IsWhiteSpace`, which is what `TrimStart` removes. Note U+0085 is in it and U+200B and U+FEFF are not.
- */
-const isDotNetWhitespace = (ch: string): boolean => {
+const isDotNetTrimStartWhitespace = (ch: string): boolean => {
   const code = O.getOrElse(Str.codePointAt(ch, 0), () => 0);
   return (
     (code >= 0x09 && code <= 0x0d) ||
@@ -32,7 +29,7 @@ const isDotNetWhitespace = (ch: string): boolean => {
 /** Would the runner read this one line as a command, by either parser. */
 export const isCommand = (line: string): boolean => {
   let i = 0;
-  while (i < line.length && isDotNetWhitespace(Str.slice(i, i + 1)(line))) i++;
+  while (i < line.length && isDotNetTrimStartWhitespace(Str.slice(i, i + 1)(line))) i++;
   return pipe(line, Str.slice(i), Str.startsWith("::")) || Str.includes("##[")(line);
 };
 

@@ -1,5 +1,5 @@
 import * as SqlEventJournal from "@beep/duckdb/DuckDbEventJournal";
-/** Vendored from effect@4.0.6 (MIT, Effectful Technologies Inc.). */
+// Ported from effect@4.0.6 (MIT, Effectful Technologies Inc.).
 // beep: public leaf imports, repo test runner, native storage and Effect helpers satisfy repo laws.
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
@@ -15,8 +15,7 @@ import type * as SqlClient from "effect/sql/SqlClient";
 
 let nextNamespace = 0;
 
-// beep: DuckDB has one serialized writer and no server lock catalog. A fiber yield
-// lets the competing operation attempt the client permit; it must remain pending.
+// beep: DuckDB has one serialized writer and no server lock catalog.
 export const suite: {
   <E>(layer: Layer.Layer<SqlClient.SqlClient, E>): (name: string) => void;
   <E>(name: string, layer: Layer.Layer<SqlClient.SqlClient, E>): void;
@@ -24,9 +23,6 @@ export const suite: {
   it.layer(Layer.merge(Reactivity.layer, layer), { timeout: "60 seconds", excludeTestServices: true })(
     `SqlEventJournal shared by processes (${name})`,
     (it) => {
-      // Process B's local write stays open in its callback while process A
-      // imports a newer entry. If A commits first, B then commits an entry that
-      // sorts before one committed ahead of it, and B's callback never saw it.
       it.effect("an import waits for a local write in flight on another connection", () =>
         Effect.gen(function* () {
           const namespace = `shared_${++nextNamespace}`;
@@ -62,16 +58,17 @@ export const suite: {
             .pipe(Effect.forkChild);
 
           yield* Effect.yieldNow;
-          const waited = importA.pollUnsafe() === undefined;
+          const pendingAfterYield = importA.pollUnsafe() === undefined;
           yield* Deferred.succeed(release, undefined);
           yield* Fiber.join(writeB);
           yield* Fiber.join(importA);
 
-          assert.isTrue(waited, "the import committed while an older local write was in flight");
+          assert.isTrue(pendingAfterYield, "the import committed while an older local write was in flight");
           const entries1 = yield* journalA.entries;
           assert.deepStrictEqual(
             A.map(entries1, (entry) => entry.idString),
-            [local.idString, newer.idString]
+            [local.idString, newer.idString],
+            "had A committed first, B's older entry would sort before one committed ahead, unseen by B's callback"
           );
         })
       );

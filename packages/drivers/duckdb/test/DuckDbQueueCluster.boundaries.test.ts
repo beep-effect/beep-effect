@@ -18,9 +18,9 @@ import * as Scope from "effect/Scope";
 import * as SqlClient from "effect/sql/SqlClient";
 import type * as MessageStorage from "effect/cluster/MessageStorage";
 
-const layer = Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, ShardingConfig.layerDefaults);
-it.layer(layer, { timeout: "30 seconds" })((it) => {
-  it.effect("queue preserves a BIGINT sequence and epoch-millis timestamps", () =>
+const databasePerBlock = Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, ShardingConfig.layerDefaults);
+it.layer(databasePerBlock, { timeout: "30 seconds" })((it) => {
+  it.effect("queue preserves a BIGINT sequence and epoch-millis timestamps under a non-UTC session TimeZone", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* sql`SET TimeZone = 'America/New_York'`;
@@ -35,7 +35,6 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
       assert.strictEqual(rows[0]?.sequence, 4294967296);
       assert.isAtLeast(rows[0]?.created ?? 0, before);
       assert.isAbove(rows[0]?.created ?? 0, 2147483647);
-      // Closing the take scope with a success marks the element completed; the assertion below reads that state.
       const takeScope = yield* Scope.make();
       const taken = yield* store
         .take({ name: "wide", maxAttempts: 1, retryDelay: () => Effect.succeed(Duration.zero) })
@@ -43,13 +42,16 @@ it.layer(layer, { timeout: "30 seconds" })((it) => {
       yield* Scope.close(takeScope, Exit.void);
       assert.strictEqual(taken.element, "payload");
       const value1 = yield* sql`SELECT state FROM wide_queue`;
-      assert.deepStrictEqual(value1, [{ state: "completed" }]);
+      assert.deepStrictEqual(
+        value1,
+        [{ state: "completed" }],
+        "closing the take scope with success completed the element"
+      );
     })
   );
 });
 
-// The queue case changes the session TimeZone, so the lease cases below get their own database.
-it.layer(layer, { timeout: "30 seconds" })((it) => {
+it.layer(databasePerBlock, { timeout: "30 seconds" })((it) => {
   const request = (
     requestId: string
   ): MessageStorage.Encoded["saveEnvelope"] extends (options: infer T) => unknown ? T : never => ({

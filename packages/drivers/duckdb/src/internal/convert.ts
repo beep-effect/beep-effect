@@ -35,7 +35,6 @@ type TypeConverter = (value: DuckDBValue, type: DuckDBType, self: DuckDBValueCon
 
 type TypeConverters = { readonly [K in DuckDBTypeId]?: TypeConverter | undefined };
 
-/** Widest DECIMAL that converts to a JS `number` without losing digits (D5). */
 const MAX_EXACT_DECIMAL_WIDTH = 15;
 
 const delegate: TypeConverter = (value, type, self) => JSDuckDBValueConverter(value, type, self);
@@ -60,21 +59,8 @@ const MICROS_PER_MILLI = BigInt(1000);
 
 const NANOS_PER_MILLI = BigInt(1000000);
 
-/** Rounds toward negative infinity to a multiple of `unit` (BigInt `/` truncates toward zero). */
 const flooredTo = (raw: bigint, unit: bigint): bigint => raw - (((raw % unit) + unit) % unit);
 
-/**
- * Reads a DATE/TIMESTAMP value as a JS `Date`, or as a string when it is a
- * DuckDB infinity sentinel or outside the JS `Date` range (D30).
- *
- * The sentinels are checked first because only the TIMESTAMP and TIMESTAMPTZ
- * `toString` know them, and ±infinity TIMESTAMP_NS is inside the `Date` range.
- * `toMillisFloor` replaces the value with one whose sub-millisecond part is
- * floored, because the upstream reader truncates toward zero and would move a
- * pre-epoch instant forward across the second, day and year boundary.
- * `render` prints an out-of-range value; it defaults to the value's own
- * `toString`.
- */
 const temporal =
   <V extends DuckDBValue, N extends bigint | number>(
     isValue: (value: DuckDBValue) => value is V,
@@ -97,8 +83,6 @@ const temporal =
         () => render(temporalValue)
       );
     };
-    // Each converter is registered for its own type id, so `isValue` only
-    // narrows the value; the delegate arm is defensive.
     return isValue(value) ? read(value) : delegate(value, type, self);
   };
 
@@ -116,13 +100,6 @@ const timestamp = temporal(
   (value) => new DuckDBTimestampValue(flooredTo(value.micros, MICROS_PER_MILLI))
 );
 
-/**
- * Prints a TIMESTAMPTZ instant in UTC (R2-DF-3).
- *
- * `DuckDBTimestampTZValue.toString` applies the host UTC offset that the
- * upstream class captures once at module load, so the same row would read as
- * a different string under a different process `TZ`.
- */
 const utcTimestampTzString = (value: DuckDBTimestampTZValue): string =>
   `${String(new DuckDBTimestampValue(value.micros))}+00`;
 
@@ -214,6 +191,20 @@ const safeIntegerConverter = makeConverter(sharedConverters);
  * DuckDB's `infinity`/`-infinity` as those strings, and values outside the JS
  * `Date` range as their string form (TIMESTAMPTZ in UTC, `+00`, whatever the
  * process time zone).
+ *
+ * **Gotchas**
+ *
+ * - DuckDB's infinity sentinels are compared before any conversion: only the
+ *   TIMESTAMP and TIMESTAMPTZ `toString` know them, and ±infinity
+ *   TIMESTAMP_NS falls inside the `Date` range.
+ * - Sub-millisecond parts are floored toward negative infinity with a
+ *   remainder formula, since BigInt `/` truncates toward zero. The upstream
+ *   reader truncates too, which would move a pre-epoch instant forward across
+ *   a second, day or year boundary.
+ * - An out-of-range TIMESTAMPTZ is rendered in UTC by the driver because
+ *   `DuckDBTimestampTZValue.toString` applies the host UTC offset captured
+ *   once at module load, so the same row would read differently under
+ *   another process `TZ`.
  *
  * **Example** (Reading rows with the default converter)
  *

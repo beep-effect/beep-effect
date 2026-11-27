@@ -106,9 +106,14 @@ export class ArtifactRefNode extends DecoratorNode<JSX.Element> {
     return new ArtifactRefNode(node.__artifactId, node.__label, node.__key);
   }
 
-  // Lexical 0.46 widened the base `importJSON` parameter to
-  // `SerializedLexicalNode & Record<string, unknown>`; mirror the intersection so
-  // the narrowed (schema-pinned, interface-backed) wire shape stays bivariant.
+  /**
+   * Imports the schema-pinned wire payload through Lexical's base signature.
+   *
+   * **Gotchas**
+   *
+   * Lexical 0.46 widened `importJSON` to `SerializedLexicalNode & Record<string, unknown>`.
+   * The intersection keeps the narrower interface-backed wire payload bivariant.
+   */
   static override importJSON(serializedNode: SerializedArtifactRefNode & Record<string, unknown>): ArtifactRefNode {
     return O.match(decodeArtifactRefNode(serializedNode), {
       onNone: invalidArtifactRefNode,

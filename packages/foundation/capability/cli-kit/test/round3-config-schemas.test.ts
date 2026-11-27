@@ -75,8 +75,8 @@ describe("theme, env and message option schemas", () => {
       color: "256",
       theme: { glyphs: "auto" },
     });
-    // EF-40: every optional key rejects a present `undefined`.
-    for (const key of ["tty", "term", "audience", "columns", "color", "theme"]) {
+    const optionalKeysRejectingUndefined = ["tty", "term", "audience", "columns", "color", "theme"];
+    for (const key of optionalKeysRejectingUndefined) {
       rejects(CliEnvTestOptions, { [key]: undefined });
     }
     rejects(CliEnvTestOptions, { audience: "robot" });

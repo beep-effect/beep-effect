@@ -121,8 +121,6 @@ export class MermaidNode extends DecoratorBlockNode {
     return this.getLatest().__source;
   }
 
-  // The diagram's text content is its source: a copy of the message, or an export
-  // to plain text, still yields the diagram the author wrote.
   override getTextContent(): string {
     return this.__source;
   }

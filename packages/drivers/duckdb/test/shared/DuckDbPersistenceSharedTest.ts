@@ -24,7 +24,7 @@ export const suite: {
   // beep: shared TestClock adjustments must run sequentially under this repo's concurrent Vitest default.
   describe(`Persistence clock isolation (${name})`, { concurrent: false }, () =>
     it.layer(layer.pipe(Layer.provideMerge(Layer.fresh(DuckDbTestLayer))))(`Persistence (${name})`, (it) => {
-      it.effect("set + get", () =>
+      it.effect("set + get, then set the same key again as an upsert", () =>
         Effect.gen(function* () {
           const persistence = yield* Persistence.BackingPersistence;
           const store = yield* persistence.make("test_store");
@@ -32,7 +32,6 @@ export const suite: {
           const value = yield* store.get("key1");
           expect(value).toEqual({ name: "Alice" });
 
-          // test upsert
           yield* store.set("key1", { name: "Alice" }, undefined);
         })
       );
@@ -156,10 +155,11 @@ export const suite: {
           const store = yield* persistence.make("test_store_quotes");
           yield* store.set("it's-a-key", { name: "Alice" }, undefined);
 
-          // Keys must be bound as parameters, not
-          // interpolated into the `IN` list as raw string literals.
           const values = yield* store.getMany(["it's-a-key", "missing'key"]);
-          expect(values).toEqual([{ name: "Alice" }, undefined]);
+          expect(values, "keys are bound as parameters, not interpolated into the IN list as raw literals").toEqual([
+            { name: "Alice" },
+            undefined,
+          ]);
         })
       );
 
@@ -172,11 +172,11 @@ export const suite: {
           const attacker = yield* persistence.make("sqli_attacker");
           yield* attacker.set("innocent", { name: "Mallory" }, undefined);
 
-          // The probe is a no-op key when keys are parameterized. If keys are
-          // interpolated into raw SQL it escapes the `IN` list and exfiltrates
-          // the victim store's `secret` entry into the attacker's results.
           const values = yield* attacker.getMany(["secret", options.injectionProbe]);
-          expect(values).toEqual([undefined, undefined]);
+          expect(
+            values,
+            "the probe is a no-op key when parameterized; interpolated, it escapes the IN list and leaks the victim's secret"
+          ).toEqual([undefined, undefined]);
           const got8 = yield* attacker.get("secret");
           expect(got8).toEqual(undefined);
         })
