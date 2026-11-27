@@ -21,9 +21,7 @@ import { $createParagraphNode, $createTextNode, $getRoot } from "lexical";
 
 const decodeUnknownSerializedEditorState = S.decodeUnknownEffect(SerializedEditorState);
 
-// The five inline marks under test. Bit values come from the schema package's
-// TextFormatBits (the wire vocabulary's source of truth), never hand-rolled.
-const MARKS = [
+const SCHEMA_MARKS = [
   { name: "bold", bit: TextFormatBits.bold },
   { name: "italic", bit: TextFormatBits.italic },
   { name: "underline", bit: TextFormatBits.underline },
@@ -31,10 +29,8 @@ const MARKS = [
   { name: "code", bit: TextFormatBits.code },
 ] as const;
 
-// The full 32-element power set of MARKS: index bit i selects MARKS[i], so the
-// enumeration is exhaustive and each case is uniquely labeled for failure output.
-const MARK_COMBOS = A.makeBy(32, (index) => {
-  const active = A.filter(MARKS, (_, i) => (index & (1 << i)) !== 0);
+const MARK_POWER_SET = A.makeBy(32, (index) => {
+  const active = A.filter(SCHEMA_MARKS, (_, i) => (index & (1 << i)) !== 0);
   return {
     label: A.match(active, {
       onEmpty: () => "none",
@@ -50,80 +46,91 @@ const MARK_COMBOS = A.makeBy(32, (index) => {
 
 const CONTENT = "Sample";
 
-// One formatted text leaf per case: setFormat takes the exact bitmask so the
-// case's marks land verbatim on the node Lexical actually serializes.
-const makeText = (mask: TextFormatMask) => $createTextNode(CONTENT).setFormat(mask);
+const makeFormattedLeaf = (mask: TextFormatMask) => $createTextNode(CONTENT).setFormat(mask);
 
 type NodeContext = {
   readonly key: string;
-  // Runs inside editor.update, appending the case's subtree onto the root.
-  readonly build: (mask: TextFormatMask) => void;
+  readonly appendInUpdate: (mask: TextFormatMask) => void;
 };
 
-// Each context wraps the formatted text leaf in a different block/inline
-// container, exercising the mark set in every node position of the wire union.
-const CONTEXTS: ReadonlyArray<NodeContext> = [
-  { key: "paragraph", build: (mask) => void $getRoot().append($createParagraphNode().append(makeText(mask))) },
-  { key: "heading-h1", build: (mask) => void $getRoot().append($createHeadingNode("h1").append(makeText(mask))) },
-  { key: "heading-h2", build: (mask) => void $getRoot().append($createHeadingNode("h2").append(makeText(mask))) },
-  { key: "heading-h3", build: (mask) => void $getRoot().append($createHeadingNode("h3").append(makeText(mask))) },
-  { key: "quote", build: (mask) => void $getRoot().append($createQuoteNode().append(makeText(mask))) },
+const NODE_CONTEXTS: ReadonlyArray<NodeContext> = [
+  {
+    key: "paragraph",
+    appendInUpdate: (mask) => void $getRoot().append($createParagraphNode().append(makeFormattedLeaf(mask))),
+  },
+  {
+    key: "heading-h1",
+    appendInUpdate: (mask) => void $getRoot().append($createHeadingNode("h1").append(makeFormattedLeaf(mask))),
+  },
+  {
+    key: "heading-h2",
+    appendInUpdate: (mask) => void $getRoot().append($createHeadingNode("h2").append(makeFormattedLeaf(mask))),
+  },
+  {
+    key: "heading-h3",
+    appendInUpdate: (mask) => void $getRoot().append($createHeadingNode("h3").append(makeFormattedLeaf(mask))),
+  },
+  {
+    key: "quote",
+    appendInUpdate: (mask) => void $getRoot().append($createQuoteNode().append(makeFormattedLeaf(mask))),
+  },
   {
     key: "list-bullet",
-    build: (mask) =>
-      void $getRoot().append($createListNode("bullet").append($createListItemNode().append(makeText(mask)))),
+    appendInUpdate: (mask) =>
+      void $getRoot().append($createListNode("bullet").append($createListItemNode().append(makeFormattedLeaf(mask)))),
   },
   {
     key: "list-number",
-    build: (mask) =>
-      void $getRoot().append($createListNode("number").append($createListItemNode().append(makeText(mask)))),
+    appendInUpdate: (mask) =>
+      void $getRoot().append($createListNode("number").append($createListItemNode().append(makeFormattedLeaf(mask)))),
   },
   {
     key: "list-check",
-    build: (mask) =>
-      void $getRoot().append($createListNode("check").append($createListItemNode(true).append(makeText(mask)))),
+    appendInUpdate: (mask) =>
+      void $getRoot().append(
+        $createListNode("check").append($createListItemNode(true).append(makeFormattedLeaf(mask)))
+      ),
   },
-  { key: "code", build: (mask) => void $getRoot().append($createCodeNode().append(makeText(mask))) },
+  { key: "code", appendInUpdate: (mask) => void $getRoot().append($createCodeNode().append(makeFormattedLeaf(mask))) },
   {
     key: "link",
-    build: (mask) =>
+    appendInUpdate: (mask) =>
       void $getRoot().append(
-        $createParagraphNode().append($createLinkNode("https://example.com").append(makeText(mask)))
+        $createParagraphNode().append($createLinkNode("https://example.com").append(makeFormattedLeaf(mask)))
       ),
   },
   {
     key: "table",
-    build: (mask) =>
+    appendInUpdate: (mask) =>
       void $getRoot().append(
         $createTableNode().append(
           $createTableRowNode().append(
-            $createTableCellNode(TableCellHeaderStates.NO_STATUS).append($createParagraphNode().append(makeText(mask)))
+            $createTableCellNode(TableCellHeaderStates.NO_STATUS).append(
+              $createParagraphNode().append(makeFormattedLeaf(mask))
+            )
           )
         )
       ),
   },
 ];
 
-// Depth-first collection of every text leaf's format bitmask, mirroring the
-// codec's LexicalNode.match walkers. Each case has exactly one text leaf, so
-// the result pins down both "the text survived" and "its mask is intact".
-const collectTextFormats: (node: LexicalNode) => ReadonlyArray<number> = LexicalNode.match({
+const collectLeafFormatsDepthFirst: (node: LexicalNode) => ReadonlyArray<number> = LexicalNode.match({
   text: (node) => [node.format],
   tab: () => [],
   linebreak: () => [],
   "artifact-ref": () => [],
   youtube: () => [],
-  root: (node) => A.flatMap(node.children, collectTextFormats),
-  paragraph: (node) => A.flatMap(node.children, collectTextFormats),
-  heading: (node) => A.flatMap(node.children, collectTextFormats),
-  quote: (node) => A.flatMap(node.children, collectTextFormats),
-  list: (node) => A.flatMap(node.children, collectTextFormats),
-  listitem: (node) => A.flatMap(node.children, collectTextFormats),
-  link: (node) => A.flatMap(node.children, collectTextFormats),
-  code: (node) => A.flatMap(node.children, collectTextFormats),
-  table: (node) => A.flatMap(node.children, collectTextFormats),
-  tablerow: (node) => A.flatMap(node.children, collectTextFormats),
-  tablecell: (node) => A.flatMap(node.children, collectTextFormats),
+  root: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  paragraph: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  heading: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  quote: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  list: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  listitem: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  link: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  code: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  table: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  tablerow: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
+  tablecell: (node) => A.flatMap(node.children, collectLeafFormatsDepthFirst),
 });
 
 const newEditor = () =>
@@ -136,30 +143,28 @@ const newEditor = () =>
   });
 
 describe("@beep/editor style × node matrix", () => {
-  for (const context of CONTEXTS) {
+  for (const context of NODE_CONTEXTS) {
     describe(context.key, () => {
-      for (const combo of MARK_COMBOS) {
-        it.effect(`marks: ${combo.label}`, () =>
+      for (const combo of MARK_POWER_SET) {
+        it.effect(`preserves ${combo.label} through schema decoding and Lexical round trips`, () =>
           Effect.gen(function* () {
             const editor = newEditor();
-            editor.update(() => context.build(combo.mask), { discrete: true });
+            editor.update(() => context.appendInUpdate(combo.mask), { discrete: true });
             const wire = editor.getEditorState().toJSON();
 
-            // (1) The built state decodes through the @beep/lexical-schema wire
-            // vocabulary — the same decode editor-nodes.test.ts asserts against.
             const decoded = yield* decodeUnknownSerializedEditorState(wire);
 
-            // The text leaf's format bitmask carries this case's exact mark set
-            // (no context silently drops or rewrites the marks). If a context
-            // ever normalized marks away, this fails loudly with the combo label
-            // rather than skipping the case.
-            expect(collectTextFormats(decoded.root)).toEqual([combo.mask]);
+            expect(
+              collectLeafFormatsDepthFirst(decoded.root),
+              "Every context must retain exactly one text leaf with the case's exact schema mark mask."
+            ).toEqual([combo.mask]);
 
-            // (2) export → import → export is a fixed point, so the node
-            // structure and every text format bitmask survive the round-trip.
             const reimported = newEditor();
             reimported.setEditorState(reimported.parseEditorState(wire));
-            expect(reimported.getEditorState().toJSON()).toEqual(wire);
+            expect(
+              reimported.getEditorState().toJSON(),
+              "Lexical export/import/export must preserve the node structure and every text format bitmask."
+            ).toEqual(wire);
           })
         );
       }

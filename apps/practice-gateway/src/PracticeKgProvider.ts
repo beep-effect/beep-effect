@@ -75,8 +75,7 @@ export interface PracticeKgModuleLoaderShape {
   readonly load: Effect.Effect<PracticeKgModules, ProviderUnavailable>;
 }
 
-// The modules pull in the DuckDB native binding and PGlite at evaluation time,
-// so they are imported dynamically, never from the gateway's static graph.
+// decision: lazy-native-provider-loading
 const importPracticeKgModules = (): Promise<PracticeKgModules> =>
   Promise.all([
     import("@beep/law-practice-server/PracticeKgHost"),

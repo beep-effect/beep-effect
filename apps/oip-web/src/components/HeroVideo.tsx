@@ -18,10 +18,6 @@ import Image from "next/image";
 
 const $I = $OipWebId.create("components/HeroVideo");
 
-/**
- * Optional Network Information API surface used to skip the video on
- * data-saver or very slow connections.
- */
 type SaveDataNavigator = Navigator & {
   readonly connection?: {
     readonly saveData?: boolean;
@@ -200,11 +196,6 @@ const rotationSetKey = (clips: ReadonlyArray<S.Struct.Type<typeof HeroClipMedia.
 
 const heroRotationIndexAtom = Atom.family((_key: string) => Atom.make(0));
 
-/**
- * Mount-effect atom that advances the active clip on a fixed interval when more
- * than one clip is present and motion is allowed. It is a no-op for a single clip
- * or when {@link shouldSkipHeroVideo} holds (reduced motion / save-data / 2g).
- */
 const heroRotationDriverAtom = Atom.family((key: string) =>
   Atom.make((get) => {
     if (typeof window === "undefined" || shouldSkipHeroVideo()) {
@@ -222,18 +213,11 @@ const heroRotationDriverAtom = Atom.family((key: string) =>
     }, HERO_ROTATE_MS);
 
     get.addFinalizer(() => {
-      // Coverage/v8 disposes the atom registry after jsdom tears down `window`.
       globalThis.clearInterval(timer);
     });
   })
 );
 
-/**
- * A single hero clip layer. When `active`, the muted, looping background video is
- * mounted and its idle autoplay is scheduled; otherwise only the poster renders so
- * the crossfade between clips has something to fade. Poster/video opacity mirrors
- * the original single-clip behavior for the active clip.
- */
 function HeroClipLayer({
   active,
   index,
@@ -312,6 +296,10 @@ function HeroClipLayer({
  * users who prefer reduced motion or are on data-saver / 2g connections. When more
  * than one clip is supplied the clips crossfade on a fixed interval
  * ({@link HERO_ROTATE_MS}); a single clip renders exactly as before and never rotates.
+ *
+ * **Gotchas**
+ *
+ * Coverage teardown may dispose the atom registry after jsdom tears down window; clear the rotation timer through globalThis.
  *
  * **Example** (Rendering HeroVideo with clip)
  *

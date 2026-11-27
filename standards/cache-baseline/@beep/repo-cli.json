@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli",
   "review": {
-    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
-    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared law-practice-server's test files, which ci-partitions.test.ts globs, as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair PERIH-10 lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared two files its tests read from other packages as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/cross-package-reads-root-reference-cache-review-2026-11-27.md",
-      "sha256": "cb0ad15eaf31ae01c877936ef9f7100e8540f47e87a9db4e8c7e227d4e5f13ba"
+      "path": "docs/reports/perih-10-cache-review-2026-11-27.md",
+      "sha256": "0b8a240212e02276f0a22638a3c53fa01856ad13d66b9affe21fe2c98a616f06"
     }
   },
   "nodes": [
@@ -373,6 +373,7 @@
           "../../../../.nvmrc",
           "../../../../AGENTS.md",
           "../../../../apps/architecture-lab-proof/**",
+          "../../../../apps/professional-desktop/src/runtime/Layer.ts",
           "../../../../goals/*/ops/**/*.ts",
           "../../../../goals/speed-loop/ops/runner-burst/**",
           "../../../../goals/time-to-certainty/research/economics.json",
@@ -382,6 +383,7 @@
           "../../../../packages/foundation/modeling/identity/src/packages.ts",
           "../../../../packages/law-practice/server/test/**",
           "../../../../packages/law-practice/server/vitest.shards.json",
+          "../../../../packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
           "../../../../tsconfig.json",
@@ -1120,6 +1122,7 @@
           "../../../../.nvmrc",
           "../../../../AGENTS.md",
           "../../../../apps/architecture-lab-proof/**",
+          "../../../../apps/professional-desktop/src/runtime/Layer.ts",
           "../../../../goals/*/ops/**/*.ts",
           "../../../../goals/speed-loop/ops/runner-burst/**",
           "../../../../goals/time-to-certainty/research/economics.json",
@@ -1129,6 +1132,7 @@
           "../../../../packages/foundation/modeling/identity/src/packages.ts",
           "../../../../packages/law-practice/server/test/**",
           "../../../../packages/law-practice/server/vitest.shards.json",
+          "../../../../packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
           "../../../../tsconfig.json",
@@ -1276,6 +1280,7 @@
           "../../../../.nvmrc",
           "../../../../AGENTS.md",
           "../../../../apps/architecture-lab-proof/**",
+          "../../../../apps/professional-desktop/src/runtime/Layer.ts",
           "../../../../goals/*/ops/**/*.ts",
           "../../../../goals/speed-loop/ops/runner-burst/**",
           "../../../../goals/time-to-certainty/research/economics.json",
@@ -1285,6 +1290,7 @@
           "../../../../packages/foundation/modeling/identity/src/packages.ts",
           "../../../../packages/law-practice/server/test/**",
           "../../../../packages/law-practice/server/vitest.shards.json",
+          "../../../../packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json",
           "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",

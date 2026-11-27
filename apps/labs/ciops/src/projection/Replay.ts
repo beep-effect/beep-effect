@@ -549,12 +549,9 @@ const admittedRows = (events: ReadonlyArray<AdmissionJournalEvent>): ReadonlyArr
     A.map(events, (event) => (event._tag === "admission-admitted" ? O.some(event) : O.none<AdmissionJournalAdmitted>()))
   );
 
-// Chains with a retained admitted or enqueued row: their terminal rows must pair, never skip.
 const retainedChainNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> =>
   HashSet.union(noncesTagged(events, "admission-admitted"), noncesTagged(events, "admission-enqueued"));
 
-// P2 Ruling 9: under a window, only a terminal row of a chain with neither an admitted nor
-// an enqueued retained row is skipped; any other unpaired terminal row fails typed.
 const isTrimmedTerminal = (options: ReplayOptions, retainedChains: HashSet.HashSet<string>, nonce: string): boolean =>
   O.isSome(options.window) && !HashSet.has(retainedChains, nonce);
 
@@ -578,8 +575,6 @@ const chainTagsByNonce = (
     HashMap.set(chains, event.nonce, A.append(O.getOrElse(HashMap.get(chains, event.nonce), A.empty), event._tag))
   );
 
-// The pin manifest's `classify_chain` pre-v3 class: no retained enqueue, an admitted or
-// released row, at most one terminal row and no eviction row.
 const isPreV3Chain = (tags: ReadonlyArray<JournalTag>): boolean =>
   A.countBy(tags, (tag) => HashSet.has(chainTerminalTags, tag)) <= 1 &&
   !A.some(tags, (tag) => HashSet.has(preV3ExcludedTags, tag)) &&
@@ -592,12 +587,10 @@ const preV3ChainNonces = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet
   return HashSet.fromIterable(nonces);
 };
 
-// Pre-v3 chains that kept an admitted row, so they replay instead of skipping.
 const replayedPreV3Chains = (events: ReadonlyArray<AdmissionJournalEvent>): HashSet.HashSet<string> =>
   HashSet.intersection(preV3ChainNonces(events), noncesTagged(events, "admission-admitted"));
 
-// Every instant a decoded row records about its own chain, in milliseconds.
-const eventInstants = (event: AdmissionJournalEvent): ReadonlyArray<number> =>
+const chainInstantsMillis = (event: AdmissionJournalEvent): ReadonlyArray<number> =>
   Match.value(event).pipe(
     Match.tag("admission-admitted", (admitted) => [admitted.enqueuedAtMillis, admitted.admittedAtMillis]),
     Match.tag("admission-released", (released) => [released.releasedAtMillis]),
@@ -621,7 +614,6 @@ const checkWindowBound = (member: string, expected: DateTime.Utc, actual: O.Opti
         )
       );
 
-// Skipped releases whose chain the manifest classifier would not count as pre-v3.
 const unclassifiedSkips = (
   preV3: HashSet.HashSet<string>,
   skippedRows: ReadonlyArray<ReplaySkippedRow>
@@ -665,7 +657,7 @@ const checkReplayWindow = Effect.fnUntraced(function* (
     return yield* windowDisagreement("journalSha256", window.journalSha256, journalDigest);
   }
   yield* checkPreV3Chains(window, events, skippedRows);
-  const instants = A.flatMap(events, eventInstants);
+  const instants = A.flatMap(events, chainInstantsMillis);
   yield* checkWindowBound(
     "firstRetainedInstant",
     window.firstRetainedInstant,
@@ -678,7 +670,6 @@ const checkReplayWindow = Effect.fnUntraced(function* (
   );
 });
 
-// Verdicts before the last skipped terminal row ran on a ledger missing a pre-window grant.
 const censorVerdicts = (
   verdicts: ReadonlyArray<ReplayEventVerdict>,
   skippedRows: ReadonlyArray<ReplaySkippedRow>
@@ -718,6 +709,11 @@ const censorVerdicts = (
  * chain, and the first and last row instants to equal the window, failing
  * `ReplayWindowError` otherwise. Verdicts before the last skipped row are
  * marked `ledgerCensored`.
+ *
+ * **Gotchas**
+ *
+ * Verdicts before the last skipped terminal row ran on a ledger missing a
+ * pre-window grant, so their ledgerCensored flag must be preserved.
  *
  * **Example** (Replay an empty event stream)
  *
@@ -782,8 +778,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       if (candidateCount === 0) {
         break;
       }
-      // The recorded admission proves capacity was freed, not which grant died:
-      // evict only when the phantom attribution is unique, never by guessing.
+
       if (candidateCount > 1) {
         return yield* replayInputFailure(
           `Ambiguous dead-lease censorship at event ${eventIndex}: ${candidateCount} active never-released grants (${A.join(
@@ -874,7 +869,6 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
     tag: ReplayTerminalTag,
     terminalAtMillis: number
   ): Effect.fn.Return<void, PolicyDecodeError> {
-    // Skipped in place (its index still advances), never pre-filtered.
     if (isTrimmedTerminal(options, retainedChains, nonce)) {
       skippedRows = A.append(
         skippedRows,
@@ -900,8 +894,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       Match.tag("admission-withdrawn", () => Effect.void),
       Match.exhaustive
     );
-    // Every decoded row counts, including ledger-neutral queue transitions.
-    // This remains the zero-based source-event index used by episode provenance.
+
     eventIndex += 1;
   }
 
@@ -1632,8 +1625,6 @@ const rowsTagged = (events: ReadonlyArray<AdmissionJournalEvent>, tag: Admission
 const custodyCount = (events: ReadonlyArray<AdmissionJournalEvent>, custody: AdmissionRowCustody) =>
   S.Natural.make(A.countBy(events, (event) => Eq.equals(admissionRowCustody(event), custody)));
 
-// Each verdict pairs its admitted grant (the entrant) with every grant the
-// replayed ledger held at that instant (the holders): one row per overlap.
 type ActiveOverlap = readonly [verdict: ReplayEventVerdict, holderNonce: string];
 
 const activeOverlaps = (verdicts: ReadonlyArray<ReplayEventVerdict>): ReadonlyArray<ActiveOverlap> =>
@@ -1642,7 +1633,6 @@ const activeOverlaps = (verdicts: ReadonlyArray<ReplayEventVerdict>): ReadonlyAr
 const protocolOf = (event: AdmissionJournalEvent): O.Option<AdmissionCoordinationProtocol> =>
   "coordinationProtocol" in event ? event.coordinationProtocol : O.none();
 
-// A grant's protocol is joined by nonce from its own chain's rows, read by value only.
 const protocolsByNonce = (
   events: ReadonlyArray<AdmissionJournalEvent>
 ): HashMap.HashMap<string, AdmissionCoordinationProtocol> =>
@@ -1733,7 +1723,6 @@ const legacyDrainArm = (
   });
 };
 
-// Grants admitted in the window with no terminal row in it and no inferred eviction.
 const grantsActiveAtLastEdge = (
   events: ReadonlyArray<AdmissionJournalEvent>,
   report: ReplayReport

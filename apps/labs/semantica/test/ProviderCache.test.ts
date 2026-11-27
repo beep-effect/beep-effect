@@ -76,6 +76,7 @@ const encodeProviderCacheEntry = Effect.fn("ProviderCacheTest.encodeProviderCach
 );
 const CacheTestServices = Layer.mergeAll(BunPlatformLive, TestClock.layer());
 
+// decision: retry-timer-registration-barrier
 const makeCacheWaitProbe = Effect.fn("ProviderCacheTest.makeWaitProbe")(function* (fs: FileSystem.FileSystem) {
   const clock = yield* TestClock.testClockWith(Effect.succeed);
   const retries = yield* Queue.unbounded<Duration.Duration>();
@@ -93,8 +94,6 @@ const makeCacheWaitProbe = Effect.fn("ProviderCacheTest.makeWaitProbe")(function
   const observedClock = Clock.Clock.of({
     ...clock,
     sleep: Effect.fn("ProviderCacheTest.observeRetrySleep")(function* (duration: Duration.Duration) {
-      // rc.117 TestClock registers its timer before its first suspension. Starting
-      // this child immediately makes the queue notification a registered-timer barrier.
       const sleeper = yield* Effect.forkChild(clock.sleep(duration), { startImmediately: true });
       yield* Ref.update(delays, A.append(Duration.toMillis(duration)));
       yield* Ref.set(phase, "retry timer registered");
@@ -191,8 +190,7 @@ const CompetingStage = S.Struct({
 });
 type CompetingStage = typeof CompetingStage.Type;
 
-// One cache directory and one sequenced filesystem serve every competing-stage case;
-// each case registers its own target, so concurrent cases never share a stage.
+// decision: deterministic-cache-stage-probes
 class CompetingStageProbe extends Context.Service<
   CompetingStageProbe,
   {
@@ -464,7 +462,7 @@ describe("C0 provider cache and language-model boundary", () => {
           const beforePromotion = yield* cache.lookup(key);
           assertNone(beforePromotion);
         }).pipe(Effect.ensuring(Deferred.succeed(finishWinnerWrite, undefined)), Effect.forkChild);
-        // Keep incomplete bytes outside the published path until atomic promotion.
+
         const winner = yield* winnerClock
           .sleep(Duration.seconds(2))
           .pipe(
@@ -492,8 +490,8 @@ describe("C0 provider cache and language-model boundary", () => {
         yield* Fiber.join(contender);
         yield* Fiber.join(winner);
 
-        const lookup6 = yield* cache.lookup(key);
-        assertSome(lookup6, entry);
+        const atomicallyPublishedEntry = yield* cache.lookup(key);
+        assertSome(atomicallyPublishedEntry, entry);
       })
     );
   });
@@ -873,10 +871,6 @@ describe("C0 provider cache and language-model boundary", () => {
     );
   });
 
-  // The concurrent write-once races above interleave on the real filesystem, so a
-  // contender reaches the competing entry at whichever store stage the scheduler
-  // allows. Each stage is driven here by publishing the competing entry on a fixed
-  // read of the target, so every outcome is covered whatever path a race takes.
   it.layer(CompetingStageServices, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect.each([
       ["while the live lock blocks acquisition", true, 2, O.none<string>()],

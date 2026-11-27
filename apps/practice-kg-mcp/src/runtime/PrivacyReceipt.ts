@@ -67,10 +67,8 @@ import type { StrictEgressRecord, StrictSpoolSurvey, StrictSpoolSurveyEntry } fr
 
 const $I = $PracticeKgMcpId.create("runtime/PrivacyReceipt");
 
-// How far back the privacy receipt looks.
 const PrivacyReceiptWindow: Duration.Duration = Duration.days(7);
 
-// Whether the host resolved a telemetry directory.
 const PracticeKgTelemetryDirStatus = LiteralKit(["resolved", "unresolved"]).pipe(
   $I.annoteSchema("PracticeKgTelemetryDirStatus", {
     description: "Whether the practice KG host resolved a telemetry directory.",
@@ -113,26 +111,19 @@ const SignalCounts = S.Struct({
   })
 );
 
-// Whether the receipt read the spool: `read`, `no-key` when the key did not
-// load so no segment could be opened, or `survey-failed` when the key loaded
-// but the spool could not be surveyed, naming only the spool operation that
-// failed (never a path or message).
 const PracticeKgReceiptSpoolStatus = S.TaggedUnion({
   read: {},
   "no-key": {},
   "survey-failed": { operation: StrictSpoolOperation },
 }).pipe(
   $I.annoteSchema("PracticeKgReceiptSpoolStatus", {
-    description: "Whether the privacy receipt read the spool, had no key, or failed to survey it (operation only).",
+    description:
+      "Whether spool was surveyed: read, no-key if the root key did not load, or survey-failed if a loaded key could not survey (operation only, never path or message).",
   })
 );
 
 type PracticeKgReceiptSpoolStatus = typeof PracticeKgReceiptSpoolStatus.Type;
 
-// What the receipt says about the spool over its window: whether it was read,
-// the opened segments sealed in the window by signal, their bytes on disk with
-// the refused ones, the segments sealed before the window, and the segments in
-// the window that did not open, by tag.
 const PracticeKgReceiptSpool = S.Struct({
   status: PracticeKgReceiptSpoolStatus,
   segments: SignalCounts,
@@ -141,7 +132,8 @@ const PracticeKgReceiptSpool = S.Struct({
   refused: RefusalLedger,
 }).pipe(
   $I.annoteSchema("PracticeKgReceiptSpool", {
-    description: "Spool counts over the receipt window: opened segments by signal, bytes, earlier and refused.",
+    description:
+      "Spool survey status and signal counts over the receipt window, including opened segment bytes plus refused bytes, pre-window segments, and in-window unopened segments grouped by refusal tag.",
   })
 );
 type PracticeKgReceiptSpool = typeof PracticeKgReceiptSpool.Type;
@@ -218,7 +210,6 @@ export type PracticeKgSpoolSummary = Pick<
   "spool" | "refusals" | "truncated" | "attributeKeys" | "metricNames" | "unlistedNames"
 >;
 
-// The spool section of a receipt whose spool was not read, and why.
 const unreadPracticeKgReceiptSpool = (status: PracticeKgReceiptSpoolStatus): PracticeKgReceiptSpool =>
   PracticeKgReceiptSpool.make({
     status,
@@ -228,13 +219,11 @@ const unreadPracticeKgReceiptSpool = (status: PracticeKgReceiptSpoolStatus): Pra
     refused: HashMap.empty(),
   });
 
-// Resource attributes the strict gate stamps from constants; they are names
-// the receipt may print even though the catalog does not declare them.
-const resourceKeys = ["service.name", "service.version", "beep.key_epoch"] as const;
+const printableResourceKeys = ["service.name", "service.version", "beep.key_epoch"] as const;
 
 const catalogAttributeKeys: HashSet.HashSet<string> = HashSet.fromIterable([
   ...A.map(PracticeKgTelemetryCatalog.attributes, (attribute) => attribute.key),
-  ...resourceKeys,
+  ...printableResourceKeys,
 ]);
 
 const catalogMetricNames: HashSet.HashSet<string> = HashSet.fromIterable(
@@ -274,7 +263,6 @@ const RefusedPoints = S.Struct({
 });
 const decodeRefusedPoints = S.decodeUnknownOption(RefusedPoints);
 
-// Every attribute key in some decoded JSON, in visit order.
 const attributeKeysIn = (value: unknown): ReadonlyArray<string> => {
   if (A.isArray(value)) {
     return A.flatMap(value, attributeKeysIn);
@@ -292,7 +280,6 @@ const MetricNames = S.Struct({
 });
 const decodeMetricNames = S.decodeUnknownOption(MetricNames);
 
-// The metric names of one decoded metrics body.
 const metricNamesIn = (value: unknown): ReadonlyArray<string> =>
   decodeMetricNames(value).pipe(
     O.map((decoded) =>
@@ -333,7 +320,6 @@ const refusedPointsOf = (metric: RefusedMetric): ReadonlyArray<RefusedPoint> =>
     ? A.flatMap(O.match(O.fromUndefinedOr(metric.sum), { onNone: () => [], onSome: (sum) => sum.dataPoints }), pointsOf)
     : [];
 
-// The `beep.telemetry.refused` points of one metrics body.
 const refusedPointsIn = (body: string): ReadonlyArray<RefusedPoint> =>
   decodeJson(body).pipe(
     O.flatMap(decodeRefusedPoints),
@@ -410,7 +396,7 @@ export const summarizePracticeKgSpool: {
       A.filter((record) => record.signal === StrictSignal.Enum.metrics),
       A.flatMap((record) => refusedPointsIn(record.body))
     );
-  // Per series: the largest point, or the first one in segment order.
+
   const fold = (
     points: ReadonlyArray<RefusedPoint>,
     keep: (current: RefusedPoint, next: RefusedPoint) => RefusedPoint
@@ -428,9 +414,8 @@ export const summarizePracticeKgSpool: {
   const withinPoints = pointsIn(within);
   const first = fold(withinPoints, (current) => current);
   const windowStartNanos = BigInt(window.startMillis) * BigInt(1_000_000);
-  // A series whose process started before the window but has no surviving
-  // point before it lost those points to eviction: its earliest surviving
-  // point is the baseline, so the growth is a lower bound.
+
+  // decision: truncated-receipt-baselines
   const startedBeforeWindow = (point: RefusedPoint): boolean =>
     BigInt_.fromString(point.startNanos).pipe(
       O.map((start) => start < windowStartNanos),
@@ -499,13 +484,10 @@ const isoOf = (millis: number): string => DateTime.formatIso(DateTime.makeUnsafe
 
 const ledgerOrder: Order.Order<readonly [TelemetryRefusalTag, number]> = Order.mapInput(Order.String, ([tag]) => tag);
 
-// A count, or a lower bound when the tag's baseline was truncated.
 const countCell = (receipt: PracticeKgPrivacyReceipt, tag: TelemetryRefusalTag, count: number): string =>
   A.contains(receipt.truncated, tag) ? `≥ ${count}, baseline truncated` : `${count}`;
 
-// The gate (non-spool) rows: every counted tag, plus every truncated tag that
-// grew by 0 since its earliest surviving point, so an unknown pre-window
-// history is never printed as "None.".
+// decision: truncated-receipt-baselines
 const gateRows = (receipt: PracticeKgPrivacyReceipt): ReadonlyArray<string> => {
   const counted = HashMap.filter(receipt.refusals, (_, tag) => !isSpoolTag(tag));
   const truncatedOnly = A.filter(receipt.truncated, (tag) => !isSpoolTag(tag) && !HashMap.has(counted, tag));
@@ -520,18 +502,12 @@ const gateRows = (receipt: PracticeKgPrivacyReceipt): ReadonlyArray<string> => {
   });
 };
 
-// Every spool refusal tag the kernel declares, in its declared order:
-// `spool-evicted`, `spool-evict-failed` and `spool-write-failed` from the gate
-// counter,
-// `spool-tier-refused` and `spool-segment-invalid` from the survey.
 const spoolTags = A.filter(TelemetryRefusalTag.literals, Str.startsWith("spool-"));
 const isSpoolTag = (tag: TelemetryRefusalTag): boolean => A.contains(spoolTags, tag);
 
 const countIn = (ledger: RefusalLedger, tag: TelemetryRefusalTag): number =>
   O.getOrElse(HashMap.get(ledger, tag), () => 0);
 
-// One row per spool tag, zero rows included, summing the gate counter growth
-// and the segments the survey refused.
 const spoolRows = (receipt: PracticeKgPrivacyReceipt): ReadonlyArray<string> => [
   "| Tag | Count |",
   "| --- | ---: |",
@@ -697,7 +673,7 @@ export const runPracticeKgPrivacyReceipt = Effect.fn("PracticeKgPrivacyReceipt.r
           surveyStrictSpool(StrictSpoolOptions.make({ directory: path.join(telemetryDir, "spool"), tier })).pipe(
             Effect.provideService(StrictSpoolKey, spoolKey),
             Effect.map(summarizePracticeKgSpool(window)),
-            // Only the operation tag of a failed survey reaches the receipt.
+
             Effect.catchTag("StrictSpoolError", (error) =>
               Effect.succeed(
                 unread(PracticeKgReceiptSpoolStatus.cases["survey-failed"].make({ operation: error.operation }))

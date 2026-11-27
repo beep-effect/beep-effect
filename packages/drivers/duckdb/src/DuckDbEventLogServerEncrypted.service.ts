@@ -122,15 +122,12 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
             PubSub.unbounded<EventLogEncryption.EncryptedRemoteBatch>(),
             PubSub.shutdown
           );
-          // Serializes writes within this storage instance.
-          const semaphore = yield* Semaphore.make(1);
-          return { pubsub, semaphore, tableSql, idsTableSql };
+          const writeLock = yield* Semaphore.make(1);
+          return { pubsub, writeLock, tableSql, idsTableSql };
         }, withTracerDisabled),
         idleTimeToLive: "5 minutes",
       });
 
-      // Returns how many of the ids were not stored yet. Stored ids keep their
-      // first sequence.
       // beep: DuckDB supports the SQLite ON CONFLICT / RETURNING branch directly.
       const insertNewIds = Effect.fnUntraced(function* (
         idsTableSql: Statement.Identifier,
@@ -156,10 +153,8 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
         batch: EventLogEncryption.EncryptedBatch,
         sequence: number
       ) {
-        // Inserting the ids decides whether the batch is new. SQL Server's
-        // MERGE also requires unique source ids.
-        const inserted = yield* insertIdRows(idsTableSql, uniqueIdRows(batch.entryIds, sequence));
-        if (inserted === 0) return Option.none<EventLogEncryption.EncryptedRemoteBatch>();
+        const newIdCount = yield* insertIdRows(idsTableSql, uniqueIdRows(batch.entryIds, sequence));
+        if (newIdCount === 0) return Option.none<EventLogEncryption.EncryptedRemoteBatch>();
         const row: BatchRow = {
           sequence,
           last_sequence: sequence + batch.entryIds.length - 1,
@@ -188,7 +183,6 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
 
       return EventLogServerEncrypted.Storage.of({
         getId: Effect.succeed(remoteId),
-        // Auto-increment sequences start at 1.
         firstSequence: 1,
         getOrCreateSessionAuthBinding: Effect.fnUntraced(
           function* (publicKey, signingPublicKey) {
@@ -209,11 +203,10 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
           function* (publicKey, storeId, batches) {
             if (batches.length === 0) return [];
             const scopeKey = makeEncryptedScopeKey(publicKey, storeId);
-            const { idsTableSql, pubsub, semaphore, tableSql } = yield* RcMap.get(resources, scopeKey);
+            const { idsTableSql, pubsub, writeLock, tableSql } = yield* RcMap.get(resources, scopeKey);
 
             const writeBatches = Effect.gen(function* () {
               const stored: Array<EventLogEncryption.EncryptedRemoteBatch> = [];
-              // Read before inserting ids, which record the sequence they are stored at.
               const [last] = yield* sql<{ last_sequence: number | string | null }>`
               SELECT MAX(last_sequence) AS last_sequence FROM ${tableSql}
             `;
@@ -227,7 +220,7 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
               return stored;
             });
 
-            return yield* semaphore.withPermits(1)(
+            return yield* writeLock.withPermits(1)(
               Effect.gen(function* () {
                 const stored = yield* sql.withTransaction(writeBatches);
                 yield* PubSub.publishAll(pubsub, stored);
@@ -291,7 +284,6 @@ const entryIdKey = (entryId: EntryId): string =>
     ","
   );
 
-// Unique ids of a batch, each at the sequence of its first occurrence.
 const uniqueIdRows = (entryIds: ReadonlyArray<EntryId>, firstSequence: number): Iterable<IdRow> =>
   HashMap.values(
     Arr.reduce(entryIds, HashMap.empty<string, IdRow>(), (ids, entry_id, i) => {

@@ -35,8 +35,6 @@ const liveSecret = { CRM_HUBSPOT_SERVICE_KEY: liveHubSpotSecret };
 
 const noDeletes = (writes: ReadonlyArray<string>) => A.filter(writes, Str.endsWith(" delete"));
 
-// The cloud fake is one in-memory store that each test resets; these tests share it, so they
-// run one at a time even though the suite runs concurrently.
 describe("OipWeb stack", { concurrent: false }, () => {
   test.provider("prod adopts every live object in place and creates only the new assets bucket", (scratch) =>
     Effect.gen(function* () {
@@ -45,7 +43,10 @@ describe("OipWeb stack", { concurrent: false }, () => {
       FakeCloud.seedLive();
       const outputs = yield* stack.deploy(stageProgram("prod")).pipe(withConfig(liveSecret));
 
-      expect(outputs.projectId).toBe(liveIds.prodProjectId);
+      expect(
+        outputs.projectId,
+        "Tests share one resettable in-memory cloud store and run serially despite the concurrent suite default."
+      ).toBe(liveIds.prodProjectId);
       expect(FakeCloud.projectCount()).toBe(2);
       expect(outputs.domains).toEqual(["oip.law", "www.oip.law", "opip.law", "www.opip.law"]);
       for (const domain of liveStageConfig.prod.domains) {
@@ -62,7 +63,7 @@ describe("OipWeb stack", { concurrent: false }, () => {
       expect(outputs.assetsBucketName).toBe("oip-law-web-assets-prod");
       expect(O.isSome(FakeCloud.bucket("assets.oip.law"))).toBe(true);
       expect(noDeletes(FakeCloud.writes())).toEqual([]);
-      // The staging stage's objects are untouched.
+
       expect(O.getOrThrow(FakeCloud.domain("staging.oip.law")).projectId).toBe(liveIds.stagingProjectId);
     })
   );
@@ -115,10 +116,11 @@ describe("OipWeb stack", { concurrent: false }, () => {
       expect(A.contains(first, "CRM_HUBSPOT_SERVICE_KEY")).toBe(true);
 
       yield* stack.deploy(stageProgram("prod")).pipe(withConfig({ CRM_HUBSPOT_SERVICE_KEY: "rotated-secret-value" }));
-      // The rotation reached Vercel, so the state check below is about a real second write.
-      expect(O.getOrThrow(FakeCloud.env(liveIds.prodProjectId, "CRM_HUBSPOT_SERVICE_KEY")).value).toBe(
-        "rotated-secret-value"
-      );
+
+      expect(
+        O.getOrThrow(FakeCloud.env(liveIds.prodProjectId, "CRM_HUBSPOT_SERVICE_KEY")).value,
+        "Rotation reached Vercel, so the later state check proves a second write."
+      ).toBe("rotated-secret-value");
       const second = yield* persistedStrings;
       expect(A.some(second, Str.includes("rotated-secret-value"))).toBe(false);
     })
@@ -151,8 +153,11 @@ describe("OipWeb stack", { concurrent: false }, () => {
       FakeCloud.seedLive();
       const exit = yield* Effect.exit(stack.deploy(stageProgram("prod")).pipe(withConfig({})));
       assertSome(failureTag(exit), "ConfigError");
-      // The key is read while planning, so nothing was applied: no project, variable, domain, DNS or bucket write.
-      expect(FakeCloud.writes()).toEqual([]);
+
+      expect(
+        FakeCloud.writes(),
+        "Secret lookup happens during planning: a missing key must precede every project, variable, domain, DNS and bucket write."
+      ).toEqual([]);
       expect(O.getOrThrow(FakeCloud.env(liveIds.prodProjectId, "CRM_HUBSPOT_SERVICE_KEY")).value).toBe(
         liveHubSpotSecret
       );
@@ -187,8 +192,6 @@ describe("servedHostnames", () => {
   );
 });
 
-// Window-5 condition 1: adopting the live projects may change nothing that runs or reports
-// on a pull request, and keeps the project ids vercel-deploy.yml hard-codes.
 describe("OipWeb leaves the pull-request surface alone", { concurrent: false }, () => {
   const pullRequestSafeKeys = ["name", "teamId"];
 
@@ -201,7 +204,10 @@ describe("OipWeb leaves the pull-request surface alone", { concurrent: false }, 
         const config = liveStageConfig[stage];
         const outputs = yield* stack.deploy(stageProgram(stage)).pipe(withConfig(liveSecret));
 
-        expect(outputs.projectId).toBe(stage === "prod" ? liveIds.prodProjectId : liveIds.stagingProjectId);
+        expect(
+          outputs.projectId,
+          "Live adoption preserves pull-request build/check behavior and the project ids hard-coded by the deployment workflow."
+        ).toBe(stage === "prod" ? liveIds.prodProjectId : liveIds.stagingProjectId);
         expect(A.isReadonlyArrayNonEmpty(FakeCloud.declaredProjectKeys())).toBe(true);
         expect(A.every(FakeCloud.declaredProjectKeys(), (key) => A.contains(pullRequestSafeKeys, key))).toBe(true);
         expect(O.getOrThrow(FakeCloud.project(config.projectName)).props).toEqual({
@@ -209,10 +215,11 @@ describe("OipWeb leaves the pull-request surface alone", { concurrent: false }, 
           ...liveProjectSettings,
           teamId: TEAM,
         });
-        // The live DNS records keep their content and comment, so the deploy only reads them.
-        expect(A.filter(FakeCloud.writes(), Str.startsWith("Cloudflare.DNS.Record"))).toEqual(
-          A.map(config.domains, (domain) => `Cloudflare.DNS.Record ${domain.name} unchanged`)
-        );
+
+        expect(
+          A.filter(FakeCloud.writes(), Str.startsWith("Cloudflare.DNS.Record")),
+          "Live DNS content and comments are preserved, so deployment only reads these records."
+        ).toEqual(A.map(config.domains, (domain) => `Cloudflare.DNS.Record ${domain.name} unchanged`));
       })
     );
   }
@@ -252,8 +259,6 @@ declare global {
   }
 }
 
-// The committed workflow's text, inlined by Vite at transform time: the subject is the file itself,
-// so no filesystem layer stands in for it.
 const vercelDeployWorkflow = A.join(
   R.values(
     import.meta.glob<string>("../../../../.github/workflows/vercel-deploy.yml", {
@@ -276,7 +281,6 @@ describe("vercel-deploy.yml", () => {
   });
 });
 
-// The guard's create allow-list against what the engine actually plans for the live census.
 describe("the first live plans pass the plan guard", { concurrent: false }, () => {
   const expected = {
     prod: { summary: "Plan: 8 to create, 5 to adopted", lines: 13 },
@@ -301,10 +305,6 @@ describe("the first live plans pass the plan guard", { concurrent: false }, () =
 });
 
 describe("the staging re-run after the 2026-11-14 partial deploy (run 43585534113)", { concurrent: false }, () => {
-  // Eight of nine rows were written; `EnvHubSpotServiceKey` failed after Alchemy committed its `creating`
-  // checkpoint (no attributes), and the live variable kept its id, type and value. The planner prints
-  // such a row as `create` and decides adoption at apply time; the re-run (run 43591525409) printed
-  // exactly this plan.
   test.provider("plans one create, passes the guard, writes only that variable, then has no changes", (scratch) =>
     Effect.gen(function* () {
       const stack = typed(scratch);
@@ -316,7 +316,10 @@ describe("the staging re-run after the 2026-11-14 partial deploy (run 4358553411
 
       const plan = yield* stack.plan(stageProgram("staging")).pipe(withConfig(liveSecret));
       const log = renderPlanLog("staging")(plan);
-      expect(Str.split("\n")(log)).toEqual([
+      expect(
+        Str.split("\n")(log),
+        "A creating checkpoint without attributes plans create, then chooses adoption during apply; the existing live variable keeps its id, type and value after the other eight rows succeeded."
+      ).toEqual([
         "Plan · staging",
         "Plan: 1 to create",
         "[AssetsBucket] noop",

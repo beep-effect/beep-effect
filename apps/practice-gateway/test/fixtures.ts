@@ -34,7 +34,6 @@ export interface FakeMachine {
   readonly registryFails?: boolean;
 }
 
-// A Windows machine described as data: paths use the folders above.
 export const fakeHost = (machine: FakeMachine) => {
   const files = HashSet.fromIterable([...(machine.files ?? []), ...A.map(machine.fileBytes ?? [], ([path]) => path)]);
   const bytes = HashMap.fromIterable(machine.fileBytes ?? []);
@@ -116,8 +115,6 @@ export const gapProfile = PracticeProfile.make({
 export const m365NotConfigured =
   "Microsoft 365 is not configured for this practice gateway yet: the extension settings have no Microsoft 365 app ID.";
 
-// A Microsoft 365 sign-in without a browser: configured or not, with a fixed
-// sign-in answer.
 export const fakeM365SignIn = (options: {
   readonly configured?: boolean;
   readonly signIn?: Effect.Effect<M365SignInOutcome, M365SignInFailure>;

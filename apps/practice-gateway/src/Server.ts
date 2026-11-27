@@ -48,8 +48,6 @@ export const PRACTICE_GATEWAY_INSTRUCTIONS =
 const logLayerFailure = (message: string) => (cause: Cause.Cause<unknown>) =>
   Layer.effectDiscard(Effect.logWarning(message, Cause.pretty(cause)));
 
-// Off Windows there is no secret store: probes that need it answer "only on
-// Windows" and Microsoft 365 sign-in is refused.
 const withPlatformSecrets = <A, E, R>(layer: Layer.Layer<A, E, R>) =>
   Layer.unwrap(
     GatewaySettings.useSync((settings) =>

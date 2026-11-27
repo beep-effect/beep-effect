@@ -671,7 +671,7 @@
     {"name":"Ci.prepareCachePilotRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.prepareCachePilotSources","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.pruneAptSources","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Ci.readCheckoutCiPatterns","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Ci.readBaseCiPatterns","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.readCounter","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.readHeavyAdmissionChangedPaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Ci.readHeavyAdmissionEvent","owner":"@beep/repo-cli","family":"tooling","conforms":true},

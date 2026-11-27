@@ -64,7 +64,8 @@ export class TimerLog extends Context.Service<
  */
 export const makeTimerLog = Effect.gen(function* () {
   const host = yield* ModHost;
-  // record reads, appends and writes the stored rows; serialize it like VerdictLog.
+
+  // decision: shared-plugin-write-permits
   const writes = yield* Semaphore.make(1);
   const read = Effect.gen(function* () {
     const raw = yield* host.storeGet(RowsKey);
@@ -77,7 +78,7 @@ export const makeTimerLog = Effect.gen(function* () {
     const encoded = yield* S.encodeEffect(StoredRows)(A.append(rows, interval)).pipe(Effect.mapError(unreadable));
     yield* host.storeSet(RowsKey, encoded);
   });
-  // Returned as text for the attorney to copy; the mod writes no files (#1728).
+
   const exportJsonl = Effect.gen(function* () {
     const rows = yield* read;
     const lines = yield* Effect.forEach(rows, (row) => S.encodeEffect(RowLine)(row).pipe(Effect.mapError(unreadable)), {
