@@ -10,10 +10,10 @@ enforcedBy: []
 ---
 
 An existing output tree is resumed, never refused; `--overwrite` is the only path that discards it.
-Resume trusts one thing per source, its outcome marker, written last and settled under the rules
-of `CorpusExtractOutcome`. A failure settles only while the routing fingerprint is unchanged, and
-the fingerprint is derived from the engine descriptors rather than a hand-bumped version, so adding
-a format to an engine unsettles it. Anything else is redone from scratch.
+Resume reuses a source only through its outcome marker, a `CorpusExtractOutcomeRecord`, whose
+Details state which outcomes settle and which inputs a marker must match. The routing fingerprint
+is derived from the engine descriptors rather than a hand-bumped version, so adding a format to an
+engine unsettles the routing failures it can now handle. Every other source is redone.
 
 Rejected: refusing a populated output tree (a killed multi-hour run restarts from zero);
 redoing every source on each run.
