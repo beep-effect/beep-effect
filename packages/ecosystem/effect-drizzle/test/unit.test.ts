@@ -195,9 +195,8 @@ describe("PostgreSQL Wave E value and structure invariants", () => {
         const value1 = yield* encodeEffect(ArrayRecord.insert)(decoded);
         expect(value1).toEqual(encoded);
         expect(is(ArrayRecord.insert)(decoded)).toBe(true);
-        // The database supplies pg.default; the insert codec preserves omission.
         const omitted = yield* makeEffect(ArrayRecord.insert)({ labels: value.labels });
-        expect(omitted.matrix).toBeUndefined();
+        expect(omitted.matrix, "the database supplies pg.default; the insert codec preserves omission").toBeUndefined();
         expect((yield* encodeEffect(ArrayRecord.insert)(omitted)).matrix).toBeUndefined();
         expect(omitted.labels).toEqual(value.labels);
       }),

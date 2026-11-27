@@ -45,9 +45,6 @@ const handleWith = (stdout: Stream.Stream<Uint8Array, PlatformError.PlatformErro
 
 const readFailingHandle = readFailure.pipe(Stream.fail, handleWith);
 
-// The driver raises the kit's per-stream capture budget; one byte past it.
-// The buffer is left unfilled: the kit counts bytes before decoding, so the
-// zeroed pages are never touched.
 const EXIFTOOL_MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
 const oversizedStdout = Stream.succeed(new Uint8Array(EXIFTOOL_MAX_OUTPUT_BYTES + 1));
 const oversizedHandle = handleWith(oversizedStdout);
@@ -114,8 +111,6 @@ describe("@beep/exiftool process reason map", () => {
     );
   });
 
-  // New with the kit: captured output is bounded. The hand-rolled fold had no
-  // ceiling, so this row has no predecessor; it reports as a run failure.
   it.layer(exiftoolOver(spawnerOf(() => Effect.succeed(oversizedHandle))), { timeout: "30 seconds" })(
     "when the output exceeds the capture bound",
     (it) => {
@@ -126,9 +121,14 @@ describe("@beep/exiftool process reason map", () => {
           expect(error.message).toBe(RUN_FAILURE_MESSAGE);
           const cause = O.getOrUndefined(error.cause);
           assertInstanceOf(cause, CommandOutputError);
-          expect(cause.kind).toBe("tooLarge");
+          expect(
+            cause.kind,
+            "the kit counts bytes before decoding, so a zeroed buffer one byte past the budget suffices"
+          ).toBe("tooLarge");
           expect(cause.cause).toMatchObject({ limit: EXIFTOOL_MAX_OUTPUT_BYTES });
-          expect(EXIFTOOL_MAX_OUTPUT_BYTES).toBeGreaterThan(DEFAULT_MAX_OUTPUT_BYTES);
+          expect(EXIFTOOL_MAX_OUTPUT_BYTES, "the driver raises the kit's per-stream capture budget").toBeGreaterThan(
+            DEFAULT_MAX_OUTPUT_BYTES
+          );
         })
       );
     }

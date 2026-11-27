@@ -38,9 +38,7 @@ import type { PacerConfig } from "./Pacer.config.ts";
 const $I = $PacerId.create("pacer/auth/PacerAuth.service");
 
 interface PacerAuthShape {
-  /** Authenticate with the configured credentials, returning a fresh token. */
   readonly login: Effect.Effect<NextGenCsoToken, PacerAuthError>;
-  /** Invalidate a token via cso-logout. */
   readonly logout: (token: NextGenCsoToken) => Effect.Effect<void, PacerAuthError>;
 }
 
@@ -49,7 +47,6 @@ const transport = (cause: unknown): PacerAuthError =>
 const decoding = (cause: unknown): PacerAuthError =>
   PacerAuthError.fromReason("response-decoding", { cause: pacerCauseMessage(cause) });
 
-/** Per-request timeout so a hung PACER auth endpoint can never block forever. */
 const REQUEST_TIMEOUT = Duration.seconds(30);
 
 const executeAuthRequest = <A, E>(
@@ -84,8 +81,6 @@ const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuth
         password: Redacted.value(cfg.password),
         clientCode: cfg.clientCode,
         otpCode: O.map(cfg.otpCode, Redacted.value),
-        // Filers (e-filing accounts) must attest redaction compliance; PACER returns
-        // loginResult "1" if a filer omits it. Search-only accounts leave it off.
         redactFlag: O.flatMap(cfg.isFiler, (isFiler) => (isFiler ? O.some("1") : O.none<string>())),
       })
     ).pipe(Effect.mapError(transport));
@@ -98,7 +93,6 @@ const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuth
     if (body.loginResult !== "0" || body.nextGenCSO === "") {
       return yield* PacerAuthError.fromLoginResult(body.loginResult, body.errorDescription.pipe(O.getOrUndefined));
     }
-    // loginResult "0" can still carry a non-fatal search-privilege warning.
     yield* logAuthWarning("login", body.errorDescription);
     return NextGenCsoToken.make(body.nextGenCSO);
   });
@@ -124,6 +118,11 @@ const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuth
 
 /**
  * PACER Authentication service: raw `login` / `logout` over an HTTP client.
+ *
+ * **Gotchas**
+ *
+ * A filer account (`isFiler`) logs in with `redactFlag: "1"` to attest redaction compliance; PACER answers a
+ * filer login without it with `loginResult` "1". Search-only accounts omit the flag.
  *
  * **Example** (Make mock layer with auth)
  *
@@ -155,7 +154,6 @@ export class PacerAuth extends Context.Service<PacerAuth, PacerAuthShape>()($I`P
 }
 
 interface PacerSessionShape {
-  /** The current auth token, refreshable by the PCL client on token rotation. */
   readonly tokenRef: Ref.Ref<Redacted.Redacted<NextGenCsoToken>>;
 }
 

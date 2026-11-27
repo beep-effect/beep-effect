@@ -104,9 +104,10 @@ it.layer(NodeServices.layer)("effect-drizzle bundle import validity", (it) => {
       const directory = yield* fs.realPath(scratchDirectory);
       const stub = `export{dropped as ${bundleConsumerExportName}};${Str.repeat(8192)("/* padding */")}`;
       const failure = yield* importBundleConsumer(stub, directory).pipe(flip);
-      // A native import fails to link the dangling export; Vitest's module runner
-      // links it lazily and yields an undefined binding. Both are rejections.
-      expect(failure._tag).toBe("BundleImportError");
+      expect(
+        failure._tag,
+        "a native import fails to link the dangling export; Vitest's module runner yields an undefined binding"
+      ).toBe("BundleImportError");
       expect([
         "Bundle artifact is not an importable module",
         `Bundle artifact does not export ${bundleConsumerExportName} as a function`,
@@ -126,9 +127,8 @@ it.layer(NodeServices.layer)("effect-drizzle bundle import validity", (it) => {
   );
 });
 
-// bunx's node shim injects a partial Bun global (spawn without which), so
-// gate on every capability the probe-process spawn actually needs.
-const hasBunSpawn = typeof Bun !== "undefined" && typeof Bun.spawn === "function" && typeof Bun.which === "function";
+const hasBunSpawnAndWhich =
+  typeof Bun !== "undefined" && typeof Bun.spawn === "function" && typeof Bun.which === "function";
 
 const acquireProbe = fnUntraced(function* (command: Array<string>) {
   return yield* acquireRelease(
@@ -157,7 +157,7 @@ const acquireProbe = fnUntraced(function* (command: Array<string>) {
   );
 });
 
-describe.runIf(hasBunSpawn)("bundle size probe process", () => {
+describe.runIf(hasBunSpawnAndWhich)("bundle size probe process", () => {
   it.effect(
     "exits nonzero for an injected one-byte regression without mutating the baseline",
     fnUntraced(function* () {

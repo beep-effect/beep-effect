@@ -198,8 +198,6 @@ export class User extends auditKit.Entity<User>("User")(
   ]
 ) {}
 
-// Deliberate bypass: proves the versioned model still satisfies Effect SQL's native repository.
-// Application code uses auditKit.Repository, whose update keeps the optimistic check.
 export const userRepository = SqlModel.makeRepository(User, {
   tableName: User.sql.tableName,
   spanPrefix: "User",
@@ -276,8 +274,6 @@ export const dualOrgLinkSchema = schema({
   organization: Organization,
   dual_org_link: DualOrgLink,
 });
-
-// Negative matrix: each assertion names the rejected invariant.
 
 // @ts-expect-error -- invariant: text requires a string-encoded schema. Owner: @beep/effect-drizzle. Exit: remove if the API is meant to accept this.
 const _badText = Finite.pipe(pg.text());
@@ -519,7 +515,6 @@ export const _declarationNeedsExplicitColumn = () => {
   return DeclarationNeedsExplicitColumn;
 };
 
-// A declared number names its `number` carrier only through the representation annotation.
 export const RepresentedDeclaredNumber = declare(isNumber, { representation: pg.NumberDeclarationRepresentation });
 
 export const _unrepresentedDeclaredNumber = () => {

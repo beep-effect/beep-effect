@@ -18,14 +18,12 @@ describe("nlp-mcp tool surface", () => {
   });
 
   it("exposes a combined 42-tool surface across both mounted toolkits", () => {
-    // Guards the server contract from `makeServerLayer`: both toolkits must be
-    // mounted, with no cross-toolkit name collision, summing to 42 unique tools.
     const nlpNames = R.keys(NlpToolkit.tools);
     const streamingNames = R.keys(StreamingToolkit.tools);
     const merged = [...nlpNames, ...streamingNames];
 
     assert.strictEqual(streamingNames.length, 17);
-    assert.strictEqual(merged.length, 42);
+    assert.strictEqual(merged.length, 42, "makeServerLayer mounts both toolkits");
     assert.strictEqual(new Set(merged).size, 42, "NLP and streaming tool names must be disjoint");
     assert.isTrue(merged.includes("Tokenize"), "NLP toolkit tool must be present");
     assert.isTrue(merged.includes("stream_read_lines"), "streaming toolkit tool must be present");

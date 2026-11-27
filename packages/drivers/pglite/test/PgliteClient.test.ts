@@ -26,8 +26,6 @@ class PgliteClientTestOperationError extends S.TaggedError<
 ) {}
 
 const PgliteErrorArbitrary = Arbitrary.schema(PgliteError).pipe(Arbitrary.filter((error) => O.isNone(error.cause)));
-// Generate the declared fields from the production schema, then constrain the
-// opaque payload to a native Error with stable, explicitly retained fields.
 const PgliteErrorWithCauseArbitrary = Arbitrary.schema(PgliteError).pipe(
   Arbitrary.map((error) => {
     const cause = new Error(error.operation, { cause: "native database failure" });
@@ -112,8 +110,6 @@ describe("PgliteClient layer lifecycle", () => {
   it.effect(
     "closes the managed PGlite instance when the layer scope closes",
     Effect.fnUntraced(function* () {
-      // `Scope.close` takes a `Scope.Closeable`; `Effect.scopedWith` only hands
-      // out the read-only `Scope`, so the test owns its scope explicitly.
       const scope = yield* Scope.make();
       yield* Effect.log("PGlite phase: acquire in-process database");
       const context = yield* Layer.buildWithScope(makeLayer(), scope);
@@ -154,9 +150,10 @@ it.layer(PgliteTestLayer, { timeout: "30 seconds" })("PgliteClient (in-memory)",
       const pg = yield* Pg.PgClient;
       const pglite = yield* PgliteClient;
 
-      // The tag-shim exposes the very same PgliteClient value under the PgClient
-      // tag, which is what lets drizzle-orm/effect-postgres run in-process.
-      expect(pg).toBe(pglite);
+      expect(
+        pg,
+        "the tag-shim exposes the same PgliteClient value, so drizzle-orm/effect-postgres runs in-process"
+      ).toBe(pglite);
     })
   );
 });

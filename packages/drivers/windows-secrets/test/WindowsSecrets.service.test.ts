@@ -40,9 +40,6 @@ describe("SecretTarget", () => {
   });
 });
 
-// The memory layer is provided through the @effect/vitest harness (the test
-// entry point), not via Effect.provide in the effect body; each test uses its
-// own target because the layer is shared across the block.
 it.layer(WindowsSecretStore.layerMemory, { timeout: "10 seconds" })("WindowsSecretStore.layerMemory", (it) => {
   it.effect("returns none for a missing credential", () =>
     Effect.gen(function* () {

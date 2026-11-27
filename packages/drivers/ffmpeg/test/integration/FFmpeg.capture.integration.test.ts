@@ -27,8 +27,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 
-// Live lane: exercises the real ffmpeg/ffprobe binaries on PATH. Skips
-// explicitly when a binary is missing; other prerequisite failures stay failures.
 const NativeCaptureTestLayer = Layer.mergeAll(
   NodeServices.layer,
   FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))
@@ -79,7 +77,6 @@ const expectToolSuccess = Effect.fnUntraced(function* (command: string, args: Re
   return result;
 });
 
-/** 2s 320x180 30fps testsrc2 golden clip. */
 const makeTestsrcClip = (outPath: string) =>
   expectToolSuccess("ffmpeg", [
     "-hide_banner",
@@ -94,11 +91,6 @@ const makeTestsrcClip = (outPath: string) =>
     outPath,
   ]);
 
-/**
- * 2s 64x64 10fps clip whose luma rises linearly with time: Y = 255*T/2.
- * Reading a frame's mean luma therefore reveals which source time the frame
- * was taken from — a machine-checkable pts-accuracy oracle.
- */
 const makeLumaRampClip = (outPath: string) =>
   expectToolSuccess("ffmpeg", [
     "-hide_banner",
@@ -183,10 +175,6 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
             const exists1 = yield* fs.exists(result.manifestPath);
             expect(exists1).toBe(true);
 
-            // pts accuracy: each frame's mean luma implies the source time the
-            // frame was decoded at; it must land within one frame duration of
-            // the requested timestamp (input-seek grabs the first frame at or
-            // after the seek point).
             for (const frame of result.frames) {
               const probe = yield* ffmpeg.probeRegionLuminance(
                 ProbeRegionLuminanceRequest.make({
@@ -205,7 +193,10 @@ it.layer(NativeCaptureTestLayer, { excludeTestServices: true })("@beep/ffmpeg li
               expect(meanLuma).toBeGreaterThanOrEqual(0);
               const impliedTimeSeconds = (meanLuma * 2) / 255;
               const drift = impliedTimeSeconds - frame.requestedTimestampSeconds;
-              expect(Math.abs(drift)).toBeLessThanOrEqual(RAMP_FRAME_DURATION_SECONDS + LUMA_TOLERANCE_SECONDS);
+              expect(
+                Math.abs(drift),
+                "mean luma on the ramp gives the decoded source time; input seek takes the first frame at or after it"
+              ).toBeLessThanOrEqual(RAMP_FRAME_DURATION_SECONDS + LUMA_TOLERANCE_SECONDS);
             }
           })
         );

@@ -25,6 +25,18 @@ const $I = $PretextId.create("Pretext.models");
 
 const NonNegativeAdvance = S.Finite.check(S.isGreaterThanOrEqualTo(0));
 const NonNegativeLineCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
+const CaptureProvenanceStamp = S.String.pipe(
+  $I.annoteSchema("CaptureProvenanceStamp", {
+    description:
+      "Opaque capture provenance, not a datetime contract: live captures write full ISO, curated fixtures may carry date-only stamps.",
+  })
+);
+const KerningDerivedSpaceWidth = S.Finite.pipe(
+  $I.annoteSchema("KerningDerivedSpaceWidth", {
+    description:
+      "Kerning-derived space advance (pair minus markers); it may sit at or fractionally below zero, so it stays unrefined.",
+  })
+);
 
 /**
  * Per-engine layout quirk fences, mirroring upstream pretext's
@@ -103,16 +115,12 @@ export class EngineProfile extends S.Opaque<EngineProfile, { readonly brand: uni
  */
 export class FontMetrics extends S.Opaque<FontMetrics, { readonly brand: unique symbol }>()(
   S.Struct({
-    // capturedAt is opaque provenance, not a datetime contract: live captures
-    // write full ISO, curated fixtures may carry date-only stamps.
-    capturedAt: S.String,
+    capturedAt: CaptureProvenanceStamp,
     engine: S.String,
     platform: S.String,
     font: S.String,
     lineHeight: NonNegativeAdvance,
-    // spaceWidth is a kerning-derived delta (pair minus markers) and may
-    // legitimately sit at or fractionally below zero; keep it unrefined.
-    spaceWidth: S.Finite,
+    spaceWidth: KerningDerivedSpaceWidth,
     words: S.Record(S.String, NonNegativeAdvance),
     engineProfile: EngineProfile,
     sentence: S.OptionFromOptionalKey(S.String),

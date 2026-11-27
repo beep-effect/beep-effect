@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/pacer",
-  "root": "packages/drivers/pacer",
-  "scopes": ["."]
-}

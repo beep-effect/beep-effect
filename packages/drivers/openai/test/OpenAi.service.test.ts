@@ -353,7 +353,6 @@ describe("OpenAI model Layers", () => {
         Effect.fnUntraced(function* () {
           const { languageModelName: blankLanguageModel, embedding } = yield* ModelMetadata;
           const blankEmbeddingModel = embedding.modelName;
-          // Acquisition failure is the subject; the test runner owns its scope.
           const missingKeyLayer = OpenAiLive.pipe(Layer.provide(makeConfigProviderLayer({})));
           const missingKeyError = yield* Layer.build(missingKeyLayer).pipe(Effect.flip);
 
@@ -373,7 +372,6 @@ describe("makeOpenAiEmbeddingModelLive boundary", () => {
       const layer = makeOpenAiEmbeddingModelLive(0).pipe(
         Layer.provide(makeConfigProviderLayer({ [OPENAI_API_KEY_ENV]: "fixture", [OPENAI_EMBEDDING_MODEL_ENV]: "" }))
       );
-      // Acquisition failure is the subject; the test runner owns its scope.
       const failure = yield* Layer.build(layer).pipe(Effect.flip);
       expect(failure._tag).toBe("SchemaError");
       expect(String(failure)).toContain("Expected a positive integer");

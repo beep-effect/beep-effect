@@ -180,10 +180,6 @@ export const patch: {
   }
 );
 
-// ---------------------------------------------------------------------------
-// Encoded-type extraction (the SQL-facing side of an Input)
-// ---------------------------------------------------------------------------
-
 /**
  * Encoded database-facing type of an input; variant fields use `select`.
  *
@@ -202,10 +198,6 @@ type SchemaEncoded<Sch> =
     : Sch extends Top
       ? Sch["Encoded"]
       : never;
-
-// ---------------------------------------------------------------------------
-// Combinator parameter validation
-// ---------------------------------------------------------------------------
 
 /**
  * Carrier for compile-time `@beep/effect-drizzle` diagnostics at a combinator callsite.

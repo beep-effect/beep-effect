@@ -35,46 +35,52 @@ import {
 import type { SecretStoreOperation, SecretTarget } from "../WindowsSecrets.models.ts";
 import type { WindowsSecretStoreShape } from "../WindowsSecrets.service.ts";
 
+const BOOL = FFIType.i32;
+const DWORD = FFIType.u32;
+const VOID = FFIType.void;
+const PVOID = FFIType.ptr;
+const HLOCAL = FFIType.ptr;
+const LPCWSTR = FFIType.ptr;
+const LPWSTR_OUT = FFIType.ptr;
+const PCREDENTIALW = FFIType.ptr;
+const PCREDENTIALW_OUT = FFIType.ptr;
+const DATA_BLOB_PTR = FFIType.ptr;
+const PROMPTSTRUCT_PTR = FFIType.ptr;
+
 const openLibraries = () => {
   const advapi32 = dlopen("advapi32.dll", {
-    // BOOL CredWriteW(PCREDENTIALW Credential, DWORD Flags)
-    CredWriteW: { args: [FFIType.ptr, FFIType.u32], returns: FFIType.i32 },
-    // BOOL CredReadW(LPCWSTR TargetName, DWORD Type, DWORD Flags, PCREDENTIALW* Credential)
-    CredReadW: { args: [FFIType.ptr, FFIType.u32, FFIType.u32, FFIType.ptr], returns: FFIType.i32 },
-    // BOOL CredDeleteW(LPCWSTR TargetName, DWORD Type, DWORD Flags)
-    CredDeleteW: { args: [FFIType.ptr, FFIType.u32, FFIType.u32], returns: FFIType.i32 },
-    // void CredFree(PVOID Buffer)
-    CredFree: { args: [FFIType.ptr], returns: FFIType.void },
+    CredWriteW: { args: [PCREDENTIALW, DWORD], returns: BOOL },
+    CredReadW: { args: [LPCWSTR, DWORD, DWORD, PCREDENTIALW_OUT], returns: BOOL },
+    CredDeleteW: { args: [LPCWSTR, DWORD, DWORD], returns: BOOL },
+    CredFree: { args: [PVOID], returns: VOID },
   });
   const crypt32 = dlopen("crypt32.dll", {
-    // BOOL CryptProtectData(DATA_BLOB* in, LPCWSTR descr, DATA_BLOB* entropy, PVOID reserved,
-    //                       CRYPTPROTECT_PROMPTSTRUCT* prompt, DWORD flags, DATA_BLOB* out)
     CryptProtectData: {
-      args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.u32, FFIType.ptr],
-      returns: FFIType.i32,
+      args: [DATA_BLOB_PTR, LPCWSTR, DATA_BLOB_PTR, PVOID, PROMPTSTRUCT_PTR, DWORD, DATA_BLOB_PTR],
+      returns: BOOL,
     },
-    // BOOL CryptUnprotectData(DATA_BLOB* in, LPWSTR* descr, DATA_BLOB* entropy, PVOID reserved,
-    //                         CRYPTPROTECT_PROMPTSTRUCT* prompt, DWORD flags, DATA_BLOB* out)
     CryptUnprotectData: {
-      args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.u32, FFIType.ptr],
-      returns: FFIType.i32,
+      args: [DATA_BLOB_PTR, LPWSTR_OUT, DATA_BLOB_PTR, PVOID, PROMPTSTRUCT_PTR, DWORD, DATA_BLOB_PTR],
+      returns: BOOL,
     },
   });
   const kernel32 = dlopen("kernel32.dll", {
-    // HLOCAL LocalFree(HLOCAL hMem)
-    LocalFree: { args: [FFIType.ptr], returns: FFIType.ptr },
-    // DWORD GetLastError(void)
-    GetLastError: { args: [], returns: FFIType.u32 },
+    LocalFree: { args: [HLOCAL], returns: HLOCAL },
+    GetLastError: { args: [], returns: DWORD },
   });
   return { advapi32, crypt32, kernel32 };
 };
 
 type Libraries = ReturnType<typeof openLibraries>;
 
-/** `ptr()` rejects empty views; a one-byte stand-in keeps the address valid. */
-const addressOf = (bytes: Uint8Array): bigint => BigInt(ptr(bytes.byteLength === 0 ? new Uint8Array(1) : bytes));
+const nonEmptyForPtr = (bytes: Uint8Array): Uint8Array => (bytes.byteLength === 0 ? new Uint8Array(1) : bytes);
 
-/** Copy a Windows-owned region into JS memory. */
+const addressOf = (bytes: Uint8Array): bigint => BigInt(ptr(nonEmptyForPtr(bytes)));
+
+const keepAliveThenWipe = (...buffers: ReadonlyArray<Uint8Array>): void => {
+  for (const buffer of buffers) buffer.fill(0);
+};
+
 const copyRegion = (region: NativeRegion): Uint8Array =>
   region.byteLength === 0
     ? new Uint8Array(0)
@@ -118,9 +124,7 @@ const makeShape = (libraries: Libraries): WindowsSecretStoreShape => {
         })
       );
       const result = advapi32.symbols.CredWriteW(credential, 0);
-      // Touching both buffers after the call keeps them reachable while Windows reads their addresses.
-      targetName.fill(0);
-      blob.fill(0);
+      keepAliveThenWipe(targetName, blob);
       return result;
     });
     if (ok === 0) {

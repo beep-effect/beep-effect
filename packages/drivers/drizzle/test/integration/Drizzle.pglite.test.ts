@@ -73,9 +73,9 @@ const readBodies = (rows: DrizzleRows) =>
 if (!shouldRunPgliteIntegration) {
   describe.skip("Drizzle PgLite integration", () => {});
 } else {
-  // The external PGlite server shares session state across connections. Each
-  // fixture must finish and release its schema before the next fixture starts.
-  describe("Drizzle PgLite integration", { concurrent: false }, () => {
+  describe("Drizzle PgLite integration, fixtures run serially on one shared PGlite session", {
+    concurrent: false,
+  }, () => {
     it.layer(DrizzlePgliteLayer, { timeout: "2 minutes", concurrent: false })(
       "execute and transaction fixture",
       (it) => {

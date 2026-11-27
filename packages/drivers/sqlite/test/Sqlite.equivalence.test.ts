@@ -16,8 +16,7 @@ describe("SqliteError declared-field equivalence", () => {
 
     expect(sameSqliteError(a, b)).toBe(true);
     expect(sameSqliteError(a, c)).toBe(false);
-    // the defect cause is payload, never identity
-    expect(sameSqliteError(a, d)).toBe(true);
+    expect(sameSqliteError(a, d), "the defect cause is payload, never identity").toBe(true);
   });
 
   it("keeps the native failure as the cause and leaves both options empty without one", () => {

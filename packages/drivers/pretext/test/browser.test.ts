@@ -7,8 +7,7 @@ import * as P from "effect/Predicate";
 
 const runtimeHasCanvas2d = P.isFunction(globalThis.OffscreenCanvas) || !P.isUndefined(globalThis.document);
 
-// Swap `navigator` and restore it inside one synchronous step, so concurrent tests never observe it.
-const profileWithNavigator = (navigatorValue: unknown) =>
+const profileUnderSyncNavigatorSwap = (navigatorValue: unknown) =>
   Effect.sync(() => {
     const original = O.fromNullishOr(Object.getOwnPropertyDescriptor(globalThis, "navigator"));
     Object.defineProperty(globalThis, "navigator", { configurable: true, value: navigatorValue });
@@ -79,7 +78,7 @@ describe("detectEngineProfile", () => {
   it.effect(
     "pins the non-browser fence values mirrored from upstream v0.0.8",
     Effect.fnUntraced(function* () {
-      const profile = yield* profileWithNavigator(undefined);
+      const profile = yield* profileUnderSyncNavigatorSwap(undefined);
 
       expect(profile.lineFitEpsilon).toBe(0.005);
       expect(profile.carryCJKAfterClosingQuote).toBe(false);
@@ -92,7 +91,7 @@ describe("detectEngineProfile", () => {
   it.effect(
     "switches to the Safari fence values for an Apple WebKit user agent",
     Effect.fnUntraced(function* () {
-      const profile = yield* profileWithNavigator({
+      const profile = yield* profileUnderSyncNavigatorSwap({
         userAgent:
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15",
         vendor: "Apple Computer, Inc.",
@@ -109,7 +108,7 @@ describe("detectEngineProfile", () => {
   it.effect(
     "carries CJK after closing quotes for Chromium even when the vendor claims Apple",
     Effect.fnUntraced(function* () {
-      const profile = yield* profileWithNavigator({
+      const profile = yield* profileUnderSyncNavigatorSwap({
         userAgent:
           "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0 Mobile/15E148 Safari/604.1",
         vendor: "Apple Computer, Inc.",
@@ -126,7 +125,7 @@ describe("detectEngineProfile", () => {
   it.effect(
     "keeps the default fence values for a non-WebKit, non-Chromium user agent",
     Effect.fnUntraced(function* () {
-      const profile = yield* profileWithNavigator({
+      const profile = yield* profileUnderSyncNavigatorSwap({
         userAgent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
         vendor: "",
       });

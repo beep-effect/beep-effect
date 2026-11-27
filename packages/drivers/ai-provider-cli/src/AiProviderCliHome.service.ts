@@ -67,7 +67,6 @@ interface AiProviderCliHomeShape {
   }) => AiProviderCliCodexHomeLayout;
 }
 
-/** Shared/effective home pair threaded through shadow-home maintenance. */
 interface HomeContext {
   readonly effectiveHomePath: string;
   readonly sharedHomePath: string;
@@ -90,12 +89,9 @@ const isLocalEntry = S.is(AiProviderCliCodexLocalEntry);
 const isEinvalCause = (cause: unknown): boolean =>
   P.isObject(cause) && P.hasProperty(cause, "code") && cause.code === "EINVAL";
 
-// `readLink` on a regular file/directory surfaces as EINVAL, which the
-// platform layer normalizes to the `Unknown` reason tag.
 const isNotSymlinkFailure = (error: PlatformError.PlatformError): boolean =>
   error.reason._tag === "Unknown" && isEinvalCause(error.reason.cause);
 
-// Drop configured values that are unset or whitespace-only.
 const configuredPath = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
 
 /**
@@ -383,8 +379,6 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
       )
     );
 
-    // Stale private symlinks other than auth.json are silently removed;
-    // auth.json is validated below and refused when it is a symlink.
     yield* Effect.forEach(
       AiProviderCliCodexPrivateEntry.pick(["models_cache.json"]).literals,
       (entryName) => removePrivateSymlink({ context, entryName }),

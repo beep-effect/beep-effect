@@ -99,7 +99,6 @@ export const isStructuralJson = (schema: Field.AnySchema): boolean => {
  */
 export type StructuralJson = JsonCarrier;
 
-/** SQLite descriptor derived from an encoded carrier, or `never` when ambiguous. */
 type Derived<I extends Field.Input> =
   SelectSchemaOf<Field.SchemaFrom<I>> extends EntityIdLike & {
     readonly tableName: infer TableName extends string;

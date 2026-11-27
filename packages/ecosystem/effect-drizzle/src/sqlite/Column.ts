@@ -42,7 +42,6 @@ import type { Option } from "effect/Option";
 import type { AST, Literal } from "effect/SchemaAST";
 import type * as Meta from "../core/Meta.ts";
 
-/** Failure raised when a SQLite descriptor violates its closed shape. */
 /** @internal */
 class ColumnInvariantError extends TaggedError<ColumnInvariantError, { readonly brand: unique symbol }>(
   "@beep/effect-drizzle/sqlite/ColumnInvariantError"
@@ -71,7 +70,6 @@ export type EntityIdIdent<TableName extends string> = `entityId<"${TableName}">`
  */
 export type ArrayDimension = Meta.ArrayDimension;
 
-/** SQLite text storage modes retained by public field inference. */
 type TextMode = "text" | "json";
 
 /**
@@ -518,7 +516,6 @@ export type CarrierOf<C extends Spec> =
                   : bigint
               : never;
 
-/** Runtime carrier witness used by foreign-key compatibility checks. */
 /** @internal */
 type CarrierTag = "string" | "number" | "bigint" | "boolean" | "object" | "date" | "bytes";
 

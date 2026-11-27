@@ -20,7 +20,6 @@ describe("Phoenix declared-field equivalence", () => {
     const a = PhoenixError.operation("doctor", "transport", { cause: new TypeError("boom") });
     const b = PhoenixError.operation("doctor", "transport", { cause: new RangeError("boom") });
 
-    // the defect cause is payload, never identity
-    assertTrue(samePhoenixError(a, b));
+    assertTrue(samePhoenixError(a, b), "the defect cause is payload, never identity");
   });
 });

@@ -83,10 +83,6 @@ const pgDialect = new PgDialect();
 const assertSchemaExpression = (expression: import("drizzle-orm").SQL, context: string): void =>
   Meta.assertNoSqlParameters(pgDialect.sqlToQuery(expression).params, context);
 
-// ---------------------------------------------------------------------------
-// Type-level projection
-// ---------------------------------------------------------------------------
-
 type BuilderBase<C extends PgColumn.Spec> =
   C extends PgColumn.Varchar<number>
     ? PgVarcharBuilder
@@ -277,10 +273,6 @@ export type TableOf<M extends AnyModel> = PgTableWithColumns<{
   dialect: "pg";
   isAlias: false;
 }>;
-
-// ---------------------------------------------------------------------------
-// Runtime projection
-// ---------------------------------------------------------------------------
 
 /**
  * Assembly-owned Drizzle enum instances keyed by PostgreSQL enum name.
