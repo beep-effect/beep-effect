@@ -103,7 +103,7 @@ const domainsByName = MutableHashMap.empty<string, DomainRecord>();
 const dnsFixed = MutableHashSet.empty<string>();
 const storedTypes = MutableHashMap.empty<string, string>();
 const refusedEnvCreates = MutableHashSet.empty<string>();
-const requestsTaggedForConcurrentTests: Array<{ readonly projectId: string; readonly call: string }> = [];
+const projectTaggedRequests: Array<{ readonly projectId: string; readonly call: string }> = [];
 const envPatchFieldNames = ["comment", "gitBranch", "key", "target", "type", "value"] as const;
 const envPatchFields: Array<{ readonly projectId: string; readonly fields: ReadonlyArray<string> }> = [];
 let sequence = 0;
@@ -139,7 +139,7 @@ export const FakeVercel = {
   /** `METHOD Route` calls the fake answered for one project, in order. */
   requestsFor: (projectId: string): ReadonlyArray<string> =>
     A.map(
-      A.filter(requestsTaggedForConcurrentTests, (entry) => entry.projectId === projectId),
+      A.filter(projectTaggedRequests, (entry) => entry.projectId === projectId),
       (entry) => entry.call
     ),
   seedProject: (name: string, repo?: string, repoType?: string): ProjectRecord => {
@@ -540,7 +540,7 @@ const client = HttpClient.make((request) =>
     const url = new URL(request.url);
     const segments = A.filter(Str.split("/")(url.pathname), Str.isNonEmpty);
     const route = toRoute(segments);
-    requestsTaggedForConcurrentTests.push({ projectId: projectIdOf(route), call: `${request.method} ${route._tag}` });
+    projectTaggedRequests.push({ projectId: projectIdOf(route), call: `${request.method} ${route._tag}` });
     const text = request.body._tag === "Uint8Array" ? new TextDecoder().decode(request.body.body) : "";
     const body = Str.isEmpty(text) ? undefined : yield* decodeJson(text).pipe(Effect.orDie);
     const result = handle(request.method, route, url.searchParams, body);
