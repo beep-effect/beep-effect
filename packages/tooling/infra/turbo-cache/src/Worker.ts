@@ -1,6 +1,6 @@
 /**
- * The repository's cache Worker: the `beep` team's policy bound to
- * {@link turboCache}. Alchemy bundles this module as the Worker, so its
+ * The repository's cache Worker: the repository policy, both its teams, bound
+ * to {@link turboCache}. Alchemy bundles this module as the Worker, so its
  * default export is the Worker resource.
  *
  * @packageDocumentation
