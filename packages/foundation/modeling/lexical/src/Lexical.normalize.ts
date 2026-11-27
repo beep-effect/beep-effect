@@ -26,10 +26,6 @@ const embedOrShortsPrefix = /^\/(?:embed|shorts)\//u;
 const firstPathSegment = (pathname: string): string =>
   pipe(Str.split(pathname, "/"), A.findFirst(Str.isNonEmpty), O.getOrElse(thunkEmptyStr));
 
-/**
- * Parses a string into a `URL` without throwing: an unparseable input becomes
- * `None`. Uses the total `URL.parse` constructor (no `try`/`catch`).
- */
 const safeUrl = (value: string): O.Option<URL> => O.fromNullishOr(URL.parse(value));
 
 const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
@@ -105,14 +101,6 @@ export const legacyYouTubeVideoId = (value: string): string => {
  */
 export const sanitizeUrl = flow(Str.trim, sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicySpec));
 
-/**
- * Allowlist of inline CSS properties that are safe to preserve on serialized
- * Lexical text/element nodes. Anything outside this set — positioning, overlay,
- * stacking, animation, transforms, and any URL-bearing or function-call value —
- * is dropped, because a serialized editor state can originate from untrusted
- * persisted/synced content and Lexical renders these strings directly as DOM
- * `style` attributes (UI redressing / external resource beacons otherwise).
- */
 const SAFE_INLINE_STYLE_PROPERTIES: ReadonlyArray<string> = [
   "color",
   "background-color",
@@ -151,6 +139,14 @@ const parseSafeDeclaration = (declaration: string): O.Option<string> => {
  * allowlist of safe presentation declarations, dropping anything that could be
  * weaponized for UI redressing or external resource fetches. Empty input (the
  * common Lexical default) round-trips to the empty string.
+ *
+ * **Gotchas**
+ *
+ * A serialized editor state can come from untrusted persisted or synced
+ * content, and Lexical renders these strings directly as DOM `style`
+ * attributes. Positioning, overlay, stacking, animation and transform
+ * properties, and any value holding a URL or a function call, are dropped so
+ * they cannot redress the UI or beacon an external resource.
  *
  * **Example** (Strip unsafe CSS properties)
  *

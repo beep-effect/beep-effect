@@ -61,9 +61,7 @@ type ChalkPrototype = object;
 
 const builderMetaMap = new WeakMap<ChalkFunction, BuilderMeta>();
 
-// A builder shares one level cell with the builder it was derived from, so a
-// level change on either reaches the whole chain.
-const builderLevelMap = new WeakMap<ChalkFunction, MutableRef.MutableRef<ColorSupportLevelType>>();
+const sharedLevelCellByBuilder = new WeakMap<ChalkFunction, MutableRef.MutableRef<ColorSupportLevelType>>();
 
 const levelMapping: Readonly<Record<ColorSupportLevelType, AnsiRenderLevel>> = {
   0: AnsiRenderLevel.Enum.ansi,
@@ -104,7 +102,7 @@ const lookupBuilder = <A>(entries: WeakMap<ChalkFunction, A>, builder: ChalkFunc
 };
 
 const getBuilderLevel = (builder: ChalkFunction): MutableRef.MutableRef<ColorSupportLevelType> =>
-  lookupBuilder(builderLevelMap, builder);
+  lookupBuilder(sharedLevelCellByBuilder, builder);
 
 const getBuilderMeta = (builder: ChalkFunction): BuilderMeta => lookupBuilder(builderMetaMap, builder);
 
@@ -291,7 +289,7 @@ const createBuilder = (
       styler,
     })
   );
-  builderLevelMap.set(builder, level);
+  sharedLevelCellByBuilder.set(builder, level);
 
   Object.setPrototypeOf(builder, currentPrototype);
 

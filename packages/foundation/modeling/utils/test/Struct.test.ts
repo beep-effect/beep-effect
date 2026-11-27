@@ -153,8 +153,7 @@ describe("@beep/utils Struct.mapPathLazy", () => {
   });
 });
 
-describe("Struct raw-path runtime compatibility", () => {
-  // These inputs exercise the runtime fallback outside the typed options API.
+describe("Struct raw-path runtime fallback outside the typed options API", () => {
   it("maps a raw string path", () => {
     const source = { profile: { name: "beep" } };
     const renderName = (value: unknown) => `${value}!`;

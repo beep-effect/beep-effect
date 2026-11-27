@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/lexical-schema",
-  "root": "packages/foundation/modeling/lexical",
-  "scopes": ["."]
-}

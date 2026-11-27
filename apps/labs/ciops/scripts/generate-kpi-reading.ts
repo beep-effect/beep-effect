@@ -8,18 +8,10 @@ import { renderReadingJson, renderReadingMarkdown } from "@/kpi/Render";
 import { runKpiScript, syncKpiArtifacts } from "@/kpi/Script";
 import { decodeEvidenceMode, EvidenceMode, EvidenceWriteScript } from "@/projection/Evidence";
 
-// The W8 KPI reading (S7 contract §9, launch sitting Ruling 10). The service reads every pin
-// by path and SHA-256 (the typed constants in `Pins.ts`, shared with the end-to-end test) and
-// folds them with no wall clock, environment read or process spawn. The reading pins the
-// projection's digest. The snapshot check that tied the projection to its payload
-// (`research/scripts/redact_journal_snapshot.py --check`) was removed with the repository's
-// Python (goal python-free-repo); recover it with `git show
-// 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:explorations/beep-ci-operational-ontology/research/scripts/redact_journal_snapshot.py`.
-// Check-by-default: the bare script compares the committed JSON and Markdown with the
-// recomputed render; only `--write` rewrites them.
 const repoRoot = "../../..";
 const writeScript = EvidenceWriteScript.Enum["evidence:kpi:write"];
 
+// decision: opt-in-evidence-writes
 const generate = Effect.gen(function* () {
   const mode = yield* decodeEvidenceMode(process.argv, writeScript);
   const reading = yield* (yield* CiOpsKpi).read(kpiReadingInput(repoRoot));

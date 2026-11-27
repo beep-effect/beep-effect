@@ -64,8 +64,6 @@ export type DocketRunSelector = typeof DocketRunSelector.Type;
 
 const isRunId = S.is(DocketRunId);
 
-// The run the selector names, which must have lines in the journal: undoing a run id that was
-// mistyped would otherwise report nothing done and look like success.
 const resolveRun = (
   entries: ReadonlyArray<DocketJournalEntry>,
   selector: DocketRunSelector
@@ -76,7 +74,6 @@ const resolveRun = (
       : latestDocketRun(entries)
   ).pipe(Effect.mapError(() => DocketIntakeCommandError.failed(`no run ${selector} in the journal`)));
 
-// Read the journal, resolve the run and plan its undo against the mailbox.
 const planRun = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, selector: DocketRunSelector) {
   const entries = yield* readDocketJournal(config.stateDirectory);
   const runId = yield* resolveRun(entries, selector);

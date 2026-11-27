@@ -37,8 +37,7 @@ const isProtobufFloatValue = (value: number) =>
   value === globalThis.Number.NEGATIVE_INFINITY ||
   (globalThis.Number.isFinite(value) && value >= floatMinimum && value <= floatMaximum);
 
-// Every BigInt consumer shares this boundary with the global coercion spy.
-describe("protobuf scalar schemas", { concurrent: false }, () => {
+describe("protobuf scalar schemas, run serially around the global BigInt coercion spy", { concurrent: false }, () => {
   describe("protobuf floating-point scalar schemas", () => {
     it.effect(
       "accepts protobuf float and double boundaries",

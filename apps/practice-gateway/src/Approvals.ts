@@ -115,7 +115,6 @@ const declined = Effect.succeed(RepairDecision.Enum.declined);
  */
 export const APPROVAL_DIALOG_TITLE = "Practice gateway: approve a change";
 
-// Timeouts, failures and interrupts all leave the machine unchanged.
 const failClosed = <E, R>(answer: Effect.Effect<RepairDecision, E, R>) =>
   answer.pipe(
     Effect.timeoutOption(APPROVAL_TIMEOUT),
@@ -127,8 +126,7 @@ const ask = (client: McpSchema.McpServerClient["Service"], requirement: SetupReq
   McpServer.elicit({ message: approvalMessage(requirement), schema: RepairApprovalAnswer }).pipe(
     Effect.map((answer) => (answer.approve ? RepairDecision.Enum.approved : RepairDecision.Enum.declined)),
     Effect.provideService(McpSchema.McpServerClient, client),
-    // Declined, cancelled (an interrupt from `elicit`), failed or malformed
-    // answers all leave the machine unchanged.
+
     failClosed
   );
 

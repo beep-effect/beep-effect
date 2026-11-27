@@ -7,7 +7,6 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const lines = Effect.map(TestConsole.logLines, (captured) => A.map(captured, String));
 
-/** A mutation that records the fact it ran, so "did not run" is observable. */
 const mutation = () => {
   const performed: Array<string> = [];
   const effect = Effect.sync(() => {
@@ -68,7 +67,6 @@ describe("DryRun", () => {
   });
 
   describe("driven by the action input", () => {
-    // Input-name keyed, `with:`-block style: mangling remains in ActionInput.
     it.layer(DryRun.layer.pipe(Layer.provide(ActionInput.layer({ "dry-run": "true" }))), {
       timeout: "30 seconds",
     })((it) => {
@@ -102,16 +100,18 @@ describe("DryRun", () => {
 
     it.layer(ActionInput.layer({ "INPUT_DRY-RUN": "yes" }), { timeout: "30 seconds" })((it) => {
       it.effect("refuses a malformed input rather than defaulting it away", () =>
-        // The discriminating case, and the reason `ActionInput`'s validation
-        // errors carry their `actual` value: `Config.withDefault` falls back for
-        // MISSING data only, and an `InvalidValue` with no actual is classified
-        // as missing. Without that, `dry-run: yes` would silently resolve to
-        // `false` and the action would perform every mutation it was asked to
-        // rehearse — the worst possible direction for this particular default.
         Effect.gen(function* () {
           const error = yield* DryRun.layer.pipe(Layer.build, Effect.flip);
-          assert.strictEqual(error._tag, "ConfigError");
-          assert.include(error.message, "YAML 1.2 core schema");
+          assert.strictEqual(
+            error._tag,
+            "ConfigError",
+            "Config.withDefault falls back for missing data only, and an InvalidValue with no actual counts as missing"
+          );
+          assert.include(
+            error.message,
+            "YAML 1.2 core schema",
+            "ActionInput errors carry actual, or `dry-run: yes` would resolve to false and perform every mutation"
+          );
         })
       );
     });

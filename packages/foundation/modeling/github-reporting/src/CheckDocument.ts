@@ -127,10 +127,8 @@ export class CheckDocumentSnapshot extends S.Opaque<CheckDocumentSnapshot, { rea
   )
 ) {}
 
-/** The layer's registry state: the snapshot's fields before admission. */
-type RegistryState = Parameters<typeof CheckDocumentSnapshot.make>[0];
+type UnadmittedRegistryState = Parameters<typeof CheckDocumentSnapshot.make>[0];
 
-/** What each {@link CheckDocumentError} kind reads as. */
 const KIND_PROSE = {
   render: "The check document could not be regenerated from the reported state",
   read: "Reading the check document's current text failed",
@@ -249,6 +247,12 @@ export class CheckDocumentStamp extends S.Opaque<CheckDocumentStamp, { readonly 
    * rewrite what it wrote itself. Only a strictly older `incoming` answers
    * `false`.
    *
+   * `at` compares as instants when both sides parse as dates and lexically
+   * otherwise. A tie falls to `runId`: exact for decimal integers, numeric for
+   * other finite spellings, lexical otherwise. A blank `runId` (plausible when
+   * `GITHUB_RUN_ID` is unset in a local or self-hosted run) compares
+   * lexically, so it never ties `"0"` and never outranks `"-1"`.
+   *
    * **Example** (Break timestamp ties by run identifier)
    *
    * ```ts
@@ -286,7 +290,6 @@ export class CheckDocumentStamp extends S.Opaque<CheckDocumentStamp, { readonly 
   );
 }
 
-/** Instant order when both sides parse as dates, lexical otherwise. */
 const compareAt: {
   (left: string, right: string): number;
   (right: string): (left: string) => number;
@@ -297,7 +300,6 @@ const compareAt: {
   )
 );
 
-/** Decimal integer spellings eligible for exact run-id ordering. */
 const DecimalRunId = S.String.check(
   S.isPattern(
     /^[+-]?\d+$/,
@@ -314,17 +316,6 @@ const DecimalRunId = S.String.check(
 const parseDecimalRunId = S.decodeUnknownOption(DecimalRunId);
 const parseFiniteRunId = S.decodeUnknownOption(S.FiniteFromString);
 
-/**
- * Exact order for decimal integers; numeric order for other non-blank finite
- * number spellings; lexical otherwise.
- *
- * **Details**
- * The blank guard exists because `Number("")` and `Number("  ")` are both a
- * finite `0` — without it a blank `runId` (plausible when `GITHUB_RUN_ID` is
- * unset in a local or self-hosted run) would compare numerically equal to
- * `"0"` and outrank `"-1"`. Blank sides fall to the lexical branch, which
- * stays total and deterministic.
- */
 const compareRunId: {
   (left: string, right: string): number;
   (right: string): (left: string) => number;
@@ -338,10 +329,8 @@ const compareRunId: {
   return O.getOrElse(
     O.map(integers, ([leftId, rightId]) => BigInt.Order(leftId, rightId)),
     () => {
-      const numbers =
-        Str.isEmpty(leftTrimmed) || Str.isEmpty(rightTrimmed)
-          ? O.none()
-          : O.all([parseFiniteRunId(left), parseFiniteRunId(right)]);
+      const eitherSideBlank = Str.isEmpty(leftTrimmed) || Str.isEmpty(rightTrimmed);
+      const numbers = eitherSideBlank ? O.none() : O.all([parseFiniteRunId(left), parseFiniteRunId(right)]);
       return O.getOrElse(
         O.map(numbers, ([leftId, rightId]) => Num.Order(leftId, rightId)),
         () => Str.Order(left, right)
@@ -350,14 +339,12 @@ const compareRunId: {
   );
 });
 
-/** The stamp a document's own regions carry, when they carry one. */
 const stampOf = (meta: Readonly<Record<string, string>>): { at: string; runId: string } | undefined => {
   const at = meta.at;
   const runId = meta.runId;
   return at === undefined || runId === undefined ? undefined : { at, runId };
 };
 
-/** The most recent stamp among a document's own regions, if any carry one. */
 const maxStampOf = (
   regions: ReadonlyArray<{ readonly meta: Readonly<Record<string, string>> }>
 ): { at: string; runId: string } | undefined => {
@@ -509,7 +496,8 @@ export interface CheckDocumentOptions<E = unknown> {
    * pass whose stamp is strictly older than the most recent stamp already on
    * the document is **dropped** rather than written, so a delayed re-run can
    * never clobber a newer run's regions. Equal stamps pass: a run may refine
-   * its own regions.
+   * its own regions. Regions without a stamp are not evidence of a newer run
+   * and never cause a drop.
    *
    * The constant is what preserves write suppression: the same run rendering
    * the same state produces byte-identical text (stamp included), so no
@@ -548,7 +536,10 @@ export interface CheckDocumentShape {
    * **Details**
    *
    * Never fails and never blocks on the write — the state lands in the
-   * registry, and the debounced background pass projects it. Reporting the
+   * registry, and the debounced background pass projects it. An entry that
+   * is not a valid `CheckReport` dies here, at the caller's `report`, so it
+   * never reaches the background pass, the `checks` read or the final flush,
+   * where it would poison the registry for the run. Reporting the
    * same key again replaces the entry; resolution is **not** terminal, so
    * `pass` followed by `fail` leaves `fail` even inside one debounce window.
    */
@@ -699,12 +690,10 @@ export class CheckDocument extends Context.Service<CheckDocument, CheckDocumentS
 
 const dies = unstubbed("CheckDocument.makeTest");
 
-/** The sink with its bare-function form normalized to `{ write }`. */
 type NormalizedSink<E> = Exclude<CheckDocumentSink<E>, (rendered: string) => Effect.Effect<unknown, E>>;
 
-/** The per-layer state one reconcile pass reads and writes. */
 type ReconcileContext<E> = {
-  readonly checksRef: Ref.Ref<RegistryState>;
+  readonly checksRef: Ref.Ref<UnadmittedRegistryState>;
   readonly options: CheckDocumentOptions<E>;
   readonly passTimeout: Duration.Input;
   readonly sink: NormalizedSink<E>;
@@ -713,14 +702,6 @@ type ReconcileContext<E> = {
   readonly writtenRef: Ref.Ref<string>;
 };
 
-/**
- * The text a pass reconciles against.
- *
- * With a readable sink each pass reconciles against the LIVE document — what
- * another run wrote, not this process's shadow. `undefined` is "nothing there
- * yet": a fresh document. The same timeout bounds the read as the write, and
- * for the same reason: the pass holds the single permit.
- */
 const readCurrent = <E>(context: ReconcileContext<E>): Effect.Effect<string, CheckDocumentError> =>
   O.match(O.fromUndefinedOr(context.sink.read), {
     onNone: () => Ref.get(context.writtenRef),
@@ -734,14 +715,6 @@ const readCurrent = <E>(context: ReconcileContext<E>): Effect.Effect<string, Che
       ),
   });
 
-/**
- * Drop a strictly older pass, logging the drop.
- *
- * Once stale, every later pass of this run is stale too — the stamp is a
- * per-run constant. INFO on the transition only; repeats (the debounced pass
- * plus an explicit flush is the common pair) log at debug so a chatty run does
- * not repeat the same drop per report.
- */
 const dropStale = Effect.fnUntraced(function* (
   staleLoggedRef: Ref.Ref<boolean>,
   incoming: { readonly at: string; readonly runId: string },
@@ -763,13 +736,6 @@ const dropStale = Effect.fnUntraced(function* (
   return "stale" as const;
 });
 
-/**
- * Whether this pass is older than the regions already on the document.
- *
- * The drop rule: regions already stamped by a more recent run win; a strictly
- * older pass must not clobber them. Regions carrying no stamp are ignored —
- * they are not evidence of a newer run.
- */
 const isStalePass = Effect.fnUntraced(function* <E>(context: ReconcileContext<E>, document: ManagedDocument) {
   const stamp = context.options.stamp;
   if (stamp === undefined) {
@@ -784,13 +750,6 @@ const isStalePass = Effect.fnUntraced(function* <E>(context: ReconcileContext<E>
   return false;
 });
 
-/**
- * Write a changed render through the sink.
- *
- * The timeout is load-bearing, not defensive: the pass holds the single
- * permit, and the finalizer's last flush waits on it — an unbounded hung sink
- * would stall reconciling AND scope teardown.
- */
 const writeRendered = Effect.fnUntraced(function* <E>(context: ReconcileContext<E>, text: string) {
   yield* context.sink.write(text).pipe(
     Effect.timeout(context.passTimeout),
@@ -799,9 +758,7 @@ const writeRendered = Effect.fnUntraced(function* <E>(context: ReconcileContext<
   yield* Ref.set(context.writtenRef, text);
 });
 
-/** One read-render-compare-write pass over the document. */
 const reconcileOnce = Effect.fn("CheckDocument.reconcile")(function* <E>(context: ReconcileContext<E>) {
-  // Plain registry state: the snapshot schema is admitted once per pass.
   const got = yield* Ref.get(context.checksRef);
   const checks = CheckDocumentSnapshot.make(got);
   const current = yield* readCurrent(context);
@@ -827,10 +784,6 @@ const reconcileOnce = Effect.fn("CheckDocument.reconcile")(function* <E>(context
   return "written" as const;
 });
 
-/**
- * Wait out one burst: a quiet window (no version movement for `quiet`) or the
- * staleness bound, whichever comes first.
- */
 const awaitSettled = Effect.fnUntraced(function* (
   versionRef: Ref.Ref<number>,
   quietMillis: number,
@@ -849,11 +802,6 @@ const awaitSettled = Effect.fnUntraced(function* (
   }
 });
 
-/**
- * Trailing debounce with a max-wait. The latch wakes the fiber on the first
- * report of a burst; {@link awaitSettled} then holds until the burst settles —
- * so the write always carries the burst's FINAL state, never its first.
- */
 const debounceLoop = Effect.fnUntraced(function* (
   signal: Latch.Latch,
   versionRef: Ref.Ref<number>,
@@ -874,46 +822,35 @@ const debounceLoop = Effect.fnUntraced(function* (
   }
 });
 
-/** Build the reconciler service over one document. */
 const makeCheckDocument = Effect.fnUntraced(function* <E>(options: CheckDocumentOptions<E>) {
   const quietMillis = Duration.toMillis(options.debounce?.quiet ?? "500 millis");
   const maxWaitMillis = Num.max(Duration.toMillis(options.debounce?.maxWait ?? "3 seconds"), quietMillis);
-  // Plain registry state: the snapshot schema is admitted once per read
-  // (`checks`, and each reconcile pass), never once per report.
-  const checksRef = yield* Ref.make<RegistryState>({ checks: HashMap.empty(), order: [] });
+  const checksRef = yield* Ref.make<UnadmittedRegistryState>({ checks: HashMap.empty(), order: [] });
   const versionRef = yield* Ref.make(0);
   const signal = yield* Latch.make(false);
-  const gate = yield* Semaphore.make(1);
+  const passPermit = yield* Semaphore.make(1);
   const stamp = options.stamp;
   const context: ReconcileContext<E> = {
     checksRef,
     options,
     passTimeout: options.sinkTimeout ?? "30 seconds",
-    // Normalized once: the bare-function sink is exactly `{ write }`.
     sink: P.isFunction(options.sink) ? { write: options.sink } : options.sink,
     staleLoggedRef: yield* Ref.make(false),
     stampMeta: stamp === undefined ? undefined : { at: stamp.at, runId: stamp.runId },
     writtenRef: yield* Ref.make(options.initial ?? ""),
   };
 
-  // One pass at a time: the debounce fiber and a manual `flush` must not
-  // interleave their read-render-compare-write sequences.
-  const flush = gate.withPermits(1)(reconcileOnce(context));
+  const flush = passPermit.withPermits(1)(reconcileOnce(context));
 
-  // Registered BEFORE the fork so it runs AFTER the fork's own interruption
-  // finalizer: the daemon is already dead when the last flush runs, so the
-  // two cannot race for the sink.
-  yield* Effect.addFinalizer(() =>
+  const lastFlushAfterDaemonInterrupt = Effect.addFinalizer(() =>
     flush.pipe(Effect.catch((failure) => Effect.logWarning("CheckDocument final flush failed", { kind: failure.kind })))
   );
+  yield* lastFlushAfterDaemonInterrupt;
   yield* Effect.forkScoped(debounceLoop(signal, versionRef, { quietMillis, maxWaitMillis }, flush));
 
   const report: CheckDocumentShape["report"] = dual(
     2,
     Effect.fn("CheckDocument.report")(function* (check: string, entry: CheckReport) {
-      // Admitted here, O(1) per report: an invalid entry dies at the caller's
-      // `report`, not later inside the daemon pass, the `checks` read or the
-      // finalizer flush, where it would poison the registry for the run.
       const admitted = CheckReport.make(entry);
       yield* Ref.update(checksRef, (current) => ({
         checks: HashMap.set(current.checks, check, admitted),

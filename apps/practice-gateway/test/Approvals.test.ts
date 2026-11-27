@@ -22,7 +22,6 @@ const decodeElicitResult = S.decodeUnknownEffect(McpSchema.ElicitResult);
 const decodeInitialize = S.decodeUnknownEffect(McpSchema.Initialize.payloadSchema);
 const decodeCapabilities = S.decodeUnknownEffect(McpSchema.ClientCapabilities);
 
-// A client session whose elicitation prompt answers with `answer`.
 const clientAnswering = Effect.fnUntraced(function* (answer: unknown, capabilities: unknown) {
   const result = yield* decodeElicitResult(answer);
   const clientCapabilities = yield* decodeCapabilities(capabilities);
@@ -99,7 +98,6 @@ describe("ElicitedApprovals", () => {
   });
 });
 
-// The gateway's approvals on a fake Windows host whose dialog answers Yes or No.
 const gatewayApprove = (machine: { readonly answersYes: boolean; readonly isWindows?: boolean }) =>
   SetupApprovals.use((approvals) => approvals.approveRepair(boxInstall)).pipe(
     provideScopedLayer(GatewayApprovals.pipe(Layer.provide(fakeHost(machine))))
@@ -125,9 +123,10 @@ describe("GatewayApprovals", () => {
 
   it.effect("prefers elicitation when the client supports it", () =>
     Effect.gen(function* () {
-      // The fake client declines the elicitation; the Yes dialog is never consulted.
       const gatewayApproveWith9 = yield* gatewayApproveWith({ answersYes: true }, { elicitation: {} });
-      expect(gatewayApproveWith9).toBe("declined");
+      expect(gatewayApproveWith9, "A declined client elicitation never consults the Windows Yes dialog.").toBe(
+        "declined"
+      );
     })
   );
 

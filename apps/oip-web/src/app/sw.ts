@@ -1,14 +1,8 @@
-// fallow-ignore-file unused-file -- Serwist compiles this service-worker entry outside the app import graph. Owner: @beep/oip-web. Exit: remove when fallow's Next plugin recognizes Serwist service-worker entries.
+// fallow-ignore-file unused-file -- Serwist compiles this service-worker entry outside the app import graph and the app’s tsgo projects because WebWorker globals conflict with the app’s DOM library. Owner: @beep/oip-web. Exit: remove when fallow's Next plugin recognizes Serwist service-worker entries.
 /// <reference lib="webworker" />
 import { defaultCache } from "@serwist/next/worker";
 import { Serwist } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-
-// Service worker entry compiled by `@serwist/webpack-plugin` (via `withSerwistInit`
-// in `@beep/repo-configs/next`) during `next build --webpack`. It is excluded from
-// the app's tsgo project because a service worker needs the WebWorker lib globals
-// (`self: ServiceWorkerGlobalScope`), which conflict with the app's DOM lib; the
-// serwist webpack loader supplies the worker context and compiles this file.
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {

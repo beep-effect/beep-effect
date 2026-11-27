@@ -26,17 +26,8 @@ import { EdgeEndpointShape, encodeEdgeEndpointKey } from "../EdgeEndpoint/index.
 import { EdgeRelation, isSymmetricEdgeRelation } from "../EdgeRelation/index.ts";
 import type { SchemaIdentity } from "../Factory/index.ts";
 
-/**
- * Digest version prefix. Bump it whenever the canonical encoding changes so old
- * and new keys can never collide in a table that holds both.
- */
 const canonicalEncodingVersion = "v1";
 
-/**
- * Marker for an absent scope. It is a distinct token rather than an empty string
- * so `none` can never collide with a real scope value — the encoding-side
- * analogue of the SQL NULL hole that motivated the digest column.
- */
 const absentScopeMarker = "<none>";
 
 /**
@@ -138,23 +129,11 @@ export const makeLogicalEdgeIdentity = <Endpoint extends S.Top>(config: {
   };
 };
 
-/**
- * Escape one canonical component so the `|` join is injective: free-form
- * values (scopes, endpoint refs) cannot smuggle the component delimiter into
- * the encoding and merge two distinct identities onto one string. `%` escapes
- * first so escaped output can never collide with a literal that already
- * contained an escape sequence.
- */
 const escapeCanonicalComponent: (value: string) => string = flow(
   Str.replaceAll("%", "%25"),
   Str.replaceAll("|", "%7C")
 );
 
-/**
- * Escape one qualifier key or value: the qualifier sub-encoding additionally
- * owns `=` (entry separator) and `,` (list separator), so both join layers
- * stay injective.
- */
 const escapeQualifierComponent: (value: string) => string = flow(
   escapeCanonicalComponent,
   Str.replaceAll("=", "%3D"),
@@ -230,12 +209,18 @@ export type LogicalEdgeIdentityShape = typeof LogicalEdgeIdentityShapeSchema.Typ
  * prefixed with the encoding version. `logicalEdgeKey` is its lowercase SHA-256
  * hex digest. Both functions are typed on the caller's identity class.
  *
+ * Every component is percent-escaped, `%` first, so no free-form scope or
+ * endpoint ref can smuggle the `|` delimiter in and merge two identities onto
+ * one key; qualifier keys and values also escape `=` and `,`. An absent scope
+ * encodes as a marker token distinct from every present `some:` scope.
+ *
  * **Gotchas**
  *
  * This is a pinned encoder (see "Pinned encoders" in the `@beep/jsonc`
  * README): the logical edge key is stored in SQL, so the `|`-joined preimage
  * keeps its exact bytes and never moves to the canonical JSON owner. A new
- * format needs a new encoding version, never an edit to this one.
+ * format needs a new encoding version, never an edit to this one, so old and
+ * new keys never collide in a table that holds both.
  *
  * **Example** (Digest a bound logical edge identity)
  *
@@ -279,13 +264,6 @@ export const makeLogicalEdgeKey = <Identity extends S.Top & { readonly Type: Log
 }) => {
   const { LogicalEdgeKey } = config;
 
-  /**
-   * Order the two encoded endpoints. A symmetric relation means the recorded
-   * source/target ordering carries no meaning, so both presentations must collapse
-   * onto the same canonical pair; an asymmetric relation never swaps. Each
-   * encoded endpoint is escaped so a free-form entity/observation ref cannot
-   * inject the component delimiter.
-   */
   const orderEndpoints = (identity: Identity["Type"]): ReadonlyArray<string> =>
     pipe(
       [

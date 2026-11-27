@@ -4,7 +4,6 @@ import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 
-// The detector answers with an Option; these assertions read its value, or null when it is None.
 const lookupTerminal = flow(lookupTerminalOption, O.getOrNull);
 
 describe("terminal identification edge behaviour", () => {

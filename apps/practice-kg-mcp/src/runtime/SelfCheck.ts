@@ -23,8 +23,6 @@ import type { PracticeKgHostError } from "@beep/law-practice-server/PracticeKgHo
 const encodeReport = S.encodeEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 const encodeRefusal = S.encodeEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 
-// Prints the refusal line, then fails with the error that tells the main
-// runner the failure is already on stdout.
 const refuse = (error: PracticeKgHostError) =>
   error.pipe(
     makePracticeKgSelfCheckRefusal,
@@ -89,7 +87,6 @@ export const printPracticeKgSelfCheck = <R>(
   check: Effect.Effect<PracticeKgSelfCheckReport, PracticeKgHostError, R>
 ): Effect.Effect<void, SelfCheckFailure, R> =>
   check.pipe(
-    // Both lines encode values their schemas already validated, so an encode failure is a defect.
     Effect.flatMap(flow(encodeReport, Effect.orDie)),
     Effect.matchEffect({ onFailure: refuse, onSuccess: Console.log }),
     Effect.withSpan("PracticeKgSelfCheck.print")

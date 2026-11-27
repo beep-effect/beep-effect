@@ -24,8 +24,6 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { fakeHost, fakeM365SignIn, fullProfile, settingsLayer } from "./fixtures.ts";
 
-// The knowledge-graph modules cannot load, as on a machine without the DuckDB
-// native sidecar: the import rejects the way the runtime reports it.
 const missingEngine = PracticeKgModuleLoader.fromImport(() =>
   Promise.reject(new Error("Cannot find module '@duckdb/node-bindings-win32-x64/duckdb.node'"))
 );
@@ -35,8 +33,6 @@ const Platform = Layer.mergeAll(MemoryFileSystem.layer, BunPath.layer);
 const layerTimeout = "30 seconds";
 const unavailableMessage = "The practice knowledge-graph engine could not be loaded on this computer.";
 
-// Setup services over a temporary data directory with a profile that selects
-// practice-kg and a bundle folder, the case where the provider must load.
 const GatewayServices = Layer.unwrap(
   FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped({ prefix: "practice-gateway-" })).pipe(
     Effect.map((dataDir) => {
@@ -83,9 +79,12 @@ describe("practice-kg provider without the DuckDB sidecar", () => {
     it.effect("skips the provider, keeps the setup tools and answers setup_status", () =>
       Effect.gen(function* () {
         yield* ProfileStore.use((store) => store.save(fullProfile));
-        // The provider builds to nothing, logging why, instead of failing the gateway.
+
         const services = yield* Layer.build(Layer.merge(McpServer.McpServer.layer, PracticeKgProviderLayer));
-        expect(Context.get(services, McpServer.McpServer).tools).toEqual([]);
+        expect(
+          Context.get(services, McpServer.McpServer).tools,
+          "Unavailable native modules mount no tools and log their reason while the gateway still builds."
+        ).toEqual([]);
 
         const toolkit = yield* SetupToolkit;
         const stream = yield* toolkit.handle("setup_status", {});

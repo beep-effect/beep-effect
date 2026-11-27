@@ -47,9 +47,6 @@ describe("HostProcess", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "5 seconds" })("HostProcess browser-eval guard", (it) => {
-  // Regression guard for the professional-desktop blank shell: evaluating the
-  // `@beep/utils` barrel in an environment with no `process` global (a browser
-  // bundle) must not throw, and the host constants must take their fallbacks.
   it.effect(
     "evaluates the @beep/utils barrel without a process global",
     Effect.fnUntraced(function* () {
@@ -69,7 +66,10 @@ it.layer(NodeServices.layer, { timeout: "5 seconds" })("HostProcess browser-eval
       });
       const output = yield* spawner.string(command);
       const decodedGuardOutput = yield* decodeGuardOutput(Str.trim(output));
-      expect(decodedGuardOutput).toEqual({ platform: "browser", arch: "unknown" });
+      expect(
+        decodedGuardOutput,
+        "a browser bundle has no process global, so the barrel must not throw and the host constants take their fallbacks"
+      ).toEqual({ platform: "browser", arch: "unknown" });
     }),
     30_000
   );

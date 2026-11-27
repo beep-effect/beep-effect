@@ -91,13 +91,11 @@ describe("LocalDate", () => {
       Effect.fnUntraced(function* () {
         const decode = decodeUnknownLocalDate;
 
-        // 2024 - previous year relative to current date (2026)
         const pastDate2024 = yield* decode({ year: 2024, month: 1, day: 15 });
         expect(pastDate2024.year).toBe(2024);
         expect(pastDate2024.month).toBe(1);
         expect(pastDate2024.day).toBe(15);
 
-        // 2020 - 6 years ago
         const pastDate2020 = yield* decode({ year: 2020, month: 6, day: 30 });
         expect(pastDate2020.year).toBe(2020);
         expect(pastDate2020.month).toBe(6);
@@ -110,19 +108,16 @@ describe("LocalDate", () => {
       Effect.fnUntraced(function* () {
         const decode = decodeUnknownLocalDate;
 
-        // Y2K date
         const y2k = yield* decode({ year: 2000, month: 1, day: 1 });
         expect(y2k.year).toBe(2000);
         expect(y2k.month).toBe(1);
         expect(y2k.day).toBe(1);
 
-        // Very old date (1900)
         const old1900 = yield* decode({ year: 1900, month: 12, day: 31 });
         expect(old1900.year).toBe(1900);
         expect(old1900.month).toBe(12);
         expect(old1900.day).toBe(31);
 
-        // Minimum allowed year (1)
         const minYear = yield* decode({ year: 1, month: 1, day: 1 });
         expect(minYear.year).toBe(1);
       })
@@ -281,7 +276,7 @@ describe("LocalDate", () => {
       const date = LocalDate.make({ year: 2024, month: 6, day: 15 });
       const jsDate = date.toDate();
       expect(jsDate.getUTCFullYear()).toBe(2024);
-      expect(jsDate.getUTCMonth()).toBe(5); // June is month 5 in JS
+      expect(jsDate.getUTCMonth(), "JS Date months are zero-based, so June is 5").toBe(5);
       expect(jsDate.getUTCDate()).toBe(15);
       expect(jsDate.getUTCHours()).toBe(0);
     });
@@ -292,11 +287,13 @@ describe("LocalDate", () => {
       const before = DateTime.toDateUtc(DateTime.nowUnsafe());
       const t = today();
       const after = DateTime.toDateUtc(DateTime.nowUnsafe());
-      // Midnight may fall between the operation and either observation.
-      expect([
-        [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],
-        [after.getUTCFullYear(), after.getUTCMonth() + 1, after.getUTCDate()],
-      ]).toContainEqual([t.year, t.month, t.day]);
+      expect(
+        [
+          [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],
+          [after.getUTCFullYear(), after.getUTCMonth() + 1, after.getUTCDate()],
+        ],
+        "UTC midnight may fall between the operation and either observation"
+      ).toContainEqual([t.year, t.month, t.day]);
     });
   });
 
@@ -304,7 +301,6 @@ describe("LocalDate", () => {
     it.effect(
       "returns the date from TestClock (starts at epoch)",
       Effect.fnUntraced(function* () {
-        // TestClock starts at epoch (1970-01-01)
         const date = yield* todayEffect;
         expect(date.year).toBe(1970);
         expect(date.month).toBe(1);
@@ -315,11 +311,9 @@ describe("LocalDate", () => {
     it.effect(
       "advances with TestClock.adjust",
       Effect.fnUntraced(function* () {
-        // Start at epoch (1970-01-01)
         const initial = yield* todayEffect;
         expect(initial.toISOString()).toBe("1970-01-01");
 
-        // Advance 365 days
         yield* TestClock.adjust(Duration.days(365));
 
         const afterYear = yield* todayEffect;
@@ -332,7 +326,6 @@ describe("LocalDate", () => {
     it.effect(
       "handles specific date via TestClock.setTime",
       Effect.fnUntraced(function* () {
-        // Set clock to 2024-06-15 midnight UTC
         const targetDate = DateTime.toDateUtc(DateTime.makeUnsafe("2024-06-15T00:00:00.000Z"));
         yield* TestClock.setTime(targetDate.getTime());
 
@@ -350,11 +343,13 @@ describe("LocalDate", () => {
         const date = yield* todayEffect;
         const now2 = yield* DateTime.now;
         const after = DateTime.toDateUtc(now2);
-        // Preserve the live-clock contract even when UTC midnight intervenes.
-        expect([
-          [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],
-          [after.getUTCFullYear(), after.getUTCMonth() + 1, after.getUTCDate()],
-        ]).toContainEqual([date.year, date.month, date.day]);
+        expect(
+          [
+            [before.getUTCFullYear(), before.getUTCMonth() + 1, before.getUTCDate()],
+            [after.getUTCFullYear(), after.getUTCMonth() + 1, after.getUTCDate()],
+          ],
+          "the live clock holds even when UTC midnight falls between the observations"
+        ).toContainEqual([date.year, date.month, date.day]);
       })
     );
   });
@@ -525,7 +520,7 @@ describe("LocalDate", () => {
 
       const feb = LocalDate.make({ year: 2024, month: 2, day: 15 });
       const febEnd = endOfMonth(feb);
-      expect(febEnd.day).toBe(29); // 2024 is a leap year
+      expect(febEnd.day, "2024 is a leap year").toBe(29);
     });
   });
 
@@ -554,18 +549,18 @@ describe("LocalDate", () => {
       expect(isLeapYear(2024)).toBe(true);
       expect(isLeapYear(2000)).toBe(true);
       expect(isLeapYear(2023)).toBe(false);
-      expect(isLeapYear(1900)).toBe(false); // divisible by 100 but not 400
+      expect(isLeapYear(1900), "1900 is divisible by 100 but not 400").toBe(false);
     });
   });
 
   describe("daysInMonth", () => {
     it("returns correct days for each month", () => {
-      expect(daysInMonth(2024, 1)).toBe(31); // January
-      expect(daysInMonth(2024, 2)).toBe(29); // February (leap year)
-      expect(daysInMonth(2023, 2)).toBe(28); // February (non-leap year)
-      expect(daysInMonth(2024, 4)).toBe(30); // April
-      expect(daysInMonth(2024, 6)).toBe(30); // June
-      expect(daysInMonth(2024, 7)).toBe(31); // July
+      expect(daysInMonth(2024, 1)).toBe(31);
+      expect(daysInMonth(2024, 2)).toBe(29);
+      expect(daysInMonth(2023, 2)).toBe(28);
+      expect(daysInMonth(2024, 4)).toBe(30);
+      expect(daysInMonth(2024, 6)).toBe(30);
+      expect(daysInMonth(2024, 7)).toBe(31);
     });
   });
 
@@ -625,13 +620,11 @@ describe("LocalDate", () => {
       it.effect(
         "parses edge case dates",
         Effect.fnUntraced(function* () {
-          // First day of year
           const jan1 = yield* decodeLocalDateFromString("2024-01-01");
           expect(jan1.year).toBe(2024);
           expect(jan1.month).toBe(1);
           expect(jan1.day).toBe(1);
 
-          // Last day of year
           const dec31 = yield* decodeLocalDateFromString("2024-12-31");
           expect(dec31.year).toBe(2024);
           expect(dec31.month).toBe(12);
@@ -642,25 +635,21 @@ describe("LocalDate", () => {
       it.effect(
         "parses past dates from previous years (historical data entry)",
         Effect.fnUntraced(function* () {
-          // 2024 - 2 years ago relative to current date (2026)
           const date2024 = yield* decodeLocalDateFromString("2024-01-15");
           expect(date2024.year).toBe(2024);
           expect(date2024.month).toBe(1);
           expect(date2024.day).toBe(15);
 
-          // 2020 - 6 years ago
           const date2020 = yield* decodeLocalDateFromString("2020-06-30");
           expect(date2020.year).toBe(2020);
           expect(date2020.month).toBe(6);
           expect(date2020.day).toBe(30);
 
-          // Y2K date (2000)
           const y2k = yield* decodeLocalDateFromString("2000-01-01");
           expect(y2k.year).toBe(2000);
           expect(y2k.month).toBe(1);
           expect(y2k.day).toBe(1);
 
-          // Very old date (1900)
           const date1900 = yield* decodeLocalDateFromString("1900-12-31");
           expect(date1900.year).toBe(1900);
           expect(date1900.month).toBe(12);

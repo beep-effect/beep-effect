@@ -215,9 +215,12 @@ describe("gateway probes", () => {
       const configured = probesFor({ files: ["/bundle/bundle.manifest.json"] }, { bundleDir: "/bundle" });
       const probe22 = yield* probe("practice-kg-bundle-present", configured);
       expect(probe22).toEqual(satisfied);
-      // The real self-check reads the file system, where /bundle does not exist.
+
       const selfCheck = yield* probe("practice-kg-self-check", configured);
-      expect(ProbeResult.guards.broken(selfCheck)).toBe(true);
+      expect(
+        ProbeResult.guards.broken(selfCheck),
+        "The real self-check reads the filesystem, where the configured bundle is absent."
+      ).toBe(true);
     })
   );
 

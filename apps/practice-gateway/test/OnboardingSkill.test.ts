@@ -16,7 +16,6 @@ import * as Str from "effect/String";
 const skillUrl = new URL("../plugin/skills/practice-onboarding/SKILL.md", import.meta.url);
 const pluginUrl = new URL("../plugin/.claude-plugin/plugin.json", import.meta.url);
 
-// Agent Skills frontmatter (agentskills.io) as the AGENTS.md law admits it.
 const SkillFrontmatter = S.Struct({
   name: S.String.check(S.isPattern(/^[a-z0-9]+(-[a-z0-9]+)*$/), S.isMaxLength(64)),
   description: S.String.check(S.isMinLength(1), S.isMaxLength(1024)),
