@@ -285,6 +285,13 @@ S.makeFilter(Str.includes("/"), $I.annote("ContainsSlashCheck", {
 - Model finite variants, lifecycle states, status/result cases, and
   case-specific payloads as discriminated unions instead of optional/nullish
   payload bags.
+- Let the discriminator govern its fields. A rule of the form "when `state`
+  is X, field Y is present, absent or required" goes in the union's members,
+  so the type, the constructor, the decoder and every match enforce it: with
+  `state` of `running`, `success` or `error`, only the `error` member declares
+  `error`. A cross-field `S.makeFilter` that reads a literal field is a union
+  written as a check; replace it with the members. Keep filters for rules the
+  shape cannot carry.
 - Keep external optional/nullish case bags at the boundary only when a wire
   shape requires them; decode or normalize to an internal tagged model before
   case-specific branching.

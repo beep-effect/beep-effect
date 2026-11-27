@@ -106,6 +106,10 @@ Keep `Schema` as the source of truth for pure data models.
 - Model finite variants, lifecycle states, status/result cases, and
   case-specific payloads as discriminated unions, not one optional/nullish
   payload bag.
+- Let the discriminator govern its fields: a rule such as "a `success` has no
+  `error`" belongs in the union's members, where the type, constructor,
+  decoder and every match enforce it. Prefer shape over a cross-field
+  `S.makeFilter`, and a filter over a runtime check.
 - Decode external optional/nullish case bags into internal tagged models when
   compatibility requires the wire shape.
 - Nest unions, one question per union: a discriminator that answers two

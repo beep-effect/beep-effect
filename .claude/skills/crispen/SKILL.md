@@ -41,7 +41,9 @@ noise** — but only *after* you understand the module and trace the real flow.
 Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
 
 1. **Can the schema carry this invariant instead of code?** (default, refinement,
-   brand, `Option` field)
+   brand, `Option` field). A rule tying a field to a state ("a `success` has no
+   `error`") is carried by shape: a tagged union whose members declare only
+   their own fields, before any cross-field filter.
 2. **Does a schema/combinator/primitive already exist?** Check upstream
    `effect/Schema` first, then search `@beep/schema` and `@beep/identity` before
    inventing — see `schema-first-development` →

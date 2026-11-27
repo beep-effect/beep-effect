@@ -269,6 +269,11 @@ complete. Report the exact commands and outcomes.
 - Model lifecycle states, result/status cases, commands, events, and
   case-specific payloads as discriminated unions, not one object with optional
   fields for every case.
+- Let the discriminator govern its fields. A rule of the form "when `state`
+  is X, field Y is present, absent or required" goes in the union's members:
+  with `state` of `running`, `success` or `error`, only the `error` member
+  declares `error`. Prefer shape over a cross-field filter, and a filter over
+  a runtime check.
 - Use `LiteralKit` for a reusable discriminator domain.
 - Define member schemas as branded `S.Opaque` classes over `S.Struct`.
 - Use `S.toTaggedUnion("<field>")` for custom fields such as `kind`, `type`,
@@ -491,7 +496,10 @@ output separately.
 ### Pattern 4: Turn finite case bags into an exhaustive tagged union
 
 **Rationale:** A discriminator makes invalid combinations unrepresentable and
-gives construction, guards, and exhaustive matching one source of truth.
+gives construction, guards, and exhaustive matching one source of truth. Each
+member declares only the fields its case has, so a rule such as "a queued job
+has no result" is enforced by the type, the constructor and the decoder, not
+by a check.
 
 **Smell:**
 

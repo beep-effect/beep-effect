@@ -157,6 +157,76 @@ discriminator-aware guards, and `.isAnyOf` for grouped case checks. For
 ordinary runtime unions that are not schema-derived, prefer
 `Match.tagsExhaustive` or `Match.tags` when they make the case set explicit.
 
+### The discriminator governs its fields
+
+The best reason to reach for a tagged union is a rule of the form "when
+`state` is X, field Y is present, absent or required". Put that rule in the
+members: each member declares exactly the fields its state has. The rule is
+then enforced when a value is built, when it is decoded and when code reads
+it, with no check to remember.
+
+```ts
+import { $SchemaId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
+
+const $I = $SchemaId.create("examples");
+
+const RunState = LiteralKit(["running", "success", "error"]);
+
+class RunRunning extends S.Opaque<RunRunning, { readonly brand: unique symbol }>()(
+  S.Struct({
+    state: S.tag("running"),
+  }).pipe($I.annoteSchema("RunRunning", { description: "A run that has not finished." }))
+) {}
+
+class RunSuccess extends S.Opaque<RunSuccess, { readonly brand: unique symbol }>()(
+  S.Struct({
+    state: S.tag("success"),
+    output: S.String,
+  }).pipe($I.annoteSchema("RunSuccess", { description: "A finished run and what it produced." }))
+) {}
+
+class RunError extends S.Opaque<RunError, { readonly brand: unique symbol }>()(
+  S.Struct({
+    state: S.tag("error"),
+    error: S.NonEmptyString,
+  }).pipe($I.annoteSchema("RunError", { description: "A failed run and why it failed." }))
+) {}
+
+export const Run = RunState.mapMembers(() => Tuple.make(RunRunning, RunSuccess, RunError)).pipe(
+  S.toTaggedUnion("state"),
+  $I.annoteSchema("Run", { description: "One run, in the state it has reached." })
+);
+export type Run = typeof Run.Type;
+
+export const summarize = Run.match({
+  running: () => "still running",
+  success: ({ output }) => `done: ${output}`,
+  error: ({ error }) => `failed: ${error}`,
+});
+```
+
+A success has no `error` field to set, an error cannot be built without one,
+and `summarize` cannot read `error` outside the `error` arm. The flat form,
+`{ state, error?: string, output?: string }`, states none of that.
+
+Prefer the strongest form that can carry a rule:
+
+1. **Shape.** A rule about which fields exist under which state goes in the
+   union's members. The type, the constructor, the decoder and every match
+   enforce it.
+2. **Check.** A rule the shape cannot carry (one number below another, a span
+   inside a text) is a metadata-rich `S.makeFilter` on the schema. The
+   constructor and the decoder enforce it; the type does not.
+3. **Code.** A rule left to an `if`, an assertion or a comment is enforced
+   only where someone remembered. Move it up.
+
+When a cross-field filter reads a literal field
+(`run.state !== "success" || O.isNone(run.error)`), it is a union written as
+a check. Replace it with the members.
+
 ## 6a. Nested Unions: One Question Per Union
 
 A tagged union answers one question about a value ("which kind of media is
