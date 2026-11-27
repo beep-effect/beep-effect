@@ -19,15 +19,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance";
 
-// Optional on insert: the column's SQL default supplies the first version.
-const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
+const sqlDefaultRowVersion = 1;
+const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? sqlDefaultRowVersion;
 
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
 
-// The row codec is a class schema, so an unencodable entity has to stay an
-// instance of its model: clone onto the same prototype and corrupt a single
-// column rather than handing the encoder a bare struct it would reject wholesale.
-const withUnencodablePublicId = <A extends object>(entity: A): A =>
+const sameClassWithUnencodablePublicId = <A extends object>(entity: A): A =>
   Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
 
 const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
@@ -185,7 +182,7 @@ describe("ProviderInstance table", () => {
       const insert = yield* Effect.fromResult(toProviderInstanceInsert(providerInstance));
 
       const converterFailure1 = yield* converterFailure(
-        toProviderInstanceInsert(withUnencodablePublicId(providerInstance))
+        toProviderInstanceInsert(sameClassWithUnencodablePublicId(providerInstance))
       );
       expectConverterFailure(converterFailure1, "ProviderInstanceConverterError");
       const converterFailure2 = yield* converterFailure(

@@ -13,8 +13,8 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// Optional on insert: the column's SQL default supplies the first version.
-const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
+const sqlDefaultRowVersion = 1;
+const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? sqlDefaultRowVersion;
 
 const decodeWorkerId = S.decodeUnknownEffect(ArchitectureLabIdentity.WorkerId);
 const decodeOrganizationId = S.decodeUnknownEffect(DomainWorker.WorkerOrganizationId);

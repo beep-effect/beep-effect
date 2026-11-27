@@ -6141,17 +6141,17 @@
       "reason": "Production dispatchTurnWithConfirm starts a detached Effect.runFork with a real 50 ms confirmation sleep; the test joins that fiber under its 200 ms live timeout, which the TestClock cannot drive (goals/effect-vitest-canon/research/desktop-final-clock-proof.md). Owner: @beep/professional-desktop. Exit: retire when dispatchTurnWithConfirm runs its confirmation wait on the caller's Clock instead of a detached runFork (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/agents/client/test/run-turn-reconciliation.test.ts:130:it.live@2#1",
+      "id": "EV009:packages/agents/client/test/run-turn-reconciliation.test.ts:128:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/agents-client",
       "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
-      "line": 130,
-      "endLine": 155,
+      "line": 128,
+      "endLine": 152,
       "symbol": "it.live",
-      "occurrence": "v2:58f4cfdd8f4b27c047781ee9d0736284ce99c8b5ffb6c4316fcdbba1e0e61676",
+      "occurrence": "v2:df0aac4cf97547c85549906e6275caeececd933040972c18b3ddaa134a8f759d",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"retains unreconciled per-thread replies across view unmounts\", Effect.fnUntraced(function* () { const atom = unreconciledTurnAtoms(threadId); const removable = Atom.make(false); const regist",
+      "evidence": "it.live( \"retains unreconciled per-thread replies across view unmounts\", Effect.fnUntraced(function* () { const atom = unreconciledTurnAtoms(threadId); const sweptControlAtom = Atom.make(false); const",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -6159,21 +6159,20 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test observes native AtomRegistry idle eviction in one registry: a removable control resets while the subject keeps its value, with the original TTL and observation window, and TestClock does not drive registry timers. Owner: @beep/agents-client. Exit: retire when AtomRegistry idle eviction runs on the test's TestClock (#1855 wave 8 register)."
+      "status": "open"
     },
     {
-      "id": "EV009:packages/agents/client/test/selected-thread-lifetime.test.ts:20:it.live@2#1",
+      "id": "EV009:packages/agents/client/test/selected-thread-lifetime.test.ts:17:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/agents-client",
       "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
-      "line": 20,
-      "endLine": 53,
+      "line": 17,
+      "endLine": 41,
       "symbol": "it.live",
-      "occurrence": "v2:e9a07617d1c38a71b6f486eb996bad295e1b55d98c8b4acef6a25f7a28f824bc",
+      "occurrence": "v2:67c93c29528e0d3651b1b88db6a5636a3b80812bfdd6caedd638572aad2d9393",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"keeps the user's thread selection while the chat surface is unmounted\", Effect.fnUntraced(function* () { // Every subscriber of the selection lives inside the chat surface, which the // app",
+      "evidence": "it.live( \"keeps the selected conversation after chat unmount and idle sweep\", Effect.fnUntraced(function* () { const registry = yield* Effect.acquireRelease( Effect.sync(() => AtomRegistry.make({ defa",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -6181,8 +6180,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test observes native AtomRegistry idle eviction in one registry: a removable control resets while the subject keeps its value, with the original TTL and observation window, and TestClock does not drive registry timers. Owner: @beep/agents-client. Exit: retire when AtomRegistry idle eviction runs on the test's TestClock (#1855 wave 8 register)."
+      "status": "open"
     },
     {
       "id": "EV009:packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts:136:it.live@2#1",

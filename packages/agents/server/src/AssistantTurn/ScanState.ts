@@ -220,10 +220,6 @@ const scanChunkResult = ScanChunkTransition.implementSync(({ state, text }) => {
  * @category parsing
  * @since 0.0.0
  */
-// scanChunk is a byte-for-byte port of the POC's incremental JSON block scanner.
-// Its branching is the brace/string/escape state machine itself and is locked
-// down by a fast-check property test (test/scanChunk.test.ts); extracting helpers
-// would scatter the single-pass state without reducing real complexity.
 export const scanChunk: {
   (text: string): (state: ScanState) => [ScanState, Array<string>];
   (state: ScanState, text: string): [ScanState, Array<string>];

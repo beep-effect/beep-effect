@@ -121,7 +121,6 @@ export const Platform = Layer.mergeAll(
   )
 );
 
-/** What the fake mailbox holds and what the tests count. */
 type Outlook = {
   readonly categories: ReadonlyArray<string>;
   readonly listCalls: number;
@@ -135,7 +134,6 @@ type ScenarioShape = {
   readonly passLayer: MailTaggingPassLayer;
 };
 
-/** One mailbox with one message, and the pass layer that reads and writes it. */
 class Scenario extends Context.Service<Scenario, ScenarioShape>()($I`Scenario`) {}
 
 const decodeIndex = S.decodeUnknownEffect(MatterIndex);
@@ -245,11 +243,11 @@ export const otherWriterPid = 4242;
 /** Boot id the fake probe reports for the current boot. */
 export const currentBootId = "boot-0001";
 
-/** Start time the fake probe reports for the live writer at `otherWriterPid`. */
 const otherWriterStart = "500";
 
-// This process started at tick 100; the other writer at 500; the dead pid has no start time.
-const startTimes = HashMap.make([ownPid, "100"], [otherWriterPid, otherWriterStart]);
+const ownStart = "100";
+
+const startTimes = HashMap.make([ownPid, ownStart], [otherWriterPid, otherWriterStart]);
 
 const probe = Layer.succeed(
   ProcessProbe,

@@ -1,19 +1,13 @@
+import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-/**
- * Property test: the incremental block extractor must produce exactly the
- * envelope's elements regardless of how the structured-output text is chunked,
- * including strings containing braces, brackets, quotes, and escapes.
- */
-
-import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn";
-import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
-import { describe, expect } from "@effect/vitest";
 import type { ScanState } from "@beep/agents-server/AssistantTurn";
 
 const json = S.fromJsonString(S.Unknown);
@@ -47,7 +41,7 @@ const block = Arbitrary.all({
 
 describe("scanChunk", () => {
   it.effect.prop(
-    "any envelope x any chunking yields exactly the elements",
+    "every chunking preserves envelope elements, including braces, quotes and escapes inside strings",
     {
       blocks: Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 5 }))).pipe(
         Arbitrary.flatMap((count) => Arbitrary.all(A.replicate(block, count)))

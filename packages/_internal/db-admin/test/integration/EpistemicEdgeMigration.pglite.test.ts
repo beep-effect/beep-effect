@@ -33,9 +33,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../drizzle", import.meta.url));
 
-// The drizzle folder contains `CREATE EXTENSION btree_gist` (this migration's
-// gist exclusion constraint), which the shared external pglite-socket lane
-// cannot load. Extension-dependent proofs are pinned to the in-process lane.
+// decision: migration-proofs-run-in-process
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
@@ -50,9 +48,6 @@ const edgeTableNames: ReadonlyArray<string> = [
   getTableName(EpistemicDbSchema.claimDisposition),
 ];
 
-// Every name below is load-bearing: the repository maps constraint violations
-// by name, never by message prose, so a silent rename is a silent behavior
-// change.
 const expectedConstraintNames: ReadonlyArray<string> = [
   "epistemic_claim_disposition_bounded",
   "epistemic_claim_disposition_claim_fk",
@@ -81,16 +76,14 @@ const expectedIndexNames: ReadonlyArray<string> = [
   "epistemic_evidence_public_id_unique_idx",
 ];
 
-// The empty-string sha256, standing in for a digest the domain would compute
-// from a LogicalEdgeIdentity.
-const logicalKey = "abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe";
+const stubLogicalEdgeDigest = "abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe";
 
 const edgeVersionFixture = (id: number, validFrom: number) => ({
   ...productEntityFixtureInput("EpistemicEdgeVersion", id),
   evidenceScope: null,
   expiredAt: null,
   fact: { note: "cited in the office action" },
-  logicalKey,
+  logicalKey: stubLogicalEdgeDigest,
   matterScope: null,
   qualifiers: { statute: "35 USC 103" },
   recordedAt: validFrom,
@@ -154,8 +147,8 @@ if (!shouldRunPgliteIntegration) {
             sortedNames
           );
 
-          expect(constraintNames).toEqual(expectedConstraintNames);
-          expect(indexNames).toEqual(expectedIndexNames);
+          expect(constraintNames, "the repository maps violations by constraint name").toEqual(expectedConstraintNames);
+          expect(indexNames, "the repository maps violations by index name").toEqual(expectedIndexNames);
 
           const claim = yield* decodeCandidateClaim({
             ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
@@ -196,29 +189,25 @@ if (!shouldRunPgliteIntegration) {
             })
           );
 
-          expect(head.logicalKey).toEqual(logicalKey);
+          expect(head.logicalKey).toEqual(stubLogicalEdgeDigest);
           expect(head.version).toEqual(1);
           expect(head.sourceKind).toEqual("claim");
           expect(head.targetKind).toEqual("evidence");
           assertSome<number>(head.sourceClaimId, 1);
           assertSome<number>(head.targetEvidenceId, 1);
           expect(DateTime.toEpochMillis(head.validFrom)).toEqual(1_000);
-          // Open head on both axes: the fact is still true and still current.
           assertNone(head.validTo);
           assertNone(head.expiredAt);
 
           const secondHead = yield* decodeEdgeVersion(edgeVersionFixture(2, 2_000));
           const secondInsert = yield* Effect.fromResult(toEdgeVersionInsert(secondHead));
 
-          // The adversarial probe stays LAST: implicit-transaction pglite hosts
-          // roll the whole session chain back after an intentional failure, so
-          // no statement may follow it. A second open head for one logical key
-          // is rejected by whichever backstop the planner checks first.
           const openHeadViolation = yield* Effect.flip(db.insert(EpistemicDbSchema.edgeVersion).values(secondInsert));
 
-          expect(NodeUtil.inspect(openHeadViolation, { depth: 10 })).toMatch(
-            /epistemic_edge_(?:open_head_idx|no_overlap)/u
-          );
+          expect(
+            NodeUtil.inspect(openHeadViolation, { depth: 10 }),
+            "either backstop may reject the second open head; the probe runs last: PGlite rolls the session back after an intentional failure"
+          ).toMatch(/epistemic_edge_(?:open_head_idx|no_overlap)/u);
         }),
         120_000
       );

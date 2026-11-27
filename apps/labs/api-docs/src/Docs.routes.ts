@@ -174,12 +174,7 @@ const contractLayer = (entry: CatalogEntry, source: Extract<CatalogSource, { rea
   );
 
 const specLayer = (entry: CatalogEntry, source: Extract<CatalogSource, { readonly _tag: "SpecSource" }>) => {
-  const rawRoute = HttpRouter.add(
-    "GET",
-    rawSpecPath(entry),
-    // `readSpecResponse` runs for every request, so a browser reload sees file edits.
-    readSpecResponse(source)
-  );
+  const rawRoute = HttpRouter.add("GET", rawSpecPath(entry), readSpecResponse(source));
   const docsRoute = Match.value(source.dialect).pipe(
     Match.when("json-schema-2020-12", () => Layer.empty),
     Match.orElse(() => HttpRouter.add("GET", docsPath(entry.meta.slug), specDocsResponse(entry)))

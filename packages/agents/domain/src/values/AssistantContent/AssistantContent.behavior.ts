@@ -71,6 +71,12 @@ const inlinesToMd = (inlines: ReadonlyArray<InlineNode>): ReadonlyArray<Md.Inlin
  * `BlockQuote`; lists become `Ul` (bullet) or `Ol` (number) with one `Li` per
  * item; code blocks become `Pre` with an optional language hint.
  *
+ * **Gotchas**
+ *
+ * A code block's language hint comes from the assistant and is untrusted: a
+ * hint that is not a valid `CodeFenceLanguage` becomes `O.none()`, as the `Pre`
+ * codec does, instead of throwing.
+ *
  * **Example** (Heading maps to Heading)
  *
  * ```ts
@@ -108,9 +114,6 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
     },
     code: (b): Md.Block.Type =>
       Md.Pre.make({
-        // Assistant-supplied language hints are untrusted free-form info strings;
-        // fold them through CodeFenceLanguage so non-conforming tokens drop to
-        // None (matching the Pre codec) instead of throwing on construction.
         language: O.flatMap(O.fromNullishOr(b.language), decodeCodeFenceLanguageOption),
         value: b.code,
       }),
