@@ -77,8 +77,6 @@ const describeServerEngine = (version: O.Option<string>): FileProcessingEngineDe
 const contentDisposition = (name: string): string =>
   `attachment; filename="${Str.replace(headerUnsafePattern, "")(name)}"`;
 
-// The effective budget is the smaller of the driver and per-operation values;
-// when neither is present the extraction is unbounded.
 const effectiveOutputBudget = (configBudget: O.Option<number>, operationBudget: O.Option<number>): O.Option<number> =>
   pipe(
     A.getSomes([configBudget, operationBudget]),
@@ -91,11 +89,6 @@ const effectiveOutputBudget = (configBudget: O.Option<number>, operationBudget: 
 const unreadableBody = () =>
   makeTikaError("response-decoding", TikaErrorOptions.make({ cause: "tika server response body was unreadable" }));
 
-// Enforces the budget against the RAW response body while it streams, so an
-// oversized response fails before it is materialized or parsed. The budget
-// therefore covers the whole `/rmeta/text` document — JSON envelope, metadata,
-// and extracted text alike — not just the text Tika extracted. Peak memory is
-// bounded by the budget plus one transport chunk.
 const readBoundedBody = (
   response: HttpClientResponse.HttpClientResponse,
   budget: O.Option<number>

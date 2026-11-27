@@ -47,11 +47,13 @@ export class CosmosGraphProjection extends S.Opaque<CosmosGraphProjection, { rea
     nodeIds: Uint32Arr,
     pointPositions: Float32Arr,
     links: Float32Arr,
-    // One label per point, in point order. cosmos.gl draws no text — it is a WebGL
-    // point renderer — but it exposes the coordinate hooks to place text over the
-    // canvas, which is how a label layer is built. Absent or empty means a bare
-    // graph; a caller with more points than it wants to name simply sends fewer.
-    labels: S.Array(S.String).pipe(S.optionalKey),
+    labels: S.Array(S.String).pipe(
+      S.annotateKey({
+        description:
+          "One label per point, in point order. Absent or empty draws a bare graph; fewer labels than points name only the first points.",
+      }),
+      S.optionalKey
+    ),
   })
     .check(
       S.makeFilter(
@@ -135,8 +137,7 @@ export const generateSyntheticOntologyProjection = (options: SyntheticOntologyGr
   const nodeIds = new Uint32Array(nodeCount);
   const pointPositions = new Float32Array(nodeCount * 2);
   const links = new Float32Array(edgeCount * 2);
-  // crispen: kept imperative to fill typed arrays without allocating intermediate arrays;
-  // move to schema-derived collection combinators if the benchmark no longer requires this hot path.
+  // decision: typed-array-hot-paths-stay-imperative
   let nodeIndex = 0;
 
   while (nodeIndex < nodeCount) {

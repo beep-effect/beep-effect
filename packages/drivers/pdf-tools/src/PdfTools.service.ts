@@ -51,20 +51,10 @@ const validateRasterRequest = S.decodeUnknownEffect(S.toType(RasterRequest));
 const validatePngRequest = S.decodeUnknownEffect(S.toType(PngRequest));
 const validatePageTextRequest = S.decodeUnknownEffect(S.toType(PageTextRequest));
 const validateInkCoverageRequest = S.decodeUnknownEffect(S.toType(InkCoverageRequest));
-// Luminance at or below which a pixel counts as ink in a coverage comparison.
-const COVERAGE_BLACK_THRESHOLD = 128;
+const COVERAGE_INK_MAX_LUMA = 128;
 const encoder = new TextEncoder();
 
-// rsvg-convert writes one page per input, in order, but takes several inputs
-// only with the unversioned `pdf` format, which cairo writes as PDF 1.7.
-// cairo's 1.5, 1.6 and 1.7 output differ only in the header line (checked on
-// rsvg-convert 2.63.2 with cairo 1.18.6), so a multi-page conversion runs at
-// `pdf` and the requested version is written over the header, same length so
-// every offset stays valid. A single SVG converts at its own `pdf1.x`; 1.4,
-// whose output differs in structure, is single-SVG only (SvgToPdfRequest).
-// Converting page by page and re-serialising with pdf-lib is not an option:
-// pdf-lib cuts a stream whose /Length is indirect at the EOL before
-// `endstream`, which drops a final 0x0D data byte and truncates the stream.
+// decision: multi-svg-stamps-pdf-header
 const pdfHeader = /^%PDF-1\.\d/;
 
 const rsvgFormatOf = (request: SvgToPdfRequest): string =>
@@ -183,6 +173,27 @@ export class PdfToolsConfig extends S.Opaque<PdfToolsConfig, { readonly brand: u
 /**
  * Runtime shape exposed by the {@link PdfTools} service.
  *
+ * **Details**
+ *
+ * `pageText` returns the raw, non-layout text of one page: layout mode pads
+ * lines with leading spaces, which defeats a whole-line match. `pageWords`
+ * reads `pdftotext -bbox-layout`, which keeps side-by-side callouts apart
+ * where `-layout` merges them into one line. `inkCoverage` renders both
+ * pages without anti-aliasing, so an edge is ink or paper, never a gray that
+ * one export draws darker than the other.
+ *
+ * **Gotchas**
+ *
+ * Each tool stream is captured up to 256 MiB, above the process kit's 16 MiB
+ * default, because the `-bbox-layout` XHTML outgrows 16 MiB on long PDFs; a
+ * larger stream fails with `tool-failed`. A tool that times out is stopped
+ * and fails with `tool-failed`.
+ *
+ * `inspect` looks at no more than 128 `/ObjStm`, `/XRef` and `/XRefStm`
+ * names, names inside stream data included, when it searches the file for
+ * object and cross-reference streams; past that it reports
+ * `containerDiscovery: "limit-reached"` and still returns the structure.
+ *
  * **Example** (Stub PdfToolsShape service)
  *
  * ```ts
@@ -215,10 +226,6 @@ export interface PdfToolsShape {
   readonly svgToPdf: (request: SvgToPdfRequest) => Effect.Effect<SvgToPdfResult, PdfToolsError>;
 }
 
-// Maps the kit's run failures onto this driver's reasons. A spawn or stream
-// failure keeps its platform failure as the cause, exactly as the hand-rolled
-// fold reported it; a timeout keeps the `tool-failed` reason and message; an
-// over-budget stream (the kit's capture bound) is a failing tool run.
 const toolFailure = (
   error: CommandFailedError | CommandOutputError,
   executable: string,
@@ -244,11 +251,7 @@ const toolFailure = (
     )
   );
 
-// Per-stream capture ceiling. `pdftotext -bbox-layout` writes a word-level
-// XHTML document to stdout that outgrows the kit's 16 MiB default on long
-// PDFs, and the hand-rolled fold had no ceiling, so this driver raises it
-// instead of inheriting the default.
-const pdfToolsMaxOutputBytes = 256 * 1024 * 1024;
+const perStreamCaptureCeilingBytes = 256 * 1024 * 1024;
 
 const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfToolsConfig) {
   const fs = yield* FileSystem.FileSystem;
@@ -270,10 +273,9 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
       }),
       { ...env }
     );
-    // Leaving the run's scope on timeout interrupts the handle, which stops the tool.
     return Run.collect(command, {
       timeout: `${config.timeoutMillis} millis`,
-      maxOutputBytes: pdfToolsMaxOutputBytes,
+      maxOutputBytes: perStreamCaptureCeilingBytes,
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.mapError((error) => toolFailure(error, executable, what, config.timeoutMillis)),
@@ -300,8 +302,6 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     const dir = yield* fs
       .makeTempDirectoryScoped({ prefix: "beep-pdf-tools-" })
       .pipe(Effect.mapError(io("Could not create a temp directory.")));
-    // Pinned fonts: rsvg-convert sees only the given directory, through a
-    // fontconfig file of its own.
     const fontconfig = yield* O.match(request.fonts, {
       onNone: () => Effect.succeed({}),
       onSome: Effect.fnUntraced(function* (fonts) {
@@ -379,7 +379,6 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     .makeTempDirectoryScoped({ prefix: "beep-pdf-tools-" })
     .pipe(Effect.mapError((cause) => PdfToolsError.fromUnknown("io", "Could not create a temp directory.", cause)));
 
-  // Rasterise one page to `<prefix>.ppm` and read it back.
   const rasterise = Effect.fn("PdfTools.rasterise")(function* (options: {
     readonly pdfPath: string;
     readonly page: number;
@@ -428,8 +427,6 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     });
   }, Effect.scoped);
 
-  // Both pages render without anti-aliasing so an edge is ink or paper, never
-  // a gray that one export draws darker than the other.
   const inkCoverage = Effect.fn("PdfTools.inkCoverage")(function* (rawRequest: InkCoverageRequest) {
     const request = yield* validateInkCoverageRequest(rawRequest).pipe(
       Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid ink-coverage request.", cause))
@@ -450,7 +447,7 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
       prefix: path.join(dir, "marked"),
     });
     return yield* Effect.try({
-      try: () => inkCoverageOf({ base, marked, dilatePx: request.dilatePx, blackThreshold: COVERAGE_BLACK_THRESHOLD }),
+      try: () => inkCoverageOf({ base, marked, dilatePx: request.dilatePx, blackThreshold: COVERAGE_INK_MAX_LUMA }),
       catch: (cause) => PdfToolsError.fromUnknown("parse", "Could not decode the rendered PPMs.", cause),
     });
   }, Effect.scoped);
@@ -471,8 +468,6 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     return `${prefix}.png`;
   });
 
-  // Raw (non-layout) text of exactly one page; layout mode pads lines with
-  // leading spaces, which would defeat a whole-line match.
   const pageText = Effect.fn("PdfTools.pageText")(function* (rawRequest: PageTextRequest) {
     const request = yield* validatePageTextRequest(rawRequest).pipe(
       Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid page-text request.", cause))
@@ -486,8 +481,6 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     );
   });
 
-  // Text blocks of exactly one page with their rectangles; `-bbox-layout`
-  // keeps side-by-side callouts apart, where `-layout` merges them into one line.
   const pageWords = Effect.fn("PdfTools.pageWords")(function* (rawRequest: PageTextRequest) {
     const request = yield* validatePageTextRequest(rawRequest).pipe(
       Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid page-words request.", cause))

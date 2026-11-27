@@ -43,7 +43,6 @@ const conflictBody = (conflicts: unknown): ConflictBody => ({
   type: "error",
 });
 
-/** Folder create (`POST /folders`): `context_info.conflicts` is an array of folder objects. */
 const folderCreateConflictBody = conflictBody([
   {
     etag,
@@ -54,7 +53,6 @@ const folderCreateConflictBody = conflictBody([
   },
 ]);
 
-/** File upload (`POST /files/content`): `context_info.conflicts` is one file object, not an array. */
 const fileUploadConflictBody = conflictBody({
   etag,
   file_version: { id: "5550001", sha1: emptySha1, type: "file_version" },
@@ -67,10 +65,6 @@ const fileUploadConflictBody = conflictBody({
   type: "file",
 });
 
-/**
- * Mirrors what `box-node-sdk` throws for a non-2xx response: `responseInfo.contextInfo` is the raw
- * `context_info` map from the body, never deserialized, so its keys keep their wire spelling.
- */
 const sdkFailure = (body: ConflictBody) => ({
   message: `${body.status} ${body.message}`,
   name: "BoxApiError",
@@ -227,8 +221,10 @@ describe("@beep/box conflict detail", () => {
       A.some(rendered, (text) => A.some(sentinels, (sentinel) => pipe(text, Str.includes(sentinel)))),
       assertFalse
     );
-    // The approved fields are what the encoded upload conflict does carry.
-    expect(A.filter(rendered, Str.includes(`"sha1":"${emptySha1}","size":629644`)).length).toBeGreaterThan(0);
+    expect(
+      A.filter(rendered, Str.includes(`"sha1":"${emptySha1}","size":629644`)).length,
+      "the approved fields are what the encoded upload conflict does carry"
+    ).toBeGreaterThan(0);
   });
 
   it.prop(

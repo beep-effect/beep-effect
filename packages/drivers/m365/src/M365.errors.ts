@@ -19,8 +19,6 @@ import * as S from "effect/Schema";
 
 const $I = $M365Id.create("M365.errors");
 
-// The retired `@beep/schema` `HttpStatus` catalog: every name `effect/http/HttpStatus` knows plus the
-// twelve unofficial codes the catalog carried. A status outside it is reported as 500, as before.
 const M365HttpStatus = S.Literals([
   ...A.map(
     [

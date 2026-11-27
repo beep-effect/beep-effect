@@ -59,9 +59,7 @@ type Evaluated = {
 
 const emptyEvaluated: Evaluated = { properties: R.empty(), required: A.empty() };
 
-// Two members that declare the same property must both hold, so a disagreeing
-// redeclaration becomes a property-level `allOf` for the importer to intersect.
-const mergeProperty = (existing: O.Option<S.Json>, incoming: S.Json): S.Json =>
+const intersectRedeclaredProperty = (existing: O.Option<S.Json>, incoming: S.Json): S.Json =>
   pipe(
     existing,
     O.filter((current) => !Equal.equals(current, incoming)),
@@ -73,7 +71,7 @@ const mergeEvaluated = (left: Evaluated, right: Evaluated): Evaluated => ({
   properties: pipe(
     Struct.entries(right.properties),
     A.reduce(left.properties, (merged, [name, schema]) =>
-      R.set(merged, name, mergeProperty(R.get(merged, name), schema))
+      R.set(merged, name, intersectRedeclaredProperty(R.get(merged, name), schema))
     )
   ),
   required: A.dedupe(A.appendAll(left.required, right.required)),
@@ -86,11 +84,10 @@ const componentName = (ref: string): O.Option<string> =>
     O.map(Str.slice(Str.length(COMPONENT_SCHEMA_REF_PREFIX)))
   );
 
-// The properties a closed node evaluates: every `allOf` member (refs resolved
-// against `components.schemas`, recursively), then the node's own properties.
-// `none` when a member points outside `components.schemas`, so the node stays
-// unlowered and the renderer's guard reports it.
-const evaluate = (schemas: Readonly<Record<string, LoweringNode>>, node: LoweringNode): O.Option<Evaluated> => {
+const closedNodeProperties = (
+  schemas: Readonly<Record<string, LoweringNode>>,
+  node: LoweringNode
+): O.Option<Evaluated> => {
   const members = pipe(
     O.fromUndefinedOr(node.allOf),
     O.getOrElse(A.empty<LoweringNode>),
@@ -98,12 +95,12 @@ const evaluate = (schemas: Readonly<Record<string, LoweringNode>>, node: Lowerin
       pipe(
         O.fromUndefinedOr(member.$ref),
         O.match({
-          onNone: () => evaluate(schemas, member),
+          onNone: () => closedNodeProperties(schemas, member),
           onSome: (ref) =>
             pipe(
               componentName(ref),
               O.flatMap((name) => R.get(schemas, name)),
-              O.flatMap((target) => evaluate(schemas, target))
+              O.flatMap((target) => closedNodeProperties(schemas, target))
             ),
         })
       )
@@ -202,7 +199,7 @@ export const closedObjectPatch = (document: unknown): OpenApiPatch.JsonPatchDocu
         A.filter(([, node]) => isClosed(node)),
         A.flatMap(([name, node]) =>
           pipe(
-            evaluate(schemas, node),
+            closedNodeProperties(schemas, node),
             O.map((evaluated) =>
               nodeOperations(`/components/schemas/${JsonPointer.escapeToken(name)}`, node, evaluated)
             ),

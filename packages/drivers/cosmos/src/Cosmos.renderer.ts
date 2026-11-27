@@ -21,12 +21,6 @@ import { CosmosGraphProjection } from "./Cosmos.projection.ts";
 
 const $I = $CosmosId.create("Cosmos.renderer");
 
-/**
- * Stable cosmos.gl simulation, appearance, and viewport defaults used for each mounted graph.
- *
- * @category models
- * @since 0.0.0
- */
 class CosmosGraphConfig extends S.Opaque<CosmosGraphConfig, { readonly brand: unique symbol }>()(
   S.Struct({
     enableDrag: S.Boolean.pipe(
@@ -69,9 +63,6 @@ class CosmosGraphConfig extends S.Opaque<CosmosGraphConfig, { readonly brand: un
       S.withConstructorDefault(Effect.succeed(0)),
       S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
-    // Appearance was left entirely to cosmos.gl's defaults, which draw a graph you
-    // can barely see: single-pixel grey points and hairline links on a dark
-    // background. A diagram nobody can read is not a diagram.
     linkWidthScale: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(1.6)),
       S.withDecodingDefaultTypeKey(Effect.succeed(1.6))
@@ -95,17 +86,13 @@ class CosmosGraphConfig extends S.Opaque<CosmosGraphConfig, { readonly brand: un
   )
 ) {}
 
-/** Points: bright enough to read against the workbench's dark canvas. */
-const POINT_RGBA: readonly [number, number, number, number] = [0.44, 0.87, 0.53, 1];
+const BRIGHT_POINT_RGBA: readonly [number, number, number, number] = [0.44, 0.87, 0.53, 1];
 
-/** Links: visible, but never louder than the points they connect. */
-const LINK_RGBA: readonly [number, number, number, number] = [0.55, 0.68, 0.6, 0.55];
+const SUBDUED_LINK_RGBA: readonly [number, number, number, number] = [0.55, 0.68, 0.6, 0.55];
 
-/** Baseline point radius, before `pointSizeScale`. */
-const POINT_SIZE = 4;
+const POINT_SIZE_BEFORE_SCALE = 4;
 
-/** Baseline link width, before `linkWidthScale`. */
-const LINK_WIDTH = 1;
+const LINK_WIDTH_BEFORE_SCALE = 1;
 
 const repeatRgba = (count: number, rgba: readonly [number, number, number, number]): Float32Array => {
   const values = new Float32Array(count * 4);
@@ -117,7 +104,7 @@ const repeatRgba = (count: number, rgba: readonly [number, number, number, numbe
 
 const filled = (count: number, value: number): Float32Array => new Float32Array(count).fill(value);
 
-type CosmosGraphInstance = {
+type CosmosGraphUsedMembers = {
   readonly destroy?: () => void;
   readonly render: () => void;
   readonly setLinkColors?: (linkColors: Float32Array) => void;
@@ -126,15 +113,11 @@ type CosmosGraphInstance = {
   readonly setPointColors?: (pointColors: Float32Array) => void;
   readonly setPointPositions: (positions: Float32Array) => void;
   readonly setPointSizes?: (pointSizes: Float32Array) => void;
-  // The graph's own space -> screen transform, which is what makes an HTML label
-  // layer possible: cosmos.gl renders no text, but it will tell you where a point
-  // currently is on screen, through every pan, zoom and simulation tick.
   readonly spaceToScreenPosition?: (spacePosition: [number, number]) => [number, number];
   readonly getPointPositions?: () => ReadonlyArray<number>;
   readonly stop?: () => void;
 };
 
-/** Beyond this many points, labels stop being readable and start being noise. */
 const MAX_RENDERED_LABELS = 300;
 
 type LabelRect = {
@@ -151,10 +134,7 @@ type LabelCandidate = {
   readonly offsetY: number;
 };
 
-// Prefer the four cardinal positions, then diagonals, across successively wider
-// rings. The first ring clears the rendered node radius; the stable order keeps
-// labels from wandering once the simulation settles.
-const labelRing = (distance: number): ReadonlyArray<LabelCandidate> => [
+const cardinalThenDiagonalRing = (distance: number): ReadonlyArray<LabelCandidate> => [
   { anchorX: 0, anchorY: 0.5, offsetX: distance, offsetY: 0 },
   { anchorX: 1, anchorY: 0.5, offsetX: -distance, offsetY: 0 },
   { anchorX: 0.5, anchorY: 0, offsetX: 0, offsetY: distance },
@@ -165,7 +145,7 @@ const labelRing = (distance: number): ReadonlyArray<LabelCandidate> => [
   { anchorX: 1, anchorY: 1, offsetX: -distance, offsetY: -distance },
 ];
 
-const LABEL_CANDIDATES = A.flatMap([30, 48, 66, 84, 102, 120, 138], labelRing);
+const LABEL_CANDIDATES = A.flatMap([30, 48, 66, 84, 102, 120, 138], cardinalThenDiagonalRing);
 const LABEL_POINT_CLEARANCE = 26;
 
 const labelRect = (
@@ -194,7 +174,7 @@ const labelFits = (candidate: LabelRect, layer: HTMLElement, occupied: ReadonlyA
   A.every(occupied, (placed) => !labelRectsOverlap(candidate, placed));
 
 const graphPointObstacles = (
-  graph: CosmosGraphInstance,
+  graph: CosmosGraphUsedMembers,
   positions: ReadonlyArray<number>,
   count: number
 ): Array<LabelRect> => {
@@ -215,15 +195,6 @@ const graphPointObstacles = (
   return obstacles;
 };
 
-/**
- * An HTML label layer over the WebGL canvas.
- *
- * The labels the ontology computes were being thrown away: cosmos.gl draws points
- * and lines, never text, so a graph of a dozen named classes rendered as a dozen
- * anonymous dots. The library does expose its space-to-screen transform, though,
- * which is exactly what a text layer needs — so the names go in a DOM layer pinned
- * over the canvas and follow their points through pan, zoom and simulation.
- */
 const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) => {
   const layer = document.createElement("div");
   layer.setAttribute("data-testid", "cosmos-labels");
@@ -232,8 +203,6 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
     "position:absolute;inset:0;overflow:hidden;pointer-events:none;font-size:11px;line-height:1;"
   );
 
-  // The canvas is positioned within the container, so the layer must be too —
-  // otherwise the labels anchor to the page and drift away from their points.
   if (getComputedStyle(container).position === "static") {
     container.style.position = "relative";
   }
@@ -263,15 +232,13 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
     elements,
     sizes,
     count: shown.length,
-    // A label layer that cannot place its labels says so, on the layer itself, where
-    // both a human and a test can see it. Silence was the original bug.
     fail: (reason: string): void => layer.setAttribute("data-label-error", reason),
     destroy: (): void => layer.remove(),
   };
 };
 
 const positionLabel = (
-  graph: CosmosGraphInstance,
+  graph: CosmosGraphUsedMembers,
   positions: ReadonlyArray<number>,
   layer: ReturnType<typeof makeLabelLayer>,
   index: number,
@@ -294,9 +261,6 @@ const positionLabel = (
   );
   return O.match(placement, {
     onNone: () => {
-      // A knowingly colliding fallback is worse than a missing low-priority
-      // label: it obscures both the node and neighboring names. Keep it out of
-      // the visual and expose the suppression count on the layer instead.
       element.hidden = true;
       element.style.transform = "translate(-9999px,-9999px)";
       return false;
@@ -310,18 +274,12 @@ const positionLabel = (
   });
 };
 
-type CosmosGraphConstructor = new (container: HTMLElement, config: CosmosGraphConfig) => CosmosGraphInstance;
+type CosmosGraphConstructor = new (container: HTMLElement, config: CosmosGraphConfig) => CosmosGraphUsedMembers;
 
 type CosmosGraphModule = {
   readonly Graph: CosmosGraphConstructor;
 };
 
-/**
- * Directed multi-graph options required by the sigma.js fallback adapter.
- *
- * @category models
- * @since 0.0.0
- */
 class GraphologyOptions extends S.Opaque<GraphologyOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     multi: S.Boolean.pipe(
@@ -337,12 +295,6 @@ class GraphologyOptions extends S.Opaque<GraphologyOptions, { readonly brand: un
 ) {}
 
 const edgeAttributesColorDefault = HexColor.make("#94a3b8");
-/**
- * Default visual attributes assigned to graphology edges rendered by sigma.js.
- *
- * @category models
- * @since 0.0.0
- */
 class EdgeAttributes extends S.Opaque<EdgeAttributes, { readonly brand: unique symbol }>()(
   S.Struct({
     color: HexColor.pipe(
@@ -358,12 +310,6 @@ class EdgeAttributes extends S.Opaque<EdgeAttributes, { readonly brand: unique s
 ) {}
 
 const nodeAttributesColorDefault = HexColor.make("#38bdf8");
-/**
- * Position, label, and default visual attributes for a sigma.js graph node.
- *
- * @category models
- * @since 0.0.0
- */
 class NodeAttributes extends S.Opaque<NodeAttributes, { readonly brand: unique symbol }>()(
   S.Struct({
     color: HexColor.pipe(
@@ -447,8 +393,7 @@ const makeFpsSampler = (): FpsSampler => {
     };
   }
 
-  // crispen: mutable counters are requestAnimationFrame callback state; move them
-  // into Effect Ref only if this sampler becomes an Effect-owned scoped resource.
+  // decision: fps-sampler-counters-stay-mutable
   let active = true;
   let currentFps = 0;
   let frames = 0;
@@ -525,22 +470,17 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
   projection: CosmosGraphProjection
 ) {
   const module = yield* loadCosmosGraphModule;
-  // Held as the instance shape this driver declares, not as cosmos.gl's class: the
-  // wrapper depends on exactly the members it names here and nothing more.
-  const graph: CosmosGraphInstance = yield* Effect.try({
+  const graph: CosmosGraphUsedMembers = yield* Effect.try({
     try: () => new module.Graph(container, CosmosGraphConfig.make({})),
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to construct cosmos.gl graph."),
   });
 
-  // Sizes and colours are set per element, not left to the library's defaults. The
-  // setters are optional in the instance type because they arrived in cosmos.gl 2.x:
-  // where they are missing the graph still draws, just with the plain defaults.
   const paint = (current: CosmosGraphProjection): void => {
     const linkCount = current.links.length / 2;
-    graph.setPointSizes?.(filled(current.nodeCount, POINT_SIZE));
-    graph.setPointColors?.(repeatRgba(current.nodeCount, POINT_RGBA));
-    graph.setLinkWidths?.(filled(linkCount, LINK_WIDTH));
-    graph.setLinkColors?.(repeatRgba(linkCount, LINK_RGBA));
+    graph.setPointSizes?.(filled(current.nodeCount, POINT_SIZE_BEFORE_SCALE));
+    graph.setPointColors?.(repeatRgba(current.nodeCount, BRIGHT_POINT_RGBA));
+    graph.setLinkWidths?.(filled(linkCount, LINK_WIDTH_BEFORE_SCALE));
+    graph.setLinkColors?.(repeatRgba(linkCount, SUBDUED_LINK_RGBA));
   };
 
   yield* Effect.try({
@@ -553,10 +493,6 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to render cosmos.gl graph."),
   });
 
-  // Labels live in a DOM layer over the canvas and are re-pinned to their points on
-  // every frame, because the simulation, a pan, and a zoom all move them. The graph
-  // is the only thing that knows where a point currently is, so it is asked, rather
-  // than the transform being reconstructed here.
   const layerFor = (current: CosmosGraphProjection): O.Option<ReturnType<typeof makeLabelLayer>> =>
     pipe(
       O.fromNullishOr(current.labels),
@@ -564,9 +500,6 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       O.map((names) => makeLabelLayer(container, names))
     );
 
-  // A graph that cannot say where its points are cannot carry labels, and pretending
-  // otherwise is how the first attempt at this failed: the labels were built, mounted,
-  // and left sitting at their off-screen start position, saying nothing.
   const canPlaceLabels = P.isFunction(graph.getPointPositions) && P.isFunction(graph.spaceToScreenPosition);
   if (A.isReadonlyArrayNonEmpty(projection.labels ?? []) && !canPlaceLabels) {
     return yield* CosmosDriverError.adapterInvariant(
@@ -601,11 +534,6 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
     );
   };
 
-  // A throw inside an animation frame lands nowhere: the browser swallows it, the
-  // loop keeps being rescheduled, and the labels sit motionless with nothing to
-  // explain them. That is exactly how the unbound-method bug above stayed invisible.
-  // So a failure here stops the loop and marks the layer, which is visible in the
-  // DOM and in a test, instead of failing in a place no one can look.
   const tick = (): void => {
     Result.match(Result.try(positionLabels), {
       onFailure: (cause) => {
@@ -638,8 +566,6 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       paint(nextProjection);
       graph.render();
 
-      // A re-projection can rename, add or drop nodes, so the layer is rebuilt from
-      // the labels that arrived with it rather than left describing the old graph.
       pipe(layer, O.match({ onNone: () => undefined, onSome: (current) => current.destroy() }));
       layer = layerFor(nextProjection);
       if (O.isSome(layer) && frame === undefined) {
@@ -672,8 +598,7 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
   const sigma = yield* loadSigmaModule;
   const graph = new graphology.default(GraphologyOptions.make({}));
   const populateGraph = (nextProjection: CosmosGraphProjection): void => {
-    // crispen: graphology exposes a mutating adapter API and these loops avoid
-    // allocating index arrays on the 100k-node benchmark path; keep explicit.
+    // decision: typed-array-hot-paths-stay-imperative
     let nodeIndex = 0;
 
     while (nodeIndex < nextProjection.nodeCount) {
@@ -683,7 +608,6 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
       graph.addNode(
         nodeId,
         NodeAttributes.make({
-          // CosmosGraphProjection checks pointPositions.length === 2 * nodeCount, so both reads are in range.
           x: nextProjection.pointPositions[positionOffset]!,
           y: nextProjection.pointPositions[positionOffset + 1]!,
           label: nodeId,
@@ -696,7 +620,6 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 
     while (edgeIndex < nextProjection.edgeCount) {
       const linkOffset = edgeIndex * 2;
-      // CosmosGraphProjection checks links.length === 2 * edgeCount, so both reads are in range.
       const sourceIndex = nextProjection.links[linkOffset]! % nextProjection.nodeCount;
       const targetIndex = nextProjection.links[linkOffset + 1]! % nextProjection.nodeCount;
 
@@ -745,10 +668,32 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 /**
  * Renders a graph projection with the selected runtime backend.
  *
+ * **Details**
+ *
+ * The cosmos backend sets every point's and link's size and colour itself,
+ * because cosmos.gl's defaults draw single-pixel grey points and hairline links
+ * that are barely visible; a cosmos.gl build without those setters (they
+ * arrived in 2.x) draws with its defaults. cosmos.gl draws no text, so a
+ * projection's labels go in a DOM layer (`data-testid="cosmos-labels"`) over
+ * the canvas and are re-pinned on every animation frame through the graph's
+ * space-to-screen transform, following the simulation, pans and zooms. At most
+ * the first 300 labels are rendered. Each label tries the four cardinal
+ * positions, then the diagonals, on successively wider rings in the same order
+ * every frame, so labels do not wander once the simulation settles; a label
+ * that fits nowhere is hidden rather than drawn over a node or another label,
+ * and the layer's `data-label-suppressed` attribute counts those. `update`
+ * rebuilds the layer from the new projection's labels.
+ *
  * **Gotchas**
  *
  * The returned handle owns a frame sampler and renderer resources. Call
  * `destroy` when the host unmounts the graph.
+ *
+ * A container with static positioning is set to `position: relative`, so the
+ * label layer anchors to it instead of the page. A projection with labels fails
+ * with an adapter invariant on a cosmos.gl build that cannot report point
+ * positions. A failure while placing labels stops the label loop and sets the
+ * layer's `data-label-error` attribute to its message.
  *
  * **Example** (Render graph and extract backend)
  *

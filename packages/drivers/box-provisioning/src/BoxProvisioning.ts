@@ -59,7 +59,6 @@ type ApplyError =
 
 const isAppliedOutcome = S.is(BoxActionApplied);
 
-/** Reports every schema issue raised while digesting a plan as a plan-stage failure. */
 const toPlanStageFailure = (): BoxProvisioningSchemaError => BoxProvisioningSchemaError.make({ stage: "plan" });
 
 const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(function* (

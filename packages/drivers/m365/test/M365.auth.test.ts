@@ -9,8 +9,6 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import type { M365TokenCachePersistence } from "@beep/m365";
 
-// Synthetic values only; no network is reached because the empty cache sends
-// MSAL straight to the (absent) interactive authorizer.
 const config = M365ConfigInput.make({ tenantId: "organizations", clientId: "00000000-0000-0000-0000-000000000002" });
 
 describe("M365Auth host token cache", () => {
@@ -25,7 +23,11 @@ describe("M365Auth host token cache", () => {
       const services = yield* Layer.build(M365Auth.makeLayer(config, { tokenCache }));
       const error = yield* Effect.flip(Context.get(services, M365Auth).acquireToken);
 
-      strictEqual(error.reason, "auth");
+      strictEqual(
+        error.reason,
+        "auth",
+        "the empty cache sends MSAL straight to the absent interactive authorizer, so no network is reached"
+      );
       strictEqual((yield* Ref.get(loads)) > 0, true);
       const got = yield* Ref.get(saves);
       strictEqual(got, 0);

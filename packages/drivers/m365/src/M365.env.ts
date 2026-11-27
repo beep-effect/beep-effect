@@ -29,13 +29,13 @@ const $I = $M365Id.create("M365.env");
 
 const UNRESOLVED_REFERENCE_PREFIX = "op://";
 
-// `openssl x509 -fingerprint -sha256` with the colons stripped: 32 bytes as 64 hex digits, either case.
 const CertThumbprintSha256 = S.String.check(
   S.isPattern(
     /^[0-9A-Fa-f]{64}$/,
     $I.annote("CertThumbprintSha256Check", {
       title: "Certificate SHA-256 thumbprint",
-      description: "The certificate's SHA-256 thumbprint as 64 hex digits.",
+      description:
+        "The certificate's SHA-256 thumbprint as 64 hex digits in either case: `openssl x509 -fingerprint -sha256` output with the colons stripped.",
       message: "Expected the certificate's SHA-256 thumbprint as 64 hex digits",
     })
   )
@@ -191,7 +191,6 @@ const optionalText = (name: string): Effect.Effect<O.Option<string>, M365EnvErro
     Effect.mapBoth({ onFailure: () => M365EnvError.of(name, "unreadable"), onSuccess: present })
   );
 
-// An `op://` value means the process was started without `op run`: never authenticate with a reference.
 const requiredText = (name: string): Effect.Effect<string, M365EnvError> =>
   optionalText(name).pipe(
     Effect.flatMap(

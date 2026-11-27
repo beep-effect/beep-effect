@@ -108,18 +108,16 @@ const M365ScopesFromCsv = S.String.pipe(
 );
 const decodeM365ScopesFromCsv = S.decodeEffect(M365ScopesFromCsv);
 
-// The service runtime's token provider and HTTP client are in-process handles,
-// never decoded from external input; structural `S.declare`s carry them through
-// the runtime schema alongside the already-decoded resolved config.
 const M365AuthShapeFromSelf = S.declare((u: unknown): u is M365AuthShape => P.isObject(u)).pipe(
   $I.annoteSchema("M365AuthShapeFromSelf", {
-    description: "In-process delegated Graph token-provider shape carried through the service runtime.",
+    description:
+      "In-process delegated Graph token-provider shape carried through the service runtime; never decoded from external input.",
   })
 );
 
 const HttpClientFromSelf = S.declare((u: unknown): u is HttpClient.HttpClient => P.isObject(u)).pipe(
   $I.annoteSchema("HttpClientFromSelf", {
-    description: "In-process Effect HttpClient carried through the service runtime.",
+    description: "In-process Effect HttpClient carried through the service runtime; never decoded from external input.",
   })
 );
 
@@ -2197,8 +2195,6 @@ export type M365Shape = {
   ) => Effect.Effect<GraphMessage, M365Error>;
 };
 
-// Decode a request schema at the M365 boundary, translating any decode failure into the
-// uniform "request encoding" M365Error for the given resource (was 11 identical consts + pipes).
 const decodeRequest = <Sch extends S.Top>(schema: Sch, resource: string) => {
   const isDecodedRequest = S.is(schema);
 
@@ -2246,8 +2242,7 @@ const signedJsonGet = Effect.fnUntraced(function* (
   );
 });
 
-// Raw content routes (`/$value`) answer with the stored media type, so no JSON `Accept` is sent.
-const signedBytesGet = Effect.fnUntraced(function* (
+const signedGetWithoutJsonAccept = Effect.fnUntraced(function* (
   auth: M365AuthShape,
   url: string
 ): Effect.fn.Return<HttpClientRequest.HttpClientRequest, M365Error> {
@@ -2301,8 +2296,6 @@ const signedWrite = Effect.fnUntraced(function* (
   );
 });
 
-// Graph returns `uniqueBody` only when `$select`ed, and as HTML unless the
-// caller prefers text.
 const AUTHORED_TEXT_SELECT = "id,internetMessageId,receivedDateTime,from,sender,uniqueBody";
 const PREFER_TEXT_BODY = { Prefer: 'outlook.body-content-type="text"' };
 
@@ -2342,8 +2335,6 @@ const ensureSuccess = Effect.fnUntraced(function* (
 
 const isThrottled = (error: M365Error): boolean => error.reason === "throttled";
 
-// A 429 is an explicit refusal, so replaying a create after it is safe. A 503 or a
-// transport failure leaves the outcome of a create unknown.
 const isRejectedBeforeProcessing = (error: M365Error): boolean => isThrottled(error) && O.contains(error.status, 429);
 
 const executeWithRetry = Effect.fnUntraced(function* (
@@ -2412,8 +2403,6 @@ const executeWrite = Effect.fnUntraced(function* (
       isRetryable
     );
 
-  // PATCH and DELETE set a final state, so replaying them is harmless. A POST creates:
-  // when its outcome is unknown the caller must reconcile before creating again.
   return yield* M365WriteMethod.is.POST(call.method)
     ? execute(isRejectedBeforeProcessing).pipe(
         Effect.mapError((error) =>
@@ -2558,7 +2547,6 @@ const deltaUrl = (config: M365ServiceConfig, request: M365DeltaDriveItemsRequest
     })
   );
 
-// The app-only lane has no signed-in user, so `/me` cannot resolve there: fail before any HTTP.
 const signedInUserPath = (
   config: M365ServiceConfig,
   path: string,
@@ -2646,14 +2634,13 @@ const FILE_ATTACHMENT_ODATA_TYPE = "#microsoft.graph.fileAttachment";
 const UPLOAD_CHUNK_CONTENT_TYPE = "application/octet-stream";
 const UPLOAD_CHUNK_RESOURCE = "attachmentUploadChunks";
 
-// The session URL carries its own short-lived token in the query string and the bytes
-// go to it unsigned, so anything other than https is refused.
 const GraphUploadUrl = S.String.check(
   S.makeFilter(
     Str.startsWith("https://"),
     $I.annote("GraphUploadUrl", {
       title: "Graph upload URL",
-      description: "An https upload-session URL returned by Microsoft Graph.",
+      description:
+        "An https upload-session URL returned by Microsoft Graph. It carries its own short-lived token in the query string and receives the bytes unsigned, so any other scheme is refused.",
       message: "Upload session URLs must use https.",
     })
   )
@@ -2695,8 +2682,6 @@ const uploadChunks = (content: Uint8Array): ReadonlyArray<M365UploadChunk> =>
     });
   });
 
-// Chunks go to the session's own pre-authenticated URL: no bearer token and no Graph
-// `Accept`. The body sets `Content-Type` and `Content-Length`.
 const unsignedChunkPut = (
   uploadUrl: string,
   chunk: M365UploadChunk
@@ -2712,7 +2697,6 @@ const unsignedChunkPut = (
     )
   );
 
-// The final chunk answers 201 with `Location: .../attachments('<id>')` (or `.../attachments/<id>`).
 const attachmentIdFromLocation = (location: string, uploadUrl: string): O.Option<string> =>
   pipe(
     O.liftThrowable(() => new URL(location, uploadUrl).pathname)(),
@@ -2728,8 +2712,6 @@ const attachmentIdFromLocation = (location: string, uploadUrl: string): O.Option
     O.filter(Str.isNonEmpty)
   );
 
-// `sessionUrl` is the Graph route that opened the session. It stands in for the
-// pre-authenticated upload URL in errors, which must not carry that URL's token.
 const uploadAttachmentInChunks = Effect.fnUntraced(function* (
   runtime: M365Runtime,
   sessionUrl: string,
@@ -2750,11 +2732,9 @@ const uploadAttachmentInChunks = Effect.fnUntraced(function* (
     GraphUploadSession
   );
   const chunks = uploadChunks(request.content);
+  const tokenFreeErrorUrl = sessionUrl;
+  const uploadUrlTracingDisabled = constTrue;
   yield* Effect.annotateCurrentSpan({ m365_upload_chunk_count: A.length(chunks) });
-  // A chunk PUT names its byte range, so replaying one after a throttle is safe.
-  // The upload URL carries the session token in its query, and the HTTP client's own span
-  // records `url.full` and `url.query`, so client tracing is off for the chunk requests.
-  // The enclosing driver span still records the size and the chunk count.
   const responses = yield* Effect.forEach(
     chunks,
     (chunk) =>
@@ -2762,11 +2742,11 @@ const uploadAttachmentInChunks = Effect.fnUntraced(function* (
         runtime.client,
         unsignedChunkPut(session.uploadUrl, chunk),
         UPLOAD_CHUNK_RESOURCE,
-        sessionUrl,
+        tokenFreeErrorUrl,
         runtime.config.maxRetries
       ),
     { concurrency: 1 }
-  ).pipe(Effect.provideService(HttpClient.TracerDisabledWhen, constTrue));
+  ).pipe(Effect.provideService(HttpClient.TracerDisabledWhen, uploadUrlTracingDisabled));
   const id = yield* pipe(
     A.last(responses),
     O.flatMapNullishOr((response) => response.headers.location),
@@ -2849,8 +2829,6 @@ const createMasterCategory = Effect.fnUntraced(function* (
   );
 });
 
-// Graph answers 409 when the name already exists: another writer created it between
-// the list and this create, which is the outcome "ensure" wants.
 const createMasterCategoryUnlessPresent = (
   runtime: M365Runtime,
   userId: O.Option<string>,
@@ -2864,7 +2842,6 @@ const createMasterCategoryUnlessPresent = (
     )
   );
 
-// Preserve Graph's complete wire object for the private pre-seed backup.
 const ContactFromWire = S.Record(S.String, S.Unknown).pipe(
   S.decodeTo(S.toType(GraphContact), {
     decode: SchemaGetter.transformEffect((wire) =>
@@ -2883,7 +2860,8 @@ const ContactFromWire = S.Record(S.String, S.Unknown).pipe(
     ),
   }),
   $I.annoteSchema("ContactFromWire", {
-    description: "Full-fidelity private contact export paired with the typed read model.",
+    description:
+      "Full-fidelity private contact export paired with the typed read model: the complete Graph wire object is kept for the private pre-seed backup.",
   })
 );
 const ContactPageFromWire = GraphCollection(ContactFromWire);
@@ -2894,7 +2872,6 @@ const contactSuffix = (folderId: O.Option<string>): string =>
     onSome: (id) => `contactFolders/${id}/contacts`,
   });
 
-// Follow only this mailbox collection's continuation, including on the delegated lane.
 const contactPageUrl = Effect.fnUntraced(function* (
   runtime: M365Runtime,
   userId: O.Option<string>,
@@ -2905,7 +2882,7 @@ const contactPageUrl = Effect.fnUntraced(function* (
   const base = yield* mailboxUrl(runtime.config, userId, suffix, "contacts", params);
   if (O.isNone(nextLink)) return base;
   const link = yield* trustedGraphLink(runtime.config, nextLink.value, "contacts");
-  const allowed = yield* Effect.try({
+  const staysInThisMailboxCollection = yield* Effect.try({
     try: () => {
       const candidate = new URL(link);
       const expected = new URL(base);
@@ -2917,12 +2894,11 @@ const contactPageUrl = Effect.fnUntraced(function* (
     },
     catch: () => M365Error.fromReason("request encoding", { resource: "contacts" }),
   });
-  return yield* allowed
+  return yield* staysInThisMailboxCollection
     ? Effect.succeed(link)
     : M365Error.failEffectFromReason("request encoding", { resource: "contacts" });
 });
 
-// Contact POSTs have zero replay budget, including explicit 429 responses.
 const createContactResource = Effect.fnUntraced(function* <Sch extends S.Top>(
   runtime: M365Runtime,
   url: string,
@@ -3134,7 +3110,7 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
       `messages/${request.messageId}/attachments/${request.attachmentId}/$value`,
       "attachments"
     );
-    const bytes = yield* executeBytes(runtime, url, "attachmentContent", signedBytesGet(runtime.auth, url));
+    const bytes = yield* executeBytes(runtime, url, "attachmentContent", signedGetWithoutJsonAccept(runtime.auth, url));
     return M365AttachmentContent.make({ bytes });
   }),
   ensureMasterCategories: Effect.fn("M365.ensureMasterCategories")(function* (rawRequest) {

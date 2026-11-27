@@ -24,10 +24,8 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $LibpffId.create("Libpff.messages");
 
+// decision: json-encode-overloads-data-last-first
 type JsonEncodeEffect<Input> = {
-  // Data-last first: the `(input, options?)` overload would otherwise absorb a
-  // lone parse-options argument and hide the curried form. The trailing
-  // optionality must mirror the data-first signature exactly.
   (options?: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
 };

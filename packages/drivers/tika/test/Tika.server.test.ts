@@ -85,8 +85,6 @@ const capturing =
     return respond(request);
   };
 
-// A tiny extracted text wrapped in oversized metadata: under the old
-// text-only budget this passed, so it pins the metadata-bypass regression.
 const metadataHeavyPayload = Result.getOrThrowWith(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
     {
@@ -201,9 +199,10 @@ describe("TikaServerEngineConfig", () => {
   });
 
   it("rejects a non-normalized base URL passed straight to the constructor", () => {
-    // `make` runs type-side checks but not decode transformations, so without
-    // the trailing-slash check it would silently yield `//rmeta/text`.
-    expect(() => TikaServerEngineConfig.make({ baseUrl: URLStr.make("http://localhost:9998/") })).toThrow();
+    expect(
+      () => TikaServerEngineConfig.make({ baseUrl: URLStr.make("http://localhost:9998/") }),
+      "make skips decode transformations, so the trailing-slash check must reject instead of yielding //rmeta/text"
+    ).toThrow();
     expect(() => TikaServerEngineConfig.make({ baseUrl: URLStr.make("http://localhost:9998///") })).toThrow();
   });
 
@@ -213,9 +212,8 @@ describe("TikaServerEngineConfig", () => {
   });
 
   it("rejects base URLs that are not http or https", () => {
-    // "A:/" is the counterexample the round-trip property surfaced: stripping
-    // its trailing slash changed the URL's identity because it is opaque.
-    for (const baseUrl of ["ftp://tika.internal", "file:///tmp/tika", "A:/"]) {
+    const opaqueUrlWithTrailingSlash = "A:/";
+    for (const baseUrl of ["ftp://tika.internal", "file:///tmp/tika", opaqueUrlWithTrailingSlash]) {
       pipe(decodeTikaServerEngineConfigResult({ baseUrl }), Result.isFailure, assertTrue);
     }
   });
@@ -433,9 +431,10 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
           const madeExtractOperationFixture10 = yield* makeExtractOperationFixture("plain-text");
           const error = yield* engine.extract(madeExtractOperationFixture10).pipe(Effect.flip);
 
-          // The body is oversized AND unparseable; the budget must win, which
-          // only happens if the check runs before JSON decoding.
-          expect(error.reason).toBe("output-limit-exceeded");
+          expect(
+            error.reason,
+            "the body is oversized and unparseable; the budget wins only if it is checked before JSON decoding"
+          ).toBe("output-limit-exceeded");
         })
       );
     }
@@ -570,13 +569,14 @@ describe("makeTikaServerFileProcessingEngine error boundary", () => {
         const request = yield* engine.extract(operation).pipe(Effect.flip, Effect.forkChild);
         const RequestStarted18 = yield* RequestStarted;
         yield* Deferred.await(RequestStarted18);
-        // TestClock waits for supervised fibers to suspend before advancing, so both
-        // the response delay and the unchanged operation deadline are armed.
         yield* TestClock.adjust("5 millis");
         const error = yield* Fiber.join(request);
 
         expect(error._tag).toBe("FileProcessingOperationError");
-        expect(error.reason).toBe("operation-timed-out");
+        expect(
+          error.reason,
+          "TestClock advances only once supervised fibers suspend, so the response delay and the deadline are both armed"
+        ).toBe("operation-timed-out");
       })
     );
   });

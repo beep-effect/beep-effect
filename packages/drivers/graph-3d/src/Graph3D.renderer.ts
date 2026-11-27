@@ -47,31 +47,27 @@ const loadControlsModule = Effect.tryPromise({
   Effect.filterOrFail(isControlsModule, () => Graph3DDriverError.adapterInvariant("Invalid TrackballControls module."))
 );
 
-/**
- * Stable visual-grammar and interaction defaults for each mounted 3D graph.
- *
- * @category models
- * @since 0.0.0
- */
 class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique symbol }>()(
   S.Struct({
-    // The observed reference canvas is #111111; #000000 is only the bundle's
-    // no-override fallback (research VERIFICATION.md §5.4). Fixed dark grammar
-    // in both app themes, matching the cosmos driver's hardcoded-color
-    // convention.
     background: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(0x111111)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0x111111))
+      S.withDecodingDefaultTypeKey(Effect.succeed(0x111111)),
+      S.annotateKey({
+        description:
+          "Canvas color, fixed in both app themes like the cosmos driver's: the reference renderer's observed #111111, not its bundle's #000000 no-override fallback.",
+      })
     ),
     cameraFov: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(40)),
       S.withDecodingDefaultTypeKey(Effect.succeed(40))
     ),
-    // Importance sizing: logical = sizeBase + importance * sizeScale, world
-    // diameter = logical * sizeWorldFactor * zoomDamping.
     sizeBase: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(10)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(10))
+      S.withDecodingDefaultTypeKey(Effect.succeed(10)),
+      S.annotateKey({
+        description:
+          "Logical node size at importance 0: logical = sizeBase + importance * sizeScale, and world diameter = logical * sizeWorldFactor * zoomDamping.",
+      })
     ),
     sizeScale: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(22.4)),
@@ -81,11 +77,13 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed(0.5)),
       S.withDecodingDefaultTypeKey(Effect.succeed(0.5))
     ),
-    // Edge ribbons: width 0.4..5.0 by weight^1.2; global opacity
-    // max(0.10, 0.95 - sqrt(E)/100); per-edge alpha 0.5..1.0 by weight.
     edgeWidthBase: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(0.4)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.4))
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.4)),
+      S.annotateKey({
+        description:
+          "Ribbon width at weight 0; width grows by edgeWidthScale * weight^1.2 (0.4..5.0 by default) and per-edge alpha runs 0.5..1.0 by weight, under a global opacity of max(0.10, 0.95 - sqrt(edgeCount) / 100).",
+      })
     ),
     edgeWidthScale: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(4.6)),
@@ -103,12 +101,13 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed(0.25)),
       S.withDecodingDefaultTypeKey(Effect.succeed(0.25))
     ),
-    // Label declutter: budget K = clamp(round(4.5 * sqrt(n) * (700/d)^0.7), 8, 90),
-    // pool-bounded; opacity floor 0.10; depth fade >35 units behind center over
-    // 130 units capped at 85%.
     labelPoolSize: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(96)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(96))
+      S.withDecodingDefaultTypeKey(Effect.succeed(96)),
+      S.annotateKey({
+        description:
+          "Label sprites; each frame shows at most clamp(round(4.5 * sqrt(n) * (700 / d)^0.7), labelBudgetMin, labelBudgetMax) of them, with an opacity floor of 0.10 and a depth fade from 35 units behind center over 130 units, capped at 85%.",
+      })
     ),
     labelBudgetMax: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(90)),
@@ -118,10 +117,12 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed(8)),
       S.withDecodingDefaultTypeKey(Effect.succeed(8))
     ),
-    // Selection dimming (confirmed reference values).
     dimmedNodeOpacity: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(0.1)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.1))
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.1)),
+      S.annotateKey({
+        description: "Opacity of a node outside the selection's neighborhood, the reference renderer's value.",
+      })
     ),
     dimmedEdgeOpacity: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(0.3)),
@@ -146,13 +147,11 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
   )
 ) {}
 
-/** 12-slot community palette from the reference renderer (ordinal % 12). */
 const COMMUNITY_PALETTE: ReadonlyArray<number> = [
   0xa6cee3, 0x1f78b4, 0xb2df8a, 0x33a02c, 0xfb9a99, 0xe31a1c, 0xfdbf6f, 0xff7f00, 0xcab2d6, 0x6a3d9a, 0xffff99,
   0xb15928,
 ];
 
-/** Non-highlighted edge color while a selection is active: rgba(80,80,80,0.30). */
 const DIMMED_EDGE_RGB = 80 / 255;
 
 const NODE_VERTEX_SHADER = /* glsl */ `
@@ -224,10 +223,8 @@ const smoothstep01 = (t: number): number => {
   return c * c * (3 - 2 * c);
 };
 
-/** Reference zoom damping: clamp((cameraDistance / 600)^0.65, 0.35, 3). */
 const zoomDamping = (cameraDistance: number): number => Math.min(3, Math.max(0.35, (cameraDistance / 600) ** 0.65));
 
-/** Reference global edge opacity: max(0.10, 0.95 - sqrt(edgeCount) / 100). */
 const globalEdgeOpacityFor = (edgeCount: number): number => Math.max(0.1, 0.95 - Math.sqrt(edgeCount) / 100);
 
 const probeWebGl2 = (): boolean =>
@@ -260,11 +257,17 @@ const probeWebGl2 = (): boolean =>
  */
 export class Graph3DRenderOptions extends S.Opaque<Graph3DRenderOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    // Fired only from user clicks (never from `select` calls), so a bridge
-    // re-applying selection after a projection update cannot loop.
-    onNodeSelect: Fn({ input: S.UndefinedOr(S.Int), output: S.Void }).pipe(S.optionalKey),
-    // Post-mount failures (WebGL context loss) surface here as typed errors.
-    onRuntimeError: Fn({ input: Graph3DDriverError, output: S.Void }).pipe(S.optionalKey),
+    onNodeSelect: Fn({ input: S.UndefinedOr(S.Int), output: S.Void }).pipe(
+      S.annotateKey({
+        description:
+          "Called for user clicks only, never for `select` calls, so a bridge that re-applies selection after a projection update cannot loop.",
+      }),
+      S.optionalKey
+    ),
+    onRuntimeError: Fn({ input: Graph3DDriverError, output: S.Void }).pipe(
+      S.annotateKey({ description: "Receives post-mount failures, such as WebGL context loss, as typed errors." }),
+      S.optionalKey
+    ),
   }).pipe(
     $I.annoteSchema("Graph3DRenderOptions", {
       description: "Optional selection and runtime-error callbacks for a mounted 3D graph renderer.",
@@ -298,8 +301,9 @@ export class Graph3DRenderStats extends S.Opaque<Graph3DRenderStats, { readonly 
     nodeCount: S.Int,
     edgeCount: S.Int,
     visibleLabelCount: S.Int,
-    // Nodes currently at the dimmed opacity because a selection is active.
-    dimmedNodeCount: S.Int,
+    dimmedNodeCount: S.Int.annotateKey({
+      description: "Nodes currently at the dimmed opacity because a selection is active.",
+    }),
     selectedNodeIndex: S.Int.pipe(S.optionalKey),
   }).pipe(
     $I.annoteSchema("Graph3DRenderStats", {
@@ -329,10 +333,14 @@ export class Graph3DRenderHandle extends S.Opaque<Graph3DRenderHandle, { readonl
     update: Fn({
       input: Graph3DProjection,
       output: S.Void,
+    }).annotateKey({
+      description:
+        "Replaces the whole projection, since topology can change across updates: the scene is rebuilt from copies of the buffers and the selection resets, so a bridge re-applies its selection by resolving its IRI against the new projection. Incoherent buffers are reported through onRuntimeError and ignored.",
     }),
-    // Applies selection dimming for a node index of the *currently rendered*
-    // projection; `undefined` clears. Never fires `onNodeSelect`.
-    select: Fn({ input: S.UndefinedOr(S.Int), output: S.Void }),
+    select: Fn({ input: S.UndefinedOr(S.Int), output: S.Void }).annotateKey({
+      description:
+        "Dims around a node index of the currently rendered projection; `undefined` clears. Never calls onNodeSelect.",
+    }),
     stats: Fn({ output: Graph3DRenderStats }),
   }).pipe(
     $I.annoteSchema("Graph3DRenderHandle", {
@@ -449,7 +457,6 @@ const mountRenderer = (
       return;
     }
     context.clearRect(0, 0, slot.canvas.width, slot.canvas.height);
-    // The reference rasterizes labels at 90 texture pixels of system-ui.
     context.font = "90px system-ui, sans-serif";
     context.textBaseline = "middle";
     context.fillStyle = "#ffffff";
@@ -458,8 +465,6 @@ const mountRenderer = (
     slot.texture.needsUpdate = true;
   };
 
-  // Community color + alpha rewrite for one edge ribbon, shared by the build
-  // pass and both selection paint paths.
   const paintEdgeCommunity = (target: EdgePaintTarget, edge: number, alpha: number): void => {
     const source = target.links[edge * 2]!;
     tmpColor.setHex(COMMUNITY_PALETTE[target.communities[source]! % COMMUNITY_PALETTE.length]!);
@@ -549,8 +554,6 @@ const mountRenderer = (
       dir.subVectors(vb, va);
       const length = dir.length();
       dir.normalize();
-      // Control point: midpoint + perpendicular offset of len × curvature,
-      // rotated `edgeCurveRotation` radians about the link axis.
       perp.crossVectors(dir, Math.abs(dir.y) > 0.9 ? altAxis : upAxis).normalize();
       perp.applyAxisAngle(dir, config.edgeCurveRotation);
       ctrl[edge * 3] = (va.x + vb.x) / 2 + perp.x * length * config.edgeCurvature;
@@ -586,9 +589,10 @@ const mountRenderer = (
     return { edgeAlphas, edgeColors, edgeGeometry, edgeMaterial, edgeMesh };
   };
 
-  // Fixed sprite pool; textures for the top-importance slots are rasterized at
-  // build time so the first frame carries no rasterization spike.
-  const buildLabelPool = (labels: ReadonlyArray<string>, importanceOrder: Uint32Array): Array<LabelSlot> => {
+  const buildLabelPoolRasterizedUpFront = (
+    labels: ReadonlyArray<string>,
+    importanceOrder: Uint32Array
+  ): Array<LabelSlot> => {
     const labelPool: Array<LabelSlot> = [];
     if (labels.length === 0) {
       return labelPool;
@@ -615,7 +619,6 @@ const mountRenderer = (
     return labelPool;
   };
 
-  // Camera fit: frame the bounding sphere of the baked layout.
   const cameraFraming = (
     positions: Float32Array,
     nodeCount: number
@@ -639,8 +642,6 @@ const mountRenderer = (
   const buildSceneGraph = (projection: Graph3DProjection): SceneGraph => {
     const nodeCount = projection.nodeCount;
     const edgeCount = projection.edgeCount;
-    // Owned copies: the projection is caller data and must stay immutable
-    // across the handle's lifetime.
     const positions = new Float32Array(projection.pointPositions);
     const importance = new Float32Array(projection.nodeImportance);
     const communities = new Uint16Array(projection.nodeCommunities);
@@ -664,7 +665,7 @@ const mountRenderer = (
 
     const nodeLayer = buildNodeLayer(nodeCount, positions, importance, communities);
     const edgeLayer = buildEdgeLayer(edgeCount, positions, links, edgeWeights, communities);
-    const labelPool = buildLabelPool(labels, importanceOrder);
+    const labelPool = buildLabelPoolRasterizedUpFront(labels, importanceOrder);
     const framing = cameraFraming(positions, nodeCount);
 
     return {
@@ -702,14 +703,13 @@ const mountRenderer = (
   };
 
   const paintDimmedSelection = (current: SceneGraph, nodeIndex: number): void => {
-    // Uint8 membership mask over node indices: 1 = selected node or neighbor.
-    const neighborhood = new Uint8Array(current.nodeAlphas.length);
-    neighborhood[nodeIndex] = 1;
+    const selectedOrNeighborMask = new Uint8Array(current.nodeAlphas.length);
+    selectedOrNeighborMask[nodeIndex] = 1;
     for (const neighbor of current.adjacency[nodeIndex] ?? []) {
-      neighborhood[neighbor] = 1;
+      selectedOrNeighborMask[neighbor] = 1;
     }
     for (let index = 0; index < current.nodeAlphas.length; index += 1) {
-      current.nodeAlphas[index] = neighborhood[index] === 1 ? 1 : config.dimmedNodeOpacity;
+      current.nodeAlphas[index] = selectedOrNeighborMask[index] === 1 ? 1 : config.dimmedNodeOpacity;
     }
     for (let edge = 0; edge < current.edgeAlphas.length; edge += 1) {
       const source = current.links[edge * 2]!;
@@ -796,7 +796,6 @@ const mountRenderer = (
       visibleLabels += 1;
     };
 
-    // interaction override first: the selected node's label is always admitted
     if (P.isNotUndefined(selectedIndex)) {
       admit(selectedIndex, 1);
     }
@@ -827,7 +826,6 @@ const mountRenderer = (
     const nodeCount = current.positions.length / 3;
     for (let index = 0; index < nodeCount; index += 1) {
       scratch.fromArray(current.positions, index * 3);
-      // reject points behind the camera plane before projecting
       if (va.copy(scratch).sub(camera.position).dot(camDir) <= camera.near) {
         continue;
       }
@@ -872,9 +870,7 @@ const mountRenderer = (
     : undefined;
   resizeObserver?.observe(container);
 
-  // frame loop + fps sampling from real frame deltas, kept in a fixed
-  // circular window so the hot loop never shifts or reallocates
-  const frameDeltas = new Float64Array(120);
+  const frameDeltaRing = new Float64Array(120);
   let frameDeltaHead = 0;
   let frameDeltaCount = 0;
   let lastFrameTime = 0;
@@ -882,9 +878,9 @@ const mountRenderer = (
   const animate = (time: number): void => {
     frameId = globalThis.requestAnimationFrame(animate);
     if (lastFrameTime !== 0) {
-      frameDeltas[frameDeltaHead] = time - lastFrameTime;
-      frameDeltaHead = (frameDeltaHead + 1) % frameDeltas.length;
-      if (frameDeltaCount < frameDeltas.length) {
+      frameDeltaRing[frameDeltaHead] = time - lastFrameTime;
+      frameDeltaHead = (frameDeltaHead + 1) % frameDeltaRing.length;
+      if (frameDeltaCount < frameDeltaRing.length) {
         frameDeltaCount += 1;
       }
     }
@@ -913,7 +909,7 @@ const mountRenderer = (
       }
       let total = 0;
       for (let index = 0; index < frameDeltaCount; index += 1) {
-        total += frameDeltas[index]!;
+        total += frameDeltaRing[index]!;
       }
       return (frameDeltaCount * 1_000) / total;
     },
@@ -921,17 +917,12 @@ const mountRenderer = (
       if (destroyed) {
         return;
       }
-      // Incoherent buffers at a trusted boundary are a programmer error.
       if (!Graph3DProjection.hasCoherentBuffers(projection)) {
         options.onRuntimeError?.(
           Graph3DDriverError.adapterInvariant("The 3D graph projection buffers are incoherent.")
         );
         return;
       }
-      // Full-projection replacement (cosmos parity): topology can change
-      // across updates (focus reprojection), so the scene graph is rebuilt
-      // and selection identity resets — the ontology bridge re-applies it by
-      // resolving its selected IRI against the new projection.
       disposeSceneGraph();
       selectedIndex = undefined;
       sceneGraph = buildSceneGraph(projection);

@@ -34,14 +34,11 @@ type WiredOperation = {
 const DEFINITION_REF_PREFIX = "#/$defs/";
 const problemEquivalence = S.toEquivalence(RunpodProblem);
 
-// The slice of a JSON Schema definition the wiring checks read.
 const JsonSchemaObject = S.Struct({
   properties: S.Record(S.String, S.Struct({ type: S.Unknown.pipe(S.optionalKey) })).pipe(S.optionalKey),
   required: S.Array(S.String).pipe(S.optionalKey),
 });
 
-// Records how the generated surface wires each spec into the factory; the
-// members it returns are never run.
 const recordOperations = (): ReadonlyArray<WiredOperation> => {
   const wired: Array<WiredOperation> = [];
   const factory: RunpodOperationFactory<never> = {
@@ -71,7 +68,6 @@ const operationMembers = (): ReadonlyArray<string> =>
     })
   );
 
-// The JSON Schema definition a schema's document points at.
 const definitionOf = (schema: S.Constraint) => {
   const document = S.toJsonSchemaDocument(schema);
   return pipe(
@@ -150,11 +146,10 @@ describe("@beep/runpod generated operations", () => {
         ]);
         expect(A.every(descriptor.pathParams, (param) => A.contains(required, param))).toBe(true);
         expect(A.contains(required, "body")).toBe(descriptor.requestBodyRequired);
-        // Both directions: a decoder exists for exactly the declared statuses
-        // whose body is not an event stream (those are read as SSE).
         deepStrictEqual(
           { operationId: descriptor.operationId, decoded: sorted(R.keys(responses)) },
-          { operationId: descriptor.operationId, decoded: sorted(decodedStatuses) }
+          { operationId: descriptor.operationId, decoded: sorted(decodedStatuses) },
+          "a decoder exists for exactly the declared statuses whose body is not an event stream (those are read as SSE)"
         );
       }),
       { concurrency: 1, discard: true }
@@ -204,8 +199,10 @@ describe("@beep/runpod errors", () => {
         const details = yield* S.encodeEffect(RunpodProblemFromProblemDetails)(problem);
         const decoded = yield* S.decodeEffect(RunpodProblemFromProblemDetails)(details);
 
-        // Arbitrary builds null-prototype objects, so compare by schema equivalence.
-        assertTrue(problemEquivalence(decoded, problem));
+        assertTrue(
+          problemEquivalence(decoded, problem),
+          "Arbitrary builds null-prototype objects, so the round trip compares by schema equivalence"
+        );
       }),
     { arbitrary: fcRuns(25) }
   );

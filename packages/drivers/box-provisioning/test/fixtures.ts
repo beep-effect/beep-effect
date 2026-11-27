@@ -191,7 +191,6 @@ type FakeListOptionals = { readonly queryParams?: { readonly marker?: string } }
 
 type FakeFolderRequest = { readonly name: string; readonly parent: { readonly id: string } };
 
-/** One upload request the fake received, whether or not it was stored. */
 type FakeBoxUpload = {
   readonly contentMd5: O.Option<string>;
   readonly name: string;
@@ -301,7 +300,6 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
           return reject(503, "unavailable");
         }
         if (A.contains(raceFolders, name)) {
-          // A concurrent writer wins the create between the plan and this request.
           raceFolders = removeFirst(raceFolders, name);
           entries = A.append(entries, { id: allocateId(), name, parentId: parent.id, type: "folder" });
           return reject(409, "item_name_in_use");
@@ -315,7 +313,6 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
           etag: "0",
           id: entry.id,
           name,
-          // A malformed response names a parent the request never asked for.
           parent: { id: A.contains(malformedFolders, name) ? "unexpected-parent" : parent.id, type: "folder" },
           type: "folder",
         });
