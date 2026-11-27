@@ -147,7 +147,15 @@ export interface RulesetShape {
   readonly delete: (rulesetId: number) => Effect.Effect<void, GitHubError, Repo>;
   /** Every ruleset the repository sees, its own and the organization's. */
   readonly list: Effect.Effect<ReadonlyArray<RulesetInfo>, GitHubError, Repo>;
-  /** An organization role's numeric id, for a bypass actor. */
+  /**
+   * An organization role's numeric id, for a bypass actor.
+   *
+   * **Gotchas**
+   *
+   * Role ids are per organization, predefined roles included, so they are
+   * looked up rather than hardcoded. An unknown name fails `notFound` with the
+   * organization's available role names in the reason.
+   */
   readonly roleId: (name: string) => Effect.Effect<number, GitHubError, Repo>;
 
   /**
@@ -169,6 +177,9 @@ export interface RulesetShape {
    * assigned at creation — so this matches on `name`. Renaming a ruleset in a
    * caller's configuration therefore creates a second one rather than renaming
    * the first; removing the orphan is the caller's cleanup pass.
+   *
+   * The match reads every page of the listing: a truncated first page would
+   * hide an existing ruleset and turn the update into a create.
    */
   readonly upsert: (payload: RulesetPayload.Encoded) => Effect.Effect<void, GitHubError, Repo>;
 }
@@ -291,7 +302,6 @@ export class Ruleset extends Context.Service<Ruleset, RulesetShape>()($I`Ruleset
 
 const unstubbed = unstubbedFor({ service: "Ruleset" });
 
-/** An inherited ruleset belongs to the organization and is not this repository's to write. */
 const isOwnedByRepository = (ruleset: { readonly source_type?: string | undefined }): boolean =>
   ruleset.source_type !== "Organization";
 
@@ -300,16 +310,11 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, ruleset: payload.name });
 
-    // Paginated, and this read is the existence check the create-vs-update
-    // decision turns on. A truncated first page would make an existing
-    // ruleset invisible past it and turn an update into a create.
     const existing = yield* client.paginate("GET /repos/{owner}/{repo}/rulesets", {
       owner,
       repo,
     });
 
-    // Repository-owned only. Without this filter a name match against an
-    // inherited ruleset issues a PUT at the organization's id.
     const match = A.findFirst(existing, (ruleset) => ruleset.name === payload.name && isOwnedByRepository(ruleset));
 
     const body = {
@@ -385,8 +390,6 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
 
   const teamId = Effect.fn("Ruleset.teamId")(function* (slug: string) {
     const { owner } = yield* Repo;
-    // Annotated as `org`, not `owner`: the coordinate is reused and the
-    // telemetry should say which meaning is in play.
     yield* Effect.annotateCurrentSpan({ org: owner, team_slug: slug });
 
     const team = yield* client.request("GET /orgs/{org}/teams/{team_slug}", {
@@ -410,9 +413,6 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
         A.map((candidate) => candidate.name),
         A.join(", ")
       );
-      // Listing what WAS available is the difference between a user fixing a
-      // typo and a user guessing. Role ids are per-organization even for
-      // predefined roles, so the list cannot be hardcoded.
       return yield* GitHubError.notFound(
         "Ruleset.roleId",
         `organization role '${name}' in '${owner}' (available: ${available || "none"})`

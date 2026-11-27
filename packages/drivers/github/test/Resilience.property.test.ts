@@ -25,9 +25,7 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 
 describe("Resilience schema property floor", () => {
   roundTrips("RateLimitSnapshot", RateLimitSnapshot);
-  // DurationFromMillis has a millisecond wire representation. Compare every
-  // policy field in those units, including nano-backed arbitrary durations.
-  const policyStructure = (policy: RetryPolicy) => ({
+  const policyInMillis = (policy: RetryPolicy) => ({
     maxRetries: policy.maxRetries,
     baseDelay: Duration.toMillis(policy.baseDelay),
     maxDelay: Duration.toMillis(policy.maxDelay),
@@ -44,7 +42,7 @@ describe("Resilience schema property floor", () => {
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(RetryPolicy)(value);
         const decoded = yield* S.decodeEffect(RetryPolicy)(encoded);
-        assert.deepStrictEqual(policyStructure(decoded), policyStructure(value));
+        assert.deepStrictEqual(policyInMillis(decoded), policyInMillis(value));
         const value2 = yield* S.encodeEffect(RetryPolicy)(decoded);
         assert.deepStrictEqual(value2, encoded);
         assert.strictEqual(decoded.retries(failure), value.retries(failure));

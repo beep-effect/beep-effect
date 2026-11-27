@@ -243,7 +243,6 @@ const describeThrowable = (value: unknown): string =>
 const statusOf = (record: Record<string, unknown> | undefined): number | undefined =>
   P.isNumber(record?.status) ? record.status : undefined;
 
-/** octokit puts headers on the error itself for GraphQL, and under `response` for HTTP failures. */
 const headersOf = (record: Record<string, unknown> | undefined): Record<string, unknown> | undefined =>
   asRecord(record?.headers) ?? asRecord(asRecord(record?.response)?.headers);
 
@@ -254,7 +253,6 @@ const messageOf: {
   P.isString(record?.message) ? record.message : describeThrowable(error)
 );
 
-/** Every entry's message joined in order, or the throwable's own message when GitHub sent no entries. */
 const reasonOf: {
   (entries: ReadonlyArray<GraphQLErrorEntry>, record: Record<string, unknown> | undefined, error: unknown): string;
   (record: Record<string, unknown> | undefined, error: unknown): (entries: ReadonlyArray<GraphQLErrorEntry>) => string;
@@ -283,11 +281,7 @@ const readEntries = (value: unknown): ReadonlyArray<GraphQLErrorEntry> => {
   return entries;
 };
 
-/**
- * GitHub's own entry classifications, in the order they win: a missing
- * resource outranks a refusal, which outranks a rate limit.
- */
-const ENTRY_KINDS: ReadonlyArray<readonly [ReadonlyArray<string>, GraphQLErrorKind]> = [
+const ENTRY_KINDS_BY_PRECEDENCE: ReadonlyArray<readonly [ReadonlyArray<string>, GraphQLErrorKind]> = [
   [["NOT_FOUND"], "notFound"],
   [["FORBIDDEN", "UNAUTHORIZED"], "unauthorized"],
   [["RATE_LIMITED"], "rateLimited"],
@@ -295,14 +289,13 @@ const ENTRY_KINDS: ReadonlyArray<readonly [ReadonlyArray<string>, GraphQLErrorKi
 
 const entryKind = (entries: ReadonlyArray<GraphQLErrorEntry>): O.Option<GraphQLErrorKind> =>
   pipe(
-    ENTRY_KINDS,
+    ENTRY_KINDS_BY_PRECEDENCE,
     A.findFirst(([types]) => A.some(entries, (entry) => entry.type !== undefined && A.contains(types, entry.type))),
     O.map(([, kind]) => kind)
   );
 
 const isServerFailure = (status: number): boolean => status >= 500;
 
-/** An HTTP failure; a 403 is a rate limit only when GitHub advised a delay. */
 const statusKind: {
   (status: number, retryAfterMillis: number | undefined): GraphQLErrorKind;
   (retryAfterMillis: number | undefined): (status: number) => GraphQLErrorKind;
@@ -319,7 +312,6 @@ const statusKind: {
     )
 );
 
-/** No status: an HTTP 200 carrying entries was refused, and anything else never got an answer. */
 const statuslessKind = (entries: ReadonlyArray<GraphQLErrorEntry>): GraphQLErrorKind =>
   A.isReadonlyArrayNonEmpty(entries) ? "rejected" : "transport";
 
@@ -485,22 +477,9 @@ export class GraphQLDocument<A, V extends Record<string, unknown>> {
   readonly encodeVariables: (variables: V) => Record<string, unknown>;
 
   private constructor(
-    /** Names the span and the error's `operation`. */
     name: string,
-    /** The document text sent to GitHub. */
     document: string,
-    /** Decodes the raw `data` payload into the domain value. */
     decode: (raw: unknown) => Effect.Effect<A, S.SchemaError>,
-    /**
-     * Turns the caller's variables into the wire object.
-     *
-     * **Details**
-     *
-     * Identity by default. It exists so `V` is genuinely load-bearing: without
-     * a member mentioning it, TypeScript's structural typing would make
-     * documents with different variable shapes interchangeable and the
-     * call-site checking would be decorative.
-     */
     encodeVariables: (variables: V) => Record<string, unknown>
   ) {
     this.name = name;

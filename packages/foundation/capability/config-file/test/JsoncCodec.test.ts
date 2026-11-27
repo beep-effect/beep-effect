@@ -28,8 +28,11 @@ describe("JsoncCodec", () => {
       assert.strictEqual(error.operation, "parse");
       assert.isDefined(error.cause);
       assert.notStrictEqual(typeof error.cause, "string");
-      // The underlying JsoncParseError survives structurally, not as prose.
-      assert.instanceOf(error.cause, JsoncParseError);
+      assert.instanceOf(
+        error.cause,
+        JsoncParseError,
+        "the underlying JsoncParseError survives structurally, not as prose"
+      );
     })
   );
 
@@ -63,8 +66,11 @@ describe("JsoncCodec", () => {
       assert.instanceOf(error, ConfigCodecError);
       assert.strictEqual(error.codec, "jsonc");
       assert.strictEqual(error.operation, "stringify");
-      // Structural, never stringified: a string has no prototype chain to JsoncStringifyError.
-      assert.instanceOf(error.cause, JsoncStringifyError);
+      assert.instanceOf(
+        error.cause,
+        JsoncStringifyError,
+        "a stringified cause has no prototype chain to JsoncStringifyError"
+      );
     })
   );
 });

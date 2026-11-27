@@ -10,13 +10,15 @@ import * as S from "effect/Schema";
 const document = Sbom.generate({ root: Component.make({ type: "library", name: "root" }), components: [] });
 
 describe("Sbom filesystem coverage", () => {
-  // TypeScript's private constructor is erased for JavaScript consumers.
-  // Reflective construction must not turn the static emitter into an instance API.
   it.effect("keeps emitter operations on the static facade after reflective construction", () =>
     Effect.sync(() => {
       const instance: unknown = Reflect.construct(Sbom, []);
-      assertTrue(instance instanceof Sbom);
-      assert.notProperty(instance, "generate");
+      assertTrue(instance instanceof Sbom, "a private constructor is erased for JavaScript consumers");
+      assert.notProperty(
+        instance,
+        "generate",
+        "reflective construction must not turn the emitter into an instance API"
+      );
       assert.notProperty(instance, "toJson");
       assert.notProperty(instance, "write");
       assert.deepStrictEqual(

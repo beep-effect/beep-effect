@@ -379,12 +379,12 @@ export class GitCommit extends Context.Service<GitCommit, GitCommitShape>()($I`G
 
 const unstubbed = unstubbedFor({ service: "GitCommit" });
 
-/** The Git Database tree entry for one change. */
+const REMOVE_PATH_SHA = null;
+
 const treeEntry = (change: FileChange) =>
   change._tag === "FileContent"
     ? { path: change.path, mode: change.mode ?? ("100644" as const), type: "blob" as const, content: change.content }
-    : // A null sha is how the Git Database API spells "remove this path".
-      { path: change.path, mode: "100644" as const, type: "blob" as const, sha: null };
+    : { path: change.path, mode: "100644" as const, type: "blob" as const, sha: REMOVE_PATH_SHA };
 
 const CommitResponse = S.Struct({
   sha: S.String,

@@ -138,7 +138,6 @@ export const openStore = Effect.fnUntraced(function* (
 export const tempDirectory = (prefix: string) =>
   FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped({ prefix }));
 
-/** One file of a folder snapshot. */
 interface SnapshotFile {
   readonly bytes: Uint8Array;
   readonly mtime: number;

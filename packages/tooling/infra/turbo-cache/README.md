@@ -22,19 +22,26 @@ section "Turbo cache".
 | `src/TurboCache.ts` | Resources: R2 bucket with lifecycle expiry, one `Random` token per principal, the Worker |
 | `src/Bucket.ts` | The R2 read-write binding |
 | `src/TokenHandoff.ts` | Send one token from state to a receiver's stdin |
-| `token.ts` | CLI over the handoff (`bun token.ts --stage prod --principal ci-pr -- <receiver>`) |
+| `token.ts` | CLI over the handoff (`bun token.ts --stage prod --team beep --principal ci-pr -- <receiver>`; `--team` defaults to `beep`) |
 
 ## Policy
 
-One team, `beep`. Every principal holds its own token (`Random`, 32 bytes,
-kept in state) of one access class:
+Two teams: `beep`, this repository, and `inventory`, the inventory-import
+repository. Every principal holds its own token (`Random`, 32 bytes, kept in
+state) of one access class:
 
-| Principal | Access | Where the token lives |
-| --- | --- | --- |
-| `ci-main` | write | `turbo-cache-write` GitHub environment (protected `main` pushes) |
-| `ci-pr` | read | repository secret (same-repository pull requests) |
-| `dankstation` | write | the workstation's 1Password item |
-| `beep-worker` | write | the worker's 1Password item |
+| Team | Principal | Access | Where the token lives |
+| --- | --- | --- | --- |
+| `beep` | `ci-main` | write | `turbo-cache-write` GitHub environment (protected `main` pushes) |
+| `beep` | `ci-pr` | read | repository secret (same-repository pull requests) |
+| `beep` | `dankstation` | write | the workstation's 1Password item |
+| `beep` | `beep-worker` | write | the worker's 1Password item |
+| `inventory` | `ci-main` | write | inventory-import's `turbo-cache-write` GitHub environment (pushes to `main`), from a 1Password item |
+| `inventory` | `ci-pr` | read | inventory-import's repository secret, from a 1Password item |
+| `inventory` | `dankstation` | write | the workstation's 1Password item |
+
+A principal's name may repeat across teams: the token is the team's and the
+principal's together (`TurboCacheToken-<team>-<principal>-r<n>`).
 
 A `read` token restores artifacts, queries hashes, reads status and reports
 events; an upload with it is `403 read_only` and never reaches the bucket.

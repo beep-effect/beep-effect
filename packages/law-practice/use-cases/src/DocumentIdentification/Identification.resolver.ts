@@ -54,7 +54,6 @@ const nameMatches = (a: string, b: string) => {
   );
 };
 
-// Callers normalise each text once; the pattern is compiled once per phrase.
 const phraseMatcher = (phrase: string) => {
   const p = normal(phrase);
   const escaped = Str.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")(p);
@@ -75,8 +74,6 @@ const partyStopWords = HashSet.fromIterable([
   "and",
 ]);
 const partyWords = wordsExcluding(partyStopWords);
-// A client name matches a party when its words all appear in the party name, or the party's two or more words all
-// appear in the client name; a shared word of four or more characters is required either way.
 const partyNamesClient = (clientName: string, partyName: string) => {
   const client = partyWords(clientName);
   const party = partyWords(partyName);
@@ -86,7 +83,6 @@ const partyNamesClient = (clientName: string, partyName: string) => {
     A.some(A.fromIterable(HashSet.intersection(client, party)), (word) => word.length >= 4)
   );
 };
-// Weight of a critic-confirmed party by its role in the document; zero-weight roles never vote.
 const roleWeight = (role: string) =>
   A.contains(["applicant", "assignee", "client"], role)
     ? 3
@@ -95,7 +91,6 @@ const roleWeight = (role: string) =>
       : A.contains(["signatory", "author"], role)
         ? 1
         : 0;
-// Text weight of a contact link: links from filed email outweigh the rest.
 const linkWeight = (source: string) => (A.contains(["attorney-filed-email", "email-subject-ref"], source) ? 3 : 1);
 const strongLinkSources = ["attorney-answer", "attorney-pc-folder", "attorney-docket-sheet", "attorney-filed-email"];
 const token = (kind: string, value: string) => `${kind}:${normal(value)}`;
@@ -152,7 +147,6 @@ const documentTokens = (document: IdentificationDocument, context: ResolverConte
     ),
   ]);
 
-// Alias chains are followed to their end; a cycle returns the original key.
 const resolveAlias =
   (aliases: ResolverContext["aliases"]) =>
   (key: ClientKey): ClientKey => {
@@ -168,8 +162,6 @@ const resolveAlias =
   };
 type Decision = { readonly client: O.Option<ClientKey>; readonly tier: Resolution["tier"] };
 const undecided: Decision = { client: O.none(), tier: "unknown" };
-// Content tier: score at least five, two independent sources, three times the runner-up (runner floor one).
-// Candidate: score at least three and twice the runner-up. Otherwise ambiguous when anyone else scored.
 const scoredDecision = (key: ClientKey, score: number, runner: number, independentSources: number): Decision => {
   const floor = Math.max(runner, 1);
   if (score >= 5 && independentSources >= 2 && score >= 3 * floor)
@@ -244,6 +236,13 @@ export const fitTokenFilter: {
  * Resolves one document, retaining conflicting strong signals and respecting critic-confirmed quotes.
  * Content identification needs two independent provenance sources and a threefold margin;
  * weaker evidence needs a twofold margin. Evidence descriptions contain ids and counts only.
+ *
+ * **Gotchas**
+ *
+ * A USPTO record contributes only when the document cites its number. Only the separators that appear
+ * inside a number (`/`, `,`, `.`, `-`) are stripped before that match; whitespace stays a boundary, so a
+ * number followed by a date, as on a USPTO cover sheet, still counts as cited.
+ *
  * **Example** (Resolve an empty document)
  *
  * ```ts
@@ -280,7 +279,6 @@ export const resolve: {
         docket
       )
     );
-  // Text signals: each distinct source adds its weight once; the total is capped when combined with content.
   const vote = (client: ClientKey, source: string, kind: EvidenceKind, weight: number) => {
     const key = alias(client);
     const priorSources = O.getOrElse(M.get(sources, key), () => HashSet.empty<string>());
@@ -288,7 +286,6 @@ export const resolve: {
     M.set(sources, key, HashSet.add(priorSources, source));
     addEvidence(kind, `client ${key}`);
   };
-  // Content signals: a critic-confirmed party adds its role weight once per client and path.
   const contentVote = (client: ClientKey, source: string, kind: EvidenceKind, weight: number) => {
     const key = alias(client);
     M.set(contentScores, key, O.getOrElse(M.get(contentScores, key), () => 0) + weight);
@@ -302,8 +299,6 @@ export const resolve: {
     );
     addEvidence(kind, `client ${key}`);
   };
-  // A token owned by exactly one client in the training split votes for that client with weight three; a token seen
-  // under several clients is dropped; an unseen token falls back to the given weighted votes.
   const tokenVotes = (key: string, fallback: ReadonlyArray<readonly [ClientKey, number, string]>, kind: EvidenceKind) =>
     O.match(
       A.findFirst(filter.ownership, (o) => o.token === key),
@@ -331,9 +326,6 @@ export const resolve: {
     }
   });
   fullReferences(document.text, "full-reference");
-  // A public result may contribute only when this document actually cites its numeric key. Only the
-  // separators that appear inside a number are stripped; whitespace stays a boundary so a number
-  // followed by a date (the USPTO cover-sheet layout) still counts as cited.
   const cited = (number: string) =>
     new RegExp(`(?<![0-9])${number}(?![0-9])`, "u").test(Str.replace(/[/,.-]/gu, "")(document.text)) ||
     O.exists(document.extraction, (e) =>
@@ -424,7 +416,6 @@ export const resolve: {
       docketFor(pair.clientNumber, docket);
     });
   });
-  // Combined score: content weight plus text votes capped at three; text counts as one independent source.
   const scores = M.empty<ClientKey, number>();
   A.forEach(A.fromIterable(contentScores), ([key, score]) => M.set(scores, key, score));
   A.forEach(A.fromIterable(votes), ([key, count]) =>

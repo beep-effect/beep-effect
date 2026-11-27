@@ -52,11 +52,7 @@ const LegacyMeta = S.Record(S.String, S.Json).pipe(S.NullOr, S.optionalKey).anno
   description: "Reserved ACP `_meta` extension payload.",
 });
 
-// --- Unknown-variant sentinels -------------------------------------------------------------------
-// The sentinels sit inside open (rest) structs whose values must stay JSON-compatible, so they are
-// structural schemas rather than branded opaque classes: a branded member has no implicit string
-// index signature and could not be placed in a normalized update without a type assertion.
-
+// decision: unknown-sentinels-stay-structural
 const UnknownContentFields = S.Struct({
   type: S.tag(ACP_UNKNOWN).annotateKey({
     description: "The `_acp_unknown` sentinel.",
@@ -161,8 +157,6 @@ export const UnknownSessionUpdate = UnknownSessionUpdateFields.pipe(
  * @since 0.0.0
  */
 export type UnknownSessionUpdate = typeof UnknownSessionUpdate.Type;
-
-// --- Legacy model selection (removed unstable API) ----------------------------------------------
 
 /**
  * **Example** (Make model info)
@@ -296,8 +290,6 @@ export class LegacyElicitationResponse extends S.Opaque<LegacyElicitationRespons
   )
 ) {}
 
-// --- Content -------------------------------------------------------------------------------------
-
 const [V2TextContent, V2ImageContent, V2AudioContent, V2ResourceLinkContent, V2ResourceContent] =
   V2.ContentBlock.members;
 
@@ -399,8 +391,6 @@ export const AvailableCommand = S.StructWithRest(
  * @since 0.0.0
  */
 export type AvailableCommand = typeof AvailableCommand.Type;
-
-// --- Initialize ----------------------------------------------------------------------------------
 
 const [V1TerminalAuthMethod] = V1.AuthMethod.members;
 
@@ -521,8 +511,6 @@ export const InitializeResponse = S.StructWithRest(
  * @since 0.0.0
  */
 export type InitializeResponse = typeof InitializeResponse.Type;
-
-// --- Session setup -------------------------------------------------------------------------------
 
 const [V1SelectConfigOption, V1BooleanConfigOption] = V1.SessionConfigOption.members;
 
@@ -1175,8 +1163,6 @@ export const PromptResponse = S.StructWithRest(
  */
 export type PromptResponse = typeof PromptResponse.Type;
 
-// --- Tool calls ----------------------------------------------------------------------------------
-
 const [V2ContentToolCallContent, V2DiffToolCallContent, V2TerminalToolCallContent] = V2.ToolCallContent.members;
 const [, V1DiffToolCallContent] = V1.ToolCallContent.members;
 
@@ -1279,8 +1265,6 @@ export const ToolCallUpdate = S.StructWithRest(
  */
 export type ToolCallUpdate = typeof ToolCallUpdate.Type;
 
-// --- Session updates -----------------------------------------------------------------------------
-
 const [
   ,
   V2UserMessage,
@@ -1310,7 +1294,7 @@ const [V2RunningState, V2IdleState, V2RequiresActionState] = V2StateUpdate.membe
 const [, , , , , V2IdleErrorState] = V2IdleState.members;
 const [V1UserMessageChunk, V1AgentMessageChunk, V1AgentThoughtChunk, V1ToolCall, , V1Plan] = V1.SessionUpdate.members;
 const V1CurrentModeUpdate = V1.SessionUpdate.members[9];
-// Generation 1 accepts any `Cost.currency`; generation 2 requires `^[A-Z]{3}$`.
+// decision: shared-update-kinds-match-both-generations
 const V1UsageUpdate = V1.SessionUpdate.members[12];
 const V1Notice = V1.SessionUpdate.members[13];
 const V1SubagentUpdate = V1.SessionUpdate.members[16];
@@ -1587,8 +1571,6 @@ export const SessionNotification = S.StructWithRest(
  */
 export type SessionNotification = typeof SessionNotification.Type;
 
-// --- Permissions ---------------------------------------------------------------------------------
-
 /**
  * **Details**
  *
@@ -1644,7 +1626,6 @@ export const RequestPermissionRequest = S.StructWithRest(
  */
 export type RequestPermissionRequest = typeof RequestPermissionRequest.Type;
 
-// --- Re-exports ----------------------------------------------------------------------------------
 // Biome's import organizer merges re-exports from one module into a single statement, and docgen
 // reads only the last JSDoc block of a statement, so each statement carries exactly one block.
 

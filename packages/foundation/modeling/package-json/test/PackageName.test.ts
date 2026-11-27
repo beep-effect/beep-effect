@@ -36,9 +36,6 @@ describe("PackageName.isValid", () => {
   });
 });
 
-// W3-f conformance shift, pinned inverted: these three names were accepted
-// before promotion and are rejected now, matching validate-npm-package-name's
-// validForOldPackages (see PackageName.differential.test.ts).
 describe("PackageName follows npm's validForOldPackages", () => {
   it("rejects a leading hyphen and the two reserved names it accepted before promotion", () => {
     for (const name of ["-leading-hyphen", "-", "node_modules", "favicon.ico"]) {
@@ -141,13 +138,16 @@ describe("PackageName JSON Schema export", () => {
     const unscopedId = $I`UnscopedPackageName`;
     const unionId = $I`PackageName`;
     const scoped = String.raw`^@[a-z0-9-][a-z0-9._-]*\/[a-z0-9-][a-z0-9._-]*$`;
-    // W3-f: no leading `-` for an unscoped name (validForOldPackages).
-    const unscoped = "^[a-z0-9][a-z0-9._-]*$";
+    const unscopedNoLeadingHyphen = "^[a-z0-9][a-z0-9._-]*$";
     assert.propertyVal(S.toJsonSchemaDocument(ScopedPackageName).definitions[scopedId], "pattern", scoped);
-    assert.propertyVal(S.toJsonSchemaDocument(UnscopedPackageName).definitions[unscopedId], "pattern", unscoped);
+    assert.propertyVal(
+      S.toJsonSchemaDocument(UnscopedPackageName).definitions[unscopedId],
+      "pattern",
+      unscopedNoLeadingHyphen
+    );
     const union = S.toJsonSchemaDocument(PackageName);
     assert.propertyVal(union.definitions[scopedId], "pattern", scoped);
-    assert.propertyVal(union.definitions[unscopedId], "pattern", unscoped);
+    assert.propertyVal(union.definitions[unscopedId], "pattern", unscopedNoLeadingHyphen);
     assert.deepPropertyVal(union.definitions[unionId], "anyOf", [
       { $ref: "#/$defs/@beep~1package-json~1PackageName~1ScopedPackageName" },
       { $ref: "#/$defs/@beep~1package-json~1PackageName~1UnscopedPackageName" },

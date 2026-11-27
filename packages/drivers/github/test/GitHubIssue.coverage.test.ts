@@ -31,7 +31,6 @@ const comment = CommentRecord.make({ id: 2, body: "", url: "web" });
 const once = CommentOnceResult.make({ wrote: true, comment });
 
 describe("GitHubIssue coverage", () => {
-  // GitHub sends a missing comment body as `null`; JSON never carries `undefined`.
   for (const selectedBody of [marker.html, null]) {
     const reads: Array<string> = [];
     let selectedReads = 0;
@@ -69,7 +68,7 @@ describe("GitHubIssue coverage", () => {
     );
     it.layer(GitHubIssue.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect(
-        `stops at the first matching comment and rereads its ${selectedBody === null ? "absent" : "present"} body`,
+        `stops at the first matching comment and rereads its ${selectedBody === null ? "absent (wire null)" : "present"} body`,
         () =>
           Effect.gen(function* () {
             const service = yield* GitHubIssue;
@@ -197,7 +196,6 @@ describe("GitHubIssue coverage", () => {
   });
 });
 
-/** Registers the typed-decode-failure cases for one malformed issue response. */
 const registerIssueDecodeCases = (field: string, valid: unknown, invalid: unknown): void => {
   for (const operation of ["get", "list"] as const) {
     const { base } = harness([{ status: 200, body: operation === "get" ? invalid : [valid, invalid] }]);
@@ -220,7 +218,6 @@ const registerIssueDecodeCases = (field: string, valid: unknown, invalid: unknow
   }
 };
 
-/** Registers the typed-decode-failure cases for one malformed comment, listed or created. */
 const registerCommentDecodeCases = (field: string, invalid: unknown): void => {
   for (const phase of ["listed", "created"] as const) {
     const { base, script } = harness(

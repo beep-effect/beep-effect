@@ -74,8 +74,6 @@ const ACP_CLIENT_PENDING_NOTIFICATION_CAPACITY = 256;
  */
 export { makeTerminationError } from "./internal/stdio.ts";
 
-// --- Options ---------------------------------------------------------------------------------------
-
 const AcpClientProtocolGenerationBase = LiteralKit(["negotiate", "v1", "v2"]);
 
 /**
@@ -159,8 +157,6 @@ export interface AcpClientOptions extends AcpProtocolLoggingFields {
     stdout: ChildProcessSpawner.ChildProcessHandle["stdout"]
   ) => AcpProtocol.AcpStdio["stdin"];
 }
-
-// --- Service shape ---------------------------------------------------------------------------------
 
 type AcpClientRaw = {
   readonly notifications: Stream.Stream<AcpProtocol.AcpIncomingNotification>;
@@ -306,8 +302,6 @@ export interface AcpClientShape extends AcpProtocol.AcpExtensionRegistrars {
  */
 export class AcpClient extends Context.Service<AcpClient, AcpClientShape>()($I`AcpClient`) {}
 
-// --- Client state ----------------------------------------------------------------------------------
-
 interface AcpCoreRequestHandlers {
   readonly createTerminal?: Handler<Compat.CreateTerminalRequest, Compat.CreateTerminalResponse>;
   readonly elicitation?: Handler<Compat.CreateElicitationRequest, Compat.CreateElicitationResponse>;
@@ -359,8 +353,6 @@ const runNotificationHandlers = <A>(handlers: ReadonlyArray<NotificationHandler<
 const appendPending = <A>(pending: ReadonlyArray<A>, notification: A): ReadonlyArray<A> =>
   A.takeRight(A.append(pending, notification), ACP_CLIENT_PENDING_NOTIFICATION_CAPACITY);
 
-// Notifications that arrive before the first handler registers are buffered (bounded, oldest
-// dropped) and replayed to it; afterwards each notification runs every handler, isolated.
 const makeNotificationChannel = <A>(): Effect.Effect<NotificationChannel<A>> =>
   Effect.map(
     Ref.make<BufferedNotifications<A>>({ handlers: [], pending: [] }),
@@ -389,6 +381,7 @@ const makeNotificationChannel = <A>(): Effect.Effect<NotificationChannel<A>> =>
     })
   );
 
+// decision: t3-parity-prompt-and-method-gates
 const initialGeneration = AcpClientProtocolGeneration.match({
   negotiate: (): Normalize.ProtocolGeneration => 2,
   v1: (): Normalize.ProtocolGeneration => 1,
@@ -401,8 +394,6 @@ const makeClientState = Effect.fnUntraced(function* (mode: AcpClientProtocolGene
     elicitationCompletions: yield* makeNotificationChannel<Compat.CompleteElicitationNotification>(),
     extNotificationHandlers: yield* Ref.make(HashMap.empty<string, ExtNotificationHandler>()),
     extRequestHandlers: yield* Ref.make(HashMap.empty<string, ExtRequestHandler>()),
-    // Before `initialize` answers, a negotiating client takes the generation-2 paths (upstream
-    // parity, see README "Provenance and design decisions").
     generation: MutableRef.make(initialGeneration(mode)),
     mode,
     prompts: yield* Ref.make(HashMap.empty<string, PromptCompletion>()),
@@ -411,8 +402,6 @@ const makeClientState = Effect.fnUntraced(function* (mode: AcpClientProtocolGene
     unknownExtRequestHandler: yield* Ref.make(O.none<AcpProtocol.AcpUnknownExtRequestHandler>()),
   } satisfies AcpClientState;
 });
-
-// --- Generation-2 prompt completion ----------------------------------------------------------------
 
 const beginPrompt = Effect.fnUntraced(function* (prompts: PromptRegistry, sessionId: string) {
   const completion = yield* Deferred.make<Compat.PromptResponse, AcpError.AcpError>();
@@ -432,9 +421,7 @@ const finishPrompt = (prompts: PromptRegistry, sessionId: string, completion: Pr
       : current
   );
 
-// An idle `state_update` ends the generation-2 turn of its session, whether or not a session-update
-// handler is registered yet. An idle that reports an error still completes the prompt (upstream
-// parity); the error stays visible to session-update handlers.
+// decision: t3-parity-prompt-and-method-gates
 const completePrompt = (prompts: PromptRegistry, notification: Compat.SessionNotification) => {
   const update = notification.update;
   if (!Normalize.isIdleStateUpdate(update)) {
@@ -464,8 +451,6 @@ const failPrompts = (prompts: PromptRegistry, error: AcpError.AcpError) =>
     )
   );
 
-// --- Inbound notifications and extension requests --------------------------------------------------
-
 const dispatchExtNotification = (state: AcpClientState, method: string, params: unknown) =>
   Effect.all([Ref.get(state.extNotificationHandlers), Ref.get(state.unknownExtNotificationHandler)], {
     concurrency: 1,
@@ -484,8 +469,6 @@ const dispatchSessionUpdate = (state: AcpClientState, notification: Compat.Sessi
 
 const isCompatSessionNotification = S.is(Compat.SessionNotification);
 
-// The protocol already normalized and transformed the params, so handlers receive that exact value.
-// A value that is not yet compat-shaped is normalized here (idempotent for compat input).
 const toCompatSessionNotification = (state: AcpClientState, params: Normalize.WireSessionNotification) =>
   isCompatSessionNotification(params)
     ? params
@@ -547,8 +530,6 @@ const makeClientTransport = ({ options, state, stdio, terminationError }: MakeCl
     transformSessionUpdate: transformSessionUpdate(state, options),
   });
 
-// --- Requests from the agent -----------------------------------------------------------------------
-
 interface RpcHandlerOptions {
   readonly requestId: RpcMessage.RequestId;
 }
@@ -556,7 +537,6 @@ interface RpcHandlerOptions {
 const requestContext = (method: string, requestId: RpcMessage.RequestId) =>
   AcpProtocol.AcpRequestContext.make({ method, requestId });
 
-// Serves one request method from the registered core handler (missing handler: methodNotFound).
 const serveRequest =
   <A, B>(
     handlers: CoreHandlers,
@@ -584,8 +564,6 @@ const servePermissionRequest =
       options
     );
 
-// `elicitation/create` is decoded here, so a malformed request is answered with -32602 without
-// calling the handler.
 const serveElicitation = (handlers: CoreHandlers) => (payload: unknown, options: RpcHandlerOptions) =>
   Normalize.decodeElicitationRequest(payload).pipe(
     Effect.mapError((cause) =>
@@ -600,7 +578,6 @@ const serveElicitation = (handlers: CoreHandlers) => (payload: unknown, options:
     )
   );
 
-// The legacy elicitation methods expect the nested `{ action, _meta }` result.
 const serveLegacyElicitation =
   (handlers: CoreHandlers, method: string) => (payload: V2.CreateElicitationRequest, options: RpcHandlerOptions) =>
     serveRequest(
@@ -684,8 +661,7 @@ const clientRequestHandlersLayer = (handlers: CoreHandlers) =>
     })
   );
 
-// A dying handler answers its own request id and the server keeps reading. `runHandler` already
-// logs the defect with its method, so no inherited error reporter logs it again.
+// decision: handler-defects-answer-their-own-request
 const serveClientRequests = Effect.fnUntraced(function* (
   transport: AcpProtocol.AcpPatchedProtocol,
   handlers: CoreHandlers
@@ -698,12 +674,8 @@ const serveClientRequests = Effect.fnUntraced(function* (
   );
 });
 
-// --- Agent methods ---------------------------------------------------------------------------------
-
 type AgentRpcClient = RpcClient.FromGroup<typeof AcpRpcs.CompatAgentRpcs, RpcClientError.RpcClientError>;
 
-// Typed RPC ids count up from 2 ** 30: numeric and within int32 (SDKs that decode ids as Int), and
-// apart from the extension request ids, which count up from 1.
 const makeAgentRpcClient = (transport: AcpProtocol.AcpPatchedProtocol) => {
   const nextRequestId = MutableRef.make(AcpProtocol.RPC_REQUEST_ID_START);
   return RpcClient.make(AcpRpcs.CompatAgentRpcs, {
@@ -733,8 +705,7 @@ const initializeRequestFor = (mode: AcpClientProtocolGeneration, request: Compat
     v2: () => Normalize.toV2InitializeRequest(request),
   });
 
-// Some agents report `protocolVersion: 2` with the generation-1 reply shape, so a negotiating
-// client takes the generation from the shape. A pinned client keeps its generation.
+// decision: generation-from-the-initialize-reply-shape
 const recordGeneration = (state: AcpClientState, response: V2.InitializeResponse | Compat.InitializeResponse) =>
   Effect.sync(() => {
     if (AcpClientProtocolGeneration.is.negotiate(state.mode)) {
@@ -815,8 +786,7 @@ const sessionManagementMethods = ({ rpc, state }: AgentMethodContext) =>
       ),
   }) satisfies Pick<AcpClientAgent, "listSessions" | "closeSession" | "deleteSession" | "setSessionConfigOption">;
 
-// Generation 1 defines `session/delete` and `providers/*`, but the client fails them locally
-// there (upstream parity, decision O4).
+// decision: t3-parity-prompt-and-method-gates
 const providerMethods = ({ rpc, state }: AgentMethodContext) =>
   ({
     listProviders: (payload) =>
@@ -852,8 +822,6 @@ const legacyModeMethods = ({ rpc, state }: AgentMethodContext) =>
       ),
   }) satisfies Pick<AcpClientAgent, "setSessionModel" | "setSessionMode">;
 
-// A generation-2 `session/prompt` result only acknowledges the turn; the idle `state_update`
-// completes it. A generation-1 result is the prompt result itself.
 const promptGeneration2 = ({ rpc, state }: AgentMethodContext, payload: V2.PromptRequest) =>
   Effect.flatMap(beginPrompt(state.prompts, payload.sessionId), (completion) =>
     rpc[AGENT_METHODS.session_prompt](payload).pipe(
@@ -863,8 +831,6 @@ const promptGeneration2 = ({ rpc, state }: AgentMethodContext, payload: V2.Promp
     )
   );
 
-// A re-sent `UnknownContent` block goes out as the original block in its `raw`; one without a wire
-// form fails locally, so the `_acp_unknown` sentinel never reaches the agent.
 const toWirePrompt = (payload: Compat.PromptRequest) =>
   Effect.fromOption(Normalize.toWirePromptRequest(payload), () =>
     AcpError.AcpRequestError.invalidParams(
@@ -889,7 +855,6 @@ const turnMethods = (context: AgentMethodContext) =>
     cancel: context.transport.notify(AGENT_METHODS.session_cancel),
   }) satisfies Pick<AcpClientAgent, "prompt" | "cancel">;
 
-// The client hosts the MCP server, so it is the provider that notifies the agent (the consumer).
 const mcpMethods = (context: AgentMethodContext) =>
   ({
     notifyMcp: context.transport.notify(AGENT_METHODS.mcp_message),
@@ -904,8 +869,6 @@ const makeAgentMethods = (context: AgentMethodContext): AcpClientAgent => ({
   ...turnMethods(context),
   ...mcpMethods(context),
 });
-
-// --- Handler registration --------------------------------------------------------------------------
 
 const registerCoreHandler =
   <K extends keyof AcpCoreRequestHandlers>(handlers: CoreHandlers, key: K) =>
@@ -932,8 +895,6 @@ const notificationRegistrars = (state: AcpClientState, extensions: AcpProtocol.A
     handleSessionUpdate: state.sessionUpdates.register,
     handleElicitationComplete: state.elicitationCompletions.register,
   }) satisfies Partial<AcpClientShape>;
-
-// --- Constructors ----------------------------------------------------------------------------------
 
 /**
  * Constructs an ACP client from an ACP stdio transport.

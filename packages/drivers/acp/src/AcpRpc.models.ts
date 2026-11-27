@@ -68,8 +68,6 @@ export const LEGACY_CLIENT_METHODS = {
   session_elicitation_complete: "session/elicitation/complete",
 } as const;
 
-// --- Generation 2: agent methods ----------------------------------------------------------------
-
 const InitializeRpc = Rpc.make(AGENT_METHODS.initialize, {
   payload: AcpSchema.InitializeRequest,
   success: AcpSchema.InitializeResponse,
@@ -185,8 +183,6 @@ export const AgentRpcs = RpcGroup.make(
   SetSessionConfigOptionRpc
 );
 
-// --- Generation 2: client methods ---------------------------------------------------------------
-
 const RequestPermissionRpc = Rpc.make(CLIENT_METHODS.session_request_permission, {
   payload: AcpSchema.RequestPermissionRequest,
   success: AcpSchema.RequestPermissionResponse,
@@ -221,11 +217,8 @@ const MessageMcpRpc = Rpc.make(CLIENT_METHODS.mcp_message, {
  */
 export const ClientRpcs = RpcGroup.make(RequestPermissionRpc, ElicitationRpc, MessageMcpRpc);
 
-// --- Dual generation: agent methods the client calls --------------------------------------------
-
 const CompatInitializeRpc = Rpc.make(AGENT_METHODS.initialize, {
-  // The negotiating request carries both generations' field names on purpose. A union encoder
-  // would pick one member and drop the other generation's fields before they reach the agent.
+  // decision: raw-payloads-for-initialize-and-elicitation
   payload: S.Unknown,
   success: S.Union([AcpSchema.InitializeResponse, AcpSchemaV1.InitializeResponse]),
   error: AcpSchema.Error,
@@ -243,11 +236,7 @@ const CompatLogoutV1Rpc = Rpc.make(V1_AGENT_METHODS.logout, {
   error: AcpSchemaV1.Error,
 });
 
-// Generation-1 results are decoded as the compat shapes (generation 1 plus the legacy `models`)
-// before the generation-2 member is tried. The compat request member comes first so the client
-// sends a caller's payload to a generation-1 agent unchanged: RpcClient builds payloads with
-// `make`, and the generated generation-2 discriminators (`S.tag`) have constructor defaults that
-// would otherwise tag an untagged generation-1 stdio MCP server as `type: "stdio"`.
+// decision: dual-generation-union-order
 const CompatNewSessionRpc = Rpc.make(AGENT_METHODS.session_new, {
   payload: S.Union([AcpCompat.NewSessionRequest, AcpSchema.NewSessionRequest, AcpSchemaV1.NewSessionRequest]),
   success: S.Union([AcpCompat.NewSessionResponse, AcpSchema.NewSessionResponse]),
@@ -284,9 +273,7 @@ const CompatCloseSessionRpc = Rpc.make(AGENT_METHODS.session_close, {
   error: AcpSchema.Error,
 });
 
-// A generation-1 prompt result decodes as the compat result (open stop reason) before the open
-// generation-2 acknowledgement member, which accepts any object (`messageId` optional); the client
-// keeps the stop reason of a result that still falls through to that member.
+// decision: dual-generation-union-order
 const CompatPromptRpc = Rpc.make(AGENT_METHODS.session_prompt, {
   payload: S.Union([AcpSchema.PromptRequest, AcpSchemaV1.PromptRequest, AcpCompat.PromptRequest]),
   success: S.Union([AcpCompat.PromptResponse, OpenPromptAcknowledgement]),
@@ -354,8 +341,6 @@ export const CompatAgentRpcs = RpcGroup.make(
   CompatSetSessionConfigOptionRpc
 );
 
-// --- Dual generation: client methods the client serves ------------------------------------------
-
 const CompatRequestPermissionRpc = Rpc.make(CLIENT_METHODS.session_request_permission, {
   payload: S.Union([AcpSchema.RequestPermissionRequest, AcpSchemaV1.RequestPermissionRequest]),
   success: S.Union([AcpSchema.RequestPermissionResponse, AcpSchemaV1.RequestPermissionResponse]),
@@ -363,13 +348,12 @@ const CompatRequestPermissionRpc = Rpc.make(CLIENT_METHODS.session_request_permi
 });
 
 const CompatElicitationRpc = Rpc.make(CLIENT_METHODS.elicitation_create, {
-  // Decoded by the client itself so a malformed request is answered with -32602.
+  // decision: raw-payloads-for-initialize-and-elicitation
   payload: S.Unknown,
   success: S.Union([AcpSchema.CreateElicitationResponse, AcpSchemaV1.CreateElicitationResponse]),
   error: AcpSchema.Error,
 });
 
-// Native ACP agents still use the older nested elicitation response.
 const CompatLegacyElicitationRpc = Rpc.make(LEGACY_CLIENT_METHODS.session_elicitation, {
   payload: AcpSchema.CreateElicitationRequest,
   success: AcpCompat.LegacyElicitationResponse,
