@@ -553,8 +553,8 @@ export class ReviewRoundDraft extends S.Opaque<ReviewRoundDraft, { readonly bran
       S.annotateKey({ description: "What the extractor did with each disputed field." }),
       S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
-    findings: S.Array(ReviewFinding).annotateKey({ description: "The critic's findings on the entry." }),
-    index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
+    findings: ReviewRound.fields.findings,
+    index: ReviewRound.fields.index,
     reading: SecretaryReview.annotateKey({ description: "The critic's own reading for the round." }),
     source: ReviewSourceText.annotateKey({ description: "The text citations are checked against." }),
   }).pipe($I.annoteSchema("ReviewRoundDraft", { description: "What a docket review round is assessed from." }))

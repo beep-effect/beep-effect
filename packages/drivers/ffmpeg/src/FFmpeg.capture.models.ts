@@ -647,6 +647,7 @@ export class ExtractFramesAtRequest extends S.Opaque<ExtractFramesAtRequest, { r
     ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      // fallow-ignore-next-line code-duplication -- the annotation reorder touched this pre-existing twin of `ExtractFramesRequest` in FFmpeg.models.ts, so the audit attributes it as introduced; the fields match but each carries its own class key identity. Owner: @beep/ffmpeg. Exit: derive both requests from one shared field record once annoteKey identities can be parameterised by parent.
       $I.annoteKey("ExtractFramesAtRequest.overwrite", {
         description: "Whether existing frame and manifest outputs may be overwritten.",
       }),

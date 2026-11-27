@@ -30,6 +30,30 @@ import type { MailCategoryName } from "./MailTagging.taxonomy.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/MailTagging/MailTagging.matching.model");
 
+const matterFilingIdentifierFields = {
+  docketNumbers: S.Array(MatterDocketNumber).pipe(
+    S.annotateKey({
+      description: "Docket numbers of the matter's filings.",
+    }),
+    S.withDecodingDefaultKey(Effect.succeed([])),
+    S.withConstructorDefault(Effect.succeed([]))
+  ),
+  applicationNumbers: S.Array(UsptoNormalizedApplicationNumber).pipe(
+    S.annotateKey({
+      description: "Eight-digit USPTO application numbers in the matter.",
+    }),
+    S.withDecodingDefaultKey(Effect.succeed([])),
+    S.withConstructorDefault(Effect.succeed([]))
+  ),
+  patentNumbers: S.Array(PatentNumber).pipe(
+    S.annotateKey({
+      description: "Digits-only patent numbers granted in the matter.",
+    }),
+    S.withDecodingDefaultKey(Effect.succeed([])),
+    S.withConstructorDefault(Effect.succeed([]))
+  ),
+};
+
 /**
  * **Details**
  *
@@ -63,27 +87,7 @@ export class MatterIndexEntry extends S.Opaque<MatterIndexEntry, { readonly bran
     clientKey: MatterClientKey.annotateKey({
       description: "Client that owns the matter.",
     }),
-    docketNumbers: S.Array(MatterDocketNumber).pipe(
-      S.annotateKey({
-        description: "Docket numbers of the matter's filings.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
-    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber).pipe(
-      S.annotateKey({
-        description: "Eight-digit USPTO application numbers in the matter.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
-    patentNumbers: S.Array(PatentNumber).pipe(
-      S.annotateKey({
-        description: "Digits-only patent numbers granted in the matter.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
+    ...matterFilingIdentifierFields,
     contactAddresses: S.Array(EmailString).pipe(
       S.annotateKey({
         description: "Normalized email addresses of the matter's contacts.",
@@ -134,27 +138,7 @@ export class MatterIndexEntry extends S.Opaque<MatterIndexEntry, { readonly bran
  */
 export class UnattributedMatter extends S.Opaque<UnattributedMatter, { readonly brand: unique symbol }>()(
   S.Struct({
-    docketNumbers: S.Array(MatterDocketNumber).pipe(
-      S.annotateKey({
-        description: "Docket numbers of the matter's filings.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
-    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber).pipe(
-      S.annotateKey({
-        description: "Eight-digit USPTO application numbers in the matter.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
-    patentNumbers: S.Array(PatentNumber).pipe(
-      S.annotateKey({
-        description: "Digits-only patent numbers granted in the matter.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
+    ...matterFilingIdentifierFields,
     familyKeys: S.Array(MatterDocketNumber).pipe(
       S.annotateKey({
         description: "Family keys of the matter, client-keyed or bare; compared only with extracted docket references.",

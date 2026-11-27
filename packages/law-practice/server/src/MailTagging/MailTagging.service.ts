@@ -76,13 +76,7 @@ export class MailTaggingServiceConfig extends S.Opaque<MailTaggingServiceConfig,
     mailboxUserId: S.NonEmptyString.annotateKey({
       description: "Mailbox address or object id the run tags.",
     }),
-    excludedFolderIds: S.Array(S.String).pipe(
-      S.annotateKey({
-        description: "Graph ids of extra mail folders to leave out, besides Deleted Items and Junk.",
-      }),
-      S.withDecodingDefaultKey(Effect.succeed([])),
-      S.withConstructorDefault(Effect.succeed([]))
-    ),
+    excludedFolderIds: MailboxM365Config.fields.excludedFolderIds,
     folderMapPath: S.NonEmptyString.annotateKey({
       description: "Full path of the matter folder-id map JSON file.",
     }),

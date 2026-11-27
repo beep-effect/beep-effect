@@ -177,6 +177,26 @@ const M365ConfigUrl = S.String.pipe(
 const m365ConfigInputGraphBaseUrlDefault = makeNormalizedUrl(GRAPH_API_BASE_URL);
 const m365ConfigInputMaxRetriesDefault = S.Natural.make(DEFAULT_MAX_RETRIES);
 const m365ConfigInputRedirectUriDefault = makeNormalizedUrl(DEFAULT_REDIRECT_URI);
+const m365EndpointFields = {
+  authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+    description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
+  }),
+  graphBaseUrl: M365ConfigUrl.pipe(
+    S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
+    S.annotateKey({
+      description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
+    }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
+  ),
+  maxRetries: S.Natural.pipe(
+    S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
+    S.annotateKey({
+      description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
+    }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
+  ),
+};
+
 /**
  * **Details**
  *
@@ -215,23 +235,7 @@ export class M365ConfigInput extends S.Opaque<M365ConfigInput, { readonly brand:
     clientId: S.NonEmptyString.annotateKey({
       description: "Entra application (public client) id used for the delegated PKCE flow.",
     }),
-    authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
-      description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
-    }),
-    graphBaseUrl: M365ConfigUrl.pipe(
-      S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
-      S.annotateKey({
-        description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
-      }),
-      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
-    ),
-    maxRetries: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
-      S.annotateKey({
-        description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
-      }),
-      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
-    ),
+    ...m365EndpointFields,
     redirectUri: M365ConfigUrl.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputRedirectUriDefault)),
       S.annotateKey({
@@ -474,23 +478,7 @@ export class M365AppOnlyConfigInput extends S.Opaque<M365AppOnlyConfigInput, { r
     credential: M365AppOnlyCredential.annotateKey({
       description: "Certificate (production) or client-secret (dev/test) credential.",
     }),
-    authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
-      description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
-    }),
-    graphBaseUrl: M365ConfigUrl.pipe(
-      S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
-      S.annotateKey({
-        description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
-      }),
-      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
-    ),
-    maxRetries: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
-      S.annotateKey({
-        description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
-      }),
-      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
-    ),
+    ...m365EndpointFields,
   }).pipe(
     $I.annoteSchema("M365AppOnlyConfigInput", {
       description: "Runtime configuration for the Microsoft 365 app-only (confidential client) lane.",

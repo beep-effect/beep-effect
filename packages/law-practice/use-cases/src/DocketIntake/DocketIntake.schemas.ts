@@ -30,6 +30,13 @@ const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
 
 const emptyStrings: ReadonlyArray<string> = [];
 
+const extractorFieldResponses = (description: string) =>
+  S.Array(ExtractorFieldResponse).pipe(
+    S.withConstructorDefault(Effect.succeed([])),
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed([]))
+  );
+
 const stringList = (description: string) =>
   S.Array(S.String).pipe(
     S.withConstructorDefault(Effect.succeed(emptyStrings)),
@@ -324,11 +331,7 @@ export class SecretaryReview extends S.Opaque<SecretaryReview, { readonly brand:
 export class ParalegalRevision extends S.Opaque<ParalegalRevision, { readonly brand: unique symbol }>()(
   S.Struct({
     entry: ParalegalEntry.annotateKey({ description: "The entry after the revision." }),
-    responses: S.Array(ExtractorFieldResponse).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.annotateKey({ description: "What the extractor did with each disputed field." }),
-      S.withDecodingDefaultTypeKey(Effect.succeed([]))
-    ),
+    responses: extractorFieldResponses("What the extractor did with each disputed field."),
     selfReportedConfidence: opt(UnitInterval, "The model's own confidence; recorded, never scored."),
   }).pipe($I.annoteSchema("ParalegalRevision", { description: "Agent 1 answer to a set of disputed fields." }))
 ) {}
@@ -360,10 +363,8 @@ export class ReviewRound extends S.Opaque<ReviewRound, { readonly brand: unique 
     }),
     entry: ParalegalEntry.annotateKey({ description: "The extractor's entry for this round." }),
     extractorConfidence: opt(UnitInterval, "The extractor's own confidence; recorded, never scored."),
-    extractorResponse: S.Array(ExtractorFieldResponse).pipe(
-      S.withConstructorDefault(Effect.succeed([])),
-      S.annotateKey({ description: "What the extractor did with each field disputed after the previous round." }),
-      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    extractorResponse: extractorFieldResponses(
+      "What the extractor did with each field disputed after the previous round."
     ),
     findings: S.Array(ReviewFinding).annotateKey({ description: "The critic's findings on the entry." }),
     index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
