@@ -2,13 +2,5 @@
   "schemaVersion": "comment-law-pending/v1",
   "package": "(root)",
   "root": ".",
-  "scopes": [
-    ".claude",
-    "commitlint.config.ts",
-    "syncpack.config.ts",
-    "vitest.config.ts",
-    "vitest.property-runner.ts",
-    "vitest.setup.ts",
-    "vitest.shared.ts"
-  ]
+  "scopes": [".claude", "vitest.setup.ts", "vitest.shared.ts"]
 }
