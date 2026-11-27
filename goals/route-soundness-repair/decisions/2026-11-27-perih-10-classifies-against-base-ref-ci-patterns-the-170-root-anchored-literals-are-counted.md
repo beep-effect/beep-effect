@@ -17,14 +17,15 @@ reversal: "Restore readCheckoutCiPatterns at the head checkout in CiOperational.
 
 A push already yields the full profile (golden `push` row).
 
-**Call sites.** All of these call the same binary, so none needed a workflow edit:
+**Call sites.** None needed a workflow edit. These call the pinned `beep` binary:
 
 - `check.yml`: the Change Profile job, the Test Plan classification and the lane-gate evals in Coverage Regression, Professional Desktop IPC Stdio and JSDoc Ratchet;
 - `heavy-admit.yml`, the documentation-only admission;
-- `storybook.yml`, the lane gate;
-- the `check.yml` admission job's lane skips, through `readHeavyLaneSkips`.
+- `storybook.yml`, the lane gate.
 
-`heavy.yml` no longer calls change-profile, and `shard-overflow.yml` only consumes the `docs_only` output. One call site is excluded: the smoke run in `beep-ci-binary.yml` sets `GITHUB_EVENT_NAME=push`, which never reads patterns. The change ships with the next closure-digest binary release and its reviewed pin bump (PERIH-11).
+The admission lane skips (`readHeavyLaneSkips`) run from source instead: `bun run beep ci admission` in `check.yml` and `heavy-admit.yml`, both `pull_request` workflows that check out the merge ref.
+
+`heavy.yml` no longer calls change-profile, and `shard-overflow.yml` only consumes the `docs_only` output. One call site is excluded: the smoke run in `beep-ci-binary.yml` sets `GITHUB_EVENT_NAME=push`, which never reads patterns. `CiOperational.service.ts` is in the CI binary closure, so the change-profile half ships with the next closure-digest binary release and its reviewed pin bump (PERIH-11), and the pull request is an operator hand merge. The admission half is live at merge. Until the pin bump merges, admission skips read the base patterns while change-profile still reads the head checkout.
 
 **Root-anchored literals (170 rows, origin/main).**
 
