@@ -221,12 +221,8 @@ const resolveHomeDir = Effect.fn("AIMetrics.resolveHomeDir")(function* (homeDir:
     return supplied.value;
   }
 
-  // `Config.String` accepts an exported-but-empty variable, so a blank `HOME`
-  // has to be rejected here; letting it through resolves the canonical store to
-  // `/.local/state/beep/ai-metrics`, which is absolute and therefore invisible
-  // to every downstream absolute-path guard.
-  const readOptionalConfigString1 = yield* readOptionalConfigString("HOME");
-  const envHome = nonBlankOption(readOptionalConfigString1);
+  const homeMayBeExportedBlank = yield* readOptionalConfigString("HOME");
+  const envHome = nonBlankOption(homeMayBeExportedBlank);
   if (O.isSome(envHome)) {
     return envHome.value;
   }
@@ -656,8 +652,6 @@ const parseRetentionSelector = Effect.fn("AIMetrics.parseRetentionSelector")(fun
   const untilEpochMillis = yield* parseOptionalEpochMillis("until", until);
 
   return AiMetricsRetentionSelector.make({
-    // Retention is a local-first operator surface with no `--target` flag, so the
-    // fallback rung is always the workstation's XDG store.
     dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
     beforeEpochMillis,
     sinceEpochMillis,
@@ -715,8 +709,6 @@ class MakeCommandInstallInputOptions extends S.Opaque<
   )
 ) {}
 
-// `defaultTool` and `privacyMode` are the only divergences among the install-shaped
-// commands; omitting them keeps `AiMetricsInstallInput`'s own constructor defaults.
 const makeCommandInstallInput = Effect.fn("AIMetrics.makeCommandInstallInput")(function* ({
   dataRoot,
   defaultTool,
@@ -1570,9 +1562,6 @@ const forwarderRunCommandToJson = Effect.fn("AIMetrics.forwarderRunCommandToJson
   });
 });
 
-// The run id comes from the forwarder pass, not from the export result. Export no longer
-// carries one: it drains every pending turn regardless of which run committed it, so a run
-// id on the result would have described the request rather than the batch.
 const forwarderOtlpExported = (
   ingestRunId: string,
   result: AiMetricsOtlpExportResult
@@ -1867,9 +1856,6 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
     })
   );
   const resolvedDataRoot = yield* resolveDataRoot(dataRoot, target);
-  // The install input carries the target-guarded secret references forward: both keys are
-  // `optionalKey` with no constructor default, so reading them back off the input yields
-  // exactly what the guards produced, `undefined` included.
   const installInput = yield* makeCommandInstallInput(
     MakeCommandInstallInputOptions.make({
       dataRoot: resolvedDataRoot,
@@ -1925,7 +1911,11 @@ class MakeForwarderTimerProgramOptions extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    bunPath: S.Option(S.String),
+    bunPath: S.Option(S.String).pipe(
+      S.annotateKey({
+        description: "An absolute pin renders without HOME; only the default probe and a `~/` pin read it.",
+      })
+    ),
     dataRoot: S.Option(S.String),
     hashSaltSecretRef: S.Option(S.String),
     intervalMinutes: S.Finite,
@@ -1968,8 +1958,6 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
       AiMetricsCommandError.make({ cause, message: "HOME is not set; cannot resolve the timer Bun executable." })
     )
   );
-  // Only the default candidate probe and a `~/` pin read HOME; an absolute pin
-  // renders in a sanitized container or CI environment that has no HOME at all.
   const executable = yield* Effect.flatMap(
     O.match(bunPath, {
       onNone: () => Effect.flatMap(requireHome, resolveSystemdBunPath),
@@ -1996,15 +1984,12 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
       target,
     })
   );
-  // `statusPath` and `--data-root` are both interpolated into the unit's
-  // `ExecStart`, where a relative path would bind to `WorkingDirectory` -- the
-  // exact mechanism that put the canonical store inside a clone. Refuse to render
-  // anything before the root is proven absolute.
   yield* requireAbsoluteAiMetricsDataRoot(spec.storage.dataRoot).pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({
         cause,
-        message: "AI metrics forwarder timer units require an absolute --data-root.",
+        message:
+          "AI metrics forwarder timer units require an absolute --data-root: a relative one binds to WorkingDirectory.",
       })
     )
   );
@@ -2040,9 +2025,6 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
         `${maxFiles}`,
         "--parquet-mode",
         parquetExportMode,
-        // `forwarder run` always enforces retention now, so the rendered timer only needs to pass the
-        // keep-N count when the operator opted into a non-default window. The legacy --retention-enforce
-        // token is intentionally not emitted (run accepts it as a no-op for older installed units).
         ...(retentionEnforce ? ["--max-snapshot-exports", `${retentionMaxSnapshotExports}`] : []),
         "--json",
       ],
@@ -2120,9 +2102,6 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
     endpoint,
     target,
   });
-  // The same entry point the forwarder uses. Reading, delivering, and marking used to be
-  // spelled out separately here, which is how marking ended up wired into this command
-  // only and never into the forwarder. One path now, and it cannot be half-used.
   const result = yield* Layer.mergeAll(
     DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath })),
     AiMetricsOtlpSpanSender.layer
@@ -3246,8 +3225,6 @@ const makeRetentionEnforceProgram = Effect.fn("AIMetrics.makeRetentionEnforcePro
 
   const result = yield* enforceAiMetricsRetentionPolicy(
     AiMetricsRetentionEnforcementPolicy.make({
-      // Retention enforce has no `--target` flag; the fallback rung is the
-      // workstation's XDG store, matching `parseRetentionSelector`.
       dataRoot: yield* resolveDataRoot(dataRoot, AiMetricsDeployTarget.Enum.local),
       dryRun: O.isNone(confirm),
       maxSnapshotExports,

@@ -249,7 +249,6 @@ const assertWarmEnvironment = Effect.fn("Cache.assertWarmEnvironment")(function*
   }
 });
 
-// The capture's two wordings over the kit: git never ran, or git exited with its stderr.
 const cacheGitErrors: GitCommandErrorAdapter<CacheCommandError> = {
   onSpawnFailure: (commandLine) => (cause) => CacheCommandError.new(`Unable to run ${commandLine}.`, cause),
   onNonZeroExit: ({ commandLine, exitCode, output }) =>
@@ -314,14 +313,11 @@ const assertWarmIdentityUnchanged = Effect.fn("Cache.assertWarmIdentityUnchanged
 });
 
 const turboCacheFlagPrefix = "--cache=";
-const turboWriteOnlyCacheFlag = `${turboCacheFlagPrefix}local:w,remote:w`;
+const turboForceEquivalentCacheFlag = `${turboCacheFlagPrefix}local:w,remote:w`;
 
-// Timing-sensitive suites (glob, jsonc, repo-docgen) starved when tests shared one Turbo pass with
-// every lint/check/build task at default concurrency (#1858). Hosted CI never runs that shape: it
-// shards the test lanes. The warm therefore runs the CPU-heavy static tasks first and the tests in a
-// second, bounded pass. `test` depends only on the `transit` topology task, so the split re-executes
-// nothing twice.
+// decision: cache-warm-two-pass
 const turboWarmStaticTasks = ["build", "check", "lint"] as const;
+// decision: cache-warm-two-pass
 const turboWarmTestTasks = ["test"] as const;
 const turboWarmTestConcurrencyArg = "--concurrency=4";
 
@@ -334,9 +330,7 @@ const turboWarmCommand = (
   "turbo",
   "run",
   ...tasks,
-  // Turbo rejects `--cache` together with `--force`; write-only access is Turbo's own
-  // definition of `--force`, so this alone re-executes every task and writes both caches.
-  turboWriteOnlyCacheFlag,
+  turboForceEquivalentCacheFlag,
   ...extraArgs,
   "--summarize",
 ];
@@ -448,22 +442,20 @@ const unknownStrings = (value: unknown): ReadonlyArray<string> => {
   return A.empty();
 };
 
-const isWriteOnlyCacheSpec = (spec: string): boolean =>
+const isForceEquivalentCacheSpec = (spec: string): boolean =>
   A.every(Str.split(spec, ","), (entry) => O.exists(A.get(Str.split(entry, ":"), 1), (mode) => mode === "w"));
 
-// Turbo defines `--force` as `--cache=local:w,remote:w`, so a spec whose every source is exactly `w`
-// is a forced run. An empty mode such as `local:` disables that source instead, so it never counts.
-const isWriteOnlyCacheCommand = (command: string): boolean =>
+const isForceEquivalentCacheCommand = (command: string): boolean =>
   A.findFirst(Str.split(command, " "), Str.startsWith(turboCacheFlagPrefix)).pipe(
     O.map(Str.slice(turboCacheFlagPrefix.length)),
-    O.exists(isWriteOnlyCacheSpec)
+    O.exists(isForceEquivalentCacheSpec)
   );
 
 const classifyRun = (run: TurboRunSummary): CacheRunMode => {
   const strings = unknownStrings(run.globalCacheInputs);
   if (
     Str.includes("--force")(run.execution.command) ||
-    isWriteOnlyCacheCommand(run.execution.command) ||
+    isForceEquivalentCacheCommand(run.execution.command) ||
     A.some(strings, Str.includes("TURBO_FORCE=true"))
   ) {
     return CacheRunMode.Enum.forced;

@@ -44,9 +44,8 @@ interface PropertyRunState {
   watchdogBudgetMillis: O.Option<number>;
 }
 
+// decision: execution-state-keyed-by-identity
 interface TestExecutionState {
-  // Registration tokens use reference identity (Effect maps compare plain objects structurally)
-  // and finish in registration order, so runs live in an insertion-ordered identity list.
   readonly propertyRuns: Array<readonly [registration: object, propertyRun: PropertyRunState]>;
 }
 
@@ -59,9 +58,7 @@ const makePropertyRunState = (): PropertyRunState => ({
   watchdogBudgetMillis: O.none(),
 });
 
-// Native Arbitrary resumes trials inside Effect fibers, which may be scheduled
-// from another test's async context. The public callback context retains its
-// execution identity across those resumptions; weak keys do not retain tasks.
+// decision: execution-state-keyed-by-identity
 const testExecutions = new WeakMap<TestContext, TestExecutionState>();
 
 const taskName = (task: ResolvedTestTask): string => task.fullTestName || task.name;
@@ -201,7 +198,6 @@ const instrumentEffect = Effect.fnUntraced(function* <A, E, R>(
           ),
           Effect.map(Exit.fail)
         );
-      // Setup consumes the stored absolute budget; sample again only when arming.
       const armedAtMillis = yield* monotonicMillis;
       const watchdog =
         propertyRun === undefined
@@ -303,8 +299,8 @@ const ensureExecutionContext = (): void => {
   }
   instrumentedSuites.add(suite);
   aroundEach((runTest, context) => {
-    // An ancestor suite can already own this execution and its finalization.
-    if (testExecutions.has(context)) {
+    const ownedByAncestorSuite = testExecutions.has(context);
+    if (ownedByAncestorSuite) {
       return runTest();
     }
     const execution: TestExecutionState = { propertyRuns: [] };
@@ -365,14 +361,12 @@ const instrumentEach = <R>(tester: Vitest.Tester<R>, clock: Clock.Clock): Vitest
       return new Proxy(() => undefined, {
         apply(_register, registerThisArg, registerArgs) {
           const [name, self, timeout] = registerArgs;
-          // Let Vitest expand and format rows, then retain the original tester's
-          // layer provisioning, scoped runner and public per-invocation context.
-          const collector = TestRunner.createTaskCollector((formattedName, options, callback) =>
+          const formatRowsThenDelegate = TestRunner.createTaskCollector((formattedName, options, callback) =>
             Reflect.apply(tester, registerThisArg, [formattedName, callback, options])
           );
           // The collector transports the returned Effect to the original tester;
           // its public .for types otherwise expect an ordinary Promise/void body.
-          return Reflect.apply(collector.for(cases), registerThisArg, [
+          return Reflect.apply(formatRowsThenDelegate.for(cases), registerThisArg, [
             name,
             P.isNumber(timeout) ? { timeout } : (timeout ?? {}),
             instrumentCaseCallback(self, clock),

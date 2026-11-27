@@ -125,9 +125,6 @@ export const loadCacheConformanceBearers = Effect.fn("CacheConformance.loadBeare
   const foreign = Redacted.value(values.foreign);
   const unknown = Redacted.value(values.unknown);
   const valid = HashSet.make(reader, writer, foreign);
-  // A topology without a role split or per-tenant credentials genuinely hands
-  // every caller the same bearer, so reuse is allowed exactly where the target
-  // does not claim the separation; the unknown bearer is always distinct.
   if (
     A.some([reader, writer, foreign, unknown], Str.isEmpty) ||
     HashSet.has(valid, unknown) ||
@@ -463,8 +460,7 @@ export const loadCacheConformanceEnvelope = Effect.fn("CacheConformance.loadEnve
   );
 }, CacheCommandError.mapError("Cannot read the measured load envelope."));
 
-/** How long the proxy holds a `timeout` fault; longer than the probes' client deadline. */
-const labHoldMs = 3000;
+const labHoldMsOverProbeDeadline = 3000;
 
 const scoreLabCase = Effect.fn("CacheConformance.scoreLabCase")(function* (
   entry: CacheConformanceCase,
@@ -526,7 +522,7 @@ export const runCacheConformanceLab = Effect.fn("CacheConformance.runLab")(funct
   const now2 = yield* DateTime.now;
   const startedAt = DateTime.formatIso(now2);
   const proxy = yield* makeCacheConformanceFaultProxy(
-    CacheConformanceProxyOptions.make({ target, bearers, holdMs: labHoldMs })
+    CacheConformanceProxyOptions.make({ target, bearers, holdMs: labHoldMsOverProbeDeadline })
   );
   const cases = yield* Effect.forEach(
     corpus.cases,

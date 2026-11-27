@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/workspace-domain",
-  "root": "packages/workspace/domain",
-  "scopes": ["."]
-}

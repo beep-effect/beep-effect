@@ -102,11 +102,10 @@ export const deriveCacheProducerEvidence = Effect.fn("Producer.deriveEvidence")(
   yield* validateCacheProducerApproval(approval);
   yield* validateCacheProducerBinding(bundle, approval.binding);
   const { pilot } = bundle;
-  // Approval and bundle validation jointly require this signed profile.
-  const execution = O.getOrThrow(approval.contract.signedExecution);
+  const validatedExecution = O.getOrThrow(approval.contract.signedExecution);
   if (
-    !S.toEquivalence(CacheQualificationKey)(pilot.baseKey, execution.sourceKey) ||
-    !S.toEquivalence(CacheEvidenceReference)(pilot.activation, execution.activationRequest)
+    !S.toEquivalence(CacheQualificationKey)(pilot.baseKey, validatedExecution.sourceKey) ||
+    !S.toEquivalence(CacheEvidenceReference)(pilot.activation, validatedExecution.activationRequest)
   ) {
     return yield* CacheCommandError.new("Signed evidence differs from its approved source or activation request.");
   }

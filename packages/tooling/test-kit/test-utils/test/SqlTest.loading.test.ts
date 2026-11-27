@@ -121,9 +121,8 @@ describe("SqlTest dependency failures", () => {
       const harness = yield* Effect.promise(() => import("@beep/test-utils/SqlTest"));
       const drivers = [harness.NodeSqliteTestDriver, harness.BunSqliteTestDriver, harness.PgliteInProcessTestDriver];
       for (const driver of drivers) {
-        // Driver layers provide different client services; only the failure matters here.
-        const layer: Layer.Layer<never, SqlTestHarnessError> = driver.makeLayer(undefined);
-        const error = yield* layer.pipe(Layer.build, Effect.flip);
+        const failureOnlyLayer: Layer.Layer<never, SqlTestHarnessError> = driver.makeLayer(undefined);
+        const error = yield* failureOnlyLayer.pipe(Layer.build, Effect.flip);
         expect(harness.SqlTestHarnessError.is(error)).toBe(true);
         if (harness.SqlTestHarnessError.is(error)) {
           expect(error.driver).toBe(driver.name);

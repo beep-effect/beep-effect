@@ -238,9 +238,7 @@ const AsciiWorkflow = S.String.check(S.isMaxLength(64 * 1024), S.isPattern(/^[\x
   })
 );
 const isAsciiWorkflow = S.is(AsciiWorkflow);
-// The standard ZIP parser owns directory/CRC/compression handling. No member
-// path is ever extracted, and the report stream is read with a hard byte cap.
-const readReportScript = `import sys, zipfile, stat
+const stdlibZipfileReportScript = `import sys, zipfile, stat
 try:
     with zipfile.ZipFile(sys.argv[1]) as archive:
         entries = archive.infolist()
@@ -286,7 +284,7 @@ const readReport = Effect.fn("CacheWorkflow.readHostedReport")(function* (archiv
   yield* fs.writeFile(file, archive, { mode: 0o600 });
   const result = yield* runCaptured({
     command: "/usr/bin/python3",
-    args: ["-I", "-S", "-c", readReportScript, file],
+    args: ["-I", "-S", "-c", stdlibZipfileReportScript, file],
     cwd: directory,
     extendEnv: false,
     env: { PATH: "/usr/bin", LANG: "C", LC_ALL: "C" },

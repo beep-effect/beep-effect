@@ -176,10 +176,6 @@ describe("ThreadTimeline", () => {
     );
   }
 
-  // Editing a turn appends a replacement parented to the turn it replaces. The
-  // transcript used to render every turn in index order, so the exchange an edit
-  // promised to discard reappeared the moment streaming finished — and the model
-  // was handed it as history.
   it.effect(
     "drops the replaced turn and everything after it from the active branch",
     Effect.fnUntraced(function* () {
@@ -192,16 +188,15 @@ describe("ThreadTimeline", () => {
         items: [{ kind: "message", role: "user", content }],
       });
 
+      const firstPrompt = turn(1, 0, null);
+      const firstAnswer = turn(2, 1, null);
+      const editedPrompt = turn(3, 2, null);
+      const supersededAnswer = turn(4, 3, null);
+      const replacementPrompt = turn(5, 4, 3);
+      const replacementAnswer = turn(6, 5, null);
       const timeline = yield* decodeUnknownThreadThreadTimeline({
         threadId: 10,
-        turns: [
-          turn(1, 0, null), // first prompt
-          turn(2, 1, null), // its answer
-          turn(3, 2, null), // second prompt        <- edited
-          turn(4, 3, null), // its answer           <- superseded
-          turn(5, 4, 3), //    replacement prompt   <- replaces turn 3
-          turn(6, 5, null), // the replacement's answer
-        ],
+        turns: [firstPrompt, firstAnswer, editedPrompt, supersededAnswer, replacementPrompt, replacementAnswer],
       });
 
       const branch = Thread.activeBranchTurns(timeline.turns);
@@ -238,8 +233,6 @@ describe("ThreadTimeline", () => {
     })
   );
 
-  // Corrupt parent links must never truncate the transcript: a reader would lose
-  // real turns. An unresolvable link degrades to "this turn replaces nothing".
   it.effect(
     "ignores parent links that cannot describe a replacement",
     Effect.fnUntraced(function* () {
@@ -252,17 +245,18 @@ describe("ThreadTimeline", () => {
         items: [{ kind: "message", role: "user", content }],
       });
 
+      const parentsItself = turn(1, 0, 1);
+      const parentsMissingTurn = turn(2, 1, 9);
+      const parentsLaterTurn = turn(3, 2, 4);
       const timeline = yield* decodeUnknownThreadThreadTimeline({
         threadId: 10,
-        turns: [
-          turn(1, 0, 1), // parents itself
-          turn(2, 1, 9), // parents a turn that does not exist
-          turn(3, 2, 4), // parents a turn that has not happened yet
-          turn(4, 3, null),
-        ],
+        turns: [parentsItself, parentsMissingTurn, parentsLaterTurn, turn(4, 3, null)],
       });
 
-      expect(A.map(Thread.activeBranchTurns(timeline.turns), (t) => Number(t.turnId))).toEqual([1, 2, 3, 4]);
+      expect(
+        A.map(Thread.activeBranchTurns(timeline.turns), (t) => Number(t.turnId)),
+        "an unresolvable link replaces nothing, so no real turn is lost from the transcript"
+      ).toEqual([1, 2, 3, 4]);
     })
   );
 });

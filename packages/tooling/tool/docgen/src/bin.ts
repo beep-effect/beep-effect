@@ -21,6 +21,7 @@ const BaseLayers = Layer.mergeAll(BunServices.layer, BunCrypto.layerDigest, Doma
 
 const DerivedLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
 
+// decision: bin-exits-explicitly-on-success
 const program = DerivedLayers.pipe(
   Layer.build,
   Effect.flatMap(
@@ -32,10 +33,6 @@ const program = DerivedLayers.pipe(
   Effect.scoped
 );
 
-// The platform runner only hard-exits on failure or signal; a successful run
-// relies on the event loop draining, so a leaked handle wedges the process
-// after docgen completes (the "✓ succeeded"-then-hang CI class). Exit
-// explicitly on success.
 BunRuntime.runMain(program, {
   teardown: (exit, onExit) => {
     Runtime.defaultTeardown(exit, onExit);

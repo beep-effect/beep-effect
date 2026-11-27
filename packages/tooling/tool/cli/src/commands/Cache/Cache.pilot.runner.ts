@@ -163,27 +163,6 @@ const withSignedPilotAdmission = Effect.fn("CachePilot.withAdmission")(function*
   );
 }, CacheCommandError.mapError("Signed pilot admission failed."));
 
-/**
- * Supervise signed comparisons with a private loopback and read-only input mounts.
- *
- * **Details**
- * The runner checkout may differ from the frozen source checkout. The nested
- * worker verifies its exact tools, registered worktrees and dependency receipt.
- * Only scoped supervisor storage outside every source input mount is writable.
- * An optional supervisor-selected issuer file is checked before/after execution
- * and probed from each nested reader. It is never added to the mount list or
- * passed as key bytes. The returned report remains observation-only and cannot
- * authorize promotion; callers still own issuer selection and approval.
- *
- * **Example** (Reference the admitted supervisor)
- * ```ts
- * import { runCacheSignedPilotExperiment } from "@beep/repo-cli/commands/Cache"
- * console.assert(typeof runCacheSignedPilotExperiment === "function")
- * ```
- *
- * @category cli-commands
- * @since 0.0.0
- */
 const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker")(function* <
   Report extends CacheSignedPilotReceipt | CacheSignedPilotRun,
 >(
@@ -213,8 +192,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       const bun = yield* fs.realPath(process.execPath);
       const node = yield* fs.realPath(request.pilot.nodeExecutable);
       const dependencies = yield* readCacheDependencyMaterialization(sourceRoot, request.pilot.dependencies);
-      // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
-      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: producer trust (D-19): pinned /usr/bin/git, scrubbed env
       const git = yield* runCapturedStreams({
         command: "/usr/bin/git",
         args: ["rev-parse", "--path-format=absolute", "--git-common-dir"],
@@ -249,9 +227,8 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       yield* writeContainedFileString(directory, "request.json", encoded);
       const worker = yield* renderSignedPilotWorker(root, directory, protectedIssuerMaterial, upload);
       yield* writeContainedFileString(directory, "worker.ts", worker);
-      // Bun otherwise discovers sourceRoot/bunfig.toml from the untrusted cwd,
-      // including preloads that run before this trusted worker.
-      yield* writeContainedFileString(directory, "bunfig.toml", "");
+      const emptyBunfigShadowsCwdPreloads = "";
+      yield* writeContainedFileString(directory, "bunfig.toml", emptyBunfigShadowsCwdPreloads);
       const verifyIssuerMountIsolation = Effect.fn("CachePilot.verifyIssuerMountIsolation")(function* () {
         if (O.isSome(protectedIssuerMaterial)) {
           const issuer = yield* fs.realPath(protectedIssuerMaterial.value);
@@ -405,6 +382,17 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
 
 /**
  * Supervise the complete signed comparison matrix under its original boundary.
+ *
+ * **Details**
+ *
+ * The supervisor runs each comparison with a private loopback and read-only input mounts.
+ * The runner checkout may differ from the frozen source checkout. The nested
+ * worker verifies its exact tools, registered worktrees and dependency receipt.
+ * Only scoped supervisor storage outside every source input mount is writable.
+ * An optional supervisor-selected issuer file is checked before/after execution
+ * and probed from each nested reader. It is never added to the mount list or
+ * passed as key bytes. The returned report remains observation-only and cannot
+ * authorize promotion; callers still own issuer selection and approval.
  *
  * **Example** (Reference the admitted matrix supervisor)
  * ```ts

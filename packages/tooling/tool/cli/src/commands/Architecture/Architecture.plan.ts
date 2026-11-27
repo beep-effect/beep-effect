@@ -382,10 +382,6 @@ export const makeArchitecturePackageOperationPlan = Effect.fn(function* (input: 
 
 const isContextRole = S.is(ArchitectureContextRole);
 
-// The identity registrar names a package's composer `$<PascalCase slug>Id` and keeps
-// the first export of a name, so `notes2-contract` and `notes-2-contract` would
-// share `$Notes2ContractId`. An accessor the registry already gives another
-// package is refused; one it gives this package replays.
 const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
   repoRoot: string,
   members: ReadonlyArray<{ readonly name: string; readonly relativePath: string }>,
@@ -393,7 +389,6 @@ const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // Registration writes the composers into @beep/identity, so a checkout without it cannot host a context.
   const identity = yield* O.match(
     A.findFirst(members, (member) => member.name === "@beep/identity"),
     {
@@ -413,7 +408,6 @@ const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
       A.fromIterable(
         pipe(registry, Str.matchAll(/export const (\$\w+): Identity\.IdentityComposer<"@beep\/([^"]+)">/gu))
       ),
-      // Both groups always take part in a match of this pattern.
       (match) => [String(match[1]), String(match[2])] as const
     )
   );
@@ -434,17 +428,12 @@ const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
   }
 });
 
-// The tsconfig sync gives each package one reference per direct workspace
-// dependency (dev dependencies included), sorted by target path and relative
-// to the package; computing the same here keeps apply-then-check idempotent.
 const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, names: ModelFirstContextNames) {
   const path = yield* Path.Path;
   const members = yield* workspaceMembers(repoRoot).pipe(
     Effect.mapError(DomainError.newCause("Failed to read the workspace manifests"))
   );
   const target = modelFirstTargetFor(names);
-  // A generated name another workspace already owns is refused; the same name
-  // at the same path is this context, so a saved plan replays.
   const taken = A.flatMap(generatedContextRoles, (role) =>
     A.filter(
       members,
@@ -458,10 +447,6 @@ const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, n
     );
   }
   yield* ensureIdentityAccessorsFree(repoRoot, members, target);
-  // The reference target is the sync's own owner config per workspace
-  // (tsconfig.build.json when one exists, else tsconfig.json); a workspace with
-  // neither gets no reference, as the sync gives it none. A generated package
-  // does not exist yet and takes the fallback.
   const descriptors = yield* TsconfigSyncPlan.buildWorkspaceDescriptors(repoRoot).pipe(
     Effect.mapError(DomainError.newCause("Failed to read the workspace tsconfigs"))
   );
@@ -538,6 +523,15 @@ export const shapeOfOperationPlan = (plan: CanonicalSliceOperationPlan): Archite
  * plan's packages have exact exports, one per `src/` file. `web` is not
  * generated until the bindings generator lands.
  *
+ * A generated workspace name another workspace owns at another path is refused, and so is an
+ * identity accessor (`$<PascalCase slug>Id`) the registry already gives another package: the
+ * registrar keeps the first export of a name, so `notes2-contract` and `notes-2-contract` would
+ * share `$Notes2ContractId`. The same names at this context's own paths replay a saved plan.
+ * Each package gets one project reference per direct workspace dependency, dev dependencies
+ * included, sorted by target path and pointing at that workspace's `tsconfig.build.json`, else
+ * its `tsconfig.json`, else nothing. That is the set the tsconfig sync writes, so
+ * apply-then-check stays idempotent.
+ *
  * **Example** (Plan the notes context)
  *
  * ```ts
@@ -568,8 +562,6 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
       `Invalid context "${input.context}": a context is a kebab-case slug such as "notes" or "case-files".`
     );
   }
-  // Workspace discovery never looks beneath these, so a package there is never
-  // registered or synced.
   if (A.contains(skippedWorkspaceDirectoryNames, input.context)) {
     return yield* DomainError.newMessage(
       `Invalid context "${input.context}": workspace discovery skips a directory named ${input.context} (${A.join(skippedWorkspaceDirectoryNames, ", ")}), so its packages would never be registered.`
@@ -583,7 +575,6 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
   const names = modelFirstContextNamesFor(
     ModelFirstContextRequest.make({ context: input.context, module: input.module })
   );
-  // Every file the plan writes must bind each top-level name once.
   const clashes = A.flatMap(modelFirstSourceFilesFor(names), (file) =>
     A.map(duplicateBindingsOf(file.content), (name) => `${file.role}/${file.path}: ${name}`)
   );
@@ -667,9 +658,6 @@ export const ensureCurrentModelFirstReferences = Effect.fn(function* (
     A.sort(Order.String)
   );
   if (A.isReadonlyArrayEmpty(stale)) return;
-  // An interrupted apply may have written some of the plan's files already; the
-  // executor never overwrites a differing file, so regenerating alone cannot
-  // get past them.
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const written = yield* Effect.filter(

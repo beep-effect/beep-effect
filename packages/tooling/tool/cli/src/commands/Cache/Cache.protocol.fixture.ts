@@ -104,9 +104,7 @@ export const corruptCacheArtifactBody = (bytes: Uint8Array) => {
  */
 export const tamperCacheArtifactTag = (tag: string) => `${Str.startsWith("A")(tag) ? "B" : "A"}${Str.slice(1)(tag)}`;
 
-// Truncate artifact bytes while retaining complete HTTP framing so the native
-// client must reject the signed payload itself.
-const readFaultBody = (stored: StoredArtifact, fault: CacheFixtureScenario["fault"]) =>
+const framedFaultBody = (stored: StoredArtifact, fault: CacheFixtureScenario["fault"]) =>
   fault === "corrupt-body"
     ? corruptCacheArtifactBody(stored.body)
     : new Uint8Array(
@@ -124,8 +122,7 @@ const AddressInUse = S.Struct({ code: S.tag("EADDRINUSE") }).pipe(
 );
 const bindFailure = (cause: unknown) => Effect.fail(new HttpServerError.ServeError({ cause }));
 
-// Let the Node test shim deliver listen/error events without consulting Clock.
-const awaitBindEvents = Effect.callback<void>((resume) => {
+const awaitNodeShimListenErrors = Effect.callback<void>((resume) => {
   const handle = setImmediate(() => resume(Effect.void));
   return Effect.sync(() => clearImmediate(handle));
 });
@@ -135,8 +132,7 @@ const startFixtureServer = Effect.fn("CacheFixture.startServer")(function* <E, R
   maxRequestBodySize: number
 ) {
   const server = yield* BunHttpServer.make({ port: 0, hostname: fixtureHost, maxRequestBodySize });
-  // Node's Bun.serve test shim reports asynchronous listen errors at reload.
-  yield* awaitBindEvents;
+  yield* awaitNodeShimListenErrors;
   yield* server.serve(app);
   return server;
 });
@@ -237,6 +233,7 @@ const readFixtureBody = Effect.fn("CacheFixture.readBody")(function* (request: H
  * while conflicting writes fail atomically. The returned events contain only
  * sanitized metadata. Callers must still isolate readers and protect receipts.
  * This server itself establishes no qualification or production trust authority.
+ * The returned `artifactBytes` is a supervisor-only view that no HTTP reader can reach.
  *
  * **Example** (Scope a fixture)
  * ```ts
@@ -356,7 +353,7 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     if (O.isNone(stored)) {
       return yield* reply(404, operation, O.some(key));
     }
-    const body = readFaultBody(stored.value, current.fault);
+    const body = framedFaultBody(stored.value, current.fault);
     const tag = readFaultTag(stored.value, current.fault);
     return yield* reply(200, operation, O.some(key), body, tag);
   });
@@ -366,10 +363,9 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
     current: CacheFixtureScenario,
     reply: ReturnType<typeof makeReply>
   ) {
-    // Avoid introducing additional URL normalization at this boundary.
-    const parts = Str.split(request.url, "?");
-    const pathname = A.head(parts).pipe(O.getOrThrow);
-    if (!validFixtureSelectors(parts, credentials.namespace)) {
+    const unnormalizedUrlParts = Str.split(request.url, "?");
+    const pathname = A.head(unnormalizedUrlParts).pipe(O.getOrThrow);
+    if (!validFixtureSelectors(unnormalizedUrlParts, credentials.namespace)) {
       return yield* reply(403, "rejected");
     }
     if (pathname === "/v8/artifacts/status" && request.method === "GET") {
@@ -410,7 +406,6 @@ export const makeCacheProtocolFixture = Effect.fn("Cache.makeProtocolFixture")(f
   return {
     url: yield* serveCacheLoopback(app, bodyLimit),
     events: Ref.get(events),
-    // Supervisor-only observation; HTTP readers cannot access this capability.
     artifactBytes: (key: CacheFixtureArtifactKey) =>
       Ref.get(artifacts).pipe(
         Effect.flatMap((all) =>

@@ -10,19 +10,24 @@ const instrumentedFixture = Config.String("BEEP_INSTRUMENTED_IT_FIXTURE").pipe(
   Effect.runSync
 );
 
+/**
+ * Vitest configuration for the shared test utilities.
+ *
+ * **Gotchas**
+ *
+ * Tests run in order: this package owns the shared PGLite integration harness, and the CI
+ * server behind the shared external URL accepts one connection at a time.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Tests here mock modules, stub globals, or change the working directory; keep every file in
-      // its own worker even under coverage (vitest.shared.ts shares the graph there by default).
       isolate: true,
       globals: true,
-      // Runtime harnesses opt in when launching their fixture subprocesses.
       exclude: instrumentedFixture ? [] : ["test/fixtures/**"],
-      // This package owns the shared PGLite integration harness. The CI server
-      // is single-connection, so package files cannot run concurrently when the
-      // shared external URL is present.
       sequence: {
         concurrent: false,
       },

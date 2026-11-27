@@ -86,8 +86,6 @@ const retainFixtureEvidence = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const configuredEvidence = yield* Config.option(Config.String("BEEP_VITEST_RUNTIME_EVIDENCE"));
   const evidenceDirectory = O.orElse(O.fromUndefinedOr(explicitEvidenceDirectory), () => configuredEvidence);
-  // Registered after the temp directory: persist first on success, failure or
-  // cancellation, then let the existing directory finalizer remove its files.
   if (O.isSome(evidenceDirectory)) {
     yield* Effect.addFinalizer((exit) =>
       Effect.gen(function* () {
@@ -398,7 +396,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       expect(phases).toContain('"reason":');
       expect(phases).toContain("Test timed out in 25ms");
       expect(phases).toContain('"phase":"finished"');
-      expect(scopeExit).toBe('{"interrupted":true}');
+      expect(
+        scopeExit,
+        "the evidence finalizer, registered after the temp directory, persists the scope exit before that directory is removed"
+      ).toBe('{"interrupted":true}');
       const processPhases = yield* fs.readFileString(path.join(retained, "process-phases.jsonl"));
       for (const phase of ["prepared", "spawn", "first-output", "drain", "exit", "scope-close"]) {
         expect(processPhases).toContain(`"phase":"${phase}"`);
@@ -410,8 +411,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       for (const [previous, next] of Arr.zip(phaseRecords, Arr.drop(phaseRecords, 1))) {
         expect(next.monotonicNanos).toBeGreaterThanOrEqual(previous.monotonicNanos);
       }
-      // Keep this interrupted-scope receipt in the same optional durable sink as
-      // ordinary fixtures before this test's temporary evidence directory closes.
       const configuredEvidence = yield* Config.option(Config.String("BEEP_VITEST_RUNTIME_EVIDENCE"));
       if (O.isSome(configuredEvidence)) {
         yield* fs.copy(retained, path.join(configuredEvidence.value, path.basename(directory)));

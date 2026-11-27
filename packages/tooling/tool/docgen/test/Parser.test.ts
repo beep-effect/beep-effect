@@ -84,12 +84,8 @@ const expectMarkdown = Effect.fn("ParserTest.expectMarkdown")(function* <E>(
   expect(actual).toBe(expected);
 });
 
-// `vitest.shared.ts` sets `sequence.concurrent`, and `makeSourcefile` removes
-// and recreates the same `test.ts` inside one shared ts-morph project. Run
-// concurrently, a case parses whatever source the previous one happened to
-// install. That was latent while these cases returned an Effect nobody ran.
 it.layer(Path.layer)("Parser services", (it) => {
-  describe("Parser", { concurrent: false }, () => {
+  describe("Parser, run in order over one shared ts-morph test.ts", { concurrent: false }, () => {
     describe("parseModule", () => {
       it.effect("preserves nested source paths in generated source links", () =>
         Effect.gen(function* () {

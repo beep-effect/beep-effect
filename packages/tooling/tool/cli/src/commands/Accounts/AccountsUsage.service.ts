@@ -117,6 +117,12 @@ const $I = $RepoCliId.create("commands/Accounts/AccountsUsage.service");
  * machine are signed in to, from their own config files; a missing or
  * unreadable file means no account is marked.
  *
+ * `accounts` names a login the proxy stored without an email after its file. `poll` sends a
+ * stored Kimi Code access token as it is, since the proxy refreshes it ahead of its fifteen-minute
+ * expiry; a Kimi profile read that fails or takes over 8 seconds is dropped and the usages still
+ * read. Without the tariff's `available` amount, a JetBrains AI row keeps its balance credit as
+ * read, which may already include top-up, and adds no separate top-up row.
+ *
  * **Example** (Poll every account)
  *
  * ```ts
@@ -155,15 +161,9 @@ export class AccountsUsage extends Context.Service<AccountsUsage, AccountsUsageS
 
 const CLAUDE_USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
 const CODEX_USAGE_URL = "https://chatgpt.com/backend-api/wham/usage";
-const MUSE_KEY_URL = "https://api.meta.ai/muse-code/key";
+const MUSE_READ_ONLY_KEY_URL = "https://api.meta.ai/muse-code/key";
 const GROK_BILLING_URL = "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig";
-// The proxy records the API root of a Kimi login's region without the `/v1`
-// segment the usages and profile endpoints live under (verified 2026-10-29:
-// `base_url` is `https://api.kimi.com/coding`, and `/coding/usages` is a 404);
-// a login without a root is on the global deployment.
 const KIMI_GLOBAL_BASE_URL = "https://api.kimi.ai/coding/v1";
-// The profile only enriches the usages, so a slow one is dropped before the
-// poll's own timeout would fail the whole row.
 const KIMI_PROFILE_TIMEOUT = Duration.seconds(8);
 
 /**
@@ -192,16 +192,12 @@ export const kimiApiBase = (baseUrl: string | undefined): string =>
     O.map((root) => (Str.endsWith("/v1")(root) ? root : `${root}/v1`)),
     O.getOrElse(() => KIMI_GLOBAL_BASE_URL)
   );
-// An empty gRPC-web request: one uncompressed frame holding a zero-length message.
-const GROK_EMPTY_REQUEST = new Uint8Array(5);
+const EMPTY_GRPC_WEB_FRAME = new Uint8Array(5);
 const REQUEST_TIMEOUT = Duration.seconds(20);
 const POLL_CONCURRENCY = 4;
 
 const isPolledProvider = S.is(AccountProvider);
 
-// The proxy names a stored login by its upstream; the report names the product.
-// A Kimi login is typed by its region (`kimi` for kimi.com, `kimi-ai` for the
-// global deployment); both are the one Kimi Code membership.
 const providerOfLogin: Readonly<Record<string, AccountProvider>> = {
   claude: "claude",
   codex: "codex",
@@ -233,10 +229,9 @@ const failed = (detail: string) => AccountUsageOutcome.cases.Failed.make({ detai
 
 const isRejectedStatus = (status: number): boolean => status === 401 || status === 403;
 
-// JetBrains' ingrazzio gateway answers an expired or revoked bearer token with
-// HTTP 407 rather than 401, so the Junie poller treats 407 as a token rejection
-// too (verified live 2026-10-14 against the stale stored Junie access token).
-const isJunieTokenRejected = (status: number): boolean => isRejectedStatus(status) || status === 407;
+const INGRAZZIO_EXPIRED_TOKEN_STATUS = 407;
+const isJunieTokenRejected = (status: number): boolean =>
+  isRejectedStatus(status) || status === INGRAZZIO_EXPIRED_TOKEN_STATUS;
 
 class JunieRefreshResponse extends S.Opaque<JunieRefreshResponse, { readonly brand: unique symbol }>()(
   S.Struct({ stored: S.String.pipe(S.Redacted), status: S.Finite, body: S.String }).pipe(
@@ -258,9 +253,6 @@ type UsageTextResponse = {
   readonly body: string;
 };
 
-// The shared shape of a JSON usage reply: a rejected login asks for a new
-// sign-in, any other non-200 or undecodable body is a failure, and a decoded
-// body becomes the provider's own outcome.
 const decodedOutcome =
   <Body>(
     name: string,
@@ -278,6 +270,11 @@ const decodedOutcome =
 
 /**
  * Turn a Claude usage response into an outcome.
+ *
+ * **Details**
+ *
+ * Claude answers an expired token with HTTP 200 and an `authentication_error` body, which
+ * becomes a re-login request.
  *
  * **Example** (Read an expired login)
  *
@@ -303,7 +300,6 @@ export const claudeUsageOutcome = (response: UsageTextResponse): AccountUsageOut
   return O.match(ClaudeUsageBodyJson.decodeOption(response.body), {
     onNone: () => failed(`Claude usage answered HTTP ${response.status} with a body this version cannot read`),
     onSome: (body) => {
-      // Claude answers an expired token with HTTP 200 and an error body.
       if (body.error !== undefined) {
         return body.error.type === "authentication_error" ? loginRejected : failed(body.error.message);
       }
@@ -424,9 +420,7 @@ export const kimiUsageOutcome: {
   )(response);
 });
 
-// Proven AI Pro tariff: 1,000,000 wire units = 10 JetBrains credits.
-// Evidence: goals/agent-pool-doctrine/history/2026-10-14-routing-refresh.md R9.
-const JUNIE_UNITS_PER_CREDIT = 100000;
+const JUNIE_AI_PRO_UNITS_PER_CREDIT = 100000;
 const JUNIE_GRAZIE_AGENT = '{"name":"junie:cli","version":"3659.4"}';
 const JunieJwtClaimsJson = JsonStringCodec(S.Struct({ exp: S.Finite.pipe(S.OptionFromOptionalKey) }));
 const JUNIE_TOKEN_SKEW = Duration.seconds(60);
@@ -455,7 +449,7 @@ const isJunieLicenseCurrent = (validThrough: O.Option<string>, time: number): bo
       !O.exists(DateTime.make(date), (at) => DateTime.toEpochMillis(at) + Duration.toMillis(Duration.days(1)) > time)
   );
 
-const selectJunieLicense = (
+const soleEligibleJunieLicense = (
   options: JunieAccessOptionsBody,
   licenseType: O.Option<string>,
   time: number
@@ -468,14 +462,10 @@ const selectJunieLicense = (
       isJunieLicenseCurrent(option.validThrough, time)
   );
   const preferred = A.filter(eligible, (option) => O.exists(licenseType, (type) => O.contains(option.code, type)));
-  // Fail closed: several equally eligible licences (personal plus organisation) or only
-  // non-`license` tiers select nothing, so the row stays balance-only rather than guessing.
   const selected = preferred.length === 1 ? A.head(preferred) : eligible.length === 1 ? A.head(eligible) : O.none();
   return O.map(selected, (option) => option.licenseId);
 };
 
-// Without a decoded tariff `available`, balanceLeft may already include top-up, so the
-// original balance credit stays as it is and no separate top-up row is added.
 const junieCycleCredits = (balance: JunieOkOutcome, quota: JunieQuotaBody): O.Option<ReadonlyArray<CreditBalance>> => {
   const tariff = quota.current.tariffQuota;
   const maximum = O.flatMap(tariff, (pool) => pool.maximum);
@@ -491,8 +481,8 @@ const junieCycleCredits = (balance: JunieOkOutcome, quota: JunieQuotaBody): O.Op
           ...credit,
           label: "JetBrains AI cycle",
           unit: "credits",
-          remaining: available.amount / JUNIE_UNITS_PER_CREDIT,
-          limit: O.map(maximum, (amount) => amount.amount / JUNIE_UNITS_PER_CREDIT),
+          remaining: available.amount / JUNIE_AI_PRO_UNITS_PER_CREDIT,
+          limit: O.map(maximum, (amount) => amount.amount / JUNIE_AI_PRO_UNITS_PER_CREDIT),
           expiresAt: O.none(),
         })
       ),
@@ -500,7 +490,7 @@ const junieCycleCredits = (balance: JunieOkOutcome, quota: JunieQuotaBody): O.Op
         CreditBalance.make({
           label: "JetBrains AI top-up",
           unit: "credits",
-          remaining: amount.amount / JUNIE_UNITS_PER_CREDIT,
+          remaining: amount.amount / JUNIE_AI_PRO_UNITS_PER_CREDIT,
           limit: O.none(),
           expiresAt: O.none(),
         })
@@ -534,7 +524,6 @@ const junieCycleWindows = (quota: JunieQuotaBody, refill: O.Option<JunieRefillBo
 const junieReplyBody = <A>(reply: JunieQuotaReply, decode: (text: string) => O.Option<A>): O.Option<A> =>
   reply.status === 200 ? decode(reply.body) : O.none();
 
-// Only quota/get is required; a failed refill only loses the refill reset time.
 const junieCycleOutcome = (
   balance: JunieOkOutcome,
   quotaReply: JunieQuotaReply,
@@ -570,7 +559,7 @@ const decodedJunieUsageOutcome: (response: UsageTextResponse) => AccountUsageOut
         CreditBalance.make({
           label: "JetBrains AI balance",
           unit: "credits",
-          remaining: body.balanceLeft.value / JUNIE_UNITS_PER_CREDIT,
+          remaining: body.balanceLeft.value / JUNIE_AI_PRO_UNITS_PER_CREDIT,
           limit: O.none(),
           expiresAt: O.none(),
         }),
@@ -783,9 +772,8 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
   const directory = yield* resolveAccountsAuthDir;
   const junieAccessToken = yield* Ref.make(O.none<JunieAccessToken>());
   const junieExchangeToken = yield* Ref.make(O.none<JunieExchangeToken>());
-  // Both caches are keyed by the refresh-token fingerprint and live for the process lifetime.
-  const junieLicenses = yield* Ref.make(HashMap.empty<string, Redacted.Redacted<string>>());
-  const junieRotatedCredentials = yield* Ref.make(HashSet.empty<string>());
+  const junieLicenseByFingerprint = yield* Ref.make(HashMap.empty<string, Redacted.Redacted<string>>());
+  const junieRotatedFingerprints = yield* Ref.make(HashSet.empty<string>());
 
   const crypto = yield* Digest.Digest;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -799,7 +787,6 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
   );
   const readJunie = Effect.fn("AccountsUsage.readJunie")(
     function* () {
-      // Realpath also keeps synthetic HOME fixtures isolated from the real keyring.
       const realHome = yield* fs.realPath(junieHome);
       const key = `${yield* sha256Hex(Str.toLowerCase(realHome)).pipe(Effect.provideService(Digest.Digest, crypto))}jb-account-stored`;
       const stored = yield* spawner
@@ -851,8 +838,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         sha256Hex,
         Effect.provideService(Digest.Digest, crypto)
       );
-      // A credential whose refresh token rotated during cycle lookup is never sent to switch_audience again.
-      const got = yield* Ref.get(junieRotatedCredentials);
+      const got = yield* Ref.get(junieRotatedFingerprints);
       if (HashSet.has(got, credentialFingerprint)) return junieAudienceRotated;
       const cached = yield* Ref.get(junieAccessToken);
       if (O.exists(cached, (value) => value.credentialFingerprint !== credentialFingerprint)) {
@@ -900,7 +886,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           );
           const switchedBody = yield* switched.text;
           if (isJunieAudienceRotation(switched.status, switchedBody, account.refresh_token)) {
-            yield* Ref.update(junieRotatedCredentials, HashSet.add(credentialFingerprint));
+            yield* Ref.update(junieRotatedFingerprints, HashSet.add(credentialFingerprint));
             return Result.fail(junieAudienceRotated);
           }
           const audience = junieRefreshOutcome({
@@ -919,18 +905,18 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           const text1 = yield* listing.text;
           const options = JunieAccessOptionsBodyJson.decodeOption(text1);
           if (O.isNone(options)) return Result.succeed(O.none<Redacted.Redacted<string>>());
-          const licenseId = selectJunieLicense(
+          const licenseId = soleEligibleJunieLicense(
             options.value,
             O.flatMap(JunieAuthTestBodyJson.decodeOption(response.body), (body) => body.licenseType),
             time
           );
           if (O.isSome(licenseId)) {
-            yield* Ref.update(junieLicenses, HashMap.set(credentialFingerprint, licenseId.value));
+            yield* Ref.update(junieLicenseByFingerprint, HashMap.set(credentialFingerprint, licenseId.value));
           }
           return Result.succeed(licenseId);
         });
         const mintExchange = Effect.fnUntraced(function* (time: number) {
-          const got2 = yield* Ref.get(junieLicenses);
+          const got2 = yield* Ref.get(junieLicenseByFingerprint);
           const cachedLicense = HashMap.get(got2, credentialFingerprint);
           const loaded = O.isSome(cachedLicense) ? Result.succeed(cachedLicense) : yield* loadLicense(time);
           if (Result.isFailure(loaded)) return loaded;
@@ -944,7 +930,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           );
           const provided = yield* client.execute(pipe3);
           if (provided.status >= 400 && provided.status < 500) {
-            yield* Ref.update(junieLicenses, HashMap.remove(credentialFingerprint));
+            yield* Ref.update(junieLicenseByFingerprint, HashMap.remove(credentialFingerprint));
           }
           if (provided.status !== 200) return Result.succeed(O.none<Redacted.Redacted<string>>());
           const text4 = yield* provided.text;
@@ -987,7 +973,6 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             : yield* mintExchange(time);
         });
         const quotaRequest = Effect.fnUntraced(function* (exchange: Redacted.Redacted<string>, suffix: string) {
-          // Extend the caller's rules for both request and response client-span attributes.
           const redactedNames = yield* Headers.CurrentRedactedNames;
           const pipe6 = yield* HttpClientRequest.post(`https://api.jetbrains.ai/user/v5/quota/${suffix}`).pipe(
             HttpClientRequest.setHeaders({
@@ -1023,7 +1008,6 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
               const [quota, refill] = yield* quotaReplies(exchange);
               if (!isJunieTokenRejected(quota.status) && !isJunieTokenRejected(refill.status))
                 return junieCycleOutcome(balance, quota, refill);
-              // A rejected Grazie token is dropped and re-minted once within this poll.
               yield* Ref.set(junieExchangeToken, O.none());
               const mintExchange8 = yield* mintExchange(time);
               return yield* withExchange(mintExchange8, cycleFrom);
@@ -1128,8 +1112,6 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           identity,
           codexUsageOutcome
         ),
-      // Meta's CLI reads its usage from the key endpoint, which answers with
-      // the key the proxy already holds; the call changes nothing.
       muse: () =>
         O.match(O.fromNullishOr(login.dca_token), {
           onNone: () =>
@@ -1138,7 +1120,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             ),
           onSome: (deviceToken) =>
             fetchText(
-              HttpClientRequest.post(MUSE_KEY_URL).pipe(
+              HttpClientRequest.post(MUSE_READ_ONLY_KEY_URL).pipe(
                 HttpClientRequest.bearerToken(Redacted.value(deviceToken)),
                 HttpClientRequest.setHeader("user-agent", "muse-code/1.0.2"),
                 HttpClientRequest.acceptJson,
@@ -1149,10 +1131,6 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             ),
         }),
       junie: () => pollJunie(),
-      // The proxy refreshes the fifteen-minute Kimi access token ahead of
-      // expiry, so the stored one is read as it is. The profile is read beside
-      // the usages for the identity and tier; a failed or slow profile read
-      // keeps the usages.
       kimi: () => {
         const base = kimiApiBase(login.base_url);
         const get = (suffix: string) =>
@@ -1184,7 +1162,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             HttpClientRequest.post(GROK_BILLING_URL).pipe(
               HttpClientRequest.bearerToken(token),
               HttpClientRequest.setHeader("x-grpc-web", "1"),
-              HttpClientRequest.bodyUint8Array(GROK_EMPTY_REQUEST, "application/grpc-web+proto")
+              HttpClientRequest.bodyUint8Array(EMPTY_GRPC_WEB_FRAME, "application/grpc-web+proto")
             )
           ),
           (response) =>
@@ -1203,7 +1181,6 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         : O.map(providerOfLoginType(file.type), (provider) =>
             AccountRef.make({
               provider,
-              // A login the proxy stored without an identity is named after its file.
               label: O.getOrElse(O.fromNullishOr(file.email), () => path.basename(source, ".json")),
               source,
             })

@@ -1,9 +1,3 @@
-// Deep property sweep runner (BEEP_FC_NUM_RUNS > 0 only; see `propertySweepSelection` in
-// vitest.shared.ts). The shared config resolves, per collected test file, the 1-based source lines
-// that are provably plain registrations and provides them under `beepPropertySweepPlainLines`.
-// After collection this runner marks every test whose task location is on one of those lines as
-// skipped, then skips every suite (and file) whose descendants are all skipped or todo, so their
-// `beforeAll`/`layer(...)` setup never runs. Files absent from the table keep every test.
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -30,8 +24,6 @@ const log = (message: string): void => Effect.runSync(Console.info(`[property-sw
 
 type Pruned = { readonly kept: number; readonly skipped: ReadonlyArray<RunnerTestCase> };
 
-// Skip plain tests, then collapse suites whose children are all inactive. Counts cover the tests
-// that were runnable when collection finished.
 const prune = (suite: RunnerTestSuite, plainLines: ReadonlyArray<number>): Pruned => {
   const pruned = A.reduce(suite.tasks, { kept: 0, skipped: [] }, (acc: Pruned, task): Pruned => {
     if (task.type === "suite") {
@@ -56,9 +48,20 @@ const prune = (suite: RunnerTestSuite, plainLines: ReadonlyArray<number>): Prune
 const isPlainLineTable = (value: unknown): value is Readonly<Record<string, ReadonlyArray<number>>> =>
   P.isObject(value) && A.every(R.values(value as Record<string, unknown>), (lines) => A.isArray(lines));
 
-/** Vitest runner for the deep property sweep: skips provably plain tests after collection. */
+/**
+ * Vitest runner for the deep property sweep: skips provably plain tests after collection.
+ *
+ * **Details**
+ *
+ * The shared config installs it only when `BEEP_FC_NUM_RUNS` is above 0, and provides, per
+ * collected test file, the 1-based source lines that are provably plain registrations under
+ * `beepPropertySweepPlainLines`. After collection the runner skips every test whose task location
+ * is on one of those lines, then skips every suite (and file) whose descendants are all skipped or
+ * todo, so their `beforeAll` and `layer(...)` setup never runs. A file absent from the table keeps
+ * every test. The logged counts cover the tests that were runnable when collection finished.
+ */
 export default class PropertySweepRunner extends TestRunner {
-  // Vitest installs this RPC bridge on every runner instance after construction.
+  /** Vitest installs this RPC bridge on every runner instance after construction. */
   declare onTaskUpdate?: VitestTestRunner["onTaskUpdate"];
 
   onCollected(files: ReadonlyArray<RunnerTestFile>): Promise<void> {

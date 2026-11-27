@@ -23,8 +23,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Optional on insert: the column's SQL default supplies the first version.
-const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
+const sqlDefaultRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
 
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
 
@@ -41,10 +40,7 @@ const decodeUnknownWorkspaceModel = S.decodeUnknownEffect(WorkspaceModel);
 
 const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
 
-// Every row codec here is a class schema, so an unencodable entity has to stay
-// an instance of its model: clone onto the same prototype and corrupt a single
-// column rather than handing the encoder a bare struct it would reject wholesale.
-const withUnencodablePublicId = <A extends object>(entity: A): A =>
+const sameClassWithBadPublicId = <A extends object>(entity: A): A =>
   Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
 
 const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
@@ -150,7 +146,7 @@ describe("WorkspaceTables", () => {
           ...threadInsert,
           deletedAt: threadInsert.deletedAt ?? null,
           deletedByPrincipal: threadInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(threadInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(threadInsert.rowVersion),
           id: 10,
         })
       );
@@ -172,7 +168,7 @@ describe("WorkspaceTables", () => {
           ...messageInsert,
           deletedAt: messageInsert.deletedAt ?? null,
           deletedByPrincipal: messageInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(messageInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(messageInsert.rowVersion),
           id: 20,
         })
       );
@@ -195,11 +191,8 @@ describe("WorkspaceTables", () => {
           ...turnInsert,
           deletedAt: turnInsert.deletedAt ?? null,
           deletedByPrincipal: turnInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(turnInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(turnInsert.rowVersion),
           id: 30,
-          // $inferInsert types parentTurnId as optional (number | null | undefined);
-          // the select-row converter expects number | null, so resolve the absent
-          // optional to its concrete null before round-tripping.
           parentTurnId: turnInsert.parentTurnId ?? null,
         })
       );
@@ -235,7 +228,7 @@ describe("WorkspaceTables", () => {
           ...workspaceInsert,
           deletedAt: workspaceInsert.deletedAt ?? null,
           deletedByPrincipal: workspaceInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(workspaceInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(workspaceInsert.rowVersion),
           id: 40,
           vaultRootPath: workspaceInsert.vaultRootPath ?? null,
         })
@@ -259,7 +252,7 @@ describe("WorkspaceTables", () => {
           ...threadInsert,
           deletedAt: threadInsert.deletedAt ?? null,
           deletedByPrincipal: threadInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(threadInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(threadInsert.rowVersion),
           id: thread.id,
         })
       );
@@ -268,7 +261,7 @@ describe("WorkspaceTables", () => {
           ...messageInsert,
           deletedAt: messageInsert.deletedAt ?? null,
           deletedByPrincipal: messageInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(messageInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(messageInsert.rowVersion),
           id: message.id,
         })
       );
@@ -277,7 +270,7 @@ describe("WorkspaceTables", () => {
           ...turnInsert,
           deletedAt: turnInsert.deletedAt ?? null,
           deletedByPrincipal: turnInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(turnInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(turnInsert.rowVersion),
           id: turn.id,
           parentTurnId: absentAsNull(turnInsert.parentTurnId),
         })
@@ -287,7 +280,7 @@ describe("WorkspaceTables", () => {
           ...workspaceInsert,
           deletedAt: workspaceInsert.deletedAt ?? null,
           deletedByPrincipal: workspaceInsert.deletedByPrincipal ?? null,
-          rowVersion: insertedRowVersion(workspaceInsert.rowVersion),
+          rowVersion: sqlDefaultRowVersion(workspaceInsert.rowVersion),
           id: workspace.id,
           vaultRootPath: absentAsNull(workspaceInsert.vaultRootPath),
         })
@@ -309,7 +302,7 @@ describe("WorkspaceTables", () => {
         workspaceId: 2,
       });
       const threadInsert = yield* Effect.fromResult(Thread.toThreadInsert(thread));
-      const converterFailure1 = yield* converterFailure(Thread.toThreadInsert(withUnencodablePublicId(thread)));
+      const converterFailure1 = yield* converterFailure(Thread.toThreadInsert(sameClassWithBadPublicId(thread)));
       expectConverterFailure(converterFailure1, "ThreadConverterError");
       const converterFailure2 = yield* converterFailure(
         Thread.fromThreadRow({ ...threadInsert, id: 10, publicId: 42 } as unknown as Thread.ThreadRow)
@@ -324,7 +317,7 @@ describe("WorkspaceTables", () => {
         turnId: 30,
       });
       const messageInsert = yield* Effect.fromResult(Message.toMessageInsert(message));
-      const converterFailure3 = yield* converterFailure(Message.toMessageInsert(withUnencodablePublicId(message)));
+      const converterFailure3 = yield* converterFailure(Message.toMessageInsert(sameClassWithBadPublicId(message)));
       expectConverterFailure(converterFailure3, "MessageConverterError");
       const converterFailure4 = yield* converterFailure(
         Message.fromMessageRow({ ...messageInsert, id: 20, publicId: 42 } as unknown as Message.MessageRow)
@@ -339,7 +332,7 @@ describe("WorkspaceTables", () => {
         turnIndex: 0,
       });
       const turnInsert = yield* Effect.fromResult(Turn.toTurnInsert(turn));
-      const converterFailure5 = yield* converterFailure(Turn.toTurnInsert(withUnencodablePublicId(turn)));
+      const converterFailure5 = yield* converterFailure(Turn.toTurnInsert(sameClassWithBadPublicId(turn)));
       expectConverterFailure(converterFailure5, "TurnConverterError");
       const converterFailure6 = yield* converterFailure(
         Turn.fromTurnRow({
@@ -361,7 +354,7 @@ describe("WorkspaceTables", () => {
       });
       const workspaceInsert = yield* Effect.fromResult(Workspace.toWorkspaceInsert(workspace));
       const converterFailure7 = yield* converterFailure(
-        Workspace.toWorkspaceInsert(withUnencodablePublicId(workspace))
+        Workspace.toWorkspaceInsert(sameClassWithBadPublicId(workspace))
       );
       expectConverterFailure(converterFailure7, "WorkspaceConverterError");
       const converterFailure8 = yield* converterFailure(

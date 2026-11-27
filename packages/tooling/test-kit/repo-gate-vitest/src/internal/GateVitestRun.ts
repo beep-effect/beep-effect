@@ -53,11 +53,6 @@ export const ADAPTER_PREFIX = "[@beep/repo-gate-vitest]";
 export const gateOf = (argv: ReadonlyArray<string>): string =>
   A.some(argv, Str.startsWith("test/integration")) ? "test-integration" : "test";
 
-/**
- * Everything a finished run hands the adapter.
- *
- * @since 0.0.0
- */
 type FinishInput = {
   readonly root: string;
   readonly argv: ReadonlyArray<string>;
@@ -108,8 +103,6 @@ const gateFiles = Effect.fnUntraced(function* (repoRoot: string, target: RecordT
   };
 });
 
-// The record and raw log a continuing run folds into: there only when the sidecar names the
-// record's own run, which the chain's first run wrote. Anything unreadable starts afresh.
 const earlierRun = Effect.fnUntraced(function* (files: GateFiles) {
   const fs = yield* FileSystem.FileSystem;
   const named = yield* fs.readFileString(files.session).pipe(Effect.option);
@@ -122,9 +115,6 @@ const earlierRun = Effect.fnUntraced(function* (files: GateFiles) {
   );
 });
 
-// Write the run, folded into the chain's earlier runs when it continues them, then name the
-// record's run in the sidecar. The sidecar goes last, so a run whose writes failed never leaves a
-// name a later run would fold into.
 const persistRun = Effect.fnUntraced(function* (input: {
   readonly files: GateFiles;
   readonly report: GateReport;
@@ -171,9 +161,12 @@ export const clearSession = Effect.fnUntraced(function* (root: string, argv: Rea
  *
  * A run with {@link GATE_CONTINUES_ENV} set folds into the record its
  * chain's first run left, when the sidecar names that record's run, and
- * appends its log; any other run replaces the record and log. A run that does
- * not continue clears the sidecar as it starts, so a record a cache restore or
- * an earlier invocation left is never extended.
+ * appends its log; any other run replaces the record and log. An unreadable
+ * record or sidecar starts the record afresh. A run that does not continue
+ * clears the sidecar as it starts, so a record a cache restore or an earlier
+ * invocation left is never extended. The sidecar is written last, after the
+ * record and log, so a run whose writes failed never leaves a name a later run
+ * would fold into.
  *
  * @since 0.0.0
  */
@@ -211,13 +204,10 @@ export const writeRunRecord = Effect.fn("GateVitestRun.writeRunRecord")(function
 export const failureLine = (cause: Cause.Cause<unknown>): string =>
   `${ADAPTER_PREFIX} gate record not written: ${pipe(cause, Cause.pretty, Str.split("\n"), A.headNonEmpty)}`;
 
-// The adapter's one line goes to the error console of the Vitest main
-// process, beside Vitest's own output.
 const printToStderr = (line: string): void => {
   Effect.runSync(Console.error(line));
 };
 
-// Run one adapter step with the platform services, released when it settles.
 const runWithPlatform = (effect: Effect.Effect<void, never, NodeServices.NodeServices>): Promise<void> => {
   const runtime = ManagedRuntime.make(NodeServices.layer);
   return runtime.runPromise(effect).finally(runtime.dispose);

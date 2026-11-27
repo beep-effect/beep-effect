@@ -89,8 +89,6 @@ const makeTextLayer = (file: DocgenConfigFile, packageJson?: string) =>
 const makeTestLayer = (config?: unknown, configFile?: string) =>
   Layer.mergeAll(Path.layer, Domain.Process.layer, makeDocgenJsonLayer(config, configFile));
 
-// package.json reads that fail at the file system: `NotFound` reaches the
-// `PackageJsonNotFoundError` branch, any other system error the read branch.
 const makePackageJsonFailureLayer = (reason: "NotFound" | "PermissionDenied") =>
   Layer.mergeAll(
     Path.layer,
@@ -112,8 +110,6 @@ const makePackageJsonFailureLayer = (reason: "NotFound" | "PermissionDenied") =>
 const expectConfig = (actual: Configuration.ConfigurationShape, expected: Configuration.ConfigurationShape) =>
   Effect.sync(() => expect(actual).toEqual(expected));
 
-// A real virtual filesystem for the tsconfig-path cases: `TsconfigValidator.compilerOptions`
-// walks the named file's `extends` chain, which a method stub cannot answer faithfully.
 const PKG = "/pkg";
 const makeTsconfigLayer = (
   files: Readonly<Record<string, string>>,
@@ -251,9 +247,6 @@ describe("Configuration", () => {
     )
   );
 
-  // docgen read docgen.json through jsonc-parser with its errors ignored, so a
-  // malformed file decoded whatever fragment survived. Through ConfigFile.read
-  // and JsoncCodec (wave 3, W3-e) the parse failure is typed.
   it.layer(makeTextLayer({ exists: true, text: O.some('{ "srcDir": "src", ') }), { timeout: "30 seconds" })((it) =>
     it.effect(
       "raises a typed parse error when docgen.json is malformed JSONC",
@@ -282,9 +275,6 @@ describe("Configuration", () => {
     )
   );
 
-  // package.json is JSON, not JSONC: npm and Node read it with JSON.parse. The
-  // retired reader shared docgen.json's JSONC codec and accepted comments; the
-  // `PackageJsonFile` read (3-A4) rejects them.
   it.layer(
     makeTextLayer(
       { exists: false, text: O.none() },
@@ -298,7 +288,9 @@ describe("Configuration", () => {
         const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
         expect(isDomainDocgenError(error)).toBe(true);
         assertTrue(Str.includes("[Configuration.readPackageJson] Failed to parse")(error.message));
-        expect(error.cause).toMatchObject({ _tag: "PackageJsonParseError" });
+        expect(error.cause, "package.json is JSON, not JSONC: npm and Node read it with JSON.parse").toMatchObject({
+          _tag: "PackageJsonParseError",
+        });
       })
     )
   );
@@ -381,11 +373,7 @@ describe("Configuration", () => {
     }
   );
 
-  // A string `parseCompilerOptions` / `examplesCompilerOptions` names a tsconfig file. docgen read
-  // the single file through the repo-utils strict model; since 3-A6 it reads the file through
-  // `TsconfigValidator.compilerOptions`: the named file passes the strict closed check, its whole
-  // `extends` chain is merged with tsc semantics, and the merged options pass the check too.
-  describe("tsconfig file input", () => {
+  describe("a named tsconfig file, checked strictly with its merged extends chain", () => {
     it.layer(
       makeTsconfigLayer({
         [`${PKG}/tsconfig.json`]:
@@ -397,16 +385,20 @@ describe("Configuration", () => {
       it.effect("merges the extends chain with tsc semantics and encodes canonical spellings", () =>
         Effect.gen(function* () {
           const config = yield* Configuration.load(makeLoadArgs());
-          // Inherited options are kept (not replaced by the defaults); path options are absolute.
-          expect(config.parseCompilerOptions).toEqual({
+          expect(
+            config.parseCompilerOptions,
+            "inherited options are kept, not replaced by the defaults, and path options are absolute"
+          ).toEqual({
             target: "es2022",
             lib: ["dom", "es2022"],
             noEmit: true,
             strict: true,
             outDir: `${PKG}/out`,
           });
-          // The examples options came from the defaults, not the file.
-          expect(config.examplesCompilerOptions.target).toBe("es2022");
+          expect(
+            config.examplesCompilerOptions.target,
+            "the examples options come from the defaults, not the file"
+          ).toBe("es2022");
         })
       )
     );
@@ -516,8 +508,7 @@ describe("Configuration", () => {
           lib: ["DOM", "ES2022"],
           moduleResolution: "Bundler",
         });
-        // Schema field order and the canonical lower-case spelling, pretty-printed by the repo renderer.
-        expect(text).toBe(
+        expect(text, "schema field order and canonical lower-case spellings, pretty-printed by the repo renderer").toBe(
           A.join(
             [
               "{",

@@ -51,17 +51,10 @@ import type { PolicyWorkspace } from "../Lint/PolicyFingerprint.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiBinaryClosure");
 
-/** The schema version, also the first line of the digested listing. */
 const CLOSURE_VERSION = "beep-ci-binary-closure/v1";
 
-/** The entry `beep ci compile-binary` bundles. */
 const CI_BINARY_ENTRY = "packages/tooling/tool/cli/src/bin-ci.ts";
 
-/**
- * Build inputs outside the import graph: the lockfile and runtime pin that
- * fix every external package and the compiler, the install configuration,
- * the compile recipe and the workflow that publishes the binary.
- */
 const CI_BINARY_BUILD_INPUTS = [
   ".bun-version",
   ".github/workflows/beep-ci-binary.yml",
@@ -70,25 +63,10 @@ const CI_BINARY_BUILD_INPUTS = [
   "packages/tooling/tool/cli/src/commands/Ci/CiCompileBinary.ts",
 ] as const;
 
-/**
- * Dependency patches `bun install` applies. `bun.lock` records each patch's
- * path, not its content, so every file here is a closure input.
- */
 const PATCHES_DIRECTORY = "patches";
 
-/**
- * The repository's root TypeScript configuration: it carries the `@beep/*`
- * `compilerOptions.paths` aliases, which Bun resolves before `node_modules`.
- */
 const ROOT_TSCONFIG = "tsconfig.json";
 
-/**
- * The one field of a `tsconfig.json` the closure walk follows: the
- * configurations it extends.
- *
- * @category models
- * @since 0.0.0
- */
 class TsconfigExtends extends S.Opaque<TsconfigExtends, { readonly brand: unique symbol }>()(
   S.Struct({
     extends: S.optionalKey(S.Union([S.String, S.Array(S.String)])),
@@ -169,8 +147,6 @@ const readRequired = Effect.fnUntraced(function* (tree: PolicySourceTree, file: 
   return yield* CiCommandError.make({ message: `CI binary closure file ${file} does not exist.` });
 });
 
-// The configurations a tsconfig extends by relative path. A package
-// specifier resolves into `node_modules`, which `bun.lock` already pins.
 const extendedConfigs = (file: string, config: TsconfigExtends): ReadonlyArray<string> => {
   const targets = A.ensure(config.extends ?? []);
   return A.map(A.filter(targets, Str.startsWith(".")), (target) => {
@@ -179,8 +155,6 @@ const extendedConfigs = (file: string, config: TsconfigExtends): ReadonlyArray<s
   });
 };
 
-// Every tsconfig reachable from the starting ones through `extends`. A
-// starting workspace without a tsconfig contributes nothing.
 const tsconfigChain = Effect.fnUntraced(function* (tree: PolicySourceTree, starts: ReadonlyArray<string>) {
   let visited = HashSet.empty<string>();
   const pending = [...starts];
@@ -199,9 +173,6 @@ const tsconfigChain = Effect.fnUntraced(function* (tree: PolicySourceTree, start
 const listFiles = (tree: PolicySourceTree, directory: string) =>
   tree.files(directory).pipe(Effect.mapError(CiCommandError.new(`Cannot list ${directory}.`)));
 
-// The closure's file list: reached modules, their workspace manifests, every
-// source file of a workspace holding a non-literal dynamic import, and the
-// build inputs.
 const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, workspaces: ReadonlyArray<PolicyWorkspace>) {
   const graph = makePolicyGraph({ tree, workspaces });
   const reached = yield* graph
@@ -221,7 +192,6 @@ const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, worksp
     (directory) => listFiles(tree, `${directory}/src`),
     { concurrency: 1 }
   );
-  // `bun.lock` names each patch by path only, so the patch bytes enter here.
   const patches = yield* listFiles(tree, PATCHES_DIRECTORY);
   return A.sort(
     A.dedupe([...modules, ...manifests, ...tsconfigs, ...A.flatten(opaque), ...patches, ...CI_BINARY_BUILD_INPUTS]),
@@ -236,6 +206,17 @@ const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, worksp
  *
  * The tree is read, never executed, so tests compute the closure of the live
  * checkout with individual files overlaid and compare digests.
+ *
+ * The listing starts with the schema version `beep-ci-binary-closure/v1`. Its files are the modules
+ * the import graph reaches from `src/bin-ci.ts` (the entry `beep ci compile-binary` bundles), their
+ * workspace manifests, and every source file of a workspace holding a non-literal dynamic import.
+ * It adds every tsconfig reachable through a relative `extends` from the root `tsconfig.json`,
+ * whose `@beep/*` paths Bun resolves before `node_modules`, and from each reached workspace's own.
+ * A package-specifier `extends` resolves into `node_modules`, which `bun.lock` pins, and a
+ * workspace without a tsconfig adds nothing. It also adds the `patches` files, because `bun.lock`
+ * names a patch by path only. Finally it adds the build inputs outside the import graph: `bun.lock`
+ * and `.bun-version`, which fix every external package and the compiler, `bunfig.toml`, the compile
+ * recipe and the workflow that publishes the binary.
  *
  * **Example** (Prepare a closure computation)
  *

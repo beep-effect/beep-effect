@@ -344,8 +344,10 @@ describe("ThreadStore in-memory", () => {
 
         const threads = yield* store.listThreads(workspaceId);
         expect(A.map(threads, (thread) => thread.title)).toEqual(["Draft fee memo"]);
-        // The rename advanced the row version; the no-op replacement did not.
-        expect(A.map(threads, (current) => current.rowVersion)).toEqual([nextRowVersion(thread.rowVersion)]);
+        expect(
+          A.map(threads, (current) => current.rowVersion),
+          "the rename advanced the row version; the no-op replacement did not"
+        ).toEqual([nextRowVersion(thread.rowVersion)]);
       })
     );
   });
@@ -447,11 +449,6 @@ describe("ThreadStore in-memory", () => {
     );
   });
 
-  // Audit stamps were filled with the row's entity id, so thread 1 was created
-  // at 1970-01-01T00:00:00.001Z and the sidebar showed every conversation as
-  // "Dec 31" (1969, in any negative UTC offset). The clock is the only source of
-  // a timestamp: under the test clock every stamp must be *exactly* the current
-  // time, which the old id-derived stamps never were.
   it.layer(Layer.fresh(CuidTestLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
       "stamps rows from the clock, and a rename advances updatedAt without restamping createdAt",
@@ -461,7 +458,10 @@ describe("ThreadStore in-memory", () => {
         const createdTime = yield* Clock.currentTimeMillis;
 
         const thread = yield* store.createThread(CreateThreadInput.make({ title: "New thread", workspaceId }));
-        expect(DateTime.toEpochMillis(thread.createdAt)).toBe(createdTime);
+        expect(
+          DateTime.toEpochMillis(thread.createdAt),
+          "the clock is the only source of a stamp, so it is exactly the test clock's time"
+        ).toBe(createdTime);
         expect(DateTime.toEpochMillis(thread.updatedAt)).toBe(createdTime);
 
         const clock = yield* Clock.Clock;

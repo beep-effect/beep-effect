@@ -75,9 +75,6 @@ const parsePositiveInteger = (raw: string): O.Option<number> => {
   return Number.isInteger(parsed) && parsed > 0 ? O.some(parsed) : O.none();
 };
 
-// Effect's default ConfigProvider snapshots the environment at process
-// boot — exactly the lane semantics (CI exports BEEP_FC_NUM_RUNS before
-// vitest starts). Runtime mutation is deliberately NOT observed.
 const fcNumRunsConfig = Config.option(Config.String("BEEP_FC_NUM_RUNS"));
 
 const fcSeedConfig = Config.option(Config.String("BEEP_FC_SEED"));
@@ -154,6 +151,12 @@ export const envFcSeed = (): O.Option<number> => pipe(Effect.runSync(fcSeedConfi
  *
  * Returns 0 when the variable is unset or not a positive integer, so it
  * can be used directly as the environment side of a `max()`.
+ *
+ * **Gotchas**
+ *
+ * The floor is read through Effect's default ConfigProvider, which snapshots the
+ * environment once; a later change to `BEEP_FC_NUM_RUNS` in the same process is
+ * not observed. The lanes export the floor before vitest starts.
  *
  * **Example** (Read environment floor value)
  *

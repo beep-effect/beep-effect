@@ -156,7 +156,6 @@ const pValueOf = (exceed: number, relabelings: number): number => roundScore((1 
 
 type NextDouble = () => number;
 
-// Fisher-Yates over the whole buffer, one draw per position from the top down.
 const shuffleInPlace = (buffer: Float64Array, nextDouble: NextDouble): void => {
   for (let i = buffer.length - 1; i >= 1; i--) {
     const j = Math.min(i, Math.floor(nextDouble() * (i + 1)));
@@ -172,7 +171,6 @@ const sumRange = (buffer: Float64Array, from: number, to: number): number => {
   return sum;
 };
 
-// Mean of the first `sizeC` entries minus the mean of the rest.
 const splitDifference = (buffer: Float64Array, sizeC: number): number =>
   sumRange(buffer, 0, sizeC) / sizeC - sumRange(buffer, sizeC, buffer.length) / (buffer.length - sizeC);
 
@@ -180,11 +178,10 @@ type RelabelingPlan = {
   readonly pooled: ReadonlyArray<Float64Array>;
   readonly buffers: ReadonlyArray<Float64Array>;
   readonly sizesC: ReadonlyArray<number>;
-  readonly familyOf: ReadonlyArray<number>;
+  readonly familyRank: ReadonlyArray<number>;
   readonly familySums: Float64Array;
 };
 
-// One relabeling of every task in input order; fills `familySums`, returns the overall sum.
 const drawRelabeling = (plan: RelabelingPlan, nextDouble: NextDouble): number => {
   plan.familySums.fill(0);
   let overallSum = 0;
@@ -194,7 +191,7 @@ const drawRelabeling = (plan: RelabelingPlan, nextDouble: NextDouble): number =>
     shuffleInPlace(buffer, nextDouble);
     const difference = splitDifference(buffer, plan.sizesC[t]!);
     overallSum += difference;
-    plan.familySums[plan.familyOf[t]!]! += difference;
+    plan.familySums[plan.familyRank[t]!]! += difference;
   }
   return overallSum;
 };
@@ -252,12 +249,10 @@ export const skillLanePermutationTest: {
 } = dual(
   2,
   Effect.fnUntraced(function* (tasks: ReadonlyArray<SkillLaneTaskValues>, relabelings: number) {
-    // No tasks: the statistic is undefined, so nothing is drawn and nothing is detected.
     if (!A.isReadonlyArrayNonEmpty(tasks)) return SkillLanePermutationResult.make({ pValue: 1, familyPValues: {} });
     const random = yield* Random.Random;
     const families = A.sort(A.dedupe(A.map(tasks, (task) => task.family)), Order.String);
-    // A family's index is its rank among the sorted distinct families.
-    const familyOf = A.map(tasks, (task) => A.length(A.filter(families, (family) => family < task.family)));
+    const familyRank = A.map(tasks, (task) => A.length(A.filter(families, (family) => family < task.family)));
     const familySizes = A.map(families, (family) => A.length(A.filter(tasks, (task) => task.family === family)));
     const observed = A.map(tasks, taskDifference);
     const observedOverall = Math.abs(roundScore(sampleMean(observed)));
@@ -279,7 +274,7 @@ export const skillLanePermutationTest: {
       pooled,
       buffers: A.map(pooled, (values) => new Float64Array(values.length)),
       sizesC: A.map(tasks, (task) => A.length(task.valuesC)),
-      familyOf,
+      familyRank,
       familySums,
     };
     const nextDouble: NextDouble = () => random.nextDoubleUnsafe();

@@ -1,5 +1,4 @@
-// Synthetic Vitest reported-task objects, retargeted from the helpers of
-// upstream packages/sdk/__test__/build-report.test.ts (vitest-agent 1cf1ab94).
+// Ported from vitest-agent packages/sdk/__test__/build-report.test.ts at 1cf1ab94 (MIT).
 import * as A from "effect/Array";
 import type {
   VitestError,

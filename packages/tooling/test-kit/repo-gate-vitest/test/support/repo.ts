@@ -1,5 +1,3 @@
-// A throwaway repository on disk: a root marked by `turbo.json` and one
-// package directory with a manifest, for the tests that write real records.
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";

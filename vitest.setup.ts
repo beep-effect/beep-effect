@@ -1,10 +1,6 @@
 // Bun-API shim for Node-based Vitest runs, including the canonical coverage lane.
-// Explicit Bun coverage runs use Istanbul instrumentation; Node uses V8.
 // The per-file regression baseline requires Node/V8, so production coverage commands
 // retain that runtime until a compatible baseline migration is validated.
-// Tests calling Bun APIs still execute under Node through this shim. The guard
-// leaves real Bun untouched and only installs when the probed surface is absent.
-//
 // This file is typechecked by the root tsconfig.configs.json project
 // (repo-sanity:config-typecheck). It is a Node polyfill of Bun's
 // Promise-based API surface, so the Effect diagnostics below cannot hold here
@@ -55,8 +51,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 // reading Node's getter yields `undefined` and emits an ExperimentalWarning.
 // Replace that distinct non-enumerable Node descriptor with an isolated
 // in-memory Web Storage before any browser-facing module evaluates.
-// The configs typecheck unit has no DOM lib, so the Web Storage surface the shim
-// installs is declared locally instead of referencing lib.dom.
 interface WebStorageShim {
   clear(): void;
   getItem(key: string): string | null;
@@ -96,23 +90,18 @@ if (
 
 addEqualityTesters();
 
-// Property-test run floors flow through @beep/fc-runs (BEEP_FC_NUM_RUNS) into per-test
-// `{ arbitrary: ... }` options. A pinned seed (see `propertySeedEnvironment` in vitest.shared.ts) is
-// also the default of every check and sample, so a property that passes no options repeats too; an
-// explicit seed still wins. The few suites that draw from fast-check itself pass their own seed.
 // Never read config here through the default ConfigProvider: this file runs in every test worker,
 // the default provider is built once from the environment at its first use, and a test that stubs a
 // variable afterwards (vi.stubEnv) would read the old environment. Keep the provider of its own.
-// The seed is parsed as vitest.shared.ts and @beep/fc-runs parse it, so a seed accepted there is used here.
-const propertySeed = Config.String("BEEP_FC_SEED").pipe(
+const seedForPropertiesWithoutOptions = Config.String("BEEP_FC_SEED").pipe(
   Config.option,
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()),
   Effect.runSync,
   O.getOrUndefined,
   parseFcSeed
 );
-if (O.isSome(propertySeed)) {
-  const seed = propertySeed.value;
+if (O.isSome(seedForPropertiesWithoutOptions)) {
+  const seed = seedForPropertiesWithoutOptions.value;
   Arbitrary.configureGlobal({ check: { seed }, sample: { seed } });
 }
 
@@ -383,12 +372,9 @@ const writeResponse = async (nodeResponse: NodeHttp.ServerResponse, response: Re
 const shimPortFloor = 20_000;
 const shimPortCount = 12_000;
 const shimPortLockDirectory = NodePath.join(NodeOS.tmpdir(), "beep-vitest-bun-serve-ports");
-const ownedShimPorts = MutableHashSet.empty<number>();
-// Setup runs again for each file in shared workers. The process owns one cleanup listener and
-// every evaluation publishes its absolute lock paths into the same registry. Keep ownedShimPorts
-// local so stopping a server can only release a reservation acquired by its own shim instance.
+const evaluationShimPorts = MutableHashSet.empty<number>();
 const shimPortCleanupKey = Symbol.for("@beep/vitest/BunServePortCleanup");
-const shimPortCleanup = (() => {
+const processShimPortLockPaths = (() => {
   const existing: unknown = Reflect.get(process, shimPortCleanupKey);
   if (MutableHashSet.isMutableHashSet<string>(existing)) return existing;
   const locks = MutableHashSet.empty<string>();
@@ -416,9 +402,7 @@ const isLiveProcess = (pid: number): boolean => {
   }
 };
 
-// The pid is written to a private staging file first and hard-linked into place, so a lock never
-// exists without its owner's pid and the link fails if the lock already exists.
-const createShimPortLock = (port: number): boolean => {
+const linkPidFileAsShimPortLock = (port: number): boolean => {
   const staging = NodePath.join(shimPortLockDirectory, `${port}.${process.pid}.${Math.random()}.tmp`);
   NodeFS.writeFileSync(staging, `${process.pid}`);
   try {
@@ -455,21 +439,21 @@ const reclaimAbandonedShimPort = (port: number, intent: string): boolean => {
   try {
     current = NodeFS.statSync(canonical);
   } catch (cause) {
-    if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
+    if (errnoCode(cause) === "ENOENT") return linkPidFileAsShimPortLock(port);
     throw cause;
   }
   if (current.dev !== inspected.dev || current.ino !== inspected.ino || current.nlink !== 2) return false;
   NodeFS.rmSync(canonical, { force: true });
-  return createShimPortLock(port);
+  return linkPidFileAsShimPortLock(port);
 };
 
 const lockShimPort = (port: number): boolean => {
-  if (createShimPortLock(port)) return true;
+  if (linkPidFileAsShimPortLock(port)) return true;
   const intent = NodePath.join(shimPortLockDirectory, `${port}.${process.pid}.${NodeCrypto.randomUUID()}.reap`);
   try {
     NodeFS.linkSync(shimPortLockPath(port), intent);
   } catch (cause) {
-    if (errnoCode(cause) === "ENOENT") return createShimPortLock(port);
+    if (errnoCode(cause) === "ENOENT") return linkPidFileAsShimPortLock(port);
     throw cause;
   }
   try {
@@ -479,12 +463,6 @@ const lockShimPort = (port: number): boolean => {
   }
 };
 
-// The lock files only exclude other shim processes. A long-lived listener outside the test run
-// (an IDE helper, a browser runtime, a dev server) can hold a port in the shim range too; the
-// async bind then fails with EADDRINUSE after `serve` returned and the caller's requests reach
-// that process instead. Linux lists every listening TCP socket in /proc/net/tcp{,6} (state 0A),
-// so those ports are skipped before a lock is taken. Elsewhere the files are absent and the
-// set stays empty.
 const shimProcNetTcpTables = ["/proc/net/tcp", "/proc/net/tcp6"] as const;
 const shimTcpListenState = "0A";
 
@@ -496,8 +474,6 @@ const readProcNetTcpRows = (table: string): ReadonlyArray<string> => {
   }
 };
 
-// A row reads `sl local_address rem_address st ...`; local_address is HEXADDR:HEXPORT for both
-// IPv4 and IPv6 rows.
 const listeningPortOfRow = (row: string): O.Option<number> => {
   const fields = A.filter(Str.split(/\s+/)(Str.trim(row)), Str.isNonEmpty);
   const localAddress = fields[1];
@@ -515,15 +491,15 @@ const listeningTcpPorts = (): MutableHashSet.MutableHashSet<number> =>
 
 const claimShimPort = (): number => {
   NodeFS.mkdirSync(shimPortLockDirectory, { recursive: true });
-  const occupied = listeningTcpPorts();
+  const portsHeldOutsideShimLocks = listeningTcpPorts();
   for (let attempt = 0; attempt < shimPortCount; attempt++) {
     const offset = (nextShimPortOffset + attempt) % shimPortCount;
     const port = shimPortFloor + offset;
-    if (MutableHashSet.has(occupied, port)) continue;
+    if (MutableHashSet.has(portsHeldOutsideShimLocks, port)) continue;
     if (lockShimPort(port)) {
       nextShimPortOffset = (offset + 1) % shimPortCount;
-      MutableHashSet.add(ownedShimPorts, port);
-      MutableHashSet.add(shimPortCleanup, shimPortLockPath(port));
+      MutableHashSet.add(evaluationShimPorts, port);
+      MutableHashSet.add(processShimPortLockPaths, shimPortLockPath(port));
       return port;
     }
   }
@@ -533,9 +509,9 @@ const claimShimPort = (): number => {
 };
 
 const releaseShimPort = (port: number): void => {
-  if (!MutableHashSet.has(ownedShimPorts, port)) return;
-  MutableHashSet.remove(ownedShimPorts, port);
-  MutableHashSet.remove(shimPortCleanup, shimPortLockPath(port));
+  if (!MutableHashSet.has(evaluationShimPorts, port)) return;
+  MutableHashSet.remove(evaluationShimPorts, port);
+  MutableHashSet.remove(processShimPortLockPaths, shimPortLockPath(port));
   NodeFS.rmSync(shimPortLockPath(port), { force: true });
 };
 
@@ -599,7 +575,6 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
   let handler = options.fetch;
   let stopped: Promise<void> | undefined;
   const hostname = options.hostname ?? "0.0.0.0";
-  // Unix listeners must not reserve or bind an unrelated TCP port.
   const port = options.unix === undefined ? listenPort(options.port) : undefined;
   let bindError: Error | undefined;
   let bindFailed = false;
@@ -686,7 +661,6 @@ const scanRootForGlobPattern = (pattern: string): string => {
 const isMissingPathError = (cause: unknown): boolean =>
   P.isError(cause) && P.hasProperty(cause, "code") && cause.code === "ENOENT";
 
-// Bun.CryptoHasher over node:crypto: a plain hash, or an HMAC when a key is given.
 class CryptoHasherShim {
   private readonly hasher: ReturnType<typeof NodeCrypto.createHash> | ReturnType<typeof NodeCrypto.createHmac>;
 
@@ -711,8 +685,6 @@ class CryptoHasherShim {
 // leading `#` as a literal, not a comment; it negates a leading `!` as minimatch does.
 const globShimOptions = GlobPatternOptions.make({ dot: true, nocomment: true });
 
-// Bun.Glob over `@beep/glob`: the matcher is the kit's `GlobPattern`; the walker keeps Bun's
-// scanSync semantics for Node runs of Bun-targeted suites (effected-promotion W4-p).
 class GlobShim {
   private readonly matcher: GlobPattern;
 
@@ -734,7 +706,6 @@ class GlobShim {
     const patternDepth = Str.split("/")(normalizedPattern).length;
     const recursivePattern = Str.includes("**")(normalizedPattern);
     const scanRoot = scanRootForGlobPattern(normalizedPattern);
-    // Bun.Glob.scanSync defaults `onlyFiles` to true: directories are listed only on request.
     const includeDirectories = options?.onlyFiles === false;
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
@@ -824,7 +795,6 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
       html: renderMarkdownHtml,
     },
     serve,
-    // Shim-only: tests of the shim find its port reservations here; real Bun has no such property.
     shimPortLockDirectory,
     sleep: (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
     spawn,
@@ -835,8 +805,6 @@ if (!isBunTestShim(Reflect.get(globalThis, "Bun"))) {
   } satisfies BunTestShim);
 }
 
-// Bun exposes the native constant-time comparator on its global Crypto API.
-// Node coverage runs use the same native primitive through this platform shim.
 if (!hasFunctionProperty(globalThis.crypto, "timingSafeEqual")) {
   Reflect.set(globalThis.crypto, "timingSafeEqual", NodeCrypto.timingSafeEqual);
 }

@@ -25,8 +25,6 @@ import type { Reporter } from "vitest/node";
 import type { GateVitestRun } from "./internal/GateVitestRun.ts";
 import type { VitestConsoleLog, VitestError, VitestModule } from "./internal/VitestShapes.ts";
 
-// The parts of the Vitest instance the reporter reads: its root (the package
-// directory) and its logger, where a stray-output capture may be published.
 type VitestInstance = { readonly config: { readonly root: string }; readonly logger: unknown };
 
 const PREFIX = "[@beep/repo-gate-vitest]";
@@ -39,11 +37,8 @@ const switchedOff = (error: unknown): undefined => {
   return undefined;
 };
 
-// A started reporter: the session for its Vitest instance and the instance's logger.
 type Started = { readonly run: GateVitestRun; readonly logger: unknown };
 
-// Start the session once the implementation has loaded. The instance is read only then, so a
-// getter that throws switches the reporter off like a failed import.
 const startRun =
   (vitest: VitestInstance, argv: ReadonlyArray<string>) =>
   (module: typeof import("./internal/GateVitestRun.ts")): Started => ({
@@ -72,6 +67,12 @@ export default class GateVitestReporter implements Reporter {
 
   /**
    * Load the implementation for this Vitest instance.
+   *
+   * **Details**
+   *
+   * The reporter reads the instance's root and its logger, where a stray-output capture may be
+   * published. It reads them only once the implementation has loaded, so a getter that throws
+   * switches the reporter off like a failed import.
    *
    * **Example** (Construct the reporter)
    *

@@ -871,8 +871,6 @@ const fingerprint = Effect.fn("CacheQualification.fingerprint")(function* (root:
   return yield* fingerprintCacheComputation(key, collectCacheCensus3, collectCacheToolchain7);
 });
 
-// The directory is a cross-process mutex. Never steal a stale or live lock;
-// interrupted writes leave the prior atomic ledger intact and require inspection.
 const withWriter = Effect.fn("CacheQualification.withWriter")(function* <A, E, R>(
   root: string,
   body: Effect.Effect<A, E, R>
@@ -1000,8 +998,6 @@ const validateTransitionContract = Effect.fn("CacheQualification.validateTransit
   }
   if (status.state !== "candidate") yield* validatePriorContract(status.contract, prior);
   if (status.state === "shadow") {
-    // Shadow preserves fresh execution authority. Bytes are retained as observations;
-    // they are not interpreted as passing qualification evidence here.
     yield* Effect.forEach(status.receipts, (reference) => verifyReference(root, reference), {
       concurrency: 1,
       discard: true,
@@ -1083,8 +1079,6 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
           request.entry
         ),
       });
-      // Suspension/exclusion must remain available even while the live graph is
-      // broken. Candidate/shadow/qualified adoption must match the current executable graph.
       yield* validateAdoption(root, request, baseline, next);
       const encoded = yield* StoreJson.encode(next);
       yield* verifyQualifiedEvidence(root, request.entry);
@@ -1096,6 +1090,18 @@ const transition = Effect.fn("CacheQualification.transition")(function* (
 
 /**
  * Cache-owned operations; consumers cannot write the qualification ledger directly.
+ *
+ * **Details**
+ *
+ * `baseline` and `transition` take a cross-process directory lock and never steal a stale
+ * or live one; an interrupted write leaves the prior atomic ledger intact for inspection.
+ * Suspension and exclusion stay available while the live graph is broken; candidate,
+ * shadow and qualified adoption must match the current executable graph. A shadow keeps
+ * fresh execution authority, and its retained bytes are observations, never passing
+ * qualification evidence. `remoteReads` decodes its request before it creates even a
+ * missing `.env`, never echoes input values, inspects every owned key before any write,
+ * accepts dotenv whitespace and `export` syntax, and refuses symlinks and paths outside
+ * the checkout.
  *
  * @category services
  * @since 0.0.0
@@ -1159,7 +1165,6 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
         const path = yield* Path.Path;
         const root = path.resolve(checkout);
         const fs = yield* FileSystem.FileSystem;
-        // Decode before creating even a missing .env; diagnostics never contain input values.
         const input = yield* S.decodeEffect(CacheRemoteReadsRequest)(request).pipe(
           Effect.mapError(() =>
             CacheCommandError.new(
@@ -1180,7 +1185,6 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
           TURBO_TEAM: input.team,
           TURBO_CACHE: "local:rw,remote:r",
         };
-        // Inspect every owned key before any write. Accept normal dotenv whitespace/export syntax.
         yield* Effect.forEach(
           TurboCacheEnvName.literals,
           Effect.fnUntraced(function* (name) {
@@ -1229,7 +1233,6 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
             yield* fs.writeFileString(backup, original);
             reports = A.append(reports, `backup: ${path.relative(root, backup)}`);
           }
-          // The guarded writer refuses symlinks and paths outside this checkout.
           yield* writeContainedFileString(root, envFile, next);
           yield* fs.chmod(envFile, 0o600);
         }

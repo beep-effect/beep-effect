@@ -50,15 +50,6 @@ const SYSTEM_PRINCIPAL = SystemPrincipal.make({ component: "Runtime", kind: "Sys
 const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
   PosInt.make(A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1);
 
-/**
- * Audit timestamps as decoded UTC instants.
- *
- * These used to be filled with the row's *entity id* — so thread 1 was stamped
- * `1970-01-01T00:00:00.001Z` and the sidebar rendered every conversation as
- * "Dec 31" (1969, in any negative UTC offset). Callers read a real clock and
- * pass it in; an update carries the row's original `createdAt` forward rather
- * than restamping it.
- */
 type EntityTimestamps = {
   readonly createdAt: DateTime.Utc;
   readonly updatedAt: DateTime.Utc;
@@ -203,6 +194,11 @@ const projectTimeline = (
 /**
  * Build the in-memory ThreadStore used by the fast workspace proof.
  *
+ * **Details**
+ *
+ * Every audit stamp is read from the Clock. Renaming a thread keeps its
+ * creation stamp and advances its row version.
+ *
  * **Example** (Create thread in memory)
  *
  * ```ts
@@ -277,7 +273,6 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
         if (current.value.title !== input.emptyTitle) {
           return ["unchanged", state] as const;
         }
-        // Renaming a thread keeps its creation stamp and advances its row version.
         const thread = Thread.make({
           ...current.value,
           rowVersion: nextRowVersion(current.value.rowVersion),
@@ -375,6 +370,20 @@ const messageTable = DbSchema.message;
 /**
  * Build a Drizzle-backed ThreadStore used by live persistence tests.
  *
+ * **Details**
+ *
+ * Every audit stamp is read from the Clock. An update keeps the row's
+ * `createdAt` and advances `updatedAt`; a rename also advances the row
+ * version. An appended turn's insert and its same-transaction reconciliation
+ * commit as the turn's first version, since no other writer has seen the row.
+ *
+ * **Gotchas**
+ *
+ * Writes are serialized within one store. Row ids are allocated as
+ * `max(existing) + 1` inside the write, so two writes in flight (two windows on
+ * one thread, a retried request) would claim the same id and one would be lost.
+ * The store assumes it is the only writer to these tables.
+ *
  * **Example** (Build Drizzle ThreadStore effect)
  *
  * ```ts
@@ -398,12 +407,6 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
   const db = yield* PostgresDrizzle;
   const publicIds = yield* makePublicIdGenerators();
 
-  // Row ids are allocated as `max(existing) + 1`, read inside the write. Two
-  // writes in flight — two windows on the same thread, a retried request —
-  // therefore read the same maximum and claim the same id, and one of them loses
-  // (the send simply never appeared, with nothing to explain why). Serializing
-  // the writes makes the read-then-allocate atomic; the sidecar is the only
-  // writer, so this is the whole race.
   const writeSemaphore = Semaphore.makeUnsafe(1);
 
   return ThreadStoreServer.Thread.ThreadStore.of({
@@ -553,15 +556,11 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
                   messageId: persistedMessage.id,
                 }),
                 persistedTurn.publicId,
-                // The row already exists; keep its creation stamp and only advance
-                // the update stamp.
                 { createdAt: persistedTurn.createdAt, updatedAt: DateTime.makeUnsafe(now) }
               );
               const reconciledInsert = yield* Effect.fromResult(toTurnInsert(reconciledTurn));
               const reconciledRows = yield* tx
                 .update(turnTable)
-                // This transaction inserted the row, so no other writer has seen
-                // it: insert plus reconciliation commit as its first version.
                 .set({ items: reconciledInsert.items })
                 .where(eq(turnTable.id, persistedTurn.id))
                 .returning();

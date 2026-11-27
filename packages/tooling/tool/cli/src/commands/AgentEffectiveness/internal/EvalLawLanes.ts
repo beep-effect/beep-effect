@@ -137,15 +137,6 @@ const laneOutcome = (
     }),
   });
 
-/**
- * Append the zero-files diagnostic for a lane expected to measure every staged
- * file (Biome, or any lane whose tool did not run).
- *
- * @param lane - The law lane being reported.
- * @param filesProcessed - How many staged files the lane measured.
- * @param environmentDiagnostics - Diagnostics collected for the lane so far.
- * @returns The diagnostics, plus the zero-files diagnostic when nothing was processed.
- */
 const requireProcessedFiles = (
   lane: AgentEffectivenessEvalLawLane,
   filesProcessed: number,
@@ -153,17 +144,6 @@ const requireProcessedFiles = (
 ): ReadonlyArray<string> =>
   filesProcessed === 0 ? A.append(environmentDiagnostics, `${lane} processed no files.`) : environmentDiagnostics;
 
-/**
- * Append the zero-staged diagnostic for a lane that ran but legitimately scans
- * only a subset of the staged files (schema-first, tsgo). Measuring none of a
- * non-empty staged set is the agent's doing and scores as `unmeasured-file`
- * violations; only an empty staged set is an environment failure.
- *
- * @param lane - The law lane being reported.
- * @param sourceFiles - The staged source files the lane was asked to measure.
- * @param environmentDiagnostics - Diagnostics collected for the lane so far.
- * @returns The diagnostics, plus the zero-staged diagnostic when nothing was staged.
- */
 const requireStagedFiles = (
   lane: AgentEffectivenessEvalLawLane,
   sourceFiles: ReadonlyArray<string>,
@@ -183,16 +163,6 @@ const unmeasuredFileViolation = (
 ): AgentEffectivenessEvalViolation =>
   AgentEffectivenessEvalViolation.make({ source: lane, ruleId: UNMEASURED_FILE_RULE_ID, file, line: 1, message });
 
-/**
- * One violation per staged source file a lane did not measure, so moving code
- * where a lane cannot see it never reads as a clean pass.
- *
- * @param lane - Lane that skipped the files.
- * @param sourceFiles - Every staged fixture source file.
- * @param measuredFiles - Staged files the lane actually measured.
- * @param reason - Why the lane skipped them.
- * @returns Violations for the staged files missing from `measuredFiles`.
- */
 const unmeasuredFileViolations = (
   lane: AgentEffectivenessEvalLawLane,
   sourceFiles: ReadonlyArray<string>,
@@ -299,8 +269,6 @@ const tsgoCompilerConfig = (repoRoot: string, sourceFiles: ReadonlyArray<string>
     declaration: false,
     declarationMap: false,
     sourceMap: false,
-    // Covers node_modules only in effect: every staged declaration file is an
-    // unmeasured tsgo file (see measureTsgo), never a silent pass.
     skipLibCheck: true,
     rootDir: `./${LAW_SANDBOX_FIXTURE_DIR}`,
     target: "ES2025",
@@ -316,15 +284,6 @@ const tsgoCompilerConfig = (repoRoot: string, sourceFiles: ReadonlyArray<string>
   ),
 });
 
-/**
- * Stage a fixture's source files in a scorer-owned sandbox.
- *
- * Only the fixture's source files (TypeScript, JavaScript, and declaration
- * files) are copied, so fixture-local tool configuration (`tsconfig.json`,
- * `biome.json`, `package.json`) never reaches a lane. The sandbox links the repository's `node_modules` so package imports
- * resolve wherever the fixture copy lives, and carries the schema-first
- * wrapper `tsconfig.json` plus the scorer's own tsgo configuration.
- */
 const prepareLawSandbox = Effect.fn("AgentEffectivenessEvalScorer.prepareLawSandbox")(function* (
   fixtureDir: string,
   repoRoot: string,
@@ -568,8 +527,6 @@ const evaluateTsgo = Effect.fn("AgentEffectivenessEvalScorer.evaluateTsgo")(func
 > {
   const path = yield* Path.Path;
   const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
-  // tsgo rejects an empty `files` list (TS18002), so with nothing to type-check
-  // the lane is measured without spawning it: every staged file is unmeasured.
   if (!A.some(sourceFiles, isTypeCheckedFile)) {
     return laneOutcome(
       "tsgo",
@@ -721,19 +678,6 @@ const withAbsoluteOverridePlugins =
       })
     );
 
-/**
- * Derive the sandbox Biome configuration from the repository's.
- *
- * The repository rules, formatter, and assists carry over unchanged. Plugin
- * paths become absolute (Biome resolves them against the config directory),
- * VCS integration is off (the sandbox is not a checkout), `files.includes`
- * names only the staged fixture directory, and `files.maxSize` is raised so no
- * staged file is skipped for its size.
- *
- * @param repoConfig - Parsed repository Biome configuration.
- * @param resolvePlugin - Resolves a repository-relative plugin path to an absolute path.
- * @returns Biome configuration for the law-lane sandbox.
- */
 const sandboxBiomeConfig = (repoConfig: S.JsonObject, resolvePlugin: (plugin: string) => string): S.JsonObject => ({
   ...pipe(repoConfig, withAbsolutePlugins(resolvePlugin), withAbsoluteOverridePlugins(resolvePlugin)),
   root: true,
@@ -800,9 +744,9 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * `node_modules`, then runs every lane under configuration it owns: tsgo under
  * a generated config extending the repository `tsconfig.base.json` with
  * explicit libs, node types, and NodeNext resolution; Biome under the
- * repository rules with plugin paths made absolute and the file set pinned to
- * the staged sources. Fixture-local `tsconfig.json` or Biome configuration
- * therefore cannot change a lane result, and a fixture copied anywhere scores
+ * repository rules with plugin paths made absolute, VCS integration off, and
+ * the file set pinned to the staged sources with no size limit skipping one.
+ * Fixture-local `tsconfig.json` or Biome configuration therefore cannot change a lane result, and a fixture copied anywhere scores
  * the same.
  *
  * A diagnostic located in a staged source file is a law violation. Anything
@@ -818,7 +762,8 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
  * `filesProcessed` counts only what the lane measured. A schema-first or tsgo
  * lane that ran but could reach none of the staged files is still measured:
  * the agent put the code out of reach, so it scores as violations rather than
- * stopping the run. tsgo is not spawned when nothing is type-checkable.
+ * stopping the run. tsgo is not spawned when nothing is type-checkable, since it rejects an
+ * empty `files` list (TS18002).
  *
  * Schema-first and Biome run concurrently, followed by tsgo.
  *
