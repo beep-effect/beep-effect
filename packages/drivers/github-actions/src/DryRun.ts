@@ -52,7 +52,6 @@ export interface DryRunShape {
   readonly isDryRun: Effect.Effect<boolean>;
 }
 
-/** The input a workflow author sets to rehearse a run. */
 const DEFAULT_INPUT = "dry-run";
 
 const make = (enabled: boolean): DryRunShape => ({

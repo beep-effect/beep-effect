@@ -256,9 +256,6 @@ export const compileAndExpand: {
 } = dual(
   2,
   Effect.fn("Walker.compileAndExpand")(function* (pattern: string, options: CompileAndExpandOptions.Encoded) {
-    // compileResult is the pure primitive; there is no reason to cross an Effect
-    // boundary twice just to reach it. Annotating the opaque `glob` field rebuilds
-    // its struct, so the brand is restored here with `make`.
     return yield* Effect.fromResult(GlobPattern.compileResult(pattern, GlobPatternOptions.make(options.glob))).pipe(
       Effect.flatMap((compiled) => descend(compiled, options)),
       Effect.mapError((cause) => GlobExpansionError.make({ pattern, cause }))

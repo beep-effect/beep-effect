@@ -56,8 +56,7 @@ type Attributes = (fqn: string, news: News) => Readonly<Record<string, unknown>>
 const slug = Str.replaceAll("/", "-");
 const arn = (service: string, fqn: string) => `arn:aws:${service}:us-east-1:832907639880:${slug(fqn)}`;
 
-// aws-extras exports its resource through a narrowed call surface; Provider.succeed needs the class.
-const launchTemplateClass = RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
+const launchTemplateAsProviderClass = RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
 
 const table: ReadonlyArray<readonly [ResourceClass<never>, string, Attributes]> = [
   [AWS.EC2.Vpc as never, "EC2.Vpc", (fqn) => ({ vpcId: `vpc-${slug(fqn)}` })],
@@ -74,7 +73,6 @@ const table: ReadonlyArray<readonly [ResourceClass<never>, string, Attributes]> 
     "Logs.LogGroup",
     (fqn, news) => ({ logGroupName: news.logGroupName, logGroupArn: arn("logs", `log-group/${fqn}`) }),
   ],
-  // Pinned names come back as declared, like the real providers; generated ones derive from the FQN.
   [
     AWS.IAM.Role as never,
     "IAM.Role",
@@ -122,15 +120,13 @@ const table: ReadonlyArray<readonly [ResourceClass<never>, string, Attributes]> 
   [AWS.Lambda.Permission as never, "Lambda.Permission", (fqn) => ({ statementId: slug(fqn) })],
   [AWS.EventBridge.Rule as never, "EventBridge.Rule", (fqn) => ({ ruleArn: arn("events", `rule/${fqn}`) })],
   [
-    launchTemplateClass as never,
+    launchTemplateAsProviderClass as never,
     "RunnerLaunchTemplate",
     (fqn) => ({ launchTemplateId: `lt-${slug(fqn)}`, defaultVersionNumber: 1, latestVersionNumber: 1 }),
   ],
 ];
 
-// The real provider reads the VPC's AWS-made default group before the stack has a state row for it, and Alchemy
-// adopts what it reads; with `adoptDefaultGroup` the fake does the same (cutover step 1b, after step 1a).
-const awsMadeDefaultGroup = {
+const readsAwsMadeDefaultGroup = {
   read: Effect.fn("Fake.readDefaultGroup")(function* (input: { readonly olds?: News }) {
     const vpcId = input.olds?.vpcId;
     return P.isString(vpcId) ? { vpcId, groupId: `sg-default-${vpcId}`, ingress: [], egress: [] } : undefined;
@@ -143,7 +139,7 @@ const fakeProvider = (
   adoptDefaultGroup: boolean
 ) =>
   Provider.succeed(resource, {
-    ...(adoptDefaultGroup && type === "EC2.DefaultSecurityGroup" ? awsMadeDefaultGroup : {}),
+    ...(adoptDefaultGroup && type === "EC2.DefaultSecurityGroup" ? readsAwsMadeDefaultGroup : {}),
     reconcile: Effect.fn("Fake.reconcile")(function* (input: {
       readonly fqn: string;
       readonly news: News;
@@ -166,8 +162,7 @@ const fakeProvider = (
 
 const unused = (operation: string) => () => Effect.die(`unexpected ${operation} in the stack tests`);
 
-// The sweep finds no runner and no token, so it only lists; each listing is logged.
-const sweepServices = (recorder: Recorder) =>
+const listOnlySweepServices = (recorder: Recorder) =>
   Layer.mergeAll(
     Layer.succeed(
       Ec2Fleet,
@@ -225,7 +220,7 @@ const environment = (accountId: string, region: string) =>
 const providers = (recorder: Recorder, accountId: string, region: string, adoptDefaultGroup: boolean) =>
   A.reduce(
     table,
-    RunnerSweepProvider.pipe(Layer.provide(sweepServices(recorder))) as Layer.Layer<never>,
+    RunnerSweepProvider.pipe(Layer.provide(listOnlySweepServices(recorder))) as Layer.Layer<never>,
     (layer, row) => Layer.merge(layer, fakeProvider(recorder, row, adoptDefaultGroup) as Layer.Layer<never>)
   ).pipe(Layer.provideMerge(environment(accountId, region)));
 

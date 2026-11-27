@@ -12,16 +12,6 @@ import { ActionEnvironment } from "./ActionEnvironment.ts";
 import { OidcTokenIssuer } from "./OidcTokenIssuer.ts";
 import type { OidcTokenError } from "./OidcTokenIssuer.ts";
 
-/**
- * The server URL a workflow on github.com runs against.
- *
- * **Details**
- *
- * GHES runners export `GITHUB_SERVER_URL`; github.com runners do too, but a
- * program running outside a runner — or under a partial test environment —
- * legitimately sees it absent, and absence has a **correct answer** rather
- * than being an error. See {@link ActionsProvenance.capture}.
- */
 const DEFAULT_SERVER_URL = "https://github.com";
 
 /**
@@ -45,6 +35,10 @@ const DEFAULT_SERVER_URL = "https://github.com";
  * signing it and uploading the bundle stay with the consumer — that pipeline
  * is deliberately consumer glue (see the lab `sbom` module's `SigstoreSigner`
  * and `@beep/github`'s `Attestation.upload`).
+ *
+ * **Gotchas**
+ *
+ * Absent GITHUB_SERVER_URL outside a runner or in a partial test environment has the valid github.com default; GHES supplies its own server URL.
  *
  * **Example** (Capture workflow provenance and read its builder ID)
  *

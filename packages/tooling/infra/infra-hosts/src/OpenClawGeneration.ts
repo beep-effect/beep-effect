@@ -66,9 +66,7 @@ const defaultConfigRoot = "/etc/beep/openclaw";
 const defaultGatewayAuthTokenRef = "op://beep-openclaw/gateway/token";
 const defaultGatewayPort = 19_031;
 const defaultLogFilePath = "/var/lib/beep/openclaw/log/openclaw.log";
-// The staging step runs `npm install` as root, so the Node toolchain is part of the trust
-// boundary: it lives beside the resolver under the root-owned `/opt/beep/openclaw` tree rather
-// than in a user-writable per-user runtime manager directory.
+// decision: privileged-scripts-trust-no-user-writable-input
 const defaultNodeBinDir = "/opt/beep/openclaw/node/bin";
 const defaultResolverCommandPath = "/opt/beep/openclaw/op-resolver.sh";
 const defaultResolverOpBinaryPath = "/opt/beep/openclaw/bin/op";
@@ -156,11 +154,7 @@ const PosixUid = S.Int.check(PosixUidRange).pipe(
 
 const shellQuote = (value: string): string => `'${pipe(value, Str.replace(/'/gu, `'"'"'`))}'`;
 
-// Never a login shell. `-l` sources /etc/profile and the user-writable ~/.bash_profile before the
-// first rendered line runs, so an unprivileged user could define a `sudo` shell function (or
-// prepend a PATH entry) and intercept every privileged command while the operator's ticket is
-// live. `--noprofile --norc` drops the startup files and `-p` refuses functions exported through
-// the environment, which is the only other way to inject one.
+// decision: privileged-scripts-trust-no-user-writable-input
 const bashScript = (lines: ReadonlyArray<string>): string =>
   `/bin/bash --noprofile --norc -p -c ${shellQuote(A.join(lines, "\n"))}`;
 
@@ -917,9 +911,7 @@ const stagedOpenclawBinary = (generation: OpenClawGeneration): string =>
 
 const healthUrl = (generation: OpenClawGeneration): string => `http://127.0.0.1:${generation.gatewayPort}/health`;
 
-// Pinned before anything else runs: the deploying process inherits the operator's PATH, which on a
-// developer workstation routinely leads with user-writable runtime-manager directories. Scripts
-// that need the pinned Node toolchain export their own PATH after this line.
+// decision: privileged-scripts-trust-no-user-writable-input
 const trustedBasePath = "export PATH=/usr/bin:/bin";
 
 const scriptPreamble = (generation: OpenClawGeneration): ReadonlyArray<string> => [
@@ -1483,9 +1475,7 @@ export const renderOpenClawPreflightScript = ({
       ["curl", "install", "loginctl", "sha256sum", "sqlite3", "systemctl"],
       (binary) => `command -v ${binary} >/dev/null || fail ${shellQuote(`${binary} is not installed on the target`)}`
     ),
-    // `sudo` is asserted as the real setuid-root binary at its absolute path rather than by name:
-    // a name lookup is satisfied by any shim earlier on PATH, which is precisely what the
-    // privileged scripts must never call.
+    // decision: privileged-scripts-trust-no-user-writable-input
     "[ -u /usr/bin/sudo ] || fail '/usr/bin/sudo is missing or not setuid root'",
     ...A.flatMap(identityChecks(OpenClawExpectedIdentity.make(identity)), identityAssertionLines),
     `linger="$(loginctl show-user ${shellQuote(identity.username)} -p Linger --value || printf '')"`,
@@ -1520,21 +1510,7 @@ export const renderOpenClawPreflightScript = ({
     `printf 'PREFLIGHT-OK generation=${generation.generationId} machine=%s host=%s uid=%s home=%s runtime=%s linger=%s units_load=%s manager=%s\\n' "\${actual_expected_machine_id}" "\${actual_expected_hostname}" "\${actual_expected_uid}" "\${actual_expected_home}" "\${XDG_RUNTIME_DIR}" "\${linger}" "\${units_load_timestamp}" "\${manager_state}"`,
   ]);
 
-/**
- * Guard lines proving the Node toolchain the privileged staging step executes is root-owned.
- *
- * **Details**
- *
- * Staging runs `npm install` under `sudo`, so every path that decides which `npm` and `node`
- * actually execute is inside the root trust boundary. Each candidate is fully resolved with
- * `readlink -f` (which collapses every symlink component) and then walked to `/`, requiring each
- * component to be uid 0 and not group- or world-writable. `--ignore-scripts` is no defense when
- * the package manager binary itself is writable, and the pinned `npm` is commonly a wrapper that
- * execs a sibling `node`, so the directory and both binaries are proven, not just `npm`.
- *
- * @param generation - The rendered OpenClaw generation.
- * @returns The guard script lines.
- */
+// decision: privileged-scripts-trust-no-user-writable-input
 const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<string> => [
   "fail() { printf 'STAGE-FAIL: %s\\n' \"$1\" >&2; exit 73; }",
   "assert_trusted_path() {",
@@ -1545,8 +1521,6 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
   '    owner="${metadata%% *}"',
   '    mode="${metadata##* }"',
   '    [ "${owner}" = 0 ] || fail "${label} is not root-owned: ${probe}"',
-  // Both operands are written `8#` explicitly: a bare `022` is octal in bash but decimal in some
-  // other shells, and this comparison decides whether root executes an attacker-writable binary.
   '    [ "$(( 8#${mode} & 8#22 ))" -eq 0 ] || fail "${label} is group- or world-writable: ${probe}"',
   '    if [ "${probe}" = / ]; then break; fi',
   '    probe="$(/usr/bin/dirname "${probe}")"',
@@ -1921,6 +1895,9 @@ export const renderOpenClawRollbackScript = (generation: OpenClawGeneration): st
 
 const driftAuditLines = (input: OpenClawGenerationIdentityScriptInput): ReadonlyArray<string> => {
   const generation = input.generation;
+  const unitDigestReaddsFinalNewline =
+    "expected_unit_sha=\"$(printf '%s\\n' \"${expected_unit_text}\" | sha256sum | cut -d' ' -f1)\"";
+  const configModeInStatOctal = `config_mode="$(stat -c '%a' ${shellQuote(activeConfigPath(OpenClawGeneration.make(generation)))} 2>/dev/null || printf 'absent')"`;
 
   return [
     "drift_alerts=0",
@@ -1943,9 +1920,7 @@ const driftAuditLines = (input: OpenClawGenerationIdentityScriptInput): Readonly
       generation.nodeVersion
     )} ] || alert node-version ${shellQuote(generation.nodeVersion)} "\${installed_node:-absent}"`,
     `unit_sha="$(sha256sum ${shellQuote(unitPath(OpenClawGeneration.make(generation)))} 2>/dev/null | cut -d' ' -f1 || printf 'absent')"`,
-    // `$(...)` strips the trailing newline the heredoc carried, so the digest is
-    // taken over the text plus the single newline the installed unit file ends with.
-    "expected_unit_sha=\"$(printf '%s\\n' \"${expected_unit_text}\" | sha256sum | cut -d' ' -f1)\"",
+    unitDigestReaddsFinalNewline,
     '[ "${unit_sha}" = "${expected_unit_sha}" ] || alert unit-content "${expected_unit_sha}" "${unit_sha:-absent}"',
     `unit_enabled="$(systemctl --user is-enabled ${shellQuote(generation.unitName)} 2>&1 || true)"`,
     `[ "\${unit_enabled}" = enabled ] || alert unit-enabled enabled "\${unit_enabled}"`,
@@ -1955,9 +1930,7 @@ const driftAuditLines = (input: OpenClawGenerationIdentityScriptInput): Readonly
     `[ "\${config_sha}" = ${shellQuote(
       generation.configHash
     )} ] || alert config-hash ${shellQuote(generation.configHash)} "\${config_sha:-absent}"`,
-    // Mode comparison uses stat's octal form so the numeric encodings systemd and
-    // stat report for the same permissions (33188 vs 420) can never read as drift.
-    `config_mode="$(stat -c '%a' ${shellQuote(activeConfigPath(OpenClawGeneration.make(generation)))} 2>/dev/null || printf 'absent')"`,
+    configModeInStatOctal,
     `[ "\${config_mode}" = 644 ] || alert config-mode 644 "\${config_mode}"`,
     `run_mode="$(stat -c '%a' ${shellQuote(
       `${pointerPath(OpenClawGeneration.make(generation))}/${runScriptFileName}`

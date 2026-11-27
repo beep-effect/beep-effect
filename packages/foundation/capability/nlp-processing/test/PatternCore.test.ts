@@ -59,6 +59,7 @@ const decodePOSPatternOption = Schema.decodeEffect(POSPatternOption);
 const decodePatternElement = Schema.decodeEffect(Pattern.Element);
 const encodePatternElement = Schema.encodeEffect(Pattern.Element);
 
+const discardsForSparseOptionRoots = 20_000;
 const POSPatternOptionArbitrary = Arbitrary.schema(POSPatternOption);
 const EntityPatternOptionArbitrary = Arbitrary.schema(EntityPatternOption);
 const LiteralPatternOptionArbitrary = Arbitrary.schema(LiteralPatternOption);
@@ -193,10 +194,7 @@ describe("Core Pattern", () => {
         return true;
       }),
     {
-      arbitrary: // Every option schema rejects a sole empty choice and the literal option
-        // also rejects reserved tags, so the five-way tuple discards most roots;
-        // the default budget (10 per run) exhausts on some seeds.
-        { ...fcRuns(50), maxDiscards: 20_000 },
+      arbitrary: { ...fcRuns(50), maxDiscards: discardsForSparseOptionRoots },
     }
   );
 

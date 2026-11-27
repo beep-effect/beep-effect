@@ -30,12 +30,11 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { state } from "../alchemy.run.ts";
 
-// The handoff spawns real receiver processes (native spawner and path); the
-// file system is an empty in-memory volume, so the profile store finds no
-// Alchemy profile on any machine and nothing on disk is read or written.
-const PlatformLive = NodeChildProcessSpawner.layer.pipe(
+const realSpawnerOverEmptyMemoryFs = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.merge(MemoryFileSystem.layer, NodePath.layer))
 );
+
+const secureRandomForStateStore = SecureRandom.layerWebCrypto;
 
 const token = "test-only-handoff-secret";
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -57,11 +56,10 @@ const MissingCredentialsLive = Layer.mergeAll(
     HttpClient.make(() => Effect.die("missing-credentials-must-not-reach-network"))
   ),
   Layer.succeed(AlchemyContext, alchemyContext),
-  Interaction.layerNonInteractive().pipe(Layer.provideMerge(PlatformLive)),
-  ProfileStoreLive.pipe(Layer.provide(PlatformLive), Layer.orDie)
+  Interaction.layerNonInteractive().pipe(Layer.provideMerge(realSpawnerOverEmptyMemoryFs)),
+  ProfileStoreLive.pipe(Layer.provide(realSpawnerOverEmptyMemoryFs), Layer.orDie)
 ).pipe(
-  // beta.86's state store needs SecureRandom.
-  Layer.provideMerge(SecureRandom.layerWebCrypto),
+  Layer.provideMerge(secureRandomForStateStore),
   Layer.provideMerge(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
 );
 
@@ -70,14 +68,13 @@ layer(MissingCredentialsLive, { timeout: "30 seconds" })("without AWS credential
     Effect.gen(function* missingCredentials() {
       const before = { ...process.env };
 
-      // Building the S3 store is lazy; the first read is what needs credentials.
       const result = yield* deployedCacheState(state).pipe(
         Effect.flatMap((store) => store.get({ fqn: "TurboCache", stack: "TurboCache", stage: "prod" })),
         Effect.catchCause(flow(stateReadFailure, Effect.fail)),
         Effect.result
       );
 
-      result.pipe(Result.isFailure, assertTrue);
+      assertTrue(Result.isFailure(result), "building the S3 store is lazy; the first read is what needs credentials");
 
       if (Result.isFailure(result)) {
         expect(result.failure.message).toContain("The token handoff failed before sending a credential.");
@@ -137,26 +134,25 @@ const receiver = A.join(
   "\n"
 );
 
-layer(PlatformLive, { timeout: "30 seconds" })("token handoff", (it) => {
-  // The receiver exits 0 only when stdin carried the token and neither its
-  // argv nor its environment did; output suppression is proven across the
-  // process boundary by the next test.
-  it.effect("sends a deployed token only through stdin", () =>
-    Effect.gen(function* stdinHandoff() {
-      const values = yield* handoffToken(
-        records,
-        TokenHandoffOptions.make({
-          args: ["-e", receiver, "8c6bb4ecb5f9adadb0fec015d9e69e5f8a0c4c0bf597a7960f4be9c69b8c600a"],
-          command: process.execPath,
-          ...identity,
-        })
-      );
+layer(realSpawnerOverEmptyMemoryFs, { timeout: "30 seconds" })("token handoff", (it) => {
+  it.effect(
+    "sends a deployed token only through stdin: the receiver exits 0 only when neither argv nor env carried it",
+    () =>
+      Effect.gen(function* stdinHandoff() {
+        const values = yield* handoffToken(
+          records,
+          TokenHandoffOptions.make({
+            args: ["-e", receiver, "8c6bb4ecb5f9adadb0fec015d9e69e5f8a0c4c0bf597a7960f4be9c69b8c600a"],
+            command: process.execPath,
+            ...identity,
+          })
+        );
 
-      expect(values).toEqual({
-        TURBO_API: "https://cache.example.test",
-        TURBO_TEAM: "alpha",
-      });
-    })
+        expect(values).toEqual({
+          TURBO_API: "https://cache.example.test",
+          TURBO_TEAM: "alpha",
+        });
+      })
   );
 
   it.effect("suppresses receiver output across the actual process boundary", () =>

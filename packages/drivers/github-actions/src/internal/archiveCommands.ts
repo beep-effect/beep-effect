@@ -1,64 +1,3 @@
-// The archiver command lines this package spawns, spelled once.
-//
-
-// `Artifact` (pack and unpack) and `ToolInstaller` (unpack only) each spawn
-// the same three shapes — a zip, an unzip, a tar extraction — and each has a
-// Windows half that no test on a POSIX host can execute. Two hand-written
-// copies drifted: `ToolInstaller.extractZip` learned the overwrite overload
-// and the stderr capture below, `Artifact.download` did not, and a download
-// into a non-empty directory kept failing on Windows with an EMPTY stderr.
-// This module is the one spelling; the tests pin its text verbatim, which
-// is the only proof the Windows halves get.
-//
-// **The pwsh unzip is deliberately belt-and-braces.** The THREE-argument
-// `ExtractToDirectory(src, dest, $true)` overload overwrites existing files —
-// the two-argument one refuses, which is what turned a repeated extraction
-// into a hard failure — and the `$ErrorActionPreference = 'Stop'` plus
-// try/catch writes the actual .NET exception text plainly to stderr and
-// exits 1. pwsh's own error rendering does not reliably reach a captured
-// stream, and an empty complaint costs a source dive to even hypothesize
-// about.
-//
-// **The pwsh zip drives .NET's `ZipFile` directly, not `Compress-Archive`.**
-// Microsoft's own reference for `Compress-Archive -Path` states both faults:
-// handed individual file paths it stores every entry under its bare file
-// name — directory structure is kept only when `-Path` names a directory —
-// so `dir\b.txt` landed as `b.txt`, same-named files in different
-// directories collided, and a Windows artifact was structurally different
-// from the POSIX `zip -qr` one; and `-Path` expands wildcards, so a literal
-// `report[1].txt` matched nothing and failed the upload. Stating every entry
-// name explicitly through `CreateEntryFromFile(zip, source, entryName)`
-// removes both: the source is `Path.Combine(root, rel)`, taken literally,
-// and the entry name is `rel` with `\` turned to `/`, which is what `zip`
-// records on POSIX.
-//
-// **The Windows script is constant-size: the file list travels in a manifest
-// file, never in `-Command`.** `CreateProcessW` caps the whole command line
-// at 32,767 characters, and inlining one `CreateEntryFromFile` statement per
-// file (~214 characters each) hit that ceiling at roughly 150 files with
-// `ENAMETOOLONG`. The script therefore reads `zipManifest`'s output (one relative path per
-// line) with `File.ReadAllLines` and loops. **The two branches deliberately
-// differ in mechanism**: POSIX `zip` takes the files as argv, whose ceiling
-// (`ARG_MAX`, megabytes on the hosted runners) is far larger, so the only
-// file-count ceiling left is that POSIX argv limit. The manifest is written by
-// the caller (`Artifact.zip`) as UTF-8 WITHOUT a BOM, which is what
-// `ReadAllLines` reads by default. Its BOM detection would consume a BOM
-// rather than leak it into the first path (measured), so this is a
-// plain-bytes preference, not a correctness guard.
-//
-// **Every `CreateEntryFromFile` is assigned to `$null`.** Unassigned, pwsh
-// writes the returned `ZipArchiveEntry` to stdout — roughly 430 bytes of
-// formatted object per file — and `internal/spawn.ts` interleaves stdout with
-// stderr into the captured output, which is what `ArtifactError.stderr`
-// carries. Left in, that chatter buried the one line that matters, the .NET
-// exception, under kilobytes of entry listings.
-//
-// Every path handed to PowerShell is single-quoted, and a single quote inside
-// one is doubled — the only escape a single-quoted PowerShell literal has.
-//
-// Pure: no filesystem, no environment, no spawn. `internal/spawn.ts` is the
-// execution half. Command construction and schema identity add no Azure or
-// GitHub SDK imports (`__test__/reachability.test.ts`).
 import { $GithubActionsId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
@@ -69,10 +8,8 @@ import * as Str from "effect/String";
 
 const $I = $GithubActionsId.create("internal/archiveCommands");
 
-/** A PowerShell single-quoted literal: `'` becomes `''`, nothing else is special. */
 const pwshLiteral = (value: string): string => `'${Str.replaceAll("'", "''")(value)}'`;
 
-/** A non-interactive pwsh invocation of one command line. */
 const pwsh: {
   (script: string, options?: ChildProcess.CommandOptions): ChildProcess.StandardCommand;
   (options?: ChildProcess.CommandOptions): (script: string) => ChildProcess.StandardCommand;
@@ -126,8 +63,7 @@ export class ZipCommandOptions extends S.Opaque<ZipCommandOptions, { readonly br
      * Windows only: the path of a file holding {@link zipManifest}'s output for
      * the same `files`, which the pwsh script reads with `File.ReadAllLines`.
      * Each line becomes an entry named with every `\` turned to `/`. Ignored
-     * by the POSIX branch, whose argv has no comparable ceiling (the module doc
-     * says why the two branches differ in mechanism).
+     * by the POSIX branch, whose argv has no comparable ceiling (the portable-archive-command-builders decision explains the differing limits).
      */
     manifest: S.String.pipe(
       $I.annoteKey("ZipCommandOptions.manifest", {
@@ -166,10 +102,8 @@ export declare namespace ZipCommandOptions {
   export type Encoded = typeof ZipCommandOptions.Encoded;
 }
 
-/** {@link ZipCommandOptions.level} clamped to `zip`'s `0..9` and truncated. */
 const clampLevel = (level: number): number => Math.min(9, Math.max(0, Math.trunc(level)));
 
-/** The .NET `CompressionLevel` member a clamped zlib level maps onto. */
 const dotnetCompressionLevel = (level: number): string =>
   level === 0 ? "NoCompression" : level <= 3 ? "Fastest" : level <= 8 ? "Optimal" : "SmallestSize";
 
@@ -210,8 +144,8 @@ export const zipManifest = (files: ReadonlyArray<string>): string =>
  * overwrite) and adds one `CreateEntryFromFile` per line of `manifest`,
  * naming each entry explicitly — under `$ErrorActionPreference = 'Stop'` and
  * a stderr-writing try/catch, and with the archive disposed in a `finally` so
- * a failed entry cannot leave the handle open (the module doc says why not
- * `Compress-Archive`, and why the list travels in a file).
+ * a failed entry cannot leave the handle open. The portable-archive-command-builders
+ * decision records why Compress-Archive and inline file lists are rejected.
  * **Example** (Construct a POSIX zip command)
  *
  * ```ts
@@ -224,6 +158,7 @@ export const zipManifest = (files: ReadonlyArray<string>): string =>
  * @category commands
  * @since 0.0.0
  */
+// decision: portable-archive-command-builders
 export const zipCommand = (options: ZipCommandOptions.Encoded): ChildProcess.StandardCommand => {
   const level = clampLevel(options.level);
   if (!options.windows) {
@@ -235,11 +170,7 @@ export const zipCommand = (options: ZipCommandOptions.Encoded): ChildProcess.Sta
   const root = pwshLiteral(options.root);
   const manifest = pwshLiteral(options.manifest);
   const compression = `[System.IO.Compression.CompressionLevel]::${dotnetCompressionLevel(level)}`;
-  // `$rel.Replace('\', '/')` is .NET `String.Replace` — a literal substring
-  // swap, not a regex — so the backslash needs no escaping. `ReadAllLines`
-  // yields no entry for the manifest's trailing newline; the empty-line guard
-  // is for a stray blank line, which would otherwise build an entry from
-  // `root` itself.
+
   return pwsh(
     "$ErrorActionPreference = 'Stop'; try { Add-Type -AssemblyName System.IO.Compression; Add-Type -AssemblyName System.IO.Compression.FileSystem; " +
       `[System.IO.File]::Delete(${destination}); ` +
@@ -304,7 +235,7 @@ export declare namespace UnzipCommandOptions {
  * Unpack a zip into `destination`, overwriting:
  * `unzip -oq -d <destination> -- <source>`, or the three-argument `ExtractToDirectory` overload under
  * `$ErrorActionPreference = 'Stop'` and a stderr-writing try/catch on
- * Windows (the module doc says why both halves are load-bearing).
+ * Windows; the portable-archive-command-builders decision records the overwrite and stderr requirements.
  * **Example** (Construct a POSIX unzip command)
  *
  * ```ts
@@ -317,6 +248,7 @@ export declare namespace UnzipCommandOptions {
  * @category commands
  * @since 0.0.0
  */
+// decision: portable-archive-command-builders
 export const unzipCommand = (options: UnzipCommandOptions.Encoded): ChildProcess.StandardCommand =>
   options.windows
     ? pwsh(
@@ -392,6 +324,7 @@ export declare namespace TarExtractCommandOptions {
  * @category commands
  * @since 0.0.0
  */
+// decision: portable-archive-command-builders
 export const tarExtractCommand = (options: TarExtractCommandOptions.Encoded): ChildProcess.StandardCommand => {
   const flags = options.flags === undefined || options.flags.length === 0 ? ["xzf"] : [...options.flags];
   return ChildProcess.make("tar", [...flags, options.archive, "-C", options.destination]);

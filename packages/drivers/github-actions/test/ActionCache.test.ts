@@ -26,14 +26,6 @@ import { nativePlatform } from "./support/host.ts";
 import { json, resultsEnv, twirpFetch } from "./support/results.ts";
 import type { FileBlobTransfer } from "@beep/github-actions";
 
-/**
- * A transport that keeps whole files in memory.
- *
- * **Details**
- * Real bytes, not a recorded call: the round-trip test saves through `tar`,
- * deletes the originals and restores them, so what this map holds has to be an
- * archive a real `tar` will accept.
- */
 const fileTransfer = (fs: FileSystem.FileSystem) => {
   const blobs = MutableHashMap.empty<string, Uint8Array>();
   const transfer: FileBlobTransfer = {
@@ -64,7 +56,6 @@ const fileTransfer = (fs: FileSystem.FileSystem) => {
   return { blobs, transfer };
 };
 
-/** The real filesystem and the real `tar`, over a stubbed backend and transport. */
 const live = (fetch: typeof globalThis.fetch, transfer: FileBlobTransfer, env: Readonly<Record<string, string>> = {}) =>
   ActionCache.layerWith(transfer).pipe(
     Layer.provide(
@@ -76,7 +67,6 @@ const live = (fetch: typeof globalThis.fetch, transfer: FileBlobTransfer, env: R
     )
   );
 
-/** The digest `actions/cache` computes for the same path set. */
 const versionOf = (paths: ReadonlyArray<string>) =>
   Digest.Digest.use((crypto) =>
     crypto
@@ -184,10 +174,10 @@ describe("ActionCache", () => {
 
           assertSome(matched, "the-key");
           assert.strictEqual(MutableHashMap.size(blobs), 1);
-          // gzip's magic: what was uploaded is an archive, not a description of one.
           assert.deepStrictEqual(
             [...(O.getOrUndefined(MutableHashMap.get(blobs, url)) ?? []).slice(0, 2)],
-            [0x1f, 0x8b]
+            [0x1f, 0x8b],
+            "gzip's magic: what was uploaded is an archive, not a description of one."
           );
           const readFileString1 = yield* fs.readFileString(file);
           assert.strictEqual(readFileString1, "cached contents");
@@ -228,9 +218,12 @@ describe("ActionCache", () => {
           yield* Effect.flatMap(ActionCache, (cache) => cache.save([file], "k"));
           yield* fs.remove(file);
           yield* Effect.flatMap(ActionCache, (cache) => cache.restore([file], "k"));
-          // The whole claim of a cache, and the one an in-memory double cannot make.
           const readFileString2 = yield* fs.readFileString(file);
-          assert.strictEqual(readFileString2, "recovered");
+          assert.strictEqual(
+            readFileString2,
+            "recovered",
+            "The in-memory transport holds real bytes, not a recorded call: this round trip saves through the real tar, deletes the originals and restores them, the one claim an in-memory double cannot make."
+          );
         })
       );
     });
@@ -255,12 +248,13 @@ describe("ActionCache", () => {
           const { calls } = yield* Fixture3;
 
           yield* Effect.flatMap(ActionCache, (cache) => cache.restore(["b", "a"], "k"));
-          // Sorting the paths would be the obvious tidy-up and would compute a
-          // version no other cache step in the workflow agrees with — the entry a
-          // sibling `actions/cache` step wrote would simply never be found.
           const argument = calls[0]?.body.version;
           const versionOf1 = yield* versionOf(["b", "a"]);
-          assert.strictEqual(argument, versionOf1);
+          assert.strictEqual(
+            argument,
+            versionOf1,
+            "Sorting the paths would be the obvious tidy-up and would compute a version no other cache step in the workflow agrees with — the entry a sibling actions/cache step wrote would simply never be found."
+          );
           const versionOf3 = yield* versionOf(["b", "a"]);
           const versionOf14 = yield* versionOf(["a", "b"]);
           assert.notStrictEqual(versionOf3, versionOf14);
@@ -290,9 +284,11 @@ describe("ActionCache", () => {
 
           yield* Effect.flatMap(ActionCache, (cache) => cache.restore(["x"], key));
           assert.strictEqual(calls[0]?.body.key, "Linux-pnpm-store-abc123");
-          // Deriving the ladder at the call site is what every consumer re-invents
-          // and gets subtly wrong; passing the key passes the ladder with it.
-          assert.deepStrictEqual(calls[0]?.body.restore_keys, [...key.restoreKeys]);
+          assert.deepStrictEqual(
+            calls[0]?.body.restore_keys,
+            [...key.restoreKeys],
+            "Deriving the ladder at the call site is what every consumer re-invents and gets subtly wrong; passing the key passes the ladder with it."
+          );
         })
       );
     });
@@ -301,12 +297,6 @@ describe("ActionCache", () => {
   {
     const setup = Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      // The whole point of the ladder policy: the typed-key path must carry
-      // it, or every consumer with a policy is back to hand-building the
-      // restore-key list and bypassing CacheKey. The expected rungs are
-      // LITERAL: an implementation that ignores the policy sends four
-      // derived prefixes here, and asserting against `key.restoreKeys`
-      // would agree with that mutant on both sides.
       const key = CacheKey.of("Linux", "X64", "v1hash", "main", "lockhash").withRestoreDepths([4, 3]);
       const { transfer } = fileTransfer(fs);
       const { calls, fetch } = twirpFetch({ GetCacheEntryDownloadURL: () => json({ ok: false }) });
@@ -325,7 +315,11 @@ describe("ActionCache", () => {
 
           yield* Effect.flatMap(ActionCache, (cache) => cache.restore(["x"], key));
           assert.strictEqual(calls[0]?.body.key, "Linux-X64-v1hash-main-lockhash");
-          assert.deepStrictEqual(calls[0]?.body.restore_keys, ["Linux-X64-v1hash-main-", "Linux-X64-v1hash-"]);
+          assert.deepStrictEqual(
+            calls[0]?.body.restore_keys,
+            ["Linux-X64-v1hash-main-", "Linux-X64-v1hash-"],
+            "The whole point of the ladder policy: the typed-key path must carry it, or every consumer with a policy is back to hand-building the restore-key list and bypassing CacheKey. The expected rungs are LITERAL: an implementation that ignores the policy sends four derived prefixes here, and asserting against key.restoreKeys would agree with that mutant on both sides."
+          );
         })
       );
     });
@@ -334,10 +328,6 @@ describe("ActionCache", () => {
   {
     const setup = Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      // The cache-bust mode: a stale partial hit is worse than a cold start,
-      // so the body must carry an EMPTY restore_keys — an implementation
-      // that reads the empty policy as "no policy" sends the two derived
-      // prefixes here instead.
       const key = CacheKey.of("Linux", "pnpm-store", "abc123").withoutRestoreKeys();
       const { transfer } = fileTransfer(fs);
       const { calls, fetch } = twirpFetch({ GetCacheEntryDownloadURL: () => json({ ok: false }) });
@@ -356,7 +346,11 @@ describe("ActionCache", () => {
 
           yield* Effect.flatMap(ActionCache, (cache) => cache.restore(["x"], key));
           assert.strictEqual(calls[0]?.body.key, "Linux-pnpm-store-abc123");
-          assert.deepStrictEqual(calls[0]?.body.restore_keys, []);
+          assert.deepStrictEqual(
+            calls[0]?.body.restore_keys,
+            [],
+            'The cache-bust mode: a stale partial hit is worse than a cold start, so the body must carry an EMPTY restore_keys — an implementation that reads the empty policy as "no policy" sends the two derived prefixes here instead.'
+          );
         })
       );
     });
@@ -409,14 +403,12 @@ describe("ActionCache", () => {
     it.layer(Layer.unwrap(Effect.map(Fixture8, (fixture) => fixture.layer)).pipe(Layer.provideMerge(fixtureLayer)), {
       timeout: "30 seconds",
     })((it) => {
-      it.effect("answers with the key that actually matched, not the one asked for", () =>
+      it.effect("returns a partial-hit key for re-saving and warming the primary entry", () =>
         Effect.gen(function* () {
           const { file } = yield* Fixture8;
 
           yield* Effect.flatMap(ActionCache, (cache) => cache.save([file], "primary"));
           const matched = yield* Effect.flatMap(ActionCache, (cache) => cache.restore([file], "primary", ["Linux-"]));
-          // A hit on a restore key is a PARTIAL hit; a caller that cannot tell it
-          // from an exact hit never re-saves and the cache never warms.
           assertSome(matched, "Linux-pnpm-store-");
         })
       );
@@ -444,9 +436,11 @@ describe("ActionCache", () => {
           const error = yield* Effect.flip(Effect.flatMap(ActionCache, (cache) => cache.save([], "k")));
           assert.instanceOf(error, ActionCacheError);
           assert.strictEqual(error.reason, "archiveFailed");
-          // Reserving an entry for an archive that will never exist leaves a key
-          // that answers "present" and serves nothing.
-          assert.lengthOf(calls, 0);
+          assert.lengthOf(
+            calls,
+            0,
+            'Reserving an entry for an archive that will never exist leaves a key that answers "present" and serves nothing.'
+          );
         })
       );
     });
@@ -455,9 +449,6 @@ describe("ActionCache", () => {
   {
     const setup = Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      // A missing path no longer reaches tar (resolution existence-filters
-      // it), so the stderr channel is proved on the extract side: bytes that
-      // are not a gzip archive.
       const corrupt: FileBlobTransfer = {
         uploadFile: dual(2, (_url: string, _file: string) => Effect.void),
         downloadToFile: dual(2, (_url: string, file: string) =>
@@ -481,10 +472,15 @@ describe("ActionCache", () => {
       it.effect("fails with tar's own complaint when the archive cannot be extracted", () =>
         Effect.gen(function* () {
           const error = yield* Effect.flip(Effect.flatMap(ActionCache, (cache) => cache.restore(["x"], "k")));
-          assert.strictEqual(error.reason, "archiveFailed");
-          // The exit code says it failed; only stderr says why, and the difference
-          // between "not in gzip format" and "tar is not installed" is the whole message.
-          assert.isDefined(error.stderr);
+          assert.strictEqual(
+            error.reason,
+            "archiveFailed",
+            "A missing path never reaches tar (resolution existence-filters it), so the stderr channel is proved on the extract side: bytes that are not a gzip archive."
+          );
+          assert.isDefined(
+            error.stderr,
+            'The exit code says it failed; only stderr says why, and the difference between "not in gzip format" and "tar is not installed" is the whole message.'
+          );
         })
       );
     });
@@ -620,7 +616,6 @@ describe("ActionCache", () => {
   }
 
   describe("glob resolution on save", () => {
-    /** A tree with two node_modules at different depths and a bystander file. */
     const tree = Effect.fn("tree")(function* (root: string) {
       const fs = yield* FileSystem.FileSystem;
       const { join } = yield* Path.Path;
@@ -646,12 +641,6 @@ describe("ActionCache", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // The real-runner repro: `tar: **/node_modules: Cannot stat` — the
-        // pattern must be resolved BEFORE tar, and a matched directory is
-        // archived recursively (implicitDescendants stays off, as in
-        // actions/toolkit cacheUtils.ts:48-70; tar's own recursion does the
-        // descending). Handing the pattern to tar verbatim fails this test
-        // with tar's exact production complaint.
         const { aDep, bDep, bystander } = yield* tree(root);
         const { transfer } = fileTransfer(fs);
         const { fetch } = backend();
@@ -677,12 +666,15 @@ describe("ActionCache", () => {
             yield* fs.remove(bystander);
             yield* Effect.flatMap(ActionCache, (cache) => cache.restore([`${root}/**/node_modules`], "k"));
             const readFileString4 = yield* fs.readFileString(aDep);
-            assert.strictEqual(readFileString4, `contents of ${aDep}`);
+            assert.strictEqual(
+              readFileString4,
+              `contents of ${aDep}`,
+              "The real-runner repro: tar: **/node_modules: Cannot stat — the pattern must be resolved BEFORE tar, and a matched directory is archived recursively (implicitDescendants stays off, as in actions/toolkit cacheUtils.ts:48-70; tar's own recursion does the descending). Handing the pattern to tar verbatim fails this test with tar's exact production complaint."
+            );
             const readFileString5 = yield* fs.readFileString(bDep);
             assert.strictEqual(readFileString5, `contents of ${bDep}`);
-            // The bystander never matched, so the archive must not resurrect it.
             const exists6 = yield* fs.exists(bystander);
-            assert.isFalse(exists6);
+            assert.isFalse(exists6, "The bystander never matched, so the archive must not resurrect it.");
           })
         );
       });
@@ -693,11 +685,6 @@ describe("ActionCache", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // actions/toolkit hashes the caller's un-resolved list on both
-        // sides (getCacheVersion, cacheUtils.ts:136-159; cache.ts:689 and
-        // :361) — restore resolves nothing, so hashing the RESOLVED list on
-        // save would compute a version restore can never reproduce, and
-        // every save would be an entry no restore finds.
         yield* tree(root);
         const literals = [`${root}/**/node_modules`, `${root}/src`];
         const { transfer } = fileTransfer(fs);
@@ -722,7 +709,11 @@ describe("ActionCache", () => {
             const lookup = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "GetCacheEntryDownloadURL"));
             const argument1 = create?.body.version;
             const versionOf2 = yield* versionOf(literals);
-            assert.strictEqual(argument1, versionOf2);
+            assert.strictEqual(
+              argument1,
+              versionOf2,
+              "actions/toolkit hashes the caller's un-resolved list on both sides (getCacheVersion, cacheUtils.ts:136-159; cache.ts:689 and :361) — restore resolves nothing, so hashing the RESOLVED list on save would compute a version restore can never reproduce, and every save would be an entry no restore finds."
+            );
             const argument2 = lookup?.body.version;
             const versionOf4 = yield* versionOf(literals);
             assert.strictEqual(argument2, versionOf4);
@@ -737,11 +728,6 @@ describe("ActionCache", () => {
         const { join } = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // Toolkit parity: the globber simply yields nothing for a pattern
-        // with no matches — and for a LITERAL path that is not on disk,
-        // which goes through the same existence filter
-        // (internal-globber.ts:90-100). Neither is an error while anything
-        // else matched.
         const file = join(root, "payload.txt");
         yield* fs.writeFileString(file, "kept");
         const { blobs, transfer } = fileTransfer(fs);
@@ -763,7 +749,11 @@ describe("ActionCache", () => {
             yield* Effect.flatMap(ActionCache, (cache) =>
               cache.save([file, `${root}/nothing-*`, join(root, "absent-literal")], "k")
             );
-            assert.strictEqual(MutableHashMap.size(blobs), 1, "the archive with the surviving path was uploaded");
+            assert.strictEqual(
+              MutableHashMap.size(blobs),
+              1,
+              "the archive with the surviving path was uploaded. Toolkit parity: the globber simply yields nothing for a pattern with no matches — and for a LITERAL path that is not on disk, which goes through the same existence filter (internal-globber.ts:90-100). Neither is an error while anything else matched."
+            );
           })
         );
       });
@@ -794,11 +784,11 @@ describe("ActionCache", () => {
             );
             assert.strictEqual(error.reason, "archiveFailed");
             assert.include(error.detail, "matched");
-            // Reserving an entry for an archive that will never exist leaves a
-            // key that answers "present" and serves nothing — same rule as the
-            // empty input list, which is the toolkit's hard Path Validation
-            // Error (cache.ts:662-666).
-            assert.lengthOf(calls, 0);
+            assert.lengthOf(
+              calls,
+              0,
+              'Reserving an entry for an archive that will never exist leaves a key that answers "present" and serves nothing — same rule as the empty input list, which is the toolkit\'s hard Path Validation Error (cache.ts:662-666).'
+            );
           })
         );
       });
@@ -809,7 +799,6 @@ describe("ActionCache", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // The canonical actions/cache idiom, exactly as a workflow writes it.
         const { aDep } = yield* tree(root);
         const { transfer } = fileTransfer(fs);
         const { fetch } = backend();
@@ -907,7 +896,6 @@ describe("ActionCache", () => {
       });
     }
 
-    /** The real spawner, recording each spawn's argv — and, when a `-T` flag is present, the named manifest's content AT SPAWN TIME, before the scratch directory is removed. */
     const spyingSpawner = () => {
       const spawns: Array<{ readonly args: ReadonlyArray<string>; readonly manifest?: string }> = [];
       const layer = Layer.effect(
@@ -1077,7 +1065,6 @@ describe("ActionCache", () => {
       });
     }
 
-    /** The real FileSystem with a live `readDirectory` call counter. */
     const countingFileSystem = () => {
       let reads = 0;
       const layer = Layer.effect(
@@ -1104,10 +1091,6 @@ describe("ActionCache", () => {
         const { join } = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // ~2.7MB of resolved absolute paths: past Linux's ~2MB and
-        // macOS's 1MB execve budgets, so handing the list to tar as
-        // argv would die as E2BIG before tar even started — the
-        // `${workspace}/**` shape at production scale.
         const segment = (label: string) => `${label}-${Str.repeat(180)("x")}`;
         const deep = join(root, segment("d1"), segment("d2"), segment("d3"), segment("d4"));
         yield* fs.makeDirectory(deep, { recursive: true });
@@ -1120,7 +1103,7 @@ describe("ActionCache", () => {
         assert.isAbove(
           A.reduce(files, 0, (total, file) => total + file.length + 1),
           2_500_000,
-          "the fixture must be big enough that argv would actually overflow"
+          "the fixture must be big enough that argv would actually overflow ~2.7MB of resolved absolute paths: past Linux's ~2MB and macOS's 1MB execve budgets, so handing the list to tar as argv would die as E2BIG before tar even started — the ${workspace}/** shape at production scale."
         );
 
         const { transfer } = fileTransfer(fs);
@@ -1156,20 +1139,17 @@ describe("ActionCache", () => {
               yield* Effect.flatMap(ActionCache, (cache) => cache.save([pattern], "k"));
               yield* fs.remove(deep, { recursive: true });
               yield* Effect.flatMap(ActionCache, (cache) => cache.restore([pattern], "k"));
-              // The real-IO round trip held at manifest scale.
               const readFileString11 = yield* fs.readFileString(files[0] ?? "");
-              assert.strictEqual(readFileString11, "payload 0");
+              assert.strictEqual(readFileString11, "payload 0", "The real-IO round trip held at manifest scale.");
               const readFileString12 = yield* fs.readFileString(files[2799] ?? "");
               assert.strictEqual(readFileString12, "payload 2799");
 
-              // The create invocation carried `-T <manifest>` and not one
-              // resolved path; the manifest listed every match.
               const create = O.getOrUndefined(A.findFirst(spy.spawns, (spawn) => spawn.args.includes("-T")));
               assert.isDefined(create, "tar was never invoked with a manifest");
               const resolvedSet = HashSet.fromIterable(files);
               assert.isFalse(
                 A.some(create?.args, (arg) => HashSet.has(resolvedSet, arg)),
-                "resolved paths must not travel as argv"
+                "resolved paths must not travel as argv. The create invocation carried -T <manifest> and not one resolved path; the manifest listed every match."
               );
               const listed = pipe(
                 create?.manifest ?? "",
@@ -1189,8 +1169,6 @@ describe("ActionCache", () => {
         const { join } = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // A pnpm-store-shaped literal: a directory with real contents
-        // that only tar's own recursion should ever descend into.
         const store = join(root, "store");
         yield* fs.makeDirectory(join(store, "v3"), { recursive: true });
         yield* fs.writeFileString(join(store, "v3", "entry.txt"), "stored");
@@ -1225,18 +1203,19 @@ describe("ActionCache", () => {
             yield* Effect.flatMap(ActionCache, (cache) => cache.save([store], "k"));
             yield* fs.remove(store, { recursive: true });
             yield* Effect.flatMap(ActionCache, (cache) => cache.restore([store], "k"));
-            // The literal contributed the only search root, and no pattern can
-            // match below it: admission comes from the stat alone, on save AND
-            // restore — a store-sized literal must not cost a full enumeration
-            // that can admit nothing. tar's recursion still archived the
-            // contents, which is what the round trip above proves.
             const readFileString13 = yield* fs.readFileString(join(store, "v3", "entry.txt"));
             assert.strictEqual(readFileString13, "stored");
-            assert.strictEqual(counting.reads(), 0, "a literal-only resolution must not enumerate the directory");
-            // The control: a wildcard below the same root MUST enumerate —
-            // proof the counter is live rather than the wrapper being blind.
+            assert.strictEqual(
+              counting.reads(),
+              0,
+              "a literal-only resolution must not enumerate the directory. The literal contributed the only search root, and no pattern can match below it: admission comes from the stat alone, on save AND restore — a store-sized literal must not cost a full enumeration that can admit nothing. tar's recursion still archived the contents, which is what the round trip above proves."
+            );
             yield* Effect.flatMap(ActionCache, (cache) => cache.save([`${store}/**`], "k2"));
-            assert.isAbove(counting.reads(), 0, "the toolkit-parity walk must survive for actual patterns");
+            assert.isAbove(
+              counting.reads(),
+              0,
+              "the toolkit-parity walk must survive for actual patterns. The control: a wildcard below the same root MUST enumerate — proof the counter is live rather than the wrapper being blind."
+            );
           })
         );
       });
@@ -1247,8 +1226,6 @@ describe("ActionCache", () => {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-cache-test-" });
 
-        // The engine refuses a pattern past its 64KB guard — the one way a
-        // pattern fails to COMPILE rather than merely failing to match.
         const { transfer } = fileTransfer(fs);
         const { calls, fetch } = twirpFetch({});
         return { root, transfer, calls, fetch, layer: live(fetch, transfer) };
@@ -1267,7 +1244,11 @@ describe("ActionCache", () => {
             const error = yield* Effect.flip(
               Effect.flatMap(ActionCache, (cache) => cache.save([`${root}/${Str.repeat(70_000)("a")}`], "k"))
             );
-            assert.strictEqual(error.reason, "archiveFailed");
+            assert.strictEqual(
+              error.reason,
+              "archiveFailed",
+              "The engine refuses a pattern past its 64KB guard — the one way a pattern fails to COMPILE rather than merely failing to match."
+            );
             assert.include(error.detail, "not a usable glob pattern");
             assert.lengthOf(calls, 0);
           })

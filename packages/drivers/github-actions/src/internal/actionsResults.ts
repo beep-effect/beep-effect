@@ -1,11 +1,3 @@
-// Reading the runner's *results backend* coordinates — the two variables the
-// cache, artifact and blob-store protocols all speak through.
-//
-// Shared by `ActionCache`, `Artifact` and `BlobStore.githubCache`, and
-// deliberately free of `@azure/storage-blob`: an internal helper is exactly how
-// a heavy import leaks into a light module's graph, so the one piece those
-// three modules share is the piece with no dependencies.
-
 import { $GithubActionsId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -227,8 +219,6 @@ export const misconfiguredDetail: {
  * @since 0.0.0
  */
 export const backendIdsFrom = (token: string): Result.Result<BackendIds, string> => {
-  // No signature verification (`internal/jwt.ts` says why): the claim read
-  // here scopes a request rather than authorizing one.
   const payload = payloadOf(token);
   if (Result.isFailure(payload)) {
     return Result.fail(`the runtime token is not a readable JWT: ${payload.failure.detail}`);
@@ -250,7 +240,6 @@ export const backendIdsFrom = (token: string): Result.Result<BackendIds, string>
   );
 };
 
-/** The run and job ids of one `Actions.Results:<run>:<job>` scope entry. */
 const resultsScopeIds = (entry: string): Result.Result<BackendIds, string> => {
   const [, run, job, ...rest] = Str.split(entry, ":");
   return A.isReadonlyArrayNonEmpty(rest) || run === undefined || run === "" || job === undefined || job === ""
@@ -273,6 +262,10 @@ const resultsScopeIds = (entry: string): Result.Result<BackendIds, string> => {
  * themselves are read per call, because resolving them at construction would
  * make merely *composing* the layer fail outside Actions — including for an
  * action that never touches the cache.
+ *
+ * **Gotchas**
+ *
+ * This shared cache/artifact/blob-cache coordinate reader stays free of Azure SDK imports so light consumers cannot acquire a blob client through a helper. JWT scope claims only scope requests; they authorize nothing, so this reader deliberately does not verify signatures.
  *
  * **Example** (Compose a results backend lookup)
  *

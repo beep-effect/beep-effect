@@ -90,8 +90,6 @@ interface ObserveWorkflowBaseOptions {
   readonly name: string;
 }
 
-// The legacy per-outcome counters and the unified `outcomes` counter are mutually exclusive: setting
-// both would count every run twice.
 interface ObserveWorkflowCounterOptions extends ObserveWorkflowBaseOptions {
   readonly completed?: Metric.Counter<number> | undefined;
   readonly failed?: Metric.Counter<number> | undefined;

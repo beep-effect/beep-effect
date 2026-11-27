@@ -39,7 +39,6 @@ import type { FieldDiff } from "./src/RulesetGuard.ts";
 const readCapture = Effect.fn("InfraGithub.readRulesetCapture")(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(path);
-  // Fail closed: a capture with any key, rule type or value the model does not know is refused.
   return yield* decodeLiveRulesetJson(text).pipe(
     Effect.tapError((error) =>
       Console.error(`ruleset-guard: REFUSED; ${path} has a shape the guard cannot read.\n${error.message}`)

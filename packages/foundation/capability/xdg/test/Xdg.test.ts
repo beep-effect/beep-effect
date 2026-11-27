@@ -17,7 +17,6 @@ import * as S from "effect/Schema";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** Build the fixture graph in a scope that owns its acquired resources. */
 const provideLayer =
   <ROut, E, RIn>(layer: Layer.Layer<ROut, E, RIn>) =>
   <A, E2, R>(self: Effect.Effect<A, E2, R>) =>
@@ -25,7 +24,6 @@ const provideLayer =
       Effect.flatMap(Layer.buildWithScope(layer, scope), (context) => Effect.provideContext(self, context))
     );
 
-/** Drive `Config` from a record instead of mutating the real environment. */
 const env = (vars: Record<string, string>) =>
   Layer.provide(Xdg.layer, ConfigProvider.layer(ConfigProvider.fromUnknown(vars)));
 
@@ -87,16 +85,12 @@ describe("Xdg", () => {
         assert.strictEqual(error._tag, "XdgEnvError");
         assert.strictEqual(error.variable, "HOME");
         assert.include(error.message, "HOME");
-        // The ConfigError is preserved structurally rather than stringified.
         const cause = error.cause;
         assert(P.hasProperty(cause, "_tag"));
-        assert.strictEqual(cause._tag, "ConfigError");
+        assert.strictEqual(cause._tag, "ConfigError", "the ConfigError is preserved structurally, not stringified");
       })
     );
 
-    // Inverted in 4-X-A: the lab kept any non-empty HOME verbatim, so a relative
-    // one resolved every AppDirs fallback against the working directory. HOME now
-    // takes the absolute-only rule of the other variables, POSIX or Windows.
     for (const home of ["relative/home", "./home", " /home/ada", "~/ada", "C:relative"]) {
       it.effect(
         `rejects a relative HOME ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(home), identity)} with XdgEnvError`,
@@ -133,8 +127,6 @@ describe("Xdg", () => {
     );
   });
 
-  // Inverted: the lab kept any non-empty value. The spec says a relative path is
-  // invalid and must be ignored, which is also what systemd-path does.
   describe("invalid environment values", () => {
     const posixDirectories = [
       ["XDG_CONFIG_HOME", "configHome"],
@@ -329,10 +321,12 @@ describe("Xdg", () => {
 
     it.effect("treats an EMPTY XDG_CONFIG_DIRS as unset, per the spec", () =>
       Effect.gen(function* () {
-        // The spec is explicit: an empty value takes the default, it does not
-        // mean "no system directories". A naive `split(":")` would yield [""].
         const paths = yield* Xdg;
-        assert.deepStrictEqual([...paths.configDirs], ["/etc/xdg"]);
+        assert.deepStrictEqual(
+          [...paths.configDirs],
+          ["/etc/xdg"],
+          'an empty list takes the default rather than meaning "no system directories"'
+        );
       }).pipe(provideLayer(env({ HOME: "/home/ada", XDG_CONFIG_DIRS: "" })))
     );
 

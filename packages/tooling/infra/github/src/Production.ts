@@ -42,24 +42,21 @@ import type { ObjectClass } from "./Config.ts";
  */
 export const productionStage = "prod";
 
-/** GitHub Actions' App id: the source every repository check is bound to. */
 const githubActionsAppId = 15368;
 
-/** App id of `beep-fleet-orchestrator`, the fleet's merging App. */
-const fleetOrchestratorAppId = 5309624;
+const mergingFleetOrchestratorAppId = 5309624;
 
-/** Role id GitHub gives the repository `admin` role in ruleset bypass lists. */
-const repositoryAdminRoleId = 5;
+const bypassListRepositoryAdminRoleId = 5;
 
-/** The shared Alchemy state role (decision 2026-11-09-github-oidc-state-role-bootstrap). */
-const stateRoleArn = "arn:aws:iam::832907639880:role/beep-alchemy-state-rw";
+// decision: oidc-state-role-variable
+const sharedAlchemyStateRoleArn = "arn:aws:iam::832907639880:role/beep-alchemy-state-rw";
 
 const check = (context: string) => RequiredCheck.make({ context, integrationId: githubActionsAppId });
 
 const label = (name: string, color: string, description: O.Option<string>) =>
   LabelSpec.make({ name, color, description });
 
-const stateRoleVariable = VariableSpec.make({ name: "ALCHEMY_STATE_ROLE_ARN", value: stateRoleArn });
+const stateRoleVariable = VariableSpec.make({ name: "ALCHEMY_STATE_ROLE_ARN", value: sharedAlchemyStateRoleArn });
 
 const mainOnly = (name: string, variables: ReadonlyArray<VariableSpec>) =>
   EnvironmentSpec.make({ name, branches: ["main"], variables });
@@ -76,6 +73,12 @@ const vercelEnvironment = unmanaged(
  * The stack configuration. Every value equals the live object it adopts, so a
  * deploy converges nothing on day one; the snapshot test in
  * `test/Census.test.ts` fails when code and captured live state diverge.
+ *
+ * **Gotchas**
+ *
+ * The main ruleset's required checks omit `beep-reviewer` on purpose: the
+ * stack carries the live entry from the ruleset capture through
+ * (`liveReviewerCheck`).
  *
  * **Example** (Count the owned labels)
  *
@@ -127,8 +130,8 @@ export const productionConfig: StackConfig = StackConfig.make({
     include: ["~DEFAULT_BRANCH"],
     exclude: [],
     bypassActors: [
-      BypassActor.make({ actorType: "RepositoryRole", actorId: repositoryAdminRoleId, bypassMode: "always" }),
-      BypassActor.make({ actorType: "Integration", actorId: fleetOrchestratorAppId, bypassMode: "always" }),
+      BypassActor.make({ actorType: "RepositoryRole", actorId: bypassListRepositoryAdminRoleId, bypassMode: "always" }),
+      BypassActor.make({ actorType: "Integration", actorId: mergingFleetOrchestratorAppId, bypassMode: "always" }),
     ],
     deletion: true,
     nonFastForward: true,
@@ -158,7 +161,6 @@ export const productionConfig: StackConfig = StackConfig.make({
       check("Heavy / Doctest"),
       check("JSDoc Ratchet"),
     ],
-    // beep-reviewer is not listed: the stack carries the live entry (RulesetGuard).
     strictRequiredStatusChecksPolicy: false,
   }),
   environments: [

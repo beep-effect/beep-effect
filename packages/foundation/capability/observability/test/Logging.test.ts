@@ -82,7 +82,6 @@ describe("Logging", () => {
     expect(Layer.isLayer(layerConsoleLogger()(config))).toBe(true);
   });
 
-  // The console logger layer is the subject: runner lifecycle logs would add span events.
   loggerSubjectIt.layer(capturedSpanEventsLayer, { timeout: "10 seconds" })(
     "keeps the tracer bridge in the console logger layer",
     (it) =>
@@ -164,7 +163,6 @@ describe("Logging", () => {
     expect(phaseShown).toContain("READY");
   });
 
-  // This layer's logger is the subject: runner lifecycle logs would alter its exact captures.
   loggerSubjectIt.layer(capturedLevelsLayer("Info"), { timeout: "10 seconds" })(
     "filters logs through the independently composable minimum-level layer",
     (it) =>

@@ -222,16 +222,6 @@ export class XdgPaths extends S.Opaque<XdgPaths, { readonly brand: unique symbol
   }).pipe($I.annoteSchema("XdgPaths", { description: "The XDG Base Directory environment, resolved." }))
 ) {}
 
-/**
- * Split a `PATH`-style variable, keeping only absolute entries.
- *
- * **Gotchas**
- *
- * Per the XDG spec, an unset **or empty** variable takes the default, and a
- * relative entry is invalid and ignored. A list with no valid entry left
- * (`XDG_CONFIG_DIRS=""`, `":::"` or `"etc:share"`) is therefore not "no
- * system directories": it is the default.
- */
 const splitDirs: {
   (raw: string | undefined, fallback: ReadonlyArray<string>): ReadonlyArray<string>;
   (fallback: ReadonlyArray<string>): (raw: string | undefined) => ReadonlyArray<string>;
@@ -293,6 +283,14 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
    * resolving every `AppDirs` fallback against the working directory.
    * `XdgBase`, which is HOME-optional, treats a relative `HOME` as absent.
    *
+   * Per the XDG spec, `$XDG_CONFIG_DIRS` and `$XDG_DATA_DIRS` keep only their
+   * absolute entries, and a list with none left (`""`, `":::"` or
+   * `"etc:share"`) takes the default: it never means "no system directories".
+   *
+   * An unset or invalid variable is ignored, but a `ConfigProvider` that cannot
+   * be read (one backed by a directory or a `.env` file) still fails the layer
+   * with an `XdgEnvError` naming the variable, rather than being treated as unset.
+   *
    * **Example** (Construct the environment-reading layer)
    *
    * ```ts
@@ -308,10 +306,6 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
   static readonly layer: Layer.Layer<Xdg, XdgEnvError> = Layer.effect(
     Xdg,
     Effect.gen(function* () {
-      /**
-       * `Config<T>` IS an `Effect<T, ConfigError>` in v4, so it pipes directly.
-       * Every `ConfigError` becomes an `XdgEnvError` naming the variable it came from.
-       */
       const asEnvError: {
         <A>(name: string, config: Config.Config<A>): Effect.Effect<A, XdgEnvError>;
         <A>(config: Config.Config<A>): (name: string) => Effect.Effect<A, XdgEnvError>;
@@ -323,14 +317,6 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
 
       const home = yield* asEnvError("HOME", Config.schema(AbsolutePath, "HOME"));
 
-      /**
-       * An unset variable is `Option.none()`, not a failure, and so is a value
-       * that fails `valid`: the spec says a relative path is invalid and must be
-       * ignored. The residual `ConfigError` a `Config.option` can still raise is
-       * a *provider* failure (a `ConfigProvider` backed by a directory or a
-       * `.env` file that cannot be read), not a missing key, so it is mapped
-       * rather than swallowed.
-       */
       const read = (name: string, valid: (value: string) => boolean): Effect.Effect<string | undefined, XdgEnvError> =>
         Effect.map(asEnvError(name, Config.option(Config.String(name))), flow(O.filter(valid), O.getOrUndefined));
 
@@ -344,8 +330,6 @@ export class Xdg extends Context.Service<Xdg, XdgPaths>()($I`Xdg`) {
       const configDirs = yield* read("XDG_CONFIG_DIRS", Str.isNonEmpty);
       const dataDirs = yield* read("XDG_DATA_DIRS", Str.isNonEmpty);
 
-      // A *present* key holding `undefined` is not the same as an absent key —
-      // v4 constructors validate — so every optional field is conditionally spread.
       return XdgPaths.make({
         home,
         ...(configHome !== undefined && { configHome }),

@@ -40,10 +40,6 @@ import type { GraphOperation } from "./Operation.ts";
 
 const $I = $NlpProcessingId.create("Graph/GraphOperations/Executor");
 
-// =============================================================================
-// Service Shape & Tag
-// =============================================================================
-
 interface Application {
   readonly errors: ReadonlyArray<unknown>;
   readonly fromCache: boolean;
@@ -127,21 +123,9 @@ export interface GraphExecutorShape {
  */
 export class GraphExecutor extends Context.Service<GraphExecutor, GraphExecutorShape>()($I`GraphExecutor`) {}
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
 const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
   A.filter(toArray(graph), (node) => A.length(getChildren(graph, node.id)) === 0);
 
-/**
- * Validate and clamp a caller-supplied parallel concurrency value.
- *
- * Non-finite or non-positive requests (NaN, Infinity, zero, negatives) fail
- * closed to a single worker; otherwise the value is floored to an integer and
- * clamped into `[1, MAX_PARALLEL_CONCURRENCY]` so an untrusted or buggy caller
- * cannot request unbounded parallelism.
- */
 const clampConcurrency = (requested: number): number =>
   Number.isFinite(requested) && requested >= 1
     ? N.clamp(Math.floor(requested), {
@@ -159,13 +143,6 @@ const concurrencyOf: (strategy: Types.ExecutionStrategy) => number = Match.type<
 const isEffectGraph = (value: unknown): value is EffectGraph<unknown> =>
   P.hasProperties(value, ["graph", "indexToNodeId", "nodeIdToIndex"]);
 
-/**
- * Bound a single `operation.apply` call by an optional timeout.
- *
- * When a timeout is configured, expiry interrupts the operation and fails with a
- * {@link TimeoutError} so the executor records it as that leaf's result error
- * instead of letting a slow or non-terminating operation run unbounded.
- */
 const applyWithTimeout = <A, B, R, E>(
   operation: GraphOperation<A, B, R, E>,
   leafNode: GraphNode<A>,
@@ -187,7 +164,6 @@ const applyWithTimeout = <A, B, R, E>(
       }),
   });
 
-/** Apply the operation to one node, caching on success, yielding nodes + errors. */
 const applyOne: {
   <A, B, R, E>(
     store: ResultStore.ResultStoreShape,
@@ -383,10 +359,6 @@ const runStrategy: {
     }).pipe(Obs.trackNlpDuration(attributes));
   })
 );
-
-// =============================================================================
-// Implementation
-// =============================================================================
 
 const estimateCost: GraphExecutorShape["estimateCost"] = dual(
   2,

@@ -19,7 +19,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { XdgPlatform } from "@beep/xdg";
 
-/** Build the fixture graph in a scope that owns its acquired resources. */
 const provideLayer =
   <ROut, E, RIn>(layer: Layer.Layer<ROut, E, RIn>) =>
   <A, E2, R>(self: Effect.Effect<A, E2, R>) =>
@@ -35,19 +34,6 @@ const xdgPaths = (overrides: Partial<Omit<XdgPaths, "configDirs" | "dataDirs">> 
     ...overrides,
   });
 
-/**
- * Records every `makeDirectory` call, in order, over a real in-memory volume.
- *
- * A fault handler runs when the method is CALLED, not when the layer is built,
- * which is the property that matters here: `AppDirs` constructs its `ensure*`
- * effects once at layer construction, so anything recording eagerly would count
- * four directories that were never created and every assertion would be
- * measuring construction rather than execution.
- *
- * Returning `undefined` delegates, so the directory is genuinely created rather
- * than merely observed — and unlike `layerNoop`, every method this fixture does
- * not name still works instead of failing as unimplemented.
- */
 const recordingFs = (made: Array<string>, failOn?: string) =>
   MemoryFileSystem.layerWith(
     {},
@@ -65,7 +51,7 @@ const recordingFs = (made: Array<string>, failOn?: string) =>
             );
           }
           made.push(dir);
-          return undefined; // delegate: the volume really creates it
+          return undefined;
         },
       },
     }
@@ -73,7 +59,6 @@ const recordingFs = (made: Array<string>, failOn?: string) =>
 
 const base = Layer.mergeAll(Path.layer, recordingFs([]));
 
-/** Resolve `AppDirs` against fixed paths and a fixed platform. No IO. */
 const resolved = (options: typeof AppDirsOptions.Encoded, paths: XdgPaths, platform: XdgPlatform = "linux") =>
   Effect.gen(function* () {
     const appDirs = yield* AppDirs;
@@ -190,8 +175,6 @@ describe("AppDirs", () => {
       })
     );
 
-    // Inverted in 4-X-A: the lab used an override "as given", so a relative one
-    // won rung 1 and resolved against the working directory.
     it.effect("admits only absolute override paths, POSIX or Windows", () =>
       Effect.gen(function* () {
         for (const kind of AppDirKind.literals) {
@@ -271,11 +254,7 @@ describe("AppDirs", () => {
     })
   );
 
-  describe("the five-level precedence", () => {
-    // Each rung is tested with every HIGHER rung absent and every LOWER rung
-    // PRESENT, so a rung that silently stopped doing anything would be caught by
-    // the value falling through to the rung below it.
-
+  describe("the five-level precedence, each rung tested with every higher rung absent and every lower rung present", () => {
     it.effect("1. an explicit override beats everything below it", () =>
       Effect.gen(function* () {
         const dirs = yield* resolved(
@@ -289,9 +268,7 @@ describe("AppDirs", () => {
           "darwin"
         );
         assert.strictEqual(dirs.config, "/explicit");
-        // Only `config` was overridden; `data` still falls through the ladder to
-        // its own XDG variable. An override that leaked across kinds fails here.
-        assert.strictEqual(dirs.data, "/xdg-data/myapp");
+        assert.strictEqual(dirs.data, "/xdg-data/myapp", "an override of config alone must not leak into data");
       })
     );
 
@@ -402,9 +379,11 @@ describe("AppDirs", () => {
         });
         const dirs = yield* resolved({ namespace: "myapp" }, paths);
         assert.deepStrictEqual([...dirs.configSearchPath], ["/home/ada/.config/myapp", "/a/myapp", "/b/myapp"]);
-        // `data` has no XDG_DATA_HOME here, so it falls to the dot-dir floor —
-        // and the search path still leads with it, then the system data dirs.
-        assert.deepStrictEqual([...dirs.dataSearchPath], ["/home/ada/.myapp", "/da/myapp", "/db/myapp"]);
+        assert.deepStrictEqual(
+          [...dirs.dataSearchPath],
+          ["/home/ada/.myapp", "/da/myapp", "/db/myapp"],
+          "without XDG_DATA_HOME the data search path still leads with the dot-dir floor"
+        );
       })
     );
 
@@ -433,7 +412,11 @@ describe("AppDirs", () => {
           )
         );
         assert.strictEqual(created, "/home/ada/.myapp");
-        assert.deepStrictEqual(made, ["/home/ada/.myapp"]);
+        assert.deepStrictEqual(
+          made,
+          ["/home/ada/.myapp"],
+          "the fault handler records calls, not the ensure* effects AppDirs builds at layer construction"
+        );
       })
     );
 
@@ -515,8 +498,7 @@ describe("AppDirs", () => {
         assert.strictEqual(error._tag, "AppDirsError");
         assert.strictEqual(error.directory, "cache");
         assert.strictEqual(error.path, "/denied");
-        // The underlying failure is preserved, not stringified.
-        assert.instanceOf(error.cause, Error);
+        assert.instanceOf(error.cause, Error, "the mkdir failure is preserved, not stringified");
       })
     );
   });
@@ -533,10 +515,7 @@ describe("AppDirs", () => {
           const exit = yield* Effect.exit(build(namespace));
           assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
           const reasons = exit.cause.reasons;
-          // The discriminating assertion: it is a DEFECT, not laundered into E.
-          // Without this line, an implementation that raised a typed error would
-          // still pass every other assertion here.
-          assert.isFalse(A.some(reasons, Cause.isFailReason));
+          assert.isFalse(A.some(reasons, Cause.isFailReason), "a bad namespace is a defect, never a typed error in E");
           const die = A.findFirst(reasons, Cause.isDieReason).pipe(O.getOrThrow);
           assert.instanceOf(die.defect, AppDirsNamespaceError);
         })

@@ -25,7 +25,6 @@ describe("XdgBase", () => {
   );
 
   describe("resolve", () => {
-    // README Deviations "absolute HOME, two meanings": Xdg.layer accepts a Windows HOME, XdgBase does not.
     it.effect("treats a Windows HOME or value as absent, unlike Xdg.layer", () =>
       Effect.sync(() => {
         for (const windows of ["C:/x", "C:\\Users\\ada", "\\\\server\\share"]) {
@@ -54,20 +53,19 @@ describe("XdgBase", () => {
       })
     );
 
-    it.effect("normalizes HOME the way systemd-path does before appending the default", () =>
-      Effect.sync(() => {
-        assertSome(XdgBase.resolve("config", { home: "/home/ada//" }), "/home/ada/.config");
-        assertSome(XdgBase.resolve("config", { home: "/a/./b" }), "/a/b/.config");
-        assertSome(XdgBase.resolve("config", { home: "/" }), "/.config");
-        assertSome(XdgBase.resolve("config", { home: "/.." }), "/.config");
-        // Inner `..` and trailing spaces are kept verbatim.
-        assertSome(XdgBase.resolve("config", { home: "/a/../b" }), "/a/../b/.config");
-        assertSome(XdgBase.resolve("config", { home: "/home/ada " }), "/home/ada /.config");
-      })
+    it.effect(
+      "normalizes HOME the way systemd-path does, keeping inner `..` and trailing spaces, before appending the default",
+      () =>
+        Effect.sync(() => {
+          assertSome(XdgBase.resolve("config", { home: "/home/ada//" }), "/home/ada/.config");
+          assertSome(XdgBase.resolve("config", { home: "/a/./b" }), "/a/b/.config");
+          assertSome(XdgBase.resolve("config", { home: "/" }), "/.config");
+          assertSome(XdgBase.resolve("config", { home: "/.." }), "/.config");
+          assertSome(XdgBase.resolve("config", { home: "/a/../b" }), "/a/../b/.config");
+          assertSome(XdgBase.resolve("config", { home: "/home/ada " }), "/home/ada /.config");
+        })
     );
 
-    // Inverted: the lab and both adopters took any non-empty value; an invalid
-    // value is now ignored, as the spec and systemd-path require.
     it.effect("ignores empty, whitespace and relative values", () =>
       Effect.sync(() => {
         for (const value of ["", " ", "relative", "~/state", " /leading-space"]) {
@@ -150,10 +148,6 @@ const Golden = S.fromJsonString(
 );
 
 describe("XdgBase against frozen systemd-path answers", () => {
-  // Regenerate with goals/effected-promotion/ops/xdg-systemd-differential.ts --golden.
-  // `systemd` is null where systemd-path had no answer, or answered from the user
-  // database because neither the variable nor HOME was valid (passwd-fallback):
-  // XdgBase is HOME-optional and answers none there.
   it.effect("matches every recorded case", () =>
     Effect.gen(function* () {
       const golden = yield* S.decodeEffect(Golden)(fixtureText("systemd-path.golden.json"));
@@ -166,7 +160,11 @@ describe("XdgBase against frozen systemd-path answers", () => {
         });
         return O.getOrNull(resolved) !== systemd;
       });
-      assert.deepStrictEqual(mismatches, []);
+      assert.deepStrictEqual(
+        mismatches,
+        [],
+        "a null systemd answer is none or a passwd fallback; XdgBase is HOME-optional and answers none there"
+      );
     })
   );
 });

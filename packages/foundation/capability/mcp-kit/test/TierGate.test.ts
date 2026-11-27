@@ -154,8 +154,6 @@ describe("dispatchWithTierGate", () => {
 });
 
 describe("recordOutcome settlement", () => {
-  // A gate that evaluates via the policy but records settlements into a Ref,
-  // so the tests observe exactly what dispatchWithTierGate reports.
   const recordingGate = Effect.fnUntraced(function* (approvedTools: ReadonlyArray<string>) {
     const recorded = yield* Ref.make<ReadonlyArray<{ readonly tool: string; readonly settlement: string }>>([]);
     const policyGate = fromApprovedToolsPolicy(TierGatePolicy.make({ approvedTools }));
