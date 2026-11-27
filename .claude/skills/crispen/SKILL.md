@@ -57,7 +57,10 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
    `standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling").
 3. **Absence/nullish → `Option` in the schema**, not a null-check.
 4. **Constant/bool default → the schema**, not a `*Defaults` spread.
-5. **Decode/guard wall → colocated statics** on the schema const/class.
+5. **Decode/guard wall → colocated statics** on the schema const/class. The
+   same rung takes any pure function with one schema subject
+   (`largestOf(picture)` → `Picture.largest(picture)`), when it needs only
+   what the schema's file already imports (EF-35c).
 6. **Repeated literal/variant family → one node + a kit** (`LiteralKit` /
    `MappedLiteralKit` for a named domain; `S.Literals` for an anonymous inline
    union never referenced by name).
@@ -66,7 +69,9 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
    union per question, nested where the first answer decides the second
    question, walked with one `.match` per union.
 8. **Split roles**: `.model.ts` / `.behavior.ts` / `.codec.ts` / `.render.ts` /
-   `.escape.ts` — specialize per package, no package needs all five.
+   `.escape.ts` — specialize per package, no package needs all five. Rung 8
+   wins over rung 5: behavior that would add an import to `.model.ts` goes to
+   `.behavior.ts`, never onto the class.
 
 For every rung, the exact combinator, its signature, and a real usage site are in
 **`references/crispening.md`** (this skill). The governing rules for *which*

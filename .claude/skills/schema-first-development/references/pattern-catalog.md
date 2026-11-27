@@ -547,6 +547,38 @@ Avoid:
 When decoder or encoder failures leave the local helper, wrap the Effect codec
 with `Effect.mapError(...)` and return the boundary's typed error.
 
+## 7a. Put Single-Subject Functions on the Schema
+
+A pure function whose one subject is a schema class is a static on that class
+(EF-35c). The caller finds it by typing the class name, and the model file
+needs no helper wall beside it.
+
+```ts
+export class Picture extends S.Opaque<Picture, { readonly brand: unique symbol }>()(
+  S.Struct({ renditions: S.NonEmptyArray(Rendition) }).pipe($I.annoteSchema("Picture", { description: "..." }))
+) {
+  static readonly largest = (picture: Picture): Rendition => A.max(picture.renditions, widest);
+}
+```
+
+Decide with the import test:
+
+| The function needs | Where it lives |
+| --- | --- |
+| only the instance and what the schema's file already imports | a static on the class |
+| a module that imports this schema back, or another concept's behavior | the package's `.behavior.ts` |
+| a service | a service method, with an accessor on the service class (EF-8b) |
+| a decode or encode | an `S.*` call at the use site, never a static |
+
+A `S.toTaggedUnion(...)` result is a const with no class body. Give it statics
+with `SchemaUtils.withStatics` as the last step of its pipe
+(`packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts`); a
+function only its own module calls may stay free (`handleOf(account)`).
+
+Statics live on the class only: `X.annotate(...)` and `X.pipe(...)` return the
+underlying schema without them, and a subclass keeps them only when written
+`Base.extend<Sub, typeof Base>()`.
+
 ## 8. Use JSON String Codecs
 
 For JSON string boundaries:

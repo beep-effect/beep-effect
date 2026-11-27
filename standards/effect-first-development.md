@@ -245,6 +245,31 @@ export class MyService extends Context.Service<MyService, {
 }>()($I`MyService`) {}
 ```
 
+### EF-8b: Service accessors mirror the contract
+
+- A service class may carry one static per contract member, so a caller needs
+  the service in its environment and not an instance in hand. Effect v4 has no
+  generated accessors (`.repos/effect/migration/services.md`); write each one.
+- Naming: the accessor has the contract member's name and its exact arguments.
+  It takes nothing the contract does not know. A wrapper such as a
+  platform-tagged locator is unwrapped by the dispatcher, before the call.
+- Lift by what the member returns: `X.use(...)` for an `Effect`,
+  `Stream.unwrap(X.useSync(...))` for a `Stream`, `X.useSync(...)` for a plain
+  value. Live sites: `DateTimes` in
+  `packages/foundation/modeling/utils/src/DateTime.ts`, `CuidState` in
+  `packages/foundation/modeling/schema/src/Cuid.ts`.
+- Boundary: an accessor reads its own service only. A static that needs a
+  second service is orchestration and belongs in a function or another service.
+
+```ts
+export class YouTubeMapper extends Context.Service<YouTubeMapper, {
+  readonly items: (target: YouTubeTarget) => Stream.Stream<MappedItem, MapperError>
+}>()($I`YouTubeMapper`) {
+  static readonly items = (target: YouTubeTarget) =>
+    Stream.unwrap(YouTubeMapper.useSync((mapper) => mapper.items(target)));
+}
+```
+
 ### EF-9: Time/randomness should be effectful
 
 - Prefer Effect runtime services such as `Clock` and `Random`.
@@ -1135,9 +1160,10 @@ Avoid this:
 - Use `LiteralKit` static APIs (`.Enum`, `.is`, `.match`, `.toTaggedUnion`)
   and the `S.Literals` members it inherits (`.literals`, `.pick(...)`) instead
   of duplicate literal arrays, enum-like objects, and ad-hoc literal guards.
-- Use class-local statics for repeated `decode`, `encode`, `arbitrary`, and
-  `equivalence` helpers when they reduce repeated plumbing without introducing
-  import cycles.
+- Use class-local statics for repeated `arbitrary` and `equivalence` helpers
+  when they reduce repeated plumbing without introducing import cycles. Decode
+  and encode are never statics (`lint schema-first`, codec-static count); see
+  EF-35c for domain functions.
 - Build an `Option` of a schema value with the constructor's own
   `makeOption`, never by wrapping `make` in `O.some`. Every schema has it:
   classes, brands, structs and tagged-union cases.
@@ -1167,6 +1193,40 @@ Avoid this:
 - Reference proofs:
   `packages/foundation/modeling/schema/test/LiteralKit.test.ts` and
   `packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts`.
+
+### EF-35c: A pure function with one schema subject lives on that schema
+
+- A pure function whose one subject is a schema class is a static on that
+  class, taking the instance as its argument: `Picture.largest(picture)`,
+  `RichText.hashtags(text)`, `Post.summary(post)`. Do not leave it as a free
+  function beside the class.
+
+  ```ts
+  export class Picture extends S.Opaque<Picture, { readonly brand: unique symbol }>()(
+    S.Struct({ renditions: S.NonEmptyArray(Rendition) }).pipe($I.annoteSchema("Picture", { description: "..." }))
+  ) {
+    static readonly largest = (picture: Picture): Rendition => A.max(picture.renditions, widest);
+  }
+  ```
+
+- Import test: the static may use only what the schema's own file already
+  imports. If it needs a module that imports this schema back, a service, or
+  another concept's behavior, it is not single-subject: it goes to the
+  package's `.behavior.ts` (or a free function where the package has no role
+  split). `standards/ARCHITECTURE.md` keeps `.model.ts` free of that cycle and
+  wins over this rule.
+- A const schema has no class body. A tagged union built with
+  `S.toTaggedUnion(...)` takes its statics through `SchemaUtils.withStatics` as
+  the last step of its pipe (live site:
+  `packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts`). A
+  function over a union that only its own module calls may stay a free
+  function (`handleOf(account)`).
+- Statics survive only on the class itself. `X.annotate(...)` and `X.pipe(...)`
+  return the underlying schema without them, and `Base.extend<Sub>()` drops
+  them unless written `Base.extend<Sub, typeof Base>()`
+  (`.repos/effect/packages/effect/SCHEMA.md`, "extends and static members").
+- Never a codec static (`SFV4-codec-static`): decode and encode stay `S.*`
+  calls at the use site.
 
 ### EF-36: Prefer schema equivalence for domain comparisons
 

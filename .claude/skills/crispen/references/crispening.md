@@ -35,6 +35,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 | Symbol | Signature (abridged) | Kills | Live site |
 |--------|----------------------|-------|-----------|
 | in-body `static readonly is = S.is(Self)` | a class body static on an `S.Opaque` or `S.Class` schema (a piped annotation drops statics) | a free-floating guard next to the class | `Md.model.ts` (`Heading.is`) |
+| in-body `static readonly largest = (picture: Picture) => ...` | a class body static taking the instance; uses only the model file's existing imports (EF-35c) | a free `largestOf(picture)` beside the class | `TSMorph.model.ts` (`withStatics` on a `S.toTaggedUnion` const) |
 | `S.is` / `S.decodeUnknownOption` / `S.toEquivalence` | upstream free functions over the schema | a hand-written guard, decoder or `===` comparison | call at the use site; Effect caches parsers per AST |
 | `SchemaUtils.withStatics` | `dual` `(self, (schema) => methods) => self & methods` | ad-hoc `Object.assign(schema, {...})` + domain helpers lost on `.annotate`; never for codecs (`SFV4-codec-static`) | `SchemaUtils/withStatics.ts` |
 | `SchemaUtils.withLiteralKitStatics` | `(literalKit) => (self) => self & kitHelpers` | LiteralKit helpers lost by a derivation such as `S.brand`; annotations already preserve them | `SchemaUtils/withLiteralKitStatics.ts` |
@@ -187,8 +188,9 @@ it.prop("round-trips losslessly", [DocumentArbitrary], ([doc]) => {
 // codec law: Md → Lexical → Md stabilizes after one pass (the lossiness profile IS the law).
 ```
 
-**7. Module role split.** Behavior moves off the schema class; `.model.ts` stays pure,
-breaking the model↔utils cycle.
+**7. Module role split.** Behavior that needs another module moves off the schema class;
+`.model.ts` stays pure, breaking the model↔utils cycle. A single-subject static that adds
+no import to `.model.ts` stays on the class (EF-35c).
 ```
 Md.model.ts    — schemas only (S.Opaque over S.TaggedStruct, LiteralKit, SchemaUtils.*)
 Md.behavior.ts — pure projections (plain-text, run segmentation)

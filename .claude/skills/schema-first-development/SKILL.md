@@ -169,6 +169,13 @@ Keep `Schema` as the source of truth for pure data models.
   describe it.
   Give no default to identity, authority, provenance or money, or to a field
   whose empty value is the widest one (EF-34).
+- Put a pure function with one schema subject on that schema as a static that
+  takes the instance: `Picture.largest(picture)`, not a free `largestOf`. It
+  may use only what the schema's file already imports; anything needing a
+  service, another concept or a module that imports the schema back goes to
+  `.behavior.ts`. A `S.toTaggedUnion` const takes statics through
+  `SchemaUtils.withStatics` last in its pipe. Never a codec static. See
+  `references/pattern-catalog.md` section 7a (EF-35c).
 - Prefer built-in schema constructors and checks before `S.makeFilter(...)`.
 - Treat broad exported/domain/boundary primitives such as `S.String`,
   `S.Number`, and unbounded arrays as prompts to ask whether the schema should
