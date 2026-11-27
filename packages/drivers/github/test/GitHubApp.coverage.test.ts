@@ -23,7 +23,7 @@ const key = await crypto.subtle.generateKey(
   ["sign", "verify"]
 );
 const bytes = new Uint8Array(await crypto.subtle.exportKey("pkcs8", key.privateKey));
-// The PEM banner is assembled so no literal key header sits in source (semgrep beep-hardcoded-private-key).
+// decision: test-pem-banner-is-assembled
 const pemBanner = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY-----`;
 const credentials = {
   appId: "Iv1.test",

@@ -24,8 +24,6 @@ import * as Str from "effect/String";
 import { harness, REPO } from "./support/harness.ts";
 import type { GitHubFixtures } from "@beep/github/GitHubClient";
 
-// --- Recorded GraphQL payloads ------------------------------------------------
-
 const wireComment = (overrides: Record<string, unknown> = {}) => ({
   id: "PRRC_1",
   databaseId: 1001,
@@ -77,8 +75,6 @@ const resolvedThread = wireThread({
 
 const outdatedThread = wireThread({ id: "PRRT_outdated", isOutdated: true, line: null, startLine: 10 });
 
-// --- Fixture helpers ----------------------------------------------------------
-
 let warnings: ReadonlyArray<{ message: unknown; annotations: Record<string, unknown> }> = [];
 const warningCollector = Logger.make(({ fiber, logLevel, message }) => {
   if (logLevel === "Warn") {
@@ -106,8 +102,6 @@ const withFixtures = <A, E>(
 const messageText = (message: unknown): string =>
   A.isArray(message) ? A.join(A.filter(message, P.isString), " ") : P.isString(message) ? message : "";
 
-// --- Model helpers --------------------------------------------------------------
-
 const newestComment = (author: O.Option<ReviewThreadActor>): O.Option<ReviewThreadComment> =>
   ReviewThreadComment.makeOption({
     id: "PRRC_x",
@@ -121,11 +115,8 @@ const newestComment = (author: O.Option<ReviewThreadActor>): O.Option<ReviewThre
     url: "https://example.test",
   });
 
-/** The newest comment is by a human with this login. */
 const lastWordFrom = (login: string) => newestComment(ReviewThreadActor.makeOption({ login, isBot: false }));
-/** The newest comment is by a bot with this login. */
 const lastWordFromBot = (login: string) => newestComment(ReviewThreadActor.makeOption({ login, isBot: true }));
-/** The newest comment's author account is gone. */
 const lastWordAnonymous = newestComment(O.none());
 
 const node = (
@@ -151,8 +142,6 @@ const node = (
     newestComment: O.none(),
     ...overrides,
   });
-
-// --- Pagination over the real client -----------------------------------------------
 
 describe("ReviewThread.list pagination", () => {
   it.effect("walks every page and threads the end cursor into the next request", () =>
@@ -254,10 +243,7 @@ describe("ReviewThread.list pagination", () => {
   );
 });
 
-/** Read one element a preceding `assert.lengthOf` already proved present. */
 const at = <X>(items: ReadonlyArray<X>, index: number): X => O.getOrThrow(A.get(items, index));
-
-// --- Projection, truncation and the warning -----------------------------------------
 
 describe("ReviewThread.list projection", () => {
   it.effect("projects threads, flags truncated comment connections and warns once per page", () =>
@@ -335,8 +321,6 @@ describe("ReviewThread.list projection", () => {
   );
 });
 
-// --- The node(id:) entry point ------------------------------------------------------
-
 describe("ReviewThread.listByNodeId", () => {
   it.effect("reads threads from a pull request node without a Repo", () =>
     Effect.gen(function* () {
@@ -353,7 +337,6 @@ describe("ReviewThread.listByNodeId", () => {
         },
         requested,
       };
-      // No Repo in the layer: the node form must not require one.
       const read = yield* Effect.scopedWith((scope) =>
         Effect.gen(function* () {
           const layer = ReviewThread.layer.pipe(Layer.provide(GitHubClient.layerFixture(fixtures)));
@@ -385,8 +368,6 @@ describe("ReviewThread.listByNodeId", () => {
     );
   }
 });
-
-// --- Mutations -------------------------------------------------------------------------
 
 describe("ReviewThread mutations", () => {
   it.effect("reply returns the new comment and sends the thread id and body", () =>
@@ -477,8 +458,6 @@ describe("ReviewThread mutations", () => {
   );
 });
 
-// --- The outstanding rule ------------------------------------------------------------
-
 describe("ReviewThread.outstanding", () => {
   const author = O.some("octocat");
 
@@ -533,8 +512,6 @@ describe("ReviewThread.outstanding", () => {
     assert.strictEqual(outstanding(ReviewThreads.make({ pullRequestAuthor: O.none(), threads: [] })), 0);
   });
 });
-
-// --- Test doubles ----------------------------------------------------------------------
 
 describe("ReviewThread test doubles", () => {
   it.layer(ReviewThread.layerTest({ resolve: () => Effect.succeed(true) }), { timeout: "30 seconds" })((it) => {

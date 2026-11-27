@@ -244,7 +244,6 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
     Layer.succeed(RepositoryVariable, RepositoryVariable.makeTest(overrides));
 }
 
-/** Decode one page walk of variables, blaming `operation` for a payload that does not fit. */
 const decodeVariables = (items: ReadonlyArray<{ readonly name: string; readonly value: string }>, operation: string) =>
   Effect.forEach(
     items,
@@ -256,18 +255,6 @@ const decodeVariables = (items: ReadonlyArray<{ readonly name: string; readonly 
   );
 
 const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
-  /**
-   * Does this variable already exist? One by-name read, not a listing.
-   *
-   * **Details**
-   *
-   * GitHub answers 404 for an absent variable, which makes the pre-write check
-   * constant cost — paginating the whole collection to answer one yes/no grows
-   * with a repository that has nothing to do with the variable being written.
-   * Only `notFound` is absorbed: a 403 from a mis-scoped token still fails,
-   * which a blanket "treat any error as absent" would destroy, turning a
-   * permissions problem into a spurious create.
-   */
   const exists: {
     (
       route: "GET /repos/{owner}/{repo}/actions/variables/{name}",
@@ -367,8 +354,6 @@ const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {
         })
         .pipe(
           Effect.as(true),
-          // Same by-name check as `set`: constant cost, and only `notFound` is
-          // absorbed so a permissions failure cannot masquerade as absence.
           Effect.catchIf(
             (error) => error.kind === "notFound",
             () => Effect.succeed(false)

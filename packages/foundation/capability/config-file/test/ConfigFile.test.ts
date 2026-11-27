@@ -62,10 +62,8 @@ describe("ConfigFile.load", () => {
         assert.instanceOf(error, ConfigFileNotFoundError);
         assert.isTrue(S.is(ConfigFileNotFoundError)(error));
         assert.strictEqual(error._tag, "ConfigFileNotFoundError");
-        // It reports which tiers were probed — v3's mega-error could not.
-        assert.include(error.searched, "explicit");
-        // ...and which paths those tiers checked — one name can hide N candidates.
-        assert.deepStrictEqual(error.candidates, ["/app/.apprc"]);
+        assert.include(error.searched, "explicit", "the error names each tier that was probed");
+        assert.deepStrictEqual(error.candidates, ["/app/.apprc"], "one tier name can hide several candidate paths");
       })
     );
   });
@@ -95,8 +93,11 @@ describe("ConfigFile.load", () => {
           "/repo/.app.json",
           "/repo/app.json",
         ]);
-        // The message names the search without dumping every path; the field carries them.
-        assert.include(error.message, "walk:project");
+        assert.include(
+          error.message,
+          "walk:project",
+          "the message names the search; the candidates field carries the paths"
+        );
         assert.include(error.message, "5 candidate paths checked");
       })
     );
@@ -112,10 +113,16 @@ describe("ConfigFile.load", () => {
         const error = yield* Effect.flip(cfg.load);
         if (!S.is(ConfigFileNotFoundError)(error)) throw error;
         assert.deepStrictEqual(error.searched, ["hand-rolled", "explicit"]);
-        // The hand-rolled tier is opaque; the built-in still reports its probe.
-        assert.deepStrictEqual(error.candidates, ["/app/.apprc"]);
-        // No probe count in the message beyond what the field holds.
-        assert.include(error.message, "1 candidate path checked");
+        assert.deepStrictEqual(
+          error.candidates,
+          ["/app/.apprc"],
+          "a hand-rolled tier is opaque; the built-in still reports its probe"
+        );
+        assert.include(
+          error.message,
+          "1 candidate path checked",
+          "the message counts only what the candidates field holds"
+        );
       })
     );
   });
@@ -145,8 +152,7 @@ describe("ConfigFile.load", () => {
         assert.strictEqual(error._tag, "ConfigValidationError");
         const { issue } = error;
         assert.notStrictEqual(typeof issue, "string");
-        // The structured schema issue tree survives, rather than String(ParseError).
-        assert.strictEqual(typeof issue, "object");
+        assert.strictEqual(typeof issue, "object", "the schema issue tree survives, not String(ParseError)");
         assert.isTrue(P.isObjectKeyword(issue));
         assert.property(issue, "_tag");
       })
@@ -174,9 +180,8 @@ describe("ConfigFile.load", () => {
         const error = yield* Effect.flip(cfg.loadFrom("/nope/.apprc"));
         assert.instanceOf(error, ConfigFileReadError);
         assert.isTrue(S.is(ConfigFileReadError)(error));
-        // v3 collapsed this to `reason: String(e)`; the host's typed PlatformError survives.
         const cause = error.cause;
-        assert.instanceOf(cause, PlatformError.PlatformError);
+        assert.instanceOf(cause, PlatformError.PlatformError, "the host's typed PlatformError survives, not String(e)");
         assert.isTrue(PlatformError.isPlatformError(cause));
         assert.strictEqual(cause.reason._tag, "NotFound");
       })
@@ -350,9 +355,6 @@ describe("ConfigFile cyclic codec documents", () => {
 });
 
 describe("ConfigFile bare non-object documents", () => {
-  // JsonCodec.parse happily accepts `null`, `42` and `"str"` — a bare,
-  // non-object JSON document. The service is where that becomes a decision:
-  // the schema rejects it as a ConfigValidationError, never a defect.
   for (const [label, raw] of [
     ["null", "null"],
     ["a bare number", "42"],
@@ -364,7 +366,11 @@ describe("ConfigFile bare non-object documents", () => {
         Effect.gen(function* () {
           const cfg = yield* AppConfig;
           const error = yield* Effect.flip(cfg.load);
-          assert.instanceOf(error, ConfigValidationError);
+          assert.instanceOf(
+            error,
+            ConfigValidationError,
+            "JsonCodec parses bare non-object documents; the schema rejects them"
+          );
           assert.isTrue(S.is(ConfigValidationError)(error));
           assert.strictEqual(error._tag, "ConfigValidationError");
         })
@@ -508,11 +514,13 @@ describe("ConfigFile options.validate", () => {
     it.effect("loadOrDefault returns defaultValue as-is, without running the schema or options.validate on it", () =>
       Effect.gen(function* () {
         const cfg = yield* AppConfig;
-        // port: 0 would be rejected by rejectPort0 if it were run, and by the
-        // schema if re-decoded. Its return unmolested pins the v3-parity behavior.
         const defaultValue = AppShape.make({ port: 0 });
         const value = yield* cfg.loadOrDefault(defaultValue);
-        assert.strictEqual(value, defaultValue);
+        assert.strictEqual(
+          value,
+          defaultValue,
+          "port 0 fails rejectPort0 and the schema, so an untouched return proves neither ran"
+        );
         assert.strictEqual(value.port, 0);
       })
     );
@@ -520,33 +528,26 @@ describe("ConfigFile options.validate", () => {
 });
 
 describe("ConfigFile error-union narrowing (type-level)", () => {
-  // These assignments do not run anything meaningful; they FAIL THE TYPECHECK
-  // if a method's error channel is wider than the design permits. That is the
-  // deliverable of this task, and the v3 defect it repairs.
   it.layer(layerFor({}), { timeout: "30 seconds" })((it) => {
-    it.effect("narrows each method's error channel", () =>
+    it.effect("narrows each method's error channel: the typed bindings fail the typecheck if one widens", () =>
       Effect.gen(function* () {
         const cfg = yield* AppConfig;
 
         const _load: Effect.Effect<AppShape, ConfigLoadError, never> = cfg.load;
-        // No ConfigFileNotFoundError: the path is explicit.
         const _loadFrom: (p: string) => Effect.Effect<AppShape, ConfigReadError, never> = cfg.loadFrom;
-        // No ConfigFileNotFoundError: an empty array is success.
         const _discover: Effect.Effect<
           ReadonlyArray<{ readonly value: AppShape }>,
           ConfigReadError,
           never
         > = cfg.discover;
-        // No ConfigFileNotFoundError: that is the branch it handles.
         const _loadOrDefault: (d: AppShape) => Effect.Effect<AppShape, ConfigReadError, never> = cfg.loadOrDefault;
-        // ConfigValidationError and nothing else.
         const _validate: (v: unknown) => Effect.Effect<AppShape, ConfigValidationError, never> = cfg.validate;
 
-        assert.isFunction(_validate);
-        assert.isFunction(_loadFrom);
-        assert.isFunction(_loadOrDefault);
+        assert.isFunction(_validate, "validate fails only with ConfigValidationError");
+        assert.isFunction(_loadFrom, "loadFrom has no ConfigFileNotFoundError: the path is explicit");
+        assert.isFunction(_loadOrDefault, "loadOrDefault has no ConfigFileNotFoundError: it handles that branch");
         assert.isDefined(_load);
-        assert.isDefined(_discover);
+        assert.isDefined(_discover, "discover has no ConfigFileNotFoundError: an empty array is success");
       })
     );
   });

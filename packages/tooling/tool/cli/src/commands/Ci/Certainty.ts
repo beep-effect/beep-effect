@@ -49,11 +49,16 @@ import {
   CiCertaintyAdmissionStat,
   CiCertaintyContextRow,
   CiCertaintyCorpus,
+  CiCertaintyDistribution,
   CiCertaintyHeadRow,
   CiCertaintyLatencyStat,
+  CiCertaintyMainCancelStat,
   CiCertaintyMainCommit,
+  CiCertaintyMainHorizon,
   CiCertaintyMainRow,
+  CiCertaintyMainRunRow,
   CiCertaintyMainStat,
+  CiCertaintyReplayInputs,
   CiCertaintyReport,
   CiCertaintyRun,
   CiCertaintyRunnerMinutes,
@@ -81,6 +86,7 @@ import {
 } from "./LaneTimings.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type {
+  CiCertaintyCancelActor,
   CiCertaintyCensorReason,
   CiCertaintyContextState,
   CiCertaintyHeadClass,
@@ -91,7 +97,7 @@ import type {
   CiCertaintyRefusal,
 } from "./Certainty.schemas.ts";
 import type { CiLaneId } from "./CiLane.ts";
-import type { CiWorkflowJob, CiWorkflowPartialRead, CiWorkflowWindowRun } from "./LaneTimings.ts";
+import type { CiRunnerClass, CiWorkflowJob, CiWorkflowPartialRead, CiWorkflowWindowRun } from "./LaneTimings.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Certainty");
 
@@ -143,8 +149,25 @@ export const CI_CERTAINTY_NOT_COVERED: ReadonlyArray<string> = [
   "Property Laws nightly verdicts (property-laws-nightly.yml)",
   "runs the compute-profile refusal routed to hosted",
   "the Yeet review window (push to Yeet-mergeable counts contexts only)",
-  "the main run cancel actor and heavy-queue pickup p95 (later slices)",
+  "heavy-pool VM boot inside heavy slot-minutes (the jobs API starts a job's clock at pickup; boot sits in the heavy-queue row)",
+  "the login behind an explicit main cancel (only check-run annotations name it, and every agent shares one login)",
 ];
+
+/**
+ * Days of main history each capture re-reads for late-arriving verdicts.
+ *
+ * **Example** (Print the horizon)
+ *
+ * ```ts
+ * import { CI_CERTAINTY_MAIN_HORIZON_DAYS } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CI_CERTAINTY_MAIN_HORIZON_DAYS) // 7
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CI_CERTAINTY_MAIN_HORIZON_DAYS = 7;
 
 const PRODUCER_CHECK: CiCertaintyProducer = "check.yml";
 const PRODUCER_HEAVY_ADMIT: CiCertaintyProducer = "heavy-admit.yml";
@@ -155,6 +178,12 @@ const DOCS_POLICY_JOB = ciLaneDescriptor("docs-policy").contextName;
 const TEST_PLAN_JOB = CiSupportJobName.Enum["Test Plan"];
 const TEST_UNIT_PARTITION_PREFIX = ciLaneShardJobPrefix("test-unit");
 const COVERAGE_CONTEXTS = ciLaneReportingNames("coverage");
+const LINT_POLICY_JOBS = ciLaneReportingNames("lint-policy");
+const PROPERTY_LAWS_JOBS = ciLaneReportingNames("property");
+const PROPERTY_LAWS_PARTITION_PREFIX = ciLaneShardJobPrefix("property");
+const MAIN_HORIZON = Duration.days(CI_CERTAINTY_MAIN_HORIZON_DAYS);
+const LATE_VERDICT_AFTER = Duration.days(1);
+const PENDING_REPLACEMENT_SLACK = Duration.minutes(1);
 // Yeet-mergeable adds these lanes' contexts to the required set (D5); Coverage Regression keeps its conditional
 // name.
 const MERGEABLE_EXTRA_LANES: ReadonlyArray<CiLaneId> = ["lint-policy", "property", "fallow", "coverage"];
@@ -308,6 +337,23 @@ const groupsGreenAt = (
   });
 };
 
+const distinctJobs = (jobs: ReadonlyArray<CiWorkflowJob>): ReadonlyArray<CiWorkflowJob> =>
+  A.dedupeWith(
+    jobs,
+    (left, right) =>
+      left.run_id === right.run_id &&
+      Str.equivalence(left.name, right.name) &&
+      left.started_at === right.started_at &&
+      left.completed_at === right.completed_at
+  );
+
+const onRunnerClass =
+  (runnerClass: CiRunnerClass) =>
+  (job: CiWorkflowJob): boolean =>
+    Str.equivalence(ciRunnerClassForLabels(job.labels), runnerClass);
+
+const executed = (job: CiWorkflowJob): boolean => job.conclusion !== "skipped" && O.isSome(epochMillis(job.started_at));
+
 /**
  * Raw runner-minutes of one run's jobs, with rerun copies counted once.
  *
@@ -346,18 +392,11 @@ const groupsGreenAt = (
  * @since 0.0.0
  */
 export const ciCertaintyRunnerMinutes = (jobs: ReadonlyArray<CiWorkflowJob>): CiCertaintyRunnerMinutes => {
-  const distinct = A.dedupeWith(
-    jobs,
-    (left, right) =>
-      left.run_id === right.run_id &&
-      Str.equivalence(left.name, right.name) &&
-      left.started_at === right.started_at &&
-      left.completed_at === right.completed_at
-  );
-  const minutesFor = (runnerClass: string): number =>
+  const distinct = distinctJobs(jobs);
+  const minutesFor = (runnerClass: CiRunnerClass): number =>
     roundMinutes(
       A.reduce(
-        A.filter(distinct, (job) => Str.equivalence(ciRunnerClassForLabels(job.labels), runnerClass)),
+        A.filter(distinct, onRunnerClass(runnerClass)),
         0,
         (total, job) =>
           total +
@@ -780,6 +819,160 @@ const mainStatOf = (rows: ReadonlyArray<CiCertaintyMainRow>): CiCertaintyMainSta
 const insideWindow = (since: DateTime.Utc, until: DateTime.Utc, millis: number): boolean =>
   millis >= DateTime.toEpochMillis(since) && millis < DateTime.toEpochMillis(until);
 
+const distributionOf = (values: ReadonlyArray<number>): CiCertaintyDistribution =>
+  CiCertaintyDistribution.make({
+    max: A.match(values, {
+      onEmpty: O.none,
+      onNonEmpty: (present) => O.some(roundMinutes(A.max(present, Order.Number))),
+    }),
+    mean: meanOf(values),
+    n: A.length(values),
+    p50: O.map(nearestRank(values, 0.5), roundMinutes),
+    p95: O.map(nearestRank(values, 0.95), roundMinutes),
+  });
+
+const startToEnd = (job: CiWorkflowJob): O.Option<number> =>
+  O.flatMap(epochMillis(job.started_at), (start) => O.map(completedMillis(job), (end) => minutesBetween(start, end)));
+
+const createdToStarted = (job: CiWorkflowJob): O.Option<number> =>
+  O.flatMap(epochMillis(job.created_at), (created) =>
+    O.map(epochMillis(job.started_at), (start) => minutesBetween(created, start))
+  );
+
+const firstJobPickupMinutes = (run: CiCertaintyRun): O.Option<number> =>
+  A.match(A.getSomes(A.map(A.filter(attemptOneJobs(run), executed), (job) => epochMillis(job.started_at))), {
+    onEmpty: O.none,
+    onNonEmpty: (starts) => O.some(minutesBetween(runCreatedMillis(run), A.min(starts, Order.Number))),
+  });
+
+const isPropertyLawsJob = (job: CiWorkflowJob): boolean =>
+  A.contains(PROPERTY_LAWS_JOBS, job.name) || Str.startsWith(PROPERTY_LAWS_PARTITION_PREFIX)(job.name);
+
+const isCompletedVerdict = (job: CiWorkflowJob): boolean =>
+  Str.equivalence(job.status, "completed") && job.conclusion !== "cancelled";
+
+const propertyLawsMinutes = (run: CiCertaintyRun): O.Option<number> => {
+  const jobs = A.filter(attemptOneJobs(run), (job) => isPropertyLawsJob(job) && executed(job));
+  const starts = A.getSomes(A.map(jobs, (job) => epochMillis(job.started_at)));
+  const ends = A.getSomes(A.map(jobs, completedMillis));
+  return A.isReadonlyArrayNonEmpty(starts) && A.isReadonlyArrayNonEmpty(ends) && A.every(jobs, isCompletedVerdict)
+    ? O.some(minutesBetween(A.min(starts, Order.Number), A.max(ends, Order.Number)))
+    : O.none();
+};
+
+const startedJobCount = (jobs: ReadonlyArray<CiWorkflowJob>, runnerClass: CiRunnerClass): number =>
+  A.length(
+    A.filter(distinctJobs(jobs), (job) => job.run_attempt === 1 && executed(job) && onRunnerClass(runnerClass)(job))
+  );
+
+const runStartMillis = (run: CiWorkflowWindowRun): number =>
+  DateTime.toEpochMillis(O.getOrElse(run.run_started_at, () => run.created_at));
+
+const isCompletedRun = (run: CiWorkflowWindowRun): boolean =>
+  O.exists(runStatus(run), (status) => Str.equivalence(status, "completed"));
+
+const replacedWhilePending = (run: CiWorkflowWindowRun, listed: ReadonlyArray<CiWorkflowWindowRun>): boolean =>
+  O.exists(run.updated_at, (ended) =>
+    A.some(
+      listed,
+      (other) =>
+        other.id !== run.id &&
+        DateTime.isGreaterThan(other.created_at, run.created_at) &&
+        DateTime.isLessThanOrEqualTo(other.created_at, DateTime.addDuration(ended, PENDING_REPLACEMENT_SLACK))
+    )
+  );
+
+const cancelActorOf = (
+  run: CiWorkflowWindowRun,
+  read: O.Option<CiCertaintyRun>,
+  listed: ReadonlyArray<CiWorkflowWindowRun>
+): CiCertaintyCancelActor =>
+  O.match(read, {
+    onNone: () => "unread",
+    onSome: (jobs) =>
+      A.some(jobs.jobs, (job) => job.run_attempt === run.run_attempt)
+        ? "explicit"
+        : replacedWhilePending(run, listed)
+          ? "concurrency-queue"
+          : "unattributed",
+  });
+
+const mainRunRowsOf = (
+  commits: ReadonlyArray<CiCertaintyMainCommit>,
+  corpus: CiCertaintyCorpus
+): ReadonlyArray<CiCertaintyMainRunRow> => {
+  const listed = A.appendAll(
+    corpus.mainPushRuns,
+    A.flatMap(corpus.mainCommits, (commit) => commit.runs)
+  );
+  return A.flatMap(commits, (commit) =>
+    A.map(commit.runs, (run) => {
+      const read = A.findFirst(
+        corpus.mainRunJobs,
+        (candidate) => candidate.run.id === run.id && !A.isReadonlyArrayNonEmpty(candidate.partialReads)
+      );
+      const cancelled = isCompletedRun(run) && O.exists(runConclusion(run), (conclusion) => conclusion === "cancelled");
+      return CiCertaintyMainRunRow.make({
+        cancelActor: cancelled ? O.some(cancelActorOf(run, read, listed)) : O.none(),
+        conclusion: runConclusion(run),
+        createdAt: run.created_at,
+        heavyJobs: O.map(read, (jobs) => startedJobCount(jobs.jobs, "managed")),
+        hostedJobs: O.map(read, (jobs) => startedJobCount(jobs.jobs, "github-hosted")),
+        runId: run.id,
+        sha: commit.sha,
+      });
+    })
+  );
+};
+
+const mainCancelStatOf = (rows: ReadonlyArray<CiCertaintyMainRunRow>): CiCertaintyMainCancelStat => {
+  const actors = A.getSomes(A.map(rows, (row) => row.cancelActor));
+  const count = (actor: CiCertaintyCancelActor) => A.length(A.filter(actors, (found) => Str.equivalence(found, actor)));
+  return CiCertaintyMainCancelStat.make({
+    cancelledRuns: A.length(actors),
+    concurrencyQueue: count("concurrency-queue"),
+    explicit: count("explicit"),
+    unattributed: count("unattributed"),
+    unread: count("unread"),
+  });
+};
+
+const isLateVerdict = (commit: CiCertaintyMainCommit, verdict: CiCertaintyMainVerdict): boolean => {
+  const lateFrom = DateTime.toEpochMillis(DateTime.addDuration(commit.committedAt, LATE_VERDICT_AFTER));
+  return (
+    (Str.equivalence(verdict, "success") || Str.equivalence(verdict, "failure")) &&
+    A.every(
+      A.filter(
+        commit.runs,
+        (run) =>
+          isCompletedRun(run) &&
+          O.exists(runConclusion(run), (conclusion) =>
+            Str.equivalence(verdict, "success") ? conclusion === "success" : conclusion !== "cancelled"
+          )
+      ),
+      (run) => runStartMillis(run) >= lateFrom
+    )
+  );
+};
+
+const mainHorizonOf = (corpus: CiCertaintyCorpus): CiCertaintyMainHorizon => {
+  const since = O.match(corpus.mainHorizonSince, {
+    onNone: () => corpus.since,
+    onSome: (horizon) => DateTime.min(horizon, corpus.since),
+  });
+  const commits = A.filter(corpus.mainCommits, (commit) =>
+    insideWindow(since, corpus.until, DateTime.toEpochMillis(commit.committedAt))
+  );
+  const rows = A.map(commits, mainRowOf(corpus.mainListingPartial));
+  return CiCertaintyMainHorizon.make({
+    lateVerdicts: A.length(
+      A.filter(A.zip(commits, rows), ([commit, row]) => !row.docsOnly && isLateVerdict(commit, row.verdict))
+    ),
+    since,
+    stat: mainStatOf(rows),
+  });
+};
+
 const rulesetDigestOf = (contexts: ReadonlyArray<string>) =>
   sha256Hex(A.join(A.sort(contexts, Order.String), "\n")).pipe(
     Effect.mapError(CiCommandError.new("Failed to digest the required contexts."))
@@ -868,20 +1061,35 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
       admissionToHeavyMinutes
     )
   );
-  const mainRows = A.map(
-    A.filter(corpus.mainCommits, (commit) =>
-      insideWindow(corpus.since, corpus.until, DateTime.toEpochMillis(commit.committedAt))
-    ),
-    mainRowOf(corpus.mainListingPartial)
+  const windowCommits = A.filter(corpus.mainCommits, (commit) =>
+    insideWindow(corpus.since, corpus.until, DateTime.toEpochMillis(commit.committedAt))
   );
+  const mainRows = A.map(windowCommits, mainRowOf(corpus.mainListingPartial));
+  const mainRuns = mainRunRowsOf(windowCommits, corpus);
+  const windowMainRunIds = HashSet.fromIterable(A.map(mainRuns, (row) => row.runId));
+  const mainPartialReads: ReadonlyArray<CiWorkflowPartialRead> = A.flatMap(
+    A.filter(corpus.mainRunJobs, (read) => HashSet.has(windowMainRunIds, read.run.id)),
+    (read: CiCertaintyRun) => read.partialReads
+  );
+  const codeProducerRuns = A.filter(headRuns, (run) => HashSet.has(codeHeadShas, run.run.head_sha));
+  const codeProducerJobs = distinctJobs(A.flatMap(codeProducerRuns, (run) => run.jobs));
+  const requiredContextNames = HashSet.fromIterable(corpus.requiredContexts);
+  const codeAttempts = A.filter(attempts, (attempt) => HashSet.has(codeHeadShas, attempt.headSha));
   const slo = ciCertaintyLatencyStat(codeHeads, (head) => head.requiredGreenMinutes);
   const countedHeads = A.filter(heads, (head) => O.isNone(head.censor));
-  const partialReads: ReadonlyArray<CiWorkflowPartialRead> = A.flatMap(
-    A.filter(windowHeads, (head) => A.some(countedHeads, (counted) => Str.equivalence(counted.headSha, head.headSha))),
-    (head: HeadRuns) => A.flatMap(head.runs, (run: CiCertaintyRun) => run.partialReads)
+  const partialReads: ReadonlyArray<CiWorkflowPartialRead> = A.appendAll(
+    A.flatMap(
+      A.filter(windowHeads, (head) =>
+        A.some(countedHeads, (counted) => Str.equivalence(counted.headSha, head.headSha))
+      ),
+      (head: HeadRuns) => A.flatMap(head.runs, (run: CiCertaintyRun) => run.partialReads)
+    ),
+    mainPartialReads
   );
   const refusals: ReadonlyArray<CiCertaintyRefusal> = [
-    ...(A.some(countedHeads, (head) => Str.equivalence(head.state, "api-partial")) || corpus.mainListingPartial
+    ...(A.some(countedHeads, (head) => Str.equivalence(head.state, "api-partial")) ||
+    corpus.mainListingPartial ||
+    A.isReadonlyArrayNonEmpty(mainPartialReads)
       ? (["api-partial"] as const)
       : []),
     ...(slo.n === 0 ? (["empty-population"] as const) : []),
@@ -890,23 +1098,66 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
     admissionToHeavy: CiCertaintyAdmissionStat.make({
       n: A.length(admissionMinutes),
       p50Minutes: O.map(nearestRank(admissionMinutes, 0.5), roundMinutes),
+      p95Minutes: O.map(nearestRank(admissionMinutes, 0.95), roundMinutes),
     }),
     capturedAt: corpus.capturedAt,
     certified: !A.isReadonlyArrayNonEmpty(refusals),
     clockSource: CI_CERTAINTY_CLOCK_SOURCE,
     coverageVerdict: ciCertaintyLatencyStat(codeHeads, (head) => head.coverageVerdictMinutes),
     docsHeads: ciCertaintyLatencyStat(classHeads("docs"), (head) => head.requiredGreenMinutes),
+    firstWavePickup: distributionOf(A.getSomes(A.map(codeCheckRuns, firstJobPickupMinutes))),
     greenOnly: ciCertaintyLatencyStat(
       A.filter(codeHeads, (head) => O.isSome(head.censor) || Str.equivalence(head.state, "green")),
       (head) => head.requiredGreenMinutes
     ),
     heads,
+    heavyQueue: distributionOf(
+      A.getSomes(
+        A.map(
+          A.filter(
+            codeProducerJobs,
+            (job) => executed(job) && onRunnerClass("managed")(job) && HashSet.has(requiredContextNames, job.name)
+          ),
+          createdToStarted
+        )
+      )
+    ),
+    heavySlotMinutes: distributionOf(A.map(codeAttempts, (attempt) => ciCertaintyRunnerMinutes(attempt.jobs).managed)),
+    lintPolicyWall: distributionOf(
+      A.getSomes(
+        A.map(
+          A.filter(
+            codeProducerJobs,
+            (job) => A.contains(LINT_POLICY_JOBS, job.name) && executed(job) && isCompletedVerdict(job)
+          ),
+          startToEnd
+        )
+      )
+    ),
     main: mainStatOf(mainRows),
+    mainCancels: mainCancelStatOf(mainRuns),
+    mainHorizon: mainHorizonOf(corpus),
     mainRows,
+    mainRuns,
     mergeable: ciCertaintyLatencyStat(codeHeads, (head) => head.mergeableGreenMinutes),
     notCovered: CI_CERTAINTY_NOT_COVERED,
     partialReads,
+    propertyLaws: distributionOf(A.getSomes(A.map(codeCheckRuns, propertyLawsMinutes))),
     refusals,
+    replayInputs: CiCertaintyReplayInputs.make({
+      mainMerges: A.length(mainRows),
+      mainRunHostedJobs: distributionOf(
+        A.getSomes(
+          A.map(
+            A.filter(mainRuns, (row) => O.exists(row.hostedJobs, (count) => count > 0)),
+            (row) => row.hostedJobs
+          )
+        )
+      ),
+      pullRequestRunHostedJobs: distributionOf(
+        A.map(codeAttempts, (attempt) => startedJobCount(attempt.jobs, "github-hosted"))
+      ),
+    }),
     requestCount: corpus.requestCount,
     requiredContexts: corpus.requiredContexts,
     rulesetDigest,
@@ -936,14 +1187,23 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
   });
 });
 
-const formatMinutes = (minutes: O.Option<number>): string =>
-  O.match(minutes, { onNone: () => "—", onSome: (value) => `${value.toFixed(1)} min` });
+const formatQuantity =
+  (unit: string) =>
+  (value: O.Option<number>): string =>
+    O.match(value, { onNone: () => "—", onSome: (present) => `${present.toFixed(1)}${unit}` });
+
+const formatMinutes = formatQuantity(" min");
 
 const formatPercentile = (minutes: O.Option<number>, status: CiCertaintyPercentileStatus): string =>
   Str.equivalence(status, "attained") ? formatMinutes(minutes) : status;
 
 const formatShare = (share: O.Option<number>): string =>
   O.match(share, { onNone: () => "—", onSome: (value) => `${(value * 100).toFixed(1)}%` });
+
+const distributionLine = (stat: CiCertaintyDistribution, unit: string): string => {
+  const format = formatQuantity(unit);
+  return `n=${stat.n}; mean ${format(stat.mean)}; p50 ${format(stat.p50)}; p95 ${format(stat.p95)}; max ${format(stat.max)}`;
+};
 
 const latencyRow = (label: string, stat: CiCertaintyLatencyStat): string =>
   `| ${label} | ${stat.n} | ${stat.misses} | ${stat.censoredSuperseded} | ${stat.censoredOpen} | ${stat.withinTen} | ${formatPercentile(stat.p50Minutes, stat.p50Status)} | ${formatPercentile(stat.p95Minutes, stat.p95Status)} |`;
@@ -1001,10 +1261,18 @@ const certaintyMarkdown = (report: CiCertaintyReport, headLines: ReadonlyArray<s
       "## Main verdict rate",
       "",
       `- non-docs first-parent commits: ${report.main.commits} (docs ${report.main.docsCommits}); completed verdicts ${report.main.verdicts}; rate ${formatShare(report.main.rate)}; cancelled ${report.main.cancelled}; no run ${report.main.noRun}; open ${report.main.open}; unread ${report.main.unread}`,
+      `- ${CI_CERTAINTY_MAIN_HORIZON_DAYS}-day late-arrival horizon from ${DateTime.formatIso(report.mainHorizon.since)}: non-docs commits ${report.mainHorizon.stat.commits}; completed verdicts ${report.mainHorizon.stat.verdicts}; rate ${formatShare(report.mainHorizon.stat.rate)}; cancelled ${report.mainHorizon.stat.cancelled}; no run ${report.mainHorizon.stat.noRun}; open ${report.mainHorizon.stat.open}; unread ${report.mainHorizon.stat.unread}; verdicts a day late ${report.mainHorizon.lateVerdicts}`,
+      `- cancelled main push runs: ${report.mainCancels.cancelledRuns}; GitHub concurrency queue ${report.mainCancels.concurrencyQueue}; explicit ${report.mainCancels.explicit}; unattributed ${report.mainCancels.unattributed}; unread ${report.mainCancels.unread}`,
       "",
       "## Rows for sibling goals",
       "",
-      `- admission-to-heavy-pool start p50 (code-head producer runs, n=${report.admissionToHeavy.n}): ${formatMinutes(report.admissionToHeavy.p50Minutes)}`,
+      `- admission-to-heavy-pool start (code-head producer runs, n=${report.admissionToHeavy.n}): p50 ${formatMinutes(report.admissionToHeavy.p50Minutes)}; heavy-wait p95 ${formatMinutes(report.admissionToHeavy.p95Minutes)}`,
+      `- heavy slot-minutes per code head attempt (heavy-pool job wall, VM boot excluded): ${distributionLine(report.heavySlotMinutes, " min")}`,
+      `- heavy-queue pickup, required heavy-pool jobs of code heads (job created to started): ${distributionLine(report.heavyQueue, " min")}`,
+      `- Lint Policy wall, code heads: ${distributionLine(report.lintPolicyWall, " min")}`,
+      `- Property Laws lane, code-head check.yml runs (first job start to last finish): ${distributionLine(report.propertyLaws, " min")}`,
+      `- PR first-wave pickup, code-head check.yml runs (run created to first job start): ${distributionLine(report.firstWavePickup, " min")}`,
+      `- replay inputs: main merges ${report.replayInputs.mainMerges}; hosted jobs per main push run ${distributionLine(report.replayInputs.mainRunHostedJobs, "")}; per pull-request head attempt ${distributionLine(report.replayInputs.pullRequestRunHostedJobs, "")}`,
       `- owner-scoped Test Unit selection: ${report.testUnitConversion.ownerScopedRuns} of ${report.testUnitConversion.plannedRuns} planned runs (${formatShare(report.testUnitConversion.share)}; full layout ${report.testUnitConversion.fullLayoutJobs} jobs)`,
       "",
       "## Heads",
@@ -1135,8 +1403,9 @@ export interface CiCertaintySourceShape {
  * The live implementation ({@link CiCertaintySourceLive}) lists check.yml and
  * heavy-admit.yml pull_request runs from `since` to the capture instant, reads
  * jobs per attempt only for heads whose T0 is inside the window, lists
- * check.yml push runs on main, and reads main's first-parent commits and their
- * changed paths from local `git`. Every GitHub read is counted and bounded by
+ * check.yml push runs on main over the late-arrival horizon and reads the jobs
+ * of the window commits' runs, and reads main's first-parent commits over the
+ * horizon and their changed paths from local `git`. Every GitHub read is counted and bounded by
  * `maxRequests`; a bound reached mid-capture leaves the affected heads
  * api-partial, which refuses certification instead of shrinking the census.
  * Tests and replays provide a corpus directly.
@@ -1181,14 +1450,17 @@ const gitLines = Effect.fn("Ci.certaintyGitLines")(
   Effect.mapError(CiCommandError.new("Failed to read main's first-parent history with git."))
 );
 
-const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (request: CiCertaintyCaptureRequest) {
+const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (
+  request: CiCertaintyCaptureRequest,
+  since: DateTime.Utc
+) {
   // `log.showSignature` in a gitconfig would interleave gpg lines with the formatted ones.
   const lines = yield* gitLines(request.repoRoot, [
     "log",
     "--no-show-signature",
     "--first-parent",
     "--format=%H%x09%cI",
-    `--since=${DateTime.formatIso(request.since)}`,
+    `--since=${DateTime.formatIso(since)}`,
     `--until=${DateTime.formatIso(request.until)}`,
     request.mainRef,
   ]);
@@ -1260,8 +1532,9 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
   CiLaneTimingGithubClient | ChildProcessSpawner.ChildProcessSpawner
 > {
   const capturedAt = yield* DateTime.now;
+  const horizonSince = DateTime.min(request.since, DateTime.subtractDuration(request.until, MAIN_HORIZON));
   // The main push listing is a few pages; read it before the per-attempt job reads spend the bound.
-  const mainRunsResult = yield* listRuns("check.yml", "push", request.since, capturedAt).pipe(Effect.result);
+  const mainRunsResult = yield* listRuns("check.yml", "push", horizonSince, capturedAt).pipe(Effect.result);
   const checkRuns = yield* listRuns("check.yml", "pull_request", request.since, capturedAt);
   const heavyAdmitRuns = yield* listRuns("heavy-admit.yml", "pull_request", request.since, capturedAt);
   const windowHeadShas = HashSet.fromIterable(
@@ -1287,7 +1560,23 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
     { concurrency: 8 }
   );
   const mainRuns = mainRunsResult._tag === "Success" ? mainRunsResult.success : A.empty<CiWorkflowWindowRun>();
-  const commits = yield* readMainCommits(request);
+  const commits = yield* readMainCommits(request, horizonSince);
+  const windowCommitShas = HashSet.fromIterable(
+    A.map(
+      A.filter(commits, (commit) =>
+        insideWindow(request.since, request.until, DateTime.toEpochMillis(commit.committedAt))
+      ),
+      (commit) => commit.sha
+    )
+  );
+  const mainRunJobs = yield* Effect.forEach(
+    A.filter(mainRuns, (run) => HashSet.has(windowCommitShas, run.head_sha)),
+    Effect.fnUntraced(function* (run) {
+      const read = yield* collectCiWorkflowRunAttemptJobs(run.id, run.run_attempt);
+      return CiCertaintyRun.make({ jobs: read.jobs, partialReads: read.partialReads, run, workflow: PRODUCER_CHECK });
+    }),
+    { concurrency: 8 }
+  );
   const requestCount = yield* Ref.get(count);
   return CiCertaintyCorpus.make({
     capturedAt,
@@ -1297,7 +1586,10 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
         runs: A.filter(mainRuns, (run) => Str.equivalence(run.head_sha, commit.sha)),
       })
     ),
+    mainHorizonSince: O.some(horizonSince),
     mainListingPartial: mainRunsResult._tag === "Failure",
+    mainPushRuns: mainRuns,
+    mainRunJobs,
     pullRequestRuns,
     requestCount,
     requiredContexts,

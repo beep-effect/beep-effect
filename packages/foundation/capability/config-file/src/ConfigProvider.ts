@@ -176,14 +176,7 @@ export const layerConfigProvider: {
     tag: Context.Key<Self, ConfigFileShape<A>>,
     options?: typeof LayerConfigProviderOptions.Encoded
   ): Layer.Layer<never, ConfigLoadError, Self> => {
-    // A `Context.Key` *is* an `Effect<Shape, never, Identifier>`, so the service
-    // lookup needs no `asEffect`, and `Self` flows straight into the layer's `R`.
     const provider = Effect.flatMap(tag, asConfigProvider);
-    // `layerAdd`'s own options type is `{ asPrimary?: boolean | undefined }`, so
-    // forwarding `options?.asPrimary` directly — rather than branching on it — is
-    // not the "explicit undefined" pitfall a `Schema`-validated constructor would
-    // have: `layerAdd` reads the field with `?.`, so an explicit `undefined` and
-    // an omitted key are identical here.
     return ConfigProvider.layerAdd(provider, { asPrimary: options?.asPrimary });
   }
 );

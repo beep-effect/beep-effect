@@ -124,18 +124,17 @@ describe("TokenPermissions", () => {
   );
 
   it("needs no layer, no client and no double", () => {
-    // The point of demoting this from a service: the whole comparison is
-    // reachable from a plain value. Its predecessor's test double
-    // reimplemented the entire read<write<admin ranking.
     assert.deepStrictEqual({ ...granted.granted }, { contents: "write", metadata: "read", issues: "admin" });
   });
 
   it("ignores permission levels it does not recognize", () => {
-    // GitHub adds levels over time; an unknown one on an unrelated permission
-    // is not a reason to fail a comparison about a different permission.
     const odd = TokenPermissions.fromGitHub({ contents: "write", future_thing: "superuser" });
     assert.strictEqual(odd.granted.future_thing, undefined);
-    assert.strictEqual(odd.granted.contents, "write");
+    assert.strictEqual(
+      odd.granted.contents,
+      "write",
+      "an unknown level on an unrelated permission fails no comparison"
+    );
   });
 
   it("is satisfied by an exact match", () => {
@@ -227,9 +226,11 @@ describe("ArtifactMetadata", () => {
         )
       );
       assert.deepStrictEqual([...ids], [11, 12]);
-      // The organization comes from Repo's owner, like every other resource —
-      // not from a positional argument.
-      assert.include(script.calls[0]?.path ?? "", "/orgs/acme/artifacts/metadata/storage-record");
+      assert.include(
+        script.calls[0]?.path ?? "",
+        "/orgs/acme/artifacts/metadata/storage-record",
+        "the organization comes from the Repo owner, not a positional argument"
+      );
       const body = yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
       assert.deepStrictEqual(body, {
         name: "libfoo-1.2.3",
@@ -237,9 +238,7 @@ describe("ArtifactMetadata", () => {
         registry_url: "https://reg.example.com/",
         repository: "bar/libfoo",
       });
-      // No `version` key: the endpoint has no such field, and the version this
-      // replaces sent one.
-      assert.notProperty(body, "version");
+      assert.notProperty(body, "version", "the endpoint has no version field");
     })
   );
 });
@@ -265,14 +264,16 @@ describe("GitBranch.createLinked", () => {
       );
       const body = yield* S.decodeEffect(JsonGraphQL)(script.calls[0]?.body ?? "{}");
       assert.include(body.query, "createLinkedBranch");
-      assert.deepStrictEqual(body.variables, {
-        issueId: "I_1",
-        repositoryId: "R_1",
-        // Normalized, so a caller passing the qualified form does not create
-        // a branch literally named `refs/heads/...`.
-        name: "42-fix-thing",
-        oid: "abc",
-      });
+      assert.deepStrictEqual(
+        body.variables,
+        {
+          issueId: "I_1",
+          repositoryId: "R_1",
+          name: "42-fix-thing",
+          oid: "abc",
+        },
+        "a qualified name is normalized, never a branch literally named refs/heads/..."
+      );
     })
   );
 });

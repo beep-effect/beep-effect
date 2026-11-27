@@ -18,7 +18,6 @@ import { dual } from "effect/Function";
 import * as Result from "effect/Result";
 import nacl from "tweetnacl";
 
-/** A sealed box opens with the recipient's key; the nonce is derived, not sent. */
 const NONCE_BYTES = 24;
 const PUBLIC_KEY_BYTES = 32;
 

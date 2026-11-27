@@ -53,16 +53,7 @@ export interface ScriptedFetch {
   readonly queryOf: (index: number) => URLSearchParams;
 }
 
-/**
- * A `Response` that knows its own URL.
- *
- * @remarks
- * A manually constructed `Response` has `url === ""`, and octokit reads that
- * back for the search-shaped endpoints — its paginator does `new URL(response.url)`
- * whenever the payload carries a `total_count`, which throws `TypeError: Invalid
- * URL` on an empty string. Real fetch responses always carry one, so the failure
- * is purely an artifact of the double; defining the property removes it.
- */
+// decision: scripted-responses-carry-their-url
 const toResponse = (reply: Reply, url: string): Response => {
   const response = new Response(
     reply.body === undefined ? null : Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(reply.body), identity),
@@ -138,7 +129,6 @@ export const rateLimitHeaders = (options: {
   };
 };
 
-/** The account projection GitHub embeds as a repository owner or user. */
 const simpleUserFixture = () => ({
   login: "",
   id: 0,
@@ -160,7 +150,6 @@ const simpleUserFixture = () => ({
   site_admin: false,
 });
 
-/** The repository fields shared by the full repository and the pull request projections. */
 const repositoryCoreFixture = () => ({
   owner: simpleUserFixture(),
   private: false,
@@ -346,18 +335,10 @@ export const environmentFixture = (
   ...overrides,
 });
 
-/**
- * Wire fields GitHub still sends on the pull request repository projection.
- *
- * `has_downloads` is deprecated in the octokit types but still required by the
- * response shape, so the fixture carries it as wire data typed here rather than
- * by naming the deprecated member.
- */
-const legacyRepositoryWireFields: { readonly has_downloads: boolean } = { has_downloads: false };
+const deprecatedButRequiredWireFields: { readonly has_downloads: boolean } = { has_downloads: false };
 
-/** The repository projection carried by a listed pull request. */
 const pullRepositoryFixture = (): Rest.Item<"GET /repos/{owner}/{repo}/pulls">["base"]["repo"] => ({
-  ...legacyRepositoryWireFields,
+  ...deprecatedButRequiredWireFields,
   id: 0,
   node_id: "",
   name: "",

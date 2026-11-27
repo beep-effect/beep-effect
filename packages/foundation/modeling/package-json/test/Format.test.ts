@@ -1,8 +1,3 @@
-// Formatting surface: indent modes (spaces / "tab" / "preserve"), the
-// sort-package-json@4.0.0 canonical top-level key order, map alphabetization,
-// and byte parity against frozen sort-package-json output for real manifests
-// from this repository (see fixtures/README.md for provenance).
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { renderJson, resolveFormatOptions, resolveIndent } from "@beep/package-json/internal/format";
 import { Package } from "@beep/package-json/Package";
@@ -163,10 +158,10 @@ describe("canonical top-level key order (sort-package-json@4.0.0)", () => {
       });
       const value4 = yield* S.decodeEffect(Json)(json);
       const keys = R.keys(value4);
-      // `pnpm` is a known key; the unknowns follow it: public sorted, then private.
-      assert.isBelow(keys.indexOf("pnpm"), keys.indexOf("aardvark"));
-      assert.isBelow(keys.indexOf("aardvark"), keys.indexOf("zebra"));
-      assert.isBelow(keys.indexOf("zebra"), keys.indexOf("_meta"));
+      assert.isBelow(keys.indexOf("pnpm"), keys.indexOf("aardvark"), "pnpm is a known key; the unknowns follow it");
+
+      assert.isBelow(keys.indexOf("aardvark"), keys.indexOf("zebra"), "unknown public keys sort alphabetically");
+      assert.isBelow(keys.indexOf("zebra"), keys.indexOf("_meta"), "private unknown keys follow the public ones");
     })
   );
 
@@ -250,7 +245,6 @@ describe("people-field wire form survives the strict format path", () => {
 
   it.effect("editing another field leaves the string author encoding alone", () =>
     Effect.gen(function* () {
-      // The consumer's actual flow: read, change something unrelated, write.
       const pkg = yield* Package.decode({ ...minimal, author: "Ann Lee <ann@x.dev>" });
       const bumped = yield* Package.setVersion(pkg, "1.1.0");
       const parsed = yield* S.decodeEffect(Json)(bumped.toJsonString());
@@ -269,7 +263,7 @@ describe("people-field wire form survives the strict format path", () => {
   );
 });
 
-describe("byte parity with sort-package-json@4.0.0 on real manifests", () => {
+describe("byte parity with frozen sort-package-json@4.0.0 output on real manifests", () => {
   const fixtures = ["root", "package-json", "semver", "toml", "workspaces"] as const;
 
   for (const name of fixtures) {

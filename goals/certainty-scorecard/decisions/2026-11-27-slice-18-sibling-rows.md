@@ -1,0 +1,9 @@
+---
+title: "Slice 18: the sibling-goal rows and the 7-day main horizon"
+date: 2026-11-27
+kind: checkpoint
+lane: "feat/certainty-scorecard-rows"
+reversal: "Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-18 PR."
+---
+
+Slice 18 (driver ruling 2026-11-27) adds to `beep ci certainty`, in its JSON report and its aggregates-only summary, the rows of SPEC "Numbers the scorecard reports" that no slice had built. They are `heavySlotMinutes`, `heavyQueue`, the heavy-wait `admissionToHeavy.p95Minutes`, `lintPolicyWall`, `propertyLaws`, `firstWavePickup`, `mainCancels` (with `mainRuns[].cancelActor`, the `CiCertaintyCancelActor` literal domain), `replayInputs` (with `mainRuns[]` job counts) and `mainHorizon`. The capture re-reads main over 7 days and reads the jobs of the window commits' push runs. A partial read of those jobs refuses certification. Corpora captured earlier still decode, with no horizon and unread cancel actors. Row definitions are in decision `sibling-row-definitions`; the two parts the job token cannot read are in `rows-not-built-in-full`. The admission gate is `packages/tooling/tool/cli/test/ci-certainty.test.ts`, which passes on Node and Bun with `Certainty.ts` and `Certainty.schemas.ts` at 100% coverage. It folds the new rows over a synthetic corpus, pins them on the committed post-#3030 capture (Lint Policy wall p95 11.97 min over 14 jobs, heavy-queue p95 3.23 min over 46, PR first-wave pickup p95 7.97 min over 15), attributes all four cancel actors, and covers the late-arrival horizon and the live capture's main job reads. This is a CLI change only: the nightly workflow is unchanged, and its next run reports the rows. That unblocks `main-verdict-every-commit` slice 2 (its stop condition on first-wave pickup and heavy wait) and `heavy-pool-diet`'s P2 readings.

@@ -21,10 +21,6 @@ import { harness } from "./support/harness.ts";
 import type { GitHubFixtures, RecordedCall } from "@beep/github/GitHubClient";
 import type { RepositoryPatch } from "@beep/github/GitHubRepository";
 
-/**
- * A wrong-but-valid route literal typechecks, so every method asserts the route
- * it hits AND the parameters it sends.
- */
 const run = Effect.fn("run")(function* <A, E>(
   effect: Effect.Effect<A, E, GitHubRepository | GitHubClient | Repo>,
   request: NonNullable<GitHubFixtures["request"]> = {},
@@ -126,15 +122,18 @@ describe("GitHubRepository reads", () => {
         { "GET /users/{username}": Result.succeed(userFixture({ type: "Organization" })) }
       );
       assert.strictEqual(org.value, "Organization");
-      assert.strictEqual(org.requested[0]?.route, "GET /users/{username}");
+      assert.strictEqual(
+        org.requested[0]?.route,
+        "GET /users/{username}",
+        "a wrong-but-valid route literal typechecks, so each method asserts its route and params"
+      );
       assert.deepStrictEqual(org.requested[0]?.params, { username: "acme" });
 
-      // Anything that is not an organization is a User, including a Bot.
       const bot = yield* run(
         Effect.flatMap(GitHubRepository, (r) => r.ownerType),
         { "GET /users/{username}": Result.succeed(userFixture({ type: "Bot" })) }
       );
-      assert.strictEqual(bot.value, "User");
+      assert.strictEqual(bot.value, "User", "anything that is not an organization is a User, including a Bot");
     })
   );
 });
@@ -154,20 +153,19 @@ describe("GitHubRepository.updateSettings", () => {
 
   it.effect("passes an already-wrapped security_and_analysis through instead of dropping it", () =>
     Effect.gen(function* () {
-      // `RepositoryPatch` is GitHub's own parameter type, so `{ status }` is
-      // what it declares and what a caller following the types will send. An
-      // earlier fold wrapped bare strings only, which silently discarded the
-      // whole block for exactly that caller — data loss on the type-correct
-      // input, invisible because the request still succeeded.
       const { requested } = yield* run(
         Effect.flatMap(GitHubRepository, (r) =>
           r.updateSettings({ security_and_analysis: { advanced_security: { status: "enabled" } } })
         ),
         { "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) }
       );
-      assert.deepStrictEqual(requested[0]?.params.security_and_analysis, {
-        advanced_security: { status: "enabled" },
-      });
+      assert.deepStrictEqual(
+        requested[0]?.params.security_and_analysis,
+        {
+          advanced_security: { status: "enabled" },
+        },
+        "RepositoryPatch declares the wrapped status form, so a type-following caller sends it"
+      );
     })
   );
 
@@ -180,8 +178,8 @@ describe("GitHubRepository.updateSettings", () => {
       transformSecurityAndAnalysis({ advanced_security: { status: "enabled" } }),
       O.some({ advanced_security: { status: "enabled" } })
     );
-    // A value that is neither is still dropped, which is the intended floor.
-    assertNone(transformSecurityAndAnalysis({ advanced_security: 42 }));
+    const neitherShapeDropped = transformSecurityAndAnalysis({ advanced_security: 42 });
+    assertNone(neitherShapeDropped);
   });
 
   it.effect("folds security_and_analysis into the body it sends", () =>
@@ -200,11 +198,14 @@ describe("GitHubRepository.updateSettings", () => {
         { "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) }
       );
 
-      // The user-facing shape is not the API's shape.
-      assert.deepStrictEqual(requested[0]?.params.security_and_analysis, {
-        secret_scanning: { status: "enabled" },
-        secret_scanning_delegated_bypass_options: { reviewers: [{ reviewer_id: 7 }] },
-      });
+      assert.deepStrictEqual(
+        requested[0]?.params.security_and_analysis,
+        {
+          secret_scanning: { status: "enabled" },
+          secret_scanning_delegated_bypass_options: { reviewers: [{ reviewer_id: 7 }] },
+        },
+        "the user-facing shape is not the API shape"
+      );
     })
   );
 
@@ -222,14 +223,16 @@ describe("GitHubRepository.updateSettings", () => {
         { "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) }
       );
 
-      // GitHub answers 422 for title/message config on a strategy being turned
-      // off in the same request.
-      assert.deepStrictEqual(requested[0]?.params, {
-        owner: "acme",
-        repo: "widget",
-        allow_merge_commit: false,
-        allow_squash_merge: false,
-      });
+      assert.deepStrictEqual(
+        requested[0]?.params,
+        {
+          owner: "acme",
+          repo: "widget",
+          allow_merge_commit: false,
+          allow_squash_merge: false,
+        },
+        "GitHub answers 422 for title or message config on a strategy turned off in the same request"
+      );
     })
   );
 
@@ -242,9 +245,11 @@ describe("GitHubRepository.updateSettings", () => {
         { "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) }
       );
 
-      // The discriminating case: dropping unconditionally would silently stop
-      // anyone configuring merge titles at all.
-      assert.strictEqual(requested[0]?.params.merge_commit_title, "PR_TITLE");
+      assert.strictEqual(
+        requested[0]?.params.merge_commit_title,
+        "PR_TITLE",
+        "dropping unconditionally would stop anyone configuring merge titles"
+      );
     })
   );
 });
@@ -267,8 +272,7 @@ describe("GitHubRepository.applySettings", () => {
         A.filter(requested, (c) => c.kind === "graphql"),
         0
       );
-      // No node-id read when nothing needs GraphQL.
-      assert.notInclude(routes, "GET /repos/{owner}/{repo}");
+      assert.notInclude(routes, "GET /repos/{owner}/{repo}", "no node-id read when nothing needs GraphQL");
     })
   );
 
@@ -282,11 +286,11 @@ describe("GitHubRepository.applySettings", () => {
         UPDATE_REPOSITORY
       );
 
-      // Nothing left for REST, so no PATCH at all. `has_discussions` above
-      // all: the REST patch silently ignores it and answers 200, which is how
-      // it read as "applied on every run" while never changing anything
-      // (effected#358).
-      assert.deepStrictEqual(routes, ["GET /repos/{owner}/{repo}"]);
+      assert.deepStrictEqual(
+        routes,
+        ["GET /repos/{owner}/{repo}"],
+        "no PATCH: the REST patch silently ignores has_discussions and answers 200"
+      );
       assert.deepStrictEqual(
         A.map(
           A.filter(requested, (c) => c.kind === "graphql"),
@@ -301,12 +305,12 @@ describe("GitHubRepository.applySettings", () => {
                 repositoryId: "R_node123",
                 hasSponsorshipsEnabled: true,
                 hasPullRequestsEnabled: false,
-                // Verified against UpdateRepositoryInput by introspection.
                 hasDiscussionsEnabled: true,
               },
             },
           },
-        ]
+        ],
+        "hasDiscussionsEnabled is verified against UpdateRepositoryInput by introspection"
       );
     })
   );
@@ -345,9 +349,11 @@ describe("GitHubRepository.applySettings", () => {
         { "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) }
       );
 
-      // A caller must not get a different shape depending on which of the two
-      // write paths they reached for.
-      assert.deepStrictEqual(requested[0]?.params.security_and_analysis, { secret_scanning: { status: "enabled" } });
+      assert.deepStrictEqual(
+        requested[0]?.params.security_and_analysis,
+        { secret_scanning: { status: "enabled" } },
+        "both write paths give a caller the same shape"
+      );
     })
   );
 
@@ -384,16 +390,15 @@ describe("transformSecurityAndAnalysis", () => {
     assertNone(transformSecurityAndAnalysis({}));
     assertNone(transformSecurityAndAnalysis(null));
     assertNone(transformSecurityAndAnalysis("nonsense"));
-    // An unknown key is not a status field and is not forwarded.
-    assertNone(transformSecurityAndAnalysis({ made_up: "enabled" }));
-    // Only the two literals GitHub accepts.
-    assertNone(transformSecurityAndAnalysis({ secret_scanning: "on" }));
+    const unknownKeyNotForwarded = transformSecurityAndAnalysis({ made_up: "enabled" });
+    assertNone(unknownKeyNotForwarded);
+    const nonGitHubStatusLiteral = transformSecurityAndAnalysis({ secret_scanning: "on" });
+    assertNone(nonGitHubStatusLiteral);
   });
 
   it("treats an EMPTY reviewer list as no change rather than no reviewers", () => {
-    // GitHub rejects `{ reviewers: [] }` outright when delegated bypass is on,
-    // so forwarding it would turn an omission into a failure.
-    assertNone(transformSecurityAndAnalysis({ delegated_bypass_reviewers: [] }));
+    const emptyReviewersGitHubRejects = transformSecurityAndAnalysis({ delegated_bypass_reviewers: [] });
+    assertNone(emptyReviewersGitHubRejects);
   });
 });
 
@@ -432,12 +437,6 @@ describe("GitHubRepository.applySettings reporting", () => {
   );
   it.effect("reports the fields it SENT, not the fields it was given", () =>
     Effect.gen(function* () {
-      // The case the whole return value exists for. `merge_commit_title` is
-      // asked for and dropped, because its strategy is being disabled — so a
-      // caller reporting Object.keys(input) names a field that never went out.
-      // A dry run is precisely where someone checks whether a conditional
-      // field survived its gate, so being wrong here is wrong in the direction
-      // that looks like success.
       const { value, requested } = yield* run(
         Effect.flatMap(GitHubRepository, (r) =>
           r.applySettings({
@@ -450,26 +449,27 @@ describe("GitHubRepository.applySettings reporting", () => {
       );
 
       assert.deepStrictEqual([...value.rest].sort(), ["allow_merge_commit", "has_issues"]);
-      assert.notInclude(value.rest, "merge_commit_title");
+      assert.notInclude(
+        value.rest,
+        "merge_commit_title",
+        "merge_commit_title is dropped because its strategy is being disabled"
+      );
       assert.deepStrictEqual([...value.graphql], []);
-      // And the report agrees with the wire, which is the property that makes
-      // it trustworthy rather than merely plausible.
-      assert.notProperty(requested[0]?.params ?? {}, "merge_commit_title");
+      assert.notProperty(requested[0]?.params ?? {}, "merge_commit_title", "the report agrees with the wire");
     })
   );
 
   it.effect("sends nothing when preparation drops every field it was given", () =>
     Effect.gen(function* () {
-      // The reviewer's reproduction. `security_and_analysis: 42` normalises to
-      // nothing, so `prepared` is empty — but the gate used to test the RAW
-      // keys, firing a PATCH carrying only owner and repo while the report
-      // said `rest: []`. The report contradicting the wire is exactly what
-      // AppliedSettings exists to prevent, so it must not happen here.
       const { value, requested } = yield* run(
         Effect.flatMap(GitHubRepository, (r) => r.applySettings({ security_and_analysis: 42 })),
         { "PATCH /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) }
       );
-      assert.deepStrictEqual([...value.rest], []);
+      assert.deepStrictEqual(
+        [...value.rest],
+        [],
+        "security_and_analysis: 42 normalises to nothing, so the gate sees no field"
+      );
       assert.lengthOf(requested, 0, "no request should have been made at all");
     })
   );
@@ -481,9 +481,11 @@ describe("GitHubRepository.applySettings reporting", () => {
         { "GET /repos/{owner}/{repo}": Result.succeed(repositoryFixture(REPO)) },
         UPDATE_REPOSITORY
       );
-      // `has_sponsorships`, not `hasSponsorshipsEnabled`: the audience is a
-      // person reading a plan against the config they wrote.
-      assert.deepStrictEqual([...value.graphql], ["has_sponsorships"]);
+      assert.deepStrictEqual(
+        [...value.graphql],
+        ["has_sponsorships"],
+        "the report names config keys, not GraphQL input fields"
+      );
       assert.deepStrictEqual([...value.rest], []);
     })
   );
@@ -491,19 +493,22 @@ describe("GitHubRepository.applySettings reporting", () => {
 
 describe("repositoryPatch", () => {
   it("drops explicitly-undefined fields rather than sending them", () => {
-    // PATCH treats an absent field as "leave it alone"; an explicit undefined
-    // is a value. Sending one would overwrite a setting the user never named.
     const patch = repositoryPatch({ has_issues: true, has_wiki: undefined, description: "x" });
-    assert.deepStrictEqual(patch, { has_issues: true, description: "x" });
+    assert.deepStrictEqual(
+      patch,
+      { has_issues: true, description: "x" },
+      "an explicit undefined would overwrite a setting"
+    );
     assert.isFalse("has_wiki" in patch, "an unset field must not reach the wire at all");
   });
 
   it("keeps a field whose value is legitimately false or empty", () => {
-    // The filter is on `undefined`, NOT on falsiness: `has_issues: false` is
-    // the whole point of a patch that disables a feature, and a truthiness
-    // check here would silently refuse to turn anything off.
     const patch = repositoryPatch({ has_issues: false, description: "" });
-    assert.deepStrictEqual(patch, { has_issues: false, description: "" });
+    assert.deepStrictEqual(
+      patch,
+      { has_issues: false, description: "" },
+      "the filter is on undefined, not on falsiness"
+    );
   });
 
   it("answers an empty patch when nothing was configured", () => {
@@ -511,14 +516,14 @@ describe("repositoryPatch", () => {
   });
 
   it("accepts a draft built from a settings source, which is the shape that would not assign", () => {
-    // This is the case from the report: a value typed `boolean | undefined`
-    // does not satisfy octokit's `has_issues?: boolean` under
-    // exactOptionalPropertyTypes, so the draft type is the thing that makes
-    // the natural call site compile without a cast.
     const configured: { has_issues?: boolean | undefined; has_projects?: boolean | undefined } = {
       has_issues: true,
     };
     const patch = repositoryPatch({ has_issues: configured.has_issues, has_projects: configured.has_projects });
-    assert.deepStrictEqual(patch, { has_issues: true });
+    assert.deepStrictEqual(
+      patch,
+      { has_issues: true },
+      "a boolean | undefined value compiles under exactOptionalPropertyTypes"
+    );
   });
 });

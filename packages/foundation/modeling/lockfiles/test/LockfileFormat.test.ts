@@ -18,14 +18,26 @@ describe("LockfileFormat", () => {
 
   describe("filenamesFor", () => {
     it("pins the full table — genuine lockfile spellings only, primary first", () => {
-      // npm honours npm-shrinkwrap.json; bun has shipped two formats (the
-      // current text bun.lock and the older binary bun.lockb). Workspace-config
-      // extras (pnpm-workspace.yaml, .pnpmfile.cjs, yarn PnP files) are a
-      // consumer's cache policy and must never appear here.
-      assert.deepStrictEqual(filenamesFor("bun"), ["bun.lock", "bun.lockb"]);
-      assert.deepStrictEqual(filenamesFor("npm"), ["package-lock.json", "npm-shrinkwrap.json"]);
-      assert.deepStrictEqual(filenamesFor("pnpm"), ["pnpm-lock.yaml"]);
-      assert.deepStrictEqual(filenamesFor("yarn"), ["yarn.lock"]);
+      assert.deepStrictEqual(
+        filenamesFor("bun"),
+        ["bun.lock", "bun.lockb"],
+        "bun has shipped the text bun.lock and the older binary bun.lockb"
+      );
+      assert.deepStrictEqual(
+        filenamesFor("npm"),
+        ["package-lock.json", "npm-shrinkwrap.json"],
+        "npm honours npm-shrinkwrap.json"
+      );
+      assert.deepStrictEqual(
+        filenamesFor("pnpm"),
+        ["pnpm-lock.yaml"],
+        "pnpm-workspace.yaml and .pnpmfile.cjs are a consumer's cache policy, never lockfile names"
+      );
+      assert.deepStrictEqual(
+        filenamesFor("yarn"),
+        ["yarn.lock"],
+        "yarn PnP files are a consumer's cache policy, never lockfile names"
+      );
     });
 
     it("keeps filenameFor as the first element for every format — one source of truth", () => {
@@ -49,11 +61,10 @@ describe("LockfileFormat", () => {
       }
     });
 
-    it("returns none for unknown names, paths and near-misses", () => {
+    it("returns none for unknown names, paths, near-misses and the detection-only filenamesFor alternates", () => {
       assertNone(fromFilename("package.json"));
-      // The filenamesFor alternates deliberately do not identify: bun.lockb is
-      // a detection alternate, not a parse target (the format is binary).
-      assertNone(fromFilename("bun.lockb"));
+      const binaryBunLockb = fromFilename("bun.lockb");
+      assertNone(binaryBunLockb);
       assertNone(fromFilename("npm-shrinkwrap.json"));
       assertNone(fromFilename("some/dir/pnpm-lock.yaml"));
       assertNone(fromFilename("PNPM-LOCK.YAML"));

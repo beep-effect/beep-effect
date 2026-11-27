@@ -65,12 +65,15 @@ it.effect.prop(
   ([payload]) =>
     Effect.gen(function* () {
       const old = yield* JsonCodec.stringify({ version: 1, payload });
-      // Migration preserves the decoded document; JSON encoding normalizes -0 to 0.
       const argument1 = S.decodeUnknownEffect(Previous);
       const parsed2 = yield* JsonCodec.parse(old);
       const previous = yield* argument1(parsed2);
       const parsed = yield* migrating.parse(old);
-      assert.deepStrictEqual(parsed, { version: 2, payload: previous.payload });
+      assert.deepStrictEqual(
+        parsed,
+        { version: 2, payload: previous.payload },
+        "migration keeps the decoded document; JSON encoding turns -0 into 0"
+      );
       const formatted = yield* migrating.stringify(parsed);
       const parsed3 = yield* migrating.parse(formatted);
       assert.deepStrictEqual(parsed3, parsed);
@@ -97,11 +100,9 @@ it.effect("upgrading preserves JSON-normalized negative zero in nested payloads"
 
 it.effect("the failing step is carried on `migration`, so `name` and `String(error)` keep the error type", () =>
   Effect.gen(function* () {
-    // Conformance shift (W3-e, D-24 precedent): the lab payload field `name`
-    // shadowed `Error.name`, so logs printed the step name instead of the type.
     const error = ConfigMigrationError.make({ version: 2, migration: "add-b", phase: "apply", cause: "failure" });
     assert.strictEqual(error.migration, "add-b");
-    assert.notStrictEqual(error.name, "add-b");
+    assert.notStrictEqual(error.name, "add-b", "a payload field called name would shadow Error.name in logs");
     assert.isFalse(Str.startsWith("add-b")(String(error)));
     const encoded = yield* S.encodeEffect(ConfigMigrationError)(error);
     assert.deepStrictEqual(A.sort(R.keys(encoded), Order.String), ["_tag", "cause", "migration", "phase", "version"]);

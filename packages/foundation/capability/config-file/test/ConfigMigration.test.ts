@@ -108,8 +108,7 @@ describe("ConfigMigration.make", () => {
       assert.strictEqual(error.migration, "add-b");
       assert.strictEqual(error.version, 2);
       assert.strictEqual(error.phase, "apply");
-      // identity preserved — not String(e), not e.message, not a reason string.
-      assert.strictEqual(error.cause, boom);
+      assert.strictEqual(error.cause, boom, "identity preserved: not String(e), not e.message, not a reason string");
     })
   );
 
@@ -130,10 +129,11 @@ describe("ConfigMigration.make", () => {
       const codec = ConfigMigration.make({ codec: JsonCodec, migrations: [bump(2, "x", (r) => r)] });
       const error = yield* codec.parse("{ not json").pipe(Effect.asVoid, Effect.flip);
       assert.strictEqual(error._tag, "ConfigCodecError");
-      // The SchemaError from JSON decoding must survive structurally through the
-      // decorator. Asserting the tag alone would still pass if a regression
-      // stringified the cause, which is the one thing this error model forbids.
-      assert.instanceOf(error.cause, S.SchemaError);
+      assert.instanceOf(
+        error.cause,
+        S.SchemaError,
+        "the JSON SchemaError survives the decorator, so a stringified cause fails here"
+      );
     })
   );
 
@@ -163,9 +163,10 @@ describe("ConfigMigration.make", () => {
       const cause = Exit.getCause(exit);
       assertSome(cause, O.getOrThrow(cause));
       assertExitFailure(exit, cause.value);
-      // A throw from caller-supplied migration code is a programmer bug: it stays a
-      // defect so catchTag("ConfigMigrationError") cannot silently swallow it.
-      assert.isTrue(Cause.hasDies(cause.value));
+      assert.isTrue(
+        Cause.hasDies(cause.value),
+        "a throw in caller migration code stays a defect, so catchTag cannot swallow it"
+      );
       assert.isFalse(Cause.hasFails(cause.value));
     })
   );
@@ -232,8 +233,7 @@ class VersionAccessError extends S.TaggedError<VersionAccessError, { readonly br
   override name = "Error";
 }
 
-/** Reads and writes the version at `meta.schemaVersion` instead of the default top-level `version`. */
-const metaAccess: VersionAccess<VersionAccessError> = {
+const metaSchemaVersionAccess: VersionAccess<VersionAccessError> = {
   get: (raw) => {
     const meta = P.hasProperty(raw, "meta") ? raw.meta : undefined;
     const version = P.hasProperty(meta, "schemaVersion") ? meta.schemaVersion : undefined;
@@ -252,16 +252,17 @@ const metaAccess: VersionAccess<VersionAccessError> = {
 describe("ConfigMigration.make with a custom versionAccess", () => {
   it.effect("reads the version through the custom get, not the default field", () =>
     Effect.gen(function* () {
-      // The top-level `version` is 0: if the default accessor were consulted, BOTH
-      // migrations would run and `b` would appear. The custom accessor reads 2 from
-      // meta.schemaVersion, so only the v3 step is pending.
       const codec = ConfigMigration.make({
         codec: JsonCodec,
         migrations: [bump(3, "add-c", (r) => ({ ...r, c: 3 })), bump(2, "add-b", (r) => ({ ...r, b: 2 }))],
-        versionAccess: metaAccess,
+        versionAccess: metaSchemaVersionAccess,
       });
       const parsed = yield* codec.parse(`{"version":0,"meta":{"schemaVersion":2},"a":1}`);
-      assert.deepStrictEqual(parsed, { version: 0, meta: { schemaVersion: 3 }, a: 1, c: 3 });
+      assert.deepStrictEqual(
+        parsed,
+        { version: 0, meta: { schemaVersion: 3 }, a: 1, c: 3 },
+        "top-level version 0 would run both steps and add b; meta.schemaVersion 2 leaves only v3"
+      );
     })
   );
 
@@ -270,10 +271,10 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
       const setVersions: Array<number> = [];
       const seenByUp: Array<unknown> = [];
       const recordingAccess: VersionAccess<VersionAccessError> = {
-        get: metaAccess.get,
+        get: metaSchemaVersionAccess.get,
         set: dual(2, (raw: unknown, version: number): Effect.Effect<unknown, VersionAccessError> => {
           setVersions.push(version);
-          return metaAccess.set(raw, version);
+          return metaSchemaVersionAccess.set(raw, version);
         }),
       };
       const codec = ConfigMigration.make({
@@ -293,13 +294,17 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
         versionAccess: recordingAccess,
       });
       const parsed = yield* codec.parse(`{"meta":{"schemaVersion":1},"a":1}`);
-      // set ran once per applied migration, in ascending order.
-      assert.deepStrictEqual(setVersions, [2, 3]);
-      // The v3 step saw the document AS STAMPED by the v2 write-version phase —
-      // the chain is keyed through the custom accessor, not around it.
-      assert.deepStrictEqual(seenByUp, [{ meta: { schemaVersion: 2 }, a: 1, b: 2 }]);
-      // No default top-level `version` field appears anywhere.
-      assert.deepStrictEqual(parsed, { meta: { schemaVersion: 3 }, a: 1, b: 2, c: 3 });
+      assert.deepStrictEqual(setVersions, [2, 3], "set ran once per applied migration, in ascending order");
+      assert.deepStrictEqual(
+        seenByUp,
+        [{ meta: { schemaVersion: 2 }, a: 1, b: 2 }],
+        "the v3 step saw the document as stamped by the v2 write-version phase"
+      );
+      assert.deepStrictEqual(
+        parsed,
+        { meta: { schemaVersion: 3 }, a: 1, b: 2, c: 3 },
+        "no default top-level version field appears"
+      );
     })
   );
 
@@ -308,12 +313,14 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
       const codec = ConfigMigration.make({
         codec: JsonCodec,
         migrations: [bump(2, "add-b", (r) => r)],
-        versionAccess: metaAccess,
+        versionAccess: metaSchemaVersionAccess,
       });
-      // The document satisfies the DEFAULT accessor (top-level version) but not the
-      // custom one — the failure proves the custom get was the one consulted.
       const error = yield* codec.parse(`{"version":1,"a":1}`).pipe(Effect.asVoid, Effect.flip);
-      assert.instanceOf(error, ConfigMigrationError);
+      assert.instanceOf(
+        error,
+        ConfigMigrationError,
+        "the document satisfies the default accessor, so failing proves the custom get ran"
+      );
       assert.isTrue(S.is(ConfigMigrationError)(error));
       assert.strictEqual(error.phase, "read-version");
       assert.strictEqual(error.version, 0);
@@ -329,7 +336,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
       const codec = ConfigMigration.make({
         codec: JsonCodec,
         migrations: [bump(2, "add-b", (r) => r)],
-        versionAccess: metaAccess,
+        versionAccess: metaSchemaVersionAccess,
       });
       const error = yield* codec.parse(`{"meta":{"schemaVersion":"two"}}`).pipe(Effect.asVoid, Effect.flip);
       assert.instanceOf(error, ConfigMigrationError);
@@ -345,7 +352,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
         codec: JsonCodec,
         migrations: [bump(2, "add-b", (r) => ({ ...r, b: 2 }))],
         versionAccess: {
-          get: metaAccess.get,
+          get: metaSchemaVersionAccess.get,
           set: dual(2, (_raw: unknown, _version: number): Effect.Effect<unknown, Error> => Effect.fail(boom)),
         },
       });
@@ -368,16 +375,17 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
           get: () => {
             throw new Error("bug in get");
           },
-          set: metaAccess.set,
+          set: metaSchemaVersionAccess.set,
         },
       });
       const exit = yield* Effect.exit(codec.parse(`{"meta":{"schemaVersion":1}}`));
       const cause = Exit.getCause(exit);
       assertSome(cause, O.getOrThrow(cause));
       assertExitFailure(exit, cause.value);
-      // A throw from a caller-supplied VersionAccess is a contract violation — it
-      // must NOT be laundered into ConfigMigrationError.
-      assert.isTrue(Cause.hasDies(cause.value));
+      assert.isTrue(
+        Cause.hasDies(cause.value),
+        "a throwing VersionAccess breaks its contract and is not laundered into ConfigMigrationError"
+      );
       assert.isFalse(Cause.hasFails(cause.value));
     })
   );
@@ -388,7 +396,7 @@ describe("ConfigMigration.make with a custom versionAccess", () => {
         codec: JsonCodec,
         migrations: [bump(2, "add-b", (r) => r)],
         versionAccess: {
-          get: metaAccess.get,
+          get: metaSchemaVersionAccess.get,
           set: dual(
             2,
             (_raw: unknown, _version: number): Effect.Effect<unknown> =>

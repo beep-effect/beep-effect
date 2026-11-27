@@ -111,18 +111,14 @@ export const lifecycleOf: {
 const tokenOf = (value: StatusValue): RegExp =>
   new RegExp(`(?<![\\p{L}\\p{N}_-])${Regex.escape(value)}(?![\\p{L}\\p{N}_-])`, "gu");
 
-// The offsets of every whole-token occurrence of `value` in the text.
 const offsetsOf = (text: string, value: StatusValue): ReadonlyArray<number> =>
   A.getSomes(A.map(A.fromIterable(Str.matchAll(tokenOf(value))(text)), (match) => O.fromUndefinedOr(match.index)));
 
 type Occurrence = readonly [StatusValue, number];
 
-// Whether `inner` lies inside the longer occurrence `outer`.
 const liesInside = ([value, offset]: Occurrence, [other, at]: Occurrence): boolean =>
   other.length > value.length && at <= offset && offset + value.length <= at + other.length;
 
-// Every whole-token occurrence of a lifecycle value in the text, with its
-// offset, less those inside a longer value's occurrence.
 const occurrences = (lifecycle: StatusLifecycle, text: string): ReadonlyArray<Occurrence> => {
   const found = A.flatMap(lifecycle.order, (value) =>
     A.map(offsetsOf(text, value), (offset): Occurrence => [value, offset])
@@ -130,13 +126,11 @@ const occurrences = (lifecycle: StatusLifecycle, text: string): ReadonlyArray<Oc
   return A.filter(found, (occurrence) => !A.some(found, (other) => liesInside(occurrence, other)));
 };
 
-// The one whole-token occurrence of a lifecycle value in the text.
 const soleOccurrence = (lifecycle: StatusLifecycle, text: string): O.Option<Occurrence> => {
   const found = occurrences(lifecycle, text);
   return found.length === 1 ? A.head(found) : O.none();
 };
 
-// A whole token: a nonempty run of letters, digits, `_` and `-`.
 const wholeToken = /^[\p{L}\p{N}_-]+$/u;
 
 /**

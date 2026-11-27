@@ -1,7 +1,3 @@
-// What the writer puts in a sheet part for each kind of value, read off the stored (uncompressed) bytes: a formula's
-// text result is a `str` cell with its saved `<v>`, text with no formula is inline, and an error cell only ever holds
-// one of Excel's error codes.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { XlsxCell, XlsxError, XlsxErrorCode, XlsxText, XlsxUnreadable, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
 import { XlsxWriteOptions } from "@beep/xlsx/XlsxOptions.schema";
@@ -17,7 +13,6 @@ import * as Str from "effect/String";
 
 const stored = XlsxWriteOptions.make({ compression: "store" });
 
-/** A one-sheet workbook of the cells given, all in row 1. */
 const bookOf = (cells: ReadonlyArray<XlsxCell>): XlsxWorkbook =>
   XlsxWorkbook.make({
     sheets: [
@@ -25,11 +20,9 @@ const bookOf = (cells: ReadonlyArray<XlsxCell>): XlsxWorkbook =>
     ],
   });
 
-/** The `<c>` elements of the sheet part in stored bytes. */
 const cellsOf = (bytes: Uint8Array): ReadonlyArray<string> =>
   A.map(A.fromIterable(Str.matchAll(/<c [^>]*>.*?<\/c>/g)(new TextDecoder().decode(bytes))), (found) => found[0]);
 
-/** What an error cell holds, for each `t="e"` cell of the stored bytes. */
 const errorValuesOf = (bytes: Uint8Array): ReadonlyArray<string> =>
   A.map(
     A.fromIterable(
@@ -38,7 +31,7 @@ const errorValuesOf = (bytes: Uint8Array): ReadonlyArray<string> =>
     (found) => found[1] ?? ""
   );
 
-describe("the writer", () => {
+describe("the writer's sheet part for each kind of value, read off its stored (uncompressed) bytes", () => {
   it.effect("writes a formula's text result as a str cell with its saved value, and other text inline", () =>
     Effect.gen(function* () {
       const bytes = yield* Xlsx.stringify(
@@ -79,14 +72,12 @@ describe("the writer", () => {
     })
   );
 
-  // Whatever a cell holds and whether it has a formula, an error cell the writer emits holds an error code, and the
-  // text of a text cell (or of what a file got wrong) comes back to the character.
   const Cell = S.Struct({
     value: XlsxValue,
     formula: S.Option(S.String.check(S.isPattern(/^[A-Z0-9+*/&"()]{1,20}$/))),
   });
   it.effect.prop(
-    "writes only error codes in error cells, and reads every text back as it was",
+    "writes only error codes in error cells and reads every text back to the character, whatever a cell holds",
     [Arbitrary.schema(S.Array(Cell).check(S.isMaxLength(12)))],
     ([cells]) =>
       Effect.gen(function* () {

@@ -49,8 +49,8 @@ import { seededRandom } from "./projector-support.ts";
 import type { BaseExport, NodeKind, NodeOperation, PartitionNode } from "@beep/agent-memory-store";
 import type { SampleFile } from "./fixtures/goals-markdown-sample.ts";
 
-/** The generator seed. */
 const fixtureSeed = 20261112;
+const seedDistinctFromBase = fixtureSeed + 1;
 
 const pending = StatusValue.make("pending");
 const inProgress = StatusValue.make("in-progress");
@@ -62,7 +62,6 @@ export const phaseStatus = StatusLifecycle.make({ field: "status", order: [pendi
 /** The status lifecycles admission applies in the fixture. */
 export const fixtureStatusFields = StatusFields.make({ lifecycles: [phaseStatus] });
 
-/** A status token outside the lifecycle. */
 const outsideLifecycle = StatusValue.make("blocked");
 
 /**
@@ -113,9 +112,7 @@ export interface AdversarialFixture {
 const maxFileChars = 16_000;
 const maxStatusFileChars = 40_000;
 
-// Nodes kept untouched on each side of a cluster's window, so no two clusters
-// share a node, a gap or an insert anchor.
-const margin = 1;
+const clusterIsolationMargin = 1;
 const maxFiles = 14;
 
 const kindCount = (nodes: ReadonlyArray<PartitionNode>, kind: NodeKind): number =>
@@ -124,12 +121,6 @@ const kindCount = (nodes: ReadonlyArray<PartitionNode>, kind: NodeKind): number 
 const isStatusRow = (node: PartitionNode): boolean =>
   node.kind === "tableRow" && !Str.includes("\n")(node.text) && O.isSome(statusValueIn(phaseStatus, node.text));
 
-/**
- * The sample files the fixture is built over, in path order: every file of at
- * most 40,000 characters holding at least two phase-table status cells, then
- * the first files of at most 16,000 characters holding at least three table
- * rows and three list items, up to fourteen files in all.
- */
 const fixtureFiles = (files: ReadonlyArray<SampleFile>): ReadonlyArray<SampleFile> => {
   const sorted = A.sort(
     files,
@@ -155,11 +146,8 @@ const fixtureFiles = (files: ReadonlyArray<SampleFile>): ReadonlyArray<SampleFil
   );
 };
 
-// --- Text edits -------------------------------------------------------------
-
 const listMarker = /^(\s*)([-*+]|\d+[.)])\s/;
 
-// The node's text revised by `tag`, when the stratum can revise its kind.
 const revisedText = (node: PartitionNode, tag: string): O.Option<string> => {
   switch (node.kind) {
     case "paragraph":
@@ -177,7 +165,6 @@ const revisedText = (node: PartitionNode, tag: string): O.Option<string> => {
   }
 };
 
-// A new node of the same kind as `node`, written by `tag`.
 const insertedText = (node: PartitionNode, tag: string): O.Option<string> => {
   switch (node.kind) {
     case "paragraph":
@@ -215,31 +202,24 @@ const inserted = (texts: ReadonlyArray<string>, at: number, news: ReadonlyArray<
   ...A.drop(texts, at),
 ];
 
-// --- Candidate places ---------------------------------------------------------
-
 interface FilePlan {
   readonly nodes: ReadonlyArray<PartitionNode>;
   readonly path: string;
   readonly texts: ReadonlyArray<string>;
 }
 
-// One writer before capture: its tag and its node texts after the edit.
 interface DraftWriter {
   readonly tag: string;
   readonly texts: ReadonlyArray<string>;
 }
 
-// A candidate cluster: the node indices it touches, its writers and the
-// operation shape each writer's capture must have.
 interface Draft {
-  // A check over every writer's operations together, when the stratum needs one.
-  readonly cross?: (operations: ReadonlyArray<ReadonlyArray<NodeOperation>>) => boolean;
+  readonly crossWriterCheck?: (operations: ReadonlyArray<ReadonlyArray<NodeOperation>>) => boolean;
   readonly expect: ReadonlyArray<(operations: ReadonlyArray<NodeOperation>, plan: Located) => boolean>;
   readonly touched: readonly [number, number];
   readonly writers: ReadonlyArray<DraftWriter>;
 }
 
-// The base node ids of a file, for the shape checks.
 interface Located {
   readonly ids: ReadonlyArray<string>;
 }
@@ -249,9 +229,6 @@ const isGap = (plan: FilePlan, index: number): boolean =>
 
 const nodeAt = (plan: FilePlan, index: number): O.Option<PartitionNode> => A.get(plan.nodes, index);
 
-// The node and the gap the retirement removes with it: the gap before it when
-// that gap's text equals the gap after it (so the file keeps its shape), else
-// the gap after it.
 const retirement = (plan: FilePlan, index: number): O.Option<readonly [number, number]> =>
   isGap(plan, index + 1) ? O.some([index, 2]) : isGap(plan, index - 1) ? O.some([index - 1, 2]) : O.none();
 
@@ -278,8 +255,6 @@ const retires =
     opsAre(operations, ["delete", "delete"]) &&
     A.some(operations, (operation) => operation.nodeId === located.ids[index]);
 
-// `count` content inserts, each followed by its gap, the first after one of
-// `anchors`; with `retiredBy`, the first anchor must be a node it deletes.
 const insertsAfter =
   (anchors: ReadonlyArray<number>, count: number) =>
   (operations: ReadonlyArray<NodeOperation>, located: Located): boolean =>
@@ -301,7 +276,6 @@ const movesStatus =
       operation.op === "setStatus" ? operation.nodeId === located.ids[index] && operation.transition.to === to : false
     );
 
-// The first insert of the second writer follows a node the first writer deletes.
 const anchoredOnRetired = ([retire, insert]: ReadonlyArray<ReadonlyArray<NodeOperation>>): boolean =>
   O.exists(O.flatMap(O.fromUndefinedOr(insert), A.head), (first) =>
     first.op === "insert"
@@ -318,12 +292,9 @@ const reviseDraft = (plan: FilePlan, index: number, tags: ReadonlyArray<string>)
     }))
   );
 
-// A writer that retires the node at `index` with one neighbouring gap.
 const retireWriter = (plan: FilePlan, index: number, tag: string): O.Option<DraftWriter> =>
   O.map(retirement(plan, index), ([from, count]) => ({ tag, texts: removed(plan.texts, from, count) }));
 
-// A writer that inserts `count` new nodes like the one at `index`, each with a
-// copy of the gap that follows it, right after that gap.
 const insertWriter = (plan: FilePlan, index: number, tag: string, count: number): O.Option<DraftWriter> =>
   O.flatMap(nodeAt(plan, index), (node) =>
     O.flatMap(nodeAt(plan, index + 1), (gap) =>
@@ -353,14 +324,10 @@ const positionOf = (value: StatusValue): number =>
 
 const last = phaseStatus.order.length - 1;
 
-// The lifecycle value right after the one at `at`.
 const nextOf = (at: number): StatusValue => phaseStatus.order[at + 1] ?? complete;
 
-// The two writers' target values for a status cell at lifecycle position `at`,
-// when the stratum can move a cell from there.
-type StatusTargets = (at: number) => O.Option<readonly [StatusValue, StatusValue]>;
+type StatusTargets = (at: number) => O.Option<readonly [writerA: StatusValue, writerB: StatusValue]>;
 
-// Two writers moving the status cell at `index` to the values `targetsOf` picks.
 const statusDraft =
   (targetsOf: StatusTargets) =>
   (plan: FilePlan, index: number): O.Option<Draft> =>
@@ -379,7 +346,6 @@ const statusDraft =
       )
     );
 
-// The draft of one stratum's cluster around the content node at `index`.
 type DraftBuilder = (plan: FilePlan, index: number) => O.Option<Draft>;
 
 const identicalTextDraft: DraftBuilder = (plan, index) =>
@@ -401,7 +367,6 @@ const reviseVersusRetireDraft: DraftBuilder = (plan, index) =>
     }))
   );
 
-// One writer retires the node at `index`, the other inserts `count` nodes after it.
 const retiredAnchorDraft =
   (count: number): DraftBuilder =>
   (plan, index) =>
@@ -409,7 +374,7 @@ const retiredAnchorDraft =
       touched: [index - 1, index + 2] as const,
       writers,
       expect: [retires(index), insertsAfter([index, index + 1], count)],
-      cross: anchoredOnRetired,
+      crossWriterCheck: anchoredOnRetired,
     }));
 
 const insertsAfterOnePredecessorDraft: DraftBuilder = (plan, index) =>
@@ -432,7 +397,6 @@ const differentNodesOneFileDraft: DraftBuilder = (plan, index) =>
         : O.none()
   );
 
-// Two writers revising two nodes of `kind` that one gap separates.
 const neighboursDraft =
   (kind: NodeKind): DraftBuilder =>
   (plan, index) =>
@@ -473,7 +437,6 @@ const mixedCleanAndContestedDraft: DraftBuilder = (plan, index) =>
     )
   );
 
-// The draft builder of every stratum.
 const draftBuilders: { readonly [K in Stratum]: DraftBuilder } = {
   reviseVersusRevise: (plan, index) => reviseDraft(plan, index, ["a", "b"]),
   identicalText: identicalTextDraft,
@@ -495,13 +458,9 @@ const draftBuilders: { readonly [K in Stratum]: DraftBuilder } = {
 const draftOf = (plan: FilePlan, index: number, stratum: Stratum): O.Option<Draft> =>
   draftBuilders[stratum](plan, index);
 
-// --- Generation -------------------------------------------------------------------
-
 const authorOf = (cluster: number, tag: string): LineageId =>
   LineageId.make(`agent-memory-store-p2:fixture-c${cluster}-${tag}`);
 
-// Whether every writer's captured (and status-typed) operations have the
-// shape the stratum declares.
 const capturesAsDeclared = (base: BaseExport, plan: FilePlan, draft: Draft): boolean => {
   const located: Located = {
     ids: O.getOrElse(
@@ -518,8 +477,7 @@ const capturesAsDeclared = (base: BaseExport, plan: FilePlan, draft: Draft): boo
         base,
         [FileEdit.cases.edited.make({ path: plan.path, text: A.join(writer.texts, "") })],
         authorOf(0, writer.tag),
-        // Base ids come from `fixtureSeed`; minted ids must not repeat them.
-        seededNodeIdMinter(fixtureSeed + 1)
+        seededNodeIdMinter(seedDistinctFromBase)
       ),
       {
         onFailure: () => O.none<ReadonlyArray<NodeOperation>>(),
@@ -531,11 +489,10 @@ const capturesAsDeclared = (base: BaseExport, plan: FilePlan, draft: Draft): boo
     onNone: () => false,
     onSome: (operations) =>
       A.every(A.zip(operations, draft.expect), ([submitted, expected]) => expected(submitted, located)) &&
-      (draft.cross === undefined || draft.cross(operations)),
+      (draft.crossWriterCheck === undefined || draft.crossWriterCheck(operations)),
   });
 };
 
-// One candidate place: a content node of one file.
 interface Candidate {
   readonly index: number;
   readonly plan: FilePlan;
@@ -547,7 +504,6 @@ const plansOf = (files: ReadonlyArray<SampleFile>): ReadonlyArray<FilePlan> =>
     return { path: file.path, nodes, texts: A.map(nodes, (node) => node.text) };
   });
 
-// Every content node of every file, in the order the fixture seed ranks them.
 const candidatesOf = (plans: ReadonlyArray<FilePlan>): ReadonlyArray<Candidate> => {
   const random = seededRandom(fixtureSeed);
   return A.map(
@@ -561,7 +517,6 @@ const candidatesOf = (plans: ReadonlyArray<FilePlan>): ReadonlyArray<Candidate> 
   );
 };
 
-// The node indices clusters already own, by file path.
 type Reserved = MutableHashMap.MutableHashMap<string, MutableHashSet.MutableHashSet<number>>;
 
 const isFree = (reserved: Reserved, path: string, from: number, to: number): boolean =>
@@ -578,7 +533,6 @@ const reserve = (reserved: Reserved, path: string, from: number, to: number): vo
   MutableHashMap.set(reserved, path, taken);
 };
 
-// What one stratum's placement reads and the clusters it adds to.
 interface Placement {
   readonly base: BaseExport;
   readonly candidates: ReadonlyArray<Candidate>;
@@ -586,13 +540,12 @@ interface Placement {
   readonly reserved: Reserved;
 }
 
-// The draft a candidate yields for `stratum`, when its window (with margins)
-// is free and every writer captures as the stratum declares.
 const placedAt = (placement: Placement, { plan, index }: Candidate, stratum: Stratum): O.Option<Draft> =>
   O.filter(draftOf(plan, index, stratum), (draft) => {
     const [lo, hi] = draft.touched;
     return (
-      isFree(placement.reserved, plan.path, lo - margin, hi + margin) && capturesAsDeclared(placement.base, plan, draft)
+      isFree(placement.reserved, plan.path, lo - clusterIsolationMargin, hi + clusterIsolationMargin) &&
+      capturesAsDeclared(placement.base, plan, draft)
     );
   });
 
@@ -606,7 +559,6 @@ const clusterOf = (id: number, plan: FilePlan, stratum: Stratum, draft: Draft): 
   })),
 });
 
-// Takes the first `wanted` free places of `stratum` in candidate order.
 const placeStratum = (placement: Placement, stratum: Stratum, wanted: number): void => {
   let taken = 0;
   for (const candidate of placement.candidates) {
@@ -616,7 +568,7 @@ const placeStratum = (placement: Placement, stratum: Stratum, wanted: number): v
     const draft = placedAt(placement, candidate, stratum);
     if (O.isSome(draft)) {
       const [lo, hi] = draft.value.touched;
-      reserve(placement.reserved, candidate.plan.path, lo - margin, hi + margin);
+      reserve(placement.reserved, candidate.plan.path, lo - clusterIsolationMargin, hi + clusterIsolationMargin);
       placement.clusters.push(clusterOf(placement.clusters.length, candidate.plan, stratum, draft.value));
       taken += 1;
     }

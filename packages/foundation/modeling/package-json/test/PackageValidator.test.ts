@@ -31,8 +31,7 @@ describe("PackageValidator", () => {
         const error = yield* Effect.flip(validator.validate(pkg));
         assert.instanceOf(error, PackageValidationError);
         assert.strictEqual(error._tag, "PackageValidationError");
-        // missing license, description, repository + is private
-        assert.strictEqual(error.failures.length, 4);
+        assert.strictEqual(error.failures.length, 4, "missing license, description and repository, and private");
         assert.include(error.message, "has-license");
         assert.include(error.message, "not-private");
       })

@@ -1,14 +1,3 @@
-// The shape-lenient discovery tier. The contract under test, pinned per the
-// tsdoctor-monorepo dogfood ask (round 1, item 3):
-//
-//   - arbitrary real-world JSON recovers `name`/`version` whenever they are
-//     string-shaped — including shapes every strict tier rejects (a legacy
-//     uppercase name, a non-semver `"1.0"`);
-//   - one malformed field NEVER fails the document: it degrades to absence,
-//     is preserved verbatim in `rest`, and is reported on `issues`;
-//   - leniency is per-field, not per-syntax — invalid JSON text and a
-//     non-object document stay typed errors.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { PackageManifest } from "@beep/package-json/PackageManifest";
@@ -30,22 +19,26 @@ const unwrapFailure = <A, E>(result: Result.Result<A, E>): E => {
   return result.failure;
 };
 
-describe("LenientManifest.decodeResult", () => {
-  // The consumer's bar: string-shaped name/version recovered even when every
-  // strict tier rejects them.
+describe("LenientManifest.decodeResult (leniency is per field: one malformed field never fails the document)", () => {
   it("recovers a legacy uppercase name and a non-semver version", () => {
     const manifest = unwrap(LenientManifest.decodeResult({ name: "JSONStream", version: "1.0" }));
-    assert.strictEqual(manifest.name, "JSONStream");
+    assert.strictEqual(
+      manifest.name,
+      "JSONStream",
+      "a string-shaped name is recovered even where every strict tier rejects it"
+    );
     assert.strictEqual(manifest.version, "1.0");
     assert.deepStrictEqual(manifest.issues, []);
   });
 
-  // The contrast pinned: the presence-lenient tier still rejects the same
-  // document, which is exactly why this tier exists.
   it.effect("PackageManifest.decode still rejects the non-semver version", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(PackageManifest.decode({ name: "JSONStream", version: "1.0" }));
-      assert.strictEqual(error._tag, "PackageDecodeError");
+      assert.strictEqual(
+        error._tag,
+        "PackageDecodeError",
+        "the presence-lenient tier rejects it, which is why this tier exists"
+      );
     })
   );
 
@@ -68,8 +61,6 @@ describe("LenientManifest.decodeResult", () => {
     assert.strictEqual(manifest.issues[0]?.field, "license");
   });
 
-  // A document malformed in MANY fields still never fails — every degradation
-  // is reported independently.
   it("never fails the document: multiple junk fields all degrade and report", () => {
     const manifest = unwrap(
       LenientManifest.decodeResult({
@@ -84,23 +75,16 @@ describe("LenientManifest.decodeResult", () => {
     assert.strictEqual(manifest.name, undefined);
     assert.strictEqual(manifest.version, undefined);
     assert.strictEqual(manifest.private, undefined);
-    // A non-boolean `private` degrades rather than coercing: isPrivate false.
-    assert.isFalse(manifest.isPrivate);
-    assert.deepStrictEqual(A.map(manifest.issues, (issue) => issue.field).sort(), [
-      "author",
-      "keywords",
-      "name",
-      "private",
-      "scripts",
-      "version",
-    ]);
-    // Every degraded raw value is preserved verbatim.
-    assert.deepStrictEqual(manifest.rest?.keywords, ["ok", 7]);
+    assert.isFalse(manifest.isPrivate, "a non-boolean private degrades rather than coercing");
+    assert.deepStrictEqual(
+      A.map(manifest.issues, (issue) => issue.field).sort(),
+      ["author", "keywords", "name", "private", "scripts", "version"],
+      "every degradation is reported independently"
+    );
+    assert.deepStrictEqual(manifest.rest?.keywords, ["ok", 7], "every degraded raw value is preserved verbatim");
     assert.strictEqual(manifest.rest?.private, "true");
   });
 
-  // Degradation granularity is the top-level field: one junk entry degrades
-  // its whole map, with the raw map still in rest.
   it("degrades a dependency map wholesale when one entry is junk", () => {
     const manifest = unwrap(
       LenientManifest.decodeResult({
@@ -111,7 +95,11 @@ describe("LenientManifest.decodeResult", () => {
     );
     assert.strictEqual(manifest.dependencies, undefined);
     assert.deepStrictEqual(manifest.devDependencies, { vitest: "^4.0.0" });
-    assert.deepStrictEqual(manifest.rest?.dependencies, { effect: "^4.0.0", broken: 7 });
+    assert.deepStrictEqual(
+      manifest.rest?.dependencies,
+      { effect: "^4.0.0", broken: 7 },
+      "degradation granularity is the top-level field, with the raw map kept in rest"
+    );
     assert.deepStrictEqual(
       A.map(manifest.issues, (issue) => issue.field),
       ["dependencies"]
@@ -127,15 +115,19 @@ describe("LenientManifest.decodeResult", () => {
     assert.deepStrictEqual(manifest.issues, []);
   });
 
-  // A manifest key named after an Object.prototype member must be treated as
-  // unknown, not resolved through the prototype chain of the guard table.
   it("treats prototype-named keys as ordinary unknown keys", () => {
     const manifest = unwrap(LenientManifest.decodeResult({ name: "pkg", toString: "oops", constructor: 1 }));
-    // Own-property reads: a plain `.toString` access type-resolves to the
-    // Object.prototype member rather than the stored data key.
-    assert.strictEqual(Object.getOwnPropertyDescriptor(manifest.rest ?? {}, "toString")?.value, "oops");
+    assert.strictEqual(
+      Object.getOwnPropertyDescriptor(manifest.rest ?? {}, "toString")?.value,
+      "oops",
+      "read the own property: a plain .toString access resolves to the Object.prototype member"
+    );
     assert.strictEqual(Object.getOwnPropertyDescriptor(manifest.rest ?? {}, "constructor")?.value, 1);
-    assert.deepStrictEqual(manifest.issues, []);
+    assert.deepStrictEqual(
+      manifest.issues,
+      [],
+      "a prototype-member key must not resolve through the guard table prototype chain"
+    );
   });
 
   it("decodes an empty object: everything absent, rest empty, no issues", () => {
@@ -164,26 +156,26 @@ describe("LenientManifest.decodeResult", () => {
     assert.deepStrictEqual(manifest.issues, []);
   });
 
-  // Zero issues does not mean the strict tiers would accept the document —
-  // the permissive shapes check JSON shape, not npm semantics.
   it.effect("zero issues is not strict validity", () =>
     Effect.gen(function* () {
       const input = { name: "UPPER CASE!!", version: "not-even-close" };
       const manifest = unwrap(LenientManifest.decodeResult(input));
-      assert.deepStrictEqual(manifest.issues, []);
+      assert.deepStrictEqual(manifest.issues, [], "the permissive shapes check JSON shape, not npm semantics");
       const error = yield* Effect.flip(PackageManifest.decode(input));
       assert.strictEqual(error._tag, "PackageDecodeError");
     })
   );
 
-  // Leniency is per-field, never per-document-shape: a non-object value is
-  // the one failure, typed, with the SchemaError preserved as cause.
   it("fails typed on null, arrays and scalars", () => {
     for (const input of [null, ["a"], 42, "text"]) {
       const error = unwrapFailure(LenientManifest.decodeResult(input));
       assert.strictEqual(error._tag, "PackageDecodeError");
       assertTrue(P.hasProperty(error.cause, "_tag"));
-      assert.strictEqual(error.cause._tag, "SchemaError");
+      assert.strictEqual(
+        error.cause._tag,
+        "SchemaError",
+        "a non-object document is the one failure, with the SchemaError as cause"
+      );
     }
   });
 });
@@ -217,14 +209,14 @@ describe("LenientManifest.parseResult", () => {
     );
   });
 
-  // The JSON.parse own-`__proto__` document: the raw value must land in rest
-  // as data without polluting any prototype.
   it("carries an own __proto__ key as data without prototype pollution", () => {
     const manifest = unwrap(LenientManifest.parseResult('{"name": "pkg", "__proto__": {"polluted": true}}'));
-    // Own-property read (a direct `.__proto__` access is the deprecated
-    // prototype accessor, which is the very thing this test proves inert).
     const protoEntry = Object.getOwnPropertyDescriptor(manifest.rest ?? {}, "__proto__")?.value;
-    assert.deepStrictEqual(protoEntry, { polluted: true });
+    assert.deepStrictEqual(
+      protoEntry,
+      { polluted: true },
+      "read as an own property: a direct .__proto__ access is the deprecated accessor this test proves inert"
+    );
     const fresh: { readonly polluted?: boolean } = {};
     assert.strictEqual(fresh.polluted, undefined);
     assert.deepStrictEqual(manifest.issues, []);

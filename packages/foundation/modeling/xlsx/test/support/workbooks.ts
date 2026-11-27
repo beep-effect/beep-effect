@@ -1,5 +1,3 @@
-// Workbooks built from hand-written parts, each named for what it holds. A test asks for one by name and gets its
-// bytes; nothing binary is committed, so what a fixture holds can be read here.
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
@@ -138,8 +136,7 @@ export const streamedArchive = (parts: ReadonlyArray<Part>): Effect.Effect<Uint8
     )
   ).pipe(Stream.pipeThroughChannel(Zip.encode()), Stream.runCollect, Effect.map(Bytes.concat), Effect.orDie);
 
-/** Where an archive's end-of-directory record is: its last `PK 5 6`. */
-const endOf = (bytes: Uint8Array): number => {
+const lastEndRecordAt = (bytes: Uint8Array): number => {
   for (let at = bytes.length - 22; at >= 0; at -= 1) {
     if (bytes[at] === 0x50 && bytes[at + 1] === 0x4b && bytes[at + 2] === 5 && bytes[at + 3] === 6) return at;
   }
@@ -155,7 +152,7 @@ export const appended = (input: { readonly first: Uint8Array; readonly second: U
   const { first, second } = input;
   const moved = second.slice();
   const view = new DataView(moved.buffer);
-  const end = endOf(moved);
+  const end = lastEndRecordAt(moved);
   const start = view.getUint32(end + 16, true);
   let at = start;
   for (let n = 0; n < view.getUint16(end + 10, true); n += 1) {
@@ -166,10 +163,9 @@ export const appended = (input: { readonly first: Uint8Array; readonly second: U
   return Bytes.concat([first, moved]);
 };
 
-/** Where an archive's central directory starts, from its end record or the 64-bit record that one names. */
 const directoryStartOf = (bytes: Uint8Array): number => {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const end = endOf(bytes);
+  const end = lastEndRecordAt(bytes);
   const start = view.getUint32(end + 16, true);
   return start === 0xffffffff ? Number(view.getBigUint64(Number(view.getBigUint64(end - 12, true)) + 48, true)) : start;
 };
@@ -190,13 +186,12 @@ export const earlyEndRecord = (bytes: Uint8Array): Uint8Array => {
 /** Bytes no deflate can shrink much, the same on every run, so an archive holding them has a known size. */
 export const filler = (size: number): Uint8Array => {
   const out = new Uint8Array(size);
-  // xorshift32: every byte of its state is well mixed, so deflate finds no repeats to shrink.
-  let state = 0x9e3779b9;
+  let xorshift32 = 0x9e3779b9;
   for (let i = 0; i < size; i += 1) {
-    state ^= state << 13;
-    state ^= state >>> 17;
-    state ^= state << 5;
-    out[i] = state >>> 24;
+    xorshift32 ^= xorshift32 << 13;
+    xorshift32 ^= xorshift32 >>> 17;
+    xorshift32 ^= xorshift32 << 5;
+    out[i] = xorshift32 >>> 24;
   }
   return out;
 };
@@ -204,7 +199,7 @@ export const filler = (size: number): Uint8Array => {
 /** An archive whose directory leaves out its last entry, which is still in the archive before the directory. */
 export const withoutLastListed = (bytes: Uint8Array): Uint8Array => {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const end = endOf(bytes);
+  const end = lastEndRecordAt(bytes);
   const count = view.getUint16(end + 10, true);
   const start = view.getUint32(end + 16, true);
   let at = start;
@@ -225,7 +220,7 @@ export const withoutLastListed = (bytes: Uint8Array): Uint8Array => {
 export const longFirstListed = (bytes: Uint8Array): Uint8Array => {
   const out = bytes.slice();
   const view = new DataView(out.buffer);
-  view.setUint16(view.getUint32(endOf(out) + 16, true) + 32, 0xffff, true);
+  view.setUint16(view.getUint32(lastEndRecordAt(out) + 16, true) + 32, 0xffff, true);
   return out;
 };
 
@@ -233,7 +228,7 @@ export const longFirstListed = (bytes: Uint8Array): Uint8Array => {
 export const countedShort = (bytes: Uint8Array): Uint8Array => {
   const out = bytes.slice();
   const view = new DataView(out.buffer);
-  const end = endOf(out);
+  const end = lastEndRecordAt(out);
   const count = view.getUint16(end + 10, true) - 1;
   view.setUint16(end + 8, count, true);
   view.setUint16(end + 10, count, true);
