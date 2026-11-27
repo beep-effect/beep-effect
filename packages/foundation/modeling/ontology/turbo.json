@@ -7,6 +7,12 @@
         "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/explorations/legal-ontology-landscape/assets/manifest.jsonl"
       ]
+    },
+    "test:integration": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/explorations/legal-ontology-landscape/assets/manifest.jsonl"
+      ]
     }
   }
 }

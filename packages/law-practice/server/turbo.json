@@ -10,6 +10,24 @@
         "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
         "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**"
       ]
+    },
+    "test:integration": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/goals/citation-extraction-engine/ops/**",
+        "!$TURBO_ROOT$/goals/citation-extraction-engine/ops/manifest.json",
+        "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
+        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**"
+      ]
+    },
+    "test:integration:parallel": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/goals/citation-extraction-engine/ops/**",
+        "!$TURBO_ROOT$/goals/citation-extraction-engine/ops/manifest.json",
+        "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
+        "$TURBO_ROOT$/packages/law-practice/use-cases/test/fixtures/**"
+      ]
     }
   }
 }

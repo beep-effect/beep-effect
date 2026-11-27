@@ -307,7 +307,9 @@ const owningPackageDirectory = (source: string, tracked: HashSet.HashSet<string>
   );
 };
 
-const decodePackageName = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ name: S.NonEmptyString })));
+const decodePackageName = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ name: S.NonEmptyString, scripts: S.Record(S.String, S.String).pipe(S.optionalKey) }))
+);
 
 const decodePackageTurbo = S.decodeUnknownEffect(
   S.fromJsonString(
@@ -317,23 +319,34 @@ const decodePackageTurbo = S.decodeUnknownEffect(
   )
 );
 
-const declaredTestInputs = Effect.fnUntraced(function* (turboPath: string) {
+const TEST_TASKS: ReadonlyArray<string> = ["test", "test:integration", "test:integration:parallel"];
+
+const testTasksOf = Effect.fnUntraced(function* (root: string, directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const text = yield* fs.readFileString(path.join(root, directory, "package.json"));
+  const manifest = yield* decodePackageName(text);
+  const scripts = manifest.scripts ?? R.empty<string, string>();
+  return A.filter(TEST_TASKS, (task) => R.has(scripts, task));
+});
+
+const declaredTestInputs = Effect.fnUntraced(function* (turboPath: string, task: string) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(turboPath);
   const turbo = yield* decodePackageTurbo(text);
   return pipe(
-    R.get(turbo.tasks, "test"),
+    R.get(turbo.tasks, task),
     O.flatMapNullishOr((task) => task.inputs),
     O.getOrElse(A.empty<string>)
   );
 });
 
-const testInputGlobs = Effect.fnUntraced(function* (root: string, directory: string) {
+const testInputGlobs = Effect.fnUntraced(function* (root: string, directory: string, task: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const turboPath = path.join(root, directory, "turbo.json");
   const present = yield* fs.exists(turboPath);
-  const inputs = present ? yield* declaredTestInputs(turboPath) : A.empty<string>();
+  const inputs = present ? yield* declaredTestInputs(turboPath, task) : A.empty<string>();
   const rootInputs = A.filterMap(inputs, (input) =>
     TURBO_ROOT_INPUT.test(input) ? Result.succeed(Str.replace(TURBO_ROOT_INPUT, "$1")(input)) : Result.failVoid
   );
@@ -611,7 +624,7 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
   );
 
   it.effect(
-    "declares every consumed path as a test input in its reader package's turbo.json",
+    "declares every consumed path as an input of each test task its reader package runs",
     Effect.fnUntraced(function* () {
       const { root, tracked, entries } = yield* CensusFacts;
       const reads = A.filter(entries, (entry) => !isExcluded(entry) && !PACKAGE_TURBO.test(entry.source));
@@ -620,12 +633,17 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
         Effect.fnUntraced(function* (entry) {
           const directory = owningPackageDirectory(entry.source, tracked);
           if (O.isNone(directory)) return O.some(`${entry.path} <- ${entry.source}: no owning package`);
-          const globs = yield* testInputGlobs(root, directory.value);
-          return globs.matches(entry.path)
-            ? O.none<string>()
-            : O.some(
-                `${entry.path} <- ${entry.source}; add "$TURBO_ROOT$/${entry.path}" (or a glob over it) to the test inputs of ${directory.value}/turbo.json`
-              );
+          const tasks = yield* testTasksOf(root, directory.value);
+          const missing = yield* Effect.filter(
+            tasks,
+            (task) => Effect.map(testInputGlobs(root, directory.value, task), (globs) => !globs.matches(entry.path)),
+            { concurrency: 1 }
+          );
+          return A.isReadonlyArrayNonEmpty(missing)
+            ? O.some(
+                `${entry.path} <- ${entry.source}; add "$TURBO_ROOT$/${entry.path}" (or a glob over it) to the ${A.join(missing, ", ")} inputs of ${directory.value}/turbo.json`
+              )
+            : O.none<string>();
         }),
         { concurrency: 8 }
       );
@@ -644,17 +662,25 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
         ])
       );
       expect(HashSet.has(tracked, ROUT_09_FIXTURE), ROUT_09_FIXTURE).toBe(true);
-      const globs = yield* testInputGlobs(root, "packages/law-practice/server");
-      expect(globs.matches(ROUT_09_FIXTURE)).toBe(true);
+      const tasks = yield* testTasksOf(root, "packages/law-practice/server");
+      expect(tasks).toEqual(TEST_TASKS);
+      for (const task of tasks) {
+        const globs = yield* testInputGlobs(root, "packages/law-practice/server", task);
+        expect(globs.matches(ROUT_09_FIXTURE), task).toBe(true);
+      }
     })
   );
 
   it.effect("keeps a negated turbo input out of the consumed paths", () =>
     Effect.gen(function* () {
       const { root, entries } = yield* CensusFacts;
-      const globs = yield* testInputGlobs(root, "packages/law-practice/server");
-      expect(globs.matches(CITATION_MANIFEST)).toBe(false);
-      expect(globs.matches("goals/citation-extraction-engine/ops/qualify-regex-translator.child.mjs")).toBe(true);
+      for (const task of TEST_TASKS) {
+        const globs = yield* testInputGlobs(root, "packages/law-practice/server", task);
+        expect(globs.matches(CITATION_MANIFEST), task).toBe(false);
+        expect(globs.matches("goals/citation-extraction-engine/ops/qualify-regex-translator.child.mjs"), task).toBe(
+          true
+        );
+      }
       expect(A.some(entries, (entry) => entry.path === CITATION_MANIFEST && PACKAGE_TURBO.test(entry.source))).toBe(
         false
       );

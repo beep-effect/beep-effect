@@ -3,10 +3,10 @@
   "subject": "@beep/eyecite",
   "review": {
     "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
-    "reason": "Re-record the root subject and six packages after their per-package turbo.json files declared the goal and exploration paths, and the law-practice use-cases fixtures, that their tests read as test inputs. Configuration review only; no qualification is granted.",
+    "reason": "Re-record the root subject and three packages after their turbo.json files declared the goal-data and fixture inputs on the integration test tasks as well. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/rout-03-slice-2-cache-review-2026-11-26.md",
-      "sha256": "08d809e1d5cea47d4cdeb26a9ca56f7fec2af2b0f076b7b2c01319d1aba03dd5"
+      "path": "docs/reports/rout-03-slice-2-integration-cache-review-2026-11-26.md",
+      "sha256": "a2f3263d1a19ea8ec0a7fc85945c7d981a13dc039dd2a90a54fdcca2dd16b2ed"
     }
   },
   "nodes": [
@@ -555,6 +555,7 @@
           "!.fallow/**",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",
           "../../../tsconfig.json",

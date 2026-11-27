@@ -9,10 +9,10 @@
   ],
   "review": {
     "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
-    "reason": "Re-record the root subject and six packages after their per-package turbo.json files declared the goal and exploration paths, and the law-practice use-cases fixtures, that their tests read as test inputs. Configuration review only; no qualification is granted.",
+    "reason": "Re-record the root subject and three packages after their turbo.json files declared the goal-data and fixture inputs on the integration test tasks as well. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/rout-03-slice-2-cache-review-2026-11-26.md",
-      "sha256": "08d809e1d5cea47d4cdeb26a9ca56f7fec2af2b0f076b7b2c01319d1aba03dd5"
+      "path": "docs/reports/rout-03-slice-2-integration-cache-review-2026-11-26.md",
+      "sha256": "a2f3263d1a19ea8ec0a7fc85945c7d981a13dc039dd2a90a54fdcca2dd16b2ed"
     }
   },
   "globalConfiguration": {
@@ -168,7 +168,7 @@
     },
     {
       "path": "packages/drivers/eyecite/turbo.json",
-      "sha256": "7b9519e1e50a4e2dd04d65a12bc4e565c11574b738bc219bb7e47c1768a972c2"
+      "sha256": "43c890bca8a83ab00613725a2311dc11a71d2325da9883aa19eff7c6ca04cfe8"
     },
     {
       "path": "packages/foundation/modeling/identity/turbo.json",
@@ -176,7 +176,7 @@
     },
     {
       "path": "packages/foundation/modeling/ontology/turbo.json",
-      "sha256": "0e87c08318fc5575d2881ecf54cff94216522fb04e41ca09fe32ca853f0a5782"
+      "sha256": "7b91a930d87ce0134a5fae768673628efc8459aaa19e9398bc886db3f4f72948"
     },
     {
       "path": "packages/foundation/primitive/types/turbo.json",
@@ -184,7 +184,7 @@
     },
     {
       "path": "packages/law-practice/server/turbo.json",
-      "sha256": "048cfa65a39e6c730d7fde61afd4f865f675ee2345bf3c17517ce024e5cc6d53"
+      "sha256": "e3493a60b0a67c55b8adce2ec99c057be675a89271dba701965f433da744af67"
     },
     {
       "path": "packages/tooling/library/ai-sync/turbo.json",
