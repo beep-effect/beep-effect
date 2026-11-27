@@ -119,11 +119,11 @@ const parsedFcNumRuns = readEnv("BEEP_FC_NUM_RUNS").pipe(
  * True when `BEEP_FC_NUM_RUNS` holds a positive integer run floor. The property lane and the
  * nightly sweep export it before vitest starts.
  *
- * **Example** (Skip a slow setup outside the sweep)
+ * **Example** (Raise the hook timeout during the sweep)
  *
  * ```ts
  * import { fcDeepSweepActive } from "./vitest.shared.ts"
- * const retry = fcDeepSweepActive ? 0 : 1
+ * const hookTimeout = fcDeepSweepActive ? 300_000 : 10_000
  * ```
  *
  * @category configuration
