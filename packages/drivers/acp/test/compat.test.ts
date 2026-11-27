@@ -1,6 +1,4 @@
-// Projection tests for `@beep/acp/compat` and the generation-1 / generation-2 normalizers. The
-// unknown-variant, elicitation and permission cases port the in-memory normalization cases of
-// t3code effect-acp `client.test.ts` (31dcc7c513) without a client; the properties are beep-only.
+// Adapted from t3code packages/effect-acp client.test.ts at 31dcc7c513 (MIT).
 import * as Compat from "@beep/acp/compat";
 import * as Normalize from "@beep/acp/internal/normalize";
 import * as AcpProtocol from "@beep/acp/protocol";
@@ -28,8 +26,9 @@ const decodeCompatLoadSessionRequest = S.decodeUnknownEffect(Compat.LoadSessionR
 const decodeCompatConfigOptionRequest = S.decodeUnknownEffect(Compat.SetSessionConfigOptionRequest);
 const decodeCompatNewSessionResponse = S.decodeUnknownEffect(Compat.NewSessionResponse);
 const decodeV2NewSessionResponse = S.decodeUnknownEffect(V2.NewSessionResponse);
-// The client's prompt success union (`AcpRpc.models.ts`).
-const decodePromptResult = S.decodeUnknownEffect(S.Union([Compat.PromptResponse, Normalize.OpenPromptAcknowledgement]));
+const decodeClientPromptSuccessUnion = S.decodeUnknownEffect(
+  S.Union([Compat.PromptResponse, Normalize.OpenPromptAcknowledgement])
+);
 
 const isCompatSessionNotification = S.is(Compat.SessionNotification);
 const isCompatInitializeResponse = S.is(Compat.InitializeResponse);
@@ -45,7 +44,6 @@ const permissionContext = AcpProtocol.AcpRequestContext.make({
 });
 const permissionOptions = [{ optionId: "allow", name: "Allow", kind: "allow_once" }];
 
-// Decodes `session/update` params the way the protocol does, then normalizes them.
 const normalizeWireUpdate = Effect.fnUntraced(function* (generation: Normalize.ProtocolGeneration, params: unknown) {
   const notification = yield* decodeIncomingNotification({
     _tag: "SessionUpdate",
@@ -103,8 +101,6 @@ describe("compat session updates", () => {
     })
   );
 
-  // Generation 2 tightens fields the kinds share (`Cost.currency` must match `^[A-Z]{3}$`,
-  // `Annotations.priority` must lie in [0, 1]), so these updates decode only as generation 1.
   it.effect("keeps shared kinds that only the generation-1 member accepts, on either generation", () =>
     Effect.gen(function* () {
       const lowerCaseCurrency = {
@@ -128,7 +124,11 @@ describe("compat session updates", () => {
       for (const update of [lowerCaseCurrency, summaryChunk, compaction]) {
         for (const generation of [1, 2] as const) {
           const normalized = yield* normalizeWireUpdate(generation, { sessionId: "session-1", update });
-          assert.deepStrictEqual(normalized, update);
+          assert.deepStrictEqual(
+            normalized,
+            update,
+            "generation 2 requires Cost.currency to match ^[A-Z]{3}$ and Annotations.priority in [0, 1]"
+          );
           assert.isTrue(isCompatSessionNotification({ sessionId: "session-1", update: normalized }));
         }
       }
@@ -300,8 +300,6 @@ describe("compat session updates", () => {
     })
   );
 
-  // A generation-1 result outside the closed v1.26 schema decodes through the open generation-2
-  // member; its stop reason must survive, and only the malformed usage is dropped.
   it.effect("keeps the stop reason of an off-schema generation-1 prompt result", () =>
     Effect.gen(function* () {
       const partialUsage = { inputTokens: 10, outputTokens: 5 };
@@ -319,8 +317,12 @@ describe("compat session updates", () => {
         [{ stopReason: 7 }, { stopReason: "end_turn" }],
       ] as const;
       for (const [wire, expected] of cases) {
-        const decodedPromptResult = yield* decodePromptResult(wire);
-        assert.deepStrictEqual(Normalize.normalizePromptResponse(decodedPromptResult), expected);
+        const decodedPromptResult = yield* decodeClientPromptSuccessUnion(wire);
+        assert.deepStrictEqual(
+          Normalize.normalizePromptResponse(decodedPromptResult),
+          expected,
+          "an off-schema result decodes through the open generation-2 member; only malformed usage is dropped"
+        );
       }
     })
   );
@@ -351,14 +353,16 @@ describe("compat initialize", () => {
 
   it.effect("detects the generation from the reply shape, not the version number", () =>
     Effect.gen(function* () {
-      // Antigravity reports version 2 with the generation-1 reply shape.
       const legacy = yield* decodeV1InitializeResponse({
         protocolVersion: 2,
         agentInfo: { name: "antigravity", version: "1.1.1" },
         agentCapabilities: { loadSession: true },
         authMethods: [{ id: "oauth", name: "Google" }],
       });
-      assert.isFalse(Normalize.isV2InitializeResponse(legacy));
+      assert.isFalse(
+        Normalize.isV2InitializeResponse(legacy),
+        "Antigravity reports version 2 with the generation-1 reply shape"
+      );
       assert.deepStrictEqual(Normalize.normalizeInitializeResponse(legacy), legacy);
     })
   );
@@ -493,8 +497,8 @@ describe("compat prompt requests", () => {
         O.some({ sessionId: "session-1", prompt: [text, chart], _meta: { trace: "t" } })
       );
 
-      // A sentinel whose `raw` is no content block (or is itself a sentinel) has no wire form.
-      for (const raw of [5, { points: [] }, { type: Compat.ACP_UNKNOWN, originalType: "chart", raw: chart }]) {
+      const rawsWithNoWireForm = [5, { points: [] }, { type: Compat.ACP_UNKNOWN, originalType: "chart", raw: chart }];
+      for (const raw of rawsWithNoWireForm) {
         const opaque = Compat.UnknownContent.make({ type: Compat.ACP_UNKNOWN, originalType: "chart", raw });
         assertNone(Normalize.toWirePromptRequest({ sessionId: "session-1", prompt: [text, opaque] }));
       }
@@ -605,10 +609,8 @@ describe("compat projections (properties)", () => {
     { arbitrary: fcRuns(50) }
   );
 
-  // A valid generation-1 update keeps its kind; only the generation-1-only kinds become
-  // `_acp_unknown`, and only on a generation-2 connection.
   it.prop(
-    "keeps the kind of every generation-1 update",
+    "keeps the kind of every generation-1 update, except generation-1-only kinds on a generation-2 connection",
     [Arbitrary.schema(V1.SessionNotification), Arbitrary.schema(Normalize.ProtocolGeneration)],
     ([notification, generation]) => {
       const kind = notification.update.sessionUpdate;
@@ -620,12 +622,11 @@ describe("compat projections (properties)", () => {
     { arbitrary: fcRuns(200) }
   );
 
-  // Every v1.26 prompt result is already a compat result, so the client returns it unchanged.
   it.prop(
     "returns every generation-1 prompt result unchanged",
     [Arbitrary.schema(V1.PromptResponse)],
     ([response]) => {
-      assert.isTrue(isCompatPromptResponse(response));
+      assert.isTrue(isCompatPromptResponse(response), "every v1.26 prompt result is already a compat result");
       assert.deepStrictEqual(Normalize.normalizePromptResponse(response), response);
     },
     { arbitrary: fcRuns(50) }

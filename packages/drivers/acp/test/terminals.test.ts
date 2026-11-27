@@ -38,12 +38,11 @@ const decodeErrorResponse = S.decodeEffect(
   )
 );
 
-// The spawner reads the filesystem only to check that an explicit cwd is accessible; every
-// command here runs in the test's own working directory.
+const cwdAccessCheckOnlyFileSystem = FileSystem.layerNoop({ access: () => Effect.void });
 const SpawnerLayer = Layer.merge(
   NodeChildProcessSpawner.layer,
   Layer.succeed(HostProcessPlatform, currentHostPlatform)
-).pipe(Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ access: () => Effect.void }), NodePath.layer)));
+).pipe(Layer.provide(Layer.mergeAll(cwdAccessCheckOnlyFileSystem, NodePath.layer)));
 
 it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => {
   it.effect(
@@ -169,7 +168,6 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
         outputByteLimit: 16,
         ...script("process.stdout.write('a'.repeat(64) + 'TAIL');"),
       });
-      // Each euro sign is three bytes, so a 16-byte limit cuts through one of them.
       const multiByte = yield* terminals.create({
         sessionId: "session",
         outputByteLimit: 16,
@@ -184,9 +182,12 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
 
       const multiByteOutput = yield* terminals.output({ sessionId: "session", ...multiByte });
       assert.isTrue(multiByteOutput.truncated);
-      assert.strictEqual(multiByteOutput.output, Str.repeat(5)("€"));
+      assert.strictEqual(
+        multiByteOutput.output,
+        Str.repeat(5)("€"),
+        "each euro sign is three bytes, so a 16-byte limit cuts through one of them"
+      );
 
-      // A one-byte limit retains only the final continuation byte of the euro sign.
       const continuationOnly = yield* terminals.create({
         sessionId: "session",
         outputByteLimit: 1,
@@ -195,7 +196,11 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
       yield* terminals.waitForExit({ sessionId: "session", ...continuationOnly });
       const continuationOutput = yield* terminals.output({ sessionId: "session", ...continuationOnly });
       assert.isTrue(continuationOutput.truncated);
-      assert.strictEqual(continuationOutput.output, "");
+      assert.strictEqual(
+        continuationOutput.output,
+        "",
+        "a one-byte limit retains only the final continuation byte of the euro sign"
+      );
     })
   );
 
@@ -296,8 +301,8 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
         concurrency: 1,
       });
       assertNone(terminals.readOutputSnapshot("session", ids[0]?.terminalId ?? ""));
-      // Trimming takes the oldest output first, so the newest terminal keeps all of its output.
-      assertSome(terminals.readOutputSnapshot("session", ids[2]?.terminalId ?? ""), {
+      const newestIntactAfterOldestFirstTrim = terminals.readOutputSnapshot("session", ids[2]?.terminalId ?? "");
+      assertSome(newestIntactAfterOldestFirstTrim, {
         output: Str.repeat(1000)("x"),
         truncated: false,
         exitStatus: { exitCode: 0, signal: null },
@@ -349,9 +354,8 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
   );
 });
 
-// The kill grace and the exit-output grace need the real clock.
 it.layer(SpawnerLayer, { excludeTestServices: true, timeout: "30 seconds" })(
-  "AcpClientTerminals on the real clock",
+  "AcpClientTerminals on the real clock that the kill grace and the exit-output grace need",
   (it) => {
     it.effect(
       "serves an agent's terminal requests through the client once registered",
@@ -402,16 +406,22 @@ it.layer(SpawnerLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           sessionId: "session",
           ...script("process.on('SIGTERM', () => {}); process.stdout.write('ready'); setInterval(() => {}, 1000);"),
         });
-        // Kill only once the SIGTERM handler is installed, or the default disposition ends the child.
-        yield* terminals.output({ sessionId: "session", terminalId }).pipe(
+        const awaitSigtermHandlerInstalled = terminals.output({ sessionId: "session", terminalId }).pipe(
           Effect.tap(() => Effect.yieldNow),
           Effect.repeat({ until: (output) => output.output === "ready" }),
           Effect.timeout("10 seconds")
         );
+        yield* awaitSigtermHandlerInstalled;
 
         yield* terminals.kill({ sessionId: "session", terminalId }).pipe(Effect.timeout("5 seconds"));
         const exit = yield* terminals.waitForExit({ sessionId: "session", terminalId });
-        if ((yield* HostProcessPlatform) !== "win32") assert.strictEqual(exit.signal, "SIGKILL");
+        if ((yield* HostProcessPlatform) !== "win32") {
+          assert.strictEqual(
+            exit.signal,
+            "SIGKILL",
+            "the kill waits for the SIGTERM handler, or the default disposition would end the child first"
+          );
+        }
       })
     );
 

@@ -1,8 +1,4 @@
-// In-memory tests for `@beep/acp/client`: generation negotiation, prompt lifecycle, request ids,
-// peer requests, notification buffering and handler isolation. The scripted-peer cases port the
-// in-memory cases of t3code effect-acp `client.test.ts` (31dcc7c513); the buffered-replay and
-// unknown-variant cases replace its spawned mock peer with a scripted one. Generation pinning,
-// the pending-notification cap, concurrent-prompt rejection and termination cases are beep-only.
+// Adapted from t3code packages/effect-acp client.test.ts at 31dcc7c513 (MIT).
 import * as AcpClient from "@beep/acp/client";
 import * as Compat from "@beep/acp/compat";
 import * as AcpError from "@beep/acp/errors";
@@ -55,8 +51,7 @@ const isNegotiatingInitialize = S.is(S.Struct({ clientCapabilities: S.Unknown, i
 type Input = Queue.Queue<Uint8Array, Cause.Done>;
 type Output = Queue.Queue<string>;
 
-// One stdin chunk holding every message, so the client must frame a batch.
-const sendAll = (input: Input, messages: ReadonlyArray<unknown>) =>
+const sendInOneChunk = (input: Input, messages: ReadonlyArray<unknown>) =>
   Effect.forEach(messages, (message) => encodeUnknownJsonText(message), { concurrency: 1 }).pipe(
     Effect.map((lines) =>
       encoder.encode(
@@ -68,7 +63,7 @@ const sendAll = (input: Input, messages: ReadonlyArray<unknown>) =>
     ),
     Effect.flatMap((bytes) => Queue.offer(input, bytes))
   );
-const send = (input: Input, message: unknown) => sendAll(input, [message]);
+const send = (input: Input, message: unknown) => sendInOneChunk(input, [message]);
 const takeRequest = (output: Output) => Effect.flatMap(Queue.take(output), decodeWireRequest);
 const takeResponse = (output: Output) => Effect.flatMap(Queue.take(output), decodeWireResponse);
 const takeError = (output: Output) => Effect.flatMap(Queue.take(output), decodeWireError);
@@ -78,7 +73,6 @@ const request = (id: string | number, method: string, params: unknown) => ({ jso
 const notification = (method: string, params: unknown) => ({ jsonrpc: "2.0", method, params });
 const result = (id: string | number, value: unknown) => ({ jsonrpc: "2.0", id, result: value });
 
-// Answers the next outbound request with `value` and returns that request.
 const answerNext = Effect.fnUntraced(function* (input: Input, output: Output, value: unknown) {
   const outbound = yield* takeRequest(output);
   yield* send(input, result(outbound.id, value));
@@ -152,12 +146,15 @@ it.effect(
     const ext = yield* takeRequest(output);
 
     assert.equal(initialize.method, "initialize");
-    // Locally generated ids stay numeric and within int32 for SDKs that decode ids as Int.
     assert.strictEqual(initialize.id, 2 ** 30);
-    assert.isAtMost(Number(initialize.id), 2 ** 31 - 1);
+    assert.isAtMost(
+      Number(initialize.id),
+      2 ** 31 - 1,
+      "locally generated ids stay numeric and within int32 for SDKs that decode ids as Int"
+    );
     assert.strictEqual(ext.id, 1);
 
-    yield* sendAll(input, [result(initialize.id, v2InitializeResult), result(ext.id, { ok: true })]);
+    yield* sendInOneChunk(input, [result(initialize.id, v2InitializeResult), result(ext.id, { ok: true })]);
     yield* Fiber.join(initializeFiber);
     const join1 = yield* Fiber.join(extFiber);
     assert.deepEqual(join1, { ok: true });
@@ -175,10 +172,9 @@ it.effect(
   })
 );
 
-// The recorded agent reports version 2 (and, in the variant, 1) with the generation-1 result shape.
 A.forEach([1, 2], (protocolVersion) =>
   it.effect(
-    `keeps generation-1 wire behavior for an agent reporting version ${protocolVersion}`,
+    `keeps generation-1 wire behavior for a recorded generation-1 result shape reporting version ${protocolVersion}`,
     Effect.fnUntraced(function* () {
       const { stdio, input, output } = yield* makeInMemoryStdio();
       const acp = yield* AcpClient.make(stdio);
@@ -256,19 +252,26 @@ A.forEach([1, 2], (protocolVersion) =>
         message: "Choose a branch",
         requestedSchema: { type: "object", properties: {} },
       };
-      // `session/elicitation` and the older underscore name (recorded from Devin) get the nested result.
       yield* send(input, request("legacy-question", "session/elicitation", question));
       const takeResponse2 = yield* takeResponse(output);
-      assert.deepEqual(takeResponse2, {
-        id: "legacy-question",
-        result: { action: { action: "accept", content: { branch: "main" } } },
-      });
+      assert.deepEqual(
+        takeResponse2,
+        {
+          id: "legacy-question",
+          result: { action: { action: "accept", content: { branch: "main" } } },
+        },
+        "session/elicitation gets the nested result"
+      );
       yield* send(input, request("devin-question", "_session/elicitation", question));
       const takeResponse3 = yield* takeResponse(output);
-      assert.deepEqual(takeResponse3, {
-        id: "devin-question",
-        result: { action: { action: "accept", content: { branch: "main" } } },
-      });
+      assert.deepEqual(
+        takeResponse3,
+        {
+          id: "devin-question",
+          result: { action: { action: "accept", content: { branch: "main" } } },
+        },
+        "the older underscore name, recorded from Devin, gets the nested result too"
+      );
 
       const completed = yield* Deferred.make<Compat.CompleteElicitationNotification>();
       yield* acp.handleElicitationComplete((done) => Deferred.succeed(completed, done).pipe(Effect.asVoid));
@@ -281,7 +284,7 @@ A.forEach([1, 2], (protocolVersion) =>
       );
       const prompt = yield* takeRequest(output);
       assert.equal(prompt.method, "session/prompt");
-      yield* sendAll(input, [
+      yield* sendInOneChunk(input, [
         notification("session/update", {
           sessionId: "native-session-1",
           update: {
@@ -325,7 +328,6 @@ it.effect(
     assert.deepEqual(initialized.outbound.params, { ...v1Initialize, protocolVersion: 1 });
     assert.equal(initialized.answer.protocolVersion, 1);
 
-    // Generation 1 defines these methods, but the client fails them locally (t3code parity).
     yield* expectMethodNotFound(acp.agent.deleteSession({ sessionId: "session-1" }));
     yield* expectMethodNotFound(acp.agent.listProviders({}));
     yield* expectMethodNotFound(
@@ -333,7 +335,7 @@ it.effect(
     );
     yield* expectMethodNotFound(acp.agent.disableProvider({ providerId: "provider" }));
     const size6 = yield* Queue.size(output);
-    assert.equal(size6, 0);
+    assert.equal(size6, 0, "generation 1 defines these methods, but the client fails them locally for t3code parity");
 
     const mode = yield* exchange(input, output, acp.agent.setSessionMode({ sessionId: "session-1", modeId: "ask" }));
     assert.equal(mode.outbound.method, "session/set_mode");
@@ -379,10 +381,8 @@ it.effect(
   })
 );
 
-// Negotiation and the v2 pin send `protocolVersion: 2`; only the v1 pin sends 1, and only
-// negotiation keeps the generation-1 `clientCapabilities` beside the generation-2 fields.
 it.effect.prop(
-  "sends the initialize request of the configured generation mode",
+  "sends protocolVersion 1 only under the v1 pin and keeps generation-1 clientCapabilities only when negotiating",
   [Arbitrary.schema(AcpClient.AcpClientProtocolGeneration)],
   Effect.fnUntraced(function* ([protocolGeneration]) {
     const { stdio, input, output } = yield* makeInMemoryStdio();
@@ -411,7 +411,7 @@ it.effect(
       Ref.update(contexts, A.append(context)).pipe(Effect.as(allow))
     );
 
-    yield* sendAll(input, [
+    yield* sendInOneChunk(input, [
       request("permission-a", "session/request_permission", toolCallPermission),
       request("permission-b", "session/request_permission", toolCallPermission),
     ]);
@@ -457,7 +457,7 @@ it.effect(
     const prompt = yield* takeRequest(output);
     const meta = { sessionId: "agent-session-1", requestId: "prompt-1", promptId: "prompt-1", modelId: "model-1" };
 
-    yield* sendAll(input, [
+    yield* sendInOneChunk(input, [
       notification("x/queue/changed", { sessionId: "agent-session-1", entries: [] }),
       notification("x/session/prompt_complete", {
         sessionId: "agent-session-1",
@@ -492,21 +492,18 @@ it.effect(
     const size11 = yield* Queue.size(output);
     assert.equal(size11, 0);
 
-    yield* sendAll(input, [result(firstRequest.id, {}), idle("session-1")]);
+    yield* sendInOneChunk(input, [result(firstRequest.id, {}), idle("session-1")]);
     const join12 = yield* Fiber.join(first);
     assert.deepEqual(join12, { stopReason: "end_turn" });
 
-    // The session accepts a new prompt once the first one completed.
     const second = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const secondRequest = yield* takeRequest(output);
-    yield* sendAll(input, [result(secondRequest.id, {}), idle("session-1", { stopReason: "cancelled" })]);
+    yield* sendInOneChunk(input, [result(secondRequest.id, {}), idle("session-1", { stopReason: "cancelled" })]);
     const join13 = yield* Fiber.join(second);
-    assert.deepEqual(join13, { stopReason: "cancelled" });
+    assert.deepEqual(join13, { stopReason: "cancelled" }, "the session accepts a new prompt once the first completed");
   })
 );
 
-// `usage` and `error` on a v2 idle are unstable draft fields. An idle whose only defect is one of
-// them must still end the prompt instead of being dropped as undecodable.
 it.effect(
   "ends a generation-2 prompt when the idle update carries an undecodable usage or error",
   Effect.fnUntraced(function* () {
@@ -516,13 +513,17 @@ it.effect(
 
     const first = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const firstRequest = yield* takeRequest(output);
-    yield* sendAll(input, [result(firstRequest.id, {}), idle("session-1", { usage: { totalTokens: 1 } })]);
+    yield* sendInOneChunk(input, [result(firstRequest.id, {}), idle("session-1", { usage: { totalTokens: 1 } })]);
     const join14 = yield* Fiber.join(first);
-    assert.deepEqual(join14, { stopReason: "end_turn" });
+    assert.deepEqual(
+      join14,
+      { stopReason: "end_turn" },
+      "usage and error are unstable draft fields, so an idle whose only defect is one of them still ends the prompt"
+    );
 
     const second = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const secondRequest = yield* takeRequest(output);
-    yield* sendAll(input, [
+    yield* sendInOneChunk(input, [
       result(secondRequest.id, {}),
       idle("session-1", { stopReason: "cancelled", error: "not an error object", usage: "unknown" }),
     ]);
@@ -531,8 +532,6 @@ it.effect(
   })
 );
 
-// The closed v1.26 result rejects a partial usage and a custom stop reason; the open generation-2
-// acknowledgement member must not swallow such a result and report `end_turn`.
 it.effect(
   "keeps the stop reason of a generation-1 prompt result outside the v1.26 schema",
   Effect.fnUntraced(function* () {
@@ -545,16 +544,22 @@ it.effect(
       stopReason: "cancelled",
       usage: { inputTokens: 1, outputTokens: 2 },
     });
-    assert.deepEqual(cancelled.answer, { stopReason: "cancelled" });
+    assert.deepEqual(
+      cancelled.answer,
+      { stopReason: "cancelled" },
+      "the closed v1.26 result rejects a partial usage; the open generation-2 member must not report end_turn"
+    );
     const custom = yield* exchange(input, output, acp.agent.prompt(prompt), { stopReason: "_vendor_limited", usage });
-    assert.deepEqual(custom.answer, { stopReason: "_vendor_limited", usage });
+    assert.deepEqual(
+      custom.answer,
+      { stopReason: "_vendor_limited", usage },
+      "the closed v1.26 result rejects a custom stop reason; the open generation-2 member must not swallow it"
+    );
     const missing = yield* exchange(input, output, acp.agent.prompt(prompt), {});
     assert.deepEqual(missing.answer, { stopReason: "end_turn" });
   })
 );
 
-// A caller may re-send content the client delivered; the agent gets the original block, never the
-// sentinel, on either generation's prompt path.
 A.forEach(["v1", "v2"] as const, (protocolGeneration) =>
   it.effect(
     `sends a re-sent unknown content block as the original block on ${protocolGeneration}`,
@@ -569,19 +574,22 @@ A.forEach(["v1", "v2"] as const, (protocolGeneration) =>
         acp.agent.prompt({ sessionId: "session-1", prompt: [text, resent] })
       );
       const outbound = yield* takeRequest(output);
-      assert.deepEqual(outbound.params, { sessionId: "session-1", prompt: [text, chart] });
+      assert.deepEqual(
+        outbound.params,
+        { sessionId: "session-1", prompt: [text, chart] },
+        "a caller may re-send delivered content; the agent gets the original block, never the sentinel"
+      );
       yield* protocolGeneration === "v1"
         ? send(input, result(outbound.id, { stopReason: "end_turn" }))
-        : sendAll(input, [result(outbound.id, {}), idle("session-1")]);
+        : sendInOneChunk(input, [result(outbound.id, {}), idle("session-1")]);
       const join16 = yield* Fiber.join(promptFiber);
       assert.deepEqual(join16, { stopReason: "end_turn" });
 
-      // A sentinel without an original content block fails locally instead of reaching the agent.
       const opaque = Compat.UnknownContent.make({ type: Compat.ACP_UNKNOWN, originalType: "chart", raw: 5 });
       const rejected = yield* expectFailure(acp.agent.prompt({ sessionId: "session-1", prompt: [opaque] }));
       assert.equal(AcpError.AcpRequestError.is(rejected) ? rejected.code : 0, -32602);
       const size17 = yield* Queue.size(output);
-      assert.equal(size17, 0);
+      assert.equal(size17, 0, "a sentinel without an original content block fails locally and never reaches the agent");
     })
   )
 );
@@ -597,12 +605,15 @@ it.effect(
     const promptFiber = yield* Effect.forkScoped(
       acp.agent.prompt({ sessionId: "session-1", prompt: [{ type: "text", text: "hello" }] })
     );
-    // The agent acknowledges the turn, then its output ends before the idle update.
     yield* answerNext(input, output, {});
     yield* Queue.end(input);
 
     const terminal = yield* Deferred.await(terminated);
-    assert.equal(terminal._tag, "AcpInputStreamEndedError");
+    assert.equal(
+      terminal._tag,
+      "AcpInputStreamEndedError",
+      "the agent acknowledged the turn, then its output ended before the idle update"
+    );
     const pipe18 = yield* promptFiber.pipe(Fiber.join, expectFailure);
     assert.strictEqual(pipe18, terminal);
     const expectFailure19 = yield* expectFailure(acp.agent.listSessions({}));
@@ -644,7 +655,6 @@ it.effect(
     const firstRequest = yield* takeRequest(output);
     const second = yield* Effect.forkScoped(acp.agent.listSessions({}));
     const secondRequest = yield* takeRequest(output);
-    // effect-rpc reads this envelope as a connection-level defect that fails every in-flight call.
     yield* send(input, {
       jsonrpc: "2.0",
       id: firstRequest.id,
@@ -661,7 +671,11 @@ it.effect(
     }
     yield* send(input, result(secondRequest.id, { sessions: [] }));
     const join21 = yield* Fiber.join(second);
-    assert.deepEqual(join21, { sessions: [] });
+    assert.deepEqual(
+      join21,
+      { sessions: [] },
+      "effect-rpc would read a Defect-tagged envelope as a connection-level defect failing every in-flight call"
+    );
   })
 );
 
@@ -681,19 +695,22 @@ it.effect(
       Ref.update(typedNotifications, A.append<unknown>(payload))
     );
 
-    yield* sendAll(input, [
+    yield* sendInOneChunk(input, [
       textChunk("session-1", "one"),
       notification("elicitation/complete", { elicitationId: "elicitation-1" }),
       notification("x/typed_notification", { count: 2 }),
       textChunk("session-1", "two"),
       request("typed-1", "x/typed_request", { message: "hello from typed request" }),
     ]);
-    // The typed request is read after every earlier notification was dispatched.
     const takeResponse22 = yield* takeResponse(output);
-    assert.deepEqual(takeResponse22, {
-      id: "typed-1",
-      result: { ok: true, echoedMessage: "hello from typed request" },
-    });
+    assert.deepEqual(
+      takeResponse22,
+      {
+        id: "typed-1",
+        result: { ok: true, echoedMessage: "hello from typed request" },
+      },
+      "the typed request is read after every earlier notification was dispatched"
+    );
 
     const updates = yield* Ref.make<ReadonlyArray<Compat.SessionNotification>>([]);
     const completions = yield* Ref.make<ReadonlyArray<Compat.CompleteElicitationNotification>>([]);
@@ -718,7 +735,7 @@ it.effect(
     const acp = yield* AcpClient.make(stdio);
     yield* acp.handleExtRequest("x/sync", S.Unknown, () => Effect.succeed({}));
 
-    yield* sendAll(input, [...A.makeBy(300, usageUpdate), request("sync", "x/sync", {})]);
+    yield* sendInOneChunk(input, [...A.makeBy(300, usageUpdate), request("sync", "x/sync", {})]);
     yield* takeResponse(output);
 
     const used = yield* Ref.make<ReadonlyArray<unknown>>([]);
@@ -740,7 +757,7 @@ it.effect(
     yield* acp.handleSessionUpdate((update) => Queue.offer(updates, update).pipe(Effect.asVoid));
     yield* exchange(input, output, acp.agent.initialize(v1Initialize), v2InitializeResult);
 
-    yield* sendAll(input, [
+    yield* sendInOneChunk(input, [
       notification("session/update", {
         sessionId: "session-1",
         update: {
@@ -791,9 +808,8 @@ it.effect(
     yield* send(input, request(4, "terminal/release", terminal));
     const takeResponse30 = yield* takeResponse(output);
     assert.deepEqual(takeResponse30, { id: 4, result: {} });
-    // No terminal/create handler is registered.
     yield* send(input, request(5, "terminal/create", { sessionId: "session-1", command: "ls" }));
-    assert.equal((yield* takeError(output)).error.code, -32601);
+    assert.equal((yield* takeError(output)).error.code, -32601, "no terminal/create handler is registered");
   })
 );
 
@@ -813,9 +829,12 @@ it.effect(
     assert.deepEqual(takeResponse31, { id: 1, result: { result: { tools: [] } } });
     const await32 = yield* Deferred.await(received);
     assert.deepEqual(await32, params);
-    // schema-v2.0.0-alpha.9 and schema-v1.26.0 removed `mcp/connect` and `mcp/disconnect`.
     yield* send(input, request(2, "mcp/connect", { serverId: "test-server" }));
-    assert.equal((yield* takeError(output)).error.code, -32601);
+    assert.equal(
+      (yield* takeError(output)).error.code,
+      -32601,
+      "schema-v2.0.0-alpha.9 and schema-v1.26.0 removed mcp/connect and mcp/disconnect"
+    );
 
     const progress = { serverId: "test-server", requestId: "mcp-1", method: "notifications/progress" };
     yield* acp.agent.notifyMcp(progress);
@@ -937,16 +956,19 @@ it.effect(
     ]);
     assert.deepEqual((yield* wire(acp.agent.logout({}))).call, ["auth/logout", {}]);
 
-    // `session/load` becomes a `session/resume` that replays from the start; `session/resume`
-    // keeps its own replay point.
     const loaded = yield* wire(acp.agent.loadSession({ ...session, mcpServers }));
-    assert.deepEqual(loaded.call, [
-      "session/resume",
-      { ...session, mcpServers: v2McpServers, replayFrom: { type: "start" } },
-    ]);
+    assert.deepEqual(
+      loaded.call,
+      ["session/resume", { ...session, mcpServers: v2McpServers, replayFrom: { type: "start" } }],
+      "session/load becomes a session/resume that replays from the start"
+    );
     assert.deepEqual(loaded.answer, {});
     const resumed = yield* wire(acp.agent.resumeSession({ ...session, mcpServers }));
-    assert.deepEqual(resumed.call, ["session/resume", { ...session, mcpServers: v2McpServers }]);
+    assert.deepEqual(
+      resumed.call,
+      ["session/resume", { ...session, mcpServers: v2McpServers }],
+      "session/resume keeps its own replay point"
+    );
 
     const forked = yield* wire(acp.agent.forkSession({ ...session, mcpServers }), {
       sessionId: "fork-1",
@@ -964,15 +986,15 @@ it.effect(
       { sessionId: "session-1" },
     ]);
 
-    // Generation 2 requires the `type` discriminator on an id-valued config option.
     const configured = yield* wire(
       acp.agent.setSessionConfigOption({ sessionId: "session-1", configId: "mode", value: "fast" }),
       { configOptions: [] }
     );
-    assert.deepEqual(configured.call, [
-      "session/set_config_option",
-      { sessionId: "session-1", configId: "mode", value: "fast", type: "id" },
-    ]);
+    assert.deepEqual(
+      configured.call,
+      ["session/set_config_option", { sessionId: "session-1", configId: "mode", value: "fast", type: "id" }],
+      "generation 2 requires the type discriminator on an id-valued config option"
+    );
     assert.deepEqual(configured.answer, { configOptions: [] });
 
     const providers = yield* wire(acp.agent.listProviders({}), { providers: [] });
@@ -1006,10 +1028,12 @@ it.effect(
 
     const option = { sessionId: "session-1", configId: "mode", value: "fast" };
     const configured = yield* exchange(input, output, acp.agent.setSessionConfigOption(option), { configOptions: [] });
-    // The compat payload union tries the generation-2 member first, so an id-valued option keeps
-    // its fields and also carries the `type: "id"` discriminator on generation 1.
     assert.equal(configured.outbound.method, "session/set_config_option");
-    assert.deepInclude(configured.outbound.params, option);
+    assert.deepInclude(
+      configured.outbound.params,
+      option,
+      "the compat payload union tries the generation-2 member first, so generation 1 also gets type: id"
+    );
     assert.deepEqual(configured.answer, { configOptions: [] });
   })
 );
@@ -1033,20 +1057,26 @@ it.effect(
     const rejected = yield* rejectedFiber.pipe(Fiber.join, expectFailure);
     assert.equal(AcpError.AcpRequestError.is(rejected) ? rejected.code : 0, -32000);
 
-    // No prompt is pending, so a stray idle update only reaches the session-update handlers.
     yield* send(input, idle("session-1"));
-    assert.deepEqual((yield* Queue.take(updates)).update, {
-      sessionUpdate: "state_update",
-      state: "idle",
-      stopReason: "end_turn",
-    });
+    assert.deepEqual(
+      (yield* Queue.take(updates)).update,
+      {
+        sessionUpdate: "state_update",
+        state: "idle",
+        stopReason: "end_turn",
+      },
+      "with no prompt pending, a stray idle update only reaches the session-update handlers"
+    );
 
-    // The rejected turn released the session, so the next prompt is admitted.
     const next = yield* Effect.forkScoped(acp.agent.prompt(prompt));
     const nextRequest = yield* takeRequest(output);
-    yield* sendAll(input, [result(nextRequest.id, {}), idle("session-1")]);
+    yield* sendInOneChunk(input, [result(nextRequest.id, {}), idle("session-1")]);
     const join39 = yield* Fiber.join(next);
-    assert.deepEqual(join39, { stopReason: "end_turn" });
+    assert.deepEqual(
+      join39,
+      { stopReason: "end_turn" },
+      "the rejected turn released the session, so the next prompt is admitted"
+    );
   })
 );
 
@@ -1064,7 +1094,10 @@ it.effect(
       Queue.offer(unknown, [method, params]).pipe(Effect.asVoid)
     );
 
-    yield* sendAll(input, [notification("x/unregistered", { hello: "world" }), notification("x/known", { count: 1 })]);
+    yield* sendInOneChunk(input, [
+      notification("x/unregistered", { hello: "world" }),
+      notification("x/known", { count: 1 }),
+    ]);
     const take40 = yield* Queue.take(unknown);
     assert.deepEqual(take40, ["x/unregistered", { hello: "world" }]);
     const take41 = yield* Queue.take(known);
@@ -1090,8 +1123,7 @@ it.effect(
   })
 );
 
-// A child agent that answers every request with an empty session list.
-const echoAgentScript = A.join(
+const emptySessionListAgentScript = A.join(
   [
     'let buffer = "";',
     'process.stdin.on("data", (chunk) => {',
@@ -1105,7 +1137,6 @@ const echoAgentScript = A.join(
   ],
   "\n"
 );
-// A child agent that reports a fatal error on stderr and exits with `code`.
 const crashingAgentScript = (code: number) =>
   `process.stderr.write("fatal: agent config is broken\\n", () => process.exit(${code}));`;
 
@@ -1121,17 +1152,16 @@ const spawnChildAgent = Effect.fnUntraced(function* (script: string) {
   );
 });
 
-// The spawner reads the filesystem only to check that an explicit cwd is accessible; every child
-// agent here runs in the test's own working directory.
+const cwdAccessCheckOnlyFileSystem = FileSystem.layerNoop({ access: () => Effect.void });
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ access: () => Effect.void }), NodePath.layer))
+  Layer.provide(Layer.mergeAll(cwdAccessCheckOnlyFileSystem, NodePath.layer))
 );
 
 it.layer(SpawnerLayer, { timeout: "30 seconds" })("effect-acp client child-process layer", (it) => {
   it.effect(
     "talks to the child over its stdio, reading stdout through transformStdout",
     Effect.fnUntraced(function* () {
-      const handle = yield* spawnChildAgent(echoAgentScript);
+      const handle = yield* spawnChildAgent(emptySessionListAgentScript);
       yield* handle.stderr.pipe(Stream.runDrain, Effect.forkScoped);
       const chunks = yield* Ref.make(0);
       const build44 = yield* Layer.build(
@@ -1195,8 +1225,6 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("effect-acp client child-proce
   );
 });
 
-// Each failing handler is answered on its own id (or dropped for a notification) and logged once;
-// reading continues.
 const errorLogs = A.empty<string>();
 const errorCollector = Logger.make(({ logLevel, message }) => {
   if (logLevel === "Error") {
@@ -1206,7 +1234,7 @@ const errorCollector = Logger.make(({ logLevel, message }) => {
 
 it.layer(Logger.layer([errorCollector]), { timeout: "10 seconds" })("effect-acp client handler isolation", (it) => {
   it.effect(
-    "answers each request whose handler dies, and keeps reading",
+    "answers each dying request handler on its own id, drops dying notifications, logs each once and keeps reading",
     Effect.fnUntraced(function* () {
       const { stdio, input, output } = yield* makeInMemoryStdio();
       const acp = yield* AcpClient.make(stdio);
@@ -1227,7 +1255,7 @@ it.layer(Logger.layer([errorCollector]), { timeout: "10 seconds" })("effect-acp 
       yield* send(input, request("ext-a", "x/dies", {}));
       assert.equal((yield* takeError(output)).id, "ext-a");
 
-      yield* sendAll(input, [notification("x/notification-dies", {}), textChunk("session-1", "hi")]);
+      yield* sendInOneChunk(input, [notification("x/notification-dies", {}), textChunk("session-1", "hi")]);
       const take46 = yield* Queue.take(updates);
       assert.equal(take46, "session-1");
 
