@@ -5,7 +5,9 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   buildCiCertaintyReport,
+  CI_CERTAINTY_MAIN_HORIZON_DAYS,
   CiCertaintyCorpus,
+  CiCertaintyMainCancelStat,
   CiCertaintyMainCommit,
   CiCertaintyReport,
   CiCertaintyRun,
@@ -834,13 +836,17 @@ const LIVE_JOBS: ReadonlyArray<readonly [number, ReadonlyArray<unknown>]> = [
   ],
   [12, [liveJob(12, 121, "Heavy / Check", "2026-11-09T10:02:00Z", "2026-11-09T10:12:00Z", ["beep-fleet-heavy"])]],
   [13, [liveJob(13, 131, "Lint", "2026-11-10T01:01:00Z", "2026-11-10T01:04:00Z")]],
+  [21, [liveJob(21, 211, "Lint", "2026-11-09T12:01:00Z", "2026-11-09T12:05:00Z")]],
 ];
 
 const liveGithub = (call: GithubFetchCall): unknown => {
   const path = call.url.pathname;
   if (Str.includes("/actions/workflows/check.yml/runs")(path)) {
     return call.url.searchParams.get("event") === "push"
-      ? runsPage([liveRun(21, MAIN_CODE, "2026-11-09T12:00:30Z", "push")])
+      ? runsPage([
+          liveRun(21, MAIN_CODE, "2026-11-09T12:00:30Z", "push"),
+          liveRun(22, Str.repeat(40)("7"), "2026-11-05T12:00:30Z", "push"),
+        ])
       : runsPage([liveRun(11, LIVE_HEAD, "2026-11-09T10:00:00Z"), liveRun(13, LATER_HEAD, "2026-11-10T01:00:00Z")]);
   }
   if (Str.includes("/actions/workflows/heavy-admit.yml/runs")(path)) {
@@ -972,7 +978,7 @@ describe("ci certainty command", () => {
 
         expect(markdown).toContain("# ci certainty 2026-11-09T00:00:00.000Z → 2026-11-10T00:00:00.000Z");
         expect(markdown).not.toContain("Not certified");
-        expect(markdown).toContain("- GitHub requests: 5");
+        expect(markdown).toContain("- GitHub requests: 6");
         expect(markdown).toContain("| aaaaaaaaaa | code | green |  | 12.0 min |");
         // One code commit passed, one empty commit has no run, the docs commit is set apart.
         expect(markdown).toContain("non-docs first-parent commits: 2 (docs 1); completed verdicts 1; rate 50.0%");
@@ -986,7 +992,7 @@ describe("ci certainty command", () => {
           "--no-show-signature",
           "--first-parent",
           "--format=%H%x09%cI",
-          "--since=2026-11-09T00:00:00.000Z",
+          "--since=2026-11-03T00:00:00.000Z",
           "--until=2026-11-10T00:00:00.000Z",
           "origin/main",
         ]);
@@ -1033,8 +1039,17 @@ describe("ci certainty command", () => {
 
         const fs = yield* FileSystem.FileSystem;
         const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
-        strictEqual(corpus.requestCount, 5);
+        strictEqual(corpus.requestCount, 6);
         assertFalse(corpus.mainListingPartial);
+        assertSome(corpus.mainHorizonSince, DateTime.makeUnsafe("2026-11-03T00:00:00Z"));
+        deepStrictEqual(
+          A.map(corpus.mainPushRuns, (run) => run.id),
+          [22, 21]
+        );
+        deepStrictEqual(
+          A.map(corpus.mainRunJobs, (read) => [read.run.id, A.length(read.jobs)]),
+          [[21, 1]]
+        );
         // Commit times keep their instant whatever offset git printed them in.
         deepStrictEqual(
           A.map(corpus.mainCommits, (commit) => [
@@ -1099,11 +1114,11 @@ describe("ci certainty command", () => {
         );
         const refused = yield* lastCertaintyLog();
         expect(refused).toContain(
-          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1)."
+          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1, run 21 attempt 1)."
         );
         expect(refused).toContain("completed verdicts 1; rate 50.0%; cancelled 0; no run 1; open 0; unread 0");
         strictEqual(A.length(calls), 5);
-        expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
+        expect(gitLogArgs(spawner)).toContain("--since=2026-11-03T03:00:00.000Z");
         expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");
 
         // The aggregates-only summary is written before the refusal and keeps its stamp.
@@ -1112,7 +1127,7 @@ describe("ci certainty command", () => {
         yield* Effect.flip(runCertaintyCommand(["--max-requests", "5", "--json", "--summary-out", summaryFile]));
         const summary = yield* fs.readFileString(summaryFile);
         expect(summary).toContain(
-          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1)."
+          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1, run 21 attempt 1)."
         );
         expect(summary).not.toContain("| Head |");
 
@@ -1310,5 +1325,370 @@ describe("ci per-attempt job reads", () => {
     const minutes = ciCertaintyRunnerMinutes([original, copy]);
     strictEqual(minutes.managed, 1);
     strictEqual(minutes.githubHosted, 0);
+  });
+});
+
+const ROWS_HEAD = Str.repeat(40)("6");
+const ROWS_SECOND_HEAD = Str.repeat(40)("7");
+const ROWS_DOCS_HEAD = Str.repeat(40)("0");
+const HEAVY_POOL = ["beep-fleet-heavy"];
+
+const rowsJob = (id: number, name: string, createdAt: string, startedAt: string, completedAt: string) =>
+  foldJob({
+    completed_at: completedAt,
+    created_at: createdAt,
+    id,
+    name,
+    started_at: startedAt,
+  });
+
+const PLANNED_SIBLING_ROWS = {
+  admissionP95: O.some(4.65),
+  firstWave: [15, O.some(7.97)],
+  heavyQueue: [46, O.some(3.23)],
+  heavySlot: [15, O.some(40.32)],
+  lintPolicy: [14, O.some(11.97)],
+  prHostedJobs: [29, O.some(77)],
+  property: [15, O.some(17.53)],
+};
+
+const siblingRowsCorpus = CiCertaintyCorpus.make({
+  capturedAt: DateTime.makeUnsafe("2026-11-10T03:00:00Z"),
+  mainCommits: [],
+  pullRequestRuns: [
+    foldRun(601, ROWS_HEAD, "2026-11-09T10:00:00Z", O.some("completed"), [
+      rowsJob(1, "Lint", "2026-11-09T10:00:10Z", "2026-11-09T10:00:30Z", "2026-11-09T10:03:00Z"),
+      rowsJob(2, "Heavy Admission", "2026-11-09T10:00:10Z", "2026-11-09T10:00:40Z", "2026-11-09T10:01:00Z"),
+      CiWorkflowJob.make({
+        ...rowsJob(3, "Heavy / Check", "2026-11-09T10:01:00Z", "2026-11-09T10:03:00Z", "2026-11-09T10:13:00Z"),
+        labels: HEAVY_POOL,
+      }),
+      CiWorkflowJob.make({
+        ...rowsJob(4, "Heavy / Docgen", "2026-11-09T10:01:00Z", "2026-11-09T10:02:00Z", "2026-11-09T10:04:00Z"),
+        labels: HEAVY_POOL,
+      }),
+      CiWorkflowJob.make({
+        ...rowsJob(5, "Heavy / Lint Policy", "2026-11-09T10:01:00Z", "2026-11-09T10:04:00Z", "2026-11-09T10:16:00Z"),
+        labels: HEAVY_POOL,
+      }),
+      rowsJob(6, "Property Laws (alpha)", "2026-11-09T10:00:10Z", "2026-11-09T10:01:00Z", "2026-11-09T10:06:00Z"),
+      rowsJob(7, "Property Laws (beta)", "2026-11-09T10:00:10Z", "2026-11-09T10:02:00Z", "2026-11-09T10:09:00Z"),
+      rowsJob(8, "Property Laws", "2026-11-09T10:09:00Z", "2026-11-09T10:09:30Z", "2026-11-09T10:10:00Z"),
+      foldJob({ conclusion: "skipped", id: 9, name: "Heavy / Test Integration" }),
+    ]),
+    foldRun(602, ROWS_SECOND_HEAD, "2026-11-09T11:00:00Z", O.some("completed"), [
+      rowsJob(11, "Lint", "2026-11-09T11:00:10Z", "2026-11-09T11:01:00Z", "2026-11-09T11:03:00Z"),
+      CiWorkflowJob.make({
+        ...rowsJob(12, "Heavy / Lint Policy", "2026-11-09T11:01:00Z", "2026-11-09T11:05:00Z", "2026-11-09T11:06:00Z"),
+        conclusion: "cancelled",
+        labels: HEAVY_POOL,
+      }),
+      CiWorkflowJob.make({
+        ...rowsJob(13, "Property Laws (alpha)", "2026-11-09T11:00:10Z", "2026-11-09T11:02:00Z", "2026-11-09T11:04:00Z"),
+        conclusion: "cancelled",
+      }),
+    ]),
+    foldRun(603, ROWS_DOCS_HEAD, "2026-11-09T12:00:00Z", O.some("completed"), [
+      rowsJob(21, "Docs Policy", "2026-11-09T12:00:10Z", "2026-11-09T12:00:20Z", "2026-11-09T12:01:00Z"),
+      CiWorkflowJob.make({
+        ...rowsJob(22, "Heavy / Lint Policy", "2026-11-09T12:01:00Z", "2026-11-09T12:02:00Z", "2026-11-09T12:32:00Z"),
+        labels: HEAVY_POOL,
+      }),
+    ]),
+  ],
+  requestCount: 0,
+  requiredContexts: ["Lint", "Heavy / Check"],
+  since: SYNTHETIC_SINCE,
+  until: SYNTHETIC_UNTIL,
+});
+
+describe("ci certainty sibling-goal rows", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("folds heavy, Lint Policy, Property Laws and first-wave rows over code heads only", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(siblingRowsCorpus);
+
+        strictEqual(headStartingWith(report.heads, ROWS_DOCS_HEAD).headClass, "docs");
+        deepStrictEqual(
+          [report.heavySlotMinutes.n, report.heavySlotMinutes.p50, report.heavySlotMinutes.p95],
+          [2, O.some(1), O.some(24)]
+        );
+        assertSome(report.heavySlotMinutes.mean, 12.5);
+        assertSome(report.heavySlotMinutes.max, 24);
+        deepStrictEqual([report.heavyQueue.n, report.heavyQueue.p95], [1, O.some(2)]);
+        deepStrictEqual([report.lintPolicyWall.n, report.lintPolicyWall.p95], [1, O.some(12)]);
+        deepStrictEqual([report.propertyLaws.n, report.propertyLaws.p95], [1, O.some(9)]);
+        deepStrictEqual(
+          [report.firstWavePickup.n, report.firstWavePickup.p50, report.firstWavePickup.p95],
+          [2, O.some(0.5), O.some(1)]
+        );
+        deepStrictEqual([report.admissionToHeavy.n, report.admissionToHeavy.p95Minutes], [1, O.some(1.33)]);
+        deepStrictEqual(
+          [
+            report.replayInputs.pullRequestRunHostedJobs.n,
+            report.replayInputs.pullRequestRunHostedJobs.p50,
+            report.replayInputs.pullRequestRunHostedJobs.p95,
+          ],
+          [3, O.some(2), O.some(5)]
+        );
+
+        const summary = renderCiCertaintySummaryMarkdown(report);
+        expect(summary).toContain(
+          "- heavy slot-minutes per code head attempt (heavy-pool job wall, VM boot excluded): n=2; mean 12.5 min; p50 1.0 min; p95 24.0 min; max 24.0 min"
+        );
+        expect(summary).toContain(
+          "- Lint Policy wall, code heads: n=1; mean 12.0 min; p50 12.0 min; p95 12.0 min; max 12.0 min"
+        );
+        expect(summary).toContain("heavy-wait p95 1.3 min");
+      })
+    );
+
+    it.effect("reports empty sibling rows as absent rather than zero", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(syntheticCorpus([]));
+
+        strictEqual(report.lintPolicyWall.n, 0);
+        assertNone(report.lintPolicyWall.p95);
+        assertNone(report.lintPolicyWall.max);
+        assertNone(report.lintPolicyWall.mean);
+        expect(renderCiCertaintyMarkdown(report)).toContain(
+          "- Lint Policy wall, code heads: n=0; mean —; p50 —; p95 —; max —"
+        );
+      })
+    );
+
+    it.effect("pins the sibling rows on the committed post-#3030 capture", () =>
+      Effect.gen(function* () {
+        const report = yield* loadCorpus(PLANNED).pipe(Effect.flatMap(buildCiCertaintyReport));
+
+        assertTrue(report.certified);
+        deepStrictEqual(
+          {
+            admissionP95: report.admissionToHeavy.p95Minutes,
+            firstWave: [report.firstWavePickup.n, report.firstWavePickup.p95],
+            heavyQueue: [report.heavyQueue.n, report.heavyQueue.p95],
+            heavySlot: [report.heavySlotMinutes.n, report.heavySlotMinutes.p95],
+            lintPolicy: [report.lintPolicyWall.n, report.lintPolicyWall.p95],
+            property: [report.propertyLaws.n, report.propertyLaws.p95],
+            prHostedJobs: [
+              report.replayInputs.pullRequestRunHostedJobs.n,
+              report.replayInputs.pullRequestRunHostedJobs.p95,
+            ],
+          },
+          PLANNED_SIBLING_ROWS
+        );
+        strictEqual(report.mainCancels.unread, report.mainCancels.cancelledRuns);
+        deepStrictEqual(report.mainHorizon.since, report.since);
+        deepStrictEqual(report.mainHorizon.stat, report.main);
+      })
+    );
+  });
+});
+
+const mainRun = (
+  id: number,
+  sha: string,
+  createdAt: string,
+  conclusion: string,
+  extra: { readonly updatedAt?: string; readonly startedAt?: string } = {}
+) =>
+  CiWorkflowWindowRun.make({
+    conclusion: O.some(conclusion),
+    created_at: DateTime.makeUnsafe(createdAt),
+    event: "push",
+    head_branch: O.some("main"),
+    head_sha: sha,
+    id,
+    run_attempt: 1,
+    run_started_at: O.map(O.fromNullishOr(extra.startedAt), DateTime.makeUnsafe),
+    status: O.some("completed"),
+    updated_at: O.map(O.fromNullishOr(extra.updatedAt), DateTime.makeUnsafe),
+  });
+
+const mainCommit = (sha: string, committedAt: string, runs: ReadonlyArray<CiWorkflowWindowRun>, docsOnly = false) =>
+  CiCertaintyMainCommit.make({ committedAt: DateTime.makeUnsafe(committedAt), docsOnly, runs, sha });
+
+const mainJobs = (run: CiWorkflowWindowRun, jobs: ReadonlyArray<CiWorkflowJob>, partial = false) =>
+  CiCertaintyRun.make({
+    jobs: A.map(jobs, (job) => CiWorkflowJob.make({ ...job, run_id: run.id })),
+    partialReads: partial ? [CiWorkflowPartialRead.make({ attempt: 1, message: "HTTP 502", runId: run.id })] : [],
+    run,
+    workflow: "check.yml",
+  });
+
+const CANCEL_SHAS = A.map(["a1", "b2", "c3", "d4", "e5", "f6", "07"], (prefix) => `${prefix}${Str.repeat(38)("0")}`);
+const sha = (index: number): string => O.getOrThrow(A.get(CANCEL_SHAS, index));
+
+const replacedPending = mainRun(501, sha(0), "2026-11-09T12:00:30Z", "cancelled", {
+  updatedAt: "2026-11-09T12:05:00Z",
+});
+const replacer = mainRun(502, sha(1), "2026-11-09T12:05:00Z", "success");
+const cancelledRunning = mainRun(503, sha(2), "2026-11-09T13:00:30Z", "cancelled", {
+  updatedAt: "2026-11-09T13:20:00Z",
+});
+const replacedByListedOnly = mainRun(504, sha(3), "2026-11-09T14:00:30Z", "cancelled", {
+  updatedAt: "2026-11-09T14:10:00Z",
+});
+const listedOnly = mainRun(508, Str.repeat(40)("9"), "2026-11-09T14:10:30Z", "success");
+const endlessCancel = mainRun(505, sha(4), "2026-11-09T14:30:30Z", "cancelled");
+const unreadCancel = mainRun(506, sha(5), "2026-11-09T15:00:30Z", "cancelled");
+const lonelyCancel = mainRun(509, sha(6), "2026-11-09T16:00:30Z", "cancelled", { updatedAt: "2026-11-09T16:20:00Z" });
+
+const hostedJob = (id: number, conclusion = "success") => foldJob({ conclusion, id, name: `Job ${id}` });
+
+const cancelCorpus = (replacerPartial: boolean) =>
+  CiCertaintyCorpus.make({
+    ...syntheticCorpus([
+      mainCommit(sha(0), "2026-11-09T12:00:00Z", [replacedPending]),
+      mainCommit(sha(1), "2026-11-09T12:04:00Z", [replacer]),
+      mainCommit(sha(2), "2026-11-09T13:00:00Z", [cancelledRunning]),
+      mainCommit(sha(3), "2026-11-09T14:00:00Z", [replacedByListedOnly]),
+      mainCommit(sha(4), "2026-11-09T14:30:00Z", [endlessCancel]),
+      mainCommit(sha(5), "2026-11-09T15:00:00Z", [unreadCancel]),
+      mainCommit(sha(6), "2026-11-09T16:00:00Z", [lonelyCancel]),
+    ]),
+    mainPushRuns: [listedOnly],
+    mainRunJobs: [
+      mainJobs(replacedPending, []),
+      mainJobs(
+        replacer,
+        [
+          hostedJob(1),
+          hostedJob(2),
+          hostedJob(3),
+          hostedJob(4, "skipped"),
+          CiWorkflowJob.make({ ...hostedJob(5), labels: HEAVY_POOL }),
+        ],
+        replacerPartial
+      ),
+      mainJobs(cancelledRunning, [hostedJob(6, "cancelled")]),
+      mainJobs(replacedByListedOnly, []),
+      mainJobs(endlessCancel, []),
+      mainJobs(lonelyCancel, []),
+    ],
+  });
+
+describe("ci certainty main cancel actors and replay inputs", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("attributes each cancelled main push run and counts started jobs per run", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(cancelCorpus(false));
+
+        deepStrictEqual(
+          report.mainCancels,
+          CiCertaintyMainCancelStat.make({
+            cancelledRuns: 6,
+            concurrencyQueue: 2,
+            explicit: 1,
+            unattributed: 2,
+            unread: 1,
+          })
+        );
+        deepStrictEqual(
+          A.map(report.mainRuns, (row) => [row.runId, row.cancelActor, row.hostedJobs, row.heavyJobs]),
+          [
+            [501, O.some("concurrency-queue"), O.some(0), O.some(0)],
+            [502, O.none(), O.some(3), O.some(1)],
+            [503, O.some("explicit"), O.some(1), O.some(0)],
+            [504, O.some("concurrency-queue"), O.some(0), O.some(0)],
+            [505, O.some("unattributed"), O.some(0), O.some(0)],
+            [506, O.some("unread"), O.none(), O.none()],
+            [509, O.some("unattributed"), O.some(0), O.some(0)],
+          ]
+        );
+        strictEqual(report.replayInputs.mainMerges, 7);
+        deepStrictEqual(
+          [report.replayInputs.mainRunHostedJobs.n, report.replayInputs.mainRunHostedJobs.max],
+          [2, O.some(3)]
+        );
+        deepStrictEqual(report.refusals, []);
+
+        const summary = renderCiCertaintySummaryMarkdown(report);
+        expect(summary).toContain(
+          "- cancelled main push runs: 6; GitHub concurrency queue 2; explicit 1; unattributed 2; unread 1"
+        );
+        expect(summary).not.toContain(Str.slice(0, 10)(sha(0)));
+      })
+    );
+
+    it.effect("refuses certification when a main run's jobs were read partially", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(cancelCorpus(true));
+
+        assertFalse(report.certified);
+        deepStrictEqual(report.refusals, ["api-partial"]);
+        deepStrictEqual(
+          A.map(report.partialReads, (read) => read.runId),
+          [502]
+        );
+        const replacerRow = O.getOrThrow(A.findFirst(report.mainRuns, (row) => row.runId === 502));
+        assertNone(replacerRow.hostedJobs);
+      })
+    );
+  });
+});
+
+const HORIZON_SHAS = A.map(["11", "22", "33", "44", "55", "66", "77"], (prefix) => `${prefix}${Str.repeat(38)("f")}`);
+const horizonSha = (index: number): string => O.getOrThrow(A.get(HORIZON_SHAS, index));
+
+const horizonCorpus = CiCertaintyCorpus.make({
+  ...syntheticCorpus([
+    mainCommit(horizonSha(0), "2026-11-04T10:00:00Z", [mainRun(701, horizonSha(0), "2026-11-04T10:01:00Z", "success")]),
+    mainCommit(horizonSha(1), "2026-11-05T10:00:00Z", [
+      mainRun(702, horizonSha(1), "2026-11-05T10:01:00Z", "cancelled"),
+      mainRun(703, horizonSha(1), "2026-11-05T10:02:00Z", "success", { startedAt: "2026-11-06T12:00:00Z" }),
+    ]),
+    mainCommit(horizonSha(2), "2026-11-05T11:00:00Z", [mainRun(704, horizonSha(2), "2026-11-06T11:00:00Z", "failure")]),
+    mainCommit(
+      horizonSha(3),
+      "2026-11-06T10:00:00Z",
+      [mainRun(705, horizonSha(3), "2026-11-08T10:00:00Z", "success")],
+      true
+    ),
+    mainCommit(horizonSha(4), "2026-11-07T10:00:00Z", []),
+    mainCommit(horizonSha(5), "2026-11-02T10:00:00Z", [mainRun(706, horizonSha(5), "2026-11-04T10:00:00Z", "success")]),
+    mainCommit(horizonSha(6), "2026-11-09T10:00:00Z", [mainRun(707, horizonSha(6), "2026-11-09T10:01:00Z", "success")]),
+  ]),
+  mainHorizonSince: O.some(DateTime.makeUnsafe("2026-11-03T00:00:00Z")),
+});
+
+describe("ci certainty main late-arrival horizon", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("re-reads seven days of main and counts verdicts that arrived a day late", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(horizonCorpus);
+
+        deepStrictEqual(report.mainHorizon.since, DateTime.makeUnsafe("2026-11-03T00:00:00Z"));
+        deepStrictEqual(
+          [
+            report.mainHorizon.stat.commits,
+            report.mainHorizon.stat.docsCommits,
+            report.mainHorizon.stat.verdicts,
+            report.mainHorizon.stat.noRun,
+            report.mainHorizon.lateVerdicts,
+          ],
+          [5, 1, 4, 1, 2]
+        );
+        assertSome(report.mainHorizon.stat.rate, 0.8);
+        deepStrictEqual([report.main.commits, report.main.verdicts], [1, 1]);
+        expect(renderCiCertaintySummaryMarkdown(report)).toContain(
+          "- 7-day late-arrival horizon from 2026-11-03T00:00:00.000Z: non-docs commits 5; completed verdicts 4; rate 80.0%; cancelled 0; no run 1; open 0; unread 0; verdicts a day late 2"
+        );
+      })
+    );
+
+    it.effect("never opens the horizon after the window's own start", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({
+            ...horizonCorpus,
+            mainHorizonSince: O.some(DateTime.makeUnsafe("2026-11-09T12:00:00Z")),
+          })
+        );
+
+        deepStrictEqual(report.mainHorizon.since, report.since);
+        strictEqual(CI_CERTAINTY_MAIN_HORIZON_DAYS, 7);
+      })
+    );
   });
 });
