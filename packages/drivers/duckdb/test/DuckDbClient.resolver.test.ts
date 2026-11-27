@@ -9,17 +9,13 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlError from "effect/sql/SqlError";
 import * as SqlResolver from "effect/sql/SqlResolver";
 
-// Mirrors effect@4.0.5 packages/sql/sqlite-node/test/Resolver.test.ts.
-// DuckDB has no implicit rowid, so ids come from a sequence default that starts
-// after the 100 explicitly seeded rows. All tests share one in-memory database
-// (one `it.layer`) and the repo runs tests concurrently, so each test seeds its
-// own table and sequence.
+// Ported from effect@4.0.5 packages/sql/sqlite-node/test/Resolver.test.ts.
 
 const isResultLengthMismatch = S.is(SqlError.ResultLengthMismatch);
 
 const TestRow = S.Struct({ id: S.Finite, name: S.String });
 
-const seededClient = Effect.fnUntraced(function* (table: string) {
+const seedIsolatedTable = Effect.fnUntraced(function* (table: string) {
   const sql = yield* SqlClient.SqlClient;
   yield* sql.unsafe(`CREATE SEQUENCE ${table}_id_seq START 101`);
   yield* sql.unsafe(`CREATE TABLE ${table} (id INTEGER PRIMARY KEY DEFAULT nextval('${table}_id_seq'), name TEXT)`);
@@ -28,13 +24,13 @@ const seededClient = Effect.fnUntraced(function* (table: string) {
   return { sql, test: sql(table) };
 });
 
-describe("DuckDbClient SqlResolver", () => {
+describe("DuckDbClient SqlResolver, per-test tables and sequences isolate concurrent tests in one database", () => {
   it.layer(DuckDbTestLayer, { timeout: "30 seconds" })((it) => {
     describe("ordered", () => {
       it.effect("insert", () =>
         Effect.gen(function* () {
           const batches: Array<ReadonlyArray<string>> = [];
-          const { sql, test } = yield* seededClient("ordered_insert");
+          const { sql, test } = yield* seedIsolatedTable("ordered_insert");
           const Insert = SqlResolver.ordered({
             Request: S.String,
             Result: TestRow,
@@ -51,10 +47,14 @@ describe("DuckDbClient SqlResolver", () => {
             },
             { concurrency: "unbounded" }
           );
-          assert.deepStrictEqual(all1, {
-            one: { id: 101, name: "one" },
-            two: { id: 102, name: "two" },
-          });
+          assert.deepStrictEqual(
+            all1,
+            {
+              one: { id: 101, name: "one" },
+              two: { id: 102, name: "two" },
+            },
+            "DuckDB has no implicit rowid; ids come from a sequence that starts after the 100 seeded rows"
+          );
           assert.deepStrictEqual(batches, [["one", "two"]]);
         })
       );
@@ -62,7 +62,7 @@ describe("DuckDbClient SqlResolver", () => {
       it.effect("insert RETURNING follows VALUES order for 50 shuffled keys", () =>
         Effect.gen(function* () {
           const batches: Array<ReadonlyArray<string>> = [];
-          const { sql, test } = yield* seededClient("ordered_shuffled");
+          const { sql, test } = yield* seedIsolatedTable("ordered_shuffled");
           const Insert = SqlResolver.ordered({
             Request: S.String,
             Result: TestRow,
@@ -72,8 +72,8 @@ describe("DuckDbClient SqlResolver", () => {
             },
           });
           const execute = SqlResolver.request(Insert);
-          // 17 is coprime to 50, so this is a deterministic permutation of 0..49.
-          const keys = A.makeBy(50, (i) => `key${(i * 17) % 50}`);
+          const strideCoprimeTo50 = 17;
+          const keys = A.makeBy(50, (i) => `key${(i * strideCoprimeTo50) % 50}`);
           const results = yield* Effect.forEach(keys, execute, { concurrency: "unbounded" });
           assert.deepStrictEqual(
             A.map(results, (row) => row.name),
@@ -90,7 +90,7 @@ describe("DuckDbClient SqlResolver", () => {
       it.effect("result length mismatch", () =>
         Effect.gen(function* () {
           const batches: Array<ReadonlyArray<number>> = [];
-          const { sql, test } = yield* seededClient("ordered_mismatch");
+          const { sql, test } = yield* seedIsolatedTable("ordered_mismatch");
           const Select = SqlResolver.ordered({
             Request: S.Finite,
             Result: TestRow,
@@ -116,7 +116,7 @@ describe("DuckDbClient SqlResolver", () => {
     describe("grouped", () => {
       it.effect("find by name", () =>
         Effect.gen(function* () {
-          const { sql, test } = yield* seededClient("grouped_name");
+          const { sql, test } = yield* seedIsolatedTable("grouped_name");
           const FindByName = SqlResolver.grouped({
             Request: S.String,
             RequestGroupKey: (name) => name,
@@ -147,7 +147,7 @@ describe("DuckDbClient SqlResolver", () => {
 
       it.effect("using raw rows", () =>
         Effect.gen(function* () {
-          const { sql, test } = yield* seededClient("grouped_raw");
+          const { sql, test } = yield* seedIsolatedTable("grouped_raw");
           const FindByName = SqlResolver.grouped({
             Request: S.String,
             RequestGroupKey: (name) => name,
@@ -181,7 +181,7 @@ describe("DuckDbClient SqlResolver", () => {
     describe("findById", () => {
       it.effect("find by id", () =>
         Effect.gen(function* () {
-          const { sql, test } = yield* seededClient("find_by_id");
+          const { sql, test } = yield* seedIsolatedTable("find_by_id");
           const FindById = SqlResolver.findById({
             Id: S.Finite,
             Result: TestRow,
@@ -207,7 +207,7 @@ describe("DuckDbClient SqlResolver", () => {
 
       it.effect("using raw rows", () =>
         Effect.gen(function* () {
-          const { sql, test } = yield* seededClient("find_by_id_raw");
+          const { sql, test } = yield* seedIsolatedTable("find_by_id_raw");
           const FindById = SqlResolver.findById({
             Id: S.Finite,
             Result: TestRow,

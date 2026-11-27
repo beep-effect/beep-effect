@@ -10,10 +10,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as SqlClient from "effect/sql/SqlClient";
 
-// Mirrors effect@4.0.5 packages/sql/pglite/test/Migrator.test.ts plus the
-// DuckDB-specific batch semantics pinned by SPEC §8.5. All tests in the first
-// block share one in-memory database, so each test uses its own migrations
-// table and data tables.
+// Ported from effect@4.0.5 packages/sql/pglite/test/Migrator.test.ts.
 
 type MigrationRow = {
   readonly migration_id: number;
@@ -40,7 +37,7 @@ const tableExists = (name: string) =>
     )
   );
 
-describe("DuckDbMigrator", () => {
+describe("DuckDbMigrator, per-test migration and data tables isolate tests sharing one database", () => {
   it.layer(Layer.mergeAll(DuckDbTestLayer, FileSystem.layerNoop({}), Path.layer), { timeout: "30 seconds" })((it) => {
     it.effect("fromRecord runs migrations in order and records them", () =>
       Effect.gen(function* () {
@@ -110,14 +107,12 @@ describe("DuckDbMigrator", () => {
           table,
         }).pipe(Effect.exit);
 
-        // Since effect 4.0.6 a failing migration is a typed MigrationError failure
-        // (4.0.5 raised it as a defect).
         const failure = Exit.findError(exit);
         if (Result.isFailure(failure)) {
           return assert.fail("expected the failing migration run to fail with a MigrationError");
         }
         const error = failure.success;
-        assert(error instanceof DuckDbMigrator.MigrationError);
+        assert(error instanceof DuckDbMigrator.MigrationError, "a failing migration is a typed failure, not a defect");
         assert.strictEqual(error.kind, "Failed");
         assert.strictEqual(error.cause, "boom");
 

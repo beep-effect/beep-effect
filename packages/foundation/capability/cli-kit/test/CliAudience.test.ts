@@ -50,7 +50,6 @@ const capturing = () => {
   return { double, out, err };
 };
 
-/** A real two-subcommand program; the handler records the `Audience` it observes. */
 const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, options?: { readonly hidden?: boolean }) {
   const { double, out, err } = capturing();
   const seen: AudienceShape[] = [];
@@ -73,7 +72,6 @@ const run = Effect.fn("run")(function* (argv: ReadonlyArray<string>, options?: {
   }).pipe(
     Effect.exit,
     Effect.provideService(Console.Console, double),
-    // The ambient audience, as env's detection would have left it.
     Effect.provideService(Audience, AudienceShape.make({ kind: "human", source: "detected" }))
   );
   const code = Exit.isFailure(exit) ? exit.cause.pipe(Cause.squash, Runtime.getErrorExitCode) : 0;
@@ -110,11 +108,9 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
         ["--audience=ci", "verify", "x"],
         AudienceShape.make({ kind: "ci", source: "flag" }),
       ],
-      // A false boolean is "not given": it falls through to the ambient audience, never to its own kind.
       ["--no-agent falls through to the ambient audience", ["--no-agent", "verify", "x"], HUMAN_DETECTED],
       ["--agent=false falls through to the ambient audience", ["--agent=false", "verify", "x"], HUMAN_DETECTED],
       ["--human=false falls through to the ambient audience", ["--human=false", "verify", "x"], HUMAN_DETECTED],
-      // Only true occurrences count, so a false one beside a true one is not a conflict.
       ["--agent=false --ci counts one true occurrence", ["--agent=false", "--ci", "verify", "x"], CI_FLAG],
       ["--agent --no-agent counts one true occurrence", ["--agent", "--no-agent", "verify", "x"], AGENT_FLAG],
       ["--no-agent --audience ci counts one occurrence", ["--no-agent", "--audience", "ci", "verify", "x"], CI_FLAG],
@@ -162,10 +158,8 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
       "--agent --ci --help exits 0 and prints help (intended: core's action flags win before the resolver)",
       () =>
         Effect.gen(function* () {
-          // Core handles --help before the resolver runs, so a conflicting audience together with
-          // --help is not a usage error. This is core's precedence, pinned here so a change to it is noticed.
           const { code, out, err } = yield* run(["--agent", "--ci", "--help"]);
-          assert.strictEqual(code, 0);
+          assert.strictEqual(code, 0, "core's precedence, pinned so a change to it is noticed");
           assert.isTrue(
             A.some(out, (line) => Str.includes("USAGE")(line)),
             A.join(out, "\n")
@@ -184,7 +178,6 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
           ),
           () => ""
         );
-        // The whole line names the choices once: core's "(choices: human, agent, ci)", and no placeholder list of its own.
         assert.include(line, "(choices: human, agent, ci)", line);
         assert.lengthOf(A.fromIterable(Str.matchAll(/human/g)(line)), 1, line);
       })
@@ -218,7 +211,6 @@ it.layer(MemoryFileSystem.layer, { timeout: "30 seconds" })((it) => {
   });
 
   describe("CliAudience and CliInteractive", () => {
-    /** The interactivity the handler sees, given the ambient value the env layer decided. */
     const observe = Effect.fn("observe")(function* (argv: ReadonlyArray<string>, ambient: boolean) {
       const { double } = capturing();
       const seen: boolean[] = [];
