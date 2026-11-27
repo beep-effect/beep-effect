@@ -206,10 +206,10 @@ describe("VaultSyncStatus wire model", () => {
   );
 
   it.effect(
-    "defaults forceProbe to the cached read path",
+    "defaults a missing forceProbe to the cached read path, wire-compatible with pre-forceProbe callers",
     Effect.fnUntraced(function* () {
       const decodedPayload = yield* decodeGetVaultSyncStatusPayload({ workspaceId: 1 });
-      assertFalse(decodedPayload.forceProbe, "missing-key decoding stays wire-compatible with pre-forceProbe callers");
+      pipe(decodedPayload.forceProbe, assertFalse);
       pipe(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe, assertTrue);
     })
   );

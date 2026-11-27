@@ -61,11 +61,6 @@ const boxCall =
 /**
  * Resolves the authorized local vault root for a destination at call time.
  *
- * **Gotchas**
- *
- * The adapter reports a failed `resolve` as a `local-root` failure of the call it is serving, because the resolver
- * cannot know that call; the operation on the resolver's own error is discarded.
- *
  * **Example** (Inspect the adapter)
  * ```ts
  * import { VaultSyncRoot } from "@beep/documents-server/aggregates/Sync";
@@ -133,7 +128,9 @@ export const BoxMirrorNoEvidenceLive = Layer.succeed(BoxMirrorEvidence, {
  * releases the claim and reports its stage; any other failure may have reached Box and stays held as
  * `uncertain-outcome-held`. Receipt fingerprints hold only reference metadata, never bytes or credentials. Each
  * operation runs in one `BoxMirror.call` client span under the kernel's `Domain.external` span, which records the
- * operation and, on failure, only where the call stopped: never arguments, paths or Box text.
+ * operation and, on failure, only where the call stopped: never arguments, paths or Box text. A failed
+ * {@link VaultSyncRoot} `resolve` is reported as a `local-root` failure of the call it serves, because the resolver
+ * cannot know that call; the operation on the resolver's own error is discarded.
  *
  * **Example** (Inspect the adapter)
  * ```ts
