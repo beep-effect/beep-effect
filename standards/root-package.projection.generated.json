@@ -334,6 +334,7 @@
     "packages/drivers/firecrawl",
     "packages/drivers/eyecite",
     "packages/drivers/sqlite",
-    "packages/tooling/infra/infra-hosts"
+    "packages/tooling/infra/infra-hosts",
+    "packages/drivers/playwright"
   ]
 }

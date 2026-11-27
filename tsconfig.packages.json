@@ -226,6 +226,9 @@
       "path": "packages/drivers/phoenix"
     },
     {
+      "path": "packages/drivers/playwright"
+    },
+    {
       "path": "packages/drivers/poppler"
     },
     {

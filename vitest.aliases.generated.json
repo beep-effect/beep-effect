@@ -2438,5 +2438,7 @@
   ],
   "@beep/repo-cli/commands/SchemaIdioms": [
     "./packages/tooling/tool/cli/src/commands/SchemaIdioms/index.ts"
-  ]
+  ],
+  "@beep/playwright": ["./packages/drivers/playwright/src/index.ts"],
+  "@beep/playwright/*": ["./packages/drivers/playwright/src/*"]
 }

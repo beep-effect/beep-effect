@@ -1,0 +1,77 @@
+{
+  "name": "@beep/playwright",
+  "version": "0.0.0",
+  "description": "Effect-native Playwright driver: browsers, contexts, pages, frames and locators as scoped services (ported from effect-playwright)",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/playwright",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "packages/drivers/playwright"
+  },
+  "beep": {
+    "family": "drivers"
+  },
+  "scripts": {
+    "build": "bun run beep:build",
+    "check": "beep-cli gate run check",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "docgen": "bun run beep:docgen",
+    "doctest": "bun run beep:doctest",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:jsdoc": "beep-cli lint jsdoc --package .",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration",
+    "beep:build": "tsrs -p tsconfig.json --emitDeclarationOnly",
+    "beep:check": "tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests",
+    "beep:docgen": "bunx --bun --no-install docgen",
+    "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts",
+    "./internal/*": null,
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/**/*.ts",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
+  "sideEffects": [],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": "./dist/index.js",
+      "./*": "./dist/*.js",
+      "./internal/*": null,
+      "./package.json": "./package.json"
+    }
+  },
+  "dependencies": {
+    "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "effect": "catalog:",
+    "playwright": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
+  }
+}

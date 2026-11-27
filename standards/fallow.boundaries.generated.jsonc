@@ -870,6 +870,12 @@
         ]
       },
       {
+        "name": "@beep/playwright",
+        "patterns": [
+          "packages/drivers/playwright/src/**"
+        ]
+      },
+      {
         "name": "@beep/poppler",
         "patterns": [
           "packages/drivers/poppler/src/**"
@@ -4514,6 +4520,19 @@
         ]
       },
       {
+        "from": "@beep/playwright",
+        "allow": [
+          "@beep/identity",
+          "@beep/playwright",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/playwright",
+          "@beep/schema"
+        ]
+      },
+      {
         "from": "@beep/poppler",
         "allow": [
           "@beep/file-processing",
@@ -5785,6 +5804,7 @@
         "allow": [
           "@beep/brand",
           "@beep/identity",
+          "@beep/playwright",
           "@beep/schema",
           "@beep/social-mapper",
           "@beep/ui"
@@ -5792,6 +5812,7 @@
         "allowTypeOnly": [
           "@beep/brand",
           "@beep/identity",
+          "@beep/playwright",
           "@beep/schema",
           "@beep/social-mapper",
           "@beep/ui"

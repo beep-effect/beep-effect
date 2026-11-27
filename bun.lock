@@ -269,6 +269,7 @@
       "dependencies": {
         "@beep/brand": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/playwright": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/ui": "workspace:^",
         "@effect/atom-react": "catalog:",
@@ -277,7 +278,6 @@
         "@fontsource-variable/jetbrains-mono": "catalog:",
         "@tauri-apps/api": "catalog:",
         "effect": "catalog:",
-        "playwright": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
       },
@@ -1893,6 +1893,22 @@
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/drivers/playwright": {
+      "name": "@beep/playwright",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+        "playwright": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -5642,6 +5658,8 @@
     "@beep/pglite": ["@beep/pglite@workspace:packages/drivers/pglite"],
 
     "@beep/phoenix": ["@beep/phoenix@workspace:packages/drivers/phoenix"],
+
+    "@beep/playwright": ["@beep/playwright@workspace:packages/drivers/playwright"],
 
     "@beep/poppler": ["@beep/poppler@workspace:packages/drivers/poppler"],
 

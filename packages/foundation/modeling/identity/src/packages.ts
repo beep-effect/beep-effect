@@ -271,7 +271,8 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "xlsx",
   "repo-gate-vitest",
   "text",
-  "annotation"
+  "annotation",
+  "playwright"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -4233,3 +4234,20 @@ export const $TextId: Identity.IdentityComposer<"@beep/text"> = /*#__PURE__*/ $I
  * @since 0.0.0
  */
 export const $AnnotationId: Identity.IdentityComposer<"@beep/annotation"> = /*#__PURE__*/ $I.create("annotation");
+
+/**
+ * Identity composer for `@beep/playwright`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PlaywrightId } from "@beep/identity/packages"
+ *
+ * const id = $PlaywrightId.make("Playwright")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PlaywrightId: Identity.IdentityComposer<"@beep/playwright"> = /*#__PURE__*/ $I.create("playwright");

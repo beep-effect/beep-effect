@@ -138,6 +138,7 @@ const config = {
     "packages/drivers/eyecite/package.json",
     "packages/drivers/sqlite/package.json",
     "packages/tooling/infra/infra-hosts/package.json",
+    "packages/drivers/playwright/package.json",
   ],
   customTypes: {
     catalog: {
