@@ -15,7 +15,6 @@ import { envVarRead } from "./harness/Readers.ts";
 
 const { test } = makeHarness();
 
-/** Run a deploy with these config values, as `op run` would export them. */
 const withConfig =
   (values: Record<string, string>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -47,10 +46,11 @@ describe("Vercel.EnvVar", () => {
       expect(created.targets).toEqual(["production"]);
       expect(P.hasProperty(created, "value")).toBe(false);
       expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("secret-one");
-      // A literal `value` is persisted in state (Alchemy keeps a Redacted prop's plain text), which is why
-      // secrets use `valueFrom`; this also proves `persistedStrings` sees through the envelope.
       const persisted = yield* persistedStrings;
-      expect(A.some(persisted, Str.includes("secret-one"))).toBe(true);
+      expect(
+        A.some(persisted, Str.includes("secret-one")),
+        "a literal value is persisted in state, Redacted plain text included, which is why secrets use valueFrom"
+      ).toBe(true);
 
       const rotated = yield* stack.deploy(
         stackWith("vt-env-crud", {
@@ -296,11 +296,13 @@ describe("Vercel.EnvVar", () => {
         });
       const created = yield* stack.deploy(declare("encrypted")).pipe(withConfig({ VT_REPLACE_TOKEN: "kept-value" }));
       const before = A.length(FakeVercel.requestsFor(created.projectId));
-      // A type change replaces the variable delete-first; without the key the plan must fail first.
       const refused = yield* Effect.exit(stack.deploy(declare("sensitive")).pipe(withConfig({})));
       assertSome(failureTag(refused), "ConfigError");
       const afterwards = A.drop(FakeVercel.requestsFor(created.projectId), before);
-      expect(A.filter(afterwards, Str.startsWith("DELETE"))).toEqual([]);
+      expect(
+        A.filter(afterwards, Str.startsWith("DELETE")),
+        "a type change replaces delete-first, so a missing key must fail the plan before any delete"
+      ).toEqual([]);
       expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("kept-value");
       yield* stack.destroy().pipe(withConfig({ VT_REPLACE_TOKEN: "kept-value" }));
     })

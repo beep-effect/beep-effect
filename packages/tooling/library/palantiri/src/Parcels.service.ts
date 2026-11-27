@@ -288,6 +288,23 @@ export interface ParcelsShape {
 /**
  * Reads parcels, checks their freshness, and records the quota gauge.
  *
+ * **Details**
+ *
+ * An `account-headroom` read records one `AccountsWindowRemaining` series per
+ * provider, window and scope: several accounts of one provider share it, so
+ * it reports the most headroom any of them has, and each model group's scoped
+ * window is its own series. A `host-pressure` read records one
+ * `HostPressureStall` series per resource. Both count fresh readings only.
+ *
+ * **Gotchas**
+ *
+ * A gauge keeps its last value, so every read replaces the gauge's whole
+ * series set: in a long-lived host (the `beep palantiri mcp` server) a series
+ * whose reading went stale, or whose source failed, stops reporting instead of
+ * repeating its last fresh value. A `since-last-check` read moves the cursor
+ * to the read time taken before its sources are read, so a row written during
+ * the read comes back on the next read rather than never.
+ *
  * **Example** (Read a parcel)
  *
  * ```ts
@@ -336,13 +353,6 @@ type GaugeReading = typeof GaugeReading.Type;
 
 const byRemaining: Order.Order<GaugeReading> = Order.mapInput(Num.Order, (reading) => reading.remaining);
 
-// One series per provider, window and scope: several accounts of one provider
-// share it, so it reports the most headroom any of them has, and scoped
-// windows (one per model group) stay separate series. Only fresh items count,
-// so a stale reading never looks current. A gauge keeps its last value, so
-// every read replaces the gauge's whole series set: in a long-lived host (the
-// `beep palantiri mcp` server) a series whose reading went stale, or whose
-// source failed, stops reporting instead of repeating its last fresh value.
 const gaugeReadings = (items: ReadonlyArray<AccountHeadroom>): ReadonlyArray<GaugeReading> =>
   A.map(
     R.values(
@@ -380,8 +390,6 @@ const recordHeadroom = (items: ReadonlyArray<AccountHeadroom>) =>
 
 const pressureStall = Metric.gauge(HostPressureStall.name, { description: HostPressureStall.description });
 
-// One series per resource, from fresh readings only; a resource that is no
-// longer fresh loses its series.
 const recordPressure = (items: ReadonlyArray<HostPressureItem>) =>
   replaceGaugeSeries(
     pressureStall,
@@ -459,10 +467,6 @@ const makeParcels = Effect.gen(function* () {
     return reduceAppErrorClasses(now1, budget);
   });
 
-  // The cursor moves to the read time taken before the sources are read, so
-  // a row written during the read shows up again next time rather than never.
-  // It moves only as far as the changes served, and not at all when the inbox
-  // could not be read (sinceLastCheckCursor).
   const readSinceLastCheck = Effect.fnUntraced(function* (budget: ParcelBudget, session: O.Option<SessionKey>) {
     const now = yield* DateTime.now;
     return yield* O.match(session, {

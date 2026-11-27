@@ -159,14 +159,16 @@ describe("handleScaleUp", () => {
   it.effect("counts a launch EC2 does not show yet through its unconsumed JIT config, and retries past the cap", () =>
     Effect.gen(function* () {
       const world = new World();
-      // The previous invocation launched i-unseen and wrote its JIT config; EC2's filtered read does not show it yet.
       world.ssm["/beep-ci/heavy/tokens/i-unseen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-unseen" } };
       const retry = yield* run(
         world,
         [queued({ id: 1 })],
         poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }))
       );
-      expect(world.fleetRequests).toStrictEqual([]);
+      expect(
+        world.fleetRequests,
+        "an earlier launch's JIT config holds the slot EC2's filtered read hides"
+      ).toStrictEqual([]);
       expect(retry).toStrictEqual(["m-1"]);
     })
   );
@@ -184,9 +186,7 @@ describe("handleScaleUp", () => {
       world.ssm["/beep-ci/heavy/tokens/i-booting"] = { value: "jit", modified: 0, tags: { InstanceId: "i-booting" } };
       const base = worldContext(world);
       const fleet = Context.get(base, Ec2Fleet);
-      // i-booting boots right after EC2 is read: its config is deleted and EC2 starts to show it. Read EC2 first and
-      // the count is 0, so it launches past the cap; read Parameter Store first and its config holds the slot.
-      const booting = Ec2Fleet.of({
+      const ec2ShowingRunnerBootedAfterRead = Ec2Fleet.of({
         ...fleet,
         listRunners: Effect.fn("BootingEc2.listRunners")(function* (filter) {
           const listed = yield* fleet.listRunners(filter);
@@ -203,8 +203,11 @@ describe("handleScaleUp", () => {
       const retry = yield* handleScaleUp({
         config: poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 })),
         batch: [queued({ id: 1 })],
-      }).pipe(Effect.provideContext(Context.add(base, Ec2Fleet, booting)));
-      expect(world.fleetRequests).toStrictEqual([]);
+      }).pipe(Effect.provideContext(Context.add(base, Ec2Fleet, ec2ShowingRunnerBootedAfterRead)));
+      expect(
+        world.fleetRequests,
+        "Parameter Store is read before EC2, so i-booting's config holds the slot; EC2 first would launch past the cap"
+      ).toStrictEqual([]);
       expect(retry).toStrictEqual(["m-1"]);
     })
   );
@@ -214,13 +217,15 @@ describe("handleScaleUp", () => {
       const world = new World();
       world.ssm["/beep-ci/heavy/tokens/i-seen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-seen" } };
       world.instances.push({ instanceId: "i-seen", launchTime: 0, state: "running", tags: { ...heavyRunnerTags } });
-      // Cap 2 with one runner counted once leaves one slot; counted twice it would leave none.
       const retry = yield* run(
         world,
         [queued({ id: 1 })],
         poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 2 }))
       );
-      expect(world.fleetRequests[0]?.targetCapacity).toBe(1);
+      expect(
+        world.fleetRequests[0]?.targetCapacity,
+        "cap 2 with one runner counted once leaves one slot; counted twice it would leave none"
+      ).toBe(1);
       expect(retry).toStrictEqual([]);
     })
   );
@@ -286,7 +291,6 @@ describe("handleScaleUp", () => {
           "UnfulfillableCapacity",
         ]) {
           const world = new World();
-          // The request itself fails, as the live layer reports it: the code is not a transport retry.
           world.fleetAnswers = [
             AwsApiError.make({
               service: "ec2",
@@ -297,13 +301,10 @@ describe("handleScaleUp", () => {
             }),
           ];
           const retried = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })]);
-          // Exactly one retry path: both messages come back to the build queue, nothing goes to the job-retry queue.
-          expect([code, retried, world.sent.length, world.instances.length]).toStrictEqual([
-            code,
-            ["m-1", "m-2"],
-            0,
-            0,
-          ]);
+          expect(
+            [code, retried, world.sent.length, world.instances.length],
+            "a failed request is not a transport retry: both messages return to the build queue, none to job-retry"
+          ).toStrictEqual([code, ["m-1", "m-2"], 0, 0]);
         }
       })
   );
@@ -363,8 +364,10 @@ describe("handleScaleUp", () => {
       world.jitFailures = ["i-0001"];
       const retry = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })]);
       expect(world.terminated).toStrictEqual(["i-0001"]);
-      // A 500 is transient: the job goes to job-retry, which re-checks it, rather than straight back to the build queue.
-      expect(retry).toStrictEqual([]);
+      expect(
+        retry,
+        "a 500 is transient: the job goes to job-retry, which re-checks it, not back to the build queue"
+      ).toStrictEqual([]);
       expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([
         "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
         "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
@@ -434,7 +437,6 @@ describe("handleScaleUp", () => {
   );
 });
 
-// Runs scale-up with every log line captured as structured output.
 const runLogged = Effect.fn("runScaleUpLogged")(function* (
   world: World,
   batch: ReadonlyArray<ReturnType<typeof queued>>,
@@ -458,8 +460,7 @@ const ssmRefusal = (message: string) =>
     message,
   });
 
-// The SDK's own conflict class through the live mapper: its category is what the fault reading weighs.
-const landedPut = toAwsApiError("ssm")("putParameter")(new ssm.ParameterAlreadyExists({}));
+const sdkConflictThroughLiveMapper = toAwsApiError("ssm")("putParameter")(new ssm.ParameterAlreadyExists({}));
 
 const jobRetryUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry";
 const buildDlqUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-build-dlq";
@@ -484,7 +485,6 @@ describe("handleScaleUp configure failures", () => {
           }),
           AwsApiError.make({ service: "ssm", operation: "putParameter", status: O.some(409), message: "conflict" }),
           AwsApiError.make({ service: "ssm", operation: "putParameter", message: "unreadable" }),
-          // AWS throttles with HTTP 400: the code wins over the status.
           AwsApiError.make({
             service: "ssm",
             operation: "putParameter",
@@ -496,7 +496,8 @@ describe("handleScaleUp configure failures", () => {
           GitHubApiError.make({ operation: "jit", status: O.some(403), message: "Resource not accessible" }),
         ],
         classifyFailure("tagInstance")
-      )
+      ),
+      "AWS throttles with HTTP 400, so a throttling code wins over the status"
     ).toStrictEqual([
       "deterministic",
       "transient",
@@ -523,7 +524,10 @@ describe("handleScaleUp configure failures", () => {
     const rows = A.map(
       ConfigureOperation.literals,
       (operation) =>
-        [operation, A.map([landedPut, bareAwsConflict, githubConflict], classifyFailure(operation))] as const
+        [
+          operation,
+          A.map([sdkConflictThroughLiveMapper, bareAwsConflict, githubConflict], classifyFailure(operation)),
+        ] as const
     );
     expect(rows).toStrictEqual([
       ["resolveRunnerGroup", ["deterministic", "deterministic", "deterministic"]],
@@ -540,7 +544,7 @@ describe("handleScaleUp configure failures", () => {
   it.effect("retries a token put that conflicts with its own lost response, after cleaning up what landed", () =>
     Effect.gen(function* () {
       const world = new World();
-      world.putFailures = [["/beep-ci/heavy/tokens/", landedPut]];
+      world.putFailures = [["/beep-ci/heavy/tokens/", sdkConflictThroughLiveMapper]];
       const { retry } = yield* runLogged(world, [queued({ id: 1 })]);
       expect([retry, world.terminated, world.deletedRunners]).toStrictEqual([[], ["i-0001"], [1001]]);
       expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([jobRetryUrl]);
@@ -551,10 +555,12 @@ describe("handleScaleUp configure failures", () => {
     Effect.gen(function* () {
       const world = new World();
       const token = "/beep-ci/heavy/tokens/i-0001";
-      // The put stores the parameter and then fails, as when SSM applied it and the response was lost.
-      world.landedPutFailures = [[token, landedPut]];
+      world.landedPutFailures = [[token, sdkConflictThroughLiveMapper]];
       yield* runLogged(world, [queued({ id: 1 })]);
-      expect(world.cleanupCalls).toStrictEqual([`deleteToken:${token}`, "deleteRunner:1001", "terminate:i-0001"]);
+      expect(
+        world.cleanupCalls,
+        "the put stored the parameter then failed, as when SSM's response was lost"
+      ).toStrictEqual([`deleteToken:${token}`, "deleteRunner:1001", "terminate:i-0001"]);
       expect(R.has(world.ssm, token)).toBe(false);
     })
   );
@@ -603,9 +609,12 @@ describe("handleScaleUp configure failures", () => {
         expect(retry).toStrictEqual([]);
         expect(A.filter(world.sent, (sent) => sent.queueUrl === jobRetryUrl)).toStrictEqual([]);
         expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([buildDlqUrl]);
-        // The DLQ holds the original message, unchanged: no retry counter was added.
         const dead = yield* decodeDeadLetter(world.sent[0]?.body);
-        deepStrictEqual(dead, { id: 1, retryCounter: O.none() });
+        deepStrictEqual(
+          dead,
+          { id: 1, retryCounter: O.none() },
+          "the DLQ holds the original message, with no retry counter"
+        );
         const warnings = A.filter(lines, (line) => line.level === "WARN");
         expect(A.map(warnings, (line) => line.annotations)).toStrictEqual([
           {
@@ -639,14 +648,19 @@ describe("handleScaleUp configure failures", () => {
     Effect.gen(function* () {
       const world = new World();
       const secret = "jit-beep-ci-i-0001";
-      // A long token-like run the provider might echo, not a known secret value: masked by its shape.
-      const longSecret = Str.repeat(6)("jitconfig");
+      const longTokenLikeRunNotAKnownSecret = Str.repeat(6)("jitconfig");
       world.putFailures = [
-        ["/beep-ci/heavy/tokens/", ssmRefusal(`Value '${secret}' at 'value' failed; also ${longSecret}`)],
+        [
+          "/beep-ci/heavy/tokens/",
+          ssmRefusal(`Value '${secret}' at 'value' failed; also ${longTokenLikeRunNotAKnownSecret}`),
+        ],
       ];
       const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
       const rendered = yield* encodeLines(lines);
-      expect([Str.includes(secret)(rendered), Str.includes(longSecret)(rendered)]).toStrictEqual([false, false]);
+      expect(
+        [Str.includes(secret)(rendered), Str.includes(longTokenLikeRunNotAKnownSecret)(rendered)],
+        "the known value is masked, and the long token-like run is masked by its shape"
+      ).toStrictEqual([false, false]);
       expect(Str.includes("Value '<redacted>' at 'value' failed; also <redacted>")(rendered)).toBe(true);
     })
   );
@@ -699,8 +713,7 @@ describe("handleScaleUp configure failures", () => {
       (line) => line.annotations as Readonly<Record<string, unknown>>
     );
 
-  // A pool that registers with a token instead of a JIT config.
-  const registrationPool = RunnerPool.make({ ...heavyPool, jitConfig: false });
+  const tokenRegistrationPool = RunnerPool.make({ ...heavyPool, jitConfig: false });
 
   const errorAnnotations = (lines: ReadonlyArray<{ readonly level: string; readonly annotations: unknown }>) =>
     A.map(
@@ -844,7 +857,7 @@ describe("handleScaleUp configure failures", () => {
         status: O.some(403),
         message: "Resource not accessible by integration",
       });
-      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(registrationPool));
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(tokenRegistrationPool));
       expect([retry, world.puts, world.cleanupCalls]).toStrictEqual([[], [], ["terminate:i-0001"]]);
       expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([buildDlqUrl]);
       expect(
@@ -866,12 +879,14 @@ describe("handleScaleUp configure failures", () => {
           ssmRefusal("Value '--url https://github.com/beep-effect --token reg-token' failed; token reg-token"),
         ],
       ];
-      const { lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(registrationPool));
+      const { lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(tokenRegistrationPool));
       const rendered = yield* encodeLines(lines);
       expect(Str.includes("reg-token")(rendered)).toBe(false);
       expect(Str.includes("--token <redacted>' failed; token <redacted>")(rendered)).toBe(true);
-      // The instance never registered a JIT runner, so only the token parameter and the instance are cleaned up.
-      expect(world.cleanupCalls).toStrictEqual(["deleteToken:/beep-ci/heavy/tokens/i-0001", "terminate:i-0001"]);
+      expect(
+        world.cleanupCalls,
+        "no JIT runner was registered, so only the token parameter and the instance are cleaned up"
+      ).toStrictEqual(["deleteToken:/beep-ci/heavy/tokens/i-0001", "terminate:i-0001"]);
       expect(A.map(world.puts, (put) => put.tier)).toStrictEqual(["Advanced"]);
     })
   );
@@ -882,8 +897,10 @@ describe("handleScaleUp configure failures", () => {
       world.jitFailures = ["i-0001"];
       world.sendFailures = [buildDlqUrl];
       const { retry, lines } = yield* runLogged(world, [queued({ id: 1, retryCounter: 1 })]);
-      // Acknowledged: no redelivery, so no second launch for this job.
-      expect([retry, world.terminated, world.fleetRequests.length]).toStrictEqual([[], ["i-0001"], 1]);
+      expect(
+        [retry, world.terminated, world.fleetRequests.length],
+        "acknowledged: no redelivery, so no second launch for this job"
+      ).toStrictEqual([[], ["i-0001"], 1]);
       const sendLine = A.filter(
         lines,
         (line) => line.message === "scale-up: build DLQ send failed; the message is dropped"
@@ -1002,13 +1019,12 @@ describe("handleScaleUp configure failures", () => {
   it.effect("cleans up a failed token write in order: token parameter, JIT runner, instance, once each", () =>
     Effect.gen(function* () {
       const world = new World();
-      // A write that fails client-side can still have landed: the parameter must not hold a cap slot afterwards.
       world.putFailures = [["/beep-ci/heavy/tokens/", ssmRefusal("Value too long")]];
       const retry = yield* run(world, [queued({ id: 1 })]);
-      expect([retry, world.cleanupCalls]).toStrictEqual([
-        [],
-        ["deleteToken:/beep-ci/heavy/tokens/i-0001", "deleteRunner:1001", "terminate:i-0001"],
-      ]);
+      expect(
+        [retry, world.cleanupCalls],
+        "a client-side write failure can still have landed, so its parameter must not keep a cap slot"
+      ).toStrictEqual([[], ["deleteToken:/beep-ci/heavy/tokens/i-0001", "deleteRunner:1001", "terminate:i-0001"]]);
     })
   );
 

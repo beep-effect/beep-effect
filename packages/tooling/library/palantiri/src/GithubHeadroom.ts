@@ -121,7 +121,6 @@ export const githubHeadroomItems: {
     })
 );
 
-// Whole minutes, or seconds under a minute, so an age reads "47m", not "47m 12s 340ms".
 const ageOf = (from: DateTime.Utc, now: DateTime.Utc): string => {
   const distance = DateTime.distance(from, now);
   const minutes = Math.floor(Duration.toMinutes(distance));
@@ -140,13 +139,11 @@ const reserveText = (item: GithubHeadroom): string =>
     unknown: () => " reserve ?",
   });
 
-// The search window resets every minute, so its reset time is noise.
 const resetText = (item: GithubHeadroom): string => (item.resource === "search" ? "" : ` ↺${clockOf(item.resetsAt)}`);
 
 const bucketText = (item: GithubHeadroom): string =>
   `${item.resource} ${item.remaining}/${item.limit}${reserveText(item)}${resetText(item)}`;
 
-// The fresh core, graphql and search buckets: the ones the summary shows as headroom.
 const shownItems = (items: ReadonlyArray<GithubHeadroom>): ReadonlyArray<GithubHeadroom> =>
   A.filter(items, (item) => isFreshItem(item) && A.contains(SUMMARY_RESOURCES, item.resource));
 
@@ -215,8 +212,6 @@ const spendersText = (
         : `spenders unknown (summary ${ageOf(asOf, now)} old)`,
   });
 
-// Over the shown buckets only: a key seen once (a reviewer App, an old token) must not keep a
-// fresh envelope stale. With nothing shown, every bucket decides, so stale stays stale.
 const envelopeFreshness = (
   input: GithubHeadroomInput,
   items: ReadonlyArray<GithubHeadroom>,
@@ -256,7 +251,8 @@ const summarize = (input: GithubHeadroomInput, items: ReadonlyArray<GithubHeadro
  * no bucket shown, every bucket's reading decides. The
  * summary lists the fresh `core`, `graphql` and `search` buckets per
  * identity, such as
- * `user:octocat core 3120/5000 ↺21:31Z · graphql 412/5000 BELOW 15% ↺21:40Z · search 30/30`,
+ * `user:octocat core 3120/5000 ↺21:31Z · graphql 412/5000 BELOW 15% ↺21:40Z · search 30/30`
+ * (the search window resets every minute, so it shows no reset time),
  * then the stale identities. With no fresh bucket it says how old the newest
  * reading is instead, so a stale ledger never reads as headroom. The top three
  * spenders of the last hour and the unattributed remainder follow, or

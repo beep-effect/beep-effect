@@ -1,7 +1,3 @@
-// One writer process of the AC-H9 concurrency test: opens the store file it
-// is given (which may not exist yet) and records RUNS runs under its own
-// branch. Exit 0: every run recorded; exit 2: a typed GateHistoryError
-// (printed); any other exit is an untyped failure.
 import { GateReport, Totals, Unit } from "@beep/gate-report/GateReport";
 import { HistoryConfig } from "@beep/gate-report/History";
 import { Item } from "@beep/gate-report/Item";
@@ -16,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 const RUNS = 25;
+const typedHistoryErrorExit = 2;
 const [filename = "", writer = "0"] = process.argv.slice(2);
 
 const report = (run: number): GateReport =>
@@ -42,8 +39,7 @@ const report = (run: number): GateReport =>
     totals: Totals.make({ collected: 3 }),
   });
 
-// Built on demand: importing this module for its path must not validate an absent file argument.
-const store = () =>
+const storeBuiltOnDemand = () =>
   layerSqlite(
     GateHistorySqliteOptions.make({ filename, config: HistoryConfig.make({ retryAttempts: 8, retryBaseMs: 20 }) })
   );
@@ -57,17 +53,18 @@ const program = Effect.gen(function* () {
   });
 }).pipe(
   Effect.catchTag("GateHistoryError", (error) =>
-    Console.error(`typed ${error.reason}: ${error.message}`).pipe(Effect.andThen(Effect.sync(() => process.exit(2))))
+    Console.error(`typed ${error.reason}: ${error.message}`).pipe(
+      Effect.andThen(Effect.sync(() => process.exit(typedHistoryErrorExit)))
+    )
   )
 );
 
 /** Where this script lives, for the test that spawns it as a separate process. */
 export const historyWriterPath = import.meta.filename;
 
-// The writer runs only when Bun executes this file directly, not when the test imports its path.
 if (import.meta.main) {
   await Effect.runPromise(
-    store().pipe(
+    storeBuiltOnDemand().pipe(
       Layer.build,
       Effect.flatMap((context) => Effect.provideContext(program, context)),
       Effect.scoped

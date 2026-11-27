@@ -74,8 +74,7 @@ const ec2Route = (request: RecordedRequest): O.Option<FakeAnswer> =>
     )
   );
 
-/** The EC2 query protocol's `Filter.N.Name` / `Filter.N.Value.M` pairs of a request body, keyed by filter name. */
-const ec2Filters = (body: string): Readonly<Record<string, ReadonlyArray<string>>> => {
+const ec2QueryFiltersByName = (body: string): Readonly<Record<string, ReadonlyArray<string>>> => {
   const params = A.fromIterable(new URLSearchParams(body));
   return R.fromEntries(
     A.getSomes(
@@ -209,25 +208,22 @@ describe("live AWS layers over distilled", () => {
             body: '{"__type":"ValidationException","message":"1 validation error detected: Value at value failed to satisfy constraint"}',
             headers: { "content-type": "application/x-amz-json-1.1" },
           },
-          // AWS throttles with HTTP 400: a declared throttling class and an undeclared throttling code.
-          "/throttled": {
+          "/throttled-declared-class": {
             status: 400,
             body: '{"__type":"ThrottlingException","message":"Rate exceeded"}',
             headers: { "content-type": "application/x-amz-json-1.1" },
           },
-          "/throttling": {
+          "/throttled-bare-code": {
             status: 400,
             body: '{"__type":"Throttling","message":"Rate exceeded"}',
             headers: { "content-type": "application/x-amz-json-1.1" },
           },
-          // A throttling code SSM does not declare reaches the layer as the SDK's unknown-error class, status 400.
-          "/request-throttled": {
+          "/throttled-code-ssm-never-declares": {
             status: 400,
             body: '{"__type":"RequestThrottled","message":"Rate exceeded"}',
             headers: { "content-type": "application/x-amz-json-1.1" },
           },
-          // A tagged put creates, so a resend after a lost response finds its own first attempt.
-          "/exists": {
+          "/exists-after-lost-response": {
             status: 400,
             body: '{"__type":"ParameterAlreadyExists","message":"The parameter already exists."}',
             headers: { "content-type": "application/x-amz-json-1.1" },
@@ -253,31 +249,30 @@ describe("live AWS layers over distilled", () => {
                 .pipe(Effect.flip),
             { concurrency: 1 }
           );
-          // The SDK would retry the throttled writes itself; the mapping is what this test reads.
         }).pipe(AwsRetry.none, withLive(http));
         deepStrictEqual(
           A.map(errors, (error) => [error.code, error.status, error.fault] as const),
           [
             [O.some("ValidationException"), O.none(), "client"],
             [O.some("ThrottlingException"), O.none(), "transient"],
-            // The SDK reads the bare `Throttling` code as its ThrottlingException class.
             [O.some("ThrottlingException"), O.none(), "transient"],
             [O.some("RequestThrottled"), O.some(400), "transient"],
             [O.some("ParameterAlreadyExists"), O.none(), "client"],
             [O.some("SomethingNew"), O.some(409), "client"],
-          ]
+          ],
+          "the SDK reads a bare Throttling code as ThrottlingException; an undeclared code arrives unknown with status 400"
         );
-        // The conflict means "it landed" only for the token put, the step that creates under the instance's own name.
         const exists = A.filter(errors, (error) => O.contains(error.code, "ParameterAlreadyExists"));
-        expect([
-          A.map(exists, classifyFailure("putToken")),
-          A.map(exists, classifyFailure("resolveRunnerGroup")),
-        ]).toStrictEqual([["transient"], ["deterministic"]]);
+        expect(
+          [A.map(exists, classifyFailure("putToken")), A.map(exists, classifyFailure("resolveRunnerGroup"))],
+          "the conflict means it landed only for the token put, which creates under the instance's own name"
+        ).toStrictEqual([["transient"], ["deterministic"]]);
       })
   );
 
   it("maps an unknown-class 400 with a throttling code to transient, a declared validation error to client", () => {
     const map = toAwsApiError("ssm")("putParameter");
+    const noStatusNoCategoryFailure = { _tag: "SomethingElse", message: "unreadable" };
     expect(
       A.map(
         [
@@ -291,8 +286,7 @@ describe("live AWS layers over distilled", () => {
           new AwsErrors.ThrottlingException({ message: "Rate exceeded" }),
           new AwsErrors.ValidationException({ message: "Value too long" }),
           new AwsErrors.UnknownAwsError({ status: 400, code: "InvalidKeyId", message: "bad key", body: {} }),
-          // No status and no category: nothing says whether a resend can succeed, so it keeps the bounded retry path.
-          { _tag: "SomethingElse", message: "unreadable" },
+          noStatusNoCategoryFailure,
         ],
         (error) => {
           const mapped = map(error);
@@ -360,12 +354,9 @@ describe("live AWS layers over distilled", () => {
           (fragment) => Str.includes(fragment)(decodedFleet)
         )
       ).toStrictEqual([true, true, true, true]);
-      // The fleet boundary is these values on the wire, in every DescribeInstances request: each live pool
-      // environment matches exactly, never by prefix. An EC2 filter value treats `*` and `?` as wildcards, so the
-      // layer must add neither (a `beep-fleet-prod-heavy*` would still be fenced; a `beep-ci*` would not).
       const describes = A.map(
         http.matching((request) => Str.includes("Action=DescribeInstances")(request.body)),
-        (request) => ec2Filters(request.body)
+        (request) => ec2QueryFiltersByName(request.body)
       );
       const listings = A.filter(describes, (filters) => R.has(filters, "tag:ghr:environment"));
       expect(
@@ -373,7 +364,8 @@ describe("live AWS layers over distilled", () => {
           filters["tag:ghr:environment"],
           filters["tag:ghr:Application"],
           filters["tag:ghr:orphan"],
-        ])
+        ]),
+        "each pool environment filters exactly, with no EC2 `*` or `?` wildcard: the fleet boundary on the wire"
       ).toStrictEqual([
         [["beep-fleet-prod-heavy"], ["github-action-runner"], ["true"]],
         [["beep-fleet-prod-overflow"], ["github-action-runner"], undefined],

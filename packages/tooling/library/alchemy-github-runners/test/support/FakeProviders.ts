@@ -48,9 +48,22 @@ export class Recorder {
   }
 }
 
-// aws-extras exports its resources through a narrowed call surface; the runtime value is the
-// Resource class itself, which Provider.succeed needs to register a fake.
-const launchTemplateClass = RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
+const runtimeLaunchTemplateResourceClass =
+  RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
+
+const compositeArnAccountAndRegion = Layer.succeed(
+  AWSEnvironment,
+  Effect.succeed({
+    accountId: "123456789012",
+    region: "us-east-1",
+    credentials: Effect.succeed({
+      accessKeyId: Redacted.make("test"),
+      secretAccessKey: Redacted.make("test"),
+      sessionToken: undefined,
+      region: "us-east-1",
+    }),
+  }) as never
+);
 
 const slug = (fqn: string) => Str.replaceAll("/", "-")(fqn);
 const arn = (service: string, path: string) => `arn:aws:${service}:us-east-1:123456789012:${slug(path)}`;
@@ -178,7 +191,7 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
       })) as never
     ),
     Provider.succeed(
-      launchTemplateClass,
+      runtimeLaunchTemplateResourceClass,
       lifecycle(recorder, "BeepAWS.EC2.RunnerLaunchTemplate", (fqn, news) => ({
         launchTemplateId: `lt-${slug(fqn)}`,
         launchTemplateArn: arn("ec2", `launch-template/${fqn}`),
@@ -189,18 +202,5 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
       })) as never
     ),
     RunnerSweepProvider.pipe(Layer.provide(Layer.succeedContext(worldContext(world)))),
-    // The composite scopes its own ARNs to the stage's account and region.
-    Layer.succeed(
-      AWSEnvironment,
-      Effect.succeed({
-        accountId: "123456789012",
-        region: "us-east-1",
-        credentials: Effect.succeed({
-          accessKeyId: Redacted.make("test"),
-          secretAccessKey: Redacted.make("test"),
-          sessionToken: undefined,
-          region: "us-east-1",
-        }),
-      }) as never
-    )
+    compositeArnAccountAndRegion
   );

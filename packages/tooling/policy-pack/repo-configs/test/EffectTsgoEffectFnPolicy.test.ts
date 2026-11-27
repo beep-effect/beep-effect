@@ -27,16 +27,16 @@ const effectTsgoCliPath = NodeURL.fileURLToPath(
   new URL("../../../../../node_modules/@effect/tsgo/dist/effect-tsgo.cjs", import.meta.url)
 );
 
-// tsrs gates TypeScript errors and every Effect rule: the three ignore flags are false and the
-// standalone diagnostics lane is retired (goals/tsrs-gates). Its Effect build ships inside @effect/tsgo, so the
-// two catalog pins move together: @effect/tsgo packages one patched build per tsrs version it supports.
 const RootCatalog = S.Struct({
   catalog: S.Struct({ tsrs: S.String, "@effect/tsgo": S.String }),
 });
 const decodeRootCatalog = flow(S.decodeResult(S.fromJsonString(RootCatalog)), Result.getOrThrow);
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
-const TestLayer = Layer.mergeAll(PlatformLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)));
+const SharedNativePlatformLayer = Layer.mergeAll(
+  PlatformLayer,
+  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer))
+);
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
@@ -158,8 +158,7 @@ const runTsgoOnProject = Effect.fn(function* (projectDir: string) {
   );
 });
 
-// Share native platform services only; each compiler call owns its child scope.
-it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
+it.layer(SharedNativePlatformLayer, { timeout: "10 seconds" })((it) => {
   describe("TypeScript compiler routing", () => {
     it.effect("keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler", () =>
       Effect.gen(function* () {
@@ -189,11 +188,11 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         expect(tscRs.exitCode, context).toBe(0);
         const readFileString1 = yield* fs.readFileString(rootManifestPath);
         const { catalog } = decodeRootCatalog(readFileString1);
-        // tsrs pins its own upstream TypeScript and
-        // `effect-tsgo patch --tsrs` replaces its binary with the Effect build of that exact tsrs
-        // version, so the reported build carries the @effect/tsgo suffix and the installed tsrs version.
         expect(tscRs.stdout, context).toMatch(/^Version 7\..*\+effect-tsgo\./u);
-        expect(tscRs.stdout, context).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
+        expect(
+          tscRs.stdout,
+          `${context}; effect-tsgo patch --tsrs installs the Effect build of the exact tsrs pin, so both catalog pins move together`
+        ).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
       })
     );
   });
@@ -261,10 +260,11 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       const projectDir = yield* fs.makeTempDirectoryScoped({ prefix: "effect-tsgo-type-errors-" });
       yield* bootstrapTsgoProject(projectDir);
       const args = [tsrsBinPath, "--noEmit", "--pretty", "false", "-p", path.join(projectDir, "tsconfig.json")];
-      // The three ignoreEffect*InTscExitCode flags are false since goals/tsrs-gates folded the
-      // standalone diagnostics lane into Check: an Effect-only finding now fails the gate compiler.
       const effectOnly = yield* runCommand(process.execPath, args, projectDir);
-      expect(effectOnly.exitCode, effectOnly.stdout).not.toBe(0);
+      expect(
+        effectOnly.exitCode,
+        `the ignoreEffect*InTscExitCode flags are false (goals/tsrs-gates), so an Effect-only finding fails: ${effectOnly.stdout}`
+      ).not.toBe(0);
       expect(effectOnly.stdout).toContain("effect(effectFnOpportunity)");
       const diagnostics = yield* runTsgoOnProject(projectDir);
       expect(diagnostics.exitCode, diagnostics.stdout).toBe(1);

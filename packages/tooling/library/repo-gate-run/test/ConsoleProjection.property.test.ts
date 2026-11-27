@@ -1,7 +1,3 @@
-// The terminal projection is the agent projection painted: with its escapes
-// and its progress line removed, it equals the agent projection, for any
-// request. Both stay inside the agent budget and open and close on the
-// verdict line, omission lines included.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { ConsoleBudget } from "@beep/gate-report/ConsoleDocument";
 import {
@@ -50,9 +46,11 @@ describe("console projections", () => {
           budget.maxChars
         );
         assert.strictEqual(A.headNonEmpty(lines), A.lastNonEmpty(lines));
-        // Every omission line is present: a notice is never dropped to fit the budget.
         const heads = A.map(omissionLines(request.omissions), (line) => A.headNonEmpty(Str.split(line, ":")));
-        assert.isTrue(A.every(heads, (head) => A.some(lines, Str.startsWith(head))));
+        assert.isTrue(
+          A.every(heads, (head) => A.some(lines, Str.startsWith(head))),
+          "a notice is never dropped to fit the budget"
+        );
       }),
     runs
   );

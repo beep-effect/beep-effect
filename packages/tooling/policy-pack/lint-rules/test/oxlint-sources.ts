@@ -15,8 +15,8 @@
 import * as A from "effect/Array";
 import type { OxlintRule } from "./oxlint-harness.ts";
 
-/** One fixture: a source, its expected finding count, and an optional path override. */
 type OxlintCase = {
+  readonly scenario?: string;
   readonly source: string;
   readonly count: number;
   readonly filename?: string;
@@ -31,8 +31,7 @@ export type OxlintRuleSources = {
 
 const lines = (...parts: ReadonlyArray<string>): string => A.join(parts, "\n");
 
-/** The repo path the host-process reference exemption keys on (suffix-matched by the rule). */
-const HOST_PROCESS_FILE = "packages/foundation/modeling/utils/src/HostProcess.ts";
+const HOST_PROCESS_SUFFIX_MATCHED_PATH = "packages/foundation/modeling/utils/src/HostProcess.ts";
 
 export const OXLINT_SOURCES: {
   readonly [K in Exclude<OxlintRule, import("@beep/lint-rules/oxlint-docs").DocsRuleId>]: OxlintRuleSources;
@@ -117,8 +116,8 @@ export const OXLINT_SOURCES: {
   },
   "no-opaque-instance-fields": {
     invalid: [
-      // (a) namespace import `* as S from "effect/Schema"` -> S.Opaque, instance field.
       {
+        scenario: '(a) namespace import `* as S from "effect/Schema"` -> S.Opaque, instance field.',
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -127,8 +126,8 @@ export const OXLINT_SOURCES: {
           `}`
         ),
       },
-      // (b) default import `Schema from "effect/Schema"` -> Schema.Opaque, instance method.
       {
+        scenario: '(b) default import `Schema from "effect/Schema"` -> Schema.Opaque, instance method.',
         count: 1,
         source: lines(
           `import Schema from "effect/Schema";`,
@@ -137,8 +136,8 @@ export const OXLINT_SOURCES: {
           `}`
         ),
       },
-      // (c) effect-root namespace `* as Effect from "effect"` -> Effect.Schema.Opaque.
       {
+        scenario: '(c) effect-root namespace `* as Effect from "effect"` -> Effect.Schema.Opaque.',
         count: 1,
         source: lines(
           `import * as Effect from "effect";`,
@@ -147,8 +146,8 @@ export const OXLINT_SOURCES: {
           `}`
         ),
       },
-      // (d) named `{ Opaque, Struct }` from "effect/Schema" -> bare Opaque(...).
       {
+        scenario: '(d) named `{ Opaque, Struct }` from "effect/Schema" -> bare Opaque(...).',
         count: 1,
         source: lines(
           `import { Opaque, Struct } from "effect/Schema";`,
@@ -159,8 +158,8 @@ export const OXLINT_SOURCES: {
       },
     ],
     valid: [
-      // `static` members are allowed on a Schema.Opaque class.
       {
+        scenario: "`static` members are allowed on a Schema.Opaque class.",
         count: 0,
         source: lines(
           `import { Schema } from "effect";`,
@@ -170,8 +169,8 @@ export const OXLINT_SOURCES: {
           `}`
         ),
       },
-      // `Opaque` from an unrelated module is not the Schema Opaque -> not flagged.
       {
+        scenario: "`Opaque` from an unrelated module is not the Schema Opaque -> not flagged.",
         count: 0,
         source: lines(
           `import { Opaque } from "./local-opaque";`,
@@ -180,8 +179,8 @@ export const OXLINT_SOURCES: {
           `}`
         ),
       },
-      // An ordinary class with instance members is untouched.
       {
+        scenario: "An ordinary class with instance members is untouched.",
         count: 0,
         source: lines(`export class G {`, `  value = 1;`, `  run() { return this.value; }`, `}`),
       },
@@ -190,8 +189,8 @@ export const OXLINT_SOURCES: {
 
   "no-inline-schema-compile": {
     invalid: [
-      // A lowercase module-level schema binding is hoistable; the name's spelling does not matter.
       {
+        scenario: "A lowercase module-level schema binding is hoistable; the name's spelling does not matter.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -199,8 +198,8 @@ export const OXLINT_SOURCES: {
           `export const h8 = () => S.decodeSync(S.Array(model))([]);`
         ),
       },
-      // A module-level binding declared below its use is still a module binding.
       {
+        scenario: "A module-level binding declared below its use is still a module binding.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -208,8 +207,8 @@ export const OXLINT_SOURCES: {
           `const later = S.Struct({});`
         ),
       },
-      // An imported lowercase schema is a module binding.
       {
+        scenario: "An imported lowercase schema is a module binding.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -217,16 +216,16 @@ export const OXLINT_SOURCES: {
           `export const h10 = () => S.decodeSync(S.Array(model))([]);`
         ),
       },
-      // In-function IIFE over an inline schema: Schema.decodeUnknownSync(Schema.Struct(...))(x).
       {
+        scenario: "In-function IIFE over an inline schema: Schema.decodeUnknownSync(Schema.Struct(...))(x).",
         count: 1,
         source: lines(
           `import { Schema } from "effect";`,
           `export const f = (x: unknown) => Schema.decodeUnknownSync(Schema.Struct({ id: Schema.String }))(x);`
         ),
       },
-      // In-function non-IIFE binding over an inline schema: const d = Schema.decodeSync(Schema.Array(M)).
       {
+        scenario: "In-function non-IIFE binding over an inline schema: const d = Schema.decodeSync(Schema.Array(M)).",
         count: 1,
         source: lines(
           `import { Schema } from "effect";`,
@@ -237,8 +236,8 @@ export const OXLINT_SOURCES: {
           `};`
         ),
       },
-      // Aliased namespace `* as S from "effect/Schema"` -> S.decodeSync over an inline schema.
       {
+        scenario: 'Aliased namespace `* as S from "effect/Schema"` -> S.decodeSync over an inline schema.',
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -246,8 +245,8 @@ export const OXLINT_SOURCES: {
           `export const h = () => S.decodeSync(S.NullOr(Model))(null);`
         ),
       },
-      // Nested schema construction rooted in a static schema is also compiled inline.
       {
+        scenario: "Nested schema construction rooted in a static schema is also compiled inline.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -255,8 +254,8 @@ export const OXLINT_SOURCES: {
           `export const h2 = () => S.decodeSync(S.Array(Model))([]);`
         ),
       },
-      // Uncurried assertion adapters over an inline schema build a new AST per call too.
       {
+        scenario: "Uncurried assertion adapters over an inline schema build a new AST per call too.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -264,8 +263,8 @@ export const OXLINT_SOURCES: {
           `export const h4 = (input: unknown): void => S.asserts(S.Array(Model), input);`
         ),
       },
-      // Static schema fields nested in an object literal remain hoistable.
       {
+        scenario: "Static schema fields nested in an object literal remain hoistable.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -273,8 +272,8 @@ export const OXLINT_SOURCES: {
           `export const h5 = () => S.decodeSync(S.Struct({ value: Model }))({});`
         ),
       },
-      // Static schema entries nested in an array literal remain hoistable.
       {
+        scenario: "Static schema entries nested in an array literal remain hoistable.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -282,16 +281,16 @@ export const OXLINT_SOURCES: {
           `export const h6 = () => S.decodeSync(S.Tuple([Model]))([]);`
         ),
       },
-      // Unary numeric literals are static schema arguments.
       {
+        scenario: "Unary numeric literals are static schema arguments.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const h7 = () => S.decodeSync(S.Literal(-1))(-1);`
         ),
       },
-      // A module-level schema refined through `.pipe(...)` in the call is a new AST per call.
       {
+        scenario: "A module-level schema refined through `.pipe(...)` in the call is a new AST per call.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -299,8 +298,8 @@ export const OXLINT_SOURCES: {
           `export const h11 = () => S.decodeSync(Model.pipe(S.check(S.isGreaterThan(0))))(1);`
         ),
       },
-      // `.annotate(...)` on a module-level schema derives a new AST per call too.
       {
+        scenario: "`.annotate(...)` on a module-level schema derives a new AST per call too.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -308,8 +307,8 @@ export const OXLINT_SOURCES: {
           `export const h12 = (x: unknown) => S.decodeUnknownSync(Model.annotate({ title: "Model" }))(x);`
         ),
       },
-      // A derived schema nested inside another inline construction is still hoistable.
       {
+        scenario: "A derived schema nested inside another inline construction is still hoistable.",
         count: 1,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -319,16 +318,16 @@ export const OXLINT_SOURCES: {
       },
     ],
     valid: [
-      // A schema built from a function parameter cannot be hoisted, whatever its name.
       {
+        scenario: "A schema built from a function parameter cannot be hoisted, whatever its name.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const p1 = (rowSchema: S.Schema<unknown>) => S.decodeSync(S.Array(rowSchema))([]);`
         ),
       },
-      // A schema declared inside the function body is local state, not a module binding.
       {
+        scenario: "A schema declared inside the function body is local state, not a module binding.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -338,16 +337,16 @@ export const OXLINT_SOURCES: {
           `};`
         ),
       },
-      // `.pipe(...)` over a function parameter cannot be hoisted.
       {
+        scenario: "`.pipe(...)` over a function parameter cannot be hoisted.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const p3 = (rowSchema: S.Schema<number>) => S.decodeSync(rowSchema.pipe(S.check(S.isGreaterThan(0))))(1);`
         ),
       },
-      // `.pipe(...)` over a body-local schema is local state, not a module binding.
       {
+        scenario: "`.pipe(...)` over a body-local schema is local state, not a module binding.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -357,8 +356,8 @@ export const OXLINT_SOURCES: {
           `};`
         ),
       },
-      // A module-level pipe taking a body-local argument cannot be hoisted either.
       {
+        scenario: "A module-level pipe taking a body-local argument cannot be hoisted either.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -366,8 +365,8 @@ export const OXLINT_SOURCES: {
           `export const p5 = (min: number) => S.decodeSync(Model.pipe(S.check(S.isGreaterThan(min))))(min);`
         ),
       },
-      // An argument-free `.pipe()` returns its receiver, so it still hits the parser cache.
       {
+        scenario: "An argument-free `.pipe()` returns its receiver, so it still hits the parser cache.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -375,8 +374,8 @@ export const OXLINT_SOURCES: {
           `export const p6 = () => S.decodeSync(Model.pipe())(1);`
         ),
       },
-      // A plain schema reference inside a function hits the per-AST parser cache.
       {
+        scenario: "A plain schema reference inside a function hits the per-AST parser cache.",
         count: 0,
         source: lines(
           `import { Schema } from "effect";`,
@@ -384,8 +383,8 @@ export const OXLINT_SOURCES: {
           `export const f = (x: unknown) => Schema.decodeUnknownSync(Model)(x);`
         ),
       },
-      // A non-IIFE binding over a plain schema reference compiles once per AST.
       {
+        scenario: "A non-IIFE binding over a plain schema reference compiles once per AST.",
         count: 0,
         source: lines(
           `import { Schema } from "effect";`,
@@ -396,8 +395,8 @@ export const OXLINT_SOURCES: {
           `};`
         ),
       },
-      // A static schema namespace member is a cached AST, not an inline construction.
       {
+        scenario: "A static schema namespace member is a cached AST, not an inline construction.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -405,8 +404,8 @@ export const OXLINT_SOURCES: {
           `export const h3 = () => S.decodeSync(Models.User)({});`
         ),
       },
-      // An uncurried assertion adapter over a plain schema reference also hits the cache.
       {
+        scenario: "An uncurried assertion adapter over a plain schema reference also hits the cache.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -414,8 +413,8 @@ export const OXLINT_SOURCES: {
           `export const h4 = (input: unknown): void => S.asserts(Model, input);`
         ),
       },
-      // Module-scope compiler call is allowed (the whole point of the rule).
       {
+        scenario: "Module-scope compiler call is allowed (the whole point of the rule).",
         count: 0,
         source: lines(
           `import { Schema } from "effect";`,
@@ -423,40 +422,40 @@ export const OXLINT_SOURCES: {
           `export const decode = Schema.decodeSync(Model);`
         ),
       },
-      // `Schema` from an unrelated local module is not the effect Schema -> not flagged.
       {
+        scenario: "`Schema` from an unrelated local module is not the effect Schema -> not flagged.",
         count: 0,
         source: lines(
           `import { Schema } from "./local-schema";`,
           `export const j = () => Schema.decodeSync(Whatever)({});`
         ),
       },
-      // Runtime schema parameters cannot be compiled at module scope.
       {
+        scenario: "Runtime schema parameters cannot be compiled at module scope.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const decodeRows = (rowSchema: S.Top) => S.decodeSync(S.Array(rowSchema));`
         ),
       },
-      // A nested wrapper around a runtime schema parameter remains dynamic.
       {
+        scenario: "A nested wrapper around a runtime schema parameter remains dynamic.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const encodedGuard = (shape: S.Top) => S.is(S.toEncoded(shape));`
         ),
       },
-      // Member expressions rooted in runtime values are dynamic schema parameters.
       {
+        scenario: "Member expressions rooted in runtime values are dynamic schema parameters.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
           `export const decodeSection = (input: { schema: S.Top }) => S.decodeSync(input.schema);`
         ),
       },
-      // Runtime schema parameters nested in object literals cannot be hoisted.
       {
+        scenario: "Runtime schema parameters nested in object literals cannot be hoisted.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -464,8 +463,8 @@ export const OXLINT_SOURCES: {
           `  S.decodeSync(S.Struct({ value: fieldSchema }));`
         ),
       },
-      // Runtime schema parameters nested in array literals cannot be hoisted.
       {
+        scenario: "Runtime schema parameters nested in array literals cannot be hoisted.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -473,8 +472,8 @@ export const OXLINT_SOURCES: {
           `  S.decodeSync(S.Tuple([fieldSchema]));`
         ),
       },
-      // Unary runtime values remain parameter-dependent.
       {
+        scenario: "Unary runtime values remain parameter-dependent.",
         count: 0,
         source: lines(
           `import * as S from "effect/Schema";`,
@@ -487,26 +486,26 @@ export const OXLINT_SOURCES: {
 
   "no-manual-effect-runtime-in-tests": {
     invalid: [
-      // Direct Effect.runPromise in a *.test.ts file.
       {
+        scenario: "Direct Effect.runPromise in a *.test.ts file.",
         count: 1,
         filename: "fixture.test.ts",
         source: lines(`import { Effect } from "effect";`, `export const a = Effect.runPromise(program);`),
       },
-      // Aliased `{ Effect as E }` -> E.runSync.
       {
+        scenario: "Aliased `{ Effect as E }` -> E.runSync.",
         count: 1,
         filename: "alias.test.ts",
         source: lines(`import { Effect as E } from "effect";`, `export const b = E.runSync(program);`),
       },
-      // Effect-root namespace `* as Eff from "effect"` -> Eff.Effect.runFork.
       {
+        scenario: 'Effect-root namespace `* as Eff from "effect"` -> Eff.Effect.runFork.',
         count: 1,
         filename: "namespace.test.ts",
         source: lines(`import * as Eff from "effect";`, `export const c = Eff.Effect.runFork(program);`),
       },
-      // ManagedRuntime.make from effect/ManagedRuntime.
       {
+        scenario: "ManagedRuntime.make from effect/ManagedRuntime.",
         count: 1,
         filename: "managed.test.ts",
         source: lines(
@@ -516,14 +515,14 @@ export const OXLINT_SOURCES: {
       },
     ],
     valid: [
-      // The SAME manual runner outside a *.test.ts file is not gated by this rule.
       {
+        scenario: "The SAME manual runner outside a *.test.ts file is not gated by this rule.",
         count: 0,
         filename: "not-a-test.ts",
         source: lines(`import { Effect } from "effect";`, `export const a = Effect.runPromise(program);`),
       },
-      // `it.effect(...)` usage in a test file is the sanctioned pattern -> silent.
       {
+        scenario: "`it.effect(...)` usage in a test file is the sanctioned pattern -> silent.",
         count: 0,
         filename: "ok.test.ts",
         source: lines(
@@ -537,31 +536,29 @@ export const OXLINT_SOURCES: {
 
   "no-global-process-runtime": {
     invalid: [
-      // Bare global process.platform.
-      { count: 1, source: `export const p = process.platform;` },
-      // globalThis.process.arch.
-      { count: 1, source: `export const a = globalThis.process.arch;` },
-      // os.platform() via a node:os namespace import.
+      { scenario: "Bare global process.platform.", count: 1, source: `export const p = process.platform;` },
+      { scenario: "globalThis.process.arch.", count: 1, source: `export const a = globalThis.process.arch;` },
       {
+        scenario: "os.platform() via a node:os namespace import.",
         count: 1,
         source: lines(`import * as os from "node:os";`, `export const m = () => os.platform();`),
       },
     ],
     valid: [
-      // A `process` parameter shadows the global -> not flagged.
       {
+        scenario: "A `process` parameter shadows the global -> not flagged.",
         count: 0,
         source: `export const f = (process: { platform: string }) => process.platform;`,
       },
-      // A local `const process` shadows the global -> not flagged.
       {
+        scenario: "A local `const process` shadows the global -> not flagged.",
         count: 0,
         source: lines(`export function g() {`, `  const process = { arch: "x64" };`, `  return process.arch;`, `}`),
       },
-      // The host-process reference file is exempt regardless of cwd (suffix-matched path).
       {
+        scenario: "The host-process reference file is exempt regardless of cwd (suffix-matched path).",
         count: 0,
-        filename: HOST_PROCESS_FILE,
+        filename: HOST_PROCESS_SUFFIX_MATCHED_PATH,
         source: `export const supports = process.platform;`,
       },
     ],
@@ -630,12 +627,18 @@ export const OXLINT_SOURCES: {
 
   "namespace-node-imports": {
     invalid: [
-      // Wrong namespace alias for a node: builtin.
-      { count: 1, source: `import * as foo from "node:fs";\nexport const x = foo;` },
+      {
+        scenario: "Wrong namespace alias for a node: builtin.",
+        count: 1,
+        source: `import * as foo from "node:fs";\nexport const x = foo;`,
+      },
     ],
     valid: [
-      // Canonical alias for the node: builtin.
-      { count: 0, source: `import * as NodeFS from "node:fs";\nexport const x = NodeFS;` },
+      {
+        scenario: "Canonical alias for the node: builtin.",
+        count: 0,
+        source: `import * as NodeFS from "node:fs";\nexport const x = NodeFS;`,
+      },
     ],
   },
   "no-comments": {

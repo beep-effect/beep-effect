@@ -465,9 +465,7 @@ const pwaConfig = (config: BeepNextPwaConfig | undefined): O.Option<PwaFeatureCo
   return O.some(config);
 };
 
-// Serwist can resolve its own Next canary, so its plugin type can point at a
-// different NextConfig identity even though the runtime config contract matches.
-const adaptSerwistNextConfigPlugin = (plugin: SerwistNextConfigPlugin): NextConfigPlugin =>
+const castSerwistPluginAcrossNextCanary = (plugin: SerwistNextConfigPlugin): NextConfigPlugin =>
   plugin as unknown as NextConfigPlugin;
 
 const makeBundleAnalyzerPlugin = (options: BeepNextConfigOptions): O.Option<NextConfigPlugin> =>
@@ -499,7 +497,7 @@ const makePwaPlugin = (options: BeepNextConfigOptions): O.Option<NextConfigPlugi
   pipe(
     pwaConfig(options.pwa),
     O.map((config) =>
-      adaptSerwistNextConfigPlugin(
+      castSerwistPluginAcrossNextCanary(
         withSerwistInit({
           swSrc: config.swSrc,
           swDest: config.swDest,
@@ -566,6 +564,12 @@ const makeBaseConfig = (options: BeepNextConfigOptions): NextConfigFromNext => {
 /**
  * Decode an unknown environment snapshot for the shared Next.js preset.
  *
+ * **Gotchas**
+ *
+ * The decoder is unary and takes no parse options: a dual is undecidable when
+ * the input is `unknown`. Pass options to `BeepNextConfigEnv.decodeEffect`
+ * directly.
+ *
  * **Example** (Decoding ANALYZE env flag)
  *
  * ```ts
@@ -578,8 +582,6 @@ const makeBaseConfig = (options: BeepNextConfigOptions): NextConfigFromNext => {
  * @category decoding
  * @since 0.0.0
  */
-// unary by contract: `options` stays reachable through `BeepNextConfigEnv.decodeEffect`;
-// a dual is undecidable here because `input` is `unknown`.
 export const decodeBeepNextConfigEnv: (input: unknown) => Effect.Effect<BeepNextConfigEnv, S.SchemaError> =
   BeepNextConfigEnv.decodeEffect;
 

@@ -51,8 +51,7 @@ const initiateXml = `${xmlProlog}<InitiateMultipartUploadResult><Bucket>binaries
 const completeXml = `${xmlProlog}<CompleteMultipartUploadResult><Bucket>binaries</Bucket><Key>actions-runner-linux.tar.gz</Key><ETag>"etag-complete"</ETag></CompleteMultipartUploadResult>`;
 const noRouteXml = `${xmlProlog}<Error><Code>NoSuchKey</Code><Message>no route</Message></Error>`;
 
-/** A served asset whose byte `i` is `i % 251`, so a reassembled upload can be compared to it. */
-const makeAsset = (size: number): Uint8Array => {
+const makeMod251PatternAsset = (size: number): Uint8Array => {
   const bytes = new Uint8Array(size);
   for (let index = 0; index < size; index++) bytes[index] = index % 251;
   return bytes;
@@ -97,12 +96,10 @@ const parseHead = (head: string) => {
 
 interface FramedBody {
   readonly body: Uint8Array;
-  /** Bytes of the connection buffer the framed body occupied. */
-  readonly consumed: number;
+  readonly bufferBytesConsumed: number;
 }
 
-/** The size of the chunk whose size line starts at `offset`, and where its data starts. */
-const chunkHeader = (bytes: Uint8Array, offset: number) => {
+const chunkSizeLineAt = (bytes: Uint8Array, offset: number) => {
   const window = latin1.decode(bytes.subarray(offset, offset + 64));
   return O.map(Str.indexOf("\r\n")(window), (lineEnd) => ({
     size: Number.parseInt(Str.split(";")(Str.slice(0, lineEnd)(window))[0] ?? "", 16),
@@ -110,47 +107,64 @@ const chunkHeader = (bytes: Uint8Array, offset: number) => {
   }));
 };
 
-/** Where the (possibly empty) trailer section that starts at `offset` ends. */
-const trailerEnd = (bytes: Uint8Array, offset: number): O.Option<number> => {
+const trailerSectionEnd = (bytes: Uint8Array, offset: number): O.Option<number> => {
   const rest = latin1.decode(bytes.subarray(offset));
   return Str.startsWith("\r\n")(rest) ? O.some(offset + 2) : O.map(Str.indexOf(crlf2)(rest), (end) => offset + end + 4);
 };
 
-/** Decodes a complete chunked body from `offset`, or `None` while it is incomplete. */
-const dechunk = (bytes: Uint8Array, offset = 0, parts: ReadonlyArray<Uint8Array> = []): O.Option<FramedBody> =>
-  O.flatMap(chunkHeader(bytes, offset), ({ size, data }) => {
+const dechunkWhenComplete = (
+  bytes: Uint8Array,
+  offset = 0,
+  parts: ReadonlyArray<Uint8Array> = []
+): O.Option<FramedBody> =>
+  O.flatMap(chunkSizeLineAt(bytes, offset), ({ size, data }) => {
     if (size === 0) {
-      return O.map(trailerEnd(bytes, data), (consumed) => ({ body: joinParts(parts), consumed }));
+      return O.map(trailerSectionEnd(bytes, data), (bufferBytesConsumed) => ({
+        body: joinParts(parts),
+        bufferBytesConsumed,
+      }));
     }
     const end = data + size;
-    return bytes.byteLength < end + 2 ? O.none() : dechunk(bytes, end + 2, A.append(parts, bytes.subarray(data, end)));
+    return bytes.byteLength < end + 2
+      ? O.none()
+      : dechunkWhenComplete(bytes, end + 2, A.append(parts, bytes.subarray(data, end)));
   });
 
-/** A `Content-Length` body, or `None` while it is incomplete. */
-const fixedBody = (bytes: Uint8Array, headers: Readonly<Record<string, string>>): O.Option<FramedBody> => {
+const contentLengthBodyWhenComplete = (
+  bytes: Uint8Array,
+  headers: Readonly<Record<string, string>>
+): O.Option<FramedBody> => {
   const size = O.match(R.get(headers, "content-length"), {
     onNone: () => 0,
     onSome: (value) => Number.parseInt(value, 10),
   });
-  return bytes.byteLength < size ? O.none() : O.some({ body: bytes.slice(0, size), consumed: size });
+  return bytes.byteLength < size ? O.none() : O.some({ body: bytes.slice(0, size), bufferBytesConsumed: size });
 };
 
 const isChunked = (headers: Readonly<Record<string, string>>) => R.has(headers, "transfer-encoding");
 
-/** What real S3 answers with 501: a chunked body, or a PUT body of undeclared length. */
-const isRejected = (method: string, headers: Readonly<Record<string, string>>) =>
+const isRejectedWith501LikeS3 = (method: string, headers: Readonly<Record<string, string>>) =>
   isChunked(headers) || (method === "PUT" && !R.has(headers, "content-length"));
 
-/** The first complete request in `pending` and the bytes after it, or `None` while it is incomplete. */
-const nextRequest = (pending: Uint8Array) =>
+const firstCompleteRequest = (pending: Uint8Array) =>
   O.flatMap(Str.indexOf(crlf2)(latin1.decode(pending.subarray(0, 65_536))), (headEnd) => {
     const head = latin1.decode(pending.subarray(0, headEnd));
     const { method, target, headers } = parseHead(head);
     const rest = pending.subarray(headEnd + 4);
-    return O.map(isChunked(headers) ? dechunk(rest) : fixedBody(rest, headers), ({ body, consumed }) => ({
-      request: { head, method, target, headers, body, rejected: isRejected(method, headers) } satisfies WireRequest,
-      remaining: rest.slice(consumed),
-    }));
+    return O.map(
+      isChunked(headers) ? dechunkWhenComplete(rest) : contentLengthBodyWhenComplete(rest, headers),
+      ({ body, bufferBytesConsumed }) => ({
+        request: {
+          head,
+          method,
+          target,
+          headers,
+          body,
+          rejected: isRejectedWith501LikeS3(method, headers),
+        } satisfies WireRequest,
+        remaining: rest.slice(bufferBytesConsumed),
+      })
+    );
   });
 
 const queryOf = (target: string) => (Str.includes("?")(target) ? (Str.split("?")(target)[1] ?? "") : "");
@@ -220,7 +234,7 @@ const routes = (origin: string, asset: Uint8Array, options: WireS3Options) => {
  * Starts the stub on an ephemeral loopback port for the current scope.
  */
 export const makeWireS3 = Effect.fn("WireS3.make")(function* (options: WireS3Options) {
-  const asset = makeAsset(options.assetSize);
+  const asset = makeMod251PatternAsset(options.assetSize);
   const requests: Array<WireRequest> = [];
   const sockets: Array<NodeNet.Socket> = [];
   let answer: (request: WireRequest) => Uint8Array = () => xmlResponse("503 Service Unavailable", noRouteXml);
@@ -231,7 +245,7 @@ export const makeWireS3 = Effect.fn("WireS3.make")(function* (options: WireS3Opt
     sockets.push(socket);
     let pending: Uint8Array = new Uint8Array(0);
     const drain = () => {
-      for (let next = nextRequest(pending); O.isSome(next); next = nextRequest(pending)) {
+      for (let next = firstCompleteRequest(pending); O.isSome(next); next = firstCompleteRequest(pending)) {
         const { request, remaining } = next.value;
         pending = remaining;
         requests.push(request);

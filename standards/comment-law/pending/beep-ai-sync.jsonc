@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/ai-sync",
-  "root": "packages/tooling/library/ai-sync",
-  "scopes": ["."]
-}

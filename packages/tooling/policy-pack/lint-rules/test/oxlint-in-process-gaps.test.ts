@@ -30,12 +30,12 @@ const namespaceImport = (source: string, local: string) =>
 
 const singleQuoted: SourceText = (node) => `'${node.value ?? ""}'`;
 
-/**
- * Instantiates a `create`-style oxlint rule against a fake rule context that
- * records every report, so the rule's visitor branches run in-process under
- * coverage instead of only through the spawned oxlint CLI harness.
- */
-const createRule = (name: RuleName, filename: string, reports: Array<unknown>, getText: SourceText = singleQuoted) => {
+const createRuleRecordingReportsInProcess = (
+  name: RuleName,
+  filename: string,
+  reports: Array<unknown>,
+  getText: SourceText = singleQuoted
+) => {
   const rule = plugin.rules[name];
   if (P.isUndefined(rule) || !("create" in rule)) {
     throw new Error(`Expected ${name} to expose create`);
@@ -50,11 +50,7 @@ const createRule = (name: RuleName, filename: string, reports: Array<unknown>, g
   } as never);
 };
 
-/**
- * Instantiates a `createOnce`-style oxlint rule against a fake rule context and runs its
- * `before` hook, so file-scoped state (shadow tracking, import bindings) starts clean.
- */
-const createOnceRule = (name: RuleName, filename: string, reports: Array<unknown>) => {
+const createOnceRuleAfterBeforeHook = (name: RuleName, filename: string, reports: Array<unknown>) => {
   const rule = plugin.rules[name];
   if (P.isUndefined(rule) || !("createOnce" in rule) || P.isUndefined(rule.createOnce)) {
     throw new Error(`Expected ${name} to expose createOnce`);
@@ -87,7 +83,11 @@ const processExit = () => call(member(identifier("process"), "exit"));
 describe("oxlint rules in process", () => {
   it("reports relative javascript specifiers across import and export forms", () => {
     const reports: Array<unknown> = [];
-    const rule = createRule("no-js-extension-imports", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createRuleRecordingReportsInProcess(
+      "no-js-extension-imports",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule.ImportDeclaration?.({ source: literal("./ProviderInstance.service.js"), type: "ImportDeclaration" } as never);
     rule.ExportNamedDeclaration?.({ source: null, type: "ExportNamedDeclaration" } as never);
@@ -104,14 +104,18 @@ describe("oxlint rules in process", () => {
   it("skips javascript sources and handles quote styles the fixer cannot rewrite", () => {
     const quotedReports: Array<unknown> = [];
     const unfixableReports: Array<unknown> = [];
-    const skipped = createRule("no-js-extension-imports", "/repo/packages/example/src/fixture.js", []);
-    const quoted = createRule(
+    const skipped = createRuleRecordingReportsInProcess(
+      "no-js-extension-imports",
+      "/repo/packages/example/src/fixture.js",
+      []
+    );
+    const quoted = createRuleRecordingReportsInProcess(
       "no-js-extension-imports",
       "/repo/packages/example/src/fixture.ts",
       quotedReports,
       (node) => `"${node.value ?? ""}"`
     );
-    const unfixable = createRule(
+    const unfixable = createRuleRecordingReportsInProcess(
       "no-js-extension-imports",
       "/repo/packages/example/src/fixture.ts",
       unfixableReports,
@@ -130,7 +134,11 @@ describe("oxlint rules in process", () => {
 
   it("reports non-namespace node builtin imports", () => {
     const reports: Array<unknown> = [];
-    const rule = createRule("namespace-node-imports", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createRuleRecordingReportsInProcess(
+      "namespace-node-imports",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule.ImportDeclaration?.({
       source: literal("node:fs"),
@@ -153,7 +161,7 @@ describe("oxlint rules in process", () => {
 
   it("reports a manual Effect runtime call inside a test file", () => {
     const reports: Array<unknown> = [];
-    const rule = createRule(
+    const rule = createRuleRecordingReportsInProcess(
       "no-manual-effect-runtime-in-tests",
       "/repo/packages/example/test/fixture.test.ts",
       reports
@@ -167,7 +175,11 @@ describe("oxlint rules in process", () => {
 
   it("reports an instance field declared on an opaque schema class", () => {
     const reports: Array<unknown> = [];
-    const rule = createRule("no-opaque-instance-fields", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createRuleRecordingReportsInProcess(
+      "no-opaque-instance-fields",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule.ImportDeclaration?.(namespaceImport("effect/Schema", "S"));
     rule.ClassDeclaration?.({
@@ -189,11 +201,14 @@ describe("oxlint rules in process", () => {
   });
   it("ignores process while a parameter binding shadows it in nested functions", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule.CallExpression?.(processExit());
 
-    // A parameter binding shadows `process` for the arrow and every nested function.
     rule.ArrowFunctionExpression?.(params("other", "process"));
     rule.CallExpression?.(processExit());
     rule.FunctionExpression?.(params());
@@ -202,14 +217,17 @@ describe("oxlint rules in process", () => {
     rule["ArrowFunctionExpression:exit"]?.(params());
     rule.CallExpression?.(processExit());
 
-    expect(reports).toHaveLength(2);
+    expect(reports, "a parameter binding shadows process for the arrow and every nested function").toHaveLength(2);
   });
 
   it("ignores Bun only inside the function whose declarator binds it", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
-    // A declarator shadows only the names the rule tracks, and only inside its function.
     rule.FunctionDeclaration?.(params());
     rule.VariableDeclarator?.(declarator(identifier("Bun")));
     rule.VariableDeclarator?.(declarator({ type: "ObjectPattern" }));
@@ -219,12 +237,18 @@ describe("oxlint rules in process", () => {
     rule["FunctionDeclaration:exit"]?.(params());
     rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
 
-    expect(reports).toHaveLength(2);
+    expect(reports, "a declarator shadows only the names the rule tracks, and only inside its function").toHaveLength(
+      2
+    );
   });
 
   it("keeps the module scope on an unbalanced function exit", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule["FunctionDeclaration:exit"]?.(params());
     rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
@@ -234,7 +258,11 @@ describe("oxlint rules in process", () => {
 
   it("reports wrapped, computed, and assigned process io in production files", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
     const wrappedProcess = {
       expression: { expression: identifier("process"), type: "TSNonNullExpression" },
       type: "ParenthesizedExpression",
@@ -259,7 +287,11 @@ describe("oxlint rules in process", () => {
 
   it("allows the host-boundary process io listed for a file and nothing else", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/tooling/tool/cli/src/bin-main.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/tooling/tool/cli/src/bin-main.ts",
+      reports
+    );
 
     rule.CallExpression?.(processExit());
     rule.CallExpression?.(call(member(member(identifier("process"), "stdout"), "write"), [literal("out")]));
@@ -270,7 +302,7 @@ describe("oxlint rules in process", () => {
 
   it("allows only the drain exit in the slim CI entrypoint", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule(
+    const rule = createOnceRuleAfterBeforeHook(
       "no-direct-process-io",
       "/repo/packages/tooling/tool/cli/src/commands/Ci/CiBinary.ts",
       reports
@@ -284,7 +316,11 @@ describe("oxlint rules in process", () => {
 
   it("leaves test files alone", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/test/fixture.test.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/test/fixture.test.ts",
+      reports
+    );
 
     rule.CallExpression?.(processExit());
     rule.AssignmentExpression?.({
@@ -299,7 +335,11 @@ describe("oxlint rules in process", () => {
 
   it("resolves globalThis.Bun and ignores non-stream and unresolvable receivers", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
     const bun = identifier("Bun");
     const unresolvableStream = {
       computed: true,
@@ -323,7 +363,11 @@ describe("oxlint rules in process", () => {
 
   it("resets shadowed scopes between files", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-global-process-runtime", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-global-process-runtime",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
     const platformRead = member(identifier("process"), "platform") as never;
 
     rule.FunctionDeclaration?.(params("process"));
@@ -336,7 +380,7 @@ describe("oxlint rules in process", () => {
 
   it("classifies named, default, and type-only runtime imports in a test file", () => {
     const reports: Array<unknown> = [];
-    const rule = createRule(
+    const rule = createRuleRecordingReportsInProcess(
       "no-manual-effect-runtime-in-tests",
       "/repo/packages/example/test/fixture.test.ts",
       reports
@@ -365,7 +409,11 @@ describe("oxlint rules in process", () => {
   });
   it("restores enclosing global shadows across every function visitor", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule.VariableDeclarator?.(declarator(identifier("process")));
     rule.FunctionDeclaration?.(params("Bun"));
@@ -379,7 +427,11 @@ describe("oxlint rules in process", () => {
   });
   it("drops the current scope and unclosed ancestors when a new file starts", () => {
     const reports: Array<unknown> = [];
-    const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
+    const rule = createOnceRuleAfterBeforeHook(
+      "no-direct-process-io",
+      "/repo/packages/example/src/fixture.ts",
+      reports
+    );
 
     rule.VariableDeclarator?.(declarator(identifier("process")));
     rule.ArrowFunctionExpression?.(params("Bun"));

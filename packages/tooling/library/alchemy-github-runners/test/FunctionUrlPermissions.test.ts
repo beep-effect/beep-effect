@@ -41,18 +41,16 @@ type Provider = Pick<
   | "reconcileFunctionUrlPermissions"
 >;
 
-// The installed package's root, whichever copy the runtime resolves the specifier to.
 const packageMarker = "/@alchemy.run/aws/";
 const resolvedEntry = import.meta.resolve("@alchemy.run/aws/Lambda");
-const packageRoot = `${pipe(resolvedEntry, Str.split(packageMarker), A.headNonEmpty)}${packageMarker}`;
+const resolvedCopyPackageRoot = `${pipe(resolvedEntry, Str.split(packageMarker), A.headNonEmpty)}${packageMarker}`;
 const copyPath = { src: "src/Lambda/Function.ts", lib: "lib/Lambda/Function.js" } as const;
-const srcProvider: Provider = await import(/* @vite-ignore */ `${packageRoot}${copyPath.src}`);
-const libProvider: Provider = await import(/* @vite-ignore */ `${packageRoot}${copyPath.lib}`);
-// Each copy's text, through Vite's raw import, so the read works on whichever runtime runs the tests.
+const srcProvider: Provider = await import(/* @vite-ignore */ `${resolvedCopyPackageRoot}${copyPath.src}`);
+const libProvider: Provider = await import(/* @vite-ignore */ `${resolvedCopyPackageRoot}${copyPath.lib}`);
 const RawText = S.Struct({ default: S.String });
 const decodeRawText = S.decodeUnknownEffect(RawText);
-const copyText = (copy: keyof typeof copyPath) =>
-  Effect.promise(() => import(/* @vite-ignore */ `${packageRoot}${copyPath[copy]}?raw`)).pipe(
+const copyTextViaViteRawImport = (copy: keyof typeof copyPath) =>
+  Effect.promise(() => import(/* @vite-ignore */ `${resolvedCopyPackageRoot}${copyPath[copy]}?raw`)).pipe(
     Effect.flatMap(decodeRawText),
     Effect.map((module) => module.default)
   );
@@ -65,13 +63,12 @@ const functionName = "beep-fleet-prod-webhook";
 const functionArn = `arn:aws:lambda:us-east-1:123456789012:function:${functionName}`;
 const policyPath = `/2015-03-31/functions/${functionName}/policy`;
 
-/** A resource policy statement in the form `GetPolicy` returns it. */
-type Statement = Readonly<Record<string, unknown>> & {
+type GetPolicyStatement = Readonly<Record<string, unknown>> & {
   readonly Sid: string;
   readonly Condition: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
 };
 
-const accessStatement = (resource = functionArn): Statement => ({
+const accessStatement = (resource = functionArn): GetPolicyStatement => ({
   Sid: FunctionUrlPublicAccessStatementId,
   Effect: "Allow",
   Principal: "*",
@@ -80,7 +77,7 @@ const accessStatement = (resource = functionArn): Statement => ({
   Condition: { StringEquals: { "lambda:FunctionUrlAuthType": "NONE" } },
 });
 
-const invokeStatement = (resource = functionArn): Statement => ({
+const invokeStatement = (resource = functionArn): GetPolicyStatement => ({
   Sid: FunctionUrlPublicInvokeStatementId,
   Effect: "Allow",
   Principal: "*",
@@ -100,8 +97,7 @@ type AddPermissionBody = typeof AddPermissionBody.Type;
 const decodeAddPermissionBody = S.decodeUnknownEffect(S.fromJsonString(AddPermissionBody));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
-/** The statement Lambda stores for an `AddPermission` call. */
-const storedStatement = (body: AddPermissionBody, resource: string): Statement => ({
+const statementLambdaStoresForAdd = (body: AddPermissionBody, resource: string): GetPolicyStatement => ({
   Sid: body.StatementId,
   Effect: "Allow",
   Principal: body.Principal,
@@ -113,23 +109,16 @@ const storedStatement = (body: AddPermissionBody, resource: string): Statement =
       : { StringEquals: { "lambda:FunctionUrlAuthType": body.FunctionUrlAuthType } },
 });
 
-/**
- * A fake of the Lambda resource policy API for one function: `GetPolicy`,
- * `AddPermission` and `RemovePermission`, holding statements by Sid as Lambda
- * does, and every call it served in order as `<Operation>` or
- * `<Operation> <Sid>`.
- */
 interface FakeLambdaPolicy {
   readonly calls: Array<string>;
   readonly qualifiers: Array<string | null>;
-  /** Statements another reconcile writes right after the next `GetPolicy` is answered. */
-  readonly racing: Array<Statement>;
-  readonly statements: MutableHashMap.MutableHashMap<string, Statement>;
+  readonly statements: MutableHashMap.MutableHashMap<string, GetPolicyStatement>;
+  readonly writtenAfterNextGetPolicy: Array<GetPolicyStatement>;
 }
 
-const fakeLambdaPolicy = (...seed: ReadonlyArray<Statement>): FakeLambdaPolicy => ({
+const fakeLambdaPolicy = (...seed: ReadonlyArray<GetPolicyStatement>): FakeLambdaPolicy => ({
   calls: [],
-  racing: [],
+  writtenAfterNextGetPolicy: [],
   qualifiers: [],
   statements: MutableHashMap.fromIterable(A.map(seed, (statement) => [statement.Sid, statement] as const)),
 });
@@ -151,8 +140,8 @@ const decoder = new TextDecoder();
 const getPolicy = Effect.fn("FakeLambdaPolicy.getPolicy")(function* (fake: FakeLambdaPolicy) {
   fake.calls.push("GetPolicy");
   const statements = fake.statements.pipe(MutableHashMap.values, A.fromIterable);
-  // The other writer lands after this read was taken, so this answer does not show its statements.
-  for (const statement of fake.racing.splice(0)) MutableHashMap.set(fake.statements, statement.Sid, statement);
+  for (const statement of fake.writtenAfterNextGetPolicy.splice(0))
+    MutableHashMap.set(fake.statements, statement.Sid, statement);
   if (A.isArrayEmpty(statements)) return lambdaError(404, "ResourceNotFoundException");
   const policy = yield* encodeJson({ Version: "2012-10-17", Id: "default", Statement: statements });
   return { status: 200, body: { Policy: policy, RevisionId: "revision" } };
@@ -168,7 +157,7 @@ const addPermission = Effect.fn("FakeLambdaPolicy.addPermission")(function* (
   );
   fake.calls.push(`AddPermission ${body.StatementId}`);
   if (MutableHashMap.has(fake.statements, body.StatementId)) return lambdaError(409, "ResourceConflictException");
-  const statement = storedStatement(body, resource);
+  const statement = statementLambdaStoresForAdd(body, resource);
   MutableHashMap.set(fake.statements, body.StatementId, statement);
   return { status: 201, body: { Statement: yield* encodeJson(statement) } };
 });
@@ -200,8 +189,7 @@ const route = Effect.fn("FakeLambdaPolicy.route")(function* (
   return removePermission(fake, url);
 });
 
-/** An effect `HttpClient` that serves `fake`, so the distilled Lambda client runs for real with no network. */
-const httpClient = (fake: FakeLambdaPolicy): HttpClient.HttpClient =>
+const fakeLambdaPolicyHttpClient = (fake: FakeLambdaPolicy): HttpClient.HttpClient =>
   HttpClient.make(
     Effect.fn("FakeLambdaPolicy.send")(function* (request, url) {
       const answer = yield* route(fake, request, url);
@@ -220,7 +208,7 @@ const httpClient = (fake: FakeLambdaPolicy): HttpClient.HttpClient =>
   );
 
 const reconcileWith = (provider: Provider) => (fake: FakeLambdaPolicy, qualifier?: string) =>
-  Layer.mergeAll(Layer.succeed(HttpClient.HttpClient, httpClient(fake)), AwsCredentials.mock).pipe(
+  Layer.mergeAll(Layer.succeed(HttpClient.HttpClient, fakeLambdaPolicyHttpClient(fake)), AwsCredentials.mock).pipe(
     Layer.build,
     Effect.flatMap((context) =>
       provider
@@ -234,8 +222,7 @@ const reconcileWith = (provider: Provider) => (fake: FakeLambdaPolicy, qualifier
     )
   );
 
-/** Forget the calls a first reconcile made, keeping the statements it wrote. */
-const clearCalls = (fake: FakeLambdaPolicy) => {
+const forgetCallsKeepStatements = (fake: FakeLambdaPolicy) => {
   fake.calls.length = 0;
   fake.qualifiers.length = 0;
 };
@@ -262,7 +249,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
       Effect.gen(function* () {
         const fake = fakeLambdaPolicy();
         yield* reconcile(fake);
-        clearCalls(fake);
+        forgetCallsKeepStatements(fake);
         const calls = yield* reconcile(fake);
         expect(fake.calls).toStrictEqual(["GetPolicy"]);
         expect(calls).toStrictEqual([]);
@@ -311,7 +298,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
     it.effect("an add that conflicts with an equal statement written meanwhile re-reads and writes nothing more", () =>
       Effect.gen(function* () {
         const fake = fakeLambdaPolicy();
-        fake.racing.push(accessStatement());
+        fake.writtenAfterNextGetPolicy.push(accessStatement());
         yield* reconcile(fake);
         expect(fake.calls).toStrictEqual([
           "GetPolicy",
@@ -326,7 +313,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
     it.effect("an add that conflicts with a differing statement written meanwhile re-reads, removes and adds", () =>
       Effect.gen(function* () {
         const fake = fakeLambdaPolicy();
-        fake.racing.push({ ...accessStatement(), Action: "lambda:InvokeFunction" });
+        fake.writtenAfterNextGetPolicy.push({ ...accessStatement(), Action: "lambda:InvokeFunction" });
         yield* reconcile(fake);
         expect(fake.calls).toStrictEqual([
           "GetPolicy",
@@ -349,7 +336,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
         const fake = fakeLambdaPolicy();
         yield* reconcile(fake, "live");
         expect(fake.qualifiers).toStrictEqual(["live", "live", "live"]);
-        clearCalls(fake);
+        forgetCallsKeepStatements(fake);
         yield* reconcile(fake, "live");
         expect(fake.calls).toStrictEqual(["GetPolicy"]);
       })
@@ -408,7 +395,7 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
     });
 
     it("removes then adds a statement held under the Sid with other content", () => {
-      const differing: ReadonlyArray<Statement> = [
+      const differing: ReadonlyArray<GetPolicyStatement> = [
         { ...invokeStatement(), Effect: "Deny" },
         { ...invokeStatement(), Principal: { AWS: "arn:aws:iam::123456789012:root" } },
         { ...invokeStatement(), Action: ["lambda:InvokeFunction", "lambda:GetFunction"] },
@@ -445,24 +432,24 @@ describe.each(providerCopies)("the %s copy of the patched provider", (copy, prov
       expect(functionPolicyStatements('{"Statement":"x"}')).toBeUndefined();
     });
 
-    // The calls above drive the exported reconcile. This pins that the provider's own URL path is the one calling it:
-    // a patch regenerated without that hunk would keep every test above green and bring the gap back.
-    it.effect("is what this copy of the provider runs for a public function URL", () =>
-      Effect.gen(function* () {
-        const source = yield* copyText(copy);
-        const body = pipe(
-          source,
-          Str.split("const upsertPublicFunctionUrlPermissions = Effect.fn("),
-          A.get(1),
-          O.map(Str.split("const deleteFunctionUrl = ")),
-          O.flatMap(A.head),
-          O.getOrElse(() => "")
-        );
-        expect(Str.includes("yield* reconcileFunctionUrlPermissions({")(body)).toBe(true);
-        expect(Str.includes("declared: publicFunctionUrlPermissions")(body)).toBe(true);
-        expect(Str.includes("removePermission")(body)).toBe(false);
-        expect(Str.includes("yield* upsertPublicFunctionUrlPermissions(functionName, qualifier)")(source)).toBe(true);
-      })
+    it.effect(
+      "is what this copy's own public function URL path runs, so a patch regenerated without that hunk fails here",
+      () =>
+        Effect.gen(function* () {
+          const source = yield* copyTextViaViteRawImport(copy);
+          const body = pipe(
+            source,
+            Str.split("const upsertPublicFunctionUrlPermissions = Effect.fn("),
+            A.get(1),
+            O.map(Str.split("const deleteFunctionUrl = ")),
+            O.flatMap(A.head),
+            O.getOrElse(() => "")
+          );
+          expect(Str.includes("yield* reconcileFunctionUrlPermissions({")(body)).toBe(true);
+          expect(Str.includes("declared: publicFunctionUrlPermissions")(body)).toBe(true);
+          expect(Str.includes("removePermission")(body)).toBe(false);
+          expect(Str.includes("yield* upsertPublicFunctionUrlPermissions(functionName, qualifier)")(source)).toBe(true);
+        })
     );
   });
 });

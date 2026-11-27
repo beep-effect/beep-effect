@@ -12,7 +12,6 @@ const seriesOf = (name: string) =>
     )
   );
 
-// Read twice: both providers fresh, then only anthropic.
 const freshThenStale = Effect.fnUntraced(function* (gauge: Metric.Gauge<number>) {
   yield* replaceGaugeSeries(gauge, [
     [{ "beep.provider": "anthropic" }, 60],

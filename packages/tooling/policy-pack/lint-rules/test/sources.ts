@@ -258,8 +258,6 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
   "no-hand-rolled-canonical-json": {
     invalidCount: 16,
     messageIncludes: "hand-rolled JSON object text",
-    // The shapes of the census encoders E1 to E9 (goals/canonical-digest-owner),
-    // compact and newline padded.
     invalid: A.join(
       [
         "export const e1 = (entries: ReadonlyArray<readonly [string, unknown]>) =>",
@@ -314,9 +312,6 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
   "no-hand-rolled-git-gh-spawn": {
     invalidCount: 14,
     messageIncludes: "hand-rolled git or gh spawn",
-    // One site per shape the repo-cli and ai-metrics census found: a program
-    // literal in the first three arguments followed by argv, a runner spec, a
-    // Bun argv and the shared gh-CLI route.
     invalid: A.join(
       [
         'export const kitless = ChildProcess.make("git", ["status"], { cwd });',

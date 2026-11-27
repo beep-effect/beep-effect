@@ -250,9 +250,6 @@ const readDomain = Effect.fn("Vercel.Domain.read")(function* (
   );
 });
 
-/**
- * The domain on its target project, else on the `moveFrom` project.
- */
 const locateDomain = Effect.fn("Vercel.Domain.locate")(function* (props: DomainProps) {
   const onTarget = yield* readDomain(props.project, props.name, props.teamId);
   if (onTarget !== undefined || props.moveFrom === undefined) return onTarget;
@@ -291,18 +288,13 @@ export const DomainProvider = Provider.succeed(DomainClass, {
     if (output !== undefined) return yield* readDomain(output.projectId, output.name, olds.teamId);
     const state = yield* locateDomain(olds);
     if (state === undefined) return undefined;
-    // Domains carry no ownership marker: without prior state the domain is foreign,
-    // unless it is this resource's own previous generation (a delete-first replacement).
     return state.name === previous?.name && state.projectId === previous.projectId ? state : Unowned(state);
   }),
   diff: Effect.fn("Vercel.Domain.provider.diff")(function* ({ news, olds, output }) {
     if (!isResolved(news)) return undefined;
     if (news.name !== olds.name || news.teamId !== olds.teamId) {
-      // A domain belongs to one project at a time: a same-name replacement deletes first.
       return { action: "replace", deleteFirst: news.name === olds.name } as const;
     }
-    // An unverified domain plans an update on every deploy, so reconcile asks Vercel to
-    // verify it again once its DNS is in place, even when the props are unchanged.
     return output !== undefined && !output.verified ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.Domain.provider.reconcile")(function* ({ news, output, session }) {
@@ -331,7 +323,6 @@ export const DomainProvider = Provider.succeed(DomainClass, {
       return yield* Effect.die(`Vercel domain ${news.name} is missing from project ${target.id} after reconcile`);
     }
     if (placed.verified) return placed;
-    // An unverified domain waits on DNS; a refused verification leaves the challenges in the output.
     return yield* projects.verifyProjectDomain({ idOrName: target.id, domain: news.name, ...scope }).pipe(
       Effect.map(toAttributes),
       Effect.catchTag("BadRequest", () => Effect.succeed(placed))

@@ -74,6 +74,13 @@ export interface WitnessShape {
 /**
  * Effect service that serves the bundled in-page witness script.
  *
+ * **Details**
+ *
+ * The served script reads each setting from `window.__BEEP_QA__` first, then
+ * the script-src query (`/witness.js?collector=...&cursor=0`), then the
+ * script tag's `data-*` attributes. A bare `?flag` with no `=` reads as the
+ * empty string and turns the flag on; only `0` and `false` turn it off.
+ *
  * **Example** (Get Witness layer)
  *
  * ```ts

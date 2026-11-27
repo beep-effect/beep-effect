@@ -71,9 +71,7 @@ const ok = (windows: ReadonlyArray<Record<string, unknown>>, asOf: string | null
   asOf,
 });
 
-// Shaped like `beep accounts status --json`, including the fields the
-// library ignores (identity, source, detail), which carry emails and paths.
-const reportDocument = (generatedAt: string, rows: ReadonlyArray<ReturnType<typeof row>>) => ({
+const accountsStatusJson = (generatedAt: string, rows: ReadonlyArray<ReturnType<typeof row>>) => ({
   schemaVersion: "accounts-status/v2",
   generatedAt,
   groups: [{ section: "mixed", rows }],
@@ -82,12 +80,11 @@ const reportDocument = (generatedAt: string, rows: ReadonlyArray<ReturnType<type
 const decodeReport = S.decodeUnknownEffect(AccountsReportInput);
 
 const sampleReport = decodeReport(
-  reportDocument(NOON, [
+  accountsStatusJson(NOON, [
     row("claude", "zed@example.com", ok([window("weekly", 40), window("session", 90)])),
     row("claude", "amy@example.com", ok([window("weekly", 70), scopedWindow("opus", 50), scopedWindow("sonnet", 10)])),
     row("codex", "work@example.com", { _tag: "NeedsLogin", detail: "login for work@example.com expired" }),
     row("grok", "x@example.com", { _tag: "Failed", detail: "timeout reading /home/x/.cli-proxy-api" }),
-    // A collector snapshot ten hours old: retained, so it keeps its own asOf.
     row("grok-bot", "bot@example.com", ok([window("weekly", 24)], "2026-10-14T02:00:00.000Z")),
   ])
 );
@@ -141,15 +138,19 @@ describe("reduceAccountHeadroom", () => {
         item.state,
         reasonOf(item.freshness),
       ]);
-      expect(items).toEqual([
-        ["claude", 1, "ok", "fresh"],
-        ["claude", 2, "ok", "fresh"],
-        ["codex", 1, "needs-login", "unreachable"],
-        ["grok", 1, "failed", "unreachable"],
-        ["grok-bot", 1, "ok", "stale"],
-      ]);
-      // amy sorts before zed, so ordinal 1 carries amy's 30% weekly headroom.
-      expect(A.map(accountItems(parcel)[0]?.windows ?? [], (window) => window.remainingPercent)).toEqual([30, 50, 90]);
+      expect(items, "a ten-hour-old collector snapshot is retained with its own asOf, so grok-bot reads stale").toEqual(
+        [
+          ["claude", 1, "ok", "fresh"],
+          ["claude", 2, "ok", "fresh"],
+          ["codex", 1, "needs-login", "unreachable"],
+          ["grok", 1, "failed", "unreachable"],
+          ["grok-bot", 1, "ok", "stale"],
+        ]
+      );
+      expect(
+        A.map(accountItems(parcel)[0]?.windows ?? [], (window) => window.remainingPercent),
+        "amy sorts before zed, so ordinal 1 carries amy's 30% weekly headroom"
+      ).toEqual([30, 50, 90]);
       const json = yield* encodeParcelEnvelopeJson(parcel);
       expect(pipe(json, Str.includes("@"))).toBe(false);
       expect(pipe(json, Str.includes("/home"))).toBe(false);
@@ -308,38 +309,34 @@ describe("Parcels.read", () => {
         ]);
         expect(readings).toContainEqual(["anthropic", "weekly"]);
         expect(readings).toContainEqual(["anthropic", "session"]);
-        // grok-bot's only reading is stale, so xai never gets a series.
-        expect(A.some(readings, ([provider]) => provider === "xai")).toBe(false);
+        expect(
+          A.some(readings, ([provider]) => provider === "xai"),
+          "grok-bot's only reading is stale, so xai never gets a series"
+        ).toBe(false);
         const weekly = A.findFirst(gauges, (metric) => metric.attributes?.["beep.window"] === "weekly");
-        // The best Claude account has 60% of its week left.
-        assertSome(
-          O.map(weekly, (metric) => metric.state),
-          { value: 60 }
-        );
-        // Each model group's weekly window is its own series, never merged into one max.
+        const bestClaudeAccountWeekly = O.map(weekly, (metric) => metric.state);
+        assertSome(bestClaudeAccountWeekly, { value: 60 });
         const scoped = A.filterMap(gauges, (metric) =>
           metric.attributes?.["beep.window"] === "weekly-scoped"
             ? Result.succeed([metric.attributes?.["beep.window_scope"], metric.state])
             : Result.failVoid
         );
-        expect(scoped).toHaveLength(2);
+        expect(scoped, "each model group's weekly window is its own series, never merged into one max").toHaveLength(2);
         expect(scoped).toContainEqual(["opus", { value: 50 }]);
         expect(scoped).toContainEqual(["sonnet", { value: 90 }]);
         assertSome(
           O.map(weekly, (metric) => metric.attributes?.["beep.window_scope"]),
           "all"
         );
-        // A private registry, so series other blocks recorded cannot leak in (the
-        // registry type is the Map Effect defines).
       }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))
     );
   });
 });
 
+const noFileResponses = Layer.mergeAll(FileSystem.layerNoop({}), Path.layer);
 const clientLayer = layerPalantiriClientInProcess.pipe(
   Layer.provide(parcelsWith(sampleInput.pipe(Effect.orDie))),
-  // Parcels never serve files, so the file-response support gets a no-op filesystem.
-  Layer.provide(Layer.mergeAll(FileSystem.layerNoop({}), Path.layer))
+  Layer.provide(noFileResponses)
 );
 
 describe("in-process client", () => {
@@ -374,10 +371,12 @@ describe("stale gauge series in a long-lived host", () => {
       yield* parcels.read("account-headroom");
       const providersOf8 = yield* providersOf;
       expect(providersOf8).toEqual(["anthropic"]);
-      // Same process, same registry: ten minutes on, every Claude reading is past its bound.
       yield* TestClock.adjust(Duration.minutes(10));
       const later = yield* parcels.read("account-headroom");
-      expect(A.every(later.items, (item) => item.freshness._tag === "Unknown")).toBe(true);
+      expect(
+        A.every(later.items, (item) => item.freshness._tag === "Unknown"),
+        "ten minutes on, every Claude reading is past its bound"
+      ).toBe(true);
       const providersOf9 = yield* providersOf;
       expect(providersOf9).toEqual([]);
     }).pipe(Effect.provideService(Metric.MetricRegistry, new Map()))

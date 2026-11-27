@@ -156,14 +156,15 @@ describe("sinceLastCheckCursor", () => {
     expect(parcel.receipt.total).toBe(4);
     expect(parcel.summary).toContain("2 newer changes pending, read again");
     assertSome(sinceLastCheckCursor(busy, NOW, 2), minutesAgo(40));
-    // The next read from that cursor serves the two held back, then reaches now.
     const next = SinceLastCheckInput.make({ ...busy, cursor: O.some(minutesAgo(40)) });
-    expect(A.map(changes(reduceSinceLastCheck(next, NOW, 2)), (change) => change.lane)).toEqual(["lane-d", "lane-c"]);
+    expect(
+      A.map(changes(reduceSinceLastCheck(next, NOW, 2)), (change) => change.lane),
+      "the next read from that cursor serves the two held back"
+    ).toEqual(["lane-d", "lane-c"]);
     assertSome(sinceLastCheckCursor(next, NOW, 2), NOW);
   });
 
   it("never splits changes that share the boundary timestamp", () => {
-    // [a@t2, b@t2, c@t1] with budget 2: serving [b, c] and moving to t2 would lose a.
     const tied = SinceLastCheckInput.make({
       cursor: O.some(minutesAgo(60)),
       lane: "main",
@@ -171,7 +172,10 @@ describe("sinceLastCheckCursor", () => {
       inbox: [],
       inboxReadable: true,
     });
-    expect(A.map(changes(reduceSinceLastCheck(tied, NOW, 2)), (change) => change.lane)).toEqual(["lane-c"]);
+    expect(
+      A.map(changes(reduceSinceLastCheck(tied, NOW, 2)), (change) => change.lane),
+      "[a@t2, b@t2, c@t1] with budget 2: serving [b, c] and moving to t2 would lose a"
+    ).toEqual(["lane-c"]);
     assertSome(sinceLastCheckCursor(tied, NOW, 2), minutesAgo(30));
     const next = SinceLastCheckInput.make({ ...tied, cursor: O.some(minutesAgo(30)) });
     expect(
@@ -205,9 +209,7 @@ describe("sinceLastCheckCursor", () => {
 });
 
 describe("Parcels.read since-last-check", () => {
-  // An in-memory cursor store: `read` serves the stored cursor, `advance`
-  // replaces it.
-  const cursorStore = Effect.gen(function* () {
+  const inMemoryCursorStore = Effect.gen(function* () {
     const cursor = yield* Ref.make(O.none<DateTime.Utc>());
     const source = SinceLastCheckSource.of({
       read: Effect.fn("SinceLastCheckSource.memory.read")(() =>
@@ -228,7 +230,7 @@ describe("Parcels.read since-last-check", () => {
     return Layer.succeed(SinceLastCheckSource, source);
   });
 
-  it.layer(layerParcels.pipe(Layer.provide(Layer.merge(failingSources, Layer.unwrap(cursorStore)))), {
+  it.layer(layerParcels.pipe(Layer.provide(Layer.merge(failingSources, Layer.unwrap(inMemoryCursorStore)))), {
     timeout: "30 seconds",
   })("with a cursor store", (it) => {
     it.effect("needs a session id, then advances the cursor on read", () =>

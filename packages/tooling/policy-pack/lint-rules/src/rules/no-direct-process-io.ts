@@ -20,10 +20,6 @@ import {
 import type { ESTree } from "@oxlint/plugins";
 import type { AstNode, MaybeNode } from "./utils.ts";
 
-// These calls run at synchronous host boundaries: the IPC guard and error reporter
-// cannot yield an Effect; the full and slim CI CLI entrypoints exit after stream drain;
-// docgen forces a successful exit after its runtime has completed.
-// Match both file and operation so a new direct write in either entrypoint is flagged.
 const HOST_OPERATIONS: ReadonlyArray<readonly [path: string, operation: string]> = [
   ["apps/professional-desktop/server/IpcStdoutGuard.prelude.ts", "process.stderr.write"],
   ["packages/foundation/capability/observability/src/server/ErrorReporting.ts", "process.stderr.write"],
@@ -40,6 +36,15 @@ const productionTypeScript = (path: string): boolean =>
 
 /**
  * Blocks direct process output and termination in production TypeScript.
+ *
+ * **Details**
+ *
+ * A few synchronous host boundaries keep one named direct call each, exempt
+ * by file and operation together, so a new direct write in either is still
+ * flagged: the desktop IPC stdout guard and the server error reporter write to
+ * stderr because they cannot yield an Effect, the full and slim CI CLI
+ * entrypoints write and exit after their streams drain, and docgen forces a
+ * successful exit once its runtime has completed.
  *
  * **Example** (Find the runtime boundary rule)
  *

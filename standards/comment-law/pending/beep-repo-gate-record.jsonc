@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/repo-gate-record",
-  "root": "packages/tooling/library/repo-gate-record",
-  "scopes": ["."]
-}

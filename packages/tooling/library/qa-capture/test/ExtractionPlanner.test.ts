@@ -302,11 +302,10 @@ describe("@beep/qa-capture extraction planner", () => {
     });
 
     const gifs = A.filter(requests, (request) => request.kind === "render-gif");
-    // Both the drag and marker rules request GIFs for this two-window fixture.
-    expect(A.map(gifs, (gif) => gif.request.outPath)).toEqual([
-      "/round/clips/drag-w0.gif",
-      "/round/clips/marker-w1.gif",
-    ]);
+    expect(
+      A.map(gifs, (gif) => gif.request.outPath),
+      "both the drag and marker rules request GIFs for this two-window fixture"
+    ).toEqual(["/round/clips/drag-w0.gif", "/round/clips/marker-w1.gif"]);
     expect(A.map(gifs, (gif) => gif.request.videoPath)).toEqual([
       "/round/video/capture.webm",
       "/round/video/capture.webm",
@@ -320,9 +319,6 @@ describe("@beep/qa-capture extraction planner", () => {
     });
   });
 
-  // A seek at exactly the container duration decodes no frame and one failed
-  // endpoint seek discards the whole staged strip, so windows extending past
-  // the recording must clamp short of the endpoint.
   it("keeps frame seeks and gif starts away from the exact video endpoint", () => {
     const events = eventsForGesture({ distancePx: 40, durationMs: 1000, kind: "drag", startOffsetMs: 5000 }, 0);
     const plan = buildExtractionPlan(BuildExtractionPlanOptions.make({ events }));
@@ -354,9 +350,10 @@ describe("@beep/qa-capture extraction planner", () => {
     expect(A.length(strips)).toBeGreaterThan(0);
     A.forEach(strips, (strip) => {
       if (strip.kind === "extract-frames-at") {
-        // Every seek of this fully-past-the-end window lands on the guarded
-        // bound — never on the undecodable container endpoint itself.
-        expect(strip.request.timestampsSeconds).toEqual([guarded]);
+        expect(
+          strip.request.timestampsSeconds,
+          "a window past the end seeks the guarded bound, never the container endpoint"
+        ).toEqual([guarded]);
       }
     });
     A.forEach(requests, (request) => {

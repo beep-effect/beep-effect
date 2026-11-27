@@ -42,33 +42,32 @@ const $I = $LintRulesId.create("rules/utils");
  */
 export const makeIdentifierShadowTracker = (names: ReadonlyArray<string>) => {
   const tracked = HashSet.fromIterable(names);
-  // `current` is the innermost scope; `enclosing` holds its ancestors, outermost first.
-  // Keeping the innermost scope outside the stack means it always exists, so no lookup
-  // needs an empty-stack fallback.
-  const enclosing: Array<MutableHashSet.MutableHashSet<string>> = [];
-  let current = MutableHashSet.empty<string>();
+  const ancestorScopesOutermostFirst: Array<MutableHashSet.MutableHashSet<string>> = [];
+  let innermostScope = MutableHashSet.empty<string>();
   const reset = () => {
-    enclosing.length = 0;
-    current = MutableHashSet.empty<string>();
+    ancestorScopesOutermostFirst.length = 0;
+    innermostScope = MutableHashSet.empty<string>();
   };
   const pushScope = (params: ReadonlyArray<ESTree.ParamPattern>) => {
-    enclosing.push(current);
-    current = MutableHashSet.empty<string>();
+    ancestorScopesOutermostFirst.push(innermostScope);
+    innermostScope = MutableHashSet.empty<string>();
     for (const param of params) {
-      if (param.type === "Identifier" && HashSet.has(tracked, param.name)) MutableHashSet.add(current, param.name);
+      if (param.type === "Identifier" && HashSet.has(tracked, param.name))
+        MutableHashSet.add(innermostScope, param.name);
     }
   };
   const popScope = () => {
-    const parent = enclosing.pop();
-    if (parent !== undefined) current = parent;
+    const parent = ancestorScopesOutermostFirst.pop();
+    if (parent !== undefined) innermostScope = parent;
   };
   const recordDeclarator = (node: ESTree.VariableDeclarator) => {
     if (node.id.type === "Identifier" && HashSet.has(tracked, node.id.name)) {
-      MutableHashSet.add(current, node.id.name);
+      MutableHashSet.add(innermostScope, node.id.name);
     }
   };
   const isShadowed = (name: string): boolean =>
-    MutableHashSet.has(current, name) || A.some(enclosing, (scope) => MutableHashSet.has(scope, name));
+    MutableHashSet.has(innermostScope, name) ||
+    A.some(ancestorScopesOutermostFirst, (scope) => MutableHashSet.has(scope, name));
   const visitors = {
     FunctionDeclaration: (node: ESTree.Function) => pushScope(node.params),
     "FunctionDeclaration:exit": popScope,
@@ -128,7 +127,6 @@ export type AstNode =
  */
 export type MaybeNode = AstNode | null | undefined;
 
-/** Expression wrappers the parser interposes; `unwrapExpression` peels them. */
 type ExpressionWrapper =
   | ESTree.ChainExpression
   | ESTree.ParenthesizedExpression
@@ -228,10 +226,8 @@ export const unwrapMemberExpression = (node: MaybeNode): O.Option<MemberAccess> 
       : O.none()
   );
 
-/** Identifier-shaped nodes whose textual name lives on the `.name` field. */
 const NAME_BEARING_TYPES = HashSet.fromIterable(["Identifier", "PrivateIdentifier"]);
 
-// Lift the carried slot of an identifier (`.name`) or literal (`.value`), when it is a string.
 const carriedSlot = (expression: AstNode): unknown =>
   HashSet.has(NAME_BEARING_TYPES, expression.type) && "name" in expression
     ? expression.name
@@ -462,7 +458,6 @@ export const classifyImportSpecifier = (
         : O.none(),
   });
 
-// Normalize OS path separators to forward slashes so comparisons are platform-stable.
 const normalizePath = (path: string): string => Str.replaceAll("\\", "/")(path);
 
 /**

@@ -213,8 +213,6 @@ const publicExportNames = (node: ESTree.Statement): ReadonlyArray<string> =>
     Match.orElse(() => [])
   );
 
-// This mirrors the old publicOnly behavior for declarations reached by export specifiers,
-// default exports, and public class methods; constructors and private methods are exempt.
 const publicVisitor = (check: (node: ESTree.Node) => void): Visitor => {
   let publicNames = HashSet.empty<string>();
   const isModulePublic = (node: ESTree.Node): boolean =>
@@ -250,7 +248,6 @@ const publicVisitor = (check: (node: ESTree.Node) => void): Visitor => {
   };
 };
 
-// Shared AST attachment is computed once for each parsed comment; each rule owns its check.
 type CommentCheck = (context: Context, comment: ESTree.Comment, block: Block, node: O.Option<ESTree.Node>) => void;
 const reportComment = (context: Context, comment: ESTree.Comment, message: string): void =>
   context.report({ loc: comment.loc, message });
@@ -531,14 +528,12 @@ const typedReturnValue = (fn: ESTree.Function | ESTree.ArrowFunctionExpression):
   const type = fn.returnType?.typeAnnotation;
   return type !== undefined && type.type !== "TSVoidKeyword" && type.type !== "TSNeverKeyword";
 };
-// `return` followed on the same line by a value (`return x`, `return(x)`); a bare
-// `return;` or `return` before a newline (ASI returns undefined) carries no value.
-const RETURNS_VALUE = /\breturn\b[ \t]*[^\s;}]/;
+const RETURN_WITH_VALUE_ON_SAME_LINE = /\breturn\b[ \t]*[^\s;}]/;
 const returnsValue = (context: Context, fn: ESTree.Function | ESTree.ArrowFunctionExpression): boolean =>
   fn.async ||
   (fn.type === "ArrowFunctionExpression" && fn.body?.type !== "BlockStatement") ||
   typedReturnValue(fn) ||
-  RETURNS_VALUE.test(
+  RETURN_WITH_VALUE_ON_SAME_LINE.test(
     O.fromNullishOr(fn.body).pipe(
       O.map(context.sourceCode.getText),
       O.getOrElse(() => "")
@@ -549,7 +544,6 @@ const checkRequireReturns: CommentCheck = (context, comment, block, node) => {
   if (O.isNone(fn) || hasInheritedDescription(block) || A.isReadonlyArrayNonEmpty(tagsNamed(block, "returns"))) return;
   if (returnsValue(context, fn.value)) reportComment(context, comment, "Missing JSDoc @returns declaration.");
 };
-// TSDoc syntax remains the separate parser-backed rule in docs.index.ts.
 const ruleVisitors: Readonly<Record<Exclude<DocsRuleId, "tsdoc-syntax">, (context: Context) => Visitor>> = {
   "require-jsdoc": requireJsdoc,
   "require-category-tag": requireCategoryTag,
@@ -569,6 +563,16 @@ const ruleVisitors: Readonly<Record<Exclude<DocsRuleId, "tsdoc-syntax">, (contex
 /**
  * Build one content or declaration documentation rule without an ESLint dependency.
  *
+ * **Details**
+ *
+ * `require-jsdoc` checks exported declarations, declarations a local export
+ * specifier or default export names, and the public methods of such classes;
+ * constructors and private methods are exempt. `check-tag-names` accepts the
+ * eslint-plugin-jsdoc TypeScript-mode vocabulary, aliases included, and reports
+ * a tag that has a preferred spelling. `require-returns` counts a `return`
+ * only when a value follows on the same line: a bare `return` before a newline
+ * returns undefined. `tsdoc-syntax` is the separate parser-backed rule.
+ *
  * **Example** (Inspect a documentation rule)
  * ```ts
  * import { docsRule } from "@beep/lint-rules/oxlint-docs"
@@ -585,7 +589,6 @@ export const docsRule = (id: Exclude<DocsRuleId, "tsdoc-syntax">) =>
     create: ruleVisitors[id],
   });
 
-// Vocabulary from eslint-plugin-jsdoc TypeScript mode; aliases remain accepted except explicit preferences.
 const validTags = HashSet.fromIterable([
   "modifies",
   "abstract",

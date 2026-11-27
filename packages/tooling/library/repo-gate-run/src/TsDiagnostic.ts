@@ -39,7 +39,6 @@ const $I = $RepoGateRunId.create("TsDiagnostic");
 export const tsDiagnosticPattern =
   /^(?<file>[^:\n]+):(?<line>\d+):(?<column>\d+)(?:\s+-)?\s+(?<severity>error|warning)\s+TS(?<code>\d+):\s+(?<message>.+)$/u;
 
-// The file runs to the final `(line,column):` delimiter, so a path may hold parentheses.
 const plainDiagnosticPattern =
   /^(?<file>[^\n]+)\((?<line>\d+),(?<column>\d+)\):\s+(?<severity>error|warning)\s+TS(?<code>\d+):\s+(?<message>.+)$/u;
 

@@ -224,13 +224,18 @@ describe("cache qualification policy", () => {
     const pin = (version: string) => ({ version, sha256: digest(1), namespace: "fixture-stable" });
     assertTrue(isPin(pin("2.10.12")));
     assertTrue(isPin(pin("2.11.5-canary.2")));
-    // Intended shift: the previous inline regex accepted these, but SemVer forbids leading zeros, empty
-    // prerelease identifiers and integers past Number.MAX_SAFE_INTEGER.
-    for (const version of ["02.10.12", "2.10.012", "2.10.12-01", "2.10.12-a..b", "9007199254740992.0.0"]) {
+    const semverForbidsButOldRegexAccepted = [
+      "02.10.12",
+      "2.10.012",
+      "2.10.12-01",
+      "2.10.12-a..b",
+      "9007199254740992.0.0",
+    ];
+    for (const version of semverForbidsButOldRegexAccepted) {
       expect(isPin(pin(version)), version).toBe(false);
     }
-    // Unchanged: the previous regex rejected these too (no build metadata, no `v` prefix, no dist-tags).
-    for (const version of ["2.10.12+build", "v2.10.12", "latest"]) {
+    const rejectedByOldRegexToo = ["2.10.12+build", "v2.10.12", "latest"];
+    for (const version of rejectedByOldRegexToo) {
       expect(isPin(pin(version)), version).toBe(false);
     }
   });
