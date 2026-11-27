@@ -1,20 +1,3 @@
-// `Sbom.generate` admits the whole document through one `SbomDocument.make`
-// (W4-b): its inputs are already admitted components, and that single `make`
-// validates and copies them once. The work is the document's node count, so it
-// is exactly affine in components: the root, carried on the metadata, plus one
-// node per dependency. A later edit that re-admitted each component (a
-// `Component.make` in the sort, or a per-component document) would double that
-// slope without failing any behavioural test. Two guards hold it:
-//
-// - the counter: a counting `admission.admit` adds the node count of every
-//   value it is handed, then calls through, so the work through the seam is
-//   pinned at exactly n + 1;
-// - the source scan: the counter only sees the seam, so a direct `.make`
-//   inside `src/Sbom.ts` would bypass the tally. The scan reads the module's
-//   raw text and requires one `admission.admit` call and no other schema
-//   `make`, which leaves the seam the only construction path the counter
-//   needs to see.
-
 import { admission } from "@beep/sbom/internal/admission";
 import { Sbom } from "@beep/sbom/Sbom";
 import { Component } from "@beep/sbom/SbomDocument";
@@ -31,24 +14,10 @@ import { sourceOf } from "./support/sourceGraph.ts";
 import type { SbomDocument } from "@beep/sbom/SbomDocument";
 import type * as S from "effect/Schema";
 
-/**
- * The nodes an admission walks: a document's components and the root on its
- * metadata, or one for any single component.
- */
 const nodesOf = (input: unknown): number =>
   P.hasProperty(input, "components") && A.isArray(input.components) ? input.components.length + 1 : 1;
 
-/**
- * The admission work of one build: the summed node counts every admission was
- * handed while it ran.
- *
- * **Gotchas**
- *
- * The counter replaces `admit` on the package's own `admission` object, not a
- * schema's `make`: `make` memoizes itself as a non-configurable own property on
- * first read, so under coverage's shared, non-isolated worker any earlier test
- * that built a document would make it impossible to wrap.
- */
+// decision: admission-counted-through-the-seam
 class AdmissionCount extends Context.Service<
   AdmissionCount,
   { readonly admissionsOf: (build: () => unknown) => Effect.Effect<number> }
@@ -59,8 +28,6 @@ class AdmissionCount extends Context.Service<
       Effect.sync(() => {
         const tally = MutableRef.make(0);
         const admit = admission.admit;
-        // A plain swap rather than `vi.spyOn`: a spy records every call's
-        // arguments and result, which would retain each admitted document.
         admission.admit = <Self extends S.Top>(schema: Self, input: Self["~type.make.in"]): Self["Type"] => {
           MutableRef.update(tally, (count) => count + nodesOf(input));
           return admit(schema, input);
@@ -91,10 +58,6 @@ const dependencies = A.makeBy(5_000, (index) =>
   Component.make({ type: "library", name: `dep-${index}`, version: "1.0.0", bomRef: `dep-${index}@1.0.0` })
 );
 
-/**
- * A deliberately re-admitting builder: it admits each component again before
- * the document, the shape a `Component.make` inside the sort would take.
- */
 const readmittingGenerate = (components: ReadonlyArray<Component>): SbomDocument =>
   Sbom.generate({ root, components: A.map(components, (component) => admission.admit(Component, component)) });
 
@@ -108,7 +71,7 @@ describe("Sbom.generate admission", () => {
         const none = yield* generateOf(A.empty());
         const small = yield* generateOf(A.take(dependencies, 1_000));
         const large = yield* generateOf(dependencies);
-        assert.strictEqual(none, 1, "the root on the metadata");
+        assert.strictEqual(none, 1, "a document walks its components plus the root on its metadata");
         assert.strictEqual(small, none + 1_000, `admissions(1k) = ${small}`);
         assert.strictEqual(large, none + 5_000, `admissions(5k) = ${large}`);
       })
@@ -120,25 +83,25 @@ describe("Sbom.generate admission", () => {
         const none = yield* admissionsOf(() => readmittingGenerate(A.empty()));
         const small = yield* admissionsOf(() => readmittingGenerate(A.take(dependencies, 1_000)));
         assert.strictEqual(none, 1);
-        assert.strictEqual(small, none + 2 * 1_000, "each component is walked twice");
+        assert.strictEqual(
+          small,
+          none + 2 * 1_000,
+          "each component is walked twice, as a Component.make in the sort would"
+        );
       })
     );
   });
 });
 
-// Top-of-line comment and doc lines, so JSDoc examples that call
-// `Component.make` and prose that names it do not count as code.
 const COMMENT_LINE = /^\s*(?:\/\/|\/\*\*?|\*).*$/gm;
 
-// Any `<Name>.make` reference, called or passed point-free.
 const MAKE_REFERENCE = /\b([A-Za-z_$][\w$]*)\s*\.\s*make\b/g;
 
 const SEAM_CALL = /\badmission\s*\.\s*admit\s*\(/g;
 
-// `make`s that construct no document node: the write error and an `Order`.
 const NON_ADMITTING_MAKES = HashSet.make("SbomWriteError", "Order");
 
-/** The construction paths one module's code takes: direct schema `make`s and calls through the seam. */
+// decision: admission-counted-through-the-seam
 const constructionsOf = (
   source: string
 ): { readonly directMakes: ReadonlyArray<string>; readonly seamCalls: number } => {
@@ -177,7 +140,11 @@ describe("Sbom.generate construction path", () => {
       "\n"
     );
     const { directMakes, seamCalls } = constructionsOf(fixture);
-    assert.deepStrictEqual(directMakes, ["Component", "SbomMetadata"]);
+    assert.deepStrictEqual(
+      directMakes,
+      ["Component", "SbomMetadata"],
+      "a called and a point-free make both count; Order.make builds no node"
+    );
     assert.strictEqual(seamCalls, 1);
   });
 });

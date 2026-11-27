@@ -380,7 +380,6 @@ export type MentionSource = (
   query: string
 ) => ReadonlyArray<typeof MentionOption.Encoded> | Promise<ReadonlyArray<typeof MentionOption.Encoded>>;
 
-// Type guard backing the {@link MentionSource} schema's `S.declare`.
 const isMentionSource = (u: unknown): u is MentionSource => P.isFunction(u);
 
 /**

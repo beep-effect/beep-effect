@@ -17,7 +17,6 @@ const ESC = String.fromCharCode(0x1b);
 
 interface Setup {
   readonly audience: AudienceKind;
-  /** Provide `CurrentRuntimeEnv` with this CI; omitted, the service is not in the environment at all. */
   readonly ci?: "github-actions" | "generic" | "none";
   readonly glyphs?: "unicode" | "ascii";
   readonly stderr?: Partial<StreamEnv>;
@@ -56,15 +55,16 @@ const layers = (setup: Setup) => {
   );
 };
 
-/** Run an effect needing the render services, with a captured Console. */
 const under = Effect.fn("under")(function* <A>(
   setup: Setup,
   effect: Effect.Effect<A, never, CliTheme | TerminalEnv | Audience | CliLinks>
 ) {
   const { double, out, err } = capturing();
-  // These layers contain only pure Layer.succeed doubles; no resource is acquired per call.
-  const context = yield* Layer.build(layers(setup));
-  const value = yield* effect.pipe(Effect.provideContext(context), Effect.provideService(Console.Console, double));
+  const pureDoublesContext = yield* Layer.build(layers(setup));
+  const value = yield* effect.pipe(
+    Effect.provideContext(pureDoublesContext),
+    Effect.provideService(Console.Console, double)
+  );
   return { value, out, err };
 });
 
@@ -283,7 +283,6 @@ describe("Doc.print: the stream", () => {
       assert.include(toStderr.err[0] ?? "", `${ESC}[`);
       const toStdout = yield* print(setup, { stream: "stdout" });
       assert.notInclude(toStdout.out[0] ?? "", ESC);
-      // And the other way round.
       const reversed: Setup = { audience: "human", stdout: { color: "basic" }, stderr: { color: "none" } };
       assert.notInclude((yield* print(reversed, { stream: "stderr" })).err[0] ?? "", ESC);
       assert.include((yield* print(reversed, { stream: "stdout" })).out[0] ?? "", `${ESC}[`);
@@ -322,9 +321,12 @@ describe("Render.context", () => {
       assert.strictEqual(err.color, "basic");
       assert.strictEqual(out.glyphs, Glyphs.ascii);
       assert.strictEqual(out.displayPath("/a/b"), "/a/b");
-      // The context paints with the stream's own level.
       const red = { fg: "#ff0000" } as const;
-      assert.strictEqual(out.paint(red, "x"), `${ESC}[38;5;196mx${ESC}[39m`);
+      assert.strictEqual(
+        out.paint(red, "x"),
+        `${ESC}[38;5;196mx${ESC}[39m`,
+        "the context paints with the stream's own level"
+      );
       assert.strictEqual(err.paint(red, "x"), `${ESC}[91mx${ESC}[39m`);
     })
   );
@@ -358,12 +360,11 @@ describe("Render.context", () => {
         Render.context("stdout")
       )).value;
       assert.strictEqual(agent.link(target, "a.ts"), "a.ts");
-      // A hyperlink-capable stderr does not light up stdout.
       const mixed = (yield* under(
         { audience: "human", stdout: { hyperlinks: false }, stderr: { hyperlinks: true } },
         Render.context("stdout")
       )).value;
-      assert.strictEqual(mixed.link(target, "a.ts"), "a.ts");
+      assert.strictEqual(mixed.link(target, "a.ts"), "a.ts", "a hyperlink-capable stderr does not light up stdout");
     })
   );
 });
@@ -393,9 +394,12 @@ describe("the width", () => {
     Effect.gen(function* () {
       const { out } = yield* print({ audience: "human", stdout: { columns: O.some(40), color: "none" } });
       assert.isAtMost(longest(out[0] ?? ""), 40);
-      // Control: the same document is wider when unbounded, so the cut above is the width at work.
       const unbounded = yield* print({ audience: "agent", stdout: { columns: O.some(40) } });
-      assert.isAbove(longest(unbounded.out[0] ?? ""), 40);
+      assert.isAbove(
+        longest(unbounded.out[0] ?? ""),
+        40,
+        "control: wider when unbounded, so the cut above is the width at work"
+      );
     })
   );
 
@@ -406,9 +410,8 @@ describe("the width", () => {
         const ctx = (yield* under(setup, Render.context("stdout"))).value;
         assert.strictEqual(ctx.width, Number.POSITIVE_INFINITY, audience);
         const { out } = yield* print(setup);
-        // The long paragraph is one line, whole; the wide table cell is whole, and not shortened by an ellipsis.
-        assert.include(out[0] ?? "", WIDE, audience);
-        assert.notInclude(out[0] ?? "", "…", audience);
+        assert.include(out[0] ?? "", WIDE, `${audience}: the long paragraph is one line, whole`);
+        assert.notInclude(out[0] ?? "", "…", `${audience}: the wide table cell is not shortened by an ellipsis`);
         assert.strictEqual(
           pipe(
             out[0] ?? "",

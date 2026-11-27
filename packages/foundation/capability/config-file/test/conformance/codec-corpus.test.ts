@@ -1,25 +1,3 @@
-// Codec conformance over a frozen corpus of real repo config files.
-//
-// WHY THIS FILE EXISTS: the codecs' own tests use inputs authored against the
-// codecs. This suite parses verbatim copies of configuration files the repo
-// ships (biome, docgen, package.json, lefthook, a GitHub workflow, a models
-// manifest, Pulumi, osv-scanner, Cargo, the models locators) through
-// `JsoncCodec`, `YamlCodec` and `TomlCodec`, and compares each document with
-// the npm reference parser for its grammar: `jsonc-parser`, `yaml` and
-// `smol-toml`. The oracles are devDependencies of this suite only.
-//
-// `quote-led-continuation.yaml` holds the three shapes the wave-3 design
-// differential found mis-parsed (W3-d, fixed in #2116): a plain multi-line
-// scalar whose continuation line starts with a quote.
-//
-// Provenance: copied 2026-10-23 from the files named in each fixture's name
-// (effected-promotion wave 3, sub-wave 3-3). The full-repo differential is
-// `goals/effected-promotion/ops/config-file-codec-differential.ts`.
-//
-// Normalization: TOML date and time values compare as their ISO text without
-// fractional seconds, because `smol-toml` keeps milliseconds only and the
-// package keeps nanoseconds.
-
 import { JsoncCodec } from "@beep/config-file/JsoncCodec";
 import { TomlCodec } from "@beep/config-file/TomlCodec";
 import { YamlCodec } from "@beep/config-file/YamlCodec";
@@ -43,11 +21,11 @@ const isTomlTemporal = P.or(
   P.or(S.is(TomlLocalDateTime), S.is(TomlOffsetDateTime))
 );
 
-const dropFraction = Str.replace(/\.\d+(?=Z|[+-]\d{2}:\d{2}|$)/, "");
+const dropFractionalSeconds = Str.replace(/\.\d+(?=Z|[+-]\d{2}:\d{2}|$)/, "");
 
 const normalize = (value: unknown): unknown => {
-  if (isTomlTemporal(value)) return dropFraction(String(value));
-  if (P.isDate(value)) return dropFraction(value.toISOString());
+  if (isTomlTemporal(value)) return dropFractionalSeconds(String(value));
+  if (P.isDate(value)) return dropFractionalSeconds(value.toISOString());
   if (A.isArray(value)) return A.map(value, normalize);
   return P.isReadonlyObject(value) ? R.map(value, normalize) : value;
 };
@@ -78,7 +56,7 @@ const lanes: Readonly<Record<string, Lane>> = {
 
 const laneOf = (lane: string): Lane => O.getOrThrow(R.get(lanes, lane));
 
-describe("codec corpus", () => {
+describe("codec corpus: real repo config files parsed by each codec and compared with its npm reference parser", () => {
   it("holds the frozen corpus for every codec", () => {
     const counts = R.map(lanes, (_, lane) => A.length(A.filter(corpusFixtures, (fixture) => fixture.lane === lane)));
     expect(counts).toEqual({ jsonc: 4, yaml: 5, toml: 3 });
@@ -89,7 +67,10 @@ describe("codec corpus", () => {
       Effect.gen(function* () {
         const { codec, oracle } = laneOf(lane);
         const parsed = yield* codec.parse(text);
-        expect(normalize(parsed)).toEqual(normalize(oracle(text)));
+        expect(
+          normalize(parsed),
+          "temporals compare without fractional seconds: smol-toml keeps milliseconds, the package nanoseconds"
+        ).toEqual(normalize(oracle(text)));
       })
     );
 
@@ -104,7 +85,7 @@ describe("codec corpus", () => {
     );
   });
 
-  it.effect("keeps quote-led continuation lines inside plain scalars (W3-d)", () =>
+  it.effect("keeps a plain multi-line scalar whose continuation line starts with a quote", () =>
     Effect.gen(function* () {
       const parsed = yield* YamlCodec.parse(corpusText("yaml/quote-led-continuation.yaml"));
       expect(parsed).toEqual({ a: 'x "y"', b: "x 'y'", c: 'x, "y"];', d: 1 });

@@ -57,9 +57,11 @@ describe("BlobEnvelope", () => {
         result,
         Result.getOrThrowWith(result, (error) => error)
       );
-      // The length prefix counts BYTES, not characters; a code-unit count
-      // would slice the body at the wrong offset here.
-      assert.strictEqual(result.success.metadata.tag, "héllo — 🎉");
+      assert.strictEqual(
+        result.success.metadata.tag,
+        "héllo — 🎉",
+        "the length prefix counts bytes, not characters; a code-unit count would slice the body at the wrong offset"
+      );
       assert.deepStrictEqual([...result.success.body], [9]);
     });
 
@@ -97,9 +99,11 @@ describe("BlobEnvelope", () => {
 
   describe("legacy and version handling", () => {
     it("reports raw unframed bytes as notAnEnvelope, not as corrupt metadata", () => {
-      // This is what lets a store holding pre-envelope entries produce a
-      // clean miss instead of a garbage read.
-      assert.strictEqual(failure(bytes(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))._tag, "NotABlobEnvelopeError");
+      assert.strictEqual(
+        failure(bytes(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))._tag,
+        "NotABlobEnvelopeError",
+        "a store holding pre-envelope entries must produce a clean miss, not a garbage read"
+      );
     });
 
     it("reports an empty blob as notAnEnvelope", () => {
@@ -115,11 +119,13 @@ describe("BlobEnvelope", () => {
     });
 
     it("keys stay stable across revisions — the version is in the blob, not the key", () => {
-      // The property the design buys: a revision is detected on READ, so a
-      // consumer never has to namespace keys by format version.
       const frame = encoded({ tag: "t", durationMs: 1 }, bytes(1));
       frame[4] = 2;
-      assert.strictEqual(failure(frame)._tag, "UnsupportedBlobEnvelopeVersionError");
+      assert.strictEqual(
+        failure(frame)._tag,
+        "UnsupportedBlobEnvelopeVersionError",
+        "a revision is detected on read, so a consumer never namespaces keys by format version"
+      );
     });
   });
 
@@ -214,15 +220,18 @@ describe("BlobEnvelope", () => {
       }
     );
 
-    it.prop("arbitrary bytes never throw — they fail typed", [S.Uint8Array.check(S.isMaxLength(128))], ([input]) => {
-      // A corrupt cache entry must be a typed miss, never a defect.
-      const result = BlobEnvelope.decodeResult(input, Meta);
-      if (Result.isSuccess(result)) {
-        assertSuccess(result, result.success);
-      } else {
-        assertFailure(result, result.failure);
+    it.prop(
+      "arbitrary bytes never throw: a corrupt cache entry is a typed miss, never a defect",
+      [S.Uint8Array.check(S.isMaxLength(128))],
+      ([input]) => {
+        const result = BlobEnvelope.decodeResult(input, Meta);
+        if (Result.isSuccess(result)) {
+          assertSuccess(result, result.success);
+        } else {
+          assertFailure(result, result.failure);
+        }
+        return true;
       }
-      return true;
-    });
+    );
   });
 });

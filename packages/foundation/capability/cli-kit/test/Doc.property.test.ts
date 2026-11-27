@@ -40,20 +40,18 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, observe?: (value:
   );
 };
 
-// Opaque callbacks are preserved by reference by the codec. Exercise their
-// observable results as well, including callbacks nested inside containers.
-const callbacks = (block: Block): ReadonlyArray<unknown> => {
+const nestedCallbackResults = (block: Block): ReadonlyArray<unknown> => {
   const results: Array<unknown> = [];
   if ("overflow" in block && block.overflow !== undefined) results.push(block.overflow(3));
   if ("total" in block && block.total !== undefined) results.push(block.total(block.counters));
   switch (block._tag) {
     case "List":
-      return [...results, ...A.flatMap(block.items, callbacks)];
+      return [...results, ...A.flatMap(block.items, nestedCallbackResults)];
     case "Section":
-      return [...results, ...A.flatMap(block.children, callbacks)];
+      return [...results, ...A.flatMap(block.children, nestedCallbackResults)];
     case "Collapsible":
     case "Callout":
-      return [...results, ...A.flatMap(block.body, callbacks)];
+      return [...results, ...A.flatMap(block.body, nestedCallbackResults)];
     default:
       return results;
   }
@@ -66,7 +64,7 @@ describe("Doc schema round trips", () => {
   roundTrips("TreeNode", TreeNode);
   roundTrips("Column", Column);
   roundTrips("Counter", Counter);
-  roundTrips("Block", Block, callbacks);
+  roundTrips("Block", Block, nestedCallbackResults);
   roundTrips("AnnotationOptions", AnnotationOptions);
   roundTrips("CountsRow", CountsRow);
 

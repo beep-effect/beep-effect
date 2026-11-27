@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/epistemic-server",
   "review": {
-    "reviewer": "Claude Opus 5.5 (infra-alchemy-rebuild P6 retire lane)",
-    "reason": "Re-record the subjects whose Turbo inputs named the deleted infra/ workspace, and drop the @beep/infra subject; configuration review only, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
+    "reason": "Re-record the root subject and nine packages after their turbo.json files declared the files their tests read from other packages as test-task inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/infra-alchemy-p6-retire-cache-review-2026-11-25.md",
-      "sha256": "449a682ef1c70c6d316f5b30da98056bcfab1aad7ba0cd2f2987ed10acc9c466"
+      "path": "docs/reports/cross-package-reads-cache-review-2026-11-27.md",
+      "sha256": "459eea41e7a0bff558a2b9d51b9fbed2aa35592d9e88fb7519143a4a29130b4f"
     }
   },
   "nodes": [
@@ -593,6 +593,7 @@
           "!README.md",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../packages/_internal/db-admin/drizzle/**",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",
           "../../../tsconfig.json",
@@ -659,6 +660,7 @@
           "!.fallow/**",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../packages/_internal/db-admin/drizzle/**",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",
           "../../../tsconfig.json",
@@ -715,6 +717,7 @@
           "!.fallow/**",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../packages/_internal/db-admin/drizzle/**",
           "../../../standards/root-package.projection.generated.json",
           "../../../tsconfig.base.json",
           "../../../tsconfig.json",

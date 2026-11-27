@@ -21,8 +21,7 @@ import type { CliLinksShape, EditorLinks, LinkTargetInput } from "@beep/cli-kit"
 
 const Json = S.fromJsonString(S.Unknown);
 
-/** A message part as `Array#join` writes it: a nullish part is empty. */
-const joinPart = (part: unknown): string => (P.isNullish(part) ? "" : String(part));
+const arrayJoinPart = (part: unknown): string => (P.isNullish(part) ? "" : String(part));
 
 const ESC = String.fromCharCode(0x1b);
 const BEL = String.fromCharCode(7);
@@ -32,11 +31,10 @@ const ST = `${ESC}\\`;
 const warnings = (sink: Array<string>) =>
   Logger.layer([
     Logger.make(({ message }) => {
-      sink.push(A.isArray(message) ? A.join(A.map(message, joinPart), " ") : String(message));
+      sink.push(A.isArray(message) ? A.join(A.map(message, arrayJoinPart), " ") : String(message));
     }),
   ]);
 
-/** `CliLinks` over a memfs volume rooted at /repo (a .git dir), with an environment. */
 const links = (
   options: { readonly editorLinks?: EditorLinks; readonly envVar?: string } = {},
   env: Record<string, string> = {},

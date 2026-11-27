@@ -83,8 +83,6 @@ const decodeSessionSchemas = S.decodeUnknownEffect(S.Array(S.Struct({ catalog: S
 const SESSION_QUERY =
   "SELECT current_database() AS database, current_setting('search_path') AS searchPath, current_setting('TimeZone') AS timeZone, current_setting('Calendar') AS calendar";
 
-// DuckDB retains dangling qualified entries after DROP SCHEMA. Tokenize only
-// outside quoted identifiers, retaining each surviving entry verbatim.
 const searchPathEntries = (path: string): ReadonlyArray<string> =>
   pipe(
     path,
@@ -253,6 +251,28 @@ export const isDuckDbConnection = (u: unknown): u is DuckDbConnection => P.hasPr
  * never closed here; once the connection scope closes, every later statement
  * fails with `ConnectionError` without reaching it.
  *
+ * **Gotchas**
+ *
+ * - Once closed, `ScopedCache.get` interrupts its caller, so a statement that
+ *   outlives the client scope skips the cache; the closed gate then fails it
+ *   before it reaches the native connection, which the owner may be closing.
+ * - Cache invalidation and the session refresh run on every exit, failures
+ *   included: a later statement can fail after `USE`/`SET` already changed the
+ *   session. A failed snapshot read is kept until a later rollback or control
+ *   statement makes the session readable again.
+ * - A refused raw `COMMIT` rolls the transaction back itself before failing:
+ *   raw text has no `onCommitFailure` to clean up after the refusal.
+ * - `appendRows` creates its appender in `acquireUseRelease`'s uninterruptible
+ *   acquire, so creation never resolves after a cancelled caller and needs no
+ *   late-success close.
+ * - Multi-statement catalog-context streams run incrementally, which keeps
+ *   `native.stream`'s last result while the prepared cache is invalidated
+ *   under the op lock.
+ * - `normalizeSessionSnapshot` drops search-path entries whose schema no
+ *   longer exists, because DuckDB keeps dangling qualified entries after
+ *   `DROP SCHEMA`. It splits the path only outside quoted identifiers and keeps
+ *   each surviving entry verbatim.
+ *
  * **Example** (Wrap a native connection)
  *
  * ```ts
@@ -338,10 +358,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
           }).pipe(Scope.provide(cacheScope))
         )
       : O.none();
-  // Once closed, `ScopedCache.get` interrupts its caller, so a statement that
-  // outlives the client scope skips the cache; the closed gate then fails it
-  // with `ConnectionError` before it reaches the native connection, which the
-  // owner may be closing at that moment.
   const cacheClosed = MutableRef.make(false);
   yield* Scope.addFinalizer(
     connectionScope,
@@ -363,10 +379,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
     const direct = gate.runUnlocked(op, () =>
       native.run(sql, nativeBinds(binds), bindTypes(binds)).then((r) => read(r, converter))
     );
-    // DuckDB plans a parameterless prepared statement once, with the table
-    // statistics of that moment, so a constant filter pruned on an empty table
-    // stays empty after later writes. Only statements with binds are re-planned
-    // per execution, so only those use the cache.
     const viaCache = O.filter(
       cache,
       () => prepared && control === "statement" && binds.length > 0 && !MutableRef.get(cacheClosed)
@@ -397,9 +409,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
       run.pipe(
         Effect.onExit(
           Effect.fnUntraced(function* () {
-            // A later statement can fail after USE/SET has already changed the session.
-            // Invalidate on failure too, and retain a failed snapshot read until a
-            // subsequent rollback/control statement makes the session readable again.
             yield* invalidate;
             if (
               options.trackSession === true &&
@@ -415,9 +424,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
 
   const setIdle = Effect.sync(() => MutableRef.set(state, TransactionPhase.Idle()));
 
-  // Applies the commit decision of the current phase (D3): `commitNow` runs
-  // only when no failure was recorded, or the abort probe shows DuckDB still
-  // holds a healthy transaction; a refusal goes to `refuse`.
   const guardedCommit = <A>(
     commitNow: Effect.Effect<A, SqlError>,
     refuse: (error: SqlError) => Effect.Effect<never, SqlError>
@@ -443,8 +449,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
       })
     );
 
-  // A raw `COMMIT` has no `onCommitFailure` to clean up after a refusal, so the
-  // driver rolls the transaction back itself before failing.
   const rollBackThenFail = (error: SqlError): Effect.Effect<never, SqlError> =>
     runStatement("ROLLBACK", [], "rollbackTransaction", false, readRows, []).pipe(
       Effect.ensuring(setIdle),
@@ -567,8 +571,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
     appendRows: (request) =>
       gate.withLock(
         Effect.acquireUseRelease(
-          // `acquireUseRelease` runs this acquire uninterruptibly, so it never
-          // resolves after a cancelled caller and needs no late-success close.
           gate.runUnlocked("appendRows", () => native.createAppender(request.table, request.schema)),
           Effect.fnUntraced(function* (appender) {
             const types = yield* gate.runUnlocked("appendRows", () =>
@@ -651,8 +653,6 @@ export const makeConnection = Effect.fnUntraced(function* (options: ConnectionOp
           const control = classifyControl(sql);
           const refusal = readerStreamRefusal(options.readOnlyReader === true, sql, control);
           if (O.isSome(refusal)) return Effect.fail(refusal.value);
-          // Multi-statement catalog-context streams keep native.stream's last
-          // result while invalidating the prepared cache under its op lock.
           const incremental =
             control === "statement" || (control === "catalogContext" && splitStatements(sql).length > 1);
           if ((isTransaction() && options.readOnlyReader !== true) || !incremental) {

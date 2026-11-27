@@ -170,13 +170,10 @@ export declare namespace ExternalReference {
   export type Encoded = typeof ExternalReference.Encoded;
 }
 
-// A contact's email as CycloneDX carries it: an external-protocol string. The
-// 1.6 schema declares `format: idn-email`, but npm never validates a manifest
-// author's email, and the emitter passes the value through verbatim rather than
-// inventing a stricter rule (the `@beep/package-json` `ManifestEmail` precedent).
 const ContactEmail = S.String.pipe(
   $I.annoteSchema("ContactEmail", {
-    description: "A CycloneDX contact email: an external-protocol string passed through verbatim.",
+    description:
+      "A CycloneDX contact email: an external-protocol string passed through verbatim. npm never validates a manifest author's email, so the 1.6 schema's idn-email format is not enforced.",
   })
 );
 
@@ -489,28 +486,11 @@ export declare namespace SbomDocument {
   export type Encoded = typeof SbomDocument.Encoded;
 }
 
-/** Drop absent keys so the emitted JSON omits them rather than carrying nulls. */
 const compact = (value: Readonly<Record<string, unknown>>): Record<string, unknown> =>
   R.filter(value, P.isNotUndefined);
 
-/**
- * The `licenses` array in one of the three shapes CycloneDX permits.
- *
- * **Details**
- *
- * A manifest's `license` field is an SPDX **expression** field: `MIT`,
- * `MIT OR Apache-2.0` and `UNLICENSED` are all legal values of it, and the
- * specification renders them three different ways — `license.id` is constrained
- * to the SPDX identifier enumeration, an expression goes in a one-element
- * `{ expression }` tuple, and anything else is a named license. Emitting every
- * value as an id produces a document that looks right and validates wrong.
- *
- * The identifier-versus-expression question is `@beep/spdx`'s to answer:
- * the kit's one SPDX engine, never a local regex.
- */
+// decision: licenses-classified-by-beep-spdx
 const licensesJson = (licenses: ReadonlyArray<string>): ReadonlyArray<Record<string, unknown>> => {
-  // The expression tuple is exclusive — the schema caps it at one element — so
-  // it is only available when the component carries a single license.
   const [only, ...others] = licenses;
   if (only !== undefined && others.length === 0 && !License.isKnownId(only) && isValidExpression(only)) {
     return [{ expression: only }];
@@ -520,7 +500,6 @@ const licensesJson = (licenses: ReadonlyArray<string>): ReadonlyArray<Record<str
   );
 };
 
-/** `f` over a present optional field; an absent one stays absent, and `compact` drops it. */
 const optionally = <A, B>(value: A | undefined, f: (value: A) => B): B | undefined =>
   O.getOrUndefined(O.map(O.fromUndefinedOr(value), f));
 
@@ -538,8 +517,6 @@ const referenceJson = (reference: ExternalReference): Record<string, unknown> =>
 const componentJson = (component: Component): Record<string, unknown> =>
   compact({
     type: component.type,
-    // The rename. CycloneDX spells this key with a hyphen; the model cannot,
-    // so the translation lives here and nowhere else.
     "bom-ref": component.bomRef,
     name: component.name,
     version: component.version,
@@ -547,7 +524,6 @@ const componentJson = (component: Component): Record<string, unknown> =>
     publisher: component.publisher,
     copyright: component.copyright,
     authors: optionally(component.authors, contactsJson),
-    // `licenses` is an array of single-key wrappers, never bare strings.
     licenses: optionally(component.licenses, licensesJson),
     purl: component.purl,
     externalReferences: optionally(component.externalReferences, (references) => A.map(references, referenceJson)),

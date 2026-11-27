@@ -44,7 +44,6 @@ const levelsOf = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
     A.map((line) => Result.getOrThrow(S.decodeResult(LogLevelRecord)(line)).level)
   );
 
-/** Run `program` under a layer that needs nothing, with an optional env var and a captured Console. */
 const run = Effect.fn("run")(function* (
   layer: Layer.Layer<never>,
   env: Record<string, string> = {},
@@ -171,9 +170,8 @@ describe("CliLog.layer level option", () => {
 describe("CliLog.layer requirements follow the fixed format", () => {
   it.effect("format json needs neither Audience nor TerminalEnv", () =>
     Effect.gen(function* () {
-      // Assigned to a layer with an empty requirement: a leftover Audience or TerminalEnv would not compile.
-      const layer: Layer.Layer<never, never, never> = CliLog.layer({ format: "json", level: "Info" });
-      const { err } = yield* run(layer);
+      const pinnedToNoRequirements: Layer.Layer<never, never, never> = CliLog.layer({ format: "json", level: "Info" });
+      const { err } = yield* run(pinnedToNoRequirements);
       assert.deepStrictEqual(levelsOf(err), ["INFO", "WARN", "ERROR"]);
     })
   );

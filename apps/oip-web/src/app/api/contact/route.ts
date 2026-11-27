@@ -44,7 +44,6 @@ const readJsonContactPayload = Effect.fn("OipContact.readJsonContactPayload")(fu
 const rejectedJsonContactResponse = (response: ContactSubmissionResponse): Response =>
   Response.json(contactResponseBody(response), { status: contactJsonStatus(response) });
 
-// Effect v4 uses `Effect.catch` for catch-all recovery; the v3 `catchAll` name is not available here.
 const recoverRejectedJsonContactResponse = (response: ContactSubmissionResponse): Effect.Effect<Response> =>
   Effect.succeed(rejectedJsonContactResponse(response));
 

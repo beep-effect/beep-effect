@@ -70,13 +70,6 @@ export class MermaidRenderError extends S.TaggedError<MermaidRenderError, { read
   })
 ) {}
 
-/**
- * Upper bound on the diagram source Mermaid is asked to lay out.
- *
- * `mermaid.render` parses and lays the graph out synchronously on the main
- * thread. An assistant can emit arbitrarily large content, so oversized source
- * falls back to inert text before Mermaid is imported.
- */
 const maxSourceLength = 20_000;
 
 const oversizedMessage = (length: number): string =>
@@ -151,8 +144,7 @@ const cssComment = /\/\*[\s\S]*?\*\//gu;
 const cssEscape = /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\n\f\r0-9a-f]))/giu;
 const cssUrl = /url\s*\(/iu;
 const localFragmentUrl = /url\s*\(\s*(?:#([^"'()\s]+)|(["'])#([^"'()\s]+)\2)\s*\)/giu;
-// Stylesheets may only reference local fragments (`url(#id)`); every rule then
-// proves each target resolves to exactly one element inside the diagram root.
+// decision: mermaid-css-isolation
 const unsafeStylesheetToken =
   /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(\s*(?!#|["']#)/iu;
 const layoutOffsetProperties = HashSet.make(
@@ -387,8 +379,7 @@ const isSafeMermaidStyles = (styles: string, root: Element, renderId: string): b
     return Result.try(() => {
       const element = globalThis.document.createElement("style");
       style = O.some(element);
-      // The live document supplies a CSSOM sheet in browsers and jsdom. `not all`
-      // keeps untrusted selectors inactive while their parsed rules are inspected.
+      // decision: mermaid-css-isolation
       element.media = "not all";
       element.textContent = styles;
       globalThis.document.head.append(element);
@@ -510,8 +501,7 @@ const rewriteMermaidTreeAttributeReferences = (
   for (const element of root.querySelectorAll("*")) {
     for (const attribute of element.attributes) rewriteMermaidAttributeReferences(attribute, ids);
   }
-  // Theme stylesheets reference `<defs>` filters by fragment (mermaid 12's neo
-  // look), so their `url(#id)` targets must follow the namespaced ids too.
+  // decision: mermaid-css-isolation
   for (const style of root.querySelectorAll("style")) {
     const styles = normalizeCssTokens(style.textContent ?? "");
     if (cssUrl.test(styles)) style.textContent = rewriteLocalFragmentUrls(ids, styles);
@@ -667,7 +657,6 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
   return true;
 };
 
-/** `index` stays below `value.length`, so the fallback never runs; it only satisfies `Option`. */
 const zeroCodeUnit = constant(0);
 
 const hashString = (value: string): string => {
@@ -735,10 +724,6 @@ class MermaidRenderKey extends Data.Class<{
   readonly renderId: string;
   readonly source: string;
 }> {}
-
-// A structural family key keeps the async atom stable across React re-renders.
-// The family retains the atom weakly, so unmounting still interrupts obsolete
-// work through the registry without retaining every rendered source.
 const mermaidRenderAtom = Atom.family(({ renderId, source }: MermaidRenderKey) =>
   mermaidRuntime.atom(
     renderMermaid(renderId, source).pipe(
@@ -765,9 +750,7 @@ const renderFailure = (source: string, message: string): JSX.Element => (
 const renderSuccess = (svg: string): JSX.Element => (
   <div
     data-testid="mermaid-diagram"
-    // Paint containment makes this trusted wrapper the fixed-position containing
-    // block and clipping boundary even if a future renderer emits a class-based
-    // layout rule that the SVG policy does not recognize.
+    // decision: mermaid-css-isolation
     className="my-3 overflow-x-auto rounded border bg-background p-3 contain-paint"
     // biome-ignore lint/security/noDangerouslySetInnerHtml: DOMPurify sanitizes at the browser parser boundary and the inert SVG policy revalidates the exact bytes injected here. Owner: @beep/editor. Exit: Mermaid renders through a DOM node API instead of an SVG string.
     dangerouslySetInnerHTML={{ __html: svg }} // nosemgrep: typescript.react.security.audit.react-dangerouslysetinnerhtml.react-dangerouslysetinnerhtml -- DOMPurify and the inert SVG policy validate the exact bytes before this sink.
@@ -784,6 +767,12 @@ const renderPending = (): JSX.Element => (
  * Renders Mermaid source to SVG and falls back to source text on render
  * failure. Async lifecycle is owned by an interruptible Atom runtime rather
  * than app-authored React state/effect hooks.
+ *
+ * **Gotchas**
+ *
+ * The named source-length limit rejects oversized diagrams before importing Mermaid, whose synchronous parsing and graph layout can block the main thread. Oversized source stays inert text.
+ *
+ * A structural render key keeps the async atom stable across React re-renders. The family retains it weakly, allowing registry unmount interruption without retaining every rendered source.
  *
  * **Example** (Render mermaid diagram)
  *

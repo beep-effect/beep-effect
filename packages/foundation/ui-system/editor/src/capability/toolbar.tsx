@@ -16,6 +16,12 @@ import type { Platform, ResolvedEditorProfile } from "./schemas.ts";
 
 /** Renders every resolved toolbar command with text and shortcut metadata.
  *
+ * **Gotchas**
+ *
+ * Only format toggles carry aria-pressed; false on heading or undo buttons would misannounce them as toggles.
+ *
+ * Keep the closed O.none thunk in the pressed-state match: a direct generic O.none reference widens the result to `Option<unknown>` under docgen TypeScript.
+ *
  * **Example** (Reference the toolbar)
  * ```tsx
  * import { CapabilityToolbar } from "@beep/editor/capability/toolbar"
@@ -33,15 +39,11 @@ export function CapabilityToolbar({
 }): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const selection = useAtomValue(toolbarSelectionAtom(editor));
-  // Only the format toggles carry `aria-pressed`; emitting `false` on every
-  // button would announce headings/undo as toggle buttons.
   const pressed = Match.type<string>().pipe(
     Match.when("format.bold", () => O.some(selection.bold)),
     Match.when("format.italic", () => O.some(selection.italic)),
     Match.when("format.strikethrough", () => O.some(selection.strikethrough)),
     Match.when("format.inline-code", () => O.some(selection.code)),
-    // Bare `O.none` leaves its generic unresolved under docgen's tsc, widening
-    // the match to Option<unknown>; the closed thunk keeps Option<boolean>.
     Match.orElse(() => O.none())
   );
   return (

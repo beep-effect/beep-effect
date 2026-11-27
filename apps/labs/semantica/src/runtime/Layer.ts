@@ -30,9 +30,6 @@ const LoggingLive = Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)],
   mergeWithExisting: false,
 });
 
-// Bun's fetch aborts at ~300s by default even when the request carries a longer
-// AbortSignal; hosted-model generations over full papers routinely need more.
-// Bun honors this non-standard RequestInit extension to lift that ceiling.
 const FetchTimeoutDisabledLive = Layer.succeed(FetchHttpClient.RequestInit, { timeout: false } as RequestInit);
 
 const InfrastructureLive = Layer.mergeAll(
@@ -111,6 +108,10 @@ const C2CanaryLive = CanaryC2Live.pipe(
 /**
  * Bun runtime services, environment-decoded lab configuration, C0 input
  * services, and stderr logging.
+ *
+ * **Gotchas**
+ *
+ * Bun fetch otherwise aborts near 300 seconds even with a longer AbortSignal. Full-paper model generation needs longer, so the RequestInit timeout extension disables that ceiling.
  *
  * **Example** (Check the runtime layer)
  *

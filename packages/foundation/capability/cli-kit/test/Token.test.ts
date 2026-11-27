@@ -117,8 +117,7 @@ describe("NamedColor spells the bright variants as chalk and Ink do", () => {
   it("the old brightX spellings are gone", () => {
     // @ts-expect-error -- renamed to cyanBright. Owner: @beep/cli-kit. Exit: remove if the API is meant to accept this.
     const old: NamedColor = "brightCyan";
-    // Rendered as an unknown name, it is ignored rather than guessed at.
-    assert.strictEqual(paintStyle({ fg: old }, "basic", "x"), "x");
+    assert.strictEqual(paintStyle({ fg: old }, "basic", "x"), "x", "an unknown name is ignored rather than guessed at");
     for (const name of ["constructor", "__proto__", "toString", ""]) {
       assert.strictEqual(paintStyle({ fg: deliberatelyInvalid<NamedColor>(name) }, "truecolor", "x"), "x", name);
     }
@@ -142,9 +141,16 @@ describe("paintStyle", () => {
   });
 
   it("256 uses the nearest 38;5;n, deterministically", () => {
-    // Pure red is the cube corner (5,0,0); mid-gray is exactly on the grayscale ramp.
-    assert.strictEqual(paintStyle(Token.hex("#ff0000"), "256", "x"), "\x1b[38;5;196mx\x1b[39m");
-    assert.strictEqual(paintStyle(Token.hex("#808080"), "256", "x"), "\x1b[38;5;244mx\x1b[39m");
+    assert.strictEqual(
+      paintStyle(Token.hex("#ff0000"), "256", "x"),
+      "\x1b[38;5;196mx\x1b[39m",
+      "pure red is the cube corner (5,0,0)"
+    );
+    assert.strictEqual(
+      paintStyle(Token.hex("#808080"), "256", "x"),
+      "\x1b[38;5;244mx\x1b[39m",
+      "mid-gray is exactly on the grayscale ramp"
+    );
     assert.strictEqual(nearest256([224, 154, 78]), 173);
     assert.strictEqual(nearest256([224, 154, 78]), nearest256([224, 154, 78]));
   });
@@ -167,8 +173,11 @@ describe("paintStyle", () => {
   it("a painted span inside a painted span leaves the outer colour in force after it", () => {
     const inner = paintStyle({ fg: "green" }, "basic", "b");
     const outer = paintStyle({ fg: "red" }, "basic", `a${inner}c`);
-    // After the inner 39 the outer red is opened again, so "c" stays red.
-    assert.strictEqual(outer, "\x1b[31ma\x1b[32mb\x1b[39m\x1b[31mc\x1b[39m");
+    assert.strictEqual(
+      outer,
+      "\x1b[31ma\x1b[32mb\x1b[39m\x1b[31mc\x1b[39m",
+      "after the inner 39 the outer red is opened again"
+    );
   });
 
   it("a different attribute nested inside a colour does not disturb it", () => {

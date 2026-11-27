@@ -23,8 +23,11 @@ it.effect("CliLogStatusOptions keeps exact optional keys and plain construction"
     const omitted = CliLogStatusOptions.make({});
     assert.deepStrictEqual<unknown>(omitted, {});
     const full = CliLogStatusOptions.make({ level: "Info", indent: 1 });
-    // Own keys: only the given keys, and no tag is added.
-    assert.deepStrictEqual(A.sort(Struct.keys(full), Str.Order), ["indent", "level"]);
+    assert.deepStrictEqual(
+      A.sort(Struct.keys(full), Str.Order),
+      ["indent", "level"],
+      "only the given keys, and no tag is added"
+    );
     for (const value of [
       omitted,
       full,
@@ -41,7 +44,6 @@ it.effect("CliLogStatusOptions keeps exact optional keys and plain construction"
       const value1 = yield* S.encodeEffect(CliLogStatusOptions)(decoded);
       assert.deepStrictEqual(value1, encoded);
     }
-    // EF-40: a present key holding `undefined` is rejected.
     for (const value of [
       { level: undefined },
       { indent: undefined },
@@ -51,7 +53,7 @@ it.effect("CliLogStatusOptions keeps exact optional keys and plain construction"
       { indent: null },
       { indent: true },
     ]) {
-      assert.isFalse(S.is(CliLogStatusOptions)(value));
+      assert.isFalse(S.is(CliLogStatusOptions)(value), "a present key holding undefined, or a bad value, is rejected");
     }
   })
 );

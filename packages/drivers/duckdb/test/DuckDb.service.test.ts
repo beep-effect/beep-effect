@@ -38,8 +38,6 @@ import * as SqlClient from "effect/sql/SqlClient";
 import * as TestClock from "effect/testing/TestClock";
 import type { DuckDBConnection } from "@duckdb/node-api";
 
-// These two uses deliberately close the production layer before close-count assertions.
-// Suite teardown would occur after the oracle and change the lifecycle subject.
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -97,8 +95,6 @@ const makeLatch = (): Latch => {
 
 const awaitLatch = (latch: Latch): Effect.Effect<void> => Effect.promise(() => latch.promise);
 
-// Wall-clock waits: these tests coordinate with native promises, and `it.effect`
-// installs TestClock, so a bare `Effect.sleep` would never elapse.
 const liveSleep = (millis: number): Effect.Effect<void> =>
   Effect.sleep(Duration.millis(millis)).pipe(TestClock.withLive);
 
@@ -671,7 +667,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       );
 
       pipe(exit, Exit.isFailure, assertTrue);
-      expect(instanceCloseAttempts).toBe(1);
+      expect(instanceCloseAttempts, "the layer closed before this count is read, not at suite teardown").toBe(1);
     })
   );
 
@@ -704,7 +700,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
       }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))));
 
       expect(connectionCloseAttempts).toBe(1);
-      expect(instanceCloseAttempts).toBe(1);
+      expect(instanceCloseAttempts, "the layer closed before this count is read, not at suite teardown").toBe(1);
     })
   );
 
@@ -956,13 +952,14 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         );
         const sql = client.withoutTransforms();
 
-        // A bound statement fills the prepared cache, so a later `USE` would
-        // reach `invalidateAll` on the closed cache if invalidation ran.
         yield* sql`SELECT ${1} AS n`;
         yield* Scope.close(clientScope, Exit.void);
 
         const exit = yield* Effect.exit(sql.unsafe("USE memory"));
-        expect(Exit.hasInterrupts(exit)).toBe(false);
+        expect(
+          Exit.hasInterrupts(exit),
+          "the bound SELECT filled the prepared cache; USE after close must not reach invalidateAll on it"
+        ).toBe(false);
         assertSome(exit.pipe(Exit.findErrorOption, O.map(reasonTagOf)), "ConnectionError");
       })
     );
@@ -1333,51 +1330,52 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
     }).pipe(Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make))
   );
 
-  // A private TestClock per test: advancing a clock shared through it.layer
-  // would move every other test of that block (effect-vitest EV015).
-  it.effect("re-prepares a cached bound statement once its prepareCacheTTL expires", () =>
-    Effect.gen(function* () {
-      const events: Array<string> = [];
-      let prepared = 0;
-      const fakeConnection = {
-        closeSync: () => undefined,
-        interrupt: () => undefined,
-        prepare: () => {
-          prepared += 1;
-          const generation = prepared;
-          events.push(`prepare ${generation}`);
-          return Promise.resolve({
-            bind: () => undefined,
-            clearBindings: () => undefined,
-            destroySync: () => {
-              events.push(`destroy ${generation}`);
-            },
-            run: () => Promise.resolve(fakeQueryResult([{ generation }])),
-          });
-        },
-        run: () => Promise.resolve(setupResult),
-      };
-      const client = yield* DuckDbClient.fromConnection({
-        connection: fakeConnection as unknown as DuckDBConnection,
-        prepareCacheTTL: "50 millis",
-      });
-      const select = client.unsafe<{ readonly generation: number }>("select ? as generation", [1]);
+  it.effect(
+    "re-prepares a cached bound statement once its prepareCacheTTL expires, on a TestClock no other test shares",
+    () =>
+      Effect.gen(function* () {
+        const events: Array<string> = [];
+        let prepared = 0;
+        const fakeConnection = {
+          closeSync: () => undefined,
+          interrupt: () => undefined,
+          prepare: () => {
+            prepared += 1;
+            const generation = prepared;
+            events.push(`prepare ${generation}`);
+            return Promise.resolve({
+              bind: () => undefined,
+              clearBindings: () => undefined,
+              destroySync: () => {
+                events.push(`destroy ${generation}`);
+              },
+              run: () => Promise.resolve(fakeQueryResult([{ generation }])),
+            });
+          },
+          run: () => Promise.resolve(setupResult),
+        };
+        const client = yield* DuckDbClient.fromConnection({
+          connection: fakeConnection as unknown as DuckDBConnection,
+          prepareCacheTTL: "50 millis",
+        });
+        const select = client.unsafe<{ readonly generation: number }>("select ? as generation", [1]);
 
-      const select41 = yield* select;
-      expect(select41).toEqual([{ generation: 1 }]);
-      // A use inside the TTL reuses the statement and does not extend its lifetime.
-      yield* TestClock.adjust("30 millis");
-      const select42 = yield* select;
-      expect(select42).toEqual([{ generation: 1 }]);
-      yield* TestClock.adjust("20 millis");
-      const select43 = yield* select;
-      expect(select43).toEqual([{ generation: 2 }]);
-      expect(events).toEqual(["prepare 1", "destroy 1", "prepare 2"]);
-      yield* TestClock.adjust("49 millis");
-      const select44 = yield* select;
-      expect(select44).toEqual([{ generation: 2 }]);
-      expect(events).toEqual(["prepare 1", "destroy 1", "prepare 2"]);
-    }).pipe(Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make))
+        const select41 = yield* select;
+        expect(select41).toEqual([{ generation: 1 }]);
+        yield* TestClock.adjust("30 millis");
+        const select42 = yield* select;
+        expect(select42, "a use inside the TTL reuses the statement").toEqual([{ generation: 1 }]);
+        yield* TestClock.adjust("20 millis");
+        const select43 = yield* select;
+        expect(select43, "the reuse inside the TTL did not extend the statement's lifetime").toEqual([
+          { generation: 2 },
+        ]);
+        expect(events).toEqual(["prepare 1", "destroy 1", "prepare 2"]);
+        yield* TestClock.adjust("49 millis");
+        const select44 = yield* select;
+        expect(select44).toEqual([{ generation: 2 }]);
+        expect(events).toEqual(["prepare 1", "destroy 1", "prepare 2"]);
+      }).pipe(Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make))
   );
 
   it.layer(Reactivity.layer, { timeout: "30 seconds" })((it) => {
@@ -1504,7 +1502,6 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         expect(result61).toEqual([]);
         const readFileString62 = yield* fs.readFileString(file);
         expect(readFileString62).toBe("unchanged");
-        // Re-applying a no-op migration triggers a second dump of the same catalog.
         yield* source`DELETE FROM effect_sql_migrations`;
         const redump = DuckDbMigrator.run({
           schemaDirectory: path.join(tmpDir, "redump"),
@@ -1514,8 +1511,7 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         }).pipe(Effect.provideService(SqlClient.SqlClient, source));
         yield* redump;
         const second = yield* fs.readFileString(path.join(tmpDir, "redump", "_schema.sql"));
-        // Both runs fix the history timestamp so the catalog and rows are identical.
-        expect(second).toBe(text);
+        expect(second, "re-applying the no-op migration dumps the same catalog; both runs pin created_at").toBe(text);
       })
     );
 
@@ -1693,7 +1689,6 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         expect(refused._tag).toBe("DuckDbError");
         expect(refused.message).toBe("Failed to open DuckDB connection.");
         expect(String(O.getOrUndefined(refused.cause))).toContain(DIFFERENT_CONFIGURATION);
-        // A refused reader must leave the writer usable, including after checkpoint.
         yield* writer.run("INSERT INTO legacy_ro_events VALUES (8)");
         yield* writer.run("CHECKPOINT");
         yield* Scope.close(writerScope, Exit.void);
@@ -1702,7 +1697,7 @@ describe("DuckDbClient native lifecycle", { concurrent: false }, () => {
         const readerContext = yield* Layer.build(readOnlyLayer).pipe(Scope.provide(readerScope));
         const reader = Context.get(readerContext, DuckDb);
         const query72 = yield* reader.query("SELECT id FROM legacy_ro_events ORDER BY id");
-        expect(query72).toEqual([{ id: 7 }, { id: 8 }]);
+        expect(query72, "the refused reader left the writer usable through CHECKPOINT").toEqual([{ id: 7 }, { id: 8 }]);
         const secondScope = yield* Scope.make();
         const secondContext = yield* Layer.build(readOnlyLayer).pipe(Scope.provide(secondScope));
         const second = Context.get(secondContext, DuckDb);

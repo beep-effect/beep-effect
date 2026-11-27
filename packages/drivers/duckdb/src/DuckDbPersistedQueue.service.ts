@@ -46,6 +46,7 @@ const $I = $DuckdbId.create("DuckDbPersistedQueue.service");
 // beep: Schema JSON codecs replace throwing native JSON operations in upstream callbacks.
 
 const sqlCleanupBatchSize = 1000;
+const maxAttemptsPlaceholderInt32 = 2147483647;
 type QueueState = {
   maxAttempts: number;
   readonly nudge: Latch.Latch;
@@ -62,9 +63,7 @@ const makeQueueStates = (): {
     get: (name) => {
       let state = O.getOrUndefined(HashMap.get(states, name));
       if (state === undefined) {
-        // the placeholder is overwritten by take before any mailbox reads it,
-        // and is kept int32-safe for SQL parameters
-        state = { maxAttempts: 2147483647, nudge: Latch.makeUnsafe(false) };
+        state = { maxAttempts: maxAttemptsPlaceholderInt32, nudge: Latch.makeUnsafe(false) };
         states = HashMap.set(states, name, state);
       }
       return state;
@@ -77,9 +76,6 @@ const makeAckRetrySchedule = (lockExpiration: Duration.Input) =>
     Schedule.upTo({ duration: lockExpiration })
   );
 
-// Internal signal used by the factory to tell a store that a taken element
-// cannot ever be processed (its stored payload fails to decode) and must be
-// dead-lettered instead of retried.
 // beep: type-only — upstream `PersistedQueue.make` constructs dead letters; this store only matches them by tag.
 interface DeadLetter {
   readonly _tag: "~effect/persistence/PersistedQueue/DeadLetter";
@@ -88,7 +84,6 @@ interface DeadLetter {
 
 const isDeadLetter = (u: unknown): u is DeadLetter => P.isTagged(u, "~effect/persistence/PersistedQueue/DeadLetter");
 
-// stores only see a positive delay, so a zero or negative one is dropped here
 const deadLetterFromCause = (cause: Cause.Cause<unknown>): DeadLetter | undefined => {
   for (const reason of cause.reasons) {
     if (Cause.isFailReason(reason) && isDeadLetter(reason.error)) {
@@ -109,7 +104,20 @@ const deadLetterFromCause = (cause: Cause.Cause<unknown>): DeadLetter | undefine
  * DuckDB deployment.
  *
  * An id re-offered with `deduplicate: "untilExecuted"` keeps only its latest
- * failure: the completed or failed row is replaced by the new offer.
+ * failure: the completed or failed row is replaced by the new offer, a new row
+ * with a fresh sequence. The delete re-checks the state and shares one
+ * transaction with the insert, so concurrent offers of the id wait behind it
+ * and then see the re-offer.
+ *
+ * **Gotchas**
+ *
+ * - Each poll claims its rows under a fresh lock, so a settlement matches only
+ *   the acquisition it belongs to, even after this store re-claims a lapsed
+ *   row. Lock refresh matches every held sequence against every held lock in
+ *   one flat statement; that renews only this store's claims because a row
+ *   carries only the lock of the poll that claimed it.
+ * - A take releases its taker count on every exit, interruption included;
+ *   otherwise the poller keeps fetching for a phantom taker.
  *
  * **Example** (Build a queue store layer)
  *
@@ -161,12 +169,12 @@ export const makeStoreSql: (
   const sqlNow = sql.literal("get_current_timestamp()");
   const secondsOffset = (seconds: number) => sql`${sqlNow} + INTERVAL '${sql.literal(seconds.toString())} seconds'`;
   const secondsAgo = (seconds: number) => secondsOffset(-Math.max(Math.ceil(seconds), 0));
-  // Deadline for a delayed offer or retry, which must never land before the
-  // delay elapses.
   // beep: DuckDB clocks are transaction-stable; bind a live TIMESTAMPTZ, independent of session time zone,
   // beep: in milliseconds rather than upstream's whole seconds (D71).
-  const visibleAfter = (delay: Duration.Duration, now: number) =>
-    sql`make_timestamptz(CAST(${now + Math.max(Math.ceil(Duration.toMillis(delay)), 0)} AS BIGINT) * 1000)`;
+  const visibleAfter = (delay: Duration.Duration, now: number) => {
+    const delayMillisRoundedUp = Math.max(Math.ceil(Duration.toMillis(delay)), 0);
+    return sql`make_timestamptz(CAST(${now + delayMillisRoundedUp} AS BIGINT) * 1000)`;
+  };
   const liveNow = Clock.Clock.defaultValue().currentTimeMillis;
   const expiresAt = lockExpiration.pipe(Duration.toSeconds, secondsAgo);
 
@@ -179,9 +187,6 @@ export const makeStoreSql: (
   const wrapString = (s: string) => `'${s}'`;
   const stringLiteral = (s: string) => sql.literal(wrapString(s));
 
-  // Elements this store has claimed and not yet settled. Each poll claims its
-  // rows under a fresh lock, so a settlement only matches the acquisition it
-  // belongs to, even after the same store re-claims a lapsed row.
   let held = HashSet.empty<Element>();
   const refreshLocks: Effect.Effect<void, SqlError> = Effect.suspend((): Effect.Effect<void, SqlError> => {
     if (HashSet.size(held) === 0) return Effect.void;
@@ -191,9 +196,6 @@ export const makeStoreSql: (
       sequences = HashSet.add(sequences, element.sequence);
       locks = HashSet.add(locks, wrapString(element.lock));
     }
-    // A row only ever carries the lock of the poll that claimed it, so matching
-    // every held sequence against every live lock renews just this store's own
-    // claims while keeping the statement flat
     return sql`
       UPDATE ${tableNameSql}
       SET acquired_at = ${sqlNow}
@@ -234,21 +236,19 @@ export const makeStoreSql: (
       `,
       element
     );
-  // The clock is read inside the statement, so each ack retry computes its own deadline.
-  const retry = (element: Element, delay: Duration.Duration, cause: Cause.Cause<unknown>) =>
-    ack(
-      Effect.flatMap(
-        liveNow,
-        (now) => sql`
+  const retry = (element: Element, delay: Duration.Duration, cause: Cause.Cause<unknown>) => {
+    const updateWithFreshDeadline = Effect.flatMap(
+      liveNow,
+      (now) => sql`
           UPDATE ${tableNameSql}
           SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, visible_at = ${visibleAfter(delay, now)},
             last_failure = ${Cause.pretty(cause)}
           WHERE sequence = ${element.sequence}
           AND acquired_by = ${stringLiteral(element.lock)}
         `
-      ),
-      element
     );
+    return ack(updateWithFreshDeadline, element);
+  };
   const interrupt = (element: Element) =>
     ack(
       sql`
@@ -298,9 +298,7 @@ export const makeStoreSql: (
         )
       );
 
-      // flip exhausted rows whose lock expired (worker crashed on the final
-      // attempt) to failed, since no finalizer will ever run for them
-      yield* sql`
+      const failCrashedFinalAttempts = sql`
         UPDATE ${tableNameSql}
         SET state = 'failed', acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow},
           last_failure = COALESCE(last_failure, 'Lock expired after final attempt')
@@ -308,7 +306,8 @@ export const makeStoreSql: (
         AND state = 'pending'
         AND attempts >= ${maxAttempts}
         AND (acquired_at IS NULL OR acquired_at < ${expiresAt})
-      `.pipe(
+      `;
+      yield* failCrashedFinalAttempts.pipe(
         Effect.tapCause(Effect.logWarning),
         Effect.ignore,
         Effect.schedule(Schedule.spaced(lockRefreshInterval)),
@@ -386,10 +385,6 @@ export const makeStoreSql: (
       })
     );
 
-  // Stores the re-offer as a new row with a fresh sequence. The plain read keeps
-  // new ids lock-free. The delete re-checks the state and shares a transaction
-  // with the insert, so concurrent offers of the id wait on the deleted row and
-  // then see the re-offer.
   // beep: On DuckDB the transaction holds the single writer, so concurrent offers queue behind it (D71).
   const replaceExecuted = <A, E, R>(id: string, name: string, insert: Effect.Effect<A, E, R>) =>
     Effect.flatMap(
@@ -419,8 +414,8 @@ export const makeStoreSql: (
           const now = yield* liveNow;
           const encodedJsonEffect = yield* encodeJsonEffect(element);
           const insert = offer(id, name, encodedJsonEffect, delay === undefined ? sqlNow : visibleAfter(delay, now));
-          // generated ids are never offered twice
-          return yield* deduplicate === "untilExecuted" && isCustomId ? replaceExecuted(id, name, insert) : insert;
+          const customIdReoffer = deduplicate === "untilExecuted" && isCustomId;
+          return yield* customIdReoffer ? replaceExecuted(id, name, insert) : insert;
         }),
         (cause) =>
           Effect.fail(
@@ -430,7 +425,6 @@ export const makeStoreSql: (
             })
           )
       ).pipe(
-        // Wake takers once the offer is committed.
         Effect.tap(() =>
           sql.afterCommit(
             Effect.sync(() => {
@@ -457,9 +451,6 @@ export const makeStoreSql: (
             if (takers.current === 1) {
               pollLatch.openUnsafe();
             }
-            // onExit so the decrement also runs when a waiting take is
-            // interrupted, otherwise the poller keeps fetching for a phantom
-            // taker
             return Effect.onExit(restore(Queue.take(queue)), () =>
               Effect.sync(() => {
                 takers.current--;
@@ -479,10 +470,9 @@ export const makeStoreSql: (
             try {
               parsed = decodeJson(element.element);
             } catch (defect) {
-              // a row that cannot be parsed will never succeed, so dead-letter
-              // it and take the next element
+              const deadLetterUnparseableRow = fail(element, Cause.die(defect));
               // beep: restore so the next take stays interruptible instead of inheriting this mask (#2306 review).
-              return Effect.andThen(fail(element, Cause.die(defect)), restore(loop));
+              return Effect.andThen(deadLetterUnparseableRow, restore(loop));
             }
             return Effect.as(
               Effect.addFinalizer((exit) => {

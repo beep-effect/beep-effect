@@ -18,16 +18,7 @@ import { runKpiScript, syncKpiArtifacts } from "@/kpi/Script";
 import { decodeEvidenceMode, EvidenceMode, EvidenceWriteScript } from "@/projection/Evidence";
 import type { AdoptionProbe, AncestryVerdict } from "@/kpi/Schemas";
 
-// LOCAL GENERATOR (launch sitting Ruling 8). It answers the fold's ancestry probes with
-// `git merge-base --is-ancestor` in a clone whose object store holds the fleet's heads, and is
-// never part of a CI check: hosted clones are shallow and lack unpushed lane heads. The lab
-// reads the committed table by path and SHA-256 and never spawns git. Lane heads that were never
-// pushed live only in the clone that ran them: set GIT_ALTERNATE_OBJECT_DIRECTORIES (git's own
-// variable, inherited by every probe) to the sibling clones' `.git/objects`. Check-by-default: the
-// bare script recomputes the table and compares bytes; only `--write` rewrites it. A shallow or
-// treeless clone is refused before any probe: at its history boundary `merge-base --is-ancestor`
-// exits 1 for true ancestors while both commits are present, so a `--write` there would commit
-// wrong adoption classes into a sha-pinned table that nothing re-derives.
+// decision: local-ancestry-generation
 const repoRoot = "../../..";
 const $I = $CiopsId.create("scripts/generate-adoption-table");
 const writeScript = EvidenceWriteScript.Enum["evidence:kpi-adoption:write"];
@@ -37,11 +28,10 @@ const probe =
 const generation =
   "local generator, never a CI check: run in a clone with full history, with GIT_ALTERNATE_OBJECT_DIRECTORIES " +
   "naming the sibling clones' object stores so unpushed lane heads resolve; a head found in no store is " +
-  "head-missing; a shallow or treeless clone is refused before any probe (git rev-parse " +
+  "head-missing; a shallow clone is refused before any probe (git rev-parse " +
   "--is-shallow-repository must print false); regenerate with `bun run evidence:kpi-adoption:write` in " +
   "apps/labs/ciops";
 
-/** The clone cannot answer ancestry probes: its history is shallow or treeless. */
 class KpiAdoptionRepositoryError extends S.TaggedError<KpiAdoptionRepositoryError, { readonly brand: unique symbol }>(
   $I`KpiAdoptionRepositoryError`
 )(
@@ -62,7 +52,6 @@ const gitExit = Effect.fn("KpiAdoption.gitExit")(function* (args: ReadonlyArray<
   return yield* handle.exitCode;
 }, Effect.scoped);
 
-// Trimmed stdout and exit code of one git invocation.
 const gitStdout = Effect.fn("KpiAdoption.gitStdout")(function* (args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
@@ -75,7 +64,6 @@ const gitStdout = Effect.fn("KpiAdoption.gitStdout")(function* (args: ReadonlyAr
   return [code, Str.trim(text)] as const;
 }, Effect.scoped);
 
-// Full history is a precondition of every probe, in check and write mode alike.
 const requireFullHistory = Effect.gen(function* () {
   const [code, shallow] = yield* gitStdout(["rev-parse", "--is-shallow-repository"]);
   if (code !== 0 || shallow !== "false") {
@@ -88,8 +76,7 @@ const requireFullHistory = Effect.gen(function* () {
   }
 });
 
-// Object presence, memoized per commit id across every probe.
-const makePresence = Effect.gen(function* () {
+const makeMemoizedCommitPresence = Effect.gen(function* () {
   const cache = yield* Ref.make(HashMap.empty<string, boolean>());
   const lookup = (sha: string) =>
     Effect.map(gitExit(["cat-file", "-e", `${sha}^{commit}`]), (code) => code === 0).pipe(
@@ -112,7 +99,7 @@ const generate = Effect.gen(function* () {
   const mode = yield* decodeEvidenceMode(process.argv, writeScript);
   yield* requireFullHistory;
   const probes = yield* (yield* CiOpsKpi).probes(kpiReadingInput(repoRoot));
-  const present = yield* makePresence;
+  const present = yield* makeMemoizedCommitPresence;
   const missingMerges = yield* Effect.filter(A.dedupe(A.map(probes, (entry) => entry.mergeCommit)), (sha) =>
     Effect.map(present(sha), (found) => !found)
   );

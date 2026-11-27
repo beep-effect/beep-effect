@@ -1,15 +1,3 @@
-// The package's import graph, read from source text that Vite's raw glob
-// import inlines at transform time, so the walk touches no filesystem and runs
-// the same under Node and Bun (the package test runner is `bunx --bun vitest`).
-//
-// Sized to this package: every public `src` module is a flat sibling and the
-// one seam lives in `src/internal/`, so a relative edge is always
-// `./<Module>.ts` or `./internal/<module>.ts` from a top-level module, and
-// anything else fails loudly instead of being resolved by guesswork. Only top-of-line `import`/`export` statements
-// count, which is what keeps the `import` lines inside JSDoc examples (written
-// ` * import …`) and prose in comments out of the graph without a comment
-// stripper.
-
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
@@ -28,6 +16,7 @@ declare global {
 
 const SRC = "../../src/";
 
+// decision: source-graph-from-vite-inlined-text
 const sources = import.meta.glob<string>("../../src/**/*.ts", { query: "?raw", import: "default", eager: true });
 
 /** Every `src` module by path under `src` (for example `"Sbom.ts"` or `"internal/admission.ts"`), sorted. */
@@ -37,15 +26,12 @@ export const sourceModules: ReadonlyArray<string> = A.sort(A.map(R.keys(sources)
 export const sourceOf = (module: string): string =>
   O.getOrThrowWith(R.get(sources, `${SRC}${module}`), () => new Error(`no source module src/${module}`));
 
-// A statement edge: `import|export [type] <clause> from "x"`, where the clause
-// is a default binding, a named list, a namespace or a star re-export. Group 1
-// is `type` for an erased edge, group 2 the specifier. Requiring a clause shape
-// keeps a declaration such as `export class X {` whose body holds the word
-// `from` inside a string from becoming a phantom edge.
+// decision: source-graph-from-vite-inlined-text
 const CLAUSE_EDGE =
   /^(?:import|export)\s+(type\s+)?(?:[\w$]+\s*,\s*)?(?:\{[^}]*\}|\*(?:\s+as\s+[\w$]+)?|[\w$]+)\s+from\s+"([^"]+)"/gm;
+const TYPE_KEYWORD_GROUP = 1;
+const SPECIFIER_GROUP = 2;
 
-// A side-effect import: `import "x"`.
 const BARE_IMPORT = /^import\s+"([^"]+)"/gm;
 
 /** The edges one module's text names, split into runtime and erased (type-only) specifiers. */
@@ -53,11 +39,12 @@ export const edgesOf = (
   source: string
 ): { readonly runtime: ReadonlyArray<string>; readonly typeOnly: ReadonlyArray<string> } => {
   const clauses = A.fromIterable(Str.matchAll(CLAUSE_EDGE)(source));
-  const specifierOf = (match: RegExpMatchArray): ReadonlyArray<string> => (match[2] === undefined ? [] : [match[2]]);
+  const specifierOf = (match: RegExpMatchArray): ReadonlyArray<string> =>
+    match[SPECIFIER_GROUP] === undefined ? [] : [match[SPECIFIER_GROUP]];
   return {
     runtime: A.appendAll(
       A.flatMap(
-        A.filter(clauses, (match) => match[1] === undefined),
+        A.filter(clauses, (match) => match[TYPE_KEYWORD_GROUP] === undefined),
         specifierOf
       ),
       A.flatMap(A.fromIterable(Str.matchAll(BARE_IMPORT)(source)), (match) =>
@@ -65,7 +52,7 @@ export const edgesOf = (
       )
     ),
     typeOnly: A.flatMap(
-      A.filter(clauses, (match) => match[1] !== undefined),
+      A.filter(clauses, (match) => match[TYPE_KEYWORD_GROUP] !== undefined),
       specifierOf
     ),
   };
@@ -73,12 +60,15 @@ export const edgesOf = (
 
 const SIBLING = /^\.\/((?:internal\/)?[A-Za-z]+\.ts)$/;
 
-/** The module a relative specifier names; anything but `./<Module>.ts` or `./internal/<module>.ts` is a walker error. */
+// decision: source-graph-from-vite-inlined-text
 const siblingOf = (specifier: string): string =>
   pipe(
     O.fromNullishOr(SIBLING.exec(specifier)),
     O.flatMap((match) => O.fromNullishOr(match[1])),
-    O.getOrThrowWith(() => new Error(`unexpected relative specifier ${specifier}`))
+    O.getOrThrowWith(
+      () =>
+        new Error(`unexpected relative specifier ${specifier}; only ./<Module>.ts or ./internal/<module>.ts is walked`)
+    )
   );
 
 const isRelative = Str.startsWith(".");

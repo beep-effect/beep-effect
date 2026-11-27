@@ -233,8 +233,6 @@ export class AcpClientTerminals extends Context.Service<AcpClientTerminals, AcpC
   $I`AcpClientTerminals`
 ) {}
 
-// --- Output buffer -------------------------------------------------------------------------------
-
 interface OutputBuffer {
   bytes: number;
   readonly chunks: Array<Uint8Array>;
@@ -264,7 +262,6 @@ const trimOutputStart = (buffer: OutputBuffer, bytes: number): void => {
 const appendOutput = (buffer: OutputBuffer, chunk: Uint8Array): void => {
   buffer.chunks.push(chunk);
   buffer.bytes += chunk.byteLength;
-  // The spec truncates from the beginning of the output.
   if (buffer.bytes > buffer.limit) trimOutputStart(buffer, buffer.bytes - buffer.limit);
 };
 
@@ -276,13 +273,10 @@ const readOutput = (buffer: OutputBuffer): string => {
     combined.set(chunk, offset);
     return offset + chunk.byteLength;
   });
-  // Dropping leading continuation bytes lands a truncated buffer on a character boundary.
-  const boundary = buffer.truncated ? combined.findIndex((byte) => !isContinuationByte(byte)) : 0;
-  const start = boundary < 0 ? combined.byteLength : boundary;
+  const firstCharacterStart = buffer.truncated ? combined.findIndex((byte) => !isContinuationByte(byte)) : 0;
+  const start = firstCharacterStart < 0 ? combined.byteLength : firstCharacterStart;
   return decoder.decode(combined.subarray(start));
 };
-
-// --- Terminal records ----------------------------------------------------------------------------
 
 interface ManagedTerminal {
   readonly buffer: OutputBuffer;
@@ -306,7 +300,6 @@ const terminalRequestError = (message: string, cause?: unknown) =>
 
 const isLive = (terminal: ManagedTerminal) => !terminal.released && O.isNone(terminal.exitStatus);
 const isUnreleased = (terminal: ManagedTerminal) => !terminal.released;
-// Retention and trimming drop the oldest terminals first.
 const byCreation = Order.mapInput(Order.Number, (terminal: ManagedTerminal) => terminal.ordinal);
 
 const snapshotOf = (terminal: ManagedTerminal): Compat.TerminalOutputResponse => ({
@@ -349,8 +342,6 @@ const exitStatusOf = (exitCode: ChildProcessSpawner.ChildProcessHandle["exitCode
     onFailure: (cause): Compat.TerminalExitStatus => ({ exitCode: null, signal: signalOf(cause).pipe(O.getOrNull) }),
     onSuccess: (code): Compat.TerminalExitStatus => ({ exitCode: code, signal: null }),
   });
-
-// --- Constructors --------------------------------------------------------------------------------
 
 /**
  * Constructs the client-side ACP terminal service.
@@ -482,7 +473,6 @@ export const make = Effect.fn($I`AcpClientTerminals_make`)(function* (
     yield* Effect.forkDetach(
       child.exitCode.pipe(
         exitStatusOf,
-        // A background process the command started can keep the pipes open after it exits.
         Effect.tap(() => Fiber.joinAll([stdout, stderr]).pipe(Effect.timeoutOption(options.exitOutputGrace))),
         Effect.tap((status) =>
           Effect.sync(() => {

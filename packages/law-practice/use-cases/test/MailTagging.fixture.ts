@@ -118,7 +118,6 @@ export const taxonomy = defaultMailTaxonomy([acme, globex]);
 
 type EnvelopeOptions = {
   readonly at: number;
-  /** Message id; defaults to `msg-<at>`. Lets two messages share one instant. */
   readonly id?: string;
   readonly subject?: string;
   readonly sender?: string;
@@ -184,20 +183,18 @@ type StoredFile = {
   readonly bytes: Uint8Array;
 };
 
-/** How much the store fake says about the file holding a taken name. */
 type HolderDetail = "hash-and-size" | "size-only" | "id-only" | "nothing";
 
 type WorldOptions = {
   readonly envelopes: ReadonlyArray<MailEnvelope>;
   readonly attachments?: ReadonlyArray<readonly [MailMessageId, ReadonlyArray<FakeAttachment>]>;
   readonly pageSize?: number;
-  /** Matter index the directory answers; the two-matter `index` when absent. */
   readonly index?: MatterIndex;
-  /** Makes every SHA-256 digest fail, as an unavailable platform would. */
   readonly failingDigests?: ReadonlyArray<Digest.Algorithm>;
-  /** Makes these digests return truncated output, which no hex decoder accepts. */
   readonly truncatedDigests?: ReadonlyArray<Digest.Algorithm>;
 };
+
+type OneBasedCall = number;
 
 type WorldShape = {
   readonly messages: Ref.Ref<ReadonlyArray<MailEnvelope>>;
@@ -205,37 +202,24 @@ type WorldShape = {
   readonly uploads: Ref.Ref<ReadonlyArray<UploadDocumentRequest>>;
   readonly tagRecords: Ref.Ref<ReadonlyArray<TagLedgerRecord>>;
   readonly filingRecords: Ref.Ref<ReadonlyArray<FilingLedgerRecord>>;
-  /** Every `upload` call, including the ones the store refused. */
   readonly uploadCalls: Ref.Ref<number>;
-  /** Files the store holds, keyed `<folderId>/<fileName>`. */
   readonly storedFiles: Ref.Ref<HashMap.HashMap<string, StoredFile>>;
-  /** Puts a file the ledger never stored under `<folderId>/<fileName>`. */
   readonly holdName: (held: { readonly key: string; readonly bytes: ReadonlyArray<number> }) => Effect.Effect<void>;
-  /** 1-based `upload` call that fails before storing anything, when set. */
-  readonly failingUpload: Ref.Ref<O.Option<number>>;
-  /** 1-based `upload` call that stores the file and then reports failure, when set. */
-  readonly lyingUpload: Ref.Ref<O.Option<number>>;
-  /** Current categories of the message with this id. */
+  readonly failingUpload: Ref.Ref<O.Option<OneBasedCall>>;
+  readonly lyingUpload: Ref.Ref<O.Option<OneBasedCall>>;
   readonly categoriesById: (id: string) => Effect.Effect<ReadonlyArray<string>>;
-  /** 1-based filing-ledger `append` call that fails, when set. */
-  readonly failingFilingAppend: Ref.Ref<O.Option<number>>;
-  /** Makes the store report a taken name without identifying the file. */
+  readonly failingFilingAppend: Ref.Ref<O.Option<OneBasedCall>>;
   readonly holderDetail: Ref.Ref<HolderDetail>;
   readonly checkpoint: Ref.Ref<O.Option<BackfillCheckpoint>>;
   readonly categoryWrites: Ref.Ref<ReadonlyArray<SetCategoriesRequest>>;
   readonly folderRequests: Ref.Ref<ReadonlyArray<string>>;
   readonly downloads: Ref.Ref<number>;
-  /** `<sha256> <matterKey>` pairs the document system already holds. */
   readonly knownDocuments: Ref.Ref<ReadonlyArray<string>>;
   readonly index: MatterIndex;
-  /** 1-based `listMessagesSince` call that fails, when set. */
-  readonly failingListCall: Ref.Ref<O.Option<number>>;
-  /** 1-based `setCategories` call that fails, when set. */
-  readonly failingCategoryWrite: Ref.Ref<O.Option<number>>;
+  readonly failingListCall: Ref.Ref<O.Option<OneBasedCall>>;
+  readonly failingCategoryWrite: Ref.Ref<O.Option<OneBasedCall>>;
   readonly folders: MatterFolderDirectoryShape;
-  /** Current categories of message `msg-<at>`. */
   readonly categoriesOf: (at: number) => Effect.Effect<ReadonlyArray<string>>;
-  /** Write calls whose name starts with a prefix. */
   readonly writesOf: (prefix: string) => Effect.Effect<ReadonlyArray<string>>;
   readonly mailbox: MailboxShape;
   readonly documents: DocumentStoreShape;

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://v2-11-13.turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/tooling/library/alchemy-github-runners/src/**"
+      ]
+    },
+    "test:integration": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/tooling/library/alchemy-github-runners/src/**"
+      ]
+    }
+  }
+}

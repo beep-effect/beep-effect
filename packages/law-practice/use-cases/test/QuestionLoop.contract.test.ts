@@ -24,7 +24,6 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// Synthetic question-loop values; no matter, client or person is named.
 const itemId = "question:docket-intake:1";
 
 const encodedAnswers = [
@@ -105,7 +104,10 @@ describe("@beep/law-practice-use-cases QuestionQueue schemas", () => {
     Effect.fnUntraced(function* () {
       const selection = yield* roundTrips(DigestSelection, { today: "2026-11-02", items: [question] });
 
-      expect(selection.items).toHaveLength(1);
+      expect(
+        selection.items,
+        "a fixed example, not a property: the LocalDateFromString arbitrary can name a day the month lacks"
+      ).toHaveLength(1);
     })
   );
 });
@@ -130,7 +132,10 @@ describe("@beep/law-practice-use-cases QuestionWrites schemas", () => {
       const updated = yield* roundTrips(AppliedWrite, { proposal, eventId: "evt-0001", prior });
 
       assertNone(created.prior);
-      expect(updated.prior._tag).toBe("Some");
+      expect(
+        updated.prior._tag,
+        "CalendarPrior is pinned by fixed examples: its LocalDateFromString arbitrary can name an impossible day"
+      ).toBe("Some");
       yield* roundTrips(CalendarPrior, prior);
       yield* roundTrips(OperatorApproval, approval);
       yield* roundTrips(AppliedWriteBatch, {
@@ -169,10 +174,7 @@ describe("@beep/law-practice-use-cases question-loop errors", () => {
   );
 });
 
-// CalendarPrior and DigestSelection carry `LocalDateFromString` dates, whose
-// arbitrary can name a day the month lacks; they are covered by the fixed
-// examples above. These schemas' dates are calendar-checked.
-describe("@beep/law-practice-use-cases question-loop schema properties", () => {
+describe("@beep/law-practice-use-cases question-loop schema properties over calendar-checked dates", () => {
   it.effect.prop(
     "round-trips schema-derived answer submissions",
     { answer: Arbitrary.schema(RecordAnswerInput) },

@@ -1,11 +1,3 @@
-// The Opaque conversion (W4-b, W4-g), pinned as inverted tests.
-//
-// The lab declared these records as `S.Class`, whose values are instances: a
-// plain object failed `S.is`, `make` returned an instance, and `instanceOf`
-// was the membership check. As branded `S.Opaque` records the value is a plain
-// object: membership is the schema's structural check, and `make` validates
-// and COPIES its input, so no caller may rely on reference identity.
-
 import {
   Component,
   ComponentInput,
@@ -67,7 +59,6 @@ const buildDefinition = {
 };
 const runDetails = { builder: { id: "https://github.com/acme/app" }, metadata: { invocationId: "https://x" } };
 
-/** One plain record per converted schema, with its `S.is` guard and `make`. */
 const cases: ReadonlyArray<{
   readonly name: string;
   readonly is: (value: unknown) => boolean;
@@ -141,20 +132,20 @@ const cases: ReadonlyArray<{
   },
 ];
 
-describe("the Opaque records", () => {
+describe("the Opaque records — branded plain values, never class instances", () => {
   it("cover the 10 member-less classes, 2 static-only records and 8 option and input structs", () => {
     assert.lengthOf(cases, 20);
   });
 
   for (const { name, is, make, value } of cases) {
     it(`${name}: a plain record of the right shape is a member — S.is is structural`, () => {
-      assertTrue(is(value));
+      assertTrue(is(value), "membership is the schema structural check, not instanceOf");
     });
 
     it(`${name}: make validates and copies — the result is equal but never the input`, () => {
       const admitted = make(value as never);
       assert.deepStrictEqual(admitted, value);
-      assert.notStrictEqual(admitted, value);
+      assert.notStrictEqual(admitted, value, "make copies its input, so no caller may rely on reference identity");
     });
   }
 

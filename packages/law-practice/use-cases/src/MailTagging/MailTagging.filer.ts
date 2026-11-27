@@ -120,7 +120,6 @@ const shortHashNames = (content: FiledContent): ReadonlyArray<string> => [
   withShortHash(content.fileName, content.contentSha256),
 ];
 
-// The name to try first, then the short-hash name once, when it is a different name.
 const candidateNames = (first: string, content: FiledContent): ReadonlyArray<string> =>
   A.dedupe(A.prepend(shortHashNames(content), first));
 
@@ -174,7 +173,6 @@ const deduped = (state: FilingState): FilingState => ({
   report: tallied(state.report, "attachmentsDeduped", false),
 });
 
-// Content that is stored (or, in a dry run, would be) stops being pending and starts deduplicating.
 const settled = (state: FilingState, content: FiledContent, outcome: Outcome, wrote: boolean): FilingState => ({
   report: tallied(state.report, outcome, wrote),
   completed: A.append(state.completed, content),
@@ -257,7 +255,7 @@ const sha256Failed = () => MailTaggingPortError.during("ContentHasher", "sha256"
  *
  * **Gotchas**
  *
- * A store that describes a holder by id alone, with no size and no hash,
+ * A store that describes a holder without a SHA-1, by id or by size alone,
  * never lets the filer prove the holder is its own upload. After an
  * interrupted upload against such a store the filer abandons the intent and
  * files the content again under the short-hash name. That is the safe
@@ -265,8 +263,6 @@ const sha256Failed = () => MailTaggingPortError.during("ContentHasher", "sha256"
  * the plain name and once under the short-hash name, and the attachment is
  * never lost or recorded against someone else's file.
  *
- * When the store reports a size and no hash, a foreign file of exactly the
- * attachment's size under the intended name is recorded as this attachment.
  * Nothing filed is ever undone here: the port has no delete verb.
  *
  * **Example** (Reference the filer constructor)
@@ -304,7 +300,6 @@ export const makeAttachmentFiler: Effect.Effect<
     return ContentSha256.make(digest);
   });
 
-  // Computed only to compare with the hash a store reports for a held name.
   const contentSha1 = (bytes: Uint8Array): Effect.Effect<string> => crypto.digestHex(Digest.sha1, bytes);
 
   const upload = (placement: Placement, payload: Payload) =>
@@ -360,7 +355,6 @@ export const makeAttachmentFiler: Effect.Effect<
     );
   });
 
-  // One two-phase attempt under one name; answers whether the file was stored.
   const attempt = Effect.fn("AttachmentFiler.attempt")(function* (
     target: FilingTarget,
     payload: Payload,
@@ -384,8 +378,6 @@ export const makeAttachmentFiler: Effect.Effect<
     names: ReadonlyArray<string>
   ) => Effect.Effect<FilingState, FilingError> = (target, state, payload, names) =>
     A.matchLeft(names, {
-      // Every attempted name was durably abandoned. Let the message settle and
-      // retain the abandoned attachment identities for operator follow-up.
       onEmpty: () => Effect.succeed(skipped(state, "name-held")),
       onNonEmpty: (fileName, rest) =>
         Effect.flatMap(attempt(target, payload, fileName), (stored) =>
@@ -395,14 +387,12 @@ export const makeAttachmentFiler: Effect.Effect<
         ),
     });
 
-  // A matching byte length cannot establish ownership of a conflicting file.
   const isOwnUpload = (holder: ExistingDocument, payload: Payload): Effect.Effect<boolean, MailTaggingPortError> =>
     O.match(holder.contentSha1, {
       onNone: () => Effect.succeed(false),
       onSome: (reported) => Effect.map(contentSha1(payload.bytes), (own) => own === reported),
     });
 
-  // A holder that is not provably ours retires the intent; the content goes to the short-hash name.
   const disown = (
     target: FilingTarget,
     state: FilingState,
@@ -460,7 +450,6 @@ export const makeAttachmentFiler: Effect.Effect<
       ? reconcile(target, state, payload, intent)
       : Effect.succeed(settled(state, payload.content, "attachmentsReconciled", false));
 
-  // Content the document system already holds is settled before any intent is written.
   const beginUnlessKnown = Effect.fn("AttachmentFiler.beginUnlessKnown")(function* (
     target: FilingTarget,
     state: FilingState,
@@ -519,7 +508,6 @@ export const makeAttachmentFiler: Effect.Effect<
     const records = yield* ledger.records;
     const recorded = completedFilings(records);
     const plannedByRun = yield* Ref.get(planned);
-    // What a dry run would have stored counts only for that dry run, never for an apply.
     const foreseen = dryRun ? O.getOrElse(HashMap.get(plannedByRun, runId), () => []) : [];
     const state = yield* Effect.reduce(
       metas,
