@@ -346,6 +346,44 @@ const ledgerPartialReadsDefault: ReadonlyArray<CiWorkflowPartialRead> = [];
 const ledgerPartitionProofsDefault: ReadonlyArray<CiLedgerPartitionProof> = [];
 
 /**
+ * The log-derived half of a {@link CiLedgerRun}: what the ledger reads from
+ * job logs rather than from the jobs listing.
+ *
+ * **Details**
+ *
+ * `testPlan` is absent when the run's latest `Test Plan` log was not read or
+ * printed no plan. `partitionProofs` holds the selection lines of the run's
+ * catch-all partition jobs. The certainty corpus stores this beside each
+ * check.yml run, so `beep ci certainty` folds empty legs through the same
+ * ledger fold as `beep ci ledger`.
+ *
+ * **Example** (No log read)
+ *
+ * ```ts
+ * import { CiLedgerRunLogs } from "@beep/repo-cli/commands/Ci"
+ *
+ * const logs = CiLedgerRunLogs.make({})
+ * console.log(logs.partitionProofs.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLedgerRunLogs extends S.Opaque<CiLedgerRunLogs, { readonly brand: unique symbol }>()(
+  S.Struct({
+    partitionProofs: S.Array(CiLedgerPartitionProof).pipe(
+      S.withConstructorDefault(Effect.succeed(ledgerPartitionProofsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ledgerPartitionProofsDefault))
+    ),
+    testPlan: CiLedgerTestPlan.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("CiLedgerRunLogs", {
+      description: "A run's Test Plan output and catch-all partition selection lines, as read from job logs.",
+    })
+  )
+) {}
+
+/**
  * **Details**
  *
  * `testPlan` is absent when the run has no readable `Test Plan` job.

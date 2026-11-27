@@ -20,6 +20,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { CiLedgerRunLogs } from "./CostLedger.schemas.ts";
 import { CiWorkflowJob, CiWorkflowPartialRead, CiWorkflowWindowRun } from "./LaneTimings.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Certainty.schemas");
@@ -405,6 +406,14 @@ const mainPushRunsDefault: ReadonlyArray<CiWorkflowWindowRun> = [];
 /**
  * One captured producer run for the scorecard corpus.
  *
+ * **Details**
+ *
+ * `ledgerLogs` holds the run's `Test Plan` output and catch-all partition
+ * selection lines, read for the check.yml runs of window heads so the
+ * empty-leg row folds through the cost ledger. It is absent for heavy-admit.yml
+ * runs, for runs read before the field existed, and for runs whose log reads
+ * the request bound refused; their legs are undetermined.
+ *
  * **Example** (Describe a captured check.yml run)
  *
  * ```ts
@@ -435,6 +444,7 @@ export class CiCertaintyRun extends S.Opaque<CiCertaintyRun, { readonly brand: u
       S.withConstructorDefault(Effect.succeed(partialReadsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(partialReadsDefault))
     ),
+    ledgerLogs: CiLedgerRunLogs.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     run: CiWorkflowWindowRun,
     workflow: CiCertaintyProducer,
   }).pipe(
@@ -479,6 +489,88 @@ export class CiCertaintyMainCommit extends S.Opaque<CiCertaintyMainCommit, { rea
 ) {}
 
 /**
+ * One local run mode's attempts over the fleet census, as the certainty
+ * report's local publish and verify row carries them.
+ *
+ * **Details**
+ *
+ * `measuredAttempts` ran to their end; `censoredAttempts` did not (red,
+ * terminated or cut off), so they are counted beside the sample rather than in
+ * it. The percentiles are the nearest-rank local-work minutes (elapsed less
+ * monitor waits) of the measured attempts, and are absent when none was.
+ *
+ * **Example** (No attempt read)
+ *
+ * ```ts
+ * import { CiCertaintyLocalProofMode } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const mode = CiCertaintyLocalProofMode.make({
+ *   attempts: 0,
+ *   censoredAttempts: 0,
+ *   measuredAttempts: 0,
+ *   p50Minutes: O.none(),
+ *   p95Minutes: O.none(),
+ * })
+ * console.log(mode.attempts) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyLocalProofMode extends S.Opaque<CiCertaintyLocalProofMode, { readonly brand: unique symbol }>()(
+  S.Struct({
+    attempts: NonNegativeInt,
+    censoredAttempts: NonNegativeInt,
+    measuredAttempts: NonNegativeInt,
+    p50Minutes: S.OptionFromNullOr(NonNegativeMinutes),
+    p95Minutes: S.OptionFromNullOr(NonNegativeMinutes),
+  }).pipe(
+    $I.annoteSchema("CiCertaintyLocalProofMode", {
+      description:
+        "One local run mode's attempts, measured and censored counts, and nearest-rank local-work p50 and p95 minutes.",
+    })
+  )
+) {}
+
+/**
+ * The local publish and verify modes a `--fleet` capture read from the fleet
+ * journals (`yeet economics --fleet`).
+ *
+ * **Example** (A fleet read with no attempts)
+ *
+ * ```ts
+ * import { CiCertaintyFleetLocalProof, CiCertaintyLocalProofMode } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const none = CiCertaintyLocalProofMode.make({
+ *   attempts: 0,
+ *   censoredAttempts: 0,
+ *   measuredAttempts: 0,
+ *   p50Minutes: O.none(),
+ *   p95Minutes: O.none(),
+ * })
+ * console.log(CiCertaintyFleetLocalProof.make({ publish: none, verify: none }).verify.attempts) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyFleetLocalProof extends S.Opaque<
+  CiCertaintyFleetLocalProof,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    publish: CiCertaintyLocalProofMode,
+    verify: CiCertaintyLocalProofMode,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyFleetLocalProof", {
+      description: "The publish and verify run modes folded from the fleet's attempt journals.",
+    })
+  )
+) {}
+
+/**
  * **Details**
  *
  * The live reader captures this shape and `--write-corpus` saves it, so a
@@ -492,7 +584,9 @@ export class CiCertaintyMainCommit extends S.Opaque<CiCertaintyMainCommit, { rea
  * listing (it names the newer run that replaced a pending one), and
  * `mainRunJobs` holds the jobs of the push runs of the window's commits.
  * Corpora captured before these fields decode with no horizon and no main
- * jobs, so their cancel actors read `unread`.
+ * jobs, so their cancel actors read `unread`. `fleetLocalProof` is present
+ * only when the capture ran with `--fleet` and read the fleet journals; a
+ * hosted capture never can.
  *
  * **Example** (Describe an empty corpus)
  *
@@ -518,6 +612,10 @@ export class CiCertaintyMainCommit extends S.Opaque<CiCertaintyMainCommit, { rea
 export class CiCertaintyCorpus extends S.Opaque<CiCertaintyCorpus, { readonly brand: unique symbol }>()(
   S.Struct({
     capturedAt: S.DateTimeUtcFromString,
+    fleetLocalProof: CiCertaintyFleetLocalProof.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     mainCommits: S.Array(CiCertaintyMainCommit),
     mainHorizonSince: S.DateTimeUtcFromString.pipe(
       S.OptionFromOptionalKey,
@@ -1090,6 +1188,126 @@ export class CiCertaintyReplayInputs extends S.Opaque<CiCertaintyReplayInputs, {
 ) {}
 
 /**
+ * Empty-leg runner-minutes per code check.yml run (ROUT-01).
+ *
+ * **Details**
+ *
+ * Each run is folded by the cost ledger (`foldCiLedgerRun`): its Test Unit
+ * and Test Integration partition jobs are joined to its `Test Plan` output at
+ * (lane, partition) grain, and an empty leg is a partition job the plan gave
+ * no task. `minutes` is over the runs whose every leg was determined;
+ * `undeterminedRuns` counts the runs with a leg the join could not settle (no
+ * readable plan or catch-all selection line), which are left out of it rather
+ * than counted as zero. `emptyLegs` totals the empty legs of the determined
+ * runs.
+ *
+ * **Example** (Read the empty-leg p95)
+ *
+ * ```ts
+ * import type { CiCertaintyEmptyLegStat } from "@beep/repo-cli/commands/Ci"
+ *
+ * const p95Of = (stat: CiCertaintyEmptyLegStat) => stat.minutes.p95
+ * console.log(typeof p95Of)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyEmptyLegStat extends S.Opaque<CiCertaintyEmptyLegStat, { readonly brand: unique symbol }>()(
+  S.Struct({
+    emptyLegs: NonNegativeInt,
+    minutes: CiCertaintyDistribution,
+    runs: NonNegativeInt,
+    undeterminedRuns: NonNegativeInt,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyEmptyLegStat", {
+      description:
+        "Runner-minutes spent on partition jobs their Test Plan gave no task, per code check.yml run, with the runs the join could not settle.",
+    })
+  )
+) {}
+
+/**
+ * Where the local publish and verify row's figures came from.
+ *
+ * **Details**
+ *
+ * `fleet-journals` means the capture read the fleet's attempt journals
+ * (`--fleet`). `not-read` means it did not, as on the hosted nightly, whose
+ * runner cannot read workstation journals; the row is then all zeros with
+ * every run censored, and names its reason.
+ *
+ * **Example** (List the sources)
+ *
+ * ```ts
+ * import { CiCertaintyLocalProofSource } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiCertaintyLocalProofSource.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CiCertaintyLocalProofSource = LiteralKit(["fleet-journals", "not-read"]).pipe(
+  $I.annoteSchema("CiCertaintyLocalProofSource", {
+    description: "Whether the certainty report's local publish and verify row was read from the fleet journals.",
+  })
+);
+
+/**
+ * Type of {@link CiCertaintyLocalProofSource}.
+ *
+ * **Example** (Name the hosted source)
+ *
+ * ```ts
+ * import type { CiCertaintyLocalProofSource } from "@beep/repo-cli/commands/Ci"
+ *
+ * const hosted: CiCertaintyLocalProofSource = "not-read"
+ * console.log(hosted)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CiCertaintyLocalProofSource = typeof CiCertaintyLocalProofSource.Type;
+
+/**
+ * Local publish p95 and verify p50 and p95 on the fleet census, with their
+ * censoring counts (read by `local-proof-under-ten`).
+ *
+ * **Details**
+ *
+ * The row is always present. `censorReason` is present exactly when `source`
+ * is `not-read`, and names why the figures are censored and where the source
+ * of record is.
+ *
+ * **Example** (Read the verify p95)
+ *
+ * ```ts
+ * import type { CiCertaintyLocalProof } from "@beep/repo-cli/commands/Ci"
+ *
+ * const verifyP95 = (row: CiCertaintyLocalProof) => row.verify.p95Minutes
+ * console.log(typeof verifyP95)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyLocalProof extends S.Opaque<CiCertaintyLocalProof, { readonly brand: unique symbol }>()(
+  S.Struct({
+    censorReason: S.OptionFromNullOr(S.NonEmptyString),
+    publish: CiCertaintyLocalProofMode,
+    source: CiCertaintyLocalProofSource,
+    verify: CiCertaintyLocalProofMode,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyLocalProof", {
+      description:
+        "Local publish and verify attempts on the fleet census with censoring counts, or the reason they were not read.",
+    })
+  )
+) {}
+
+/**
  * **Details**
  *
  * `slo` is the headline: p95 push to every required context green over code
@@ -1098,8 +1316,9 @@ export class CiCertaintyReplayInputs extends S.Opaque<CiCertaintyReplayInputs, {
  * verdict, docs heads, runner-minutes, the superseded share and the main
  * verdict rate. The sibling-goal rows (`heavySlotMinutes`, `heavyQueue`,
  * `lintPolicyWall`, `propertyLaws`, `firstWavePickup`, `admissionToHeavy`'s
- * heavy-wait p95, `mainCancels`, `mainHorizon` and `replayInputs`) cover code
- * heads and the window's main commits. `certified` is false whenever `refusals` is non-empty, and an
+ * heavy-wait p95, `mainCancels`, `mainHorizon`, `replayInputs` and
+ * `emptyLegs`) cover code heads and the window's main commits; `localProof`
+ * covers the fleet's local publish and verify attempts. `certified` is false whenever `refusals` is non-empty, and an
  * uncertified report is never acceptance evidence. `notCovered` names what the
  * scorecard does not measure.
  *
@@ -1123,12 +1342,14 @@ export class CiCertaintyReport extends S.Opaque<CiCertaintyReport, { readonly br
     clockSource: S.NonEmptyString,
     coverageVerdict: CiCertaintyLatencyStat,
     docsHeads: CiCertaintyLatencyStat,
+    emptyLegs: CiCertaintyEmptyLegStat,
     firstWavePickup: CiCertaintyDistribution,
     greenOnly: CiCertaintyLatencyStat,
     heads: S.Array(CiCertaintyHeadRow),
     heavyQueue: CiCertaintyDistribution,
     heavySlotMinutes: CiCertaintyDistribution,
     lintPolicyWall: CiCertaintyDistribution,
+    localProof: CiCertaintyLocalProof,
     main: CiCertaintyMainStat,
     mainCancels: CiCertaintyMainCancelStat,
     mainHorizon: CiCertaintyMainHorizon,

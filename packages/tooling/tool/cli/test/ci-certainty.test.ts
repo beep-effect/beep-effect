@@ -5,7 +5,9 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   buildCiCertaintyReport,
+  CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON,
   CI_CERTAINTY_MAIN_HORIZON_DAYS,
+  CI_CERTAINTY_NOT_COVERED,
   CiCertaintyCorpus,
   CiCertaintyMainCancelStat,
   CiCertaintyMainCommit,
@@ -13,10 +15,14 @@ import {
   CiCertaintyRun,
   CiCommandError,
   CiLaneTimingGithubClient,
+  CiLedgerLanePlan,
+  CiLedgerRunLogs,
+  CiLedgerTestPlan,
   CiWorkflowJob,
   CiWorkflowPartialRead,
   CiWorkflowWindowRun,
   ciCertaintyCommand,
+  ciCertaintyFleetLocalProof,
   ciCertaintyLatencyStat,
   ciCertaintyRunnerMinutes,
   collectCiWorkflowRunAttemptJobs,
@@ -25,6 +31,7 @@ import {
   renderCiCertaintySummaryMarkdown,
 } from "@beep/repo-cli/commands/Ci";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
+import { EconomicsModeDurationRow } from "@beep/repo-cli/test/Yeet";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -1711,5 +1718,231 @@ describe("ci certainty replay inputs population", () => {
         assertNone(report.replayInputs.pullRequestRunHostedJobs.p95);
       })
     );
+  });
+});
+
+const LEGS_HEAD = Str.repeat(40)("e");
+const UNREAD_LEGS_HEAD = Str.repeat(40)("f");
+
+const integrationPlan = (selectedTasks: number) =>
+  CiLedgerRunLogs.make({
+    testPlan: CiLedgerTestPlan.makeOption({
+      lanes: [
+        CiLedgerLanePlan.make({
+          lane: "test-integration",
+          laneTasks: O.some(24),
+          partitions: ["lps-int-2", "int-rest"],
+          selectedTasks: O.some(selectedTasks),
+        }),
+      ],
+    }),
+  });
+
+const emptyLegsCorpus = CiCertaintyCorpus.make({
+  capturedAt: DateTime.makeUnsafe("2026-11-10T03:00:00Z"),
+  mainCommits: [],
+  pullRequestRuns: [
+    CiCertaintyRun.make({
+      ...foldRun(801, LEGS_HEAD, "2026-11-09T10:00:00Z", O.some("completed"), [
+        rowsJob(1, "Lint", "2026-11-09T10:00:10Z", "2026-11-09T10:00:30Z", "2026-11-09T10:03:00Z"),
+        rowsJob(2, "Test Plan", "2026-11-09T10:00:10Z", "2026-11-09T10:00:20Z", "2026-11-09T10:00:50Z"),
+        rowsJob(
+          3,
+          "Test Integration (int-rest)",
+          "2026-11-09T10:01:00Z",
+          "2026-11-09T10:01:00Z",
+          "2026-11-09T10:03:00Z"
+        ),
+        rowsJob(
+          4,
+          "Test Integration (lps-int-2)",
+          "2026-11-09T10:01:00Z",
+          "2026-11-09T10:01:00Z",
+          "2026-11-09T10:04:00Z"
+        ),
+      ]),
+      ledgerLogs: O.some(integrationPlan(0)),
+    }),
+    foldRun(802, UNREAD_LEGS_HEAD, "2026-11-09T11:00:00Z", O.some("completed"), [
+      rowsJob(11, "Lint", "2026-11-09T11:00:10Z", "2026-11-09T11:00:30Z", "2026-11-09T11:03:00Z"),
+      rowsJob(
+        12,
+        "Test Integration (int-rest)",
+        "2026-11-09T11:01:00Z",
+        "2026-11-09T11:01:00Z",
+        "2026-11-09T11:02:00Z"
+      ),
+    ]),
+  ],
+  requestCount: 0,
+  requiredContexts: ["Lint"],
+  since: SYNTHETIC_SINCE,
+  until: SYNTHETIC_UNTIL,
+});
+
+const modeRow = (mode: string, attempts: number, measuredAttempts: number, p50Ms: number, p95Ms: number) =>
+  EconomicsModeDurationRow.make({
+    attempts,
+    measuredAttempts,
+    mode,
+    p50ElapsedMs: O.some(p50Ms),
+    p95ElapsedMs: O.some(p95Ms),
+    redAttempts: attempts - measuredAttempts,
+    terminatedAttempts: 0,
+  });
+
+describe("ci certainty empty legs and local proof", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("folds empty-leg runner-minutes through the ledger and leaves an unread plan undetermined", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(emptyLegsCorpus);
+
+        deepStrictEqual(
+          [report.emptyLegs.runs, report.emptyLegs.undeterminedRuns, report.emptyLegs.emptyLegs],
+          [2, 1, 2]
+        );
+        deepStrictEqual([report.emptyLegs.minutes.n, report.emptyLegs.minutes.p95], [1, O.some(5)]);
+        expect(renderCiCertaintySummaryMarkdown(report)).toContain(
+          "- empty-leg runner-minutes per code-head check.yml run (partition jobs their Test Plan gave no task; runs 2, undetermined 1, empty legs 2): n=1; mean 5.0 min; p50 5.0 min; p95 5.0 min; max 5.0 min"
+        );
+
+        const selectedWithoutCatchAllLine = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({
+            ...emptyLegsCorpus,
+            pullRequestRuns: A.map(emptyLegsCorpus.pullRequestRuns, (run) =>
+              CiCertaintyRun.make({ ...run, ledgerLogs: O.some(integrationPlan(3)) })
+            ),
+          })
+        );
+        deepStrictEqual(
+          [selectedWithoutCatchAllLine.emptyLegs.undeterminedRuns, selectedWithoutCatchAllLine.emptyLegs.emptyLegs],
+          [2, 0]
+        );
+        strictEqual(selectedWithoutCatchAllLine.emptyLegs.minutes.n, 0);
+      })
+    );
+
+    it.effect("always reports the local proof row, censored with its reason when the fleet was not read", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(emptyLegsCorpus);
+
+        strictEqual(report.localProof.source, "not-read");
+        assertSome(report.localProof.censorReason, CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON);
+        deepStrictEqual([report.localProof.publish.attempts, report.localProof.verify.attempts], [0, 0]);
+        expect(renderCiCertaintySummaryMarkdown(report)).toContain(
+          `- local proof on the fleet census (not-read): publish attempts 0 (measured 0, censored 0), p50 —, p95 —; verify attempts 0 (measured 0, censored 0), p50 —, p95 —; censored, ${CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON}`
+        );
+        assertFalse(A.some(CI_CERTAINTY_NOT_COVERED, (row) => Str.includes("local publish and verify")(row)));
+
+        const fleet = ciCertaintyFleetLocalProof([
+          modeRow("repair", 2, 2, 60_000, 60_000),
+          modeRow("publish", 10, 7, 300_000, 540_000),
+          modeRow("verify", 4, 4, 120_000, 183_000),
+        ]);
+        const read = yield* buildCiCertaintyReport(
+          CiCertaintyCorpus.make({ ...emptyLegsCorpus, fleetLocalProof: O.some(fleet) })
+        );
+        strictEqual(read.localProof.source, "fleet-journals");
+        assertNone(read.localProof.censorReason);
+        expect(renderCiCertaintyMarkdown(read)).toContain(
+          "- local proof on the fleet census (fleet-journals): publish attempts 10 (measured 7, censored 3), p50 5.0 min, p95 9.0 min; verify attempts 4 (measured 4, censored 0), p50 2.0 min, p95 3.0 min\n"
+        );
+        assertNone(ciCertaintyFleetLocalProof([]).verify.p95Minutes);
+        strictEqual(ciCertaintyFleetLocalProof([modeRow("verify", 1, 1, 0, 0)]).publish.attempts, 0);
+      })
+    );
+  });
+});
+
+const LEDGER_LOG_JOBS = [
+  liveJob(11, 111, "Heavy Admission", "2026-11-09T10:00:30Z", "2026-11-09T10:01:00Z"),
+  liveJob(11, 112, "Lint", "2026-11-09T10:01:00Z", "2026-11-09T10:05:00Z"),
+  liveJob(11, 113, "Test Plan", "2026-11-09T10:00:10Z", "2026-11-09T10:00:40Z"),
+  liveJob(11, 114, "Test Integration (int-rest)", "2026-11-09T10:01:00Z", "2026-11-09T10:03:00Z"),
+];
+
+const LEDGER_LOGS: Readonly<Record<string, string>> = {
+  "113":
+    "2026-11-09T10:00:30Z [ci] test-integration plan: 1 partition(s) for 0 selected task(s) of 24: int-rest\n2026-11-09T10:00:31Z test_integration: 1 of 20 partitions: int-rest\n",
+  "114":
+    "2026-11-09T10:02:00Z [ci] test-integration partition union proved: 24 executable tasks, 0 selected, 0 in int-rest.\n",
+};
+
+const ledgerLogGithub = (call: GithubFetchCall): unknown => {
+  const path = call.url.pathname;
+  if (Str.includes("/actions/runs/11/attempts/1/jobs")(path)) {
+    return { jobs: LEDGER_LOG_JOBS, total_count: A.length(LEDGER_LOG_JOBS) };
+  }
+  return O.match(Str.match(/\/actions\/jobs\/(\d+)\/logs$/)(path), {
+    onNone: () => liveGithub(call),
+    onSome: (groups) =>
+      O.match(O.fromUndefinedOr(LEDGER_LOGS[groups[1] ?? ""]), {
+        onNone: () => reply(404)({ message: "Not Found" }),
+        onSome: (log) => log,
+      }),
+  });
+};
+
+describe("ci certainty ledger log capture", () => {
+  it.layer(certaintyCommandLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("reads a window head's Test Plan and catch-all logs after its job reads", () => {
+      const calls = A.empty<GithubFetchCall>();
+      return Effect.gen(function* () {
+        const { corpusFile, markdown } = yield* captureLiveWindow();
+
+        const fs = yield* FileSystem.FileSystem;
+        const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+        strictEqual(corpus.requestCount, 8);
+        deepStrictEqual(
+          A.map(corpus.pullRequestRuns, (run) => [run.run.id, O.isSome(run.ledgerLogs)]),
+          [
+            [11, true],
+            [13, false],
+            [12, false],
+          ]
+        );
+        expect(markdown).toContain("runs 1, undetermined 0, empty legs 1): n=1; mean 2.0 min");
+        expect(markdown).toContain("- local proof on the fleet census (not-read)");
+      }).pipe(withLiveCapture(calls, liveGit(), ledgerLogGithub));
+    });
+
+    it.effect(
+      "skips the log reads the request bound refuses, leaving the legs undetermined and the head counted",
+      () => {
+        const calls = A.empty<GithubFetchCall>();
+        return Effect.gen(function* () {
+          const repoRoot = yield* seedRequiredContexts();
+          const corpusFile = `${repoRoot}/certainty-corpus.json`;
+          yield* runCertaintyCommand([...LIVE_WINDOW, "--max-requests", "7", "--write-corpus", corpusFile]);
+          const markdown = yield* lastCertaintyLog();
+
+          const fs = yield* FileSystem.FileSystem;
+          const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+          strictEqual(corpus.requestCount, 6);
+          assertTrue(A.every(corpus.pullRequestRuns, (run) => O.isNone(run.ledgerLogs)));
+          expect(markdown).not.toContain("Not certified");
+          expect(markdown).toContain("runs 1, undetermined 1, empty legs 0): n=0");
+          assertFalse(A.some(calls, (call) => Str.includes("/logs")(call.url.pathname)));
+        }).pipe(withLiveCapture(calls, liveGit(), ledgerLogGithub));
+      }
+    );
+
+    it.effect("refuses --fleet with --corpus, and reads the fleet journals into the corpus with --fleet", () => {
+      const calls = A.empty<GithubFetchCall>();
+      return Effect.gen(function* () {
+        const repoRoot = yield* seedRequiredContexts();
+        const error = yield* Effect.flip(runCertaintyCommand(["--corpus", `${repoRoot}/none.json`, "--fleet"]));
+        assertInstanceOf(error, CiCommandError);
+        strictEqual(error.message, "--fleet reads live journals; it cannot be combined with --corpus.");
+
+        const corpusFile = `${repoRoot}/certainty-corpus.json`;
+        yield* runCertaintyCommand([...LIVE_WINDOW, "--fleet", "--write-corpus", corpusFile]);
+        const markdown = yield* lastCertaintyLog();
+        const fs = yield* FileSystem.FileSystem;
+        const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+        assertTrue(corpus.fleetLocalProof.pipe(O.isSome));
+        expect(markdown).toContain("- local proof on the fleet census (fleet-journals): publish attempts 0");
+      }).pipe(withLiveCapture(calls, liveGit(), ledgerLogGithub));
+    });
   });
 });

@@ -2605,18 +2605,78 @@ const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
   YeetEconomicsErrorReason.is["no-runs-directory"](error.reason);
 
 /**
+ * Read one `yeet economics` scope and fold it into its report.
+ *
+ * **Details**
+ *
+ * A checkout with no `<packetDir>/runs` folds to an empty report rather than
+ * failing, as `proof-report` does for an empty ledger. Every other
+ * {@link YeetEconomicsError} cause (a failed run-id derivation, no repo root)
+ * fails the read. With `fleetHosts` (which implies `fleet`), the
+ * {@link YeetFleetHostSource} journals join the fold and its receipts the
+ * report's `scope.hosts`. The {@link YeetPressureSource} read is joined onto
+ * every attempt in the report's `pressure` section (MEAS-08), the fleet
+ * hosts' attempts marked `remote-host`. `beep ci certainty --fleet` reads its
+ * local publish and verify row through this.
+ *
+ * **Example** (Build the collector effect)
+ *
+ * ```ts
+ * import { collectYeetEconomicsReport, YeetEconomicsOptions } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option"
+ *
+ * const read = collectYeetEconomicsReport(YeetEconomicsOptions.make({ json: false, branch: O.none(), fleet: true }))
+ * console.log(Effect.isEffect(read)) // true
+ * ```
+ *
+ * @param options - Parsed `yeet economics` flags; `json` is ignored.
+ * @param repoRoot - Where the checkout root comes from; defaults to the git root of the working directory.
+ * @returns The folded economics report.
+ * @category services
+ * @since 0.0.0
+ */
+export const collectYeetEconomicsReport = Effect.fn("Yeet.collectEconomicsReport")(function* (
+  options: YeetEconomicsOptions,
+  repoRoot: Effect.Effect<string, YeetEconomicsError, FileSystem.FileSystem> = locateRepoRoot
+): Effect.fn.Return<
+  YeetEconomicsReport,
+  YeetEconomicsError,
+  FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource | YeetFleetHostSource | YeetPressureSource
+> {
+  const source = yield* YeetEconomicsSource;
+  const reviewLane = yield* YeetReviewLaneSource;
+  const fleetHosts = yield* YeetFleetHostSource;
+  const pressureSource = yield* YeetPressureSource;
+  const checkoutRoot = yield* repoRoot;
+  // `--fleet-hosts` adds the configured hosts to the fleet, so it implies `--fleet`.
+  const request = EconomicsScopeRequest.make({
+    repoRoot: checkoutRoot,
+    branch: options.branch,
+    fleet: options.fleet || options.fleetHosts,
+    fleetHosts: options.fleetHosts,
+    packetDir: options.packetDir,
+  });
+  const local = yield* source
+    .read(request)
+    .pipe(Effect.catchIf(isNoRunsDirectory, () => Effect.succeed(A.empty<EconomicsJournal>())));
+  const hosts = yield* fleetHosts.read(request);
+  const ledgers = yield* reviewLane.read(request);
+  const pressure = yield* pressureSource.read;
+  const folded = yield* reportFor(request, A.appendAll(local, hosts.journals), ledgers, hosts.receipts);
+  return YeetEconomicsReport.make({
+    ...folded,
+    pressure: joinEconomicsPressure(pressure, local, hosts.journals),
+  });
+});
+
+/**
  * Run one `yeet economics` pass: read the scope, fold, print text or JSON.
  *
  * **Details**
  *
- * A checkout with no `<packetDir>/runs` prints an empty report rather than
- * failing, as `proof-report` does for an empty ledger. Every other
- * {@link YeetEconomicsError} cause (a failed run-id derivation, no repo root,
- * a failed encoding) fails the run. With `fleetHosts` (which implies `fleet`),
- * the {@link YeetFleetHostSource} journals join the fold and its receipts the
- * report's `scope.hosts`. The {@link YeetPressureSource} read is joined onto
- * every attempt in the report's `pressure` section (MEAS-08), the fleet
- * hosts' attempts marked `remote-host`.
+ * The report comes from {@link collectYeetEconomicsReport}; a failed encoding
+ * fails the run.
  *
  * **Example** (Build the runner effect)
  *
@@ -2643,30 +2703,7 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
   YeetEconomicsError,
   FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource | YeetFleetHostSource | YeetPressureSource
 > {
-  const source = yield* YeetEconomicsSource;
-  const reviewLane = yield* YeetReviewLaneSource;
-  const fleetHosts = yield* YeetFleetHostSource;
-  const pressureSource = yield* YeetPressureSource;
-  const checkoutRoot = yield* repoRoot;
-  // `--fleet-hosts` adds the configured hosts to the fleet, so it implies `--fleet`.
-  const request = EconomicsScopeRequest.make({
-    repoRoot: checkoutRoot,
-    branch: options.branch,
-    fleet: options.fleet || options.fleetHosts,
-    fleetHosts: options.fleetHosts,
-    packetDir: options.packetDir,
-  });
-  const local = yield* source
-    .read(request)
-    .pipe(Effect.catchIf(isNoRunsDirectory, () => Effect.succeed(A.empty<EconomicsJournal>())));
-  const hosts = yield* fleetHosts.read(request);
-  const ledgers = yield* reviewLane.read(request);
-  const pressure = yield* pressureSource.read;
-  const folded = yield* reportFor(request, A.appendAll(local, hosts.journals), ledgers, hosts.receipts);
-  const report = YeetEconomicsReport.make({
-    ...folded,
-    pressure: joinEconomicsPressure(pressure, local, hosts.journals),
-  });
+  const report = yield* collectYeetEconomicsReport(options, repoRoot);
   if (options.json) {
     const json = yield* YeetEconomicsReportJson.encode(report).pipe(
       Effect.mapError((cause) =>
@@ -2678,6 +2715,53 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
   }
   yield* Console.log(renderYeetEconomicsReport(report));
 });
+
+/**
+ * Provide the live economics sources: the checkout and fleet journals, the
+ * review-lane ledgers, the pressure samples and the fleet-host shell.
+ *
+ * **Example** (Provide the sources to a collector)
+ *
+ * ```ts
+ * import { collectYeetEconomicsReport, provideYeetEconomicsSources, YeetEconomicsOptions } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * import * as O from "effect/Option"
+ *
+ * const read = provideYeetEconomicsSources(
+ *   collectYeetEconomicsReport(YeetEconomicsOptions.make({ json: false, branch: O.none(), fleet: true }))
+ * )
+ * console.log(Effect.isEffect(read)) // true
+ * ```
+ *
+ * @param effect - An effect that reads the economics sources.
+ * @returns The effect with every economics source provided.
+ * @category layers
+ * @since 0.0.0
+ */
+export const provideYeetEconomicsSources = <A>(
+  effect: Effect.Effect<
+    A,
+    YeetEconomicsError,
+    FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource | YeetFleetHostSource | YeetPressureSource
+  >
+): Effect.Effect<
+  A,
+  YeetEconomicsError,
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+> =>
+  effect.pipe(
+    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
+    Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make),
+    Effect.provideServiceEffect(YeetPressureSource, YeetPressureSource.make),
+    Effect.provideServiceEffect(
+      YeetFleetHostSource,
+      Effect.provideServiceEffect(YeetFleetHostSource.make, FleetHostShell, FleetHostShell.make)
+    )
+  );
 
 /**
  * The `yeet economics` command handler: decode the parsed flags and run the
@@ -2708,16 +2792,7 @@ export const runYeetEconomicsCommand = (
   | Digest.Digest
   | ChildProcessSpawner.ChildProcessSpawner
   | SecureRandom.SecureRandom
-> =>
-  runYeetEconomics(YeetEconomicsOptions.make(options)).pipe(
-    Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
-    Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make),
-    Effect.provideServiceEffect(YeetPressureSource, YeetPressureSource.make),
-    Effect.provideServiceEffect(
-      YeetFleetHostSource,
-      Effect.provideServiceEffect(YeetFleetHostSource.make, FleetHostShell, FleetHostShell.make)
-    )
-  );
+> => provideYeetEconomicsSources(runYeetEconomics(YeetEconomicsOptions.make(options)));
 
 const firstLine = (text: string): string => A.headNonEmpty(Str.split(text, "\n"));
 

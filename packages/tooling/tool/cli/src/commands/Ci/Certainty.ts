@@ -45,13 +45,19 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
+import { YeetEconomicsOptions } from "../Yeet/internal/Economics.schemas.ts";
+import { collectYeetEconomicsReport, provideYeetEconomicsSources } from "../Yeet/internal/Economics.ts";
 import {
   CiCertaintyAdmissionStat,
   CiCertaintyContextRow,
   CiCertaintyCorpus,
   CiCertaintyDistribution,
+  CiCertaintyEmptyLegStat,
+  CiCertaintyFleetLocalProof,
   CiCertaintyHeadRow,
   CiCertaintyLatencyStat,
+  CiCertaintyLocalProof,
+  CiCertaintyLocalProofMode,
   CiCertaintyMainCancelStat,
   CiCertaintyMainCommit,
   CiCertaintyMainHorizon,
@@ -75,6 +81,8 @@ import {
 } from "./CiLaneJobs.ts";
 import { CI_LANE_PARTITIONS } from "./CiLanePartitions.ts";
 import { isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
+import { CiLedgerRun } from "./CostLedger.schemas.ts";
+import { ciLedgerLogReads, foldCiLedgerRun, readCiLedgerRunLogs } from "./CostLedger.ts";
 import {
   CiLaneTimingGithubClient,
   CiLaneTimingWindowOptions,
@@ -84,7 +92,11 @@ import {
   makeCiLaneTimingGithubClient,
   withCiGithub,
 } from "./LaneTimings.ts";
+import type { GitHubClient } from "@beep/github/GitHubClient";
+import type { Repo } from "@beep/github/Repo";
 import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type { EconomicsModeDurationRow } from "../Yeet/internal/Economics.schemas.ts";
 import type {
   CiCertaintyCancelActor,
   CiCertaintyCensorReason,
@@ -143,8 +155,7 @@ export const CI_CERTAINTY_NOT_COVERED: ReadonlyArray<string> = [
   "per-task hosted Turbo durations",
   "the hosted concurrent-job ceiling (no admin read)",
   "agent seats as admission demand",
-  "fleet hosts and T3 lanes (no local attempt journal is read in this report)",
-  "local publish and verify figures (censored until journal retention lands)",
+  "fleet hosts (`--fleet` reads this workstation's checkouts and T3 lanes, never the remote hosts)",
   "Test Integration partition setup versus body, and its 1,395-1,551 s outlier legs",
   "Property Laws nightly verdicts (property-laws-nightly.yml)",
   "runs the compute-profile refusal routed to hosted",
@@ -152,6 +163,23 @@ export const CI_CERTAINTY_NOT_COVERED: ReadonlyArray<string> = [
   "heavy-pool VM boot inside heavy slot-minutes (the jobs API starts a job's clock at pickup; boot sits in the heavy-queue row)",
   "the login behind an explicit main cancel (only check-run annotations name it, and every agent shares one login)",
 ];
+
+/**
+ * Why a report without `--fleet` censors its local publish and verify row.
+ *
+ * **Example** (Print the reason)
+ *
+ * ```ts
+ * import { CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON.length > 0)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON =
+  "fleet journals not read: the hosted runner cannot read workstation journals; the source of record is `beep yeet economics --fleet`";
 
 /**
  * Days of main history each capture re-reads for late-arriving verdicts.
@@ -978,6 +1006,98 @@ const rulesetDigestOf = (contexts: ReadonlyArray<string>) =>
     Effect.mapError(CiCommandError.new("Failed to digest the required contexts."))
   );
 
+const ledgerRunOf = (run: CiCertaintyRun): CiLedgerRun =>
+  CiLedgerRun.make({
+    jobs: run.jobs,
+    partialReads: run.partialReads,
+    partitionProofs: O.match(run.ledgerLogs, { onNone: A.empty, onSome: (logs) => logs.partitionProofs }),
+    run: run.run,
+    testPlan: O.flatMap(run.ledgerLogs, (logs) => logs.testPlan),
+  });
+
+const emptyLegStatOf = (runs: ReadonlyArray<CiCertaintyRun>): CiCertaintyEmptyLegStat => {
+  const folded = A.map(runs, (run) => foldCiLedgerRun(ledgerRunOf(run)));
+  const determined = A.filter(folded, (row) => O.isSome(row.emptyLegMs));
+  return CiCertaintyEmptyLegStat.make({
+    emptyLegs: A.reduce(determined, 0, (total, row) => total + row.emptyLegs),
+    minutes: distributionOf(A.getSomes(A.map(determined, (row) => O.map(row.emptyLegMs, (ms) => ms / 60_000)))),
+    runs: A.length(folded),
+    undeterminedRuns: A.length(folded) - A.length(determined),
+  });
+};
+
+const noLocalAttempts = CiCertaintyLocalProofMode.make({
+  attempts: 0,
+  censoredAttempts: 0,
+  measuredAttempts: 0,
+  p50Minutes: O.none(),
+  p95Minutes: O.none(),
+});
+
+const localProofOf = (corpus: CiCertaintyCorpus): CiCertaintyLocalProof =>
+  O.match(corpus.fleetLocalProof, {
+    onNone: () =>
+      CiCertaintyLocalProof.make({
+        censorReason: O.some(CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON),
+        publish: noLocalAttempts,
+        source: "not-read",
+        verify: noLocalAttempts,
+      }),
+    onSome: (fleet) =>
+      CiCertaintyLocalProof.make({
+        censorReason: O.none(),
+        publish: fleet.publish,
+        source: "fleet-journals",
+        verify: fleet.verify,
+      }),
+  });
+
+const msToMinutes = (ms: number): number => roundMinutes(ms / 60_000);
+
+const localProofModeOf = (rows: ReadonlyArray<EconomicsModeDurationRow>, mode: string): CiCertaintyLocalProofMode =>
+  O.match(
+    A.findFirst(rows, (row) => Str.equivalence(row.mode, mode)),
+    {
+      onNone: () => noLocalAttempts,
+      onSome: (row) =>
+        CiCertaintyLocalProofMode.make({
+          attempts: row.attempts,
+          censoredAttempts: row.attempts - row.measuredAttempts,
+          measuredAttempts: row.measuredAttempts,
+          p50Minutes: O.map(row.p50ElapsedMs, msToMinutes),
+          p95Minutes: O.map(row.p95ElapsedMs, msToMinutes),
+        }),
+    }
+  );
+
+/**
+ * The local publish and verify modes of a fleet economics report
+ * (`yeet economics --fleet`'s `modeDurations`).
+ *
+ * **Details**
+ *
+ * An attempt that did not run to its end is censored: it is counted beside the
+ * measured sample, never in it. A mode with no attempt yields zeros.
+ *
+ * **Example** (No mode rows)
+ *
+ * ```ts
+ * import { ciCertaintyFleetLocalProof } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciCertaintyFleetLocalProof([]).publish.attempts) // 0
+ * ```
+ *
+ * @param rows - The economics report's per-mode rows.
+ * @returns The publish and verify modes in minutes.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const ciCertaintyFleetLocalProof = (rows: ReadonlyArray<EconomicsModeDurationRow>): CiCertaintyFleetLocalProof =>
+  CiCertaintyFleetLocalProof.make({
+    publish: localProofModeOf(rows, "publish"),
+    verify: localProofModeOf(rows, "verify"),
+  });
+
 /**
  * Fold a captured corpus into a head-level certainty scorecard.
  *
@@ -1105,6 +1225,7 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
     clockSource: CI_CERTAINTY_CLOCK_SOURCE,
     coverageVerdict: ciCertaintyLatencyStat(codeHeads, (head) => head.coverageVerdictMinutes),
     docsHeads: ciCertaintyLatencyStat(classHeads("docs"), (head) => head.requiredGreenMinutes),
+    emptyLegs: emptyLegStatOf(codeCheckRuns),
     firstWavePickup: distributionOf(A.getSomes(A.map(codeCheckRuns, firstJobPickupMinutes))),
     greenOnly: ciCertaintyLatencyStat(
       A.filter(codeHeads, (head) => O.isSome(head.censor) || Str.equivalence(head.state, "green")),
@@ -1134,6 +1255,7 @@ export const buildCiCertaintyReport = Effect.fn("Ci.buildCiCertaintyReport")(fun
         )
       )
     ),
+    localProof: localProofOf(corpus),
     main: mainStatOf(mainRows),
     mainCancels: mainCancelStatOf(mainRuns),
     mainHorizon: mainHorizonOf(corpus),
@@ -1205,6 +1327,15 @@ const distributionLine = (stat: CiCertaintyDistribution, unit: string): string =
   return `n=${stat.n}; mean ${format(stat.mean)}; p50 ${format(stat.p50)}; p95 ${format(stat.p95)}; max ${format(stat.max)}`;
 };
 
+const localProofModeLine = (label: string, mode: CiCertaintyLocalProofMode): string =>
+  `${label} attempts ${mode.attempts} (measured ${mode.measuredAttempts}, censored ${mode.censoredAttempts}), p50 ${formatMinutes(mode.p50Minutes)}, p95 ${formatMinutes(mode.p95Minutes)}`;
+
+const localProofLine = (row: CiCertaintyLocalProof): string =>
+  `- local proof on the fleet census (${row.source}): ${localProofModeLine("publish", row.publish)}; ${localProofModeLine("verify", row.verify)}${O.match(
+    row.censorReason,
+    { onNone: () => "", onSome: (reason) => `; censored, ${reason}` }
+  )}`;
+
 const latencyRow = (label: string, stat: CiCertaintyLatencyStat): string =>
   `| ${label} | ${stat.n} | ${stat.misses} | ${stat.censoredSuperseded} | ${stat.censoredOpen} | ${stat.withinTen} | ${formatPercentile(stat.p50Minutes, stat.p50Status)} | ${formatPercentile(stat.p95Minutes, stat.p95Status)} |`;
 
@@ -1273,6 +1404,8 @@ const certaintyMarkdown = (report: CiCertaintyReport, headLines: ReadonlyArray<s
       `- Property Laws lane, code-head check.yml runs (first job start to last finish): ${distributionLine(report.propertyLaws, " min")}`,
       `- PR first-wave pickup, code-head check.yml runs (run created to first job start): ${distributionLine(report.firstWavePickup, " min")}`,
       `- replay inputs: main merges ${report.replayInputs.mainMerges}; hosted jobs per main push run ${distributionLine(report.replayInputs.mainRunHostedJobs, "")}; per pull-request head attempt ${distributionLine(report.replayInputs.pullRequestRunHostedJobs, "")}`,
+      `- empty-leg runner-minutes per code-head check.yml run (partition jobs their Test Plan gave no task; runs ${report.emptyLegs.runs}, undetermined ${report.emptyLegs.undeterminedRuns}, empty legs ${report.emptyLegs.emptyLegs}): ${distributionLine(report.emptyLegs.minutes, " min")}`,
+      localProofLine(report.localProof),
       `- owner-scoped Test Unit selection: ${report.testUnitConversion.ownerScopedRuns} of ${report.testUnitConversion.plannedRuns} planned runs (${formatShare(report.testUnitConversion.share)}; full layout ${report.testUnitConversion.fullLayoutJobs} jobs)`,
       "",
       "## Heads",
@@ -1408,6 +1541,11 @@ export interface CiCertaintySourceShape {
  * horizon and their changed paths from local `git`. Every GitHub read is counted and bounded by
  * `maxRequests`; a bound reached mid-capture leaves the affected heads
  * api-partial, which refuses certification instead of shrinking the census.
+ * Last, it reads the Test Plan and catch-all partition logs of each window
+ * head's check.yml runs for the empty-leg row, charging them to the bound
+ * before sending them. Those reads spend only what the job reads left, so they
+ * never make a head api-partial; a run whose log reads the bound refuses keeps
+ * no `ledgerLogs`, and its legs are undetermined rather than empty.
  * Tests and replays provide a corpus directly.
  *
  * **Example** (Access the source service)
@@ -1522,6 +1660,22 @@ const countingGithubClient = (
     }),
   });
 
+const readBoundedLedgerLogs = Effect.fn("Ci.certaintyReadLedgerLogs")(function* (
+  jobs: ReadonlyArray<CiWorkflowJob>,
+  maxRequests: number,
+  count: Ref.Ref<number>
+) {
+  const reads = ciLedgerLogReads(jobs);
+  const admitted = yield* Ref.modify(count, (used): readonly [boolean, number] =>
+    used + reads <= maxRequests ? [true, used + reads] : [false, used]
+  );
+  if (!admitted) {
+    return O.none();
+  }
+  const logs = yield* readCiLedgerRunLogs(jobs);
+  return O.some(logs);
+});
+
 const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
   request: CiCertaintyCaptureRequest,
   requiredContexts: ReadonlyArray<string>,
@@ -1529,7 +1683,7 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
 ): Effect.fn.Return<
   CiCertaintyCorpus,
   CiCommandError,
-  CiLaneTimingGithubClient | ChildProcessSpawner.ChildProcessSpawner
+  CiLaneTimingGithubClient | GitHubClient | Repo | ChildProcessSpawner.ChildProcessSpawner
 > {
   const capturedAt = yield* DateTime.now;
   const horizonSince = DateTime.min(request.since, DateTime.subtractDuration(request.until, MAIN_HORIZON));
@@ -1577,6 +1731,16 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
     }),
     { concurrency: 8 }
   );
+  const withLedgerLogs = yield* Effect.forEach(
+    pullRequestRuns,
+    (run) =>
+      Str.equivalence(run.workflow, PRODUCER_CHECK) && HashSet.has(windowHeadShas, run.run.head_sha)
+        ? Effect.map(readBoundedLedgerLogs(run.jobs, request.maxRequests, count), (ledgerLogs) =>
+            CiCertaintyRun.make({ ...run, ledgerLogs })
+          )
+        : Effect.succeed(run),
+    { concurrency: 4 }
+  );
   const requestCount = yield* Ref.get(count);
   return CiCertaintyCorpus.make({
     capturedAt,
@@ -1590,7 +1754,7 @@ const captureWithClient = Effect.fn("Ci.certaintyCaptureWithClient")(function* (
     mainListingPartial: mainRunsResult._tag === "Failure",
     mainPushRuns: mainRuns,
     mainRunJobs,
-    pullRequestRuns,
+    pullRequestRuns: withLedgerLogs,
     requestCount,
     requiredContexts,
     since: request.since,
@@ -1733,6 +1897,46 @@ const captureLive = Effect.fn("Ci.certaintyCaptureLive")(function* ({
 });
 
 /**
+ * Read the local publish and verify modes from this workstation's fleet
+ * journals, as `beep yeet economics --fleet` folds them.
+ *
+ * **Example** (Reference the reader)
+ *
+ * ```ts
+ * import { readCiCertaintyFleetLocalProof } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(typeof readCiCertaintyFleetLocalProof)
+ * ```
+ *
+ * @param repoRoot - The checkout whose fleet to read.
+ * @returns The fleet's publish and verify modes.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const readCiCertaintyFleetLocalProof = (
+  repoRoot: string
+): Effect.Effect<
+  CiCertaintyFleetLocalProof,
+  CiCommandError,
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+> =>
+  provideYeetEconomicsSources(
+    collectYeetEconomicsReport(
+      YeetEconomicsOptions.make({ json: false, branch: O.none(), fleet: true }),
+      Effect.succeed(repoRoot)
+    )
+  ).pipe(
+    Effect.mapBoth({
+      onFailure: CiCommandError.new("Failed to read the fleet's attempt journals."),
+      onSuccess: (report) => ciCertaintyFleetLocalProof(report.modeDurations),
+    })
+  );
+
+/**
  * `beep ci certainty` — the head-level push-to-every-required-green scorecard.
  *
  * **Details**
@@ -1744,7 +1948,11 @@ const captureLive = Effect.fn("Ci.certaintyCaptureLive")(function* ({
  * the corpus carries branch names, so it is never published. `--summary-out`
  * also writes the aggregates-only Markdown
  * ({@link renderCiCertaintySummaryMarkdown}), before any refusal, for public
- * surfaces such as the nightly workflow's job summary.
+ * surfaces such as the nightly workflow's job summary. `--fleet` also reads
+ * this workstation's attempt journals ({@link readCiCertaintyFleetLocalProof})
+ * into the corpus for the local publish and verify row; without it, as on the
+ * hosted nightly, that row is censored with
+ * {@link CI_CERTAINTY_LOCAL_PROOF_CENSOR_REASON}.
  * An uncertified report is printed in full and then the command exits non-zero
  * naming every refusal, unless `--preview` accepts an uncertified run. The
  * reads are background reads under `goals/github-budget-ledger`'s reserve
@@ -1767,6 +1975,10 @@ export const ciCertaintyCommand = Command.make(
     corpus: Flag.String("corpus").pipe(
       Flag.optional,
       Flag.withDescription("Replay a captured corpus JSON instead of reading GitHub")
+    ),
+    fleet: Flag.Boolean("fleet").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Also read this workstation's attempt journals for the local publish and verify row")
     ),
     json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the report as JSON")),
     mainRef: Flag.String("main-ref").pipe(
@@ -1792,16 +2004,37 @@ export const ciCertaintyCommand = Command.make(
       Flag.withDescription("Write the captured corpus JSON to this path")
     ),
   },
-  Effect.fnUntraced(function* ({ corpus, json, mainRef, maxRequests, preview, since, summaryOut, until, writeCorpus }) {
+  Effect.fnUntraced(function* ({
+    corpus,
+    fleet,
+    json,
+    mainRef,
+    maxRequests,
+    preview,
+    since,
+    summaryOut,
+    until,
+    writeCorpus,
+  }) {
     const fs = yield* FileSystem.FileSystem;
     const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
-    const captured = yield* O.match(corpus, {
+    if (fleet && O.isSome(corpus)) {
+      return yield* CiCommandError.make({
+        message: "--fleet reads live journals; it cannot be combined with --corpus.",
+      });
+    }
+    const read = yield* O.match(corpus, {
       onSome: (file) =>
         fs
           .readFileString(file)
           .pipe(CiCommandError.mapError(`Failed to read ${file}.`), Effect.flatMap(decodeCiCertaintyCorpus)),
       onNone: () => captureLive({ mainRef, maxRequests, repoRoot, since, until }),
     });
+    const captured = fleet
+      ? yield* Effect.map(readCiCertaintyFleetLocalProof(repoRoot), (fleetLocalProof) =>
+          CiCertaintyCorpus.make({ ...read, fleetLocalProof: O.some(fleetLocalProof) })
+        )
+      : read;
     if (O.isSome(writeCorpus)) {
       const text = yield* encodeCorpus(captured).pipe(
         CiCommandError.mapError("Failed to encode the certainty corpus.")
