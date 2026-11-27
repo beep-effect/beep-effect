@@ -55,13 +55,12 @@ describe("Xdg schema laws", () => {
             const context = yield* Layer.buildWithScope(layer, scope);
             return yield* Xdg.pipe(Effect.provideContext(context));
           });
-          // Mix absolute and relative entries; a body may itself carry ":" separators.
-          const raw = A.join(
+          const mixedEntries = A.join(
             A.map(parts, ({ absolute, body }) => (absolute ? `/${body}` : body)),
             ":"
           );
-          const parsed = yield* parse(raw);
-          const entries = A.filter(Str.split(raw, ":"), Str.startsWith("/"));
+          const parsed = yield* parse(mixedEntries);
+          const entries = A.filter(Str.split(mixedEntries, ":"), Str.startsWith("/"));
           assert.deepStrictEqual(parsed.configDirs, entries.length === 0 ? ["/etc/xdg"] : entries);
           assert.deepStrictEqual(parsed.dataDirs, entries.length === 0 ? ["/usr/local/share", "/usr/share"] : entries);
           const configText = A.join(parsed.configDirs, ":");

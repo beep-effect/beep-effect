@@ -72,9 +72,6 @@ const makeStatusConstructor =
   (message: string, cause?: unknown): Error =>
     new ctor({ message, status, cause: O.isOption(cause) ? cause : O.fromUndefinedOr(cause) });
 
-// The retired `@beep/schema` `HttpStatus4XX` / `HttpStatus5XX` kits: the status name on the
-// encoded side and its code on the decoded side, over the same names. Each name maps to its
-// `effect/http/HttpStatus` code, so an unnamed code in the range still fails to decode, as before.
 const statusNameCodec = <const Name extends HttpStatus.Literal>(names: A.NonEmptyReadonlyArray<Name>) =>
   S.Literals(names).transform(A.map(names, HttpStatus.fromLiteral));
 

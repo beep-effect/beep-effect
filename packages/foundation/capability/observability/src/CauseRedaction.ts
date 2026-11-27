@@ -151,9 +151,7 @@ export const RedactionChannel = LiteralKit(["client", "diagnostic"]).pipe(
  */
 export type RedactionChannel = typeof RedactionChannel.Type;
 
-// Matching semantics come exclusively from the canonical versioned bank.
-// Rendering, category selection and whitespace policy remain owned by this consumer.
-const redactionSteps: ReadonlyArray<(input: string) => string> = A.make(
+const bankCategoryRedactions: ReadonlyArray<(input: string) => string> = A.make(
   maskCredentialCategory("secret-assignment"),
   replaceCredentialCategory("auth-header", `$1$2${REDACTION_PLACEHOLDER}`),
   replaceCredentialCategory("bearer-token", `$1$2${REDACTION_PLACEHOLDER}`),
@@ -162,7 +160,8 @@ const redactionSteps: ReadonlyArray<(input: string) => string> = A.make(
   replaceCredentialCategory("home-path", `$1$3${REDACTION_PLACEHOLDER}`)
 );
 
-const applyRedactionSteps = (input: string): string => A.reduce(redactionSteps, input, (acc, step) => step(acc));
+const applyRedactionSteps = (input: string): string =>
+  A.reduce(bankCategoryRedactions, input, (acc, step) => step(acc));
 
 /**
  * Strip secret-shaped tokens and home-directory paths from a single string.
@@ -347,11 +346,6 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
 
   return RedactedCause.make({
     tag: summary.classification,
-    // The fingerprint is message-derived (see CauseDiagnostics.fingerprintValue),
-    // so it can carry the same secrets/tokens/home paths as the raw message.
-    // Sanitize it with the unbounded message redactor: secret-shaped values
-    // collapse to the placeholder while the structural fingerprint stays stable
-    // for correlation (same structural error → same redacted fingerprint).
     fingerprint: sanitizeSensitiveText(summary.fingerprint.value),
     message: redactString(summary.primaryMessage, options.messageLimit),
     detail,
@@ -361,6 +355,13 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
 
 /**
  * Redact a cause summary's message, detail, and fingerprint for safe logging.
+ *
+ * **Details**
+ *
+ * The fingerprint is derived from the message, so it can carry the same
+ * secrets, tokens and home paths. It is sanitized without truncation:
+ * secret-shaped values collapse to the placeholder, and the same structural
+ * error keeps the same redacted fingerprint for correlation.
  *
  * **Example** (Redact cause summary safely)
  *

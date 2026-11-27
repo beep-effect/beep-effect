@@ -106,10 +106,6 @@ const makeTextNode = (fields: {
     })
   );
 
-// =============================================================================
-// Constructors
-// =============================================================================
-
 /**
  * Create an empty structural text graph.
  *
@@ -253,10 +249,6 @@ export const fromDocument = Effect.fn("TextGraph.fromDocument")(function* (
     return graph;
   }).pipe(Obs.observeNlpWorkflow("TextGraph.fromDocument", attributes));
 });
-
-// =============================================================================
-// Graph Operations
-// =============================================================================
 
 /**
  * Add child nodes under a parent, validating the result stays acyclic.
@@ -536,14 +528,6 @@ export const filterNodes: {
   (graph: TextGraph, predicate: (node: TextNode) => boolean): TextGraph => rebuild(graph, predicate, (node) => node)
 );
 
-// =============================================================================
-// Traversal
-// =============================================================================
-
-/**
- * Walkers take an optional `start` list, so arity alone cannot decide the call
- * style. A `TextGraph` is never an array, which makes the subject decidable.
- */
 const isTraversalDataFirst = (args: IArguments): boolean =>
   args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !A.isArray(args[0]));
 
@@ -635,10 +619,6 @@ export const topo = (graph: TextGraph): Graph.NodeWalker<TextNode> => Graph.topo
  */
 export const toArray = (graph: TextGraph): ReadonlyArray<TextNode> =>
   A.fromIterable(graph.pipe(Graph.nodes, Graph.values));
-
-// =============================================================================
-// Queries
-// =============================================================================
 
 /**
  * Count nodes in a text graph.
@@ -763,10 +743,6 @@ export const getChildren: {
   2,
   (graph: TextGraph, nodeIndex: Graph.NodeIndex): ReadonlyArray<Graph.NodeIndex> => Graph.neighbors(graph, nodeIndex)
 );
-
-// =============================================================================
-// Visualization & algorithms
-// =============================================================================
 
 /**
  * Export the text graph to GraphViz DOT format.

@@ -36,7 +36,6 @@ const safeCompilerDiagnostic = (output: string): string =>
   redactString(Str.replaceAll(repoRoot, "<repo>")(output), compilerOutputLimit);
 const runTypecheck = Effect.fn("BoundaryTest.runTypecheck")(function* (tscPath: string, tsconfigPath: string) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  // Drain both pipes while awaiting exit; each compiler owns a shorter child scope.
   const child = yield* spawner.spawn(
     ChildProcess.make(tscPath, ["--pretty", "false", "--noEmit", "-p", tsconfigPath], {
       cwd: repoRoot,

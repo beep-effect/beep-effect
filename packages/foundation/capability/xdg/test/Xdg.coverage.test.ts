@@ -31,9 +31,8 @@ describe("Xdg fallback coverage", () => {
   it.effect("uses Linux conventions when the host reports no process or an unknown platform", () =>
     Effect.gen(function* () {
       const on = (platform: string) => currentPlatform.pipe(Effect.provideService(HostProcessPlatform, platform));
-      // HostProcessPlatform reads "browser" when there is no `process` at all.
-      const on1 = yield* on("browser");
-      assert.strictEqual(on1, "linux");
+      const withoutProcess = yield* on("browser");
+      assert.strictEqual(withoutProcess, "linux");
       const on2 = yield* on("unknown-os");
       assert.strictEqual(on2, "linux");
       const on3 = yield* on("darwin");

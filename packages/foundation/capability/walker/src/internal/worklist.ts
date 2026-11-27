@@ -16,6 +16,11 @@ import * as O from "effect/Option";
 /**
  * Iterate a growing worklist by head index, stopping at a missing frame.
  *
+ * **Details**
+ *
+ * `Array.shift()` re-indexes the whole array on every dequeue, so a
+ * shift-based queue would make a large walk quadratic.
+ *
  * **Example** (Visit queued frames)
  *
  * ```ts
@@ -27,8 +32,6 @@ import * as O from "effect/Option";
  * @since 0.0.0
  */
 export function* walkFrames<T>(frames: ReadonlyArray<T | undefined>): Generator<T> {
-  // A head index, never Array.shift(): shift() re-indexes the whole array on
-  // every dequeue, turning a large walk quadratic.
   for (let head = 0; head < frames.length; head += 1) {
     const frame = frames[head];
     if (frame === undefined) break;

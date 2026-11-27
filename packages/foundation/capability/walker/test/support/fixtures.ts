@@ -1,18 +1,3 @@
-// In-memory filesystem fixtures for the descend suite.
-//
-// The volume is `@beep/memfs` — a real virtual POSIX filesystem — rather
-// than a hand-rolled `FileSystem.layerNoop` answering the three methods
-// `descend` happens to call. That distinction matters: a stub only implements
-// the semantics its author remembered, so a walker bug that depends on
-// anything else (mode bits, parent-directory creation, a symlink hop the stub
-// resolved in one step) cannot show up in a test. memfs still needs no
-// platform package, so the "no `@effect/platform-node`, even in tests" rule
-// holds.
-//
-// Symlinks are seeded; the two misbehaviors are injected as faults, which is
-// the sanctioned way to reach a permission failure (memfs records modes but
-// never enforces them).
-
 import { MemoryFileSystem } from "@beep/memfs";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -35,7 +20,11 @@ export interface FileSystemOptions {
    * and stats NotFound); `readLink` succeeds on it and nothing else.
    */
   readonly symlinks?: Readonly<Record<string, string>>;
-  /** Directories whose `readDirectory` fails with `PermissionDenied` — the unreadable-subtree case. */
+  /**
+   * Directories whose `readDirectory` fails with `PermissionDenied` — the unreadable-subtree case.
+   * They are seeded as real directories, so their parent still lists them and they stat as
+   * directories.
+   */
   readonly unreadable?: HashSet.HashSet<string>;
   /**
    * Paths whose `realPath` fails with the given reason — the
@@ -53,8 +42,6 @@ export interface FileSystemOptions {
   readonly vanished?: HashSet.HashSet<string>;
 }
 
-// The v4 constructor is `PlatformError.systemError`, not a `new SystemError` —
-// `SystemError` is the reason payload, `PlatformError` is the failure.
 const failure = (method: "readDirectory" | "realPath", reason: "NotFound" | "PermissionDenied", path: string) =>
   Effect.fail(
     PlatformError.systemError({
@@ -65,12 +52,6 @@ const failure = (method: "readDirectory" | "realPath", reason: "NotFound" | "Per
     })
   );
 
-/**
- * A `FileSystem` over a virtual tree. Files and symlinks are seeded into the
- * volume; `unreadable` and `vanished` directories are seeded too (so they
- * appear in their parent's listing and stat as directories) and then have
- * their `readDirectory` intercepted.
- */
 const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<FileSystem.FileSystem> => {
   const unreadable = options.unreadable ?? HashSet.empty<string>();
   const vanished = options.vanished ?? HashSet.empty<string>();
@@ -79,8 +60,6 @@ const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<Fi
   const seed: Record<string, MemoryFileSystemSeedEntry> = {};
   for (const [path, contents] of R.toEntries(tree)) seed[path] = contents;
   for (const [link, target] of R.toEntries(options.symlinks ?? {})) seed[link] = MemoryFileSystem.symlink(target);
-  // Seeded as real (empty) directories: the misbehavior is on the read, not on
-  // their existence — both cases must still be listed by their parent.
   for (const dir of HashSet.union(unreadable, vanished)) seed[dir] ??= MemoryFileSystem.directory();
 
   return MemoryFileSystem.layerWith(seed, {
@@ -88,7 +67,7 @@ const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<Fi
       readDirectory: (path: string) => {
         if (HashSet.has(unreadable, path)) return failure("readDirectory", "PermissionDenied", path);
         if (HashSet.has(vanished, path)) return failure("readDirectory", "NotFound", path);
-        return undefined; // delegate to the real volume
+        return undefined;
       },
       realPath: (path: string) => {
         const reason = unresolvable[path];
