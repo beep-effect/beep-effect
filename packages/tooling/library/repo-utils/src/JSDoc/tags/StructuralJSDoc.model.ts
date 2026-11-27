@@ -46,11 +46,7 @@ export class JSDocParam extends S.Opaque<JSDocParam & JSDocTagMember<"param">, {
     relatedTags: ["returns", "template", "callback"],
     isDeprecated: false,
     example: `/** @param {string} name - The user's display name */`,
-  }).pipe(
-    $I.annoteSchema("JSDocParam", {
-      // description:
-    })
-  )
+  }).pipe($I.annoteSchema("JSDocParam", {}))
 ) {
   static readonly serializer = S.toCodecJson(this);
 }
@@ -92,11 +88,7 @@ export class JSDocReturns extends S.Opaque<
     relatedTags: ["param", "throws", "yields"],
     isDeprecated: false,
     example: `/** @returns {Promise<User>} The resolved user object */`,
-  }).pipe(
-    $I.annoteSchema("JSDocReturns", {
-      // description:
-    })
-  )
+  }).pipe($I.annoteSchema("JSDocReturns", {}))
 ) {}
 
 /**

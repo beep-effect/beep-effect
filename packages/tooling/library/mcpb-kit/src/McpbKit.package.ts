@@ -319,9 +319,7 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
     target === "windows-x64"
       ? yield* Effect.flatMap(mcpbCacheDirectory, (cacheDir) => ensureWindowsBindings(cacheDir, repoRoot))
       : path.resolve(repoRoot, "node_modules", "@duckdb", nativePackage);
-  // Staging resolves the pinned runtime before the last bundle is removed, so
-  // a pin or download failure leaves it in place.
-  const staged = yield* McpbLaunch.match(launch, {
+  const stagedBeforeBundleRemoval = yield* McpbLaunch.match(launch, {
     compiled: ({ bunTarget, executable }) =>
       Effect.succeed({
         files: [executable],
@@ -376,10 +374,8 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
     Effect.mapError((cause) => McpbPackageFailure.make({ cause, message: `Failed encoding the ${target} manifest.` }))
   );
   yield* fs.writeFileString(path.join(bundleDir, "manifest.json"), `${manifest}\n`);
-  yield* staged.build;
+  yield* stagedBeforeBundleRemoval.build;
   yield* copyDirectory(nativeSource, path.join(bundleDir, "node_modules", "@duckdb", nativePackage));
-  // DuckDB publishes `duckdb.node` unsigned (`duckdb.dll` beside it is signed),
-  // so it passes Windows application control on reputation only.
   yield* assertSignedBinaries({
     bundleDir,
     allowedUnsigned: [`node_modules/@duckdb/${nativePackage}/duckdb.node`],
@@ -388,7 +384,7 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
   yield* run(["zip", "-q", "-r", archivePath, "."], { cwd: bundleDir });
   yield* assertArchive({
     archivePath,
-    files: staged.files,
+    files: stagedBeforeBundleRemoval.files,
     nativePackage,
     forbiddenFragments: spec.forbiddenArchiveFragments,
   });
@@ -411,6 +407,12 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
  * binary other than DuckDB's `duckdb.node`. The command needs a
  * `Digest` service; running it needs `bun`, `zip` and `unzip` (and `curl`,
  * `tar` for Windows) on `PATH`.
+ *
+ * **Gotchas**
+ *
+ * DuckDB publishes `duckdb.node` unsigned (the `duckdb.dll` beside it is
+ * signed), so the Windows bundle's native addon passes Windows application
+ * control on reputation only.
  *
  * **Example** (Build the command for an app)
  *

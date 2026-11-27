@@ -41,9 +41,7 @@ const makeFlips = (paintJitterMs = 0): ReadonlyArray<BeaconEvent> =>
     })
   );
 
-// Video timeline starts exactly at T0: white iff the last flip at or before t
-// had an even index.
-const lumaAtSeconds = (timeSeconds: number): number => {
+const lumaOfVideoStartingAtT0 = (timeSeconds: number): number => {
   const sinceFirstFlipMs = timeSeconds * 1000 - FIRST_FLIP_OFFSET_MS;
   if (sinceFirstFlipMs < 0) {
     return 16;
@@ -56,7 +54,7 @@ const syntheticSamples = (fps: number, durationSeconds: number): ReadonlyArray<L
   A.makeBy(Math.floor(durationSeconds * fps), (frameIndex) =>
     LuminanceSample.make({
       frameIndex,
-      meanLuma: lumaAtSeconds(frameIndex / fps),
+      meanLuma: lumaOfVideoStartingAtT0(frameIndex / fps),
       ptsTimeSeconds: frameIndex / fps,
     })
   );
@@ -123,7 +121,7 @@ const DelayedBeaconTestLayer = Layer.suspend(() => {
       const samples = A.makeBy(Math.floor(O.getOrThrow(clip.durationSeconds) * 30), (frameIndex) =>
         LuminanceSample.make({
           frameIndex,
-          meanLuma: lumaAtSeconds(frameIndex / 30 + clip.startSeconds - 4),
+          meanLuma: lumaOfVideoStartingAtT0(frameIndex / 30 + clip.startSeconds - 4),
           ptsTimeSeconds: frameIndex / 30,
         })
       );
@@ -216,9 +214,10 @@ describe("@beep/qa-capture clock correlator", () => {
           );
           expect(sync.method).toBe("beacon");
           expect(sync.confidence).toBe("high");
-          // Frame quantization delays each detected edge by up to one frame
-          // (33.3 ms at 30 fps); the mean shift survives in the offset.
-          expect(Math.abs(sync.offsetMs + T0)).toBeLessThan(40);
+          expect(
+            Math.abs(sync.offsetMs + T0),
+            "30 fps quantization delays each edge up to one 33.3 ms frame"
+          ).toBeLessThan(40);
           expect(sync.residualRmsMs).toBeLessThanOrEqual(25);
         })
       );

@@ -16,15 +16,8 @@ import { fixtureLayer, tree } from "./support/fixtures.ts";
 import type { SyncFileSystem, TsconfigLoaderSyncOptions } from "@beep/repo-tsconfig/TsconfigLoaderSync";
 import type { FixtureTree } from "./support/fixtures.ts";
 
-/**
- * A `SyncFileSystem` over a real memfs volume: the handle's `sync` port is
- * node-shaped (`exists` follows links and is directory-true, `readFile`
- * throws node's exact errno on a miss), so it satisfies the consumer contract
- * structurally with no adapter. Contents are only what the tree seeds.
- */
-const syncFs = (files: FixtureTree): SyncFileSystem => MemoryFileSystem.makeSync(files).sync;
+const nodeShapedSyncFs = (files: FixtureTree): SyncFileSystem => MemoryFileSystem.makeSync(files).sync;
 
-// Pure Layer.succeed providers retain Node's exact POSIX and Win32 path methods.
 const posixPath = NodePath.layerPosix.pipe(
   Layer.build,
   Effect.map(Context.get(Path.Path)),
@@ -39,11 +32,10 @@ const win32Path = NodePath.layerWin32.pipe(
 );
 
 const posixOptions = (files: FixtureTree): TsconfigLoaderSyncOptions => ({
-  fileSystem: syncFs(files),
+  fileSystem: nodeShapedSyncFs(files),
   path: posixPath,
 });
 
-/** Run `fn`, returning what it throws; fails the test if it returns instead. */
 const capture = (fn: () => unknown): unknown => {
   let thrown: unknown;
   let threw = false;
@@ -56,10 +48,6 @@ const capture = (fn: () => unknown): unknown => {
   assert.isTrue(threw, "expected the call to throw");
   return thrown;
 };
-
-// ---------------------------------------------------------------------------
-// The shared extends-chain fixture: derived wins over base per key.
-// ---------------------------------------------------------------------------
 
 const CHAIN_TREE = tree(
   ["/proj/tsconfig.json", `{ "extends": "./base.json", "compilerOptions": { "strict": true, "target": "es2024" } }`],
@@ -115,7 +103,7 @@ describe("TsconfigLoaderSync.resolve", () => {
       TsconfigLoaderSync.resolve("/proj/tsconfig.json", {
         path: posixPath,
         fileSystem: {
-          ...syncFs(directoryFiles),
+          ...nodeShapedSyncFs(directoryFiles),
           isFile: () => {
             throw cause;
           },
@@ -139,9 +127,8 @@ describe("TsconfigLoaderSync.resolve", () => {
   it("folds an extends chain derived-wins", () => {
     const resolved = TsconfigLoaderSync.resolve("/proj/tsconfig.json", posixOptions(CHAIN_TREE));
     assert.deepStrictEqual(resolved.extendedPaths, ["/proj/base.json", "/proj/tsconfig.json"]);
-    // Derived wins on the shared key; the base-only key survives.
-    assert.strictEqual(resolved.compilerOptions.target, "es2024");
-    assert.strictEqual(resolved.compilerOptions.module, "esnext");
+    assert.strictEqual(resolved.compilerOptions.target, "es2024", "derived wins on the shared key");
+    assert.strictEqual(resolved.compilerOptions.module, "esnext", "the base-only key survives");
     assert.strictEqual(resolved.compilerOptions.strict, true);
   });
 
@@ -167,10 +154,9 @@ describe("TsconfigLoaderSync.resolve", () => {
     assert.strictEqual(error.reason._tag, "Unknown");
     assert.strictEqual(error.reason.module, "FileSystem");
     assert.strictEqual(error.reason.method, "readFileString");
-    // The original throw rides as the cause: the volume's own ENOENT, not a fabricated one.
     const cause = error.reason.cause;
     if (!P.hasProperty(cause, "code")) return assert.fail("expected errno cause");
-    assert.strictEqual(cause.code, "ENOENT");
+    assert.strictEqual(cause.code, "ENOENT", "the original throw rides as the cause: the volume's own ENOENT");
   });
 
   it("throws the typed TsconfigExtendsError on a cycle", () => {
@@ -191,10 +177,6 @@ describe("TsconfigLoaderSync.compilerOptions", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Async/sync parity: the same fixture through both pipelines.
-// ---------------------------------------------------------------------------
-
 layer(fixtureLayer(CHAIN_TREE), { timeout: "30 seconds" })("TsconfigLoaderSync parity with TsconfigLoader", (it) => {
   it.effect("resolve returns the exact async result on the same fixture", () =>
     Effect.gen(function* () {
@@ -214,21 +196,7 @@ layer(fixtureLayer(CHAIN_TREE), { timeout: "30 seconds" })("TsconfigLoaderSync p
   );
 });
 
-// ---------------------------------------------------------------------------
-// The consumer's path implementation is respected end to end: a win32-
-// flavored SyncPath (drive-letter roots, backslash output) drives the whole
-// resolution. Under the posix implementation these inputs would resolve
-// against the test process cwd instead of the drive root.
-// ---------------------------------------------------------------------------
-
-/**
- * memfs is a POSIX volume, so a win32 path reaches it through a two-member
- * shim: backslashes become forward slashes and a drive root `C:` becomes the
- * top-level directory `/C:`. Only the spelling is translated — existence and
- * content still come from the volume. This suite is about the consumer's
- * `SyncPath` driving resolution, not about Windows filesystem semantics.
- */
-const win32Fs = (files: FixtureTree): SyncFileSystem => {
+const win32SpellingOverMemfs = (files: FixtureTree): SyncFileSystem => {
   const toVolume = (p: string): string => {
     const slashed = Str.replace(/\\/g, "/")(p);
     return /^[A-Za-z]:\//.test(slashed) ? `/${slashed}` : slashed;
@@ -242,36 +210,29 @@ describe("TsconfigLoaderSync with a win32 SyncPath", () => {
     ["C:/proj/tsconfig.json", `{ "extends": ".\\\\base.json", "compilerOptions": { "strict": true } }`],
     ["C:/proj/base.json", `{ "compilerOptions": { "target": "es2022" } }`]
   );
-  const options: TsconfigLoaderSyncOptions = { fileSystem: win32Fs(files), path: win32Path };
+  const options: TsconfigLoaderSyncOptions = { fileSystem: win32SpellingOverMemfs(files), path: win32Path };
 
   it("resolves a backslash extends chain under drive-letter roots", () => {
     const resolved = TsconfigLoaderSync.resolve("C:\\proj\\tsconfig.json", options);
-    // The loader's documented normalize-to-forward-slash policy, applied to
-    // paths the win32 implementation produced: drive-letter roots survive,
-    // which the posix implementation could never have yielded.
-    assert.strictEqual(resolved.configPath, "C:/proj/tsconfig.json");
+    assert.strictEqual(
+      resolved.configPath,
+      "C:/proj/tsconfig.json",
+      "forward-slash normalization of win32 output keeps the drive-letter root"
+    );
     assert.deepStrictEqual(resolved.extendedPaths, ["C:/proj/base.json", "C:/proj/tsconfig.json"]);
     assert.strictEqual(resolved.compilerOptions.strict, true);
     assert.strictEqual(resolved.compilerOptions.target, "es2022");
   });
 
   it("treats a drive-letter path as absolute only under the supplied implementation", () => {
-    // The premise the suite rests on, pinned: the two implementations
-    // genuinely disagree about these inputs.
     assert.isTrue(win32Path.isAbsolute("C:\\proj\\tsconfig.json"));
-    assert.isFalse(posixPath.isAbsolute("C:\\proj\\tsconfig.json"));
+    assert.isFalse(
+      posixPath.isAbsolute("C:\\proj\\tsconfig.json"),
+      "the posix and win32 implementations disagree about a drive-letter path"
+    );
   });
 });
 
-// ---------------------------------------------------------------------------
-// The optional realPath: a package target is realpathed through the consumer's
-// function, and the identity stands in when the consumer supplies none.
-// ---------------------------------------------------------------------------
-
-/**
- * A linked workspace package, spelled as the two places it lives: the files exist under
- * `/proj/packages/lib`, and `/proj/app/node_modules/lib` is the same directory seen through a link.
- */
 const LINKED_TREE = tree(
   ["/proj/packages/base/tsconfig.base.json", `{ "compilerOptions": { "strict": true } }`],
   ["/proj/packages/lib/tsconfig.json", `{ "extends": "../base/tsconfig.base.json" }`],
@@ -279,14 +240,13 @@ const LINKED_TREE = tree(
   ["/proj/app/tsconfig.json", `{ "extends": "lib/tsconfig.json" }`]
 );
 
-/** The link the tree models, as `realpathSync` would report it. */
 const linkedRealPath = (p: string): string =>
   Str.startsWith("/proj/app/node_modules/lib/")(p) ? `/proj/packages/lib/${Str.slice(27)(p)}` : p;
 
 describe("TsconfigLoaderSync realPath", () => {
   it("realpaths a package target through the consumer's realPath", () => {
     const options: TsconfigLoaderSyncOptions = {
-      fileSystem: { ...syncFs(LINKED_TREE), realPath: linkedRealPath },
+      fileSystem: { ...nodeShapedSyncFs(LINKED_TREE), realPath: linkedRealPath },
       path: posixPath,
     };
     const resolved = TsconfigLoaderSync.resolve("/proj/app/tsconfig.json", options);
@@ -306,9 +266,9 @@ describe("TsconfigLoaderSync realPath", () => {
   });
 
   it("throws the wrapped PlatformError when realPath throws", () => {
-    // An empty volume's readFile throws node's exact ENOENT for any path: a realistic realPath failure.
+    const enoentOnEveryPath = nodeShapedSyncFs(tree()).readFile;
     const options: TsconfigLoaderSyncOptions = {
-      fileSystem: { ...syncFs(LINKED_TREE), realPath: syncFs(tree()).readFile },
+      fileSystem: { ...nodeShapedSyncFs(LINKED_TREE), realPath: enoentOnEveryPath },
       path: posixPath,
     };
     const thrown = capture(() => TsconfigLoaderSync.resolve("/proj/app/tsconfig.json", options));

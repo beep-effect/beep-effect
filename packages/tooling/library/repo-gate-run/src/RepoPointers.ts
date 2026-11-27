@@ -136,7 +136,6 @@ export class GateQueryCommands extends S.Opaque<GateQueryCommands, { readonly br
   )
 ) {}
 
-// `beep gate show <gate>` and `beep gate item <gate> <selector>` are built in the repo CLI.
 const liveQueries = (gate: ContractGate): GateQueryCommands =>
   GateQueryCommands.make({
     showRun: RepoCommand.make({ words: ["gate", "show", gate], status: "live" }),
@@ -226,8 +225,6 @@ export const repoCommands: ReadonlyArray<RepoCommand> = A.flatMap(R.values(repoG
   commands.showItem,
 ]);
 
-// The flags that pin a query to one record: a package's directory, or a root
-// run's id, so a printed pointer still names its run after later runs.
 const targetFlags: (target: RecordTarget) => ReadonlyArray<string> = RecordTarget.match({
   PackageTarget: (target) => ["--dir", target.packageDir],
   RootTarget: (target) => ["--run", target.runId],
@@ -236,7 +233,8 @@ const targetFlags: (target: RecordTarget) => ReadonlyArray<string> = RecordTarge
 /**
  * The query commands for one record: `gate show` of that record, and
  * `gate item` of its first listed item, each pinned by `--dir <package>` for
- * a package record or `--run <run id>` for a root run.
+ * a package record or `--run <run id>` for a root run, so a printed pointer
+ * still names its record after later runs.
  *
  * **Example** (Pin a package record)
  *

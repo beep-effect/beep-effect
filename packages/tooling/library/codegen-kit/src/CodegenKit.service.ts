@@ -376,11 +376,9 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
       const definitions = yield* definitionsFor(document, config);
       return yield* Effect.try({
         try: () => {
-          // Every selected schema is a definition: registering one again as a named root would collide with
-          // its own reference, and the generator would emit a second copy under a suffixed name.
-          const includeSchemas = A.map(selectedEntries(definitions, config.roots), ([name]) => name);
+          const rootsAsDefinitionsOnly = A.map(selectedEntries(definitions, config.roots), ([name]) => name);
           return makeJsonSchemaGenerator().generate(schemaGeneratorSource(config), definitions, false, {
-            includeSchemas,
+            includeSchemas: rootsAsDefinitionsOnly,
             onEnter: composeTransforms(config.transforms, definitions),
           });
         },
@@ -393,8 +391,6 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
     const warnings = MutableList.make<OpenApiGenerator.OpenApiGeneratorWarning>();
     const definitionsFor1 = yield* definitionsFor(document, config);
     const onEnter = composeTransforms(config.transforms, definitionsFor1);
-    // The upstream generator runs synchronously inside its own Effect, so a throwing `onEnter` transform
-    // or importer surfaces as a defect. Report it like the schemas branch does: as a typed generate error.
     const generated = yield* openApiGenerator
       .generate(spec, {
         name: pipe(

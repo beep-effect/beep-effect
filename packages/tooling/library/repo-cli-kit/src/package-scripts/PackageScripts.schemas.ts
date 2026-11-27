@@ -831,8 +831,10 @@ export class PackageScriptsReportWire extends S.Opaque<PackageScriptsReportWire,
     rules: PackageScriptsRuleVersion,
     manifests: ManifestCount,
     drift: S.Record(S.String, S.Array(PackageScriptsDrift)),
-    // Added after v1 shipped: absent in earlier v1 payloads, decoded as empty.
-    implDrift: S.Record(S.String, S.Array(ImplScriptDrift)).pipe(S.withDecodingDefaultKey(Effect.succeed({}))),
+    implDrift: S.Record(S.String, S.Array(ImplScriptDrift)).pipe(
+      S.annotateKey({ description: "Added after v1 shipped: absent in earlier v1 payloads, decoded as empty." }),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
     written: S.Array(S.String),
   }).pipe(
     $I.annoteSchema("PackageScriptsReportWire", {
@@ -1625,8 +1627,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
 ];
 
-// Every policy-managed kind. Apps and labs generate a no-emit build, but three apps
-// (`architecture-lab-proof`, `practice-gateway`, `practice-kg-mcp`) carry the library build.
 const ManagedKind = PackageKind.omit(["exempt"]);
 const BABEL_BUILD = "tsrs -p tsconfig.json && bun run babel";
 
@@ -1640,6 +1640,9 @@ const BABEL_BUILD = "tsrs -p tsconfig.json && bun run babel";
  * `@beep/repo-configs`, so no `beep:build` still calls the retired `babel`
  * script. A package listed in `javaScriptBuildOverrides` keeps its `beep:build`
  * as written.
+ * Apps and labs generate a no-emit build, but a few apps (`architecture-lab-proof`,
+ * `practice-gateway`, `practice-kg-mcp`) carry the library build, so the
+ * retirements cover every kind except `exempt`.
  *
  * **Example** (Find the replacement for the Babel build)
  *
@@ -1749,12 +1752,9 @@ export const ownSourceCheckOverrides: ReadonlyArray<OwnSourceCheckOverride> = [
   }),
 ];
 
-// A program ends where the command does, at whitespace before its own flags, or at `&&`.
 const opensAtBoundary = (rest: string): boolean =>
   Str.isEmpty(rest) || Str.startsWith("&&")(rest) || Str.trimStart(rest) !== rest;
 
-// The text after `program` when it opens the command's first `&&` segment: nothing, the
-// program's own flags, or `&&` and the later segments; the caller keeps it verbatim.
 const afterLeadingProgram = (command: string, program: string): O.Option<string> =>
   pipe(O.liftPredicate(command, Str.startsWith(program)), O.map(Str.slice(program.length)), O.filter(opensAtBoundary));
 
@@ -1864,7 +1864,6 @@ export const applyScaffoldRuleForTesting: {
   (rule: TaskScriptRule): (scripts: HashMap.HashMap<string, string>) => HashMap.HashMap<string, string>;
 } = dual(2, scaffoldRule);
 
-// A scaffolded declaration-only package leads its `beep:check` with its build, as the writer would.
 const serveScaffoldCheck = (scripts: HashMap.HashMap<string, string>): HashMap.HashMap<string, string> =>
   pipe(
     O.all([HashMap.get(scripts, "beep:check"), HashMap.get(scripts, "beep:build")]),

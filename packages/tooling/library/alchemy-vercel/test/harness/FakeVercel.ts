@@ -102,16 +102,9 @@ const envsById = MutableHashMap.empty<string, EnvRecord>();
 const domainsByName = MutableHashMap.empty<string, DomainRecord>();
 const dnsFixed = MutableHashSet.empty<string>();
 const storedTypes = MutableHashMap.empty<string, string>();
-/** Keys whose create the fake refuses, to model a create that fails mid-replacement. */
 const refusedEnvCreates = MutableHashSet.empty<string>();
-/**
- * Requests the fake answered, each tagged with the id of the project it targeted. Tests in a
- * file run concurrently, so assertions read one project's requests, never the whole log.
- */
-const requests: Array<{ readonly projectId: string; readonly call: string }> = [];
-/** The env body fields, alphabetical, as {@link FakeVercel.envPatchFieldsFor} reports them. */
+const projectTaggedRequests: Array<{ readonly projectId: string; readonly call: string }> = [];
 const envPatchFieldNames = ["comment", "gitBranch", "key", "target", "type", "value"] as const;
-/** Field names of every env PATCH body, per project, in order: what an in-place edit sent. */
 const envPatchFields: Array<{ readonly projectId: string; readonly fields: ReadonlyArray<string> }> = [];
 let sequence = 0;
 
@@ -146,7 +139,7 @@ export const FakeVercel = {
   /** `METHOD Route` calls the fake answered for one project, in order. */
   requestsFor: (projectId: string): ReadonlyArray<string> =>
     A.map(
-      A.filter(requests, (entry) => entry.projectId === projectId),
+      A.filter(projectTaggedRequests, (entry) => entry.projectId === projectId),
       (entry) => entry.call
     ),
   seedProject: (name: string, repo?: string, repoType?: string): ProjectRecord => {
@@ -278,7 +271,6 @@ const domainResponse = (domain: DomainRecord) => ({
 const envResponse = (env: EnvRecord) => ({
   id: env.id,
   key: env.key,
-  // Sensitive values are never returned, like the real API.
   value: env.type === "sensitive" ? "" : env.value,
   type: env.type,
   target: env.target,
@@ -300,7 +292,6 @@ type Route =
 
 const unknownRoute: Route = { _tag: "Unknown" };
 
-/** Routes under `/projects/{idOrName}`, keyed by the path shape after the project. */
 const projectRoutes: Record<string, (project: string, id: string) => Route> = {
   "": (project) => ({ _tag: "Project", project }),
   env: (project) => ({ _tag: "Envs", project }),
@@ -340,7 +331,6 @@ const newProject = (name: string, accountId: string, body: typeof ProjectBody.Ty
 const sharesTarget = (env: EnvRecord, key: string, gitBranch: string | undefined, target: ReadonlyArray<string>) =>
   env.key === key && env.gitBranch === gitBranch && A.some(env.target, (t) => A.contains(target, t));
 
-/** `POST /projects/{id}/env`: with `upsert`, a same-key variable on any shared target is replaced. */
 const upsertEnv = (project: ProjectRecord, body: typeof EnvBody.Type, upsert: boolean) => {
   if (body.key === undefined || body.value === undefined || body.target === undefined) return error(400, "bad_request");
   const { key, value, target } = body;
@@ -361,12 +351,6 @@ const upsertEnv = (project: ProjectRecord, body: typeof EnvBody.Type, upsert: bo
   return ok({ created: envResponse(record), failed: [] });
 };
 
-/**
- * What the real `PATCH /v9/projects/{id}/env/{envId}` refuses, as observed or documented:
- * - any `key` on a sensitive variable, even the identical key (observed 2026-11-14, run 43585534113);
- * - a `type` on a sensitive variable that is not `sensitive` (no in-place conversion, Vercel docs);
- * - a `gitBranch` without the `preview` target (the request schema's own constraint).
- */
 const refuseSensitiveEdit = (env: EnvRecord, body: typeof EnvBody.Type) =>
   env.type !== "sensitive"
     ? O.none()
@@ -556,7 +540,7 @@ const client = HttpClient.make((request) =>
     const url = new URL(request.url);
     const segments = A.filter(Str.split("/")(url.pathname), Str.isNonEmpty);
     const route = toRoute(segments);
-    requests.push({ projectId: projectIdOf(route), call: `${request.method} ${route._tag}` });
+    projectTaggedRequests.push({ projectId: projectIdOf(route), call: `${request.method} ${route._tag}` });
     const text = request.body._tag === "Uint8Array" ? new TextDecoder().decode(request.body.body) : "";
     const body = Str.isEmpty(text) ? undefined : yield* decodeJson(text).pipe(Effect.orDie);
     const result = handle(request.method, route, url.searchParams, body);

@@ -31,7 +31,6 @@ const invalidInput =
 const parseYamlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
   Effect.try({ try: () => Yaml.parse(text), catch: invalidInput("YAML") });
 
-// `Toml.parse` reports malformed input as a failed `Result` instead of throwing.
 const parseTomlText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
   Effect.fromResult(Toml.parse(text)).pipe(Effect.mapError(invalidInput("TOML")));
 

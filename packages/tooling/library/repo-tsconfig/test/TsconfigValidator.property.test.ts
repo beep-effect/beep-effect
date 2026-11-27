@@ -26,9 +26,7 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>, options = runs): 
 
 describe("TsconfigValidator property floor", () => {
   roundTrips("TsconfigValidationError", TsconfigValidationError);
-  // The strict schemas filter their samples (unique lists, cross-field rules), so the discard budget
-  // is wide enough for a random seed to reach the accepted-sample count.
-  const filtered = { arbitrary: { ...fcRuns(20), maxDiscards: fcRuns(20).runs * 100 } };
-  roundTrips("StrictCompilerOptions", StrictCompilerOptions, filtered);
-  roundTrips("StrictTsconfig", StrictTsconfig, filtered);
+  const wideDiscardBudget = { arbitrary: { ...fcRuns(20), maxDiscards: fcRuns(20).runs * 100 } };
+  roundTrips("StrictCompilerOptions", StrictCompilerOptions, wideDiscardBudget);
+  roundTrips("StrictTsconfig", StrictTsconfig, wideDiscardBudget);
 });

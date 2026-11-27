@@ -28,7 +28,6 @@ const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);
 const decodeRuleRegistry = S.decodeUnknownEffect(RuleRegistrySchema);
 const encodeRuleRegistry = S.encodeEffect(RuleRegistrySchema);
 
-/** Repo root (five levels up from `test/registry.test.ts`). */
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 
 describe("rule registry", () => {

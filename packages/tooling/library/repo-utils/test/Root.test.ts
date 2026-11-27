@@ -16,10 +16,9 @@ describe("Root", () => {
         "should find repo root from current directory",
         Effect.fn(function* () {
           const root = yield* findRepoRoot();
-          // The repo root should contain a .git directory
           const fs = yield* Fs.FileSystem;
           const hasGit = yield* fs.exists(`${root}/.git`);
-          expect(hasGit).toBe(true);
+          expect(hasGit, "the repo root found from the current directory holds .git").toBe(true);
         })
       );
 
@@ -36,9 +35,7 @@ describe("Root", () => {
       it.effect(
         "should find repo root when starting from itself",
         Effect.fn(function* () {
-          // First find the actual root
           const root = yield* findRepoRoot();
-          // Then verify starting from root finds root
           const rootAgain = yield* findRepoRoot(root);
           expect(rootAgain).toBe(root);
         })
@@ -111,7 +108,6 @@ describe("Root", () => {
           const subDir = `${tmpDir}/sub/dir`;
           yield* fs.makeDirectory(subDir, { recursive: true });
 
-          // Create a bun.lock at the tmp root
           yield* fs.writeFileString(`${tmpDir}/bun.lock`, "");
 
           const root = yield* findRepoRoot(subDir);
@@ -127,7 +123,6 @@ describe("Root", () => {
           const subDir = `${tmpDir}/a/b/c`;
           yield* fs.makeDirectory(subDir, { recursive: true });
 
-          // Create a .git directory at the tmp root
           yield* fs.makeDirectory(`${tmpDir}/.git`);
 
           const root = yield* findRepoRoot(subDir);

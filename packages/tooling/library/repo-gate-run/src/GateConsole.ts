@@ -244,8 +244,6 @@ const entryTones =
       NoteEntry: (note) => A.map(note.lines, () => tone("warning")),
     });
 
-// The tone of every line between the two verdict lines, in the order the
-// model's plain-text projection prints them.
 const bodyTones = (document: ConsoleDocument, budget: ConsoleBudget): ReadonlyArray<Tone> => [
   ...A.flatMap(document.entries, entryTones(budget)),
   ...A.map(document.folds, () => tone("warning")),
@@ -266,9 +264,6 @@ const sizeOf = (lines: ReadonlyArray<string>): number => A.reduce(lines, 0, (tot
 
 type Fit = { readonly document: ConsoleDocument; readonly budget: ConsoleBudget };
 
-// The body goes, the frame stays: a dispatched document carries no cap, so the cap counts the
-// failure entries and folds dropped here. The frame (two verdict lines, cap, delta, path and
-// pointer) and the two notices are eight lines, which every budget holds.
 const frameOnly = (document: ConsoleDocument): ConsoleDocument => {
   const dropped = A.filter(document.entries, ConsoleEntry.guards.FailureEntry).length + document.folds.length;
   return ConsoleDocument.make({
@@ -279,9 +274,6 @@ const frameOnly = (document: ConsoleDocument): ConsoleDocument => {
   });
 };
 
-// The notices are never dropped: their lines, and the closing verdict a lone verdict line gains
-// beside them, are taken off the budget before the body is fitted. When the rest is too small to
-// be a budget, the body goes instead.
 const reservedFit = (document: ConsoleDocument, budget: ConsoleBudget, notices: ReadonlyArray<string>): Fit =>
   A.isReadonlyArrayEmpty(notices)
     ? { document, budget }
@@ -340,6 +332,15 @@ const progressText = (snapshot: ProgressSnapshot): string =>
  * painted, after a sequence that clears the progress line. `progress` gives
  * one progress frame to write without a newline, for the terminal projection
  * only; the agent projection prints nothing while a gate runs.
+ *
+ * **Gotchas**
+ *
+ * `render` never drops an omission notice to fit the budget: the notices,
+ * and the closing verdict a lone verdict line gains beside them, are taken
+ * off the budget before the body is fitted. When the rest is too small to be
+ * a budget, the body goes and the frame (both verdict lines, cap, delta, path
+ * and pointer) stays, with the cap counting the failure entries and folds
+ * dropped; the frame and two notices are eight lines, which every budget holds.
  *
  * **Example** (Use the shape)
  *

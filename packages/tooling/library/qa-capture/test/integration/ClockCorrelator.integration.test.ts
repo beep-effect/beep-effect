@@ -14,9 +14,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stream from "effect/Stream";
 
-// Live lane: exercises the real ffmpeg binary on PATH. A missing binary is an
-// explicit skip; failed prerequisites and native execution remain failures.
-const NativeCorrelatorTestLayer = Layer.mergeAll(
+const RealFfmpegCorrelatorLayer = Layer.mergeAll(
   NodeServices.layer,
   ClockCorrelator.layer.pipe(Layer.provide(FFmpeg.makeLayer().pipe(Layer.provide(NodeServices.layer))))
 );
@@ -60,12 +58,7 @@ const T0 = 1753838000000;
 const FIRST_FLIP_OFFSET_MS = 500;
 const FLIP_INTERVAL_MS = 150;
 
-/**
- * 3s 320x240 30fps black clip whose 160x160 top-left corner flashes white in
- * exactly the witness beacon cadence: white during the first 150 ms of each
- * 300 ms cycle starting at t=0.5s, ending at t=1.7s — eight state flips.
- */
-const makeBeaconClip = Effect.fnUntraced(function* (outPath: string) {
+const makeWitnessCadenceBeaconClip = Effect.fnUntraced(function* (outPath: string) {
   const result = yield* runTool("ffmpeg", [
     "-hide_banner",
     "-nostdin",
@@ -99,7 +92,7 @@ const makeFlips = (): ReadonlyArray<BeaconEvent> =>
     })
   );
 
-it.layer(NativeCorrelatorTestLayer, { excludeTestServices: true })("@beep/qa-capture live clock correlator", (it) => {
+it.layer(RealFfmpegCorrelatorLayer, { excludeTestServices: true })("@beep/qa-capture live clock correlator", (it) => {
   it.effect(
     "recovers the wall-clock offset from a synthesized beacon video",
     (context) =>
@@ -112,7 +105,7 @@ it.layer(NativeCorrelatorTestLayer, { excludeTestServices: true })("@beep/qa-cap
         const path = yield* Path.Path;
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const videoPath = path.join(tmpDir, "beacon.mp4");
-        yield* makeBeaconClip(videoPath);
+        yield* makeWitnessCadenceBeaconClip(videoPath);
 
         const correlator = yield* ClockCorrelator;
         const sync = yield* correlator.correlate(
@@ -127,9 +120,9 @@ it.layer(NativeCorrelatorTestLayer, { excludeTestServices: true })("@beep/qa-cap
 
         expect(sync.method).toBe("beacon");
         expect(sync.slope).toBe(1);
-        // The video timeline starts exactly at T0; frame quantization at
-        // 30 fps plus the h264 normalization bound the recovered offset.
-        expect(Math.abs(sync.offsetMs + T0)).toBeLessThan(80);
+        expect(Math.abs(sync.offsetMs + T0), "30 fps quantization and h264 re-encoding bound the offset").toBeLessThan(
+          80
+        );
         expect(sync.residualRmsMs).toBeLessThan(80);
         expect(sync.confidence === "high" || sync.confidence === "medium").toBe(true);
       }),

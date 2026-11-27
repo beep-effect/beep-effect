@@ -8,9 +8,7 @@
 import { flow } from "effect/Function";
 import * as Str from "effect/String";
 
-// Each maximal local-part run is attempted once, including runs without an @.
-// The original character classes and greedy match semantics remain unchanged.
-const EMAIL = /(?<![^\s@<>()"',;:])[^\s@<>()"',;:]+@[^\s@<>()"',;:]+/g;
+const EMAIL_FROM_RUN_START = /(?<![^\s@<>()"',;:])[^\s@<>()"',;:]+@[^\s@<>()"',;:]+/g;
 const HOME_PATH = /(?:\/home|\/Users)\/[^\s/]+|\/root(?=\/|\s|$)/g;
 
 /**
@@ -39,7 +37,7 @@ const HOME_PATH = /(?:\/home|\/Users)\/[^\s/]+|\/root(?=\/|\s|$)/g;
  * @since 0.0.0
  */
 export const redactText: (text: string) => string = flow(
-  Str.replaceAll(EMAIL, "[email]"),
+  Str.replaceAll(EMAIL_FROM_RUN_START, "[email]"),
   Str.replaceAll("@", ""),
   Str.replaceAll(HOME_PATH, "$$HOME")
 );

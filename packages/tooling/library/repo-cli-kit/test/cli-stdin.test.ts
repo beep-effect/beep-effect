@@ -8,8 +8,6 @@ const MESSAGES = {
   readFailurePrefix: "Failed to read the test document from stdin",
 };
 
-// Tests always inject the stdin source: a real stdin.text() read blocks until
-// the pipe reaches EOF, and test runners hold their workers' stdin open.
 const stdinSource = (text: () => Promise<string>, interactive = false) =>
   Effect.provideService(CommandStdinSource, { interactive: () => interactive, text });
 

@@ -121,7 +121,7 @@ describe("oxlint rules", () => {
           it.effect(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
             Effect.gen(function* () {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
-              expect(findings.length).toBe(testCase.count);
+              expect(findings.length, testCase.scenario).toBe(testCase.count);
               expect(A.every(findings, (finding) => finding.ruleId === rule)).toBe(true);
 
               if (testCase.fixedSource !== undefined) {
@@ -143,7 +143,7 @@ describe("oxlint rules", () => {
           it.effect(`ignores valid case #${index}`, () =>
             Effect.gen(function* () {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
-              expect(findings.length).toBe(0);
+              expect(findings.length, testCase.scenario).toBe(0);
             })
           )
         );
@@ -152,10 +152,6 @@ describe("oxlint rules", () => {
   }
 });
 
-// Staleness guard for the `no-manual-effect-runtime-in-tests` legacy baseline: every row must
-// name an existing repo file whose live manual-runner count equals the row's count, because a row
-// above the live count silently admits new violations in that file. Each file is linted under its
-// bare basename in a temp dir, where no baseline row matches, so every runner reports.
 describe("no-manual-effect-runtime-in-tests legacy baseline", () => {
   it.layer(NodeServices.layer, { timeout: "60 seconds" })((it) =>
     it.effect("matches each listed file's live violation count", () =>
@@ -169,7 +165,10 @@ describe("no-manual-effect-runtime-in-tests legacy baseline", () => {
           expect(exists, `${repoPath} is listed but missing`).toBe(true);
           const source = yield* fs.readFileString(absolutePath);
           const findings = yield* runOxlintRule("no-manual-effect-runtime-in-tests", source, path.basename(repoPath));
-          expect(findings.length, `${repoPath} live count`).toBe(count);
+          expect(
+            findings.length,
+            `${repoPath} live count, linted under its bare basename where no row matches: a row above it admits new violations`
+          ).toBe(count);
         }
       })
     )

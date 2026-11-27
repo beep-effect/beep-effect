@@ -161,8 +161,6 @@ const stripAnsi: (text: string) => string = Str.replace(/\u001b\[[0-9;]*m/gu, ""
 const locationOf = (file: string, diagnostic: TsDiagnostic): O.Option<Location> =>
   Location.makeOption({ file, line: diagnostic.line, column: diagnostic.column });
 
-// The reducer numbers repeated diagnostics of one file, code and shape by
-// their locations, so every diagnostic is emitted under its plain key.
 const diagnosticItem = (input: {
   readonly keyFile: string;
   readonly unit: string;
@@ -224,7 +222,9 @@ const runEvents = (input: {
  * Every line the compiler printed a diagnostic on becomes one item: an
  * error fails, a warning warns. Colour codes are stripped first and lines
  * that are not diagnostics (continuations, summaries) are skipped. A
- * diagnostic printed without a file is keyed on the run's project file. A
+ * diagnostic printed without a file is keyed on the run's project file.
+ * Repeated diagnostics of one file, code and message share one plain key,
+ * which the reducer numbers by their locations. A
  * nonzero exit with no diagnostic reduces to an errored run carrying an
  * excerpt of the output, under the recorder's 8 KiB bound; an empty output
  * carries none, so the recorder's excerpt of the raw log is used instead.
@@ -254,7 +254,6 @@ export const compilerEvents = (compiler: CompilerRun): ReadonlyArray<GateEvent> 
     A.getSomes,
     A.map(compilerItem(compiler.run.project))
   );
-  // Only an unexplained failure carries an excerpt; it is bounded as the recorder bounds its own.
   const unexplained = compiler.exitCode !== 0 && A.isReadonlyArrayEmpty(items);
   return runEvents({
     run: compiler.run,
@@ -270,6 +269,11 @@ export const compilerEvents = (compiler: CompilerRun): ReadonlyArray<GateEvent> 
  * run that stopped before its compiler: one TS6305 item per missing
  * declaration index, which the console folds into one line with the build
  * command.
+ *
+ * **Details**
+ *
+ * A probe finding has no location, so each item is keyed on its reference
+ * to stay distinct, with the package's project file as its unit.
  *
  * **Example** (Fold an unbuilt upstream)
  *
@@ -297,8 +301,6 @@ export const unbuiltReferenceEvents = (probe: UnbuiltProbe): ReadonlyArray<GateE
     exitCode: 1,
     unitsChecked: 1,
     logExcerpt: O.none(),
-    // A probe finding has no location, so each is keyed on its reference to
-    // stay a distinct item; the package's project file is the unit.
     items: A.map(probe.missing, (missing) =>
       diagnosticItem({
         keyFile: missing.reference,

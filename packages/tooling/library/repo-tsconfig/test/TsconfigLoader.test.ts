@@ -65,10 +65,6 @@ layer(
   );
 });
 
-// ---------------------------------------------------------------------------
-// E1 — relative / rooted targets
-// ---------------------------------------------------------------------------
-
 layer(fixtureLayer(tree(["/proj/base.json", EMPTY])), { timeout: "30 seconds" })(
   "resolveExtendsTarget, relative .json retry",
   (it) => {
@@ -98,8 +94,6 @@ layer(fixtureLayer(tree(["/proj/dir/tsconfig.json", EMPTY])), { timeout: "30 sec
   (it) => {
     it.effect("a relative path to a directory never tries <dir>/tsconfig.json", () =>
       Effect.gen(function* () {
-        // The directory itself is skipped; tsc retries `./dir.json`, but never
-        // `<dir>/tsconfig.json`. Neither permitted candidate is a file here.
         const result = yield* resolveExtendsTarget("./dir", "/proj/tsconfig.json");
         assertNone(result);
       })
@@ -130,10 +124,6 @@ layer(fixtureLayer(tree(["/abs/base.json", EMPTY])), { timeout: "30 seconds" })(
     );
   }
 );
-
-// ---------------------------------------------------------------------------
-// E2 — bare specifiers
-// ---------------------------------------------------------------------------
 
 layer(fixtureLayer(tree(["/proj/node_modules/foo/package.json", EMPTY], ["/proj/node_modules/foo/bar.json", EMPTY])), {
   timeout: "30 seconds",
@@ -235,10 +225,6 @@ layer(
   );
 });
 
-// ---------------------------------------------------------------------------
-// E2 — exports resolution (through resolveExtendsTarget)
-// ---------------------------------------------------------------------------
-
 layer(
   fixtureLayer(
     tree(
@@ -287,7 +273,6 @@ layer(
 )("resolveExtendsTarget, a .ts export target is read as its .json sibling", (it) => {
   it.effect("a source-only pattern blocks the tsconfig.json fallback, as tsc does", () =>
     Effect.gen(function* () {
-      // `./src/tsconfig.json` does not exist; tsc lets exports block the fallback (W3-c).
       const resolvedExtendsTarget = yield* resolveExtendsTarget("src-exp/tsconfig", "/proj/tsconfig.json");
       assertNone(resolvedExtendsTarget);
       const resolvedExtendsTarget1 = yield* resolveExtendsTarget("src-exp/tsconfig.json", "/proj/tsconfig.json");
@@ -311,8 +296,6 @@ layer(
 )("resolveExtendsTarget, malformed manifest coerced to empty", (it) => {
   it.effect("a hostile package.json falls through to the tsconfig.json probe, never a defect", () =>
     Effect.gen(function* () {
-      // tsc's readJson (typescript.js:21176) coerces an unparseable
-      // manifest to {} and the manifest-less lookups still run.
       const result = yield* resolveExtendsTarget("bad", "/proj/tsconfig.json");
       assertSome(result, "/proj/node_modules/bad/tsconfig.json");
     })
@@ -330,8 +313,6 @@ layer(
 )("resolveExtendsTarget, tsconfig field pointing at a missing file", (it) => {
   it.effect("falls through to the tsconfig.json probe when the field target does not exist", () =>
     Effect.gen(function* () {
-      // tsc parity: a falsy packageFileResult falls through to
-      // loadModuleFromFile(indexPath) — typescript.js:45943-45945.
       const result = yield* resolveExtendsTarget("badfield", "/proj/tsconfig.json");
       assertSome(result, "/proj/node_modules/badfield/tsconfig.json");
     })
@@ -343,23 +324,12 @@ layer(
     tree(
       ["/proj/node_modules/emptyfield/package.json", '{"tsconfig":""}'],
       ["/proj/node_modules/emptyfield/tsconfig.json", EMPTY]
-      // `path.resolve(pkgDir, "")` resolves to the package DIRECTORY, which
-      // a directory-true `exists` accepts. The volume creates that directory
-      // on its own, so the discriminating condition is real here rather than
-      // simulated: under the old `typeof tsField === "string"` guard the
-      // empty field "resolved" to the directory instead of a config file.
-      // The fixed guard treats it as falsy and never probes the path.
     )
   ),
   { timeout: "30 seconds" }
 )("resolveExtendsTarget, empty-string tsconfig field falls through", (it) => {
   it.effect("treats an empty tsconfig field as falsy, per tsc's packageFile && loader(...) parity", () =>
     Effect.gen(function* () {
-      // tsc parity: `path.resolve(pkgDir, "")` resolves to the package
-      // directory, which a directory-true `exists` would accept — but tsc
-      // treats a falsy packageFile as no-match and falls through to the
-      // `<pkg>/tsconfig.json` probe (typescript.js:45943-45945, same
-      // citation as the "field pointing at a missing file" case above).
       const result = yield* resolveExtendsTarget("emptyfield", "/proj/tsconfig.json");
       assertSome(result, "/proj/node_modules/emptyfield/tsconfig.json");
     })
@@ -402,19 +372,12 @@ layer(
 )("resolveExtendsTarget, walk continues past an unresolved candidate", (it) => {
   it.effect("a nearer copy that does not resolve does not shadow a farther one that does", () =>
     Effect.gen(function* () {
-      // tsc's ancestor walk only stops on a defined result
-      // (forEachAncestorDirectoryStoppingAtGlobalCache, typescript.js:46466).
       const result = yield* resolveExtendsTarget("dual", "/proj/a/tsconfig.json");
       assertSome(result, "/proj/node_modules/dual/tsconfig.json");
     })
   );
 });
 
-// ---------------------------------------------------------------------------
-// resolveExports — pure unit tests, including hostile inputs
-// ---------------------------------------------------------------------------
-
-/** The walk of `targets` that no `null` ended. */
 const walked = (...targets: ReadonlyArray<string>) => ({ targets, blocked: false });
 
 describe("resolveExports", () => {
@@ -498,10 +461,6 @@ describe("resolveExports", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// TsconfigLoader.load — read one file, decode, wrap decode failures
-// ---------------------------------------------------------------------------
-
 layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":true}}'])), { timeout: "30 seconds" })(
   "TsconfigLoader.load, single file",
   (it) => {
@@ -529,10 +488,6 @@ layer(fixtureLayer(tree(["/proj/tsconfig.json", "{ not valid jsonc"])), { timeou
   }
 );
 
-// ---------------------------------------------------------------------------
-// TsconfigLoader.resolve — the full pipeline
-// ---------------------------------------------------------------------------
-
 layer(fixtureLayer(tree(["/proj/tsconfig.json", '{"compilerOptions":{"strict":true},"include":["src"]}'])), {
   timeout: "30 seconds",
 })("TsconfigLoader.resolve, single file no extends", (it) => {
@@ -558,8 +513,6 @@ layer(
 )("TsconfigLoader.resolveDocument, document already in hand", (it) => {
   it.effect("resolves the given document's extends chain without reading the named file again", () =>
     Effect.gen(function* () {
-      // The file on disk is malformed, so any re-read would fail with TsconfigParseError:
-      // the in-memory document is the config at that path.
       const document = yield* TsconfigLoader.load("/proj/base.json");
       const resolved = yield* TsconfigLoader.resolveDocument(
         { extends: "../base.json", compilerOptions: { declaration: true } },
@@ -568,12 +521,19 @@ layer(
       assert.strictEqual(resolved.configPath, "/proj/app/tsconfig.json");
       assert.deepStrictEqual(resolved.extendedPaths, ["/proj/base.json", "/proj/app/tsconfig.json"]);
       assert.deepStrictEqual(resolved.compilerOptions, { strict: true, outDir: "/proj/out", declaration: true });
-      // The same document resolved at its own path equals resolve() of that path.
       const fromDisk = yield* TsconfigLoader.resolve("/proj/base.json");
       const resolvedDocument = yield* TsconfigLoader.resolveDocument(document, "/proj/base.json");
-      assert.deepStrictEqual(resolvedDocument, fromDisk);
+      assert.deepStrictEqual(
+        resolvedDocument,
+        fromDisk,
+        "the same document resolved at its own path equals resolve() of that path"
+      );
       const reread = yield* Effect.flip(TsconfigLoader.resolve("/proj/app/tsconfig.json"));
-      assert.strictEqual(reread._tag, "TsconfigParseError");
+      assert.strictEqual(
+        reread._tag,
+        "TsconfigParseError",
+        "the file on disk is malformed, so only the in-memory document was resolved"
+      );
     })
   );
 });
@@ -592,9 +552,9 @@ layer(
       const resolved = yield* TsconfigLoader.resolve("/proj/app/tsconfig.json");
       assert.deepStrictEqual(resolved.extendedPaths, ["/proj/base.json", "/proj/app/tsconfig.json"]);
       assert.strictEqual(resolved.configPath, "/proj/app/tsconfig.json");
-      assert.strictEqual(resolved.compilerOptions.strict, true); // inherited from base
-      assert.strictEqual(resolved.compilerOptions.noEmit, true); // derived wins
-      assert.strictEqual(resolved.compilerOptions.declaration, true); // derived only
+      assert.strictEqual(resolved.compilerOptions.strict, true, "inherited from base");
+      assert.strictEqual(resolved.compilerOptions.noEmit, true, "derived wins");
+      assert.strictEqual(resolved.compilerOptions.declaration, true, "derived only");
     })
   );
 });
@@ -613,17 +573,15 @@ layer(
   it.effect("B beats A, own beats both, A's nested chain (C) applied before B (E3)", () =>
     Effect.gen(function* () {
       const resolved = yield* TsconfigLoader.resolve("/proj/tsconfig.json");
-      // order applied: C, A, B, own
-      assert.deepStrictEqual(resolved.extendedPaths, [
-        "/proj/c.json",
-        "/proj/a.json",
-        "/proj/b.json",
-        "/proj/tsconfig.json",
-      ]);
-      assert.strictEqual(resolved.compilerOptions.noEmit, true); // B's true beats A's false
-      assert.strictEqual(resolved.compilerOptions.declaration, false); // C (nested under A) survives
-      assert.strictEqual(resolved.compilerOptions.sourceMap, true); // A only
-      assert.strictEqual(resolved.compilerOptions.removeComments, false); // own beats B
+      assert.deepStrictEqual(
+        resolved.extendedPaths,
+        ["/proj/c.json", "/proj/a.json", "/proj/b.json", "/proj/tsconfig.json"],
+        "applied in order: C, A, B, own"
+      );
+      assert.strictEqual(resolved.compilerOptions.noEmit, true, "B's true beats A's false");
+      assert.strictEqual(resolved.compilerOptions.declaration, false, "C (nested under A) survives");
+      assert.strictEqual(resolved.compilerOptions.sourceMap, true, "A only");
+      assert.strictEqual(resolved.compilerOptions.removeComments, false, "own beats B");
     })
   );
 });
@@ -665,7 +623,7 @@ layer(fixtureLayer(tree(["/proj/a.json", '{"extends":"./b.json"}'], ["/proj/b.js
       assert.strictEqual(error._tag, "TsconfigExtendsError");
       if (error._tag === "TsconfigExtendsError") {
         assert.strictEqual(error.reason, "cycle");
-        assert.strictEqual(error.path, "/proj/b.json"); // the config whose extends re-entered
+        assert.strictEqual(error.path, "/proj/b.json", "the config whose extends re-entered");
         assert.strictEqual(error.target, "/proj/a.json");
         assert.deepStrictEqual(error.chain, ["/proj/a.json", "/proj/b.json", "/proj/a.json"]);
       }

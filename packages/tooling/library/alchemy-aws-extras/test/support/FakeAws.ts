@@ -76,7 +76,6 @@ export const operations = (account: FakeAccount): Array<string> =>
     )
   );
 
-/** Launch template stored under `name`, if any. */
 const findLaunchTemplate = (account: FakeAccount, name: string): LaunchTemplateRecord | undefined =>
   pipe(
     MutableHashMap.values(account.launchTemplates),
@@ -85,16 +84,11 @@ const findLaunchTemplate = (account: FakeAccount, name: string): LaunchTemplateR
     O.getOrUndefined
   );
 
-/** Seed a launch template created outside the stack (no Alchemy tags). */
 const seedLaunchTemplate = (account: FakeAccount, name: string, tags: Record<string, string> = {}) => {
   const id = `lt-${Str.padStart(17, "0")(`${account.nextLaunchTemplate++}`)}`;
   MutableHashMap.set(account.launchTemplates, id, { id, name, defaultVersion: 1, tags, versions: [{}] });
   return id;
 };
-
-// ---------------------------------------------------------------------------
-// Responses
-// ---------------------------------------------------------------------------
 
 interface FakeResponse {
   readonly body: string;
@@ -144,10 +138,6 @@ const tagSetXml = (tags: Record<string, string>) =>
 
 const launchTemplateXml = (template: LaunchTemplateRecord) =>
   `<launchTemplateId>${template.id}</launchTemplateId><launchTemplateName>${escapeXml(template.name)}</launchTemplateName><defaultVersionNumber>${template.defaultVersion}</defaultVersionNumber><latestVersionNumber>${template.versions.length}</latestVersionNumber>${tagSetXml(template.tags)}`;
-
-// ---------------------------------------------------------------------------
-// JSON services
-// ---------------------------------------------------------------------------
 
 const JsonInput = S.Struct({
   TagKeys: S.String.pipe(S.Array, S.optionalKey),
@@ -208,8 +198,7 @@ const updateHubEnrollment: JsonHandler = (account, input) => {
   return json({ status: input.status });
 };
 
-/** awsJson services by endpoint host prefix, each with its operation table. */
-const jsonServices: ReadonlyArray<{
+const awsJsonServicesByHostPrefix: ReadonlyArray<{
   readonly prefix: string;
   readonly service: string;
   readonly operations: Readonly<Record<string, JsonHandler>>;
@@ -237,20 +226,14 @@ const jsonServices: ReadonlyArray<{
   },
 ];
 
-// ---------------------------------------------------------------------------
-// EC2 (query protocol)
-// ---------------------------------------------------------------------------
-
-/** Values of `<prefix>.1`, `<prefix>.2`, ... in request order. */
-const listParam = (params: Record<string, string>, prefix: string): Array<string> =>
+const numberedParamValues = (params: Record<string, string>, prefix: string): Array<string> =>
   pipe(
     R.toEntries(params),
     A.filter(([key]) => new RegExp(`^${prefix}\\.\\d+$`).test(key)),
     A.map(([, value]) => value)
   );
 
-/** `<prefix>.N.Key` / `<prefix>.N.Value` pairs as a record. */
-const tagParams = (params: Record<string, string>, prefix: string): Record<string, string> =>
+const numberedKeyValueParams = (params: Record<string, string>, prefix: string): Record<string, string> =>
   pipe(
     R.toEntries(params),
     A.flatMap(([key, value]) => {
@@ -260,8 +243,7 @@ const tagParams = (params: Record<string, string>, prefix: string): Record<strin
     R.fromEntries
   );
 
-/** The `LaunchTemplateData.*` params with the prefix removed. */
-const templateData = (params: Record<string, string>): Record<string, string> =>
+const launchTemplateDataUnprefixed = (params: Record<string, string>): Record<string, string> =>
   pipe(
     R.toEntries(params),
     A.filter(([key]) => Str.startsWith("LaunchTemplateData.")(key)),
@@ -284,8 +266,8 @@ const matchesFilter = (filter: ReadonlyArray<string>, value: string) =>
   A.isReadonlyArrayEmpty(filter) || A.contains(filter, value);
 
 const describeLaunchTemplates: Ec2Handler = (account, operation, params) => {
-  const ids = listParam(params, "LaunchTemplateId");
-  const names = listParam(params, "LaunchTemplateName");
+  const ids = numberedParamValues(params, "LaunchTemplateId");
+  const names = numberedParamValues(params, "LaunchTemplateName");
   const found = pipe(
     account.launchTemplates,
     MutableHashMap.values,
@@ -311,17 +293,17 @@ const createLaunchTemplate: Ec2Handler = (account, operation, params) => {
   if (findLaunchTemplate(account, name) !== undefined) {
     return ec2Error("InvalidLaunchTemplateName.AlreadyExistsException", `Launch template name already in use: ${name}`);
   }
-  const id = seedLaunchTemplate(account, name, tagParams(params, "TagSpecification.1.Tag"));
+  const id = seedLaunchTemplate(account, name, numberedKeyValueParams(params, "TagSpecification.1.Tag"));
   const template = templateById(account, id);
   if (template === undefined) return templateNotFound();
-  template.versions[0] = templateData(params);
+  template.versions[0] = launchTemplateDataUnprefixed(params);
   return templateResponse(operation, template);
 };
 
 const createLaunchTemplateVersion: Ec2Handler = (account, operation, params) => {
   const template = templateById(account, params.LaunchTemplateId);
   if (template === undefined) return templateNotFound();
-  template.versions.push(templateData(params));
+  template.versions.push(launchTemplateDataUnprefixed(params));
   return xml(
     operation,
     `<launchTemplateVersion><launchTemplateId>${template.id}</launchTemplateId><versionNumber>${template.versions.length}</versionNumber></launchTemplateVersion>`
@@ -345,8 +327,8 @@ const deleteLaunchTemplate: Ec2Handler = (account, operation, params) => {
 const retag =
   (apply: (current: Record<string, string>, tags: Record<string, string>) => Record<string, string>): Ec2Handler =>
   (account, operation, params) => {
-    const tags = tagParams(params, "Tag");
-    const templates = A.flatMap(listParam(params, "ResourceId"), (id) => {
+    const tags = numberedKeyValueParams(params, "Tag");
+    const templates = A.flatMap(numberedParamValues(params, "ResourceId"), (id) => {
       const template = templateById(account, id);
       return template === undefined ? [] : [template];
     });
@@ -363,10 +345,6 @@ const ec2Operations: Readonly<Record<string, Ec2Handler>> = {
   CreateTags: retag((current, tags) => ({ ...current, ...tags })),
   DeleteTags: retag((current, tags) => R.filter(current, (_, key) => !(key in tags))),
 };
-
-// ---------------------------------------------------------------------------
-// HTTP routing
-// ---------------------------------------------------------------------------
 
 const decoder = new TextDecoder();
 
@@ -389,7 +367,7 @@ const routeJson = Effect.fn("FakeAws.routeJson")(function* (
 ) {
   const operation = lastSegment(target);
   const input = yield* decodeJsonInput(text === "" ? "{}" : text);
-  const service = A.findFirst(jsonServices, (candidate) => Str.startsWith(candidate.prefix)(host));
+  const service = A.findFirst(awsJsonServicesByHostPrefix, (candidate) => Str.startsWith(candidate.prefix)(host));
   if (O.isNone(service)) return jsonError("UnknownServiceException", host);
   account.calls.push(`${service.value.service}:${operation}`);
   const handler = service.value.operations[operation];
@@ -416,8 +394,7 @@ const route = Effect.fn("FakeAws.route")(function* (
   return target === undefined ? routeEc2(account, text) : yield* routeJson(account, target, text, url.hostname);
 });
 
-/** An effect `HttpClient` that serves `account`. */
-const httpClient = (account: FakeAccount): HttpClient.HttpClient =>
+const fakeAccountHttpClient = (account: FakeAccount): HttpClient.HttpClient =>
   HttpClient.make(
     Effect.fn("FakeAws.send")(function* (request, url) {
       const response = yield* route(account, request, url);
@@ -443,14 +420,10 @@ const environment = Layer.succeed(
   })
 );
 
-/**
- * The package's providers pinned to a fake environment, with the fake HTTP
- * client merged into the lifecycle context so no request leaves the process.
- */
-const providers = (account: FakeAccount) =>
+const providersOnFakeEnvironment = (account: FakeAccount) =>
   AwsExtras.providers.pipe(
     Layer.provide(environment),
-    Layer.provideMerge(Layer.succeed(HttpClient.HttpClient, httpClient(account)))
+    Layer.provideMerge(Layer.succeed(HttpClient.HttpClient, fakeAccountHttpClient(account)))
   );
 
 /**
@@ -474,7 +447,7 @@ export interface TypedStack {
 
 export const harness = (seed?: Parameters<typeof makeAccount>[0]) => {
   const account = makeAccount(seed);
-  const { test } = Test.make({ providers: providers(account), state: inMemoryState() });
+  const { test } = Test.make({ providers: providersOnFakeEnvironment(account), state: inMemoryState() });
   const provider = (name: string, body: (stack: TypedStack) => Effect.Effect<void, StackFailure>) =>
     test.provider(name, (stack) => {
       const typed: TypedStack = stack;

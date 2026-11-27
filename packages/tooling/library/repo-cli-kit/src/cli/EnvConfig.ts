@@ -130,16 +130,9 @@ export const configStringEqualsSync: {
 export const configStringOption = (name: string): Effect.Effect<O.Option<string>> =>
   Config.option(Config.String(name)).pipe(Effect.orElseSucceed(O.none<string>));
 
-/**
- * The one CI rule: `RuntimeEnv.ci` is `Some`.
- *
- * @param env - The runtime environment snapshot.
- * @returns `true` when the snapshot reports a CI run.
- */
 const runsInCi = (env: RuntimeEnv): boolean => O.isSome(env.ci);
 
-/** A fresh runtime snapshot of the ambient `ConfigProvider`, never shared through a layer memo. */
-const ambientRuntimeEnv: Effect.Effect<RuntimeEnv> = ConfigProvider.ConfigProvider.pipe(
+const freshAmbientRuntimeEnv: Effect.Effect<RuntimeEnv> = ConfigProvider.ConfigProvider.pipe(
   Effect.flatMap((provider) =>
     Layer.build(CurrentRuntimeEnv.layerFrom(provider)).pipe(Effect.map(Context.get(CurrentRuntimeEnv)), Effect.scoped)
   )
@@ -178,7 +171,7 @@ const ambientRuntimeEnv: Effect.Effect<RuntimeEnv> = ConfigProvider.ConfigProvid
  * @since 0.0.0
  */
 export const isCi: Effect.Effect<boolean> = Effect.serviceOption(CurrentRuntimeEnv).pipe(
-  Effect.flatMap(O.match({ onSome: Effect.succeed, onNone: () => ambientRuntimeEnv })),
+  Effect.flatMap(O.match({ onSome: Effect.succeed, onNone: () => freshAmbientRuntimeEnv })),
   Effect.map(runsInCi)
 );
 
@@ -373,9 +366,6 @@ const isBunxTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
 const isDirectTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
   command === "turbo" || Str.endsWith("/turbo")(command) || isBunxTurbo(command, args);
 
-// `op run -- bunx turbo ...` is still a turbo spawn: the
-// overrides below must reach it, or an op-wrapped lane silently loses the
-// mouse-capture guard and the fail-closed cache posture.
 const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
   command === "op" &&
   pipe(
@@ -550,10 +540,6 @@ const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(functio
   return exitCode === 0;
 });
 
-// Width of the isolated per-reference `op run` probes. Each probe is a short,
-// network-bound child process, so 16 in flight replays a 50-reference `.env`
-// in 1.4-1.6 s instead of 5.2 s at width 4, with the same failing names and
-// unchanged CPU.
 const environmentHealthProbeConcurrency = 16;
 
 const turboEnvironmentHealthVerdicts = MutableHashMap.empty<string, ReadonlyArray<TurboEnvironmentHealthWarning>>();
@@ -743,8 +729,9 @@ export const turboEnvExtendsAmbient: {
  * `op://` references. A direct spawn also unsets every other unresolved
  * reference, so a checkout's `.env` cannot leak per-clone strings into the task
  * hashes that the shared cache directory keys on. A wrapped spawn receives a
- * complete sanitized environment for use with `extendEnv: false`. Returns an
- * empty object for any non-turbo command.
+ * complete sanitized environment for use with `extendEnv: false`. `TSRS_FAST`
+ * defaults to `1`, the fast mode qualified for this repository; an explicit `0`
+ * keeps a reference lane. Returns an empty object for any non-turbo command.
  *
  * **Gotchas**
  *
@@ -784,9 +771,6 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
     return {};
   }
 
-  // A wrapped spawn hands this complete environment to `op run` with ambient
-  // extension disabled. Only Turbo credential references survive for resolution;
-  // every unrelated reference is absent from both `op` and its task child.
   if (!directTurbo) {
     return {
       ...turboCacheSecretSessionEnvironment(environment),
@@ -802,23 +786,13 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   const unresolvedToken = isUnresolvedSecretReference(pipe(turboToken, O.getOrUndefined));
   const unresolvedTeam = isUnresolvedSecretReference(pipe(turboTeam, O.getOrUndefined));
   return {
-    // Unresolved references are inert strings to a task, but Turbo still hashes
-    // any it declares in `env`, so per-checkout `.env` drift would split the
-    // shared cache. They leave a direct spawn just as they leave a wrapped one.
     ...unresolvedSecretReferenceScrub(environment),
-    // Spawned turbo inherits the parent TTY; its interactive TUI enables
-    // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
-    // failed task tears the run down, the child is killed before it can restore
-    // the terminal — leaving it emitting mouse-motion reports and swallowing
-    // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
-    // Fast mode is qualified for the repository; explicit 0 keeps a reference lane.
     TSRS_FAST: environment.TSRS_FAST ?? "1",
     TURBO_UI: "false",
     ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum["local:rw"] } : {}),
   };
 });
 
-// Optional client inputs, including the artifact key, sit outside the required cache quad.
 const TURBO_CACHE_OPTION_ENV_NAMES: ReadonlyArray<string> = [
   "TURBO_CACHE_DIR",
   "HOME",

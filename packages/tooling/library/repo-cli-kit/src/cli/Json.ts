@@ -200,7 +200,6 @@ export const encodeCommandJson = Effect.fn("RepoCli.Json.encodeCommandJson")(fun
   return yield* encodeJson(value);
 });
 
-/** Size guard and formatting overrides accepted by {@link renderPrettyCommandJson}. */
 type RenderPrettyCommandJsonOptions = {
   readonly maxLength?: number;
   readonly formattingOptions?: JsoncFormattingOptionsLike;

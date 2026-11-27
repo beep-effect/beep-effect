@@ -63,7 +63,6 @@ export declare namespace FindNearestOptions {
   export type Encoded = typeof FindNearestOptions.Encoded;
 }
 
-// Implementation of TsconfigDiscovery.findNearest; the public contract lives on the static.
 const findNearest: {
   (
     start: string,

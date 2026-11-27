@@ -75,12 +75,7 @@ const liveWatcherConfig = TerminationWatcherRuntimeConfig.make({
 
 const noFailures = { batchItemFailures: [] };
 
-/**
- * Drives the termination watcher Lambda under the live config. Per pool it seeds an instance with an idle runner,
- * then one with a busy runner (every delete answers 422), runner ids counting up from 10; sends a Spot warning for
- * each, then one deregister-retry batch naming all of them.
- */
-const watchLive = Effect.fn("watchLive")(function* (
+const watchIdleThenBusyRunnerPerPool = Effect.fn("watchIdleThenBusyRunnerPerPool")(function* (
   pools: ReadonlyArray<{
     readonly tags: Readonly<Record<string, string>>;
     readonly runnerName: (instanceId: string) => string;
@@ -180,7 +175,6 @@ describe("Lambda entry points", () => {
   it.effect("scale-up reports a launch refused for an unreadable or unsettled count as a batch item failure", () =>
     Effect.gen(function* () {
       const event = yield* sqsEvent([message({ id: 1 })]);
-      // The runner count cannot be read: nothing launches, and the record goes back to SQS, never acknowledged.
       const unreadable = new World();
       const base = worldContext(unreadable);
       const fleet = Context.get(base, Ec2Fleet);
@@ -199,20 +193,19 @@ describe("Lambda entry points", () => {
       const refused = yield* ScaleUpLambda.definition
         .run(poolConfig(), event)
         .pipe(Effect.provideContext(Context.add(base, Ec2Fleet, failing)));
-      expect([refused, unreadable.fleetRequests.length]).toStrictEqual([
-        { batchItemFailures: [{ itemIdentifier: "m-0" }] },
-        0,
-      ]);
-      // A launch EC2 does not show yet still holds its slot through its JIT config: the record goes back for retry.
+      expect(
+        [refused, unreadable.fleetRequests.length],
+        "an unreadable runner count launches nothing and the record goes back to SQS, never acknowledged"
+      ).toStrictEqual([{ batchItemFailures: [{ itemIdentifier: "m-0" }] }, 0]);
       const unsettled = new World();
       unsettled.ssm["/beep-ci/heavy/tokens/i-unseen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-unseen" } };
       const capped = yield* ScaleUpLambda.definition
         .run(poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 })), event)
         .pipe(Effect.provideContext(worldContext(unsettled)));
-      expect([capped, unsettled.fleetRequests.length]).toStrictEqual([
-        { batchItemFailures: [{ itemIdentifier: "m-0" }] },
-        0,
-      ]);
+      expect(
+        [capped, unsettled.fleetRequests.length],
+        "a launch EC2 does not show yet holds its slot through its JIT config, so the record goes back"
+      ).toStrictEqual([{ batchItemFailures: [{ itemIdentifier: "m-0" }] }, 0]);
     })
   );
 
@@ -287,7 +280,7 @@ describe("Lambda entry points", () => {
 
   it.effect("termination watcher ignores the old fleet's idle and busy runners in events and retry batches", () =>
     Effect.gen(function* () {
-      const run = yield* watchLive(
+      const run = yield* watchIdleThenBusyRunnerPerPool(
         A.map(oldFleetPrefixes, (prefix) => ({
           tags: oldFleetTags(prefix),
           runnerName: oldFleetRunnerName(prefix),
@@ -304,7 +297,7 @@ describe("Lambda entry points", () => {
 
   it.effect("termination watcher acts on the new fleet's runners under the same live config (control)", () =>
     Effect.gen(function* () {
-      const run = yield* watchLive(
+      const run = yield* watchIdleThenBusyRunnerPerPool(
         A.map([liveHeavyPool, liveOverflowPool], (pool) => ({
           tags: {
             "ghr:environment": `beep-fleet-prod-${pool.name}`,
@@ -316,11 +309,10 @@ describe("Lambda entry points", () => {
         }))
       );
       expect([run.warned, run.retried]).toStrictEqual([A.makeBy(4, () => noFailures), noFailures]);
-      // The idle runners go on the warning; each busy one is queued on the warning and re-queued from the batch.
-      expect([run.world.deletedRunners, A.map(run.world.sent, (sent) => sent.queueUrl)]).toStrictEqual([
-        [10, 12],
-        A.makeBy(4, () => liveWatcherConfig.deregisterRetryQueueUrl),
-      ]);
+      expect(
+        [run.world.deletedRunners, A.map(run.world.sent, (sent) => sent.queueUrl)],
+        "idle runners go on the warning; each busy one is queued on the warning and re-queued from the batch"
+      ).toStrictEqual([[10, 12], A.makeBy(4, () => liveWatcherConfig.deregisterRetryQueueUrl)]);
     })
   );
 

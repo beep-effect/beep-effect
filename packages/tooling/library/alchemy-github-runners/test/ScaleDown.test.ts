@@ -26,8 +26,7 @@ const runnerTags = (extra: Record<string, string> = {}) => ({
   ...extra,
 });
 
-/** Launches `count` instances at `launchTime` and registers an idle GitHub runner for each. */
-const seedRegistered = (world: World, count: number, launchTime: number) =>
+const launchWithIdleRegisteredRunners = (world: World, count: number, launchTime: number) =>
   A.map(world.launch(count, runnerTags(), launchTime), (instanceId, index) => {
     const id = 500 + world.githubRunners.length + index;
     world.githubRunners.push(
@@ -44,7 +43,7 @@ describe("handleScaleDown", () => {
   it.effect("deregisters then terminates an idle runner past its minimum running time", () =>
     Effect.gen(function* () {
       const world = new World();
-      const [runner] = seedRegistered(world, 1, 0);
+      const [runner] = launchWithIdleRegisteredRunners(world, 1, 0);
       yield* TestClock.adjust(6 * minute);
       const decisions = yield* run(world);
       expect(A.map(decisions, (decision) => decision.action)).toStrictEqual(["terminated"]);
@@ -56,7 +55,7 @@ describe("handleScaleDown", () => {
   it.effect("leaves a runner alone inside its minimum running time", () =>
     Effect.gen(function* () {
       const world = new World();
-      seedRegistered(world, 1, 0);
+      launchWithIdleRegisteredRunners(world, 1, 0);
       yield* TestClock.adjust(4 * minute);
       const decisions = yield* run(world);
       expect(decisions).toStrictEqual([]);
@@ -67,9 +66,9 @@ describe("handleScaleDown", () => {
   it.effect("keeps a busy runner and keeps idleCount runners, evicting the oldest first", () =>
     Effect.gen(function* () {
       const world = new World();
-      const [old] = seedRegistered(world, 1, 0);
-      const [young] = seedRegistered(world, 1, minute);
-      const [busy] = seedRegistered(world, 1, 2 * minute);
+      const [old] = launchWithIdleRegisteredRunners(world, 1, 0);
+      const [young] = launchWithIdleRegisteredRunners(world, 1, minute);
+      const [busy] = launchWithIdleRegisteredRunners(world, 1, 2 * minute);
       world.githubRunners = A.map(world.githubRunners, (runner) =>
         runner.id === busy?.id ? SelfHostedRunner.make({ ...runner, busy: true }) : runner
       );
@@ -81,7 +80,7 @@ describe("handleScaleDown", () => {
         [old?.instanceId, "terminated"],
       ]);
       const busyWorld = new World();
-      const [onlyBusy] = seedRegistered(busyWorld, 1, 0);
+      const [onlyBusy] = launchWithIdleRegisteredRunners(busyWorld, 1, 0);
       busyWorld.githubRunners = A.map(busyWorld.githubRunners, (runner) =>
         SelfHostedRunner.make({ ...runner, busy: true })
       );
@@ -96,7 +95,7 @@ describe("handleScaleDown", () => {
   it.effect("does not terminate when GitHub deregistration fails", () =>
     Effect.gen(function* () {
       const world = new World();
-      const [runner] = seedRegistered(world, 1, 0);
+      const [runner] = launchWithIdleRegisteredRunners(world, 1, 0);
       world.busyOnDelete = [runner?.id ?? 0];
       yield* TestClock.adjust(10 * minute);
       const decisions = yield* run(world);
@@ -155,12 +154,7 @@ describe("handleScaleDown", () => {
   );
 });
 
-describe("handleScaleDown across fleets during the cutover", () => {
-  // The live terraform-module fleet shares the account and the GitHub org. Per old pool it holds an idle registered
-  // runner (scale-down would deregister and terminate it), a runner-less instance past its boot time (it would be
-  // tagged ghr:orphan), an orphan whose runner is online (it would be un-tagged) and an orphan whose runner is
-  // offline and busy (it would be terminated). The pool under test holds one instance of each of the first three
-  // kinds: the positive control under the same live config.
+describe("handleScaleDown across the cutover's two fleets, which share one AWS account and one GitHub org", () => {
   const seedOldFleet = (world: World) =>
     A.flatMap(oldFleetPrefixes, (prefix, index) => {
       const base = 800 + 10 * index;
@@ -227,7 +221,10 @@ describe("handleScaleDown across fleets during the cutover", () => {
         yield* TestClock.adjust(60 * minute);
         const decisions = yield* handleScaleDown(config).pipe(Effect.provideContext(worldContext(world)));
         expect(config.environment).toBe(`beep-fleet-prod-${pool.name}`);
-        expect(A.map(decisions, (decision) => [decision.instanceId, decision.action])).toStrictEqual([
+        expect(
+          A.map(decisions, (decision) => [decision.instanceId, decision.action]),
+          "the own pool holds the first three old-fleet kinds: the positive control under the same live config"
+        ).toStrictEqual([
           [own.orphan, "unorphaned"],
           [own.idle, "terminated"],
           [own.runnerless, "orphaned"],
@@ -240,7 +237,10 @@ describe("handleScaleDown across fleets during the cutover", () => {
           [own.orphan],
         ]);
         expect(A.map(world.githubRunners, (runner) => runner.id)).toStrictEqual([800, 801, 802, 810, 811, 812, 900]);
-        expect(snapshot()).toStrictEqual(before);
+        expect(
+          snapshot(),
+          "each old pool's idle runner, runner-less instance, online orphan and offline busy orphan stay untouched"
+        ).toStrictEqual(before);
       })
     )
   );

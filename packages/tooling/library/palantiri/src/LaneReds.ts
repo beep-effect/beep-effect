@@ -100,8 +100,6 @@ const jobRed =
       : O.none();
   };
 
-// Only the newest job per branch counts: a later passing job clears an
-// earlier failure.
 const latestJobPerBranch = (jobs: ReadonlyArray<ProofJobInput>): ReadonlyArray<ProofJobInput> =>
   A.map(R.values(A.groupBy(jobs, (job) => job.branch)), (group) => A.max(group, bySubmitted));
 
@@ -168,8 +166,6 @@ const unreadableLanes = (input: LaneRedsInput): ReadonlyArray<string> =>
 const skippedLines = (input: LaneRedsInput): number =>
   A.reduce(input.checkouts, 0, (total, checkout) => total + checkout.skippedLines);
 
-// What keeps a readable read from being complete: lanes whose inbox or proof
-// jobs could not be read, and inbox lines that did not decode.
 const attributionGaps = (unreadable: ReadonlyArray<string>, skipped: number): ReadonlyArray<string> =>
   A.getSomes([
     A.match(unreadable, { onEmpty: O.none, onNonEmpty: (lanes) => O.some(`unreadable: ${A.join(lanes, ", ")}`) }),

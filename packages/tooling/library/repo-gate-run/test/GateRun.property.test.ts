@@ -1,6 +1,3 @@
-// The run entry's promise as a property: whatever event list a tool run
-// produced, `runGate` neither fails nor dies, prints one console that opens
-// and closes on a verdict line, and returns the tool's exit code.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GateEvent } from "@beep/gate-report/GateEvent";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
@@ -38,7 +35,6 @@ describe("runGate over any event list", () => {
             source: eventsSource(events),
             exitCode,
           });
-          // A failure or a defect here fails the property.
           const result = yield* runGate(request, Stream.empty);
           const lines = linesOf(result.output.text);
           assert.strictEqual(A.headNonEmpty(lines), A.lastNonEmpty(lines));

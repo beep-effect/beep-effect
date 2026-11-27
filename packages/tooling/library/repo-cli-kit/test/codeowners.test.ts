@@ -9,8 +9,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Oracle: the CODEOWNERS compiler exactly as it was inlined in KnowledgeDoctor.leases.ts and
-// Skills.patches.ts before the shared module (hand-rolled escape included).
 const oracleGlobTokens: Readonly<Record<string, string>> = {
   "**/": "(?:.*/)?",
   "/**": "(?:/.*)?",

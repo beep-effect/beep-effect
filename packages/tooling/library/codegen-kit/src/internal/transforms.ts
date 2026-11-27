@@ -48,11 +48,6 @@ const singleRef = (node: JsonSchema.JsonSchema): O.Option<string> =>
     O.filter(P.isString)
   );
 
-/**
- * JSON Pointer prefixes that address the document's definition pool. The upstream generator rewrites
- * `#/components/schemas/<name>` to `#/$defs/<name>` for every dialect the kit feeds it, so both name the
- * same entry of the `definitions` the kit passes to {@link composeTransforms}.
- */
 const definitionPools: ReadonlyArray<ReadonlyArray<string>> = [["$defs"], ["components", "schemas"]];
 
 const isDefinitionPointer =
@@ -60,10 +55,6 @@ const isDefinitionPointer =
   (pool: ReadonlyArray<string>): boolean =>
     A.length(path) === A.length(pool) + 1 && A.every(pool, (token, index) => path[index] === token);
 
-/**
- * Resolves a same-document `$ref` to its definition key by its full, unescaped JSON pointer. Nested
- * pointers (`#/$defs/A/properties/b`) and external references (`other.json#/$defs/A`) have no key.
- */
 const definitionKey = (ref: string): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(JsonPointer.parseUriFragment(ref)),
@@ -291,8 +282,6 @@ const isAnnotationOnly = (node: Record<string, unknown>): boolean => A.every(R.k
 
 const failIntersect = (message: string): never => transformFailure("intersectSiblingProperties", message);
 
-// `number` contains `integer`, so that pair intersects to `integer`; any other pair of distinct
-// single types is disjoint.
 const isNumberIntegerPair = (left: unknown, right: unknown): boolean =>
   left !== right && A.every([left, right], (type) => type === "number" || type === "integer");
 
@@ -303,8 +292,6 @@ const disjointAlternatives = (left: Record<string, unknown>, right: Record<strin
   disjointTypes(left.type, right.type) ||
   (left.const !== undefined && right.const !== undefined && !Equal.equals(left.const, right.const));
 
-// Splits a property schema into its alternatives: a nullable type array is lowered first, and the
-// annotations next to an `anyOf` are copied onto every member.
 const propertyAlternatives = (name: string, schema: unknown): ReadonlyArray<Record<string, unknown>> => {
   const node = pipe(
     recordValue(schema),
@@ -352,7 +339,6 @@ const intersectAlternatives =
     });
   };
 
-// Intersects a base property with a branch's redeclaration; disjoint alternatives drop out.
 const intersectProperty = (name: string, base: unknown, branch: unknown): unknown =>
   A.match(
     A.getSomes(
@@ -400,10 +386,6 @@ const narrowBranch =
     return { ...entry, properties: { ...own, ...narrowed } };
   };
 
-/**
- * Pushes every base property that a union branch redeclares down into all branches, intersected with
- * each branch's own declaration, so no branch overlaps its siblings any more.
- */
 const intersectSiblingProperties: NodeTransform = (node) =>
   pipe(
     O.all({ key: unionKey(node), properties: propertyRecord(node) }),
@@ -430,11 +412,6 @@ const schemaMapKeywords: ReadonlyArray<string> = [
   "dependentSchemas",
 ];
 
-/**
- * Walks a JSON Schema bottom-up, rewriting children before their parent. Literal value keywords are
- * copied verbatim and schema maps (`properties`, `$defs`, ...) are walked per entry, so a property named
- * like a keyword is never mistaken for one.
- */
 const walkSchema = (
   value: unknown,
   visit: (node: Record<string, unknown>) => unknown,
@@ -465,7 +442,6 @@ const assertNoConflictingConstraints = (left: Record<string, unknown>, right: Re
   }
 };
 
-// Merges two plain object schemas: constraints must agree, properties merge, `required` unions.
 const mergeObjectSchemas = (left: Record<string, unknown>, right: Record<string, unknown>): Record<string, unknown> => {
   assertNoConflictingConstraints(left, right);
   const leftProperties = recordValue(left.properties);
@@ -486,10 +462,6 @@ const mergeObjectSchemas = (left: Record<string, unknown>, right: Record<string,
   };
 };
 
-// A `$ref` survives only beside annotation-only siblings; otherwise its target is inlined, on
-// either side, and the siblings' annotations apply over it as the member's own outer
-// annotations. distributeNode applies the outer `allOf` annotations last at the reduced
-// schema's level, preserving union branch annotations. `none` when neither side is a reference.
 const mergeReference = (
   left: Record<string, unknown>,
   right: Record<string, unknown>,
@@ -520,8 +492,6 @@ const annotationsOf = (schema: Record<string, unknown>): Record<string, unknown>
 const constraintsOf = (schema: Record<string, unknown>): Record<string, unknown> =>
   R.filter(schema, (_, key) => !isAnnotationKeyword(key));
 
-// Outer annotations describe the whole reduced schema: on a union they land on its `anyOf`, on
-// an object they win over the merged members' own.
 const withOuterAnnotations = (
   reduced: Record<string, unknown>,
   annotations: Record<string, unknown>,
@@ -540,14 +510,6 @@ const inlineReference = (
     inline
   );
 
-// A union side's own annotations (`default`, `examples` and `discriminator` included) describe
-// its alternatives as a whole, so they stay on the resulting `anyOf` in either member order; an
-// object side's annotations describe a fragment that every branch absorbs, so they only add the
-// keys the union lacks. Two unions resolve a conflict right over left, as two objects do. Only
-// the other side's constraints reach the branches, so its annotations neither overwrite a
-// branch's own nor are overwritten by them. Pair by pair, an object annotation a union has
-// already absorbed would count as the union's own, so distributeNode recomputes a reduced
-// union's annotations from all of its `allOf` members (memberAnnotations).
 const mergeIntersection = (
   left: unknown,
   right: unknown,
@@ -586,8 +548,6 @@ const mergeOverlappingProperties = (
   return { ...left, ...right };
 };
 
-// An `allOf` member as the reduction sees it: a `$ref` is inlined with its siblings, as
-// mergeReference inlines it.
 const resolveMember = (part: Record<string, unknown>, inline: (ref: string) => unknown): Record<string, unknown> => {
   if (!P.isString(part.$ref)) return part;
   const { $ref, ...siblings } = part;
@@ -602,10 +562,7 @@ const annotationLayer = (members: ReadonlyArray<Record<string, unknown>>): Recor
     ...annotationsOf(member),
   }));
 
-// The annotations of a union reduced from several `allOf` members, independent of where the
-// unions sit among them: object members right over left, then union members right over left.
-// The reduction has already rejected any member that is not an object.
-const memberAnnotations = (
+const annotationsFromEveryMember = (
   parts: ReadonlyArray<unknown>,
   inline: (ref: string) => unknown
 ): Record<string, unknown> => {
@@ -625,18 +582,15 @@ const distributeNode = (node: Record<string, unknown>, inline: (ref: string) => 
         mergeIntersection(current, part, inline)
       )
     : base;
-  // A single member's annotations already are the reduced union's.
   const reduced =
     A.isArray(allOf) && A.length(allOf) > 1 && A.isArray(folded.anyOf)
-      ? { ...memberAnnotations(allOf, inline), ...constraintsOf(folded) }
+      ? { ...annotationsFromEveryMember(allOf, inline), ...constraintsOf(folded) }
       : folded;
   const combined = withOuterAnnotations(reduced, annotations, inline);
   if (A.isArray(anyOf) && !A.isArray(allOf) && isAnnotationOnly(base)) return { ...base, anyOf };
   return A.isArray(anyOf) ? mergeIntersection(combined, { anyOf }, inline) : combined;
 };
 
-// Only a pure grouping wrapper is transparent: siblings carry their own annotation or
-// constraint scope and must still be reduced as a member before its parent.
 const inlineAllOfMembers = (part: unknown): ReadonlyArray<unknown> =>
   P.isObject(part) && A.isArray(part.allOf) && A.length(R.keys(part)) === 1
     ? A.flatMap(part.allOf, inlineAllOfMembers)

@@ -167,19 +167,21 @@ describe("canonical package scripts schemas", () => {
       buildServedCheck(OWN_SOURCE_CHECK_COMMAND, `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`),
       DECLARATION_ONLY_BUILD_COMMAND
     );
-    // Flags of the first segment carry over, in order, ahead of the later segments.
+    const firstSegmentFlagsInOrder = `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`;
     assertSome(
       buildServedCheck(
         `${OWN_SOURCE_CHECK_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`,
         DECLARATION_ONLY_BUILD_COMMAND
       ),
-      `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache --pretty false && bun run beep:check:tests`
+      firstSegmentFlagsInOrder
     );
-    // A longer config name, a later no-emit segment, and a build that is not declaration-only.
-    assertNone(buildServedCheck(`${OWN_SOURCE_CHECK_COMMAND}c`, DECLARATION_ONLY_BUILD_COMMAND));
-    assertNone(buildServedCheck(`bun run codegen && ${OWN_SOURCE_CHECK_COMMAND}`, DECLARATION_ONLY_BUILD_COMMAND));
+    const longerConfigName = `${OWN_SOURCE_CHECK_COMMAND}c`;
+    const laterNoEmitSegment = `bun run codegen && ${OWN_SOURCE_CHECK_COMMAND}`;
+    const emittingBuild = `${DECLARATION_ONLY_BUILD_COMMAND} --listEmittedFiles`;
+    assertNone(buildServedCheck(longerConfigName, DECLARATION_ONLY_BUILD_COMMAND));
+    assertNone(buildServedCheck(laterNoEmitSegment, DECLARATION_ONLY_BUILD_COMMAND));
     assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, OWN_SOURCE_CHECK_COMMAND));
-    assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, `${DECLARATION_ONLY_BUILD_COMMAND} --listEmittedFiles`));
+    assertNone(buildServedCheck(OWN_SOURCE_CHECK_COMMAND, emittingBuild));
     expect(
       A.map(
         [DECLARATION_ONLY_BUILD_COMMAND, `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`, "vite build", ""],

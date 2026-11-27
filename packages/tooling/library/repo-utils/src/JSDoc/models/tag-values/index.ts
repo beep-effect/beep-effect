@@ -47,7 +47,6 @@ export * from "./OrganizationalTagValues.ts";
  * @since 0.0.0
  */
 export * from "./RemainingTagValues.ts";
-// ── Re-export all member classes ─────────────────────────────────────
 /**
  * @category models
  * @since 0.0.0
@@ -151,7 +150,6 @@ import {
   TutorialValue,
   VariationValue,
 } from "./RemainingTagValues.ts";
-// ── Import all members for composition ───────────────────────────────
 import {
   AsyncValue,
   AugmentsValue,
@@ -196,11 +194,6 @@ import {
 } from "./TypeDocTagValues.ts";
 import { OverloadValue } from "./TypeScriptTagValues.ts";
 
-// ── Encoded sub-unions by category ───────────────────────────────────
-// S.toTaggedUnion requires Objects ASTs (not Declaration). S.toEncoded()
-// unwraps each TaggedClass from its Declaration wrapper so the _tag
-// literal is visible. Sub-unions keep the total Flatten depth within
-// TypeScript's recursion limit.
 const StructuralEnc = S.Union([
   S.toEncoded(ParamValue),
   S.toEncoded(ReturnsValue),
@@ -350,6 +343,12 @@ const TypeScriptEnc = S.Union([S.toEncoded(OverloadValue)]);
  * Provides `.cases`, `.match`, `.guards`, and `.isAnyOf` for dispatching on
  * the parsed `_tag` discriminant.
  *
+ * **Gotchas**
+ *
+ * Each member is its class's `S.toEncoded` side, because `S.toTaggedUnion`
+ * needs object ASTs. A `TagValue` is therefore the encoded shape, not a class
+ * instance.
+ *
  * **Example** (Guarding param tag values)
  *
  * ```ts
@@ -405,7 +404,6 @@ export type TagValue = typeof TagValue.Type;
  * @internal
  */
 const tagNames = [
-  // Structural
   "param",
   "returns",
   "throws",
@@ -421,7 +419,6 @@ const tagNames = [
   "async",
   "generator",
   "yields",
-  // Access modifiers
   "access",
   "public",
   "private",
@@ -440,7 +437,6 @@ const tagNames = [
   "satisfies",
   "import",
   "this",
-  // Documentation content
   "description",
   "summary",
   "remarks",
@@ -451,7 +447,6 @@ const tagNames = [
   "version",
   "author",
   "todo",
-  // TSDoc-specific
   "alpha",
   "beta",
   "experimental",
@@ -463,10 +458,8 @@ const tagNames = [
   "label",
   "decorator",
   "eventProperty",
-  // Inline
   "link",
   "inheritDoc",
-  // Organizational
   "module",
   "namespace",
   "memberof",
@@ -474,12 +467,10 @@ const tagNames = [
   "property",
   "interface",
   "function",
-  // Event & dependency
   "fires",
   "listens",
   "event",
   "requires",
-  // Remaining JSDoc
   "alias",
   "borrows",
   "classdesc",
@@ -500,7 +491,6 @@ const tagNames = [
   "name",
   "variation",
   "tutorial",
-  // Google Closure-specific
   "define",
   "dict",
   "implicitCast",
@@ -516,7 +506,6 @@ const tagNames = [
   "record",
   "nocollapse",
   "noinline",
-  // TypeDoc-specific
   "category",
   "document",
   "group",
@@ -527,7 +516,6 @@ const tagNames = [
   "primaryExport",
   "sortStrategy",
   "useDeclaredType",
-  // TypeScript-specific
   "overload",
 ] as const;
 
