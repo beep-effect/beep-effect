@@ -108,21 +108,42 @@ const unreserved = (identifier: string, ...reserved: ReadonlyArray<string>) => {
   );
 };
 
+const notDotSegment = S.makeFilter(
+  (segment: string) => O.isNone(Str.match(/^(?:\.|%2e)+$/i)(segment)),
+  $I.annote("NotDotSegment", {
+    title: "Not a dot segment",
+    description: "Excludes names made only of periods, which a URL parser resolves away as path navigation.",
+    message: "Expected a name with a character other than a period.",
+  })
+);
+
+const name = (identifier: string, pattern: RegExp, description: string, ...reserved: ReadonlyArray<string>) =>
+  S.String.check(S.isPattern(new RegExp(Str.replaceAll("a-z", "A-Za-z")(pattern.source)))).pipe(
+    S.decodeTo(
+      text(identifier, pattern, description).check(notDotSegment, unreserved(identifier, ...reserved)),
+      T.toLowerCase()
+    )
+  );
+
+const Slug = text("Slug", /^[^/?#]+$/, "One path segment a site prints for readers and ignores when routing.");
+
+declare namespace Slug {
+  export type Encoded = string;
+}
+
 const PostNumber = text("PostNumber", /^\d{1,20}$/, "A decimal identifier of at most twenty digits.");
 
 declare namespace PostNumber {
   export type Encoded = string;
 }
 
-const XHandle = text("XHandle", /^[A-Za-z0-9_]{1,15}$/, "An X handle of one to fifteen letters, digits or underscores.").check(
-  unreserved("XHandle", "home", "explore", "i", "search", "settings", "notifications", "messages")
-);
+const XHandle = name("XHandle", /^[a-z0-9_]{1,15}$/, "An X handle of one to fifteen letters, digits or underscores.", "home", "explore", "i", "search", "settings", "notifications", "messages");
 
 declare namespace XHandle {
   export type Encoded = string;
 }
 
-const YouTubeHandle = text("YouTubeHandle", /^[A-Za-z0-9_.-]{3,30}$/, "A YouTube handle without its leading @.");
+const YouTubeHandle = name("YouTubeHandle", /^[a-z0-9_.-]{3,30}$/, "A YouTube handle without its leading @.");
 
 declare namespace YouTubeHandle {
   export type Encoded = string;
@@ -132,14 +153,14 @@ const YouTubeChannelId = text("YouTubeChannelId", /^UC[A-Za-z0-9_-]{22}$/, "A Yo
 declare namespace YouTubeChannelId {
   export type Encoded = string;
 }
-const YouTubeLegacyName = text("YouTubeLegacyName", /^[A-Za-z0-9]{1,20}$/, "A username from the retired /user/ channel URL.");
+const YouTubeLegacyName = name("YouTubeLegacyName", /^[a-z0-9]{1,20}$/, "A username from the retired /user/ channel URL.");
 
 declare namespace YouTubeLegacyName {
   export type Encoded = string;
 }
-const YouTubeCustomName = text(
+const YouTubeCustomName = name(
   "YouTubeCustomName",
-  /^[A-Za-z0-9_.%-]{1,100}$/,
+  /^[a-z0-9_.%-]{1,100}$/,
   "A name from the retired /c/ custom channel URL, percent-encoded where it is not ASCII."
 );
 
@@ -151,12 +172,12 @@ const YouTubeVideoId = text("YouTubeVideoId", /^[A-Za-z0-9_-]{11}$/, "An eleven-
 declare namespace YouTubeVideoId {
   export type Encoded = string;
 }
-const RedGifsUser = text("RedGifsUser", /^[A-Za-z0-9._-]{1,64}$/, "A RedGifs username.");
+const RedGifsUser = name("RedGifsUser", /^[a-z0-9._-]{1,64}$/, "A RedGifs username.");
 
 declare namespace RedGifsUser {
   export type Encoded = string;
 }
-const RedGifsClipId = text("RedGifsClipId", /^[a-z0-9-]{2,100}$/, "A lowercase RedGifs clip identifier.");
+const RedGifsClipId = name("RedGifsClipId", /^[a-z0-9-]{2,100}$/, "A lowercase RedGifs clip identifier.");
 
 declare namespace RedGifsClipId {
   export type Encoded = string;
@@ -258,12 +279,22 @@ const XTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("XTargetFromRoute", { description: "Reads and prints X targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/", XHandle, "/status/", PostNumber, S.Literals(["/photo/", "/video/"]), PostNumber]).pipe(
+    S.decodeTo(
+      XPost,
+      T.transform({
+        decode: ([, handle, , id]): typeof XPost.Encoded => ({ kind: "post", handle, id }),
+        encode: ({ handle, id }) => ["/", handle, "/status/", id, "/photo/", "1"],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("XTargetFromRoute", { description: "Reads every accepted X route and prints the first one that fits." }));
 
 declare namespace XTargetFromRoute {
   export type Encoded =
     | `/${XHandle.Encoded}${XTab.Encoded}`
-    | `/${XHandle.Encoded}/status/${PostNumber.Encoded}`;
+    | `/${XHandle.Encoded}/status/${PostNumber.Encoded}`
+    | `/${XHandle.Encoded}/status/${PostNumber.Encoded}${"/photo/" | "/video/"}${PostNumber.Encoded}`;
 }
 
 class ChannelByHandle extends S.Opaque<ChannelByHandle, { readonly brand: unique symbol }>()(
@@ -457,6 +488,27 @@ const YouTubeTargetFromRoute = S.Union([
       T.transform({ decode: ([, id]) => ({ kind: "post", id }), encode: ({ id }) => ["/shorts/", id] })
     )
   ),
+  S.TemplateLiteralParser([S.Literals(["/live/", "/embed/"]), YouTubeVideoId]).pipe(
+    S.decodeTo(
+      YouTubeVideo,
+      T.transform({
+        decode: ([, id]): typeof YouTubeVideo.Encoded => ({ kind: "post", id }),
+        encode: ({ id }) => ["/live/", id],
+      })
+    )
+  ),
+  S.TemplateLiteralParser([
+    S.toEncoded(YouTubeChannelFromPath),
+    S.Literals(["/featured", "/about", "/playlists", "/community", "/posts", "/live"]),
+  ]).pipe(
+    S.decodeTo(
+      YouTubeCollection,
+      T.transform({
+        decode: ([channel]): typeof YouTubeCollection.Encoded => ({ kind: "collection", channel, tab: "home" }),
+        encode: ({ channel }) => [channel, "/featured"],
+      })
+    )
+  ),
 ]).pipe(
   $I.annoteSchema("YouTubeTargetFromRoute", {
     description: "Reads every accepted YouTube route and prints the first one that fits.",
@@ -467,7 +519,9 @@ declare namespace YouTubeTargetFromRoute {
   export type Encoded =
     | `${YouTubeChannelFromPath.Encoded}${YouTubeTab.Encoded}`
     | `/watch?v=${YouTubeVideoId.Encoded}`
-    | `/shorts/${YouTubeVideoId.Encoded}`;
+    | `/shorts/${YouTubeVideoId.Encoded}`
+    | `${"/live/" | "/embed/"}${YouTubeVideoId.Encoded}`
+    | `${YouTubeChannelFromPath.Encoded}${"/featured" | "/about" | "/playlists" | "/community" | "/posts" | "/live"}`;
 }
 
 class RedGifsCollection extends S.Opaque<RedGifsCollection, { readonly brand: unique symbol }>()(
@@ -546,19 +600,37 @@ const RedGifsTargetFromRoute = S.Union([
       T.transform({ decode: ([, id]) => ({ kind: "post", id }), encode: ({ id }) => ["/watch/", id] })
     )
   ),
+  S.TemplateLiteralParser(["/users/", RedGifsUser, "/collections"]).pipe(
+    S.decodeTo(
+      RedGifsCollection,
+      T.transform({
+        decode: ([, user]): typeof RedGifsCollection.Encoded => ({ kind: "collection", user }),
+        encode: ({ user }) => ["/users/", user, "/collections"],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/ifr/", RedGifsClipId]).pipe(
+    S.decodeTo(
+      RedGifsClip,
+      T.transform({
+        decode: ([, id]): typeof RedGifsClip.Encoded => ({ kind: "post", id }),
+        encode: ({ id }) => ["/ifr/", id],
+      })
+    )
+  ),
 ]).pipe(
-  $I.annoteSchema("RedGifsTargetFromRoute", { description: "Reads and prints RedGifs targets as site-relative routes." })
+  $I.annoteSchema("RedGifsTargetFromRoute", { description: "Reads every accepted RedGifs route and prints the first one that fits." })
 );
 
 declare namespace RedGifsTargetFromRoute {
   export type Encoded =
     | `/users/${RedGifsUser.Encoded}`
-    | `/watch/${RedGifsClipId.Encoded}`;
+    | `/watch/${RedGifsClipId.Encoded}`
+    | `/users/${RedGifsUser.Encoded}/collections`
+    | `/ifr/${RedGifsClipId.Encoded}`;
 }
 
-const FacebookName = text("FacebookName", /^[A-Za-z0-9][A-Za-z0-9.]{0,49}$/, "A Facebook page or profile name.").check(
-  unreserved("FacebookName", "reel", "photo", "watch", "groups", "marketplace", "profile.php")
-);
+const FacebookName = name("FacebookName", /^[a-z0-9][a-z0-9.]{0,49}$/, "A Facebook page or profile name.", "reel", "photo", "watch", "groups", "marketplace", "profile.php", "photo.php", "people", "share");
 
 declare namespace FacebookName {
   export type Encoded = string;
@@ -609,12 +681,22 @@ const FacebookPageFromPath = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("FacebookPageFromPath", { description: "Reads and prints the two ways a Facebook route names a page." }));
+  S.TemplateLiteralParser(["/people/", Slug, "/", PostNumber]).pipe(
+    S.decodeTo(
+      FacebookPageById,
+      T.transform({
+        decode: ([, , , id]): typeof FacebookPageById.Encoded => ({ by: "id", id }),
+        encode: ({ id }) => ["/people/", "_", "/", id],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("FacebookPageFromPath", { description: "Reads the three ways a Facebook route names a page and prints the first that fits." }));
 
 declare namespace FacebookPageFromPath {
   export type Encoded =
     | `/${FacebookName.Encoded}`
-    | `/profile.php?id=${PostNumber.Encoded}`;
+    | `/profile.php?id=${PostNumber.Encoded}`
+    | `/people/${Slug.Encoded}/${PostNumber.Encoded}`;
 }
 
 const FacebookTab = MappedLiteralKit([
@@ -631,10 +713,15 @@ declare namespace FacebookTab {
 const FacebookPostForm = MappedLiteralKit([
   ["/reel/", "reel"],
   ["/photo?fbid=", "photo"],
-]).pipe($I.annoteSchema("FacebookPostForm", { description: "Route prefix of a Facebook post and whether it is a reel or a photo." }));
+  ["/watch?v=", "video"],
+]).pipe(
+  $I.annoteSchema("FacebookPostForm", {
+    description: "Route prefix of a Facebook post and whether it is a reel, a photo or a video.",
+  })
+);
 
 declare namespace FacebookPostForm {
-  export type Encoded = "/reel/" | "/photo?fbid=";
+  export type Encoded = "/reel/" | "/photo?fbid=" | "/watch?v=";
 }
 
 class FacebookCollection extends S.Opaque<FacebookCollection, { readonly brand: unique symbol }>()(
@@ -662,14 +749,14 @@ declare namespace FacebookCollection {
 
 class FacebookPost extends S.Opaque<FacebookPost, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("post"), form: S.toType(FacebookPostForm), id: PostNumber }).pipe(
-    $I.annoteSchema("FacebookPost", { description: "One Facebook reel or photo, which does not name its page." })
+    $I.annoteSchema("FacebookPost", { description: "One Facebook reel, photo or video, which does not name its page." })
   )
 ) {}
 
 declare namespace FacebookPost {
   export interface Encoded {
     readonly kind: "post";
-    readonly form: "reel" | "photo";
+    readonly form: "reel" | "photo" | "video";
     readonly id: PostNumber.Encoded;
   }
 }
@@ -730,17 +817,45 @@ const FacebookTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("FacebookTargetFromRoute", { description: "Reads and prints Facebook targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/photo.php?fbid=", PostNumber]).pipe(
+    S.decodeTo(
+      FacebookPost,
+      T.transform({
+        decode: ([, id]): typeof FacebookPost.Encoded => ({ kind: "post", form: "photo", id }),
+        encode: ({ id }) => ["/photo.php?fbid=", id],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/", FacebookName, "/videos/", PostNumber]).pipe(
+    S.decodeTo(
+      FacebookPost,
+      T.transform({
+        decode: ([, , , id]): typeof FacebookPost.Encoded => ({ kind: "post", form: "video", id }),
+        encode: ({ id }) => ["/", "facebook", "/videos/", id],
+      })
+    )
+  ),
+  S.TemplateLiteralParser([S.toEncoded(FacebookPageFromPath), "/about"]).pipe(
+    S.decodeTo(
+      FacebookCollection,
+      T.transform({
+        decode: ([page]): typeof FacebookCollection.Encoded => ({ kind: "collection", page, tab: "posts" }),
+        encode: ({ page }) => [page, "/about"],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("FacebookTargetFromRoute", { description: "Reads every accepted Facebook route and prints the first one that fits." }));
 
 declare namespace FacebookTargetFromRoute {
   export type Encoded =
     | `${FacebookPageFromPath.Encoded}${FacebookTab.Encoded}`
-    | `${FacebookPostForm.Encoded}${PostNumber.Encoded}`;
+    | `${FacebookPostForm.Encoded}${PostNumber.Encoded}`
+    | `/photo.php?fbid=${PostNumber.Encoded}`
+    | `/${FacebookName.Encoded}/videos/${PostNumber.Encoded}`
+    | `${FacebookPageFromPath.Encoded}/about`;
 }
 
-const FanslyUser = text("FanslyUser", /^[A-Za-z0-9_-]{2,30}$/, "A Fansly username.").check(
-  unreserved("FanslyUser", "post", "explore", "messages")
-);
+const FanslyUser = name("FanslyUser", /^[a-z0-9_-]{2,30}$/, "A Fansly username.", "post", "explore", "messages");
 
 declare namespace FanslyUser {
   export type Encoded = string;
@@ -828,17 +943,25 @@ const FanslyTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("FanslyTargetFromRoute", { description: "Reads and prints Fansly targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/", FanslyUser, S.Literals(["/posts", "/media"])]).pipe(
+    S.decodeTo(
+      FanslyCollection,
+      T.transform({
+        decode: ([, user]): typeof FanslyCollection.Encoded => ({ kind: "collection", user }),
+        encode: ({ user }) => ["/", user, "/posts"],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("FanslyTargetFromRoute", { description: "Reads every accepted Fansly route and prints the first one that fits." }));
 
 declare namespace FanslyTargetFromRoute {
   export type Encoded =
     | `/${FanslyUser.Encoded}`
-    | `/post/${PostNumber.Encoded}`;
+    | `/post/${PostNumber.Encoded}`
+    | `/${FanslyUser.Encoded}${"/posts" | "/media"}`;
 }
 
-const InstagramUser = text("InstagramUser", /^[A-Za-z0-9_.]{1,30}$/, "An Instagram username.").check(
-  unreserved("InstagramUser", "p", "reel", "reels", "stories", "explore", "accounts", "direct")
-);
+const InstagramUser = name("InstagramUser", /^[a-z0-9_.]{1,30}$/, "An Instagram username.", "p", "reel", "reels", "stories", "explore", "accounts", "direct", "tv", "share");
 
 declare namespace InstagramUser {
   export type Encoded = string;
@@ -1016,7 +1139,43 @@ const InstagramTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("InstagramTargetFromRoute", { description: "Reads and prints Instagram targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/", InstagramUser, InstagramPostForm, InstagramShortcode]).pipe(
+    S.decodeTo(
+      InstagramPost,
+      T.transform({
+        decode: ([, , form, shortcode]): typeof InstagramPost.Encoded => ({ kind: "post", form, shortcode }),
+        encode: ({ form, shortcode }) => ["/", "_", form, shortcode],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/reels/", InstagramShortcode]).pipe(
+    S.decodeTo(
+      InstagramPost,
+      T.transform({
+        decode: ([, shortcode]): typeof InstagramPost.Encoded => ({ kind: "post", form: "reel", shortcode }),
+        encode: ({ shortcode }) => ["/reels/", shortcode],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/tv/", InstagramShortcode]).pipe(
+    S.decodeTo(
+      InstagramPost,
+      T.transform({
+        decode: ([, shortcode]): typeof InstagramPost.Encoded => ({ kind: "post", form: "post", shortcode }),
+        encode: ({ shortcode }) => ["/tv/", shortcode],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/stories/", InstagramUser, "/", PostNumber]).pipe(
+    S.decodeTo(
+      InstagramStories,
+      T.transform({
+        decode: ([, user]): typeof InstagramStories.Encoded => ({ kind: "stories", user }),
+        encode: ({ user }) => ["/stories/", user, "/", "0"],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("InstagramTargetFromRoute", { description: "Reads every accepted Instagram route and prints the first one that fits." }));
 
 declare namespace InstagramTargetFromRoute {
   export type Encoded =
@@ -1024,12 +1183,13 @@ declare namespace InstagramTargetFromRoute {
     | `/_u/${InstagramUser.Encoded}`
     | `/stories/${InstagramUser.Encoded}`
     | `/stories/highlights/${PostNumber.Encoded}`
-    | `${InstagramPostForm.Encoded}${InstagramShortcode.Encoded}`;
+    | `${InstagramPostForm.Encoded}${InstagramShortcode.Encoded}`
+    | `/${InstagramUser.Encoded}${InstagramPostForm.Encoded}${InstagramShortcode.Encoded}`
+    | `${"/reels/" | "/tv/"}${InstagramShortcode.Encoded}`
+    | `/stories/${InstagramUser.Encoded}/${PostNumber.Encoded}`;
 }
 
-const OnlyFansUser = text("OnlyFansUser", /^[A-Za-z][A-Za-z0-9._-]{1,63}$/, "An OnlyFans username beginning with a letter.").check(
-  unreserved("OnlyFansUser", "my", "posts")
-);
+const OnlyFansUser = name("OnlyFansUser", /^[a-z][a-z0-9._-]{1,63}$/, "An OnlyFans username beginning with a letter.", "my", "posts", "action");
 
 declare namespace OnlyFansUser {
   export type Encoded = string;
@@ -1118,17 +1278,35 @@ const OnlyFansTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("OnlyFansTargetFromRoute", { description: "Reads and prints OnlyFans targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/", OnlyFansUser, S.Literals(["/media", "/photos", "/videos"])]).pipe(
+    S.decodeTo(
+      OnlyFansCollection,
+      T.transform({
+        decode: ([, user]): typeof OnlyFansCollection.Encoded => ({ kind: "collection", user }),
+        encode: ({ user }) => ["/", user, "/media"],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/", OnlyFansUser, "/c", PostNumber]).pipe(
+    S.decodeTo(
+      OnlyFansCollection,
+      T.transform({
+        decode: ([, user]): typeof OnlyFansCollection.Encoded => ({ kind: "collection", user }),
+        encode: ({ user }) => ["/", user, "/c", "0"],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("OnlyFansTargetFromRoute", { description: "Reads every accepted OnlyFans route and prints the first one that fits." }));
 
 declare namespace OnlyFansTargetFromRoute {
   export type Encoded =
     | `/${OnlyFansUser.Encoded}`
-    | `/${PostNumber.Encoded}/${OnlyFansUser.Encoded}`;
+    | `/${PostNumber.Encoded}/${OnlyFansUser.Encoded}`
+    | `/${OnlyFansUser.Encoded}${"/media" | "/photos" | "/videos"}`
+    | `/${OnlyFansUser.Encoded}/c${PostNumber.Encoded}`;
 }
 
-const PinterestUser = text("PinterestUser", /^[A-Za-z0-9_-]{3,30}$/, "A Pinterest username.").check(
-  unreserved("PinterestUser", "pin", "ideas", "search", "today")
-);
+const PinterestUser = name("PinterestUser", /^[a-z0-9_-]{3,30}$/, "A Pinterest username.", "pin", "ideas", "search", "today");
 
 declare namespace PinterestUser {
   export type Encoded = string;
@@ -1216,15 +1394,35 @@ const PinterestTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("PinterestTargetFromRoute", { description: "Reads and prints Pinterest targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/", PinterestUser, S.Literals(["/_saved", "/_created", "/pins"])]).pipe(
+    S.decodeTo(
+      PinterestCollection,
+      T.transform({
+        decode: ([, user]): typeof PinterestCollection.Encoded => ({ kind: "collection", user }),
+        encode: ({ user }) => ["/", user, "/_saved"],
+      })
+    )
+  ),
+  S.TemplateLiteralParser(["/pin/", Slug, "--", PostNumber]).pipe(
+    S.decodeTo(
+      PinterestPin,
+      T.transform({
+        decode: ([, , , id]): typeof PinterestPin.Encoded => ({ kind: "post", id }),
+        encode: ({ id }) => ["/pin/", "pin", "--", id],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("PinterestTargetFromRoute", { description: "Reads every accepted Pinterest route and prints the first one that fits." }));
 
 declare namespace PinterestTargetFromRoute {
   export type Encoded =
     | `/${PinterestUser.Encoded}`
-    | `/pin/${PostNumber.Encoded}`;
+    | `/pin/${PostNumber.Encoded}`
+    | `/${PinterestUser.Encoded}${"/_saved" | "/_created" | "/pins"}`
+    | `/pin/${Slug.Encoded}--${PostNumber.Encoded}`;
 }
 
-const SnapchatUser = text("SnapchatUser", /^[A-Za-z0-9._-]{3,15}$/, "A Snapchat username.");
+const SnapchatUser = name("SnapchatUser", /^[a-z0-9._-]{3,15}$/, "A Snapchat username.");
 
 declare namespace SnapchatUser {
   export type Encoded = string;
@@ -1347,7 +1545,7 @@ declare namespace SnapchatTargetFromRoute {
     | `/@${SnapchatUser.Encoded}/spotlight/${SpotlightId.Encoded}`;
 }
 
-const ThreadsUser = text("ThreadsUser", /^[A-Za-z0-9_.]{1,30}$/, "A Threads username without its leading @.");
+const ThreadsUser = name("ThreadsUser", /^[a-z0-9_.]{1,30}$/, "A Threads username without its leading @.");
 
 declare namespace ThreadsUser {
   export type Encoded = string;
@@ -1361,10 +1559,12 @@ declare namespace ThreadsShortcode {
 const ThreadsTab = MappedLiteralKit([
   ["", "posts"],
   ["/media", "media"],
+  ["/replies", "replies"],
+  ["/reposts", "reposts"],
 ]).pipe($I.annoteSchema("ThreadsTab", { description: "Path suffix of a Threads profile route and the tab it selects." }));
 
 declare namespace ThreadsTab {
-  export type Encoded = "" | "/media";
+  export type Encoded = "" | "/media" | "/replies" | "/reposts";
 }
 
 class ThreadsCollection extends S.Opaque<ThreadsCollection, { readonly brand: unique symbol }>()(
@@ -1377,7 +1577,7 @@ declare namespace ThreadsCollection {
   export interface Encoded {
     readonly kind: "collection";
     readonly user: ThreadsUser.Encoded;
-    readonly tab: "posts" | "media";
+    readonly tab: "posts" | "media" | "replies" | "reposts";
   }
 }
 
@@ -1459,7 +1659,7 @@ declare namespace ThreadsTargetFromRoute {
     | `/@${ThreadsUser.Encoded}/post/${ThreadsShortcode.Encoded}`;
 }
 
-const TikTokUser = text("TikTokUser", /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,63}$/, "A TikTok username without its leading @.");
+const TikTokUser = name("TikTokUser", /^[a-z0-9_][a-z0-9_.-]{0,63}$/, "A TikTok username without its leading @.");
 
 declare namespace TikTokUser {
   export type Encoded = string;
@@ -1558,15 +1758,25 @@ const TikTokTargetFromRoute = S.Union([
       })
     )
   ),
-]).pipe($I.annoteSchema("TikTokTargetFromRoute", { description: "Reads and prints TikTok targets as site-relative routes." }));
+  S.TemplateLiteralParser(["/@", TikTokUser, "/live"]).pipe(
+    S.decodeTo(
+      TikTokCollection,
+      T.transform({
+        decode: ([, user]): typeof TikTokCollection.Encoded => ({ kind: "collection", user }),
+        encode: ({ user }) => ["/@", user, "/live"],
+      })
+    )
+  ),
+]).pipe($I.annoteSchema("TikTokTargetFromRoute", { description: "Reads every accepted TikTok route and prints the first one that fits." }));
 
 declare namespace TikTokTargetFromRoute {
   export type Encoded =
     | `/@${TikTokUser.Encoded}`
-    | `/@${TikTokUser.Encoded}${TikTokPostForm.Encoded}${PostNumber.Encoded}`;
+    | `/@${TikTokUser.Encoded}${TikTokPostForm.Encoded}${PostNumber.Encoded}`
+    | `/@${TikTokUser.Encoded}/live`;
 }
 
-const VscoUser = text("VscoUser", /^[A-Za-z0-9_-]{3,64}$/, "A VSCO username.");
+const VscoUser = name("VscoUser", /^[a-z0-9_-]{3,64}$/, "A VSCO username.");
 
 declare namespace VscoUser {
   export type Encoded = string;
@@ -1698,7 +1908,7 @@ declare namespace VscoTargetFromRoute {
     | `/${VscoUser.Encoded}${VscoPostForm.Encoded}${VscoMediaId.Encoded}`;
 }
 
-const RedditUser = text("RedditUser", /^[A-Za-z0-9_-]{3,20}$/, "A Reddit username.");
+const RedditUser = name("RedditUser", /^[a-z0-9_-]{3,20}$/, "A Reddit username.");
 
 declare namespace RedditUser {
   export type Encoded = string;
@@ -1706,6 +1916,16 @@ declare namespace RedditUser {
 const RedditPostId = text("RedditPostId", /^[a-z0-9]{2,12}$/, "A lowercase base-36 Reddit post identifier.");
 
 declare namespace RedditPostId {
+  export type Encoded = string;
+}
+
+const RedditHome = text(
+  "RedditHome",
+  /^\/(?:r|u|user)\/[A-Za-z0-9_-]{2,21}$/,
+  "Route of the community or user profile a Reddit post was submitted to."
+);
+
+declare namespace RedditHome {
   export type Encoded = string;
 }
 
@@ -1810,16 +2030,46 @@ const RedditTargetFromRoute = S.Union([
       })
     )
   ),
+  S.TemplateLiteralParser(["/comments/", RedditPostId, "/", Slug]).pipe(
+    S.decodeTo(
+      RedditPost,
+      T.transform({
+        decode: ([, id]): typeof RedditPost.Encoded => ({ kind: "post", id }),
+        encode: ({ id }) => ["/comments/", id, "/", "_"],
+      })
+    )
+  ),
+  S.TemplateLiteralParser([RedditHome, "/comments/", RedditPostId]).pipe(
+    S.decodeTo(
+      RedditPost,
+      T.transform({
+        decode: ([, , id]): typeof RedditPost.Encoded => ({ kind: "post", id }),
+        encode: ({ id }) => ["/r/all", "/comments/", id],
+      })
+    )
+  ),
+  S.TemplateLiteralParser([RedditHome, "/comments/", RedditPostId, "/", Slug]).pipe(
+    S.decodeTo(
+      RedditPost,
+      T.transform({
+        decode: ([, , id]): typeof RedditPost.Encoded => ({ kind: "post", id }),
+        encode: ({ id }) => ["/r/all", "/comments/", id, "/", "_"],
+      })
+    )
+  ),
 ]).pipe($I.annoteSchema("RedditTargetFromRoute", { description: "Reads every accepted Reddit route and prints the first one that fits." }));
 
 declare namespace RedditTargetFromRoute {
   export type Encoded =
     | `/user/${RedditUser.Encoded}${RedditTab.Encoded}`
     | `/u/${RedditUser.Encoded}${RedditTab.Encoded}`
-    | `/comments/${RedditPostId.Encoded}`;
+    | `/comments/${RedditPostId.Encoded}`
+    | `/comments/${RedditPostId.Encoded}/${Slug.Encoded}`
+    | `${RedditHome.Encoded}/comments/${RedditPostId.Encoded}`
+    | `${RedditHome.Encoded}/comments/${RedditPostId.Encoded}/${Slug.Encoded}`;
 }
 
-const DzenName = text("DzenName", /^[A-Za-z0-9_.-]{2,64}$/, "A Dzen channel name.").check(unreserved("DzenName", "id"));
+const DzenName = text("DzenName", /^[A-Za-z0-9_.-]{2,64}$/, "A Dzen channel name.").check(notDotSegment, unreserved("DzenName", "id"));
 
 declare namespace DzenName {
   export type Encoded = string;
@@ -2243,18 +2493,18 @@ declare namespace Site {
 
 const sites: Readonly<Record<Platform, Site>> = {
   x: Site.make({ hosts: ["x.com","www.x.com","twitter.com","www.twitter.com","mobile.twitter.com"] }),
-  youtube: Site.make({ hosts: ["www.youtube.com","youtube.com","m.youtube.com"], routedQuery: ["v"] }),
-  redgifs: Site.make({ hosts: ["www.redgifs.com","redgifs.com"] }),
-  facebook: Site.make({ hosts: ["www.facebook.com","facebook.com","m.facebook.com","mbasic.facebook.com","web.facebook.com","fb.com","www.fb.com"], routedQuery: ["id","fbid"] }),
+  youtube: Site.make({ hosts: ["www.youtube.com","youtube.com","m.youtube.com","music.youtube.com"], routedQuery: ["v"] }),
+  redgifs: Site.make({ hosts: ["www.redgifs.com","redgifs.com","v3.redgifs.com"] }),
+  facebook: Site.make({ hosts: ["www.facebook.com","facebook.com","m.facebook.com","mbasic.facebook.com","web.facebook.com","fb.com","www.fb.com"], routedQuery: ["id","fbid","v"] }),
   fansly: Site.make({ hosts: ["fansly.com","www.fansly.com"] }),
   instagram: Site.make({ hosts: ["www.instagram.com","instagram.com"] }),
   onlyfans: Site.make({ hosts: ["onlyfans.com","www.onlyfans.com"] }),
-  pinterest: Site.make({ hosts: ["www.pinterest.com","pinterest.com"] }),
+  pinterest: Site.make({ hosts: ["www.pinterest.com","pinterest.com","www.pinterest.co.uk","pinterest.co.uk","uk.pinterest.com","www.pinterest.ca","www.pinterest.com.au","www.pinterest.de","www.pinterest.fr","www.pinterest.es","www.pinterest.it","www.pinterest.com.mx","www.pinterest.jp"] }),
   snapchat: Site.make({ hosts: ["www.snapchat.com","snapchat.com"] }),
   threads: Site.make({ hosts: ["www.threads.com","threads.com","www.threads.net","threads.net"] }),
   tiktok: Site.make({ hosts: ["www.tiktok.com","tiktok.com","m.tiktok.com"] }),
   vsco: Site.make({ hosts: ["vsco.co","www.vsco.co"] }),
-  reddit: Site.make({ hosts: ["www.reddit.com","reddit.com","old.reddit.com"] }),
+  reddit: Site.make({ hosts: ["www.reddit.com","reddit.com","old.reddit.com","new.reddit.com","sh.reddit.com","np.reddit.com"] }),
   dzen: Site.make({ hosts: ["dzen.ru","www.dzen.ru"] }),
 };
 
@@ -2309,7 +2559,9 @@ declare namespace SiteRoute {
  * **Details**
  *
  * Decoding lowercases the host, drops a trailing slash, the fragment and every
- * query key the site does not route on, then reads the remaining route.
+ * query key the site does not route on, then reads the remaining route. An
+ * account name is lowercased, because every site but Dzen matches names
+ * without regard to case; post identifiers keep theirs.
  * Encoding prints the site's first host and the first route that fits, so
  * decoding a URL and encoding the result yields its canonical form.
  *

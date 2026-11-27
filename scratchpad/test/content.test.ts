@@ -354,6 +354,21 @@ describe("the links of a profile", () => {
     );
   });
 
+  it("treats one account written in two cases as one account", () => {
+    const mixed = S.decodeOption(Profile)({
+      source: "https://www.instagram.com/example/reels",
+      account: { by: "handle", handle: "example" },
+      links: [
+        { url: "https://instagram.com/Example" },
+        { url: "https://x.com/Example" },
+        { url: "https://twitter.com/example/media" },
+      ],
+    });
+    expect(O.map(mixed, (p) => A.flatMap(elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
+      O.some(["https://x.com/example"])
+    );
+  });
+
   it("names the accounts those links lead to, without the profile itself", () => {
     expect(O.map(decoded, (p) => A.flatMap(elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
       O.some(["https://x.com/example", "https://www.threads.com/@example", "https://www.snapchat.com/@example"])
