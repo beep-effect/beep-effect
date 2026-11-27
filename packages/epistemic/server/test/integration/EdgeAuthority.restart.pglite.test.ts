@@ -1,9 +1,3 @@
-// Restart proof (SPEC acceptance: history and reads survive process boundaries).
-// Two scopes over ONE dataDir: the first writes through the real repository and the
-// gate-outcome resolver, then PGlite shuts down with the scope; the second reopens the
-// same directory and re-asks both axes, re-reads the lineage and the disposition, and
-// re-provokes the exclusion constraint. Nothing is migrated in the second scope — if the
-// answers come back, they came back off disk.
 import * as NodeURL from "node:url";
 import * as NodeUtil from "node:util";
 import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
@@ -46,9 +40,6 @@ const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 
 const TempDirServices = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
-// One persistent database per scope, reopened from the same directory. Relaxed durability
-// keeps the proof fast; the point under test is that the data files carry the history, not
-// that fsync happens on every commit.
 const makePersistentLayer = (dataDir: string) =>
   makeDrizzleLayer().pipe(
     Layer.provideMerge(Pglite.makeLayer({ dataDir, extensions: { btree_gist }, relaxedDurability: true }))
@@ -98,11 +89,6 @@ const asOf = Effect.fnUntraced(function* (
 const factOf = (version: O.Option<{ readonly fact: Record<string, unknown> }>, key: string): O.Option<unknown> =>
   O.map(version, (value) => value.fact[key]);
 
-/**
- * First scope: migrate, seed the endpoints, write one correction through the repository,
- * and record a rejected gate verdict. Answers with the identity and the ids the second
- * scope re-reads.
- */
 const writeHistory = Effect.fnUntraced(function* () {
   const db = yield* makeDrizzle();
   yield* migrate(db, { migrationsFolder, migrationsSchema: "drizzle" });
@@ -163,8 +149,6 @@ const writeHistory = Effect.fnUntraced(function* () {
   });
   const corrected = yield* repository.supersede(decodedSupersede);
 
-  // The resolver reads the clock for `resolvedAt`; pinning it makes the surviving row
-  // assertable rather than merely present.
   yield* TestClock.setTime(resolvedAtMillis);
   const dispositions = yield* makeDrizzleClaimDispositionRepository();
   const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
@@ -198,8 +182,6 @@ const writeHistory = Effect.fnUntraced(function* () {
   assertSome(corrected.supersedesId, former.id);
   pipe(outcome.disposition, O.isSome, assertTrue);
 
-  // The claim id travels back branded (the resolver hands the decoded claim through),
-  // so the second scope can read the disposition without re-decoding a raw row id.
   return { claimId: outcome.claim.id, formerId: former.id, identity };
 });
 
@@ -218,8 +200,6 @@ if (!shouldRunPgliteIntegration) {
 
           const written = yield* writeHistory().pipe(provideScopedLayer(makePersistentLayer(dataDir)));
 
-          // The first scope is closed here: PGlite has shut down and the only thing carrying
-          // the history across is the directory.
           yield* Effect.gen(function* () {
             const repository = yield* makeDrizzleEdgeAuthorityRepository();
             const dispositions = yield* makeDrizzleClaimDispositionRepository();
@@ -238,23 +218,23 @@ if (!shouldRunPgliteIntegration) {
                 onSome: Effect.succeed,
               })
             );
-            expect(head.version).toBe(2);
+            expect(
+              head.version,
+              "the first scope's PGlite has shut down and this one never migrates: the data files carry the history"
+            ).toBe(2);
             assertSome(head.supersedesId, written.formerId);
             expect(DateTime.toEpochMillis(head.recordedAt)).toBe(2_000);
 
             const recorded = yield* dispositions.listByClaim(written.claimId);
             expect(A.map(recorded, (disposition) => disposition.status)).toStrictEqual(["rejected"]);
-            expect(A.map(recorded, (disposition) => DateTime.toEpochMillis(disposition.resolvedAt))).toStrictEqual([
-              resolvedAtMillis,
-            ]);
+            expect(
+              A.map(recorded, (disposition) => DateTime.toEpochMillis(disposition.resolvedAt)),
+              "the resolver reads the clock for resolvedAt, pinned before the first scope resolved"
+            ).toStrictEqual([resolvedAtMillis]);
             expect(
               A.map(recorded, (disposition) => A.map(disposition.violations, (violation) => violation.message))
             ).toStrictEqual([["Expected at least 1 value(s) for evidence."]]);
 
-            // The constraint is live in the reopened database, not merely recorded in its
-            // catalog: a closed interval overlapping the surviving open head is still
-            // refused, and the refusal still arrives as the typed conflict. Probe stays
-            // LAST — it aborts the surrounding transaction chain.
             const decodedRecord3 = yield* decodeRecord({
               fact: { amount: "999" },
               identity: written.identity,
@@ -266,9 +246,12 @@ if (!shouldRunPgliteIntegration) {
               validFrom: 1_200,
               validTo: 1_400,
             });
-            const conflict = yield* Effect.flip(repository.record(decodedRecord3));
-            pipe(SupersessionConflict.is(conflict), assertTrue);
-            expect(NodeUtil.inspect(conflict, { depth: 12 })).toContain("epistemic_edge_no_overlap");
+            const lastStatementConflict = yield* Effect.flip(repository.record(decodedRecord3));
+            pipe(SupersessionConflict.is(lastStatementConflict), assertTrue);
+            expect(
+              NodeUtil.inspect(lastStatementConflict, { depth: 12 }),
+              "the reopened database still enforces the exclusion constraint, not merely lists it"
+            ).toContain("epistemic_edge_no_overlap");
           }).pipe(provideScopedLayer(makePersistentLayer(dataDir)));
         }),
         180_000

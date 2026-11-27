@@ -111,19 +111,17 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     assertNone(decodeUnknownSupersedeEdgeFactOption(withoutValidFrom(supersedeEncoded)));
   });
 
-  // EdgeAsOfQuery carries both axes and no cross-field check, so its arbitrary generates
-  // freely; the write commands require orgScope/orgId agreement, which a generate-and-filter
-  // arbitrary would essentially never satisfy.
   it.effect.prop(
-    "round-trips schema-derived as-of queries without changing the encoded shape",
+    "round-trips schema-derived as-of queries, free of the write commands' org agreement check, keeping the encoded shape",
     { query: EdgeAsOfQuery },
     Effect.fnUntraced(function* ({ query }) {
       const encoded = yield* encodeEdgeAsOfQuery(EdgeAsOfQuery.make(query));
       const decoded = yield* decodeEdgeAsOfQuery(encoded);
 
-      // Both axes survive the millis boundary for every generated instant, not just the fixture.
       const encodedEdgeAsOfQuery1 = yield* encodeEdgeAsOfQuery(decoded);
-      expect(encodedEdgeAsOfQuery1).toStrictEqual(encoded);
+      expect(encodedEdgeAsOfQuery1, "both axes survive the millis boundary for every generated instant").toStrictEqual(
+        encoded
+      );
       expect(typeof encoded.knownAt).toBe("number");
       expect(typeof encoded.validAt).toBe("number");
 

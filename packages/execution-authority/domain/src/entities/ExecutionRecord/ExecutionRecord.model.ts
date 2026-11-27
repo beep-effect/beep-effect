@@ -39,14 +39,7 @@ import type { GrantOperation, SinkDestination } from "../../values/ExecutionGran
 
 const $I = $ExecutionAuthorityDomainId.create("entities/ExecutionRecord/ExecutionRecord.model");
 
-/**
- * Record-hash encoding version prefixes. Bump on any canonical-encoding change
- * so old and new hashes can never collide in a table holding both.
- *
- * The `epistemic-` prefix is frozen: these records began in the epistemic slice,
- * and the label is a hash input, so renaming it to match this slice would change
- * every new hash and break verification of every stored chain.
- */
+// decision: epistemic-hash-labels-frozen
 const decisionEncodingVersion = "epistemic-execution-decision/v1";
 const outcomeEncodingVersion = "epistemic-execution-outcome/v1";
 
@@ -442,16 +435,9 @@ export class ExecutionOutcomeRecord extends S.Opaque<ExecutionOutcomeRecord, { r
   )
 ) {}
 
-// The seal preimage is `${version}\n${canonical}` over the canonical JSON
-// owner's text. A record has no typed channel, so the owner's refusal of a
-// value outside plain JSON throws its `JsoncCanonicalizeError`.
-const digestOf = (version: string, wire: Record<string, unknown>): string =>
+const sealDigestOrThrow = (version: string, wire: Record<string, unknown>): string =>
   bytesToHex(sha256(utf8ToBytes(`${version}\n${Result.getOrThrow(JsoncFingerprint.canonicalizeResult(wire))}`)));
 
-/**
- * Distributes `Omit` over a union so each variant loses the key individually
- * instead of the union collapsing to its common keys.
- */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 /**
@@ -473,9 +459,7 @@ type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K>
  */
 export type ExecutionDecisionContent = DistributiveOmit<ExecutionDecisionRecord, "hash">;
 
-// Manual wire-form projection of decision content for hashing. Kept manual —
-// rather than derived via S.omit — because the record schema is a tagged
-// union, and the hash input must be stable independent of schema plumbing.
+// decision: hash-wire-projection-stays-manual
 const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string, unknown> => ({
   audience: content.audience,
   decidedAt: DateTime.toEpochMillis(content.decidedAt),
@@ -527,7 +511,7 @@ const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string
  * @since 0.0.0
  */
 export const sealExecutionDecision = (content: ExecutionDecisionContent): ExecutionDecisionRecord => {
-  const hash = DecisionRecordHash.make(digestOf(decisionEncodingVersion, encodeDecisionContent(content)));
+  const hash = DecisionRecordHash.make(sealDigestOrThrow(decisionEncodingVersion, encodeDecisionContent(content)));
   return ExecutionDecisionRecord.make({ ...content, hash });
 };
 
@@ -565,7 +549,7 @@ export const sealExecutionDecision = (content: ExecutionDecisionContent): Execut
  * @since 0.0.0
  */
 export const verifyExecutionDecisionHash = (record: ExecutionDecisionRecord): boolean =>
-  digestOf(decisionEncodingVersion, encodeDecisionContent(record)) === record.hash;
+  sealDigestOrThrow(decisionEncodingVersion, encodeDecisionContent(record)) === record.hash;
 
 const ChainVerificationTag = LiteralKit(["chain-intact", "chain-broken"]);
 
@@ -717,8 +701,7 @@ export const verifyOutcomeBinding: {
     verifyExecutionDecisionHash(decision)
 );
 
-// Manual wire-form projection of outcome content for hashing, mirroring
-// encodeDecisionContent's rationale.
+// decision: hash-wire-projection-stays-manual
 const encodeOutcomeContent = (content: ExecutionOutcomeContent): Record<string, unknown> => ({
   decisionHash: content.decisionHash,
   recordedAt: DateTime.toEpochMillis(content.recordedAt),
@@ -769,7 +752,7 @@ export type ExecutionOutcomeContent = Omit<S.Struct.Type<typeof ExecutionOutcome
 export const sealExecutionOutcome = (content: ExecutionOutcomeContent): ExecutionOutcomeRecord =>
   ExecutionOutcomeRecord.make({
     ...content,
-    hash: OutcomeRecordHash.make(digestOf(outcomeEncodingVersion, encodeOutcomeContent(content))),
+    hash: OutcomeRecordHash.make(sealDigestOrThrow(outcomeEncodingVersion, encodeOutcomeContent(content))),
   });
 
 /**
@@ -795,7 +778,7 @@ export const sealExecutionOutcome = (content: ExecutionOutcomeContent): Executio
  * @since 0.0.0
  */
 export const verifyExecutionOutcomeHash = (record: ExecutionOutcomeRecord): boolean =>
-  digestOf(outcomeEncodingVersion, encodeOutcomeContent(record)) === record.hash;
+  sealDigestOrThrow(outcomeEncodingVersion, encodeOutcomeContent(record)) === record.hash;
 
 /**
  * Digests a raw operation or destination string for ledger storage. The one

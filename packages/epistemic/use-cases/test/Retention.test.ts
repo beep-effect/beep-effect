@@ -35,15 +35,14 @@ import {
   queryInput,
 } from "./helpers/Retention.ts";
 
-// Generate ordered windows constructively; filtering equal size-zero integers exhausts the generator.
-const PolicyPositive = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
+const WindowWidthMillis = RetentionPolicy.fields.hotThroughMillis.check(S.isLessThanOrEqualTo(1_000_000));
 const PolicyArbitrary = Arbitrary.schema(
   S.Struct({
-    hotThroughMillis: PolicyPositive,
-    warmThroughMillis: PolicyPositive,
-    coldThroughMillis: PolicyPositive,
-    decayScaleMillis: PolicyPositive,
-    payloadBudgetBytes: PolicyPositive,
+    hotThroughMillis: WindowWidthMillis,
+    warmThroughMillis: WindowWidthMillis,
+    coldThroughMillis: WindowWidthMillis,
+    decayScaleMillis: WindowWidthMillis,
+    payloadBudgetBytes: WindowWidthMillis,
   })
 ).pipe(
   Arbitrary.map((parts) =>
@@ -252,8 +251,10 @@ describe("retention reporting", () => {
   it.effect("sanitizes corrupted policy and report values at serialization boundaries", () =>
     Effect.gen(function* () {
       const policy = yield* S.decodeEffect(RetentionPolicy)(policyInput);
-      // Simulate a JavaScript caller corrupting a value after schema admission.
-      expect(Reflect.set(policy, "payloadBudgetBytes", 0)).toBe(true);
+      expect(
+        Reflect.set(policy, "payloadBudgetBytes", 0),
+        "a JavaScript caller corrupts the policy after schema admission"
+      ).toBe(true);
       const value16 = yield* S.decodeEffect(RetentionQuery)(queryInput);
       const argument2 = generateRetentionReport(value16, O.some(policy));
       const madeSnapshot3 = yield* makeSnapshot();

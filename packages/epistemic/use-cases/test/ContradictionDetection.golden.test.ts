@@ -155,8 +155,6 @@ describe("Contradiction detection golden vectors", () => {
     }
     it.effect.prop(
       "schema-derived values preserve negation and permutation invariants",
-      // Well-formed text only: the proposal-fact bound refuses an unpaired
-      // surrogate, which has no canonical form to digest.
       [
         S.String.check(
           S.isMaxLength(32),
@@ -172,7 +170,9 @@ describe("Contradiction detection golden vectors", () => {
         const records = yield* detect(snapshot);
         yield* Effect.forEach(records, conformance, { concurrency: 1 });
         const permuted = ContradictionDetectionSnapshot.make({ ...snapshot, beliefs: A.reverse(snapshot.beliefs) });
-        expect(A.length(records)).toBe(1);
+        expect(A.length(records), "well-formed text only: an unpaired surrogate has no canonical form to digest").toBe(
+          1
+        );
         const detect11 = yield* detect(permuted);
         const encodedOutput6 = yield* encodedOutput(detect11);
         const expectation2 = expect(encodedOutput6);

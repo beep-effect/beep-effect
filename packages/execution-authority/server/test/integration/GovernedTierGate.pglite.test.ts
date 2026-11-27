@@ -37,14 +37,12 @@ import type { TierGateShape } from "@beep/mcp-kit";
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 
-// Pinned to the in-process pglite driver with the bundled btree_gist
-// extension, matching the ExecutionLedger integration harness.
-const makeMigrationCapableLayer = () =>
+const inProcessBtreeGistLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const GovernedGateTestLayer = ExecutionLedgerDrizzle.pipe(
   Layer.provideMerge(makeDrizzleLayer()),
-  Layer.provideMerge(makeMigrationCapableLayer())
+  Layer.provideMerge(inProcessBtreeGistLayer())
 );
 
 const migrateLedger = Effect.fnUntraced(function* () {
@@ -73,9 +71,7 @@ const gateOptions = GovernedTierGateOptions.make({
 const grantedTool = Tool.make("ontology_propose_change_batch");
 const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 
-// The session id keys the run; clientId varies per request in production, so
-// the harness pins the session and lets the client id drift.
-const callerOf = (sessionId: string, clientId = 1) =>
+const sessionPinnedCaller = (sessionId: string, clientId = 1) =>
   McpCallerIdentity.makeOption({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) });
 
 const makeGate = () =>
@@ -90,7 +86,7 @@ const dispatchAs = <A2, E, R>(
 ) =>
   dispatchWithTierGate({ tool, toolCallId: O.none() }, onApproved).pipe(
     Effect.provideService(TierGate, gate),
-    Effect.provideService(CurrentMcpCaller, callerOf(session, clientId))
+    Effect.provideService(CurrentMcpCaller, sessionPinnedCaller(session, clientId))
   );
 
 const rawSql = Effect.map(Effect.service(SqlClient.SqlClient), (client) => client.withoutTransforms());
@@ -111,12 +107,13 @@ const countDecisions = Effect.fnUntraced(function* () {
   return rows[0]?.count ?? -1;
 });
 
-// The run key is minted inside the gate, so a test discovers its own run by
-// diffing the distinct run keys before and after its dispatches.
 const newRunKeySince = Effect.fnUntraced(function* (before: ReadonlyArray<string>) {
   const after = yield* readRunKeys();
   const fresh = A.filter(after, (key) => !A.contains(before, key));
-  expect(fresh).toHaveLength(1);
+  expect(
+    fresh,
+    "the gate mints the run key, so a test finds its run by diffing run keys before and after"
+  ).toHaveLength(1);
   return ExecutionRunKey.make(fresh[0]!);
 });
 
@@ -135,9 +132,6 @@ if (!shouldRunPgliteIntegration) {
           const decisionsBefore = yield* countDecisions();
           const observedDuringEffect = yield* Ref.make(-1);
 
-          // The wrapped effect stands in for the tool handler: by the time it
-          // runs, its own write-ahead decision row is already committed and
-          // readable — the only new row in the table.
           const result = yield* dispatchAs(
             gate,
             "s-1",
@@ -147,7 +141,10 @@ if (!shouldRunPgliteIntegration) {
 
           expect(result._tag).toBe("Dispatched");
           const got = yield* Ref.get(observedDuringEffect);
-          expect(got).toBe(1);
+          expect(
+            got,
+            "the handler's own write-ahead row is committed and readable before it runs, the only new row"
+          ).toBe(1);
 
           const runKey = yield* newRunKeySince(runKeysBefore);
           const decisions = yield* ledger.readDecisions(runKey);
@@ -188,10 +185,11 @@ if (!shouldRunPgliteIntegration) {
           expect(decision.verdict === "denied" && decision.reason).toBe("operation-not-granted");
           const readOutcomes3 = yield* ledger.readOutcomes(runKey);
           expect(readOutcomes3).toHaveLength(0);
-          // An ordinary denial has no outcome row and must not be reported by
-          // the derived unknown-outcome predicate, which is scoped to allowed.
           const readUnsettledAllowed4 = yield* ledger.readUnsettledAllowed(runKey);
-          expect(readUnsettledAllowed4).toHaveLength(0);
+          expect(
+            readUnsettledAllowed4,
+            "the unknown-outcome predicate is scoped to allowed decisions, so an ordinary denial is not reported"
+          ).toHaveLength(0);
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -204,15 +202,16 @@ if (!shouldRunPgliteIntegration) {
           const gate = yield* makeGate();
           const runKeysBefore = yield* readRunKeys();
 
-          // Three different client ids on ONE session — exactly what the HTTP
-          // protocol produces, since it mints a clientId per request.
           yield* dispatchAs(gate, "s-3", grantedTool, Effect.void, 11);
           yield* dispatchAs(gate, "s-3", ungrantedTool, Effect.void, 12);
           yield* dispatchAs(gate, "s-3", grantedTool, Effect.void, 13);
 
           const runKey = yield* newRunKeySince(runKeysBefore);
           const decisions = yield* ledger.readDecisions(runKey);
-          expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1, 2]);
+          expect(
+            A.map(decisions, (record) => record.seq),
+            "HTTP mints a clientId per request: three client ids on one session chain into one run"
+          ).toEqual([0, 1, 2]);
           expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "denied", "allowed"]);
           expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
 
@@ -225,8 +224,6 @@ if (!shouldRunPgliteIntegration) {
       );
     });
 
-    // A separate database: this block destroys the decision table to prove the
-    // fail-closed refusal against a real driver failure, not a stub.
     it.layer(GovernedGateTestLayer, { timeout: "5 minutes" })((it) => {
       it.effect(
         "a real decision-write failure refuses the dispatch and the effect does not run",
@@ -240,7 +237,10 @@ if (!shouldRunPgliteIntegration) {
 
           const result = yield* dispatchAs(gate, "s-4", grantedTool, Ref.set(ran, true));
 
-          expect(result._tag).toBe("Refused");
+          expect(
+            result._tag,
+            "this block's own fresh database lost its decision table: a real driver failure, not a stub"
+          ).toBe("Refused");
           const got6 = yield* Ref.get(ran);
           pipe(got6, assertFalse);
         }),

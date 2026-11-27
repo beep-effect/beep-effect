@@ -6,8 +6,6 @@ import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
-// Encoded rows as written before EdgeVersion composed the @beep/epistemics
-// interval field sets. They must decode and re-encode byte-for-byte.
 const baseRow = {
   ...productEntityFixtureInput(Epistemic.EdgeVersionId.entityType, 1),
   deletedAt: null,
@@ -45,7 +43,10 @@ describe("EdgeVersion row compatibility", () => {
         Effect.gen(function* () {
           const decoded = yield* S.decodeUnknownEffect(EdgeVersion)(row);
           const encoded = yield* S.encodeEffect(EdgeVersion)(decoded);
-          expect(encoded).toStrictEqual(row);
+          expect(
+            encoded,
+            "a row written before EdgeVersion composed the @beep/epistemics interval fields"
+          ).toStrictEqual(row);
         }),
       { concurrency: 1 }
     )

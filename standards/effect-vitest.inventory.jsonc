@@ -1551,15 +1551,15 @@
       "reason": "The client is built and provided within an inner scope so close completes before the same dataDir is reopened or ordered results are read; suite sharing would remove the close/reopen durability witness. Owner: @beep/pglite. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/execution-authority/config/test/Config.test.ts:91:provideScopedLayer@70#1",
+      "id": "EV002:packages/execution-authority/config/test/Config.test.ts:88:provideScopedLayer@70#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/execution-authority-config",
       "file": "packages/execution-authority/config/test/Config.test.ts",
-      "line": 91,
-      "endLine": 91,
+      "line": 88,
+      "endLine": 88,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:1add42e36f574f0bd38af5acd40c03cc8bf1c8083f67c459ff79238dc16a5efe",
+      "occurrence": "v2:bb4deb8fa00b92462cd88be2345d264a4bbc2239223fc04ebce69035519e0cbc",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(configLayer(configuration))",
       "replacement": {
@@ -8119,13 +8119,13 @@
       "reason": "Native storage is the persistent PGlite close/reopen subject, in a directory owned by the outer TempDirServices layer; this makes no crash or fsync claim. Owner: @beep/epistemic-server. Exit: retire when the reopen case runs on an in-memory PGlite instance."
     },
     {
-      "id": "EV010:packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts:29:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts:23:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/epistemic-server",
       "file": "packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts",
-      "line": 29,
-      "endLine": 29,
+      "line": 23,
+      "endLine": 23,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",

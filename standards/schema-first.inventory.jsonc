@@ -421,7 +421,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 40,
+      "line": 38,
       "owner": "@beep/epistemic-server",
       "reason": "Fixture-driven integration coverage of the bounded SHACL validator behind the claim gate; schema-derived property coverage for these request/dataset schemas already lives in packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts."
     },
@@ -441,7 +441,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 62,
+      "line": 52,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression uses deterministic candidate identifiers to prove concurrent repository behavior; arbitrary values would make the race non-reproducible, and schema-derived identifier laws live with the owning domain models."
     },
@@ -461,7 +461,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 71,
+      "line": 48,
       "owner": "@beep/epistemic-server",
       "reason": "External-Postgres race regression decodes fixed commands to drive two genuinely parallel repository writers; what is under test is database contention (row locks, the open-head index, the exclusion constraint), not schema laws, and arbitrary-driven commands would make the race non-reproducible."
     },
@@ -471,7 +471,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 62,
+      "line": 59,
       "owner": "@beep/epistemic-server",
       "reason": "Bitemporal behavior regression decodes fixed commands to drive the real repository transaction and assert exact as-of answers at named instants; schema-derived arbitrary round-trips for LogicalEdgeIdentity, the EdgeAuthority commands, and the EdgeVersion entity live with the domain and use-cases model tests."
     },
@@ -481,7 +481,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 57,
+      "line": 48,
       "owner": "@beep/epistemic-server",
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
     },
@@ -507,7 +507,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 53,
+      "line": 50,
       "owner": "@beep/execution-authority-tables",
       "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/execution-authority-domain entity models; the table converters only project them across the persistence boundary."
     },
