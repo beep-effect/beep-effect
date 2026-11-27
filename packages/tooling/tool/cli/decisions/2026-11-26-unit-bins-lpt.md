@@ -7,4 +7,4 @@ governs:
 enforcedBy: []
 ---
 
-Anchor for goals/ci-lane-economics/decisions/2026-11-09-repack-test-unit-into-8-repo-cli-11-law-practice-server-and-6-unit-partitions-under-ten-minutes.md and 2026-11-09-start-unit-bin-heaviest-packages-first.md. Every package that ran, default-placed ones included, is curated into a bin.
+Anchor for goals/ci-lane-economics/decisions/2026-11-09-repack-test-unit-into-8-repo-cli-11-law-practice-server-and-6-unit-partitions-under-ten-minutes.md and 2026-11-09-start-unit-bin-heaviest-packages-first.md.

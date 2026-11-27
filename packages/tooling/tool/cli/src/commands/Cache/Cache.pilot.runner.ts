@@ -227,9 +227,8 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       yield* writeContainedFileString(directory, "request.json", encoded);
       const worker = yield* renderSignedPilotWorker(root, directory, protectedIssuerMaterial, upload);
       yield* writeContainedFileString(directory, "worker.ts", worker);
-      // Bun otherwise discovers sourceRoot/bunfig.toml from the untrusted cwd,
-      // including preloads that run before this trusted worker.
-      yield* writeContainedFileString(directory, "bunfig.toml", "");
+      const emptyBunfigShadowsCwdPreloads = "";
+      yield* writeContainedFileString(directory, "bunfig.toml", emptyBunfigShadowsCwdPreloads);
       const verifyIssuerMountIsolation = Effect.fn("CachePilot.verifyIssuerMountIsolation")(function* () {
         if (O.isSome(protectedIssuerMaterial)) {
           const issuer = yield* fs.realPath(protectedIssuerMaterial.value);

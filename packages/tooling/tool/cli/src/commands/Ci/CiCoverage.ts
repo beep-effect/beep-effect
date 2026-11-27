@@ -338,7 +338,6 @@ const configuredInvocations = Effect.fn("CiCoverage.configuredInvocations")(func
   }));
 });
 
-/** Config-aware test discovery, without importing or executing the test bodies. */
 const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages")(function* (
   repoRoot: string,
   owners: ReadonlyArray<CoverageScopeOwner>,

@@ -1985,9 +1985,8 @@ const runPilot = Effect.fn("CachePilot.run")(
               });
               yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-seed`, fault: "none" }));
               const seed = yield* executeSignedProducer(producerRoot, `signed-${pair}-seed`);
-              // Deprecated-import verdicts belong to the root policy task.
-              // The package dependency mutation still requires hash invalidation.
-              const expectedExit = id === "root-lint-config" ? 1 : 0;
+              const rootPolicyOwnsDeprecatedImports = id === "root-lint-config";
+              const expectedExit = rootPolicyOwnsDeprecatedImports ? 1 : 0;
               if (
                 seed.graphExitCode !== expectedExit ||
                 seed.outcome.selected.exitCode !== expectedExit ||

@@ -438,6 +438,11 @@ const PARTITION_PLAN_FLAGS = ["--plan-partitions", "--planned-partitions"] as co
  * context's name before its lane moved under Heavy (`Build`, until 2026-09-09). The
  * integration shards run in check.yml as `Test Integration (<partition>)`.
  *
+ * Build runs on pull requests affected-scoped with remote-cache read; trusted main pushes run it
+ * unscoped and are its only cache writer. It dispatches from heavy.yml, because the heavy runner
+ * group admits heavy.yml@main on pull requests and not check.yml jobs, so its context carries the
+ * Heavy prefix.
+ *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -614,12 +619,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence, unless --inventory <path> supplies a prebuilt inventory (then only the ratchet runs).",
   }),
-  // Quality-lane audit D12: Build runs on pull requests affected-scoped with
-  // remote-cache read; trusted main pushes run unscoped and are the only
-  // cache writer. It dispatches from heavy.yml (the beep-ec2-heavy runner
-  // group admits heavy.yml@main on pull requests, not check.yml jobs), so its
-  // hosted context carries the Heavy prefix. Still non-required until it has
-  // a stable green history.
   CiLaneDescriptor.make({
     id: "build",
     workflow: "heavy",
@@ -1774,6 +1773,11 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * runtime runs the seven Fallow sub-lanes three at a time (one at a time with `serial`) and maintains
  * `.beep/fallow/status.md` accounting in that same order (see {@link runCiLane}).
  *
+ * **Details**
+ *
+ * A local `check` proof takes its Turbo concurrency from `BEEP_QUALITY_CHECK_CONCURRENCY`, which
+ * the admission profile sets: 3 for a solo proof, 2 while a sibling lease is active.
+ *
  * **Example** (Configure a CI lane)
  *
  * ```ts
@@ -1816,9 +1820,6 @@ export const ciLaneStepsForTesting: {
   (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
     CiLaneId.match(laneId, {
       build: () => [turboRootLaneStep(repoRoot, "build", "build", A.empty<string>(), options)],
-      // D2 admission profile: a solo proof uses measured-safe c3; any active
-      // sibling lease lowers it to c2. Hosted CI has no local admission lease
-      // and therefore takes the conservative c2 default.
       check: () => [turboRootLaneStep(repoRoot, "check", "check", [qualityCheckConcurrencyArg()], options)],
       codegen: () => [
         ...codegenDriverSteps(repoRoot),
@@ -2086,10 +2087,6 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
     CiCommandError.mapError("Rejected a caller-provided cache runtime identity.")
   );
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(resolved)}`);
-  // Lane bodies that shell out to Turbo need the same env hygiene the root
-  // quality runner applies: no interactive TUI (it can leave a killed run's
-  // terminal in mouse-capture mode) and no unresolved `op://` token/team
-  // references leaking through as literal values on a workstation.
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
   const runtime = cacheRuntimeStep(resolved);
   return yield* runToExit({

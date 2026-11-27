@@ -1911,7 +1911,11 @@ class MakeForwarderTimerProgramOptions extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    bunPath: S.Option(S.String),
+    bunPath: S.Option(S.String).pipe(
+      S.annotateKey({
+        description: "An absolute pin renders without HOME; only the default probe and a `~/` pin read it.",
+      })
+    ),
     dataRoot: S.Option(S.String),
     hashSaltSecretRef: S.Option(S.String),
     intervalMinutes: S.Finite,
@@ -1954,8 +1958,6 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
       AiMetricsCommandError.make({ cause, message: "HOME is not set; cannot resolve the timer Bun executable." })
     )
   );
-  // Only the default candidate probe and a `~/` pin read HOME; an absolute pin
-  // renders in a sanitized container or CI environment that has no HOME at all.
   const executable = yield* Effect.flatMap(
     O.match(bunPath, {
       onNone: () => Effect.flatMap(requireHome, resolveSystemdBunPath),

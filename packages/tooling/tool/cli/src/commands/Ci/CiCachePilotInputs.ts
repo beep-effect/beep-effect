@@ -81,7 +81,7 @@ export const cachePilotInputDirectory: Readonly<Record<CiCachePilotMode, string>
   local: ".beep/cache/local-pilot-observation",
 };
 
-// decision: cache-pilot-inputs-adapter-parity
+// A refusal the Python adapter raised as `SystemExit(message)`: stderr, exit 1.
 const refuse = (message: string) => Console.error(message).pipe(Effect.andThen(failWithReportedExit(message)));
 const variable = (name: string) => readStepVariable(COMMAND, name);
 
@@ -515,6 +515,7 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
   const program = Effect.gen(function* () {
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: git stderr stays on the job log, inherited (D-22)
     const head = yield* runStatus("git", ["rev-parse", "HEAD"], "pipe", env);
+    // `$(git rev-parse HEAD)` drops trailing newlines before the comparison.
     const revision = yield* variable("GITHUB_SHA");
     if (Str.replace(/\n+$/u, "")(head.output) !== revision)
       return yield* failWithPrintedExit("Checkout is not at GITHUB_SHA.");
@@ -545,6 +546,8 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: the exit status of diff --quiet is the step contract (D-22)
     yield* step("git", ["diff", "--quiet", "HEAD"]);
   });
+  // `umask 077` covers every file this command and its children create. A
+  // platform or decoding failure (the Python adapter's traceback) exits 1.
   return yield* Effect.acquireUseRelease(
     Effect.sync(() => process.umask(0o077)),
     () => program,
