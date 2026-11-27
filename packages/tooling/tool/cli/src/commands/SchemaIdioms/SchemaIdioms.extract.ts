@@ -12,7 +12,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -35,7 +35,7 @@ import type { SchemaIndexEntry } from "./SchemaIdioms.model.ts";
 
 const $I = $RepoCliId.create("commands/SchemaIdioms/SchemaIdioms.extract");
 
-const EffectPackageManifest = S.Struct({ version: S.String }).pipe(
+const EffectPackageManifest = S.Struct({ version: S.SemVerFromString }).pipe(
   $I.annoteSchema("EffectPackageManifest", {
     description: "The installed effect package.json fields the schema index records.",
   })
@@ -122,7 +122,8 @@ const moduleFileOf = (probe: SourceFile, specifier: string): Effect.Effect<Sourc
     Effect.fromOption,
     Effect.mapError(() =>
       SchemaIdiomsError.new(`could not resolve ${specifier} from the repository root; is effect installed?`)
-    )
+    ),
+    Effect.withSpan("SchemaIdioms.moduleFileOf")
   );
 
 /**
@@ -131,10 +132,10 @@ const moduleFileOf = (probe: SourceFile, specifier: string): Effect.Effect<Sourc
  *
  * **Example** (Shorten an imported type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Shorten an imported type"
  * import { normalizeTypeText } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(normalizeTypeText('import("effect/DateTime").Utc')) // "DateTime.Utc"
+ * normalizeTypeText('import("effect/DateTime").Utc') // => "DateTime.Utc"
  * ```
  *
  * @param text - Type text printed by the TypeScript checker.
@@ -142,8 +143,11 @@ const moduleFileOf = (probe: SourceFile, specifier: string): Effect.Effect<Sourc
  * @category formatting
  * @since 0.0.0
  */
-export const normalizeTypeText = (text: string): string =>
-  pipe(text, Str.replace(IMPORTED_TYPE_QUALIFIER, "$1."), Str.replace(/\s+/g, " "), Str.trim);
+export const normalizeTypeText: (text: string) => string = flow(
+  Str.replace(IMPORTED_TYPE_QUALIFIER, "$1."),
+  Str.replace(/\s+/g, " "),
+  Str.trim
+);
 
 /**
  * The first sentence of a JSDoc description's first prose paragraph, with
@@ -156,11 +160,11 @@ export const normalizeTypeText = (text: string): string =>
  *
  * **Example** (Summarise a description)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Summarise a description"
  * import { jsDocSummary } from "@beep/repo-cli/commands/SchemaIdioms"
+ * import * as O from "effect/Option"
  *
- * console.log(jsDocSummary("Decodes a {@link Duration}. More text.\n\n**Details**\n\nIgnored."))
- * // { _id: 'Option', _tag: 'Some', value: 'Decodes a Duration.' }
+ * O.getOrThrow(jsDocSummary("Decodes a {@link Duration}. More text.\n\n**Details**\n\nIgnored.")) // => "Decodes a Duration."
  * ```
  *
  * @param description - JSDoc description text without its block tags.
@@ -171,7 +175,7 @@ export const normalizeTypeText = (text: string): string =>
 export const jsDocSummary = (description: string): O.Option<string> =>
   pipe(
     Str.split(description, PARAGRAPH_BREAK),
-    A.map((paragraph) => pipe(paragraph, Str.replace(LINK_TAG, "$1"), Str.replace(/\s+/g, " "), Str.trim)),
+    A.map(flow(Str.replace(LINK_TAG, "$1"), Str.replace(/\s+/g, " "), Str.trim)),
     A.findFirst((paragraph) => Str.isNonEmpty(paragraph) && !Str.startsWith("**")(paragraph)),
     O.map((paragraph) =>
       pipe(
@@ -197,7 +201,7 @@ const statementExportNames = (statement: Node): ReadonlyArray<string> => {
     return A.map(statement.getDeclarations(), (declaration) => declaration.getName());
   }
   if ((Node.isFunctionDeclaration(statement) || Node.isClassDeclaration(statement)) && statement.isExported()) {
-    return O.match(O.fromNullishOr(statement.getName()), { onNone: A.empty, onSome: A.of });
+    return A.fromNullishOr(statement.getName());
   }
   return A.empty();
 };
@@ -312,14 +316,14 @@ const readSourceDocs = Effect.fn("SchemaIdioms.readSourceDocs")(function* (
  * it is given) a combinator. Entries are sorted by name and carry no paths, so
  * the output depends only on the installed effect.
  *
- * **Example** (Extract the index)
+ * **Example** (Build the extraction program)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the extraction program"
  * import { extractSchemaIndex } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as Effect from "effect/Effect"
  *
  * const program = extractSchemaIndex(process.cwd()).pipe(Effect.map((index) => index.entries.length))
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @param repoRoot - Absolute repository root whose `node_modules/effect` is indexed.
@@ -349,12 +353,11 @@ export const extractSchemaIndex = Effect.fn("SchemaIdioms.extractSchemaIndex")(f
   const entries = A.map(schemaNames, (name) => entryOf(probe, name, docOf(schemaDocs, name)));
   const getters = yield* Effect.forEach(
     getterFiles,
-    ([module, file]) =>
-      Effect.gen(function* () {
-        const docs = yield* readSourceDocs(project, effectRoot, module);
-        const names = valueExportNames(file);
-        return A.map(names, (name) => SchemaGetterEntry.make({ module, name, ...docOf(docs, name) }));
-      }),
+    Effect.fnUntraced(function* ([module, file]) {
+      const docs = yield* readSourceDocs(project, effectRoot, module);
+      const names = valueExportNames(file);
+      return A.map(names, (name) => SchemaGetterEntry.make({ module, name, ...docOf(docs, name) }));
+    }),
     { concurrency: 1 }
   );
   return SchemaIndex.make({

@@ -226,9 +226,9 @@ complete. Report the exact commands and outcomes.
   `S.URLFromString`, `S.BigDecimalFromString`, `S.Redacted`, ...), instead of
   keeping the string or number it arrived as. Look the wire type up before
   settling on a primitive or a custom check:
-  `bun run beep schema-idioms lookup <string|number|bigint|date|collections|constructors|getters>`
+  `bun run beep schema-idioms lookup <string|number|bigint|date|other|collections|constructors|getters>`
   lists what the installed `effect/Schema` ships. A field named like a
-  duration, instant, byte size, URL, address, port or version whose schema
+  duration, instant, byte size, URL, network address, port or version whose schema
   decodes to a primitive is the usual miss.
 - Describe a field with a key annotation (`S.annotateKey`, `$I.annoteKey`),
   first in the field's pipe, never with `.annotate(...)`. On a field whose

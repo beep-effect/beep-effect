@@ -7,18 +7,26 @@
  * **Details**
  *
  * The file is parsed with `oxc-parser`, so comments and JSDoc examples never
- * produce hints. A field counts only inside an object literal whose value is
- * an `effect/Schema`-rooted expression, or names a same-file `const` that is
- * one (one hop; an imported identifier is not followed). A schema that
- * already mentions a rich codec for the kind, or converts through
- * `decodeTo` / a transformation, is left alone.
+ * produce hints, and a file that does not parse cleanly produces none. A field
+ * counts only as a property of the fields argument of `S.Struct`,
+ * `S.TaggedStruct`, `S.Class`, `S.TaggedClass`, `S.Error` or `S.TaggedError`
+ * called through an `effect/Schema` namespace import. Its value must be a
+ * primitive head (`S.Number`, `S.String`, ...) reached only through the
+ * optional wrappers, `.check` / `.annotate` / `.annotateKey`, or a `.pipe`
+ * whose every argument is a type-preserving combinator (`S.check`,
+ * `S.brand`, `S.annotate`, `S.annotateKey`, the constructor and decoding
+ * defaults, an optional wrapper, or an `annoteSchema` / `annote` call). It
+ * may name a top-level `const` once (one hop; an imported identifier is not
+ * followed). Anything else, a conversion or collection combinator included,
+ * is not a primitive and is never hinted. A namespace alias or `const` name
+ * bound more than once anywhere in the file is not trusted.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { constFalse, constTrue, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
@@ -28,7 +36,18 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { parseSync, Visitor } from "oxc-parser";
 import { SCHEMA_IDIOM_TELLS, SCHEMA_PRIMITIVE_HEADS, SchemaIdiomHint } from "./SchemaIdiomHints.model.ts";
-import type { Argument, Expression, ObjectProperty, Program, Statement } from "oxc-parser";
+import type {
+  Argument,
+  BindingPattern,
+  BindingRestElement,
+  CallExpression,
+  Expression,
+  ObjectExpression,
+  ObjectProperty,
+  ParamPattern,
+  Program,
+  Statement,
+} from "oxc-parser";
 import type { SchemaIdiomHintInput, SchemaIdiomTell, SchemaPrimitiveHead } from "./SchemaIdiomHints.model.ts";
 
 const SCHEMA_MODULE = "effect/Schema";
@@ -53,25 +72,34 @@ const OPTIONAL_WRAPPERS = HashSet.make(
   "OptionFromOptionalNullOr"
 );
 
-const CONVERSION_MARKERS = HashSet.make(
-  "decodeTo",
-  "encodeTo",
-  "decode",
-  "encode",
-  "transform",
-  "transformOrFail",
-  "SchemaTransformation",
-  "SchemaGetter"
+const PIPE_PRESERVING = HashSet.make(
+  "check",
+  "brand",
+  "annotate",
+  "annotateKey",
+  "withConstructorDefault",
+  "withDecodingDefault",
+  "withDecodingDefaultKey",
+  "withDecodingDefaultType",
+  "withDecodingDefaultTypeKey"
+);
+
+const METHOD_PRESERVING = HashSet.make("check", "annotate", "annotateKey");
+
+const ANNOTATION_HELPERS = HashSet.make("annoteSchema", "annote");
+
+const DIRECT_CONTAINERS: HashMap.HashMap<string, number> = HashMap.make(["Struct", 0], ["TaggedStruct", 1]);
+
+const CURRIED_CONTAINERS: HashMap.HashMap<string, number> = HashMap.make(
+  ["Class", 0],
+  ["Error", 0],
+  ["TaggedClass", 1],
+  ["TaggedError", 1]
 );
 
 const PRIMITIVE_HEADS: HashMap.HashMap<string, SchemaPrimitiveHead> = HashMap.fromIterable(
   A.map(SCHEMA_PRIMITIVE_HEADS, (head): readonly [string, SchemaPrimitiveHead] => [head.name, head])
 );
-
-const TELL_PATTERNS = A.map(SCHEMA_IDIOM_TELLS, (tell): readonly [SchemaIdiomTell, RegExp] => [
-  tell,
-  new RegExp(tell.namePattern),
-]);
 
 const byLine: Order.Order<SchemaIdiomHint> = Order.mapInput(Order.Number, (hint: SchemaIdiomHint) => hint.line);
 
@@ -80,10 +108,17 @@ type ScanScope = {
   readonly definitions: HashMap.HashMap<string, Expression>;
 };
 
-type NamedSpan = {
-  readonly name: string;
-  readonly start: number;
+type Primitive = {
+  readonly head: SchemaPrimitiveHead;
+  readonly via: O.Option<string>;
 };
+
+type TextSpan = {
+  readonly start: number;
+  readonly end: number;
+};
+
+type BindingNode = BindingPattern | BindingRestElement | ParamPattern;
 
 /**
  * Whether a path is a TypeScript source file the hint reads: `.ts`, `.tsx`,
@@ -121,60 +156,147 @@ const unwrap = (expression: Expression): Expression =>
 const argumentExpression = (argument: Argument): O.Option<Expression> =>
   argument.type === "SpreadElement" ? O.none() : O.some(argument);
 
-const rootOf = (expression: Expression): O.Option<string> =>
-  Match.type<Expression>().pipe(
-    Match.discriminators("type")({
-      Identifier: (node) => O.some(node.name),
-      MemberExpression: (node) => rootOf(node.object),
-      CallExpression: (node) => rootOf(node.callee),
-    }),
-    Match.orElse(() => O.none())
-  )(unwrap(expression));
+const isObjectExpression = (expression: Expression): expression is ObjectExpression =>
+  expression.type === "ObjectExpression";
 
 const isAlias = (scope: ScanScope, expression: Expression): boolean => {
   const node = unwrap(expression);
   return node.type === "Identifier" && HashSet.has(scope.aliases, node.name);
 };
 
-const headOf = (scope: ScanScope, expression: Expression, hop: boolean): O.Option<string> =>
+const calleeMember = (call: CallExpression): O.Option<readonly [object: Expression, name: string]> => {
+  const callee = unwrap(call.callee);
+  return !call.optional &&
+    callee.type === "MemberExpression" &&
+    !callee.computed &&
+    callee.property.type === "Identifier"
+    ? O.some([callee.object, callee.property.name])
+    : O.none();
+};
+
+const aliasMember = (scope: ScanScope, expression: Expression): O.Option<string> => {
+  const node = unwrap(expression);
+  return node.type === "MemberExpression" &&
+    !node.computed &&
+    node.property.type === "Identifier" &&
+    isAlias(scope, node.object)
+    ? O.some(node.property.name)
+    : O.none();
+};
+
+const preservesType =
+  (scope: ScanScope) =>
+  (argument: Argument): boolean =>
+    O.exists(argumentExpression(argument), (expression) =>
+      Match.type<Expression>().pipe(
+        Match.discriminators("type")({
+          MemberExpression: (node) =>
+            O.exists(aliasMember(scope, node), (name) => HashSet.has(OPTIONAL_WRAPPERS, name)),
+          CallExpression: (node) =>
+            O.exists(calleeMember(node), ([object, name]) =>
+              isAlias(scope, object)
+                ? HashSet.has(PIPE_PRESERVING, name)
+                : unwrap(object).type === "Identifier" && HashSet.has(ANNOTATION_HELPERS, name)
+            ),
+        }),
+        Match.orElse(constFalse)
+      )(unwrap(expression))
+    );
+
+const methodPreserves = (scope: ScanScope, name: string, args: ReadonlyArray<Argument>): boolean =>
+  name === "pipe" ? A.every(args, preservesType(scope)) : HashSet.has(METHOD_PRESERVING, name);
+
+const primitiveOf = (scope: ScanScope, expression: Expression, hop: boolean): O.Option<Primitive> =>
   Match.type<Expression>().pipe(
     Match.discriminators("type")({
       Identifier: (node) =>
-        hop ? O.flatMap(HashMap.get(scope.definitions, node.name), (def) => headOf(scope, def, false)) : O.none(),
-      MemberExpression: (node) =>
-        !node.computed && isAlias(scope, node.object) && node.property.type === "Identifier"
-          ? O.some(node.property.name)
-          : O.none(),
-      CallExpression: (node) => {
-        const callee = unwrap(node.callee);
-        if (callee.type !== "MemberExpression" || callee.computed || callee.property.type !== "Identifier") {
-          return O.none();
-        }
-        if (!isAlias(scope, callee.object)) {
-          return headOf(scope, callee.object, hop);
-        }
-        const name = callee.property.name;
-        return HashSet.has(OPTIONAL_WRAPPERS, name)
+        hop
           ? pipe(
-              A.head(node.arguments),
-              O.flatMap(argumentExpression),
-              O.flatMap((argument) => headOf(scope, argument, hop))
+              HashMap.get(scope.definitions, node.name),
+              O.flatMap((definition) => primitiveOf(scope, definition, false)),
+              O.map(({ head }): Primitive => ({ head, via: O.some(node.name) }))
             )
-          : O.some(name);
-      },
+          : O.none(),
+      MemberExpression: (node) =>
+        pipe(
+          aliasMember(scope, node),
+          O.flatMap((name) => HashMap.get(PRIMITIVE_HEADS, name)),
+          O.map((head): Primitive => ({ head, via: O.none() }))
+        ),
+      CallExpression: (node) =>
+        O.flatMap(calleeMember(node), ([object, name]) =>
+          isAlias(scope, object)
+            ? HashSet.has(OPTIONAL_WRAPPERS, name) && A.length(node.arguments) === 1
+              ? pipe(
+                  A.head(node.arguments),
+                  O.flatMap(argumentExpression),
+                  O.flatMap((argument) => primitiveOf(scope, argument, hop))
+                )
+              : O.none()
+            : methodPreserves(scope, name, node.arguments)
+              ? primitiveOf(scope, object, hop)
+              : O.none()
+        ),
     }),
     Match.orElse(() => O.none())
   )(unwrap(expression));
 
-const schemaAliases = (program: Program): HashSet.HashSet<string> =>
-  HashSet.fromIterable(
-    A.flatMap(program.body, (statement) =>
-      statement.type === "ImportDeclaration" && statement.source.value === SCHEMA_MODULE
-        ? A.flatMap(statement.specifiers, (specifier) =>
-            specifier.type === "ImportNamespaceSpecifier" ? [specifier.local.name] : A.empty<string>()
-          )
-        : A.empty<string>()
-    )
+const fieldsOf = (scope: ScanScope, call: CallExpression): O.Option<ObjectExpression> => {
+  const callee = unwrap(call.callee);
+  const index =
+    callee.type === "CallExpression"
+      ? O.flatMap(aliasMember(scope, callee.callee), (name) => HashMap.get(CURRIED_CONTAINERS, name))
+      : O.flatMap(aliasMember(scope, callee), (name) => HashMap.get(DIRECT_CONTAINERS, name));
+  return pipe(
+    index,
+    O.filter(() => !call.optional),
+    O.flatMap((position) => A.get(call.arguments, position)),
+    O.flatMap(argumentExpression),
+    O.map(unwrap),
+    O.filter(isObjectExpression)
+  );
+};
+
+const isFieldProperty = (property: ObjectExpression["properties"][number]): property is ObjectProperty =>
+  property.type === "Property" && property.kind === "init" && !property.method && !property.computed;
+
+const boundNames = (node: BindingNode | null): ReadonlyArray<string> =>
+  P.isNull(node)
+    ? A.empty()
+    : Match.type<BindingNode>().pipe(
+        Match.discriminators("type")({
+          Identifier: (binding) => A.of(binding.name),
+          ObjectPattern: (binding) =>
+            A.flatMap(binding.properties, (property) =>
+              property.type === "RestElement" ? boundNames(property.argument) : boundNames(property.value)
+            ),
+          ArrayPattern: (binding) => A.flatMap(binding.elements, boundNames),
+          AssignmentPattern: (binding) => boundNames(binding.left),
+          RestElement: (binding) => boundNames(binding.argument),
+          TSParameterProperty: (binding) => boundNames(binding.parameter),
+        }),
+        Match.exhaustive
+      )(node);
+
+const bindingCounts = (names: ReadonlyArray<string>): HashMap.HashMap<string, number> =>
+  A.reduce(names, HashMap.empty<string, number>(), (counts, name) =>
+    HashMap.set(counts, name, O.getOrElse(HashMap.get(counts, name), () => 0) + 1)
+  );
+
+const boundOnce =
+  (counts: HashMap.HashMap<string, number>) =>
+  (name: string): boolean =>
+    O.contains(HashMap.get(counts, name), 1);
+
+const schemaAliases = (program: Program): ReadonlyArray<string> =>
+  A.flatMap(program.body, (statement) =>
+    statement.type === "ImportDeclaration" &&
+    statement.source.value === SCHEMA_MODULE &&
+    statement.importKind !== "type"
+      ? A.flatMap(statement.specifiers, (specifier) =>
+          specifier.type === "ImportNamespaceSpecifier" ? A.of(specifier.local.name) : A.empty<string>()
+        )
+      : A.empty<string>()
   );
 
 type ConstDefinition = readonly [name: string, init: Expression];
@@ -194,13 +316,11 @@ const declaredConsts = (statement: Statement): ReadonlyArray<ConstDefinition> =>
 };
 
 const propertyName = (property: ObjectProperty): O.Option<string> =>
-  property.computed
-    ? O.none()
-    : Match.type<ObjectProperty["key"]>().pipe(
-        Match.when({ type: "Identifier" }, (key) => O.some(key.name)),
-        Match.when({ type: "Literal", value: P.isString }, (key) => O.some(key.value)),
-        Match.orElse(() => O.none())
-      )(property.key);
+  Match.type<ObjectProperty["key"]>().pipe(
+    Match.when({ type: "Identifier" }, (key) => O.some(key.name)),
+    Match.when({ type: "Literal", value: P.isString }, (key) => O.some(key.value)),
+    Match.orElse(() => O.none())
+  )(property.key);
 
 const lineStartsOf = (text: string): ReadonlyArray<number> =>
   A.scan(Str.split(text, "\n"), 0, (start, line) => start + Str.length(line) + 1);
@@ -208,36 +328,35 @@ const lineStartsOf = (text: string): ReadonlyArray<number> =>
 const lineAt = (starts: ReadonlyArray<number>, offset: number): number =>
   A.length(A.takeWhile(starts, (start) => start <= offset));
 
-const namesWithin = (names: ReadonlyArray<NamedSpan>, start: number, end: number): ReadonlyArray<string> =>
-  A.map(
-    A.filter(names, (span) => span.start >= start && span.start < end),
-    (span) => span.name
-  );
-
 const tellFor = (field: string, head: SchemaPrimitiveHead): O.Option<SchemaIdiomTell> =>
-  pipe(
-    A.findFirst(TELL_PATTERNS, ([tell, pattern]) => pattern.test(field) && A.contains(tell.decodes, head.decodes)),
-    O.map(([tell]) => tell)
-  );
+  A.findFirst(SCHEMA_IDIOM_TELLS, (tell) => tell.namePattern.test(field) && A.contains(tell.decodes, head.decodes));
 
-const alreadyConverted = (tell: SchemaIdiomTell, names: ReadonlyArray<string>): boolean =>
-  A.some(
-    names,
-    (name) => HashSet.has(CONVERSION_MARKERS, name) || A.some(tell.richMarkers, (marker) => Str.includes(marker)(name))
-  );
+const uniqueSpanOf =
+  (text: string) =>
+  (fragment: string): ReadonlyArray<TextSpan> =>
+    pipe(
+      O.all([Str.indexOf(fragment)(text), Str.lastIndexOf(fragment)(text)]),
+      O.filter(([first, last]) => first === last),
+      O.map(([start]): TextSpan => ({ start, end: start + Str.length(fragment) })),
+      A.fromOption
+    );
 
-const writtenLinesOf = (written: string): HashSet.HashSet<string> =>
-  HashSet.fromIterable(A.filter(A.map(Str.split(written, "\n"), Str.trim), Str.isNonEmpty));
+const covers =
+  (property: ObjectProperty) =>
+  (span: TextSpan): boolean =>
+    span.start <= property.start && property.end <= span.end;
 
 /**
  * Compute the name-tell hints of one TypeScript file.
  *
  * **Details**
  *
- * Returns no hints for a path {@link isSchemaIdiomHintPath} rejects or a file
- * that does not import `effect/Schema` as a namespace. With `written`, only
- * fields whose trimmed line appears among the written text's lines are
- * hinted; resolution still reads the whole file. Hints are sorted by line.
+ * Returns no hints for a path {@link isSchemaIdiomHintPath} rejects, a file
+ * that does not parse cleanly, or one that does not import `effect/Schema` as
+ * a namespace. With `written` fragments, a field is hinted only when its
+ * whole `key: value` span lies inside a fragment that occurs exactly once in
+ * the text; a fragment that occurs twice or not at all scopes nothing.
+ * Resolution still reads the whole file. Hints are sorted by line.
  *
  * **Example** (Hint a byte-size field)
  *
@@ -256,7 +375,7 @@ const writtenLinesOf = (written: string): HashSet.HashSet<string> =>
  * console.log(A.map(hints, (hint) => `${hint.line} ${hint.field} ${hint.kind}`)) // ["3 diskFreeBytes byte-size"]
  * ```
  *
- * @param input - The file path, its full text and the optional just-written subset.
+ * @param input - The file path, its full text and the optional just-written fragments.
  * @returns The advisory hints, in line order.
  * @category use-cases
  * @since 0.0.0
@@ -265,77 +384,89 @@ export const schemaIdiomHints = (input: SchemaIdiomHintInput): ReadonlyArray<Sch
   if (!isSchemaIdiomHintPath(input.file)) {
     return A.empty();
   }
-  const { program } = parseSync(input.file, input.text, {
+  const parsed = parseSync(input.file, input.text, {
     sourceType: "module",
     lang: Str.endsWith(".tsx")(input.file) ? "tsx" : "ts",
   });
-  const aliases = schemaAliases(program);
+  if (A.isReadonlyArrayNonEmpty(parsed.errors)) {
+    return A.empty();
+  }
+  const bound = A.empty<string>();
+  const calls = A.empty<CallExpression>();
+  const bind = (node: BindingNode | null): void => {
+    bound.push(...boundNames(node));
+  };
+  const bindAll = (nodes: ReadonlyArray<BindingNode>): void => {
+    A.forEach(nodes, bind);
+  };
+  new Visitor({
+    VariableDeclarator: (node) => bind(node.id),
+    FunctionDeclaration: (node) => {
+      bind(node.id);
+      bindAll(node.params);
+    },
+    FunctionExpression: (node) => {
+      bind(node.id);
+      bindAll(node.params);
+    },
+    TSDeclareFunction: (node) => {
+      bind(node.id);
+      bindAll(node.params);
+    },
+    TSEmptyBodyFunctionExpression: (node) => bindAll(node.params),
+    ArrowFunctionExpression: (node) => bindAll(node.params),
+    ClassDeclaration: (node) => bind(node.id),
+    ClassExpression: (node) => bind(node.id),
+    CatchClause: (node) => bind(node.param),
+    ImportSpecifier: (node) => bind(node.local),
+    ImportDefaultSpecifier: (node) => bind(node.local),
+    ImportNamespaceSpecifier: (node) => bind(node.local),
+    TSImportEqualsDeclaration: (node) => bind(node.id),
+    TSEnumDeclaration: (node) => bind(node.id),
+    TSModuleDeclaration: (node) => {
+      if (node.id.type === "Identifier") {
+        bind(node.id);
+      }
+    },
+    CallExpression: (node) => {
+      calls.push(node);
+    },
+  }).visit(parsed.program);
+  const once = boundOnce(bindingCounts(bound));
+  const aliases = HashSet.fromIterable(A.filter(schemaAliases(parsed.program), once));
   if (HashSet.size(aliases) === 0) {
     return A.empty();
   }
-  const scope: ScanScope = { aliases, definitions: HashMap.fromIterable(A.flatMap(program.body, declaredConsts)) };
-  const names = A.empty<NamedSpan>();
-  const properties = A.empty<ObjectProperty>();
-  new Visitor({
-    Identifier: (node) => {
-      names.push({ name: node.name, start: node.start });
-    },
-    ObjectExpression: (node) => {
-      for (const property of node.properties) {
-        if (property.type === "Property" && property.kind === "init" && !property.method) {
-          properties.push(property);
-        }
-      }
-    },
-  }).visit(program);
+  const scope: ScanScope = {
+    aliases,
+    definitions: HashMap.fromIterable(A.filter(A.flatMap(parsed.program.body, declaredConsts), ([name]) => once(name))),
+  };
   const starts = lineStartsOf(input.text);
-  const lines = Str.split(input.text, "\n");
-  const written = O.map(input.written, writtenLinesOf);
+  const spans = O.map(input.written, A.flatMap(uniqueSpanOf(input.text)));
+  const properties = A.filter(
+    A.flatMap(calls, (call) =>
+      O.match(fieldsOf(scope, call), {
+        onNone: A.empty<ObjectProperty>,
+        onSome: (fields) => A.filter(fields.properties, isFieldProperty),
+      })
+    ),
+    (property) => O.match(spans, { onNone: constTrue, onSome: A.some(covers(property)) })
+  );
   const hints = A.getSomes(
     A.map(properties, (property) =>
       pipe(
         O.Do,
         O.bind("field", () => propertyName(property)),
-        O.bind("value", () => O.some(unwrap(property.value))),
-        O.bind("root", ({ value }) => rootOf(value)),
-        O.bind("schemaIdentifier", ({ root }) =>
-          HashSet.has(aliases, root)
-            ? O.some(O.none<string>())
-            : pipe(
-                HashMap.get(scope.definitions, root),
-                O.filter((definition) => O.exists(rootOf(definition), (defRoot) => HashSet.has(aliases, defRoot))),
-                O.as(O.some(root))
-              )
-        ),
-        O.let("line", () => lineAt(starts, property.key.start)),
-        O.filter(({ line }) =>
-          O.match(written, {
-            onNone: () => true,
-            onSome: (set) => O.exists(A.get(lines, line - 1), (text) => HashSet.has(set, Str.trim(text))),
-          })
-        ),
-        O.bind("head", ({ value }) =>
-          O.flatMap(headOf(scope, value, true), (name) => HashMap.get(PRIMITIVE_HEADS, name))
-        ),
-        O.bind("tell", ({ field, head }) => tellFor(field, head)),
-        O.filter(({ value, schemaIdentifier, tell }) => {
-          const own = namesWithin(names, value.start, value.end);
-          const resolved = pipe(
-            schemaIdentifier,
-            O.flatMap((identifier) => HashMap.get(scope.definitions, identifier)),
-            O.map((definition) => namesWithin(names, definition.start, definition.end)),
-            O.getOrElse(A.empty<string>)
-          );
-          return !alreadyConverted(tell, A.appendAll(own, resolved));
-        }),
-        O.map(({ field, line, schemaIdentifier, tell, head }) =>
+        O.bind("primitive", () => primitiveOf(scope, property.value, true)),
+        O.bind("tell", ({ field, primitive }) => tellFor(field, primitive.head)),
+        O.map(({ field, primitive, tell }) =>
           SchemaIdiomHint.make({
-            line,
+            line: lineAt(starts, property.key.start),
             field,
-            schemaIdentifier,
+            schemaIdentifier: primitive.via,
             kind: tell.kind,
             readsAs: tell.readsAs,
-            wire: head.wire,
+            wire: primitive.head.wire,
             shipped: tell.shipped,
           })
         )

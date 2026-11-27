@@ -121,13 +121,12 @@ export const SCHEMA_PRIMITIVE_HEADS: ReadonlyArray<SchemaPrimitiveHead> = [
  * const tell = SchemaIdiomTell.make({
  *   kind: "port",
  *   readsAs: "a port",
- *   namePattern: "^port$|[a-z0-9]Port$",
+ *   namePattern: /^port$|[a-z0-9]Port$/,
  *   decodes: ["number"],
- *   richMarkers: ["Port"],
  *   shipped: ["Port"],
  * })
  *
- * console.log(new RegExp(tell.namePattern).test("listenPort")) // true
+ * console.log(tell.namePattern.test("listenPort")) // true
  * ```
  *
  * @category models
@@ -137,14 +136,13 @@ export class SchemaIdiomTell extends S.Opaque<SchemaIdiomTell, { readonly brand:
   S.Struct({
     kind: SchemaIdiomKind,
     readsAs: S.String,
-    namePattern: S.String,
+    namePattern: S.RegExp,
     decodes: S.NonEmptyArray(SchemaWireType),
-    richMarkers: S.Array(S.String),
     shipped: S.NonEmptyArray(S.String),
   }).pipe(
     $I.annoteSchema("SchemaIdiomTell", {
       description:
-        "One row of the name-tell table: the field-name pattern (a regular expression source), the primitive decoded types it fires over, the identifier fragments that mean the schema is already rich, and the effect/Schema exports to suggest.",
+        "One row of the name-tell table: the field-name pattern, the primitive decoded types it fires over, and the effect/Schema exports to suggest.",
     })
   )
 ) {}
@@ -181,59 +179,52 @@ export const SCHEMA_IDIOM_TELLS: ReadonlyArray<SchemaIdiomTell> = [
   SchemaIdiomTell.make({
     kind: "instant",
     readsAs: "an instant",
-    namePattern: "^(?:timestamp|until|since)(?:Ms|Millis)?$|[a-z0-9](?:At|Timestamp|Until|Since)(?:Ms|Millis)?$",
+    namePattern: /^(?:timestamp|until|since)(?:Ms|Millis)?$|[a-z0-9](?:At|Timestamp|Until|Since)(?:Ms|Millis)?$/,
     decodes: ["string", "number", "date"],
-    richMarkers: ["DateTime"],
     shipped: ["DateTimeUtcFromString", "DateTimeUtcFromMillis", "DateTimeUtcFromDate"],
   }),
   SchemaIdiomTell.make({
     kind: "duration",
     readsAs: "a duration",
     namePattern:
-      "^(?:ms|millis|seconds|secs|timeout|ttl|duration|interval|delay)$|[a-z0-9](?:Ms|Millis|Seconds|Secs|Timeout|Ttl|Duration|Interval|Delay)$",
+      /^(?:ms|millis|seconds|secs|timeout|ttl|duration|interval|delay)$|[a-z0-9](?:Ms|Millis|Seconds|Secs|Timeout|Ttl|Duration|Interval|Delay)$/,
     decodes: ["number"],
-    richMarkers: ["Duration"],
     shipped: ["DurationFromMillis", "DurationFromNanos", "DurationFromString"],
   }),
   SchemaIdiomTell.make({
     kind: "byte-size",
     readsAs: "a byte size",
-    namePattern: "^(?:bytes|byteSize)$|[a-z0-9](?:Bytes|ByteSize)$",
+    namePattern: /^(?:bytes|byteSize)$|[a-z0-9](?:Bytes|ByteSize)$/,
     decodes: ["number"],
-    richMarkers: ["ByteSize"],
     shipped: ["ByteSizeFromNumber", "ByteSizeFromBigInt", "ByteSizeFromString"],
   }),
   SchemaIdiomTell.make({
     kind: "url",
     readsAs: "a URL",
-    namePattern: "^(?:url|uri|href)$|[a-z0-9](?:Url|Uri|Href|URL|URI)$",
+    namePattern: /^(?:url|uri|href)$|[a-z0-9](?:Url|Uri|Href|URL|URI)$/,
     decodes: ["string"],
-    richMarkers: ["URL"],
     shipped: ["URLFromString"],
   }),
   SchemaIdiomTell.make({
     kind: "network-address",
     readsAs: "a network address",
     namePattern:
-      "^(?:host|hostname|ip|ipAddress)$|[a-z0-9](?:Host|Hostname|Ip|IpAddress|IPAddress)$|^(?:host|socket|peer|bind|listen|remote|server|client)Address$|[a-z0-9](?:Host|Socket|Peer|Bind|Listen|Remote|Server|Client)Address$",
+      /^(?:host|hostname|ip|ipAddress)$|[a-z0-9](?:Host|Hostname|Ip|IpAddress|IPAddress)$|^(?:host|socket|peer|bind|listen|remote|server|client)Address$|[a-z0-9](?:Host|Socket|Peer|Bind|Listen|Remote|Server|Client)Address$/,
     decodes: ["string"],
-    richMarkers: ["IpAddress", "HostFromString", "HostPort", "InetAddress"],
     shipped: ["IpAddressFromString", "HostFromString", "HostPortFromString"],
   }),
   SchemaIdiomTell.make({
     kind: "port",
     readsAs: "a port",
-    namePattern: "^port$|[a-z0-9]Port$",
+    namePattern: /^port$|[a-z0-9]Port$/,
     decodes: ["number"],
-    richMarkers: ["Port"],
     shipped: ["Port"],
   }),
   SchemaIdiomTell.make({
     kind: "version",
     readsAs: "a version",
-    namePattern: "^version$|[a-z0-9]Version$",
+    namePattern: /^version$|[a-z0-9]Version$/,
     decodes: ["string"],
-    richMarkers: ["SemVer"],
     shipped: ["SemVerFromString"],
   }),
 ];
@@ -288,7 +279,7 @@ export class SchemaIdiomHint extends S.Opaque<SchemaIdiomHint, { readonly brand:
  * const input = SchemaIdiomHintInput.make({
  *   file: "src/Fleet.ts",
  *   text: 'import * as S from "effect/Schema"\nexport const Runner = S.Struct({ timeoutMs: S.Number })\n',
- *   written: O.some("export const Runner = S.Struct({ timeoutMs: S.Number })"),
+ *   written: O.some(["export const Runner = S.Struct({ timeoutMs: S.Number })"]),
  * })
  *
  * console.log(input.file) // "src/Fleet.ts"
@@ -301,11 +292,11 @@ export class SchemaIdiomHintInput extends S.Opaque<SchemaIdiomHintInput, { reado
   S.Struct({
     file: S.String,
     text: S.String,
-    written: S.Option(S.String),
+    written: S.String.pipe(S.NonEmptyArray, S.Option),
   }).pipe(
     $I.annoteSchema("SchemaIdiomHintInput", {
       description:
-        "A TypeScript file's path and full text, and optionally the text just written into it; only fields on a line of the written text are hinted.",
+        "A TypeScript file's path and full text, and optionally the fragments just written into it. With fragments, a field is hinted only when it lies wholly inside a fragment that occurs exactly once in the text; without them the whole file is hinted.",
     })
   )
 ) {}

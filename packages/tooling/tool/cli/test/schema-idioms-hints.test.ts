@@ -22,9 +22,15 @@ const indexLists = (text: string, name: string): boolean =>
 
 const IMPORT = 'import * as S from "effect/Schema";';
 
+const TRANSFORMATION_IMPORT = 'import * as T from "effect/SchemaTransformation";';
+
 const lines = (...rows: ReadonlyArray<string>): string => A.join([IMPORT, ...rows, ""], "\n");
 
-const hintsOf = (text: string, file = "src/Fixture.ts", written: O.Option<string> = O.none()) =>
+const hintsOf = (
+  text: string,
+  file = "src/Fixture.ts",
+  written: O.Option<A.NonEmptyReadonlyArray<string>> = O.none()
+) =>
   A.map(
     schemaIdiomHints(SchemaIdiomHintInput.make({ file, text, written })),
     (hint) =>
@@ -107,6 +113,15 @@ const CODEX_C1_REDUCED = A.join(
   "\n"
 );
 
+const DUPLICATE_LINE = lines(
+  "export const Wire = S.Struct({",
+  "  timeoutMs: S.Number,",
+  "});",
+  "/* Added documentation:",
+  "timeoutMs: S.Number,",
+  "*/"
+);
+
 describe("schema idiom hints", () => {
   it("hints the named byte-size schema of a builder output and not its bare address field", () => {
     expect(hintsOf(OPUS_O3_REDUCED)).toEqual(["L37 diskFreeBytes (DiskFreeBytes) byte-size number"]);
@@ -180,6 +195,41 @@ describe("schema idiom hints", () => {
     ]);
   });
 
+  it("a name tell over a primitive of another decoded type is not hinted", () => {
+    expect(
+      hintsOf(
+        lines(
+          "export const Wire = S.Struct({",
+          "  listenPort: S.String,",
+          "  timeoutMs: S.String,",
+          "  homepageUrl: S.Number,",
+          "  agentVersion: S.Int,",
+          "  sizeBytes: S.String,",
+          "});"
+        )
+      )
+    ).toEqual([]);
+  });
+
+  it("lower-case words ending in a tell suffix are not hinted", () => {
+    expect(
+      hintsOf(
+        lines(
+          "export const Wire = S.Struct({",
+          "  support: S.Number,",
+          "  ghost: S.String,",
+          "  zip: S.String,",
+          "  format: S.String,",
+          "  flat: S.Number,",
+          "  transport: S.Number,",
+          "  passport: S.Number,",
+          "  expires: S.String,",
+          "});"
+        )
+      )
+    ).toEqual([]);
+  });
+
   it("an interface member is not a schema field", () => {
     expect(
       hintsOf(
@@ -192,22 +242,119 @@ describe("schema idiom hints", () => {
     ).toEqual([]);
   });
 
-  it("does not follow an imported identifier or a second hop", () => {
+  it("hints only properties of a schema field container's fields argument", () => {
+    expect(hintsOf(lines("export const codecRegistry = {", "  version: S.String,", "};"))).toEqual([]);
+    expect(hintsOf(lines("export const Wire = S.String.annotate({", "  version: S.String,", "});"))).toEqual([]);
     expect(
       hintsOf(
-        A.join(
-          [
-            IMPORT,
-            'import { Millis } from "./Millis.ts";',
-            "const Inner = S.Number;",
-            "const Outer = Inner;",
-            "export const Wire = S.Struct({ timeoutMs: Millis, delayMs: Outer, retryDelay: Unknown });",
-            "",
-          ],
-          "\n"
+        lines(
+          "export const Wire = S.Struct({ timeoutMs: S.Number });",
+          "export const defaults = { timeoutMs: S.Number.make(5000) };"
+        )
+      )
+    ).toEqual(["L2 timeoutMs duration number"]);
+    expect(hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number.make(5000) });"))).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          'export class Runner extends S.Class<Runner>("Runner")({ timeoutMs: S.Number }, { version: S.String }) {}',
+          "export const Plain = notSchema.Struct({ listenPort: S.Int });",
+          "export const Optional = S.Struct?.({ listenPort: S.Int });"
+        )
+      )
+    ).toEqual(["L2 timeoutMs duration number"]);
+  });
+
+  it("reads the fields argument of each recognized container", () => {
+    expect(
+      hintsOf(
+        lines(
+          'export const Tagged = S.TaggedStruct("Tagged", { timeoutMs: S.Number });',
+          'export class Klass extends S.Class<Klass>("Klass")({ listenPort: S.Int }) {}',
+          'export class Tag extends S.TaggedClass<Tag>()("Tag", { sizeBytes: S.Number }) {}',
+          'export class Failure extends S.Error<Failure>("Failure")({ retryDelay: S.Number }) {}',
+          'export class Tagged2 extends S.TaggedError<Tagged2>()("Tagged2", { homeUrl: S.String }) {}',
+          "export class Wire extends S.Opaque<Wire, { readonly brand: unique symbol }>()(",
+          "  S.Struct({ agentVersion: S.String })",
+          ") {}",
+          "export const Nested = S.Struct({ inner: S.Struct({ host: S.String }) });"
+        )
+      )
+    ).toEqual([
+      "L2 timeoutMs duration number",
+      "L3 listenPort port number",
+      "L4 sizeBytes byte-size number",
+      "L5 retryDelay duration number",
+      "L6 homeUrl url string",
+      "L8 agentVersion version string",
+      "L10 host network-address string",
+    ]);
+  });
+
+  it("does not trust a namespace alias or const bound more than once in the file", () => {
+    expect(
+      hintsOf(lines("export function makeDefaults(S: { Number: number }) {", "  return { timeoutMs: S.Number };", "}"))
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const Timeout = S.Number;",
+          "export function makeDefaults(Timeout: number) {",
+          "  return { timeoutMs: Timeout };",
+          "}"
         )
       )
     ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const Timeout = S.Number;",
+          "export function makeWire() {",
+          "  const Timeout = S.DurationFromMillis;",
+          "  return S.Struct({ timeoutMs: Timeout });",
+          "}"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number });", "try { run() } catch (S) { report(S) }"))
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const Timeout = S.Number;",
+          "export const Wire = S.Struct({ timeoutMs: Timeout });",
+          "{ let Timeout = 1; use(Timeout) }"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "const Timeout = S.Number;",
+          "export const Wire = S.Struct({ timeoutMs: Timeout });",
+          "const { a: [, ...Timeout2], b = Timeout } = source;",
+          "function Timeout2Fn({ Timeout }: { Timeout: number }) { return Timeout }"
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number });", "const [S2, ...S] = pair;"))
+    ).toEqual([]);
+  });
+
+  it("hints an alias and const bound exactly once", () => {
+    expect(
+      hintsOf(
+        lines(
+          "const Timeout = S.Number;",
+          "export const Wire = S.Struct({ timeoutMs: Timeout });",
+          "export function makeDefaults(T: number) {",
+          "  return { timeoutMs: T };",
+          "}"
+        )
+      )
+    ).toEqual(["L3 timeoutMs (Timeout) duration number"]);
   });
 
   it("follows one identifier hop through method calls and optional wrappers", () => {
@@ -225,6 +372,7 @@ describe("schema idiom hints", () => {
           "  remoteAddress: S.String,",
           "  homeUrl: (S.String satisfies unknown),",
           "  listenPort: S.Int!,",
+          "  waitMs: S.optionalKey(Timeout),",
           "});"
         )
       )
@@ -236,7 +384,101 @@ describe("schema idiom hints", () => {
       "L10 remoteAddress network-address string",
       "L11 homeUrl url string",
       "L12 listenPort port number",
+      "L13 waitMs (Timeout) duration number",
     ]);
+  });
+
+  it("a converted const stays converted inside an optional wrapper", () => {
+    const converted = (field: string) =>
+      lines(
+        TRANSFORMATION_IMPORT,
+        "const Timeout = S.Number.pipe(S.decodeTo(S.Duration, T.durationFromMillis));",
+        `export const Wire = S.Struct({ timeoutMs: ${field} });`
+      );
+    expect(hintsOf(converted("S.optionalKey(Timeout)"))).toEqual([]);
+    expect(hintsOf(converted("S.NullOr(Timeout)"))).toEqual([]);
+    expect(hintsOf(converted("S.OptionFromOptionalKey(Timeout)"))).toEqual([]);
+    expect(hintsOf(converted("Timeout.pipe(S.optionalKey)"))).toEqual([]);
+  });
+
+  it("keeps a primitive only through an allow-listed pipe", () => {
+    expect(
+      hintsOf(
+        lines(
+          TRANSFORMATION_IMPORT,
+          "const convert = S.decodeTo(S.Duration, T.durationFromMillis);",
+          "export const Wire = S.Struct({ timeoutMs: S.Number.pipe(convert) });"
+        )
+      )
+    ).toEqual([]);
+    expect(hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number.pipe(S.Array) });"))).toEqual([]);
+    expect(
+      hintsOf(
+        lines(
+          "export const Wire = S.Struct({",
+          "  timeoutMs: S.Array(S.Number),",
+          "  delayMs: S.Number.pipe(S.check(S.isGreaterThan(0)), S.Array),",
+          "  ttl: S.Number.pipe(S.decodeTo(S.Duration, transformation)),",
+          "  pollInterval: S.Number.pipe(...combinators),",
+          '  waitMs: S.Number.pipe(S.brand?.("Wait")),',
+          "  retryMs: S.Number.pipe(S.Struct.fields),",
+          '  graceMs: S.Number.pipe(helper.annoteSchema("x")),',
+          "  idleMs: S.Number.pipe(S.mutable),",
+          "});"
+        )
+      )
+    ).toEqual(["L9 graceMs duration number"]);
+    expect(
+      hintsOf(
+        lines(
+          "const $I = { annoteSchema: (name: string) => name };",
+          "export const Wire = S.Struct({",
+          '  timeoutMs: S.Number.pipe(S.check(S.isGreaterThan(0)), S.brand("Timeout"), $I.annoteSchema("T")),',
+          "  delayMs: S.Number.pipe(S.annotate({}), S.annotateKey({}), S.withConstructorDefault(make)),",
+          "  ttl: S.Number.pipe(S.withDecodingDefault(make), S.withDecodingDefaultKey(make), S.optionalKey),",
+          "  waitMs: S.Number.pipe(S.withDecodingDefaultType(make), S.withDecodingDefaultTypeKey(make)),",
+          "});"
+        )
+      )
+    ).toEqual([
+      "L4 timeoutMs duration number",
+      "L5 delayMs duration number",
+      "L6 ttl duration number",
+      "L7 waitMs duration number",
+    ]);
+  });
+
+  it("an identifier naming a rich value inside a check or annotation does not suppress the hint", () => {
+    expect(
+      hintsOf(
+        lines(
+          "const maximumDuration = 5000;",
+          "export const Wire = S.Struct({ timeoutMs: S.Number.check(S.isLessThan(maximumDuration)) });"
+        )
+      )
+    ).toEqual(["L3 timeoutMs duration number"]);
+    expect(
+      hintsOf(lines("export const Wire = S.Struct({ sizeBytes: S.Number.annotate({ codec: ByteSizeCodec }) });"))
+    ).toEqual(["L2 sizeBytes byte-size number"]);
+  });
+
+  it("does not follow an imported identifier or a second hop", () => {
+    expect(
+      hintsOf(
+        A.join(
+          [
+            IMPORT,
+            'import { Millis } from "./Millis.ts";',
+            "const Inner = S.Number;",
+            "const Outer = Inner;",
+            "const Wrapped = S.optionalKey(Inner);",
+            "export const Wire = S.Struct({ timeoutMs: Millis, delayMs: Outer, retryDelay: Unknown, waitMs: Wrapped });",
+            "",
+          ],
+          "\n"
+        )
+      )
+    ).toEqual([]);
   });
 
   it("leaves schemas that already convert or use a rich codec alone", () => {
@@ -244,6 +486,7 @@ describe("schema idiom hints", () => {
       hintsOf(
         lines(
           "const Delay = S.Number.pipe(S.decodeTo(S.Duration, transformation));",
+          "const Inner = S.Number.pipe(S.decodeTo(S.Duration, transformation));",
           "const Wrapped = S.optionalKey(Inner);",
           "const { Number: Destructured } = S;",
           "export declare const Declared: unknown;",
@@ -257,7 +500,6 @@ describe("schema idiom hints", () => {
           "  tenthMs: S.optionalKey(1),",
           "  1: S.Int,",
           "  timeoutMs: S.Number.pipe(S.decode(toMillis)),",
-          "  sizeBytes: S.Number.annotate({ codec: ByteSizeCodec }),",
           "  createdAt: S.DateTimeUtcFromString,",
           "  label: S.String,",
           "  [computedMs]: S.Number,",
@@ -271,6 +513,11 @@ describe("schema idiom hints", () => {
           "  fifthMs: (() => S.Number)(),",
           "  sixthMs: S.optionalKey(...rest),",
           "  seventhMs: S.optionalKey(),",
+          "  twoArgMs: S.optionalKey(S.Number, S.Number),",
+          "  optionalCallMs: S.optionalKey?.(S.Number),",
+          "  madeMs: S.Number.make(1),",
+          "  rebuiltMs: S.Number.rebuild(ast),",
+          "  durationMs: S.DurationFromMillis,",
           "});",
           "// const Commented = S.Struct({ timeoutMs: S.Number })"
         )
@@ -278,13 +525,52 @@ describe("schema idiom hints", () => {
     ).toEqual([]);
   });
 
-  it("hints only fields on a line of the written text", () => {
+  it("hints only fields inside a written fragment that occurs once", () => {
     const text = lines("export const Wire = S.Struct({", "  timeoutMs: S.Number,", "  listenPort: S.Int,", "});");
-    expect(hintsOf(text, "src/Fixture.ts", O.some("  listenPort: S.Int,\n"))).toEqual(["L4 listenPort port number"]);
+    expect(hintsOf(text, "src/Fixture.ts", O.some(["  listenPort: S.Int,\n"]))).toEqual(["L4 listenPort port number"]);
+    expect(hintsOf(text, "src/Fixture.ts", O.some(["listenPort: S"]))).toEqual([]);
+    expect(hintsOf(text, "src/Fixture.ts", O.some(["absent", "  timeoutMs: S.Number,"]))).toEqual([
+      "L3 timeoutMs duration number",
+    ]);
   });
 
-  it("skips files without an effect/Schema namespace import", () => {
-    expect(hintsOf('import { Number } from "effect/Schema";\nconst W = { timeoutMs: S.Number };\n')).toEqual([]);
+  it("a comment-only edit that repeats a field line hints nothing", () => {
+    expect(hintsOf(DUPLICATE_LINE)).toEqual(["L3 timeoutMs duration number"]);
+    expect(
+      hintsOf(DUPLICATE_LINE, "src/Fixture.ts", O.some(["/* Added documentation:\ntimeoutMs: S.Number,\n*/"]))
+    ).toEqual([]);
+  });
+
+  it("a written fragment that occurs twice scopes nothing", () => {
+    const text = lines(
+      "export const A = S.Struct({",
+      "  timeoutMs: S.Number,",
+      "});",
+      "export const B = S.Struct({",
+      "  timeoutMs: S.Number,",
+      "});"
+    );
+    expect(hintsOf(text)).toEqual(["L3 timeoutMs duration number", "L6 timeoutMs duration number"]);
+    expect(hintsOf(text, "src/Fixture.ts", O.some(["  timeoutMs: S.Number,"]))).toEqual([]);
+  });
+
+  it("a namespace import of another module named S is not hinted", () => {
+    expect(
+      hintsOf('import * as S from "./MySchema.ts";\nexport const Wire = S.Struct({ timeoutMs: S.Number });\n')
+    ).toEqual([]);
+    expect(
+      hintsOf('import type * as S from "effect/Schema";\nexport const Wire = S.Struct({ timeoutMs: S.Number });\n')
+    ).toEqual([]);
+  });
+
+  it("named imports from effect/Schema are not hinted", () => {
+    expect(
+      hintsOf('import { Number, Struct } from "effect/Schema";\nexport const Wire = Struct({ timeoutMs: Number });\n')
+    ).toEqual([]);
+  });
+
+  it("a file that does not parse is not hinted", () => {
+    expect(hintsOf(lines("export const Wire = S.Struct({ timeoutMs: S.Number });", "export const = ;"))).toEqual([]);
   });
 
   it("parses tsx files", () => {
@@ -296,7 +582,14 @@ describe("schema idiom hints", () => {
   it("skips generated, declaration, test and non-TypeScript paths", () => {
     const text = lines("export const W = S.Struct({ port: S.Int });");
     expect(hintsOf(text, "src/Wire.gen.ts")).toEqual([]);
-    expect(A.map(["src/a.ts", "src/a.tsx", "src/a.mts"], isSchemaIdiomHintPath)).toEqual([true, true, true]);
+    expect(hintsOf(text, "src/Wire.mts")).toEqual(["L2 port port number"]);
+    expect(hintsOf(text, "src/Wire.cts")).toEqual(["L2 port port number"]);
+    expect(A.map(["src/a.ts", "src/a.tsx", "src/a.mts", "src/a.cts"], isSchemaIdiomHintPath)).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
     expect(
       A.map(
         [
@@ -305,12 +598,15 @@ describe("schema idiom hints", () => {
           "src/a.test.ts",
           "src/a.spec.tsx",
           "src/a.d.ts",
+          "src/a.d.mts",
+          "src/a.test.mts",
+          "src/a.gen.cts",
           "src/a.md",
           "pkg/__tests__/a.ts",
         ],
         isSchemaIdiomHintPath
       )
-    ).toEqual([false, false, false, false, false, false, false]);
+    ).toEqual([false, false, false, false, false, false, false, false, false, false]);
   });
 });
 

@@ -83,10 +83,10 @@ it.layer(TestLayer, { timeout: "180 seconds" })((it) => {
           "\n"
         )
       );
-    }).pipe(Effect.scoped)
+    })
   );
 
-  it.effect("refuses --write with --check, hints a file and prints usage for the bare group", () =>
+  it.effect("refuses --write with --check, hints a file, skips a test file and prints usage for the bare group", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       yield* fixtureRepository;
@@ -104,9 +104,15 @@ it.layer(TestLayer, { timeout: "180 seconds" })((it) => {
       );
       const quiet = yield* run(["hint", "Wire.ts"]);
       expect(quiet).toBe("[schema-idiom] No hints.");
+      yield* fs.writeFileString(
+        "Wire.test.ts",
+        'import * as S from "effect/Schema";\nexport const W = S.Struct({ port: S.Int });\n'
+      );
+      const skipped = yield* run(["hint", "Wire.test.ts"]);
+      expect(skipped).toBe("[schema-idiom] Not scanned: test, generated, declaration or non-TypeScript path.");
       const usage = yield* run([]);
       expect(usage).toContain("effect/Schema idiom commands:");
       expect(usage).toContain("- bun run beep schema-idioms hint <file>");
-    }).pipe(Effect.scoped)
+    })
   );
 });

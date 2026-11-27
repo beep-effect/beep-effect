@@ -33,15 +33,15 @@ const byFile: Order.Order<SchemaIndexDrift> = Order.mapInput(Order.String, (drif
 /**
  * Extract the index from the installed effect and render its files.
  *
- * **Example** (Count the generated files)
+ * **Example** (Build the program that counts the generated files)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the program that counts the generated files"
  * import { generateSchemaIndexFiles } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as A from "effect/Array"
  * import * as Effect from "effect/Effect"
  *
  * const program = generateSchemaIndexFiles(process.cwd()).pipe(Effect.map(A.length))
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @param repoRoot - Absolute repository root.
@@ -78,14 +78,14 @@ const committedMarkdown = Effect.fn("SchemaIdioms.committedMarkdown")(function* 
 /**
  * Compare the committed index directory against generated files.
  *
- * **Example** (Check the committed index)
+ * **Example** (Build the program that checks the committed index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the program that checks the committed index"
  * import { diffSchemaIndexFiles } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as Effect from "effect/Effect"
  *
  * const program = diffSchemaIndexFiles(process.cwd(), [])
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @param repoRoot - Absolute repository root.
@@ -105,18 +105,17 @@ export const diffSchemaIndexFiles = Effect.fn("SchemaIdioms.diffSchemaIndexFiles
   const generatedNames = HashSet.fromIterable(A.map(files, (file) => file.file));
   const generatedDrift = yield* Effect.forEach(
     files,
-    (file) =>
-      Effect.gen(function* () {
-        if (!A.contains(committed, file.file)) {
-          return SchemaIndexDrift.makeOption({ file: file.file, change: "missing" });
-        }
-        const text = yield* fs
-          .readFileString(path.join(directory, file.file))
-          .pipe(SchemaIdiomsError.mapError(`could not read ${file.file}`));
-        return text === file.content
-          ? O.none<SchemaIndexDrift>()
-          : SchemaIndexDrift.makeOption({ file: file.file, change: "changed" });
-      }),
+    Effect.fnUntraced(function* (file) {
+      if (!A.contains(committed, file.file)) {
+        return SchemaIndexDrift.makeOption({ file: file.file, change: "missing" });
+      }
+      const text = yield* fs
+        .readFileString(path.join(directory, file.file))
+        .pipe(SchemaIdiomsError.mapError(`could not read ${file.file}`));
+      return text === file.content
+        ? O.none<SchemaIndexDrift>()
+        : SchemaIndexDrift.makeOption({ file: file.file, change: "changed" });
+    }),
     { concurrency: 1 }
   );
   const extra = A.map(
@@ -130,14 +129,14 @@ export const diffSchemaIndexFiles = Effect.fn("SchemaIdioms.diffSchemaIndexFiles
  * Write the generated files into the index directory and delete committed
  * Markdown files nothing generates.
  *
- * **Example** (Regenerate the index)
+ * **Example** (Build the program that regenerates the index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the program that regenerates the index"
  * import { writeSchemaIndexFiles } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as Effect from "effect/Effect"
  *
  * const program = writeSchemaIndexFiles(process.cwd(), [])
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @param repoRoot - Absolute repository root.
@@ -184,14 +183,14 @@ export const writeSchemaIndexFiles = Effect.fn("SchemaIdioms.writeSchemaIndexFil
 /**
  * Read the committed slice a lookup topic names.
  *
- * **Example** (Print the number slice)
+ * **Example** (Build the program that reads the number slice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the program that reads the number slice"
  * import { readSchemaIndexSlice } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as Effect from "effect/Effect"
  *
  * const program = readSchemaIndexSlice(process.cwd(), "number")
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @param repoRoot - Absolute repository root.
@@ -220,14 +219,14 @@ export const readSchemaIndexSlice = Effect.fn("SchemaIdioms.readSchemaIndexSlice
 /**
  * Read one file and render its name-tell hints as the advisory message.
  *
- * **Example** (Hint a file)
+ * **Example** (Build the program that hints a file)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the program that hints a file"
  * import { hintSchemaIdiomsFile } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as Effect from "effect/Effect"
  *
  * const program = hintSchemaIdiomsFile("packages/demo/src/Fleet.ts")
- * console.log(Effect.isEffect(program)) // true
+ * Effect.isEffect(program) // => true
  * ```
  *
  * @param file - Path of the TypeScript file, absolute or relative to the working directory.

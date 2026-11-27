@@ -15,8 +15,10 @@ import {
 } from "@beep/repo-cli/commands/SchemaIdioms";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as SemVer from "effect/SemVer";
 import * as Str from "effect/String";
 
 const codec = (name: string, decoded: string, encoded: string, summary = O.some(`${name} summary.`)) =>
@@ -52,22 +54,22 @@ describe("schema index rendering", () => {
   });
 
   it("places each entry kind in its slice", () => {
-    expect(sliceOfEntry(codec("NumberFromString", "number", "string"))).toEqual(O.some("wire-string"));
-    expect(sliceOfEntry(codec("DurationFromMillis", "Duration.Duration", "number"))).toEqual(O.some("wire-number"));
-    expect(sliceOfEntry(codec("BigInt", "bigint", "bigint"))).toEqual(O.some("wire-bigint"));
-    expect(sliceOfEntry(codec("Date", "Date", "Date"))).toEqual(O.some("wire-date"));
-    expect(sliceOfEntry(codec("Uint8Array", "Uint8Array", "Uint8Array"))).toEqual(O.some("wire-other"));
-    expect(sliceOfEntry(check("isMinLength", "string"))).toEqual(O.some("wire-string"));
-    expect(sliceOfEntry(check("isMinSize", "{ readonly size: number; }"))).toEqual(O.some("checks-collections"));
-    expect(sliceOfEntry(combinator("Struct", O.some("constructors")))).toEqual(O.some("takes-a-schema"));
-    expect(sliceOfEntry(combinator("brand", O.none()))).toEqual(O.some("takes-a-schema"));
-    expect(sliceOfEntry(combinator("decodeUnknownSync", O.some("decoding")))).toEqual(O.none());
+    assertSome(sliceOfEntry(codec("NumberFromString", "number", "string")), "wire-string");
+    assertSome(sliceOfEntry(codec("DurationFromMillis", "Duration.Duration", "number")), "wire-number");
+    assertSome(sliceOfEntry(codec("BigInt", "bigint", "bigint")), "wire-bigint");
+    assertSome(sliceOfEntry(codec("Date", "Date", "Date")), "wire-date");
+    assertSome(sliceOfEntry(codec("Uint8Array", "Uint8Array", "Uint8Array")), "wire-other");
+    assertSome(sliceOfEntry(check("isMinLength", "string")), "wire-string");
+    assertSome(sliceOfEntry(check("isMinSize", "{ readonly size: number; }")), "checks-collections");
+    assertSome(sliceOfEntry(combinator("Struct", O.some("constructors"))), "takes-a-schema");
+    assertSome(sliceOfEntry(combinator("brand", O.none())), "takes-a-schema");
+    assertNone(sliceOfEntry(combinator("decodeUnknownSync", O.some("decoding"))));
   });
 
   it("renders the slices and the README in a fixed order", () => {
     const files = renderSchemaIndexFiles(
       SchemaIndex.make({
-        effectVersion: "4.1.5",
+        effectVersion: SemVer.make({ major: 4, minor: 1, patch: 5 }),
         entries: [
           combinator("Struct", O.some("constructors")),
           check("isMinSize", "{ readonly size: number; }"),
@@ -133,21 +135,20 @@ describe("schema index rendering", () => {
 
 describe("schema idiom hint rendering", () => {
   it("renders no message without hints", () => {
-    expect(renderSchemaIdiomHints([])).toEqual(O.none());
+    assertNone(renderSchemaIdiomHints([]));
   });
 
   it("renders hint lines and the lookup commands for each wire", () => {
-    expect(renderSchemaIdiomHints([hint(1, "number"), hint(2, "string")])).toEqual(
-      O.some(
-        A.join(
-          [
-            "[schema-idiom] Advisory: effect/Schema may already ship these. Skip any line that does not fit the domain.",
-            "L1 field1 (Named): the name reads as a port but the schema decodes to a primitive. Shipped: S.Port",
-            "L2 field2: the name reads as a URL but the schema decodes to a primitive. Shipped: S.URLFromString · S.Other",
-            "More by wire type: bun run beep schema-idioms lookup number · bun run beep schema-idioms lookup string",
-          ],
-          "\n"
-        )
+    assertSome(
+      renderSchemaIdiomHints([hint(1, "number"), hint(2, "string")]),
+      A.join(
+        [
+          "[schema-idiom] Advisory: effect/Schema may already ship these. Skip any line that does not fit the domain.",
+          "L1 field1 (Named): the name reads as a port but the schema decodes to a primitive. Shipped: S.Port",
+          "L2 field2: the name reads as a URL but the schema decodes to a primitive. Shipped: S.URLFromString · S.Other",
+          "More by wire type: bun run beep schema-idioms lookup number · bun run beep schema-idioms lookup string",
+        ],
+        "\n"
       )
     );
   });

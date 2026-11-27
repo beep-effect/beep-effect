@@ -109,11 +109,14 @@ the lookup is "this arrives as a number, what can it become":
 bun run beep schema-idioms lookup number
 ```
 
-Slices: `string`, `number`, `bigint`, `date`, `collections` (size, length and
-uniqueness checks), `constructors` (schemas that take a schema: `S.Option`,
+Slices: `string`, `number`, `bigint`, `date`, `other` (any other encoded shape,
+such as `S.SemVer` or `S.HostPort`), `collections` (size, length and uniqueness
+checks), `constructors` (schemas that take a schema: `S.Option`,
 `S.OptionFromNullOr`, `S.HashSet`, `S.Redacted`, `S.NonEmptyArray`) and
-`getters`. `bun run beep schema-idioms index --write` regenerates them after an
-Effect bump; `--check` fails when they are stale.
+`getters`. `bun run beep schema-idioms index --check` fails when they differ
+from the installed effect, and the repo-cli test `schema-idioms-index.test.ts`
+makes the same comparison; no CI lane runs `--check` itself, so run
+`bun run beep schema-idioms index --write` after an Effect bump.
 
 A field's name is the strongest sign that a primitive is standing in for a
 richer value. Seven name shapes are checked on newly written schema fields, and
@@ -125,9 +128,14 @@ richer value. Seven name shapes are checked on newly written schema fields, and
 | an instant | `createdAt`, `expiresAt`, `startedAtMs`, `maintenanceUntil` | `S.DateTimeUtcFromString`, `S.DateTimeUtcFromMillis`, `S.DateTimeUtcFromDate` |
 | a byte size | `payloadBytes`, `diskFreeBytes` | `S.ByteSizeFromNumber`, `S.ByteSizeFromBigInt`, `S.ByteSizeFromString` |
 | a URL | `endpointUrl`, `callbackUri`, `href` | `S.URLFromString` |
-| a network address | `address`, `host`, `sourceIp` | `S.IpAddressFromString`, `S.HostFromString`, `S.HostPortFromString` |
+| a network address | `bindAddress`, `host`, `sourceIp` | `S.IpAddressFromString`, `S.HostFromString`, `S.HostPortFromString` |
 | a port | `port`, `listenPort` | `S.Port` |
 | a version | `agentVersion`, `clientVersion` | `S.SemVerFromString` |
+
+A bare `address` is never hinted, nor is a postal, billing, wallet or email
+address: only `host` and `ip` names and an address qualified by a network role
+(`bind`, `listen`, `remote`, `peer`, `socket`, `server`, `client`, `host`) read
+as a network address.
 
 The hint is advisory. Keep the primitive when the encoded shape is a persisted
 or published contract that other code compares as a number, or when the value

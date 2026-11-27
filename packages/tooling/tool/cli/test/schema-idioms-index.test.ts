@@ -5,6 +5,7 @@ import {
   jsDocSummary,
   normalizeTypeText,
   readSchemaIndexSlice,
+  renderSchemaIndexFiles,
   SCHEMA_INDEX_DIRECTORY,
   SchemaIndexEntry,
   SchemaIndexFile,
@@ -13,11 +14,13 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as SemVer from "effect/SemVer";
 import * as Str from "effect/String";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 import type { SchemaIndexDrift } from "@beep/repo-cli/commands/SchemaIdioms";
@@ -141,28 +144,29 @@ describe("schema index text helpers", () => {
   });
 
   it("reads the first sentence of the first prose paragraph", () => {
-    expect(jsDocSummary("Decodes a {@link Duration}. More text.\n\n**Details**\n\nIgnored.")).toEqual(
-      O.some("Decodes a Duration.")
+    assertSome(
+      jsDocSummary("Decodes a {@link Duration}. More text.\n\n**Details**\n\nIgnored."),
+      "Decodes a Duration."
     );
-    expect(jsDocSummary("**Example** (Title)\n\nUses {@linkcode Schema | the schema} here")).toEqual(
-      O.some("Uses Schema here")
-    );
-    expect(jsDocSummary("**Details**\n\n")).toEqual(O.none());
+    assertSome(jsDocSummary("**Example** (Title)\n\nUses {@linkcode Schema | the schema} here"), "Uses Schema here");
+    assertNone(jsDocSummary("**Details**\n\n"));
   });
 });
 
 it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
-  it.effect("indexes the installed effect with the type checker", () =>
+  it.effect("indexes the installed effect with the type checker and matches the committed index", () =>
     Effect.gen(function* () {
       const repoRoot = yield* findRepoRoot();
       const index = yield* extractSchemaIndex(repoRoot);
       const views = A.map(index.entries, entryView);
-      expect(Str.isNonEmpty(index.effectVersion)).toBe(true);
+      expect(SemVer.format(index.effectVersion)).toMatch(/^\d+\.\d+\.\d+/);
       expect(views).toContain("codec DurationFromMillis Duration.Duration <- number");
       expect(views).toContain("codec String string <- string");
       expect(views).toContain("check isMinLength on { readonly length: number; }");
       expect(views).toContain("combinator Struct");
       expect(A.some(index.getters, (getter) => getter.module === "SchemaTransformation")).toBe(true);
+      const drift = yield* diffSchemaIndexFiles(repoRoot, renderSchemaIndexFiles(index));
+      expect(A.map(drift, driftView)).toEqual([]);
     })
   );
 
@@ -172,7 +176,7 @@ it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
       const root = yield* fs.makeTempDirectoryScoped();
       yield* writeStub(root, true);
       const index = yield* extractSchemaIndex(root);
-      expect(index.effectVersion).toBe("0.0.0-stub");
+      expect(SemVer.format(index.effectVersion)).toBe("0.0.0-stub");
       expect(A.map(index.entries, entryView)).toEqual([
         "combinator Klass",
         "codec NumberFromString number <- string",
@@ -182,25 +186,27 @@ it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
         "check isMinLength on string",
       ]);
       const byName = (name: string) => O.getOrThrow(A.findFirst(index.entries, (entry) => entry.name === name));
-      expect([byName("String").summary, byName("String").category]).toEqual([
-        O.some("Decodes a String value."),
-        O.some("schemas"),
+      assertSome(byName("String").summary, "Decodes a String value.");
+      assertSome(byName("String").category, "schemas");
+      assertSome(byName("NumberFromString").summary, "Parses a number from a string");
+      assertNone(byName("NumberFromString").category);
+      assertSome(byName("isMinLength").summary, "First overload.");
+      assertSome(byName("isMinLength").category, "checks");
+      assertNone(byName("Klass").summary);
+      assertNone(byName("Struct").summary);
+      expect(
+        A.map(index.getters, (getter) => [
+          getter.module,
+          getter.name,
+          O.getOrNull(getter.summary),
+          O.getOrNull(getter.category),
+        ])
+      ).toEqual([
+        ["SchemaGetter", "Model", null, null],
+        ["SchemaGetter", "trim", "Trims a string.", "transforming"],
+        ["SchemaTransformation", "durationFromMillis", null, null],
       ]);
-      expect([byName("NumberFromString").summary, byName("NumberFromString").category]).toEqual([
-        O.some("Parses a number from a string"),
-        O.none(),
-      ]);
-      expect([byName("isMinLength").summary, byName("isMinLength").category]).toEqual([
-        O.some("First overload."),
-        O.some("checks"),
-      ]);
-      expect([byName("Klass").summary, byName("Struct").summary]).toEqual([O.none(), O.none()]);
-      expect(A.map(index.getters, (getter) => [getter.module, getter.name, getter.summary, getter.category])).toEqual([
-        ["SchemaGetter", "Model", O.none(), O.none()],
-        ["SchemaGetter", "trim", O.some("Trims a string."), O.some("transforming")],
-        ["SchemaTransformation", "durationFromMillis", O.none(), O.none()],
-      ]);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("names what is missing when effect cannot be read", () =>
@@ -219,7 +225,7 @@ it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
       yield* writeStub(noSources, false);
       const unreadSources = yield* failureMessage(extractSchemaIndex(noSources));
       expect(unreadSources).toMatch(/^could not read effect\/src\/Schema\.ts: /);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("writes missing and changed slices, removes extra ones, then reports none", () =>
@@ -247,7 +253,7 @@ it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
       const otherKept = yield* fs.exists(path.join(directory, "notes.txt"));
       const after = yield* diffSchemaIndexFiles(root, files);
       expect([rewritten, extraLeft, otherKept, after]).toEqual(["# b\n", false, true, []]);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("reads a lookup slice and names the regenerate command when it is missing", () =>
@@ -265,7 +271,7 @@ it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
       ]);
       const slice = yield* readSchemaIndexSlice(root, "number");
       expect(slice).toBe("# n\n");
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("hints a file on disk and fails on a missing one", () =>
@@ -279,15 +285,15 @@ it.layer(NodeTestLayer, { timeout: "120 seconds" })((it) => {
         'import * as S from "effect/Schema";\nexport const W = S.Struct({ port: S.Int });\n'
       );
       const message = yield* hintSchemaIdiomsFile(file);
-      expect(O.map(message, Str.includes("L2 port: the name reads as a port"))).toEqual(O.some(true));
+      expect(O.getOrThrow(message)).toContain("L2 port: the name reads as a port");
       yield* fs.writeFileString(
         file,
         'import * as S from "effect/Schema";\nexport const W = S.Struct({ port: S.Port });\n'
       );
       const none = yield* hintSchemaIdiomsFile(file);
-      expect(none).toEqual(O.none());
+      assertNone(none);
       const missing = yield* failureMessage(hintSchemaIdiomsFile(path.join(root, "Missing.ts")));
       expect(missing).toMatch(/^could not read .*Missing\.ts: /);
-    }).pipe(Effect.scoped)
+    })
   );
 });

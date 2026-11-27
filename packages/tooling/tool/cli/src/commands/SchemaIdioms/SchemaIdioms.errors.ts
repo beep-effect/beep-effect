@@ -14,11 +14,11 @@ const $I = $RepoCliId.create("commands/SchemaIdioms/SchemaIdioms.errors");
 /**
  * **Example** (Read a schema idioms error)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read a schema idioms error"
  * import { SchemaIdiomsError } from "@beep/repo-cli/commands/SchemaIdioms"
  *
  * const error = SchemaIdiomsError.new("could not resolve effect/Schema")
- * console.log(error.message) // "could not resolve effect/Schema"
+ * error.message // => "could not resolve effect/Schema"
  * ```
  *
  * @category errors

@@ -17,10 +17,10 @@ const $I = $RepoCliId.create("commands/SchemaIdioms/SchemaIdioms.model");
 /**
  * **Example** (Classify a wire type)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Classify a wire type"
  * import { SchemaWireType } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SchemaWireType.is.number("number")) // true
+ * SchemaWireType.is.number("number") // => true
  * ```
  *
  * @category models
@@ -42,7 +42,7 @@ export type SchemaWireType = typeof SchemaWireType.Type;
 /**
  * **Example** (Describe a codec entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a codec entry"
  * import { SchemaIndexCodec } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as O from "effect/Option"
  *
@@ -55,7 +55,7 @@ export type SchemaWireType = typeof SchemaWireType.Type;
  *   category: O.some("schemas"),
  * })
  *
- * console.log(entry.encoded) // "number"
+ * entry.encoded // => "number"
  * ```
  *
  * @category models
@@ -80,7 +80,7 @@ export class SchemaIndexCodec extends S.Opaque<SchemaIndexCodec, { readonly bran
 /**
  * **Example** (Describe a check entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a check entry"
  * import { SchemaIndexCheck } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as O from "effect/Option"
  *
@@ -92,7 +92,7 @@ export class SchemaIndexCodec extends S.Opaque<SchemaIndexCodec, { readonly bran
  *   category: O.some("validation"),
  * })
  *
- * console.log(entry.input) // "{ readonly size: number }"
+ * entry.input // => "{ readonly size: number }"
  * ```
  *
  * @category models
@@ -127,7 +127,7 @@ export class SchemaIndexCheck extends S.Opaque<SchemaIndexCheck, { readonly bran
  *   category: O.some("constructors"),
  * })
  *
- * console.log(entry.kind) // "combinator"
+ * entry.kind // => "combinator"
  * ```
  *
  * @category models
@@ -150,7 +150,7 @@ export class SchemaIndexCombinator extends S.Opaque<SchemaIndexCombinator, { rea
 /**
  * **Example** (Narrow an index entry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Narrow an index entry"
  * import { SchemaIndexCombinator, SchemaIndexEntry } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as O from "effect/Option"
  *
@@ -161,7 +161,7 @@ export class SchemaIndexCombinator extends S.Opaque<SchemaIndexCombinator, { rea
  *   category: O.none(),
  * })
  *
- * console.log(SchemaIndexEntry.guards.combinator(entry)) // true
+ * SchemaIndexEntry.guards.combinator(entry) // => true
  * ```
  *
  * @category models
@@ -183,10 +183,10 @@ export type SchemaIndexEntry = typeof SchemaIndexEntry.Type;
 /**
  * **Example** (Name the module of a getter)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Name the module of a getter"
  * import { SchemaGetterModule } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SchemaGetterModule.Enum.SchemaGetter) // "SchemaGetter"
+ * SchemaGetterModule.Enum.SchemaGetter // => "SchemaGetter"
  * ```
  *
  * @category models
@@ -207,7 +207,7 @@ export type SchemaGetterModule = typeof SchemaGetterModule.Type;
 /**
  * **Example** (Describe a named transformation)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a named transformation"
  * import { SchemaGetterEntry } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as O from "effect/Option"
  *
@@ -218,7 +218,7 @@ export type SchemaGetterModule = typeof SchemaGetterModule.Type;
  *   category: O.some("transforming"),
  * })
  *
- * console.log(entry.name) // "trim"
+ * entry.name // => "trim"
  * ```
  *
  * @category models
@@ -241,11 +241,12 @@ export class SchemaGetterEntry extends S.Opaque<SchemaGetterEntry, { readonly br
 /**
  * **Example** (Hold an empty index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Hold an empty index"
  * import { SchemaIndex } from "@beep/repo-cli/commands/SchemaIdioms"
+ * import * as SemVer from "effect/SemVer"
  *
- * const index = SchemaIndex.make({ effectVersion: "4.1.5", entries: [], getters: [] })
- * console.log(index.effectVersion) // "4.1.5"
+ * const index = SchemaIndex.make({ effectVersion: SemVer.make({ major: 4, minor: 1, patch: 5 }), entries: [], getters: [] })
+ * SemVer.format(index.effectVersion) // => "4.1.5"
  * ```
  *
  * @category models
@@ -253,7 +254,7 @@ export class SchemaGetterEntry extends S.Opaque<SchemaGetterEntry, { readonly br
  */
 export class SchemaIndex extends S.Opaque<SchemaIndex, { readonly brand: unique symbol }>()(
   S.Struct({
-    effectVersion: S.String,
+    effectVersion: S.SemVer,
     entries: S.Array(SchemaIndexEntry),
     getters: S.Array(SchemaGetterEntry),
   }).pipe(
@@ -267,10 +268,10 @@ export class SchemaIndex extends S.Opaque<SchemaIndex, { readonly brand: unique 
 /**
  * **Example** (List the slice files)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List the slice files"
  * import { SchemaIndexSlice } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SchemaIndexSlice.literals.length) // 8
+ * SchemaIndexSlice.literals.length // => 8
  * ```
  *
  * @category models
@@ -301,10 +302,10 @@ export type SchemaIndexSlice = typeof SchemaIndexSlice.Type;
 /**
  * **Example** (Pick a lookup topic)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Pick a lookup topic"
  * import { SchemaIdiomsLookupTopic } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SchemaIdiomsLookupTopic.is.collections("collections")) // true
+ * SchemaIdiomsLookupTopic.is.collections("collections") // => true
  * ```
  *
  * @category models
@@ -335,11 +336,11 @@ export type SchemaIdiomsLookupTopic = typeof SchemaIdiomsLookupTopic.Type;
 /**
  * **Example** (Describe a rendered slice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a rendered slice"
  * import { SchemaIndexFile } from "@beep/repo-cli/commands/SchemaIdioms"
  *
  * const file = SchemaIndexFile.make({ file: "wire-bigint.md", entries: 1, content: "# effect/Schema: bigint on the wire\n" })
- * console.log(file.file) // "wire-bigint.md"
+ * file.file // => "wire-bigint.md"
  * ```
  *
  * @category models
@@ -348,7 +349,7 @@ export type SchemaIdiomsLookupTopic = typeof SchemaIdiomsLookupTopic.Type;
 export class SchemaIndexFile extends S.Opaque<SchemaIndexFile, { readonly brand: unique symbol }>()(
   S.Struct({
     file: S.String,
-    entries: S.Int,
+    entries: S.Natural,
     content: S.String,
   }).pipe(
     $I.annoteSchema("SchemaIndexFile", {
@@ -361,10 +362,10 @@ export class SchemaIndexFile extends S.Opaque<SchemaIndexFile, { readonly brand:
 /**
  * **Example** (Name a drift kind)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Name a drift kind"
  * import { SchemaIndexDriftChange } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SchemaIndexDriftChange.Enum.changed) // "changed"
+ * SchemaIndexDriftChange.Enum.changed // => "changed"
  * ```
  *
  * @category models
@@ -386,11 +387,12 @@ export type SchemaIndexDriftChange = typeof SchemaIndexDriftChange.Type;
 /**
  * **Example** (Report a changed slice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Report a changed slice"
  * import { SchemaIndexDrift } from "@beep/repo-cli/commands/SchemaIdioms"
  *
  * const drift = SchemaIndexDrift.make({ file: "wire-number.md", change: "changed" })
- * console.log(`${drift.change}: ${drift.file}`) // "changed: wire-number.md"
+ * const shown = `${drift.change}: ${drift.file}`
+ * shown // => "changed: wire-number.md"
  * ```
  *
  * @category models

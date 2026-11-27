@@ -41,7 +41,7 @@ Keep `Schema` as the source of truth for pure data models.
    child of the reference workspace; Effect `main` is v4.
 - Before a field becomes `S.String`, `S.Number` or a custom check, look up
   what `effect/Schema` ships for that wire type:
-  `bun run beep schema-idioms lookup <string|number|bigint|date|collections|constructors|getters>`
+  `bun run beep schema-idioms lookup <string|number|bigint|date|other|collections|constructors|getters>`
   (the generated slices live in `references/schema-index/`). The decoded side
   holds Effect's own value (`Duration`, `DateTime.Utc`, `ByteSize`, `URL`,
   `Option`, `Redacted`), the encoded side holds what the wire sends, and

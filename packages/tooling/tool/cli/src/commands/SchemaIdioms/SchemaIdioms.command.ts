@@ -17,6 +17,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { isSchemaIdiomHintPath } from "./SchemaIdiomHints.ts";
 import { SchemaIdiomsLookupTopic } from "./SchemaIdioms.model.ts";
 import { SCHEMA_INDEX_DIRECTORY } from "./SchemaIdioms.render.ts";
 import {
@@ -48,7 +49,7 @@ const schemaIdiomsIndexCommand = Command.make(
       Flag.withDescription("Exit non-zero when the committed index differs from the installed effect")
     ),
   },
-  Effect.fn(function* ({ write, check }) {
+  Effect.fn("SchemaIdioms.indexCommand")(function* ({ write, check }) {
     if (write && check) {
       return yield* failWithPrintedExit("beep schema-idioms index: pass --write or --check, not both.");
     }
@@ -87,7 +88,7 @@ const schemaIdiomsLookupCommand = Command.make(
       Argument.withDescription("Wire type (string, number, bigint, date, other) or collections, constructors, getters")
     ),
   },
-  Effect.fn(function* ({ topic }) {
+  Effect.fn("SchemaIdioms.lookupCommand")(function* ({ topic }) {
     const repoRoot = yield* findRepoRoot();
     const slice = yield* readSchemaIndexSlice(repoRoot, topic);
     yield* Console.log(slice);
@@ -97,9 +98,14 @@ const schemaIdiomsLookupCommand = Command.make(
 const schemaIdiomsHintCommand = Command.make(
   "hint",
   {
-    file: Argument.String("file").pipe(Argument.withDescription("TypeScript file to read")),
+    file: Argument.String("file").pipe(
+      Argument.withDescription("TypeScript source file to read; test, generated and .d.ts files are not scanned")
+    ),
   },
-  Effect.fn(function* ({ file }) {
+  Effect.fn("SchemaIdioms.hintCommand")(function* ({ file }) {
+    if (!isSchemaIdiomHintPath(file)) {
+      return yield* Console.log("[schema-idiom] Not scanned: test, generated, declaration or non-TypeScript path.");
+    }
     const message = yield* hintSchemaIdiomsFile(file);
     yield* Console.log(O.getOrElse(message, () => "[schema-idiom] No hints."));
   })
@@ -114,12 +120,12 @@ const schemaIdiomsHintCommand = Command.make(
  *
  * **Example** (Confirm the subcommands)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Confirm the subcommands"
  * import { schemaIdiomsCommand } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as A from "effect/Array"
  *
  * const names = A.flatMap(schemaIdiomsCommand.subcommands, (group) => A.map(group.commands, (command) => command.name))
- * console.log(names) // ["index", "lookup", "hint"]
+ * names // => ["index", "lookup", "hint"]
  * ```
  *
  * @category cli-commands
@@ -135,4 +141,4 @@ export const schemaIdiomsCommand = Command.make("schema-idioms", {}, () =>
 ).pipe(
   Command.withDescription("The generated effect/Schema index and advisory schema field hints (index, lookup, hint)"),
   Command.withSubcommands([schemaIdiomsIndexCommand, schemaIdiomsLookupCommand, schemaIdiomsHintCommand])
-) as Command.Command<"schema-idioms", {}, {}, never, never>;
+);

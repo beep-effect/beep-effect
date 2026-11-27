@@ -46,7 +46,7 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
    their own fields, before any cross-field filter.
 2. **Does a schema/combinator/primitive already exist?** Check upstream
    `effect/Schema` first (`bun run beep schema-idioms lookup <wire-type>` lists
-   what ships for a string, number, bigint or date on the wire), then search
+   what ships for a string, number, bigint, date or other shape on the wire), then search
    `@beep/schema` and `@beep/identity` before
    inventing — see `schema-first-development` →
    `references/local-primitives.md`. Where upstream covers a

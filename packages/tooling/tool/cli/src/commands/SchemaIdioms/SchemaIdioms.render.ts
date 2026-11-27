@@ -7,11 +7,12 @@
  */
 
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as SemVer from "effect/SemVer";
 import * as Str from "effect/String";
 import { SchemaIdiomsLookupTopic, SchemaIndexEntry, SchemaIndexFile, SchemaIndexSlice } from "./SchemaIdioms.model.ts";
 import type { SchemaIdiomHint } from "./SchemaIdiomHints.model.ts";
@@ -22,10 +23,10 @@ import type { SchemaGetterEntry, SchemaIndex } from "./SchemaIdioms.model.ts";
  *
  * **Example** (Locate the index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Locate the index"
  * import { SCHEMA_INDEX_DIRECTORY } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SCHEMA_INDEX_DIRECTORY) // ".claude/skills/schema-first-development/references/schema-index"
+ * SCHEMA_INDEX_DIRECTORY // => ".claude/skills/schema-first-development/references/schema-index"
  * ```
  *
  * @category configuration
@@ -38,10 +39,10 @@ export const SCHEMA_INDEX_DIRECTORY = ".claude/skills/schema-first-development/r
  *
  * **Example** (Read the cap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read the cap"
  * import { SCHEMA_IDIOM_HINT_LIMIT } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(SCHEMA_IDIOM_HINT_LIMIT) // 8
+ * SCHEMA_IDIOM_HINT_LIMIT // => 8
  * ```
  *
  * @category configuration
@@ -86,7 +87,7 @@ const SLICE_HOLDS: Readonly<Record<SchemaIndexSlice, string>> = {
   "wire-string": "Schemas that read a string, and checks on strings.",
   "wire-number": "Schemas that read a number, and checks on numbers.",
   "wire-bigint": "Schemas that read a bigint, and checks on bigints.",
-  "wire-date": "Schemas that read a JavaScript Date.",
+  "wire-date": "Schemas that read a JavaScript Date, and checks on Dates.",
   "wire-other": "Schemas whose encoded side is any other shape, with that shape shown.",
   "checks-collections": "Checks whose input is a collection, a sized or lengthed value, or another non-primitive.",
   "takes-a-schema": "Constructors and combinators whose result depends on the schema passed in.",
@@ -106,11 +107,11 @@ const byKindThenName: Order.Order<SchemaIndexEntry> = Order.combine(
  *
  * **Example** (Shorten type text)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Shorten type text"
  * import { shortTypeText } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(shortTypeText("{ readonly size: number; }")) // "has .size"
- * console.log(shortTypeText("Duration.Duration")) // "Duration.Duration"
+ * shortTypeText("{ readonly size: number; }") // => "has .size"
+ * shortTypeText("Duration.Duration") // => "Duration.Duration"
  * ```
  *
  * @param text - Normalized checker type text.
@@ -135,7 +136,7 @@ const wireSlice = (encoded: string): O.Option<SchemaIndexSlice> => R.get(WIRE_SL
  *
  * **Example** (Place a codec)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Place a codec"
  * import { SchemaIndexCodec, sliceOfEntry } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as O from "effect/Option"
  *
@@ -147,7 +148,7 @@ const wireSlice = (encoded: string): O.Option<SchemaIndexSlice> => R.get(WIRE_SL
  *   summary: O.none(),
  *   category: O.some("schemas"),
  * })
- * console.log(sliceOfEntry(entry)) // Some("wire-number")
+ * O.getOrThrow(sliceOfEntry(entry)) // => "wire-number"
  * ```
  *
  * @param entry - One index entry.
@@ -189,7 +190,7 @@ const isRenderedGetter = (getter: SchemaGetterEntry): boolean =>
   !O.exists(getter.category, (category) => HashSet.has(SKIPPED_GETTER_CATEGORIES, category));
 
 const generatedNotice = (index: SchemaIndex): string =>
-  `Generated from effect ${index.effectVersion} by \`bun run beep schema-idioms index --write\`. Do not edit by hand.`;
+  `Generated from effect ${SemVer.format(index.effectVersion)} by \`bun run beep schema-idioms index --write\`. Do not edit by hand.`;
 
 const sliceFile = (index: SchemaIndex, slice: SchemaIndexSlice, lines: ReadonlyArray<string>): SchemaIndexFile =>
   SchemaIndexFile.make({
@@ -213,7 +214,7 @@ const readmeFile = (index: SchemaIndex, slices: ReadonlyArray<SchemaIndexFile>):
         "",
         "What the installed `effect/Schema` ships, grouped by the wire (encoded) type a schema reads, so a field that arrives as a number is one lookup: `bun run beep schema-idioms lookup number`. Topics: `string`, `number`, `bigint`, `date`, `other`, `collections`, `constructors`, `getters`.",
         "",
-        "`bun run beep schema-idioms index --check` fails when these files differ from what the installed effect would generate, so an Effect bump that skips regeneration is caught.",
+        "`bun run beep schema-idioms index --check` fails when these files differ from what the installed effect would generate, and the repo-cli test `schema-idioms-index.test.ts` makes the same comparison. No CI lane runs `--check` itself: after an Effect bump, run `bun run beep schema-idioms index --write` and commit the result.",
         "",
         "| Slice | Entries | Holds |",
         "| --- | --- | --- |",
@@ -233,12 +234,14 @@ const readmeFile = (index: SchemaIndex, slices: ReadonlyArray<SchemaIndexFile>):
  *
  * **Example** (Render an empty index)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render an empty index"
  * import { renderSchemaIndexFiles, SchemaIndex } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as A from "effect/Array"
+ * import * as SemVer from "effect/SemVer"
  *
- * const files = renderSchemaIndexFiles(SchemaIndex.make({ effectVersion: "4.1.5", entries: [], getters: [] }))
- * console.log(A.map(files, (file) => file.file).length) // 9
+ * const effectVersion = SemVer.make({ major: 4, minor: 1, patch: 5 })
+ * const files = renderSchemaIndexFiles(SchemaIndex.make({ effectVersion, entries: [], getters: [] }))
+ * A.length(files) // => 9
  * ```
  *
  * @param index - The extracted index.
@@ -268,11 +271,11 @@ export const renderSchemaIndexFiles = (index: SchemaIndex): ReadonlyArray<Schema
  *
  * **Example** (Map topics to files)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map topics to files"
  * import { lookupSliceFile } from "@beep/repo-cli/commands/SchemaIdioms"
  *
- * console.log(lookupSliceFile("number")) // "wire-number.md"
- * console.log(lookupSliceFile("constructors")) // "takes-a-schema.md"
+ * lookupSliceFile("number") // => "wire-number.md"
+ * lookupSliceFile("constructors") // => "takes-a-schema.md"
  * ```
  *
  * @param topic - A wire type or a role topic.
@@ -308,9 +311,10 @@ const hintLine = (hint: SchemaIdiomHint): string => {
  *
  * **Example** (Render one hint)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render one hint"
  * import { renderSchemaIdiomHintMessage, SchemaIdiomHint } from "@beep/repo-cli/commands/SchemaIdioms"
  * import * as O from "effect/Option"
+ * import * as Str from "effect/String"
  *
  * const hint = SchemaIdiomHint.make({
  *   line: 3,
@@ -321,7 +325,8 @@ const hintLine = (hint: SchemaIdiomHint): string => {
  *   wire: "number",
  *   shipped: ["Port"],
  * })
- * console.log(renderSchemaIdiomHintMessage([hint]))
+ * const lines = Str.split(renderSchemaIdiomHintMessage([hint]), "\n")
+ * lines[1] // => "L3 port: the name reads as a port but the schema decodes to a primitive. Shipped: S.Port"
  * ```
  *
  * @param hints - Hints in line order; only the first {@link SCHEMA_IDIOM_HINT_LIMIT} are listed.
@@ -352,10 +357,11 @@ export const renderSchemaIdiomHintMessage = (hints: A.NonEmptyReadonlyArray<Sche
  *
  * **Example** (Render no hints)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Render no hints"
  * import { renderSchemaIdiomHints } from "@beep/repo-cli/commands/SchemaIdioms"
+ * import * as O from "effect/Option"
  *
- * console.log(renderSchemaIdiomHints([])) // None
+ * O.isNone(renderSchemaIdiomHints([])) // => true
  * ```
  *
  * @param hints - Hints in line order.
@@ -364,4 +370,4 @@ export const renderSchemaIdiomHintMessage = (hints: A.NonEmptyReadonlyArray<Sche
  * @since 0.0.0
  */
 export const renderSchemaIdiomHints = (hints: ReadonlyArray<SchemaIdiomHint>): O.Option<string> =>
-  A.match(hints, { onEmpty: O.none, onNonEmpty: (all) => O.some(renderSchemaIdiomHintMessage(all)) });
+  A.match(hints, { onEmpty: O.none, onNonEmpty: flow(renderSchemaIdiomHintMessage, O.some) });

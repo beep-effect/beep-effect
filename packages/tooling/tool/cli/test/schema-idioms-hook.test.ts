@@ -1,10 +1,12 @@
 import {
   SCHEMA_IDIOM_STATE_ENV,
+  SchemaIdiomHookOutput,
   schemaIdiomHookMain,
   schemaIdiomHookOutput,
 } from "@beep/repo-cli/commands/SchemaIdioms";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -33,15 +35,31 @@ const SOURCE = A.join(
   "\n"
 );
 
-const decodeHookOutput = S.decodeEffect(
-  S.fromJsonString(
-    S.Struct({
-      hookSpecificOutput: S.Struct({ hookEventName: S.Literal("PostToolUse"), additionalContext: S.String }),
-    })
-  )
+const COMMENTED = A.join(
+  [
+    'import * as S from "effect/Schema";',
+    "export const Wire = S.Struct({",
+    "  timeoutMs: S.Number,",
+    "});",
+    "/* Added documentation:",
+    "timeoutMs: S.Number,",
+    "*/",
+    "",
+  ],
+  "\n"
 );
 
+const COMMENT_EDIT = "/* Added documentation:\ntimeoutMs: S.Number,\n*/";
+
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+
+const OWNER_ONLY = 0o600;
+
+const decodeHookOutput = S.decodeEffect(S.fromJsonString(SchemaIdiomHookOutput));
+
 const encodePayload = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+const StateEntries = S.fromJsonString(S.Array(S.String));
 
 const contextOf = (output: O.Option<string>) =>
   O.match(output, {
@@ -58,39 +76,46 @@ const hintedFields = Effect.fn(function* (output: O.Option<string>) {
   });
 });
 
-const payload = (file: string, toolInput: Record<string, unknown>, session: O.Option<string> = O.some("s1")) =>
+const payload = (
+  toolName: string,
+  file: string,
+  toolInput: Record<string, unknown>,
+  session: O.Option<string> = O.some("s1")
+) =>
   encodePayload({
     ...O.match(session, { onNone: () => ({}), onSome: (session_id) => ({ session_id }) }),
-    tool_name: "Edit",
+    tool_name: toolName,
     tool_input: { file_path: file, ...toolInput },
   });
 
 const hook = Effect.fn(function* (
+  toolName: string,
   file: string,
   toolInput: Record<string, unknown>,
   state: O.Option<string>,
   session: O.Option<string> = O.some("s1")
 ) {
-  const stdin = yield* payload(file, toolInput, session);
+  const stdin = yield* payload(toolName, file, toolInput, session);
   return yield* schemaIdiomHookOutput(stdin, state);
 });
 
 const hookFields = Effect.fn(function* (
+  toolName: string,
   file: string,
   toolInput: Record<string, unknown>,
   state: O.Option<string>,
   session: O.Option<string> = O.some("s1")
 ) {
-  const output = yield* hook(file, toolInput, state, session);
+  const output = yield* hook(toolName, file, toolInput, state, session);
   return yield* hintedFields(output);
 });
 
-const sourceFile = Effect.gen(function* () {
+const sourceFile = Effect.fn(function* (source: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped();
   const file = path.join(root, "Wire.ts");
-  yield* fs.writeFileString(file, SOURCE);
+  yield* fs.writeFileString(file, source);
   return { root, file };
 });
 
@@ -116,77 +141,149 @@ const runHookMain = Effect.fn(function* (stdin: string, env: Record<string, stri
 it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
   it.effect("hints the text a Write, Edit or MultiEdit call wrote", () =>
     Effect.gen(function* () {
-      const { file } = yield* sourceFile;
-      const write = yield* hook(file, { content: SOURCE }, O.none(), O.none());
+      const { file } = yield* sourceFile(SOURCE);
+      const write = yield* hook("Write", file, { content: SOURCE }, O.none());
       const writeFields = yield* hintedFields(write);
       const writeContext = yield* contextOf(write);
       expect(writeFields).toEqual(["timeoutMs", "listenPort"]);
-      expect(O.map(writeContext, Str.startsWith("[schema-idiom] Advisory:"))).toEqual(O.some(true));
-      const edit = yield* hookFields(file, { new_string: "  listenPort: S.Int," }, O.none());
+      assertSome(O.map(writeContext, Str.startsWith("[schema-idiom] Advisory:")), true);
+      const edit = yield* hookFields("Edit", file, { old_string: "x", new_string: "  listenPort: S.Int," }, O.none());
       expect(edit).toEqual(["listenPort"]);
       const multiEdit = yield* hookFields(
+        "MultiEdit",
         file,
         { edits: [{ new_string: "  timeoutMs: S.Number," }, { new_string: "});" }] },
         O.none()
       );
       expect(multiEdit).toEqual(["timeoutMs"]);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("a hint is shown once per field per session", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const { root, file } = yield* sourceFile;
+      const { root, file } = yield* sourceFile(SOURCE);
       const state = O.some(path.join(root, "state.json"));
-      const first = yield* hookFields(file, { new_string: "  listenPort: S.Int," }, state);
+      const first = yield* hookFields("Edit", file, { new_string: "  listenPort: S.Int," }, state);
       expect(first).toEqual(["listenPort"]);
-      const again = yield* hook(file, { new_string: "  listenPort: S.Int," }, state);
-      expect(again).toEqual(O.none());
-      const wider = yield* hookFields(file, { content: SOURCE }, state);
+      const again = yield* hook("Edit", file, { new_string: "  listenPort: S.Int," }, state);
+      assertNone(again);
+      const wider = yield* hookFields("Write", file, { content: SOURCE }, state);
       expect(wider).toEqual(["timeoutMs"]);
-      const otherSession = yield* hookFields(file, { new_string: "  listenPort: S.Int," }, state, O.some("s2"));
+      const otherSession = yield* hookFields("Edit", file, { new_string: "  listenPort: S.Int," }, state, O.some("s2"));
       expect(otherSession).toEqual(["listenPort"]);
-    }).pipe(Effect.scoped)
+    })
+  );
+
+  it.effect("decodes only Edit, MultiEdit and Write payloads with a session", () =>
+    Effect.gen(function* () {
+      const { file } = yield* sourceFile(SOURCE);
+      assertNone(yield* hook("Read", file, {}, O.none()));
+      assertNone(yield* hook("Grep", file, { content: SOURCE }, O.none()));
+      assertNone(yield* hook("Write", file, { new_string: "  listenPort: S.Int," }, O.none()));
+      assertNone(yield* hook("Edit", file, { content: SOURCE }, O.none()));
+      assertNone(yield* hook("MultiEdit", file, { edits: [] }, O.none()));
+      assertNone(yield* hook("Write", file, { content: SOURCE }, O.none(), O.none()));
+      assertNone(yield* hook("Write", file, { content: SOURCE }, O.none(), O.some("")));
+      const control = yield* hookFields("Write", file, { content: SOURCE }, O.none());
+      expect(control).toEqual(["timeoutMs", "listenPort"]);
+    })
+  );
+
+  it.effect("an edit that only adds a comment repeating a field line hints nothing and consumes no key", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, file } = yield* sourceFile(COMMENTED);
+      const statePath = path.join(root, "state.json");
+      const state = O.some(statePath);
+      assertNone(yield* hook("Edit", file, { old_string: "/* old note */", new_string: COMMENT_EDIT }, state));
+      assertNone(yield* hook("MultiEdit", file, { edits: [{ new_string: COMMENT_EDIT }] }, state));
+      assertNone(yield* hook("Edit", file, { new_string: "timeoutMs: S.Number," }, state));
+      expect(yield* fs.exists(statePath)).toBe(false);
+      const write = yield* hookFields("Write", file, { content: COMMENTED }, state);
+      expect(write).toEqual(["timeoutMs"]);
+    })
   );
 
   it.effect("stays silent on paths it does not hint, bad payloads and missing files", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const { root } = yield* sourceFile;
-      const markdown = yield* hook(path.join(root, "README.md"), { content: "x" }, O.none());
-      const notJson = yield* schemaIdiomHookOutput("not json", O.none());
-      const noToolInput = yield* schemaIdiomHookOutput('{"tool_name":"Edit"}', O.none());
-      const missing = yield* hook(path.join(root, "Missing.ts"), { content: SOURCE }, O.none());
-      expect([markdown, notJson, noToolInput, missing]).toEqual([O.none(), O.none(), O.none(), O.none()]);
-    }).pipe(Effect.scoped)
+      const { root } = yield* sourceFile(SOURCE);
+      assertNone(yield* hook("Write", path.join(root, "README.md"), { content: "x" }, O.none()));
+      assertNone(yield* schemaIdiomHookOutput("not json", O.none()));
+      assertNone(yield* schemaIdiomHookOutput('{"tool_name":"Edit"}', O.none()));
+      assertNone(yield* hook("Write", path.join(root, "Missing.ts"), { content: SOURCE }, O.none()));
+    })
+  );
+
+  it.effect("persists only owner-only digests of the hint keys", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, file } = yield* sourceFile(SOURCE);
+      const statePath = path.join(root, "state.json");
+      const shown = yield* hookFields("Write", file, { content: SOURCE }, O.some(statePath), O.some("session-secret"));
+      expect(shown).toEqual(["timeoutMs", "listenPort"]);
+      const text = yield* fs.readFileString(statePath);
+      const entries = yield* S.decodeEffect(StateEntries)(text);
+      expect(A.length(entries)).toBe(2);
+      expect(A.every(entries, (entry) => SHA256_HEX.test(entry))).toBe(true);
+      expect(
+        A.filter([root, "session-secret", "timeoutMs", "listenPort"], (raw) => pipe(text, Str.includes(raw)))
+      ).toEqual([]);
+      const info = yield* fs.stat(statePath);
+      expect(info.mode & 0o777).toBe(OWNER_ONLY);
+    })
+  );
+
+  it.effect("discards legacy plaintext state entries and tightens an existing state file", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, file } = yield* sourceFile(SOURCE);
+      const statePath = path.join(root, "legacy.json");
+      const legacy = yield* S.encodeEffect(StateEntries)([`s1\t${file}\ttimeoutMs\tduration`]);
+      yield* fs.writeFileString(statePath, legacy, { mode: 0o644 });
+      yield* fs.chmod(statePath, 0o644);
+      const shown = yield* hookFields("Write", file, { content: SOURCE }, O.some(statePath));
+      expect(shown).toEqual(["timeoutMs", "listenPort"]);
+      const text = yield* fs.readFileString(statePath);
+      expect(pipe(text, Str.includes(root))).toBe(false);
+      const entries = yield* S.decodeEffect(StateEntries)(text);
+      expect(A.every(entries, (entry) => SHA256_HEX.test(entry))).toBe(true);
+      const info = yield* fs.stat(statePath);
+      expect(info.mode & 0o777).toBe(OWNER_ONLY);
+    })
   );
 
   it.effect("treats a corrupt or unwritable state file as empty", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const { root, file } = yield* sourceFile;
+      const { root, file } = yield* sourceFile(SOURCE);
       const corrupt = path.join(root, "corrupt.json");
       yield* fs.writeFileString(corrupt, "{ not an array");
-      const fromCorrupt = yield* hookFields(file, { content: SOURCE }, O.some(corrupt));
+      const fromCorrupt = yield* hookFields("Write", file, { content: SOURCE }, O.some(corrupt));
       expect(fromCorrupt).toEqual(["timeoutMs", "listenPort"]);
       const rewritten = yield* fs.readFileString(corrupt);
-      expect(rewritten).toContain("timeoutMs");
+      const entries = yield* S.decodeEffect(StateEntries)(rewritten);
+      expect(A.length(entries)).toBe(2);
       const unwritable = O.some(path.join(root, "absent", "state.json"));
-      const first = yield* hookFields(file, { content: SOURCE }, unwritable);
-      const second = yield* hookFields(file, { content: SOURCE }, unwritable);
+      const first = yield* hookFields("Write", file, { content: SOURCE }, unwritable);
+      const second = yield* hookFields("Write", file, { content: SOURCE }, unwritable);
       expect([first, second]).toEqual([
         ["timeoutMs", "listenPort"],
         ["timeoutMs", "listenPort"],
       ]);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("the hook program reads stdin and the state variable and prints one line", () =>
     Effect.gen(function* () {
       const path = yield* Path.Path;
-      const { root, file } = yield* sourceFile;
-      const stdin = yield* payload(file, { content: SOURCE });
+      const { root, file } = yield* sourceFile(SOURCE);
+      const stdin = yield* payload("Write", file, { content: SOURCE });
       const stated = { [SCHEMA_IDIOM_STATE_ENV]: path.join(root, "main-state.json") };
       const printed = yield* runHookMain(stdin, stated);
       expect(Str.endsWith("\n")(printed)).toBe(true);
@@ -199,6 +296,6 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
       expect(unstatedFields).toEqual(["timeoutMs", "listenPort"]);
       const empty = yield* runHookMain("", {});
       expect(empty).toBe("");
-    }).pipe(Effect.scoped)
+    })
   );
 });

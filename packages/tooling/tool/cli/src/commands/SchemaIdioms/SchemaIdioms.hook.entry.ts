@@ -10,9 +10,13 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunStdio from "@effect/platform-bun/BunStdio";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { schemaIdiomHookMain } from "./SchemaIdioms.hook.ts";
 
-BunRuntime.runMain(schemaIdiomHookMain.pipe(Effect.provide([BunFileSystem.layer, BunStdio.layer])), {
-  disableErrorReporting: true,
-});
+BunRuntime.runMain(
+  schemaIdiomHookMain.pipe(Effect.provide([BunFileSystem.layer, BunStdio.layer, Digest.layerWebCrypto])),
+  {
+    disableErrorReporting: true,
+  }
+);
