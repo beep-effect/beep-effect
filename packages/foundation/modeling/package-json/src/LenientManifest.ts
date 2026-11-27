@@ -38,8 +38,6 @@ import { PackageJsonSyntaxError } from "./PackageJsonFormat.ts";
 
 const $I = $PackageJsonId.create("LenientManifest");
 
-// ── Issue reporting ─────────────────────────────────────────────────────────
-
 /**
  * One degraded field from a lenient decode: the top-level `field` that did not
  * match its permissive shape, a human-readable description of the `expected`
@@ -99,13 +97,9 @@ export declare namespace LenientFieldIssue {
   export type Encoded = typeof LenientFieldIssue.Encoded;
 }
 
-// ── Permissive field shapes ─────────────────────────────────────────────────
-
 const StringRecord = S.Record(S.String, S.String);
 const UnknownRecord = S.Record(S.String, S.Unknown);
 const StringOrRecord = S.Union([S.String, UnknownRecord]);
-
-// ── The permissive-shape guards backing the sift ────────────────────────────
 
 const isString = P.isString;
 const isBoolean = P.isBoolean;
@@ -134,8 +128,7 @@ const booleanOrStringArrayGuard: FieldGuard = {
   test: S.is(BooleanOrStringListField),
 };
 
-// A Map, not a plain object: a manifest key like `"toString"` or
-// `"constructor"` must miss, not hit `Object.prototype`.
+// decision: rest-keys-stored-as-own-data
 const FIELD_GUARDS = HashMap.fromIterable<string, FieldGuard>([
   ["name", stringGuard],
   ["version", stringGuard],
@@ -197,17 +190,9 @@ const FIELD_GUARDS = HashMap.fromIterable<string, FieldGuard>([
   ["readme", stringGuard],
 ]);
 
-// ── The sift engine (pure) ──────────────────────────────────────────────────
-
-// Partition a raw manifest object: keys matching their permissive shape become
-// typed members; unknown keys AND malformed known keys flow verbatim into
-// `rest` (a malformed known field is treated as an unknown key), with each
-// degradation recorded as an issue. The field guards establish the constructor invariants.
 const sift = (raw: Record<string, unknown>): LenientManifest => {
   const known: Record<string, unknown> = {};
-  // Null-prototype for the same reason as the strict wire transform: an own
-  // `__proto__` key on a plain object would mutate the prototype instead of
-  // storing data.
+  // decision: rest-keys-stored-as-own-data
   const rest: Record<string, unknown> = { __proto__: null };
   const issues: Array<LenientFieldIssue> = [];
   for (const [key, value] of R.toEntries(raw)) {
@@ -228,8 +213,6 @@ const sift = (raw: Record<string, unknown>): LenientManifest => {
 
 const decodeRecord = S.decodeUnknownExit(UnknownRecord);
 const decodeJson = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
-
-// ── Model ───────────────────────────────────────────────────────────────────
 
 /**
  * **Details**

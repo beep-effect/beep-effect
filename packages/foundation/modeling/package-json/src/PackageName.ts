@@ -75,13 +75,7 @@ export class InvalidPackageNameError extends S.TaggedError<InvalidPackageNameErr
   }
 }
 
-// npm name grammar, written lookahead-free so `Arbitrary.schema` can derive a
-// generator: the native regex compiler in `effect/Arbitrary` rejects
-// `(?=`/`(?!` and would fall back to filtering random strings, none of which
-// is ever a package name. The remainder is URL-safe lowercase. Every accepted
-// name is valid for npm's `validate-npm-package-name` `validForOldPackages`
-// (W3-f): an unscoped name may not start with `.`, `_` or `-`, and the two
-// names npm reserves outright are excluded by a separate check.
+// decision: lookahead-free-package-name-grammar
 const UNSCOPED_RE = /^[a-z0-9][a-z0-9._-]*$/u;
 const SCOPED_RE = /^@[a-z0-9-][a-z0-9._-]*\/[a-z0-9-][a-z0-9._-]*$/u;
 const MAX_LENGTH = 214;
@@ -180,8 +174,6 @@ const PackageNameUnion = S.Union([ScopedPackageName, UnscopedPackageName]).pipe(
     description: "A valid npm package name, scoped or unscoped, with classification statics.",
   })
 );
-// TypeScript cannot extend a primitive union. Widen only the unused constructor
-// surface to its common string members, preserving every schema value/type role.
 const PackageNameBase: Omit<S.Opaque<PackageName, typeof PackageNameUnion, {}>, never> &
   (new (
     _: never

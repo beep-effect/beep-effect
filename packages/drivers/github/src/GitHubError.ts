@@ -36,6 +36,18 @@ const $I = $GithubId.create("GitHubError");
  * `alreadyExists` tells "someone else created it" apart from "that failed", so
  * an upsert needs no follow-up existence check.
  *
+ * - `notFound`: the resource is not there (404). Often not an error at all; see
+ *   the `*Option` reads.
+ * - `alreadyExists`: the resource already exists (a 422 or 409 saying so).
+ * - `rejected`: GitHub understood and refused: validation, policy, conflict.
+ * - `unauthorized`: credentials are missing, wrong, or lack the required scope.
+ * - `rateLimited`: a primary or secondary rate limit. Retryable, usually with a
+ *   server-advised delay.
+ * - `transport`: the request never got a usable answer: a 5xx, a network
+ *   failure, an abort. Retryable.
+ * - `decode`: a response arrived but did not match the schema it was decoded
+ *   against.
+ *
  * **Example** (Validate a structural error kind)
  *
  * ```ts
@@ -50,19 +62,12 @@ const $I = $GithubId.create("GitHubError");
  * @since 0.0.0
  */
 export const GitHubErrorKind = LiteralKit([
-  /** The resource is not there (404). Often not an error at all — see the `*Option` reads. */
   "notFound",
-  /** The resource already exists (422/409 saying so). What makes `upsert` implementable. */
   "alreadyExists",
-  /** GitHub understood and refused: validation, policy, conflict. */
   "rejected",
-  /** Credentials are missing, wrong, or lack the required scope. */
   "unauthorized",
-  /** A rate limit — primary or secondary. Retryable, usually with a server-advised delay. */
   "rateLimited",
-  /** The request never got a usable answer: 5xx, a network failure, an abort. Retryable. */
   "transport",
-  /** A response arrived but did not match the schema it was decoded against. */
   "decode",
 ]).pipe($I.annoteSchema("GitHubErrorKind", { description: "Why a GitHub call failed, as a value you can branch on." }));
 
@@ -75,6 +80,13 @@ export type GitHubErrorKind = typeof GitHubErrorKind.Type;
 
 /**
  * **Details**
+ *
+ * - `missing`: a resource the request referred to does not exist.
+ * - `missing_field`: a required parameter was not sent.
+ * - `invalid`: a parameter is badly formatted.
+ * - `already_exists`: another resource already has this value.
+ * - `unprocessable`: the parameters were invalid.
+ * - `custom`: no fixed meaning; read the entry's `message`.
  *
  * The complete documented set. Only `already_exists` earns its own
  * {@link GitHubErrorKind}; every other code classifies as `rejected`, and a
@@ -100,17 +112,11 @@ export type GitHubErrorKind = typeof GitHubErrorKind.Type;
  * @since 0.0.0
  */
 export const GitHubValidationCode = LiteralKit([
-  /** A resource the request referred to does not exist. */
   "missing",
-  /** A required parameter was not sent. */
   "missing_field",
-  /** A parameter is badly formatted. */
   "invalid",
-  /** Another resource already has this value. Classifies as `alreadyExists`. */
   "already_exists",
-  /** The parameters were invalid. */
   "unprocessable",
-  /** No fixed meaning: read the entry's `message`. */
   "custom",
 ]).pipe(
   $I.annoteSchema("GitHubValidationCode", {
@@ -427,6 +433,13 @@ export class GitHubError extends S.TaggedError<GitHubError, { readonly brand: un
    * The client supplies `Clock.currentTimeMillis`, which is the `TestClock`
    * under test.
    *
+   * **Gotchas**
+   *
+   * A 403 is GitHub's answer both to "you may not" and to "you have asked too
+   * often". Only the headers tell them apart: it classifies as `rateLimited`
+   * when they yield a delay (an exhausted budget's reset or a `retry-after`),
+   * and as `unauthorized` otherwise.
+   *
    * **Example** (Classify a server retry delay)
    *
    * ```ts
@@ -524,7 +537,6 @@ export class GitHubError extends S.TaggedError<GitHubError, { readonly brand: un
   }
 }
 
-/** What classification needs out of an unknown throwable. */
 interface Throwable {
   readonly headers: Readonly<Record<string, unknown>> | undefined;
   readonly reason: string;
@@ -538,18 +550,8 @@ const describeThrowable = (value: unknown): string =>
     () => "Unable to describe GitHub REST failure"
   );
 
-/**
- * Read an unknown throwable structurally.
- *
- * **Details**
- *
- * Deliberately structural rather than `instanceof RequestError`:
- * `@octokit/request-error` is a transitive dependency this package does not
- * declare, and importing a package you did not declare is how a peer closure
- * rots. The shape it throws — `{ status, response: { headers, data } }` — is
- * stable and public.
- */
 const readThrowable = (error: unknown): Throwable => {
+  // decision: structural-octokit-error-read
   if (!P.isObject(error)) {
     return { status: undefined, headers: undefined, reason: describeThrowable(error), validation: [] };
   }
@@ -569,15 +571,6 @@ const isStatus = S.is(S.Int);
 
 const asRecord = (value: unknown): Record<string, unknown> | undefined => (P.isObject(value) ? value : undefined);
 
-/**
- * GitHub answers some requests with an HTML error page whose body becomes a
- * multi-kilobyte "message".
- *
- * **Gotchas**
- *
- * An HTML body is never a useful reason string, and letting one through means
- * a log line with a whole web page in it.
- */
 const sanitizeReason = (message: string): string => {
   const trimmed = Str.trim(message);
   if (Str.startsWith("<")(trimmed) || trimmed.length > MAX_REASON_LENGTH) {
@@ -590,7 +583,6 @@ const sanitizeReason = (message: string): string => {
 
 const MAX_REASON_LENGTH = 500;
 
-/** GitHub's validation failures arrive as `data.errors[]` entries. */
 const readValidation = (data: Record<string, unknown> | undefined): ReadonlyArray<GitHubValidationEntry> => {
   const errors = data?.errors;
   if (!A.isArray(errors)) return [];
@@ -624,19 +616,8 @@ const stringField: {
 
 const ALREADY_EXISTS = "already exists";
 
-/** GitHub's documented validation-error code for a duplicate resource. */
 const ALREADY_EXISTS_CODE = "already_exists";
 
-/**
- * Kinds decided by the status code alone, once the status is known.
- *
- * **Details**
- *
- * A 403 is GitHub's answer to BOTH "you may not" and "you have asked too
- * often". Only the headers tell them apart: an exhausted budget carries a
- * zeroed remaining count or an explicit delay. A 422 or 409 needs the response
- * body, so it is decided by {@link saysAlreadyExists}.
- */
 const statusKind: {
   (facts: Throwable, status: number, retryAfterMillis: number | undefined): GitHubErrorKind;
   (status: number, retryAfterMillis: number | undefined): (facts: Throwable) => GitHubErrorKind;

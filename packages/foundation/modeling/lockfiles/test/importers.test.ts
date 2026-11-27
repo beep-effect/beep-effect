@@ -1,10 +1,3 @@
-// Per-format importer extraction: the `Lockfile.importers` field and the
-// `lockfile.importer(path)` keyed lookup. pnpm records `{ specifier, version }`
-// per importer dependency — the parser splits pnpm's peer-disambiguation
-// suffix off the version into `peerSuffix`; bun and npm record a specifier
-// only (the resolved version lives on package entries); yarn records no
-// importers at all.
-
 import { peerDeclarations } from "@beep/lockfiles/internal/shared";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
 import { assert, describe, it } from "@effect/vitest";
@@ -26,18 +19,16 @@ describe("Lockfile.importers", () => {
       Effect.gen(function* () {
         const lockfile = yield* parseFixture("pnpm/v1/pnpm-lock.yaml", "pnpm");
 
-        // The root importer "." is present and declares nothing.
-        const root = lockfile.importer(".");
+        const emptyRoot = lockfile.importer(".");
         assertSome(
-          O.map(root, (importer) => importer.dependencies.length),
+          O.map(emptyRoot, (importer) => importer.dependencies.length),
           0
         );
-        assert.strictEqual(O.getOrThrow(root).dependencies.length, 0);
+        assert.strictEqual(O.getOrThrow(emptyRoot).dependencies.length, 0);
 
         const core = O.getOrThrow(lockfile.importer("packages/core"));
         assert.strictEqual(core.path, "packages/core");
-        // dependencies (2) + devDependencies (1)
-        assert.strictEqual(core.dependencies.length, 3);
+        assert.strictEqual(core.dependencies.length, 3, "2 dependencies + 1 devDependency");
 
         const lodash = O.getOrThrow(core.dependency("lodash"));
         assert.strictEqual(lodash.specifier.raw, "4.17.21");
@@ -79,8 +70,7 @@ describe("Lockfile.importers", () => {
 
     it.effect("peer-disambiguation suffixes split off; link:/file: resolutions pass through verbatim", () =>
       Effect.gen(function* () {
-        // The exact literal from issue #165, nested-suffix chain included.
-        const content = A.join(
+        const nestedPeerSuffixDocument = A.join(
           [
             "lockfileVersion: '9.0'",
             "importers:",
@@ -102,21 +92,19 @@ describe("Lockfile.importers", () => {
           ],
           "\n"
         );
-        const lockfile = yield* Lockfile.parse(content, { format: "pnpm" });
+        const lockfile = yield* Lockfile.parse(nestedPeerSuffixDocument, { format: "pnpm" });
         const root = O.getOrThrow(lockfile.importer("."));
 
         const experimental = O.getOrThrow(root.dependency("@effect/experimental"));
         assert.strictEqual(experimental.version, "4.0.0-beta.101");
         assert.strictEqual(experimental.peerSuffix, "(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@8.1.1))");
 
-        // A suffix-free entry keeps its version and records no peerSuffix key.
         const effect = O.getOrThrow(root.dependency("effect"));
         assert.strictEqual(effect.version, "4.0.0-beta.101");
-        assert.isFalse(P.hasProperty(effect, "peerSuffix"));
+        assert.isFalse(P.hasProperty(effect, "peerSuffix"), "a suffix-free entry records no peerSuffix key");
 
-        // Non-version resolutions pass through untouched, no suffix field.
         const linked = O.getOrThrow(root.dependency("@local/utils"));
-        assert.strictEqual(linked.version, "link:packages/utils");
+        assert.strictEqual(linked.version, "link:packages/utils", "a non-version resolution passes through untouched");
         assert.isFalse(P.hasProperty(linked, "peerSuffix"));
 
         const vendored = O.getOrThrow(root.dependency("vendored"));
@@ -131,14 +119,15 @@ describe("Lockfile.importers", () => {
       Effect.gen(function* () {
         const lockfile = yield* parseFixture("bun/v1/bun.lock", "bun");
 
-        // The root workspace ("") becomes the "." importer.
         const root = O.getOrThrow(lockfile.importer("."));
-        assert.strictEqual(root.dependencies.length, 0);
+        assert.strictEqual(root.dependencies.length, 0, 'the root workspace ("") becomes the "." importer');
 
         const core = O.getOrThrow(lockfile.importer("packages/core"));
-        // 3 dependencies + 1 devDependency
-        assert.strictEqual(core.dependencies.length, 4);
-        assert.isTrue(A.every(core.dependencies, (d) => d.version === undefined));
+        assert.strictEqual(core.dependencies.length, 4, "3 dependencies + 1 devDependency");
+        assert.isTrue(
+          A.every(core.dependencies, (d) => d.version === undefined),
+          "bun records a specifier only; the resolved version lives on package entries"
+        );
 
         const react = O.getOrThrow(core.dependency("react"));
         assert.strictEqual(react.specifier._tag, "catalog");
@@ -158,10 +147,12 @@ describe("Lockfile.importers", () => {
         assert.strictEqual(ts.specifier.raw, "^5.3.0");
         assert.strictEqual(ts.version, undefined);
 
-        // 3 dependencies + 1 peerDependency + 1 optionalDependency.
         const core = O.getOrThrow(lockfile.importer("packages/core"));
-        assert.strictEqual(core.dependencies.length, 5);
-        assert.isTrue(A.every(core.dependencies, (d) => d.version === undefined));
+        assert.strictEqual(core.dependencies.length, 5, "3 dependencies + 1 peerDependency + 1 optionalDependency");
+        assert.isTrue(
+          A.every(core.dependencies, (d) => d.version === undefined),
+          "npm records a specifier only; the resolved version lives on package entries"
+        );
         assert.strictEqual(O.getOrThrow(core.dependency("react")).depType, "peerDependencies");
         assert.strictEqual(O.getOrThrow(core.dependency("fsevents")).depType, "optionalDependencies");
       })
