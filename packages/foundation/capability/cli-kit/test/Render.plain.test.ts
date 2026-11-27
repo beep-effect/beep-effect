@@ -46,8 +46,11 @@ describe("Render.plain: no escapes of any kind", () => {
         const out = yield* plain(composite({ codeAndPath: true }), overrides);
         assert.notInclude(out, ESC);
         assert.notInclude(out, "\u0007");
-        // Everything but line feeds: no control character remains, a tab included.
-        assert.notMatch(out, /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/);
+        assert.notMatch(
+          out,
+          /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/,
+          "no control character but a line feed remains, a tab included"
+        );
         assert.match(out, /red/, "the text around the escapes is kept");
         assert.match(out, /loneescape/);
       })

@@ -24,9 +24,12 @@ it.effect.prop(
       const once = renderPlain([Doc.verbatim(input)], ctx);
       const lines = pipe(sanitize(input), Str.replace(/\r\n|\r/g, "\n"), Str.split("\n"));
       const expected = A.join(lines, "\n");
-      // github-log neutralization is a separate, intentional normalization of untrusted commands.
       assert.strictEqual(renderPlain([Doc.verbatim(once)], ctx), once);
-      assert.strictEqual(once, expected);
+      assert.strictEqual(
+        once,
+        expected,
+        "plain does not neutralize: github-log's is a separate normalization of untrusted commands"
+      );
       assert.deepStrictEqual(
         Str.split(once, "\n"),
         Str.split(renderPlain([Doc.verbatim(pipe(once, Str.split("\n"), A.join("\n")))], ctx), "\n")

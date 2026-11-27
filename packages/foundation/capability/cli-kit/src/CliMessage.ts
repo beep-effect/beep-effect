@@ -67,6 +67,8 @@ export declare namespace CliMessageOptions {
   export type Encoded = typeof CliMessageOptions.Encoded;
 }
 
+const isVocabularyFirst = (args: IArguments): boolean => args[0] instanceof Status;
+
 /**
  * One-line status messages: a glyph and some text, themed for a person and plain for an agent.
  *
@@ -103,7 +105,8 @@ export abstract class CliMessage {
    * **Details**
    *
    * The stream defaults to stderr when the status ranks at or above `warning` in `vocab`, and stdout
-   * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr.
+   * otherwise, so a custom status follows its own rank: a `timeout` ranked 85 goes to stderr. The line is painted
+   * with the chosen stream's own colour, so a redirected stderr is not coloured because stdout is a terminal.
    *
    * **Example** (Construct a vocabulary status message)
    *
@@ -135,9 +138,7 @@ export abstract class CliMessage {
       options?: CliMessageOptions.Encoded
     ): (vocab: Status<N>) => Effect.fn.Return<void, never, CliTheme | Audience>;
   } = dual(
-    // The options are optional, so the arity cannot tell `status(vocab, name, text)` from the data-last
-    // `status(name, text, options)`: a vocabulary in first position is the data-first call.
-    (args) => args[0] instanceof Status,
+    isVocabularyFirst,
     Effect.fn("CliMessage.status")(function* <N extends string>(
       vocab: Status<N>,
       name: N,
@@ -149,16 +150,12 @@ export abstract class CliMessage {
       const def = vocab.def(name);
       const message = sanitize(text);
 
-      // The stream first, then the line painted with THAT stream's colour: a redirected stderr is not coloured
-      // because stdout is.
       const warning = vocab.def("warning").rank;
       const stream = options?.stream ?? (def.rank >= warning ? "stderr" : "stdout");
       const streamTheme = theme.forStream(stream);
 
       let line: string;
-      // An agent sees the theme at colour none: the same line, its glyph sanitised and unpainted.
       line = CliTheme.forAudience(streamTheme, audience.kind).status(vocab, name, message);
-      // The runner reads a log line as a command; this is the one place a message's text reaches it.
       if (yield* underGithubActions) line = CommandNeutralizer.text(line);
 
       yield* stream === "stderr" ? Console.error(line) : Console.log(line);

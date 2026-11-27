@@ -1,9 +1,3 @@
-// The package's import boundary, read from its own source text.
-//
-// Vite inlines every `src` module's raw text at transform time, so these walks touch no file system and run the same
-// under Node and Bun. Every specifier counts, `import type` included: a type-only import of `ink` would still make the
-// root's declarations need it. The `./ui` half of the port is deferred as `@beep/ink` (W4-m) and left the lab
-// with its own boundary.test.ts ui rules.
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,34 +7,33 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-const RAW = import.meta.glob<string>("../src/**/*.ts", { query: "?raw", import: "default", eager: true });
+const SOURCES_INLINED_BY_VITE = import.meta.glob<string>("../src/**/*.ts", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
 
-/** Source text by `src`-relative path (`"internal/layout.ts"`). */
 const SOURCE: Readonly<Record<string, string>> = R.fromEntries(
-  A.map(R.toEntries(RAW), ([key, text]) => [Str.slice("../src/".length)(key), text] as const)
+  A.map(R.toEntries(SOURCES_INLINED_BY_VITE), ([key, text]) => [Str.slice("../src/".length)(key), text] as const)
 );
 
 type Read = (module: string) => O.Option<string>;
 
-/** The source of a module the glob found. */
 const sourceOf = (module: string): string =>
   O.getOrThrowWith(R.get(SOURCE, module), () => new Error(`no source for ${module}`));
 const readSource: Read = (module) => R.get(SOURCE, module);
 
-/** The code of a module with its comments blanked, so a JSDoc example's import is not an edge. */
-const code = (text: string): string =>
+const withCommentsBlanked = (text: string): string =>
   pipe(text, Str.replace(/\/\*[\s\S]*?\*\//g, " "), Str.replace(/(^|[^:"'`])\/\/[^\n]*/g, "$1"));
 
 const SPECIFIER =
   /\b(?:import|export)\b[^"'`;]*?\bfrom\s*["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)|\bimport\s+["']([^"']+)["']/g;
 
-/** Every module a source names: static and type-only imports, re-exports, side-effect imports and `import("…")`. */
 const specifiersOf = (text: string): ReadonlyArray<string> =>
-  A.flatMap(A.fromIterable(Str.matchAll(SPECIFIER)(code(text))), (match) =>
+  A.flatMap(A.fromIterable(Str.matchAll(SPECIFIER)(withCommentsBlanked(text))), (match) =>
     O.toArray(O.firstSomeOf([O.fromUndefinedOr(match[1]), O.fromUndefinedOr(match[2]), O.fromUndefinedOr(match[3])]))
   );
 
-/** A relative specifier resolved against the importing module's `src`-relative path. */
 const resolveFrom = (module: string, specifier: string): string =>
   A.join(
     A.reduce(Str.split(specifier, "/"), A.dropRight(Str.split(module, "/"), 1), (path, part) =>
@@ -49,7 +42,6 @@ const resolveFrom = (module: string, specifier: string): string =>
     "/"
   );
 
-/** The modules reachable from `entry` along relative edges, and the bare specifiers they name. */
 const closure = (entry: string, read: Read = readSource) => {
   const modules = MutableHashSet.empty<string>();
   const bare = MutableHashSet.empty<string>();
@@ -70,16 +62,13 @@ const closure = (entry: string, read: Read = readSource) => {
   return { modules: A.sort(A.fromIterable(modules), Str.Order), bare: A.sort(A.fromIterable(bare), Str.Order) };
 };
 
-/** A package the root and `./testing` may never name: Ink, React, the lab `./ui`, a platform package or Node. */
 const isForbidden = (specifier: string): boolean =>
   /^(?:ink|react)(?:$|\/)|^@beep\/cli-kit\/ui(?:$|\/)|^@beep\/scratchpad(?:$|\/)|^@effect\/platform|^node:/.test(
     specifier
   );
 
-/** The test-double modules only `./testing` may reach. */
-const TESTING: ReadonlyArray<string> = ["CliTest.ts", "TestTerminal.ts", "testing.ts"];
+const TEST_DOUBLE_MODULES: ReadonlyArray<string> = ["CliTest.ts", "TestTerminal.ts", "testing.ts"];
 
-/** Every way the closure of `entries` breaks the root boundary, sorted. */
 const offences = (entries: ReadonlyArray<string>, read: Read = readSource): ReadonlyArray<string> =>
   A.sort(
     A.flatMap(entries, (entry) => {
@@ -98,7 +87,7 @@ const offences = (entries: ReadonlyArray<string>, read: Read = readSource): Read
     Str.Order
   );
 
-describe("cli-kit boundary", () => {
+describe("cli-kit import boundary, read from its own source text with no file system", () => {
   it("the walker reads the real tree, or it proves nothing", () => {
     assert.isAbove(R.size(SOURCE), 50, "the glob found the sources");
     const main = closure("index.ts").modules;
@@ -109,7 +98,7 @@ describe("cli-kit boundary", () => {
 
   it("nothing reachable from `.` is a test double; `./testing` reaches them", () => {
     assert.deepStrictEqual(
-      A.filter(closure("index.ts").modules, (module) => A.contains(TESTING, module)),
+      A.filter(closure("index.ts").modules, (module) => A.contains(TEST_DOUBLE_MODULES, module)),
       [],
       "test utilities belong behind ./testing"
     );
@@ -125,7 +114,8 @@ describe("cli-kit boundary", () => {
   });
 
   it("only CliLogger.ts names console, where it is a local bound to the Console service; nothing reads process", () => {
-    const naming = (pattern: RegExp) => A.filter(R.keys(SOURCE), (module) => pattern.test(code(sourceOf(module))));
+    const naming = (pattern: RegExp) =>
+      A.filter(R.keys(SOURCE), (module) => pattern.test(withCommentsBlanked(sourceOf(module))));
     assert.deepStrictEqual(naming(/\bconsole\b/), ["CliLogger.ts"]);
     assert.deepStrictEqual(naming(/\bprocess\s*\./), []);
   });

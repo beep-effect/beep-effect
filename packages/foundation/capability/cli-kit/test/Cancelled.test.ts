@@ -65,8 +65,7 @@ describe("Cancelled", () => {
     const cancelled = Cancelled.make({ reason: "escape" });
     assert.notInclude(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(cancelled), identity), "errorExitCode");
     assert.notInclude(A.join(Struct.keys(cancelled), ","), "errorExitCode");
-    // But core still finds it: `in` sees a prototype getter, and the code is read through it.
-    assert.isTrue(Runtime.errorExitCode in cancelled);
+    assert.isTrue(Runtime.errorExitCode in cancelled, "core still finds it: in sees a prototype getter");
     assert.strictEqual(Runtime.getErrorExitCode(cancelled), 130);
   });
 
@@ -92,14 +91,13 @@ describe("Cancelled", () => {
 });
 
 describe("a library that rewrites error.message cannot make these errors throw", () => {
-  // ES modules are strict, so assigning to a property that has only a getter throws a TypeError.
   it("assigning to message is a no-op, for both errors, and the line stays", () => {
     for (const error of [Cancelled.make({ reason: "escape" }), NotInteractive.make()]) {
       const line = error.message;
       assert.doesNotThrow(() => {
         error.message = "rewritten by a library";
       });
-      assert.strictEqual(error.message, line);
+      assert.strictEqual(error.message, line, "a strict-mode write to a getter-only property would throw a TypeError");
       assert.strictEqual(Str.includes("rewritten")(String(error)), false);
     }
   });
