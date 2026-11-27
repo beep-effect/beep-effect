@@ -55,7 +55,6 @@ export const SETTINGS = OutboxHandlerSettings.make({
   maxMessageAttachmentBytes: 1024,
 });
 
-/** Graph reports an attachment size that includes storage overhead, never the content length. */
 const GRAPH_SIZE_OVERHEAD = 200;
 
 const FILE_ATTACHMENT = "#microsoft.graph.fileAttachment";
@@ -85,7 +84,6 @@ export const storedDraft = GraphMessage.make({
   webLink: O.some("https://outlook.example.test/owa/?ItemID=draft-1"),
 });
 
-/** One attachment as the mailbox holds it. */
 type StoredFile = {
   readonly content: Uint8Array;
   readonly id: string;
@@ -113,35 +111,24 @@ export const fixtureFile = storedFile({ content: FIXTURE_CONTENT, name: "fixture
 
 type WorldState = {
   readonly appendFailsFor: ReadonlyArray<OutboxAuditRecord["_tag"]>;
-  /** Record kinds whose next append fails once; each entry is used up by one failure. */
   readonly appendFailsOnce: ReadonlyArray<OutboxAuditRecord["_tag"]>;
-  /** The RFC 5322 message id a create returns. */
   readonly createdInternetMessageId: O.Option<string>;
   readonly calls: ReadonlyArray<string>;
   readonly corruptUploads: boolean;
   readonly draft: GraphMessage;
   readonly event: GraphEvent;
-  /** When set, `getEvent` fails with it. */
   readonly eventFailure: O.Option<M365Error>;
   readonly failDownloads: boolean;
   readonly failAttachmentAt: O.Option<number>;
   readonly files: ReadonlyArray<StoredFile>;
-  /** Draft ids an earlier server run recorded creating, beyond what `records` holds. */
   readonly knownDraftIds: ReadonlyArray<string>;
-  /** When set, `listMessages` fails with it. */
   readonly listFailure: O.Option<M365Error>;
-  /** Message ids whose read fails with a transport error. */
   readonly failingMessageIds: ReadonlyArray<string>;
-  /** Message ids the mailbox no longer has: their read answers 404. */
   readonly missingMessageIds: ReadonlyArray<string>;
-  /** When set, a category write fails with it, such as a 412 for a message changed since it was read. */
   readonly categoryFailure: O.Option<M365Error>;
-  /** When set, reading the Deleted Items folder fails with it. */
   readonly mailFolderFailure: O.Option<M365Error>;
-  /** Mail other than the draft: `getMessage` finds it by id, `listMessages` by conversation. */
   readonly messages: ReadonlyArray<GraphMessage>;
   readonly nextId: number;
-  /** Whether a conversation listing reports a next page. */
   readonly pagedConversation: boolean;
   readonly pagedListing: boolean;
   readonly records: ReadonlyArray<OutboxAuditRecord>;
@@ -243,7 +230,6 @@ const StubM365Layer = Layer.effect(
           size: O.some(file.content.byteLength + GRAPH_SIZE_OVERHEAD),
         });
       }),
-      // A new draft starts with no attachments.
       createDraftMessage: Effect.fn("StubM365.createDraftMessage")(function* (request) {
         yield* called("createDraftMessage", request);
         yield* Ref.update(state, (current) => ({ ...current, files: [] }));
@@ -289,7 +275,6 @@ const StubM365Layer = Layer.effect(
         );
       }),
       getListItem: notScripted,
-      // Only the well-known Deleted Items folder is asked for.
       getMailFolder: Effect.fn("StubM365.getMailFolder")(function* (request) {
         yield* called("getMailFolder", request);
         const current = yield* Ref.get(state);
@@ -316,7 +301,6 @@ const StubM365Layer = Layer.effect(
       listDrives: notScripted,
       listEvents: notScripted,
       listMasterCategories: notScripted,
-      // Like Graph, the listing reports a size that is not the content length.
       listMessageAttachments: Effect.fn("StubM365.listMessageAttachments")(function* (request) {
         yield* called("listMessageAttachments", request);
         const current = yield* Ref.get(state);
@@ -333,7 +317,6 @@ const StubM365Layer = Layer.effect(
           ),
         });
       }),
-      // Answers only the conversation filter the basis reader sends, with OData's doubled quote.
       listMessages: Effect.fn("StubM365.listMessages")(function* (request) {
         yield* called("listMessages", request);
         const current = yield* Ref.get(state);
@@ -363,7 +346,6 @@ const StubM365Layer = Layer.effect(
         yield* called("updateEvent", request);
         return GraphEvent.make({ id: request.eventId });
       }),
-      // Like Graph with If-Match: the write answers 412 unless the change key is the stored one.
       updateMessageCategories: Effect.fn("StubM365.updateMessageCategories")(function* (request) {
         yield* called("updateMessageCategories", request);
         const current = yield* Ref.get(state);
@@ -444,7 +426,6 @@ const StubAuditLogLayer = Layer.effect(
 /** The bytes the synthetic attachment source yields for the path at `index`. */
 export const sourceContent = (index: number): Uint8Array => new Uint8Array(16).fill(index + 1);
 
-// One synthetic 16-byte attachment per path, named by the path's last segment.
 const StubAttachmentSourceLayer = Layer.effect(
   OutboxAttachmentSource,
   Effect.gen(function* () {

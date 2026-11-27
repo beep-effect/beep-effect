@@ -26,8 +26,7 @@ import type * as Documents from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/LegacySync.query");
-// The legacy tables only ever held the Box mirror.
-const provider = "box";
+const legacyMirrorProvider = "box";
 
 const readUnavailable =
   (operation: string) =>
@@ -106,7 +105,7 @@ export const LegacySyncReadModelLive = Layer.effect(
         const rows = yield* db
           .select()
           .from(syncItemTable)
-          .where(and(eq(syncItemTable.workspaceId, workspaceId), eq(syncItemTable.provider, provider)))
+          .where(and(eq(syncItemTable.workspaceId, workspaceId), eq(syncItemTable.provider, legacyMirrorProvider)))
           .orderBy(asc(syncItemTable.id))
           .pipe(readUnavailable("list sync items"));
         return yield* Effect.fromResult(Result.all(A.map(rows, fromSyncItemRow))).pipe(
@@ -120,7 +119,7 @@ export const LegacySyncReadModelLive = Layer.effect(
           .where(
             and(
               eq(syncOperationTable.workspaceId, workspaceId),
-              eq(syncOperationTable.provider, provider),
+              eq(syncOperationTable.provider, legacyMirrorProvider),
               eq(syncOperationTable.status, status)
             )
           )
@@ -137,7 +136,7 @@ export const LegacySyncReadModelLive = Layer.effect(
           .where(
             and(
               eq(syncConflictTable.workspaceId, workspaceId),
-              eq(syncConflictTable.provider, provider),
+              eq(syncConflictTable.provider, legacyMirrorProvider),
               eq(syncConflictTable.resolutionStatus, DomainSyncConflict.SyncConflictResolution.Enum.open)
             )
           )
@@ -164,7 +163,7 @@ export const LegacySyncReadModelLive = Layer.effect(
         const rows = yield* db
           .select()
           .from(syncCursorTable)
-          .where(and(eq(syncCursorTable.workspaceId, workspaceId), eq(syncCursorTable.provider, provider)))
+          .where(and(eq(syncCursorTable.workspaceId, workspaceId), eq(syncCursorTable.provider, legacyMirrorProvider)))
           .orderBy(asc(syncCursorTable.id))
           .limit(1)
           .pipe(readUnavailable("select sync cursor"));

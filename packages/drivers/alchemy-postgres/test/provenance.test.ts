@@ -35,25 +35,21 @@ class Note extends Domain.Aggregate("Note", {
 }) {}
 class Notes extends Domain.Model("Notes", { aggregates: [Note] }) {}
 
-/** Genesis import's legacy audit actor. */
 class GenesisActor extends Domain.RequestContext<GenesisActor>()(
   "Provenance/GenesisActor",
   S.Struct({ principal: S.String, sourceKind: S.String })
 ) {}
 
-/** The Session middleware's v1 request context: a string principal key and a source kind. */
 class SessionContext extends Domain.RequestContext<SessionContext>()(
   "Provenance/SessionContext",
   S.Struct({ version: S.tag(1), principalKey: S.String, sourceKind: S.String })
 ) {}
 
-/** An actor whose principal is not a string. */
 class NumericActor extends Domain.RequestContext<NumericActor>()(
   "Provenance/NumericActor",
   S.Struct({ principal: S.Finite, sourceKind: S.String })
 ) {}
 
-/** A request context no mapping names. */
 class TraceContext extends Domain.RequestContext<TraceContext>()(
   "Provenance/TraceContext",
   S.Struct({ principal: S.String, sourceKind: S.String })
@@ -84,13 +80,11 @@ const asTrace = Effect.provideService(TraceContext, { principal: "trace", source
 const StoredRow = S.Struct({ principal: S.NullOr(S.String), source_kind: S.NullOr(S.String) });
 const decodeStoredRows = S.decodeUnknownEffect(S.Array(StoredRow));
 
-/** Send one note to `id`; the caller provides the request context. */
 const send = Effect.fn("test.send")(function* (id: string) {
   const notes = yield* Note;
   return yield* notes.send(NoteId.make(id), WriteNote.make({ text: "hello" }));
 });
 
-/** Assert the provenance columns of the event rows of note `id` in `table`. */
 const rowsIn = (table: string) =>
   Effect.fn("test.rowsIn")(function* (id: string, expected: ReadonlyArray<typeof StoredRow.Type>) {
     const sql = yield* SqlClient.SqlClient;

@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/practice-mail-tagging",
-  "root": "apps/practice-mail-tagging",
-  "scopes": ["."]
-}

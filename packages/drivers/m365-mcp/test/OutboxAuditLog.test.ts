@@ -99,10 +99,9 @@ describe("@beep/m365-mcp outbox audit log", () => {
   );
 
   it("decodes a draft-created line written before pins existed with an empty basis", () => {
-    // The shape create_draft wrote before the basis field: no `basis` key.
-    const earlier =
+    const lineWithoutBasisKey =
       '{"_tag":"draft-created","at":"2030-01-15T12:00:00.000Z","attachments":[],"auditId":"audit-0","bcc":[],"cc":[],"draftId":"draft-1","subject":"Fixture subject","to":["first@example.test"],"version":1}';
-    const record = Result.getOrThrow(decodeLine(earlier));
+    const record = Result.getOrThrow(decodeLine(lineWithoutBasisKey));
 
     assert.isTrue(S.is(OutboxDraftCreatedRecord)(record));
     if (S.is(OutboxDraftCreatedRecord)(record)) {
@@ -128,7 +127,6 @@ describe("@beep/m365-mcp outbox audit log", () => {
       draftCreated(at, [], "cleared"),
       OutboxDraftBasisMarkedRecord.make({ at, auditId: "f", draftId: "cleared", fields: ["start"] }),
       OutboxDraftBasisClearedRecord.make({ at, auditId: "g", draftId: "cleared" }),
-      // A later draft-created record of the same draft wins and moves it to the end.
       draftCreated(february, [digest], "refused"),
     ]);
 
@@ -138,7 +136,8 @@ describe("@beep/m365-mcp outbox audit log", () => {
         ["marked", true, 0],
         ["cleared", false, 0],
         ["refused", false, 1],
-      ]
+      ],
+      "a later draft-created record of the same draft wins and moves it to the end"
     );
   });
 
@@ -326,8 +325,8 @@ describe("@beep/m365-mcp outbox audit log", () => {
 
         const found = yield* useLog(directory, (log) =>
           Effect.gen(function* () {
-            // What a crash in the middle of a write leaves: part of a record and no newline.
-            yield* fs.writeFileString(path.join(directory, "2030-01.jsonl"), '{"_tag":"draft-crea');
+            const tornFragmentNoNewline = '{"_tag":"draft-crea';
+            yield* fs.writeFileString(path.join(directory, "2030-01.jsonl"), tornFragmentNoNewline);
             yield* log.append(draftCreated(january, []));
             yield* log.append(
               OutboxEventCreatedRecord.make({
@@ -359,13 +358,12 @@ describe("@beep/m365-mcp outbox audit log", () => {
         const failure = yield* useLog(directory, (log) =>
           Effect.gen(function* () {
             yield* log.append(draftCreated(january, []));
-            // A read-only directory refuses a new month's file.
             yield* Effect.acquireRelease(fs.chmod(directory, 0o500), () => Effect.ignore(fs.chmod(directory, 0o700)));
             return yield* log.append(draftCreated(february, [])).pipe(Effect.flip);
           })
         );
 
-        assert.strictEqual(failure._tag, "OutboxAuditError");
+        assert.strictEqual(failure._tag, "OutboxAuditError", "a read-only directory refuses a new month's file");
         assert.strictEqual(failure.reason, "append");
       })
     );

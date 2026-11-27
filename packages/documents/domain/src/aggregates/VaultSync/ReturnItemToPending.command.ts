@@ -12,6 +12,10 @@ import * as V from "./Values.ts";
 /**
  * ReturnItemToPending vault sync contract.
  *
+ * **Details**
+ *
+ * `type` is set when a reviewed move or rename overrides the re-push type with its corrective operation.
+ *
  * **Example** (Build a command for dispatch)
  * ```ts
  * import * as V from "@beep/documents-domain/aggregates/VaultSync";
@@ -23,7 +27,6 @@ import * as V from "./Values.ts";
  */
 export class ReturnItemToPending extends Domain.Command("ReturnItemToPending", {
   target: V.ItemId,
-  // A reviewed move or rename overrides the re-push type with its corrective operation.
   input: { operationId: V.OperationId, type: S.optionalKey(V.OperationType) },
   events: [E.ItemReturnedToPending],
   rejects: [SyncRuleViolation],

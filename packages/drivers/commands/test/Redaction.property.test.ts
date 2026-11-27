@@ -26,13 +26,12 @@ it.effect.prop(
   [Arbitrary.schema(S.String)],
   ([value]) =>
     Effect.sync(() => {
-      // The prefix makes every secret disjoint from both the marker and safe framing.
-      const secret = `token-${value}`;
-      const secrets = [Redacted.make(secret)];
-      const scrubbed = Redaction.apply(`before:${secret}:after`, secrets);
+      const markerDisjointSecret = `token-${value}`;
+      const secrets = [Redacted.make(markerDisjointSecret)];
+      const scrubbed = Redaction.apply(`before:${markerDisjointSecret}:after`, secrets);
       assert.strictEqual(scrubbed, "before:***:after");
       assert.strictEqual(Redaction.apply(scrubbed, secrets), scrubbed);
-      assert.deepStrictEqual(Redaction.applyArgs([secret, "safe"], secrets), ["***", "safe"]);
+      assert.deepStrictEqual(Redaction.applyArgs([markerDisjointSecret, "safe"], secrets), ["***", "safe"]);
     }),
   runs
 );

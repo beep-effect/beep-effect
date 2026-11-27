@@ -39,7 +39,6 @@ import type { LaneRepository, LaneRow, LanesLoaded } from "./Lanes.ts";
 
 const KEYS_HELP = " ↑↓ move · / filter · enter expand · y copy path · p copy PR · q quit ";
 
-// Props of `LanesBoard`.
 interface LanesBoardProps {
   readonly cols: number;
   readonly now: DateTime.Utc;
@@ -48,7 +47,6 @@ interface LanesBoardProps {
   readonly view: BoardView;
 }
 
-// The lanes a view shows, in board order, after the filter.
 const visibleLanes =
   (view: BoardView) =>
   (snapshot: LanesSnapshot): ReadonlyArray<LaneRow> =>
@@ -114,14 +112,14 @@ const detailLines = (
     : A.map([head, `next: ${lane.next}`, `checkout: ${lane.checkout}`], fit(inner));
 };
 
-// The `/filter` line, shown while typing a filter or while one is kept.
 const filterLine = (view: BoardView): O.Option<string> =>
   view.filtering || Str.isNonEmpty(view.filter) ? O.some(`/${view.filter}${view.filtering ? "▏" : ""}`) : O.none();
 
 const corruptLine = (loaded: LanesLoaded): O.Option<string> =>
   loaded.corrupt > 0 ? O.some(`! ${loaded.corrupt} ledger row(s) could not be read and are not shown`) : O.none();
 
-// Rows left for the list: the body less the detail pane (its lines and a rule) and one row per banner shown.
+const detailPaneRuleRows = 1;
+
 const listHeightOf = (
   height: number,
   detail: O.Option<ReadonlyArray<string>>,
@@ -130,7 +128,7 @@ const listHeightOf = (
   Math.max(
     1,
     height -
-      O.match(detail, { onNone: () => 0, onSome: (lines) => A.length(lines) + 1 }) -
+      O.match(detail, { onNone: () => 0, onSome: (lines) => A.length(lines) + detailPaneRuleRows }) -
       A.length(A.getSomes(banners))
   );
 
@@ -142,7 +140,6 @@ const emptyMessage = (loaded: LanesLoaded, view: BoardView): string =>
 const marker = (lane: LaneRow, selected: boolean): string =>
   selected ? ">" : LaneState.is.blocked(lane.state) ? "!" : " ";
 
-// One optional single-line banner, cut to the frame.
 const Banner = ({
   line,
   color,
@@ -250,10 +247,9 @@ const LoadedBody = ({
   );
 };
 
-// Draw the board for a snapshot and a view. Pure: same props, same frame.
 const LanesBoard = ({ snapshot, now, view, cols, rows }: LanesBoardProps): ReactNode => {
-  // Border (2) and horizontal padding (2).
-  const inner = Math.max(10, cols - 4);
+  const borderAndPaddingCells = 4;
+  const inner = Math.max(10, cols - borderAndPaddingCells);
   const height = Math.max(1, rows - 2);
   return (
     <Box

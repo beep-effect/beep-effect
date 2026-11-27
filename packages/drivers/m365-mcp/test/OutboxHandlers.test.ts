@@ -65,12 +65,11 @@ const isToolError = S.is(OutboxToolError);
 const isDraftCreated = S.is(OutboxDraftCreated);
 const isDraftView = S.is(OutboxDraftView);
 
-// The expectation restates the content length (16), never the size Graph reports (216).
 const sendParams = Effect.gen(function* () {
   return {
     draftId: DRAFT_ID,
     expect: {
-      attachments: [{ name: "fixture.pdf", sha256: yield* sha256Of(FIXTURE_CONTENT), size: 16 }],
+      attachments: [{ name: "fixture.pdf", sha256: yield* sha256Of(FIXTURE_CONTENT), size: FIXTURE_CONTENT.length }],
       bcc: [],
       cc: ["COPY@example.test"],
       subject: " Fixture subject ",
@@ -135,7 +134,6 @@ const requestMessage = conversationMessage({
 
 type PinRefInput = typeof OutboxBasisPinRef.Encoded;
 
-// What the caller read, as it passes the pins: the view of `pinnedEvent` and `requestMessage`.
 const eventBasis: ReadonlyArray<PinRefInput> = [
   {
     id: EVENT_ID,
@@ -165,7 +163,6 @@ const createWithBasis = Effect.fn("createWithBasis")(function* (basis: ReadonlyA
   return yield* head(handle);
 });
 
-// The verdict, and per pin either the changed fields or the status tag.
 const basisOfDraft = Effect.gen(function* () {
   const toolkit = yield* OutboxToolkit;
   const handle = yield* toolkit.handle("m365_outbox_get_draft", { draftId: DRAFT_ID });
@@ -386,7 +383,6 @@ describe("@beep/m365-mcp outbox handlers", () => {
 
         yield* world.script({ draft: { ...storedDraft, subject: O.some("Edited in Outlook") } });
         const subject = yield* refusedWith;
-        // Same name and same reported size, different bytes.
         yield* world.script({ draft: storedDraft, files: [swapped] });
         const digest = yield* refusedWith;
         yield* world.script({ files: [fixtureFile, added] });
@@ -413,7 +409,11 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const calls = yield* world.calls;
 
         assert.deepStrictEqual(subject, ["refused", ["subject"]]);
-        assert.deepStrictEqual(digest, ["refused", ["attachment-digest"]]);
+        assert.deepStrictEqual(
+          digest,
+          ["refused", ["attachment-digest"]],
+          "same name and reported size, different bytes"
+        );
         assert.deepStrictEqual(extra, ["refused", ["attachments"]]);
         assert.deepStrictEqual(removed, ["refused", ["attachments"]]);
         assert.deepStrictEqual(reference, ["refused", ["attachments"]]);
@@ -426,11 +426,10 @@ describe("@beep/m365-mcp outbox handlers", () => {
         assert.deepStrictEqual(undownloadable, ["refused", ["attachments"]]);
         assert.deepStrictEqual(tags(records), A.replicate("send-outcome", 12));
         assert.deepStrictEqual(sends(calls), []);
-        // Subject, swap, extra (2 files) and the failing download: 5 attempts. Nothing is downloaded once a
-        // limit or an unverifiable attachment is seen.
         assert.lengthOf(
           A.filter(calls, (call) => call === "downloadMessageAttachment"),
-          5
+          5,
+          "subject, swap, extra (2 files) and the failing download; nothing downloads past a limit or an unverifiable attachment"
         );
       })
     );
@@ -441,7 +440,6 @@ describe("@beep/m365-mcp outbox handlers", () => {
       "refuses with not-created-here alone, reads and downloads nothing, and records one refused outcome",
       Effect.fnUntraced(function* () {
         const world = yield* OutboxWorld;
-        // The stored draft matches the expectation in every field; only the creation record is missing.
         yield* world.script({ knownDraftIds: [] });
 
         const output = yield* send;
@@ -451,7 +449,11 @@ describe("@beep/m365-mcp outbox handlers", () => {
         assert.isTrue(isSendResult(output.result));
         if (isSendResult(output.result)) {
           assert.strictEqual(output.result.outcome, "refused");
-          assert.deepStrictEqual(output.result.mismatches, ["not-created-here"]);
+          assert.deepStrictEqual(
+            output.result.mismatches,
+            ["not-created-here"],
+            "the stored draft matches in every field; only the creation record is missing"
+          );
           assert.isTrue(output.result.auditRecorded);
         }
         const calls13 = yield* world.calls;
@@ -463,13 +465,16 @@ describe("@beep/m365-mcp outbox handlers", () => {
           [["send-outcome", "refused", ["not-created-here"]]]
         );
 
-        // A creation record permits checking, but cannot authorize an unbound send.
         yield* world.script({ records: [draftCreatedRecord([])] });
         const own = yield* send;
 
         assert.isTrue(isSendResult(own.result) && own.result.outcome === "refused");
         if (isSendResult(own.result)) {
-          assert.deepStrictEqual(own.result.mismatches, ["version-unbound"]);
+          assert.deepStrictEqual(
+            own.result.mismatches,
+            ["version-unbound"],
+            "a creation record permits checking but cannot authorize an unbound send"
+          );
         }
         const calls14 = yield* world.calls;
         assert.deepStrictEqual(sends(calls14), []);
@@ -551,9 +556,12 @@ describe("@beep/m365-mcp outbox handlers", () => {
 
         assert.isFalse(created.isFailure);
         assert.isFalse(updated.isFailure);
-        // The update reads the event before it changes it.
         const calls21 = yield* world.calls;
-        assert.deepStrictEqual(calls21, ["createEvent", "getEvent", "updateEvent"]);
+        assert.deepStrictEqual(
+          calls21,
+          ["createEvent", "getEvent", "updateEvent"],
+          "the update reads the event before it changes it"
+        );
         const userIds22 = yield* world.userIds;
         assert.deepStrictEqual(userIds22, A.replicate(O.some(MAILBOX), 3));
         const records23 = yield* world.records;
@@ -583,8 +591,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
           id: EVENT_ID,
         });
 
-        // An attendee-less event that exists in the mailbox but has no creation record here.
-        const foreign = yield* updateEvent;
+        const uncreatedAttendeelessEvent = yield* updateEvent;
         yield* world.script({ event: meeting, records: [eventCreatedRecord] });
         const gainedAttendee = yield* updateEvent;
         const refusedCalls = yield* world.calls;
@@ -592,8 +599,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
         yield* world.script({ event: GraphEvent.make({ attendees: O.some([]), id: EVENT_ID }) });
         const own = yield* updateEvent;
 
-        assert.isTrue(foreign.isFailure);
-        assertSome(reasonOf(foreign), "not-created-here");
+        assert.isTrue(uncreatedAttendeelessEvent.isFailure);
+        assertSome(reasonOf(uncreatedAttendeelessEvent), "not-created-here");
         assert.isTrue(gainedAttendee.isFailure);
         assertSome(reasonOf(gainedAttendee), "has-attendees");
         if (isToolError(gainedAttendee.result)) {
@@ -627,19 +634,18 @@ describe("@beep/m365-mcp outbox handlers", () => {
           );
         const firstInvocation = failed(toolkit.handle("m365_outbox_get_draft", { draftId: DRAFT_ID }));
         const sendParams1 = yield* sendParams;
-        const invocations = [
+        const invocationsDeleteLast = [
           ["m365_outbox_get_draft", firstInvocation],
           ["m365_outbox_send_draft", failed(toolkit.handle("m365_outbox_send_draft", sendParams1))],
           ["m365_outbox_create_event", failed(toolkit.handle("m365_outbox_create_event", eventParams))],
           ["m365_outbox_update_event", failed(toolkit.handle("m365_outbox_update_event", { eventId: EVENT_ID }))],
           ["m365_outbox_create_draft", failed(toolkit.handle("m365_outbox_create_draft", createDraftParams))],
           ["m365_outbox_check_drafts", failed(toolkit.handle("m365_outbox_check_drafts", {}))],
-          // Last: it removes the draft the other tools read.
           ["m365_outbox_delete_draft", failed(toolkit.handle("m365_outbox_delete_draft", { draftId: DRAFT_ID }))],
         ] as const;
 
         const observed = yield* Effect.forEach(
-          invocations,
+          invocationsDeleteLast,
           ([name, invocation]) =>
             Effect.gen(function* () {
               const before = yield* sendCalls;
@@ -684,8 +690,11 @@ describe("@beep/m365-mcp outbox handlers", () => {
             ["event"]
           );
         }
-        // The pin is read before Graph is asked to create anything.
-        assert.deepStrictEqual(A.take(calls, 2), ["getEvent", "createDraftMessage"]);
+        assert.deepStrictEqual(
+          A.take(calls, 2),
+          ["getEvent", "createDraftMessage"],
+          "the pin is read before Graph is asked to create anything"
+        );
         const record = A.findFirst(records, isDraftCreatedRecord);
         assertSome(
           O.map(record, ({ basis }) =>
@@ -699,7 +708,6 @@ describe("@beep/m365-mcp outbox handlers", () => {
         );
 
         const unchanged = yield* basisOfDraft;
-        // A new reminder and a new change key are outside the view.
         yield* world.script({
           event: GraphEvent.make({
             ...pinnedEvent,
@@ -707,7 +715,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
             reminderMinutesBeforeStart: O.some(60),
           }),
         });
-        const reminderEdited = yield* basisOfDraft;
+        const reminderAndChangeKeyEdited = yield* basisOfDraft;
         yield* world.script({
           event: GraphEvent.make({ ...pinnedEvent, start: eventAt("2030-01-15T08:00:00.0000000") }),
         });
@@ -720,7 +728,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const deleted = yield* basisOfDraft;
 
         assertSome(unchanged, ["pinned-current", ["Current"]]);
-        assertSome(reminderEdited, ["pinned-current", ["Current"]]);
+        assertSome(reminderAndChangeKeyEdited, ["pinned-current", ["Current"]]);
         assertSome(moved, ["pinned-stale", [["start"]]]);
         assertSome(failed, ["pinned-unverified", ["Unreadable"]]);
         assertSome(deleted, ["pinned-stale", ["Gone"]]);
@@ -765,14 +773,12 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const reasonAndMessage = (result: unknown) =>
           isToolError(result) ? [O.getOrElse(result.reason, () => ""), result.message] : [];
 
-        // The event moved between the caller's read and creation.
         yield* world.script({
           event: GraphEvent.make({ ...pinnedEvent, start: eventAt("2030-01-15T08:00:00.0000000") }),
         });
         const moved = yield* createWithBasis(eventBasis);
         const callsAfterMoved = yield* world.calls;
         const recordsAfterMoved = yield* world.records;
-        // A reply from another sender arrived between the caller's read and creation.
         yield* world.script({
           calls: [],
           messages: [
@@ -782,7 +788,6 @@ describe("@beep/m365-mcp outbox handlers", () => {
         });
         const replied = yield* createWithBasis(messageBasis);
         const callsAfterReplied = yield* world.calls;
-        // Only a reminder, a category and the change key changed: outside the named view.
         yield* world.script({
           calls: [],
           event: GraphEvent.make({
@@ -822,7 +827,6 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const output = yield* createWithBasis(messageBasis);
         assert.isFalse(output.isFailure);
 
-        // Filed into another folder: a new Graph id, the same message id.
         yield* world.script({ calls: [], messages: [GraphMessage.make({ ...requestMessage, id: "request-moved" })] });
         const moved = yield* basisOfDraft;
         const recheckCalls = yield* world.calls;
@@ -842,8 +846,11 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const otherReply = yield* basisOfDraft;
 
         assertSome(moved, ["pinned-current", ["Current"]]);
-        // The one getMessage is the draft's own read; the pin costs one list call and no get by id.
-        assert.deepStrictEqual(recheckCalls, ["getMessage", "listMessageAttachments", "listMessages"]);
+        assert.deepStrictEqual(
+          recheckCalls,
+          ["getMessage", "listMessageAttachments", "listMessages"],
+          "the one getMessage is the draft's own read; the pin costs one list call and no get by id"
+        );
         assertSome(ownReply, ["pinned-current", ["Current"]]);
         assertSome(laterDraft, ["pinned-current", ["Current"]]);
         assertSome(otherReply, ["pinned-stale", [["newestOtherReply"]]]);
@@ -873,8 +880,11 @@ describe("@beep/m365-mcp outbox handlers", () => {
 
     for (const tool of R.values(OutboxToolkit.tools)) {
       const keys = parameterKeys(tool.parametersSchema);
-      // check_drafts takes no parameter at all; every other tool takes some.
-      assert.strictEqual(A.isReadonlyArrayEmpty(keys), tool.name === "m365_outbox_check_drafts", tool.name);
+      assert.strictEqual(
+        A.isReadonlyArrayEmpty(keys),
+        tool.name === "m365_outbox_check_drafts",
+        `${tool.name}: only check_drafts takes no parameter`
+      );
       assert.deepStrictEqual(A.intersection(keys, forbidden), [], tool.name);
     }
   });

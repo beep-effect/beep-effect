@@ -88,8 +88,6 @@ const initializeRequest = frame(
 const initializedNotification = frame(JsonRpcMessage.make({ method: "notifications/initialized" }));
 const listRequest = frame(JsonRpcMessage.make({ id: 2, method: "tools/list", params: {} }));
 
-// Sends `initialize` (2025-11-25), `notifications/initialized` and `tools/list` to a built stdio
-// server the way Claude Code and Claude Desktop open one, and returns everything it wrote.
 const handshake = Effect.fnUntraced(function* <E>(
   serverOver: (stdio: Layer.Layer<Stdio.Stdio>) => Layer.Layer<never, E>
 ) {

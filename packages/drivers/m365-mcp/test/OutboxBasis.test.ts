@@ -31,16 +31,15 @@ const OBSERVED_AT = DateTime.makeUnsafe("2030-01-10T12:00:00Z");
 const graphInstant = (instant: { readonly dateTime: string; readonly timeZone: string }) =>
   GraphDateTimeTimeZone.makeOption({ dateTime: O.some(instant.dateTime), timeZone: O.some(instant.timeZone) });
 
-// What Graph stores beside the view: none of it may change the comparison.
-const Outside = S.Struct({
+const StoredOutsideView = S.Struct({
   categories: S.Array(S.Literals(["Docket", "Client", "Billing"])).check(S.isMaxLength(3)),
   changeKey: S.NonEmptyString,
   isReminderOn: S.Boolean,
   reminderMinutesBeforeStart: S.Int.check(S.isBetween({ minimum: 0, maximum: 10080 })),
 });
-type Outside = typeof Outside.Type;
+type StoredOutsideView = typeof StoredOutsideView.Type;
 
-const graphEventOf = (view: OutboxEventView, outside: Outside): GraphEvent =>
+const graphEventOf = (view: OutboxEventView, outside: StoredOutsideView): GraphEvent =>
   GraphEvent.make({
     categories: O.some(outside.categories),
     changeKey: O.some(outside.changeKey),
@@ -119,8 +118,7 @@ const replyIn = (page: ReadonlyArray<GraphMessage>) =>
     O.flatMap((view) => view.newestOtherReply)
   );
 
-// Messages that arrive after the pinned one and are not replies: drafts, and mail the mailbox sent.
-const Noise = S.Array(
+const LaterNonReplies = S.Array(
   S.Struct({
     draft: S.Boolean,
     minutesLater: S.Int.check(S.isBetween({ minimum: 1, maximum: 100000 })),
@@ -128,7 +126,7 @@ const Noise = S.Array(
   })
 ).check(S.isMaxLength(6));
 
-const noiseOf = (noise: typeof Noise.Type): ReadonlyArray<GraphMessage> =>
+const noiseOf = (noise: typeof LaterNonReplies.Type): ReadonlyArray<GraphMessage> =>
   A.map(noise, (entry, index) =>
     message({
       from: entry.draft ? "counsel@example.test" : entry.shouting ? Str.toUpperCase(MAILBOX) : MAILBOX,
@@ -143,7 +141,7 @@ const noiseOf = (noise: typeof Noise.Type): ReadonlyArray<GraphMessage> =>
 describe("@beep/m365-mcp outbox basis", () => {
   it.prop(
     "an event edit outside the named view (categories, reminder, change key) is Current",
-    [Arbitrary.schema(OutboxEventView), Arbitrary.schema(Outside), Arbitrary.schema(Outside)],
+    [Arbitrary.schema(OutboxEventView), Arbitrary.schema(StoredOutsideView), Arbitrary.schema(StoredOutsideView)],
     ([view, before, after]) => {
       const pinned = viewOf(graphEventOf(view, before));
       const status = compareBasisPin(eventPin(pinned), eventNow(viewOf(graphEventOf(view, after))));
@@ -155,7 +153,7 @@ describe("@beep/m365-mcp outbox basis", () => {
 
   it.prop(
     "an edit to any named event field is Changed naming exactly that field",
-    [Arbitrary.schema(OutboxEventView), Arbitrary.schema(Outside), Arbitrary.schema(EventField)],
+    [Arbitrary.schema(OutboxEventView), Arbitrary.schema(StoredOutsideView), Arbitrary.schema(EventField)],
     ([view, outside, field]) => {
       const now = viewOf(graphEventOf(editEvent(view, field), outside));
       const status = compareBasisPin(eventPin(viewOf(graphEventOf(view, outside))), eventNow(now));
@@ -170,7 +168,7 @@ describe("@beep/m365-mcp outbox basis", () => {
 
   it.prop(
     "a later draft or a later message from the mailbox leaves a message pin Current",
-    [Arbitrary.schema(Noise)],
+    [Arbitrary.schema(LaterNonReplies)],
     ([noise]) => {
       const pinned = O.getOrThrow(messageViewOf([PINNED], pinnedTarget));
       const now = O.getOrThrow(messageViewOf(A.appendAll([PINNED], noiseOf(noise)), pinnedTarget));
@@ -223,12 +221,15 @@ describe("@beep/m365-mcp outbox basis", () => {
     );
     assert.isTrue(OutboxBasisStatus.guards.Current(compareBasisPin(eventPin(view), eventNow(viewOf(allDay)))));
 
-    // The same wall-clock time in another zone is another instant: no conversion makes them equal.
     const otherZone = OutboxEventView.make({
       ...view,
       start: OutboxEventInstant.make({ dateTime: view.start.dateTime, timeZone: "Pacific Standard Time" }),
     });
-    assert.deepStrictEqual(changedFields(compareBasisPin(eventPin(view), eventNow(otherZone))), ["start"]);
+    assert.deepStrictEqual(
+      changedFields(compareBasisPin(eventPin(view), eventNow(otherZone))),
+      ["start"],
+      "the same wall-clock time in another zone is another instant"
+    );
   });
 
   it("reads an event without a start or end as no view, and defaults the missing fields", () => {
@@ -267,28 +268,28 @@ describe("@beep/m365-mcp outbox basis", () => {
       replyIn([PINNED, counsel("first", "2030-01-11T09:00:00Z"), counsel("newest", "2030-01-12T09:00:00Z")]),
       "<newest@example.test>"
     );
-    // Instants, not strings: an offset that sorts lower as text is the later message.
-    assertSome(
-      replyIn([PINNED, counsel("utc", "2030-01-11T09:00:00Z"), counsel("offset", "2030-01-11T05:30:00-05:00")]),
-      "<offset@example.test>"
-    );
-    // A message without a sender is another sender; one without a readable receipt time is no reply.
-    assertSome(
-      replyIn([PINNED, message({ id: "anonymous", received: "2030-01-11T09:00:00Z" })]),
-      "<anonymous@example.test>"
-    );
-    assertNone(replyIn([PINNED, counsel("undated", "not a date"), message({ from: "x@example.test", id: "none" })]));
-    // A pinned message without a receipt time sorts before every reply.
-    assertSome(
-      pipe(
-        messageViewOf(
-          [message({ from: "counsel@example.test", id: "request" }), counsel("any", "2020-01-01T00:00:00Z")],
-          pinnedTarget
-        ),
-        O.flatMap((view) => view.newestOtherReply)
+    const laterOffsetSortsLowerAsText = replyIn([
+      PINNED,
+      counsel("utc", "2030-01-11T09:00:00Z"),
+      counsel("offset", "2030-01-11T05:30:00-05:00"),
+    ]);
+    assertSome(laterOffsetSortsLowerAsText, "<offset@example.test>");
+    const senderlessIsAnotherSender = replyIn([PINNED, message({ id: "anonymous", received: "2030-01-11T09:00:00Z" })]);
+    assertSome(senderlessIsAnotherSender, "<anonymous@example.test>");
+    const undatedIsNoReply = replyIn([
+      PINNED,
+      counsel("undated", "not a date"),
+      message({ from: "x@example.test", id: "none" }),
+    ]);
+    assertNone(undatedIsNoReply);
+    const undatedPinSortsFirst = pipe(
+      messageViewOf(
+        [message({ from: "counsel@example.test", id: "request" }), counsel("any", "2020-01-01T00:00:00Z")],
+        pinnedTarget
       ),
-      "<any@example.test>"
+      O.flatMap((view) => view.newestOtherReply)
     );
+    assertSome(undatedPinSortsFirst, "<any@example.test>");
   });
 
   it("names every field of the pinned kind when the observation is of the other kind", () => {

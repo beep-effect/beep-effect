@@ -305,7 +305,6 @@ const mirrorLayer = (fake: FakeBoxHarness, config: BoxMirrorConfigValue = defaul
     Layer.provide(Layer.merge(Box.makeLayerFromClient(fake.client), BoxMirrorConfig.layerConfig(config)))
   );
 
-// Mirror adapter over the fixture fake whose client answers with `overrides`.
 const mirrorLayerWith = (overrides: FakeBoxOverrides) => (fake: FakeBoxHarness) =>
   mirrorLayer({ ...fake, client: overrideClient(fake.client, overrides) });
 
@@ -467,8 +466,10 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       pipe(probe.connected, assertTrue);
       assertSome<string>(probe.rootRemoteId, rootId);
-      // The first page (no marker) missed the root; the second page found it.
-      expect(markers).toEqual([undefined, "page-2"]);
+      expect(markers, "the first page (no marker) missed the root; the second page found it").toEqual([
+        undefined,
+        "page-2",
+      ]);
       expect(fake.counts.createFolder).toBe(0);
     })
   );
@@ -489,8 +490,6 @@ describe("@beep/documents-server DmsMirrorBox", () => {
             });
           },
           createFolder: () => {
-            // A concurrent creator won the race: our create conflicts and the
-            // root is now visible to the recovery lookup.
             createFolderCalls += 1;
             rootVisible = true;
             return Promise.reject(nameConflictRejection);
@@ -505,9 +504,8 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       pipe(probe.connected, assertTrue);
       assertSome<string>(probe.rootRemoteId, rootId);
-      expect(createFolderCalls).toBe(1);
-      // One lookup found nothing, the create conflicted, the recovery lookup won.
-      expect(getFolderItemsCalls).toBe(2);
+      expect(createFolderCalls, "a concurrent creator won the race, so the one create conflicts").toBe(1);
+      expect(getFolderItemsCalls, "one lookup found nothing, the create conflicted, the recovery lookup won").toBe(2);
     })
   );
 
@@ -892,9 +890,8 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         pipe(uploadError.retryable, assertFalse);
         expect(uploadError.reason).toContain("status 400");
         expect(uploadError.reason).toContain("bad_request");
-        // Mirror verbs carry the same probe-facing classification the
-        // availability layer reads: an unclassifiable 400 stays the fallback.
-        assertSome<string>(uploadError.disconnectReason, "probe-failed");
+        const unclassifiable400Reason = uploadError.disconnectReason;
+        assertSome<string>(unclassifiable400Reason, "probe-failed");
       })
     );
   });
@@ -942,9 +939,8 @@ describe("@beep/documents-server DmsMirrorBox", () => {
 
       pipe(probe.connected, assertFalse);
       assertNone(probe.rootRemoteId);
-      // A status-less SDK throw carries no classification signal, so the
-      // probe stays on the unclassified fallback.
-      assertSome<string>(probe.disconnectReason, "probe-failed");
+      const statuslessThrowReason = probe.disconnectReason;
+      assertSome<string>(statuslessThrowReason, "probe-failed");
       pipe(probe.probedAt, O.isSome, assertTrue);
     })
   );
@@ -1030,11 +1026,8 @@ describe("@beep/documents-server DmsMirrorBox", () => {
   );
 
   it.effect(
-    "falls back to probe-failed when the resolved mirror-root id fails decoding",
+    "falls back to probe-failed on the SchemaError path when the driver's empty mirror-root id fails RemoteItemId decoding",
     Effect.fnUntraced(function* () {
-      // The driver accepts an empty folder id, but RemoteItemId is non-empty:
-      // the probe's own decode step fails, which is the SchemaError (not
-      // DmsMirrorUnavailable) classification path.
       const malformed = makeFakeBox({
         folders: {
           getFolderItems: () =>
@@ -1057,13 +1050,11 @@ describe("@beep/documents-server DmsMirrorBox", () => {
   it.effect(
     "refresh bypasses the cached probe answer and asks Box again",
     Effect.fnUntraced(function* () {
-      // Overrides replace the harness implementation (and its counter), so
-      // the override counts its own invocations.
-      const calls = { getFolderItems: 0 };
+      const overrideCalls = { getFolderItems: 0 };
       const failing = makeFakeBox({
         folders: {
           getFolderItems: () => {
-            calls.getFolderItems += 1;
+            overrideCalls.getFolderItems += 1;
             return Promise.reject({ responseInfo: { statusCode: 503 } });
           },
         },
@@ -1072,22 +1063,21 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         const availability = yield* DmsMirrorAvailability;
         const first = yield* availability.probe;
         const cached = yield* availability.probe;
-        const callsBeforeRefresh = calls.getFolderItems;
+        const callsBeforeRefresh = overrideCalls.getFolderItems;
         const refreshed = yield* availability.refresh;
-        return { callsAfterRefresh: calls.getFolderItems, callsBeforeRefresh, cached, first, refreshed };
+        return { callsAfterRefresh: overrideCalls.getFolderItems, callsBeforeRefresh, cached, first, refreshed };
       }).pipe(provideScopedLayer(availabilityLayer(failing)));
 
       pipe(outcome.first.connected, assertFalse);
-      // Within the failure TTL a passive probe replays the cached answer …
-      expect(outcome.cached).toBe(outcome.first);
-      // … while an explicit refresh must actually re-ask Box.
-      expect(outcome.callsAfterRefresh).toBeGreaterThan(outcome.callsBeforeRefresh);
+      expect(outcome.cached, "within the failure TTL a passive probe replays the cached answer").toBe(outcome.first);
+      expect(outcome.callsAfterRefresh, "an explicit refresh actually re-asks Box").toBeGreaterThan(
+        outcome.callsBeforeRefresh
+      );
       assertSome<string>(outcome.refreshed.disconnectReason, "transient");
       pipe(outcome.refreshed.probedAt, O.isSome, assertTrue);
     })
   );
 
-  // Box is down for the first resolution and back for the refresh.
   const recoveringCalls = { getFolderItems: 0 };
   const recovering = makeFakeBox({
     folders: {
@@ -1105,7 +1095,6 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       Effect.fnUntraced(function* () {
         const availability = yield* DmsMirrorAvailability;
         const subscribed = yield* Deferred.make<void>();
-        // The subscription resolves the current probe, replays it, then follows every resolution.
         const subscriber = yield* availability.changes.pipe(
           Stream.tap(() => Deferred.succeed(subscribed, undefined)),
           Stream.take(2),
@@ -1116,7 +1105,10 @@ describe("@beep/documents-server DmsMirrorBox", () => {
         yield* availability.refresh;
         const seen = yield* Fiber.join(subscriber);
 
-        expect(A.map(A.fromIterable(seen), (probe) => probe.connected)).toEqual([false, true]);
+        expect(
+          A.map(A.fromIterable(seen), (probe) => probe.connected),
+          "the subscription resolves the current probe, replays it, then follows every resolution"
+        ).toEqual([false, true]);
       })
     );
   });

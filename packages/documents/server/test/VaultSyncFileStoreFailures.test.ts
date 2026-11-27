@@ -92,10 +92,11 @@ const becomeSymlinkAt = (occurrence: number) => {
   return {
     fault,
     verify: () => {
-      // Equal error messages cannot distinguish these stages. Pin the actual
-      // injection and whether descriptor/path validation completed before it.
       const opened = occurrence === 2 ? 0 : 1;
-      expect({ injected, calls, opens, descriptorStats, pathStats }).toEqual({
+      expect(
+        { injected, calls, opens, descriptorStats, pathStats },
+        "equal error messages cannot tell the stages apart, so the injection and the validation before it are pinned"
+      ).toEqual({
         injected: true,
         calls: occurrence,
         opens: opened,
@@ -225,7 +226,6 @@ const testLayer = (fault: FileSystemFault) =>
     Effect.map(FileSystem.FileSystem, (fs) => FileSystem.FileSystem.of({ ...fs, ...fault(fs) }))
   ).pipe(Layer.provide(BunFileSystem.layer), Layer.provideMerge(BunPath.layer));
 
-/** Scan a fresh vault holding one target file through the faulted filesystem. */
 const scanWith = Effect.fnUntraced(function* (contents: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -298,12 +298,11 @@ describe("Vault filesystem boundary empty observations", () => {
           .scan(canonicalRoot)
           .pipe(Effect.withLogger(recorder), Effect.provideService(References.MinimumLogLevel, "Debug"));
         expect(A.map(observation.files, (file) => file.relPath)).toEqual(["kept.txt"]);
-        // Each skipped link is logged by depth only: no vault path, no entry name.
         const skipped = A.filter(logged, ({ message }) => Str.includes("skipped a symlink")(Formatter.format(message)));
-        expect(A.map(skipped, ({ annotations }) => annotations)).toEqual([
-          { "documents.vault_sync.depth": 1 },
-          { "documents.vault_sync.depth": 1 },
-        ]);
+        expect(
+          A.map(skipped, ({ annotations }) => annotations),
+          "each skipped link is logged by depth only: no vault path, no entry name"
+        ).toEqual([{ "documents.vault_sync.depth": 1 }, { "documents.vault_sync.depth": 1 }]);
         const everything = Formatter.format(logged);
         expect(everything).not.toContain(root);
         expect(everything).not.toContain("link.txt");

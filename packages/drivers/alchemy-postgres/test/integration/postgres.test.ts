@@ -11,7 +11,6 @@ import * as O from "effect/Option";
 import * as Random from "effect/Random";
 import { postgresSuites } from "../conformance/postgres-suites.ts";
 
-// Read once, while the suite registers: whether there is a database to run against.
 const url = atRegistration(Config.Redacted("DB_PG_URL").pipe(Config.option));
 const run = atRegistration(Random.nextIntBetween(0, 1_000_000_000));
 

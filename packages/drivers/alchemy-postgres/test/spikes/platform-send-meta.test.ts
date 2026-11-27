@@ -43,10 +43,8 @@ interface Seen {
   readonly stored: ReadonlyArray<Platform.StoredEvent>;
 }
 
-/** What the kernel handed the wrapped platform, in send order. */
 const seen: Array<Seen> = [];
 
-/** A platform that delegates to the ambient one and records every aggregate `send`. */
 const Recording = Layer.effect(Domain.Platform)(
   Effect.gen(function* () {
     const inner = yield* Domain.Platform;

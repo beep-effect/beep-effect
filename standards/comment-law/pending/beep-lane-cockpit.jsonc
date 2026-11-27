@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/lane-cockpit",
-  "root": "apps/labs/lane-cockpit",
-  "scopes": ["."]
-}

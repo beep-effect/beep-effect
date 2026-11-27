@@ -225,13 +225,13 @@ export const diffSyncCutoverSnapshot = Effect.fn($I`diffSyncCutoverSnapshot`)(fu
 const migrate = Effect.fnUntraced(function* (options: SyncAdmissionOptions, generation: number) {
   const sql = yield* SqlClient.SqlClient;
   const at = yield* Clock.currentTimeMillis;
-  // The epoch moves before the snapshot so no older writer can slip in between.
-  yield* sql.withTransaction(
+  const fenceBeforeSnapshot = sql.withTransaction(
     Effect.gen(function* () {
       yield* installSyncWriterFence;
       yield* writeSyncWriterEpoch(SyncWriterEpochState.make({ epoch: "migrating", generation, importId: null }), at);
     })
   );
+  yield* fenceBeforeSnapshot;
   const imported = yield* importSyncGenesis(SyncCutoverBackupId, options.mirrorRootName);
   yield* awaitCaughtUp(options);
   const differences = yield* diffSyncCutoverSnapshot("cutover_backup");
@@ -374,8 +374,7 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
       const differences = yield* diffSyncCutoverSnapshot("reversal_backup");
       if (A.isReadonlyArrayNonEmpty(differences))
         return yield* SyncCutoverRejected.make({ reason: "reversal-snapshot-differs" });
-      // Leases belong to Model workflows that will never resume; the legacy writer only knows queued work.
-      const leased = yield* sql`UPDATE documents_sync_operation
+      const orphanedLeases = yield* sql`UPDATE documents_sync_operation
         SET status = 'queued', row_version = row_version + 1, updated_at = ${at}
         WHERE status = 'leased' RETURNING id`.pipe(Effect.flatMap(S.decodeUnknownEffect(Ids)));
       yield* Effect.forEach(
@@ -389,7 +388,7 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
         },
         { concurrency: 1, discard: true }
       );
-      const ids = A.map(leased, (row) => row.id);
+      const ids = A.map(orphanedLeases, (row) => row.id);
       const encoded = yield* encodeRequeuedIds(ids);
       yield* sql`CREATE TABLE IF NOT EXISTS documents_sync_cutover_reversal (
         generation integer PRIMARY KEY, events integer NOT NULL, requeued jsonb NOT NULL, reversed_at bigint NOT NULL)`;

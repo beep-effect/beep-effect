@@ -36,12 +36,10 @@ import type * as Platform from "@alchemy.run/domain/Platform";
 
 const ownKey = "documents_sync_destination_aown";
 const foreignKey = "documents_sync_destination_aforeign";
-// The foreign workspace partition keeps its plain spelling; destination keys are minted ids.
-const foreignKeys: ReadonlyArray<string> = [foreignKey, "foreign"];
+const foreignWorkspacePartition = "foreign";
+const foreignKeys: ReadonlyArray<string> = [foreignKey, foreignWorkspacePartition];
 
-// The generated CLI requires these services even for a read command. No
-// filesystem or child-process operation is exercised by this suite.
-const cliPlatform = BunChildProcessSpawner.layer.pipe(
+const inertCliPlatform = BunChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(FileSystem.layerNoop({}), Path.layer, Stdio.layerTest({}), BunTerminal.layer))
 );
 
@@ -169,7 +167,7 @@ describe("Views as security boundaries", () => {
         Layer.provide(Layer.succeed(V.SessionResolver, f.resolver)),
         Layer.provide(BunHttpPlatform.layer),
         Layer.provide(Etag.layer),
-        Layer.provide(cliPlatform)
+        Layer.provide(inertCliPlatform)
       );
       const app = yield* Effect.acquireRelease(
         Effect.sync(() => HttpRouter.toWebHandler(appLayer, { disableLogger: true })),
@@ -187,7 +185,7 @@ describe("Views as security boundaries", () => {
   it.effect("CLI rejects a guessed foreign key through the generated command", () =>
     Effect.gen(function* () {
       const f = yield* fixture;
-      const context = yield* Layer.build(Layer.merge(f.host, cliPlatform));
+      const context = yield* Layer.build(Layer.merge(f.host, inertCliPlatform));
       const cli = Cli.toCli(
         {
           apiName: VaultSyncApi.apiName,
