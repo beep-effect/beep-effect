@@ -377,15 +377,6 @@ export declare namespace GitHubWorkflowProvenance {
   export type Encoded = typeof GitHubWorkflowProvenance.Encoded;
 }
 
-/**
- * The workflow file's path, with the repository prefix and the `@ref` suffix
- * removed: `owner/repo/.github/workflows/x.yml@main` → `.github/workflows/x.yml`.
- *
- * **Details**
- *
- * Reproduces upstream's extraction exactly, first occurrence and first `@`
- * included — a divergence here is a divergence in the emitted predicate.
- */
 const workflowPathOf = (input: GitHubWorkflowProvenance.Encoded): string =>
   Str.replace(/@[\s\S]*$/, "")(Str.replace(`${input.repository}/`, "")(input.workflowRef));
 
@@ -469,6 +460,14 @@ export class SlsaProvenance extends S.Opaque<SlsaProvenance, { readonly brand: u
    * already in the input; nothing is read from the environment and nothing can
    * fail.
    *
+   * **Gotchas**
+   *
+   * The workflow `path` is `workflowRef` with the repository prefix and the
+   * `@ref` suffix removed (`owner/repo/.github/workflows/x.yml@main` →
+   * `.github/workflows/x.yml`), reproducing `@actions/attest`'s extraction
+   * exactly, first occurrence and first `@` included: a divergence here is a
+   * divergence in the emitted predicate.
+   *
    * **Example** (Project claims into the workflow predicate)
    *
    * ```ts
@@ -495,7 +494,6 @@ export class SlsaProvenance extends S.Opaque<SlsaProvenance, { readonly brand: u
    * @since 0.0.0
    */
   static forGitHubWorkflow(input: GitHubWorkflowProvenance.Encoded): SlsaProvenance {
-    // One admission for the whole predicate: the nested records are plain.
     return SlsaProvenance.make({
       buildDefinition: {
         buildType: GITHUB_BUILD_TYPE,
