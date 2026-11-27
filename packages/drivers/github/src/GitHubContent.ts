@@ -56,7 +56,8 @@ export interface GitHubContentShape {
    *
    * Fails `notFound` when the path does not exist, and `rejected` when it is a
    * directory, is not a regular file, or is too large for the contents API
-   * (which answers an empty body above roughly a megabyte).
+   * (which answers an empty body above roughly a megabyte). That empty body is
+   * refused rather than decoded, because it would read as an empty file.
    */
   readonly getFile: {
     (path: string, options?: { readonly ref?: string | undefined }): Effect.Effect<string, GitHubError, Repo>;
@@ -187,8 +188,6 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
         path,
         ...O.getSomesStruct({ ref: O.fromUndefinedOr(options?.ref) }),
       });
-      // A directory comes back as an array. Reading one as a file would be a
-      // silent type confusion.
       if (A.isArray(response)) {
         return yield* GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a directory`);
       }
@@ -200,9 +199,6 @@ const make = (client: GitHubClient["Service"]): GitHubContentShape => {
       if (content.type !== "file") {
         return yield* GitHubError.rejected("GitHubContent.getFile", 422, `${path} is a ${content.type}, not a file`);
       }
-      // Over about a megabyte GitHub answers with `encoding: "none"` and an empty
-      // body. Decoding that as base64 yields an empty string that looks exactly
-      // like a legitimately empty file, so it is refused instead.
       if (content.encoding !== "base64") {
         return yield* GitHubError.rejected(
           "GitHubContent.getFile",

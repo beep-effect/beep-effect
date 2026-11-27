@@ -30,8 +30,6 @@ describe("@beep/package-json root barrel", () => {
     })
   );
 
-  // W3-f: the @beep/jsonc and @beep/npm-spec re-exports were dropped; consumers
-  // import those names from their own packages.
   it.effect("no longer re-exports @beep/jsonc or @beep/npm-spec names", () =>
     Effect.sync(() => {
       const names = R.keys(PackageJson);
@@ -41,7 +39,7 @@ describe("@beep/package-json root barrel", () => {
         "InvalidDependencySpecifierError",
         "isValidDependencySpecifier",
       ]) {
-        assert.notInclude(names, name);
+        assert.notInclude(names, name, `${name}: consumers import it from @beep/jsonc or @beep/npm-spec`);
       }
     })
   );
@@ -49,8 +47,7 @@ describe("@beep/package-json root barrel", () => {
   it.effect("never reaches the IO surface through its runtime import closure", () =>
     Effect.sync(() => {
       const closure = runtimeClosureOf("index.ts");
-      // The walk really ran: the barrel reaches the model and its internals.
-      assert.include(closure.modules, "Package.ts");
+      assert.include(closure.modules, "Package.ts", "the walk really ran: the barrel reaches the model");
       assert.include(closure.modules, "internal/wire.ts");
       assert.notInclude(closure.modules, "PackageJsonFile.ts");
       assert.deepStrictEqual(
@@ -63,9 +60,8 @@ describe("@beep/package-json root barrel", () => {
   it.effect("depends only on packages whose sources never import the IO surface", () =>
     Effect.sync(() => {
       const { scanned, offending } = dependencyModulesImporting(IO_MODULES);
-      // The glob really matched: every runtime dependency contributed sources.
       for (const name of ["identity", "jsonc", "npm-spec", "semver", "spdx"]) {
-        assert.isTrue(A.some(scanned, Str.startsWith(`${name}/src/`)), name);
+        assert.isTrue(A.some(scanned, Str.startsWith(`${name}/src/`)), `${name}: the glob must match its sources`);
       }
       assert.deepStrictEqual(offending, []);
     })

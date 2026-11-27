@@ -215,7 +215,6 @@ const DisableAutoMerge = GraphQLDocument.make({
   response: AutoMergeResponse,
 })<{ readonly pullRequestId: string }>();
 
-/** GraphQL spells the merge methods in capitals. */
 const GRAPHQL_MERGE_METHOD = { merge: "MERGE", squash: "SQUASH", rebase: "REBASE" } as const;
 
 /**
@@ -327,7 +326,6 @@ export class MergeQueueEntry extends S.Opaque<MergeQueueEntry, { readonly brand:
   )
 ) {}
 
-/** The `MergeQueueEntry` wire shape every queue document selects. */
 const WireQueueEntry = S.Struct({
   id: S.String,
   state: MergeQueueEntryState,
@@ -981,16 +979,6 @@ export class PullRequest extends Context.Service<PullRequest, PullRequestShape>(
 
 const unstubbed = unstubbedFor({ service: "PullRequest" });
 
-/**
- * Every member unstubbed, each dying with its own name when called.
- *
- * **Details**
- *
- * A function rather than a constant because `makeTest` is a static initializer
- * that runs while the module body is still evaluating; the shape is only built
- * when a test double is requested. `exactOptionalPropertyTypes` keeps an
- * override from spreading an explicit `undefined` over a member.
- */
 const unstubbedShape = (): PullRequestShape => ({
   get: () => unstubbed("get"),
   list: () => unstubbed("list"),
@@ -1008,12 +996,6 @@ const unstubbedShape = (): PullRequestShape => ({
   mergeQueueEntry: () => unstubbed("mergeQueueEntry"),
 });
 
-/**
- * The raw REST wire shape, as GitHub answers it — **not** the domain type.
- * {@link PullRequestInfo} is what callers read; `project` below is the one
- * conversion between them. Private on purpose: nothing outside this module
- * should hold a value of this shape.
- */
 interface RawPull {
   readonly base: { readonly ref: string; readonly sha: string };
   readonly body?: string | null | undefined;
@@ -1029,6 +1011,7 @@ interface RawPull {
   readonly title: string;
 }
 
+// decision: rest-pull-projected-by-construction
 const project = (raw: RawPull): Effect.Effect<PullRequestInfo, GitHubError> =>
   Effect.try({
     try: () =>
@@ -1044,11 +1027,6 @@ const project = (raw: RawPull): Effect.Effect<PullRequestInfo, GitHubError> =>
         baseSha: raw.base.sha,
         draft: raw.draft ?? false,
         merged: raw.merged ?? raw.merged_at != null,
-        // Constructed rather than decoded: the Type side of
-        // `Schema.Option(DateTimeUtcFromString)` is an `Option<DateTime.Utc>`,
-        // and GitHub's wire form is a nullable ISO string — two different
-        // shapes, so the conversion belongs here rather than in a codec that
-        // would have to describe GitHub's encoding as if it were ours.
         mergedAt: raw.merged_at == null ? O.none() : O.some(DateTime.makeUnsafe(raw.merged_at)),
         ...(raw.body != null ? { body: raw.body } : {}),
         ...(raw.merge_commit_sha != null ? { mergeCommitSha: raw.merge_commit_sha } : {}),
@@ -1056,7 +1034,6 @@ const project = (raw: RawPull): Effect.Effect<PullRequestInfo, GitHubError> =>
     catch: (error) => GitHubError.decode("PullRequest", "GitHub returned an unexpected pull request", error),
   });
 
-/** `owner:branch` is what GitHub's `head` filter wants for a cross-fork search. */
 const qualifyHead: {
   (head: string, owner: string): string;
   (owner: string): (head: string) => string;
@@ -1122,9 +1099,6 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
         owner,
         repo,
         pull_number: number,
-        // Conditional spreads, not `...patch`: under exactOptionalPropertyTypes a
-        // present-but-undefined key is not the same as an absent one, and octokit's
-        // generated parameter types say so.
         ...O.getSomesStruct({ title: O.fromUndefinedOr(patch.title) }),
         ...O.getSomesStruct({ body: O.fromUndefinedOr(patch.body) }),
         ...O.getSomesStruct({ state: O.fromUndefinedOr(patch.state) }),
@@ -1163,8 +1137,6 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
           { owner, repo, pull_number: number },
           options?.page
         );
-        // The same `diff-entry` wire shape the single-commit read answers with,
-        // so the same projection turns it into `CommitFile`s.
         return yield* Effect.forEach(files, fileOf("PullRequest.listFiles"), { concurrency: 1 });
       })
     ),

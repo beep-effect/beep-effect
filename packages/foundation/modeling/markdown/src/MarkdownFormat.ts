@@ -341,19 +341,17 @@ export class MarkdownModificationError extends S.TaggedError<
   }
 }
 
-// ── Internal: tree walking ──────────────────────────────────────────────────
-
 const childrenOf = (node: MarkdownNode): ReadonlyArray<MarkdownNode> => ("children" in node ? node.children : []);
 
-/** The visitor `walk` calls with each node; returning `false` skips its descendants. */
+type VisitChildren = boolean;
+
 type WalkVisitor = (
   node: MarkdownNode,
   parent: MarkdownNode | undefined,
   siblings: ReadonlyArray<MarkdownNode>,
   index: number
-) => void | boolean;
+) => void | VisitChildren;
 
-/** Walk the tree, invoking `visit` with each node, its parent and its siblings. */
 const walk: {
   (
     node: MarkdownNode,
@@ -387,7 +385,6 @@ const walk: {
   }
 );
 
-/** Whether any node of the tree under `root` (inclusive) satisfies `predicate`. */
 const containsNode: {
   (root: MarkdownNode, predicate: (node: MarkdownNode) => boolean): boolean;
   (predicate: (node: MarkdownNode) => boolean): (root: MarkdownNode) => boolean;
@@ -404,26 +401,22 @@ const spanOf = (node: MarkdownNode): { readonly start: number; readonly end: num
   end: node.position.end.offset,
 });
 
-// ── Internal: format guards ─────────────────────────────────────────────────
-
-// Keep these character classes and flanking rules aligned with scanDelims.
-const DELIMITER_PUNCTUATION = /^[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~\p{P}\p{S}]/u;
-const DELIMITER_WHITESPACE = /^\s/;
+const SCAN_DELIMS_PUNCTUATION = /^[!"#$%&'()*+,\-./:;<=>?@[\]\\^_`{|}~\p{P}\p{S}]/u;
+const SCAN_DELIMS_WHITESPACE = /^\s/;
 
 const underscoreCanOpen: {
   (before: string, after: string): boolean;
   (after: string): (before: string) => boolean;
 } = dual(2, (before: string, after: string): boolean => {
-  const beforeWhitespace = DELIMITER_WHITESPACE.test(before);
-  const afterWhitespace = DELIMITER_WHITESPACE.test(after);
-  const beforePunctuation = DELIMITER_PUNCTUATION.test(before);
-  const afterPunctuation = DELIMITER_PUNCTUATION.test(after);
+  const beforeWhitespace = SCAN_DELIMS_WHITESPACE.test(before);
+  const afterWhitespace = SCAN_DELIMS_WHITESPACE.test(after);
+  const beforePunctuation = SCAN_DELIMS_PUNCTUATION.test(before);
+  const afterPunctuation = SCAN_DELIMS_PUNCTUATION.test(after);
   const left = !afterWhitespace && (!afterPunctuation || beforeWhitespace || beforePunctuation);
   const right = !beforeWhitespace && (!beforePunctuation || afterWhitespace || afterPunctuation);
   return left && (!right || beforePunctuation);
 });
 
-/** Whether the code unit at `index` ends a line (an out-of-range index does not). */
 const isLineBreakAt: {
   (source: string, index: number): boolean;
   (index: number): (source: string) => boolean;
@@ -432,7 +425,6 @@ const isLineBreakAt: {
   return char === "\n" || char === "\r";
 });
 
-/** Whether the code unit at `index` is a space or tab (an out-of-range index is not). */
 const isSpaceOrTabAt: {
   (source: string, index: number): boolean;
   (index: number): (source: string) => boolean;
@@ -441,7 +433,6 @@ const isSpaceOrTabAt: {
   return char === " " || char === "\t";
 });
 
-/** The start offset of the line containing `offset`. */
 const lineStartOf: {
   (source: string, offset: number): number;
   (offset: number): (source: string) => number;
@@ -453,23 +444,19 @@ const lineStartOf: {
   return index;
 });
 
-/** A run of spaces and tabs, matched at a position. */
 const BLANK_RUN = /[ \t]*/y;
 
-/** A run of whitespace and line terminators, matched at a position. */
 const WHITESPACE_RUN = /[ \t\r\n]*/y;
 
-/** The offset where the (always matching, possibly empty) sticky run `pattern` starting at `from` ends. */
 const runEnd: {
-  (source: string, pattern: RegExp, from: number): number;
-  (pattern: RegExp, from: number): (source: string) => number;
-} = dual(3, (source: string, pattern: RegExp, from: number): number => {
-  pattern.lastIndex = from;
-  pattern.test(source);
-  return pattern.lastIndex;
+  (source: string, alwaysMatchingStickyRun: RegExp, from: number): number;
+  (alwaysMatchingStickyRun: RegExp, from: number): (source: string) => number;
+} = dual(3, (source: string, alwaysMatchingStickyRun: RegExp, from: number): number => {
+  alwaysMatchingStickyRun.lastIndex = from;
+  alwaysMatchingStickyRun.test(source);
+  return alwaysMatchingStickyRun.lastIndex;
 });
 
-/** Whether the line before the one containing `offset` is blank (or absent). */
 const previousLineBlank: {
   (source: string, offset: number): boolean;
   (offset: number): (source: string) => boolean;
@@ -482,13 +469,10 @@ const previousLineBlank: {
   return runEnd(source, BLANK_RUN, lineStartOf(source, lineEnd)) >= lineEnd;
 });
 
-/** Content that cannot stand as a setext heading's text line. */
 const SETEXT_CONTENT_HAZARD = /^(?:[-+*>#=]|\d{1,9}[.)](?:\s|$)|`{3}|~{3}|\s)/;
 
-/** A carriage return or line feed anywhere in a string. */
 const LINE_TERMINATOR = /[\r\n]/;
 
-/** The longest run of `char` anywhere in `value`. */
 const longestRun: {
   (value: string, char: string): number;
   (char: string): (value: string) => number;
@@ -504,7 +488,6 @@ const longestRun: {
 
 const isUnorderedList = (node: MarkdownNode): node is List => node.type === "list" && node.ordered !== true;
 
-/** Whether only whitespace separates two spans. */
 const adjacentSpans: {
   (source: string, endOfFirst: number, startOfSecond: number): boolean;
   (endOfFirst: number, startOfSecond: number): (source: string) => boolean;
@@ -513,8 +496,6 @@ const adjacentSpans: {
   (source: string, endOfFirst: number, startOfSecond: number): boolean =>
     runEnd(source, WHITESPACE_RUN, endOfFirst) >= startOfSecond
 );
-
-// ── Internal: format edit collection ────────────────────────────────────────
 
 const TaggedEdit = S.Struct({
   ...MarkdownEdit.fields,
@@ -535,7 +516,6 @@ type TaggedEdit = typeof TaggedEdit.Type;
 const toMarkdownEdit = (edit: TaggedEdit): MarkdownEdit =>
   MarkdownEdit.make({ offset: edit.offset, length: edit.length, content: edit.content });
 
-/** Accumulates edits after the formatting helpers have excluded unchanged markers (mutable engine state, D-42). */
 class FormatEmitter {
   readonly edits: Array<TaggedEdit> = [];
   push(node: MarkdownNode, offset: number, length: number, content: string, bullet = false): void {
@@ -544,11 +524,10 @@ class FormatEmitter {
   }
 }
 
-/** Emit `content` over the whole span of `node`; always `true`, so a caller can report the conversion. */
 const replaceWhole: {
-  (emit: FormatEmitter, node: MarkdownNode, content: string): boolean;
-  (node: MarkdownNode, content: string): (emit: FormatEmitter) => boolean;
-} = dual(3, (emit: FormatEmitter, node: MarkdownNode, content: string): boolean => {
+  (emit: FormatEmitter, node: MarkdownNode, content: string): true;
+  (node: MarkdownNode, content: string): (emit: FormatEmitter) => true;
+} = dual(3, (emit: FormatEmitter, node: MarkdownNode, content: string): true => {
   const { start, end } = spanOf(node);
   emit.push(node, start, end - start, content);
   return true;
@@ -558,20 +537,18 @@ const formatThematicBreak: {
   (source: string, emit: FormatEmitter, node: ThematicBreak, target: ThematicBreakChar): void;
   (emit: FormatEmitter, node: ThematicBreak, target: ThematicBreakChar): (source: string) => void;
 } = dual(4, (source: string, emit: FormatEmitter, node: ThematicBreak, target: ThematicBreakChar): void => {
-  // A `-` break under a non-blank line would read as a setext underline.
-  if (node.markerChar !== target && (target !== "-" || previousLineBlank(source, spanOf(node).start))) {
+  const readsAsSetextUnderline = target === "-" && !previousLineBlank(source, spanOf(node).start);
+  if (node.markerChar !== target && !readsAsSetextUnderline) {
     replaceWhole(emit, node, Str.repeat(3)(target));
   }
 });
 
-/** A heading's content span and its single-line source text. */
 interface HeadingContent {
   readonly original: string;
   readonly start: number;
 }
 
-/** The heading's content span, when it has content on a single source line. */
-const headingContent: {
+const singleLineHeadingContent: {
   (source: string, node: Heading): O.Option<HeadingContent>;
   (node: Heading): (source: string) => O.Option<HeadingContent>;
 } = dual(
@@ -589,7 +566,6 @@ const headingContent: {
     )
 );
 
-/** Whether a setext spelling is unsafe: too deep, hazardous content, or not flush-left after a blank line. */
 const setextBlocked: {
   (source: string, node: Heading, original: string): boolean;
   (node: Heading, original: string): (source: string) => boolean;
@@ -603,11 +579,6 @@ const setextBlocked: {
   );
 });
 
-/**
- * Normalize the heading's descendants against the original source, then
- * compose their splices into the heading content. The outer walk skips these
- * descendants only when the whole-heading edit is emitted.
- */
 const normalizedHeadingContent: {
   (source: string, node: Heading, content: HeadingContent, emphasisChar: EmphasisChar | undefined): string;
   (node: Heading, content: HeadingContent, emphasisChar: EmphasisChar | undefined): (source: string) => string;
@@ -631,7 +602,6 @@ const normalizedHeadingContent: {
   }
 );
 
-/** Content ending in what would read as an ATX closing sequence. */
 const ATX_CLOSING_SEQUENCE = /(?:^|[ \t])#+[ \t]*$/;
 
 const atxSpelling: {
@@ -643,7 +613,6 @@ const atxSpelling: {
     ATX_CLOSING_SEQUENCE.test(content) ? O.none() : O.some(`${Str.repeat(node.depth)("#")} ${content}`)
 );
 
-/** Whether `proposed` re-parses as exactly one setext heading of `depth` whose content is `content`. */
 const reparsesAsSetext: {
   (proposed: string, depth: HeadingDepth, content: string, parseOptions: MarkdownParseOptions.Encoded): boolean;
   (depth: HeadingDepth, content: string, parseOptions: MarkdownParseOptions.Encoded): (proposed: string) => boolean;
@@ -658,7 +627,7 @@ const reparsesAsSetext: {
         (block): block is Heading =>
           block.type === "heading" && block.headingStyle === "setext" && block.depth === depth
       ),
-      O.flatMap((heading) => headingContent(proposed, heading)),
+      O.flatMap((heading) => singleLineHeadingContent(proposed, heading)),
       O.exists((parsed) => parsed.original === content)
     )
 );
@@ -702,7 +671,7 @@ const formatHeading: {
   ): boolean =>
     node.headingStyle !== target &&
     pipe(
-      headingContent(source, node),
+      singleLineHeadingContent(source, node),
       O.filter((content) => target === "atx" || !setextBlocked(source, node, content.original)),
       O.flatMap((content) => {
         const normalized = normalizedHeadingContent(source, node, content, emphasisChar);
@@ -712,7 +681,6 @@ const formatHeading: {
     )
 );
 
-/** Whether normalizing `node`'s bullets could merge it with an adjacent unordered sibling list. */
 const mergesWithUnorderedSibling: {
   (source: string, node: List, siblings: ReadonlyArray<MarkdownNode>, index: number): boolean;
   (node: List, siblings: ReadonlyArray<MarkdownNode>, index: number): (source: string) => boolean;
@@ -787,13 +755,11 @@ const codePointAfter: {
   Str.slice(offset, offset + (O.exists(Str.codePointAt(source, offset), (code) => code > 0xffff) ? 2 : 1))(source)
 );
 
-/** A document edge reads as a line ending for flanking purposes. */
-const orLineEnding = (char: string): string => (char === "" ? "\n" : char);
+const edgeAsLineEnding = (char: string): string => (char === "" ? "\n" : char);
 
 const isEmphasisLike = (node: MarkdownNode): node is Emphasis | Strong =>
   node.type === "emphasis" || node.type === "strong";
 
-/** Whether `_` markers could not open at the start or close at the end of the span. */
 const underscoreBlocked: {
   (source: string, start: number, end: number, markerLength: number): boolean;
   (start: number, end: number, markerLength: number): (source: string) => boolean;
@@ -801,16 +767,15 @@ const underscoreBlocked: {
   4,
   (source: string, start: number, end: number, markerLength: number): boolean =>
     !underscoreCanOpen(
-      orLineEnding(codePointBefore(source, start)),
-      orLineEnding(codePointAfter(source, start + markerLength))
+      edgeAsLineEnding(codePointBefore(source, start)),
+      edgeAsLineEnding(codePointAfter(source, start + markerLength))
     ) ||
     !underscoreCanOpen(
-      orLineEnding(codePointAfter(source, end)),
-      orLineEnding(codePointBefore(source, end - markerLength))
+      edgeAsLineEnding(codePointAfter(source, end)),
+      edgeAsLineEnding(codePointBefore(source, end - markerLength))
     )
 );
 
-/** Whether an emphasis-family child sits right against the node's opening or closing marker. */
 const hasEdgeEmphasisChild: {
   (node: Emphasis | Strong, start: number, end: number, markerLength: number): boolean;
   (start: number, end: number, markerLength: number): (node: Emphasis | Strong) => boolean;
@@ -823,7 +788,6 @@ const hasEdgeEmphasisChild: {
   )
 );
 
-/** Whether an emphasis-family sibling abuts the span, which would change the delimiter algebra. */
 const abutsEmphasisSibling: {
   (siblings: ReadonlyArray<MarkdownNode>, index: number, start: number, end: number): boolean;
   (index: number, start: number, end: number): (siblings: ReadonlyArray<MarkdownNode>) => boolean;
@@ -875,7 +839,6 @@ const formatEmphasis: {
   }
 );
 
-/** The length of the opening fence run at the start of the code block's span. */
 const openingFenceLength: {
   (source: string, start: number, end: number, fenceChar: FenceChar): number;
   (start: number, end: number, fenceChar: FenceChar): (source: string) => number;
@@ -915,15 +878,14 @@ const closingFence: {
   }
 );
 
-/** A backtick fence's info string cannot hold a backtick. */
-const infoHasBacktick = (node: Code): boolean => Str.includes("`")(`${node.lang ?? ""}${node.meta ?? ""}`);
+const infoForbidsBacktickFence = (node: Code): boolean => Str.includes("`")(`${node.lang ?? ""}${node.meta ?? ""}`);
 
 const formatFence: {
   (source: string, emit: FormatEmitter, node: Code, target: FenceChar): void;
   (emit: FormatEmitter, node: Code, target: FenceChar): (source: string) => void;
 } = dual(4, (source: string, emit: FormatEmitter, node: Code, target: FenceChar): void => {
   const fidelity = node.fenceChar;
-  if (fidelity === undefined || fidelity === target || (target === "`" && infoHasBacktick(node))) {
+  if (fidelity === undefined || fidelity === target || (target === "`" && infoForbidsBacktickFence(node))) {
     return;
   }
   const { start, end } = spanOf(node);
@@ -936,28 +898,19 @@ const formatFence: {
   }
 });
 
-/** A line that is empty or holds only spaces and tabs. */
 const BLANK_LINE = /^[ \t]*$/;
 
-/** Whether a sibling is a code block with no info string (either spelling). */
 const isLanguagelessCode = (node: MarkdownNode): boolean =>
   node.type === "code" && node.lang === undefined && node.meta === undefined;
 
-/** The parser's code values end with the block's final line terminator; it belongs to block structure. */
 const withoutFinalNewline = (value: string): string => (Str.endsWith("\n")(value) ? Str.slice(0, -1)(value) : value);
 
-/** Indent every non-blank line by four spaces; blank lines stay bare. */
 const indentCodeLines = (lines: ReadonlyArray<string>): string =>
   A.join(
     A.map(lines, (line) => (line === "" ? line : `    ${line}`)),
     "\n"
   );
 
-/**
- * The lines of a value's indented spelling, when one exists: no blank first
- * or last line (an empty value included) and no whitespace-only interior line,
- * which blankness would erase.
- */
 const indentedLines = (value: string): O.Option<ReadonlyArray<string>> => {
   const lines = Str.split(value, "\n");
   const representable =
@@ -967,12 +920,6 @@ const indentedLines = (value: string): O.Option<ReadonlyArray<string>> => {
   return representable ? O.some(lines) : O.none();
 };
 
-/**
- * Whether an indented spelling would be absorbed by its context: it cannot
- * follow a non-blank line (lazy paragraph continuation), a preceding list or
- * footnote definition absorbs it as continuation, and an adjacent
- * language-less code block would merge with it across the blank line.
- */
 const indentedAbsorbed: {
   (source: string, node: Code, siblings: ReadonlyArray<MarkdownNode>, index: number): boolean;
   (node: Code, siblings: ReadonlyArray<MarkdownNode>, index: number): (source: string) => boolean;
@@ -987,7 +934,6 @@ const indentedAbsorbed: {
     O.exists(A.get(siblings, index + 1), isLanguagelessCode)
 );
 
-/** The fenced spelling of an indented block; an existing fence is left to `formatFence`. */
 const fencedSpelling: {
   (node: Code, value: string, fenceChar: FenceChar | undefined): O.Option<string>;
   (value: string, fenceChar: FenceChar | undefined): (node: Code) => O.Option<string>;
@@ -1000,7 +946,6 @@ const fencedSpelling: {
   return O.some(`${fence}\n${value}\n${fence}`);
 });
 
-/** The indented spelling of a fenced block, where provably safe. */
 const indentedSpelling: {
   (source: string, node: Code, value: string, siblings: ReadonlyArray<MarkdownNode>, index: number): O.Option<string>;
   (
@@ -1023,19 +968,6 @@ const indentedSpelling: {
       : O.map(indentedLines(value), indentCodeLines)
 );
 
-/**
- * Convert a language-less code block toward the requested style. Returns
- * whether a whole-block conversion edit was emitted, so the caller can keep
- * `formatFence` off a span this conversion already rewrote.
- *
- * **Gotchas**
- *
- * Both directions are whole-block rewrites, so both are restricted to
- * root-level, flush-left blocks — a container's continuation-line prefix
- * (`> `, list indentation) is not reproducible by a single splice. The
- * indented direction carries the re-parse hazards an indented block is
- * subject to and skips each one (see `indentedAbsorbed` and `indentedLines`).
- */
 const formatCodeBlockStyle: {
   (
     source: string,
@@ -1082,7 +1014,6 @@ const formatCodeBlockStyle: {
   }
 );
 
-/** Everything a node formatter needs besides the node itself. */
 interface FormatContext {
   readonly emit: FormatEmitter;
   readonly index: number;
@@ -1093,7 +1024,6 @@ interface FormatContext {
   readonly text: string;
 }
 
-/** Normalize a code block: a style conversion first; `formatFence` must not splice inside a span it replaced. */
 const formatCode = (node: Code, context: FormatContext): void => {
   const { codeBlockStyle, fenceChar } = context.options;
   const converted =
@@ -1113,42 +1043,40 @@ const formatCode = (node: Code, context: FormatContext): void => {
   }
 };
 
-/** Format one node; `false` means a whole-node rewrite was emitted, so the walk skips its descendants. */
 const formatNode = Match.type<MarkdownNode>().pipe(
-  Match.discriminator("type")("thematicBreak", (node) => (context: FormatContext): boolean => {
+  Match.discriminator("type")("thematicBreak", (node) => (context: FormatContext): VisitChildren => {
     const target = context.options.thematicBreakChar;
     if (target !== undefined) formatThematicBreak(context.text, context.emit, node, target);
     return true;
   }),
-  Match.discriminator("type")("heading", (node) => (context: FormatContext): boolean => {
+  Match.discriminator("type")("heading", (node) => (context: FormatContext): VisitChildren => {
     const { emphasisChar, headingStyle } = context.options;
     return (
       headingStyle === undefined ||
       !formatHeading(context.text, context.emit, node, headingStyle, emphasisChar, context.parseOptions)
     );
   }),
-  Match.discriminator("type")("list", (node) => (context: FormatContext): boolean => {
+  Match.discriminator("type")("list", (node) => (context: FormatContext): VisitChildren => {
     const target = context.options.bulletChar;
     if (target !== undefined) formatList(context.text, context.emit, node, context.siblings, context.index, target);
     return true;
   }),
-  Match.discriminator("type")("emphasis", "strong", (node) => (context: FormatContext): boolean => {
+  Match.discriminator("type")("emphasis", "strong", (node) => (context: FormatContext): VisitChildren => {
     const target = context.options.emphasisChar;
     if (target !== undefined) formatEmphasis(context.text, context.emit, node, context.siblings, context.index, target);
     return true;
   }),
-  Match.discriminator("type")("code", (node) => (context: FormatContext): boolean => {
+  Match.discriminator("type")("code", (node) => (context: FormatContext): VisitChildren => {
     formatCode(node, context);
     return true;
   }),
   Match.orElse(
     () =>
-      (_context: FormatContext): boolean =>
+      (_context: FormatContext): VisitChildren =>
         true
   )
 );
 
-/** Every candidate edit the requested options produce, before the range filter and the bullet hazard pass. */
 const collectFormatEdits: {
   (
     text: string,
@@ -1177,7 +1105,6 @@ const collectFormatEdits: {
   }
 );
 
-/** The edits whose owning node intersects `range` (all of them without one). */
 const editsInRange: {
   (edits: ReadonlyArray<TaggedEdit>, range: MarkdownRangeLike | undefined): ReadonlyArray<TaggedEdit>;
   (range: MarkdownRangeLike | undefined): (edits: ReadonlyArray<TaggedEdit>) => ReadonlyArray<TaggedEdit>;
@@ -1192,7 +1119,6 @@ const editsInRange: {
         )
 );
 
-/** The start offsets of every thematic break in the tree. */
 const thematicBreakStarts = (root: Root): ReadonlyArray<number> => {
   const starts: Array<number> = [];
   walk(root, undefined, [], 0, (node) => {
@@ -1201,12 +1127,6 @@ const thematicBreakStarts = (root: Root): ReadonlyArray<number> => {
   return starts;
 };
 
-/**
- * The line starts where a bullet normalization would create a new thematic
- * break. The complete range-filtered wave is projected — nested lists on the
- * same physical line included — before the hazard is judged; a projection
- * that no longer parses marks every bullet line hazardous.
- */
 const bulletHazards: {
   (
     text: string,
@@ -1232,20 +1152,18 @@ const bulletHazards: {
       return HashSet.empty();
     }
     const existingBreaks = HashSet.fromIterable(thematicBreakStarts(root));
-    const projected = MarkdownEdit.applyAll(text, A.map(bulletEdits, toMarkdownEdit));
-    const hazardLines = Result.match(Markdown.parseResult(projected, parseOptions), {
+    const wholeWaveProjection = MarkdownEdit.applyAll(text, A.map(bulletEdits, toMarkdownEdit));
+    const hazardLines = Result.match(Markdown.parseResult(wholeWaveProjection, parseOptions), {
       onFailure: () => A.map(bulletEdits, (edit) => lineStartOf(text, edit.offset)),
       onSuccess: (reparsed) =>
         A.map(
           A.filter(thematicBreakStarts(reparsed), (start) => !HashSet.has(existingBreaks, start)),
-          (start) => lineStartOf(projected, start)
+          (start) => lineStartOf(wholeWaveProjection, start)
         ),
     });
     return HashSet.fromIterable(hazardLines);
   }
 );
-
-// ── Internal: modify support ────────────────────────────────────────────────
 
 const FLOW_TYPES = LiteralKit([
   "blockquote",
@@ -1275,16 +1193,10 @@ const PHRASING_TYPES = LiteralKit([
   "text",
 ] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
-// Category checks read the `type` tag only. The fragment is already a typed
-// node (built with `make` or admitted by a parse), and a structural
-// `S.is(FlowContent)` would re-validate the whole fragment recursively, which
-// overflows the stack on the over-deep fragments `FragmentUnrenderable` exists
-// to report (D-39).
-const isFlowReplacement = S.is(S.Struct({ type: FLOW_TYPES }));
+const hasFlowTypeTag = S.is(S.Struct({ type: FLOW_TYPES }));
 
-const isPhrasingReplacement = S.is(S.Struct({ type: PHRASING_TYPES }));
+const hasPhrasingTypeTag = S.is(S.Struct({ type: PHRASING_TYPES }));
 
-/** Parent types whose child slot holds flow content. */
 const FLOW_PARENTS = LiteralKit([
   "root",
   "blockquote",
@@ -1292,7 +1204,6 @@ const FLOW_PARENTS = LiteralKit([
   "footnoteDefinition",
 ] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
-/** Parent types whose child slot holds phrasing content. */
 const PHRASING_PARENTS = LiteralKit([
   "paragraph",
   "heading",
@@ -1304,7 +1215,6 @@ const PHRASING_PARENTS = LiteralKit([
   "tableCell",
 ] satisfies A.NonEmptyReadonlyArray<MarkdownNode["type"]>);
 
-/** Ancestor types whose continuation lines carry a prefix (or forbid newlines outright). */
 const NO_MULTILINE_ANCESTORS = LiteralKit([
   "blockquote",
   "list",
@@ -1320,27 +1230,13 @@ const isFlowParent = S.is(FLOW_PARENTS);
 const isPhrasingParent = S.is(PHRASING_PARENTS);
 const isNoMultilineAncestor = S.is(NO_MULTILINE_ANCESTORS);
 
-/** The content category of a replacement slot. */
 const ReplacementSlot = LiteralKit(["flow", "phrasing", "cell"]);
 type ReplacementSlot = typeof ReplacementSlot.Type;
 
-/** A pipe the GFM cell splitter would read as a column boundary: preceded by an even run of backslashes. */
 const UNESCAPED_CELL_PIPE = /(?<!\\)((?:\\\\)*)\|/g;
 
-/**
- * The stringifier's parity-aware cell post-pass, kept at the facade boundary
- * because this module cannot import the engine. An odd backslash run already
- * escapes a pipe; an even run needs one more backslash for the cell splitter.
- */
 const escapeCellPipes = Str.replaceAll(UNESCAPED_CELL_PIPE, "$1\\|");
 
-/**
- * Whether `node` is `target`: the same reference, or (nodes being plain data,
- * D-22) an equal value at the same source span. Value matching keeps a
- * `MarkdownDocument.definitions` entry — a validated copy of the tree's
- * definition node, not the same reference — a valid `modify` target; the
- * offset prefilter keeps the deep comparison off every non-candidate.
- */
 const isSameNode = (node: MarkdownNode, target: MarkdownNode): boolean =>
   node === target ||
   (node.type === target.type &&
@@ -1348,18 +1244,11 @@ const isSameNode = (node: MarkdownNode, target: MarkdownNode): boolean =>
     node.position.end.offset === target.position.end.offset &&
     Equal.equals(node, target));
 
-/** The tree's own node matched for a `modify` target, with its ancestor chain (nearest first). */
 interface TreeMatch {
   readonly ancestry: ReadonlyArray<MarkdownNode>;
   readonly node: MarkdownNode;
 }
 
-/**
- * Find `target` (see `isSameNode`). The result carries the tree's own node,
- * never the caller's object, so every later step works on the admitted tree
- * and none depends on whether the caller passed the tree's reference or an
- * equal copy (a `MarkdownDocument` view entry or a `make` re-wrap).
- */
 const matchTarget: {
   (root: Root, target: MarkdownNode): O.Option<TreeMatch>;
   (target: MarkdownNode): (root: Root) => O.Option<TreeMatch>;
@@ -1371,13 +1260,8 @@ const matchTarget: {
   return search(root, []);
 });
 
-/** Builds the typed failure for the current target's span. */
 type FailModification = (code: MarkdownModificationErrorCode, detail: string) => MarkdownModificationError;
 
-/**
- * Where a `modify` target sits: the tree's own matched node, its span,
- * ancestor chain (nearest first), parent and slot category.
- */
 interface ModifySite {
   readonly ancestry: ReadonlyArray<MarkdownNode>;
   readonly end: number;
@@ -1387,7 +1271,6 @@ interface ModifySite {
   readonly start: number;
 }
 
-/** The content category of the slot `target` occupies in `parent`. */
 const slotOf: {
   (target: MarkdownNode, parent: MarkdownNode): O.Option<ReplacementSlot>;
   (parent: MarkdownNode): (target: MarkdownNode) => O.Option<ReplacementSlot>;
@@ -1401,7 +1284,6 @@ const slotOf: {
   return isPhrasingParent(parent.type) ? O.some("phrasing") : O.none();
 });
 
-/** Locate the target in the document and classify its slot, refusing unsupported targets. */
 const locateTarget: {
   (root: Root, target: MarkdownNode, fail: FailModification): Result.Result<ModifySite, MarkdownModificationError>;
   (target: MarkdownNode, fail: FailModification): (root: Root) => Result.Result<ModifySite, MarkdownModificationError>;
@@ -1425,16 +1307,12 @@ const locateTarget: {
   }
 );
 
-// Synthesized render scaffolding around an already-typed fragment, built with
-// `trustedNode` so the fragment is not re-walked and copied (D-39); the
-// zero-width position is never read by the stringifier.
 const paragraphOf = (children: ReadonlyArray<PhrasingContent>): Paragraph =>
   trustedNode<Paragraph>({ type: "paragraph", children, position: Position.synthetic });
 
 const rootOf = (children: ReadonlyArray<FlowContent>): Root =>
   trustedNode<Root>({ type: "root", children, position: Position.synthetic });
 
-/** The render root for a replacement, refusing a fragment whose category does not fit the slot. */
 const fragmentRoot: {
   (
     replacement: MarkdownNode | string,
@@ -1456,7 +1334,7 @@ const fragmentRoot: {
       return Result.succeed(rootOf([paragraphOf([Text.make({ value: replacement })])]));
     }
     if (slot === "flow") {
-      return isFlowReplacement(replacement)
+      return hasFlowTypeTag(replacement)
         ? Result.succeed(rootOf([replacement]))
         : Result.fail(
             fail(
@@ -1465,7 +1343,7 @@ const fragmentRoot: {
             )
           );
     }
-    return isPhrasingReplacement(replacement)
+    return hasPhrasingTypeTag(replacement)
       ? Result.succeed(rootOf([paragraphOf([replacement])]))
       : Result.fail(
           fail(
@@ -1480,7 +1358,6 @@ const isLinkLike = (node: MarkdownNode): boolean => node.type === "link" || node
 
 const isCarriageReturnText = (node: MarkdownNode): boolean => node.type === "text" && Str.includes("\r")(node.value);
 
-/** The width of the closing delimiter run `ancestor` ends with (zero for non-delimited nodes). */
 const closingDelimiterWidth: {
   (ancestor: MarkdownNode, source: string, start: number): number;
   (source: string, start: number): (ancestor: MarkdownNode) => number;
@@ -1494,7 +1371,6 @@ const closingDelimiterWidth: {
   return ancestor.type === "delete" ? longestRun(Str.slice(spanOf(ancestor).start, start)(source), "~") : 0;
 });
 
-/** Whether the target ends exactly at an enclosing delimiter run, where trailing whitespace would stop it closing. */
 const endsAtClosingDelimiter: {
   (site: ModifySite, source: string): boolean;
   (source: string): (site: ModifySite) => boolean;
@@ -1505,10 +1381,9 @@ const endsAtClosingDelimiter: {
   })
 );
 
-/** Encode a trailing whitespace run as numeric character references, so a closing delimiter still flanks. */
 const encodeTrailingWhitespace = (content: string): string => {
   let whitespaceStart = content.length;
-  while (whitespaceStart > 0 && DELIMITER_WHITESPACE.test(Str.slice(whitespaceStart - 1, whitespaceStart)(content))) {
+  while (whitespaceStart > 0 && SCAN_DELIMS_WHITESPACE.test(Str.slice(whitespaceStart - 1, whitespaceStart)(content))) {
     whitespaceStart -= 1;
   }
   if (whitespaceStart === content.length) {
@@ -1521,7 +1396,6 @@ const encodeTrailingWhitespace = (content: string): string => {
   return Str.slice(0, whitespaceStart)(content) + A.join(references, "");
 };
 
-/** Where a trailing `#` run in `projected` begins, when it would read as an ATX closing sequence. */
 const closingHashRunStart = (projected: string): O.Option<number> => {
   let hashEnd = projected.length;
   while (isSpaceOrTabAt(projected, hashEnd - 1)) hashEnd -= 1;
@@ -1534,7 +1408,6 @@ const closingHashRunStart = (projected: string): O.Option<number> => {
 
 const isAtxHeading = (node: MarkdownNode): node is Heading => node.type === "heading" && node.headingStyle === "atx";
 
-/** Escape a closing-sequence `#` run the replacement would introduce inside an ATX heading. */
 const escapeAtxClosingRun: {
   (content: string, site: ModifySite, source: string): string;
   (site: ModifySite, source: string): (content: string) => string;
@@ -1554,7 +1427,6 @@ const escapeAtxClosingRun: {
   )
 );
 
-/** The rendered fragment made safe for its splice context: cell pipes, delimiter flanking, ATX closing runs. */
 const contextualContent: {
   (rendered: string, site: ModifySite, source: string): string;
   (site: ModifySite, source: string): (rendered: string) => string;
@@ -1566,11 +1438,6 @@ const contextualContent: {
   return escapeAtxClosingRun(flankSafe, site, source);
 });
 
-/**
- * The replacement text for the splice, refusing a nested link and any
- * carriage return or multi-line content a prefixed or single-line container
- * cannot carry.
- */
 const spliceContent: {
   (
     rendered: string,
@@ -1621,7 +1488,6 @@ const spliceContent: {
   }
 );
 
-/** The blocks the projected document places directly in the target's parent container. */
 const contextualBlocks: {
   (projected: Root, parent: MarkdownNode): ReadonlyArray<MarkdownNode>;
   (parent: MarkdownNode): (projected: Root) => ReadonlyArray<MarkdownNode>;
@@ -1635,7 +1501,6 @@ const contextualBlocks: {
   return blocks;
 });
 
-/** Whether `blocks` holds a block of `type` at exactly `[start, end)`. */
 const hasBlockAt: {
   (blocks: ReadonlyArray<MarkdownNode>, type: MarkdownNode["type"], start: number, end: number): boolean;
   (type: MarkdownNode["type"], start: number, end: number): (blocks: ReadonlyArray<MarkdownNode>) => boolean;
@@ -1646,11 +1511,6 @@ const hasBlockAt: {
   )
 );
 
-/**
- * The sibling after the site's node in its parent. Reference matching is
- * exact here because `site.node` and `site.parent` both come from the
- * document's own tree (`locateTarget`), never from the caller.
- */
 const followingSibling = (site: ModifySite): O.Option<MarkdownNode> => {
   const siblings = childrenOf(site.parent);
   return O.flatMap(
@@ -1659,12 +1519,6 @@ const followingSibling = (site: ModifySite): O.Option<MarkdownNode> => {
   );
 };
 
-/**
- * Why a flow replacement does not survive its source context, if it does
- * not. This reuses the actual interruption grammar: each standalone block
- * must keep both splice-relative boundaries in the same container slot, and
- * the following sibling must keep its span shifted by the length delta.
- */
 const flowContextFailure: {
   (content: string, document: MarkdownDocument, site: ModifySite): O.Option<string>;
   (document: MarkdownDocument, site: ModifySite): (content: string) => O.Option<string>;
@@ -1693,7 +1547,6 @@ const flowContextFailure: {
   return changesFollowing ? O.some("the flow replacement would absorb or change its following sibling") : O.none();
 });
 
-/** The parse options `format` parses with: the formatting options' parse knobs, absent ones omitted. */
 const formatParseOptions = (options: MarkdownFormattingOptions.Encoded | undefined): MarkdownParseOptions =>
   MarkdownParseOptions.make({
     ...O.getSomesStruct({
@@ -1701,8 +1554,6 @@ const formatParseOptions = (options: MarkdownFormattingOptions.Encoded | undefin
       frontmatter: O.fromUndefinedOr(options?.frontmatter),
     }),
   });
-
-// ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
  * Normalizes markdown markers and replaces a single node, as byte-minimal

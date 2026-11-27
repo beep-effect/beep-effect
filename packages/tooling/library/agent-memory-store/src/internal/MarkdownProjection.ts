@@ -90,8 +90,7 @@ export const nodeEventDecoders = {
 const decodeFileImported = S.decodeUnknownEffect(FileImportedEvent.payloadSchemaBinary);
 const decodeFolderImported = S.decodeUnknownEffect(FolderImportedEvent.payloadSchemaBinary);
 
-// Lists `nodeId` under `key` once: a node folded again keeps its one place.
-const pushTo = <K>(map: MutableHashMap.MutableHashMap<K, Array<NodeId>>, key: K, nodeId: NodeId): void => {
+const listOnce = <K>(map: MutableHashMap.MutableHashMap<K, Array<NodeId>>, key: K, nodeId: NodeId): void => {
   O.match(MutableHashMap.get(map, key), {
     onNone: () => {
       MutableHashMap.set(map, key, [nodeId]);
@@ -104,8 +103,6 @@ const pushTo = <K>(map: MutableHashMap.MutableHashMap<K, Array<NodeId>>, key: K,
   });
 };
 
-// A later event for a node replaces its record; the text it replaces becomes
-// `previousText`, which `projectNode` turns into the edit's span.
 const updateNode = (
   projection: Projection,
   nodeId: NodeId,
@@ -120,15 +117,12 @@ const updateNode = (
   );
 };
 
-// A revision that keeps its node live: a NodeRevised or a NodeStatusChanged.
 const liveRevision =
   (projection: Projection) =>
   (payload: { readonly nodeId: NodeId; readonly revisionId: RevisionId; readonly text: string }): LazyArg<void> =>
   () =>
     updateNode(projection, payload.nodeId, { live: true, revisionId: payload.revisionId, text: payload.text });
 
-// Decodes one entry's payload and returns what folding it does to the
-// projection, so the caller applies it in step with the cursor.
 const entryStep = (projection: Projection, entry: Entry): Effect.Effect<LazyArg<void>, S.SchemaError> =>
   Match.value(entry.event).pipe(
     // The log refuses a second NodeCreated for a node, so each node is created
@@ -154,8 +148,8 @@ const entryStep = (projection: Projection, entry: Entry): Effect.Effect<LazyArg<
           )
         );
         O.match(payload.after, {
-          onNone: () => pushTo(projection.roots, payload.filePath, payload.nodeId),
-          onSome: (after) => pushTo(projection.children, after, payload.nodeId),
+          onNone: () => listOnce(projection.roots, payload.filePath, payload.nodeId),
+          onSome: (after) => listOnce(projection.children, after, payload.nodeId),
         });
       })
     ),
@@ -203,15 +197,12 @@ export const applyEntries = Effect.fnUntraced(function* (projection: Projection,
   }
 });
 
-// Newest first by journal entry order: creation time, then entry id bytes.
 const newestFirst: Order.Order<ProjectedNode> = Order.mapInput(
   Order.flip(EventJournal.EntryIdOrder),
   (node: ProjectedNode) => node.entryId
 );
 
-// The nodes of `ids` that belong to `filePath`, ordered oldest first so that
-// pushing them onto the walk stack leaves the newest on top.
-const stackOrder = (
+const oldestFirstForStack = (
   projection: Projection,
   ids: ReadonlyArray<NodeId>,
   filePath: MemoryFilePath
@@ -243,13 +234,17 @@ export const fileNodes: {
 } = dual(2, (projection: Projection, filePath: MemoryFilePath): ReadonlyArray<ProjectedNode> => {
   const ordered: Array<ProjectedNode> = [];
   const stack: Array<ProjectedNode> = [
-    ...stackOrder(projection, O.getOrElse(MutableHashMap.get(projection.roots, filePath), A.empty<NodeId>), filePath),
+    ...oldestFirstForStack(
+      projection,
+      O.getOrElse(MutableHashMap.get(projection.roots, filePath), A.empty<NodeId>),
+      filePath
+    ),
   ];
   let node = stack.pop();
   while (node !== undefined) {
     ordered.push(node);
     stack.push(
-      ...stackOrder(
+      ...oldestFirstForStack(
         projection,
         O.getOrElse(MutableHashMap.get(projection.children, node.nodeId), A.empty<NodeId>),
         filePath

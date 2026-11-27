@@ -65,7 +65,6 @@ const edited = (from: string, to: string) =>
 
 const outcomeKinds = (outcomes: ReadonlyArray<AdmissionOutcome>) => A.map(outcomes, (outcome) => outcome.outcome);
 
-// A memory folder holding `notes.md`, imported into the block's fresh store.
 const importedNotes = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const projector = yield* MarkdownProjector;
@@ -79,11 +78,10 @@ const importedNotes = Effect.fnUntraced(function* () {
 
 const options = (author: LineageId, seed: number) => ({ author, statusFields, mintNodeId: seededNodeIdMinter(seed) });
 
-// Each block gets its own store: a store imports one folder once.
-const freshStore = () => Layer.mergeAll(TestPlatform, memoryWritingStoreLayer(statusFields));
+const storeForOneFolderImport = () => Layer.mergeAll(TestPlatform, memoryWritingStoreLayer(statusFields));
 
 describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
-  it.layer(freshStore(), { timeout: "60 seconds" })("two writers on different nodes", (it) => {
+  it.layer(storeForOneFolderImport(), { timeout: "60 seconds" })("two writers on different nodes", (it) => {
     it.effect(
       "two agents starting from one base and editing different nodes of one file both land, and the export holds both edits byte for byte",
       Effect.fnUntraced(function* () {
@@ -115,15 +113,13 @@ describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
     );
   });
 
-  it.layer(freshStore(), { timeout: "60 seconds" })("typed status moves", (it) => {
+  it.layer(storeForOneFolderImport(), { timeout: "60 seconds" })("typed status moves", (it) => {
     it.effect(
       "a status cell edit is submitted as a typed status move and judged against the log head",
       Effect.fnUntraced(function* () {
         const { base, fs, root } = yield* importedNotes();
         const admission = yield* Admission;
         const complete = yield* writeEdits(root, base, [edited("| pending |", "| complete |")], options(writerA, 3));
-        // Writer B moves the same cell forward from the same base, but the log
-        // already holds a later value: the lifecycle guard refuses the move.
         const behind = yield* writeEdits(root, base, [edited("| pending |", "| in-progress |")], options(writerB, 4));
 
         assertSome(
@@ -131,7 +127,10 @@ describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
           ["setStatus"]
         );
         expect(outcomeKinds(complete.write.outcomes)).toEqual(["landed"]);
-        expect(outcomeKinds(behind.write.outcomes)).toEqual(["rejected"]);
+        expect(
+          outcomeKinds(behind.write.outcomes),
+          "writer B moves the cell forward from the same base, but the log already holds a later value"
+        ).toEqual(["rejected"]);
         expect(
           A.flatMap(behind.write.outcomes, (outcome) =>
             outcome.outcome === "rejected" ? A.map(outcome.violations, (violation) => violation.code) : []
@@ -146,7 +145,7 @@ describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
     );
   });
 
-  it.layer(freshStore(), { timeout: "60 seconds" })("one contested node", (it) => {
+  it.layer(storeForOneFolderImport(), { timeout: "60 seconds" })("one contested node", (it) => {
     it.effect(
       "a contested node is held with both texts and the export keeps the text that landed first",
       Effect.fnUntraced(function* () {
@@ -175,7 +174,7 @@ describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
     );
   });
 
-  it.layer(freshStore(), { timeout: "60 seconds" })("removed and empty created files", (it) => {
+  it.layer(storeForOneFolderImport(), { timeout: "60 seconds" })("removed and empty created files", (it) => {
     it.effect(
       "a removed file stays as an empty file that is edited again, never created; an empty created file is refused",
       Effect.fnUntraced(function* () {
@@ -219,7 +218,7 @@ describe.skipIf(!isBunRuntime)("agent write path (Bun runtime)", () => {
     );
   });
 
-  it.layer(freshStore(), { timeout: "60 seconds" })("an unchanged edit", (it) => {
+  it.layer(storeForOneFolderImport(), { timeout: "60 seconds" })("an unchanged edit", (it) => {
     it.effect(
       "an edit that changes nothing submits no batch",
       Effect.fnUntraced(function* () {

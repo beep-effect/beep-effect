@@ -214,11 +214,9 @@ describe("transport thrown headers and classification", () => {
 
 const priorSnapshot = RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_000 });
 
-/** The seed reply that records {@link priorSnapshot}, when the case retains one. */
 const seedReplies = (retained: boolean): ReadonlyArray<Reply> =>
   retained ? [{ status: 200, body: {}, headers: rateLimitHeaders(priorSnapshot) }] : [];
 
-/** Make the seed request so the prior snapshot is recorded, when the case retains one. */
 const seedPrior = Effect.fnUntraced(function* (transport: Transport, retained: boolean) {
   if (!retained) return;
   yield* transport.request("seed", "/seed", {});
@@ -226,7 +224,6 @@ const seedPrior = Effect.fnUntraced(function* (transport: Transport, retained: b
   assertSome(rateLimit3, priorSnapshot);
 });
 
-/** The snapshot survives an invalid reset only when an earlier response recorded it. */
 const assertRetainedSnapshot = Effect.fnUntraced(function* (transport: Transport, retained: boolean) {
   const snapshot = yield* transport.rateLimit;
   if (retained) assertSome(snapshot, priorSnapshot);
@@ -273,7 +270,6 @@ const invalidResetHeaders = (reset: string) => ({
   "x-ratelimit-reset": reset,
 });
 
-/** Every invalid reset, each with and without a snapshot recorded beforehand. */
 const snapshotCases = A.flatMap(["9007199254740992", "1e308"], (reset) =>
   A.map([false, true], (retained) => ({ reset, retained, headers: invalidResetHeaders(reset) }))
 );
@@ -286,7 +282,6 @@ const failureCases = A.flatMap(snapshotCases, (snapshotCase) =>
   A.map(["request", "pagination", "graphql"] as const, (mode) => ({ ...snapshotCase, mode }))
 );
 
-/** A paginated read answers a page array; a single request answers the object itself. */
 const answerBody = (mode: "request" | "pagination"): unknown =>
   mode === "pagination" ? [{ answer: 42 }] : { answer: 42 };
 
@@ -429,9 +424,6 @@ describe("transport cancellation", () => {
   }
 });
 
-// A write GitHub may already have applied is not repeated on an ambiguous failure: the 502 stands for a
-// request that reached GitHub and lost its response. Reads, and writes GitHub refused by rate limit,
-// still retry.
 describe("transport write retry safety", () => {
   const twoRetries = RetryPolicy.make({
     ...RetryPolicy.none,
@@ -451,7 +443,7 @@ describe("transport write retry safety", () => {
         const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
         const error = yield* transport.request("write", route, { body: "hello" }).pipe(Effect.flip);
         assert.strictEqual(error.kind, "transport");
-        assert.strictEqual(script.count(), 1);
+        assert.strictEqual(script.count(), 1, "a write GitHub may already have applied is not repeated");
       })
     );
   }
@@ -510,7 +502,6 @@ describe("transport write retry safety", () => {
   );
 });
 
-/** A transport built under a sink that keeps every observation, in order. */
 const observing = Effect.fnUntraced(function* (options: TransportOptions.Encoded) {
   const seen = yield* Ref.make<ReadonlyArray<RateLimitObservation>>([]);
   const sink: RateLimitSinkShape = { record: (observation) => Ref.update(seen, A.append(observation)) };
@@ -569,8 +560,7 @@ describe("transport rate-limit observations", () => {
       assert.strictEqual(seen[0]?.outcome, "ok");
       assert.strictEqual(seen[0]?.operation, "viewer");
       assertNone(seen[0]?.budgetLabel ?? O.some("unexpected"));
-      // The per-attempt fetch wraps the configured one rather than bypassing it.
-      assert.strictEqual(script.count(), 1);
+      assert.strictEqual(script.count(), 1, "the per-attempt fetch wraps the configured one rather than bypassing it");
       const rateLimit = yield* transport.rateLimit;
       assert.deepStrictEqual(rateLimit, O.fromUndefinedOr(seen[0]?.snapshot));
     })
@@ -585,7 +575,6 @@ describe("transport rate-limit observations", () => {
           headers: rateLimitHeaders({ remaining: 4_998 }),
         },
       ]);
-      // Built before the global is swapped: the per-attempt fetch must not have captured it.
       const { transport, observations } = yield* observing({ retry: RetryPolicy.none });
       const data = yield* Effect.acquireUseRelease(
         Effect.sync(() => vi.stubGlobal("fetch", script.fetch)),
@@ -593,7 +582,7 @@ describe("transport rate-limit observations", () => {
         () => Effect.sync(() => vi.unstubAllGlobals())
       );
       assert.deepStrictEqual(data, { viewer: { login: "octocat" } });
-      assert.strictEqual(script.count(), 1);
+      assert.strictEqual(script.count(), 1, "built before the global swap, the per-attempt fetch never captured it");
       const seen = yield* observations;
       assert.lengthOf(seen, 1);
       assert.strictEqual(seen[0]?.snapshot.resource, "graphql");
@@ -608,8 +597,6 @@ describe("transport rate-limit observations", () => {
         { status: 304, headers: rateLimitHeaders({ remaining: 4_990, resource: "core" }) },
       ]);
       const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
-      // octokit throws on a 304; an ETag cache passed as the per-request `request.hook` turns it
-      // back into a response carrying the cached body, so the transport sees a successful 304.
       const answerFromCache = (request: (options: unknown) => Promise<unknown>, options: unknown) =>
         request(options).catch((error: unknown) =>
           P.isObject(error) && error.status === 304 && P.isObject(error.response)
@@ -619,7 +606,11 @@ describe("transport rate-limit observations", () => {
       const response = yield* transport.request<{ readonly answer: number }>("GET /answer", "GET /answer", {
         request: { hook: answerFromCache },
       });
-      assert.strictEqual(response.status, 304);
+      assert.strictEqual(
+        response.status,
+        304,
+        "octokit throws on a 304; the ETag cache hook turns it back into a response"
+      );
       assert.deepStrictEqual(response.data, { answer: 42 });
       const seen = yield* observations;
       assert.lengthOf(seen, 1);

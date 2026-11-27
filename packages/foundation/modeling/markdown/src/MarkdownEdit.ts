@@ -34,7 +34,6 @@ import * as Str from "effect/String";
 
 const $I = $MarkdownId.create("MarkdownEdit");
 
-// Reverse offset order keeps every earlier offset valid while splicing.
 const byOffsetDescending = Order.mapInput(Order.flip(Order.Number), (edit: { readonly offset: number }) => edit.offset);
 
 class OverlappingMarkdownEditsError extends S.TaggedError<
@@ -229,20 +228,18 @@ export class MarkdownEdit extends S.Opaque<MarkdownEdit, { readonly brand: uniqu
   } = dual(
     2,
     (text: string, edits: ReadonlyArray<MarkdownEdit>): string =>
-      // Highest offset first; `limit` is the start of the edit applied just
-      // before, which every later (lower) edit must end at or before.
       A.reduce(
         A.sort(edits, byOffsetDescending),
-        { result: text, limit: Number.POSITIVE_INFINITY },
-        ({ result, limit }, edit) => {
-          if (edit.offset + edit.length > limit) {
+        { result: text, previousEditStart: Number.POSITIVE_INFINITY },
+        ({ result, previousEditStart }, edit) => {
+          if (edit.offset + edit.length > previousEditStart) {
             throw OverlappingMarkdownEditsError.make({
-              message: `MarkdownEdit.applyAll received overlapping edits at offsets ${edit.offset} and ${limit} — overlapping edits are a programmer error`,
+              message: `MarkdownEdit.applyAll received overlapping edits at offsets ${edit.offset} and ${previousEditStart} — overlapping edits are a programmer error`,
             });
           }
           return {
             result: `${Str.slice(0, edit.offset)(result)}${edit.content}${Str.slice(edit.offset + edit.length)(result)}`,
-            limit: edit.offset,
+            previousEditStart: edit.offset,
           };
         }
       ).result

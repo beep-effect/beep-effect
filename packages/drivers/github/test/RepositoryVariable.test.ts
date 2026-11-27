@@ -31,9 +31,8 @@ const run = Effect.fn("run")(function* <A, E>(
       )
     )
   );
-  // The caller's test scope owns the layer, so its finalizers run when the test ends.
-  const context = yield* Layer.build(layer);
-  const value = yield* Effect.provideContext(effect, context);
+  const testScopedContext = yield* Layer.build(layer);
+  const value = yield* Effect.provideContext(effect, testScopedContext);
   return { value, requested, routes: A.map(requested, (c) => c.route) };
 });
 
@@ -50,12 +49,11 @@ describe("RepositoryVariable.set", () => {
         }
       );
 
-      // GitHub has no upsert: the read is what decides the verb. It is a
-      // by-NAME read, so the cost does not grow with the repository.
-      assert.deepStrictEqual(routes, [
-        "GET /repos/{owner}/{repo}/actions/variables/{name}",
-        "PATCH /repos/{owner}/{repo}/actions/variables/{name}",
-      ]);
+      assert.deepStrictEqual(
+        routes,
+        ["GET /repos/{owner}/{repo}/actions/variables/{name}", "PATCH /repos/{owner}/{repo}/actions/variables/{name}"],
+        "GitHub has no upsert; a by-name read decides the verb"
+      );
       assert.deepStrictEqual(requested[1]?.params, {
         owner: "acme",
         repo: "widget",
@@ -70,17 +68,16 @@ describe("RepositoryVariable.set", () => {
       const { requested, routes } = yield* run(
         Effect.flatMap(RepositoryVariable, (v) => v.set("NODE_ENV", "production")),
         {
-          // Absent is a 404 from GitHub, stubbed as the response rather than
-          // by leaving the route unwired — absence would mean "unstubbed".
           "GET /repos/{owner}/{repo}/actions/variables/{name}": Result.fail(GitHubError.notFound("read", "NODE_ENV")),
           "POST /repos/{owner}/{repo}/actions/variables": Result.succeed({}),
         }
       );
 
-      assert.deepStrictEqual(routes, [
-        "GET /repos/{owner}/{repo}/actions/variables/{name}",
-        "POST /repos/{owner}/{repo}/actions/variables",
-      ]);
+      assert.deepStrictEqual(
+        routes,
+        ["GET /repos/{owner}/{repo}/actions/variables/{name}", "POST /repos/{owner}/{repo}/actions/variables"],
+        "absence is a stubbed 404; an unwired route would only mean unstubbed"
+      );
       assert.deepStrictEqual(requested[1]?.params, {
         owner: "acme",
         repo: "widget",
@@ -92,10 +89,6 @@ describe("RepositoryVariable.set", () => {
 
   it.effect("asks GitHub about the exact name, so a longer one cannot look like a match", () =>
     Effect.gen(function* () {
-      // This used to be a substring hazard: the check scanned a listing, so
-      // `NODE_ENV` present could have made `NODE` look like an update. The
-      // by-name read removes the class — GitHub is asked about `NODE` and
-      // answers 404 — so what is pinned now is the name that was ASKED FOR.
       const { requested, routes } = yield* run(
         Effect.flatMap(RepositoryVariable, (v) => v.set("NODE", "x")),
         {
@@ -104,7 +97,7 @@ describe("RepositoryVariable.set", () => {
         }
       );
 
-      assert.strictEqual(requested[0]?.params.name, "NODE");
+      assert.strictEqual(requested[0]?.params.name, "NODE", "the by-name read asks about the name the caller gave");
       assert.strictEqual(routes[1], "POST /repos/{owner}/{repo}/actions/variables");
     })
   );
@@ -126,12 +119,11 @@ describe("RepositoryVariable.list and delete", () => {
 
       assert.deepStrictEqual(Result.getOrThrow(decodeVariableInfos(value)), value);
 
-      // Variables are readable, unlike secrets — discarding the value here
-      // would make an EDITED variable undetectable downstream.
-      assert.deepStrictEqual(value, [
-        VariableInfo.make({ name: "A", value: "1" }),
-        VariableInfo.make({ name: "B", value: "2" }),
-      ]);
+      assert.deepStrictEqual(
+        value,
+        [VariableInfo.make({ name: "A", value: "1" }), VariableInfo.make({ name: "B", value: "2" })],
+        "variables are readable, unlike secrets, so an edited value stays detectable"
+      );
     })
   );
 
@@ -151,20 +143,13 @@ describe("RepositoryVariable.list and delete", () => {
 describe("RepositoryVariable pagination", () => {
   it.effect("returns every variable across pages, not just the first", () =>
     Effect.gen(function* () {
-      // The defect this pins: these reads used a single `request`, which
-      // returns ONE page. A repository with more variables than a page holds
-      // reported a truncated list that looked complete — and the symptom is
-      // exactly what the reporting consumer saw, a listing length that
-      // disagrees with GitHub's own total_count. `layerFixture` pages the
-      // recorded array through the real pagination engine, so 60 items with a
-      // 30-item page is a genuine two-page read.
-      const many = Array.from({ length: 60 }, (_, i) => ({ name: `VAR_${i}`, value: String(i) }));
+      const twoPagesOfVariables = Array.from({ length: 60 }, (_, i) => ({ name: `VAR_${i}`, value: String(i) }));
       const { value } = yield* run(
         Effect.flatMap(RepositoryVariable, (v) => v.list),
         {},
-        { "GET /repos/{owner}/{repo}/actions/variables": Result.succeed(A.map(many, variableFixture)) }
+        { "GET /repos/{owner}/{repo}/actions/variables": Result.succeed(A.map(twoPagesOfVariables, variableFixture)) }
       );
-      assert.lengthOf(value, 60);
+      assert.lengthOf(value, 60, "60 items at a 30-item page size is a genuine two-page read");
       assert.strictEqual(value[59]?.name, "VAR_59");
     })
   );

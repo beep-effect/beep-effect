@@ -42,10 +42,12 @@ describe("GitBranch.create", () => {
     it.layer(GitBranch.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("accepts a name the caller already qualified", () =>
         Effect.gen(function* () {
-          // GitHub's own API is inconsistent about this, so callers pass whichever
-          // form they last saw.
           yield* Effect.flatMap(GitBranch, (branch) => branch.create("refs/heads/main", "abc"));
-          assert.strictEqual((yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}")).ref, "refs/heads/main");
+          assert.strictEqual(
+            (yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}")).ref,
+            "refs/heads/main",
+            "GitHub is inconsistent about qualified names, so callers pass either form"
+          );
         })
       );
     });
@@ -102,13 +104,15 @@ describe("GitBranch.upsert", () => {
           assert.strictEqual(script.count(), 2);
           assert.strictEqual(script.calls[1]?.method, "PATCH");
           assert.include(script.calls[1]?.path ?? "", "/git/refs/heads/main");
-          // Reset, not "proceed": a creator that rooted the branch somewhere else
-          // is corrected rather than inherited.
           const value2 = yield* S.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}");
-          assert.deepStrictEqual(value2, {
-            sha: "abc",
-            force: true,
-          });
+          assert.deepStrictEqual(
+            value2,
+            {
+              sha: "abc",
+              force: true,
+            },
+            "a concurrent creator that rooted the branch elsewhere is reset, not inherited"
+          );
         })
       );
     });
@@ -128,10 +132,8 @@ describe("GitBranch.upsert", () => {
     it.layer(GitBranch.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("resets when already-exists arrives only as a structured code", () =>
         Effect.gen(function* () {
-          // GitHub's documented validation shape with no message anywhere but the
-          // generic top-level one — the shape the releases endpoint answers with.
           const value = yield* Effect.flatMap(GitBranch, (branch) => branch.upsert("main", "abc"));
-          assert.strictEqual(value, "reset");
+          assert.strictEqual(value, "reset", "the releases endpoint answers with only the generic top-level message");
           assert.strictEqual(script.calls[1]?.method, "PATCH");
         })
       );
@@ -255,9 +257,8 @@ describe("GitBranch reads", () => {
     it.layer(GitBranch.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("exists still fails on a real error", () =>
         Effect.gen(function* () {
-          // "Absent" is a 404 and nothing else — a 500 is not an answer.
           const error = yield* Effect.flip(Effect.flatMap(GitBranch, (branch) => branch.exists("main")));
-          assert.strictEqual(error.kind, "transport");
+          assert.strictEqual(error.kind, "transport", "absent is a 404 and nothing else");
         })
       );
     });
@@ -297,9 +298,6 @@ describe("the ManifestCommitter rewrite", () => {
     it.layer(GitBranch.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("what took a 7-line comment and 4 round trips is one call", () =>
         Effect.gen(function* () {
-          // Before: getSha -> exists -> create -> (on failure) exists -> reset,
-          // with a comment explaining that re-checking existence was the only
-          // robust way to tell a concurrent creator from a real failure.
           const value = yield* Effect.flatMap(GitBranch, (branch) => branch.upsert("chore/manifest", "abc"));
           assert.strictEqual(value, "created");
           assert.strictEqual(script.count(), 1);
@@ -329,8 +327,11 @@ describe("Repo", () => {
       it.effect("Repo.provide redirects a program at another repository", () =>
         Effect.gen(function* () {
           yield* Effect.flatMap(GitBranch, (branch) => branch.sha("main")).pipe(Repo.provide(other));
-          // The multi-repository case silk-sync-action loops over.
-          assert.include(script.calls[0]?.path ?? "", "/repos/other/thing/");
+          assert.include(
+            script.calls[0]?.path ?? "",
+            "/repos/other/thing/",
+            "the multi-repository case a sync action loops over"
+          );
         })
       );
     });
