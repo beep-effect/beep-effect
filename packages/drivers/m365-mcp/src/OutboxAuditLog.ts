@@ -875,10 +875,7 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
 
   const appendLine = Effect.fnUntraced(function* (fileName: string, line: string) {
     const file = yield* fs.open(path.join(directory, fileName), { flag: "a", mode: AUDIT_FILE_MODE });
-    // The leading newline ends whatever a crash left unterminated at the end of the file, so a
-    // torn fragment costs only itself and never the record appended after it.
     yield* file.writeAll(textEncoder.encode(`\n${line}\n`));
-    // The record must be on disk before the caller acts on it.
     yield* file.sync;
   }, Effect.scoped);
 
@@ -889,8 +886,6 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
       (name) => fs.readFileString(path.join(directory, name)),
       { concurrency: 1 }
     );
-    // Empty lines separate records. A line that does not decode (a torn write after a crash)
-    // is skipped rather than blocking every later send.
     return pipe(
       texts,
       A.flatMap(Str.split("\n")),

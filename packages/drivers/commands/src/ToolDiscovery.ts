@@ -29,7 +29,6 @@ import type { Tool } from "./Tool.ts";
 
 const $I = $CommandsId.create("ToolDiscovery");
 
-/** An unstubbed test-double member was exercised. */
 class ToolDiscoveryUnstubbedError extends S.TaggedError<ToolDiscoveryUnstubbedError, { readonly brand: unique symbol }>(
   $I`ToolDiscoveryUnstubbedError`
 )(
@@ -40,10 +39,8 @@ class ToolDiscoveryUnstubbedError extends S.TaggedError<ToolDiscoveryUnstubbedEr
   })
 ) {}
 
-/** How many tools' probe evidence to remember. */
 const CACHE_CAPACITY = 256;
 
-/** First version-shaped token: `1.2.3`, `v22.1.0`, `2.3.1-beta.4`. */
 const DEFAULT_VERSION_PATTERN = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/;
 
 /**
@@ -352,7 +349,6 @@ export const ToolResolutionFailure = S.Union([
  */
 export type ToolResolutionFailure = typeof ToolResolutionFailure.Type;
 
-/** What one probe learned about one location; retains its plain-object representation. */
 const Probe = S.Struct({
   found: S.Boolean.pipe($I.annoteKey("Probe.found", { description: "Whether the executable ran." })),
   version: S.Option(S.String).pipe(
@@ -361,7 +357,6 @@ const Probe = S.Struct({
 }).pipe($I.annoteSchema("Probe", { description: "Discovery evidence for one location." }));
 type Probe = typeof Probe.Type;
 
-/** Cached evidence before each call applies its own resolution policy. */
 const Evidence = S.Struct({
   global: Probe.pipe($I.annoteKey("Evidence.global", { description: "Global probe evidence." })),
   local: Probe.pipe($I.annoteKey("Evidence.local", { description: "Project-local probe evidence." })),
@@ -371,17 +366,7 @@ const Evidence = S.Struct({
 }).pipe($I.annoteSchema("Evidence", { description: "Cached discovery evidence independent of policy." }));
 type Evidence = typeof Evidence.Type;
 
-/**
- * The cache key: everything the probe outcome depends on, and nothing else.
- *
- * **Details**
- *
- * A structured key rather than a string because the cache's `MutableHashMap`
- * keys on `Equal`/`Hash`, which Effect implements structurally for plain
- * objects — so the key can carry the probe itself instead of an encoded
- * rendering of it, and the lookup needs no side table. Policy fields are
- * deliberately absent: they are applied to the evidence per call.
- */
+// decision: structural-evidence-cache-key
 class EvidenceKey extends S.Opaque<EvidenceKey, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.String.pipe(
@@ -403,15 +388,12 @@ class EvidenceKey extends S.Opaque<EvidenceKey, { readonly brand: unique symbol 
   )
 ) {}
 
-/** argv for a version probe: the flag string split on whitespace. */
 const probeArgs = (probe: VersionProbe): ReadonlyArray<string> =>
   probe._tag === "VersionNone" ? ["--version"] : A.filter(Str.split(/\s+/)(probe.flag), (part) => part.length > 0);
 
-/** Non-throwing JSON boundary over unknown input. */
 const UnknownJson = S.fromJsonString(S.Unknown);
 const decodeJson = (stdout: unknown) => S.decodeUnknownOption(UnknownJson)(stdout);
 
-/** Reads a version out of one probe's captured stdout. */
 const extractVersion: {
   (probe: VersionProbe, stdout: string): O.Option<string>;
   (stdout: string): (probe: VersionProbe) => O.Option<string>;
@@ -420,7 +402,6 @@ const extractVersion: {
   if (probe._tag === "VersionFlag") {
     const pattern = probe.pattern === undefined ? DEFAULT_VERSION_PATTERN : new RegExp(probe.pattern);
     const match = pattern.exec(stdout);
-    // Group 1 when the pattern captures, else the whole match.
     return O.fromUndefinedOr(match?.[1] ?? match?.[0]);
   }
   return A.reduce(Str.split(probe.path, "."), decodeJson(stdout), (current, key) =>
@@ -430,17 +411,6 @@ const extractVersion: {
   ).pipe(O.filter(P.isString));
 });
 
-/**
- * Runs one location's probe.
- *
- * **Details**
- *
- * Presence is decided by whether the process **ran**, never by its exit code:
- * a tool whose `--version` exits non-zero still exists. Absence is a spawn
- * failure, which is why `Run.collect`'s typed failure is the signal here and
- * no shell (`command -v`) is involved, so a tool name is never interpolated
- * into a command line.
- */
 const probeLocation: {
   (
     command: ChildProcess.Command,
@@ -479,11 +449,9 @@ export interface ToolDiscoveryShape {
   readonly resolve: (tool: Tool) => Effect.Effect<ResolvedTool, ToolResolutionFailure>;
 }
 
-/** The locations a source requirement searches, reported when it is unmet. */
 const requiredSources = (source: Tool["source"]): ReadonlyArray<ResolvedSource> =>
   source === "any" || source === "both" ? ["global", "local"] : [source];
 
-/** Whether the probe evidence meets a source requirement. */
 const SOURCE_SATISFIED: Record<Tool["source"], (evidence: Evidence) => boolean> = {
   any: (evidence) => evidence.global.found || evidence.local.found,
   both: (evidence) => evidence.global.found && evidence.local.found,
@@ -493,7 +461,6 @@ const SOURCE_SATISFIED: Record<Tool["source"], (evidence: Evidence) => boolean> 
 
 const isSatisfied = (source: Tool["source"], evidence: Evidence): boolean => SOURCE_SATISFIED[source](evidence);
 
-/** Both copies exist and report different versions. */
 const hasVersionMismatch = (evidence: Evidence): boolean =>
   evidence.global.found &&
   evidence.local.found &&
@@ -501,34 +468,18 @@ const hasVersionMismatch = (evidence: Evidence): boolean =>
   O.isSome(evidence.local.version) &&
   evidence.global.version.value !== evidence.local.version.value;
 
-// Which copy to run: an explicit source requirement decides; otherwise the
-// mismatch policy decides when both exist; otherwise whichever exists,
-// preferring local.
 const selectSource = (tool: Tool, evidence: Evidence, mismatch: boolean): ResolvedSource => {
   if (tool.source === "global" || tool.source === "local") return tool.source;
   if (mismatch && tool.onMismatch === "preferGlobal") return "global";
   return evidence.local.found ? "local" : "global";
 };
 
-/** Builds the service over an already-resolved spawner and local-exec context. */
 const make = Effect.fnUntraced(function* () {
   const local = yield* LocalExec;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
-  // Cache the EVIDENCE, not the answer: `source` and `onMismatch` are applied
-  // per call, so a second Tool with different constraints gets the right answer
-  // without a second probe.
-  //
-  // The key is (name, version probe) — exactly what the evidence depends on —
-  // as a plain schema value, whose structural `Equal`/`Hash` the cache's
-  // `MutableHashMap` uses, nested union members included. Two tools differing
-  // only in policy share one probe; two differing in how they ask for a
-  // version do not — pinned by "the cache stores EVIDENCE, so a second Tool
-  // with different constraints is answered correctly".
-  //
-  // `timeToLive` is not decoration: with a fixed TTL, core `Cache` memoizes a
-  // FAILED lookup for the entry's lifetime, so one
-  // transient probe failure would mark a tool permanently absent.
+  const rememberOnlyFoundTools = (exit: Exit.Exit<Evidence, LocalExecError>) =>
+    Exit.isSuccess(exit) && (exit.value.global.found || exit.value.local.found) ? Duration.infinity : Duration.zero;
   const cache = yield* Cache.makeWith(
     Effect.fnUntraced(function* (key: EvidenceKey) {
       const context = yield* local.context;
@@ -541,23 +492,7 @@ const make = Effect.fnUntraced(function* () {
     }),
     {
       capacity: CACHE_CAPACITY,
-      // Only a POSITIVE result is worth remembering. Two distinct traps sit
-      // behind this line, and a naive `isSuccess ? infinity : zero` catches
-      // only the first:
-      //
-      // 1. A failed lookup (the LocalExec mechanism erroring) is memoized for
-      //    the entry's whole TTL by default, so a transient failure would
-      //    stick for the process lifetime.
-      // 2. "Not found" is a SUCCESSFUL lookup carrying negative evidence. Left
-      //    memoized, a tool installed mid-process (an action that provisions a
-      //    runtime and then uses it) stays absent forever, with nothing to
-      //    suggest why — pinned by "ABSENCE is not memoized — a tool installed
-      //    mid-process is found".
-      //
-      // A tool that exists does not stop existing; a tool that does not exist
-      // very often starts to.
-      timeToLive: (exit) =>
-        Exit.isSuccess(exit) && (exit.value.global.found || exit.value.local.found) ? Duration.infinity : Duration.zero,
+      timeToLive: rememberOnlyFoundTools,
     }
   ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
 
@@ -566,7 +501,6 @@ const make = Effect.fnUntraced(function* () {
 
   const resolve = Effect.fn("ToolDiscovery.resolve")(function* (tool: Tool) {
     yield* Effect.annotateCurrentSpan({ tool: tool.name, source: tool.source });
-    // Pre-spawn guard: argv position zero is not a place to accept a flag.
     if (tool.name === "" || Str.startsWith("-")(tool.name)) {
       return yield* ToolRefusedError.make({ tool: tool.name });
     }
@@ -613,7 +547,6 @@ const make = Effect.fnUntraced(function* () {
   } satisfies ToolDiscoveryShape;
 });
 
-/** The default for an unstubbed {@link ToolDiscovery.makeTest} member. */
 const notStubbed = (method: string) => () =>
   Effect.die(
     ToolDiscoveryUnstubbedError.make({

@@ -31,7 +31,6 @@ import type { AlchemyPostgresConfig } from "../AlchemyPostgres.config.ts";
 import type { AlchemyPostgresOperation } from "../AlchemyPostgres.errors.ts";
 import type { AlchemyPostgresTables } from "../AlchemyPostgres.schema.ts";
 
-/** SQL and row-decoding failures: infrastructure, never domain outcomes. */
 const isStorageError = (error: unknown): error is SqlError.SqlError | S.SchemaError =>
   SqlError.isSqlError(error) || S.isSchemaError(error);
 
@@ -52,12 +51,7 @@ export const orDieAs =
 /** Decode the rows a statement returned. */
 export const rowsOf = <Schema extends S.Codec<unknown>>(row: Schema) => S.decodeUnknownEffect(S.Array(row));
 
-/**
- * `Backfill.Storage` hands back whatever it put, typed by its caller: the
- * contract is untyped by design (a Durable Object's storage is too), so values
- * read back are trusted as the type the role asks for.
- */
-const isStored = <A>(_: unknown): _ is A => true;
+const trustUntypedBackfillValue = <A>(_: unknown): _ is A => true;
 
 const KvRow = S.Struct({ key: S.String, value: S.Unknown });
 const decodeKv = rowsOf(KvRow);
@@ -66,20 +60,14 @@ const decodeJobRefs = rowsOf(JobRef);
 const decodeDeliveries = rowsOf(DeliveryRow);
 const decodeGenerations = rowsOf(S.Struct({ generation: S.Int }));
 
-/** The longest a failed delivery waits before its next attempt. */
 const retryCeilingMillis = Duration.toMillis(Duration.minutes(1));
-/** The largest backoff exponent: keeps `pollMillis * 2^attempts` inside `bigint` however often a row fails. */
-const retryExponentCap = 30;
-/** How long a failed backfill job waits before it runs again. */
+const bigintSafeRetryExponentCap = 30;
 const jobRetryMillis = Duration.toMillis(Duration.seconds(1));
-/** How long an interrupted delivery pass spends freeing its rows before it leaves them to lapse with their lease. */
 const claimReleaseBudget = Duration.seconds(5);
 const byPosition = Order.mapInput(Order.Number, (row: DeliveryRow) => row.position);
 
-/** The longest failure tag a log line carries. */
 const failureTagLimit = 64;
 
-/** A tagged value's `_tag`, cut to {@link failureTagLimit}. */
 const tagOf = (value: unknown): O.Option<string> =>
   P.hasProperty(value, "_tag") && P.isString(value._tag) ? O.some(Str.slice(0, failureTagLimit)(value._tag)) : O.none();
 
@@ -103,11 +91,9 @@ export const causeTagOf = (cause: Cause.Cause<unknown>): string =>
 /** The role an address belongs to (`node`, `run`, `scanner`, `source`, `consumer`), never its key. */
 export const roleOf: (address: string) => string = flow(Str.split(":"), A.headNonEmpty);
 
-/** Split `rest` at its first `/`: `["view:Name", "a-1/b"]` for `view:Name/a-1/b`. */
-const splitFirst = (rest: string): O.Option<readonly [string, string]> =>
+const splitAtFirstSlash = (rest: string): O.Option<readonly [string, string]> =>
   O.map(Str.indexOf("/")(rest), (at) => [Str.slice(0, at)(rest), Str.slice(at + 1)(rest)] as const);
 
-/** The consumers in the model and their plans, as of the latest `start`. */
 interface Plans {
   model: ReadonlyArray<string>;
   planOf: (target: string) => Backfill.Plan | undefined;
@@ -117,14 +103,11 @@ interface HostDeps {
   readonly config: AlchemyPostgresConfig;
   readonly modelName: string;
   readonly now: Effect.Effect<number>;
-  /** This host's id, written on the outbox rows it leases. */
   readonly owner: string;
   readonly scope: Scope.Scope;
   readonly sql: SqlClient.SqlClient;
   readonly tables: AlchemyPostgresTables;
-  /** Wakes the delivery worker after a commit; polling covers other processes. */
   readonly wakeDeliveries: Queue.Queue<void>;
-  /** Wakes the backfill job worker after a job is scheduled. */
   readonly wakeJobs: Queue.Queue<void>;
 }
 
@@ -137,28 +120,20 @@ export const makeContext = (deps: HostDeps) => {
   const signalDeliveries = Queue.offer(wakeDeliveries, undefined).pipe(Effect.asVoid);
   const signalJobs = Queue.offer(wakeJobs, undefined).pipe(Effect.asVoid);
   const plans: Plans = { model: [], planOf: constUndefined };
-  // A waiting key asks again after `pollMillis`, rather than at once (InMemory's
-  // work queue runs it as soon as other work has run; a polled table would spin).
+  // decision: backfill-waits-poll-interval
   const limits: Backfill.Limits = {
     ...Backfill.defaultLimits,
     ...O.getOrElse(config.backfill, () => ({})),
     pollMillis: config.pollMillis,
   };
-  /** Background passes started once every store is built. */
   const workers: Array<Effect.Effect<void>> = [];
-  /** Each producer's `deliver`, by producer (`Account`, `view:Statement`): an outbox row names it. */
   const delivers = MutableHashMap.empty<string, (delivery: DomainPlatform.Delivery) => Effect.Effect<void>>();
-  /** The source part of each hosted aggregate and view, by its name. */
   const sourceRoles = MutableHashMap.empty<string, (id: string) => Backfill.Source>();
-  /** The consumer part of each hosted view and projection, by `kind:name`. */
   const consumerRoles = MutableHashMap.empty<string, (key: string) => Backfill.Consumer>();
-  /** Each consumer's routing of a source's stored rows: what its scanners use. */
   const consumerRoutes = MutableHashMap.empty<string, Backfill.ScannerHost["route"]>();
 
-  /** The advisory-lock name of one object in this model. */
   const lockName = (object: string) => `${tables.backfillKv}|${modelName}|${object}`;
 
-  /** Run `effect` in a transaction holding `lock`: every other holder on any process waits. */
   const exclusive =
     (lock: string) =>
     <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -172,7 +147,6 @@ export const makeContext = (deps: HostDeps) => {
           )
         );
 
-  /** `Backfill.Storage` for one object: a key-ordered KV table section, locked by `lock`. */
   const storage = (address: string, lock: string): Backfill.Storage => {
     const orDie = orDieAs("backfill")(tables.backfillKv);
     const put = (key: string, value: unknown) =>
@@ -190,7 +164,9 @@ export const makeContext = (deps: HostDeps) => {
           Effect.flatMap(decodeKv),
           Effect.map((rows) =>
             O.getOrUndefined(
-              O.flatMap(A.head(rows), ({ value }) => O.liftPredicate(value, (stored) => isStored<A>(stored)))
+              O.flatMap(A.head(rows), ({ value }) =>
+                O.liftPredicate(value, (stored) => trustUntypedBackfillValue<A>(stored))
+              )
             )
           ),
           orDie
@@ -219,7 +195,9 @@ export const makeContext = (deps: HostDeps) => {
           Effect.flatMap(decodeKv),
           Effect.map(
             flow(
-              A.filter((row): row is { readonly key: string; readonly value: A } => isStored<A>(row.value)),
+              A.filter((row): row is { readonly key: string; readonly value: A } =>
+                trustUntypedBackfillValue<A>(row.value)
+              ),
               A.map(({ key, value }) => Tuple.make(key, value))
             )
           ),
@@ -229,12 +207,10 @@ export const makeContext = (deps: HostDeps) => {
     };
   };
 
-  /** Durable `Backfill.Jobs` for one object: a job table row per id, earliest due wins. */
   const jobs = (address: string): Backfill.Jobs => ({
     schedule: Effect.fn("AlchemyPostgres.Backfill.schedule")(function* (id: string, afterMillis: number) {
       const at = yield* now;
       const due = at + Math.max(0, afterMillis);
-      // A job running now runs again at the new due time; a pending one keeps the earlier one.
       yield* sql`INSERT INTO ${sql(tables.backfillJob)} AS job (model, address, job_id, due_at)
           VALUES (${modelName}, ${address}, ${id}, ${due})
           ON CONFLICT (model, address, job_id) DO UPDATE
@@ -244,7 +220,6 @@ export const makeContext = (deps: HostDeps) => {
     }, orDieAs("backfill")(tables.backfillJob)),
   });
 
-  // ---------------------------------------------------------------- roles, as InMemory wires them
   const nodes = MutableHashMap.empty<string, Backfill.Node>();
   const node = (path: string): Backfill.Node =>
     O.getOrElse(MutableHashMap.get(nodes, path), () => {
@@ -258,7 +233,6 @@ export const makeContext = (deps: HostDeps) => {
     return O.map(MutableHashMap.get(consumerRoles, `${kind}:${name}`), (role) => role(key));
   };
   const scanners = MutableHashMap.empty<string, Backfill.Scanner>();
-  /** The scanner at `address`, for one consumer generation. */
   const scannerAt = (address: string, target: string): Backfill.Scanner =>
     O.getOrElse(MutableHashMap.get(scanners, address), () => {
       const { kind, name } = Backfill.consumerOf(target);
@@ -281,7 +255,6 @@ export const makeContext = (deps: HostDeps) => {
   const scanner = (target: string, ref: Backfill.SourceRef) =>
     scannerAt(`scanner:${target}/${ref.source}/${ref.id}`, target);
   const runs = MutableHashMap.empty<string, Backfill.Run>();
-  /** The root of a consumer generation's run. */
   const run = (target: string): Backfill.Run =>
     O.getOrElse(MutableHashMap.get(runs, target), () => {
       const address = `run:${target}`;
@@ -294,10 +267,8 @@ export const makeContext = (deps: HostDeps) => {
     });
   const sourceOf = (ref: Backfill.SourceRef) =>
     O.map(MutableHashMap.get(sourceRoles, ref.source), (role) => role(ref.id));
-  /** Call the source role of `ref`, or answer `missing` when its source is not in the model. */
   const viaSource = <A>(ref: Backfill.SourceRef, missing: A, use: (role: Backfill.Source) => Effect.Effect<A>) =>
     Effect.suspend(() => O.match(sourceOf(ref), { onNone: () => Effect.succeed(missing), onSome: use }));
-  /** Call a consumer key's role, or answer `missing` when its consumer is not in the model. */
   const viaConsumer = <A>(
     target: string,
     key: string,
@@ -317,7 +288,6 @@ export const makeContext = (deps: HostDeps) => {
           )
         ),
     },
-    // A source or consumer no longer in the model has nothing to give, and takes nothing.
     source: {
       cursor: (ref, target) => viaSource(ref, 0, (role) => role.cursor(target)),
       read: (ref, target, key, after, limit) =>
@@ -350,37 +320,34 @@ export const makeContext = (deps: HostDeps) => {
     },
   };
   const relay = Backfill.makeRelay(net);
-  /** List an instance in the directory; its first commit waits for it. */
   const register = (ref: Backfill.SourceRef) => net.node.register(Backfill.leafOf(ref), ref);
 
-  /** The job runner at `address`, rebuilt from the address after a restart. */
-  const jobRunner = (address: string): O.Option<(id: string) => Effect.Effect<void>> => {
+  const jobRunnerFromAddress = (address: string): O.Option<(id: string) => Effect.Effect<void>> => {
     const after = (prefix: string) => O.map(O.liftPredicate(address, Str.startsWith(prefix)), Str.slice(prefix.length));
     return O.firstSomeOf([
       O.map(after("node:"), (path) => (id: string) => node(path).run(id)),
       O.map(after("run:"), (target) => (id: string) => run(target).run(id)),
       O.flatMap(after("scanner:"), (rest) =>
         O.map(
-          splitFirst(rest),
+          splitAtFirstSlash(rest),
           ([target]) =>
             (id: string) =>
               scannerAt(address, target).run(id)
         )
       ),
       O.flatMap(after("source:"), (rest) =>
-        O.flatMap(splitFirst(rest), ([source, id]) =>
+        O.flatMap(splitAtFirstSlash(rest), ([source, id]) =>
           O.map(MutableHashMap.get(sourceRoles, source), (role) => () => role(id).flush)
         )
       ),
       O.flatMap(after("consumer:"), (rest) =>
-        O.flatMap(splitFirst(rest), ([target, key]) =>
+        O.flatMap(splitAtFirstSlash(rest), ([target, key]) =>
           O.map(consumerRole(target, key), (role) => (id: string) => role.merge(Str.slice("bf-merge:".length)(id)))
         )
       ),
     ]);
   };
 
-  /** Claim due jobs, run each, and drop a job only when no newer request came in while it ran. */
   const jobPass = Effect.gen(function* () {
     const at = yield* now;
     const claimed = yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = ${at + config.leaseMillis}
@@ -395,8 +362,7 @@ export const makeContext = (deps: HostDeps) => {
       claimed,
       Effect.fnUntraced(function* ({ address, job_id, revision }) {
         const where = sql`model = ${modelName} AND address = ${address} AND job_id = ${job_id}`;
-        const exit = yield* O.match(jobRunner(address), {
-          // A role no longer in the model: nothing to run.
+        const exit = yield* O.match(jobRunnerFromAddress(address), {
           onNone: () => Effect.exit(Effect.void),
           onSome: (runJob) =>
             Effect.exit(
@@ -424,7 +390,6 @@ export const makeContext = (deps: HostDeps) => {
     return A.isReadonlyArrayNonEmpty(claimed);
   }).pipe(orDieAs("backfill")(tables.backfillJob));
 
-  /** Rows after a cursor, then every page committed later: a live tail polled at `pollMillis`. */
   const pollTail =
     <Row, E, Req>(read: (after: number) => Effect.Effect<ReadonlyArray<Row>, E, Req>, seqOf: (row: Row) => number) =>
     (after: number): Stream.Stream<Row, E, Req> =>
@@ -442,11 +407,6 @@ export const makeContext = (deps: HostDeps) => {
         )
       );
 
-  /**
-   * The consumer part of catch-up for each key of a view or projection, as
-   * InMemory builds it: it buffers and merges history while a backfill runs,
-   * and applies through `apply`. Registers the consumer and its routing.
-   */
   const consumerKeys = (consumer: {
     readonly id: string;
     readonly target: string;
@@ -483,10 +443,6 @@ export const makeContext = (deps: HostDeps) => {
     return role;
   };
 
-  /**
-   * Start a consumer's stored keys over when its generation is newer than the
-   * one that built them (a rebuilt view or projection), then record it.
-   */
   const resetConsumer = <E, R>(consumer: string, generation: number, clear: Effect.Effect<unknown, E, R>) =>
     sql.withTransaction(
       Effect.gen(function* () {
@@ -504,8 +460,6 @@ export const makeContext = (deps: HostDeps) => {
       })
     );
 
-  // ---------------------------------------------------------------- outbox
-  /** Stage deliveries in the outbox inside the caller's transaction; the worker wakes after it commits. */
   const outbox = (producer: string, deliveries: ReadonlyArray<DomainPlatform.Delivery>, at: number) =>
     Effect.forEach(
       deliveries,
@@ -520,14 +474,7 @@ export const makeContext = (deps: HostDeps) => {
       { concurrency: 1, discard: true }
     ).pipe(Effect.andThen(sql.afterCommit(signalDeliveries)));
 
-  /**
-   * Claim the next deliverable outbox rows for this host: the oldest pending row
-   * of each `(source, target)` whose retry is due and that no host holds a lease
-   * on. `FOR UPDATE SKIP LOCKED` plus the lease keep two hosts on one database
-   * from claiming one row; heads-only keeps every `(source, target)` in order.
-   * Rows from producers this host does not run wait for a host that does.
-   */
-  const claim = Effect.fnUntraced(function* (at: number, hosted: A.NonEmptyReadonlyArray<string>) {
+  const claimLeasedHeads = Effect.fnUntraced(function* (at: number, hosted: A.NonEmptyReadonlyArray<string>) {
     const rows = yield* sql`UPDATE ${sql(tables.delivery)}
       SET locked_until = ${at + config.leaseMillis}, claimed_by = ${owner}
       WHERE position IN (
@@ -551,7 +498,6 @@ export const makeContext = (deps: HostDeps) => {
     sql`UPDATE ${sql(tables.delivery)} SET status = 'delivered', attempts = attempts + 1, locked_until = 0
       WHERE position = ${row.position} AND claimed_by = ${owner}`;
 
-  /** A failed run stays pending: count the attempt, back off, and release the lease. */
   const retryLater = Effect.fnUntraced(function* (row: DeliveryRow, cause: Cause.Cause<unknown>) {
     const at = yield* now;
     yield* Effect.logError(`alchemy-postgres ${modelName} delivery failed; retrying`).pipe(
@@ -565,7 +511,7 @@ export const makeContext = (deps: HostDeps) => {
     );
     yield* sql`UPDATE ${sql(tables.delivery)}
       SET attempts = attempts + 1, locked_until = 0,
-        next_attempt_at = ${at} + LEAST(${config.pollMillis} * POWER(2, LEAST(attempts, ${retryExponentCap}))::bigint, ${retryCeilingMillis})
+        next_attempt_at = ${at} + LEAST(${config.pollMillis} * POWER(2, LEAST(attempts, ${bigintSafeRetryExponentCap}))::bigint, ${retryCeilingMillis})
       WHERE position = ${row.position} AND claimed_by = ${owner}`;
   });
 
@@ -580,15 +526,10 @@ export const makeContext = (deps: HostDeps) => {
           )} AND claimed_by = ${owner}`.pipe(Effect.asVoid),
     });
 
-  /**
-   * Route one claimed row through its producer's kit; `claim` only returns rows
-   * of hosted producers. The span continues the trace stored with the commit
-   * that produced the row, as the kernel's own reaction spans do.
-   */
   const deliverRow = (row: DeliveryRow) => {
     const { envelope, target } = row.delivery;
-    return Effect.fromOption(MutableHashMap.get(delivers, row.producer)).pipe(
-      Effect.orDie,
+    const hostedProducerDeliver = Effect.fromOption(MutableHashMap.get(delivers, row.producer)).pipe(Effect.orDie);
+    return hostedProducerDeliver.pipe(
       Effect.flatMap((deliver) => deliver(row.delivery)),
       Effect.withSpan("AlchemyPostgres.Outbox.deliver", {
         kind: "consumer",
@@ -598,7 +539,6 @@ export const makeContext = (deps: HostDeps) => {
     );
   };
 
-  /** Deliver claimed rows in position order; the first failure stops the pass and frees the rest. */
   const deliverAll = (rows: ReadonlyArray<DeliveryRow>): Effect.Effect<boolean, SqlError.SqlError> =>
     A.match(rows, {
       onEmpty: () => Effect.succeed(true),
@@ -613,11 +553,6 @@ export const makeContext = (deps: HostDeps) => {
         ),
     });
 
-  /**
-   * Free the rows an interrupted pass claimed, as on host close, instead of making the next host wait up to
-   * `leaseMillis` for them. An interruption is not a failed attempt, so attempts and retry times stay as they
-   * were. The release is bounded so an unreachable database cannot hold up close; the lease remains the fallback.
-   */
   const releaseOnInterrupt = (rows: ReadonlyArray<DeliveryRow>, exit: Exit.Exit<boolean, SqlError.SqlError>) =>
     Exit.hasInterrupts(exit)
       ? release(rows).pipe(
@@ -628,25 +563,21 @@ export const makeContext = (deps: HostDeps) => {
         )
       : Effect.void;
 
-  /** One pass: claim, deliver; another pass follows while every claimed row was delivered. */
   const deliveryPass = Effect.gen(function* () {
     const at = yield* now;
     const hosted = delivers.pipe(MutableHashMap.keys, A.fromIterable);
-    // The claim is uninterruptible, so an interrupted pass always knows which rows it holds.
     return yield* Effect.acquireUseRelease(
-      A.isReadonlyArrayNonEmpty(hosted) ? claim(at, hosted) : Effect.succeed(A.empty<DeliveryRow>()),
+      A.isReadonlyArrayNonEmpty(hosted) ? claimLeasedHeads(at, hosted) : Effect.succeed(A.empty<DeliveryRow>()),
       (rows) => Effect.map(deliverAll(rows), (completed) => completed && A.isReadonlyArrayNonEmpty(rows)),
       releaseOnInterrupt
     );
   }).pipe(orDieAs("deliver")(tables.delivery));
 
-  /** Log a background failure; the next pass, poll or wake runs the work again. */
   const logFailure = (what: string) => (cause: Cause.Cause<unknown>) =>
     Effect.logError(`alchemy-postgres ${modelName} ${what} failed`).pipe(
       Effect.annotateLogs({ model: modelName, failure: causeTagOf(cause) })
     );
 
-  /** Run `pass` while it reports more work, on every wake and every poll interval. */
   const worker = (name: string, wake: Queue.Queue<void>, pass: Effect.Effect<boolean>) =>
     Effect.forever(
       Queue.take(wake).pipe(
@@ -656,7 +587,6 @@ export const makeContext = (deps: HostDeps) => {
       )
     );
 
-  /** Start the outbox, backfill and per-store workers in the model's scope. */
   const startWorkers = Effect.suspend(() =>
     Effect.forEach(
       [worker("delivery", wakeDeliveries, deliveryPass), worker("backfill job", wakeJobs, jobPass), ...workers],

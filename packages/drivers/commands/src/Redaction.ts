@@ -66,72 +66,48 @@ export const SECRET_FLAGS: HashSet.HashSet<string> = HashSet.fromIterable([
   "--token",
 ]);
 
-/**
- * npm config keys whose value is a credential (`//registry/:_authToken`,
- * `//registry/:_password`).
- */
-const AUTH_KEY = /:(?:_authtoken|_password)$/i;
+const NPM_AUTH_CONFIG_KEY = /:(?:_authtoken|_password)$/i;
 
-/**
- * The distinct, non-empty secret values, longest first.
- *
- * **Gotchas**
- *
- * Longest-first is load-bearing: redacting `"ab"` before `"abcd"` rewrites
- * `"abcd"` to `"***cd"`, leaking `"cd"` — a fragment of the longer secret.
- * Empty values are dropped because `"abc".split("").join("***")` would insert
- * the placeholder between every character.
- */
-const prepare = (secrets: ReadonlyArray<Redacted.Redacted<string>>): ReadonlyArray<string> =>
+const longestFirstNonEmpty = (secrets: ReadonlyArray<Redacted.Redacted<string>>): ReadonlyArray<string> =>
   A.sort(
     A.filter(A.dedupe(A.map(secrets, Redacted.value)), (value) => value.length > 0),
     Order.mapInput(Order.flip(Order.Number), (value: string) => value.length)
   );
 
-/** Replaces each prepared value with {@link REDACTED}, literally (never as a pattern). */
-const replaceAll: {
+const replaceLiterally: {
   (text: string, values: ReadonlyArray<string>): string;
   (values: ReadonlyArray<string>): (text: string) => string;
 } = dual(2, (text: string, values: ReadonlyArray<string>): string => {
   let out = text;
   for (const value of values) {
-    // split/join is a literal replace on both sides: no regex compilation of
-    // the needle, and no `$&`-style expansion of the replacement.
     out = A.join(Str.split(value)(out), REDACTED);
   }
   return out;
 });
 
-// Implementation of Redaction.apply; the public contract lives on the static.
 const apply: {
   (text: string, secrets: ReadonlyArray<Redacted.Redacted<string>>): string;
   (secrets: ReadonlyArray<Redacted.Redacted<string>>): (text: string) => string;
 } = dual(2, (text: string, secrets: ReadonlyArray<Redacted.Redacted<string>>): string =>
-  secrets.length === 0 ? text : replaceAll(text, prepare(secrets))
+  secrets.length === 0 ? text : replaceLiterally(text, longestFirstNonEmpty(secrets))
 );
 
-// Implementation of Redaction.applyArgs; the public contract lives on the static.
 const applyArgs: {
   (args: ReadonlyArray<string>, secrets: ReadonlyArray<Redacted.Redacted<string>>): ReadonlyArray<string>;
   (secrets: ReadonlyArray<Redacted.Redacted<string>>): (args: ReadonlyArray<string>) => ReadonlyArray<string>;
 } = dual(2, (args: ReadonlyArray<string>, secrets: ReadonlyArray<Redacted.Redacted<string>>): ReadonlyArray<string> => {
   if (secrets.length === 0) return args;
-  return A.map(args, replaceAll(prepare(secrets)));
+  return A.map(args, replaceLiterally(longestFirstNonEmpty(secrets)));
 });
 
-/** Whether `name` introduces a credential value. */
 const isSecretName: {
   (name: string, extra: HashSet.HashSet<string>): boolean;
   (extra: HashSet.HashSet<string>): (name: string) => boolean;
 } = dual(2, (name: string, extra: HashSet.HashSet<string>): boolean => {
   const lower = Str.toLowerCase(name);
-  return HashSet.has(SECRET_FLAGS, lower) || HashSet.has(extra, lower) || AUTH_KEY.test(name);
+  return HashSet.has(SECRET_FLAGS, lower) || HashSet.has(extra, lower) || NPM_AUTH_CONFIG_KEY.test(name);
 });
 
-/**
- * Scrubs the argument at `index` into `out` and returns the index of the next
- * unconsumed argument.
- */
 const scrubArgAt = (
   args: ReadonlyArray<string>,
   index: number,
@@ -145,16 +121,14 @@ const scrubArgAt = (
     return index + 1;
   }
   out.push(arg);
-  // Only consume a following value when one actually exists — a trailing
-  // secret flag must not grow the array.
-  if (isSecretName(arg, extra) && index + 1 < args.length) {
+  const hasFollowingValue = index + 1 < args.length;
+  if (isSecretName(arg, extra) && hasFollowingValue) {
     out.push(REDACTED);
     return index + 2;
   }
   return index + 1;
 };
 
-// Implementation of Redaction.scrubArgs; the public contract lives on the static.
 const scrubArgs: {
   (
     args: ReadonlyArray<string>,

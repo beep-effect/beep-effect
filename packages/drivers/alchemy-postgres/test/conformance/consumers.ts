@@ -43,7 +43,6 @@ class Customer extends Domain.Aggregate("Customer", {
   evolve: { CustomerJoined: (_state, event) => ({ _tag: "Member" as const, name: event.name }) },
 }) {}
 
-/** Version 2 added `amount`; a version 1 row reads back with no amount, as 0. */
 class OrderPlaced extends Domain.Event("OrderPlaced", { customer: CustomerId, amount: S.Int }) {
   static readonly schemaVersion = 2;
   static readonly upcast = (fromVersion: number, json: unknown): unknown =>
@@ -69,7 +68,6 @@ class Order extends Domain.Aggregate("Order", {
 
 class Hidden extends S.TaggedError<Hidden, { readonly brand: unique symbol }>()("Hidden", {}) {}
 
-/** Folds both aggregates' events into one row per customer; a customer named `hidden` is not readable. */
 class CustomerTotals extends Domain.View("CustomerTotals", {
   from: [Customer, Order],
   key: Customer,
@@ -102,7 +100,6 @@ class OrderLedger extends Domain.Projection("OrderLedger", {
   writes: [OrderFeed],
 }) {}
 
-/** The projection's port: rows written per event, and the size of every batch handed over. */
 class LedgerRows extends Context.Service<
   LedgerRows,
   {
@@ -111,7 +108,6 @@ class LedgerRows extends Context.Service<
   }
 >()("@beep/alchemy-postgres/test/conformance/consumers/LedgerRows") {}
 const LedgerRowsLive = Layer.sync(LedgerRows)(() => ({ rows: MutableHashMap.empty(), batches: [] }));
-/** A port of its own, never shared through the suite's memo map. */
 const freshRows = Layer.fresh(LedgerRowsLive);
 
 const OrderLedgerLive = OrderLedger.toLayer(
@@ -139,9 +135,7 @@ class Shop extends Domain.Model("Shop", {
 
 class ShopApi extends Domain.Api("ShopApi", { model: Shop, views: ["CustomerTotals"] }) {}
 
-/** Before the view: a model of customers alone. */
 class ArchiveBefore extends Domain.Model("Archive", { aggregates: [Customer] }) {}
-/** The same model with a view added after its events exist: it catches up from history. */
 class JoinedNames extends Domain.View("JoinedNames", {
   from: [Customer],
   key: Customer,
@@ -150,7 +144,6 @@ class JoinedNames extends Domain.View("JoinedNames", {
   evolve: { CustomerJoined: (_names, event) => ({ name: event.name }) },
 }) {}
 class ArchiveAfter extends Domain.Model("Archive", { aggregates: [Customer], views: [JoinedNames] }) {}
-/** The same view reading a second source at the same version: its deploy must fail. */
 class JoinedNamesWide extends Domain.View("JoinedNames", {
   from: [Customer, Order],
   key: Customer,
@@ -160,7 +153,6 @@ class JoinedNamesWide extends Domain.View("JoinedNames", {
   evolve: { CustomerJoined: (_names, event) => ({ name: event.name }), OrderPlaced: (names) => names },
 }) {}
 class ArchiveWider extends Domain.Model("Archive", { aggregates: [Customer, Order], views: [JoinedNamesWide] }) {}
-/** The view rebuilt by bumping its version: it computes names in capitals, from the history. */
 class JoinedNamesV1 extends Domain.View("JoinedNames", {
   from: [Customer],
   key: Customer,
@@ -171,7 +163,6 @@ class JoinedNamesV1 extends Domain.View("JoinedNames", {
 }) {}
 class ArchiveRebuilt extends Domain.Model("Archive", { aggregates: [Customer], views: [JoinedNamesV1] }) {}
 
-/** Orders and customers first; then a two-source view and a projection that reads that view. */
 class BacklogBefore extends Domain.Model("Backlog", { aggregates: [Customer, Order] }) {}
 class TotalsLedger extends Domain.Projection("TotalsLedger", {
   from: [CustomerTotals],
@@ -195,11 +186,9 @@ class BacklogAfter extends Domain.Model("Backlog", {
   projections: [TotalsLedger],
 }) {}
 
-/** A long history first; then a two-source view added after it. */
 class LedgerbookBefore extends Domain.Model("Ledgerbook", { aggregates: [Customer, Order] }) {}
 class LedgerbookAfter extends Domain.Model("Ledgerbook", { aggregates: [Customer, Order], views: [CustomerTotals] }) {}
 
-/** One row per order, keyed by its customer; rebuilt by bumping its version on its Layer. */
 class OrderCount extends Domain.Projection("OrderCount", {
   from: [Order],
   key: Customer,
@@ -222,11 +211,9 @@ const OrderCountV1Live = OrderCount.toLayer(countRows, { version: 1 });
 class Counting extends Domain.Model("Counting", { aggregates: [Customer, Order], projections: [OrderCount] }) {}
 class CountingRebuilt extends Domain.Model("Counting", { aggregates: [Customer, Order], projections: [OrderCount] }) {}
 
-/** A long history, then a two-source view whose first build stops mid-backfill. */
 class ResumingBefore extends Domain.Model("Resuming", { aggregates: [Customer, Order] }) {}
 class ResumingAfter extends Domain.Model("Resuming", { aggregates: [Customer, Order], views: [CustomerTotals] }) {}
 
-/** A view with entries first; then a projection that reads it, added after them. */
 class RelayBefore extends Domain.Model("Relay", { aggregates: [Customer], views: [JoinedNames] }) {}
 class NameLedger extends Domain.Projection("NameLedger", {
   from: [JoinedNames],
@@ -240,12 +227,10 @@ class RelayAfter extends Domain.Model("Relay", {
   projections: [NameLedger],
 }) {}
 
-/** A two-source view whose backfill is cut short, then a model without the view at all. */
 class LeavingBefore extends Domain.Model("Leaving", { aggregates: [Customer, Order] }) {}
 class LeavingWith extends Domain.Model("Leaving", { aggregates: [Customer, Order], views: [CustomerTotals] }) {}
 class LeavingWithout extends Domain.Model("Leaving", { aggregates: [Customer, Order] }) {}
 
-/** Fails the first time it folds a customer named `flaky`: a backfill step that dies once. */
 const flakyFolds = MutableHashMap.empty<string, number>();
 class FlakyTotals extends Domain.View("FlakyTotals", {
   from: [Customer, Order],
@@ -266,7 +251,6 @@ class FlakyTotals extends Domain.View("FlakyTotals", {
 class FlakyBefore extends Domain.Model("Flaky", { aggregates: [Customer, Order] }) {}
 class FlakyAfter extends Domain.Model("Flaky", { aggregates: [Customer, Order], views: [FlakyTotals] }) {}
 
-/** The same pair hosted lazily: each key reads its own instance's history before its first answer. */
 class LazyBefore extends Domain.Model("Lazy", { aggregates: [Customer] }) {}
 class LazyAfter extends Domain.Model("Lazy", { aggregates: [Customer], views: [JoinedNames] }) {}
 
@@ -281,14 +265,12 @@ export interface ConsumerTarget<R, E, PE> {
   readonly platform: Layer.Layer<Domain.Platform, PE, R>;
 }
 
-/** Poll until `predicate` holds, failing after 5 seconds. */
 const eventually = <A, E, Req>(effect: Effect.Effect<A, E, Req>, predicate: (value: A) => boolean) =>
   effect.pipe(
     Effect.repeat({ until: predicate, schedule: Schedule.spaced(Duration.millis(25)) }),
     Effect.timeout(Duration.seconds(15))
   );
 
-/** The built model's stores, by name. */
 const aggregateStore = Effect.fnUntraced(function* (name: string) {
   const internals = yield* Internals;
   return yield* Effect.fromOption(O.fromUndefinedOr(internals.aggregates.get(name)));
@@ -404,14 +386,14 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             true
           );
           const entries = yield* feed.list(cy);
-          // InMemory's stamp exactly: id, stream, seq, at and commandId, no correlation id or trace.
           deepStrictEqual(
             A.map(entries, ({ envelope: { at, commandId, ...rest } }) => ({
               ...rest,
               at: P.isNumber(at),
               commandId: P.isString(commandId),
             })),
-            A.map([1, 2, 3], (seq) => ({ id: cy, stream: `OrderFeed/${cy}`, seq, at: true, commandId: true }))
+            A.map([1, 2, 3], (seq) => ({ id: cy, stream: `OrderFeed/${cy}`, seq, at: true, commandId: true })),
+            "InMemory's stamp exactly: id, stream, seq, at and commandId, no correlation id or trace"
           );
         })
       );
@@ -431,7 +413,6 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             const caught = yield* eventually(names.get(Customer.ref(dee)), O.isSome);
             deepStrictEqual(caught, O.some({ name: "dee" }));
           }).pipe(Effect.scoped);
-          // The same consumer reading another source at the same version: the deploy dies, saying to bump it.
           const changed = yield* Layer.build(ArchiveWider.layer(Layer.empty)).pipe(
             Effect.scoped,
             Effect.sandbox,
@@ -442,9 +423,10 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             Str.includes("view:JoinedNames now reads Customer, Order, but its backfill was started reading Customer")(
               changed
             ),
-            true
+            true,
+            "the same consumer reading another source at the same version: the deploy dies, saying to bump it"
           );
-          // Bumped: every key starts over and is computed again from the history.
+
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(ArchiveRebuilt.layer(Layer.empty));
             const names = Context.get(context, JoinedNamesV1);
@@ -466,9 +448,8 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(LazyAfter.layer(Layer.empty, { lazy: ["JoinedNames"] }));
             const names = Context.get(context, JoinedNames);
-            // No waiting: the first read itself fills the key from the instance's events.
             const first = yield* names.get(Customer.ref(eve));
-            deepStrictEqual(first, O.some({ name: "eve" }));
+            deepStrictEqual(first, O.some({ name: "eve" }), "the first read itself fills the key, with no waiting");
             const history = yield* names.history;
             strictEqual(history.complete, true);
           }).pipe(Effect.scoped);
@@ -530,7 +511,6 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               { _tag: "OrderNoted", order: orderId("gus-2"), amount: 3 },
             ]
           );
-          // A key emits an entry per applied event, with its state after it.
           const listed = yield* view.list(gus);
           deepStrictEqual(
             A.map(listed, ({ seq, state }) => [seq, state]),
@@ -538,7 +518,8 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               [1, { name: "gus", total: 0, orders: 0 }],
               [2, { name: "gus", total: 2, orders: 1 }],
               [3, { name: "gus", total: 5, orders: 2 }],
-            ]
+            ],
+            "a key emits an entry per applied event, with its state after it"
           );
           const tailed = yield* Stream.runCollect(view.tail(gus, 1).pipe(Stream.take(2)));
           deepStrictEqual(
@@ -574,16 +555,16 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             const projectionHistory = yield* eventually(progress.history, ({ complete }) => complete);
             strictEqual(projectionHistory.complete, true);
             const ledger = Context.get(context, LedgerRows);
-            // The port is the suite's (memoized), so count this customer's rows: one per view entry.
-            const rows = yield* eventually(
+            const halRowsInSharedPort = yield* eventually(
               Effect.sync(() =>
                 ledger.rows.pipe(MutableHashMap.keys, A.fromIterable, A.filter(Str.startsWith(`${hal}:`)))
               ),
               (found) => A.length(found) === 3
             );
             deepStrictEqual(
-              A.map(rows, (row) => O.getOrElse(MutableHashMap.get(ledger.rows, row), () => 0)),
-              [1, 1, 1]
+              A.map(halRowsInSharedPort, (row) => O.getOrElse(MutableHashMap.get(ledger.rows, row), () => 0)),
+              [1, 1, 1],
+              "one row per view entry"
             );
           }).pipe(Effect.scoped);
         })
@@ -614,8 +595,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           }).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(LedgerbookAfter.layer(CustomerTotalsLive));
-            // Commits while the backfill runs: an instance it has not reached yet asks for a reader,
-            // and neither the history nor the new events are lost.
+
             const first = yield* Effect.fromOption(A.head(customers));
             yield* Context.get(context, Order).send(
               orderId("page-late"),
@@ -641,7 +621,11 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             const withLate = yield* eventually(totals.get(Customer.ref(first)), (found) =>
               O.exists(found, ({ orders }) => orders === 4)
             );
-            deepStrictEqual(withLate, O.some({ name: "n0", total: 10, orders: 4 }));
+            deepStrictEqual(
+              withLate,
+              O.some({ name: "n0", total: 10, orders: 4 }),
+              "a commit during the backfill loses neither the history nor the new event"
+            );
             const joinedLate = yield* eventually(totals.get(Customer.ref(late)), O.isSome);
             deepStrictEqual(joinedLate, O.some({ name: "late", total: 0, orders: 0 }));
           }).pipe(Effect.scoped);
@@ -671,8 +655,8 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               { concurrency: 1, discard: true }
             );
           }).pipe(Effect.scoped);
-          // Stopped right after it starts: its run, directory, scanner and source jobs are left mid-way.
-          yield* Layer.build(ResumingAfter.layer(CustomerTotalsLive)).pipe(Effect.scoped);
+          const stoppedRightAfterStart = Layer.build(ResumingAfter.layer(CustomerTotalsLive)).pipe(Effect.scoped);
+          yield* stoppedRightAfterStart;
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(ResumingAfter.layer(CustomerTotalsLive));
             const totals = Context.get(context, CustomerTotals);
@@ -759,11 +743,12 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
         it.effect("inputs a projection accepted before its process stopped are handled by the next one", () =>
           Effect.gen(function* () {
             const jo = customerId("jo");
-            // The batch waits 400 ms to fill; the first runtime stops before it does.
+
             yield* Effect.gen(function* () {
               const context = yield* Layer.build(Counting.layer(OrderCountLive).pipe(Layer.provideMerge(freshRows)));
               yield* Context.get(context, Order).send(orderId("jo-1"), PlaceOrder.make({ customer: jo, amount: 1 }));
-              yield* Effect.sleep(Duration.millis(150));
+              const stopBeforeBatchWaitEnds = Duration.millis(150);
+              yield* Effect.sleep(stopBeforeBatchWaitEnds);
             }).pipe(Effect.scoped);
             yield* Effect.gen(function* () {
               const context = yield* Layer.build(Counting.layer(OrderCountLive).pipe(Layer.provideMerge(freshRows)));
@@ -788,9 +773,8 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               (customer) => Context.get(context, Customer).send(customer, JoinCustomer.make({ name: customer })),
               { concurrency: 1 }
             );
-            // Not read while filling: in beta.85 InMemory, reading a view key before its first
-            // delivery keeps it out of the directory, and a later backfill would miss it.
-            yield* Effect.sleep(Duration.millis(500));
+            const settleWithoutReadingKeys = Duration.millis(500);
+            yield* Effect.sleep(settleWithoutReadingKeys);
           }).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(RelayAfter.layer(NameLedgerLive).pipe(Layer.provideMerge(freshRows)));
@@ -806,7 +790,8 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
             );
             deepStrictEqual(
               A.sort(rows, Str.Order),
-              A.map(names, (customer) => `JoinedNames/${customer}:1`)
+              A.map(names, (customer) => `JoinedNames/${customer}:1`),
+              "keys are not read while filling: InMemory keeps a key read before its first delivery out of the directory"
             );
           }).pipe(Effect.scoped);
         })
@@ -827,15 +812,15 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               { concurrency: 1, discard: true }
             );
           }).pipe(Effect.scoped);
-          // Built and torn down at once: its backfill run and the jobs it scheduled are left behind.
-          yield* Layer.build(LeavingWith.layer(CustomerTotalsLive)).pipe(Effect.scoped);
+          const builtAndTornDown = Layer.build(LeavingWith.layer(CustomerTotalsLive)).pipe(Effect.scoped);
+          yield* builtAndTornDown;
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(LeavingWithout.layer(Layer.empty));
-            // What is left runs against roles that are gone; live commits route only to what is hosted.
-            yield* Effect.sleep(Duration.millis(600));
+            const leftoverJobsRun = Duration.millis(600);
+            yield* Effect.sleep(leftoverJobsRun);
             const late = customerId("leaving-late");
             const receipt = yield* Context.get(context, Customer).send(late, JoinCustomer.make({ name: "late" }));
-            strictEqual(receipt.version, 1);
+            strictEqual(receipt.version, 1, "live commits route only to what is hosted, not to the removed view");
             const placed = yield* Context.get(context, Order).send(
               orderId("leaving-late-o"),
               PlaceOrder.make({ customer: late, amount: 2 })

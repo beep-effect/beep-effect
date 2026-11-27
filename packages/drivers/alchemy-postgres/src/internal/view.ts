@@ -21,8 +21,7 @@ import type { HostContext } from "./host.ts";
 
 const decodeKeys = rowsOf(S.Struct({ snapshot: ViewSnapshotJson, routed: S.NullOr(S.Record(S.String, S.Finite)) }));
 const decodeEntries = rowsOf(ViewEntryJson);
-/** `COALESCE(MAX(...), 0)` always answers one row. */
-const decodeCount = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ position: S.Int })));
+const decodeCoalescedMax = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ position: S.Int })));
 
 const all = 2_147_483_647;
 
@@ -33,7 +32,6 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
     const name = kit.name;
     const consumerId = `view:${name}`;
     const orDie = orDieAs("receive")(tables.viewKey);
-    // Rebuilt (a new generation): start every key over; the history is replayed to it.
     yield* ctx.resetConsumer(
       consumerId,
       kit.generation,
@@ -47,7 +45,6 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
       )
     );
     const target = kit.target;
-    /** One lock per key: applying, and the key's consumer and source roles, hold it. */
     const lockOf = (key: string) => `view:${name}/${key}`;
     MutableHashMap.set(ctx.delivers, consumerId, kit.deliver);
 
@@ -68,7 +65,6 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
         WHERE model = ${modelName} AND view = ${name} AND key = ${key} AND seq > ${after}
         ORDER BY seq LIMIT ${limit}`.pipe(Effect.flatMap(decodeEntries), orDie);
 
-    /** Apply deliveries to a key and route what it emits, in one transaction holding the key's lock. */
     const apply = (key: string, deliveries: ReadonlyArray<DomainPlatform.Delivery>): Effect.Effect<void> =>
       ctx
         .exclusive(lockOf(key))(
@@ -84,7 +80,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
             const fresh = A.filter(deliveries, (delivery) => (before.checkpoints[delivery.source] ?? 0) < delivery.seq);
             const last = yield* sql`SELECT COALESCE(MAX(position), 0)::int AS position FROM ${sql(tables.consumerInput)}
               WHERE model = ${modelName} AND consumer = ${consumerId} AND key = ${key}`.pipe(
-              Effect.flatMap(decodeCount),
+              Effect.flatMap(decodeCoalescedMax),
               Effect.map((rows) => A.headNonEmpty(rows).position)
             );
             yield* Effect.forEach(
@@ -129,7 +125,6 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
         )
         .pipe(kit.observe(key, deliveries));
 
-    // As a consumer: buffers and merges history while a backfill runs.
     const consumer = ctx.consumerKeys({
       id: consumerId,
       target,
@@ -145,7 +140,6 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
         ({ seq }) => seq
       );
 
-    // As a source: other views and projections read its entries.
     const sources = MutableHashMap.empty<string, Backfill.Source>();
     const sourceRole = (key: string): Backfill.Source =>
       O.getOrElse(MutableHashMap.get(sources, key), () => {
@@ -179,11 +173,8 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
         return role;
       });
 
-    // A key of a view keyed by its one aggregate reads its history from that
-    // instance before it answers anything, the first time: when the view is
-    // lazy, or rebuilt in place. After that, it is read like any other.
     const caughtUp = MutableHashSet.empty<string>();
-    const ready = (key: string): Effect.Effect<void> =>
+    const catchUpFromAggregateOnce = (key: string): Effect.Effect<void> =>
       Effect.suspend(() => {
         const catchUp = kit.catchUp;
         if (catchUp === undefined || MutableHashSet.has(caughtUp, key)) return Effect.void;
@@ -200,17 +191,16 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
             Effect.asVoid
           );
       });
-    // Read as a source (by a view or projection catching up), a key has its
-    // own history first: what reads it never sees a key still filling.
     MutableHashMap.set(ctx.sourceRoles, name, (key) => {
       const role = sourceRole(key);
-      const first = ready(key);
+      const ownHistoryFirst = catchUpFromAggregateOnce(key);
       return {
         ...role,
-        log: (after, limit) => Effect.andThen(first, role.log(after, limit)),
-        cursor: (routeTarget) => Effect.andThen(first, role.cursor(routeTarget)),
-        read: (routeTarget, at, after, limit) => Effect.andThen(first, role.read(routeTarget, at, after, limit)),
-        handoff: (routeTarget, at, through) => Effect.andThen(first, role.handoff(routeTarget, at, through)),
+        log: (after, limit) => Effect.andThen(ownHistoryFirst, role.log(after, limit)),
+        cursor: (routeTarget) => Effect.andThen(ownHistoryFirst, role.cursor(routeTarget)),
+        read: (routeTarget, at, after, limit) =>
+          Effect.andThen(ownHistoryFirst, role.read(routeTarget, at, after, limit)),
+        handoff: (routeTarget, at, through) => Effect.andThen(ownHistoryFirst, role.handoff(routeTarget, at, through)),
       };
     });
 
@@ -219,15 +209,14 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
         key: string,
         deliveries: ReadonlyArray<DomainPlatform.Delivery>
       ) {
-        // A key is listed as a source before it first applies anything.
         const existing = yield* keyRow(key);
         if (O.isNone(existing)) yield* ctx.register({ source: name, id: key });
         if (yield* consumer(key).admit(target, deliveries)) yield* apply(key, deliveries);
       }),
-      read: (key) => ready(key).pipe(Effect.andThen(snapshotOf(key))),
+      read: (key) => catchUpFromAggregateOnce(key).pipe(Effect.andThen(snapshotOf(key))),
       changes: (key) =>
         Stream.unwrap(
-          ready(key).pipe(
+          catchUpFromAggregateOnce(key).pipe(
             Effect.as(
               Stream.fromEffectSchedule(snapshotOf(key), Schedule.spaced(ctx.poll)).pipe(
                 Stream.changesWith((left, right) => left.version === right.version && left.seq === right.seq)
@@ -235,7 +224,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
             )
           )
         ),
-      list: (key) => ready(key).pipe(Effect.andThen(entriesAfter(key, 0, all))),
-      tail: (key, after) => Stream.unwrap(ready(key).pipe(Effect.as(tailFrom(key)(after)))),
+      list: (key) => catchUpFromAggregateOnce(key).pipe(Effect.andThen(entriesAfter(key, 0, all))),
+      tail: (key, after) => Stream.unwrap(catchUpFromAggregateOnce(key).pipe(Effect.as(tailFrom(key)(after)))),
     } satisfies DomainPlatform.ViewStore;
   }).pipe(orDieAs("receive")(ctx.tables.viewKey));
