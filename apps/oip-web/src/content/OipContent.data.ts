@@ -347,10 +347,8 @@ const rawOipSiteContent = {
     title: "Send Tom an email.",
     lede: "",
     notice: [
-      // "Thomas J. Oppold is licensed to practice law in Iowa and Minnesota and registered to practice before the United States Patent and Trademark Office.",
       "Information on this site is for general informational purposes only and is not legal advice.",
       "Sending an email does not create an attorney-client relationship; an engagement begins only on countersignature of a written engagement letter following a conflicts check.",
-      // "Past results do not guarantee future outcomes.",
     ],
     review: needsReview("Confirm contact email, jurisdictions, and notice text before launch."),
   },

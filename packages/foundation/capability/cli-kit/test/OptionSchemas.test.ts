@@ -1,6 +1,3 @@
-// The option and context records are branded S.Opaque schemas whose callback and service fields are declared by a
-// guard. These cases run every guard on a value it must accept and one it must refuse, so a schema cannot drift
-// from the values the kit itself builds and passes around.
 import { CliEnvOptions } from "@beep/cli-kit/CliEnv";
 import { CliFailure, CliFailureOptions } from "@beep/cli-kit/CliFailure";
 import { CliLinksLinkerOptions } from "@beep/cli-kit/CliLinks";
@@ -27,7 +24,7 @@ import * as S from "effect/Schema";
 const identity = (absolute: string): string => absolute;
 const links = { mode: "off" as const, target: () => O.none<string>() };
 
-describe("declared option fields", () => {
+describe("declared option fields: each guard accepts a value the kit builds and refuses another, so none drifts", () => {
   it("environment options take a path callback, a formatter record and a stderr TTY effect", () => {
     assertTrue(S.is(CliEnvOptions)({ displayPath: identity, formatter: {}, stderrIsTerminal: Effect.succeed(true) }));
     assertFalse(S.is(CliEnvOptions)({ formatter: 1 }));

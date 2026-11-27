@@ -43,8 +43,6 @@ it.layer(
   ),
   { timeout: "30 seconds" }
 )("DuckDB runner operation deadline", (it) => {
-  // The single DuckDB writer serializes statements, so a transaction that holds it past the
-  // lock-operation interval makes a heartbeat miss its deadline and interrupts the stalled operation.
   it.effect("fails a heartbeat that cannot reach the writer before its deadline", () =>
     TestClock.withLive(
       Effect.gen(function* () {
@@ -53,7 +51,10 @@ it.layer(
         const holder = yield* sql.withTransaction(Effect.sleep("500 millis")).pipe(Effect.forkChild);
         yield* Effect.sleep("20 millis");
         const exit = yield* Effect.exit(storage.refresh(RunnerAddress.make("localhost", 4321), []));
-        assertTrue(exit.pipe(Exit.isFailure));
+        assertTrue(
+          exit.pipe(Exit.isFailure),
+          "the single writer serializes statements, so the held transaction makes the heartbeat miss its deadline"
+        );
         yield* Fiber.join(holder);
         const refresh2 = yield* storage.refresh(RunnerAddress.make("localhost", 4321), []);
         assert.deepStrictEqual(refresh2, []);
@@ -71,8 +72,6 @@ it.layer(
   ),
   { timeout: "30 seconds" }
 )("DuckDB runner lease time zones", (it) => {
-  // Lease timestamps are instants: a lease written under UTC must still be live after the session
-  // moves to UTC+14, so another runner cannot take the shard (a zone-less TIMESTAMP would read 14 hours old).
   it.effect("keeps a lease across a session TimeZone change", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
@@ -85,7 +84,11 @@ it.layer(
       assert.deepStrictEqual(acquire3, [shard]);
       yield* sql`SET TimeZone = 'Pacific/Kiritimati'`;
       const acquire4 = yield* storage.acquire(rival, [shard]);
-      assert.deepStrictEqual(acquire4, []);
+      assert.deepStrictEqual(
+        acquire4,
+        [],
+        "lease timestamps are instants; a zone-less TIMESTAMP would read 14 hours old under UTC+14"
+      );
       const refresh5 = yield* storage.refresh(owner, [shard]);
       assert.deepStrictEqual(refresh5, [shard]);
       yield* sql`SET TimeZone = 'UTC'`;

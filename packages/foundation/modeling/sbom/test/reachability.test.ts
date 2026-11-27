@@ -1,18 +1,3 @@
-// The confinement invariant, as a test rather than a promise.
-//
-// Emitting an SBOM is pure computation over a manifest; signing is
-// network-bound cryptography against Fulcio and Rekor. This package is the
-// first half only: the Sigstore signer is deferred as `@beep/sigstore`, so
-// no module here may reach `@sigstore/*`, a `node:*`
-// builtin, or the runtime half of `@beep/package-json`.
-//
-// The claim is checked structurally, by walking the RUNTIME import graph of
-// `src` from Vite-inlined source text (`test/support/sourceGraph.ts`). What
-// this does not prove is that a downstream bundler drops an unreferenced
-// module; that rests on `"sideEffects": []` (asserted below) plus module-per-
-// file output. What it does prove is the part this package controls: no edge
-// exists.
-
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
@@ -20,7 +5,6 @@ import * as Str from "effect/String";
 import manifest from "../package.json" with { type: "json" };
 import { edgesOf, packageOf, runtimeClosure, sourceModules, sourceOf } from "./support/sourceGraph.ts";
 
-/** The workspace packages the runtime closure may reach, besides `effect`. */
 const RUNTIME_WORKSPACE_PACKAGES = ["@beep/identity", "@beep/schema", "@beep/spdx"];
 
 const MODULES = [
@@ -42,11 +26,7 @@ describe("the source walker", () => {
   });
 
   it("keeps prose, doc examples, strings and erased edges out of the runtime graph", () => {
-    // The parser's own regression fixture, self-contained so it cannot be
-    // reworded away. A `/*` inside a LINE comment once opened a phantom block
-    // comment in a stripper and hid every import after it; this walker reads
-    // only top-of-line statements, so the fixture pins that it stays immune.
-    const fixture = A.join(
+    const phantomBlockCommentFixture = A.join(
       [
         "// Prose naming a scope like @sigstore/* and a glob like src/* here.",
         'import { Schema } from "effect";',
@@ -65,19 +45,26 @@ describe("the source walker", () => {
       ],
       "\n"
     );
-    assert.deepStrictEqual(edgesOf(fixture), {
-      runtime: ["effect", "@beep/spdx", "effect/Array", "./SbomDocument.ts", "./Sibling.ts"],
-      typeOnly: ["@beep/package-json/Package", "@beep/package-json/Person"],
-    });
+    assert.deepStrictEqual(
+      edgesOf(phantomBlockCommentFixture),
+      {
+        runtime: ["effect", "@beep/spdx", "effect/Array", "./SbomDocument.ts", "./Sibling.ts"],
+        typeOnly: ["@beep/package-json/Package", "@beep/package-json/Person"],
+      },
+      "a /* in a line comment once opened a phantom block comment in a stripper; top-of-line reading stays immune"
+    );
   });
 });
 
-describe("bundle reachability", () => {
+describe("bundle reachability — the pure SBOM half never reaches network-bound signing", () => {
   it("the root barrel reaches every module and no @sigstore/*, node:* or package-json runtime edge", () => {
     const { modules, packages } = runtimeClosure("index.ts");
     assert.deepStrictEqual(modules, A.sort(MODULES, Str.Order));
     for (const specifier of packages) {
-      assert.isFalse(Str.startsWith("@sigstore/")(specifier), `${specifier} leaks the signer's dependency`);
+      assert.isFalse(
+        Str.startsWith("@sigstore/")(specifier),
+        `${specifier} leaks a dependency of the signer, deferred to @beep/sigstore`
+      );
       assert.isFalse(Str.startsWith("node:")(specifier), `${specifier} is a Node builtin`);
       assert.notStrictEqual(packageOf(specifier), "@beep/package-json", "package-json is a type-only edge");
     }
@@ -95,20 +82,23 @@ describe("bundle reachability", () => {
   });
 
   it("package-json is reached as a type only — the control for the absence above", () => {
-    // Without this control the absence could mean the walker never saw the
-    // edge. `SbomMetadataSource` names `Package` and `Person` through leaves.
     const typeOnly = A.filter(
       edgesOf(sourceOf("SbomMetadataSource.ts")).typeOnly,
       Str.startsWith("@beep/package-json")
     );
-    assert.deepStrictEqual(A.sort(typeOnly, Str.Order), ["@beep/package-json/Package", "@beep/package-json/Person"]);
+    assert.deepStrictEqual(
+      A.sort(typeOnly, Str.Order),
+      ["@beep/package-json/Package", "@beep/package-json/Person"],
+      "the control: without it the absence could mean the walker never saw the edge"
+    );
   });
 
   it("the bundle value and the identity contract reach nothing but effect and identity", () => {
-    // `SigstoreBundle` and `IdentityToken` are their own modules precisely so a
-    // verifier, or anything that stores or forwards a bundle, can name the shape
-    // without loading Fulcio's transport.
-    assert.deepStrictEqual(runtimeClosure("SigstoreBundle.ts").packages, ["@beep/identity/packages", "effect/Schema"]);
+    assert.deepStrictEqual(
+      runtimeClosure("SigstoreBundle.ts").packages,
+      ["@beep/identity/packages", "effect/Schema"],
+      "a verifier that stores or forwards a bundle names its shape without loading the Fulcio transport"
+    );
     assert.deepStrictEqual(runtimeClosure("IdentityToken.ts").packages, [
       "@beep/identity/packages",
       "effect/Context",
@@ -155,16 +145,19 @@ describe("bundle reachability", () => {
   });
 
   it("the statement, provenance and NTIA models reach nothing but effect and the kit", () => {
-    // This is what lets a VERIFIER depend on the shapes alone.
-    assert.deepStrictEqual(runtimeClosure("InTotoStatement.ts").packages, [
-      "@beep/identity/packages",
-      "effect/Array",
-      "effect/Effect",
-      "effect/Function",
-      "effect/Result",
-      "effect/Schema",
-      "effect/String",
-    ]);
+    assert.deepStrictEqual(
+      runtimeClosure("InTotoStatement.ts").packages,
+      [
+        "@beep/identity/packages",
+        "effect/Array",
+        "effect/Effect",
+        "effect/Function",
+        "effect/Result",
+        "effect/Schema",
+        "effect/String",
+      ],
+      "this is what lets a verifier depend on the shapes alone"
+    );
     assert.deepStrictEqual(runtimeClosure("SlsaProvenance.ts").packages, [
       "@beep/identity/packages",
       "effect/Schema",
@@ -191,30 +184,34 @@ describe("bundle reachability", () => {
   });
 
   it("no src module reads the ambient process", () => {
-    // `SlsaProvenance` takes `serverUrl` as a field because upstream's
-    // `process.env.GITHUB_SERVER_URL` read wrote the literal `undefined` into
-    // every URL when the variable was unset. Comments may name `process`;
-    // code may not, so only top-of-line comment and doc lines are dropped.
-    const COMMENT_LINE = /^\s*(?:\/\/|\/\*\*?|\*).*$/gm;
+    const TOP_OF_LINE_COMMENT = /^\s*(?:\/\/|\/\*\*?|\*).*$/gm;
     for (const module of sourceModules) {
-      const code = Str.replace(COMMENT_LINE, "")(sourceOf(module));
-      assert.notMatch(code, /\bprocess\b/, `${module} reads the ambient process`);
+      const code = Str.replace(TOP_OF_LINE_COMMENT, "")(sourceOf(module));
+      assert.notMatch(
+        code,
+        /\bprocess\b/,
+        `${module} reads the ambient process; upstream's unset GITHUB_SERVER_URL wrote undefined into every URL`
+      );
     }
   });
 });
 
 describe("the manifest", () => {
   it("declares the package side-effect free", () => {
-    // The other half of the mechanism: without it a bundler must assume
-    // evaluating an unreferenced module matters, and keeps it.
-    assert.deepStrictEqual(manifest.sideEffects, []);
+    assert.deepStrictEqual(
+      manifest.sideEffects,
+      [],
+      "the walk proves no edge exists; without this a bundler must keep an unreferenced module"
+    );
   });
 
   it("declares every runtime dependency", () => {
-    // A package you import but do not declare is how a closure rots.
     const declared = R.keys(manifest.dependencies);
     for (const specifier of runtimeClosure("index.ts").packages) {
-      assert.isTrue(A.contains(declared, packageOf(specifier)), `${specifier} is imported but not declared`);
+      assert.isTrue(
+        A.contains(declared, packageOf(specifier)),
+        `${specifier} is imported but not declared, which is how a closure rots`
+      );
     }
   });
 });

@@ -22,20 +22,17 @@ import { LiveStage } from "./OipWebConfig.ts";
 
 const $I = $OipWebId.create("stack/PlanGuard");
 
-/** Per-resource action an `alchemy plan` line reports (`alchemy/src/Cli/LoggingCli.ts`, `formatPlanLines`). */
 const PlanAction = LiteralKit(["create", "update", "adopted", "replace", "delete", "orphaned", "noop"]).pipe(
   $I.annoteSchema("PlanAction", {
-    description: "Action an alchemy plan line reports for one resource.",
+    description: "Per-resource action reported by Alchemy LoggingCli.formatPlanLines (alchemy/src/Cli/LoggingCli.ts).",
   })
 );
 
-/** Actions that remove a physical object: a replacement deletes the old generation, an orphan or a delete removes it. */
 const DestructiveAction = PlanAction.pick(["replace", "delete", "orphaned"]);
 
-/** Kinds of resource whose loss takes oip.law down or loses data. */
 const GuardedKind = LiteralKit(["project", "envVar", "domain", "dns", "bucket"]).pipe(
   $I.annoteSchema("GuardedKind", {
-    description: "Kind of OipWeb resource that a deploy may never replace or delete.",
+    description: "Resource kind protected from replacement or deletion to prevent oip.law downtime or data loss.",
   })
 );
 
@@ -47,7 +44,6 @@ const GuardedKind = LiteralKit(["project", "envVar", "domain", "dns", "bucket"])
  */
 export type GuardedKind = typeof GuardedKind.Type;
 
-/** One resource line of a plan: the resource FQN and the action the plan reports for it. */
 class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symbol }>()(
   S.Struct({
     fqn: S.NonEmptyString,
@@ -59,37 +55,32 @@ class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symbol }>()
   )
 ) {}
 
-/** Raised when a plan replaces, deletes or orphans a guarded resource. */
 class PlanRefused extends S.TaggedError<PlanRefused, { readonly brand: unique symbol }>($I`PlanRefused`)(
   "PlanRefused",
   {
-    refused: S.Array(PlanEntry).annotateKey({ description: "The guarded resources the plan would remove." }),
+    refused: S.Array(PlanEntry).annotateKey({
+      description: "The guarded resources the plan would remove.",
+    }),
   },
   $I.annoteError<PlanRefused>("PlanRefused", {
     description:
-      "The plan replaces or deletes the OipWeb project, a variable, a domain, a DNS record or the assets bucket.",
+      "The plan replaces, deletes or orphans the guarded OipWeb project, variables, domains, DNS records or assets bucket.",
   })
 ) {}
 
-/** Raised when the plan cannot be read with certainty, so nothing can be judged; the check fails closed. */
 class PlanUnreadable extends S.TaggedError<PlanUnreadable, { readonly brand: unique symbol }>($I`PlanUnreadable`)(
   "PlanUnreadable",
   {
-    reason: S.String.annotateKey({ description: "What could not be read: names FQNs, actions and counts only." }),
+    reason: S.String.annotateKey({
+      description: "What could not be read: names FQNs, actions and counts only.",
+    }),
   },
   $I.annoteError<PlanUnreadable>("PlanUnreadable", {
-    description: "The plan log has no summary, an unreadable resource line, or counts that disagree with its lines.",
+    description:
+      "The plan cannot be judged with certainty, so it fails closed on a missing summary, unreadable resource line or mismatched counts.",
   })
 ) {}
 
-/**
- * Logical ids a first `prod` deploy may plan as `create`. The assets bucket is new; the variables
- * and domains take the create path because their `project` prop is the adopted project's output,
- * unresolved when the plan is made, and reconcile then lands on the live object (a variable is
- * written in place, a domain already on the project is left alone). Everything else exists live and
- * must be adopted, so a planned `create` of it (the project, a DNS record, or any resource added to
- * the stack later) is refused until it is added here deliberately.
- */
 const ProdCreatable = LiteralKit([
   "AssetsBucket",
   "EnvNextDisablePwa",
@@ -101,11 +92,11 @@ const ProdCreatable = LiteralKit([
   "Domain-www-opip-law",
 ]).pipe(
   $I.annoteSchema("ProdCreatable", {
-    description: "OipWeb logical id the prod stage may plan as create.",
+    description:
+      "Logical ids a first `prod` deploy may plan as `create`. The assets bucket is new; the variables and domains take the create path because their `project` prop is the adopted project's output, unresolved when the plan is made, and reconcile then lands on the live object (a variable is written in place, a domain already on the project is left alone). Everything else exists live and must be adopted, so a planned `create` of it (the project, a DNS record, or any resource added to the stack later) is refused until it is added here deliberately.",
   })
 );
 
-/** Logical ids a `staging` deploy may plan as `create`; see {@link ProdCreatable}. */
 const StagingCreatable = LiteralKit([
   "AssetsBucket",
   "EnvNextDisablePwa",
@@ -119,57 +110,45 @@ const StagingCreatable = LiteralKit([
   })
 );
 
-/** The create allow-list of each live stage. Personal stages create everything and have none. */
 const creatableOnLiveStage: HashMap.HashMap<string, HashSet.HashSet<string>> = HashMap.make(
   [LiveStage.Enum.prod, HashSet.fromIterable(ProdCreatable.literals)],
   [LiveStage.Enum.staging, HashSet.fromIterable(StagingCreatable.literals)]
 );
 
-/** Raised when a live stage plans `create` for a resource that exists live and must be adopted. */
 class PlanCreateRefused extends S.TaggedError<PlanCreateRefused, { readonly brand: unique symbol }>(
   $I`PlanCreateRefused`
 )(
   "PlanCreateRefused",
   {
-    stage: S.String.annotateKey({ description: "The live stage the plan is for." }),
+    stage: S.String.annotateKey({
+      description: "The live stage the plan is for.",
+    }),
     refused: S.Array(PlanEntry).annotateKey({ description: "The creates outside the stage's allow-list." }),
   },
   $I.annoteError<PlanCreateRefused>("PlanCreateRefused", {
-    description: "A live stage plans to create a resource that is not on its create allow-list.",
+    description:
+      "Existing live-stage resources must be adopted; creating outside the stage create allow-list is refused.",
   })
 ) {}
 
 const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
-/** The logger's line prefix in CI and other non-TTY runs: `[20:33:03.096] INFO: ` (or `INFO (#1): `). */
 const logPrefixPattern = /^\[\d{2}:\d{2}:\d{2}(?:\.\d+)?\] [A-Z]+(?: \(#\d+\))?: /;
 
 const planSummaryPattern = /^Plan:\s/;
 
 const planLinePattern = /^\[([^\]]+)\] ([a-z]+)\b/;
 
-/** Any line the renderer writes for a resource: `[<fqn>] ...`. */
 const resourceLinePattern = /^\[([^\]]+)\] /;
 
-/** The logger's title line, naming the operation and the stage: `Plan · prod`. */
 const stageHeaderPattern = /^(?:Plan|Deploy|Destroy) · (\S+)$/;
 
-/** One per-action count of the summary: `12 to adopted`. */
 const summaryCountPattern = /(\d+) to ([a-z]+)/g;
 
-/** The explicit empty summaries the renderer writes: `Plan: no resources`, `Plan: no changes`. */
 const emptySummaryPattern = /^Plan:\s+no (?:resources|changes)$/;
 
-/** A summary made only of per-action counts: `Plan: 1 to create, 12 to adopted`. */
 const countedSummaryPattern = /^Plan:\s+\d+ to [a-z]+(?:, \d+ to [a-z]+)*$/;
 
-/**
- * The per-action counts of a summary line, or `None` when the whole line is not one of the
- * supported shapes, so a truncated or reshaped summary (`Plan: 1 to`) never reads as empty.
- *
- * @param line - The summary line, color codes and logger prefix removed.
- * @returns The `[action, count]` pairs; empty for an explicit empty summary.
- */
 const readSummaryCounts = (line: string): O.Option<ReadonlyArray<readonly [string, number]>> => {
   if (emptySummaryPattern.test(line)) return O.some([]);
   if (!countedSummaryPattern.test(line)) return O.none();
@@ -181,29 +160,10 @@ const readSummaryCounts = (line: string): O.Option<ReadonlyArray<readonly [strin
   );
 };
 
-/**
- * Remove terminal color codes; the CI renderer colors actions.
- *
- * @param line - A raw log line.
- * @returns The line without escape sequences.
- */
 const stripAnsi = (line: string): string => Str.replace(ansiPattern, "")(line);
 
-/**
- * A log line as the plan renderer wrote it: color codes, surrounding space and the
- * logger's timestamp-and-level prefix removed.
- *
- * @param line - A raw log line.
- * @returns The rendered plan text of the line.
- */
 const cleanLine: (line: string) => string = flow(stripAnsi, Str.trim, Str.replace(logPrefixPattern, ""));
 
-/**
- * The resource line a log line carries, if any.
- *
- * @param line - A log line without color codes.
- * @returns The entry, or `None` for any other line.
- */
 const toEntry = (line: string): O.Option<PlanEntry> =>
   pipe(
     O.fromNullishOr(planLinePattern.exec(line)),
@@ -212,6 +172,10 @@ const toEntry = (line: string): O.Option<PlanEntry> =>
 
 /**
  * The resource lines of a plan log.
+ *
+ * **Gotchas**
+ *
+ * Only complete supported summary shapes yield action counts. An explicit empty summary yields no counts; truncated or reshaped summaries such as Plan: 1 to must fail closed.
  *
  * **Example** (Parse a plan)
  *
@@ -233,12 +197,6 @@ export const parsePlanLog: (log: string) => ReadonlyArray<PlanEntry> = flow(
   A.getSomes
 );
 
-/**
- * The logical id of a resource: the last segment of its FQN.
- *
- * @param fqn - The resource FQN as the plan prints it.
- * @returns The logical id.
- */
 const logicalIdOf = (fqn: string): string =>
   pipe(
     Str.split("/")(fqn),
@@ -246,22 +204,9 @@ const logicalIdOf = (fqn: string): string =>
     O.getOrElse(() => fqn)
   );
 
-/**
- * The stage a plan log is for, from the logger's `Plan · <stage>` title line.
- *
- * @param lines - The log lines, cleaned.
- * @returns The stage, or `None` when the log names none.
- */
 const stageOf = (lines: ReadonlyArray<string>): O.Option<string> =>
   A.findFirst(lines, (line) => O.fromNullishOr(stageHeaderPattern.exec(line)?.[1]));
 
-/**
- * The planned creates a live stage does not allow; always empty for a personal stage.
- *
- * @param stage - The stage the plan is for.
- * @param entries - The plan's resource lines.
- * @returns The creates outside the stage's allow-list.
- */
 const disallowedCreates = (stage: string, entries: ReadonlyArray<PlanEntry>): ReadonlyArray<PlanEntry> =>
   O.match(HashMap.get(creatableOnLiveStage, stage), {
     onNone: () => [],
@@ -299,12 +244,6 @@ export const guardedKindOf = (fqn: string): O.Option<GuardedKind> => {
   return O.none();
 };
 
-/**
- * Total count per action.
- *
- * @param counts - Pairs of an action and a count, one per resource line or per summary count.
- * @returns The count per action.
- */
 const countActions = (counts: ReadonlyArray<readonly [string, number]>): HashMap.HashMap<string, number> =>
   A.reduce(counts, HashMap.empty<string, number>(), (acc, [action, count]) =>
     HashMap.set(acc, action, O.getOrElse(HashMap.get(acc, action), () => 0) + count)

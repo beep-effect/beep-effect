@@ -26,11 +26,6 @@ import { ONBOARD_PRACTICE_PROMPT, ONBOARDING_GUIDE, ONBOARDING_GUIDE_DESCRIPTION
 import { SetupToolkit } from "./SetupTools.ts";
 import { PRACTICE_GATEWAY_VERSION } from "./Version.ts";
 
-/*
- * The manifest's tool list derives from the toolkits the gateway serves, so it
- * cannot drift from them. Setup tools are always mounted; practice-kg, Box
- * Drive and Microsoft 365 tools mount when the saved profile selects them.
- */
 const manifestTools = A.map(
   [
     ...R.values(SetupToolkit.tools),
@@ -51,7 +46,7 @@ const program = mcpbPackageProgram(
     commandName: "practice-gateway-package",
     repoRoot: Bun.fileURLToPath(new URL("../../..", import.meta.url)),
     forbiddenArchiveFragments: ["package.ts", "src/", "practice-profile.json", ".dpapi"],
-    // The PGlite files bin.ts imports `with { type: "file" }`.
+
     assets: ["initdb.wasm", "pglite.data", "pglite.wasm"],
     manifest: McpbManifestFields.make({
       name: "beep-practice-gateway",

@@ -21,9 +21,7 @@ import * as Str from "effect/String";
 
 const Defect = S.Defect();
 const runs = { arbitrary: fcRuns(100) };
-// Defect is a JSON boundary: compare causes in their documented wire form,
-// which intentionally omits Error stacks and normalizes non-JSON values.
-const structural = Effect.fn("structural")(function* <A extends object>(value: A) {
+const defectWireForm = Effect.fn("defectWireForm")(function* <A extends object>(value: A) {
   const fields = "name" in value ? { ...value, name: value.name } : { ...value };
   return "cause" in value ? { ...fields, cause: yield* S.encodeEffect(Defect)(value.cause) } : fields;
 });
@@ -35,9 +33,13 @@ const roundTrips = <A extends object, I>(name: string, schema: S.Codec<A, I>): v
       Effect.gen(function* () {
         const encoded = yield* S.encodeEffect(schema)(value);
         const decoded = yield* S.decodeEffect(schema)(encoded);
-        const structural1 = yield* structural(decoded);
-        const structural6 = yield* structural(value);
-        assert.deepStrictEqual(structural1, structural6);
+        const structural1 = yield* defectWireForm(decoded);
+        const structural6 = yield* defectWireForm(value);
+        assert.deepStrictEqual(
+          structural1,
+          structural6,
+          "causes compare in Defect's JSON wire form, which omits Error stacks and normalizes non-JSON values"
+        );
         const value2 = yield* S.encodeEffect(schema)(decoded);
         assert.deepStrictEqual(value2, encoded);
       }),

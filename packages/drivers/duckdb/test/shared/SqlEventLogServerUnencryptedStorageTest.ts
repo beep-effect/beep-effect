@@ -104,8 +104,7 @@ const assertEntries = (
 
 type Storage = EventLogServerUnencrypted.Storage["Service"];
 
-// beep: the open-with-backlog, drained-queue, persisted-rows and sentinel steps are shared helpers
-// (inlined upstream) so the repo's fallow duplication gate passes; each case keeps its steps.
+// beep: backlog, drain, persisted-row and sentinel steps are shared helpers, inlined upstream, for the fallow gate.
 const openWithBacklog = Effect.fnUntraced(function* (storage: Storage, storeId: StoreId, backlog: EventJournal.Entry) {
   yield* storage.write(storeId, [backlog]);
   const changes = yield* openChanges(storage, storeId);
@@ -148,8 +147,7 @@ type SuiteOptions = {
   readonly savepoints?: boolean | undefined;
 };
 
-// beep: `dual` and a generic error channel satisfy the repo's tsgo rules
-// (missingPipeableSignature, anyUnknownInErrorContext).
+// beep: `dual` and a generic error channel satisfy tsgo missingPipeableSignature and anyUnknownInErrorContext.
 export const suite: {
   <E>(layer: Layer.Layer<SqlClient.SqlClient, E>, options?: SuiteOptions): (name: string) => void;
   <E>(name: string, layer: Layer.Layer<SqlClient.SqlClient, E>, options?: SuiteOptions): void;
@@ -300,10 +298,9 @@ export const suite: {
                   yield* storage.write(storeId, [after]);
                 })
               );
-              // The sentinel exposes leaked notifications without sleeps.
               yield* storage.write(storeId, [sentinel]);
-              const takeN3 = yield* Queue.takeN(changes, 3);
-              assertEntries(takeN3, [before, after, sentinel], 2);
+              const throughSentinel = yield* Queue.takeN(changes, 3);
+              assertEntries(throughSentinel, [before, after, sentinel], 2);
               yield* assertDrained(changes);
 
               yield* assertPersisted(storage, storeId, [backlog, before, after, sentinel]);
@@ -343,58 +340,59 @@ export const suite: {
           })
         );
 
-        it.effect("streams concurrent sibling transactions in sequence order exactly once", () =>
-          Effect.gen(function* () {
-            const sql = yield* SqlClient.SqlClient;
-            const completed = yield* Deferred.make<void>();
-            const release = yield* Deferred.make<void>();
-            let pauseNext = false;
-            // Pause after savepoint completion releases the SQL permit, before storage merges the buffer.
-            const delayedSql: SqlClient.SqlClient = Object.assign(
-              (...args: Parameters<SqlClient.SqlClient>) => sql(...args),
-              sql,
-              {
-                withTransaction: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-                  Effect.suspend(() => {
-                    const pause = pauseNext;
-                    pauseNext = false;
-                    return sql
-                      .withTransaction(effect)
-                      .pipe(
-                        Effect.tap(() =>
-                          pause
-                            ? Deferred.succeed(completed, undefined).pipe(Effect.andThen(Deferred.await(release)))
-                            : Effect.void
-                        )
-                      );
-                  }),
-              }
-            );
-            const storage = yield* makeStorage(makeOptions("sibling_ordering")).pipe(
-              Effect.provideService(SqlClient.SqlClient, delayedSql)
-            );
-            const storeId = makeStoreId("sibling_ordering");
-            const backlog = makeEntry("Ada");
-            const first = makeEntry("Grace");
-            const second = makeEntry("Margaret");
-            const sentinel = makeEntry("Linus");
-            const changes = yield* openWithBacklog(storage, storeId, backlog);
+        it.effect(
+          "streams siblings in order after savepoint releases the SQL permit, before storage merges the buffer",
+          () =>
+            Effect.gen(function* () {
+              const sql = yield* SqlClient.SqlClient;
+              const completed = yield* Deferred.make<void>();
+              const release = yield* Deferred.make<void>();
+              let pauseNext = false;
+              const sqlPausingAfterSavepoint: SqlClient.SqlClient = Object.assign(
+                (...args: Parameters<SqlClient.SqlClient>) => sql(...args),
+                sql,
+                {
+                  withTransaction: <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+                    Effect.suspend(() => {
+                      const pause = pauseNext;
+                      pauseNext = false;
+                      return sql
+                        .withTransaction(effect)
+                        .pipe(
+                          Effect.tap(() =>
+                            pause
+                              ? Deferred.succeed(completed, undefined).pipe(Effect.andThen(Deferred.await(release)))
+                              : Effect.void
+                          )
+                        );
+                    }),
+                }
+              );
+              const storage = yield* makeStorage(makeOptions("sibling_ordering")).pipe(
+                Effect.provideService(SqlClient.SqlClient, sqlPausingAfterSavepoint)
+              );
+              const storeId = makeStoreId("sibling_ordering");
+              const backlog = makeEntry("Ada");
+              const first = makeEntry("Grace");
+              const second = makeEntry("Margaret");
+              const sentinel = makeEntry("Linus");
+              const changes = yield* openWithBacklog(storage, storeId, backlog);
 
-            yield* storage.withTransaction(
-              Effect.gen(function* () {
-                pauseNext = true;
-                const writer = yield* storage.write(storeId, [first]).pipe(Effect.forkChild);
-                yield* Deferred.await(completed);
-                yield* storage.write(storeId, [second]).pipe(Effect.ensuring(Deferred.succeed(release, undefined)));
-                yield* Fiber.join(writer);
-              })
-            );
-            yield* storage.write(storeId, [sentinel]);
-            const rows = yield* Queue.takeN(changes, 3);
-            yield* assertDrained(changes);
-            yield* assertPersisted(storage, storeId, [backlog, first, second, sentinel]);
-            assertEntries(rows, [first, second, sentinel], 2);
-          })
+              yield* storage.withTransaction(
+                Effect.gen(function* () {
+                  pauseNext = true;
+                  const writer = yield* storage.write(storeId, [first]).pipe(Effect.forkChild);
+                  yield* Deferred.await(completed);
+                  yield* storage.write(storeId, [second]).pipe(Effect.ensuring(Deferred.succeed(release, undefined)));
+                  yield* Fiber.join(writer);
+                })
+              );
+              yield* storage.write(storeId, [sentinel]);
+              const rows = yield* Queue.takeN(changes, 3);
+              yield* assertDrained(changes);
+              yield* assertPersisted(storage, storeId, [backlog, first, second, sentinel]);
+              assertEntries(rows, [first, second, sentinel], 2);
+            })
         );
 
         it.effect("rolls back an interrupted pre-commit body without publishing its writes", () =>

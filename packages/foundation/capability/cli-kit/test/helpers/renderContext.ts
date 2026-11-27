@@ -142,8 +142,8 @@ export const decodeTokens = (painted: string): ReadonlyArray<readonly [string | 
   const out: Array<readonly [string | undefined, string]> = [];
   let last = 0;
   for (const match of Str.matchAll(TOKEN_RUN)(painted)) {
-    // A matchAll match always carries its index; the type does not say so.
-    const at = match.index ?? last;
+    const fallbackMatchAllNeverUses = last;
+    const at = match.index ?? fallbackMatchAllNeverUses;
     if (at > last) out.push([undefined, Str.slice(last, at)(painted)]);
     out.push([tokenName(names, match[1]), match[2] ?? ""]);
     last = at + match[0].length;

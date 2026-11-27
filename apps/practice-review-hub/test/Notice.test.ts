@@ -26,20 +26,16 @@ import { Platform } from "./Hub.fixture.ts";
 const MAILBOX = "attorney@example.test";
 const UTC = DateTime.zoneMakeNamedUnsafe("UTC");
 
-/** One draft the fake mailbox was asked to send: its subject, recipients and body type, and its body. */
 type Sent = { readonly summary: string; readonly content: string };
 
-/** What the fake mailbox was asked to send, in order. */
 class SentMail extends Context.Service<SentMail, Ref.Ref<ReadonlyArray<Sent>>>()(
   "@beep/practice-review-hub/test/Notice.test/SentMail"
 ) {}
 
-/** The data directory of one layer build, so a test can read the notice's day claims. */
 class DataDirectory extends Context.Service<DataDirectory, string>()(
   "@beep/practice-review-hub/test/Notice.test/DataDirectory"
 ) {}
 
-// Records each draft; sending succeeds without doing anything.
 const FakeMailbox = Layer.unwrap(
   Effect.map(SentMail, (sent) =>
     Layer.mock(M365)({
@@ -75,7 +71,6 @@ const noticeTest = (claudeFolder: O.Option<NoticeClaudeFolder>) =>
 
 const NoticeTest = noticeTest(O.none());
 
-// A synthetic review folder, written with / as the runbook recommends for the environment file.
 const ReviewFolderTest = noticeTest(NoticeClaudeFolder.makeOption("C:/Users/attorney/Review"));
 
 const question = (itemId: string) =>
@@ -134,7 +129,6 @@ describe("@beep/practice-review-hub daily notice", () => {
       Effect.fnUntraced(function* () {
         yield* (yield* ReviewItemStore).upsert([question("question:notice-link-1")]);
 
-        // The exact line `notice` prints to the journal.
         const printed = yield* noticeOutcomeLine(UTC);
         const SentMail2 = yield* SentMail;
         const sent = yield* Ref.get(SentMail2);

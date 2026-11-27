@@ -9,13 +9,10 @@ import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { sourceModules, sourceOf } from "./support/sourceGraph.ts";
 
-/** Records what was masked, so ordering can be asserted. */
 const recordingOutputs = () => {
   const masked: Array<string> = [];
   const service = ActionOutputs.makeTest({
     setSecret: (value) =>
-      // `Effect.suspend` so the record happens when the effect RUNS, not when
-      // it is described — an eager recorder logs calls that never happened.
       Effect.suspend(() => {
         masked.push(value);
         return Effect.void;
@@ -24,11 +21,6 @@ const recordingOutputs = () => {
   return { masked, service };
 };
 
-/**
- * A `ConfigProvider` over a fixed record. `ConfigProvider.ConfigProvider` is a
- * `Context.Reference` in v4, so it is overridden with `provideService` — there
- * is no `Effect.withConfigProvider`.
- */
 const withConfig = <A, E, R>(values: Record<string, string>, effect: Effect.Effect<A, E, R>) =>
   Effect.provideService(
     effect,
@@ -72,8 +64,6 @@ describe("Secret", () => {
     });
 
     it.effect("masks a value before that value is in the returned record", () => {
-      // The ordering is the invariant: a mask that ran after the caller
-      // already held plaintext would be a mask the caller could skip.
       const seen: Array<string> = [];
       const service = ActionOutputs.makeTest({
         setSecret: (value) =>
@@ -85,7 +75,11 @@ describe("Secret", () => {
       return Effect.gen(function* () {
         const env = yield* Secret.forChildEnv({ A: Redacted.make("aaa") });
         seen.push(`returned:${env.A}`);
-        assert.deepStrictEqual(seen, ["mask:aaa", "returned:aaa"]);
+        assert.deepStrictEqual(
+          seen,
+          ["mask:aaa", "returned:aaa"],
+          "the ordering is the invariant: a mask after the caller holds plaintext is a mask the caller could skip"
+        );
       }).pipe(Effect.provideService(ActionOutputs, service));
     });
 
@@ -121,9 +115,6 @@ describe("Secret", () => {
     });
 
     it.effect("masks before the caller holds the plaintext", () => {
-      // Same ordering invariant as the other members: a mask that ran after
-      // the caller already held plaintext would be a mask the caller could
-      // skip on the way into `process.env`.
       const seen: Array<string> = [];
       const service = ActionOutputs.makeTest({
         setSecret: (value) =>
@@ -135,7 +126,11 @@ describe("Secret", () => {
       return Effect.gen(function* () {
         const plaintext = yield* Secret.forProcessEnv(Redacted.make("bridged"));
         seen.push(`returned:${plaintext}`);
-        assert.deepStrictEqual(seen, ["mask:bridged", "returned:bridged"]);
+        assert.deepStrictEqual(
+          seen,
+          ["mask:bridged", "returned:bridged"],
+          "a mask after the caller holds plaintext is one it could skip on the way into process.env"
+        );
       }).pipe(Effect.provideService(ActionOutputs, service));
     });
 
@@ -170,11 +165,12 @@ describe("Secret", () => {
     });
 
     it("never hands back plaintext — the success channel is void, by type", () => {
-      // Compile-time proof, not a runtime one: were mask to return the
-      // plaintext (A = string), this assignment would not typecheck, because
-      // string is not assignable to void.
       const witness: (secret: Redacted.Redacted<string>) => Effect.Effect<void, never, ActionOutputs> = Secret.mask;
-      assert.strictEqual(witness, Secret.mask);
+      assert.strictEqual(
+        witness,
+        Secret.mask,
+        "the proof is the typed witness: a mask returning plaintext (A = string) would not be assignable to void"
+      );
     });
   });
 
@@ -202,25 +198,6 @@ describe("Secret", () => {
   });
 
   describe("the declassification invariant", () => {
-    /**
-     * Strip comments before scanning.
-     *
-     * **Details**
-     *
-     * A raw text scan reads TSDoc as code: a module whose comment *explains*
-     * that it does not unwrap a secret gets reported as unwrapping one. That
-     * happened — `OidcTokenIssuer` documents the invariant it obeys and failed
-     * this test for saying so. It is the same phantom-edge problem the bundle
-     * reachability walkers hit with `@example` imports, and it has the same fix.
-     *
-     * LINE comments must be stripped FIRST, and the order is load-bearing, not
-     * stylistic: prose containing a `/*`-bearing token — a glob like `src/*`, or
-     * a scope like `@octokit/*` — opens a block comment as far as a regex is
-     * concerned. Stripping blocks first therefore deletes everything from that
-     * word to the end of the NEXT doc comment, real code included. Blocks
-     * cannot nest, so once the fake openers are gone a real `/*` inside a real
-     * block comment is harmless.
-     */
     const stripComments = (source: string): string =>
       pipe(source, Str.replace(/(^|\n)\s*\/\/.*/g, "$1"), Str.replace(/\/\*[\s\S]*?\*\//g, ""));
 
@@ -228,34 +205,41 @@ describe("Secret", () => {
       A.filter(sourceModules, (module) => Str.includes("Redacted.value")(stripComments(sourceOf(module))));
 
     it("only Secret.ts unwraps a Redacted", () => {
-      // The structural half of the invariant: declassification is coupled to
-      // masking, and stays coupled only because nothing else may unwrap.
-      // A reintroduction elsewhere fails here rather than in review.
-      assert.deepStrictEqual(unwrappingModules(), ["Secret.ts"]);
+      assert.deepStrictEqual(
+        unwrappingModules(),
+        ["Secret.ts"],
+        "declassification stays coupled to masking only because nothing else may unwrap a Redacted"
+      );
     });
 
     it("the guard can fail — it is asserting on a non-empty set", () => {
-      // Without this control, the assertion above would pass just as well if
-      // the package had stopped using Redacted entirely — or if the comment
-      // stripper had blinded the scan.
-      assert.isAbove(unwrappingModules().length, 0);
+      assert.isAbove(
+        unwrappingModules().length,
+        0,
+        "without this control the guard passes if Redacted were unused or the comment stripper blinded the scan"
+      );
     });
 
     it("the comment stripper removes comments and only comments", () => {
-      // The stripper is now load-bearing for the invariant above, so it gets its
-      // own discriminating test rather than being trusted.
-      assert.notInclude(stripComments("/** mentions Redacted.value in TSDoc */\nconst a = 1;"), "Redacted.value");
-      assert.include(stripComments("// a note\nconst t = Redacted.value(s);"), "Redacted.value");
+      assert.notInclude(
+        stripComments("/** mentions Redacted.value in TSDoc */\nconst a = 1;"),
+        "Redacted.value",
+        "a raw scan reads TSDoc as code, reporting a module that explains it does not unwrap as unwrapping"
+      );
+      assert.include(
+        stripComments("// a note\nconst t = Redacted.value(s);"),
+        "Redacted.value",
+        "the stripper is load-bearing for the invariant, so it is tested rather than trusted"
+      );
     });
 
     it("stripping order survives a `/*`-bearing token inside a LINE comment", () => {
-      // A blocks-first stripper reads a line comment mentioning a glob like
-      // `src/*` as a block-comment opener. It then eats everything up to the
-      // NEXT `*/` — real code included — before the line-comment pass ever
-      // runs. Lines must be stripped first so a fake opener like this never
-      // gets the chance to swallow the `Redacted.value` call that follows it.
       const fixture = "// note: see src/* for glob patterns\nconst v = Redacted.value(s);\n/** trailing doc */\n";
-      assert.include(stripComments(fixture), "Redacted.value");
+      assert.include(
+        stripComments(fixture),
+        "Redacted.value",
+        "lines strip first: to a regex src/* or @octokit/* opens a block that eats real code up to the next */"
+      );
     });
   });
 });

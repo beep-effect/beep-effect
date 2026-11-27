@@ -60,8 +60,6 @@ const withCsp = (cspHeader: string) => (response: NextResponse) => {
   return response;
 };
 
-// The proxy runs on the Node runtime; the Crypto service is the only platform
-// capability it needs, so one app-local runtime provides it for every request.
 const proxyRuntime = ManagedRuntime.make(NodeCrypto.layer);
 
 const nextNonce = Effect.gen(function* () {

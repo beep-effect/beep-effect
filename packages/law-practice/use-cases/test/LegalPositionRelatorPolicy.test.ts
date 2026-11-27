@@ -46,7 +46,6 @@ import * as R from "effect/Record";
 const ACT = "enter the land";
 const NORM = { designation: "cl. 4.1" };
 
-/** The eight positions, one per kind, all over the same act. */
 const everyPosition = A.map(HohfeldPositionKind.literals, (kind) =>
   HohfeldPosition.make({
     content: LegalActContent.make({ description: ACT, polarity: "act" }),
@@ -54,11 +53,6 @@ const everyPosition = A.map(HohfeldPositionKind.literals, (kind) =>
   })
 );
 
-/**
- * The four kinds reachable from one position under the two derivations. Four
- * applications suffice because the derivations commute and are involutive, so
- * the group they generate has order four.
- */
 const orbitKinds = (position: HohfeldPosition) =>
   HashSet.fromIterable([
     position.kind,
@@ -66,10 +60,6 @@ const orbitKinds = (position: HohfeldPosition) =>
     oppositePosition(position).kind,
     correlativePosition(oppositePosition(position)).kind,
   ]);
-
-// ---------------------------------------------------------------------------
-// Relator fixtures
-// ---------------------------------------------------------------------------
 
 type ScopeInput = {
   readonly material: ReadonlyArray<string>;
@@ -95,7 +85,6 @@ const LESSOR_SCOPE: ScopeInput = {
   territorial: ["US-CA"],
 };
 
-/** Same as {@link LESSOR_SCOPE} except that no territory is shared. */
 const ELSEWHERE_SCOPE: ScopeInput = { ...LESSOR_SCOPE, territorial: ["US-NY"] };
 
 const roleInput = (name: string, player: number) => ({
@@ -114,8 +103,7 @@ type RelatorOptions = {
   readonly scope: ScopeInput;
 };
 
-/** One encoded stored relation, as a record store would hand it over. */
-const relatorInput = (options: RelatorOptions) => ({
+const encodedStoredRelation = (options: RelatorOptions) => ({
   ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, options.id),
   assertingInterpreter: { kind: "User", userId: 1 },
   bearer: roleInput(options.bearer[0], options.bearer[1]),
@@ -127,8 +115,7 @@ const relatorInput = (options: RelatorOptions) => ({
   sourceNorm: NORM,
 });
 
-/** X's stored privilege to enter, held against Y. */
-const PRIVILEGE_TO_ENTER = relatorInput({
+const PRIVILEGE_TO_ENTER = encodedStoredRelation({
   bearer: ["lessee", 1],
   counterparty: ["lessor", 2],
   id: 1,
@@ -137,11 +124,7 @@ const PRIVILEGE_TO_ENTER = relatorInput({
   scope: LESSEE_SCOPE,
 });
 
-/**
- * Y's stored claim that X enter, held against X. X's `duty(enter+)` is the
- * derived correlative of this record — `duty` is never a stored kind.
- */
-const CLAIM_THAT_X_ENTERS = relatorInput({
+const CLAIM_THAT_X_ENTERS = encodedStoredRelation({
   bearer: ["lessor", 2],
   counterparty: ["lessee", 1],
   id: 2,
@@ -150,8 +133,7 @@ const CLAIM_THAT_X_ENTERS = relatorInput({
   scope: LESSOR_SCOPE,
 });
 
-/** Y's stored claim that X refrain from entering, held against X. */
-const CLAIM_THAT_X_REFRAINS = relatorInput({
+const CLAIM_THAT_X_REFRAINS = encodedStoredRelation({
   bearer: ["lessor", 2],
   counterparty: ["lessee", 1],
   id: 3,
@@ -160,8 +142,7 @@ const CLAIM_THAT_X_REFRAINS = relatorInput({
   scope: LESSOR_SCOPE,
 });
 
-/** As {@link CLAIM_THAT_X_REFRAINS}, but recorded for a territory X's privilege does not reach. */
-const CLAIM_THAT_X_REFRAINS_ELSEWHERE = relatorInput({
+const CLAIM_THAT_X_REFRAINS_ELSEWHERE = encodedStoredRelation({
   bearer: ["lessor", 2],
   counterparty: ["lessee", 1],
   id: 4,
@@ -170,7 +151,6 @@ const CLAIM_THAT_X_REFRAINS_ELSEWHERE = relatorInput({
   scope: ELSEWHERE_SCOPE,
 });
 
-/** Every field a relation cannot be read without, refused one at a time. */
 const REQUIRED_RELATOR_FIELDS: ReadonlyArray<keyof typeof PRIVILEGE_TO_ENTER> = [
   "assertingInterpreter",
   "bearer",
@@ -181,10 +161,6 @@ const REQUIRED_RELATOR_FIELDS: ReadonlyArray<keyof typeof PRIVILEGE_TO_ENTER> = 
   "scope",
   "sourceNorm",
 ];
-
-// ---------------------------------------------------------------------------
-// The algebra, by exhaustion over all eight positions
-// ---------------------------------------------------------------------------
 
 describe("LegalPositionRelatorPolicy — the derivations over the closed eight-member domain", () => {
   it.effect("are total: every kind maps into the domain under both derivations", () =>
@@ -227,7 +203,10 @@ describe("LegalPositionRelatorPolicy — the derivations over the closed eight-m
         const expected = isDeonticPositionKind(position.kind)
           ? HashSet.fromIterable(DeonticPositionKind.literals)
           : HashSet.fromIterable(PotestativePositionKind.literals);
-        expect(HashSet.size(orbit)).toBe(4);
+        expect(
+          HashSet.size(orbit),
+          "four applications suffice: the derivations commute and are involutive, so they generate a group of order four"
+        ).toBe(4);
         pipe(Equal.equals(orbit, expected), assertTrue);
       }
     })
@@ -300,10 +279,6 @@ describe("LegalPositionRelatorPolicy — kind and content move together, or not 
   );
 });
 
-// ---------------------------------------------------------------------------
-// Admission
-// ---------------------------------------------------------------------------
-
 describe("LegalPositionRelatorPolicy — admission", () => {
   it.layer(LegalPositionRelatorPolicyLive)((it) => {
     it.effect("admits a complete advantage-side record", () =>
@@ -348,10 +323,6 @@ describe("LegalPositionRelatorPolicy — admission", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// One stored relation, both views
-// ---------------------------------------------------------------------------
-
 describe("LegalPositionRelatorPolicy — one stored relation, every other reading derived", () => {
   it.layer(LegalPositionRelatorPolicyLive)((it) => {
     it.effect("derives both views from a single record, and neither view is storable", () =>
@@ -362,16 +333,18 @@ describe("LegalPositionRelatorPolicy — one stored relation, every other readin
         const correlative = policy.correlativeView(stored);
         const opposite = policy.oppositeView(stored);
 
-        // The cross-party reading: same relation, other end, content untouched.
-        expect(correlative.viewKind).toBe("correlative");
+        expect(correlative.viewKind, "the cross-party reading: same relation, other end, content untouched").toBe(
+          "correlative"
+        );
         expect(correlative.relator).toBe(stored.id);
         expect(correlative.bearer.player).toBe(stored.counterparty.player);
         expect(correlative.counterparty.player).toBe(stored.bearer.player);
         expect(correlative.position.kind).toBe("noRight");
         pipe(legalActContentEquivalence(correlative.position.content, stored.content), assertTrue);
 
-        // The same-party negation: roles stay put, kind and polarity move together.
-        expect(opposite.viewKind).toBe("opposite");
+        expect(opposite.viewKind, "the same-party negation: roles stay put, kind and polarity move together").toBe(
+          "opposite"
+        );
         expect(opposite.relator).toBe(stored.id);
         expect(opposite.bearer.player).toBe(stored.bearer.player);
         expect(opposite.counterparty.player).toBe(stored.counterparty.player);
@@ -379,20 +352,17 @@ describe("LegalPositionRelatorPolicy — one stored relation, every other readin
         expect(opposite.position.content.polarity).toBe("omission");
         expect(opposite.position.content.description).toBe(stored.content.description);
 
-        // Both views are burden-side, so neither could ever have been stored,
-        // and the one stored relation is exactly what it was.
         pipe(HashSet.has(HashSet.fromIterable(AdvantagePositionKind.literals), correlative.position.kind), assertFalse);
         pipe(HashSet.has(HashSet.fromIterable(AdvantagePositionKind.literals), opposite.position.kind), assertFalse);
-        expect(stored.positionKind).toBe("privilege");
+        expect(
+          stored.positionKind,
+          "both views are burden-side, so neither could have been stored, and the stored relation is unchanged"
+        ).toBe("privilege");
         expect(stored.content.polarity).toBe("act");
       })
     );
   });
 });
-
-// ---------------------------------------------------------------------------
-// The scope-overlap-and-opposition check
-// ---------------------------------------------------------------------------
 
 describe("LegalPositionRelatorPolicy — scope overlap and prima facie opposition", () => {
   it.layer(LegalPositionRelatorPolicyLive)((it) => {
@@ -402,16 +372,19 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
         const privilege = yield* policy.admit(PRIVILEGE_TO_ENTER);
         const claim = yield* policy.admit(CLAIM_THAT_X_ENTERS);
 
-        // X's duty(enter+) is the derived correlative of Y's stored claim, and
-        // it lands on the same kind as X's own opposite view — but on the other
-        // polarity, which is exactly why the two coexist.
         const opposite = policy.oppositeView(privilege);
         const correlative = policy.correlativeView(claim);
         expect(opposite.position.kind).toBe("duty");
-        expect(correlative.position.kind).toBe("duty");
+        expect(
+          correlative.position.kind,
+          "X's duty(enter+) is the derived correlative of Y's stored claim; duty is never a stored kind"
+        ).toBe("duty");
         expect(opposite.bearer.player).toBe(correlative.bearer.player);
         expect(opposite.position.content.polarity).toBe("omission");
-        expect(correlative.position.content.polarity).toBe("act");
+        expect(
+          correlative.position.content.polarity,
+          "the same kind as X's own opposite view but the other polarity, which is why the two coexist"
+        ).toBe("act");
 
         expect(HashSet.size(policy.screenForOpposition([privilege, claim]))).toBe(0);
       })
@@ -428,8 +401,6 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
         expect(opposite.position.kind).toBe(correlative.position.kind);
         pipe(legalActContentEquivalence(opposite.position.content, correlative.position.content), assertTrue);
 
-        // The whole emission is asserted, not one sampled member: exactly one
-        // candidate, carrying the unordered pair and the values that qualified it.
         const expected = LegalOppositionCandidateInput.make({
           act: ACT,
           overlappingScope: LegalScopeContext.make({
@@ -443,7 +414,7 @@ describe("LegalPositionRelatorPolicy — scope overlap and prima facie oppositio
         });
 
         const candidates = policy.screenForOpposition([privilege, claim]);
-        expect(HashSet.size(candidates)).toBe(1);
+        expect(HashSet.size(candidates), "the whole emission is asserted, not one sampled member").toBe(1);
         pipe(Equal.equals(candidates, HashSet.make(expected)), assertTrue);
       })
     );

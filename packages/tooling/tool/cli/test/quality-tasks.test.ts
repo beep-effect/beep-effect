@@ -7608,6 +7608,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             })
         );
         expect(changedCoverageOwners(owners, ["packages/_internal/db-admin/drizzle/0001.sql"])).toEqual([
+          "@beep/documents-server",
           "@beep/epistemic-server",
           "@beep/law-practice-server",
           "@beep/repo-cli",

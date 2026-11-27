@@ -1,8 +1,8 @@
 // beep: Effect array ordering preserves the upstream assertions under repository diagnostics.
 
-// Vendored from effect@4.0.6 packages/platform/node/test/cluster/SqlRunnerStorage.integration.test.ts.
-// beep: Retain the shared SQLite registration/shard contract. PostgreSQL/MySQL reserved-connection,
-// advisory-lock and blackhole scenarios require server drivers and do not apply to DuckDB (D65).
+// Ported from effect@4.0.6 packages/platform/node/test/cluster/SqlRunnerStorage.integration.test.ts.
+// beep: Retain the shared SQLite registration/shard contract; drop the server-driver-only scenarios.
+// beep: PostgreSQL/MySQL reserved-connection, advisory-lock and blackhole cases do not apply to DuckDB.
 import { DuckDbTestLayer } from "@beep/duckdb";
 import * as SqlRunnerStorage from "@beep/duckdb/DuckDbRunnerStorage";
 // beep: Public leaf imports and repository test runner replace upstream barrels.
@@ -51,7 +51,7 @@ it.layer(SqlRunnerStorage.layer.pipe(Layer.provideMerge(DuckDbTestLayer), Layer.
     { timeout: 30_000 }
   );
 
-  it.effect("acquireShards", () =>
+  it.effect("acquireShards, then release one shard as a smoke test", () =>
     Effect.gen(function* () {
       const storage = yield* RunnerStorage.RunnerStorage;
 
@@ -82,7 +82,6 @@ it.layer(SqlRunnerStorage.layer.pipe(Layer.provideMerge(DuckDbTestLayer), Layer.
         )
       ).toEqual([1, 2, 3]);
 
-      // smoke test release
       yield* storage.release(runnerAddress1, ShardId.make("default", 2));
     })
   );

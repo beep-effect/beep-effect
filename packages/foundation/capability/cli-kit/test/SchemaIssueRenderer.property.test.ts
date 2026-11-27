@@ -9,10 +9,8 @@ const runs = { arbitrary: fcRuns(100) };
 const target = S.Struct({ port: S.Finite });
 const JsonInput = S.fromJsonString(S.Struct({ port: S.String }));
 
-// This formatter consumes issue trees, not its string output. Fidelity is
-// measured by reconstructing the rejected input through its JSON codec.
 it.effect.prop(
-  "issue formatting preserves the rejected path and survives input serialization",
+  "issue formatting preserves the rejected path, checked by rebuilding the rejected input through its JSON codec",
   [Arbitrary.schema(S.String)],
   ([port]) =>
     Effect.gen(function* () {

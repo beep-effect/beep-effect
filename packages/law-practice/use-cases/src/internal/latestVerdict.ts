@@ -19,23 +19,16 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import type { ReviewBatchId, ReviewItemId, VerdictRow } from "@beep/law-practice-domain";
 
-/** The fields every envelope log row shares: verdict rows and answer rows. */
 type LogRow = { readonly itemId: ReviewItemId; readonly recordedAt: DateTime.Utc; readonly revision: number };
 
-// Recency order of log rows: by `recordedAt` only. Revisions never compare
-// rows; append order breaks ties.
 const LogRowRecency: Order.Order<LogRow> = Order.mapInput(DateTime.Order, (row: LogRow) => row.recordedAt);
 
 const isMoreRecent = Order.isGreaterThan(LogRowRecency);
 
-// A judgement row decides verdicts; a lock row only closes its batch.
 const isJudgementRow = (row: VerdictRow): boolean => O.isNone(row.lockedAt);
 
-// Of two rows read in append order, the more recent one; a tie on
-// `recordedAt` goes to `next`, the row appended last.
 const laterRow = <Row extends LogRow>(current: Row, next: Row): Row => (isMoreRecent(current, next) ? current : next);
 
-// One more than the highest revision among the rows, or 1 when there are none.
 const revisionAfter = (rows: ReadonlyArray<LogRow>): number =>
   pipe(
     A.map(rows, (row) => row.revision),

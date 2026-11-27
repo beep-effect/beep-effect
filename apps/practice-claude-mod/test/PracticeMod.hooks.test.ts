@@ -46,7 +46,7 @@ const fixture = () => {
       every: vi.fn<Engine["clock"]["every"]>(() => ({ cancel: () => undefined })),
     },
   } satisfies Engine;
-  // The engine owns opaque render elements; these spies inspect its requested props.
+
   const elements = {
     Box: vi.fn<ReturnType<Engine["ui"]["resolve"]>["Box"]>(),
     Text: vi.fn<ReturnType<Engine["ui"]["resolve"]>["Text"]>(),

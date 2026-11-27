@@ -17,11 +17,6 @@ import {
   SocialLink,
 } from "@/content";
 
-// Regression coverage for CSF-043: the `social.active` SEO filter gates which
-// social profiles surface in public JSON-LD (`sameAs`) and Twitter metadata.
-// Footer visibility and SEO output must stay aligned with the `active` flag, so
-// these tests pin the active / inactive / missing-active behavior against drift.
-
 const metadata = SiteMetadataContent.make({
   description: "Patent counsel for the people who build the machines.",
   linkedInUrl: "https://www.linkedin.com/in/example",
@@ -31,9 +26,6 @@ const metadata = SiteMetadataContent.make({
   title: "oip.law",
 });
 
-// Build a minimal OipSiteContent shell that only varies the socials list. Every
-// other field reuses the approved launch content so the SEO builders see a
-// realistic graph while we isolate the `active` filter behavior.
 const withSocials = (socials: ReadonlyArray<SocialLink>): OipSiteContent =>
   OipSiteContent.make({
     ...oipSiteContent,
@@ -41,9 +33,6 @@ const withSocials = (socials: ReadonlyArray<SocialLink>): OipSiteContent =>
     socials,
   });
 
-// Extract the LegalService node's `sameAs` array (the public profile fan-out).
-// The builder omits `sameAs` entirely when no active non-discord profile
-// exists, so this resolves to an empty array in that case.
 const sameAsUrls = (content: OipSiteContent): ReadonlyArray<string> => {
   const graph = makeJsonLdGraph(content);
   const legalService = A.findFirst(graph["@graph"], (node) => node["@type"] === "LegalService");
@@ -65,7 +54,10 @@ describe("OipSeo social.active filter (CSF-043)", () => {
       }),
     ]);
 
-    expect(sameAsUrls(content)).toContain("https://www.instagram.com/oip.law/");
+    expect(
+      sameAsUrls(content),
+      "Social active flags must align footer visibility with public sameAs and Twitter metadata for active, inactive and omitted flags."
+    ).toContain("https://www.instagram.com/oip.law/");
   });
 
   it("excludes an inactive social from JSON-LD sameAs", () => {
@@ -79,8 +71,11 @@ describe("OipSeo social.active filter (CSF-043)", () => {
     ]);
 
     expect(sameAsUrls(content)).not.toContain("https://www.instagram.com/oip.law/");
-    // No active profile means the LegalService node omits `sameAs` entirely.
-    expect(sameAsUrls(content)).toHaveLength(0);
+
+    expect(
+      sameAsUrls(content),
+      "LegalService omits sameAs when there is no active non-Discord identity profile; the helper then returns an empty array."
+    ).toHaveLength(0);
   });
 
   it("always excludes discord from JSON-LD sameAs even when active", () => {
@@ -93,16 +88,14 @@ describe("OipSeo social.active filter (CSF-043)", () => {
       }),
     ]);
 
-    // Discord invites are server links, not identity profiles, so they never
-    // appear in `sameAs` regardless of the active flag.
-    expect(sameAsUrls(content)).not.toContain("https://discord.gg/example");
+    expect(
+      sameAsUrls(content),
+      "Discord links are server invites rather than identity profiles and never enter sameAs, even when active."
+    ).not.toContain("https://discord.gg/example");
     expect(sameAsUrls(content)).toHaveLength(0);
   });
 
   it("treats a social with active omitted as active (constructor default contract)", () => {
-    // SocialLink.active carries `withConstructorDefault(true)`, so omitting the
-    // flag yields an ACTIVE social that IS included in SEO output. This pins the
-    // implementation's current contract: missing active === active === visible.
     const social = SocialLink.make({
       platform: "instagram",
       href: "https://www.instagram.com/oip.law/",
@@ -114,8 +107,6 @@ describe("OipSeo social.active filter (CSF-043)", () => {
   });
 
   it("treats decoded input with active omitted as active (decoding default contract)", () => {
-    // The decoding default mirrors the constructor default: raw content missing
-    // `active` decodes to `active: true` and therefore surfaces in SEO output.
     const decoded = decodeOipSiteContentResult({
       ...oipSiteContent,
       metadata,
@@ -162,8 +153,6 @@ describe("OipSeo social.active filter (CSF-043)", () => {
   });
 
   it("derives the Twitter handle when an X profile omits active (default contract)", () => {
-    // Consistent with the JSON-LD path: a missing active flag defaults to true,
-    // so the X handle is still derived.
     const content = withSocials([
       SocialLink.make({
         platform: "x",
@@ -176,8 +165,6 @@ describe("OipSeo social.active filter (CSF-043)", () => {
   });
 
   it("matches the approved launch content sanity check", () => {
-    // oipSiteContent ships every profile active, so the live Instagram URL and
-    // the X handle both surface, and discord stays out of sameAs.
     const seoUrls = sameAsUrls(OipSiteContent.make({ ...oipSiteContent }));
 
     expect(seoUrls).toContain("https://www.instagram.com/oip.law/");

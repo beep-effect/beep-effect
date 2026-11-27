@@ -1,7 +1,4 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
-import * as Arbitrary from "effect/Arbitrary";
-// Real archive bytes, subprocess extraction, and spawn-time manifest IO need the Node platform.
-
 import { Artifact, ArtifactError, BlobTransferError } from "@beep/github-actions";
 import {
   ArtifactRef,
@@ -13,6 +10,7 @@ import {
 import { MemoryFileSystem } from "@beep/memfs";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Digest from "effect/crypto/Digest";
@@ -67,7 +65,6 @@ const fileTransfer = () => {
 const artifactLayer = (transfer: ReturnType<typeof fileTransfer>["transfer"]) =>
   Layer.unwrap(Effect.map(FileSystem.FileSystem, (fs) => Artifact.layerWith(transfer(fs))));
 
-/** The real filesystem and the real `zip`/`unzip`, over a stubbed backend. */
 const live = (
   fetch: typeof globalThis.fetch,
   transfer: ReturnType<typeof fileTransfer>["transfer"],
@@ -101,8 +98,7 @@ const protocol = (
     )
   );
 
-// The RPC regressions need archive bytes, but do not depend on a native zip process.
-const protocolZip = Layer.effect(
+const fakeZipSpawner = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
   Effect.map(FileSystem.FileSystem, (fs) =>
     ChildProcessSpawner.make(
@@ -135,14 +131,12 @@ const uploadable = {
   FinalizeArtifact: () => json({ ok: true, artifactId: "4242" }),
 };
 
-/** Every malformed artifact id a Twirp answer can carry, by field spelling and answering method. */
 const MALFORMED_ID_CASES = A.flatMap(["artifactId", "artifact_id"], (idField) =>
   A.flatMap(["not-a-number", "Infinity", "1e309"], (malformed) =>
     A.map(["FinalizeArtifact", "DeleteArtifact"] as const, (method) => ({ idField, malformed, method }))
   )
 );
 
-/** The call that reaches each answering method. */
 const MALFORMED_ID_CALL = {
   FinalizeArtifact: (artifacts: Artifact["Service"]): Effect.Effect<void, ArtifactError> =>
     Effect.asVoid(artifacts.upload("logs", ["/work/a.txt"], "/work")),
@@ -150,7 +144,6 @@ const MALFORMED_ID_CALL = {
     Effect.asVoid(artifacts.delete("logs")),
 };
 
-/** The RPCs each call makes before the malformed id stops it. */
 const MALFORMED_ID_METHODS = {
   FinalizeArtifact: ["CreateArtifact", "FinalizeArtifact"],
   DeleteArtifact: ["ListArtifacts", "DeleteArtifact"],
@@ -168,8 +161,10 @@ describe("Artifact", () => {
         const value1 = yield* S.decodeEffect(UploadOptions)(plain);
         assert.deepStrictEqual(value1, plain);
       }
-      // Exact optional keys (EF-40): an optional key is omitted, never undefined.
-      assert.isFalse(S.is(UploadOptions)({ retentionDays: undefined }));
+      assert.isFalse(
+        S.is(UploadOptions)({ retentionDays: undefined }),
+        "exact optional keys: an absent option is omitted, never undefined"
+      );
       assert.isFalse(S.is(UploadOptions)({ compressionLevel: undefined }));
       assert.isFalse(S.is(DownloadOptions)({ path: undefined }));
       for (const options of [{}, { path: "/out" }]) {
@@ -261,7 +256,7 @@ describe("Artifact", () => {
   {
     const { transfer } = fileTransfer();
     const { calls, fetch } = twirpFetch(uploadable);
-    it.layer(protocol(fetch, transfer, {}, protocolZip), { timeout: "30 seconds" })((it) => {
+    it.layer(protocol(fetch, transfer, {}, fakeZipSpawner), { timeout: "30 seconds" })((it) => {
       it.effect("preserves valid retention, omitted expiry and infinity compression acceptance", () =>
         Effect.gen(function* () {
           const artifacts = yield* Artifact;
@@ -292,7 +287,7 @@ describe("Artifact", () => {
       ListArtifacts: () => json({ artifacts: [{ databaseId: "11", name: "logs", size: "1" }] }),
       [method]: () => json({ ok: true, [idField]: malformed }),
     });
-    it.layer(protocol(fetch, transfer, {}, protocolZip), { timeout: "10 seconds" })((it) => {
+    it.layer(protocol(fetch, transfer, {}, fakeZipSpawner), { timeout: "10 seconds" })((it) => {
       it.effect(`rejects malformed ${idField} ${malformed} from ${method}`, () =>
         Effect.gen(function* () {
           const artifacts = yield* Artifact;
@@ -304,7 +299,8 @@ describe("Artifact", () => {
           assert.instanceOf(error.cause, S.SchemaError);
           assert.deepStrictEqual(
             A.map(calls, (call) => call.method),
-            MALFORMED_ID_METHODS[method]
+            MALFORMED_ID_METHODS[method],
+            "the malformed id stops each call right after the RPC that answered it"
           );
         })
       );
@@ -319,7 +315,7 @@ describe("Artifact", () => {
       ListArtifacts: () => json({ artifacts: [{ databaseId: "11", name: "logs", size: "1" }] }),
       DeleteArtifact: () => json({ ok: true }),
     });
-    it.layer(protocol(fetch, transfer, {}, protocolZip), { timeout: "10 seconds" })((it) => {
+    it.layer(protocol(fetch, transfer, {}, fakeZipSpawner), { timeout: "10 seconds" })((it) => {
       it.effect("preserves missing-id defaults at finalize and delete boundaries", () =>
         Effect.gen(function* () {
           const artifacts = yield* Artifact;
@@ -350,22 +346,28 @@ describe("Artifact", () => {
 
           const uploaded = O.getOrUndefined(MutableHashMap.get(blobs, "https://blob.example/artifact?sig=abc"));
           assert.isDefined(uploaded);
-          // `PK\x03\x04`: what was uploaded is a zip, not a description of one.
-          assert.deepStrictEqual([...(uploaded ?? []).slice(0, 4)], [0x50, 0x4b, 0x03, 0x04]);
+          assert.deepStrictEqual(
+            [...(uploaded ?? []).slice(0, 4)],
+            [0x50, 0x4b, 0x03, 0x04],
+            "PK\\x03\\x04: what was uploaded is a zip, not a description of one"
+          );
 
-          // The protocol version is 7 and has nothing to do with the `v4` in
-          // `actions/upload-artifact@v4` — which is the obvious wrong guess, and
-          // produces a create the backend rejects.
           const create = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "CreateArtifact"));
-          assert.strictEqual(create?.body.version, 7);
+          assert.strictEqual(
+            create?.body.version,
+            7,
+            "the protocol version is 7, unrelated to upload-artifact@v4; the obvious guess 4 is a rejected create"
+          );
           assert.strictEqual(create?.body.mimeType, "application/zip");
 
           const finalize = O.getOrUndefined(A.findFirst(calls, (call) => call.method === "FinalizeArtifact"));
-          // The digest is over the STORED zip. Hashing anything else produces a
-          // finalize the backend accepts and an artifact it later refuses to serve.
           const argument = finalize?.body.hash;
           const digest1 = yield* (yield* Digest.Digest).digest(Digest.sha256, uploaded ?? new Uint8Array());
-          assert.strictEqual(argument, `sha256:${Buffer.from(digest1).toString("hex")}`);
+          assert.strictEqual(
+            argument,
+            `sha256:${Buffer.from(digest1).toString("hex")}`,
+            "the digest is over the stored zip; any other hash finalizes, then the backend refuses to serve it"
+          );
           assert.strictEqual(finalize?.body.size, String(uploaded?.byteLength));
           assert.strictEqual(result.id, 4242);
           assert.strictEqual(result.size, uploaded?.byteLength);
@@ -396,11 +398,12 @@ describe("Artifact", () => {
           yield* artifacts.upload("logs", [join(root, "src", "deep", "file.txt")], root);
           yield* artifacts.download(4242, { path: destination });
 
-          // Absolute paths in the zip would extract into a tree named after the
-          // runner that produced them — the file would be somewhere under
-          // `out/private/var/folders/…` rather than where the caller asked.
           const readFileString6 = yield* fs.readFileString(join(destination, "src", "deep", "file.txt"));
-          assert.strictEqual(readFileString6, "contents");
+          assert.strictEqual(
+            readFileString6,
+            "contents",
+            "absolute zip paths would extract under a runner-named tree such as out/private/var/folders/…"
+          );
         })
       );
     });
@@ -413,9 +416,11 @@ describe("Artifact", () => {
       it.effect("scopes every call to the run and job in the runtime token", () =>
         Effect.gen(function* () {
           yield* Effect.flatMap(Artifact, (artifacts) => artifacts.list);
-          // Unscoped, the backend answers about a different job — or refuses. The
-          // ids are not configuration: they are inside the credential.
-          assert.strictEqual(calls[0]?.body.workflowRunBackendId, "run-1");
+          assert.strictEqual(
+            calls[0]?.body.workflowRunBackendId,
+            "run-1",
+            "unscoped, the backend answers about another job or refuses; the ids live inside the credential"
+          );
           assert.strictEqual(calls[0]?.body.workflowJobRunBackendId, "job-1");
         })
       );
@@ -506,14 +511,13 @@ describe("Artifact", () => {
     });
     const layer = protocol(fetch, transfer);
     it.layer(layer, { timeout: "30 seconds" })((it) => {
-      it.effect("finds one by name, and reports an absent one as nothing", () =>
+      it.effect("finds one by name, and reports an absent one as nothing, not a failure, as a cache miss does", () =>
         Effect.gen(function* () {
           const found = yield* Effect.flatMap(Artifact, (artifacts) => artifacts.get("logs"));
           assertSome(
             O.map(found, (artifact) => artifact.id),
             7
           );
-          // Absent is an answer, not a failure — the same convention as a cache miss.
           const flatMap7 = yield* Effect.flatMap(Artifact, (artifacts) => artifacts.get("other"));
           assertNone(flatMap7);
         })
@@ -535,9 +539,11 @@ describe("Artifact", () => {
           const error = yield* Effect.flip(
             Effect.flatMap(Artifact, (artifacts) => artifacts.upload("logs", [join(root, "a.txt")], root))
           );
-          // Unlike the cache, where a conflict means the write already happened,
-          // a second artifact under one name is a mistake the caller must see.
-          assert.strictEqual(error.reason, "refused");
+          assert.strictEqual(
+            error.reason,
+            "refused",
+            "unlike a cache conflict, a second artifact under one name is a mistake the caller must see"
+          );
         })
       );
     });
@@ -564,8 +570,7 @@ describe("Artifact", () => {
 
           const empty = yield* Effect.flip(Effect.flatMap(Artifact, (artifacts) => artifacts.upload("logs", [], root)));
           assert.strictEqual(empty.reason, "invalidOptions");
-          // Neither reserved a name for an upload that will never happen.
-          assert.lengthOf(calls, 0);
+          assert.lengthOf(calls, 0, "neither reserved a name for an upload that will never happen");
         })
       );
     });
@@ -582,16 +587,17 @@ describe("Artifact", () => {
             const fs = yield* FileSystem.FileSystem;
             const { join } = yield* Path.Path;
             const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-artifact-test-" });
-            // The Windows list travels one path per line; a break would split the
-            // entry. Rejected on POSIX too, so an upload cannot pass on one runner
-            // and fail on another.
             const broken = join(root, "a\nb.txt");
             yield* fs.writeFileString(broken, "x");
 
             const error = yield* Effect.flip(
               Effect.flatMap(Artifact, (artifacts) => artifacts.upload("logs", [broken], root))
             );
-            assert.strictEqual(error.reason, "invalidOptions");
+            assert.strictEqual(
+              error.reason,
+              "invalidOptions",
+              "the Windows list is one path per line, and POSIX refuses too so no runner passes what another fails"
+            );
             assert.include(
               error.message,
               Result.getOrThrowWith(S.encodeResult(Json)("a\nb.txt"), (error) => error)
@@ -664,10 +670,6 @@ describe("Artifact", () => {
           yield* fs.writeFileString(join(root, "a.txt"), "a");
           yield* fs.writeFileString(join(root, "dir", "b.txt"), "b");
 
-          // Records the spawn — and the manifest's bytes AT SPAWN TIME, since
-          // the scratch directory holding it is gone once the upload settles —
-          // then answers as a failed pwsh would, so nothing reaches the backend.
-
           const error = yield* Effect.flip(
             Effect.flatMap(Artifact, (artifacts) =>
               artifacts.upload("logs", [join(root, "a.txt"), join(root, "dir", "b.txt")], root)
@@ -675,24 +677,31 @@ describe("Artifact", () => {
           );
           assert.strictEqual(error.reason, "archiveFailed");
           assert.strictEqual(error.stderr, "System.IO.IOException: disk full");
-          assert.lengthOf(calls, 0);
+          assert.lengthOf(calls, 0, "the spy answers as a failed pwsh would, so nothing reaches the backend");
 
           assert.lengthOf(spawns, 1);
           const [spawn] = spawns;
           assert.strictEqual(spawn?.command, "pwsh");
           const script = spawn?.args[3] ?? "";
-          // The manifest sits beside the archive inside the scratch directory,
-          // so the scratch release removes both.
           const zipPath = /ZipFile\]::Open\('([^']*)'/.exec(script)?.[1] ?? "";
           const manifestPath = /ReadAllLines\('([^']*)'\)/.exec(script)?.[1] ?? "";
-          assert.strictEqual(manifestPath, join(dirname(zipPath), "artifact.manifest"));
+          assert.strictEqual(
+            manifestPath,
+            join(dirname(zipPath), "artifact.manifest"),
+            "the manifest sits beside the archive in the scratch directory, so the scratch release removes both"
+          );
           assert.strictEqual(basename(zipPath), "artifact.zip");
-          // One relative path per line, trailing newline, and NO BOM — .NET's
-          // `ReadAllLines` would otherwise prefix the first path with it.
-          assert.strictEqual(spawn?.manifest.toString("utf8"), `a.txt\n${join("dir", "b.txt")}\n`);
-          assert.notDeepEqual([...(spawn?.manifest.subarray(0, 3) ?? [])], [0xef, 0xbb, 0xbf]);
-          // The script itself never names a file: its size is independent of the list.
-          assert.notInclude(script, "a.txt");
+          assert.strictEqual(
+            spawn?.manifest.toString("utf8"),
+            `a.txt\n${join("dir", "b.txt")}\n`,
+            "one relative path per line, with a trailing newline"
+          );
+          assert.notDeepEqual(
+            [...(spawn?.manifest.subarray(0, 3) ?? [])],
+            [0xef, 0xbb, 0xbf],
+            "no BOM, or .NET's ReadAllLines would prefix the first path with it"
+          );
+          assert.notInclude(script, "a.txt", "the script never names a file, so its size is independent of the list");
           assert.notInclude(script, "b.txt");
         })
       );
@@ -733,14 +742,13 @@ describe("Artifact", () => {
           const fs = yield* FileSystem.FileSystem;
           const { join } = yield* Path.Path;
           const root = yield* fs.makeTempDirectoryScoped({ prefix: "effected-artifact-test-" });
-          // Present-but-undefined is not the same as absent on the wire: the
-          // backend would read a null expiry as "expire now".
           yield* fs.writeFileString(join(root, "a.txt"), "x");
 
           yield* Effect.flatMap(Artifact, (artifacts) => artifacts.upload("logs", [join(root, "a.txt")], root));
           assert.notProperty(
             O.getOrUndefined(A.findFirst(calls, (call) => call.method === "FinalizeArtifact"))?.body ?? {},
-            "expiresAt"
+            "expiresAt",
+            "present-but-undefined is not absent on the wire: the backend reads a null expiry as expire now"
           );
         })
       );

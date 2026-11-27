@@ -1,6 +1,3 @@
-// Every exported schema generates only values it accepts (schema-first rule SF-7), and the behaviour beside the
-// schemas holds on values read off the fixtures.
-
 import {
   columnFromLetters,
   columnLetters,
@@ -97,7 +94,7 @@ const schemas: Readonly<Record<string, S.Top>> = {
   XlsxKeptList,
 };
 
-describe("every schema generates only valid values", () => {
+describe("every exported schema generates only values it accepts (schema-first rule SF-7)", () => {
   for (const [name, schema] of R.toEntries(schemas)) {
     it.prop(
       name,
@@ -121,11 +118,13 @@ describe("addresses", () => {
     assertSome(columnFromLetters("xfd"), 16_383);
     assertNone(columnFromLetters("XFE"));
   });
-  // A generated value may have a null prototype, so a round trip is compared by the schema's own equivalence.
   const sameAddress = S.toEquivalence(S.Option(XlsxAddress));
   const sameRange = S.toEquivalence(S.Option(XlsxRange));
   it.prop("parse after format is the identity", [Arbitrary.schema(XlsxAddress)], ([address]) => {
-    assertTrue(sameAddress(XlsxAddress.parse(XlsxAddress.format(address)), O.some(address)));
+    assertTrue(
+      sameAddress(XlsxAddress.parse(XlsxAddress.format(address)), O.some(address)),
+      "a generated value may have a null prototype, so the round trip is compared by the schema's own equivalence"
+    );
   });
   it.prop("a range parses back from its reference", [Arbitrary.schema(XlsxRange)], ([range]) => {
     assertTrue(sameRange(XlsxRange.parse(XlsxRange.format(range)), O.some(XlsxRange.ordered(range))));
@@ -168,13 +167,13 @@ describe("serials", () => {
     assertNone(XlsxCalendar.fromSerial(MAX_SERIAL, "1904"));
     assertNone(XlsxCalendar.toDateTime(MAX_SERIAL, "1904"));
   });
-  // The bound is the last whole second of 31 December 9999, as a workbook stores it to 15 digits: that second is a
-  // date in both systems, reads back to itself, and is shown; the next day is none, and so is shown as nothing.
   it("keeps the last second of 31 December 9999 in both systems, and shows nothing past it", () => {
     const last = XlsxCalendar.make({ year: 9999, month: 12, day: 31, hour: 23, minute: 59, second: 59 });
     for (const system of XlsxDateSystem.literals) {
       const serial = O.getOrThrow(XlsxCalendar.toSerial(last, system));
-      expect(serial).toBeLessThanOrEqual(maxSerial(system));
+      expect(serial, "the bound is the last whole second of 31 December 9999, stored to 15 digits").toBeLessThanOrEqual(
+        maxSerial(system)
+      );
       assertSome(XlsxCalendar.fromSerial(serial, system), last);
       assertSome(XlsxCalendar.fromSerial(maxSerial(system), system), last);
       const shown = (at: number) =>
@@ -188,9 +187,11 @@ describe("serials", () => {
       assertSome(shown(serial), "9999-12-31 23:59:59");
       assertSome(shown(maxSerial(system)), "9999-12-31 23:59:59");
     }
-    // The serial schema ends at the 1900 system's last serial, so only a 1904 serial can pass its system's last.
     const past1904 = maxSerial("1904") + 1;
-    expect(past1904).toBeLessThanOrEqual(MAX_SERIAL);
+    expect(
+      past1904,
+      "the serial schema ends at the 1900 system's last serial, so only a 1904 serial can pass its system's last"
+    ).toBeLessThanOrEqual(MAX_SERIAL);
     assertNone(
       XlsxCell.shown(
         {
@@ -200,31 +201,34 @@ describe("serials", () => {
         "1904"
       )
     );
-    // A 1904 serial past the system's last day was shown as the year 0002.
-    const late = XlsxDate.make({ serial: 2_958_000 });
-    assertNone(XlsxCell.shown({ value: late, format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" }) }, "1904"));
+    const serialOnceShownAsYear0002 = XlsxDate.make({ serial: 2_958_000 });
+    assertNone(
+      XlsxCell.shown(
+        { value: serialOnceShownAsYear0002, format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" }) },
+        "1904"
+      )
+    );
   });
-  // The serial domain is one schema for both systems, so a 1904 serial can name a day past 9999; `fromSerial` says
-  // none there and never throws. Within a system's range it always gives the day, back to within a second.
   it.prop(
     "fromSerial gives every serial of a system its day, and toSerial gives the serial back",
     [Arbitrary.schema(XlsxDateSystem), Arbitrary.schema(S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })))],
     ([system, share]) => {
       const serial = share * maxSerial(system);
       const calendar = XlsxCalendar.fromSerial(serial, system);
-      assertTrue(calendar.pipe(O.isSome));
+      assertTrue(
+        calendar.pipe(O.isSome),
+        "the serial domain is one schema for both systems; within a system's range fromSerial always gives the day"
+      );
       const back = O.getOrThrow(O.flatMap(calendar, (found) => XlsxCalendar.toSerial(found, system)));
-      expect(Math.abs(back - serial)).toBeLessThan(1 / 86_400);
+      expect(Math.abs(back - serial), "back to within a second").toBeLessThan(1 / 86_400);
     },
     { arbitrary: { runs: 500 } }
   );
-  // A time that rounds up to midnight carries into the next day, in both systems. SheetJS gets these wrong (it
-  // shows 12:00:00 PM for the end of a day and drops the 1904 offset after the carry), so they are stated here
-  // rather than in the oracle test.
-  it("carries a time that rounds up to midnight into the next day", () => {
-    // The time of day is rounded to the nearest millisecond, and only a time that rounds to midnight carries; the
-    // calendar keeps the whole second of that value and the displayed text rounds it to the nearest second.
-    expect(O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_999_5, "1900"))).toMatchObject({
+  it("carries a time that rounds up to midnight into the next day, in both systems", () => {
+    expect(
+      O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_999_5, "1900")),
+      "SheetJS shows 12:00:00 PM for the end of a day and drops the 1904 offset after the carry, so this is not in the oracle test"
+    ).toMatchObject({
       year: 1900,
       month: 1,
       day: 1,
@@ -232,7 +236,10 @@ describe("serials", () => {
       minute: 0,
       second: 0,
     });
-    expect(O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_99, "1900"))).toMatchObject({
+    expect(
+      O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_99, "1900")),
+      "the time is rounded to the millisecond and only one that rounds to midnight carries; the calendar keeps its whole second"
+    ).toMatchObject({
       day: 0,
       hour: 23,
       minute: 59,
@@ -249,8 +256,7 @@ describe("serials", () => {
     assertNone(XlsxCalendar.toDateTime(0.5, "1900"));
     assertTrue(XlsxCalendar.toDateTime(61, "1900").pipe(O.isSome));
   });
-  // `toDateTime` once passed the time under plural keys `DateTime.make` does not read, so every moment was midnight.
-  it("keeps the time of day in a DateTime, to the millisecond", () => {
+  it("keeps the time of day in a DateTime, to the millisecond, rather than making every moment midnight", () => {
     const iso = (serial: number, system: XlsxDateSystem) =>
       O.map(XlsxCalendar.toDateTime(serial, system), DateTime.formatIso);
     assertSome(iso(45_292.5, "1900"), "2024-01-01T12:00:00.000Z");
@@ -259,9 +265,6 @@ describe("serials", () => {
     assertSome(iso(1_938_086.986_574_074, "1900"), "7206-04-18T23:40:40.000Z");
     assertSome(iso(45_292 + 1.5 / 86_400, "1900"), "2024-01-01T00:00:01.500Z");
   });
-  // A workbook stores 15 significant digits, which keep at least eight decimals of a day (under a millisecond)
-  // through the last serial of either system, and the time of day is rounded to the millisecond: so every whole
-  // second, of every day a system shows, reads back to itself.
   const share = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 }));
   const secondOfDay = S.Int.check(S.isBetween({ minimum: 0, maximum: 86_399 }));
   const serialOf = (system: XlsxDateSystem, part: number, seconds: number) => {
@@ -269,14 +272,14 @@ describe("serials", () => {
     return day + seconds / 86_400;
   };
   it.prop(
-    "toSerial after fromSerial is the identity on whole seconds",
+    "toSerial after fromSerial is the identity on every whole second of every day a system shows",
     [XlsxDateSystem, share, secondOfDay],
     ([system, part, seconds]) => {
       const serial = serialOf(system, part, seconds);
-      assertSome(
-        O.flatMap(XlsxCalendar.fromSerial(serial, system), (calendar) => XlsxCalendar.toSerial(calendar, system)),
-        serial
+      const fifteenDigitsKeepEightDecimals = O.flatMap(XlsxCalendar.fromSerial(serial, system), (calendar) =>
+        XlsxCalendar.toSerial(calendar, system)
       );
+      assertSome(fifteenDigitsKeepEightDecimals, serial);
     },
     { arbitrary: { runs: 1000 } }
   );
@@ -346,8 +349,6 @@ describe("displayed text", () => {
     expect(XlsxCell.canonical(number(MAX_SERIAL, "yyyy"), "1904").value).toMatchObject({ kind: "Number" });
     expect(XlsxCell.canonical(number(MAX_SERIAL, "yyyy"), "1900").value).toMatchObject({ kind: "Date" });
   });
-  // A format kind and the displayed text come from one reading of the code: whatever `shown` renders, `kind` does
-  // not call a format it does not render.
   const patterns = A.flatMap(A.range(0, 40), (n) => [
     Str.repeat(n + 1)("0"),
     `0.${Str.repeat(n)("0")}`,
@@ -359,7 +360,10 @@ describe("displayed text", () => {
     ([format, value]) => {
       for (const candidate of [format, ...A.map(patterns, (code) => XlsxNumberFormat.make({ id: 164, code }))]) {
         if (O.isSome(XlsxCell.shown({ value: XlsxNumber.make({ value }), format: candidate }, "1900"))) {
-          expect(XlsxNumberFormat.kind(candidate).kind).not.toBe("Other");
+          expect(
+            XlsxNumberFormat.kind(candidate).kind,
+            "a format kind and the displayed text come from one reading of the code"
+          ).not.toBe("Other");
         }
       }
     }
@@ -369,8 +373,6 @@ describe("displayed text", () => {
     expect(XlsxNumberFormat.kind(wide).kind).toBe("Other");
     assertNone(XlsxCell.shown({ value: XlsxNumber.make({ value: 0 }), format: wide }, "1900"));
   });
-  // The word General is read without regard to case, by `kind` and `isDate` alike, so a number under it stays a
-  // number (SheetJS called `general` a date for its lowercase g). A lone g is an era mark, and a date.
   const caseMix = S.Array(S.Boolean).check(S.isMinLength(7), S.isMaxLength(7));
   it.prop("calls General in any case General, and never a date", [Arbitrary.schema(caseMix)], ([upper]) => {
     const code = A.join(
@@ -378,7 +380,10 @@ describe("displayed text", () => {
       ""
     );
     expect(XlsxNumberFormat.kind({ code }).kind).toBe("General");
-    expect(XlsxNumberFormat.isDate({ code })).toBe(false);
+    expect(
+      XlsxNumberFormat.isDate({ code }),
+      "kind and isDate read General in any case alike; SheetJS called general a date for its lowercase g"
+    ).toBe(false);
     expect(XlsxNumberFormat.isDate({ code: `${code} "x"` })).toBe(false);
     expect(XlsxCell.canonical(number(42, code), "1900").value).toMatchObject({ kind: "Number", value: 42 });
     assertSome(XlsxCell.shown(number(42, code), "1900"), "42");
@@ -387,8 +392,6 @@ describe("displayed text", () => {
     expect(XlsxNumberFormat.isDate({ code: "g" })).toBe(true);
     expect(XlsxNumberFormat.isDate({ code: "ggg yyyy" })).toBe(true);
   });
-  // A condition chooses a section by the serial; this package does not choose, so it shows nothing rather than the
-  // first section's text, for any condition in any section. A format with none is still shown.
   const Condition = S.Struct({
     operator: S.Literals(["<", ">", "=", "<=", ">=", "<>"]),
     bound: S.Int.check(S.isBetween({ minimum: 0, maximum: 99_999 })),
@@ -399,7 +402,10 @@ describe("displayed text", () => {
     const block = `[${condition.operator}${condition.bound}]`;
     const code = condition.second ? `yyyy-mm-dd;${block}dd/mm/yyyy` : `${block}yyyy-mm-dd;dd/mm/yyyy`;
     assertNone(XlsxCell.shown(date(condition.serial, code), "1900"));
-    assertTrue(XlsxNumberFormat.isDate({ code }));
+    assertTrue(
+      XlsxNumberFormat.isDate({ code }),
+      "a condition chooses a section by the serial, which this package does not do, so nothing is shown, not the first section"
+    );
   });
   it("shows a date format whose brackets hold no condition", () => {
     assertNone(XlsxCell.shown(date(1, "[>=2]yyyy-mm-dd;dd/mm/yyyy"), "1900"));
@@ -445,8 +451,6 @@ describe("uniqueness", () => {
       }
     }
   });
-  // Each key is read once per row: a check that compared every pair would read 2,000 rows' numbers four million
-  // times. The row schema reads its number once more, so a linear check reads each number at most three times.
   it("reads each row's number a bounded number of times to check a sheet", () => {
     let reads = 0;
     const counted = A.map(A.range(1, 2000), (number) => ({
@@ -461,7 +465,10 @@ describe("uniqueness", () => {
       S.is(XlsxWorksheet)({ ...XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "S" }) }), rows: counted })
     ).toBe(true);
     expect(reads).toBeGreaterThanOrEqual(counted.length);
-    expect(reads).toBeLessThanOrEqual(3 * counted.length);
+    expect(
+      reads,
+      "each key is read once per row and once more by the row schema; comparing every pair would read four million"
+    ).toBeLessThanOrEqual(3 * counted.length);
   });
   it("checks a sheet of 20,000 rows, a full row and 1,000 sheets", () => {
     const rows = A.map(A.range(1, 20_000), row);
@@ -477,7 +484,6 @@ describe("uniqueness", () => {
     expect(S.is(XlsxWorkbook)(XlsxWorkbook.make({ sheets: [sheet("Sheet 0"), ...sheets] }))).toBe(true);
     assertNone(XlsxWorkbook.makeOption({ sheets: [sheet("sheet 1"), ...sheets] }));
   });
-  // A sheet's merged ranges and hidden columns are one schema each, wherever a sheet's layout is held.
   it("refuses a range merged twice or a column hidden twice, in a worksheet and an outline alike", () => {
     const range = O.getOrThrow(XlsxRange.parse("A1:B2"));
     const reversed = XlsxRange.make({ first: range.last, last: range.first });
@@ -491,16 +497,16 @@ describe("uniqueness", () => {
   });
 });
 
-// This package's properties pass no seed of their own, and its coverage once changed with the seed they
-// drew. The run's log carries the seed and the number of values one of them draws, the built-in count; the
-// deep sweep keeps properties only, so the property reports on its last draw.
 const BUILT_IN_RUNS = 100;
 const drawn = Ref.makeUnsafe(0);
-describe("the seed of a property here", () => {
+describe("the seed of a property here, logged with the built-in count of values one property draws", () => {
   it.effect.prop("is the run's", [XlsxNumberFormat], () =>
     Effect.gen(function* () {
       const runs = yield* Ref.updateAndGet(drawn, (count) => count + 1);
-      expect(runs).toBeLessThanOrEqual(BUILT_IN_RUNS);
+      expect(
+        runs,
+        "the properties pass no seed of their own and coverage once changed with it; the deep sweep keeps properties only"
+      ).toBeLessThanOrEqual(BUILT_IN_RUNS);
       if (runs < BUILT_IN_RUNS) return;
       const seed = yield* Config.option(Config.String("BEEP_FC_SEED"));
       const line = `[property-seed] xlsx worker seed ${O.getOrElse(seed, () => "random")}, ${runs} runs without fcRuns`;

@@ -29,8 +29,6 @@ const backToTopVisibleAtom = Atom.make((get) => {
   const update = () => get.setSelf(browserWindow.scrollY > REVEAL_OFFSET_PX);
 
   browserWindow.addEventListener("scroll", update, { passive: true });
-  // Teardown-safe: under the coverage runtime the registry can finalize after
-  // jsdom has already stripped the window's methods.
   get.addFinalizer(
     () => P.isFunction(browserWindow.removeEventListener) && browserWindow.removeEventListener("scroll", update)
   );
@@ -60,6 +58,10 @@ const scrollToTopAtom = Atom.writable(thunkUndefined, () => {
  * out of motion. Styling mirrors the carousel chevrons: a soil-toned pill with
  * a gold glyph that reads on both the light paper and dark soil sections it
  * floats over.
+ *
+ * **Gotchas**
+ *
+ * Coverage teardown may finalize the atom registry after jsdom removes window methods; guard removeEventListener before removing the scroll listener.
  *
  * **Example** (Rendering BackToTop button)
  *

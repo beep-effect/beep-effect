@@ -1,11 +1,3 @@
-// The three traps ARE the test matrix. Each of these cost a real consumer a
-// cross-OS matrix round or a review catch before the helper existed:
-// (a) `env` without `extendEnv: true` silently strips the child's environment;
-// (b) Windows inherits `Path`, and emitting `PATH` beside it leaves the winner
-//     to Node's case-insensitive lexicographic-first dedupe — an undocumented
-//     internal — so the helper must write THROUGH the inherited casing;
-// (c) `.cmd` shims need `shell: true` since CVE-2024-27980.
-
 import { ChildEnv } from "@beep/github-actions";
 import { PathPrependEnv, PathPrependOptions } from "@beep/github-actions/ChildEnv";
 import { assert, describe, it } from "@effect/vitest";
@@ -14,23 +6,26 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 describe("ChildEnv", () => {
-  describe("trap (a): the extendEnv pair", () => {
+  describe("trap (a): env without extendEnv: true silently strips the child's environment", () => {
     it("answers env AND extendEnv: true as one value", () => {
-      // The pair is the point: a caller spreading the whole answer cannot
-      // forget the flag, and a mutant returning only `env` fails here.
       const answer = ChildEnv.prependPath(["/tools/bin"], { base: { PATH: "/usr/bin" }, platform: "linux" });
-      assert.deepStrictEqual(answer, PathPrependEnv.make({ env: { PATH: "/tools/bin:/usr/bin" }, extendEnv: true }));
+      assert.deepStrictEqual(
+        answer,
+        PathPrependEnv.make({ env: { PATH: "/tools/bin:/usr/bin" }, extendEnv: true }),
+        "the pair is the point: spreading the whole answer cannot forget the flag, and an env-only mutant fails"
+      );
     });
 
     it("carries exactly one env entry — the additions, nothing restated", () => {
-      // The DetachedProcess composition takes `.env` alone and merges it over
-      // the parent itself; restating unrelated variables here would make that
-      // merge clobber them with stale copies.
       const answer = ChildEnv.prependPath(["/tools/bin"], {
         base: { PATH: "/usr/bin", HOME: "/home/ci" },
         platform: "linux",
       });
-      assert.deepStrictEqual(R.keys(answer.env), ["PATH"]);
+      assert.deepStrictEqual(
+        R.keys(answer.env),
+        ["PATH"],
+        "DetachedProcess merges `.env` over the parent; restated variables would clobber it with stale copies"
+      );
     });
   });
 
@@ -40,10 +35,11 @@ describe("ChildEnv", () => {
         base: { Path: "C:\\Windows\\system32", SystemRoot: "C:\\Windows" },
         platform: "win32",
       });
-      // The discriminating assertion: the KEY is the inherited spelling. A
-      // mutant that hardcodes "PATH" produces two case-colliding entries in
-      // the merged block and leaves the winner to Node's internals.
-      assert.deepStrictEqual(answer.env, { Path: "D:\\tools;C:\\Windows\\system32" });
+      assert.deepStrictEqual(
+        answer.env,
+        { Path: "D:\\tools;C:\\Windows\\system32" },
+        "the key is the inherited spelling; a PATH beside Path leaves the winner to Node's undocumented dedupe"
+      );
     });
 
     it("finds the key case-insensitively, whatever the casing", () => {
@@ -63,10 +59,8 @@ describe("ChildEnv", () => {
 
   describe("trap (c): the win32 shell decision", () => {
     it("asks for a shell on win32 only", () => {
-      // `.cmd` shims cannot be spawned directly since CVE-2024-27980; POSIX
-      // gets no shell, which would only add a quoting hazard.
-      assert.isTrue(ChildEnv.needsShell("win32"));
-      assert.isFalse(ChildEnv.needsShell("linux"));
+      assert.isTrue(ChildEnv.needsShell("win32"), ".cmd shims cannot be spawned directly since CVE-2024-27980");
+      assert.isFalse(ChildEnv.needsShell("linux"), "POSIX gets no shell, which would only add a quoting hazard");
       assert.isFalse(ChildEnv.needsShell("darwin"));
     });
   });
@@ -81,12 +75,11 @@ describe("ChildEnv", () => {
     });
 
     it("appends nothing for an absent or empty inherited PATH — no empty trailing entry", () => {
-      // A trailing delimiter is an empty PATH entry, which both platforms
-      // historically read as "the current directory" — an injection, not a
-      // tidiness issue.
-      assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], { base: {}, platform: "linux" }).env, {
-        PATH: "/tools",
-      });
+      assert.deepStrictEqual(
+        ChildEnv.prependPath(["/tools"], { base: {}, platform: "linux" }).env,
+        { PATH: "/tools" },
+        "a trailing delimiter is an empty PATH entry, which both platforms read as the current directory: an injection"
+      );
       assert.deepStrictEqual(ChildEnv.prependPath(["/tools"], { base: { PATH: "" }, platform: "linux" }).env, {
         PATH: "/tools",
       });

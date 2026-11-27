@@ -40,7 +40,6 @@ const entry = DocketCalendarEntry.make({
 
 const existing = DocketWrittenEntry.make({ eventId: "event-existing" });
 
-// The ports below only read: a write that reached them would fail the proof.
 const refuseWrite = () => Effect.die("a dry run wrote through to the ports below it");
 
 const BelowLayer = Layer.merge(

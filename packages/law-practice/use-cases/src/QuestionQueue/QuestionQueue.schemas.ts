@@ -22,8 +22,6 @@ const $I = $LawPracticeUseCasesId.create("QuestionQueue/QuestionQueue.schemas");
  */
 export type QuestionReviewItem = (typeof ReviewItem.cases)["question"]["Type"];
 
-// An answer row's fields without the tag, which the submission union adds, and
-// without `revision` and `recordedAt`, which the queue assigns.
 const submittedFields = <Fields extends Readonly<Record<"state" | "revision" | "recordedAt", unknown>>>(
   fields: Fields
 ) => Struct.omit(fields, ["state", "revision", "recordedAt"]);

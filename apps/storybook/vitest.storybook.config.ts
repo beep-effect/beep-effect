@@ -3,10 +3,9 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({
+// decision: eager-browser-dependencies
+const config = defineConfig({
   optimizeDeps: {
-    // Workspace story imports expose these leaves after the initial Vite crawl.
-    // Optimize them before tests start so discovery cannot reload the browser.
     include: [
       "effect/Number",
       "effect/Utils",
@@ -54,3 +53,5 @@ export default defineConfig({
     },
   },
 });
+
+export default config;
