@@ -16,11 +16,6 @@ import { decodeJournalLines, replayTailWaits } from "@/backfill/JournalReplay";
 import { ReplayArmSpec, ReplayEtaEstimator, ReplayReport, SimulationInputError } from "@/backfill/Schemas";
 import { PosInt } from "@/projection/PosInt";
 
-// SCHE-06 tail-wait A/B (PLAN slice 12): replay a recorded admission journal
-// root (its `journal-archive/*.ndjson` day segments, then `journal.ndjson`)
-// through every arm and print the aggregate report as JSON. Usage:
-//   bun run scripts/backfill-ab.ts <admission-root> [--since <epoch-millis>] [--eta-permille <n>]
-// The report holds counts and wait quantiles only: no paths, origins or nonces.
 const encodeReport = S.encodeUnknownEffect(S.fromJsonString(ReplayReport));
 
 const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number, valid: (value: number) => boolean) =>
@@ -80,13 +75,13 @@ const program = Effect.gen(function* () {
         error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(error)
       )
     );
-  const files = A.append(
+  const archiveThenActiveFiles = A.append(
     A.map(A.sort(A.filter(segments, Str.endsWith(".ndjson")), Order.String), (name) =>
       path.join(optionalArchiveDirectory, name)
     ),
     path.join(root, "journal.ndjson")
   );
-  const texts = yield* Effect.forEach(files, (file) => fs.readFileString(file), { concurrency: 1 });
+  const texts = yield* Effect.forEach(archiveThenActiveFiles, (file) => fs.readFileString(file), { concurrency: 1 });
   const lines = A.filter(A.flatMap(texts, Str.split("\n")), Str.isNonEmpty);
   const read = yield* decodeJournalLines(lines);
   yield* Console.error(

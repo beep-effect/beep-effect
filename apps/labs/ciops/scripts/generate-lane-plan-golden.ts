@@ -10,23 +10,21 @@ import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjecti
 import { decodeEvidenceMode, EvidenceDriftError, EvidenceMode, EvidenceWriteScript } from "@/projection/Evidence";
 import { GateOrderHandoffRef, PlanEpisodeInput } from "@/projection/Schemas";
 
-const goldenPath = "test/fixtures/lane-plan-v1.ttl";
+const labRelativeGoldenPath = "test/fixtures/lane-plan-v1.ttl";
 const writeScript: EvidenceWriteScript = EvidenceWriteScript.Enum["evidence:lane-plan:write"];
 
-// The pinned handoff digest (P2 Ruling 2) and the fixed episode id no admission document uses
-// (contract §8.3). Paths are relative to the lab directory, where the package scripts run.
 const pinnedSha256 = Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198");
-const episodeId = "lane-plan-golden-1";
+const nonAdmissionEpisodeId = "lane-plan-golden-1";
 
 const fixtureInput = PlanEpisodeInput.make({
-  episodeId,
+  episodeId: nonAdmissionEpisodeId,
   repoRoot: ".",
   handoff: GateOrderHandoffRef.make({ path: "test/fixtures/gate-order-handoff-v1.json", sha256: pinnedSha256 }),
 });
 
 // decision: live-handoff-cache-fallback
 const liveInput = PlanEpisodeInput.make({
-  episodeId,
+  episodeId: nonAdmissionEpisodeId,
   repoRoot: "../../..",
   handoff: GateOrderHandoffRef.make({
     path: "goals/time-to-certainty/research/gate-order-handoff.json",
@@ -42,14 +40,14 @@ const checkLiveHandoff = Effect.fnUntraced(function* () {
 
 const checkGolden = Effect.fnUntraced(function* (content: string) {
   const fs = yield* FileSystem.FileSystem;
-  const golden = yield* fs.readFileString(goldenPath);
+  const golden = yield* fs.readFileString(labRelativeGoldenPath);
   if (golden !== content) {
     return yield* EvidenceDriftError.make({
-      path: goldenPath,
+      path: labRelativeGoldenPath,
       message: "drifted from the emitted lane plan; run `bun run evidence:lane-plan:write`",
     });
   }
-  yield* Console.log(`PASS: ${goldenPath} is byte-equal to the emitted lane plan`);
+  yield* Console.log(`PASS: ${labRelativeGoldenPath} is byte-equal to the emitted lane plan`);
 });
 
 // decision: opt-in-evidence-writes
@@ -62,14 +60,12 @@ const generate = Effect.gen(function* () {
   yield* Console.log(`lane plan ${plan.planId}: ${plan.laneSteps.length} lane steps`);
   if (EvidenceMode.is.write(mode)) {
     const fs = yield* FileSystem.FileSystem;
-    yield* fs.writeFileString(goldenPath, document.content);
-    return yield* Console.log(`wrote ${goldenPath}`);
+    yield* fs.writeFileString(labRelativeGoldenPath, document.content);
+    return yield* Console.log(`wrote ${labRelativeGoldenPath}`);
   }
   return yield* checkGolden(document.content);
 }).pipe(Effect.withSpan("LanePlanGolden.generate"));
 
-// strictEffectProvide bans Layer-provide outside composed entry layers, so the
-// scoped context build below provides the platform and service as a Context.
 BunRuntime.runMain(
   CiOpsProjectionLive.pipe(
     Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer)),

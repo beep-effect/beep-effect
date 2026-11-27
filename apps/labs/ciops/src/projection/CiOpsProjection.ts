@@ -51,6 +51,13 @@ type PlanEpisodeError = HandoffReadError | HandoffDigestMismatchError | HandoffD
  * current-proposal shell. `emitLanePlan` serializes a lane plan in the
  * provisional lane-plan vocabulary only.
  *
+ * **Gotchas**
+ *
+ * Handoff hashing consumes raw bytes, never a re-encoded string. Every
+ * Uint8Array decodes and its digest cannot fail, but schema decoding still
+ * types an issue; planEpisode maps that issue into HandoffReadError to keep
+ * it inside the declared contract §8.1 failure union.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -89,8 +96,6 @@ const readHandoffBytes = (fs: FileSystem.FileSystem, input: PlanEpisodeInput) =>
     .readFile(`${input.repoRoot}/${input.handoff.path}`)
     .pipe(Effect.mapError((error) => HandoffReadError.make({ path: input.handoff.path, message: error.message })));
 
-// The digest is over the raw bytes, never a re-encoded string. A Uint8Array always decodes and the digest cannot
-// fail, but the decode still types a schema issue; it stays typed inside the §8.1 union.
 const digestHandoff = (crypto: Digest.Digest["Service"], input: PlanEpisodeInput, bytes: Uint8Array) =>
   digestHandoffBytes(bytes).pipe(
     Effect.provideService(Digest.Digest, crypto),

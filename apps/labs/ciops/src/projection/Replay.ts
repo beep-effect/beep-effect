@@ -670,7 +670,6 @@ const checkReplayWindow = Effect.fnUntraced(function* (
   );
 });
 
-// Verdicts before the last skipped terminal row ran on a ledger missing a pre-window grant.
 const censorVerdicts = (
   verdicts: ReadonlyArray<ReplayEventVerdict>,
   skippedRows: ReadonlyArray<ReplaySkippedRow>
@@ -710,6 +709,11 @@ const censorVerdicts = (
  * chain, and the first and last row instants to equal the window, failing
  * `ReplayWindowError` otherwise. Verdicts before the last skipped row are
  * marked `ledgerCensored`.
+ *
+ * **Gotchas**
+ *
+ * Verdicts before the last skipped terminal row ran on a ledger missing a
+ * pre-window grant, so their ledgerCensored flag must be preserved.
  *
  * **Example** (Replay an empty event stream)
  *

@@ -28,8 +28,6 @@ const generate = Effect.gen(function* () {
   }
 }).pipe(Effect.withSpan("S7Evidence.generate"));
 
-// strictEffectProvide bans Layer-provide outside composed entry layers, so the
-// scoped context build below provides the file system as a Context instead.
 BunRuntime.runMain(
   BunFileSystem.layer.pipe(
     Layer.merge(BunCrypto.layer),

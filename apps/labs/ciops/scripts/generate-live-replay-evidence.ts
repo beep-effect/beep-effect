@@ -14,10 +14,6 @@ import {
 } from "@/projection/Evidence";
 import type { LiveEvidenceRun } from "@/projection/Evidence";
 
-// The pin's typed constants (P2 Ruling 9) live in `Evidence.ts`, shared with the
-// end-to-end test. The run asserts both digests against the files and the window
-// members against MANIFEST.yaml's `admission_roots[0].window` and
-// `loss_population.chain_counts` before replay.
 const paths = run4FleetLiveEvidencePaths;
 
 // decision: opt-in-evidence-writes
@@ -35,8 +31,6 @@ const generate = Effect.gen(function* () {
 
 const platform = Layer.merge(BunFileSystem.layer, BunCrypto.layer);
 
-// strictEffectProvide bans Layer-provide outside composed entry layers: build the
-// platform layer in a scope and provide the resulting Context to the run.
 BunRuntime.runMain(
   platform.pipe(
     Layer.build,

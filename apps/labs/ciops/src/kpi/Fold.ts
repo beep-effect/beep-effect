@@ -115,7 +115,6 @@ const [windowW, windowWa, windowWb] = kpiWindows;
 const m1Modes: ReadonlyArray<string> = ["verify", "repair", "publish"];
 const m1CeilingMs = 86_400_000;
 
-// Tiers that own an attempt subsequence; the merged-preview sub-partition shares TierLocalFullProof's.
 const subsequenceTiers: ReadonlyArray<KpiTier> = ["repair-green", "local-full-proof", "ci-merge-green", "unassigned"];
 
 const reportedTiers: ReadonlyArray<KpiTier> = [
@@ -781,11 +780,6 @@ const m1ReplicaRow = (
   });
 };
 
-// CQ-012's queue-wait share over W-b, void unless every episode decomposes (KPI law §2, §7.5;
-// Ruling 12d). An episode decomposes when every attempt in it joins at least one admission ticket
-// and every such ticket resolved; its queue wait is the sum of enqueue-to-resolution over them.
-// The denominator is every W-b episode's (uncut) duration. A share above 1 (overlapping tickets)
-// cannot be a share, so it voids the row as well.
 const cq012Decomposition = (episodes: ReadonlyArray<FoldedEpisode>): Cq012Decomposition => {
   const members = A.filter(episodes, (folded) => inSlice(windowWb, folded.episode.openedAt));
   const waits = A.getSomes(A.map(members, (folded) => folded.queueWaitMs));
@@ -925,6 +919,16 @@ export const adoptionProbes = Effect.fn("KpiFold.adoptionProbes")(function* (
  * classes for the local-series change events to every episode in `W`, and
  * computes the percentile, starvation, M1-replica, CQ-012 and partition rows.
  * `adoptionPath` names the adoption table in a missing-row failure.
+ *
+ * **Gotchas**
+ *
+ * The merged-preview sub-partition shares the local-full-proof attempt
+ * subsequence rather than owning a separate one. CQ-012 is void unless every
+ * W-b episode decomposes: every attempt must join at least one admission
+ * ticket and every such ticket must resolve. Queue wait sums each ticket's
+ * enqueue-to-resolution interval; its denominator sums every W-b episode's
+ * uncut duration. Overlapping tickets can produce a share above 1, which
+ * also voids the row (KPI law §2 and §7.5).
  *
  * @category folding
  * @since 0.0.0
