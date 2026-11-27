@@ -25,8 +25,7 @@ const Json = S.fromJsonString(S.Record(S.String, S.Unknown));
 
 const fixturePath = (name: string) => `/fixtures/${name}/package.json`;
 
-// The subject consumes FileSystem and Path; each suite gets its own seeded volume.
-const TestLayer = PackageJsonFile.layer.pipe(
+const SeededVolumeLayer = PackageJsonFile.layer.pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       MemoryFileSystem.layerWith({
@@ -57,7 +56,7 @@ const TestLayer = PackageJsonFile.layer.pipe(
 );
 
 describe("PackageJsonFile", () => {
-  it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
+  it.layer(SeededVolumeLayer, { timeout: "30 seconds" })((it) => {
     it.effect("reads the minimal fixture", () =>
       Effect.gen(function* () {
         const file = yield* PackageJsonFile;
@@ -134,7 +133,7 @@ describe("PackageJsonFile", () => {
 });
 
 describe("PackageJsonFile round-trip", () => {
-  it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
+  it.layer(SeededVolumeLayer, { timeout: "30 seconds" })((it) => {
     const roundtrip = Effect.fn("roundtrip")(function* (fixture: string) {
       const file = yield* PackageJsonFile;
       const fs = yield* FileSystem.FileSystem;
@@ -254,10 +253,12 @@ describe("PackageJsonFile round-trip", () => {
     it.effect("full round-trip preserves nested, encoded and unknown-shaped fields", () =>
       Effect.gen(function* () {
         const result = yield* roundtrip("full");
-        // packageManager is a codec — it must re-encode to the exact string.
-        assert.strictEqual(result.packageManager, "pnpm@10.33.0+sha512.abc123");
-        // private flag and nested structural fields survive verbatim.
-        assert.strictEqual(result.private, true);
+        assert.strictEqual(
+          result.packageManager,
+          "pnpm@10.33.0+sha512.abc123",
+          "packageManager is a codec and must re-encode to the exact string"
+        );
+        assert.strictEqual(result.private, true, "the private flag and nested structural fields survive verbatim");
         assert.deepStrictEqual(result.exports, { ".": "./src/index.ts", "./utils": "./src/utils.ts" });
         assert.deepStrictEqual(result.bin, { "my-cli": "./dist/cli.js" });
         assert.deepStrictEqual(result.peerDependenciesMeta, { effect: { optional: true } });
@@ -278,10 +279,8 @@ describe("PackageJsonFile round-trip", () => {
   });
 });
 
-// The #286 surface: the lenient read for the private workspace-root shape and
-// the surgical, byte-preserving modify.
-describe("PackageJsonFile manifest and modify", () => {
-  it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
+describe("PackageJsonFile manifest and modify (lenient private-root read, byte-preserving modify)", () => {
+  it.layer(SeededVolumeLayer, { timeout: "30 seconds" })((it) => {
     const PRIVATE_ROOT_TEXT =
       '{\n\t"private": true,\n\t"packageManager": "pnpm@11.2.0",\n\t"devEngines": {\n\t\t"runtime": {\n\t\t\t"name": "node",\n\t\t\t"version": "24.9.1"\n\t\t}\n\t}\n}\n';
 
@@ -406,7 +405,7 @@ describe("PackageJsonFile manifest and modify", () => {
 });
 
 describe("PackageJsonFile write/read property", () => {
-  it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
+  it.layer(SeededVolumeLayer, { timeout: "30 seconds" })((it) => {
     it.effect.prop(
       "a written package with a generated name reads back with that name and version",
       [UnscopedPackageName],

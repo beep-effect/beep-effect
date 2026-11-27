@@ -51,8 +51,6 @@ const isMemoryFilePath = S.is(MemoryFilePath);
 
 const utf8 = new TextEncoder();
 
-// One file capture works on: its path, its base nodes (none for a created
-// file) and its edited text (empty for a removed file).
 interface CaptureTarget {
   readonly nodes: ReadonlyArray<BaseNode>;
   readonly path: MemoryFilePath;
@@ -63,8 +61,6 @@ const byPath: Order.Order<CaptureTarget> = Order.mapInput(Order.String, (target:
 
 type BaseRefusal = CaptureBaseRefusedError["reason"];
 
-// Records the node ids of one base file in `ids`, or names the first reason
-// its nodes are not exact, in-sequence anchors with ids no earlier node holds.
 const indexNodes = (file: BaseFile, ids: MutableHashSet.MutableHashSet<NodeId>): O.Option<BaseRefusal> => {
   let offset = 0;
   for (const node of file.nodes) {
@@ -81,8 +77,6 @@ const indexNodes = (file: BaseFile, ids: MutableHashSet.MutableHashSet<NodeId>):
   return O.none();
 };
 
-// Records one base file in `files` and its node ids in `ids`, or names the
-// first reason it does not describe an exact, distinct file text.
 const indexFile = (
   file: BaseFile,
   files: MutableHashMap.MutableHashMap<MemoryFilePath, BaseFile>,
@@ -95,8 +89,6 @@ const indexFile = (
   return indexNodes(file, ids);
 };
 
-// The base files by path and every node id the base holds, or the first
-// reason the base does not describe exact, distinct file texts.
 const indexBase = (
   base: BaseExport
 ): Result.Result<
@@ -120,7 +112,6 @@ const indexBase = (
 const refuse = (path: string, reason: CaptureEditRefusedError["reason"]) =>
   Result.fail(CaptureEditRefusedError.make({ path, reason }));
 
-// The capture target of one edit, given the base file at its path.
 const targetOf = (
   edit: FileEdit,
   path: MemoryFilePath,
@@ -169,8 +160,6 @@ const targetsOf = (
   return Result.succeed(A.sort(targets, byPath));
 };
 
-// Appends the operations of one file to `operations`, minting an id for
-// every insert; each insert follows the node the edited text puts before it.
 const emitFile = (
   target: CaptureTarget,
   taken: MutableHashSet.MutableHashSet<NodeId>,

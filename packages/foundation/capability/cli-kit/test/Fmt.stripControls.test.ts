@@ -8,8 +8,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const ESC = "\u001B";
-/** Every C0 control, DEL and every C1 control: none of them may survive. */
-const CONTROLS = /[\u0000-\u001F\u007F-\u009F]/u;
+const C0_DEL_OR_C1_CONTROL = /[\u0000-\u001F\u007F-\u009F]/u;
 
 describe("Fmt.stripControls", () => {
   it("removes an OSC 8 hyperlink with either terminator, and an OSC 52 clipboard write", () => {
@@ -22,9 +21,11 @@ describe("Fmt.stripControls", () => {
     assert.strictEqual(stripControls(`${ESC}[31mred${ESC}[0m`), "red");
     assert.strictEqual(stripControls(`${ESC}[?25l${ESC}[2J${ESC}[H${ESC}[1;2'zx`), "x");
     assert.strictEqual(stripControls(`${ESC}M${ESC}_${ESC}@ok`), "ok");
-    // An ESC before a byte outside the C1-equivalent range (@ through _) loses only the ESC, as in both copies it
-    // replaced; the byte after it is plain text.
-    assert.strictEqual(stripControls(`${ESC}c${ESC}7ok`), "c7ok");
+    assert.strictEqual(
+      stripControls(`${ESC}c${ESC}7ok`),
+      "c7ok",
+      "an ESC before a byte outside @ through _ loses only the ESC, as in both copies it replaced"
+    );
   });
 
   it("removes line breaks, tabs, NUL, DEL and C1 controls, which sanitize keeps or rewrites", () => {
@@ -71,7 +72,7 @@ it.effect.prop(
   ([text]) =>
     Effect.sync(() => {
       const once = stripControls(text);
-      assert.isFalse(CONTROLS.test(once));
+      assert.isFalse(C0_DEL_OR_C1_CONTROL.test(once));
       assert.strictEqual(stripControls(once), once);
       assert.isAtMost(Str.length(once), Str.length(text));
     }),

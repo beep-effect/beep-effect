@@ -14,7 +14,6 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 type Level = "error" | "warning" | "notice";
 const LEVELS: ReadonlyArray<Level> = ["error", "warning", "notice"];
 
-/** The same annotation through the oracle: its readable names for what the wire calls `line` and `col`. */
 const oracle = (annotation: GithubAnnotationProperties.Encoded, message: string): string => {
   const properties = {
     ...(annotation.title === undefined ? {} : { title: annotation.title }),
@@ -27,12 +26,7 @@ const oracle = (annotation: GithubAnnotationProperties.Encoded, message: string)
   return WorkflowCommand[annotation.level](message, properties);
 };
 
-/**
- * The documented wire grammar, read independently of both implementations: `::level key=value,key=value::message`,
- * where a message escapes `%`, CR and LF and a property also `:` and `,`.
- * https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions
- */
-const decode = (command: string) => {
+const decodeDocumentedWireGrammar = (command: string) => {
   const match = /^::(error|warning|notice)(?: ([^:]*))?::([\s\S]*)$/.exec(command);
   if (match === null) return undefined;
   const unescapeData = (text: string): string =>
@@ -169,11 +163,11 @@ describe("GithubAnnotation.format against the WorkflowCommand oracle", () => {
           line: 3,
           col: 4,
         };
-        const decoded = decode(GithubAnnotation.format(annotation, message));
+        const decoded = decodeDocumentedWireGrammar(GithubAnnotation.format(annotation, message));
         assert.deepStrictEqual(
           decoded,
           { level: "error", properties: { title, file: `f${title}`, line: "3", col: "4" }, message },
-          Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)([message, title]), identity)
+          `decoded independently, per https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)([message, title]), identity)}`
         );
       }
     }

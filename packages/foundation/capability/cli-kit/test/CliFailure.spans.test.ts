@@ -57,18 +57,17 @@ const APP = "/home/u/.npm/lib/node_modules/reposets/dist/sync.js:20:5";
 
 const at = (file: string | undefined) => () => (file === undefined ? undefined : `at file://${file}`);
 
-/**
- * The span chain the runtime records for `reposets sync` calling `ConfigFile.discover`, which calls
- * `ConfigFile.loadFrom`: each `Effect.fn` call carries its definition as its parent, innermost first.
- */
 const chain = (sites: { readonly app: string; readonly kit: string }): Frame => {
   const root: Frame = { name: "sync", stack: at(sites.app), parent: undefined };
   const rootDef: Frame = { name: "sync (definition)", stack: at(sites.app), parent: undefined };
   const sync: Frame = { ...root, parent: rootDef };
   const discoverDef: Frame = { name: "ConfigFile.discover (definition)", stack: at(sites.kit), parent: sync };
-  // The program calls discover, so the call site is the program's: it is judged by its definition, in the kit.
-  const discover: Frame = { name: "ConfigFile.discover", stack: at(sites.app), parent: discoverDef };
-  const loadDef: Frame = { name: "ConfigFile.loadFrom (definition)", stack: at(sites.kit), parent: discover };
+  const discoverCalledFromApp: Frame = { name: "ConfigFile.discover", stack: at(sites.app), parent: discoverDef };
+  const loadDef: Frame = {
+    name: "ConfigFile.loadFrom (definition)",
+    stack: at(sites.kit),
+    parent: discoverCalledFromApp,
+  };
   return { name: "ConfigFile.loadFrom", stack: at(sites.kit), parent: loadDef };
 };
 
@@ -163,7 +162,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
   });
 
   describe("CliFailure.toDoc: the running program's own package (appModule)", () => {
-    /** schemastore-cli, installed globally beside the kit packages it uses: its own spans are under @effected too. */
     const GLOBAL = "/usr/local/lib/node_modules";
     const BIN = `file://${GLOBAL}/@effected/schemastore-cli/dist/bin.js`;
     const LOADER = `${GLOBAL}/@effected/schemastore-cli/dist/ConfigLoader.js:30:9`;
@@ -232,13 +230,20 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
   describe("CliFailure.toDoc: appModule on Windows paths", () => {
     const ROOT = "C:\\Users\\u\\AppData\\Roaming\\npm\\node_modules";
-    /** A CommonJS frame: a bare Windows path with backslashes, no file: URL. */
-    const raw = (file: string) => () => `at ${file}`;
+    const bareCommonJsFrame = (file: string) => () => `at ${file}`;
     const companion = (loader: string, kit: string): Frame => {
-      const loadDef: Frame = { name: "ConfigLoader.load (definition)", stack: raw(loader), parent: undefined };
-      const load: Frame = { name: "ConfigLoader.load", stack: raw(loader), parent: loadDef };
-      const decodeDef: Frame = { name: "ConfigFile.loadFrom (definition)", stack: raw(kit), parent: load };
-      return { name: "ConfigFile.loadFrom", stack: raw(kit), parent: decodeDef };
+      const loadDef: Frame = {
+        name: "ConfigLoader.load (definition)",
+        stack: bareCommonJsFrame(loader),
+        parent: undefined,
+      };
+      const load: Frame = { name: "ConfigLoader.load", stack: bareCommonJsFrame(loader), parent: loadDef };
+      const decodeDef: Frame = {
+        name: "ConfigFile.loadFrom (definition)",
+        stack: bareCommonJsFrame(kit),
+        parent: load,
+      };
+      return { name: "ConfigFile.loadFrom", stack: bareCommonJsFrame(kit), parent: decodeDef };
     };
     const LOADER = `${ROOT}\\@effected\\schemastore-cli\\dist\\ConfigLoader.js:30:9`;
     const KIT = `${ROOT}\\@effected\\config-file\\dist\\ConfigFile.js:41:7`;
@@ -347,7 +352,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           )
         ),
         Effect.provideService(Console.Console, double)
-        // `env.log` types a file sink's FileSystem and Path into main's requirements; none is written here.
       );
       return A.join(err, "\n");
     });
@@ -431,11 +435,9 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             );
           const atNone = yield* runTool(undefined, undefined, undefined, bad, { level: "None" });
           assert.lengthOf(warnings(atNone), 1, `printed at level None: ${atNone}`);
-          // With the sink live (Debug, NDJSON), the warning is still one plain line, and no record carries it.
           const sinkOn = yield* runTool(undefined, undefined, undefined, bad, { level: "Debug", format: "json" });
-          assert.lengthOf(warnings(sinkOn), 1, sinkOn);
+          assert.lengthOf(warnings(sinkOn), 1, `with the sink live the warning is still one plain line: ${sinkOn}`);
           assert.isFalse(Str.startsWith("{")(A.getUnsafe(warnings(sinkOn), 0)), "a plain line, not an NDJSON record");
-          // Side by side with log.envVar's own invalid value: delivered the same way.
           const both = yield* runTool(
             undefined,
             undefined,
@@ -449,7 +451,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             Str.split("\n"),
             A.filter((line) => Str.includes("TOOL_LOG=shout")(line))
           );
-          assert.lengthOf(logWarning, 1, both);
+          assert.lengthOf(logWarning, 1, `log.envVar's own invalid value is delivered the same way: ${both}`);
           assert.lengthOf(warnings(both), 1, both);
           assert.strictEqual(
             Str.startsWith("{")(A.getUnsafe(warnings(both), 0)),

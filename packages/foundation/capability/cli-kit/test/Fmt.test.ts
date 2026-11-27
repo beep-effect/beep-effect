@@ -2,31 +2,31 @@ import { Doc, Fmt, Render } from "@beep/cli-kit";
 import { assert, describe, it } from "@effect/vitest";
 
 describe("Fmt.duration", () => {
-  const cases: ReadonlyArray<readonly [number, string]> = [
+  const cases: ReadonlyArray<readonly [ms: number, expected: string, why?: string]> = [
     [0, "0ms"],
     [250, "250ms"],
     [999, "999ms"],
     [1000, "1s"],
-    [1049, "1s"], // 1.049s rounds to 1.0, and a trailing .0 is dropped
-    [1050, "1.1s"], // 1.050s rounds half up to 1.1
+    [1049, "1s", "1.049s rounds to 1.0, and a trailing .0 is dropped"],
+    [1050, "1.1s", "1.050s rounds half up to 1.1"],
     [1200, "1.2s"],
     [2000, "2s"],
     [59_949, "59.9s"],
-    [59_999, "1m"], // rounds up to a whole minute rather than printing "60s"
+    [59_999, "1m", "rounds up to a whole minute rather than printing 60s"],
     [60_000, "1m"],
     [63_000, "1m 3s"],
     [120_000, "2m"],
-    [3_599_999, "1h"], // rounds up to a whole hour rather than printing "60m"
+    [3_599_999, "1h", "rounds up to a whole hour rather than printing 60m"],
     [3_600_000, "1h"],
     [3_660_000, "1h 1m"],
     [5_400_000, "1h 30m"],
     [7_200_000, "2h"],
     [7_260_000, "2h 1m"],
-    [86_400_000, "24h"], // no days unit: hours keep counting
+    [86_400_000, "24h", "no days unit: hours keep counting"],
   ];
-  for (const [ms, expected] of cases) {
+  for (const [ms, expected, why] of cases) {
     it(`${ms}ms => ${expected}`, () => {
-      assert.strictEqual(Fmt.duration(ms), expected);
+      assert.strictEqual(Fmt.duration(ms), expected, why);
     });
   }
 
@@ -91,9 +91,12 @@ describe("Fmt.truncate", () => {
   });
 
   it("never produces half a wide character: CJK at an odd budget", () => {
-    // "日本語" is 6 wide. Width 4 leaves 3 after the 1-wide ellipsis: one wide char (2) fits, a second (4) does not.
     const out = Fmt.truncate("日本語", 4);
-    assert.strictEqual(out, "日…");
+    assert.strictEqual(
+      out,
+      "日…",
+      "width 4 leaves 3 after the 1-wide ellipsis: one wide char (2) fits, a second (4) does not"
+    );
     assert.isAtMost(Fmt.width(out), 4);
     assert.strictEqual(Fmt.truncate("日本語日本語", 5), "日本…");
   });
@@ -101,9 +104,12 @@ describe("Fmt.truncate", () => {
   it("never splits an emoji ZWJ family", () => {
     const family = "👨‍👩‍👧";
     assert.strictEqual(Fmt.width(family), 2);
-    // Room for the ellipsis and one column: the 2-wide family does not fit, so it is dropped whole.
     assert.strictEqual(Fmt.truncate(`${family}${family}`, 3), `${family}…`);
-    assert.strictEqual(Fmt.truncate(`${family}${family}`, 2), "…");
+    assert.strictEqual(
+      Fmt.truncate(`${family}${family}`, 2),
+      "…",
+      "room for the ellipsis and one column: the 2-wide family does not fit, so it is dropped whole"
+    );
     assert.strictEqual(Fmt.truncate(`a${family}`, 2), "a…");
   });
 

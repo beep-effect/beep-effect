@@ -146,7 +146,7 @@ const committedPlans = import.meta.glob<string>(
 // A lazy glob lists the checked-in test files without loading them, so the memory checkout holds
 // exactly the files that exist and the plans' "no longer in" warnings report real drift. Vite's glob
 // omits the importing file, which is added from its own module URL.
-const lawPracticePrefix = "../../../../law-practice/server/";
+const lawPracticePrefix = "../../../../law-practice/server/test/";
 const checkedInTests = R.keys(
   import.meta.glob(["../../../../law-practice/server/test/**/*.test.{ts,tsx}", "./**/*.test.{ts,tsx}"])
 );
@@ -154,7 +154,7 @@ const cliPackageRoot = "packages/tooling/tool/cli/";
 const selfPath = Str.slice(O.getOrElse(Str.indexOf(cliPackageRoot)(import.meta.url), () => 0))(import.meta.url);
 const checkoutPath = (key: string): string =>
   Str.startsWith(lawPracticePrefix)(key)
-    ? `/repo/packages/law-practice/server/${Str.slice(Str.length(lawPracticePrefix))(key)}`
+    ? `/repo/packages/law-practice/server/test/${Str.slice(Str.length(lawPracticePrefix))(key)}`
     : `/repo/${cliPackageRoot}test/${Str.slice(2)(key)}`;
 const CommittedCheckout = Layer.mergeAll(
   NodePath.layer,

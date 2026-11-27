@@ -1,16 +1,8 @@
-import { identity } from "effect/Function";
-// The emitter: an owned CycloneDX 1.6 model and its canonical JSON.
-//
-// `generate` and `toJson` are TOTAL — no error channel — which is a deliberate
-// correction of the package this replaces, where both were typed
-// `Effect<_, SbomError>` with `reason: "build" | "serialize"`. Those failures
-// could only happen because the CycloneDX library might throw; with an owned
-// model over already-validated Schema values, neither can fail.
-
 import { Component, Contact, Sbom, SbomInput, SbomJsonOptions, SbomMetadata, Supplier } from "@beep/sbom";
 import { assert, describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import { identity } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -48,25 +40,33 @@ const dep = (name: string, version: string) =>
 
 describe("Sbom.generate", () => {
   it("takes admitted components, so validation stays with the caller's make and generate cannot throw", () => {
-    // The empty bom-ref is rejected where the component is built (CycloneDX
-    // `refType` has minLength 1), never inside `generate`.
     assert.throws(() => Component.make({ type: "application", name: "x", bomRef: "" }));
-    // A plain record is not an admitted component, so it does not type-check.
     const unadmitted: Parameters<typeof Sbom.generate>[0] = {
       // @ts-expect-error: `root` must be a `Component`, not its encoded shape.
       root: { type: "application", name: "x" },
       components: [],
     };
-    assert.strictEqual(unadmitted.components.length, 0);
+    assert.strictEqual(
+      unadmitted.components.length,
+      0,
+      "a plain record is not an admitted component, so it does not type-check"
+    );
     const admitted = Component.make({ type: "application", name: "x", bomRef: "x" });
-    assert.strictEqual(Sbom.generate({ root: admitted, components: [admitted] }).components.length, 1);
+    assert.strictEqual(
+      Sbom.generate({ root: admitted, components: [admitted] }).components.length,
+      1,
+      "generate takes an admitted component as is; an empty bom-ref (refType minLength 1) fails at Component.make"
+    );
   });
 
   it("is a plain function — no Effect, no error channel", () => {
-    // If this ever needs `yield*`, the pure-tier claim has been lost.
     const document = Sbom.generate({ root, components: [] });
-    assert.strictEqual(document.bomFormat, "CycloneDX");
-    assert.strictEqual(document.specVersion, "1.6");
+    assert.strictEqual(
+      document.bomFormat,
+      "CycloneDX",
+      "an owned model over validated Schema values cannot fail, so generate and toJson have no error channel"
+    );
+    assert.strictEqual(document.specVersion, "1.6", "needing yield* here would lose the pure-tier claim");
   });
 
   it("carries the root component as metadata.component", () => {
@@ -75,25 +75,23 @@ describe("Sbom.generate", () => {
   });
 
   it("sorts components by name for a stable document", () => {
-    // Two runs over the same inputs must produce the same bytes, or an SBOM
-    // digest changes for no reason and an attestation subject drifts with it.
     const document = Sbom.generate({ root, components: [dep("zulu", "1.0.0"), dep("alpha", "2.0.0")] });
     assert.deepStrictEqual(
       A.map(document.components, (c) => c.name),
-      ["alpha", "zulu"]
+      ["alpha", "zulu"],
+      "the same inputs must give the same bytes, or the SBOM digest and attestation subject drift"
     );
   });
 
   it("sorts by code unit, not by locale collation", () => {
-    // A locale collation puts "a" before "B" and "é" beside "e"; code-unit
-    // order is the same on every host, whatever its locale or ICU data.
     const document = Sbom.generate({
       root,
       components: [dep("a", "1.0.0"), dep("é", "1.0.0"), dep("f", "1.0.0"), dep("B", "1.0.0")],
     });
     assert.deepStrictEqual(
       A.map(document.components, (c) => c.name),
-      ["B", "a", "f", "é"]
+      ["B", "a", "f", "é"],
+      "code-unit order is the same on every host; a locale collation puts a before B and é beside e"
     );
   });
 
@@ -106,15 +104,17 @@ describe("Sbom.generate", () => {
 
 describe("Sbom.toJson", () => {
   it("emits the hyphenated `bom-ref` key, not `bomRef`", () => {
-    // The one field whose JSON name differs from its TypeScript name. Emitting
-    // `bomRef` produces a document that looks right and validates wrong.
     const json: unknown = Result.getOrThrowWith(
       S.decodeResult(UnknownJson)(Sbom.toJson(Sbom.generate({ root, components: [] }))),
       identity
     );
     assertTrue(S.is(ComponentDocument)(json));
     assert.property(json.metadata.component, "bom-ref");
-    assert.notProperty(json.metadata.component, "bomRef");
+    assert.notProperty(
+      json.metadata.component,
+      "bomRef",
+      "the one field whose JSON name differs; emitting bomRef looks right and validates wrong"
+    );
   });
 
   it("omits absent optional fields rather than emitting null", () => {
@@ -130,14 +130,17 @@ describe("Sbom.toJson", () => {
   });
 
   it("renders licenses in CycloneDX's wrapper shape", () => {
-    // `licenses` is an array of single-key wrapper objects, not bare strings.
     const licensed = Component.make({ type: "library", name: "x", licenses: ["MIT"] });
     const json: unknown = Result.getOrThrowWith(
       S.decodeResult(UnknownJson)(Sbom.toJson(Sbom.generate({ root: licensed, components: [] }))),
       identity
     );
     assertTrue(S.is(ComponentDocument)(json));
-    assert.deepStrictEqual<unknown>(json.metadata.component.licenses, [{ license: { id: "MIT" } }]);
+    assert.deepStrictEqual<unknown>(
+      json.metadata.component.licenses,
+      [{ license: { id: "MIT" } }],
+      "licenses is an array of single-key wrapper objects, not bare strings"
+    );
   });
 
   it("carries supplier and authors onto metadata", () => {
@@ -163,12 +166,12 @@ describe("Sbom.toJson", () => {
   });
 
   it("rejects an explicit undefined metadata or indent (EF-40 exact optional keys)", () => {
-    // `metadata` and `space` are exact optional keys: a caller with no value
-    // omits the key. A present key holding `undefined` fails validation...
-    assert.isFalse(S.is(SbomInput)({ root, components: [], metadata: undefined }));
+    assert.isFalse(
+      S.is(SbomInput)({ root, components: [], metadata: undefined }),
+      "a caller with no value omits the exact optional key; a present undefined fails validation"
+    );
     assert.isFalse(S.is(SbomJsonOptions)({ space: undefined }));
     assert.isTrue(S.is(SbomJsonOptions)({}));
-    // ...and does not type-check under exactOptionalPropertyTypes.
     const input: { metadata: SbomMetadata | undefined; space: number | undefined } = {
       metadata: undefined,
       space: undefined,
@@ -177,7 +180,7 @@ describe("Sbom.toJson", () => {
     const generateInput: Parameters<typeof Sbom.generate>[0] = { root, components: [], metadata: input.metadata };
     // @ts-expect-error: `space` is an exact optional key; `undefined` is not a value for it.
     const jsonOptions: SbomJsonOptions.Encoded = { space: input.space };
-    assert.isDefined(generateInput);
+    assert.isDefined(generateInput, "an explicit undefined does not type-check under exactOptionalPropertyTypes");
     assert.isDefined(jsonOptions);
   });
 });

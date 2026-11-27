@@ -113,8 +113,8 @@ export const fromArray: {
       if (finished) return O.none();
       const page = items.slice(offset, offset + perPage);
       offset += perPage;
-      // A short page is GitHub's own end-of-collection signal.
-      if (page.length < perPage) finished = true;
+      const shortPageEndsCollection = page.length < perPage;
+      if (shortPageEndsCollection) finished = true;
       return page.length === 0 ? O.none() : O.some(page);
     }),
   };

@@ -1,17 +1,3 @@
-import { identity } from "effect/Function";
-// The generic npm / Node / TypeScript / bundler / Yarn / Bun fields the kit
-// models since 3-A2 (the field set repo-utils `schemas/PackageJson.ts` modeled
-// and the kit lacked). Each field is pinned on every tier:
-//
-//   - the strict `Package.schema` and a `Package.wireFor` subclass decode it
-//     to a typed member (not `rest`) and encode it back byte-for-byte;
-//   - the presence-lenient `PackageManifest.schema` does the same without
-//     `name` / `version`;
-//   - a malformed value fails the strict and presence tiers, and degrades on
-//     `LenientManifest` (absent, kept verbatim in `rest`, reported on
-//     `issues`);
-//   - an explicit `undefined` is rejected, not read as absence (EF-40, W4-j).
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { $PackageJsonId } from "@beep/identity/packages";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -35,6 +21,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFalse, assertTrue, assertUndefined, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -45,8 +32,6 @@ const Json = S.fromJsonString(S.Unknown);
 
 const base = { name: "@scope/pkg", version: "1.0.0" };
 
-// The four dependency maps and `scripts` decode with an empty default, so the
-// wire encode carries them back as `{}` (`toJsonString` strips them).
 const DEFAULT_MAPS = {
   dependencies: {},
   devDependencies: {},
@@ -58,15 +43,14 @@ const DEFAULT_MAPS = {
 const sameCatalog = S.toEquivalence(StringRecordField);
 const sameOverrides = S.toEquivalence(OverridesField);
 
-/** One added field: a valid wire value, a malformed one, and the lenient shape it degrades against. */
-interface FieldCase {
+interface AddedFieldCase {
   readonly expected: string;
   readonly field: string;
   readonly invalid: unknown;
   readonly valid: unknown;
 }
 
-const CASES: ReadonlyArray<FieldCase> = [
+const CASES: ReadonlyArray<AddedFieldCase> = [
   { field: "files", valid: ["dist", "!dist/**/*.map"], invalid: "dist", expected: "an array of strings" },
   { field: "imports", valid: { "#internal/*": "./src/internal/*.js" }, invalid: "#x", expected: "an object" },
   { field: "module", valid: "./dist/index.mjs", invalid: 1, expected: "a string" },
@@ -215,7 +199,11 @@ describe("added fields on the manifest tiers", () => {
         deepStrictEqual(typedMember(strict, field), valid);
         assertUndefined(strict.rest?.[field]);
         const value3 = yield* S.encodeUnknownEffect(Package.schema)(strict);
-        deepStrictEqual(value3, { ...DEFAULT_MAPS, ...wire });
+        deepStrictEqual(
+          value3,
+          { ...DEFAULT_MAPS, ...wire },
+          "the dependency maps and scripts decode to an empty default, so the raw encode carries {}"
+        );
 
         const codec = Package.wireFor(ExtendedPackage);
         const extended = yield* S.decodeEffect(codec)({ ...wire, tool: "kept" });
@@ -248,11 +236,11 @@ describe("added fields on the manifest tiers", () => {
         strictEqual(error._tag, "PackageDecodeError");
         const strictError = yield* Effect.flip(Package.decode({ ...base, [field]: undefined }));
         strictEqual(strictError._tag, "PackageDecodeError");
-        // The discovery tier degrades it like any other malformed value.
         const lenient = yield* LenientManifest.decode({ [field]: undefined });
         deepStrictEqual(
           A.map(lenient.issues, (issue) => issue.field),
-          [field]
+          [field],
+          "the discovery tier degrades it like any other malformed value"
         );
       })
     );
@@ -310,12 +298,7 @@ describe("ManifestFields property", () => {
   );
 });
 
-// Typing a field moves it out of `rest`, which changes the RAW schema-encode
-// key order (`{ ...rest, ...known }`). That order is not a contract: the
-// formatted output is, and `toJsonString` sorts by the canonical key order
-// whatever the typing. Pin it byte-for-byte against the decode-free
-// `PackageJsonFormat` text path, which never types a field.
-describe("ManifestFields formatted output", () => {
+describe("ManifestFields formatted output (raw encode key order is no contract; toJsonString sorts canonically)", () => {
   const shuffled = Result.getOrThrowWith(
     S.encodeUnknownResult(Json)({
       trustedDependencies: ["esbuild"],
@@ -408,11 +391,7 @@ describe("ManifestFields formatted output", () => {
   );
 });
 
-// A struct parse emits its declared keys first, and the canonical sort orders
-// top-level keys only, so a nested Bun `workspaces` object written
-// catalog-before-packages is where a typed field could still drift from the
-// decode-free text path.
-describe("ManifestFields formatted output: nested workspaces key order", () => {
+describe("ManifestFields formatted output: nested workspaces key order (the canonical sort orders top-level keys only)", () => {
   const bunRoot = A.join(
     [
       "{",
@@ -443,7 +422,11 @@ describe("ManifestFields formatted output: nested workspaces key order", () => {
   it.effect("Package and PackageManifest re-render the Bun root byte-for-byte", () =>
     Effect.gen(function* () {
       const raw = yield* S.decodeEffect(Json)(bunRoot);
-      strictEqual((yield* Package.decode(raw)).toJsonString(), bunRoot);
+      strictEqual(
+        (yield* Package.decode(raw)).toJsonString(),
+        bunRoot,
+        "a struct parse emits its declared keys first, so a typed nested workspaces object could drift"
+      );
       strictEqual((yield* PackageManifest.decode(raw)).toJsonString(), bunRoot);
     })
   );

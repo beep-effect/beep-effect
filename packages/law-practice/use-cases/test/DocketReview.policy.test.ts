@@ -101,7 +101,6 @@ const dismissed = ParalegalNotDocketItem.make({ rationale: "Fixture newsletter."
 
 const iso = (date: LocalDate): string => date.toISOString();
 
-// The common notice that states only its due date: no mail date and no period.
 const STATED_BODY = "Synthetic fixture notice for FIX-0001. Your response is due April 15, 2030.";
 const statedSource = ReviewSourceText.make({ messageText: STATED_BODY });
 const statedDue = LocalDate.make({ year: 2030, month: 4, day: 15 });
@@ -242,7 +241,6 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       );
     const notice = "Mailed January 8, 2030. A response is due within 30 days.";
 
-    // The number and the unit only occur apart: 8 is part of the date.
     assertSome(cites(notice, periodOf(8, "days")), "Failed");
     assertSome(cites(notice, periodOf(30, "days")), "Passed");
     assertSome(cites("Respond within thirty days.", periodOf(30, "days")), "Passed");
@@ -251,7 +249,6 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     assertSome(cites("Respond within a month.", periodOf(1, "months")), "Failed");
     assertSome(cites("Respond within one month.", periodOf(1, "months")), "Passed");
     assertSome(cites("Due 8 January; extensions are counted in days.", periodOf(8, "days")), "Failed");
-    // "monday" and "yesterday" never count as the unit.
     assertSome(cites("Filed 3 monday.", periodOf(3, "days")), "Failed");
     assertSome(cites("Filed 3 yesterday.", periodOf(3, "days")), "Failed");
     assertSome(cites("Respond within 3 daysx.", periodOf(3, "days")), "Failed");
@@ -313,7 +310,6 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     assertSome(agreedOn(entryOf(), readingOf({ matterReferences: ["FIX-0002"] }), "matter-references"), false);
     assertSome(agreedOn(entryOf({ matterReferences: [" "] }), readingOf(), "matter-references"), false);
     assertNone(agreedOn(entryOf({ matterReferences: [] }), readingOf({ matterReferences: [] }), "matter-references"));
-    // A stated due date is a sixth field, compared only when at least one side read one.
     assertNone(agreedOn(entryOf(), readingOf(), "stated-due-date"));
     assertSome(agreedOn(statedOnly, statedReading(statedDue), "stated-due-date"), true);
     assertSome(agreedOn(statedOnly, statedReading(statedDue), "due-date"), true);
@@ -345,8 +341,8 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       "2030-04-08"
     );
     assertNone(criticDueDate(readingOf({ responsePeriod: O.none() })));
-    // A date the critic read stated outright comes before its own arithmetic, as on the extractor's side.
-    assertSome(O.map(criticDueDate(readingOf({ statedDueDate: O.some(stated) })), iso), "2030-05-01");
+    const statedDateOverArithmetic = O.map(criticDueDate(readingOf({ statedDueDate: O.some(stated) })), iso);
+    assertSome(statedDateOverArithmetic, "2030-05-01");
     assertSome(O.map(criticComputedDueDate(readingOf({ statedDueDate: O.some(stated) })), iso), "2030-04-08");
     assertSome(O.map(criticDueDate(statedReading(statedDue)), iso), "2030-04-15");
     assertNone(criticComputedDueDate(statedReading(statedDue)));
@@ -515,7 +511,6 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       "source-document",
     ]);
     expect(A.map(disputes, (dispute) => A.length(dispute.reasons))).toStrictEqual([2, 1, 2, 2]);
-    // A failed check on the critic's own citation disputes the due date, so its dates are read again.
     expect(
       A.map(
         reviewDisputes(
@@ -530,7 +525,8 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
           })
         ),
         (dispute) => dispute.field
-      )
+      ),
+      "a failed check on the critic's own citation disputes the due date, so its dates are read again"
     ).toStrictEqual(["due-date"]);
     expect(
       reviewDisputes(
@@ -563,9 +559,9 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
         readFromSourceDocument: true,
       })
     );
-    // A disputed stated date takes the re-read date and the text cited for it, and nothing else.
     expect(
-      mergeRereading(RereadMerge.make({ fields: ["stated-due-date"], previous, reread: statedReading(statedDue) }))
+      mergeRereading(RereadMerge.make({ fields: ["stated-due-date"], previous, reread: statedReading(statedDue) })),
+      "a disputed stated date takes the re-read date and the text cited for it, and nothing else"
     ).toStrictEqual(
       readingOf({
         citedText: O.some("Your response is due April 15, 2030."),
@@ -608,15 +604,14 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       ["critic", "values-appear-in-cited-text", true],
       ["critic", "cited-span-exists", true],
     ]);
-    // The date it reports is not in the text it cites.
     expect(
-      A.map(pipe(statedReading(otherDue), runCriticChecks(statedSource)), (check) => isPassed(check))
+      A.map(pipe(statedReading(otherDue), runCriticChecks(statedSource)), (check) => isPassed(check)),
+      "the date it reports is not in the text it cites"
     ).toStrictEqual([false, true]);
-    // The text it cites is not in the source.
-    expect(A.map(runCriticChecks(statedReading(statedDue), source), (check) => isPassed(check))).toStrictEqual([
-      true,
-      false,
-    ]);
+    expect(
+      A.map(runCriticChecks(statedReading(statedDue), source), (check) => isPassed(check)),
+      "the text it cites is not in the source"
+    ).toStrictEqual([true, false]);
     expect(A.map(runCriticChecks(readingOf(), source), (check) => isPassed(check))).toStrictEqual([true, true]);
   });
 
@@ -637,8 +632,10 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
 
     expect([same.score, reviewGatePassed(same.checks)]).toStrictEqual([1, true]);
     assertSome(decide({ round: same }), "accepted");
-    // Two of four fields disagree: the stated date and the due date it stands for.
-    expect([different.score, reviewGatePassed(different.checks)]).toStrictEqual([0.75, true]);
+    expect(
+      [different.score, reviewGatePassed(different.checks)],
+      "two of four fields disagree: the stated date and the due date it stands for"
+    ).toStrictEqual([0.75, true]);
     assertSome(decide({ round: different }), "flagged-max-rounds");
   });
 
@@ -653,14 +650,11 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       ["P3", "title"],
       ["P1", "due-date"],
     ]);
-    // Carried into the next round it is written once, and it goes when its cause does.
-    expect(assess(inconsistent, raised)).toStrictEqual(raised);
-    expect(assess(consistent, raised)).toStrictEqual([minor]);
+    expect(assess(inconsistent, raised), "carried into the next round it is written once").toStrictEqual(raised);
+    expect(assess(consistent, raised), "the finding goes when its cause does").toStrictEqual([minor]);
     expect(assess(readingOf(), [])).toStrictEqual([]);
   });
   it("adds a partial re-reading's citation to the earlier one, and replaces it after a full re-reading", () => {
-    // The extractor's mail date was wrong; the stated date and the period were agreed. The critic
-    // re-read only the mail date and the stated date and cited only those.
     const PERIOD = "A response is due within THREE (3) months";
     const STATED = "Response due by April 8, 2030.";
     const MAILED = "Mailed   January 8, 2030.";
@@ -679,12 +673,15 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const partial = merged(["mail-date", "stated-due-date"]);
 
     assertSome(partial.citedText, `${PERIOD}\n${STATED}\n${MAILED}`);
-    expect(A.map(runCriticChecks(partial, withStated), (check) => isPassed(check))).toStrictEqual([true, true]);
-    // The period was kept from the earlier reading, so the re-read citation alone would not hold it.
+    expect(
+      A.map(runCriticChecks(partial, withStated), (check) => isPassed(check)),
+      "the extractor's mail date was wrong and the rest agreed; the critic re-read and cited only mail and stated dates"
+    ).toStrictEqual([true, true]);
     expect(
       A.map(runCriticChecks(readingOf({ citedText: reread.citedText, statedDueDate: stated }), withStated), (check) =>
         isPassed(check)
-      )
+      ),
+      "the period was kept from the earlier reading, so the re-read citation alone would not hold it"
     ).toStrictEqual([false, true]);
     assertSome(merged(["mail-date", "response-period", "stated-due-date"]).citedText, `${MAILED}\n${STATED}`);
     assertSome(merged(["due-date"]).citedText, `${MAILED}\n${STATED}`);

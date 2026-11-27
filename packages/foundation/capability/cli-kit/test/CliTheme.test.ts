@@ -270,8 +270,7 @@ describe("CliTheme.forStream", () => {
   });
 });
 
-/** The SGR parameters of a painted token, decoded without the kit's own colour table: what a terminal would show. */
-const NAMES: Readonly<Record<number, NamedColor | undefined>> = {
+const TERMINAL_SGR_NAMES: Readonly<Record<number, NamedColor | undefined>> = {
   30: "black",
   31: "red",
   32: "green",
@@ -299,7 +298,7 @@ const applyCode = (style: MutableStyle, code: number): void => {
   else if (code === 2) style.dim = true;
   else if (code === 3) style.italic = true;
   else if (code === 4) style.underline = true;
-  else if (NAMES[code] !== undefined) style.fg = NAMES[code];
+  else if (TERMINAL_SGR_NAMES[code] !== undefined) style.fg = TERMINAL_SGR_NAMES[code];
 };
 
 const applyParams = (style: MutableStyle, parts: ReadonlyArray<number>): void => {
@@ -340,11 +339,10 @@ describe("Token.resolve agrees with what CliTheme.paint renders", () => {
         for (const token of tokenNames) {
           const resolved = Token.resolve(token);
           const painted = theme.paint(token, "x");
-          // Without the name-to-number table the default styles are all named colours and attributes.
           assert.deepStrictEqual(
             decode(painted),
             { ...resolved },
-            `${token}: ${Result.getOrThrow(S.encodeUnknownResult(Json)(painted))}`
+            `${token} decoded without the kit's table is named colours and attributes: ${Result.getOrThrow(S.encodeUnknownResult(Json)(painted))}`
           );
         }
       })

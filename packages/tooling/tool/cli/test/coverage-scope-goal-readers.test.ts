@@ -51,6 +51,9 @@ const PR_3101 = [
 
 const CITATION_MANIFEST = "goals/citation-extraction-engine/ops/manifest.json";
 
+const ROUT_09_FIXTURE = "packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json";
+const useCasesOwner = owner("@beep/law-practice-use-cases", "packages/law-practice/use-cases");
+
 // One sample path per registry row, keyed by the row's pattern. The citation ops sample is an
 // `.mjs` file so it does not also match the ops `.ts` row.
 const SAMPLES: Readonly<Record<string, string>> = {
@@ -141,6 +144,14 @@ describe("coverage owners for goal and exploration readers", () => {
     });
   });
 
+  it("selects law-practice-server for a use-cases fixture its tests read by relative path (ROUT-09)", () => {
+    expect(planCoverageAffectedScope(A.append(owners, useCasesOwner), [ROUT_09_FIXTURE])).toEqual({
+      _tag: "selected",
+      packageNames: ["@beep/law-practice-server", "@beep/law-practice-use-cases"],
+      dependentPackageNames: [],
+    });
+  });
+
   it("selects only the code owner of a diff that mixes code with a packet manifest", () => {
     expect(planCoverageAffectedScope(owners, ["packages/b/src/B.ts", "goals/demo-packet/ops/manifest.json"])).toEqual({
       _tag: "selected",
@@ -157,6 +168,20 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("live workspace goal rea
       const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
       expect(planCoverageAffectedScope(workspace, PR_3101)).toEqual(NOOP);
       expect(planCoverageAffectedScope(workspace, [CITATION_MANIFEST])).toEqual(NOOP);
+    })
+  );
+
+  it.effect("selects law-practice-server for the ROUT-09 use-cases fixture against the live workspace", (ctx) =>
+    Effect.gen(function* () {
+      const inventory = yield* currentCheckoutInventory;
+      skipWhenCheckoutPruned(ctx, inventory, [
+        workspaceSubject("@beep/law-practice-server"),
+        workspaceSubject("@beep/law-practice-use-cases"),
+      ]);
+      const repoRoot = yield* findRepoRoot();
+      const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
+      const scope = planCoverageAffectedScope(workspace, [ROUT_09_FIXTURE]);
+      expect(scope._tag === "selected" && A.contains(scope.packageNames, "@beep/law-practice-server")).toBe(true);
     })
   );
 

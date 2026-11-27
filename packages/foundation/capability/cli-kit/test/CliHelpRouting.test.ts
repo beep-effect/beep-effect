@@ -48,21 +48,20 @@ const sub = Command.make("sub", { count: Flag.Int("count").pipe(Flag.withDefault
 const app = Command.make("app").pipe(Command.withSubcommands([sub]));
 const HELP_MARK = "USAGE";
 
-/** A console double recording each stream, and every call in one shared sequence so order ACROSS streams is visible. */
 const capturing = () => {
   const out: string[] = [];
   const err: string[] = [];
-  const seq: Array<readonly ["out" | "err", string]> = [];
+  const orderAcrossStreams: Array<readonly ["out" | "err", string]> = [];
   const record = (stream: "out" | "err", line: string) => {
     (stream === "out" ? out : err).push(line);
-    seq.push([stream, line]);
+    orderAcrossStreams.push([stream, line]);
   };
   const double: Console.Console = Object.assign(Object.create(console), {
     log: (...args: ReadonlyArray<unknown>) => record("out", pipe(args, A.map(String), A.join(" "))),
     error: (...args: ReadonlyArray<unknown>) => record("err", pipe(args, A.map(String), A.join(" "))),
     warn: (...args: ReadonlyArray<unknown>) => record("err", `warn:${pipe(args, A.map(String), A.join(" "))}`),
   });
-  return { double, out, err, seq };
+  return { double, out, err, seq: orderAcrossStreams };
 };
 
 const codeOf = (exit: Exit.Exit<unknown, unknown>): number =>
@@ -193,7 +192,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     );
 
     describe("held help, driven directly (order across both streams)", () => {
-      /** Run `body` under main with routing on; `help`/`errors` are strings the recording Formatter produced. */
       const drive = (
         body: (text: { readonly help: string; readonly errors: string }) => Effect.Effect<void>
       ): Effect.Effect<ReadonlyArray<readonly ["out" | "err", string]>> =>

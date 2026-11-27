@@ -335,7 +335,6 @@ type Ports = {
 const textEncoder = new TextEncoder();
 const KEY_HEX_LENGTH = 40;
 
-// Dated entries share a thread/date identity; messages without a thread retain their identity.
 const entryKey = Effect.fnUntraced(function* (
   ports: Ports,
   identity: string,
@@ -409,7 +408,6 @@ const derivationText = (source: {
     })
   );
 
-// A due date the message states outright has no derivation to show.
 const statedDerivation: (entry: ParalegalEntry) => string = ParalegalEntry.match({
   ParalegalDocketEntry: (entry) => (O.isSome(entry.statedDueDate) ? "" : derivationText(entry)),
   ParalegalNotDocketItem: () => "",
@@ -434,8 +432,6 @@ const dateLine = (label: string, date: O.Option<LocalDate>, derivation: string):
     })
   );
 
-// What the matter lookup found, on one line; `matterLine` puts it on an entry and a needs-review
-// outcome keeps it for the attorney's question.
 const matterText: (matter: MatterLookupResult) => string = MatterLookupResult.match({
   MatterAmbiguous: (matter) => `ambiguous between ${A.join(matter.familyKeys, ", ")}; needs attorney`,
   MatterNotFound: () => "not found in the practice records; needs attorney",
@@ -466,8 +462,6 @@ const matterLine: (matter: O.Option<MatterLookupResult>) => string = flow(
 const onlyOne = (values: ReadonlyArray<string>): O.Option<string> =>
   A.length(values) === 1 ? O.filter(A.head(values), Str.isNonEmpty) : O.none();
 
-// The docket a question belongs to: the one docket of a unique matter the references named, or
-// the only docket of a unique matter when they named the family. None when there is any doubt.
 const matterDocket = (matter: O.Option<MatterLookupResult>): O.Option<string> =>
   pipe(
     O.filter(matter, MatterLookupResult.guards.MatterUnique),
@@ -495,8 +489,7 @@ const sourceLine = (message: DocketMessage): string =>
     onSome: (link) => `Source email: ${link}`,
   });
 
-// Mail found in Junk Email or Deleted Items is docketed like any other, and every entry written
-// for it says where it was found.
+// decision: docket-intake-never-drops-a-possible-deadline
 const folderFlags: (folder: DocketSourceFolder) => ReadonlyArray<DocketEntryFlag> = DocketSourceFolder.match({
   deleted: (): ReadonlyArray<DocketEntryFlag> => ["deleted-folder"],
   junk: (): ReadonlyArray<DocketEntryFlag> => ["junk-folder"],
@@ -528,7 +521,7 @@ const matterReferences = (entry: ParalegalEntry, review: SecretaryReview): Reado
     A.fromIterable
   );
 
-// A matter lookup that fails must not cost the attorney the entry: it becomes a flag.
+// decision: docket-intake-never-drops-a-possible-deadline
 const lookupMatter = (ports: Ports, references: ReadonlyArray<string>): Effect.Effect<O.Option<MatterLookupResult>> =>
   ports.lookup.lookup(references).pipe(
     Effect.asSome,
@@ -540,16 +533,12 @@ const needsReviewDate = (message: DocketMessage, today: LocalDate): LocalDate =>
   return isBefore(dayAfterReceipt, today) ? today : dayAfterReceipt;
 };
 
-// Rows of the docket sheet dated more than this many days before receipt are not compared: they
-// belong to an earlier step of the matter.
+// decision: docket-sheet-only-moves-an-entry-earlier
 const TRACKED_WINDOW_DAYS = 7;
 
-// A reference names a docket when the practice KG's own extraction reads one in it.
 const isDocketReference = (reference: string): boolean =>
   A.isReadonlyArrayNonEmpty(extractPracticeKgPathEvidence(reference).dockets);
 
-// The dockets the sheet is asked about: those of a unique matter that the references named (all of
-// its dockets when they named the family), and every docket the references name themselves.
 const sheetDockets = (matter: O.Option<MatterLookupResult>, references: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.dedupe([
     ...pipe(
@@ -566,7 +555,7 @@ const isDeadlineType = S.is(TrackedDateType.pick(["due-date", "final-date"]));
 
 const TrackedDateOrder = Order.mapInput(LocalDateOrder, (row: TrackedDate) => row.date);
 
-// The earliest due or final date the sheet tracks on or after a week before receipt.
+// decision: docket-sheet-only-moves-an-entry-earlier
 const earliestTracked = (rows: ReadonlyArray<TrackedDate>, received: LocalDate): O.Option<TrackedDate> => {
   const from = addDays(received, -TRACKED_WINDOW_DAYS);
   const deadlines: ReadonlyArray<TrackedDate> = A.filter(
@@ -576,15 +565,13 @@ const earliestTracked = (rows: ReadonlyArray<TrackedDate>, received: LocalDate):
   return O.map(O.liftPredicate(deadlines, A.isReadonlyArrayNonEmpty), A.min(TrackedDateOrder));
 };
 
-// What the docket sheet adds to an entry: its earliest tracked date, or the flag that it could not be read.
 type TrackedCheck = { readonly flags: ReadonlyArray<DocketEntryFlag>; readonly row: O.Option<TrackedDate> };
 
 const NOTHING_TRACKED: TrackedCheck = { flags: [], row: O.none() };
 
 const SHEET_UNAVAILABLE: TrackedCheck = { flags: ["tracked-dates-unavailable"], row: O.none() };
 
-// The sheet is consulted only when the port is wired and there is a docket to ask about. A sheet
-// that cannot be read is a flag on the entry, never a failure of the message.
+// decision: docket-sheet-only-moves-an-entry-earlier
 const checkTrackedDates = (
   ports: Ports,
   message: DocketMessage,
@@ -606,7 +593,6 @@ const checkTrackedDates = (
     }
   );
 
-// The sheet's own words for each kind of date.
 const TRACKED_TYPE_LABELS: Readonly<Record<TrackedDateType, string>> = {
   "due-date": "Due Date",
   "final-date": "Final Date",
@@ -620,8 +606,7 @@ type Placement = {
   readonly lines: ReadonlyArray<string>;
 };
 
-// The standing rule with the sheet as a third source: the entry goes on the earlier date and a
-// difference is flagged. The sheet can move an entry earlier and add a flag, nothing else.
+// decision: docket-sheet-only-moves-an-entry-earlier
 const placeWithSheet = (date: LocalDate, check: TrackedCheck): Placement =>
   O.match(check.row, {
     onNone: (): Placement => ({ date, flags: check.flags, lines: [] }),
@@ -642,7 +627,6 @@ const UNDATED: ReasonText = {
 const FLAGGED_INTRO =
   "A message looks like a docket item but the automatic review did not accept it. Nothing here is confirmed: please read the message and enter it yourself.";
 
-// What the attorney sees first: the subject prefix and the opening line say why the entry exists.
 const reasonText: (reason: DocketNeedsReviewReason) => ReasonText = DocketNeedsReviewReason.match({
   "agents-disagree": () => UNDATED,
   "due-date-past": () => ({
@@ -656,8 +640,6 @@ const reasonText: (reason: DocketNeedsReviewReason) => ReasonText = DocketNeedsR
   "processing-failed": () => UNDATED,
 });
 
-// Where a needs-review entry goes and how it is labelled, by placement. A resolved date that has
-// already passed is moved to today (D-48); a fallback date is labelled as not a due date (D-49).
 type NeedsReviewPlaced = {
   readonly date: LocalDate;
   readonly identity: string;
@@ -702,9 +684,6 @@ const placeNeedsReview = (
     }),
   });
 
-// A needs-review outcome keeps what tells the attorney which email it is about, the dates the
-// deadline could be, the matter and the item's title (what a date the attorney picks writes), so
-// the question raised from it can say so. None of it is logged or put in the digest.
 const writeNeedsReview = Effect.fnUntraced(function* (
   ports: Ports,
   message: DocketMessage,
@@ -801,7 +780,6 @@ const reminderEntry = Effect.fnUntraced(function* (
   );
 });
 
-// The reviewer's stated date is shown only when it read one; its computed date always has a line.
 const dateLines = (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArray<string> => [
   dateLine("Date from the email (paralegal entry)", extractorDueDate(entry), statedDerivation(entry)),
   ...A.map(
@@ -814,8 +792,6 @@ const dateLines = (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArr
 const earliestDate = (dates: ReadonlyArray<LocalDate>): O.Option<LocalDate> =>
   O.map(O.liftPredicate(dates, A.isReadonlyArrayNonEmpty), A.min(LocalDateOrder));
 
-// Both dates the reviewer has: the one it read stated and the one its mail date and period give.
-// When they differ the earlier one is the reviewer's candidate.
 const criticDates = (reading: SecretaryReview): ReadonlyArray<LocalDate> =>
   A.getSomes([reading.statedDueDate, criticComputedDueDate(reading)]);
 
@@ -824,8 +800,6 @@ const candidate =
   (date: LocalDate): DocketCandidateDate =>
     DocketCandidateDate.make({ date, source });
 
-// Every date the deadline could be, by where it came from: the first reader's date, the second
-// reader's dates, and the docket sheet's.
 const candidateDates = (
   entry: ParalegalEntry,
   reading: SecretaryReview,
@@ -975,8 +949,7 @@ const isDocketEntry = S.is(ParalegalEntry.cases.ParalegalDocketEntry);
 
 const verdictText = (isDocketItem: boolean): string => (isDocketItem ? "docket item" : "not a docket item");
 
-// The review accepted the round although the agents still disagree about whether this is a
-// docket item at all. Missing one is worse than a spurious entry, so the attorney gets to decide.
+// decision: docket-intake-never-drops-a-possible-deadline
 const escalateDisagreement = (
   ports: Ports,
   message: DocketMessage,
@@ -999,8 +972,6 @@ const escalateDisagreement = (
     title: titleOf(round.entry),
   });
 
-// Everything one review needs: the ports, the message, and the source documents with the text
-// citations are checked against. The documents are read once per processing run.
 type ReviewContext = {
   readonly documents: ReadonlyArray<DocketSourceDocument>;
   readonly message: DocketMessage;
@@ -1009,11 +980,12 @@ type ReviewContext = {
   readonly today: LocalDate;
 };
 
-// The text of the attached documents is usable only when every document has it: with part of it
-// missing, a citation of the unread part would fail for no reason.
+const textOfEveryDocument = (documents: ReadonlyArray<DocketSourceDocument>): O.Option<string> =>
+  O.map(O.all(A.map(documents, (document) => document.text)), A.join("\n"));
+
 const sourceTextOf = (message: DocketMessage, documents: ReadonlyArray<DocketSourceDocument>): ReviewSourceText =>
   ReviewSourceText.make({
-    documentText: O.map(O.all(A.map(documents, (document) => document.text)), A.join("\n")),
+    documentText: textOfEveryDocument(documents),
     hasDocuments: A.isReadonlyArrayNonEmpty(documents),
     messageText: `${O.getOrElse(message.subject, () => "")}\n${message.bodyText}`,
   });
@@ -1030,7 +1002,6 @@ const contextOf = Effect.fnUntraced(function* (
 const bothDismiss = (entry: ParalegalEntry, reading: SecretaryReview): boolean =>
   !isDocketEntry(entry) && !reading.isDocketItem;
 
-// When both agents find nothing to docket there is no entry to find fault with.
 const critiqueOf = (
   context: ReviewContext,
   entry: ParalegalEntry,
@@ -1040,8 +1011,7 @@ const critiqueOf = (
     ? Effect.succeed(A.empty<ReviewFinding>())
     : context.ports.secretary.critique({ documents: context.documents, entry, message: context.message });
 
-// Round 1: the critic reads the message and its documents for itself, then says what is wrong
-// with what it is shown of the entry.
+// decision: docket-critic-reads-dates-for-itself
 const firstRound = Effect.fnUntraced(function* (
   context: ReviewContext,
   entry: ParalegalEntry
@@ -1055,7 +1025,7 @@ const firstRound = Effect.fnUntraced(function* (
   return assessReviewRound(ReviewRoundDraft.make({ entry, findings, index: 1, reading, source: context.source }));
 });
 
-// What the critic is shown of an entry. Its dates are deliberately not part of it.
+// decision: docket-critic-reads-dates-for-itself
 const criticView: (entry: ParalegalEntry) => ReadonlyArray<string> = ParalegalEntry.match({
   ParalegalDocketEntry: (entry) => [entry._tag, entry.title, entry.rationale, ...entry.matterReferences],
   ParalegalNotDocketItem: (entry) => [entry._tag, entry.rationale],
@@ -1063,9 +1033,7 @@ const criticView: (entry: ParalegalEntry) => ReadonlyArray<string> = ParalegalEn
 
 const sameCriticView = A.makeEquivalence(Str.Equivalence);
 
-// A later round: the extractor revises or defends the disputed fields, the critic reads the
-// fields it can read again, and it is asked for findings again only when what it is shown of the
-// entry changed. The same view would only get the same findings.
+// decision: docket-critic-reads-dates-for-itself
 const nextRound = Effect.fnUntraced(function* (
   context: ReviewContext,
   previous: ReviewRound
@@ -1116,9 +1084,7 @@ const storedRounds = (
     )
   );
 
-// Each completed round is written to the message's ledger record before the next one starts, so a
-// restart continues from the next round. The record is a placeholder until the message settles:
-// it reads as "still failing", which is what keeps the cursor behind it.
+// decision: docket-ledger-carries-unsettled-review-rounds
 const persistRounds = Effect.fnUntraced(function* (
   context: ReviewContext,
   rounds: ReadonlyArray<ReviewRound>
@@ -1147,13 +1113,14 @@ const persistRounds = Effect.fnUntraced(function* (
   );
 });
 
-// How a review ended: both agents dismissed the message, or the loop reached a terminal status.
 type ReviewEnd = O.Option<ReviewTerminalStatus>;
+
+const BOTH_DISMISSED: ReviewEnd = O.none();
 
 const reviewEnd = (config: DocketReviewConfig, rounds: A.NonEmptyReadonlyArray<ReviewRound>): O.Option<ReviewEnd> => {
   const round = A.lastNonEmpty(rounds);
   return bothDismiss(round.entry, SecretaryReview.make(round.reading))
-    ? O.some(O.none())
+    ? O.some(BOTH_DISMISSED)
     : O.map(
         terminalStatus(
           ReviewDecisionInput.make({
@@ -1187,8 +1154,6 @@ const checkLine = (check: DeterministicCheck): O.Option<string> =>
     Unknown: ({ reason }) => O.some(`- unknown check ${checkSubject(check)}: ${reason}`),
   });
 
-// What is still open after the last round: failed checks, fields the two readings differ on, and
-// the critic's findings.
 const openLines = (round: ReviewRound): ReadonlyArray<string> => [
   ...A.getSomes(A.map(round.checks, checkLine)),
   ...A.map(
@@ -1198,8 +1163,7 @@ const openLines = (round: ReviewRound): ReadonlyArray<string> => [
   ...A.map(round.findings, findingLine),
 ];
 
-// A flagged item is shown to the attorney, never entered as an accepted deadline: one
-// needs-review entry on the earliest date either agent read, with no reminder ladder.
+// decision: docket-intake-never-drops-a-possible-deadline
 const writeFlagged = Effect.fnUntraced(function* (
   context: ReviewContext,
   round: ReviewRound,
@@ -1280,7 +1244,6 @@ const fieldsWithAction = (
     (response) => response.field
   );
 
-// What each side decided in a round, without any of the text it read (D-46).
 const traceOf = (round: ReviewRound): ReviewRoundTrace =>
   ReviewRoundTrace.make({
     agreedFields: fieldsWhere(round.agreement, true),
@@ -1334,7 +1297,6 @@ const settleReview = (
     onSome: (status) => settleReviewed(context, rounds, status),
   });
 
-// The bounded loop: decide after each round, and run another only while the review has not ended.
 const runReview = (
   context: ReviewContext,
   rounds: A.NonEmptyReadonlyArray<ReviewRound>
@@ -1380,8 +1342,6 @@ const reassessed =
       })
     );
 
-// Rounds already in the ledger are read back, not run again: the agents are asked only for the
-// rounds that are still missing.
 const processOrFail = Effect.fnUntraced(function* (
   ports: Ports,
   message: DocketMessage,
@@ -1399,12 +1359,11 @@ const processOrFail = Effect.fnUntraced(function* (
 
 const isFailed = S.is(DocketIntakeOutcome.cases.IntakeFailed);
 
-// A record with review rounds still in it belongs to a review that has not finished.
+// decision: docket-ledger-carries-unsettled-review-rounds
 const isSettled = (record: O.Option<DocketLedgerRecord>): boolean =>
   O.exists(record, (value) => !isFailed(value.outcome) && O.isNone(value.review));
 
-// After the retry budget, a message that still cannot be read gets a needs-review entry so it
-// is not silently dropped. A failing calendar cannot take that entry either, so it keeps retrying.
+// decision: docket-intake-never-drops-a-possible-deadline
 const settleExhausted = (
   ports: Ports,
   message: DocketMessage,
@@ -1493,8 +1452,6 @@ const makeService = (ports: Ports): DocketIntakeShape => {
         Str.Order(left.receivedAt, right.receivedAt)
       );
       const unsettled = A.filter(ordered, (message) => !isSettled(R.get(loaded.ledger, message.messageId)));
-      // A bounded cycle takes the oldest pending messages. Those it leaves are unsettled, so the
-      // cursor, which only advances over the leading run of settled messages, stops before them.
       const pending = O.match(options.maxMessages, {
         onNone: () => unsettled,
         onSome: (max) => A.take(unsettled, max),
@@ -1512,9 +1469,7 @@ const makeService = (ports: Ports): DocketIntakeShape => {
           const outcome = yield* processMessage(message, today).pipe(
             Effect.flatMap((processed) => settleExhausted(ports, message, today, processed, attempts))
           );
-          // The review wrote its rounds to the ledger while the message was processed. A message
-          // that failed keeps them, so the next attempt continues from the next round; a settled
-          // one drops them.
+          // decision: docket-ledger-carries-unsettled-review-rounds
           const latest = yield* ports.store.load;
           const state = DocketIntakeState.make({
             cursor: latest.cursor,
@@ -1533,21 +1488,18 @@ const makeService = (ports: Ports): DocketIntakeShape => {
               })
             ),
           });
-          // The ledger is saved as it grows; the cursor only moves at the end of the cycle.
           yield* ports.store.save(state);
           return { outcomes: A.append(accumulator.outcomes, outcome), state };
         })
       );
 
-      // The cursor advances over the leading run of settled messages: a message still failing
-      // holds it back, so the next poll reads that message again.
       const settledRun = A.takeWhile(ordered, (message) => isSettled(R.get(final.state.ledger, message.messageId)));
       const cursor = laterTimestamp(
         final.state.cursor,
         O.map(A.last(settledRun), (message) => message.receivedAt)
       );
       const horizon = O.map(cursor, (value) => subtractMinutes(value, ports.config.overlapMinutes));
-      // A record is dropped once its message can no longer be listed again and its day is digested.
+      // decision: docket-ledger-carries-unsettled-review-rounds
       const ledger = R.filter(
         final.state.ledger,
         (record) =>

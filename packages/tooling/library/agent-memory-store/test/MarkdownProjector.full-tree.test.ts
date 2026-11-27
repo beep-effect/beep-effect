@@ -45,8 +45,6 @@ describe.skipIf(!enabled)("MarkdownProjector AC-1 over the live goals tree (opt-
         const goalsFolder = yield* path.fromFileUrl(new URL("../../../../../goals", import.meta.url));
         const workspace = yield* tempDirectory("beep-ac1-full-tree-");
         const store = yield* openStore(`${workspace}/memory.db`);
-        // The source bytes are read right before the import, so an edit to the
-        // tree after the import cannot read as a rebuild mismatch.
         const source = yield* snapshotFolder(goalsFolder);
         const importStart = yield* TestClock.withLive(Clock.currentTimeMillis);
         const imported = yield* store.projector.importFolder(PosixPath.make(goalsFolder));
@@ -75,7 +73,10 @@ describe.skipIf(!enabled)("MarkdownProjector AC-1 over the live goals tree (opt-
         );
         expect(markdown.length).toBe(imported.files.length);
         expect(records).toHaveLength(markdown.length);
-        expect(identical).toHaveLength(markdown.length);
+        expect(
+          identical,
+          "source bytes are read right before the import, so a later edit to the tree cannot read as a rebuild mismatch"
+        ).toHaveLength(markdown.length);
       }),
       { timeout: 900_000 }
     );

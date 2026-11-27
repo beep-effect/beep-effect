@@ -22,7 +22,6 @@ import { insertEvent, isBunRuntime, replayNodeId, TestPlatform } from "./project
 
 const notes = MemoryFilePath.make("notes.md");
 
-// Three nodes of one file, committed to a fresh in-memory log.
 const committedEntries = Effect.fnUntraced(function* () {
   const context = yield* Layer.build(MemoryLogTestLayer);
   const log = Context.get(context, MemoryLog);

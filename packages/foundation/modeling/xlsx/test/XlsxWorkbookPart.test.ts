@@ -1,6 +1,3 @@
-// Example workbooks that reach every way a workbook part is opened: where the parts sit, what a sheet entry
-// names, and what a styles part writes. The property tests reach these only by chance, so each has an example.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { describe, expect, it } from "@effect/vitest";
@@ -26,8 +23,7 @@ const book = (sheets: string): string =>
   `<workbook xmlns="${main}" xmlns:r="${rel}"><sheets>${sheets}</sheets></workbook>`;
 const cells = sheet('<row r="1"><c r="A1"><v>1</v></c></row>');
 
-/** A workbook in the usual place, with the links and sheet entries given. */
-const usual = (input: {
+const usualPlaceWorkbook = (input: {
   readonly links: ReadonlyArray<readonly [id: string, kind: string, target: string]>;
   readonly sheets: string;
   readonly more?: ReadonlyArray<Part>;
@@ -50,10 +46,9 @@ const findingOf = (bytes: Uint8Array, limits: Parameters<typeof XlsxLimits.make>
   );
 const sheetLink = ["s1", "worksheet", "worksheets/sheet1.xml"] as const;
 
-describe("opening a workbook part", () => {
-  it.effect("styles and shared text the first pass does not hold are read in a second pass", () =>
+describe("opening a workbook part, by an example for each way that the property tests reach only by chance", () => {
+  it.effect("styles under a worksheets folder and shared text without an XML name are read in a second pass", () =>
     Effect.gen(function* () {
-      // The first pass holds small XML parts but never one under a worksheets folder or without an XML name.
       const bytes = yield* archive([
         ["[Content_Types].xml", "<Types/>"],
         rootRels("xl/workbook.xml"),
@@ -77,7 +72,7 @@ describe("opening a workbook part", () => {
 
   it.effect("the first of two links with one id is the one a sheet names", () =>
     Effect.gen(function* () {
-      const bytes = yield* usual({
+      const bytes = yield* usualPlaceWorkbook({
         links: [sheetLink, ["s1", "worksheet", "worksheets/absent.xml"]],
         sheets: '<sheet name="Kept" sheetId="1" r:id="s1"/>',
       });
@@ -88,7 +83,7 @@ describe("opening a workbook part", () => {
 
   it.effect("a sheet with no name takes its position, and a state it does not know is visible", () =>
     Effect.gen(function* () {
-      const bytes = yield* usual({
+      const bytes = yield* usualPlaceWorkbook({
         links: [sheetLink],
         sheets: '<sheet sheetId="1" state="sideways" r:id="s1"/>',
       });
@@ -101,7 +96,7 @@ describe("opening a workbook part", () => {
 
   it.effect("an entry whose link is no worksheet is passed over", () =>
     Effect.gen(function* () {
-      const bytes = yield* usual({
+      const bytes = yield* usualPlaceWorkbook({
         links: [sheetLink, ["c1", "chartsheet", "chartsheets/sheet1.xml"]],
         sheets: '<sheet name="Chart" sheetId="1" r:id="c1"/><sheet name="Data" sheetId="2" r:id="s1"/>',
       });
@@ -112,7 +107,7 @@ describe("opening a workbook part", () => {
 
   it.effect("a workbook whose only entries are no worksheets has no sheets", () =>
     Effect.gen(function* () {
-      const bytes = yield* usual({
+      const bytes = yield* usualPlaceWorkbook({
         links: [["c1", "chartsheet", "chartsheets/sheet1.xml"]],
         sheets: '<sheet name="Chart" sheetId="1" r:id="c1"/>',
       });
@@ -123,8 +118,11 @@ describe("opening a workbook part", () => {
 
   it.effect("a sheet that names a link the workbook lacks, or a name that cannot be read, stops the open", () =>
     Effect.gen(function* () {
-      const lacking = yield* usual({ links: [sheetLink], sheets: '<sheet name="Lost" sheetId="1" r:id="nope"/>' });
-      const unnamed = yield* usual({
+      const lacking = yield* usualPlaceWorkbook({
+        links: [sheetLink],
+        sheets: '<sheet name="Lost" sheetId="1" r:id="nope"/>',
+      });
+      const unnamed = yield* usualPlaceWorkbook({
         links: [sheetLink],
         sheets: `<sheet name="${Str.repeat(256)("n")}" sheetId="1" r:id="s1"/>`,
       });
@@ -135,24 +133,26 @@ describe("opening a workbook part", () => {
 
   it.effect("a sheet whose part is not in the file, and a workbook part that is not, are missing parts", () =>
     Effect.gen(function* () {
-      const noSheet = yield* usual({
+      const noSheet = yield* usualPlaceWorkbook({
         links: [["s9", "worksheet", "worksheets/absent.xml"]],
         sheets: '<sheet name="Gone" sheetId="1" r:id="s9"/>',
       });
-      // The root link names a workbook part the file does not hold; another part's name still marks it a workbook.
-      const noBook = yield* archive([
+      const rootLinkToAbsentBook = yield* archive([
         ["[Content_Types].xml", "<Types/>"],
         rootRels("xl/absent.xml"),
         ["old/xl/workbook.xml", book("")],
       ]);
-      const findings = [yield* findingOf(noSheet), yield* findingOf(noBook)];
-      expect(A.map(findings, (finding) => finding.kind)).toEqual(["MissingPart", "MissingPart"]);
+      const findings = [yield* findingOf(noSheet), yield* findingOf(rootLinkToAbsentBook)];
+      expect(
+        A.map(findings, (finding) => finding.kind),
+        "old/xl/workbook.xml still marks the file a workbook, so the absent root target is a missing part"
+      ).toEqual(["MissingPart", "MissingPart"]);
     })
   );
 
   it.effect("more sheets than the cap stops the open", () =>
     Effect.gen(function* () {
-      const bytes = yield* usual({
+      const bytes = yield* usualPlaceWorkbook({
         links: [sheetLink],
         sheets: '<sheet name="One" sheetId="1" r:id="s1"/><sheet name="Two" sheetId="2" r:id="s1"/>',
       });
@@ -166,7 +166,6 @@ describe("opening a workbook part", () => {
       const stylesPart =
         `<styleSheet xmlns="${main}"><numFmts count="2"><numFmt numFmtId="170"/><numFmt numFmtId="x" formatCode="0"/></numFmts>` +
         `<fonts count="2"><font/><font/></fonts>` +
-        // Two styles of one id, one with no id and one whose id is no number: each is General or the one format made.
         `<cellXfs count="6"><xf numFmtId="0"/><xf numFmtId="170"/><xf numFmtId="250"/><xf numFmtId="250"/><xf/><xf numFmtId="x"/></cellXfs></styleSheet>`;
       const bytes = yield* archive([
         ["[Content_Types].xml", "<Types/>"],
@@ -186,13 +185,14 @@ describe("opening a workbook part", () => {
         ["custom/thing.dat", "other"],
       ]);
       const result = yield* read(bytes);
-      // One format per cell, in style order: General; the custom id with the empty code it wrote; an unknown id as
-      // General under that id, the same for its repeat; and General for a style with no id or one that is no number.
       const formats = A.map(result.workbook.sheets[0]?.rows[0]?.cells ?? [], (cell) => [
         cell.format.id,
         cell.format.code,
       ]);
-      expect(formats).toEqual([
+      expect(
+        formats,
+        "in style order: General; the custom id with its empty code; an unknown id, twice, as General under that id; General for no id or a non-number"
+      ).toEqual([
         [0, "General"],
         [170, ""],
         [250, "General"],
@@ -226,8 +226,11 @@ describe("opening a workbook part", () => {
 
   it.effect("a file past the cap on its bytes, and shared text past the cap on its entries, stop the open", () =>
     Effect.gen(function* () {
-      const plain = yield* usual({ links: [sheetLink], sheets: '<sheet name="One" sheetId="1" r:id="s1"/>' });
-      const texts = yield* usual({
+      const plain = yield* usualPlaceWorkbook({
+        links: [sheetLink],
+        sheets: '<sheet name="One" sheetId="1" r:id="s1"/>',
+      });
+      const texts = yield* usualPlaceWorkbook({
         links: [sheetLink, ["ss", "sharedStrings", "sharedStrings.xml"]],
         sheets: '<sheet name="One" sheetId="1" r:id="s1"/>',
         more: [["xl/sharedStrings.xml", `<sst xmlns="${main}"><si><t>a</t></si><si><t>b</t></si></sst>`]],

@@ -45,7 +45,6 @@ import type { ProposedWrite } from "@beep/law-practice-use-cases/QuestionWrites"
 
 type TestEvent = { readonly fields: CalendarPrior; readonly key: O.Option<string> };
 
-/** The in-memory calendar's events by id, so tests can read what a write did. */
 class CalendarEvents extends Context.Service<CalendarEvents, Ref.Ref<HashMap.HashMap<string, TestEvent>>>()(
   "@beep/law-practice-use-cases/test/QuestionLoop.slice.test/CalendarEvents"
 ) {}
@@ -59,15 +58,11 @@ const date = (year: number, month: number, day: number) => LocalDate.make({ year
 const provisional = (fields: { readonly date: LocalDate; readonly title: string }) =>
   CalendarPrior.make({ ...fields, category: "Docket - unverified" });
 
-// The docket entry the question is about, already on the calendar.
 const SEEDED_EVENT = "evt-seeded";
 const seededPrior = provisional({ date: date(2026, 10, 2), title: "Response due" });
 
 const notFound = (itemId: O.Option<string>) => QuestionWriteError.make({ reason: "event-not-found", itemId });
 
-// Upserts and restores against a map of events: a named event is updated, a
-// keyed write creates its event once and updates it after that, returning its
-// state before as the prior, as the calendar adapter does.
 const TestCalendar = Layer.effect(
   QuestionCalendar,
   Effect.map(CalendarEvents, (events) =>
@@ -169,7 +164,6 @@ const approval = Effect.map(DateTime.now, (approvedAt) =>
 
 const eventsNow = Effect.flatMap(CalendarEvents, Ref.get);
 
-// A batch whose writes before the last apply, and whose last write the calendar refuses.
 const failingBatch = (batchId: string, ...applied: ReadonlyArray<readonly [string, string]>) =>
   S.decodeUnknownEffect(ProposedWriteBatch)({
     batchId,
@@ -195,11 +189,9 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         const writes = yield* QuestionWrites;
         const item = yield* question("question:slice:1");
 
-        // Raised: no answer yet, so the digest selects it.
         const digestOn2 = yield* digestOn(date(2026, 10, 14), [item]);
-        expect(digestOn2).toStrictEqual([item.itemId]);
+        expect(digestOn2, "raised: no answer yet, so the digest selects it").toStrictEqual([item.itemId]);
 
-        // Pending on the client until October 20: skipped before, selected on and after.
         const pending = yield* answerAt(
           T_ASKED,
           item,
@@ -207,29 +199,36 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         );
         expect(pending.revision).toBe(1);
         const digestOn3 = yield* digestOn(date(2026, 10, 19), [item]);
-        expect(digestOn3).toStrictEqual([]);
+        expect(
+          digestOn3,
+          "pending on the client until October 20: skipped before, selected on and after"
+        ).toStrictEqual([]);
         const digestOn4 = yield* digestOn(date(2026, 10, 20), [item]);
         expect(digestOn4).toStrictEqual([item.itemId]);
         const digestOn5 = yield* digestOn(date(2026, 10, 21), [item]);
         expect(digestOn5).toStrictEqual([item.itemId]);
 
-        // Decided on the option that moves the date: it leaves the digest and proposes one write.
         const decision = yield* answerAt(T_ASKED + MINUTE, item, decided(item.itemId, "move-to-2026-11-02"));
         expect(decision.revision).toBe(2);
         const digestOn6 = yield* digestOn(date(2026, 10, 21), [item]);
-        expect(digestOn6).toStrictEqual([]);
+        expect(digestOn6, "decided on the option that moves the date: it leaves the digest").toStrictEqual([]);
         const proposals = writes.propose({ items: [item], rows: yield* queue.readLog });
-        expect(A.map(proposals, ({ optionId }) => optionId)).toStrictEqual(["move-to-2026-11-02"]);
+        expect(
+          A.map(proposals, ({ optionId }) => optionId),
+          "the decided option proposes one write"
+        ).toStrictEqual(["move-to-2026-11-02"]);
         expect(A.map(proposals, ({ answeredAt }) => DateTime.toEpochMillis(answeredAt))).toStrictEqual([
           T_ASKED + MINUTE,
         ]);
 
-        // Approved and applied: the seeded event moves, and its prior state is journaled.
         const applied = yield* writes.apply({
           batch: yield* batchOf("writes-2026-10-21", proposals),
           approval: yield* approval,
         });
-        expect(A.map(applied.applied, ({ eventId }) => eventId)).toStrictEqual([SEEDED_EVENT]);
+        expect(
+          A.map(applied.applied, ({ eventId }) => eventId),
+          "approved and applied: the seeded event moves, and its prior state is journaled"
+        ).toStrictEqual([SEEDED_EVENT]);
         assertSome(
           O.flatMap(A.head(applied.applied), ({ prior }) => prior),
           seededPrior
@@ -241,13 +240,10 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
           "2026-11-02"
         );
 
-        // Undone: the event is back as it was.
         yield* writes.undo(applied);
         const eventsNow8 = yield* eventsNow;
-        assertSome(
-          O.map(HashMap.get(eventsNow8, SEEDED_EVENT), ({ fields }) => fields),
-          seededPrior
-        );
+        const seededEventAfterUndo = O.map(HashMap.get(eventsNow8, SEEDED_EVENT), ({ fields }) => fields);
+        assertSome(seededEventAfterUndo, seededPrior);
       })
     );
   });
@@ -299,16 +295,17 @@ describe("@beep/law-practice-use-cases question loop slice", () => {
         expect(digestOn10).toStrictEqual([reminding.itemId, unanswered.itemId]);
         const currentAnswers11 = yield* queue.currentAnswers(items);
         expect(HashMap.size(currentAnswers11)).toBe(3);
-        // A decided option that names no write, and every other state, proposes nothing.
-        expect(writes.propose({ items, rows: yield* queue.readLog })).toStrictEqual([]);
+        expect(
+          writes.propose({ items, rows: yield* queue.readLog }),
+          "a decided option that names no write, and every other state, proposes nothing"
+        ).toStrictEqual([]);
 
-        // A later answer revises an earlier one: withdrawn, then keep reminding.
         const revised = yield* answerAt(
           T_ASKED + MINUTE,
           withdrawn,
           RecordAnswerInput.cases["keep-reminding"].make({ itemId: withdrawn.itemId })
         );
-        expect(revised.revision).toBe(2);
+        expect(revised.revision, "a later answer revises an earlier one: withdrawn, then keep reminding").toBe(2);
         const digestOn12 = yield* digestOn(date(2026, 10, 14), items);
         expect(digestOn12).toStrictEqual([reminding.itemId, withdrawn.itemId, unanswered.itemId]);
       })

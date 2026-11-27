@@ -27,9 +27,7 @@ const observation = {
   normalizedSha256: hash,
   payload,
 };
-// Bounded synthetic schema controls. The real corpus and its cryptographic,
-// coordinate and independent-source checks run through ops/check-operations.ts.
-const fixture = {
+const syntheticFixture = {
   schemaVersion: "citation-oracle-operations/v1",
   scope: "public-operation-observations; model/helper assertion proof remains separate",
   commit: "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
@@ -50,10 +48,10 @@ const fixture = {
 };
 const accepts = (value: unknown) => Result.isSuccess(S.decodeUnknownResult(CitationOracleOperations)(value));
 
-describe("normalized public-operation oracle evidence", () => {
+describe("normalized public-operation oracle evidence: bounded synthetic schema controls", () => {
   it.effect("decodes typed data while preserving exact payload bytes on encode", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(CitationOracleOperations)(fixture);
+      const decoded = yield* S.decodeUnknownEffect(CitationOracleOperations)(syntheticFixture);
       const first = decoded.cases[0];
       if (first?.operation !== "clean_text") throw new Error("expected synthetic cleaning case");
       expect(first.payload.raw).toBe(payload);
@@ -65,7 +63,7 @@ describe("normalized public-operation oracle evidence", () => {
 
   it.effect("rejects a forged parsed value instead of re-encoding stale payload hashes", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(CitationOracleOperations)(fixture);
+      const decoded = yield* S.decodeUnknownEffect(CitationOracleOperations)(syntheticFixture);
       const first = decoded.cases[0];
       if (first?.operation !== "clean_text") throw new Error("expected synthetic cleaning case");
       const changed = {
@@ -86,11 +84,11 @@ describe("normalized public-operation oracle evidence", () => {
   );
 
   it("rejects malformed JSON and unknown operation/output discriminants", () => {
-    expect(accepts({ ...fixture, cases: [{ ...observation, payload: "{" }] })).toBe(false);
-    expect(accepts({ ...fixture, cases: [{ ...observation, operation: "unknown" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, cases: [{ ...observation, payload: "{" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, cases: [{ ...observation, operation: "unknown" }] })).toBe(false);
     expect(
       accepts({
-        ...fixture,
+        ...syntheticFixture,
         cases: [
           { ...observation, payload: '{"input":{"text":"x","steps":[]},"stages":{},"outcome":{"kind":"unknown"}}' },
         ],
@@ -99,18 +97,18 @@ describe("normalized public-operation oracle evidence", () => {
   });
 
   it("rejects missing, duplicate or mismatched source/runtime rows", () => {
-    expect(accepts({ ...fixture, cases: [] })).toBe(false);
-    expect(accepts({ ...fixture, cases: [observation, observation] })).toBe(false);
-    expect(accepts({ ...fixture, sourceSites: [site, site] })).toBe(false);
-    expect(accepts({ ...fixture, sourceSites: [] })).toBe(false);
-    expect(accepts({ ...fixture, cases: [{ ...observation, sourceSiteId: "unknown" }] })).toBe(false);
-    expect(accepts({ ...fixture, cases: [{ ...observation, id: "wrong" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, cases: [] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, cases: [observation, observation] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, sourceSites: [site, site] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, sourceSites: [] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, cases: [{ ...observation, sourceSiteId: "unknown" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, cases: [{ ...observation, id: "wrong" }] })).toBe(false);
   });
 
   it("rejects wrong pins, clock, lock and license evidence", () => {
-    expect(accepts({ ...fixture, commit: "wrong" })).toBe(false);
-    expect(accepts({ ...fixture, clockDate: "2027-01-01" })).toBe(false);
-    expect(accepts({ ...fixture, lockSha256: hash })).toBe(false);
-    expect(accepts({ ...fixture, license: "unknown" })).toBe(false);
+    expect(accepts({ ...syntheticFixture, commit: "wrong" })).toBe(false);
+    expect(accepts({ ...syntheticFixture, clockDate: "2027-01-01" })).toBe(false);
+    expect(accepts({ ...syntheticFixture, lockSha256: hash })).toBe(false);
+    expect(accepts({ ...syntheticFixture, license: "unknown" })).toBe(false);
   });
 });
