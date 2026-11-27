@@ -17,10 +17,7 @@ import * as O from "effect/Option";
 import * as Atom from "effect/reactivity/Atom";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 
-// The desktop registry disposes any atom with no listeners and no dependents once
-// its idle TTL elapses. A tiny TTL reproduces in milliseconds what took the real
-// app thirty seconds.
-const IDLE_TTL_MS = 40;
+const TINY_IDLE_TTL_MS = 40;
 
 const openSession = createSession(
   CreateSessionInput.make({
@@ -35,18 +32,11 @@ describe("ontology workbench state lifetime", () => {
   it.live(
     "keeps the open document when the workbench is unmounted for longer than the idle TTL",
     Effect.fnUntraced(function* () {
-      // Every subscriber of these atoms lives inside OntologyWorkbench, and the app
-      // unmounts it whenever the user switches surface. That dropped them to zero
-      // listeners, and the sweep reset them to their defaults: the open document,
-      // every unsaved change in its change log, the dirty-tracking signature and the
-      // redo stack were destroyed in silence, and the workbench came back claiming
-      // no file was open. Nothing warned the user; nothing could be undone.
       const registry = yield* Effect.acquireRelease(
-        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: IDLE_TTL_MS })),
+        Effect.sync(() => AtomRegistry.make({ defaultIdleTTL: TINY_IDLE_TTL_MS })),
         (registry) => Effect.sync(() => registry.dispose())
       );
 
-      // Prove the same registry actually evicts ordinary state during this wait.
       const removable = Atom.make(0);
       const releaseRemovable = yield* Effect.acquireRelease(
         Effect.sync(() => registry.mount(removable)),
@@ -56,7 +46,6 @@ describe("ontology workbench state lifetime", () => {
       expect(registry.get(removable)).toBe(1);
       releaseRemovable();
 
-      // The workbench is on screen: something subscribes.
       const unmount = yield* Effect.acquireRelease(
         Effect.sync(() => registry.mount(ontologySessionAtom)),
         (release) => Effect.sync(release)
@@ -67,18 +56,17 @@ describe("ontology workbench state lifetime", () => {
       registry.set(ontologyRedoStackAtom, []);
       registry.set(ontologySavedChangeLogSignatureAtom, "saved-signature");
 
-      // The user switches to Chat: the workbench unmounts and every subscriber goes.
       unmount();
 
-      // ...and stays away longer than the registry's idle TTL.
-      yield* Effect.sleep(Duration.millis(IDLE_TTL_MS * 5));
+      yield* Effect.sleep(Duration.millis(TINY_IDLE_TTL_MS * 5));
 
-      expect(registry.get(removable)).toBe(0);
+      expect(registry.get(removable), "the same registry evicts ordinary state during this wait").toBe(0);
 
-      // Coming back must show the same document, not an empty workbench.
       assertSome(registry.get(ontologySessionAtom), openSession);
       assertSome(registry.get(ontologyPathAtom), openPath);
-      expect(registry.get(ontologySourceAtom)).toBe("@prefix ex: <https://example.test/> .");
+      expect(registry.get(ontologySourceAtom), "coming back shows the same document, not an empty workbench").toBe(
+        "@prefix ex: <https://example.test/> ."
+      );
       expect(registry.get(ontologySavedChangeLogSignatureAtom)).toBe("saved-signature");
     })
   );

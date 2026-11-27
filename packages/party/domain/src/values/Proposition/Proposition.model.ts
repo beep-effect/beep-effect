@@ -336,7 +336,6 @@ export class External extends S.Opaque<External, { readonly brand: unique symbol
  */
 export const Proposition = S.Union([
   KeyAssignment,
-  // identity
   IdentifierOf,
   AccountIdentifier,
   MailboxKind,
@@ -345,13 +344,10 @@ export const Proposition = S.Union([
   SameParty.check(distinctPair("SameParty", "left", "right")),
   DistinctParty.check(distinctPair("DistinctParty", "left", "right")),
   PartyName,
-  // organization
   Membership,
   ReportsTo.check(distinctPair("ReportsTo", "subordinate", "superior")),
   DelegateOf.check(distinctPair("DelegateOf", "delegate", "principal")),
-  // context: client, custodian, witness, inventor, opposing counsel, target...
   ContextRole,
-  // extension
   External,
 ]).pipe(
   S.toTaggedUnion("_tag"),
@@ -363,13 +359,6 @@ export const Proposition = S.Union([
  */
 export type Proposition = typeof Proposition.Type;
 
-/**
- * Deterministic logical key: the "same fact" across assertions and versions.
- * Symmetric propositions order their endpoints so `Same(a,b) ≡ Same(b,a)`.
- *
- * @category schemas
- * @since 0.0.0
- */
 const keyParts = Proposition.match({
   KeyAssignment: (p) => ["KeyAssignment", p.key],
   IdentifierOf: (p) => ["IdentifierOf", p.identifier, `${p.party}`, p.relation],

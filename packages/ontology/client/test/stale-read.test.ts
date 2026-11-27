@@ -57,11 +57,6 @@ describe("ontology reads never publish a result for a session that has moved", (
   it.effect(
     "discards a SPARQL result when the session changed while the query was running",
     Effect.fnUntraced(function* () {
-      // SPARQL deliberately does not hold the mutation lock — a slow read must never
-      // block editing — so the user can apply a triple while a query is in flight.
-      // The query then lands afterwards and used to be published as the current
-      // answer: rows computed from an ontology that no longer exists, shown as the
-      // verdict for the one on screen.
       const queryReached = yield* Deferred.make<void>();
       const releaseQuery = yield* Deferred.make<void>();
 
@@ -86,19 +81,16 @@ describe("ontology reads never publish a result for a session that has moved", (
       );
       registry.set(ontologySessionAtom, O.some(openSession));
 
-      // Start the query. It parks inside the stub until we release it.
       registry.set(runOntologySparqlAtom, undefined);
       yield* Deferred.await(queryReached);
 
-      // The user edits the ontology while the query is still in flight.
       registry.set(ontologySessionAtom, O.some(appendChange(openSession, addedTriple)));
 
-      // Let the query land, then wait for the atom to finish publishing.
       yield* Deferred.succeed(releaseQuery, undefined);
       yield* AtomRegistry.getResult(registry, runOntologySparqlAtom);
 
-      // The stale rows must NOT be on screen as the current answer.
-      assertNone(registry.get(ontologySparqlResultAtom));
+      const staleRowsOnScreen = registry.get(ontologySparqlResultAtom);
+      assertNone(staleRowsOnScreen);
       pipe(registry.get(ontologySparqlErrorAtom), O.isSome, assertTrue);
     })
   );

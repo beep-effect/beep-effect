@@ -37,7 +37,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — slice 19 next. These slices have merged:
+P1 Implement — slice 19 is built and in review (checkpoint `slice-19-empty-legs-and-local-proof`). These slices
+have merged:
 
 | Slice | Lever | PR | What it added |
 | --- | --- | --- | --- |
@@ -61,7 +62,9 @@ against [`history/closeout-evidence-2026-11-27.md`](./history/closeout-evidence-
 (run 46015289067), the first report scored by #3609's code. That report certified, but two rows of "Numbers the
 scorecard reports" exist only outside it: empty-leg runner-minutes (`ci ledger`) and local publish and verify
 (`yeet economics --fleet`). Slice 19 builds both into `beep ci certainty` (decision
-`criterion-2-rows-built-into-certainty`), and the closeout PR follows the first nightly that shows every row. Wall-time, cache and dist baselines taken
+`criterion-2-rows-built-into-certainty`): `emptyLegs` through the ledger's own fold, and `localProof`, which a
+hosted report shows as n=0 with every run censored and the reason. The closeout PR follows the first nightly
+after slice 19 merges that shows every row. Wall-time, cache and dist baselines taken
 before d8326d55935 (#3208) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 

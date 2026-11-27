@@ -435,25 +435,7 @@ const OntologyValidationStatus = LiteralKit(["idle", "running", "blocked", "fail
  */
 export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
 
-/**
- * Workbench state that outlives the view showing it.
- *
- * The registry disposes any atom with no listeners and no dependents once its
- * idle TTL elapses, and the desktop sets one. Every atom below is subscribed
- * only from inside `OntologyWorkbench`, which the app unmounts whenever the user
- * switches surface — so leaving the Ontology tab dropped all of them to zero
- * listeners, and thirty seconds later the registry swept them back to their
- * defaults. The open document, every unsaved change in its change log, the
- * dirty-tracking signature, and the redo stack were all destroyed in silence:
- * the workbench simply came back saying "no file open".
- *
- * This is application state, not view state. Keeping it alive says so. These are
- * singletons, so there is nothing to leak — unlike a per-editor family, where
- * keeping values alive would pin every editor ever created.
- *
- * @category atoms
- * @since 0.0.0
- */
+// decision: workbench-atoms-stay-alive
 const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialValue));
 
 /**
@@ -800,18 +782,9 @@ const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = 
   A.join("\n")
 );
 
-/** Identifies the exact session a read was computed from. */
 const sessionSignature = (session: Session): string => `${session.id}:${changeLogSignature(session.changeLog)}`;
 
-/**
- * True when the open session is no longer the one a read started against.
- *
- * SPARQL and validation deliberately do not hold the mutation lock — a slow read
- * must never block editing — so the user can apply a triple, undo, or redo while
- * one is in flight. A result computed from the session as it was is not an answer
- * about the ontology as it is: publishing it anyway put rows and verdicts from the
- * old ontology on screen as the current ones, which is worse than no answer.
- */
+// decision: session-mutations-hold-one-permit
 const sessionMoved = (current: O.Option<Session>, signature: string): boolean =>
   O.match(current, {
     onNone: thunkTrue,
@@ -958,19 +931,6 @@ const resetOntologyValidation = (ctx: Atom.FnContext): void => {
   ctx.set(ontologyValidationErrorAtom, O.none());
 };
 
-/**
- * What to tell the user when an ontology action fails.
- *
- * The workbench used to print `Cause.pretty(cause)` straight into its panels: an
- * internal Effect cause, complete with stack frames and module paths, shown to
- * someone who mistyped a SPARQL query. It told them nothing they could act on, and
- * it leaked the shape of the program to do it.
- *
- * Every failure that crosses the RPC boundary is a typed `OntologyActionError`
- * carrying a `message` written for a person — so that message is what gets shown.
- * The full cause still goes to the log, where the detail is useful and the reader is
- * a developer.
- */
 const isOntologyActionError = S.is(OntologyActionError);
 
 const actionFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
@@ -1687,18 +1647,11 @@ export class OntologyGraphWorkerTimeoutError extends S.TaggedError<
     message: S.NonEmptyString,
   },
   $I.annoteError<OntologyGraphWorkerTimeoutError>("OntologyGraphWorkerTimeoutError", {
-    description: "The ontology graph projection worker exceeded its response deadline.",
+    description:
+      "The ontology graph projection worker exceeded its response deadline. A worker that never answers fires neither `error` nor `messageerror`, so this deadline is the only signal of a hung worker.",
   })
 ) {}
 
-/**
- * How long a projection may take before the worker is treated as dead.
- *
- * There was no watchdog at all, and a worker that simply never answers is the one
- * failure the error handlers cannot see: `error` and `messageerror` never fire, so
- * the workbench sat on "pending" forever with nothing to explain it. That is the
- * shape this very bug took. A silence this long is a failure, and it now says so.
- */
 const GRAPH_WORKER_TIMEOUT = Duration.seconds(20);
 
 type GraphWorkerWatchdog = () => void;
@@ -1783,8 +1736,6 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   const WorkerCtor = globalThis.Worker;
 
   if (P.isUndefined(WorkerCtor)) {
-    // No worker, no projection — but say so. Returning quietly left the graph on
-    // "pending" forever with nothing to explain it.
     get.set(ontologyGraphErrorAtom, O.some(GRAPH_WORKER_UNAVAILABLE_MESSAGE));
     return;
   }
@@ -1797,12 +1748,9 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   get.mount(reportGraphWorkerFailureAtom);
   get.mount(runGraphWorkerBoundaryAtom);
 
-  // Cancels an outstanding request by bumping its counter. Registry disposal
-  // runs this graph's finalizer after the node map is already empty, and reading
-  // a request atom then would create a node on a disposed registry; a request
-  // nobody can answer any more needs no cancellation.
   const cancelRequest = <A>(atom: Atom.Writable<GraphWorkerRequest<A>>): void => {
-    if (!get.registry.getNodes().has(atom)) return;
+    const readWouldRecreateDisposedNode = !get.registry.getNodes().has(atom);
+    if (readWouldRecreateDisposedNode) return;
     get.set(atom, [get.registry.get(atom)[0] + 1, O.none()]);
   };
 
@@ -1810,9 +1758,6 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
     cancelRequest(graphWorkerWatchdogRequestAtom);
   };
 
-  // Armed on every request, disarmed by any answer. A worker that never replies
-  // fires neither `error` nor `messageerror`, so without this the graph waits
-  // forever and says nothing — which is precisely how this bug hid.
   const armWatchdog = (): void => {
     disarmWatchdog();
     get.set(graphWorkerWatchdogRequestAtom, [
@@ -1850,14 +1795,9 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   };
 
   const makeWorker = (): Worker => {
-    // Keep the global constructor literal at the bundler boundary. Vite only
-    // recognizes this exact shape as a module-worker entry; constructing through
-    // the captured alias turns the TypeScript source into a `data:` asset, which
-    // a restrictive packaged CSP correctly rejects.
+    // decision: graph-worker-literal-constructor
     const nextWorker = new Worker(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
     nextWorker.addEventListener("message", (event: MessageEvent<unknown>) => {
-      // The worker posts the ENCODED result: a structured clone drops prototypes,
-      // so what arrives is plain data until it is decoded back into the domain.
       disarmWatchdog();
       const received = decodeWorkerResult(event.data);
       if (!Result.isSuccess(received)) {
@@ -2007,10 +1947,6 @@ export const cosmosProjectionFromOntology = (projection: OntologyGraphProjection
     nodeIds: projection.nodeIds,
     pointPositions: projection.pointPositions,
     links: projection.links,
-    // The projection has always carried a label for every node, and the fold level
-    // has always decided how many to show — and then the renderer dropped the lot,
-    // so a graph of named classes drew as a field of anonymous dots. The names reach
-    // the canvas now; `hidden` still means hidden.
     ...(projection.labelDetail === "hidden" ? {} : { labels: A.map(projection.nodes, (node) => node.label) }),
   });
 
@@ -2202,12 +2138,7 @@ const graphBetweennessCentrality = (
   return normalizeGraphCentrality(centrality);
 };
 
-/**
- * Minimum normalized endpoint betweenness above which an edge counts as an
- * inter-cluster artery. Only edges whose BOTH endpoints are strong bridges are
- * cut, so hub-to-leaf star edges survive (leaf bc is ~0) while hub-to-hub
- * arteries separate clusters. Product-tuned.
- */
+// decision: graph-communities-cut-bridge-arteries
 const communityArteryThreshold = 0.4;
 
 const includesCommunityEdge = (importance: Float32Array, source: number, target: number): boolean =>
@@ -2256,6 +2187,8 @@ const labelGraphComponents = (
   return communities;
 };
 
+const uint16ValueCount = 65_536;
+
 const compressCommunityOrdinals = (communities: Uint32Array): Uint16Array<ArrayBuffer> => {
   const ordinals = new Uint16Array(communities.length);
   const ordinalByCommunity = new Uint16Array(communities.length);
@@ -2267,8 +2200,7 @@ const compressCommunityOrdinals = (communities: Uint32Array): Uint16Array<ArrayB
     const community = communities[nodeIndex] ?? nodeIndex;
     if ((seen[community] ?? 0) === 0) {
       seen[community] = 1;
-      // Uint16 holds 0..65_535, so the ordinal wrap is modulo 65_536.
-      ordinalByCommunity[community] = distinctCount % 65_536;
+      ordinalByCommunity[community] = distinctCount % uint16ValueCount;
       distinctCount += 1;
     }
     ordinals[nodeIndex] = ordinalByCommunity[community] ?? 0;
@@ -2283,11 +2215,7 @@ const graphCommunities = (
   links: Float32Array,
   importance: Float32Array
 ): Uint16Array<ArrayBuffer> => {
-  // One-shot Girvan–Newman on the betweenness channel we already compute:
-  // drop artery edges (min endpoint bc above the threshold), then color
-  // connected components. Deterministic; label propagation was rejected —
-  // synchronous updates two-color the tree-heavy ontology graphs and
-  // asynchronous updates flood through bridge nodes.
+  // decision: graph-communities-cut-bridge-arteries
   const adjacency = buildGraphAdjacency(nodeCount, links, (source, target) =>
     includesCommunityEdge(importance, source, target)
   );
@@ -2450,8 +2378,6 @@ const applyOntologyGraphRenderRequestAtom = ontologyBrowserRuntime.fn<Atom.Type<
       return;
     }
 
-    // A fresh attempt clears the last failure, so a recovered graph stops
-    // claiming to be broken.
     ctx.set(ontologyGraphErrorAtom, O.none());
     const container = request.container.value;
     const projection = request.projection.value;
@@ -2623,24 +2549,28 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
 
 const noOpenSessionError = OntologyActionError.new("No ontology session is open.");
 
-/**
- * Serializes every session-authoring mutation.
- *
- * Each mutation reads the open session, awaits an RPC that returns a *whole new
- * session*, then writes it back. Two mutations in flight therefore both start
- * from session S, come back with S+A and S+B, and whichever lands last silently
- * discards the other author's change — a double-clicked Apply, or a graph
- * gesture fired while Apply was pending, loses work with no error anywhere.
- *
- * Holding the permit across the read means a queued mutation observes the
- * previous one's committed session, so changes compose instead of racing. The
- * server-side tool service already serializes its own mutations the same way
- * ({@link OntologyToolService}); this closes the client path.
- *
- * @category concurrency
- * @since 0.0.0
- */
+// decision: session-mutations-hold-one-permit
 const sessionMutationSemaphore = Semaphore.makeUnsafe(1);
+
+const mutateOpenSession = <A, E, R>(
+  ctx: Atom.FnContext,
+  mutate: (client: OntologyClient["Service"], session: Session) => Effect.Effect<A, E, R>
+) =>
+  sessionMutationSemaphore.withPermit(
+    Effect.gen(function* () {
+      const client = yield* OntologyClient;
+      const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+      return yield* mutate(client, session);
+    })
+  );
+
+const catchDocumentFailure = (ctx: Atom.FnContext) =>
+  Effect.catchCause(
+    Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
+      yield* reportFailure("Ontology document", cause);
+      ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+    })
+  );
 
 /**
  * Toggle inferred view and refresh inference when enabling it.
@@ -2709,6 +2639,11 @@ export const applyOntologySparqlExampleAtom = OntologyClient.runtime.fn<string>(
 /**
  * Execute the current SPARQL query through the sidecar safeguards.
  *
+ * **Gotchas**
+ *
+ * The previous result and error are cleared before the query runs, so a rejected
+ * query never leaves an earlier result table on screen as its answer.
+ *
  * **Example** (Log SPARQL runner atom)
  *
  * ```ts
@@ -2726,9 +2661,6 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
       const client = yield* OntologyClient;
       const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
       const signature = sessionSignature(session);
-      // Drop the previous verdict before running: an invalid or failing query
-      // used to leave the last successful result table on screen with no error,
-      // so the panel appeared to answer a query it had actually rejected.
       ctx.set(ontologySparqlResultAtom, O.none());
       ctx.set(ontologySparqlErrorAtom, O.none());
       let inference = ctx(ontologyInferenceResultAtom);
@@ -2810,10 +2742,7 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
           ),
           [VALIDATION_KEY]
         );
-        // A verdict for the session as it WAS is not a verdict on the session as it
-        // IS. Applying a triple mid-validation used to land the older run afterwards
-        // and present it as `complete` for the newer ontology — a clean bill of
-        // health for a document that had changed underneath it.
+        // decision: session-mutations-hold-one-permit
         if (sessionMoved(ctx(ontologySessionAtom), signature)) {
           ctx.set(ontologyValidationStatusAtom, "idle");
           ctx.set(ontologyValidationResultAtom, O.none());
@@ -2836,6 +2765,13 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
 
 /**
  * Apply one verified SHACL repair through the standard batch change pipeline.
+ *
+ * **Gotchas**
+ *
+ * Once the batch commits, the pre-repair verdict is cleared and validation is
+ * marked running, so a failed revalidation never leaves the resolved violations
+ * and their repair button on screen. That failure leaves the ontology repaired but
+ * unvalidated: the validation status becomes `failed` with an error message.
  *
  * **Example** (Log repair applier atom)
  *
@@ -2863,10 +2799,6 @@ export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairP
         ctx.set(ontologySparqlResultAtom, O.none());
         ctx.set(ontologyGraphProjectionAtom, O.none());
         ctx.set(ontologyGraphDeltaAtom, O.none());
-        // The repair is already committed. Clear the pre-repair verdict now and
-        // mark validation running: if revalidation below fails, the panel must
-        // not keep showing violations the repair already resolved (still
-        // offering the same repair button), as though nothing had happened.
         ctx.set(ontologyValidationStatusAtom, "running");
         ctx.set(ontologyValidationResultAtom, O.none());
         ctx.set(ontologyValidationErrorAtom, O.none());
@@ -2885,8 +2817,6 @@ export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairP
         ctx.set(ontologyValidationResultAtom, O.some(validation));
         ctx.set(ontologyValidationErrorAtom, O.none());
       }).pipe(
-        // A failure after the batch landed leaves the ontology repaired but
-        // unvalidated; say so instead of failing silently.
         Effect.catchCause(
           Effect.fnUntraced(function* (cause) {
             ctx.set(ontologyValidationStatusAtom, "failed");
@@ -2989,21 +2919,11 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
           }
         })
       )
-      .pipe(
-        // Without this, a rejected path or unreadable file made Open a no-op:
-        // the RPC failed, nothing rendered, and the workbench sat at "No file open".
-        Effect.catchCause(
-          Effect.fnUntraced(function* (cause) {
-            yield* reportFailure("Ontology document", cause);
-            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
-          })
-        )
-      );
+      .pipe(catchDocumentFailure(ctx));
   })
 );
 
-// Keep-alive so one attempt spans the whole app session: panel remounts read
-// the flag instead of re-opening a document the user closed or replaced.
+// decision: workbench-atoms-stay-alive
 const ontologyAutoOpenAttemptedAtom = workbenchState(false);
 
 /**
@@ -3040,8 +2960,6 @@ const ontologyAutoOpenAttemptedAtom = workbenchState(false);
  * @since 0.0.0
  */
 export const ontologyWorkbenchAutoOpenAtom = Atom.make((get): void => {
-  // `once`, not `get`: this is a one-shot — subscribing to session/path would
-  // recompute the bootstrap on every open, close, and edit.
   if (get.once(ontologyAutoOpenAttemptedAtom)) {
     return;
   }
@@ -3061,6 +2979,12 @@ export const ontologyWorkbenchAutoOpenAtom = Atom.make((get): void => {
 /**
  * Save the current ontology session through the sidecar.
  *
+ * **Gotchas**
+ *
+ * The saved change count and signature move only after the write succeeds, so a
+ * failed save leaves the document dirty instead of showing "Saved" for data still
+ * only in memory.
+ *
  * **Example** (Log save document atom)
  *
  * ```ts
@@ -3074,32 +2998,20 @@ export const ontologyWorkbenchAutoOpenAtom = Atom.make((get): void => {
  */
 export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDocumentInput>()(
   Effect.fn("saveOntologyDocument")(function* (input, ctx) {
-    yield* sessionMutationSemaphore
-      .withPermit(
-        Effect.gen(function* () {
-          const client = yield* OntologyClient;
-          const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-          const saved = yield* Reactivity.mutation(client("SaveOntologyDocument", { path: input.path, session }), [
-            SESSION_KEY,
-            SOURCE_KEY,
-          ]);
-          ctx.set(ontologyDocumentErrorAtom, O.none());
-          ctx.set(ontologyPathAtom, O.some(saved.path));
-          ctx.set(ontologySourceAtom, saved.source);
-          // Only after the write lands: marking the log saved on a failed save
-          // would flip the badge to "Saved" for data still only in memory.
-          ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
-          ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
-        })
-      )
-      .pipe(
-        Effect.catchCause(
-          Effect.fnUntraced(function* (cause) {
-            yield* reportFailure("Ontology document", cause);
-            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
-          })
-        )
-      );
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
+        const saved = yield* Reactivity.mutation(client("SaveOntologyDocument", { path: input.path, session }), [
+          SESSION_KEY,
+          SOURCE_KEY,
+        ]);
+        ctx.set(ontologyDocumentErrorAtom, O.none());
+        ctx.set(ontologyPathAtom, O.some(saved.path));
+        ctx.set(ontologySourceAtom, saved.source);
+        ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
+        ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
+      })
+    ).pipe(catchDocumentFailure(ctx));
   })
 );
 
@@ -3125,14 +3037,7 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
       const preview = yield* Reactivity.mutation(client("PreviewOntologyTurtle", { session }), [SOURCE_KEY]);
       ctx.set(ontologyDocumentErrorAtom, O.none());
       ctx.set(ontologySourceAtom, preview.source);
-    }).pipe(
-      Effect.catchCause(
-        Effect.fnUntraced(function* (cause) {
-          yield* reportFailure("Ontology document", cause);
-          ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
-        })
-      )
-    );
+    }).pipe(catchDocumentFailure(ctx));
   })
 );
 
@@ -3152,11 +3057,9 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
  */
 export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBatchInput>()(
   Effect.fn("applyOntologyBatch")(function* (input, ctx) {
-    // The session read must happen under the permit — see sessionMutationSemaphore.
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         const applied = yield* Reactivity.mutation(
           client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: input.operations })),
           [SESSION_KEY, GRAPH_KEY]
@@ -3194,10 +3097,9 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
  */
 export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOntologyGraphGestureInput>()(
   Effect.fn("applyOntologyGraphGesture")(function* (input, ctx) {
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         const operations = graphGestureChangeOperations(input.gesture);
         const applied = yield* Reactivity.mutation(
           client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations })),
@@ -3331,12 +3233,9 @@ export const applyOntologyInspectorActionAtom = OntologyClient.runtime.fn<Ontolo
  */
 export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("undoOntologyChange")(function* (_, ctx) {
-    // Undo/redo rewrite the session wholesale from a snapshot too, so spamming
-    // them alongside an in-flight Apply raced the same way.
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         yield* pipe(
           A.last(session.changeLog),
           O.match({
@@ -3381,10 +3280,9 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
  */
 export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("redoOntologyChange")(function* (_, ctx) {
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         yield* pipe(
           A.head(ctx(ontologyRedoStackAtom)),
           O.match({

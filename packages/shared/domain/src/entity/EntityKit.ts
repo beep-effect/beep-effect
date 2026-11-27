@@ -216,10 +216,6 @@ export const withAudit = () => ({ columns: auditColumns });
  */
 export const withOrg = () => ({ columns: orgColumns });
 
-// ---------------------------------------------------------------------------
-// Identity columns: runtime closure + authoritative declared types
-// ---------------------------------------------------------------------------
-
 const identityColumns = (id: EntityId.Any) => ({
   entityType: M.GeneratedByApp(S.Literal(id.entityType)).pipe(Pg.text(), Pg.columnName("entity_type")),
   id: VariantField({ select: id, update: id, json: id }).pipe(Pg.primaryKey(), Pg.serial()),
@@ -378,11 +374,8 @@ const factoryImpl =
         fieldName: collision.value,
       });
     }
-    // Internal seam: the tier factory's declared types (TierEntityFactory) are
-    // authoritative; the kit's public Entity factory is generically typed for
-    // literal declaration sites and is deliberately widened here.
-    const entity = kit.Entity as unknown as RawEntity;
-    return entity(id.tableName)({ ...own, ...identityFor(id) }, annotations, extras);
+    const entityWidenedForTierTypes = kit.Entity as unknown as RawEntity;
+    return entityWidenedForTierTypes(id.tableName)({ ...own, ...identityFor(id) }, annotations, extras);
   };
 
 /**

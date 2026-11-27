@@ -434,9 +434,7 @@ const makeOntologyToolService = Effect.gen(function* () {
   const path = yield* Path.Path;
   const workspaceRoot = yield* Config.NonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
   const canonicalWorkspaceRoot = yield* fileSystem.realPath(workspaceRoot);
-  // The desktop sidecar is the sole v1 write authority for files exposed via
-  // /mcp. This semaphore closes compare/apply/write TOCTOU inside that process;
-  // deliberately no cross-process lock or stateful session repository exists.
+  // decision: tool-mutations-lock-in-process
   const mutationSemaphore = yield* Semaphore.make(1);
   const ensureProvenanceDestinationsAvailable = Effect.fn("Ontology.Tools.ensureProvenanceDestinationsAvailable")(
     function* (request: ExportProvenanceRequest) {

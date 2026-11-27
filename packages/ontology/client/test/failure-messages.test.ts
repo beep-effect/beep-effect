@@ -30,10 +30,6 @@ describe("a failed ontology action explains itself", () => {
   it.effect(
     "shows the failure's own message, not an internal stack trace",
     Effect.fnUntraced(function* () {
-      // The panel printed `Cause.pretty(cause)`: an internal Effect cause, with stack
-      // frames and module paths, shown to someone who had merely mistyped a query. It
-      // told them nothing they could act on, and leaked the shape of the program to do
-      // it — while the typed failure carried a message written for a person all along.
       const client = OntologyClient.of(((tag: string) =>
         tag === "RunOntologySparql"
           ? Effect.fail(OntologyActionError.new(PARSE_FAILURE))
@@ -59,10 +55,9 @@ describe("a failed ontology action explains itself", () => {
       pipe(shown, O.isSome, assertTrue);
       expect(O.getOrElse(shown, () => "")).toContain(PARSE_FAILURE);
 
-      // And none of the program's internals: no stack frames, no module paths.
       const text = O.getOrElse(shown, () => "");
-      expect(text).not.toContain("    at ");
-      expect(text).not.toContain(".ts:");
+      expect(text, "the message shows no stack frames").not.toContain("    at ");
+      expect(text, "the message shows no module paths").not.toContain(".ts:");
       expect(text).not.toContain("Session.atoms");
     })
   );

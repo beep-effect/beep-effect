@@ -63,10 +63,6 @@ const OntologyWorkspaceFilePathChecks = S.makeFilterGroup(
 const OntologyWorkspaceFilePath = OntologyFilePath.check(OntologyWorkspaceFilePathChecks);
 const decodeOntologyWorkspaceFilePath = S.decodeUnknownEffect(OntologyWorkspaceFilePath);
 
-// Absence is not a failure to read: callers seed a starter document when a file
-// is missing, and must never take that path for a file that exists but could not
-// be read (a permissions error or a transient fault would otherwise overwrite the
-// user's document with the fixture).
 const readFailure =
   (path: ReadOntologyFileRequest["path"]) =>
   (error: PlatformError.PlatformError): OntologyFileStoreError =>
@@ -205,6 +201,11 @@ const resolveWritePath = (
  * The supplied ontology server configuration must name an existing
  * directory. Requests accept only traversal-safe root-relative paths ending in
  * lower-case `.ttl`.
+ *
+ * `read` fails with reason `notFound` only when the file is absent; every other read
+ * error is `readFailed`. A caller that seeds a starter document must branch on
+ * `notFound` alone, or a permission error or transient fault overwrites the
+ * user's document with the fixture.
  *
  * **Example** (Build filesystem file store)
  *

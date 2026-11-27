@@ -47,8 +47,6 @@ const missingFileStoreLayer = Layer.succeed(OntologyFileStore, {
   write: () => Effect.void,
 } as unknown as typeof OntologyFileStore.Service);
 
-// A client whose execute always fails with the given reason, so the error
-// translation can be driven without a transport.
 const failingClientLayer = (reason: HttpClientError.HttpClientError["reason"]) =>
   Layer.succeed(
     HttpClient.HttpClient,
@@ -62,8 +60,6 @@ const transportErrorWith = (cause: unknown) =>
     cause,
   });
 
-// Hoisted so the call sites stay one level deep; nesting them trips
-// `missedPipeableOpportunity`.
 const egressDenialError = transportErrorWith(egressDenial);
 const outageError = transportErrorWith(new Error("connection reset"));
 
@@ -107,11 +103,15 @@ describe("publishProvenance", () => {
           const error = yield* publishProvenance(request).pipe(Effect.flip);
 
           expect(error._tag).toBe("OntologyTierGateRefusal");
-          // Reason-free: the guidance must say nothing about destinations or
-          // allowlists, or an agent could map the allowlist by probing it.
           const guidance = error._tag === "OntologyTierGateRefusal" ? error.guidance : "";
-          expect(pipe(guidance, Str.toLowerCase)).not.toContain("destination");
-          expect(pipe(guidance, Str.toLowerCase)).not.toContain("allow");
+          expect(
+            pipe(guidance, Str.toLowerCase),
+            "naming a destination would let an agent map it by probing"
+          ).not.toContain("destination");
+          expect(
+            pipe(guidance, Str.toLowerCase),
+            "naming the allowlist would let an agent map it by probing"
+          ).not.toContain("allow");
         })
       );
     }
@@ -120,16 +120,13 @@ describe("publishProvenance", () => {
     (it) => {
       it.effect("keeps an ordinary transport failure distinguishable from a denial", () =>
         Effect.gen(function* () {
-          // The sibling of the test above, and the reason it is not vacuous: if the
-          // translation collapsed *every* transport failure into the refusal, a
-          // denial would be indistinguishable from a network outage — which is the
-          // opposite of the property, and would hide real failures from operators.
           const error = yield* publishProvenance(request).pipe(Effect.flip);
 
-          expect(error._tag).toBe("OntologyToolExecutionError");
-          // It also must not echo the underlying cause back to the agent.
+          expect(error._tag, "an outage collapsed into the refusal would hide real failures from operators").toBe(
+            "OntologyToolExecutionError"
+          );
           const message = error._tag === "OntologyToolExecutionError" ? error.message : "";
-          expect(message).not.toContain("connection reset");
+          expect(message, "the underlying cause is not echoed back to the agent").not.toContain("connection reset");
         })
       );
     }
@@ -151,18 +148,14 @@ describe("publishProvenance", () => {
           const error = yield* publishProvenance(request).pipe(Effect.flip);
 
           expect(error._tag).toBe("OntologyToolExecutionError");
-          // Nothing left the machine for a file that does not exist.
-          pipe(attempted, assertFalse);
+          assertFalse(attempted, "nothing leaves the machine for a file that does not exist");
         })
       );
     });
   }
 });
 
-// Dispatching through the real handler layer, rather than calling
-// `publishProvenance` directly, is what proves the layer wires the gate in at
-// all: a layer that forgot `gatedMutation` would still pass every test above.
-describe("OntologyMcpPublishHandlersLive", () => {
+describe("OntologyMcpPublishHandlersLive wires gatedMutation in front of publishProvenance", () => {
   const refusingGate = Layer.succeed(
     TierGate,
     TierGate.of({
@@ -205,9 +198,10 @@ describe("OntologyMcpPublishHandlersLive", () => {
             .pipe(Stream.unwrap, Stream.run(Sink.last()), Effect.flatMap(Effect.fromOption));
 
           pipe(result.isFailure, assertTrue);
-          // The gate refused, so the tool never reached the egress boundary — the
-          // two controls are ordered, not redundant.
-          pipe(attempted, assertFalse);
+          assertFalse(
+            attempted,
+            "the gate refuses before the egress boundary is reached: the two controls are ordered"
+          );
         })
       );
     });

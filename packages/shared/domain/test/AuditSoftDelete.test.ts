@@ -12,7 +12,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// Boundary projection: exercise the exact select codecs inherited by every audited kit.
 const DeletionRow = S.Struct({
   deletedAt: fields.deletedAt.schema.schemas.select,
   deletedByPrincipal: fields.deletedByPrincipal.schema.schemas.select,
