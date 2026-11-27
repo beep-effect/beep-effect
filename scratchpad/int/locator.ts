@@ -8,6 +8,7 @@ import { $ScratchpadId } from "@beep/identity/packages"
 import { LiteralKit } from "@beep/schema/LiteralKit"
 import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
 import * as A from "effect/Array"
+import * as P from "effect/Predicate";
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import { flow, pipe } from "effect/Function"
@@ -123,7 +124,7 @@ const unreserved = (identifier: string, ...reserved: ReadonlyArray<string>) => {
 }
 
 const notDotSegment = S.makeFilter(
-  (segment: string) => O.isNone(Str.match(/^(?:\.|%2e)+$/i)(segment)),
+  flow(Str.match(/^(?:\.|%2e)+$/i), O.isNone),
   $I.annote("NotDotSegment", {
     title: "Not a dot segment",
     description: "Excludes names made only of periods, which a URL parser resolves away as path navigation.",
@@ -2839,13 +2840,18 @@ const platformByHost = HashMap.fromIterable(
   A.flatMap(R.toEntries(sites), ([platform, site]) => A.map(site.hosts, (host) => Tuple.make(host, platform)))
 )
 
+const WebUrlProtocol = LiteralKit(["https:", "http:"]).pipe(
+  $I.annoteSchema("WebUrlProtocol", { description: "Protocol of a URL a browser fetches over HTTP, as `URL` spells it." })
+)
+
 const WebUrl = S.URLFromString.check(
   S.makeFilter(
-    (url) =>
-      (url.protocol === "https:" || url.protocol === "http:") &&
-      Str.isEmpty(url.username) &&
-      Str.isEmpty(url.password) &&
-      Str.isEmpty(url.port),
+    P.Struct({
+      protocol: S.is(WebUrlProtocol),
+      username: Str.isEmpty,
+      password: Str.isEmpty,
+      port: Str.isEmpty
+    }),
     $I.annote("PlainWebUrl", {
       title: "Plain web URL",
       description: "An HTTP or HTTPS URL on the default port with no embedded credentials.",
@@ -2977,8 +2983,8 @@ export type PostLocator = Denoting<Locator, "post">;
  */
 export type CollectionLocator = Denoting<Locator, "collection">;
 
-const denotesPost = (locator: Locator): locator is PostLocator => locator.target.kind === "post"
-const denotesCollection = (locator: Locator): locator is CollectionLocator => locator.target.kind === "collection"
+const denotesPost = (locator: Locator): locator is PostLocator => TargetKind.is.post(locator.target.kind)
+const denotesCollection = (locator: Locator): locator is CollectionLocator => TargetKind.is.collection(locator.target.kind)
 
 const postOnly = $I.annote("DenotesPost", {
   title: "Denotes a post",

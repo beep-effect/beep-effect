@@ -10,6 +10,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit"
 import * as A from "effect/Array"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
+import * as Equivalence from "effect/Equivalence"
 import { dual, pipe } from "effect/Function"
 import * as O from "effect/Option"
 import * as Order from "effect/Order"
@@ -448,7 +449,7 @@ export declare namespace RichText {
 }
 
 const Marks =
-  /(?<url>https?:\/\/(?:(?![,;|]https?:\/\/)[^\s<>"])*[^\s<>".,;:!?)\]}'])|(?<![\p{L}\p{N}_.@#/])(?<www>www\.(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s<>"]*[^\s<>".,;:!?)\]}'])?)|(?<![\p{L}\p{N}_.@#/])(?<bare>(?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s<>"]*[^\s<>".,;:!?)\]}'])|(?:(?<![\p{L}\p{N}_&/])|(?<=(?<![\p{L}\p{N}_&/])(?:#[\p{L}\p{N}_]+)+))#(?<tag>[\p{L}\p{N}_]*[\p{L}_][\p{L}\p{N}_]*)|(?<![\p{L}\p{N}_./])@(?<handle>[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*)(?![A-Za-z0-9_@])/giu;
+  /(?<url>https?:\/\/(?:(?![,;|]https?:\/\/)[^\s<>"])*[^\s<>".,;:!?)\]}'])|(?<![\p{L}\p{N}_.@#/])(?<www>www\.(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s<>"]*[^\s<>".,;:!?)\]}'])?)|(?<![\p{L}\p{N}_.@#/])(?<bare>(?:[a-z0-9-]+\.)+[a-z]{2,}\/[^\s<>"]*[^\s<>".,;:!?)\]}'])|(?:(?<![\p{L}\p{N}_&/])|(?<=(?<![\p{L}\p{N}_&/])(?:#[\p{L}\p{N}_]+)+))#(?<tag>[\p{L}\p{N}_]*[\p{L}_][\p{L}\p{N}_]*)|(?<![\p{L}\p{N}_./])@(?<handle>[A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*)(?![A-Za-z0-9_@])/giu
 
 const TopLevelDomain = LiteralKit([
   "com", "net", "org", "io", "co", "me", "ee", "ly", "gg", "tv", "app", "ai", "link", "bio", "to", "be", "it", "uk",
@@ -456,12 +457,12 @@ const TopLevelDomain = LiteralKit([
   "cn", "tw", "hk", "sg", "nz", "za", "ie", "pt", "gr", "tr", "ua", "cz", "dk", "il", "ar", "cl", "id", "th", "vn",
   "ph", "my", "is", "xyz", "site", "online", "shop", "store", "club", "page", "dev", "info", "biz", "fans", "live",
   "fm", "cc", "la", "vip", "top", "one", "art", "blog", "social", "gl", "im", "st", "sh", "so", "ms", "ws", "ag", "ac",
-  "pro", "tech", "world", "today", "news", "media", "studio", "design", "space", "zone", "life", "love", "fun",
+  "pro", "tech", "world", "today", "news", "media", "studio", "design", "space", "zone", "life", "love", "fun"
 ]).pipe(
   $I.annoteSchema("TopLevelDomain", {
-    description: "Top-level domains common enough in biographies to read a host without a scheme as a link.",
+    description: "Top-level domains common enough in biographies to read a host without a scheme as a link."
   })
-);
+)
 
 const hasKnownDomain = (bare: string): boolean =>
   pipe(
@@ -469,7 +470,7 @@ const hasKnownDomain = (bare: string): boolean =>
     A.head,
     O.flatMap((host) => A.last(Str.split(".")(Str.toLowerCase(host)))),
     O.exists(S.is(TopLevelDomain))
-  );
+  )
 
 const isUrlText = S.is(S.URLFromString.pipe(S.toEncoded))
 
@@ -1897,7 +1898,7 @@ export class Profile extends S.Opaque<Profile, {
         A.map(links, ({ url }) => url),
         A.map(A.filter(bio.entities, TextEntity.guards.link), ({ url }) => url)
       ),
-      (left, right) => left.href === right.href
+      sameHref
     )
 
   /**
@@ -1975,6 +1976,8 @@ export declare namespace Profile {
 const locatorOf = S.decodeUnknownOption(LocatorFromUrl)
 
 const sameLocator = S.toEquivalence(Locator)
+
+const sameHref = Equivalence.mapInput(Str.Equivalence, ({ href }: URL) => href)
 
 /**
  * **Example** (Branch on a connection)
@@ -2105,10 +2108,10 @@ export interface SiteReader<Target> {
  * @since 0.0.0
  */
 export class XReader extends Context.Service<XReader, SiteReader<XTarget>>()($I`XReader`) {
-  static readonly posts = (target: XTarget) => Stream.unwrap(XReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: XTarget) => XReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: XTarget) => Stream.unwrap(XReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: XTarget) => XReader.use((reader) => reader.profile(target))
   static readonly connections = (target: XTarget, connection: Connection) =>
-    Stream.unwrap(XReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(XReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2136,10 +2139,10 @@ export class XReader extends Context.Service<XReader, SiteReader<XTarget>>()($I`
  * @since 0.0.0
  */
 export class YouTubeReader extends Context.Service<YouTubeReader, SiteReader<YouTubeTarget>>()($I`YouTubeReader`) {
-  static readonly posts = (target: YouTubeTarget) => Stream.unwrap(YouTubeReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: YouTubeTarget) => YouTubeReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: YouTubeTarget) => Stream.unwrap(YouTubeReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: YouTubeTarget) => YouTubeReader.use((reader) => reader.profile(target))
   static readonly connections = (target: YouTubeTarget, connection: Connection) =>
-    Stream.unwrap(YouTubeReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(YouTubeReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2167,10 +2170,10 @@ export class YouTubeReader extends Context.Service<YouTubeReader, SiteReader<You
  * @since 0.0.0
  */
 export class RedGifsReader extends Context.Service<RedGifsReader, SiteReader<RedGifsTarget>>()($I`RedGifsReader`) {
-  static readonly posts = (target: RedGifsTarget) => Stream.unwrap(RedGifsReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: RedGifsTarget) => RedGifsReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: RedGifsTarget) => Stream.unwrap(RedGifsReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: RedGifsTarget) => RedGifsReader.use((reader) => reader.profile(target))
   static readonly connections = (target: RedGifsTarget, connection: Connection) =>
-    Stream.unwrap(RedGifsReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(RedGifsReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2198,10 +2201,10 @@ export class RedGifsReader extends Context.Service<RedGifsReader, SiteReader<Red
  * @since 0.0.0
  */
 export class FacebookReader extends Context.Service<FacebookReader, SiteReader<FacebookTarget>>()($I`FacebookReader`) {
-  static readonly posts = (target: FacebookTarget) => Stream.unwrap(FacebookReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: FacebookTarget) => FacebookReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: FacebookTarget) => Stream.unwrap(FacebookReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: FacebookTarget) => FacebookReader.use((reader) => reader.profile(target))
   static readonly connections = (target: FacebookTarget, connection: Connection) =>
-    Stream.unwrap(FacebookReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(FacebookReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2229,10 +2232,10 @@ export class FacebookReader extends Context.Service<FacebookReader, SiteReader<F
  * @since 0.0.0
  */
 export class FanslyReader extends Context.Service<FanslyReader, SiteReader<FanslyTarget>>()($I`FanslyReader`) {
-  static readonly posts = (target: FanslyTarget) => Stream.unwrap(FanslyReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: FanslyTarget) => FanslyReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: FanslyTarget) => Stream.unwrap(FanslyReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: FanslyTarget) => FanslyReader.use((reader) => reader.profile(target))
   static readonly connections = (target: FanslyTarget, connection: Connection) =>
-    Stream.unwrap(FanslyReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(FanslyReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2260,10 +2263,10 @@ export class FanslyReader extends Context.Service<FanslyReader, SiteReader<Fansl
  * @since 0.0.0
  */
 export class InstagramReader extends Context.Service<InstagramReader, SiteReader<InstagramTarget>>()($I`InstagramReader`) {
-  static readonly posts = (target: InstagramTarget) => Stream.unwrap(InstagramReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: InstagramTarget) => InstagramReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: InstagramTarget) => Stream.unwrap(InstagramReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: InstagramTarget) => InstagramReader.use((reader) => reader.profile(target))
   static readonly connections = (target: InstagramTarget, connection: Connection) =>
-    Stream.unwrap(InstagramReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(InstagramReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2291,10 +2294,10 @@ export class InstagramReader extends Context.Service<InstagramReader, SiteReader
  * @since 0.0.0
  */
 export class OnlyFansReader extends Context.Service<OnlyFansReader, SiteReader<OnlyFansTarget>>()($I`OnlyFansReader`) {
-  static readonly posts = (target: OnlyFansTarget) => Stream.unwrap(OnlyFansReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: OnlyFansTarget) => OnlyFansReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: OnlyFansTarget) => Stream.unwrap(OnlyFansReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: OnlyFansTarget) => OnlyFansReader.use((reader) => reader.profile(target))
   static readonly connections = (target: OnlyFansTarget, connection: Connection) =>
-    Stream.unwrap(OnlyFansReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(OnlyFansReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2322,10 +2325,10 @@ export class OnlyFansReader extends Context.Service<OnlyFansReader, SiteReader<O
  * @since 0.0.0
  */
 export class PinterestReader extends Context.Service<PinterestReader, SiteReader<PinterestTarget>>()($I`PinterestReader`) {
-  static readonly posts = (target: PinterestTarget) => Stream.unwrap(PinterestReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: PinterestTarget) => PinterestReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: PinterestTarget) => Stream.unwrap(PinterestReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: PinterestTarget) => PinterestReader.use((reader) => reader.profile(target))
   static readonly connections = (target: PinterestTarget, connection: Connection) =>
-    Stream.unwrap(PinterestReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(PinterestReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2353,10 +2356,10 @@ export class PinterestReader extends Context.Service<PinterestReader, SiteReader
  * @since 0.0.0
  */
 export class SnapchatReader extends Context.Service<SnapchatReader, SiteReader<SnapchatTarget>>()($I`SnapchatReader`) {
-  static readonly posts = (target: SnapchatTarget) => Stream.unwrap(SnapchatReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: SnapchatTarget) => SnapchatReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: SnapchatTarget) => Stream.unwrap(SnapchatReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: SnapchatTarget) => SnapchatReader.use((reader) => reader.profile(target))
   static readonly connections = (target: SnapchatTarget, connection: Connection) =>
-    Stream.unwrap(SnapchatReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(SnapchatReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2384,10 +2387,10 @@ export class SnapchatReader extends Context.Service<SnapchatReader, SiteReader<S
  * @since 0.0.0
  */
 export class ThreadsReader extends Context.Service<ThreadsReader, SiteReader<ThreadsTarget>>()($I`ThreadsReader`) {
-  static readonly posts = (target: ThreadsTarget) => Stream.unwrap(ThreadsReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: ThreadsTarget) => ThreadsReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: ThreadsTarget) => Stream.unwrap(ThreadsReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: ThreadsTarget) => ThreadsReader.use((reader) => reader.profile(target))
   static readonly connections = (target: ThreadsTarget, connection: Connection) =>
-    Stream.unwrap(ThreadsReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(ThreadsReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2415,10 +2418,10 @@ export class ThreadsReader extends Context.Service<ThreadsReader, SiteReader<Thr
  * @since 0.0.0
  */
 export class TikTokReader extends Context.Service<TikTokReader, SiteReader<TikTokTarget>>()($I`TikTokReader`) {
-  static readonly posts = (target: TikTokTarget) => Stream.unwrap(TikTokReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: TikTokTarget) => TikTokReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: TikTokTarget) => Stream.unwrap(TikTokReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: TikTokTarget) => TikTokReader.use((reader) => reader.profile(target))
   static readonly connections = (target: TikTokTarget, connection: Connection) =>
-    Stream.unwrap(TikTokReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(TikTokReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2446,10 +2449,10 @@ export class TikTokReader extends Context.Service<TikTokReader, SiteReader<TikTo
  * @since 0.0.0
  */
 export class VscoReader extends Context.Service<VscoReader, SiteReader<VscoTarget>>()($I`VscoReader`) {
-  static readonly posts = (target: VscoTarget) => Stream.unwrap(VscoReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: VscoTarget) => VscoReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: VscoTarget) => Stream.unwrap(VscoReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: VscoTarget) => VscoReader.use((reader) => reader.profile(target))
   static readonly connections = (target: VscoTarget, connection: Connection) =>
-    Stream.unwrap(VscoReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(VscoReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2477,10 +2480,10 @@ export class VscoReader extends Context.Service<VscoReader, SiteReader<VscoTarge
  * @since 0.0.0
  */
 export class RedditReader extends Context.Service<RedditReader, SiteReader<RedditTarget>>()($I`RedditReader`) {
-  static readonly posts = (target: RedditTarget) => Stream.unwrap(RedditReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: RedditTarget) => RedditReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: RedditTarget) => Stream.unwrap(RedditReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: RedditTarget) => RedditReader.use((reader) => reader.profile(target))
   static readonly connections = (target: RedditTarget, connection: Connection) =>
-    Stream.unwrap(RedditReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(RedditReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**
@@ -2508,10 +2511,10 @@ export class RedditReader extends Context.Service<RedditReader, SiteReader<Reddi
  * @since 0.0.0
  */
 export class DzenReader extends Context.Service<DzenReader, SiteReader<DzenTarget>>()($I`DzenReader`) {
-  static readonly posts = (target: DzenTarget) => Stream.unwrap(DzenReader.useSync((reader) => reader.posts(target)));
-  static readonly profile = (target: DzenTarget) => DzenReader.use((reader) => reader.profile(target));
+  static readonly posts = (target: DzenTarget) => Stream.unwrap(DzenReader.useSync((reader) => reader.posts(target)))
+  static readonly profile = (target: DzenTarget) => DzenReader.use((reader) => reader.profile(target))
   static readonly connections = (target: DzenTarget, connection: Connection) =>
-    Stream.unwrap(DzenReader.useSync((reader) => reader.connections(target, connection)));
+    Stream.unwrap(DzenReader.useSync((reader) => reader.connections(target, connection)))
 }
 
 /**

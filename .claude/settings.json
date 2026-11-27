@@ -139,6 +139,17 @@
             "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; BEEP_HOOK_PULSE_NOTIFIER_REV=desktop-ntfy-1 \"$CLAUDE_PROJECT_DIR/.claude/hooks/hook-pulse.sh\""
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || exit 0; \"$CLAUDE_PROJECT_DIR/.claude/hooks/schema-idiom.sh\"",
+            "timeout": 5,
+            "statusMessage": "Checking schema idioms"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
