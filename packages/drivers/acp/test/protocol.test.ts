@@ -1,6 +1,4 @@
-// Transport tests for `@beep/acp/protocol`: wire framing, id correlation, writer acknowledgement,
-// handler isolation and termination. Behaviour cases port t3code effect-acp `protocol.test.ts`
-// (31dcc7c513); the escaped-key, frame-decoder and property suites are beep-specific.
+// Adapted from t3code packages/effect-acp protocol.test.ts at 31dcc7c513 (MIT).
 import * as AcpError from "@beep/acp/errors";
 import { runHandler } from "@beep/acp/internal/shared";
 import * as AcpJson from "@beep/acp/json";
@@ -178,16 +176,15 @@ it.effect.prop(
   { arbitrary: fcRuns(25) }
 );
 
-// Node 24 (V8 12.8 through 13.7) `JSON.parse` resolves an escaped one-character object key through
-// an existing map transition whenever the raw source prefix matches it, so once any object shaped
-// `{ " ": …, "\\": … }` exists in the isolate, `{" ":0,"\u0000":1}` decodes with a "\\" key. The
-// property above found this on 2026-09-11 (replay
-// `[0,"5464242726500343",5009,3,[0,0,0,0,0,0],"PropertyError"]`); this pins the shrunk shape.
 it.effect(
   "keeps escaped _meta keys after the host materialised a backslash key at the same position",
   Effect.fnUntraced(function* () {
     const decodedJsonWithHostParser = yield* decodeJsonWithHostParser('{" ":0,"\\\\":0}');
-    assert.deepEqual(decodedJsonWithHostParser, { " ": 0, "\\": 0 });
+    assert.deepEqual(
+      decodedJsonWithHostParser,
+      { " ": 0, "\\": 0 },
+      'the host parser materialises the { " ", "\\\\" } map transition in this isolate'
+    );
     const notification = {
       jsonrpc: "2.0" as const,
       method: "session/cancel" as const,
@@ -202,7 +199,11 @@ it.effect(
     const decoded = yield* decodeSessionCancelNotification(encoded);
     const encodedSessionCancelNotification1 = yield* encodeSessionCancelNotification(decoded);
     assert.equal(encodedSessionCancelNotification1, encoded);
-    assert.deepEqual(decoded.params._meta, notification.params._meta);
+    assert.deepEqual(
+      decoded.params._meta,
+      notification.params._meta,
+      "V8 12.8-13.7 JSON.parse resolves an escaped one-character key through a matching map transition"
+    );
   })
 );
 
@@ -336,8 +337,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
 
       yield* transport.notify("session/cancel", { sessionId: "session-1" });
       const outbound = yield* Queue.take(output);
-      // A JSON-RPC notification carries no `id`; Grok CLI drops frames that do.
-      assert.equal(outbound, '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n');
+      assert.equal(
+        outbound,
+        '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n',
+        "a JSON-RPC notification carries no id; Grok CLI drops frames that do"
+      );
       const decodedSessionCancelNotification = yield* decodeSessionCancelNotification(outbound);
       assert.deepEqual(decodedSessionCancelNotification, {
         jsonrpc: "2.0",
@@ -876,8 +880,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
         stdout: () => Sink.drain,
         stderr: () => Sink.drain,
       });
-      // The protocol lives in its own layer scope, held open by this fiber; interrupting it closes the
-      // writer while a response is admitted but not yet queued.
       const protocolOwner = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio,
         serverRequestMethods: HashSet.empty(),
@@ -910,7 +912,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       yield* send("future");
 
       const takeN24 = yield* Queue.takeN(failures, 2);
-      assert.deepEqual(takeN24, ["admitted", "future"]);
+      assert.deepEqual(
+        takeN24,
+        ["admitted", "future"],
+        "interrupting the fiber holding the protocol's layer scope closes the writer before the admitted response is queued"
+      );
     })
   );
 
@@ -1129,9 +1135,12 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
       });
       const got41 = yield* Ref.get(handled);
       assert.equal(got41, notificationCount);
-      // The undrained buffer slides and keeps only a short tail: the 32 newest notifications.
       const [oldestKept] = yield* transport.incoming.pipe(Stream.take(1), Stream.runCollect);
-      assert.deepEqual(oldestKept, { _tag: "ExtNotification", method: "x/note", params: notificationCount - 32 });
+      assert.deepEqual(
+        oldestKept,
+        { _tag: "ExtNotification", method: "x/note", params: notificationCount - 32 },
+        "the undrained buffer slides and keeps only the 32 newest notifications"
+      );
     })
   );
 
@@ -1290,9 +1299,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol", (
   );
 });
 
-// One bad update must not end a session whose later updates are fine; each distinct failure is
-// warned about once per connection, with structural diagnostics only. The tests in this suite run
-// interleaved, so each one counts only the warnings about its own payloads.
 const capturedWarnings = A.empty<unknown>();
 const warningCollector = Logger.make(({ fiber, logLevel }) => {
   if (logLevel === "Warn") {
@@ -1308,8 +1314,6 @@ const warningsAbout = (issue: string) =>
       Str.includes(issue)(annotations.issueSummary)
   );
 
-// A response no outstanding request can claim (no id, `id: null`, or an id this side never
-// issued) is dropped, but a hung call must still leave something to diagnose.
 it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-acp uncorrelated responses", (it) => {
   it.effect(
     "warns and drops late extension replies and never-issued or completed integer ids",
@@ -1352,7 +1356,11 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
         capturedWarnings,
         (annotations) => P.hasProperty(annotations, "errorMessage") && annotations.errorMessage === sentinel
       );
-      assert.lengthOf(warnings, 4);
+      assert.lengthOf(
+        warnings,
+        4,
+        "a response no request can claim is dropped, but warned about so a hung call can be diagnosed"
+      );
       A.forEach([1, 999, 7, 8], (requestId, index) =>
         assert.include(warnings[index], { requestId, messageTag: "Exit", code: -32000 })
       );
@@ -1375,7 +1383,6 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
         `{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"${sentinel}"}}`,
         `{"jsonrpc":"2.0","error":{"_tag":"Defect","code":-32603,"message":"${sentinel}"}}`,
         `{"jsonrpc":"2.0","id":"agent-7","error":{"code":-32000,"message":"${sentinel}"}}`,
-        // effect's own encoder writes a server-level `Defect` with this id.
         `{"jsonrpc":"2.0","id":-32603,"error":{"_tag":"Defect","code":1,"message":"${sentinel}"}}`,
         '{"jsonrpc":"2.0","method":"x/after","params":{}}',
       ];
@@ -1388,21 +1395,28 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
           )
         )
       );
-      // The reader routes frames in order, so every response was handled once this arrives.
       yield* Queue.take(notifications);
 
       const warnings = A.filter(
         capturedWarnings,
         (annotations) => P.hasProperty(annotations, "errorMessage") && annotations.errorMessage === sentinel
       );
-      assert.lengthOf(warnings, 4);
+      assert.lengthOf(
+        warnings,
+        4,
+        "the reader routes frames in order, so every response was handled once x/after arrives"
+      );
       const [parseError, idlessDefect, unknownId, effectDefect] = warnings;
       assert.include(parseError, { code: -32700, messageTag: "Exit" });
       assert.notProperty(parseError, "requestId");
       assert.include(idlessDefect, { code: -32603, messageTag: "Exit" });
       assert.notProperty(idlessDefect, "requestId");
       assert.include(unknownId, { code: -32000, messageTag: "Exit", requestId: "agent-7" });
-      assert.include(effectDefect, { code: 1, messageTag: "Exit", requestId: -32603 });
+      assert.include(
+        effectDefect,
+        { code: 1, messageTag: "Exit", requestId: -32603 },
+        "effect's own encoder writes a server-level Defect with id -32603"
+      );
     })
   );
 });
@@ -1451,7 +1465,7 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
       assert.equal(notification._tag, "SessionUpdate");
       assert.deepEqual(notification.params, usageUpdate(10));
       const got54 = yield* Ref.get(terminated);
-      assert.isFalse(got54);
+      assert.isFalse(got54, "one bad update must not end a session whose later updates are fine");
       assert.equal(transformCalls, 1);
 
       const decodeFailures = A.filter(events, ({ stage }) => stage === "decode_failed");
@@ -1461,13 +1475,21 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
         operation: "decode-notification-payload",
       });
       const warnings = warningsAbout("update.used missing");
-      assert.lengthOf(warnings, 1);
+      assert.lengthOf(
+        warnings,
+        1,
+        "suite tests run interleaved, so only warnings about this test's payload count, once per connection"
+      );
       const encodedUnknownJsonText = yield* encodeUnknownJsonText(warnings[0]);
       assert.include(encodedUnknownJsonText, "update.used missing");
       const encodedUnknownJsonText55 = yield* encodeUnknownJsonText(decodeFailures[0]?.payload);
       assert.include(encodedUnknownJsonText55, "update.used missing");
       const encodedUnknownJsonText56 = yield* encodeUnknownJsonText({ decodeFailures, capturedWarnings });
-      assert.notInclude(encodedUnknownJsonText56, secret);
+      assert.notInclude(
+        encodedUnknownJsonText56,
+        secret,
+        "decode failures are reported with structural diagnostics only"
+      );
     })
   );
 
@@ -1482,7 +1504,6 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
         onNotification: () => Deferred.succeed(dispatched, undefined).pipe(Effect.asVoid),
       });
 
-      // Each update carries one malformed command, at a new index every time.
       const command = { name: "a", description: "d" };
       for (const index of A.range(1, 40)) {
         const availableCommands = A.append(
@@ -1503,15 +1524,17 @@ it.layer(Logger.layer([warningCollector]), { timeout: "10 seconds" })("effect-ac
       yield* Queue.offer(input, jsonLine58);
 
       yield* Deferred.await(dispatched);
-      assert.lengthOf(warningsAbout("update.availableCommands"), 1);
+      assert.lengthOf(
+        warningsAbout("update.availableCommands"),
+        1,
+        "each distinct decode failure is warned about once per connection"
+      );
     })
   );
 });
 
 const effectFrameParser = RpcSerialization.ndJsonRpc().makeUnsafe();
 
-// Inbound ids pass through verbatim, so effect's own ndjson decoder output is the parity oracle for
-// the package frame decoder.
 const oracle = (line: string): ReadonlyArray<unknown> => effectFrameParser.decode(`${line}\n`);
 
 it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decoder parity", (it) => {
@@ -1535,14 +1558,16 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         .run(0, (message) => Queue.offer(clientSeen, message).pipe(Effect.asVoid))
         .pipe(Effect.forkScoped);
 
-      // `@effect/rpc/*` control frames and `Defect`-tagged errors deliberately diverge from the
-      // oracle; see the hardening suite and the edge cases below.
       const serverFrames = [
         '{"jsonrpc":"2.0","id":7,"method":"session/request_permission","params":{"sessionId":"s","toolCall":{"toolCallId":"t","title":"x"},"options":[]}}',
       ];
       for (const line of serverFrames) {
         yield* Queue.offer(input, encoder.encode(`${line}\n`));
-        assert.deepEqual([yield* Queue.take(serverSeen)], oracle(line));
+        assert.deepEqual(
+          [yield* Queue.take(serverSeen)],
+          oracle(line),
+          "@effect/rpc/* control frames and Defect-tagged errors diverge from the oracle on purpose and are left out"
+        );
       }
 
       const clientFrames = [
@@ -1553,7 +1578,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
       ];
       for (const line of clientFrames) {
         yield* Queue.offer(input, encoder.encode(`${line}\n`));
-        assert.deepEqual([yield* Queue.take(clientSeen)], oracle(line));
+        assert.deepEqual(
+          [yield* Queue.take(clientSeen)],
+          oracle(line),
+          "inbound ids pass through verbatim, so effect's own ndjson decoder output is the parity oracle"
+        );
       }
     })
   );
@@ -1584,11 +1613,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
       assert.deepEqual(take60, { _tag: "ExtNotification", method: "x/two", params: 2 });
 
       const bytes = encoder.encode('{"jsonrpc":"2.0","method":"x/utf8","params":{"text":"😀é"}}\n');
-      // Cut inside the four-byte emoji, then again right before the newline.
-      const insideEmoji = bytes.indexOf(0xf0) + 2;
-      yield* Queue.offer(input, bytes.slice(0, insideEmoji));
-      yield* Queue.offer(input, bytes.slice(insideEmoji, bytes.length - 1));
-      yield* Queue.offer(input, bytes.slice(bytes.length - 1));
+      const insideFourByteEmoji = bytes.indexOf(0xf0) + 2;
+      const beforeNewline = bytes.length - 1;
+      yield* Queue.offer(input, bytes.slice(0, insideFourByteEmoji));
+      yield* Queue.offer(input, bytes.slice(insideFourByteEmoji, beforeNewline));
+      yield* Queue.offer(input, bytes.slice(beforeNewline));
       const take61 = yield* Queue.take(notifications);
       assert.deepEqual(take61, {
         _tag: "ExtNotification",
@@ -1660,11 +1689,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         assert.deepEqual([yield* Queue.take(serverSeen)], oracle(line));
       }
 
-      // A response without an id is not a typed RPC response, so it never reaches the RpcClient.
       yield* Queue.offer(input, encoder.encode('{"jsonrpc":"2.0","result":1}\n'));
 
-      // An Interrupt cause entry always materialises its fiberId key, and cause data that is not a
-      // cause array degrades to a single Die entry carrying the whole error object.
       yield* Queue.offer(
         input,
         encoder.encode(
@@ -1672,12 +1698,15 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         )
       );
       const take63 = yield* Queue.take(clientSeen);
-      assert.deepEqual(take63, {
-        _tag: "Exit",
-        requestId: 13,
-        exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: undefined }] },
-      });
-      // Effect's JSON RPC codec encodes a missing interrupt fiberId as null; it stays an Interrupt.
+      assert.deepEqual(
+        take63,
+        {
+          _tag: "Exit",
+          requestId: 13,
+          exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: undefined }] },
+        },
+        "an id-less response never reaches the RpcClient, and an Interrupt cause entry always has its fiberId key"
+      );
       yield* Queue.offer(
         input,
         encoder.encode(
@@ -1685,28 +1714,32 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         )
       );
       const take64 = yield* Queue.take(clientSeen);
-      assert.deepEqual(take64, {
-        _tag: "Exit",
-        requestId: 113,
-        exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: null }] },
-      });
-      // That single Die entry is a protocol-shaped error object, so it is restored to a typed Fail.
+      assert.deepEqual(
+        take64,
+        {
+          _tag: "Exit",
+          requestId: 113,
+          exit: { _tag: "Failure", cause: [{ _tag: "Interrupt", fiberId: null }] },
+        },
+        "effect's JSON RPC codec encodes a missing interrupt fiberId as null; it stays an Interrupt"
+      );
       yield* Queue.offer(
         input,
         encoder.encode('{"jsonrpc":"2.0","id":14,"error":{"_tag":"Cause","code":2,"message":"odd","data":"oops"}}\n')
       );
       const take65 = yield* Queue.take(clientSeen);
-      assert.deepEqual(take65, {
-        _tag: "Exit",
-        requestId: 14,
-        exit: {
-          _tag: "Failure",
-          cause: [{ _tag: "Fail", error: { _tag: "Cause", code: 2, message: "odd", data: "oops" } }],
+      assert.deepEqual(
+        take65,
+        {
+          _tag: "Exit",
+          requestId: 14,
+          exit: {
+            _tag: "Failure",
+            cause: [{ _tag: "Fail", error: { _tag: "Cause", code: 2, message: "odd", data: "oops" } }],
+          },
         },
-      });
-      // effect reads a `Defect`-tagged error as a connection-level defect that the RpcClient applies
-      // to every in-flight call. From a peer it stays the typed failure of its own request id, and
-      // any other `_tag` is an ordinary extra member of the error object.
+        "non-array cause data degrades to one Die entry; a protocol-shaped error object is restored to a typed Fail"
+      );
       yield* Queue.offer(
         input,
         encoder.encode(
@@ -1714,24 +1747,35 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp frame decode
         )
       );
       const take66 = yield* Queue.take(clientSeen);
-      assert.deepEqual(take66, {
-        _tag: "Exit",
-        requestId: 10,
-        exit: {
-          _tag: "Failure",
-          cause: [{ _tag: "Fail", error: { _tag: "Defect", code: -32603, message: "defect", data: { boom: true } } }],
+      assert.deepEqual(
+        take66,
+        {
+          _tag: "Exit",
+          requestId: 10,
+          exit: {
+            _tag: "Failure",
+            cause: [{ _tag: "Fail", error: { _tag: "Defect", code: -32603, message: "defect", data: { boom: true } } }],
+          },
         },
-      });
+        "effect would apply a Defect-tagged error to every in-flight call; from a peer it fails only its own request"
+      );
       yield* Queue.offer(
         input,
         encoder.encode('{"jsonrpc":"2.0","id":17,"error":{"_tag":"Other","code":-32000,"message":"tagged"}}\n')
       );
       const take67 = yield* Queue.take(clientSeen);
-      assert.deepEqual(take67, {
-        _tag: "Exit",
-        requestId: 17,
-        exit: { _tag: "Failure", cause: [{ _tag: "Fail", error: { _tag: "Other", code: -32000, message: "tagged" } }] },
-      });
+      assert.deepEqual(
+        take67,
+        {
+          _tag: "Exit",
+          requestId: 17,
+          exit: {
+            _tag: "Failure",
+            cause: [{ _tag: "Fail", error: { _tag: "Other", code: -32000, message: "tagged" } }],
+          },
+        },
+        "any other _tag is an ordinary extra member of the error object"
+      );
     })
   );
 
@@ -1784,23 +1828,24 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("effect-acp untagged err
         encoder.encode('{"jsonrpc":"2.0","id":8,"error":{"code":-32000,"message":"boom","data":{"k":1}}}\n')
       );
 
-      // effect rc.117 parity: RpcSerialization maps a plain error object to `Fail`, so ACP
-      // consumers receive a typed error on the Cause channel rather than a `Die` defect.
       const take69 = yield* Queue.take(clientSeen);
-      assert.deepEqual(take69, {
-        _tag: "Exit",
-        requestId: 8,
-        exit: {
-          _tag: "Failure",
-          cause: [{ _tag: "Fail", error: { code: -32000, message: "boom", data: { k: 1 } } }],
+      assert.deepEqual(
+        take69,
+        {
+          _tag: "Exit",
+          requestId: 8,
+          exit: {
+            _tag: "Failure",
+            cause: [{ _tag: "Fail", error: { code: -32000, message: "boom", data: { k: 1 } } }],
+          },
         },
-      });
+        "RpcSerialization maps a plain error object to Fail, so ACP consumers get a typed error on the Cause channel"
+      );
     })
   );
 });
 
 it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp dual-generation session updates", (it) => {
-  // Raw `session/update` frames: generation-1 and future updates the generation-2 codec rejects.
   const RawSessionUpdateNotification = jsonRpcNotification("session/update", S.Unknown);
 
   it.effect(
@@ -1889,8 +1934,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp dual-generat
   );
 });
 
-// Protocol hardening: reentrancy, bounded concurrency, writer and termination failure paths, and the
-// wire shape of typed traffic. Each case pins one review finding on the t3code port.
 const WireFrame = S.Struct({
   error: S.optionalKey(S.Struct({ code: S.Finite, message: S.String })),
   id: S.optionalKey(S.Union([S.Finite, S.String])),
@@ -1901,8 +1944,10 @@ const decodeWireFrame = S.decodeEffect(AcpJson.fromJsonText(WireFrame));
 const takeFrame = (output: Queue.Queue<string>) => Queue.take(output).pipe(Effect.flatMap(decodeWireFrame));
 const takeFrames = (output: Queue.Queue<string>, count: number) =>
   Effect.forEach(A.range(1, count), () => takeFrame(output), { concurrency: 1 });
-// Lets every runnable fiber reach its next suspension point.
-const settle = Effect.forEach(A.range(1, 20), () => Effect.yieldNow, { concurrency: 1, discard: true });
+const letFibersReachSuspension = Effect.forEach(A.range(1, 20), () => Effect.yieldNow, {
+  concurrency: 1,
+  discard: true,
+});
 
 class TypedRpcs extends RpcGroup.make(
   Rpc.make("x/typed", { payload: S.Struct({ n: S.Finite }), success: S.Struct({ ok: S.Boolean }) })
@@ -1947,10 +1992,8 @@ const serveTypedRequests = Effect.fnUntraced(function* (transport: AcpProtocol.A
 });
 
 it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol hardening", (it) => {
-  // A child's stdin pipe breaks when it exits, so the writer can fail before the ended stdout
-  // reports the exit status. The writer fails first here and the exit status arrives later.
   it.effect(
-    "ends with the peer's exit when the output writer fails before the exit status arrives",
+    "ends with the peer's exit when its broken stdin pipe fails the writer before the exit status arrives",
     Effect.fnUntraced(function* () {
       const classifying = yield* Deferred.make<void>();
       const exitReported = yield* Deferred.make<void>();
@@ -2041,7 +2084,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const terminated = yield* Deferred.make<AcpError.AcpError>();
       const sendCount = 2_100;
       const logged = yield* Ref.make(0);
-      const allLogged = yield* Deferred.make<void>();
+      const allSendsAtQueueOffer = yield* Deferred.make<void>();
       const stdio = Stdio.make({
         args: Effect.succeed([]),
         stdin: Stream.never,
@@ -2053,12 +2096,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         stdio,
         serverRequestMethods: HashSet.empty(),
         logOutgoing: true,
-        // Every send logs its raw frame right before it offers it to the output queue.
         logger: (event) =>
           event.stage === "raw"
             ? Ref.updateAndGet(logged, (count) => count + 1).pipe(
                 Effect.flatMap((count) =>
-                  count === sendCount + 1 ? Deferred.succeed(allLogged, undefined) : Effect.void
+                  count === sendCount + 1 ? Deferred.succeed(allSendsAtQueueOffer, undefined) : Effect.void
                 ),
                 Effect.asVoid
               )
@@ -2068,22 +2110,25 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const outcome = <A>(send: Effect.Effect<A, AcpError.AcpError>) =>
         send.pipe(Effect.match({ onFailure: O.some, onSuccess: () => O.none<AcpError.AcpError>() }), Effect.forkScoped);
 
-      // The writer holds one chunk and the queue holds 1,024 more; the rest of the sends park.
       const notifications = yield* Effect.forEach(
         A.range(1, sendCount),
         (index) => outcome(transport.notify("x/flood", index)),
         { concurrency: 1 }
       );
       const request = yield* outcome(transport.request("x/test", { hello: "world" }));
-      yield* Deferred.await(allLogged);
-      yield* settle;
+      yield* Deferred.await(allSendsAtQueueOffer);
+      yield* letFibersReachSuspension;
       yield* Deferred.succeed(releaseFailure, undefined);
 
       const error = yield* Deferred.await(terminated);
       assert.instanceOf(error, AcpError.AcpTransportError);
       const forEach73 = yield* Effect.forEach(notifications, Fiber.join, { concurrency: 1 });
       const failures = A.getSomes(forEach73);
-      assert.isAbove(failures.length, 0);
+      assert.isAbove(
+        failures.length,
+        0,
+        "the writer holds one chunk and the queue 1,024 more, so the remaining sends park and fail"
+      );
       for (const failure of failures) {
         assert.strictEqual(failure, error);
       }
@@ -2100,7 +2145,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio,
         serverRequestMethods: HashSet.empty(),
-        // Every handler waits on a response that only the reader can deliver.
         onExtRequest: (_method, _params, context) =>
           Deferred.await(protocolReady).pipe(
             Effect.flatMap((protocol) => protocol.request("x/inner", { from: String(context.requestId) })),
@@ -2118,19 +2162,19 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
 
       const frames = yield* takeFrames(output, outerCount);
       const inner = A.filter(frames, ({ method }) => method === "x/inner");
-      assert.lengthOf(inner, 64);
+      assert.lengthOf(inner, 64, "every handler waits on an inner response that only the reader can deliver");
       assert.deepEqual(
         A.filter(frames, ({ error }) => error !== undefined),
         [{ id: "outer-64", error: { code: -32603, message: "Too many concurrent ACP extension requests" } }]
       );
 
-      // The reader kept reading, so every inner response reaches its handler.
       const responses = A.map(inner, ({ id }) => `{"jsonrpc":"2.0","id":${id},"result":{"ok":true}}\n`);
       yield* Queue.offer(input, encoder.encode(A.join(responses, "")));
       const answered = yield* takeFrames(output, 64);
       assert.lengthOf(
         A.filter(answered, ({ result }) => result !== undefined),
-        64
+        64,
+        "the reader kept reading, so every inner response reaches its handler"
       );
     })
   );
@@ -2218,10 +2262,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       assert.deepEqual(await83, { ok: true });
       const takeFrame84 = yield* takeFrame(output);
       assert.deepEqual(takeFrame84, { id: 99, result: { ok: true } });
-      // A real typed call goes on the wire without effect trace ids or headers.
       assert.equal(
         line,
-        `{"jsonrpc":"2.0","method":"x/typed","params":{"n":1},"id":${AcpProtocol.RPC_REQUEST_ID_START}}\n`
+        `{"jsonrpc":"2.0","method":"x/typed","params":{"n":1},"id":${AcpProtocol.RPC_REQUEST_ID_START}}\n`,
+        "a real typed call goes on the wire without effect trace ids or headers"
       );
     })
   );
@@ -2258,7 +2302,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         )
       );
       yield* Deferred.await(firstStarted);
-      yield* settle;
+      yield* letFibersReachSuspension;
       const got85 = yield* Ref.get(events);
       assert.deepEqual(got85, ["start-1"]);
 
@@ -2279,7 +2323,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio,
         serverRequestMethods: HashSet.empty(),
-        // The peer never answers these requests, so each handler keeps waiting.
         onNotification: () =>
           Deferred.await(protocolReady).pipe(
             Effect.flatMap((protocol) => protocol.request("x/inner", {})),
@@ -2299,7 +2342,8 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const frames = yield* takeFrames(output, 65);
       assert.lengthOf(
         A.filter(frames, ({ method }) => method === "x/inner"),
-        64
+        64,
+        "the peer never answers these requests, so each handler keeps waiting"
       );
       assert.deepEqual(frames[64], { id: "ping", result: { ok: true } });
       const failure = yield* Queue.take(failures);
@@ -2320,7 +2364,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio,
         serverRequestMethods: HashSet.empty(),
-        // The first request releases the reader; the second is sent by an already detached handler.
         onNotification: () =>
           Deferred.await(protocolReady).pipe(
             Effect.flatMap((protocol) =>
@@ -2344,7 +2387,11 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       yield* Queue.offer(input, jsonLine90);
 
       const await91 = yield* Deferred.await(answers);
-      assert.deepEqual(await91, [1, 2]);
+      assert.deepEqual(
+        await91,
+        [1, 2],
+        "the first request releases the reader; the second is sent by an already detached handler"
+      );
     })
   );
 
@@ -2378,11 +2425,13 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       yield* Queue.offer(own.input, jsonLine93);
       const elsewhere = yield* takeFrame(other.output);
       assert.equal(elsewhere.method, "x/elsewhere");
-      // Another connection's reader delivers that response, so this reader keeps waiting for the
-      // handler and the ping behind it stays unanswered.
-      yield* settle;
+      yield* letFibersReachSuspension;
       const size94 = yield* Queue.size(own.output);
-      assert.strictEqual(size94, 0);
+      assert.strictEqual(
+        size94,
+        0,
+        "another connection's reader delivers that response, so this reader waits and the ping stays unanswered"
+      );
 
       const jsonLine95 = yield* jsonLine({ jsonrpc: "2.0", id: elsewhere.id, result: "there" });
       yield* Queue.offer(other.input, jsonLine95);
@@ -2418,11 +2467,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const encodedJsonl98 = yield* encodeJsonl(ExtResponse, { jsonrpc: "2.0", id: 1, result: { ok: true } });
       yield* Queue.offer(input, encodedJsonl98);
 
-      // The cancelled request cannot claim a late response.
       yield* Queue.offer(input, encoder.encode('{"jsonrpc":"2.0","method":"x/after","params":{}}\n'));
       yield* Deferred.await(drained);
       const size99 = yield* Queue.size(lateResponse);
-      assert.equal(size99, 0);
+      assert.equal(size99, 0, "the cancelled request cannot claim a late response");
     })
   );
 
@@ -2496,7 +2544,6 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const takeFrame102 = yield* takeFrame(output);
       assert.deepEqual(takeFrame102, { id: "after", result: { method: "@effect/rpc/Ping" } });
 
-      // A peer `Eof` no longer ends the writer: sends and typed responses still reach the wire.
       yield* transport.notify("session/cancel", { sessionId: "session-1" });
       const take103 = yield* Queue.take(output);
       assert.equal(take103, '{"jsonrpc":"2.0","method":"session/cancel","params":{"sessionId":"session-1"}}\n');
@@ -2505,7 +2552,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
       const takeFrame105 = yield* takeFrame(output);
       assert.deepEqual(takeFrame105, { id: 2, result: "fast" });
       const got106 = yield* Ref.get(terminated);
-      assert.isFalse(got106);
+      assert.isFalse(got106, "a peer Eof does not end the writer: sends and typed responses still reach the wire");
     })
   );
 
@@ -2556,31 +2603,32 @@ it.effect(
   })
 );
 
-// Outside the shared layer: `TestClock.adjust` needs this test's own clock (top-level `it.effect`
-// provides a fresh `TestEnv`), not one shared with the interleaved hardening cases.
 it.effect(
-  "settles callers when classifying the termination outlasts its bound",
+  "settles callers when classifying the termination outlasts its bound on this test's own TestClock",
   Effect.fnUntraced(function* () {
     const { stdio, input, output } = yield* makeInMemoryStdio();
     const classifying = yield* Deferred.make<void>();
+    const peerClosedStdoutNeverExits = Deferred.succeed(classifying, undefined).pipe(Effect.andThen(Effect.never));
     const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
       stdio,
       serverRequestMethods: HashSet.empty(),
-      // A peer that closed stdout but never exits.
-      terminationError: Deferred.succeed(classifying, undefined).pipe(Effect.andThen(Effect.never)),
+      terminationError: peerClosedStdoutNeverExits,
     });
 
     const response = yield* transport.request("x/test", { hello: "world" }).pipe(Effect.forkScoped);
     yield* Queue.take(output);
     yield* Queue.end(input);
     yield* Deferred.await(classifying);
-    // The bound starts with the classification; a second step covers a timer that registers late.
     yield* TestClock.adjust("5 seconds");
-    yield* settle;
+    yield* letFibersReachSuspension;
     yield* TestClock.adjust("5 seconds");
 
     const error = yield* response.pipe(Fiber.join, expectFailure);
-    assert.instanceOf(error, AcpError.AcpInputStreamEndedError);
+    assert.instanceOf(
+      error,
+      AcpError.AcpInputStreamEndedError,
+      "the bound starts with the classification; the second step covers a late timer, on a clock no hardening case shares"
+    );
     const expectFailure109 = yield* expectFailure(transport.notify("session/cancel", { sessionId: "session-1" }));
     assert.strictEqual(expectFailure109, error);
   })

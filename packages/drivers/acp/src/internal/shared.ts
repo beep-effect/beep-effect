@@ -142,7 +142,6 @@ const decodeExtRequestRegistration =
   <A, I>({ handler, method, payload }: DecodeExtRequestRegistrationOptions<A, I>): ExtRequestHandler =>
   (params, context) =>
     S.decodeUnknownEffect(payload)(params).pipe(
-      // The peer sees only value-free diagnostics; the exact schema error stays in `cause`.
       Effect.mapError((error) => AcpError.AcpRequestError.invalidExtensionPayload(method, error)),
       Effect.flatMap((decoded) => handler(decoded, context))
     );
