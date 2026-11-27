@@ -65,46 +65,21 @@ export const vercelCnameTarget = "cname.vercel-dns.com";
  */
 export const dnsRecordComment = "Managed by Pulumi for oip.law Vercel routing.";
 
-/**
- * Logical-id suffix of a hostname: `www.oip.law` becomes `www-oip-law`.
- *
- * @param domain - The hostname.
- * @returns The suffix.
- */
 const slugOf = (domain: OipDomain): string => Str.replaceAll(".", "-")(domain.name);
 
-/** Logical id of a domain's `Vercel.Domain` resource: `Domain-oip-law` for `oip.law`. */
 const domainId = (domain: OipDomain): string => `Domain-${slugOf(domain)}`;
 
-/** Logical id of a domain's `Cloudflare.DNS.Record` resource: `Dns-oip-law` for `oip.law`. */
 const dnsRecordId = (domain: OipDomain): string => `Dns-${slugOf(domain)}`;
 
-/** Logical id of the Vercel project (the plan guard classifies it by this id). */
 const projectId = "Project";
 
-/** Logical id of the assets bucket (the plan guard classifies it by this id). */
 const assetsBucketId = "AssetsBucket";
 
-/**
- * Applied to every object a live stage owns: adopt the live object per
- * object (D20) and refuse any plan that would replace or delete it. A
- * personal stage adopts nothing and protects nothing.
- *
- * @param live - Whether the stage owns live objects.
- * @returns The decoration for a live object's declaration.
- */
 const liveObject =
   (live: boolean) =>
   <A, E, R>(declaration: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
     declaration.pipe(adopt(live), RemovalPolicy.protect(live));
 
-/**
- * Declare one hostname: the project domain and the DNS record pointing it at Vercel.
- *
- * @param config - The stage's configuration.
- * @param project - The Vercel project id.
- * @returns The effect declaring both resources.
- */
 const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
   Effect.fn("OipWeb.declareDomain")(function* (domain: OipDomain) {
     const vercelDomain = yield* Vercel.Domain(domainId(domain), {
@@ -141,6 +116,10 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  * no reader. Vercel deployments stay with `.github/workflows/vercel-deploy.yml`;
  * this stack owns configuration, not builds.
  *
+ * **Gotchas**
+ *
+ * Live objects are individually adopted and protected against replacement or deletion; personal stages do neither. Read the secret config key before declaring resources so a missing key fails before sibling writes; the provider reads the value again at write time without storing it here. Declare project identity only, omitting git link, framework, commands, root directory, Node version, system variables and deployment protection. git.deploymentEnabled remains in vercel.json. Public variables are literal live values because Redacted props retain their text in state; secrets use valueFrom and never reach state.
+ *
  * **Example** (Declare a personal stage)
  *
  * ```ts
@@ -158,24 +137,14 @@ const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
  * @since 0.0.0
  */
 export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: OipWebStackConfig) {
-  // A live stage reads its secret's config key before declaring anything, so a missing key fails
-  // the deploy before any resource is planned or written (a provider would only see it once its
-  // upstream outputs resolve, after sibling writes). The value itself is read again by the
-  // provider at write time and never kept here.
   if (config.hubSpotServiceKey !== undefined) {
     yield* Config.Redacted(config.hubSpotServiceKey.config);
   }
-  // Only the project's identity is declared. Every field that shapes a build or a pull-request
-  // check (git link, framework, commands, root directory, Node version, system variables,
-  // deployment protection) is left out, so adopting the live project can never send one;
-  // `git.deploymentEnabled` lives in vercel.json, which no resource touches.
   const project = yield* Vercel.Project(projectId, {
     name: config.projectName,
     teamId: vercelTeamId,
   }).pipe(liveObject(config.live));
 
-  // Public values: written as literals (Alchemy keeps a Redacted prop's text in state), equal
-  // to the live values. Like every adopted object they are protected on live stages.
   yield* Vercel.EnvVar("EnvNextDisablePwa", {
     project: project.projectId,
     teamId: vercelTeamId,
@@ -192,7 +161,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
     targets: ["production", "preview"],
     type: "encrypted",
   }).pipe(liveObject(config.live));
-  // The secret is read at deploy time and never reaches state.
+
   yield* pipe(
     O.fromUndefinedOr(config.hubSpotServiceKey),
     O.match({
@@ -243,17 +212,6 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
   };
 });
 
-/**
- * AWS providers for the one AWS resource this stack declares, `AWS.S3.Bucket`.
- *
- * **Details**
- *
- * `AWS.providers()` registers every AWS resource and dies at build without
- * the Lambda assets bucket that `alchemy provider aws bootstrap` creates
- * (D18, deferred to the runner fleet). This collection registers the bucket
- * provider alone over the same environment, credential and region chain, as
- * `@beep/alchemy-aws-extras` does for its resources.
- */
 const awsBucketProviders = Layer.effect(AWS.Providers, Provider.collection([AWS.S3.Bucket])).pipe(
   Layer.provide(AWS.S3.BucketProvider()),
   Layer.provideMerge(Layer.fresh(AwsRegion.fromEnvironment)),
@@ -267,6 +225,10 @@ const awsBucketProviders = Layer.effect(AWS.Providers, Provider.collection([AWS.
 
 /**
  * Every provider the stack needs: Vercel, Cloudflare and the AWS bucket collection.
+ *
+ * **Gotchas**
+ *
+ * Register only the S3 bucket provider over the normal environment, credential and region chain. AWS.providers() requires the Lambda bootstrap assets bucket even though this stack declares no Lambda resource.
  *
  * **Example** (Inspect the layer)
  *

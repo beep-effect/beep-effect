@@ -53,9 +53,6 @@ class SmokeServerInfo extends S.Opaque<SmokeServerInfo, { readonly brand: unique
   )
 ) {}
 
-// The 2026-07-28 `server/discover` result carries serverInfo under a `_meta`
-// key (`SERVER_INFO_META_KEY` in `@beep/mcp-kit/client`); the smoke inlines the
-// key so the compiled app keeps its dependency set.
 const SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo";
 const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
 const CLIENT_CAPABILITIES_META_KEY = "io.modelcontextprotocol/clientCapabilities";
@@ -63,7 +60,10 @@ const CLIENT_INFO_META_KEY = "io.modelcontextprotocol/clientInfo";
 const MCP_PROTOCOL_VERSION = "2026-07-28";
 class SmokeDiscoverMeta extends S.Opaque<SmokeDiscoverMeta, { readonly brand: unique symbol }>()(
   S.Struct({ [SERVER_INFO_META_KEY]: SmokeServerInfo }).pipe(
-    $I.annoteSchema("SmokeDiscoverMeta", { description: "Discover result metadata carrying the server identity." })
+    $I.annoteSchema("SmokeDiscoverMeta", {
+      description:
+        "MCP 2026-07-28 server/discover carries serverInfo under the SERVER_INFO_META_KEY metadata key; inline the key to preserve the compiled app dependency set.",
+    })
   )
 ) {}
 class SmokeDiscoverResult extends S.Opaque<SmokeDiscoverResult, { readonly brand: unique symbol }>()(
@@ -130,9 +130,6 @@ class SmokeCallResponse extends S.Opaque<SmokeCallResponse, { readonly brand: un
   )
 ) {}
 
-// This projection checks the actual encoded tool page, not an internal adapter.
-// A complete record plus the refined object head proves the optional fixed
-// lexical provider ran inside the executable rather than availability fallback.
 class SmokeInspectionPage extends S.Opaque<SmokeInspectionPage, { readonly brand: unique symbol }>()(
   S.Struct({
     records: S.NonEmptyArray(
@@ -147,7 +144,7 @@ class SmokeInspectionPage extends S.Opaque<SmokeInspectionPage, { readonly brand
   }).pipe(
     $I.annoteSchema("SmokeInspectionPage", {
       description:
-        "Minimal compiled inspection-page projection proving source-role execution and honest complete coverage.",
+        "Encoded tool-page projection; a complete record and refined object head prove fixed lexical provider execution inside the compiled host rather than availability fallback.",
     })
   )
 ) {}
@@ -248,12 +245,7 @@ export const makePracticeKgSmokeBundle = Effect.fn("PracticeKgSmoke.makeFixtureB
   return bundleOut;
 });
 
-// bin.ts resolves PRACTICE_KG_BUNDLE_DIR ahead of BUNDLE_DIR, so an ambient value in a
-// developer or CI shell would aim the compiled host at another bundle and let a leg pass
-// without proving the staged artifact. Dropping both higher-precedence overrides also
-// leaves PRACTICE_KG_CORPUS_ROOT unset, mirroring the pointer-only install. An ambient
-// NODE_PATH is dropped too, so only a leg that sets it explicitly (the manifest leg) gets
-// one. Every leg spawns the host from this environment.
+// decision: compiled-host-environment
 const compiledHostEnv = (): Record<string, string | undefined> => {
   const ambientEnv: Record<string, string | undefined> = { ...Bun.env };
   return R.remove(R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT"), "NODE_PATH");
@@ -310,6 +302,7 @@ export const verifyCompiledClaimInspection = Effect.fn("PracticeKgSmoke.verifyCo
   yield* Effect.logInfo("COMPILED_CLAUSE_INSPECTION_OK", { records: page.records.length, terms: objectHeads.length });
 });
 
+// decision: compiled-host-environment
 const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   executable: string,
   bundleOut: string,
@@ -323,8 +316,7 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     .pipe(
       Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Failed reading the staged manifest.json." }))
     );
-  // Decoding the manifest slice is the contract check: dropping NODE_PATH from
-  // mcp_config.env fails the smoke here, before the host even spawns.
+
   const manifest = yield* decodeManifest(manifestText).pipe(
     Effect.mapError((cause) =>
       SmokeFailure.make({ cause, message: "Staged manifest.json broke the mcp_config contract." })
@@ -332,8 +324,7 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   );
   const substitute = substituteManifestTokens(exeDir, bundleOut);
   const hostEnv = compiledHostEnv();
-  // 2026-07-28 framing: no initialize handshake; every request carries the
-  // protocol version, client capabilities and client info in `_meta`.
+
   const requestMeta = `{"${PROTOCOL_VERSION_META_KEY}":"${MCP_PROTOCOL_VERSION}","${CLIENT_CAPABILITIES_META_KEY}":{},"${CLIENT_INFO_META_KEY}":{"name":"compiled-smoke","version":"0.0.0"}}`;
   const frame = (id: number, method: string, params: string): string =>
     `{"jsonrpc":"2.0","id":${id},"method":"${method}","params":${params}}`;
@@ -348,9 +339,6 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     `| "$1"`;
   const child = yield* Effect.try({
     try: () =>
-      // Desktop-faithful spawn: a neutral cwd (Desktop never launches from the extension
-      // dir, so resolution must not lean on cwd-adjacent node_modules) and configuration
-      // through the manifest env alone.
       Bun.spawn(["sh", "-c", pipeScript, "practice-kg-smoke", executable], {
         cwd: neutralCwd,
         env: {
@@ -384,7 +372,7 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     );
   const discoverLine = yield* responseLine(0, "server/discover");
   const toolsLine = yield* responseLine(1, "tools/list");
-  // Server-name mismatch fails here too: SmokeServerInfo.name is a literal.
+
   const discover = yield* decodeDiscover(discoverLine).pipe(
     Effect.mapError((cause) => SmokeFailure.make({ cause, message: "server/discover response was invalid." }))
   );
@@ -406,8 +394,7 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   const call = yield* decodeCall(callLine).pipe(
     Effect.mapError((cause) => SmokeFailure.make({ cause, message: "corpus_search_text response was invalid." }))
   );
-  // Every tool result carries bundle_version; its presence proves the DuckDB-backed
-  // query path executed inside the compiled host, not just the JSON-RPC plumbing.
+
   const callText = A.head(call.result.content).pipe(
     O.map((item) => item.text),
     O.getOrElse(() => "")
@@ -424,15 +411,14 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   });
 });
 
-// Claude Desktop opens every server with a classic `initialize` handshake. The
-// first hand-off of a stateless-only host failed there with "initialize is not
-// supported by the configured MCP protocols", so the smoke proves the handshake
-// against the compiled artifact as well as the stateless framing above.
 const HANDSHAKE_PROTOCOL_VERSION = "2025-11-25";
 
 class SmokeInitializeResult extends S.Opaque<SmokeInitializeResult, { readonly brand: unique symbol }>()(
   S.Struct({ protocolVersion: S.tag(HANDSHAKE_PROTOCOL_VERSION), serverInfo: SmokeServerInfo }).pipe(
-    $I.annoteSchema("SmokeInitializeResult", { description: "Initialize result negotiated by the compiled MCP host." })
+    $I.annoteSchema("SmokeInitializeResult", {
+      description:
+        "Classic initialize handshake result required by Claude Desktop; compiled smoke verifies it alongside stateless framing.",
+    })
   )
 ) {}
 
@@ -468,9 +454,7 @@ const runCompiledHandshake = Effect.fn("PracticeKgSmoke.runCompiledHandshake")(f
       new Response(
         Bun.spawn(["sh", "-c", pipeScript, "practice-kg-handshake", executable], {
           cwd: neutralCwd,
-          // No NODE_PATH and a neutral cwd: a `claude mcp add` registration or a
-          // script launches the host this way, so the DuckDB addon must resolve
-          // from the executable's own folder (#1959).
+
           env: { ...compiledHostEnv(), BUNDLE_DIR: bundleOut },
           stderr: "inherit",
           stdout: "pipe",
@@ -501,8 +485,6 @@ const runCompiledHandshake = Effect.fn("PracticeKgSmoke.runCompiledHandshake")(f
 
 const decodeSelfCheck = S.decodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 
-// The install proof a person cannot give over SSH: the compiled host opens the
-// bundle and both stores and reports them on one line, with stdin closed.
 const runCompiledSelfCheck = Effect.fn("PracticeKgSmoke.runCompiledSelfCheck")(function* (
   executable: string,
   bundleOut: string,
@@ -516,7 +498,7 @@ const runCompiledSelfCheck = Effect.fn("PracticeKgSmoke.runCompiledSelfCheck")(f
     try: () =>
       Bun.spawn([executable, "--self-check"], {
         cwd: neutralCwd,
-        // No NODE_PATH, neutral cwd: proves executable-relative addon resolution (#1959).
+
         env: { ...compiledHostEnv(), BUNDLE_DIR: bundleOut },
         stderr: "inherit",
         stdin: "ignore",

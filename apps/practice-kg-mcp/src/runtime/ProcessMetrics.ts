@@ -28,7 +28,6 @@ import { PracticeKgProcessCpu, PracticeKgProcessRss } from "../telemetry/Practic
 
 const $I = $PracticeKgMcpId.create("runtime/ProcessMetrics");
 
-// How often the host samples, and the window one value per gauge is recorded for.
 const ProcessSampleInterval: Duration.Duration = Duration.seconds(10);
 const ProcessMetricsWindow: Duration.Duration = Duration.minutes(5);
 
@@ -38,8 +37,6 @@ const windowMillis = Duration.toMillis(ProcessMetricsWindow);
 const microsPerMilli = 1_000;
 
 const NonNegative = S.Finite.check(S.isGreaterThanOrEqualTo(0));
-// A thousand cores at full load, and 256 TiB: far past any host, well inside
-// exact float arithmetic.
 const maxCpuPercent = 100_000;
 const maxRssBytes = 2 ** 48;
 const WindowCpuPercent = S.Finite.check(S.isBetween({ minimum: 0, maximum: maxCpuPercent }));
@@ -201,7 +198,6 @@ export const coarsenRssBytes = (bytes: number): number => Math.max(0, Math.floor
 
 const windowStartOf = (atMillis: number): number => Math.floor(atMillis / windowMillis) * windowMillis;
 
-// Clamped into the window schema's bounds, so closing a window never fails.
 const closeWindow = (state: ProcessWindowState): ProcessWindow =>
   ProcessWindow.make({
     windowStartMillis: state.windowStartMillis,

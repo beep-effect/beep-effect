@@ -32,7 +32,6 @@ export type M365Script = {
 };
 
 type FakeM365Shape = {
-  /** Verbs called, in order, with the event id for deletes. */
   readonly calls: Ref.Ref<ReadonlyArray<string>>;
   readonly script: Ref.Ref<M365Script>;
 };
@@ -104,7 +103,6 @@ export const FakeM365Layer = Layer.effect(
       getListItem: unused,
       getMailFolder: unused,
       getMessage: Effect.fnUntraced(function* (request) {
-        // The projection is recorded too: a read meant to skip the body must say so.
         const select = O.getOrElse(request.select, () => "-");
         return yield* run(`getMessage ${request.messageId} select=${select}`, (script) => script.getMessage);
       }),

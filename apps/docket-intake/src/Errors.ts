@@ -13,11 +13,10 @@ import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntak
 
 const $I = $DocketIntakeId.create("Errors");
 
-// Why a command ended without doing its work: `refused` is a write the operator did not confirm
-// with `--yes`, `throttled` is Graph refusing with a rate limit, and `failed` is everything else.
 const DocketIntakeFailureKind = LiteralKit(["failed", "refused", "throttled"]).pipe(
   $I.annoteSchema("DocketIntakeFailureKind", {
-    description: "Why a docket intake command ended without doing its work.",
+    description:
+      "A command is refused when its write lacks --yes, throttled when Graph rate-limits it, and failed for other failures.",
   })
 );
 
