@@ -38,7 +38,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const claimsHeading = "CLAIMS";
-const lineWrappedClaimsContent = A.join(
+const syntheticWrappedClaimsContent = A.join(
   [
     "1. A camera comprising:",
     "a housing; and",
@@ -50,7 +50,7 @@ const lineWrappedClaimsContent = A.join(
   ],
   "\n"
 );
-const sourceText = `${claimsHeading}\n${lineWrappedClaimsContent}`;
+const sourceText = `${claimsHeading}\n${syntheticWrappedClaimsContent}`;
 const sourceStart = Str.length(claimsHeading) + 1;
 
 const knownApplication = UsptoNormalizedApplicationNumber.make("18900001");
@@ -77,7 +77,7 @@ const document = Effect.map(normalizedClaims, (claims) =>
     claims,
     sections: [
       PatentApplicationSection.make({
-        content: lineWrappedClaimsContent,
+        content: syntheticWrappedClaimsContent,
         heading: claimsHeading,
         role: "claims",
         sourceEnd: Str.length(sourceText),

@@ -477,7 +477,10 @@ describe("MailTagging job contact-only near misses", () => {
         const applied = yield* run("apply", runId);
 
         for (const report of [preview, applied]) {
-          expect(report.unmatched).toStrictEqual({
+          expect(
+            report.unmatched,
+            "a known contact, a domain-only sender and a reply to a contact two matters share all stay below the threshold"
+          ).toStrictEqual({
             "no-signal": 0,
             "below-threshold": 3,
             ambiguous: 0,

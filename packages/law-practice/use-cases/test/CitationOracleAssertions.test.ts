@@ -54,7 +54,7 @@ const syntheticFixture = {
 };
 const accepts = (value: unknown) => Result.isSuccess(S.decodeUnknownResult(CitationOracleAssertions)(value));
 
-describe("assertion oracle evidence", () => {
+describe("assertion oracle evidence: bounded synthetic schema controls", () => {
   it.effect("requires fixed metadata during decode and encode rather than constructing defaults", () =>
     Effect.gen(function* () {
       const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(syntheticFixture);

@@ -48,7 +48,7 @@ const syntheticFixture = {
 };
 const accepts = (value: unknown) => Result.isSuccess(S.decodeUnknownResult(CitationOracleOperations)(value));
 
-describe("normalized public-operation oracle evidence", () => {
+describe("normalized public-operation oracle evidence: bounded synthetic schema controls", () => {
   it.effect("decodes typed data while preserving exact payload bytes on encode", () =>
     Effect.gen(function* () {
       const decoded = yield* S.decodeUnknownEffect(CitationOracleOperations)(syntheticFixture);

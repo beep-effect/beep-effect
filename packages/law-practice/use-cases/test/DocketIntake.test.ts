@@ -1057,10 +1057,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           O.flatMap(afterFirst, (state) => state.cursor),
           "2030-01-09T10:02:00Z"
         );
-        expect(
-          [second.processed, second.entered],
-          "round 1 is in the ledger but the record is not settled, so the cursor stays behind it"
-        ).toStrictEqual([1, 1]);
+        expect([second.processed, second.entered]).toStrictEqual([1, 1]);
         assertSome(
           O.flatMap(afterSecond, (state) => state.cursor),
           "2030-01-09T10:03:00Z"
@@ -1772,7 +1769,10 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
           ]),
           ["IntakeFailed", 1, [1]]
         );
-        expect([second.processed, second.entered]).toStrictEqual([1, 1]);
+        expect(
+          [second.processed, second.entered],
+          "round 1 is in the ledger but the record is not settled, so the cursor stays behind it"
+        ).toStrictEqual([1, 1]);
         const argument2 = yield* Ref.get(harness.enters);
         const argument3 = yield* Ref.get(harness.reviews);
         const argument4 = yield* Ref.get(harness.critiques);
