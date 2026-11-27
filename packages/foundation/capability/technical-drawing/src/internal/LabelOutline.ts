@@ -188,8 +188,6 @@ const commandOf = (command: Readonly<Record<string, unknown>>): O.Option<GlyphCo
     )
   );
 
-// Extremes of a quadratic Bézier on one axis: the end points plus the interior
-// stationary point, when there is one.
 const quadExtremes = (p0: number, p1: number, p2: number): ReadonlyArray<number> => {
   const denominator = p0 - 2 * p1 + p2;
   const t = denominator === 0 ? -1 : (p0 - p1) / denominator;
@@ -281,8 +279,7 @@ export const alphabetSpan = (face: LabelFace): readonly [number, number] => {
   return [Math.min(...A.map(inked, (g) => g.ink[1])), Math.max(...A.map(inked, (g) => g.ink[3]))];
 };
 
-// A non-literal specifier keeps the import out of the type program (the
-// published typings reference the DOM library) and out of bundler graphs.
+// decision: opentype-loaded-by-computed-specifier
 const OPENTYPE_MODULE = Str.concat("opentype", ".js");
 
 const parserOf = (module: unknown): O.Option<(buffer: ArrayBuffer) => unknown> =>
@@ -303,7 +300,6 @@ const parserOf = (module: unknown): O.Option<(buffer: ArrayBuffer) => unknown> =
 const fontFailure = (fontFile: string) => (message: string) =>
   DrawingError.make({ reason: "font", message: `Label font "${fontFile}": ${message}` });
 
-// Parse font bytes with opentype.js into the slice this module reads.
 const parseFont = Effect.fnUntraced(function* (fontFile: string, bytes: Uint8Array) {
   const failed = fontFailure(fontFile);
   const module = yield* Effect.tryPromise({

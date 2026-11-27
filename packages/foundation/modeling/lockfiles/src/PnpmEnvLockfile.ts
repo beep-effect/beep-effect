@@ -15,7 +15,6 @@ import type { ParseFailure } from "./internal/shared.ts";
 import type { LockfileFramingError, LockfileParseError } from "./Lockfile.ts";
 import type { PackageManagerLock } from "./PackageManagerLock.ts";
 
-/** Both readers surface an internal `ParseFailure` the one way `Lockfile.parse` does. */
 const materialize = Effect.mapError((failure: ParseFailure) => materializeFailure("pnpm", failure));
 
 const packageManager = Effect.fn("PnpmEnvLockfile.packageManager")((content: string) =>

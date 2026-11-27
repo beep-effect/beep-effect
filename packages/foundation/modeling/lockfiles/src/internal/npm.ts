@@ -29,8 +29,6 @@ import type { DependencyMap, ParseFailure } from "./shared.ts";
 
 const $I = $LockfilesId.create("internal/npm");
 
-// ── Raw schema (permissive validation scaffolding, not API) ────────────────
-
 const DepRecord = S.optionalKey(S.Record(S.String, S.String)).pipe(
   $I.annoteSchema("DepRecord", { description: "Optional dependency names and their declared specifier strings" })
 );
@@ -113,7 +111,6 @@ const NpmPackageEntry = S.Struct({
  * @internal
  */
 const NpmVersionProbe = S.Struct({
-  // The version gate owns non-finite rejection and preserves the recorded value in its typed cause.
   lockfileVersion: S.Union([S.Finite, S.String]).pipe(
     $I.annoteKey("NpmVersionProbe.lockfileVersion", {
       description: "Recorded format version, preserved verbatim before gating or string conversion",
@@ -132,7 +129,6 @@ const NpmLockfileRaw = S.Struct({
   version: S.optionalKey(S.String).pipe(
     $I.annoteKey("NpmLockfileRaw.version", { description: "Recorded package version or resolved dependency version" })
   ),
-  // The version gate owns non-finite rejection and preserves the recorded value in its typed cause.
   lockfileVersion: S.Union([S.Finite, S.String]).pipe(
     $I.annoteKey("NpmLockfileRaw.lockfileVersion", {
       description: "Recorded format version, preserved verbatim before gating or string conversion",
@@ -231,7 +227,6 @@ const entrySections = (entry: NpmPackageEntryType | undefined): ReadonlyArray<De
   entry?.peerDependencies,
 ];
 
-/** The lockfile text decoded as JSON of any shape; the version gate and shape decode follow. */
 const decodeJsonText = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 /**
@@ -258,50 +253,29 @@ export const parseNpm = Effect.fn("NpmLockfile.parse")(function* (
   content: string
 ): Effect.fn.Return<LockfileFields, ParseFailure> {
   const raw = yield* decodeJsonText(content).pipe(Effect.mapError(syntaxFailure));
-  // Format-version gate: npm lockfileVersion 3 and newer. v1/v2 trees record
-  // resolution in a different shape this parser does not model.
-  //
-  // It runs BEFORE the shape decode, and must: a v1 tree carries no
-  // `packages` object at all, so decoding first would report the oldest
-  // format we reject as merely malformed. "Too old" is the more specific
-  // true statement, and the only one a consumer can act on.
   const probe = yield* decodeNpmVersionProbe(raw).pipe(Effect.mapError(validationFailure));
   yield* requireLockfileVersion("npm", probe.lockfileVersion);
   const validated = yield* decodeNpmLockfileRaw(raw).pipe(Effect.mapError(validationFailure));
   return yield* toFields(validated);
 });
 
-// ── Transform ──────────────────────────────────────────────────────────────
-
-/**
- * One `packages` entry that names a package position, at any nesting depth —
- * `node_modules/x`, `node_modules/x/node_modules/y` and the workspace form
- * `packages/lib/node_modules/y` alike. A key that names none (a workspace path
- * entry) is reached through its link entry instead.
- */
 type NpmRow =
   | {
       readonly _tag: "link";
       readonly key: string;
       readonly name: string;
       readonly resolved: string | undefined;
-      // The resolved path entry, which holds a workspace link's actual data.
-      readonly workspace: NpmPackageEntryType | undefined;
+      readonly resolvedEntry: NpmPackageEntryType | undefined;
     }
   | {
       readonly _tag: "package";
       readonly key: string;
       readonly name: string;
-      // The install-position name, set only when the entry records a different
-      // real `name` (an `npm:` alias).
       readonly alias: O.Option<string>;
       readonly version: string;
       readonly entry: NpmPackageEntryType;
     };
 
-// An installed (non-link) entry. npm records `name` on an entry only when it
-// differs from the install position, which is how it spells an
-// `npm:<real>@<range>` alias.
 const packageRow = (key: string, keyName: string, entry: NpmPackageEntryType): O.Option<NpmRow> => {
   if (keyName === "" || entry.version === undefined) return O.none();
   const name = entry.name === undefined || entry.name === "" ? keyName : entry.name;
@@ -309,18 +283,17 @@ const packageRow = (key: string, keyName: string, entry: NpmPackageEntryType): O
   return O.some({ _tag: "package", key, name, alias, version: entry.version, entry });
 };
 
-// A workspace link stub, named from its resolved entry first.
 const linkRow = (
   raw: NpmLockfileRawType,
   key: string,
   keyName: string,
   entry: NpmPackageEntryType
 ): O.Option<NpmRow> => {
-  const workspace = O.getOrUndefined(
+  const resolvedEntry = O.getOrUndefined(
     O.flatMap(O.fromUndefinedOr(entry.resolved), (resolved) => R.get(raw.packages, resolved))
   );
-  const name = workspace?.name ?? entry.name ?? keyName;
-  return name === "" ? O.none() : O.some({ _tag: "link", key, name, resolved: entry.resolved, workspace });
+  const name = resolvedEntry?.name ?? entry.name ?? keyName;
+  return name === "" ? O.none() : O.some({ _tag: "link", key, name, resolved: entry.resolved, resolvedEntry });
 };
 
 // Name resolution is the same for every pass (the resolved entry first), so a
@@ -346,20 +319,16 @@ const linkPackage: {
   (row: Extract<NpmRow, { _tag: "link" }>, instanceIds: MutableHashSet.MutableHashSet<string>): ResolvedPackage =>
     ResolvedPackage.make({
       name: row.name,
-      version: row.workspace?.version ?? "0.0.0",
+      version: row.resolvedEntry?.version ?? "0.0.0",
       instanceId: row.key,
       isWorkspace: true,
       ...O.getSomesStruct({ relativePath: O.fromUndefinedOr(row.resolved) }),
-      // A workspace link entry is a stub; its manifest sections — peers
-      // included — live on the resolved path entry.
-      ...peerDeclarations(row.workspace?.peerDependencies, row.workspace?.peerDependenciesMeta, undefined),
-      // Resolution starts from the workspace *directory*, which is where npm
-      // nests a workspace-local copy (`packages/lib/node_modules/x`).
-      resolved: resolveNpmEdges(nonEmptyPath(row) ?? row.key, entrySections(row.workspace), instanceIds),
+      ...peerDeclarations(row.resolvedEntry?.peerDependencies, row.resolvedEntry?.peerDependenciesMeta, undefined),
+      resolved: resolveNpmEdges(workspaceDirectoryOf(row) ?? row.key, entrySections(row.resolvedEntry), instanceIds),
     })
 );
 
-const nonEmptyPath = (row: Extract<NpmRow, { _tag: "link" }>): string | undefined =>
+const workspaceDirectoryOf = (row: Extract<NpmRow, { _tag: "link" }>): string | undefined =>
   row.resolved === "" ? undefined : row.resolved;
 
 const regularPackage: {
@@ -390,16 +359,11 @@ const regularPackage: {
     )
 );
 
-// npm records concrete versions on the `node_modules/*` entries, not per
-// importer, so every importer dependency carries a specifier and no version.
-// The root manifest is the `""` entry — the `"."` importer. An empty resolved
-// path is malformed: `LockfileImporter.path` is a `NonEmptyString`, so the row
-// is skipped before construction, per the total-skip discipline.
 const npmImporters = (raw: NpmLockfileRawType, links: ReadonlyArray<Extract<NpmRow, { _tag: "link" }>>) =>
   A.appendAll(
     O.toArray(O.map(R.get(raw.packages, ""), (root) => importerOf(".", root))),
     A.flatMap(links, (row) =>
-      O.toArray(O.map(O.fromUndefinedOr(nonEmptyPath(row)), (path) => importerOf(path, row.workspace)))
+      O.toArray(O.map(O.fromUndefinedOr(workspaceDirectoryOf(row)), (path) => importerOf(path, row.resolvedEntry)))
     )
   );
 
@@ -423,7 +387,7 @@ const toFields = Effect.fn("NpmLockfile.toFields")(function* (
   }
   const workspaceEntries = MutableHashMap.fromIterable(
     A.flatMap(links, (row) =>
-      row.workspace === undefined ? [] : [[row.name, workspaceEntryOf(row.workspace)] as const]
+      row.resolvedEntry === undefined ? [] : [[row.name, workspaceEntryOf(row.resolvedEntry)] as const]
     )
   );
   return LockfileFields.make({

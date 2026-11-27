@@ -30,7 +30,6 @@ import * as Stream from "effect/Stream";
 import { errnoTag } from "./internal/errno.ts";
 import type * as PlatformErrorNs from "effect/PlatformError";
 
-// Effect FileSystem cannot provide the synchronous operations required by Effect.runSync.
 const NFS = process.getBuiltinModule("node:fs");
 
 type PlatformErrorType = PlatformErrorNs.PlatformError;
@@ -92,10 +91,6 @@ class InvalidPathArgumentError extends S.TaggedError<InvalidPathArgumentError, {
   override readonly name = "TypeError";
 }
 
-// Mirrors @effect/platform-node-shared's `handleErrnoException`: the tag comes
-// from the code through the shared `errnoTag` mapping (anything unmapped,
-// including node's `ERR_*` argument codes, is Unknown) and the node error rides
-// as `cause`.
 const errnoException: {
   (method: string, path: string, err: unknown): PlatformErrorType;
   (path: string, err: unknown): (method: string) => PlatformErrorType;
@@ -112,12 +107,7 @@ const errnoException: {
     })
 );
 
-// Mirrors the adapter's `effectify(…, handleErrnoException, handleBadArgument)`
-// split: a failure from the syscall itself (it carries a numeric `errno` or a
-// `syscall`) is a system error; anything node throws BEFORE the syscall — its
-// argument validation, whose errors also carry string codes such as
-// ERR_INVALID_ARG_VALUE (a NUL byte) or ERR_INVALID_ARG_TYPE — is BadArgument.
-const fail: {
+const syscallOrBadArgument: {
   (method: string, path: string, err: unknown): PlatformErrorType;
   (path: string, err: unknown): (method: string) => PlatformErrorType;
 } = dual(
@@ -139,7 +129,7 @@ const attempt: {
 } = dual(
   3,
   <A>(method: string, path: string, f: () => A): Effect.Effect<A, PlatformErrorType> =>
-    Effect.try({ try: f, catch: (err) => fail(method, path, err) })
+    Effect.try({ try: f, catch: (err) => syscallOrBadArgument(method, path, err) })
 );
 
 const bigintToNumber: {
@@ -158,8 +148,7 @@ const bigintToNumberOption = (value: bigint | undefined): O.Option<number> =>
 
 type NodeBigIntStats = import("node:fs").BigIntStats;
 
-// The adapter's type cascade, in its order: the first matching predicate wins.
-const fileTypeChecks: ReadonlyArray<readonly [(stat: NodeBigIntStats) => boolean, FileSystem.File.Type]> = [
+const adapterFileTypeCascade: ReadonlyArray<readonly [(stat: NodeBigIntStats) => boolean, FileSystem.File.Type]> = [
   [(stat) => stat.isFile(), "File"],
   [(stat) => stat.isDirectory(), "Directory"],
   [(stat) => stat.isSymbolicLink(), "SymbolicLink"],
@@ -172,14 +161,13 @@ const fileTypeChecks: ReadonlyArray<readonly [(stat: NodeBigIntStats) => boolean
 const fileType = (stat: NodeBigIntStats): FileSystem.File.Type =>
   O.getOrElse(
     O.map(
-      A.findFirst(fileTypeChecks, ([is]) => is(stat)),
+      A.findFirst(adapterFileTypeCascade, ([is]) => is(stat)),
       ([, type]) => type
     ),
     (): FileSystem.File.Type => "Unknown"
   );
 
-// The node adapter's `makeFileInfo`, field for field.
-const fileInfo = (stat: NodeBigIntStats): FileSystem.File.Info => ({
+const makeFileInfo = (stat: NodeBigIntStats): FileSystem.File.Info => ({
   type: fileType(stat),
   mtime: O.fromNullishOr(stat.mtime),
   atime: O.fromNullishOr(stat.atime),
@@ -196,16 +184,10 @@ const fileInfo = (stat: NodeBigIntStats): FileSystem.File.Info => ({
   blocks: O.fromNullishOr(stat.blocks),
 });
 
-// Every member outside the read set is a DEFECT, never a typed failure: a
-// program handed this filesystem that tries to write has a wiring bug, and a
-// typed failure (what `FileSystem.makeNoop` answers) could be caught and
-// silently absorbed as "not found".
 const readOnly = (member: string) =>
   ReadOnlyFileSystemError.make({ message: `NodeSyncFileSystem is read-only: ${member} is not supported` });
 const unsupported = (member: string) => () => Effect.die(readOnly(member));
 
-// `stat` and `lstat` share one shape: the syscall's own failure is a system
-// error, a stat field outside the safe integer range is BadArgument.
 const statInfo =
   (method: "stat" | "lstat", read: (path: string) => NodeBigIntStats) =>
   (path: string): Effect.Effect<FileSystem.File.Info, PlatformErrorType> =>
@@ -213,7 +195,7 @@ const statInfo =
       attempt(method, path, () => read(path)),
       (stat) =>
         Effect.try({
-          try: () => fileInfo(stat),
+          try: () => makeFileInfo(stat),
           catch: (err) =>
             PlatformError.badArgument({
               module: "FileSystem",
@@ -223,8 +205,6 @@ const statInfo =
         })
     );
 
-// `FileSystem.make` derives `glob` from `readDirectoryEntries`; both stay
-// outside the read set, so the derived `glob` is replaced with the same defect.
 const make: FileSystem.FileSystem = {
   ...FileSystem.make({
     access: (path, options) =>
@@ -236,10 +216,6 @@ const make: FileSystem.FileSystem = {
       }),
     stat: statInfo("stat", (path) => NFS.statSync(path, { bigint: true })),
     lstat: statInfo("lstat", (path) => NFS.lstatSync(path, { bigint: true })),
-    // The adapter's own value: node's Buffer (a Uint8Array), not a copy. A
-    // non-string path never reaches `readFileSync`, which would read it as a
-    // file DESCRIPTOR; the adapter's async `readFile` rejects it in its callback,
-    // so it surfaces there as a system error (Unknown, ERR_INVALID_ARG_TYPE).
     readFile: (path) =>
       P.isString(path)
         ? attempt("readFile", path, () => NFS.readFileSync(path))
@@ -253,20 +229,12 @@ const make: FileSystem.FileSystem = {
               })
             )
           ),
-    // The adapter wraps `readdir` in `Effect.tryPromise` whose catch is
-    // `handleErrnoException` alone, so EVERY failure — argument errors too — is
-    // a system error (an `ERR_*` code maps to Unknown). Matched here ON PURPOSE:
-    // a NUL byte or non-string path is `Unknown`/`ERR_INVALID_ARG_*` for
-    // readDirectory but `BadArgument` for every other member, exactly as on the
-    // adapter. Do not "fix" it: it is the parity with the adapter.
     readDirectory: (path, options) =>
       Effect.try({
         try: () => NFS.readdirSync(path, { encoding: "utf8", recursive: options?.recursive === true }),
         catch: (err) => errnoException("readDirectory", path, err),
       }),
     readLink: (path) => attempt("readLink", path, () => NFS.readlinkSync(path)),
-    // The JS `realpathSync`, NOT `.native`: the node adapter wraps the JS
-    // `fs.realpath`, which resolves links but never canonicalizes case.
     realPath: (path) => attempt("realPath", path, () => NFS.realpathSync(path)),
     copy: unsupported("copy"),
     copyFile: unsupported("copyFile"),
@@ -311,6 +279,21 @@ const make: FileSystem.FileSystem = {
  * temp files — is a defect (`Effect.die`), not a typed failure: this
  * filesystem never writes, and a caller that tries has a wiring bug
  * `Effect.catch` must not absorb.
+ *
+ * **Gotchas**
+ *
+ * - `readDirectory` reports every failure as a system error because the
+ *   adapter wraps `readdir` in `Effect.tryPromise` with `handleErrnoException`
+ *   alone; elsewhere a failure carrying a numeric `errno` or a `syscall` is a
+ *   system error and anything node throws before the syscall is
+ *   `BadArgument`, the adapter's `effectify` split. Do not "fix" either: it is
+ *   the parity with the adapter.
+ * - `readFile` with a non-string path never reaches `readFileSync`, which
+ *   would read it as a file descriptor; like the adapter's async `readFile`, it
+ *   fails `Unknown` with `ERR_INVALID_ARG_TYPE`. Its success is node's own
+ *   Buffer, not a copy.
+ * - `realPath` is the JS `realpathSync`, never `.native`: the adapter wraps
+ *   the JS `fs.realpath`, which never canonicalizes case.
  *
  * **Example** (Read a package manifest with Effect.runSync)
  *

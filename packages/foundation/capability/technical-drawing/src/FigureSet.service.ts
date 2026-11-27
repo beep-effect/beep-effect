@@ -72,10 +72,8 @@ const MARGIN_DPI = 300;
 const PURITY_DPIS = [300, 600];
 const FONT_FILE = /\.(?:ttf|otf)$/i;
 
-// Family names compare without case: fontconfig matches them the same way.
 const sameFamily = (a: string, b: string): boolean => Str.toLowerCase(a) === Str.toLowerCase(b);
 
-// A label style rendered as embedded text, with the label it letters.
 const textLabelsOf = (sheet: SheetOptions): ReadonlyArray<{ readonly label: SheetLabel; readonly style: LabelStyle }> =>
   pipe(
     [
@@ -157,28 +155,18 @@ export interface FigureSetShape {
   readonly validate: (pdfPath: string, options: ValidationOptions) => Effect.Effect<ValidationReport, DrawingError>;
 }
 
-// Shading pitch and sliver width are paper quantities: convert the sheet's mm
-// to model units at the common scale (points per model unit), then project
-// once more.
-// The validator's default spacing floor (`ValidationOptions.minShadingSpacingMm`) and
-// ladder reach (`ladderReachMm`), read from the schema so the kernel's clearance and
-// gutter and the checks cannot drift apart.
+// decision: render-reads-validation-defaults
 const validationDefaults = ValidationOptions.make({ expectedPages: O.none() });
 const shadingClearanceFloorMm = validationDefaults.minShadingSpacingMm;
 const shadingLadderReachMm = validationDefaults.ladderReachMm;
-// The least outline spacing and the overlap it is held over, read from the same schema, so the separation the render
-// applies and the check it is validated by cannot drift apart.
 const outlineSpacingMm = validationDefaults.minOutlineSpacingMm;
 const outlineOverlapMm = validationDefaults.minOutlineOverlapMm;
 
-// A length in mm on the sheet, in model units at the common scale (points per model unit).
 const toModelAt =
   (scale: number) =>
   (mm: number): number =>
     (mm * PT_PER_MM) / scale;
 
-// Graded stroke ends stand half a pitch clear of the outlines, and never less than the validator's spacing floor, so
-// the render passes its own check.
 const shadingClearanceMm = (sheet: SheetOptions): number =>
   Math.max(sheet.shadingMinPitchMm / 2, shadingClearanceFloorMm);
 
@@ -203,31 +191,20 @@ const shadingFor = (input: {
       minFaceSpan: toModel(sheet.shadingMinFaceSpanMm),
       minStroke: toModel(sheet.shadingMinStrokeMm),
       clearance: O.some(toModel(shadingClearanceMm(sheet))),
-      // a band whose edge has drawn lines this close beyond it starts behind a gutter, the
-      // same reach the ladder check reads
       ladderReach: O.some(toModel(shadingLadderReachMm)),
     })
   );
 };
 
-// Everything a sheet draws for a view: solid outlines, broken lines, and emphasis lines.
 const drawnSegments = (edges: {
   readonly visible: ReadonlyArray<Segment2>;
   readonly broken: ReadonlyArray<Segment2>;
   readonly emphasis: ReadonlyArray<Segment2>;
 }): ReadonlyArray<Segment2> => [...edges.visible, ...edges.broken, ...edges.emphasis];
 
-// The sheet prints point coordinates to 3 decimals (under 0.0002 mm each), so a pair opened to exactly the least
-// spacing can print a hair under it; separation asks this much more (review loop 4, R4-06).
 const outlineSpacingMarginMm = 0.005;
-// The engine rounds every projected coordinate to three decimals in model units (`EdgeSet`), so an end on a line can
-// sit up to about one and a half steps off it; separation finds ends on lines within that much, whatever the scale.
 const edgeCoordinateStep = 0.001;
 
-// Outlines that run side by side closer than the least spacing print as one line of the emphasis weight, so they are
-// opened to it on the sheet after the common scale (points per model unit), keeping both lines (review loop 4,
-// O-01). Broken lines move like outlines; an emphasis line moves with the outline it is drawn over, which moves only
-// when nothing else can. Every line ending on a moved one is re-ended, emphasis and broken lines included.
 const separatedOutline = (edges: EdgeSet, scale: number) => {
   const toModel = toModelAt(scale);
   const separated = separateCloseOutlines({
@@ -249,7 +226,6 @@ const separatedOutline = (edges: EdgeSet, scale: number) => {
 
 const sameSegment = A.makeEquivalence(Equivalence.Number);
 
-// The drawn lines the separation changed: moved with their line, or re-ended on a moved one.
 const movedLines = (edges: EdgeSet, outline: ReturnType<typeof separatedOutline>): ReadonlyArray<Segment2> =>
   A.flatMap(
     [
@@ -263,11 +239,7 @@ const movedLines = (edges: EdgeSet, outline: ReturnType<typeof separatedOutline>
     )
   );
 
-// Graded strokes are planned and drawn back against the outlines as projected; the separation then moves some of
-// those outlines, by up to a spacing and further in a stacked run, toward the stroke ends of the face beside them. The
-// strokes are clipped again against every line it changed, with the plan's clearance and least stroke, and a band
-// left below two strokes draws none. Uniform strokes end on the face edge by design and stay as planned, as the kernel
-// leaves them.
+// decision: sheet-shading-rules-graded-only
 const clippedShading = (input: {
   readonly shaded: O.Option<EdgeSet>;
   readonly moved: ReadonlyArray<Segment2>;
@@ -287,8 +259,6 @@ const clippedShading = (input: {
     : { segments: strokes, trimmed: 0, dropped: 0, droppedAt: [] };
 };
 
-// The coverage of what the sheet draws: the engine's, with every band and face the re-clip left bare counted lost
-// (PR #1842 thread on FigureSet.service.ts:646), so the manifest and the lost-face check read the sheet, not the plan.
 const drawnCoverage = (shaded: O.Option<EdgeSet>, droppedAt: ReadonlyArray<number>): O.Option<ShadingCoverage> =>
   O.flatMap(shaded, (view) =>
     O.map(view.shadingCoverage, (coverage) =>
@@ -296,7 +266,6 @@ const drawnCoverage = (shaded: O.Option<EdgeSet>, droppedAt: ReadonlyArray<numbe
     )
   );
 
-// An omitted pictorial is projected like the figure it is claimed from.
 const projectionOf = (spec: FigureSetSpec, view: ViewName): PictorialProjection =>
   pipe(
     A.findFirst(spec.figures, (f) => f.view === view),
@@ -348,7 +317,6 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       }),
       { concurrency: 1 }
     );
-    // Text labels are checked in the extracted text, which a missing font leaves empty.
     const textFindings = A.isReadonlyArrayNonEmpty(options.textLabels)
       ? yield* Effect.forEach(
           pages,
@@ -373,7 +341,6 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         Effect.mapError((cause) => DrawingError.fromUnknown("font", `Could not read label font "${fontFile}".`, cause))
       );
 
-  // Outline a label font and check its cap height at the style's size.
   const faceOf = Effect.fnUntraced(function* (style: LabelStyle, fontFile: string, bytes: Uint8Array) {
     const face = yield* outlineFontFile(fontFile, bytes);
     const capCm = (style.sizePt * face.capHeight) / face.unitsPerEm / PT_PER_CM;
@@ -386,16 +353,12 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     return face;
   });
 
-  // Outline an operator label font file; its sha256 goes in the manifest.
   const loadLabelFont = Effect.fnUntraced(function* (style: LabelStyle, fontFile: string) {
     const bytes = yield* readFont(fontFile);
     const face = yield* faceOf(style, fontFile, bytes);
     return { record: LabelFontRecord.make({ fontFile, sha256: yield* sha256Hex(bytes) }), face };
   });
 
-  // Resolve every text label's family to the one Regular file of that family
-  // in the font directory (searched recursively, as fontconfig does). The
-  // files' own metrics place the labels; their hashes pin the PDF's fonts.
   const resolveTextFonts = Effect.fnUntraced(function* (sheet: SheetOptions) {
     const texts = textLabelsOf(sheet);
     if (!A.isReadonlyArrayNonEmpty(texts)) {
@@ -522,14 +485,11 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         message: `${model.partOverlaps} pair(s) of parts overlap; fix the model so parts only touch, or set allowPartOverlaps to render anyway.`,
       });
     }
-    // The spec's own sheet options win wholesale; the manifest records the ones used.
     const sheet = O.getOrElse(spec.sheet, () => request.sheet);
-    // Font files are read before projecting, so a bad one fails fast.
     const sheetNumberFont = yield* labelFace(sheet.sheetNumberLabel);
     const figureFont = yield* labelFace(sheet.figureLabel);
     const textFonts = yield* resolveTextFonts(sheet);
     const textFaces = O.map(textFonts, (t) => t.faces);
-    // A style is either outlined from a font file or set as text, never both.
     const faces = SheetLabelFaces.make({
       sheetNumber: O.orElse(
         O.map(sheetNumberFont, (f) => f.face),
@@ -656,11 +616,10 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           visibleSegments: A.length(edges.visible),
           shadingSegments: A.length(strokes.segments),
           brokenSegments: A.length(edges.broken),
-          // recorded only when drawn, so a manifest without overlays keeps its JSON
+          // decision: additions-keep-earlier-output-byte-identical
           emphasisSegments: A.isReadonlyArrayNonEmpty(edges.emphasis) ? O.some(A.length(edges.emphasis)) : O.none(),
           camera: A.get(cameras, index),
           shadingCoverage: coverage,
-          // recorded only when the rule moved a line, so a manifest without close outlines keeps its JSON
           outlineSeparations: A.match(outline.moves, {
             onEmpty: O.none,
             onNonEmpty: (moves) =>
@@ -692,13 +651,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         onSome: (t) => A.map(t.pins, (pin) => pin.family),
       }),
     });
-    // Shading is checked on the render's own vectors, in mm on the sheet: line
-    // spacing, stroke ends clear of outlines, no stroke alone beside an outline,
-    // no band reading as one ladder with the lines beyond its edge, and no face
-    // or stretch that planned lines and drew none, the re-clip's losses included.
     const inMm = (segments: ReadonlyArray<Segment2>) =>
       A.map(segments, ([x1, y1, x2, y2]) => Segment2.make([x1 * mm, y1 * mm, x2 * mm, y2 * mm]));
-    // Every sheet's drawn lines, shaded or not, keep the least outline spacing.
     const outlineFindings = A.flatMap(drawn, ({ outline }, index) =>
       outlineSpacingFindings({
         page: index + 1,
@@ -706,17 +660,13 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         options: validationOptions,
       })
     );
-    // The outline, lone-line and lost-face checks describe graded strokes (drawn back from
-    // outlines and planned per visible stretch); uniform strokes end on the face outline by
-    // design and have no probe pass, so those checks would fail every default render.
+    // decision: sheet-shading-rules-graded-only
     const graded = sheet.shadingStyle === "graded";
     const shadingFindings = A.flatMap(
       A.zip(shading, drawn),
       ([view, { strokes, coverage }]: readonly [EdgeSet, (typeof drawn)[number]], index: number) => {
         const page = index + 1;
-        // the strokes the sheet draws, clipped again beside moved outlines
         const shadingMm = inMm(strokes.segments);
-        // the outline the sheet draws: opened like the figure's own
         const outlineMm = inMm(drawnSegments(separatedOutline(view, scale)));
         const gradedFindings = graded
           ? [
@@ -778,6 +728,27 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
 
 /**
  * Figure-set service: render a spec into sheets and validate sheet-set PDFs.
+ *
+ * **Details**
+ *
+ * A text label's family resolves as fontconfig does: family names compare
+ * without case, and the font directory is searched recursively for the one
+ * Regular file of that family. Those files' own metrics place the labels, and
+ * their sha256, like each outlined label font's, is pinned in the manifest.
+ * Drawn outlines that run side by side closer than the least spacing would
+ * print as one line of the emphasis weight, so after the common scale the
+ * sheet opens them to it ({@link separateCloseOutlines}), keeping both lines
+ * (review loop 4, O-01). Validation checks text labels in the PDF's extracted
+ * text, which a missing font leaves empty, and checks shading on the render's
+ * own vectors, in mm on the sheet: line spacing, stroke ends clear of
+ * outlines, no stroke alone beside an outline, no band reading as one ladder
+ * with the lines beyond its edge, and no face or stretch that planned lines
+ * and drew none, the re-clip's losses included.
+ *
+ * **Gotchas**
+ *
+ * Label font files are read before the model is projected, so a bad font
+ * fails the render fast.
  *
  * **Example** (Reference the service)
  *

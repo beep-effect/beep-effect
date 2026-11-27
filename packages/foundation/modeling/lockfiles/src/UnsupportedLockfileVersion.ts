@@ -5,13 +5,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// The structured cause a version-gate failure carries, plus the predicate that
-// narrows to it.
-//
-// A leaf module on purpose: `internal/shared.ts` builds the value and must not
-// import `Lockfile.ts` (noImportCycles), so the shape lives here where both the
-// internals and the public entry point can reach it.
-
 import { $LockfilesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as P from "effect/Predicate";
@@ -44,19 +37,19 @@ const GatedFormat = LiteralKit(["npm", "pnpm"]).pipe(
  *
  * @public
  */
+// decision: version-cause-leaf-module
 const UnsupportedLockfileVersion = S.TaggedStruct("UnsupportedLockfileVersion", {
   format: GatedFormat.pipe(
     $I.annoteKey("UnsupportedLockfileVersion.format", {
       description: "Gated npm or pnpm format that rejected the recorded version",
     })
   ),
-  // Non-finite recorded versions fail boundary validation before the version gate.
   lockfileVersion: S.Union([S.String, S.Finite]).pipe(
     $I.annoteKey("UnsupportedLockfileVersion.lockfileVersion", {
-      description: "Recorded format version, preserved verbatim before gating or string conversion",
+      description:
+        "Recorded format version, preserved verbatim; a non-finite number fails boundary validation before the gate",
     })
   ),
-  // Supported minimum versions are finite domain numbers.
   minimumSupported: S.Finite.pipe(
     $I.annoteKey("UnsupportedLockfileVersion.minimumSupported", {
       description: "Lowest format version supported by the rejecting parser",
@@ -94,6 +87,11 @@ const isVersionFailure = S.is(UnsupportedLockfileVersion);
  * and narrowing is a predicate, which is the honest tool for an intentionally
  * open value.
  *
+ * **Gotchas**
+ *
+ * The `_tag` must be an own property: a foreign throwable that inherits the
+ * tag from its prototype is not this record.
+ *
  * **Example** (Distinguish unsupported lockfile versions from malformed input)
  *
  * ```ts
@@ -122,8 +120,6 @@ const isVersionFailure = S.is(UnsupportedLockfileVersion);
 export const isUnsupportedLockfileVersion = (cause: unknown): cause is UnsupportedLockfileVersion =>
   P.isObjectKeyword(cause) &&
   !P.isFunction(cause) &&
-  // A foreign throwable inheriting the tag is not this record; all remaining
-  // required fields are validated structurally by the schema.
   "_tag" in cause &&
   R.has(cause, "_tag") &&
   isVersionFailure(cause);
