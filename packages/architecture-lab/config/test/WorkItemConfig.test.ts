@@ -168,3 +168,19 @@ describe("WorkItem configuration", () => {
     { arbitrary: fcRuns(25) }
   );
 });
+
+describe("WorkItemServerConfig JSON Schema key annotations", () => {
+  it("emits the repositoryName key annotation in toJsonSchemaDocument because annotateKey runs before withDecodingDefaultTypeKey", () => {
+    expect(S.toJsonSchemaDocument(WorkItemServerConfig).definitions).toMatchObject({
+      "@beep/architecture-lab-config/WorkItemConfig/WorkItemServerConfig": {
+        properties: {
+          repositoryName: {
+            allOf: expect.arrayContaining([
+              { description: "Repository name used for architecture lab WorkItem persistence." },
+            ]),
+          },
+        },
+      },
+    });
+  });
+});

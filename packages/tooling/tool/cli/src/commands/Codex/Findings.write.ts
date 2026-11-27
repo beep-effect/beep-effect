@@ -121,10 +121,10 @@ export class PacketDocument extends S.Opaque<PacketDocument, { readonly brand: u
     ),
     scan: PacketScanPolicy.pipe(
       S.withConstructorDefault(Effect.succeed("reject" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("reject" as const)),
       $I.annoteKey("PacketDocument.scan", {
         description: "Whether scan hits refuse the write or are reported to the operator.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("reject" as const))
     ),
   }).pipe(
     $I.annoteSchema("PacketDocument", {

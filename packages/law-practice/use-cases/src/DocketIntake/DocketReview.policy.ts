@@ -548,11 +548,13 @@ export class ReviewRoundDraft extends S.Opaque<ReviewRoundDraft, { readonly bran
   S.Struct({
     entry: ParalegalEntry.annotateKey({ description: "The extractor's entry for the round." }),
     extractorConfidence: opt(UnitInterval, "The extractor's own confidence; recorded, never scored."),
-    extractorResponse: S.Array(ExtractorFieldResponse)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "What the extractor did with each disputed field." }),
-    findings: S.Array(ReviewFinding).annotateKey({ description: "The critic's findings on the entry." }),
-    index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
+    extractorResponse: S.Array(ExtractorFieldResponse).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "What the extractor did with each disputed field." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
+    findings: ReviewRound.fields.findings,
+    index: ReviewRound.fields.index,
     reading: SecretaryReview.annotateKey({ description: "The critic's own reading for the round." }),
     source: ReviewSourceText.annotateKey({ description: "The text citations are checked against." }),
   }).pipe($I.annoteSchema("ReviewRoundDraft", { description: "What a docket review round is assessed from." }))
@@ -694,9 +696,11 @@ export const assessReviewRound = (draft: ReviewRoundDraft): ReviewRound => {
 export class ReviewDecisionInput extends S.Opaque<ReviewDecisionInput, { readonly brand: unique symbol }>()(
   S.Struct({
     config: DocketReviewConfig.annotateKey({ description: "Settings of the review loop." }),
-    earlier: S.Array(ReviewRound)
-      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
-      .annotateKey({ description: "The rounds before this one, oldest first." }),
+    earlier: S.Array(ReviewRound).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.annotateKey({ description: "The rounds before this one, oldest first." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
     gatePassed: S.Boolean.annotateKey({ description: "Whether every deterministic check of the round passed." }),
     isLastRound: S.Boolean.annotateKey({ description: "Whether the round limit is reached." }),
     round: ReviewRound.annotateKey({ description: "The round being decided." }),

@@ -277,12 +277,11 @@ export class RunnerPool extends S.Opaque<RunnerPool, { readonly brand: unique sy
       S.withConstructorDefault(Effect.succeed<AllocationStrategy>("capacity-optimized")),
       S.withDecodingDefaultKey(Effect.succeed<AllocationStrategy>("capacity-optimized"))
     ),
-    onDemandFailoverErrors: S.Array(S.String)
-      .pipe(
-        S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([])),
-        S.withDecodingDefaultKey(Effect.succeed<ReadonlyArray<string>>([]))
-      )
-      .annotateKey({ description: "CreateFleet error codes that trigger an on-demand launch of the shortfall." }),
+    onDemandFailoverErrors: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed<ReadonlyArray<string>>([])),
+      S.annotateKey({ description: "CreateFleet error codes that trigger an on-demand launch of the shortfall." }),
+      S.withDecodingDefaultKey(Effect.succeed<ReadonlyArray<string>>([]))
+    ),
     maximumCount: S.Int.check(S.isGreaterThanOrEqualTo(-1)).annotateKey({
       description: "VM cap per owner; -1 for no cap.",
     }),
@@ -293,26 +292,30 @@ export class RunnerPool extends S.Opaque<RunnerPool, { readonly brand: unique sy
     ),
     runnerGroup: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("Default")),
+      S.annotateKey({ description: "Org runner group name." }),
       S.withDecodingDefaultKey(Effect.succeed("Default"))
-    ).annotateKey({ description: "Org runner group name." }),
+    ),
     runnerNamePrefix: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
+      S.annotateKey({ description: "Prefix of every runner name." }),
       S.withDecodingDefaultKey(Effect.succeed(""))
-    ).annotateKey({ description: "Prefix of every runner name." }),
+    ),
     minimumRunningTimeMinutes: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(5)),
       S.withDecodingDefaultKey(Effect.succeed(5))
     ),
     bootTimeMinutes: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(5)),
+      S.annotateKey({
+        description: "Minutes after launch before an unregistered instance counts as an orphan.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(5))
-    ).annotateKey({
-      description: "Minutes after launch before an unregistered instance counts as an orphan.",
-    }),
+    ),
     idleCount: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
+      S.annotateKey({ description: "Idle runners scale-down keeps per owner." }),
       S.withDecodingDefaultKey(Effect.succeed(0))
-    ).annotateKey({ description: "Idle runners scale-down keeps per owner." }),
+    ),
     evictionStrategy: EvictionStrategy.pipe(
       S.withConstructorDefault(Effect.succeed<EvictionStrategy>("oldest_first")),
       S.withDecodingDefaultKey(Effect.succeed<EvictionStrategy>("oldest_first"))
@@ -327,11 +330,12 @@ export class RunnerPool extends S.Opaque<RunnerPool, { readonly brand: unique sy
     ),
     jobQueuedCheck: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description:
+          "Ask GitHub whether the job is still queued before launching. The live fleet disables it: its jobs API answered not-queued for queued jobs, and scale-up then consumes the message with no retry.",
+      }),
       S.withDecodingDefaultKey(Effect.succeed(false))
-    ).annotateKey({
-      description:
-        "Ask GitHub whether the job is still queued before launching. The live fleet disables it: its jobs API answered not-queued for queued jobs, and scale-up then consumes the message with no retry.",
-    }),
+    ),
     jobRetry: S.OptionFromOptionalKey(JobRetryPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("RunnerPool", {

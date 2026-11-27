@@ -343,6 +343,9 @@ export type TSMorphServiceError = typeof TSMorphServiceError.Type;
  * remain repository-relative. If an id has been resolved in multiple roots,
  * id-based lookups use the current repository; an unmatched current repository
  * produces a typed scope-resolution error instead of selecting another root.
+ * `updateSourceFile`'s optional `repoRoot` scopes the project to that checkout
+ * instead of the working directory's, so a caller can edit a file in a sibling
+ * checkout.
  *
  * **Example** (Import service shape type)
  *
@@ -384,8 +387,6 @@ export type TSMorphServiceShape = {
   readonly getDiagnostics: (
     request: TsMorphDiagnosticsRequest
   ) => Effect.Effect<TsMorphDiagnosticsResult, TSMorphServiceError>;
-  // `repoRoot` scopes the project to that checkout instead of the working
-  // directory's, so a caller can edit a file in a sibling checkout.
   readonly updateSourceFile: (
     filePath: string,
     update: (sourceFile: SourceFile, project: Project) => void,
@@ -456,17 +457,6 @@ const isOutsideAncestor = (pathApi: Path.Path, parentPath: string, childPath: st
   return relativePath.length === 0 ? false : pathApi.isAbsolute(relativePath) || Str.startsWith("..")(relativePath);
 };
 
-/**
- * The repo-relative implementation path of a project source file, when the scope indexes it.
- *
- * None for a file outside the workspace under `workspaceOnly`, a file outside the
- * repository root, or a path that is not an implementation TypeScript file.
- *
- * @param pathApi - Path service used for normalization and containment checks.
- * @param scope - The resolved project scope being indexed.
- * @param sourceFilePath - The ts-morph source file path.
- * @returns The scoped implementation path, or None when the scope skips the file.
- */
 const scopedImplementationFilePath = (
   pathApi: Path.Path,
   scope: TsMorphProjectScope,

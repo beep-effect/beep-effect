@@ -8,12 +8,6 @@
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 
-/**
- * Canonical TypeScript SyntaxKind name entries.
- *
- * @category models
- * @since 0.0.0
- */
 const TSSyntaxKindEntries = [
   ["Unknown", 0],
   ["EndOfFileToken", 1],
@@ -77,9 +71,7 @@ const TSSyntaxKindEntries = [
   ["ColonToken", 59],
   ["AtToken", 60],
   ["QuestionQuestionToken", 61],
-  /** Only the JSDoc scanner produces BacktickToken. The normal scanner produces NoSubstitutionTemplateLiteral and related kinds. */
   ["BacktickToken", 62],
-  /** Only the JSDoc scanner produces HashToken. The normal scanner produces PrivateIdentifier. */
   ["HashToken", 63],
   ["EqualsToken", 64],
   ["PlusEqualsToken", 65],
@@ -445,6 +437,10 @@ const TSSyntaxKindBase = LiteralKit(TSSyntaxKindNames);
  *
  * `From` is kept as a compatibility alias for callers that previously reached
  * for the literal-name side of the old mapped model.
+ *
+ * Only the JSDoc scanner produces `BacktickToken` and `HashToken`; the normal
+ * scanner produces `NoSubstitutionTemplateLiteral` (and the related template
+ * kinds) and `PrivateIdentifier` instead.
  *
  * **Example** (Access SyntaxKind code map)
  *

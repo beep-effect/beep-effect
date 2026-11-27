@@ -87,10 +87,11 @@ export class OfficeActionReviewInput extends S.Opaque<OfficeActionReviewInput, {
     }),
     entitySeed: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(officeActionReviewInputEntitySeedDefault)),
+      S.annotateKey({
+        description: "Deterministic positive seed used to mint distinct batch entity identities.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(officeActionReviewInputEntitySeedDefault))
-    ).annotateKey({
-      description: "Deterministic positive seed used to mint distinct batch entity identities.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("OfficeActionReviewInput", {
       description: "Schema-backed input for reviewing one office-action source artifact.",

@@ -234,14 +234,17 @@ export const repoRunOutputBound = OutputBound.make({
   retention: OutputRetention.Enum["head-tail"],
 });
 
-// Grouped Turbo invocations (the lint-policy phases fold hundreds of package tasks and the
-// census-style root tasks into one run) need far more than the single-worker budget; a truncated
-// capture hides the Turbo footer that names the failed task.
 const QUALITY_STEP_OUTPUT_MAX_CHARS = 8 * 1024 * 1024;
 
 /**
  * Output bound for grouped quality steps: `8 * 1024 * 1024` characters, after
  * which the capture keeps a truncation notice naming the cap.
+ *
+ * **Details**
+ *
+ * Grouped Turbo invocations fold hundreds of package tasks and the root census
+ * tasks into one run, so they need far more than the single-worker budget: a
+ * truncated capture would hide the Turbo footer that names the failed task.
  *
  * **Example** (Read the grouped-step character cap)
  *
@@ -339,7 +342,6 @@ type SpawnFields = {
   readonly cwd?: string | undefined;
   readonly env?: Record<string, string | undefined> | undefined;
   readonly extendEnv?: boolean | undefined;
-  /** Escalate child cleanup to `SIGKILL` after this duration. */
   readonly forceKillAfter?: Duration.Input | undefined;
   readonly stdin?: StepStdio | undefined;
 };
@@ -742,26 +744,13 @@ export class CaptureCommandTimedOutError extends S.TaggedError<
   })
 ) {}
 
-/** Grace for inherited-pipe stragglers to close the capture after the child exits, before its process group is reaped. */
+// decision: capture-reaps-child-group-after-exit
 const CAPTURE_DRAIN_GRACE: Duration.Input = "2 seconds";
-/** Grace after the group reap for the kernel to deliver EOF before the capture is declared wedged. */
 const CAPTURE_REAP_GRACE: Duration.Input = "3 seconds";
-/** Grace after forced termination before cleanup detaches from a child whose exit signal was lost. */
 const CAPTURE_FORCE_KILL_REAP_GRACE: Duration.Input = "1 second";
-/** Maximum captured output retained in a timeout diagnostic, independent of the normal capture bound. */
 const CAPTURE_TIMEOUT_TAIL_CHARS = 2_000;
 
-/**
- * Turns a finished capture into its step result, or into a timeout when the deadline had already
- * elapsed. The deadline race interrupts the capture and kills the child, but a child that handles
- * the signal by flushing a summary and exiting zero inside the kill grace can still deliver a
- * complete capture through the interrupted fiber (Lint Policy job 102722219371: Turbo exited 0
- * with 52 of 141 tasks after exactly the 15-minute cap and the step passed). A capture that only
- * ended once the deadline had elapsed is a timeout, whatever the child reported.
- *
- * @param options - The capture, its command line, elapsed time, exit code, timeout and trim flag.
- * @returns The captured step, or `CaptureCommandTimedOutError` when the deadline had elapsed.
- */
+// decision: late-capture-is-a-timeout
 const settleCapturedStep = (options: {
   readonly captured: BoundedOutput;
   readonly commandLine: string;
@@ -831,28 +820,7 @@ const interruptTimedOutCapture = (
  */
 export const settleCapturedStepForTesting = settleCapturedStep;
 
-/**
- * Bounds a capture stream's lifetime to its child process.
- *
- * **Details**
- *
- * A capture completes only at pipe EOF, and EOF requires every inherited copy of the write end to
- * close — not just the direct child. A child that exits successfully gets no process-group cleanup
- * from the spawner (its cleanup is interrupt/nonzero-only), and the child's own success hard-exit
- * can orphan a grandchild that still holds the write end, leaving the fold waiting forever while
- * the lane sits silent (Lint Policy jobs 94646234791 and 95354812245: every policy step logged
- * done, then 29-40 minutes of nothing until job cleanup reaped the wedged wrapper chain). Spawns
- * are detached session leaders, so the CI runner's own `setsid` group reap cannot reach them
- * either. After the child exits, stragglers get a short drain grace; then the child's process
- * group is reaped so the kernel closes surviving write ends and the capture ends with its text
- * intact. A descendant that escaped the group too (double-fork or its own `setsid`) becomes a loud
- * defect naming the command instead of a silent hang. On the normal path the deadline is forked by
- * `Stream.interruptWhen` and interrupted the moment the stream ends — it costs nothing.
- *
- * @param handle - The running child process.
- * @param commandLine - The command line named in the wedged-capture defect.
- * @returns An effect that never succeeds; it dies once the capture outlives the child's group reap.
- */
+// decision: capture-reaps-child-group-after-exit
 const capturePipeDeadline = (
   handle: ChildProcessSpawner.ChildProcessHandle,
   commandLine: string
@@ -1109,9 +1077,6 @@ export type RunCapturedStreamsOptions = SpawnFields & {
   readonly trim?: boolean | undefined;
 };
 
-// Spawns an admitted child with piped stdout and stderr and drains both under
-// the shared pipe deadline: stdout through the caller's collector, stderr into
-// bounded text, alongside the exit code.
 const runPipedChild = <A>(
   options: SpawnFields & { readonly command: string; readonly args: ReadonlyArray<string> },
   collectStdout: (

@@ -76,10 +76,10 @@ export class EcfrConfigInput extends S.Opaque<EcfrConfigInput, { readonly brand:
   S.Struct({
     apiUrl: S.String.pipe(
       S.withConstructorDefault(Effect.succeed(ECFR_API_URL)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(ECFR_API_URL)),
       S.annotateKey({
         description: "Base origin for the eCFR admin, search, and versioner API families.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ECFR_API_URL))
     ),
   }).pipe(
     $I.annoteSchema("EcfrConfigInput", {

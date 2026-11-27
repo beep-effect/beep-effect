@@ -77,8 +77,8 @@ export class ProjectionRequest extends S.Opaque<ProjectionRequest, { readonly br
       .annotateKey({ description: "Cameras, one view each, in order." }),
     withHidden: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
-      S.annotateKey({ description: "Whether to also collect hidden edges. Defaults to false." })
+      S.annotateKey({ description: "Whether to also collect hidden edges. Defaults to false." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     shading: S.OptionFromOptionalKey(ShadingPlan).pipe(
       S.withConstructorDefault(Effect.succeedNone),

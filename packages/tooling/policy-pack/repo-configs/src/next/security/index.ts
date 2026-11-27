@@ -119,22 +119,25 @@ export class SecureHeadersConfigValue extends S.Opaque<SecureHeadersConfigValue,
   S.Struct({
     source: S.String.pipe(
       S.withConstructorDefault(Effect.succeed(defaultHeaderSource)),
+      S.annotateKey({
+        description: "Next.js route source receiving the secure headers.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultHeaderSource))
-    ).annotateKey({
-      description: "Next.js route source receiving the secure headers.",
-    }),
+    ),
     headers: HeaderList.pipe(
       S.withConstructorDefault(Effect.succeed(defaultBeepSecureHeaders)),
+      S.annotateKey({
+        description: "Replacement secure header list.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(defaultBeepSecureHeaders))
-    ).annotateKey({
-      description: "Replacement secure header list.",
-    }),
+    ),
     additionalHeaders: HeaderList.pipe(
       S.withConstructorDefault(Effect.succeed(emptySecureHeaders)),
+      S.annotateKey({
+        description: "Additional secure headers merged with the repo default list.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(emptySecureHeaders))
-    ).annotateKey({
-      description: "Additional secure headers merged with the repo default list.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("SecureHeadersConfigValue", {
       description: "Object form of shared secure-header configuration for the repo Next.js preset.",

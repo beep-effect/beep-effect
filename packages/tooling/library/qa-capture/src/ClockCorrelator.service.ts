@@ -257,10 +257,10 @@ export class CorrelateClockRequest extends S.Opaque<CorrelateClockRequest, { rea
     ),
     beaconEvents: S.Array(BeaconEvent).pipe(
       S.withConstructorDefault(Effect.succeed(correlateClockRequestBeaconEventsDefault)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(correlateClockRequestBeaconEventsDefault)),
       $I.annoteKey("CorrelateClockRequest.beaconEvents", {
         description: "Witness beacon flip events, when a sync beacon ran.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(correlateClockRequestBeaconEventsDefault))
     ),
     beaconRegionSize: S.Int.check(
       S.isGreaterThanOrEqualTo(
@@ -273,10 +273,10 @@ export class CorrelateClockRequest extends S.Opaque<CorrelateClockRequest, { rea
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(128)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(128)),
       $I.annoteKey("CorrelateClockRequest.beaconRegionSize", {
         description: "Square edge length of the top-left probe region in pixels.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(128))
     ),
     probePadSeconds: S.Finite.check(
       S.isGreaterThanOrEqualTo(
@@ -289,17 +289,17 @@ export class CorrelateClockRequest extends S.Opaque<CorrelateClockRequest, { rea
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(2)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(2)),
       $I.annoteKey("CorrelateClockRequest.probePadSeconds", {
         description: "Seconds of padding around the beacon flip span when cutting the probe clip.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2))
     ),
     recordStartEpochMs: S.Option(EpochMilliseconds).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<number>())),
-      S.withDecodingDefaultKey(Effect.succeed(O.none<number>())),
       $I.annoteKey("CorrelateClockRequest.recordStartEpochMs", {
         description: "OBS RecordStateChanged STARTED receipt time, when Lane B recorded.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(O.none<number>()))
     ),
     videoPath: S.String.pipe(
       $I.annoteKey("CorrelateClockRequest.videoPath", {

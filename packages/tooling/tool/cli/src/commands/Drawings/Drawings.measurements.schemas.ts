@@ -152,10 +152,10 @@ export class CriticPdfMeasurements extends S.Opaque<CriticPdfMeasurements, { rea
     }),
     containerDiscovery: StreamCheck.pipe(
       S.withConstructorDefault(Effect.succeed("complete" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("complete" as const)),
       S.annotateKey({
         description: "Raw object/cross-reference container discovery completeness, separate from the inflate check.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("complete" as const))
     ),
     streamCheck: StreamCheck.annotateKey({
       description:

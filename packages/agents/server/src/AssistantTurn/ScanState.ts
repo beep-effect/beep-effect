@@ -39,34 +39,39 @@ export class ScanState extends S.Opaque<ScanState, { readonly brand: unique symb
   S.Struct({
     current: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("")),
+      S.annotateKey({
+        description: "Current JSON object slice being accumulated while scanner depth is positive.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(""))
-    ).annotateKey({
-      description: "Current JSON object slice being accumulated while scanner depth is positive.",
-    }),
+    ),
     depth: NonNegativeScanDepth.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
+      S.annotateKey({
+        description: "Current non-negative JSON nesting depth inside the blocks array.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(0))
-    ).annotateKey({
-      description: "Current non-negative JSON nesting depth inside the blocks array.",
-    }),
+    ),
     escaped: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description: "Whether the previous character was an escape marker inside a JSON string.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({
-      description: "Whether the previous character was an escape marker inside a JSON string.",
-    }),
+    ),
     inBlocksArray: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description: "Whether the scanner has entered the top-level blocks array.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({
-      description: "Whether the scanner has entered the top-level blocks array.",
-    }),
+    ),
     inString: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({
+        description: "Whether the scanner is currently inside a JSON string literal.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ).annotateKey({
-      description: "Whether the scanner is currently inside a JSON string literal.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("ScanState", {
       description: "The carry state of the incremental block extractor between chunks.",

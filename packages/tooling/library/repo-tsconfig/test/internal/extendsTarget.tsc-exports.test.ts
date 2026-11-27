@@ -15,13 +15,9 @@ import { fixtureLayer } from "../support/fixtures.ts";
 import type { FixtureTree } from "../support/fixtures.ts";
 
 interface Row {
-  /** The package-relative file tsc picked, or `Option.none()` for TS6053. */
   readonly expected: O.Option<string>;
-  /** The raw `exports` JSON. */
   readonly exports: string;
-  /** Files (relative to the package) that exist. */
   readonly files: ReadonlyArray<string>;
-  /** The package name, also the specifier unless `spec` overrides it. */
   readonly name: string;
   readonly spec?: string;
 }
@@ -33,7 +29,6 @@ const rows: ReadonlyArray<Row> = [
     files: ["base.json", "tsconfig.json"],
     expected: O.some("tsconfig.json"),
   },
-  // A directory is a miss, even when its name ends in `.json` (#2133).
   {
     name: "directory-condition",
     exports: '{".":{"types":"./directory.json","default":"./tsconfig.json"}}',
@@ -46,7 +41,6 @@ const rows: ReadonlyArray<Row> = [
     files: ["directory.json/child.json", "tsconfig.json"],
     expected: O.some("tsconfig.json"),
   },
-  // The review case and its variants.
   {
     name: "review",
     exports: '{".":{"types":"./index.d.ts","default":"./tsconfig.json"}}',
@@ -153,7 +147,6 @@ const rows: ReadonlyArray<Row> = [
     spec: "exact-key-decides/base",
     expected: O.none(),
   },
-  // A `null` target stops tsc where it stands; it never falls through.
   {
     name: "null-first",
     exports: '{".":{"types":null,"default":"./tsconfig.json"}}',
@@ -197,7 +190,6 @@ const rows: ReadonlyArray<Row> = [
     spec: "null-subpath/base",
     expected: O.none(),
   },
-  // Invalid targets are skipped; tsc keeps walking.
   {
     name: "no-dot-slash",
     exports: '{".":{"types":"other.json","default":"./tsconfig.json"}}',
@@ -234,7 +226,6 @@ const rows: ReadonlyArray<Row> = [
     files: ["tsconfig.json", "a\\..\\other.json"],
     expected: O.some("tsconfig.json"),
   },
-  // A `*` capture with an invalid segment is skipped too.
   {
     name: "capture-dot-dot",
     exports: '{"./*":["./*.json","./tsconfig.json"]}',
@@ -263,7 +254,6 @@ const rows: ReadonlyArray<Row> = [
     spec: "capture-valid/a/x",
     expected: O.some("a/x.json"),
   },
-  // Which `exports` values count as absent.
   { name: "exports-null", exports: "null", files: ["tsconfig.json"], expected: O.some("tsconfig.json") },
   { name: "exports-false", exports: "false", files: ["tsconfig.json"], expected: O.some("tsconfig.json") },
   { name: "exports-empty-string", exports: '""', files: ["tsconfig.json"], expected: O.some("tsconfig.json") },
@@ -307,7 +297,6 @@ describe("extendsTarget exports resolution matches tsc", () => {
     }
   });
 
-  // A near copy under /p/sub/node_modules, a manifest-less far copy under /p/node_modules.
   const ancestorRows: ReadonlyArray<readonly [string, string, string, boolean]> = [
     ["far-after-directory", '{".":"./directory.json"}', "far-after-directory", true],
     ["far-after-fallback-directory", "null", "far-after-fallback-directory", true],

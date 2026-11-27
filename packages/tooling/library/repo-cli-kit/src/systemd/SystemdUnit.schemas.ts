@@ -54,10 +54,6 @@ export const SystemdBunCandidate = LiteralKit([".local/share/mise/shims/bun", ".
  */
 export type SystemdBunCandidate = typeof SystemdBunCandidate.Type;
 
-// systemd parses Exec= arguments with its own quoting and escape rules and
-// substitutes `%` specifiers and `$` variables throughout a unit, so a path
-// carrying any of those characters would render a unit that runs something
-// other than what the operator named.
 const SYSTEMD_UNIT_PATH_PATTERN = /^[^"\\%$\p{Cc}]+$/u;
 
 /**

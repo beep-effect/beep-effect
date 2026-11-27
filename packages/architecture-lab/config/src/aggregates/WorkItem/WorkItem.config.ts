@@ -83,16 +83,18 @@ export class WorkItemServerConfig extends S.Opaque<WorkItemServerConfig, { reado
   S.Struct({
     repositoryName: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("architecture-lab-work-items")),
+      S.annotateKey({
+        description: "Repository name used for architecture lab WorkItem persistence.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("architecture-lab-work-items"))
-    ).annotateKey({
-      description: "Repository name used for architecture lab WorkItem persistence.",
-    }),
+    ),
     migrationSchemaName: WorkItemMigrationSchemaName.pipe(
       S.withConstructorDefault(Effect.succeed("architecture_lab")),
+      S.annotateKey({
+        description: "Database schema name used for architecture lab WorkItem migrations.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("architecture_lab"))
-    ).annotateKey({
-      description: "Database schema name used for architecture lab WorkItem migrations.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("WorkItemServerConfig", {
       title: "WorkItem server config",
@@ -124,10 +126,11 @@ export class WorkItemSecretConfig extends S.Opaque<WorkItemSecretConfig, { reado
   S.Struct({
     connectionName: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("architecture-lab-proof")),
+      S.annotateKey({
+        description: "Secret connection reference name for the WorkItem backing connection.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("architecture-lab-proof"))
-    ).annotateKey({
-      description: "Secret connection reference name for the WorkItem backing connection.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("WorkItemSecretConfig", {
       title: "WorkItem secret config",

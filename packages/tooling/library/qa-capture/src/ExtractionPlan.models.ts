@@ -160,10 +160,10 @@ export class ExtractionRule extends S.Opaque<ExtractionRule, { readonly brand: u
   S.Struct({
     enabled: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
-      S.withDecodingDefaultKey(Effect.succeed(true)),
       $I.annoteKey("ExtractionRule.enabled", {
         description: "Whether the rule participates in planning.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(true))
     ),
     gifFps: S.Finite.check(
       S.isGreaterThan(
@@ -176,10 +176,10 @@ export class ExtractionRule extends S.Opaque<ExtractionRule, { readonly brand: u
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(10)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(10)),
       $I.annoteKey("ExtractionRule.gifFps", {
         description: "GIF frame rate used when the rule renders a GIF.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10))
     ),
     kind: ExtractionRuleKind.pipe(
       $I.annoteKey("ExtractionRule.kind", {
@@ -197,31 +197,31 @@ export class ExtractionRule extends S.Opaque<ExtractionRule, { readonly brand: u
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.minDistancePx", {
         description: "Minimum pointer travel in pixels before the rule fires (drag).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     minDwellMs: DurationMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.minDwellMs", {
         description: "Minimum dwell duration in milliseconds before the rule fires (hover).",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     postRollMs: DurationMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.postRollMs", {
         description: "Milliseconds appended after the triggering span.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     preRollMs: DurationMilliseconds.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       $I.annoteKey("ExtractionRule.preRollMs", {
         description: "Milliseconds prepended before the triggering span.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     priority: ExtractionPriority.pipe(
       $I.annoteKey("ExtractionRule.priority", {
@@ -230,10 +230,10 @@ export class ExtractionRule extends S.Opaque<ExtractionRule, { readonly brand: u
     ),
     renderGif: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false)),
       $I.annoteKey("ExtractionRule.renderGif", {
         description: "Whether the rule renders a GIF over its window.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(false))
     ),
     stripFractions: S.Array(
       S.Finite.check(
@@ -426,10 +426,10 @@ export class ArtifactBudget extends S.Opaque<ArtifactBudget, { readonly brand: u
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(6)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(6)),
       $I.annoteKey("ArtifactBudget.maxGifSeconds", {
         description: "Maximum GIF duration in seconds; longer windows are capped.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(6))
     ),
     maxTotalBytes: S.Int.check(
       S.isGreaterThan(
@@ -442,10 +442,10 @@ export class ArtifactBudget extends S.Opaque<ArtifactBudget, { readonly brand: u
       )
     ).pipe(
       S.withConstructorDefault(Effect.succeed(20971520)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(20971520)),
       $I.annoteKey("ArtifactBudget.maxTotalBytes", {
         description: "Maximum estimated total artifact bytes per round; defaults to 20 MiB.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(20971520))
     ),
   }).pipe(
     $I.annoteSchema("ArtifactBudget", {

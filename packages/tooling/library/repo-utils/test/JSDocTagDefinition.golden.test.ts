@@ -37,8 +37,7 @@ type MakeMember = <const Tag extends TagName, const Def extends typeof JSDocTagD
 ) => MemberSchema;
 type JSDocTagSchema = typeof JSDocTag;
 
-// Reuse captured wire values: native Arbitrary seeds do not reproduce fast-check samples.
-const sampleMember = (tag: TagName) => golden[tag].roundTrip;
+const capturedRoundTripSample = (tag: TagName) => golden[tag].roundTrip;
 
 const fingerprint = Effect.fnUntraced(function* (schema: MemberSchema, sample: unknown) {
   const metadata = pipe(getJSDocTagMetadata(schema), O.getOrThrow);
@@ -62,7 +61,7 @@ const fingerprints = Effect.fnUntraced(function* (implementation: MakeMember, js
         const { _tag: _, ...meta } = yield* encodeJSDocTagDefinition(definition);
         const schema = implementation(tag, meta);
 
-        return [tag, yield* fingerprint(schema, sampleMember(tag))] as const;
+        return [tag, yield* fingerprint(schema, capturedRoundTripSample(tag))] as const;
       }),
     { concurrency: 1 }
   );

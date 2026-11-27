@@ -90,9 +90,9 @@ export class DependencyResolutionError extends S.TaggedError<
      * @since 0.0.0
      */
     reason: S.Literals(["mechanism", "no-version"]).pipe(
+      $I.annoteKey("DependencyResolutionError.reason", { description: "Why the specifier could not be resolved." }),
       S.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
-      S.withConstructorDefault(Effect.succeed("mechanism" as const)),
-      $I.annoteKey("DependencyResolutionError.reason", { description: "Why the specifier could not be resolved." })
+      S.withConstructorDefault(Effect.succeed("mechanism" as const))
     ),
     cause: S.Defect({ includeStack: true }).pipe(
       $I.annoteKey("DependencyResolutionError.cause", {

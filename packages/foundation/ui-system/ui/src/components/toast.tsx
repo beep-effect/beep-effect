@@ -147,10 +147,10 @@ export class ToastData extends S.Opaque<ToastData, { readonly brand: unique symb
     variant: ToastVariant.pipe(
       S.optionalKey,
       S.withConstructorDefault(Effect.succeed(ToastVariant.Enum.default)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(ToastVariant.Enum.default)),
       $I.annoteKey("ToastData.variant", {
         description: "Visual variant carried by toast notification data.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ToastVariant.Enum.default))
     ),
   }).pipe(
     $I.annoteSchema("ToastData", {

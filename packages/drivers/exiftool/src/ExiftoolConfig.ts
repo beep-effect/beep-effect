@@ -291,24 +291,24 @@ export class RenderBeepQaConfigOptions extends S.Opaque<RenderBeepQaConfigOption
   S.Struct({
     namespacePrefix: XmpNamespacePrefix.pipe(
       S.withConstructorDefault(Effect.succeed(BEEP_QA_XMP_NAMESPACE_PREFIX)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(BEEP_QA_XMP_NAMESPACE_PREFIX)),
       $I.annoteKey("RenderBeepQaConfigOptions.namespacePrefix", {
         description: "XMP namespace prefix registered by the rendered config.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BEEP_QA_XMP_NAMESPACE_PREFIX))
     ),
     namespaceUri: XmpNamespaceUri.pipe(
       S.withConstructorDefault(Effect.succeed(BEEP_QA_XMP_NAMESPACE_URI)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(BEEP_QA_XMP_NAMESPACE_URI)),
       $I.annoteKey("RenderBeepQaConfigOptions.namespaceUri", {
         description: "XMP namespace URI registered by the rendered config.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BEEP_QA_XMP_NAMESPACE_URI))
     ),
     propertyNames: S.Array(XmpPropertyName).pipe(
       S.withConstructorDefault(Effect.succeed(BeepQaTagName.literals)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(BeepQaTagName.literals)),
       $I.annoteKey("RenderBeepQaConfigOptions.propertyNames", {
         description: "String-writable property names declared inside the namespace.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BeepQaTagName.literals))
     ),
   }).pipe(
     $I.annoteSchema("RenderBeepQaConfigOptions", {

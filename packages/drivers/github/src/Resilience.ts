@@ -171,11 +171,11 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot, { readonly bra
     ),
     /** The bucket the request counted against (`x-ratelimit-resource`); `unknown` when absent or unrecognised. */
     resource: GitHubRateLimitResource.pipe(
-      S.withDecodingDefaultKey(Effect.succeed(GitHubRateLimitResource.Enum.unknown)),
-      S.withConstructorDefault(Effect.succeed(GitHubRateLimitResource.Enum.unknown)),
       $I.annoteKey("RateLimitSnapshot.resource", {
         description: "The bucket the request counted against; unknown when absent or unrecognised.",
-      })
+      }),
+      S.withDecodingDefaultKey(Effect.succeed(GitHubRateLimitResource.Enum.unknown)),
+      S.withConstructorDefault(Effect.succeed(GitHubRateLimitResource.Enum.unknown))
     ),
     /** Requests used in the current window (`x-ratelimit-used`); none when the response omitted it. */
     used: S.Int.pipe(

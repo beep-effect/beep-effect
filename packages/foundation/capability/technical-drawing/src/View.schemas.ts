@@ -289,37 +289,37 @@ export class CameraForViewInput extends S.Opaque<CameraForViewInput, { readonly 
     box: BoundingBox.annotateKey({ description: "Bounding box of the model." }),
     projection: PictorialProjection.pipe(
       S.withConstructorDefault(Effect.succeed("perspective" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("perspective" as const)),
-      S.annotateKey({ description: "Projection of a pictorial view; ignored by plans and elevations." })
+      S.annotateKey({ description: "Projection of a pictorial view; ignored by plans and elevations." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("perspective" as const))
     ),
     azimuthDeg: S.Option(S.Finite).pipe(
       S.withConstructorDefault(Effect.succeedNone),
-      S.withDecodingDefaultTypeKey(Effect.succeedNone),
       S.annotateKey({
         description:
           "Pictorial azimuth in degrees from the front toward the left. None keeps the original perspective eye (about 39.8°), or 45° for an isometric or two-point pictorial.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeedNone)
     ),
     elevationDeg: S.Option(PictorialElevationDeg).pipe(
       S.withConstructorDefault(Effect.succeedNone),
-      S.withDecodingDefaultTypeKey(Effect.succeedNone),
       S.annotateKey({
         description:
           "Pictorial sight angle in degrees. An isometric looks down (up) at the model at it, within (0, 90); none keeps the isometric elevation, about 35.264°. A two-point eye sees the near top (bottom) corner of the bounding box at it, not any face of the article, within (0, 30]; none keeps 20°. A perspective ignores it.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeedNone)
     ),
     focusDiagonals: S.Option(PictorialFocusDiagonals).pipe(
       S.withConstructorDefault(Effect.succeedNone),
-      S.withDecodingDefaultTypeKey(Effect.succeedNone),
       S.annotateKey({
         description:
           "Eye distance of a converging (perspective or two-point) pictorial in box diagonals, at least 1. None keeps 2.5. An isometric ignores it.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeedNone)
     ),
     planFacing: ElevationView.pipe(
       S.withConstructorDefault(Effect.succeed("front" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("front" as const)),
-      S.annotateKey({ description: "Elevation whose viewer stands at the page bottom of both plans." })
+      S.annotateKey({ description: "Elevation whose viewer stands at the page bottom of both plans." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("front" as const))
     ),
   })
     .check(
@@ -505,11 +505,11 @@ export class FigureSpec extends S.Opaque<FigureSpec, { readonly brand: unique sy
     ).annotateKey({ description: "Description sentence for the figure, without the leading `FIG. n`." }),
     projection: PictorialProjection.pipe(
       S.withConstructorDefault(Effect.succeed("perspective" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("perspective" as const)),
       S.annotateKey({
         description:
           "Projection of a pictorial (`top-perspective` / `bottom-perspective`) figure. Defaults to `perspective`; plans and elevations accept only the default.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("perspective" as const))
     ),
   }).pipe(
     $I.annoteSchema("FigureSpec", {
@@ -692,8 +692,8 @@ export class FigureSetSpec extends S.Opaque<FigureSetSpec, { readonly brand: uni
       .annotateKey({ description: "Figures in FIG. 1..n order." }),
     omissions: S.Array(OmissionClaim).pipe(
       S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([])),
-      S.annotateKey({ description: "Views left out with a typed, render-proven reason." })
+      S.annotateKey({ description: "Views left out with a typed, render-proven reason." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
     approver: S.OptionFromOptionalKey(EmailString).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -744,11 +744,11 @@ export class FigureSetSpec extends S.Opaque<FigureSetSpec, { readonly brand: uni
     ),
     planFacing: ElevationView.pipe(
       S.withConstructorDefault(Effect.succeed("front" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("front" as const)),
       S.annotateKey({
         description:
           "Elevation whose viewer stands at the page bottom of both plans (plan up = −eye of that elevation). Defaults to `front`.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("front" as const))
     ),
     sheet: S.OptionFromOptionalKey(SheetOptions).pipe(
       S.withConstructorDefault(Effect.succeedNone),

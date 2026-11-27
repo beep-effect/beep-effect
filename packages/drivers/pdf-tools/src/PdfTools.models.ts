@@ -293,13 +293,13 @@ export class SvgToPdfRequest extends S.Opaque<SvgToPdfRequest, { readonly brand:
     outputPath: S.NonEmptyString.annotateKey({ description: "Destination PDF path; overwritten." }),
     pdfVersion: PdfVersion.pipe(
       S.withConstructorDefault(Effect.succeed("1.6" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("1.6" as const)),
-      S.annotateKey({ description: "PDF version to emit. Defaults to 1.6." })
+      S.annotateKey({ description: "PDF version to emit. Defaults to 1.6." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("1.6" as const))
     ),
     sourceDateEpoch: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
-      S.annotateKey({ description: "Unix seconds used for the PDF creation date. Defaults to 0." })
+      S.annotateKey({ description: "Unix seconds used for the PDF creation date. Defaults to 0." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0))
     ),
     fonts: S.OptionFromOptionalKey(PinnedFonts).pipe(
       S.withConstructorDefault(Effect.succeedNone),
@@ -536,11 +536,11 @@ export class PdfStructure extends S.Opaque<PdfStructure, { readonly brand: uniqu
     ),
     containerDiscovery: S.Literals(["complete", "limit-reached", "encrypted"]).pipe(
       S.withConstructorDefault(Effect.succeed("complete" as const)),
-      S.withDecodingDefaultTypeKey(Effect.succeed("complete" as const)),
       S.annotateKey({
         description:
           "Whether raw object/cross-reference container discovery completed, stopped at its candidate budget, or was skipped for encryption. Global stream inspection is complete only when this and streamCheck are complete.",
-      })
+      }),
+      S.withDecodingDefaultTypeKey(Effect.succeed("complete" as const))
     ),
     streamCheck: StreamCheck.pipe(
       S.withConstructorDefault(Effect.succeed("complete" as const)),
@@ -585,8 +585,8 @@ export class RasterRequest extends S.Opaque<RasterRequest, { readonly brand: uni
     antiAlias: S.Boolean.annotateKey({ description: "Whether to anti-alias text and vectors." }),
     blackThreshold: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(128)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(128)),
-      S.annotateKey({ description: "Luminance below which a pixel counts as ink (0–255). Defaults to 128." })
+      S.annotateKey({ description: "Luminance below which a pixel counts as ink (0–255). Defaults to 128." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(128))
     ),
   }).pipe(
     $I.annoteSchema("RasterRequest", {

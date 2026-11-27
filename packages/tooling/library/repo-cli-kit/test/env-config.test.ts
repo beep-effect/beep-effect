@@ -1,12 +1,6 @@
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 
-// Effect's default ConfigProvider snapshots the ambient environment once, at
-// the first config read in this (isolated) test file. Set the values the
-// synchronous readers observe before any test triggers that first read.
-// `Bun.env` is the same live object the default `ConfigProvider.fromEnv()`
-// reads, so seeding it here preserves the snapshot behaviour these readers rely
-// on without touching `process.env` directly.
 Bun.env.BEEP_SI_STR = "value";
 Bun.env.BEEP_SI_INT_POS = "42";
 Bun.env.BEEP_SI_INT_NEG = "-5";
@@ -115,8 +109,6 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
       expect(Str.includes('"b": 2')(next)).toBe(true);
     });
 
-    // Parity pins: the bytes jsonc-parser 3.3.1 `modify` + `applyEdits` produced for the same
-    // requests before R3b moved the facade onto @beep/jsonc.
     it("appends, deletes and creates exactly as jsonc-parser did", () => {
       const source = '{\n  "workspaces": ["a"], // keep\n  "b": {}\n}\n';
       expect(
@@ -133,7 +125,9 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     });
   });
 
-  describe("EnvConfig readers", { concurrent: false }, () => {
+  describe("EnvConfig readers over Bun.env values seeded before the first config read snapshots the environment", {
+    concurrent: false,
+  }, () => {
     const UNSET = "BEEP_SI_DEFINITELY_UNSET";
 
     it("configStringOptionSync reads present and absent snapshot values", () => {
@@ -354,10 +348,9 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
     );
   });
 
-  // Every classification arm is reachable from an explicit record, so the
-  // file's measured coverage no longer depends on which Turbo posture the host
-  // process happens to carry (ship-velocity B9).
-  describe("readTurboCacheEnvironment", { concurrent: false }, () => {
+  describe("readTurboCacheEnvironment over explicit records, whatever Turbo posture the host carries", {
+    concurrent: false,
+  }, () => {
     const REMOTE_READ = "local:rw,remote:r";
 
     it("classifies literal values and unresolved references per name", () => {
@@ -406,7 +399,6 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
   });
 
   describe("canUseTurboCacheSecretSession", { concurrent: false }, () => {
-    // The nth spawn takes the nth reply (the last one repeats); the spawn is recorded before the script runs.
     const sessionWith = Effect.fn("sessionWith")(function* (
       env: Record<string, string>,
       replies: ReadonlyArray<ScriptResult.Encoded>
@@ -469,8 +461,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
 
     it.effect("does not open a secret session for literal credentials, local-only Turbo or other commands", () =>
       Effect.gen(function* () {
-        // Own double: a never-spawn guard dies on any spawn; ScriptedSpawner has no defect outcome.
-        const spawner = ChildProcessSpawner.make(() => Effect.die("an unnecessary secret session was opened"));
+        const neverSpawnGuard = ChildProcessSpawner.make(() => Effect.die("an unnecessary secret session was opened"));
         for (const step of [
           QualityTaskStep.make({ label: "git", command: "git", args: ["status"], cwd: "/repo" }),
           QualityTaskStep.make({
@@ -491,7 +482,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
             TURBO_TOKEN: "fixture-literal",
             TURBO_TEAM: "fixture",
             TURBO_CACHE: "local:rw,remote:r",
-          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+          }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, neverSpawnGuard));
           expect(resolved13).toBe(step);
         }
       })
@@ -577,11 +568,11 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           exists: () => Effect.succeed(true),
           readFileString: () => Effect.succeed(envFileFixture),
         });
-        // The spawn is recorded before the script runs, so the last record carries this child's environment.
+        const thisChildSpawn = () => A.last(spawner.spawns);
         const spawner: ScriptedSpawner = ScriptedSpawner.make((_command, args) => ({
           exit:
             A.some(args, Str.startsWith("--env-file=")) ||
-            O.exists(A.last(spawner.spawns), (spawn) => spawn.env?.STALE_DATABASE_URL === staleReference)
+            O.exists(thisChildSpawn(), (spawn) => spawn.env?.STALE_DATABASE_URL === staleReference)
               ? 1
               : 0,
         }));
@@ -704,9 +695,9 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
           TURBO_TEAM: "fixture-team",
           TURBO_CACHE: TurboCacheMode.Enum["local:rw,remote:r"],
         };
-        // The spawn is recorded before the script runs, so the last record carries this child's environment.
+        const thisChildSpawn = () => A.last(spawner.spawns);
         const spawner: ScriptedSpawner = ScriptedSpawner.make(() => ({
-          exit: O.exists(A.last(spawner.spawns), (spawn) => spawn.env?.TURBO_TOKEN === brokenReference) ? 1 : 0,
+          exit: O.exists(thisChildSpawn(), (spawn) => spawn.env?.TURBO_TOKEN === brokenReference) ? 1 : 0,
         }));
 
         clearTurboCacheSecretSessionVerdictsForTesting();

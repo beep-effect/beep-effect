@@ -10,15 +10,13 @@ import { ApplicableTo } from "./ApplicableTo.model.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/HasJSDocApplicableToMapEntry.model");
 
-/**
- * One mapping row from a TypeScript `HasJSDoc` member name to an
- * `ApplicableTo` classification.
- *
- * @category models
- * @since 0.0.0
- */
 const fields = { member: S.String } as const;
 /**
+ * **Details**
+ *
+ * The members mirror `ApplicableTo`, whose Details say what `parameter`,
+ * `module`, `file` and `any` cover.
+ *
  * **Example** (Make applicable map entry)
  *
  * ```ts
@@ -48,7 +46,7 @@ export const HasJSDocApplicableToMapEntry = ApplicableTo.toTaggedUnion("applicab
   property: fields,
   accessor: fields,
   constructor: fields,
-  parameter: fields, // nested within @callback/@typedef
+  parameter: fields,
   signature: fields,
   indexSignature: fields,
   typeParameter: fields,
@@ -57,12 +55,12 @@ export const HasJSDocApplicableToMapEntry = ApplicableTo.toTaggedUnion("applicab
   identifier: fields,
   statement: fields,
   expression: fields,
-  module: fields, // ES module or CJS module
+  module: fields,
   namespace: fields,
-  file: fields, // file-level comment
+  file: fields,
   event: fields,
   mixin: fields,
-  any: fields, // can attach to anything
+  any: fields,
 }).pipe(
   $I.annoteSchema("HasJSDocApplicableToMapEntry", {
     description: "One mapping row from a TypeScript `HasJSDoc` member name to an `ApplicableTo` classification.",

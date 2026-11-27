@@ -138,31 +138,36 @@ export class PhoenixContainerConfig extends S.Opaque<PhoenixContainerConfig, { r
     image: PinnedImage.annotateKey({ description: "Pinned Phoenix image; refresh deliberately when upgrading." }),
     containerName: DockerName.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics-phoenix")),
+      S.annotateKey({ description: "Container name; the Compose file used the same one." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics-phoenix"))
-    ).annotateKey({ description: "Container name; the Compose file used the same one." }),
+    ),
     networkName: DockerName.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics")),
+      S.annotateKey({ description: "Bridge network the stack owns for Phoenix and later sibling services." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics"))
-    ).annotateKey({ description: "Bridge network the stack owns for Phoenix and later sibling services." }),
+    ),
     dataVolume: S.OptionFromOptionalKey(DockerName).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description:
         "Existing named volume holding Phoenix data, looked up and never created or removed. Unset, it is Compose's name for the `phoenix_data` volume of `legacyCompose.composeProject`: `<composeProject>_phoenix_data`.",
     }),
     dataDir: AbsolutePosixPath.pipe(
       S.withConstructorDefault(Effect.succeed("/data")),
+      S.annotateKey({ description: "PHOENIX_WORKING_DIR inside the container, where the volume mounts." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("/data"))
-    ).annotateKey({ description: "PHOENIX_WORKING_DIR inside the container, where the volume mounts." }),
+    ),
     port: TcpPort.pipe(
       S.withConstructorDefault(Effect.succeed(6006)),
+      S.annotateKey({ description: "Phoenix HTTP port, published on host loopback only." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(6006))
-    ).annotateKey({ description: "Phoenix HTTP port, published on host loopback only." }),
+    ),
     rehearsalPort: TcpPort.pipe(
       S.withConstructorDefault(Effect.succeed(16006)),
+      S.annotateKey({
+        description:
+          "Host loopback port a rehearsal stage publishes its throwaway Phoenix on. One rehearsal at a time per port: set a different port to run two.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(16006))
-    ).annotateKey({
-      description:
-        "Host loopback port a rehearsal stage publishes its throwaway Phoenix on. One rehearsal at a time per port: set a different port to run two.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("PhoenixContainerConfig", {
       description: "The Phoenix container, its network and its data volume.",
@@ -187,8 +192,9 @@ export class TailnetServeConfig extends S.Opaque<TailnetServeConfig, { readonly 
     fqdn: S.NonEmptyString.annotateKey({ description: "The host's tailnet FQDN." }),
     httpsPort: TcpPort.pipe(
       S.withConstructorDefault(Effect.succeed(8447)),
+      S.annotateKey({ description: "Dedicated Tailscale Serve HTTPS port for Phoenix." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(8447))
-    ).annotateKey({ description: "Dedicated Tailscale Serve HTTPS port for Phoenix." }),
+    ),
   }).pipe($I.annoteSchema("TailnetServeConfig", { description: "The Tailscale Serve HTTPS front for Phoenix." }))
 ) {}
 
@@ -213,15 +219,17 @@ export class LegacyComposeConfig extends S.Opaque<LegacyComposeConfig, { readonl
     }),
     unitName: S.NonEmptyString.pipe(
       S.withConstructorDefault(Effect.succeed("ai-metrics-phoenix.service")),
+      S.annotateKey({ description: "The `systemd --user` unit that runs `docker compose up`." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("ai-metrics-phoenix.service"))
-    ).annotateKey({ description: "The `systemd --user` unit that runs `docker compose up`." }),
+    ),
     composeProject: DockerName.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics-dankserver")),
+      S.annotateKey({
+        description:
+          "Compose project the legacy container and data volume carry. RetireCompose compares the container's `com.docker.compose.project` label with it, and the data volume name defaults from it.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics-dankserver"))
-    ).annotateKey({
-      description:
-        "Compose project the legacy container and data volume carry. RetireCompose compares the container's `com.docker.compose.project` label with it, and the data volume name defaults from it.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("LegacyComposeConfig", { description: "The Compose and systemd deployment retired at cutover." })
   )
@@ -290,8 +298,9 @@ export class AiMetricsHostConfig extends S.Opaque<AiMetricsHostConfig, { readonl
     }),
     dockerContextName: DockerName.pipe(
       S.withConstructorDefault(Effect.succeed("beep-ai-metrics")),
+      S.annotateKey({ description: "Docker CLI context the stack creates on the deploying workstation." }),
       S.withDecodingDefaultTypeKey(Effect.succeed("beep-ai-metrics"))
-    ).annotateKey({ description: "Docker CLI context the stack creates on the deploying workstation." }),
+    ),
     phoenix: PhoenixContainerConfig,
     tailnet: TailnetServeConfig,
     legacyCompose: LegacyComposeConfig,

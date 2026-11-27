@@ -285,15 +285,17 @@ export class OutboxHandlerSettings extends S.Opaque<OutboxHandlerSettings, { rea
     }),
     maxAttachments: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENTS)),
+      S.annotateKey({ description: "Largest number of stored attachments a read or send will download." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENTS))
-    ).annotateKey({ description: "Largest number of stored attachments a read or send will download." }),
+    ),
     maxMessageAttachmentBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES)),
+      S.annotateKey({
+        description:
+          "Per-message attachment byte limit. A draft whose attachments Graph reports as more than twice this is not downloaded.",
+      }),
       S.withDecodingDefaultTypeKey(Effect.succeed(OUTBOX_DEFAULT_MAX_ATTACHMENT_BYTES))
-    ).annotateKey({
-      description:
-        "Per-message attachment byte limit. A draft whose attachments Graph reports as more than twice this is not downloaded.",
-    }),
+    ),
   }).pipe(
     $I.annoteSchema("OutboxHandlerSettings", {
       description: "The mailbox and download limits the outbox tool handlers are bound to.",

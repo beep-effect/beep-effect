@@ -154,7 +154,6 @@ const makeStrictStringKeyRecord = <Value extends S.Top>(
     S.makeFilter<S.Record.Type<typeof S.String, Value>>((record) =>
       pipe(
         R.keys(record),
-        // Report one invalid key per decode; callers use the path as the JSON pointer anchor.
         A.findFirst((key) => !keyGuard(key)),
         O.match({
           onNone: () => undefined,
@@ -222,11 +221,9 @@ export const toSortedRecord = (map: HashMap.HashMap<string, string>): R.Readonly
   );
 
 const recordToSortedHashMap = {
-  // An absent map decodes to an empty `HashMap`, the kit's `DependencyMapField` default.
   decode: SchemaGetter.transformOptional((record: O.Option<{ readonly [key: string]: string }>) =>
     record.pipe(O.getOrElse(R.empty<string, string>), R.toEntries, HashMap.fromIterable, O.some)
   ),
-  // An empty map encodes to an absent key, so encoding never invents `{}`; keys are emitted in sorted order.
   encode: SchemaGetter.transformOptional((map: O.Option<HashMap.HashMap<string, string>>) =>
     pipe(
       map,
@@ -236,9 +233,7 @@ const recordToSortedHashMap = {
   ),
 };
 
-// The decoded HashMap carries the same key and value checks as the encoded record, so derived arbitraries and
-// `S.is` guards agree with what the record admits.
-const makeHashMapField = <
+const recordCheckedMap = <
   Record extends S.Codec<{ readonly [key: string]: string }>,
   Key extends S.Codec<string>,
   Value extends S.Codec<string>,
@@ -252,7 +247,7 @@ const makeHashMapField = <
     S.withConstructorDefault(Effect.succeed(HashMap.empty<string, string>()))
   );
 
-const RepoDependencyMapField = makeHashMapField(RepoDependencyRecord, RepoPackageName, NonEmptyStringValue).pipe(
+const RepoDependencyMapField = recordCheckedMap(RepoDependencyRecord, RepoPackageName, NonEmptyStringValue).pipe(
   $I.annoteSchema("RepoDependencyMapField", {
     title: "Repo Dependency Map Field",
     description:
@@ -260,7 +255,7 @@ const RepoDependencyMapField = makeHashMapField(RepoDependencyRecord, RepoPackag
   })
 );
 
-const NonEmptyStringMapField = makeHashMapField(NonEmptyStringRecord, NonEmptyStringValue, NonEmptyStringValue).pipe(
+const NonEmptyStringMapField = recordCheckedMap(NonEmptyStringRecord, NonEmptyStringValue, NonEmptyStringValue).pipe(
   $I.annoteSchema("NonEmptyStringMapField", {
     title: "Non Empty String Map Field",
     description:
@@ -645,8 +640,6 @@ export const PublishConfig = S.StructWithRest(PublishConfigBase, [S.Record(S.Str
   })
 );
 
-// `PackageManifest` keeps unknown top-level keys in `rest`; the repo model is closed, so a literal `rest` key is
-// rejected at `/rest` like any other unexpected key.
 const ClosedRest = S.Never.pipe(
   $I.annoteSchema("ClosedRest", {
     title: "Closed Rest",
@@ -657,8 +650,6 @@ const ClosedRest = S.Never.pipe(
 
 const RawPackageJson = S.Record(S.String, S.Unknown);
 
-// The repo model's wire codec: keys outside the declared fields are gathered into `rest`, which `ClosedRest` rejects
-// with the unexpected-key message, so the codec is strict without parse options and decodes to the class itself.
 const makeClosedWire = <Self>(
   Class: S.Codec<Self, unknown> & { readonly fields: Readonly<Record<string, unknown>> }
 ): S.Codec<Self, { readonly [k: string]: unknown }> => {

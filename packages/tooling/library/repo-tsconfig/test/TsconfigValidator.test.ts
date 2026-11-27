@@ -16,7 +16,6 @@ import { fixtureLayer, tree } from "./support/fixtures.ts";
 const propertyNames = (ast: SchemaAST.AST): ReadonlyArray<PropertyKey> =>
   SchemaAST.isObjects(ast) ? A.map(ast.propertySignatures, (signature) => signature.name) : [];
 
-/** The strict failure's message, or the success marker, for one in-memory document. */
 const verdict = (input: unknown) =>
   TsconfigValidator.validate(input).pipe(
     Effect.match({ onFailure: (error) => error.message, onSuccess: () => "accept" })
@@ -78,9 +77,12 @@ describe("TsconfigValidator in memory", () => {
       ]);
       strictEqual(document.watchOptions?.watchFile, "usefsevents");
       assert.deepStrictEqual(document.references, [{ path: "./packages/a" }, { path: "./packages/b" }]);
-      // Encoding gives the on-disk shape with the canonical spelling.
       const encoded = yield* S.encodeEffect(StrictTsconfig)(document);
-      strictEqual(encoded.compilerOptions?.target, "es2022");
+      strictEqual(
+        encoded.compilerOptions?.target,
+        "es2022",
+        "encoding gives the on-disk shape with the canonical spelling"
+      );
       assert.deepStrictEqual(encoded.files, ["src/index.ts"]);
     })
   );
@@ -152,12 +154,10 @@ describe("TsconfigValidator in memory", () => {
         const verdict3 = yield* verdict({ compilerOptions: { allowImportingTsExtensions: true, [enabler]: true } });
         strictEqual(verdict3, "accept");
       }
-      // Inverted from the legacy repo-utils model, which also demanded moduleResolution=bundler; tsc
-      // 7 does not (tsc-probe A in the 3-A6 parity note), so a nodenext noEmit config is accepted.
       const verdict4 = yield* verdict({
         compilerOptions: { allowImportingTsExtensions: true, moduleResolution: "NodeNext", noEmit: true },
       });
-      strictEqual(verdict4, "accept");
+      strictEqual(verdict4, "accept", "tsc 7 accepts a nodenext noEmit config: moduleResolution need not be bundler");
     })
   );
 
@@ -183,8 +183,6 @@ describe("TsconfigValidator in memory", () => {
     })
   );
 
-  // Verdict shifts from the legacy repo-utils model (3-A6), each inverted here and classified by
-  // goals/effected-promotion/ops/tsconfig-validator-parity.ts.
   describe("shifts from the legacy strict model", () => {
     it.effect("rejects null where the legacy model collapsed it to Option.none", () =>
       Effect.gen(function* () {
@@ -270,8 +268,11 @@ layer(
       const document = yield* TsconfigValidator.load("/proj/tsconfig.json");
       assert.deepStrictEqual(document, { extends: "./base.json", compilerOptions: { strict: true, outDir: "out" } });
       const options = yield* TsconfigValidator.compilerOptions("/proj/tsconfig.json");
-      // tsc semantics: inherited options merged, path options absolute.
-      assert.deepStrictEqual(options, { target: "es2022", module: "nodenext", strict: true, outDir: "/proj/out" });
+      assert.deepStrictEqual(
+        options,
+        { target: "es2022", module: "nodenext", strict: true, outDir: "/proj/out" },
+        "tsc semantics: inherited options merged, path options absolute"
+      );
     })
   );
 
