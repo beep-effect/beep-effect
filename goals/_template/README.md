@@ -15,7 +15,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 Use this command for execution-capable sessions:
 
 ```text
-/goal follow the instructions in goals/<slug>/GOAL.md
+/goal follow the instructions in goals/<slug>/GOAL.md, or stop when the only work left is a step the packet names as Benjamin's
 ```
 
 `GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.

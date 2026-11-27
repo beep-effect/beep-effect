@@ -93,7 +93,7 @@ snapshot is a no-op.
 ## 3. Execute
 
 ```
-/goal follow the instructions in goals/<slug>/GOAL.md
+/goal follow the instructions in goals/<slug>/GOAL.md, or stop when the only work left is a step the packet names as Benjamin's, or stop when the only work left is a step the packet names as Benjamin's
 ```
 
 The packet arrives at the **P1 capture → P2 validate** boundary. Every finding
