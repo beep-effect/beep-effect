@@ -49,12 +49,7 @@ import { overSsh, shellQuote } from "./internal/Shell.ts";
  */
 export const aiMetricsStackName = "HostsAiMetrics";
 
-/**
- * Memo scope for host steps: hash no files. A step re-runs only when its
- * rendered command or environment changes, never because a file in the
- * deploying checkout changed.
- */
-const commandOnlyMemo = { include: [], exclude: ["**"] };
+const hashNoFilesMemo = { include: [], exclude: ["**"] };
 
 const shell = "/bin/sh";
 
@@ -158,8 +153,6 @@ export const renderPreflightCommand = ({
           `peer_network=${shellQuote(phoenixPeerNetwork(config))}`,
           'docker network inspect "${peer_network}" >/dev/null || { printf \'peer network %s, which the OTLP collector reaches Phoenix on, is missing; refusing\\n\' "${peer_network}" >&2; exit 1; }',
         ],
-        // One rehearsal at a time per port on the engine: the port must be free
-        // or already published by this stage's own container.
         rehearsal: () => [
           `port=${shellQuote(String(config.phoenix.rehearsalPort))}`,
           `own=${shellQuote(containerName)}`,
@@ -334,8 +327,6 @@ export const renderHealthCommand = ({
       "  fi",
       "  sleep 5",
       "done",
-      // The port must be published by this stage's own container, so the curl
-      // below cannot be answered by another stage's Phoenix.
       `published=${shellQuote(`127.0.0.1:${hostPort}`)}`,
       `docker port "\${container}" ${shellQuote(`${config.phoenix.port}/tcp`)} | grep -Fqx "\${published}" || { printf 'port %s is not published by container %s; refusing to trust its answer\\n' "\${published}" "\${container}" >&2; exit 1; }`,
       `curl -fsS ${shellQuote(`http://127.0.0.1:${hostPort}`)} >/dev/null`,
@@ -453,12 +444,12 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
       kind: HostsStageKind.Enum.prod,
     }),
     shell,
-    memo: commandOnlyMemo,
+    memo: hashNoFilesMemo,
   });
   const retire = yield* Command.Exec("RetireCompose", {
     command: renderRetireComposeCommand(config),
     shell,
-    memo: commandOnlyMemo,
+    memo: hashNoFilesMemo,
     env: { BEEP_HOSTS_AFTER: preflight.hash.input },
   });
   const network = yield* Docker.Network("Network", {
@@ -483,7 +474,7 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
   const serve = yield* Command.Exec("TailscaleServe", {
     command: renderTailscaleServeCommand(config),
     shell,
-    memo: commandOnlyMemo,
+    memo: hashNoFilesMemo,
     env: { BEEP_HOSTS_PHOENIX: phoenix.name },
   });
   yield* Command.Exec("Health", {
@@ -494,7 +485,7 @@ const deployProd = Effect.fn("AiMetricsStack.deployProd")(function* (config: AiM
       kind: HostsStageKind.Enum.prod,
     }),
     shell,
-    memo: commandOnlyMemo,
+    memo: hashNoFilesMemo,
     env: { BEEP_HOSTS_PHOENIX_ID: phoenix.id, BEEP_HOSTS_AFTER: serve.hash.input },
   });
   return { containerName: config.phoenix.containerName, phoenixUrl: phoenixPublicUrl(config) };
@@ -514,7 +505,7 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
   const preflight = yield* Command.Exec("Preflight", {
     command: renderPreflightCommand({ config, containerName, kind: HostsStageKind.Enum.rehearsal }),
     shell,
-    memo: commandOnlyMemo,
+    memo: hashNoFilesMemo,
   });
   const network = yield* Docker.Network("Network", {
     context,
@@ -543,7 +534,7 @@ const deployRehearsal = Effect.fn("AiMetricsStack.deployRehearsal")(function* (
       kind: HostsStageKind.Enum.rehearsal,
     }),
     shell,
-    memo: commandOnlyMemo,
+    memo: hashNoFilesMemo,
     env: { BEEP_HOSTS_PHOENIX_ID: phoenix.id },
   });
   return { containerName, phoenixUrl: `http://127.0.0.1:${config.phoenix.rehearsalPort}` };

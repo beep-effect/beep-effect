@@ -90,19 +90,22 @@ describe("CiRunners plan check", () => {
   it.effect("fails closed on a line it cannot read", () =>
     Effect.sync(() => {
       expect(reasons(planOf("Plan: 1 to create", "[Vpc] create", "something unexpected"))).toEqual(["UnreadableLine"]);
-      // The unreadable row also leaves the summary's create unaccounted for.
-      expect(reasons(planOf("Plan: 1 to create", "[Vpc] recreate"))).toEqual(["UnreadableLine", "IncompletePlan"]);
+      expect(
+        reasons(planOf("Plan: 1 to create", "[Vpc] recreate")),
+        "the unreadable row also leaves the summary's create unaccounted for"
+      ).toEqual(["UnreadableLine", "IncompletePlan"]);
     })
   );
 
   it.effect("refuses a log whose rows do not account for the summary counts", () =>
     Effect.sync(() => {
       expect(reasons(planOf("Plan: 1 to delete"))).toEqual(["IncompletePlan"]);
-      // A log that ends after the summary, or mid-header, is refused; Alchemy's empty summaries pass.
-      expect(reasons(planOf("Plan: 1 tasks"))).toEqual(["IncompletePlan"]);
-      expect(reasons(planOf("Plan: 66 to"))).toEqual(["UnreadableLine"]);
+      expect(reasons(planOf("Plan: 1 tasks")), "a log that ends after the summary is refused").toEqual([
+        "IncompletePlan",
+      ]);
+      expect(reasons(planOf("Plan: 66 to")), "a log that ends mid-header is refused").toEqual(["UnreadableLine"]);
       expect(reasons(planOf("Plan: 2 to create, 1 to"))).toEqual(["UnreadableLine"]);
-      expect(reasons(planOf("Plan: no resources"))).toEqual([]);
+      expect(reasons(planOf("Plan: no resources")), "Alchemy's empty summaries pass").toEqual([]);
       expect(reasons(planOf("Plan: no changes"))).toEqual([]);
       expect(reasons(planOf("Plan: 2 to create, 1 binding changes", "[Vpc] create", "[Reaper] create"))).toEqual([
         "IncompletePlan",

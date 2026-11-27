@@ -4,17 +4,14 @@ import { dual } from "effect/Function";
 import { BlobTransferError } from "../BlobTransfer.ts";
 import type { DataBlobTransfer, FileBlobTransfer } from "../BlobTransfer.ts";
 
-// The one module in the package that imports `@azure/storage-blob`. The cache,
-// artifact and blob-store protocols hand back signed Azure URLs, so the three
-// services that speak them (`ActionCache`, `Artifact` and
-// `BlobStore.githubCache`) reach this module and nothing else does:
-// `test/reachability.test.ts` pins both halves of that confinement, so a
-// consumer that imports only `ActionOutputs` can never link a blob client.
-
 /**
  * File transfers against a signed blob URL, with the block size and
  * concurrency `actions/cache` itself uses: a multi-gigabyte toolchain cache is
  * the normal case, not the exceptional one.
+ *
+ * **Gotchas**
+ *
+ * This module owns the package's only Azure blob SDK import. Only cache, artifact and blob-cache services reach it; light consumers such as ActionOutputs must never link the blob client.
  *
  * **Example** (Reference the file transfer)
  *

@@ -6,7 +6,6 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Runtime from "effect/Runtime";
 
-/** `it.effect` installs a `TestConsole`; these tests spy on the real one. */
 const onRealConsole = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<Exit.Exit<A, E>> =>
   effect.pipe(Effect.provideService(Console.Console, console), Effect.exit);
 
@@ -40,7 +39,11 @@ it.effect("a broken failure console still fails the step", () =>
             Exit.findErrorOption(exit),
             ActionFailedError.makeOption({ summary: "the failure could not be rendered" })
           );
-          assert.isAbove(spy.mock.calls.length, 0);
+          assert.isAbove(
+            spy.mock.calls.length,
+            0,
+            "it.effect installs a TestConsole; these tests spy on the real one."
+          );
         }),
       () => Effect.sync(() => spy.mockRestore())
     );

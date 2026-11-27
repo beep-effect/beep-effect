@@ -5,10 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 
-// Workers provide `crypto.subtle.timingSafeEqual`; Bun does not. The stub
-// below compares every byte, like the Workers primitive, and is removed after
-// the suite. The end-to-end behaviour on workerd is `Runtime.test.ts`.
-const constantTimeEqual = (left: ArrayBuffer, right: ArrayBuffer): boolean => {
+const bunTimingSafeEqualStub = (left: ArrayBuffer, right: ArrayBuffer): boolean => {
   const a = new Uint8Array(left);
   const b = new Uint8Array(right);
   return (
@@ -18,7 +15,7 @@ const constantTimeEqual = (left: ArrayBuffer, right: ArrayBuffer): boolean => {
 };
 
 beforeAll(() => {
-  Object.defineProperty(crypto.subtle, "timingSafeEqual", { configurable: true, value: constantTimeEqual });
+  Object.defineProperty(crypto.subtle, "timingSafeEqual", { configurable: true, value: bunTimingSafeEqualStub });
 });
 
 afterAll(() => {
@@ -46,7 +43,6 @@ const credentials: ReadonlyArray<Credential> = [
   }),
 ];
 
-// Every case below must be refused before storage is touched.
 const untouched = () => Effect.die("storage must not be reached");
 const handle = artifactHandler({ bucket: { get: untouched, head: untouched, put: untouched }, credentials });
 

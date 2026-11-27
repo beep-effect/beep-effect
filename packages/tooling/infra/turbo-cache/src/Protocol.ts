@@ -74,8 +74,6 @@ export interface Storage<R = RuntimeContext> {
 
 type NativeComparison = (a: ArrayBuffer, b: ArrayBuffer) => boolean;
 
-// Workers ship `crypto.subtle.timingSafeEqual`; decoding it once keeps the
-// comparison constant-time and fails loudly on a runtime without it.
 const NativeCrypto = S.Struct({
   timingSafeEqual: S.declare<NativeComparison>((input: unknown): input is NativeComparison => P.isFunction(input)),
 });
@@ -154,9 +152,7 @@ const authenticate = Effect.fn("TurboCache.authenticate")(function* (
 ) {
   const native = yield* S.decodeUnknownEffect(NativeCrypto)(crypto.subtle).pipe(Effect.orDie);
   const bearer = bearerOf(request);
-  // Digest even an absent bearer and compare against every credential, so the
-  // time a refusal takes does not reveal which teams or tokens exist.
-  const presented = yield* digest(O.getOrElse(bearer, () => ""));
+  const presentedEvenIfAbsent = yield* digest(O.getOrElse(bearer, () => ""));
   const matches = yield* Effect.forEach(
     credentials,
     (credential) =>
@@ -164,7 +160,7 @@ const authenticate = Effect.fn("TurboCache.authenticate")(function* (
         Effect.flatMap((value) => value.pipe(Redacted.value, digest)),
         Effect.map((expected) => ({
           credential,
-          matches: native.timingSafeEqual.call(crypto.subtle, expected, presented),
+          matches: native.timingSafeEqual.call(crypto.subtle, expected, presentedEvenIfAbsent),
         }))
       ),
     { concurrency: 1 }
@@ -327,6 +323,14 @@ export interface ArtifactHandlerOptions<R = RuntimeContext> {
  * `slug`, or any `teamId` is `403 forbidden`; a `read` token asking to upload
  * is `403 read_only`. Only then does the request touch the bucket, under the
  * `<team>/<hash>` key.
+ *
+ * **Gotchas**
+ *
+ * Authentication digests even an absent bearer and compares it with every
+ * credential through the Workers runtime's `crypto.subtle.timingSafeEqual`,
+ * so the time a refusal takes reveals no team or token. A runtime without
+ * `timingSafeEqual` dies rather than falling back to a non-constant-time
+ * comparison.
  *
  * **Example** (Refuse an anonymous request before storage)
  *

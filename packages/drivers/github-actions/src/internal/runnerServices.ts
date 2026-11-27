@@ -6,12 +6,6 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { ActionEnvironment } from "../ActionEnvironment.ts";
 import { isWindowsRunner } from "./runner.ts";
 
-// The platform services the archive-backed protocols (`ActionCache` and
-// `Artifact`) resolve once, at layer construction, so every member's `R` is
-// `never`: HTTP for the results backend, the filesystem and path dialect for
-// the scratch archive, the spawner for `tar`, and the runner environment with
-// the one host fact both read from it.
-
 /**
  * What an archive-backed service needs from its layer.
  *
@@ -28,6 +22,10 @@ export type RunnerServiceRequirements =
 
 /**
  * Resolve the archive-backed services' platform once.
+ *
+ * **Gotchas**
+ *
+ * Resolve platform and runner services once when constructing archive-backed layers, so every archive service member has R = never. Keep the HTTP backend, scratch filesystem/path, spawner and runner environment together, including the shared Windows fact.
  *
  * **Example** (Reference the resolver)
  *

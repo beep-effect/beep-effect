@@ -52,7 +52,6 @@ describe("CiRunners guards and providers", () => {
     Effect.sync(() => {
       const slug = Str.repeat(maxStageSlugLength)("a");
       const suffix = Str.repeat(16)("x");
-      // Alchemy's generated name: `<stack>-<logical id>-<stage>-<suffix>`, lower case for S3; past the limit it truncates.
       const generated = (logicalId: string) => `CiRunners-${logicalId}-${slug}-${suffix}`;
       const limits: ReadonlyArray<readonly [string, number]> = [
         ["RunnerBinariesSyncer", 64],
@@ -62,7 +61,10 @@ describe("CiRunners guards and providers", () => {
         ["DeregisterRetryQueueDlq", 80],
       ];
       for (const [logicalId, limit] of limits) {
-        expect([logicalId, generated(logicalId).length <= limit]).toStrictEqual([logicalId, true]);
+        expect(
+          [logicalId, generated(logicalId).length <= limit],
+          "Alchemy generates <stack>-<logical id>-<stage>-<suffix> names; past the limit it truncates"
+        ).toStrictEqual([logicalId, true]);
       }
       expect(`CiRunners-RunnerBinariesSyncer-${slug}a-${suffix}`.length > 64).toBe(true);
     })
@@ -82,9 +84,11 @@ describe("CiRunners guards and providers", () => {
       for (const error of refused) {
         expect(error.message).toContain("stage slug contains a 'prod' segment, reserved for production");
       }
-      // `product-x` is refused by the older prefix rule: its fleet name starts with `beep-fleet-prod`.
       const product = yield* requireDistinctStage("product-x").pipe(Effect.flip);
-      expect(product.message).toContain("prefix one another");
+      expect(
+        product.message,
+        "product-x is refused by the older prefix rule: its fleet name starts with beep-fleet-prod"
+      ).toContain("prefix one another");
       expect(product.message).not.toContain("'prod' segment");
     })
   );

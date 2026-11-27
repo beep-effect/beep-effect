@@ -1,8 +1,3 @@
-// Hermetic provider layers for the host stack tests: fake Docker providers that
-// record the props each resource is reconciled with, and Alchemy's real
-// `Command.Exec` provider over a fake executor that records every command
-// instead of running it. Nothing here touches Docker, SSH or a shell.
-
 import * as Docker from "@alchemy.run/docker";
 import * as Command from "alchemy/Command";
 import * as Provider from "alchemy/Provider";
