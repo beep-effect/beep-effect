@@ -29,15 +29,13 @@ export const createLegacySyncTables = Effect.gen(function* () {
   }
 });
 
-// SQL compares JSONB values, preserving strings exactly and normalizing object key order only.
-// A full join catches lost/extra rows. jsonb_each compares every physical column.
 export const diffLegacySyncTables = Effect.fn("test.diffLegacySyncTables")(function* () {
   const sql = yield* SqlClient.SqlClient;
   return yield* Effect.forEach(
     ["item", "operation", "conflict", "cursor"],
     Effect.fnUntraced(function* (entity) {
       const table = `documents_sync_${entity}`;
-      return yield* sql`WITH expected AS (SELECT id,to_jsonb(t) AS row FROM ${sql(`${table}_cutover_backup`)} t),
+      const jsonbColumnDiff = sql`WITH expected AS (SELECT id,to_jsonb(t) AS row FROM ${sql(`${table}_cutover_backup`)} t),
       actual AS (SELECT id,to_jsonb(t) AS row FROM ${sql(table)} t)
       SELECT ${table} AS "table",COALESCE(e.id,a.id) AS id,c.key AS column,
         e.row -> c.key AS expected,a.row -> c.key AS actual
@@ -46,6 +44,7 @@ export const diffLegacySyncTables = Effect.fn("test.diffLegacySyncTables")(funct
         UNION SELECT key FROM jsonb_each(COALESCE(a.row,'{}'::jsonb))) c
       WHERE (e.row -> c.key) IS DISTINCT FROM (a.row -> c.key)
       ORDER BY id,c.key`;
+      return yield* jsonbColumnDiff;
     }),
     { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));

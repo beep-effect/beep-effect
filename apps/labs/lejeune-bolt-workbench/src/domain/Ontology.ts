@@ -70,6 +70,12 @@ const ValidIsoDateCheck = S.makeFilter(
 /**
  * Fixed ISO calendar date used by the deterministic bundle.
  *
+ * **Details**
+ *
+ * Arbitrary generation draws days 1–28 only, because the calendar-validity
+ * filter cannot construct candidates. Decoding still accepts every real date,
+ * the 31st included.
+ *
  * **Example** (Decode a calendar date)
  *
  * ```ts
@@ -86,9 +92,6 @@ export const IsoDate = S.String.check(
   S.isPattern(
     /^\d{4}-\d{2}-\d{2}$/u,
     $I.annote("IsoDatePatternCheck", {
-      // Generation-only shape: the calendar-validity filter cannot construct, so
-      // candidates stay inside always-valid month/day ranges (validation keeps
-      // the loose pattern plus the calendar check for real dates like the 31st).
       arbitraryConstraint: {
         patterns: [{ source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])$", flags: "" }],
       },
@@ -108,7 +111,6 @@ export const IsoDate = S.String.check(
 /** Runtime type decoded by {@link IsoDate}. @category models @since 0.0.0 */
 export type IsoDate = typeof IsoDate.Type;
 
-// A string that re-formats to itself is already trimmed, non-empty, and parseable.
 const ValidIsoTimestampCheck = S.makeFilter(
   (value: string) =>
     Result.try({
@@ -134,6 +136,11 @@ const ValidIsoTimestampCheck = S.makeFilter(
 /**
  * Fixed millisecond-precision UTC timestamp used by synthetic records.
  *
+ * **Details**
+ *
+ * Arbitrary generation draws only always-valid month, day and clock ranges;
+ * decoding keeps the full pattern and the calendar check.
+ *
  * **Example** (Decode a UTC timestamp)
  *
  * ```ts
@@ -150,7 +157,6 @@ export const IsoTimestamp = S.String.check(
   S.isPattern(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u,
     $I.annote("IsoTimestampPatternCheck", {
-      // Generation-only shape mirroring IsoDate's constraint with valid clock ranges.
       arbitraryConstraint: {
         patterns: [
           {

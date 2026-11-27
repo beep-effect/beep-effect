@@ -8,8 +8,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { mapFailureTags, mapResultFailureTag } from "./helpers/FailureTags.ts";
 
-// Protect the complete-cause oracle from a lossy Exit.mapError substitution.
-describe("failure tag projection", () => {
+describe("failure tag projection keeps the complete cause, unlike a lossy Exit.mapError", () => {
   it.prop(
     "retains typed failure, defect and interruption reasons together",
     { tag: S.String, defect: S.String, fiberId: S.Int },

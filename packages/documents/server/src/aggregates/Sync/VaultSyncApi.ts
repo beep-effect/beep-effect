@@ -32,15 +32,11 @@ import {
   VaultSyncReadMode,
 } from "./VaultSync.instruments.ts";
 
-// A call's destination, recorded only when its `target` or `key` is an opaque DestinationId:
-// a ReservationKey, ConflictId or WorkspaceKey never reaches the span.
 const destinationField = (field: "target" | "key") => (payload: unknown) =>
   P.hasProperty(payload, field) ? O.liftPredicate(payload[field], S.is(V.DestinationId)) : O.none<V.DestinationId>();
 const destinationOf = (payload: unknown) =>
   O.orElse(destinationField("target")(payload), () => destinationField("key")(payload));
 
-// The boundary span of one Api call: commands are `<Command>`, reads are `<View>.<mode>`. Only
-// known literals become attributes; the Session adds the transport and correlation id once resolved.
 const traceApiCall = <A, E, R>(self: Effect.Effect<A, E, R>, tag: string, payload: unknown) => {
   const destination = getSomesStruct({ [VaultSyncAttribute.destinationId]: destinationOf(payload) });
   const [view, mode] = Str.split(".")(tag);
@@ -63,17 +59,13 @@ const traceApiCall = <A, E, R>(self: Effect.Effect<A, E, R>, tag: string, payloa
       });
 };
 
-// The Session middleware. With `boundary` it also opens the call's boundary span; the gated RPC
-// endpoint's outer server runs it without, because its handlers forward every call to the in-process
-// client, whose own Session opens the one boundary span around the kernel send.
-const makeSession = Effect.fnUntraced(function* (boundary: boolean) {
+const makeSession = Effect.fnUntraced(function* (opensBoundarySpan: boolean) {
   const resolver = yield* V.SessionResolver;
   return V.Session.of(
     Effect.fnUntraced(
       function* (effect, { rpc, payload, headers }) {
         const request = yield* resolver.resolve(headers);
-        // Only the boundary span takes the resolved transport and correlation id.
-        yield* boundary
+        yield* opensBoundarySpan
           ? Effect.annotateCurrentSpan({
               [VaultSyncAttribute.transport]: request.sourceKind,
               [VaultSyncAttribute.requestCorrelationId]: request.correlationId,
@@ -87,7 +79,7 @@ const makeSession = Effect.fnUntraced(function* (boundary: boolean) {
           Effect.provideService(Correlation, { id: request.correlationId })
         );
       },
-      (self, _effect, { rpc, payload }) => (boundary ? traceApiCall(self, rpc._tag, payload) : self)
+      (self, _effect, { rpc, payload }) => (opensBoundarySpan ? traceApiCall(self, rpc._tag, payload) : self)
     )
   );
 });
@@ -95,6 +87,13 @@ const makeSession = Effect.fnUntraced(function* (boundary: boolean) {
 /**
  * Resolve verified identity and preflight live scope before any RPC handler runs, inside the
  * call's `VaultSyncApi.command` or `VaultSyncApi.read` boundary span.
+ *
+ * **Details**
+ *
+ * A command span is tagged with its `<Command>` and a read span with its `<View>.<mode>`; only known
+ * literals become attributes. The span records the call's destination only when its `target` or `key`
+ * is an opaque DestinationId, so a ReservationKey, ConflictId or WorkspaceKey never reaches it. Once
+ * the Session resolves, only this boundary span takes the transport and correlation id.
  *
  * **Example** (Inspect adapter)
  * ```ts
@@ -350,9 +349,6 @@ type Forward = (payload: never, options: { readonly headers: Headers.Headers }) 
 type Flat = Record<string, (...args: ReadonlyArray<unknown>) => unknown>;
 const viewMethods = ["get", "watch", "events", "list", "snapshot"] as const;
 
-// Every RPC of the Api forwards to the protected delivery client with the caller's headers,
-// so Session runs again inside and watch/events pass the per-frame gate. The raw Api fetch,
-// whose streams bypass that gate, is never mounted.
 const gatedHandlers = (client: DeliveryClient): Record<string, Forward> => {
   const flat = client as unknown as Record<string, Flat | ((...args: ReadonlyArray<unknown>) => unknown)>;
   return R.fromEntries(
@@ -389,7 +385,9 @@ const gatedHandlers = (client: DeliveryClient): Record<string, Forward> => {
  *
  * **Details**
  *
- * Each RPC is served through {@link VaultSyncDeliveryClient}, never through the unwrapped Api fetch.
+ * Each RPC is served through {@link VaultSyncDeliveryClient} with the caller's headers, so the Session
+ * runs again inside and watch and events streams pass the per-frame delivery gate; the unwrapped Api
+ * fetch, whose streams bypass that gate, is never mounted.
  * The outer server runs the Session without a boundary span; the delivery client's own Session
  * opens the single `VaultSyncApi.command` or `VaultSyncApi.read` span, so a remote CLI call has one.
  *
@@ -403,7 +401,6 @@ const gatedHandlers = (client: DeliveryClient): Record<string, Forward> => {
  */
 export const VaultSyncRpcHttp = Layer.unwrap(
   Effect.gen(function* () {
-    // The outer server authenticates each call; the in-process client it forwards to opens the boundary span.
     const outer = yield* makeSession(false);
     const serve = yield* RpcServer.toHttpEffect(VaultSyncApi.group).pipe(Effect.provideService(V.Session, outer));
     return HttpRouter.add("POST", VAULT_SYNC_RPC_PATH, serve);

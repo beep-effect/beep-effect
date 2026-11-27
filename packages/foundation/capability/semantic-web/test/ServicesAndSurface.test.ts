@@ -101,8 +101,9 @@ describe("Services and Surface", () => {
     expect(surface).toEqual(
       expect.arrayContaining(["CanonicalizationService", "ShaclValidationService", "SparqlQueryService"])
     );
-    // Model families live in @beep/rdf; the legacy re-exports must not return.
-    expect(surface).not.toEqual(expect.arrayContaining(["IRI"]));
+    expect(surface, "model families live in @beep/rdf; the legacy re-exports must not return").not.toEqual(
+      expect.arrayContaining(["IRI"])
+    );
     expect(surface).not.toEqual(expect.arrayContaining(["Dataset"]));
     expect(surface).not.toEqual(expect.arrayContaining(["ProvBundle"]));
   });

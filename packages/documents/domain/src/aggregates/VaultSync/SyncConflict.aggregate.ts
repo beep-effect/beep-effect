@@ -24,8 +24,7 @@ const escapesConflictScope =
   (record: C.ConflictRecord) =>
   (correction: { readonly input: Pick<C.ConflictRecord, "destinationId" | "itemId"> }): boolean =>
     correction.input.destinationId !== record.destinationId || correction.input.itemId !== record.itemId;
-// QueueOperation refuses an input whose idempotency key is not its target, so such a correction can never queue.
-const unreachableCorrection = (correction: {
+const queueOperationWouldRefuse = (correction: {
   readonly operationId: V.OperationId;
   readonly input: { readonly idempotencyKey: V.OperationId };
 }): boolean => correction.input.idempotencyKey !== correction.operationId;
@@ -70,7 +69,7 @@ export class SyncConflict extends Domain.Aggregate("SyncConflict", {
       decideOpenConflict(s, c, (record) =>
         O.exists(O.fromNullOr(c.correction), escapesConflictScope(record))
           ? SyncRuleViolation.make({ rule: "correction-scope", evidence: c.remoteEventId })
-          : O.exists(O.fromNullOr(c.correction), unreachableCorrection)
+          : O.exists(O.fromNullOr(c.correction), queueOperationWouldRefuse)
             ? SyncRuleViolation.make({ rule: "correction-key", evidence: c.remoteEventId })
             : [
                 C.ConflictReviewRequested.make({

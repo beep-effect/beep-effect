@@ -9,10 +9,10 @@ import type * as PlatformError from "effect/PlatformError";
 
 const $I = $CommandsId.create("internal/capture");
 
-/** Non-finite sentinels cannot be Schema literals; this guard accepts only negative infinity. */
 const NegativeInfinity = S.declare((input): input is number => input === Number.NEGATIVE_INFINITY).pipe(
   $I.annoteSchema("NegativeInfinity", {
-    description: "The intentional negative-infinity capture-budget sentinel.",
+    description:
+      "The intentional negative-infinity capture-budget sentinel, declared because non-finite numbers cannot be Schema literals.",
     toCodecArbitrary: () =>
       S.link<number>()(S.Literal("-Infinity"), {
         decode: SchemaGetter.transform(() => Number.NEGATIVE_INFINITY),

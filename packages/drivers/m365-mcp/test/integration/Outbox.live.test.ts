@@ -26,9 +26,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-// Absent, blank, or unresolved `op://` values count as absent, so the suite
-// skips instead of authenticating with a placeholder.
-const envText = (name: string): O.Option<string> =>
+const resolvedEnvOrAbsent = (name: string): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(Bun.env[name]),
     O.map(Str.trim),
@@ -36,18 +34,15 @@ const envText = (name: string): O.Option<string> =>
   );
 
 const liveEnv = O.all({
-  clientId: envText("M365_OUTBOX_CLIENT_ID"),
-  mailbox: envText("M365_OUTBOX_MAILBOX"),
-  privateKey: envText("M365_OUTBOX_CERT_PRIVATE_KEY"),
-  tenantId: envText("M365_OUTBOX_TENANT_ID"),
-  thumbprintSha256: envText("M365_OUTBOX_CERT_THUMBPRINT_SHA256"),
+  clientId: resolvedEnvOrAbsent("M365_OUTBOX_CLIENT_ID"),
+  mailbox: resolvedEnvOrAbsent("M365_OUTBOX_MAILBOX"),
+  privateKey: resolvedEnvOrAbsent("M365_OUTBOX_CERT_PRIVATE_KEY"),
+  tenantId: resolvedEnvOrAbsent("M365_OUTBOX_TENANT_ID"),
+  thumbprintSha256: resolvedEnvOrAbsent("M365_OUTBOX_CERT_THUMBPRINT_SHA256"),
 });
 
-const optedIn = (name: string): boolean => O.exists(envText(name), (value) => value === "1");
+const optedIn = (name: string): boolean => O.exists(resolvedEnvOrAbsent(name), (value) => value === "1");
 
-// Credentials alone allow a token and a read. Every mailbox write needs an
-// explicit opt-in: M365_OUTBOX_LIVE_WRITE=1 for creating and deleting a draft,
-// M365_OUTBOX_LIVE_SEND=1 (which implies write) for sending one message.
 const liveSend = optedIn("M365_OUTBOX_LIVE_SEND");
 const liveWrite = liveSend || optedIn("M365_OUTBOX_LIVE_WRITE");
 
@@ -87,7 +82,6 @@ pipe(
           )
         ).pipe(Layer.provideMerge(PlatformLayer));
 
-        // One synthetic attachment in the first configured root, removed afterwards.
         const stagedAttachment = Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -141,7 +135,6 @@ pipe(
               const toolkit = yield* OutboxToolkit;
               const prepared = yield* prepare(`beep outbox live smoke (draft only) ${yield* Clock.currentTimeMillis}`);
 
-              // A failed readback must not leave the synthetic draft in the mailbox.
               const view = yield* toolkit.handle("m365_outbox_get_draft", { draftId: prepared.draft.draftId }).pipe(
                 Effect.flatMap(head),
                 Effect.onError(() =>
@@ -196,12 +189,12 @@ pipe(
               );
               const lines = pipe(texts, A.flatMap(Str.split("\n")), A.filter(Str.includes(`"${result.auditId}"`)));
 
-              // Ids, counts and outcomes only: no address, subject or body is logged.
-              yield* Effect.logInfo("M365 outbox live: send completed", {
+              const sendSummaryWithoutContent = {
                 auditId: result.auditId,
                 auditRecordCount: A.length(lines),
                 outcome: result.outcome,
-              });
+              };
+              yield* Effect.logInfo("M365 outbox live: send completed", sendSummaryWithoutContent);
               assert.strictEqual(result.outcome, "sent");
               assert.isTrue(result.auditRecorded);
               assert.lengthOf(lines, 2);

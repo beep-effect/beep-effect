@@ -23,6 +23,8 @@ import { makeIdentificationStages } from "@/runtime/Layer";
 const decodeReport = S.decodeEffect(S.fromJsonString(I.EvaluationReport));
 const decodeIndex = S.decodeEffect(S.fromJsonString(I.IdentificationIndex));
 
+const saltHoldingOutAllZeroHash = "fixture-6";
+
 const lookup = Layer.succeed(
   I.UsptoRecordLookup,
   I.UsptoRecordLookupShape.make({
@@ -196,8 +198,7 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
               input: file("truth.jsonl"),
               context: file("context.json"),
               output: file("report.json"),
-              // This salt holds the all-zero fixture hash out for scoring.
-              splitSalt: "fixture-6",
+              splitSalt: saltHoldingOutAllZeroHash,
             })
           )
         );

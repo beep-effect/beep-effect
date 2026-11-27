@@ -170,6 +170,7 @@ export const FilingTextExtractionLiveLayer = Layer.effect(
               message: "Document source exceeds the configured filing text extraction byte cap.",
             });
           }
+          const engineOwnedBytes = new Uint8Array(input.content);
           const operation = yield* decodeProcessFileOperation({
             exportChildren: false,
             maxMaterializedBytes: config.maxMaterializedBytes,
@@ -177,9 +178,7 @@ export const FilingTextExtractionLiveLayer = Layer.effect(
             operationKind: "process",
             preference: { engine: "auto" },
             source: {
-              // Defensive copy: an engine must never be able to detach or
-              // mutate the intake bytes that are later materialized verbatim.
-              bytes: new Uint8Array(input.content),
+              bytes: engineOwnedBytes,
               digest: `sha256:${input.contentDigest}`,
               ...O.getSomesStruct({ extension }),
               id: `artifact:${input.contentDigest}`,

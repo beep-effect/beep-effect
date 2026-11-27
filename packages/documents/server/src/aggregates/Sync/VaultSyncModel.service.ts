@@ -96,6 +96,11 @@ const Ownership = S.Array(S.Struct({ workspace_id: S.Int }));
  * {@link VaultSyncOwnership}'s. Genesis import streams resolve to the
  * Migration system principal and the workspace named in the stream.
  *
+ * **Gotchas**
+ *
+ * A failed `resolve` dies instead of failing: a projection cannot proceed
+ * without provenance, and the driver redelivers the event after a defect.
+ *
  * **Example** (Inspect the layer)
  *
  * ```ts
@@ -163,10 +168,7 @@ export const LegacySyncAuditLive = Layer.effect(
     });
     return LegacySyncAudit.of({
       resolve: Effect.fn("LegacySyncAudit.resolve")((stream, seq) =>
-        (Str.startsWith("genesis/")(stream) ? genesisWorkspace(stream) : live(stream, seq)).pipe(
-          // A projection cannot proceed without provenance; the driver redelivers after a defect.
-          Effect.orDie
-        )
+        (Str.startsWith("genesis/")(stream) ? genesisWorkspace(stream) : live(stream, seq)).pipe(Effect.orDie)
       ),
     });
   })

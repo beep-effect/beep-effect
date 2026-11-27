@@ -21,17 +21,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation";
 
-// Optional on insert: the column's SQL default supplies the first version.
-const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
+const sqlDefaultRowVersion = 1;
+const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? sqlDefaultRowVersion;
 
 const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
 
 const SyncOperationEquivalence = S.toEquivalence(DomainSyncOperation.SyncOperation);
 
-// The row codec is a class schema, so an unencodable entity has to stay an
-// instance of its model: clone onto the same prototype and corrupt a single
-// column rather than handing the encoder a bare struct it would reject wholesale.
-const withUnencodablePublicId = <A extends object>(entity: A): A =>
+const modelCloneWithBadPublicId = <A extends object>(entity: A): A =>
   Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
 
 const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
@@ -41,6 +38,8 @@ const expectConverterFailure = (error: { readonly _tag: string; readonly message
   expect(error._tag).toBe(tag);
   pipe(Str.isNonEmpty(error.message), assertTrue);
 };
+
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -127,12 +126,9 @@ describe("SyncOperation table", () => {
           deletedByPrincipal: insert.deletedByPrincipal ?? null,
           rowVersion: insertedRowVersion(insert.rowVersion),
           id: 20,
-          // $inferInsert types nullable columns as `value | null | undefined`; the
-          // select-row converter expects `value | null`, so resolve absent
-          // optionals to their concrete nulls before round-tripping.
-          inputContentDigest: insert.inputContentDigest ?? null,
-          lastError: insert.lastError ?? null,
-          targetParentRelPath: insert.targetParentRelPath ?? null,
+          inputContentDigest: absentAsNull(insert.inputContentDigest),
+          lastError: absentAsNull(insert.lastError),
+          targetParentRelPath: absentAsNull(insert.targetParentRelPath),
         })
       );
 
@@ -177,7 +173,9 @@ describe("SyncOperation table", () => {
       const syncOperation = yield* decodeUnknownSyncOperation(uploadRow);
       const insert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
 
-      const converterFailure1 = yield* converterFailure(toSyncOperationInsert(withUnencodablePublicId(syncOperation)));
+      const converterFailure1 = yield* converterFailure(
+        toSyncOperationInsert(modelCloneWithBadPublicId(syncOperation))
+      );
       expectConverterFailure(converterFailure1, "SyncOperationConverterError");
       const converterFailure2 = yield* converterFailure(
         fromSyncOperationRow({

@@ -24,21 +24,24 @@ describe("Redaction.apply", () => {
   });
 
   it("IGNORES an empty-string secret instead of shredding the text", () => {
-    // "abc".replaceAll("", "***") would insert the placeholder between every
-    // character. An empty secret carries no information and must be skipped.
-    assert.strictEqual(Redaction.apply("abc", [secret("")]), "abc");
+    assert.strictEqual(
+      Redaction.apply("abc", [secret("")]),
+      "abc",
+      "an empty secret would insert the placeholder between every character"
+    );
   });
 
   it("replaces the LONGEST secret first so no fragment survives", () => {
-    // Shortest-first would rewrite "abcd" via "ab" -> "***cd", leaking "cd"
-    // — a fragment of the longer secret.
     const result = Redaction.apply("abcd", [secret("ab"), secret("abcd")]);
-    assert.strictEqual(result, REDACTED);
+    assert.strictEqual(result, REDACTED, `shortest-first would rewrite "abcd" via "ab" to "***cd", leaking "cd"`);
   });
 
   it("treats the secret as a literal, not a pattern", () => {
-    // A regex-flavored secret must not be compiled; `.` matches only a dot.
-    assert.strictEqual(Redaction.apply("a.c and abc", [secret("a.c")]), `${REDACTED} and abc`);
+    assert.strictEqual(
+      Redaction.apply("a.c and abc", [secret("a.c")]),
+      `${REDACTED} and abc`,
+      "a regex-flavored secret is not compiled: `.` matches only a dot"
+    );
   });
 });
 
@@ -63,7 +66,6 @@ describe("Redaction.scrubArgs (heuristic backstop)", () => {
   });
 
   it("redacts the inline --flag=value form", () => {
-    // v3's scrubber only handled the separated form and leaked this one.
     assert.deepStrictEqual(Redaction.scrubArgs(["--token=abc123"]), [`--token=${REDACTED}`]);
   });
 
@@ -108,22 +110,26 @@ describe("Redaction.scrubArgs (heuristic backstop)", () => {
   });
 });
 
-describe("Redaction properties", () => {
-  // The invariant with teeth: a counterexample here is a leaked credential.
-  // Secrets containing the placeholder's own character are excluded — the
-  // "***" written in place of "*l" plus a following "l" spells "*l" again,
-  // and "aa***bb" scrubbed of "a***b" IS "a***b". A placeholder can always be
-  // re-formed from itself and its neighbours; that is a documented limitation
-  // rather than a defect.
-  const secretValue = Arbitrary.schema(S.NonEmptyString).pipe(Arbitrary.filter((s) => !Str.includes("*")(s)));
+describe("Redaction properties: a counterexample is a leaked credential; `*` secrets can re-form the placeholder", () => {
+  const secretWithoutPlaceholderChar = Arbitrary.schema(S.NonEmptyString).pipe(
+    Arbitrary.filter((s) => !Str.includes("*")(s))
+  );
 
-  it.prop("no secret value survives apply", [secretValue, S.String, S.String], ([value, before, after]) => {
-    const text = `${before}${value}${after}`;
-    return !Str.includes(value)(Redaction.apply(text, [secret(value)]));
-  });
+  it.prop(
+    "no secret value survives apply",
+    [secretWithoutPlaceholderChar, S.String, S.String],
+    ([value, before, after]) => {
+      const text = `${before}${value}${after}`;
+      return !Str.includes(value)(Redaction.apply(text, [secret(value)]));
+    }
+  );
 
-  it.prop("no secret value survives applyArgs, in any position", [secretValue, S.Array(S.String)], ([value, rest]) => {
-    const args = [...rest, value, `prefix-${value}-suffix`];
-    return A.every(Redaction.applyArgs(args, [secret(value)]), (arg) => !Str.includes(value)(arg));
-  });
+  it.prop(
+    "no secret value survives applyArgs, in any position",
+    [secretWithoutPlaceholderChar, S.Array(S.String)],
+    ([value, rest]) => {
+      const args = [...rest, value, `prefix-${value}-suffix`];
+      return A.every(Redaction.applyArgs(args, [secret(value)]), (arg) => !Str.includes(value)(arg));
+    }
+  );
 });

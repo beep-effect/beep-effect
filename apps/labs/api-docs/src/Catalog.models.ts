@@ -46,7 +46,6 @@ export const ApiAudience = LiteralKit(["served", "consumed"]).pipe(
   }))
 );
 
-/** On-disk serialization format for a committed specification. */
 const SpecFormat = LiteralKit(["json", "yaml"]).pipe(
   $I.annoteSchema("SpecFormat", {
     description: "Serialization format preserved when the lab serves a committed specification.",

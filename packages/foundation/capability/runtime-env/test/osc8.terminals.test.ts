@@ -7,7 +7,6 @@ import * as O from "effect/Option";
 import { envFor } from "./support/osc8.fixtures.ts";
 import { anyCaseEnvReadsOf, sourceOf } from "./support/sources.ts";
 
-// The detector answers with an Option; these assertions read its value, or null when it is None.
 const lookupTerminal = flow(lookupTerminalOption, O.getOrNull);
 
 describe("lookupTerminal", () => {
@@ -117,9 +116,11 @@ describe("lookupTerminal", () => {
     it("identifies via TERM=alacritty with no version gate", () => {
       const m = lookupTerminal(envFor.alacritty());
       assert.strictEqual(m?.entry.name, "Alacritty");
-      // minVersion is None because TERM=alacritty carries no version info;
-      // gating on a minVersion would falsely reject every Alacritty user.
-      assert.deepStrictEqual(m?.entry.minVersion, O.none());
+      assert.deepStrictEqual(
+        m?.entry.minVersion,
+        O.none(),
+        "TERM=alacritty carries no version, so a minVersion gate would reject every Alacritty user"
+      );
     });
   });
 
@@ -195,7 +196,6 @@ describe("lookupTerminal", () => {
   });
 });
 
-// Added by the port (not in std-osc8): the key list and the detectors cannot drift.
 describe("terminalKeys", () => {
   it("lists every env key the ported detectors read", () => {
     const read = new Set(

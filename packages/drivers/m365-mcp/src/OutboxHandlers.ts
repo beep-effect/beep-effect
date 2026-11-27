@@ -118,7 +118,6 @@ const $I = $M365McpId.create("OutboxHandlers");
 
 const NOT_FOUND_STATUS = 404;
 
-// A refusal the handlers raise themselves, before or after a driver call.
 class OutboxRefusal extends S.TaggedError<OutboxRefusal, { readonly brand: unique symbol }>($I`OutboxRefusal`)(
   "OutboxRefusal",
   {
@@ -196,14 +195,11 @@ const STORED_BYTES_ALLOWANCE = 2;
 
 const PRECONDITION_FAILED_STATUS = 412;
 
-// A moved draft and, at most, a sent copy share one RFC 5322 message id.
-const MOVED_DRAFT_PAGE_SIZE = 5;
+const MESSAGE_ID_COPIES_PAGE_SIZE = 5;
 
-// The fields check_drafts reads from a draft: never a body, a subject or a recipient.
-const CHECK_DRAFT_SELECT = "id,isDraft,categories,changeKey,internetMessageId";
+const DRAFT_METADATA_ONLY_SELECT = "id,isDraft,categories,changeKey,internetMessageId";
 
-// The lookup of a moved draft also asks for its folder, to tell a deleted draft from a moved one.
-const MOVED_DRAFT_SELECT = `${CHECK_DRAFT_SELECT},parentFolderId`;
+const MOVED_DRAFT_WITH_FOLDER_SELECT = `${DRAFT_METADATA_ONLY_SELECT},parentFolderId`;
 
 const DELETED_ITEMS_FOLDER = "deleteditems";
 
@@ -213,9 +209,6 @@ const decodeSegment = S.decodeUnknownEffect(GraphPathSegment);
 
 const nonEmpty = O.filter(Str.isNonEmpty);
 
-// What check_drafts does to one draft's categories.
-// Keep: nothing is written. Set or Clear: a new category list. Reconcile: the journal says this
-// server marked the draft but the category is gone, so only a draft-basis-cleared record is written.
 type MarkPlan =
   | { readonly _tag: "Keep"; readonly outcome: OutboxDraftMarkOutcome }
   | { readonly _tag: "Set"; readonly categories: ReadonlyArray<string> }
@@ -224,9 +217,6 @@ type MarkPlan =
 
 const keep = (outcome: OutboxDraftMarkOutcome): MarkPlan => ({ _tag: "Keep", outcome });
 
-// The category is set on a stale draft and removed from a current one only when this server set it.
-// Every other category stays, in order. `basisMarked` holds exactly when the journal says this
-// server's category is on the draft; a mark the draft no longer carries is reconciled in the journal.
 const planMark = (verdict: OutboxBasisVerdict, categories: ReadonlyArray<string>, basisMarked: boolean): MarkPlan => {
   const carries = A.contains(categories, OUTBOX_BASIS_STALE_CATEGORY);
   const without = (): ReadonlyArray<string> =>
@@ -251,7 +241,6 @@ const planMark = (verdict: OutboxBasisVerdict, categories: ReadonlyArray<string>
   );
 };
 
-// The changed view fields across a draft's pins, each once.
 const changedFieldsOf = (report: OutboxBasisReport): ReadonlyArray<OutboxBasisChangedField> =>
   pipe(
     report.pins,
@@ -259,7 +248,6 @@ const changedFieldsOf = (report: OutboxBasisReport): ReadonlyArray<OutboxBasisCh
     A.dedupe
   );
 
-// Where one open draft ends up in the check_drafts result.
 const DraftOutcome = S.TaggedUnion({
   Checked: { entry: OutboxDraftCheck },
   Closed: { entry: OutboxDraftClosed },
@@ -316,6 +304,16 @@ export class OutboxHandlerSettings extends S.Opaque<OutboxHandlerSettings, { rea
 /**
  * Build the handler layer of the outbox toolkit.
  *
+ * **Gotchas**
+ *
+ * check_drafts appends the mark record before it sets the stale-basis category and removes the
+ * category before it records the clear, so a failure leaves a record without a category (reconciled
+ * on the next call), never a category without a record. Graph gives a message a new id when it moves
+ * to another folder, so after a 404 a draft is found by the RFC 5322 message id recorded when it was
+ * created. send_draft refuses a draft this server did not record creating before it reads anything:
+ * the expectation guard proves only that the caller restated the draft, not that the draft is this
+ * server's own.
+ *
  * **Example** (Compose the handler layer)
  *
  * ```ts
@@ -348,7 +346,6 @@ export const makeOutboxToolkitHandlers = (
       const readMessage = (draftId: string) =>
         m365.getMessage(M365GetMessageRequest.make({ messageId: draftId, userId }));
 
-      // What the draft stores, hashed from the stored bytes. Never a record of what was uploaded.
       const readStored = (draftId: string) =>
         readStoredAttachments(
           OutboxStoredAttachmentsRequest.make({
@@ -395,8 +392,11 @@ export const makeOutboxToolkitHandlers = (
         return yield* audit.append(OutboxDraftBasisClearedRecord.make({ at, auditId, draftId }));
       });
 
-      // The only Graph write check_drafts makes, always conditional on the change key just read.
-      const writeCategories = (messageId: GraphPathSegment, changeKey: string, categories: ReadonlyArray<string>) =>
+      const writeCategoriesIfUnchanged = (
+        messageId: GraphPathSegment,
+        changeKey: string,
+        categories: ReadonlyArray<string>
+      ) =>
         m365
           .updateMessageCategories(
             M365UpdateMessageCategoriesRequest.make({ categories, changeKey: O.some(changeKey), messageId, userId })
@@ -413,8 +413,6 @@ export const makeOutboxToolkitHandlers = (
         markFailure,
       });
 
-      // Records always lead or follow the category so that a failure leaves "recorded as marked,
-      // category absent" (repaired by Reconcile next call), never "category present, no record".
       const applyMark = Effect.fnUntraced(function* (
         draftId: string,
         messageId: GraphPathSegment,
@@ -433,19 +431,18 @@ export const makeOutboxToolkitHandlers = (
           return marked("failed", O.some("no-change-key"));
         }
         if (plan._tag === "Set") {
-          // Intent first, as a send records its intent before acting.
           const recorded = yield* Effect.isSuccess(appendMark(draftId, fields));
           if (!recorded) {
             return marked("failed", O.some("audit"));
           }
-          return yield* writeCategories(messageId, changeKey.value, plan.categories).pipe(
+          return yield* writeCategoriesIfUnchanged(messageId, changeKey.value, plan.categories).pipe(
             Effect.match({
               onFailure: (reason) => marked("failed", O.some(reason)),
               onSuccess: () => marked("set"),
             })
           );
         }
-        const cleared = yield* writeCategories(messageId, changeKey.value, plan.categories).pipe(
+        const cleared = yield* writeCategoriesIfUnchanged(messageId, changeKey.value, plan.categories).pipe(
           Effect.mapError(O.some),
           Effect.result
         );
@@ -456,21 +453,20 @@ export const makeOutboxToolkitHandlers = (
         return marked(recorded ? "cleared" : "cleared-unrecorded");
       });
 
-      // Where an open draft is now: by its recorded id, or after a 404 by its RFC 5322 message id,
-      // because Graph gives a message a new id when it moves to another folder. Fails with an
-      // unreadable reason.
       const locateDraft = (open: OutboxOpenDraft, deletedItemsId: Effect.Effect<string, string>) =>
         decodeSegment(open.created.draftId).pipe(
           Effect.mapError(() => "invalid-id"),
           Effect.flatMap((messageId) =>
-            m365.getMessage(M365GetMessageRequest.make({ messageId, select: O.some(CHECK_DRAFT_SELECT), userId })).pipe(
-              Effect.asSome,
-              Effect.catch((error) =>
-                O.contains(error.status, NOT_FOUND_STATUS) && error.reason === "response status"
-                  ? findMoved(open.internetMessageId, deletedItemsId)
-                  : Effect.fail(error.reason)
+            m365
+              .getMessage(M365GetMessageRequest.make({ messageId, select: O.some(DRAFT_METADATA_ONLY_SELECT), userId }))
+              .pipe(
+                Effect.asSome,
+                Effect.catch((error) =>
+                  O.contains(error.status, NOT_FOUND_STATUS) && error.reason === "response status"
+                    ? findMoved(open.internetMessageId, deletedItemsId)
+                    : Effect.fail(error.reason)
+                )
               )
-            )
           ),
           Effect.flatMap(
             O.match({
@@ -486,8 +482,6 @@ export const makeOutboxToolkitHandlers = (
           )
         );
 
-      // A hit in Deleted Items is a draft someone deleted in Outlook, not a moved one. The folder's
-      // id is asked for only when a draft hit names a folder.
       const liveDraftHit = (
         drafts: ReadonlyArray<GraphMessage>,
         deletedItemsId: Effect.Effect<string, string>
@@ -498,8 +492,6 @@ export const makeOutboxToolkitHandlers = (
             )
           : Effect.succeed(A.head(drafts));
 
-      // One list call, only after a 404: the draft's current copy. A draft outside Deleted Items
-      // wins; otherwise a copy that is no longer a draft (sent); otherwise none (missing).
       const findMoved = (
         internetMessageId: O.Option<string>,
         deletedItemsId: Effect.Effect<string, string>
@@ -511,8 +503,8 @@ export const makeOutboxToolkitHandlers = (
               .listMessages(
                 M365ListMessagesRequest.make({
                   filter: O.some(odataEquals("internetMessageId", id)),
-                  select: O.some(MOVED_DRAFT_SELECT),
-                  top: O.some(MOVED_DRAFT_PAGE_SIZE),
+                  select: O.some(MOVED_DRAFT_WITH_FOLDER_SELECT),
+                  top: O.some(MESSAGE_ID_COPIES_PAGE_SIZE),
                   userId,
                 })
               )
@@ -531,8 +523,6 @@ export const makeOutboxToolkitHandlers = (
               ),
         });
 
-      // One open draft: closed when sent or missing, unreadable when Graph could not be asked,
-      // otherwise rechecked and marked.
       const checkOpenDraft = Effect.fnUntraced(function* (
         open: OutboxOpenDraft,
         deletedItemsId: Effect.Effect<string, string>
@@ -549,15 +539,12 @@ export const makeOutboxToolkitHandlers = (
           return yield* closed("missing");
         }
         const { message, messageId } = located.success.value;
-        // Only an explicit false means sent; a missing flag is not evidence either way.
         if (O.isNone(message.isDraft)) {
           return DraftOutcome.cases.Unreadable.make({ entry: unreadable("incomplete-draft") });
         }
         if (!message.isDraft.value) {
           return yield* closed("sent");
         }
-        // A draft recorded without a message id learns it now, so a later move can still find it.
-        // Best effort: a failed append is retried on the next call.
         if (O.isNone(open.internetMessageId)) {
           yield* O.match(nonEmpty(message.internetMessageId), {
             onNone: () => Effect.void,
@@ -586,9 +573,7 @@ export const makeOutboxToolkitHandlers = (
       return OutboxToolkit.of({
         m365_outbox_create_draft: Effect.fn("M365Outbox.m365_outbox_create_draft")(
           function* (params: OutboxCreateDraftParams) {
-            // Every path is checked and read before Graph is touched.
             const attachments = yield* source.resolve(params.attachmentPaths);
-            // Every pin is read before the draft exists: an unreadable pin creates nothing.
             const basis = yield* Effect.forEach(params.basis, reader.observe, { concurrency: 1 });
             yield* Effect.annotateCurrentSpan({
               m365_outbox_attachment_count: A.length(attachments),
@@ -607,8 +592,6 @@ export const makeOutboxToolkitHandlers = (
                 userId,
               })
             );
-            // The RFC 5322 message id lets check_drafts find the draft after it moves; one narrow read
-            // when the create response lacks it, and none recorded when that read fails.
             const internetMessageId = yield* O.match(nonEmpty(message.internetMessageId), {
               onNone: () =>
                 m365
@@ -626,7 +609,6 @@ export const makeOutboxToolkitHandlers = (
               onSome: Effect.succeedSome,
             });
             const digests = A.map(attachments, (attachment) => attachment.digest);
-            // A failed prepare leaves nothing in Drafts: any failure from here on removes the draft.
             yield* Effect.gen(function* () {
               yield* Effect.forEach(
                 attachments,
@@ -642,8 +624,6 @@ export const makeOutboxToolkitHandlers = (
                   ),
                 { concurrency: 1, discard: true }
               );
-              // Prove the upload round-trip: what Graph stores must be the local files, byte for byte,
-              // so the digests returned here are exactly what send_draft will compute later.
               const stored = yield* readStored(message.id);
               if (!sameAttachments(stored, digests)) {
                 return yield* refuse(
@@ -679,7 +659,6 @@ export const makeOutboxToolkitHandlers = (
         m365_outbox_create_event: Effect.fn("M365Outbox.m365_outbox_create_event")(
           function* (params: M365EventDraft) {
             const auditId = yield* audit.nextAuditId;
-            // The audit id doubles as the event's idempotency key, so Graph drops a duplicate create.
             const event = yield* m365.createEvent(
               M365CreateEventRequest.make({
                 event: params,
@@ -733,7 +712,6 @@ export const makeOutboxToolkitHandlers = (
           function* (params: OutboxDraftRef) {
             const draft = yield* readMessage(params.draftId);
             const stored = yield* readStored(params.draftId);
-            // A draft this server did not record creating has no pins and reports unpinned.
             const created = yield* audit.createdDraft(params.draftId);
             const pins = O.match(created, { onNone: A.empty, onSome: (record) => record.basis });
             const statuses = yield* Effect.forEach(pins, reader.recheck, { concurrency: 1 });
@@ -771,8 +749,7 @@ export const makeOutboxToolkitHandlers = (
           function* (params: OutboxSendDraftParams) {
             const auditId = yield* audit.nextAuditId;
 
-            // Returns whether the outcome record reached the log; the send has already been decided.
-            const recordOutcome = Effect.fnUntraced(function* (fields: {
+            const recordDecidedOutcome = Effect.fnUntraced(function* (fields: {
               readonly graphStatus?: O.Option<number>;
               readonly internetMessageId?: O.Option<string>;
               readonly mismatches?: ReadonlyArray<OutboxSendMismatchField>;
@@ -791,17 +768,14 @@ export const makeOutboxToolkitHandlers = (
               );
             });
             const refused = Effect.fnUntraced(function* (mismatches: ReadonlyArray<OutboxSendMismatchField>) {
-              const auditRecorded = yield* recordOutcome({ mismatches, outcome: "refused" });
+              const auditRecorded = yield* recordDecidedOutcome({ mismatches, outcome: "refused" });
               return OutboxSendResult.make({ auditId, auditRecorded, mismatches, outcome: "refused" });
             });
 
-            // Only a draft this server recorded creating is sent. The guard below proves the caller
-            // restated the draft, not that the draft is the session's own. Nothing is read or downloaded.
             if (!(yield* audit.hasCreatedDraft(params.draftId))) {
               return yield* refused(["not-created-here"]);
             }
             const draft = yield* readMessage(params.draftId);
-            // Attachments that cannot be listed are a tool error; ones that cannot be verified refuse the send.
             const stored = yield* readStored(params.draftId).pipe(
               Effect.asSome,
               Effect.catchTag("OutboxStoredAttachmentError", () => Effect.succeedNone)
@@ -816,9 +790,6 @@ export const makeOutboxToolkitHandlers = (
               return yield* refused(mismatch.value.fields);
             }
 
-            // Graph's draft-send action accepts only the mutable message id. The
-            // checked snapshot can change after this guard, so do not delegate
-            // Mail.Send to an unversioned operation.
             return yield* refused(["version-unbound"]);
           },
           finalizeOutboxTool("m365_outbox_send_draft", "sendDraft", false)
@@ -826,7 +797,6 @@ export const makeOutboxToolkitHandlers = (
         m365_outbox_check_drafts: Effect.fn("M365Outbox.m365_outbox_check_drafts")(
           function* () {
             const open = yield* audit.openDrafts;
-            // Deleted Items is resolved at most once per call, and only when a moved draft needs it.
             const deletedItemsId = yield* Effect.cached(
               m365
                 .getMailFolder(M365GetMailFolderRequest.make({ folder: DELETED_ITEMS_FOLDER, userId }))
@@ -860,8 +830,6 @@ export const makeOutboxToolkitHandlers = (
         ),
         m365_outbox_update_event: Effect.fn("M365Outbox.m365_outbox_update_event")(
           function* (params: OutboxUpdateEventParams) {
-            // Both gates run before any PATCH: Graph mails a meeting's attendees when it changes,
-            // which would be a send outside the send guard.
             const createdHere = yield* audit.hasCreatedEvent(params.eventId);
             const stored = yield* m365.getEvent(M365GetEventRequest.make({ eventId: params.eventId, userId }));
             yield* Effect.annotateCurrentSpan({

@@ -70,10 +70,12 @@ describe("WorkflowCommand", () => {
   });
 
   describe("escaping", () => {
-    // The runner parses these characters structurally; an unescaped one
-    // truncates the command or injects a new one.
     it("escapes percent, CR and LF in the message", () => {
-      assert.strictEqual(WorkflowCommand.render("debug", {}, "100% \r\n done"), "::debug::100%25 %0D%0A done");
+      assert.strictEqual(
+        WorkflowCommand.render("debug", {}, "100% \r\n done"),
+        "::debug::100%25 %0D%0A done",
+        "the runner parses these characters structurally; an unescaped one truncates the command or injects a new one"
+      );
     });
 
     it("escapes colon and comma in property values, which delimit the command", () => {
@@ -85,8 +87,11 @@ describe("WorkflowCommand", () => {
     });
 
     it("escapes the percent sign FIRST, so an escape sequence is not double-escaped", () => {
-      // Escaping "\n" before "%" would turn "%0A" back into "%250A".
-      assert.strictEqual(WorkflowCommand.render("debug", {}, "\n"), "::debug::%0A");
+      assert.strictEqual(
+        WorkflowCommand.render("debug", {}, "\n"),
+        "::debug::%0A",
+        'escaping "\\n" before "%" would turn "%0A" back into "%250A"'
+      );
       assert.strictEqual(WorkflowCommand.render("debug", {}, "%0A"), "::debug::%250A");
     });
 

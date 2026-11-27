@@ -375,8 +375,6 @@ export const VerifiedSpanAttemptOutcome = VerifiedSpanAttemptOutcomeStatus.mapMe
  */
 export type VerifiedSpanAttemptOutcome = typeof VerifiedSpanAttemptOutcome.Type;
 
-// Attempt timestamps are persisted strings, so this validates the text and keeps it
-// verbatim: `S.DateTimeUtcFromString` would re-encode `...56Z` as `...56.000Z`.
 // fallow-ignore-next-line code-duplication -- consumer-local copy of the retired `@beep/schema` ISOStr wire; langextract has no dependency on @beep/skill-contract, which owns the other copy. Owner: @beep/langextract. Exit: import upstream when effect/Schema ships a verbatim ISO date-time string schema.
 const IsoDateTimeString = S.Trim.check(
   S.isNonEmpty({ message: "String must not be empty" }),
@@ -398,7 +396,8 @@ const IsoDateTimeString = S.Trim.check(
   )
 ).pipe(
   $I.annoteSchema("IsoDateTimeString", {
-    description: "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim.",
+    description:
+      "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim because attempt timestamps are persisted strings and S.DateTimeUtcFromString would re-encode `...56Z` as `...56.000Z`.",
   })
 );
 

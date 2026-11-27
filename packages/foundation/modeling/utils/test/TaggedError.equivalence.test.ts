@@ -13,7 +13,6 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-// EmptyStructError's exact fields under another tag: only the tag can break equivalence.
 class DifferentTagError extends S.TaggedError<DifferentTagError, { readonly brand: unique symbol }>()(
   "DifferentTagError",
   EmptyStructError.fields
@@ -30,7 +29,10 @@ const captureEffectDefect = (effect: Effect.Effect<unknown>) =>
 
 const expectPrivateEquivalence = (first: unknown, second: unknown, different: unknown): void => {
   const schema = P.isObject(first) ? Reflect.get(first, "constructor") : first;
-  expect(S.isSchema(schema)).toBe(true);
+  expect(
+    S.isSchema(schema),
+    "the Node handles resolve lazily after getBuiltinModule is disabled; an earlier test file sharing the module instance would already have populated them"
+  ).toBe(true);
 
   if (S.isSchema(schema)) {
     const same = S.toEquivalence(schema);
@@ -47,7 +49,10 @@ describe("@beep/utils tagged-error declared equivalence", () => {
     const differentTag = DifferentTagError.make({ cause: O.none(), input: { left: true } });
 
     expect(same(first, second)).toBe(true);
-    expect(Reflect.apply(same, undefined, [first, differentTag])).toBe(false);
+    expect(
+      Reflect.apply(same, undefined, [first, differentTag]),
+      "DifferentTagError has EmptyStructError's exact fields, so only the tag can break equivalence"
+    ).toBe(false);
   });
 
   it.effect("compares private Node runtime errors by their declared singleton fields", () =>

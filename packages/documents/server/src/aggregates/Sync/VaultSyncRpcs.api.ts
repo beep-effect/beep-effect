@@ -87,6 +87,11 @@ const counts = (status: {
  * durable requests and answer with the status at acceptance; the pass itself runs in its saga.
  * Conflict rows come from the legacy read model the slice projects, restricted to the public
  * ids the authorized OpenConflicts View returns. Nothing here writes the legacy tables.
+ * WatchVaultSyncStatus gates View frames and availability changes through the same live
+ * delivery check as the other View subscriptions, so a probe that only moves the connection
+ * state still pushes a frame and a revoked subscriber sees neither. A dropped failure is logged
+ * by its tag alone and answered with a generic denial, so denials and driver errors never
+ * cross the legacy wire.
  *
  * **Example** (Inspect the handler layer)
  * ```ts
@@ -104,7 +109,6 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
     const availability = yield* DmsMirrorAvailability;
     const legacyConflicts = yield* LegacySyncReadModel;
     const denied = (context: string) => VaultSyncActionError.failEffect(context);
-    // Only the failure tag is logged: denials and driver errors never cross the legacy wire.
     const dropped = (context: string) => (error: unknown) =>
       Effect.logWarning("vault sync rpc dropped failure").pipe(
         Effect.annotateLogs({
@@ -121,9 +125,8 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
       const list = yield* client.DestinationList.get(V.WorkspaceKey.make(`${orgId}:${workspaceId}`), { headers }).pipe(
         Effect.catch(() => denied("Vault sync is unavailable for this workspace."))
       );
-      // Genesis creates one destination per workspace and provider; pick it deterministically.
-      const first = A.head(A.sort(keysOf(list), Order.String));
-      return yield* O.match(first, {
+      const genesisDestination = A.head(A.sort(keysOf(list), Order.String));
+      return yield* O.match(genesisDestination, {
         onNone: () => denied("Workspace vault is not configured."),
         onSome: Effect.succeed,
       });
@@ -160,9 +163,6 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
       const view = yield* client.VaultSyncStatus.get(destinationId, { headers });
       return yield* statusOf(destinationId, headers, view, refresh);
     });
-    // View frames and availability changes both pass the same live delivery gate as the
-    // other View subscriptions, so a probe that only moves the connection state still
-    // pushes a frame and a revoked subscriber sees none of either.
     const watchStatus = (workspaceId: number, headers: Headers.Input) =>
       Stream.unwrap(
         Effect.map(destinationOf(workspaceId, headers), (destinationId) =>
@@ -227,21 +227,20 @@ export const VaultSyncRpcsApiLive = VaultSyncRpcs.toLayer(
         function* ({ conflictId, workspaceId }, { headers }) {
           const pairs = yield* openRows(workspaceId, headers);
           const { row, record } = yield* Effect.fromOption(A.findFirst(pairs, ({ row }) => row.id === conflictId));
-          // One heal operation per conflict: a retried review reuses the same identity.
-          const healOperationId = yield* S.decodeEffect(V.OperationId)(
+          const stableHealOperationId = yield* S.decodeEffect(V.OperationId)(
             Str.replace(CONFLICT_PREFIX, OPERATION_PREFIX)(record.publicId)
           );
-          // A reviewed remote move or rename re-asserts the local path (I14).
           const view = yield* client.VaultSyncStatus.get(record.destinationId, { headers });
           const item = record.itemId === null || view === null ? null : O.getOrNull(H.get(view.items, record.itemId));
+          const localPathReassertion = V.reviewCorrection({ record, item });
           yield* client.ReviewConflict(
             record.publicId,
             {
               remoteEventId: record.remoteEventId,
               workspaceId: record.workspaceId,
               destinationId: record.destinationId,
-              correction: O.getOrNull(V.reviewCorrection({ record, item })),
-              healOperationId,
+              correction: O.getOrNull(localPathReassertion),
+              healOperationId: stableHealOperationId,
             },
             { headers }
           );
