@@ -6,36 +6,15 @@ import * as Output from "alchemy/Output";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 
-/**
- * Stage that owns the public `/storybook` route. Every other stage
- * (`live_$USER`, `dev_$USER`) serves from workers.dev only.
- */
 const productionStage = "prod";
 
-/**
- * Physical name of the `prod` Worker. Alchemy generates a Worker name from an
- * instance id it keeps in state, so a stage whose state is lost or moved mints
- * a new name and cannot take the route from the live Worker (the
- * `BeepEffectWeb` state move did exactly that, #3133). A pinned name makes a
- * prod deploy find this Worker whatever the state holds.
- */
+// decision: pinned-production-worker
 const productionWorkerName = "beep-storybook-prod";
 
-/**
- * Reserved route this site is served under on the public origin
- * (`@beep/public-site`): Storybook is a projection of the single origin, not a
- * subdomain.
- */
 const storybookRoute = SiteRoute.Enum.storybook;
 
-/** Hostname of the public origin; its Cloudflare zone carries the route. */
 const apexHost = new URL(PublicOrigin.literal).hostname;
 
-/**
- * Directory the build stages for upload, relative to this app. The static
- * build lands in `site/storybook`, so the asset path of every file already
- * carries the `/storybook` prefix the route keeps on the request.
- */
 const siteDir = "site";
 
 /**
@@ -93,6 +72,7 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const stack = yield* Alchemy.Stack;
+
     // Every `prod` deploy runs in CI under the `alchemy-storybook-prod`
     // concurrency group; the S3 store's stage lease is the second guard. A
     // local `prod` plan/deploy fails here with a ConfigError on `CI`.
@@ -103,8 +83,6 @@ export default Alchemy.Stack(
     }
     const site = yield* Storybook;
 
-    // The Worker origin serves nothing at its root: the site lives under the
-    // same path prefix on every stage.
     return {
       url: Output.interpolate`${site.url}/${storybookRoute}/`,
     };

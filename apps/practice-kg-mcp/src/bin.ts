@@ -93,7 +93,6 @@ const serve = Effect.fnUntraced(function* (flags: BundleFlags) {
   );
 });
 
-// The self-check never builds the stdio server layer, so stdin is left alone.
 const check = (flags: BundleFlags) =>
   resolveBundle(flags).pipe(
     Effect.catchTag("ConfigError", (cause) =>

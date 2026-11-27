@@ -204,8 +204,6 @@ const rowIdsAreUnique = (manifest: CorpusManifestFields): boolean =>
 const rowCountMatchesSelection = (manifest: CorpusManifestFields): boolean =>
   Equal.equals(A.length(manifest.rows), manifest.selection.take);
 
-// Rows the canonical JSON owner refuses have no canonical bytes, so no hash
-// matches them: the check fails typed instead of throwing.
 const manifestHashMatchesRows = (manifest: CorpusManifestFields): boolean =>
   Result.match(canonicalJsonResult(manifest.rows), {
     onFailure: constFalse,

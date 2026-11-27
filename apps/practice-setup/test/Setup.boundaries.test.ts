@@ -153,11 +153,13 @@ it.layer(platform, { concurrent: false, timeout: "5 seconds" })(
       Effect.fnUntraced(function* (host, calls) {
         const resultInstaller = yield* host.runInstaller("/fixture/setup.exe", ["/S"]);
         expect(resultInstaller).toBe(1);
-        // Without the per-user executable the file goes to Explorer, whose nonzero
-        // exit is allowed because it can already have opened the file.
+
         yield* host.openInClaude("/fixture/bundle.mcpb");
         const text = "text with 'quotes'; $(not a command)";
-        expect((yield* host.openLink(text).pipe(Effect.result))._tag).toBe("Failure");
+        expect(
+          (yield* host.openLink(text).pipe(Effect.result))._tag,
+          "Without the per-user executable, the file goes through Explorer; its nonzero exit is allowed because it may already have opened the file."
+        ).toBe("Failure");
         expect((yield* host.copyToClipboard(text).pipe(Effect.result))._tag).toBe("Failure");
         expect(A.map(calls, (call) => call.command)).toEqual([
           "/fixture/setup.exe",

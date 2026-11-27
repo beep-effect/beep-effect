@@ -54,7 +54,7 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const stack = yield* Alchemy.Stack;
-    // `prod` and `staging` deploy only from CI; a local plan of either fails here.
+
     yield* requireCiForLiveStage(stack.stage);
     const config = yield* configForStage(stack.stage).pipe(Effect.orDie);
     return yield* oipWebResources(config);

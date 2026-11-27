@@ -135,12 +135,6 @@ const GoldReferenceOutcome = S.Union([GoldReferenceWritten, GoldReferenceNotWrit
   })
 );
 
-/**
- * Options used by the gold-proposal workflow.
- *
- * @category models
- * @since 0.0.0
- */
 interface GoldProposalOptions {
   readonly manifestPath: string;
   readonly outputDirectory: string;
@@ -148,12 +142,6 @@ interface GoldProposalOptions {
   readonly subset: O.Option<GoldFileValue["subset"]>;
 }
 
-/**
- * Proposal counts and files written by one command invocation.
- *
- * @category models
- * @since 0.0.0
- */
 type GoldProposalResultFields = {
   readonly accepted: typeof S.Natural;
   readonly files: S.$Array<typeof GoldFile>;
@@ -549,6 +537,8 @@ const nearestWhitespaceFoldedSpan = (
   ).pipe(O.map((best) => best.span));
 };
 
+type GoldQuoteAnchor = readonly [startChar: number, endChar: number, quote: string];
+
 /**
  * Resolves a proposed quote to an exact canonical-text slice within the gold drift window.
  *
@@ -569,8 +559,6 @@ const nearestWhitespaceFoldedSpan = (
  * @category anchoring
  * @since 0.0.0
  */
-type GoldQuoteAnchor = readonly [startChar: number, endChar: number, quote: string];
-
 export const resolveGoldQuoteAnchor: {
   (quote: string, claimedStart: number): (text: string) => O.Option<GoldQuoteAnchor>;
   (text: string, quote: string, claimedStart: number): O.Option<GoldQuoteAnchor>;
@@ -594,8 +582,7 @@ export const resolveGoldQuoteAnchor: {
   );
 });
 
-// Everything one job needs before any file is touched: the canonical text and the decoded proposal.
-// Replay is cache-only, so a missing entry or invalid output fails here, before the run writes.
+// decision: cache-replay-before-gold-writes
 const generateJobProposal = Effect.fn("Gold.generateJobProposal")(function* (
   selection: DocumentSelection,
   job: GoldJob
@@ -781,8 +768,7 @@ export const proposeGold = Effect.fn("Gold.propose")(function* (
   const completeRun = O.isNone(options.paper) && O.isNone(options.subset);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // Generate every selected proposal first: a replay miss in a checkout without the local provider
-  // cache must fail before the committed gold.json is invalidated or any label file is rewritten.
+
   const generated = yield* Effect.forEach(jobs, (job) => generateJobProposal(selection, job), { concurrency: 1 });
   yield* fs
     .remove(path.join(options.outputDirectory, "gold.json"), { force: true })

@@ -51,7 +51,6 @@ export const LiveStage = LiteralKit(["prod", "staging"]).pipe(
  */
 export type LiveStage = typeof LiveStage.Type;
 
-/** Every hostname the stack may attach to a Vercel project. */
 const OipHostname = LiteralKit([
   "oip.law",
   "www.oip.law",
@@ -116,10 +115,9 @@ export const OipRecordType = LiteralKit(["A", "CNAME"]).pipe(
   })
 );
 
-/** Redirect status codes the live domains use: 308 for production, 307 for staging. */
 const OipRedirectStatus = LiteralKit([307, 308]).pipe(
   $I.annoteSchema("OipRedirectStatus", {
-    description: "HTTP status of a Vercel domain redirect.",
+    description: "Live-domain redirect status: production uses 308 and staging uses 307.",
   })
 );
 
@@ -353,7 +351,6 @@ const hubSpotServiceKeyConfig = "CRM_HUBSPOT_SERVICE_KEY";
 
 const hubSpotAccountId = "246203876";
 
-/** Raw (encoded) form of a domain, as the recorded stage configurations write it. */
 type OipDomainInput = typeof OipDomain.Encoded;
 
 const apex = (zone: OipZone): OipDomainInput => ({ name: zone, zone, record: OipRecordType.Enum.A });
@@ -416,26 +413,12 @@ export const liveStageConfig = {
   },
 } as const satisfies Record<LiveStage, typeof OipWebStackConfig.Encoded>;
 
-/**
- * Lowercase, hyphenated form of a stage name for physical names
- * (`dev_alice` becomes `dev-alice`).
- *
- * @param stage - The Alchemy stage.
- * @returns The stage as a name segment.
- */
 const stageSegment: (stage: string) => string = flow(
   Str.toLowerCase,
   Str.replaceAll("_", "-"),
   Str.replace(/[^a-z0-9-]/g, "")
 );
 
-/**
- * Raw configuration of a personal stage: a new project and bucket named after
- * the stage, the two public variables, no domain, no DNS and no secret.
- *
- * @param stage - A stage other than `prod` and `staging`.
- * @returns The undecoded configuration.
- */
 const personalStageConfig = (stage: string) => ({
   live: false,
   projectName: `oip-web-${stageSegment(stage)}`,

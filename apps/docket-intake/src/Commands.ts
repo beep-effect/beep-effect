@@ -148,7 +148,6 @@ const printBackfillReport = printJson(S.encodeEffect(S.fromJsonString(DocketBack
 
 const pollOptions = (limit: O.Option<number>) => DocketPollOptions.make({ maxMessages: limit });
 
-// Build a layer for the length of one program and run the program with what it provides.
 const runWith = <A, E, R, ROut, E2, R2>(
   program: Effect.Effect<A, E, R>,
   layer: Layer.Layer<ROut, E2, R2>
@@ -159,7 +158,6 @@ const runWith = <A, E, R, ROut, E2, R2>(
     Effect.scoped
   );
 
-// The start of a first run: `--since`, else DOCKET_INTAKE_START_AT, else now.
 const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flagged: O.Option<DateTime.Utc>) {
   const now = yield* DateTime.now;
   return DateTime.formatIso(
@@ -186,7 +184,6 @@ const startOf = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, flag
  * @since 0.0.0
  */
 export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<E1, R1, E2, R2, E3, R3>) => {
-  // Build the pipeline for this process, seed the cursor on a first run, then run the program.
   const withIntake = Effect.fnUntraced(function* (flagged: O.Option<DateTime.Utc>, program: IntakeProgram) {
     const config = yield* DocketIntakeAppConfigFromEnv;
     const startAt = yield* startOf(config, flagged);

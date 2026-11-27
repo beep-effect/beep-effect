@@ -34,7 +34,6 @@ import { DocketDryRunPortsLive } from "../DryRun.ts";
 import { makeDocketQuestionPublisherLayer } from "../Questions.ts";
 import type { DocketIntakeAppConfig } from "../Config.ts";
 
-// The app-only Microsoft Graph layer for the configured tenant and certificate.
 const makeM365Layer = (config: DocketIntakeAppConfig) =>
   M365.makeAppOnlyLiveLayer(
     M365AppOnlyConfigInput.make({
@@ -59,22 +58,18 @@ const graphConfig = (options: IntakeOptions) =>
     timeZone: options.config.timeZone,
   });
 
-// The matter lookup over the configured practice-KG bundle, opened read-only; without a bundle,
-// every entry is flagged `matter-lookup-failed`.
 const matterLookupLayer = (config: DocketIntakeAppConfig) =>
   O.match(config.kgBundleDirectory, {
     onNone: () => DocketMatterLookupUnavailableLive,
     onSome: (bundleDir) => makeDocketMatterLookupLayer(DocketKgBundleOptions.make({ bundleDir })),
   });
 
-// The review hub's questions, over its data directory; without one, no questions are stored.
 const questionPublisherLayer = (config: DocketIntakeAppConfig) =>
   O.match(config.reviewHubDirectory, {
     onNone: () => Layer.empty,
     onSome: (directory) => makeDocketQuestionPublisherLayer(directory).pipe(Layer.provide(BunCrypto.layer)),
   });
 
-// The docket sheet cross-check over the configured CSV export; without one there is no cross-check.
 const trackedDatesLayer = (config: DocketIntakeAppConfig) =>
   O.match(config.docketSheetCsv, {
     onNone: () => Layer.empty,
@@ -123,8 +118,6 @@ const makeDocketIntakeAppLayer = (options: IntakeOptions) => {
   );
 };
 
-// The same pipeline for a dry run: read-only Graph ports under recording ones, and a throwaway
-// store in the dry-run directory. Nothing reaches the calendar, the mailbox or the real state.
 const makeDocketDryRunAppLayer = (options: IntakeOptions & { readonly directory: string }) => {
   const graph = makeDocketGraphReadOnlyLayer(graphConfig(options)).pipe(Layer.provide(makeM365Layer(options.config)));
   return pipelineOver(

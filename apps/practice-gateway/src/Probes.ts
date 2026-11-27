@@ -179,6 +179,7 @@ export const makeGatewayProbes = Effect.gen(function* () {
       if (executable || O.isSome(registered)) {
         return satisfied;
       }
+
       // Admin and MDM installs deploy the MSIX package instead of the per-user installer.
       const families = yield* host.appxPackageFamilies("Claude");
       return A.contains(families, CLAUDE_MSIX_PACKAGE_FAMILY)
@@ -369,7 +370,6 @@ export const makeGatewayProbes = Effect.gen(function* () {
   return registry;
 });
 
-// The catalog ids are kebab-case slugs, so the brand always holds.
 const idOf = (requirement: GatewayRequirementId): SetupRequirementId => SetupRequirementId.make(requirement);
 
 const lookup = (registry: GatewayProbeRegistry, requirement: SetupRequirement): O.Option<GatewayProbe> =>

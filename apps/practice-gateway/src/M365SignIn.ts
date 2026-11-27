@@ -236,20 +236,11 @@ export const makeDpapiTokenCache = Effect.fnUntraced(function* (filePath: string
   return persistence;
 });
 
-// One open loopback listener and the authorizer that uses it.
 interface LoopbackSignIn {
-  /**
-   * Opens the sign-in page and waits for its redirect; hand it to the driver.
-   */
   readonly authorizer: M365InteractiveAuthorizer;
-  /**
-   * Why the last authorization failed, in plain language, when the
-   * authorizer itself saw why.
-   */
+
   readonly problem: Effect.Effect<O.Option<M365SignInFailure>>;
-  /**
-   * The redirect URI the listener answers: `http://127.0.0.1:<port>`.
-   */
+
   readonly redirectUri: string;
 }
 

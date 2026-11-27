@@ -33,8 +33,6 @@ const SmokeLayer = Layer.merge(FakeM365Layer, BunCrypto.layer);
 
 const isDocketIntakeSmokeFailed = S.is(DocketIntakeSmokeFailed);
 
-// Run the smoke check against a script; answer how many steps it reported failed, the verbs it
-// called and the lines it printed.
 const runSmoke = Effect.fnUntraced(function* (script: Partial<M365Script>, write: boolean) {
   const fake = yield* FakeM365;
   yield* Ref.set(fake.script, { ...passingScript, ...script });
@@ -47,8 +45,7 @@ const runSmoke = Effect.fnUntraced(function* (script: Partial<M365Script>, write
   return {
     calls: argument,
     failed: argument1,
-    // The console also carries Effect log lines when a runner turns logging on; only the
-    // check's own PASS/FAIL report is asserted.
+
     lines: A.filter(
       logLines1,
       (line): line is string => Str.isString(line) && (Str.startsWith("PASS ")(line) || Str.startsWith("FAIL ")(line))

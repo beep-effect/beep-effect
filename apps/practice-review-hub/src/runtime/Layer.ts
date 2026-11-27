@@ -44,7 +44,6 @@ export const TAILSCALE_LOGIN_HEADER = "tailscale-user-login";
 
 const FORBIDDEN = 403;
 
-// Every request must independently authenticate before its proxy login is trusted.
 const loginAllowList = (allowedLogins: ReadonlyArray<string>, apiToken: Redacted.Redacted<string>) => {
   const expected = Buffer.from(`Bearer ${Redacted.value(apiToken)}`);
   const authenticated = (authorization: string) => {
@@ -65,7 +64,6 @@ const loginAllowList = (allowedLogins: ReadonlyArray<string>, apiToken: Redacted
   );
 };
 
-// Each tool calls the hub operation of the same purpose.
 const ReviewHubToolsLive = ReviewHubToolkit.toLayer(
   Effect.map(ReviewHub, (hub) => ({
     review_lock_batch: hub.lockBatch,

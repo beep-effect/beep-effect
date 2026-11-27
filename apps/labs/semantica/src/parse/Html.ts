@@ -6,19 +6,6 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 
-/**
- * HTML5 named references decoded by the C0 extractor.
- *
- * **Details**
- *
- * The supported set is `amp`, `apos`, `copy`, `gt`, `hellip`, `lt`, `mdash`,
- * `ndash`, `nbsp`, `quot`, `reg`, and `trade`. Numeric decimal and hexadecimal
- * references are also decoded. Unknown named references remain byte-for-byte
- * text.
- *
- * @category encoding
- * @since 0.0.0
- */
 const HTML5_NAMED_ENTITIES: Readonly<Record<string, string>> = {
   amp: "&",
   apos: "'",

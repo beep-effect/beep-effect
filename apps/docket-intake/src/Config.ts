@@ -75,7 +75,6 @@ export class DocketIntakeAppConfig extends S.Opaque<DocketIntakeAppConfig, { rea
 
 const DEFAULT_MAX_CONSECUTIVE_FAILURES = 6;
 
-// The review loop's own defaults (three rounds, a threshold of 0.85) apply when the variables are unset.
 const DEFAULT_REVIEW = DocketReviewConfig.make({});
 
 const STATE_SUFFIX = "beep/docket-intake";

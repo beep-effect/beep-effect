@@ -39,10 +39,8 @@ import type { PinnedInstaller } from "./Setup.models.ts";
 
 const $I = $PracticeSetupId.create("Setup.services");
 
-// Package family name of the Claude Desktop MSIX.
 const CLAUDE_PACKAGE_FAMILY = "Claude_pzs8sxrjxfjjc";
 
-// Registry key Claude Setup's per-user install registers under.
 const CLAUDE_UNINSTALL_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AnthropicClaude";
 
 /**
@@ -65,19 +63,17 @@ const CLAUDE_UNINSTALL_KEY = "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion
 export const appxListsClaude = (output: string): boolean =>
   pipe(Str.linesIterator(output), A.fromIterable, A.map(Str.trim), A.contains(CLAUDE_PACKAGE_FAMILY));
 
-// Service shape of SetupHost.
 interface SetupHostShape {
-  /** How Claude Desktop is installed for this Windows account, if at all. */
   readonly claudeInstall: Effect.Effect<ClaudeInstall, SetupFailure>;
-  /** Put text on the Windows clipboard. */
+
   readonly copyToClipboard: (text: string) => Effect.Effect<void, SetupFailure>;
-  /** Hand an extension file to Claude Desktop: its own executable when installed per user, else Windows. */
+  // decision: claude-launcher-boundary
   readonly openInClaude: (file: string) => Effect.Effect<void, SetupFailure>;
-  /** Hand a `claude://` link to Claude Desktop: its per-user launcher when installed, else Windows. */
+
   readonly openLink: (link: string) => Effect.Effect<void, SetupFailure>;
-  /** Run an installer and wait for it; succeeds with its exit code. */
+
   readonly runInstaller: (path: string, args: ReadonlyArray<string>) => Effect.Effect<number, SetupFailure>;
-  /** The bootstrapper's own folder, created on first use. */
+
   readonly stateDir: Effect.Effect<string, SetupFailure>;
 }
 
@@ -183,6 +179,7 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
         const present = yield* fs
           .exists(executable)
           .pipe(Effect.mapError(failWith("Claude's folder could not be checked.")));
+
         // reg.exe exits 1 when the key is absent.
         return present || (yield* run("reg.exe", ["query", CLAUDE_UNINSTALL_KEY])).exitCode === 0;
       });
@@ -194,7 +191,6 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
         "Get-AppxPackage -Name Claude | Select-Object -ExpandProperty PackageFamilyName",
       ]).pipe(Effect.map(({ stdout }) => appxListsClaude(stdout)));
 
-      // Runs one PowerShell command that reads its only input from `BEEP_SETUP_TEXT`.
       const powershellWith = Effect.fnUntraced(function* (command: string, text: string, failure: string) {
         const { exitCode } = yield* run("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], {
           BEEP_SETUP_TEXT: text,
@@ -204,9 +200,7 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
         }
       });
 
-      // The per-user launcher, when installed. Claude's own updates can leave the
-      // claude:// handler pointing at a removed app-<version> folder, so files
-      // and links go to this launcher, which always starts the current version.
+      // decision: claude-launcher-boundary
       const perUserClaude = Effect.gen(function* () {
         const localAppData2 = yield* localAppData;
         const claude = path.join(localAppData2, "AnthropicClaude", "claude.exe");
@@ -216,7 +210,6 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
         return present ? O.some(claude) : O.none<string>();
       });
 
-      // Both values travel as environment variables, so neither is parsed as PowerShell.
       const startClaudeWith = Effect.fnUntraced(function* (claude: string, argument: string, failure: string) {
         const { exitCode } = yield* run(
           "powershell.exe",
@@ -248,7 +241,6 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
         openInClaude: Effect.fn("SetupHost.openInClaude")(function* (file) {
           const claude = yield* perUserClaude;
           if (O.isNone(claude)) {
-            // explorer.exe exits 1 even when it opened the target, so the code is ignored.
             yield* run("explorer.exe", [file]);
             return;
           }
@@ -282,9 +274,7 @@ export class SetupHost extends Context.Service<SetupHost, SetupHostShape>()($I`S
   );
 }
 
-// Service shape of InstallerDownload.
 interface InstallerDownloadShape {
-  /** Download a pinned installer to `destination`, refusing it when its SHA-256 differs. */
   readonly fetch: (installer: PinnedInstaller, destination: string) => Effect.Effect<void, SetupFailure>;
 }
 
@@ -359,11 +349,9 @@ export class InstallerDownload extends Context.Service<InstallerDownload, Instal
   );
 }
 
-// Service shape of GatewayBundle.
 interface GatewayBundleShape {
-  /** Copy the gateway `.mcpb` into `dir` and return the copy's path, ready to open. */
   readonly materialize: (dir: string) => Effect.Effect<string, SetupFailure>;
-  /** The bundle's manifest version, when the build stamped it in. */
+
   readonly version: O.Option<string>;
 }
 
@@ -431,13 +419,11 @@ export class GatewayBundle extends Context.Service<GatewayBundle, GatewayBundleS
     );
 }
 
-// Service shape of Lawyer.
 interface LawyerShape {
-  /** Wait for Enter without showing anything; interruptible, for racing a probe. */
   readonly awaitEnter: Effect.Effect<void, SetupFailure>;
-  /** Show one plain-language line. */
+
   readonly tell: (text: string) => Effect.Effect<void>;
-  /** Show an instruction and wait until the lawyer presses Enter. */
+
   readonly waitFor: (instruction: string) => Effect.Effect<void, SetupFailure>;
 }
 
@@ -513,11 +499,9 @@ export const InstallWaitSchedule = Context.Reference<Schedule.Schedule<unknown>>
   defaultValue: (): Schedule.Schedule<unknown> => Schedule.max([Schedule.spaced("2 seconds"), Schedule.recurs(90)]),
 });
 
-// Service shape of ClaudeState.
 interface ClaudeStateShape {
-  /** Whether Claude Desktop lists the gateway at `expected` (any version when `None`). */
   readonly gateway: (expected: O.Option<string>) => Effect.Effect<GatewayInstallState>;
-  /** Whether Claude Desktop has a signed-in account. */
+
   readonly signIn: Effect.Effect<SignInState>;
 }
 
@@ -582,7 +566,6 @@ export class ClaudeState extends Context.Service<ClaudeState, ClaudeStateShape>(
           : yield* Effect.map(Config.String("APPDATA"), (value) => path.join(value, "Claude"));
       });
 
-      // None when the file does not exist yet; fails when it cannot be located or read.
       const readClaudeFile = Effect.fnUntraced(function* (name: string) {
         const dataDir6 = yield* dataDir;
         const file = path.join(dataDir6, name);

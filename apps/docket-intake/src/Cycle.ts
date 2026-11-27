@@ -117,8 +117,6 @@ const earliestProcessedDay = (state: DocketIntakeState): O.Option<LocalDate> =>
     )
   );
 
-// Write the digest of every day that is over and not digested yet, earliest first, so days missed
-// while the service was down each get their own digest.
 const writeOwedDigests: (
   config: DocketIntakeAppConfig,
   today: LocalDate,
@@ -180,7 +178,7 @@ export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (
   const report = yield* intake.pollOnce(today, options);
   // Every run gets a line, also one that wrote nothing, so `runs` lists it and `undo` finds it.
   yield* recordDocketRunCompleted(report);
-  // Only when the review hub is configured: its questions for every needs-review message.
+
   const store = yield* DocketIntakeStore;
   const serviceOption2 = yield* Effect.serviceOption(DocketQuestionPublisher);
   yield* O.match(serviceOption2, {

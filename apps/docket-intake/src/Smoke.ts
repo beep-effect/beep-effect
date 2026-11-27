@@ -65,7 +65,6 @@ const errorLabel = (error: M365Error): string =>
     onSome: (status) => `${error.reason} ${status}`,
   });
 
-// Run one step and print PASS or FAIL with ids and counts only. A failed step yields `None`.
 const step = <A>(
   name: string,
   effect: Effect.Effect<A, M365Error>,

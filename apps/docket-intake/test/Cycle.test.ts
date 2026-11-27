@@ -29,7 +29,6 @@ const DIGESTS = `${STATE_DIRECTORY}/digests`;
 const TODAY = LocalDate.make({ year: 1969, month: 12, day: 31 });
 const DAY_ONE = addDays(TODAY, -3);
 
-// Save state as if the last digest had been written for this day, keeping the ledger.
 const setDigestedThrough = Effect.fnUntraced(function* (day: LocalDate) {
   const harness = yield* PipelineHarness;
   yield* Ref.update(harness.state, (state) =>
@@ -122,7 +121,7 @@ describe("@beep/docket-intake poll cycle", () => {
         const intake = yield* DocketIntake;
         const store = yield* DocketIntakeStore;
         const harness = yield* PipelineHarness;
-        // The message was entered three days ago, and the last digest is from the day before that.
+
         yield* intake.pollOnce(DAY_ONE);
         yield* setDigestedThrough(addDays(DAY_ONE, -1));
 
@@ -144,8 +143,11 @@ describe("@beep/docket-intake poll cycle", () => {
         expect(dayOne).toContain("Tentative entries created: 1.");
         expect(dayOne).toContain("2030-04-08 tentative entry");
         expect(dayTwo).toContain("Tentative entries created: 0.");
-        // Only the day with something to report gets a calendar entry.
-        expect(A.map(digestEntries, (entry) => entry.date.toISOString())).toStrictEqual(["1969-12-28"]);
+
+        expect(
+          A.map(digestEntries, (entry) => entry.date.toISOString()),
+          "Only days containing something to report get their own calendar digest entry."
+        ).toStrictEqual(["1969-12-28"]);
       })
     );
   });
@@ -179,14 +181,17 @@ describe("@beep/docket-intake poll cycle", () => {
       Effect.fnUntraced(function* () {
         const store = yield* DocketIntakeStore;
         const harness = yield* PipelineHarness;
-        // Fail, succeed, fail, succeed: never two failures in a row, so the limit of 2 is not reached.
+
         yield* Ref.set(harness.listingFailures, [true, false, true, false]);
 
         yield* pollOnSchedule({ config: fixtureConfig, schedule: Schedule.recurs(3) });
         const state = yield* store.load;
 
         const got4 = yield* Ref.get(harness.listings);
-        expect(got4).toBe(4);
+        expect(
+          got4,
+          "Alternating failure and success resets the consecutive-failure count, so a limit of two is never reached."
+        ).toBe(4);
         expect(R.keys(state.ledger)).toStrictEqual(["m1"]);
         assertSome(state.cursor, "2030-01-09T10:00:00.000Z");
       })

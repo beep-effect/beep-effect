@@ -65,24 +65,14 @@ export const vercelCnameTarget = "cname.vercel-dns.com";
  */
 export const dnsRecordComment = "Managed by Pulumi for oip.law Vercel routing.";
 
-/**
- * Logical-id suffix of a hostname: `www.oip.law` becomes `www-oip-law`.
- *
- * @param domain - The hostname.
- * @returns The suffix.
- */
 const slugOf = (domain: OipDomain): string => Str.replaceAll(".", "-")(domain.name);
 
-/** Logical id of a domain's `Vercel.Domain` resource: `Domain-oip-law` for `oip.law`. */
 const domainId = (domain: OipDomain): string => `Domain-${slugOf(domain)}`;
 
-/** Logical id of a domain's `Cloudflare.DNS.Record` resource: `Dns-oip-law` for `oip.law`. */
 const dnsRecordId = (domain: OipDomain): string => `Dns-${slugOf(domain)}`;
 
-/** Logical id of the Vercel project (the plan guard classifies it by this id). */
 const projectId = "Project";
 
-/** Logical id of the assets bucket (the plan guard classifies it by this id). */
 const assetsBucketId = "AssetsBucket";
 
 /**
@@ -98,13 +88,6 @@ const liveObject =
   <A, E, R>(declaration: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
     declaration.pipe(adopt(live), RemovalPolicy.protect(live));
 
-/**
- * Declare one hostname: the project domain and the DNS record pointing it at Vercel.
- *
- * @param config - The stage's configuration.
- * @param project - The Vercel project id.
- * @returns The effect declaring both resources.
- */
 const declareDomain = (config: OipWebStackConfig, project: Input<string>) =>
   Effect.fn("OipWeb.declareDomain")(function* (domain: OipDomain) {
     const vercelDomain = yield* Vercel.Domain(domainId(domain), {
@@ -192,6 +175,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
     targets: ["production", "preview"],
     type: "encrypted",
   }).pipe(liveObject(config.live));
+
   // The secret is read at deploy time and never reaches state.
   yield* pipe(
     O.fromUndefinedOr(config.hubSpotServiceKey),

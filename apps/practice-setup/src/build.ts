@@ -91,6 +91,7 @@ const build = Command.make(
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const repoRoot = path.resolve(import.meta.dirname, "../../..");
     const outputDir = path.resolve(repoRoot, flags.output);
+
     // The generated entry stays inside the app so its imports resolve from the workspace.
     const embedDir = path.join(repoRoot, "apps/practice-setup/dist/embed");
     const { bunTarget, executable } = mcpbCompiledLaunch("windows-x64", "practice-setup");

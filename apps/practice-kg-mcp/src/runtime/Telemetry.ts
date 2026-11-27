@@ -58,8 +58,6 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as OtlpExporter from "effect/observability/OtlpExporter";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
-// Span-name prefixes that carry a tool id: the MCP kit dispatch span and the
-// practice KG handler span.
 const PracticeKgToolSpanPrefixes = ["mcp.tool.call.", "PracticeKgTools."] as const;
 
 /**
@@ -82,7 +80,6 @@ export const PracticeKgTelemetryCatalog: InstrumentCatalog = InstrumentCatalog.m
   instruments: [...ObservabilityInstruments.instruments, ...PracticeKgTelemetryInstruments.instruments],
 });
 
-// Strict gate configuration of the practice KG host for one key epoch.
 const makePracticeKgStrictGateConfig = (keyEpoch: string): StrictGateConfig =>
   StrictGateConfig.make({
     serviceName: "practice-kg-mcp",
@@ -116,7 +113,6 @@ const makePracticeKgStrictGateConfig = (keyEpoch: string): StrictGateConfig =>
  */
 export const PracticeKgStrictGateConfig: StrictGateConfig = makePracticeKgStrictGateConfig("memory");
 
-// Synchronous HMAC-SHA256 through Bun, lowercase hex.
 const bunHmacSha256Hex = (key: Uint8Array, value: string): string =>
   new Bun.CryptoHasher("sha256", key).update(value).digest("hex");
 
@@ -178,7 +174,6 @@ export const shapeOnlyLogLine: {
     `practice-kg-mcp level=${level} tool=${O.getOrElse(tool, () => "none")} refused=${TelemetryRefusalTag.Enum["log-record-dropped"]}`
 );
 
-// Writes `shapeOnlyLogLine` lines to stderr; it never reads the message or cause.
 const shapeOnlyStderrLogger: Logger.Logger<unknown, void> = Logger.withConsoleError(
   Logger.make((options) =>
     shapeOnlyLogLine(

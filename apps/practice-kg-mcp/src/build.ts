@@ -91,6 +91,7 @@ const buildCommand = Command.make(
       { corpusRoot: flags.corpusRoot, ...OptionUtils.getSomesStruct({ bundleOut: flags.bundleOut }) },
       path
     );
+
     // Options are built before anything is removed, so a value the options
     // schema refuses can never cost an existing bundle.
     const options = PracticeKgOptions.make({

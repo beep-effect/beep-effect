@@ -18,10 +18,6 @@ import Image from "next/image";
 
 const $I = $OipWebId.create("components/HeroVideo");
 
-/**
- * Optional Network Information API surface used to skip the video on
- * data-saver or very slow connections.
- */
 type SaveDataNavigator = Navigator & {
   readonly connection?: {
     readonly saveData?: boolean;
@@ -200,11 +196,6 @@ const rotationSetKey = (clips: ReadonlyArray<S.Struct.Type<typeof HeroClipMedia.
 
 const heroRotationIndexAtom = Atom.family((_key: string) => Atom.make(0));
 
-/**
- * Mount-effect atom that advances the active clip on a fixed interval when more
- * than one clip is present and motion is allowed. It is a no-op for a single clip
- * or when {@link shouldSkipHeroVideo} holds (reduced motion / save-data / 2g).
- */
 const heroRotationDriverAtom = Atom.family((key: string) =>
   Atom.make((get) => {
     if (typeof window === "undefined" || shouldSkipHeroVideo()) {

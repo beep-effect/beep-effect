@@ -125,8 +125,6 @@ export class PracticeKgTelemetryKeyFile extends S.Opaque<
 const decodeKeyFile = S.decodeUnknownEffect(S.fromJsonString(PracticeKgTelemetryKeyFile));
 const encodeKeyFile = S.encodeEffect(S.fromJsonString(PracticeKgTelemetryKeyFile));
 
-// Identity `DpapiPort` marked `dev-file`: the root key is stored
-// unwrapped. Not for production.
 const layerDevPlaintextDpapi: Layer.Layer<DpapiPort> = Layer.succeed(
   DpapiPort,
   DpapiPort.of({ protection: StrictKeyProtection.Enum["dev-file"], protect: Effect.succeed, unprotect: Effect.succeed })
@@ -187,7 +185,7 @@ const loadCrypt32 = Effect.tryPromise({
           }
           const view = new DataView(output.buffer);
           const pointer = view.getBigUint64(8, true);
-          // Copy the result out, then zero DPAPI's buffer before freeing it.
+
           const native = new Uint8Array(ffi.toArrayBuffer(pointer, 0, view.getUint32(0, true)));
           const copy = native.slice();
           native.fill(0);
@@ -201,7 +199,6 @@ const loadCrypt32 = Effect.tryPromise({
   )
 );
 
-// One crypt32 call; `None` is the call returning FALSE.
 const dpapiCall = (
   call: (protect: boolean, input: Uint8Array) => O.Option<Uint8Array>,
   protect: boolean,
@@ -215,9 +212,6 @@ const dpapiCall = (
   );
 };
 
-// DPAPI `DpapiPort` over `bun:ffi`, calling
-// `crypt32.CryptProtectData` / `CryptUnprotectData` for the current user
-// with the UI forbidden. Windows only; building it elsewhere fails.
 const layerDpapiFfi: Layer.Layer<DpapiPort, TelemetryKeyFailure> = Layer.effect(
   DpapiPort,
   Effect.map(loadCrypt32, (call) =>
@@ -345,8 +339,6 @@ export const roundTripDpapi = Effect.fn("PracticeKgTelemetryKey.roundTrip")(func
   return port.protection;
 });
 
-// The production DPAPI port: the `bun:ffi` path when it loads and passes a
-// round trip, otherwise the PowerShell path.
 const layerDpapiProduction: Layer.Layer<DpapiPort, TelemetryKeyFailure, ChildProcessSpawner.ChildProcessSpawner> =
   Layer.effect(
     DpapiPort,
@@ -456,8 +448,7 @@ const unwrapStored = Effect.fnUntraced(function* (
     );
 });
 
-// Key files are `key.<epoch>.dpapi`; a file is published once and never
-// overwritten, so the highest epoch on disk is the current key.
+// decision: atomic-telemetry-key-epochs
 const keyFilePattern = /^key\.(\d+)\.dpapi$/;
 const keyFileNameFor = (epoch: number): string => `key.${epoch}.dpapi`;
 const keyAttempts = 5;
@@ -465,7 +456,6 @@ const pendingNameBytes = 6;
 
 const isAlreadyExists = (error: PlatformError.PlatformError): boolean => error.reason._tag === "AlreadyExists";
 
-// The highest epoch present in the directory and its decoded file, if it decodes.
 const latestKeyFile = Effect.fnUntraced(function* (telemetryDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -489,10 +479,7 @@ const latestKeyFile = Effect.fnUntraced(function* (telemetryDir: string) {
   });
 });
 
-// Draws a new root key and publishes it as `key.<epoch>.dpapi`: the wrapped key
-// is written owner-only to a pending name, then hard-linked into place, which
-// fails when the name already exists. `None` means another process published
-// that epoch first.
+// decision: atomic-telemetry-key-epochs
 const publishKey = Effect.fnUntraced(function* (
   port: Context.Service.Shape<typeof DpapiPort>,
   telemetryDir: string,
@@ -522,8 +509,7 @@ const publishKey = Effect.fnUntraced(function* (
   return published ? O.some({ epoch, material }) : O.none<{ readonly epoch: number; readonly material: Uint8Array }>();
 });
 
-// Uses the highest-epoch key when it unwraps; otherwise publishes the next
-// epoch, and when another process wins that epoch, starts over and uses its key.
+// decision: atomic-telemetry-key-epochs
 const resolveKey = Effect.fnUntraced(function* (
   port: Context.Service.Shape<typeof DpapiPort>,
   telemetryDir: string,
@@ -622,8 +608,6 @@ export const layerPracticeKgSpoolKey = (
     })
   );
 
-// What a read-only look at the telemetry key found: a key that unwrapped, no
-// key file, or a key file that does not decode or unwrap.
 const PracticeKgKeyStatus = LiteralKit(["loaded", "missing", "unreadable"]).pipe(
   $I.annoteSchema("PracticeKgKeyStatus", {
     description: "Read-only telemetry key status: loaded, missing, or present but not decodable or unwrappable.",
@@ -686,7 +670,7 @@ export class PracticeKgKeyReport extends S.Opaque<PracticeKgKeyReport, { readonl
  */
 export const readPracticeKgSpoolKey = Effect.fn("PracticeKgTelemetryKey.read")(function* (telemetryDir: string) {
   const port = yield* DpapiPort;
-  // The same highest-epoch scan the host uses; it only lists and reads.
+
   const latest = yield* latestKeyFile(telemetryDir);
   return yield* O.match(latest, {
     onNone: () => Effect.succeed([PracticeKgKeyReport.make({ status: "missing" }), O.none()] as const),

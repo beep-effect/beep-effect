@@ -646,7 +646,6 @@ export const BoxDriveToolkitHandlers = BoxDriveToolkit.toLayer(
       );
     };
 
-    // Resolve a relative path to its real location inside the Box folder.
     const resolve = Effect.fnUntraced(function* (tool: string, relative: string) {
       const checked = yield* S.decodeEffect(BoxRelativePath)(relative).pipe(
         Effect.mapError(() =>
@@ -673,8 +672,6 @@ export const BoxDriveToolkitHandlers = BoxDriveToolkit.toLayer(
       return { root, target, segments, info, shown: A.join(segments, "/") };
     });
 
-    // Entries are re-checked against the Box folder, so a symlink that leads
-    // out of it is not listed.
     const entryOf = (root: string, folder: string, parent: ReadonlyArray<string>) => (name: string) =>
       resolvePathWithinRoot({ root, candidate: path.join(folder, name) }).pipe(
         Effect.provideContext(platform),
@@ -689,7 +686,7 @@ export const BoxDriveToolkitHandlers = BoxDriveToolkit.toLayer(
               })
             : O.none()
         ),
-        // An entry that escapes, vanished or cannot be read is left out of the listing.
+
         Effect.orElseSucceed(O.none<BoxEntry>)
       );
 

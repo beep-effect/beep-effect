@@ -93,6 +93,8 @@ export const ReviewStatus = ReviewStatusBase.pipe(
  * @category models
  * @since 0.0.0
  */
+
+// fallow-ignore-next-line unused-type -- the schema-annotation policy requires the type companion although only the ReviewStatus value is consumed. Owner: @beep/oip-web. Exit: remove when the policy stops requiring a type alias per schema value or a consumer imports the type.
 // Required runtime-type-alias companion for the ReviewStatus schema (jsdoc
 // schema-annotation policy); the value export is consumed via ReviewStatus.Enum.*
 // in OipContent.data.ts, so only the type alias reads as unused.

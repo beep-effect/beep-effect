@@ -73,7 +73,6 @@ export const sendDailyNotice = Effect.fn("ReviewNotice.send")(function* (timeZon
   return yield* (yield* DailyNotice).sendIfDue({ digest, today });
 });
 
-// The outcome as one JSON line.
 const encodeOutcomeLine = S.encodeEffect(S.fromJsonString(DailyNoticeOutcome));
 
 /**
