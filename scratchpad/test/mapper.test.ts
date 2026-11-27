@@ -1,4 +1,4 @@
-import { AuthRequired, Locator, MappedItem, PostLocator, RedGifsTarget, YouTubeTarget, locate } from "@beep/scratchpad/int/locator";
+import { AuthRequired, Locator, MappedItem, Page, PostLocator, RedGifsTarget, YouTubeTarget, locate } from "@beep/scratchpad/int/locator";
 import {
   DzenMapper,
   FacebookMapper,
@@ -29,27 +29,28 @@ const video = PostLocator.make(
 
 it.layer(
   Layer.mergeAll(
-    Layer.succeed(XMapper, { items: () => Stream.fail(AuthRequired.make({ platform: "x" })) }),
+    Layer.succeed(XMapper, { pages: () => Stream.fail(AuthRequired.make({ platform: "x" })) }),
     Layer.succeed(YouTubeMapper, {
-      items: YouTubeTarget.match({
-        collection: () => Stream.make(MappedItem.make({ source: video, videos: 1 })),
-        post: (target) => Stream.make(MappedItem.make({ source: PostLocator.make(Locator.cases.youtube.make({ target })), videos: 1 })),
+      pages: YouTubeTarget.match({
+        collection: () => Stream.make(Page.of(MappedItem.make({ source: video, videos: 1 }))),
+        post: (target) =>
+          Stream.make(Page.of(MappedItem.make({ source: PostLocator.make(Locator.cases.youtube.make({ target })), videos: 1 }))),
       }),
     }),
     Layer.succeed(RedGifsMapper, {
-      items: RedGifsTarget.match({ collection: () => Stream.empty, post: () => Stream.empty }),
+      pages: RedGifsTarget.match({ collection: () => Stream.empty, post: () => Stream.empty }),
     }),
-    Layer.succeed(DzenMapper, { items: () => Stream.empty }),
-    Layer.succeed(FacebookMapper, { items: () => Stream.empty }),
-    Layer.succeed(FanslyMapper, { items: () => Stream.empty }),
-    Layer.succeed(InstagramMapper, { items: () => Stream.empty }),
-    Layer.succeed(OnlyFansMapper, { items: () => Stream.empty }),
-    Layer.succeed(PinterestMapper, { items: () => Stream.empty }),
-    Layer.succeed(RedditMapper, { items: () => Stream.empty }),
-    Layer.succeed(SnapchatMapper, { items: () => Stream.empty }),
-    Layer.succeed(ThreadsMapper, { items: () => Stream.empty }),
-    Layer.succeed(TikTokMapper, { items: () => Stream.empty }),
-    Layer.succeed(VscoMapper, { items: () => Stream.empty })
+    Layer.succeed(DzenMapper, { pages: () => Stream.empty }),
+    Layer.succeed(FacebookMapper, { pages: () => Stream.empty }),
+    Layer.succeed(FanslyMapper, { pages: () => Stream.empty }),
+    Layer.succeed(InstagramMapper, { pages: () => Stream.empty }),
+    Layer.succeed(OnlyFansMapper, { pages: () => Stream.empty }),
+    Layer.succeed(PinterestMapper, { pages: () => Stream.empty }),
+    Layer.succeed(RedditMapper, { pages: () => Stream.empty }),
+    Layer.succeed(SnapchatMapper, { pages: () => Stream.empty }),
+    Layer.succeed(ThreadsMapper, { pages: () => Stream.empty }),
+    Layer.succeed(TikTokMapper, { pages: () => Stream.empty }),
+    Layer.succeed(VscoMapper, { pages: () => Stream.empty })
   )
 )("items", (it) => {
   it.effect("routes a locator to the mapper service of its platform", () =>

@@ -1714,6 +1714,7 @@ export class Post extends S.Opaque<Post, { readonly brand: unique symbol }>()(
       source: post.source,
       images: A.length(A.filter(post.media, Media.guards.image)),
       videos: A.length(A.filter(post.media, Media.guards.video)),
+      locked: A.length(A.filter(post.media, ({ access }) => Access.guards.locked(access))),
       publishedAt: post.publishedAt
     })
 }

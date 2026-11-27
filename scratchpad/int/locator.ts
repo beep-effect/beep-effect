@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect"
 import { flow, pipe } from "effect/Function"
 import * as HashMap from "effect/HashMap"
 import * as HashSet from "effect/HashSet"
+import * as Num from "effect/Number"
 import * as UrlParams from "effect/http/UrlParams"
 import * as O from "effect/Option"
 import * as P from "effect/Predicate"
@@ -3297,12 +3298,35 @@ declare namespace MediaCount {
   export type Encoded = number;
 }
 
+const absentKey = <Schema extends S.Top>(schema: Schema, description: string) =>
+  schema.pipe(
+    S.annotateKey({ description }),
+    S.OptionFromOptionalKey,
+    S.withConstructorDefault(Effect.succeedNone)
+  )
+
+const flag = (description: string) =>
+  S.Boolean.pipe(
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+    S.withConstructorDefault(Effect.succeed(false))
+  )
+
+const counter = (description: string) =>
+  MediaCount.pipe(
+    S.annotateKey({ description }),
+    S.withDecodingDefaultTypeKey(Effect.succeed(0)),
+    S.withConstructorDefault(Effect.succeed(0))
+  )
+
 /**
  * **Details**
  *
  * `source` is the item's identity: its encoded form is the canonical post URL,
  * which also carries the platform, the post identifier and, where the site
- * prints one, the author.
+ * prints one, the author. `locked` counts the media a paywall withholds, so
+ * `images + videos - locked` is what a download can fetch. A stored item
+ * holds no media URL, because sites sign those and they expire.
  *
  * **Example** (Record a mapped video)
  *
@@ -3319,6 +3343,7 @@ declare namespace MediaCount {
  * })
  * const stored = O.map(S.encodeOption(MappedItem)(item), ({ source }) => source)
  * stored // => O.some("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+ * MappedItem.fetchable(item) // => 1
  * ```
  *
  * @category models
@@ -3329,21 +3354,14 @@ export class MappedItem extends S.Opaque<MappedItem, {
 }>()(
   S.Struct({
     source: PostLocatorFromUrl,
-    images: MediaCount.pipe(
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
-      S.withConstructorDefault(Effect.succeed(0))
-    ),
-    videos: MediaCount.pipe(
-      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
-      S.withConstructorDefault(Effect.succeed(0))
-    ),
-    publishedAt: S.DateTimeUtcFromMillis.pipe(
-      S.annotateKey({ description: "Publication instant, when the site reports one." }),
-      S.OptionFromOptionalKey,
-      S.withConstructorDefault(Effect.succeedNone)
-    )
+    images: counter("Still images in the post."),
+    videos: counter("Videos in the post."),
+    locked: counter("Media of the post a paywall withholds from the viewer."),
+    pinned: flag("Whether the listing shows the post out of order, above newer ones."),
+    publishedAt: absentKey(S.DateTimeUtcFromMillis, "Publication instant, when the site reports one.")
   }).pipe($I.annoteSchema("MappedItem", { description: "One post discovered while traversing a listing." }))
 ) {
+  static readonly fetchable = ({ images, videos, locked }: MappedItem): number => Num.max(0, images + videos - locked)
 }
 
 /**
@@ -3359,21 +3377,121 @@ export declare namespace MappedItem {
     readonly source: PostLocatorFromUrl.Encoded;
     readonly images?: MediaCount.Encoded;
     readonly videos?: MediaCount.Encoded;
+    readonly locked?: MediaCount.Encoded;
+    readonly pinned?: boolean;
     readonly publishedAt?: number;
   }
 }
 
 /**
- * **Example** (Recover from a sign-in wall)
+ * **Example** (Carry a site's resume token)
  *
- * ```ts import.meta.vitest name="Recover from a sign-in wall"
+ * ```ts import.meta.vitest name="Carry a site's resume token"
+ * import { Cursor } from "@beep/scratchpad/int/locator"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(Cursor)("QVFEa2x") // => true
+ * S.is(Cursor)("") // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Cursor = S.NonEmptyString.pipe(
+  S.brand("Cursor"),
+  $I.annoteSchema("Cursor", {
+    description: "Token a site hands out to continue a listing after the page that carried it."
+  })
+)
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Cursor = typeof Cursor.Type;
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Cursor {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = string;
+}
+
+/**
+ * **Details**
+ *
+ * A page is the unit a site answers in and the unit a traversal is stored in:
+ * one write per page, and `next` is where a later run resumes. An `aside`
+ * page is a list the site shows beside the timeline, such as pinned posts: its
+ * items are kept, and neither its end nor its already-known items say
+ * anything about how far the timeline has been read.
+ *
+ * **Example** (Wrap one item as a page)
+ *
+ * ```ts import.meta.vitest name="Wrap one item as a page"
+ * import { Locator, MappedItem, Page, PostLocator, RedGifsTarget } from "@beep/scratchpad/int/locator"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const source = PostLocator.make(
+ *   Locator.cases.redgifs.make({ target: RedGifsTarget.cases.post.make({ id: "calmclip" }) })
+ * )
+ * const page = Page.of(MappedItem.make({ source, videos: 1 }))
+ * A.length(page.items) // => 1
+ * O.isNone(page.next) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Page extends S.Opaque<Page, {
+  readonly brand: unique symbol
+}>()(
+  S.Struct({
+    items: S.Array(MappedItem).pipe(
+      S.annotateKey({ description: "Posts of this page in the order the site lists them." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed([])),
+      S.withConstructorDefault(Effect.succeed([]))
+    ),
+    next: absentKey(Cursor, "Where the listing continues, when the site hands out a token."),
+    aside: flag("Whether the page belongs to a side list such as pinned posts.")
+  }).pipe($I.annoteSchema("Page", { description: "One answer of a site while a listing is traversed." }))
+) {
+  static readonly of = (item: MappedItem): Page => Page.make({ items: [item] })
+}
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Page {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly items?: ReadonlyArray<MappedItem.Encoded>;
+    readonly next?: Cursor.Encoded;
+    readonly aside?: boolean;
+  }
+}
+
+/**
+ * **Example** (Recover from a refused traversal)
+ *
+ * ```ts import.meta.vitest name="Recover from a refused traversal"
  * import { AuthRequired } from "@beep/scratchpad/int/locator"
  * import * as Effect from "effect/Effect"
  *
- * const outcome = Effect.fail(AuthRequired.make({ platform: "x" })).pipe(
+ * const outcome = Effect.fail(AuthRequired.make({ platform: "instagram" })).pipe(
  *   Effect.catchTag("AuthRequired", ({ platform }) => Effect.succeed(`sign in to ${platform}`))
  * )
- * Effect.runSync(outcome) // => "sign in to x"
+ * Effect.runSync(outcome) // => "sign in to instagram"
  * ```
  *
  * @category errors
@@ -3406,6 +3524,11 @@ export declare namespace AuthRequired {
 }
 
 /**
+ * **Details**
+ *
+ * `retryAfter` is the wait the site asked for, when it named one. A caller
+ * that retries without it should back off on its own schedule.
+ *
  * **Example** (Recover from a rate limit)
  *
  * ```ts import.meta.vitest name="Recover from a rate limit"
@@ -3425,7 +3548,10 @@ export class RateLimited extends S.TaggedError<RateLimited, {
   readonly brand: unique symbol
 }>($I`RateLimited`)(
   "RateLimited",
-  { platform: Platform },
+  {
+    platform: Platform,
+    retryAfter: absentKey(S.DurationFromMillis, "How long the site asked the caller to wait.")
+  },
   $I.annoteError<RateLimited>("RateLimited", {
     description: "The site is throttling requests; items already emitted remain valid."
   })
@@ -3444,6 +3570,110 @@ export declare namespace RateLimited {
   export interface Encoded {
     readonly _tag: "RateLimited";
     readonly platform: Platform.Encoded;
+    readonly retryAfter?: number;
+  }
+}
+
+const Absence = LiteralKit(["missing", "private", "challenged"]).pipe(
+  $I.annoteSchema("Absence", {
+    description:
+      "Why a site shows nothing: the target does not exist, its owner closed it, or the site asked for proof of a human."
+  })
+)
+
+declare namespace Absence {
+  export type Encoded = typeof Absence.Encoded;
+}
+
+/**
+ * **Example** (Tell a closed account from a missing one)
+ *
+ * ```ts import.meta.vitest name="Tell a closed account from a missing one"
+ * import { Unavailable } from "@beep/scratchpad/int/locator"
+ * import * as Effect from "effect/Effect"
+ *
+ * const outcome = Effect.fail(Unavailable.make({ platform: "vsco", reason: "challenged" })).pipe(
+ *   Effect.catchTag("Unavailable", ({ reason }) => Effect.succeed(reason))
+ * )
+ * Effect.runSync(outcome) // => "challenged"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class Unavailable extends S.TaggedError<Unavailable, {
+  readonly brand: unique symbol
+}>($I`Unavailable`)(
+  "Unavailable",
+  { platform: Platform, reason: Absence },
+  $I.annoteError<Unavailable>("Unavailable", {
+    description: "The site answered and has nothing to show for the target."
+  })
+) {
+}
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Unavailable {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "Unavailable";
+    readonly platform: Platform.Encoded;
+    readonly reason: Absence.Encoded;
+  }
+}
+
+/**
+ * **Details**
+ *
+ * This is the failure of the machinery and not of the site: a browser that
+ * would not start, an answer in a shape the mapper does not read, a helper
+ * process that died. `detail` is for a log, never for branching.
+ *
+ * **Example** (Report a mapper that broke)
+ *
+ * ```ts import.meta.vitest name="Report a mapper that broke"
+ * import { MapperFailed } from "@beep/scratchpad/int/locator"
+ * import * as Effect from "effect/Effect"
+ *
+ * const outcome = Effect.fail(MapperFailed.make({ platform: "onlyfans", detail: "browser closed" })).pipe(
+ *   Effect.catchTag("MapperFailed", ({ detail }) => Effect.succeed(detail))
+ * )
+ * Effect.runSync(outcome) // => "browser closed"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class MapperFailed extends S.TaggedError<MapperFailed, {
+  readonly brand: unique symbol
+}>($I`MapperFailed`)(
+  "MapperFailed",
+  { platform: Platform, detail: S.String },
+  $I.annoteError<MapperFailed>("MapperFailed", {
+    description: "The mapper itself broke before the site could answer or refuse."
+  })
+) {
+}
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MapperFailed {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "MapperFailed";
+    readonly platform: Platform.Encoded;
+    readonly detail: string;
   }
 }
 
@@ -3456,6 +3686,8 @@ export declare namespace RateLimited {
  * const reason = MapFailure.match(RateLimited.make({ platform: "redgifs" }), {
  *   AuthRequired: ({ platform }) => `sign in to ${platform}`,
  *   RateLimited: () => "retry later",
+ *   Unavailable: ({ reason }) => reason,
+ *   MapperFailed: ({ detail }) => detail,
  * })
  * reason // => "retry later"
  * ```
@@ -3463,7 +3695,7 @@ export declare namespace RateLimited {
  * @category errors
  * @since 0.0.0
  */
-export const MapFailure = S.Union([AuthRequired, RateLimited]).pipe(
+export const MapFailure = S.Union([AuthRequired, RateLimited, Unavailable, MapperFailed]).pipe(
   $I.annoteSchema("MapFailure", {
     description: "Why a traversal ended before the site ran out of items."
   }),
@@ -3487,5 +3719,7 @@ export declare namespace MapFailure {
    */
   export type Encoded =
     | AuthRequired.Encoded
-    | RateLimited.Encoded;
+    | RateLimited.Encoded
+    | Unavailable.Encoded
+    | MapperFailed.Encoded;
 }

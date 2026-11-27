@@ -27,6 +27,7 @@ import {
   Locator,
   LocatorFromUrl,
   MappedItem,
+  Page,
   type Platform,
   PostLocator,
   RateLimited,
@@ -107,11 +108,11 @@ const readers = Layer.mergeAll(
   Layer.succeed(DzenReader, signedOut("dzen"))
 );
 
-const unmapped = { items: () => Stream.empty };
+const unmapped = { pages: () => Stream.empty };
 const mappers = Layer.mergeAll(
   Layer.succeed(RedGifsMapper, {
-    items: () =>
-      Stream.make(MappedItem.make({ source: clip("calmclip").source, videos: 1 })).pipe(
+    pages: () =>
+      Stream.make(Page.of(MappedItem.make({ source: clip("calmclip").source, videos: 1 }))).pipe(
         Stream.concat(Stream.fail(RateLimited.make({ platform: "redgifs" })))
       ),
   }),

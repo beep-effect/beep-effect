@@ -5,9 +5,21 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { ReaderRpcs } from "./protocol.ts"
+import { LibraryRpcs, ReaderRpcs } from "./protocol.ts"
 import * as Operation from "./rpcs/Operation.ts"
-import { Connections, Items, Posts, Profile } from "./rpcs/server.ts"
+import {
+  Connections,
+  Download,
+  InventoryList,
+  Items,
+  MapRun,
+  MapStop,
+  MapWatch,
+  Posts,
+  Profile,
+  SessionList,
+  SessionOpen
+} from "./rpcs/server.ts"
 
 /**
  * Serves {@link ReaderRpcs} from whatever readers and mappers are provided.
@@ -34,3 +46,28 @@ import { Connections, Items, Posts, Profile } from "./rpcs/server.ts"
  * @since 0.0.0
  */
 export const ReaderHandlers = ReaderRpcs.toLayer(Operation.handlers({ Items, Posts, Profile, Connections }))
+
+/**
+ * Serves {@link LibraryRpcs} from the library, the kept sessions and the
+ * download service.
+ *
+ * **Example** (Serve the library in process)
+ *
+ * ```ts import.meta.vitest name="Serve the library in process"
+ * import { LibraryRpcs } from "@beep/scratchpad/int/protocol"
+ * import { LibraryHandlers } from "@beep/scratchpad/int/protocol.layer"
+ * import * as Effect from "effect/Effect"
+ * import * as RpcTest from "effect/rpc/RpcTest"
+ *
+ * const records = Effect.gen(function* () {
+ *   const client = yield* RpcTest.makeClient(LibraryRpcs)
+ *   return yield* client.InventoryList({})
+ * }).pipe(Effect.provide(LibraryHandlers))
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const LibraryHandlers = LibraryRpcs.toLayer(
+  Operation.handlers({ MapRun, MapWatch, MapStop, InventoryList, SessionList, SessionOpen, Download })
+)

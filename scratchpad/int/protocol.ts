@@ -7,7 +7,19 @@
  */
 import * as RpcGroup from "effect/rpc/RpcGroup"
 import type { Locator } from "./locator.ts"
-import { Connections, Items, Posts, Profile } from "./rpcs/index.ts"
+import {
+  Connections,
+  Download,
+  InventoryList,
+  Items,
+  MapRun,
+  MapStop,
+  MapWatch,
+  Posts,
+  Profile,
+  SessionList,
+  SessionOpen
+} from "./rpcs/index.ts"
 import * as Operation from "./rpcs/Operation.ts"
 
 /**
@@ -36,3 +48,32 @@ import * as Operation from "./rpcs/Operation.ts"
  * @since 0.0.0
  */
 export const ReaderRpcs = RpcGroup.make(...Operation.contracts({ Items, Posts, Profile, Connections }))
+/**
+ * What a user does with listings they keep: map them, watch and stop the
+ * runs, sign in, and save the files.
+ *
+ * **Details**
+ *
+ * Where {@link ReaderRpcs} answers a question about a locator and forgets
+ * it, these operations act on state that outlives the call: the records a
+ * run fills, the run itself, and the kept sign-ins. `MapRun` answers at
+ * once and the run goes on; `MapWatch` is the stream to follow it by, so a
+ * client never polls.
+ *
+ * **Example** (Find the operation that follows a run)
+ *
+ * ```ts import.meta.vitest name="Find the operation that follows a run"
+ * import { LibraryRpcs } from "@beep/scratchpad/int/protocol"
+ * import * as O from "effect/Option"
+ * import * as RpcSchema from "effect/rpc/RpcSchema"
+ *
+ * const watch = O.fromNullishOr(LibraryRpcs.requests.get("MapWatch"))
+ * O.map(watch, ({ successSchema }) => RpcSchema.isStreamSchema(successSchema)) // => O.some(true)
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const LibraryRpcs = RpcGroup.make(
+  ...Operation.contracts({ MapRun, MapWatch, MapStop, InventoryList, SessionList, SessionOpen, Download })
+)

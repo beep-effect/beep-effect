@@ -13,7 +13,19 @@ describe("operation modules", () => {
   });
 
   it("keys each handler by its operation", () => {
-    expect(R.keys(Operation.handlers(Served))).toEqual(["Connections", "Items", "Posts", "Profile"]);
+    expect(R.keys(Operation.handlers(Served))).toEqual([
+      "Connections",
+      "Download",
+      "InventoryList",
+      "Items",
+      "MapRun",
+      "MapStop",
+      "MapWatch",
+      "Posts",
+      "Profile",
+      "SessionList",
+      "SessionOpen",
+    ]);
   });
 
   it("refuses a module filed under a name that is not its contract's tag", () => {
