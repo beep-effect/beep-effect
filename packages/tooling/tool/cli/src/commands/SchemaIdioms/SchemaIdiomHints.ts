@@ -366,6 +366,13 @@ const effectiveFields = (fields: ObjectExpression): ReadonlyArray<ObjectProperty
   );
 };
 
+const computedReceiver = (call: CallExpression): O.Option<CallExpression> => {
+  const callee = unwrap(call.callee);
+  return callee.type === "MemberExpression" && callee.computed
+    ? pipe(O.some(unwrap(callee.object)), O.filter(isCallExpression))
+    : O.none();
+};
+
 const spanKey = (node: CallExpression): string => `${node.start}:${node.end}`;
 
 const isPipeCall = (call: CallExpression): boolean => {
@@ -390,19 +397,25 @@ const carrierOf =
         ])
       )
     );
-    return O.orElse(asReceiver, () =>
-      isPipeCall(call)
-        ? pipe(
-            A.head(call.arguments),
-            O.flatMap(argumentExpression),
-            O.map(unwrap),
-            O.filter(isCallExpression),
-            O.map((first): readonly [string, Carrier] => [
-              spanKey(first),
-              { outer, preserving: A.every(A.drop(call.arguments, 1), preservesType(scope)) },
-            ])
-          )
-        : O.none()
+    const asComputedReceiver = O.map(computedReceiver(call), (receiver): readonly [string, Carrier] => [
+      spanKey(receiver),
+      { outer, preserving: false },
+    ]);
+    return O.orElse(
+      O.orElse(asReceiver, () => asComputedReceiver),
+      () =>
+        isPipeCall(call)
+          ? pipe(
+              A.head(call.arguments),
+              O.flatMap(argumentExpression),
+              O.map(unwrap),
+              O.filter(isCallExpression),
+              O.map((first): readonly [string, Carrier] => [
+                spanKey(first),
+                { outer, preserving: A.every(A.drop(call.arguments, 1), preservesType(scope)) },
+              ])
+            )
+          : O.none()
     );
   };
 

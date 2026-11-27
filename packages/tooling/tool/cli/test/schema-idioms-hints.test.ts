@@ -550,6 +550,18 @@ describe("schema idiom hints", () => {
     ).toEqual([]);
     expect(
       hintsOf(
+        lines(
+          'export const Wire = S.Struct({timeoutMs: S.Number})["mapFields"](() => ({timeoutMs: S.DurationFromMillis}));'
+        )
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
+        lines('export const Wire = S.Struct({timeoutMs: S.Number})["pipe"](S.fieldsAssign({timeoutMs: S.Duration}));')
+      )
+    ).toEqual([]);
+    expect(
+      hintsOf(
         lines("export const Wire = S.Struct({ timeoutMs: S.Number }).pipe(S.fieldsAssign({ timeoutMs: S.Duration }));")
       )
     ).toEqual([]);
