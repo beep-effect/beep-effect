@@ -397,6 +397,8 @@ export type DetachedProcessError =
  * text file. This schema is that missing check, and it decodes to core's type so
  * the two are interchangeable.
  *
+ * The positive-integer filter supplies its issue text through the message annotation: Effect 4.0.6 renders that annotation ahead of any string returned by the predicate.
+ *
  * **Example** (Decode a persisted process ID before reaping)
  *
  * ```ts
@@ -418,8 +420,6 @@ export type DetachedProcessError =
 export const ProcessId = S.Number.pipe(
   S.check(
     S.makeFilter(
-      // effect 4.0.6 renders a check's `message` annotation as the issue message,
-      // ahead of any string the predicate returns, so the described text lives there.
       (value) => Number.isInteger(value) && value > 0,
       $I.annote("PositiveIntegerProcessId", {
         message: "Expected a positive integer process id",

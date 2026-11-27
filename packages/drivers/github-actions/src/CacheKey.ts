@@ -271,6 +271,8 @@ const wildcardMatches = Effect.fnUntraced(function* (
  * {@link CacheKey.withRestoreDepths}, or none at all with
  * {@link CacheKey.withoutRestoreKeys}, instead of bypassing the typed key.
  *
+ * The restore-depth filter supplies its issue text through the message annotation: Effect 4.0.6 renders that annotation ahead of any string returned by the predicate.
+ *
  * **Example** (Build a cache key with a restore-key ladder)
  *
  * ```ts
@@ -299,8 +301,6 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     restoreDepths: S.optionalKey(RestoreDepths),
   }).check(
     S.makeFilter(
-      // effect 4.0.6 renders a check's `message` annotation as the issue message,
-      // ahead of any string the predicate returns, so the described text lives there.
       (key) =>
         key.restoreDepths === undefined || A.every(key.restoreDepths, (depth) => depth <= key.segments.length - 1),
       $I.annote("RestoreDepthWithinSegments", {
