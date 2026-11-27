@@ -58,6 +58,8 @@ const uriMetadata = makeSemanticSchemaMetadata({
   canonicalizationRequired: true,
 });
 
+const absoluteUriArbitraryPattern = /^https:\/\/example\.org\/[a-z0-9]{1,30}$/;
+
 const makeReferenceChecks = (
   identifier: string,
   title: string,
@@ -81,11 +83,7 @@ const makeReferenceChecks = (
           description,
           message,
           arbitraryConstraint: {
-            patterns: [
-              Str.startsWith(identifier, "Relative")
-                ? /^[a-z][a-z0-9/]{0,30}$/
-                : /^https:\/\/example\.org\/[a-z0-9]{1,30}$/,
-            ],
+            patterns: [Str.startsWith(identifier, "Relative") ? /^[a-z][a-z0-9/]{0,30}$/ : absoluteUriArbitraryPattern],
           },
         })
       ),
@@ -127,9 +125,7 @@ const makeNonEmptyReferenceChecks = (
           description,
           message,
           arbitraryConstraint: {
-            // Every family built here is absolute (URI, AbsoluteURI); the
-            // reference builder above owns the relative generation pattern.
-            patterns: [/^https:\/\/example\.org\/[a-z0-9]{1,30}$/],
+            patterns: [absoluteUriArbitraryPattern],
           },
         })
       ),
@@ -148,7 +144,7 @@ const normalizePercentEncoding: (value: string) => string = Str.replaceWith(/%[0
 const normalizeAbsoluteUri = (value: string): string => {
   const url = new URL(value);
   const scheme = Str.toLowerCase(url.protocol);
-  const host = Str.toLowerCase(url.host);
+  const hostWithoutDefaultPort = Str.toLowerCase(url.host);
   const pathname = normalizePercentEncoding(url.pathname);
   const search = normalizePercentEncoding(url.search);
   const hash = normalizePercentEncoding(url.hash);
@@ -157,8 +153,7 @@ const normalizeAbsoluteUri = (value: string): string => {
     return `${scheme}${normalizePercentEncoding(url.pathname)}${search}${hash}`;
   }
 
-  // WHATWG URL parsing already drops the default http/https port from `url.host`.
-  return `${scheme}//${host}${pathname}${search}${hash}`;
+  return `${scheme}//${hostWithoutDefaultPort}${pathname}${search}${hash}`;
 };
 
 const looksLikeAbsoluteUri = (value: string): boolean => SCHEME_PREFIX.test(value);

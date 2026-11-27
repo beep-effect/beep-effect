@@ -1,6 +1,8 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { fcDeepSweepActive, packageTestTimeout, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 
+const recursiveSchemaSuiteTimeoutMs = 60_000;
+
 export default mergeConfig(
   shared,
   defineConfig({
@@ -11,17 +13,7 @@ export default mergeConfig(
       // files for resource-intensive lanes while each suite serializes its own
       // tests.
       fileParallelism: !(vitestCoverageRunActive || fcDeepSweepActive),
-      // These suites compile large recursive Lexical schemas (`Arbitrary.schema`
-      // + first-touch decoder compilation of `SerializedEditorState`) and run
-      // codec round-trip property tests over arbitrary editor states. Under v8
-      // coverage instrumentation the first decode is 10x+ slower, and the
-      // full-monorepo `sequence.concurrent` coverage lane saturates small CI
-      // runners — a ~5s local decode was observed ballooning past 60s there.
-      // Defer to the shared config's coverage-aware ceiling (300s under
-      // coverage or a deep property sweep) instead of clamping it back to a
-      // coverage-unaware constant; keep focused non-coverage headroom over
-      // the 30s shared default.
-      testTimeout: packageTestTimeout(60_000),
+      testTimeout: packageTestTimeout(recursiveSchemaSuiteTimeoutMs),
     },
   })
 );

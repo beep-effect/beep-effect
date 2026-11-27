@@ -61,7 +61,6 @@ export const isResolvedPathWithinRoot: {
   );
 });
 
-/** Canonicalize the configured authority root for a candidate operation. */
 const canonicalizeRoot = (fs: FileSystem.FileSystem, root: string, candidate: string) =>
   fs.realPath(root).pipe(Effect.mapError((cause) => PathSafetyError.rootNotResolvable({ root, candidate, cause })));
 
@@ -118,14 +117,7 @@ export const resolvePathWithinRoot: (options: {
   return yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
 });
 
-/**
- * Canonicalize the deepest existing ancestor of an absolute path and re-join
- * the unresolved (not-yet-created) suffix. If the full path exists it is
- * resolved directly; otherwise we walk parents until `realPath` succeeds, then
- * re-append the trailing segments. Fails only when even the filesystem root
- * cannot be resolved.
- */
-const canonicalizeExisting: (
+const canonicalizeDeepestExistingAncestor: (
   fs: FileSystem.FileSystem,
   path: Path.Path,
   absolute: string
@@ -143,8 +135,8 @@ const canonicalizeExisting: (
     }
 
     const parent = path.dirname(current);
-    if (Eq.equals(parent, current)) {
-      // Reached the filesystem root and it still did not resolve.
+    const atFilesystemRoot = Eq.equals(parent, current);
+    if (atFilesystemRoot) {
       return yield* fs.realPath(current);
     }
 
@@ -153,11 +145,6 @@ const canonicalizeExisting: (
   }
 });
 
-/**
- * Resolve a candidate against a root that has already been canonicalized.
- * Keeping this separate lets multi-step operations bind their authority root
- * once instead of following a caller-controlled root symlink at every check.
- */
 const resolveCandidateWithinCanonicalRoot: (
   fs: FileSystem.FileSystem,
   path: Path.Path,
@@ -168,14 +155,8 @@ const resolveCandidateWithinCanonicalRoot: (
     return yield* PathSafetyError.canonicalRootNotAbsolute({ root: canonicalRoot, candidate });
   }
 
-  // Resolve the candidate against the canonical root so a relative candidate
-  // is anchored in-root and an absolute candidate stays absolute.
   const anchored = path.resolve(canonicalRoot, candidate);
-
-  // Canonicalize the deepest existing ancestor (following symlinks), then
-  // re-attach any not-yet-created suffix. This lets write targets that don't
-  // exist yet still be guarded without a realPath failure on the missing leaf.
-  const canonicalCandidate = yield* canonicalizeExisting(fs, path, anchored).pipe(
+  const canonicalCandidate = yield* canonicalizeDeepestExistingAncestor(fs, path, anchored).pipe(
     Effect.mapError((cause) => PathSafetyError.candidateNotResolvable({ root: canonicalRoot, candidate, cause }))
   );
 
@@ -239,9 +220,6 @@ export const resolvePathWithinCanonicalRoot: (options: {
   return yield* resolveCandidateWithinCanonicalRoot(fs, path, options.canonicalRoot, options.candidate);
 });
 
-/**
- * Shared implementation for atomic writes beneath an already-canonical root.
- */
 const writeWithinCanonicalRootAtomically: (
   fs: FileSystem.FileSystem,
   path: Path.Path,

@@ -29,7 +29,6 @@ import type * as Duration from "effect/Duration";
 const NS = "savvy-web";
 const KEY = "release-validation";
 
-/** Build a layer inside the same scope that owns the test workflow. */
 const withLayer = <ROut, EIn, RIn>(layer: Layer.Layer<ROut, EIn, RIn>) =>
   Effect.fn("CheckDocument.test.withLayer")(<A, E, R>(self: Effect.Effect<A, E, R>) =>
     Effect.scopedWith((scope) =>
@@ -37,7 +36,6 @@ const withLayer = <ROut, EIn, RIn>(layer: Layer.Layer<ROut, EIn, RIn>) =>
     )
   );
 
-/** One region per check — the layout the reconciler is designed around. */
 const perCheck = ({ checks, order }: CheckDocumentSnapshot): ReadonlyArray<readonly [string, string]> =>
   A.map(order, (check) => {
     const entry = HashMap.getUnsafe(checks, check);
@@ -53,7 +51,6 @@ interface HarnessOptions {
   readonly sinkTimeout?: Duration.Input;
 }
 
-/** A recording sink plus the layer wired to it. */
 const harness = Effect.fn("harness")(function* (options: HarnessOptions = {}) {
   const writes = yield* Ref.make<ReadonlyArray<string>>([]);
   const layer = CheckDocument.layer({
@@ -79,9 +76,11 @@ describe("CheckDocument", () => {
           yield* doc.report("build", CheckReport.make({ state: "fail" }));
           yield* TestClock.adjust("500 millis");
           const all = yield* Ref.get(writes);
-          // ONE write for the burst, carrying its FINAL state. A
-          // leading-edge debounce would have published `pass` and left it.
-          assert.strictEqual(all.length, 1);
+          assert.strictEqual(
+            all.length,
+            1,
+            "one write for the burst, carrying its final state; a leading-edge debounce would publish pass and leave it"
+          );
           const text = all[0] ?? "";
           assert.include(text, "fail");
           assert.notInclude(text, "pass");
@@ -98,10 +97,12 @@ describe("CheckDocument", () => {
             doc.report("build", deliberatelyInvalid<CheckReport>({ state: "not-a-state" }))
           );
           assert.isTrue(Exit.hasDies(exit));
-          // The rejected entry never reached the registry, so later reports,
-          // reads and passes still work.
           yield* doc.report("lint", CheckReport.make({ state: "pass" }));
-          assert.deepStrictEqual((yield* doc.checks).order, ["lint"]);
+          assert.deepStrictEqual(
+            (yield* doc.checks).order,
+            ["lint"],
+            "the rejected entry never reached the registry, so later reports, reads and passes still work"
+          );
           yield* TestClock.adjust("500 millis");
           assert.strictEqual((yield* Ref.get(writes)).length, 1);
         }).pipe(withLayer(layer));
@@ -131,12 +132,14 @@ describe("CheckDocument", () => {
           yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "clean" }));
           yield* TestClock.adjust("500 millis");
           assert.strictEqual((yield* Ref.get(writes)).length, 1);
-          // The same state again: same render, byte-identical document —
-          // neither the debounced pass nor an explicit flush may write.
           yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "clean" }));
           yield* TestClock.adjust("500 millis");
           yield* doc.flush;
-          assert.strictEqual((yield* Ref.get(writes)).length, 1);
+          assert.strictEqual(
+            (yield* Ref.get(writes)).length,
+            1,
+            "the same state renders a byte-identical document, so neither the debounced pass nor flush may write"
+          );
         }).pipe(withLayer(layer));
       })
     );
@@ -146,13 +149,16 @@ describe("CheckDocument", () => {
         const { writes, layer } = yield* harness({ quiet: "500 millis", maxWait: "2 seconds" });
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
-          // Reports every 400ms: the quiet window NEVER elapses.
           for (let step = 0; step < 5; step += 1) {
             yield* doc.report("build", CheckReport.make({ state: "running", outcome: `step ${step}` }));
             yield* TestClock.adjust("400 millis");
           }
           const all = yield* Ref.get(writes);
-          assert.strictEqual(all.length, 1, "exactly one write, at the staleness bound");
+          assert.strictEqual(
+            all.length,
+            1,
+            "reports every 400ms never let the quiet window elapse: exactly one write, at the staleness bound"
+          );
           assert.include(all[0] ?? "", "step 4", "and it carries the latest state, not the first");
         }).pipe(withLayer(layer));
       })
@@ -191,11 +197,10 @@ describe("CheckDocument", () => {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
           yield* doc.flush;
-          // Resolution is NOT terminal: the check resolves again.
           yield* doc.report("build", CheckReport.make({ state: "fail" }));
           yield* doc.flush;
           const all = yield* Ref.get(writes);
-          assert.strictEqual(all.length, 2);
+          assert.strictEqual(all.length, 2, "resolution is not terminal: the check resolves again");
           const final = all[1] ?? "";
           assert.strictEqual(
             Str.split(final, `BEGIN ${NS}.${KEY}.check-build`).length - 1,
@@ -234,7 +239,6 @@ describe("CheckDocument", () => {
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
-          // No adjust, no flush: the scope closes mid-window.
         }).pipe(withLayer(layer));
         const all = yield* Ref.get(writes);
         assert.strictEqual(all.length, 1, "the finalizer flushed the last burst");
@@ -342,17 +346,14 @@ describe("CheckDocument", () => {
 
     it.effect("kind sink: a HUNG sink fails at the timeout bound instead of stalling the reconciler", () =>
       Effect.gen(function* () {
-        // The pass holds the single permit and the finalizer's last flush
-        // waits on it — unbounded, a sink that never resolves would stall
-        // every later pass AND scope teardown. Hang only the FIRST call so
-        // the finalizer's own flush can complete the teardown cleanly.
         const calls = yield* Ref.make(0);
+        const sinkHangingOnFirstCall = () =>
+          Effect.flatMap(
+            Ref.updateAndGet(calls, (n) => n + 1),
+            (n) => (n === 1 ? Effect.never : Effect.void)
+          );
         const { layer } = yield* harness({
-          sink: () =>
-            Effect.flatMap(
-              Ref.updateAndGet(calls, (n) => n + 1),
-              (n) => (n === 1 ? Effect.never : Effect.void)
-            ),
+          sink: sinkHangingOnFirstCall,
           sinkTimeout: "1 second",
         });
         yield* Effect.gen(function* () {
@@ -362,7 +363,11 @@ describe("CheckDocument", () => {
           yield* TestClock.adjust("1 second");
           const failure = yield* Fiber.join(flipped);
           assert.instanceOf(failure, CheckDocumentError);
-          assert.strictEqual(failure.kind, "sink");
+          assert.strictEqual(
+            failure.kind,
+            "sink",
+            "the pass holds the permit the final flush waits on, so an unbounded hung sink would stall every pass and teardown"
+          );
         }).pipe(withLayer(layer));
       })
     );
@@ -372,17 +377,19 @@ describe("CheckDocument", () => {
     const stamp = (at: string, runId: string) => ({ at, runId });
 
     it("compares at as epoch when both sides parse — format differences do not order", () => {
-      // The same instant spelled two ways is a TIE, decided by runId; a
-      // lexical comparison would have ordered the strings instead.
       assert.isTrue(
-        CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T00:00:00.000Z", "2"), stamp("2024-01-01T00:00:00Z", "1"))
+        CheckDocumentStamp.isAtLeastAsRecent(
+          stamp("2024-01-01T00:00:00.000Z", "2"),
+          stamp("2024-01-01T00:00:00Z", "1")
+        ),
+        "the same instant spelled two ways is a tie decided by runId, not a lexical order"
       );
       assert.isFalse(
         CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-01T00:00:00.000Z", "1"), stamp("2024-01-01T00:00:00Z", "2"))
       );
-      // And a genuinely later instant wins regardless of runId.
       assert.isTrue(
-        CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-02T00:00:00Z", "1"), stamp("2024-01-01T00:00:00Z", "999"))
+        CheckDocumentStamp.isAtLeastAsRecent(stamp("2024-01-02T00:00:00Z", "1"), stamp("2024-01-01T00:00:00Z", "999")),
+        "a genuinely later instant wins regardless of runId"
       );
     });
 
@@ -394,8 +401,10 @@ describe("CheckDocument", () => {
 
     it("breaks at-ties on runId numerically when both parse — 10 beats 9", () => {
       const at = "2024-01-01T00:00:00Z";
-      // Lexically "10" < "9"; numerically 10 > 9. The numeric order must win.
-      assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "10"), stamp(at, "9")));
+      assert.isTrue(
+        CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "10"), stamp(at, "9")),
+        'lexically "10" < "9"; the numeric order must win'
+      );
       assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "9"), stamp(at, "10")));
     });
 
@@ -486,9 +495,10 @@ describe("CheckDocument", () => {
 
     it("treats a blank runId lexically, never as the number zero", () => {
       const at = "2024-01-01T00:00:00Z";
-      // Number("") is a finite 0 — without the blank guard "" would compare
-      // numerically equal to "0" and outrank "-1".
-      assert.isFalse(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, ""), stamp(at, "0")));
+      assert.isFalse(
+        CheckDocumentStamp.isAtLeastAsRecent(stamp(at, ""), stamp(at, "0")),
+        'Number("") is a finite 0, so a numeric blank would tie "0" and outrank "-1"'
+      );
       assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "0"), stamp(at, "")));
       assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, "-1"), stamp(at, "")));
       assert.isTrue(CheckDocumentStamp.isAtLeastAsRecent(stamp(at, ""), stamp(at, "")));
@@ -500,12 +510,7 @@ describe("CheckDocument", () => {
     const NEWER = { at: "2024-01-02T00:00:00Z", runId: "200" };
     const OLDER = { at: "2024-01-01T00:00:00Z", runId: "100" };
 
-    /**
-     * A layer over a SHARED live document — the sink's `read` sees what any
-     * other layer wrote, which is exactly the two-runs-one-document race the
-     * guard exists for. Each layer records its own writes.
-     */
-    const sharedHarness = Effect.fn("sharedHarness")(function* (
+    const sharedLiveDocumentHarness = Effect.fn("sharedLiveDocumentHarness")(function* (
       remote: Ref.Ref<string | undefined>,
       stamp?: { readonly at: string; readonly runId: string }
     ) {
@@ -528,24 +533,22 @@ describe("CheckDocument", () => {
     it.effect("an older run's pass against a newer document is dropped — the #284 race", () =>
       Effect.gen(function* () {
         const remote = yield* Ref.make<string | undefined>(undefined);
-        const newer = yield* sharedHarness(remote, NEWER);
-        const older = yield* sharedHarness(remote, OLDER);
+        const newer = yield* sharedLiveDocumentHarness(remote, NEWER);
+        const older = yield* sharedLiveDocumentHarness(remote, OLDER);
 
-        // The newer run writes first.
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass", outcome: "newer run" }));
-          const flush4 = yield* doc.flush;
-          assert.strictEqual(flush4, "written");
+          const newerRunFlush = yield* doc.flush;
+          assert.strictEqual(newerRunFlush, "written");
         }).pipe(withLayer(newer.layer));
         const afterNewer = yield* Ref.get(remote);
 
-        // The delayed older run flushes against the live document.
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "fail", outcome: "stale rerun" }));
-          const flush5 = yield* doc.flush;
-          assert.strictEqual(flush5, "stale");
+          const delayedOlderRunFlush = yield* doc.flush;
+          assert.strictEqual(delayedOlderRunFlush, "stale");
         }).pipe(withLayer(older.layer));
 
         const got6 = yield* Ref.get(older.writes);
@@ -566,8 +569,8 @@ describe("CheckDocument", () => {
           MutableRef.update(lines.ref, (all) => [...all, String(entry.message)])
         );
         const remote = yield* Ref.make<string | undefined>(undefined);
-        const newer = yield* sharedHarness(remote, NEWER);
-        const older = yield* sharedHarness(remote, OLDER);
+        const newer = yield* sharedLiveDocumentHarness(remote, NEWER);
+        const older = yield* sharedLiveDocumentHarness(remote, OLDER);
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
@@ -576,30 +579,34 @@ describe("CheckDocument", () => {
           assert.strictEqual(flush8, "written");
         }).pipe(withLayer(newer.layer));
 
-        // The stale run flushes twice — the report-driven pass plus an
-        // explicit flush is the pair the consumer observed logging twice.
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "fail", outcome: "stale rerun" }));
           const flush9 = yield* doc.flush;
           assert.strictEqual(flush9, "stale");
           const flush10 = yield* doc.flush;
-          assert.strictEqual(flush10, "stale");
+          assert.strictEqual(
+            flush10,
+            "stale",
+            "a report-driven pass plus an explicit flush is the pair a consumer saw logging twice"
+          );
         }).pipe(withLayer(older.layer), withLayer(Logger.layer([collector])));
 
-        // The debug-level repeat is below the default minimum level, so the
-        // consumer-visible count across both stale passes is exactly one.
         const got11 = yield* Ref.get(lines);
         const dropped = A.filter(got11, Str.includes("pass dropped"));
-        assert.strictEqual(dropped.length, 1, "one INFO drop line across two stale passes");
+        assert.strictEqual(
+          dropped.length,
+          1,
+          "the debug-level repeat is below the default minimum level: one INFO drop line across two stale passes"
+        );
       })
     );
 
     it.effect("a newer run's pass against an older document writes and replaces", () =>
       Effect.gen(function* () {
         const remote = yield* Ref.make<string | undefined>(undefined);
-        const older = yield* sharedHarness(remote, OLDER);
-        const newer = yield* sharedHarness(remote, NEWER);
+        const older = yield* sharedLiveDocumentHarness(remote, OLDER);
+        const newer = yield* sharedLiveDocumentHarness(remote, NEWER);
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
@@ -628,8 +635,8 @@ describe("CheckDocument", () => {
     it.effect("an equal stamp passes — a run refines its own regions", () =>
       Effect.gen(function* () {
         const remote = yield* Ref.make<string | undefined>(undefined);
-        const first = yield* sharedHarness(remote, NEWER);
-        const second = yield* sharedHarness(remote, NEWER);
+        const first = yield* sharedLiveDocumentHarness(remote, NEWER);
+        const second = yield* sharedLiveDocumentHarness(remote, NEWER);
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
@@ -653,15 +660,14 @@ describe("CheckDocument", () => {
     it.effect("regions carrying no stamp are not evidence of a newer run", () =>
       Effect.gen(function* () {
         const remote = yield* Ref.make<string | undefined>(undefined);
-        // An unstamped layer writes first — the pre-stamp world.
-        const unstamped = yield* sharedHarness(remote);
-        const stamped = yield* sharedHarness(remote, OLDER);
+        const unstamped = yield* sharedLiveDocumentHarness(remote);
+        const stamped = yield* sharedLiveDocumentHarness(remote, OLDER);
 
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "running" }));
           const flush16 = yield* doc.flush;
-          assert.strictEqual(flush16, "written");
+          assert.strictEqual(flush16, "written", "an unstamped layer writes first, as before stamps existed");
         }).pipe(withLayer(unstamped.layer));
 
         yield* Effect.gen(function* () {
@@ -676,15 +682,14 @@ describe("CheckDocument", () => {
     it.effect("a byte-identical pass reports unchanged — the stamp does not defeat suppression", () =>
       Effect.gen(function* () {
         const remote = yield* Ref.make<string | undefined>(undefined);
-        const { writes, layer } = yield* sharedHarness(remote, NEWER);
+        const { writes, layer } = yield* sharedLiveDocumentHarness(remote, NEWER);
         yield* Effect.gen(function* () {
           const doc = yield* CheckDocument;
           yield* doc.report("build", CheckReport.make({ state: "pass" }));
           const flush18 = yield* doc.flush;
           assert.strictEqual(flush18, "written");
-          // The same state, the same per-run stamp: byte-identical render.
           const flush19 = yield* doc.flush;
-          assert.strictEqual(flush19, "unchanged");
+          assert.strictEqual(flush19, "unchanged", "the same state and per-run stamp render byte-identical text");
           assert.strictEqual((yield* Ref.get(writes)).length, 1);
         }).pipe(withLayer(layer));
       })
@@ -768,9 +773,6 @@ describe("CheckFlushOutcome schema contract", () => {
 });
 
 describe("Opaque conformance (W3-b)", () => {
-  // Conformance shift: CheckReport, CheckDocumentSnapshot and
-  // CheckDocumentStamp were S.Class. As branded S.Opaque structs, `make`
-  // copies its input and `S.is` is structural, so a plain record passes.
   it("make copies plain records and S.is accepts them structurally", () => {
     const input = { state: "pass", outcome: "clean" } as const;
     const report = CheckReport.make(input);

@@ -149,9 +149,7 @@ const proposalFactObjectEntries = (value: S.Json): ReadonlyArray<readonly [strin
 const proposalFactTextCodeUnits = (value: S.Json, objectEntries: ReadonlyArray<readonly [string, S.Json]>): number =>
   (P.isString(value) ? Str.length(value) : 0) + A.reduce(objectEntries, 0, (total, [key]) => total + Str.length(key));
 
-// An unpaired surrogate is the one thing generated JSON holds that the fact
-// check refuses, so the fact arbitrary replaces each with U+FFFD, as
-// `String.prototype.toWellFormed` does, instead of discarding the sample.
+// decision: construct-well-formed-proposal-facts
 const wellFormedProposalFactText: (text: string) => string = Str.replaceAll(/\p{Surrogate}/gu, "\uFFFD");
 
 const wellFormedProposalFactJson = (value: S.Json): S.Json => {
@@ -203,9 +201,6 @@ const isBoundedProposalFact = (fact: S.JsonObject): boolean => {
     pending.push(...A.map(children, (value) => ({ depth: current.depth + 1, value })));
   }
 
-  // A fact the canonical digest owner refuses, such as one holding an unpaired
-  // surrogate, has no canonical UTF-8 to measure, so it is out of bounds: the
-  // check stays total and the schema fails typed instead of throwing.
   return pipe(
     JsoncFingerprint.canonicalizeResult(fact),
     Result.map((canonical) => utf8ToBytes(canonical).byteLength <= CONTRADICTION_PROPOSAL_FACT_MAX_BYTES),
@@ -402,7 +397,7 @@ export const makeContradictionVocabulary = (config: IdentityConfig) => {
       $I.annote("ContradictionProposalFactBoundsCheck", {
         title: "Bounded Contradiction Proposal Fact",
         description:
-          "Checks replacement facts before digesting: at most 64 KiB canonical UTF-8, 4,096 JSON nodes, and 32 levels.",
+          "Checks replacement facts before digesting: at most 64 KiB canonical UTF-8, 4,096 JSON nodes, and 32 levels. A fact the canonical JSON owner refuses, such as one holding an unpaired surrogate, has no canonical UTF-8 to measure and fails the check instead of throwing.",
         message: "Expected a bounded contradiction proposal fact.",
       })
     )
@@ -412,10 +407,7 @@ export const makeContradictionVocabulary = (config: IdentityConfig) => {
     })
   );
 
-  // Constructs facts the bound class accepts: generated JSON with every
-  // unpaired surrogate replaced. Deriving from the checked schema instead
-  // discards about a quarter of the samples, which exhausts a property that
-  // nests several facts. The guard stays as the last word on the size bounds.
+  // decision: construct-well-formed-proposal-facts
   const ContradictionProposalFactArbitrary = Arbitrary.schema(S.JsonObject).pipe(
     Arbitrary.map(wellFormedProposalFactObject),
     Arbitrary.filter(S.is(ContradictionProposalFact))
@@ -1018,8 +1010,6 @@ export const makeContradictionProposals = <
 
   const encodeProposalContent = S.encodeResult(ContradictionProposalContentSchema.mapFields(identity));
 
-  // The structural proposal with its fact built by the constructive fact
-  // arbitrary; every other field derives from its own schema.
   const ContradictionResolutionProposalStructArbitrary = Arbitrary.all({
     fact: ContradictionProposalFactArbitrary,
     rest: Arbitrary.schema(ContradictionResolutionProposalStructSchema.mapFields(Struct.omit(["fact"]))),
@@ -1504,8 +1494,6 @@ export const makeContradictionBehavior = <
     return ContradictionCandidateKey.make(sha256Hex(canonical));
   });
 
-  // A content the canonical JSON owner refuses fails in the same `SchemaError`
-  // channel as an encoding failure.
   const contradictionProposalDigest = (
     content: ProposalContent
   ): Result.Result<typeof ContradictionProposalDigest.Type, S.SchemaError> =>

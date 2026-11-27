@@ -20,9 +20,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Letters whose NFKC form starts with a combining mark, beside the text that shows a wrong cluster:
-// bases that compose, marks of different canonical classes, conjoining and halfwidth Jamo, compatibility
-// letters and an astral letter. No whitespace or quotes, so the locator form is the NFKC form.
 const MARK_LEADING_LETTERS = [
   ["U+0E33", "\u0e33"],
   ["U+0EB3", "\u0eb3"],
@@ -35,7 +32,6 @@ const NFKC_CLUSTER_SCALARS: ReadonlyArray<string> = [
   ...["\u0323", "\u0301", "\u0308", "\u3099", "\u0e48"],
   ...["\u1100", "\u1161", "\u11a8", "\uac00", "\uffa1", "\uffc2", "\ufb01", "\u2460", "\u{1d4b3}"],
 ];
-// Long enough that the triple a wrong cluster needs (a composing base, a mark-leading letter, a mark) is common.
 const nfkcClusterText = Arbitrary.schema(
   S.Array(S.Literals(NFKC_CLUSTER_SCALARS)).check(S.isMinLength(8), S.isMaxLength(24))
 ).pipe(Arbitrary.map(A.join("")));
@@ -134,7 +130,10 @@ describe("verified-span hostile-text contract", () => {
     "normalizes cluster by cluster to the NFKC form of the whole text",
     { text: nfkcClusterText },
     ({ text }) => {
-      expect(normalizeTextLocator(text)).toBe(Str.normalize("NFKC")(text));
+      expect(
+        normalizeTextLocator(text),
+        "mark-leading letters, composing bases, marks of different canonical classes, Jamo, compatibility and astral letters with no whitespace or quotes, so the locator form is the NFKC form; 8 or more scalars make the wrong-cluster triple (composing base, mark-leading letter, mark) common"
+      ).toBe(Str.normalize("NFKC")(text));
     },
     { arbitrary: fcRuns(500) }
   );
@@ -366,11 +365,13 @@ describe("verified-span hostile-text contract", () => {
   it.effect(
     "fails as a typed error when NFKC expands a maximum-length locator",
     Effect.fnUntraced(function* () {
-      // U+2026 normalizes to three code units, so this 4 096-unit locator becomes about 12 286 units.
       const expandedLocator = Str.concat(Str.repeat(4_095)("\u2026"), "x");
       const failure = yield* locateRawText("a plain source without the locator", expandedLocator).pipe(Effect.flip);
 
-      expect(failure.reason).toBe("not-found");
+      expect(
+        failure.reason,
+        "U+2026 normalizes to three code units, so this 4 096-unit locator becomes about 12 286"
+      ).toBe("not-found");
     })
   );
 

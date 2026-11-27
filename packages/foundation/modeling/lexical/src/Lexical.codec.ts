@@ -128,9 +128,6 @@ const rowTableCellHeader = 1 satisfies TableCellHeaderState;
 const decodeSafeUrl = S.decodeUnknownEffect(SafeUrl);
 const runtimeListStart = (value: number): PosInt => PosInt.make(N.max(1, value));
 
-// Reversible map between the Lexical heading `tag` ("h1".."h6") and the Md
-// `Heading.level` (1..6): `From.Enum` resolves a tag to its level, `To.Enum`
-// resolves a level (via its `number{n}` helper key) back to its tag.
 const HeadingLevelTag = MappedLiteralKit([
   ["h1", 1],
   ["h2", 2],
@@ -140,9 +137,6 @@ const HeadingLevelTag = MappedLiteralKit([
   ["h6", 6],
 ] as const);
 
-// effect 4.0.0-beta.105 makes `makeEffect` honest about failing with a raw
-// `SchemaIssue.Issue`; this module's boundary is `S.SchemaError`, so node
-// construction funnels through this normalizer.
 const asSchemaError = <A, R>(
   effect: Effect.Effect<A, S.SchemaError | SchemaIssue.Issue, R>
 ): Effect.Effect<A, S.SchemaError, R> =>
@@ -375,7 +369,6 @@ const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
     )
   );
 
-// A single inline child that is an `a` node whose href is an artifact:// URI.
 const isArtifactLink: P.Refinement<Md.Inline, Md.A> = P.chainRefinements([
   Md.Inline.guards.a,
   (child: Md.A): child is Md.A => S.is(ArtifactUri)(child.href),
@@ -482,8 +475,6 @@ export const blockToLexical = Match.typeTags<Md.Block>()({
       listItemsToLexical(A.map(node.children, (item) => ({ children: item.children, checked: item.checked }))),
       (children) => ListNode.makeEffect(ListNodeValue.cases.check.make({ start: firstOrdinal, children }))
     ),
-  // Thematic breaks are outside the v1 node scope; they degrade to a literal
-  // "---" paragraph (README "Lossiness profile").
   hr: () => Effect.flatMap(textLeaf("---", emptyTextFormat), (text) => ParagraphNode.makeEffect({ children: [text] })),
   mathBlock: blockTextParagraph,
   footnoteDefinition: blockTextParagraph,
@@ -553,8 +544,6 @@ const inlineNodeToMd: (node: LexicalNode) => Md.Inline = LexicalNode.match({
       href: Result.getOrThrow(S.decodeUnknownResult(ArtifactUri)(`${ARTIFACT_URI_PREFIX}${node.artifactId}`)),
       children: [Md.Text.make({ value: O.getOrElse(node.label, () => node.artifactId) })],
     }),
-  // Element nodes have no inline Md equivalent; they degrade to their plain text
-  // (README "Lossiness profile").
   root: (node) => Md.Text.make({ value: nodeToPlainText(node) }),
   paragraph: (node) => Md.Text.make({ value: nodeToPlainText(node) }),
   heading: (node) => Md.Text.make({ value: nodeToPlainText(node) }),
@@ -648,17 +637,19 @@ const tableToBlock = (node: TableNode): Md.Table =>
     children: A.map(A.filter(node.children, TableRowNode.is), tableRowToMd),
   });
 
-// The lexical `YouTubeNode.videoID` is an unconstrained string, while the Md
-// `YouTube` embed enforces the CSF-026 guard (a bare 11-character video id) so
-// that downstream percent-encoders cannot be crashed by a malformed id. Project
-// the embed only when the id satisfies that schema; otherwise drop it (the embed
-// is presentation-only, so omitting it keeps the document valid) so the
-// Lexical -> Md projection stays total on arbitrary/untrusted input.
 const youtubeToBlocks = (node: YouTubeNode): ReadonlyArray<Md.Block> =>
   S.is(Md.YouTubeVideoId)(node.videoID) ? [Md.YouTube.make({ videoId: node.videoID })] : A.empty<Md.Block>();
 
 /**
  * Project one serialized Lexical node onto Md blocks.
+ *
+ * **Gotchas**
+ *
+ * A `youtube` node's `videoID` is an unconstrained string, while the Md
+ * `YouTube` embed accepts only a bare 11-character video id, so a malformed id
+ * cannot crash a downstream percent-encoder. A node whose id fails that schema
+ * projects to no block: the embed is presentation-only, so dropping it keeps the
+ * document valid and the projection total on untrusted input.
  *
  * **Example** (Project artifact-ref node)
  *
@@ -698,7 +689,7 @@ export const nodeToBlocks: (node: LexicalNode) => ReadonlyArray<Md.Block> = Lexi
   youtube: (node) => youtubeToBlocks(node),
   list: (node) => [listToBlock(node)],
   listitem: (node) => [Md.P.make({ children: textRunToInlines(node.children) })],
-  "artifact-ref": (node) => [Md.P.make({ children: [inlineNodeToMd(node)] })], // Loose leaves outside an element wrap into a paragraph.
+  "artifact-ref": (node) => [Md.P.make({ children: [inlineNodeToMd(node)] })],
   text: (node) => [Md.P.make({ children: [inlineNodeToMd(node)] })],
   tab: (node) => [Md.P.make({ children: [inlineNodeToMd(node)] })],
   linebreak: (node) => [Md.P.make({ children: [inlineNodeToMd(node)] })],

@@ -318,8 +318,9 @@ describe("@beep/file-processing", () => {
     expect(classifySourceFormat("eml", undefined)).toBe("eml");
     expect(classifySourceFormat("bin", "message/rfc822")).toBe("eml");
     expect(classifySourceFormat(undefined, "application/vnd.ms-outlook")).toBe("msg");
-    // A recognized extension wins over the media type.
-    expect(classifySourceFormat("txt", "message/rfc822")).toBe("plain-text");
+    expect(classifySourceFormat("txt", "message/rfc822"), "a recognized extension wins over the media type").toBe(
+      "plain-text"
+    );
     expect(classifySourceFormat(undefined, undefined)).toBe("unknown");
     expect(FileFormatFamily.processCapability("eml")).toBe("extract-text");
   });
