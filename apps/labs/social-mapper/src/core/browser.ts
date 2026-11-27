@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $SocialMapperId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Context from "effect/Context";
 import * as S from "effect/Schema";
 import type * as Duration from "effect/Duration";
@@ -54,6 +55,47 @@ export declare namespace BrowserFailed {
     readonly _tag: "BrowserFailed";
     readonly detail: string;
   }
+}
+
+/**
+ * **Details**
+ *
+ * `screen` is a window the user sees and can type in. `offscreen` is the
+ * same full browser drawn on the X display the server was started under,
+ * which a launch under a virtual display keeps off the user's screen.
+ * `headless` draws nothing; some sites answer a headless browser differently.
+ *
+ * **Example** (Tell a window the user sees from one they do not)
+ *
+ * ```ts import.meta.vitest name="Tell a window the user sees from one they do not"
+ * import { Placement } from "@/core/browser"
+ *
+ * Placement.is.screen("offscreen") // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Placement = LiteralKit(["screen", "offscreen", "headless"]).pipe(
+  $I.annoteSchema("Placement", { description: "Where a browser window is drawn." })
+);
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Placement = typeof Placement.Type;
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Placement {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Placement.Encoded;
 }
 
 /**
@@ -112,7 +154,7 @@ export interface Tab {
  *
  * const names = Effect.gen(function* () {
  *   const browser = yield* Browser
- *   const tab = yield* browser.open({ directory: "profiles/example", visible: false })
+ *   const tab = yield* browser.open({ directory: "profiles/example", window: "headless" })
  *   return yield* tab.cookies(new URL("https://example.com"))
  * }).pipe(Effect.scoped)
  * ```
@@ -125,7 +167,7 @@ export class Browser extends Context.Service<
   {
     readonly open: (options: {
       readonly directory: string;
-      readonly visible: boolean;
+      readonly window: Placement;
     }) => Effect.Effect<Tab, BrowserFailed, Scope.Scope>;
   }
 >()($I`Browser`) {}

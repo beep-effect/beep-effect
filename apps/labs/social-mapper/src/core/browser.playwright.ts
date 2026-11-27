@@ -6,6 +6,7 @@
  */
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
@@ -20,7 +21,7 @@ import * as Str from "effect/String";
 import { chromium } from "playwright";
 import { Browser, BrowserFailed } from "./browser.ts";
 import type { Response } from "playwright";
-import type { Exchange } from "./browser.ts";
+import type { Exchange, Placement } from "./browser.ts";
 
 const attempt = <A>(run: () => Promise<A>): Effect.Effect<A, BrowserFailed> =>
   Effect.tryPromise({
@@ -46,6 +47,16 @@ const exchange = (response: Response): O.Option<Exchange> => {
 const advance =
   "(() => { const before = window.scrollY; window.scrollBy(0, window.innerHeight * 2); return window.scrollY !== before })()";
 
+const drawn = (wayland: boolean) => ({
+  screen: { headless: false, viewport: null, args: wayland ? ["--ozone-platform=wayland"] : [] },
+  offscreen: {
+    headless: false,
+    viewport: null,
+    args: ["--ozone-platform=x11", "--window-position=0,0", "--window-size=1600,1000"],
+  },
+  headless: { headless: true, args: [] },
+});
+
 /**
  * Drives the Chromium at the path given, or the one Playwright installed.
  *
@@ -53,7 +64,9 @@ const advance =
  *
  * Every window is a persistent context over the directory it is given, so
  * cookies and local storage written while a window is open are there the
- * next time the same directory is opened.
+ * next time the same directory is opened. An `offscreen` window is drawn
+ * on the X display of the process; `wayland` says the user's own screen is
+ * a Wayland one, so a `screen` window is sent there and not to that display.
  *
  * **Example** (Drive the system Chromium)
  *
@@ -61,25 +74,32 @@ const advance =
  * import { layerWith } from "@/core/browser.playwright"
  * import * as O from "effect/Option"
  *
- * const browser = layerWith(O.some("/usr/bin/chromium"))
+ * const browser = layerWith({ executable: O.some("/usr/bin/chromium") })
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
+export const layerWith = ({
+  executable,
+  wayland = false,
+}: {
+  readonly executable: O.Option<string>;
+  readonly wayland?: boolean;
+}): Layer.Layer<Browser> =>
   Layer.succeed(Browser, {
     open: Effect.fn("Browser.open")(function* ({
       directory,
-      visible,
+      window,
     }: {
       readonly directory: string;
-      readonly visible: boolean;
+      readonly window: Placement;
     }) {
       const context = yield* Effect.acquireRelease(
         attempt(() =>
           chromium.launchPersistentContext(directory, {
-            headless: !visible,
+            ...drawn(wayland)[window],
+            chromiumSandbox: true,
             ...R.getSomes({ executablePath: executable }),
           })
         ),
@@ -89,6 +109,12 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
         onNone: () => attempt(() => context.newPage()),
         onSome: Effect.succeed,
       });
+      const gone = yield* Deferred.make<void>();
+      const leave = () => {
+        Deferred.doneUnsafe(gone, Effect.void);
+      };
+      context.once("close", leave);
+      page.once("close", leave);
       return {
         visit: (url: URL) =>
           Stream.callback<Exchange, BrowserFailed>(
@@ -108,16 +134,15 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
           attempt(() => context.cookies(origin.href)).pipe(
             Effect.map((cookies) => HashSet.fromIterable(A.map(cookies, ({ name }) => name)))
           ),
-        closed: Effect.callback<void>((resume) => {
-          context.once("close", () => resume(Effect.void));
-        }),
+        closed: Deferred.await(gone),
       };
     }),
   });
 
 /**
  * Drives the Chromium named by `SOCIAL_MAPPER_CHROMIUM`, or the one Playwright
- * installed when the variable is unset.
+ * installed when the variable is unset. A set `WAYLAND_DISPLAY` sends the
+ * windows the user must see to that screen.
  *
  * **Example** (Provide the browser to a program)
  *
@@ -133,5 +158,11 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
  * @since 0.0.0
  */
 export const layer: Layer.Layer<Browser> = Layer.unwrap(
-  Config.NonEmptyString("SOCIAL_MAPPER_CHROMIUM").pipe(Config.option, Effect.orDie, Effect.map(layerWith))
+  Config.all({
+    executable: Config.option(Config.NonEmptyString("SOCIAL_MAPPER_CHROMIUM")),
+    wayland: Config.option(Config.NonEmptyString("WAYLAND_DISPLAY")),
+  }).pipe(
+    Effect.orDie,
+    Effect.map(({ executable, wayland }) => layerWith({ executable, wayland: O.isSome(wayland) }))
+  )
 );

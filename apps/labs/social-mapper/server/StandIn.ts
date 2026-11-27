@@ -95,6 +95,7 @@ export const site = Effect.gen(function* () {
     "/api2/v2/session/sess": () => cookie("sess"),
     "/api2/v2/session/auth_id": () => cookie("auth_id"),
     "/example": () => html(profilePage),
+    "/example/media": () => html(profilePage),
     "/302/example": () => html("fetch('/api2/v2/posts/302')"),
     "/303/example": () => html("fetch('/api2/v2/posts/303')"),
     "/api2/v2/users/example": () =>

@@ -7,6 +7,7 @@
 import { $SocialMapperId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
@@ -16,7 +17,6 @@ import * as Stream from "effect/Stream";
 import { ConnectionsHidden, Post } from "./content.ts";
 import { AuthRequired, MappedItem, MapperFailed, Page, RateLimited, Unavailable } from "./locator.ts";
 import { Sessions } from "./session.ts";
-import type * as Duration from "effect/Duration";
 import type { BrowserFailed, Exchange } from "./browser.ts";
 import type { Profile } from "./content.ts";
 import type { MapFailure, Platform } from "./locator.ts";
@@ -122,7 +122,8 @@ export declare namespace FeedPage {
  * A site mapped through the browser differs from the next one in five
  * places only: where a target's page lives, which cookies mean a sign-in,
  * which of the page's fetches matter, how their bodies read, and how fast
- * the page may be scrolled. Sign-in checks, status handling, scrolling,
+ * the page may be scrolled. `pace.quiet` is how long the page may go without
+ * a fetch that matters before the run is given up. Sign-in checks, status handling, scrolling,
  * ending and the browser's lifetime belong to the engine and are the same
  * for every rule.
  *
@@ -132,7 +133,11 @@ export declare namespace FeedPage {
 export interface FeedRule<Target> {
   readonly entry: (target: Target) => URL;
   readonly origin: URL;
-  readonly pace: { readonly moved: Duration.Duration; readonly still: Duration.Duration };
+  readonly pace: {
+    readonly moved: Duration.Duration;
+    readonly quiet: Duration.Duration;
+    readonly still: Duration.Duration;
+  };
   readonly page: (body: unknown, target: Target) => Effect.Effect<FeedPage, S.SchemaError>;
   readonly part: (url: URL, target: Target) => O.Option<FeedPart>;
   readonly platform: Platform;
@@ -168,7 +173,9 @@ const heard = <Target>(rule: FeedRule<Target>, session: Session) => {
         const sessions = yield* Sessions;
         const tab = yield* Effect.mapError(sessions.tab(session), lost);
         const cookies = yield* Effect.mapError(tab.cookies(rule.origin), lost);
+        yield* Effect.logInfo(`opened ${rule.platform}`, rule.entry(target).href);
         if (!A.every(rule.signedIn, (name) => HashSet.has(cookies, name))) {
+          yield* Effect.logInfo(`${rule.platform} is not signed in`);
           return yield* AuthRequired.make({ platform: rule.platform });
         }
         yield* tab.scroll.pipe(
@@ -181,10 +188,29 @@ const heard = <Target>(rule: FeedRule<Target>, session: Session) => {
           Stream.mapError(lost),
           Stream.flatMap((exchange) =>
             O.match(rule.part(exchange.url, target), {
-              onNone: () => Stream.empty,
-              onSome: (part) => answer(part, exchange),
+              onNone: () =>
+                Effect.logInfo("passed over", exchange.url.pathname, exchange.status).pipe(
+                  Stream.fromEffect,
+                  Stream.drain
+                ),
+              onSome: (part) =>
+                Stream.unwrap(
+                  Effect.as(
+                    Effect.logInfo(`heard ${part}`, exchange.url.pathname, exchange.status),
+                    answer(part, exchange)
+                  )
+                ),
             })
           ),
+          Stream.timeoutOrElse({
+            duration: rule.pace.quiet,
+            orElse: () =>
+              Stream.fail(
+                broken(
+                  `the page loaded no posts for ${Duration.format(rule.pace.quiet)}; this account may have no access to the profile`
+                )
+              ),
+          }),
           Stream.interruptWhen(Effect.andThen(tab.closed, Effect.fail(broken("the browser window was closed"))))
         );
       })

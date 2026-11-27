@@ -10,6 +10,7 @@ import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
+import * as Str from "effect/String";
 import { chosen, download, draft, listings, platforms, run, signIn, stop } from "@/client/Library.atoms";
 import { Listing, status } from "@/client/Listing";
 import { Entry, Inventory, Standing } from "@/core/inventory";
@@ -20,7 +21,11 @@ const day = DateTime.formatIsoDateUtc;
 
 const failed = <A, E>(result: AsyncResult.AsyncResult<A, E>): O.Option<string> =>
   AsyncResult.isFailure(result) && !Cause.hasInterruptsOnly(result.cause)
-    ? result.cause.pipe(Cause.pretty, O.some)
+    ? result.cause.pipe(
+        Cause.prettyErrors,
+        A.head,
+        O.map(({ message }) => message)
+      )
     : O.none();
 
 function Trouble({ text }: { readonly text: O.Option<string> }) {
@@ -72,7 +77,9 @@ function Add() {
       className="flex flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        map(address);
+        if (Str.isNonEmpty(Str.trim(address))) {
+          map(Str.trim(address));
+        }
       }}
     >
       <div className="flex gap-2">
@@ -123,9 +130,15 @@ function Actions({ listing }: { readonly listing: Listing }) {
             </Button>
           </>
         )}
-        <Button size="sm" disabled={owed === 0 || saving.waiting} onClick={() => save()}>
-          {saving.waiting ? "Saving" : `Download ${owed}`}
-        </Button>
+        {saving.waiting ? (
+          <Button size="sm" variant="destructive" onClick={() => save(Atom.Interrupt)}>
+            Stop saving, {owed} left
+          </Button>
+        ) : (
+          <Button size="sm" disabled={owed === 0} onClick={() => save()}>
+            Download {owed}
+          </Button>
+        )}
       </div>
       <Trouble text={failed(saving)} />
     </div>

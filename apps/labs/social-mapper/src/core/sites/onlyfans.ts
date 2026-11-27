@@ -70,6 +70,11 @@ export class Options extends S.Opaque<Options, { readonly brand: unique symbol }
       S.withDecodingDefaultTypeKey(Effect.succeed(Duration.millis(1500))),
       S.withConstructorDefault(Effect.succeed(Duration.millis(1500)))
     ),
+    quiet: S.DurationFromMillis.pipe(
+      S.annotateKey({ description: "How long a page may fetch nothing that matters before the run is given up." }),
+      S.withDecodingDefaultTypeKey(Effect.succeed(Duration.seconds(45))),
+      S.withConstructorDefault(Effect.succeed(Duration.seconds(45)))
+    ),
     still: S.DurationFromMillis.pipe(
       S.annotateKey({ description: "Pause after a scroll that left the page where it was." }),
       S.withDecodingDefaultTypeKey(Effect.succeed(Duration.seconds(4))),
@@ -92,6 +97,7 @@ export declare namespace Options {
     readonly media?: ReadonlyArray<string>;
     readonly moved?: number;
     readonly origin?: string;
+    readonly quiet?: number;
     readonly still?: number;
   }
 }
@@ -200,7 +206,7 @@ const posts = (options: Options) => {
   });
 };
 
-const numbered = Str.match(/^\/api2\/v2\/users\/\d+\/posts$/);
+const numbered = Str.match(/^\/api2\/v2\/users\/\d+\/posts(?:\/.*)?$/);
 
 const named = Str.match(/^\/api2\/v2\/users\/([^/]+)$/);
 
@@ -252,9 +258,9 @@ export const rule = (options: Options = Options.make({})): FeedRule<OnlyFansTarg
     platform: "onlyfans",
     origin: options.origin,
     signedIn: ["sess", "auth_id"],
-    pace: { moved: options.moved, still: options.still },
+    pace: { moved: options.moved, quiet: options.quiet, still: options.still },
     entry: OnlyFansTarget.match({
-      collection: ({ user }) => new URL(`/${user}`, options.origin),
+      collection: ({ user }) => new URL(`/${user}/media`, options.origin),
       post: ({ id, user }) => new URL(`/${id}/${user}`, options.origin),
     }),
     part: (url, target) =>

@@ -31,7 +31,7 @@
     "beep:test": "bunx --bun vitest run",
     "dev": "portless social-mapper.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
     "dev:tauri": "tauri dev",
-    "server": "bun run server/main.ts",
+    "server": "xvfb-run -a -s '-screen 0 1600x1000x24 -nolisten tcp' bun run server/main.ts",
     "standin": "bun run server/standin.main.ts",
     "dev:all": "SOCIAL_MAPPER_TOKEN=\"${SOCIAL_MAPPER_TOKEN:-$(openssl rand -hex 24)}\" sh -c 'trap \"kill 0\" EXIT; bun run server & bun run dev'"
   },

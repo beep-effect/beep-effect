@@ -10,6 +10,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
@@ -78,6 +79,8 @@ export declare namespace DownloadFailed {
   }
 }
 
+const samePost = S.toEquivalence(PostLocatorFromUrl);
+
 const widest = Order.mapInput(Order.flip(Num.Order), ({ width }: Rendition) => O.getOrElse(width, () => 0));
 
 const best = (media: Media) => A.head(A.sort(fetchable(media), widest));
@@ -91,9 +94,10 @@ const best = (media: Media) => A.head(A.sort(fetchable(media), widest));
  * a paid site signs stop working within hours; nothing an inventory stores
  * can be used to download later. Each file is written beside its final
  * name and renamed once complete, then recorded in the inventory, so an
- * interrupted download leaves no file that looks finished. `post` saves one
- * post and `pending` every post of a listing that still lacks files, one at
- * a time.
+ * interrupted download leaves no file that looks finished. `post` saves the
+ * files of one post the inventory does not hold yet and `pending` every post
+ * of a listing that still lacks files, one at a time, so a download that was
+ * interrupted carries on from the first file it had not recorded.
  *
  * **Example** (Save everything a listing still lacks)
  *
@@ -149,7 +153,8 @@ export class Downloads extends Context.Service<
           const response = yield* http.get(url, { headers: { referer } });
           yield* response.stream.pipe(
             Stream.tap((chunk) => Ref.update(written, Num.sum(chunk.length))),
-            Stream.run(fs.sink(`${target}.part`))
+            Stream.run(fs.sink(`${target}.part`)),
+            Effect.onInterrupt(() => Effect.ignore(fs.remove(`${target}.part`, { force: true })))
           );
           yield* fs.rename(`${target}.part`, target);
           const bytes = yield* Ref.get(written);
@@ -158,12 +163,22 @@ export class Downloads extends Context.Service<
         });
 
         const post = Effect.fn("Downloads.post")(function* (source: CollectionLocator, locator: PostLocator) {
+          const inventory = yield* library.get(source);
+          const kept = HashSet.fromIterable(
+            A.flatMap(
+              A.filter(inventory.entries, (entry: Entry) => samePost(entry.item.source, locator)),
+              (entry: Entry) => A.map(entry.files, (file) => file.ordinal)
+            )
+          );
           const read = yield* posts(locator).pipe(Stream.runHead, Effect.provide(readers));
           const found = yield* Effect.mapError(Effect.fromOption(read), () =>
             Unavailable.make({ platform: locator.platform, reason: "missing" })
           );
-          const wanted = A.getSomes(
-            A.map(found.media, (media, ordinal) => O.map(best(media), (rendition) => [ordinal, rendition] as const))
+          const wanted = A.filter(
+            A.getSomes(
+              A.map(found.media, (media, ordinal) => O.map(best(media), (rendition) => [ordinal, rendition] as const))
+            ),
+            ([ordinal]) => !HashSet.has(kept, ordinal)
           );
           return yield* Effect.forEach(
             wanted,
