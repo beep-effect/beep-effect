@@ -1,16 +1,8 @@
-// The inverted OIDC contract.
-//
-// The whole point of declaring this here rather than importing an issuer is
-// that the signing path becomes testable with no Actions runtime, no HTTP
-// client and no platform peer — which is what every test in this file, and the
-// signer's whole suite, relies on.
-
 import { IdentityToken, IdentityTokenError } from "@beep/sbom";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 
-/** One instance, so a test can assert identity rather than equality. */
 const HELD = Redacted.make("held-token");
 
 describe("IdentityToken.layerStatic", () => {
@@ -19,19 +11,24 @@ describe("IdentityToken.layerStatic", () => {
       Effect.gen(function* () {
         const identity = yield* IdentityToken;
         const token = yield* identity.token("sigstore");
-        assert.strictEqual(Redacted.value(token), "held-token");
+        assert.strictEqual(
+          Redacted.value(token),
+          "held-token",
+          "a held token answers with no Actions runtime, HTTP client or platform peer"
+        );
       })
     );
 
     it.effect("ignores the audience, because it cannot honour one", () =>
       Effect.gen(function* () {
-        // Documented rather than pretended: a static token was minted before this
-        // layer existed, and a layer that filtered by audience would be claiming
-        // a check it cannot perform.
         const identity = yield* IdentityToken;
         const first = yield* identity.token("sigstore");
         const second = yield* identity.token("something-else");
-        assert.strictEqual(Redacted.value(first), Redacted.value(second));
+        assert.strictEqual(
+          Redacted.value(first),
+          Redacted.value(second),
+          "a static token was minted before this layer, so filtering by audience would claim an unperformed check"
+        );
       })
     );
 
@@ -47,12 +44,13 @@ describe("IdentityToken.layerStatic", () => {
   it.layer(IdentityToken.layerStatic(HELD), { timeout: "10 seconds" })("with an already-redacted token", (it) => {
     it.effect("accepts an already-redacted token without unwrapping and rewrapping it", () =>
       Effect.gen(function* () {
-        // Identity, not equality: the layer must hand back the very value it was
-        // given. A `Redacted.value` round trip through a string would compare
-        // equal and would be a declassification this package promises not to do.
         const identity = yield* IdentityToken;
         const token1 = yield* identity.token("sigstore");
-        assert.strictEqual(token1, HELD);
+        assert.strictEqual(
+          token1,
+          HELD,
+          "identity, not equality: a Redacted.value round trip would compare equal and declassify the token"
+        );
       })
     );
   });
@@ -62,12 +60,13 @@ describe("IdentityToken doubles", () => {
   it.layer(IdentityToken.layerTest(), { timeout: "10 seconds" })("the default double", (it) => {
     it.effect("answers rather than dying — a test token is a real answer", () =>
       Effect.gen(function* () {
-        // Contrast the deferred signer's `SigstoreSigner.makeTest`, which dies: a
-        // fabricated OIDC token is a legitimate test answer, a fabricated
-        // signature is a lie.
         const identity = yield* IdentityToken;
         const token2 = yield* identity.token("sigstore");
-        assert.strictEqual(Redacted.value(token2), "test-identity-token");
+        assert.strictEqual(
+          Redacted.value(token2),
+          "test-identity-token",
+          "a fabricated OIDC token is a legitimate test answer, where a fabricated signature would be a lie"
+        );
       })
     );
   });
