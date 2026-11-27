@@ -44,15 +44,6 @@ const FILES = {
   GITHUB_STEP_SUMMARY: "/rf/summary",
 };
 
-/**
- * A real in-memory volume for the runner files, fresh per test.
- *
- * `ActionEnvironment`'s own TSDoc tells consumers to reach for `@effected/memfs`
- * rather than a hand stub, and the append semantics are why: these writes are
- * `flag: "a"` appends, and a stub that models them by concatenating into a Map
- * is re-implementing the filesystem behavior under test. The volume performs
- * the real append, and `/rf` is seeded because a write needs its parent.
- */
 const runnerFiles = () => {
   const handle = MemoryFileSystem.makeSync({ "/rf": MemoryFileSystem.directory() });
   return { written: handle.volume, layer: handle.layer };
@@ -75,7 +66,11 @@ describe("ActionOutputs", () => {
               yield* outputs.set("result", value);
               yield* outputs.exportVariable("result", value);
               expected += `result<<EFFECTED_EOF${newline}${value}${newline}EFFECTED_EOF${newline}`;
-              assert.strictEqual(files.written.text(FILES.GITHUB_OUTPUT), expected);
+              assert.strictEqual(
+                files.written.text(FILES.GITHUB_OUTPUT),
+                expected,
+                "a real in-memory volume performs the flag: a appends a concatenating stub would re-implement"
+              );
               assert.strictEqual(files.written.text(FILES.GITHUB_ENV), expected);
             }
           })
@@ -96,9 +91,12 @@ describe("ActionOutputs", () => {
               assert.strictEqual(error.outputName, path);
               assert.isUndefined(files.written.text(FILES.GITHUB_PATH));
             }
-            // PATH entries have no heredoc separator restrictions.
             yield* outputs.addPath("/opt/a=b<<c");
-            assert.strictEqual(files.written.text(FILES.GITHUB_PATH), "/opt/a=b<<c\n");
+            assert.strictEqual(
+              files.written.text(FILES.GITHUB_PATH),
+              "/opt/a=b<<c\n",
+              "PATH entries have no heredoc separator restrictions"
+            );
           })
         );
       });
@@ -141,13 +139,15 @@ describe("ActionOutputs", () => {
       it.layer(outputLayer(files), { timeout: "30 seconds" })((it) => {
         it.effect("derives a delimiter the value cannot contain", () =>
           Effect.gen(function* () {
-            // A value containing the default delimiter would, with a fixed
-            // delimiter, terminate the block early and corrupt every later entry.
             yield* (yield* ActionOutputs).set("evil", "EFFECTED_EOF\nsmuggled=1");
             const body = files.written.text(FILES.GITHUB_OUTPUT) ?? "";
             const lines = pipe(body, Str.trimEnd, Str.split("\n"));
             const delimiter = Str.slice("evil<<".length)(lines[0] ?? "");
-            assert.notStrictEqual(delimiter, "EFFECTED_EOF");
+            assert.notStrictEqual(
+              delimiter,
+              "EFFECTED_EOF",
+              "a fixed delimiter inside the value would end the block early and corrupt every later entry"
+            );
             assert.isFalse(
               Str.includes(delimiter)("EFFECTED_EOF\nsmuggled=1"),
               "delimiter must not occur in the value"
@@ -236,23 +236,28 @@ describe("ActionOutputs", () => {
       it.layer(outputLayer(files), { timeout: "30 seconds" })((it) => {
         it.effect("refuses a name containing the runner-file separators", () =>
           Effect.gen(function* () {
-            // The runner reads each line up to its first `=` or `<<`, whichever
-            // comes first: a name carrying `=` parses as a key=value property
-            // before the block ever opens, and a name carrying `<<` splits at
-            // the wrong delimiter — either way every entry after it is corrupt.
-            // A name ending in `<` composes a header (`a<<<DELIM`) whose first
-            // `<<` matches one character early, so the delimiter the runner
-            // waits for can never be matched by the terminating line.
             const forEquals = yield* Effect.flip((yield* ActionOutputs).set("bad=name", "1"));
-            assert.instanceOf(forEquals, InvalidOutputNameError);
+            assert.instanceOf(
+              forEquals,
+              InvalidOutputNameError,
+              "the runner reads up to the first = or <<, so a name with = parses as key=value before the block opens"
+            );
             const forHeredoc = yield* Effect.flip((yield* ActionOutputs).set("bad<<name", "1"));
-            assert.instanceOf(forHeredoc, InvalidOutputNameError);
+            assert.instanceOf(
+              forHeredoc,
+              InvalidOutputNameError,
+              "a name with << splits at the wrong delimiter and corrupts every later entry"
+            );
             const forEnv = yield* Effect.flip((yield* ActionOutputs).exportVariable("bad=name", "1"));
             assert.instanceOf(forEnv, InvalidOutputNameError);
             const forJson = yield* Effect.flip((yield* ActionOutputs).setJson("bad<<name", 1, S.Finite));
             assert.instanceOf(forJson, InvalidOutputNameError);
             const forTrailing = yield* Effect.flip((yield* ActionOutputs).set("bad<", "1"));
-            assert.instanceOf(forTrailing, InvalidOutputNameError);
+            assert.instanceOf(
+              forTrailing,
+              InvalidOutputNameError,
+              "a trailing < composes a<<<DELIM, whose first << matches early, so the terminator never matches"
+            );
             const forJsonTrailing = yield* Effect.flip((yield* ActionOutputs).setJson("<", 1, S.Finite));
             assert.instanceOf(forJsonTrailing, InvalidOutputNameError);
             assert.strictEqual(files.written.paths().length, 0, "nothing may be written when the name is refused");
@@ -313,27 +318,26 @@ describe("ActionOutputs", () => {
   });
 
   describe("layerDetached", () => {
-    /** The S3-shaped secret from the incident this layer exists for. */
-    const PLAINTEXT = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
+    const S3_SIGNING_SECRET = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
 
-    /** Everything this process wrote to its console, as one string. */
-    const captured = Effect.map(Effect.zip(TestConsole.logLines, TestConsole.errorLines), ([logs, errors]) =>
+    const consoleTranscript = Effect.map(Effect.zip(TestConsole.logLines, TestConsole.errorLines), ([logs, errors]) =>
       Result.getOrThrowWith(S.encodeResult(Json)([...logs, ...errors]), (error) => error)
     );
     it.layer(ActionOutputs.layerDetached, { timeout: "30 seconds" })((it) => {
       it.effect("the incident, as regression: a signing secret never reaches a detached worker's log", () =>
         Effect.gen(function* () {
-          // The worker-side composition that shipped wrong: an S3-style signer
-          // declassifying its key via Secret.forSigning. Under layerDetached
-          // the signer still gets the raw bytes for the HMAC…
-          const key = yield* Secret.forSigning(Redacted.make(PLAINTEXT));
-          assert.strictEqual(key, PLAINTEXT);
-          // …and the secret appears NOWHERE in the captured output. Under the
-          // real layer this exact assertion fails (see the control below):
-          // stdout in a detached worker is a log file no runner parses, so the
-          // mask both masks nothing and writes the plaintext into the log.
-          const captured1 = yield* captured;
-          assert.notInclude(captured1, PLAINTEXT);
+          const key = yield* Secret.forSigning(Redacted.make(S3_SIGNING_SECRET));
+          assert.strictEqual(
+            key,
+            S3_SIGNING_SECRET,
+            "under layerDetached an S3-style signer declassifying via Secret.forSigning still gets raw HMAC bytes"
+          );
+          const captured1 = yield* consoleTranscript;
+          assert.notInclude(
+            captured1,
+            S3_SIGNING_SECRET,
+            "a detached worker's stdout is a log no runner parses, so a mask masks nothing and writes the plaintext"
+          );
         })
       );
     });
@@ -343,13 +347,13 @@ describe("ActionOutputs", () => {
       it.layer(outputLayer(files), { timeout: "30 seconds" })((it) => {
         it.effect("the control: the REAL layer writes ::add-mask::<plaintext> — the shipped inversion", () =>
           Effect.gen(function* () {
-            // The mutant the regression discriminates against: swap
-            // layerDetached back to ActionOutputs.layer and the plaintext is in
-            // the output, workflow-command prefix and all. In a `uses:` step the
-            // runner consumes this line; in a detached worker it IS the leak.
-            yield* Secret.forSigning(Redacted.make(PLAINTEXT));
-            const captured2 = yield* captured;
-            assert.include(captured2, `::add-mask::${PLAINTEXT}`);
+            yield* Secret.forSigning(Redacted.make(S3_SIGNING_SECRET));
+            const captured2 = yield* consoleTranscript;
+            assert.include(
+              captured2,
+              `::add-mask::${S3_SIGNING_SECRET}`,
+              "a uses: step's runner consumes this line; under ActionOutputs.layer in a detached worker it is the leak"
+            );
           })
         );
       });
@@ -358,7 +362,7 @@ describe("ActionOutputs", () => {
       it.effect("setSecret is a silent no-op — the value must not be written anywhere", () =>
         Effect.gen(function* () {
           yield* (yield* ActionOutputs).setSecret("s3cr3t");
-          const captured3 = yield* captured;
+          const captured3 = yield* consoleTranscript;
           assert.strictEqual(captured3, "[]", "a detached worker must write nothing for a mask");
         })
       );
@@ -380,9 +384,8 @@ describe("ActionOutputs", () => {
             assert.strictEqual(error.file, file);
             assert.include(error.message, "detached worker");
           }
-          // Failing typed, not silently: nothing was logged on the way.
-          const captured4 = yield* captured;
-          assert.strictEqual(captured4, "[]");
+          const captured4 = yield* consoleTranscript;
+          assert.strictEqual(captured4, "[]", "failing typed, not silently: nothing was logged on the way");
         })
       );
     });
@@ -395,10 +398,12 @@ describe("ActionOutputs", () => {
             Result.getOrThrowWith(S.encodeResult(Json)(errors), (error) => error),
             "it broke"
           );
-          // The ::error:: protocol means nothing in a worker's log file —
-          // emitting it would be pretending a runner is listening.
-          const captured5 = yield* captured;
-          assert.notInclude(captured5, "::error::");
+          const captured5 = yield* consoleTranscript;
+          assert.notInclude(
+            captured5,
+            "::error::",
+            "::error:: means nothing in a worker's log file; emitting it would pretend a runner is listening"
+          );
         })
       );
     });
@@ -429,9 +434,7 @@ describe("ActionOutputs", () => {
     });
 
     describe("setJson always encodes first (#636)", () => {
-      /** The output contract: `count` must be an integer. */
       const Report = S.Struct({ count: S.Int });
-      /** The drift: a projection handing over a string where the schema says Int. */
       const drifted = { count: deliberatelyInvalid<number>("3") };
       it.layer(
         ActionOutputs.layerTest({
@@ -445,11 +448,12 @@ describe("ActionOutputs", () => {
       )((it) => {
         it.effect("the #636 trap: an override that ignores `schema` can no longer hide a drift", () =>
           Effect.gen(function* () {
-            // The natural consumer override from the issue — accepts `schema`,
-            // never looks at it. Before the fix this typechecked, read complete,
-            // and turned a production OutputEncodeError into a green suite.
             const error = yield* Effect.flip((yield* ActionOutputs).setJson("result", drifted, Report));
-            assert.strictEqual(error._tag, "OutputEncodeError");
+            assert.strictEqual(
+              error._tag,
+              "OutputEncodeError",
+              "the natural override accepts schema and never reads it; setJson encodes first so the drift still fails"
+            );
             assert.strictEqual(error._tag === "OutputEncodeError" ? error.outputName : undefined, "result");
           })
         );

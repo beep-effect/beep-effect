@@ -9,8 +9,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
-// The caller rejects CR/LF in paths. Empty strings are preserved as blank lines.
-const paths = S.String.pipe(
+const pathsWithoutLineBreaks = S.String.pipe(
   S.Array,
   Arbitrary.schema,
   Arbitrary.map((files) => A.map(files, (file) => Str.replaceAll(/[\r\n]/g, "_")(file)))
@@ -18,11 +17,11 @@ const paths = S.String.pipe(
 const parse = (text: string): Array<string> => (text === "" ? [] : pipe(text, Str.slice(0, -1), Str.split("\n")));
 it.effect.prop(
   "zip manifest formatting is idempotent through parsing and preserves every representable path byte and order",
-  [paths],
+  [pathsWithoutLineBreaks],
   ([files]) =>
     Effect.sync(() => {
       const text = zipManifest(files);
-      assert.deepStrictEqual(parse(text), files);
+      assert.deepStrictEqual(parse(text), files, "the caller rejects CR/LF; empty paths survive as blank lines");
       assert.strictEqual(zipManifest(parse(text)), text);
       assert.deepStrictEqual(parse(zipManifest(parse(text))), parse(text));
     }),

@@ -1,13 +1,3 @@
-// The host platform the real-process suites run on. `ActionCache`, `Artifact`,
-// `ToolInstaller`, `PackageManagerInstaller` and `DetachedProcess` are tested
-// against the real `tar`, `unzip`, installer tarballs and detached children,
-// which read and write the real filesystem; an in-memory volume cannot host a
-// child process. The suites reach the platform through this one module: the
-// Effect services for the code under test, and the host builtins the fixtures
-// stage files, spawn children and bind sockets with, loaded the way the
-// package's own `src` loads builtins (`process.getBuiltinModule`), so no suite
-// imports a builtin.
-
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as Layer from "effect/Layer";
@@ -16,13 +6,26 @@ import type * as Digest from "effect/crypto/Digest";
 /**
  * The Node platform services (filesystem, path, spawner, terminal) the real-process suites provide, plus the
  * `Digest` family the cache key and artifact hashing read (`NodeServices` no longer bundles crypto).
+ *
+ * **Details**
+ *
+ * `ActionCache`, `Artifact`, `ToolInstaller`, `PackageManagerInstaller` and `DetachedProcess` are tested against the
+ * real `tar`, `unzip`, installer tarballs and detached children, which read and write the real filesystem; an
+ * in-memory volume cannot host a child process. The suites reach the platform only through this module.
  */
 export const nativePlatform: Layer.Layer<NodeServices.NodeServices | Digest.Digest> = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layerDigest
 );
 
-/** The host's `node:fs`; the fixtures use its synchronous members. */
+/**
+ * The host's `node:fs`; the fixtures use its synchronous members.
+ *
+ * **Details**
+ *
+ * Every `host*` builtin here loads the way the package's own `src` loads builtins (`process.getBuiltinModule`), so no
+ * suite imports a builtin.
+ */
 export const hostFs: typeof import("node:fs") = process.getBuiltinModule("node:fs");
 
 /** The host's `node:os`, for the temp root the fixtures stage scratch directories under. */

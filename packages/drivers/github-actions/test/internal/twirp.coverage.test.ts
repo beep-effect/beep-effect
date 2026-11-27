@@ -51,10 +51,14 @@ it.effect(
           const value2 = yield* S.encodeEffect(TwirpFailure)(failure);
           assert.deepStrictEqual(value2, failure);
         }
-        // Exact optional keys (EF-40): an optional key is omitted, never undefined.
-        assert.isFalse(S.is(TwirpFailure)({ method: "Read", kind, status: undefined }));
-        // `cause` is `S.Unknown`, whose domain includes the undefined value itself.
-        assert.isTrue(S.is(TwirpFailure)({ method: "Read", kind, cause: undefined }));
+        assert.isFalse(
+          S.is(TwirpFailure)({ method: "Read", kind, status: undefined }),
+          "exact optional keys: an absent status is omitted, never undefined"
+        );
+        assert.isTrue(
+          S.is(TwirpFailure)({ method: "Read", kind, cause: undefined }),
+          "cause is S.Unknown, whose domain includes the undefined value itself"
+        );
         for (const status of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, "503"]) {
           assert.isFalse(S.is(TwirpFailure)({ method: "Read", kind, status }));
         }
@@ -100,7 +104,6 @@ import { settle } from "../support/results.ts";
 
 it.effect("a transport failure retries and returns the recovered body", () =>
   Effect.gen(function* () {
-    // This test exclusively owns its TestClock and advances only its retry fiber.
     let calls = 0;
     const http = HttpClient.make((request) =>
       Effect.suspend(() => {
@@ -127,6 +130,6 @@ it.effect("a transport failure retries and returns the recovered body", () =>
       TestClock.adjust("3 seconds")
     );
     assertExitSuccess(exit, { recovered: true });
-    assert.strictEqual(calls, 2);
+    assert.strictEqual(calls, 2, "this test owns its TestClock, and the advance reaches only its retry fiber");
   })
 );

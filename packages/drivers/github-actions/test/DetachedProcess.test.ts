@@ -39,16 +39,10 @@ const { createServer } = hostHttp;
 const { mkdtempSync, readFileSync, rmSync } = hostFs;
 const { join } = hostPath;
 
-/** The child's PATH: a fixed value the env tests pass through and read back. */
 const CHILD_PATH = "/usr/local/bin:/usr/bin:/bin";
 
-/** A fresh scratch directory per use, removed by the test that made it. */
 const scratch = () => mkdtempSync(join(hostOs.tmpdir(), "effected-detached-"));
 
-/**
- * Wait for a real condition: the predicate is polled every 20ms on the live
- * clock (a real child is filling a real file), up to `attempts` more times.
- */
 const eventually = (predicate: () => boolean, attempts = 100): Effect.Effect<boolean> =>
   Effect.repeat(Effect.sync(predicate), {
     schedule: Schedule.spaced("20 millis"),
@@ -56,7 +50,6 @@ const eventually = (predicate: () => boolean, attempts = 100): Effect.Effect<boo
     times: attempts,
   }).pipe(TestClock.withLive);
 
-/** Whether a pid is still alive, asked without signalling it. */
 const alive = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
@@ -66,7 +59,6 @@ const alive = (pid: number): boolean => {
   }
 };
 
-// process.kill is a native global seam; no Effect service is exposed for spying.
 class KillSpy extends Context.Service<KillSpy, ReturnType<typeof killSpy>>()(
   "@beep/github-actions/test/DetachedProcess.test/KillSpy"
 ) {}
@@ -74,11 +66,6 @@ const killSpy = () => vi.spyOn(process, "kill");
 
 describe("DetachedProcess", () => {
   describe("the bare-pid guard", () => {
-    // The assertion that matters is the spy, not the failure. pid 0 signals
-    // the caller's entire process group, so on a runner an unguarded reap of a
-    // state value that decoded to 0 takes down the job running it. A test that
-    // only checked the effect failed would pass against an implementation that
-    // killed the group and THEN reported an error.
     it.layer(
       Layer.effect(
         KillSpy,
@@ -93,8 +80,16 @@ describe("DetachedProcess", () => {
         Effect.gen(function* () {
           const calls = (yield* KillSpy).mock.calls;
           const error = yield* Effect.flip(DetachedProcess.reap(0));
-          assert.instanceOf(error, InvalidPidError);
-          assert.lengthOf(calls, 0, "process.kill must not have been called at all");
+          assert.instanceOf(
+            error,
+            InvalidPidError,
+            "pid 0 signals the whole process group, so reaping a decoded 0 would take down the runner's job"
+          );
+          assert.lengthOf(
+            calls,
+            0,
+            "the spy is what matters: checking the failure alone passes code that killed the group and THEN failed"
+          );
         })
       );
     });
@@ -114,7 +109,11 @@ describe("DetachedProcess", () => {
           const calls = (yield* KillSpy).mock.calls;
           const error = yield* Effect.flip(DetachedProcess.reap(-1));
           assert.instanceOf(error, InvalidPidError);
-          assert.lengthOf(calls, 0, "process.kill must not have been called at all");
+          assert.lengthOf(
+            calls,
+            0,
+            "process.kill must not be called; it is a native global seam with no Effect service, so a vi spy watches it"
+          );
         })
       );
     });
@@ -149,29 +148,31 @@ describe("DetachedProcess", () => {
       ),
       { timeout: "30 seconds" }
     )((it) => {
-      // The control prevents an implementation that never signals anything from passing.
       it.effect("the control: a positive pid DOES reach process.kill", () =>
         Effect.gen(function* () {
           const calls = (yield* KillSpy).mock.calls;
           const reap1 = yield* DetachedProcess.reap(4242, "SIGTERM");
           assert.isTrue(reap1);
-          assert.deepStrictEqual(calls, [[4242, "SIGTERM"]]);
+          assert.deepStrictEqual(
+            calls,
+            [[4242, "SIGTERM"]],
+            "the control keeps an implementation that never signals anything from passing"
+          );
         })
       );
     });
   });
 
   describe("reap", () => {
-    // No kill spy: a child that already exited and was waited on makes the real
-    // process.kill throw ESRCH, which must classify through the wrapped cause.
     it.effect("reports a real exited child as false", () =>
       Effect.gen(function* () {
         const { pid } = spawnSync(process.execPath, ["-e", ""]);
-        // A failed spawn must never reach a pid-0 group signal.
-        assertTrue(Number.isSafeInteger(pid) && pid > 0);
-        // SIGCONT is harmless if the OS has already reused the pid.
+        assertTrue(Number.isSafeInteger(pid) && pid > 0, "a failed spawn must never reach a pid-0 group signal");
         const reap2 = yield* DetachedProcess.reap(pid, "SIGCONT");
-        assertFalse(reap2);
+        assertFalse(
+          reap2,
+          "no spy: the waited-on child makes the real kill throw ESRCH; SIGCONT is harmless if the pid was reused"
+        );
       })
     );
 
@@ -191,9 +192,8 @@ describe("DetachedProcess", () => {
     )((it) => {
       it.effect("reports an already-dead process as false rather than failing", () =>
         Effect.gen(function* () {
-          // A post phase finding its child already gone is the normal ending.
           const reap3 = yield* DetachedProcess.reap(4242);
-          assert.isFalse(reap3);
+          assert.isFalse(reap3, "a post phase finding its child already gone is the normal ending");
         })
       );
     });
@@ -224,9 +224,11 @@ describe("DetachedProcess", () => {
 
   describe("ProcessId", () => {
     it("refuses the zero a truncated state file decodes to", () => {
-      // Both defenses matter and this is the first: the bad value never reaches
-      // reap, because it never leaves ActionState.
-      assert.strictEqual(S.decodeExit(ProcessId)(0)._tag, "Failure");
+      assert.strictEqual(
+        S.decodeExit(ProcessId)(0)._tag,
+        "Failure",
+        "the first of both defenses: the bad value never leaves ActionState, so it never reaches reap"
+      );
       assert.strictEqual(S.decodeExit(ProcessId)(-1)._tag, "Failure");
       assert.strictEqual(S.decodeExit(ProcessId)(1.5)._tag, "Failure");
     });
@@ -261,12 +263,14 @@ describe("DetachedProcess", () => {
           return calls >= 3;
         });
         const fiber = yield* Effect.forkChild(DetachedProcess.awaitReady(probe, { interval: "100 millis" }));
-        // Latch-free but clock-driven: it.effect installs a virtual clock, so a
-        // real sleep here would hang to the vitest timeout instead of ticking.
         yield* TestClock.adjust("100 millis");
         yield* TestClock.adjust("100 millis");
         yield* Fiber.join(fiber);
-        assert.strictEqual(calls, 3);
+        assert.strictEqual(
+          calls,
+          3,
+          "it.effect's virtual clock ticks the polls; a real sleep would hang to the vitest timeout"
+        );
       })
     );
 
@@ -290,12 +294,13 @@ describe("DetachedProcess", () => {
           calls += 1;
           return Effect.fail("probe is misconfigured" as const);
         });
-        // A probe that cannot run is a different situation from a child that is
-        // not up yet; retrying the first turns a config error into a timeout
-        // with nothing to show for it.
         const error = yield* Effect.flip(DetachedProcess.awaitReady(probe, { attempts: 5 }));
         assert.strictEqual(error, "probe is misconfigured");
-        assert.strictEqual(calls, 1);
+        assert.strictEqual(
+          calls,
+          1,
+          "a probe that cannot run is not a child not up yet; retrying turns a config error into a bare timeout"
+        );
       })
     );
   });
@@ -361,9 +366,7 @@ describe("DetachedProcess", () => {
     it.layer(FetchHttpClient.layer, { timeout: "30 seconds" })((it) => {
       it.effect("collapses a refused connection to false rather than failing", () =>
         Effect.gen(function* () {
-          // Bind an ephemeral port and close it completely first: the port is
-          // then known-refusing without racing another process for a fixed one.
-          const port = yield* Effect.callback<number>((resume) => {
+          const closedEphemeralPort = yield* Effect.callback<number>((resume) => {
             const server = createServer();
             server.listen(0, "127.0.0.1", () => {
               const address = server.address();
@@ -374,11 +377,11 @@ describe("DetachedProcess", () => {
               server.close(() => resume(Effect.succeed(bound)));
             });
           });
-          // The assertion that matters is that this line is reached at all: a
-          // probe that let the transport error through would fail the effect
-          // here instead of answering false.
-          const httpProbe7 = yield* DetachedProcess.httpProbe(`http://127.0.0.1:${port}/status`);
-          assert.isFalse(httpProbe7);
+          const httpProbe7 = yield* DetachedProcess.httpProbe(`http://127.0.0.1:${closedEphemeralPort}/status`);
+          assert.isFalse(
+            httpProbe7,
+            "reaching this line is the point: a probe letting the transport error through fails the effect instead"
+          );
         })
       );
     });
@@ -390,11 +393,10 @@ describe("DetachedProcess", () => {
       ),
       { timeout: "30 seconds" }
     )((it) => {
-      it.effect("composes with awaitReady: an answering child reports ready", () =>
+      it.effect("composes with awaitReady: an answering child is ready; a small budget fails a wrong false fast", () =>
         Effect.gen(function* () {
           const url = yield* ServerUrl;
           yield* DetachedProcess.awaitReady(DetachedProcess.httpProbe(url), {
-            // Small budget so a wrong `false` fails fast instead of in 6s.
             interval: "10 millis",
             attempts: 2,
           });
@@ -404,7 +406,6 @@ describe("DetachedProcess", () => {
   });
 
   describe("the ops seam", () => {
-    /** The die a makeTestOps member exits through, asserted to BE a die. */
     const defectMessage = (exit: Exit.Exit<unknown, unknown>): string => {
       assert.isTrue(Exit.isFailure(exit));
       if (!Exit.isFailure(exit)) {
@@ -464,19 +465,19 @@ describe("DetachedProcess", () => {
           const reap11 = yield* ops.reap(4242);
           assert.isTrue(reap11);
           assert.deepStrictEqual(reaped, [4242]);
-          // The overrides must not soften the rest of the double.
           const exit12 = yield* Effect.exit(ops.spawn({ command: "node", logFile: "/tmp/never.log" }));
-          assert.include(defectMessage(exit12), "spawn");
+          assert.include(defectMessage(exit12), "spawn", "the overrides must not soften the rest of the double");
         })
       );
 
       it.effect("dying is lazy — building the double runs nothing", () =>
         Effect.gen(function* () {
-          // An eagerly-throwing double would make it impossible to build the
-          // ops value in a test that only ever calls its stubbed members.
           const ops = DetachedProcess.makeTestOps();
           const described = ops.reap(4242);
-          assert.isDefined(described);
+          assert.isDefined(
+            described,
+            "an eagerly throwing double could not be built by a test that only calls its stubbed members"
+          );
           const exit13 = yield* Effect.exit(described);
           const message = defectMessage(exit13);
           assert.include(message, "reap");
@@ -486,7 +487,6 @@ describe("DetachedProcess", () => {
   });
 
   describe("spawn", () => {
-    // The child and its log are real; the polling runs on the live clock (TestClock.withLive).
     it.effect("starts a detached child, routes its output to the log file, and survives to be reaped", () => {
       const directory = scratch();
       const logFile = join(directory, "child.log");
@@ -498,9 +498,6 @@ describe("DetachedProcess", () => {
         });
         assert.isAbove(pid, 0);
 
-        // The parent closed its own descriptor immediately; the child holds a
-        // duplicate, which is what keeps the log filling after this process
-        // would have exited.
         const wrote = yield* eventually(() => {
           try {
             return Str.includes("hello from the child")(readFileSync(logFile, "utf8"));
@@ -508,7 +505,10 @@ describe("DetachedProcess", () => {
             return false;
           }
         });
-        assert.isTrue(wrote, "the child's stdout must reach the log file");
+        assert.isTrue(
+          wrote,
+          "the real child's stdout reaches the real log via its duplicate descriptor, polled on the live clock"
+        );
 
         const reap14 = yield* DetachedProcess.reap(pid);
         assert.isTrue(reap14);
@@ -517,22 +517,16 @@ describe("DetachedProcess", () => {
       }).pipe(Effect.ensuring(Effect.sync(() => rmSync(directory, { recursive: true, force: true }))));
     });
 
-    // The child and its log are real; the polling runs on the live clock (TestClock.withLive).
     it.effect("a supplied base replaces the parent's environment wholesale, with env merged over it", () => {
       const directory = scratch();
       const logFile = join(directory, "env.log");
-      // A test-owned variable, not `HOME`: nothing guarantees a runner's
-      // environment carries any particular name. Set on the parent for the
-      // test's duration only, and restored on every path.
       const PARENT_ONLY = "EFFECTED_DETACHED_PARENT_ONLY";
       vi.stubEnv(PARENT_ONLY, "parent-only");
       return Effect.gen(function* () {
-        // The parent holds it; the child must NOT see it — the base is the
-        // whole inherited block, not additions to the parent's environment.
         assert.strictEqual(
           import.meta.env[PARENT_ONLY],
           "parent-only",
-          "the control: the parent must hold the variable the child must lack"
+          "the control: the parent holds a test-owned variable the child must lack, since no runner guarantees HOME"
         );
         const pid = yield* DetachedProcess.spawn({
           command: process.execPath,
@@ -549,7 +543,7 @@ describe("DetachedProcess", () => {
             return false;
           }
         });
-        assert.isTrue(wrote, "the child must have printed its environment");
+        assert.isTrue(wrote, "the real child must have printed its environment, polled on the live clock");
         const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error);
         if (!S.is(EnvironmentRecord)(seen)) {
           assert.fail("expected a string environment record");
@@ -557,9 +551,12 @@ describe("DetachedProcess", () => {
         assert.strictEqual(seen.ONLY, "1");
         assert.strictEqual(seen.X, "y");
         assert.strictEqual(seen.PATH, CHILD_PATH);
-        assert.notProperty(seen, PARENT_ONLY, "the parent's own variables must not leak past an explicit base");
-        // An `undefined` base value is dropped, never stringified.
-        assert.notProperty(seen, "DROPPED");
+        assert.notProperty(
+          seen,
+          PARENT_ONLY,
+          "the base is the whole inherited block, so the parent's own variables must not leak past it"
+        );
+        assert.notProperty(seen, "DROPPED", "an undefined base value is dropped, never stringified");
         assert.notInclude(R.values(seen), "undefined");
       }).pipe(
         Effect.ensuring(
@@ -571,7 +568,6 @@ describe("DetachedProcess", () => {
       );
     });
 
-    // The child and its log are real; the polling runs on the live clock (TestClock.withLive).
     it.effect("env overrides a key the base also carries", () => {
       const directory = scratch();
       const logFile = join(directory, "env.log");
@@ -590,7 +586,7 @@ describe("DetachedProcess", () => {
             return false;
           }
         });
-        assert.isTrue(wrote, "the child must have printed its environment");
+        assert.isTrue(wrote, "the real child must have printed its environment, polled on the live clock");
         const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error);
         if (!S.is(EnvironmentRecord)(seen)) {
           assert.fail("expected a string environment record");
@@ -635,9 +631,11 @@ describe("DetachedSpawnOptions schema contract", () => {
       const minimal: DetachedSpawnOptions.Encoded = { command: "node", logFile: "/tmp/child.log" };
       const value15 = yield* S.decodeEffect(DetachedSpawnOptions)(minimal);
       assert.deepStrictEqual(value15, minimal);
-      // Exact optional keys (EF-40): an optional key is omitted, never undefined.
       for (const key of ["args", "cwd", "base", "env"]) {
-        assert.isFalse(S.is(DetachedSpawnOptions)({ ...minimal, [key]: undefined }));
+        assert.isFalse(
+          S.is(DetachedSpawnOptions)({ ...minimal, [key]: undefined }),
+          "exact optional keys: an absent option is omitted, never undefined"
+        );
       }
       const configured: DetachedSpawnOptions.Encoded = {
         ...minimal,

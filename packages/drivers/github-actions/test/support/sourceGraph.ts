@@ -1,11 +1,3 @@
-// The package's `src` modules, read from source text Vite's raw glob import
-// inlines at transform time, so the scans touch no filesystem and run the same
-// under Node and Bun (the package test runner is `bunx --bun vitest`). The
-// import graph itself is `@beep/test-utils/ImportGraph`'s; this module adds
-// the one edge form that walker does not read: a literal
-// `process.getBuiltinModule("node:…")` load, which is how this package reaches
-// `node:crypto`, `node:fs` and `node:child_process`.
-
 import * as ImportGraph from "@beep/test-utils/ImportGraph";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -18,7 +10,14 @@ const SOURCES = ImportGraph.fromGlob(
   { prefix: "../../src/" }
 );
 
-/** Every `src` module by its `src`-relative path (`"ActionCache.ts"`, `"internal/twirp.ts"`), sorted. */
+/**
+ * Every `src` module by its `src`-relative path (`"ActionCache.ts"`, `"internal/twirp.ts"`), sorted.
+ *
+ * **Details**
+ *
+ * The modules are source text that Vite's raw glob import inlines at transform time, so the scans touch no filesystem
+ * and run the same under Node and Bun (the package test runner is `bunx --bun vitest`).
+ */
 export const sourceModules: ReadonlyArray<string> = SOURCES.pipe(HashMap.keys, A.fromIterable, A.sort(Str.Order));
 
 /** The raw text of one `src` module; a module that does not exist fails loudly. */
@@ -27,7 +26,15 @@ export const sourceOf = (module: string): string =>
 
 const BUILTIN_LOAD = /\bprocess\.getBuiltinModule\(\s*"(node:[^"]+)"\s*\)/g;
 
-/** The `node:*` builtins a module's code loads through `process.getBuiltinModule`. */
+/**
+ * The `node:*` builtins a module's code loads through `process.getBuiltinModule`.
+ *
+ * **Details**
+ *
+ * This is the one edge form the `@beep/test-utils/ImportGraph` walker does not read: a literal
+ * `process.getBuiltinModule("node:…")` load, which is how this package reaches `node:crypto`, `node:fs` and
+ * `node:child_process`.
+ */
 export const builtinsOf = (source: string): ReadonlyArray<string> =>
   A.getSomes(
     A.map(A.fromIterable(Str.matchAll(BUILTIN_LOAD)(ImportGraph.stripComments(source))), (match) =>
