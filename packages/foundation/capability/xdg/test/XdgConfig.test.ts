@@ -15,7 +15,6 @@ import * as S from "effect/Schema";
 import type { XdgPlatform } from "@beep/xdg";
 import type * as O from "effect/Option";
 
-/** Build the fixture graph in a scope that owns its acquired resources. */
 const provideLayer =
   <ROut, E, RIn>(layer: Layer.Layer<ROut, E, RIn>) =>
   <A, E2, R>(self: Effect.Effect<A, E2, R>) =>
@@ -32,14 +31,6 @@ const paths = XdgPaths.make({
   dataDirs: ["/usr/share"],
 });
 
-/**
- * A real in-memory volume where every `present` path holds `files[path]` (or an
- * empty file), every `denied` path is seeded too but its probe raises
- * PermissionDenied, and everything else is honestly absent. Seeding the denied
- * paths makes the fault load-bearing: with it disarmed the probe would FIND
- * them. `probed` records every path the resolver actually looked at, when the
- * probe executes, so short-circuiting is observable.
- */
 const fsFixture = (options: {
   readonly present?: ReadonlyArray<string>;
   readonly files?: Readonly<Record<string, string>>;
@@ -67,13 +58,12 @@ const fsFixture = (options: {
               })
             );
           }
-          return undefined; // delegate: the volume answers
+          return undefined;
         },
       },
     }
   );
 
-/** Platform, environment, filesystem and a resolved `AppDirs` — all in the R channel. */
 const context = (options: Parameters<typeof fsFixture>[0], platform: XdgPlatform = "linux") => {
   const base = Layer.mergeAll(
     Path.layer,
@@ -140,9 +130,6 @@ describe("XdgConfig.resolver", () => {
 
   it.effect("an UNREADABLE candidate does not hide a readable one behind it", () =>
     Effect.gen(function* () {
-      // This is the v3 bug. Its resolver wrapped the whole probe in one
-      // `catchAll`, so an EACCES on the first candidate returned `none` and the
-      // remaining search path was never consulted.
       const found = yield* resolve(XdgConfig.resolver({ filename: "rc.json" }));
       assertSome(found, "/etc/xdg/myapp/rc.json");
     }).pipe(
@@ -182,7 +169,7 @@ describe("XdgConfig.nativeResolver", () => {
     })
   );
 
-  it.effect("absorbs an unreadable native directory into None", () =>
+  it.effect("absorbs an unreadable native config file into None, even though the denied file is present", () =>
     Effect.gen(function* () {
       const found = yield* resolve(XdgConfig.nativeResolver({ namespace: "myapp", filename: "rc.json" }));
       assertNone(found);
@@ -200,9 +187,6 @@ describe("XdgConfig.savePath", () => {
 
   it.effect("drops into ConfigFile.defaultPath, whose slot demands a `never` channel", () =>
     Effect.gen(function* () {
-      // The end-to-end proof that resolving at layer-construction time was the
-      // right call: `defaultPath` is typed `Effect<string, never, RR>`, so a
-      // fallible savePath simply would not fit here without an `orDie`.
       const AppShape = S.Struct({ port: S.Finite });
       class AppConfig extends ConfigFile.Service<AppConfig, typeof AppShape.Type>()("test/AppConfig") {}
 
@@ -219,10 +203,9 @@ describe("XdgConfig.savePath", () => {
         const loaded = yield* config.load;
         assert.deepStrictEqual(loaded, { port: 4242 });
         const target = yield* config.save({ port: 8080 });
-        // Same provide, same volume: the save really landed.
         const volume = yield* MemoryFileSystem.Volume;
         const value = yield* S.decodeEffect(JsonValue)(volume.text(target) ?? "null");
-        assert.deepStrictEqual(value, { port: 8080 });
+        assert.deepStrictEqual(value, { port: 8080 }, "the save landed on the same in-memory volume");
         return target;
       }).pipe(
         provideLayer(

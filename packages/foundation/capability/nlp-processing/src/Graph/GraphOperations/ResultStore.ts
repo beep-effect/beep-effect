@@ -80,10 +80,6 @@ export class AnyOperationResult extends S.Opaque<AnyOperationResult, { readonly 
   )
 ) {}
 
-// =============================================================================
-// Keys & Stored Values
-// =============================================================================
-
 /**
  * **Details**
  *
@@ -197,10 +193,6 @@ export class CacheStats extends S.Opaque<CacheStats, { readonly brand: unique sy
   )
 ) {}
 
-// =============================================================================
-// Service Shape & Tag
-// =============================================================================
-
 /**
  * Structural service contract for caching graph-operation results.
  *
@@ -253,10 +245,6 @@ export interface ResultStoreShape {
  * @since 0.0.0
  */
 export class ResultStore extends Context.Service<ResultStore, ResultStoreShape>()($I`ResultStore`) {}
-
-// =============================================================================
-// In-Memory Implementation
-// =============================================================================
 
 const makeResultStore = Effect.gen(function* () {
   const storeRef = yield* Ref.make<HashMap.HashMap<string, StoredResult>>(HashMap.empty());

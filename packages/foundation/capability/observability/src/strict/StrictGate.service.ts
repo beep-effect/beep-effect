@@ -265,6 +265,13 @@ const logRecordCount = (data: LogsData): number =>
  * in the ledger under its {@link TelemetryRefusalTag}, and a rule turned off
  * in `config.rules` passes its data through unchanged.
  *
+ * Under `metric-values`, a histogram's count is the sum of its coarsened
+ * buckets, so the point stays consistent under OTLP, and exponential
+ * histograms and summaries are refused whole: their value-derived bucket
+ * layouts and quantiles cannot be floored onto the ladder. Under
+ * `metric-names`, a metric's description and unit come from its catalog
+ * entry, never from the input series.
+ *
  * **Example** (Build a gate effect)
  *
  * ```ts
@@ -446,11 +453,8 @@ export const makeStrictGate = Effect.fn("StrictGate.make")(function* (config: St
               A.length(A.filter([point.sum, point.min, point.max], P.isNotUndefined))
             );
           }
-          // Buckets are coarsened one by one, so `count` is their sum: flooring
-          // the count on its own could disagree with the buckets and make the
-          // point inconsistent under OTLP.
           const bucketCounts = A.map(point.bucketCounts ?? [], value);
-          const total =
+          const countMatchingBuckets =
             rules["metric-values"] && A.isReadonlyArrayNonEmpty(bucketCounts)
               ? Num.sumAll(bucketCounts)
               : value(point.count ?? 0);
@@ -459,7 +463,7 @@ export const makeStrictGate = Effect.fn("StrictGate.make")(function* (config: St
               attributes,
               ...pointTimes(point),
               exemplars: [],
-              count: total,
+              count: countMatchingBuckets,
               bucketCounts,
               explicitBounds: point.explicitBounds ?? [],
               ...(rules["metric-values"] ? {} : aggregates),
@@ -469,8 +473,6 @@ export const makeStrictGate = Effect.fn("StrictGate.make")(function* (config: St
       })
     );
 
-  // Exponential histograms and summaries carry value-derived bucket layouts
-  // and quantiles that no ladder can coarsen, so the whole series is refused.
   const refusedSeries = <D>(key: string, data: D | undefined): Record<string, D> => {
     if (P.isUndefined(data)) {
       return {};
@@ -492,8 +494,6 @@ export const makeStrictGate = Effect.fn("StrictGate.make")(function* (config: St
       onNone: () => HashSet.empty<string>(),
       onSome: (instrument) => HashSet.fromIterable<string>(instrument.attributes),
     });
-    // Description and unit come from the catalog entry, never the input
-    // series; only with the metric-names rule off does the input pass through.
     const identity = rules["metric-names"]
       ? O.match(found, {
           onNone: () => ({ description: "" }),

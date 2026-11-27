@@ -47,13 +47,7 @@ const SoftToolkitHandlersLive = SoftToolkit.toLayer({
 
 const softSourceLayer = sanitizedToolkit(SoftToolkit).pipe(Layer.provide(SoftToolkitHandlersLive));
 
-// The credential read happens per tool call (inside the handler), not while
-// this layer builds, so the fixture ConfigProvider can be a sibling: by the
-
-// time an `it.effect` body calls `callTool`, the merged layer output
-
-// (including the overridden `ConfigProvider`) is already its ambient context.
-const buildLayer = (env: Record<string, string>) =>
+const layerWithSiblingConfig = (env: Record<string, string>) =>
   Layer.mergeAll(
     McpServer.McpServer.layer,
     softSourceLayer,
@@ -76,7 +70,7 @@ const assertSchemaRoundTrip = Effect.fnUntraced(function* <Schema extends S.Code
 });
 
 describe("api_key_required envelope", () => {
-  it.layer(buildLayer({}), { timeout: "5 seconds" })("when the credential is absent", (it) => {
+  it.layer(layerWithSiblingConfig({}), { timeout: "5 seconds" })("when the credential is absent", (it) => {
     it.effect(
       "api_key_required stays a non-error result with the envelope mirrored into content[].text",
       Effect.fnUntraced(function* () {
@@ -97,7 +91,7 @@ describe("api_key_required envelope", () => {
     );
   });
 
-  it.layer(buildLayer({ MCP_KIT_TEST_SOFT_KEY: "fixture-secret" }), { timeout: "5 seconds" })(
+  it.layer(layerWithSiblingConfig({ MCP_KIT_TEST_SOFT_KEY: "fixture-secret" }), { timeout: "5 seconds" })(
     "when the credential is present",
     (it) => {
       it.effect(
@@ -110,7 +104,11 @@ describe("api_key_required envelope", () => {
           const [first] = result.content;
           assert.strictEqual(first?.type, "text");
           const decoded = yield* decodeStringFromJson((first as { readonly text: string }).text);
-          assert.strictEqual(decoded, "ok");
+          assert.strictEqual(
+            decoded,
+            "ok",
+            "the credential is read per tool call, so the sibling ConfigProvider is already ambient"
+          );
         })
       );
     }

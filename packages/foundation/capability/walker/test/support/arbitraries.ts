@@ -3,8 +3,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Getter from "effect/SchemaGetter";
 
-// instanceOf has no built-in generator. These generation-only links retain
-// the public schemas' encoders, decoders and equivalence for every assertion.
 const ReasonSample = S.Literals(["PermissionDenied", "Unknown", "NotFound"]);
 
 /** Unreadable-directory fields with an arbitrary for the original filesystem cause. */

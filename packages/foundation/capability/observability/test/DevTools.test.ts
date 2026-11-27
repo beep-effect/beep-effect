@@ -84,8 +84,10 @@ describe("DevTools", () => {
         )
       );
 
-      // `withSpan` attributes land after creation; the start snapshot keeps its own copy.
-      expect(A.map(client.messages, describeMessage)).toStrictEqual([
+      expect(
+        A.map(client.messages, describeMessage),
+        "withSpan attributes land after creation; the start snapshot keeps its own copy"
+      ).toStrictEqual([
         { tag: "Span", name: "published", attributes: {}, status: "Started" },
         { tag: "SpanEvent", name: "checkpoint", attributes: undefined, status: undefined },
         { tag: "Span", name: "published", attributes: { early: true, late: true }, status: "Ended" },

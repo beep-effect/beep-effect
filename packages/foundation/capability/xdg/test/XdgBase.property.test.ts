@@ -62,10 +62,12 @@ describe("XdgBase laws", () => {
         }
         const dir = O.getOrThrow(resolved);
         assertTrue(Str.startsWith("/")(dir));
-        // The default never carries an empty or `.` segment from HOME.
-        assertTrue(!Str.includes("//")(dir) && !Str.includes("/./")(dir));
-        // A relative HOME has no default at all.
-        if (!Str.startsWith("/")(home)) assertNone(XdgBase.resolve(kind, { home }));
+        assertTrue(
+          !Str.includes("//")(dir) && !Str.includes("/./")(dir),
+          "the default never carries an empty or `.` segment from HOME"
+        );
+        const homeIsRelative = !Str.startsWith("/")(home);
+        if (homeIsRelative) assertNone(XdgBase.resolve(kind, { home }));
       }),
     runs
   );

@@ -71,12 +71,10 @@ export type TextNodeType = typeof TextNodeType.Type;
  * @since 0.0.0
  */
 export const TextEdgeRelation = LiteralKit([
-  // Structural relations
   "contains",
   "follows",
   "derived-from",
   "parent-of",
-  // Linguistic annotation relations
   "tagged-as",
   "lemma-of",
   "head-of",
