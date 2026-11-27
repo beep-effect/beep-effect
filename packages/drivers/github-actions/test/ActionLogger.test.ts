@@ -436,7 +436,7 @@ describe("ActionLogger", () => {
           assert.deepStrictEqual(
             lines12,
             ["✅ install"],
-            'withStep renders its summary through Effect.logInfo, so the log-to- workflow-command logger has to be installed for the line to be observable — the same one Action.run installs. The whole point: two verbose lines in, one summary line out. This is the step withBuffer({ onSuccess: "discard" }) alone cannot reach — it leaves ZERO lines, which is why the recipe kept coming out wrong.'
+            'withStep renders its summary through Effect.logInfo, so the log-to-workflow-command logger has to be installed for the line to be observable — the same one Action.run installs. The whole point: two verbose lines in, one summary line out. This is the step withBuffer({ onSuccess: "discard" }) alone cannot reach — it leaves ZERO lines.'
           );
         })
       );

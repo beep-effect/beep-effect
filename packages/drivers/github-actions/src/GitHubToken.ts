@@ -28,10 +28,6 @@ import type { ActionStateError } from "./ActionState.ts";
 const $I = $GithubActionsId.create("GitHubToken");
 
 /**
- * **Gotchas**
- *
- * Bot identity lookup is best-effort: a GET /app failure must not fail a release, so retain the minted token without identity fields and log the lookup failure. Supply the installation token to GET /users/{slug}[bot], which rejects an app JWT and would otherwise consume the unauthenticated per-IP limit. Revocation failure must preserve the original action failure.
- *
  * **Example** (Identify an expired persisted token)
  *
  * ```ts
@@ -282,6 +278,21 @@ export declare namespace ClientLayerOptions {
   export type Admitted = S.Struct.Type<typeof ClientLayerOptions.fields>;
 }
 
+/**
+ * Resolve the app's identity onto a minted token, degrading rather than failing.
+ *
+ * **Details**
+ *
+ * The identity is what makes a commit say `my-app[bot]` instead of
+ * `github-actions[bot]`. It is worth a request and it is **not** worth an
+ * action: a `GET /app` hiccup must not fail a release, so the failure is logged
+ * and the token comes back without the identity fields. `botIdentity()` then
+ * falls back on its own.
+ *
+ * The installation token is supplied to the lookup on purpose:
+ * `GET /users/{slug}[bot]` rejects an app JWT, so without one the request runs
+ * unauthenticated against GitHub's sixty-per-hour-per-IP limit.
+ */
 const identified: {
   (app: GitHubAppShape, options: ProvisionOptions.Encoded, minted: InstallationToken): Effect.Effect<InstallationToken>;
   (
@@ -395,6 +406,10 @@ export abstract class GitHubToken {
    * {@link Secret.forRunnerFile}, so the ordering is structural rather than
    * remembered: `GITHUB_STATE` is plaintext by protocol, and the runner's log
    * filter is the only defense available.
+   *
+   * **Gotchas**
+   *
+   * A provision that fails after minting revokes the token best-effort, and a failed revocation never replaces the original failure.
    *
    * **Example** (Construct token provisioning for the pre phase)
    *

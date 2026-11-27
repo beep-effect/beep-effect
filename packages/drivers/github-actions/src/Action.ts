@@ -99,7 +99,7 @@ export class ActionRuntime {
    *
    * **Gotchas**
    *
-   * Reuse the named logger layer so reference-based memoization is shared. Install ActionInput.layerDefault, not the record-backed test provider: bare flat Config reads try the runner INPUT_ derivation before the unchanged ambient lookup, while a caller layer still wins by merging last in Action.run. Provide ActionOutputs to ActionState, then ActionEnvironment to ActionOutputs with provideMerge; flat sibling merges cannot supply these dependencies.
+   * Bare flat `Config` reads try the runner's `INPUT_` derivation first and then the unchanged ambient lookup, so a plain-named read never silently falls back to its `withDefault`. A caller-supplied provider in `Action.run`'s `layer` option still wins: its context merges last.
    *
    * **Example** (Compose the default runner services)
    *
@@ -115,6 +115,8 @@ export class ActionRuntime {
    */
   static readonly layer: Layer.Layer<ActionServices> = Layer.mergeAll(
     ActionLogger.layer,
+    // The named constant, not a second spelling of it: two `Logger.layer([...])`
+    // values with the same contents are different layers and memoize separately.
     ActionLogger.layerLogger,
     ActionState.layer,
     ActionInput.layerDefault

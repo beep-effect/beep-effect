@@ -275,7 +275,7 @@ describe("ActionInput", () => {
         assert.deepStrictEqual(
           [...value],
           ["a", "b"],
-          'Before the union grammar, a "*" bullet kept its marker as part of the value ("* a" survived intact) instead of being stripped.'
+          'A "*" bullet is a marker like "-": "* a" must parse to "a", not keep its marker as part of the value.'
         );
       })
     );
@@ -479,7 +479,7 @@ describe("ActionInput", () => {
           assert.strictEqual(
             value,
             "resolved",
-            `${input} should resolve via ${expected} Seeded with ONLY the expected variable, so resolving proves the derivation rather than restating it.`
+            `${input} should resolve via ${expected}. Seeded with ONLY the expected variable, so resolving proves the derivation rather than restating it.`
           );
         }
       })

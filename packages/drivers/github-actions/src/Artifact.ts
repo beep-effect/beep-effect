@@ -448,12 +448,9 @@ export declare namespace ArtifactRef {
  * The members of the {@link Artifact} service: upload, list, get, download and
  * delete, each failing with {@link ArtifactError}.
  *
- *
  * **Gotchas**
  *
- * CreateArtifact uses protocol version 7 from the toolkit upload path. It is unrelated to the v4 major of actions/upload-artifact; deriving the protocol field from that major produces a rejected create request.
- *
- * Backend ids come from the runtime token scope; a missing scope is workflow misconfiguration. Digest the stored zip by streaming: artifacts have no size ceiling and runners have limited memory. Archive relative to rootDirectory on both platforms, never under runner-specific absolute paths. Reject line breaks on every platform because the Windows one-path-per-line manifest cannot represent them. Keep that UTF-8, BOM-free manifest beside the zip so scratch release removes both. Windows extraction must use the same overwrite-capable command as ToolInstaller. Artifact-name conflicts are failures, unlike immutable-cache races: a run owns only one artifact per name. Download resolves the caller's id through listing because the signed-url RPC accepts a name; that lookup cannot be omitted.
+ * Backend ids come from the runtime token's scope claim, so a token without one fails as a workflow misconfiguration rather than a call failure. A path holding a line break is rejected on every platform: the same upload must not succeed on one runner and fail on another. An artifact-name conflict is a failure, unlike an immutable-cache race: a run owns one artifact per name.
  *
  * @public
  * @category type-level
@@ -498,6 +495,16 @@ export interface ArtifactShape {
 
 const SERVICE = "github.actions.results.api.v1.ArtifactService";
 
+/**
+ * `CreateArtifact`'s `version` field.
+ *
+ * **Gotchas**
+ *
+ * `7`, read off `actions/toolkit`'s own upload path. It is a *protocol*
+ * version, unrelated to the `v4` in `actions/upload-artifact@v4`, and guessing
+ * it from the action's major version — which is the obvious guess — produces a
+ * create the backend rejects.
+ */
 const ARTIFACT_VERSION = 7;
 
 const toItem = Effect.fnUntraced(function* (row: unknown) {
@@ -613,6 +620,15 @@ const make = Effect.fn("make")(function* (
       )
   );
 
+  /**
+   * The SHA-256 the backend finalizes against.
+   *
+   * **Details**
+   *
+   * Over the *stored zip*, streamed rather than read: an artifact is the one
+   * payload in this package with no upper bound on size, and a runner has
+   * roughly seven gigabytes of memory for everything.
+   */
   const digestOf: {
     (file: string, artifact: string): Effect.Effect<string, ArtifactError>;
     (artifact: string): (file: string) => Effect.Effect<string, ArtifactError>;
@@ -650,6 +666,11 @@ const make = Effect.fn("make")(function* (
       level: number,
       artifact: string
     ) {
+      // Stored relative to `rootDirectory`: `zip` records the paths exactly
+      // as given, and the Windows script states each entry name explicitly
+      // from the same relative path, so the two archives have one structure
+      // — and absolute inputs would extract into a tree named after the
+      // runner that produced them.
       const relative = A.map(files, (file) => path.relative(root, file));
       const unrepresentable = A.findFirst(relative, (file) => Str.includes("\n")(file) || Str.includes("\r")(file));
       if (O.isSome(unrepresentable)) {
@@ -660,6 +681,10 @@ const make = Effect.fn("make")(function* (
           detail: `a file path may not contain a line break: ${quoted}`,
         });
       }
+      // Beside the archive inside the scratch directory, so `scratch`'s
+      // release removes it with the zip. `writeFileString` is UTF-8 with no
+      // BOM, which is what `File.ReadAllLines` needs to read the first path
+      // intact.
       const manifest = path.join(path.dirname(destination), "artifact.manifest");
       if (windows) {
         yield* fs
@@ -670,6 +695,9 @@ const make = Effect.fn("make")(function* (
     })
   );
 
+  // One spelling with ToolInstaller.extractZip (`internal/archiveCommands.ts`):
+  // the Windows half must use the overwrite overload, or a download into a
+  // non-empty path fails with an empty stderr.
   const unzip: {
     (source: string, destination: string, artifact: string): Effect.Effect<void, ArtifactError>;
     (destination: string, artifact: string): (source: string) => Effect.Effect<void, ArtifactError>;
@@ -806,6 +834,9 @@ const make = Effect.fn("make")(function* (
       Effect.fn("Artifact.download")(function* (artifactId: number, options?: DownloadOptions.Encoded) {
         const label = String(artifactId);
         yield* Effect.annotateCurrentSpan({ artifactId });
+        // The signed-url RPC takes a NAME, and a caller holds an id — so the
+        // listing is how the two are reconciled, not an extra round trip that
+        // could be optimized away.
         const all = yield* listAll(label);
         const found = yield* Effect.fromOption(
           A.findFirst(all, (item) => item.id === artifactId),

@@ -202,7 +202,7 @@ describe("Action.main", () => {
         assert.include(
           lines,
           `::error::${failure.message}`,
-          "Action.main owns its runtime, so its real console and runner environment are the subject. Run Action.main and keep its Exit. **Details** On the real console, because it.effect installs a TestConsole and the subject here is what the runner reads."
+          "Action.main owns its runtime, so its real console and runner environment are the subject: it.effect installs a TestConsole, and the subject here is what the runner reads."
         );
       })
     );
@@ -274,7 +274,7 @@ describe("Action.main", () => {
           assert.include(
             lines,
             "::warning::dry-run=from-input",
-            'the default must NOT fire The false-green reproduction: a bare Config read of "dry-run" must reach this variable through the installed provider. The exact shipped defect: a bare read with a default. Before the runtime installed the provider, the plain-named lookup found nothing, the default fired, and a rehearsal flag silently read as its fallback on every run.'
+            'the default must NOT fire. The false-green reproduction: a bare Config read of "dry-run" must reach this variable through the installed provider. The exact shipped defect: a bare read with a default. Before the runtime installed the provider, the plain-named lookup found nothing, the default fired, and a rehearsal flag silently read as its fallback on every run.'
           );
           assert.strictEqual(code, 0);
         })

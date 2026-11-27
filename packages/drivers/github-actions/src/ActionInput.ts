@@ -855,10 +855,6 @@ export class ActionInput {
    * derivation through `ActionInput.variable` instead of trying to catch it by
    * substitution.
    *
-   * **Gotchas**
-   *
-   * Resolve the INPUT_ attempt through the same ambient provider used for fallback, rather than reading a second environment. inputVariable remains the only spelling of the runner derivation.
-   *
    * **Example** (Prefer runner inputs over ambient names)
    *
    * ```ts
@@ -883,6 +879,9 @@ export class ActionInput {
     return ConfigProvider.orElse(
       ConfigProvider.make((path) => {
         const name = path.length === 1 ? path[0] : undefined;
+        // The attempt resolves through `ambient` rather than reading an
+        // environment of its own, so there is exactly one source of values and
+        // exactly one spelling of the derivation (`inputVariable`).
         return Bool.match(P.isString(name), {
           onTrue: () => ambient.load([inputVariable(`${name}`)]),
           onFalse: () => Effect.as(Effect.void, undefined),

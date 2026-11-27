@@ -222,7 +222,7 @@ describe("ActionCache", () => {
           assert.strictEqual(
             readFileString2,
             "recovered",
-            "A transport that keeps whole files in memory. **Details** Real bytes, not a recorded call: the round-trip test saves through tar, deletes the originals and restores them, so what this map holds has to be an archive a real tar will accept. The real filesystem and the real tar, over a stubbed backend and transport. The whole claim of a cache, and the one an in-memory double cannot make."
+            "The in-memory transport holds real bytes, not a recorded call: this round trip saves through the real tar, deletes the originals and restores them, the one claim an in-memory double cannot make."
           );
         })
       );
@@ -475,7 +475,7 @@ describe("ActionCache", () => {
           assert.strictEqual(
             error.reason,
             "archiveFailed",
-            "A missing path no longer reaches tar (resolution existence-filters it), so the stderr channel is proved on the extract side: bytes that are not a gzip archive."
+            "A missing path never reaches tar (resolution existence-filters it), so the stderr channel is proved on the extract side: bytes that are not a gzip archive."
           );
           assert.isDefined(
             error.stderr,
@@ -752,7 +752,7 @@ describe("ActionCache", () => {
             assert.strictEqual(
               MutableHashMap.size(blobs),
               1,
-              "the archive with the surviving path was uploaded Toolkit parity: the globber simply yields nothing for a pattern with no matches — and for a LITERAL path that is not on disk, which goes through the same existence filter (internal-globber.ts:90-100). Neither is an error while anything else matched."
+              "the archive with the surviving path was uploaded. Toolkit parity: the globber simply yields nothing for a pattern with no matches — and for a LITERAL path that is not on disk, which goes through the same existence filter (internal-globber.ts:90-100). Neither is an error while anything else matched."
             );
           })
         );
@@ -1149,7 +1149,7 @@ describe("ActionCache", () => {
               const resolvedSet = HashSet.fromIterable(files);
               assert.isFalse(
                 A.some(create?.args, (arg) => HashSet.has(resolvedSet, arg)),
-                "resolved paths must not travel as argv The create invocation carried -T <manifest> and not one resolved path; the manifest listed every match."
+                "resolved paths must not travel as argv. The create invocation carried -T <manifest> and not one resolved path; the manifest listed every match."
               );
               const listed = pipe(
                 create?.manifest ?? "",
@@ -1208,13 +1208,13 @@ describe("ActionCache", () => {
             assert.strictEqual(
               counting.reads(),
               0,
-              "a literal-only resolution must not enumerate the directory The literal contributed the only search root, and no pattern can match below it: admission comes from the stat alone, on save AND restore — a store-sized literal must not cost a full enumeration that can admit nothing. tar's recursion still archived the contents, which is what the round trip above proves."
+              "a literal-only resolution must not enumerate the directory. The literal contributed the only search root, and no pattern can match below it: admission comes from the stat alone, on save AND restore — a store-sized literal must not cost a full enumeration that can admit nothing. tar's recursion still archived the contents, which is what the round trip above proves."
             );
             yield* Effect.flatMap(ActionCache, (cache) => cache.save([`${store}/**`], "k2"));
             assert.isAbove(
               counting.reads(),
               0,
-              "the toolkit-parity walk must survive for actual patterns The control: a wildcard below the same root MUST enumerate — proof the counter is live rather than the wrapper being blind."
+              "the toolkit-parity walk must survive for actual patterns. The control: a wildcard below the same root MUST enumerate — proof the counter is live rather than the wrapper being blind."
             );
           })
         );

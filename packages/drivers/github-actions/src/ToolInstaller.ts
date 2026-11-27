@@ -400,9 +400,7 @@ export declare namespace ProvisionedFile {
  *
  * **Gotchas**
  *
- * A statusless download failure is a retryable transport fault. Stream toolchain archives to disk rather than buffering hundreds of megabytes, and put the per-attempt timeout inside retries so a stalled connection becomes a typed statusless downloadFailed instead of hanging to the job timeout. Validate shared-cache hits for the requested binary: an incomplete entry from another writer must fall through to reinstall. Before caching a downloaded binary, set its executable bit off Windows so the cache only contains runnable tools.
- *
- * Run extraction once through spawnOnce and retain stderr, which distinguishes corrupt input from a missing tar binary. Reading output and exit code through separate convenience calls would spawn twice; a repeated .NET extraction can fail on Windows while captured output describes the first successful run.
+ * A statusless download failure is a retryable transport fault. The per-attempt timeout sits inside the retries, so a stalled connection becomes a typed statusless `downloadFailed` instead of hanging to the job timeout. A shared-cache hit missing the requested binary falls through to a reinstall, since another writer may have left an incomplete entry.
  *
  * @public
  * @category services
@@ -545,6 +543,19 @@ const make = Effect.gen(function* () {
     );
   };
 
+  /**
+   * Run an extraction command ONCE, keeping its stderr.
+   *
+   * **Gotchas**
+   *
+   * `tar`'s exit code says only that it failed; its stderr says why, and it is
+   * the difference between "this is not a gzip archive" and "tar is not
+   * installed". Discarding it is what makes an extraction failure unactionable.
+   *
+   * **One spawn, not two — load-bearing**, and why is spelled once in
+   * `internal/spawn.ts`: a second run fails on Windows because .NET's
+   * `ZipFile.ExtractToDirectory` refuses to overwrite.
+   */
   const extractWith: {
     (command: ChildProcess.Command, archive: string): Effect.Effect<void, ToolInstallerError>;
     (archive: string): (command: ChildProcess.Command) => Effect.Effect<void, ToolInstallerError>;
@@ -637,6 +648,8 @@ const make = Effect.gen(function* () {
           .makeTempDirectory({ prefix: "effected-download-" })
           .pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause })));
         const file = path.join(directory, "download");
+        // Streamed to disk rather than buffered: a toolchain archive is measured
+        // in hundreds of megabytes and a runner is not generous with memory.
         yield* Stream.run(response.stream, fs.sink(file)).pipe(
           Effect.mapError((cause) => ToolInstallerError.make({ reason: "downloadFailed", subject: url, cause }))
         );
@@ -776,6 +789,10 @@ const make = Effect.gen(function* () {
       }
       const file = yield* download(options.url);
       if (!windows) {
+        // A downloaded file has no executable bit, and the cached binary must
+        // be invocable as-is; on Windows the bit does not exist and chmod is
+        // skipped entirely. BEFORE caching, so the cache only ever contains a
+        // runnable tool — same ordering as PackageManagerInstaller's bun path.
         yield* fs
           .chmod(file, 0o755)
           .pipe(Effect.mapError((cause) => ToolInstallerError.make({ reason: "cacheFailed", subject: file, cause })));
@@ -909,7 +926,6 @@ export class ToolInstaller extends Context.Service<ToolInstaller, ToolInstallerS
    * (`internal/runner.ts`). **That is a read of the ambient environment**,
    * sanctioned here only because a double has no `ActionEnvironment` to ask,
    * and limited to the test double.
-   *
    *
    * **Gotchas**
    *

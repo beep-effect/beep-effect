@@ -20,6 +20,20 @@ import { framedGet, framedPut } from "./internal/storedBlob.ts";
 import type { BlobStoreShape } from "./BlobStore.ts";
 import type { BlobTransferError, DataBlobTransfer } from "./BlobTransfer.ts";
 
+/**
+ * The `version` every entry is filed under.
+ *
+ * **Details**
+ *
+ * The cache protocol keys an entry on `(key, version)`, and `actions/cache`
+ * derives the version from the *paths* it archives. A blob store has no paths —
+ * the key is caller-supplied and the payload is opaque — so the version is a
+ * constant, which is what makes any key map to a reproducible slot.
+ *
+ * It is deliberately **not** a format version: {@link BlobEnvelope} carries that
+ * inside the blob, so a framing change is a clean miss rather than a key change
+ * that strands every existing entry.
+ */
 const VERSION = sha256Hex("blobstore|1.0");
 
 const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
@@ -97,8 +111,6 @@ const make = Effect.fn("make")(function* (transfer: DataBlobTransfer) {
  * reachable from every module that reads a blob.
  *
  * **Gotchas**
- *
- * Cache entries use a constant version because opaque blobs have no path list to hash. This is not the envelope format version: framing changes are clean misses inside {@link BlobEnvelope}, rather than changing every object's reproducible cache slot.
  *
  * A reservation conflict means another job already wrote the immutable key and satisfies this write; it is not an error.
  *

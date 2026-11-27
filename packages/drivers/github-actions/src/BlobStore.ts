@@ -137,10 +137,9 @@ export interface StoredBlob<A> {
  * The members of the {@link BlobStore} service: `get`, `put` and `has` over
  * blobs that carry the caller's own metadata.
  *
- *
  * **Gotchas**
  *
- * S3 credentials are declassified once through the package Secret seam and registered with the log filter, rather than emitting a workflow command per object. Keep existing endpoint path escapes and encode only raw object segments; trim trailing separators without a backtracking regex.
+ * The S3 backend keeps the endpoint's existing path escapes and encodes only raw object key segments. Its credentials are registered with the runner's log mask once, not per object.
  *
  * @public
  * @category type-level
@@ -463,6 +462,9 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config.Encoded) {
     config.endpoint ?? `https://s3.${config.region}.amazonaws.com`
   );
 
+  // Declassified ONCE, here, through the package's only declassification
+  // seam — which also registers both values with the runner's log filter.
+  // Doing it per request would emit a workflow command per object.
   const secretAccessKey = yield* Secret.forSigning(config.secretAccessKey);
   const sessionToken = yield* O.match(O.fromUndefinedOr(config.sessionToken), {
     onNone: () => Effect.succeed(O.none<string>()),
@@ -495,6 +497,7 @@ const makeS3 = Effect.fn("makeS3")(function* (config: S3Config.Encoded) {
       body: Uint8Array,
       now: DateTime.Utc
     ): { readonly url: string; readonly headers: Record<string, string> } => {
+      // Strip trailing slashes without a backtracking regex.
       let encodedPathPrefix = endpoint.pathname;
       while (Str.endsWith("/")(encodedPathPrefix)) {
         encodedPathPrefix = Str.slice(0, -1)(encodedPathPrefix);

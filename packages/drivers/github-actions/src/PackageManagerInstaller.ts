@@ -607,30 +607,17 @@ export interface PackageManagerInstallerShape {
    * Provision the exact package-manager version a pin names, answering with
    * where it landed and how to invoke it.
    *
-   *
    * **Gotchas**
    *
-   * POSIX .bin shims exec their target and preserve quoted arguments with "$@". Run .js/.mjs/.cjs entry points under node; exec native binaries and shell alias scripts directly, since feeding Mach-O or shell text to node fails with Invalid or unexpected token. Windows shims apply the same distinction with CRLF-terminated command text.
-   *
-   * Bun asset naming was verified against bun-v1.3.14: bun-{linux,darwin,windows}-{x64,aarch64}.zip, mapping runner macOS to darwin and Node arm64 to aarch64; unsupported pairs return None. Yarn before version 2 uses the yarn registry package; Berry uses `@yarnpkg/cli-dist`, with an unscoped `cli-dist-<version>.tgz` tarball basename.
-   *
-   * Resolve RUNNER_OS and RUNNER_ARCH once at construction; host architecture is only the off-runner fallback when RUNNER_ARCH is absent. ToolInstaller owns cache-path arch derivation. Read libc beside those facts only to select Linux pnpm glibc versus musl binaries.
-   *
-   * Hash artifact bytes incrementally through native crypto. The pin grammar limits algorithms to sha1/sha256/sha384/sha512, all supported there. An integrity-less pin may proceed with a warning because devEngines pins commonly omit it, but requireIntegrity is decided on inputs before cache, ambient probing or download: a cache hit cannot launder a missing checksum, and an option-supplied checksum counts.
+   * An integrity-less pin may proceed with a warning because devEngines pins commonly omit it, but requireIntegrity is decided on inputs before cache, ambient probing or download: a cache hit cannot launder a missing checksum, and an option-supplied checksum counts.
    *
    * Settle one effective pin before every path. Validate the integrity option as corepack `<algo>.<hex>` once even though its input type accepts broader IntegrityHash forms. Refuse disagreement with pin integrity instead of preferring either. A malformed supplied option is could-not-verify integrityMismatch without expected/actual, rather than incorrectly reporting integrityMissing.
    *
-   * Read bin and @pnpm/exe.* optional-dependency maps from the downloaded manifest instead of hardcoding changing layouts: pnpm used bin/pnpm.cjs through v10, bin/pnpm.mjs from v11, and native placeholders from v12. Treat both maps as attacker bytes and admit string pairs only.
-   *
    * Package roots must be real directories. Bin links may resolve only inside them: a ../../payload.js manifest target must not escape into a file the archive never owned for existence checks, chmod, shim execution or published bin paths. Preflight every target, shim directory and destination before writing any shim, including literal .cmd representability on Windows, so a later hostile bin leaves no partial shim set.
-   *
-   * Detect pnpm native layout from @pnpm/exe.* optional dependencies, not its major. A shebang-less #-led non-#! placeholder marks an old/foreign entry whose lifecycle overlay never ran; a shebang, executable magic, unreadable or empty file stays under ordinary layout validation. No shim can repair a placeholder, so reinstall the whole entry and rewrite every stale exec-node shim rather than keeping it through skipExisting.
    *
    * The shared cache may have been populated by the runner image, setup actions or older writers with no shims. Regenerate missing shims without replacing ones owned by another writer; failure to write remains typed cacheFailed rather than a silent PATH hole.
    *
-   * Overlay pnpm native binaries in the staged wrapper because lifecycle scripts are never run. Fetch the host @pnpm/exe.* artifact from the wrapper's same registry and keep dist/ beside the executable. Settle its expected checksum before fetching the roughly 36 MB archive: a supplied nativeIntegrity map is authoritative and skips packument lookup, otherwise the exact-version registry dist.integrity is authoritative. Either unavailable authority fails closed; this second artifact has no integrity-less posture.
-   *
-   * On Windows place each wrapper bin both as `<name>.exe` and over its extensionless placeholder, since an old shim may still name the latter, and repoint recorded bins to .exe. Off Windows chmod every non-Node executable and shell alias after overlay; extraction does not reliably preserve executability. Bun likewise needs its executable bit set before caching.
+   * For pnpm native binaries, settle the expected checksum before fetching the roughly 36 MB archive: a supplied nativeIntegrity map is authoritative and skips packument lookup, otherwise the exact-version registry dist.integrity is authoritative. Either unavailable authority fails closed; this second artifact has no integrity-less posture.
    *
    * Bun has no corepack integrity authority: its checksum covers the downloaded platform zip and is inherently platform-specific. npm, pnpm and Yarn 1 corepack pins cover registry tarball bytes; Yarn >=2 pins cover standalone repo.yarnpkg.com yarn.js, byte-identical to bin/yarn.js inside cli-dist, so verify that extracted file instead.
    *
@@ -674,6 +661,14 @@ interface ExpectedDigest {
 
 const SHIM_DIR = ".bin";
 
+/**
+ * The POSIX shim body: an `exec` wrapper so the shim's process *becomes* the
+ * target, and `"$@"` so arguments survive quoting intact. A Node script
+ * (`.js`/`.mjs`/`.cjs`) runs under `node`; anything else — pnpm 12's native
+ * binary, its `#!/bin/sh` alias scripts — is exec'd directly, because handing
+ * a shell script or a Mach-O to node is exactly the "Invalid or unexpected
+ * token" failure this rule exists to prevent.
+ */
 const posixShim = (target: string): string => {
   const literal = `'${Str.replaceAll("'", "'\\''")(target)}'`;
   return isNodeScript(target) ? `#!/bin/sh\nexec node -- ${literal} "$@"\n` : `#!/bin/sh\nexec ${literal} "$@"\n`;
@@ -684,6 +679,17 @@ const cmdShim = (target: string): string =>
 
 const PNPM_NATIVE_BIN_NAMES: ReadonlyArray<string> = ["pnpm", "pn", "pnpx", "pnx"];
 
+/**
+ * The bun release asset name for a runner platform, or `None` when bun
+ * publishes no build for it.
+ *
+ * **Details**
+ *
+ * Asset names verified against the `bun-v1.3.14` release:
+ * `bun-{linux,darwin,windows}-{x64,aarch64}.zip`, with the runner's `RUNNER_OS` values mapped to
+ * bun's spelling (`macOS` → `darwin`) and the Node arch spelling to bun's
+ * (`arm64` → `aarch64`).
+ */
 const BUN_OS: Readonly<Record<string, string>> = { linux: "linux", macos: "darwin", windows: "windows" };
 const BUN_CPU: Readonly<Record<string, string>> = { x64: "x64", arm64: "aarch64" };
 const bunTarget: {
@@ -777,6 +783,8 @@ const make = Effect.gen(function* () {
   } = dual(
     3,
     (pin: PackageManagerPin, file: string, algorithm: string): Effect.Effect<string, PackageManagerInstallerError> =>
+      // The pin grammar admits sha1/sha256/sha384/sha512 only, all of which
+      // `node:crypto` supports.
       digestFileHex(fs, file, algorithm).pipe(
         Effect.mapError((cause) => errorFor(pin)({ reason: "integrityMismatch", subject: file, cause }))
       )
@@ -904,6 +912,20 @@ const make = Effect.gen(function* () {
     })
   );
 
+  /**
+   * What a package directory's own manifest says about its entry points: the
+   * `bin` map, plus the `@pnpm/exe.*` optional dependencies that mark the
+   * pnpm 12 native-binary layout (empty for every other manager and version).
+   *
+   * **Details**
+   *
+   * Read from the artifact rather than hardcoded per manager, because the
+   * layouts genuinely move — corepack's own table has pnpm's entry at
+   * `bin/pnpm.cjs` through v10 and `bin/pnpm.mjs` from v11, and from v12 the
+   * `pnpm` bin is a placeholder for a native binary shipped as a separate
+   * package. Both maps are attacker-supplied bytes and are normalized to
+   * string → string before anything downstream reads them.
+   */
   const readPackageManifest: {
     (pin: PackageManagerPin, packageDir: string): Effect.Effect<PackageManifest, PackageManagerInstallerError>;
     (packageDir: string): (pin: PackageManagerPin) => Effect.Effect<PackageManifest, PackageManagerInstallerError>;
@@ -974,6 +996,13 @@ const make = Effect.gen(function* () {
       ])
     );
 
+  /**
+   * Whether a file is still pnpm's shebang-less placeholder (a `#`-led text
+   * file that is not a `#!` script) rather than the native binary meant to
+   * overlay it — the mark of an entry written without the overlay, by an
+   * older writer or a foreign one that ran no lifecycle scripts. Anything else (a shebang, an executable's magic, an unreadable
+   * or empty file) is left to the ordinary layout checks.
+   */
   const isPlaceholder = (file: string): Effect.Effect<boolean> =>
     Effect.scoped(Effect.flatMap(fs.open(file), (handle) => handle.readAlloc(2))).pipe(
       Effect.map((head) =>
@@ -1105,6 +1134,12 @@ const make = Effect.gen(function* () {
       const manifest = yield* readPackageManifest(pin, directory);
       let bins = manifest.bins;
       if (R.keys(manifest.nativePackages).length > 0) {
+        // A native-binary wrapper cached by an older writer (which shimmed the
+        // placeholder as a Node script) or by a foreign writer that ran no
+        // lifecycle scripts still holds the placeholder.
+        // A stale `exec node` shim beside it would survive `skipExisting`,
+        // so the whole entry is reinstalled over rather than patched in
+        // place — the install path rewrites every shim.
         const entry = bins[pin.name];
         if (entry !== undefined && (yield* isPlaceholder(path.join(directory, entry)))) {
           yield* Effect.logInfo(
@@ -1269,6 +1304,12 @@ const make = Effect.gen(function* () {
       )
     );
 
+  /**
+   * Mirrors the wrapper's own Windows install script: the binary lands as
+   * `<name>.exe` AND over the extensionless placeholder for each bin (a
+   * pre-existing shim may still name the latter), and `bin` is repointed at
+   * the `.exe` twins.
+   */
   const placeNativeWindows = Effect.fnUntraced(function* (
     pin: PackageManagerPin,
     packageDir: string,
@@ -1287,6 +1328,12 @@ const make = Effect.gen(function* () {
     return nativeWindowsBins(bins);
   });
 
+  /**
+   * The binary over the placeholder, then the executable bit on every non-Node
+   * bin: the overlaid binary and the `#!/bin/sh` alias bins are exec'd directly
+   * by their shims, and tar extraction does not reliably carry the bit (the
+   * bun rule).
+   */
   const placeNativePosix = Effect.fnUntraced(function* (
     pin: PackageManagerPin,
     packageDir: string,
@@ -1314,6 +1361,18 @@ const make = Effect.gen(function* () {
     return bins;
   });
 
+  /**
+   * pnpm 12's native overlay, done here because the installer never runs the
+   * lifecycle script that does it upstream: pick the host's `@pnpm/exe.*`
+   * package from the wrapper's optional dependencies, fetch its tarball from
+   * the SAME registry the wrapper came from, verify it against the caller's
+   * `nativeIntegrity` entry when one was supplied or else the registry's own
+   * `dist.integrity` (fail-closed either way — this is a second artifact the
+   * pin never named, so there is no integrity-less posture to honor), and copy
+   * the executable over the placeholder in the STAGED wrapper, where `dist/`
+   * sits beside it as the binary expects. Answers the bins as they should be
+   * shimmed and recorded — retargeted to `.exe` on Windows, as upstream does.
+   */
   const overlayNativeBinary: {
     (
       pin: PackageManagerPin,
@@ -1358,6 +1417,8 @@ const make = Effect.gen(function* () {
     const binary = path.join(extracted, target, bunBinaryName);
     yield* assertFile(pin, binary, `${target}/${bunBinaryName} is missing from the zip`);
     if (!windows) {
+      // The zip does not reliably carry the executable bit through every
+      // extractor; the cached binary must be invocable as-is.
       yield* fs
         .chmod(binary, 0o755)
         .pipe(Effect.mapError((cause) => errorFor(pin)({ reason: "cacheFailed", subject: binary, cause })));
@@ -1404,6 +1465,9 @@ const make = Effect.gen(function* () {
       }
       const manifest = yield* readPackageManifest(pin, packageDir);
 
+      // pnpm 12's layout, detected by what the manifest declares rather than
+      // by major: the `pnpm` bin is a placeholder for a native binary that
+      // ships as an `@pnpm/exe.*` optional dependency and is overlaid here.
       const bins =
         R.keys(manifest.nativePackages).length > 0
           ? yield* overlayNativeBinary(pin, packageDir, manifest, source)

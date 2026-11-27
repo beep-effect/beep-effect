@@ -417,7 +417,7 @@ describe("ActionEnvironment", () => {
           assert.strictEqual(
             left,
             "left",
-            "Latches, not a sleep: it.effect installs a virtual TestClock, so Effect.sleep would hang to the vitest timeout rather than interleave.  TWO latches, and the order is the whole test. A save/restore implementation over a shared global is LIFO-correct whenever the two overrides nest properly, so an interleaving where the inner one restores before the outer one reads passes for the wrong reason. This order forces LEFT TO READ WHILE RIGHT'S OVERRIDE IS STILL APPLIED AND UNRESTORED — which only a fiber-local implementation survives."
+            "Latches, not a sleep: it.effect installs a virtual TestClock, so Effect.sleep would hang to the vitest timeout rather than interleave. TWO latches, and the order is the whole test. A save/restore implementation over a shared global is LIFO-correct whenever the two overrides nest properly, so an interleaving where the inner one restores before the outer one reads passes for the wrong reason. This order forces LEFT TO READ WHILE RIGHT'S OVERRIDE IS STILL APPLIED AND UNRESTORED — which only a fiber-local implementation survives."
           );
           assert.strictEqual(right, "right");
         })

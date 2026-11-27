@@ -100,6 +100,7 @@ const renderLogger: Logger.Logger<unknown, string> = Logger.make((options) =>
 
 const commandLogger: Logger.Logger<unknown, void> = Logger.withConsoleLog(renderLogger);
 
+/** A step's captured transcript. Mutable by design — a logger callback is synchronous. */
 interface BufferState {
   readonly entries: Array<string>;
   readonly label: string;
@@ -398,7 +399,7 @@ export interface ActionLoggerShape {
    *
    * **Gotchas**
    *
-   * The synchronous logger appends to a mutable transcript. Capture at minimum level All so debug details survive for failed steps, and neutralize transcript text and labels when flushing. Clear after flush so a second flush is a no-op.
+   * The buffer captures at minimum level `All`, so debug lines survive in a failed step's transcript, and a flushed transcript and its label are neutralized like live lines.
    *
    * **Example** (Discard a successful buffer in a test)
    *
@@ -460,7 +461,7 @@ export interface ActionLoggerShape {
    *
    * **Gotchas**
    *
-   * Write the failure header directly through Console before flushing, rather than buffering it with Effect.logError or duplicating Action.run's error annotation. Emit the success summary outside the buffered region so discarding a successful transcript cannot discard its replacement line.
+   * A failed step prints its header ahead of the flushed transcript and adds no second `::error::` beside the one `Action.run` renders for the failure.
    *
    * **Example** (Preserve a named step result)
    *
@@ -560,9 +561,17 @@ const make = Effect.gen(function* () {
       ): Effect.Effect<A, E, R> =>
         withBuffer(
           name,
+          // Written through `Console` rather than `Effect.logError`, so it lands
+          // ahead of the flush instead of into the buffer it is announcing — and
+          // so a failed step does not mint a second `::error::` beside the one
+          // `Action.run` already renders for the failure itself.
           Effect.tapCause(effect, () => Console.log(CommandNeutralizer.text(`❌ ${name}`))),
           { onSuccess: "discard" }
-        ).pipe(Effect.tap(() => Effect.logInfo(options?.summary ?? `✅ ${name}`)))
+        ).pipe(
+          // Outside the buffered region on purpose: a line emitted inside it is
+          // discarded with the transcript it was meant to replace.
+          Effect.tap(() => Effect.logInfo(options?.summary ?? `✅ ${name}`))
+        )
     ),
 
     notice: dual(

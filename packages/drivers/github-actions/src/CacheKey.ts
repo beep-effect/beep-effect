@@ -52,10 +52,6 @@ export class InvalidDigestLengthError extends S.TaggedError<
 ) {}
 
 /**
- * **Gotchas**
- *
- * Hyphens separate key segments so prefix-based restore keys stop at meaningful boundaries, matching published Actions recipes. Refuse commas and newlines inside a segment because the runner uses them to split the restore-key list.
- *
  * **Example** (Identify an unreadable lockfile)
  *
  * ```ts
@@ -271,7 +267,7 @@ const wildcardMatches = Effect.fnUntraced(function* (
  * {@link CacheKey.withRestoreDepths}, or none at all with
  * {@link CacheKey.withoutRestoreKeys}, instead of bypassing the typed key.
  *
- * The restore-depth filter supplies its issue text through the message annotation: Effect 4.0.6 renders that annotation ahead of any string returned by the predicate.
+ * Hyphens separate key segments so prefix-based restore keys stop at meaningful boundaries, matching published Actions recipes. Commas and newlines are refused inside a segment because the runner uses them to split the restore-key list.
  *
  * **Example** (Build a cache key with a restore-key ladder)
  *
@@ -301,6 +297,8 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
     restoreDepths: S.optionalKey(RestoreDepths),
   }).check(
     S.makeFilter(
+      // effect 4.0.6 renders a check's `message` annotation as the issue message,
+      // ahead of any string the predicate returns, so the described text lives there.
       (key) =>
         key.restoreDepths === undefined || A.every(key.restoreDepths, (depth) => depth <= key.segments.length - 1),
       $I.annote("RestoreDepthWithinSegments", {
@@ -616,10 +614,6 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
    * digest — it is the signal that the pattern is wrong, and a caller that
    * folds it into a key silently caches against a constant.
    *
-   * **Gotchas**
-   *
-   * Hash matched files with explicit bounded concurrency 8: Effect.all otherwise defaults to one and loses parallel IO, while an unbounded fiber per file can exhaust descriptors for large pattern sets.
-   *
    * **Example** (Construct a lockfile hashing effect)
    *
    * ```ts
@@ -644,6 +638,12 @@ export class CacheKey extends S.Class<CacheKey, { readonly brand: unique symbol 
         fs
           .readFile(path)
           .pipe(Effect.mapBoth({ onFailure: (cause) => CacheKeyReadError.make({ path, cause }), onSuccess: sha256 })),
+      // The `concurrency` option is load-bearing, not a tuning knob: `Effect.all`
+      // defaults to `concurrency: 1`, so omitting it reads every file one at a
+      // time and this whole shape buys nothing over a sequential loop. Bounded rather than `"unbounded"` because a pattern set can
+      // match thousands of files and one fiber per file would exhaust the
+      // runner's descriptors; 8 is the width `ActionCache` and `Artifact`
+      // already use for their own IO fan-out.
       { concurrency: 8 }
     );
     return O.some(sha256Hex(Uint8Array.from(A.flatMap(digests, (digest) => [...digest]))));

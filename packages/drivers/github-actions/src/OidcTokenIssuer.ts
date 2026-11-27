@@ -285,6 +285,17 @@ const make = Effect.gen(function* () {
   const required = (name: string): Effect.Effect<string, OidcTokenError> =>
     env.get(name).pipe(Effect.mapError(() => OidcTokenError.make({ reason: "unavailable", detail: name })));
 
+  /**
+   * The raw JWT, before it is wrapped.
+   *
+   * **Details**
+   *
+   * `claims` reads this rather than unwrapping what `token` returns, so
+   * `Redacted.value` does not appear in this module at all — the package's
+   * declassification invariant is that `Secret.ts` is the only place a secret
+   * becomes a string, and a wrap-then-immediately-unwrap here would be a
+   * genuine exception to it rather than a cosmetic one.
+   */
   const issue = Effect.fn("OidcTokenIssuer.token")(function* (audience?: string) {
     const bearer = yield* required(REQUEST_TOKEN);
     const base = yield* required(REQUEST_URL);
@@ -293,6 +304,7 @@ const make = Effect.gen(function* () {
       const parsed = yield* S.decodeEffect(S.URLFromString)(base).pipe(
         Effect.mapError((cause) => OidcTokenError.make({ reason: "requestFailed", cause }))
       );
+      // Keep encodeURIComponent's %20 spelling and append before the fragment.
       parsed.search = `${parsed.search}${parsed.search === "" ? "?" : "&"}audience=${encodeURIComponent(audience)}`;
       url = parsed.href;
     }
@@ -358,8 +370,6 @@ export class OidcTokenIssuer extends Context.Service<OidcTokenIssuer, OidcTokenI
    *
    * Fails with {@link OidcTokenError} (`unavailable`) at use when the workflow
    * lacks `permissions: id-token: write`.
-   *
-   * Read claims from the raw issued JWT before wrapping it, rather than immediately declassifying it again: Secret.ts remains the only secret-to-string seam. Audience query values retain encodeURIComponent's %20 spelling and are appended before a fragment.
    *
    * **Example** (Construct the live issuer layer)
    *
