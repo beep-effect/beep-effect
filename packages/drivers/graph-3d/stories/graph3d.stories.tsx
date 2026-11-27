@@ -3,23 +3,12 @@ import { useGraph3DFps, useGraph3DHandle } from "@beep/graph-3d/react";
 import { useEffect, useMemo, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-/**
- * Story wrapper over the driver's React hooks (`@beep/graph-3d/react`). The
- * driver itself is framework-free; the ontology client bridge owns mounting in
- * the product, and the hooks play that role for Storybook.
- */
 interface Graph3DDemoProps {
   readonly communityCount: number;
   readonly edgeCount: number;
-  /**
-   * Non-destructive 2D flatten: renders the same projection with z forced to
-   * zero; switching back restores the identical baked depths (the toggle
-   * contract from the design gate).
-   */
   readonly flatten: boolean;
   readonly nodeCount: number;
   readonly seed: number;
-  /** Applies selection dimming to the highest-importance node. */
   readonly selectHub: boolean;
 }
 
@@ -70,15 +59,10 @@ const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, fl
       return;
     }
     handle.update(flatten ? flattened : projection);
-    // update() resets selection; re-apply the demo's declarative selection —
-    // the same re-apply contract the ontology bridge follows.
     handle.select(selectHub ? hubIndex(projection) : undefined);
   }, [handle, flatten, flattened, projection, selectHub]);
 
   return (
-    // `dark` scopes the theme's dark tokens over the always-dark canvas, so the HUD reads
-    // `text-foreground` on a translucent black plate in both Storybook themes. Height is
-    // the theme's 80vh `h-story-canvas` step with a 480px floor.
     <div className="dark relative h-story-canvas min-h-120 w-full">
       <div ref={containerRef} data-testid="graph3d-container" className="absolute inset-0" />
       <div

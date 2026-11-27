@@ -256,15 +256,12 @@ const RunpodUrlParams = S.Record(S.String, RunpodUrlParamValue).pipe(
 
 type RunpodUrlParams = typeof RunpodUrlParams.Type;
 
-// One JSON-encoded query value, used by `content: application/json` parameters
-// such as the list `filters`.
 const RunpodJsonQueryValue = S.fromJsonString(S.Unknown);
 const encodeJsonQueryValue = S.encodeUnknownEffect(RunpodJsonQueryValue);
 const decodeQueryScalar = S.decodeUnknownOption(RunpodQueryScalar);
 const decodeQueryValue = S.decodeUnknownOption(RunpodQueryValue);
 const decodeProblem = S.decodeUnknownEffect(RunpodProblemFromProblemDetails);
 
-// Request field that carries the page cursor of a cursor-paginated list.
 const PAGINATION_CURSOR_FIELD = "cursor";
 
 const resolveConfig = (config: RunpodConfigInput): ResolvedRunpodConfig =>
@@ -306,7 +303,6 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   );
 };
 
-// Scalar wire value of an encoded request field, rendered for a URL or header.
 const scalarField = (encoded: unknown, field: string): O.Option<string> =>
   pipe(readProperty(encoded, field), O.flatMap(decodeQueryScalar), O.map(queryScalarToString));
 
@@ -315,13 +311,7 @@ const encodingError =
   (cause?: unknown): RunpodError =>
     RunpodError.fromDescriptor(descriptor, "request encoding", RunpodErrorOptionsInput.make({ cause }));
 
-// Every v2 request body is closed (`unevaluatedProperties: false`, lowered to a
-// closed struct). `<Operation>Params.make` drops unknown keys like any Effect
-// Schema constructor, so this guards the values that bypass it: a key written
-// onto a constructed body fails encoding, where Runpod would answer 422, rather
-// than going out silently without it. Index-signature fields such as `env`
-// still accept any key.
-const requestEncodeOptions: SchemaAST.ParseOptions = { onExcessProperty: "error" };
+const rejectExcessRequestKeys: SchemaAST.ParseOptions = { onExcessProperty: "error" };
 
 const encodeRequest = Effect.fnUntraced(function* <Request>(
   descriptor: G.RunpodOperationDescriptor,
@@ -329,7 +319,7 @@ const encodeRequest = Effect.fnUntraced(function* <Request>(
   request: unknown
 ): Effect.fn.Return<unknown, RunpodError> {
   return yield* pipe(
-    S.encodeUnknownEffect(requestSchema)(request, requestEncodeOptions),
+    S.encodeUnknownEffect(requestSchema)(request, rejectExcessRequestKeys),
     Effect.mapError(encodingError(descriptor))
   );
 });
@@ -368,8 +358,6 @@ type RunpodQueryEntry = readonly [string, RunpodUrlParamValue];
 const queryStrings = (value: unknown): O.Option<A.NonEmptyReadonlyArray<string>> =>
   pipe(decodeQueryValue(value), O.map(queryValueToStrings), O.filter(A.isReadonlyArrayNonEmpty));
 
-// `repeat` sends one key per value, `comma` joins the values into one key
-// (OpenAPI `explode: false`), and `json` sends one JSON-encoded value.
 const queryEntryValue = (
   descriptor: G.RunpodOperationDescriptor,
   parameter: G.RunpodQueryParameter,
@@ -492,7 +480,6 @@ const addJsonBody = Effect.fnUntraced(function* (
   );
 });
 
-// Builds the HTTP request from the encoded (wire) form of an operation request.
 const buildRequest = Effect.fn("Runpod.buildRequest")(function* (
   config: ResolvedRunpodConfig,
   descriptor: G.RunpodOperationDescriptor,
@@ -532,18 +519,14 @@ const isJsonContentType = (response: HttpClientResponse.HttpClientResponse): boo
     O.exists((contentType) => pipe(contentType, Str.includes("json")))
   );
 
-// The problem body is optional detail on a failure the status already names, so
-// a body that stays open (a proxy holding a 503) cannot delay the error.
-const PROBLEM_READ_TIMEOUT = "5 seconds";
+const PROBLEM_BODY_READ_TIMEOUT = "5 seconds";
 
-// Runpod v2 answers failures with RFC 9457 problem details. A body that is not
-// a readable problem, or not read in time, leaves the error with its status only.
 const readProblem = (response: HttpClientResponse.HttpClientResponse) =>
   isJsonContentType(response)
     ? response.json.pipe(
         Effect.flatMap(decodeProblem),
         Effect.option,
-        Effect.timeoutOption(PROBLEM_READ_TIMEOUT),
+        Effect.timeoutOption(PROBLEM_BODY_READ_TIMEOUT),
         Effect.map(O.flatten)
       )
     : Effect.succeedNone;
@@ -571,8 +554,6 @@ const decodingError =
   (cause?: unknown): RunpodError =>
     RunpodError.fromDescriptor(descriptor, "response decoding", RunpodErrorOptionsInput.make({ cause }));
 
-// The declared response for the returned status; an undeclared success status
-// decodes with the first declared one.
 const responseFor = (descriptor: G.RunpodOperationDescriptor, status: number): O.Option<G.RunpodOperationResponse> =>
   pipe(
     descriptor.responses,
@@ -609,7 +590,6 @@ const decodeOperationResponse = Effect.fnUntraced(function* <Request, Response>(
   return yield* pipe(S.decodeUnknownEffect(decoder)(body), Effect.mapError(decodingError(spec.descriptor)));
 });
 
-// Runs one operation from the encoded (wire) form of its request.
 const executeEncoded = Effect.fnUntraced(function* <Request, Response>(
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig,
@@ -639,9 +619,6 @@ const withCursor = (encoded: unknown, cursor: string): O.Option<unknown> =>
     O.map((request) => ({ ...request, [PAGINATION_CURSOR_FIELD]: cursor }))
   );
 
-// The encoded request for the page after `pagination`, or none on the last page.
-// A page that hands back the cursor it was requested with would be requested
-// again forever, so the stream fails instead of replaying it.
 const nextPageRequest = (
   descriptor: G.RunpodOperationDescriptor,
   encoded: unknown,
@@ -685,8 +662,6 @@ const paginateOperation = <Request, Page extends { readonly pagination: Models.P
     )
   );
 
-// A server `retry:` directive or a broken connection is a transport failure;
-// an unparseable event is a decoding failure.
 const eventStreamReason = Match.type<HttpClientError.HttpClientError | Sse.Retry | Sse.SseError>().pipe(
   Match.tag("SseError", (): RunpodErrorReason => "response decoding"),
   Match.orElse((): RunpodErrorReason => "transport")
@@ -748,8 +723,6 @@ const streamSpan =
       Stream.withSpan("Runpod.stream", { attributes: operationAttributes(descriptor) })
     );
 
-// A missing request on an operation without a default fails to encode, the same
-// as any other invalid request.
 const makeFactory = (
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig
@@ -990,6 +963,21 @@ const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(
 
 /**
  * Effect service for every documented Runpod REST API v2 operation.
+ *
+ * **Gotchas**
+ *
+ * Request bodies are closed. `<Operation>Params.make` drops unknown keys like
+ * any schema constructor, but a key written onto a constructed body fails with
+ * reason `request encoding` instead of going out silently dropped (Runpod would
+ * answer 422). Index-signature fields such as `env` still accept any key. An
+ * operation that has no default request also fails that way when called
+ * without one.
+ *
+ * A failure's RFC 9457 problem body is read for at most 5 seconds. A body that
+ * stays open, as a proxy holding a 503 can, or that is not a readable problem
+ * leaves the `RunpodError` with its status only. A paginated stream fails with
+ * reason `pagination` when a page hands back the cursor it was requested with,
+ * instead of requesting that page forever.
  *
  * **Example** (Create Runpod service layer)
  *

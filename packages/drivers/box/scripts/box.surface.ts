@@ -28,8 +28,25 @@
 /**
  * `BoxClient` manager property names wrapped as generated JSON operations.
  *
- * Each entry names the demand that keeps it: removing a manager whose demand
- * disappears is as valid as adding one, and both require a re-measurement.
+ * **Details**
+ *
+ * The demand that keeps each manager is listed here. Removing a manager whose
+ * demand disappears is as valid as adding one, and both require a
+ * re-measurement.
+ *
+ * - `avatars`: `Box.streaming.ts` getUserAvatar / createUserAvatar payload and success models.
+ * - `chunkedUploads`: `Box.streaming.ts` chunked upload session lifecycle.
+ * - `downloads`: `Box.streaming.ts` byte downloads and the test surface.
+ * - `events`: `DmsMirrorBox.ts` event polling, the `Box.streaming.ts` event stream, tests.
+ * - `files`: `DmsMirrorBox.ts` file metadata, move and delete; `Box.streaming.ts` thumbnails.
+ * - `folders`: `DmsMirrorBox.ts` ensure, rename and move folder, and item listing.
+ * - `listCollaborations`: practice-box-provisioning inventory of folder collaborations.
+ * - `uploads`: `DmsMirrorBox.ts` upload and upload new version, `Box.streaming.ts`, tests.
+ * - `userCollaborations`: practice-box-provisioning create, inspect, update and remove collaborations.
+ * - `users`: `users.getUserMe`, the probe of the read-only live smokes (goals/box-driver
+ *   manifest decision `live-smokes-read-only`).
+ * - `webhooks`: practice-box-provisioning discovery and management of V2 webhooks.
+ * - `zipDownloads`: `Box.streaming.ts` zip download request and status models.
  *
  * **Example** (Filter discovered managers to the wrapped surface)
  *
@@ -54,39 +71,36 @@
  * @since 0.0.0
  */
 export const GENERATED_MANAGERS: ReadonlyArray<string> = [
-  // Box.streaming.ts — getUserAvatar / createUserAvatar payload + success models.
   "avatars",
-  // Box.streaming.ts — chunked upload session lifecycle.
   "chunkedUploads",
-  // Box.streaming.ts — byte downloads; test surface.
   "downloads",
-  // DmsMirrorBox.ts (event polling); Box.streaming.ts (event stream); tests.
   "events",
-  // DmsMirrorBox.ts (file metadata, move, delete); Box.streaming.ts thumbnails.
   "files",
-  // DmsMirrorBox.ts (ensure/rename/move folder, list items).
   "folders",
-  // practice-box-provisioning — inventory collaborations attached to folders.
   "listCollaborations",
-  // DmsMirrorBox.ts (upload, upload new version); Box.streaming.ts; tests.
   "uploads",
-  // practice-box-provisioning — create, inspect, update, and remove collaborations.
   "userCollaborations",
-  // goals/box-driver `live-smokes-read-only`: users.getUserMe is the live probe.
   "users",
-  // practice-box-provisioning — discover and manage V2 webhooks.
   "webhooks",
-  // Box.streaming.ts — zip download request/status models.
   "zipDownloads",
 ];
 
 /**
  * Individual Box SDK operations admitted without wrapping their whole manager.
  *
+ * **Details**
+ *
  * Use this surface for manager families whose unused operations would exceed
  * the type-instantiation budget or publish mutations that the current product
  * entitlement deliberately blocks. Entries use `manager.method` names from
  * the installed SDK declarations.
+ *
+ * - The `folderMetadata`, `metadataCascadePolicies`, `metadataTemplates`,
+ *   `retentionPolicies` and `retentionPolicyAssignments` reads serve
+ *   practice-box-provisioning metadata and retention discovery, which only the
+ *   Business plan offers.
+ * - The `signRequests` and `signTemplates` entries are Box Sign's complete
+ *   request and template manager surface, used by practice-box-provisioning.
  *
  * **Example** (Check an individually admitted operation)
  *
@@ -106,7 +120,6 @@ export const GENERATED_MANAGERS: ReadonlyArray<string> = [
  * @since 0.0.0
  */
 export const GENERATED_OPERATIONS: ReadonlyArray<string> = [
-  // practice-box-provisioning — metadata and retention discovery only on Business.
   "folderMetadata.getFolderMetadata",
   "folderMetadata.getFolderMetadataById",
   "metadataCascadePolicies.getMetadataCascadePolicies",
@@ -121,7 +134,6 @@ export const GENERATED_OPERATIONS: ReadonlyArray<string> = [
   "retentionPolicyAssignments.getFilesUnderRetentionPolicyAssignment",
   "retentionPolicyAssignments.getRetentionPolicyAssignmentById",
   "retentionPolicyAssignments.getRetentionPolicyAssignments",
-  // practice-box-provisioning — Box Sign's complete request/template manager surface.
   "signRequests.cancelSignRequest",
   "signRequests.createSignRequest",
   "signRequests.getSignRequestById",

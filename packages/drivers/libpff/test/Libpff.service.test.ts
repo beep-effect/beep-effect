@@ -26,7 +26,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
-// `NodeServices` no longer bundles crypto; the archive engine hashes through `Digest`.
 const TestServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 const SourceArtifactArbitrary = Arbitrary.schema(SourceArtifact);

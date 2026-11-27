@@ -467,7 +467,6 @@ describe("@beep/m365 service", () => {
       "reads a reply's plain-text uniqueBody through $select and a text Prefer header",
       Effect.fnUntraced(function* () {
         const testHttp = yield* M365TestHttp;
-        // recorded reply shape (Graph v1.0 message with $select'd uniqueBody, text preference)
         yield* testHttp.respondWith(() =>
           Effect.succeed(
             makeJsonResponse({

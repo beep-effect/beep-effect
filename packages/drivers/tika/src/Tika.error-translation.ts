@@ -64,8 +64,6 @@ export const TIKA_ENGINE_UNAVAILABLE_MESSAGE = "The Tika runtime is not availabl
 export const TIKA_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE =
   "Tika extraction is deferred because no Tika runtime is configured for this proof.";
 
-// Wording overrides accepted by `tikaOperationError`; engines that predate the
-// live runners supply their own engine-unavailable message.
 type TikaOperationErrorOptions = {
   readonly engineUnavailableMessage?: string | undefined;
 };

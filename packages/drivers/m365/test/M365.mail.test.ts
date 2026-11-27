@@ -175,7 +175,6 @@ const reasonOf = <A>(effect: Effect.Effect<A, M365Error>) =>
 
 const routes = A.map((capture: CapturedRequest) => `${capture.method} ${capture.url}`);
 
-// Every span the effect under test starts, with whatever attributes it ends up carrying.
 const makeRecordingTracer = (): { readonly spans: Array<Tracer.NativeSpan>; readonly tracer: Tracer.Tracer } => {
   const spans: Array<Tracer.NativeSpan> = [];
   const tracer = Tracer.make({
@@ -435,23 +434,22 @@ describe("@beep/m365 mail outbound verbs", () => {
         const texts = spanTexts(spans);
         const driverSpan = A.findFirst(spans, (span) => span.name === "M365.addMessageAttachment");
 
-        // The upload URL's session token must not reach any span: not as a name, a key or a value.
         expect(
           A.filter(
             texts,
             (text) => pipe(text, Str.includes(UPLOAD_SESSION_TOKEN)) || pipe(text, Str.includes("authtoken"))
-          )
+          ),
+          "the upload URL's session token must not reach any span as a name, a key or a value"
         ).toStrictEqual([]);
-        // The tracer did record: the driver span carries the size and chunk count, and the bearer-token
-        // session request still has its HTTP client span.
-        assertSome(
-          O.map(driverSpan, (span) => [
-            span.attributes.get("m365_attachment_size_bytes"),
-            span.attributes.get("m365_upload_chunk_count"),
-          ]),
-          [total, 3]
-        );
-        expect(A.filter(texts, (text) => text === `${MESSAGE_URL}/attachments/createUploadSession`)).toHaveLength(1);
+        const recordedDriverSizeAndChunkCount = O.map(driverSpan, (span) => [
+          span.attributes.get("m365_attachment_size_bytes"),
+          span.attributes.get("m365_upload_chunk_count"),
+        ]);
+        assertSome(recordedDriverSizeAndChunkCount, [total, 3]);
+        expect(
+          A.filter(texts, (text) => text === `${MESSAGE_URL}/attachments/createUploadSession`),
+          "the bearer-token session request still has its HTTP client span"
+        ).toHaveLength(1);
 
         expect(routes(captures)).toStrictEqual([
           `POST ${MESSAGE_URL}/attachments/createUploadSession`,

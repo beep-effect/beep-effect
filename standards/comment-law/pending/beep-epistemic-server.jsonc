@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/epistemic-server",
-  "root": "packages/epistemic/server",
-  "scopes": ["."]
-}

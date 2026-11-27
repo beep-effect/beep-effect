@@ -27,15 +27,13 @@ const belief = {
   validTo: null,
 };
 const decode = S.decodeUnknownResult(DetectionBelief);
+const wellFormedBoundedValue = Arbitrary.schema(S.String.check(S.isMaxLength(32))).pipe(
+  Arbitrary.filter((value) => value.isWellFormed())
+);
 describe("Detection input bounds and content identities", () => {
   it.prop(
     "round-trips bounded values with either polarity",
-    [
-      // An unpaired surrogate has no canonical form, so the proposal-fact bound
-      // refuses it; the refusal is pinned in the next test.
-      Arbitrary.schema(S.String.check(S.isMaxLength(32))).pipe(Arbitrary.filter((value) => value.isWellFormed())),
-      Arbitrary.schema(DetectionPolarity),
-    ],
+    [wellFormedBoundedValue, Arbitrary.schema(DetectionPolarity)],
     ([value, polarity]) => {
       const original = Result.getOrThrow(decode({ ...belief, value, polarity }));
       const encoded = Result.getOrThrow(S.encodeResult(DetectionBelief)(original));

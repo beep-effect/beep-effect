@@ -387,10 +387,13 @@ export class RunpodDocsError extends S.TaggedError<RunpodDocsError, { readonly b
  */
 export class RunpodErrorOptions extends S.Opaque<RunpodErrorOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    // Sanitized string label so the exported options schema round-trips
-    // deterministically. Raw thrown causes are accepted via the private
-    // `RunpodErrorOptionsInput` and normalized through `causeFromUnknown`.
-    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Sanitized string label of the failure cause, so the options round-trip deterministically; raw thrown causes are normalized to it first.",
+      })
+    ),
     problem: S.OptionFromOptionalKey(RunpodProblem).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
@@ -484,10 +487,13 @@ export class RunpodRawErrorOptions extends S.Opaque<RunpodRawErrorOptions, { rea
  */
 export class RunpodDocsErrorOptions extends S.Opaque<RunpodDocsErrorOptions, { readonly brand: unique symbol }>()(
   S.Struct({
-    // Sanitized string label so the exported options schema round-trips
-    // deterministically. Raw thrown causes are accepted via the private
-    // `RunpodDocsErrorOptionsInput` and normalized through `causeFromUnknown`.
-    cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Sanitized string label of the failure cause, so the options round-trip deterministically; raw thrown causes are normalized to it first.",
+      })
+    ),
     status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
     url: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
@@ -530,8 +536,6 @@ export class RunpodDocsErrorOptionsInput extends S.Opaque<
   )
 ) {}
 
-// Keep reflective inspection inside the driver boundary: hostile proxies and
-// throwing getters are treated as absent diagnostic metadata.
 const safelyRead = (key: PropertyKey): ((value: unknown) => O.Option<unknown>) =>
   flow(
     O.liftPredicate(P.isObject),

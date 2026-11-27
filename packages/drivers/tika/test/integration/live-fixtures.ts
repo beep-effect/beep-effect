@@ -129,7 +129,7 @@ export const makeLivePng = (): Uint8Array => {
   ]);
 };
 
-const zipDosDate = 0x0021; // 1980-01-01, keeps the archive byte-for-byte stable.
+const zipDosDate = 0x0021;
 const zipDosTime = 0x0000;
 
 type ZipEntry = {
@@ -279,11 +279,6 @@ const cfbDirectoryEntry = (
   return entry;
 };
 
-// Lays every stream out in the regular FAT chain and skips the mini FAT
-// entirely. That is only legal while each stream's *declared* size is at least
-// the 4096-byte mini-stream cutoff — readers route anything smaller through the
-// mini stream, which this container does not build, and the failure is silent
-// (empty text, no error).
 const makeCompoundFile = (streams: ReadonlyArray<CfbStream>): Uint8Array => {
   let cursor = 0;
   const placed = A.map(streams, (stream) => {
@@ -369,38 +364,46 @@ const makeCompoundFile = (streams: ReadonlyArray<CfbStream>): Uint8Array => {
   return concatBytes([header, body]);
 };
 
-const wordFibSize = 0x200;
-// Parked inside the zeroed FIB region so it never lands on text bytes no matter
-// how long the text grows; POI's guessCodePage reads it and garbage there can
-// select a double-byte charset that mangles extraction.
-const wordFontTableOffset = 0x180;
+const zeroFilledFibBytes = 0x200;
+const fontTableInsideZeroedFib = 0x180;
 
-// HWPFOldDocument reads its table pointers at hard-coded absolute offsets in
-// this stream (0x88 fcPlcfsed, 0xb8 fcPlcfbteChpx, 0xc0 fcPlcfbtePapx,
-// 0xd0 fcSttbfffn, 0x160 fcClx), not through the FIB structure. Zero-length
-// tables are safe, so the reserved 512-byte FIB region stays zero-filled apart
-// from the fields set below. Text must stay ASCII: it is encoded as UTF-8 here
-// but POI decodes it as cp1252.
+const hwpfOldAbsoluteFibOffsets = {
+  cbMac: 0x40,
+  ccpText: 0x54,
+  cslw: 0x3e,
+  csw: 0x20,
+  fcMac: 0x1c,
+  fcMin: 0x18,
+  fcSttbfffn: 0xd0,
+  lid: 0x06,
+  nFib: 0x02,
+  nFibBack: 0x0c,
+  wIdent: 0x00,
+};
+
 const makeWordDocumentStream = (text: string): Uint8Array => {
   const body = textEncoder.encode(`${text}\r`);
-  const fcMin = wordFibSize;
-  // Pad the declared stream size to the mini-stream cutoff; anything smaller is
-  // routed through the mini FAT that makeCompoundFile never builds.
-  const stream = new Uint8Array(Math.max(cfbMiniStreamCutoff, cfbSectorsFor(fcMin + body.length) * cfbSectorSize));
+  const fcMin = zeroFilledFibBytes;
+  const declaredSizeAtLeastMiniCutoff = Math.max(
+    cfbMiniStreamCutoff,
+    cfbSectorsFor(fcMin + body.length) * cfbSectorSize
+  );
+  const stream = new Uint8Array(declaredSizeAtLeastMiniCutoff);
   const view = new DataView(stream.buffer);
+  const fib = hwpfOldAbsoluteFibOffsets;
   stream.set(body, fcMin);
 
-  view.setUint16(0x00, 0xa5dc, true); // wIdent
-  view.setUint16(0x02, 101, true); // nFib
-  view.setUint16(0x06, 0x0409, true); // lid
-  view.setUint16(0x0c, 101, true); // nFibBack
-  view.setUint32(0x18, fcMin, true); // fcMin
-  view.setUint32(0x1c, fcMin + body.length, true); // fcMac
-  view.setUint16(0x20, 0x000e, true); // csw
-  view.setUint16(0x3e, 0x0016, true); // cslw
-  view.setUint32(0x40, stream.length, true); // cbMac
-  view.setUint32(0x54, body.length, true); // ccpText
-  view.setUint32(0xd0, wordFontTableOffset, true); // fcSttbfffn
+  view.setUint16(fib.wIdent, 0xa5dc, true);
+  view.setUint16(fib.nFib, 101, true);
+  view.setUint16(fib.lid, 0x0409, true);
+  view.setUint16(fib.nFibBack, 101, true);
+  view.setUint32(fib.fcMin, fcMin, true);
+  view.setUint32(fib.fcMac, fcMin + body.length, true);
+  view.setUint16(fib.csw, 0x000e, true);
+  view.setUint16(fib.cslw, 0x0016, true);
+  view.setUint32(fib.cbMac, stream.length, true);
+  view.setUint32(fib.ccpText, body.length, true);
+  view.setUint32(fib.fcSttbfffn, fontTableInsideZeroedFib, true);
 
   return stream;
 };
@@ -412,6 +415,11 @@ const makeWordDocumentStream = (text: string): Uint8Array => {
  * `nFib` below 106 routes POI down its `HWPFOldDocument` path, which reads the
  * text straight out of `WordDocument` between `fcMin` and `fcMac` and needs no
  * companion table stream.
+ *
+ * **Gotchas**
+ *
+ * `text` must stay ASCII: it is encoded as UTF-8 here, but POI decodes it as
+ * cp1252.
  */
 export const makeLiveDoc = (text = "hello live tika corpus"): Uint8Array =>
   makeCompoundFile([{ data: makeWordDocumentStream(text), name: "WordDocument" }]);

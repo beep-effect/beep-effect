@@ -173,9 +173,10 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning app
       );
       const recovered = yield* recoverBoxAdoptions(desiredFixture, anonymized);
 
-      // Only the adoption already declared in the desired state survives: the
-      // identity-less journal entry contributes nothing.
-      expect(A.map(recovered.entries, (adoption) => adoption.expectedProviderId)).toEqual(["100"]);
+      expect(
+        A.map(recovered.entries, (adoption) => adoption.expectedProviderId),
+        "only the adoption the desired state declares survives; the identity-less entry adds nothing"
+      ).toEqual(["100"]);
     })
   );
 

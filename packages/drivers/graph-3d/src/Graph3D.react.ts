@@ -47,8 +47,7 @@ export const useGraph3DHandle = (options: {
   readonly projection: Graph3DProjection;
   readonly onNodeSelect?: ((nodeIndex: number | undefined) => void) | undefined;
 }): {
-  // Inline structural result: a live DOM ref and an imperative handle are
-  // runtime capabilities, not data to model as an exported schema.
+  // decision: react-hook-result-stays-inline-type
   readonly containerRef: React.RefObject<HTMLDivElement | null>;
   readonly error: string | undefined;
   readonly handle: Graph3DRenderHandle | undefined;

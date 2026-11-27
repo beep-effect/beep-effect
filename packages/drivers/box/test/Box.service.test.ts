@@ -607,10 +607,6 @@ describe("@beep/box", () => {
     })
   );
 
-  // The SDK deserializers materialize absent response fields as present-but-
-  // undefined keys. Exact-optional schema keys reject those, which silently
-  // broke every real Box call whose response omitted an optional field (the
-  // mirror-root probe read it as "disconnected" rather than a decode failure).
   it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
@@ -634,10 +630,6 @@ describe("@beep/box", () => {
     );
   });
 
-  // A response carrying a raw `__proto__` key still decodes. (The normalizer
-  // writes keys with `defineProperty` so the legacy prototype setter is never
-  // invoked; that hardening is not otherwise observable here, because schema
-  // decoding ignores the unknown key either way.)
   it.layer(
     B.Box.makeLayerFromClient(
       makeFakeClient({
@@ -660,7 +652,10 @@ describe("@beep/box", () => {
         const box = yield* B.Box;
         const response = yield* box.users.getUserMe(B.UsersGetUserMePayload.make({}));
 
-        expect(response.id).toBe("user-id");
+        expect(
+          response.id,
+          "decoding ignores the unknown key either way, so this does not observe the defineProperty copy"
+        ).toBe("user-id");
       })
     );
   });
@@ -989,10 +984,6 @@ describe("@beep/box", () => {
     { timeout: "10 seconds" }
   )((it) => {
     it.effect("preserves direct caller cancellation tokens for generated methods", () => {
-      // The controller is the caller's, which is the whole point of the test:
-      // `Effect.abortSignal` would hand the driver Effect's own signal and prove
-      // nothing about a token supplied from outside. Built here rather than in
-      // the generator so it reads as fixture setup, not effectful work.
       const callerController = new AbortController();
 
       return Effect.gen(function* () {
@@ -1002,7 +993,10 @@ describe("@beep/box", () => {
           .pipe(Effect.forkChild);
 
         yield* Effect.promise(() => generatedDirectCancellationProbe.entered.promise);
-        expect(generatedDirectCancellationProbe.received).toBeInstanceOf(AbortSignal);
+        expect(
+          generatedDirectCancellationProbe.received,
+          "the token is the caller's own controller signal; Effect.abortSignal would prove nothing about an outside token"
+        ).toBeInstanceOf(AbortSignal);
         callerController.abort();
         yield* Effect.promise(() => generatedDirectCancellationProbe.aborted.promise);
         generatedDirectCancellationProbe.pending.resolve(userFull);
@@ -1047,7 +1041,6 @@ describe("@beep/box", () => {
     { timeout: "10 seconds" }
   )((it) => {
     it.effect("preserves optionalsInput caller cancellation tokens for generated methods", () => {
-      // Caller-supplied on purpose, as above.
       const callerController = new AbortController();
 
       return Effect.gen(function* () {

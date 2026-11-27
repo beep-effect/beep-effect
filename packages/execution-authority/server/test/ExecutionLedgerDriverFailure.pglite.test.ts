@@ -25,10 +25,7 @@ const UnmigratedDrizzleLayer = makeDrizzleLayer().pipe(
   Layer.provideMerge(Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" })))
 );
 
-// A failed statement leaves an implicit-transaction PGlite session in the
-// aborted state, where the only legal next statement is the rollback that
-// quiesces it, so every expected failure is followed by one.
-const quiesce = Effect.fn("ExecutionLedgerDriverFailure.quiesce")(function* () {
+const rollbackAbortedSession = Effect.fn("ExecutionLedgerDriverFailure.rollbackAbortedSession")(function* () {
   const sql = yield* SqlClient.SqlClient;
   yield* sql.unsafe("ROLLBACK").pipe(Effect.orDie);
 });
@@ -40,9 +37,15 @@ describe("Execution ledger driver failures", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const ledger = yield* makeDrizzleExecutionLedger();
 
-        const decisions = yield* ledger.readDecisions(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
-        const outcomes = yield* ledger.readOutcomes(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
-        const unsettled = yield* ledger.readUnsettledAllowed(runKey).pipe(Effect.flip, Effect.ensuring(quiesce()));
+        const decisions = yield* ledger
+          .readDecisions(runKey)
+          .pipe(Effect.flip, Effect.ensuring(rollbackAbortedSession()));
+        const outcomes = yield* ledger
+          .readOutcomes(runKey)
+          .pipe(Effect.flip, Effect.ensuring(rollbackAbortedSession()));
+        const unsettled = yield* ledger
+          .readUnsettledAllowed(runKey)
+          .pipe(Effect.flip, Effect.ensuring(rollbackAbortedSession()));
 
         expect(A.map([decisions, outcomes, unsettled], (error) => ExecutionLedgerUnavailable.is(error))).toEqual([
           true,

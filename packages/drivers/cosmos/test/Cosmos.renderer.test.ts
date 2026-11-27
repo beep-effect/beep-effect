@@ -31,8 +31,8 @@ it.effect(
   "initializes the Cosmos buffers and releases its renderer and frame sampler",
   Effect.fnUntraced(function* () {
     const container = document.createElement("div");
-    // The vendor mock never uses WebGL; only the capability probe sees this document.
-    vi.stubGlobal("document", { createElement: () => ({ getContext: () => ({}) }) });
+    const documentSeenOnlyByCapabilityProbe = { createElement: () => ({ getContext: () => ({}) }) };
+    vi.stubGlobal("document", documentSeenOnlyByCapabilityProbe);
     const requestFrame = vi.fn<(callback: FrameRequestCallback) => number>().mockReturnValue(7);
     const cancelFrame = vi.fn();
     vi.stubGlobal("requestAnimationFrame", requestFrame);

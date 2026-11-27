@@ -84,24 +84,19 @@ import * as Str from "effect/String";
 import type { DecisionRecordHash } from "@beep/execution-authority-domain/entities/ExecutionRecord";
 
 const $I = $ExecutionAuthorityServerId.create("GovernedEgress/GovernedEgress.fetch");
-// The settlement write happens *after* the request has already gone out, so it
-// can never fail the fetch — but an unbounded one would hold the caller's
-// response hostage to a stalled ledger. This bound is what makes "best effort"
-// literally true. It is deliberately generous: a measured PGlite write-ahead
-// append is ~2ms, so a second is roughly 500x headroom and a timeout here means
-// the ledger is genuinely unwell rather than merely busy.
-//
-// The cost of exceeding it is real and is why it is not tighter: the decision
-// stays allowed-with-no-outcome, which `readUnsettledAllowed` reports as
-// "decided, outcome unknown". That is the honest answer — the request did go
-// out and we cannot say how it ended — and the dropped write is logged at
-// warning with its cause.
+// decision: settlement-write-is-best-effort
 const outcomeAppendTimeout = Duration.seconds(1);
 
 /**
  * Session-static inputs the composition root supplies to the governed egress
  * boundary. The destinations themselves are never passed here — they come from
  * `ExecutionAuthorityConfig`, so the allowlist has exactly one owner.
+ *
+ * **Details**
+ *
+ * There is no audience option either: each grant's audience is derived from its
+ * destination, because a caller that could declare its own audience would
+ * declare the friendlier one.
  *
  * **Example** (Usage)
  * ```ts
@@ -144,33 +139,18 @@ export class GovernedEgressOptions extends S.Opaque<GovernedEgressOptions, { rea
 
 const egressPrincipal = SystemPrincipal.make({ component: "Runtime", kind: "System" });
 
-// Canonical form for *coverage comparison*: origin plus path, with any trailing
-// slash removed and the query deliberately dropped — a query string must never
-// widen or narrow what an allowlist entry covers. Parsing through `URL` is what
-// makes the comparison safe: `https://allowed.example@evil.test/` and
-// `https://allowed.example:443` both normalize to the origin they actually
-// resolve to, not the one they read like.
 const canonicalize = (value: string): O.Option<string> =>
   Result.try(() => {
     const url = new URL(value);
     return O.some(`${url.origin}${Str.replace(/\/+$/, "")(url.pathname)}`);
   }).pipe(Result.getOrElse(O.none));
 
-// Canonical form for the *record*, which keeps the query and fragment. These
-// are dropped from coverage on purpose but must survive into the decision row:
-// an agent can carry a payload out in a query string under an allowed prefix,
-// and if the row named only the allowlist entry, that request would be
-// byte-identical in the ledger to a benign one. Only the digest is stored, so
-// recording the full form reveals nothing an auditor could not already see.
 const canonicalizeForRecord = (value: string): O.Option<string> =>
   Result.try(() => {
     const url = new URL(value);
     return O.some(`${url.origin}${Str.replace(/\/+$/, "")(url.pathname)}${url.search}${url.hash}`);
   }).pipe(Result.getOrElse(O.none));
 
-// An allowlist entry covers itself and everything beneath it, and nothing else.
-// The `/` boundary is the whole point: a bare `startsWith` would let
-// `https://allowed.example.evil.test` match an `https://allowed.example` entry.
 const coveredBy = (entry: string, requested: string): boolean =>
   requested === entry || Str.startsWith(`${entry}/`)(requested);
 
@@ -189,6 +169,24 @@ const coveredBy = (entry: string, requested: string): boolean =>
  * "the grant expired", or "the ledger is down" produced it is written to the
  * decision row and the server log; an agent that could tell them apart could
  * map the allowlist by probing it.
+ *
+ * **Gotchas**
+ *
+ * - An allowlist entry covers its own origin and path and everything beneath
+ *   the next `/`, never a lookalike host: `https://allowed.example` does not
+ *   cover `https://allowed.example.evil.test`. Entries and requests are parsed
+ *   as URLs, so `https://allowed.example@evil.test/` and
+ *   `https://allowed.example:443` compare as the origin they resolve to, and a
+ *   query string never widens or narrows coverage.
+ * - An allowlist entry that does not parse as a URL is dropped with a logged
+ *   warning, never granted.
+ * - The decision row records the destination as requested, query and fragment
+ *   included (as a digest), not the covering entry, so an exfiltration under an
+ *   allowed prefix (`.../publish?payload=…`) stays distinguishable in the
+ *   ledger from a benign request to that prefix.
+ * - Redirects are refused (`redirect: "error"`), because the check covers the
+ *   first hop only: an allowlisted host that redirects fails the request
+ *   instead of handing it to a host the operator never named.
  *
  * **Example** (Usage)
  * ```ts
@@ -209,6 +207,7 @@ const coveredBy = (entry: string, requested: string): boolean =>
  * @category constructors
  * @since 0.0.0
  */
+// decision: decision-append-advances-chain-atomically
 export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgress.make")(function* (
   options: GovernedEgressOptions,
   baseFetch?: typeof globalThis.fetch
@@ -218,9 +217,6 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
   const frozenAt = yield* DateTime.now;
   const expiresAt = DateTime.add(frozenAt, { milliseconds: Duration.toMillis(options.grantTtl) });
 
-  // One grant per allowed destination. An entry that does not parse as a URL is
-  // dropped rather than granted: a malformed entry must never be able to buy
-  // authority, and the drop is logged so it is not silent.
   const entries = A.getSomes(A.map(config.destinationAllowlist, canonicalize));
   yield* A.length(entries) === A.length(config.destinationAllowlist)
     ? Effect.void
@@ -242,32 +238,23 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
       purpose: options.purpose,
       resource: options.resource,
       sink: ExecutionSink.make({
-        // Derived from the destination, never declared: a caller that could
-        // name its own audience would name the friendlier one.
         audience: resolveSinkAudience(destination),
         destination,
         sinkClass: "network-egress",
       }),
     });
   });
-  // The layer's error channel is closed. A grant set built from constructors
-  // encodes, so a schema failure here is a defect rather than a caller error.
   const frozen = yield* Effect.fromResult(
     freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), frozenAt)
   ).pipe(Effect.orDie);
-  // The `epistemic-egress/` prefix is kept from the slice egress began in so
-  // run keys stay byte-identical across the move.
+  // decision: epistemic-run-key-labels-frozen
   const runKey = ExecutionRunKey.make(
     digestForLedger(`epistemic-egress/${DateTime.toEpochMillis(frozenAt)}/${frozen.digest}`)
   );
   const chain = yield* Ref.make({ lastHash: O.none<DecisionRecordHash>(), nextSeq: 0 });
   const lock = yield* Semaphore.make(1);
 
-  // Resolve the requested URL to the allowlist entry that covers it, so the
-  // evaluator's exact-match comparison stays exact. An uncovered URL is carried
-  // through as its own canonical form, which matches no grant and is therefore
-  // denied with the destination recorded as what was actually attempted.
-  const destinationFor = (requested: string): SinkDestination => {
+  const coveringEntryOrSelf = (requested: string): SinkDestination => {
     const canonical = canonicalize(requested);
     const covering = O.flatMap(canonical, (value) => A.findFirst(entries, (entry) => coveredBy(entry, value)));
     return SinkDestination.make(O.getOrElse(covering, () => O.getOrElse(canonical, () => requested)));
@@ -285,12 +272,7 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
 
   const authorize = Effect.fn("ExecutionAuthority.GovernedEgress.authorize")(function* (requested: string) {
     const now = yield* DateTime.now;
-    const destination = destinationFor(requested);
-    // The evaluator compares against the covering allowlist entry, but the row
-    // records what was actually asked for, query and all. Recording the entry
-    // would make an exfiltration under an allowed prefix
-    // (`.../publish?payload=…`) indistinguishable in the ledger from a benign
-    // publish to that same prefix.
+    const destination = coveringEntryOrSelf(requested);
     const recordedDestination = SinkDestination.make(O.getOrElse(canonicalizeForRecord(requested), () => requested));
     const request = ExecutionRequest.make({
       destination,
@@ -325,9 +307,6 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
             denied: ({ reason }) => ({ ...common, reason, verdict: "denied" as const }),
           })
         );
-        // Uninterruptible for the same reason the gate's append is: an
-        // interruption between a successful append and the chain advance would
-        // strand the run on a sequence slot the ledger already holds.
         const appended = yield* Effect.uninterruptible(
           ledger.appendDecision(record).pipe(
             Effect.andThen(Ref.set(chain, { lastHash: O.some(record.hash), nextSeq: state.nextSeq + 1 })),
@@ -341,7 +320,6 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
           )
         );
         if (!appended) {
-          // No record, no request — the same fail-closed rule the gate applies.
           yield* deny(DenialReason.Enum["ledger-unavailable"], recordedDestination);
           return O.none<DecisionRecordHash>();
         }
@@ -374,30 +352,14 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
   });
 
   const platformFetch = baseFetch ?? globalThis.fetch;
-  // The authorization runs detached from whatever fiber called `fetch`, because
-  // `fetch` is a plain function and there is no fiber to inherit from. Running
-  // it *with* the build context is what keeps the boundary's own logs and spans
-  // inside the application's logger and tracer instead of a bare default
-  // runtime — the decision log is the only place a denial's reason survives.
-  const context1 = yield* Effect.context<never>();
-  const runInContext = Effect.runPromiseWith(context1);
+  const buildContext = yield* Effect.context<never>();
+  const runInBuildContext = Effect.runPromiseWith(buildContext);
 
-  // `Fetch` is `typeof globalThis.fetch`, so the contract is a promise-returning
-  // function and this cannot be an Effect. It is written as a `.then` chain
-  // rather than an `async` function so the boundary needs no diagnostic
-  // suppression to exist.
-  //
-  // Redirects are refused rather than followed. `fetch` follows them by
-  // default, which would let an allowlisted destination hand the request to any
-  // host it likes *after* the check passed — the authorization would cover the
-  // first hop only. `error` makes the redirect itself the failure, so an
-  // operator who allowlists a host that redirects gets a broken publish rather
-  // than a silent one to somewhere they never named.
   const governedFetch = (
     input: Parameters<typeof globalThis.fetch>[0],
     init?: Parameters<typeof globalThis.fetch>[1]
   ): Promise<Response> =>
-    runInContext(authorize(input instanceof Request ? input.url : String(input))).then(
+    runInBuildContext(authorize(input instanceof Request ? input.url : String(input))).then(
       O.match({
         onNone: () => Promise.reject(EgressDenied.make({})),
         onSome: (decisionHash) =>
@@ -405,9 +367,9 @@ export const makeGovernedEgressFetch = Effect.fn("ExecutionAuthority.GovernedEgr
             .then(() => platformFetch(input, { ...init, redirect: "error" }))
             .then(
               (response) =>
-                runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.completed)).then(() => response),
+                runInBuildContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.completed)).then(() => response),
               (cause: unknown) =>
-                runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.failed)).then(() =>
+                runInBuildContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.failed)).then(() =>
                   Promise.reject(cause)
                 )
             ),
