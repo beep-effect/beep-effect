@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli",
   "review": {
-    "reviewer": "Claude Opus 5.5 (route-soundness-repair ROUT-03 slice 2 lane)",
-    "reason": "Re-record the root subject and six packages after their per-package turbo.json files declared the goal and exploration paths, and the law-practice use-cases fixtures, that their tests read as test inputs. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
+    "reason": "Re-record the root subject and nine packages after their turbo.json files declared the files their tests read from other packages as test-task inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/rout-03-slice-2-cache-review-2026-11-26.md",
-      "sha256": "08d809e1d5cea47d4cdeb26a9ca56f7fec2af2b0f076b7b2c01319d1aba03dd5"
+      "path": "docs/reports/cross-package-reads-cache-review-2026-11-27.md",
+      "sha256": "459eea41e7a0bff558a2b9d51b9fbed2aa35592d9e88fb7519143a4a29130b4f"
     }
   },
   "nodes": [
@@ -379,6 +379,8 @@
           "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
           "../../../../packages/_internal/db-admin/**",
           "../../../../packages/architecture-lab/**",
+          "../../../../packages/foundation/modeling/identity/src/packages.ts",
+          "../../../../packages/law-practice/server/vitest.shards.json",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
           "../../../../tsconfig.json",
@@ -1123,6 +1125,8 @@
           "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
           "../../../../packages/_internal/db-admin/**",
           "../../../../packages/architecture-lab/**",
+          "../../../../packages/foundation/modeling/identity/src/packages.ts",
+          "../../../../packages/law-practice/server/vitest.shards.json",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
           "../../../../tsconfig.json",
@@ -1276,6 +1280,8 @@
           "../../../../goals/time-to-certainty/research/gate-order-handoff.json",
           "../../../../packages/_internal/db-admin/**",
           "../../../../packages/architecture-lab/**",
+          "../../../../packages/foundation/modeling/identity/src/packages.ts",
+          "../../../../packages/law-practice/server/vitest.shards.json",
           "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tsconfig.base.json",
