@@ -121,7 +121,11 @@ export const suite: {
           const retried = yield* storage.write(publicKey, storeId, [batch]);
           const persisted = yield* storage.changes(publicKey, storeId, 0).pipe(Stream.take(1), Stream.runCollect);
 
-          assert.deepStrictEqual(ids(stored), ids([batch]));
+          assert.deepStrictEqual(
+            ids(stored),
+            ids([batch]),
+            "65536 ids exceed SQL Server 2100, PostgreSQL client 32767 and MySQL 65535 bind limits"
+          );
           assert.deepStrictEqual(retried, []);
           assert.deepStrictEqual(ids(persisted), ids([batch]));
           assert.strictEqual(A.getUnsafe(persisted, 0).sequence, A.getUnsafe(stored, 0).sequence);

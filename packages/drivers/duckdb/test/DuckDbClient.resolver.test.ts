@@ -24,7 +24,7 @@ const seedIsolatedTable = Effect.fnUntraced(function* (table: string) {
   return { sql, test: sql(table) };
 });
 
-describe("DuckDbClient SqlResolver", () => {
+describe("DuckDbClient SqlResolver, per-test tables and sequences isolate concurrent tests in one database", () => {
   it.layer(DuckDbTestLayer, { timeout: "30 seconds" })((it) => {
     describe("ordered", () => {
       it.effect("insert", () =>

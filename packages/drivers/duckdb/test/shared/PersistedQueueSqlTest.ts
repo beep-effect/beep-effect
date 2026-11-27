@@ -67,7 +67,7 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           assert.isAtLeast(
             (yield* Clock.currentTimeMillis) - offeredAt,
             1000 - databaseClockLagMillis,
-            "offered mid-second, so a whole-second database clock would drop about half a second"
+            "offered mid-second so a slow write lands in that second; 100ms lag against the process clock allows coarse database ticks (SQL Server SYSDATETIME), far below half-second or multi-second errors"
           );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
@@ -265,7 +265,7 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
             yield* Effect.sleep("1500 millis").pipe(TestClock.withLive);
             assert.isUndefined(
               duplicate.pollUnsafe(),
-              "past lockExpiration, the stale settlement neither released the replacement nor unregistered its refresh"
+              "refreshes resumed for the replacement before stale settlement; past lockExpiration it neither released the replacement nor unregistered its refresh"
             );
 
             yield* Fiber.interrupt(replacement);

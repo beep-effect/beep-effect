@@ -382,7 +382,10 @@ const suiteWithImpl = <R, E>(
 
           const fiber2 = yield* queue.take((val) => Effect.succeed(val)).pipe(Effect.forkScoped);
 
-          yield* assertNotDelivered(fiber2, "a periodic store reset ran while the element was still being processed");
+          yield* assertNotDelivered(
+            fiber2,
+            "allow any periodic store reset to run while the element is still being processed"
+          );
 
           yield* release.open;
           yield* Fiber.join(fiber);
@@ -670,7 +673,7 @@ const suiteWithImpl = <R, E>(
             yield* takeOnce(
               queue,
               { n: 3n },
-              "expiring failures keeps the pending replacement; a retained failure reserves the id for default offers"
+              "expiring failures keeps the pending replacement; retained failures reserve default ids; only injected cleanup clocks can retain the second failure reliably because SQL clocks can cross its one-second TTL before cleanup"
             );
           }),
         testOptions

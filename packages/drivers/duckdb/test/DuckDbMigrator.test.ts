@@ -37,7 +37,7 @@ const tableExists = (name: string) =>
     )
   );
 
-describe("DuckDbMigrator", () => {
+describe("DuckDbMigrator, per-test migration and data tables isolate tests sharing one database", () => {
   it.layer(Layer.mergeAll(DuckDbTestLayer, FileSystem.layerNoop({}), Path.layer), { timeout: "30 seconds" })((it) => {
     it.effect("fromRecord runs migrations in order and records them", () =>
       Effect.gen(function* () {
