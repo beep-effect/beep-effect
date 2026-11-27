@@ -48,6 +48,11 @@ const phone = (s: string): O.Option<PhoneNumber> => {
  * mailboxes, phone numbers or postal addresses; then the normalised name and organisation. A card with
  * nothing identifying is dropped rather than given a shared key.
  *
+ * **Gotchas**
+ *
+ * Role mailboxes such as `info@` never form the first rung: they are shared, so two people who share only
+ * a role mailbox keep distinct ids.
+ *
  * **Example** (Normalise no cards)
  *
  * ```ts
@@ -93,9 +98,6 @@ export const normaliseContacts = (cards: ReadonlyArray<RawContactCard>): Readonl
       Order.mapInput(Order.String, (p: PhoneNumber) => p.e164)
     );
     const postal = distinct(A.flatMap(group, (c) => c.addresses));
-    // Identity ladder: non-role emails first (role mailboxes are shared, so two people who share only info@
-    // keep distinct ids); a nameless card then falls back to its own mailboxes, phone numbers or postal
-    // addresses; then name|organisation. A card with nothing identifying is dropped.
     const personal = A.filter(emails, (e) => !e.role);
     const named = `${nameKey(displayName)}|${nameKey(O.getOrElse(organization, () => ""))}`;
     const nameless = Str.isEmpty(nameKey(displayName));
