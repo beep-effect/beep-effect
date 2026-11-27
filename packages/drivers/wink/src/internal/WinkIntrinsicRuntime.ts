@@ -133,7 +133,6 @@ export class WinkIntrinsicOwner {
           rawForm: request.rawForm,
           remainingWork: request.remainingWork,
         });
-      // This debit precedes identity reads, both vendor calls, and result allocation.
       const remainingWork = request.remainingWork - debit;
       yield* Effect.annotateCurrentSpan({
         "wink.intrinsic.form_length": request.rawForm.length,

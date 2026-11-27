@@ -49,7 +49,6 @@ const label = makeNamedNode("https://example.test/label");
 const labelShape = makeNamedNode("urn:shape:string-label");
 const labelProperty = makeBlankNode("shape-string-label-property");
 
-// One xsd:string-typed label on `material`, checked against sh:datatype xsd:string.
 const labelRequest = (text: string): ShaclValidationRequest =>
   ShaclValidationRequest.make({
     dataset: makeDataset([makeQuad(material, label, makeLiteral(text))]),

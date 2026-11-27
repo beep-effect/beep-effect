@@ -1,21 +1,14 @@
-import { assertSome } from "@effect/vitest/utils";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-/**
- * Proofs for the GraphOperations Catalog: the backend-backed linguistic operations
- * (sentencize/tokenize/posTag/lemmatize/extractEntities) produce child nodes when
- * applied to a node, and the pure string operations (toLowerCase/toUpperCase/trim)
- * transform node data. Backend-backed ops run against the real wink-nlp model.
- */
-
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Catalog } from "@beep/nlp-processing/Graph/GraphOperations";
 import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 
 const BackendLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 

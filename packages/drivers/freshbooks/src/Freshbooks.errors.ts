@@ -21,9 +21,6 @@ const FreshbooksHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.isLess
   })
 );
 
-// Reduce an unknown thrown cause to a short, non-sensitive label. Kept as one
-// self-contained reducer (rather than a chain of reflection helpers) so the
-// boundary stays compact and does not leak raw API payloads.
 const readTag = (value: unknown, key: string): O.Option<string> =>
   P.isObject(value) ? O.filter(O.fromNullishOr(Reflect.get(value, key) as unknown), P.isString) : O.none();
 
@@ -41,8 +38,6 @@ const causeLabel = (cause: unknown): O.Option<string> => {
   ]);
 };
 
-// Diagnostic options for FreshbooksError.fromReason. Internal: the driver
-// constructs errors through the static below, so consumers never name this.
 type FreshbooksErrorOptions = {
   readonly cause?: unknown;
   readonly resource?: string;

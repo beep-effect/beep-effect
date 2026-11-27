@@ -24,8 +24,6 @@ const hangingStub = `#!/usr/bin/env bash
 exec sleep 20
 `;
 
-// Writes the PNG pdftoppm would write (output root is the last argument) and
-// records its arguments so the test can read the page range and resolution.
 const pdftoppmStub = (argsLog: string): string => `#!/usr/bin/env bash
 printf '%s\\n' "$*" > "${argsLog}"
 printf 'synthetic-png-bytes' > "\${@: -1}.png"
@@ -61,8 +59,6 @@ const fixture = Effect.fn("PopplerTest.fixture")(function* (stubs: {
   };
 });
 
-// Classic TIFF header plus a directory chain. Each directory has zero entries
-// and a next-directory offset; a zero offset ends the chain.
 const tiffBytes = (littleEndian: boolean, directoryCount: number, loop = false): Uint8Array => {
   const bytes = new Uint8Array(8 + directoryCount * 6);
   const view = new DataView(bytes.buffer);
@@ -169,7 +165,6 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Poppler rasterizer", (i
         PopplerConfig.make({ pdfinfoPath: hanging.pdfinfoPath, timeoutMillis: 300 })
       ))
         .pageCount(hanging.pdfPath)
-        // Live clock: the timeout races a real subprocess, which the test clock never advances past.
         .pipe(Effect.flip, TestClock.withLive);
 
       expect(unavailable).toEqual(
@@ -198,8 +193,9 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Poppler rasterizer", (i
       const args = yield* fs.readFileString(argsLog);
 
       expect(new TextDecoder().decode(image.bytes)).toBe("synthetic-png-bytes");
-      // sha256("synthetic-png-bytes")
-      expect(image.digest).toBe("sha256:6b3d646cf8e5146959f655fdaef7e568c7b39e37662c1003bbfd4cb3bf181baa");
+      expect(image.digest, "sha256 of synthetic-png-bytes").toBe(
+        "sha256:6b3d646cf8e5146959f655fdaef7e568c7b39e37662c1003bbfd4cb3bf181baa"
+      );
       expect(image.dpi).toBe(150);
       expect(image.mediaType).toBe("image/png");
       expect(Str.startsWith("-r 150 -gray -png -singlefile -f 2 -l 2 ")(args)).toBe(true);

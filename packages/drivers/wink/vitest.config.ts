@@ -1,12 +1,13 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { fcDeepSweepActive, vitestCoverageRunActive } from "../../../vitest.shared.ts";
 
+const isolateMutatedWinkModelState = true;
+
 export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // Model initialization must not reuse mutated module state across test files.
-      isolate: true,
+      isolate: isolateMutatedWinkModelState,
       testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 20_000,
     },
   })

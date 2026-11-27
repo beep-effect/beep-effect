@@ -14,9 +14,10 @@ const fixturePath = NodeURL.fileURLToPath(
 );
 const tscPath = NodeURL.fileURLToPath(new URL("../../../../node_modules/.bin/tsc", import.meta.url));
 
-// The spawner only touches the filesystem to check an explicit `cwd`, which this test never sets.
+const cwdCheckOnlyFileSystem = FileSystem.layerNoop({});
+
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provide(Layer.mergeAll(FileSystem.layerNoop({}), NodePath.layer))
+  Layer.provide(Layer.mergeAll(cwdCheckOnlyFileSystem, NodePath.layer))
 );
 
 const readText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>) => stream.pipe(Stream.decodeText(), Stream.mkString);

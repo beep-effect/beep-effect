@@ -19,7 +19,6 @@ describe("1Password CLI declared-field equivalence", () => {
     const a = OnePasswordCliError.fromUnknown("read", "Secret read failed.", { cause: new Error("first failure") });
     const b = OnePasswordCliError.fromUnknown("read", "Secret read failed.", { cause: new Error("second failure") });
 
-    // the defect cause is payload, never identity
-    expect(sameOnePasswordCliError(a, b)).toBe(true);
+    expect(sameOnePasswordCliError(a, b), "the defect cause is payload, never identity").toBe(true);
   });
 });

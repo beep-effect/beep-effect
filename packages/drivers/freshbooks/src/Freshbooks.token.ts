@@ -245,6 +245,11 @@ export type FreshbooksTokenStoreShape = {
 /**
  * Public shape of {@link FreshbooksAuth}.
  *
+ * **Details**
+ *
+ * `refresh` rotates even when the stored token still looks fresh, for a token FreshBooks revoked before its
+ * recorded expiry; `accessToken` rotates only a stale token.
+ *
  * **Example** (Read a bearer token from the service)
  *
  * ```ts
@@ -333,6 +338,13 @@ const callTokenEndpoint = Effect.fn("callTokenEndpoint")(function* (
  * is the token store's responsibility, not this permit's — back it with a
  * store whose `write` is atomic and whose reads reflect the latest rotation.
  *
+ * **Gotchas**
+ *
+ * Once the single-use refresh token is sent, cancelling the caller waits for the response and its persisted
+ * replacement; a queued caller cancelled before it holds the permit never starts an exchange. A store `write`
+ * failure after a successful exchange fails as `token refresh` whatever the store reported: FreshBooks has
+ * already consumed the old refresh token, so the caller must re-authorize rather than retry.
+ *
  * **Example** (Reference the constructor)
  *
  * ```ts
@@ -351,18 +363,10 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
 ): Effect.fn.Return<FreshbooksAuthShape, never> {
   const permit = yield* Semaphore.make(1);
 
-  // Once the single-use credential is sent, caller cancellation must wait for
-  // the response and its durable replacement. Permit acquisition stays
-  // interruptible, so cancelled queued callers never start an exchange.
   const rotate = Effect.fn("Freshbooks.rotate")(function* (grant: Record<string, string>) {
     const now = yield* Clock.currentTimeMillis;
     const response = yield* callTokenEndpoint(client, config, grant);
     const stored = toStored(response, now);
-    // A write failure here is a stranded rotation: FreshBooks has already
-    // consumed the old single-use refresh token and issued this replacement,
-    // so a persistence failure means the new token is lost and the caller must
-    // re-authorize. Surface it as `token refresh` regardless of the store's own
-    // failure reason so callers do not retry the now-invalid credential.
     yield* store
       .write(stored)
       .pipe(
@@ -373,10 +377,7 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
     return stored;
   }, Effect.uninterruptible);
 
-  // Refresh-if-stale, used by `accessToken`: re-reads the store inside the
-  // critical section so queued fibers observe a token another owner already
-  // rotated and skip the network call.
-  const refreshLocked: Effect.Effect<FreshbooksStoredToken, FreshbooksError> = permit.withPermit(
+  const refreshIfStillStale: Effect.Effect<FreshbooksStoredToken, FreshbooksError> = permit.withPermit(
     Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis;
       const current = yield* store.read;
@@ -390,9 +391,6 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
     })
   );
 
-  // Force a rotation regardless of recorded expiry, for the revoked/rejected
-  // token case where the stored token still looks fresh. Serialized through the
-  // same one-permit owner.
   const forceRefresh: Effect.Effect<FreshbooksStoredToken, FreshbooksError> = permit.withPermit(
     Effect.gen(function* () {
       const current = yield* store.read;
@@ -407,8 +405,8 @@ export const makeFreshbooksAuth = Effect.fn("Freshbooks.makeAuth")(function* (
     const now = yield* Clock.currentTimeMillis;
     const current = yield* store.read;
     const token = yield* O.match(current, {
-      onNone: () => refreshLocked,
-      onSome: (value) => (isFresh(value, now) ? Effect.succeed(value) : refreshLocked),
+      onNone: () => refreshIfStillStale,
+      onSome: (value) => (isFresh(value, now) ? Effect.succeed(value) : refreshIfStillStale),
     });
     return token.accessToken;
   });

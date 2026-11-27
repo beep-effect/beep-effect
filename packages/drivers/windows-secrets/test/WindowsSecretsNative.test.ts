@@ -20,15 +20,13 @@ import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { vi } from "vitest";
 
-// Every FFI entry point is replaced before importing the adapter. Addresses are
-// synthetic IDs into test-owned byte buffers; no DLL or host memory is accessed.
-const ffi = vi.hoisted(() => ({
+const syntheticFfi = vi.hoisted(() => ({
   dlopen: vi.fn(),
   ptr: vi.fn<(bytes: Uint8Array) => number>(),
   toArrayBuffer: vi.fn<(address: bigint, offset: number, length: number) => ArrayBuffer>(),
 }));
 vi.mock("bun:ffi", () => ({
-  ...ffi,
+  ...syntheticFfi,
   FFIType: { ptr: "ptr", u32: "u32", i32: "i32", void: "void" },
 }));
 
@@ -43,8 +41,8 @@ const makeRuntime = () => {
     return address;
   };
   const bytesAt = (address: bigint) => O.getOrThrow(MutableHashMap.get(memory, address));
-  ffi.ptr.mockImplementation((bytes) => Number(allocate(bytes)));
-  ffi.toArrayBuffer.mockImplementation(
+  syntheticFfi.ptr.mockImplementation((bytes) => Number(allocate(bytes)));
+  syntheticFfi.toArrayBuffer.mockImplementation(
     (address, offset, length) => Uint8Array.from(bytesAt(address).subarray(offset, offset + length)).buffer
   );
   const symbols = {
@@ -80,7 +78,7 @@ const makeRuntime = () => {
   const closeCredential = vi.fn();
   const closeCrypto = vi.fn();
   const closeKernel = vi.fn();
-  ffi.dlopen
+  syntheticFfi.dlopen
     .mockReturnValueOnce({ symbols, close: closeCredential })
     .mockReturnValueOnce({ symbols, close: closeCrypto })
     .mockReturnValueOnce({ symbols, close: closeKernel });
@@ -98,7 +96,7 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
         (scope) => Scope.provide(acquireNativeSecretStore, scope),
         Scope.close
       );
-      expect(ffi.dlopen.mock.calls).toMatchObject([
+      expect(syntheticFfi.dlopen.mock.calls).toMatchObject([
         ["advapi32.dll", { CredReadW: { returns: "i32" }, CredFree: { returns: "void" } }],
         ["crypt32.dll", { CryptProtectData: { returns: "i32" } }],
         ["kernel32.dll", { GetLastError: { returns: "u32" } }],
@@ -197,7 +195,7 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
       const flip3 = yield* Effect.flip(store.set(target, Redacted.make(Str.repeat(1281)("x"))));
       expect(flip3).toBeInstanceOf(SecretTooLarge);
       expect(symbols.CredWriteW).not.toHaveBeenCalled();
-      expect(ffi.ptr).not.toHaveBeenCalled();
+      expect(syntheticFfi.ptr).not.toHaveBeenCalled();
     })
   );
 
@@ -264,7 +262,7 @@ describe("Windows native adapter through synthetic FFI", { concurrent: false }, 
             operation === "protect" ? "CryptProtectData returned failure." : "CryptUnprotectData returned failure.",
         })
       );
-      expect(ffi.ptr).toHaveBeenCalledWith(new Uint8Array(1));
+      expect(syntheticFfi.ptr).toHaveBeenCalledWith(new Uint8Array(1));
       expect(symbols.LocalFree).not.toHaveBeenCalled();
     })
   );

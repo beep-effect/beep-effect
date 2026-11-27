@@ -140,14 +140,18 @@ export const resolveConfig = Effect.fn("Freshbooks.resolveConfig")(
   Effect.mapError((cause) => FreshbooksError.fromReason("config", { cause }))
 );
 
-// Options accepted by the FreshBooks list verbs. Kept internal: consumers pass
-// an object literal (e.g. `{ page: 2 }`) without naming the type.
 type ListOptions = {
   readonly page?: number;
 };
 
 /**
  * Public FreshBooks read-service shape.
+ *
+ * **Gotchas**
+ *
+ * A non-2xx response, a short-burst 429 with `Retry-After` included, fails with a `response status`
+ * {@link FreshbooksError} carrying the status. The read verbs never retry, so the caller schedules any retry
+ * with the server-provided delay.
  *
  * **Example** (Name the service key)
  *
@@ -214,10 +218,6 @@ const authorizedGet = Effect.fn("authorizedGet")(function* (
   const response = yield* client
     .execute(request)
     .pipe(Effect.mapError((cause) => FreshbooksError.fromReason("transport", { cause, resource, url })));
-  // Non-2xx (including a short-burst 429 with Retry-After) surfaces as a typed
-  // error carrying the status; retry/backoff and reconciliation belong to the
-  // consuming reconciler rather than every read verb, so the caller can
-  // observe and schedule the retry with the server-provided delay.
   if (response.status < 200 || response.status >= 300) {
     return yield* FreshbooksError.fromReason("response status", { resource, status: response.status, url });
   }

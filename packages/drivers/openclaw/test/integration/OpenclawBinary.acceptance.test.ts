@@ -56,10 +56,6 @@ const stagePackage = `openclaw@${compatibility.openclawVersion}`;
 const stubScript = "#!/bin/sh\nexit 0\n";
 const placeholderRoot = "/beep-openclaw-placeholder";
 const negativeFixtureDir = NodeURL.fileURLToPath(new URL("../fixtures/negative/", import.meta.url));
-// Note: the design contract's "retired allowSymlinkCommand" defect is a
-// 2026.7.2 retirement — the pinned 2026.7.1-2 binary still accepts that key
-// (verified directly), so the exec-provider strict-boundary fixture uses an
-// unknown provider key, which the pinned binary genuinely rejects.
 const negativeFixtureNames = [
   "agents-entries-shape",
   "gateway-port-string",
@@ -118,7 +114,6 @@ const resolveCacheRoot = Effect.gen(function* () {
   return O.getOrElse(option1, () => path.join(home, ".cache", "beep-openclaw-driver"));
 });
 
-/** Stage the pinned npm package once; reuse the cache when already staged. */
 const ensurePinnedBinaryStaged = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -154,17 +149,12 @@ const tripleAtLeast = (candidate: VersionTriple, floor: VersionTriple): boolean 
       ? candidate[1] > floor[1]
       : candidate[2] >= floor[2];
 
-/** The pinned binary's engine ranges as [inclusive floor, exclusive major ceiling]. */
-const supportedNodeRanges: ReadonlyArray<readonly [VersionTriple, number]> = [
+const supportedNodeRanges: ReadonlyArray<readonly [inclusiveFloor: VersionTriple, exclusiveMajorCeiling: number]> = [
   [[22, 22, 3], 23],
   [[24, 15, 0], 25],
   [[25, 9, 0], Number.POSITIVE_INFINITY],
 ];
 
-/**
- * True when the reported Node version satisfies the pinned binary's engine
- * ranges: `>=22.22.3 <23`, `>=24.15.0 <25`, or `>=25.9.0`.
- */
 const isSupportedNodeVersion = (version: string): boolean => {
   const candidate = versionTriple(version);
   return (
@@ -173,14 +163,8 @@ const isSupportedNodeVersion = (version: string): boolean => {
   );
 };
 
-/**
- * True when `<directory>/node` is a real, engine-supported Node executable.
- * Under `bunx --bun vitest`, Bun's `node` shim shadows real Node on PATH and
- * the pinned binary refuses Bun (`node:sqlite`), so each candidate is probed:
- * Bun's shim reports `process.versions.bun`, real Node does not. Hosts may
- * also carry a real Node below the engine floor (e.g. v24.13.0), so the
- * probed version must satisfy the pinned engine ranges too.
- */
+const bunShimRevealingProbe = 'process.versions.bun ? "bun" : process.version';
+
 const isUsableNodeDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -190,17 +174,13 @@ const isUsableNodeDirectory = Effect.fnUntraced(function* (directory: string) {
     return false;
   }
   yield* Effect.logInfo("OpenClaw acquisition node:probe").pipe(Effect.when(acquisitionTraceEnabled));
-  const [stdout, , exitCode] = yield* runCapturedProcess(
-    ambientProcess(candidate, ["-p", 'process.versions.bun ? "bun" : process.version'])
-  ).pipe(Effect.orElseSucceed(() => ["", "", 1] as const));
+  const [stdout, , exitCode] = yield* runCapturedProcess(ambientProcess(candidate, ["-p", bunShimRevealingProbe])).pipe(
+    Effect.orElseSucceed(() => ["", "", 1] as const)
+  );
   const report = Str.trim(stdout);
   return exitCode === 0 && pipe(report, Str.startsWith("v")) && isSupportedNodeVersion(report);
 });
 
-/**
- * Stage the compatibility set's pinned Node from nodejs.org into the cache
- * when the host offers no usable runtime; reuse the extraction across runs.
- */
 const ensurePinnedNodeStaged = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -229,10 +209,6 @@ const ensurePinnedNodeStaged = Effect.gen(function* () {
   return binDir;
 });
 
-/**
- * Pinned Node bin dir: explicit override, then mise Node 24, then the first
- * PATH entry with a real supported node, then a staged pinned Node download.
- */
 const resolveNodeBinDirectory = Effect.gen(function* () {
   const path = yield* Path.Path;
   const override = yield* Config.option(Config.String("BEEP_OPENCLAW_IT_NODE_BIN"));
@@ -324,7 +300,6 @@ const workbenchContext = (bench: OpenclawItWorkbenchShape, configPath: O.Option<
     stateDir: O.some(bench.stateDir),
   });
 
-/** The golden intent re-anchored onto the workbench's real temp paths. */
 const workbenchIntent = (bench: OpenclawItWorkbenchShape): OpenclawDeploymentIntent =>
   OpenclawDeploymentIntent.make({
     ...goldenDeploymentIntent,
@@ -390,7 +365,10 @@ describe("@beep/openclaw pinned-binary acceptance", () => {
             yield* fs.writeFileString(configPath, pipe(fixtureJson, Str.replaceAll(placeholderRoot, bench.rootDir)));
             const validation = yield* cli.configValidate(workbenchContext(bench, O.some(configPath)));
 
-            expect({ fixture: fixtureName, tag: validation._tag }).toEqual({ fixture: fixtureName, tag: "Invalid" });
+            expect(
+              { fixture: fixtureName, tag: validation._tag },
+              "pinned 2026.7.1-2 still accepts allowSymlinkCommand, so the exec-provider fixture uses an unknown key"
+            ).toEqual({ fixture: fixtureName, tag: "Invalid" });
           }),
           { concurrency: 1 }
         );

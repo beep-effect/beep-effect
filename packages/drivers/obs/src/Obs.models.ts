@@ -24,7 +24,6 @@ const $I = $ObsId.create("Obs.models");
  * @category schemas
  * @since 0.0.0
  */
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/obs. Exit: import it and delete this copy once a foundation capability package exports the idiom.
 export const PositiveMilliseconds = S.Finite.check(
   S.makeFilterGroup(

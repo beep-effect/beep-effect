@@ -60,15 +60,12 @@ export interface Junction {
 export const relationName = (fieldName: string): string =>
   endsWith("Id")(fieldName) ? slice(0, -2)(fieldName) : `${fieldName}Relation`;
 
-/** Stable alias shared by forward and reverse relations. */
 /** @internal */
 const relationAlias = (edge: Edge): string => `${edge.sourceKey}_${edge.sourceField}_${edge.targetKey}`;
 
-/** Deliberately narrow pluralization used by deterministic relation names. */
 /** @internal */
-const plural = (value: string): string => `${camelCase(value)}s`;
+const naivePlural = (value: string): string => `${camelCase(value)}s`;
 
-/** Derive the reverse relation name for one edge. */
 /** @internal */
 const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
   const ambiguous =
@@ -77,11 +74,10 @@ const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => 
   if (edge.sourceKey === edge.targetKey && startsWith("parent")(edge.relationName)) {
     return `child${capitalize(slice(6)(edge.relationName))}s`;
   }
-  const base = plural(edge.sourceKey);
+  const base = naivePlural(edge.sourceKey);
   return ambiguous ? `${base}By${capitalize(edge.relationName)}` : base;
 };
 
-/** Structural model surface needed by the shared relation assembler. */
 /** @internal */
 interface RelationModel {
   readonly sql: {
@@ -179,7 +175,7 @@ export const validateSchemaNames: {
 });
 
 const throughRelationName = (targetKey: string, junctionKey: string): string =>
-  `${plural(targetKey)}Through${capitalize(camelCase(junctionKey))}`;
+  `${naivePlural(targetKey)}Through${capitalize(camelCase(junctionKey))}`;
 
 const addRelation = (
   models: RelationModels,

@@ -11,8 +11,6 @@ import winkNLP from "wink-nlp";
 
 const request = WinkIntrinsicNounRequest.make({ rawForm: "joint", remainingWork: 262_144 });
 
-// Replaces the owner's private activated cache with a synthetic vendor handle,
-// so the decode and failure paths behind the pinned SDK can be driven directly.
 const injectCache = (owner: object, cache: { readonly hasSamePOS: unknown; readonly isOOV: unknown }) =>
   Reflect.set(owner, "cache", O.some(cache));
 
@@ -96,8 +94,6 @@ describe("WinkIntrinsicOwner guards every path before and after activation", () 
       if (!P.isFunction(baseCore)) return;
       let owner = O.none<object>();
       let released = false;
-      // The pinned cache factory reads the captured core synchronously; marking the
-      // owner inactive on that read lands between the pre-check and the post-build check.
       const releasingModel = {
         ...model,
         core: () =>
@@ -114,7 +110,7 @@ describe("WinkIntrinsicOwner guards every path before and after activation", () 
       const constructed = yield* constructWinkWithIntrinsicOwner(winkNLP, releasingModel);
       owner = O.some(constructed.owner);
       const reason = yield* failureReason(constructed.owner.activate);
-      assert.strictEqual(released, true);
+      assert.strictEqual(released, true, "the features read lands between the pre-check and the post-build check");
       assert.deepStrictEqual(reason, O.some("core-owner"));
     })
   );

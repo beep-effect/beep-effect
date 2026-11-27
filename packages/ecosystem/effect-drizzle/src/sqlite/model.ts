@@ -86,7 +86,6 @@ type AutoRef<I extends Field.Input> = Field.MetaFrom<I>["references"] extends Me
         : undefined
       : undefined;
 
-/** Metadata exposed after SQLite derivation and automatic EntityId references. */
 type ResolvedMetaOf<I extends Field.Input> = Meta.Merge<
   Field.MetaFrom<I>,
   { readonly column: Derive.ResolvedColumn<I>; readonly references: AutoRef<I> }
@@ -178,7 +177,6 @@ export type EffectiveSchema<I extends Field.Input> =
       ? PlainVariants<Field.SchemaFrom<I>, ResolvedMetaOf<I>>
       : never;
 
-/** Variant-aware schema record exposed by SQLite model inference. */
 type UnwrappedFields<F extends FieldsInput> = {
   readonly [K in keyof F]: EffectiveSchema<F[K]>;
 };

@@ -101,11 +101,7 @@ const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.m
 const schemaPath = "packages/ecosystem/effect-drizzle/test/integration/sqlite-drizzle-schema.ts";
 const preloadPath = NodeURL.fileURLToPath(new URL("./drizzle-kit-sqlite-rc-compat.cjs", import.meta.url));
 
-// drizzle-kit needs Node's CJS module loader, but under `bunx --bun vitest`
-// every PATH entry named `node` (including `/usr/bin/env node`) resolves to
-// Bun's shim. Probe PATH candidates for a real Node binary instead of
-// hardcoding a location that differs across hosts and CI runners.
-const isRealNode = (candidate: string): boolean => {
+const isNodeNotBunShim = (candidate: string): boolean => {
   const probe = Bun.spawnSync([candidate, "--print", "process.isBun ? 1 : 0"]);
   return probe.exitCode === 0 && trim(new TextDecoder().decode(probe.stdout)) === "0";
 };
@@ -121,13 +117,13 @@ const resolveNodeBinary = (): string => {
         filter(split(":")(Bun.env.PATH ?? ""), (directory) => directory.length > 0),
         (directory) => Bun.which("node", { PATH: directory })
       ),
-      (candidate): candidate is string => candidate !== null && isRealNode(candidate)
+      (candidate): candidate is string => candidate !== null && isNodeNotBunShim(candidate)
     ),
     () => "/usr/bin/node"
   );
 };
 
-const nodeBinary = resolveNodeBinary();
+const realNodeForDrizzleKit = resolveNodeBinary();
 
 const runPush = (databasePath: string) =>
   acquireUseRelease(
@@ -138,7 +134,7 @@ const runPush = (databasePath: string) =>
           inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
         const process = Bun.spawn(
           [
-            nodeBinary,
+            realNodeForDrizzleKit,
             "./node_modules/.bin/drizzle-kit",
             "push",
             "--dialect",

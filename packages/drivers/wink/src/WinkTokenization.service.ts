@@ -154,9 +154,7 @@ const optionFromTokenNumber = (token: ItemToken, itsFunction: unknown): O.Option
 const readPrecedingSpaces = (token: ItemToken, its: ItsHelpers): string =>
   O.getOrElse(optionFromTokenString(token, its.precedingSpaces), thunkEmptyStr);
 
-// Token offsets are located in the source text from the previous token's end; wink caps a token's
-// stored preceding spaces at 65,534, so `previousEnd + precedingSpaces.length` drifts after a longer
-// whitespace run. The rebuilt offset remains the fallback for a token whose text is not in the source.
+// decision: wink-offsets-located-in-source
 const makeToken = (
   source: string,
   token: ItemToken,

@@ -31,7 +31,6 @@ const tiffBigEndian = 0x4d4d;
 const tiffMagic = 42;
 const tiffEntryBytes = 12;
 
-// Byte order, magic number and first directory offset of a classic TIFF.
 const tiffHeader = (
   bytes: Uint8Array
 ): O.Option<{ readonly firstDirectory: number; readonly littleEndian: boolean; readonly view: DataView }> => {
@@ -46,8 +45,7 @@ const tiffHeader = (
     : O.none();
 };
 
-// Length of the directory chain, or none when it runs off the end or loops.
-const tiffDirectoryChain = (view: DataView, littleEndian: boolean, firstDirectory: number): O.Option<number> => {
+const tiffDirectoryChainLength = (view: DataView, littleEndian: boolean, firstDirectory: number): O.Option<number> => {
   const seen = MutableHashSet.empty<number>();
   let offset = firstDirectory;
   let frames = 0;
@@ -93,7 +91,7 @@ const tiffDirectoryChain = (view: DataView, littleEndian: boolean, firstDirector
 export const tiffFrameCount = (bytes: Uint8Array): O.Option<number> =>
   pipe(
     tiffHeader(bytes),
-    O.flatMap(({ firstDirectory, littleEndian, view }) => tiffDirectoryChain(view, littleEndian, firstDirectory)),
+    O.flatMap(({ firstDirectory, littleEndian, view }) => tiffDirectoryChainLength(view, littleEndian, firstDirectory)),
     O.filter((frames) => frames > 0)
   );
 

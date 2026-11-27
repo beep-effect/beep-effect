@@ -99,6 +99,14 @@ export interface OpenAiCompatClientShape {
   readonly createChatCompletion: (
     request: OpenAiCompatChatCompletionRequest
   ) => Effect.Effect<OpenAiCompatChatCompletionResponse, AiError.AiError>;
+  /**
+   * Stream chat-completion chunks from the server-sent event response.
+   *
+   * **Details**
+   *
+   * The client forces `stream: true` and `stream_options.include_usage` on every request, so a direct caller gets
+   * the usage chunk without setting either field.
+   */
   readonly streamChatCompletion: (
     request: OpenAiCompatChatCompletionRequest
   ) => Stream.Stream<OpenAiCompatChatCompletionChunk, AiError.AiError>;
@@ -232,7 +240,6 @@ const postChatCompletionRequest: {
 const makeStreamingRequest = (request: OpenAiCompatChatCompletionRequest): OpenAiCompatChatCompletionRequest =>
   OpenAiCompatChatCompletionRequest.make({
     ...request,
-    // The client can be used directly, so it asserts streaming fields even when the language-model adapter set them.
     stream: true,
     stream_options: {
       include_usage: true,

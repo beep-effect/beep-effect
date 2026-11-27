@@ -61,9 +61,6 @@ import type { ObsAuthChallenge, ObsEvent, ObsOutgoingMessage, ObsRequestType } f
 const $I = $ObsId.create("ObsProtocol.service");
 
 const OBS_EVENT_PUBSUB_CAPACITY = 256;
-// obs-websocket closes the session with WebSocketCloseCode
-// AuthenticationFailed (4009) when the Identify authentication string is
-// rejected — a reachability-independent failure the driver must not retry.
 const OBS_CLOSE_CODE_AUTHENTICATION_FAILED = 4009;
 const OBS_WEBSOCKET_SUBPROTOCOL = "obswebsocket.json";
 const OBS_WEBSOCKET_CONFIG_HINT =
@@ -182,9 +179,6 @@ const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError
       ObsError.make({
         closeCode: O.some(reason.code),
         message: `obs-websocket connection closed (${reason.message}).`,
-        // Close 4009 means the server was reachable and rejected the
-        // credentials: tag it "authenticate" so connect-keyed spawn/retry
-        // predicates surface it immediately instead of relaunching OBS.
         operation: reason.code === OBS_CLOSE_CODE_AUTHENTICATION_FAILED ? "authenticate" : "connect",
       })
     ),
@@ -305,8 +299,6 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
           salt: challenge.salt,
         }).pipe(
           Effect.provide(digestContext),
-          // `fromUnknown` returns an existing `ObsError` cause unchanged, so the
-          // schema-issue channel is normalized without re-wrapping driver errors.
           Effect.mapBoth({
             onFailure: (error) =>
               ObsError.fromUnknown("authenticate", "Failed to compute the obs-websocket authentication string.", {

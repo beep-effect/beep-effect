@@ -38,35 +38,19 @@ import type * as Cause from "effect/Cause";
 
 const textDecoder = new TextDecoder();
 
-// Challenge, salt, and password from the obs-websocket protocol.md
-// "Creating an authentication string" walkthrough. The expected string was
-// cross-verified against an independent SHA256 reference implementation:
-// base64(sha256(base64(sha256(password + salt)) + challenge)). (The Identify
-// example message in protocol.md carries an authentication string from a
-// different session and does not correspond to this challenge/salt pair.)
-const DOC_CHALLENGE = "+IxH4CnCiqpX1rM9scsNynZzbOe4KhDeYcTNS3PDaeY="; // gitleaks:allow — public protocol.md doc value
-const DOC_SALT = "lM1GncleQOaCu9lT1yeUZhFYnqhsLLP1G5lAGo3ixaI="; // gitleaks:allow — public protocol.md doc value
+const DOC_CHALLENGE = "+IxH4CnCiqpX1rM9scsNynZzbOe4KhDeYcTNS3PDaeY="; // gitleaks:allow
+const DOC_SALT = "lM1GncleQOaCu9lT1yeUZhFYnqhsLLP1G5lAGo3ixaI="; // gitleaks:allow
 const DOC_PASSWORD = "supersecretpassword";
-const DOC_AUTHENTICATION = "1Ct943GAT+6YQUUX47Ia/ncufilbe6+oD6lY+5kaCu4="; // gitleaks:allow — public protocol.md doc value
+const DOC_AUTHENTICATION = "1Ct943GAT+6YQUUX47Ia/ncufilbe6+oD6lY+5kaCu4="; // gitleaks:allow
 
 type EmitMessage = (message: ObsIncomingMessage) => Effect.Effect<void>;
 
 type FakeObsServerOptions = {
   readonly authentication?: ObsAuthChallenge | undefined;
   readonly onRequest?: ((envelope: ObsRequestEnvelope, emit: EmitMessage) => Effect.Effect<void>) | undefined;
-  /**
-   * When set, the server answers Identify by closing the connection with this
-   * code instead of Identified — how obs-websocket rejects bad credentials
-   * (close code 4009).
-   */
   readonly rejectIdentifyWithCloseCode?: number | undefined;
 };
 
-/**
- * In-memory obs-websocket server faked through `Socket.make`: emits Hello on
- * open, answers Identify with Identified, records every client frame, and
- * routes Request envelopes to the test-supplied responder.
- */
 const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOptions | undefined) {
   const incoming = yield* Queue.unbounded<string, Cause.Done>();
   const sentFrames = yield* Ref.make(A.empty<string>());
@@ -164,7 +148,10 @@ describe("computeObsAuthentication", () => {
           password: DOC_PASSWORD,
           salt: DOC_SALT,
         });
-        expect(computeObsAuthentication1).toBe(DOC_AUTHENTICATION);
+        expect(
+          computeObsAuthentication1,
+          "protocol.md walkthrough vector; its Identify example carries another session's string"
+        ).toBe(DOC_AUTHENTICATION);
       })
     );
   });
@@ -223,9 +210,9 @@ describe("ObsProtocol.connectWith", () => {
       ).pipe(Effect.flip);
 
       assert(ObsError.is(error));
-      // "authenticate", not "connect": the server was reachable, so the
-      // spawn-and-retry recovery in Obs.connectAndMake must not engage.
-      expect(error.operation).toBe("authenticate");
+      expect(error.operation, "the server was reachable, so spawn-and-retry recovery must not engage").toBe(
+        "authenticate"
+      );
       expect(pipe(error.message, Str.includes("password"))).toBe(true);
     })
   );

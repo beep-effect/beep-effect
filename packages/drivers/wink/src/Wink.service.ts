@@ -153,9 +153,6 @@ export type WinkEngineRuntimeState = {
   readonly nlp: WinkMethods;
 };
 
-// Literal imports keep the fixed assets discoverable to native bundlers while
-// loading only when this effect is initialized. Expected import/model failures
-// retain the existing typed engine error boundary.
 const initializationError = (cause: unknown): WinkEngineError => WinkEngineError.fromCause(cause, "initialize");
 const loadWinkRuntime = Effect.all(
   [

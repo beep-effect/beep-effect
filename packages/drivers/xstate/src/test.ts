@@ -25,8 +25,7 @@ import type * as Duration from "effect/Duration";
 import type * as Layer from "effect/Layer";
 import type { AnyActorLogic, EventFromLogic, Snapshot, SnapshotFrom } from "xstate";
 
-// Defaults keep sampling deterministic: 32 values from seed 0 unless the caller says otherwise.
-const sampleOptions = (options?: Arbitrary.SampleOptions): Arbitrary.SampleOptions => ({
+const deterministicSampleOptions = (options?: Arbitrary.SampleOptions): Arbitrary.SampleOptions => ({
   ...options,
   count: options?.count ?? 32,
   seed: options?.seed ?? 0,
@@ -78,7 +77,7 @@ export const arbitraryFromSchema: {
     schema: Schema,
     options?: Arbitrary.SampleOptions
   ): Effect.Effect<fc.Arbitrary<Schema["Type"]>, Arbitrary.SampleError> =>
-    Effect.map(Arbitrary.sampleEffect(Arbitrary.schema(schema), sampleOptions(options)), (values) =>
+    Effect.map(Arbitrary.sampleEffect(Arbitrary.schema(schema), deterministicSampleOptions(options)), (values) =>
       fc.constantFrom(...values)
     )
 );

@@ -16,8 +16,7 @@ import { createMachine, types } from "xstate";
 import { Deployments, deploymentsSucceeding, ReleaseEvents, releaseMachine } from "./fixtures/Release.machine.ts";
 import type { AnyStateMachine } from "xstate";
 
-// `@xstate/test` 2.0.0-alpha.1 constrains its source to `ActorLogic<any, any, any>`, which a machine
-// declaring `schemas.emitted` does not satisfy (its `ActorSelf.on` is narrowed to the emitted union).
+// decision: xstate-test-alpha-any-machine-widening
 const releaseModel: AnyStateMachine = releaseMachine;
 
 const counterMachine = createMachine({

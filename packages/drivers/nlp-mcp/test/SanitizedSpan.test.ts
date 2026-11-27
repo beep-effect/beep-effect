@@ -44,10 +44,6 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
   return { captured, tracer };
 };
 
-// `McpServer.callTool` resolves the calling client from context; in production
-// the transport's own middleware provides it per request. This fixture stands in
-// for that middleware so the call dispatches instead of dying on a missing
-// service.
 const stubClientInfo = { name: "nlp-mcp-sanitized-span-test", version: "0.0.0" };
 
 const stubMcpClient = McpServerClient.of({

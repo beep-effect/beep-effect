@@ -41,7 +41,6 @@ describe("Sanity declared-field equivalence", () => {
       })
     );
 
-    // the defect cause is payload, never identity
-    expect(sameSanityError(a, b)).toBe(true);
+    expect(sameSanityError(a, b), "the defect cause is payload, never identity").toBe(true);
   });
 });

@@ -111,8 +111,6 @@ const makeDocx = (text: string): Promise<Buffer> =>
 const documentXml = (text: string) =>
   `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>${text}</w:t></w:r></w:p></w:body></w:document>`;
 
-// Visit headers by their declared spans rather than scanning compressed data
-// for coincidental ZIP signatures. Mutations affect metadata, never payloads.
 const alterZipHeaders = (bytes: Uint8Array, change: (view: DataView, offset: number, central: boolean) => void) => {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let offset = 0;
@@ -303,15 +301,15 @@ describe("@beep/doc-text", () => {
           "word/document.xml": strToU8(
             `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}</w:body></w:document>`
           ),
-          // Mammoth does not read these parts: their complexity must not consume
-          // the raw-text XML budget or cause them to be inflated for validation.
           "word/theme/theme1.xml": strToU8(`<theme>${Str.repeat(1_000_001)("<p/>")}</theme>`),
           "word/settings.xml": strToU8("<!DOCTYPE ignored><settings/>"),
           "word/fontTable.xml": strToU8("<ignored>"),
         });
         const madeOperation6 = yield* makeOperation(ids, "docx", "docx", bytes);
         const result = yield* DocTextFileProcessingEngine.extract(madeOperation6);
-        expect(result.text).toContain("ordinary contract text");
+        expect(result.text, "parts Mammoth never reads must not consume the XML budget or be inflated").toContain(
+          "ordinary contract text"
+        );
         expect(Str.length(O.getOrElse(O.fromUndefinedOr(result.text), () => ""))).toBeGreaterThan(pages * 5_000);
       })
     );
@@ -352,7 +350,7 @@ describe("@beep/doc-text", () => {
       const madeOperation8 = yield* makeOperation(ids, "docx", "docx", bytes);
       const result = yield* DocTextFileProcessingEngine.extract(madeOperation8);
       expect(result.text).toContain("custom document text");
-      expect(bytes).toEqual(original);
+      expect(bytes, "pdfjs detaches the buffer it is handed, so the engine must extract from a copy").toEqual(original);
     })
   );
 
@@ -392,12 +390,13 @@ describe("@beep/doc-text", () => {
           `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="missing" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="missing"/>${related}<Relationship Id="later" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="later"/></Relationships>`
         ),
         "word/styles": strToU8('<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'),
-        // The later existing match must not displace the first existing target.
         "word/later": strToU8("<!DOCTYPE rejected><invalid/>"),
       });
       const madeOperation10 = yield* makeOperation(ids, "docx", "docx", bytes);
       const result = yield* DocTextFileProcessingEngine.extract(madeOperation10);
-      expect(result.text).toContain("dense relationship text");
+      expect(result.text, "a later existing target must not displace the first existing one").toContain(
+        "dense relationship text"
+      );
     })
   );
 
@@ -622,17 +621,6 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  // The stable codec law: decoding an encoded value and re-encoding it must
-  // reproduce the original encoding byte-for-byte. This holds for every schema,
-  // including class schemas whose decoded side is an Error subclass.
-  // Decoded-side equivalence additionally pins that the decoded instance equals
-  // the generated one. It holds for `S.TaggedError` classes too: Effect derives a
-  // Schema class's equivalence from its declared field struct by construction
-  // (effect@4.0.0-rc.113), so the `Error` runtime metadata never takes part.
-  // Measured on this schema set at 60 seeds x 400 runs on rc.113: DocTextError,
-  // DocTextErrorReason and DocTextErrorOptions all 0/24000 unequal (the rc.109
-  // run that motivated a class-level hook was 682/24000 on DocTextError; see
-  // goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md).
   it.prop(
     "round-trips document text driver schemas",
     {
@@ -666,7 +654,8 @@ describe("@beep/doc-text", () => {
         encode(DocTextError, encodedError)
       );
       expect(
-        S.toEquivalence(DocTextError)(decode(DocTextError, encode(DocTextError, equivalentError)), equivalentError)
+        S.toEquivalence(DocTextError)(decode(DocTextError, encode(DocTextError, equivalentError)), equivalentError),
+        "a TaggedError class equivalence comes from its declared fields, so Error runtime metadata never takes part"
       ).toBe(true);
     },
     { arbitrary: fcRuns(10) }
@@ -696,8 +685,6 @@ describe("@beep/doc-text", () => {
       const madeOperation23 = yield* makeOperation(ids, "pdf", "pdf-text-layer", bytes);
       yield* DocTextFileProcessingEngine.extract(madeOperation23);
 
-      // pdfjs transfers the buffer it is handed; the engine must extract from a
-      // copy so intake can still materialize the source bytes verbatim.
       expect(bytes.byteLength).toBe(original.byteLength);
       expect(bytes).toEqual(original);
     })

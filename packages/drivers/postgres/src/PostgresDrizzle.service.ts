@@ -169,14 +169,7 @@ const getDrizzleSession = <TSchema extends Record<string, unknown>, TRelations e
   db: PostgresDrizzleDatabase<TSchema, TRelations>
 ): unknown => (db as unknown as { readonly session: unknown }).session;
 
-// Drizzle's Effect migrator/session surface is still RC-shaped in 1.0.0-rc.4-de6c356.
-// Revisit these compatibility casts when the final Effect integration API stabilizes.
-// The session migrator reads only migrationsTable/migrationsSchema/init from the
-// config; migrationsFolder is never dereferenced, which is what lets
-// migrateBundle pass an in-memory sentinel instead of a real folder. Upstream
-// already codified this for SQLite (session migrators there take
-// Omit<MigrationConfig, "migrationsFolder">, PR #5265); the pg session migrator
-// just hasn't received the same treatment — drop the sentinel when it does.
+// decision: pg-bundle-migrator-folder-sentinel
 const runPgEffectMigrations = <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
   db: PostgresDrizzleDatabase<TSchema, TRelations>,
   migrations: ReadonlyArray<MigrationMeta>,
@@ -238,7 +231,8 @@ const MigrationBundleEntryName = S.String.check(
     /^\d{14}/,
     $I.annote("MigrationBundleEntryNameCheck", {
       title: "Timestamped migration bundle entry name",
-      description: "A Drizzle migration folder name beginning with a 14-digit UTC timestamp.",
+      description:
+        "A Drizzle migration folder name beginning with a 14-digit UTC timestamp. The v1 journal matches pending migrations by name alone and always runs one with a falsy name.",
       message: "Expected a migration folder name beginning with a 14-digit UTC timestamp.",
     })
   )
@@ -554,18 +548,7 @@ const reconcileLegacyMigrationNames = Effect.fn("Postgres.reconcileLegacyMigrati
   return A.getSomes(reconciled);
 });
 
-// Mirrors drizzle-orm readMigrationFiles (migrator.js) field-for-field so
-// in-memory journal rows stay byte-identical to folder-derived ones:
-// hash = sha256 of the raw file content, folderMillis from the 14-digit
-// name prefix (drizzle's own formatToMillis), sql split on the breakpoint
-// marker. Deriving from {name, sql} at runtime makes a hash/sql mismatch
-// unrepresentable. The real hash (drizzle's own no-fs SQLite migrators write
-// hash: "") is what keeps the v0->v1 journal upgrade path viable — it matches
-// legacy rows by millis then hash — and keeps bundle-migrated databases
-// reconcilable with drizzle-kit-migrated ones.
-// The drizzle v1 journal matches pending migrations by name alone, and its
-// matcher treats a falsy name as "always run" — so the schema rejects unnamed
-// entries before they can silently re-apply on every boot.
+// decision: bundle-journal-mirrors-folder-migrator
 const migrationMetaFromBundleEntry = Effect.fn("Postgres.migrationMetaFromBundleEntry")(function* (
   entry: MigrationBundleEntry
 ): Effect.fn.Return<MigrationMeta, PostgresError, Digest.Digest> {

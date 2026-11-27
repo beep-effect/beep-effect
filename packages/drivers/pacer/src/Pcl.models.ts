@@ -21,8 +21,7 @@ import { CaseNumberFull, JurisdictionType, ReportStatus } from "./Pacer.tokens.t
 
 const $I = $PacerId.create("pacer/pcl/Pcl.models");
 
-/** Permissive numeric field: PACER returns these as int (immediate) or string (batch). */
-const NumberOrString = S.Union([S.Finite, S.String]);
+const ImmediateIntOrBatchString = S.Union([S.Finite, S.String]);
 
 /**
  * **Example** (Search by full case number)
@@ -170,9 +169,9 @@ export class PageInfo extends S.Opaque<PageInfo, { readonly brand: unique symbol
 export class CaseResult extends S.Opaque<CaseResult, { readonly brand: unique symbol }>()(
   S.Struct({
     courtId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    caseId: NumberOrString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    caseYear: NumberOrString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    caseNumber: NumberOrString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    caseId: ImmediateIntOrBatchString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    caseYear: ImmediateIntOrBatchString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    caseNumber: ImmediateIntOrBatchString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     caseOffice: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     caseType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     caseTitle: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
@@ -218,7 +217,7 @@ export class PartyResult extends S.Opaque<PartyResult, { readonly brand: unique 
     caseNumberFull: CaseNumberFull.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     jurisdictionType: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     dateFiled: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-    caseId: NumberOrString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    caseId: ImmediateIntOrBatchString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("PartyResult", {
       description: "PCL party search result record (subset).",
@@ -300,7 +299,7 @@ export class PartyReportList extends S.Opaque<PartyReportList, { readonly brand:
  */
 export class ReportInfoType extends S.Opaque<ReportInfoType, { readonly brand: unique symbol }>()(
   S.Struct({
-    reportId: NumberOrString,
+    reportId: ImmediateIntOrBatchString,
     status: ReportStatus.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     recordCount: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     pages: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),

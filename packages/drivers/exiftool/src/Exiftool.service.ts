@@ -40,9 +40,6 @@ import type { CommandFailedError, CommandOutput, CommandOutputError } from "@bee
 
 const $I = $ExiftoolId.create("Exiftool.service");
 const decodeRawRecords = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Record(S.String, S.Unknown))));
-// Requests arrive as already-constructed Type-side instances (Options and
-// all), so the boundary validation runs through the type-side codec instead
-// of the encoded-side class codec.
 const validateReadTagsRequest = S.decodeUnknownEffect(S.toType(ReadTagsRequest));
 const validateWriteTagsRequest = S.decodeUnknownEffect(S.toType(WriteTagsRequest));
 const validateWriteXmpPacketRequest = S.decodeUnknownEffect(S.toType(WriteXmpPacketRequest));
@@ -80,7 +77,6 @@ export interface ExiftoolShape {
 const defaultConfig = (input?: ExiftoolConfigInputOptions | undefined): ExiftoolConfig =>
   ExiftoolConfig.make(ExiftoolConfigInput.make(input ?? {}));
 
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication -- driver-boundary idiom repeated across sibling drivers that must not depend on each other; no foundation capability owns it yet. Owner: @beep/exiftool. Exit: import it and delete this copy once a foundation capability package exports the idiom.
 const parseFiniteNumber = (value: unknown): O.Option<number> => {
   if (P.isNumber(value)) {
@@ -95,10 +91,7 @@ const parseFiniteNumber = (value: unknown): O.Option<number> => {
   return O.none();
 };
 
-// -G1 prefixes every key with a family-1 group ("File:FileType"); match the
-// bare tag name first, then the first group-qualified suffix match in
-// exiftool's own emission order.
-const tagValueAt = (raw: Readonly<Record<string, unknown>>, tagName: string): O.Option<unknown> => {
+const bareOrGroupQualifiedTag = (raw: Readonly<Record<string, unknown>>, tagName: string): O.Option<unknown> => {
   const direct = O.fromUndefinedOr(raw[tagName]);
   if (O.isSome(direct)) {
     return direct;
@@ -114,7 +107,7 @@ const tagValueAt = (raw: Readonly<Record<string, unknown>>, tagName: string): O.
 
 const textTag = (raw: Readonly<Record<string, unknown>>, tagName: string): O.Option<string> =>
   pipe(
-    tagValueAt(raw, tagName),
+    bareOrGroupQualifiedTag(raw, tagName),
     O.flatMap((value) =>
       P.isString(value)
         ? O.some(value)
@@ -126,7 +119,7 @@ const textTag = (raw: Readonly<Record<string, unknown>>, tagName: string): O.Opt
   );
 
 const numberTag = (raw: Readonly<Record<string, unknown>>, tagName: string): O.Option<number> =>
-  pipe(tagValueAt(raw, tagName), O.flatMap(parseFiniteNumber));
+  pipe(bareOrGroupQualifiedTag(raw, tagName), O.flatMap(parseFiniteNumber));
 
 const metadataFromRaw = (raw: Readonly<Record<string, unknown>>): ExifMetadata =>
   ExifMetadata.make({
@@ -145,7 +138,7 @@ const metadataFromRaw = (raw: Readonly<Record<string, unknown>>): ExifMetadata =
     model: textTag(raw, "Model"),
     modifyDate: textTag(raw, "ModifyDate"),
     orientation: pipe(
-      tagValueAt(raw, "Orientation"),
+      bareOrGroupQualifiedTag(raw, "Orientation"),
       O.flatMap((value) => (P.isString(value) ? O.some<number | string>(value) : parseFiniteNumber(value)))
     ),
     raw,
@@ -204,6 +197,11 @@ const BuildReadTagsArgs = Fn({
 
 /**
  * Build exiftool arguments for the read-tags operation.
+ *
+ * **Gotchas**
+ *
+ * `-config` stays the first argument because exiftool reads it before any other option. `-G1` prefixes every
+ * output key with its family-1 group (`File:FileType`), so readers match the bare tag name or a `:<tag>` suffix.
  *
  * **Example** (Build read-tags args)
  *
@@ -292,6 +290,10 @@ const BuildWriteTagsArgs = Fn({
 /**
  * Build exiftool arguments for the temp-then-commit write-tags operation.
  *
+ * **Gotchas**
+ *
+ * `-config` stays the first argument because exiftool reads it before any other option.
+ *
  * **Example** (Build write-tags args)
  *
  * ```ts
@@ -337,16 +339,9 @@ export const buildWriteTagsArgs: (options: BuildWriteTagsArgsOptions) => Readonl
  */
 export const exiftoolVersionArgs: ReadonlyArray<string> = ["-ver"];
 
-// The kit reports a spawn or stream failure as `CommandFailedError` carrying
-// the platform failure; unwrap it so the driver error keeps the same cause it
-// had under the hand-rolled fold. An over-budget stream has no platform cause,
-// so the kit error itself becomes the cause.
 const commandFailureCause = (error: CommandFailedError | CommandOutputError): unknown =>
   error._tag === "CommandFailedError" ? error.cause : error;
 
-// Per-stream capture ceiling. A `-j` readTags batch over many files can run
-// well past the kit's 16 MiB default, and the hand-rolled fold had no ceiling,
-// so this driver raises it instead of inheriting the default.
 const exiftoolMaxOutputBytes = 128 * 1024 * 1024;
 
 const runProcess = (
@@ -387,10 +382,6 @@ const makeService = Effect.fn("Exiftool.make")(function* (configInput?: Exiftool
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
-  // Materialize the XMP-beepQA -config once per layer into a scoped temp file;
-  // every spawn passes it as the FIRST exiftool argument. Failing to stage a
-  // few hundred bytes of config is an environment defect, not a typed error,
-  // so the layer's error channel stays `never`.
   const configPath = yield* fs.makeTempFileScoped({ prefix: "beep-exiftool-config-" }).pipe(
     Effect.tap((file) => fs.writeFileString(file, renderBeepQaExiftoolConfig(RenderBeepQaConfigOptions.make({})))),
     Effect.orDie
@@ -582,6 +573,9 @@ export class Exiftool extends Context.Service<Exiftool, ExiftoolShape>()($I`Exif
    *
    * The layer never probes the exiftool binary at build time; a missing
    * binary surfaces as an actionable {@link ExiftoolError} on the first call.
+   *
+   * Each exiftool output stream is captured up to 128 MiB, above the command kit's 16 MiB default, so large `-j`
+   * read batches fit; a stream past that bound fails the call as a run failure.
    *
    * **Example** (Create service layer)
    *

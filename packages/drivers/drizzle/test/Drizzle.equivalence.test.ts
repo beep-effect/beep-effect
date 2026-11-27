@@ -27,7 +27,6 @@ describe("DrizzleError declared-field equivalence", () => {
 
     expect(sameDrizzleError(a, b)).toBe(true);
     expect(sameDrizzleError(a, c)).toBe(false);
-    // the defect cause is payload, never identity
-    expect(sameDrizzleError(a, d)).toBe(true);
+    expect(sameDrizzleError(a, d), "the defect cause is payload, never identity").toBe(true);
   });
 });

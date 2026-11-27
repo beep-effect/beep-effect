@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/openai-compat",
-  "root": "packages/drivers/openai-compat",
-  "scopes": ["."]
-}

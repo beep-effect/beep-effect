@@ -23,9 +23,7 @@ const observedSpawnerLayer = Layer.effectContext(
   Effect.gen(function* () {
     const nativeSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const started = yield* Deferred.make<ChildProcessSpawner.ChildProcessHandle>();
-    // Substitute only the executable payload. Command options, native process
-    // ownership and streams stay real; no FFmpeg binary is needed for this test.
-    const observedSpawner = ChildProcessSpawner.make((command) =>
+    const idleNodeSubstituteSpawner = ChildProcessSpawner.make((command) =>
       nativeSpawner
         .spawn(
           ChildProcess.isStandardCommand(command)
@@ -35,7 +33,7 @@ const observedSpawnerLayer = Layer.effectContext(
         .pipe(Effect.tap((handle) => Deferred.succeed(started, handle)))
     );
     return Context.make(StartedProcess, started).pipe(
-      Context.add(ChildProcessSpawner.ChildProcessSpawner, observedSpawner)
+      Context.add(ChildProcessSpawner.ChildProcessSpawner, idleNodeSubstituteSpawner)
     );
   })
 );
@@ -63,8 +61,8 @@ it.layer(nativeLifecycleLayer, { excludeTestServices: true, timeout: "10 seconds
 
         const probe = yield* driver.probeVideo(ProbeVideoRequest.make({ videoPath })).pipe(Effect.forkChild);
         const handle = yield* Deferred.await(started).pipe(Effect.timeout("5 seconds"));
-        // A failing assertion must not leave this deliberately long-lived child.
-        yield* Effect.addFinalizer(() => handle.kill({ killSignal: "SIGKILL" }).pipe(Effect.ignore));
+        const killLongLivedChild = handle.kill({ killSignal: "SIGKILL" }).pipe(Effect.ignore);
+        yield* Effect.addFinalizer(() => killLongLivedChild);
         const isRunning1 = yield* handle.isRunning;
         expect(isRunning1).toBe(true);
 
