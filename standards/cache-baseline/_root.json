@@ -9,10 +9,10 @@
   ],
   "review": {
     "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
-    "reason": "Re-record the root subject and nine packages after their turbo.json files declared the files their tests read from other packages as test-task inputs. Configuration review only; no qualification is granted.",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared law-practice-server's test files, which ci-partitions.test.ts globs, as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/cross-package-reads-cache-review-2026-11-27.md",
-      "sha256": "459eea41e7a0bff558a2b9d51b9fbed2aa35592d9e88fb7519143a4a29130b4f"
+      "path": "docs/reports/cross-package-reads-root-reference-cache-review-2026-11-27.md",
+      "sha256": "cb0ad15eaf31ae01c877936ef9f7100e8540f47e87a9db4e8c7e227d4e5f13ba"
     }
   },
   "globalConfiguration": {
@@ -228,7 +228,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "adcc7780a5d67fbf4e0d7c9fcde40180b623c9753637597f019fa2e8bff5c948"
+      "sha256": "b110b2b5b7950cf0100424edab44d36eafde2baa3b62b15f5d6612c9682bcb6d"
     },
     {
       "path": "packages/workspace/server/turbo.json",

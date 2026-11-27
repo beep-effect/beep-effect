@@ -362,8 +362,9 @@ The turbo-input helpers move to `test/support/TurboTestInputs.ts`, which both ce
 - On the pre-change tree the census fails both checks.
 - After it, a migration-only change selects `test`, `test:integration` and `test:integration:parallel` for every replaying server package.
 - A malformed baseline migration turns `packages/epistemic/server/test/RetentionAuthority.pglite.test.ts` red with `syntax error at or near "THIS"`.
+- Two review findings on #3616 widened the census. It now strips only module specifiers from a line instead of skipping every `import`/`export` line, and it keeps a reference that resolves to another package's root. On main the first surfaced 0 new reads. The second surfaced 1: `ci-partitions.test.ts` named law-practice-server's root as a join base for the test files it globs. The literal is narrowed to `test/`, and repo-cli declares `packages/law-practice/server/test/**` on `test`, `test:property` and `coverage`, with a CoverageScope row for the same prefix.
 
-The cache subjects are re-recorded through `docs/reports/cross-package-reads-cache-baseline-request-2026-11-27.json`. No changed file is in the CI binary closure.
+The cache subjects are re-recorded through `docs/reports/cross-package-reads-cache-baseline-request-2026-11-27.json` and, for the review fix, `docs/reports/cross-package-reads-root-reference-cache-baseline-request-2026-11-27.json`. No changed file is in the CI binary closure.
 
 Lane fix/route-soundness-cross-package-reads
 
