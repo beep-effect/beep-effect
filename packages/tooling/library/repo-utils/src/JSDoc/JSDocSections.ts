@@ -105,8 +105,6 @@ const jsdocCommentEnd = (sourceText: string, start: number): number => {
   return sourceText.length;
 };
 
-// Index of the first character on the line holding `index`, found by walking back to the previous
-// line break (the same result as a positional `lastIndexOf("\n", index - 1) + 1`).
 const lineStartBefore = (sourceText: string, index: number): number => {
   let lineStart = index;
   while (lineStart > 0 && sourceText[lineStart - 1] !== "\n") {
@@ -184,7 +182,6 @@ export const rawJSDocSpans = (sourceText: string): ReadonlyArray<RawJSDocSpan> =
   const spans: Array<RawJSDocSpan> = [];
   let cursor = 0;
   for (const text of jsdocCommentsFromSource(sourceText)) {
-    // An escaped global pattern finds `text` at or after `cursor`, like a positional indexOf.
     const occurrence = new RegExp(Regex.escape(text), "g");
     occurrence.lastIndex = cursor;
     const match = occurrence.exec(sourceText);
@@ -429,8 +426,6 @@ const blankLinesLike = (value: string): string =>
     "\n"
   );
 
-// The line scanner's reading of the fences, for a text the CommonMark parser refuses: every line
-// between an opening fence and its closer (to the end for an unterminated fence) is blanked.
 const maskFencedLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
   let openFence: string | undefined;
   return A.map(lines, (line) => {
@@ -440,8 +435,6 @@ const maskFencedLines = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
   });
 };
 
-// Blank every fence body (any language) so section markers quoted inside code are not read as sections.
-// A text with no run of three backticks or tildes has no fence and is not parsed.
 const maskFencedContent = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
   const text = A.join(lines, "\n");
   return !/`{3}|~{3}/u.test(text)
@@ -518,6 +511,15 @@ export class ParseJSDocSectionsResult extends S.Opaque<ParseJSDocSectionsResult,
 
 /**
  * Parses the canonical prose and Example sections from one JSDoc comment.
+ *
+ * **Details**
+ *
+ * Fence bodies of any language are blanked before sections are read, so a
+ * section heading quoted inside code is not read as a section. A text with no
+ * run of three backticks or tildes has no fence and is not parsed. When the
+ * CommonMark parser refuses the text, a line scanner reads the fences instead:
+ * every line between an opening fence and its closer is blanked, to the end of
+ * the text for an unterminated fence.
  *
  * **Example** (Parse an Example section)
  *

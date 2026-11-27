@@ -10623,7 +10623,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The integration reads the actual checkout and discovers workspace paths with native SharedGlob. Owner: @beep/repo-utils. Exit: retire when the monorepo integration moves to a checkout lint."
+      "reason": "The integration reads the actual checkout and discovers workspace paths with native SharedGlob. Its assertions check structural invariants (non-empty results, expected keys), never workspace counts, so adding or removing a workspace does not break them. Owner: @beep/repo-utils. Exit: retire when the monorepo integration moves to a checkout lint."
     },
     {
       "id": "EV010:packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts:6:@effect/platform-node@0#1",

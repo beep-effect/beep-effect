@@ -13,12 +13,6 @@ import * as HashMap from "effect/HashMap";
 import { FsUtils, GlobOptions } from "./FsUtils.ts";
 import type { DomainError } from "./errors/index.ts";
 
-/**
- * The root package identifier used in the returned HashMap.
- *
- * @category configuration
- * @since 0.0.0
- */
 const ROOT_KEY = "@beep/root";
 
 const IGNORED_TSCONFIG_DIRS = ["**/ci-runners/sdks/**"];
@@ -68,7 +62,6 @@ export const collectTsConfigPaths: {
 
     let result = HashMap.empty<string, ReadonlyArray<string>>();
 
-    // Collect tsconfig files for root
     const rootConfigs = yield* fsUtils.globFiles(
       "tsconfig*.json",
       GlobOptions.make({
@@ -81,7 +74,6 @@ export const collectTsConfigPaths: {
       result = HashMap.set(result, ROOT_KEY, rootConfigs);
     }
 
-    // Collect tsconfig files for each workspace
     for (const [name, dir] of workspaceDirs) {
       const configs = yield* fsUtils.globFiles(
         "tsconfig*.json",

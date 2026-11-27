@@ -10,6 +10,12 @@ import { LiteralKit } from "@beep/schema";
 const $I = $RepoUtilsId.create("JSDoc/models/ApplicableTo.model");
 
 /**
+ * **Details**
+ *
+ * `parameter` is a parameter nested within `@callback` or `@typedef`. `module`
+ * is an ES or CommonJS module, `file` a file-level comment, and `any` a tag that
+ * can attach to anything.
+ *
  * **Example** (Assert function target)
  *
  * ```ts
@@ -36,7 +42,7 @@ export const ApplicableTo = LiteralKit([
   "property",
   "accessor",
   "constructor",
-  "parameter", // nested within @callback/@typedef
+  "parameter",
   "signature",
   "indexSignature",
   "typeParameter",
@@ -45,12 +51,12 @@ export const ApplicableTo = LiteralKit([
   "identifier",
   "statement",
   "expression",
-  "module", // ES module or CJS module
+  "module",
   "namespace",
-  "file", // file-level comment
+  "file",
   "event",
   "mixin",
-  "any", // can attach to anything
+  "any",
 ]).pipe(
   $I.annoteSchema("ApplicableTo", {
     description: "AST-level attachment surface for a documentation tag.",

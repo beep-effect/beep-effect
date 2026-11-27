@@ -99,10 +99,12 @@ export class DerivationEvidence extends S.Opaque<DerivationEvidence, { readonly 
     doctestOwners: S.HashSet(S.String),
     bypassingConfigs: S.HashSet(S.String),
     generators: S.HashSet(S.String),
-    // Manifests whose reviewed `javaScriptBuildOverrides` row keeps their `beep:build` as written.
-    javaScriptBuilds: S.HashSet(S.String),
-    // Manifests whose reviewed `ownSourceCheckOverrides` row keeps the no-emit check leading `beep:check`.
-    ownSourceChecks: S.HashSet(S.String),
+    javaScriptBuilds: S.HashSet(S.String).annotateKey({
+      description: "Manifests whose reviewed javaScriptBuildOverrides row keeps their beep:build as written.",
+    }),
+    ownSourceChecks: S.HashSet(S.String).annotateKey({
+      description: "Manifests whose reviewed ownSourceCheckOverrides row keeps the no-emit check leading beep:check.",
+    }),
   }).pipe(
     $I.annoteSchema("DerivationEvidence", {
       description:
@@ -164,9 +166,7 @@ const seedImplementation = (
 
   return impls;
 };
-// Implementation values are package-owned; only an exact match of a retired generated value is
-// rewritten, and a package with a JavaScript-emit override keeps its `beep:build`.
-const retireImplementations = (kind: PackageKind, impls: ScriptsBlock["impls"], keepsJavaScriptBuild: boolean) =>
+const retireSeededImplementations = (kind: PackageKind, impls: ScriptsBlock["impls"], keepsJavaScriptBuild: boolean) =>
   A.reduce(retiredImplScripts, impls, (current, row) =>
     row.kind === kind &&
     !(keepsJavaScriptBuild && row.name === "beep:build") &&
@@ -174,9 +174,10 @@ const retireImplementations = (kind: PackageKind, impls: ScriptsBlock["impls"], 
       ? HashMap.set(current, row.name, row.replacement)
       : current
   );
-// After retirement, so the declaration-only build that pass wrote serves the check in the same pass;
-// a package with an own-source check override keeps the no-emit check first.
-const serveCheckFromBuild = (impls: ScriptsBlock["impls"], keepsOwnSourceCheck: boolean): ScriptsBlock["impls"] =>
+const serveCheckFromRetiredBuild = (
+  impls: ScriptsBlock["impls"],
+  keepsOwnSourceCheck: boolean
+): ScriptsBlock["impls"] =>
   keepsOwnSourceCheck
     ? impls
     : pipe(
@@ -218,9 +219,8 @@ const expectedBlock: PackageScriptsPolicyShape["expected"] = (kind, actual, evid
   }
   const codegen = HashMap.get(tasks, "codegen");
   if (O.exists(codegen, isPlaceholder)) tasks = HashMap.remove(tasks, "codegen");
-  // After seeding, so an implementation seeded from a retired task value is retired in the same pass.
-  impls = retireImplementations(kind, impls, HashSet.size(evidence.javaScriptBuilds) > 0);
-  impls = serveCheckFromBuild(impls, HashSet.size(evidence.ownSourceChecks) > 0);
+  impls = retireSeededImplementations(kind, impls, HashSet.size(evidence.javaScriptBuilds) > 0);
+  impls = serveCheckFromRetiredBuild(impls, HashSet.size(evidence.ownSourceChecks) > 0);
   const extras = HashMap.filter(actual.extras, (_, name) => !isRetiredScriptName(name));
   return ScriptsBlock.make({ kind, tasks, impls, extras });
 };
@@ -241,10 +241,6 @@ const taskDrift = (
     : [{ _tag: "wrong-binding", name, expected: after.value, actual: before.value }];
 };
 
-// A `beep:build` that only type-checks (`tsrs -p tsconfig.check.json`) writes nothing
-// to disk, so the workspace must override the root `build.outputs` with `[]` in its own
-// `turbo.json`; otherwise Turbo warns "no output files found" on every root build.
-// `bun run beep create-package` emits that override for service apps.
 const NOEMIT_BUILD_CONFIG = "tsconfig.check.json";
 const NOEMIT_BUILD_REASON =
   "noEmit build needs turbo.json with tasks.build.outputs: [] (bun run beep create-package emits it)";
@@ -260,10 +256,6 @@ const noEmitBuildConflicts = (actual: ScriptsBlock, turboText: string): Readonly
     ? [{ _tag: "derivation-conflict", name: "build", reason: NOEMIT_BUILD_REASON }]
     : [];
 
-// The root `check` task depends on the package's own `build`, whose declaration-only program
-// leads a declaration-only package's `beep:check`. Any other package with a `check` keeps the
-// upstream-only graph through its own `turbo.json`: `tasks.check.dependsOn` lists `^build`, not
-// `build`, and does not extend the root list. `bun run beep create-package` emits that override.
 const UPSTREAM_BUILD_EDGE = "^build";
 const OWN_BUILD_EDGE = "build";
 const TURBO_EXTENDS = "$TURBO_EXTENDS$";
@@ -300,8 +292,6 @@ const derivationConflicts = (evidence: DerivationEvidence, manifestPath: string,
   return conflicts;
 };
 
-// An implementation whose expected value differs is a retired value (the writer never changes an
-// owned one otherwise); a retired extra is a key the writer removes.
 const retiredDrift = (actual: ScriptsBlock, expected: ScriptsBlock): ReadonlyArray<PackageScriptsDrift> => [
   ...A.flatMap(
     A.fromIterable(actual.impls),
@@ -339,14 +329,6 @@ const diffBlock: PackageScriptsPolicyShape["diff"] = (actual, expected) => {
   return drift;
 };
 
-// `tsrs` is the only TypeScript checker a `beep:build`, `beep:check`, or `beep:check:*` script
-// may run. Every word of the command counts, not just each segment's head, so runner flag values
-// (`bunx -p typescript tsc`), wrappers (`env … tsc`, `node node_modules/typescript/bin/tsc`) and
-// assignments (`TSC=tsgo`) cannot hide a checker. Each word is normalized first: a trailing
-// `@<version>` is dropped, the `@typescript/native-preview` package maps to `tsgo`, and the
-// basename loses a `.js`/`.cjs`/`.mjs`/`.cmd`/`.exe` extension, so `tsc@5.9.3`, `tsgo@latest` and
-// `node node_modules/typescript/lib/tsc.js` count too. A normalized `tsgo` or `tsc` fails the gate
-// unless `checkerEngineExemptions` carries a reviewed row for that manifest script.
 const COMMAND_WORD_SEPARATOR = /[\s;&|=()"'`]+/u;
 const isCheckerScriptName = S.is(CheckerScriptName);
 const isNonCanonicalChecker = S.is(NonCanonicalChecker);
@@ -394,8 +376,6 @@ const checkerEngineDrift = (
   });
 };
 
-// The scaffold default an implementation is compared with: a declaration-only package's default
-// check leads with its build, as `scaffoldPackageScripts` and the writer produce it.
 const scaffoldDefault = (actual: ScriptsBlock, row: ImplScriptDefault, keepsOwnSourceCheck: boolean): string =>
   row.name !== "beep:check" || keepsOwnSourceCheck
     ? row.value
@@ -421,6 +401,27 @@ const implementationDrift = (actual: ScriptsBlock, keepsOwnSourceCheck: boolean)
 
 /**
  * Evaluates root workspace members and repairs only policy-owned script text.
+ *
+ * **Details**
+ *
+ * Implementation scripts are package-owned: `write` rewrites one only when it
+ * exactly matches a retired generated value, and never the `beep:build` of a
+ * manifest with a reviewed JavaScript-emit override.
+ *
+ * `check` also reports a no-emit `beep:build` (`tsrs -p tsconfig.check.json`)
+ * whose `turbo.json` does not set `tasks.build.outputs` to `[]`, since Turbo
+ * otherwise warns "no output files found" on every root build; and a `check`
+ * whose build is not declaration-only unless its `turbo.json` sets
+ * `tasks.check.dependsOn` to `["^build"]` without extending the root list,
+ * since the root `check` task depends on the package's own `build`.
+ *
+ * `tsrs` is the only TypeScript checker a `beep:build`, `beep:check` or
+ * `beep:check:*` script may run. Every word of the command counts, so runner
+ * flag values, wrappers and assignments cannot hide a checker; each word drops
+ * a trailing `@<version>` and a `.js`/`.cjs`/`.mjs`/`.cmd`/`.exe` extension,
+ * and `@typescript/native-preview` reads as `tsgo`. A `tsc` or `tsgo` word
+ * fails unless `checkerEngineExemptions` holds a reviewed row for that script.
+ *
  * **Example** (Construct the policy effect)
  * ```ts
  * import { PackageScriptsPolicy } from "@beep/repo-cli-kit/package-scripts/PackageScriptsPolicy"

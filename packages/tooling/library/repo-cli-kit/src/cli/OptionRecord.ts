@@ -8,7 +8,6 @@
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 
-/** Spreadable record carrying `Key` only when the source option is present. */
 type OptionalPropRecord<Key extends string, Value> = { readonly [K in Key]?: Value };
 
 /**

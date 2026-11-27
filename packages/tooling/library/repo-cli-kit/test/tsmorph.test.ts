@@ -22,7 +22,6 @@ const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const json = (value: unknown): string => `${Result.getOrThrowWith(encodeJson(value), identity)}\n`;
 
-// A scratch repository: `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

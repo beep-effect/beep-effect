@@ -69,12 +69,6 @@ export class DegradedManifestFieldError extends S.TaggedError<
 
 const describeIssue = (issue: LenientFieldIssue): string => `${issue.field} is not ${issue.expected}`;
 
-/**
- * Fail when one of the `read` fields degraded; otherwise pass the manifest through.
- *
- * @param read - The fields the caller reads.
- * @returns A check that fails with `DegradedManifestFieldError` when a read field degraded.
- */
 const requireFieldShapes =
   (read: ReadonlyArray<string>) =>
   (manifest: LenientManifest): Effect.Effect<LenientManifest, DegradedManifestFieldError> => {

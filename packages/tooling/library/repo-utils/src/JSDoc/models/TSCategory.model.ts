@@ -44,24 +44,12 @@ const DocumentationPriority = S.Int.check(S.isBetween({ minimum: 1, maximum: 99 
   })
 );
 
-/**
- * Internal base literal schema for all supported TypeDoc `@category` values.
- *
- * @category models
- * @since 0.0.0
- */
 const TSCategoryTagBase = LiteralKit(TS_CATEGORY_TAG_VALUES).pipe(
   $I.annoteSchema("TSCategoryTag", {
     description: "Strict literal union for all supported TypeDoc @category values.",
   })
 );
 
-/**
- * Inferred type for {@link TSCategoryTagBase}.
- *
- * @category models
- * @since 0.0.0
- */
 type TSCategoryTagBase = typeof TSCategoryTagBase.Type;
 
 /**
@@ -421,12 +409,6 @@ export const TESTING_IMPORT_PATTERNS = [
   "sinon*",
 ] as const satisfies ReadonlyArray<string>;
 
-/**
- * Per-category literal schema members built through the TS category fibration `make` helper.
- *
- * @category models
- * @since 0.0.0
- */
 const DomainModel = make("DomainModel", {
   definition: "Core business concepts and stable type-level contracts that represent domain state and invariants.",
   classificationGuidance:
@@ -463,12 +445,7 @@ const DomainModel = make("DomainModel", {
   effectAnalog: "Identity",
   architecturalLayers: ["DomainEntity", "Core"],
   purity: "pure",
-  adjacentCategories: [
-    "DomainLogic",
-    "Validation",
-    "Utility",
-    "TransportContract", // Forward-declaration: see design decision #6
-  ],
+  adjacentCategories: ["DomainLogic", "Validation", "Utility", "TransportContract"],
   typicalImportPatterns: ["**/domain/**/*.ts", "**/model/**/*.ts", "**/entities/**/*.ts"],
   dependencyProfile: { typicalFanIn: "high", typicalFanOut: "low" },
   documentationPriority: 1,
@@ -1269,20 +1246,6 @@ const CATEGORY_TAXONOMY_RUNTIME: ReadonlyArray<TSCategory> = CATEGORY_TAXONOMY;
 const clampConfidence = (confidence: number): number =>
   globalThis.Number.isFinite(confidence) ? globalThis.Math.max(0, globalThis.Math.min(1, confidence)) : 0;
 
-/**
- * Combine multiple signal confidences using the noisy-OR formula:
- *   1 - Π(1 - c_i)
- *
- * Assumes signal independence. Correlated signals (e.g., two signals
- * both triggered by the same import declaration) will produce inflated
- * combined confidence. Callers should prefer structurally independent
- * detection criteria when designing AST signals.
- *
- * @param confidences - Individual signal confidence scores to combine.
- * @returns Combined confidence score clamped to the inclusive range [0, 1].
- * @category utilities
- * @since 0.0.0
- */
 const combineSignalConfidences: (confidences: ReadonlyArray<number>) => number = flow(
   A.reduce(0, (combined, confidence) => {
     const clamped = clampConfidence(confidence);
@@ -1517,6 +1480,11 @@ const scoredCategoryCandidateOrder = Order.make<ScoredCategoryCandidate>((left, 
  *
  * Combined confidence formula:
  *   1 - Π(1 - c_i)
+ *
+ * Each confidence is clamped to [0, 1] first. The formula assumes the signals
+ * are independent: two signals triggered by the same import declaration
+ * inflate the combined confidence, so AST signals should use structurally
+ * independent detection criteria.
  *
  * **Example** (Scoring Validation candidates)
  *

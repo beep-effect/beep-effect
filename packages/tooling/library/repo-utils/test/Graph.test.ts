@@ -9,9 +9,6 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
-/**
- * Helper to build an adjacency list from a record for readability.
- */
 const makeAdj = (entries: Record<string, ReadonlyArray<string>>): HashMap.HashMap<string, HashSet.HashSet<string>> => {
   let map = HashMap.empty<string, HashSet.HashSet<string>>();
   for (const [key, deps] of R.toEntries(entries)) {
@@ -25,10 +22,6 @@ const indexOfOrThrow = (values: ReadonlyArray<string>, value: string): number =>
 
 const isCyclicDependencyError = S.is(CyclicDependencyError);
 
-// ---------------------------------------------------------------------------
-// topologicalSort
-// ---------------------------------------------------------------------------
-
 describe("topologicalSort", () => {
   it.effect(
     "should sort a simple linear DAG (A -> B -> C)",
@@ -40,7 +33,6 @@ describe("topologicalSort", () => {
       });
       const order = yield* topologicalSort(adj);
 
-      // C must come before B, B before A
       const idxC = indexOfOrThrow(order, "C");
       const idxB = indexOfOrThrow(order, "B");
       const idxA = indexOfOrThrow(order, "A");
@@ -67,7 +59,6 @@ describe("topologicalSort", () => {
       const idxC = indexOfOrThrow(order, "C");
       const idxA = indexOfOrThrow(order, "A");
 
-      // D must come before B and C, and B and C before A
       expect(idxD).toBeLessThan(idxB);
       expect(idxD).toBeLessThan(idxC);
       expect(idxB).toBeLessThan(idxA);
@@ -125,9 +116,7 @@ describe("topologicalSort", () => {
       const order = yield* topologicalSort(adj);
 
       expect(order).toHaveLength(4);
-      // B before A
       expect(indexOfOrThrow(order, "B")).toBeLessThan(indexOfOrThrow(order, "A"));
-      // D before C
       expect(indexOfOrThrow(order, "D")).toBeLessThan(indexOfOrThrow(order, "C"));
     })
   );
@@ -150,10 +139,6 @@ describe("topologicalSort", () => {
     })
   );
 });
-
-// ---------------------------------------------------------------------------
-// detectCycles
-// ---------------------------------------------------------------------------
 
 describe("detectCycles", () => {
   it.effect(
@@ -180,10 +165,9 @@ describe("detectCycles", () => {
       const cycles = yield* detectCycles(adj);
       expect(cycles.length).toBeGreaterThan(0);
 
-      // The cycle should contain A, B, C and loop back
       const cycle = O.getOrThrow(A.head(cycles));
-      expect(cycle[0]).toBe(cycle[cycle.length - 1]); // Should loop back
-      expect(cycle.length).toBeGreaterThanOrEqual(3); // At least 3 distinct + repeat
+      expect(cycle[0], "a cycle path ends on the vertex it starts from").toBe(cycle[cycle.length - 1]);
+      expect(cycle.length, "three distinct vertices plus the repeated start").toBeGreaterThanOrEqual(3);
       expect(cycle).toContain("A");
       expect(cycle).toContain("B");
       expect(cycle).toContain("C");
@@ -245,10 +229,6 @@ describe("detectCycles", () => {
     })
   );
 });
-
-// ---------------------------------------------------------------------------
-// computeTransitiveClosure
-// ---------------------------------------------------------------------------
 
 describe("computeTransitiveClosure", () => {
   it.effect(
@@ -328,7 +308,6 @@ describe("computeTransitiveClosure", () => {
       const depsA = yield* computeTransitiveClosure(adj, "A");
       expect(HashSet.size(depsA)).toBe(1);
       expect(HashSet.has(depsA, "B")).toBe(true);
-      // C and D should NOT be reachable from A
       expect(HashSet.has(depsA, "C")).toBe(false);
       expect(HashSet.has(depsA, "D")).toBe(false);
     })

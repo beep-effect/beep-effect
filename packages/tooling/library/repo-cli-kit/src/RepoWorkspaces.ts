@@ -153,7 +153,6 @@ export type RepoWorkspacesError = WorkspaceDiscoveryError | WorkspacePatternErro
 
 const JsonText = S.fromJsonString(S.Unknown);
 
-// A drive (`C:/`), UNC (`//host`) or POSIX (`/`) absolute pattern, after backslashes become slashes.
 const absolutePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 
 /**
@@ -182,12 +181,6 @@ export const skippedWorkspaceDirectoryNames: ReadonlyArray<string> = [
 
 const GENERATED_DIRECTORIES = skippedWorkspaceDirectoryNames;
 
-/**
- * The reason a root pattern is unsafe, if it is.
- *
- * @param pattern - A root workspace pattern, verbatim.
- * @returns The refusal reason, or none for a pattern that stays inside the root.
- */
 const unsafeReasonOf = (pattern: string): O.Option<UnsafeWorkspacePatternReason> => {
   const body = Str.replaceAll("\\", "/")(Str.startsWith("!")(pattern) ? Str.slice(1)(pattern) : pattern);
   if (Str.isEmpty(Str.trim(body))) return O.some("empty");
@@ -195,13 +188,6 @@ const unsafeReasonOf = (pattern: string): O.Option<UnsafeWorkspacePatternReason>
   return A.contains(Str.split(body, "/"), "..") ? O.some("parentSegment") : O.none();
 };
 
-/**
- * Reads and strictly decodes the root manifest, then refuses any unsafe
- * pattern of the workspace list discovery will enumerate.
- *
- * @param repoRoot - Absolute repository root.
- * @returns Nothing; it fails typed on a bad root.
- */
 const guardRoot = Effect.fn("RepoWorkspaces.guardRoot")(function* (
   repoRoot: string
 ): Effect.fn.Return<void, WorkspaceDiscoveryError | UnsafeWorkspacePatternError, FileSystem.FileSystem | Path.Path> {
@@ -244,7 +230,8 @@ const guardRoot = Effect.fn("RepoWorkspaces.guardRoot")(function* (
  * {@link UnsafeWorkspacePatternError}. A directory beneath a generated
  * directory (`dist`, `build`, `coverage`, `.turbo`, `node_modules`) is
  * skipped before its manifest is read, so it is neither a member nor a
- * discovery failure.
+ * discovery failure. Discovery stops at `repoRoot`, so a `repoRoot` without a
+ * workspace marker yields no packages rather than an ancestor checkout's.
  *
  * **Example** (Compose workspace discovery without reading files)
  *
@@ -273,7 +260,6 @@ export const workspacePackages = Effect.fn("RepoWorkspaces.workspacePackages")(f
     skipMissingBaseDirs: true,
     skipDirectoryNames: GENERATED_DIRECTORIES,
   }).pipe(Effect.provideService(WorkspaceRoot, roots));
-  // The root is pinned as the ceiling, so "no root" means `repoRoot` holds no workspace marker.
   return yield* discovery.listPackages.pipe(
     Effect.catchTag("WorkspaceRootNotFoundError", () => Effect.succeed(A.empty<WorkspacePackage>()))
   );

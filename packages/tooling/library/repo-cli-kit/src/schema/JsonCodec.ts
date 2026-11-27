@@ -83,11 +83,6 @@ export const JsonStringCodec = <Sch extends S.Codec<unknown, unknown>>(schema: S
   };
 };
 
-/**
- * Decoder from JSON text into a schema's decoded type, failing with a
- * caller-owned error. Named so {@link decodeOrFail}'s data-first and data-last
- * signatures return the same type rather than two structural twins.
- */
 type JsonTextDecoder<Sch extends S.Codec<unknown, unknown>, E> = (text: string) => Effect.Effect<Sch["Type"], E>;
 
 /**

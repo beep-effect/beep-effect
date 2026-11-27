@@ -17,6 +17,14 @@ type RepoTsMorphProjectInput = {
 /**
  * Create a semantic ts-morph project and load the requested source globs.
  *
+ * **Gotchas**
+ *
+ * Only compiler options are read from the tsconfig: its include paths are never
+ * enumerated, because even `skipAddingFilesFromTsConfig` walks them and races
+ * with generated-docs cleanup. Only the glob matches are added, file by file,
+ * since `addSourceFilesAtPaths` also registers parent directories, excluded
+ * docs among them.
+ *
  * **Example** (Load project from source globs)
  *
  * ```ts
@@ -39,15 +47,11 @@ export const createRepoTsMorphProject = (input: RepoTsMorphProjectInput): Projec
   const fileSystem = project.getFileSystem();
   const readDirSync = fileSystem.readDirSync;
 
-  // Only compiler options are needed from tsconfig. Even skipAddingFilesFromTsConfig
-  // enumerates its include paths, which can race with generated-docs cleanup.
   fileSystem.readDirSync = A.empty;
   const { options } = getCompilerOptionsFromTsConfig(input.tsConfigFilePath, { fileSystem });
   fileSystem.readDirSync = readDirSync;
   project.compilerOptions.set(options);
 
-  // addSourceFilesAtPaths also recursively registers parent directories, including
-  // excluded docs. Load only the glob matches so excluded directories stay unread.
   for (const filePath of fileSystem.globSync(input.sourceFileGlobs)) {
     project.addSourceFileAtPathIfExists(filePath);
   }

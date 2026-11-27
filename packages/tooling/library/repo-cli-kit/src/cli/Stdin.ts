@@ -42,13 +42,8 @@ export class StdinDocumentError extends S.TaggedError<StdinDocumentError, { read
   })
 ) {}
 
-/**
- * How a command observes and consumes the process stdin.
- */
 interface CommandStdinShape {
-  /** Whether stdin is an interactive terminal with nothing piped into it. */
   readonly interactive: () => boolean;
-  /** Read the whole piped document. */
   readonly text: () => Promise<string>;
 }
 
@@ -81,20 +76,20 @@ export const CommandStdinSource: Context.Reference<CommandStdinShape> = Context.
     }),
 });
 
-/**
- * The caller-specific phrasing for each way a stdin read can fail.
- */
 interface StdinDocumentMessages {
-  /** Refusal when the command ran without its `--from-stdin` flag. */
   readonly missingFlag: string;
-  /** Refusal when stdin is an interactive terminal with nothing piped. */
   readonly noStdin: string;
-  /** Prefix for a failed read, completed with the underlying cause. */
   readonly readFailurePrefix: string;
 }
 
 /**
  * Read one whole document from stdin, or fail with the caller's phrasing.
+ *
+ * **Details**
+ *
+ * The command refuses with `missingFlag` when it ran without `--from-stdin`,
+ * with `noStdin` when stdin is an interactive terminal with nothing piped into
+ * it, and with `readFailurePrefix` followed by the cause when the read fails.
  *
  * **Example** (Refuse without the flag)
  *

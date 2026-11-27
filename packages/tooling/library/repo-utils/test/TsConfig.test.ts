@@ -17,7 +17,6 @@ const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
 const MOCK_ROOT = NodeURL.fileURLToPath(new URL("./fixtures/mock-monorepo", import.meta.url));
-// The caller supplies the workspace directories (repo-cli reads them from `@beep/repo-workspaces`).
 const MOCK_WORKSPACE_DIRS = HashMap.make(
   ["@mock/pkg-a", `${MOCK_ROOT}/packages/pkg-a`],
   ["@mock/pkg-b", `${MOCK_ROOT}/packages/pkg-b`],
@@ -30,7 +29,6 @@ it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
       "should collect tsconfig files for root and workspaces",
       Effect.fn(function* () {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT, MOCK_WORKSPACE_DIRS);
-        // Root should have tsconfig.json and tsconfig.build.json
         const rootConfigs = HashMap.get(configs, "@beep/root");
         rootConfigs.pipe(O.isSome, assertTrue);
         if (O.isSome(rootConfigs)) {
@@ -45,7 +43,6 @@ it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
       "should find tsconfig files in workspace packages",
       Effect.fn(function* () {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT, MOCK_WORKSPACE_DIRS);
-        // pkg-a has tsconfig.json and tsconfig.test.json
         const pkgAConfigs = HashMap.get(configs, "@mock/pkg-a");
         pkgAConfigs.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgAConfigs)) {
@@ -60,7 +57,6 @@ it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
       "should find single tsconfig in packages with one config",
       Effect.fn(function* () {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT, MOCK_WORKSPACE_DIRS);
-        // pkg-b and pkg-c each have only tsconfig.json
         const pkgBConfigs = HashMap.get(configs, "@mock/pkg-b");
         pkgBConfigs.pipe(O.isSome, assertTrue);
         if (O.isSome(pkgBConfigs)) {
@@ -86,20 +82,18 @@ it.layer(TestLayer, { timeout: "10 seconds" })("TsConfig", (it) => {
       "should include all workspace packages",
       Effect.fn(function* () {
         const configs = yield* collectTsConfigPaths(MOCK_ROOT, MOCK_WORKSPACE_DIRS);
-        // Root + 3 packages = 4 entries
-        expect(HashMap.size(configs)).toBe(4);
+        expect(HashMap.size(configs), "the root plus the three named packages").toBe(4);
       })
     );
 
     it.effect(
       "should omit a root or workspace directory that has no tsconfig",
       Effect.fn(function* () {
-        // Neither `packages/` nor `pkg-a/src` holds a top-level tsconfig*.json.
         const configs = yield* collectTsConfigPaths(
           `${MOCK_ROOT}/packages`,
           HashMap.make(["@mock/pkg-a-src", `${MOCK_ROOT}/packages/pkg-a/src`])
         );
-        expect(HashMap.size(configs)).toBe(0);
+        expect(HashMap.size(configs), "neither packages/ nor pkg-a/src holds a top-level tsconfig*.json").toBe(0);
       })
     );
 

@@ -74,15 +74,10 @@ export class GlobOptions extends S.Opaque<GlobOptions, { readonly brand: unique 
   )
 ) {}
 
-// Ignore patterns always match dot segments, as the picomatch post-filter they replace did.
 const ignoreDialect = GlobPatternOptions.make({ dot: true });
 
-// A `**/<name>/**` ignore excludes every directory named `<name>`, so the walk can prune it outright.
 const prunableIgnore = /^\*\*\/([^/*?[\]{}()!+@\\]+)\/\*\*$/;
 
-// The directory names the walk never enters: the `<name>` of each `**/<name>/**` ignore.
-// Any other ignore shape prunes nothing, so the walker's own `node_modules`/`.git`
-// default never silently applies.
 const pruneFromIgnores: (ignores: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
   A.flatMap(
     flow(
@@ -94,13 +89,10 @@ const pruneFromIgnores: (ignores: ReadonlyArray<string>) => ReadonlyArray<string
   A.dedupe
 );
 
-// A leading `./` and repeated slashes carry no meaning in a glob, so they never reach the walk or its results.
 const normalizeSource: (source: string) => string = flow(Str.replace(/\/{2,}/g, "/"), Str.replace(/^(?:\.\/)+/, ""));
 
-// A leading-`!` pattern in the include list excludes what it names, as in fast-glob and npm workspaces.
 const isExclusion = Str.startsWith("!");
 
-// Each ignore compiles as itself and as everything below it (`p` OR `p/**`), trailing slash dropped.
 const compileIgnores = Effect.fnUntraced(function* (ignores: ReadonlyArray<string>) {
   const sources = A.flatMap(ignores, (ignore) => {
     const base = Str.replace(/\/+$/, "")(normalizeSource(ignore));
@@ -109,29 +101,23 @@ const compileIgnores = Effect.fnUntraced(function* (ignores: ReadonlyArray<strin
   return yield* Effect.forEach(sources, (source) => GlobPattern.compile(source, ignoreDialect), { concurrency: 1 });
 });
 
-// Where one include pattern walks from, and the prefix its walk-relative matches are reported under.
 type WalkAnchor = {
   readonly cwd: string;
   readonly prefix: string;
   readonly pattern: string;
 };
 
-// The compiled ignores of one call: relative ones match the reported path, absolute ones the absolute path.
 type IgnoreSets = {
   readonly relative: ReadonlyArray<GlobPattern>;
   readonly absolute: ReadonlyArray<GlobPattern>;
 };
 
-// The leading run of `../` segments a pattern climbs out of `cwd` with, or `""`.
 const leadingClimb: (source: string) => string = flow(
   Str.match(/^(?:\.\.\/)+/),
   O.flatMapNullishOr((match) => match[0]),
   O.getOrElse(() => "")
 );
 
-// An absolute pattern walks from its filesystem root and yields absolute paths; a pattern that
-// starts by climbing out of `cwd` (`../`) walks from the directory it climbs to and keeps the climb
-// in its results; any other pattern walks from `cwd` itself.
 const anchorOf = (path: Path.Path, cwd: string, source: string): WalkAnchor => {
   const prefix = path.isAbsolute(source) ? path.parse(source).root : leadingClimb(source);
   return { cwd: path.resolve(cwd, prefix), prefix, pattern: Str.slice(prefix.length)(source) };
@@ -152,7 +138,6 @@ const isIgnored = (path: Path.Path, ignores: IgnoreSets, anchor: WalkAnchor, mat
   );
 };
 
-// The include patterns of a call, and its ignores with every leading-`!` include folded in.
 const splitPatterns = (
   pattern: string | ReadonlyArray<string>,
   ignore: undefined | string | ReadonlyArray<string>
@@ -164,7 +149,6 @@ const splitPatterns = (
   };
 };
 
-// A relative pattern needs a real directory to walk from; a missing or non-directory cwd fails.
 const requireDirectory = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, cwd: string) {
   const info = yield* fs.stat(cwd);
   if (info.type !== "Directory") {
@@ -212,9 +196,12 @@ export interface FsUtilsShape {
    * it names, a pattern that starts with `../` walks from the directory it
    * climbs to and keeps the climb in its results, and an absolute pattern
    * yields absolute paths. Ignore patterns exclude a match and everything below
-   * it; an absolute ignore is matched against the absolute path. Results are
-   * deduplicated and sorted, and symlinked directories are entered only under
-   * `followSymlinks`.
+   * it; an absolute ignore is matched against the absolute path. Ignore
+   * patterns match dot segments too. An ignore made of one plain directory name
+   * between two globstar segments keeps the walk out of every directory with
+   * that name; no other directory is pruned, so `node_modules` and `.git` are
+   * walked unless an ignore names them. Results are deduplicated and sorted, and
+   * symlinked directories are entered only under `followSymlinks`.
    *
    * **Gotchas**
    *
@@ -532,7 +519,6 @@ export const findNearestPackageDir: {
   Effect.fn(function* (startDir: string, stopAt: string) {
     const path = yield* Path.Path;
     const boundary = path.resolve(stopAt);
-    // `Walker.ascend` stops at its ceiling inclusively; this lookup excludes the boundary itself.
     const ascend2 = yield* Walker.ascend(path.resolve(startDir), { stopAt: boundary });
     const dirs = A.filter(ascend2, (dir) => dir !== boundary);
     const manifest = yield* Walker.findUpward(dirs, (dir) => [path.join(dir, "package.json")]);

@@ -9,8 +9,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
-// The structural tag family as JSDoc names it; the union must cover exactly
-// these, and the matcher must dispatch every one of them.
 const STRUCTURAL_TAGS = [
   "param",
   "returns",
@@ -37,11 +35,12 @@ const StructuralArbitrary = Arbitrary.schema(StructuralJSDoc);
 describe("StructuralJSDoc", () => {
   it("covers exactly the structural tag family", () => {
     const sortTags = A.sort(Order.String);
-    expect(sortTags(structuralTags)).toEqual(sortTags(STRUCTURAL_TAGS));
+    expect(
+      sortTags(structuralTags),
+      "the union covers exactly the structural tag family as JSDoc names it, and the matcher dispatches each"
+    ).toEqual(sortTags(STRUCTURAL_TAGS));
   });
 
-  // One property per member, so every matcher branch is exercised regardless
-  // of how the whole-union arbitrary below happens to distribute its samples.
   for (const tag of structuralTags) {
     it.effect.prop(
       `dispatches schema-derived "${tag}" values through the exhaustive matcher`,
@@ -49,7 +48,10 @@ describe("StructuralJSDoc", () => {
       ([value]) =>
         Effect.gen(function* () {
           expect(value._tag).toBe(tag);
-          expect(matchStructuralJSDoc(value)).toBeUndefined();
+          expect(
+            matchStructuralJSDoc(value),
+            "one property per member exercises every matcher branch, whatever the whole-union arbitrary samples"
+          ).toBeUndefined();
 
           return true;
         }),
