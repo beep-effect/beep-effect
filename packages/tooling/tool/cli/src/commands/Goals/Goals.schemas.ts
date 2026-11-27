@@ -31,6 +31,23 @@ import type * as AST from "effect/SchemaAST";
 const $I = $RepoCliId.create("commands/Goals/Goals.schemas");
 
 /**
+ * Lets the native goal judge accept a packet-defined hand-off to Benjamin.
+ *
+ * **Example** (Complete a goal launcher)
+ *
+ * ```ts
+ * import { GOAL_HANDOFF_CLAUSE } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const command = `/goal follow the instructions in goals/example/GOAL.md${GOAL_HANDOFF_CLAUSE}`
+ * console.log(command)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const GOAL_HANDOFF_CLAUSE = ", or stop when the only work left is a step the packet names as Benjamin's";
+
+/**
  * **Details**
  *
  * `active` packets are executing (and must carry a `GOAL.md` launcher),
