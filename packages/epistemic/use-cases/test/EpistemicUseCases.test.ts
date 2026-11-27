@@ -64,16 +64,13 @@ const decodeLegacyEvidence = S.decodeUnknownEffect(Evidence)({
 
 const decodeAdmittedVerdict = S.decodeEffect(ClaimGateResult)({ verdict: "admitted" });
 
-// Stubbed port: conforms exactly when the projected dataset carries evidence
-// quads beyond the claim's type quad, mirroring the bounded engine's minCount
-// semantics. Integration over the real bounded validator lives in
-// @beep/epistemic-server's BoundedShaclValidator tests.
-const StubShaclValidation = Layer.succeed(
+const claimTypeQuadCount = 1;
+const MinCountShaclStub = Layer.succeed(
   ShaclValidationService,
   ShaclValidationService.of({
     validate: Effect.fn((request) =>
       Effect.succeed(
-        HashSet.size(request.dataset.quads) > 1
+        HashSet.size(request.dataset.quads) > claimTypeQuadCount
           ? ShaclValidationResult.make({ conforms: true, violations: [], truncated: false })
           : ShaclValidationResult.make({
               conforms: false,
@@ -93,8 +90,7 @@ const StubShaclValidation = Layer.succeed(
 );
 
 describe("@beep/epistemic-use-cases", () => {
-  // Boots only the stubbed SHACL port — no other slice, no live capability.
-  it.layer(StubShaclValidation)("claim gate over the stubbed SHACL port", (it) => {
+  it.layer(MinCountShaclStub)("claim gate over the stubbed SHACL port", (it) => {
     it.effect(
       "admits a well-formed claim and advances candidate -> shape_valid",
       Effect.fnUntraced(function* () {

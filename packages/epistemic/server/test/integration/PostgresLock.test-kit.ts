@@ -29,8 +29,6 @@ export const expectBothWritersWaiting = Effect.fn("PostgresLock.expectBothWriter
   function* (sql: SqlClient.SqlClient, firstPid: number, secondPid: number) {
     let waiters: ReadonlyArray<{ readonly count: number }> = [];
     for (let poll = 0; poll < 250; poll++) {
-      // This observer runs inside the blocking transaction. Refresh statistics
-      // so each query can see writers that reached the lock since the last poll.
       yield* sql`SELECT pg_stat_clear_snapshot()`;
       waiters = yield* sql<{ readonly count: number }>`
         SELECT COUNT(*)::int AS count

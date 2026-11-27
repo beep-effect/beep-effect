@@ -45,8 +45,6 @@ const egressOptions = GovernedEgressOptions.make({
 const allowedUrl = `${fixtureAllowedDestination}/v1/publish`;
 
 interface Harness {
-  // A plain array rather than a Ref: the recorder is written from inside a
-  // promise-returning `fetch`, which has no fiber to run an Effect on.
   readonly attempted: ReadonlyArray<string>;
   readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;
   readonly fetch: typeof globalThis.fetch;
@@ -56,9 +54,8 @@ interface Harness {
   readonly redirectModes: ReadonlyArray<string>;
 }
 
-// A test-local ledger stub for the same reason the gate suite has one: the
-// ledger's real guarantees are the database's, and this exists only to observe
-// what the boundary writes and to inject write failures.
+const schedulerYieldUnderTestClock = Effect.yieldNow;
+
 const makeHarness = Effect.fnUntraced(function* (options?: {
   readonly config?: ExecutionAuthorityServerConfig;
   readonly contendAppends?: boolean;
@@ -79,11 +76,7 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
         return yield* ExecutionLedgerUnavailable.during("appendDecision", "injected decision failure");
       }
       if (options?.contendAppends === true) {
-        // A yield point inside the append, not a timed sleep: `it.effect`
-        // installs a TestClock, so a sleep would never advance. Yielding hands
-        // the scheduler to the other in-flight authorizations, which is what
-        // widens an unserialized read window into a visible fork.
-        yield* Effect.yieldNow;
+        yield* schedulerYieldUnderTestClock;
       }
       yield* Ref.update(decisions, A.append(record));
     }),
@@ -116,11 +109,8 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       );
     }),
   });
-  // The base fetch records what the boundary let through and never reaches the
-  // network, so "allowed" is a positively observed fact rather than an absence
-  // of errors.
   const redirectModes: Array<string> = [];
-  const baseFetch = ((input: string | URL | Request, requestInit?: RequestInit) => {
+  const recordingBaseFetch = ((input: string | URL | Request, requestInit?: RequestInit) => {
     attempted.push(String(input));
     redirectModes.push(String(requestInit?.redirect));
     if (options?.throwFetch === true) {
@@ -130,7 +120,7 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       ? Promise.reject({ _tag: "InjectedFetchFailure" })
       : Promise.resolve(new Response("delivered", { status: 200 }));
   }) as typeof globalThis.fetch;
-  const fetch = yield* makeGovernedEgressFetch(egressOptions, baseFetch).pipe(
+  const fetch = yield* makeGovernedEgressFetch(egressOptions, recordingBaseFetch).pipe(
     Effect.provideService(ExecutionLedger, stub),
     Effect.provideService(ExecutionAuthorityConfig, options?.config ?? testExecutionAuthorityConfig)
   );
@@ -158,8 +148,6 @@ const attemptEgress = (harness: Harness, url: string) =>
     )
   );
 
-// Scoped to the denied URL rather than asserting nothing was ever attempted,
-// so it stays honest in a test that also makes allowed requests.
 const expectDenied = Effect.fn("GovernedEgressTest.expectDenied")(function* (harness: Harness, url: string) {
   const outcome = yield* attemptEgress(harness, url);
   pipe(outcome.rejected, assertTrue);
@@ -173,23 +161,24 @@ describe("GovernedEgress", () => {
       const response = yield* Effect.promise(() => harness.fetch(allowedUrl, { method: "POST" }));
 
       expect(response.status).toBe(200);
-      // The positive sibling fact: the request actually reached the base fetch.
-      expect(harness.attempted).toEqual([allowedUrl]);
+      expect(harness.attempted, "the request actually reached the base fetch").toEqual([allowedUrl]);
       const decisions = yield* Ref.get(harness.decisions);
       expect(decisions).toHaveLength(1);
       expect(decisions[0]!.verdict).toBe("allowed");
       expect(decisions[0]!.sinkClass).toBe("network-egress");
       expect(decisions[0]!.audience).toBe("external-network");
-      // The record names what was actually requested, not the allowlist entry
-      // that covered it.
-      expect(decisions[0]!.destinationDigest).toBe(destinationDigestOf(SinkDestination.make(allowedUrl)));
+      expect(
+        decisions[0]!.destinationDigest,
+        "the record names what was actually requested, not the allowlist entry that covered it"
+      ).toBe(destinationDigestOf(SinkDestination.make(allowedUrl)));
       const outcomes = yield* Ref.get(harness.outcomes);
       expect(outcomes).toHaveLength(1);
       expect(outcomes[0]!.settlement).toBe("completed");
       pipe(verifyOutcomeBinding(outcomes[0]!, decisions[0]!), assertTrue);
-      // Redirects are not followed: authorizing the first hop would otherwise
-      // authorize wherever that hop chose to send the request next.
-      expect(harness.redirectModes).toEqual(["error"]);
+      expect(
+        harness.redirectModes,
+        "redirects are not followed: authorizing the first hop must not authorize wherever it sends the request next"
+      ).toEqual(["error"]);
     })
   );
 
@@ -280,19 +269,20 @@ describe("GovernedEgress", () => {
       );
 
       pipe(EgressDenied.is(error), assertTrue);
-      // Field-free by construction: there is nothing on it for an agent to read.
-      expect(A.filter(R.keys(error as R.ReadonlyRecord<string, unknown>), (key) => key !== "_tag")).toEqual([]);
+      expect(
+        A.filter(R.keys(error as R.ReadonlyRecord<string, unknown>), (key) => key !== "_tag"),
+        "field-free by construction: nothing on it for an agent to read"
+      ).toEqual([]);
     })
   );
 
   it.effect("does not let a lookalike host borrow an allowlist entry's prefix", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness();
-      // `https://registry.example.evil.test` starts with the allowed entry's
-      // text. A prefix match without the `/` boundary would deliver it.
-      yield* expectDenied(harness, "https://registry.example.evil.test/publish");
-      // Userinfo that reads like the allowed host but resolves elsewhere.
-      yield* expectDenied(harness, "https://registry.example@evil.test/publish");
+      const sharesEntryTextPrefix = "https://registry.example.evil.test/publish";
+      const userinfoLookalikeHost = "https://registry.example@evil.test/publish";
+      yield* expectDenied(harness, sharesEntryTextPrefix);
+      yield* expectDenied(harness, userinfoLookalikeHost);
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(A.map(decisions, (record) => record.verdict)).toEqual(["denied", "denied"]);
@@ -303,11 +293,11 @@ describe("GovernedEgress", () => {
   it.effect("refuses the request when the decision write fails", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness({ failDecisions: true });
-      // The destination is allowed; only the record is unavailable. No record,
-      // no request.
       yield* expectDenied(harness, allowedUrl);
       const got7 = yield* Ref.get(harness.decisions);
-      expect(got7).toHaveLength(0);
+      expect(got7, "the destination is allowed and only the record is unavailable: no record, no request").toHaveLength(
+        0
+      );
     })
   );
 
@@ -332,10 +322,6 @@ describe("GovernedEgress", () => {
 
   it.effect("keeps the chain dense when many requests are authorized concurrently", () =>
     Effect.gen(function* () {
-      // Each `fetch` call authorizes on its own detached fiber, so the ledger
-      // append and the chain advance are only serialized by the boundary's
-      // semaphore. A slow append widens any unserialized read window: without
-      // the permit, two requests read the same `nextSeq` and the chain forks.
       const harness = yield* makeHarness({ contendAppends: true });
       const urls = A.map(A.range(0, 19), (index) =>
         index % 2 === 0 ? allowedUrl : `https://not-allowed-${index}.example/x`
@@ -347,34 +333,37 @@ describe("GovernedEgress", () => {
       );
 
       const decisions = yield* Ref.get(harness.decisions);
-      expect(A.map(decisions, (record) => record.seq)).toEqual(A.map(A.range(0, 19), (index) => index));
+      expect(
+        A.map(decisions, (record) => record.seq),
+        "each fetch authorizes on its own detached fiber: only the boundary's permit stops two requests reading one nextSeq"
+      ).toEqual(A.map(A.range(0, 19), (index) => index));
       const runKey = decisions[0]!.runKey;
       expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
-      // Exactly the allowed half was delivered — the denials did not merely
-      // fail to record, they failed to leave.
-      expect(harness.attempted).toHaveLength(10);
+      expect(
+        harness.attempted,
+        "exactly the allowed half was delivered: the denials did not merely fail to record, they failed to leave"
+      ).toHaveLength(10);
     })
   );
 
   it.effect("distinguishes two allowed requests that differ only past the granted prefix", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness();
-      // Both are covered by the same allowlist entry, so both are allowed. The
-      // second is the exfiltration shape: a payload carried out in the query
-      // string of an otherwise legitimate destination. If the row named the
-      // covering entry, these two would be indistinguishable in the ledger and
-      // the record would be useless for reconstructing what left the machine.
       yield* Effect.promise(() => harness.fetch(allowedUrl, { method: "POST" }));
       const exfiltrating = `${allowedUrl}?payload=privileged-text`;
       yield* Effect.promise(() => harness.fetch(exfiltrating, { method: "POST" }));
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "allowed"]);
-      expect(decisions[1]!.destinationDigest).not.toBe(decisions[0]!.destinationDigest);
+      expect(
+        decisions[1]!.destinationDigest,
+        "one allowlist entry covers both: a row naming the covering entry would hide a query-string exfiltration"
+      ).not.toBe(decisions[0]!.destinationDigest);
       expect(decisions[1]!.destinationDigest).toBe(destinationDigestOf(SinkDestination.make(exfiltrating)));
-      // The query does not widen coverage either — it is dropped before the
-      // allowlist comparison, so it can neither buy nor lose authority.
-      expect(harness.attempted).toEqual([allowedUrl, exfiltrating]);
+      expect(
+        harness.attempted,
+        "the query is dropped before the allowlist comparison, so it neither buys nor loses authority"
+      ).toEqual([allowedUrl, exfiltrating]);
     })
   );
 
@@ -387,10 +376,11 @@ describe("GovernedEgress", () => {
         }),
       });
       yield* expectDenied(harness, "not a url");
-      // The parseable sibling still works, so the drop is targeted rather than
-      // a wholesale failure to build the grant set.
       const response = yield* Effect.promise(() => harness.fetch(allowedUrl, { method: "POST" }));
-      expect(response.status).toBe(200);
+      expect(
+        response.status,
+        "the parseable sibling still works: the drop is targeted, not a failed grant-set build"
+      ).toBe(200);
     })
   );
 });

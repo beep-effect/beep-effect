@@ -42,15 +42,12 @@ import type {
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 
-// The db-admin drizzle folder creates `btree_gist` for the edge exclusion
-// constraint, which the shared external pglite-socket lane cannot load, so this
-// suite is pinned to the in-process driver with the bundled extension.
-const makeMigrationCapableLayer = () =>
+const inProcessBtreeGistLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const ExecutionLedgerTestLayer = ExecutionLedgerDrizzle.pipe(
   Layer.provideMerge(makeDrizzleLayer()),
-  Layer.provideMerge(makeMigrationCapableLayer())
+  Layer.provideMerge(inProcessBtreeGistLayer())
 );
 
 const migrateLedger = Effect.fnUntraced(function* () {
@@ -89,10 +86,13 @@ const decisionContent = (input: {
     : ({ ...common, verdict: "allowed" } as const);
 };
 
-// Chains a run of sealed decisions: seq 0 allowed, seq 1 denied, seq 2 allowed.
 const sealedRun = (
   runKey: string
-): readonly [ExecutionDecisionRecord, ExecutionDecisionRecord, ExecutionDecisionRecord] => {
+): readonly [
+  allowedSeq0: ExecutionDecisionRecord,
+  deniedSeq1: ExecutionDecisionRecord,
+  allowedSeq2: ExecutionDecisionRecord,
+] => {
   const first = sealExecutionDecision(decisionContent({ prevHash: O.none(), runKey, seq: 0 }));
   const second = sealExecutionDecision(
     decisionContent({ prevHash: O.some(first.hash), runKey, seq: 1, verdict: "denied" })
@@ -120,9 +120,6 @@ if (!shouldRunPgliteIntegration) {
             yield* ledger.appendDecision(decision);
           }
 
-          // A denied decision never settles: dispatch refuses before the effect
-          // runs, so only the two allowed decisions get outcome rows — the
-          // first here, the second later, to exercise the unsettled predicate.
           const firstOutcome = sealExecutionOutcome({
             decisionHash: first.hash,
             recordedAt: DateTime.makeUnsafe(2_000),
@@ -137,7 +134,10 @@ if (!shouldRunPgliteIntegration) {
           expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
 
           const outcomes = yield* ledger.readOutcomes(runKey);
-          expect(outcomes).toHaveLength(1);
+          expect(
+            outcomes,
+            "a denied decision never settles: only allowed decisions get outcomes, the third later for the unsettled predicate"
+          ).toHaveLength(1);
           const settled = yield* pipe(
             A.head(outcomes),
             O.match({
@@ -147,10 +147,11 @@ if (!shouldRunPgliteIntegration) {
           );
           pipe(verifyOutcomeBinding(settled, first), assertTrue);
 
-          // The unsettled predicate is scoped to allowed decisions: the denied
-          // seq-1 decision has no outcome row and must NOT be reported.
           const unsettled = yield* ledger.readUnsettledAllowed(runKey);
-          expect(A.map(unsettled, (record) => record.seq)).toEqual([2]);
+          expect(
+            A.map(unsettled, (record) => record.seq),
+            "scoped to allowed decisions: the denied seq-1 decision has no outcome row and is not reported"
+          ).toEqual([2]);
 
           const thirdOutcome = sealExecutionOutcome({
             decisionHash: third.hash,
@@ -176,13 +177,11 @@ if (!shouldRunPgliteIntegration) {
 
           yield* ledger.appendDecision(first);
 
-          // The rejection probe stays LAST in its effect: a failed statement
-          // aborts the surrounding pglite transaction chain.
-          const violation = yield* Effect.flip(ledger.appendDecision(first));
+          const lastStatementConflict = yield* Effect.flip(ledger.appendDecision(first));
 
-          pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
-          if (ExecutionLedgerConstraintViolation.is(violation)) {
-            expect(violation.constraintName).toBe("execution_authority_decision_pk");
+          pipe(ExecutionLedgerConstraintViolation.is(lastStatementConflict), assertTrue);
+          if (ExecutionLedgerConstraintViolation.is(lastStatementConflict)) {
+            expect(lastStatementConflict.constraintName).toBe("execution_authority_decision_pk");
           }
         }),
         pgliteIntegrationTimeoutMillis
@@ -253,9 +252,6 @@ if (!shouldRunPgliteIntegration) {
           const runKey = Str.repeat(64)("5");
           const digest = Str.repeat(64)("d");
 
-          // Raw SQL bypasses every domain codec on purpose: the bounded-reason
-          // CHECK is the last line against a compromised writer smuggling
-          // payload text into a no-payload ledger.
           const violation = yield* Effect.flip(sql`
             INSERT INTO execution_authority_decision (
               run_key, seq, prev_hash, hash, verdict, reason, operation_digest,
@@ -268,7 +264,10 @@ if (!shouldRunPgliteIntegration) {
             )
           `);
 
-          expect(NodeUtil.inspect(violation, { depth: 10 })).toContain("execution_authority_decision_reason_bounded");
+          expect(
+            NodeUtil.inspect(violation, { depth: 10 }),
+            "raw SQL skips every codec on purpose: this CHECK is the last line against a writer smuggling payload text"
+          ).toContain("execution_authority_decision_reason_bounded");
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -283,10 +282,6 @@ if (!shouldRunPgliteIntegration) {
           yield* ledger.appendDecision(first);
           yield* ledger.appendDecision(second);
 
-          // seq 1 is the DENIED decision: dispatch never ran an effect for it,
-          // so an outcome bound to its hash is a fabrication. The table shape
-          // rejects it — the outcome's constant decision_verdict column can
-          // only reference an (hash, verdict) pair whose verdict is allowed.
           const fabricated = sealExecutionOutcome({
             decisionHash: second.hash,
             recordedAt: DateTime.makeUnsafe(2_000),
@@ -297,7 +292,10 @@ if (!shouldRunPgliteIntegration) {
 
           pipe(ExecutionLedgerConstraintViolation.is(violation), assertTrue);
           if (ExecutionLedgerConstraintViolation.is(violation)) {
-            expect(violation.constraintName).toBe("execution_authority_outcome_decision_verdict_fk");
+            expect(
+              violation.constraintName,
+              "the constant decision_verdict column only references an allowed (hash, verdict) pair"
+            ).toBe("execution_authority_outcome_decision_verdict_fk");
           }
         }),
         pgliteIntegrationTimeoutMillis
@@ -363,15 +361,14 @@ if (!shouldRunPgliteIntegration) {
           yield* migrateLedger();
           const sql = yield* rawSql;
 
-          // Row-level triggers never fire on TRUNCATE, and a truncated run
-          // would read back as an EMPTY chain the verifier certifies intact —
-          // the one wipe that would not even be tamper-evident. The
-          // statement-level triggers exist for exactly this hole.
           const truncation = yield* Effect.flip(sql`
             TRUNCATE execution_authority_decision, execution_authority_outcome
           `);
 
-          expect(NodeUtil.inspect(truncation, { depth: 10 })).toContain("append-only");
+          expect(
+            NodeUtil.inspect(truncation, { depth: 10 }),
+            "row triggers skip TRUNCATE, and an emptied run verifies intact: only the statement-level trigger catches it"
+          ).toContain("append-only");
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -407,9 +404,6 @@ if (!shouldRunPgliteIntegration) {
           const sql = yield* rawSql;
           const digest = Str.repeat(64)("d");
 
-          // The reason itself is in the bounded list, so the only constraint
-          // this row can violate is the presence rule — pinning the CHECK body,
-          // not just its name.
           const violation = yield* Effect.flip(sql`
             INSERT INTO execution_authority_decision (
               run_key, seq, prev_hash, hash, verdict, reason, operation_digest,
@@ -422,9 +416,10 @@ if (!shouldRunPgliteIntegration) {
             )
           `);
 
-          expect(NodeUtil.inspect(violation, { depth: 10 })).toContain(
-            "execution_authority_decision_reason_iff_denied"
-          );
+          expect(
+            NodeUtil.inspect(violation, { depth: 10 }),
+            "the reason is in the bounded list, so only the presence rule rejects it: pins the CHECK body, not its name"
+          ).toContain("execution_authority_decision_reason_iff_denied");
         }),
         pgliteIntegrationTimeoutMillis
       );
@@ -505,12 +500,6 @@ if (!shouldRunPgliteIntegration) {
             yield* ledger.appendDecision(decision);
           }
 
-          // PGlite connects as table owner and an owner can drop the trigger —
-          // the documented reason this ledger is tamper-EVIDENT, not
-          // tamper-proof. The trigger is defense in depth; the chain verifier
-          // is the primary proof, and this is the test that makes that claim
-          // earn itself: mutate a sealed field mid-chain and the verifier must
-          // name the exact index.
           const sql = yield* rawSql;
           yield* Effect.acquireUseRelease(
             sql`DROP TRIGGER execution_authority_decision_append_only ON execution_authority_decision`,
@@ -527,7 +516,10 @@ if (!shouldRunPgliteIntegration) {
                 const verification = verifyExecutionDecisionChain(tampered, runKey);
                 expect(verification.result).toBe("chain-broken");
                 if (verification.result === "chain-broken") {
-                  expect(verification.atIndex).toBe(1);
+                  expect(
+                    verification.atIndex,
+                    "an owner can drop the trigger (tamper-evident, not tamper-proof): the chain verifier names the exact index"
+                  ).toBe(1);
                 }
               }),
             () =>
@@ -562,7 +554,6 @@ if (!shouldRunPgliteIntegration) {
             sql`DROP TRIGGER execution_authority_outcome_append_only ON execution_authority_outcome`,
             () =>
               Effect.gen(function* () {
-                // Rewrite history: a failed execution becomes a completed one.
                 yield* sql`
             UPDATE execution_authority_outcome
             SET settlement = 'completed'

@@ -146,23 +146,21 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
 
   it.effect("keeps qualifier delimiter characters from merging two identities", () =>
     Effect.gen(function* () {
-      // Without escaping, both encode the qualifier tail as `a=1,b=2`.
       const smuggled = yield* keyOf({ qualifiers: { a: "1,b=2" } });
       const distinct = yield* keyOf({ qualifiers: { a: "1", b: "2" } });
 
-      expect(smuggled).not.toEqual(distinct);
+      expect(smuggled, "without escaping, both encode the qualifier tail as a=1,b=2").not.toEqual(distinct);
     })
   );
 
   it.effect("keeps the component delimiter in a scope from forging encoding structure", () =>
     Effect.gen(function* () {
-      // A literal pipe must never read as a component boundary, and the escaped
-      // form of one value must never collide with a value that already looks
-      // escaped (`%` escapes first, so `a|b` and `a%7Cb` stay distinct).
       const identityOf7 = yield* identityOf({ matterScope: "a|b" });
-      expect(encodeLogicalEdgeIdentity(identityOf7)).toContain("some:a%7Cb");
+      expect(encodeLogicalEdgeIdentity(identityOf7), "a literal pipe never reads as a component boundary").toContain(
+        "some:a%7Cb"
+      );
       const keyOf8 = yield* keyOf({ matterScope: "a|b" });
-      const argument5 = expect(keyOf8).not;
+      const argument5 = expect(keyOf8, "% escapes first, so a|b never collides with an already-escaped a%7Cb").not;
       const keyOf13 = yield* keyOf({ matterScope: "a%7Cb" });
       argument5.toEqual(keyOf13);
     })

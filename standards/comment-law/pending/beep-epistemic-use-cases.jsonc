@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/epistemic-use-cases",
-  "root": "packages/epistemic/use-cases",
-  "scopes": ["."]
-}

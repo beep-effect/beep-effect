@@ -48,15 +48,12 @@ import * as TestClock from "effect/testing/TestClock";
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 
-// The db-admin drizzle folder creates `btree_gist` for the edge exclusion
-// constraint, which the shared external pglite-socket lane cannot load, so this
-// suite is pinned to the in-process driver with the bundled extension.
-const makeMigrationCapableLayer = () =>
+const inProcessBtreeGistLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const EdgeAuthorityTestLayer = EpistemicServerDrizzleLive.pipe(
   Layer.provideMerge(makeDrizzleLayer()),
-  Layer.provideMerge(makeMigrationCapableLayer())
+  Layer.provideMerge(inProcessBtreeGistLayer())
 );
 
 const decodeClaim = S.decodeUnknownEffect(CandidateClaim);
@@ -92,13 +89,6 @@ const requireHead = <Row>(rows: ReadonlyArray<Row>, what: string): Effect.Effect
     })
   );
 
-/**
- * Insert the claim and evidence rows the edge endpoints point at, and answer
- * with the identity every command in one scenario shares. Each scenario seeds
- * its own endpoints, so the database-assigned ids differ and the digest — and
- * therefore the logical edge — is scenario-local even though the suite shares
- * one database.
- */
 const seedScenario = Effect.fnUntraced(function* (scenario: number) {
   yield* migrateEpistemicEdge();
   const db = yield* makeDrizzle();
@@ -226,7 +216,6 @@ if (!shouldRunPgliteIntegration) {
           assertNone(head.supersedesId);
           expect(DateTime.toEpochMillis(head.validFrom)).toBe(1_000);
           expect(DateTime.toEpochMillis(head.recordedAt)).toBe(1_000);
-          // Endpoints survive the flatten/unflatten round trip the columns force.
           const identity = yield* decodeIdentity(scenario.identity);
           assertSome(unflattenEdgeSource(head), identity.source);
           assertSome(unflattenEdgeTarget(head), identity.target);
@@ -238,10 +227,8 @@ if (!shouldRunPgliteIntegration) {
             1
           );
 
-          // `readLatest` is the same predicate asked at now/now, so pinning the
-          // clock is what makes "latest" a decidable assertion rather than a
-          // wall-clock race.
-          yield* TestClock.setTime(3_000);
+          const pinnedLatestNow = 3_000;
+          yield* TestClock.setTime(pinnedLatestNow);
           const latest = yield* repository.readLatest(head.logicalKey);
           assertSome<number>(
             O.map(latest, (version) => version.version),
@@ -304,13 +291,14 @@ if (!shouldRunPgliteIntegration) {
           const openVersions = yield* Effect.fromResult(Result.all(A.map(openHeads, fromEdgeVersionRow)));
           expect(A.map(openVersions, (version) => version.version)).toStrictEqual([2]);
 
-          // Closing the former head is a row write, so it advances that row's
-          // optimistic token; the replacement starts at the first version.
           const formerRows = yield* db
             .select({ rowVersion: edgeTable.rowVersion })
             .from(edgeTable)
             .where(eq(edgeTable.id, former.id));
-          expect([former.rowVersion, ...A.map(formerRows, (row) => row.rowVersion)]).toStrictEqual([1, 2]);
+          expect(
+            [former.rowVersion, ...A.map(formerRows, (row) => row.rowVersion)],
+            "closing the former head is a row write, so it advances that row's optimistic token"
+          ).toStrictEqual([1, 2]);
           expect(corrected.rowVersion).toBe(1);
         }),
         120_000
@@ -384,11 +372,10 @@ if (!shouldRunPgliteIntegration) {
           const late = yield* repository.record(recordFact17);
 
           expect(late.version).toBe(2);
-          // Closed at the standing head's valid_from even though the command
-          // named no upper bound, and carrying no lineage: a late arrival is not
-          // a correction of the fact it precedes.
-          assertSome(O.map(late.validTo, DateTime.toEpochMillis), 2_000);
-          assertNone(late.supersedesId);
+          const closedAtHeadValidFrom = O.map(late.validTo, DateTime.toEpochMillis);
+          assertSome(closedAtHeadValidFrom, 2_000);
+          const lateArrivalCorrectsNothing = late.supersedesId;
+          assertNone(lateArrivalCorrectsNothing);
 
           const openHeads = yield* db
             .select()
@@ -435,9 +422,8 @@ if (!shouldRunPgliteIntegration) {
           });
           const disjoint = yield* repository.record(recordFact22);
 
-          // The command's own upper bound is already earlier than the head, so
-          // the donor rule leaves it alone rather than stretching it to 2000.
-          assertSome(O.map(disjoint.validTo, DateTime.toEpochMillis), 900);
+          const ownEarlierUpperBoundKept = O.map(disjoint.validTo, DateTime.toEpochMillis);
+          assertSome(ownEarlierUpperBoundKept, 900);
           assertNone(disjoint.supersedesId);
           expect(disjoint.version).toBe(2);
 
@@ -464,9 +450,6 @@ if (!shouldRunPgliteIntegration) {
           const scenario = yield* seedScenario(10);
           const repository = yield* EdgeAuthorityRepository;
 
-          // An inverted valid interval is a malformed write rather than a lost
-          // race, so it must NOT collapse into the conflict the two backstops
-          // raise — it names the CHECK that caught it.
           const recordFact25 = yield* recordFact({
             fact: { state: "inverted" },
             identity: scenario.identity,
@@ -499,8 +482,6 @@ if (!shouldRunPgliteIntegration) {
           });
           yield* repository.record(recordFact26);
 
-          // The rejection probe stays LAST in its effect: a failed statement
-          // aborts the surrounding pglite transaction chain.
           const supersedeFact27 = yield* supersedeFact({
             expectedVersion: 2,
             fact: { amount: "150" },
@@ -508,10 +489,13 @@ if (!shouldRunPgliteIntegration) {
             recordedAt: 2_000,
             validFrom: 1_000,
           });
-          const conflict = yield* Effect.flip(repository.supersede(supersedeFact27));
+          const lastStatementConflict = yield* Effect.flip(repository.supersede(supersedeFact27));
 
-          pipe(SupersessionConflict.is(conflict), assertTrue);
-          assertSome<number>(SupersessionConflict.is(conflict) ? conflict.observedVersion : O.none(), 1);
+          pipe(SupersessionConflict.is(lastStatementConflict), assertTrue);
+          assertSome<number>(
+            SupersessionConflict.is(lastStatementConflict) ? lastStatementConflict.observedVersion : O.none(),
+            1
+          );
         }),
         120_000
       );

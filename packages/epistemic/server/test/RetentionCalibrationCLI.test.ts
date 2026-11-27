@@ -65,8 +65,6 @@ const assertUntrustedReceipt = Effect.fn("CalibrationCLITest.assertUntrustedRece
   const argument1 = S.decodeEffect(Json);
   const readFileString2 = yield* fs.readFileString(manifestPath);
   const manifest = yield* argument1(readFileString2);
-  // Entirely synthetic untrusted fixture: the user principal does not attest to approval.
-  // Schema validity must not promote caller data to trusted registry membership.
   const untrusted = yield* S.decodeUnknownEffect(RetentionCalibration)({
     policyDigest,
     datasetDigest: manifest.sha256,
@@ -96,7 +94,9 @@ const assertUntrustedReceipt = Effect.fn("CalibrationCLITest.assertUntrustedRece
   expect(result.code, result.text).not.toBe(0);
   expect(result.text).toContain("calibration");
   const exists1 = yield* fs.exists(output);
-  expect(exists1).toBe(false);
+  expect(exists1, "a schema-valid synthetic receipt with a User approver never becomes registry membership").toBe(
+    false
+  );
 });
 
 it.layer(
@@ -159,8 +159,6 @@ it.layer(
         const argument3 = S.decodeEffect(Json);
         const readFileString4 = yield* fs.readFileString(fixturePath);
         const fixture = yield* argument3(readFileString4);
-        // A fixture receipt is untrusted input, never registry membership. This input surface
-        // excludes every receipt, including claims of human approval or historical validity.
         const text = yield* S.encodeEffect(Json)({ ...fixture, calibration: submission });
         yield* fs.writeFileString(fixturePath, text);
         const crypto = yield* Digest.Digest;
@@ -179,7 +177,9 @@ it.layer(
         expect(result.code, result.text).not.toBe(0);
         expect(result.text).toContain("calibration");
         const exists7 = yield* fs.exists(output);
-        expect(exists7).toBe(false);
+        expect(exists7, "a fixture receipt is untrusted input, even one claiming human approval or past validity").toBe(
+          false
+        );
       })
     );
   }
@@ -190,7 +190,6 @@ it.layer(
         const fixturePath = path.join(packet, "ops/fixture-v1.json");
         const original = yield* fs.readFileString(fixturePath);
         const fixture = yield* S.decodeEffect(FixtureJson)(original);
-        // Tuple decode makes the nonempty control explicit without a non-null assertion.
         const [query] = yield* S.decodeUnknownEffect(SingleQuery)([fixture.queries[0]]);
         const altered =
           mode === "duplicate-stratum"

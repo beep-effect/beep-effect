@@ -196,22 +196,12 @@ const grantPrincipal = SystemPrincipal.make({ component: "Runtime", kind: "Syste
 const destructiveOf = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
 
-// A run is the MCP session. `clientId` cannot key it: the HTTP protocol mints
-// a fresh one per request, so keying on it would open a new run per dispatch
-// and reduce every chain to a single genesis row. `sessionId` is the
-// transport's session identifier; transports that issue none (stdio) fall back
-// to the client id, where the connection is the session.
 const runIdOf = (caller: McpCallerIdentity): string =>
   O.match(caller.sessionId, {
     onNone: () => `client:${caller.clientId}`,
     onSome: (sessionId) => `session:${sessionId}`,
   });
 
-// `dispatchWithTierGate` calls `evaluate` and then, via `Effect.onExit`,
-// `recordOutcome` on the same fiber, so the fiber identifies one dispatch
-// exactly. Correlation keyed by anything coarser (the operation, say) binds
-// the wrong settlement to the wrong decision as soon as two dispatches of one
-// operation overlap and finish out of order.
 const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Effect.succeed(fiber.id));
 
 /**
@@ -222,7 +212,17 @@ const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Eff
  * Reads `ExecutionAuthorityConfig` and `ExecutionLedger` once at construction, so both
  * gate methods stay total (`R = never`) as `TierGateShape` requires; the only
  * per-request context is the `CurrentMcpCaller` reference the sanitized
- * toolkit populates on each dispatch.
+ * toolkit populates on each dispatch. A transport that issues no session
+ * identifier (stdio) keys its run by client id, since there the connection is
+ * the session.
+ *
+ * **Gotchas**
+ *
+ * A settlement is matched to its decision by fiber id: `recordOutcome` must run
+ * on the fiber that ran `evaluate` for the same dispatch, as
+ * `dispatchWithTierGate` does through `Effect.onExit`. Correlating by anything
+ * coarser, such as the operation, binds a settlement to the wrong decision once
+ * two dispatches of one operation overlap and finish out of order.
  *
  * **Example** (Usage)
  * ```ts
@@ -248,16 +248,14 @@ const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Eff
  * @category constructors
  * @since 0.0.0
  */
+// decision: decision-append-advances-chain-atomically
 export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGate.make")(function* (
   options: GovernedTierGateOptions
 ) {
   const config = yield* ExecutionAuthorityConfig;
   const ledger = yield* ExecutionLedger;
   const runs = yield* Ref.make(HashMap.empty<string, RunState>());
-  // One lock serializes run creation and ledger appends so chain sequencing
-  // stays dense per run. Global rather than per-run: the desktop surface has
-  // one interactive caller, and a coarser critical section cannot deadlock —
-  // the wrapped effect always runs outside it.
+  // decision: single-gate-lock
   const lock = yield* Semaphore.make(1);
 
   const freezeRunFor = (runId: string, now: DateTime.Utc): Result.Result<RunState, S.SchemaError> => {
@@ -274,11 +272,7 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
         sink: options.sink,
       })
     );
-    // Deterministic per (run id, freeze instant). The run id is the transport's
-    // session identifier, which never recurs, so the pair cannot repeat. A
-    // collision would surface as a chain primary-key violation, which refuses
-    // fail-closed rather than corrupting the chain. The `epistemic-run/` prefix
-    // is kept from the slice this gate began in so run keys stay byte-identical.
+    // decision: epistemic-run-key-labels-frozen
     const runKey = ExecutionRunKey.make(digestForLedger(`epistemic-run/${runId}/${DateTime.toEpochMillis(now)}`));
     return Result.map(
       freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), now),
@@ -293,17 +287,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
     );
   };
 
-  // Runs are never evicted. Eviction plus re-freeze would hand an expired
-  // session brand-new authority on its next dispatch, turning the grant TTL
-  // into a delay rather than a bound; retaining the expired run is what makes
-  // `grant-expired` permanent for the session that earned it. Growth is one
-  // small entry per MCP session — sessions are minted only by an `initialize`
-  // that already passed the origin allowlist and the per-launch bearer token.
-  // Run creation is serialized by `lock`, so reading the map and inserting the
-  // frozen run are not racing another creator. A freeze failure means the
-  // policy-derived draft violated its own schema, which is a programmer error
-  // rather than a caller error, so it dies instead of joining the gate's typed
-  // failures.
   const resolveRun = (runId: string, now: DateTime.Utc): Effect.Effect<RunState> =>
     Effect.flatMap(Ref.get(runs), (map) =>
       O.match(HashMap.get(map, runId), {
@@ -349,8 +332,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
       toolCallId: request.toolCallId,
     });
 
-  // The bounded reason names the log line and nothing else: every refusal the
-  // agent sees carries the same constant guidance.
   const refuse = (request: ToolCallRequest, reason: DenialReason, now: DateTime.Utc): Effect.Effect<TierGateVerdict> =>
     Effect.logWarning("governed tier gate refused a dispatch").pipe(
       Effect.annotateLogs({
@@ -366,8 +347,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
     const caller = yield* CurrentMcpCaller;
     const now = yield* DateTime.now;
     if (O.isNone(caller)) {
-      // No MCP session means no run, hence no chain to append to; the refusal
-      // is still fail-closed and still audited.
       return yield* refuse(request, DenialReason.Enum["no-grant-in-scope"], now);
     }
     const runId = runIdOf(caller.value);
@@ -379,11 +358,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
           destination: options.sink.destination,
           operation: GrantOperation.make(request.tool.name),
           principal: grantPrincipal,
-          // The boundary owns the classification for this branch's sink:
-          // every governed operation here targets the composition-root sink
-          // triple, so its audience is a construction fact, not a resolver
-          // question. The network resolver applies to network-egress
-          // destinations, which carry per-destination grants.
           resolvedAudience: options.sink.audience,
           sinkClass: options.sink.sinkClass,
         });
@@ -410,10 +384,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
             denied: ({ reason }) => ({ ...common, reason, verdict: "denied" as const }),
           })
         );
-        // Uninterruptible so an interruption cannot land between a successful
-        // append and the state commit — that gap would strand the run on a
-        // sequence slot the database already holds, wedging every later
-        // dispatch of the run into a chain-key refusal.
         const appended = yield* Effect.uninterruptible(
           ledger.appendDecision(record).pipe(
             Effect.andThen(commitDecision(runId, dispatchId, record)),
@@ -431,9 +401,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
           )
         );
         if (!appended) {
-          // No record, no action: a decision that cannot be written refuses the
-          // dispatch regardless of what the evaluator concluded, and the run
-          // state does not advance, so the next dispatch reuses this slot.
           return yield* refuse(request, DenialReason.Enum["ledger-unavailable"], now);
         }
         return yield* ExecutionVerdict.match(verdict, {
@@ -459,10 +426,7 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
     readonly runKey: ExecutionRunKey;
     readonly settlement: TierGateSettlement;
   }) {
-    // Dequeue before the append attempt: the dispatch has settled and no
-    // retry is coming, so a failed outcome write must leave the decision
-    // visibly unsettled in the derived unknown-outcome view rather than
-    // queued forever.
+    // decision: settlement-write-is-best-effort
     yield* Ref.update(runs, (map) =>
       O.match(HashMap.get(map, input.runId), {
         onNone: () => map,
@@ -509,9 +473,6 @@ export const makeGovernedTierGate = Effect.fn("ExecutionAuthority.GovernedTierGa
     yield* lock.withPermit(
       Effect.gen(function* () {
         const map = yield* Ref.get(runs);
-        // Both misses mean the same thing — nothing to settle against. No run
-        // for this session, or no decision pending for this dispatch (already
-        // settled, or the state was lost).
         const pending = O.flatMap(HashMap.get(map, runId), (state) =>
           O.map(HashMap.get(state.pendingOutcomes, dispatchId), (decisionHash) => ({
             decisionHash,

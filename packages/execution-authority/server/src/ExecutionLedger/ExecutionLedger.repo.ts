@@ -127,9 +127,6 @@ export const makeDrizzleExecutionLedger = Effect.fn("ExecutionAuthority.Executio
       );
     }),
     readUnsettledAllowed: Effect.fn("ExecutionAuthority.ExecutionLedger.readUnsettledAllowed")(function* (runKey) {
-      // Scoped to allowed decisions on purpose: a refused dispatch legitimately
-      // has no outcome row, and an unscoped LEFT JOIN would report every
-      // ordinary denial as "outcome unknown".
       const rows = yield* db
         .select({ decision: decisionTable })
         .from(decisionTable)

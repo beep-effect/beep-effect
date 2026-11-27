@@ -10,8 +10,6 @@ import type { IdCodec } from "@beep/epistemics/Factory";
 
 type Equals<A, B> = (<X>() => X extends A ? 1 : 2) extends <X>() => X extends B ? 1 : 2 ? true : false;
 
-// The pre-factory definitions (d0d3ddb225), restated without identity
-// annotations, which carry no type information.
 const HeadEdgeEndpoint = LiteralKit(["claim", "evidence", "entity", "observation"]).toTaggedUnion("kind")({
   claim: { claimId: Epistemic.CandidateClaimId.annotateKey({ description: "claim" }) },
   evidence: { evidenceId: Epistemic.EvidenceId.annotateKey({ description: "evidence" }) },
@@ -37,12 +35,15 @@ const beliefRefEncodedMatchesHead: Equals<typeof BeliefVersionRef.Encoded, typeo
 
 describe("factory bindings keep the pre-factory types", () => {
   it("binds EdgeEndpoint and BeliefVersionRef to the same Type and Encoded as before", () => {
-    expect([
-      edgeEndpointTypeMatchesHead,
-      edgeEndpointEncodedMatchesHead,
-      beliefRefFieldsMatchHead,
-      beliefRefEncodedMatchesHead,
-    ]).toStrictEqual([true, true, true, true]);
+    expect(
+      [
+        edgeEndpointTypeMatchesHead,
+        edgeEndpointEncodedMatchesHead,
+        beliefRefFieldsMatchHead,
+        beliefRefEncodedMatchesHead,
+      ],
+      "the Head schemas restate the pre-factory definitions without identity annotations, which carry no types"
+    ).toStrictEqual([true, true, true, true]);
   });
 
   it("accepts the shared-domain entity ids as IdCodec", () => {

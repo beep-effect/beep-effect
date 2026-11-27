@@ -75,22 +75,11 @@ const earlierThan = Order.isLessThan(DateTime.Order);
 const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
 const byVersion = Order.mapInput(Order.Number, (version: EdgeVersion) => version.version);
 
-/**
- * Placeholder identity carried by a seed entity between construction and insert.
- * It never reaches the database: `toEdgeVersionInsert` drops `id` so the SERIAL
- * sequence assigns the real one, and the inserted row is decoded back before it
- * is returned.
- */
-const pendingEdgeVersionId = Epistemic.EdgeVersionId.make(1);
+const placeholderIdBeforeInsert = Epistemic.EdgeVersionId.make(1);
+const residualFailureVersion = PosInt.make(1);
 
-/**
- * Public handle for one edge version, derived from the pair that already
- * identifies it uniquely — `epistemic_edge_logical_version_unique` guarantees
- * one row per `(logical_key, version)`, so the derived handle inherits that
- * uniqueness instead of needing a generator and the CUID/crypto services one
- * would drag into the layer.
- */
 const decodeEdgeVersionPublicId = S.decodeUnknownEffect(edgeVersionPublicId);
+// decision: edge-public-id-from-version-key
 const publicIdFor = Effect.fnUntraced(function* (logicalKey: LogicalEdgeKey, version: PosInt) {
   return yield* decodeEdgeVersionPublicId(`${Epistemic.EdgeVersionId.tableName}_a${logicalKey}v${version}`);
 });
@@ -104,12 +93,6 @@ type EdgeVersionShape = {
   readonly version: PosInt;
 };
 
-/**
- * Build the row a command asks for. Both temporal axes come from the command
- * verbatim — `recordedAt` is the arrival instant the caller reports, never a
- * clock read here — and the transaction axis always opens (`expiredAt` absent),
- * because a row is current the moment it is written.
- */
 const buildEdgeVersion = Effect.fnUntraced(function* (command: EdgeFactCommand, shape: EdgeVersionShape) {
   const publicId = yield* publicIdFor(shape.logicalKey, shape.version);
   return EdgeVersion.make({
@@ -121,7 +104,7 @@ const buildEdgeVersion = Effect.fnUntraced(function* (command: EdgeFactCommand, 
     evidenceScope: command.identity.evidenceScope,
     expiredAt: O.none(),
     fact: command.fact,
-    id: pendingEdgeVersionId,
+    id: placeholderIdBeforeInsert,
     logicalKey: shape.logicalKey,
     matterScope: command.identity.matterScope,
     orgId: command.orgId,
@@ -141,12 +124,6 @@ const buildEdgeVersion = Effect.fnUntraced(function* (command: EdgeFactCommand, 
   });
 });
 
-/**
- * Canonical two-axis predicate: what was true at `validAt`, as far as anyone
- * knew at `knownAt`. Both axes are half-open, so the lower bound is included and
- * the upper bound is not, and an absent upper bound is unbounded rather than a
- * sentinel date.
- */
 const asOfWhere = (logicalKey: LogicalEdgeKey, validAt: number, knownAt: number) =>
   and(
     eq(edgeTable.logicalKey, logicalKey),
@@ -159,10 +136,6 @@ const asOfWhere = (logicalKey: LogicalEdgeKey, validAt: number, knownAt: number)
 const nextVersionAfter = (versions: ReadonlyArray<EdgeVersion>): PosInt =>
   PosInt.make(A.reduce(versions, 0, (highest, version) => N.max(highest, version.version)) + 1);
 
-/**
- * The row that is currently true and currently believed: open on both axes. The
- * `epistemic_edge_open_head_idx` partial unique index makes it at most one row.
- */
 const openHeadOf = (versions: ReadonlyArray<EdgeVersion>): O.Option<EdgeVersion> =>
   A.findFirst(versions, (version) => O.isNone(version.validTo) && O.isNone(version.expiredAt));
 
@@ -196,14 +169,6 @@ export const supersessionHeadOf = (current: ReadonlyArray<EdgeVersion>): O.Optio
     O.orElse(() => pipe(current, A.sort(byVersion), A.last))
   );
 
-/**
- * Out-of-order donor rule (Graphiti `edge_operations.py:820-839`): a late fact
- * whose valid time starts BEFORE the standing head's is inserted already closed
- * at the head's `validFrom` rather than displacing it. A caller-supplied
- * `validTo` that already ends at or before the head is kept — it is more
- * specific than the rule's default — and any other command inserts its interval
- * as given.
- */
 const recordValidTo = (command: RecordEdgeFact, versions: ReadonlyArray<EdgeVersion>): O.Option<DateTime.Utc> =>
   pipe(
     openHeadOf(versions),
@@ -222,12 +187,6 @@ const recordValidTo = (command: RecordEdgeFact, versions: ReadonlyArray<EdgeVers
 const constraintNameOf = (operation: EdgeAuthorityOperation, cause: unknown): O.Option<string> =>
   PostgresError.fromUnknown(operation, cause).constraintName;
 
-/**
- * Normalize one write failure. Typed failures raised by the transaction body
- * pass through untouched; a driver failure is classified by the constraint NAME
- * Postgres reported, and a failure that names no constraint is an availability
- * problem rather than a rejection.
- */
 const normalizeWriteFailure =
   (operation: EdgeWriteOperation, logicalKey: LogicalEdgeKey, expectedVersion: PosInt) =>
   (cause: unknown): EdgeAuthorityError =>
@@ -243,20 +202,6 @@ const normalizeWriteFailure =
                 `${operation} failed against ${EDGE_TABLE_NAME}`,
                 driverCause
               ),
-            // Four names mean "another writer got there first"; every other name
-            // describes a malformed write.
-            //
-            // The open-head index and the valid-interval exclusion constraint are
-            // the two obvious ones. The third — the `(logical_key, version)`
-            // unique constraint — is unreachable for a lone writer, because the
-            // version is always derived as `max + 1` over the rows this very
-            // transaction locked. A duplicate can therefore only mean a
-            // concurrent writer committed that version first, which is the same
-            // lost race and the same caller recovery: re-read the head, re-derive
-            // the version, try again. The public ID is derived from that exact
-            // pair, so its unique index is a fourth equivalent backstop.
-            // PostgreSQL may report either unique index for two creators of a
-            // new key; callers need the same conflict regardless of index order.
             onSome: (constraintName) =>
               Match.value(constraintName).pipe(
                 Match.whenOr(
@@ -399,6 +344,26 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
 /**
  * Build the Drizzle-backed bitemporal edge authority repository.
  *
+ * **Gotchas**
+ *
+ * - Four constraint names report a `SupersessionConflict`, a lost race whose
+ *   recovery is to re-read the head, re-derive the version and retry: the
+ *   open-head index, the valid-interval exclusion constraint, the
+ *   `(logical_key, version)` unique constraint and the public-id unique index
+ *   derived from that pair. The version is `max + 1` over the rows the write
+ *   locked, so a duplicate means a concurrent writer committed it first, and
+ *   PostgreSQL may report either unique index for two creators of a new key.
+ *   Any other constraint name is an `EdgeConstraintViolation`; a failure that
+ *   names no constraint is `EdgeRepositoryUnavailable`. A `record` conflict
+ *   reports the version the write attempted.
+ * - Writes through one repository are serialized in process, so concurrent
+ *   local callers queue instead of retrying; the database backstops still catch
+ *   writers in other processes.
+ * - A late `record` whose valid time starts before the standing head's is
+ *   inserted already closed at the head's `validFrom` instead of displacing it
+ *   (Graphiti's out-of-order rule, `edge_operations.py:820-839`); a command
+ *   `validTo` that already ends at or before the head is kept as given.
+ *
  * **Example** (Build Effect repository)
  *
  * ```ts
@@ -422,10 +387,6 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
 export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAuthority.makeDrizzle")(function* () {
   const db = yield* PostgresDrizzle;
 
-  // One in-process writer at a time. The database backstops are the real
-  // guarantee — they hold against writers this process never sees — but
-  // serializing local writes keeps the common case out of the conflict path
-  // instead of making every concurrent caller re-read and retry.
   const writeSemaphore = Semaphore.makeUnsafe(1);
 
   const readAsOfAt = Effect.fn("Epistemic.EdgeAuthority.readAsOfAt")(function* (
@@ -471,30 +432,23 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
             Effect.fnUntraced(function* (tx) {
               const rows = yield* tx.select().from(edgeTable).where(eq(edgeTable.logicalKey, logicalKey)).for("update");
               const versions = yield* Effect.fromResult(Result.all(A.map(rows, fromEdgeVersionRow)));
-              const version = nextVersionAfter(versions);
+              const attemptedVersion = nextVersionAfter(versions);
               const seed = yield* buildEdgeVersion(command, {
                 logicalKey,
                 supersedesId: O.none(),
                 validTo: recordValidTo(command, versions),
-                version,
+                version: attemptedVersion,
               });
               const insert = yield* Effect.fromResult(toEdgeVersionInsert(seed));
               const inserted = yield* tx
                 .insert(edgeTable)
                 .values(insert)
                 .returning()
-                // A `record` carries no caller expectation about the head, so a
-                // backstop rejection reports the version this write attempted:
-                // that is what the losing writer must re-derive before it tries
-                // again.
-                .pipe(writeFailure("record", logicalKey, version));
+                .pipe(writeFailure("record", logicalKey, attemptedVersion));
               return yield* persistedOrSeed(inserted, seed);
             })
           )
-          // Residual transaction-level failures only; the statements inside
-          // already carry their own classification, and typed failures pass
-          // through this mapper untouched.
-          .pipe(writeFailure("record", logicalKey, PosInt.make(1)))
+          .pipe(writeFailure("record", logicalKey, residualFailureVersion))
       );
     }),
     supersede: Effect.fn("Epistemic.EdgeAuthority.supersede")(function* (command) {

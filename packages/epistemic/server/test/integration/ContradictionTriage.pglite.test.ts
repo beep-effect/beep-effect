@@ -467,11 +467,6 @@ const listQuery = (disposition: "all" | "open" | "rejected" | "superseded", know
     validAt: instant(1_500),
   });
 
-// Restart boundary: one persistent PGlite directory opened by two independent scopes. The
-// first scope migrates, submits, and reviews through the production repository; PGlite shuts
-// down with that scope. The second scope reopens the same directory without migrating and
-// re-asks the identical two-axis questions. `TestDatabaseInfo` is supplied by hand because the
-// in-process test driver only knows ephemeral databases.
 const RestartTempDirServices = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
 const makePersistentContradictionLayer = (dataDir: string, tempDir: string) =>
@@ -516,10 +511,6 @@ const expiredAtMillis = (expiredAt: O.Option<DateTime.DateTime>) =>
 
 const byCandidateId = Order.mapInput(Order.Number, (item: { readonly id: number }) => item.id);
 
-/**
- * Every answer the restart proof compares, projected to plain data so the reopened scope's
- * replay can be checked with structural equality.
- */
 const restartSnapshot = Effect.fnUntraced(function* (
   ids: RestartCandidateIds,
   losingBeliefId: EdgeVersion["id"],
@@ -983,8 +974,6 @@ if (!shouldRunPgliteIntegration) {
             updatedAt: 1_450,
             verifiedAnchor: unrelatedAnchor,
           });
-          // Simulate a legacy/corrupt row that bypassed the guarded converter:
-          // detail reads must still refuse to associate this unrelated anchor.
           const encodedUnrelated = yield* Effect.fromResult(
             encodeUnknownEvidenceVerificationResult(unrelatedVerification)
           );
@@ -1623,13 +1612,11 @@ if (!shouldRunPgliteIntegration) {
             };
           }).pipe(provideScopedLayer(persistent));
 
-          // The first scope's answers must be the two-axis picture, not an empty database:
-          // every candidate is open before the reviews were known, and each resolution shows
-          // only on its own axis afterwards.
           const { ids, snapshot } = written;
-          expect(A.map(snapshot.openBefore.items, (item) => item.id)).toStrictEqual(
-            A.sort([ids.open, ids.rejected, ids.superseded], Order.Number)
-          );
+          expect(
+            A.map(snapshot.openBefore.items, (item) => item.id),
+            "the first scope answers the two-axis picture, not an empty database"
+          ).toStrictEqual(A.sort([ids.open, ids.rejected, ids.superseded], Order.Number));
           expect(A.map(snapshot.openBefore.items, (item) => item.status)).toStrictEqual([null, null, null]);
           expect(snapshot.openAfter.items).toStrictEqual([{ id: ids.open, status: null }]);
           expect(snapshot.rejectedAfter.items).toStrictEqual([{ id: ids.rejected, status: "rejected" }]);
@@ -1642,12 +1629,13 @@ if (!shouldRunPgliteIntegration) {
           expect(snapshot.amountBefore).toBe("100");
           expect(snapshot.amountAfter).toBe("125");
 
-          // PGlite has shut down with the first scope; only the directory carries the answers.
-          // Nothing is migrated here — the reopened production repository must replay them.
           const reopened = yield* restartSnapshot(ids, written.losingBeliefId, written.identityA).pipe(
             provideScopedLayer(persistent)
           );
-          expect(reopened).toStrictEqual(snapshot);
+          expect(
+            reopened,
+            "a second scope reopens only the directory, unmigrated, and replays the answers"
+          ).toStrictEqual(snapshot);
         }),
         180_000
       );
