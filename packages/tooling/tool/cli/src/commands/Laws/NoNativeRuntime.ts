@@ -67,7 +67,6 @@ const OBJECT_METHODS = HashSet.fromIterable([
 const DATE_METHODS = HashSet.fromIterable(["now", "parse", "UTC"]);
 const ARRAY_STATIC_METHODS = HashSet.fromIterable(["from", "isArray", "of"]);
 const MAP_SET_CTORS = HashSet.fromIterable(["Map", "Set"]);
-// Effect has no weak collections, so these need a documented identity/GC reason rather than HashMap/HashSet.
 const WEAK_COLLECTION_CTORS = HashSet.fromIterable(["WeakMap", "WeakSet"]);
 const PLATFORM_AVAILABILITY_GLOBALS = HashSet.fromIterable([
   "document",

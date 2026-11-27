@@ -25,7 +25,6 @@ import type { EffectSchemaInventoryModule, EffectSchemaInventoryRendered } from 
 
 const INDEX_FILE = "INDEX.md";
 
-/** Mode given to a freshly created fixture directory when there is no previous one to copy. */
 const DIRECTORY_MODE = 0o755;
 
 const fixtureError =
@@ -35,7 +34,6 @@ const fixtureError =
       `${action} ${EffectSchemaInventoryFixturePath}/${name}: ${Inspectable.toStringUnknown(cause, 0)}`
     );
 
-// A missing directory lists as empty; any other listing failure fails loud instead of reading as empty.
 const listFixtureDirectory = Effect.fn("EffectSchemaInventoryStore.listFixtureDirectory")(function* (
   directory: string
 ) {
@@ -138,8 +136,6 @@ const isOwnedStaleRows = Effect.fn("EffectSchemaInventoryStore.isOwnedStaleRows"
   );
 });
 
-// Entries the new directory keeps: everything except files the generation replaces and `.jsonl`
-// files it owns (every line decodes as a row) but no longer renders.
 const carriedEntries = Effect.fn("EffectSchemaInventoryStore.carriedEntries")(function* (
   directory: string,
   present: ReadonlyArray<string>,
@@ -183,8 +179,6 @@ const stageFixture = Effect.fn("EffectSchemaInventoryStore.stageFixture")(functi
   );
 });
 
-// Two renames replace the directory: the previous one moves aside, the staged one takes its name,
-// and the previous one is restored if that second rename fails.
 const swapFixture = Effect.fn("EffectSchemaInventoryStore.swapFixture")(function* (staging: string, directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const previous = `${staging}-previous`;
@@ -210,6 +204,10 @@ const swapFixture = Effect.fn("EffectSchemaInventoryStore.swapFixture")(function
  * written, and the staged directory is renamed into place. A failure before the swap leaves the
  * committed fixture untouched and the staging directory is removed. A fixture directory that
  * exists but cannot be listed, or a stale `.jsonl` that cannot be read, fails the write.
+ *
+ * The swap moves the committed directory aside first and moves it back if the staged rename
+ * fails. The staged directory takes the committed fixture's mode, or 0o755 when no fixture is
+ * present.
  *
  * **Example** (Build a write)
  *

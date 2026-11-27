@@ -41,9 +41,6 @@ type RowDraft = typeof EffectSchemaInventoryRow.Encoded;
 
 const decodeRow = S.decodeUnknownEffect(EffectSchemaInventoryRow);
 
-/**
- * Collation used by the committed fixture: `String.prototype.localeCompare` with locale `en`.
- */
 const localeOrder: Order.Order<string> = Order.make((self, that) => Str.localeCompare(that, ["en"])(self));
 
 const rowOrder: Order.Order<EffectSchemaInventoryRow> = Order.combineAll([
@@ -58,8 +55,6 @@ const isTsNode = (value: unknown): value is ts.Node =>
 
 const isJsDocNode = (value: unknown): value is ts.JSDoc => isTsNode(value) && ts.isJSDoc(value);
 
-// Reads a node-valued property the public TypeScript typings do not declare on every node kind,
-// reproducing the prototype's untyped `node.<key>` access.
 const nodeProperty = (node: ts.Node, key: "body" | "name" | "type"): O.Option<ts.Node> => {
   if (!P.hasProperty(node, key)) return O.none();
   const value = node[key];
@@ -202,7 +197,6 @@ const isFunctionInitializer = (expression: ts.Expression): expression is ts.Arro
 const declaredType = (node: ts.VariableDeclaration | ts.BindingElement): O.Option<ts.TypeNode> =>
   ts.isVariableDeclaration(node) ? O.fromUndefinedOr(node.type) : O.none();
 
-// Measured from `pos`, leading trivia included, exactly as the prototype sliced it.
 const initializerHead = (initializer: ts.ArrowFunction | ts.FunctionExpression): string =>
   sliceText(initializer, initializer.body.pos - initializer.pos);
 
@@ -225,7 +219,6 @@ const variableSignature = (node: ts.VariableDeclaration | ts.BindingElement): st
 const memberListSignature = (node: ts.ClassDeclaration | ts.InterfaceDeclaration): string =>
   compact(sliceText(node, node.members.pos - node.getStart() - 1));
 
-// Functions, methods, accessors, and namespaces stop before their body; everything else is whole.
 const headSignature = (node: ts.Node): string =>
   compact(
     O.match(nodeProperty(node, "body"), {
@@ -296,7 +289,6 @@ const directMembers = (node: ts.Node): ReadonlyArray<ts.Node> =>
 
 const specifierText = (name: ts.ModuleExportName): string => name.text;
 
-/** Everything one module's walk needs, bundled so the recursive visitor stays a plain function. */
 type ModuleWalk = {
   readonly pin: EffectSchemaInventoryPin;
   readonly module: EffectSchemaInventoryModule;
@@ -339,7 +331,6 @@ const addRow = (
   });
 };
 
-/** One statement list being walked: its module, symbol prefix, nesting depth, and local names. */
 type Visit = {
   readonly walk: ModuleWalk;
   readonly prefix: string;
@@ -347,7 +338,6 @@ type Visit = {
   readonly locals: MutableHashMap.MutableHashMap<string, Declared>;
 };
 
-// Later declarations of a name win, as with the prototype's `new Map(entries)`.
 const localsOf = (declarations: ReadonlyArray<Declared>): MutableHashMap.MutableHashMap<string, Declared> =>
   MutableHashMap.fromIterable(
     A.getSomes(
@@ -367,7 +357,6 @@ const emitMembers = (walk: ModuleWalk, node: ts.Node, symbol: string): void => {
     addRow(walk, member, member, `${symbol}.${memberName(member)}`);
 };
 
-// Top-level declarations also emit one level of members, or one level of namespace statements.
 const emitDeclaration = (visit: Visit, node: ts.Node, owner: ts.Node, name: string): void => {
   const symbol = `${visit.prefix}${name}`;
   addRow(visit.walk, node, owner, symbol);
@@ -384,8 +373,6 @@ const namespaceTarget = (walk: ModuleWalk, declaration: ts.ExportDeclaration): O
     O.map((specifier) => walk.resolveTarget(walk.module.file, specifier.text))
   );
 
-// A namespace re-export is one row; its target is inventoried under its own module path, so the
-// barrel never repeats the target's members.
 const visitNamespaceExport = (visit: Visit, declaration: ts.ExportDeclaration, clause: ts.NamespaceExport): void => {
   const target = namespaceTarget(visit.walk, declaration);
   if (O.exists(target, (file) => HashSet.has(visit.walk.moduleFiles, file))) {
@@ -398,7 +385,6 @@ const visitNamespaceExport = (visit: Visit, declaration: ts.ExportDeclaration, c
   );
 };
 
-// A specifier naming a local declaration emits that declaration; anything else is a re-export row.
 const visitExportSpecifier = (visit: Visit, declaration: ts.ExportDeclaration, element: ts.ExportSpecifier): void => {
   const local =
     declaration.moduleSpecifier === undefined
@@ -472,6 +458,11 @@ const parseModule = Effect.fn("EffectSchemaInventoryExtract.parse")(function* (
  * Rows sort by file, line, symbol, and kind with `localeCompare(…, "en")`, the prototype's
  * collation, so regeneration reproduces committed bytes. A namespace re-export whose target is
  * not in the module list fails rather than silently dropping or duplicating rows.
+ *
+ * A function, method, accessor or namespace signature stops before its body; an arrow or
+ * function initializer keeps its leading trivia, as the prototype sliced it. A name declared
+ * twice in one module resolves to its later declaration. An export specifier naming a local
+ * declaration emits that declaration, and any other specifier is a re-export row.
  *
  * **Example** (Extract one exported function)
  *

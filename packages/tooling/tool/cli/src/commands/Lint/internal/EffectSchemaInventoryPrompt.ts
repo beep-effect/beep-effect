@@ -45,10 +45,6 @@ import type {
   EffectSchemaInventoryRow,
 } from "../EffectSchemaInventory.schemas.ts";
 
-/**
- * One top-level declaration of the pinned source and the rows it declares. Overload signatures
- * and their implementation are consecutive statements, so they form one block.
- */
 type DeclarationBlock = {
   readonly statements: A.NonEmptyReadonlyArray<ts.Statement>;
   readonly startLine: number;
@@ -92,7 +88,6 @@ const continuesOverloads = (previous: ts.Statement, statement: ts.Statement): bo
     O.exists(([left, right]) => left === right)
   );
 
-// Consecutive same-name function declarations (overloads plus implementation) grouped; every other statement alone.
 const declarationGroups = (
   statements: ReadonlyArray<ts.Statement>
 ): ReadonlyArray<A.NonEmptyReadonlyArray<ts.Statement>> =>
@@ -107,8 +102,6 @@ const declarationGroups = (
     )
   );
 
-// Every declaration group that declares each name, in source order: overloads with their
-// implementation, and both sides of a type/value pair that share a name.
 const groupIndexesByName = (
   groups: ReadonlyArray<{ readonly statements: A.NonEmptyReadonlyArray<ts.Statement> }>
 ): R.ReadonlyRecord<string, ReadonlyArray<number>> =>
@@ -122,7 +115,6 @@ const groupIndexesByName = (
     A.map(([, index]) => index)
   );
 
-// Declaration groups named by a specifier-only `export { … }` statement, which the rows point at.
 const exportedLocalGroups = (
   statement: ts.Statement,
   byName: R.ReadonlyRecord<string, ReadonlyArray<number>>
@@ -194,7 +186,6 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
           `| ${row.line} | \`${cell(row.symbol)}\` | ${row.kind} | ${cell(O.getOrElse(row.category, () => "-"))} | ${cell(O.getOrElse(row.since, () => "-"))} | ${rowNotes(row)} |`
       ),
       "",
-      // Source excerpts cite names from the rest of their module, so they cannot compile as standalone fences.
       `${fence}ts skip-type-checking`,
       code,
       fence,
@@ -204,7 +195,6 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
   );
 };
 
-/** The four inputs every prompt is rendered from. */
 type PromptInput = {
   readonly module: EffectSchemaInventoryModule;
   readonly pin: EffectSchemaInventoryPin;
@@ -263,7 +253,6 @@ const failMissingExamples = (
     }
   );
 
-/** Resolve every row to the top-level declaration group whose lines contain it. */
 const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, source: ts.SourceFile) {
   const groups = A.map(declarationGroups(source.statements), (statements) => ({
     statements,
@@ -296,7 +285,6 @@ const declarationBlocks = Effect.fnUntraced(function* (input: PromptInput, sourc
             A.filter(resolved, ({ at }) => O.exists(at, (value) => value === index)),
             ({ row }) => row
           ),
-          // Locals already rendered as their own block are not repeated.
           locals: A.flatMap(
             A.sort(
               A.dedupe(
@@ -357,6 +345,11 @@ const assemblePrompt = (input: PromptInput, blockCount: number, blocksText: Read
  * also inlines the local declarations it names. Generation fails when a row resolves to no
  * statement, when a row's file differs from the module's file, or when a row flagged
  * `hasExample` lands on inlined text without an example.
+ *
+ * Overload signatures and their implementation form one block. An inlined local brings every
+ * declaration of its name, both sides of a type/value pair included, unless it is already
+ * rendered as its own block. Excerpts are fenced `ts skip-type-checking` because they cite names
+ * from the rest of their module.
  *
  * **Example** (Render a prompt for one function)
  *

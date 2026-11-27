@@ -49,7 +49,6 @@ const OsvConfig = S.Struct({
 });
 type OsvConfig = typeof OsvConfig.Type;
 
-// The distinct named keys of one OSV exception table: package names or advisory ids.
 const osvSiteKeys = <Entry>(
   osv: O.Option<OsvConfig>,
   entries: (config: OsvConfig) => ReadonlyArray<Entry> | undefined,
@@ -68,8 +67,7 @@ const decodeWorkspaceManifest = S.decodeUnknownEffect(S.fromJsonString(Workspace
 const decodeHeldList = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
 const decodeOsvConfig = decodeTomlTextWith(S.decodeUnknownEffect(OsvConfig));
 
-// Read the labels from the syntax tree: comments and quote style must not change what counts as a group.
-const syncpackVersionGroupLabels = (text: string): ReadonlyArray<string> =>
+const versionGroupLabelsFromSyntaxTree = (text: string): ReadonlyArray<string> =>
   pipe(
     createInMemoryTsMorphProject()
       .createSourceFile("syncpack.config.ts", text, { overwrite: true })
@@ -244,7 +242,7 @@ export const makeHoldSites = Effect.fn("HoldSites.make")(function* (repoRoot: st
     ];
     const versionGroups = pipe(
       O.toArray(syncpackText),
-      A.flatMap(syncpackVersionGroupLabels),
+      A.flatMap(versionGroupLabelsFromSyntaxTree),
       A.map((label) => HoldAnchor.cases.SyncpackVersionGroup.make({ label }))
     );
     const present = [

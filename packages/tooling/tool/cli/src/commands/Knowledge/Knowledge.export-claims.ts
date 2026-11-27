@@ -19,7 +19,6 @@ const isRegularBlob = (entry: KnowledgeTrackedEntry): boolean => entry.mode === 
 const negativePackageClaimPrefix = (prefix: string): boolean =>
   /\b(?:not|no|never|without|remove|drop|avoid|proposed|planned|if|whether|could|would|might)\b[^.;|]*$/iu.test(prefix);
 
-// A wildcard spelling is ownership evidence only when its resolved target is tracked.
 const hasTrackedExportTarget = (
   pkg: KnowledgeWorkspacePackage,
   subpath: string,
@@ -69,9 +68,8 @@ export const verifiedPackageExportColumns: {
     entries: ReadonlyArray<KnowledgeTrackedEntry>
   ): HashSet.HashSet<number> => {
     const spans = knowledgeInlineSpans(lineText);
-    // Only a `./` span can be a verified claim, and the owner search below scans every workspace
-    // package per line: a line without one answers empty before paying for it.
-    if (!A.some(spans, ({ span }) => Str.startsWith("./")(span))) {
+    const mayHoldVerifiedClaim = A.some(spans, ({ span }) => Str.startsWith("./")(span));
+    if (!mayHoldVerifiedClaim) {
       return HashSet.empty<number>();
     }
     const localOwners = A.filter(packages, (pkg) =>

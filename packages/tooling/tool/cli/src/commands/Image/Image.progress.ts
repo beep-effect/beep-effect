@@ -51,13 +51,8 @@ export const renderExtractFramesEvent: {
   })
 );
 
-/** Sink invoked once per FFmpeg event while frames are extracted. */
 type ExtractFramesEventSink = (event: FFmpegEvent) => Effect.Effect<void, never>;
 
-/**
- * An {@link ExtractFramesEventSink} when progress can be displayed, `undefined`
- * when stdout is not a TTY and FFmpeg progress must stay unobserved.
- */
 type ExtractFramesEventSinkOrUndefined = ExtractFramesEventSink | undefined;
 
 /**

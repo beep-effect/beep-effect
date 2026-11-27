@@ -78,7 +78,6 @@ const TAG_KEY = "_tag";
 const MATCH_MAX_LENGTH = 120;
 const READ_CONCURRENCY = 32;
 
-/** Source that cannot bind `effect/Schema` is skipped before parsing. */
 const SCHEMA_IMPORT_PATTERN = /["']effect(?:\/Schema)?["']/u;
 
 const JSDOC_BLOCK_PATTERN = /\/\*\*[\s\S]*?\*\//gu;
@@ -88,10 +87,8 @@ const MARKDOWN_PATHSPECS = ["*.md", "*.mdx"] as const;
 const MARKDOWN_HISTORY_PREFIXES = ["goals/", "explorations/", "research/"] as const;
 const GENERATED_SEGMENT = "_generated/";
 
-/** `S.annotate(...)` / `S.annotateKey(...)` steps and the `.annotate(...)` / `.annotateKey(...)` methods. */
 const ANNOTATION_NAMES = HashSet.make("annotate", "annotateKey");
 
-/** `$I.<method>` identity helpers that only annotate. */
 const IDENTITY_ANNOTATION_METHODS = HashSet.make("annote", "annoteSchema", "annoteKey");
 
 const DECODING_DEFAULT_MEMBERS = HashSet.make(
@@ -101,13 +98,10 @@ const DECODING_DEFAULT_MEMBERS = HashSet.make(
   "withDecodingDefaultTypeKey"
 );
 
-/** Schema constructors called directly with a fields object, keyed to that argument's index. */
 const DIRECT_FIELD_ARGUMENT = HashMap.make(["Struct", 0], ["TaggedStruct", 1]);
 
-/** Curried schema class factories, keyed to the fields argument index of the second call. */
 const FACTORY_FIELD_ARGUMENT = HashMap.make(["Class", 0], ["Error", 0], ["TaggedClass", 1], ["TaggedError", 1]);
 
-/** Owners whose inline fixed `_tag` has a tagged constructor (`TaggedStruct`, `TaggedClass`, `TaggedError`). */
 const TAGGABLE_OWNERS = HashSet.make("Struct", "Class", "Error");
 
 const EXTEND_METHOD = "extend";
@@ -217,7 +211,6 @@ const addImportBindings = (bindings: SchemaBindings, statement: ts.Statement): S
 const collectBindings = (sourceFile: ts.SourceFile): SchemaBindings =>
   A.reduce(sourceFile.statements, emptyBindings, addImportBindings);
 
-// Strip parentheses, `as` / `satisfies` and angle-bracket assertions.
 const unwrap = (expression: ts.Expression): ts.Expression =>
   ts.isParenthesizedExpression(expression) ||
   ts.isAsExpression(expression) ||
@@ -258,7 +251,6 @@ const isAnnotationStep = (context: ScanContext, step: ts.Expression): boolean =>
   (isSchemaMemberIn(context.bindings, step.expression, ANNOTATION_NAMES) ||
     O.exists(methodName(step.expression), (method) => HashSet.has(IDENTITY_ANNOTATION_METHODS, method)));
 
-// `S.mutableKey` only changes the key's mutability, so the field stays fixed to its tag.
 const isMutableKeyStep = (context: ScanContext, step: ts.Expression): boolean =>
   O.exists(schemaMember(context.bindings, step), (name) => name === MUTABLE_KEY_MEMBER);
 
@@ -295,7 +287,6 @@ const stepKind = (context: ScanContext, literal: ts.Expression, step: ts.Express
   return isDecodingDefaultStep(context, step) ? "decoding-default" : "other";
 };
 
-// Apply one `.pipe(...)` call's steps; a decoding default keeps the tag fixed only beside a constructor default.
 const withPipeSteps = (
   context: ScanContext,
   tag: FixedTag,
@@ -334,7 +325,6 @@ const fixedTagCall = (context: ScanContext, call: ts.CallExpression): O.Option<F
     )
   );
 
-// The fixed tag a value spells: `S.Literal(v)` or `S.tag(v)` plus tag-preserving steps.
 const fixedTag = (context: ScanContext, node: ts.Expression): O.Option<FixedTag> => {
   const expression = unwrap(node);
   if (!ts.isCallExpression(expression)) {
@@ -374,7 +364,6 @@ const constInitializerIn = (statements: ReadonlyArray<ts.Statement>, name: strin
     O.map(unwrap)
   );
 
-// Resolve an identifier to the initializer of the const it names in an enclosing scope of this file.
 const resolveConstInitializer = (identifier: ts.Identifier): O.Option<ts.Expression> => {
   const visit = (node: ts.Node | undefined): O.Option<ts.Expression> => {
     if (P.isUndefined(node)) {
@@ -392,7 +381,6 @@ const resolveConstInitializer = (identifier: ts.Identifier): O.Option<ts.Express
   return visit(identifier.parent);
 };
 
-// An inline fields object, or the object of a same-file const.
 const resolveFields = (expression: ts.Expression): O.Option<ts.ObjectLiteralExpression> => {
   const value = unwrap(expression);
   if (ts.isObjectLiteralExpression(value)) {
@@ -442,7 +430,6 @@ const factorySites = (context: ScanContext, call: ts.CallExpression): ReadonlyAr
     : A.empty();
 };
 
-// The cases object of `S.TaggedUnion({ ... })` or `LiteralKit(...).toTaggedUnion(tag)({ ... })`.
 const casesArgument = (context: ScanContext, call: ts.CallExpression): O.Option<ts.Expression> => {
   if (O.exists(schemaMember(context.bindings, call.expression), (member) => member === TAGGED_UNION_MEMBER)) {
     return A.get(call.arguments, 0);
@@ -478,7 +465,6 @@ const returnedObjects = (body: ts.ConciseBody): ReadonlyArray<ts.Expression> =>
       )
     : A.of(body);
 
-// The objects a `mapFields(fields => ({ ... }))` callback returns.
 const mapFieldsSites = (call: ts.CallExpression): ReadonlyArray<FieldsSite> => {
   const callback = pipe(A.get(call.arguments, 0), O.map(unwrap));
   const isMapFields = O.exists(methodName(call.expression), (method) => method === MAP_FIELDS_METHOD);
@@ -495,8 +481,6 @@ const mapFieldsSites = (call: ts.CallExpression): ReadonlyArray<FieldsSite> => {
 const callSites = (context: ScanContext, call: ts.CallExpression): ReadonlyArray<FieldsSite> =>
   A.flatten([directSites(context, call), factorySites(context, call), caseSites(context, call), mapFieldsSites(call)]);
 
-// A same-file const fields object passed straight to a constructor keeps that owner, so its `_tag` is judged
-// exactly like an inline one.
 const siteFieldObject = (site: FieldsSite): O.Option<FieldObject> =>
   O.map(
     resolveFields(site.argument),
@@ -518,7 +502,6 @@ const spreadFieldObjects = (fields: FieldObject): ReadonlyArray<FieldObject> =>
 
 const sameObject = (left: FieldObject, right: FieldObject): boolean => left.object === right.object;
 
-// Add every fields object reached by spreading a known fields object, until none is new.
 const closeOverSpreads = (initial: ReadonlyArray<FieldObject>): ReadonlyArray<FieldObject> => {
   let known = A.dedupeWith(initial, sameObject);
   let frontier = known;
@@ -558,13 +541,11 @@ const makeFinding = (
   });
 };
 
-// A `_tag` value, through the same-file const it names when it is an identifier.
 const tagValue = (property: ts.PropertyAssignment): ts.Expression => {
   const value = unwrap(property.initializer);
   return ts.isIdentifier(value) ? O.getOrElse(resolveConstInitializer(value), () => value) : value;
 };
 
-// A fixed `_tag` the struct-tag or class-tag rule moves into a tagged constructor.
 const movableTag = (context: ScanContext, property: ts.PropertyAssignment): O.Option<FixedTag> =>
   O.filter(fixedTag(context, tagValue(property)), (tag) => !tag.decodingDefault);
 
@@ -579,7 +560,6 @@ const movableTagProperty = (
       )
     : O.none();
 
-// The `S.Class` / `S.Error` call whose fields argument is this inline `S.Struct(...)` call.
 const enclosingClassCall = (context: ScanContext, fields: FieldObject): O.Option<FieldObject> => {
   const struct = fields.anchor;
   const parent = struct.parent;
@@ -635,7 +615,6 @@ const tagFinding = (
 const tagSuggestion = (context: ScanContext, tag: FixedTag): string =>
   `${tag.namespace}.tag(${tag.literal.getText(context.sourceFile)})${tag.otherSteps ? "…" : ""}`;
 
-// Whether the struct-tag / class-tag rule owns this property, or a `mapFields` body replaces `_tag`.
 const isTagHandledElsewhere = (context: ScanContext, fields: FieldObject, property: ts.PropertyAssignment): boolean =>
   isTagProperty(property) &&
   (fields.owner === MAP_FIELDS_METHOD ||
@@ -682,8 +661,6 @@ const collectNodes = (sourceFile: ts.SourceFile): ReadonlyArray<ts.Node> => {
   return nodes;
 };
 
-// A same-named identifier in a name slot (a property, key, member or declaration name) does not read the const.
-// A shorthand property and an export list entry are both a name and a read.
 const isNamePosition = (identifier: ts.Identifier): boolean => {
   const parent = identifier.parent;
   return (
@@ -694,11 +671,9 @@ const isNamePosition = (identifier: ts.Identifier): boolean => {
   );
 };
 
-// Whether an identifier reads the binding; `typeof` queries only follow its type, so they are not reads.
 const isValueReference = (identifier: ts.Identifier): boolean =>
   !(isNamePosition(identifier) || ts.isQualifiedName(identifier.parent) || ts.isTypeQueryNode(identifier.parent));
 
-// The outermost expression that only wraps `node` in annotation or `S.mutableKey` steps.
 const annotatedReference = (context: ScanContext, node: ts.Expression): ts.Expression => {
   const access = node.parent;
   if (!ts.isPropertyAccessExpression(access) || !ts.isCallExpression(access.parent)) {
@@ -713,7 +688,6 @@ const annotatedReference = (context: ScanContext, node: ts.Expression): ts.Expre
   return isAnnotation && call.expression === access ? annotatedReference(context, call) : node;
 };
 
-// Whether a reference is the whole value of a property in a scanned fields object.
 const isFieldValueReference = (
   context: ScanContext,
   fieldObjects: ReadonlyArray<FieldObject>,
@@ -822,7 +796,6 @@ const scanCode = (
 const emptyText = constant("");
 const zero = constant(0);
 
-// A capture group the pattern always matches; the fallback only satisfies the type.
 const groupText = (match: RegExpMatchArray, group: number): string => O.getOrElse(A.get(match, group), emptyText);
 const matchIndex = (match: RegExpMatchArray): number => O.getOrElse(O.fromNullishOr(match.index), zero);
 
@@ -833,8 +806,6 @@ type FenceRead = {
   readonly unreadable: ReadonlyArray<SchemaTagIdiomFinding>;
 };
 
-// The TypeScript fences of a Markdown or JSDoc text starting at line `lineOffset`, and an
-// `unreadable-markdown` finding when the parser refused a text that may bind `effect/Schema`.
 const typescriptFences = (file: string, content: string, lineOffset = 0): FenceRead => {
   const [fences, warnings] = sharedTypeScriptFences(content);
   return {
@@ -864,7 +835,6 @@ const typescriptFences = (file: string, content: string, lineOffset = 0): FenceR
 const jsDocLine = (line: string): string =>
   pipe(line, Str.replace(/^\s*\/\*\*/u, ""), Str.replace(/\*\/\s*$/u, ""), Str.replace(/^\s*\* ?/u, ""));
 
-// TypeScript fences inside the JSDoc blocks of a source file; lines map one to one.
 const jsDocFences = (file: string, text: string): FenceRead => {
   const reads = pipe(
     Str.matchAll(JSDOC_BLOCK_PATTERN)(text),
@@ -884,8 +854,6 @@ const jsDocFences = (file: string, text: string): FenceRead => {
   };
 };
 
-// Scan the fences that can bind `effect/Schema`; the count is of those fences. A text the parser
-// refused contributes its `unreadable-markdown` finding first.
 const scanFences = (file: string, read: FenceRead): SourceScan => {
   const schemaFences = A.filter(read.fences, (fence) => SCHEMA_IMPORT_PATTERN.test(fence.code));
   return {
@@ -1042,7 +1010,6 @@ const gitErrorAdapter: GitCommandErrorAdapter<SchemaTagIdiomsExecutionError> = {
   onTruncated: O.none(),
 };
 
-/** The tracked paths: the Markdown paths alone exceed the old bounded readers' 512 KiB, well inside the kit's 16 MiB. */
 const listTracked = Effect.fnUntraced(function* (repoRoot: string, pathspecs: ReadonlyArray<string>) {
   const git = yield* Git;
   const entries = yield* git

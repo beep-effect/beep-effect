@@ -64,20 +64,8 @@ export const HISTORY_NOTES_REF = "refs/notes/history";
  */
 export const HISTORY_SUBJECT_MAX_LENGTH = 72;
 
-/**
- * The message's lines, with the trailing newline(s) a map row may end with dropped first.
- *
- * @param message - One map row's commit message.
- * @returns Its lines in order, without the empty tail a trailing newline would add.
- */
 const messageLines = (message: string): ReadonlyArray<string> => Str.split("\n")(Str.replace(/\n+$/u, "")(message));
 
-/**
- * The first line of a message.
- *
- * @param message - One map row's commit message.
- * @returns The subject line, which is the whole message when it has no newline.
- */
 const subjectOf = (message: string): string => A.headNonEmpty(Str.split("\n")(message));
 
 /**

@@ -29,10 +29,6 @@ import type { KnowledgeMintInput } from "./KnowledgeDoctor.baseline.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/KnowledgeDoctor.mint");
 
-/* -------------------------------------------------------------------------------------------------
- * Mint outcome
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * The head branch the mint workflow opens its baseline-only pull request from (C8 condition i).
  *
@@ -145,10 +141,6 @@ export const mintKnowledgeBaselineText = Effect.fn("KnowledgeDoctor.mintText")(f
   return KnowledgeMintOutcome.make({ baseline, text, changed });
 });
 
-/* -------------------------------------------------------------------------------------------------
- * Write context
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * The facts `knowledge doctor mint --write` checks before it writes the sealed baseline.
  *
@@ -240,10 +232,6 @@ export const knowledgeMintWriteRefusals = (context: KnowledgeMintWriteContext): 
       ? O.none()
       : O.some(`${context.baseRef} does not contain ${context.commit}; mint a default-branch commit.`),
   ]);
-
-/* -------------------------------------------------------------------------------------------------
- * Pull request context (C8 condition i)
- * ---------------------------------------------------------------------------------------------- */
 
 /**
  * The login GitHub gives the pull requests a GitHub App opens.
@@ -417,10 +405,6 @@ export const readKnowledgeMintPullRequest = Effect.fn("KnowledgeDoctor.readMintP
     repository: yield* configStringOption("GITHUB_REPOSITORY"),
   });
 });
-
-/* -------------------------------------------------------------------------------------------------
- * Quality-lane mode
- * ---------------------------------------------------------------------------------------------- */
 
 /**
  * How the quality lane runs the knowledge doctor: the read-only report, or the gate with the seal guard.

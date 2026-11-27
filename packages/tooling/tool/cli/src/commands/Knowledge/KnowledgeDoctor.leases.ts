@@ -380,10 +380,6 @@ export const decodeKnowledgeLeasesReportJson: {
   (input: unknown, options?: AST.ParseOptions): Effect.Effect<KnowledgeLeasesReport, S.SchemaError>;
 } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(S.fromJsonString(KnowledgeLeasesReport)));
 
-/* -------------------------------------------------------------------------------------------------
- * CODEOWNERS
- * ---------------------------------------------------------------------------------------------- */
-
 /**
  * Resolves the owner set of a repository path from `.github/CODEOWNERS` text.
  *
@@ -419,10 +415,6 @@ export const resolveKnowledgeCodeowners: {
   (codeowners: string, repoPath: string): ReadonlyArray<string> =>
     O.getOrElse(matchCodeownersOwners(codeowners, repoPath), A.empty<string>)
 );
-
-/* -------------------------------------------------------------------------------------------------
- * Evaluation
- * ---------------------------------------------------------------------------------------------- */
 
 /**
  * **Details**
@@ -528,7 +520,6 @@ const lifetimeVerdicts = (
   ]);
 };
 
-// Earliest-issued leases keep their quota slot; every later non-expired lease past a quota breaks it.
 const quotaVerdicts = (
   leases: ReadonlyArray<KnowledgeDebtLease>,
   now: DateTime.Utc

@@ -167,7 +167,6 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
       : "";
   });
 
-  // A line that does not decode could be newer evidence, so a damaged ledger fails instead of reading short.
   const strictRows = Effect.fn("HoldLedger.strictRows")(function* <Row, E>(
     file: string,
     decode: (line: string) => Effect.Effect<Row, E, Digest.Digest>
@@ -203,11 +202,10 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
     yield* fs
       .makeDirectory(directory, { recursive: true })
       .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
-    // A hand-edited ledger may lack its trailing newline; start a new row instead of joining the last one.
     const existing = yield* readLines(file);
-    const separator = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
+    const restoredTrailingNewline = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
     yield* fs
-      .writeFileString(file, `${separator}${A.join(lines, "\n")}\n`, { flag: "a" })
+      .writeFileString(file, `${restoredTrailingNewline}${A.join(lines, "\n")}\n`, { flag: "a" })
       .pipe(Effect.mapError(holdsPlatformError(`Could not append to ${file}`)));
   });
 
@@ -437,7 +435,6 @@ const runProbeSide = Effect.fn("HoldProbe.runSide")(function* (
   return { outcome, version: installed } as const;
 });
 
-// Each invocation gets its own directory, removed when the run ends, so concurrent probes never share files.
 const runScriptedProbe = Effect.fn("HoldProbe.scripted")(function* (
   scratchRoot: string,
   request: HoldProbeRequest,

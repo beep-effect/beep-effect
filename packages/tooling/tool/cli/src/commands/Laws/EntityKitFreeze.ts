@@ -57,26 +57,18 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { EntityKitFreezeOptions } from "./EntityKitFreeze.model.ts";
 
-/**
- * An `import`/`export` statement with a `from` clause. The clause admits only
- * identifiers, braces, commas, `*` and whitespace, so a match cannot run from
- * an unrelated keyword across code into a later `from`.
- */
 const FROM_CLAUSE_PATTERN =
   /\b(?:import|export)\b(?<clause>[\w$\s{},*]*?)\bfrom\s*(?<quote>["'])(?<specifier>[^"'\r\n]+)\k<quote>/gu;
 
-/** A side-effect `import "x"` or a dynamic / type-query `import("x")`. */
 const BARE_IMPORT_PATTERN = /\bimport\s*\(?\s*(?<quote>["'])(?<specifier>[^"'\r\n]+)\k<quote>/gu;
 
-/** The named-binding list of an import or export clause. */
 const NAMED_BINDINGS_PATTERN = /\{(?<bindings>[^}]*)\}/u;
 
 const BINDING_TYPE_PREFIX_PATTERN = /^type\s+/u;
 
 const BINDING_ALIAS_PATTERN = /\s+as\s+/u;
 
-/** Cheap pre-filter: every frozen specifier and the barrel contain this literal. */
-const RULE_LITERAL = entityKitFreezeBarrelSpecifier;
+const PREFILTER_LITERAL = entityKitFreezeBarrelSpecifier;
 
 const SCANNED_ROOTS = ["packages/", "apps/"];
 
@@ -209,7 +201,7 @@ const bareImports = (content: string): ReadonlyArray<RawImport> =>
  * @since 0.0.0
  */
 export const findEntityKitImports = (content: string): ReadonlyArray<EntityKitImport> => {
-  if (!F.pipe(content, Str.includes(RULE_LITERAL))) {
+  if (!F.pipe(content, Str.includes(PREFILTER_LITERAL))) {
     return A.empty();
   }
   const lineStarts = lineStartOffsets(content);

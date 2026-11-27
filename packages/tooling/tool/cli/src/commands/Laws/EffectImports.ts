@@ -52,8 +52,6 @@ import type { ScriptFence } from "./internal/TypeScriptFences.ts";
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 
-// The public runner retains an explicit scope for fixture and library callers.
-// The CLI supplies every repository source family as the enforced default.
 const EFFECT_IMPORT_PROMOTED_FAMILY_PREFIXES = A.empty<string>();
 
 /**
@@ -309,11 +307,6 @@ const namedTarget = (source: string, imported: string): ImportTarget => ({ kind:
 
 const defaultTarget = (source: string): ImportTarget => ({ kind: "default", source });
 
-/**
- * Census-owned routes for bindings whose barrel graph has more than one
- * public first-hop path. Each override is still checked against both package
- * export maps before it replaces the ambiguous graph-derived candidates.
- */
 const CENSUS_MAPPING_OVERRIDES: RootImportMappings = {};
 
 const FlatPackageExports = S.Record(S.String, S.Union([S.String, S.Null])).pipe(
@@ -328,7 +321,6 @@ type FlatPackageExports = typeof FlatPackageExports.Type;
 const isFlatPackageExports = S.is(FlatPackageExports);
 const isUnknownJsonObject = S.is(S.Record(S.String, S.Unknown));
 
-// Flat Function exports retain their named-import form at the root barrel.
 const EFFECT_FUNCTION_BINDINGS = ["absurd", "cast", "flow", "hole", "identity", "pipe"] as const;
 
 const EFFECT_PACKAGE_JSON_PATH = NodeURL.fileURLToPath(import.meta.resolve("effect/package.json"));
@@ -850,8 +842,6 @@ const foundationMappingsForFiles = Effect.fn("EffectImports.foundationMappingsFo
   effectExports: FlatPackageExports
 ) {
   const path = yield* Path.Path;
-  // Semantic export resolution belongs only to the foundation mapping phase.
-  // Never seed it with the complete executable corpus.
   const mappingProject = createRepoTsMorphProject({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
     sourceFileGlobs: [],
@@ -1382,9 +1372,6 @@ const planRootExport = (mappings: RootImportMappings, file: string, declaration:
 
 type ModuleCallKind = "dynamic-import" | "require";
 
-// One parse-tree census per source text. `ts.forEachChild` never enters JSDoc, so
-// the attached blocks are read from `node.jsDoc` before the node's children, which
-// reproduces ts-morph's `getDescendantsOfKind` order for every collected kind.
 type SyntaxCensus = {
   readonly root: ts.SourceFile;
   readonly moduleCalls: ReadonlyArray<readonly [ModuleCallKind, ts.CallExpression]>;
@@ -1420,11 +1407,9 @@ const syntaxCensus = (root: ts.SourceFile): SyntaxCensus => {
   return { root, moduleCalls, importTypes, importEquals, jsDocs };
 };
 
-// ts-morph line numbers count only `\n`, unlike `getLineAndCharacterOfPosition`.
 const startLineNumber = (node: ts.Node, root: ts.SourceFile): number =>
   A.length(Str.split("\n")(Str.slice(0, node.getStart(root))(root.text)));
 
-// First string literal in `getChildren` order, the walk ts-morph uses for token kinds.
 const firstStringLiteral = (node: ts.Node, root: ts.SourceFile): O.Option<ts.StringLiteral> =>
   A.findFirst(node.getChildren(root), (child) =>
     ts.isStringLiteral(child) ? O.some(child) : firstStringLiteral(child, root)
@@ -1697,10 +1682,8 @@ type JsDocUnit = {
 
 const JSDOC_OPEN = /^\/\*\*[^\S\n]*\n?/u;
 const JSDOC_CLOSE = /(\r?\n)?[^\S\n]*\*\/$/u;
-// ts-morph's whitespace set, narrower than `\s`, before an optional leading `*` and one space.
 const JSDOC_LINE_STAR = /^[ \f\r\t\v\u00A0\u2028\u2029]*\* ?/u;
 
-// `JSDoc#getInnerText` from ts-morph, applied to the raw block text.
 const jsDocInnerText: (text: string) => string = flow(
   Str.replace(JSDOC_OPEN, Str.empty),
   Str.replace(JSDOC_CLOSE, Str.empty),
@@ -1709,8 +1692,6 @@ const jsDocInnerText: (text: string) => string = flow(
   A.join("\n")
 );
 
-// JSDoc blocks last to first. Check mode reads the raw parse tree; write mode keeps the
-// ts-morph wrappers, which own the in-place replacement.
 const jsDocUnits = (sourceFile: SourceFile, write: boolean): ReadonlyArray<JsDocUnit> => {
   if (write) {
     return A.map(A.reverse(sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc)), (jsDoc) => ({
@@ -1741,8 +1722,6 @@ type FenceTransform = {
   readonly replacement: string;
 };
 
-// The transform of one fence and its rewritten body, or the warning for a fence that cannot be parsed
-// or that sits in a blockquote or list item, where splicing the rewritten code would end the container.
 const transformFence = (
   mappings: RootImportMappings,
   file: string,
@@ -1762,8 +1741,6 @@ const transformFence = (
   });
 };
 
-// A Markdown fence's `code` is the CommonMark value, which uses LF only; a replacement for a CRLF body keeps the
-// body's CRLF line endings.
 const withWrittenLineEndings = (writtenBody: string, replacement: string): string =>
   Str.includes("\r\n")(writtenBody) ? Str.replace(/\r?\n/gu, "\r\n")(replacement) : replacement;
 
@@ -1868,17 +1845,6 @@ const READLINK_CONCURRENCY = 16;
 const toCwdRelativePosixPath = (path: Path.Path, file: string): string =>
   toPosixPath(path.isAbsolute(file) ? path.relative(process.cwd(), file) : file);
 
-// Each include pattern is expanded by `@beep/walker` from the working directory
-// (unreadable entries skipped); the walk never enters the name-shaped exclusions,
-// and the path-shaped ones (`.claude/worktrees`, `docs/modules`, ...) are matched
-// on the result through `@beep/glob` under the same dot dialect as the include
-// patterns. Symbolic links are dropped, directories and files alike, as the
-// previous walker did: the repository's `CLAUDE.md` links resolve to `AGENTS.md`
-// files the walk already reads, and a link scanned through its own path would
-// double every finding and write. The walker skips linked directories itself but
-// lists a linked file (its `stat` follows the link), so the file-level drop is a
-// `readLink` probe per candidate, run concurrently: it is one syscall each over
-// thousands of files, and order is restored by the sort before it.
 const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(function* (
   patterns: ReadonlyArray<string>,
   exclusions: ReadonlyArray<string>,
@@ -1920,22 +1886,13 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
   );
 });
 
-// The Markdown walk enters every directory, so git-ignored local residue (a
-// root `tmp/`, `scratchpad/` loop output) would be scanned locally although CI
-// and fresh lanes never contain it. One `git ls-files` listing of the tracked
-// and untracked-but-not-ignored paths, relative to the working directory like
-// the walk, keeps the corpus to what a commit can carry. Outside a git work
-// tree the listing fails and the walk is kept unfiltered.
 const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(function* () {
-  // Tracked plus visible untracked paths through the kit (`ls-files -z` and `ls-files --others
-  // --exclude-standard -z`), as the retired `ls-files --cached --others` capture listed them (SPEC D-21).
   const git = yield* Git;
   const adapter = messageGitErrorAdapter((message) => message);
   const cwd = process.cwd();
   return yield* Effect.all(
     [
       git.lsFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles([]), adapter))),
-      // `relative: true` keeps the untracked half cwd-relative, as `lsFiles` and the Markdown filter are.
       git
         .untrackedFiles(cwd, { relative: true })
         .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(true), adapter))),
@@ -2014,7 +1971,9 @@ export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discover
  * `worktrees` directory among them) plus `.git`, `.beep`, `docs/modules`,
  * `docs/generated` and `docs/_internal`. Inside a git work tree the walk is
  * further limited to paths git does not ignore, so ignored local residue never
- * enters the corpus. Symbolic links and unreadable entries are skipped. Paths are
+ * enters the corpus; outside a git work tree the listing fails and the walk stays unfiltered.
+ * Symbolic links are skipped because the repository's `CLAUDE.md` links resolve to `AGENTS.md`
+ * files the walk already reads, and unreadable entries are skipped too. Paths are
  * POSIX, deduplicated and sorted; the per-run scope filter is applied by the
  * runner, not here.
  *
@@ -2060,6 +2019,14 @@ export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discov
 
 /**
  * Run per-module import migration/check logic.
+ *
+ * **Gotchas**
+ *
+ * Check mode reads the raw TypeScript parse tree and write mode the ts-morph wrappers. Both visit
+ * nodes and JSDoc blocks in the ts-morph descendant order, count lines by LF only and read JSDoc
+ * inner text the way ts-morph does, so the two modes report the same findings. A rewritten
+ * Markdown fence keeps the CRLF line endings of a CRLF body. A file removed between discovery and
+ * reading, such as a parallel gate's temporary directory, is skipped rather than failing the run.
  *
  * **Example** (Reference the import rules runner)
  *
@@ -2111,7 +2078,6 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     MutableHashSet.add(excludePaths, toPosixPath(excludePath));
   }
 
-  // Load only matches to avoid ts-morph recursively registering excluded directories.
   const discoveredSourceFiles = yield* discoverEffectImportSourceFiles(options).pipe(
     Effect.map(A.map((relativePath) => path.join(process.cwd(), relativePath)))
   );
@@ -2143,8 +2109,6 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     );
     for (const relativePath of markdownFiles) {
       const absolutePath = path.join(process.cwd(), relativePath);
-      // A parallel gate can remove a temporary directory after glob discovery.
-      // Source loading uses addSourceFileAtPathIfExists; retain that policy here.
       const content = yield* fs.readFileString(absolutePath).pipe(
         Effect.asSome,
         Effect.catchIf(
@@ -2189,8 +2153,6 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
     );
 
     for (const { filePath, relativePath } of sourcePaths) {
-      // These checks inspect syntax, not cross-file types. Retain only the current
-      // source tree; forgetting it releases ts-morph's descendant wrapper cache.
       const sourceFile = project.addSourceFileAtPathIfExists(filePath);
       if (P.isUndefined(sourceFile)) continue;
       scannedFiles += 1;

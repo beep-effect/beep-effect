@@ -45,31 +45,16 @@ import type {
   RetiredEffectPathsOptions,
 } from "./RetiredEffectPaths.model.ts";
 
-/** `effect/` + `unstable` at a word boundary, plus any `/segment` chain that follows it. */
 const MODULE_SPECIFIER_PATTERN = /effect\/unstable\b(?:\/[\w*-]+)*/gu;
 
-/** A retired `unstable/<module>` source directory, or the retired arbitrary module file. */
 const SOURCE_PATH_PATTERN =
   /(?<![\w-])unstable\/(?:arbitrary\/Arbitrary\.(?:d\.ts|ts|js)\b|(?:ai|cli|cluster|devtools|encoding|eventlog|http|httpapi|net|observability|persistence|process|reactivity|rpc|schema|socket|sql|workers|workflow|arbitrary)\b)/gu;
 
-/**
- * The `#fragment` of an inline link `](…#…)` or a reference definition
- * `]: …#…`. Consume unterminated candidates too, so a failed opener cannot
- * restart the search over the same suffix. Callers discard candidates without
- * a fragment. Both valid and malformed candidates advance over disjoint spans.
- */
-const LINK_FRAGMENT_PATTERN = /\](?:\(|:[ \t]*)[^\s)#]*(?:#[^\s)]*|(?=[\s)]|$))/gu;
+const LINK_FRAGMENT_OR_UNTERMINATED_PATTERN = /\](?:\(|:[ \t]*)[^\s)#]*(?:#[^\s)]*|(?=[\s)]|$))/gu;
 
-/**
- * A retired path's GitHub heading slug (`effect/unstable/reactivity/Atom` →
- * `effectunstablereactivityatom`), searched only inside a link fragment. The
- * slug runs to the next hyphen, since slugging turns the heading's spaces into
- * hyphens.
- */
 const ANCHOR_SLUG_PATTERN = /effectunstable[\p{L}\p{N}_]*/gu;
 
-/** Cheap pre-filter: every match of every rule contains this literal. */
-const RULE_LITERAL = "unstable";
+const PREFILTER_LITERAL = "unstable";
 
 type RawMatch = {
   readonly index: number;
@@ -88,7 +73,9 @@ const collectMatches = (content: string, pattern: RegExp, rule: RetiredEffectPat
 
 const collectAnchorSlugMatches = (content: string): ReadonlyArray<RawMatch> =>
   A.flatMap(
-    A.filter(collectMatches(content, LINK_FRAGMENT_PATTERN, "anchor-slug"), (link) => Str.includes("#")(link.text)),
+    A.filter(collectMatches(content, LINK_FRAGMENT_OR_UNTERMINATED_PATTERN, "anchor-slug"), (link) =>
+      Str.includes("#")(link.text)
+    ),
     (link: RawMatch) => {
       const fragmentStart = Str.length(A.headNonEmpty(Str.split(link.text, "#"))) + 1;
       return A.map(
@@ -217,7 +204,7 @@ export const scanText: {
   (content: string): (file: string) => ReadonlyArray<RetiredEffectPathFinding>;
   (file: string, content: string): ReadonlyArray<RetiredEffectPathFinding>;
 } = F.dual(2, (file: string, content: string): ReadonlyArray<RetiredEffectPathFinding> => {
-  if (!F.pipe(content, Str.includes(RULE_LITERAL))) {
+  if (!F.pipe(content, Str.includes(PREFILTER_LITERAL))) {
     return A.empty();
   }
   const moduleMatches = collectMatches(content, MODULE_SPECIFIER_PATTERN, "module-specifier");

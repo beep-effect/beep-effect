@@ -66,7 +66,6 @@ const VITEST_MODULES = ["@effect/vitest", "vitest"];
 const REF_MODULES = ["effect", "effect/Ref"];
 const CONFIG_PROVIDER_MODULES = ["effect", "effect/ConfigProvider"];
 
-// A fixed dispatch index avoids scanning the full member list for every call.
 const detectorCallMembers = HashSet.fromIterable([
   "pipe",
   "runPromise",
@@ -170,7 +169,6 @@ const localInitializer = (identifier: Identifier, imports: EffectVitestImports):
 
 type LayerLeaf = (expression: Expression, imports: EffectVitestImports) => boolean;
 
-// Follows Layer.merge/mergeAll operands and const initializers down to leaves.
 const layerComposedOf =
   (leaf: LayerLeaf) =>
   (expression: Expression, imports: EffectVitestImports): boolean => {
@@ -196,8 +194,6 @@ const isStubLayerLeaf: LayerLeaf = (expression, imports) =>
 
 const isPureStubLayer = layerComposedOf(isStubLayerLeaf);
 
-// Platform service bundles build in-process services and acquire no external
-// resource, so a hook timeout guards nothing.
 const platformServiceLayerModules = A.flatMap(
   [
     { runtime: "Node", root: "@effect/platform-node" },
@@ -210,9 +206,6 @@ const platformServiceLayerModules = A.flatMap(
     }))
 );
 
-// Effect 4.1 splits crypto into per-family services: the platform `NodeCrypto`/`BunCrypto` modules
-// export one `Layer.succeed` per family beside the bundle, and each `effect/crypto/<Family>` module
-// exports a `layerWebCrypto` over the runtime's `crypto.subtle`. None acquires anything.
 const cryptoFamilies = [
   "SecureRandom",
   "Digest",
@@ -250,18 +243,6 @@ const isPlatformServiceLayer: LayerLeaf = (expression, imports) =>
       isProvenanceExpression(expression, imports, [root, `${root}/${name}`], name, ["layer", `${name}.layer`])
     ));
 
-// --- EV014 test-layer acquisition (#1855 wave 6) -----------------------------------------------
-//
-// EV014 asks whether the layer an `it.layer` block builds in its hook acquires something a hook
-// budget should bound. A layer is acquisition-free when every leaf it composes is a stub
-// (`succeed`/`sync`/`mock`/`empty`/`succeedContext`), a platform service bundle, a named
-// in-memory library layer, or a hermetic in-memory acquisition: a `Layer.effect` or
-// `Layer.unwrap` whose effect only reads services and allocates Effect state. References are
-// followed through same-file bindings, imports into other repository sources (bundler-style
-// module resolution, as vitest resolves them), class static members and factory calls, whose
-// parameters are bound to the call's arguments. Anything unresolved acquires.
-
-// Bundler resolution: package `exports`, `.ts` extension imports and extensionless relatives.
 const LAYER_RESOLUTION_OPTIONS: ts.CompilerOptions = {
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -272,8 +253,6 @@ const LAYER_SOURCE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"];
 const LAYER_ANALYSIS_DEPTH = 24;
 
 type LayerFunction = EffectVitestFunctionNode | MethodDeclaration;
-// `argument` is `None` when the call cannot say which value the parameter receives (at or after a
-// spread argument), so neither a positional argument nor the parameter's default may stand in for it.
 type LayerBinding = { readonly parameter: MorphNode; readonly argument: O.Option<Expression>; readonly env: LayerEnv };
 type LayerEnv = ReadonlyArray<LayerBinding>;
 type LayerEntity =
@@ -281,29 +260,22 @@ type LayerEntity =
   | { readonly _tag: "Function"; readonly definition: LayerFunction; readonly env: LayerEnv }
   | { readonly _tag: "Class"; readonly declaration: ClassDeclaration }
   | { readonly _tag: "Module"; readonly source: SourceFile }
-  // An `effect` module export, which ships only as `.d.ts`: `name` is a member, or `*` for the namespace.
   | { readonly _tag: "EffectExport"; readonly module: string; readonly name: string };
 
 const isEffectModuleSpecifier = (specifier: string): boolean =>
   specifier === "effect" || Str.startsWith("effect/")(specifier);
 
-// The `effect` barrel exports each module as a namespace (`import { Effect } from "effect"`).
 const effectExport = (module: string, name: string): LayerEntity =>
   module === "effect" && name !== "*"
     ? { _tag: "EffectExport", module: `effect/${name}`, name: "*" }
     : { _tag: "EffectExport", module, name };
 
-/**
- * Per-file EV014 resolution context: import contexts of reached sources and resolved modules.
- * Both caches live for one `detectEffectVitestFindings` call, like the file's own AST caches.
- */
 type LayerAnalysis = {
   readonly importsOf: (source: SourceFile) => EffectVitestImports;
   readonly moduleSource: (from: SourceFile, specifier: string) => O.Option<SourceFile>;
 };
 
 const makeLayerAnalysis = (sourceFile: SourceFile, imports: EffectVitestImports): LayerAnalysis => {
-  // Keyed by file path: both caches live only for this call, so weak identity buys nothing.
   const contexts = MutableHashMap.empty<string, EffectVitestImports>();
   MutableHashMap.set(contexts, sourceFile.getFilePath(), imports);
   const modules = MutableHashMap.empty<string, O.Option<SourceFile>>();
@@ -315,7 +287,6 @@ const makeLayerAnalysis = (sourceFile: SourceFile, imports: EffectVitestImports)
     MutableHashMap.set(contexts, key, collected);
     return collected;
   };
-  // A wrapped node outside any Project has no module resolution host, so nothing resolves.
   const resolveSource = (from: SourceFile, specifier: string): O.Option<SourceFile> =>
     O.flatMap(O.liftThrowable(() => from.getProject())(), (project) =>
       O.flatMap(
@@ -328,7 +299,6 @@ const makeLayerAnalysis = (sourceFile: SourceFile, imports: EffectVitestImports)
           ).resolvedModule
         ),
         ({ extension, resolvedFileName }) =>
-          // Declaration files and installed packages carry no initializer to classify.
           A.contains(LAYER_SOURCE_EXTENSIONS, extension) && !Str.includes("/node_modules/")(resolvedFileName)
             ? O.fromUndefinedOr(
                 project.getSourceFile(resolvedFileName) ?? project.addSourceFileAtPathIfExists(resolvedFileName)
@@ -432,7 +402,6 @@ const declarationEntity = (
     : O.none();
 };
 
-// An exported `const`, `function` or `class` declared in the module itself.
 const declaredExport = (source: SourceFile, name: string): O.Option<MorphNode> =>
   A.findFirst(source.getStatements(), (statement): O.Option<MorphNode> => {
     if (Node.isVariableStatement(statement))
@@ -446,7 +415,6 @@ const declaredExport = (source: SourceFile, name: string): O.Option<MorphNode> =
       : O.none();
   });
 
-// `export * as name from`, `export { local as name } from` or a local `export { local as name }`.
 const namedReExport = (
   statement: ExportDeclaration,
   name: string,
@@ -506,8 +474,6 @@ const starExport = (
 const effectStarExport = (statement: ExportDeclaration, name: string): O.Option<LayerEntity> =>
   O.map(O.filter(starSpecifier(statement), isEffectModuleSpecifier), (module) => effectExport(module, name));
 
-// Syntax-only export lookup: exported declarations, then named and namespace re-exports, then
-// `export *` targets. Type-only exports never carry a layer.
 const moduleExport = (
   source: SourceFile,
   name: string,
@@ -556,7 +522,6 @@ const resolveLayerReference = (
       : resolveLayerReference(base, env, analysis, depth + 1);
   return O.flatMap(owner, (entity): O.Option<LayerEntity> => {
     if (entity._tag === "Module") return moduleExport(entity.source, reference.getName(), analysis, depth + 1);
-    // A member of a named `effect` export is a member of that module (`import { HttpClient } from "effect/http"`).
     if (entity._tag === "EffectExport")
       return O.some(
         entity.name === "*"
@@ -574,7 +539,6 @@ const resolveLayerReference = (
   });
 };
 
-// The implementation of `dual(arity, implementation)` from effect/Function.
 const dualImplementation = (value: Expression, analysis: LayerAnalysis): O.Option<Expression> => {
   if (!Node.isCallExpression(value) || value.getArguments().length !== 2) return O.none();
   const implementation = value.getArguments()[1];
@@ -586,7 +550,6 @@ const dualImplementation = (value: Expression, analysis: LayerAnalysis): O.Optio
     : O.none();
 };
 
-// A callee through aliases (`const make = makeInMemory`) and `dual(arity, implementation)`.
 const resolveLayerCallee = (
   callee: Expression,
   env: LayerEnv,
@@ -623,15 +586,12 @@ const layerFunctionReturns = (definition: LayerFunction): ReadonlyArray<Expressi
 
 type LayerJudge = (expression: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean;
 
-// Parameters bound to a call's positional arguments, ahead of the definition's own bindings. Positions
-// hold only before the first spread argument: every parameter at or after it binds to an unknown value.
 const bindArguments = (
   definition: LayerFunction,
   argumentsOf: ReadonlyArray<MorphNode>,
   callerEnv: LayerEnv,
   definitionEnv: LayerEnv
 ): LayerEnv => {
-  // Without a spread every position is known; a missing argument then falls back to the parameter's default.
   const firstSpread = O.getOrElse(A.findFirstIndex(argumentsOf, Node.isSpreadElement), () => Number.POSITIVE_INFINITY);
   return [
     ...A.getSomes(
@@ -648,8 +608,6 @@ const bindArguments = (
   ];
 };
 
-// The generator of `Effect.fn(name)(function* () {})`, `Effect.fn(function* () {})` or
-// `Effect.fnUntraced(function* () {})`. Extra pipeable arguments are not followed.
 const effectFunctionGenerator = (expression: Expression, analysis: LayerAnalysis): O.Option<LayerFunction> => {
   if (!Node.isCallExpression(expression)) return O.none();
   const imports = analysis.importsOf(expression.getSourceFile());
@@ -671,7 +629,6 @@ const effectFunctionGenerator = (expression: Expression, analysis: LayerAnalysis
     : O.none();
 };
 
-// Every return of a resolved function, judged with its parameters bound to the call's arguments.
 const judgeFunctionReturns = (
   definition: LayerFunction,
   argumentsOf: ReadonlyArray<MorphNode>,
@@ -688,7 +645,6 @@ const judgeFunctionReturns = (
   );
 };
 
-// Follows a reference to its value, or a call to the returns of the function it resolves to.
 const followLayerValue = (
   expression: Expression,
   env: LayerEnv,
@@ -702,8 +658,6 @@ const followLayerValue = (
     return O.exists(resolveLayerCallee(value.getExpression(), env, analysis, depth + 1), (entity) => {
       if (entity._tag === "Function")
         return judgeFunctionReturns(entity.definition, value.getArguments(), env, entity.env, judge, analysis, depth);
-      // `Effect.fn(name)(function* (...) {})` and `Effect.fnUntraced(function* (...) {})` define effect
-      // factories: the call runs the generator with its parameters bound to the arguments.
       return (
         entity._tag === "Value" &&
         judge === isHermeticEffect &&
@@ -741,8 +695,6 @@ const callbackReturns = (
 const STUB_LAYER_MEMBERS = ["succeed", "mock", "succeedContext"];
 const LAYER_COMPOSERS = ["merge", "mergeAll", "provide", "provideMerge", "fresh"];
 
-// `ConfigProvider.layer(provider)` is `Layer.succeed(ConfigProvider)(provider)` unless the argument is an
-// Effect (effect/ConfigProvider.ts); a `ConfigProvider.fromUnknown(...)` argument is a provider value.
 const isConfigProviderValueLayer = (call: CallExpression, imports: EffectVitestImports): boolean => {
   const provider = call.getArguments()[0];
   return (
@@ -753,8 +705,6 @@ const isConfigProviderValueLayer = (call: CallExpression, imports: EffectVitestI
   );
 };
 
-// `Logger.layer([Logger.make(...)])` adds logger values in a `Layer.effect`; it yields only entries
-// that are Effects (effect/Logger.ts), and `Logger.make` returns a logger value.
 const isLoggerValueLayer = (call: CallExpression, imports: EffectVitestImports): boolean => {
   const loggers = call.getArguments()[0];
   return (
@@ -767,12 +717,6 @@ const isLoggerValueLayer = (call: CallExpression, imports: EffectVitestImports):
   );
 };
 
-// Effect's own in-memory layers, whose declarations ship only as `.d.ts`: `Path.layer` is
-// `Layer.succeed(Path)(posixImpl)` (effect/Path.ts), `TestClock.layer()` is `Layer.effectContext`
-// over an in-memory clock and scheduler (effect/testing/TestClock.ts), `AtomRegistry.layer` is
-// `layerOptions()`, a `Layer.effect` that builds an in-memory registry with a finalizer
-// (effect/reactivity/AtomRegistry.ts), and `FetchHttpClient.layer` is
-// `HttpClient.layerMergedContext(Effect.succeed(fetch))` (effect/http/FetchHttpClient.ts).
 const isLibraryMemoryLayer = (expression: Expression, imports: EffectVitestImports): boolean =>
   Node.isCallExpression(expression)
     ? isProvenanceCall(expression, imports, TEST_CLOCK_MODULES, "TestClock", ["layer"]) ||
@@ -783,7 +727,6 @@ const isLibraryMemoryLayer = (expression: Expression, imports: EffectVitestImpor
       isProvenanceExpression(expression, imports, ATOM_REGISTRY_MODULES, "AtomRegistry", ["layer"]) ||
       isProvenanceExpression(expression, imports, FETCH_HTTP_CLIENT_MODULES, "FetchHttpClient", ["layer"]);
 
-// One syntactic case of a judge: the call shapes it matches and how it judges them.
 type LayerCallRule = {
   readonly matches: (call: CallExpression, imports: EffectVitestImports) => boolean;
   readonly judge: (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean;
@@ -838,7 +781,6 @@ const judgesCallback =
   (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
     callbackReturns(call.getArguments()[index], env, analysis, depth, judge());
 
-// `f(self, continuation)`: a hermetic `self`, then the continuation judged by `continuation`.
 const continuedEffect =
   (continuation: (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => boolean) =>
   (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
@@ -846,7 +788,6 @@ const continuedEffect =
     judgesArgument(0, () => isHermeticEffect)(call, env, analysis, depth) &&
     continuation(call, env, analysis, depth);
 
-// `flatMap`/`andThen`/`tap`/`acquireRelease`: a continuation whose body and returns are hermetic.
 const sequencedEffect = continuedEffect(judgesCallback(1, () => isHermeticEffect));
 
 const withStageImports = (
@@ -890,8 +831,6 @@ const pipeReceiver = (call: CallExpression): Expression => {
   return Node.isPropertyAccessExpression(callee) ? callee.getExpression() : callee;
 };
 
-// The effect argument of `Layer.effect(tag, effect)`, `Layer.effect(tag)(effect)` or
-// `Layer.effectContext(effect)`: the last argument, once the call has all of its operands.
 const layerEffectArgument = (call: CallExpression, required: number): O.Option<Expression> =>
   Node.isCallExpression(call.getExpression()) || call.getArguments().length >= required
     ? O.filter(A.last(call.getArguments()), Node.isExpression)
@@ -909,9 +848,6 @@ const isToolkitLayerCall = (call: CallExpression): boolean => {
   return Node.isPropertyAccessExpression(callee) && callee.getName() === "toLayer" && call.getArguments().length === 1;
 };
 
-// `toolkit.toLayer(build)` is `Layer.effectContext(toolkit.toHandlers(build))`, which reads the context and
-// yields `build` when it is an Effect (effect/ai/Toolkit.ts). It is free when the receiver resolves to
-// `Toolkit.make(...)`/`Toolkit.merge(...)` and `build` is a handler record or a hermetic effect.
 const isToolkitLayer = (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean => {
   const toolkit = O.exists(
     resolveLayerCallee(pipeReceiver(call), env, analysis, depth + 1),
@@ -973,8 +909,6 @@ const LAYER_FREE_RULES: LayerJudgeRules = {
 };
 
 const EFFECT_CONSTANTS = ["succeed", "fail", "die", "context", "service", "serviceOption"];
-// In-memory Effect state: constructors plus the non-blocking reads and writes of a ref or deferred.
-// `Deferred.await`, `Queue.take` and the like can suspend, so they are not listed.
 const MEMORY_STATE = [
   { namespace: "Ref", members: ["make", "get", "set", "update", "updateAndGet", "getAndSet", "modify"] },
   { namespace: "SynchronizedRef", members: ["make"] },
@@ -988,7 +922,6 @@ const MEMORY_STATE = [
   { namespace: "Cache", members: ["make"] },
 ];
 
-// Reading the current time is an in-memory clock read, not a wait.
 const isClockRead = (expression: Expression, imports: EffectVitestImports): boolean =>
   isProvenanceExpression(expression, imports, ["effect", "effect/Clock"], "Clock", [
     "currentTimeMillis",
@@ -1000,14 +933,11 @@ const isMemoryStateCall = (call: CallExpression, imports: EffectVitestImports): 
     isProvenanceCall(call, imports, ["effect", `effect/${namespace}`], namespace, members)
   );
 
-// `Effect` constants, in-memory state, and `LanguageModel.make(params)`, which reads optional services and
-// returns the model (effect/ai/LanguageModel.ts).
 const isHermeticConstructor = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", EFFECT_CONSTANTS) ||
   isMemoryStateCall(call, imports) ||
   isProvenanceCall(call, imports, LANGUAGE_MODEL_MODULES, "LanguageModel", ["make"]);
 
-// `Context.Service<...>()(...)`, `Context.Tag(...)` or `Context.Reference(...)` declares a service key.
 const declaresServiceKey = (expression: MorphNode | undefined, imports: EffectVitestImports): boolean =>
   expression !== undefined &&
   A.some(
@@ -1018,8 +948,6 @@ const declaresServiceKey = (expression: MorphNode | undefined, imports: EffectVi
       isProvenanceExpression(candidate, imports, CONTEXT_MODULES, "Context", ["Service", "Tag", "Reference"])
   );
 
-// Effect modules export their service key under the module's own name: `FileSystem.FileSystem`, with the
-// module imported as `* as FileSystem from "effect/FileSystem"` or `{ FileSystem } from "effect"`.
 const isModuleServiceKey = (expression: Expression, imports: EffectVitestImports): boolean => {
   if (!Node.isPropertyAccessExpression(expression)) return false;
   const base = expression.getExpression();
@@ -1079,27 +1007,6 @@ const isHermeticGenerator = (generator: LayerFunction, env: LayerEnv, analysis: 
     )
   );
 
-// --- What a thunk or a generator body runs (#1855 wave 6, review round on #2247) ---------------
-//
-// A thunk handed to `Effect.sync`/`suspend`/`promise`/`try`/`tryPromise` or `Layer.sync`, a callback the
-// acquisition applies (`map`, `flatMap`, `pipe` stages), and every statement of a generator run during the
-// hook, so each is judged by the calls in its own body, not by the constructor it is passed to. A body is
-// hermetic when every call it makes itself (nested functions only define values, so their bodies are not
-// counted) is one of:
-// - an `effect` module function (curried calls included), except the `run*` entry points; a data module
-//   (`Array`, `Option`, `Record`, `Struct`, `String`, `Match`, `pipe`, ...) applies its function arguments
-//   at once, so they are judged too, while other modules (`Effect`, `Layer`, `HttpClient.make`, ...) take
-//   callbacks they run later;
-// - a repository function whose own body is hermetic, with its parameters bound to the call's arguments;
-// - an `Effect.fn`/`Effect.fnUntraced` factory, whose call only builds an effect;
-// - `of`/`make` on a class built from an `effect` base (`Context.Service`, `Schema.Class`, ...);
-// - a `pipe` method, or a built-in (`JSON`, `Object`, `Array`, `Math`, `Number`, `String`, `Boolean`,
-//   `Symbol`, `BigInt`, `Promise`, `Date`), with function arguments judged; `new` only of the built-in
-//   value constructors.
-// Any other call, including an unresolved one, is acquisition. `Effect.try` follows the same rule as
-// `Effect.sync`: whether a thunk may throw says nothing about what it does, and the body rule already
-// flags the external work (`loadWinkRuntime` calls the imported `wink-nlp` loader).
-// Gotcha: a function passed by an unresolved name to an `effect` helper (`A.map(xs, f)`) is not followed.
 const RUN_MEMBERS = ["runSync", "runSyncExit", "runPromise", "runPromiseExit", "runFork", "runCallback"];
 const EAGER_NAMESPACES = [
   "Array",
@@ -1156,7 +1063,6 @@ const SYNC_CONSTRUCTORS = [
 
 const lastSegment = (module: string): string => O.getOrElse(A.last(Str.split("/")(module)), () => module);
 
-// The unbound global an identifier or `Global.member` chain starts from.
 const unboundGlobal = (callee: Expression, analysis: LayerAnalysis): O.Option<string> => {
   let base: Expression = callee;
   while (Node.isPropertyAccessExpression(base)) base = stripLayerExpression(base.getExpression());
@@ -1177,10 +1083,7 @@ const isEffectBasedClass = (declaration: ClassDeclaration, analysis: LayerAnalys
     )
   );
 
-// A value `effect` defines: an `effect` export, a class built from an `effect` base, or the result of an
-// `effect` constructor (`Toolkit.make(...)`).
 const isEffectDefinedValue = (entity: LayerEntity, analysis: LayerAnalysis, depth: number): boolean => {
-  // A namespace (`HttpClient`) is not a value: `HttpClient.make(...)` is an ordinary module function.
   if (entity._tag === "EffectExport") return entity.name !== "*";
   if (entity._tag === "Class") return isEffectBasedClass(entity.declaration, analysis);
   return (
@@ -1193,7 +1096,6 @@ const isEffectDefinedValue = (entity: LayerEntity, analysis: LayerAnalysis, dept
   );
 };
 
-// `Tag.of(...)`, `Schema.make(...)` or `toolkit.of(...)` on a value `effect` defines: these build a value.
 const isEffectClassConstructor = (callee: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) =>
   Node.isPropertyAccessExpression(callee) &&
   A.contains(["of", "make"], callee.getName()) &&
@@ -1223,7 +1125,6 @@ const functionArgumentsHermetic = (
     })
   );
 
-// The calls of a curried chain, outermost first: `Effect.fn("name")(generator)` is two calls on one callee.
 const curriedCalls = (call: CallExpression): ReadonlyArray<CallExpression> => {
   const calls = [call];
   let callee = stripLayerExpression(call.getExpression());
@@ -1248,7 +1149,6 @@ const resolvedCallHermetic = (call: CallExpression, env: LayerEnv, analysis: Lay
             A.every(calls, (level) => functionArgumentsHermetic(level, env, analysis, depth)))
         );
       }
-      // Calling what a repository function returns runs code this rule does not follow.
       if (calls.length > 1) return false;
       if (entity._tag === "Function")
         return isHermeticSyncBody(
@@ -1286,7 +1186,6 @@ const isHermeticSyncCall = (
     : resolvedCallHermetic(call, env, analysis, depth);
 };
 
-// A call a body makes itself; a `yield*` operand is an effect the generator runs, judged as one.
 const isOwnSyncCall = (node: MorphNode, definition: LayerFunction): node is CallExpression | NewExpression => {
   if (!Node.isCallExpression(node) && !Node.isNewExpression(node)) return false;
   if (node.getFirstAncestor(isFunctionBoundary) !== definition) return false;
@@ -1301,8 +1200,6 @@ const isHermeticSyncBody = (definition: LayerFunction, env: LayerEnv, analysis: 
     isOwnSyncCall(node, definition) ? isHermeticSyncCall(node, env, analysis, depth) : true
   );
 
-// A function value the acquisition calls: a literal or a resolved function by its body, an `effect`
-// function, an `Effect.fn` factory, or an `effect`-based class's `of`/`make`.
 const isHermeticCallable = (expression: Expression, env: LayerEnv, analysis: LayerAnalysis, depth: number) => {
   const callable = stripLayerExpression(expression);
   if (isLayerFunctionNode(callable)) return isHermeticSyncBody(callable, env, analysis, depth + 1);
@@ -1319,13 +1216,11 @@ const judgesCallable =
   (call: CallExpression, env: LayerEnv, analysis: LayerAnalysis, depth: number): boolean =>
     O.exists(expressionArgument(call, index), (callable) => isHermeticCallable(callable, env, analysis, depth));
 
-// The thunk of `Effect.try(thunk)`/`tryPromise(thunk)` or of their `{ try, catch }` options.
 const tryThunk = (call: CallExpression): O.Option<Expression | MethodDeclaration> =>
   O.flatMap(expressionArgument(call, 0), (argument): O.Option<Expression | MethodDeclaration> => {
     const options = stripLayerExpression(argument);
     if (!Node.isObjectLiteralExpression(options)) return O.some(argument);
     const property = options.getProperty("try");
-    // `try` is a reserved word, so the thunk is a property assignment or a method, never a shorthand.
     if (Node.isPropertyAssignment(property)) return O.fromUndefinedOr(property.getInitializer());
     return Node.isMethodDeclaration(property) ? O.some(property) : O.none();
   });
@@ -1353,9 +1248,6 @@ const isHermeticStage = (stage: MorphNode, env: LayerEnv, analysis: LayerAnalysi
     );
   });
 
-// A hermetic acquisition reads services and allocates in-memory Effect state; it has no I/O,
-// process, network, clock wait or unresolved effect. Thunk-taking constructors (`sync`, `suspend`,
-// `promise`, `try`, `tryPromise`) are judged by what their thunk runs (see the body rules above).
 const isHermeticEffect: LayerJudge = makeLayerJudge(() => HERMETIC_EFFECT_RULES);
 
 const HERMETIC_EFFECT_RULES: LayerJudgeRules = {
@@ -1395,7 +1287,6 @@ const HERMETIC_EFFECT_RULES: LayerJudgeRules = {
   ],
 };
 
-// The effect handed to `Layer.unwrap` must be hermetic and yield an acquisition-free layer.
 const producesFreeLayer: LayerJudge = makeLayerJudge(() => FREE_LAYER_EFFECT_RULES);
 
 const FREE_LAYER_EFFECT_RULES: LayerJudgeRules = {
@@ -1439,7 +1330,6 @@ const isContextProvision = (
   );
 };
 
-// `Context.make(...).pipe(Context.add(...))` stays a Context when every stage is a data-last Context combinator.
 const isContextPipe = (call: CallExpression, imports: EffectVitestImports, seen: ReadonlyArray<string>): boolean => {
   const callee = call.getExpression();
   return (
@@ -1454,7 +1344,6 @@ const isContextPipe = (call: CallExpression, imports: EffectVitestImports, seen:
   );
 };
 
-// A call of a same-file function is a Context when every value that function returns is one.
 const isContextFactoryCall = (
   call: CallExpression,
   imports: EffectVitestImports,
@@ -1498,7 +1387,6 @@ const TEMP_ROOT_CONSTRUCTORS = ["makeTempDirectory", "makeTempDirectoryScoped"];
 const isEffectAcquisition = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["acquireRelease", "acquireUseRelease"]);
 
-// `<fs>.makeTempDirectory(options?)`: options only say where and how to name the root.
 const isTempRootCall = (node: MorphNode | undefined): boolean => {
   if (!Node.isCallExpression(node)) return false;
   const callee = node.getExpression();
@@ -1516,12 +1404,10 @@ const isFileSystemTag = (node: MorphNode | undefined, imports: EffectVitestImpor
 const yieldedExpression = (node: MorphNode | undefined): MorphNode | undefined =>
   Node.isYieldExpression(node) && node.getAsteriskToken() !== undefined ? node.getExpression() : undefined;
 
-// `const fs = yield* FileSystem.FileSystem` only reads the service.
 const isFileSystemBinding = (statement: MorphNode, imports: EffectVitestImports): boolean =>
   Node.isVariableStatement(statement) &&
   A.every(statement.getDeclarations(), (declaration) => isFileSystemService(declaration, imports));
 
-// `(fs) => fs.makeTempDirectory()`, or a block whose only statement returns that call.
 const returnsTempRoot = (body: MorphNode | undefined): boolean => {
   if (!Node.isArrowFunction(body) && !Node.isFunctionExpression(body)) return false;
   const inner = body.getBody();
@@ -1531,7 +1417,6 @@ const returnsTempRoot = (body: MorphNode | undefined): boolean => {
   return statements.length === 1 && Node.isReturnStatement(only) && isTempRootCall(only.getExpression());
 };
 
-// `Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory(); })`.
 const isTempRootGenerator = (call: CallExpression, imports: EffectVitestImports): boolean => {
   const body = call.getArguments()[0];
   if (call.getArguments().length !== 1 || !Node.isFunctionExpression(body)) return false;
@@ -1545,8 +1430,6 @@ const isTempRootGenerator = (call: CallExpression, imports: EffectVitestImports)
   );
 };
 
-// The acquire IS the temp-root call, optionally behind FileSystem access. Any combinator that adds
-// work (zipLeft, tap, andThen, zip, all, or a flatMap into other work) is not a fresh-root acquire.
 const isTempRootAcquire = (acquire: MorphNode, imports: EffectVitestImports): boolean => {
   if (isTempRootCall(acquire)) return true;
   if (!Node.isCallExpression(acquire)) return false;
@@ -1561,7 +1444,6 @@ const isTempRootAcquire = (acquire: MorphNode, imports: EffectVitestImports): bo
   );
 };
 
-// `process.chdir(...)`, or an assignment or `delete` whose target is rooted at the global `process`.
 const PROCESS_MODULES = ["node:process", "process"];
 
 const isGlobalProcess = (node: MorphNode, imports: EffectVitestImports): boolean => {
@@ -1613,7 +1495,6 @@ const mutatesProcessDirectly = (region: MorphNode, imports: EffectVitestImports)
     isProcessAccess(deletion.getExpression(), imports)
   );
 
-// Helpers are reached by name: a called identifier, or an identifier passed as an argument (`Effect.sync(restore)`).
 const helperReferences = (region: MorphNode): ReadonlyArray<MorphNode> =>
   A.flatMap([region, ...region.getDescendantsOfKind(SyntaxKind.CallExpression)], (node) =>
     Node.isCallExpression(node)
@@ -1621,7 +1502,6 @@ const helperReferences = (region: MorphNode): ReadonlyArray<MorphNode> =>
       : A.filter([node], Node.isIdentifier)
   );
 
-// Follows same-file helpers called by name, because they run inside the wrapper's use or release.
 const mutatesProcessState = (region: MorphNode, imports: EffectVitestImports): boolean => {
   const visited = A.empty<MorphNode>();
   const visit = (current: MorphNode): boolean =>
@@ -1640,7 +1520,6 @@ const mutatesProcessState = (region: MorphNode, imports: EffectVitestImports): b
 const isEffectFunctionConstructor = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["fn", "fnUntraced"]);
 
-// `Effect.fnUntraced(function* (path) {...})` and `Effect.fn("name")(function* (path) {...})` release through their body.
 const releaseFunction = (release: MorphNode, imports: EffectVitestImports): O.Option<MorphNode> => {
   if (!Node.isCallExpression(release)) return O.some(release);
   const callee = release.getExpression();
@@ -1650,7 +1529,6 @@ const releaseFunction = (release: MorphNode, imports: EffectVitestImports): O.Op
   return constructed ? A.head(release.getArguments()) : O.none();
 };
 
-// The release must remove the exact path its acquire produced (its first parameter).
 const removesAcquiredPath = (candidate: MorphNode, imports: EffectVitestImports): boolean => {
   const release = O.getOrUndefined(releaseFunction(candidate, imports));
   if (!Node.isArrowFunction(release) && !Node.isFunctionExpression(release)) return false;
@@ -1668,7 +1546,6 @@ const removesAcquiredPath = (candidate: MorphNode, imports: EffectVitestImports)
   });
 };
 
-// A fresh temp root per call isolates each case on purpose; `it.layer` sharing would undo that (#1855 FP-2).
 const isFreshTempRootAcquisition = (call: CallExpression, imports: EffectVitestImports): boolean => {
   if (!isEffectAcquisition(call, imports)) return false;
   const releaseIndex = isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["acquireUseRelease"]) ? 2 : 1;
@@ -1699,7 +1576,6 @@ const functionHasResourceWhere = (
 const functionHasResource = (definition: EffectVitestFunctionNode, imports: EffectVitestImports): boolean =>
   functionHasResourceWhere(definition, imports, constTrue);
 
-// `L.unwrap(...)`, or a Layer value piped only through data-last Layer combinators.
 const isLayerValued = (expression: MorphNode | undefined, imports: EffectVitestImports): boolean => {
   if (!Node.isCallExpression(expression)) return false;
   if (isLayerValue(expression, imports)) return true;
@@ -1712,8 +1588,6 @@ const isLayerValued = (expression: MorphNode | undefined, imports: EffectVitestI
   );
 };
 
-// A layer factory returns its Layer to the caller's `it.layer`, which owns the build and its scope, so it is
-// the shape EV003 recommends, not a wrapper around it (#1855 wave 5). Every return must be a Layer value.
 const isLayerFactory = (definition: EffectVitestFunctionNode, imports: EffectVitestImports): boolean => {
   const body = definition.getBody();
   if (body === undefined) return false;
@@ -1728,9 +1602,6 @@ const isLayerFactory = (definition: EffectVitestFunctionNode, imports: EffectVit
   );
 };
 
-// EV003 asks for `it.layer` sharing only when a wrapper holds a resource other than a fresh temp root.
-// A wrapper that changes process state anywhere in its body (use, release, pipe stages, or a
-// same-file helper it reaches) stays under review even when its only acquisition is a fresh temp root.
 const functionHasShareableResource = (definition: EffectVitestFunctionNode, imports: EffectVitestImports): boolean =>
   !isLayerFactory(definition, imports) &&
   (functionHasResourceWhere(definition, imports, (call) => !isFreshTempRootAcquisition(call, imports)) ||
@@ -1750,7 +1621,6 @@ const buildsAndProvidesLayer = (definition: EffectVitestFunctionNode, imports: E
 
 const platformRuntimeNames = ["BunRuntime", "NodeRuntime"];
 
-// A module-scope `BunRuntime.runMain(...)` or `NodeRuntime.runMain(...)` statement.
 const isRuntimeMainStatement = (statement: MorphNode, imports: EffectVitestImports): boolean => {
   if (!Node.isExpressionStatement(statement)) return false;
   const call = statement.getExpression();
@@ -1768,15 +1638,10 @@ const isRuntimeMainStatement = (statement: MorphNode, imports: EffectVitestImpor
   );
 };
 
-// A process entry module under test/ (an evaluation runner, a spawned child fixture) registers no
-// test and hands its program to a platform runtime's `runMain` at module scope. EV003 asks a
-// wrapper to share its resource through \`it.layer\`; an entry module has no test to share it with.
 const isProcessEntryModule = (sourceFile: SourceFile, imports: EffectVitestImports): boolean =>
   A.some(sourceFile.getStatements(), (statement) => isRuntimeMainStatement(statement, imports)) &&
   !A.some(imports.calls, (call) => O.isSome(classifyHarnessCall(call, imports)));
 
-// Only an argument forwarded to Layer.build is a caller-supplied layer.
-// Fixed-layer fixtures are still reviewed at their resource definition (EV003).
 const callerProvidedLayer = (
   call: CallExpression,
   definition: EffectVitestFunctionNode,
@@ -1856,7 +1721,6 @@ const dataShapeReference = (node: MorphNode, imports: EffectVitestImports): bool
   (isProvenanceExpression(node, imports, OPTION_MODULES, "Option", ["isSome", "isNone"]) ||
     isProvenanceExpression(node, imports, RESULT_MODULES, "Result", ["isSuccess", "isFailure"]) ||
     isProvenanceExpression(node, imports, EXIT_MODULES, "Exit", ["isSuccess", "isFailure"]));
-// Only these rc.115 public operations have a fixed tagged/Boolean result after full application.
 const taggedValueOperations = [
   { modules: OPTION_MODULES, namespace: "Option", members: ["all", "flatten"], arity: 1 },
   { modules: OPTION_MODULES, namespace: "Option", members: ["map", "flatMap", "filter", "contains"], arity: 2 },
@@ -2006,13 +1870,11 @@ const liveClockFor = (wait: CallExpression, imports: EffectVitestImports): boole
 
 const FORK_MEMBERS = ["forkChild", "forkScoped", "forkDetach"];
 
-// A pipe stage that forks: `Effect.forkChild` or `Effect.forkChild({ ... })`.
 const isForkStage = (argument: MorphNode, imports: EffectVitestImports): boolean =>
   Node.isCallExpression(argument)
     ? isProvenanceCall(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)
     : Node.isExpression(argument) && isProvenanceExpression(argument, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS);
 
-// `Effect.forkChild(x)`, or a `.pipe` stage `Effect.forkChild` / `Effect.forkChild({ ... })`.
 const forkCall = (call: CallExpression, imports: EffectVitestImports): boolean => {
   if (isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", FORK_MEMBERS)) return true;
   const callee = call.getExpression();
@@ -2023,7 +1885,6 @@ const forkCall = (call: CallExpression, imports: EffectVitestImports): boolean =
   );
 };
 
-// Whether any identifier under `node` resolves to one of `bindings`.
 // Identity, not `Equal`: structural equality over ts-morph nodes walks the whole tree.
 const readsBinding = (node: MorphNode, bindings: ReadonlyArray<MorphNode>, imports: EffectVitestImports): boolean =>
   A.some(node.getDescendantsOfKind(SyntaxKind.Identifier), (identifier) =>
@@ -2044,8 +1905,6 @@ const newCarriers = (
     );
   });
 
-// Test-body declarations that carry the wait: the one whose initializer holds it, then every
-// test-body declaration whose initializer reads one already reached (a fake service handed to a subject).
 const waitCarriers = (
   wait: CallExpression,
   callback: EffectVitestFunctionNode,
@@ -2071,7 +1930,6 @@ const readsOrIs = (node: MorphNode, bindings: ReadonlyArray<MorphNode>, imports:
 const encloses = (outer: MorphNode, inner: MorphNode): boolean =>
   outer.getStart() <= inner.getStart() && inner.getEnd() <= outer.getEnd();
 
-// The carriers that build the forked value: those the fork reads, then every carrier their initializers read.
 const forkFeeders = (
   fork: CallExpression,
   carriers: ReadonlyArray<VariableDeclaration>,
@@ -2094,9 +1952,6 @@ const forkFeeders = (
   return fed;
 };
 
-// A carrier the test body also yields itself runs its wait on the test fiber, so the fork does not hold it:
-// a `yield*` outside the fork and outside the feeders' own initializers that reads a carrier declared before
-// the fork (the fiber handle and later join results are not carriers of the wait).
 const directlyAwaited = (
   fork: CallExpression,
   carriers: ReadonlyArray<VariableDeclaration>,
@@ -2117,9 +1972,6 @@ const directlyAwaited = (
   );
 };
 
-// The fork that runs the wait: a syntactic fork ancestor, or a fork in the same body whose
-// arguments or receiver read a test-body value carrying the wait, when the body does not also
-// yield that value directly.
 const forkOfWait = (
   wait: CallExpression,
   callback: EffectVitestFunctionNode,
@@ -2143,9 +1995,6 @@ const forkOfWait = (
   );
 };
 
-// A wait is controlled when a fiber forked in the test body holds it and a later statement of the
-// same body drives the TestClock or interrupts fibers, the TestClock canon (#1855 wave 5). A clock
-// operation before the fork cannot drive it, and a directly awaited wait is never controlled.
 const controlledWait = (
   wait: CallExpression,
   callback: EffectVitestFunctionNode,
@@ -2160,11 +2009,6 @@ const controlledWait = (
           isProvenanceCall(call, imports, ["effect", "effect/Fiber"], "Fiber", ["interrupt", "interruptAll"]))
     )
   );
-// Effect v4 exposes the live time reads as Effect values, so they appear as
-// references rather than calls inside the live body: `Clock.currentTimeMillis`
-// through a namespace, or a bare `currentTimeMillis` through a named import.
-// `DateTime.now` and its zoned and Date forms read the same Clock service; `nowUnsafe` reads the
-// host clock directly.
 const isLiveClockReference = (imports: EffectVitestImports) => (expression: Expression) =>
   isProvenanceExpression(expression, imports, ["effect", "effect/Clock"], "Clock", [
     "currentTimeMillis",
@@ -2269,7 +2113,6 @@ const fileSystemLayerModules = [
   "@effect/platform-node-shared/NodeFileSystem",
 ];
 const memoryFileSystemModules = ["@beep/memfs", "@beep/memfs/MemoryFileSystem"];
-// Results of these operations are POSIX link resolution or inode metadata.
 const nativeFileSystemOperations = ["chmod", "chown", "link", "readLink", "realPath", "symlink", "utimes"];
 const testKitModules = ["@beep/test-utils", "@beep/test-runner"];
 
@@ -2313,7 +2156,6 @@ const memberAccess = (node: MorphNode, member: string): O.Option<MorphNode> => {
     : O.none();
 };
 
-// A platform layer module: its subpath modules export `layer`, and its roots export the named bundles.
 type PlatformBundle = { readonly subpathModules: ReadonlyArray<string>; readonly names: ReadonlyArray<string> };
 const servicesBundle: PlatformBundle = { subpathModules: platformServicesModules, names: servicesBundleNames };
 const fileSystemBundle: PlatformBundle = { subpathModules: fileSystemLayerModules, names: [] };
@@ -2401,7 +2243,6 @@ const isDataLastLayerStage = (node: MorphNode, imports: EffectVitestImports): bo
   node.getArguments().length === 1 &&
   isProvenanceCall(node, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge", "merge"]);
 
-// A pipe preserves the layer only when every stage is a data-last Layer combinator.
 const isLayerPipe = (stage: MorphNode, imports: EffectVitestImports): boolean => {
   if (!Node.isCallExpression(stage)) return false;
   const callee = stage.getExpression();
@@ -2414,7 +2255,6 @@ const isLayerPipe = (stage: MorphNode, imports: EffectVitestImports): boolean =>
   return !A.isReadonlyArrayEmpty(stages) && A.every(stages, (candidate) => isDataLastLayerStage(candidate, imports));
 };
 
-// One step up the parent chain: climb with the subject flag, or stop with the flows found.
 type FlowStep =
   | { readonly _tag: "climb"; readonly provided: boolean }
   | { readonly _tag: "done"; readonly flows: O.Option<ReadonlyArray<HarnessFlow>> };
@@ -2431,8 +2271,6 @@ const suppliesSubject = (parent: CallExpression, current: MorphNode, imports: Ef
   isProvenanceCall(parent, imports, LAYER_MODULES, "Layer", ["provide", "provideMerge"]) &&
   O.exists(providerTarget(parent, current, imports), (target) => providesWorkspaceSubject(target, imports));
 
-// `MemoryFileSystem.layer`, `layerWith(...)` or `layerFaulty(...)` from `@beep/memfs`, imported
-// by name or reached through a namespace import of either module.
 const memoryFileSystemMembers = (members: ReadonlyArray<string>): ReadonlyArray<string> => [
   ...members,
   ...A.map(members, (member) => `MemoryFileSystem.${member}`),
@@ -2455,8 +2293,6 @@ const isMemoryFileSystemLayer = (node: MorphNode, imports: EffectVitestImports):
         memoryFileSystemMembers(["layer"])
       );
 
-// A merge builds its operands into one context where a later service replaces an earlier one,
-// so a memory filesystem operand after the bundle replaces the bundle's FileSystem.
 const memoryReplacesFileSystem = (
   parent: CallExpression,
   current: MorphNode,
@@ -2473,14 +2309,11 @@ const memoryReplacesFileSystem = (
   );
 };
 
-// `NodeServices.layer`, `BunServices.layer` or a services subpath `layer`, uncalled.
 const isServicesBundleLayer = (node: MorphNode, imports: EffectVitestImports): boolean =>
   (Node.isIdentifier(node) || Node.isPropertyAccessExpression(node)) &&
   (A.some(servicesBundleNames, (name) => isProvenanceExpression(node, imports, platformRoots, name, ["layer"])) ||
     isProvenanceExpression(node, imports, platformServicesModules, "Services", ["layer"]));
 
-// A runtime choice between the Node and Bun bundles: either branch may be the value, so the
-// chosen bundle reaches every harness the conditional reaches. Any other branch stays opaque.
 const runtimeBundleChoice = (
   conditional: ConditionalExpression,
   current: MorphNode,
@@ -2493,14 +2326,12 @@ const runtimeBundleChoice = (
   );
 };
 
-// One step through a Layer combinator call that takes the current layer as an argument.
 const compositionStep = (
   parent: CallExpression,
   current: MorphNode,
   imports: EffectVitestImports,
   provided: boolean
 ): FlowStep => {
-  // The bundle's FileSystem reaches no harness; its other services are not filesystem provenance.
   if (memoryReplacesFileSystem(parent, current, imports)) return done(O.some([]));
   if (isDataLastLayerStage(current, imports) && isLayerPipe(parent, imports)) return climb(provided);
   if (!isPreservingLayerCall(parent, imports)) return done(O.none());
@@ -2563,8 +2394,6 @@ const parentStep = (
   return done(O.none());
 };
 
-// Follow a layer value through const bindings and Layer composition to the
-// `@effect/vitest` layer harnesses it provides; any other use stays opaque.
 const harnessFlows = (
   node: MorphNode,
   imports: EffectVitestImports,
@@ -2600,7 +2429,6 @@ const bindingFlows = (
     }
     flows.push(...reached.value);
   }
-  // An unused binding stays opaque; references whose FileSystem is replaced contribute no flows.
   const result = opaque || A.isReadonlyArrayEmpty(references) ? O.none() : O.some(flows);
   MutableHashMap.set(visited, declaration.getStart(), result);
   return result;
@@ -2648,8 +2476,6 @@ const harnessCallbackKinds = HashSet.fromIterable([SyntaxKind.ArrowFunction, Syn
 const isFunctionValue = (node: MorphNode | undefined): node is EffectVitestFunctionNode =>
   Node.isArrowFunction(node) || Node.isFunctionExpression(node);
 
-// `Effect.fn(name)(body)`, `Effect.fn(body)` and `Effect.fnUntraced(body)` with no pipeline stages
-// keep the caller's context; any extra stage could provide another FileSystem.
 const effectFunctionBody = (call: CallExpression, imports: EffectVitestImports): O.Option<EffectVitestFunctionNode> => {
   const [body, ...stages] = call.getArguments();
   if (!isFunctionValue(body) || !A.isReadonlyArrayEmpty(stages)) return O.none();
@@ -2674,13 +2500,9 @@ const isPublicLayerProvider = (call: CallExpression, imports: EffectVitestImport
     "provideScopedLayer",
   ]);
 
-// Every effect/Effect combinator that provides or rewrites services for the effect it wraps.
 const effectContextProviders = ["provide", "provideContext", "setContext", "updateContext"];
-// Service-keyed providers name the one service they replace.
 const effectServiceProviders = ["provideService", "provideServiceEffect", "updateService", "updateServiceScoped"];
 
-// One classifier for any call that provides or rewrites context: the public
-// `provideScopedLayer` helper plus every effect/Effect provide and update combinator.
 const isContextProvider = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isPublicLayerProvider(call, imports) ||
   isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", [...effectContextProviders, ...effectServiceProviders]);
@@ -2706,8 +2528,6 @@ const importedName = (declaration: ImportDeclaration, local: string): string =>
     () => local
   );
 
-// A key proves another service only when it is an imported tag that is not FileSystem:
-// not from effect/FileSystem, not imported as FileSystem, and not a `.FileSystem` member.
 const keysOtherService = (key: MorphNode, imports: EffectVitestImports): boolean => {
   const access = Node.isPropertyAccessExpression(key);
   const root = access ? key.getExpression() : key;
@@ -2720,11 +2540,9 @@ const keysOtherService = (key: MorphNode, imports: EffectVitestImports): boolean
   );
 };
 
-// A provider replaces FileSystem unless its service key provably names another service.
 const replacesFileSystem = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isContextProvider(call, imports) && !O.exists(serviceKey(call, imports), (key) => keysOtherService(key, imports));
 
-// A pipe stage is a provider call, or the curried `provideService(key)(value)` form.
 const isProviderStage = (stage: MorphNode, imports: EffectVitestImports): boolean => {
   if (!Node.isCallExpression(stage)) return false;
   const callee = stage.getExpression();
@@ -2737,7 +2555,6 @@ const providesContext = (helper: EffectVitestFunctionNode, imports: EffectVitest
 const containsNode = (outer: MorphNode, inner: MorphNode): boolean =>
   outer === inner || A.some(inner.getAncestors(), (ancestor) => ancestor === outer);
 
-// A pipe whose input holds the call and whose later stages include a provider.
 const pipesThroughProvider = (pipe: CallExpression, call: MorphNode, imports: EffectVitestImports): boolean => {
   const callee = pipe.getExpression();
   if (Node.isPropertyAccessExpression(callee) && callee.getName() === "pipe")
@@ -2750,8 +2567,6 @@ const pipesThroughProvider = (pipe: CallExpression, call: MorphNode, imports: Ef
   return input !== undefined && containsNode(input, call) && A.some(stages, (stage) => isProviderStage(stage, imports));
 };
 
-// True when a provider or update wrapper encloses this call site within its region,
-// either taking it as an argument or piping it through a provider stage.
 const wrappedByProvider = (call: MorphNode, region: MorphNode, imports: EffectVitestImports): boolean =>
   A.some(
     A.takeWhile(call.getAncestors(), (ancestor) => ancestor !== region),
@@ -2765,7 +2580,6 @@ const wrappedByProvider = (call: MorphNode, region: MorphNode, imports: EffectVi
 const isYieldStar = (node: MorphNode | undefined): boolean =>
   Node.isYieldExpression(node) && node.getAsteriskToken() !== undefined;
 
-// A call on an effect/Effect namespace (`Effect.map(program, f)`) keeps carrying its effect arguments.
 const isEffectModuleCall = (call: CallExpression, imports: EffectVitestImports): boolean => {
   const callee = call.getExpression();
   if (!Node.isPropertyAccessExpression(callee)) return false;
@@ -2778,7 +2592,6 @@ const isEffectModuleCall = (call: CallExpression, imports: EffectVitestImports):
   );
 };
 
-// `program.pipe(...stages)` carries the receiver on when no stage is a provider.
 const pipeCarrier = (access: MorphNode, node: MorphNode, imports: EffectVitestImports): O.Option<MorphNode> => {
   if (!Node.isPropertyAccessExpression(access) || access.getExpression() !== node || access.getName() !== "pipe")
     return O.none();
@@ -2790,14 +2603,12 @@ const pipeCarrier = (access: MorphNode, node: MorphNode, imports: EffectVitestIm
     : O.none();
 };
 
-// `Effect.map(program, f)` and similar effect/Effect calls carry their effect arguments.
 const effectCallCarries = (parent: MorphNode | undefined, node: MorphNode, imports: EffectVitestImports): boolean =>
   Node.isCallExpression(parent) &&
   isArgumentOf(parent, node) &&
   isEffectModuleCall(parent, imports) &&
   !isProviderStage(parent, imports);
 
-// The expression that carries this effect value one step further, when the step adds no provider.
 const carriedBy = (node: MorphNode, imports: EffectVitestImports): O.Option<MorphNode> => {
   const parent = node.getParent();
   if (parent === undefined) return O.none();
@@ -2805,8 +2616,6 @@ const carriedBy = (node: MorphNode, imports: EffectVitestImports): O.Option<Morp
   return effectCallCarries(parent, node, imports) ? O.some(parent) : pipeCarrier(parent, node, imports);
 };
 
-// A function whose returned effect is run by its own caller: the region itself, whose call
-// sites are checked separately, or a test registration callback run by the harness.
 const returnsToRunner = (fn: MorphNode | undefined, region: MorphNode, imports: EffectVitestImports): boolean => {
   if (fn === region) return true;
   const registration = fn?.getParent();
@@ -2822,8 +2631,6 @@ type BindingCheck = {
   readonly seen: Array<VariableDeclaration>;
 };
 
-// Where one effect value ends up. It is safe only when it is run by `yield*`, discarded,
-// returned to a runner, or bound to a `const` whose own uses are all safe.
 const flowsToNativeRun = (node: MorphNode, check: BindingCheck): boolean => {
   let current = node;
   for (let next = carriedBy(current, check.imports); O.isSome(next); next = carriedBy(current, check.imports))
@@ -2840,8 +2647,6 @@ const flowsToNativeRun = (node: MorphNode, check: BindingCheck): boolean => {
 const functionLike = (node: MorphNode): boolean =>
   Node.isArrowFunction(node) || Node.isFunctionExpression(node) || Node.isFunctionDeclaration(node);
 
-// A `const` holding an unrun effect: every reference must be resolvable and flow safely,
-// and none may sit under a provider. `let`, destructuring and escapes keep it opaque.
 const effectBindingSafe = (declaration: VariableDeclaration, check: BindingCheck): boolean => {
   if (A.some(check.seen, (prior) => prior === declaration)) return true;
   check.seen.push(declaration);
@@ -2853,8 +2658,6 @@ const effectBindingSafe = (declaration: VariableDeclaration, check: BindingCheck
   );
 };
 
-// A `yield*` result binding: the helper already ran in the caller's context, so only a
-// reference placed under a provider can make the call site ambiguous.
 const resultBindingSafe = (declaration: VariableDeclaration, check: BindingCheck): boolean => {
   const name = declaration.getNameNode();
   return (
@@ -2865,7 +2668,6 @@ const resultBindingSafe = (declaration: VariableDeclaration, check: BindingCheck
   );
 };
 
-// One step from a value to its consumer: through `yield*` (the effect has then run) or a carrier.
 const valueStep = (
   node: MorphNode,
   imports: EffectVitestImports
@@ -2875,7 +2677,6 @@ const valueStep = (
   return O.map(carriedBy(node, imports), (next) => ({ next, ran: false }));
 };
 
-// Follows the helper call's value to its binding, if any, and checks every use of it.
 const boundValueSafe = (call: CallExpression, region: MorphNode, imports: EffectVitestImports): boolean => {
   let current: MorphNode = call;
   let ran = false;
@@ -2887,12 +2688,9 @@ const boundValueSafe = (call: CallExpression, region: MorphNode, imports: Effect
   const check: BindingCheck = { region, imports, seen: [] };
   if (Node.isVariableDeclaration(parent) && parent.getInitializer() === current)
     return ran ? resultBindingSafe(parent, check) : effectBindingSafe(parent, check);
-  // An unrun value must reach a native run like a bound one; an unknown function argument,
-  // object property, spread or assignment does not, so the helper stays unfollowed.
   return ran || flowsToNativeRun(current, check);
 };
 
-// `updateServiceScoped` rewrites the rest of its scope, so it taints every call site in the region.
 const regionUpdatesScope = (calls: ReadonlyArray<CallExpression>, imports: EffectVitestImports): boolean =>
   A.some(
     calls,
@@ -2901,8 +2699,6 @@ const regionUpdatesScope = (calls: ReadonlyArray<CallExpression>, imports: Effec
       replacesFileSystem(call, imports)
   );
 
-// A same-file helper called by name runs in the caller's context, so its
-// FileSystem reads count as the harness callback's own.
 const calledHelper = (call: CallExpression, imports: EffectVitestImports): O.Option<EffectVitestFunctionNode> => {
   const callee = call.getExpression();
   return Node.isIdentifier(callee)
@@ -2913,7 +2709,6 @@ const calledHelper = (call: CallExpression, imports: EffectVitestImports): O.Opt
     : O.none();
 };
 
-// Records FileSystem service bindings and calls lexically inside one region.
 const collectFileSystemEvidence = (
   region: MorphNode,
   imports: EffectVitestImports,
@@ -2923,19 +2718,15 @@ const collectFileSystemEvidence = (
   region.forEachDescendant((node, traversal) => {
     if (Node.isVariableDeclaration(node) && isFileSystemService(node, imports)) services.push(node);
     if (Node.isCallExpression(node)) calls.push(node);
-    // Only these two syntax kinds can be harness callbacks; other descendants need no provenance lookup.
     if (!HashSet.has(harnessCallbackKinds, node.getKind())) return;
     const harness = node.getParentIfKind(SyntaxKind.CallExpression)?.getExpressionIfKind(SyntaxKind.CallExpression);
     if (harness === undefined) return;
-    // A nested layer owns its callback's services and may replace FileSystem.
     if (isHarnessMethodCall(harness, imports, "layer") && O.contains(harnessCallback(harness), node)) {
       traversal.skip();
     }
   });
 
 // Queues each newly reached same-file helper once, so recursive helpers terminate.
-// A call site wrapped by a provider may run the helper against another FileSystem,
-// so its helper is not followed and the import stays flagged for review.
 const appendCalledHelpers = (
   calls: ReadonlyArray<CallExpression>,
   region: MorphNode,
@@ -2944,7 +2735,6 @@ const appendCalledHelpers = (
 ): void => {
   if (regionUpdatesScope(calls, imports)) return;
   for (const call of calls) {
-    // Resolve the helper first: the call-site checks walk references and run only for helper calls.
     const helper = calledHelper(call, imports);
     if (
       O.isSome(helper) &&
@@ -2988,8 +2778,6 @@ const isChildProcessMake = (node: MorphNode | undefined, imports: EffectVitestIm
   Node.isCallExpression(node) &&
   isProvenanceCall(node, imports, ["effect/process/ChildProcess"], "ChildProcess", ["make"]);
 
-// `const child = yield* ChildProcess.make(...)`, or `yield* run(...)` through a same-file
-// `const run = (...) => ChildProcess.make(...)`: a handle to a process the platform spawner started.
 const isChildProcessHandle = (binding: MorphNode, imports: EffectVitestImports): boolean => {
   if (!Node.isVariableDeclaration(binding) || binding.getVariableStatement()?.getDeclarationKind() !== "const")
     return false;
@@ -3012,9 +2800,6 @@ const isChildProcessHandle = (binding: MorphNode, imports: EffectVitestImports):
   );
 };
 
-// A harness that kills a process it spawned tests that process's death (crash recovery,
-// SIGKILL boundaries). Only the native spawner produces a killable process, so the platform
-// bundle is the subject; a scripted spawner or memory filesystem cannot stand in for it.
 const harnessKillsChildProcess = (harness: CallExpression, imports: EffectVitestImports): boolean =>
   O.exists(harnessCallback(harness), (callback) => {
     const { calls } = harnessEvidence(callback, imports);
@@ -3029,7 +2814,6 @@ const harnessKillsChildProcess = (harness: CallExpression, imports: EffectVitest
     });
   });
 
-// A write target: the left side of an assignment, a for-in/of head, or a ++/-- operand.
 const identifierIsWritten = (candidate: Identifier): boolean =>
   A.some(candidate.getAncestors(), (ancestor) => {
     if (Node.isForInStatement(ancestor) || Node.isForOfStatement(ancestor))
@@ -3048,7 +2832,6 @@ const identifierIsWritten = (candidate: Identifier): boolean =>
     );
   });
 
-// The names a declaration binds: one identifier, or every identifier of a destructuring pattern.
 const declarationBoundNames = (declaration: VariableDeclaration): ReadonlyArray<string> => {
   const nameNode = declaration.getNameNode();
   return Node.isIdentifier(nameNode)
@@ -3056,8 +2839,6 @@ const declarationBoundNames = (declaration: VariableDeclaration): ReadonlyArray<
     : A.dedupe(A.map(nameNode.getDescendantsOfKind(SyntaxKind.Identifier), (identifier) => identifier.getText()));
 };
 
-// A mutable declaration is opaque only if a later write can replace its initializer.
-// A candidate resolves to the declaration only through a name it binds; order is irrelevant to A.some.
 const declarationIsReassigned = (declaration: VariableDeclaration, imports: EffectVitestImports): boolean => {
   const declarations = declaration.getParentIfKind(SyntaxKind.VariableDeclarationList);
   if (declarations === undefined || declarations.getDeclarationKind() === "const") return false;
@@ -3072,9 +2853,6 @@ const declarationIsReassigned = (declaration: VariableDeclaration, imports: Effe
 
 const PLATFORM_LOCAL_MODULES = ["@effect/vitest", "@beep/test-runner", "@beep/test-utils/Vitest"];
 
-// Imported values can carry filesystem effects even when passed without calling them.
-// Unbound runtime I/O globals are opaque; local shadowing remains lexical.
-// Loop heads have a declaration list but no variable statement; catch bindings have neither.
 const opaquePlatformReference = (reference: Identifier, imports: EffectVitestImports): boolean => {
   const binding = imports.resolveBinding(reference);
   if (O.isNone(binding)) return A.contains(["Bun", "require", "process", "globalThis", "global"], reference.getText());
@@ -3084,8 +2862,6 @@ const opaquePlatformReference = (reference: Identifier, imports: EffectVitestImp
   return module !== "effect" && !Str.startsWith("effect/")(module) && !A.contains(PLATFORM_LOCAL_MODULES, module);
 };
 
-// Follow local values as well as helpers: an initializer can hide an imported effect,
-// runtime alias or an Effect.fn pipeline that helperBody deliberately cannot open.
 // Include the region itself because an alias initializer may be just one identifier.
 const harnessHasOpaquePlatformReferences = (harness: CallExpression, imports: EffectVitestImports): boolean =>
   O.exists(harnessCallback(harness), (callback) => {
@@ -3127,11 +2903,8 @@ const harnessHasOpaquePlatformReferences = (harness: CallExpression, imports: Ef
     return false;
   });
 
-// A services bundle used only by the shared harness is not filesystem evidence.
-// Keep portable filesystem candidates unless the existing native-subject proof succeeds.
 const SQLITE_CLIENT_MODULES = ["@effect/sql-sqlite-node/SqliteClient", "@effect/sql-sqlite-bun/SqliteClient"];
 
-// `SqliteClient.make({ filename })` or `.layer({ filename })` over anything but the `":memory:"` literal.
 const opensSqliteFile = (call: CallExpression, imports: EffectVitestImports): boolean => {
   if (!isProvenanceCall(call, imports, SQLITE_CLIENT_MODULES, "SqliteClient", ["make", "layer"])) return false;
   const options = call.getArguments()[0];
@@ -3142,16 +2915,11 @@ const opensSqliteFile = (call: CallExpression, imports: EffectVitestImports): bo
   return value !== undefined && !(Node.isStringLiteral(value) && value.getLiteralValue() === ":memory:");
 };
 
-// A harness that opens a SQLite database file reads bytes the engine wrote through the native
-// filesystem; SQLite never goes through the Effect FileSystem, so no memory filesystem can hold
-// that file and the platform bundle is the subject.
 const harnessOpensSqliteFile = (harness: CallExpression, imports: EffectVitestImports): boolean =>
   O.exists(harnessCallback(harness), (callback) =>
     A.some(harnessEvidence(callback, imports).calls, (call) => opensSqliteFile(call, imports))
   );
 
-// Vite's `?raw` import decodes UTF-8 text, so a checked-in binary file (a WASM kernel, an archive, an
-// image, a database) has no in-memory route into a test: only the native filesystem can read it.
 const committedBinaryAssetExtensions = [
   ".wasm",
   ".bin",
@@ -3170,7 +2938,6 @@ const committedBinaryAssetExtensions = [
 ];
 const REPOSITORY_REGION_LIMIT = 64;
 
-// `new URL("<relative>", import.meta.url)`: a checked-in repository file located on disk.
 const repositoryFileUrl = (node: MorphNode, imports: EffectVitestImports): O.Option<string> => {
   if (!Node.isNewExpression(node)) return O.none();
   const callee = node.getExpression();
@@ -3189,8 +2956,6 @@ const repositoryFileUrl = (node: MorphNode, imports: EffectVitestImports): O.Opt
 const isRelativeImport = (binding: MorphNode): boolean =>
   Node.isImportDeclaration(binding) && Str.startsWith(".")(binding.getModuleSpecifierValue());
 
-// The value a referenced binding contributes: a same-file const initializer or function, or the
-// exported value of a relative (test fixture or support) module. Package imports stay closed.
 const referencedRegion = (
   reference: Identifier,
   imports: EffectVitestImports,
@@ -3207,8 +2972,6 @@ const referencedRegion = (
     });
   });
 
-// The harness callback plus every same-file value and relative-module export it reaches by name,
-// each region visited once and the walk bounded, so fixture-shaped subjects are followed to source.
 const regionValueReferences = (region: MorphNode): ReadonlyArray<Identifier> =>
   A.filter(
     region.getDescendantsOfKind(SyntaxKind.Identifier),
@@ -3241,9 +3004,6 @@ const regionLocates = (region: MorphNode, analysis: LayerAnalysis, accept: (targ
   );
 };
 
-// A harness that spawns a child process and hands it a checked-in repository file (its entrypoint
-// or its subject) tests a process that reads the real disk; no memory filesystem is visible to a
-// child, so the platform bundle is the subject. The spawn may live in a relative fixture module.
 const harnessSpawnsRepositoryChild = (harness: CallExpression, analysis: LayerAnalysis): boolean =>
   A.some(
     harnessRepositoryRegions(harness, analysis),
@@ -3253,8 +3013,6 @@ const harnessSpawnsRepositoryChild = (harness: CallExpression, analysis: LayerAn
       ) && regionLocates(region, analysis, constTrue)
   );
 
-// A harness that hands its subject a checked-in binary asset by path reads bytes only the native
-// filesystem can supply (see `committedBinaryAssetExtensions`).
 const harnessLocatesCommittedBinaryAsset = (harness: CallExpression, analysis: LayerAnalysis): boolean =>
   A.some(harnessRepositoryRegions(harness, analysis), (region) =>
     regionLocates(region, analysis, (target) =>
@@ -3283,7 +3041,6 @@ const canonicalPlatformIntegration = (
           (!Node.isIdentifier(node) || !isNamePosition(node)) &&
           isProvenanceExpression(node, imports, ["effect", "effect/FileSystem"], "FileSystem", ["FileSystem"])
       );
-      // Every reached layer either flows to these harnesses or has its FileSystem replaced by memory.
       return (
         !A.isReadonlyArrayEmpty(layers) &&
         A.every(
@@ -3305,8 +3062,6 @@ const canonicalPlatformIntegration = (
     });
   });
 
-// A native FileSystem layer stays a memory filesystem candidate unless every harness it reaches
-// calls a link or inode operation on the FileSystem it binds; a provided subject is not enough here.
 const nativeFileSystemLayerIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
   A.contains(fileSystemLayerModules, declaration.getModuleSpecifierValue()) &&
   O.exists(platformBundleLayers(declaration, imports, fileSystemBundle), (layers) => {
@@ -3530,7 +3285,6 @@ const detectRuntimeBoundary = (
 const providesBuiltLayer = (layer: Expression, imports: EffectVitestImports): boolean =>
   !isPureStubLayer(layer, imports) && !isContextProvision(layer, imports);
 
-// A context bound from `yield* Layer.build(...)` was built once; providing it again starts no new lifecycle.
 const isBuiltContext = (layer: Expression, imports: EffectVitestImports): boolean =>
   Node.isIdentifier(layer) &&
   O.exists(localInitializer(layer, imports), (initializer) => {
@@ -3548,7 +3302,6 @@ const isLayerProvisionCall = (call: CallExpression, imports: EffectVitestImports
   !Node.isCallExpression(call.getExpression()) &&
   (isPublicLayerProvider(call, imports) || isProvenanceCall(call, imports, EFFECT_MODULES, "Effect", ["provide"]));
 
-// Variables declared inside the test callback that a provided layer expression reads.
 const testBodyBindings = (
   layer: MorphNode,
   callback: EffectVitestFunctionNode,
@@ -3575,7 +3328,6 @@ const LAYER_VALUES = [...LAYER_COMBINATORS, "succeed", "sync", "effect", "scoped
 const yieldedOperand = (initializer: Expression): O.Option<Expression> =>
   Node.isYieldExpression(initializer) ? O.fromUndefinedOr(initializer.getExpression()) : O.some(initializer);
 
-// `yield* Path.Path` or `yield* FileSystem.FileSystem` reads a service tag; refs and config layers hold no store.
 const isUtilityInitializer = (initializer: Expression, imports: EffectVitestImports): boolean =>
   O.match(yieldedOperand(initializer), {
     onNone: constTrue,
@@ -3601,9 +3353,6 @@ const bodyDeclarationInitializer = (declaration: MorphNode): O.Option<Expression
     ? O.fromUndefinedOr(declaration.getInitializer())
     : O.fromUndefinedOr(declaration.getFirstAncestorByKind(SyntaxKind.VariableDeclaration)?.getInitializer());
 
-// Test-body values a layer reads directly that can name its store: a directory, a path, a fixture. Service
-// tags, refs and config layers never count; layer-valued bindings are followed but are not evidence themselves,
-// and other values are not followed, so two stores derived from one corpus root stay distinct.
 const storeEvidence = (
   node: MorphNode,
   callback: EffectVitestFunctionNode,
@@ -3624,24 +3373,16 @@ const storeEvidence = (
     });
   });
 
-// A store-reading factory argument: its normalized text plus the test-body declarations its identifiers resolve
-// to, so same-named bindings in nested or sibling scopes (two `const dataDir`) stay distinct stores (#2196).
 type ArgumentEvidence = { readonly text: string; readonly bindings: ReadonlyArray<MorphNode> };
 
 type StoreEvidence = MorphNode | ArgumentEvidence;
 
 type LifecycleKey = { readonly key: MorphNode | string; readonly evidence: ReadonlyArray<StoreEvidence> };
 
-// Generic constructors name no store themselves: `Layer.effect(StoreA, openA(dir))` and
-// `Layer.effect(StoreB, openB(dir))` are different layers, so their key is the whole normalized call.
 const GENERIC_LAYER_CONSTRUCTORS = ["succeed", "sync", "effect", "scoped", "unwrap", "mock"];
 
 const normalizedText = (node: MorphNode): string => Str.replace(/\s+/gu, "")(node.getText());
 
-// A factory argument names its store by its whole expression bound to its store-evidence declarations, so
-// `path.join(root, "a")` and `path.join(root, "b")` stay distinct, and so do two `dataDir` bindings declared
-// in different scopes, while a per-scope `const path = yield* Path.Path` never splits one store; object
-// arguments compare property by property.
 const argumentStoreEvidence = (
   argument: MorphNode,
   callback: EffectVitestFunctionNode,
@@ -3652,9 +3393,6 @@ const argumentStoreEvidence = (
     return A.isReadonlyArrayNonEmpty(bindings) ? [{ text: normalizedText(part), bindings }] : [];
   });
 
-// The constructors a provided layer builds: a test-body layer binding (and what it builds), a project
-// factory call named by its callee, or a generic Layer constructor named by its whole call. Layer
-// combinators and `.pipe` stages contribute their operands.
 const lifecycleKeys = (
   layer: MorphNode,
   callback: EffectVitestFunctionNode,
@@ -3708,8 +3446,6 @@ const sharesLifecycle = (left: LifecycleKey, right: LifecycleKey): boolean =>
   left.key === right.key &&
   A.some(left.evidence, (value) => A.some(right.evidence, (other) => sameEvidence(value, other)));
 
-// `it.layer` builds one layer per block. A test that provides the same layer binding or factory twice over
-// one test-body store value (open, close, reopen one store) owns several lifecycles `it.layer` cannot express.
 const repeatsTestBodyLifecycle = (node: MorphNode, layer: Expression, state: DetectorState): boolean =>
   O.exists(state.harness.enclosingTest(node), ({ callback }) => {
     const { imports } = state;
@@ -3810,7 +3546,6 @@ const detectResourceWrapper = (context: ReturnType<typeof inspectContext>, state
   }
 };
 
-// Value assertions that also observe state, beside `isAssertion`'s expect and Boolean forms.
 const VALUE_ASSERTIONS = [
   "deepStrictEqual",
   "notDeepStrictEqual",
@@ -3829,8 +3564,6 @@ const VALUE_ASSERTIONS = [
   "assertUndefined",
 ];
 
-// `expect(x).toBe(y)`, `expect(x).not.toBe(y)` or `expect(p).resolves.toBe(y)`: a matcher call on an
-// `expect(...)` receiver. A bare `expect(x)` checks nothing.
 const isExpectMatcher = (call: CallExpression, imports: EffectVitestImports): boolean => {
   let receiver: MorphNode = call.getExpression();
   if (!Node.isPropertyAccessExpression(receiver)) return false;
@@ -3844,7 +3577,6 @@ const isObservation = (call: CallExpression, imports: EffectVitestImports): bool
   isProvenanceCall(call, imports, ["@effect/vitest/utils"], "utils", VALUE_ASSERTIONS) ||
   isProvenanceCall(call, imports, VITEST_MODULES, "assert", VALUE_ASSERTIONS);
 
-// Constructs whose body may run zero times, or only on one branch.
 const CONDITIONAL_KINDS = HashSet.fromIterable([
   SyntaxKind.IfStatement,
   SyntaxKind.SwitchStatement,
@@ -3869,8 +3601,6 @@ const isConditional = (node: MorphNode): boolean =>
   HashSet.has(CONDITIONAL_KINDS, node.getKind()) ||
   (Node.isBinaryExpression(node) && HashSet.has(SHORT_CIRCUIT_OPERATORS, node.getOperatorToken().getKind()));
 
-// Code that may run later, never, or only on some paths: function, method, accessor and class bodies,
-// conditional statements and expressions, and nested blocks.
 const mayNotRun = (node: MorphNode): boolean =>
   Node.isFunctionLikeDeclaration(node) ||
   Node.isClassDeclaration(node) ||
@@ -3878,7 +3608,6 @@ const mayNotRun = (node: MorphNode): boolean =>
   Node.isBlock(node) ||
   isConditional(node);
 
-// Whether the statement `node` always runs an assertion: only its unconditional parts count.
 const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean => {
   if (mayNotRun(node)) return false;
   let asserts = false;
@@ -3893,8 +3622,6 @@ const assertsDirectly = (node: MorphNode, imports: EffectVitestImports): boolean
   return asserts;
 };
 
-// The operand an `Effect.scoped(operand)` call closes, or the pipe input when `Effect.scoped` is the
-// first stage. A later stage closes the earlier stages' output, so no operand is claimed for it.
 const scopedOperand = (call: CallExpression, stage: O.Option<MorphNode>): O.Option<MorphNode> => {
   const arguments_ = call.getArguments();
   if (O.isNone(stage)) return O.fromUndefinedOr(arguments_[0]);
@@ -3904,7 +3631,6 @@ const scopedOperand = (call: CallExpression, stage: O.Option<MorphNode>): O.Opti
   return arguments_[1] === stage.value ? O.fromUndefinedOr(arguments_[0]) : O.none();
 };
 
-// `Effect.succeed(...)` and `Effect.sync(...)` acquire nothing a scope could release.
 const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imports: EffectVitestImports) =>
   O.exists(
     scopedOperand(call, stage),
@@ -3913,20 +3639,15 @@ const closesPureOperand = (call: CallExpression, stage: O.Option<MorphNode>, imp
       isProvenanceCall(operand, imports, EFFECT_MODULES, "Effect", ["succeed", "sync"])
   );
 
-// `pipe(effect, ..., Effect.forkChild)` from `effect/Function`, the free-function form `forkCall` leaves out.
 const functionPipeFork = (call: CallExpression, imports: EffectVitestImports): boolean =>
   isProvenanceCall(call, imports, ["effect", "effect/Function"], "Function", ["pipe"]) &&
   A.some(call.getArguments().slice(1), (argument) => isForkStage(argument, imports));
 
-// `Effect.gen(function* () { ... })` runs its generator in place; any other function value may run later
-// or never, even when it is a call argument.
 const runsInPlace = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
   Node.isCallExpression(parent) &&
   isProvenanceCall(parent, imports, EFFECT_MODULES, "Effect", ["gen"]) &&
   A.some(parent.getArguments(), (argument) => argument === current);
 
-// A path step that may skip the scope or let it outlive the following statements: a nested
-// declaration, a fork, a conditional, or a function value that does not run in place.
 const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectVitestImports): boolean =>
   Node.isFunctionDeclaration(current) ||
   isConditional(current) ||
@@ -3936,14 +3657,9 @@ const leavesExecution = (current: MorphNode, parent: MorphNode, imports: EffectV
 const isBodyStatement = (current: MorphNode, parent: MorphNode): boolean =>
   Node.isBlock(parent) && Node.isStatement(current);
 
-// A body statement runs the scope only when it yields it; the test callback's own `return` hands the
-// effect to the harness, which runs it.
 const statementRuns = (current: MorphNode, parent: MorphNode, ran: boolean, root: EffectVitestFunctionNode) =>
   !isBodyStatement(current, parent) || ran || (Node.isReturnStatement(current) && parent === root.getBody());
 
-// Whether every step from the scope up to the test or helper callback runs it: each enclosing statement
-// yields the scoped effect (`const work = Effect.scoped(acquire)` only builds it), no step is conditional,
-// forked or deferred, and only `Effect.gen` generator bodies are crossed.
 const scopeRuns = (
   current: MorphNode,
   executed: boolean,
@@ -3957,7 +3673,6 @@ const scopeRuns = (
   return statementRuns(current, parent, ran, root) && scopeRuns(parent, ran, root, imports);
 };
 
-// Whether a statement after one of the scope's enclosing statements always asserts.
 const observedAfterScope = (
   current: MorphNode,
   root: EffectVitestFunctionNode,
@@ -3974,8 +3689,6 @@ const observedAfterScope = (
 
 type ScopeOwner = O.Option<{ readonly callback: EffectVitestFunctionNode }>;
 
-// A shorter scope the test observes closing: every step up to the test or helper runs it, and a later
-// unconditional statement asserts after it has completed. Such a scope needs no review.
 const observedShorterScope = (
   call: CallExpression,
   stage: O.Option<MorphNode>,
@@ -4255,7 +3968,6 @@ const predicateFamilies = [
   { family: "Exit", modules: EXIT_MODULES, members: ["isSuccess", "isFailure"] },
 ];
 
-// `value.pipe(O.isSome)` / `pipe(value, O.isSome)`: the terminal stage is a predicate reference.
 const pipedPredicateDescription = (node: MorphNode | undefined, imports: EffectVitestImports) =>
   O.flatMap(Node.isCallExpression(node) ? terminalPipeStage(node, imports) : O.none(), (stage) =>
     Node.isExpression(stage)
@@ -4279,8 +3991,6 @@ const isCompoundBoolean = (node: MorphNode | undefined): boolean => {
   );
 };
 
-// A canonical utils.assertTrue/assertFalse already states a compound Boolean
-// predicate, or a piped predicate whose recommended primitive is that same helper.
 const isCanonicalBooleanForm = (call: CallExpression, imports: EffectVitestImports): boolean =>
   A.some([true, false], (truth) => {
     const helper = truth ? "assertTrue" : "assertFalse";
@@ -4537,7 +4247,6 @@ const detectLayerTimeout = ({ call }: ReturnType<typeof inspectContext>, state: 
   }
 };
 
-// `each`, `for` and `prop` register several cases from one call; a curried callee does the same.
 const MULTI_CASE_MEMBERS = ["each", "for", "prop", "propEffect"];
 
 const isSingleCaseRegistration = (registration: CallExpression): boolean => {
@@ -4557,7 +4266,6 @@ const isDirectBlockStatement = (registration: CallExpression, block: EffectVites
   return body === registration || (Node.isExpressionStatement(statement) && statement.getParent() === body);
 };
 
-// The block's tester may only appear as the base of its one registration, never passed to a helper.
 const testerConfinedTo = (registration: CallExpression, block: EffectVitestFunctionNode): boolean =>
   A.every(block.getParameters(), (parameter) => {
     const name = parameter.getNameNode();
@@ -4574,8 +4282,6 @@ const testerConfinedTo = (registration: CallExpression, block: EffectVitestFunct
     );
   });
 
-// A nested `it.layer` builds `Layer.provideMerge(nested, parentEnv)`, whose later context wins, so a direct
-// `TestClock.layer()` argument (a new layer object, built once in the forked memo map) replaces the parent clock.
 const installsFreshTestClock = (block: EffectVitestFunctionNode, imports: EffectVitestImports): boolean => {
   const registration = block.getParent();
   const builder = Node.isCallExpression(registration) ? registration.getExpression() : undefined;
@@ -4583,9 +4289,6 @@ const installsFreshTestClock = (block: EffectVitestFunctionNode, imports: Effect
   return Node.isCallExpression(layer) && isProvenanceCall(layer, imports, TEST_CLOCK_MODULES, "TestClock", ["layer"]);
 };
 
-// `@effect/vitest` builds every top-level `it.layer` in a fresh memo map, so its TestClock is the block's
-// own. Nested blocks fork the parent's memo map and share its TestClock unless their own layer installs a
-// fresh one.
 const ownsUnsharedTestClock = (block: EffectVitestFunctionNode, adjust: CallExpression, state: DetectorState) =>
   O.match(state.harness.enclosingLayerBlock(block), {
     onNone: constTrue,
@@ -4617,8 +4320,6 @@ const detectLayerClockReset = ({ call, member }: ReturnType<typeof inspectContex
   }
 };
 
-// Vitest's transform requires its own vi binding for hoisted module mocks.
-// Registration/assertion imports still belong to the Effect test harness.
 const requiresVitestMockHoisting = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean => {
   const named = declaration.getNamedImports();
   if (
@@ -4730,7 +4431,6 @@ const scopeReferenceWholeBody = (call: CallExpression, state: DetectorState): bo
   );
 };
 
-// An applied scope runs in an Effect test, a directly registered effect, or an effect helper.
 const appliedScopeRuns = (
   call: CallExpression,
   test: ReturnType<EffectVitestHarnessIndex["enclosingTest"]>,
@@ -4774,8 +4474,6 @@ const detectAppliedReferences = (call: CallExpression, member: string, state: De
   const callee = call.getExpression();
   if (A.isReadonlyArrayEmpty(stages) && !isProviderReference(callee, state)) return;
   A.forEach(stages, (stage, index) => detectAppliedScope(call, stage, index === stages.length - 1, state));
-  // Resolve only applied provider references before walking test ancestry.
-  // The lexical resolver remains authoritative for aliases and shadows.
   const providers = A.getSomes(
     A.map(
       A.filter([...stages, callee], (expression) => isProviderReference(expression, state)),
@@ -4946,6 +4644,76 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  *
  * Mechanical predicates produce detector rows; semantic uncertainty is retained
  * as lower-confidence judgment rows instead of being asserted or discarded.
+ *
+ * EV002 skips a test that provides one layer binding or factory twice over one test-body store
+ * (open, close, reopen): `it.layer` builds one layer per block and cannot express those
+ * lifecycles. A store is named by the whole factory argument bound to the test-body declarations
+ * it reads, so same-named bindings in different scopes stay distinct, and object arguments compare
+ * property by property. Service tags, refs and config layers never name a store, and a context
+ * bound from `Layer.build` starts no new lifecycle.
+ *
+ * EV003 asks for `it.layer` sharing only when a wrapper holds a resource other than a fresh temp
+ * root, or changes process state in its use, release, pipe stages or a same-file helper it
+ * reaches. A fresh temp root (an acquire that is only the temp-directory call, optionally behind
+ * FileSystem access, released by removing the exact path it produced) isolates each case on
+ * purpose. A layer factory returning its Layer, and a process entry module under test/ that hands
+ * its program to a platform `runMain` at module scope, are not wrappers. Only an argument
+ * forwarded to `Layer.build` is a caller-supplied layer; a fixed-layer fixture is reviewed at its
+ * resource definition.
+ *
+ * EV004 skips a shorter scope the test observes closing: each step from the scope up to the test
+ * or helper callback yields it, no step is conditional, forked or deferred, only `Effect.gen`
+ * bodies are crossed, and a later unconditional statement asserts. A scope over `Effect.succeed`
+ * or `Effect.sync` closes nothing.
+ *
+ * EV006 leaves a utils `assertTrue` or `assertFalse` that already states a compound Boolean or a
+ * piped predicate whose recommended primitive is that same helper.
+ *
+ * EV008 treats a wait as controlled only when a fiber forked in the test body holds it and a later
+ * statement of that body adjusts the TestClock or interrupts fibers. A fork holds a wait it reads
+ * through test-body values unless the body also yields such a value itself; a clock call before
+ * the fork, or a directly awaited wait, controls nothing. EV009 finds live time reads as Effect
+ * value references, and `DateTime.now` and its forms read the same Clock.
+ *
+ * EV010 keeps a native filesystem import as a memory filesystem candidate unless every harness its
+ * layers reach needs the real disk: it kills a process it spawned, opens a SQLite file other than
+ * the in-memory one, spawns a child given a checked-in file, hands its subject a checked-in binary
+ * asset (a raw import decodes text, so it cannot carry those bytes), or calls a link or inode
+ * operation. A later memory filesystem operand in a merge replaces the bundle's FileSystem. A
+ * provider replaces FileSystem unless its key is an imported tag provably naming another service,
+ * and a same-file helper counts as the harness callback's own only when its value reaches a run
+ * in the caller's context with no provider in between.
+ *
+ * EV011 accepts a plain vitest import that only supplies the vi binding hoisted module mocks need.
+ *
+ * EV014 judges the layer an `it.layer` block builds in its hook. A layer is acquisition-free when
+ * every leaf it composes is a stub (`succeed`, `sync`, `mock`, `empty`, `succeedContext`), a
+ * platform service bundle, a named in-memory library layer, or a hermetic `Layer.effect` or
+ * `Layer.unwrap` whose effect only reads services and allocates Effect state: constructors and
+ * non-blocking ref or deferred operations, and clock reads, never an operation that can suspend.
+ * References are followed through same-file bindings, repository imports (bundler resolution, as
+ * vitest resolves them), class static members and factory calls; a parameter at or after a spread
+ * argument binds to an unknown value, and a missing argument takes the parameter's default. A
+ * thunk, an applied callback and each generator statement are judged by the calls in their own
+ * body: an `effect` module function other than the `run*` entry points, a repository function with
+ * a hermetic body, an `Effect.fn` factory, `of` or `make` on an `effect`-based class, a `pipe`
+ * method or a value built-in. Anything unresolved acquires, and `Effect.try` follows the
+ * `Effect.sync` rule.
+ *
+ * EV015 flags `TestClock.adjust` in an `it.layer` block that does not own its TestClock. A
+ * top-level block owns one; a nested block shares its parent's unless its layer argument is a
+ * direct `TestClock.layer()`. An owning block must register only the one case that adjusts it.
+ *
+ * **Gotchas**
+ *
+ * EV014 reads several Effect constructors from their upstream definitions, since their declarations
+ * ship only as .d.ts: `Path.layer`, `TestClock.layer()`, `AtomRegistry.layer`,
+ * `FetchHttpClient.layer`, `ConfigProvider.layer` over a provider value, `Logger.layer` over logger
+ * values, `toolkit.toLayer` over `Toolkit.make` or `Toolkit.merge`, `LanguageModel.make` and the
+ * per-family crypto layers. EV005 knows a fixed list of operations whose applied result is a fixed
+ * tagged or Boolean value. An Effect bump that changes any of them changes these rows. A function
+ * passed by an unresolved name to an `effect` helper, and extra pipeable arguments of `Effect.fn`,
+ * are not followed.
  *
  * **Example** (Detect a plain-test runtime boundary)
  *

@@ -554,12 +554,6 @@ const lawsFrozenGrantSetCommand = Command.make(
   })
 ).pipe(Command.withDescription("Check FrozenGrantSet.make stays inside its defining module"));
 
-/**
- * The `--check` and `--json` flags every text-scanning law command takes.
- *
- * @param checkDescription - Help text for the law's `--check` flag.
- * @returns The flag record to pass to `Command.make`.
- */
 const lawCheckFlags = (checkDescription: string) => ({
   check: Flag.Boolean("check").pipe(Flag.withDefault(false), Flag.withDescription(checkDescription)),
   json: Flag.Boolean("json").pipe(
@@ -568,7 +562,6 @@ const lawCheckFlags = (checkDescription: string) => ({
   ),
 });
 
-/** Print a law summary as JSON or as the prefixed counter lines followed by its findings. */
 const reportLawSummary = Effect.fn("reportLawSummary")(function* (options: {
   readonly prefix: string;
   readonly check: boolean;

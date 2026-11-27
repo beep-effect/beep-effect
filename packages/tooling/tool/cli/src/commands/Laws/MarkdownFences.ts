@@ -88,7 +88,6 @@ import type { MarkdownFenceDisposition, MarkdownFencesOptions } from "./Markdown
 
 const $I = $RepoCliId.create("commands/Laws/MarkdownFences");
 
-/** Opening and closing markers of the README region docgen renders from source JSDoc. */
 const DOCGEN_REGION_START = "<!-- docgen:api-reference:start -->";
 const DOCGEN_REGION_END = "<!-- docgen:api-reference:end -->";
 
@@ -116,14 +115,11 @@ const EXCLUDED_PREFIXES = [
 const EXCLUDED_SEGMENTS = ["/node_modules/", "/test/fixtures/", "/.claude/worktrees/"] as const;
 const SKILLS_PREFIX = ".claude/skills/";
 
-/** Staged module names are `fence-<index>.ts(x)`; `tsc --pretty false` prints diagnostics as `file(line,col): error TSn: message`. */
 const DIAGNOSTIC_PATTERN = /^fence-(\d+)\.tsx?\((\d+),(\d+)\): error (TS\d+): (.*)$/gmu;
 const ERROR_LINE_PATTERN = /error TS\d+:/u;
-/** Lines of compiler output carried by a compiler failure. */
 const OUTPUT_TAIL_LINES = 20;
 const UNATTRIBUTED_DIAGNOSTIC_LIMIT = 20;
 const TRAILING_NEWLINE_PATTERN = /\n$/u;
-/** Directives that would silently exempt a staged fence from the check. */
 const SUPPRESSION_PATTERN = /@ts-(?:nocheck|ignore)\b/gu;
 
 const decodeLanguage = S.decodeUnknownOption(MarkdownFenceLanguage);

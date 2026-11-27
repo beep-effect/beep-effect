@@ -76,6 +76,12 @@ export interface ImageCommandServiceShape {
   /**
    * Extract PNG frames from every direct video in a directory.
    *
+   * **Gotchas**
+   *
+   * Fails with an {@link ImageCommandError} when a filename-derived stem (`..` from
+   * `...mp4`) or a same-stem symlink would place an output directory outside the
+   * selected directory; the check resolves real paths, so it is not lexical.
+   *
    * @since 0.0.0
    */
   readonly extractFramesDir: (
@@ -117,10 +123,6 @@ const resolveExtractFramesDirOutDir = Effect.fn("ImageCommandService.resolveExtr
   sourceName: string,
   stem: string
 ) {
-  // Fail closed when the filename-derived stem (e.g. ".." from "...mp4") or a
-  // same-stem symlink would place the output directory outside the selected
-  // directory. resolvePathWithinRoot canonicalizes via realPath and guards
-  // not-yet-existing write targets, so lexical checks cannot be bypassed.
   return yield* resolvePathWithinRoot({ root: directory, candidate: stem }).pipe(
     ImageCommandError.mapError(`image extract-frames-dir: refusing unsafe output directory for "${sourceName}".`)
   );

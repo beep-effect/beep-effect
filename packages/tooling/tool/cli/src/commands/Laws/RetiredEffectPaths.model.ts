@@ -200,6 +200,8 @@ export class RetiredEffectPathsAllowlist extends S.Opaque<
  * `.patterns/effect-module-paths.md` is the canonical record of the mapping.
  * `.gitleaksignore` fingerprints historical commits by their real paths. The
  * law's own model, scanner, and test spell the retired paths as data.
+ * The generated research routing data under `goals/research-intake-2026-11/` quotes
+ * sources written before the module move.
  *
  * **Example** (Read the allowlisted directory prefixes)
  *
@@ -217,7 +219,6 @@ export const retiredEffectPathsAllowlist: RetiredEffectPathsAllowlist = RetiredE
   exactPaths: [
     ".gitleaksignore",
     ".patterns/effect-module-paths.md",
-    // Generated research data: finding summaries quote sources written before the module move.
     "goals/research-intake-2026-11/research/routing.jsonl",
     "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.model.ts",
     "packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.ts",

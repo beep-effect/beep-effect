@@ -1247,8 +1247,6 @@ const isGoalPacketDataPath = (segments: ReadonlyArray<string>): boolean =>
   O.exists(A.get(segments, 1), Str.isNonEmpty) &&
   O.exists(A.get(segments, 2), (segment) => Str.Equivalence(segment, "data"));
 
-// A packet's `goals/<packet>/ops/inventory/digests/` are dated scan receipts; the generated
-// inventory rows beside them stay live, source-bound evidence.
 const isGoalPacketInventoryDigestPath = (segments: ReadonlyArray<string>): boolean =>
   O.exists(A.get(segments, 0), (segment) => Str.Equivalence(segment, "goals")) &&
   O.exists(A.get(segments, 1), Str.isNonEmpty) &&
@@ -1256,7 +1254,6 @@ const isGoalPacketInventoryDigestPath = (segments: ReadonlyArray<string>): boole
   O.exists(A.get(segments, 3), (segment) => Str.Equivalence(segment, "inventory")) &&
   O.exists(A.get(segments, 4), (segment) => Str.Equivalence(segment, "digests"));
 
-// `docs/reports/` holds dated point-in-time reports, many bound by digest to a cache-baseline request.
 const isDocsReportPath = (segments: ReadonlyArray<string>): boolean =>
   O.exists(A.get(segments, 0), (segment) => Str.Equivalence(segment, "docs")) &&
   O.exists(A.get(segments, 1), (segment) => Str.Equivalence(segment, "reports"));
@@ -1359,13 +1356,6 @@ const GOVERNED_ROOT_FILES = HashSet.make(
 
 const stripQueryAndFragment = Str.replace(/[?#].*$/u, "");
 
-/**
- * Spellings a governed path may never contain: whitespace, glob and shell syntax, ellipses, absolute
- * roots, URLs.
- *
- * @param value - Query-and-fragment-stripped, NFC-normalized spelling read from a document.
- * @returns True when the spelling carries syntax no tracked repository path can legitimately use.
- */
 const hasUngovernedPathSyntax = (value: string): boolean =>
   /[\s\\]/u.test(value) ||
   /[*[\]{}<>|:]/u.test(value) ||
@@ -1390,14 +1380,6 @@ const isGovernedPathSpelling = (raw: string): boolean => {
   });
 };
 
-/**
- * Applies one path segment to the resolved stack, or `O.none()` when `..` escapes the repository
- * root.
- *
- * @param segments - Segments resolved so far, always rooted at the repository root.
- * @param segment - Next raw segment; empty and `.` segments leave the stack untouched.
- * @returns The extended stack, or `O.none()` when `..` would step above the repository root.
- */
 const applyPathSegment = (segments: ReadonlyArray<string>, segment: string): O.Option<ReadonlyArray<string>> => {
   if (segment === "" || segment === ".") {
     return O.some(segments);
@@ -1512,13 +1494,6 @@ export type KnowledgeInlineSpan = {
   readonly column: number;
 };
 
-/**
- * Removes CommonMark inline-code padding: one leading and one trailing space, stripped only when both
- * are present and the content is not entirely spaces.
- *
- * @param content - Raw text between the opening and closing backtick runs.
- * @returns The span content a path or command reader sees.
- */
 const stripInlineCodePadding = (content: string): string =>
   Str.startsWith(" ")(content) && Str.endsWith(" ")(content) && !/^ +$/u.test(content)
     ? Str.slice(1, -1)(content)
@@ -1559,7 +1534,6 @@ const inlineSpanOf = (match: RegExpExecArray): O.Option<KnowledgeInlineSpan> => 
 export const knowledgeInlineSpans = (lineText: string): ReadonlyArray<KnowledgeInlineSpan> =>
   A.getSomes(A.map(knowledgeLineMatches(/(^|[^`\\])(`+)([^\r\n]*?)\2(?!`)/gu, lineText), inlineSpanOf));
 
-// A complete single- or double-quoted shell argument; an unterminated quote never matches.
 const QUOTED_ARGUMENT_PATTERN = /"[^"]*"|'[^']*'/gu;
 
 /**
@@ -1601,8 +1575,6 @@ export const isKnowledgeCommandSpan = (span: string): boolean =>
   !/\$\(/u.test(span) &&
   !/[|;&<>]|[ \t]→[ \t]|(?:^|[ \t])#/u.test(Str.replace(QUOTED_ARGUMENT_PATTERN, "")(span));
 
-// CommonMark starts an HTML block at up to three spaces of indentation; four spaces or a
-// tab make the line an indented code block, which is literal syntax and asserts nothing.
 const PATH_ASSERTION_LINE_PATTERN = /^( {0,3})<!-- beep:assert path-exists (\S+) -->[ \t]*$/u;
 
 /**
@@ -1682,24 +1654,11 @@ const QUOTE_PREFIX_PATTERN = /^(?:[ \t]*>[ \t]?)+/u;
 const LIST_PREFIX_PATTERN = /^[ \t]*(?:(?:[-+*]|[0-9]{1,9}[.)])[ \t]+)?/u;
 const stripListPrefix = Str.replace(LIST_PREFIX_PATTERN, "");
 
-/** One line split into the Markdown container it sits in and the body a fence delimiter is read from. */
 type ContainerLine = {
   readonly depth: number;
   readonly body: string;
 };
 
-/**
- * Strips the Markdown container prefix so a fence nested in a blockquote or a list item is still
- * recognized as a fence.
- *
- * Blockquote markers are removed first and counted, then list-item indentation and an optional
- * bullet or ordered marker. Indentation is stripped without a depth limit, which is what makes a
- * fence inside a deeply nested list item visible; the trade is that a four-space indented code block
- * showing a literal fence now opens one, suppressing scanning rather than inventing findings.
- *
- * @param line - Raw document line.
- * @returns The blockquote depth the prefix carried and the body the fence matcher reads.
- */
 const containerLine = (line: string): ContainerLine => {
   const quote = QUOTE_PREFIX_PATTERN.exec(line);
   const quoted = quote === null ? "" : quote[0];
@@ -1709,7 +1668,6 @@ const containerLine = (line: string): ContainerLine => {
   };
 };
 
-/** The open fence a line is inside: its container depth, marker character, and closing run length. */
 type OpenFence = {
   readonly marker: string;
   readonly length: number;
@@ -1743,13 +1701,6 @@ const closesFence = (line: ContainerLine, open: OpenFence): boolean => {
   );
 };
 
-/**
- * Fence state after one line: `O.none()` outside a fence, `O.some` while inside one.
- *
- * @param fence - Fence state carried in from the preceding line.
- * @param line - Container-stripped line whose delimiter may open or close the surrounding block.
- * @returns The fence state the next line starts from.
- */
 const advanceFence = (fence: O.Option<OpenFence>, line: ContainerLine): O.Option<OpenFence> =>
   O.match(fence, {
     onNone: () => openedFence(line),
@@ -1832,6 +1783,12 @@ export type KnowledgeDocumentFenceLine = KnowledgeDocumentLine & {
  * never makes a fence carry it. The `prose` verdict is exactly the one {@link knowledgeDocumentLines}
  * reports, because that reader is a projection of this one.
  *
+ * **Gotchas**
+ *
+ * Blockquote markers, list indentation and list markers are stripped without a depth limit, so a
+ * fence inside a deeply nested list item is still seen. A four-space indented code block that shows
+ * a literal fence therefore opens one, which suppresses scanning rather than inventing findings.
+ *
  * **Example** (Read the info string of a fenced line)
  *
  * The delimiter is assembled rather than written literally, because a fence cannot appear inside
@@ -1855,12 +1812,9 @@ export type KnowledgeDocumentFenceLine = KnowledgeDocumentLine & {
  * @since 0.0.0
  */
 export const knowledgeDocumentFenceLines = (text: string): ReadonlyArray<KnowledgeDocumentFenceLine> => {
-  // Single-allocation map with fence state threaded through the closure: per-line `A.append`
-  // re-copies the whole accumulator and turns a large document quadratic.
   let fence = O.none<OpenFence>();
   return A.map(Str.split(/\r?\n/u)(text), (lineText, index) => {
     const nextFence = advanceFence(fence, containerLine(lineText));
-    // Prose only: fence delimiters and fenced content alike are excluded.
     const prose = O.isNone(fence) && O.isNone(nextFence);
     const fenceInfo = O.map(
       O.orElse(fence, () => nextFence),
@@ -1968,11 +1922,7 @@ export const extractKnowledgeHostAnchors = (lineText: string): ReadonlyArray<Kno
   ]);
 };
 
-// Every member is a config/state/toolchain directory convention of a named product or of the XDG
-// basedir spec — portable across machines by definition, which is the class semantic. Widening
-// this set is a deliberate CLI PR per ratified decision A3; the batch after `~/.openclaw` was
-// admitted by the Workstream A rewrite pass with per-prefix rationale in
-// goals/knowledge-surface-automation/research/p3-report-refs-rewrite.md.
+// decision: portable-home-convention-allowlist
 const PORTABLE_HOME_CONVENTIONS = HashSet.make(
   "~/.claude",
   "~/.codex",
@@ -1990,18 +1940,10 @@ const PORTABLE_HOME_CONVENTIONS = HashSet.make(
   "~/.supermemory-claude"
 );
 
-// Exact-mention conventions: naming the XDG user directory itself is portable, but any concrete
-// descendant (`~/Downloads/report.csv`) is machine session residue and stays gated — a prefix
-// admission here would let live guidance park arbitrary machine-local files behind the folder name.
-// The bare home root (`~/`) names no machine-local file: upstream skill mirrors use it as an
-// import-alias spelling (`@/`, `~/`) and as the generic "your home" placeholder.
+// decision: portable-home-convention-allowlist
 const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~", "~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 const stripTrailingSlashes = Str.replace(/\/+$/u, "");
-// A shell assignment (`PORTLESS_STATE_DIR=~/.portless-lan`) carries the same convention as the bare
-// path; the variable name is not part of the anchor. Only a plain literal value is admitted: a
-// right-hand side with substitution, expansion, quoting, or globbing (`~/.portless-lan/$(hostname)`)
-// is not the path it appears to be, so the token is judged whole and stays gated.
 const SHELL_ASSIGNMENT_PREFIX_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*=/u;
 const SHELL_DYNAMIC_VALUE_PATTERN = /[$`"'\\(){}*?[\]]/u;
 const stripShellAssignment = (token: string): string => {
@@ -2078,13 +2020,6 @@ export type KnowledgeRefClassificationInput = {
   readonly ungoverned: boolean;
 };
 
-/**
- * Rules 3c–3f of the cascade: a live, non-pattern host anchor judged by its convention and locus.
- *
- * @param anchor - Lexical anchor that made the span machine-local.
- * @param token - Trimmed containing token the convention sets and checkout marker are tested on.
- * @returns The convention, mirror, or actionable class for a live host anchor.
- */
 const classifyLiveHostAnchor = (anchor: KnowledgeHostAnchor, token: string): KnowledgeRefClassification => {
   if (
     KnowledgeHostAnchor.is["home-relative"](anchor) &&
@@ -2424,7 +2359,6 @@ export const decodeKnowledgeUtf8: {
 const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, KnowledgeOperationalError> =>
   decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked file "${repoPath}".`);
 
-/** A repository-path spelling after the ratified tri-state read: governed, ungoverned, or ignored. */
 type RepoPathOutcome =
   | { readonly _tag: "governed"; readonly normalized: string }
   | { readonly _tag: "ungoverned"; readonly normalized: string }
@@ -2439,18 +2373,6 @@ const isAbsoluteGovernedSpelling = (value: string): boolean =>
 const isBackslashGovernedSpelling = (value: string): boolean =>
   Str.includes("\\")(value) && isGovernedPathSpelling(Str.replaceAll("\\", "/")(value));
 
-/**
- * The tri-state read of one path spelling: a governed target, an ungoverned spelling worth
- * reporting, or nothing at all.
- *
- * `documentRelative` applies Markdown link semantics, where a bare `PLAN.md` destination means
- * `./PLAN.md`. Inline spans never get that extension: they are read under the Stage-1 grammar alone.
- *
- * @param documentPath - Repository-relative path of the containing document.
- * @param raw - Path spelling exactly as written inside the document.
- * @param documentRelative - Whether a bare relative spelling resolves from the document's directory.
- * @returns The governed, ungoverned, or ignored outcome for the spelling.
- */
 const repoPathOutcome = (documentPath: string, raw: string, documentRelative: boolean): RepoPathOutcome => {
   const cleaned = stripQueryAndFragment(nfc(raw));
   if (Str.isEmpty(cleaned)) {
@@ -2465,13 +2387,11 @@ const repoPathOutcome = (documentPath: string, raw: string, documentRelative: bo
     return IGNORED_OUTCOME;
   }
   return O.match(normalizeKnowledgeRepoPath(documentPath, spelling), {
-    // The spelling is governed, so the only remaining failure is a `..` escape above the root.
     onNone: (): RepoPathOutcome => ({ _tag: "ungoverned", normalized: cleaned }),
     onSome: (normalized): RepoPathOutcome => ({ _tag: "governed", normalized }),
   });
 };
 
-/** One extracted reference occurrence, before resolution, classification, and identity assignment. */
 type RefCandidate = {
   readonly kind: KnowledgeRefKind;
   readonly subject: string;
@@ -2501,7 +2421,6 @@ const goalUriRef = (raw: string, slug: string, displayPath: O.Option<string>): K
     onSome: (value) => KnowledgeGoalUriRef.make({ raw, slug, displayPath: value }),
   });
 
-// These are parser/source handles and offset tables, local to one requested-tree scan.
 type GeneratedEvidenceSource = {
   readonly source: ts.SourceFile;
   readonly literals: ReadonlyArray<ts.StringLiteralLike>;
@@ -2550,9 +2469,7 @@ const indexGeneratedEvidenceSource = (file: string, text: string): GeneratedEvid
   return { source, literals, ranges };
 };
 
-// Reproduce compactEvidence's whitespace collapse, 200-code-unit prefix and trim,
-// retaining the corresponding original source offset for each displayed code unit.
-const evidenceSourceOffsets = (node: ts.Node, source: ts.SourceFile) => {
+const compactEvidenceSourceOffsets = (node: ts.Node, source: ts.SourceFile) => {
   const raw = node.getText(source);
   const offsets = A.empty<number>();
   const chunks = A.empty<string>();
@@ -2589,7 +2506,7 @@ const sourceEvidenceAnchor = (
   );
   const matches = A.getSomes(
     A.map(candidates, (node) => {
-      const normalized = evidenceSourceOffsets(node, source.source);
+      const normalized = compactEvidenceSourceOffsets(node, source.source);
       return normalized.evidence === finding.evidence ? O.some(normalized.offsets) : O.none();
     })
   );
@@ -2935,8 +2852,6 @@ const beepRefCandidates = (
   if (A.isReadonlyArrayEmpty(refs)) {
     return A.empty<RefCandidate>();
   }
-  // Ratified pairing rule A1: more than one reference on a line makes every reference on it
-  // ambiguous, because the tool must never guess which object an identity names.
   const ambiguousLine = A.length(refs) > 1;
   return A.getSomes(
     A.map(refs, (match) => {
@@ -2974,10 +2889,7 @@ const extractDocumentRefs = (
   const lines = knowledgeDocumentLines(text);
   let lineOffset = 0;
   const markdown = Str.endsWith(MARKDOWN_EXTENSION)(documentPath);
-  // One flatMap allocation for the whole document: accumulating with `A.appendAll` per line
-  // re-copies every prior candidate and turns a dense document quadratic.
   return A.flatMap(lines, (line, index) => {
-    // Host anchors are counted line-wise on every elected file type; fences never exempt them.
     const host = hostCandidates(documentPath, line, surface, evidencePositions, lineOffset);
     lineOffset += line.text.length + (text[lineOffset + line.text.length] === "\r" ? 2 : 1);
     if (!markdown || !line.prose) {
@@ -3028,9 +2940,6 @@ const resolveGoalSlug = Effect.fn("Knowledge.resolveGoalSlug")(function* (
 ) {
   const manifestPath = goalManifestPath(slug);
   const entry = HashMap.get(pathIndex, manifestPath);
-  // A manifest tracked as a symlink or a gitlink is recorded in `skipped` and never followed, so it
-  // is unavailable as an identity source rather than readable. Reading it anyway would fail the
-  // whole census on a blob the scan already decided not to open.
   if (O.isNone(entry) || !isRegularBlob(entry.value)) {
     return KnowledgeRefMissing.make({});
   }
@@ -3085,6 +2994,7 @@ const entryPathOrder = Order.mapInput(Order.String, (entry: KnowledgeTrackedEntr
  * one, because that is exactly the split-brain state it exists to detect. A manifest tracked as a
  * symlink or gitlink is a third case: the scan never opens it, so it is unavailable rather than
  * undecodable, and the reference resolves as missing while the link itself is recorded in `skipped`.
+ * Host anchors are counted on every line of every elected file type: a fence never exempts one.
  *
  * **Example** (Census an empty tree)
  *
@@ -3129,8 +3039,6 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
 
   const evidenceSources = MutableHashMap.empty<string, O.Option<GeneratedEvidenceSource>>();
   let skipped = A.getSomes(A.map(scoped, skippedEntry));
-  // Per-document chunks flattened once: appending 18k candidates one document at a time re-copies
-  // the whole accumulator per document and turns the corpus scan quadratic.
   let chunks = A.empty<ReadonlyArray<RefCandidate>>();
   for (const entry of documents) {
     const bytes = yield* oracle.readBytes(entry.path);
@@ -3202,8 +3110,6 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
       remediation: knowledgeRefRemediation(classification, resolution),
     });
   });
-  // Sequential forEach allocates the observation list once; per-observation `A.append` re-copies
-  // the whole accumulator and dominated the census runtime at corpus scale.
   const observations = yield* Effect.forEach(A.sort(candidates, candidateOrder), toObservation, { concurrency: 1 });
 
   return KnowledgeRefsReport.make({

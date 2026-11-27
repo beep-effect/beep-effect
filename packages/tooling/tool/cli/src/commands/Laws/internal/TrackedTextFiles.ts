@@ -33,7 +33,6 @@ import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.
 
 const NEWLINE_PATTERN = /\n/gu;
 
-/** `git ls-files --stage` modes of regular files; symlinks (120000) and gitlinks (160000) carry no text. */
 const REGULAR_FILE_MODES = ["100644", "100755"];
 
 const READ_CONCURRENCY = 32;
@@ -42,15 +41,8 @@ const textDecoder = new TextDecoder();
 const utf16LeDecoder = new TextDecoder("utf-16le");
 const utf16BeDecoder = new TextDecoder("utf-16be");
 
-/** Bytes sampled to tell UTF-16 without a byte order mark from other NUL-bearing content. */
 const UTF16_SAMPLE_BYTES = 65_536;
 
-/**
- * NUL counts at even and odd offsets of the sampled bytes.
- *
- * @param content - The file's bytes; only the first sample is read.
- * @returns The NUL count at even offsets and at odd offsets.
- */
 const nulParity = (content: Uint8Array): { readonly even: number; readonly odd: number } => {
   let even = 0;
   let odd = 0;
@@ -67,29 +59,9 @@ const nulParity = (content: Uint8Array): { readonly even: number; readonly odd: 
   return { even, odd };
 };
 
-/**
- * Whether the sampled NULs sit almost only at one byte parity and fill at
- * least half of it, as the zero high bytes of mostly-ASCII UTF-16 text do: odd
- * offsets for little endian, even offsets for big endian.
- *
- * @param hits - NULs at the parity under test.
- * @param other - NULs at the other parity.
- * @param content - The file's bytes, which bound the sample size.
- * @returns Whether the NUL layout reads as UTF-16 of that byte order.
- */
 const isMostlyAt = (hits: number, other: number, content: Uint8Array): boolean =>
   hits * 4 >= Math.min(content.length, UTF16_SAMPLE_BYTES) && other * 20 <= hits;
 
-/**
- * The text a NUL-bearing file yields for a scan: UTF-16 decoded by its byte
- * order mark, such as a Windows PowerShell 5.1 redirect, or by where its NULs
- * fall when it has none; anything else is decoded as UTF-8 with each NUL read
- * as a space, so a terminal capture with a stray NUL and the printable runs
- * of a binary file are still scanned.
- *
- * @param content - The bytes of a file that contains a NUL.
- * @returns The decoded text to scan.
- */
 const decodeNulBearingText = (content: Uint8Array): string => {
   if (content[0] === 0xff && content[1] === 0xfe) {
     return utf16LeDecoder.decode(content);
@@ -216,7 +188,6 @@ const listTrackedRegularFiles = Effect.fn("TrackedTextFiles.listTrackedRegularFi
   gitErrors: GitCommandErrorAdapter<E>
 ) {
   const git = yield* Git;
-  // The staged listing is ~6.6 MB, inside the kit's 16 MiB fail-closed bound.
   const entries = yield* git.lsFiles(repoRoot).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles(), gitErrors)));
   return F.pipe(
     entries,

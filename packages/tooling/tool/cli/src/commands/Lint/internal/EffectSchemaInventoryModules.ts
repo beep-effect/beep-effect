@@ -143,10 +143,6 @@ const EffectCatalog = S.Struct({ effect: S.optionalKey(S.String) });
 const WorkspacesWithCatalog = S.Struct({ catalog: S.optionalKey(EffectCatalog) });
 const isWorkspacePatternList = S.is(StringListField);
 
-// The repo-specific halves of the root manifest the pin needs: the Bun
-// `workspaces.catalog` fallback and `config.effectSource`. The manifest itself
-// reads through `LenientManifest`; these decode the two nested values it types
-// only as open JSON.
 const decodeRootWorkspaces = S.decodeUnknownEffect(S.Union([StringListField, WorkspacesWithCatalog]));
 const decodeRootConfig = S.decodeUnknownEffect(
   S.Struct({
