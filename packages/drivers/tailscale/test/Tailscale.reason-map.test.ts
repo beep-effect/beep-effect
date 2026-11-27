@@ -35,10 +35,7 @@ const exitFailure = PlatformError.systemError({
   description: "exit status unavailable",
 });
 
-// The Node spawner checks a working directory with `fs.access` before it
-// spawns; that failure happens before the handle exists, so it is a spawn
-// error even though its method is not "spawn".
-const accessFailure = PlatformError.systemError({
+const preSpawnAccessFailure = PlatformError.systemError({
   _tag: "NotFound",
   module: "FileSystem",
   method: "access",
@@ -96,7 +93,7 @@ describe("@beep/tailscale process reason map", () => {
   it.layer(
     Layer.succeed(
       ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make(() => Effect.fail(accessFailure))
+      ChildProcessSpawner.make(() => Effect.fail(preSpawnAccessFailure))
     ),
     { timeout: "30 seconds" }
   )("when a pre-spawn check fails", (it) => {
@@ -106,7 +103,7 @@ describe("@beep/tailscale process reason map", () => {
         const error = yield* Effect.flip(readTailscaleStatus);
         assertInstanceOf(error, TailscaleCommandSpawnError);
         expect(error.subcommand).toBe("status");
-        expect(error.cause).toBe(accessFailure);
+        expect(error.cause).toBe(preSpawnAccessFailure);
       })
     );
   });
@@ -157,8 +154,6 @@ describe("@beep/tailscale process reason map", () => {
     }
   );
 
-  // New with the kit: captured output is bounded. The hand-rolled fold had no
-  // ceiling, so this row has no predecessor; it reports as an output error.
   it.layer(spawnerOf(handleWith({ stdout: oversized })), { timeout: "30 seconds" })(
     "when stdout exceeds the capture bound",
     (it) => {

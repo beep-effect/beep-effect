@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/xstate",
-  "root": "packages/drivers/xstate",
-  "scopes": ["."]
-}

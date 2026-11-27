@@ -83,10 +83,6 @@ import type { AST, Check, Suspend } from "effect/SchemaAST";
 import type { ValidateSqlName } from "../core/names.ts";
 import type { EntityIdLike } from "./derive.ts";
 
-// ---------------------------------------------------------------------------
-// Column setters
-// ---------------------------------------------------------------------------
-
 const isStringTypeAst = (node: AST, visited: ReadonlyArray<Suspend> = empty()): boolean =>
   matchType<AST>().pipe(
     matchTag("String", constTrue),
@@ -1162,10 +1158,6 @@ export function array(
     });
   };
 }
-
-// ---------------------------------------------------------------------------
-// Modifiers
-// ---------------------------------------------------------------------------
 
 /**
  * Marks a non-nullable field as the inline primary key.

@@ -275,18 +275,19 @@ describe("PACER end-to-end (mock transport)", () => {
         Effect.gen(function* () {
           const pcl = yield* Pacer.PclClient;
           const fiber = yield* pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})).pipe(Effect.forkChild);
-          // Reaching status proves acquisition completed. No timing-based race or real endpoint.
           yield* Deferred.await(polling).pipe(Effect.withSpan("PacerTest.batch.pollingStarted"));
           yield* Fiber.interrupt(fiber).pipe(Effect.withSpan("PacerTest.batch.interruptAndCleanup"));
           const await6 = yield* Fiber.await(fiber);
-          expect(Exit.hasInterrupts(await6)).toBe(true);
+          expect(
+            Exit.hasInterrupts(await6),
+            "interrupted only after the status poll proves the report job was acquired, with no timing race"
+          ).toBe(true);
           const got7 = yield* Ref.get(deleted);
           expect(got7).toEqual([Pacer.DEFAULT_REPORT_ID]);
         })
       );
-      // The scoped session finalizer still logs out after interrupt-driven report deletion.
       const got8 = yield* Ref.get(logoutCount);
-      expect(got8).toBe(1);
+      expect(got8, "the scoped session finalizer still logs out after the interrupt-driven deletion").toBe(1);
     })
   );
 

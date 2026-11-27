@@ -153,11 +153,8 @@ export type WinkEngineRuntimeState = {
   readonly nlp: WinkMethods;
 };
 
-// Literal imports keep the fixed assets discoverable to native bundlers while
-// loading only when this effect is initialized. Expected import/model failures
-// retain the existing typed engine error boundary.
 const initializationError = (cause: unknown): WinkEngineError => WinkEngineError.fromCause(cause, "initialize");
-const loadWinkRuntime = Effect.all(
+const lazyBundlerVisibleWinkRuntime = Effect.all(
   [
     Effect.tryPromise({ try: () => import("wink-nlp"), catch: initializationError }),
     Effect.tryPromise({ try: () => import("wink-eng-lite-web-model"), catch: initializationError }),
@@ -208,7 +205,7 @@ const collectTokens = (state: WinkEngineRuntimeState, text: string): Array<ItemT
 };
 
 const makeWinkEngine = Effect.gen(function* () {
-  const runtime = yield* Effect.acquireRelease(loadWinkRuntime, ({ owner }) => owner.release);
+  const runtime = yield* Effect.acquireRelease(lazyBundlerVisibleWinkRuntime, ({ owner }) => owner.release);
   const nlp = runtime.nlp;
   const intrinsicNoun = yield* Effect.cached(runtime.owner.activate);
   const instanceCounterRef = yield* Ref.make(0);

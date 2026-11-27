@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/tailscale",
-  "root": "packages/drivers/tailscale",
-  "scopes": ["."]
-}

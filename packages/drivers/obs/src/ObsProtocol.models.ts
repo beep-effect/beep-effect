@@ -25,6 +25,7 @@ import type * as SchemaAST from "effect/SchemaAST";
 const UnknownRecord = S.Record(S.String, S.Unknown);
 
 const $I = $ObsId.create("ObsProtocol.models");
+const hasOpEnvelopeFirst = (args: IArguments): boolean => P.hasProperty(args[0], "op");
 
 /**
  * The obs-websocket RPC version this driver negotiates.
@@ -790,12 +791,7 @@ export const decodeObsIncomingMessageJson: {
 export const encodeObsIncomingMessageJson: {
   (options?: SchemaAST.ParseOptions): (input: ObsIncomingMessage) => Effect.Effect<string, S.SchemaError>;
   (input: ObsIncomingMessage, options?: SchemaAST.ParseOptions): Effect.Effect<string, S.SchemaError>;
-} = dual(
-  // Dispatch on the `op` envelope discriminant: every `ObsIncomingMessage` carries
-  // one and `ParseOptions` never does.
-  (args) => P.hasProperty(args[0], "op"),
-  S.encodeEffect(S.fromJsonString(ObsIncomingMessage))
-);
+} = dual(hasOpEnvelopeFirst, S.encodeEffect(S.fromJsonString(ObsIncomingMessage)));
 
 /**
  * Decode a raw obs-websocket JSON text frame into an {@link ObsOutgoingMessage}.
@@ -840,12 +836,7 @@ export const decodeObsOutgoingMessageJson: {
 export const encodeObsOutgoingMessageJson: {
   (options?: SchemaAST.ParseOptions): (input: ObsOutgoingMessage) => Effect.Effect<string, S.SchemaError>;
   (input: ObsOutgoingMessage, options?: SchemaAST.ParseOptions): Effect.Effect<string, S.SchemaError>;
-} = dual(
-  // Dispatch on the `op` envelope discriminant: every `ObsOutgoingMessage` carries
-  // one and `ParseOptions` never does.
-  (args) => P.hasProperty(args[0], "op"),
-  S.encodeEffect(S.fromJsonString(ObsOutgoingMessage))
-);
+} = dual(hasOpEnvelopeFirst, S.encodeEffect(S.fromJsonString(ObsOutgoingMessage)));
 
 /**
  * **Example** (Make record state data)

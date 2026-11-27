@@ -126,9 +126,6 @@ const respondWith = (body: string): Layer.Layer<HttpClient.HttpClient> =>
 const testUsptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
-// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
-// builds `McpServer`, so a direct `callTool` — one with no transport middleware
-// in front of it — has to supply the caller itself.
 const stubClientInfo = { name: "uspto-mcp-test-client", version: "0.0.0" };
 
 const StubMcpClientLayer = Layer.succeed(
@@ -153,10 +150,6 @@ const buildLayer = (env: Record<string, string>, http: Layer.Layer<HttpClient.Ht
     Layer.provide(testUsptoLayer(http))
   );
 
-  // The soft gate always mounts regardless of the credential's presence, so
-  // (per ApiKeyRequired.test.ts's own note) the fixture ConfigProvider can be
-  // a sibling: the credential is re-read per call, inside the handler, not
-  // while this layer builds.
   return Layer.mergeAll(
     McpServer.McpServer.layer,
     StubMcpClientLayer,
@@ -257,9 +250,6 @@ describe("uspto-mcp fixture proofs", () => {
         assert.isFalse(result.isError);
         const raw = textOf(result);
 
-        // The complete-tier payload for 200 documents comfortably exceeds the
-        // default 8000-byte budget; the response must have been reshaped down
-        // to a smaller named tier rather than returned inline in full.
         const projection = yield* decodeDocumentsProjectionOutputJson(raw);
 
         assert.strictEqual(projection._tag, "Inline");
@@ -269,15 +259,17 @@ describe("uspto-mcp fixture proofs", () => {
             `tier was: ${projection.tier}`
           );
         }
-        assert.isAtMost(raw.length, 8000);
+        assert.isAtMost(
+          raw.length,
+          8000,
+          "200 complete-tier documents exceed the default budget, so a smaller tier is returned"
+        );
       })
     );
   });
 });
 
 describe("uspto-mcp UTF-8 response budgets", () => {
-  // These replacements affect only document identifiers, preserving the 200-row
-  // fixture and its document metadata/download URLs.
   for (const { label, identifierPrefix, expected } of [
     { label: "multibyte identifiers", identifierPrefix: "文档-", expected: "Inline" },
     { label: "oversized multibyte identifiers", identifierPrefix: `${Str.repeat(20)("界")}-`, expected: "Fetchable" },
@@ -296,7 +288,11 @@ describe("uspto-mcp UTF-8 response budgets", () => {
             assert.strictEqual(projection._tag, expected);
             assert.isAtMost(new TextEncoder().encode(raw).byteLength, 8000);
             if (projection._tag === "Inline") {
-              assert.strictEqual(projection.envelope.rows.length, LARGE_DOCUMENT_COUNT);
+              assert.strictEqual(
+                projection.envelope.rows.length,
+                LARGE_DOCUMENT_COUNT,
+                "only document identifiers are replaced, so all 200 rows survive"
+              );
               assert.isTrue(projection.tier === "balanced" || projection.tier === "minimal");
             } else {
               assert.isAbove(projection.handle.sizeBytes, 8000);
@@ -582,9 +578,6 @@ describe("uspto-mcp schema-derived arbitraries", () => {
   );
 });
 
-// The host as the kit conformance runner sees it: registrations only, with
-// the fixture `Uspto` client and a resolvable USPTO_API_KEY so the soft gate
-// answers with real data rather than the `api_key_required` envelope.
 const usptoConformanceHost = {
   name: "beep-uspto-test",
   version: "0.0.0",
@@ -606,15 +599,14 @@ describe("uspto-mcp through the kit client", () => {
   it.layer(layerConformanceHttp(usptoConformanceHost), { timeout: "10 seconds" })("over streamable HTTP", (it) => {
     it.effect("carries an array success in text content and emits no structuredContent", () =>
       Effect.gen(function* () {
-        // `uspto_search_applications` succeeds with an array. The 2026-07-28
-        // `structuredContent` field is an object by contract, so the kit's
-        // projection withholds it for non-object results and the array rides
-        // in the text content, where the kit client decodes it back verbatim.
         const { discovery, rpc } = yield* connectHttp();
         assert.strictEqual(discovery.instructions, USPTO_MCP_INSTRUCTIONS);
         const result = yield* rpc["tools/call"]({ name: "uspto_search_applications", arguments: { query: "widget" } });
         assert.notStrictEqual(result.isError, true);
-        assert.isUndefined(result.structuredContent);
+        assert.isUndefined(
+          result.structuredContent,
+          "structuredContent is an object by contract, so an array result rides in text content"
+        );
         const applications = yield* decodeApplicationMetadataArray(textOf(result));
         assert.strictEqual(applications.length, 1);
         assert.strictEqual(applications[0]?.applicationNumberText, "16138242");
@@ -624,10 +616,6 @@ describe("uspto-mcp through the kit client", () => {
   });
 });
 
-// The production stdio host, protocol list included: `makeServerLayer` is the
-// layer `bin` launches, so these arms fail if the host is narrowed back to
-// the stateless-only list. The conformance runner above cannot see that, as
-// it mounts the registrations on its own stateless transport.
 const HANDSHAKE_PROTOCOL_VERSION = "2025-11-25";
 const HandshakeResult = S.Struct({
   protocolVersion: S.String,
@@ -648,8 +636,6 @@ describe("uspto-mcp production stdio host", () => {
   it.effect("answers the initialize handshake Claude Desktop opens with", () =>
     withProductionStdioHost((io) =>
       Effect.gen(function* () {
-        // Regression: a stateless-only list made Claude Desktop fail with
-        // "initialize is not supported by the configured MCP protocols".
         yield* io.sendMessage(
           JsonRpcMessage.make({
             id: 1,
@@ -663,9 +649,16 @@ describe("uspto-mcp production stdio host", () => {
         );
         const response = yield* io.nextMessage;
         assert.strictEqual(response.id, 1);
-        assert.isUndefined(response.error);
+        assert.isUndefined(
+          response.error,
+          "a stateless-only protocol list fails the initialize Claude Desktop opens with"
+        );
         const handshake = yield* decodeHandshakeResult(response.result);
-        assert.strictEqual(handshake.protocolVersion, HANDSHAKE_PROTOCOL_VERSION);
+        assert.strictEqual(
+          handshake.protocolVersion,
+          HANDSHAKE_PROTOCOL_VERSION,
+          "makeServerLayer, the layer bin launches, keeps the stateful protocol in its list"
+        );
         assert.strictEqual(handshake.serverInfo.name, "beep-uspto-handshake");
         assert.strictEqual(handshake.instructions, USPTO_MCP_INSTRUCTIONS);
         yield* io.sendMessage(JsonRpcMessage.make({ method: "notifications/initialized" }));

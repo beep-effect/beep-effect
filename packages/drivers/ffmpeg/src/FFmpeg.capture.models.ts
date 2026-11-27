@@ -1515,6 +1515,11 @@ export class ProbeRegionLuminanceResult extends S.Opaque<
 /**
  * Decode an unknown value into an extract-frame-at request.
  *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ExtractFrameAtRequest.decodeEffect` directly.
+ *
  * **Example** (Decoding extract-frame-at request)
  *
  * ```ts
@@ -1531,12 +1536,16 @@ export class ProbeRegionLuminanceResult extends S.Opaque<
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ExtractFrameAtRequest.decodeEffect.
 export const decodeExtractFrameAtRequest: (input: unknown) => Effect.Effect<ExtractFrameAtRequest, S.SchemaError> =
   ExtractFrameAtRequest.decodeEffect;
 
 /**
  * Decode an unknown value into an extract-frames-at request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ExtractFramesAtRequest.decodeEffect` directly.
  *
  * **Example** (Decoding extract-frames-at request)
  *
@@ -1554,12 +1563,16 @@ export const decodeExtractFrameAtRequest: (input: unknown) => Effect.Effect<Extr
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ExtractFramesAtRequest.decodeEffect.
 export const decodeExtractFramesAtRequest: (input: unknown) => Effect.Effect<ExtractFramesAtRequest, S.SchemaError> =
   ExtractFramesAtRequest.decodeEffect;
 
 /**
  * Decode an unknown value into an extract-clip request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ExtractClipRequest.decodeEffect` directly.
  *
  * **Example** (Decoding extract-clip request)
  *
@@ -1577,12 +1590,16 @@ export const decodeExtractFramesAtRequest: (input: unknown) => Effect.Effect<Ext
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ExtractClipRequest.decodeEffect.
 export const decodeExtractClipRequest: (input: unknown) => Effect.Effect<ExtractClipRequest, S.SchemaError> =
   ExtractClipRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a render-gif request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `RenderGifRequest.decodeEffect` directly.
  *
  * **Example** (Decoding render-gif request)
  *
@@ -1601,12 +1618,16 @@ export const decodeExtractClipRequest: (input: unknown) => Effect.Effect<Extract
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on RenderGifRequest.decodeEffect.
 export const decodeRenderGifRequest: (input: unknown) => Effect.Effect<RenderGifRequest, S.SchemaError> =
   RenderGifRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a render-contact-sheet request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `RenderContactSheetRequest.decodeEffect` directly.
  *
  * **Example** (Decoding contact-sheet request)
  *
@@ -1623,13 +1644,17 @@ export const decodeRenderGifRequest: (input: unknown) => Effect.Effect<RenderGif
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on RenderContactSheetRequest.decodeEffect.
 export const decodeRenderContactSheetRequest: (
   input: unknown
 ) => Effect.Effect<RenderContactSheetRequest, S.SchemaError> = RenderContactSheetRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a write-container-metadata request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `WriteContainerMetadataRequest.decodeEffect` directly.
  *
  * **Example** (Decoding metadata write request)
  *
@@ -1647,13 +1672,17 @@ export const decodeRenderContactSheetRequest: (
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on WriteContainerMetadataRequest.decodeEffect.
 export const decodeWriteContainerMetadataRequest: (
   input: unknown
 ) => Effect.Effect<WriteContainerMetadataRequest, S.SchemaError> = WriteContainerMetadataRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a probe-region-luminance request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ProbeRegionLuminanceRequest.decodeEffect` directly.
  *
  * **Example** (Decoding luminance probe request)
  *
@@ -1673,13 +1702,17 @@ export const decodeWriteContainerMetadataRequest: (
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ProbeRegionLuminanceRequest.decodeEffect.
 export const decodeProbeRegionLuminanceRequest: (
   input: unknown
 ) => Effect.Effect<ProbeRegionLuminanceRequest, S.SchemaError> = ProbeRegionLuminanceRequest.decodeEffect;
 
 /**
  * Encode an extract-frames-at manifest into its JSON-safe shape.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass encode options to
+ * `ExtractFramesAtManifest.encodeEffect` directly.
  *
  * **Example** (Encoding extract-frames-at manifest)
  *
@@ -1712,7 +1745,6 @@ export const decodeProbeRegionLuminanceRequest: (
  * @category encoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ExtractFramesAtManifest.encodeEffect.
 export const encodeExtractFramesAtManifest: (
   input: unknown
 ) => Effect.Effect<typeof ExtractFramesAtManifest.Encoded, S.SchemaError> = ExtractFramesAtManifest.encodeEffect;

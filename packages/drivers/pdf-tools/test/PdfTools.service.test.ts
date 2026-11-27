@@ -47,9 +47,7 @@ import type * as CommandLine from "effect/process/CommandLine";
 
 const encoder = new TextEncoder();
 
-// A 6 × 4 P6 raster: a 3 × 3 black square at (1,1), one gray pixel at (5,0),
-// one red pixel at (5,3), white elsewhere.
-const ppmFixture = (() => {
+const blackSquareGrayAndRedPixelPpm = (() => {
   const width = 6;
   const height = 4;
   const header = encoder.encode(`P6\n# comment\n${width} ${height}\n255\n`);
@@ -73,8 +71,7 @@ const ppmFixture = (() => {
   return out;
 })();
 
-// P6 raster of `width` × `height` white pixels with black ink at `inked`.
-const ppmOf = (width: number, height: number, inked: ReadonlyArray<readonly [number, number]>) => {
+const whitePpmInkedAt = (width: number, height: number, inked: ReadonlyArray<readonly [number, number]>) => {
   const header = encoder.encode(`P6\n${width} ${height}\n255\n`);
   const pixels = new Uint8Array(width * height * 3).fill(255);
   for (const [x, y] of inked) {
@@ -86,21 +83,19 @@ const ppmOf = (width: number, height: number, inked: ReadonlyArray<readonly [num
   return out;
 };
 
-// Base sheet: a three-pixel stroke on row 1 and a dot at (6,2). The marked
-// page carries the stroke one row lower (a re-export shift) and a dot at (7,0).
-const basePpm = ppmOf(8, 4, [
+const baseStrokeAndDotPpm = whitePpmInkedAt(8, 4, [
   [1, 1],
   [2, 1],
   [3, 1],
   [6, 2],
 ]);
-const markedPpm = ppmOf(8, 4, [
+const markedShiftedStrokePpm = whitePpmInkedAt(8, 4, [
   [1, 2],
   [2, 2],
   [7, 0],
 ]);
-const smallMarkedPpm = ppmOf(2, 2, [[1, 1]]);
-const blankPpm = ppmOf(8, 4, []);
+const smallMarkedPpm = whitePpmInkedAt(2, 2, [[1, 1]]);
+const blankPpm = whitePpmInkedAt(8, 4, []);
 
 const bboxLayout = `<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><body><doc>
   <page width="612.000000" height="792.000000">
@@ -126,9 +121,6 @@ const bboxLayout = `<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><b
 </doc></body></html>
 `;
 
-// The stand-in for rsvg-convert output: one Letter page per input SVG.
-// pdf-lib writes a `%PDF-1.7` header, which is what rsvg-convert writes for
-// the unversioned `pdf` format; a `pdf1.x` format gets its own header.
 const fakeRsvgPdf = (pageCount: number, format: string) =>
   Effect.promise(() => PDFDocument.create({ updateMetadata: false })).pipe(
     Effect.flatMap((doc) => {
@@ -158,11 +150,9 @@ const concatBytes = (...parts: ReadonlyArray<Uint8Array>): Uint8Array => {
 const streamBody = (dict: string, data: Uint8Array): Uint8Array =>
   concatBytes(encoder.encode(`${dict}\nstream\n`), data, encoder.encode("\nendstream"));
 
-// A hand-written PDF whose objects 1..n are `bodies`, with a correct xref
-// table; objects 1-3 must be the catalog, page tree, and page.
-const craftPdf = (bodies: ReadonlyArray<Uint8Array | string>): Uint8Array => {
+const craftPdf = (catalogPagesPageThenBodies: ReadonlyArray<Uint8Array | string>): Uint8Array => {
   const header = encoder.encode("%PDF-1.6\n");
-  const objects = A.map(bodies, (body, index) =>
+  const objects = A.map(catalogPagesPageThenBodies, (body, index) =>
     concatBytes(
       encoder.encode(`${index + 1} 0 obj\n`),
       typeof body === "string" ? encoder.encode(body) : body,
@@ -201,9 +191,7 @@ const pageObjects = [
 
 const latin1 = new TextDecoder("latin1");
 
-// The bytes of `pdf` with an incremental update appended that redefines
-// `objectNumber` as `body`, with its own xref section and trailer.
-const appendRevision = (pdf: Uint8Array, objectNumber: number, body: Uint8Array): Uint8Array => {
+const appendIncrementalUpdate = (pdf: Uint8Array, objectNumber: number, body: Uint8Array): Uint8Array => {
   const text = latin1.decode(pdf);
   const previous =
     Str.split(/\s/)(
@@ -228,12 +216,7 @@ const appendRevision = (pdf: Uint8Array, objectNumber: number, body: Uint8Array)
   return concatBytes(pdf, object, encoder.encode(xref));
 };
 
-// A PDF 1.5 file the way cairo writes one: `topLevel` objects 1..n, then an
-// object stream numbered n + 1 holding `packed` (numbered from n + 2), then a
-// FlateDecode cross-reference stream. `shapeObjStm` and `shapeXref` may cut
-// the zlib bytes of either stream; the object stream's /Length is indirect,
-// written as the object after it.
-const craftXrefStreamPdf = (options: {
+const craftCairoStyleXrefStreamPdf = (options: {
   readonly topLevel: ReadonlyArray<Uint8Array | string>;
   readonly packed: ReadonlyArray<string>;
   readonly shapeObjStm?: (zlib: Uint8Array) => Uint8Array;
@@ -279,22 +262,21 @@ const craftXrefStreamPdf = (options: {
     offset += object.length;
   }
   objectOffsets[xrefNumber] = offset;
-  // /W [1 4 2]: type, offset or object-stream number, generation or index.
-  const entry = (type: number, field2: number, field3: number) => [
+  const xrefW142Entry = (type: number, offsetOrObjStm: number, generationOrIndex: number) => [
     type,
-    (field2 >>> 24) & 0xff,
-    (field2 >>> 16) & 0xff,
-    (field2 >>> 8) & 0xff,
-    field2 & 0xff,
-    (field3 >>> 8) & 0xff,
-    field3 & 0xff,
+    (offsetOrObjStm >>> 24) & 0xff,
+    (offsetOrObjStm >>> 16) & 0xff,
+    (offsetOrObjStm >>> 8) & 0xff,
+    offsetOrObjStm & 0xff,
+    (generationOrIndex >>> 8) & 0xff,
+    generationOrIndex & 0xff,
   ];
   const entries = A.flatMap(A.range(0, xrefNumber), (number) =>
     number === 0
-      ? entry(0, 0, 0xffff)
+      ? xrefW142Entry(0, 0, 0xffff)
       : number >= firstPacked && number < lengthNumber
-        ? entry(2, objStmNumber, number - firstPacked)
-        : entry(1, objectOffsets[number] ?? 0, 0)
+        ? xrefW142Entry(2, objStmNumber, number - firstPacked)
+        : xrefW142Entry(1, objectOffsets[number] ?? 0, 0)
   );
   const xrefData = shapeXref(NodeZlib.deflateSync(Uint8Array.from(entries)));
   written.push(
@@ -325,10 +307,6 @@ const makeHandle = (exitCode: number, stderr = "", stdout = ""): ChildProcessSpa
     unref: Effect.succeed(Effect.void),
   });
 
-// Fake rsvg-convert writes a PDF with one page per input SVG at the
-// `--output` path; fake pdftoppm (not `-png`) writes the PPM fixture at the
-// requested prefix.
-/** The plain text a real spawner hands the child for one argv or environment word. */
 const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 
 const fakeOutputs = (
@@ -349,12 +327,12 @@ const fakeOutputs = (
       Str.endsWith("/base")(prefix)
         ? O.exists(source, Str.endsWith("blank.pdf"))
           ? blankPpm
-          : basePpm
+          : baseStrokeAndDotPpm
         : Str.endsWith("/marked")(prefix)
           ? O.exists(source, (pdf) => Str.endsWith("small.pdf")(pdf))
             ? smallMarkedPpm
-            : markedPpm
-          : ppmFixture;
+            : markedShiftedStrokePpm
+          : blackSquareGrayAndRedPixelPpm;
     return pipe(
       A.last(args),
       O.match({ onNone: () => Effect.void, onSome: (prefix) => fs.writeFile(`${prefix}.ppm`, fixtureFor(prefix)) })
@@ -382,10 +360,9 @@ const makeFakeSpawnerLayer = (
             if (exitCode !== 0) {
               return makeHandle(exitCode, "tool stderr");
             }
-            // The pinned fontconfig file lives in a scoped temp directory: read it while it exists.
-            const fontconfig = command.options.env?.FONTCONFIG_FILE;
-            if (fontconfig !== undefined) {
-              fontconfigs[A.length(fontconfigs)] = yield* fs.readFileString(wordText(fontconfig));
+            const fontconfigInScopedTempDir = command.options.env?.FONTCONFIG_FILE;
+            if (fontconfigInScopedTempDir !== undefined) {
+              fontconfigs[A.length(fontconfigs)] = yield* fs.readFileString(wordText(fontconfigInScopedTempDir));
             }
             yield* fakeOutputs(fs, command);
             if (command.command === "pdftotext" && A.contains(command.args, "-bbox-layout")) {
@@ -407,10 +384,8 @@ const makeFakeSpawnerLayer = (
     })
   );
 
-// The fake tools write every file the subject reads, so each block runs on its own in-memory volume.
-const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
+const InMemoryVolumePlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 
-// A tool that starts and never exits.
 const HangingSpawner = Layer.succeed(
   ChildProcessSpawner.ChildProcessSpawner,
   ChildProcessSpawner.ChildProcessSpawner.of(
@@ -442,14 +417,13 @@ const makeLayer = (
 ) =>
   PdfTools.makeLayer(config).pipe(
     Layer.provide(makeFakeSpawnerLayer(commands, exitCode, fontconfigs)),
-    Layer.provideMerge(PlatformLayer)
+    Layer.provideMerge(InMemoryVolumePlatformLayer)
   );
 
 describe("@beep/pdf-tools service", () => {
   describe("svgToPdf", () => {
     const commands: Array<ChildProcess.StandardCommand> = [];
-    // Tests run concurrently: each one finds its own runs by its temp directory.
-    const runsIn = (dir: string) =>
+    const runsInOwnTempDir = (dir: string) =>
       A.filter(commands, (command) => A.some(command.args, flow(wordText, Str.startsWith(dir))));
     it.layer(makeLayer(commands), { timeout: "30 seconds" })((it) => {
       it.effect(
@@ -466,9 +440,11 @@ describe("@beep/pdf-tools service", () => {
           expect(result.outputPath).toBe(out);
           const written = yield* fs.readFile(out);
           expect(written.byteLength).toBe(result.bytes);
-          // rsvg-convert wrote %PDF-1.7 for the unversioned format; the driver relabels it
-          expect(new TextDecoder().decode(written.subarray(0, 9))).toBe("%PDF-1.6\n");
-          const runs = runsIn(dir);
+          expect(
+            new TextDecoder().decode(written.subarray(0, 9)),
+            "rsvg-convert wrote %PDF-1.7 for the unversioned format; the driver relabels it"
+          ).toBe("%PDF-1.6\n");
+          const runs = runsInOwnTempDir(dir);
           expect(A.length(runs)).toBe(1);
           const command = runs[0];
           expect(command?.command).toBe("rsvg-convert");
@@ -497,7 +473,7 @@ describe("@beep/pdf-tools service", () => {
           );
           expect(result.pageCount).toBe(1);
           expect(new TextDecoder().decode((yield* fs.readFile(out)).subarray(0, 8))).toBe("%PDF-1.4");
-          const runs = runsIn(dir);
+          const runs = runsInOwnTempDir(dir);
           expect(A.length(runs)).toBe(1);
           expect(runs[0]?.args.slice(0, 3)).toEqual(["--format", "pdf1.4", "--output"]);
           expect(runs[0]?.args.slice(4)).toEqual([svg]);
@@ -523,7 +499,7 @@ describe("@beep/pdf-tools service", () => {
           assertInstanceOf(error, PdfToolsError);
           expect(error.reason).toBe("invalid-request");
           assertSome(error.cause, "Expected exactly one SVG path for PDF 1.4 output");
-          expect(runsIn(dir)).toEqual([]);
+          expect(runsInOwnTempDir(dir)).toEqual([]);
         })
       );
 
@@ -555,9 +531,7 @@ describe("@beep/pdf-tools service", () => {
   describe("svgToPdf with pinned fonts", () => {
     const commands: Array<ChildProcess.StandardCommand> = [];
     const fontconfigs: Array<string> = [];
-    // Tests run concurrently: each one finds its own runs by its temp directory, in the arguments or the
-    // environment, and its fontconfig file by the pinned directory it names.
-    const runsIn = (dir: string) =>
+    const runsInOwnTempDirArgsOrEnv = (dir: string) =>
       A.filter(
         commands,
         (command) =>
@@ -587,7 +561,7 @@ describe("@beep/pdf-tools service", () => {
               }),
             })
           );
-          const runs = runsIn(dir);
+          const runs = runsInOwnTempDirArgsOrEnv(dir);
           expect(A.length(runs)).toBe(1);
           expect(runs[0]?.options.env?.FONTCONFIG_FILE).toMatch(/fonts\.conf$/);
           expect(runs[0]?.options.env?.SOURCE_DATE_EPOCH).toBe("0");
@@ -595,8 +569,10 @@ describe("@beep/pdf-tools service", () => {
             A.findFirst(fontconfigs, Str.includes(`<dir>${Str.replace("&", "&amp;")(fontDir)}</dir>`)),
             () => ""
           );
-          // the only <dir> is the pinned one, XML-escaped; no <include> pulls in the system config
-          expect(O.getOrUndefined(Str.match(/<dir>/g)(config))?.length).toBe(1);
+          expect(
+            O.getOrUndefined(Str.match(/<dir>/g)(config))?.length,
+            "the only <dir> is the pinned one, XML-escaped; no <include> pulls in the system config"
+          ).toBe(1);
           expect(config).toContain(`<dir>${Str.replace("&", "&amp;")(fontDir)}</dir>`);
           expect(config).not.toContain("<include");
           expect(config).toContain(
@@ -623,7 +599,7 @@ describe("@beep/pdf-tools service", () => {
           );
           assertInstanceOf(error, PdfToolsError);
           expect(error.reason).toBe("invalid-request");
-          expect(runsIn(dir)).toEqual([]);
+          expect(runsInOwnTempDirArgsOrEnv(dir)).toEqual([]);
           expect(A.filter(fontconfigs, Str.includes(missing))).toEqual([]);
         })
       );
@@ -667,8 +643,10 @@ describe("@beep/pdf-tools service", () => {
             O.map(metrics.inkBox, (box) => [box.minX, box.minY, box.maxX, box.maxY]),
             [1, 0, 5, 3]
           );
-          // 9 black + 1 gray (luma 128 counts as ink at the default threshold) + red (luma 76)
-          expect(metrics.inkPixels).toBe(11);
+          expect(
+            metrics.inkPixels,
+            "9 black + 1 gray (luma 128 counts as ink at the default threshold) + red (luma 76)"
+          ).toBe(11);
           expect(metrics.impurePixels).toBe(2);
           expect(metrics.chromaPixels).toBe(1);
           expect(metrics.largestBlackSquare).toBe(3);
@@ -738,9 +716,12 @@ describe("@beep/pdf-tools service", () => {
           const path = yield* Path.Path;
           const dir = yield* fs.makeTempDirectoryScoped();
           const file = path.join(dir, "streams.pdf");
+          const hexTextNotZlibUnchecked = streamBody(
+            "<< /Length 5 /Filter [/ASCIIHexDecode /FlateDecode] >>",
+            encoder.encode("4142>")
+          );
           const valid = NodeZlib.deflateSync(encoder.encode("q 0 0 m 100 100 l S Q\n"));
-          // every payload byte still inflates; only the checksum's last byte is gone
-          const truncated = NodeZlib.deflateSync(
+          const checksumCutOnly = NodeZlib.deflateSync(
             encoder.encode(Str.repeat(8)("BT /F1 12 Tf (FIG. 1) Tj ET\n"))
           ).subarray(0, -1);
           yield* fs.writeFile(
@@ -748,9 +729,8 @@ describe("@beep/pdf-tools service", () => {
             craftPdf([
               ...pageObjects,
               streamBody(`<< /Length ${valid.length} /Filter /FlateDecode >>`, valid),
-              streamBody(`<< /Length ${truncated.length} /Filter [/FlateDecode] >>`, truncated),
-              // the raw bytes are hex text, not zlib: not checked
-              streamBody("<< /Length 5 /Filter [/ASCIIHexDecode /FlateDecode] >>", encoder.encode("4142>")),
+              streamBody(`<< /Length ${checksumCutOnly.length} /Filter [/FlateDecode] >>`, checksumCutOnly),
+              hexTextNotZlibUnchecked,
             ])
           );
           const structure = yield* (yield* PdfTools).inspect(file);
@@ -767,18 +747,19 @@ describe("@beep/pdf-tools service", () => {
           const path = yield* Path.Path;
           const dir = yield* fs.makeTempDirectoryScoped();
           const file = path.join(dir, "indirect-length.pdf");
-          // Adler-32 of "q  Q\n" ends in 0x0D, so the zlib stream does too
           const data = NodeZlib.deflateSync(encoder.encode("q  Q\n"));
-          expect(data.at(-1)).toBe(0x0d);
+          expect(data.at(-1), 'Adler-32 of "q  Q\\n" ends in 0x0D, so the zlib stream does too').toBe(0x0d);
           const bytes = craftPdf([
             ...pageObjects,
             streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", data),
             `${data.length}`,
           ]);
           yield* fs.writeFile(file, bytes);
-          // pdf-lib alone cuts the 0x0D as if it were the EOL before `endstream`
           const parsed = (yield* Effect.promise(() => PDFDocument.load(bytes))).context.lookup(PDFRef.of(4));
-          expect(parsed instanceof PDFRawStream ? parsed.contents.length : -1).toBe(data.length - 1);
+          expect(
+            parsed instanceof PDFRawStream ? parsed.contents.length : -1,
+            "pdf-lib alone cuts the 0x0D as if it were the EOL before `endstream`"
+          ).toBe(data.length - 1);
           const structure = yield* (yield* PdfTools).inspect(file);
           expect(structure.undecodableStreams).toEqual([]);
         })
@@ -795,23 +776,23 @@ describe("@beep/pdf-tools service", () => {
             encoder.encode(Str.repeat(8)("BT /F1 12 Tf (FIG. 1) Tj ET\n"))
           ).subarray(0, -1);
           const valid = NodeZlib.deflateSync(encoder.encode("q 0 0 m 100 100 l S Q\n"));
+          const lengthRunsIntoEndstream = streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", truncated);
+          const lengthStopsShortOfEndstream = streamBody("<< /Length 7 0 R /Filter /FlateDecode >>", valid);
           yield* fs.writeFile(
             file,
             craftPdf([
               ...pageObjects,
-              // 5 bytes too long: the bytes at that length run into `endstream`
-              streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", truncated),
+              lengthRunsIntoEndstream,
               `${truncated.length + 5}`,
-              // 3 bytes too short: `endstream` does not follow the bytes at that length
-              streamBody("<< /Length 7 0 R /Filter /FlateDecode >>", valid),
+              lengthStopsShortOfEndstream,
               `${valid.length - 3}`,
             ])
           );
           const structure = yield* (yield* PdfTools).inspect(file);
-          // Read at its declared length, object 4 would fail "incorrect data check" and object 6 would fail too.
-          expect(structure.undecodableStreams).toEqual([
-            UndecodableStream.make({ objectNumber: 4, generation: 0, reason: "unexpected end of file" }),
-          ]);
+          expect(
+            structure.undecodableStreams,
+            'read at its declared length, object 4 would fail "incorrect data check" and object 6 would fail too'
+          ).toEqual([UndecodableStream.make({ objectNumber: 4, generation: 0, reason: "unexpected end of file" })]);
           expect(structure.streamCheck).toBe("complete");
         })
       );
@@ -823,30 +804,32 @@ describe("@beep/pdf-tools service", () => {
           const path = yield* Path.Path;
           const dir = yield* fs.makeTempDirectoryScoped();
           const tools = yield* PdfTools;
-          // Adler-32 of "q  Q\n" ends in 0x0D, which pdf-lib drops, so the stream is re-read from the file
           const data = NodeZlib.deflateSync(encoder.encode("q  Q\n"));
-          expect(data.at(-1)).toBe(0x0d);
-          // the same bytes but the checksum's last: pdf-lib's prefix matches both definitions
-          const stale = Uint8Array.from(data);
-          stale[stale.length - 1] = 0x0e;
+          expect(
+            data.at(-1),
+            'Adler-32 of "q  Q\\n" ends in 0x0D, which pdf-lib drops, so the stream is re-read from the file'
+          ).toBe(0x0d);
+          const staleSharesPdfLibPrefix = Uint8Array.from(data);
+          staleSharesPdfLibPrefix[staleSharesPdfLibPrefix.length - 1] = 0x0e;
           const updated = path.join(dir, "updated.pdf");
           yield* fs.writeFile(
             updated,
-            appendRevision(
+            appendIncrementalUpdate(
               craftPdf([
                 ...pageObjects,
-                streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", stale),
+                streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", staleSharesPdfLibPrefix),
                 `${data.length}`,
               ]),
               4,
               streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", data)
             )
           );
-          // the newest definition is the one read, not the stale one before it
-          expect((yield* tools.inspect(updated)).undecodableStreams).toEqual([]);
+          expect(
+            (yield* tools.inspect(updated)).undecodableStreams,
+            "the newest definition is the one read, not the stale one before it"
+          ).toEqual([]);
 
-          // an unfiltered stream that quotes another `4 0 obj` after the real one
-          const quoted = concatBytes(
+          const quotedFakeObject4Header = concatBytes(
             encoder.encode("4 0 obj\n<< /Length 5 0 R /Filter /FlateDecode >>\nstream\n"),
             new Uint8Array(data.length).fill(0x41),
             encoder.encode("\nendstream\nendobj")
@@ -858,11 +841,13 @@ describe("@beep/pdf-tools service", () => {
               ...pageObjects,
               streamBody("<< /Length 5 0 R /Filter /FlateDecode >>", data),
               `${data.length}`,
-              streamBody(`<< /Length ${quoted.length} >>`, quoted),
+              streamBody(`<< /Length ${quotedFakeObject4Header.length} >>`, quotedFakeObject4Header),
             ])
           );
-          // the quoted bytes fit the length and end at `endstream`, but are not the bytes pdf-lib parsed
-          expect((yield* tools.inspect(quoting)).undecodableStreams).toEqual([]);
+          expect(
+            (yield* tools.inspect(quoting)).undecodableStreams,
+            "the quoted bytes fit the length and end at `endstream`, but are not the bytes pdf-lib parsed"
+          ).toEqual([]);
         })
       );
 
@@ -978,14 +963,13 @@ describe("@beep/pdf-tools service", () => {
           ];
           const packed = ["<< /Producer (beep) >>"];
           const whole = path.join(dir, "whole.pdf");
-          yield* fs.writeFile(whole, craftXrefStreamPdf({ topLevel, packed }));
+          yield* fs.writeFile(whole, craftCairoStyleXrefStreamPdf({ topLevel, packed }));
           const intact = yield* tools.inspect(whole);
           expect(intact.undecodableStreams).toEqual([]);
           expect(intact.streamCheck).toBe("complete");
           expect(intact.containerDiscovery).toBe("complete");
 
-          // object stream 5 (indirect /Length 7 0 R) and cross-reference stream 8 each lose their last checksum byte
-          const cutBytes = craftXrefStreamPdf({
+          const cutBytes = craftCairoStyleXrefStreamPdf({
             topLevel,
             packed,
             shapeObjStm: (zlib) => zlib.subarray(0, -1),
@@ -993,14 +977,19 @@ describe("@beep/pdf-tools service", () => {
           });
           const cut = path.join(dir, "cut.pdf");
           yield* fs.writeFile(cut, cutBytes);
-          // pdf-lib ignores the checksum: it reads the packed object and keeps neither stream as an object
           const loaded = yield* Effect.promise(() => PDFDocument.load(cutBytes, { updateMetadata: false }));
-          assertTrue(loaded.context.lookup(PDFRef.of(6)) instanceof PDFDict);
-          expect(loaded.context.lookup(PDFRef.of(5))).toBeUndefined();
-          expect(loaded.context.lookup(PDFRef.of(8))).toBeUndefined();
+          assertTrue(
+            loaded.context.lookup(PDFRef.of(6)) instanceof PDFDict,
+            "pdf-lib ignores the checksum: it reads the packed object"
+          );
+          expect(loaded.context.lookup(PDFRef.of(5)), "pdf-lib keeps neither stream as an object").toBeUndefined();
+          expect(loaded.context.lookup(PDFRef.of(8)), "pdf-lib keeps neither stream as an object").toBeUndefined();
           const structure = yield* tools.inspect(cut);
           expect(A.length(structure.pages)).toBe(1);
-          expect(structure.undecodableStreams).toEqual([
+          expect(
+            structure.undecodableStreams,
+            "object stream 5 (indirect /Length 7 0 R) and cross-reference stream 8 each lose their last checksum byte"
+          ).toEqual([
             UndecodableStream.make({ objectNumber: 5, generation: 0, reason: "unexpected end of file" }),
             UndecodableStream.make({ objectNumber: 8, generation: 0, reason: "unexpected end of file" }),
           ]);
@@ -1082,8 +1071,7 @@ describe("@beep/pdf-tools service", () => {
     const commands: Array<ChildProcess.StandardCommand> = [];
     const limit = 1536 * 1024;
     const content = NodeZlib.deflateSync(encoder.encode("q 0 0 m 100 100 l S Q\n"));
-    // 1 MiB of zeros deflates about 1009:1; cut by its last checksum byte
-    const truncatedMiB = NodeZlib.deflateSync(new Uint8Array(1024 * 1024)).subarray(0, -1);
+    const zeroMiBChecksumCut = NodeZlib.deflateSync(new Uint8Array(1024 * 1024)).subarray(0, -1);
     it.layer(makeLayer(commands, 0, [], PdfToolsConfig.make({ maxInflatedBytes: limit })), { timeout: "30 seconds" })(
       (it) => {
         it.effect(
@@ -1094,15 +1082,18 @@ describe("@beep/pdf-tools service", () => {
             const dir = yield* fs.makeTempDirectoryScoped();
             const file = path.join(dir, "large.pdf");
             const large = NodeZlib.deflateSync(new Uint8Array(2 * 1024 * 1024));
+            const validStreamPastLimitAlone = streamBody(`<< /Length ${large.length} /Filter /FlateDecode >>`, large);
+            const neverReachedStream = streamBody(
+              `<< /Length ${zeroMiBChecksumCut.length} /Filter /FlateDecode >>`,
+              zeroMiBChecksumCut
+            );
             yield* fs.writeFile(
               file,
               craftPdf([
                 ...pageObjects,
                 streamBody(`<< /Length ${content.length} /Filter /FlateDecode >>`, content),
-                // a valid stream that alone inflates past the limit
-                streamBody(`<< /Length ${large.length} /Filter /FlateDecode >>`, large),
-                // never reached
-                streamBody(`<< /Length ${truncatedMiB.length} /Filter /FlateDecode >>`, truncatedMiB),
+                validStreamPastLimitAlone,
+                neverReachedStream,
               ])
             );
             const structure = yield* (yield* PdfTools).inspect(file);
@@ -1121,16 +1112,21 @@ describe("@beep/pdf-tools service", () => {
             const path = yield* Path.Path;
             const dir = yield* fs.makeTempDirectoryScoped();
             const file = path.join(dir, "bombs.pdf");
-            // charged 1032 bytes per input byte, the first cut stream leaves less than the 1 MiB the second inflates to
-            expect(truncatedMiB.length * 1032).toBeLessThan(limit);
-            expect(limit - truncatedMiB.length * 1032).toBeLessThan(1024 * 1024);
+            expect(
+              zeroMiBChecksumCut.length * 1032,
+              "the first cut stream is charged 1032 bytes per input byte"
+            ).toBeLessThan(limit);
+            expect(
+              limit - zeroMiBChecksumCut.length * 1032,
+              "the first cut stream leaves less than the 1 MiB the second inflates to"
+            ).toBeLessThan(1024 * 1024);
             yield* fs.writeFile(
               file,
               craftPdf([
                 ...pageObjects,
                 streamBody(`<< /Length ${content.length} /Filter /FlateDecode >>`, content),
-                streamBody(`<< /Length ${truncatedMiB.length} /Filter /FlateDecode >>`, truncatedMiB),
-                streamBody(`<< /Length ${truncatedMiB.length} /Filter /FlateDecode >>`, truncatedMiB),
+                streamBody(`<< /Length ${zeroMiBChecksumCut.length} /Filter /FlateDecode >>`, zeroMiBChecksumCut),
+                streamBody(`<< /Length ${zeroMiBChecksumCut.length} /Filter /FlateDecode >>`, zeroMiBChecksumCut),
                 streamBody(`<< /Length ${content.length} /Filter /FlateDecode >>`, content),
               ])
             );
@@ -1147,7 +1143,6 @@ describe("@beep/pdf-tools service", () => {
 
   describe("inspect under an inflate limit above the runtime's buffer limit", () => {
     const commands: Array<ChildProcess.StandardCommand> = [];
-    // Bun refuses an inflate asked for more than 4 GiB of output; the limit is set past that.
     const limit = 2 ** 33;
     it.layer(makeLayer(commands, 0, [], PdfToolsConfig.make({ maxInflatedBytes: limit })), { timeout: "30 seconds" })(
       (it) => {
@@ -1174,7 +1169,10 @@ describe("@beep/pdf-tools service", () => {
             expect(structure.undecodableStreams).toEqual([
               UndecodableStream.make({ objectNumber: 5, generation: 0, reason: "unexpected end of file" }),
             ]);
-            expect(structure.streamCheck).toBe("complete");
+            expect(
+              structure.streamCheck,
+              "the limit sits past the 4 GiB inflate Bun refuses, so no stream is skipped"
+            ).toBe("complete");
           })
         );
       }
@@ -1239,8 +1237,10 @@ describe("@beep/pdf-tools service", () => {
         Effect.fnUntraced(function* () {
           const tools = yield* PdfTools;
           const coverage = yield* tools.inkCoverage(request(1));
-          // the shifted stroke covers all three stroke pixels; the dot at (6,2) is two rows from (7,0)
-          expect([coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels]).toEqual([4, 3, 3]);
+          expect(
+            [coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels],
+            "the shifted stroke covers all three stroke pixels; the dot at (6,2) is two rows from (7,0)"
+          ).toEqual([4, 3, 3]);
           expect(coverage.coverage).toBe(0.75);
           const exact = yield* tools.inkCoverage(request(0));
           expect([exact.coveredPixels, exact.coverage]).toEqual([0, 0]);
@@ -1264,8 +1264,10 @@ describe("@beep/pdf-tools service", () => {
         Effect.fnUntraced(function* () {
           const tools = yield* PdfTools;
           const coverage = yield* tools.inkCoverage(request(1, "small.pdf"));
-          // the marked dot at (1,1) dilates over (0..2, 0..2) but the raster stops at 2 × 2
-          expect([coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels]).toEqual([4, 1, 1]);
+          expect(
+            [coverage.baseInkPixels, coverage.coveredPixels, coverage.markedInkPixels],
+            "the marked dot at (1,1) dilates over (0..2, 0..2) but the raster stops at 2 × 2"
+          ).toEqual([4, 1, 1]);
           expect(coverage.coverage).toBe(0.25);
         })
       );
@@ -1381,7 +1383,7 @@ describe("@beep/pdf-tools service", () => {
   describe("when the tool never exits", () => {
     const HangingLayer = PdfTools.makeLayer(PdfToolsConfig.make({ timeoutMillis: 5_000 })).pipe(
       Layer.provide(HangingSpawner),
-      Layer.provideMerge(PlatformLayer)
+      Layer.provideMerge(InMemoryVolumePlatformLayer)
     );
     it.layer(HangingLayer, { timeout: "30 seconds" })((it) => {
       it.effect(

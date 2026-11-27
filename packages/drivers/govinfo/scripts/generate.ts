@@ -20,7 +20,6 @@ const config = GenerateConfig.make({
   source: {
     _tag: "url",
     url: "https://api.govinfo.gov/api-docs",
-    // Pin the document's info.version so an upstream API version change is explicit drift.
     pin: "2.0",
     cachePath: `${packageRoot}/openapi.json`,
   },

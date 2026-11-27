@@ -26,7 +26,6 @@ describe("HubSpot declared-field equivalence", () => {
       HubSpotErrorOptions.make({ cause: new Error("second failure"), formGuid: "form-guid" })
     );
 
-    // the defect cause is payload, never identity
-    expect(sameHubSpotError(a, b)).toBe(true);
+    expect(sameHubSpotError(a, b), "the defect cause is payload, never identity").toBe(true);
   });
 });

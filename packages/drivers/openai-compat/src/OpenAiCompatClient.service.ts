@@ -232,7 +232,6 @@ const postChatCompletionRequest: {
 const makeStreamingRequest = (request: OpenAiCompatChatCompletionRequest): OpenAiCompatChatCompletionRequest =>
   OpenAiCompatChatCompletionRequest.make({
     ...request,
-    // The client can be used directly, so it asserts streaming fields even when the language-model adapter set them.
     stream: true,
     stream_options: {
       include_usage: true,
@@ -381,6 +380,11 @@ export class OpenAiCompatClient extends Context.Service<OpenAiCompatClient, Open
 ) {
   /**
    * Builds an OpenAI-compatible client layer from explicit configuration.
+   *
+   * **Details**
+   *
+   * The built client forces `stream: true` and `stream_options.include_usage` on every `streamChatCompletion`
+   * request, so a direct caller gets the usage chunk without setting either field.
    *
    * **Example** (Build client layer)
    *

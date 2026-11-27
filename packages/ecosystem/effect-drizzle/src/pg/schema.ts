@@ -654,14 +654,11 @@ export function schema(models: ModelRecord): unknown {
   validatePhysicalTableNames(models, "pg", fail);
   const enums = collectEnums(models);
   const edges = collectEdges(models);
-  // Drizzle evaluates extra-config callbacks lazily. Reassigning this registry
-  // lets callbacks created for earlier tables see forward and self references
-  // after every table has been projected.
-  let runtimeTables = empty<string, TableOf<AnyModel>>();
+  let tablesForLazyCallbacks = empty<string, TableOf<AnyModel>>();
 
   forEach(toEntries(models), ([key, model]) => {
-    runtimeTables = set(
-      runtimeTables,
+    tablesForLazyCallbacks = set(
+      tablesForLazyCallbacks,
       key,
       toPgTable(
         model,
@@ -669,7 +666,7 @@ export function schema(models: ModelRecord): unknown {
           mapArray(
             filter(edges, (edge) => edge.sourceKey === key),
             (edge) => {
-              const targetTable = getOrElse(getRecord(runtimeTables, edge.targetKey), () =>
+              const targetTable = getOrElse(getRecord(tablesForLazyCallbacks, edge.targetKey), () =>
                 fail("Resolved foreign-key table or column is unavailable.", key, edge.sourceField, edge.targetKey)
               );
               if (!hasProperty(targetTable, edge.targetField)) {
@@ -718,7 +715,7 @@ export function schema(models: ModelRecord): unknown {
     );
   });
 
-  const tables = runtimeTables;
+  const tables = tablesForLazyCallbacks;
   validateSchemaNames(collectSchemaNames(tables, enums), "pg", fail);
   const junctions = collectJunctions(tables, edges);
   const relationsConfig = makeRelationsConfig(models, tables, edges, junctions, fail);

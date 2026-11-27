@@ -114,12 +114,8 @@ esac
 /usr/bin/tar --format=posix --sort=name --numeric-owner --owner=0 --group=0 -C /output -cf - .
 `;
 
-// pffexport suffixes the -t basename per mode: `items` fills `.export`,
-// `recovered` fills `.orphans` + `.recovered`, `all` fills all three — and it
-// hard-fails when a tree it wants to create already exists.
-const allTargetTreeSuffixes: ReadonlyArray<string> = [".export", ".orphans", ".recovered"];
+const pffexportTreeSuffixesAllModes: ReadonlyArray<string> = [".export", ".orphans", ".recovered"];
 
-// Held for the duration of one export as the atomic per-target mutex.
 const PFFEXPORT_CLAIM_SUFFIX = ".claim";
 
 const outlookHeadersFileName = "OutlookHeaders.txt";
@@ -131,9 +127,6 @@ const itemMetadataFileNames: ReadonlyArray<string> = [
   "ConversationIndex.txt",
   "ItemValues.txt",
 ];
-// Fixed precedence keeps EML assembly deterministic under `-f all`, which
-// writes several body variants side by side; non-selected variants stay plain
-// metadata children rather than attachments.
 const bodyFileNamePrecedence: ReadonlyArray<string> = [
   "Message.txt",
   "Message.html",
@@ -334,7 +327,7 @@ const targetTreeSuffixesFor = (mode: PffexportMode): ReadonlyArray<string> =>
   Match.value(mode).pipe(
     Match.when("items", (): ReadonlyArray<string> => [".export"]),
     Match.when("recovered", (): ReadonlyArray<string> => [".orphans", ".recovered"]),
-    Match.when("all", () => allTargetTreeSuffixes),
+    Match.when("all", () => pffexportTreeSuffixesAllModes),
     Match.exhaustive
   );
 
@@ -403,9 +396,6 @@ const itemFolderPath = (directoryPath: string, treeRootNames: ReadonlyArray<stri
   );
 };
 
-// An item directory is one that directly contains OutlookHeaders.txt, except
-// attachment subtrees (`Attachments`, `Attachment<digit>...`) — an attachment
-// literally named OutlookHeaders.txt must not fabricate an item.
 const collectItemAccumulators = (entries: ReadonlyArray<ExportedEntry>): Record<string, ExportedItemAccumulator> => {
   const accumulators: Record<string, ExportedItemAccumulator> = {};
 
@@ -480,9 +470,6 @@ const finalizeItem = (
   outlookHeaders: accumulator.outlookHeaders,
 });
 
-// Classification operates on the pre-assembly walk snapshot only. Files
-// attribute to their deepest enclosing item directory, so embedded messages
-// become their own items instead of double counting as parent attachments.
 const classifyExportedItems = (
   entries: ReadonlyArray<ExportedEntry>,
   treeRootNames: ReadonlyArray<string>
@@ -561,6 +548,31 @@ const claimReleaseFailedWarning =
  * before child references are built. A colliding escaped name yields a
  * non-portable-path warning without overwriting either entry; synthesized
  * EML retains original attachment display names.
+ *
+ * An item is a directory that directly contains `OutlookHeaders.txt`, outside
+ * attachment subtrees, so an attachment with that name never makes an item.
+ * Each file belongs to its deepest enclosing item, so an embedded message is
+ * its own child item rather than an attachment of its parent. Under `-f all`
+ * the EML body is the first body file present in a fixed order (Message.txt,
+ * Message.html, Message.rtf, then the contact, appointment, task, meeting and
+ * note texts); the other variants stay plain metadata children. EML assembly
+ * holds one message's parts in memory at a time.
+ *
+ * **Gotchas**
+ *
+ * An export owns its target through a `<target>.claim` directory for the whole
+ * run. A claim left by a crashed run fails every later export of that source
+ * under every existing-export policy, `replace` included, until the `.claim`
+ * path is removed or a fresh export root is chosen. A claim that cannot be
+ * released after a successful export becomes a result warning. pffexport
+ * itself fails when a target tree it would create already exists.
+ *
+ * A pffexport that spawns and then dies, for example from the signal libpff
+ * raises on some corrupt PSTs, fails as a process failure, never as a missing
+ * engine. An item whose export already holds a `Message.eml` gets no
+ * synthesized EML, and an item whose parts' raw size alone would pass the
+ * materialization budget is skipped before any part is read; both leave a
+ * result warning.
  *
  * **Example** (Configure an export engine)
  * ```ts
@@ -1100,9 +1112,8 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         LibpffErrorOptions.make({ cause: "export tree contains a symbolic link" })
       );
     }
-    // Bun's realpath interprets literal backslashes. Resolve each checked
-    // parent, retaining every component verbatim until the escape pass.
-    if (Str.includes("\\")(absolutePath)) {
+    const bunRealPathWouldRewrite = Str.includes("\\")(absolutePath);
+    if (bunRealPathWouldRewrite) {
       const parent = yield* resolveExportEntry(path.dirname(absolutePath));
       return path.join(parent, path.basename(absolutePath));
     }
@@ -1248,9 +1259,6 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     targetBase: string
   ): Effect.fn.Return<void, LibpffError> {
     const command = yield* pffexportCommand(sourcePath, targetBase);
-    // Only a failed spawn means the engine is missing; a process that spawned
-    // and then died from a signal (libpff segfaults on corrupt PSTs) is a
-    // process failure, not a missing engine.
     const { exitCode, stderr } = yield* Effect.scoped(
       Effect.gen(function* () {
         const handle = yield* spawner
@@ -1307,11 +1315,13 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
                   )
                 )
               );
+            const stdoutPipedUntilTarExits = Effect.raceFirst(
+              Stream.run(handle.stdout, extractor.stdin),
+              extractor.exitCode.pipe(Effect.asVoid)
+            );
             const [, capturedStderr, code, , tarStderr, tarExitCode] = yield* Effect.all(
               [
-                // Tar can finish after consuming a complete archive while the
-                // stdin sink is still waiting for the producer stream to close.
-                Effect.raceFirst(Stream.run(handle.stdout, extractor.stdin), extractor.exitCode.pipe(Effect.asVoid)),
+                stdoutPipedUntilTarExits,
                 captureBoundedProcessText(handle.stderr),
                 handle.exitCode,
                 drainStream(extractor.stdout),
@@ -1388,7 +1398,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     messagesJsonlPath: string
   ): Effect.fn.Return<void, LibpffError> {
     const candidates: Array<string> = [];
-    for (const suffix of allTargetTreeSuffixes) {
+    for (const suffix of pffexportTreeSuffixesAllModes) {
       candidates.push(`${targetBase}${suffix}`);
     }
     candidates.push(messagesJsonlPath);
@@ -1664,16 +1674,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       return O.none<ArtifactReference>();
     }
 
-    // Never overwrite engine output: an exported file already owns this
-    // item's Message.eml name, so the snapshot reference stays truthful.
     if (R.has(entryPathIndex, `${item.directoryPath}/${PFFEXPORT_EML_FILE_NAME}`)) {
       warnings.push(emlNameCollisionWarning);
       return O.none<ArtifactReference>();
     }
 
-    // Peak assembly memory is one message's parts; the raw byte sum of the
-    // parts is a strict lower bound of the final EML size (base64 only
-    // expands), so an over-budget item is skipped before any part is read.
     const emlLowerBoundBytes =
       O.match(item.body, { onNone: () => 0, onSome: (entry) => entry.ref.sizeBytes ?? 0 }) +
       A.reduce(item.attachments, 0, (total, entry) => total + (entry.ref.sizeBytes ?? 0));
@@ -1739,15 +1744,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     });
   });
 
-  // Atomic target ownership: two concurrent exports of the same
-  // content-addressed source derive identical target paths (duplicate PSTs
-  // are common in real corpora), and an exists-check alone leaves a window
-  // where both pass before either writes. A non-recursive mkdir is the
-  // atomic claim, held for the run and always released. A present claim
-  // refuses under EVERY policy — the driver cannot distinguish a live
-  // concurrent export from a crashed run's leftover, so `replace` never
-  // steals; recovering a crashed run means removing the `.claim` path (or
-  // choosing a fresh export root) explicitly.
+  // decision: export-target-claimed-by-mkdir
   const acquireExportClaim = Effect.fn("Libpff.pffexport.acquireExportClaim")(function* (
     claimPath: string
   ): Effect.fn.Return<void, LibpffError> {
@@ -1890,9 +1887,6 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       warnings.push("pffexport produced no exported children for this archive.");
     }
 
-    // Release on the success path surfaces a stuck claim as result data; the
-    // caller's `ensuring` backstop stays silent because failure paths already
-    // carry their own error.
     yield* releaseSuccessfulExportClaim(claimPath, warnings);
 
     return ArchiveExportResult.make({

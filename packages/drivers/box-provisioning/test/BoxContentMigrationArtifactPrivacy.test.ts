@@ -47,8 +47,7 @@ const isActionFailed = S.is(BoxContentActionFailed);
 const isActionNotAttempted = S.is(BoxContentActionNotAttempted);
 const journalBase = { actionDigest: digest, attemptId: "attempt-12345678", planDigest: digest, sequence: 0 };
 
-/** Every schema a string can occupy in a plan, receipt, or journal entry. */
-const stringCarriers = [
+const stringFieldSchemas = [
   { schemaName: "Sha256Hex", accepts: S.is(Sha256Hex) },
   { schemaName: "BoxProviderId", accepts: S.is(BoxProviderId) },
   { schemaName: "BoxSourceRevision", accepts: S.is(BoxSourceRevision) },
@@ -128,14 +127,12 @@ const journalDocument = { ...journalBase, actionKind: "file", failureKind: "prov
 
 const encodeJsonText = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeJsonText = S.decodeEffect(S.fromJsonString(S.Unknown));
-/** Sentinel documents are plain JSON values, so serializing one cannot fail. */
-const encodeJson = (document: unknown) => Effect.orDie(encodeJsonText(document));
+const encodePlainJson = (document: unknown) => Effect.orDie(encodeJsonText(document));
 const isPlan = S.is(S.toEncoded(BoxContentMigrationPlan));
 const isReceipt = S.is(S.toEncoded(BoxContentMigrationReceipt));
 const isJournalEntry = S.is(S.toEncoded(BoxContentJournalEntry));
 
-/** One document per string-bearing field, each with that field replaced by the sentinel. */
-const withSentinel = (document: Readonly<Record<string, unknown>>, sentinel: string) => [
+const sentinelPerStringField = (document: Readonly<Record<string, unknown>>, sentinel: string) => [
   ...A.map(
     ["expectedEnterpriseId", "mapDigest", "planDigest", "rootFolderId", "sourceRevision", "subjectId"],
     (key) => ({
@@ -157,7 +154,7 @@ const withSentinel = (document: Readonly<Record<string, unknown>>, sentinel: str
 describe("@beep/box-provisioning content migration artifact privacy", () => {
   describe("rejects sensitive-looking values from every string carrier", () => {
     it.each(
-      A.flatMap(stringCarriers, (carrier) => A.map(sensitiveSentinels, (sentinel) => ({ ...carrier, ...sentinel })))
+      A.flatMap(stringFieldSchemas, (carrier) => A.map(sensitiveSentinels, (sentinel) => ({ ...carrier, ...sentinel })))
     )("$schemaName rejects $category", ({ accepts, value }) => {
       pipe(accepts(value), assertFalse);
     });
@@ -200,8 +197,8 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
       "$category",
       Effect.fnUntraced(function* ({ value }) {
         const errors = yield* Effect.forEach(
-          withSentinel(planDocument, value),
-          (document) => encodeJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationPlan), Effect.flip),
+          sentinelPerStringField(planDocument, value),
+          (document) => encodePlainJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationPlan), Effect.flip),
           { concurrency: 1 }
         );
 
@@ -224,11 +221,10 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
         ];
         const errors = yield* Effect.forEach(
           A.take(receipts, 5),
-          (document) => encodeJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt), Effect.flip),
+          (document) => encodePlainJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt), Effect.flip),
           { concurrency: 1 }
         );
-        // An unknown key such as raw error text is not rejected, it is dropped: it can never be re-encoded.
-        const stripped = yield* encodeJson(receipts[5]).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt));
+        const stripped = yield* encodePlainJson(receipts[5]).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt));
         const journalEntries = [
           { ...journalDocument, actionDigest: value },
           { ...journalDocument, attemptId: value },
@@ -239,7 +235,10 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
 
         expect(A.dedupe(A.map(errors, (error) => error.stage))).toEqual(["migration-receipt"]);
         expect(stripped.outcomes).toMatchObject([{ _tag: "Failed", failureKind: "provider-error" }]);
-        expect(stripped.outcomes[0]).not.toHaveProperty("message");
+        expect(
+          stripped.outcomes[0],
+          "an unknown key such as raw error text is dropped, not rejected, so it can never be re-encoded"
+        ).not.toHaveProperty("message");
         pipe(A.some(journalEntries, isJournalEntry), assertFalse);
       })
     );

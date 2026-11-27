@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/m365",
-  "root": "packages/drivers/m365",
-  "scopes": ["."]
-}

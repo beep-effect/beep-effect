@@ -1171,6 +1171,11 @@ export type FFmpegEvent = typeof FFmpegEvent.Type;
 /**
  * Decode an unknown value into an extract-frames request.
  *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ExtractFramesRequest.decodeEffect` directly.
+ *
  * **Example** (Decode extract frames request)
  *
  * ```ts
@@ -1183,12 +1188,16 @@ export type FFmpegEvent = typeof FFmpegEvent.Type;
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ExtractFramesRequest.decodeEffect.
 export const decodeExtractFramesRequest: (input: unknown) => Effect.Effect<ExtractFramesRequest, S.SchemaError> =
   ExtractFramesRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a probe request.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass parse options to
+ * `ProbeVideoRequest.decodeEffect` directly.
  *
  * **Example** (Decode probe video request)
  *
@@ -1202,12 +1211,16 @@ export const decodeExtractFramesRequest: (input: unknown) => Effect.Effect<Extra
  * @category decoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ProbeVideoRequest.decodeEffect.
 export const decodeProbeVideoRequest: (input: unknown) => Effect.Effect<ProbeVideoRequest, S.SchemaError> =
   ProbeVideoRequest.decodeEffect;
 
 /**
  * Encode an extract-frames manifest into its JSON-safe shape.
+ *
+ * **Details**
+ *
+ * Unary, with no data-last dual, because the input is unknown; pass encode options to
+ * `ExtractFramesManifest.encodeEffect` directly.
  *
  * **Example** (Encode extract frames manifest)
  *
@@ -1230,7 +1243,6 @@ export const decodeProbeVideoRequest: (input: unknown) => Effect.Effect<ProbeVid
  * @category encoding
  * @since 0.0.0
  */
-// Unary by contract: no dual because input is unknown; options stays on ExtractFramesManifest.encodeEffect.
 export const encodeExtractFramesManifest: (
   input: unknown
 ) => Effect.Effect<typeof ExtractFramesManifest.Encoded, S.SchemaError> = ExtractFramesManifest.encodeEffect;

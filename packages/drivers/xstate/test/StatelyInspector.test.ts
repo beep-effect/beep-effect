@@ -81,10 +81,9 @@ describe("StatelyInspector", () => {
   });
 
   it.layer(recordingLayer, { timeout: "30 seconds" })((it) => {
-    it.effect("forwards actor transitions through the SDK transport", () =>
+    it.effect("forwards actor transitions through an injected SDK transport that derives no relay URL", () =>
       Effect.gen(function* () {
         const inspector = yield* StatelyInspector;
-        // An injected transport replaces the relay, so the SDK derives no inspector URL.
         assertNone(inspector.inspectorUrl);
         yield* inspector.ready;
         const actor = yield* createEffectActor(releaseMachine, { input: { release: "v1.0.0" } });

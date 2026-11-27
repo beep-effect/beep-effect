@@ -111,9 +111,6 @@ const defaultTimeoutMessage = "pffexport timed out while exporting the archive."
 const defaultExportFailedMessage = "pffexport failed while exporting the archive.";
 const outputLimitMessage = "libpff export exceeded the configured materialization limit.";
 
-// Per-arm wording overrides; the scaffold engine predates the live pffexport
-// runner and supplies its own P1 wording. The identity guarantee across the
-// consolidation is reason + details, not message bytes.
 type LibpffOperationErrorOptions = {
   readonly engineUnavailableMessage?: string | undefined;
   readonly exportFailedMessage?: string | undefined;
@@ -136,7 +133,8 @@ const operationErrorContext = (operation: ExportArchiveOperation) => ({
  * as `operation-timed-out`; budget overruns surface as
  * `output-limit-exceeded`; configuration and process failures surface as
  * `archive-export-failed` carrying the process exit code in `details` when
- * one was available.
+ * one was available. `options` changes only the message text: every caller
+ * gets the same reason and details for the same failure.
  *
  * **Example** (Translate timeout to timed-out)
  *

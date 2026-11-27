@@ -152,6 +152,3 @@ export const stringifyTikaMetadata = (record: Readonly<Record<string, unknown>>)
  */
 export const readTikaContentText = (record: Readonly<Record<string, unknown>>): O.Option<TikaContentText> =>
   O.fromUndefinedOr(record[tikaContentKey]).pipe(O.flatMap(S.decodeUnknownOption(TikaContentText)));
-
-// Output-budget arithmetic lives with its only consumer in `Tika.server.ts`;
-// the tika-app engine declares no budget, so it is not a shared response concern.

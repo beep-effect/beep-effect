@@ -67,12 +67,7 @@ import type {
 
 const $I = $OpenclawId.create("OpenclawCli.service");
 
-/**
- * Extra driver-side wall-clock granted to `agent` turns beyond the
- * CLI-enforced `--timeout <seconds>` so the binary can report its own
- * timeout result before the driver deadline fires.
- */
-const agentTurnTimeoutGrace = Duration.seconds(15);
+const graceForCliTimeoutReport = Duration.seconds(15);
 
 const openclawGatewayPluginsWireErrorsDefault = A.empty();
 const openclawGatewayPluginsWireLoadedDefault = A.empty();
@@ -701,7 +696,7 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
       "--json",
       ...(options.local === true ? ["--local"] : []),
     ];
-    const timeout = Duration.sum(Duration.seconds(options.timeoutSeconds), agentTurnTimeoutGrace);
+    const timeout = Duration.sum(Duration.seconds(options.timeoutSeconds), graceForCliTimeoutReport);
     const result = yield* execute(ctx, "agent", args, timeout, options.message);
     if (result.exitCode !== 0) {
       return yield* exitFailure(ctx.binaryPath, "agent", result, O.none());

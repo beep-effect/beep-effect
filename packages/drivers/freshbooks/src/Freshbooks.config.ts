@@ -27,10 +27,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 const $I = $FreshbooksId.create("Freshbooks.config");
 const normalizeFreshbooksBaseUrl = Str.replace(/\/+$/, "");
 const isFreshbooksUrl = (value: unknown): value is string => P.isString(value) && URLStr.is(value);
-// FreshBooks requires an exact-match HTTPS redirect URI with no query string
-// (CAPTURE addenda / AGENTS §OAuth mechanics). Enforce https + no-query +
-// no-fragment at decode so an invalid callback is rejected on config resolution
-// rather than only when FreshBooks refuses the authorization exchange.
 const isHttpsNoQueryRedirect = (value: unknown): value is string => {
   if (!P.isString(value)) {
     return false;
@@ -47,7 +43,8 @@ const FreshbooksRedirectUri = S.NonEmptyString.check(
   })
 ).pipe(
   $I.annoteSchema("FreshbooksRedirectUri", {
-    description: "Exact-match HTTPS redirect URI (no query or fragment) registered for the OAuth application.",
+    description:
+      "Exact-match HTTPS redirect URI (no query or fragment) registered for the OAuth application, checked when config is decoded rather than when FreshBooks refuses the authorization exchange.",
   })
 );
 

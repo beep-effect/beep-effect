@@ -46,7 +46,6 @@ const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 const jsonResponse = (body: unknown, status = 200): Response =>
   Response.json(body, { headers: { "content-type": "application/json" }, status });
 
-// Synthetic fixtures — no real client, invoice, or payment data.
 const accountId = decode(FreshbooksAccountId, "TESTACCT");
 const errorAccountId = decode(FreshbooksAccountId, "ERRACCT");
 const clientId = decode(FreshbooksClientId, 1001);
@@ -101,10 +100,7 @@ const listEnvelope = (key: string, items: ReadonlyArray<unknown>): unknown => ({
 });
 const detailEnvelope = (key: string, item: unknown): unknown => ({ response: { result: { [key]: item } } });
 
-// Stateless routing mock — returns the fixture for the requested path. Because
-// there is no shared per-test response state, concurrently-scheduled tests
-// cannot interfere with one another.
-const route = (url: string): Response => {
+const statelessRoute = (url: string): Response => {
   const path = new URL(url).pathname;
   if (pipe(path, Str.includes("ERRACCT"))) {
     return jsonResponse({ response: { errors: [{ errno: 429 }] } }, 429);
@@ -138,8 +134,7 @@ const findUrl = (captures: ReadonlyArray<CapturedRequest>, url: string): Capture
     option._tag === "Some" ? option.value : undefined
   );
 
-// A token valid far into the future so verbs never trigger a refresh.
-const freshToken = FreshbooksStoredToken.make({
+const neverStaleToken = FreshbooksStoredToken.make({
   accessToken: Redacted.make("access-token"),
   refreshToken: Redacted.make("refresh-token"),
   expiresAt: 4_102_444_800_000,
@@ -161,7 +156,7 @@ const CapturingHttpClientLayer = Layer.effect(
           option._tag === "Some" ? option.value.toString() : request.url
         );
         yield* Ref.update(ref, A.append({ authorization: request.headers.authorization, method: request.method, url }));
-        return HttpClientResponse.fromWeb(request, route(url));
+        return HttpClientResponse.fromWeb(request, statelessRoute(url));
       })
     );
   })
@@ -179,7 +174,7 @@ const TestLayer = Freshbooks.makeLayer(
     redirectUri: "https://localhost:8443/callback",
   })
 ).pipe(
-  Layer.provideMerge(FreshbooksTokenStore.layerMemory(freshToken)),
+  Layer.provideMerge(FreshbooksTokenStore.layerMemory(neverStaleToken)),
   Layer.provide(CapturingHttpClientLayer),
   Layer.provideMerge(FreshbooksCaptureRef.layer)
 );

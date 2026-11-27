@@ -31,13 +31,6 @@ import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/**
- * A mock FreshBooks OAuth token server that enforces single-use refresh
- * tokens: a refresh presenting anything other than the currently-valid refresh
- * token is rejected with 401, exactly as FreshBooks does. It counts how many
- * network refreshes actually happened so the serialization proof can assert a
- * single owner performed the rotation.
- */
 type TokenServerShape = {
   readonly refreshCount: Effect.Effect<number>;
   readonly currentRefresh: Effect.Effect<string>;
@@ -113,15 +106,14 @@ const config = FreshbooksConfigInput.make({
   redirectUri: "https://localhost:8443/callback",
 });
 
-// A token already past expiry (epoch 0), forcing a refresh on first access.
 const expiredToken = FreshbooksStoredToken.make({
   accessToken: Redacted.make("access-0"),
   refreshToken: Redacted.make("refresh-0"),
   expiresAt: 0,
 });
 
-// A token valid far into the future: `accessToken` reuses it, but an explicit
-// `refresh` must still rotate it (revoked-before-expiry recovery).
+const zeroClockPlusExpiresIn = 43_200 * 1_000;
+
 const freshToken = FreshbooksStoredToken.make({
   accessToken: Redacted.make("access-0"),
   refreshToken: Redacted.make("refresh-0"),
@@ -202,18 +194,19 @@ describe("@beep/freshbooks token rotation", () => {
         const auth = yield* FreshbooksAuth;
         const server = yield* TokenServer;
 
-        // 25 fibers demand a token at once; the seeded token is expired.
         const tokens = yield* Effect.all(
           A.makeBy(25, () => auth.accessToken),
           { concurrency: "unbounded" }
         );
 
         const count = yield* server.refreshCount;
-        expect(count).toBe(1);
+        expect(count, "25 fibers seeded with an expired token rotate it once").toBe(1);
 
-        // Every fiber observed the same rotated access token.
         const values = A.map(tokens, Redacted.value);
-        expect(A.every(values, (value) => value === "access-1")).toBe(true);
+        expect(
+          A.every(values, (value) => value === "access-1"),
+          "every fiber observes the same rotated access token"
+        ).toBe(true);
       })
     );
   });
@@ -232,12 +225,12 @@ describe("@beep/freshbooks token rotation", () => {
         const currentRefresh = yield* server.currentRefresh;
         assertSome(
           O.map(stored, (stored) => {
-            // The consumed refresh token must never be persisted again.
-            expect(Redacted.value(stored.refreshToken)).not.toBe("refresh-0");
+            expect(Redacted.value(stored.refreshToken), "the consumed refresh token is never persisted again").not.toBe(
+              "refresh-0"
+            );
             return { refreshToken: Redacted.value(stored.refreshToken), expiresAt: stored.expiresAt };
           }),
-          // TestClock starts at zero; expires_in is 43200 seconds.
-          { refreshToken: currentRefresh, expiresAt: 43_200_000 }
+          { refreshToken: currentRefresh, expiresAt: zeroClockPlusExpiresIn }
         );
       })
     );
@@ -250,14 +243,14 @@ describe("@beep/freshbooks token rotation", () => {
         const auth = yield* FreshbooksAuth;
         const server = yield* TokenServer;
 
-        yield* auth.accessToken; // triggers the single rotation
+        yield* auth.accessToken;
         const first = yield* server.refreshCount;
-        yield* auth.accessToken; // token now fresh — no network call
+        yield* auth.accessToken;
         yield* auth.accessToken;
         const second = yield* server.refreshCount;
 
-        expect(first).toBe(1);
-        expect(second).toBe(1);
+        expect(first, "the first access rotates the expired token").toBe(1);
+        expect(second, "later accesses reuse the now-fresh token").toBe(1);
       })
     );
   });
@@ -294,15 +287,13 @@ describe("@beep/freshbooks token rotation", () => {
         const auth = yield* FreshbooksAuth;
         const server = yield* TokenServer;
 
-        // accessToken reuses the fresh token without a network refresh.
         yield* auth.accessToken;
         const refreshCount4 = yield* server.refreshCount;
-        expect(refreshCount4).toBe(0);
+        expect(refreshCount4, "accessToken reuses the fresh token without a network refresh").toBe(0);
 
-        // An explicit refresh rotates it anyway (revoked-before-expiry case).
         const rotated = yield* auth.refresh;
         const refreshCount5 = yield* server.refreshCount;
-        expect(refreshCount5).toBe(1);
+        expect(refreshCount5, "an explicit refresh rotates it anyway, for a token revoked before expiry").toBe(1);
         expect(Redacted.value(rotated)).toBe("access-1");
       })
     );

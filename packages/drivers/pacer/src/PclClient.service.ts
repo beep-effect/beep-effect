@@ -81,15 +81,12 @@ const formatServerReportDeletePathSegment = (reportId: ReportIdValue): O.Option<
       )
     : pipe(O.liftPredicate(Str.isNonEmpty)(reportId), O.map(globalThis.encodeURIComponent), O.filter(Str.isNonEmpty));
 
-/** Max status polls before a batch download is treated as timed out (~10s at 200ms). */
 const POLL_MAX_ATTEMPTS = 50;
 
 const POLL_SCHEDULE = Schedule.spaced(Duration.millis(200)).pipe(Schedule.upTo({ times: POLL_MAX_ATTEMPTS }));
 
-/** Per-request timeout so a hung PACER endpoint can never block the program forever. */
 const REQUEST_TIMEOUT = Duration.seconds(30);
 
-/** Hard cap on pagination, guarding against a server that never sets `pageInfo.last`. */
 const PAGINATION_MAX_PAGES = 1000;
 
 const extractResponseStatus = (value: unknown): O.Option<number> =>
@@ -135,7 +132,6 @@ const mapPclFailure = (error: unknown): PacerPclError => {
   });
 };
 
-/** Apply the shared per-request timeout and map any failure to a typed PacerPclError. */
 const callPcl = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, PacerPclError> =>
   effect.pipe(Effect.timeout(REQUEST_TIMEOUT), Effect.mapError(mapPclFailure));
 
@@ -171,26 +167,23 @@ const makeInjectingClient = (
   );
 
 interface PclClientShape {
-  /** Download the full result set of a completed batch case job. */
   readonly caseDownloadResults: (reportId: number) => Effect.Effect<CaseReportList, PacerPclError>;
-  /** Poll the status of a batch case download job. */
   readonly caseDownloadStatus: (reportId: number) => Effect.Effect<ReportInfoType, PacerPclError>;
-  /** Delete a stored batch report job (PACER caps stored jobs, so this is mandatory). */
   readonly deleteCaseReport: (reportId: number) => Effect.Effect<void, PacerPclError>;
-  /** Full batch lifecycle: start → poll until COMPLETED → download → always delete. */
   readonly downloadCases: (payload: CourtCaseSearchDto) => Effect.Effect<ReadonlyArray<CaseResult>, PacerPclError>;
-  /** Fetch a single page of `/cases/find` (0-based page). */
   readonly findCasesPage: (payload: CourtCaseSearchDto, page: number) => Effect.Effect<CaseReportList, PacerPclError>;
-  /** Fetch a page of `/parties/find` (0-based page, defaults to 0). */
   readonly findParties: (payload: PartySearchDto, page?: number) => Effect.Effect<PartyReportList, PacerPclError>;
-  /** Start an asynchronous batch case download; returns the report job metadata. */
   readonly startCaseDownload: (payload: CourtCaseSearchDto) => Effect.Effect<ReportInfoType, PacerPclError>;
-  /** Stream every `/cases/find` result across pages until `pageInfo.last`. */
   readonly streamCases: (payload: CourtCaseSearchDto) => Stream.Stream<CaseResult, PacerPclError>;
 }
 
 /**
  * Typed PCL client service derived from {@link PclHttpApi}.
+ *
+ * **Gotchas**
+ *
+ * `downloadCases` runs the whole batch lifecycle (start, poll until COMPLETED, download) and always deletes the
+ * stored report job afterwards, on failure and interruption too, because PACER caps stored jobs.
  *
  * **Example** (Creating mock pacer layers)
  *
@@ -216,9 +209,8 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
       PclClient,
       Effect.gen(function* () {
         const session = yield* PacerSession;
-        // A token-injecting client for the raw DELETE (httpapi has no DELETE here).
         const HttpClient1 = yield* HttpClient.HttpClient;
-        const injected = makeInjectingClient(HttpClient1, cfg, session.tokenRef);
+        const injectingClientForRawDelete = makeInjectingClient(HttpClient1, cfg, session.tokenRef);
         const client = yield* HttpApiClient.make(PclHttpApi, {
           baseUrl: cfg.pclBaseUrl,
           transformClient: (base) => makeInjectingClient(base, cfg, session.tokenRef),
@@ -257,7 +249,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
 
         const deleteCaseReportByPathSegment = (reportId: string): Effect.Effect<void, PacerPclError> =>
           callPcl(
-            injected.execute(
+            injectingClientForRawDelete.execute(
               HttpClientRequest.make("DELETE")(`${cfg.pclBaseUrl}/pcl-public-api/rest/cases/reports/${reportId}`)
             )
           ).pipe(

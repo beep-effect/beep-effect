@@ -20,9 +20,6 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { PDFArray, PDFDocument, PDFName, PDFNumber, PDFRawStream, PDFRef, rgb, StandardFonts } from "pdf-lib";
 
-// Live lane: exercises the real rsvg-convert, pdftoppm, and pdftotext binaries
-// on PATH. A machine without librsvg or poppler skips explicitly; any other
-// spawn failure stays a failure.
 const toolPresent = (command: string, versionFlag: string) =>
   Effect.scoped(
     Effect.gen(function* () {
@@ -55,8 +52,6 @@ const missingPoppler = Effect.findFirst(
 
 const LiveLayer = PdfTools.makeLayer().pipe(Layer.provideMerge(NodeServices.layer));
 
-// A text-free sheet (a box and a diagonal) and the same sheet with a typed note
-// on top, the way a reviewer's flattened export comes back.
 const drawSheet = (doc: PDFDocument) => {
   const page = doc.addPage([612, 792]);
   page.drawRectangle({ x: 150, y: 300, width: 300, height: 200, borderColor: rgb(0, 0, 0), borderWidth: 3 });
@@ -64,7 +59,7 @@ const drawSheet = (doc: PDFDocument) => {
   return page;
 };
 
-const sheetPair = Effect.gen(function* () {
+const sheetAndFlattenedReviewedExport = Effect.gen(function* () {
   const sheet = yield* Effect.promise(() => PDFDocument.create());
   drawSheet(sheet);
   const reviewed = yield* Effect.promise(() => PDFDocument.create());
@@ -73,25 +68,20 @@ const sheetPair = Effect.gen(function* () {
   return [yield* Effect.promise(() => sheet.save()), yield* Effect.promise(() => reviewed.save())] as const;
 });
 
-// A Letter sheet: a 100 pt black square 1 in from the top-left corner and a
-// 50 % gray square 1 in from the bottom-right corner.
-const sheetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="612pt" height="792pt" viewBox="0 0 612 792">
+const blackAndGraySquaresSheetSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="612pt" height="792pt" viewBox="0 0 612 792">
 <rect x="72" y="72" width="100" height="100" fill="#000"/>
 <rect x="440" y="620" width="100" height="100" fill="#808080"/>
 </svg>
 `;
 
-// Two sheets of different sizes, each with a path and a text label. With rsvg-convert 2.63.2 (cairo 1.18.6)
-// and this host's default font, the first page's content stream ends in 0x0D (the `H119` is what makes it so).
+const sheetSvgWhoseStreamMayEndIn0x0D = `<svg xmlns="http://www.w3.org/2000/svg" width="612pt" height="792pt" viewBox="0 0 612 792"><path d="M72 72H540V720H119Z" fill="none" stroke="#000"/><text x="300" y="400" font-size="14">FIG. 1</text></svg>\n`;
+
 const writeTwoSheets = Effect.fnUntraced(function* (dir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const first = path.join(dir, "first.svg");
   const second = path.join(dir, "second.svg");
-  yield* fs.writeFileString(
-    first,
-    `<svg xmlns="http://www.w3.org/2000/svg" width="612pt" height="792pt" viewBox="0 0 612 792"><path d="M72 72H540V720H119Z" fill="none" stroke="#000"/><text x="300" y="400" font-size="14">FIG. 1</text></svg>\n`
-  );
+  yield* fs.writeFileString(first, sheetSvgWhoseStreamMayEndIn0x0D);
   yield* fs.writeFileString(
     second,
     `<svg xmlns="http://www.w3.org/2000/svg" width="300pt" height="400pt" viewBox="0 0 300 400"><circle cx="150" cy="200" r="80" fill="none" stroke="#000"/><text x="120" y="380" font-size="14">FIG. 2</text></svg>\n`
@@ -99,9 +89,7 @@ const writeTwoSheets = Effect.fnUntraced(function* (dir: string) {
   return [first, second] as const;
 });
 
-// FlateDecode streams under an indirect /Length that pdf-lib reads shorter than declared: the ones its
-// re-serialisation truncates.
-const shortenedFlateStreams = Effect.fnUntraced(function* (bytes: Uint8Array) {
+const pdfLibShortenedIndirectFlateStreams = Effect.fnUntraced(function* (bytes: Uint8Array) {
   const doc = yield* Effect.promise(() => PDFDocument.load(bytes, { updateMetadata: false }));
   const lookup = (value: unknown) => (value instanceof PDFRef ? doc.context.lookup(value) : value);
   return A.length(
@@ -136,7 +124,7 @@ describe("@beep/pdf-tools live tools", () => {
         const tools = yield* PdfTools;
         const dir = yield* fs.makeTempDirectoryScoped();
         const svg = path.join(dir, "sheet.svg");
-        yield* fs.writeFileString(svg, sheetSvg);
+        yield* fs.writeFileString(svg, blackAndGraySquaresSheetSvg);
         const pdfA = path.join(dir, "a.pdf");
         const pdfB = path.join(dir, "b.pdf");
         yield* tools.svgToPdf(SvgToPdfRequest.make({ svgPaths: [svg, svg], outputPath: pdfA }));
@@ -159,17 +147,14 @@ describe("@beep/pdf-tools live tools", () => {
         );
         expect(metrics.width).toBe(612);
         expect(metrics.height).toBe(792);
-        // ink box spans the black square (72..171) only; gray (#808080, luma 128) sits on the threshold
-        assertSome(
-          O.map(metrics.inkBox, (box) => [box.minX, box.minY]),
-          [72, 72]
-        );
+        const inkBoxTopLeftAtBlackSquare = O.map(metrics.inkBox, (box) => [box.minX, box.minY]);
+        assertSome(inkBoxTopLeftAtBlackSquare, [72, 72]);
         expect(metrics.largestBlackSquare).toBe(100);
-        // the gray square is the only impurity; no anti-aliasing means no edge grays
-        expect(metrics.impurePixels).toBe(100 * 100);
+        expect(metrics.impurePixels, "the gray square is the only impurity; no anti-aliasing means no edge grays").toBe(
+          100 * 100
+        );
         expect(metrics.chromaPixels).toBe(0);
 
-        // page text: only the requested page, raw (no layout padding)
         const textSvg = (line: string) =>
           `<svg xmlns="http://www.w3.org/2000/svg" width="612pt" height="792pt"><text x="300" y="100" font-size="12">${line}</text></svg>\n`;
         yield* fs.writeFileString(path.join(dir, "p1.svg"), textSvg("Request page"));
@@ -178,9 +163,9 @@ describe("@beep/pdf-tools live tools", () => {
         yield* tools.svgToPdf(
           SvgToPdfRequest.make({ svgPaths: [path.join(dir, "p1.svg"), path.join(dir, "p2.svg")], outputPath: textPdf })
         );
-        const text = yield* tools.pageText(PageTextRequest.make({ pdfPath: textPdf, page: 2 }));
-        expect(text).toContain("Initialed page AB");
-        expect(text).not.toContain("Request page");
+        const rawRequestedPageText = yield* tools.pageText(PageTextRequest.make({ pdfPath: textPdf, page: 2 }));
+        expect(rawRequestedPageText).toContain("Initialed page AB");
+        expect(rawRequestedPageText).not.toContain("Request page");
       })
     );
 
@@ -204,13 +189,17 @@ describe("@beep/pdf-tools live tools", () => {
 
         const structure = yield* tools.inspect(out);
         expect(structure.headerVersion).toBe("1.6");
-        // pages in input order, each at its own SVG's size
-        expect(A.map(structure.pages, (page) => [Math.round(page.widthPt), Math.round(page.heightPt)])).toEqual([
+        expect(
+          A.map(structure.pages, (page) => [Math.round(page.widthPt), Math.round(page.heightPt)]),
+          "pages in input order, each at its own SVG's size"
+        ).toEqual([
           [612, 792],
           [300, 400],
         ]);
-        // every stream inflates, cairo's object and cross-reference streams included
-        expect(structure.undecodableStreams).toEqual([]);
+        expect(
+          structure.undecodableStreams,
+          "every stream inflates, cairo's object and cross-reference streams included"
+        ).toEqual([]);
         expect(structure.streamCheck).toBe("complete");
       })
     );
@@ -227,7 +216,6 @@ describe("@beep/pdf-tools live tools", () => {
         const tools = yield* PdfTools;
         const dir = yield* fs.makeTempDirectoryScoped();
         const svgPaths = yield* writeTwoSheets(dir);
-        // The pipeline svgToPdf replaced: one PDF 1.6 conversion per page, merged and re-serialised by pdf-lib.
         const pages = yield* Effect.forEach(
           svgPaths,
           (svg, index) => {
@@ -238,13 +226,11 @@ describe("@beep/pdf-tools live tools", () => {
           },
           { concurrency: 1 }
         );
-        // pdf-lib cuts a stream whose /Length is indirect at the EOL before `endstream`, so only a stream whose
-        // data ends in 0x0D comes out short; whether cairo writes one depends on its build and the host's fonts.
-        const forEach2 = yield* Effect.forEach(pages, shortenedFlateStreams, { concurrency: 1 });
-        const shortened = A.reduce(forEach2, 0, (total, count) => total + count);
+        const shortenedPerPage = yield* Effect.forEach(pages, pdfLibShortenedIndirectFlateStreams, { concurrency: 1 });
+        const shortened = A.reduce(shortenedPerPage, 0, (total, count) => total + count);
         if (shortened === 0) {
           context.skip(
-            "This rsvg-convert/cairo build ends no per-page FlateDecode stream under an indirect /Length in 0x0D, so the merge truncates nothing here; the unit test of an indirect /Length covers the read"
+            "This rsvg-convert/cairo build ends no per-page FlateDecode stream under an indirect /Length in 0x0D, so the merge truncates nothing here (it depends on the cairo build and the host's fonts); the unit test of an indirect /Length covers the read"
           );
           return;
         }
@@ -282,7 +268,7 @@ describe("@beep/pdf-tools live tools", () => {
         const path = yield* Path.Path;
         const tools = yield* PdfTools;
         const dir = yield* fs.makeTempDirectoryScoped();
-        const [sheetBytes, reviewedBytes] = yield* sheetPair;
+        const [sheetBytes, reviewedBytes] = yield* sheetAndFlattenedReviewedExport;
         const sheet = path.join(dir, "sheet.pdf");
         const reviewed = path.join(dir, "reviewed.pdf");
         yield* fs.writeFile(sheet, sheetBytes);
@@ -292,9 +278,8 @@ describe("@beep/pdf-tools live tools", () => {
         expect(pageWords3).toEqual([]);
         const blocks = yield* tools.pageWords(PageTextRequest.make({ pdfPath: reviewed, page: 1 }));
         expect(A.map(blocks, (b) => b.text)).toEqual(["Make the box taller"]);
-        // top-left frame: the baseline sits 92 pt below the top edge
         expect(blocks[0]?.rect.xMin).toBeCloseTo(72, 0);
-        expect(blocks[0]?.rect.yMax).toBeGreaterThan(80);
+        expect(blocks[0]?.rect.yMax, "top-left frame: the baseline sits 92 pt below the top edge").toBeGreaterThan(80);
         expect(blocks[0]?.rect.yMax).toBeLessThan(100);
 
         const forward = yield* tools.inkCoverage(
@@ -307,7 +292,6 @@ describe("@beep/pdf-tools live tools", () => {
         );
         expect(forward.coverage).toBe(1);
         expect(forward.markedInkPixels).toBeGreaterThan(forward.baseInkPixels);
-        // the reverse direction leaves the note's ink uncovered
         const reverse = yield* tools.inkCoverage(
           InkCoverageRequest.make({
             base: PdfPageRef.make({ pdfPath: reviewed, page: 1 }),
@@ -316,7 +300,7 @@ describe("@beep/pdf-tools live tools", () => {
             dilatePx: 1,
           })
         );
-        expect(reverse.coverage).toBeLessThan(1);
+        expect(reverse.coverage, "the reverse direction leaves the note's ink uncovered").toBeLessThan(1);
         const annotations4 = yield* tools.annotations(reviewed);
         expect(annotations4).toEqual([]);
       })

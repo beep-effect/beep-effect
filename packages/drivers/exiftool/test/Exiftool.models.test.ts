@@ -326,8 +326,7 @@ describe("@beep/exiftool models", () => {
       expect(beepQaRawTagKey("sessionId")).toBe("XMP-beepQA:SessionId");
       expect(beepQaRawTagKey("capturedAtEpochMs")).toBe("XMP-beepQA:CapturedAtEpochMs");
 
-      // exiftool 13.55 returns numeric-looking values as JSON numbers.
-      const decoded = provenanceFromRawTags({
+      const decodedFromJsonNumbers = provenanceFromRawTags({
         "XMP-beepQA:ActionId": "act-9",
         "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
         "XMP-beepQA:ClockOffsetMs": 12.5,
@@ -338,9 +337,9 @@ describe("@beep/exiftool models", () => {
         "XMP-beepQA:ToolVersions": '{"exiftool":"13.55"}',
       });
 
-      pipe(decoded, O.isSome, assertTrue);
+      pipe(decodedFromJsonNumbers, O.isSome, assertTrue);
       const pipe2 = yield* pipe(
-        decoded,
+        decodedFromJsonNumbers,
         O.map(encodeBeepQaProvenance),
         O.getOrElse(() => Effect.succeed({}))
       );

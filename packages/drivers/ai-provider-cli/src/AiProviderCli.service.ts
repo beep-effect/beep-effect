@@ -192,12 +192,12 @@ const runNative = (
 
 const decodeClaudeAuthStatus = S.decodeUnknownEffect(S.fromJsonString(AiProviderCliClaudeAuthStatusPayload));
 
+const genericClaudeSubscriptionLabel = "Claude Subscription";
+
 const claudeSubscriptionLabelFor = (subscriptionType: string): string =>
   Result.getOrElse(
     decodeUnknownAiProviderCliClaudeSubscriptionLabelResult(subscriptionType),
-    () =>
-      // Unknown tiers keep a stable generic label instead of failing the probe.
-      "Claude Subscription"
+    () => genericClaudeSubscriptionLabel
   );
 
 const exitCodeOnlySnapshot = (
@@ -220,7 +220,6 @@ const claudeSnapshot = (result: AiProviderCliProcessResult): Effect.Effect<AiPro
         tokenSource: O.filter(payload.authMethod, isAiProviderCliTokenSource),
       })
     ),
-    // Malformed stdout degrades to the exit-code-only probe; raw output never leaks.
     Effect.catchTag("SchemaError", () => Effect.succeed(exitCodeOnlySnapshot("claude", result)))
   );
 

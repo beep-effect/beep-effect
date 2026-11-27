@@ -63,11 +63,10 @@ const errors = [
 describe("@beep/box-provisioning errors", () => {
   it.each(errors)("$error._tag renders a sanitized message", ({ error, fragment }) => {
     expect(error.message).toContain(fragment);
-    // Provider ids and digests are payload fields; the rendered message never repeats them.
-    pipe(
-      A.some([sensitiveId, digest], (secret) => pipe(error.message, Str.includes(secret))),
-      assertFalse
+    const messageRepeatsPayloadId = A.some([sensitiveId, digest], (secret) =>
+      pipe(error.message, Str.includes(secret))
     );
+    pipe(messageRepeatsPayloadId, assertFalse);
   });
 });
 

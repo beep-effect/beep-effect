@@ -226,11 +226,11 @@ export const processFile = Effect.fn("Pipeline.processFile")(function* (
   const processOptions = PipelineProcessOptions.make(options);
   const startedAt = yield* Clock.currentTimeMillis;
 
-  // Read raw lines (blanks included) so we can report how many were skipped;
-  // `maxLines` still caps how many raw lines are read.
-  const allLines = yield* readLines(filePath, { maxLines: processOptions.maxLines });
-  const lines = processOptions.skipEmpty ? A.filter(allLines, (line) => Str.isNonEmpty(Str.trim(line))) : allLines;
-  const skipped = A.length(allLines) - A.length(lines);
+  const rawLinesWithBlanks = yield* readLines(filePath, { maxLines: processOptions.maxLines });
+  const lines = processOptions.skipEmpty
+    ? A.filter(rawLinesWithBlanks, (line) => Str.isNonEmpty(Str.trim(line)))
+    : rawLinesWithBlanks;
+  const skipped = A.length(rawLinesWithBlanks) - A.length(lines);
 
   const results = A.map(lines, (line) => applyStages(stages, line));
   const finishedAt = yield* Clock.currentTimeMillis;

@@ -246,9 +246,10 @@ describe("streaming schema laws", () => {
   );
 
   it("keeps extracted tool-parameter option wire shape byte-identical to the prior inline S.Struct", () => {
-    // Every field stayed S.optionalKey with no default: an empty call still
-    // encodes to `{}` (no keys materialize), exactly as the inline S.Struct did.
-    expect(encode(ReadLinesOptions, ReadLinesOptions.make({}))).toEqual({});
+    expect(
+      encode(ReadLinesOptions, ReadLinesOptions.make({})),
+      "every field stays S.optionalKey with no default, so an empty call encodes to {}"
+    ).toEqual({});
     expect(encode(ProcessFileOptions, ProcessFileOptions.make({}))).toEqual({});
 
     expect(

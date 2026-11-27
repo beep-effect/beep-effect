@@ -23,7 +23,6 @@ const offsetsOf = (span: O.Option<{ readonly start: number; readonly end: number
 
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
-// The live engine with `its.span` returning an empty token range, so no entity span resolves.
 const UnresolvableSpanEngine = Layer.effect(
   WinkEngine.WinkEngine,
   Effect.gen(function* () {
@@ -108,7 +107,6 @@ describe("WinkBackend", () => {
         const backend = yield* Backend.NLPBackend;
         const entities = yield* backend.extractEntities("Meet me at 5pm on Monday.");
         expect(entities.length).toBeGreaterThan(0);
-        // wink detects temporal entities; each carries a type + span
         for (const entity of entities) {
           expect(typeof entity.entityType).toBe("string");
           assertSome(
@@ -146,12 +144,12 @@ describe("WinkBackend", () => {
       "takes entity spans from the original text",
       Effect.fnUntraced(function* () {
         const backend = yield* Backend.NLPBackend;
-        // wink caps a token's stored preceding spaces at 65,534, so offsets rebuilt from them drift.
         const text = `${Str.repeat(65_535)(" ")}a@b.com`;
         const entities = yield* backend.extractEntities(text);
         deepStrictEqual(
           A.map(entities, (entity) => offsetsOf(entity.span)),
-          [O.some({ end: 65_542, start: 65_535 })]
+          [O.some({ end: 65_542, start: 65_535 })],
+          "wink caps stored preceding spaces at 65,534, so offsets rebuilt from them would drift"
         );
       })
     );

@@ -29,10 +29,6 @@ const quotePattern = /"/g;
 const lineBreakPattern = /\r?\n/;
 const continuationPattern = /^[ \t]/;
 
-// MIME-structural headers are stripped from verbatim transport headers because
-// the driver generates its own structure; keeping the original Content-Type
-// (typically multipart with a boundary that no longer exists in the
-// reassembled body) would make the EML unparseable.
 const structuralHeaderNames: ReadonlyArray<string> = [
   "content-disposition",
   "content-id",
@@ -46,9 +42,7 @@ const outlookSenderNameKey = "Sender name";
 const outlookSenderEmailKey = "Sender email address";
 const outlookClientSubmitTimeKey = "Client submit time";
 
-// RFC 5322's 998-octet physical-line limit. It governs headers and bodies
-// alike: header lines fold against it, body parts switch encoding against it.
-const headerLineOctetLimit = 998;
+const rfc5322LineOctetLimit = 998;
 const outlookTimestampPattern = /^([A-Za-z]{3}) (\d{1,2}), (\d{4}) (\d{2}):(\d{2}):(\d{2})(?:\.\d+)? UTC$/;
 const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const monthLengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -56,8 +50,6 @@ const textEncoder = new TextEncoder();
 
 const isLeapYear = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
-// The pattern only constrains digit counts, so "Nov 99, 2020 25:61:61 UTC"
-// matches it. Calendar and clock ranges are checked separately.
 const daysInMonth = (month: string, year: number): number =>
   A.findFirstIndex(monthAbbreviations, Str.equivalence(month)).pipe(
     O.map((index) => (index === 1 && isLeapYear(year) ? 29 : O.getOrElse(A.get(monthLengths, index), () => 0))),
@@ -144,15 +136,13 @@ const octetLength = (value: string): number => textEncoder.encode(value).length;
  * @since 0.0.0
  */
 export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
-  octetLength(line) <= headerLineOctetLimit
+  octetLength(line) <= rfc5322LineOctetLimit
     ? A.of(line)
     : A.reduce(Str.split(" ")(line), A.empty<string>(), (folded, word) =>
         A.matchRight(folded, {
           onEmpty: () => A.of(word),
           onNonEmpty: (init, last) =>
-            // Breaking here promotes this word's own leading space to the
-            // continuation indent, so unfolding puts it back unchanged.
-            octetLength(`${last} ${word}`) > headerLineOctetLimit
+            octetLength(`${last} ${word}`) > rfc5322LineOctetLimit
               ? A.append(folded, ` ${word}`)
               : A.append(init, `${last} ${word}`),
         })
@@ -225,6 +215,10 @@ const isStructuralHeader = (line: string) =>
  * are removed, line endings are normalized to CRLF, and any physical line over
  * the 998-octet limit is folded. Lines that already fit are passed through
  * unchanged, so a block that arrived correctly folded is preserved as-is.
+ *
+ * MIME-structural headers go because the assembled EML writes its own MIME
+ * structure: an original multipart `Content-Type` names a boundary that the
+ * reassembled body no longer has, which would make the EML unparseable.
  *
  * **Example** (Strip MIME structural headers)
  *
@@ -378,15 +372,8 @@ interface EmlAssemblyInput {
 
 const emptyBody: EmlBodyPart = { content: "", contentType: "text/plain; charset=utf-8" };
 
-// A body part obeys the same 998-octet physical-line limit as headers, but
-// folding would corrupt content, so a part with any over-long line switches
-// to base64 (losslessly — decoding restores the exact body string) while
-// every other part stays verbatim 8bit. Splitting on the line-break pattern
-// leaves a lone CR inside its line, where it counts toward the octet length:
-// a deliberate safe over-trigger for the one break style RFC 5322 does not
-// recognize.
 const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
-  A.some(pipe(body.content, Str.split(lineBreakPattern)), (line) => octetLength(line) > headerLineOctetLimit)
+  A.some(pipe(body.content, Str.split(lineBreakPattern)), (line) => octetLength(line) > rfc5322LineOctetLimit)
     ? [
         `Content-Type: ${body.contentType}`,
         "Content-Transfer-Encoding: base64",
@@ -416,6 +403,9 @@ const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
  * UTF-8 decoding with U+FFFD replacement): decoding the part restores that
  * string exactly, while the raw body file beside the EML remains the
  * authoritative byte-for-byte artifact.
+ *
+ * A lone CR is not a line break here, so it counts toward its line's length;
+ * it can only push a part to base64, never let an over-long line through.
  *
  * **Example** (Assemble deterministic EML)
  *
@@ -556,6 +546,13 @@ const internetHeaderValues = Match.type<{ key: string; value: string }>().pipe(
 );
 
 /** Unfold RFC 5322 headers and retain repeated fields in input order.
+ *
+ * **Gotchas**
+ *
+ * Header names become own data properties of the returned record, so a
+ * `__proto__` or `constructor` header is an ordinary key; it never reads or
+ * replaces `Object.prototype`.
+ *
  * **Example** (Read folded addresses)
  * ```ts
  * import { parseInternetHeaders } from "@beep/libpff"
@@ -574,9 +571,5 @@ export const parseInternetHeaders = (text: string): InternetHeaderMap => {
     const previous = O.getOrElse(MutableHashMap.get(headers, key), A.empty<string>);
     MutableHashMap.set(headers, key, A.appendAll(previous, internetHeaderValues({ key, value })));
   }
-  // `R.fromEntries` defines own data properties, so a `Constructor:` or
-  // `__proto__:` header becomes an ordinary key; indexing a plain object
-  // literal would read `Object` / `Object.prototype` instead and throw on
-  // spread.
   return R.fromEntries(headers);
 };

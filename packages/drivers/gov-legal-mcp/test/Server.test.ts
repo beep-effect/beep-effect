@@ -195,9 +195,6 @@ const FailingGovinfoRegistrationLayer = sanitizedToolkit(GovinfoToolkit).pipe(
   Layer.provide(FixtureFailingGovinfo)
 );
 
-// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
-// builds `McpServer`, so a direct `callTool` — one with no transport middleware
-// in front of it — has to supply the caller itself.
 const stubClientInfo = { name: "gov-legal-mcp-test-client", version: "0.0.0" };
 
 const StubMcpClientLayer = Layer.succeed(
@@ -527,10 +524,10 @@ describe("gov-legal MCP frozen contract", () => {
           const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
 
           assert.isTrue(result.isError);
-          // rc.117 projects declared failures as tool errors whose encoded payload
-          // travels in `content[].text`; `structuredContent` describes successes
-          // only, since it must conform to the advertised `outputSchema`.
-          assert.isUndefined(result.structuredContent);
+          assert.isUndefined(
+            result.structuredContent,
+            "a declared failure travels in content text; structuredContent must conform to outputSchema"
+          );
           const [first] = result.content;
           const failure = yield* decodeGovinfoSearchFailureFromJson(first?.type === "text" ? first.text : "");
           assert.strictEqual(failure._tag, "GovinfoSearchFailure");
@@ -738,9 +735,6 @@ describe("tool-name report determinism", () => {
   });
 });
 
-// The host as the kit conformance runner sees it: the exported registrations
-// with fixture eCFR and GovInfo clients and a resolvable GOVINFO_API_KEY, so
-// both sources mount and the keyless eCFR search answers with fixture data.
 conformance2026({
   name: "beep-gov-legal-test",
   version: "0.0.0",
@@ -756,10 +750,6 @@ conformance2026({
   },
 });
 
-// The production stdio host, protocol list included: `makeServerLayer` is the
-// layer `bin` launches, so these arms fail if the host is narrowed back to
-// the stateless-only list. The conformance runner above cannot see that, as
-// it mounts the registrations on its own stateless transport.
 const HANDSHAKE_PROTOCOL_VERSION = "2025-11-25";
 const HandshakeResult = S.Struct({
   protocolVersion: S.String,
@@ -780,8 +770,6 @@ describe("gov-legal-mcp production stdio host", () => {
   it.effect("answers the initialize handshake Claude Desktop opens with", () =>
     withProductionStdioHost((io) =>
       Effect.gen(function* () {
-        // Regression: a stateless-only list made Claude Desktop fail with
-        // "initialize is not supported by the configured MCP protocols".
         yield* io.sendMessage(
           JsonRpcMessage.make({
             id: 1,
@@ -795,9 +783,16 @@ describe("gov-legal-mcp production stdio host", () => {
         );
         const response = yield* io.nextMessage;
         assert.strictEqual(response.id, 1);
-        assert.isUndefined(response.error);
+        assert.isUndefined(
+          response.error,
+          "a stateless-only protocol list fails the initialize Claude Desktop opens with"
+        );
         const handshake = yield* decodeHandshakeResult(response.result);
-        assert.strictEqual(handshake.protocolVersion, HANDSHAKE_PROTOCOL_VERSION);
+        assert.strictEqual(
+          handshake.protocolVersion,
+          HANDSHAKE_PROTOCOL_VERSION,
+          "makeServerLayer, the layer bin launches, keeps the stateful protocol in its list"
+        );
         assert.strictEqual(handshake.serverInfo.name, "beep-gov-legal-handshake");
         assert.strictEqual(handshake.instructions, GOV_LEGAL_MCP_INSTRUCTIONS);
         yield* io.sendMessage(JsonRpcMessage.make({ method: "notifications/initialized" }));

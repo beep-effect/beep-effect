@@ -8,24 +8,20 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 
-// Resolve RUNPOD_API_KEY, treating absent, blank, or unresolved `op://` reference
-// values (present when secrets are not resolved, e.g. no local `op` session) as
-// not configured so live calls are skipped instead of authenticating with a
-// non-token.
+const isResolvedNonEmptyKey = (value: Redacted.Redacted<string>): boolean => {
+  const raw = Redacted.value(value);
+  return Str.isNonEmpty(raw) && !Str.startsWith("op://")(raw);
+};
+
 const usableRunpodApiKey = Config.Redacted("RUNPOD_API_KEY").pipe(
   Config.option,
-  Effect.map(
-    O.filter((value) => {
-      const raw = Redacted.value(value);
-      return Str.isNonEmpty(raw) && !Str.startsWith("op://")(raw);
-    })
-  )
+  Effect.map(O.filter(isResolvedNonEmptyKey))
 );
 
 describe("@beep/runpod live", () => {
   it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "lists one page of pods when RUNPOD_API_KEY is configured",
+      "lists one page of pods when RUNPOD_API_KEY is set, non-empty and not an unresolved 1Password op:// reference",
       Effect.fnUntraced(function* (context) {
         const apiKey = yield* usableRunpodApiKey;
         if (O.isNone(apiKey)) {

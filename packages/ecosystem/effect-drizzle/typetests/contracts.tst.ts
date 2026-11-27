@@ -224,8 +224,7 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
   }) {}
   const repository = makeRepository(ServiceRecord, { spanPrefix: "ServiceRecord", idColumn: "id" });
   const curriedRepository = makeRepository({ spanPrefix: "ServiceRecord", idColumn: "id" })(ServiceRecord);
-  // Compiles only while ServiceRecord satisfies SqlModel's Model.Any and idColumn constraints.
-  const sqlModelVersionedRepository = SqlModel.makeRepository(ServiceRecord, {
+  const sqlModelAcceptsServiceRecord = SqlModel.makeRepository(ServiceRecord, {
     tableName: ServiceRecord.sql.tableName,
     spanPrefix: "ServiceRecord",
     idColumn: "id",
@@ -262,7 +261,7 @@ it("preserves migrated PostgreSQL fixture compile contracts", () => {
   type ArrayInsert = typeof arrayTable.$inferInsert;
   type Repository = Success<typeof repository>;
   type CurriedRepository = Success<typeof curriedRepository>;
-  type SqlModelVersionedRepository = Success<typeof sqlModelVersionedRepository>;
+  type SqlModelVersionedRepository = Success<typeof sqlModelAcceptsServiceRecord>;
   type NativeRepository = Success<typeof nativeRepository>;
   type SqlModelNativeRepository = Success<typeof sqlModelNativeRepository>;
   type RepositoryInsert = ReturnType<Repository["insert"]>;

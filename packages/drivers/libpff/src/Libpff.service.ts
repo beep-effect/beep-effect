@@ -55,8 +55,6 @@ export const LibpffFileProcessingEngineDescriptor = FileProcessingEngineDescript
   supportedFormats: ["pst"],
 });
 
-// The scaffold predates the live pffexport runner and keeps its P1 wording
-// through the shared translator's per-arm overrides.
 const scaffoldErrorWording = {
   engineUnavailableMessage: LIBPFF_SCAFFOLD_ENGINE_UNAVAILABLE_MESSAGE,
   exportFailedMessage: LIBPFF_SCAFFOLD_EXPORT_FAILED_MESSAGE,
