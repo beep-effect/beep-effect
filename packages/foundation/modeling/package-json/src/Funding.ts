@@ -46,14 +46,11 @@ import type * as SchemaIssue from "effect/SchemaIssue";
 
 const $I = $PackageJsonId.create("Funding");
 
-/** The wire value a single funding entry was decoded from. */
 type EntryWire = string | { readonly [k: string]: unknown };
 
 const KNOWN_FUNDING_KEYS = HashSet.make("type", "url");
 
-// Validated by the same route `Person.schema` uses: the struct produces the
-// issue tree, so a missing or non-string `url` reads exactly as it would from
-// decoding the class directly.
+// decision: provenance-codecs-construct-in-transform
 const FundingFields = S.Struct({
   type: S.optionalKey(S.String),
   url: S.String,
@@ -61,42 +58,28 @@ const FundingFields = S.Struct({
 
 const decodeFundingFields = S.decodeUnknownEffect(FundingFields);
 
-/** Whether two extension records hold the same keys with identical (`===`) values, in any order. */
 const sameExtensions = (original: Record<string, unknown>, current: Record<string, unknown>): boolean =>
   R.keys(original).length === R.keys(current).length &&
   A.every(R.toEntries(current), ([key, value]) =>
     O.exists(R.get(original, key), (originalValue) => originalValue === value)
   );
 
-/**
- * Whether the remembered object still describes this entry. Guarding the
- * replay is load-bearing: `Schema.Class` instances are not frozen, so an entry
- * mutated in place keeps a provenance entry that no longer describes it, and
- * an unguarded replay would write the ORIGINAL object back — silently
- * discarding the edit.
- */
+// decision: wire-replay-guarded-by-faithfulness
 const isFaithfulObject: {
   (wire: { readonly [k: string]: unknown }, funding: Funding): boolean;
   (funding: Funding): (wire: { readonly [k: string]: unknown }) => boolean;
 } = dual(2, (wire: { readonly [k: string]: unknown }, funding: Funding): boolean => {
   if (wire.url !== funding.url) return false;
   if ((P.isString(wire.type) ? wire.type : undefined) !== funding.type) return false;
-  // Replay only if no extension was added, deleted or changed.
   return sameExtensions(restOf(wire, KNOWN_FUNDING_KEYS), funding.rest ?? {});
 });
 
-/** Whether the bare string form can still carry everything this entry holds. */
 const isStringExpressible = (funding: Funding): boolean =>
   funding.type === undefined && R.isEmptyRecord(funding.rest ?? {});
 
 const encodeEntry = (funding: Funding): EntryWire => {
   const wire = Funding.wireOf(funding);
-  // Shape fidelity, `Person`'s rule: an edited string entry re-emits as a
-  // STRING (rebuilt from the new url), not upgraded to the object form — a
-  // manifest's `funding` must not change representation because the url was
-  // edited. The object form is the fallback only when the string genuinely
-  // cannot carry the value, which is exactly when the entry gained a `type`
-  // or an unknown key, since a string has no syntax for either.
+  // decision: edited-shorthand-keeps-string-form
   if (P.isString(wire) && isStringExpressible(funding)) return funding.url;
   if (wire !== undefined && !P.isString(wire) && isFaithfulObject(wire, funding)) return wire;
   return {
@@ -322,10 +305,7 @@ export class Funding extends S.Class<Funding, { readonly brand: unique symbol }>
   static readonly FromValue: S.Codec<Funding, string | { readonly [k: string]: unknown }> = EntryValue.pipe(
     S.decodeTo(
       S.instanceOf(Funding),
-      // `transformEffect` rather than `transform`: this transform constructs
-      // the instance itself — the only way to associate the raw wire value
-      // with the result — so it must carry the field validation the class
-      // factory would otherwise perform, including the required `url`.
+      // decision: provenance-codecs-construct-in-transform
       SchemaTransformation.transformEffect({
         decode: (input: string | { readonly [k: string]: unknown }) => decodeEntry(input),
         encode: (funding: Funding) => Effect.succeed(encodeEntry(funding)),
@@ -381,9 +361,6 @@ export class Funding extends S.Class<Funding, { readonly brand: unique symbol }>
         },
         encode: (entries: ReadonlyArray<Funding>) => {
           const only = entries.length === 1 ? entries[0] : undefined;
-          // Guarded on the entry still being alone: pushing a second entry
-          // into the decoded field upgrades it to the array form rather
-          // than silently dropping the addition.
           if (only !== undefined && Funding.isBareField(only)) return Effect.succeed(encodeEntry(only));
           return Effect.succeed(A.map(entries, encodeEntry));
         },

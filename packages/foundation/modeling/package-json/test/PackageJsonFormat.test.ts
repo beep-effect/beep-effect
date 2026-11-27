@@ -1,14 +1,9 @@
-import { identity } from "effect/Function";
-// Decode-free canonical sort and format, in both shapes a downstream host
-// needs: `PackageJsonFormat.sortValue` (value→value) and
-// `PackageJsonFormat.formatToString` (bytes→bytes). The cases named "call-site
-// shape" mirror the `sort-package-json` call sites a consumer is replacing.
-
 import { Package } from "@beep/package-json/Package";
 import { PackageJsonFormat } from "@beep/package-json/PackageJsonFormat";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitSuccess, assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -62,13 +57,14 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
   });
 
   it("never adds or removes a key, empty maps included", () => {
-    // The value path only reorders — that is what lets it return its input
-    // type. Removing empty maps lives on `formatToString`, which returns a
-    // string and so has no such obligation.
-    assert.deepStrictEqual(PackageJsonFormat.sortValue({ name: "p", dependencies: {} }), {
-      name: "p",
-      dependencies: {},
-    });
+    assert.deepStrictEqual(
+      PackageJsonFormat.sortValue({ name: "p", dependencies: {} }),
+      {
+        name: "p",
+        dependencies: {},
+      },
+      "the value path only reorders so it can return its input type; formatToString owns stripping empty maps"
+    );
   });
 
   it("does not mutate its input", () => {
@@ -85,10 +81,12 @@ describe("PackageJsonFormat.sortValue (value in, value out)", () => {
   });
 
   it("returns a non-object unchanged rather than mangling it", () => {
-    // Guards a mistyped `Json` union at a call site: an array must not become
-    // an index-keyed object.
     const array = [1, 2];
-    assert.strictEqual(PackageJsonFormat.sortValue(deliberatelyInvalid<never>(array)), array);
+    assert.strictEqual(
+      PackageJsonFormat.sortValue(deliberatelyInvalid<never>(array)),
+      array,
+      "a mistyped Json union at a call site must not turn an array into an index-keyed object"
+    );
     assert.strictEqual(PackageJsonFormat.sortValue(deliberatelyInvalid<never>(null)), null);
     assert.strictEqual(PackageJsonFormat.sortValue(deliberatelyInvalid<never>("text")), "text");
   });
@@ -117,11 +115,10 @@ describe("PackageJsonFormat.formatToString accepts any syntactically valid JSON 
   });
 
   it("formats a manifest whose values the model would reject", () => {
-    // A malformed semver and a malformed packageManager integrity: both are
-    // strict-decode failures, neither is a formatting concern.
     assert.strictEqual(
       format('{"version": "1.0", "packageManager": "pnpm@nope"}'),
-      '{\n  "version": "1.0",\n  "packageManager": "pnpm@nope"\n}\n'
+      '{\n  "version": "1.0",\n  "packageManager": "pnpm@nope"\n}\n',
+      "a malformed semver and packageManager are strict-decode failures, not formatting concerns"
     );
   });
 
@@ -166,9 +163,11 @@ describe("PackageJsonFormat.formatToString preserves what it does not format", (
   });
 
   it("keeps empty dependency maps, which the strict path strips", () => {
-    // The strict path strips these because the model materializes absent maps
-    // as empty ones; here the key is one the author actually wrote.
-    assert.strictEqual(format('{"name": "p", "dependencies": {}}'), '{\n  "name": "p",\n  "dependencies": {}\n}\n');
+    assert.strictEqual(
+      format('{"name": "p", "dependencies": {}}'),
+      '{\n  "name": "p",\n  "dependencies": {}\n}\n',
+      "the model materializes absent maps as empty, but here the author wrote the key"
+    );
   });
 
   it("strips empty maps on request", () => {

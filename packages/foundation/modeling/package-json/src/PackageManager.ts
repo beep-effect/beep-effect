@@ -41,8 +41,6 @@ import * as Str from "effect/String";
 
 const $I = $PackageJsonId.create("PackageManager");
 
-// The name half of the grammar, deliberately looser than
-// `PackageManagerPin`'s four literals — see the class remarks for why.
 const PACKAGE_MANAGER_NAME_RE = /^[a-z]+$/;
 
 const invalid: {
@@ -187,29 +185,17 @@ export class PackageManager extends S.Class<PackageManager, { readonly brand: un
               if (!PACKAGE_MANAGER_NAME_RE.test(name)) {
                 return invalid(input, `Invalid packageManager name: "${name}"`);
               }
-              // The first `+` begins the integrity component, unconditionally —
-              // the version position of this field never carries build metadata.
               const plus = Str.indexOf("+")(rest);
               const version = O.match(plus, {
                 onNone: () => rest,
                 onSome: (at) => Str.slice(0, at)(rest),
               });
-              // Strict semver, matching corepack's own `semver.valid` check: a
-              // leading-zero component (`01.2.3`), a leading-zero numeric
-              // prerelease (`1.2.3-01`) or an empty prerelease identifier
-              // (`1.2.3-a..b`) is malformed, not merely unusual. Stricter than
-              // the trimming parse on one axis — a padded version substring
-              // (`pnpm@ 10.33.0`) fails typed rather than being canonicalized.
               if (!SemVer.isPinnable(version)) {
                 return invalid(input, `Invalid packageManager version: "${version}"`);
               }
               return O.match(plus, {
                 onNone: () => Effect.succeed(PackageManager.make({ name, version, integrity: O.none() })),
                 onSome: (at): Effect.Effect<PackageManager, SchemaIssue.Issue> => {
-                  // Validate the integrity through the corepack-restricted schema so a
-                  // malformed hash — or a valid SRI/yarn form the `packageManager`
-                  // field never legitimately carries — is a typed failure, not the
-                  // defect `make` would throw on a value the field schema rejects.
                   const rawIntegrity = Str.slice(at + 1)(rest);
                   const decoded = S.decodeExit(CorepackIntegrityHash)(rawIntegrity);
                   if (Exit.isFailure(decoded)) {

@@ -133,6 +133,9 @@ export interface CodeScanningShape {
    * Nothing here polls: a successful call means GitHub accepted the request,
    * not that scanning is running.
    *
+   * Only the keys `setup` sets are sent: an omitted key leaves that setting as
+   * it is rather than clearing it.
+   *
    * **Turning it back off does not undo everything it did.** Setting `state`
    * to `not-configured` stops default setup, but the synthetic CodeQL workflow
    * GitHub created when it was enabled **survives** — it remains listed among
@@ -286,20 +289,12 @@ export class CodeScanning extends Context.Service<CodeScanning, CodeScanningShap
 
 const unstubbed = unstubbedFor({ service: "CodeScanning" });
 
-/**
- * Every method resolves {@link Repo} per call rather than once at layer
- * construction, for the reason `GitBranch` states: capturing the coordinate
- * would make a scoped `Repo.provide` silently do nothing.
- */
 const make = (client: GitHubClient["Service"]): CodeScanningShape => {
+  // decision: repo-resolved-per-call
   const configure = Effect.fn("CodeScanning.configure")(function* (setup: CodeScanningSetup.Encoded) {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo });
 
-    // Only the keys the caller set are sent. Copying the whole object would
-    // send `undefined` for every key they omitted, which clears settings
-    // rather than leaving them alone. `satisfies` lists every setup key, so a
-    // new optional field fails to compile until it is forwarded here.
     const body: Readonly<Record<string, unknown>> = O.getSomesStruct({
       state: O.fromUndefinedOr(setup.state),
       languages: O.map(O.fromUndefinedOr(setup.languages), A.copy),

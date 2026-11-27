@@ -277,16 +277,6 @@ export class RepositorySecret extends Context.Service<RepositorySecret, Reposito
     Layer.succeed(RepositorySecret, RepositorySecret.makeTest(overrides));
 }
 
-/**
- * Seal a value, turning a malformed public key into a typed failure.
- *
- * **Details**
- *
- * `encryptSecret` returns a `Result` because base64 decoding or key length validation can fail. A public
- * key GitHub cannot have produced is still *input*, and input failures are
- * typed rather than thrown — so this maps it onto the same `GitHubError` a
- * caller already handles, naming the route it came from.
- */
 const seal: {
   (route: string, publicKey: string, value: Redacted.Redacted<string>): Effect.Effect<string, GitHubError>;
   (publicKey: string, value: Redacted.Redacted<string>): (route: string) => Effect.Effect<string, GitHubError>;
@@ -300,7 +290,6 @@ const seal: {
     })
 );
 
-/** Decode one page walk of secrets, blaming `operation` for a payload that does not fit. */
 const decodeSecrets = (items: ReadonlyArray<{ readonly name: string }>, operation: string) =>
   Effect.forEach(
     items,
@@ -329,8 +318,6 @@ const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
         owner,
         repo,
         secret_name: name,
-        // The single unwrap, at the moment of encryption. What continues from
-        // here is the sealed box.
         encrypted_value: yield* seal(routes.publicKey, publicKey.key, value),
         key_id: publicKey.key_id,
       });
@@ -341,9 +328,6 @@ const make = (client: GitHubClient["Service"]): RepositorySecretShape => {
     const { owner, repo } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ owner, repo, scope });
 
-    // Paginated: the array on one page is a page, not the count. A repository
-    // with more secrets than a page holds would otherwise report a truncated
-    // list that looks complete.
     const secrets = yield* client.paginate(ROUTES[scope].list, { owner, repo });
     return yield* decodeSecrets(secrets, "RepositorySecret.list");
   });

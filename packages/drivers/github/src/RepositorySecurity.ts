@@ -209,9 +209,6 @@ const make = (client: GitHubClient["Service"]): RepositorySecurityShape => {
         })
         .pipe(
           Effect.as(true),
-          // Disabled is reported as 404 rather than as a payload. Only `notFound`
-          // is absorbed; a 403 from a mis-scoped token still fails, which is the
-          // distinction a blanket `orElseSucceed(false)` would destroy.
           Effect.catchIf(
             (error) => error.kind === "notFound",
             () => Effect.succeed(false)

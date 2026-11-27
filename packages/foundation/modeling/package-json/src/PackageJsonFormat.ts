@@ -176,8 +176,6 @@ export declare namespace PackageFormatTextOptions {
   export type Encoded = typeof PackageFormatTextOptions.Encoded;
 }
 
-// The text path's defaults: preserve the source indentation and keep the
-// empty dependency maps an author wrote (see each option's description).
 const resolveTextFormatOptions = (source: string, options: PackageFormatTextOptions.Encoded | undefined) => ({
   indent: resolveIndent(options?.indent ?? "preserve", source),
   sort: options?.sort ?? true,
@@ -382,8 +380,6 @@ export class PackageJsonFormat {
   } = dual(
     (args) => P.isString(args[0]),
     (source: string, options?: PackageFormatTextOptions.Encoded): Result.Result<string, PackageJsonSyntaxError> => {
-      // Shares `sortKeys` with `sortValue` via `renderJson`, so the two entry
-      // points cannot drift in ordering.
       const decoded = S.decodeResult(Json)(source);
       if (Result.isFailure(decoded)) {
         return Result.fail(PackageJsonSyntaxError.make({ reason: "invalid-json", cause: decoded.failure }));
@@ -451,8 +447,6 @@ export class PackageJsonFormat {
   } = dual(
     3,
     Effect.fn("PackageJsonFormat.modify")(function* (source: string, path: JsoncPath, value: unknown) {
-      // package.json is strict JSON; a syntactic precondition keeps garbage
-      // input a typed failure instead of undefined scanner behavior.
       const parsed = yield* S.decodeEffect(Json)(source).pipe(
         Effect.mapError((cause) => PackageJsonSyntaxError.make({ reason: "invalid-json", cause }))
       );

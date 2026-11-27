@@ -24,7 +24,17 @@
       "cache": false
     },
     "test": {
-      "cache": false
+      "cache": false,
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt"
+      ]
+    },
+    "test:integration": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt"
+      ]
     }
   }
 }
