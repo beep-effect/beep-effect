@@ -218,6 +218,7 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["biome.jsonc", "@beep/lint-rules"],
   ["package.json", "@beep/repo-cli"],
   ["turbo.json", "@beep/repo-cli"],
+  ["packages/law-practice/server/vitest.shards.json", "@beep/repo-cli"],
   ["packages/foundation/**/package.json", "@beep/repo-cli"],
   ...A.map(COVERAGE_SCANNED_OWNER_ROWS, ([, pattern, owner]) => [pattern, owner] as const),
 ];
@@ -244,11 +245,12 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
   ["packages/_internal/db-admin/", "@beep/repo-cli"],
   ["packages/agents/", "@beep/agents-domain"],
   ["packages/law-practice/use-cases/test/fixtures/", "@beep/law-practice-server"],
+  ["packages/law-practice/domain/test/fixtures/claim-element/", "@beep/law-practice-server"],
   ...A.map(
     // Register coverage-executed reads, not any test read. Epistemic explicitly
     // includes ContradictionTriage.pglite; law-practice reads from top-level tests.
     // The other server consumers exclude their integration-only readers.
-    ["@beep/epistemic-server", "@beep/law-practice-server"],
+    ["@beep/documents-server", "@beep/epistemic-server", "@beep/law-practice-server"],
     (packageName): readonly [string, string] => ["packages/_internal/db-admin/drizzle/", packageName]
   ),
 ];
