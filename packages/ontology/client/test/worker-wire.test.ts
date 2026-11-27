@@ -69,7 +69,10 @@ describe("ontology graph worker wire", () => {
     });
 
     const usedDirectly = structuredClone(result);
-    pipe(isProjection(usedDirectly.result), assertTrue);
+    assertTrue(
+      isProjection(usedDirectly.result),
+      "projection is plain branded data, so even the raw clone keeps its shape"
+    );
 
     const encoded = encodeWorkerResult(result);
     pipe(encoded, Result.isSuccess, assertTrue);

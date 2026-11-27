@@ -209,8 +209,12 @@ export class RunOntologySparqlResult extends S.Opaque<RunOntologySparqlResult, {
     profile: OntologySparqlPanelProfile,
     submittedQuery: S.String,
     normalizedQuery: S.String,
-    effectiveLimit: S.Natural,
-    limitInjected: S.Boolean,
+    effectiveLimit: S.Natural.annotateKey({
+      description: "The bound in force: the query's own top-level LIMIT, otherwise the safeguard default.",
+    }),
+    limitInjected: S.Boolean.annotateKey({
+      description: "Whether the safeguard appended a LIMIT. Never true for an ASK, which returns one boolean.",
+    }),
     truncated: S.Boolean,
     rawResultCount: S.Int,
     displayedResultCount: S.Int,

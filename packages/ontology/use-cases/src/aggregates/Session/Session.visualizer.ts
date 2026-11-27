@@ -852,7 +852,8 @@ const deterministicPosition3d = (iri: string, index: number): readonly [number, 
 
 const FORCE_RANGE = 150;
 const MANY_BODY_STRENGTH = -60;
-const INTRA_COMMUNITY_LINK_REST_LENGTH = 50;
+// decision: one-link-rest-length-until-communities
+const LINK_REST_LENGTH = 50;
 const LINK_STRENGTH = 0.1;
 const VELOCITY_DAMPING = 0.6;
 const CONTAINMENT_RADIUS = 420;
@@ -998,7 +999,7 @@ const applySpringForces = (
     const y = inRangeAt(positions, targetOffset + 1) - inRangeAt(positions, sourceOffset + 1);
     const z = inRangeAt(positions, targetOffset + 2) - inRangeAt(positions, sourceOffset + 2);
     const distance = Math.sqrt(x * x + y * y + z * z) || 1;
-    const force = ((distance - INTRA_COMMUNITY_LINK_REST_LENGTH) / distance) * LINK_STRENGTH * alpha;
+    const force = ((distance - LINK_REST_LENGTH) / distance) * LINK_STRENGTH * alpha;
     const sourceDegree = inRangeAt(degrees, source);
     const targetDegree = inRangeAt(degrees, target);
     const bias = sourceDegree / (sourceDegree + targetDegree);

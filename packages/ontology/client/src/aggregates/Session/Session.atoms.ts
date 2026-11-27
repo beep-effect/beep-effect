@@ -2948,9 +2948,6 @@ const ontologyAutoOpenAttemptedAtom = workbenchState(false);
  * gate, so a chat-only browser session never mounts this atom and keeps its
  * "needs desktop session" empty state.
  *
- * The bootstrap reads the session, path and attempt flag with `get.once`, so it
- * never recomputes on a later open, close or edit.
- *
  * **Example** (Log auto-open bootstrap atom)
  *
  * ```ts

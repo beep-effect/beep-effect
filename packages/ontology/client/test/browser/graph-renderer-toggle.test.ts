@@ -31,6 +31,7 @@ import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import { vi } from "vitest";
 import type { CosmosRenderHandle } from "@beep/cosmos";
 import type { Graph3DRenderHandle } from "@beep/graph-3d/browser";
+import type * as Atom from "effect/reactivity/Atom";
 
 const renderers = vi.hoisted(() => ({
   graph3d: vi.fn<(handle: Graph3DRenderHandle) => void>(),
@@ -224,18 +225,15 @@ describe("workbench graph renderer toggle", () => {
         (registry) => Effect.sync(() => registry.dispose())
       );
 
-      yield* Effect.acquireRelease(
-        Effect.sync(() => registry.subscribe(ontologyGraphBackendAtom, () => undefined)),
-        (release) => Effect.sync(release)
-      );
-      yield* Effect.acquireRelease(
-        Effect.sync(() => registry.subscribe(ontologyGraphErrorAtom, () => undefined)),
-        (release) => Effect.sync(release)
-      );
-      yield* Effect.acquireRelease(
-        Effect.sync(() => registry.subscribe(ontologyGraphRenderBridgeAtom, () => undefined)),
-        (release) => Effect.sync(release)
-      );
+      const mountLikeUseAtomValue = <A>(atom: Atom.Atom<A>) =>
+        Effect.acquireRelease(
+          Effect.sync(() => registry.subscribe(atom, () => undefined)),
+          (release) => Effect.sync(release)
+        );
+      const forceBridgeBodyToRun = () => registry.get(ontologyGraphRenderBridgeAtom);
+      yield* mountLikeUseAtomValue(ontologyGraphBackendAtom);
+      yield* mountLikeUseAtomValue(ontologyGraphErrorAtom);
+      yield* mountLikeUseAtomValue(ontologyGraphRenderBridgeAtom);
       yield* Effect.acquireRelease(
         Effect.sync(() => registry.mount(ontologyGraphContainerBindingAtom)),
         (release) => Effect.sync(release)
@@ -250,7 +248,7 @@ describe("workbench graph renderer toggle", () => {
           yield* waitFor("finalized graph container", () => O.isNone(registry.get(ontologyGraphContainerAtom)));
         })
       );
-      registry.get(ontologyGraphRenderBridgeAtom);
+      forceBridgeBodyToRun();
 
       registry.set(setOntologyGraphContainerElementAtom, container);
       yield* waitFor("measurable graph container", () => O.isSome(registry.get(ontologyGraphContainerAtom)));
