@@ -15,13 +15,11 @@ import type { ConfigCodec } from "@beep/config-file/ConfigCodec";
 const salt = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
 const key = () => EncryptedCodecKey.fromPassphrase("correct horse battery staple", salt);
 
-/** A real AES-GCM key, generated rather than derived — drives the `fromCryptoKey` variant. */
 const generateKeyForTest = (): Effect.Effect<CryptoKey, ConfigEncryptionError> =>
   Effect.promise(() =>
     globalThis.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"])
   );
 
-/** A codec that hands its input straight through, so we can encrypt bytes the json codec would reject. */
 const passthrough: ConfigCodec<never> = {
   name: "raw",
   parse: (raw) => Effect.succeed(raw),
@@ -31,11 +29,6 @@ const passthrough: ConfigCodec<never> = {
   },
 };
 
-/**
- * Wrap the real PBKDF2 derivation with a counter. The count is provided to
- * one program only, so tests running concurrently in this file never see
- * each other's derivations (a global `crypto.subtle` spy would).
- */
 const countingDerivation = () => {
   let derivations = 0;
   return {
@@ -64,8 +57,7 @@ describe("EncryptedCodec", () => {
     Effect.gen(function* () {
       const codec = EncryptedCodec(JsonCodec, key());
       const ciphertext = yield* codec.stringify({ port: 8080, secret: "hunter2" });
-      // Neither the base64 envelope nor its decoded bytes may contain the plaintext.
-      assert.notInclude(ciphertext, "8080");
+      assert.notInclude(ciphertext, "8080", "neither the base64 envelope nor its decoded bytes may hold the plaintext");
       assert.notInclude(ciphertext, "hunter2");
       const decoded = atob(ciphertext);
       assert.notInclude(decoded, "8080");
@@ -80,11 +72,9 @@ describe("EncryptedCodec", () => {
       const a = yield* codec.stringify({ port: 1 });
       const b = yield* codec.stringify({ port: 1 });
       assert.notStrictEqual(a, b);
-      // The 12-byte IV prefix differs...
-      assert.notStrictEqual(Str.slice(0, 12)(atob(a)), Str.slice(0, 12)(atob(b)));
-      // ...and both still decrypt to the same plaintext.
+      assert.notStrictEqual(Str.slice(0, 12)(atob(a)), Str.slice(0, 12)(atob(b)), "the 12-byte IV prefix differs");
       const parsed1 = yield* codec.parse(a);
-      assert.deepStrictEqual(parsed1, { port: 1 });
+      assert.deepStrictEqual(parsed1, { port: 1 }, "both ciphertexts still decrypt to the same plaintext");
       const parsed2 = yield* codec.parse(b);
       assert.deepStrictEqual(parsed2, { port: 1 });
     })
@@ -120,8 +110,11 @@ describe("EncryptedCodec", () => {
       assert.instanceOf(error, ConfigEncryptionError);
       assert.isTrue(S.is(ConfigEncryptionError)(error));
       assert.strictEqual(error.phase, "encoding");
-      // The caught host failure rides along structurally — never String(e).
-      assert.notStrictEqual(typeof error.cause, "string");
+      assert.notStrictEqual(
+        typeof error.cause,
+        "string",
+        "the caught host failure rides along structurally, never String(e)"
+      );
     })
   );
 
@@ -151,16 +144,19 @@ describe("EncryptedCodec", () => {
 
   it.effect("surfaces the inner codec's error after successful decryption", () =>
     Effect.gen(function* () {
-      // Encrypt invalid JSON with a raw passthrough codec, then decrypt with json.
       const ciphertext = yield* EncryptedCodec(passthrough, key()).stringify("{ not json");
       const error = yield* EncryptedCodec(JsonCodec, key()).parse(ciphertext).pipe(Effect.asVoid, Effect.flip);
-      // The inner codec's error, widened not flattened.
-      assert.strictEqual(error._tag, "ConfigCodecError");
+      assert.strictEqual(
+        error._tag,
+        "ConfigCodecError",
+        "passthrough encrypted invalid JSON; json surfaces its error, widened not flattened"
+      );
       assert.notInstanceOf(error, ConfigEncryptionError);
-      // Decryption succeeded and JSON decoding then failed, so its SchemaError
-      // must reach the caller intact. Without this, a regression that
-      // replaced `cause` with its string form would still pass.
-      assert.instanceOf(error.cause, S.SchemaError);
+      assert.instanceOf(
+        error.cause,
+        S.SchemaError,
+        "the SchemaError reaches the caller intact, so a stringified cause fails here"
+      );
     })
   );
 
@@ -170,8 +166,6 @@ describe("EncryptedCodec", () => {
 
   it.effect("derives the key exactly once across many operations", () =>
     Effect.gen(function* () {
-      // Count derivations directly. Never assert on wall-clock time: it is
-      // machine-dependent, and "the second call was fast" is not the claim.
       let derivations = 0;
       const counting = EncryptedCodecKey.fromCryptoKey(
         Effect.suspend(() => {
@@ -185,7 +179,7 @@ describe("EncryptedCodec", () => {
       yield* codec.stringify({ a: 2 });
       yield* codec.parse(a);
 
-      assert.strictEqual(derivations, 1);
+      assert.strictEqual(derivations, 1, "count derivations, never wall-clock time");
     })
   );
 
@@ -198,17 +192,14 @@ describe("EncryptedCodec", () => {
           return generateKeyForTest();
         })
       );
-      // Constructing the codec must not run the key effect.
       const codec = EncryptedCodec(JsonCodec, counting);
-      assert.strictEqual(derivations, 0);
+      assert.strictEqual(derivations, 0, "constructing the codec must not run the key effect");
       yield* codec.stringify({ a: 1 });
       assert.strictEqual(derivations, 1);
     })
   );
 
   it.effect("runs PBKDF2 exactly once per codec instance across parse and stringify", () => {
-    // Count the real derivations at the PBKDF2 seam, so the passphrase path is
-    // held to the same standard as `fromCryptoKey`.
     const derivation = countingDerivation();
     return Effect.gen(function* () {
       const codec = EncryptedCodec(JsonCodec, key());
@@ -218,7 +209,11 @@ describe("EncryptedCodec", () => {
       yield* codec.parse(a);
       yield* codec.parse(a);
 
-      assert.strictEqual(derivation.count(), 1);
+      assert.strictEqual(
+        derivation.count(),
+        1,
+        "PBKDF2 counted at its seam, provided to this program only, not a global spy"
+      );
     }).pipe(derivation.provide);
   });
 
@@ -244,14 +239,10 @@ describe("EncryptedCodec", () => {
       const codec = EncryptedCodec(JsonCodec, failing);
 
       const first = yield* Effect.flip(codec.stringify({ a: 1 }));
-      // A well-formed envelope: parse validates it before resolving the key, so
-      // this reaches the key rather than short-circuiting on the too-short guard.
       const second = yield* codec.parse(btoa(Str.repeat(32)("x"))).pipe(Effect.asVoid, Effect.flip);
-      // The deterministic failure still fails, by identity, every time...
-      assert.strictEqual(first, boom);
-      assert.strictEqual(second, boom);
-      // ...but only success is memoized, so each operation resolves the key again.
-      assert.strictEqual(attempts, 2);
+      assert.strictEqual(first, boom, "the deterministic failure fails by identity every time");
+      assert.strictEqual(second, boom, "a well-formed envelope passes the length guard, so parse reaches the key");
+      assert.strictEqual(attempts, 2, "only success is memoized, so each operation resolves the key again");
     })
   );
 
@@ -261,25 +252,28 @@ describe("EncryptedCodec", () => {
       const counting = EncryptedCodecKey.fromCryptoKey(
         Effect.suspend((): Effect.Effect<CryptoKey, ConfigEncryptionError> => {
           attempts++;
-          // Park the first resolution so the sibling failure interrupts it.
           return attempts === 1 ? Effect.never : generateKeyForTest();
         })
       );
       const codec = EncryptedCodec(JsonCodec, counting);
 
-      // Clock-free by construction: `it.effect` runs on a virtual TestClock, so a
-      // timeout- or sleep-driven interrupt would never fire. A failing sibling
-      // under `Effect.all` interrupts the parked key resolution immediately.
       const exit = yield* Effect.exit(
         Effect.all([codec.stringify({ a: 1 }), Effect.fail("sibling")], { concurrency: 2 })
       );
       assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
 
-      // The interrupt was not memoized: the codec re-resolves and still works.
       const ciphertext = yield* codec.stringify({ port: 8080 });
       const parsed3 = yield* codec.parse(ciphertext);
-      assert.deepStrictEqual(parsed3, { port: 8080 });
-      assert.strictEqual(attempts, 2);
+      assert.deepStrictEqual(
+        parsed3,
+        { port: 8080 },
+        "the interrupt was not memoized, so the codec re-resolves and works"
+      );
+      assert.strictEqual(
+        attempts,
+        2,
+        "the first resolution parks on Effect.never and the failing sibling interrupts it, no TestClock needed"
+      );
     })
   );
 
@@ -298,18 +292,15 @@ describe("EncryptedCodec", () => {
 
       const flip4 = yield* Effect.flip(codec.stringify({ a: 1 }));
       assert.instanceOf(flip4, ConfigEncryptionError);
-      // The failure was not cached, so the retry derives a usable key.
       const ciphertext = yield* codec.stringify({ port: 8080 });
       const parsed5 = yield* codec.parse(ciphertext);
-      assert.deepStrictEqual(parsed5, { port: 8080 });
+      assert.deepStrictEqual(parsed5, { port: 8080 }, "the failure was not cached, so the retry derives a usable key");
       assert.strictEqual(attempts, 2);
     })
   );
 
   it.effect("a key effect that throws instead of failing is a defect, not a typed error", () =>
     Effect.gen(function* () {
-      // Caller-supplied code with a declared error channel: a throw is a
-      // programmer bug and must not be laundered into ConfigEncryptionError.
       const throwing = EncryptedCodecKey.fromCryptoKey(
         Effect.suspend((): Effect.Effect<CryptoKey, ConfigEncryptionError> => {
           throw new Error("bug");
@@ -319,7 +310,10 @@ describe("EncryptedCodec", () => {
       const cause = Exit.getCause(exit);
       assertSome(cause, O.getOrThrow(cause));
       assertExitFailure(exit, cause.value);
-      assert.isTrue(Cause.hasDies(cause.value));
+      assert.isTrue(
+        Cause.hasDies(cause.value),
+        "a throw in caller key code is a bug, not laundered into ConfigEncryptionError"
+      );
       assert.isFalse(Cause.hasFails(cause.value));
     })
   );

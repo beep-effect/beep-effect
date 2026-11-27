@@ -21,7 +21,6 @@ class Settings extends S.Class<Settings, { readonly brand: unique symbol }>("dee
     return `${this.host}:${this.port}`;
   }
 }
-// Recursively merged records filter __proto__; arbitrary JSON stays atomic in arrays.
 const Document = S.Struct({
   section: S.Struct({
     constructor: S.String,
@@ -258,7 +257,7 @@ describe("deepMerge structural properties", () => {
       assert.isTrue(R.has(payload, "__proto__"));
       assert.deepStrictEqual(R.get(payload, "__proto__"), O.some([]));
       assert.deepStrictEqual(deepMerge(once, value), once);
-      assert.strictEqual(once.items, value.items);
+      assert.strictEqual(once.items, value.items, "arbitrary JSON stays atomic inside arrays");
     })
   );
 
@@ -270,7 +269,7 @@ describe("deepMerge structural properties", () => {
         assert.isTrue(isPlainObject(value));
         assert.isTrue(canMerge(value, value));
         const once = deepMerge(value, value);
-        assert.deepStrictEqual(once, value);
+        assert.deepStrictEqual(once, value, "recursively merged records filter __proto__");
         assert.deepStrictEqual(deepMerge(once, value), once);
         assert.strictEqual(once.items, value.items);
       }),

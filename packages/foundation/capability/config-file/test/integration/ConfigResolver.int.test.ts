@@ -128,35 +128,29 @@ describe("ConfigResolver against a real filesystem", () => {
       }).pipe(Effect.orDie)
     );
 
-    // Every other stopAt test finds its match before reaching stopAt, so none of them
-    // observe stopAt actually halting the ascent: dropping the option entirely leaves
-    // them all green. This one puts the only match ABOVE stopAt.
-    it.effect("upwardWalk does not see a file above stopAt", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cf-" }).pipe(Effect.orDie);
-        const mid = path.join(root, "mid");
-        const leaf = path.join(mid, "leaf");
-        yield* fs.makeDirectory(leaf, { recursive: true });
-        yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+    it.effect(
+      "upwardWalk does not see a file above stopAt, the one case where stopAt halts the ascent before a match",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "cf-" }).pipe(Effect.orDie);
+          const mid = path.join(root, "mid");
+          const leaf = path.join(mid, "leaf");
+          yield* fs.makeDirectory(leaf, { recursive: true });
+          yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
 
-        const found = yield* ConfigResolver.upwardWalk({
-          filename: ".apprc",
-          cwd: leaf,
-          stopAt: mid,
-        }).resolve;
+          const found = yield* ConfigResolver.upwardWalk({
+            filename: ".apprc",
+            cwd: leaf,
+            stopAt: mid,
+          }).resolve;
 
-        assertNone(found);
-      }).pipe(Effect.orDie)
+          assertNone(found);
+        }).pipe(Effect.orDie)
     );
 
-    // systemEtc's success path was never exercised: the suite only reached it through a
-    // hostile filesystem (always none()) and a `.name` assertion, so returning none() on
-    // the hit branch passed everything. This pins both the some(candidate) return and the
-    // `app` path segment. The win32 short-circuit stays unobservable without stubbing
-    // `process.platform`, so it remains untested here.
-    it.effect("systemEtc finds a file under <dir>/<app>", () =>
+    it.effect("systemEtc returns some(candidate) for a file under <dir>/<app>", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -175,12 +169,7 @@ describe("ConfigResolver against a real filesystem", () => {
       }).pipe(Effect.orDie)
     );
 
-    // rootAnchored exists to probe subpaths UNDER the anchor. Every other fixture puts
-    // the config at or above the anchor, so probing the whole ascent chain instead of
-    // just the anchored root gives the same answer — collapsing gitRoot into a plain
-    // upwardWalk would pass the entire suite. Here the only config sits strictly BELOW
-    // the root, so anchoring must not see it.
-    it.effect("gitRoot does not find a config in a subdirectory below the anchored root", () =>
+    it.effect("gitRoot probes the anchored root, not the ascent chain, so a config below the root is not found", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -200,28 +189,28 @@ describe("ConfigResolver against a real filesystem", () => {
       }).pipe(Effect.orDie)
     );
 
-    // No other fixture has nested roots, so an implementation that anchors on the
-    // FURTHEST accepting ancestor instead of the nearest passes them all.
-    it.effect("gitRoot anchors on the nearest .git when repositories are nested", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cf-" }).pipe(Effect.orDie);
-        const inner = path.join(root, "inner");
-        const deep = path.join(inner, "pkg");
-        yield* fs.makeDirectory(deep, { recursive: true });
-        yield* fs.makeDirectory(path.join(root, ".git"));
-        yield* fs.makeDirectory(path.join(inner, ".git"));
-        yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
-        yield* fs.writeFileString(path.join(inner, ".apprc"), "{}");
+    it.effect(
+      "gitRoot anchors on the nearest .git when repositories are nested, not the furthest accepting ancestor",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "cf-" }).pipe(Effect.orDie);
+          const inner = path.join(root, "inner");
+          const deep = path.join(inner, "pkg");
+          yield* fs.makeDirectory(deep, { recursive: true });
+          yield* fs.makeDirectory(path.join(root, ".git"));
+          yield* fs.makeDirectory(path.join(inner, ".git"));
+          yield* fs.writeFileString(path.join(root, ".apprc"), "{}");
+          yield* fs.writeFileString(path.join(inner, ".apprc"), "{}");
 
-        const found = yield* ConfigResolver.gitRoot({
-          filename: ".apprc",
-          cwd: deep,
-        }).resolve;
+          const found = yield* ConfigResolver.gitRoot({
+            filename: ".apprc",
+            cwd: deep,
+          }).resolve;
 
-        assertSome(found, path.join(inner, ".apprc"));
-      }).pipe(Effect.orDie)
+          assertSome(found, path.join(inner, ".apprc"));
+        }).pipe(Effect.orDie)
     );
 
     it.effect("upwardWalk: an earlier-listed subpath wins over a later one in the same directory", () =>

@@ -20,20 +20,18 @@ const Doc = S.Struct({ from: S.String });
 class DocConfig extends ConfigFile.Service<DocConfig, typeof Doc.Type>()("test/DocConfig") {}
 
 describe("ConfigResolver.upwardWalk filenames", () => {
-  // The whole point of a per-directory candidate list: three separate
-  // `upwardWalk` entries would run the first to the filesystem root before the
-  // second started, so a parent's `.app.toml` would beat the child's
-  // `app.toml`. Every candidate must be exhausted at one level first.
   it.layer(platform({ "/repo/pkg/app.toml": "", "/repo/.app.toml": "" }), { timeout: "30 seconds" })((it) => {
-    it.effect("prefers a nearer directory's later candidate over an ancestor's first", () =>
-      Effect.gen(function* () {
-        const resolver = ConfigResolver.upwardWalk({
-          filenames: [".app.toml", "app.toml", ".config/app.toml"],
-          cwd: "/repo/pkg",
-        });
-        const found = yield* resolver.resolve;
-        assertSome(found, "/repo/pkg/app.toml");
-      })
+    it.effect(
+      "exhausts every candidate in one directory before ascending, so a nearer later candidate beats an ancestor's first",
+      () =>
+        Effect.gen(function* () {
+          const resolver = ConfigResolver.upwardWalk({
+            filenames: [".app.toml", "app.toml", ".config/app.toml"],
+            cwd: "/repo/pkg",
+          });
+          const found = yield* resolver.resolve;
+          assertSome(found, "/repo/pkg/app.toml");
+        })
     );
   });
 
@@ -64,7 +62,7 @@ describe("ConfigResolver.upwardWalk filenames", () => {
   });
 
   it.layer(platform({ "/repo/b.toml": "", "/repo/.config/a.toml": "" }), { timeout: "30 seconds" })((it) => {
-    it.effect("crosses filenames with subpaths, subpath-major", () =>
+    it.effect("crosses filenames with subpaths, subpath-major: ./b.toml beats .config/a.toml", () =>
       Effect.gen(function* () {
         const resolver = ConfigResolver.upwardWalk({
           filenames: ["a.toml", "b.toml"],
@@ -72,7 +70,6 @@ describe("ConfigResolver.upwardWalk filenames", () => {
           cwd: "/repo",
         });
         const found = yield* resolver.resolve;
-        // `./b.toml` beats `.config/a.toml`: the subpath is the outer loop.
         assertSome(found, "/repo/b.toml");
       })
     );
@@ -193,8 +190,6 @@ describe("ConfigResolver match reporting", () => {
     );
   });
 
-  // A resolver written outside the package implements `resolve` only; the
-  // pipeline must still produce a source, with the path as its whole match.
   it.layer(
     ConfigFile.layer(DocConfig, {
       schema: Doc,
@@ -208,7 +203,11 @@ describe("ConfigResolver match reporting", () => {
       Effect.gen(function* () {
         const config = yield* DocConfig;
         const sources = yield* config.discover;
-        assert.deepStrictEqual(sources[0]?.match, ConfigMatch.make({ path: "/repo/app.json" }));
+        assert.deepStrictEqual(
+          sources[0]?.match,
+          ConfigMatch.make({ path: "/repo/app.json" }),
+          "a resolver from outside the package implements resolve only and still yields a source"
+        );
       })
     );
   });
@@ -244,14 +243,11 @@ describe("ConfigResolver probe reporting", () => {
         });
         const probe = yield* resolver.resolveProbe ?? Effect.succeed({ match: O.none(), probed: [] });
         assertSome(probe.match, ConfigMatch.make({ path: "/repo/app.toml", dir: "/repo", filename: "app.toml" }));
-        // firstMatch short-circuits: the prefix ends at the match, so nothing
-        // above /repo — and no later candidate there — was ever checked.
-        assert.deepStrictEqual(probe.probed, [
-          "/repo/pkg/.app.toml",
-          "/repo/pkg/app.toml",
-          "/repo/.app.toml",
-          "/repo/app.toml",
-        ]);
+        assert.deepStrictEqual(
+          probe.probed,
+          ["/repo/pkg/.app.toml", "/repo/pkg/app.toml", "/repo/.app.toml", "/repo/app.toml"],
+          "firstMatch short-circuits, so nothing above /repo and no later candidate there was checked"
+        );
       })
     );
   });
@@ -275,12 +271,14 @@ describe("ConfigResolver probe reporting", () => {
   it.layer(platform({}), { timeout: "30 seconds" })((it) => {
     it.effect("gitRoot reports no candidates when there is no root", () =>
       Effect.gen(function* () {
-        // The fallback must not coincide with the expected value, or the test
-        // passes with `resolveProbe` absent.
         const noRoot = yield* ConfigResolver.gitRoot({ filename: "config.json", cwd: "/repo/pkg" }).resolveProbe ??
           Effect.die("gitRoot must implement resolveProbe");
         assertNone(noRoot.match);
-        assert.deepStrictEqual(noRoot.probed, []);
+        assert.deepStrictEqual(
+          noRoot.probed,
+          [],
+          "the fallback dies rather than yielding [], so a missing resolveProbe cannot pass"
+        );
       })
     );
   });
