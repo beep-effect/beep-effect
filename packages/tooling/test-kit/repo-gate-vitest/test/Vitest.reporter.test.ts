@@ -18,9 +18,7 @@ afterEach(() => {
 
 const target = RecordTarget.cases.PackageTarget.make({ packageDir: PACKAGE_DIR, gate: "test" });
 
-describe("GateVitestReporter on synthetic Vitest objects, one case at a time since the cases spy on the error console", {
-  concurrent: false,
-}, () => {
+describe("GateVitestReporter on synthetic Vitest objects", { concurrent: false }, () => {
   it.layer(NodeServices.layer)("on disk", (it) => {
     it.effect("writes the package record at the end of a run, printing nothing", () =>
       Effect.gen(function* () {

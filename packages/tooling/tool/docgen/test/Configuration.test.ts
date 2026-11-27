@@ -283,12 +283,14 @@ describe("Configuration", () => {
     { timeout: "30 seconds" }
   )((it) =>
     it.effect(
-      "rejects comments and trailing commas in package.json, which npm and Node read with JSON.parse",
+      "rejects comments and trailing commas in package.json",
       Effect.fnUntraced(function* () {
         const error = yield* Configuration.load(makeLoadArgs()).pipe(Effect.flip);
         expect(isDomainDocgenError(error)).toBe(true);
         assertTrue(Str.includes("[Configuration.readPackageJson] Failed to parse")(error.message));
-        expect(error.cause).toMatchObject({ _tag: "PackageJsonParseError" });
+        expect(error.cause, "package.json is JSON, not JSONC: npm and Node read it with JSON.parse").toMatchObject({
+          _tag: "PackageJsonParseError",
+        });
       })
     )
   );

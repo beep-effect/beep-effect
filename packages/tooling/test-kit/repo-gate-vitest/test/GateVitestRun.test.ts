@@ -262,11 +262,7 @@ it.layer(NodeServices.layer)("one script, several Vitest runs", (it) => {
       yield* runAs(true, { packageRoot, module: nodeModule, line: "node run", reason: "passed" });
       {
         const names = yield* itemNames(repoRoot);
-        assert.deepStrictEqual(
-          names,
-          ["boundary"],
-          "so the chain's continuing run cannot fold into the restored record"
-        );
+        assert.deepStrictEqual(names, ["boundary"], "the chain's continuing run did not fold into the restored record");
       }
     })
   );

@@ -23,9 +23,7 @@ const keep = (drawn: Ref.Ref<ReadonlyArray<number>>) => (value: number) =>
 const logToProcessConsole = (line: string) =>
   Effect.provideService(Console.log(`[property-seed] worker seed ${line}`), Console.Console, globalThis.console);
 
-describe("the pinned property seed reaches every property in a worker, in order since the last test reads what the others drew", {
-  concurrent: false,
-}, () => {
+describe("the pinned property seed reaches every property in a worker", { concurrent: false }, () => {
   it.effect.prop("draws for a property that passes no seed", [S.Int], ([value]) => keep(unseeded)(value), {
     arbitrary: { runs },
   });
@@ -48,7 +46,11 @@ describe("the pinned property seed reaches every property in a worker, in order 
           " "
         )}`
       );
-      deepStrictEqual([drawn.length, expected.length], [runs, runs]);
+      deepStrictEqual(
+        [drawn.length, expected.length],
+        [runs, runs],
+        "both properties above ran first, in order, and each drew its runs"
+      );
       deepStrictEqual(Equal.equals(drawn, expected), O.isSome(seed));
       deepStrictEqual(Equal.equals(first, second), O.isSome(seed));
       assertFalse(Equal.equals(explicit, first));

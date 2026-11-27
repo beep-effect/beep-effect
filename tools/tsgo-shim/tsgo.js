@@ -14,9 +14,7 @@ const executable = NodeChildProcess.execFileSync(process.execPath, [effectTsgoCl
 if (process.platform !== "win32" && typeof process.execve === "function") {
   try {
     process.execve(executable, [executable, ...process.argv.slice(2)]);
-  } catch {
-    // decision: tsgo-runs-the-effect-compiler-artifact
-  }
+  } catch {}
 }
 
 try {

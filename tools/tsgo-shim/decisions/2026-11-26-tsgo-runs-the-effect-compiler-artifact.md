@@ -10,4 +10,3 @@ enforcedBy: []
 
 The shim executes the compiler artifact the installed @effect/tsgo package ships, and finds its path by running the package's bundled CLI with get-exe-path.
 Rejected: routing through the mutable @typescript/native patch, where a preserved `.original` backup can make a newer patcher mistake an older Effect compiler for the current one; and the package's exported path helper, which accepts only platform metadata schema v4 while the 0.39 platform packages ship v5.
-The shim replaces its own process with execve where the runtime exposes it, and falls back to a child process when a runtime exposes execve without supporting it there.

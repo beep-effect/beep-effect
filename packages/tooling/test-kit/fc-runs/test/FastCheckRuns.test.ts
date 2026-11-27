@@ -39,7 +39,7 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
     expect(parseFcNumRunsFloor(undefined)).toBe(0);
   });
 
-  it("raises to the environment floor in a fresh process, since the floor is read once at boot from a variable set at spawn", () => {
+  it("raises to the environment floor read once at boot, in a fresh process spawned with the variable set", () => {
     const probe = A.join(
       [
         'const { fcRuns } = await import("@beep/fc-runs");',

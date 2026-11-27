@@ -536,7 +536,7 @@ describe("synthesizeEvents — reported objects that throw", () => {
     assert.strictEqual(report.totals.loadFailed, 1);
   });
 
-  it("reads a test without attempts() and a suite without errors(), as older Vitest reporters hand them, as having none", () => {
+  it("reads an older reporter's test without attempts() and suite without errors() as having none", () => {
     const bare: VitestTestCase = {
       type: "test",
       name: "bare",

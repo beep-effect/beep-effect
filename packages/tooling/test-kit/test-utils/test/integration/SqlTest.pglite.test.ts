@@ -204,7 +204,7 @@ it.effect("recognizes only verified container absence during inspection", () =>
   })
 );
 
-describe("PGLite in-process SQL test driver, the gate's docker-free default, so this block always runs", () => {
+describe("PGLite in-process SQL test driver, the gate's docker-free default", () => {
   it.effect(
     "runs select 1 and CRUD through the in-process driver",
     Effect.fnUntraced(function* () {
@@ -243,7 +243,7 @@ describe("PGLite in-process SQL test driver, the gate's docker-free default, so 
   );
 });
 
-describe("PGLite shared external SQL test driver, sequential: each test opens its own connection to the one shared database", {
+describe("PGLite shared external SQL test driver, run sequentially against the one shared database", {
   concurrent: false,
 }, () => {
   it.effect(

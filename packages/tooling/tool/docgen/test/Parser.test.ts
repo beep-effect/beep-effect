@@ -85,9 +85,7 @@ const expectMarkdown = Effect.fn("ParserTest.expectMarkdown")(function* <E>(
 });
 
 it.layer(Path.layer)("Parser services", (it) => {
-  describe("Parser, run in order since makeSourcefile recreates one test.ts in a shared ts-morph project", {
-    concurrent: false,
-  }, () => {
+  describe("Parser, run in order over one shared ts-morph test.ts", { concurrent: false }, () => {
     describe("parseModule", () => {
       it.effect("preserves nested source paths in generated source links", () =>
         Effect.gen(function* () {

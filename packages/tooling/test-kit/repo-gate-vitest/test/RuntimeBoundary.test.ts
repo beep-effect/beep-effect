@@ -16,22 +16,21 @@ const PROBE = A.join(
   "\n"
 );
 
-it.layer(NodeServices.layer, { timeout: "60 seconds" })(
-  "runtime boundary: Vitest's main process is Bun under bunx --bun vitest and Node under plain bunx vitest",
-  (it) => {
-    it.effect(
-      "Node loads the reporter and its implementation with every module they reach, so no bun: module is reachable",
-      () =>
-        Effect.gen(function* () {
-          const path = yield* Path.Path;
-          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-          const output = yield* spawner.string(
-            ChildProcess.make("node", ["--input-type=module", "-e", PROBE], {
-              cwd: path.resolve(import.meta.dirname, ".."),
-            })
-          );
-          assert.strictEqual(Str.trim(output), "function function function");
+it.layer(NodeServices.layer, { timeout: "60 seconds" })("runtime boundary", (it) => {
+  it.effect("Node loads the reporter and its implementation with every module they reach, none from bun:", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const output = yield* spawner.string(
+        ChildProcess.make("node", ["--input-type=module", "-e", PROBE], {
+          cwd: path.resolve(import.meta.dirname, ".."),
         })
-    );
-  }
-);
+      );
+      assert.strictEqual(
+        Str.trim(output),
+        "function function function",
+        "Node, which runs Vitest's main process under plain bunx vitest, loaded all three"
+      );
+    })
+  );
+});

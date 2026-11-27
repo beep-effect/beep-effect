@@ -108,7 +108,7 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("a real Vitest run", (i
     })
   );
 
-  it.effect("records the two Vitest runs one script chains as one run, like repo-utils' Bun-then-Node beep:test", () =>
+  it.effect("records the two Vitest runs one script chains, Bun then Node, as one run", () =>
     Effect.gen(function* () {
       const { exitCode, report } = yield* runFixture(
         "chained",

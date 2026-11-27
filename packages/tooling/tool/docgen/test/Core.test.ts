@@ -107,7 +107,7 @@ describe("Core", () =>
         ["Code block does not have a matching closing fence:\na\n\n~~~ts\nconst a = 1"]
       ));
 
-    it("should not open a fence on a marker run inside prose, since only CommonMark fences count", () =>
+    it("should not open a fence on a marker run inside prose, only on a CommonMark fence", () =>
       expectFencedCode("Write ```ts to open one.\n\n```ts\nconst a = 1\n```", ["const a = 1"], []));
 
     it("should not close a backtick fence with a tilde run", () =>
