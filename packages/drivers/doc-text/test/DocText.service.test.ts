@@ -350,7 +350,7 @@ describe("@beep/doc-text", () => {
       const madeOperation8 = yield* makeOperation(ids, "docx", "docx", bytes);
       const result = yield* DocTextFileProcessingEngine.extract(madeOperation8);
       expect(result.text).toContain("custom document text");
-      expect(bytes, "pdfjs detaches the buffer it is handed, so the engine must extract from a copy").toEqual(original);
+      expect(bytes).toEqual(original);
     })
   );
 
@@ -686,7 +686,7 @@ describe("@beep/doc-text", () => {
       yield* DocTextFileProcessingEngine.extract(madeOperation23);
 
       expect(bytes.byteLength).toBe(original.byteLength);
-      expect(bytes).toEqual(original);
+      expect(bytes, "pdfjs detaches the buffer it is handed, so the engine must extract from a copy").toEqual(original);
     })
   );
 

@@ -130,8 +130,6 @@ const sourceBytes = (operation: ExtractFileOperation): Effect.Effect<Uint8Array,
     })
   );
 
-const pdfjsWarningsSuppressed = { verbosity: 0 };
-
 const extractPdf = Effect.fn("DocTextFileProcessingEngine.extractPdf")(function* (
   operation: ExtractFileOperation
 ): Effect.fn.Return<ExtractionResult, DocTextError> {
@@ -139,7 +137,7 @@ const extractPdf = Effect.fn("DocTextFileProcessingEngine.extractPdf")(function*
   const bytesForPdfjsToDetach = new Uint8Array(bytes);
   const result = yield* Effect.tryPromise({
     try: () =>
-      getDocumentProxy(bytesForPdfjsToDetach, pdfjsWarningsSuppressed).then((proxy) =>
+      getDocumentProxy(bytesForPdfjsToDetach, { verbosity: 0 }).then((proxy) =>
         extractText(proxy, { mergePages: true })
       ),
     catch: () => makeDocTextError("extraction"),

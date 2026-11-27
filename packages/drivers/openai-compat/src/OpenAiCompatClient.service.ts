@@ -99,14 +99,6 @@ export interface OpenAiCompatClientShape {
   readonly createChatCompletion: (
     request: OpenAiCompatChatCompletionRequest
   ) => Effect.Effect<OpenAiCompatChatCompletionResponse, AiError.AiError>;
-  /**
-   * Stream chat-completion chunks from the server-sent event response.
-   *
-   * **Details**
-   *
-   * The client forces `stream: true` and `stream_options.include_usage` on every request, so a direct caller gets
-   * the usage chunk without setting either field.
-   */
   readonly streamChatCompletion: (
     request: OpenAiCompatChatCompletionRequest
   ) => Stream.Stream<OpenAiCompatChatCompletionChunk, AiError.AiError>;
@@ -388,6 +380,11 @@ export class OpenAiCompatClient extends Context.Service<OpenAiCompatClient, Open
 ) {
   /**
    * Builds an OpenAI-compatible client layer from explicit configuration.
+   *
+   * **Details**
+   *
+   * The built client forces `stream: true` and `stream_options.include_usage` on every `streamChatCompletion`
+   * request, so a direct caller gets the usage chunk without setting either field.
    *
    * **Example** (Build client layer)
    *

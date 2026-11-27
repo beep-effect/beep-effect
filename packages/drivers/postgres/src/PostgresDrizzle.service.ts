@@ -567,6 +567,7 @@ const migrationMetaFromBundleEntry = Effect.fn("Postgres.migrationMetaFromBundle
 
 const decodeMigrationBundleConfig = S.decodeUnknownEffect(MigrationBundleConfig);
 
+// decision: pg-bundle-migrator-folder-sentinel
 const InMemoryBundleFolderSentinel = "<in-memory-bundle>";
 
 /**

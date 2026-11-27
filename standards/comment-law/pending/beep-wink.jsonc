@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/wink",
+  "root": "packages/drivers/wink",
+  "scopes": ["."]
+}

@@ -16,7 +16,7 @@ import { createMachine, types } from "xstate";
 import { Deployments, deploymentsSucceeding, ReleaseEvents, releaseMachine } from "./fixtures/Release.machine.ts";
 import type { AnyStateMachine } from "xstate";
 
-// decision: xstate-test-alpha-any-machine-widening
+// decision: xstate-test-any-machine-widening
 const releaseModel: AnyStateMachine = releaseMachine;
 
 const counterMachine = createMachine({

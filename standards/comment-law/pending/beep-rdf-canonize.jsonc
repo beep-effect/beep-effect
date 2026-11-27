@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/rdf-canonize",
+  "root": "packages/drivers/rdf-canonize",
+  "scopes": ["."]
+}
