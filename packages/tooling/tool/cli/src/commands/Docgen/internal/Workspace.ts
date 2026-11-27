@@ -35,9 +35,6 @@ const PRIVATE_DOCS_MODULES_SEGMENTS = [".jsdoc-loop", "generated-docs", "modules
 
 const DOCGEN_CONFIG_SCAN_GLOBS = ["apps/**/docgen.json", "packages/**/docgen.json"] as const;
 const DOCGEN_CONFIG_SCAN_IGNORES = [
-  // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab templates omit
-  // docgen.json, and a stray one below apps/labs must never be scanned or
-  // orphan-flagged. Canonical glob: @beep/repo-cli-kit/cli/Labs/LabsWorkspace.
   LABS_PATH_IGNORE_GLOB,
   "**/.git/**",
   "**/.turbo/**",
@@ -74,6 +71,11 @@ const formatOrphanDocgenConfigMessage = (paths: ReadonlyArray<string>): string =
 
 /**
  * Discover package-local docgen configs that do not belong to a current workspace.
+ *
+ * **Gotchas**
+ *
+ * Labs are ceremony-exempt: lab templates omit `docgen.json`, and a stray one below `apps/labs`
+ * is never scanned or flagged as an orphan.
  *
  * @param rootDir - Optional repo root override.
  * @returns Repo-relative orphaned `docgen.json` paths sorted for stable diagnostics.
@@ -316,6 +318,11 @@ export const createDocgenConfigDocument: {
 /**
  * Discover all workspace packages relevant to docgen.
  *
+ * **Gotchas**
+ *
+ * A lab workspace is never a docgen package: a stray `docgen.json` below `apps/labs` does not
+ * make it a generation, aggregation or local-plan target.
+ *
  * @param rootDir - Optional repo root override.
  * @returns Sorted workspace package descriptors with current docgen status.
  * **Example** (Discover docgen workspaces)
@@ -343,9 +350,6 @@ export const discoverDocgenWorkspacePackages: (
   const workspaceDirs = yield* workspaceDirectories(repoRoot).pipe(
     Effect.mapError(DomainError.newCause("Failed to discover workspace packages"))
   );
-  // Labs are ceremony-exempt (goals/lab-apps-lifecycle D2): lab workspaces are
-  // never docgen participants, so a stray docgen.json below apps/labs must not
-  // turn one into a generation, aggregation, or local-plan target.
   const docgenWorkspaceEntries = A.filter(
     HashMap.toEntries(workspaceDirs),
     ([, absolutePath]) => !isLabsWorkspacePath(path.relative(repoRoot, absolutePath))

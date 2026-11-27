@@ -50,8 +50,6 @@ const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketDigest");
  */
 export const PACKET_EVENT_SEQ_WIDTH = 5;
 
-// JSON.stringify is used ONLY on primitives here: string escaping must match
-// JSON exactly, and no schema codec expresses a key-sorted canonical form.
 const canonicalPrimitive = (value: string | number | boolean): string =>
   Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(value), identity);
 
@@ -117,9 +115,6 @@ const canonicalAtDepth = (value: unknown, indent: number, depth: number): string
   return isJsonRecord(value) ? canonicalObject(value, indent, depth) : "null";
 };
 
-// Callers build records with optional members left `undefined` (the goal
-// completion declaration does), and the digests over them treat such a member
-// as absent, as the encoder this replaced did.
 const omitUndefinedMembers = JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true });
 
 /**
@@ -130,7 +125,9 @@ const omitUndefinedMembers = JsoncCanonicalizeOptions.make({ omitUndefinedMember
  *
  * The text is RFC 8785 from `JsoncFingerprint` in `@beep/jsonc`, the owner of
  * every canonical digest preimage, with `omitUndefinedMembers` set: an object
- * member whose value is `undefined` is left out, as if absent.
+ * member whose value is `undefined` is left out, as if absent. Callers build records with
+ * optional members left `undefined`, as the goal completion declaration does, and the digests
+ * over them treat such a member as absent.
  *
  * **Gotchas**
  *

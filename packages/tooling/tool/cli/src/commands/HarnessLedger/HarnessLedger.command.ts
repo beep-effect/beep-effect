@@ -93,10 +93,6 @@ const listReasoningEffortFlag = Flag.String("reasoning-effort").pipe(
   Flag.optional
 );
 
-// ---------------------------------------------------------------------------
-// propose
-// ---------------------------------------------------------------------------
-
 const buildHypothesis = Effect.fn("HarnessLedger.buildHypothesis")(function* (
   claim: O.Option<string>,
   expectedSurface: O.Option<ContextSurfaceKind>,
@@ -194,10 +190,6 @@ export const harnessLedgerProposeCommand = Command.make(
   Command.provide(HarnessLedgerServiceLive)
 );
 
-// ---------------------------------------------------------------------------
-// disposition
-// ---------------------------------------------------------------------------
-
 const buildDelta = Effect.fn("HarnessLedger.buildDelta")(function* (score: O.Option<number>, cost: O.Option<number>) {
   if (O.isNone(score) && O.isNone(cost)) {
     return O.none<HarnessLedgerDelta>();
@@ -290,10 +282,6 @@ export const harnessLedgerDispositionCommand = Command.make(
   Command.withDescription("Append a disposition row superseding the latest row of a chain"),
   Command.provide(HarnessLedgerServiceLive)
 );
-
-// ---------------------------------------------------------------------------
-// list
-// ---------------------------------------------------------------------------
 
 const listLines = (entries: ReadonlyArray<HarnessLedgerListEntry>): ReadonlyArray<string> =>
   A.match(entries, {
@@ -394,14 +382,9 @@ export const harnessLedgerListCommand = Command.make(
   Command.provide(HarnessLedgerServiceLive)
 );
 
-// ---------------------------------------------------------------------------
-// prune-proposals
-// ---------------------------------------------------------------------------
-
 const windowCount = (report: HarnessLedgerPruneReport): string =>
   `${report.sessionsObserved} of ${report.windowSessions} sessions under the current harness hash`;
 
-// The last line says honestly whether anything was written, and why not.
 const outcomeLine = (report: HarnessLedgerPruneReport, write: boolean): string =>
   Match.value({
     written: report.written,

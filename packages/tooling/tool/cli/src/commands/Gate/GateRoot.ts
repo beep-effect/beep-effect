@@ -192,7 +192,6 @@ const currentReport = Effect.fnUntraced(function* (input: {
     onNone: () => Effect.succeedNone,
     onSome: (packageTarget) => Effect.option(store.readRecord(packageTarget)),
   });
-  // A hit's record was restored by Turbo; a run's must be this run's own.
   return pipe(
     O.filter(
       record,
@@ -237,8 +236,6 @@ const reportEvents = (dir: string, report: GateReport): ReadonlyArray<GateEvent>
   ...A.map(report.items, (item) => GateEvent.cases.ItemFinished.make({ item: placedItem(dir, report)(item) })),
 ];
 
-// A task that ran without leaving a current record: failed when the task
-// failed, otherwise listed as skipped so the record still names it.
 const unrecordedEvents = (gate: string, task: TurboSummaryTask): ReadonlyArray<GateEvent> => {
   const exitCode = task.execution?.exitCode ?? 0;
   return [
@@ -325,6 +322,12 @@ export const workspaceEvents = (input: WorkspaceFold): ReadonlyArray<GateEvent> 
  * Record a root gate run Turbo finished and print its one console: the
  * records of the packages that ran folded into the workspace report, the
  * root record and raw log written under `.beep/gates/<gate>/`.
+ *
+ * **Gotchas**
+ *
+ * A cache hit's package record is the one Turbo restored; any other package counts only a
+ * record generated at or after Turbo started. A task without one is failed when it failed, and
+ * otherwise listed as skipped so the record still names it.
  *
  * **Example** (Record a root test run)
  *

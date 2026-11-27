@@ -123,16 +123,9 @@ const isTerminalToolEvent = S.is(TerminalToolEvent);
 const isUnknownStart = (pulse: HookPulseV1) => pulse.hookEvent === "SessionStart" && O.isNone(pulse.harnessHash);
 
 const ANY_SHARD = /^hook-pulse-.*\.ndjson$/;
-// The writer appends a session's rows only to `hook-pulse-<UTC day>-<session
-// digest>.ndjson`, so an undecodable line in such a shard can only belong to that
-// session. A line in any other shard has no recoverable owner.
 const SESSION_SHARD = /^hook-pulse-.+-([0-9a-f]{64})\.ndjson$/;
 const shardSession = (name: string): O.Option<string> => O.fromNullishOr(SESSION_SHARD.exec(name)?.[1]);
 
-// Just enough of a row to read its instrument class. A spike or meta row that
-// predates the current schema (the 2026-08-01 hook-semantics spike corpus) is
-// not production evidence whatever else it fails, so it is set aside by its
-// declared class instead of poisoning the production window as corruption.
 const decodeRowInstrument = S.decodeUnknownResult(
   S.fromJsonString(S.Struct({ instrumentClass: HookPulseInstrumentClass }))
 );
@@ -142,8 +135,6 @@ const isNonProductionLine = (line: string): boolean =>
     onSuccess: (row) => row.instrumentClass !== HookPulseInstrumentClass.Enum.production,
   });
 
-// Why a hook-shard line is not folded. `non-production` lines are counted and
-// set aside; `undecodable` lines are corruption: unknown content, never zero.
 const ShardLineSkip = LiteralKit(["non-production", "undecodable"]).pipe(
   $I.annoteSchema("ShardLineSkip", {
     description: "Reason a hook-pulse shard line is not folded into a production window.",
@@ -160,11 +151,6 @@ const readShardLine = (line: string): Result.Result<HookPulseV1, ShardLineSkip> 
         : Result.fail(ShardLineSkip.Enum["non-production"]),
   });
 
-// Which side of the current harness a session falls on. `in-regime`: at least
-// one SessionStart stamp, every stamp equal to the current harness hash.
-// `out-of-regime`: stamped, but some stamp names another harness (a session
-// restarted across a harness edit is mixed and lands here). `unstamped`: no
-// stamp at all.
 const SessionRegime = LiteralKit(["in-regime", "out-of-regime", "unstamped"]);
 type SessionRegime = typeof SessionRegime.Type;
 
@@ -201,17 +187,12 @@ const regimeOf = (tally: SessionTally, harnessHash: HarnessHash): SessionRegime 
 
 const byNewestFirst = Order.flip(Order.mapInput(Order.Number, (tally: SessionTally) => tally.maxTs));
 
-// The mutable state one observation threads through its shard reads: the
-// per-session tallies, collection counters and disarm provenance.
 type ShardScan = {
   readonly stateDir: string;
   readonly tallies: MutableHashMap.MutableHashMap<string, SessionTally>;
   undecodableLines: number;
   nonProductionLines: number;
   corruptShards: number;
-  // Sessions owning a shard with an undecodable line, and undecodable lines no
-  // shard name can attribute. The first excludes those sessions; the second
-  // fails the whole window closed.
   corruptSessions: HashSet.HashSet<string>;
   unscopedUndecodableLines: number;
   shardsRead: number;
@@ -225,7 +206,6 @@ type ShardScan = {
   readonly refusalsByAgentKind: ObservedSessionWindow["refusalsByAgentKind"];
 };
 
-// Fold production rows into client/session/transcript tallies across all shards.
 const countPrimaryEvent = (pulse: HookPulseV1, event: (value: HookPulseEvent) => boolean): number =>
   O.contains(pulse.sessionRole, "primary") && event(pulse.hookEvent) ? 1 : 0;
 
@@ -233,8 +213,6 @@ const foldPulse = (tallies: ShardScan["tallies"], pulse: HookPulseV1): void => {
   if (pulse.instrumentClass !== "production") return;
   const ts = DateTime.toEpochMillis(pulse.ts);
   const parent = `${pulse.agentKind}:${pulse.sessionId}`;
-  // A child that shares its root's session id and transcript path (Claude Code
-  // subagents) is still its own tally: its native agent id keys it apart.
   const key = `${parent}:${O.getOrElse(pulse.transcriptPath, () => "no-transcript")}:${O.getOrElse(pulse.agentId, () => "root")}`;
   const tally = O.getOrElse(MutableHashMap.get(tallies, key), () => ({
     minTs: ts,
@@ -327,9 +305,6 @@ const readShard = Effect.fnUntraced(function* (scan: ShardScan, name: string) {
   foldShardText(scan, name, text);
 });
 
-// Skipped sessions of `regime` newer than the window's oldest session; every
-// visited skipped session when the window is not full (then every session
-// was read).
 const countSkipped = (
   ranked: ReadonlyArray<SessionTally>,
   oldest: O.Option<SessionTally>,
@@ -352,9 +327,6 @@ const windowReport = (
   namespaceCutover: O.Option<number>
 ): ObservedSessionWindow => {
   const ranked = visited.pipe(MutableHashMap.values, A.fromIterable, A.sort(byNewestFirst));
-  // A session that began before the dated namespace cutover was pseudonymized
-  // under the previous regime. It stays readable and counted, but never fills
-  // the current window: old observations are not folded into a zero-use claim.
   const preCutover = (tally: SessionTally) => O.exists(namespaceCutover, (cutover) => tally.minTs < cutover);
   const overlapsDisarm = (tally: SessionTally) =>
     (scan.openDisarm &&
@@ -378,12 +350,8 @@ const windowReport = (
         DateTime.toEpochMillis(row.ts) + 999 >= tally.minTs &&
         !O.exists(tally.endedAt, (end) => end < DateTime.toEpochMillis(row.ts))
     );
-  // Corruption is scoped to the session whose shard holds it. Lines no shard
-  // name can attribute, and an unreadable refusal ledger, fail every session.
   const windowCorrupt = scan.unscopedUndecodableLines > 0 || scan.refusalUndecodableLines > 0;
   const corrupt = (tally: SessionTally) => windowCorrupt || HashSet.has(scan.corruptSessions, tally.sessionId);
-  // Group once: summaries and root selection never scan the complete history
-  // from inside a per-transcript predicate.
   const groups = A.groupBy(ranked, (tally) => tally.parent);
   const roots = R.map(groups, (group) => {
     const primary = A.filter(group, (tally) => tally.primary && !tally.child);
@@ -453,9 +421,6 @@ const windowReport = (
   );
   const grouped = R.values(summaries);
   const selectedGrouped = A.filter(grouped, (tally) => tally.agentKind === agentKind);
-  // A session whose rows say the harness cannot tell root from child is
-  // unattributable, not merely skipped: a client made only of such sessions
-  // cannot measure roots at all, so its coverage reads `unsupported`.
   const unattributable = (tally: SessionTally) => !tally.primary && tally.roleUnknown;
   const roleUnsupported = (kind: HookPulseAgentKind) =>
     A.some(grouped, (tally) => tally.agentKind === kind && unattributable(tally)) &&
@@ -554,7 +519,22 @@ const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: st
  * shard name names no owner. A missing state directory observes zero.
  * Sessions that began before `namespaceCutover` (epoch milliseconds of the
  * applied hook-pulse namespace projection) are excluded from the window and
- * counted in `sessionsSkippedPreCutover`.
+ * counted in `sessionsSkippedPreCutover`. Their observations were pseudonymized under the previous
+ * regime, so they are never folded into a zero-use claim.
+ *
+ * **Gotchas**
+ *
+ * - The writer appends a session's rows only to `hook-pulse-<UTC day>-<session digest>.ndjson`,
+ *   so an undecodable line in such a shard belongs to that session; a line in any other shard has
+ *   no recoverable owner. An unreadable refusal-ledger line also fails every session.
+ * - A session is `in-regime` when it has at least one SessionStart stamp and every stamp equals
+ *   the current harness hash, `out-of-regime` when some stamp names another harness (a session
+ *   restarted across a harness edit is mixed and lands here), and `unstamped` with no stamp.
+ * - Skip tallies count the skipped sessions newer than the window's oldest session, or every
+ *   visited skipped session when the window is not full, since every session was then read.
+ * - A session whose rows say the harness cannot tell root from child is unattributable, not
+ *   merely skipped: a client made only of such sessions cannot measure roots, so its coverage
+ *   reads `unsupported`.
  *
  * @internal
  * @category use-cases
@@ -633,7 +613,6 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   return windowReport(scan, scan.tallies, window, harnessHash, agentKind, namespaceCutover);
 });
 
-// Only structural metadata is decoded. Content strings never leave this reader.
 const TranscriptTool = S.Struct({ type: S.optionalKey(S.String), id: S.optionalKey(S.String) });
 const TranscriptContent = S.Array(S.Unknown);
 const isTranscriptContent = S.is(TranscriptContent);
@@ -767,8 +746,6 @@ const readReconciliationHooks = Effect.fn("HarnessLedger.readReconciliationHooks
       .readFileString(path.join(stateDir, shard))
       .pipe(Effect.mapError(HarnessLedgerIoError.wrap("Cannot read reconciliation shard.")));
     for (const line of A.filter(Str.split(text, "\n"), Str.isNonEmpty)) {
-      // Non-production lines are not hook evidence, and a pre-schema spike row
-      // is not corruption of the production store.
       Result.match(readShardLine(line), {
         onSuccess: (pulse) => foldReconciliationHook(pulse, agentKind, bindings, hooks),
         onFailure: ShardLineSkip.match({
@@ -916,8 +893,6 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
 
 const ParentSessionSegment = S.String.check(S.isPattern(/^[0-9a-f-]{36}$/));
 const isParentSessionSegment = S.is(ParentSessionSegment);
-// The transcript read, done once per file: structural tallies and the raw
-// (unhashed) identities a salt pass hashes. Content strings never leave here.
 type TranscriptIdentities = {
   readonly file: string;
   readonly tally: TranscriptTally;
@@ -958,8 +933,6 @@ const readTranscriptIdentities = Effect.fn("HarnessLedger.readTranscriptIdentiti
   return { file, tally, session } satisfies TranscriptIdentities;
 });
 
-// Hash one transcript's identities under one salt. Called once per regime so
-// pre-cutover hook rows still join under the namespace they were written in.
 const hashTranscriptCounts = Effect.fn("HarnessLedger.hashTranscriptCounts")(function* (
   identities: TranscriptIdentities,
   hashSalt: O.Option<string>
@@ -1013,10 +986,6 @@ const matchingTranscriptHooks = (
           )
       );
 
-// Hook rows written before the namespace cutover carry digests from the
-// previous regime's salt, so the same transcript is re-keyed under each
-// previous salt and matched again. The regimes are reported apart; the sum is
-// only the coverage ratio's numerator.
 const previousRegimeHooks = Effect.fnUntraced(function* (
   identities: TranscriptIdentities,
   file: ReconciliationTranscriptFile,
@@ -1040,7 +1009,6 @@ const previousRegimeHooks = Effect.fnUntraced(function* (
   return matched;
 });
 
-// The running tallies one reconciliation threads through its transcript loop.
 type ReconciliationTotals = {
   readonly sessions: MutableHashMap.MutableHashMap<string, number>;
   readonly selectedSessionHooks: MutableHashMap.MutableHashMap<string, number>;
@@ -1054,8 +1022,6 @@ const addCount = (map: MutableHashMap.MutableHashMap<string, number>, key: strin
   MutableHashMap.set(map, key, O.getOrElse(MutableHashMap.get(map, key), () => 0) + count);
 };
 
-// Read one transcript once, hash it under the current salt for its counts and
-// under every previous salt for its hook matches, and fold both into `totals`.
 const accumulateTranscript = Effect.fnUntraced(function* (
   totals: ReconciliationTotals,
   file: ReconciliationTranscriptFile,
@@ -1096,6 +1062,14 @@ const reconciliationBasis = HookPulseAgentKind.match({
 /**
  * Reconcile every transcript file beneath a caller-selected root, including
  * nested Workflow and subagent files, against complete production hook shards.
+ *
+ * **Gotchas**
+ *
+ * Each transcript is read once, and only its structural metadata is decoded; content strings
+ * never leave the reader. Hook rows written before the namespace cutover carry digests from a
+ * previous salt, so each transcript's identities are re-hashed under every previous salt and
+ * matched again. The current and previous regimes are reported apart; their sum is only the
+ * coverage ratio's numerator.
  *
  * @internal
  * @category use-cases

@@ -82,7 +82,6 @@ const projectionRow = Effect.fn("Goals.projectionRow")(function* <E, R>(
   record: GoalPacketRecord,
   reader: GoalPacketReader<E, R>
 ) {
-  // A missing or unparsable manifest is the doctor's finding, not this writer's: it is skipped here.
   const raw = pipe(O.fromUndefinedOr(record.manifestText), O.flatMap(parseGoalManifestText), O.filter(isJsonRecord));
   if (O.isNone(raw) || record.manifestText === undefined) return O.none<ManifestProjectionRow>();
   const files = yield* reader.researchFiles(record.packetPath);
@@ -101,6 +100,11 @@ const projectionRow = Effect.fn("Goals.projectionRow")(function* <E, R>(
 
 /**
  * Collects every packet whose `researchReports` drifts from its `research/` listing.
+ *
+ * **Details**
+ *
+ * A packet with a missing or unparsable manifest is skipped: that is the goals doctor's finding,
+ * not this writer's.
  *
  * **Example** (Build the collection effect)
  *

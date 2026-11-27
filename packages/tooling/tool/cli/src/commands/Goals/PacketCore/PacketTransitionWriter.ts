@@ -360,6 +360,18 @@ export interface PacketTransitionWriterShape {
 /**
  * Service tag for the guarded transition writer.
  *
+ * **Details**
+ *
+ * A transition and a risk-tier override each append exactly one event past the drafted base, with
+ * the same CAS envelope (sequence, expected revision, parent digest, actor, timestamp); only the
+ * body differs.
+ *
+ * **Gotchas**
+ *
+ * The stream is the system of record for its own history: when it already derives a status, as
+ * after a retry that a partial failure left the manifest behind, that derived status is the
+ * event's `previous`, not the caller's manifest snapshot.
+ *
  * **Example** (Yield the writer inside an Effect)
  *
  * ```ts
@@ -387,9 +399,6 @@ type DraftBase = {
   readonly parent: O.Option<PacketEventId>;
 };
 
-// Both drafters append exactly one event past the drafted base; the CAS
-// envelope (sequence, expected revision, parent digest, actor, timestamp) is
-// identical either way — only the body differs.
 const draftAppendedEvent = (request: PacketPlanRequest, base: DraftBase, body: PacketEvent["body"]): PacketEvent =>
   PacketEvent.make({
     schemaVersion: "packet-event/v1",
@@ -471,10 +480,6 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     derived: PacketDerivedState
   ) {
     const base = yield* draftBase(request, derived, request.previousStatus);
-    // The stream is the system of record for its own history: when it already
-    // derives a status (e.g. a retry after a partial failure left the manifest
-    // behind), that derived status is the accurate `previous`, not the
-    // caller's manifest snapshot.
     const previous = derived.status ?? request.previousStatus;
     const statusSet = draftAppendedEvent(
       request,

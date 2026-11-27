@@ -104,7 +104,6 @@ const GH_PR_VIEW_FIELDS = "number,state,headRefName";
 const decodeCandidate = S.decodeUnknownOption(S.fromJsonString(GoalFinalPullRequestCandidate));
 const decodeCandidateFields = S.decodeUnknownOption(GoalFinalPullRequestCandidate);
 
-// `gh pr view`'s GraphQL state from the REST record: GitHub's REST `closed` covers a merge.
 const candidateFromPull = (pull: PullRequestInfo): O.Option<GoalFinalPullRequestCandidate> =>
   decodeCandidateFields({
     number: pull.number,
@@ -118,17 +117,13 @@ const makeGoalFinalPullRequestResolver: Effect.Effect<
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > = Effect.map(Effect.context<ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>(), (context) => {
   const forBranch = (root: string) =>
-    // KEEP (D-22): the branch's pull request in any state; the kit only has `openPullRequestForBranch`, and
-    // `PullRequest.list` filters one state per read.
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: the kit reads only open branch PRs; PullRequest.list takes one state per read
     ghOutput({
       args: ["pr", "view", "--json", GH_PR_VIEW_FIELDS],
       cwd: root,
       label: "gh pr view",
       onFailure: identity,
     }).pipe(Effect.map(decodeCandidate), Effect.orElseSucceed(O.none), Effect.provideContext(context));
-  // `PullRequest.get` (`GET /repos/{owner}/{repo}/pulls/{n}`, W8, SPEC D-22) on the `gh` login and the
-  // checkout's repository; any token, repository, transport or decode failure is `None`, as gh's was.
   const byNumber = (root: string, number: number) =>
     Layer.build(layerWorktreeGithub(root)).pipe(
       Effect.flatMap((services) =>
@@ -156,11 +151,18 @@ const candidateAt = (candidates: ReadonlyArray<GoalFinalPullRequestCandidate>, n
  *
  * **Details**
  *
- * `layer` runs `gh pr view [n] --json number,state,headRefName` in the
- * repository root. `layerTest(candidates)` never spawns: `forBranch`
+ * `layer` reads the branch's pull request with `gh pr view --json number,state,headRefName`
+ * in the repository root, and a numbered one with `PullRequest.get` on the `gh` login and the
+ * checkout's repository. `layerTest(candidates)` never spawns: `forBranch`
  * returns the first candidate (the checked-out branch's pull request), and
  * `byNumber` finds any candidate by number. An empty list models a branch
  * with no pull request.
+ *
+ * **Gotchas**
+ *
+ * `byNumber` maps the REST record onto the GraphQL states `gh pr view` reports: REST `closed`
+ * also covers a merge, so `merged` reads as `MERGED` first. Any token, repository, transport or
+ * decode failure is `None`, as a failed `gh` read was.
  *
  * **Example** (Build a fixture resolver for the branch's pull request)
  *
@@ -184,7 +186,7 @@ export class GoalFinalPullRequestResolver extends Context.Service<
   GoalFinalPullRequestResolver,
   GoalFinalPullRequestResolverShape
 >()($I`GoalFinalPullRequestResolver`, { make: makeGoalFinalPullRequestResolver }) {
-  /** Live resolver over `gh pr view`. */
+  /** Live resolver over `gh pr view` and `PullRequest.get`. */
   static readonly layer: Layer.Layer<
     GoalFinalPullRequestResolver,
     never,

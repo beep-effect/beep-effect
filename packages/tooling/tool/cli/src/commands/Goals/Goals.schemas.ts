@@ -2009,8 +2009,6 @@ export const renderGoalCloseoutRecordView: {
 export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
   renderGoalCloseoutRecordView(view.closeout, view.verification);
 
-// A committed closeout needs a non-grandfathered gate and no other declared
-// final PR. Hosted facts, not declared evidence, verify it.
 const closeoutGateAdmits = (gate: GoalCompletionGate, finalPullRequest: number): boolean =>
   !gate.grandfathered &&
   !O.exists(

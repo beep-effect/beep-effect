@@ -189,14 +189,12 @@ const headFactsOf = (receipt: GoalCompletionReceipt, context: string): ReadonlyA
 
 const isPending = (fact: GoalRequiredCheckFact): boolean => O.isSome(fact.checkRunId) && fact.outcome === "unknown";
 
-// Red, or never reported on the head: the facts a claim may attribute.
 const redOrMissing = (facts: ReadonlyArray<GoalRequiredCheckFact>): boolean =>
   A.some(facts, (fact) => fact.outcome === "unsatisfied") ||
   (A.isReadonlyArrayNonEmpty(facts) && A.every(facts, (fact) => O.isNone(fact.checkRunId)));
 
 const claimValue = (claim: GoalRedAttributionClaim): string => `${claim.attribution}#${claim.fixPullRequest}`;
 
-// A context the receipt's counted claims attribute unambiguously.
 const attributedBy = (receipt: GoalCompletionReceipt, context: string): boolean =>
   A.length(
     A.dedupe(
@@ -207,9 +205,6 @@ const attributedBy = (receipt: GoalCompletionReceipt, context: string): boolean 
     )
   ) === 1;
 
-// `required-check-unobserved` is transient only when every uncovered required
-// context has a run that is still pending; a context with no run and no claim
-// is structural.
 const onlyPendingUncovered = (receipt: GoalCompletionReceipt): boolean => {
   const contexts = O.match(receipt.requiredChecks, {
     onNone: A.empty<string>,
@@ -318,11 +313,9 @@ const unsatisfiedReasons = (receipt: GoalCompletionReceipt): ReadonlyArray<strin
   return A.isReadonlyArrayNonEmpty(reasons) ? reasons : ["completion unsatisfied"];
 };
 
-// Only a receipt that did not verify reaches here, so it is unsatisfied or unknown.
 const outcomeReasons = (receipt: GoalCompletionReceipt): ReadonlyArray<string> =>
   receipt.outcome === "unsatisfied" ? unsatisfiedReasons(receipt) : goalCompletionUnknownReasons(receipt);
 
-// Advisory notes about the committed claims themselves.
 const claimNotes = (receipt: GoalCompletionReceipt, claims: GoalClaimSet): ReadonlyArray<string> => {
   const contexts = O.map(receipt.requiredChecks, (snapshot) => snapshot.contexts);
   const stale = O.match(contexts, {
@@ -410,7 +403,6 @@ const closeoutCheck = (
     ...extra,
   });
 
-// A v1 row that verified is returned as stored, so its verdict can be other than verified.
 const verifiedCloseoutCheck = (input: GoalCloseoutClassificationInput, receipt: GoalCompletionReceipt) => {
   const verdict = goalCompletionVerdict(receipt);
   return closeoutCheck(
@@ -426,8 +418,6 @@ const verifiedCloseoutCheck = (input: GoalCloseoutClassificationInput, receipt: 
   );
 };
 
-// The pull-request read decides alone: unread, open, closed without merging,
-// or merged before the window (where only a stored verified receipt verifies).
 const pullStateCheck = (input: GoalCloseoutClassificationInput): O.Option<GoalCloseoutCheck> => {
   const final = input.finalPullRequest;
   if (O.isNone(input.pull))
@@ -456,7 +446,6 @@ const pullStateCheck = (input: GoalCloseoutClassificationInput): O.Option<GoalCl
   );
 };
 
-// Inside the window the receipt decides, then a committed ruling, then whether the unknown is transient.
 const receiptCheck = (input: GoalCloseoutClassificationInput): GoalCloseoutCheck => {
   if (O.isNone(input.receipt))
     return closeoutCheck(input, "transient", [`final #${input.finalPullRequest} not observed`]);
@@ -485,6 +474,11 @@ const receiptCheck = (input: GoalCloseoutClassificationInput): GoalCloseoutCheck
  * for the final is `operator-ruling`, a transient unknown
  * ({@link goalCompletionTransient}) is `transient`, and anything else is
  * `unverified`.
+ *
+ * **Gotchas**
+ *
+ * A stored v1 receipt that verified is returned as stored, so its verdict can be other than
+ * verified.
  *
  * **Example** (An open final is no finding)
  *
@@ -545,7 +539,6 @@ const makeGoalCloseoutChecker = Effect.gen(function* () {
   const context = yield* Effect.context<
     ChildProcessSpawner.ChildProcessSpawner | Digest.Digest | FileSystem.FileSystem | Path.Path
   >();
-  // One memoized port per checker, so packets that share a base read its rule-suite listing once.
   const io = yield* Effect.flatMap(goalCompletionIo(), memoizeGoalCompletionRuleSuites);
   const check = Effect.fn("GoalCloseoutChecker.check")(
     function* (root: string, slug: string, manifest: GoalManifest, scope: GoalClaimScope = "checkout") {
@@ -557,7 +550,6 @@ const makeGoalCloseoutChecker = Effect.gen(function* () {
       );
       const now = yield* DateTime.now;
       const merged = O.filter(pull, (value) => value.merged);
-      // A merged final without a merge time reads as inside the window.
       const inWindow = O.exists(merged, (value) =>
         O.match(value.merged_at, { onNone: () => true, onSome: (at) => goalFinalWithinCloseoutWindow(at, now) })
       );
@@ -603,6 +595,10 @@ const makeGoalCloseoutChecker = Effect.gen(function* () {
  * result comes from {@link classifyGoalCloseout}. {@link GoalCloseoutCheckerLive}
  * reads GitHub through the completion port; {@link GoalCloseoutChecker.layerTest}
  * returns fixed checks.
+ *
+ * **Gotchas**
+ *
+ * A merged final without a merge time reads as inside the closeout window.
  *
  * **Example** (Read a fixed check)
  *

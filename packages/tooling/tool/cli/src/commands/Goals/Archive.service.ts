@@ -86,7 +86,6 @@ export const INBOUND_LINK_ROOTS: ReadonlyArray<string> = [
 ];
 
 const INBOUND_LINK_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx", ".ts", ".tsx", ".json"];
-// The knowledge doctor reads code spans only in Markdown; elsewhere a backticked path may be program output.
 const CODE_SPAN_CITATION_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx"];
 const QUERY_OR_FRAGMENT = /[?#].*$/;
 const FRAGMENT = /#.*$/;
@@ -151,7 +150,6 @@ const gitFailed =
   (error: { readonly message: string }): ArchiveError =>
     ArchiveError.new("archive-git-failed", null, repoRoot, error.message);
 
-// Tracked paths under the pathspecs, once each (an unresolved merge lists one entry per stage).
 const trackedPaths = Effect.fnUntraced(function* (repoRoot: string, pathspec: ReadonlyArray<string>) {
   const git = yield* Git;
   const entries = yield* git.lsFiles(repoRoot, { pathspec }).pipe(Effect.mapError(gitFailed(repoRoot)));
@@ -299,7 +297,6 @@ type ScannedLink = {
   readonly target: string;
 };
 
-// The code spans the knowledge doctor reads as tracked paths, so the plan repoints what the doctor would flag.
 const scanLineCodeSpans = (file: string, line: KnowledgeDocumentLine): ReadonlyArray<ScannedLink> =>
   A.getSomes(
     A.map(
@@ -354,7 +351,6 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
 
 const GIT_SYMLINK_MODE = "120000";
 
-// A tracked symlink has no text of its own: its target is scanned and rewritten once, under its own path.
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
   const git = yield* Git;
   const tracked = yield* git
@@ -396,7 +392,6 @@ const planEntry = Effect.fnUntraced(function* (
     .pipe(Effect.mapError(gitFailed(options.repoRoot)));
   const removed = HashSet.fromIterable(remove);
   const under = (target: string): ((file: string) => boolean) => Str.startsWith(`${target}/`);
-  // A cited directory breaks only when the tombstone keeps nothing under it.
   const citesRemovedDirectory = (target: string): boolean =>
     Str.startsWith(`${dir}/`)(target) && A.some(remove, under(target)) && !A.some(keep, under(target));
   const cited = (link: ScannedLink): boolean =>
@@ -495,6 +490,17 @@ export interface ArchivePlannerShape {
 
 /**
  * Selects terminal packets and computes their reviewable archive plan.
+ *
+ * **Gotchas**
+ *
+ * - Each tracked path is planned once, even during an unresolved merge, where git lists one
+ *   entry per stage.
+ * - Code-span citations count as inbound references only in Markdown: the knowledge doctor
+ *   reads code spans only there and as tracked paths, so the plan repoints what the doctor
+ *   would flag, and elsewhere a backticked path may be program output.
+ * - A tracked symlink has no text of its own: its target is scanned and rewritten once, under
+ *   the target's own path.
+ * - A cited directory breaks only when the tombstone keeps nothing under it.
  *
  * **Example** (Request the planner)
  *

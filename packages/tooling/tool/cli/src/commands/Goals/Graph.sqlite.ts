@@ -55,9 +55,6 @@ const SCHEMA_SQL: ReadonlyArray<string> = [
   )`,
 ];
 
-// Shared CTEs: `avail` = capabilities with a completed-retained provider;
-// `cand` = consumer -> candidate-provider edges for unavailable requirements,
-// where a candidate provider is still buildable but unfinished.
 const GRAPH_CTES = `
   avail (cap) AS (
     SELECT DISTINCT p.capability_slug
@@ -101,8 +98,6 @@ const FRONTIER_SQL = `
     )
   ORDER BY k.packet_id`;
 
-// `UNION` over a finite (src, dst) set terminates; a member's root is the least
-// slug it reaches and is reached by, which includes itself.
 const CYCLES_SQL = `
   WITH RECURSIVE ${GRAPH_CTES},
   reach (src, dst) AS (
@@ -116,8 +111,6 @@ const CYCLES_SQL = `
   GROUP BY a.src
   ORDER BY a.src`;
 
-// Depth is bounded by the packet count, so the `UNION` stays finite; the
-// minimum depth per (target, slug) is the breadth-first depth.
 const WALKS_SQL = `
   WITH RECURSIVE ${GRAPH_CTES},
   walk (target, slug, depth) AS (
@@ -145,8 +138,6 @@ const ownMessage = (cause: unknown): O.Option<string> =>
     ? O.some(cause.message)
     : O.none();
 
-// SqlError's own message is generic ("Failed to execute statement"); the driver's
-// text (e.g. "FOREIGN KEY constraint failed") sits further down the cause chain.
 const causeMessages = (cause: unknown, depth: number): ReadonlyArray<string> =>
   depth >= CAUSE_CHAIN_DEPTH || P.isNullish(cause)
     ? []
@@ -251,7 +242,16 @@ const walksFor = (
  * Loads the projection into the `SqlClient` database in one transaction and
  * runs the five queries. The database must be empty: build a fresh
  * {@link GraphSqliteLive} per call, or use {@link runCapabilityGraph}. Row
- * decode failures and statement failures are {@link GoalGraphOperationalError}.
+ * decode failures and statement failures are {@link GoalGraphOperationalError}. SqlError's own
+ * message is generic, so a statement failure carries the driver's text (such as
+ * `FOREIGN KEY constraint failed`) from further down the cause chain.
+ *
+ * **Gotchas**
+ *
+ * A capability is available once a `completed-retained` packet provides it; a candidate provider
+ * of an unavailable requirement is buildable but unfinished. A cycle is named by its root, the
+ * least slug each member both reaches and is reached by, itself included. Unlock depth is the
+ * breadth-first depth, bounded by the packet count, so both recursive queries terminate.
  *
  * **Example** (Build the query effect for an empty projection)
  *
@@ -287,8 +287,6 @@ export const queryCapabilityGraph = Effect.fn("Goals.queryCapabilityGraph")(func
 
 const IN_MEMORY = { filename: ":memory:" } as const;
 
-// Each driver layer provides its own client service beside SqlClient, so the
-// two branches only unify as the generic SqlClient layer.
 const loadSqliteLayer: Effect.Effect<
   Layer.Layer<SqlClient.SqlClient, SqlError>,
   GoalGraphOperationalError

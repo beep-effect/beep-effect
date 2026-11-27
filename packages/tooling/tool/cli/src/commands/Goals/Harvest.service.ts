@@ -220,19 +220,15 @@ const makeRow = Effect.fnUntraced(function* (context: PacketContext, draft: Harv
 
 const splitLines = (text: string): ReadonlyArray<string> => Str.split(text, LINE_BREAK);
 
-// Lines `[start, end)`.
 const sliceLines = (lines: ReadonlyArray<string>, start: number, end: number): ReadonlyArray<string> =>
   A.take(A.drop(lines, start), end - start);
 
-// Index of the first line at or after `from` that satisfies the predicate.
 const indexFrom = (
   lines: ReadonlyArray<string>,
   from: number,
   predicate: (line: string) => boolean
 ): O.Option<number> => O.map(A.findFirstIndex(A.drop(lines, from), predicate), (offset) => offset + from);
 
-// Resolves each needle to a 1-based line, scanning forward so repeated values land on distinct lines;
-// an unlocatable needle falls back to `fallback` and leaves the cursor in place.
 const sequentialLines = (
   lines: ReadonlyArray<string>,
   start: number,
@@ -496,8 +492,6 @@ export const checkboxItemTexts = (text: string): ReadonlyArray<string> =>
     )
   );
 
-// Checkbox texts of every Markdown file under the goal and exploration templates: boilerplate
-// that each scaffolded packet inherits, so a copied line is not harvested as packet alpha.
 const templateRootCheckboxTexts = Effect.fnUntraced(function* (repoRoot: string, templateRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -659,7 +653,6 @@ const explorationPacketRows = Effect.fnUntraced(function* (repoRoot: string, slu
 
 const packetKey = (root: string, slug: string): string => `${root}/${slug}`;
 
-// The packet a tracked ledger path lives in, or `None` outside any packet directory.
 const ledgerPacket = (file: string): O.Option<{ readonly root: PacketRoot; readonly slug: string }> => {
   const segments = Str.split(file, "/");
   return pipe(
@@ -725,7 +718,6 @@ const collectLedger = Effect.fn("Harvest.collect")(function* (options: HarvestCo
   const nonPacketContext: PacketContext = { packet: null, status: null, terminal: false, commit };
   const ledgerPackets = A.filterMap(ledgerFiles, (file) =>
     O.match(ledgerPacket(file), {
-      // Ledgers outside any packet belong to no kind; only `--kind all` reads them.
       onNone: () =>
         wantsGoals && wantsExplorations ? Result.succeed({ file, context: nonPacketContext }) : Result.fail(undefined),
       onSome: ({ root, slug }) =>
@@ -897,6 +889,15 @@ export interface HarvestProjectorShape {
 
 /**
  * Projects packets and tracked friction ledgers into the harvest provenance ledger.
+ *
+ * **Gotchas**
+ *
+ * - Checkbox texts from the Markdown files under the goal and exploration templates are
+ *   boilerplate every scaffolded packet inherits, so a copied line is never harvested.
+ * - A row's line numbers resolve forward through its file, so repeated values land on distinct
+ *   lines; a value that cannot be located takes its fallback line.
+ * - A tracked ledger outside any packet directory belongs to no kind; only a collection over
+ *   both kinds (`--kind all`) reads it.
  *
  * **Example** (Request the projector)
  *

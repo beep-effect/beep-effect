@@ -338,7 +338,6 @@ type DraftState = {
   readonly byText: HashMap.HashMap<string, number>;
 };
 
-// Every note with the same normalised text joins one draft, wherever it sits.
 const addNote = (state: DraftState, entry: { readonly figure: number; readonly note: MarkupNote }): DraftState => {
   const key = normalize(entry.note.text);
   return pipe(
@@ -369,8 +368,6 @@ const addNote = (state: DraftState, entry: { readonly figure: number; readonly n
 
 const MAX_FINDINGS = 99;
 
-// A draft covers every sheet when it is marked "(all sheets)" or was read on
-// every sheet of a set of two or more.
 const coversEverySheet = (draft: FindingDraft, sheets: ReadonlyArray<number>): boolean =>
   draft.marked || (A.length(sheets) > 1 && A.every(sheets, (sheet) => A.contains(draft.figures, sheet)));
 

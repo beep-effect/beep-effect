@@ -638,9 +638,6 @@ const graduationEventBodies = (
 const explorationLocator = (exploration: string, packetPath: string) =>
   PacketStreamLocator.make({ packet: exploration, root: "explorations", packetPath });
 
-// E19: the events an opted-in exploration is owed are planned against the
-// stream before the manifest flips and recorded in a sidecar, so a crash
-// between the flip and the append leaves a durable, replayable record.
 const planPendingEvents = Effect.fn("Explore.planPendingEvents")(function* (
   plan: GraduationPlan,
   manifestPath: string,
@@ -670,11 +667,6 @@ const planPendingEvents = Effect.fn("Explore.planPendingEvents")(function* (
   });
 });
 
-// Appends whatever suffix of the recorded events the stream still lacks, then
-// regenerates the trace atomically. The recorded events are the authority:
-// the stream must still owe a suffix of them, so a replay after a partial
-// append never duplicates an event, and a stream that moved some other way
-// is refused rather than guessed at.
 const appendPendingEvents = Effect.fn("Explore.appendPendingEvents")(function* (
   pending: GraduationPendingEvents,
   packetPath: string
@@ -766,6 +758,12 @@ const refuseConflictedGraduation = (plan: GraduationPlan) =>
  * {@link resumeGraduationEvents} (`explore graduate <slug> --resume-events`).
  * `explore --check` reports a leftover sidecar.
  *
+ * The stream is folded and the owed events encoded before any child is published, so a forked
+ * or corrupt stream refuses with nothing written. The sidecar lands only after every child
+ * published, immediately before the flip, so a failed child publish leaves none. When the flip
+ * fails, the sidecar is kept only if the manifest already holds exactly the recorded bytes;
+ * any other state removes it, so recovery never points at a manifest it does not match.
+ *
  * **Example** (Build the write effect)
  *
  * ```ts
@@ -823,8 +821,6 @@ export const writeGraduationPlan = Effect.fn("Explore.writeGraduationPlan")(func
     GoalPlanOperationalError.new(
       `Recording the graduation events of explorations/${plan.exploration} failed before anything was written: ${error.message}`
     )(error);
-  // The stream is folded and the owed events encoded before any child is
-  // published, so a forked or corrupt stream refuses with nothing written.
   const pending = (yield* store.hasStream(packetPath))
     ? yield* Effect.asSome(
         Effect.gen(function* () {
@@ -843,16 +839,10 @@ export const writeGraduationPlan = Effect.fn("Explore.writeGraduationPlan")(func
       ),
     { concurrency: 1 }
   );
-  // The sidecar lands only after every child published and immediately before
-  // the flip, so a failed child publish leaves no sidecar behind.
   yield* O.match(pending, {
     onNone: () => Effect.void,
     onSome: ({ text }) => Effect.asVoid(writeFileAtomically(pendingPath, text)).pipe(Effect.mapError(streamFailure)),
   });
-  // A sidecar is only meaningful next to the graduated manifest it records.
-  // When the flip fails, it is kept only if the manifest already holds exactly
-  // those bytes; any other state (pre-image, moved pre-image, unreadable)
-  // removes it, so recovery is never pointed at a manifest it does not match.
   const discardUnflippedPending = (owed: GraduationPendingEvents) =>
     fs.readFile(path.join(repoRoot, edit.path)).pipe(
       Effect.flatMap(sha256HexBytes),
@@ -941,6 +931,12 @@ export const renderGraduationReceiptJson: (receipt: GraduationReceipt) => Effect
  * recorded events the stream still lacks (none, if an earlier attempt
  * already appended them), rewrites the trace atomically, and removes the
  * sidecar. A second run therefore refuses: there is nothing left to resume.
+ *
+ * **Gotchas**
+ *
+ * The recorded events are the authority: the stream must still owe a suffix of them, so a
+ * replay after a partial append never duplicates an event, and a stream that moved some other
+ * way is refused rather than guessed at.
  *
  * **Example** (Build the recovery effect)
  *

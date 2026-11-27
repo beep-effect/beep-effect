@@ -446,6 +446,7 @@ const selectedPackageFromWorkspacePackage = (
 const localTurboCacheArgs = (args: ReadonlyArray<string>, ci: boolean): ReadonlyArray<string> =>
   turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci }));
 
+// decision: docgen-runs-turbo-with-no-resident-helper
 const turboArgsForSelectedPackages = (
   selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>,
   parallel: number,
@@ -454,15 +455,8 @@ const turboArgsForSelectedPackages = (
   const args = [
     ...A.map(selectedPackages, turboFilterForPackage),
     `--concurrency=${localParallel(parallel)}`,
-    // Run summaries feed the hosted CI lane only; locally nothing reads them back and
-    // they accumulate under `.turbo/runs` until the residue janitor reaps them.
     ...(ci ? ["--summarize"] : []),
     "--ui=stream",
-    // No background daemon: a daemon spawned inside this child survives it and
-    // holds process handles, which repeatedly kept the hosted Docgen lane's bun
-    // wrapper from exiting after successful runs (hang or SIGABRT at teardown).
-    // Turbo 2.10 dropped the `--daemon=false` value form (and no longer uses
-    // the daemon for `turbo run` at all); `--no-daemon` remains accepted.
     "--no-daemon",
   ];
   return ["turbo", "run", "docgen", ...localTurboCacheArgs(args, ci), ...args];
@@ -614,6 +608,8 @@ const parseDocgenProcessDiagnostics = (output: string): ReadonlyArray<DocgenProc
     A.sort(byDocgenProcessPidAscending)
   );
 
+const PS_COLUMNS_WITHOUT_ARGV = "pid=,ppid=,etimes=,stat=,comm=";
+
 const queryDocgenProcesses = Effect.fn("DocgenLocal.queryDocgenProcesses")(function* (
   repoRoot: string,
   processIds: ReadonlyArray<number>,
@@ -628,7 +624,7 @@ const queryDocgenProcesses = Effect.fn("DocgenLocal.queryDocgenProcesses")(funct
     args: [
       "-ww",
       "-o",
-      "pid=,ppid=,etimes=,stat=,comm=",
+      PS_COLUMNS_WITHOUT_ARGV,
       selectChildren ? "--ppid" : "-p",
       A.join(
         A.map(processIds, (processId) => `${processId}`),
@@ -691,9 +687,6 @@ const renderDocgenProcessTree = (diagnostics: ReadonlyArray<DocgenProcessDiagnos
         "\n"
       );
 
-// Inspect only the process tree rooted at the docgen child. Each ps invocation
-// selects known PIDs or their direct children, and `comm` deliberately exposes
-// executable identity without the raw argument values carried by `args`.
 const logDocgenProcessTree = Effect.fn("DocgenLocal.logDocgenProcessTree")(function* (
   reason: string,
   repoRoot: string,
@@ -1056,14 +1049,7 @@ export const filterDocgenMetadataCheckPackagesForTesting = Effect.fn("DocgenLoca
   }
 );
 
-// Both proofs ratchet only packages whose generated docs are aggregated into
-// docs/generated: full mode discovers all configured packages, while scoped
-// mode filters the planner's direct selections through the same canonical
-// outDir partition. A non-canonical outDir (the scratchpad's focused quality
-// analysis output) is skipped exactly as the aggregate step skips it. Proof
-// manifests are deliberately not consulted: they prove generation, not metadata, and
-// generation alone let an unknown @category merge on main (#1054) that only
-// the next PR's scoped check paid for (#1057).
+// decision: docgen-proofs-check-metadata-before-generating
 const discoverFullMetadataCheckPackages = Effect.fn("DocgenLocal.discoverFullMetadataCheckPackages")(function* (
   parallel: number
 ) {
@@ -1071,15 +1057,13 @@ const discoverFullMetadataCheckPackages = Effect.fn("DocgenLocal.discoverFullMet
   return yield* filterDocgenMetadataCheckPackagesForTesting(packages, parallel);
 });
 
+// decision: docgen-proofs-check-metadata-before-generating
+// decision: docgen-runs-turbo-with-no-resident-helper
+// decision: docgen-steps-retry-under-a-stall-watchdog
 const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string, parallel: number) {
-  // The scoped proof ratchets JSDoc metadata before it generates; the full
-  // proof must too, or main merges debt that only the next PR pays for.
   const packages = yield* discoverFullMetadataCheckPackages(parallel);
   yield* Console.log(`docgen:local: checking JSDoc metadata for ${A.length(packages)} package(s)`);
   yield* checkPackageDocumentation(packages, parallel);
-  // Run Turbo directly so the typed lane concurrency setting governs full and
-  // affected proofs through the same local command surface. The full budget is
-  // much larger because a cold full proof legitimately runs for tens of minutes.
   yield* runStepWithStallWatchdog(
     "full turbo docgen",
     turboBinaryPath(repoRoot),
@@ -1096,55 +1080,33 @@ const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot
   );
 });
 
-// Spawn the turbo binary directly: `bunx turbo` leaves a resident bun wrapper
-// between the CLI and turbo, and the hosted Docgen lane showed bun processes
-// on the fleet image failing to exit after successful work.
+// decision: docgen-runs-turbo-with-no-resident-helper
 const turboBinaryPath = (repoRoot: string): string => `${repoRoot}/node_modules/.bin/turbo`;
 
 const directTurboArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => A.drop(turboArgs, 1);
 
-// Turbo has been observed on the hosted fleet to run every task to completion,
-// print its summary, and then never exit: the Docgen lane burned its whole
-// 60-minute budget after 2m8s of real work (run 31991634069, and again on the
-// following push). The parent then sits in `runToExit` waiting on a child that
-// is already done, so the CLI's exit-on-success teardown never gets to run --
-// the stall is mid-program, not at exit, which is why the forced-exit
-// teardowns in bin-main.ts and the docgen bin cannot help.
-//
-// By the time turbo wedges, every task has succeeded and its output is on disk
-// and in .turbo/cache, so abandoning it and retrying costs seconds: the retry
-// is a full cache hit. That turns an unrecoverable 60-minute stall into a
-// recoverable blip. The budget is ~7x the observed CI runtime so a genuinely
-// slow run is never cut short.
-//
-// This has NOT been reproduced off-runner -- the same command with the same
-// zero-cache conditions finishes locally in 108s -- so treat it as containment
-// for a fleet-specific stall, not as a root-cause fix.
+// decision: docgen-steps-retry-under-a-stall-watchdog
 type DocgenStepBudget = {
   readonly first: Duration.Duration;
   readonly retry: Duration.Duration;
 };
 
-// Scoped runs took 2m8s on the fleet before wedging, so ~7x headroom.
+// decision: docgen-steps-retry-under-a-stall-watchdog
 const scopedDocgenStepBudget: DocgenStepBudget = {
   first: Duration.minutes(15),
   retry: Duration.minutes(10),
 };
 
-// A cold full proof walks every package in the monorepo. Its budget has to
-// clear a legitimately long run by a wide margin -- killing honest work would
-// be far worse than the stall this guards against.
+// decision: docgen-steps-retry-under-a-stall-watchdog
 const fullDocgenStepBudget: DocgenStepBudget = {
   first: Duration.minutes(45),
   retry: Duration.minutes(30),
 };
 
-// Abandoning the step closes the child's scope, which signals the process
-// group and then waits for the exit event. Without an escalation the wait is
-// unbounded against a child ignoring SIGTERM, and the budgets above would not
-// actually reclaim anything.
+// decision: docgen-steps-retry-under-a-stall-watchdog
 const docgenStepForceKillAfter = Duration.seconds(20);
 
+// decision: docgen-steps-retry-under-a-stall-watchdog
 const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog")(function* (
   label: string,
   command: string,
@@ -1284,8 +1246,6 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
     );
   }
 
-  // Previously nothing was logged between turbo's own summary and the first
-  // "aggregated" line, so a stall in between was invisible.
   yield* Console.log(`docgen:local: aggregating ${A.length(packages)} package(s) into docs/generated`);
   const [aggregateElapsed, aggregateCount] = yield* Effect.timed(aggregateDocgenPackagesForTesting(packages));
   yield* Console.log(

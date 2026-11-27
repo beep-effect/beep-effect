@@ -41,15 +41,9 @@ import type {
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const SCAN_ROOTS = ["packages", "apps", "scratchpad", "standards", "goals", "research", ".changeset", ".github"];
-// `.beep` holds machine-local operator state (yeet run artifacts, CI mirrors);
-// the runtime-artifact probe scans `.beep/ci` deliberately from inside that
-// root, so excluding the top-level entry here never reaches it. The git-visible
-// listing drops a path with any of these segments too, so a checkout that does
-// not ignore them reads the same set the walk did.
 const EXCLUDED_DIRECTORIES = HashSet.fromIterable([".git", "node_modules", "dist", "coverage", ".turbo", ".beep"]);
 const SOURCE_SUFFIXES = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 const TEXT_SUFFIXES = [...SOURCE_SUFFIXES, ".json", ".jsonc", ".md", ".yml", ".yaml", ".toml"];
-// A historical record is read in every suffix the authored-reference probe skips it in, plus tables.
 const RECORD_SUFFIXES = A.append(TEXT_SUFFIXES, ".tsv");
 
 const isSuffixIn =
@@ -57,8 +51,6 @@ const isSuffixIn =
   (file: string): boolean =>
     A.some(suffixes, (suffix) => Str.endsWith(suffix)(file));
 
-// Only the runtime-artifact probe walks the filesystem: `.beep/ci` is gitignored machine state, so
-// git never lists it. Every other scan reads the git-visible listing below.
 const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
   root: string,
   suffixes: ReadonlyArray<string>
@@ -102,12 +94,6 @@ const gitListingAdapter = (repoRoot: string): GitCommandErrorAdapter<Registratio
 const hasExcludedSegment = (file: string): boolean =>
   A.some(Str.split("/")(file), (segment) => HashSet.has(EXCLUDED_DIRECTORIES, segment));
 
-// The `git ls-files --cached --others --exclude-standard` set: tracked files plus untracked files git
-// does not ignore, so gitignored build output (docgen `docs/`, bundles, caches) is never read. A listed
-// path can be gone from disk (a deleted tree stays in the index until staged); readers skip it. A root
-// that is not a git work tree fails; there is no filesystem fallback, which would bring that output back.
-// The `--acknowledge` file names the target by construction, so exactly that path is never scanned: a
-// committed acknowledgement file is not a dependent of the deletion it reviews, nor its residue.
 const gitVisibleFilesAt = Effect.fn("RegistrationGeometry.gitVisibleFilesAt")(function* (
   repoRoot: string,
   acknowledgementFile: O.Option<string>
@@ -121,7 +107,6 @@ const isUnderRoot =
   (file: string): boolean =>
     Str.startsWith(`${root}/`)(file);
 
-// The content of one git-visible file, or none when it no longer exists on disk or cannot be read.
 const readVisibleFile = Effect.fn("RegistrationGeometry.readVisibleFile")(function* (
   repoRoot: string,
   relativeFile: string
@@ -151,9 +136,6 @@ export type AcknowledgedOccurrences = (file: string, text: string) => number;
 
 const noAcknowledgedOccurrences: AcknowledgedOccurrences = () => 0;
 
-// A file is authored-reference evidence unless every line naming the target is acknowledged, counted per
-// distinct trimmed text: two identical lines need an allowance of two. A file whose text matches but no
-// single line does keeps counting, as it did before evidence was line-aware.
 const hasUnacknowledgedMention = (
   file: string,
   content: string,
@@ -170,18 +152,6 @@ const hasUnacknowledgedMention = (
   );
 };
 
-// The matcher for every search whose needle can be the target's package path. A needle equal to
-// `target.packagePath` skips the occurrences a sibling workspace path accounts for
-// (`packages/tooling/deploy/x` does not name `deploy`); any other needle stays a whole token. Its
-// users: the dependents scan (workspace files, root scripts, root policy files) and the doctor
-// surfaces `derived-rebuild`, `generated-inventory` for the four path-keyed inventories
-// (`fallow-health-baseline`, `fallow-dead-code-baseline`, `schema-first-inventory`,
-// `schema-catalog`), `authored-reference` and `historical-record`. So `--dry-run`, `--check` and
-// the post-apply doctor judge a path needle the same way. Whole tokens stay for every needle that
-// cannot be a package path: package names (also in `pending-changeset` and `runtime-artifact`),
-// the identity slug and accessor, the membership keys of the name-keyed inventories
-// (`coverage-baseline`, `instrumentation-catalog`, `test-typecheck-baseline`)
-// and the quoted workspace literal (its quotes anchor it).
 type NeedleMatcher = (needles: ReadonlyArray<string>) => (text: string) => boolean;
 
 const needleMatcherFor =
@@ -194,8 +164,6 @@ const needleMatcherFor =
     return (text) => A.some(matchers, (matches) => matches(text));
   };
 
-// A repository with no root manifest declares no workspaces, so no sibling path can shadow the
-// target; any other discovery failure propagates.
 const workspacePathsAt = Effect.fn("RegistrationGeometry.workspacePathsAt")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -224,8 +192,6 @@ const existingEvidence = Effect.fn("RegistrationGeometry.existingEvidence")(func
   return evidence;
 });
 
-// A pending changeset is residue when it names the package or reuses the deletion note's basename,
-// unless it is the canonical deletion note itself.
 const isPendingChangesetResidue = Effect.fn("RegistrationGeometry.isPendingChangesetResidue")(function* (
   file: string,
   content: string,
@@ -241,8 +207,6 @@ const isPendingChangesetResidue = Effect.fn("RegistrationGeometry.isPendingChang
 
 const recordGlob = GlobPatternOptions.make({ nonegate: true, nocomment: true });
 
-// The doctor's one reading of a dated record: the files the historical-record surfaces declare, where
-// a wildcard matches no dot entry. The authored-reference probe skips exactly these and nothing else.
 const historicalRecordMatcherFor = (surfaces: ReadonlyArray<RegistrationSurface>): ((file: string) => boolean) => {
   const patterns = pipe(
     surfaces,
@@ -290,8 +254,6 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
         [identity.registryFile],
         mentionsAnyToken([`"${identity.slug}"`, identity.accessor])
       );
-      // The deletion removes the accessor's shape-test rows too; any mention
-      // left in that file names an export that no longer exists.
       const shapeTestEvidence = yield* existingEvidence(
         repoRoot,
         [IDENTITY_SHAPE_TEST_PATH],
@@ -306,8 +268,6 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
         derived.outputs,
         matchNeedles([target.packageName, target.packagePath])
       );
-      // Labs are excluded from the root TS solution: a labs target referenced by
-      // tsconfig.packages.json is registration residue, not rebuildable drift.
       const labsRootReference =
         isLabsWorkspacePath(target.packagePath) && A.some(evidence, Str.equivalence("tsconfig.packages.json"));
       const dirtyStatus = labsRootReference ? "residue" : "drift";
@@ -338,9 +298,6 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
     }),
     "pending-changeset": Effect.fn(function* (pending) {
       const files = A.filter(visibleFiles, (file) => isUnderRoot(".changeset")(file) && Str.endsWith(".md")(file));
-      // The dedicated `{}` deletion note is the intentional record the delete
-      // itself emits; only OTHER pending changesets naming the package are
-      // residue.
       let evidence = A.empty<string>();
       for (const file of files) {
         const read = yield* readVisibleFile(repoRoot, file);
@@ -422,6 +379,24 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  * A `repoRoot` that is not a git work tree fails with a
  * `RegistrationGeometryError` naming it; there is no filesystem fallback.
  *
+ * - No path with a `.git`, `node_modules`, `dist`, `coverage`, `.turbo` or `.beep` segment is
+ *   read, even in a checkout that does not ignore them; the runtime-artifact probe reads
+ *   `.beep/ci` from inside that root.
+ * - A file whose text names the target only across lines, with no single line naming it,
+ *   still counts as an authored reference.
+ * - A needle equal to the target's package path skips occurrences inside a sibling workspace
+ *   path (`packages/tooling/deploy/x` does not name `packages/tooling/deploy`), exactly as the
+ *   dependents scan does. Package names, the identity slug and accessor, name-keyed inventory
+ *   keys and the quoted workspace literal match as whole tokens.
+ * - A repository with no root manifest has no sibling workspace paths; any other workspace
+ *   discovery failure fails the Effect.
+ * - A pending changeset is residue when it names the package or reuses the deletion note's
+ *   basename, unless it is the dedicated deletion note the delete itself emits.
+ * - Any mention of the accessor left in the identity shape test is residue, because the
+ *   deletion removes that accessor's rows.
+ * - A labs target referenced by `tsconfig.packages.json` is residue, not rebuildable drift:
+ *   labs are excluded from the root TS solution.
+ *
  * **Example** (Collect doctor statuses)
  *
  * ```ts
@@ -494,11 +469,6 @@ const manifestKindFor = (bucket: string): DependentHitKind =>
         ? "manifest-peer"
         : "manifest-optional";
 
-// One key per distinct dependent. A line-located hit is one line of one kind in one file, so
-// (kind, owner, file, line) names it. A hit without a line is unique by construction for every kind but
-// `script`: a manifest edge per (owner manifest, bucket), a root policy file per file, a descendant
-// workspace per manifest path. Root scripts all share `package.json` with no line, so the script name
-// keys them; without it every script after the first naming the target vanished from the report.
 const hitKey = (hit: DependentHit): string =>
   `${hit.kind}\u0000${hit.owner}\u0000${hit.file}\u0000${O.getOrElse(hit.line, () => 0)}\u0000${O.getOrElse(hit.script, () => Str.empty)}`;
 
@@ -525,7 +495,6 @@ const dynamicImportSpecifier = (node: Node): O.Option<string> => {
   );
 };
 
-// `import("x").T` in type position.
 const importTypeSpecifier = (node: Node): O.Option<string> => {
   if (!Node.isImportTypeNode(node)) return O.none();
   const argument = node.getArgument();
@@ -533,7 +502,6 @@ const importTypeSpecifier = (node: Node): O.Option<string> => {
   return Node.isStringLiteral(literal) ? O.some(literal.getLiteralText()) : O.none();
 };
 
-// `import x = require("x")`; its `require` is a module reference, not a call.
 const importEqualsSpecifier = (node: Node): O.Option<string> => {
   if (!Node.isExternalModuleReference(node)) return O.none();
   const expression = node.getExpression();
@@ -637,13 +605,6 @@ const isBaselineReferenceFile = (file: string): boolean =>
   Str.startsWith(".changeset/")(file) ||
   A.some(BASELINE_REFERENCE_FILES, Str.equivalence(file));
 
-// Inside a packet, only the live planning surface (PLAN/SPEC/GOAL/README/ops)
-// carries claims a deletion must answer for. `history/**` is preserved
-// evidence and `research/**` is the packet's ledger and intel — both record
-// the past, so a deleted package named there is expected, not a stale claim.
-// Receipt 11 (lab-apps-lifecycle): recording a deletion proof in packet
-// history made the proof unrepeatable because these files classified as
-// live packet claims.
 const isPacketHistoricalRecord = (file: string): boolean =>
   Str.startsWith("goals/")(file) && (Str.includes("/history/")(file) || Str.includes("/research/")(file));
 
@@ -664,7 +625,6 @@ const authoredKindFor = (file: string): DependentHitKind =>
 
 type WorkspaceEdge = { readonly owner: string; readonly bucket: string; readonly dependency: string };
 
-// Every manifest edge onto a workspace member, root manifest included: one row per bucket and dependency.
 const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEdges")(function* (
   repoRoot: string,
   targetName: string
@@ -782,6 +742,18 @@ const dedupedSortedHits = (hits: ReadonlyArray<DependentHit>): ReadonlyArray<Dep
  * gone from disk is skipped, and a `repoRoot` that is not a git work tree
  * fails with a `RegistrationGeometryError` naming it.
  *
+ * - The `--acknowledge` file names the target by construction, so it is never scanned: it is
+ *   not a dependent of the deletion it reviews.
+ * - Each root script naming the target is its own hit, keyed by script name, although every
+ *   root script shares `package.json` and has no line.
+ * - A needle equal to the target's package path skips occurrences inside a sibling workspace
+ *   path, the same reading the doctor applies.
+ * - Rows of the identity shape test naming the target's accessor are not dependents, because
+ *   the deletion removes them. The identity registry is not a dependent either (the
+ *   identity-segment surface rewrites it); every other file naming the accessor is.
+ * - Inside a goal packet, only the live planning surface is a `packet` hit. A mention under a
+ *   packet's `history/` or `research/` records the past and is a `historical-doc` hit.
+ *
  * **Example** (Build a dependency scan)
  *
  * ```ts
@@ -870,13 +842,9 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
     onNone: () => thunkFalse,
     onSome: mentionsToken,
   });
-  // delete-package itself removes the target's shape-test rows, so they are
-  // not dependents: blocking on them forced every deletion to hand-strip them.
   const isRemovedShapeTestRow = (relativeFile: string, line: string): boolean =>
     Str.equivalence(relativeFile, IDENTITY_SHAPE_TEST_PATH) &&
     O.exists(identityAccessor, (accessor) => O.exists(shapeTestRowAccessor(line), Str.equivalence(accessor)));
-  // The identity registry declares every accessor and the identity-segment
-  // surface rewrites it; every other file that names the accessor depends on it.
   const isIdentityRegistry = (relativeFile: string): boolean =>
     O.exists(identitySurface, (surface) => Str.equivalence(relativeFile, surface.registryFile));
 

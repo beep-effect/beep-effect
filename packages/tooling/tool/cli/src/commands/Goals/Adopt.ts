@@ -74,8 +74,6 @@ const readSnapshotFile = Effect.fn("Goals.readSnapshotFile")(function* (root: st
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entryAbsolute = path.join(root, entryRelative);
-  // Digest the raw bytes: decoding first is lossy for non-UTF-8 content
-  // (binary evidence under history/), which would break hash-pinning.
   const bytes = yield* fs
     .readFile(entryAbsolute)
     .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read "${entryAbsolute}".`)));
@@ -140,9 +138,6 @@ const walkDirectory = (
     )
   );
 
-// Only a provable NotFound reads as absence: any other stat failure (for example
-// PermissionDenied) leaves existence unverifiable, and an adoption plan compiled over
-// unverifiable state could misreport a real packet as packet-not-found.
 const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs.stat(target).pipe(
@@ -162,11 +157,19 @@ const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (targ
  * **Details**
  *
  * The entire `FileSystem` surface used here is `readDirectory`, `stat`, and
- * `readFileString` — there is no writer to disable. A missing packet is not an
+ * `readFile` — there is no writer to disable. A missing packet is not an
  * error: the snapshot records `exists: false` and the pure compiler emits a
  * `packet-not-found` conflict, keeping environment facts inside the plan. A
  * missing or unreadable template tree is an operational failure: adoption
  * cannot measure against a standard it cannot read.
+ *
+ * **Gotchas**
+ *
+ * - File digests are taken over the raw bytes: decoding first is lossy for non-UTF-8 content
+ *   (binary evidence under `history/`), which would break hash pinning.
+ * - Only a provable `NotFound` reads as a missing packet. Any other stat failure, such as
+ *   `PermissionDenied`, fails the snapshot, so a plan compiled over unverifiable state never
+ *   misreports a real packet as `packet-not-found`.
  *
  * **Example** (Build the snapshot effect)
  *
@@ -269,9 +272,6 @@ const ADOPT_BASE_VALIDATIONS: ReadonlyArray<ValidationRequirement> = [
   "goal-md-within-budget",
 ];
 
-// Template files a conforming packet need not carry (ruled 2026-10-13,
-// research/p1-fp-eyeball-verdicts.md, Workstream E): the reflection template is
-// authoring convenience in goals/_template, never a packet artifact.
 const isOptionalTemplateConvention = (relativePath: string): boolean =>
   Str.Equivalence(relativePath, `history/reflections/${REFLECTION_TEMPLATE_BASENAME}`);
 
@@ -292,6 +292,11 @@ const isReflectionArtifact = (relativePath: string): boolean =>
  * `report` entry a human resolves; only machine-derivable artifacts (directory
  * markers, and a seeded manifest for a manifest-less packet) are planned as
  * `create`. Diagnosis never mutates, and it never invents prose.
+ *
+ * **Gotchas**
+ *
+ * The reflection template in `goals/_template` is authoring convenience, never a packet
+ * artifact: a conforming packet need not carry it.
  *
  * **Example** (Build the compile effect against an empty snapshot)
  *
@@ -413,8 +418,6 @@ const conflictedAdoptionPlan = (
     conflicts: [{ reason, message }],
   });
 
-// Present manifest → preserve + preservation row; present .gitkeep → generated retain;
-// anything else present → authored retain.
 const presentFileRow = (
   packetPath: string,
   file: PacketSnapshotFile,
@@ -501,8 +504,6 @@ const seededManifestRow = (
   }));
 };
 
-// Template artifact absent from the packet: manifest → generated seed; .gitkeep →
-// generated marker copy; prose → report row (diagnosis never invents prose).
 const missingTemplateRow = (
   snapshot: PacketSnapshot,
   archetype: PhaseArchetype,

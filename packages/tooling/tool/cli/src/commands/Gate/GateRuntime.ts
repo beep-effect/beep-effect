@@ -106,7 +106,6 @@ export class GateNotAPackage extends S.TaggedError<GateNotAPackage, { readonly b
   })
 ) {}
 
-// Build a layer into a context and run an effect in it, scoped to the effect.
 const withLayer = <A, E, R, ROut, E2, RIn>(
   effect: Effect.Effect<A, E, R>,
   layer: Layer.Layer<ROut, E2, RIn>
@@ -206,7 +205,6 @@ export const consoleSettings = Effect.fn("Gate.consoleSettings")(function* (flag
     selectAudience(flags),
     Audience.layer().pipe(Layer.provide(CurrentRuntimeEnv.layer))
   );
-  // Without a standard output to ask, the console stays plain.
   const stdio = yield* Effect.serviceOption(Stdio.Stdio);
   const color = yield* O.match(stdio, {
     onNone: () => Effect.succeed<ColorLevel>("none"),
@@ -499,7 +497,6 @@ const eventRequest = (run: EventRun, deadlineMs: O.Option<number>) =>
     ...O.match(deadlineMs, { onNone: () => ({}), onSome: (historyDeadlineMs) => ({ historyDeadlineMs }) }),
   });
 
-// History is read under the target's deadline inside the run, and written only after the console was printed.
 const recordWithHistory = (config: GateServicesConfig, run: EventRun, target: GateHistoryTarget) =>
   withLayer(
     runGate(eventRequest(run, O.some(target.config.deadlineMs)), Stream.make(run.output)).pipe(

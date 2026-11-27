@@ -486,8 +486,6 @@ const readDirectoryEntries = Effect.fnUntraced(function* (directory: string) {
   return yield* fs.readDirectory(directory).pipe(mapPlatformError("Failed to read directory", directory));
 });
 
-// Scan a directory with one per-entry collector, then sort kept files by name and
-// skipped entries by source name. Every scan-style command shares this shape.
 const collectScannedEntries = Effect.fnUntraced(function* <Skipped extends { readonly sourceName: string }>(
   directory: string,
   collectEntry: (

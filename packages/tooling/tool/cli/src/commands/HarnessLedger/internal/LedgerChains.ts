@@ -74,7 +74,6 @@ export const chainLength: {
   const byId = HashMap.fromIterable(A.map(rows, (row) => [row.rowId, row] as const));
   let length = 1;
   let cursor = head.previousRowId;
-  // Bounded by the row count so a malformed cycle cannot loop forever.
   while (O.isSome(cursor) && length <= A.length(rows)) {
     const previous = HashMap.get(byId, cursor.value);
     if (O.isNone(previous)) {

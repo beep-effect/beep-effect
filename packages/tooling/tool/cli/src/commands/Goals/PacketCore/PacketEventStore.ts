@@ -96,8 +96,6 @@ export class PacketStreamLocator extends S.Opaque<PacketStreamLocator, { readonl
   )
 ) {}
 
-// Called under the packet lock before any mutation can interpret an absent
-// canonical directory as a fresh stream. Recovery never guesses among backups.
 const refuseInterruptedForkReplacement = Effect.fn("PacketEventStore.refuseInterruptedForkReplacement")(function* (
   locator: PacketStreamLocator
 ) {
@@ -269,6 +267,14 @@ export interface PacketEventStoreShape {
 
 /**
  * Service tag for the per-event CAS store.
+ *
+ * **Gotchas**
+ *
+ * Every mutation first checks, under the packet lock, for an interrupted fork replacement, so an
+ * absent canonical event directory is never read as a fresh stream; recovery never guesses among
+ * backups. `append` checks only the lock's parent, `ops/`, before locking, because that parent
+ * stays stable across an event-directory replacement; the stream itself is checked after the
+ * lock is acquired.
  *
  * **Example** (Yield the store inside an Effect)
  *
@@ -520,8 +526,6 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
   });
 
   const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
-    // The lock's parent is stable across event-directory replacement. Check only
-    // that parent here; appendLocked still checks the stream after acquisition.
     const hasOperationsDirectory = yield* fs
       .exists(path.join(locator.packetPath, "ops"))
       .pipe(Effect.mapError((error) => PacketStreamError.new(locator.packet, error.message)));

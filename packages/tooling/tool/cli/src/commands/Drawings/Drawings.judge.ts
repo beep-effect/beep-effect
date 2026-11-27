@@ -137,8 +137,6 @@ const copyPhotos = Effect.fn("DrawingsJudge.copyPhotos")(function* (photosDir: s
   return A.map(photos, (name) => DrawingJudgeFile.make({ kind: "screenshot", path: `photos/${name}` }));
 });
 
-// The reviewer-requests section for a judge pack, from a round.json and the
-// inventory.json beside it, checked against the hash round.json records.
 const reviewSection = Effect.fn("DrawingsJudge.reviewSection")(function* (roundPath: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -252,8 +250,6 @@ export const buildDrawingJudgePack = Effect.fn("DrawingsJudge.buildPack")(functi
 
 const FENCED_JSON = /```json\s*\n([\s\S]*?)\n```/;
 
-// The judge's final message is a fenced json block followed by one line; a
-// bare JSON file is accepted too.
 const inventoryText = (text: string): string =>
   pipe(
     O.fromNullishOr(FENCED_JSON.exec(text)),
@@ -295,6 +291,11 @@ const inventoryProblems = Effect.fn("DrawingsJudge.inventoryProblems")(function*
 /**
  * Validate a judge reply against the drawing rubric and store it as the
  * round's `inventory.json`.
+ *
+ * **Gotchas**
+ *
+ * The reply may be the judge's final message (a fenced json block followed by one line) or a
+ * bare JSON file.
  *
  * **Example** (Reference the ingester)
  *

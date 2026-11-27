@@ -215,9 +215,6 @@ const processOperationErrorSkipReason = (error: FileProcessingOperationError): O
 const syntheticLibpffEngine = (): FileProcessingEngineShape =>
   makeLibpffFileProcessingEngine(LibpffFileProcessingEngineOptions.make({ syntheticExport: true }));
 
-// Static engine descriptors let skip/deferral records name their engine
-// without constructing a real engine, so a run that never dispatches to a
-// family never probes its binary, URL, or environment configuration.
 const processDescriptorFor = (
   engine: ProcessFilesOptions["engine"],
   format: FileFormatFamily
@@ -237,10 +234,6 @@ const processDescriptorFor = (
 
 type ProcessEngineResolver = (format: FileFormatFamily) => Effect.Effect<FileProcessingEngineShape, FilesCommandError>;
 
-// Engines are constructed lazily and memoized per family: only a source that
-// actually dispatches to a family (or an --engine forcing) pays that family's
-// construction cost, and a malformed configuration for an unused family can
-// never fail the run.
 const makeProcessEngineResolver = Effect.fn("Files.makeProcessEngineResolver")(function* (
   options: ProcessFilesOptions,
   outputDirectory: string
@@ -914,10 +907,6 @@ const processArchiveSuccessOutcome = (
   text: O.none<readonly [string, string]>(),
 });
 
-// Real pffexport children are relative to the engine's export root
-// (children/); the manifest contract requires output-root-relative paths, so
-// they are rebased here. The synthetic test engine already emits
-// output-root-relative children.
 const processChildRecord = (
   options: ProcessFilesOptions,
   prepared: ProcessPreparedSource,
@@ -1223,8 +1212,6 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
   yield* writeProcessStringFile(path.join(outputDirectory, "failures.jsonl"), A.join("")(failureLines));
 });
 
-// SPEC exit policy: configuration, output preparation, and engine discovery
-// failures exit 2 instead of the per-source fail-on-error exit 1.
 const asConfigPhaseFailure = <A, R>(
   effect: Effect.Effect<A, FilesCommandError, R>
 ): Effect.Effect<A, FilesCommandError, R> =>
@@ -1236,8 +1223,6 @@ const asConfigPhaseFailure = <A, R>(
     })
   );
 
-// Whether processPreparedSource would dispatch this source to an engine (as
-// opposed to resolving it with a descriptor-only skip).
 const processSourceDispatches = (options: ProcessFilesOptions, format: FileFormatFamily): boolean => {
   if (format === "docm" || format === "xls" || format === "xlsx" || format === "unknown") {
     return false;
@@ -1250,10 +1235,6 @@ const processSourceDispatches = (options: ProcessFilesOptions, format: FileForma
   return true;
 };
 
-// Read, hash, and process bounded chunks rather than retaining source bytes or
-// extracted payloads for the complete corpus. Representative identities omit
-// bytes, and each outcome writes its text and child manifest before only its
-// lightweight records are retained for the run summaries.
 const processCollectedSources = Effect.fn("Files.processCollectedSources")(function* (
   files: ReadonlyArray<ProcessCollectedFile>,
   outputDirectory: string,
@@ -1302,6 +1283,20 @@ const processCollectedSources = Effect.fn("Files.processCollectedSources")(funct
  * the output directory, process each file, and write per-artifact plus
  * summary outputs.
  *
+ * **Gotchas**
+ *
+ * - Configuration, output preparation and engine discovery failures exit 2, ahead of every
+ *   engine side effect: each required family's engine is constructed up front. A per-source
+ *   failure exits 1 under fail-on-error.
+ * - Engines are built lazily and memoized per family, so only a family that a source (or
+ *   `--engine`) dispatches to is probed, and a malformed configuration for an unused family
+ *   never fails the run. Skip and deferral records name their engine from a static descriptor.
+ * - Child paths in the manifest are output-root-relative; pffexport children, which are
+ *   relative to the engine's export root, are rebased.
+ * - Sources are read, hashed and processed in bounded chunks: each outcome writes its text and
+ *   child manifest before only its lightweight records are kept for the summaries, so neither
+ *   source bytes nor extracted payloads are retained for the whole corpus.
+ *
  * @category use-cases
  * @since 0.0.0
  */
@@ -1316,9 +1311,6 @@ export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(fu
   ).pipe(asConfigPhaseFailure);
   const engineFor = yield* makeProcessEngineResolver(options, outputDirectory);
 
-  // Engine construction failures are configuration failures; forcing the
-  // required families up front keeps SPEC's exit-2 phase ahead of every
-  // engine side effect instead of surfacing mid-dispatch.
   yield* Effect.forEach(
     A.dedupeWith(
       pipe(

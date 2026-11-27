@@ -15,15 +15,10 @@ import { Str, thunkFalse } from "@beep/utils";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 
-// D12 locality doctrine: only loopback hosts and `.localhost` names count as
-// local. An unparseable DATABASE_URL is not provably local, so it classifies
-// as non-local and requires --allow-non-local-data.
 const LOCAL_DATABASE_HOSTS = HashSet.fromIterable(["localhost", "127.0.0.1", "::1"]);
 
 const parseUrl = O.liftThrowable((value: string) => new URL(value));
 
-// WHATWG hostnames wrap IPv6 literals in brackets; strip them so `[::1]`
-// matches the loopback set.
 const canonicalHost = (hostname: string): string =>
   Str.startsWith("[")(hostname) && Str.endsWith("]")(hostname)
     ? Str.slice(1, Str.length(hostname) - 1)(hostname)
@@ -49,6 +44,12 @@ const renderManualDropStep = (resourceName: string): string => `DROP SCHEMA IF E
  * Data-phase policy helpers for labs deletion: exact schema-name derivation
  * (`lab_<snake(slug)>`), `DATABASE_URL` locality classification, ownership
  * proof, and the manual `DROP SCHEMA` step rendering.
+ *
+ * **Gotchas**
+ *
+ * `isLocalDatabaseUrl` counts only loopback hosts (`localhost`, `127.0.0.1`, `::1`, bracketed
+ * `[::1]` included) and `.localhost` names as local. An unparseable `DATABASE_URL` is not
+ * provably local, so it classifies as non-local and needs `--allow-non-local-data`.
  *
  * **Example** (Derive and verify a lab schema name)
  *

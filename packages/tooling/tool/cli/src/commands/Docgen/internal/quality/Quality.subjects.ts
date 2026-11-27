@@ -74,13 +74,6 @@ const EXCLUDED_SOURCE_SUFFIXES = [".stories.ts", ".stories.tsx"] as const;
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
-// docgen.json exclude patterns are developer configuration: a guard trip is a
-// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
-// let `*` match a dot-leading segment; negation and comment prefixes stay the
-// literal characters they were to it.
-// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
-// minimatch magic here where the old compiler read them literally; no live
-// pattern uses them (R2b oracle, `dialectMagic` section).
 const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 /**
@@ -771,8 +764,6 @@ const collectModuleSubject = ({
   );
 };
 
-// Re-export declarations are permanent export graph edges, not owner
-// declarations for quality scoring. The owning declaration remains the subject.
 const collectReExportSubjects = A.empty;
 
 const collectDirectExportSubjects = ({
@@ -880,12 +871,6 @@ export const finalizeSubject = Effect.fn("DocgenQuality.finalizeSubject")(functi
   });
 });
 
-/**
- * Result of collecting package subject candidates for docgen quality analysis.
- *
- * @category models
- * @since 0.0.0
- */
 class PackageSubjectCandidateResult extends S.Opaque<
   PackageSubjectCandidateResult,
   { readonly brand: unique symbol }
@@ -904,6 +889,15 @@ class PackageSubjectCandidateResult extends S.Opaque<
 
 /**
  * Collect exported-symbol JSDoc subject candidates for one package.
+ *
+ * **Gotchas**
+ *
+ * - A re-export declaration is an export graph edge, never a subject: the owning declaration
+ *   is the one scored.
+ * - `docgen.json` exclude patterns compile as minimatch globs with dot matching and no negation
+ *   or comments, so `*` matches a dot-leading segment and a leading `!` or `#` is literal.
+ *   `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` are glob magic. A pattern that
+ *   fails to compile is a wiring defect.
  *
  * **Example** (Collect docgen quality subjects)
  *

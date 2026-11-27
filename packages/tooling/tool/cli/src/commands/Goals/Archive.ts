@@ -174,7 +174,6 @@ export const renderArchiveDryRun = (input: {
   `- receipt: ${ARCHIVE_RECEIPTS_DIR}/${input.plan.planId}.json`,
 ];
 
-// Links written in files the plan deletes or regenerates are dropped with them.
 const rewritableLinks = (plan: ArchivePlan) => {
   const replaced = HashSet.fromIterable(
     A.flatMap(plan.entries, (entry) => A.append(entry.remove, `${entry.root}/${entry.slug}/README.md`))
@@ -189,6 +188,11 @@ const rewritableLinks = (plan: ArchivePlan) => {
  * Execute a verified archive plan: push, verify, rewrite inbound links,
  * tombstone, and write the receipt. Nothing on `main` changes unless every
  * mirrored tree hash matches.
+ *
+ * **Gotchas**
+ *
+ * Inbound links written in files the plan deletes or regenerates are dropped with them, not
+ * rewritten.
  *
  * **Example** (Build the execution effect)
  *

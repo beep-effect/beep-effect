@@ -128,6 +128,21 @@ export interface HarnessLedgerServiceShape {
 /**
  * Service tag for harness ledger operations.
  *
+ * **Gotchas**
+ *
+ * - `disposition` checks for a successor and appends under the ledger write fence: interleaved
+ *   with another writer, two dispositions of one head would fork the chain. `pruneProposals`
+ *   with `write` reads the blocking heads and appends under the same fence, so one surface is
+ *   never proposed twice.
+ * - An open `proposed` head blocks a fresh proposal under any regime; a human decision blocks
+ *   only while it stands under the current harness hash, because evidence gathered under an older
+ *   harness has expired. A tombstone never blocks. A decision is dated by `decidedUnder`; a row
+ *   written before that key existed falls back to its fingerprint's harness hash.
+ * - A window with no observed session is no evidence, not zero touches, and proposes nothing. Any
+ *   undecodable line also proposes nothing: it may have carried a touch, so the touch set is
+ *   incomplete even when the line disqualifies only its own session.
+ * - Proposal evidence names the regime by a harness-hash prefix, never by a path.
+ *
  * **Example** (Proposing through the service)
  *
  * ```ts
@@ -167,9 +182,6 @@ const proposeImpl = Effect.fn("HarnessLedger.propose")(function* (options: Harne
   return row;
 });
 
-// Runs under the ledger write fence: the successor check and the append must
-// not interleave with another writer, or two dispositions of one head fork
-// the chain.
 const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function* (
   options: HarnessLedgerDispositionOptions
 ) {
@@ -192,8 +204,6 @@ const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function*
       ),
     { concurrency: 1 }
   );
-  // The row keeps the evidence's fingerprint; the decision belongs to the
-  // harness it is made under, which may have changed since the proposal.
   const decidedUnder = yield* captureHarnessFingerprint(options.repoRoot, O.none(), O.none()).pipe(
     Effect.flatMap(deriveHarnessHash),
     Effect.mapError(HarnessLedgerIoError.wrap("Failed to derive the harness hash of this decision."))
@@ -235,9 +245,6 @@ const passesFilter = <A>(filter: O.Option<A>, predicate: (value: A) => boolean):
 const listImpl = Effect.fn("HarnessLedger.list")(function* (options: HarnessLedgerListOptions) {
   const rows = yield* readLedgerRows(options.repoRoot);
   const current = yield* captureHarnessFingerprint(options.repoRoot, options.modelId, options.reasoningEffort);
-  // An unset --model / --reasoning-effort is not compared: substitute the
-  // row's own recorded component so only supplied components and the harness
-  // hashes can make a row stale.
   const entries = yield* Effect.forEach(
     chainHeads(rows),
     (head) =>
@@ -279,7 +286,6 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
   windowEnd: DateTime.Utc
 ) {
   const createdAt = yield* DateTime.now;
-  // Names the regime by a hash prefix, never by a path.
   const evidence = `zero touches across ${observed.sessionsObserved} sessions under harness hash ${Str.slice(
     0,
     12
@@ -309,12 +315,6 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
   );
 });
 
-// Why a chain head keeps its target surface from a fresh proposal: an open
-// `proposed` head blocks under any regime; a human decision blocks only while
-// it was recorded under the current harness hash, because evidence gathered
-// under an older harness has expired. A tombstone never blocks. A decision is
-// dated by `decidedUnder`; a row written before that key existed falls back to
-// the harness hash of its fingerprint.
 const ProposalBlock = LiteralKit(["open-proposal", "standing-decision"]);
 type ProposalBlock = typeof ProposalBlock.Type;
 
@@ -339,7 +339,6 @@ const blockOf = Effect.fn("HarnessLedger.blockOf")(function* (head: HarnessLedge
   });
 });
 
-// Target surfaces of every chain head that blocks a fresh proposal, split by why.
 const blockedTargets = Effect.fn("HarnessLedger.blockedTargets")(function* (
   rows: ReadonlyArray<HarnessLedgerRow>,
   harnessHash: HarnessHash
@@ -370,9 +369,6 @@ const blockedTargets = Effect.fn("HarnessLedger.blockedTargets")(function* (
   };
 });
 
-// Reads blocking chain heads and plans fresh proposals without writing. With
-// `write` it runs under the ledger write fence, so the read and the append
-// cannot interleave with another writer and propose one surface twice.
 const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(function* (
   options: HarnessLedgerPruneOptions,
   fingerprint: HarnessFingerprint,
@@ -382,9 +378,6 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
   const rows = yield* readLedgerRows(options.repoRoot);
   const blocked = yield* blockedTargets(rows, observed.harnessHash);
   const untouched = A.filter(candidates, (candidate) => !HashSet.has(observed.touched, candidate.surfaceId));
-  // No observed session is no evidence, not zero touches: propose nothing. An
-  // undecodable line may have carried a touch, so any corruption also leaves the
-  // touch set incomplete even when it only disqualifies its own session.
   const zeroTouch =
     observed.sessionsObserved === 0 || observed.undecodableLines > 0 ? A.empty<PruneSurfaceCandidate>() : untouched;
   const notOpen = A.filter(zeroTouch, (candidate) => !HashSet.has(blocked.open, candidate.surfaceId));
@@ -396,8 +389,6 @@ const planPruneProposals = Effect.fn("HarnessLedger.planPruneProposals")(functio
   const sharedHarnessWindowFull = A.every(R.values(observed.sessionsByAgentKind), (count) => count >= 30);
   return HarnessLedgerPruneReport.make({
     sharedHarnessWindowFull,
-    // Transcript reconciliation is independently reported. Missing reconciliation
-    // never labels a zero-touch candidate genuinely unused.
     nonUseQualified: false,
     windowSessions: options.windowSessions,
     harnessHash: observed.harnessHash,
@@ -449,8 +440,6 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
     options.agentKind,
     hookPulseNamespaceCutoverMillis(namespace)
   );
-  // A zero-touch observation remains advisory until tool identities and surface
-  // coverage are reconciled. No incomplete collection can persist a non-use claim.
   return yield* planPruneProposals(options, fingerprint, candidates, observed);
 });
 

@@ -388,7 +388,6 @@ const decodeManifest = S.decodeUnknownEffect(ExplorationManifest);
 const isExplorationStage = S.is(ExplorationStage);
 const isExplorationStatus = S.is(ExplorationStatus);
 const STATUS_SECTION_ID = SectionId.make({ key: "exploration-status", commentStyle: CommentStyle.html });
-// The README status markers predate `@beep/managed-section`, so they keep their literal spelling.
 const STATUS_DIALECT = LiteralMarkerDialect.make({
   phrase: SectionDialect.default.phrase,
   styles: [CommentStyle.html],
@@ -428,9 +427,6 @@ const authoredStatusNote = (line: string): O.Option<string> => {
   );
 };
 
-// The Status section's lines outside its generated region, or `None` when the
-// region's markers are malformed (duplicated, orphaned, overlapping or
-// unterminated). A section without a generated region keeps every line.
 const linesOutsideGeneratedStatus = (section: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> => {
   const text = A.join(section, "\n");
   return O.map(Result.getSuccess(SectionDocument.parseResult(text, STATUS_DIALECT)), (document) =>
@@ -793,8 +789,6 @@ export const explorationProjectionDriftPaths: {
 const projectionIssueLines = (projection: ExplorationProjection): ReadonlyArray<string> =>
   A.map(A.sort(projection.issues, issueOrder), (issue) => `${issue.path}: ${issue.detail}`);
 
-// `CliReportedExit` is silent at the runtime boundary, so every refusal must
-// print its evidence on stderr first or the operator sees only exit 1.
 const refuseIssues = Effect.fn("Explore.refuseIssues")(function* (projection: ExplorationProjection) {
   const summary = `${A.length(projection.issues)} underivable projection input(s); repair the packet inputs, never ${EXPLORATION_ATLAS_PATH}`;
   yield* Console.error(`${ATLAS_LOG_PREFIX} ${summary}:`);
@@ -897,10 +891,6 @@ export const checkExplorationAtlas = Effect.fn("Explore.checkExplorationAtlas")(
   const local = yield* fs.readFileString(path.join(projection.root, EXPLORATION_ATLAS_PATH)).pipe(Effect.option);
   const drift = explorationProjectionDriftPaths(projection, local);
   if (A.some(drift, isTrackedProjectionPath)) return yield* refuseDrift(drift);
-  // Only the git-ignored Atlas drifts: a pull left it stale or someone authored into it. It may
-  // carry no authored doctrine and no hosted lane carries it, so the check rewrites it from the
-  // projection instead of failing a red only local runs could hit; tracked files are never
-  // written here.
   if (A.isReadonlyArrayNonEmpty(drift)) {
     yield* writeContainedFileString(
       projection.root,

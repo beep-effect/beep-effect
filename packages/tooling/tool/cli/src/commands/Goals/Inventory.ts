@@ -136,9 +136,6 @@ const scanGoalPacket = Effect.fn("Goals.scanGoalPacket")(function* (
   const readStat = fs.stat(packetPath).pipe(Effect.asSome);
   const stat = yield* mode === "strict" ? readStat : readStat.pipe(Effect.orElseSucceed(O.none));
   if (O.isNone(stat) || stat.value.type !== "Directory") return O.none<GoalPacketRecord>();
-  // E11: an empty slug directory is an abandoned publish claim, not a packet.
-  // Only a directory that lists successfully as empty is hidden; one that cannot be
-  // listed is still a packet (permissive mode reports it, strict mode fails).
   const readEntries = fs.readDirectory(packetPath);
   const listed = yield* mode === "strict" ? Effect.asSome(readEntries) : Effect.option(readEntries);
   if (O.exists(listed, A.isReadonlyArrayEmpty)) return O.none<GoalPacketRecord>();
@@ -217,7 +214,9 @@ export const listExplorationPacketFiles = Effect.fn("Goals.listExplorationPacket
  *
  * The `_template` scaffold and hidden editor or tooling directories are excluded, and a missing
  * `goals/` directory yields an empty scan rather than a failure, so the goals commands behave the
- * same in a repository that has no packets yet.
+ * same in a repository that has no packets yet. A slug directory that lists as empty is an
+ * abandoned publish claim, not a packet; one that cannot be listed is still a packet, which this
+ * scan reports and {@link listGoalPacketsStrict} fails on.
  *
  * **Example** (Scan the current working tree)
  *
@@ -283,8 +282,9 @@ export const isJsonRecord = (value: unknown): value is Readonly<Record<string, u
  *
  * **Details**
  *
- * Parsing is JSONC-tolerant, so comments and trailing commas survive, but the result must still be a
- * JSON object: arrays and scalars are rejected the same way a syntax error is.
+ * Parsing takes jsonc-parser's default reading: comments are allowed and trailing commas are
+ * rejected. The result must still be a JSON object: arrays and scalars are rejected the same way
+ * a syntax error is.
  *
  * **Example** (Distinguish valid and invalid manifest text)
  *
@@ -304,7 +304,6 @@ export const isJsonRecord = (value: unknown): value is Readonly<Record<string, u
 export const parseGoalManifestText = (text: string): O.Option<unknown> =>
   Jsonc.parseResult(text, strictJson).pipe(Result.getSuccess, O.filter(isJsonRecord));
 
-// jsonc-parser's default reading: comments allowed, trailing commas rejected.
 const strictJson = JsoncParseOptions.make({ allowTrailingComma: false });
 
 const LIFECYCLE_LINE_PATTERN = /^(Lifecycle:[ \t]*`?)([A-Za-z0-9_-]+)(`?.*)$/m;

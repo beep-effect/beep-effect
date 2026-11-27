@@ -74,20 +74,16 @@ const page = (body: string, status = 200) => HttpServerResponse.text(body, { sta
 
 type Outcome = GitHubAppRegistrationOutcome;
 
-// One safe terminal line and one safe page per callback outcome; never a credential or payload.
 interface OutcomeReport {
   readonly body: string;
   readonly line: Effect.Effect<void>;
   readonly status: number;
 }
 
-// The per-App divergences of the shared flow, kept exactly as each App's launcher emitted them.
 interface AppProfile {
-  // Whether `op-doctor` runs before the store-failure line is printed.
   readonly diagnoseBeforeReport: boolean;
   readonly itemTitle: string;
   readonly listening: string;
-  // Whether the vault item records the App slug (and the conversion must carry one).
   readonly recordsSlug: boolean;
   readonly report: (outcome: Outcome) => OutcomeReport;
 }
@@ -126,8 +122,6 @@ const mintTitle = "beep-knowledge-mint GitHub App";
 const constEmpty = constant(Str.empty);
 const slugOf = (slug: O.Option<string>) => O.getOrElse(slug, constEmpty);
 
-// One profile for every App whose vault item records its slug: only the log tag, the item title
-// and the Stored line's closing instruction differ between them.
 const sluggedProfile = (tag: string, itemTitle: string, storedNext: string): AppProfile => ({
   itemTitle,
   recordsSlug: true,
@@ -169,8 +163,6 @@ const knowledgeMintProfile = sluggedProfile(
   "Install it, record installation_id, then press Ctrl-C."
 );
 
-// The InfraGithub deploy identity (goals/infra-alchemy-rebuild). After the mint, the operator follows the
-// "InfraGithub" section of docs/runbooks/alchemy-infra.md: install, then the infra-github-prod environment.
 const infraGithubProfile = sluggedProfile(
   "infra-github",
   "beep-infra-github GitHub App",
@@ -203,9 +195,7 @@ const vaultTemplate = (profile: AppProfile, converted: GitHubAppManifestConversi
     ],
   });
 
-// No secret in argv, stdout, stderr, the callback page, or a temporary file. The op CLI needs a
-// real pipe to detect a JSON template, so cat bridges the in-memory stdin stream into one. The
-// writer's command is a positional shell argument, never interpolated into the script.
+// decision: github-app-credentials-reach-op-through-a-pipe
 const storeCommand = (writer: GitHubAppVaultWriter, template: string) =>
   ChildProcess.make(
     "bash",
@@ -218,7 +208,6 @@ const storeCommand = (writer: GitHubAppVaultWriter, template: string) =>
     }
   );
 
-// A spawn failure counts as a failed exit; the caller only needs to know the step did not succeed.
 const exitCodeOf = (command: ChildProcess.Command) =>
   ChildProcessSpawner.ChildProcessSpawner.use((spawner) => spawner.exitCode(command)).pipe(
     Effect.orElseSucceed(constant(127))
@@ -342,7 +331,6 @@ export const preflightGitHubAppVaultWriter = Effect.fn("GitHubAppMint.preflight"
   }
 });
 
-// One safe, count-only diagnosis for the operator; a missing op-doctor changes nothing.
 const diagnose = ChildProcessSpawner.ChildProcessSpawner.use((spawner) =>
   spawner.exitCode(ChildProcess.make("op-doctor", [], { stdout: "inherit", stderr: "ignore", extendEnv: true }))
 ).pipe(Effect.ignore);
@@ -374,7 +362,6 @@ const convertAndStore = Effect.fn("GitHubAppMint.convertAndStore")(function* (
     : GitHubAppRegistrationOutcome.cases.StoreFailed.make({ slug, exitCode });
 });
 
-// The outcome's line, with op-doctor before or after it on a store failure as the App's launcher did.
 const reportOutcome = (profile: AppProfile, outcome: Outcome) => {
   const { line, body, status } = profile.report(outcome);
   const diagnosed = profile.diagnoseBeforeReport ? Effect.andThen(diagnose, line) : Effect.andThen(line, diagnose);
@@ -395,6 +382,11 @@ const escapeAttribute = (value: string) =>
  * GET whose `state` matches, exchanges the code, and stores the credentials. Any
  * other host, method, path, state, or a second callback is rejected with 400.
  * The credentials go through `writer`, which `serve` has already preflighted.
+ *
+ * **Gotchas**
+ *
+ * Each callback outcome prints one terminal line and serves one page, and neither ever
+ * carries a credential or payload.
  *
  * **Example** (Build a handler)
  *
@@ -439,7 +431,6 @@ export const makeGitHubAppMintHandler = ({
       if (url.pathname !== "/callback" || url.searchParams.get("state") !== nonce || O.isNone(code)) {
         return page("Invalid or already used callback", 400);
       }
-      // Claimed atomically before the first conversion step, so a concurrent second callback is refused.
       if (yield* Ref.getAndSet(attempted, true)) {
         return page("Invalid or already used callback", 400);
       }
@@ -481,6 +472,12 @@ export interface GitHubAppMintShape {
 /**
  * Owns the human-operated GitHub App manifest registration flow.
  *
+ * **Details**
+ *
+ * The per-App divergences of the shared flow (log tag, vault item title, the Stored line's
+ * closing instruction, and whether `op-doctor` runs before or after a store-failure line) are
+ * kept exactly as each App's launcher emitted them.
+ *
  * **Example** (Print a manifest)
  *
  * ```ts
@@ -521,10 +518,8 @@ const makeGitHubAppMint = Effect.fn("GitHubAppMint.make")(function* (owner: stri
 
   const serve: GitHubAppMintShape["serve"] = Effect.fn("GitHubAppMint.serve")(function* (app, opCli) {
     const text = yield* manifestText(app);
-    // manifestText already decoded this text as a manifest, so re-encoding it cannot fail; a failure is a defect.
     const manifestJson = yield* decodeJson(text).pipe(Effect.flatMap(encodeJson), Effect.orDie);
     const nonce = yield* SecureRandom.SecureRandom.use((random) => random.uuidV4()).pipe(Effect.provide(context));
-    // Before anything listens: an App registered with no writable vault loses its private key.
     const writer = yield* resolveGitHubAppVaultWriter(opCli).pipe(Effect.provide(context));
     yield* preflightGitHubAppVaultWriter(writer, nonce).pipe(Effect.provide(context));
     yield* Console.log(`Vault writer ${writer.command} (${writer.source}) can create and delete items in ${VAULT}.`);

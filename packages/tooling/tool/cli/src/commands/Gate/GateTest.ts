@@ -36,8 +36,6 @@ import type { ConsoleSettings } from "@beep/repo-gate-run/GateConsole";
 import type { runCheckGate } from "./GateCheck.ts";
 import type { CapturedRun } from "./GateRuntime.ts";
 
-// The record the adapter wrote during this run: one generated at or after
-// the run started. An older record belongs to an earlier run.
 const freshRecord = Effect.fnUntraced(function* (
   location: PackageLocation,
   target: RecordTarget,
@@ -86,6 +84,11 @@ const recordCapturedRun = Effect.fnUntraced(function* (input: {
 /**
  * Run the `test` gate of the package in `dir`, print its console and fail
  * with the test script's exit code when it is not zero.
+ *
+ * **Gotchas**
+ *
+ * Only a record the adapter generated at or after the run started counts; an older record
+ * belongs to an earlier run.
  *
  * **Example** (Test a package)
  *

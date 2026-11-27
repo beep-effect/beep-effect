@@ -57,8 +57,6 @@ import type { IntakeAttachmentOutcome, IntakePick } from "./Drawings.intake.sche
 const $I = $RepoCliId.create("commands/Drawings/Drawings.intake");
 
 const FILE_ATTACHMENT = "#microsoft.graph.fileAttachment";
-// Graph answers 404 for an unknown message id and 400 for an id of the wrong kind (a conversation id as a
-// message id). A 400 from the conversation listing is a refused query, never "not found".
 const MESSAGE_NOT_FOUND_STATUSES = HashSet.make(400, 404);
 const LISTING_NOT_FOUND_STATUSES = HashSet.make(404);
 const CONVERSATION_PAGE_SIZE = 50;
@@ -101,8 +99,6 @@ const addressOf: (recipient: O.Option<GraphRecipient>) => O.Option<string> = flo
 const rawSenderOf = (message: GraphMessage): O.Option<string> =>
   O.orElse(addressOf(message.from), () => addressOf(message.sender));
 
-// Drafts are never a reviewer's input; the mailbox's own mail (sheets we sent, replies from the outbox) is
-// set aside unless the request includes it. A mailbox given as a user id matches no address and sets nothing aside.
 const isEligible =
   (mailbox: string, includeOwn: boolean) =>
   (message: GraphMessage): boolean => {
@@ -113,7 +109,6 @@ const isEligible =
     return !O.getOrElse(message.isDraft, () => false) && (includeOwn || !sentByMailbox);
   };
 
-// A plain file name: no separators, control or shell-hostile characters, no leading dots, never a record name.
 const sanitizedName: (name: string) => string = flow(
   Str.replaceAll(UNSAFE_NAME_PATTERN, "_"),
   Str.replaceAll(WHITESPACE_RUN_PATTERN, " "),
@@ -154,7 +149,6 @@ type RowFields = {
 
 type IntakeRow = (outcome: IntakeAttachmentOutcome, fields: RowFields) => IntakeAttachment;
 
-// The intake directory as scanned: its real path, the files in it by content hash, and every taken name.
 type OutDir = {
   readonly realOut: string;
   readonly byHash: MutableHashMap.MutableHashMap<Sha256Hex, string>;
@@ -182,7 +176,6 @@ const isItemAttachment = (attachment: GraphAttachment): boolean =>
   O.getOrElse(attachment["@odata.type"], () => FILE_ATTACHMENT) !== FILE_ATTACHMENT;
 const isInlineAttachment = (attachment: GraphAttachment): boolean => O.getOrElse(attachment.isInline, () => false);
 
-// The outcome that skips an attachment without downloading it: an item, an inline file, or a declared size over the cap.
 const skipOutcomeOf = (maxBytes: number): ((attachment: GraphAttachment) => O.Option<IntakeAttachmentOutcome>) =>
   Match.type<GraphAttachment>().pipe(
     Match.when(isItemAttachment, () => O.some<IntakeAttachmentOutcome>("skipped-item")),
@@ -194,7 +187,6 @@ const skipOutcomeOf = (maxBytes: number): ((attachment: GraphAttachment) => O.Op
     Match.orElse(O.none<IntakeAttachmentOutcome>)
   );
 
-// Content already in the directory: unchanged when it holds the wanted name, otherwise a duplicate of its holder.
 const knownRow = (
   row: IntakeRow,
   fields: { readonly bytes: number; readonly sha256: Sha256Hex },
@@ -255,8 +247,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
       Effect.mapError(mailError("Could not read the message"))
     );
 
-  // Newest-first is applied after the listing, so a conversation cut off at the page cap could hide its
-  // newest message: a page link left after the last allowed page refuses the intake instead.
   const collectPages = (
     mailbox: string,
     request: M365ListMessagesRequest,
@@ -285,8 +275,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
       })
     );
 
-  // Graph refuses `$orderby` on a property the `$filter` does not name, so the newest-first order, and the
-  // draft and own-mail exclusion, are applied here: the listing spans every folder, Sent Items and Drafts included.
   const asConversation = Effect.fnUntraced(function* (
     mailbox: string,
     id: string,
@@ -321,8 +309,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
     return O.some({ message, conversationSize: O.some(A.length(candidates)), setAside });
   });
 
-  // The id prefix is only a hint: try the kind it suggests first, then the other. A Graph failure of the
-  // first lookup does not stop the second; when neither finds the item, the first failure is reported.
   const resolve = Effect.fn("DrawingIntake.resolve")(function* (request: IntakeRequest) {
     const { id } = request.ref;
     const message = asMessage(request.mailbox, id);
@@ -354,7 +340,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
     );
   });
 
-  // Provenance is recorded as far as Graph reports it; a missing or non-SMTP field never stops the pull.
   const factsOf = Effect.fnUntraced(function* (message: GraphMessage) {
     const from = rawSenderOf(message);
     const fromEmail = yield* O.match(from, {
@@ -383,7 +368,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
       )
     );
 
-  // Every existing file in the intake directory, by content hash (first name wins), plus every taken name.
   const scanOut = Effect.fnUntraced(function* (outDir: string) {
     const pipe1 = yield* fs.readDirectory(outDir).pipe(Effect.mapError(io(`Could not list "${outDir}".`)));
     const names = A.sort(pipe1, Order.String);
@@ -419,7 +403,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
         })
       );
 
-  // Write new content under its sanitized name, or that name tagged with a short hash when another file holds it.
   const save = Effect.fnUntraced(function* (out: OutDir, wanted: string, sha256: Sha256Hex, bytes: Uint8Array) {
     const fileName = MutableHashSet.has(out.taken, wanted) ? withShortHash(wanted, sha256) : wanted;
     if (MutableHashSet.has(out.taken, fileName)) {
@@ -427,7 +410,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
         `"${fileName}" already exists in "${out.realOut}" with other content; nothing is overwritten.`
       );
     }
-    // `wx` fails rather than replace a file that appeared since the scan.
     yield* fs
       .writeFile(path.join(out.realOut, fileName), bytes, { flag: "wx" })
       .pipe(Effect.mapError(io(`Could not write "${fileName}".`)));
@@ -436,7 +418,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
     return fileName;
   });
 
-  // Hash downloaded bytes and keep them unless they are over the cap or their content is already in the directory.
   const keep = Effect.fnUntraced(function* (
     out: OutDir,
     maxBytes: number,
@@ -472,8 +453,6 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
       )
       .pipe(Effect.mapError(mailError("Could not list the message's attachments")));
 
-    // Re-check on real paths, before and after creating the directory, so a symlink inside the
-    // corpus can neither lead the writes out of it nor create a directory outside it.
     const realRoot = yield* realPathOf(root);
     const outsideRoot = (real: string) =>
       real !== realRoot && !isWithinRoot(path, realRoot, real)
@@ -531,6 +510,26 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
  * attachments are hashed, deduped against the files already in the directory,
  * and written without ever replacing a file. The record goes to
  * `intake.json`, or `intake-<n>.json` when earlier records exist.
+ *
+ * **Gotchas**
+ *
+ * - The id's prefix only picks which kind is tried first. A Graph failure of the first lookup
+ *   does not stop the second; when neither finds the item, the first failure is reported.
+ * - On the message lookup, Graph answers 404 for an unknown id and 400 for an id of the wrong
+ *   kind, and both read as not found. A 400 from the conversation listing is a refused query.
+ * - Graph refuses `$orderby` on a property the `$filter` does not name, so newest-first and the
+ *   draft and own-mail exclusion are applied after the listing. A conversation that outruns
+ *   the page cap therefore refuses the intake instead of risking a hidden newest message.
+ * - A mailbox given as a user id matches no sender address, so it sets nothing aside.
+ * - Provenance is recorded as far as Graph reports it; a missing or non-SMTP field never stops
+ *   the pull.
+ * - A saved name is a plain file name (no separators, control or shell-hostile characters, no
+ *   leading dots) and never an intake record name. New content takes that name, or the name
+ *   tagged with a short hash when another file holds it; content already in the directory
+ *   keeps the first name that holds it.
+ * - The output directory is checked on real paths before and after it is created, so a
+ *   symlink inside the corpus can neither lead the writes out of it nor create a directory
+ *   outside it.
  *
  * **Example** (Reference the service)
  *

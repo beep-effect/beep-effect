@@ -43,8 +43,6 @@ const getJsDocs = (node: Node): ReadonlyArray<JSDoc> => {
     return getDeclaredJsDocs(node);
   }
 
-  // `export default <expression>` resolves to the expression itself; its JSDoc
-  // lives on the owning ExportAssignment statement.
   const parent = node.getParent();
   return parent !== undefined && Node.isExportAssignment(parent) ? parent.getJsDocs() : A.empty();
 };
@@ -342,13 +340,6 @@ const analyzeModuleFileoverview = (
   );
 };
 
-// docgen.json exclude patterns are developer configuration: a guard trip is a
-// wiring defect. The dot dialect keeps the previous matcher's behaviour, which
-// let `*` match a dot-leading segment; negation and comment prefixes stay the
-// literal characters they were to it.
-// `?`, `[..]`, `{a,b}`, `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are
-// minimatch magic here where the old compiler read them literally; no live
-// pattern uses them (R2b oracle, `dialectMagic` section).
 const excludeGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
 
 const sourceFileMatchesExclude = (
@@ -449,6 +440,14 @@ const computeAnalysisSummary = (analyses: ReadonlyArray<DocgenExportAnalysis>): 
 
 /**
  * Analyze required JSDoc metadata for one workspace package.
+ *
+ * **Gotchas**
+ *
+ * - `docgen.json` exclude patterns are developer configuration: one that fails to compile is a
+ *   defect, not a typed failure.
+ * - They compile as minimatch globs with dot matching and no negation or comments, so `*`
+ *   matches a dot-leading segment and a leading `!` or `#` is literal. `?`, `[..]`, `{a,b}`,
+ *   `+(..)`, `\` and an in-segment `**` (`src/**.ts`) are glob magic.
  *
  * **Example** (Analyze package JSDoc metadata)
  *
