@@ -8,10 +8,6 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import { Dataset } from "@beep/rdf/Rdf";
-// Subpath imports, never the `@beep/schema` root barrel: this module is in the graph
-// worker's import graph, and the barrel drags a markdown stack behind it whose browser
-// build calls `document.createElement` at module top level — which kills a real worker.
-// BrowserWorkerImportGraph.test.ts guards exactly this.
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.ts";
@@ -21,6 +17,7 @@ import type * as Result from "effect/Result";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 
+// decision: worker-graph-imports-skip-root-barrels
 const WorkerCommandKind = LiteralKit([
   "parseTurtle",
   "diffDatasets",
@@ -240,10 +237,6 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
  */
 export type WorkerResult = typeof WorkerResult.Type;
 
-// The exported encoders below wrap these rather than being them: `S.encodeResult`
-// returns a function carrying an optional options parameter. This stays local
-// because callers never need a data-last form. Nobody passes encode options
-// across a worker boundary.
 const encodeWorkerCommandResult = S.encodeResult(WorkerCommand);
 const encodeWorkerResultResult = S.encodeResult(WorkerResult);
 
@@ -262,6 +255,11 @@ const encodeWorkerResultResult = S.encodeResult(WorkerResult);
  *
  * Both ends must therefore speak the *encoded* form, and both must go through
  * these four functions. Encoding at the boundary is what makes the wire the wire.
+ *
+ * **Gotchas**
+ *
+ * Takes no encode options: nothing passes them across a worker boundary. Call
+ * `S.encodeResult(WorkerCommand)` directly when options are needed.
  *
  * **Example** (Reference the command codec pair)
  *
@@ -282,6 +280,12 @@ export const encodeWorkerCommand = (
 /**
  * Decode a `WorkerCommand` that has crossed the worker boundary.
  *
+ * **Gotchas**
+ *
+ * Typed as a one-argument function that takes no `ParseOptions`: with an `unknown`
+ * input no predicate could tell a value from an options bag. Call
+ * `S.decodeUnknownResult(WorkerCommand)` directly when options are needed.
+ *
  * **Example** (Reference the command decoder)
  *
  * ```ts
@@ -293,8 +297,6 @@ export const encodeWorkerCommand = (
  * @category codecs
  * @since 0.0.0
  */
-// unary by contract: `options` stays reachable through `S.decodeUnknownResult(WorkerCommand)`;
-// a dual is undecidable here because `input` is `unknown`.
 export const decodeWorkerCommand: (input: unknown) => Result.Result<WorkerCommand, S.SchemaError> =
   S.decodeUnknownResult(WorkerCommand);
 
@@ -306,6 +308,11 @@ export const decodeWorkerCommand: (input: unknown) => Result.Result<WorkerComman
  * The return path had the same defect in mirror image: the worker posted the
  * decoded result and the parent never decoded it, so the projection arrived
  * de-prototyped — a plain object wearing the shape of a domain value.
+ *
+ * **Gotchas**
+ *
+ * Takes no encode options: nothing passes them across a worker boundary. Call
+ * `S.encodeResult(WorkerResult)` directly when options are needed.
  *
  * **Example** (Reference the result encoder)
  *
@@ -324,6 +331,12 @@ export const encodeWorkerResult = (result: WorkerResult): Result.Result<typeof W
 /**
  * Decode a `WorkerResult` received from the worker.
  *
+ * **Gotchas**
+ *
+ * Typed as a one-argument function that takes no `ParseOptions`: with an `unknown`
+ * input no predicate could tell a value from an options bag. Call
+ * `S.decodeUnknownResult(WorkerResult)` directly when options are needed.
+ *
  * **Example** (Reference the result decoder)
  *
  * ```ts
@@ -335,8 +348,6 @@ export const encodeWorkerResult = (result: WorkerResult): Result.Result<typeof W
  * @category codecs
  * @since 0.0.0
  */
-// unary by contract: `options` stays reachable through `S.decodeUnknownResult(WorkerResult)`;
-// a dual is undecidable here because `input` is `unknown`.
 export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult, S.SchemaError> =
   S.decodeUnknownResult(WorkerResult);
 

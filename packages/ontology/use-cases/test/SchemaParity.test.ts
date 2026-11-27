@@ -76,12 +76,7 @@ const schemaRoundTripCases: ReadonlyArray<readonly [string, S.Codec<unknown, unk
   ["TurtleCodecError", TurtleCodecError],
 ];
 
-// The batch protocols multiply Quad-heavy components (session × delta ×
-// operations with the partition coherence filter), so native generation
-// discards far more aggressively there than on the flat protocols. Budgets
-// sit well above the observed exhaustion thresholds under rotating seeds;
-// runs are never reduced.
-const deepDiscardBudgets: Partial<Record<string, number>> = {
+const quadHeavyBatchDiscardBudgets: Partial<Record<string, number>> = {
   ApplyOntologyBatchCommand: 10_000,
   ApplyOntologyBatchResult: 50_000,
 };
@@ -98,7 +93,7 @@ describe("@beep/ontology-use-cases schema parity", () => {
         const decoded = Result.getOrThrow(decode(encoded));
         pipe(equivalent(decoded, value), assertTrue);
       },
-      { arbitrary: { ...fcRuns(25), maxDiscards: fcRuns(25).runs * (deepDiscardBudgets[name] ?? 100) } }
+      { arbitrary: { ...fcRuns(25), maxDiscards: fcRuns(25).runs * (quadHeavyBatchDiscardBudgets[name] ?? 100) } }
     );
   }
 

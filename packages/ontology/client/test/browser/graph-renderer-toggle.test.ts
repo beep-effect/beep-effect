@@ -32,8 +32,6 @@ import { vi } from "vitest";
 import type { CosmosRenderHandle } from "@beep/cosmos";
 import type { Graph3DRenderHandle } from "@beep/graph-3d/browser";
 
-// These observers call the real factories and methods: WebGL, canvas mounting,
-// projection updates, and selection remain the integration-test subjects.
 const renderers = vi.hoisted(() => ({
   graph3d: vi.fn<(handle: Graph3DRenderHandle) => void>(),
   cosmos: vi.fn<(handle: CosmosRenderHandle) => void>(),
@@ -71,6 +69,12 @@ vi.mock("@beep/cosmos", (importOriginal) =>
       ),
   }))
 );
+
+const releaseRenderersLeftByFailedTest = (): void => {
+  for (const [handle] of [...renderers.graph3d.mock.calls, ...renderers.cosmos.mock.calls]) {
+    if (vi.mocked(handle.destroy).mock.calls.length === 0) handle.destroy();
+  }
+};
 
 const node = (id: number, label: string) =>
   OntologyGraphNode.make({
@@ -165,15 +169,7 @@ describe("workbench graph renderer toggle", () => {
       document.body.append(container);
       renderers.graph3d.mockClear();
       renderers.cosmos.mockClear();
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
-          // A failed assertion must also release a renderer the bridge has not
-          // finished disposing before the registry shuts down.
-          for (const [handle] of [...renderers.graph3d.mock.calls, ...renderers.cosmos.mock.calls]) {
-            if (vi.mocked(handle.destroy).mock.calls.length === 0) handle.destroy();
-          }
-        })
-      );
+      yield* Effect.addFinalizer(() => Effect.sync(releaseRenderersLeftByFailedTest));
       const registry = yield* Effect.acquireRelease(
         Effect.sync(() => AtomRegistry.make()),
         (registry) => Effect.sync(() => registry.dispose())
@@ -222,23 +218,12 @@ describe("workbench graph renderer toggle", () => {
       document.body.append(container);
       renderers.graph3d.mockClear();
       renderers.cosmos.mockClear();
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
-          // A failed assertion must also release a renderer the bridge has not
-          // finished disposing before the registry shuts down.
-          for (const [handle] of [...renderers.graph3d.mock.calls, ...renderers.cosmos.mock.calls]) {
-            if (vi.mocked(handle.destroy).mock.calls.length === 0) handle.destroy();
-          }
-        })
-      );
+      yield* Effect.addFinalizer(() => Effect.sync(releaseRenderersLeftByFailedTest));
       const registry = yield* Effect.acquireRelease(
         Effect.sync(() => AtomRegistry.make()),
         (registry) => Effect.sync(() => registry.dispose())
       );
 
-      // Atoms are lazy: values written by the bridge only persist while the
-      // atom is mounted, so the test mounts everything it reads — the same
-      // thing the workbench's useAtomValue subscriptions do.
       yield* Effect.acquireRelease(
         Effect.sync(() => registry.subscribe(ontologyGraphBackendAtom, () => undefined)),
         (release) => Effect.sync(release)
@@ -265,55 +250,55 @@ describe("workbench graph renderer toggle", () => {
           yield* waitFor("finalized graph container", () => O.isNone(registry.get(ontologyGraphContainerAtom)));
         })
       );
-      // subscribing mounts lazily; reading forces the bridge body to run
       registry.get(ontologyGraphRenderBridgeAtom);
 
       registry.set(setOntologyGraphContainerElementAtom, container);
       yield* waitFor("measurable graph container", () => O.isSome(registry.get(ontologyGraphContainerAtom)));
       registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
 
-      // cosmos is the default renderer
       yield* waitFor(
         "first canvas or error",
         () => container.querySelectorAll("canvas").length > 0 || O.isSome(registry.get(ontologyGraphErrorAtom))
       );
       expect(registry.get(ontologyGraphErrorAtom)).toStrictEqual(O.none());
       yield* waitFor("cosmos backend", () => O.isSome(registry.get(ontologyGraphBackendAtom)));
-      expect(registry.get(ontologyGraphRendererAtom)).toBe("cosmos");
+      expect(registry.get(ontologyGraphRendererAtom), "cosmos is the default renderer").toBe("cosmos");
       const cosmosCanvasCount = container.querySelectorAll("canvas").length;
       expect(cosmosCanvasCount).toBeGreaterThan(0);
 
-      // opt into the 3D renderer: cosmos unmounts (its canvases go away), the
-      // single 3D canvas mounts, and the cosmos backend badge source goes quiet
       registry.set(ontologyGraphRendererAtom, "graph3d");
       yield* waitFor("backend cleared", () => O.isNone(registry.get(ontologyGraphBackendAtom)));
       yield* waitFor("single 3d canvas", () => container.querySelectorAll("canvas").length === 1);
       expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-      // selection flows through the bridge into the mounted 3D renderer
       registry.set(selectedOntologyResourceIriAtom, O.some("https://example.test/Pizza"));
       yield* waitFor("3D selection applied", () =>
         A.some(renderers.graph3d.mock.calls, ([handle]) => handle.stats().selectedNodeIndex === 0)
       );
       const handle = renderers.graph3d.mock.calls.at(-1)![0];
-      expect(handle.stats().selectedNodeIndex).toBe(0);
+      expect(handle.stats().selectedNodeIndex, "selection flows through the bridge into the mounted 3D renderer").toBe(
+        0
+      );
       expect(handle.stats().dimmedNodeCount).toBeGreaterThan(0);
       expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-      // a projection update while selected re-applies selection without errors
       const updatesBefore = vi.mocked(handle.update).mock.calls.length;
       registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
       yield* waitFor(
         "3D projection and selection reapplied",
         () => vi.mocked(handle.update).mock.calls.length > updatesBefore && handle.stats().selectedNodeIndex === 0
       );
-      expect(handle.stats().dimmedNodeCount).toBeGreaterThan(0);
+      expect(
+        handle.stats().dimmedNodeCount,
+        "a projection update while selected re-applies the selection"
+      ).toBeGreaterThan(0);
       expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-      // toggling back restores the cosmos default
       registry.set(ontologyGraphRendererAtom, "cosmos");
       yield* waitFor("cosmos restored", () => O.isSome(registry.get(ontologyGraphBackendAtom)));
-      expect(container.querySelectorAll("canvas").length).toBeGreaterThan(0);
+      expect(container.querySelectorAll("canvas").length, "toggling back restores the cosmos default").toBeGreaterThan(
+        0
+      );
       expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
       registry.set(setOntologyGraphContainerElementAtom, null);

@@ -414,18 +414,7 @@ const validateProfile = (
       );
 };
 
-// Whether the query already bounds its own solutions with a top-level `LIMIT`.
-//
-// This is a safety guard, not a formatter: if it wrongly reports `true` the
-// engine materializes an unbounded result set before `truncateResult` ever runs,
-// which can exhaust the sidecar. A raw regex over the query text reported `true`
-// for a `LIMIT` that appears in a comment (`# LIMIT 1`) or inside a subquery —
-// neither of which bounds anything — so the scan below tracks lexical state:
-// `#` comments run to end-of-line, `'…'`/`"…"` (incl. triple-quoted) literals and
-// `<…>` IRIs are opaque, and only a `LIMIT` keyword at brace depth 0 counts.
-// The branches are the lexical scanner's explicit states. Keeping one forward
-// pass avoids either a false positive that permits an unbounded query or a
-// multi-pass parser whose cost grows with the input.
+// decision: sparql-limit-guard-scans-lexically
 // fallow-ignore-next-line complexity -- lexical scan separates a top-level LIMIT from comments, literals and subqueries (cognitive 32). Owner: @beep/ontology-use-cases. Exit: replace with a SPARQL parser once the ontology slice adopts one.
 const topLevelLimit = (query: string): O.Option<number> => {
   let depth = 0;
@@ -479,16 +468,11 @@ const topLevelLimit = (query: string): O.Option<number> => {
       index += 1;
       continue;
     }
-    // A keyword only counts when it stands alone (not `?limit`, not `xLIMIT`).
     if (depth === 0 && startsWithAt("LIMIT", index)) {
       const before = index === 0 ? " " : (query[index - 1] ?? " ");
       const after = query[index + 5] ?? " ";
-      if (/[\s(){}]/.test(before) && /\s/.test(after)) {
-        // The value matters, not just the keyword. Reporting only *whether* a bound
-        // existed is what let the panel announce `LIMIT 100` over a query that had
-        // asked for `LIMIT 2` and been given exactly two rows: the badge named a bound
-        // that was never applied. A `LIMIT` with no number is not a bound the engine
-        // will honour, so it is treated as absent and the safeguard still injects one.
+      const limitKeywordStandsAlone = /[\s(){}]/.test(before) && /\s/.test(after);
+      if (limitKeywordStandsAlone) {
         const digits = /^\s+(\d+)/.exec(pipe(query, Str.slice(index + 5)));
         if (digits !== null && digits[1] !== undefined) {
           return O.some(Number(digits[1]));
@@ -577,8 +561,7 @@ const truncateResult = (
         truncated: HashSet.size(construct.dataset.quads) > quads.length,
       };
     }),
-    // An ASK answers with a single boolean. There is nothing to take the first N of,
-    // and nothing that can be cut off.
+    // decision: sparql-limit-guard-scans-lexically
     Match.when("ask", () => ({
       result,
       rawResultCount: 1,
@@ -598,8 +581,7 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
   const service = yield* SparqlQueryService;
   const normalized = normalizePrefixes(input);
   yield* validateProfile(input.profile, normalized);
-  // An ASK returns one boolean; bounding it is meaningless, and appending a LIMIT to
-  // someone's query so a badge can describe it would be worse than meaningless.
+  // decision: sparql-limit-guard-scans-lexically
   const limited =
     input.profile === "ask"
       ? { query: normalized, injected: false }
@@ -619,9 +601,6 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
     profile: input.profile,
     submittedQuery: input.query,
     normalizedQuery: limited.query,
-    // The bound actually in force: the query's own LIMIT when it carried one, and the
-    // safeguard's default only when we supplied it. Reporting the default either way
-    // meant the badge described a limit the engine had never been given.
     effectiveLimit: S.Natural.make(O.getOrElse(topLevelLimit(input.query), () => input.safeguards.defaultLimit)),
     limitInjected: limited.injected,
     truncated: truncated.truncated,

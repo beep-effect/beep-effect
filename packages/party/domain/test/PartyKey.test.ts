@@ -41,9 +41,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { IdentifierIssue } from "@beep/party-domain/Identifier";
 
-// Pinned by SPEC "PartyKey v1 bytes and adapter equality". The digest was
-// calculated independently of this package:
-//   printf '%s' '<bytes>' | sha256sum
+// decision: partykey-v1-parity-proof
 const PINNED_EMAIL_BYTES = '{"authority":"","kind":"identifier","scheme":"email","value":"dana@example.test"}';
 const PINNED_EMAIL_DIGEST = "a390765977ccb1ea6062e33c4508f6847be63377c0c0057d726c99eac3a04d29";
 
@@ -211,9 +209,10 @@ describe("email adapter equality", () => {
       expect(issueReason22).toBe("invalid-domain");
       const issueReason23 = yield* issueReason(normalizeEmail("dana@exa_mple.test"));
       expect(issueReason23).toBe("invalid-domain");
-      // U+2488 maps to "1." without STD3 rules; STD3 processing must reject it.
       const issueReason24 = yield* issueReason(normalizeEmail("dana@a⒈test"));
-      expect(issueReason24).toBe("invalid-domain");
+      expect(issueReason24, 'U+2488 maps to "1." without STD3 rules; STD3 processing must reject it').toBe(
+        "invalid-domain"
+      );
     })
   );
 });
@@ -463,9 +462,10 @@ describe("review findings (PR 2588)", () => {
       expect(issueReason65).toBe("invalid-basis");
       const issueReason66 = yield* issueReason(canonicalBytes(basis("email", "", "Dana@EXAMPLE.test")));
       expect(issueReason66).toBe("invalid-basis");
-      // The graduated spellings of the same identifiers are accepted, and the pinned bytes are unchanged.
       const canonicalJson67 = yield* canonicalJson(basis("email", "", "dana@example.test"));
-      expect(canonicalJson67).toBe(PINNED_EMAIL_BYTES);
+      expect(canonicalJson67, "the graduated spelling is accepted and the pinned bytes are unchanged").toBe(
+        PINNED_EMAIL_BYTES
+      );
       const canonicalJson68 = yield* canonicalJson(basis("tel", "", "+12015550123"));
       expect(canonicalJson68).toBe('{"authority":"","kind":"identifier","scheme":"tel","value":"+12015550123"}');
       const canonicalJson69 = yield* canonicalJson(basis("x500", "", "/O=EXAMPLEORG/CN=DANA"));
@@ -477,12 +477,17 @@ describe("review findings (PR 2588)", () => {
 
   it.effect("decodes stored E.164 values structurally; validity is checked only at graduation", () =>
     Effect.gen(function* () {
-      // Shape-valid but not an assigned number under the pinned metadata.
-      const stored = "+10000000000";
-      expect(S.is(E164Phone)(stored)).toBe(true);
-      const decoded = yield* S.decodeEffect(PhoneNumber)({ _tag: "PhoneNumber", e164: stored, raw: stored });
-      expect(decoded.e164).toBe(stored);
-      const issueReason71 = yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: stored, country: O.none() })));
+      const shapeValidUnassignedE164 = "+10000000000";
+      expect(S.is(E164Phone)(shapeValidUnassignedE164)).toBe(true);
+      const decoded = yield* S.decodeEffect(PhoneNumber)({
+        _tag: "PhoneNumber",
+        e164: shapeValidUnassignedE164,
+        raw: shapeValidUnassignedE164,
+      });
+      expect(decoded.e164).toBe(shapeValidUnassignedE164);
+      const issueReason71 = yield* issueReason(
+        phoneNumber(PhoneNumberInput.make({ raw: shapeValidUnassignedE164, country: O.none() }))
+      );
       expect(issueReason71).toBe("invalid-phone");
       expect(S.is(E164Phone)("+1 201 555 0123")).toBe(false);
       expect(S.is(E164Phone)("2015550123")).toBe(false);
@@ -530,13 +535,6 @@ describe("review findings (PR 2588)", () => {
   );
 });
 
-// Goal canonical-digest-owner, slice C. PartyKey v1 keeps its own serializer:
-// its bytes are pinned by the party-slice specification and this package's
-// fixture, so it is not swapped for the canonical digest owner. This block is
-// the parity proof instead: on every basis the PartyKey boundary accepts, its
-// canonical bytes equal the RFC 8785 bytes `JsoncFingerprint` emits for the
-// same encoded basis. A future change to either side that broke that would
-// show here, while the pinned digest above keeps PartyKey's bytes fixed.
 describe("PartyKey v1 bytes against the canonical digest owner", () => {
   const encodeBasis = S.encodeEffect(PartyKeyBasis);
 
@@ -545,16 +543,10 @@ describe("PartyKey v1 bytes against the canonical digest owner", () => {
     return yield* Effect.fromResult(JsoncFingerprint.canonicalizeResult(encoded));
   });
 
-  // Basis strings: generated text of at least one code unit (a check starts
-  // at size zero and an empty string is never a basis), kept when it is
-  // already canonical. Each pair is checked as a source-record basis and as
-  // a namespaced identifier basis (scheme `ext`), covering both key sets.
-  // Deriving identifier bases from their own schema would discard almost
-  // every sample: each scheme's graduated value is a narrow grammar.
-  const someText = Arbitrary.schema(S.String.check(S.isMinLength(1)));
+  const nonEmptyText = Arbitrary.schema(S.String.check(S.isMinLength(1)));
   const basisText = Arbitrary.all({
-    authority: someText.pipe(Arbitrary.filter(S.is(IdentifierNamespace))),
-    value: someText.pipe(Arbitrary.filter(S.is(IdentifierValue))),
+    authority: nonEmptyText.pipe(Arbitrary.filter(S.is(IdentifierNamespace))),
+    value: nonEmptyText.pipe(Arbitrary.filter(S.is(IdentifierValue))),
   });
 
   it.effect.prop(
@@ -574,10 +566,6 @@ describe("PartyKey v1 bytes against the canonical digest owner", () => {
     { arbitrary: { runs: 200, seed: "partykey-canonical-parity" } }
   );
 
-  // The escapes PartyKey writes by hand: quote, backslash, the two-character
-  // control escapes, other C0 controls as lowercase `\u00xx`, and nothing
-  // else (U+2028, DEL, precomposed and astral characters stay literal). The
-  // basis accepts NFC text without surrounding whitespace only.
   it.effect("matches the owner's escapes and key order on the hand-written cases", () =>
     Effect.gen(function* () {
       const bases = [
@@ -589,9 +577,11 @@ describe("PartyKey v1 bytes against the canonical digest owner", () => {
         const basis = yield* decodePartyKeyBasis(input);
         const owner = yield* ownerBytes(basis);
         const partyKeyBytes = yield* canonicalJson(input);
-        expect(partyKeyBytes).toBe(owner);
+        expect(
+          partyKeyBytes,
+          "PartyKey's hand-written escapes (quote, backslash, control escapes, lowercase C0 \\u00xx) match the owner"
+        ).toBe(owner);
       }
-      // The owner reproduces the bytes the specification pins.
       const pinnedBasis = yield* decodePartyKeyBasis({
         kind: "identifier",
         scheme: "email",
@@ -599,7 +589,7 @@ describe("PartyKey v1 bytes against the canonical digest owner", () => {
         value: "dana@example.test",
       });
       const pinned = yield* ownerBytes(pinnedBasis);
-      expect(pinned).toBe(PINNED_EMAIL_BYTES);
+      expect(pinned, "the owner reproduces the bytes the specification pins").toBe(PINNED_EMAIL_BYTES);
     })
   );
 });

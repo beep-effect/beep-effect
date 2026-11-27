@@ -24,10 +24,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-// The worker boundary is a structured clone: it copies own enumerable properties
-// and drops prototypes. Anything the two ends exchange has to survive that, which
-// is why both sides speak the ENCODED form. `structuredClone` here IS the boundary
-// — it is exactly what `postMessage` does to the value.
 const session = createSession(
   CreateSessionInput.make({
     id: SessionId.make("session-1"),
@@ -43,21 +39,14 @@ const session = createSession(
 
 const snapshot = buildOntologySnapshot(session);
 
-// `focusIri: none` is the whole bug: Effect's `Option.none()` keeps `_tag`/`_id` on
-// its PROTOTYPE, so a clone of the decoded value delivers a bare `{}` — a key that
-// is present but is not the `string | absent` the wire expects.
-const options = OntologyGraphProjectionOptions.make({
+const optionsWithNoneFocusIri = OntologyGraphProjectionOptions.make({
   ...defaultOntologyGraphProjectionOptions(),
   focusIri: O.none(),
 });
 
 describe("ontology graph worker wire", () => {
   it("a command survives the structured clone the worker boundary performs", () => {
-    // The parent used to post the DECODED command. The worker decoded it against the
-    // encoded schema, the decode failed on `focusIri`, and the worker dropped it in
-    // silence: no reply, no throw, no error event. The graph sat on "pending"
-    // forever, and nothing anywhere said why.
-    const command = WorkerCommand.make({ kind: "projectGraph", snapshot, options });
+    const command = WorkerCommand.make({ kind: "projectGraph", snapshot, options: optionsWithNoneFocusIri });
 
     const encoded = encodeWorkerCommand(command);
     pipe(encoded, Result.isSuccess, assertTrue);
@@ -74,23 +63,14 @@ describe("ontology graph worker wire", () => {
   });
 
   it("a result comes back as a domain value, not a de-prototyped shape of one", () => {
-    // The return path had the same defect mirrored: the worker posted the decoded
-    // result and the parent never decoded it at all, so what the parent held was a
-    // plain object wearing the shape of a domain value — every method and branded
-    // field gone. It only *looked* fine because `kind` is a bare string that
-    // survives cloning.
     const result = WorkerResult.make({
       kind: "projectGraphSucceeded",
-      result: buildOntologyGraphProjection(snapshot, options),
+      result: buildOntologyGraphProjection(snapshot, optionsWithNoneFocusIri),
     });
 
-    // What the parent used to consume: the clone, used directly. The projection is
-    // plain branded data now, so the clone still has its shape; the contract is that
-    // the parent decodes it, which restores every non-cloneable field below.
     const usedDirectly = structuredClone(result);
     pipe(isProjection(usedDirectly.result), assertTrue);
 
-    // What it consumes now: decoded back into the domain.
     const encoded = encodeWorkerResult(result);
     pipe(encoded, Result.isSuccess, assertTrue);
     if (!Result.isSuccess(encoded)) {

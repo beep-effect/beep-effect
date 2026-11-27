@@ -82,12 +82,13 @@ describe("OntologyMcpConfigLive", () => {
   it.effect(
     "keeps a malformed flag in the typed failure channel rather than defaulting to off",
     Effect.fnUntraced(function* () {
-      // Silently reading a typo as `false` would be safe but dishonest: the
-      // operator asked for something and got no signal that it was ignored.
       const exit = yield* mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "maybe" }).pipe(Layer.build, Effect.exit);
 
       if (!Exit.isFailure(exit)) throw new Error("Expected a failure exit");
-      assertTrue(exit.cause.pipe(Cause.hasFails));
+      assertTrue(
+        exit.cause.pipe(Cause.hasFails),
+        "a malformed flag must surface as a typed failure, not silently read as false"
+      );
       assertFalse(exit.cause.pipe(Cause.hasDies));
     })
   );

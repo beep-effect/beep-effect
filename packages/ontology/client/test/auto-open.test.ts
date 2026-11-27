@@ -129,15 +129,13 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
       yield* AtomRegistry.getResult(registry, openOntologyDocumentAtom);
       expect(counter.invocations).toBe(1);
 
-      // The user putting the workbench back to "nothing open" must stick:
-      // a panel remount may not open the tutorial again behind their back.
       unmount();
       registry.set(ontologySessionAtom, O.none());
       registry.set(ontologyPathAtom, O.none());
       yield* AtomRegistry.mount(registry, ontologyWorkbenchAutoOpenAtom);
       registry.get(ontologyWorkbenchAutoOpenAtom);
 
-      expect(counter.invocations).toBe(1);
+      expect(counter.invocations, "a remount after the user closed the document must not reopen the tutorial").toBe(1);
       assertNone(registry.get(ontologySessionAtom));
       assertNone(registry.get(ontologyPathAtom));
     })
@@ -165,13 +163,15 @@ describe("ontologyWorkbenchAutoOpenAtom", () => {
         (release) => Effect.sync(release)
       );
       registry.get(ontologyWorkbenchAutoOpenAtom);
-      // The open action absorbs its own failure, so its result still settles.
       yield* AtomRegistry.getResult(registry, openOntologyDocumentAtom);
 
       expect(invocations).toBe(1);
       assertNone(registry.get(ontologySessionAtom));
       assertNone(registry.get(ontologyPathAtom));
-      expect(O.getOrNull(registry.get(ontologyDocumentErrorAtom))).toBe("The tutorial document could not be opened.");
+      expect(
+        O.getOrNull(registry.get(ontologyDocumentErrorAtom)),
+        "the open action absorbs its own failure into the document error"
+      ).toBe("The tutorial document could not be opened.");
 
       unmount();
       yield* AtomRegistry.mount(registry, ontologyWorkbenchAutoOpenAtom);

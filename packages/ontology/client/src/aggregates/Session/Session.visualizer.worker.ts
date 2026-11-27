@@ -17,9 +17,6 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session/worker";
 import * as Result from "effect/Result";
 
-// The boundary is a structured clone, not a channel that carries types, so both
-// ends speak the ENCODED form. See the codecs in Session.worker-protocol.ts for
-// what posting a decoded value did to this worker.
 const postResult = (result: WorkerResult): void => {
   const encoded = encodeWorkerResult(result);
   if (!Result.isSuccess(encoded)) {
@@ -60,11 +57,6 @@ const pipeDecode = (data: unknown): void => {
     return;
   }
 
-  // A command this worker cannot read is not something to shrug at. Dropping it
-  // is what made the graph inexplicable: the worker was alive and being messaged,
-  // and it answered nothing, so the workbench sat on "pending" with no error to
-  // show and no way to find out why. Throwing surfaces it as an `error` event on
-  // the parent, which fails the graph out loud.
   throw OntologyWorkerUndecodableCommand.make({ reason: String(decoded.failure) });
 };
 
