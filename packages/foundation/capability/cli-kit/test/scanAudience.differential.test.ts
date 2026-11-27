@@ -8,9 +8,6 @@ import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
-// scanAudience reads argv by hand, mirroring core's lexer. This differential test is what pins that mirror: it runs
-// core's REAL parser over a set of edge argvs, reads the parsed audience flags back out, and requires the scan to
-// agree. A change in core's lexer or boolean spellings fails here instead of silently drifting.
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -22,7 +19,6 @@ import type { AudienceFlagValues } from "@beep/cli-kit/internal/scanAudience";
 
 const Json = S.fromJsonString(S.Unknown);
 
-/** Parse `argv` with core and return the audience flags it saw, or `undefined` when core rejects the argv. */
 const parsedBy = Effect.fn("parsedBy")(function* (argv: ReadonlyArray<string>) {
   let seen: AudienceFlagValues.Encoded | undefined;
   const sub = Command.make("init", { rest: Argument.String("rest").pipe(Argument.atLeast(0)) }, () => Effect.void);
@@ -103,32 +99,37 @@ const parserServices = Layer.mergeAll(
     ChildProcessSpawner.make(() => Effect.die("unused"))
   )
 );
-it.layer(parserServices, { timeout: "30 seconds" })("scanAudience agrees with core's parser", (it) => {
-  for (const argv of accepted) {
-    it.effect(A.join(argv, " ") || "(no arguments)", () =>
-      Effect.gen(function* () {
-        const parsed = yield* parsedBy(argv);
-        // Every argv in this list is one core parses, so a rejection here is itself a finding.
-        assert.isDefined(parsed, `core rejected ${Result.getOrThrow(S.encodeUnknownResult(Json)(argv))}`);
-        if (parsed === undefined) return;
-        assert.deepStrictEqual(
-          scanAudience(argv),
-          tallyAudience(parsed),
-          Result.getOrThrow(S.encodeUnknownResult(Json)(parsed))
-        );
-      })
-    );
-  }
-
-  for (const [argv, counted] of rejected) {
-    it.effect(
-      `core rejects ${A.join(argv, " ")}; the scan counts only ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(counted), identity)}`,
-      () =>
+it.layer(parserServices, { timeout: "30 seconds" })(
+  "scanAudience, mirroring core's lexer by hand, agrees with core's real parser on edge argvs",
+  (it) => {
+    for (const argv of accepted) {
+      it.effect(A.join(argv, " ") || "(no arguments)", () =>
         Effect.gen(function* () {
-          const parsedBy1 = yield* parsedBy(argv);
-          assert.isUndefined(parsedBy1, "core should have refused this argv");
-          assert.deepStrictEqual(scanAudience(argv).given, counted);
+          const parsed = yield* parsedBy(argv);
+          assert.isDefined(
+            parsed,
+            `every argv here is one core parses, so this is a finding: core rejected ${Result.getOrThrow(S.encodeUnknownResult(Json)(argv))}`
+          );
+          if (parsed === undefined) return;
+          assert.deepStrictEqual(
+            scanAudience(argv),
+            tallyAudience(parsed),
+            `core's lexer or boolean spellings drifted from the scan: ${Result.getOrThrow(S.encodeUnknownResult(Json)(parsed))}`
+          );
         })
-    );
+      );
+    }
+
+    for (const [argv, counted] of rejected) {
+      it.effect(
+        `core rejects ${A.join(argv, " ")}; the scan counts only ${Result.getOrThrowWith(S.encodeUnknownResult(Json)(counted), identity)}`,
+        () =>
+          Effect.gen(function* () {
+            const parsedBy1 = yield* parsedBy(argv);
+            assert.isUndefined(parsedBy1, "core should have refused this argv");
+            assert.deepStrictEqual(scanAudience(argv).given, counted);
+          })
+      );
+    }
   }
-});
+);

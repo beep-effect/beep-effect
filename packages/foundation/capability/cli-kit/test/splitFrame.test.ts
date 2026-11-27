@@ -10,8 +10,7 @@ import * as Str from "effect/String";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-/** The regular expression `splitFrame` replaced, kept here as the oracle for its exact behaviour. */
-const legacy = (raw: string): ReturnType<typeof splitFrame> => {
+const replacedRegexOracle = (raw: string): ReturnType<typeof splitFrame> => {
   const text = pipe(raw, Str.trim, Str.replace(/^at\s+/, ""));
   const wrapped = /^(.*?)\s+\((.*)\)$/.exec(text);
   const fn = wrapped?.[1];
@@ -52,7 +51,7 @@ describe("splitFrame", () => {
     const differences: Array<string> = [];
     for (const raw of upTo(alphabet, 6)) {
       const got = splitFrame(raw);
-      const want = legacy(raw);
+      const want = replacedRegexOracle(raw);
       if (
         Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(got), identity) !==
           Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(want), identity) &&
