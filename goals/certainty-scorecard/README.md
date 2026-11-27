@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `active` (closing; the closeout PR sets `completed-retained`)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,54 +37,29 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — slice 1 (MEAS-01 slice 1 with MEAS-04) merged as #3118 (`beep ci certainty` and per-attempt
-job reads; coverage rows fixed by #3121, decision `slice-1-coverage-reds`). Slice 2 (ROUT-05 slice 1) merged
-as #3141: every hosted job is attributed to a lane, a support job or unknown, and `beep ci route census` reports
-the conservation census (decision `job-attribution-classes`). Slice 3 (MEAS-02 with DEPS-10) merged as #3176:
-the Yeet economics fold attributes refusals by failure kind as rows of the same `actionableLaneMix` (checkpoint
-`slice-3-refusal-attribution`). Slice 1's scoring was then fixed by #3144 (decision `certainty-scoring-fixes`),
-#3168 (decision `main-listing-unread`) and #3181 (coverage). Slice 5 (SCHE-09 slice 1) merged as #3227: rows the
-admission ring trims go to UTC day segments kept for 30 days, and `bun run beep quality scheduler history` folds
-them with the live journal (decision `sche-09-admission-archive`); the pressure fields are slice 5b. Slice 6
-(MEAS-07) merged as #3228: each `yeet final-check` run is a `final-check` attempt in the branch's Yeet attempt
-journal, carrying the receipt it wrote (decision `final-check-attempt-journal`). Slice 11 (ROUT-05 slice 2)
-merged as #3257: failed jobs keep their steps in the v1 route corpus, rows take optional per-task outcomes, and
-aggregate, setup and harness reds are charged to no lane and reported as unknown by the replay (decision
-`step-classes-and-red-origins`); its producer of per-task outcome records is the new slice 11b. Slice 10
-(MEAS-03) merged as #3262: economics classes every attempt green, red or terminated, terminated attempts leave
-the red denominator, and each run mode reports its elapsed p50 and p95 (decision `terminations-apart-from-reds`).
-Slice 7 (PERIL-11 slice 1) merged as #3263: every removal files the checkout's attempt journals in the
-workstation store, and `yeet economics --fleet` reads them as `(retained)` (decision `attempt-journal-store`).
-Slice 4 (MEAS-01 slice 2) merged as #3266: `.github/workflows/certainty-nightly.yml` scores the previous UTC day
-each night from main's code and turns red when the report is not certified (decision `certainty-nightly-workflow`).
-The nightly is live; its first run (2026-11-12, dispatched by hand, certified) is recorded by #3270 in
-[`history/certainty-nightly.md`](./history/certainty-nightly.md), and P2's seven nights start at 2026-11-14.
-Slice 8 (PERIL-11 slice 2) merged as #3273: the T3 Code worktree root joins the intended `roots.json` list in
-the fleet-roots runbook, `yeet economics --fleet` reads a checkout reachable through two roots once, and monitor
-waits are reported apart from local work in `yeet-economics/v4` (decision
-`peril-11-slice-2-t3-root-and-monitor-waits`). Slice 14 (MEAS-05 slice 1) merged as #3274: `CI_LANE_DESCRIPTORS`
-is the one job-name map every census, scorecard and admission join reads (decision `lane-job-map`). Slice 10b
-(MEAS-03 slice 2) merged as #3342: the handler errors slice 10 left `unlocated` carry a typed `handlerErrorKind`
-from the raise site into the verdict, and economics locates them as `refusal:publish-input`,
-`refusal:review-threads`, `github:rate-limit` and `github:transport`, with `unlocated` kept as the unknown bucket
-(decision `handler-errors-typed-and-located`). Slice 5b
-(SCHE-09 slice 2) merged as #3344: admitted and v3 released admission rows carry an optional `pressure` stamp
-(capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, unadmitted
-`agent-runs.slice` memory), written only while the admission protocol's new `pressure` key is on
-(`bun run beep quality scheduler protocol --pressure on`; decision `sche-09-pressure-stamps`). Slice 15 (MEAS-05
-slice 2) merged as #3347: `beep ci ledger` folds named workflow runs into rows at (lane, partition) grain over the
-slice-14 lane map, joins every Test Unit and Test Integration partition job to the run's Test Plan output for
-the empty-leg row, and reports the turbo-task, final-check, economics and PSI sources as absent rows (decision
-`ledger-fold-absent-sources`). Slice 9 (PERIL-11 slice 3) merged as #3349: attempt-started rows carry optional
-`host` and `seat` keys, every attempt mix gains `hostMix` and `seatMix`, and `yeet economics --fleet-hosts` reads
-the hosts in the fleet's `hosts.json` read-only over their existing SSH wrappers, reporting only per-host
-receipts (decision `peril-11-slice-3-host-seat-fleet-hosts`). In short, slices 1 to 11, 5b, 10b, 14 and 15 have
-merged. Slice 16 (MEAS-08) is built, PR pending: `yeet economics` gains a `pressure` section that joins the PSI
-recorder samples onto each local attempt by time window and the admission rows' SCHE-09 stamps by attempt id,
-every missing field absent with its reason and both source rows `present` only when every line or row decoded;
-it samples and writes nothing, and the ledger's `psi` row stays `absent` because hosted runners are not the
-sampled host (decision `psi-join-onto-attempts`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
-declaration-only builds) are not comparable with later readings (checkpoint
+P4 Close — slice 17, the closeout PR. Every implementation slice has merged:
+
+| Slice | Lever | PR | What it added |
+| --- | --- | --- | --- |
+| 1 | MEAS-01 slice 1, MEAS-04 | #3118 (fixes #3121, #3144, #3168, #3181) | `beep ci certainty` and per-attempt job reads |
+| 2 | ROUT-05 slice 1 | #3141 | every hosted job a lane, support or unknown job, with a conservation census |
+| 3 | MEAS-02, DEPS-10 | #3176 | refusals attributed as rows of `actionableLaneMix` |
+| 4 | MEAS-01 slice 2 | #3266 (first run #3270) | the certainty nightly on main |
+| 5, 5b | SCHE-09 | #3227, #3344 | the admission archive, then pressure stamps |
+| 6 | MEAS-07 | #3228 | final-check runs journaled as attempts |
+| 7, 8, 9 | PERIL-11 | #3263, #3273, #3349 | journals retained on removal, the T3 root row, host and seat fields with read-only fleet-host reads |
+| 10, 10b | MEAS-03 | #3262, #3342 | terminations apart from reds; handler errors typed and located |
+| 11, 11b, 12 | ROUT-05 | #3257, #3369, #3372 | failed-job steps, per-task outcome records, the corpus through 2026-11-17 |
+| 13 | MEAS-06 | #3367 | Test Unit timings on every event |
+| 14, 15 | MEAS-05 | #3274, #3347 | one lane-job map; the cost ledger fold |
+| 16 | MEAS-08 | #3351 | PSI samples and admission stamps joined onto attempts |
+| 18 | sibling rows | #3609 | heavy slot-minutes, heavy-queue and heavy-wait p95, Lint Policy wall, Property Laws, first-wave pickup, main cancel actor, replay inputs, the 7-day main horizon |
+
+#3305 moved the per-attempt job reads to 30-job pages. P2 is met: seven certified nights, UTC days 2026-11-14 to
+2026-11-20 (#3605, [`history/certainty-nightly.md`](./history/certainty-nightly.md)). The closeout ticks the
+remaining acceptance criteria against [`history/closeout-evidence-2026-11-27.md`](./history/closeout-evidence-2026-11-27.md)
+and the 2026-11-27 nightly, the first report scored by #3609's code. Wall-time, cache and dist baselines taken
+before d8326d55935 (#3208) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
 ## Latest Evidence
@@ -138,25 +113,12 @@ declaration-only builds) are not comparable with later readings (checkpoint
 
 ## Notes
 
-- Merged: MEAS-01 slice 1 with MEAS-04 (#3118), "feat(ci): beep ci certainty head-level required-green and
-  main-verdict report" (M, CLI only), with fixes #3144, #3168 and #3181; ROUT-05 slice 1 (partition job
-  mapping, #3141); MEAS-02 (refusal attribution, slice 3, #3176); SCHE-09 slice 1 (admission archive, slice 5,
-  #3227); MEAS-07 (final-check attempt journals, slice 6, #3228); ROUT-05 slice 2 (failed-job steps and
-  uncharged reds, slice 11, #3257); MEAS-03 (terminations apart from reds, slice 10, #3262); the nightly
-  workflow (slice 4, #3266, first run recorded by #3270); PERIL-11 slice 1 (journal retention, slice 7,
-  #3263); PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8, #3273); MEAS-05 slice 1 (one lane map, slice 14,
-  #3274); MEAS-03 slice 2 (residual handler errors typed and located, slice 10b, #3342); SCHE-09 slice 2
-  (capacity and host-pressure stamps on admission rows, slice 5b, #3344); MEAS-05 slice 2 (the ledger fold with
-  absent-source rows, slice 15, #3347); PERIL-11 slice 3 (host and seat fields, read-only fleet-host reads,
-  slice 9, #3349). Built: MEAS-08 (PSI samples and admission stamps joined onto attempts, slice 16) and ROUT-05 slice 2b (per-task outcome records the capture reads into `tasks`, slice 11b, merging last in the held set before window 6, ci-lane-economics decision `window-5-preview-restart`). Merged in the held set: MEAS-06 (Test Unit timings on every event, slice 13, #3367).
+- Every planned slice has merged (table under Current Phase); per-lever detail is in SPEC "Levers".
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
   `github-budget-ledger`'s reserve signal (D27).
-- Landed: MEAS-02 (slice 3), MEAS-07 (slice 6) and MEAS-03 (terminations apart from reds, slice 10, and the
-  remaining `unlocated` reds typed, slice 10b, #3342). Partly landed: MEAS-01, MEAS-04, ROUT-05, SCHE-09 (slice 5; 5b, #3344, adds the
-  pressure fields), PERIL-11 (slices 1 and 2; slice 9, host and seat fields with the read-only fleet-host read, is open as #3349) and MEAS-05 (slices 14 and 15, #3347). The
-  #3007 and #3030 edits to `LaneTimings.ts` are shard-layout census upkeep owned by
+- The #3007 and #3030 edits to `LaneTimings.ts` are shard-layout census upkeep owned by
   [`ci-lane-economics`](../ci-lane-economics/README.md), not MEAS-04.
 - The fixture corpora the plan's MEAS-01 gate names are not in the repository; slice 1 commits its own
   (decision `in-repo-fixture-corpus`).
