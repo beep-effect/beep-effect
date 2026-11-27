@@ -44,7 +44,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { ContentSecurityPolicyOption } from "@beep/schema/Csp";
 
-// Hoisted guards: the repo forbids compiling a schema guard inside a test body.
 const isCrossOriginEmbedderPolicyError = S.is(HeaderErrors.CrossOriginEmbedderPolicyError);
 const isCrossOriginOpenerPolicyError = S.is(HeaderErrors.CrossOriginOpenerPolicyError);
 const isCrossOriginResourcePolicyError = S.is(HeaderErrors.CrossOriginResourcePolicyError);

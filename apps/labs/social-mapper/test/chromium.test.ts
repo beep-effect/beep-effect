@@ -70,7 +70,7 @@ it.layer(NodeHttpServer.layerTest, { timeout: "90 seconds", excludeTestServices:
           Layer.provide(KeyValueStore.layerFileSystem(path.join(root, "store"))),
           Layer.provideMerge(Layer.merge(onlyfans(options), unmapped)),
           Layer.provideMerge(Sessions.layer(path.join(root, "sessions"))),
-          Layer.provide(layerWith(O.some(chromium)))
+          Layer.provide(layerWith({ executable: O.some(chromium) }))
         )
       );
       yield* Effect.gen(function* () {
@@ -108,6 +108,11 @@ it.layer(NodeHttpServer.layerTest, { timeout: "90 seconds", excludeTestServices:
         expect(text).toBe("not really a jpeg");
         const after = yield* library.get(source);
         expect(A.flatMap(after.entries, ({ files: saved }) => saved)).toHaveLength(1);
+        const holder = yield* Effect.fromOption(
+          A.findFirst(after.entries, ({ files: saved }) => A.isReadonlyArrayNonEmpty(saved))
+        );
+        const again = yield* downloads.post(source, holder.item.source);
+        expect(again).toEqual([]);
       }).pipe(Effect.provide(services));
     })
   );

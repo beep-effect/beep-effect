@@ -7,6 +7,7 @@
 import { chromium, Playwright } from "@beep/playwright";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { constVoid } from "effect/Function";
@@ -22,7 +23,7 @@ import * as Str from "effect/String";
 import { Browser, BrowserFailed } from "./browser.ts";
 import type { ResponseShape } from "@beep/playwright/Common";
 import type { PlaywrightError } from "@beep/playwright/PlaywrightError";
-import type { Exchange } from "./browser.ts";
+import type { Exchange, Placement } from "./browser.ts";
 
 const failed = ({ cause }: PlaywrightError): BrowserFailed =>
   BrowserFailed.make({ detail: P.isError(cause) ? cause.message : "the browser gave no reason" });
@@ -45,6 +46,16 @@ const exchange = (response: ResponseShape): O.Option<Exchange> => {
 const advance =
   "(() => { const before = window.scrollY; window.scrollBy(0, window.innerHeight * 2); return window.scrollY !== before })()";
 
+const drawn = (wayland: boolean) => ({
+  screen: { headless: false, viewport: null, args: wayland ? ["--ozone-platform=wayland"] : [] },
+  offscreen: {
+    headless: false,
+    viewport: null,
+    args: ["--ozone-platform=x11", "--window-position=0,0", "--window-size=1600,1000"],
+  },
+  headless: { headless: true, args: [] },
+});
+
 /**
  * Drives the Chromium at the path given, or the one Playwright installed.
  *
@@ -52,7 +63,9 @@ const advance =
  *
  * Every window is a persistent context over the directory it is given, so
  * cookies and local storage written while a window is open are there the
- * next time the same directory is opened.
+ * next time the same directory is opened. An `offscreen` window is drawn
+ * on the X display of the process; `wayland` says the user's own screen is
+ * a Wayland one, so a `screen` window is sent there and not to that display.
  *
  * **Example** (Drive the system Chromium)
  *
@@ -60,13 +73,19 @@ const advance =
  * import { layerWith } from "@/core/browser.playwright"
  * import * as O from "effect/Option"
  *
- * const browser = layerWith(O.some("/usr/bin/chromium"))
+ * const browser = layerWith({ executable: O.some("/usr/bin/chromium") })
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
+export const layerWith = ({
+  executable,
+  wayland = false,
+}: {
+  readonly executable: O.Option<string>;
+  readonly wayland?: boolean;
+}): Layer.Layer<Browser> =>
   Layer.effect(
     Browser,
     Effect.gen(function* () {
@@ -74,14 +93,15 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
       return {
         open: Effect.fn("Browser.open")(function* ({
           directory,
-          visible,
+          window,
         }: {
           readonly directory: string;
-          readonly visible: boolean;
+          readonly window: Placement;
         }) {
           const context = yield* playwright
             .launchPersistentContextScoped(chromium, directory, {
-              headless: !visible,
+              ...drawn(wayland)[window],
+              chromiumSandbox: true,
               ...R.getSomes({ executablePath: executable }),
             })
             .pipe(Effect.mapError(failed));
@@ -89,6 +109,13 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
             onNone: () => Effect.mapError(context.newPage, failed),
             onSome: Effect.succeed,
           });
+          const gone = yield* Deferred.make<void>();
+          yield* Stream.merge(context.eventStream("close"), page.eventStream("close")).pipe(
+            Stream.take(1),
+            Stream.runDrain,
+            Effect.andThen(Deferred.succeed(gone, undefined)),
+            Effect.forkScoped
+          );
           return {
             visit: (url: URL) =>
               page.eventStream("response").pipe(
@@ -107,7 +134,7 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
                   onSuccess: (cookies) => HashSet.fromIterable(A.map(cookies, ({ name }) => name)),
                 })
               ),
-            closed: context.eventStream("close").pipe(Stream.take(1), Stream.runDrain),
+            closed: Deferred.await(gone),
           };
         }),
       };
@@ -116,7 +143,8 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
 
 /**
  * Drives the Chromium named by `SOCIAL_MAPPER_CHROMIUM`, or the one Playwright
- * installed when the variable is unset.
+ * installed when the variable is unset. A set `WAYLAND_DISPLAY` sends the
+ * windows the user must see to that screen.
  *
  * **Example** (Provide the browser to a program)
  *
@@ -132,5 +160,11 @@ export const layerWith = (executable: O.Option<string>): Layer.Layer<Browser> =>
  * @since 0.0.0
  */
 export const layer: Layer.Layer<Browser> = Layer.unwrap(
-  Config.NonEmptyString("SOCIAL_MAPPER_CHROMIUM").pipe(Config.option, Effect.orDie, Effect.map(layerWith))
+  Config.all({
+    executable: Config.option(Config.NonEmptyString("SOCIAL_MAPPER_CHROMIUM")),
+    wayland: Config.option(Config.NonEmptyString("WAYLAND_DISPLAY")),
+  }).pipe(
+    Effect.orDie,
+    Effect.map(({ executable, wayland }) => layerWith({ executable, wayland: O.isSome(wayland) }))
+  )
 );

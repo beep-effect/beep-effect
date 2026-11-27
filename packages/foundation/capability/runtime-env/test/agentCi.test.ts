@@ -11,8 +11,7 @@ import { envReadsOf, sourceOf } from "./support/sources.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// std-env 4.3.0 agent table (dist/index.mjs), in its declared order. AI_AGENT wins over all.
-const AGENTS: ReadonlyArray<readonly [string, Record<string, string>]> = [
+const STD_ENV_430_AGENT_TABLE: ReadonlyArray<readonly [string, Record<string, string>]> = [
   ["claude", { CLAUDECODE: "1" }],
   ["claude", { CLAUDE_CODE: "1" }],
   ["replit", { REPL_ID: "x" }],
@@ -32,7 +31,7 @@ const AGENTS: ReadonlyArray<readonly [string, Record<string, string>]> = [
 ];
 
 describe("detectAgent", () => {
-  for (const [name, env] of AGENTS) {
+  for (const [name, env] of STD_ENV_430_AGENT_TABLE) {
     it(`${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)} → ${name}`, () =>
       assert.deepStrictEqual(detectAgent(env), O.some(name)));
   }
@@ -42,10 +41,13 @@ describe("detectAgent", () => {
     assert.deepStrictEqual(detectAgent({ AI_AGENT: "github_copilot_vscode_agent" }), O.some("copilot"));
     assert.deepStrictEqual(detectAgent({ AI_AGENT: "github_copilot_cloud_agent" }), O.some("copilot"));
   });
-  // AI_AGENT carries a family plus extras (Claude Code sets claude-code_2-1-285_agent): detectAgent reports the family.
   it("AI_AGENT is normalized to its family name", () => {
     const family = (value: string) => detectAgent({ AI_AGENT: value });
-    assert.deepStrictEqual(family("claude-code_2-1-285_agent"), O.some("claude"));
+    assert.deepStrictEqual(
+      family("claude-code_2-1-285_agent"),
+      O.some("claude"),
+      "AI_AGENT carries a family plus extras: Claude Code sets claude-code_2-1-285_agent"
+    );
     assert.deepStrictEqual(family("codex_cli_1"), O.some("codex"));
     assert.deepStrictEqual(family("gemini-cli"), O.some("gemini"));
     assert.deepStrictEqual(family("Claude"), O.some("claude"));
@@ -60,7 +62,7 @@ describe("detectAgent", () => {
   it("nothing set → none", () => assert.deepStrictEqual(detectAgent({}), O.none()));
   it("kiro (TERM_PROGRAM, TTY-gated in std-env) is not detected: env has no TTY here — documented", () =>
     assert.deepStrictEqual(detectAgent({ TERM_PROGRAM: "kiro" }), O.none()));
-  // Added beyond the brief: declared order decides between two matching rows, and the regex rules do not over-match.
+
   it("the first declared row wins when several match", () =>
     assert.deepStrictEqual(detectAgent({ CURSOR_AGENT: "1", CLAUDECODE: "1" }), O.some("claude")));
   it("pi and devin rules need their pattern, not just a set variable", () => {
@@ -86,40 +88,38 @@ describe("detectCi", () => {
   it("GITHUB_ACTIONS=false is not github-actions", () =>
     assert.deepStrictEqual(ci({ GITHUB_ACTIONS: "false" }), O.none()));
   it("nothing set → none", () => assert.deepStrictEqual(ci({}), O.none()));
-  // Added by the hardening round: "" is falsy, as in detectAgent and std-env, for every CI variable.
+
   it("an empty GITHUB_ACTIONS, CI or CONTINUOUS_INTEGRATION is none", () => {
     assert.deepStrictEqual(ci({ GITHUB_ACTIONS: "" }), O.none());
     assert.deepStrictEqual(ci({ CI: "" }), O.none());
     assert.deepStrictEqual(ci({ CONTINUOUS_INTEGRATION: "" }), O.none());
     assert.deepStrictEqual(ci({ GITHUB_ACTIONS: "", CI: "", CONTINUOUS_INTEGRATION: "" }), O.none());
   });
-  // Review round 2: the falsy set is Config.Boolean's (effect Schema.FalseLiterals), read case-insensitively,
-  // so no spelling the retired repo-cli predicates read as not-CI turns into CI.
-  const FALSY = ["false", "no", "off", "0", "n"] as const;
+
+  const CONFIG_BOOLEAN_FALSE_LITERALS = ["false", "no", "off", "0", "n"] as const;
   const MIXED_CASE = ["NO", "No", "OFF", "Off", "N", "False", "fAlSe"] as const;
-  for (const v of [...FALSY, ...MIXED_CASE]) {
+  for (const v of [...CONFIG_BOOLEAN_FALSE_LITERALS, ...MIXED_CASE]) {
     it(`CI=${v} → none`, () => assert.deepStrictEqual(ci({ CI: v }), O.none()));
     it(`CONTINUOUS_INTEGRATION=${v} → none`, () => assert.deepStrictEqual(ci({ CONTINUOUS_INTEGRATION: v }), O.none()));
     it(`GITHUB_ACTIONS=${v} → none`, () => assert.deepStrictEqual(ci({ GITHUB_ACTIONS: v }), O.none()));
   }
   it("a falsy GITHUB_ACTIONS falls through to a truthy CI", () =>
     assert.deepStrictEqual(ci({ GITHUB_ACTIONS: "off", CI: "true" }), O.some("generic")));
-  // Config.Boolean rejects a value outside its literals; detectCi cannot fail, so an unknown value is a set
-  // variable and counts as CI, as in std-env. Whitespace is not trimmed (Config.Boolean does not trim either),
-  // so a padded falsy spelling is an unknown value.
   for (const v of ["banana", "nope", " no", "no ", "falsey"]) {
     it(`unknown CI=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(v), identity)} → generic`, () =>
-      assert.deepStrictEqual(ci({ CI: v }), O.some("generic")));
+      assert.deepStrictEqual(
+        ci({ CI: v }),
+        O.some("generic"),
+        "detectCi cannot fail, so a value outside Config.Boolean's literals is a set variable, as in std-env; padding is not trimmed"
+      ));
   }
 });
 
-// The public presence-key domain is the table's presence keys, in order: no row key is missing from it, and it
-// names nothing the table does not test. PATH and EDITOR are pattern rows, AI_AGENT the explicit override.
 describe("AgentEnvKey", () => {
   const nonPresenceKeys = ["AI_AGENT", "PATH", "EDITOR", "GITHUB_ACTIONS", "CI", "CONTINUOUS_INTEGRATION"];
   const presenceFixtureKeys = A.dedupe(
     A.filter(
-      A.flatMap(AGENTS, ([, env]) => R.keys(env)),
+      A.flatMap(STD_ENV_430_AGENT_TABLE, ([, env]) => R.keys(env)),
       (key) => !A.contains(nonPresenceKeys, key)
     )
   );
@@ -127,7 +127,11 @@ describe("AgentEnvKey", () => {
   const literals: ReadonlyArray<string> = AgentEnvKey.literals;
 
   it("lists the std-env table's presence keys in their declared order", () =>
-    assert.deepStrictEqual(literals, presenceFixtureKeys));
+    assert.deepStrictEqual(
+      literals,
+      presenceFixtureKeys,
+      "PATH and EDITOR are pattern rows and AI_AGENT the explicit override, so none of them is a presence key"
+    ));
   it("is exactly the presence keys the detector reads", () =>
     assert.deepStrictEqual(
       A.filter(agentCiKeys, (key) => !A.contains(nonPresenceKeys, key)),
@@ -140,10 +144,9 @@ describe("AgentEnvKey", () => {
     ));
 });
 
-// Added beyond the brief: the key list and the detector cannot drift.
 describe("agentCiKeys", () => {
   const direct = new Set(envReadsOf(sourceOf("internal/agentCi.ts")));
-  const fixtureKeys = A.flatMap(AGENTS, ([, env]) => R.keys(env));
+  const fixtureKeys = A.flatMap(STD_ENV_430_AGENT_TABLE, ([, env]) => R.keys(env));
 
   it("covers every direct env.X read in the source (regex control: it finds reads)", () => {
     assert.isAbove(direct.size, 3);

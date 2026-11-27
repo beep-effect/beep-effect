@@ -10,6 +10,7 @@
     {"file":"apps/labs/social-mapper/src/client/Listing.ts","symbol":"Status","kind":"struct-const","owner":"@beep/social-mapper","identity":"Status","description":"A listing's standing in words a user reads."},
     {"file":"apps/labs/social-mapper/src/client/Listing.ts","symbol":"Tone","kind":"literal-kit","owner":"@beep/social-mapper","identity":"Tone","description":"How loudly a status is shown."},
     {"file":"apps/labs/social-mapper/src/core/browser.ts","symbol":"BrowserFailed","kind":"tagged-error","owner":"@beep/social-mapper","identity":"BrowserFailed"},
+    {"file":"apps/labs/social-mapper/src/core/browser.ts","symbol":"Placement","kind":"literal-kit","owner":"@beep/social-mapper","identity":"Placement","description":"Where a browser window is drawn."},
     {"file":"apps/labs/social-mapper/src/core/catalog.ts","symbol":"Installed","kind":"struct-const","owner":"@beep/social-mapper","identity":"Installed","description":"A platform that has a mapper, and where its sign-in begins."},
     {"file":"apps/labs/social-mapper/src/core/content.ts","symbol":"Access","kind":"tagged-union","owner":"@beep/social-mapper","identity":"Access","description":"What of a media item the current viewer may fetch, discriminated by `kind`."},
     {"file":"apps/labs/social-mapper/src/core/content.ts","symbol":"Account","kind":"tagged-union","owner":"@beep/social-mapper","identity":"Account","description":"Reference to an account on the site of the enclosing value, discriminated by `by`."},

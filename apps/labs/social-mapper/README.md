@@ -36,6 +36,15 @@ cookies, `store` the mapped listings and `files` the downloads.
 `SOCIAL_MAPPER_CHROMIUM` names the Chromium to drive; without it the one
 Playwright installed is used.
 
+The server starts under `xvfb-run`, and mapping and downloading open their
+browser windows on that virtual display, so they never appear on your screen;
+only the sign-in window does. `SOCIAL_MAPPER_WINDOW=screen` puts them on your
+screen to watch, and `headless` runs them with no window at all. A mapping
+run gives up after 45 seconds without a posts answer.
+
+**Download** saves a listing's files one at a time; **Stop saving** ends it
+after the files already written, and **Download** carries on from there.
+
 ## Try it without an account
 
 ```bash

@@ -13,7 +13,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// The detector answers with an Option; these assertions read its value, or null when it is None.
 const parseKonsoleVersion = flow(parseKonsoleVersionOption, O.getOrNull);
 const parseVteVersion = flow(parseVteVersionOption, O.getOrNull);
 
@@ -21,8 +20,7 @@ const runs = { arbitrary: fcRuns(100) };
 const Component = S.Int.check(S.isBetween({ minimum: 0, maximum: 99 }));
 const Version = S.Tuple([Component, Component, Component]);
 
-// The inverse wire representation of a dotted packed version is M*10000+m*100+p.
-const stringifyPacked = (version: string): string =>
+const dottedToPackedVersion = (version: string): string =>
   String(A.reduce(Str.split(".")(version), 0, (packed, part) => packed * 100 + Number(part)));
 
 describe("semver parser property floor", () => {
@@ -32,7 +30,7 @@ describe("semver parser property floor", () => {
   ] as const) {
     const format = (raw: string | undefined): string | undefined => {
       const parsed = parse(raw);
-      return parsed === null ? undefined : stringifyPacked(parsed);
+      return parsed === null ? undefined : dottedToPackedVersion(parsed);
     };
 
     it.effect.prop(
@@ -57,7 +55,7 @@ describe("semver parser property floor", () => {
           const dotted = `${major}.${minor}.${patch}`;
           const raw = `  +000${packed}suffix`;
           assert.strictEqual(parse(raw), dotted);
-          assert.strictEqual(parse(stringifyPacked(dotted)), dotted);
+          assert.strictEqual(parse(dottedToPackedVersion(dotted)), dotted);
           assert.strictEqual(format(format(raw)), String(packed));
         }),
       runs

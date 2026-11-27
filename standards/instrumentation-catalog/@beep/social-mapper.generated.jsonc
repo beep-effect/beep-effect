@@ -37,6 +37,7 @@
     {"name":"Locator.locate","owner":"@beep/social-mapper","family":"lab","conforms":true},
     {"name":"ReaderRpcs.Profile","owner":"@beep/social-mapper","family":"lab","conforms":false},
     {"name":"Sessions.forget","owner":"@beep/social-mapper","family":"lab","conforms":true},
+    {"name":"Sessions.free","owner":"@beep/social-mapper","family":"lab","conforms":true},
     {"name":"Sessions.list","owner":"@beep/social-mapper","family":"lab","conforms":true},
     {"name":"Sessions.open","owner":"@beep/social-mapper","family":"lab","conforms":true},
     {"name":"Sessions.signIn","owner":"@beep/social-mapper","family":"lab","conforms":true},

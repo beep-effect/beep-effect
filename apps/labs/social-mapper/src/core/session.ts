@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -20,7 +21,7 @@ import * as Stream from "effect/Stream";
 import { Browser, BrowserFailed } from "./browser.ts";
 import { Platform } from "./locator.ts";
 import type * as Scope from "effect/Scope";
-import type { Tab } from "./browser.ts";
+import type { Placement, Tab } from "./browser.ts";
 
 const $I = $SocialMapperId.create("core/session");
 
@@ -77,9 +78,11 @@ const unreadable = ({ message }: { readonly message: string }) => BrowserFailed.
  *
  * `signIn` opens a visible window at the address given and returns once the
  * user closes it; whatever they signed in to stays in the profile. `tab`
- * opens the same profile without a window, for a mapper. A profile serves
- * one window at a time, so a second `tab` of one session waits for the
- * first scope to close.
+ * opens the same profile for a mapper, drawn where the layer's `mapping`
+ * placement says. A profile serves one window at a time, so a second `tab` of one session waits for the
+ * first scope to close. While a sign-in window is open, `tab` and a second
+ * `signIn` of that session fail at once: the user decides when a sign-in
+ * ends, so nothing may wait on it.
  *
  * **Example** (Sign in once, then map without a window)
  *
@@ -107,28 +110,42 @@ export class Sessions extends Context.Service<
     readonly forget: (session: Session) => Effect.Effect<void, BrowserFailed>;
   }
 >()($I`Sessions`) {
-  static readonly layer = (root: string): Layer.Layer<Sessions, never, Browser | FileSystem.FileSystem | Path.Path> =>
+  static readonly layer = (
+    root: string,
+    mapping: Placement = "headless"
+  ): Layer.Layer<Sessions, never, Browser | FileSystem.FileSystem | Path.Path> =>
     Layer.effect(
       Sessions,
       Effect.gen(function* () {
         const browser = yield* Browser;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const locks = MutableHashMap.empty<Session, Semaphore.Semaphore>();
+        const locks = MutableHashMap.empty<string, Semaphore.Semaphore>();
+        const signing = MutableHashSet.empty<string>();
+
+        const key = ({ name, platform }: Session) => `${platform}/${name}`;
 
         const lock = (session: Session) =>
-          O.getOrElse(MutableHashMap.get(locks, session), () => {
+          O.getOrElse(MutableHashMap.get(locks, key(session)), () => {
             const made = Semaphore.makeUnsafe(1);
-            MutableHashMap.set(locks, session, made);
+            MutableHashMap.set(locks, key(session), made);
             return made;
           });
 
-        const open = Effect.fn("Sessions.open")(function* (session: Session, visible: boolean) {
+        const free = Effect.fn("Sessions.free")(function* (session: Session) {
+          if (MutableHashSet.has(signing, key(session))) {
+            return yield* BrowserFailed.make({
+              detail: `the sign-in window for ${session.platform} is still open; close it first`,
+            });
+          }
+        });
+
+        const open = Effect.fn("Sessions.open")(function* (session: Session, window: Placement) {
           const held = lock(session);
           yield* Effect.acquireRelease(Semaphore.take(held, 1), () => Semaphore.release(held, 1));
           const directory = path.join(root, session.platform, session.name);
           yield* Effect.mapError(fs.makeDirectory(directory, { recursive: true }), unreadable);
-          return yield* browser.open({ directory, visible });
+          return yield* browser.open({ directory, window });
         });
 
         const named = (platform: Platform) =>
@@ -145,11 +162,16 @@ export class Sessions extends Context.Service<
             Effect.withSpan("Sessions.list")
           ),
           signIn: Effect.fn("Sessions.signIn")(function* (session: Session, entry: URL) {
-            const tab = yield* open(session, true);
+            yield* free(session);
+            yield* Effect.acquireRelease(
+              Effect.sync(() => MutableHashSet.add(signing, key(session))),
+              () => Effect.sync(() => MutableHashSet.remove(signing, key(session)))
+            );
+            const tab = yield* open(session, "screen");
             yield* tab.visit(entry).pipe(Stream.runDrain, Effect.forkScoped);
             yield* tab.closed;
           }, Effect.scoped),
-          tab: Effect.fn("Sessions.tab")((session: Session) => open(session, false)),
+          tab: Effect.fn("Sessions.tab")((session: Session) => Effect.andThen(free(session), open(session, mapping))),
           forget: Effect.fn("Sessions.forget")(function* (session: Session) {
             yield* fs
               .remove(path.join(root, session.platform, session.name), { recursive: true, force: true })

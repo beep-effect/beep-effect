@@ -20,6 +20,7 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 import * as S from "effect/Schema";
 import { layer as chromium } from "../src/core/browser.playwright.ts";
+import { Placement } from "../src/core/browser.ts";
 import { Catalog } from "../src/core/catalog.ts";
 import { Downloads } from "../src/core/download.ts";
 import { Library } from "../src/core/library.ts";
@@ -41,6 +42,7 @@ const Settings = Config.all({
   ),
   data: Config.option(Config.NonEmptyString("SOCIAL_MAPPER_DATA")),
   home: Config.NonEmptyString("HOME"),
+  window: Config.schema(Placement, "SOCIAL_MAPPER_WINDOW").pipe(Config.withDefault(Placement.Enum.offscreen)),
   onlyfans: Config.all({
     origin: Config.option(Config.URL("SOCIAL_MAPPER_ONLYFANS_ORIGIN")),
     entry: Config.option(Config.NonEmptyString("SOCIAL_MAPPER_ONLYFANS_ENTRY")),
@@ -67,7 +69,7 @@ const Main = Layer.unwrap(
       Layer.provideMerge(Inventories.layer),
       Layer.provide(KeyValueStore.layerFileSystem(path.join(root, "store"))),
       Layer.provideMerge(Layer.merge(onlyfans(settings.onlyfans), unmapped)),
-      Layer.provideMerge(Sessions.layer(path.join(root, "sessions"))),
+      Layer.provideMerge(Sessions.layer(path.join(root, "sessions"), settings.window)),
       Layer.provide(chromium),
       Layer.provideMerge(Layer.succeed(Catalog, { installed: [installed(settings.onlyfans)] }))
     );
@@ -79,7 +81,7 @@ const Main = Layer.unwrap(
       RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(Layer.provide(HttpRouter.layer)),
       Guard.layer({ token: settings.token, origins: settings.origins }).pipe(Layer.provide(HttpRouter.layer))
     );
-    return HttpRouter.serve(Served.pipe(Layer.provideMerge(Routes))).pipe(
+    return HttpRouter.serve(Served.pipe(Layer.provideMerge(Routes)), { disableLogger: true }).pipe(
       Layer.provide(
         BunHttpServer.layer({ hostname: "127.0.0.1", port: settings.port, idleTimeout: bunMaxIdleTimeoutSeconds })
       ),

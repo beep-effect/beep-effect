@@ -453,22 +453,22 @@ describe("Lexical.codec", { concurrent: false }, () => {
   it.effect(
     "drops invalid legacy code-fence languages during Lexical projection",
     Effect.fnUntraced(function* () {
-      // Invalid info-strings are unconstructable via `Pre.make` now (the schema
-      // validates the branded `CodeFenceLanguage` at construction); they can only
-      // arrive on the wire, where Md decode folds them to None at the boundary.
-      const invalidLanguage = decoded(
+      const wireOnlyInvalidLanguagePre = decoded(
         decodeMdModelPreResult({
           _tag: "pre",
           value: "console.log('beep')",
           language: "ts bad",
         })
       );
-      assertNone(invalidLanguage.language);
+      assertNone(wireOnlyInvalidLanguagePre.language);
 
       const validLanguage = MdModel.Pre.make({ value: "console.log('beep')", language: O.some("ts") });
 
-      const invalidNode = yield* blockToLexical(invalidLanguage);
-      expect(invalidNode.type).toBe("code");
+      const invalidNode = yield* blockToLexical(wireOnlyInvalidLanguagePre);
+      expect(
+        invalidNode.type,
+        "Pre.make rejects an invalid CodeFenceLanguage, so such a fence only arrives on the wire, where Md decode folds it to None"
+      ).toBe("code");
       if (invalidNode.type === "code") {
         assertNone(invalidNode.language);
       }
@@ -479,7 +479,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
         assertSome(validNode.language, "ts");
       }
 
-      const roundTrip16 = yield* roundTrip(MdModel.Document.make({ children: [invalidLanguage] }));
+      const roundTrip16 = yield* roundTrip(MdModel.Document.make({ children: [wireOnlyInvalidLanguagePre] }));
       expect(roundTrip16).toEqual(
         MdModel.Document.make({
           children: [MdModel.Pre.make({ value: "console.log('beep')", language: O.none() })],
@@ -505,7 +505,6 @@ describe("Lexical.codec", { concurrent: false }, () => {
               format: "",
               indent: 0,
               children: [
-                // bold (1) + underline (8): underline has no Md equivalent
                 { type: "text", version: 1, detail: 0, format: 9, mode: "normal", style: "", text: "kept bold" },
               ],
             },
@@ -514,9 +513,10 @@ describe("Lexical.codec", { concurrent: false }, () => {
       })
     );
 
-    expect(editorStateToDocument(state).children).toEqual([
-      MdModel.P.make({ children: [MdModel.Strong.make({ children: [mdText("kept bold")] })] }),
-    ]);
+    expect(
+      editorStateToDocument(state).children,
+      "format 9 is bold (1) plus underline (8), and underline has no Md equivalent"
+    ).toEqual([MdModel.P.make({ children: [MdModel.Strong.make({ children: [mdText("kept bold")] })] })]);
   });
 
   it.effect(
