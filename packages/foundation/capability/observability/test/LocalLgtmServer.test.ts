@@ -58,7 +58,7 @@ const tracesRequests = (requests: ReadonlyArray<CapturedRequest>) =>
 
 describe("layerLocalLgtmServer", () => {
   it.live(
-    "exports spans over OTLP when devtools is also enabled",
+    "exports spans over OTLP when devtools is also enabled, on the live clock the devtools connect timeout needs",
     Effect.fnUntraced(function* () {
       const http = makeCapturingHttpClient();
       const span = yield* runThenFlushExporters(

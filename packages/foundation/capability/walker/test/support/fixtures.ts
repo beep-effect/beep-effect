@@ -20,11 +20,7 @@ export interface FileSystemOptions {
    * and stats NotFound); `readLink` succeeds on it and nothing else.
    */
   readonly symlinks?: Readonly<Record<string, string>>;
-  /**
-   * Directories whose `readDirectory` fails with `PermissionDenied` — the unreadable-subtree case.
-   * They are seeded as real directories, so their parent still lists them and they stat as
-   * directories.
-   */
+  /** Directories whose `readDirectory` fails with `PermissionDenied` — the unreadable-subtree case. */
   readonly unreadable?: HashSet.HashSet<string>;
   /**
    * Paths whose `realPath` fails with the given reason — the
@@ -42,7 +38,7 @@ export interface FileSystemOptions {
   readonly vanished?: HashSet.HashSet<string>;
 }
 
-const failure = (method: "readDirectory" | "realPath", reason: "NotFound" | "PermissionDenied", path: string) =>
+const injectedFault = (method: "readDirectory" | "realPath", reason: "NotFound" | "PermissionDenied", path: string) =>
   Effect.fail(
     PlatformError.systemError({
       _tag: reason,
@@ -65,28 +61,19 @@ const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<Fi
   return MemoryFileSystem.layerWith(seed, {
     faults: {
       readDirectory: (path: string) => {
-        if (HashSet.has(unreadable, path)) return failure("readDirectory", "PermissionDenied", path);
-        if (HashSet.has(vanished, path)) return failure("readDirectory", "NotFound", path);
+        if (HashSet.has(unreadable, path)) return injectedFault("readDirectory", "PermissionDenied", path);
+        if (HashSet.has(vanished, path)) return injectedFault("readDirectory", "NotFound", path);
         return undefined;
       },
       realPath: (path: string) => {
         const reason = unresolvable[path];
-        return reason === undefined ? undefined : failure("realPath", reason, path);
+        return reason === undefined ? undefined : injectedFault("realPath", reason, path);
       },
     },
   });
 };
 
-/**
- * A `FileSystem` + `Path` layer over a virtual tree that misbehaves as `options` describes.
- *
- * **Details**
- *
- * The volume is a real `@beep/memfs` filesystem, not a `FileSystem.layerNoop` stub of the methods
- * `descend` calls today, so a walker bug that depends on mode bits, parent creation or a multi-hop
- * symlink still shows up. Permission failures are injected as faults because memfs records modes
- * but never enforces them.
- */
+/** A `FileSystem` + `Path` layer over a virtual tree that misbehaves as `options` describes. */
 export const platformWith: {
   (options: FileSystemOptions): (tree: Tree) => Layer.Layer<FileSystem.FileSystem | Path.Path>;
   (tree: Tree, options: FileSystemOptions): Layer.Layer<FileSystem.FileSystem | Path.Path>;

@@ -562,12 +562,9 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
  * 5. Internal failures are logged, reported and scrubbed to a fixed boundary
  *    text, so schema stacks and local paths never reach the wire;
  *    interruption propagates.
- * 6. Request-scoped services (request context, client, HTTP request, log
- *    level and the dispatch anchor) always come from the invocation: they are
- *    omitted from the context captured at layer build, including the context
- *    each built handler retains, so a per-request value is never shadowed.
- * 7. A success with no result, including a `Schema.Void` success that Effect
- *    encodes as `null`, has no content at all, as upstream.
+ * 6. The dispatch anchor joins the request-scoped services omitted from the
+ *    context captured at layer build, and each built handler's retained
+ *    context is trimmed the same way, so a per-request value is never shadowed.
  *
  * **Example** (Register sanitized toolkit)
  *

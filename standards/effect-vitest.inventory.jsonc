@@ -6303,9 +6303,9 @@
       "line": 60,
       "endLine": 73,
       "symbol": "it.live",
-      "occurrence": "v2:6dec30b0254647a0f5681f6aa05e16caacb750b621feaa93f04c0c43ffd76edd",
+      "occurrence": "v2:ff1dce2d5b485e0170f5d7443a03d414822c6c5b2de98dff404f5c597cc8e791",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"exports spans over OTLP when devtools is also enabled\", Effect.fnUntraced(function* () { const http = makeCapturingHttpClient(); const span = yield* runThenFlushExporters( Effect.currentSpan",
+      "evidence": "it.live( \"exports spans over OTLP when devtools is also enabled, on the live clock the devtools connect timeout needs\", Effect.fnUntraced(function* () { const http = makeCapturingHttpClient(); const s",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."

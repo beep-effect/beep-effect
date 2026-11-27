@@ -16,11 +16,6 @@ import * as O from "effect/Option";
 /**
  * Iterate a growing worklist by head index, stopping at a missing frame.
  *
- * **Details**
- *
- * `Array.shift()` re-indexes the whole array on every dequeue, so a
- * shift-based queue would make a large walk quadratic.
- *
  * **Example** (Visit queued frames)
  *
  * ```ts

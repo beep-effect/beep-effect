@@ -5,14 +5,7 @@ import * as Getter from "effect/SchemaGetter";
 
 const ReasonSample = S.Literals(["PermissionDenied", "Unknown", "NotFound"]);
 
-/**
- * Unreadable-directory fields with an arbitrary for the original filesystem cause.
- *
- * **Details**
- *
- * `S.instanceOf` has no built-in generator, so the cause gets a generation-only link; the public
- * schema's encoder, decoder and equivalence still serve every assertion.
- */
+/** Unreadable-directory fields with an arbitrary for the original filesystem cause. */
 export const unreadableDirectorySample = UnreadableDirectory.mapFields((fields) => ({
   ...fields,
   cause: fields.cause.annotate({
