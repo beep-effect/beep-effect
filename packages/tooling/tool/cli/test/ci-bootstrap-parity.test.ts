@@ -240,7 +240,8 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
       assert.include(absent.stdout, "docs_only=true");
       assert.include(absent.stderr, "classifying with the compiled-in patterns");
 
-      const canonical = yield* commitOn(empty, [[patternPath, yield* encodePatterns(ciOperationalPatterns)]]);
+      const canonicalJson = yield* encodePatterns(ciOperationalPatterns);
+      const canonical = yield* commitOn(empty, [[patternPath, canonicalJson]]);
       const widened = yield* encodePatterns(
         CiOperationalPatterns.make({ ...ciOperationalPatterns, docs: ".", codeRoots: "^$" })
       );
@@ -248,26 +249,24 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
         [patternPath, widened],
         ["packages/example/src/index.ts", "export const value = 1;\n"],
       ]);
-      assert.strictEqual(yield* fs.readFileString(patternFile), widened);
+      const checkedOut = yield* fs.readFileString(patternFile);
+      assert.strictEqual(checkedOut, widened);
       const widenedRun = profile(canonical, widenedHead);
       assert.strictEqual(widenedRun.exitCode, 0, widenedRun.stderr);
       assert.include(widenedRun.stdout, "docs_only=false");
 
-      const narrowed = yield* commitOn(empty, [
-        [
-          patternPath,
-          yield* encodePatterns(CiOperationalPatterns.make({ ...ciOperationalPatterns, docs: "^nothing/" })),
-        ],
-      ]);
+      const narrowedJson = yield* encodePatterns(
+        CiOperationalPatterns.make({ ...ciOperationalPatterns, docs: "^nothing/" })
+      );
+      const narrowed = yield* commitOn(empty, [[patternPath, narrowedJson]]);
       const docsOnNarrowed = yield* commitOn(narrowed, [["docs/notes.md", "# notes\n"]]);
       const narrowedRun = profile(narrowed, docsOnNarrowed);
       assert.strictEqual(narrowedRun.exitCode, 0, narrowedRun.stderr);
       assert.include(narrowedRun.stdout, "docs_only=false");
 
       const { lanes: _lanes, ...withoutLanes } = ciOperationalPatterns;
-      const undescribed = yield* commitOn(empty, [
-        [patternPath, yield* encodePatterns(CiOperationalPatterns.make(withoutLanes))],
-      ]);
+      const undescribedJson = yield* encodePatterns(CiOperationalPatterns.make(withoutLanes));
+      const undescribed = yield* commitOn(empty, [[patternPath, undescribedJson]]);
       const docsOnUndescribed = yield* commitOn(undescribed, [["docs/notes.md", "# notes\n"]]);
       const undescribedRun = profile(undescribed, docsOnUndescribed);
       assert.strictEqual(undescribedRun.exitCode, 0, undescribedRun.stderr);
@@ -278,7 +277,7 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
 
       const foreign = yield* commitOn(empty, [[patternPath, '{ "goals": "^goals/" }\n']]);
       const docsOnForeign = yield* commitOn(foreign, [
-        [patternPath, yield* encodePatterns(ciOperationalPatterns)],
+        [patternPath, canonicalJson],
         ["docs/notes.md", "# notes\n"],
       ]);
       const foreignRun = profile(foreign, docsOnForeign);
