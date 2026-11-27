@@ -5,8 +5,7 @@ reversal: Drop sessionMutationSemaphore from the mutation atoms, or wrap runOnto
 governs:
   - src/aggregates/Session/Session.atoms.ts#sessionMutationSemaphore
   - src/aggregates/Session/Session.atoms.ts#sessionMoved
-  - src/aggregates/Session/Session.atoms.ts#applyOntologyBatchAtom
-  - src/aggregates/Session/Session.atoms.ts#undoOntologyChangeAtom
+  - src/aggregates/Session/Session.atoms.ts#mutateOpenSession
   - src/aggregates/Session/Session.atoms.ts#runOntologyValidationAtom
   - src/aggregates/Session/Session.atoms.ts#runOntologySparqlAtom
 enforcedBy: []

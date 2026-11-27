@@ -2552,6 +2552,26 @@ const noOpenSessionError = OntologyActionError.new("No ontology session is open.
 // decision: session-mutations-hold-one-permit
 const sessionMutationSemaphore = Semaphore.makeUnsafe(1);
 
+const mutateOpenSession = <A, E, R>(
+  ctx: Atom.FnContext,
+  mutate: (client: OntologyClient["Service"], session: Session) => Effect.Effect<A, E, R>
+) =>
+  sessionMutationSemaphore.withPermit(
+    Effect.gen(function* () {
+      const client = yield* OntologyClient;
+      const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+      return yield* mutate(client, session);
+    })
+  );
+
+const catchDocumentFailure = (ctx: Atom.FnContext) =>
+  Effect.catchCause(
+    Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
+      yield* reportFailure("Ontology document", cause);
+      ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+    })
+  );
+
 /**
  * Toggle inferred view and refresh inference when enabling it.
  *
@@ -2899,14 +2919,7 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
           }
         })
       )
-      .pipe(
-        Effect.catchCause(
-          Effect.fnUntraced(function* (cause) {
-            yield* reportFailure("Ontology document", cause);
-            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
-          })
-        )
-      );
+      .pipe(catchDocumentFailure(ctx));
   })
 );
 
@@ -2988,30 +3001,20 @@ export const ontologyWorkbenchAutoOpenAtom = Atom.make((get): void => {
  */
 export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDocumentInput>()(
   Effect.fn("saveOntologyDocument")(function* (input, ctx) {
-    yield* sessionMutationSemaphore
-      .withPermit(
-        Effect.gen(function* () {
-          const client = yield* OntologyClient;
-          const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-          const saved = yield* Reactivity.mutation(client("SaveOntologyDocument", { path: input.path, session }), [
-            SESSION_KEY,
-            SOURCE_KEY,
-          ]);
-          ctx.set(ontologyDocumentErrorAtom, O.none());
-          ctx.set(ontologyPathAtom, O.some(saved.path));
-          ctx.set(ontologySourceAtom, saved.source);
-          ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
-          ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
-        })
-      )
-      .pipe(
-        Effect.catchCause(
-          Effect.fnUntraced(function* (cause) {
-            yield* reportFailure("Ontology document", cause);
-            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
-          })
-        )
-      );
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
+        const saved = yield* Reactivity.mutation(client("SaveOntologyDocument", { path: input.path, session }), [
+          SESSION_KEY,
+          SOURCE_KEY,
+        ]);
+        ctx.set(ontologyDocumentErrorAtom, O.none());
+        ctx.set(ontologyPathAtom, O.some(saved.path));
+        ctx.set(ontologySourceAtom, saved.source);
+        ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
+        ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
+      })
+    ).pipe(catchDocumentFailure(ctx));
   })
 );
 
@@ -3037,14 +3040,7 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
       const preview = yield* Reactivity.mutation(client("PreviewOntologyTurtle", { session }), [SOURCE_KEY]);
       ctx.set(ontologyDocumentErrorAtom, O.none());
       ctx.set(ontologySourceAtom, preview.source);
-    }).pipe(
-      Effect.catchCause(
-        Effect.fnUntraced(function* (cause) {
-          yield* reportFailure("Ontology document", cause);
-          ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
-        })
-      )
-    );
+    }).pipe(catchDocumentFailure(ctx));
   })
 );
 
@@ -3064,11 +3060,9 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
  */
 export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBatchInput>()(
   Effect.fn("applyOntologyBatch")(function* (input, ctx) {
-    // decision: session-mutations-hold-one-permit
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         const applied = yield* Reactivity.mutation(
           client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: input.operations })),
           [SESSION_KEY, GRAPH_KEY]
@@ -3106,10 +3100,9 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
  */
 export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOntologyGraphGestureInput>()(
   Effect.fn("applyOntologyGraphGesture")(function* (input, ctx) {
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         const operations = graphGestureChangeOperations(input.gesture);
         const applied = yield* Reactivity.mutation(
           client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations })),
@@ -3243,11 +3236,9 @@ export const applyOntologyInspectorActionAtom = OntologyClient.runtime.fn<Ontolo
  */
 export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("undoOntologyChange")(function* (_, ctx) {
-    // decision: session-mutations-hold-one-permit
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         yield* pipe(
           A.last(session.changeLog),
           O.match({
@@ -3292,10 +3283,9 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
  */
 export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("redoOntologyChange")(function* (_, ctx) {
-    yield* sessionMutationSemaphore.withPermit(
-      Effect.gen(function* () {
-        const client = yield* OntologyClient;
-        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* mutateOpenSession(
+      ctx,
+      Effect.fnUntraced(function* (client, session) {
         yield* pipe(
           A.head(ctx(ontologyRedoStackAtom)),
           O.match({

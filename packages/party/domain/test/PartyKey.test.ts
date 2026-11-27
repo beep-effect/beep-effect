@@ -477,17 +477,11 @@ describe("review findings (PR 2588)", () => {
 
   it.effect("decodes stored E.164 values structurally; validity is checked only at graduation", () =>
     Effect.gen(function* () {
-      const shapeValidUnassignedE164 = "+10000000000";
-      expect(S.is(E164Phone)(shapeValidUnassignedE164)).toBe(true);
-      const decoded = yield* S.decodeEffect(PhoneNumber)({
-        _tag: "PhoneNumber",
-        e164: shapeValidUnassignedE164,
-        raw: shapeValidUnassignedE164,
-      });
-      expect(decoded.e164).toBe(shapeValidUnassignedE164);
-      const issueReason71 = yield* issueReason(
-        phoneNumber(PhoneNumberInput.make({ raw: shapeValidUnassignedE164, country: O.none() }))
-      );
+      const stored = "+10000000000";
+      expect(S.is(E164Phone)(stored), "an unassigned number still passes the structural E.164 check").toBe(true);
+      const decoded = yield* S.decodeEffect(PhoneNumber)({ _tag: "PhoneNumber", e164: stored, raw: stored });
+      expect(decoded.e164).toBe(stored);
+      const issueReason71 = yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: stored, country: O.none() })));
       expect(issueReason71).toBe("invalid-phone");
       expect(S.is(E164Phone)("+1 201 555 0123")).toBe(false);
       expect(S.is(E164Phone)("2015550123")).toBe(false);
