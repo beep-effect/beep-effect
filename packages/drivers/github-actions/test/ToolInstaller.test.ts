@@ -137,19 +137,22 @@ const liveWithFileSystem = (
   mutate: (fs: FileSystem.FileSystem) => FileSystem.FileSystem,
   fetch: typeof globalThis.fetch,
   env: Record<string, string> = {}
-) =>
-  ToolInstaller.layer.pipe(
+) => {
+  const fileSystemOverrideMergedLast = Layer.effect(
+    FileSystem.FileSystem,
+    Effect.map(FileSystem.FileSystem, mutate)
+  ).pipe(Layer.provide(nativePlatform));
+  return ToolInstaller.layer.pipe(
     Layer.provide(
       Layer.mergeAll(
         ActionEnvironment.layerTest({ RUNNER_TOOL_CACHE: root, ...env }),
         nativePlatform,
-        Layer.effect(FileSystem.FileSystem, Effect.map(FileSystem.FileSystem, mutate)).pipe(
-          Layer.provide(nativePlatform)
-        ),
+        fileSystemOverrideMergedLast,
         FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch)(fetch)))
       )
     )
   );
+};
 
 const exdev = (from: string, to: string) =>
   PlatformError.systemError({
@@ -379,11 +382,7 @@ describe("ToolInstaller", () => {
           const source = path.join(root, "new-source");
           yield* fs.writeFileString(source, "new binary");
           const error = yield* Effect.flip(installer.cacheFile(source, "tool", "tool", "1"));
-          assert.strictEqual(
-            error.reason,
-            "cacheFailed",
-            "fixture writes use the original FileSystem; only the install is refused"
-          );
+          assert.strictEqual(error.reason, "cacheFailed");
           assert.strictEqual(markerWrites, failure === "marker" ? 1 : 0);
           const officiallyDiscoverable =
             (yield* fs.exists(destination)) && (yield* fs.exists(`${destination}.complete`));

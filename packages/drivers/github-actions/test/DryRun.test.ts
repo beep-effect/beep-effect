@@ -73,10 +73,7 @@ describe("DryRun", () => {
       it.effect("reads a true input", () =>
         Effect.gen(function* () {
           const isDryRun4 = yield* (yield* DryRun).isDryRun;
-          assert.isTrue(
-            isDryRun4,
-            "ActionInput.layer is keyed by input name, `with:`-block style; ActionInput owns mangling"
-          );
+          assert.isTrue(isDryRun4);
         })
       );
     });

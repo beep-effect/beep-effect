@@ -21,7 +21,7 @@ it.effect.prop(
   ([files]) =>
     Effect.sync(() => {
       const text = zipManifest(files);
-      assert.deepStrictEqual(parse(text), files, "the caller rejects CR/LF; empty paths survive as blank lines");
+      assert.deepStrictEqual(parse(text), files, "empty paths survive as blank lines");
       assert.strictEqual(zipManifest(parse(text)), text);
       assert.deepStrictEqual(parse(zipManifest(parse(text))), parse(text));
     }),

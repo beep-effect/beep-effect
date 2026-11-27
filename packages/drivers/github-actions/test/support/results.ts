@@ -71,9 +71,10 @@ export const twirpFetch = (
   handlers: Readonly<Record<string, (body: Record<string, unknown>, index: number) => Response>>
 ): { readonly calls: Array<Rpc>; readonly fetch: typeof globalThis.fetch } => {
   const calls: Array<Rpc> = [];
+  const bodyBytesAsText = (init: Parameters<typeof globalThis.fetch>[1]) => new Response(init?.body ?? "{}").text();
   const fetch: typeof globalThis.fetch = Object.assign(
     (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) =>
-      new Response(init?.body ?? "{}").text().then((text) => {
+      bodyBytesAsText(init).then((text) => {
         const url = String(input);
         const method = Str.slice(O.getOrElse(Str.lastIndexOf("/")(url), () => -1) + 1)(url);
         const body = Result.getOrThrowWith(S.decodeResult(RequestBodyJson)(text || "{}"), (error) => error);

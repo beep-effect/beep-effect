@@ -694,7 +694,7 @@ describe("Artifact", () => {
           assert.strictEqual(
             spawn?.manifest.toString("utf8"),
             `a.txt\n${join("dir", "b.txt")}\n`,
-            "read at spawn time, since the scratch directory is gone once the upload settles"
+            "one relative path per line, with a trailing newline"
           );
           assert.notDeepEqual(
             [...(spawn?.manifest.subarray(0, 3) ?? [])],

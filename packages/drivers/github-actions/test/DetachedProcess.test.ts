@@ -109,11 +109,7 @@ describe("DetachedProcess", () => {
           const calls = (yield* KillSpy).mock.calls;
           const error = yield* Effect.flip(DetachedProcess.reap(-1));
           assert.instanceOf(error, InvalidPidError);
-          assert.lengthOf(
-            calls,
-            0,
-            "process.kill must not be called; it is a native global seam with no Effect service, so a vi spy watches it"
-          );
+          assert.lengthOf(calls, 0, "process.kill must not have been called at all");
         })
       );
     });
@@ -266,11 +262,7 @@ describe("DetachedProcess", () => {
         yield* TestClock.adjust("100 millis");
         yield* TestClock.adjust("100 millis");
         yield* Fiber.join(fiber);
-        assert.strictEqual(
-          calls,
-          3,
-          "it.effect's virtual clock ticks the polls; a real sleep would hang to the vitest timeout"
-        );
+        assert.strictEqual(calls, 3);
       })
     );
 
@@ -505,10 +497,7 @@ describe("DetachedProcess", () => {
             return false;
           }
         });
-        assert.isTrue(
-          wrote,
-          "the real child's stdout reaches the real log via its duplicate descriptor, polled on the live clock"
-        );
+        assert.isTrue(wrote, "the child's stdout must reach the log file");
 
         const reap14 = yield* DetachedProcess.reap(pid);
         assert.isTrue(reap14);
@@ -526,7 +515,7 @@ describe("DetachedProcess", () => {
         assert.strictEqual(
           import.meta.env[PARENT_ONLY],
           "parent-only",
-          "the control: the parent holds a test-owned variable the child must lack, since no runner guarantees HOME"
+          "the control: the parent must hold the variable the child must lack"
         );
         const pid = yield* DetachedProcess.spawn({
           command: process.execPath,
@@ -543,7 +532,7 @@ describe("DetachedProcess", () => {
             return false;
           }
         });
-        assert.isTrue(wrote, "the real child must have printed its environment, polled on the live clock");
+        assert.isTrue(wrote, "the child must have printed its environment");
         const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error);
         if (!S.is(EnvironmentRecord)(seen)) {
           assert.fail("expected a string environment record");
@@ -586,7 +575,7 @@ describe("DetachedProcess", () => {
             return false;
           }
         });
-        assert.isTrue(wrote, "the real child must have printed its environment, polled on the live clock");
+        assert.isTrue(wrote, "the child must have printed its environment");
         const seen = Result.getOrThrowWith(S.decodeResult(Json)(readFileSync(logFile, "utf8")), (error) => error);
         if (!S.is(EnvironmentRecord)(seen)) {
           assert.fail("expected a string environment record");

@@ -1328,10 +1328,7 @@ describe("PackageManagerInstaller", () => {
               );
               assert.strictEqual(installed.source, "tool-cache");
               const warning = O.getOrUndefined(A.findFirst(entries, (entry) => entry.level === "Warn"));
-              assert.isDefined(
-                warning,
-                "an unverified download must be announced; live clears loggers so it leaks nowhere else"
-              );
+              assert.isDefined(warning, "an unverified download must be announced");
               assert.include(String(warning?.message), "integrity");
             }),
           };
@@ -2575,11 +2572,15 @@ describe("PackageManagerInstaller", () => {
                         cached,
                         "only a #-led non-shebang file is the placeholder, else every run reinstalls"
                       );
-                      assert.strictEqual(installed.bins.pnpm, join(cached, "pnpm"));
+                      assert.strictEqual(
+                        installed.bins.pnpm,
+                        join(cached, "pnpm"),
+                        "the fetch always fails, so this answer proves nothing was downloaded"
+                      );
                       assert.strictEqual(
                         readFileSync(join(cached, ".bin", "pnpm"), "utf8"),
                         `#!/bin/sh\nexec '${join(cached, "pnpm")}' "$@"\n`,
-                        "the fetch always fails, so the absent shims were regenerated with the direct-exec body"
+                        "a foreign writer's entry had no .bin, so shims are regenerated with the direct-exec body"
                       );
                       assert.strictEqual(
                         readFileSync(join(cached, ".bin", "pn"), "utf8"),
@@ -2627,11 +2628,7 @@ describe("PackageManagerInstaller", () => {
             test: Effect.gen(function* () {
               const install21 = yield* install(`pnpm@${version}`);
               const installed = cachedOf(install21);
-              assert.deepStrictEqual(
-                script.calls,
-                [urls.wrapper, urls.packument, urls.exe],
-                "RUNNER_OS reaches the Windows names, shim flavour and chmod skip from any host"
-              );
+              assert.deepStrictEqual(script.calls, [urls.wrapper, urls.packument, urls.exe]);
               for (const name of ["pnpm", "pn", "pnpx", "pnx"]) {
                 assert.strictEqual(installed.bins[name], join(installed.directory, `${name}.exe`));
                 assert.strictEqual(
@@ -2652,7 +2649,7 @@ describe("PackageManagerInstaller", () => {
       { timeout: "30 seconds" }
     )((it) => {
       it.effect(
-        "on Windows the binary lands as <name>.exe for every wrapper bin, and the .cmd shims target the .exe",
+        "with RUNNER_OS=Windows on any host, the binary lands as <name>.exe for every wrapper bin and the .cmd shims target it",
         runTest
       );
     });
