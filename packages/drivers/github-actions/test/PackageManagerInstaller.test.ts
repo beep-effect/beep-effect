@@ -476,7 +476,7 @@ describe("PackageManagerInstaller", () => {
     for (const key of ["requireIntegrity", "integrity", "registry", "nativeIntegrity", "allowAmbient"]) {
       assert.isFalse(
         S.is(PackageManagerInstallOptions)({ ...options, [key]: undefined }),
-        `EF-40: ${key} is omitted, never undefined`
+        `exact optional keys: ${key} is omitted, never undefined`
       );
     }
     assert.isFalse(S.is(PackageManagerInstallOptions)({ allowAmbient: "true" }));

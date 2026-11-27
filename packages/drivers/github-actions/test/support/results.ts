@@ -20,10 +20,6 @@ const jwtSegment = (value: unknown): string =>
  *
  * The signature segment is nonsense on purpose — nothing verifies it, and a
  * fixture that looked signed would suggest something does.
- *
- * The cache, artifact and GitHub-cache blob store suites all speak this one
- * protocol through this token, so no suite hand-rolls a token the real
- * backend-id decoder would reject, a divergence only production would show.
  */
 export const runtimeToken = (scope = "Actions.Results:run-1:job-1"): string =>
   `${jwtSegment({ alg: "HS256", typ: "JWT" })}.${jwtSegment({ scp: scope })}.not-a-signature`;
@@ -70,12 +66,6 @@ export const json = (value: unknown): Response => jsonStatus(value, 200);
  * the first `GetCacheEntryDownloadURL` differently from the second without
  * counting calls itself. An unrouted method answers 501 rather than 200, so a
  * protocol change shows up as a failure instead of a silently skipped step.
- *
- * The request body is read through `Response`, not `String(init.body)`: it
- * arrives as bytes, and a stringified Uint8Array (`123,34,…`) throws in
- * `JSON.parse`. Inside a fake `fetch` that is a transport fault the client
- * retries, hanging the virtual clock: one misread fixture shows up as ten
- * unrelated timeouts.
  */
 export const twirpFetch = (
   handlers: Readonly<Record<string, (body: Record<string, unknown>, index: number) => Response>>
@@ -97,17 +87,12 @@ export const twirpFetch = (
   return { calls, fetch };
 };
 
-/**
- * Run a fiber to completion while a virtual clock drives its retry sleeps.
- *
- * **Details**
- *
- * The clock advances at most 12 times rather than in a `while (true)` loop, so a fiber blocked on something that is
- * not a sleep is not driven until the vitest timeout with no clue why.
- */
+const clockAdvanceLimit = 12;
+
+/** Run a fiber to completion while a virtual clock drives its retry sleeps. */
 export const settle = Effect.fn("settle")(function* <A, E>(effect: Effect.Effect<A, E>, adjust: Effect.Effect<void>) {
   const fiber = yield* Effect.forkChild(effect);
-  for (let attempt = 0; attempt < 12 && fiber.pollUnsafe() === undefined; attempt += 1) {
+  for (let attempt = 0; attempt < clockAdvanceLimit && fiber.pollUnsafe() === undefined; attempt += 1) {
     yield* adjust;
   }
   return yield* Fiber.await(fiber);

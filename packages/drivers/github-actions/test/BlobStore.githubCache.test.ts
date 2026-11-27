@@ -302,11 +302,7 @@ describe("GitHubCacheBlobStore", () => {
             const blobStore = yield* BlobStore;
             const exit = yield* settle(blobStore.has("k"), TestClock.adjust("10 seconds"));
             assertExitSuccess(exit, false);
-            assert.lengthOf(
-              calls,
-              2,
-              "a 503 is the backend saying `later`; this single-test layer owns the TestClock it advances"
-            );
+            assert.lengthOf(calls, 2, "a 503 is the backend saying `later`");
           })
         );
       });

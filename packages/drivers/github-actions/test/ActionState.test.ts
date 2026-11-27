@@ -51,11 +51,7 @@ describe("ActionState", () => {
             yield* state.saveSecret("secret", value);
             expected += `result<<EFFECTED_EOF${newline}${serialized}${newline}EFFECTED_EOF${newline}`;
             expected += `secret<<EFFECTED_EOF${newline}${serialized}${newline}EFFECTED_EOF${newline}`;
-            assert.strictEqual(
-              files.written.text("/rf/state"),
-              expected,
-              "a fresh in-memory volume performs the real flag: a appends; /rf is seeded since a write needs a parent"
-            );
+            assert.strictEqual(files.written.text("/rf/state"), expected);
             const value1 = yield* S.decodeEffect(JsonString)(serialized);
             assert.strictEqual(value1, value);
           }

@@ -130,6 +130,6 @@ it.effect("a transport failure retries and returns the recovered body", () =>
       TestClock.adjust("3 seconds")
     );
     assertExitSuccess(exit, { recovered: true });
-    assert.strictEqual(calls, 2, "this test owns its TestClock, and the advance reaches only its retry fiber");
+    assert.strictEqual(calls, 2);
   })
 );

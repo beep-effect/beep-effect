@@ -88,11 +88,7 @@ describe("Secret", () => {
       return Effect.gen(function* () {
         const forChildEnv1 = yield* Secret.forChildEnv({});
         assert.deepStrictEqual(forChildEnv1, {});
-        assert.lengthOf(
-          outputs.masked,
-          0,
-          "the recorder suspends, so it logs a mask when it runs; an eager one logs calls that never happened"
-        );
+        assert.lengthOf(outputs.masked, 0);
       }).pipe(Effect.provideService(ActionOutputs, outputs.service));
     });
   });

@@ -393,7 +393,7 @@ describe("DetachedProcess", () => {
       ),
       { timeout: "30 seconds" }
     )((it) => {
-      it.effect("composes with awaitReady: an answering child is ready; a small budget fails a wrong false fast", () =>
+      it.effect("composes with awaitReady: an answering child reports ready", () =>
         Effect.gen(function* () {
           const url = yield* ServerUrl;
           yield* DetachedProcess.awaitReady(DetachedProcess.httpProbe(url), {

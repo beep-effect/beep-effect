@@ -66,11 +66,7 @@ describe("ActionOutputs", () => {
               yield* outputs.set("result", value);
               yield* outputs.exportVariable("result", value);
               expected += `result<<EFFECTED_EOF${newline}${value}${newline}EFFECTED_EOF${newline}`;
-              assert.strictEqual(
-                files.written.text(FILES.GITHUB_OUTPUT),
-                expected,
-                "a real in-memory volume performs the flag: a appends a concatenating stub would re-implement"
-              );
+              assert.strictEqual(files.written.text(FILES.GITHUB_OUTPUT), expected);
               assert.strictEqual(files.written.text(FILES.GITHUB_ENV), expected);
             }
           })

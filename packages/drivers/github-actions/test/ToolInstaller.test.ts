@@ -199,7 +199,7 @@ describe("ToolInstaller", () => {
     assert.deepEqual(S.decodeResult(ExtractOptions)(extraction).pipe(Result.getOrThrow), extraction);
     assert.isFalse(
       S.is(ExtractOptions)({ destination: undefined }),
-      "EF-40: an optional key is omitted, never undefined"
+      "exact optional keys: an optional key is omitted, never undefined"
     );
     assert.isFalse(S.is(ExtractOptions)({ flags: undefined }));
     assert.deepEqual(S.decodeResult(ExtractOptions)({}).pipe(Result.getOrThrow), ExtractOptions.make({}));
@@ -588,7 +588,7 @@ describe("ToolInstaller", () => {
               assert.strictEqual(
                 refused,
                 1,
-                "only the source rename is refused (the mutated FileSystem merged last wins); the swap stays real"
+                "exactly the source rename is refused; the swap into the cache stays real"
               );
               const readFileString16 = yield* fs.readFileString(join(cached, "bin"));
               assert.strictEqual(readFileString16, "#!/bin/sh\n");

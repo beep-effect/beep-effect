@@ -331,7 +331,7 @@ describe("CacheKey", () => {
             const digest = yield* CacheKey.hashFiles(["/w/alpha.txt", "/w/beta.txt"]);
             assert.isTrue(
               overlapped,
-              "reads never overlapped: Effect.all defaults to concurrency 1 (a latch, not yields, would hang)"
+              "the two reads never overlapped — Effect.all ran sequentially, its default concurrency being 1"
             );
             assertSome(digest, ALPHA_BETA);
           })
