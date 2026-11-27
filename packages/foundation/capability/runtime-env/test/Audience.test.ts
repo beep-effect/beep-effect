@@ -40,7 +40,7 @@ const runtime = (fields: { agent?: string; ci?: "github-actions" | "generic" }) 
     terminal: O.none(),
   });
 
-const audienceOverRealRuntimeEnv = (env: Record<string, string>, envVar = "OKFIT_AUDIENCE") =>
+const realEnvAudience = (env: Record<string, string>, envVar = "OKFIT_AUDIENCE") =>
   Audience.layer({ envVar }).pipe(
     Layer.provide(CurrentRuntimeEnv.layer),
     Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
@@ -61,29 +61,25 @@ describe("Audience.layer", () => {
   class Invalid extends Context.Service<Invalid, Context.Service.Shape<typeof Audience>>()(
     "@beep/runtime-env/test/Audience.test/Invalid"
   ) {}
-  it.layer(audienceOverRealRuntimeEnv({ CLAUDECODE: "1", OKFIT_AUDIENCE: "human" }), { timeout: "30 seconds" })(
-    (it) => {
-      it.effect("the override beats detection: CLAUDECODE=1 with OKFIT_AUDIENCE=human is a human", () =>
-        Effect.map(Audience, (audience) =>
-          assert.deepStrictEqual({ ...audience }, { kind: "human", source: "override" })
-        )
-      );
-    }
-  );
+  it.layer(realEnvAudience({ CLAUDECODE: "1", OKFIT_AUDIENCE: "human" }), { timeout: "30 seconds" })((it) => {
+    it.effect("the override beats detection: CLAUDECODE=1 with OKFIT_AUDIENCE=human is a human", () =>
+      Effect.map(Audience, (audience) => assert.deepStrictEqual({ ...audience }, { kind: "human", source: "override" }))
+    );
+  });
 
-  it.layer(audienceOverRealRuntimeEnv({ CLAUDECODE: "1" }), { timeout: "30 seconds" })((it) => {
+  it.layer(realEnvAudience({ CLAUDECODE: "1" }), { timeout: "30 seconds" })((it) => {
     it.effect("CLAUDECODE=1 with no override is an agent, detected, never a refusal", () =>
       Effect.map(Audience, (audience) => assert.deepStrictEqual({ ...audience }, { kind: "agent", source: "detected" }))
     );
   });
 
-  it.layer(audienceOverRealRuntimeEnv({}), { timeout: "30 seconds" })((it) => {
+  it.layer(realEnvAudience({}), { timeout: "30 seconds" })((it) => {
     it.effect("no signals and no override is a detected human", () =>
       Effect.map(Audience, (audience) => assert.deepStrictEqual({ ...audience }, { kind: "human", source: "detected" }))
     );
   });
 
-  it.layer(audienceOverRealRuntimeEnv({ GITHUB_ACTIONS: "true" }), { timeout: "30 seconds" })((it) => {
+  it.layer(realEnvAudience({ GITHUB_ACTIONS: "true" }), { timeout: "30 seconds" })((it) => {
     it.effect("CI detection feeds the audience", () =>
       Effect.map(Audience, (audience) => assert.deepStrictEqual({ ...audience }, { kind: "ci", source: "detected" }))
     );
@@ -91,7 +87,7 @@ describe("Audience.layer", () => {
 
   {
     const lines: Array<{ readonly level: string; readonly text: string }> = [];
-    it.layer(capturedAudience(audienceOverRealRuntimeEnv({ OKFIT_AUDIENCE: "robot", CLAUDECODE: "1" }), lines), {
+    it.layer(capturedAudience(realEnvAudience({ OKFIT_AUDIENCE: "robot", CLAUDECODE: "1" }), lines), {
       timeout: "30 seconds",
     })((it) => {
       it.effect("an invalid override falls back to detection and logs exactly one warning", () =>
@@ -115,10 +111,10 @@ describe("Audience.layer", () => {
     it.layer(
       Layer.mergeAll(
         Layer.effect(Valid, Audience).pipe(
-          Layer.provide(capturedAudience(audienceOverRealRuntimeEnv({ OKFIT_AUDIENCE: "ci" }), valid))
+          Layer.provide(capturedAudience(realEnvAudience({ OKFIT_AUDIENCE: "ci" }), valid))
         ),
         Layer.effect(Invalid, Audience).pipe(
-          Layer.provide(capturedAudience(audienceOverRealRuntimeEnv({ OKFIT_AUDIENCE: "nope" }), invalid))
+          Layer.provide(capturedAudience(realEnvAudience({ OKFIT_AUDIENCE: "nope" }), invalid))
         )
       ),
       { timeout: "30 seconds" }
@@ -136,7 +132,7 @@ describe("Audience.layer", () => {
 
   {
     const lines: Array<{ readonly level: string; readonly text: string }> = [];
-    it.layer(capturedAudience(audienceOverRealRuntimeEnv({ OKFIT_AUDIENCE: "", GITHUB_ACTIONS: "true" }), lines), {
+    it.layer(capturedAudience(realEnvAudience({ OKFIT_AUDIENCE: "", GITHUB_ACTIONS: "true" }), lines), {
       timeout: "30 seconds",
     })((it) => {
       it.effect("an empty override is unset: detected, with no warning", () =>
@@ -180,15 +176,11 @@ describe("Audience.layer", () => {
     });
   }
 
-  it.layer(audienceOverRealRuntimeEnv({ OKFIT_AUDIENCE: "HUMAN", CLAUDECODE: "1" }), { timeout: "30 seconds" })(
-    (it) => {
-      it.effect("the override is case-insensitive", () =>
-        Effect.map(Audience, (audience) =>
-          assert.deepStrictEqual({ ...audience }, { kind: "human", source: "override" })
-        )
-      );
-    }
-  );
+  it.layer(realEnvAudience({ OKFIT_AUDIENCE: "HUMAN", CLAUDECODE: "1" }), { timeout: "30 seconds" })((it) => {
+    it.effect("the override is case-insensitive", () =>
+      Effect.map(Audience, (audience) => assert.deepStrictEqual({ ...audience }, { kind: "human", source: "override" }))
+    );
+  });
 
   it.layer(
     Layer.provide(Audience.layer(), CurrentRuntimeEnv.layer).pipe(

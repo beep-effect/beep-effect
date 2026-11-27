@@ -132,7 +132,7 @@ describe("verified-span hostile-text contract", () => {
     ({ text }) => {
       expect(
         normalizeTextLocator(text),
-        "mark-leading letters, composing bases, marks of different canonical classes, Jamo, compatibility and astral letters with no whitespace or quotes, so the locator form is the NFKC form; 8 or more scalars make the wrong-cluster triple (composing base, mark-leading letter, mark) common"
+        "the scalars hold no whitespace or quotes, so the locator form is the NFKC form"
       ).toBe(Str.normalize("NFKC")(text));
     },
     { arbitrary: fcRuns(500) }

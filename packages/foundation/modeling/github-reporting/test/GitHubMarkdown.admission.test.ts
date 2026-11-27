@@ -83,16 +83,8 @@ describe("GitHubMarkdown admission", () => {
         const none = yield* tableOf(A.empty());
         const small = yield* tableOf(A.take(rows, 5_000));
         const large = yield* tableOf(rows);
-        assert.strictEqual(
-          none,
-          PER_ROW + 3,
-          "the header row, plus 1 for the table and 2 for the root; the counter wraps admission.admit because a schema's make memoizes as a non-configurable own property that coverage's shared worker cannot rewrap"
-        );
-        assert.strictEqual(
-          small,
-          none + PER_ROW * 5_000,
-          `admissions(5k) = ${small}; the counter is a plain swap, since a vi.spyOn spy would retain every admitted tree`
-        );
+        assert.strictEqual(none, PER_ROW + 3, "the header row, plus 1 for the table and 2 for the root");
+        assert.strictEqual(small, none + PER_ROW * 5_000, `admissions(5k) = ${small}`);
         assert.strictEqual(
           large,
           none + PER_ROW * 10_000,

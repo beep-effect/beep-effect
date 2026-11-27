@@ -141,9 +141,7 @@ const inPlaceLexicalType: Readonly<Record<MdFieldOnlyNode["_tag"], LexicalStruct
 
 const looseLeafTypes: ReadonlyArray<string> = ["text", "tab", "linebreak", "link"];
 
-const discardFreeListNodeArbitrary = Arbitrary.schema(ListNodeValue).pipe(
-  Arbitrary.map((payload) => ListNode.make(payload))
-);
+const NoDiscardListNodes = Arbitrary.schema(ListNodeValue).pipe(Arbitrary.map((payload) => ListNode.make(payload)));
 
 const isDeclared = (table: ReadonlyArray<PatternTransition>, source: string, target: string): boolean =>
   A.some(table, ([from, to]) => from === source && to === target);
@@ -256,7 +254,7 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
     for (const [type, member] of R.toEntries(LexicalNode.cases)) {
       it.prop(
         `projects the ${type} node with a conserved or declared pattern`,
-        { node: type === "list" ? discardFreeListNodeArbitrary : Arbitrary.schema(member) },
+        { node: type === "list" ? NoDiscardListNodes : Arbitrary.schema(member) },
         ({ node }) => {
           const blocks = nodeToBlocks(node);
 

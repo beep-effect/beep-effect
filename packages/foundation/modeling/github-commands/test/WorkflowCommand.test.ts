@@ -69,9 +69,13 @@ describe("WorkflowCommand", () => {
     });
   });
 
-  describe("escaping the characters the runner parses structurally, which would truncate or inject a command", () => {
+  describe("escaping", () => {
     it("escapes percent, CR and LF in the message", () => {
-      assert.strictEqual(WorkflowCommand.render("debug", {}, "100% \r\n done"), "::debug::100%25 %0D%0A done");
+      assert.strictEqual(
+        WorkflowCommand.render("debug", {}, "100% \r\n done"),
+        "::debug::100%25 %0D%0A done",
+        "the runner parses these characters structurally; an unescaped one truncates the command or injects a new one"
+      );
     });
 
     it("escapes colon and comma in property values, which delimit the command", () => {
