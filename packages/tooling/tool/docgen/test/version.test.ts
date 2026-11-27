@@ -26,8 +26,6 @@ it.layer(BunServices.layer)("Version", (it) => {
   );
 });
 
-// No file system entry exists, so the manifest read fails and maps to a
-// `DocgenError` naming the manifest.
 it.layer(Layer.mergeAll(Path.layer, FileSystem.layerNoop({})), { timeout: "30 seconds" })(
   "Version without a manifest",
   (it) => {
@@ -70,9 +68,6 @@ it.layer(Layer.mergeAll(rejectingPath, FileSystem.layerNoop({})), { timeout: "30
   }
 );
 
-// `readManifestVersion` reads through the presence-lenient `PackageManifest`
-// tier and requires `version`: unrelated absent fields are fine, a present
-// `version` must be strict semver, and the text must be JSON.
 it.layer(BunServices.layer)("Version.readManifestVersion", (it) => {
   const readFrom = Effect.fn("VersionTest.readFrom")(function* (text: string) {
     const fs = yield* FileSystem.FileSystem;

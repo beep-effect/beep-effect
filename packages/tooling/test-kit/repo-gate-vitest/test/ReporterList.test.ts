@@ -1,6 +1,3 @@
-// The shared Vitest config keeps Vitest's own default reporter selection and
-// appends the gate adapter by package specifier; this resolves the package's
-// real config through Vitest and compares the resolved list.
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it } from "@effect/vitest";
 import * as A from "effect/Array";

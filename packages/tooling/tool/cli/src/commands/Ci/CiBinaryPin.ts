@@ -140,7 +140,6 @@ export const decodeCiBinaryPinFlags = (flags: typeof CiBinaryPin.Encoded) =>
     Effect.mapError((error) => CiCommandError.make({ message: `Invalid pin: ${error.message}` }))
   );
 
-// One `KEY: value` line under a step's `env:` block; the value is a single token.
 const pinLinePattern = (key: string): RegExp => new RegExp(`^([\\t ]*${key}:[\\t ]*)(\\S+)[\\t ]*$`, "gmu");
 
 const TAG_KEY = "BEEP_CI_RELEASE_TAG";
@@ -169,6 +168,7 @@ const rewritePinLine = Effect.fnUntraced(function* (text: string, key: string, v
  * leaves every other byte alone, so rewriting with the pin already present
  * returns the same text. Fails with a `CiCommandError` when the text holds
  * none or more than one line for either key.
+ * Each key is one `KEY: value` line under a step's `env:` block, and its value is a single token.
  *
  * **Example** (Rewrite a pin)
  *

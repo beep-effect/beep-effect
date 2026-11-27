@@ -238,6 +238,11 @@ export const requireCacheSupervisorCapture: {
 /**
  * Allocate scoped supervisor storage outside every task input mount.
  *
+ * **Details**
+ *
+ * The storage holds a `node_modules` symlink to the repository root, so worker
+ * imports resolve without private captures ever sitting inside a source mount.
+ *
  * **Example** (Reference private host storage)
  * ```ts
  * import { makePrivateSupervisorStorage } from "@beep/repo-cli/test/Cache"
@@ -263,7 +268,6 @@ export const makePrivateSupervisorStorage = Effect.fn("CachePilot.makePrivateSup
   if (A.some([...mounts, "/usr"], (mount) => isResolvedPathWithinRoot(path, { root: mount, candidate: directory })))
     return yield* CacheCommandError.new("Private supervisor storage must remain outside every source input mount.");
   yield* fs.chmod(directory, 0o700);
-  // Resolve worker imports without placing private captures inside a source mount.
   yield* fs.symlink(path.join(root, "node_modules"), path.join(directory, "node_modules"));
   return directory;
 });

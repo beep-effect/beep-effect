@@ -76,16 +76,6 @@ export class RecordAgentEffectivenessEvalScoreOptions extends S.Opaque<
 const candidateSkillRoots = [".agents", ".claude"];
 const encodeCandidateSkillListing = S.encodeEffect(S.fromJsonString(S.Array(S.Tuple([S.String, S.String]))));
 
-/**
- * Digest every file under `<dir>/.agents/skills` and `<dir>/.claude/skills`.
- *
- * **Details**
- *
- * Files are listed recursively, keyed by their dir-relative path, sorted, and
- * content-hashed; the digest hashes that sorted `(path, contentSha256)`
- * listing. No candidate file under either root yields `Option.none()`. Raw
- * skill content is never persisted.
- */
 const candidateSkillDigest = Effect.fn("AgentEffectivenessEvalScorer.candidateSkillDigest")(function* (dir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

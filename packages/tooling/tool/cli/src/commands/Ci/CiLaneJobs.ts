@@ -28,9 +28,7 @@ import type { CiLaneDescriptor } from "./CiLane.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLaneJobs");
 
-// A job of a called (reusable) workflow reports as `<caller> / <job>`, e.g. `Heavy / Check`.
 const CALLED_JOB_SEPARATOR = " / ";
-// A partition job reports as `<family> (<partition>)`, e.g. `Lint (lint-a)`.
 const PARTITION_OPEN = " (";
 const PARTITION_CLOSE = ")";
 const PARTITION_SUFFIX = / \([^()]*\)$/;
@@ -109,6 +107,10 @@ const partitionOfName = (name: string): O.Option<string> =>
 /**
  * The partition a job reports for: its own ` (<partition>)` suffix or, for a
  * job of a called workflow, its caller's.
+ *
+ * **Details**
+ *
+ * A partition job reports as `<family> (<partition>)`, e.g. `Lint (lint-a)`.
  *
  * **Example** (Read the partition of three jobs)
  *
@@ -202,7 +204,6 @@ export const HEAVY_CONTEXT_PREFIX = `${CiSupportJobName.Enum.Heavy}${CALLED_JOB_
 
 const isCiLaneId = S.is(CiLaneId);
 
-// The descriptors of runnable lanes; `pr-size` and `dependency-review` are checks, not lanes.
 const LANE_DESCRIPTORS: ReadonlyArray<readonly [CiLaneId, CiLaneDescriptor]> = A.getSomes(
   A.map(CI_LANE_DESCRIPTORS, (descriptor) =>
     O.map(O.liftPredicate(descriptor.id, isCiLaneId), (lane) => [lane, descriptor] as const)
@@ -217,6 +218,8 @@ const DESCRIPTOR_BY_LANE: HashMap.HashMap<CiLaneId, CiLaneDescriptor> = HashMap.
  *
  * Every lane id has exactly one descriptor (the conservation test in
  * `ci-lane-jobs.test.ts` holds it), so the lookup is total.
+ * Only runnable lanes have a descriptor here: `pr-size` and `dependency-review` are checks, not
+ * lanes.
  *
  * **Example** (Read a lane's reporting job)
  *
@@ -396,8 +399,6 @@ export const ciLaneOfShardFamily = (family: string): O.Option<CiLaneId> => HashM
  */
 export const isCiHeavyLane = (lane: CiLaneId): boolean => Str.Equivalence(ciLaneDescriptor(lane).workflow, "heavy");
 
-// Support jobs: the named ones, plus the context of every descriptor that is no lane (`PR Size Label`) and
-// whose name no lane reports under (`Security` is the security lane's).
 const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(
   A.appendAll(
     CiSupportJobName.literals,
@@ -412,6 +413,11 @@ const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(
 
 /**
  * Whether a job name is a known job outside every lane.
+ *
+ * **Details**
+ *
+ * Support jobs are the named ones plus the context of every descriptor that is no lane
+ * (`PR Size Label`) and that no lane reports under (`Security` is the security lane's).
  *
  * **Example** (Two support jobs and a lane job)
  *
@@ -430,15 +436,19 @@ const SUPPORT_JOB_NAMES: HashSet.HashSet<string> = HashSet.fromIterable(
  */
 export const isCiSupportJobName = (name: string): boolean => HashSet.has(SUPPORT_JOB_NAMES, name);
 
-// The jobs a partition job runs through a called workflow. Each reports as `<shard> / <job>` and is that shard
-// on another runner, so the lane-timings census measures it in its layout and its pickup. `Overflow` is the job
-// of shard-overflow.yml: a Test Unit partition that Test Plan routed to the self-hosted overflow pool runs
-// through it, called from check.yml's matrix job of the same name (goals/ci-lane-economics, 2026-11-13).
 const SHARD_CALLED_JOBS: ReadonlyArray<string> = ["Overflow"];
 
 /**
  * Every name one partition job can report under: its own, then
  * `<shard> / <job>` for each job it may run through a called workflow.
+ *
+ * **Details**
+ *
+ * Each called job reports as `<shard> / <job>` and is that shard on another runner, so the
+ * lane-timings census measures it in its layout and pickup. `Overflow` is the job of
+ * shard-overflow.yml: a Test Unit partition that Test Plan routed to the self-hosted overflow pool
+ * runs through it, called from check.yml's matrix job of the same name (goals/ci-lane-economics,
+ * 2026-11-13).
  *
  * **Example** (A shard routed to the overflow pool)
  *

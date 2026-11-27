@@ -103,8 +103,6 @@ const decodeOperation = S.decodeUnknownEffect(OpenApiOperation);
 const OptionalOperation = CacheConformanceOperationId.pick(["queryArtifacts", "recordCacheEvents"]);
 const isOptionalOperation = S.is(OptionalOperation);
 
-// Hand-authored route table: the generator looks each (method, path) up in the
-// blob and takes the operationId the blob publishes, mounted under `/v8`.
 const routeTable: ReadonlyArray<readonly [CacheConformanceMethod, string]> = [
   ["GET", "/artifacts/status"],
   ["HEAD", "/artifacts/{hash}"],
@@ -139,8 +137,7 @@ const putHeadGet: CaseRule["routes"] = [
 ];
 const clients = ["published-stable-client", "published-canary-client"] as const;
 
-// RC-001..RC-032 in plan order.
-const caseTable: ReadonlyArray<CaseRule> = [
+const caseTableInPlanOrder: ReadonlyArray<CaseRule> = [
   rule("wire", ["strict-openapi"], wireReason, [["GET", "/artifacts/status"]]),
   rule("wire", ["strict-openapi", ...clients], wireReason, putHeadGet),
   rule("wire", ["strict-openapi", ...clients], wireReason, putHeadGet),
@@ -213,8 +210,6 @@ const caseTable: ReadonlyArray<CaseRule> = [
 
 const responseRefPrefix = "#/components/responses/";
 
-// Error responses in the pinned blob are `$ref`s to shared components; resolve
-// them so their documented media type is scored, and fail on a dangling ref.
 const resolveResponse = (
   components: (typeof OpenApiDocument.Type)["components"],
   response: typeof OpenApiResponse.Type
@@ -298,6 +293,10 @@ const originFor = Effect.fn("CacheConformance.originFor")(function* (
  * a typed error. The plan digest is recorded. Case identity, class, operation
  * and assertion come from the plan; executor, dimensions and justification
  * come from the hand-authored table in this module.
+ * Each hand-authored (method, path) route takes the operationId the blob publishes for it,
+ * mounted under `/v8`. Error responses that are `$ref`s to shared components are resolved so
+ * their documented media type is scored; a dangling ref fails. A plan that drifts from the corpus
+ * schema fails with a typed error, never a thrown constructor.
  *
  * **Example** (Build the corpus from the repository root)
  * ```ts
@@ -322,12 +321,12 @@ export const buildCacheConformanceCorpus = Effect.fn("CacheConformance.buildCorp
   const planBytes = yield* readCacheExperimentBytes(root, CacheConformancePaths.plan);
   const decodedCacheExperimentText1 = yield* decodeCacheExperimentText(planBytes);
   const plan = yield* decodePlanJson(decodedCacheExperimentText1);
-  if (plan.cases.length !== caseTable.length)
+  if (plan.cases.length !== caseTableInPlanOrder.length)
     return yield* CacheCommandError.new(
-      `Plan has ${plan.cases.length} cases; the hand-authored table has ${caseTable.length}.`
+      `Plan has ${plan.cases.length} cases; the hand-authored table has ${caseTableInPlanOrder.length}.`
     );
   const cases = yield* Effect.forEach(
-    A.zip(plan.cases, caseTable),
+    A.zip(plan.cases, caseTableInPlanOrder),
     Effect.fnUntraced(function* ([planned, entry]) {
       const generated = planned.class === "generated" || planned.class === "generated-optional";
       if (generated !== A.isReadonlyArrayNonEmpty(entry.routes))
@@ -342,7 +341,6 @@ export const buildCacheConformanceCorpus = Effect.fn("CacheConformance.buildCorp
     }),
     { concurrency: 1 }
   );
-  // Validate through the type side so a plan drift is a typed failure, not a thrown make.
   return yield* decodeCorpusType({
     schemaVersion: "cache-conformance-corpus/v1",
     openapi: { gitBlob: CacheConformancePaths.specGitBlob, sha256: openapiSha256, mountPrefix: "/v8" },
@@ -377,6 +375,10 @@ export const renderCacheConformanceCorpus = Effect.fn("CacheConformance.renderCo
  * Write the generated corpus, or with `check` fail when the committed file's
  * content differs; whitespace-only reformatting is tolerated.
  *
+ * **Details**
+ *
+ * The comparison normalises whitespace only, so a change of content or key order still fails.
+ *
  * **Example** (Check corpus freshness)
  * ```ts
  * import { syncCacheConformanceCorpus } from "@beep/repo-cli/commands/Cache"
@@ -403,8 +405,6 @@ export const syncCacheConformanceCorpus = Effect.fn("CacheConformance.syncCorpus
   const committed = yield* readCacheExperimentBytes(root, CacheConformancePaths.corpus).pipe(
     Effect.flatMap(decodeCacheExperimentText)
   );
-  // Compare whitespace-normalised JSON: the commit formatter may re-wrap the
-  // generated document, but any change of content or key order still fails.
   if ((yield* normalise(committed)) !== (yield* normalise(rendered)))
     return yield* CacheCommandError.new(
       `${CacheConformancePaths.corpus} is stale; run bun run beep cache conformance-corpus.`

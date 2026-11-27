@@ -19,7 +19,6 @@
 const rawArgv = Bun.argv.slice(2);
 let handledLintFixNoop = false;
 const isCheckProbe = rawArgv.length === 2 && rawArgv[0] === "quality" && rawArgv[1] === "check-probe";
-// One audience flag may follow (`beep-cli gate run check --agent`); anything else goes to the full CLI.
 const isGateRunCheck =
   rawArgv[0] === "gate" &&
   rawArgv[1] === "run" &&
@@ -35,8 +34,6 @@ if (isCheckProbe) {
     import("effect/Layer"),
     import("./commands/Quality/CheckProbe.ts"),
   ]);
-  // A generated `check` script runs in its package directory. The platform
-  // layer is built into a context here, at the entry point, as bin-main does.
   runMain(
     Layer.merge(BunFileSystem.layer, BunPath.layer).pipe(
       Layer.build,
@@ -68,8 +65,6 @@ if (isGateRunCheck) {
     import("./commands/Gate/GateCheck.ts"),
     import("./commands/Gate/GateRuntime.ts"),
   ]);
-  // The gate prints its own console and fails with the compiler's exit code. It
-  // needs the file system, paths, a process spawner and standard output only.
   runMain(
     BunChildProcessSpawner.layer.pipe(
       Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer, BunStdio.layer)),
@@ -86,9 +81,7 @@ if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
   const [A, Str] = await Promise.all([import("effect/Array"), import("effect/String")]);
   const CHANGED_PATH_DIFF_FILTER = "ACMRTUXB";
   const runGit = (args: ReadonlyArray<string>) =>
-    // KEEP (D-21, X4-X6): the three `lint --fix` no-op reads run before any Effect runtime exists, so no
-    // `Git` service can be provided; a failed read just falls through to the full CLI.
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X4-X6), reason above
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: runs before any Effect runtime exists; a failed read falls through to the full CLI
     Bun.spawnSync({
       cmd: ["git", ...args],
       stderr: "ignore",

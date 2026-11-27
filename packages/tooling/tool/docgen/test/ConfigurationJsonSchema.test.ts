@@ -13,8 +13,11 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 describe("schema.json", () => {
   it("equals the JSON Schema rendered from ConfigurationSchema", () => {
-    // Regenerate with the command in the configurationJsonSchema JSDoc when this fails.
-    strictEqual(encodeJson(schemaJson), encodeJson(Configuration.configurationJsonSchema()));
+    strictEqual(
+      encodeJson(schemaJson),
+      encodeJson(Configuration.configurationJsonSchema()),
+      "schema.json is stale: regenerate it with the command in the configurationJsonSchema JSDoc"
+    );
   });
 
   it("renders the compiler-option inputs from the closed CompilerOptionsShape, not a second model", () => {
@@ -44,9 +47,8 @@ describe("schema.json", () => {
     );
     const shape = defs["@beep/repo-docgen/Configuration/CompilerOptionsShape"];
     assertTrue(P.isReadonlyObject(shape) && P.isReadonlyObject(shape.properties));
-    // The closed view's option set, closed, with nothing the retired repo-utils model carried.
     assertTrue(P.isReadonlyObject(shape.properties.allowImportingTsExtensions));
-    strictEqual(shape.additionalProperties, false);
+    strictEqual(shape.additionalProperties, false, "the closed view's option set is closed");
     const text = encodeJson(rendered);
     strictEqual(Str.includes("TSConfigCompilerOptionsSemantic")(text), false);
     strictEqual(Str.includes('"type":"null"')(text), false);

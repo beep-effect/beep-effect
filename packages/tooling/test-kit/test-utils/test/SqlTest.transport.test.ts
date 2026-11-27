@@ -17,7 +17,6 @@ import { vi } from "vitest";
 
 const transport = vi.hoisted(() => ({ rejectSqlite: false }));
 
-// Exercise harness lifecycle logic with real local SQL clients at the transport seam.
 vi.mock("@effect/platform-bun/BunFileSystem", () => import("@effect/platform-node/NodeFileSystem"));
 vi.mock("@effect/platform-bun/BunPath", () => import("@effect/platform-node/NodePath"));
 vi.mock("@effect/sql-sqlite-bun", () =>
@@ -67,7 +66,7 @@ vi.mock("testcontainers", () => ({
   Wait: { forListeningPorts: () => ({}) },
 }));
 
-describe("SqlTest transport lifecycle", () => {
+describe("SqlTest transport lifecycle with real local SQL clients at the transport seam", () => {
   it.layer(makeSqlTestLayer({ driver: BunSqliteTestDriver, config: undefined }), { timeout: "60 seconds" })(
     "Bun transport",
     (it) => {

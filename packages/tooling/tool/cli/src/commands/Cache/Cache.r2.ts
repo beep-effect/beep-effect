@@ -119,16 +119,15 @@ export const cacheR2ProbeFixture = Effect.fn("CacheR2.fixture")(function* (optio
 }) {
   const digest = yield* hashHex(encoder.encode(`${options.marker}${options.label}`));
   const seed = yield* Effect.fromResult(Hex.decode(digest)).pipe(Effect.orDie);
-  const out = new Uint8Array(options.size);
-  out.set(seed.subarray(0, Math.min(seed.length, options.size)));
+  const seedRepeatedToSize = new Uint8Array(options.size);
+  seedRepeatedToSize.set(seed.subarray(0, Math.min(seed.length, options.size)));
   let filled = Math.min(seed.length, options.size);
-  // Doubling copy of the repeated digest; equal to Python's (seed * n)[:size].
   while (filled < options.size) {
     const span = Math.min(filled, options.size - filled);
-    out.copyWithin(filled, 0, span);
+    seedRepeatedToSize.copyWithin(filled, 0, span);
     filled += span;
   }
-  return out;
+  return seedRepeatedToSize;
 });
 
 const decodeStored = JsonStringCodec(CacheR2StoredReceipt).decode;

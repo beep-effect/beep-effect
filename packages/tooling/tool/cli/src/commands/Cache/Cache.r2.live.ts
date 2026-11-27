@@ -42,12 +42,6 @@ const PythonEscaped = HashSet.make("!", "'", "(", ")", "*");
 const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheR2ProbeReceipt, { space: 2 }));
 const ByMtime = Order.mapInput(Order.Number, ([, mtime]: readonly [string, number]) => mtime);
 
-/**
- * Percent-encode one query value like Python's `quote(value, safe="")`.
- *
- * @param value - Raw query value.
- * @returns The value with every reserved character percent-encoded.
- */
 const quote = (value: string) =>
   pipe(
     Str.split(encodeURIComponent(value), ""),
@@ -203,7 +197,6 @@ const readerAdapter = (live: Live) =>
     const port = yield* reserveLoopbackPort;
     const readerKey = yield* requiredEnvironment(live, "R2_READ_ACCESS_KEY_ID");
     const readerSecret = yield* requiredEnvironment(live, "R2_READ_SECRET_ACCESS_KEY");
-    // The scoped handle terminates the adapter, then kills it after five seconds.
     const handle = yield* ChildProcess.make(
       live.path.join(live.target.root, "packages/tooling/infra/turbo-cache/r2-pilot/adapter.sh"),
       ["serve"],

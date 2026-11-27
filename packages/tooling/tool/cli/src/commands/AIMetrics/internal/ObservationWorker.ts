@@ -195,8 +195,6 @@ const resolveObservationCredentials = Effect.fnUntraced(function* (uid: number) 
   );
   const secrets = yield* Effect.gen(function* () {
     if (O.isNone(credentialDirectory)) {
-      // Direct process fixtures retain their explicit environment route. The
-      // installed service uses credentials and clears all inherited variables.
       return {
         salt: yield* Config.Redacted("BEEP_AI_METRICS_HASH_SALT"),
         apiKey: yield* Config.option(Config.Redacted("BEEP_OBSERVATION_PHOENIX_API_KEY")),
@@ -276,7 +274,17 @@ const prepareObservationStorage = Effect.fnUntraced(function* (directory: string
  *
  * **Details**
  *
- * Linux/Bun only. Requires a pre-created private directory/config, inherited exclusive flock, cgroup memory/swap/CPU/task ceilings, finite descriptor/file limits, zero core dumps and no-new-privileges. Opens only fixed owned journal/socket paths; refuses symlink/hardlink database files and active stale sockets. Health, metrics and pause/resume are private-socket routes; no TCP listener is created. A frontend may expose only /v1/traces with the previously qualified transport limits. Installed credentials come from bounded private systemd files; direct process fixtures may use an explicit environment. A present but invalid credential directory never falls back to environment secrets. Secrets never enter argv or health. Scope shutdown drains the worker and closes the socket. No source is enrolled automatically and the historical recovery hold is untouched.
+ * Linux/Bun only. Requires a pre-created private directory/config, inherited exclusive flock,
+ * cgroup memory/swap/CPU/task ceilings, finite descriptor/file limits, zero core dumps and
+ * no-new-privileges. Opens only fixed owned journal/socket paths; refuses symlink/hardlink database
+ * files and active stale sockets. Health, metrics and pause/resume are private-socket routes; no
+ * TCP listener is created. A frontend may expose only /v1/traces with the previously qualified
+ * transport limits. Installed credentials come from bounded private systemd files; direct process
+ * fixtures may use an explicit environment. A present but invalid credential directory never falls
+ * back to environment secrets. Secrets never enter argv or health. Scope shutdown drains the worker
+ * and stops the server before it removes the socket, and removes it only while it is still the
+ * inode this process bound, so a failed bind never unlinks another listener. No source is enrolled
+ * automatically and the historical recovery hold is untouched.
  *
  * **Example** (Inspect the worker process entry point)
  *
@@ -320,13 +328,11 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
         })
       : O.none();
     const runtime = yield* makeObservationRuntime(worker, config.runtime, sourceWork);
-    // Capture ownership only after bind. Never unlink another listener on a failed bind.
-    let ownedSocket: O.Option<FileSystem.File.Info> = O.none();
-    // Registered first so server shutdown precedes inode-checked socket cleanup.
+    let ownedSocketAfterBind: O.Option<FileSystem.File.Info> = O.none();
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
-        if (O.isNone(ownedSocket)) return;
-        const owner = ownedSocket.value;
+        if (O.isNone(ownedSocketAfterBind)) return;
+        const owner = ownedSocketAfterBind.value;
         const current = yield* fs.lstat(socket).pipe(Effect.option);
         if (O.exists(current, (info) => info.type === "Socket" && sameFileIdentity(info, owner))) {
           yield* fs.remove(socket);
@@ -338,7 +344,7 @@ export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWo
     );
     const server = Context.get(build2, HttpServer.HttpServer);
     const lstat3 = yield* fs.lstat(socket);
-    ownedSocket = O.some(lstat3);
+    ownedSocketAfterBind = O.some(lstat3);
     yield* fs.chmod(socket, 0o600);
     const handler = Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;

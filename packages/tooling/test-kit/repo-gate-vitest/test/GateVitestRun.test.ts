@@ -1,6 +1,3 @@
-// The adapter's implementation against a throwaway repository on disk: where
-// a run's record goes, what the record and the raw log hold, and that a
-// failure becomes one stderr line instead of a rejected promise.
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import {
@@ -67,8 +64,11 @@ it.layer(NodeServices.layer)("on disk", (it) => {
       const record = yield* store.readRecord(target);
       assert.strictEqual(record.report.subject, "@beep/demo");
       assert.strictEqual(record.report.reason, "failed");
-      // Turbo's task hash when the suite itself runs under Turbo, unique to the run otherwise.
-      assert.match(record.report.inputFingerprint, /^(local|turbo):/u);
+      assert.match(
+        record.report.inputFingerprint,
+        /^(local|turbo):/u,
+        "Turbo's task hash when the suite runs under Turbo, unique to the run otherwise"
+      );
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const log = yield* fs.readFileString(path.join(packageRoot, ".beep/gates/test/report.log"));
@@ -125,8 +125,8 @@ it.layer(NodeServices.layer)("on disk", (it) => {
       const { packageRoot } = yield* tempRepo();
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      // A file where the gates directory belongs makes every write fail.
-      yield* fs.writeFileString(path.join(packageRoot, ".beep"), "not a directory");
+      const fileWhereGatesDirBelongs = path.join(packageRoot, ".beep");
+      yield* fs.writeFileString(fileWhereGatesDirBelongs, "not a directory");
       const lines: Array<string> = [];
       const session = makeGateVitestRun({ root: packageRoot, argv: [], printLine: (line) => lines.push(line) });
       yield* Effect.promise(() =>
@@ -153,11 +153,11 @@ describe("makeConsoleLogBuffer", () => {
     buffer.add({ content: "abc", type: "stdout" });
     buffer.add({ content: "def\n", type: "stdout" });
     buffer.add({ content: "ghi", type: "stderr" });
-    // Would still fit, but a line after a dropped one is dropped too, so the log keeps an unbroken start.
     buffer.add({ content: "", type: "stdout" });
     assert.strictEqual(
       buffer.text(),
-      "[stdout] abc\n[stdout] def\n[gate] not recorded past the 36-character bound: 2 console lines, 23 characters\n"
+      "[stdout] abc\n[stdout] def\n[gate] not recorded past the 36-character bound: 2 console lines, 23 characters\n",
+      "the last line would still fit, but a line after a dropped one is dropped too, so the log keeps an unbroken start"
     );
   });
 
@@ -174,7 +174,6 @@ describe("makeConsoleLogBuffer", () => {
   });
 });
 
-// A package script chains a Bun run and a Node run; the second carries the continuation flag.
 const asRun = (continuing: boolean) =>
   Effect.provideService(
     ConfigProvider.ConfigProvider,
@@ -247,9 +246,6 @@ it.layer(NodeServices.layer)("one script, several Vitest runs", (it) => {
     })
   );
 
-  // A cache restore brings back the record and the sidecar naming it. The next invocation's first
-  // run clears the sidecar as it starts, so even if that run then writes nothing, its chain's
-  // continuing run cannot fold into the restored record.
   it.effect("never folds into a restored record once a new chain has started", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -262,11 +258,11 @@ it.layer(NodeServices.layer)("one script, several Vitest runs", (it) => {
       const first = makeGateVitestRun({ root: packageRoot, argv: [] });
       yield* Effect.promise(() => first.start());
       const cleared = yield* fs.exists(sidecar);
-      assert.isFalse(cleared);
+      assert.isFalse(cleared, "the next invocation's first run clears the cache-restored sidecar as it starts");
       yield* runAs(true, { packageRoot, module: nodeModule, line: "node run", reason: "passed" });
       {
         const names = yield* itemNames(repoRoot);
-        assert.deepStrictEqual(names, ["boundary"]);
+        assert.deepStrictEqual(names, ["boundary"], "the chain's continuing run did not fold into the restored record");
       }
     })
   );
@@ -281,19 +277,21 @@ it.layer(NodeServices.layer)("one script, several Vitest runs", (it) => {
       yield* clearSession(packageRoot, []).pipe(asRun(true));
       const kept = yield* fs.exists(path.join(gateDir, SESSION_FILE));
       assert.isTrue(kept);
-      // A continuing run whose chain's record is gone replaces it.
       yield* fs.remove(path.join(gateDir, "report.json"));
       yield* runAs(true, { packageRoot, module: nodeModule, line: "second", reason: "passed" });
       {
         const names = yield* itemNames(repoRoot);
-        assert.deepStrictEqual(names, ["boundary"]);
+        assert.deepStrictEqual(names, ["boundary"], "a continuing run whose chain's record is gone replaces it");
       }
-      // A continuing run whose chain's log is gone still folds the record, and its log starts there.
       yield* fs.remove(path.join(gateDir, "report.log"));
       yield* runAs(true, { packageRoot, module: failingModule, line: "third", reason: "failed" });
       {
         const folded = yield* itemNames(repoRoot);
-        assert.deepStrictEqual(folded, ["boundary", "adds", "subtracts"]);
+        assert.deepStrictEqual(
+          folded,
+          ["boundary", "adds", "subtracts"],
+          "a continuing run whose chain's log is gone still folds the record"
+        );
       }
       const log = yield* fs.readFileString(path.join(gateDir, "report.log"));
       assert.isTrue(Str.startsWith("[stdout] third\n")(log), log);

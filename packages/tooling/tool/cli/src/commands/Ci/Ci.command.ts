@@ -340,7 +340,6 @@ const appendTurboSummaryCommand = Command.make(
   Command.provide(CiRunnerOutputsLive)
 );
 
-// `${1:-default}`: an absent or empty positional takes the adapter's default.
 const positionalOr = (value: O.Option<string>, fallback: string) =>
   O.getOrElse(O.filter(value, Str.isNonEmpty), () => fallback);
 
@@ -369,6 +368,11 @@ const cacheLocalSummaryCommand = Command.make(
 
 /**
  * CI helper command group.
+ *
+ * **Details**
+ *
+ * `cache-pilot-inputs` treats an absent or empty positional like shell `${1:-default}`: it takes
+ * the adapter's default (`signed`, `@beep/identity#lint`).
  *
  * **Example** (Register CI command group)
  *

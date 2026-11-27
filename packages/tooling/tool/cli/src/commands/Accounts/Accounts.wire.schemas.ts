@@ -251,8 +251,6 @@ export class CodexUsageBody extends S.Opaque<CodexUsageBody, { readonly brand: u
  */
 export const CodexUsageBodyJson = JsonStringCodec(CodexUsageBody);
 
-// Codex puts a window of any length in either slot (a Pro plan reports its
-// weekly window as `primary_window`), so the kind comes from the duration.
 const SESSION_WINDOW_MAX_SECONDS = 86_400;
 
 const codexWindow = (wire: typeof CodexWindow.Type | null | undefined): O.Option<UsageWindow> =>
@@ -267,6 +265,11 @@ const codexWindow = (wire: typeof CodexWindow.Type | null | undefined): O.Option
 
 /**
  * The usage windows in a Codex response.
+ *
+ * **Details**
+ *
+ * Codex puts a window of any length in either slot (a Pro plan reports its weekly window as
+ * `primary_window`), so a window of up to one day is a session and a longer one is weekly.
  *
  * **Example** (Read no windows without limits)
  *
@@ -287,8 +290,6 @@ export const codexUsageWindows = (body: CodexUsageBody): ReadonlyArray<UsageWind
     O.getOrElse(A.empty<UsageWindow>)
   );
 
-// Claude names its dollar pools with rotating code names, so every top-level
-// entry shaped like a pool is read; the names known today get a plain label.
 const ClaudeDollarPool = S.Struct({
   limit_dollars: S.Finite,
   remaining_dollars: S.Finite,
@@ -302,6 +303,11 @@ const claudePoolLabel = (key: string): string => (key === "iguana_necktie" ? "cl
 
 /**
  * The dollar credit pools in a Claude usage response.
+ *
+ * **Details**
+ *
+ * Claude names its dollar pools with rotating code names, so every top-level entry shaped like
+ * a pool is read; only the names known today get a plain label.
  *
  * **Example** (Read a pool)
  *
@@ -588,8 +594,7 @@ export const kimiUsageWindows = (body: KimiUsageBody): ReadonlyArray<UsageWindow
     O.getOrElse(A.empty<UsageWindow>)
   );
 
-// Kimi wallet amounts carry eight decimals of the currency unit.
-const KIMI_WALLET_UNITS = 100_000_000;
+const KIMI_UNITS_PER_CURRENCY_UNIT = 100_000_000;
 
 const kimiCurrency = (wallet: typeof KimiBoosterWallet.Type): O.Option<string> =>
   pipe(
@@ -629,8 +634,8 @@ export const kimiCreditBalances = (body: KimiUsageBody): ReadonlyArray<CreditBal
             return CreditBalance.make({
               label: currency === "USD" ? "extra usage" : `extra usage (${currency})`,
               unit: currency === "USD" ? "usd" : "credits",
-              remaining: O.getOrElse(O.fromNullishOr(balance.amountLeft), () => 0) / KIMI_WALLET_UNITS,
-              limit: O.some(amount / KIMI_WALLET_UNITS),
+              remaining: O.getOrElse(O.fromNullishOr(balance.amountLeft), () => 0) / KIMI_UNITS_PER_CURRENCY_UNIT,
+              limit: O.some(amount / KIMI_UNITS_PER_CURRENCY_UNIT),
               expiresAt: O.none(),
             });
           })
@@ -640,8 +645,6 @@ export const kimiCreditBalances = (body: KimiUsageBody): ReadonlyArray<CreditBal
     O.toArray
   );
 
-// The profile's email is external text: a value outside the label format is
-// dropped, so one odd email cannot fail the whole profile and lose the tier.
 const KimiProfileEmail = S.String.pipe(
   S.NullOr,
   S.decodeTo(
@@ -719,20 +722,21 @@ export const KimiProfileBodyJson = JsonStringCodec(KimiProfileBody);
 export const kimiProfileIdentity = (body: KimiProfileBody): O.Option<string> =>
   O.orElse(O.flatten(O.fromNullishOr(body.email)), () => O.filter(O.fromNullishOr(body.nickname), Str.isNonEmpty));
 
-// Protobuf wire types: 0 varint, 1 fixed 64-bit, 2 length-delimited, 5 fixed 32-bit.
 const ProtoField = S.Struct({
   number: S.Finite,
   wireType: S.Finite,
   varint: S.Finite,
   bytes: S.Uint8Array,
-});
+}).pipe(
+  $I.annoteSchema("ProtoField", {
+    description: "One protobuf field; wire type 0 is a varint, 1 fixed 64-bit, 2 length-delimited, 5 fixed 32-bit.",
+  })
+);
 type ProtoField = typeof ProtoField.Type;
 
 const NO_BYTES = new Uint8Array(0);
 
-// Read a base-128 varint with arithmetic, not bit shifts: a Unix timestamp in
-// seconds already needs more than 31 bits.
-const readVarint = (bytes: Uint8Array, start: number): O.Option<readonly [value: number, next: number]> => {
+const readVarintPast31Bits = (bytes: Uint8Array, start: number): O.Option<readonly [value: number, next: number]> => {
   let value = 0;
   let scale = 1;
   for (let index = start; index < bytes.length && index < start + 10; index += 1) {
@@ -763,12 +767,12 @@ const fixedProtoWidth = (wireType: number): O.Option<number> =>
 const readProtoValue = (bytes: Uint8Array, number: number, wireType: number, start: number): O.Option<ProtoRead> => {
   if (wireType === 0) {
     return O.map(
-      readVarint(bytes, start),
+      readVarintPast31Bits(bytes, start),
       ([varint, next]): ProtoRead => [{ number, wireType, varint, bytes: NO_BYTES }, next]
     );
   }
   if (wireType === 2) {
-    return O.flatMap(readVarint(bytes, start), ([length, from]) =>
+    return O.flatMap(readVarintPast31Bits(bytes, start), ([length, from]) =>
       sliceProtoField(bytes, number, wireType, from, from + length)
     );
   }
@@ -778,13 +782,11 @@ const readProtoValue = (bytes: Uint8Array, number: number, wireType: number, sta
 };
 
 const readProtoField = (bytes: Uint8Array, offset: number): O.Option<ProtoRead> =>
-  O.flatMap(readVarint(bytes, offset), ([key, afterTag]) =>
+  O.flatMap(readVarintPast31Bits(bytes, offset), ([key, afterTag]) =>
     readProtoValue(bytes, Math.floor(key / 8), key % 8, afterTag)
   );
 
-// Split one protobuf message into its fields. A truncated or unknown field
-// ends the read with what was decoded so far.
-const protoFields = (bytes: Uint8Array): ReadonlyArray<ProtoField> => {
+const protoFieldsUntilMalformed = (bytes: Uint8Array): ReadonlyArray<ProtoField> => {
   let fields = A.empty<ProtoField>();
   let offset = 0;
   while (offset < bytes.length) {
@@ -802,12 +804,13 @@ const protoField = (fields: ReadonlyArray<ProtoField>, number: number, wireType:
 const float32 = (bytes: Uint8Array): number =>
   new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getFloat32(0, true);
 
-// A gRPC-web body is a run of frames: one flag byte (0 = message), a
-// big-endian 32-bit length, then the payload. The first message frame is the reply.
-const grpcWebMessage = (bytes: Uint8Array): O.Option<Uint8Array> => {
-  if (bytes.length < 5 || bytes[0] !== 0) return O.none();
-  const length = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(1, false);
-  return bytes.length >= 5 + length ? O.some(bytes.subarray(5, 5 + length)) : O.none();
+const GRPC_WEB_MESSAGE_FLAG = 0;
+const FRAME_HEADER_BYTES = 5;
+const grpcWebFirstMessage = (bytes: Uint8Array): O.Option<Uint8Array> => {
+  if (bytes.length < FRAME_HEADER_BYTES || bytes[0] !== GRPC_WEB_MESSAGE_FLAG) return O.none();
+  const bigEndianLength = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(1, false);
+  const end = FRAME_HEADER_BYTES + bigEndianLength;
+  return bytes.length >= end ? O.some(bytes.subarray(FRAME_HEADER_BYTES, end)) : O.none();
 };
 
 /**
@@ -835,16 +838,16 @@ const grpcWebMessage = (bytes: Uint8Array): O.Option<Uint8Array> => {
  * @since 0.0.0
  */
 export const grokUsageWindows = (body: Uint8Array): O.Option<ReadonlyArray<UsageWindow>> =>
-  grpcWebMessage(body).pipe(
-    O.flatMap((message) => protoField(protoFields(message), 1, 2)),
-    O.map((config) => protoFields(config.bytes)),
+  grpcWebFirstMessage(body).pipe(
+    O.flatMap((message) => protoField(protoFieldsUntilMalformed(message), 1, 2)),
+    O.map((config) => protoFieldsUntilMalformed(config.bytes)),
     O.map((fields) => [
       UsageWindow.make({
         kind: "weekly",
         scope: O.none(),
         usedPercent: O.match(protoField(fields, 1, 5), { onNone: () => 0, onSome: (field) => float32(field.bytes) }),
         resetsAt: protoField(fields, 5, 2).pipe(
-          O.flatMap((end) => protoField(protoFields(end.bytes), 1, 0)),
+          O.flatMap((end) => protoField(protoFieldsUntilMalformed(end.bytes), 1, 0)),
           O.map((seconds) => DateTime.makeUnsafe(seconds.varint * 1000))
         ),
       }),
@@ -1096,9 +1099,11 @@ export class JunieAuthTestBody extends S.Opaque<JunieAuthTestBody, { readonly br
  */
 export const JunieAuthTestBodyJson = JsonStringCodec(JunieAuthTestBody);
 
-// `Number(s)` reads "", whitespace, and hex as numbers, so only plain decimals may decode.
 const JunieDecimalString = S.String.check(S.isPattern(/^-?\d+(\.\d+)?$/)).pipe(
-  S.decodeTo(S.Finite, SchemaTransformation.numberFromString)
+  S.decodeTo(S.Finite, SchemaTransformation.numberFromString),
+  $I.annoteSchema("JunieDecimalString", {
+    description: 'A plain decimal; Number() alone would also read "", whitespace and hex.',
+  })
 );
 const JunieAmount = S.Struct({ amount: S.Union([S.Finite, JunieDecimalString]) });
 const JunieQuotaPool = S.Struct({

@@ -88,7 +88,7 @@ const PERCENT_WIDTH = 9;
 const RESET_WIDTH = 7;
 const MAX_LABEL_WIDTH = 30;
 const MIN_BAR_WIDTH = 4;
-// A reading older than this is worth a second look before switching to it.
+const LONG_LEGEND_WIDTH = 80;
 const STALE_HOURS = 6;
 const MILLIS_PER_HOUR = 3_600_000;
 
@@ -108,10 +108,6 @@ const productName: Readonly<Record<string, string>> = {
   "grok-bot": "Grok Bot",
 };
 
-// In these panels the accounts are alternatives to each other, so the order
-// is advice. The SuperGrok panel lists three tools on one subscription, and
-// Muse, JetBrains AI, and Kimi Code have one login each: nothing there to
-// choose between.
 const isRanked = (section: AccountSection): boolean =>
   section === "claude" || section === "codex" || section === "other";
 
@@ -132,11 +128,8 @@ const makePalette = (color: boolean) => {
 
 type Palette = ReturnType<typeof makePalette>;
 
-// Spaces that pad display-width-fitted text out to `width` columns.
 const padding = (text: string, width: number): string => Str.repeat(Math.max(width - Fmt.width(text), 0))(" ");
 
-// Fit plain text into a column by display width: cut with an ellipsis, or pad with spaces. A wide character or an
-// emoji counts as the two columns a terminal gives it.
 const fit = (text: string, width: number): string => {
   const cut = Fmt.truncate(text, width);
   return `${cut}${padding(cut, width)}`;
@@ -168,7 +161,6 @@ const hoursUntil = (from: DateTime.Utc, at: DateTime.Utc): number =>
 const sessionWindow = (row: AccountRanking): O.Option<UsageWindow> =>
   A.findFirst(windowsOf(row), (window) => window.kind === "session");
 
-// Hours until an account that cannot take work now can take it again.
 const hoursUntilAvailable = (row: AccountRanking, now: DateTime.Utc): O.Option<number> =>
   AccountAvailability.match(row.availability, {
     "session-capped": () =>
@@ -178,8 +170,6 @@ const hoursUntilAvailable = (row: AccountRanking, now: DateTime.Utc): O.Option<n
     unavailable: O.none<number>,
   });
 
-// The proxy stores a Kimi login without an identity, so the row shows the
-// email the poll read from the profile once it has one.
 const identityOf = (row: AccountRanking): O.Option<string> =>
   AccountUsageOutcome.match(row.usage.outcome, {
     Ok: ({ identity }) => identity,
@@ -212,7 +202,6 @@ const statusOf = (row: AccountRanking, palette: Palette): Status =>
 const barOf = (row: AccountRanking, width: number, palette: Palette): string => {
   const [full, empty] = palette.color ? ["━", "━"] : ["█", "░"];
   return O.match(row.weeklyRemainingPercent, {
-    // No limit data at all: leave the track out rather than draw an empty one.
     onNone: () => pipe(" ", Str.repeat(width)),
     onSome: (left) => {
       const filled = Math.min(Math.round((left / 100) * width), width);
@@ -224,8 +213,6 @@ const barOf = (row: AccountRanking, width: number, palette: Palette): string => 
 
 const resetOf = (row: AccountRanking): string => {
   const accountWide = A.findFirst(windowsOf(row), isAccountWide);
-  // An unstarted week, or one that reset since an older reading, has no known
-  // reset time yet.
   const known = O.exists(accountWide, (window) => O.isSome(window.resetsAt));
   return known ? O.match(row.hoursUntilWeeklyReset, { onNone: () => "", onSome: renderHours }) : "";
 };
@@ -247,7 +234,6 @@ const creditOf = (credit: CreditBalance): string =>
     " "
   );
 
-// A session this close to full ends the next long task early.
 const LOW_SESSION_PERCENT = 20;
 
 const sessionDetail = (row: AccountRanking, now: DateTime.Utc, palette: Palette): O.Option<string> =>
@@ -305,11 +291,9 @@ const detailsOf = (row: AccountRanking, now: DateTime.Utc, palette: Palette): Re
     ],
   });
 
-// Join colored parts, keeping whole parts while they fit a visible width. `Fmt.width` counts ANSI escapes as no
-// columns, so a part is measured as it is and no escape sequence is ever split.
 const SEPARATOR = " · ";
 
-const joinFitted = (parts: ReadonlyArray<string>, width: number): string =>
+const joinWholePartsThatFit = (parts: ReadonlyArray<string>, width: number): string =>
   A.join(
     A.reduce(parts, { kept: A.empty<string>(), used: 0, full: false }, (state, part) => {
       const used = state.used + (A.isReadonlyArrayEmpty(state.kept) ? 0 : SEPARATOR.length) + Fmt.width(part);
@@ -326,13 +310,9 @@ interface Columns {
   readonly label: number;
 }
 
-// Every column of a row except the label and the bar: marker, separators,
-// status, percent, and reset.
 const ROW_FIXED_WIDTH = 2 + 1 + 1 + STATUS_WIDTH + 1 + 1 + PERCENT_WIDTH + 1 + RESET_WIDTH;
 const MIN_LABEL_WIDTH = 10;
 
-// The label column shrinks before the bar would push a row past the frame;
-// `fit` truncates the labels it then cannot hold.
 const columnsFor = (width: number, labels: ReadonlyArray<string>): Columns => {
   const inner = width - 4;
   const wanted = Math.min(Math.max(...A.map(labels, Fmt.width), 8) + 2, MAX_LABEL_WIDTH);
@@ -377,7 +357,7 @@ const rowLines = (
   );
   const details = detailsOf(row, now, palette);
   const indent = "   ";
-  const detailLine = joinFitted(details, columns.inner - indent.length);
+  const detailLine = joinWholePartsThatFit(details, columns.inner - indent.length);
   return Str.isEmpty(detailLine)
     ? [framed(head, columns, palette)]
     : [framed(head, columns, palette), framed(`${indent}${detailLine}`, columns, palette)];
@@ -443,6 +423,14 @@ const panelLines = (group: AccountGroup, width: number, now: DateTime.Utc, palet
  * to stay on the signed-in account (`●`) or switch. Percentages always mean
  * quota left.
  *
+ * Only the Claude, Codex and Other panels number and rank their rows: their accounts are
+ * alternatives to each other. The SuperGrok panel lists three tools on one subscription, and
+ * Muse, JetBrains AI and Kimi Code have one login each. A Kimi Code row shows the email the
+ * poll read from the profile when it has one, since the proxy stores that login without an
+ * identity. An account with no limit data gets a blank bar track, and the reset column stays
+ * blank while the account-wide window has no known reset time (an unstarted week, or one that
+ * reset since an older reading).
+ *
  * **Example** (Render an empty report)
  *
  * ```ts
@@ -472,9 +460,8 @@ export const renderAccountsBoard: {
   const width = Math.min(Math.max(layout.width, MIN_WIDTH), MAX_WIDTH);
   const status = Str.trimEnd(fit(layout.status, Math.max(width - 11, 0)));
   const heading = `${palette.title(" Accounts")}${Str.isEmpty(status) ? "" : `  ${palette.dim(status)}`}`;
-  // The long legend needs 80 columns; narrower boards get the short one.
   const legend =
-    width >= 80
+    width >= LONG_LEGEND_WIDTH
       ? palette.dim(
           ` ${palette.accent("▶")} use next   ${palette.accent("●")} signed in to the CLI   bars: weekly or billing-cycle quota left`
         )

@@ -1,8 +1,4 @@
-// Retargets the recorder half of upstream packages/sdk/__test__/stray-output.test.ts
-// (vitest-agent 1cf1ab94): the recorder, the escape-only test and the reader.
-// The schema and note cases live in the model package. The capture's install
-// point (packages/plugin/__test__/stray-output-capture.test.ts) is not
-// ported: the adapter patches no logger stream.
+// Ported from vitest-agent packages/sdk/__test__/stray-output.test.ts at 1cf1ab94 (MIT).
 import { StrayOutput, StrayOutputSample } from "@beep/gate-report/StrayOutput";
 import {
   isEscapeOnly,

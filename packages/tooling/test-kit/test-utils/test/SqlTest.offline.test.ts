@@ -315,9 +315,7 @@ describe("SqlTest offline coverage", () => {
         Effect.forkChild
       );
 
-      // Advance only after the child has requested a real clock sleep.
-      // Race the driver with completion so the final attempt needs no extra tick.
-      const driveClock = Effect.forever(
+      const advanceEachRequestedSleep = Effect.forever(
         Effect.gen(function* () {
           const duration = yield* Queue.take(scheduled);
           expect(Duration.toMillis(Duration.fromInputUnsafe(duration))).toBe(250);
@@ -325,7 +323,7 @@ describe("SqlTest offline coverage", () => {
           yield* TestClock.adjust(duration);
         })
       );
-      const exit = yield* Fiber.join(fiber).pipe(Effect.raceFirst(driveClock));
+      const exit = yield* Fiber.join(fiber).pipe(Effect.raceFirst(advanceEachRequestedSleep));
       expect(connectionAttempt.mock.calls.length - initialAttempts).toBe(21);
 
       expect(Exit.isFailure(exit)).toBe(true);

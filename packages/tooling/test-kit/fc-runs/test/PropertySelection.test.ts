@@ -84,14 +84,14 @@ describe("plainRegistrationLines", () => {
 
 describe("runsPropertiesInline", () => {
   it("matches every inline execution marker", () => {
+    const retiredPathSpelledInPieces = A.join(["effect", "unstable", "arbitrary", "Arbitrary"], "/");
     const markers = [
       'import * as FastCheck from "effect/testing/FastCheck"',
       'import fc from "fast-check"',
       "yield* assertSchemaArbitraryDecodesToSelf(Schema)",
       "yield* Arbitrary.checkEffect(arb, f)",
       "const samples = yield* Arbitrary.sampleEffect(arb, { count: 3 })",
-      // Spelled in pieces: the retired-path law scans tracked text for the joined form.
-      `import * as Arbitrary from "${A.join(["effect", "unstable", "arbitrary", "Arbitrary"], "/")}"`,
+      `import * as Arbitrary from "${retiredPathSpelledInPieces}"`,
       "fc.assert(fc.property(arb, f))",
       "fc.sample(arb, 5)",
     ];
@@ -142,7 +142,6 @@ describe("relative imports", () => {
 describe("moduleGraphRunsPropertiesInline", () => {
   const graph = (files: Record<string, string>) => ({
     read: (path: string) => R.get(files, path),
-    // The fixture paths are flat: `/t/<name>`.
     resolve: (_importer: string, specifier: string) =>
       A.map(relativeImportCandidates(specifier), (candidate) => `/t/${Str.replace(/^\.{1,2}\//, "")(candidate)}`),
   });
@@ -192,7 +191,6 @@ describe("moduleGraphRunsPropertiesInline", () => {
 });
 
 describe("propertyTestMarker", () => {
-  // Each shape the sweep must see, with the part of the pattern that sees it and no other part does.
   it.each([
     ["it.prop", 'it.prop("law", [S.Int], check);', "\\bit\\.prop\\b|"],
     ["it.effect.prop", 'it.effect.prop("law", [S.Int], check);', "\\bit\\.effect\\.prop\\b|"],
@@ -203,7 +201,7 @@ describe("propertyTestMarker", () => {
       "yield* assertSchemaArbitraryDecodesToSelf(Model);",
       "\\bassertSchemaArbitraryDecodesToSelf\\b|",
     ],
-  ])("sees %s by its own alternative", (_shape, source, alternative) => {
+  ])("sees %s by its own alternative and by no other", (_shape, source, alternative) => {
     const without = Str.replace(alternative, "")(propertyTestMarker.source);
     expect(without).not.toBe(propertyTestMarker.source);
     expect(propertyTestMarker.test(source)).toBe(true);

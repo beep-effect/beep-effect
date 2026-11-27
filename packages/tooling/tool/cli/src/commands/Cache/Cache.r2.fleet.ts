@@ -26,20 +26,18 @@ import { CacheR2FleetReceipt, CacheR2FleetRow } from "./Cache.r2.schemas.ts";
 import type { CacheR2FleetRequest } from "./Cache.r2.schemas.ts";
 
 const CanonicalOrigin = /^(?:https:\/\/github\.com\/|git@github\.com:)beep-effect\/beep-effect(?:\.git)?$/;
-const POLICY_FILES = [
+const CURRENT_AND_LEGACY_POLICY_FILES = [
   "packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts",
-  // The policy moved to @beep/repo-cli-kit in beep-cli-composition W3; older checkouts keep it in repo-cli.
   "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
 ];
 const PathOrder = Order.mapInput(A.makeOrder(Str.Order), (path: string) => Str.split(path, "/"));
 const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheR2FleetReceipt, { space: 2 }));
 const failedCapture = (exitCode: number) => () => ({ exitCode, stdout: "", stderr: "", truncated: false });
 
-// Any git failure reads as an empty answer, as the retired script's captured calls did.
-const gitText = <E>(read: Effect.Effect<string, E>) => read.pipe(Effect.orElseSucceed(() => ""));
+const gitTextOrEmpty = <E>(read: Effect.Effect<string, E>) => read.pipe(Effect.orElseSucceed(() => ""));
 
 const originUrl = (git: Git["Service"], clone: string) =>
-  git.remoteUrl(clone).pipe(Effect.map(O.getOrElse(() => "")), gitText);
+  git.remoteUrl(clone).pipe(Effect.map(O.getOrElse(() => "")), gitTextOrEmpty);
 
 const listedWorktrees = (git: Git["Service"], clone: string) =>
   git.worktreeList(clone).pipe(Effect.map(A.map((entry) => entry.path)), Effect.orElseSucceed(A.empty<string>));
@@ -76,7 +74,7 @@ const planCheckout = Effect.fnUntraced(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const policies = yield* Effect.filter(
-    A.map(POLICY_FILES, (file) => path.join(checkout, file)),
+    A.map(CURRENT_AND_LEGACY_POLICY_FILES, (file) => path.join(checkout, file)),
     (file) => isType(fs, "File")(file)
   );
   const text = yield* O.match(A.head(policies), { onNone: () => Effect.succeed(""), onSome: fs.readFileString });
@@ -85,12 +83,11 @@ const planCheckout = Effect.fnUntraced(function* (checkout: string) {
     : ("local:rw,remote:r" as const);
   const supported = pipe(text, Str.includes("local:rw,remote:r"));
   const git = yield* Git;
-  const head = yield* git.revParse(checkout, "HEAD").pipe(gitText);
+  const head = yield* git.revParse(checkout, "HEAD").pipe(gitTextOrEmpty);
   return CacheR2FleetRow.make({ checkout, head, mode, status: supported ? "planned" : "legacy-use-beep-turbo" });
 });
 
 const enroll = Effect.fnUntraced(function* (row: CacheR2FleetRow, workstation: string) {
-  // Enrollment errors describe field names only. Do not retain arbitrary command output.
   const result = yield* runCapturedStreams({ command: workstation, args: ["enable", row.checkout, row.mode] }).pipe(
     Effect.orElseSucceed(failedCapture(127))
   );

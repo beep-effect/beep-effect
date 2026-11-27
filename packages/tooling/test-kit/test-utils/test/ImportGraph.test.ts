@@ -11,15 +11,13 @@ const lines = (...parts: ReadonlyArray<string>): string => A.join(parts, "\n");
 
 describe("ImportGraph.stripComments", () => {
   it("removes line comments before block comments, so a /*-bearing token in prose hides nothing", () => {
-    // The token must sit in a LINE comment: inside a block comment a `/*` is
-    // swallowed by its own comment and is harmless.
-    const source = lines(
+    const lineCommentWithBlockOpener = lines(
       "// Prose naming a scope like @octokit/* and a glob like src/* here.",
       'import * as Str from "effect/String";',
       "/** A doc comment. */",
       'import * as A from "effect/Array";'
     );
-    expect(ImportGraph.runtimeImportsOf(source)).toStrictEqual(["effect/String", "effect/Array"]);
+    expect(ImportGraph.runtimeImportsOf(lineCommentWithBlockOpener)).toStrictEqual(["effect/String", "effect/Array"]);
   });
 
   it("drops the imports that JSDoc examples and line comments carry", () => {

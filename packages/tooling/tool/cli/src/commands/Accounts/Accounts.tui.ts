@@ -35,12 +35,11 @@ const LEAVE_SCREEN = "\u001b[?25h\u001b[?1049l";
 const HOME = "\u001b[H";
 const CLEAR_LINE = "\u001b[K";
 const CLEAR_BELOW = "\u001b[J";
-// Width used when the board is printed to something that is not a terminal.
-const PLAIN_WIDTH = 100;
+const PIPED_WIDTH = 100;
 const MIN_INTERVAL = Duration.seconds(15);
+const PIPED_STDOUT_COLUMNS = 0;
 
 interface WatchState {
-  // Why the last poll failed, until a poll succeeds again.
   readonly lastError: O.Option<string>;
   readonly nextPollAt: DateTime.Utc;
   readonly polling: boolean;
@@ -65,9 +64,7 @@ const statusLine = (state: WatchState, now: DateTime.Utc): string =>
     "  ·  "
   );
 
-// Paint over the previous frame line by line instead of clearing the screen
-// first, so a redraw never flashes.
-const frameOf = (text: string): string =>
+const flickerFreeFrame = (text: string): string =>
   `${HOME}${A.join(
     A.map(Str.split(text, "\n"), (line) => `${line}${CLEAR_LINE}`),
     "\n"
@@ -83,7 +80,7 @@ const printOnce = Effect.gen(function* () {
   yield* Console.log(
     renderAccountsBoard(
       report,
-      AccountsBoardLayout.make({ width: PLAIN_WIDTH, color: false, status: `updated ${clock(report.generatedAt)}` })
+      AccountsBoardLayout.make({ width: PIPED_WIDTH, color: false, status: `updated ${clock(report.generatedAt)}` })
     )
   );
 });
@@ -108,8 +105,7 @@ const printOnce = Effect.gen(function* () {
  */
 export const watchAccounts = Effect.fn("Accounts.watch")(function* (interval: Duration.Duration) {
   const terminal = yield* Terminal.Terminal;
-  // A terminal reports zero columns when standard output is piped or redirected.
-  if ((yield* terminal.columns) === 0) return yield* printOnce;
+  if ((yield* terminal.columns) === PIPED_STDOUT_COLUMNS) return yield* printOnce;
 
   const every = Duration.max(interval, MIN_INTERVAL);
   const state = yield* Ref.make<WatchState>({
@@ -128,7 +124,7 @@ export const watchAccounts = Effect.fn("Accounts.watch")(function* (interval: Du
       onNone: () => ` Accounts  ${status}\n\n polling every account…`,
       onSome: (report) => renderAccountsBoard(report, AccountsBoardLayout.make({ width, color: true, status })),
     });
-    yield* terminal.display(frameOf(body)).pipe(Effect.ignore);
+    yield* terminal.display(flickerFreeFrame(body)).pipe(Effect.ignore);
   });
 
   const poll = Effect.gen(function* () {
@@ -147,7 +143,6 @@ export const watchAccounts = Effect.fn("Accounts.watch")(function* (interval: Du
     yield* draw;
   });
 
-  // Every second: redraw, and start a poll when one is due and none is running.
   const tick = Effect.gen(function* () {
     const current = yield* Ref.get(state);
     const now = yield* DateTime.now;

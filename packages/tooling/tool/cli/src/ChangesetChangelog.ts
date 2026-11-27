@@ -39,14 +39,11 @@ const TRANSIENT_GITHUB_ERROR_MESSAGES: ReadonlyArray<string> = [
   "GITHUB_TOKEN",
 ];
 
-// A changelog formatter rejected; `cause` is the formatter's own rejection value. Module-private:
-// the promise boundary below rethrows `cause`, so callers never see this error.
 class ChangelogLineError extends S.TaggedError<ChangelogLineError, { readonly brand: unique symbol }>()(
   "ChangelogLineError",
   { cause: S.Defect({ includeStack: true }) }
 ) {}
 
-// `String(...)` keeps the rendering the original CommonJS module used for non-Error rejections.
 const errorMessage = (error: unknown): string => (P.isError(error) ? error.message : String(error));
 
 const isTransientGitHubError = (error: ChangelogLineError): boolean => {
@@ -69,7 +66,6 @@ const withFallback = (
           `[changeset-changelog] GitHub changelog enrichment failed during ${operation}; using plain changelog fallback.\n${errorMessage(error.cause)}`
         ).pipe(Effect.andThen(attempt(fallback)))
       ),
-      // The promise boundary: Changesets must see exactly the value the formatter rejected with.
       Effect.catchTag("ChangelogLineError", (error) => Effect.die(error.cause))
     )
   );
@@ -81,6 +77,10 @@ const withFallback = (
  *
  * Changesets calls the data-first form with all three arguments; the
  * data-last form takes the version type and options first.
+ *
+ * **Gotchas**
+ *
+ * A rejection carries the formatter's own rejection value, unwrapped, including a fallback failure.
  *
  * **Example** (Confirm the Changesets contract)
  *
@@ -111,6 +111,10 @@ export const getReleaseLine: {
  *
  * Changesets calls the data-first form with all three arguments; the
  * data-last form takes the updated dependencies and options first.
+ *
+ * **Gotchas**
+ *
+ * A rejection carries the formatter's own rejection value, unwrapped, including a fallback failure.
  *
  * **Example** (Confirm the Changesets contract)
  *

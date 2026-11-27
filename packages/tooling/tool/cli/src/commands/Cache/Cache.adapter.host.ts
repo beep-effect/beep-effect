@@ -87,18 +87,6 @@ const AllowedEnvironment = HashSet.make(
 const Role = S.Literals(["reader", "writer"]);
 const Integer = S.NumberFromString.pipe(S.check(S.isInt()));
 
-/**
- * Bounded launcher run inside the transient unit.
- *
- * **Details**
- * The unit starts it through `/usr/bin/env -i`, so the user manager's
- * environment (preload or runtime option variables included) never reaches the
- * launcher or the adapter. It reads the private startup value from the unit's
- * anonymous stdin pipe and replaces itself with the adapter through `execve`,
- * which keeps the PID the parent observes and passes exactly the approved
- * environment. It runs under the CLI's own runtime, outside this module, so it
- * is plain JavaScript text rather than Effect code.
- */
 const LAUNCHER = `const chunks = []
 let size = 0
 for await (const chunk of process.stdin) { size += chunk.length; if (size > ${STARTUP_INPUT_BOUND}) process.exit(78); chunks.push(chunk) }
@@ -111,6 +99,10 @@ process.execve(config.adapter, [config.adapter], config.env)`;
  * **Details**
  * The CLI's absolute runtime executable runs the launcher. Bun additionally
  * skips dotenv loading; Node never loads dotenv implicitly.
+ * `env -i` keeps the user manager's environment (preload or runtime option variables included)
+ * away from the launcher and the adapter. The launcher reads the private startup value from the
+ * unit's anonymous stdin pipe and replaces itself with the adapter through `execve`, which keeps
+ * the PID the parent observes and passes exactly the approved environment.
  *
  * **Example** (Inspect the cleared launcher environment)
  * ```ts
@@ -135,8 +127,6 @@ export const cacheOwnedAdapterLauncher = ({
 const fail = (message: string) => Effect.fail(CacheCommandError.new(message));
 
 const userManagerEnvironment = (home: string) => {
-  // The retired host ran with only PATH and HOME, so it always used the
-  // default runtime directory and bus for its own uid.
   const uid = O.getOrElse(O.fromUndefinedOr(process.getuid?.()), () => 0);
   const runtime = `/run/user/${uid}`;
   return {
@@ -241,7 +231,6 @@ type ObservationCheck = readonly [
   refusal: string,
 ];
 
-// The retired host's order and refusal messages; the first failing check names the refusal.
 const OBSERVATION_CHECKS: ReadonlyArray<ObservationCheck> = [
   [ownsCgroup, "Runtime proof did not identify its owned adapter cgroup"],
   [
@@ -407,6 +396,12 @@ export type CacheOwnedAdapterServices =
 /**
  * Starts one owned adapter unit inside the caller's scope from a private startup value.
  *
+ * **Details**
+ *
+ * The exhaustive cleanup is registered on the caller's scope before the unit or its child exists,
+ * so closing the scope stops whatever started even when `start` fails. `verify` and `stop` fail
+ * once the unit's ten-minute runtime cap has passed; parent commands cannot extend it.
+ *
  * @internal
  * @category services
  * @since 0.0.0
@@ -492,19 +487,16 @@ const stopUnit = Effect.fnUntraced(function* (environment: Readonly<Record<strin
   yield* systemctl(environment, ["reset-failed", unit], Duration.seconds(10)).pipe(Effect.ignore);
 });
 
-// Closing a process scope sends SIGTERM and SIGKILL ten seconds later, the
-// retired host's terminate/wait/kill sequence.
+const processKillGrace = Duration.seconds(10);
+const stopTimeoutOverKillGrace = Duration.seconds(15);
 const stopProcess = (scope: Scope.Closeable) =>
-  Scope.close(scope, Exit.void).pipe(Effect.timeout(Duration.seconds(15)));
+  Scope.close(scope, Exit.void).pipe(Effect.timeout(stopTimeoutOverKillGrace));
 
 interface OwnedResources {
   readonly processes: ReadonlyArray<Scope.Closeable>;
   readonly units: ReadonlyArray<string>;
 }
 
-/**
- * Attempt every owned unit and child before reporting an aggregate failure.
- */
 const stopOwnedAdapters = Effect.fnUntraced(function* (
   environment: Readonly<Record<string, string>>,
   resources: Ref.Ref<OwnedResources>
@@ -592,7 +584,6 @@ const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheO
   const unit = yield* allocateUnit(manager, input.role);
   const processScope = yield* Scope.make();
   const resources = yield* Ref.make<OwnedResources>({ units: [unit], processes: [processScope] });
-  // The exhaustive cleanup scope is installed before the unit or child can exist.
   yield* Effect.addFinalizer(() => stopOwnedAdapters(manager, resources).pipe(Effect.ignore));
   const handle = yield* ChildProcess.make(SYSTEMD_RUN, systemdRunArguments(unit, input.workspace), {
     cwd: input.workspace,
@@ -601,7 +592,7 @@ const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheO
     stdin: { stream: Stream.make(input.bytes) },
     stdout: "ignore",
     stderr: "ignore",
-    forceKillAfter: Duration.seconds(10),
+    forceKillAfter: processKillGrace,
   }).pipe(Scope.provide(processScope));
   yield* awaitReadiness(handle, input.port);
   const pid = yield* unitProperty(manager, unit, "MainPID").pipe(
@@ -626,7 +617,6 @@ const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheO
       )
     );
   const ready = yield* observe("ready");
-  // The unit caps the adapter at ten minutes; parent commands cannot extend it.
   const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(Duration.minutes(10));
   const requireLive = Effect.gen(function* () {
     const now = yield* Clock.currentTimeMillis;

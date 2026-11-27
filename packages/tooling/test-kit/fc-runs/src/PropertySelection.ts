@@ -46,16 +46,9 @@ import * as Str from "effect/String";
 export const propertyTestMarker: RegExp =
   /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 
-// Calls that execute a property (or draw samples) wherever they appear, including inside the
-// body of a plain `it.effect(...)` registration. `assertSchemaArbitraryDecodesToSelf` is the
-// shared `@beep/test-utils` helper that runs `Arbitrary.checkEffect` with `fcRuns`.
 const inlineExecutionMarker =
   /\bFastCheck\b|\bfast-check\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 
-// Every `fcRuns(` / `fcRunsCapped(` call, and the one shape that only feeds a `.prop`
-// registration: the `{ arbitrary: fcRuns(n) }` options object of `it.prop` / `it.effect.prop`.
-// Any other call hands a raised run count to something else (a local or package helper), so
-// the module counts as inline.
 const fcRunsCall = /\bfcRuns(?:Capped)?\s*\(/g;
 const fcRunsPropOption = /\barbitrary\s*:\s*fcRuns(?:Capped)?\s*\(/g;
 
@@ -71,7 +64,11 @@ const countMatches = (source: string, pattern: RegExp): number =>
  * `Arbitrary.sampleEffect`, `FastCheck`, `fast-check`, `fc.assert` and friends,
  * `assertSchemaArbitraryDecodesToSelf`, the retired unstable Arbitrary module path) or calls
  * `fcRuns` / `fcRunsCapped` anywhere other than as the `arbitrary:` option of a `.prop`
- * registration. In such a module every test is kept by the sweep.
+ * registration. An inline call runs wherever it appears, even inside the body of a plain
+ * `it.effect(...)`; `assertSchemaArbitraryDecodesToSelf` is the shared `@beep/test-utils` helper
+ * that runs `Arbitrary.checkEffect` with `fcRuns`. Any other `fcRuns` call hands a raised run
+ * count to something else, such as a local or package helper. In such a module every test is kept
+ * by the sweep.
  *
  * **Example** (Classify module sources)
  *
@@ -211,8 +208,6 @@ export const moduleGraphRunsPropertiesInline = ({
   return O.match(readSource(entry), { onNone: () => true, onSome: (source) => visit(entry, source) });
 };
 
-// `it` / `test`, then only modifiers that never run a property, then the registration call.
-// Call-form modifiers are recognised only when their argument list holds no parentheses.
 const plainRegistration =
   /^\s*(?:it|test)(?:\.(?:effect|live|scoped|scopedLive|concurrent|sequential|fails|skip|only|todo)|\.(?:skipIf|runIf|each|for)\([^()]*\))*\(/;
 const propertyRegistration = /\.prop\b|\bprop\s*\(/;
