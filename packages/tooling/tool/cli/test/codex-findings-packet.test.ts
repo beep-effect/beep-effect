@@ -66,6 +66,12 @@ const ManifestSubset = S.Struct({
 
 const decodeManifest = S.decodeUnknownEffect(ManifestSubset);
 
+const LauncherManifestJson = S.fromJsonString(
+  S.Struct({
+    agentLaunchers: S.Array(S.Struct({ command: S.String })),
+  })
+);
+
 const manifestOf = Effect.fnUntraced(function* (documents: ReadonlyArray<PacketDocument>) {
   const parsedJson = yield* parseJson(at(documents, "ops/manifest.json").contents);
   return yield* decodeManifest(parsedJson);
@@ -137,13 +143,7 @@ describe("codex findings packet launcher budget", () => {
       const command =
         "/goal follow the instructions in goals/codex-security-findings-2026-08-06/GOAL.md, or stop when the only work left is a step the packet names as Benjamin's";
       const manifestText = at(documents, "ops/manifest.json").contents;
-      const manifest = yield* S.decodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            agentLaunchers: S.Array(S.Struct({ command: S.String })),
-          })
-        )
-      )(manifestText);
+      const manifest = yield* S.decodeEffect(LauncherManifestJson)(manifestText);
       expect(A.map(manifest.agentLaunchers, (launcher) => launcher.command)).toEqual([command]);
       expect(at(documents, "README.md").contents).toContain(command);
     })
