@@ -101,17 +101,31 @@ describe("CachePolicy", () => {
 });
 
 describe("the repository policy", () => {
-  it.effect("CI main and the named workstations write, pull requests only read", () =>
+  it.effect("CI main and the named workstations write, pull requests only read, in each team", () =>
     Effect.sync(() => {
       const holders = tokenHolders(cachePolicy);
       const byAccess = (access: Access) =>
         A.map(
           A.filter(holders, ({ principal }) => principal.access === access),
-          ({ principal }) => principal.name
+          ({ team, principal }) => `${team}/${principal.name}`
         );
-      expect(A.map(holders, ({ team }) => team)).toEqual(["beep", "beep", "beep", "beep"]);
-      expect(byAccess("write")).toEqual(["ci-main", "dankstation", "beep-worker"]);
-      expect(byAccess("read")).toEqual(["ci-pr"]);
+      expect(A.map(holders, ({ team }) => team)).toEqual([
+        "beep",
+        "beep",
+        "beep",
+        "beep",
+        "inventory",
+        "inventory",
+        "inventory",
+      ]);
+      expect(byAccess("write")).toEqual([
+        "beep/ci-main",
+        "beep/dankstation",
+        "beep/beep-worker",
+        "inventory/ci-main",
+        "inventory/dankstation",
+      ]);
+      expect(byAccess("read")).toEqual(["beep/ci-pr", "inventory/ci-pr"]);
     })
   );
 
@@ -124,6 +138,9 @@ describe("the repository policy", () => {
         "TurboCacheToken-beep-ci-pr-r1",
         "TurboCacheToken-beep-dankstation-r1",
         "TurboCacheToken-beep-beep-worker-r1",
+        "TurboCacheToken-inventory-ci-main-r1",
+        "TurboCacheToken-inventory-ci-pr-r1",
+        "TurboCacheToken-inventory-dankstation-r1",
       ]);
       expect(foundationId(options)).toBe("TurboCacheFoundation");
       expect(workerId(options)).toBe("TurboCache");

@@ -170,7 +170,6 @@ describe("PullRequest coverage", () => {
     { status: 200, body: { data: {} } },
     { status: 200, body: { data: {} } },
   ]);
-  // An empty or missing request body reads as `{}`.
   const sentBody = (index: number) => S.decodeEffect(JsonObject)(script.calls[index]?.body || "{}");
   it.layer(PullRequest.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
     it.effect("projects REST responses and sends only present parameters", () =>
