@@ -3,7 +3,7 @@ import { planCoverageAffectedScope, workspaceCoverageScopeOwners } from "@beep/r
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -21,7 +21,7 @@ import { undeclaredTestTasks } from "./support/TurboTestInputs.ts";
 const TEST_CODE = /^(?:packages|apps|infra)\/.+\/test\/.+\.(?:[cm]?[jt]sx?)$/u;
 const PACKAGE_MANIFEST = /^((?:packages|apps|infra)\/.+)\/package\.json$/u;
 const COMMENT_LINE = /^\s*(?:\*|\/\/|\/\*)/u;
-const MODULE_LINE = /^\s*(?:import|export)\b|\bfrom\s+["'`]|\bimport\(/u;
+const MODULE_SPECIFIER = /\bfrom\s+(["'`])[^"'`]*\1|^\s*import\s+(["'`])[^"'`]*\2|\bimport\(\s*(["'`])[^"'`]*\3\s*\)/gu;
 const RELATIVE_READ = /["'`]((?:\.\.\/)+[^"'`\s),$]*)/gu;
 const INTEGRATION_SOURCE = /\/test\/integration\//u;
 const DRIZZLE = "packages/_internal/db-admin/drizzle";
@@ -79,7 +79,8 @@ const readsOf = (
 ): ReadonlyArray<CrossPackageRead> =>
   pipe(
     Str.split("\n")(text),
-    A.filter((line) => !COMMENT_LINE.test(line) && !MODULE_LINE.test(line)),
+    A.filter((line) => !COMMENT_LINE.test(line)),
+    A.map(Str.replace(MODULE_SPECIFIER, "")),
     A.flatMap((line) => A.map(A.fromIterable(Str.matchAll(RELATIVE_READ)(line)), (match) => match[1] ?? "")),
     A.dedupe,
     A.filterMap((reference) => {
@@ -87,7 +88,7 @@ const readsOf = (
       const target = O.map(resolveRelative(source, reference), Str.replace(/\/$/u, ""));
       const owner = O.flatMap(target, (resolved) => nearestPackage(packages, resolved));
       if (O.isNone(reader) || O.isNone(target) || O.isNone(owner)) return Result.failVoid;
-      if (owner.value === reader.value || owner.value === target.value) return Result.failVoid;
+      if (owner.value === reader.value) return Result.failVoid;
       const prefix = `${target.value}/`;
       const consumed = A.filter(paths, (file) => file === target.value || Str.startsWith(prefix)(file));
       return A.isReadonlyArrayNonEmpty(consumed)
@@ -198,4 +199,38 @@ it.layer(Layer.provideMerge(CrossPackageFactsLive, Layer.provideMerge(Git.layer,
       expect(A.dedupe(unselected)).toEqual([]);
     })
   );
+});
+
+describe("cross-package read extraction", () => {
+  const packages = HashSet.make("packages/demo/domain", "packages/demo/server");
+  const tracked: ReadonlyArray<string> = [
+    "packages/demo/domain/package.json",
+    "packages/demo/domain/test/fixtures/case.json",
+    "packages/demo/server/package.json",
+  ];
+  const source = "packages/demo/server/test/Demo.test.ts";
+  const targetsOf = (text: string) => A.map(readsOf(source, text, packages, tracked), (read) => read.target);
+
+  it("counts a read inside an exported helper and skips only the module specifier", () => {
+    expect(targetsOf('export const loadFixture = () => readFixture("../../domain/test/fixtures/case.json");')).toEqual([
+      "packages/demo/domain/test/fixtures/case.json",
+    ]);
+    expect(
+      targetsOf(
+        A.join(
+          [
+            'export { decode } from "../../domain/test/fixtures/case.json";',
+            'import "../../domain/test/fixtures/case.json";',
+            'const lazy = import("../../domain/test/fixtures/case.json");',
+          ],
+          "\n"
+        )
+      )
+    ).toEqual([]);
+  });
+
+  it("counts a reference that resolves to another package's root", () => {
+    expect(targetsOf('const domainRoot = path.join(here, "../../domain");')).toEqual(["packages/demo/domain"]);
+    expect(targetsOf('const serverRoot = path.join(here, "../");')).toEqual([]);
+  });
 });

@@ -246,6 +246,7 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
   ["packages/agents/", "@beep/agents-domain"],
   ["packages/law-practice/use-cases/test/fixtures/", "@beep/law-practice-server"],
   ["packages/law-practice/domain/test/fixtures/claim-element/", "@beep/law-practice-server"],
+  ["packages/law-practice/server/test/", "@beep/repo-cli"],
   ...A.map(
     // Register coverage-executed reads, not any test read. Epistemic explicitly
     // includes ContradictionTriage.pglite; law-practice reads from top-level tests.

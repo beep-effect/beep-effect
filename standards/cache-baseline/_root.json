@@ -228,7 +228,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "ea584ac1b81142f2d8990c5966bb8194723227f09a9235fbaccb673503790b9a"
+      "sha256": "39e84bd5d96dd641e2542038bff3ea8832e50de097cd86df8f9e1fd4db974fcc"
     },
     {
       "path": "packages/workspace/server/turbo.json",
