@@ -60,7 +60,6 @@ const runtimeLayer = CutoverModel.layer(Layer.merge(VaultSyncReadAccess, LegacyS
 );
 const options = SyncAdmissionOptions.make({ mirrorRootName: "synthetic-vault" });
 
-/** What an older sidecar executable does on boot: run its bundled drizzle migrations. */
 const bootLegacyExecutable = Effect.gen(function* () {
   const db = yield* makeDrizzle();
   yield* migrate(db, { migrationsFolder, migrationsSchema: "drizzle" });
@@ -100,14 +99,13 @@ describe("vault-sync single-writer cutover", () => {
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* bootLegacyExecutable;
-        // Before the cutover the legacy writer owns the tables.
         yield* sql`INSERT INTO documents_sync_item ${sql.insert(legacyRow(41, "documents_sync_item_asynthetic41"))}`;
         yield* sql`SELECT setval('documents_sync_item_id_seq', 41, true)`;
-        const before = yield* readSyncWriterEpoch;
-        assertNone(before);
+        const epochBeforeCutover = yield* readSyncWriterEpoch;
+        assertNone(epochBeforeCutover);
 
-        const scope = yield* Scope.make();
-        const runtime = yield* Layer.buildWithScope(runtimeLayer, scope);
+        const modelRuntimeScope = yield* Scope.make();
+        const runtime = yield* Layer.buildWithScope(runtimeLayer, modelRuntimeScope);
         const admitted = yield* ensureSyncCutover(options).pipe(Effect.provide(runtime));
         expect(admitted.admitted).toBe("admitted");
         const again = yield* ensureSyncCutover(options).pipe(Effect.provide(runtime));
@@ -120,21 +118,23 @@ describe("vault-sync single-writer cutover", () => {
         const genesisDiff = yield* diffSyncCutoverSnapshot("cutover_backup");
         expect(genesisDiff).toEqual([]);
 
-        // Every legacy entry point is refused: the epoch guard, raw SQL and ORM-generated SQL.
         const guarded = yield* requireSyncWriterEpoch("legacy").pipe(Effect.flip);
-        expect(guarded).toMatchObject({ _tag: "SyncWriterEpochRejected", epoch: "model", writer: "legacy" });
+        expect(guarded, "the epoch guard refuses the legacy writer").toMatchObject({
+          _tag: "SyncWriterEpochRejected",
+          epoch: "model",
+          writer: "legacy",
+        });
         yield* requireSyncWriterEpoch("model");
         const rawLegacy = yield* sql`UPDATE documents_sync_item SET last_error = 'old build'`.pipe(Effect.flip);
-        expect(rawLegacy._tag).toBe("SqlError");
+        expect(rawLegacy._tag, "raw legacy SQL is refused").toBe("SqlError");
         const db = yield* PostgresDrizzle;
-        // Effect.flip fails the test if the ORM update were admitted.
         yield* db.update(syncItemTable).set({ lastError: "old build" }).pipe(Effect.flip);
-        // A re-run of the old executable's migrations does not disarm the fence.
         yield* bootLegacyExecutable;
         const afterReboot = yield* sql`DELETE FROM documents_sync_item`.pipe(Effect.flip);
-        expect(afterReboot._tag).toBe("SqlError");
+        expect(afterReboot._tag, "a re-run of the old executable's migrations does not disarm the fence").toBe(
+          "SqlError"
+        );
 
-        // The admitted Model writer works.
         const destinationId = V.DestinationId.make("documents_sync_destination_acutover");
         const itemId = V.ItemId.make("documents_sync_item_amodel1");
         const operationId = V.OperationId.make("documents_sync_operation_amodel1");
@@ -191,8 +191,7 @@ describe("vault-sync single-writer cutover", () => {
           Effect.timeout("20 seconds")
         );
 
-        // Stop the Model runtime and its workers before reversing.
-        yield* Scope.close(scope, Exit.void);
+        yield* Scope.close(modelRuntimeScope, Exit.void);
         yield* sql`CREATE TABLE IF NOT EXISTS documents_sync_box_receipt (
         operation_id text PRIMARY KEY, fingerprint text NOT NULL, result text)`;
         yield* sql`INSERT INTO documents_sync_box_receipt (operation_id, fingerprint) VALUES ('held/1', 'f')`;
@@ -204,9 +203,8 @@ describe("vault-sync single-writer cutover", () => {
         expect(receipt.generation).toBe(1);
         expect(receipt.requeued).toEqual([leasedId]);
         expect(receipt.events).toBeGreaterThan(0);
-        // The legacy tables equal the projected state except the recorded lease rollback.
         const differences = yield* diffSyncCutoverSnapshot("reversal_backup");
-        expect(differences).toEqual([
+        expect(differences, "the legacy tables equal the projected state except the recorded lease rollback").toEqual([
           { table: "documents_sync_operation", id: leasedId, column: "row_version" },
           { table: "documents_sync_operation", id: leasedId, column: "status" },
           { table: "documents_sync_operation", id: leasedId, column: "updated_at" },
@@ -214,10 +212,11 @@ describe("vault-sync single-writer cutover", () => {
         const rows = yield* sql`SELECT public_id FROM documents_sync_item ORDER BY id`;
         expect(rows).toEqual([{ public_id: "documents_sync_item_asynthetic41" }, { public_id: itemId }]);
 
-        // The legacy writer works again and its sequence clears every Model-allocated id.
         const next = yield* sql`SELECT nextval('documents_sync_item_id_seq')::int AS id`;
         const maxId = yield* sql`SELECT MAX(id)::int AS id FROM documents_sync_item`;
-        expect(Number(next[0]?.id)).toBeGreaterThan(Number(maxId[0]?.id));
+        expect(Number(next[0]?.id), "the legacy writer's sequence clears every Model-allocated id").toBeGreaterThan(
+          Number(maxId[0]?.id)
+        );
         yield* sql`INSERT INTO documents_sync_item ${sql.insert(legacyRow(Number(next[0]?.id), "documents_sync_item_alegacy2"))}`;
         yield* db.update(syncItemTable).set({ lastError: "legacy again" });
         const legacyAgain = yield* requireSyncWriterEpoch("legacy");
@@ -226,12 +225,11 @@ describe("vault-sync single-writer cutover", () => {
           ["legacy", 1] as const
         );
 
-        // The abandoned Model can neither resume nor write.
         const resumed = yield* Layer.build(runtimeLayer).pipe(
           Effect.flatMap((context) => ensureSyncCutover(options).pipe(Effect.provide(context))),
           Effect.flip
         );
-        expect(resumed).toMatchObject({
+        expect(resumed, "the abandoned Model cannot resume").toMatchObject({
           _tag: "SyncWriterEpochRejected",
           reason: "reversed-store-requires-fresh-import",
         });
@@ -242,7 +240,7 @@ describe("vault-sync single-writer cutover", () => {
             )
           )
           .pipe(Effect.flip);
-        expect(staleModel._tag).toBe("SqlError");
+        expect(staleModel._tag, "the abandoned Model cannot write").toBe("SqlError");
         const again2 = yield* reverseSyncCutover("VaultSync").pipe(Effect.flip);
         expect(again2).toMatchObject({ reason: "not-admitted" });
       })

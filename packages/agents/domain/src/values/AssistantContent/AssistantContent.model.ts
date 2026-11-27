@@ -18,10 +18,6 @@ import * as S from "effect/Schema";
 const $I = $AgentsDomainId.create("values/AssistantContent/AssistantContent.model");
 const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 
-// ---------------------------------------------------------------------------
-// Inlines (stratified, non-recursive — inlines contain no blocks)
-// ---------------------------------------------------------------------------
-
 /**
  * **Example** (Decode bold text inline)
  *
@@ -135,10 +131,6 @@ const HeadingBlockInlineNode = InlineNode.pipe($I.annoteSchema("HeadingBlockInli
 const QuoteBlockInlineNode = InlineNode.pipe($I.annoteSchema("QuoteBlockInlineNode"));
 const ListItemInlineNode = InlineNode.pipe($I.annoteSchema("ListItemInlineNode"));
 const TableCellBlockInlineNode = InlineNode.pipe($I.annoteSchema("TableCellBlockInlineNode"));
-
-// ---------------------------------------------------------------------------
-// Blocks (structured assistant turn block vocabulary)
-// ---------------------------------------------------------------------------
 
 /**
  * **Example** (Access heading tag enum)

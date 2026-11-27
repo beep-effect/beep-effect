@@ -232,8 +232,10 @@ describe("vault sync pure transitions", () => {
   it("public ids and one-way operation types retain the legacy contract (I3,I11)", () => {
     expect(S.is(V.OperationId)("documents_sync_operation_a17")).toBe(true);
     expect(S.is(V.OperationType)("deleteItem")).toBe(false);
-    expect(S.is(V.OperationInput)({ ...input, content: new Uint8Array([1]) })).toBe(true);
-    // Extra input is stripped at the codec: upload bytes are never encoded into events.
+    expect(
+      S.is(V.OperationInput)({ ...input, content: new Uint8Array([1]) }),
+      "extra input is stripped at the codec: upload bytes are never encoded into events"
+    ).toBe(true);
   });
   it.effect("event encoding contains only declared input fields and carries version one", () =>
     Effect.gen(function* () {
@@ -543,14 +545,14 @@ describe("restricted genesis transitions", () => {
         id: destination,
       })
     ).toEqual({ _tag: "Unregistered" });
-    // The legacy free text maps onto the closed literal; the event keeps the row verbatim.
     expect(
       V.SyncDestination.definition.evolve.CursorGenesisImported(destinationRecord, event, {
         ...envelope,
         id: destination,
-      })
+      }),
+      "the legacy free text maps onto the closed literal"
     ).toMatchObject({ cursor: "opaque", cursorError: "pollEvents" });
-    expect(event.row.last_error).toBe("old poll error");
+    expect(event.row.last_error, "the genesis event keeps the legacy row verbatim").toBe("old poll error");
     const duplicate = V.CursorGenesisImported.make({
       ...Struct.omit(command, ["_tag"]),
       selected: false,

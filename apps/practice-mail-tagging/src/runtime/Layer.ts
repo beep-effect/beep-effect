@@ -110,7 +110,6 @@ export const liveMailTaggingDrivers = Effect.fn("PracticeMailTagging.liveDrivers
   return Layer.mergeAll(M365.makeAppOnlyLiveLayer(m365), boxLayer(box), practiceKgLayer(settings.kgBundleDirectory));
 });
 
-// Each pass gets its own label in the shared Box call ledger, so a ledger line names its run.
 const passSettings = (settings: PracticeMailTaggingConfig, runId: TaggingRunId) =>
   mailTaggingServiceConfigLayer(
     MailTaggingServiceConfig.make({

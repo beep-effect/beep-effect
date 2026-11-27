@@ -8,7 +8,6 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import type * as CommandLine from "effect/process/CommandLine";
 
-/** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
   <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) =>
   <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
@@ -16,7 +15,6 @@ const withLayer =
       Effect.flatMap(Layer.buildWithScope(layer, scope), (context) => Effect.provideContext(program, context))
     );
 
-/** The argv a command would actually spawn with. */
 const argv = (command: ChildProcess.Command): ReadonlyArray<CommandLine.Word> => {
   if (!ChildProcess.isStandardCommand(command)) {
     throw new Error("expected a standard command");
@@ -39,11 +37,9 @@ describe("LocalExec.prefixes", () => {
       LauncherPrefixes.make({
         prefix: ["npx", "--no", "--"],
         dlxPrefix: ["npx"],
-        // The `--` is load-bearing: bare `npm run <script> --flag` silently
-        // claims `--flag` for npm itself rather than forwarding it (probed
-        // live at npm 11); `npm run -- <script> --flag` forwards it.
         scriptPrefix: ["npm", "run", "--"],
-      })
+      }),
+      "bare `npm run <script> --flag` claims `--flag` for npm (probed at npm 11); `npm run -- <script> --flag` forwards it"
     );
     assert.deepStrictEqual(
       LocalExec.prefixes("yarn"),
@@ -70,9 +66,6 @@ describe("LocalExec.prefixes", () => {
   });
 
   it("every launcher uses the explicit `run` form", () => {
-    // The uniformity is the point of the member: the consumer this replaces
-    // kept a hand-rolled argv table that disagreed with itself about whether
-    // `run` was needed per manager.
     for (const launcher of ["npm", "pnpm", "yarn", "bun"] as const) {
       assert.include(LocalExec.scriptPrefix(launcher), "run", `${launcher} script prefix`);
     }
@@ -101,8 +94,8 @@ describe("ExecContext", () => {
   });
 
   it("applyScript uses the script prefix and applies the directory", () => {
-    // `command` is the script name; `args` are the script's arguments.
-    const applied = context.applyScript(ChildProcess.make("ci:build", ["--watch"]));
+    const scriptNameWithArgs = ChildProcess.make("ci:build", ["--watch"]);
+    const applied = context.applyScript(scriptNameWithArgs);
     assert.deepStrictEqual(argv(applied), ["pnpm", "run", "ci:build", "--watch"]);
     if (!ChildProcess.isStandardCommand(applied)) assert.fail("expected a standard command");
     assert.strictEqual(applied.options.cwd, "/repo");

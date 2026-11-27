@@ -13,12 +13,9 @@ import * as Path from "effect/Path";
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 
-// SHA-256 of the three ASCII bytes "abc" (FIPS 180-2 test vector).
-const ABC_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+const FIPS_180_2_ABC_SHA256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 const encoder = new TextEncoder();
 
-// root/abc.txt (3 bytes), root/big.bin (64 bytes), root/empty.txt, root/folder/,
-// root/escape -> outside/secret.txt, root/alias -> root/abc.txt, root-evil/sibling.txt.
 const stage = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -77,7 +74,7 @@ describe("@beep/m365-mcp outbox attachment source", () => {
         );
         assert.deepStrictEqual(
           A.map(A.take(attachments, 2), (attachment) => attachment.sha256),
-          [ABC_SHA256, ABC_SHA256]
+          [FIPS_180_2_ABC_SHA256, FIPS_180_2_ABC_SHA256]
         );
         assert.deepStrictEqual(
           A.map(attachments, (attachment) => attachment.digest.sha256),
@@ -100,7 +97,7 @@ describe("@beep/m365-mcp outbox attachment source", () => {
         const reason3 = yield* reason(`${staged.root}/../outside/secret.txt`);
         assert.strictEqual(reason3, "outside-roots");
         const reason4 = yield* reason(`${staged.sibling}/sibling.txt`);
-        assert.strictEqual(reason4, "outside-roots");
+        assert.strictEqual(reason4, "outside-roots", "a sibling sharing the root's name prefix is not under it");
         const reason5 = yield* reason(staged.at("escape"));
         assert.strictEqual(reason5, "outside-roots");
         const reason6 = yield* reason(staged.at("folder"));
@@ -141,9 +138,8 @@ describe("@beep/m365-mcp outbox attachment source", () => {
           staged.at("big.bin"),
         ]);
         assert.lengthOf(resolvedWith, 2);
-        // One bad path refuses the whole list.
         const reasonWith13 = yield* reasonWith(OutboxAttachmentPolicy.make({ roots }), [abc, staged.at("escape")]);
-        assert.strictEqual(reasonWith13, "outside-roots");
+        assert.strictEqual(reasonWith13, "outside-roots", "one bad path refuses the whole list");
       })
     );
 

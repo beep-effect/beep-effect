@@ -12,11 +12,6 @@ import type { PostgresDrizzleDatabase } from "@beep/postgres";
 
 type ScriptedResult = Effect.Effect<ReadonlyArray<unknown>, string>;
 
-/**
- * Drizzle double whose query builders are chainable proxies over scripted
- * effects: each `select`/`insert`/`update` chain resolves to the next scripted
- * result, and an exhausted script resolves to an empty row set.
- */
 const scriptedDb = (results: ReadonlyArray<ScriptedResult>): PostgresDrizzleDatabase => {
   let cursor = 0;
   const query = (): PostgresDrizzleDatabase => {

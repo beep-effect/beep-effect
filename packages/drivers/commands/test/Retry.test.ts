@@ -42,9 +42,10 @@ describe("Retry.isTransient", () => {
   });
 
   it("a timeout is NOT transient by default", () => {
-    // A deterministically hanging command would otherwise burn its whole
-    // ceiling on every attempt. Callers opt in explicitly.
-    assert.isFalse(Retry.isTransient(CommandFailedError.timedOut(command)));
+    assert.isFalse(
+      Retry.isTransient(CommandFailedError.timedOut(command)),
+      "a hanging command would burn its whole ceiling on every attempt; callers opt in explicitly"
+    );
   });
 
   it("matches case-insensitively", () => {

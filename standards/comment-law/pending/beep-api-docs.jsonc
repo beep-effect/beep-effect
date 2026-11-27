@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/api-docs",
-  "root": "apps/labs/api-docs",
-  "scopes": ["."]
-}

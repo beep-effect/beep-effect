@@ -32,10 +32,8 @@ import type * as DomainPlatform from "@alchemy.run/domain/Platform";
 const AccountId = S.String.pipe(S.brand("ConformanceAccountId"));
 const Actor = S.Struct({ principal: S.String, sourceKind: S.Literals(["user", "system"]) });
 
-/** The request context every scenario sends with; its key is the provenance mapping's `contextKey`. */
 class CurrentActor extends Domain.RequestContext<CurrentActor>()("Conformance/CurrentActor", Actor) {}
 
-/** `rejects` takes any tagged error class; a schema one constructs with `make`. */
 class NotOpen extends S.TaggedError<NotOpen, { readonly brand: unique symbol }>()("NotOpen", {}) {}
 class AccountOpened extends Domain.Event("AccountOpened", { owner: S.String }) {}
 class MoneyDeposited extends Domain.Event("MoneyDeposited", { amount: S.Int }) {
@@ -95,7 +93,6 @@ class Ledger extends Domain.Aggregate("Ledger", {
   evolve: { LedgerCreated: (_state, event) => ({ _tag: "Created" as const, owner: event.owner }) },
 }) {}
 
-/** Policy runs by source account id, across every build in this test file. */
 const policyRuns = MutableHashMap.empty<string, number>();
 const countRun = (id: string) => {
   const run = O.getOrElse(MutableHashMap.get(policyRuns, id), () => 0) + 1;
@@ -110,7 +107,6 @@ const LedgerProvisioningLive = LedgerProvisioning.toLayer(
     const ledgers = yield* Ledger;
     return Effect.fn(function* ({ source, event }) {
       const run = countRun(source.id);
-      // The first run for a `*flaky-*` account dies: a platform that redelivers runs it again.
       if (Str.includes("flaky-")(source.id) && run === 1) return yield* Effect.die("flaky policy run");
       yield* ledgers.send(AccountId.make(source.id), CreateLedger.make({ owner: event.owner }));
     });
@@ -122,7 +118,6 @@ class Conformance extends Domain.Model("Conformance", {
   policies: [LedgerProvisioning],
 }) {}
 
-/** Another model under the same name: hosting it next to `Conformance` must fail. */
 class Impostor extends Domain.Model("Conformance", { aggregates: [Ledger] }) {}
 
 /** One stored event row's provenance and schema version, as a durable platform keeps it. */
@@ -164,7 +159,6 @@ export interface ScenarioClock {
   readonly now: Effect.Effect<DateTime.Utc>;
 }
 
-/** The built model's store of one aggregate. */
 const storeOf = Effect.fnUntraced(function* (aggregate: string) {
   const internals = yield* Internals;
   return yield* Effect.fromOption(O.fromUndefinedOr(internals.aggregates.get(aggregate)));
@@ -179,40 +173,33 @@ const eventsOf = (store: DomainPlatform.AggregateStore, id: string) =>
 const user = { principal: "user_1", sourceKind: "user" } as const;
 const asUser = Effect.provideService(CurrentActor, user);
 
-/** Poll until `predicate` holds; the 15 s ceiling only matters on a slow runner. */
+const slowRunnerCeiling = Duration.seconds(15);
 const eventually = <A, E, R>(effect: Effect.Effect<A, E, R>, predicate: (value: A) => boolean) =>
   effect.pipe(
     Effect.repeat({ until: predicate, schedule: Schedule.spaced(Duration.millis(20)) }),
-    Effect.timeout(Duration.seconds(15))
+    Effect.timeout(slowRunnerCeiling)
   );
 
-/** Structural command guard for the one account whose timer commit is refused. */
 const isRemind = S.is(S.Struct(Remind.fields));
 
-/**
- * Wrap a platform so Remind on the refused account is rejected by the kernel. Scheduled commands cannot declare rejections, so
- * this is how a scenario reaches a scheduled command whose commit is rejected.
- */
 const refusing = <E, R>(platform: Layer.Layer<Domain.Platform, E, R>) =>
   Layer.effect(Domain.Platform)(
     Effect.gen(function* () {
       const inner = yield* Domain.Platform;
-      const refuse = (kit: DomainPlatform.AggregateKit): DomainPlatform.AggregateKit =>
-        // The models here have no views or projections, so the kit's `targets` is final when copied.
-        ({
-          ...kit,
-          handle: (input) =>
-            Str.endsWith("-refused")(input.id) && isRemind(input.command)
-              ? Effect.succeed({ _tag: "Rejected", rejection: { _tag: "Refused" } })
-              : kit.handle(input),
-        });
+      const refuseInViewlessModel = (kit: DomainPlatform.AggregateKit): DomainPlatform.AggregateKit => ({
+        ...kit,
+        handle: (input) =>
+          Str.endsWith("-refused")(input.id) && isRemind(input.command)
+            ? Effect.succeed({ _tag: "Rejected", rejection: { _tag: "Refused" } })
+            : kit.handle(input),
+      });
       return Domain.Platform.of({
         model: Effect.fn("test.refusing.model")(function* (hosted: DomainPlatform.HostedModel) {
           const host = yield* inner.model(hosted);
           return {
             ...host,
             aggregate: (definition: Domain.Aggregate.Any, kit: DomainPlatform.AggregateKit) =>
-              host.aggregate(definition, refuse(kit)),
+              host.aggregate(definition, refuseInViewlessModel(kit)),
           };
         }),
       });
@@ -221,7 +208,6 @@ const refusing = <E, R>(platform: Layer.Layer<Domain.Platform, E, R>) =>
 
 const isOpen = (state: typeof AccountState.Type) => state._tag === "Open";
 
-/** Lets `millis` pass on the target's clock: advanced and drained when explicit, slept otherwise. */
 const elapse = (clock: ScenarioClock | undefined, millis: number) =>
   clock === undefined ? Effect.sleep(Duration.millis(millis)) : clock.advance(millis);
 
@@ -233,13 +219,10 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
     Layer.provideMerge(NodeCrypto.layer)
   );
   describe(`Platform conformance: ${target.name}`, () => {
-    // Ids are scoped per target: the policy run counter is module state, and a runner that shares
-    // one module instance across the InMemory and PGlite files must not add their runs together.
-    const scope = Str.toLowerCase(Str.replace(/[^A-Za-z0-9]+/g, "-")(target.name));
-    const accountId = (name: string) => AccountId.make(`${scope}-${name}`);
-    // Sequential: several scenarios build a second platform on the same store, whose workers
-    // would otherwise deliver or fire another scenario's rows while it runs.
-    layer(hosted, { timeout: "30 seconds", excludeTestServices: true, concurrent: false })("scenarios", (it) => {
+    const perTargetIdPrefix = Str.toLowerCase(Str.replace(/[^A-Za-z0-9]+/g, "-")(target.name));
+    const accountId = (name: string) => AccountId.make(`${perTargetIdPrefix}-${name}`);
+    const sequentialOnSharedStore = { timeout: Duration.seconds(30), excludeTestServices: true, concurrent: false };
+    layer(hosted, sequentialOnSharedStore)("scenarios", (it) => {
       it.effect("an accepted command commits its events and state", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
@@ -349,19 +332,21 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const never = yield* accounts.unschedule(id, "remind-never").pipe(Effect.flip);
           strictEqual(never._tag, "NotScheduled");
 
-          // Due at a point in time rather than after a delay: it fires the same way.
           const now = yield* target.clock?.now ?? DateTime.now;
-          const soon = DateTime.add(now, { milliseconds: 100 });
-          yield* accounts.schedule(id, Remind.make({}), { at: soon, commandId: "remind-at" });
+          const dueAtPointInTime = DateTime.add(now, { milliseconds: 100 });
+          yield* accounts.schedule(id, Remind.make({}), { at: dueAtPointInTime, commandId: "remind-at" });
           yield* elapse(target.clock, 100);
           yield* eventually(accounts.get(id), (state) => state._tag === "Open" && state.reminders >= 3);
 
-          // A wide delay: on a wall clock a loaded runner must still unschedule before the due time.
           yield* accounts.schedule(id, Remind.make({}), { after: "1 second", commandId: "remind-3" });
           yield* accounts.unschedule(id, "remind-3");
           yield* elapse(target.clock, 1300);
           const state6 = yield* accounts.get(id);
-          deepStrictEqual(state6, { _tag: "Open", owner: "fay", balance: 0, reminders: 3 });
+          deepStrictEqual(
+            state6,
+            { _tag: "Open", owner: "fay", balance: 0, reminders: 3 },
+            "the 1 second delay is wide so a loaded runner on a wall clock unschedules before the due time"
+          );
         })
       );
 
@@ -386,13 +371,10 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
             const id = accountId("durable");
             yield* accounts.send(id, OpenAccount.make({ owner: "gus" })).pipe(asUser);
             yield* accounts.send(id, Deposit.make({ amount: 7 })).pipe(asUser);
+            const freshRefusingPlatform = target.platform.pipe(refusing, Layer.fresh);
             const rebuilt = yield* Effect.gen(function* () {
               const context = yield* Layer.build(
-                // Fresh: the suite's memo map would otherwise hand back the platform already built.
-                // Refusing as well: while it is open, this build's workers fire the suite's schedules too.
-                Conformance.layer(LedgerProvisioningLive).pipe(
-                  Layer.provide(target.platform.pipe(refusing, Layer.fresh))
-                )
+                Conformance.layer(LedgerProvisioningLive).pipe(Layer.provide(freshRefusingPlatform))
               );
               return yield* Context.get(context, Account).get(id);
             }).pipe(Effect.scoped);
@@ -411,11 +393,10 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "early" });
           yield* accounts.send(id, Remind.make({}), { commandId: "early" }).pipe(asUser);
           yield* elapse(target.clock, 400);
-          // Wait for the fire itself where the target can report it, so a loaded runner cannot race the asserts.
           if (target.scheduleStatus !== undefined) {
             const scheduleStatus = target.scheduleStatus;
             const status = yield* eventually(scheduleStatus("Account", id, "early"), (value) => value === "executed");
-            strictEqual(status, "executed");
+            strictEqual(status, "executed", "waits for the fire itself, so a loaded runner cannot race the asserts");
           }
           const state = yield* accounts.get(id);
           deepStrictEqual(state, { _tag: "Open", owner: "jay", balance: 0, reminders: 2 });
@@ -432,20 +413,26 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           yield* accounts.send(id, OpenAccount.make({ owner: "kim" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "50 millis", commandId });
           yield* elapse(target.clock, 50);
-          // Wait for the fire itself where the target can report it, so a loaded runner cannot race the asserts.
           if (target.scheduleStatus !== undefined) {
             const scheduleStatus = target.scheduleStatus;
             const status = yield* eventually(scheduleStatus("Account", id, commandId), (value) => value === "rejected");
-            strictEqual(status, "rejected");
+            strictEqual(status, "rejected", "waits for the fire itself, so a loaded runner cannot race the asserts");
           } else {
             yield* elapse(target.clock, 1000);
           }
           const state = yield* accounts.get(id);
-          deepStrictEqual(state, { _tag: "Open", owner: "kim", balance: 0, reminders: 0 });
-          // The failed arming has no receipt; its retained name can still be cancelled.
+          deepStrictEqual(
+            state,
+            { _tag: "Open", owner: "kim", balance: 0, reminders: 0 },
+            "the refusing platform rejects the scheduled Remind: scheduled commands cannot declare rejections"
+          );
           yield* accounts.unschedule(id, commandId);
           const cancelled = yield* accounts.unschedule(id, commandId).pipe(Effect.flip);
-          strictEqual(cancelled._tag, "AlreadyCancelled");
+          strictEqual(
+            cancelled._tag,
+            "AlreadyCancelled",
+            "the failed arming has no receipt; its retained name can still be cancelled"
+          );
           const again = yield* accounts.schedule(id, Remind.make({}), { after: "1 hour", commandId });
           strictEqual(again.commandId, commandId);
           yield* accounts.unschedule(id, commandId);

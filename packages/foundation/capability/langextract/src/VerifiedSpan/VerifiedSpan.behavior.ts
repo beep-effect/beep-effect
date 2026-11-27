@@ -59,23 +59,13 @@ type ReconstructionState = readonly [expectedStart: number, parts: Chunk.Chunk<s
 
 const reconstructionInitial = (): ReconstructionState => [S.Natural.make(0), Chunk.empty()];
 
-// Performance boundary (KMP scan): the scan below touches every UTF-16 code
-// unit of a source up to 1,000,000 long, so it reads arrays and strings with
-// native indexing. Module-namespace helper calls cost a property lookup per
-// call (a getter call under Vite's module runner), which dominated hosted CI.
-
+// decision: hot-scans-use-native-loops
 const nextMatchedLength = (
   locator: string,
   prefixTable: ReadonlyArray<number>,
   matchedLength: number,
   unit: string | undefined
 ): number => {
-  // KMP fallback walks the prefix chain iteratively, so a scanned code unit
-  // allocates nothing and uses constant stack. The chain can be as long as the
-  // NFKC-normalized locator, which may be several times MAX_LOCATOR_LENGTH (for
-  // example U+2026 expands to three code units), so recursion here could
-  // overflow. `length` always stays below the locator length, keeping both
-  // reads in bounds.
   let length = matchedLength;
   while (length > 0 && locator[length] !== unit) {
     length = A.getUnsafe(prefixTable, length - 1);
@@ -83,8 +73,8 @@ const nextMatchedLength = (
   return locator[length] === unit ? length + 1 : 0;
 };
 
+// decision: hot-scans-use-native-loops
 const prefixTable = (locator: string): ReadonlyArray<number> => {
-  // The single KMP-table allocation; it is immutable once construction returns.
   const table = A.make(0);
   pipe(
     I.range(1),
@@ -98,17 +88,8 @@ const prefixTable = (locator: string): ReadonlyArray<number> => {
   return table;
 };
 
-// A located match is unique only when no second occurrence exists, so every
-// scan stops at the second accepted occurrence.
-const MATCH_LIMIT = 2;
+const MATCHES_THAT_PROVE_AMBIGUITY = 2;
 
-/**
- * Scan `text` for `locator` and keep the first {@link MATCH_LIMIT} matches
- * whose start passes the cheap `admits` predicate and then yields an anchor.
- *
- * Matches are visited in source order and the scan returns as soon as the
- * limit is reached, so repetitive sources never enumerate remaining matches.
- */
 const firstAcceptedMatches = <A>(
   text: string,
   locator: string,
@@ -124,7 +105,7 @@ const firstAcceptedMatches = <A>(
   const accepted = A.empty<A>();
   const textLength = Str.length(text);
   let matchedLength = 0;
-  for (let index = 0; index < textLength && accepted.length < MATCH_LIMIT; index++) {
+  for (let index = 0; index < textLength && accepted.length < MATCHES_THAT_PROVE_AMBIGUITY; index++) {
     matchedLength = nextMatchedLength(locator, table, matchedLength, text[index]);
     if (matchedLength === locatorLength) {
       matchedLength = retainedLength;
@@ -158,20 +139,15 @@ const exactRawMatches = (sourceText: string, locator: string): ReadonlyArray<Tex
     rawAnchor(sourceText, startChar, startChar + Str.length(locator))
   );
 
-/**
- * A normalized match maps back to raw text only when it starts at the first
- * and ends at the last normalized code unit of its raw clusters; a match that
- * shares a raw range with its neighbour would split a cluster.
- */
+// decision: hot-scans-use-native-loops
 const alignsWithRawClusters =
   (normalizedSource: NormalizedTextWithRawOffsets, normalizedLocatorLength: number) =>
   (normalizedStart: number): boolean => {
-    // KMP reports matches inside the normalized text, whose offset maps hold one
-    // entry per normalized code unit; neighbour reads past either end are
-    // undefined and never equal a raw offset.
     const { ends, starts } = normalizedSource;
     const normalizedEnd = normalizedStart + normalizedLocatorLength;
-    return starts[normalizedStart - 1] !== starts[normalizedStart] && ends[normalizedEnd] !== ends[normalizedEnd - 1];
+    const startsAtClusterStart = starts[normalizedStart - 1] !== starts[normalizedStart];
+    const endsAtClusterEnd = ends[normalizedEnd] !== ends[normalizedEnd - 1];
+    return startsAtClusterStart && endsAtClusterEnd;
   };
 
 const normalizedRawAnchor = (
@@ -203,7 +179,6 @@ const normalizedRawMatches = (
 
 type PreparedNormalizedSource = () => NormalizedTextWithRawOffsets;
 
-// Normalization runs at most once per source, and only when a locator needs it.
 const preparedNormalizedSource = (sourceText: string): PreparedNormalizedSource =>
   lazy(() => normalizeWithRawOffsets(sourceText));
 
@@ -214,9 +189,8 @@ const findRawMatches: {
   3,
   (sourceText: string, normalizedSource: PreparedNormalizedSource, locator: string): ReadonlyArray<TextAnchor> => {
     const exactMatches = exactRawMatches(sourceText, locator);
-    // Two exact raw occurrences already establish ambiguity: normalized matches
-    // can only be appended after them, so the source is never normalized.
-    return A.length(exactMatches) > 1
+    const exactMatchesProveAmbiguity = A.length(exactMatches) > 1;
+    return exactMatchesProveAmbiguity
       ? exactMatches
       : pipe(
           normalizedRawMatches(sourceText, normalizedSource(), normalizeTextLocator(locator)),

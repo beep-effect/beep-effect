@@ -82,8 +82,7 @@ const runPass = Effect.fn("PracticeMailTagging.runPass")(function* (mode: Taggin
 const categoriesAdded = (report: TaggingRunReport): number =>
   A.reduce(report.categoryAdds, 0, (total, add) => total + add.count);
 
-// A watch process logs to the journal, so it logs totals and never a category name.
-const logPass = (report: TaggingRunReport) =>
+const logTotalsNeverCategoryNames = (report: TaggingRunReport) =>
   Effect.logInfo("mail-tagging pass finished").pipe(
     Effect.annotateLogs({
       runId: report.runId,
@@ -106,7 +105,7 @@ const isRetryable = (error: PracticeMailTaggingError): boolean =>
 const watch = Effect.fn("PracticeMailTagging.watch")(function* (flags: PassFlags, maxPasses: O.Option<number>) {
   const { schedule } = yield* MailTaggingPasses;
   const pass = runPass("apply", flags).pipe(
-    Effect.tap(logPass),
+    Effect.tap(logTotalsNeverCategoryNames),
     Effect.tapError(logFailure),
     Effect.retry({
       schedule: Schedule.min([Schedule.exponential(schedule.pollInterval), Schedule.spaced(schedule.maxBackoff)]),
@@ -125,7 +124,6 @@ const dryRunCommand = Command.make("dry-run", passFlags, (flags) =>
   Effect.flatMap(runPass("dry-run", flags), printRunReport)
 ).pipe(Command.withDescription("Run one pass that reads, decides, and reports, and writes nothing."));
 
-// A writing command holds the state-directory lock until its process ends.
 const writing =
   (command: string) =>
   <A, E, R>(work: Effect.Effect<A, E, R>) =>

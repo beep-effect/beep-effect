@@ -92,8 +92,6 @@ const NiceGoodText = S.Struct({
   Indication: S.ArrayEnsure(S.Struct({ Label: S.ArrayEnsure(TextNode) })),
 });
 
-// Unknown XML properties (notes, definitions, references and warnings) are
-// deliberately discarded by the schema. They cannot enter the CPC projection.
 const IpcDocument = S.Struct({
   IPCScheme: S.Struct({ edition: S.String, ipcEntry: S.ArrayEnsure(IpcEntry) }),
 });

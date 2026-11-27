@@ -70,16 +70,14 @@ const makeHost = (deps: Parameters<typeof makeContext>[0]): DomainPlatform.Model
   const policy = (_definition: unknown, kit: DomainPlatform.PolicyKit) =>
     Effect.sync((): DomainPlatform.PolicyStore => {
       const locks = MutableHashMap.empty<string, Semaphore.Semaphore>();
-      const lockFor = (key: string) =>
+      const perKeyOrderLock = (key: string) =>
         O.getOrElse(MutableHashMap.get(locks, key), () => {
           const created = Semaphore.makeUnsafe(1);
           MutableHashMap.set(locks, key, created);
           return created;
         });
       return {
-        // The outbox marks a delivery done only after this succeeds: at least once, in order per key.
-        // A failed run fails the delivery: the outbox keeps the row pending and retries it.
-        receive: (delivery) => lockFor(delivery.key).withPermits(1)(kit.run(delivery)),
+        receive: (delivery) => perKeyOrderLock(delivery.key).withPermits(1)(kit.run(delivery)),
       };
     });
 
@@ -89,8 +87,6 @@ const makeHost = (deps: Parameters<typeof makeContext>[0]): DomainPlatform.Model
     policy,
     projection: (definition, kit) => makeProjectionStore(ctx)(definition, kit),
     stream: (definition, kit) => makeStreamStore(ctx)(definition, kit),
-    // Every store is built: deliveries find their targets hosted, and a deploy that adds
-    // consumers starts their runs.
     start: Effect.fn("AlchemyPostgresPlatform.start")(function* (
       targets: ReadonlyArray<string>,
       plans: (target: string) => Backfill.Plan | undefined,
@@ -104,8 +100,6 @@ const makeHost = (deps: Parameters<typeof makeContext>[0]): DomainPlatform.Model
         (target) =>
           O.match(O.fromUndefinedOr(plans(target)), {
             onNone: () => Effect.void,
-            // A consumer that reads other sources than its run started with, at the same
-            // version: building the model fails, saying to bump the version.
             onSome: (plan) =>
               Effect.flatMap(ctx.net.run.begin(target, plan), (begun) =>
                 begun.status === "changed"

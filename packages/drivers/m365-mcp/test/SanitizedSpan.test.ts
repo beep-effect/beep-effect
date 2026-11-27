@@ -88,12 +88,9 @@ const registrationLayer = sanitizedToolkit(M365Toolkit).pipe(
   Layer.provide(MockM365Layer)
 );
 
-// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
-// builds `McpServer`, so a direct `callTool` — one with no transport middleware
-// in front of it — has to supply the caller itself.
 const stubClientInfo = { name: "m365-mcp-test-client", version: "0.0.0" };
 
-const StubMcpClientLayer = Layer.succeed(
+const DirectCallToolCallerLayer = Layer.succeed(
   McpServerClient,
   McpServerClient.of({
     clientId: 1,
@@ -109,7 +106,7 @@ const StubMcpClientLayer = Layer.succeed(
   })
 );
 
-const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, StubMcpClientLayer);
+const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, DirectCallToolCallerLayer);
 
 describe("m365-mcp sanitized dispatch", () => {
   it.layer(fullLayer, { timeout: "30 seconds" })("with M365Toolkit mounted via sanitizedToolkit", (it) => {

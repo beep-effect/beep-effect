@@ -237,7 +237,6 @@ export const BackfillRunJobSpan = SpanInstrument.make({
 const spanOnly: A.NonEmptyReadonlyArray<SignalKind> = [SignalKind.Enum.span];
 const spanAndMetric: A.NonEmptyReadonlyArray<SignalKind> = [SignalKind.Enum.span, SignalKind.Enum.metric];
 
-/** A kernel `domain.*` key set from a model-declared name or a fixed literal. */
 const kernelName = (key: string, description: string, signals: A.NonEmptyReadonlyArray<SignalKind> = spanOnly) =>
   AttributeKey.make({
     key: AttributeKeyName.make(key),
@@ -250,7 +249,6 @@ const kernelName = (key: string, description: string, signals: A.NonEmptyReadonl
     description,
   });
 
-/** A kernel `domain.*` count. */
 const kernelCount = (key: string, description: string) =>
   AttributeKey.make({
     key: AttributeKeyName.make(key),
@@ -263,7 +261,6 @@ const kernelCount = (key: string, description: string) =>
     description,
   });
 
-/** A kernel `domain.*` instance identifier: kept only from `standard` up. */
 const kernelIdentifier = (key: string, description: string) =>
   AttributeKey.make({
     key: AttributeKeyName.make(key),
@@ -276,7 +273,6 @@ const kernelIdentifier = (key: string, description: string) =>
     description,
   });
 
-/** The keys the hosted kernel sets on its spans and metric series (`@alchemy.run/domain` `Telemetry`). */
 const kernelAttributes = [
   kernelName("domain.aggregate", "Aggregate a kernel span or series concerns, as the model names it.", spanAndMetric),
   kernelName("domain.command", "Command a kernel decide span or series handles.", spanAndMetric),

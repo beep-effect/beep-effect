@@ -155,14 +155,15 @@ if (!shouldRunPgliteIntegration) {
           expect(rows).toHaveLength(1);
           expect(rows[0]?.evidenceId).toBe(1);
 
-          // Keep the intentional failure last: direct mutation must be denied
-          // by the append-only trigger installed by the generated migration.
           const mutation = yield* Effect.flip(sql`
             UPDATE epistemic_evidence_verification
             SET manifestation_key = ${Str.repeat(64)("b")}
             WHERE evidence_id = 1
           `);
-          expect(NodeUtil.inspect(mutation, { depth: 10 })).toContain("append-only");
+          expect(
+            NodeUtil.inspect(mutation, { depth: 10 }),
+            "the append-only trigger denies a direct edit; the edit runs last: PGlite rolls the session back after an intentional failure"
+          ).toContain("append-only");
         }),
         120_000
       );

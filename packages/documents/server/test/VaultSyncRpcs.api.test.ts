@@ -61,8 +61,7 @@ const legacyRowInput = {
   workspaceId: 1,
 } as const;
 const moveId = V.ConflictId.make("documents_sync_conflict_m1");
-// One decode of both legacy rows: the open edit (41) and the open remote move (43).
-const decodeLegacyRows = S.decodeEffect(S.Tuple([SyncConflict, SyncConflict]))([
+const decodeEditAndMoveRows = S.decodeEffect(S.Tuple([SyncConflict, SyncConflict]))([
   legacyRowInput,
   { ...legacyRowInput, id: 43, publicId: moveId, conflictKind: "remoteMove", remoteEventId: "event-m1" },
 ]);
@@ -88,27 +87,24 @@ const probe = DmsMirrorProbe.make({ connected: true, provider: "box" });
 const authFailed = DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("auth-failed"), provider: "box" });
 
 const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: ReadonlyArray<SyncConflict> = []) {
-  const [legacyRow] = yield* decodeLegacyRows;
-  // A legacy row with no matching authorized View record must never be returned.
+  const [legacyRow] = yield* decodeEditAndMoveRows;
   const unrelatedRow = SyncConflict.make({
     ...legacyRow,
     id: 42 as never,
     publicId: "documents_sync_conflict_zz" as never,
   });
   const refreshed = yield* Ref.make(0);
-  // `answer` is what the provider would say now; `current` is the sidecar's last resolution.
-  const answer = yield* Ref.make(probe);
-  const current = yield* SubscriptionRef.make(probe);
+  const providerAnswerNow = yield* Ref.make(probe);
+  const sidecarLastResolution = yield* SubscriptionRef.make(probe);
   const mirrorAvailability = DmsMirrorAvailability.of({
-    changes: SubscriptionRef.changes(current),
-    probe: SubscriptionRef.get(current),
+    changes: SubscriptionRef.changes(sidecarLastResolution),
+    probe: SubscriptionRef.get(sidecarLastResolution),
     refresh: Ref.update(refreshed, (n) => n + 1).pipe(
-      Effect.andThen(Ref.get(answer)),
-      Effect.tap((next) => SubscriptionRef.set(current, next))
+      Effect.andThen(Ref.get(providerAnswerNow)),
+      Effect.tap((next) => SubscriptionRef.set(sidecarLastResolution, next))
     ),
   });
   const availability = Layer.succeed(DmsMirrorAvailability, mirrorAvailability);
-  // The read model has no write methods: the adapter can only read projected rows.
   const legacy = Layer.succeed(
     LegacySyncReadModel,
     LegacySyncReadModel.of({
@@ -159,7 +155,7 @@ const setup = Effect.fn("VaultSyncRpcsTest.setup")(function* (extraRows: Readonl
     })
   );
   const client = yield* RpcTest.makeClient(VaultSyncRpcs).pipe(Effect.provideContext(context));
-  return { answer, availability: mirrorAvailability, client, context, refreshed, sql };
+  return { answer: providerAnswerNow, availability: mirrorAvailability, client, context, refreshed, sql };
 });
 
 const workspaceId = 1 as never;
@@ -172,8 +168,7 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       const denied = yield* Effect.flip(client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers));
       expect(denied._tag).toBe("VaultSyncActionError");
       yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
-      // Views project asynchronously: retry until the destination and its conflict are visible.
-      const status = yield* client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers).pipe(
+      const projectedStatus = yield* client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers).pipe(
         Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }),
         Effect.repeat({
           until: (current) => current.openConflicts === 1,
@@ -181,10 +176,13 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
           times: 300,
         })
       );
-      expect(status.connected).toBe(true);
-      expect(status.provider).toBe("box");
+      expect(projectedStatus.connected).toBe(true);
+      expect(projectedStatus.provider).toBe("box");
       const conflicts = yield* client.ListVaultSyncConflicts({ workspaceId }, headers);
-      expect(A.map(conflicts, (row) => row.id)).toEqual([41]);
+      expect(
+        A.map(conflicts, (row) => row.id),
+        "a legacy row with no matching authorized View record is never returned"
+      ).toEqual([41]);
       yield* client.GetVaultSyncStatus({ workspaceId, forceProbe: true }, headers);
       const refreshes = yield* Ref.get(refreshed);
       expect(refreshes).toBe(1);
@@ -206,7 +204,7 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
 
   it.effect("reviewing a remote move queues the corrective move before the review closes (I14)", () =>
     Effect.gen(function* () {
-      const [, moveRow] = yield* decodeLegacyRows;
+      const [, moveRow] = yield* decodeEditAndMoveRows;
       const { client, context, sql } = yield* setup([moveRow]);
       yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
       const items = Context.get(context, V.SyncItem);
@@ -254,7 +252,6 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
           }),
         })
       );
-      // Wait until the View shows both the pushed item and the open move conflict.
       yield* client
         .ListVaultSyncConflicts({ workspaceId }, headers)
         .pipe(
@@ -339,12 +336,14 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
         Effect.repeat({ until: A.isReadonlyArrayNonEmpty, schedule: Schedule.spaced("10 millis") }),
         Effect.timeout("10 seconds")
       );
-      // The probe changes only availability: no command reaches any View.
       yield* Ref.set(answer, authFailed);
       yield* availability.refresh;
       yield* Fiber.join(watching).pipe(Effect.timeout("10 seconds"));
       const seen = yield* Ref.get(frames);
-      expect(A.map(seen, (frame) => frame.connected)).toEqual([true, false]);
+      expect(
+        A.map(seen, (frame) => frame.connected),
+        "a probe that changes only availability still pushes a frame, though no command reaches any View"
+      ).toEqual([true, false]);
       const last = A.last(seen);
       assertSome(
         O.flatMap(last, (frame) => frame.disconnectReason),
@@ -358,8 +357,6 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       const { answer, availability, client, sql } = yield* setup();
       yield* sql`INSERT INTO shared_membership (org_id, role, status, user_id) VALUES (1, 'member', 'active', 7)`;
       const frames = yield* Ref.make<ReadonlyArray<VaultSyncStatus>>([]);
-      // Wait for the destination to project, so the subscription itself needs no retry
-      // and the post-revocation failure ends the fiber.
       yield* client
         .GetVaultSyncStatus({ workspaceId, forceProbe: false }, headers)
         .pipe(Effect.retry({ schedule: Schedule.spaced("10 millis"), times: 300 }));
@@ -375,7 +372,10 @@ describe("desktop VaultSyncRpcs served through the vault-sync Api", () => {
       yield* Ref.set(answer, authFailed);
       yield* availability.refresh;
       const ended = yield* Fiber.join(watching).pipe(Effect.flip, Effect.timeout("10 seconds"));
-      expect(ended._tag).toBe("VaultSyncActionError");
+      expect(
+        ended._tag,
+        "subscribed after the destination projected, the post-revocation failure ends the fiber with no retry"
+      ).toBe("VaultSyncActionError");
       const seen = yield* Ref.get(frames);
       expect(A.every(seen, (frame) => frame.connected)).toBe(true);
     }).pipe(TestClock.withLive)
