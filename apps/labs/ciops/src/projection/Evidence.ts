@@ -335,8 +335,7 @@ export const generateReplayEvidence = Effect.fn("Evidence.generateReplayEvidence
   const journalDigest = yield* sha256(artifacts.journal);
   const replayed: ReplayReport = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest);
   const rendered = renderReplayEvidence(replayed, journalDigest);
-  // A diverging replay fails typed before any write; its FAIL table is printed
-  // first so the expected/projected nonces remain diagnosable from the run.
+
   const report = yield* requireReplayMatch(replayed).pipe(Effect.tapError(() => Console.log(rendered)));
   if (EvidenceMode.is.write(mode)) {
     yield* writeEvidence(paths.evidence, rendered);
@@ -507,7 +506,6 @@ export const topLevelBlock: {
     })
 );
 
-// Lines after the first `header` line that are indented deeper than it.
 const nestedBlock = (lines: ReadonlyArray<string>, header: string): ReadonlyArray<string> =>
   O.match(A.findFirstIndex(lines, Eq.equals(header)), {
     onNone: A.empty<string>,
@@ -516,7 +514,6 @@ const nestedBlock = (lines: ReadonlyArray<string>, header: string): ReadonlyArra
 
 const scalarMember = /^ {4}([a-z0-9_-]+): '?([^']*)'?$/;
 
-// Scalar members at indent 4; folded continuation lines (indent 6) never match.
 const scalarMembers = (lines: ReadonlyArray<string>, prefix: string): ReadonlyArray<readonly [string, string]> =>
   A.getSomes(
     A.map(lines, (line) =>
@@ -739,7 +736,7 @@ const replayLivePin = Effect.fnUntraced(function* (
   const decodedUtf82 = yield* decodeUtf8(journalBytes, journalPath);
   const events = yield* decodeAdmissionJournal(decodedUtf82);
   const options = ReplayOptions.make({ window: O.some(window) });
-  // The bytes' own digest feeds the replay, so its window guard re-checks the pin.
+
   const report = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest, options);
   return buildLiveReplayReport(events, report, window);
 });
