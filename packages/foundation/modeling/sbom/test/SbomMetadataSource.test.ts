@@ -1,19 +1,3 @@
-// Derivation from a package.json manifest.
-//
-// Half of the hand-rolled predecessor is DEAD here rather than ported:
-// `parseAuthor` is `Person.FromValue`, and `parseRepository`'s four-substitution
-// git-URL normalization is `Repository.browseUrl` — both in
-// `@beep/package-json`, both with wire fidelity the hand-roll lacked. What
-// remains is the part that is genuinely CycloneDX vocabulary: which manifest
-// field becomes which external-reference type, how a supplier resolves, and
-// what a purl looks like.
-//
-// The purl expectations are the package-url spec's own test vectors
-// (`tests/types/npm-test.json`): a scoped package is `pkg:npm/%40angular/animation@12.3.1`
-// — the scope is the NAMESPACE with its `@` percent-encoded and the separating
-// slash kept literal. The predecessor emitted `encodeURIComponent(name)`, which
-// collapses that slash to `%2F` and is not a canonical purl.
-
 import { Package } from "@beep/package-json/Package";
 import {
   ComponentInput,
@@ -32,7 +16,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { ExternalReference } from "@beep/sbom";
 
-/** The first external reference of one type, or `undefined`. */
 const referenceOf = (
   references: ReadonlyArray<ExternalReference>,
   type: ExternalReference["type"]
@@ -55,16 +38,18 @@ const decode = (value: Record<string, unknown> = manifest) => Package.decode(val
 
 describe("SbomMetadataSource.npmPurl", () => {
   it("encodes an unscoped package as the spec's canonical form", () => {
-    assert.strictEqual(SbomMetadataSource.npmPurl("foobar", "12.3.1"), "pkg:npm/foobar@12.3.1");
+    assert.strictEqual(
+      SbomMetadataSource.npmPurl("foobar", "12.3.1"),
+      "pkg:npm/foobar@12.3.1",
+      "expectations are the package-url spec npm vectors (tests/types/npm-test.json)"
+    );
   });
 
   it("keeps the scope a namespace: %40scope/name, not %40scope%2Fname", () => {
-    // The package-url spec's own roundtrip vector. `encodeURIComponent(name)`
-    // — what the predecessor did — produces `pkg:npm/%40angular%2Fanimation`,
-    // which parses as a namespace-less name and is not canonical.
     assert.strictEqual(
       SbomMetadataSource.npmPurl("@angular/animation", "12.3.1"),
-      "pkg:npm/%40angular/animation@12.3.1"
+      "pkg:npm/%40angular/animation@12.3.1",
+      "the scope is the namespace: @ percent-encoded, slash literal; %2F parses as a namespace-less name"
     );
   });
 
@@ -108,20 +93,18 @@ describe("SbomMetadataSource.componentFor", () => {
   });
 
   it("rejects explicit undefined optional fields (EF-40 exact optional keys)", () => {
-    // The #664 widening is retired: `ComponentInput`'s optional fields are
-    // exact keys, so a caller with no version omits the key. A present key
-    // holding `undefined` fails validation...
-    assert.isFalse(S.is(ComponentInput)({ name: "left-pad", version: undefined }));
+    assert.isFalse(
+      S.is(ComponentInput)({ name: "left-pad", version: undefined }),
+      "a caller with no version omits the exact optional key; a present undefined fails validation"
+    );
     assert.isFalse(S.is(ComponentInput)({ name: "left-pad", license: undefined }));
     assert.isFalse(S.is(ComponentInput)({ name: "left-pad", description: undefined }));
     assert.isFalse(S.is(ComponentInput)({ name: "left-pad", type: undefined }));
     assert.isTrue(S.is(ComponentInput)({ name: "left-pad" }));
-    // ...and does not type-check: this file is compiled with
-    // exactOptionalPropertyTypes: true.
     const pkg: { name: string; version: string | undefined } = { name: "left-pad", version: undefined };
     // @ts-expect-error: `version` is an exact optional key; `undefined` is not a value for it.
     const input: ComponentInput.Encoded = pkg;
-    assert.isDefined(input);
+    assert.isDefined(input, "an explicit undefined does not type-check under exactOptionalPropertyTypes");
   });
 });
 
@@ -141,9 +124,12 @@ describe("SbomMetadataSource.rootComponent", () => {
 
   it.effect("maps keywords onto CycloneDX 1.6 tags", () =>
     Effect.gen(function* () {
-      // `tags` is 1.6-only, which is part of what the 1.6-only ruling bought.
       const decoded1 = yield* decode();
-      assert.deepStrictEqual(SbomMetadataSource.rootComponent(decoded1).tags, ["sbom", "cyclonedx"]);
+      assert.deepStrictEqual(
+        SbomMetadataSource.rootComponent(decoded1).tags,
+        ["sbom", "cyclonedx"],
+        "tags exists only in CycloneDX 1.6, the one version this package emits"
+      );
     })
   );
 
@@ -211,13 +197,14 @@ describe("SbomMetadataSource.rootComponent", () => {
 describe("SbomMetadataSource.externalReferences", () => {
   it.effect("normalizes the repository through the package-json model, not a regex", () =>
     Effect.gen(function* () {
-      // `git+https://github.com/effected/kit.git` browses at
-      // `https://github.com/effected/kit`. The normalization is
-      // `Repository.browseUrl`'s; this package only chooses the reference type.
       const decoded4 = yield* decode();
       const references = SbomMetadataSource.externalReferences(decoded4);
       const vcs = referenceOf(references, "vcs");
-      assert.strictEqual(vcs?.url, "https://github.com/effected/kit");
+      assert.strictEqual(
+        vcs?.url,
+        "https://github.com/effected/kit",
+        "Repository.browseUrl in @beep/package-json normalizes; this package only picks the reference type"
+      );
     })
   );
 
@@ -231,10 +218,11 @@ describe("SbomMetadataSource.externalReferences", () => {
 
   it.effect("emits no vcs reference when the repository value is not a URL the model recognizes", () =>
     Effect.gen(function* () {
-      // The discriminating negative: an externalReference.url that is not a URL
-      // is a document that validates and misleads.
       const pkg = yield* decode({ ...manifest, repository: "  " });
-      assert.isUndefined(referenceOf(SbomMetadataSource.externalReferences(pkg), "vcs"));
+      assert.isUndefined(
+        referenceOf(SbomMetadataSource.externalReferences(pkg), "vcs"),
+        "an externalReference.url that is not a URL is a document that validates and misleads"
+      );
     })
   );
 
@@ -273,9 +261,11 @@ describe("SbomMetadataSource.externalReferences", () => {
         "https://acme.example"
       );
 
-      // Same URL twice is one reference, not two rows saying the same thing.
       const same = Supplier.make({ name: "Acme", url: ["https://effected.dev"] });
-      assert.isUndefined(referenceOf(SbomMetadataSource.externalReferences(pkg, { supplier: same }), "website"));
+      assert.isUndefined(
+        referenceOf(SbomMetadataSource.externalReferences(pkg, { supplier: same }), "website"),
+        "the same URL twice is one reference, not two rows saying the same thing"
+      );
     })
   );
 
@@ -325,13 +315,13 @@ describe("SbomMetadataSource.fromPackage", () => {
 
   it.effect("derives no supplier and no authors from a manifest alone", () =>
     Effect.gen(function* () {
-      // A manifest says who wrote the software, never who assembled the SBOM or
-      // which organization supplied it. Inventing either would fabricate two of
-      // the NTIA elements.
       const decoded11 = yield* decode();
       const metadata = SbomMetadataSource.fromPackage(decoded11);
-      assert.isUndefined(metadata.supplier);
-      assert.isUndefined(metadata.authors);
+      assert.isUndefined(metadata.supplier, "a manifest never says which organization supplied the software");
+      assert.isUndefined(
+        metadata.authors,
+        "a manifest never says who assembled the SBOM; inventing it fabricates an NTIA element"
+      );
       assert.isUndefined(metadata.timestamp);
     })
   );
@@ -347,10 +337,10 @@ describe("SbomMetadataSource.fromPackage", () => {
   );
 
   it("rejects explicit undefined options (EF-40 exact optional keys)", () => {
-    // Same exact keys as ComponentInput: an option read out of config as
-    // `T | undefined` is omitted at the call site, never forwarded as
-    // `undefined`. A present key holding `undefined` fails validation...
-    assert.isFalse(S.is(SbomMetadataOptions)({ supplier: undefined }));
+    assert.isFalse(
+      S.is(SbomMetadataOptions)({ supplier: undefined }),
+      "an option read from config as T | undefined is omitted at the call site, never forwarded as undefined"
+    );
     assert.isFalse(S.is(SbomMetadataOptions)({ authors: undefined }));
     assert.isFalse(S.is(SbomMetadataOptions)({ timestamp: undefined }));
     assert.isFalse(S.is(SbomMetadataOptions)({ publisher: undefined }));
@@ -358,11 +348,10 @@ describe("SbomMetadataSource.fromPackage", () => {
     assert.isFalse(S.is(SbomMetadataOptions)({ documentationUrl: undefined }));
     assert.isFalse(S.is(SbomMetadataOptions)({ type: undefined }));
     assert.isTrue(S.is(SbomMetadataOptions)({}));
-    // ...and does not type-check.
     const config: { timestamp: string | undefined } = { timestamp: undefined };
     // @ts-expect-error: `timestamp` is an exact optional key; `undefined` is not a value for it.
     const options: SbomMetadataOptions.Encoded = config;
-    assert.isDefined(options);
+    assert.isDefined(options, "an explicit undefined option does not type-check");
   });
 });
 
@@ -395,17 +384,16 @@ describe("SbomMetadataSource.formatCopyright", () => {
   });
 
   it("takes the year as an argument, never from an ambient clock", () => {
-    // The predecessor defaulted `endYear` to `new Date().getFullYear()`, which
-    // made its output untestable and its purity a claim rather than a property.
-    // Two calls a year apart must be reproducible from the arguments alone.
-    assert.strictEqual(SbomMetadataSource.formatCopyright("Acme", { year: 1999 }), "Copyright 1999 Acme");
+    assert.strictEqual(
+      SbomMetadataSource.formatCopyright("Acme", { year: 1999 }),
+      "Copyright 1999 Acme",
+      "two calls a year apart reproduce from the arguments alone; an ambient clock would make output untestable"
+    );
   });
 });
 
 describe("SbomMetadataSource.merge", () => {
   it("lets the override win on every field, not just the one a test happens to check", () => {
-    // Field by field, or a merge that is right about `supplier` and wrong about
-    // `timestamp` passes a suite that only ever asserts on suppliers.
     const base = SbomMetadata.make({
       timestamp: "2026-01-01T00:00:00.000Z",
       authors: [Contact.make({ name: "base-author" })],
@@ -421,7 +409,11 @@ describe("SbomMetadataSource.merge", () => {
         supplier: Supplier.make({ name: "Explicit" }),
       })
     );
-    assert.strictEqual(merged.timestamp, "2026-07-25T00:00:00.000Z");
+    assert.strictEqual(
+      merged.timestamp,
+      "2026-07-25T00:00:00.000Z",
+      "checked field by field: a merge right about supplier can be wrong about timestamp"
+    );
     assert.strictEqual(merged.authors?.[0]?.name, "override-author");
     assert.strictEqual(merged.component?.name, "override");
     assert.strictEqual(merged.supplier?.name, "Explicit");
@@ -448,13 +440,10 @@ describe("SbomMetadataSource.merge", () => {
   });
 
   it("returns an admitted SbomMetadata, structurally — Opaque records have no prototype", () => {
-    // Inverted from the lab's `instanceOf` pin (W4-g): `SbomMetadata` is a
-    // branded `S.Opaque`, so membership is the schema's structural check, and a
-    // merge copies its inputs rather than aliasing them.
     const base = SbomMetadata.make({ timestamp: "2025-01-01T00:00:00Z" });
     const merged = SbomMetadataSource.merge(base, SbomMetadata.make({}));
-    assertTrue(S.is(SbomMetadata)(merged));
-    assert.notStrictEqual(merged, base);
+    assertTrue(S.is(SbomMetadata)(merged), "a branded S.Opaque is a member by the schema structural check");
+    assert.notStrictEqual(merged, base, "a merge copies its inputs rather than aliasing them");
     assert.deepStrictEqual(merged, base);
   });
 });
