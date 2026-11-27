@@ -53,9 +53,7 @@ roundTrips("ContentFailure", ContentFailure);
 roundTrips("FramingFailure", FramingFailure);
 roundTrips("ParseFailure", ParseFailure);
 roundTrips("WorkspaceEntry", WorkspaceEntry);
-// ClassifiedSpecifier's native arbitrary generates independent raw text and tags.
-// Classify its text before sampling the enclosing bundle to respect that codec's domain.
-const canonical = (value: LockfileFields): LockfileFields => ({
+const withSpecifiersReclassified = (value: LockfileFields): LockfileFields => ({
   ...value,
   importers: A.map(value.importers, (importer) =>
     LockfileImporter.make({
@@ -75,13 +73,16 @@ const canonical = (value: LockfileFields): LockfileFields => ({
   ),
 });
 it.effect.prop(
-  "LockfileFields encoding decodes without failure and preserves the normalized bundle",
-  [Arbitrary.schema(LockfileFields).pipe(Arbitrary.map(canonical))],
+  "LockfileFields with specifiers reclassified from their raw text round-trip and preserve the normalized bundle",
+  [Arbitrary.schema(LockfileFields).pipe(Arbitrary.map(withSpecifiersReclassified))],
   ([value]) =>
     Effect.gen(function* () {
       const encoded = yield* S.encodeEffect(LockfileFields)(value);
       const decoded = yield* S.decodeEffect(LockfileFields)(encoded);
-      assertTrue(S.toEquivalence(LockfileFields)(decoded, value));
+      assertTrue(
+        S.toEquivalence(LockfileFields)(decoded, value),
+        "the native ClassifiedSpecifier arbitrary pairs a tag with an unrelated raw, so the raw is reclassified first"
+      );
       const value2 = yield* S.encodeEffect(LockfileFields)(decoded);
       assert.deepStrictEqual(value2, encoded);
     }),

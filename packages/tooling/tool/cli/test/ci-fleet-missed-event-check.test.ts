@@ -1,15 +1,22 @@
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import {
   CiCommandError,
+  checkingRun,
   ciFleetMissedEventCheckCommand,
   classifyFleetEvidence,
   decideFleetVerdict,
   deliveryWindow,
+  earlierFleetRuns,
+  FLEET_CHECK_JOB_NAME,
+  FleetCheckingRun,
+  FleetCheckJob,
   FleetCheckReport,
   FleetDeliveryDetail,
   FleetDeliveryEvidence,
   FleetGithubFixture,
   FleetGithubReads,
+  FleetGuardDecision,
+  FleetGuardInput,
   FleetHookDelivery,
   FleetHookSource,
   FleetHookSourceEntry,
@@ -26,28 +33,32 @@ import {
   FleetRunnersPage,
   FleetRunsPage,
   FleetRunsQuery,
-  FleetScheduledRun,
   FleetSleep,
   FleetVerdict,
   FleetWatchToken,
+  FleetWorkflowRun,
   failOnFleetAlerts,
+  fleetGuardDecision,
   fleetHookSources,
   fleetPoolCaps,
   fleetPoolCapsProjection,
+  fleetPreviousRun,
   fleetRemedies,
   fleetVerdictLabel,
   hookSourceAt,
+  isCadenceGapFinding,
   isFleetAlert,
   judgeDeliveryEvidence,
   layerFleetGithubReadsLive,
   layerFleetMissedEventLive,
   nextLinkCursor,
   percentile95,
-  previousScheduledRun,
   productionFleetPools,
   quoteJsonIds,
   renderFleetCheckSummary,
+  renderFleetGuardDecision,
   runFleetMissedEventCheck,
+  runFleetMissedEventGuard,
 } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -75,6 +86,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -135,6 +147,10 @@ const started = (id: number, createdAt: number, startedAt: number, runnerName: O
 const delivery = (id: string, deliveredAt: number, statusCode = 200, action: O.Option<string> = O.some("queued")) =>
   FleetHookDelivery.make({ id, deliveredAt, statusCode, action });
 
+const run = (id: number, createdAt: number) => FleetWorkflowRun.make({ id, createdAt });
+
+const ranAt = (runId: number, startedAt: number) => ({ runId, job: FleetCheckJob.cases.Ran.make({ startedAt }) });
+
 const detail = (id: string, jobId: number) => FleetDeliveryDetail.make({ id, workflowJobId: O.some(`${jobId}`) });
 
 const fixtureOf = (input: {
@@ -144,7 +160,9 @@ const fixtureOf = (input: {
   readonly details?: ReadonlyArray<FleetDeliveryDetail>;
   readonly failingDetails?: ReadonlyArray<string>;
   readonly failDeliveryPageAt?: number;
-  readonly scheduledRuns?: O.Option<ReadonlyArray<FleetScheduledRun>>;
+  readonly workflowRuns?: O.Option<ReadonlyArray<FleetWorkflowRun>>;
+  readonly checkJobs?: ReadonlyArray<{ readonly runId: number; readonly job: FleetCheckJob }>;
+  readonly failingCheckJobs?: ReadonlyArray<number>;
   readonly pageSize?: number;
   readonly recentRuns?: ReadonlyArray<number>;
 }) =>
@@ -168,7 +186,9 @@ const fixtureOf = (input: {
     details: input.details ?? [],
     failingDetails: input.failingDetails ?? [],
     failDeliveryPageAt: O.fromUndefinedOr(input.failDeliveryPageAt),
-    scheduledRuns: input.scheduledRuns ?? O.some([]),
+    workflowRuns: input.workflowRuns ?? O.some([]),
+    checkJobs: input.checkJobs ?? [],
+    failingCheckJobs: input.failingCheckJobs ?? [],
     pageSize: input.pageSize ?? 100,
   });
 
@@ -991,31 +1011,63 @@ describe("fleet missed-event check review wave 2", () => {
     })
   );
 
-  it("the previous scheduled run is the newest created before this one, past a newer pending run", () => {
-    const runs = [
-      FleetScheduledRun.make({ id: 50, createdAt: ago(10) }),
-      FleetScheduledRun.make({ id: 40, createdAt: ago(20) }),
-      FleetScheduledRun.make({ id: 10, createdAt: ago(60) }),
-    ];
-    const previousRun = previousScheduledRun(runs, O.some(40));
-    expect(previousRun).toEqual(
-      FleetPreviousRun.cases.Found.make({ runId: 10, createdAt: ago(60), currentCreatedAt: O.some(ago(20)) })
-    );
-    const report = FleetCheckReport.make({
-      repository: REPOSITORY,
-      checkedAt: NOW,
-      pools: [],
-      findings: [],
-      previousRun,
-    });
-    expect(renderFleetCheckSummary(report)).toContain(
-      "40m00s before this scheduled run (more than 30 minutes: a finding for the gate)"
-    );
-    expect(previousScheduledRun(runs, O.some(10))).toEqual(FleetPreviousRun.cases.NoneFound.make({}));
-    expect(previousScheduledRun(runs, O.some(5555))).toEqual(
-      FleetPreviousRun.cases.Found.make({ runId: 50, createdAt: ago(10), currentCreatedAt: O.none() })
-    );
-  });
+  it.effect("the previous check run is the newest earlier run that ran its check, past newer and skipped runs", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[]],
+          jobs: [],
+          workflowRuns: O.some([
+            run(60, ago(2)),
+            run(50, ago(10)),
+            run(40, ago(20)),
+            run(30, ago(25)),
+            run(10, ago(60)),
+          ]),
+          checkJobs: [ranAt(60, ago(2)), ranAt(50, ago(10)), ranAt(40, ago(20)), ranAt(10, ago(60))],
+        }),
+        { currentRunId: 40 }
+      );
+      expect(report.previousRun).toEqual(
+        FleetPreviousRun.cases.Found.make({
+          runId: 10,
+          startedAt: ago(60),
+          currentStartedAt: O.some(ago(20)),
+          fleetJobsInGap: 0,
+        })
+      );
+      expect(renderFleetCheckSummary(report)).toContain(
+        "previous check run 10 started 2026-11-22T20:20:00.000Z, 40m00s before this check run started (more than 30 minutes, no fleet job created inside it: information only)"
+      );
+    })
+  );
+
+  it.effect("a workflow_run or dispatch run that ran its check counts as the previous check run", () =>
+    Effect.gen(function* () {
+      const { report } = yield* runCheck(
+        fixtureOf({
+          reads: [[]],
+          jobs: [],
+          workflowRuns: O.some([run(70, ago(1)), run(69, ago(4)), run(68, ago(6)), run(67, ago(30))]),
+          checkJobs: [ranAt(70, ago(1)), ranAt(68, ago(6)), ranAt(67, ago(30))],
+        }),
+        { currentRunId: 70 }
+      );
+      assertTrue(FleetPreviousRun.guards.Found(report.previousRun));
+      expect(FleetPreviousRun.guards.Found(report.previousRun) ? report.previousRun.runId : 0).toBe(68);
+    })
+  );
+
+  it.effect("no earlier checking run, and a run of its own with no other runs, name none", () =>
+    Effect.gen(function* () {
+      const onlySkipped = yield* runCheck(
+        fixtureOf({ reads: [[]], jobs: [], workflowRuns: O.some([run(90, ago(1)), run(89, ago(3))]) }),
+        { currentRunId: 90 }
+      );
+      expect(onlySkipped.report.previousRun).toEqual(FleetPreviousRun.cases.NoneFound.make({}));
+      expect(renderFleetCheckSummary(onlySkipped.report)).toContain("previous check run: none found");
+    })
+  );
 });
 
 describe("fleet missed-event check precedence", () => {
@@ -1230,9 +1282,13 @@ describe("fleet missed-event check reads", () => {
 
   it.effect("names an unreadable previous run without failing", () =>
     Effect.gen(function* () {
-      const { report } = yield* runCheck(fixtureOf({ reads: [[]], jobs: [], scheduledRuns: O.none() }));
+      const { report } = yield* runCheck(fixtureOf({ reads: [[]], jobs: [], workflowRuns: O.none() }));
       expect(report.previousRun._tag).toBe("Unreadable");
-      expect(renderFleetCheckSummary(report)).toContain("previous scheduled run: unreadable");
+      expect(renderFleetCheckSummary(report)).toContain("previous check run: unreadable");
+      const jobsUnreadable = yield* runCheck(
+        fixtureOf({ reads: [[]], jobs: [], workflowRuns: O.some([run(5, ago(20))]), failingCheckJobs: [5] })
+      );
+      expect(jobsUnreadable.report.previousRun._tag).toBe("Unreadable");
     })
   );
 });
@@ -1246,10 +1302,8 @@ describe("fleet missed-event check output", () => {
         fixtureOf({
           reads: [read, read],
           jobs,
-          scheduledRuns: O.some([
-            FleetScheduledRun.make({ id: 9001, createdAt: NOW }),
-            FleetScheduledRun.make({ id: 77, createdAt: ago(10) }),
-          ]),
+          workflowRuns: O.some([run(9001, ago(5)), run(77, ago(15))]),
+          checkJobs: [ranAt(9001, ago(5)), ranAt(77, ago(15))],
         }),
         { currentRunId: 9001, stepSummary: true }
       );
@@ -1259,10 +1313,10 @@ describe("fleet missed-event check output", () => {
       expect(summary).toContain("1 queued job(s) checked; verdicts: WaitingAtCap 1");
       expect(summary).toContain("p95 queue-to-start: heavy 5m00s");
       expect(summary).toContain(
-        "previous scheduled run 77 at 2026-11-22T21:10:00.000Z, 10m00s before this scheduled run"
+        "previous check run 77 started 2026-11-22T21:05:00.000Z, 10m00s before this check run started;"
       );
-      expect(report.githubRequests).toBe(9);
-      expect(summary).toContain("; 9 GitHub request(s)");
+      expect(report.githubRequests).toBe(11);
+      expect(summary).toContain("; 11 GitHub request(s)");
       expect(summaries).toEqual([summary]);
       const exit = yield* Effect.exit(failOnFleetAlerts(report));
       expect(exit._tag).toBe("Success");
@@ -1278,10 +1332,8 @@ describe("fleet missed-event check output", () => {
           jobs: [queued(410, ago(12))],
           deliveries: [delivery(id, ago(12) + 1000, 500), delivery("10", ago(40))],
           details: [detail(id, 410), detail("10", 10)],
-          scheduledRuns: O.some([
-            FleetScheduledRun.make({ id: 9002, createdAt: ago(5) }),
-            FleetScheduledRun.make({ id: 76, createdAt: ago(45) }),
-          ]),
+          workflowRuns: O.some([run(9002, ago(5)), run(76, ago(45))]),
+          checkJobs: [ranAt(9002, ago(5)), ranAt(76, ago(45))],
         }),
         { currentRunId: 9002 }
       );
@@ -1292,39 +1344,74 @@ describe("fleet missed-event check output", () => {
       expect(summary).toContain(`gh api -X POST repos/${REPOSITORY}/hooks/${HOOK}/deliveries/${id}/attempts`);
       expect(summary).not.toContain("gh run cancel 3410");
       expect(summary).not.toContain("--failed");
-      expect(summary).toContain("(more than 30 minutes: a finding for the gate)");
+      expect(summary).toContain(
+        "40m00s before this check run started (more than 30 minutes with 1 fleet job(s) created inside it: a finding for the gate)"
+      );
+      assertTrue(isCadenceGapFinding(report.previousRun));
       const exit = yield* Effect.exit(failOnFleetAlerts(report));
       expect(exit._tag).toBe("Failure");
     })
   );
 
-  it.effect(
-    "measures the cadence gap from scheduled run to scheduled run, and only notes the elapsed time otherwise",
-    () =>
-      Effect.gen(function* () {
-        const runs = O.some([
-          FleetScheduledRun.make({ id: 9003, createdAt: ago(5) }),
-          FleetScheduledRun.make({ id: 78, createdAt: ago(31) }),
-        ]);
-        const scheduled = yield* runCheck(fixtureOf({ reads: [[]], jobs: [], scheduledRuns: runs }), {
-          currentRunId: 9003,
-        });
-        const scheduledSummary = renderFleetCheckSummary(scheduled.report);
-        expect(scheduledSummary).toContain("26m00s before this scheduled run");
-        expect(scheduledSummary).not.toContain("more than 30 minutes");
-        const dispatched = yield* runCheck(
-          fixtureOf({
-            reads: [[]],
-            jobs: [],
-            scheduledRuns: O.some([FleetScheduledRun.make({ id: 79, createdAt: ago(45) })]),
-          }),
-          { currentRunId: 5555 }
-        );
-        const dispatchedSummary = renderFleetCheckSummary(dispatched.report);
-        expect(dispatchedSummary).toContain("45m00s before this check");
-        expect(dispatchedSummary).not.toContain("more than 30 minutes");
-      })
+  it.effect("measures the cadence gap from check start to check start, and only notes the elapsed time otherwise", () =>
+    Effect.gen(function* () {
+      const inActions = yield* runCheck(
+        fixtureOf({
+          reads: [[]],
+          jobs: [],
+          workflowRuns: O.some([run(9003, ago(5)), run(78, ago(31))]),
+          checkJobs: [ranAt(9003, ago(5)), ranAt(78, ago(31))],
+        }),
+        { currentRunId: 9003 }
+      );
+      const inActionsSummary = renderFleetCheckSummary(inActions.report);
+      expect(inActionsSummary).toContain("26m00s before this check run started");
+      expect(inActionsSummary).not.toContain("more than 30 minutes");
+      const local = yield* runCheck(
+        fixtureOf({ reads: [[]], jobs: [], workflowRuns: O.some([run(79, ago(45))]), checkJobs: [ranAt(79, ago(45))] })
+      );
+      const localSummary = renderFleetCheckSummary(local.report);
+      expect(localSummary).toContain("45m00s before this check");
+      expect(localSummary).not.toContain("more than 30 minutes");
+    })
   );
+
+  it("reports a gap over 30 minutes as a finding only when a fleet job was created inside it", () => {
+    const previous = FleetCheckingRun.makeOption({ runId: 5, startedAt: ago(45) });
+    const inGap = queued(1, ago(20));
+    const beforeGap = queued(2, ago(50));
+    const afterGap = queued(3, ago(1));
+    const withJob = fleetPreviousRun({
+      previous,
+      currentStartedAt: O.some(ago(5)),
+      jobs: [inGap, beforeGap, afterGap],
+      checkedAt: NOW,
+    });
+    expect(withJob).toEqual(
+      FleetPreviousRun.cases.Found.make({
+        runId: 5,
+        startedAt: ago(45),
+        currentStartedAt: O.some(ago(5)),
+        fleetJobsInGap: 1,
+      })
+    );
+    assertTrue(isCadenceGapFinding(withJob));
+    const quiet = fleetPreviousRun({ previous, currentStartedAt: O.some(ago(5)), jobs: [beforeGap], checkedAt: NOW });
+    expect(isCadenceGapFinding(quiet)).toBe(false);
+    const short = fleetPreviousRun({
+      previous: FleetCheckingRun.makeOption({ runId: 5, startedAt: ago(30) }),
+      currentStartedAt: O.some(ago(5)),
+      jobs: [inGap],
+      checkedAt: NOW,
+    });
+    expect(isCadenceGapFinding(short)).toBe(false);
+    const local = fleetPreviousRun({ previous, currentStartedAt: O.none(), jobs: [inGap, afterGap], checkedAt: NOW });
+    expect(isCadenceGapFinding(local)).toBe(false);
+    expect(FleetPreviousRun.guards.Found(local) ? local.fleetJobsInGap : -1).toBe(2);
+    expect(fleetPreviousRun({ previous: O.none(), currentStartedAt: O.none(), jobs: [], checkedAt: NOW })).toEqual(
+      FleetPreviousRun.cases.NoneFound.make({})
+    );
+  });
 
   it("renders every verdict and evidence form", () => {
     const base = {
@@ -1382,7 +1469,7 @@ describe("fleet missed-event check output", () => {
     expect(summary).toContain("| delivery evidence: gate | delivery evidence: gate |");
     expect(summary).toContain("none in 2026-11-22T20:58:00.000Z..2026-11-22T21:05:00.000Z");
     expect(summary).toContain("verdicts: Stuck 1, Wedged 1, MissedDelivery 1, NoLaunch 2, WaitingAtCap 1, Waiting 1");
-    expect(summary).toContain("previous scheduled run: none found");
+    expect(summary).toContain("previous check run: none found");
     expect(summary).toContain("## Fleet missed-event check: 5 alert(s)");
   });
 
@@ -1453,13 +1540,16 @@ describe("fleet missed-event check helpers", () => {
     expect(fleetHookSources[0].source).toEqual(hookSource);
   });
 
-  it("finds the previous scheduled run other than this one", () => {
-    const runs = [FleetScheduledRun.make({ id: 2, createdAt: 20 }), FleetScheduledRun.make({ id: 1, createdAt: 10 })];
-    expect(previousScheduledRun(runs, O.some(2))).toEqual(
-      FleetPreviousRun.cases.Found.make({ runId: 1, createdAt: 10, currentCreatedAt: O.some(20) })
+  it("selects the earlier runs newest first and the checking run of a run that ran its check", () => {
+    const runs = [run(2, 20), run(3, 30), run(1, 10)];
+    expect(A.map(earlierFleetRuns(runs, O.some(3)), (each) => each.id)).toEqual([2, 1]);
+    expect(A.map(pipe(runs, earlierFleetRuns(O.none())), (each) => each.id)).toEqual([3, 2, 1]);
+    expect(earlierFleetRuns(runs, O.some(1))).toEqual([]);
+    assertSome(
+      checkingRun(run(2, 20), FleetCheckJob.cases.Ran.make({ startedAt: 25 })),
+      FleetCheckingRun.make({ runId: 2, startedAt: 25 })
     );
-    expect(pipe(runs, previousScheduledRun(O.none()))._tag).toBe("Found");
-    expect(previousScheduledRun([], O.none())).toEqual(FleetPreviousRun.cases.NoneFound.make({}));
+    assertNone(pipe(run(2, 20), checkingRun(FleetCheckJob.cases.NotRan.make({}))));
   });
 
   it("labels the non-alert verdicts", () => {
@@ -1568,6 +1658,160 @@ describe("fleet missed-event check helpers", () => {
   });
 });
 
+const runGuard = Effect.fnUntraced(function* (
+  fixture: FleetGithubFixture,
+  options: { readonly event: string; readonly currentRunId?: number; readonly githubOutput?: boolean }
+) {
+  yield* TestClock.setTime(NOW);
+  const slept = yield* Ref.make<ReadonlyArray<number>>([]);
+  const calls = yield* Ref.make<Calls>({ deliveriesPage: 0, deliveryDetail: 0, jobsPage: 0 });
+  const outputs = ActionOutputs.recording();
+  const decision = yield* runFleetMissedEventGuard(
+    FleetGuardInput.make({
+      repository: REPOSITORY,
+      workflowFile: "fleet-missed-event-check.yml",
+      currentRunId: O.fromUndefinedOr(options.currentRunId),
+      event: options.event,
+      githubOutput: options.githubOutput ?? true,
+    })
+  ).pipe(provideScopedLayer(Layer.mergeAll(countingReads(fixture, calls), advancingSleep(slept), outputs.layer)));
+  return {
+    decision,
+    sets: A.map(
+      A.filter(outputs.entries(), (entry) => entry.member === "set"),
+      (entry) => [entry.name, entry.value]
+    ),
+  };
+});
+
+describe("fleet missed-event check guard", () => {
+  it.effect("skips when the previous check run started inside the 8-minute window", () =>
+    Effect.gen(function* () {
+      const { decision, sets } = yield* runGuard(
+        fixtureOf({
+          reads: [],
+          jobs: [],
+          workflowRuns: O.some([run(101, NOW), run(100, ago(4))]),
+          checkJobs: [ranAt(100, ago(3))],
+        }),
+        { event: "workflow_run", currentRunId: 101 }
+      );
+      expect(decision).toEqual(FleetGuardDecision.cases.Skip.make({ runId: 100, startedAt: ago(3) }));
+      expect(sets).toEqual([["run", "false"]]);
+      const logs = yield* TestConsole.logLines;
+      expect(A.join(A.map(logs, String), "\n")).toContain(
+        "fleet missed-event guard: skip; check run 100 started 3m00s ago, inside the 8m00s window"
+      );
+    })
+  );
+
+  it.effect("looks past guard-skipped runs to the earlier check run", () =>
+    Effect.gen(function* () {
+      const recent = yield* runGuard(
+        fixtureOf({
+          reads: [],
+          jobs: [],
+          workflowRuns: O.some([run(105, NOW), run(104, ago(1)), run(103, ago(2)), run(102, ago(6))]),
+          checkJobs: [ranAt(102, ago(6))],
+        }),
+        { event: "workflow_run", currentRunId: 105 }
+      );
+      expect(recent.decision).toEqual(FleetGuardDecision.cases.Skip.make({ runId: 102, startedAt: ago(6) }));
+      const stale = yield* runGuard(
+        fixtureOf({
+          reads: [],
+          jobs: [],
+          workflowRuns: O.some([run(105, NOW), run(104, ago(1)), run(103, ago(2)), run(102, ago(9))]),
+          checkJobs: [ranAt(102, ago(9))],
+        }),
+        { event: "workflow_run", currentRunId: 105 }
+      );
+      expect(stale.decision).toEqual(
+        FleetGuardDecision.cases.Run.make({ reason: "previous check run 102 started 9m00s ago" })
+      );
+      expect(stale.sets).toEqual([["run", "true"]]);
+    })
+  );
+
+  it.effect("runs when no earlier run ran its check, and ignores a newer pending run", () =>
+    Effect.gen(function* () {
+      const { decision, sets } = yield* runGuard(
+        fixtureOf({
+          reads: [],
+          jobs: [],
+          workflowRuns: O.some([run(111, NOW), run(110, ago(1)), run(109, ago(2))]),
+          checkJobs: [ranAt(111, ago(1))],
+        }),
+        { event: "schedule", currentRunId: 110 }
+      );
+      expect(decision).toEqual(FleetGuardDecision.cases.Run.make({ reason: "no previous check run found" }));
+      expect(sets).toEqual([["run", "true"]]);
+    })
+  );
+
+  it.effect("a dispatch always runs without reading", () =>
+    Effect.gen(function* () {
+      const { decision, sets } = yield* runGuard(
+        fixtureOf({ reads: [], jobs: [], workflowRuns: O.none(), checkJobs: [ranAt(100, ago(1))] }),
+        { event: "workflow_dispatch", currentRunId: 101 }
+      );
+      expect(decision).toEqual(FleetGuardDecision.cases.Run.make({ reason: "workflow_dispatch always runs" }));
+      expect(sets).toEqual([["run", "true"]]);
+    })
+  );
+
+  it.effect("fails open when the runs or a check job cannot be read", () =>
+    Effect.gen(function* () {
+      const runs = yield* runGuard(fixtureOf({ reads: [], jobs: [], workflowRuns: O.none() }), {
+        event: "workflow_run",
+        currentRunId: 101,
+      });
+      expect(runs.decision._tag).toBe("Run");
+      expect(FleetGuardDecision.guards.Run(runs.decision) ? runs.decision.reason : "").toContain(
+        "previous check run unreadable, failing open"
+      );
+      expect(runs.sets).toEqual([["run", "true"]]);
+      const jobs = yield* runGuard(
+        fixtureOf({
+          reads: [],
+          jobs: [],
+          workflowRuns: O.some([run(101, NOW), run(100, ago(2))]),
+          failingCheckJobs: [100],
+        }),
+        { event: "workflow_run", currentRunId: 101 }
+      );
+      expect(jobs.decision._tag).toBe("Run");
+      expect(jobs.sets).toEqual([["run", "true"]]);
+    })
+  );
+
+  it.effect("writes no output when GITHUB_OUTPUT is not requested", () =>
+    Effect.gen(function* () {
+      const { sets } = yield* runGuard(fixtureOf({ reads: [], jobs: [] }), {
+        event: "workflow_run",
+        githubOutput: false,
+      });
+      expect(sets).toEqual([]);
+    })
+  );
+
+  it("decides and renders from a constructed previous run", () => {
+    const previous = FleetCheckingRun.makeOption({ runId: 7, startedAt: ago(8) });
+    expect(fleetGuardDecision({ event: "workflow_run", now: NOW, previous: Result.succeed(previous) })._tag).toBe(
+      "Run"
+    );
+    expect(fleetGuardDecision({ event: "workflow_run", now: NOW - 1, previous: Result.succeed(previous) })._tag).toBe(
+      "Skip"
+    );
+    expect(fleetGuardDecision({ event: "workflow_run", now: NOW, previous: Result.fail("HTTP 502") })).toEqual(
+      FleetGuardDecision.cases.Run.make({ reason: "previous check run unreadable, failing open (HTTP 502)" })
+    );
+    expect(pipe(FleetGuardDecision.cases.Run.make({ reason: "x" }), renderFleetGuardDecision(NOW))).toBe(
+      "fleet missed-event guard: run; x"
+    );
+  });
+});
+
 describe("fleet missed-event check caps", () => {
   it.effect("projects the production caps from the generated input", () =>
     Effect.gen(function* () {
@@ -1628,7 +1872,7 @@ const liveReads = Effect.fnUntraced(function* (routes: ReadonlyArray<Route>) {
 });
 
 describe("fleet missed-event check live reads", () => {
-  it.effect("maps runners, runs, jobs and scheduled runs over GET requests with the token", () =>
+  it.effect("maps runners, runs, jobs and workflow runs over GET requests with the token", () =>
     Effect.gen(function* () {
       const { reads, recorded } = yield* liveReads([
         [
@@ -1652,6 +1896,22 @@ describe("fleet missed-event check live reads", () => {
           200,
           '{"total_count":1,"workflow_runs":[{"id":5,"created_at":"2026-11-22T21:10:00Z"}]}',
         ],
+        [
+          "actions/runs/5/jobs",
+          200,
+          `{"total_count":2,"jobs":[{"name":"Fleet Missed-Event Guard","status":"completed","conclusion":"success","started_at":"2026-11-22T21:10:05Z"},{"name":"${FLEET_CHECK_JOB_NAME}","status":"completed","conclusion":"success","started_at":"2026-11-22T21:11:00Z"}]}`,
+        ],
+        [
+          "actions/runs/6/jobs",
+          200,
+          `{"total_count":1,"jobs":[{"name":"${FLEET_CHECK_JOB_NAME}","status":"completed","conclusion":"skipped","started_at":"2026-11-22T21:12:00Z"}]}`,
+        ],
+        [
+          "actions/runs/7/jobs",
+          200,
+          `{"total_count":1,"jobs":[{"name":"${FLEET_CHECK_JOB_NAME}","status":"queued","conclusion":null,"started_at":null}]}`,
+        ],
+        ["actions/runs/8/jobs", 200, '{"total_count":0,"jobs":[]}'],
       ]);
       const runners = yield* reads.runnersPage(1);
       expect(runners.runners).toEqual([
@@ -1669,15 +1929,28 @@ describe("fleet missed-event check live reads", () => {
           [2, O.some(DateTime.makeUnsafe("2026-11-22T21:01:00Z").pipe(DateTime.toEpochMillis)), O.some("r1")],
         ]
       );
-      const scheduled = yield* reads.scheduledRuns("fleet-missed-event-check.yml");
-      expect(A.map(scheduled, (run) => run.id)).toEqual([5]);
+      const workflowRuns = yield* reads.workflowRuns("fleet-missed-event-check.yml");
+      expect(workflowRuns).toEqual([run(5, DateTime.toEpochMillis(DateTime.makeUnsafe("2026-11-22T21:10:00Z")))]);
+      const checkJobs = yield* Effect.forEach([5, 6, 7, 8], reads.checkJob, { concurrency: 1 });
+      const notRan = FleetCheckJob.cases.NotRan.make({});
+      expect(checkJobs).toEqual([
+        FleetCheckJob.cases.Ran.make({
+          startedAt: DateTime.toEpochMillis(DateTime.makeUnsafe("2026-11-22T21:11:00Z")),
+        }),
+        notRan,
+        notRan,
+        notRan,
+      ]);
       const requestCount = yield* reads.requestCount;
-      expect(requestCount).toBe(5);
+      expect(requestCount).toBe(9);
       const requests = yield* Ref.get(recorded);
       expect(A.every(requests, (request) => request.method === "GET")).toBe(true);
       assertTrue(A.every(requests, (request) => O.contains(request.authorization, "Bearer ghs_test")));
       expect(A.map(requests, (request) => request.url)).toContain(
         "https://api.github.com/repos/beep-effect/beep-effect/actions/runs?created=%3E%3D2026-11-22T21%3A20%3A00.000Z&per_page=100&page=2"
+      );
+      expect(A.map(requests, (request) => request.url)).toContain(
+        "https://api.github.com/repos/beep-effect/beep-effect/actions/workflows/fleet-missed-event-check.yml/runs?per_page=30"
       );
     })
   );
@@ -1868,6 +2141,101 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
       })
     );
 
+    layerIt.effect("--guard skips behind a recent check run and exits green", () =>
+      Effect.gen(function* () {
+        const startedAt = DateTime.formatIso(DateTime.makeUnsafe(ago(2)));
+        const routes: ReadonlyArray<Route> = [
+          [
+            "workflows/fleet-missed-event-check.yml/runs",
+            200,
+            '{"total_count":2,"workflow_runs":[{"id":12,"created_at":"2026-11-22T21:20:00Z"},{"id":11,"created_at":"2026-11-22T21:17:00Z"}]}',
+          ],
+          [
+            "actions/runs/11/jobs",
+            200,
+            `{"total_count":1,"jobs":[{"name":"${FLEET_CHECK_JOB_NAME}","status":"in_progress","conclusion":null,"started_at":"${startedAt}"}]}`,
+          ],
+        ];
+        const { exit, recorded } = yield* runCommandFor(
+          ["--guard"],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_RUN_ID: "12", GITHUB_EVENT_NAME: "workflow_run" },
+          routes
+        );
+        expect(exit._tag).toBe("Success");
+        expect(A.length(recorded)).toBe(2);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain("fleet missed-event guard: skip; check run 11");
+      })
+    );
+
+    layerIt.effect("--guard fails open without a token and runs on a dispatch without reading", () =>
+      Effect.gen(function* () {
+        const tokenless = yield* runCommandFor(
+          ["--guard"],
+          { GH_REPO: REPOSITORY, GITHUB_RUN_ID: "12", GITHUB_EVENT_NAME: "workflow_run" },
+          emptyFleet
+        );
+        expect(tokenless.exit._tag).toBe("Success");
+        const dispatched = yield* runCommandFor(
+          ["--guard"],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_EVENT_NAME: "workflow_dispatch" },
+          emptyFleet
+        );
+        expect(dispatched.exit._tag).toBe("Success");
+        expect(dispatched.recorded).toEqual([]);
+        const logLines = yield* TestConsole.logLines;
+        const logs = A.join(A.map(logLines, String), "\n");
+        expect(logs).toContain("fleet missed-event guard: run; previous check run unreadable, failing open");
+        expect(logs).toContain("fleet missed-event guard: run; workflow_dispatch always runs");
+      })
+    );
+
+    layerIt.effect("--guard without an event name reads the runs like a scheduled run", () =>
+      Effect.gen(function* () {
+        const { exit, recorded } = yield* runCommandFor(
+          ["--guard"],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_RUN_ID: "12" },
+          emptyFleet
+        );
+        expect(exit._tag).toBe("Success");
+        expect(A.length(recorded)).toBe(1);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain(
+          "fleet missed-event guard: run; no previous check run found"
+        );
+      })
+    );
+
+    layerIt.effect("passes when the current run's check job has not started", () =>
+      Effect.gen(function* () {
+        const startedAt = DateTime.formatIso(DateTime.makeUnsafe(ago(20)));
+        const routes: ReadonlyArray<Route> = [
+          ["actions/runners", 200, '{"total_count":0,"runners":[]}'],
+          [
+            "workflows/fleet-missed-event-check.yml/runs",
+            200,
+            '{"total_count":2,"workflow_runs":[{"id":12,"created_at":"2026-11-22T21:20:00Z"},{"id":11,"created_at":"2026-11-22T21:00:00Z"}]}',
+          ],
+          [
+            "actions/runs/11/jobs",
+            200,
+            `{"total_count":1,"jobs":[{"name":"${FLEET_CHECK_JOB_NAME}","status":"completed","conclusion":"success","started_at":"${startedAt}"}]}`,
+          ],
+          ["actions/runs/12/jobs", 200, '{"total_count":0,"jobs":[]}'],
+          ["actions/runs?", 200, '{"total_count":0,"workflow_runs":[]}'],
+        ];
+        const { exit, recorded } = yield* runCommandFor(
+          [],
+          { GH_REPO: REPOSITORY, GH_TOKEN: "ghs_x", GITHUB_RUN_ID: "12" },
+          routes
+        );
+        expect(exit._tag).toBe("Success");
+        expect(A.some(recorded, (request) => Str.includes("actions/runs/12/jobs")(request.url))).toBe(true);
+        const logs = yield* TestConsole.logLines;
+        expect(A.join(A.map(logs, String), "\n")).toContain("fleet missed-event check: green");
+      })
+    );
+
     layerIt.effect("refuses to run without a repository", () =>
       Effect.gen(function* () {
         const { exit } = yield* runCommandFor([], { GH_TOKEN: "ghs_x" }, emptyFleet);
@@ -1899,11 +2267,48 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
         const text = yield* fs.readFileString(path.join(root, ".github/workflows/fleet-missed-event-check.yml"));
         const workflow = parseWorkflowYaml(text);
         const job = (segments: ReadonlyArray<string | number>) => yamlAt(workflow, ["jobs", "check", ...segments]);
+        const guard = (segments: ReadonlyArray<string | number>) => yamlAt(workflow, ["jobs", "guard", ...segments]);
         expect(yamlAt(workflow, ["on", "schedule"])).toEqual([{ cron: "3-59/10 * * * *" }]);
         expect(yamlAt(workflow, ["on"])).toHaveProperty("workflow_dispatch");
+        expect(yamlAt(workflow, ["on", "workflow_run"])).toEqual({
+          workflows: ["Check", "Heavy Admit", "Cache Warm"],
+          types: ["requested"],
+        });
+        expect(yamlAt(workflow, ["concurrency"])).toEqual({
+          group: "fleet-missed-event-check",
+          "cancel-in-progress": false,
+        });
         expect(yamlAt(workflow, ["permissions"])).toEqual({});
+        expect(job(["name"])).toBe(FLEET_CHECK_JOB_NAME);
+        expect(job(["needs"])).toBe("guard");
+        expect(job(["if"])).toBe("${{ !cancelled() && needs.guard.outputs.run != 'false' }}");
         expect(job(["runs-on"])).toBe("ubuntu-latest");
         expect(job(["environment"])).toBe("fleet-watch");
+        expect(job(["permissions"])).toEqual({ contents: "read" });
+        expect(guard(["permissions"])).toEqual({ actions: "read", contents: "read" });
+        expect(guard(["environment"])).toBeUndefined();
+        expect(guard(["outputs", "run"])).toBe("${{ steps.guard.outputs.run }}");
+        const stepsOf = (value: unknown): ReadonlyArray<unknown> => (A.isArray(value) ? value : []);
+        const guardSteps = stepsOf(guard(["steps"]));
+        const decide = A.findFirst(guardSteps, (step) => yamlAt(step, ["id"]) === "guard");
+        assertSome(
+          O.map(decide, (step) => [yamlAt(step, ["run"]), yamlAt(step, ["env", "GH_TOKEN"])]),
+          ["bun run beep ci fleet-missed-event-check --guard", "${{ github.token }}"]
+        );
+        expect(
+          A.some(guardSteps, (step) => Str.includes("create-github-app-token")(String(yamlAt(step, ["uses"]))))
+        ).toBe(false);
+        for (const steps of [guardSteps, stepsOf(job(["steps"]))]) {
+          const checkout = A.findFirst(steps, (step) =>
+            Str.startsWith("actions/checkout@")(String(yamlAt(step, ["uses"])))
+          );
+          assertSome(
+            O.map(checkout, (step) => [yamlAt(step, ["with", "ref"]), yamlAt(step, ["with", "persist-credentials"])]),
+            ["${{ github.event.repository.default_branch }}", false]
+          );
+        }
+        expect(text).toContain("Security posture");
+        expect(text).not.toMatch(/head_sha|head_branch|pull_request/u);
         const steps = job(["steps"]);
         const stepList: ReadonlyArray<unknown> = A.isArray(steps) ? steps : [];
         const mint = A.findFirst(stepList, (step) =>

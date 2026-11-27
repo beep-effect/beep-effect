@@ -54,7 +54,6 @@ const serializePerson = (person: Person): string => {
   return result;
 };
 
-/** The verbatim wire value a person was decoded from: shorthand text or the raw object. */
 type PersonWire = string | { readonly [k: string]: unknown };
 
 const rememberWire: {
@@ -67,18 +66,7 @@ const rememberWire: {
 
 const KNOWN_KEYS = HashSet.make("name", "email", "url");
 
-// A remembered wire value is replayed only while it still describes the person
-// faithfully. A person whose fields were changed after decoding re-encodes
-// canonically instead of emitting stale text.
-// Whether the shorthand grammar can carry this person at all. It has no syntax
-// for extra keys, so a person holding a meaningful `rest` cannot be written as
-// one. An EMPTY rest carries no information and does not disqualify anything.
-//
-// Two callers, deliberately the same predicate: the faithfulness guard (a
-// remembered shorthand never describes a person that has since gained keys) and
-// the re-encode fallback (an edited person re-emits shorthand only if it still
-// fits). Splitting them would let a person be refused the replay yet handed back
-// as shorthand, dropping the very keys the refusal detected.
+// decision: wire-replay-guarded-by-faithfulness
 const isShorthandExpressible = (person: Person): boolean => person.rest === undefined || R.isEmptyRecord(person.rest);
 
 const isFaithful: {
@@ -91,10 +79,7 @@ const isFaithful: {
       parsed.name === person.name &&
       parsed.email === person.email &&
       parsed.url === person.url &&
-      // Without this clause the three named fields match, the wire replays,
-      // and any added keys are silently dropped on write — the same
-      // stale-provenance corruption the rest of this guard prevents, reached
-      // through the one field the shorthand cannot express.
+      // decision: wire-replay-guarded-by-faithfulness
       isShorthandExpressible(person)
     );
   }
@@ -150,10 +135,7 @@ export const ManifestEmail = S.String.pipe(
  */
 export type ManifestEmail = typeof ManifestEmail.Type;
 
-// The modeled fields alone, used to validate the object wire form. Decoding
-// through this rather than the class keeps the issue tree identical to what a
-// direct class decode produced, while leaving instance construction to the
-// transform so the raw object can be remembered.
+// decision: provenance-codecs-construct-in-transform
 const PersonFields = S.Struct({
   name: S.String,
   email: S.optionalKey(ManifestEmail),
@@ -162,8 +144,7 @@ const PersonFields = S.Struct({
 
 const decodePersonFields = S.decodeUnknownEffect(PersonFields);
 
-// Replay the remembered object verbatim (key order included) while it still
-// matches the person; otherwise rebuild it, typed fields winning on collision.
+// decision: rest-keys-stored-as-own-data
 const encodePersonObject = (person: Person): { readonly [k: string]: unknown } => {
   const wire = Person.wireOf(person);
   if (wire !== undefined && !P.isString(wire) && isFaithful(wire, person)) return wire;
@@ -293,12 +274,7 @@ export class Person extends S.Class<Person, { readonly brand: unique symbol }>($
   static readonly schema: S.Codec<Person, { readonly [k: string]: unknown }> = S.Record(S.String, S.Unknown).pipe(
     S.decodeTo(
       S.instanceOf(Person),
-      // `transformEffect` rather than `transform` because this transform
-      // constructs the instance itself — the only way to associate the raw
-      // wire object with the resulting `Person` — and so must carry the
-      // field validation that the class factory would otherwise perform.
-      // The issue tree comes from `PersonFields`, so diagnostics are
-      // unchanged from decoding the class directly.
+      // decision: provenance-codecs-construct-in-transform
       SchemaTransformation.transformEffect({
         decode: (raw: { readonly [k: string]: unknown }) =>
           decodePersonFields(raw).pipe(
@@ -384,21 +360,11 @@ export class Person extends S.Class<Person, { readonly brand: unique symbol }>($
       S.instanceOf(Person),
       SchemaTransformation.transform({
         decode: (input: Person | string) => (P.isString(input) ? rememberWire(parsePersonString(input), input) : input),
-        // Only the string branch is decided here: a person from the object
-        // form encodes back through `Person.schema`, which replays its own
-        // remembered object verbatim.
         encode: (person: Person): Person | string => {
           const wire = Person.wireOf(person);
           if (!P.isString(wire)) return person;
           if (isFaithful(wire, person)) return wire;
-          // Edited since it was decoded. Re-emit the shorthand SHAPE rather
-          // than upgrading to the object form: a manifest that wrote
-          // `"Ann <ann@x.dev>"` should not silently become
-          // `{"name":"Ann","email":"new@x.dev"}` because one field changed.
-          // Shape fidelity is what this package promises; the object form is
-          // the fallback only when the shorthand genuinely cannot carry the
-          // value (it gained keys), where preserving data outranks preserving
-          // shape.
+          // decision: edited-shorthand-keeps-string-form
           return isShorthandExpressible(person) ? serializePerson(person) : person;
         },
       })

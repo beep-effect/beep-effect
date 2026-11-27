@@ -209,4 +209,16 @@ Lane docs/ci-window5-preview-restart
 
 Reverse: Delete this checkpoint and keep the held set held until the window-5 census on 2026-11-20T20:10Z.
 
+### Window 6 runs 2026-11-26T21:10Z to 2026-12-03T21:10Z, 2026-11-27
+
+Window 6 starts after the last merge that changes a required lane. That is pin #3592 (CI binary beep-ci-3d3f90096cd3), merged at 2026-11-26T21:05:47Z. Two earlier merges also changed required lanes: #3567 (Pulumi CI fleet retirement, 17:46:50Z) and #3580 (apt .deb cache, 17:47:05Z). #3597 (fleet missed-event check trigger, 2026-11-27T00:28:52Z) changes no required context, so it does not move the anchor.
+
+The census runs on or after 2026-12-03T21:10Z with `bun run beep ci lane-timings --window --workflow check.yml --event all --since 2026-11-26T21:10:00Z --until 2026-12-03T21:10:00Z --markdown`, with a preview around 2026-11-29.
+
+Expected result. The heavy pool stays at cap 2 by operator ruling, with no burst. Reads on 2026-11-26 put the heavy queue-to-start p95 at 33m06s (fleet missed-event check run 45916956339), and one Lint Policy job queued for 28 minutes. Window 6 will likely breach on the heavy lanes' wait. If the only breach is heavy wait, the capacity question goes to the operator, because raising the cap is a money decision, and this goal does not change the cap.
+
+Lane docs/ci-goals-catchup-11-27
+
+Reverse: Delete this checkpoint and anchor window 6 at a different instant
+
 <!-- beep:decisions:end -->

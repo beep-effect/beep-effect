@@ -31,9 +31,7 @@ describe("DevEngines property floor", () => {
   roundTrips("DevEnginesSchema", DevEnginesSchema);
 });
 
-// npm documents `warn`, `error` and `ignore`; `download` is the OpenJS
-// devEngines proposal value pnpm implements (3-A2).
-describe("DevEngine.onFail", () => {
+describe("DevEngine.onFail (npm documents warn, error and ignore)", () => {
   it.effect("accepts download, per the OpenJS devEngines proposal pnpm implements", () =>
     Effect.gen(function* () {
       const wire = { runtime: { name: "node", version: "^24.0.0", onFail: "download" as const } };

@@ -168,8 +168,6 @@ export declare namespace TocOptions {
 
 const TOC_MARKER = /<!--[ \t]*toc[ \t]*-->/;
 
-// The blocks whose source `markdown-toc` tests for the marker: a paragraph or
-// heading (its `inline` token), raw HTML and code (indented or fenced).
 const isMarkerHolderType = S.is(S.Literals(["paragraph", "heading", "html", "code"]));
 
 const nodeSource = (document: MarkdownDocument, node: MarkdownNode): string =>
@@ -177,10 +175,7 @@ const nodeSource = (document: MarkdownDocument, node: MarkdownNode): string =>
 
 const byEndLine = Order.mapInput(Order.Number, (node: MarkdownNode) => node.position.end.line);
 
-// The last line of the last block holding a marker. An inline `html` node
-// inside a paragraph matches beside its paragraph; the maximum keeps the
-// paragraph's own end line. Mirrors `markdown-toc`'s `tocstart`.
-const markerBoundary = (document: MarkdownDocument): O.Option<number> =>
+const tocstartLine = (document: MarkdownDocument): O.Option<number> =>
   A.match(
     document.findAll((node) => isMarkerHolderType(node.type) && TOC_MARKER.test(nodeSource(document, node))),
     {
@@ -268,8 +263,7 @@ export abstract class MarkdownToc {
    * @since 0.0.0
    */
   static readonly entries = (document: MarkdownDocument): ReadonlyArray<TocEntry> => {
-    const boundary = markerBoundary(document);
-    // `headingContents` maps `headings` one to one, so zipping them pairs every heading with its content.
+    const boundary = tocstartLine(document);
     const listed = A.filter(
       A.map(A.zip(document.headings, document.headingContents), ([heading, content], index) => ({
         heading,
