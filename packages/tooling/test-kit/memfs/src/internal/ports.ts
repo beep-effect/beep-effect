@@ -1,9 +1,3 @@
-// KIT EXTENSION (ports). The read-only `node:fs` sync port and `node:fs/promises`
-// port over the literal inspection view, the path resolver they share, the
-// fault wrapper, and the synchronous-run helpers behind `makeSync`. Failure is
-// a node-shaped error built by `nodeErrno` — the only channel a synchronous
-// signature has.
-
 import { $MemfsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -26,16 +20,9 @@ import type {
   MemoryFileSystemVolume,
 } from "../MemoryFileSystem.ts";
 
-// The port is defined in `stat` terms, so it FOLLOWS symbolic links — unlike
-// the literal inspection view it is built on. `MAX_LINK_HOPS` mirrors the
-// ELOOP guard a real filesystem applies; the budget is ONE counter shared by
-// the whole resolution (recursive target walks included), so a cycle spread
-// across nested link targets terminates as ELOOP.
 const MAX_LINK_HOPS = 40;
 
 const $I = $MemfsId.create("internal/ports");
-// The public stat and dirent models live here, beside the ports that build
-// them, but keep the facade's identity: they are re-exported from it.
 const $Facade = $MemfsId.create("MemoryFileSystem");
 const ResolutionErrno = LiteralKit(["ENOENT", "ENOTDIR", "ELOOP"]).pipe(
   $I.annoteSchema("ResolutionErrno", { description: "Failures of component-wise path resolution." })
@@ -278,15 +265,11 @@ interface HopBudget {
 
 const resolutionFailure = (code: typeof ResolutionErrno.Type): Resolved => Resolved.cases.Failure.make({ code });
 
-// A component under something that is not a directory is ENOTDIR, not absence;
-// `..` under a non-directory is ENOTDIR too, as the kernel reports it.
 const isUnderNonDirectory = (volume: MemoryFileSystemVolume, current: string): boolean => {
   const here = volume.lstat(current === "" ? "/" : current);
   return here !== undefined && here.kind !== "directory";
 };
 
-// Follows the link chain at `candidate` (whose parent is `current`) until it
-// lands on a non-link, spending the shared hop budget.
 const followLinks = (volume: MemoryFileSystemVolume, current: string, start: string, budget: HopBudget): Resolved => {
   let candidate = start;
   for (let target = volume.readLink(candidate); target !== undefined; target = volume.readLink(candidate)) {
@@ -299,7 +282,6 @@ const followLinks = (volume: MemoryFileSystemVolume, current: string, start: str
   return Resolved.cases.Success.make({ path: candidate });
 };
 
-// Resolves one path component against the RESOLVED location `current`.
 const stepComponent = (
   volume: MemoryFileSystemVolume,
   current: string,
@@ -308,8 +290,6 @@ const stepComponent = (
   budget: HopBudget
 ): Resolved => {
   if (isUnderNonDirectory(volume, current)) return resolutionFailure("ENOTDIR");
-  // Applied to the RESOLVED location, so ".." after a link ascends from the
-  // target rather than from the link's own parent.
   if (part === "..")
     return Resolved.cases.Success.make({
       path: Str.slice(0, Math.max(0, pipe(current, Str.lastIndexOf("/"), O.getOrElse(constant(-1)))))(current),
@@ -326,9 +306,6 @@ const walk: {
   (volume: MemoryFileSystemVolume, path: string, followFinal: boolean, budget: HopBudget): Resolved;
   (path: string, followFinal: boolean, budget: HopBudget): (volume: MemoryFileSystemVolume) => Resolved;
 } = dual(4, (volume: MemoryFileSystemVolume, path: string, followFinal: boolean, budget: HopBudget): Resolved => {
-  // Resolution is per COMPONENT, not just the final one: `/links/pkg/a.json`
-  // has to follow the link at `/links/pkg` before it can see `a.json`, exactly
-  // as a real filesystem walks a path.
   let current = "";
   const parts = A.filter(Str.split("/")(path), (part) => part !== "" && part !== ".");
   for (const [i, part] of parts.entries()) {
@@ -341,6 +318,16 @@ const walk: {
 
 /**
  * Resolves `path` the way `stat` (or, with `followFinal: false`, `lstat`) does, reporting WHY it is absent: `ENOENT`, `ENOTDIR` (a component under a non-directory) or `ELOOP` (too many links).
+ *
+ * **Details**
+ *
+ * Links are followed in every component, not only the final one: `/links/pkg/a.json` follows the link at `/links/pkg` before it can see `a.json`, as a real filesystem walks a path. Unlike the literal inspection view under it, the resolver is defined in `stat` terms.
+ *
+ * **Gotchas**
+ *
+ * - `..` ascends from the RESOLVED location, so after a link it leaves the link's target, not the link's parent; `..` under a non-directory is `ENOTDIR`, as the kernel reports it.
+ * - The link budget (40 hops, the kernel's `ELOOP` guard) is ONE counter for the whole resolution, nested target walks included, so a cycle spread across link targets still ends in `ELOOP`.
+ * - A trailing slash asserts a directory, as on node: the final link is followed even for `lstat`, and a resolved non-directory is `ENOTDIR`, never the file itself.
  *
  * **Example** (Resolve a seeded file)
  *
@@ -362,10 +349,6 @@ export const resolvePath: {
 } = dual(
   (args) => P.isObject(args[0]),
   (volume: MemoryFileSystemVolume, path: string, followFinal = true): Resolved => {
-    // A trailing slash asserts "this is a directory", as on node: the final
-    // link is followed even for `lstat`, and a resolved non-directory is
-    // ENOTDIR — never the file itself (which `walk`, dropping the empty
-    // segment, would otherwise answer).
     const trailingSlash = path.length > 1 && Str.endsWith("/")(path);
     const r = walk(volume, path, followFinal || trailingSlash, { hops: 0 });
     if (trailingSlash && Resolved.guards.Success(r) && volume.lstat(r.path)?.kind !== "directory")
@@ -415,9 +398,6 @@ const isEncoded = (options: unknown): boolean =>
   P.isString(options) ||
   (P.isObjectOrArray(options) && P.hasProperty(options, "encoding") && P.isString(options.encoding));
 
-// The outbound `fs/promises` edge: `f` runs as one Effect and a throw becomes
-// the rejection. `runPromise` squashes the cause, so the rejection is the raw
-// node-shaped errno `f` threw, never a wrapper.
 const settle = <A>(f: () => A): Promise<A> => Effect.runPromise(Effect.sync(f));
 
 /**
@@ -486,8 +466,6 @@ export const withFaults: {
 
 const decoder = new TextDecoder();
 
-// `readFileSync(path)`: the bytes of the regular file `path` resolves to, or
-// node's error — never fabricated content.
 const readBytes: {
   (volume: MemoryFileSystemVolume, path: string): Uint8Array;
   (path: string): (volume: MemoryFileSystemVolume) => Uint8Array;
@@ -495,23 +473,21 @@ const readBytes: {
   const resolved = resolvedPath(resolvePath(volume, path), "open", path);
   const bytes = volume.bytes(resolved);
   if (bytes === undefined) {
-    // Reading a directory as a file is EISDIR in `readFileSync`; anything
-    // else that is not a regular file is ENOTDIR. `read` works on a
-    // descriptor, so node's EISDIR carries no path.
     throw volume.isDirectory(resolved) ? nodeErrno("EISDIR", "read", undefined) : nodeErrno("ENOTDIR", "open", path);
   }
   return bytes;
 });
 
-// The `syscall` on each thrown error is the one node reports for the same call:
-// `open` for readFile (`read` when the target is a directory), `scandir` for
-// readDirectory, `stat`/`lstat` for the stat pair.
 /**
  * Builds a read-only synchronous filesystem port over the volume, following symbolic links for reads and `stat`.
  *
  * **Details**
  *
  * `lstat` reports the final link itself. Resolution failures become node-shaped errors with the syscall and caller path.
+ *
+ * **Gotchas**
+ *
+ * Each thrown error names the syscall node reports for the same call: `open` for `readFile`, `scandir` for `readDirectory`, `stat`/`lstat` for the stat pair. `readFile` answers the bytes of the regular file the path resolves to or node's error, never fabricated content: a directory is `EISDIR` from `read`, with no path because `read` works on a descriptor, and any other non-file is `ENOTDIR` from `open`.
  *
  * **Example** (Read a seeded file synchronously)
  *
@@ -551,6 +527,10 @@ export const makeSyncFileSystem = (volume: MemoryFileSystemVolume): MemoryFileSy
  *
  * Reading without an encoding returns bytes. Directory entries requested with `withFileTypes` describe symbolic links literally, while `stat` follows them.
  *
+ * **Gotchas**
+ *
+ * Only a string encoding, or `{ encoding: string }`, reads a string, as node does; `{ flag: "r" }`, `null` or `undefined` read bytes. A failure rejects with the raw node-shaped error, never a wrapper: `Effect.runPromise` squashes the cause.
+ *
  * **Example** (Read a seeded file with an encoding)
  *
  * ```ts
@@ -583,18 +563,14 @@ export const makePromisesFileSystem = (volume: MemoryFileSystemVolume): MemoryFi
       const r = resolvePath(volume, path);
       const base = Resolved.match(r, { Failure: () => path, Success: ({ path }) => path });
       return A.map(names, (name): MemoryFileSystemDirent => {
-        // Literal: a link is reported as a link, as `readdir` dirents do.
         const kind = volume.lstat(`${base === "/" ? "" : base}/${name}`)?.kind;
         return MemoryFileSystemDirent.make({ name, kind });
       });
     });
   }
-  // node's overloads: bytes without an encoding, a string with one.
   function readFile(path: string): Promise<Uint8Array>;
   function readFile(path: string, encoding: MemoryFileSystemReadFileEncoding): Promise<string>;
   function readFile(path: string, encoding?: MemoryFileSystemReadFileEncoding): Promise<Uint8Array | string> {
-    // Only a string encoding, or `{ encoding: string }`, selects the string
-    // form — as node does; `{ flag: "r" }`, `null` or `undefined` read bytes.
     return settle(() => (isEncoded(encoding) ? sync.readFile(path) : readBytes(volume, path)));
   }
   return {
@@ -605,9 +581,6 @@ export const makePromisesFileSystem = (volume: MemoryFileSystemVolume): MemoryFi
   };
 };
 
-// The syscall node reports for the `FileSystem` method a handle mutator or a
-// seed step runs — the thrown error carries it, never the Effect method name.
-// `rmSync` fails in the `lstat` it opens with (host-probed), not in "rm".
 const methodSyscall: { readonly [method: string]: string | undefined } = {
   writeFile: "open",
   makeDirectory: "mkdir",
@@ -619,6 +592,10 @@ const methodSyscall: { readonly [method: string]: string | undefined } = {
 
 /**
  * Returns node's syscall for a `FileSystem` method; a method with no node twin (the seed's own `root` check) keeps its name.
+ *
+ * **Gotchas**
+ *
+ * `remove` maps to `lstat`: `rmSync` fails in the `lstat` it opens with (host-probed), not in `rm`.
  *
  * **Example** (Translate a removal syscall)
  *

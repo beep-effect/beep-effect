@@ -84,10 +84,8 @@ const statementCheck = (text: string, statement: string, scoped: boolean): O.Opt
   if (A.contains(lines, statement)) {
     return O.none();
   }
-  // Classification only: quote markers are stripped to recognise a quoted
-  // copy, never to approve one.
-  const unquoted = A.map(textLines(text), (line) => Str.replace(/^(\s*>\s?)+/, "")(line));
-  return A.contains(unquoted, statement) ? O.some("statement-only-quoted") : O.some("statement-missing");
+  const quoteStrippedLines = A.map(textLines(text), (line) => Str.replace(/^(\s*>\s?)+/, "")(line));
+  return A.contains(quoteStrippedLines, statement) ? O.some("statement-only-quoted") : O.some("statement-missing");
 };
 
 /**

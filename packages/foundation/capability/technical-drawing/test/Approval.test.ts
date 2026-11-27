@@ -47,8 +47,9 @@ describe("@beep/technical-drawing approval", () => {
     "approves a reply whose authored text carries the statement on its own line",
     Effect.fnUntraced(function* () {
       expect(reasonOf(reply(`Thanks, these look right.\n\n${statement}\n\nBest,\nA.\n`))).toBe("approved");
-      // trailing whitespace and CRLF are tolerated; nothing else is
-      expect(reasonOf(reply(`${statement}  \r\n`))).toBe("approved");
+      expect(reasonOf(reply(`${statement}  \r\n`)), "trailing whitespace and CRLF are tolerated; nothing else is").toBe(
+        "approved"
+      );
     })
   );
 
@@ -98,8 +99,10 @@ describe("@beep/technical-drawing approval", () => {
     "accepts a PDF only when the initialed page carries the statement and the approver delivered it",
     Effect.fnUntraced(function* () {
       expect(reasonOf(page(`Sheet set review\n${statement}\nInitials: AB\n`))).toBe("approved");
-      // the request page reprints the statement; the initialed page does not
-      expect(reasonOf(page("Initials: AB\nFIG. 1-8 reviewed.\n"))).toBe("statement-missing");
+      expect(
+        reasonOf(page("Initials: AB\nFIG. 1-8 reviewed.\n")),
+        "the request page reprints the statement; the initialed page does not"
+      ).toBe("statement-missing");
       expect(reasonOf(page(`${statement}\n`, "assistant@example.com"))).toBe("delivery-mismatch");
     })
   );
