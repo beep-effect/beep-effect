@@ -1116,6 +1116,12 @@
         ]
       },
       {
+        "name": "@beep/social-mapper",
+        "patterns": [
+          "apps/labs/social-mapper/src/**"
+        ]
+      },
+      {
         "name": "@beep/spdx",
         "patterns": [
           "packages/foundation/modeling/spdx/src/**"
@@ -5772,6 +5778,23 @@
           "@beep/skill-contract",
           "@beep/test-runner",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/social-mapper",
+        "allow": [
+          "@beep/brand",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/social-mapper",
+          "@beep/ui"
+        ],
+        "allowTypeOnly": [
+          "@beep/brand",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/social-mapper",
+          "@beep/ui"
         ]
       },
       {

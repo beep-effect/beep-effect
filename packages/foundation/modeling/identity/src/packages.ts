@@ -281,6 +281,7 @@ const generatedLabComposers = /*#__PURE__*/ $I.compose(
   "lane-cockpit",
   "lejeune-bolt-workbench",
   "semantica",
+  "social-mapper",
   "trustgraph-workbench"
 );
 // GENERATED LAB COMPOSERS END
@@ -405,6 +406,25 @@ export const $LejeuneBoltWorkbenchId: Identity.IdentityComposer<"@beep/lejeune-b
  * @since 0.0.0
  */
 export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = /*#__PURE__*/ $I.create("semantica");
+
+/**
+ * Identity composer for `@beep/social-mapper`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $SocialMapperId } from "@beep/identity/packages"
+ *
+ * const id = $SocialMapperId.make("SocialMapper")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SocialMapperId: Identity.IdentityComposer<"@beep/social-mapper"> = /*#__PURE__*/ $I.create(
+  "social-mapper"
+);
 
 /**
  * Identity composer for `@beep/trustgraph-workbench`.

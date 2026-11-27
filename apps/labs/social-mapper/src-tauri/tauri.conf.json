@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "social-mapper",
+  "version": "0.0.0",
+  "identifier": "dev.beep.social-mapper",
+  "build": {
+    "beforeDevCommand": "bun run dev:all",
+    "devUrl": "http://social-mapper.labs.beep.localhost:1355",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Social mapper",
+        "width": 1200,
+        "height": 820
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost",
+      "devCsp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc: http://ipc.localhost ws://social-mapper.labs.beep.localhost:1355 http://social-mapper.labs.beep.localhost:1355"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.png"]
+  }
+}

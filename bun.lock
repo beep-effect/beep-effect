@@ -263,6 +263,41 @@
         "vite": "catalog:",
       },
     },
+    "apps/labs/social-mapper": {
+      "name": "@beep/social-mapper",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/brand": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/ui": "workspace:^",
+        "@effect/atom-react": "catalog:",
+        "@effect/platform-bun": "catalog:",
+        "@fontsource-variable/inter": "catalog:",
+        "@fontsource-variable/jetbrains-mono": "catalog:",
+        "@tauri-apps/api": "catalog:",
+        "effect": "catalog:",
+        "playwright": "catalog:",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@tauri-apps/cli": "catalog:",
+        "@testing-library/dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
+        "jsdom": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "apps/labs/trustgraph-workbench": {
       "name": "@beep/trustgraph-workbench",
       "version": "0.0.0",
@@ -5689,6 +5724,8 @@
     "@beep/shared-use-cases": ["@beep/shared-use-cases@workspace:packages/shared/use-cases"],
 
     "@beep/skill-contract": ["@beep/skill-contract@workspace:packages/foundation/modeling/skill-contract"],
+
+    "@beep/social-mapper": ["@beep/social-mapper@workspace:apps/labs/social-mapper"],
 
     "@beep/spdx": ["@beep/spdx@workspace:packages/foundation/modeling/spdx"],
 

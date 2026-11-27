@@ -2435,5 +2435,8 @@
   ],
   "@beep/repo-cli/commands/Decisions": [
     "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
+  ],
+  "@beep/repo-cli/commands/SchemaIdioms": [
+    "./packages/tooling/tool/cli/src/commands/SchemaIdioms/index.ts"
   ]
 }

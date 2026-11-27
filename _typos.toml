@@ -6,6 +6,8 @@ adjascent = "adjascent"
 abd = "abd"
 compilability = "compilability"
 anc = "anc"
+# The social-mapper lab research quotes Instagram field names built on "bloks".
+bloks = "bloks"
 # Exploration research cites Mata v. Avianca and the virtua.cloud domain.
 Mata = "Mata"
 virtua = "virtua"
