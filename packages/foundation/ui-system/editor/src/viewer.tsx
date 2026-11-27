@@ -50,20 +50,7 @@ const nodeSource = (node: SerializedNodeLike): string => {
   return node.children === undefined ? "" : A.join(A.map(node.children, nodeSource), "");
 };
 
-/**
- * Swap mermaid code blocks for the decorator node before Lexical mounts.
- *
- * The wire profile keeps a diagram as a `code` block with `language="mermaid"`
- * (the composer edits diagrams as code, and that must not change), so the swap
- * happens here, on the read-only side, against the state this viewer is about to
- * render and never serializes back.
- *
- * Rendering it as a real Lexical node is the point: the previous decorator hid
- * the `<code>` and injected a sibling `<div>` into the contenteditable subtree to
- * portal into. Lexical owns and reconciles that subtree, so it removed the div —
- * and the diagram rendered as a blank gap with its source hidden behind it. It
- * rendered while streaming (a separate path) and disappeared once it persisted.
- */
+// decision: readonly-node-decoration
 const decorateMermaid = (node: SerializedNodeLike): SerializedNodeLike =>
   node.type === "code" && node.language === MERMAID_LANGUAGE
     ? ({ type: "mermaid", version: 1, format: "", source: nodeSource(node) } as SerializedNodeLike)
@@ -71,17 +58,7 @@ const decorateMermaid = (node: SerializedNodeLike): SerializedNodeLike =>
       ? node
       : { ...node, children: A.map(node.children, decorateMermaid) };
 
-/**
- * Swap the remaining code blocks for the code-block node, on the same read-only
- * terms as the diagram above: the wire profile still carries a `code` block, and the
- * composer still edits one.
- *
- * A code block Lexical renders itself cannot do two things a reader needs. Its long
- * lines *wrap*, because the contenteditable's `white-space` is `pre-wrap` — code that
- * folds at an arbitrary column has to be reassembled in the reader's head. And it
- * cannot be copied: the only way to take a snippet the assistant wrote was to select
- * it by hand and hope the selection did not catch the prose around it.
- */
+// decision: readonly-node-decoration
 const decorateCode = (node: SerializedNodeLike): SerializedNodeLike =>
   node.type === "code"
     ? ({
@@ -95,14 +72,7 @@ const decorateCode = (node: SerializedNodeLike): SerializedNodeLike =>
       ? node
       : { ...node, children: A.map(node.children, decorateCode) };
 
-/**
- * The encoded forms of a viewer state, computed once and remembered.
- *
- * A transcript re-renders on every streamed block, and this ran on each of them for
- * every message already on screen: the entire history re-serialized, every frame, to
- * produce strings identical to the ones it produced last time. The key is the state
- * object, held weakly — a message that leaves the timeline takes its entry with it.
- */
+// decision: weak-viewer-encoding-cache
 const encodedStates = new WeakMap<object, { readonly decorated: string; readonly encoded: string }>();
 
 const encodeOnce = (state: SerializedEditorState.Type): { readonly decorated: string; readonly encoded: string } => {
@@ -227,6 +197,12 @@ function EditorReadOnlyFallback({
  * Read-only Lexical viewer over the `@beep/lexical-schema` v1 node
  * vocabulary — the render side of the schema → viewer pipeline.
  *
+ * **Gotchas**
+ *
+ * Lexical reads initialConfig.editorState only during construction. Key the composer by the exact encoded state to remount only when content changes, without a reconciliation effect or another serialization.
+ *
+ * The contenteditable's direct parent stays non-flex even inside arbitrary flex message layouts, avoiding Lexical's Chrome focus warning.
+ *
  * **Example** (Read-only preview component)
  *
  * ```tsx
@@ -255,18 +231,7 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
     );
   }
 
-  // `initialConfig.editorState` is read once, when Lexical constructs the
-  // editor: a viewer that stays mounted while its `state` prop changes would go
-  // on rendering the message it was first given. Keying the composer by the
-  // encoded state remounts it exactly when the content differs — the JSON string
-  // is the same value the config consumes, so this costs nothing extra and needs
-  // no effect to reconcile.
-  //
-  // Encoded ONCE per state, not once per render. A transcript re-renders on every
-  // streamed block, and each render re-encoded every message already on screen — the
-  // whole history, serialized again, to produce a string identical to the one it
-  // produced last time. The cache is keyed on the state object itself and holds it
-  // weakly, so a message that scrolls out of the timeline takes its entry with it.
+  // decision: weak-viewer-encoding-cache
   const { encoded, decorated } = encodeOnce(runtimeState.success);
   return (
     <LexicalComposer
@@ -280,9 +245,6 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
         onError: (error) => logEditorError(error),
       }}
     >
-      {/* Non-flex wrapper: Lexical warns when the content editable's direct
-          parent computes to flex/inline-flex (Chrome focus quirks), and the
-          viewer mounts inside arbitrary (often flex) message layouts. */}
       <div className="relative">
         <RichTextPlugin
           contentEditable={

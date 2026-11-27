@@ -108,9 +108,6 @@ export class MentionLookupError extends S.TaggedError<MentionLookupError, { read
   })
 ) {}
 
-// Whether a slash item matches the (already trimmed + lowercased) query across
-// its label, hint, or keywords. Extracted so the filter predicate reads as one
-// named match rather than an inline conditional chain.
 const slashItemMatchesQuery = (item: SlashItem, q: string): boolean =>
   Str.includes(q)(Str.toLowerCase(item.label)) ||
   (item.hint !== undefined && Str.includes(q)(Str.toLowerCase(item.hint))) ||
@@ -122,7 +119,6 @@ const filterSlashItems = (items: ReadonlyArray<SlashItem>, query: string): Reado
   return A.filter(items, (item) => slashItemMatchesQuery(item, q));
 };
 
-// Per-editor `/` query text. Writable; the typeahead writes the live query.
 const slashQueryAtom = Atom.family((_editor: LexicalEditor) => Atom.make<string>(""));
 
 const decodeMentionOptions = S.decodeUnknownEffect(MentionOptions);
@@ -144,9 +140,6 @@ const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
     }>()(
       Effect.fnUntraced(
         function* ({ query, source }) {
-          // `Promise.resolve` adopts a promise-returning source and lifts an
-          // immediate result; a synchronous throw from `source` is routed to
-          // `catch` by `Effect.tryPromise`, matching the previous Effect.try.
           const raw = yield* Effect.tryPromise({
             try: () => Promise.resolve(source(query)),
             catch: mentionSourceFailure,
@@ -171,18 +164,12 @@ const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
     .pipe(Atom.setIdleTTL(0))
 );
 
-// Bumped whenever the viewport moves under an open menu. `TypeaheadMenuList`
-// reads it so the fixed-position listbox is recomputed on scroll/resize instead
-// of detaching from the caret; listeners live only while a menu is mounted.
+// decision: typeahead-viewport-layout
 const viewportTickAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     let frame: number | undefined = undefined;
 
-    // One reposition per frame, not one per scroll event. The handler ran on the
-    // capture phase and bumped the tick synchronously, so every wheel notch — of the
-    // window OR of any ancestor pane, which is why capture is used — re-rendered the
-    // menu inside the scroll handler itself, on the thread that was trying to scroll.
-    // A frame is the finest granularity the screen can show anyway.
+    // decision: typeahead-viewport-layout
     const bump = (): void => {
       if (frame !== undefined) return;
       frame = globalThis.requestAnimationFrame(() => {
@@ -191,8 +178,7 @@ const viewportTickAtom = Atom.family((editor: LexicalEditor) =>
       });
     };
 
-    // `passive` promises the browser we will not call `preventDefault`, so scrolling is
-    // never blocked waiting to find out.
+    // decision: typeahead-viewport-layout
     const options = { capture: true, passive: true } as const;
     window.addEventListener("scroll", bump, options);
     window.addEventListener("resize", bump, { passive: true });
@@ -214,9 +200,9 @@ interface MenuListProps<TOption extends MenuOption> {
   readonly setHighlightedIndex: (index: number) => void;
 }
 
-// max-h-72 (288px) plus the 4px gap between the caret line and the listbox.
+// decision: typeahead-viewport-layout
 const MENU_MAX_HEIGHT_PX = 292;
-// w-64, used to clamp the menu inside the viewport horizontally.
+// decision: typeahead-viewport-layout
 const MENU_WIDTH_PX = 256;
 const MENU_VIEWPORT_GAP_PX = 4;
 
@@ -286,15 +272,7 @@ export const typeaheadMenuPosition = ({
     : { left, top: caret.bottom + MENU_VIEWPORT_GAP_PX };
 };
 
-// Viewport rect of the caret line the menu anchors to. The live DOM selection is
-// measured first because Lexical positions the anchor element in an effect after
-// this render; the anchor rect is only a fallback (e.g. collapsed selection with
-// no client rect).
-//
-// `undefined` means the caret cannot be located at all — the selection has moved
-// away from this trigger and the anchor is degenerate. A menu that renders anyway
-// strands itself at the viewport origin on top of the live menu, so callers must
-// render nothing instead.
+// decision: typeahead-viewport-layout
 const caretViewportRect = (
   anchor: HTMLElement
 ): { readonly bottom: number; readonly left: number; readonly top: number } | undefined => {
@@ -332,16 +310,7 @@ const caretViewportRect = (
 export const typeaheadInsetPx = (value: number | undefined): string | undefined =>
   value === undefined ? undefined : `${value}px`;
 
-/**
- * Renders the open typeahead as a `listbox` portal pinned to the viewport at
- * the caret: below the caret line when there is room, flipped above it
- * otherwise. `position: fixed` keeps the menu inside the view box, so a
- * composer at the bottom of the screen never grows the page scroll area.
- * Each row is a `role="option"` with an editor-scoped id referenced through
- * `aria-activedescendant`, and registers its element via
- * `option.setRefElement` so scroll-into-view works. `mousedown` is prevented
- * so clicking an option never steals focus from the editor.
- */
+// decision: typeahead-viewport-layout
 function TypeaheadMenuList<TOption extends MenuOption>({
   anchorElementRef,
   options,
@@ -351,16 +320,13 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   renderItem,
 }: MenuListProps<TOption>): ReactNode {
   const [editor] = useLexicalComposerContext();
-  // Subscribing re-renders (and so repositions) the fixed listbox whenever the
-  // viewport moves; mounting here scopes the listeners to an open menu.
+  // decision: typeahead-viewport-layout
   useAtomValue(viewportTickAtom(editor));
   if (anchorElementRef.current === null || A.isReadonlyArrayEmpty(options)) {
     return null;
   }
   const caret = caretViewportRect(anchorElementRef.current);
-  // No locatable caret means this menu's trigger is gone even though Lexical
-  // still holds a resolution for it. Rendering would strand the listbox at the
-  // viewport origin over the menu the user is actually using.
+  // decision: typeahead-viewport-layout
   if (caret === undefined) {
     return null;
   }
@@ -384,12 +350,7 @@ function TypeaheadMenuList<TOption extends MenuOption>({
       {A.map(options, (option, index) => (
         <div
           key={option.key}
-          // Scoped to the editor. Lexical points the editor root's
-          // `aria-activedescendant` at a hardcoded `typeahead-item-${index}`, so two
-          // composers on one page emitted the same ids — and the attribute resolves
-          // document-wide, first match wins. A screen reader in one composer could be
-          // told about an option in the other composer's menu. The rows carry unique
-          // ids now, and the binding below points each editor at its own.
+          // decision: typeahead-dom-ownership
           id={typeaheadOptionId(editor, index)}
           role="option"
           aria-selected={selectedIndex === index}
@@ -410,8 +371,7 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   );
 }
 
-// Rendered in place of mention options while lookup is pending or unavailable,
-// so both states stay visible and editor-scoped instead of reading as no matches.
+// decision: typeahead-dom-ownership
 function MentionLookupNotice({
   anchorElementRef,
   message,
@@ -531,9 +491,7 @@ export function SlashPlugin({ items }: SlashPluginProps): ReactNode {
       options={options}
       onQueryChange={(matching) => setQuery(matching ?? "")}
       onSelectOption={onSelectOption}
-      // Opening is exclusive: only one typeahead may hold the combobox at a
-      // time, so a menu that never fired `onClose` cannot keep `aria-expanded`
-      // true (or gate Enter) behind the menu the user is actually using.
+      // decision: typeahead-dom-ownership
       onOpen={() => setMenus({ slash: true, mention: false })}
       onClose={() => {
         setMenus((s) => ({ ...s, slash: false }));
@@ -615,9 +573,7 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
   };
 
   const menuRenderFn: MenuRenderFn<MentionMenuOption> = (anchorElementRef, itemProps) =>
-    // Pending and failed lookups keep an editor-scoped portal mounted. Besides
-    // making the lifecycle visible, the marker keeps Enter owned by this
-    // typeahead and gives the expanded combobox a real controlled listbox.
+    // decision: typeahead-dom-ownership
     pending && A.isReadonlyArrayEmpty(itemProps.options) ? (
       <MentionLookupNotice anchorElementRef={anchorElementRef} message="Looking up mentions..." />
     ) : failed && A.isReadonlyArrayEmpty(itemProps.options) ? (
@@ -709,12 +665,7 @@ const synchronizeTypeaheadAria = (root: HTMLElement, editor: LexicalEditor): voi
   }
 };
 
-// Per-editor combobox-ARIA root-listener registration. Subscribes to
-// anyMenuOpenAtom so it re-registers whenever open state changes. Lexical uses
-// one hardcoded listbox id for every composer and rewrites its ARIA relations
-// from effects and command handlers; the short-lived observer repairs those
-// relations after Lexical's writes and disconnects as soon as this editor's
-// menu closes.
+// decision: typeahead-dom-ownership
 const COMBOBOX_ARIA_ATTRIBUTES: ReadonlyArray<string> = [
   "role",
   "aria-haspopup",
@@ -770,9 +721,7 @@ const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
         });
       })
     );
-    // Unregistering the root listener leaves the attributes painted on a root
-    // that outlives this plugin — an editor advertised as an expanded combobox
-    // with no popup. Strip what we applied when the binding goes away.
+    // decision: typeahead-dom-ownership
     get.addFinalizer(() => {
       observer?.disconnect();
       if (root !== null) clearComboboxAria(root);

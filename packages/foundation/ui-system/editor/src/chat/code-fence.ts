@@ -22,11 +22,6 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { $getSelection, $isParagraphNode, $isRangeSelection, $isTextNode } from "lexical";
 
-/**
- * A paragraph that is nothing but a fence opener: three or more backticks and an
- * optional language. Anything after the language means the line is prose about a
- * fence, not a fence.
- */
 const CODE_FENCE_OPENER = /^[ \t]*`{3,}([\w-]+)?[ \t]?$/;
 
 /**
@@ -72,6 +67,12 @@ export const $isInsideCodeBlock = (): boolean => {
  *
  * Returns whether the fence was taken, so the caller knows Enter is spent.
  *
+ * **Gotchas**
+ *
+ * The caret must be at the end of the opener; mid-line backticks are text being edited and must not be swallowed.
+ *
+ * Replacing the paragraph intentionally leaves its children behind: the backticks are the input gesture, not code content.
+ *
  * **Example** (Open fence from triple backticks)
  *
  * ```ts
@@ -104,8 +105,6 @@ export const $openCodeFence = (): boolean => {
   const paragraph = anchorNode.getParent();
   if (!$isParagraphNode(paragraph)) return false;
 
-  // The caret has to be at the very end of the opener. Mid-line, the user is editing
-  // text that merely starts with backticks, and swallowing it would be theft.
   if (anchorNode.getNextSibling() !== null || selection.anchor.offset !== anchorNode.getTextContentSize()) {
     return false;
   }
@@ -113,8 +112,6 @@ export const $openCodeFence = (): boolean => {
   const match = Str.match(CODE_FENCE_OPENER)(paragraph.getTextContent());
   if (O.isNone(match)) return false;
 
-  // `replace` leaves the children behind, which is what we want: the backticks were
-  // the gesture, not content.
   const code = $createCodeNode(match.value[1]);
   paragraph.replace(code);
   code.select();

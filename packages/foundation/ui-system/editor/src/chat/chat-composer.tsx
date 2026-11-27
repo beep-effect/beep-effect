@@ -584,7 +584,6 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
     Result.getSuccess(decodeEditorStateForRuntimeResult(state))
   );
   const encodedInitialState = O.flatMap(runtimeInitialState, encodeEditorStateFromJsonOption);
-  // Lexical config errors log through the Effect runtime (no runSync here).
   const logEditorError = useAtomSet(logEditorErrorFn);
   if (initialState !== undefined && O.isNone(encodedInitialState)) {
     return <EditorWireViewer input={initialState} className={className} />;

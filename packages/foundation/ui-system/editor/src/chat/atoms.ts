@@ -234,6 +234,12 @@ export const typeaheadActiveDescendant: {
  * Trusting the flag alone let a stale `true` swallow every Enter with no menu
  * visible and no way to send the draft.
  *
+ * **Gotchas**
+ *
+ * Headless Lexical throws from getRootElement; shared non-DOM command tests have no visible menu and must return false.
+ *
+ * Query only this editor's menu marker. A document-wide menu query lets another composer suppress Enter here.
+ *
  * **Example** (Checking menu visibility)
  *
  * ```ts
@@ -247,17 +253,11 @@ export const typeaheadActiveDescendant: {
  * @since 0.0.0
  */
 export const isTypeaheadMenuVisible = (editor: LexicalEditor): boolean => {
-  // Headless Lexical deliberately throws from getRootElement(); command
-  // bindings are shared with its non-DOM tests, where no visible menu can
-  // exist.
   const root = Result.getOrElse(
     Result.try(() => editor.getRootElement()),
     () => null
   );
   if (root === null) return false;
-  // Scoped to THIS editor. A document-wide query let a menu open in another
-  // composer on the page suppress Enter here, which is the same silent
-  // dead-Enter this predicate exists to prevent.
   return root.ownerDocument.querySelector(`[${TYPEAHEAD_MENU_ATTRIBUTE}="${editor.getKey()}"]`) !== null;
 };
 
@@ -421,6 +421,16 @@ export const composerRuntime = Atom.runtime(Layer.empty);
  * The size bound is read from {@link maxAttachmentBytesAtom}. Both the footer
  * picker and the drag-drop binding drive this same path.
  *
+ * **Gotchas**
+ *
+ * Concurrent operations outlive the read lifetime of their FnContext. Use its stable registry for mutations after awaiting the upload port.
+ *
+ * Append accepted files before notifying the port: capture already created object URLs, and only attachmentsAtom can revoke them. A throwing callback must not strand untracked URLs.
+ *
+ * Captures are independent concurrent batches. Latest-write-wins would interrupt an older notification after append and prevent rejection rollback.
+ *
+ * The sweep aborts the exact mount controller before revoking its URLs. A late rejection must neither read a disposed registry, revoke twice, nor update a later composer mount.
+ *
  * **Example** (Capturing attachment files)
  *
  * ```tsx
@@ -447,9 +457,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
 }>()(
   Effect.fnUntraced(function* ({ editor, files }, get) {
     if (A.isReadonlyArrayEmpty(files)) return;
-    // Concurrent Atom.fn operations outlive the read lifetime that created
-    // their FnContext. Its registry remains stable for the whole operation and
-    // is therefore the correct mutation boundary after the port await.
     const registry = get.registry;
     const lifecycle = registry.get(attachmentLifecycleAtom(editor));
     if (O.isNone(lifecycle) || lifecycle.value.controller.signal.aborted) return;
@@ -457,8 +464,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
     const maxAttachmentBytes = registry.get(maxAttachmentBytesAtom(editor));
     registry.set(attachmentFailureAtom(editor), O.none());
     const results = A.map(files, (file) => fileToAttachment(file, maxAttachmentBytes));
-    // Surface (rather than silently drop) why a file was declined; the failure
-    // channel is the whole reason `fromFile` returns `Result` not `O.Option`.
     const rejections = A.getSomes(A.map(results, Result.getFailure));
     if (A.isReadonlyArrayNonEmpty(rejections)) {
       registry.set(attachmentFailureAtom(editor), O.some(rejections[0]));
@@ -466,12 +471,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
     }
     const captured = A.getSomes(A.map(results, Result.getSuccess));
     if (A.isReadonlyArrayNonEmpty(captured)) {
-      // Append BEFORE notifying: `fileToAttachment` has already minted object
-      // URLs for these files, and only `attachmentsAtom` knows how to revoke
-      // them. Notifying first meant a throwing consumer callback took the append
-      // down with it, stranding every URL it had just created — invisible to
-      // removal, send, and the unmount sweep alike.
-      //
       registry.update(attachmentsAtom(editor), (current) => [...current, ...captured]);
       yield* Effect.tryPromise({
         try: () =>
@@ -487,10 +486,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
       }).pipe(
         Effect.catch(
           Effect.fnUntraced(function* (failure) {
-            // The sweep aborts this exact mount controller before revoking its
-            // URLs. A late port rejection must not read from a disposed registry,
-            // revoke the same batch twice, or paint failure state onto a later
-            // mount of the composer.
             if (lifecycle.value.controller.signal.aborted) return;
             const current = registry.get(attachmentsAtom(editor));
             const rolledBack = A.filter(current, (attachment) =>
@@ -508,9 +503,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
       );
     }
   }),
-  // Captures are independent batches. The default latest-write-wins `Atom.fn`
-  // behavior would interrupt an older port notification after its attachments
-  // had already been appended, preventing that batch's rejection rollback.
   { concurrent: true }
 );
 
@@ -714,10 +706,8 @@ export const characterCountAtom = Atom.family((editor: LexicalEditor) =>
 const hasCommandModifier = (event: KeyboardEvent): boolean => event.ctrlKey || event.metaKey;
 
 const isImeComposing = (event: KeyboardEvent): boolean => {
-  // Modern browsers set `isComposing`; legacy IME paths can still surface only
-  // `keyCode === 229`.
-  const legacyKeyCode = (event as unknown as { readonly keyCode?: number }).keyCode;
-  return event.isComposing || legacyKeyCode === 229;
+  const legacyImeKeyCode = (event as unknown as { readonly keyCode?: number }).keyCode;
+  return event.isComposing || legacyImeKeyCode === 229;
 };
 
 const shouldSendFromEnter = (event: KeyboardEvent, sendOn: ComposerFeatures["sendOn"]): boolean =>
@@ -741,6 +731,18 @@ const shouldSendFromEnter = (event: KeyboardEvent, sendOn: ComposerFeatures["sen
  * never re-registers the command. Menu ownership is read from the
  * editor-scoped visible-menu marker at event time.
  *
+ * **Gotchas**
+ *
+ * Enter ownership is ordered: current visible-menu/IME state, then code/fence/newline handling, then send dispatch. Plugin flags can go stale, so menu ownership must be confirmed against the DOM.
+ *
+ * With a visible menu, IME Enter consumes the Lexical command without preventing native composition; otherwise Lexical's lower-priority handler would select an option. With no visible menu, yield to ordinary composition.
+ *
+ * Inside a code block Enter stays a newline, allowing multiple code lines; Cmd/Ctrl+Enter sends under either policy so the user can leave the block without a mouse.
+ *
+ * A fence opener owns Enter before send or newline because the high-priority composer consumes the gesture before the markdown shortcut.
+ *
+ * For sendOn="enter", Shift+Enter inserts a real paragraph, rather than Lexical's soft break; otherwise subsequent block toggles would consume the whole draft as one paragraph.
+ *
  * **Example** (Mounting enter-to-send)
  *
  * ```tsx
@@ -763,46 +765,24 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
     get.addFinalizer(
       editor.registerCommand(
         KEY_ENTER_COMMAND,
-        // Enter handling is a single priority-ordered interaction state machine:
-        // visible-menu/IME ownership, newline policy, then send dispatch.
-        // Keeping that ordering together makes Lexical command consumption
-        // auditable and avoids splitting event ownership across callbacks.
         // fallow-ignore-next-line complexity -- the Enter handler orders visible-menu and IME, code-block, newline and send ownership (cognitive 11). Owner: @beep/editor. Exit: split when the composer keymap moves to a Lexical command priority table.
         (event) => {
           if (event === null) return false;
-          // Confirm menu ownership against the DOM: plugin-reported open flags
-          // can go stale after a trigger vanishes. An IME Enter with a visible
-          // menu must consume this Lexical command (without preventing the
-          // browser's composition default), or Lexical's lower-priority menu
-          // handler selects the highlighted option. With no visible menu, keep
-          // yielding so the ordinary composition path remains unchanged.
           const visibleTypeahead = isTypeaheadMenuVisible(editor);
           if (isImeComposing(event)) return visibleTypeahead;
           if (visibleTypeahead) return false;
-          // A code block owns Enter: inside one the keystroke is a newline, or the
-          // block the fence just opened could only ever hold a single line. That
-          // spends the send gesture, so Cmd/Ctrl+Enter becomes an explicit send here
-          // under either policy — otherwise a code block is a keyboard trap you can
-          // only escape with the mouse.
           if ($isInsideCodeBlock()) {
             if (!hasCommandModifier(event)) return false;
             event.preventDefault();
             editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
             return true;
           }
-          // A fence opener takes the keystroke ahead of both send and newline: typing
-          // ```ts and pressing Enter is how a code block gets written, and this
-          // composer consumes Enter before `@lexical/markdown` can ever see it.
           if ($openCodeFence()) {
             event.preventDefault();
             return true;
           }
           const sendOn = get.once(featuresAtom(editor)).sendOn;
           if (!shouldSendFromEnter(event, sendOn)) {
-            // With sendOn="enter" the only newline gesture is Shift+Enter, and
-            // Lexical's default maps it to a soft line-break — leaving the whole
-            // draft one paragraph, so block toggles (lists/quote/code) swallow
-            // everything typed so far. Promote it to a real paragraph break.
             if (sendOn === "enter" && event.shiftKey && !event.altKey && !hasCommandModifier(event)) {
               event.preventDefault();
               editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
@@ -911,6 +891,14 @@ export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<Send
  * paragraph re-selected — keeping focus and a valid selection (`registerRichText`
  * does not handle `CLEAR_EDITOR_COMMAND`). An out-of-schema state is skipped.
  *
+ * **Gotchas**
+ *
+ * An empty text draft is a no-op for Enter and the Send button; captured attachments currently do not bypass the text-content guard.
+ *
+ * An unbound handler means onSend was never seeded or its config atom was swept after the registry idle TTL. Expose the blocked-send message rather than silently returning false.
+ *
+ * After a successful send, revoke captured attachment URLs and empty the chip strip alongside the editor content; the unmount sweep is only the final backstop.
+ *
  * **Example** (Mounting send command)
  *
  * ```tsx
@@ -938,16 +926,8 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
         SEND_MESSAGE_COMMAND,
         () => {
           const editorState = editor.getEditorState();
-          // Nothing to send when the editor has no text content — Enter (or the
-          // Send button) on an empty composer is a no-op. (When attachment
-          // transport lands, an attachments-present check joins this guard.)
           const hasContent = editorState.read(() => Str.trim($getRoot().getTextContent()).length > 0);
           const handler = get.once(onSendAtom(editor));
-          // An unbound handler means the composer's `onSend` was never seeded —
-          // or was swept out from under this binding by the registry's idle TTL
-          // (see the mount in `ComposerBody`). Either way the send has nowhere
-          // to go, and returning a quiet `false` here is what made a composer
-          // that had silently stopped sending look like a broken app.
           if (hasContent && handler.run === unboundSend) {
             get.set(sendBlockedAtom(editor), O.some(SEND_UNBOUND_MESSAGE));
             get.set(logEditorErrorFn, "ChatComposer refused to send: no send handler is bound");
@@ -956,9 +936,6 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           const dispatched =
             hasContent &&
             Result.match(decodeEditorStateForRuntimeResult(editorState.toJSON()), {
-              // A state the wire schema rejects is a bug in the schema or the
-              // editor — never a reason to make the composer quietly stop
-              // working. Say so, keep the draft, and leave a log behind.
               onFailure: () => {
                 get.set(sendBlockedAtom(editor), O.some(SEND_DECODE_FAILURE_MESSAGE));
                 get.set(logEditorErrorFn, "ChatComposer refused to send: editor state failed to decode");
@@ -977,10 +954,6 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
               root.append(paragraph);
               paragraph.select();
             });
-            // Reset the captured attachments alongside the editor content: revoke
-            // their object URLs (so they don't leak between sends) and empty the
-            // chip strip. The unmount sweep is the final backstop; this keeps the
-            // composer consistent turn-to-turn.
             const captured = get.once(attachmentsAtom(editor));
             if (A.isReadonlyArrayNonEmpty(captured)) {
               for (const attachment of captured) revokeAttachment(attachment);

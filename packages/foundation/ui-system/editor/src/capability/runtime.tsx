@@ -248,6 +248,10 @@ export const runCommand: {
 
 /** Converts a keyboard event into the canonical chord vocabulary.
  *
+ * **Gotchas**
+ *
+ * AltGr reports Ctrl+Alt on Windows/Linux layouts while typing a layout character; it must never become a Ctrl+Alt command chord.
+ *
  * **Example** (Read a Ctrl+B event)
  * ```ts
  * import * as O from "effect/Option"
@@ -262,8 +266,6 @@ export const chordFromKeyboardEvent: {
   (platform: Platform): (event: KeyboardEvent) => O.Option<KeyChord>;
   (event: KeyboardEvent, platform: Platform): O.Option<KeyChord>;
 } = dual(2, (event: KeyboardEvent, platform: Platform): O.Option<KeyChord> => {
-  // AltGr reports ctrlKey + altKey on Windows/Linux layouts; it is typing a
-  // layout character, never a Ctrl+Alt chord.
   if (event.getModifierState("AltGraph")) return O.none();
   const digit = Str.startsWith("Digit")(event.code) ? Str.slice(5)(event.code) : "";
   const key = digit === "" ? Str.toLowerCase(event.key) : digit;

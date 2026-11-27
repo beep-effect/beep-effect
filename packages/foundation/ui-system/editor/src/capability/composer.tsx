@@ -69,7 +69,11 @@ export function ProfileResolutionNotice({ error }: { readonly error: ProfileReso
 /** Resolves an app profile and mounts only its projected authoring surfaces.
  *
  * **Gotchas**
- * Profile and initial state are mount-only; change the React key to remount.
+ *  * Keep the outer column box-filling: toolbar and help stay pinned while the editable owns the flexible space and scrolls, so a short dock never collapses the document.
+ *
+ * The editing surface uses an inset focus-within ring so keyboard focus remains visible inside its scroll container.
+ *
+Profile and initial state are mount-only; change the React key to remount.
  *
  * **Example** (Mount a reference profile)
  * ```tsx
@@ -95,8 +99,6 @@ export function CapabilityComposer({
   return Result.match(resolveEditorProfile(catalog, profile), {
     onFailure: (error) => <ProfileResolutionNotice error={error} />,
     onSuccess: (resolved) => {
-      // D3: content that the live runtime cannot admit stays readable as
-      // escaped wire instead of silently mounting an empty editor.
       const encodedInitialState = O.flatMap(runtimeInitialStateOption(initialState), encodeEditorStateFromJsonOption);
       if (initialState !== undefined && O.isNone(encodedInitialState)) {
         return (
@@ -113,15 +115,10 @@ export function CapabilityComposer({
             onError: (error) => logEditorError(error),
           }}
         >
-          {/* Box-filling column: the toolbar and help are pinned, the
-              editable owns the flexible space and scrolls on its own, so a
-              short dock box never collapses the document. */}
           <div className="flex h-full min-h-0 flex-col">
             {A.contains(resolved.registrations.extensions, "ToolbarProjection") ? (
               <CapabilityToolbar resolved={resolved} platform={platform} />
             ) : undefined}
-            {/* Inset focus-within ring: the editing surface stays identifiable
-                for keyboard users, and inset survives the scroll container. */}
             <div className="relative min-h-0 flex-1 overflow-auto rounded-sm focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring">
               <RichTextPlugin
                 contentEditable={
