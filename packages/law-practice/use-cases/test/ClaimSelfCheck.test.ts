@@ -37,9 +37,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Synthetic claims written for this test; the source text wraps lines the way a filed document does.
 const claimsHeading = "CLAIMS";
-const claimsContent = A.join(
+const lineWrappedClaimsContent = A.join(
   [
     "1. A camera comprising:",
     "a housing; and",
@@ -51,7 +50,7 @@ const claimsContent = A.join(
   ],
   "\n"
 );
-const sourceText = `${claimsHeading}\n${claimsContent}`;
+const sourceText = `${claimsHeading}\n${lineWrappedClaimsContent}`;
 const sourceStart = Str.length(claimsHeading) + 1;
 
 const knownApplication = UsptoNormalizedApplicationNumber.make("18900001");
@@ -78,7 +77,7 @@ const document = Effect.map(normalizedClaims, (claims) =>
     claims,
     sections: [
       PatentApplicationSection.make({
-        content: claimsContent,
+        content: lineWrappedClaimsContent,
         heading: claimsHeading,
         role: "claims",
         sourceEnd: Str.length(sourceText),
@@ -101,8 +100,6 @@ const inputFor = (claimsDocument: PatentApplicationDocument) =>
   });
 const input = Effect.map(document, inputFor);
 
-// Claim 1 names a body its text does not contain, so it cannot decompose; nothing depends on it.
-// Claim 2 is independent and has no referring term, so it raises no finding.
 const uncoveredContent = A.join(["1. A tripod comprising: a leg.", "2. A mount comprising: a plate."], "\n");
 const uncoveredSourceText = `${claimsHeading}\n${uncoveredContent}`;
 const uncoveredDocument = PatentApplicationDocument.make({
@@ -270,10 +267,15 @@ describe("ClaimSelfCheck", () => {
       it.effect("returns an undecomposable claim with no dependents instead of reading as clean", () =>
         Effect.gen(function* () {
           const result = yield* (yield* ClaimSelfCheck).candidates(inputFor(uncoveredDocument));
-          assert.strictEqual(result.candidates.length, 0);
+          assert.strictEqual(
+            result.candidates.length,
+            0,
+            "claim 2 is independent and has no referring term, so it raises no finding"
+          );
           assert.deepStrictEqual(
             A.map(result.undecomposed, ({ claimNumber, reason }) => [claimNumber, reason]),
-            [[1, "unsupported-claim-text"]]
+            [[1, "unsupported-claim-text"]],
+            "claim 1 names a body its text does not contain, so it cannot decompose; nothing depends on it"
           );
         })
       );

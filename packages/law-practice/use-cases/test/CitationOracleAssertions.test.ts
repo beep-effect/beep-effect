@@ -32,9 +32,7 @@ const event = {
   normalizedSha256: hash,
   payload,
 };
-// Synthetic schema controls stay bounded. The portable checker exercises the
-// full source/discovery/hash/loop graph against committed real observations.
-const fixture = {
+const syntheticFixture = {
   schemaVersion: "citation-oracle-assertions/v1",
   scope: "assertion/iteration observations; not target parity proof",
   commit: "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
@@ -59,7 +57,7 @@ const accepts = (value: unknown) => Result.isSuccess(S.decodeUnknownResult(Citat
 describe("assertion oracle evidence", () => {
   it.effect("requires fixed metadata during decode and encode rather than constructing defaults", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(fixture);
+      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(syntheticFixture);
       const fields = [
         "schemaVersion",
         "scope",
@@ -74,7 +72,7 @@ describe("assertion oracle evidence", () => {
         "lockSha256",
       ] as const;
       for (const field of fields) {
-        expect(accepts(R.remove(fixture, field))).toBe(false);
+        expect(accepts(R.remove(syntheticFixture, field))).toBe(false);
         const encoded = yield* S.encodeUnknownEffect(CitationOracleAssertions)(R.remove(decoded, field)).pipe(
           Effect.exit
         );
@@ -88,13 +86,13 @@ describe("assertion oracle evidence", () => {
       Str.replace('"passed":true,', "")(payload),
       Str.replace('"kind":"comparison",', "")(payload),
     ]) {
-      expect(accepts({ ...fixture, events: [{ ...event, payload: invalid }] })).toBe(false);
+      expect(accepts({ ...syntheticFixture, events: [{ ...event, payload: invalid }] })).toBe(false);
     }
   });
 
   it.effect("preserves original assertion bytes through both codec directions", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(fixture);
+      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(syntheticFixture);
       expect(decoded.events[0]?.payload.value.operands.length).toBe(2);
       const encoded = yield* S.encodeEffect(CitationOracleAssertions)(decoded);
       expect(encoded.events[0]?.payload).toBe(payload);
@@ -103,7 +101,7 @@ describe("assertion oracle evidence", () => {
 
   it.effect("rejects forged typed payloads with stale raw bytes", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(fixture);
+      const decoded = yield* S.decodeUnknownEffect(CitationOracleAssertions)(syntheticFixture);
       const first = decoded.events[0];
       if (first === undefined) throw new Error("expected synthetic observation");
       const forged = {
@@ -116,11 +114,11 @@ describe("assertion oracle evidence", () => {
   );
 
   it("rejects missing, duplicate and mismatched assertion declarations", () => {
-    expect(accepts({ ...fixture, events: [] })).toBe(false);
-    expect(accepts({ ...fixture, events: [event, event] })).toBe(false);
-    expect(accepts({ ...fixture, source: { ...fixture.source, declarations: [] } })).toBe(false);
-    expect(accepts({ ...fixture, events: [{ ...event, id: "forged" }] })).toBe(false);
-    expect(accepts({ ...fixture, events: [{ ...event, assertion: "assertNotEqual" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, events: [] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, events: [event, event] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, source: { ...syntheticFixture.source, declarations: [] } })).toBe(false);
+    expect(accepts({ ...syntheticFixture, events: [{ ...event, id: "forged" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, events: [{ ...event, assertion: "assertNotEqual" }] })).toBe(false);
   });
 
   it("retains loop iteration identities and rejects duplicate observations", () => {
@@ -143,20 +141,27 @@ describe("assertion oracle evidence", () => {
       parentIterationIds: [],
       bindings: { item: "x" },
     };
-    const observed = { ...fixture, source: { ...fixture.source, loops: [loop] }, iterations: [iteration] };
+    const observed = {
+      ...syntheticFixture,
+      source: { ...syntheticFixture.source, loops: [loop] },
+      iterations: [iteration],
+    };
     expect(accepts(observed)).toBe(true);
     expect(accepts({ ...observed, iterations: [iteration, iteration] })).toBe(false);
   });
 
   it("rejects malformed or unclassified operands and outcomes", () => {
-    expect(accepts({ ...fixture, events: [{ ...event, payload: "{" }] })).toBe(false);
-    expect(accepts({ ...fixture, events: [{ ...event, assertion: "unknown" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, events: [{ ...event, payload: "{" }] })).toBe(false);
+    expect(accepts({ ...syntheticFixture, events: [{ ...event, assertion: "unknown" }] })).toBe(false);
     expect(
-      accepts({ ...fixture, events: [{ ...event, payload: Str.replace('"passed":true', '"passed":false')(payload) }] })
+      accepts({
+        ...syntheticFixture,
+        events: [{ ...event, payload: Str.replace('"passed":true', '"passed":false')(payload) }],
+      })
     ).toBe(false);
     expect(
       accepts({
-        ...fixture,
+        ...syntheticFixture,
         events: [{ ...event, payload: Str.replace('"kind":"value"', '"kind":"unknown"')(payload) }],
       })
     ).toBe(false);
@@ -171,12 +176,14 @@ describe("assertion oracle evidence", () => {
       itemCount: 2,
       items: [{ ordinal: 1, expression: "x", expressionSha256: hash }],
     };
-    expect(accepts({ ...fixture, source: { ...fixture.source, literalParameters: [parameter] } })).toBe(false);
+    expect(
+      accepts({ ...syntheticFixture, source: { ...syntheticFixture.source, literalParameters: [parameter] } })
+    ).toBe(false);
     expect(
       accepts({
-        ...fixture,
+        ...syntheticFixture,
         source: {
-          ...fixture.source,
+          ...syntheticFixture.source,
           literalParameters: [{ ...parameter, itemCount: 1, items: [{ ...parameter.items[0], ordinal: 2 }] }],
         },
       })

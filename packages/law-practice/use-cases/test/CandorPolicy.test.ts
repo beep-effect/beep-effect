@@ -53,16 +53,7 @@ const TEXT_A = "Smith discloses a hinge assembly.";
 const TEXT_A2 = "Smith discloses a hinge assembly with a detent.";
 const TEXT_B = "Jones discloses a latch.";
 
-// ---------------------------------------------------------------------------
-// Digest: Web Crypto rather than a platform package, so this proof adds no
-// dependency. `verifyTextAnchor` needs a real SHA-256 or every anchor fails.
-// ---------------------------------------------------------------------------
-
-const TestCrypto = Digest.layerWebCrypto;
-
-// ---------------------------------------------------------------------------
-// Fixture builders
-// ---------------------------------------------------------------------------
+const RealSha256Digest = Digest.layerWebCrypto;
 
 type Observation = {
   readonly encoded: Record<string, unknown>;
@@ -75,29 +66,26 @@ type SourceEntry = {
   readonly text: string;
 };
 
-/**
- * One exact observation of one logical source. Two observations built from the
- * same `name` with different text are two versions of the same source, which is
- * what makes declared supersession meaningful.
- */
-const observation = Effect.fnUntraced(function* (name: string, text: string) {
+const observation = Effect.fnUntraced(function* (sourceName: string, text: string) {
   const hex = yield* decodeSha256HexFromBytes(utf8.encode(text));
   const digest = `sha256:${hex}`;
   const encoded = {
     extractor: { name: "utf8", version: "1" },
-    locator: `${name}.txt`,
+    locator: `${sourceName}.txt`,
     normalizationVersion: "1",
     scopeRef: SCOPE_REF,
     sourceDigest: digest,
-    sourceRef: `source:${name}`,
+    sourceRef: `source:${sourceName}`,
     textDigest: digest,
   };
   const identity = yield* decodeUnknownSourceTextIdentity(encoded);
   return { encoded, identity, text } satisfies Observation;
 });
 
-/** What the resolver will hand back for an observation, text overridable. */
-const sourceEntry = (o: Observation, text?: string): SourceEntry => ({ identity: o.identity, text: text ?? o.text });
+const sourceEntry = (o: Observation, resolvedText?: string): SourceEntry => ({
+  identity: o.identity,
+  text: resolvedText ?? o.text,
+});
 
 const groundingOf = (o: Observation) => ({
   anchor: { endChar: Str.length(o.text), quote: o.text, startChar: 0 },
@@ -158,10 +146,6 @@ const dispositionFixture = (
 
 const targets = (id: number, o: Observation) => ({ eventId: id, textDigest: o.identity.textDigest });
 
-// ---------------------------------------------------------------------------
-// Scenario layers
-// ---------------------------------------------------------------------------
-
 type Fixture = {
   readonly dispositions: ReadonlyArray<CandorDisposition>;
   readonly events: ReadonlyArray<PatentCitationEvent>;
@@ -200,7 +184,7 @@ const resolverLayer = (fixture: Fixture) =>
 const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Digest.Digest>) =>
   Layer.unwrap(
     Effect.map(build, (fixture) => Layer.mergeAll(CandorPolicyLive, readerLayer(fixture), resolverLayer(fixture)))
-  ).pipe(Layer.provideMerge(TestCrypto));
+  ).pipe(Layer.provideMerge(RealSha256Digest));
 
 const evaluateFiling = Effect.fnUntraced(function* () {
   const citingApplication = yield* decodeCitingApplicationIdentity(FILING_ENCODED);
@@ -219,7 +203,6 @@ const blockedEventIds = (verdict: CandorGateVerdict) =>
     Order.Number
   );
 
-/** Assert a blocking verdict whose reasons are exactly `expected` (sorted). */
 const expectBlocked = (verdict: CandorGateVerdict, expected: ReadonlyArray<string>) => {
   pipe(CandorGateVerdict.isBlocked(verdict), assertTrue);
   expect(reasons(verdict)).toEqual(expected);
@@ -229,10 +212,6 @@ const expectReleased = (verdict: CandorGateVerdict) => {
   pipe(CandorGateVerdict.isBlocked(verdict), assertFalse);
   expect(verdict.uncovered).toEqual([]);
 };
-
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
 
 const undisposed = Effect.fnUntraced(function* () {
   const a = yield* observation("a", TEXT_A);
@@ -248,7 +227,6 @@ const disposed = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-/** Two references, each its own source, both current and AI-discovered. */
 const twoReferences = (disposeFirst: boolean, disposeSecond: boolean) =>
   Effect.fnUntraced(function* () {
     const a = yield* observation("a", TEXT_A);
@@ -265,11 +243,6 @@ const twoReferences = (disposeFirst: boolean, disposeSecond: boolean) =>
     } satisfies Fixture;
   });
 
-/**
- * Event 1 observes source `a`; event 2 observes a newer version of the same
- * source and declares that it supersedes event 1. `order` and `replay` vary how
- * the records arrive without changing what was declared.
- */
 const supersession = (options: {
   readonly disposeNewer: boolean;
   readonly disposeOlder: boolean;
@@ -294,7 +267,6 @@ const supersession = (options: {
     return { dispositions, events, sources: [sourceEntry(older), sourceEntry(newer)] } satisfies Fixture;
   });
 
-/** A crafted head tries to retire a different patent citation from the same source. */
 const foreignReferenceSupersession = Effect.fnUntraced(function* () {
   const older = yield* observation("a", TEXT_A);
   const newer = yield* observation("a", TEXT_A2);
@@ -308,7 +280,6 @@ const foreignReferenceSupersession = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-/** Two separately identified citations happen to share one prosecution source. */
 const independentReferencesSameSource = Effect.fnUntraced(function* () {
   const first = yield* observation("a", TEXT_A);
   const second = yield* observation("a", TEXT_A2);
@@ -319,7 +290,6 @@ const independentReferencesSameSource = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-/** A crafted head tries to supersede through two equally empty references. */
 const emptyReferenceSupersession = Effect.fnUntraced(function* () {
   const older = yield* observation("a", TEXT_A);
   const newer = yield* observation("a", TEXT_A2);
@@ -333,7 +303,6 @@ const emptyReferenceSupersession = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-/** Two observations of one source, neither declaring supersession. */
 const forkedLineage = Effect.fnUntraced(function* () {
   const first = yield* observation("a", TEXT_A);
   const second = yield* observation("a", TEXT_A2);
@@ -355,11 +324,6 @@ const withDisposition = (options: DispositionOptions, extra?: DispositionOptions
     return { dispositions, events: [yield* eventFixture(1, a)], sources: [sourceEntry(a)] } satisfies Fixture;
   });
 
-/**
- * D10 covers event 1. D11 retires D10 but is bound to a DIFFERENT observation
- * version, so a retirement check scoped to event 1's own bound dispositions
- * would never see it. Regression guard for the fail-open hole Greptile caught.
- */
 const retiredByForeignBinding = Effect.fnUntraced(function* () {
   const a = yield* observation("a", TEXT_A);
   const other = yield* observation("b", TEXT_B);
@@ -373,12 +337,6 @@ const retiredByForeignBinding = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-/**
- * An examiner-observed observation supersedes an AI-discovered one on the same
- * source. `disposeHead` decides whether the examiner-observed head carries a
- * disposition, which is the whole point of the pair: the head's discovery kind
- * does not decide whether it can be dispositioned.
- */
 const examinerHeadOverAiEvent = (disposeHead: boolean) =>
   Effect.fnUntraced(function* () {
     const older = yield* observation("a", TEXT_A);
@@ -431,10 +389,6 @@ const examinerOnly = (disposed: boolean) =>
       sources: [sourceEntry(a)],
     } satisfies Fixture;
   });
-
-// ---------------------------------------------------------------------------
-// Proof
-// ---------------------------------------------------------------------------
 
 describe("CandorPolicy — one AI-discovered event", () => {
   it.layer(scenario(undisposed()), { timeout: "30 seconds" })((it) => {
@@ -622,14 +576,13 @@ describe("CandorPolicy — a judgment must still stand, and a human must have ma
 
 describe("CandorPolicy — retirement is derived over the whole recorded set", () => {
   it.layer(scenario(retiredByForeignBinding()), { timeout: "30 seconds" })((it) => {
-    it.effect("stops covering when the retiring disposition names a different observation", () =>
-      Effect.gen(function* () {
-        // Before the fix the retiring row was filtered out by the event binding
-        // before its `supersedes` was read, so the retired judgment still
-        // covered and the gate released.
-        const evaluateFiling11 = yield* evaluateFiling();
-        expectBlocked(evaluateFiling11, ["disposition-not-effective"]);
-      })
+    it.effect(
+      "stops covering when the retiring disposition is bound to another observation than the event it retires",
+      () =>
+        Effect.gen(function* () {
+          const evaluateFiling11 = yield* evaluateFiling();
+          expectBlocked(evaluateFiling11, ["disposition-not-effective"]);
+        })
     );
   });
 });
@@ -678,23 +631,24 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
   it.layer(scenario(examinerHeadOverAiEvent(false)()), { timeout: "30 seconds" })((it) => {
     it.effect("blocks while the examiner-observed head that superseded an AI finding is undisposed", () =>
       Effect.gen(function* () {
-        // The AI event is superseded, but its history is not discharged by the
-        // arrival of an examiner record — only a human can decide that.
         const verdict = yield* evaluateFiling();
         expectBlocked(verdict, ["no-disposition", "no-disposition"]);
-        expect(blockedEventIds(verdict)).toEqual([1, 2]);
+        expect(
+          blockedEventIds(verdict),
+          "an arriving examiner record does not discharge the superseded AI event; only a human disposition does"
+        ).toEqual([1, 2]);
       })
     );
   });
 
   it.layer(scenario(examinerHeadOverAiEvent(true)()), { timeout: "30 seconds" })((it) => {
-    it.effect("releases once a disposition binds to that examiner-observed head", () =>
-      Effect.gen(function* () {
-        // The examiner head is the current observation; one human disposition
-        // clears the whole declared lineage.
-        const evaluateFiling16 = yield* evaluateFiling();
-        expectReleased(evaluateFiling16);
-      })
+    it.effect(
+      "releases the whole declared lineage once one human disposition binds to the examiner-observed head",
+      () =>
+        Effect.gen(function* () {
+          const evaluateFiling16 = yield* evaluateFiling();
+          expectReleased(evaluateFiling16);
+        })
     );
   });
 });
