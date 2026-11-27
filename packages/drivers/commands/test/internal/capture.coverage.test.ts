@@ -76,9 +76,12 @@ describe("bounded capture boundary behavior", () => {
       assert.strictEqual(collectBounded8, "");
       const collectBounded9 = yield* collectBounded(Stream.make(new Uint8Array()), 0);
       assert.strictEqual(collectBounded9, "");
-      // Stream.decodeText flushes an incomplete sequence as a replacement character.
       const collectBounded10 = yield* collectBounded(Stream.make(Uint8Array.of(65, 0xe2, 0x82)), 3);
-      assert.strictEqual(collectBounded10, "A�");
+      assert.strictEqual(
+        collectBounded10,
+        "A�",
+        "Stream.decodeText flushes an incomplete sequence as a replacement character"
+      );
     })
   );
 

@@ -141,12 +141,7 @@ export class AlchemyPostgresTables extends S.Opaque<AlchemyPostgresTables, { rea
     });
 }
 
-/**
- * `bigint` columns: PGlite returns numbers, postgres.js returns decimal strings,
- * and `@effect/sql-pg` returns native `bigint`. Values stay within the safe
- * integer range (epoch milliseconds, positions, counters).
- */
-const Int8FromBigInt = S.BigInt.pipe(
+const sqlPgSafeIntFromBigInt = S.BigInt.pipe(
   S.decodeTo(
     S.Int,
     SchemaTransformation.transform({
@@ -155,7 +150,9 @@ const Int8FromBigInt = S.BigInt.pipe(
     })
   )
 );
-const Int8 = S.Union([S.Int, S.NumberFromString.check(S.isInt()), Int8FromBigInt]);
+const pgliteInt8 = S.Int;
+const postgresJsInt8 = S.NumberFromString.check(S.isInt());
+const Int8 = S.Union([pgliteInt8, postgresJsInt8, sqlPgSafeIntFromBigInt]);
 
 /**
  * **Example** (Decode an instance row)
@@ -711,7 +708,6 @@ const ddl = (sql: SqlClient.SqlClient, tables: AlchemyPostgresTables, prefix: st
     claimed_by text,
     at bigint NOT NULL
   )`,
-  // #2825 named the producer column `aggregate`; rename it in place on databases it migrated.
   sql`DO $$ BEGIN
     ALTER TABLE ${sql(tables.delivery)} RENAME COLUMN aggregate TO producer;
   EXCEPTION WHEN undefined_column OR duplicate_column THEN NULL;

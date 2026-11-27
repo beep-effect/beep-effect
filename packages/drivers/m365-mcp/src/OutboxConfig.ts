@@ -149,7 +149,6 @@ const optionalText = (name: string): Effect.Effect<O.Option<string>, OutboxConfi
     })
   );
 
-// An `op://` value means the server was started without `op run`: never authenticate with a reference.
 const requiredText = (name: string): Effect.Effect<string, OutboxConfigError> =>
   optionalText(name).pipe(
     Effect.flatMap(
@@ -169,7 +168,6 @@ const optionalInt = (name: string): Effect.Effect<O.Option<number>, OutboxConfig
     Effect.mapError(() => OutboxConfigError.make({ message: `${name} must be a whole number.` }))
   );
 
-// The XDG base directory with its spec default; a relative value or HOME is ignored (@beep/xdg).
 const stateRoot = (kind: XdgBaseKind): Effect.Effect<string, OutboxConfigError> =>
   XdgBase.dir(kind).pipe(
     Effect.mapError(() => OutboxConfigError.make({ message: `${XdgBase.variable(kind)} could not be read.` })),
@@ -187,8 +185,6 @@ const decodePolicy = S.decodeUnknownEffect(OutboxAttachmentPolicy);
 
 const attachmentPolicy = Effect.fnUntraced(function* () {
   const configuredRoots = yield* optionalText(OUTBOX_ENV.attachmentRoots);
-  // With no roots configured the one sanctioned root is a dedicated staging directory,
-  // never the home directory or a working tree.
   const roots = yield* pipe(
     configuredRoots,
     O.match({
