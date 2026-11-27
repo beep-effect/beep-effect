@@ -30,11 +30,6 @@ import * as Str from "effect/String";
 
 const $I = $MarkdownId.create("FrontmatterResolver");
 
-/**
- * Invalid or conflicting registry configuration.
- *
- * @since 0.0.0
- */
 class SchemaRegistryError extends S.TaggedError<SchemaRegistryError, { readonly brand: unique symbol }>(
   $I`SchemaRegistryError`
 )(
@@ -532,14 +527,10 @@ export interface FrontmatterSchemaResolver<E = never> {
   };
 }
 
-// The committed version grammar: one to three dot-separated non-negative
-// integer segments. Canonical decimal strings preserve exact integer values
-// at every size: "02.1.00" and "2.1.0" carry the same segments, without
-// rounding adjacent large integers. Leading zeros are legal; npm-style
-// prerelease/build/range syntax is not.
 const VersionString = S.String.check(S.isPattern(/^\d+(\.\d+){0,2}$/)).pipe(
   $I.annoteSchema("VersionString", {
-    description: "One to three dot-separated non-negative integer segments, with leading zeros allowed.",
+    description:
+      "One to three dot-separated non-negative integer segments, with leading zeros allowed and no prerelease, build or range syntax; versions compare as canonical decimal strings, so `02.1.00` equals `2.1.0` and large segments never round.",
   })
 );
 const isVersionString = S.is(VersionString);
@@ -549,41 +540,30 @@ const canonicalSegments = (version: string): ReadonlyArray<string> =>
 const isMapping = (value: unknown): value is Record<string, unknown> =>
   P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
-/** A bundle- or file-relative reference: starts `./`, `../` or `/`. */
 const PATH_REFERENCE = /^(?:\.\.?)?\//;
 
-/** A URL reference: contains `://` anywhere. */
 const isUrlReference = Str.includes("://");
 
-/** The canonical registry key for a version: its numeric segments rejoined. */
 const canonicalVersion = (version: string): string => A.join(canonicalSegments(version), ".");
 
-/**
- * Classify a name under the `name[@version]` grammar: split at the last `@`
- * unless that `@` is the leading scope, and validate the version segment.
- */
-const classifyName = (value: string): Result.Result<SchemaDeclaration, SchemaDeclarationInvalidError> =>
-  O.match(
-    O.filter(Str.lastIndexOf("@")(value), (separator) => separator > 0),
-    {
-      // No separator, or only the leading scope @ — the whole string is the
-      // name.
-      onNone: () => Result.succeed(SchemaDeclarationByName.make({ name: value })),
-      onSome: (separator) => {
-        const version = Str.slice(separator + 1)(value);
-        return isVersionString(version)
-          ? Result.succeed(SchemaDeclarationByName.make({ name: Str.slice(0, separator)(value), version }))
-          : Result.fail(
-              SchemaDeclarationInvalidError.make({
-                reason: `version "${version}" is outside the X[.Y[.Z]] integer grammar`,
-                value,
-              })
-            );
-      },
-    }
-  );
+const classifyName = (value: string): Result.Result<SchemaDeclaration, SchemaDeclarationInvalidError> => {
+  const versionSeparatorAfterScope = O.filter(Str.lastIndexOf("@")(value), (separator) => separator > 0);
+  return O.match(versionSeparatorAfterScope, {
+    onNone: () => Result.succeed(SchemaDeclarationByName.make({ name: value })),
+    onSome: (separator) => {
+      const version = Str.slice(separator + 1)(value);
+      return isVersionString(version)
+        ? Result.succeed(SchemaDeclarationByName.make({ name: Str.slice(0, separator)(value), version }))
+        : Result.fail(
+            SchemaDeclarationInvalidError.make({
+              reason: `version "${version}" is outside the X[.Y[.Z]] integer grammar`,
+              value,
+            })
+          );
+    },
+  });
+};
 
-/** Classify a string `$schema` value: URL, then path, then name. */
 const classifyString = (value: string): Result.Result<SchemaDeclaration, SchemaDeclarationInvalidError> => {
   if (value.length === 0) {
     return Result.fail(SchemaDeclarationInvalidError.make({ reason: "the declaration is empty", value }));
@@ -596,13 +576,11 @@ const classifyString = (value: string): Result.Result<SchemaDeclaration, SchemaD
     : classifyName(value);
 };
 
-/** One registered name: its versionless schema and its schemas by canonical version. */
 interface RegistryEntry {
   versionless: O.Option<S.Top>;
   readonly versions: MutableHashMap.MutableHashMap<string, S.Top>;
 }
 
-/** Register one `name[@version]` key, throwing on a malformed or colliding key. */
 const register = (byName: MutableHashMap.MutableHashMap<string, RegistryEntry>, key: string, schema: S.Top): void => {
   const classified = classifyString(key);
   if (Result.isFailure(classified) || !S.is(SchemaDeclarationByName)(classified.success)) {
@@ -618,7 +596,6 @@ const register = (byName: MutableHashMap.MutableHashMap<string, RegistryEntry>, 
   if (declaration.version === undefined) {
     entry.versionless = O.some(schema);
   } else {
-    // Classification already validated the version grammar.
     const canonical = canonicalVersion(declaration.version);
     if (MutableHashMap.has(entry.versions, canonical)) {
       throw SchemaRegistryError.make({
@@ -630,7 +607,6 @@ const register = (byName: MutableHashMap.MutableHashMap<string, RegistryEntry>, 
   MutableHashMap.set(byName, declaration.name, entry);
 };
 
-/** Resolve a named declaration's version against one registry entry, exactly. */
 const resolveVersion = (
   declaration: SchemaDeclarationByName,
   entry: RegistryEntry
@@ -651,7 +627,6 @@ const resolveVersion = (
   );
 };
 
-/** Resolve a (possibly absent) declaration against the built registry. */
 const resolveFrom =
   (byName: MutableHashMap.MutableHashMap<string, RegistryEntry>) =>
   (declaration: SchemaDeclaration | undefined): Effect.Effect<S.Top, FrontmatterResolveError> => {
@@ -803,7 +778,6 @@ export class SchemaResolver {
    * @since 0.0.0
    */
   static fromRegistry(registrations: Readonly<Record<string, S.Top>>): FrontmatterSchemaResolver {
-    // Hash keys keep registration names independent of object prototypes.
     const byName = MutableHashMap.empty<string, RegistryEntry>();
     for (const [key, schema] of R.toEntries(registrations)) {
       register(byName, key, schema);
