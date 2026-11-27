@@ -179,8 +179,6 @@ const clearFormatting = (editor: LexicalEditor): void =>
   editor.update(() => {
     const selection = $getSelection();
     if (!$isRangeSelection(selection)) return;
-    // `extract` splits the boundary text nodes so only the selected range
-    // loses its formatting.
     A.forEach(selection.extract(), (node) => {
       if ($isTextNode(node)) node.setFormat(0).setStyle("");
     });
@@ -194,6 +192,10 @@ const toggleLink = (editor: LexicalEditor): void => {
 };
 
 /** Executable Lexical handlers keyed by resolved command id.
+ *
+ * **Gotchas**
+ *
+ * Clearing formatting uses Lexical selection.extract(), which splits boundary text nodes so only the selected range loses formatting.
  *
  * **Example** (Inspect the bold handler)
  * ```ts import.meta.vitest name="Inspect the bold handler"
@@ -339,6 +341,10 @@ export function ResolvedExtensions({ resolved }: { readonly resolved: ResolvedEd
  * `extension.shortcut-help`; the resolver's `guardedChords` then swallow both
  * disabled capabilities' chords and any replaced defaults.
  *
+ * **Gotchas**
+ *
+ * The structural registration key compares the editor by reference and the mount-immutable resolved profile and platform by value. Re-renders reuse the atom rather than re-registering its keydown handler.
+ *
  * **Example** (Reference keybinding plugin)
  * ```tsx
  * import { KeybindingPlugin } from "@beep/editor/capability/runtime"
@@ -359,10 +365,6 @@ export function KeybindingPlugin({
   useAtomMount(registration);
   return undefined;
 }
-
-// Structural family key: the editor by reference, the mount-immutable resolved
-// profile by value, the platform by value — a re-render reuses the same atom
-// instead of re-registering the keydown handler.
 class KeybindingKey extends Data.Class<{
   readonly editor: LexicalEditor;
   readonly resolved: ResolvedEditorProfile;

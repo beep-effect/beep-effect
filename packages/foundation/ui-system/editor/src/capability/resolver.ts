@@ -414,11 +414,6 @@ const resolvedCommands = (
 
 const sameBinding = (left: Keybinding, right: Keybinding): boolean =>
   Equal.equals(left.platform, right.platform) && Equal.equals(left.chord, right.chord);
-
-// A default chord is guarded when nothing in the resolved registry owns it:
-// every chord of a disabled capability, plus the defaults an override replaced
-// or unbound on an enabled command (otherwise the native Lexical shortcut
-// would still fire underneath the replacement).
 const guardedChordsOf = (
   catalog: CapabilityCatalog,
   enabled: MutableHashSet.MutableHashSet<CapabilityId>,
@@ -476,6 +471,10 @@ const firstResolutionError = (
  * Validation follows the ratified first-failure order: unknown ids, profile kind,
  * dependencies, cycles, conflicts, registration invariants, commands, and chords.
  * Successful registrations and commands always follow catalog declaration order.
+ *
+ * **Gotchas**
+ *
+ * Guarded chords cover disabled capabilities and enabled commands' replaced or unbound defaults whenever no resolved command owns the chord. Otherwise Lexical's native shortcut can still fire beneath the replacement.
  *
  * **Example** (Resolve an empty catalog)
  *

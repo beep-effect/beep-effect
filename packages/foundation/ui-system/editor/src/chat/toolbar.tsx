@@ -237,12 +237,6 @@ interface ToolbarToggleProps {
   readonly onClick: () => void;
   readonly pressed: boolean;
 }
-
-// Toggleable text marks (bold/italic/underline/strikethrough/inline-code). The
-// canonical `Toggle` surfaces an unmistakable pressed state via `data-[pressed]`
-// (accent fill + foreground) in both light and dark themes. We drive `pressed`
-// straight from the selection atom and dispatch on press, so the Lexical command
-// — not the toggle's internal state — remains the source of truth.
 function ToolbarToggle({ pressed, label, onClick, children }: ToolbarToggleProps): JSX.Element {
   return (
     <Toggle size="sm" aria-label={label} title={label} pressed={pressed} onMouseDown={preventBlur} onClick={onClick}>
@@ -257,11 +251,6 @@ interface ToolbarButtonProps {
   readonly label: string;
   readonly onClick: () => void;
 }
-
-// One-shot / block actions (lists, quote, code block). These render the same
-// canonical `Toggle` as the text marks, with `pressed` driven by the active
-// block type, so the active state reads identically across the bar and Base UI
-// reports it through `aria-pressed`.
 function ToolbarButton({ active = false, label, onClick, children }: ToolbarButtonProps): JSX.Element {
   return (
     <ToolbarToggle pressed={active} label={label} onClick={onClick}>

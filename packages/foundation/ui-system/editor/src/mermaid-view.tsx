@@ -70,13 +70,6 @@ export class MermaidRenderError extends S.TaggedError<MermaidRenderError, { read
   })
 ) {}
 
-/**
- * Upper bound on the diagram source Mermaid is asked to lay out.
- *
- * `mermaid.render` parses and lays the graph out synchronously on the main
- * thread. An assistant can emit arbitrarily large content, so oversized source
- * falls back to inert text before Mermaid is imported.
- */
 const maxSourceLength = 20_000;
 
 const oversizedMessage = (length: number): string =>
@@ -664,7 +657,6 @@ const isSafeMermaidSvg = (svg: string, renderId: string): boolean => {
   return true;
 };
 
-/** `index` stays below `value.length`, so the fallback never runs; it only satisfies `Option`. */
 const zeroCodeUnit = constant(0);
 
 const hashString = (value: string): string => {
@@ -732,10 +724,6 @@ class MermaidRenderKey extends Data.Class<{
   readonly renderId: string;
   readonly source: string;
 }> {}
-
-// A structural family key keeps the async atom stable across React re-renders.
-// The family retains the atom weakly, so unmounting still interrupts obsolete
-// work through the registry without retaining every rendered source.
 const mermaidRenderAtom = Atom.family(({ renderId, source }: MermaidRenderKey) =>
   mermaidRuntime.atom(
     renderMermaid(renderId, source).pipe(
@@ -779,6 +767,12 @@ const renderPending = (): JSX.Element => (
  * Renders Mermaid source to SVG and falls back to source text on render
  * failure. Async lifecycle is owned by an interruptible Atom runtime rather
  * than app-authored React state/effect hooks.
+ *
+ * **Gotchas**
+ *
+ * The named source-length limit rejects oversized diagrams before importing Mermaid, whose synchronous parsing and graph layout can block the main thread. Oversized source stays inert text.
+ *
+ * A structural render key keeps the async atom stable across React re-renders. The family retains it weakly, allowing registry unmount interruption without retaining every rendered source.
  *
  * **Example** (Render mermaid diagram)
  *

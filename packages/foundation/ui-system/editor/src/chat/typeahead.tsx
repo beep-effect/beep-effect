@@ -128,10 +128,6 @@ const mentionSourceFailure = (cause: unknown): MentionLookupError =>
     message: "Mentions are unavailable right now.",
     cause,
   });
-
-// Runtime-owned, per-editor lookup. Atom.fn's default latest-write-wins
-// semantics interrupt the preceding request when a newer query arrives, so
-// stale responses cannot cross queries or composers.
 const mentionLookupFn = Atom.family((_editor: LexicalEditor) =>
   composerRuntime
     .fn<{
@@ -512,6 +508,10 @@ interface MentionPluginProps {
  * select the mention is inserted as ephemeral plain text (`@label`), never a
  * persisted node, so the emitted state stays within the v1 schema vocabulary.
  * Tracks its open state in the shared {@link menusOpenAtom}.
+ *
+ * **Gotchas**
+ *
+ * Each editor owns its lookup atom. Atom.fn's latest-write-wins semantics interrupt the preceding request when a newer query arrives, preventing stale responses across queries or composers.
  *
  * **Example** (MentionPlugin with query source)
  *

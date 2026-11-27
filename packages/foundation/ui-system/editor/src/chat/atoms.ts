@@ -368,10 +368,6 @@ export const onAttachAtom = Atom.family((_editor: LexicalEditor) => Atom.make<At
 interface AttachmentLifecycle {
   readonly controller: AbortController;
 }
-
-// Private mount provenance for the attachment surface. Every Lexical root
-// mount gets a fresh controller; pending capture fibers retain that exact
-// controller so an older mount can never mutate a later one.
 const attachmentLifecycleAtom = Atom.family((_editor: LexicalEditor) =>
   Atom.make<O.Option<AttachmentLifecycle>>(O.none())
 );
@@ -430,6 +426,8 @@ export const composerRuntime = Atom.runtime(Layer.empty);
  * Captures are independent concurrent batches. Latest-write-wins would interrupt an older notification after append and prevent rejection rollback.
  *
  * The sweep aborts the exact mount controller before revoking its URLs. A late rejection must neither read a disposed registry, revoke twice, nor update a later composer mount.
+ *
+ * Every Lexical root mount receives a fresh attachment controller. Pending capture fibers retain that exact controller so an older mount cannot mutate a later one.
  *
  * **Example** (Capturing attachment files)
  *

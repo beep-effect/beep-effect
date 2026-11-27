@@ -42,7 +42,6 @@ interface SerializedNodeLike {
   readonly type?: string | undefined;
 }
 
-/** The source a code block holds, the way Lexical's own `getTextContent` reads it. */
 const nodeSource = (node: SerializedNodeLike): string => {
   if (node.type === "linebreak") return "\n";
   if (node.type === "tab") return "\t";
@@ -202,6 +201,8 @@ function EditorReadOnlyFallback({
  * Lexical reads initialConfig.editorState only during construction. Key the composer by the exact encoded state to remount only when content changes, without a reconciliation effect or another serialization.
  *
  * The contenteditable's direct parent stays non-flex even inside arbitrary flex message layouts, avoiding Lexical's Chrome focus warning.
+ *
+ * Code-block source extraction follows Lexical getTextContent semantics, including tab and linebreak nodes.
  *
  * **Example** (Read-only preview component)
  *

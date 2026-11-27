@@ -207,17 +207,8 @@ function ComposerFooter({
 }: FooterProps): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const count = useCharacterCount();
-  // A refused send must never be invisible: the composer used to go quietly dead
-  // when the editor state failed to decode.
   const sendBlocked = useAtomValue(sendBlockedAtom(editor));
-  // The picked files flow into the per-editor capture runtime mutation (which
-  // notifies the upload-port and appends captured attachments); the footer holds
-  // no capture logic of its own.
   const capture = useAtomSet(captureAttachmentsFn);
-  // The hidden <input type="file"> ref is a real DOM element ref, not state:
-  // opening the native file dialog requires a real <input> element + `.click()`,
-  // which cannot be driven from an atom. The file-capture logic lives in the
-  // runtime; only the DOM handle stays in React (the one permitted useRef).
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -293,8 +284,6 @@ function ComposerFooter({
 }
 
 interface ComposerSurfaceProps {
-  // Resolved by `ChatComposer` (defaulted), so the inner surfaces take a name
-  // rather than re-deriving the fallback.
   readonly ariaLabel: string;
   readonly features: ComposerFeatures;
   readonly onStop?: () => void;
@@ -303,10 +292,6 @@ interface ComposerSurfaceProps {
   readonly sendLabel: string;
   readonly streaming: boolean;
 }
-
-// The visible composer surface: optional toolbar, attachment chips, the editable
-// region, and the footer. Split from ComposerBody so the JSX nesting + toolbar
-// gate live here and ComposerBody stays a thin assembler.
 function ComposerSurface({
   ariaLabel,
   features,
@@ -324,22 +309,10 @@ function ComposerSurface({
       {features.toolbar ? <FixedToolbarPlugin /> : null}
       <AttachmentChips attachments={attachments} onRemove={(id) => remove({ editor, id })} />
       <AttachmentFailureNotice />
-      {/* min-h-0 flex column: when a height-capped consumer squeezes the
-          composer, the editable (overflow-auto, so its flex minimum is zero)
-          is the region that shrinks and scrolls — never the toolbar or the
-          footer, which keep their content height. */}
+
       <div className="relative flex min-h-0 flex-col">
         <RichTextPlugin
-          contentEditable={
-            <ContentEditable
-              // The typeahead plugins promote this root to `role="combobox"`;
-              // a combobox named only by `aria-placeholder` has no accessible
-              // name, so assistive tech announces an unlabeled control.
-              ariaLabel={ariaLabel}
-              variant="compact"
-              placeholder={placeholder}
-            />
-          }
+          contentEditable={<ContentEditable ariaLabel={ariaLabel} variant="compact" placeholder={placeholder} />}
           ErrorBoundary={LexicalErrorBoundary}
         />
       </div>
@@ -382,19 +355,12 @@ function useComposerRuntimeBindings(
   onSend: SendPort | undefined,
   onAttach: AttachmentPort | undefined
 ): void {
-  // Seed the per-editor config the Lexical bindings + capture runtime read at
-  // fire time. The composer remounts by `key` on thread/edit-target changes,
-  // so these values are stable for the lifetime of each mount.
   useAtomInitialValues([
     [featuresAtom(editor), features],
     [onSendAtom(editor), { run: onSend ?? unboundSend }],
     [onAttachAtom(editor), onAttach ?? unboundAttach],
     [maxAttachmentBytesAtom(editor), maxAttachmentBytes],
   ]);
-
-  // The registry may sweep nodes that have no listeners or dependents after
-  // its idle TTL. These config atoms are read only at fire time, so explicitly
-  // mount them for as long as the composer is alive.
   useAtomMount(featuresAtom(editor));
   useAtomMount(onSendAtom(editor));
   useAtomMount(onAttachAtom(editor));
@@ -495,12 +461,6 @@ function SerializedChangePlugin({ onSerializedChange }: SerializedChangePluginPr
     ),
   });
 }
-
-// The feature-gated plugins, split out of ComposerBody so the conditional
-// mounting lives in one place (and ComposerBody stays simple): the change sink,
-// slash / mention typeahead, attachment capture, combobox ARIA, and the send
-// command binding. Always-on plugins (history, lists, links, markdown, send key)
-// stay in ComposerBody.
 function ComposerFeaturePlugins({
   editor,
   features,
@@ -519,16 +479,10 @@ function ComposerFeaturePlugins({
     </>
   );
 }
-
-// Mounts the per-editor SEND_MESSAGE_COMMAND handler that clears the editor in
-// place when the consumer's onSend reports a dispatch.
 function SendCommandBinding({ editor }: { readonly editor: LexicalEditor }): null {
   useAtomMount(sendCommandBindingAtom(editor));
   return null;
 }
-
-// Tracks the Lexical root lifetime so async attachment work cannot escape its
-// composer mount.
 function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
   useAtomMount(attachmentSweepBindingAtom(editor));
   return null;
@@ -541,6 +495,16 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
  *
  * This component is the declarative assembly boundary for plugins and optional consumer ports.
  * Keep prop forwarding here so the mount-time inputs to the atom-backed body remain explicit.
+ *
+ * **Gotchas**
+ *
+ * Only the editable region shrinks and scrolls under a height cap. Preserve its min-h-0 flex column and overflow scrolling while the toolbar and footer retain their content height.
+ *
+ * Typeahead promotes the editable root to a combobox. aria-placeholder does not give a combobox an accessible name; forward ariaLabel to the editable surface.
+ *
+ * Keep the fire-time configuration atoms mounted for the composer lifetime: without listeners or dependents the registry can sweep them after its idle TTL.
+ *
+ * The hidden file input needs a real DOM ref to open the native picker with click(). React retains only that handle; attachment capture belongs to the per-editor runtime.
  *
  * **Example** (Composer with onSend config)
  *
