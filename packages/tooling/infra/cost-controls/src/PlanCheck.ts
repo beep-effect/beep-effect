@@ -393,10 +393,14 @@ const emptyParse: ParseState = { entries: [], unreadable: [], latestReadable: tr
  * entry, so they never land on the readable resource before it. Lines that are not resource
  * lines (the summary, `Done:` and other log output) never match.
  *
- * A change line contributes its property name, never its value: the text
- * before the first colon, minus any YAML list marker, kept only when it is
- * identifier-shaped. A bare scalar (an array element such as an address) is
- * reported as `(value)`, so no declared value reaches the job log.
+ * A change line contributes its property name: the text before the first
+ * colon, minus any YAML list marker, kept only when it is identifier-shaped,
+ * and `(value)` otherwise, so an address never reaches the job log.
+ *
+ * **Gotchas**
+ *
+ * A bare list scalar that is itself identifier-shaped (`- token123`) cannot be
+ * told apart from a property name, so it is reported by that text.
  *
  * **Example** (Parse one adopted resource)
  *
