@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active` (closing; the closeout PR sets `completed-retained`)
+Lifecycle: `completed-retained` (final PR #3617)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -4,13 +4,13 @@
     "id": "certainty-scorecard",
     "packetId": "goal-packet/v1:886cba4664eb501ccd0489d0e253b4b240da9d29f2a9dd58aecb7cc5c30d9563",
     "title": "Certainty Scorecard",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-09",
     "updated": "2026-11-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/certainty-scorecard",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Report the ten-minute target nightly per PR head SHA (p95 push to every required context green on code heads, red, held and api-partial heads counted as misses) beside runner-minutes per run, time to Yeet-mergeable and the main verdict rate, and make local publish and verify economics attributable across retired lanes, T3 lanes and fleet hosts, so every sibling goal reads its acceptance numbers from one instrument.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3617,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -69,12 +75,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -89,11 +95,15 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Closing (slice 17, the closeout PR). Every implementation slice has merged: 1 (#3118, fixes #3121 #3144 #3168 #3181), 2 (#3141), 3 (#3176), 4 (#3266, first run #3270), 5 (#3227), 5b (#3344), 6 (#3228), 7 (#3263), 8 (#3273), 9 (#3349), 10 (#3262), 10b (#3342), 11 (#3257), 11b (#3369), 12 (#3372), 13 (#3367), 14 (#3274), 15 (#3347), 16 (#3351) and 18 (#3609, the sibling-goal rows and the 7-day main horizon); #3305 moved per-attempt job reads to 30-job pages. P2 is met: seven certified nightly reports, UTC days 2026-11-14 to 2026-11-20 (#3605). The closeout ticks the remaining acceptance criteria against the evidence in history/closeout-evidence-2026-11-27.md and the 2026-11-27 nightly, the first scored by #3609's code. route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal.",
+  "statusNote": "Completed-retained; final PR #3617 (slice 17, the closeout). Every implementation slice has merged: 1 (#3118, fixes #3121 #3144 #3168 #3181), 2 (#3141), 3 (#3176), 4 (#3266, first run #3270), 5 (#3227), 5b (#3344), 6 (#3228), 7 (#3263), 8 (#3273), 9 (#3349), 10 (#3262), 10b (#3342), 11 (#3257), 11b (#3369), 12 (#3372), 13 (#3367), 14 (#3274), 15 (#3347), 16 (#3351) and 18 (#3609, the sibling-goal rows and the 7-day main horizon); #3305 moved per-attempt job reads to 30-job pages. P2 is met: seven certified nightly reports, UTC days 2026-11-14 to 2026-11-20 (#3605). The closeout ticks the remaining acceptance criteria against the evidence in history/closeout-evidence-2026-11-27.md and the 2026-11-27 nightly, the first scored by #3609's code. route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal.",
   "opsScripts": [
     {
       "path": "ops/admission-stamp-overhead.ts",
       "purpose": "SCHE-09 slice 2 overhead micro-measurement: admit 100 full-proof requests one after another over a 600-row journal and report promotion and release p50 and p95 with the pressure gate off or on; runs on origin/main's code too, gate off."
     }
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3617
+  }
 }
