@@ -15,6 +15,8 @@ import {
   Locator,
   LocatorFromUrl,
   MappedItem,
+  PostLocator,
+  CollectionLocator,
   RedGifsMapper,
   RedGifsTarget,
   XMapper,
@@ -29,6 +31,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -123,7 +126,9 @@ describe("LocatorFromUrl", () => {
   });
 });
 
-const video = Locator.cases.youtube.make({ target: YouTubeTarget.cases.post.make({ id: "dQw4w9WgXcQ" }) });
+const video = PostLocator.make(
+  Locator.cases.youtube.make({ target: YouTubeTarget.cases.post.make({ id: "dQw4w9WgXcQ" }) })
+);
 
 describe("landing", () => {
   it("resolves a post to its owner's listing only when the URL names the owner", () => {
@@ -147,7 +152,7 @@ it.layer(
     Layer.succeed(YouTubeMapper, {
       items: YouTubeTarget.match({
         collection: () => Stream.make(MappedItem.make({ source: video, videos: 1 })),
-        post: (target) => Stream.make(MappedItem.make({ source: Locator.cases.youtube.make({ target }), videos: 1 })),
+        post: (target) => Stream.make(MappedItem.make({ source: PostLocator.make(Locator.cases.youtube.make({ target })), videos: 1 })),
       }),
     }),
     Layer.succeed(RedGifsMapper, {
@@ -189,4 +194,30 @@ it.layer(
       expect(failure.input).toBe("https://example.org/jack");
     })
   );
+});
+
+describe("PostLocator and CollectionLocator", () => {
+  const read = S.decodeUnknownOption(LocatorFromUrl);
+  const kinds = (url: string) =>
+    O.map(read(url), (locator) => [S.is(PostLocator)(locator), S.is(CollectionLocator)(locator)]);
+
+  it("read the platform-first union by the kind of target instead", () => {
+    expect(kinds("https://x.com/jack/status/20")).toEqual(O.some([true, false]));
+    expect(kinds("https://x.com/jack/media")).toEqual(O.some([false, true]));
+    expect(kinds("https://www.instagram.com/stories/example")).toEqual(O.some([false, false]));
+  });
+
+  it("give a narrowed locator its site's post fields once the platform is known", () => {
+    const id = pipe(
+      read("https://www.youtube.com/shorts/dQw4w9WgXcQ"),
+      O.flatMap(PostLocator.makeOption),
+      O.map((post) => (post.platform === "youtube" ? post.target.id : post.platform))
+    );
+    expect(id).toEqual(O.some("dQw4w9WgXcQ"));
+  });
+
+  it("type the landing of any locator as a collection", () => {
+    const home = O.flatMap(read("https://x.com/jack/status/20"), landing);
+    expect(O.map(home, ({ target }) => target.kind)).toEqual(O.some("collection"));
+  });
 });

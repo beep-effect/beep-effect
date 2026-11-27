@@ -10,7 +10,7 @@ import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as UrlParams from "effect/http/UrlParams";
@@ -2327,6 +2327,159 @@ export declare namespace LocatorFromUrl {
   export type Encoded = WebUrl.Encoded;
 }
 
+type Denoting<Site, Kind extends string> = Site extends { readonly target: infer Target }
+  ? [Extract<Target, { readonly kind: Kind }>] extends [never]
+    ? never
+    : Site & { readonly target: Extract<Target, { readonly kind: Kind }> }
+  : never;
+
+/**
+ * A locator that denotes one post, on any site that has post URLs.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PostLocator = Denoting<Locator, "post">;
+
+/**
+ * A locator that denotes an account's own listing of posts.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CollectionLocator = Denoting<Locator, "collection">;
+
+const denotesPost = (locator: Locator): locator is PostLocator => locator.target.kind === "post";
+const denotesCollection = (locator: Locator): locator is CollectionLocator => locator.target.kind === "collection";
+
+const postOnly = $I.annote("DenotesPost", {
+  title: "Denotes a post",
+  description: "The locator names a single post, never a listing of them.",
+  message: "Expected the URL of a single post.",
+});
+
+const collectionOnly = $I.annote("DenotesCollection", {
+  title: "Denotes a collection",
+  description: "The locator names an account's listing, never a single post.",
+  message: "Expected the URL of an account, not of a single post.",
+});
+
+/**
+ * **Details**
+ *
+ * `Locator` discriminates the platform first and the kind of target second,
+ * because that is the order a site service is chosen in. This is the same
+ * union read in the other order: every member whose target is a post. It is
+ * a refinement of `Locator`, so its values are locators and print as URLs
+ * without conversion.
+ *
+ * **Example** (Narrow a locator to a post)
+ *
+ * ```ts import.meta.vitest name="Narrow a locator to a post"
+ * import { Locator, PostLocator, XTarget } from "@beep/scratchpad/int/locator"
+ * import * as O from "effect/Option"
+ *
+ * const status = Locator.cases.x.make({ target: XTarget.cases.post.make({ handle: "jack", id: "20" }) })
+ * const timeline = Locator.cases.x.make({ target: XTarget.cases.collection.make({ handle: "jack", tab: "media" }) })
+ * O.isSome(PostLocator.makeOption(status)) // => true
+ * O.isSome(PostLocator.makeOption(timeline)) // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PostLocator = Locator.pipe(
+  S.refine(denotesPost, postOnly),
+  $I.annoteSchema("PostLocator", { description: "A locator whose target is one post." })
+);
+
+/**
+ * **Example** (Narrow a locator to an account listing)
+ *
+ * ```ts import.meta.vitest name="Narrow a locator to an account listing"
+ * import { CollectionLocator, Locator, XTarget } from "@beep/scratchpad/int/locator"
+ * import * as O from "effect/Option"
+ *
+ * const timeline = Locator.cases.x.make({ target: XTarget.cases.collection.make({ handle: "jack", tab: "media" }) })
+ * O.isSome(CollectionLocator.makeOption(timeline)) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CollectionLocator = Locator.pipe(
+  S.refine(denotesCollection, collectionOnly),
+  $I.annoteSchema("CollectionLocator", { description: "A locator whose target is an account's listing of posts." })
+);
+
+/**
+ * **Example** (Refuse a listing where a post is required)
+ *
+ * ```ts import.meta.vitest name="Refuse a listing where a post is required"
+ * import { PostLocatorFromUrl } from "@beep/scratchpad/int/locator"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const read = S.decodeUnknownOption(PostLocatorFromUrl)
+ * O.isSome(read("https://x.com/jack/status/20")) // => true
+ * O.isSome(read("https://x.com/jack")) // => false
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const PostLocatorFromUrl = LocatorFromUrl.pipe(
+  S.refine(denotesPost, postOnly),
+  $I.annoteSchema("PostLocatorFromUrl", { description: "Reads and prints a post locator as its canonical URL." })
+);
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PostLocatorFromUrl {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = WebUrl.Encoded;
+}
+
+/**
+ * **Example** (Refuse a post where an account is required)
+ *
+ * ```ts import.meta.vitest name="Refuse a post where an account is required"
+ * import { CollectionLocatorFromUrl } from "@beep/scratchpad/int/locator"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const read = S.decodeUnknownOption(CollectionLocatorFromUrl)
+ * O.isSome(read("https://x.com/jack")) // => true
+ * O.isSome(read("https://x.com/jack/status/20")) // => false
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const CollectionLocatorFromUrl = LocatorFromUrl.pipe(
+  S.refine(denotesCollection, collectionOnly),
+  $I.annoteSchema("CollectionLocatorFromUrl", {
+    description: "Reads and prints a collection locator as its canonical URL.",
+  })
+);
+
+/**
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CollectionLocatorFromUrl {
+  /**
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = WebUrl.Encoded;
+}
+
 /**
  * **Example** (Report a link from an unsupported site)
  *
@@ -2416,7 +2569,8 @@ export const locate = Effect.fn("Locator.locate")(function* (input: string) {
  * @category getters
  * @since 0.0.0
  */
-export const landing: (locator: Locator) => O.Option<Locator> = Locator.match({
+export const landing: (locator: Locator) => O.Option<CollectionLocator> = flow(
+  Locator.match({
   x: ({ target }) => Locator.cases.x.makeOption({ target: XCollection.make({ handle: target.handle, tab: "tweets" }) }),
   youtube: ({ target }) =>
     pipe(
@@ -2458,7 +2612,9 @@ export const landing: (locator: Locator) => O.Option<Locator> = Locator.match({
       )
     ),
   dzen: (locator) => O.some(locator),
-});
+  }),
+  O.filter(denotesCollection)
+);
 
 const MediaCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("MediaCount", { description: "Number of media files of one format in a post." })
@@ -2478,12 +2634,14 @@ declare namespace MediaCount {
  * **Example** (Record a mapped video)
  *
  * ```ts import.meta.vitest name="Record a mapped video"
- * import { Locator, MappedItem, YouTubeTarget } from "@beep/scratchpad/int/locator"
+ * import { Locator, MappedItem, PostLocator, YouTubeTarget } from "@beep/scratchpad/int/locator"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const item = MappedItem.make({
- *   source: Locator.cases.youtube.make({ target: YouTubeTarget.cases.post.make({ id: "dQw4w9WgXcQ" }) }),
+ *   source: PostLocator.make(
+ *     Locator.cases.youtube.make({ target: YouTubeTarget.cases.post.make({ id: "dQw4w9WgXcQ" }) })
+ *   ),
  *   videos: 1,
  * })
  * const stored = O.map(S.encodeOption(MappedItem)(item), ({ source }) => source)
@@ -2495,7 +2653,7 @@ declare namespace MediaCount {
  */
 export class MappedItem extends S.Opaque<MappedItem, { readonly brand: unique symbol }>()(
   S.Struct({
-    source: LocatorFromUrl,
+    source: PostLocatorFromUrl,
     images: MediaCount.pipe(
       S.withDecodingDefaultTypeKey(Effect.succeed(0)),
       S.withConstructorDefault(Effect.succeed(0))
@@ -2522,7 +2680,7 @@ export declare namespace MappedItem {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly source: LocatorFromUrl.Encoded;
+    readonly source: PostLocatorFromUrl.Encoded;
     readonly images?: MediaCount.Encoded;
     readonly videos?: MediaCount.Encoded;
     readonly publishedAt?: number;
@@ -3031,6 +3189,7 @@ export class DzenMapper extends Context.Service<DzenMapper, SiteMapper<DzenTarge
  *   MappedItem,
  *   OnlyFansMapper,
  *   PinterestMapper,
+ *   PostLocator,
  *   RedditMapper,
  *   RedGifsMapper,
  *   RedGifsTarget,
@@ -3046,7 +3205,9 @@ export class DzenMapper extends Context.Service<DzenMapper, SiteMapper<DzenTarge
  * import * as Layer from "effect/Layer"
  * import * as Stream from "effect/Stream"
  *
- * const clip = Locator.cases.redgifs.make({ target: RedGifsTarget.cases.post.make({ id: "calmclip" }) })
+ * const clip = PostLocator.make(
+ *   Locator.cases.redgifs.make({ target: RedGifsTarget.cases.post.make({ id: "calmclip" }) })
+ * )
  * const none = { items: () => Stream.empty }
  * const mappers = Layer.mergeAll(
  *   Layer.succeed(RedGifsMapper, { items: () => Stream.make(MappedItem.make({ source: clip, videos: 1 })) }),
