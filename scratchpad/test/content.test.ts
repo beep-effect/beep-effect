@@ -30,14 +30,6 @@ import {
   RichText,
   RichTextFromString,
   TextEntity,
-  elsewhere,
-  hashtags,
-  largest,
-  linked,
-  mentions,
-  outbound,
-  summary,
-  tagged,
 } from "@beep/scratchpad/int/content";
 import { AuthRequired, CollectionLocator, Locator, LocatorFromUrl, type Platform, PostLocator, XTarget, locate } from "@beep/scratchpad/int/locator";
 import { describe, expect, it } from "@effect/vitest";
@@ -93,12 +85,12 @@ const carousel = {
 describe("Post", () => {
   it("keeps one caption for the post and separate tags for each gallery item", () => {
     const read = readPost(carousel);
-    expect(O.map(read, (post) => hashtags(post.body))).toEqual(O.some(["sunset"]));
+    expect(O.map(read, (post) => RichText.hashtags(post.body))).toEqual(O.some(["sunset"]));
     expect(O.map(read, (post) => A.map(post.media, ({ tags }) => A.length(tags)))).toEqual(O.some([1, 1]));
-    expect(O.map(read, (post) => A.map(tagged(post), handleOf))).toEqual(
+    expect(O.map(read, (post) => A.map(Post.tagged(post), handleOf))).toEqual(
       O.some([O.some("friend"), O.some("other")])
     );
-    expect(O.map(read, (post) => A.map(mentions(post.body), handleOf))).toEqual(
+    expect(O.map(read, (post) => A.map(RichText.mentions(post.body), handleOf))).toEqual(
       O.some([O.some("friend")])
     );
   });
@@ -109,7 +101,7 @@ describe("Post", () => {
   });
 
   it("derives links to other posts from the caption's link entities", () => {
-    const targets = O.map(readPost(carousel), (post) => A.map(linked(post.body), ({ platform }) => platform));
+    const targets = O.map(readPost(carousel), (post) => A.map(RichText.linked(post.body), ({ platform }) => platform));
     expect(targets).toEqual(O.some(["x"]));
   });
 
@@ -122,7 +114,7 @@ describe("Post", () => {
   });
 
   it("reduces to the traversal row of the locator module", () => {
-    const row = O.map(readPost(carousel), summary);
+    const row = O.map(readPost(carousel), Post.summary);
     expect(O.map(row, ({ images, videos }) => [images, videos])).toEqual(O.some([1, 1]));
   });
 
@@ -191,7 +183,7 @@ describe("Profile", () => {
   };
 
   it("picks the largest profile picture a site offers", () => {
-    const label = O.flatMap(readProfile(profile), ({ avatar }) => O.flatMap(avatar, (picture) => largest(picture).label));
+    const label = O.flatMap(readProfile(profile), ({ avatar }) => O.flatMap(avatar, (picture) => Picture.largest(picture).label));
     expect(label).toEqual(O.some("_400x400"));
   });
 
@@ -215,7 +207,7 @@ describe("Profile", () => {
 describe("RichText", () => {
   it("holds entities whether or not the site said where they sit", () => {
     const unplaced = readText({ text: "thanks", entities: [{ kind: "mention", account: { by: "id", id: "7" } }] });
-    expect(O.map(unplaced, (text) => A.length(mentions(text)))).toEqual(O.some(1));
+    expect(O.map(unplaced, (text) => A.length(RichText.mentions(text)))).toEqual(O.some(1));
     expect(O.isSome(Account.cases.id.makeOption({ id: "7" }))).toBe(true);
   });
 });
@@ -338,9 +330,9 @@ describe("a biography", () => {
 
   it("answers the same questions as a caption", () => {
     const bio = read("#bitcoin and #nostr with @jack, see https://x.com/jack/status/20");
-    expect(O.map(bio, hashtags)).toStrictEqual(O.some(["bitcoin", "nostr"]));
-    expect(O.map(bio, (text) => A.map(mentions(text), handleOf))).toStrictEqual(O.some([O.some("jack")]));
-    expect(O.map(bio, (text) => A.map(linked(text), ({ platform }) => platform))).toStrictEqual(O.some(["x"]));
+    expect(O.map(bio, RichText.hashtags)).toStrictEqual(O.some(["bitcoin", "nostr"]));
+    expect(O.map(bio, (text) => A.map(RichText.mentions(text), handleOf))).toStrictEqual(O.some([O.some("jack")]));
+    expect(O.map(bio, (text) => A.map(RichText.linked(text), ({ platform }) => platform))).toStrictEqual(O.some(["x"]));
   });
 });
 
@@ -366,7 +358,7 @@ describe("the links of a profile", () => {
   const printed = S.encodeOption(LocatorFromUrl);
 
   it("lists link slots before biography links and each URL once", () => {
-    expect(O.map(decoded, (p) => A.map(outbound(p), ({ hostname }) => hostname))).toStrictEqual(
+    expect(O.map(decoded, (p) => A.map(Profile.outbound(p), ({ hostname }) => hostname))).toStrictEqual(
       O.some(["shop.example", "twitter.com", "www.threads.net", "linktr.ee", "www.snapchat.com", "instagram.com"])
     );
   });
@@ -381,13 +373,13 @@ describe("the links of a profile", () => {
         { url: "https://twitter.com/example/media" },
       ],
     });
-    expect(O.map(mixed, (p) => A.flatMap(elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
+    expect(O.map(mixed, (p) => A.flatMap(Profile.elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
       O.some(["https://x.com/example"])
     );
   });
 
   it("names the accounts those links lead to, without the profile itself", () => {
-    expect(O.map(decoded, (p) => A.flatMap(elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
+    expect(O.map(decoded, (p) => A.flatMap(Profile.elsewhere(p), (locator) => A.fromOption(printed(locator))))).toStrictEqual(
       O.some(["https://x.com/example", "https://www.threads.com/@example", "https://www.snapchat.com/@example"])
     );
   });

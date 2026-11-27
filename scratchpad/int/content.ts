@@ -315,7 +315,7 @@ export declare namespace TextEntity {
  * **Example** (Read a caption with a mention)
  *
  * ```ts import.meta.vitest name="Read a caption with a mention"
- * import { RichText, mentions } from "@beep/scratchpad/int/content"
+ * import { RichText } from "@beep/scratchpad/int/content"
  * import * as A from "effect/Array"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -324,7 +324,7 @@ export declare namespace TextEntity {
  *   text: "with @jack",
  *   entities: [{ kind: "mention", account: { by: "handle", handle: "jack" }, span: { start: 5, end: 10 } }],
  * })
- * O.map(caption, (text) => A.length(mentions(text))) // => O.some(1)
+ * O.map(caption, (text) => A.length(RichText.mentions(text))) // => O.some(1)
  * ```
  *
  * @category models
@@ -356,6 +356,80 @@ export class RichText extends S.Opaque<RichText, {
     )
     .pipe($I.annoteSchema("RichText", { description: "A caption, description or biography and what it refers to." }))
 ) {
+  /**
+   * Accounts a text mentions, in the order the site listed them.
+   *
+   * **Example** (List the accounts a caption mentions)
+   *
+   * ```ts import.meta.vitest name="List the accounts a caption mentions"
+   * import { Account, RichText, TextEntity, handleOf } from "@beep/scratchpad/int/content"
+   * import * as A from "effect/Array"
+   * import * as O from "effect/Option"
+   *
+   * const jack = Account.cases.handle.make({ handle: "jack" })
+   * const text = RichText.make({ text: "with @jack", entities: [TextEntity.cases.mention.make({ account: jack })] })
+   * A.map(RichText.mentions(text), handleOf) // => [O.some("jack")]
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly mentions = (text: RichText): ReadonlyArray<Account> =>
+    A.map(A.filter(text.entities, TextEntity.guards.mention), ({ account }) => account)
+
+  /**
+   * Hashtags a text carries, without their leading #.
+   *
+   * **Example** (List the hashtags of a caption)
+   *
+   * ```ts import.meta.vitest name="List the hashtags of a caption"
+   * import { RichText, TextEntity } from "@beep/scratchpad/int/content"
+   *
+   * const text = RichText.make({ text: "#sunset", entities: [TextEntity.cases.hashtag.make({ tag: "sunset" })] })
+   * RichText.hashtags(text) // => ["sunset"]
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly hashtags = (text: RichText): ReadonlyArray<string> =>
+    A.map(A.filter(text.entities, TextEntity.guards.hashtag), ({ tag }) => tag)
+
+  /**
+   * Posts and accounts of supported sites that a text links to.
+   *
+   * **Details**
+   *
+   * A link to other material stays a plain link entity. Whether it names a
+   * post is derived by decoding its URL, so the text never stores the same fact
+   * twice.
+   *
+   * **Example** (Find a linked status in a caption)
+   *
+   * ```ts import.meta.vitest name="Find a linked status in a caption"
+   * import { RichText } from "@beep/scratchpad/int/content"
+   * import * as A from "effect/Array"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   *
+   * const text = S.decodeUnknownOption(RichText)({
+   *   text: "see the original",
+   *   entities: [
+   *     { kind: "link", url: "https://twitter.com/jack/status/20?s=20" },
+   *     { kind: "link", url: "https://example.org/essay" },
+   *   ],
+   * })
+   * O.map(text, (t) => A.map(RichText.linked(t), ({ platform }) => platform)) // => O.some(["x"])
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly linked = (text: RichText): ReadonlyArray<Locator> =>
+    pipe(
+      A.filter(text.entities, TextEntity.guards.link),
+      A.flatMap(({ url }) => A.fromOption(locatorOf(url.href)))
+    )
 }
 
 /**
@@ -453,12 +527,12 @@ const markOf = (match: RegExpMatchArray): O.Option<TextEntity.Encoded> =>
  * **Example** (Find what a bare biography refers to)
  *
  * ```ts import.meta.vitest name="Find what a bare biography refers to"
- * import { RichTextFromString, hashtags } from "@beep/scratchpad/int/content"
+ * import { RichTextFromString, RichText } from "@beep/scratchpad/int/content"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const bio = S.decodeUnknownOption(RichTextFromString)("#vanlife with @jack, more at linktr.ee/jack")
- * O.map(bio, hashtags) // => O.some(["vanlife"])
+ * O.map(bio, RichText.hashtags) // => O.some(["vanlife"])
  * ```
  *
  * @category codecs
@@ -651,7 +725,7 @@ export declare namespace Rendition {
  * **Example** (Pick the largest profile picture)
  *
  * ```ts import.meta.vitest name="Pick the largest profile picture"
- * import { Picture, largest } from "@beep/scratchpad/int/content"
+ * import { Picture } from "@beep/scratchpad/int/content"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -661,7 +735,7 @@ export declare namespace Rendition {
  *     { url: "https://cdn.example/a_400x400.jpg", width: 400 },
  *   ],
  * })
- * O.map(avatar, (picture) => largest(picture).url.href) // => O.some("https://cdn.example/a_400x400.jpg")
+ * O.map(avatar, (picture) => Picture.largest(picture).url.href) // => O.some("https://cdn.example/a_400x400.jpg")
  * ```
  *
  * @category models
@@ -676,6 +750,31 @@ export class Picture extends S.Opaque<Picture, {
     })
   )
 ) {
+  /**
+   * The rendition with the greatest reported width.
+   *
+   * **Gotchas**
+   *
+   * A rendition without a width ranks below every measured one, so a site that
+   * only labels its sizes yields the first rendition it listed.
+   *
+   * **Example** (Choose among measured sizes)
+   *
+   * ```ts import.meta.vitest name="Choose among measured sizes"
+   * import { Picture } from "@beep/scratchpad/int/content"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   *
+   * const picture = S.decodeUnknownOption(Picture)({
+   *   renditions: [{ url: "https://cdn.example/s.jpg", width: 150 }, { url: "https://cdn.example/l.jpg", width: 320 }],
+   * })
+   * O.flatMap(picture, (p) => Picture.largest(p).width) // => O.some(320)
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly largest = (picture: Picture): Rendition => A.max(picture.renditions, widest)
 }
 
 /**
@@ -693,32 +792,6 @@ export declare namespace Picture {
 }
 
 const widest = Order.mapInput(Order.Number, ({ width }: Rendition) => O.getOrElse(width, () => 0))
-
-/**
- * The rendition with the greatest reported width.
- *
- * **Gotchas**
- *
- * A rendition without a width ranks below every measured one, so a site that
- * only labels its sizes yields the first rendition it listed.
- *
- * **Example** (Choose among measured sizes)
- *
- * ```ts import.meta.vitest name="Choose among measured sizes"
- * import { Picture, largest } from "@beep/scratchpad/int/content"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const picture = S.decodeUnknownOption(Picture)({
- *   renditions: [{ url: "https://cdn.example/s.jpg", width: 150 }, { url: "https://cdn.example/l.jpg", width: 320 }],
- * })
- * O.flatMap(picture, (p) => largest(p).width) // => O.some(320)
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const largest = (picture: Picture): Rendition => A.max(picture.renditions, widest)
 
 const Unit = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(
   $I.annoteSchema("Unit", { description: "Fraction of a width or height, from 0 at the left or top edge to 1." })
@@ -1561,7 +1634,7 @@ const instant = (description: string) => absent(S.DateTimeUtcFromMillis, descrip
  * **Example** (Read a two-item gallery with a tag on the second item)
  *
  * ```ts import.meta.vitest name="Read a two-item gallery with a tag on the second item"
- * import { Post, tagged } from "@beep/scratchpad/int/content"
+ * import { Post } from "@beep/scratchpad/int/content"
  * import * as A from "effect/Array"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -1575,7 +1648,7 @@ const instant = (description: string) => absent(S.DateTimeUtcFromMillis, descrip
  *     { kind: "image", tags: [{ account: { by: "handle", handle: "friend" }, position: { x: 0.4, y: 0.6 } }] },
  *   ],
  * })
- * O.map(post, (p) => A.length(tagged(p))) // => O.some(1)
+ * O.map(post, (p) => A.length(Post.tagged(p))) // => O.some(1)
  * ```
  *
  * @category models
@@ -1603,6 +1676,62 @@ export class Post extends S.Opaque<Post, { readonly brand: unique symbol }>()(
     expiresAt: instant("Instant the site removes the post, for stories and timed posts.")
   }).pipe($I.annoteSchema("Post", { description: "One post as its site publishes it to the current viewer." }))
 ) {
+  /**
+   * Every account tagged on any gallery item of a post, in gallery order.
+   *
+   * **Example** (Collect tags across a gallery)
+   *
+   * ```ts import.meta.vitest name="Collect tags across a gallery"
+   * import { Post, handleOf } from "@beep/scratchpad/int/content"
+   * import * as A from "effect/Array"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   *
+   * const post = S.decodeUnknownOption(Post)({
+   *   source: "https://x.com/jack/status/20",
+   *   author: { by: "handle", handle: "jack" },
+   *   media: [
+   *     { kind: "image", tags: [{ account: { by: "handle", handle: "a" } }] },
+   *     { kind: "video", tags: [{ account: { by: "handle", handle: "b" } }] },
+   *   ],
+   * })
+   * O.map(post, (p) => A.map(Post.tagged(p), handleOf)) // => O.some([O.some("a"), O.some("b")])
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly tagged = (post: Post): ReadonlyArray<Account> =>
+    A.flatMap(post.media, ({ tags }) => A.map(tags, ({ account }) => account))
+
+  /**
+   * The traversal row a post reduces to: its source, media counts and date.
+   *
+   * **Example** (Reduce a post to its traversal row)
+   *
+   * ```ts import.meta.vitest name="Reduce a post to its traversal row"
+   * import { Post } from "@beep/scratchpad/int/content"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   *
+   * const post = S.decodeUnknownOption(Post)({
+   *   source: "https://x.com/jack/status/20",
+   *   author: { by: "handle", handle: "jack" },
+   *   media: [{ kind: "image" }, { kind: "image" }, { kind: "video" }],
+   * })
+   * O.map(post, (p) => Post.summary(p).images) // => O.some(2)
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly summary = (post: Post): MappedItem =>
+    MappedItem.make({
+      source: post.source,
+      images: A.length(A.filter(post.media, Media.guards.image)),
+      videos: A.length(A.filter(post.media, Media.guards.video)),
+      publishedAt: post.publishedAt
+    })
 }
 
 /**
@@ -1690,13 +1819,13 @@ const Visibility = LiteralKit(["public", "private"]).pipe(
  * titled links on Instagram and Threads, a titled list on YouTube, Reddit
  * and Facebook. `bio` holds whatever the account typed, with its hashtags,
  * mentions and URLs as entities; a site that sends the biography as bare
- * text is read through {@link RichTextFromString}. {@link outbound} joins the
- * two and {@link elsewhere} reads them as accounts.
+ * text is read through {@link RichTextFromString}. {@link Profile.outbound} joins the
+ * two and {@link Profile.elsewhere} reads them as accounts.
  *
  * **Example** (Read a profile with a picture and counts)
  *
  * ```ts import.meta.vitest name="Read a profile with a picture and counts"
- * import { Profile, largest } from "@beep/scratchpad/int/content"
+ * import { Profile, Picture } from "@beep/scratchpad/int/content"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -1706,7 +1835,7 @@ const Visibility = LiteralKit(["public", "private"]).pipe(
  *   avatar: { renditions: [{ url: "https://pbs.example/a_400x400.jpg", width: 400, label: "_400x400" }] },
  *   followers: { kind: "rounded", count: 6400000 },
  * })
- * O.flatMap(profile, ({ avatar }) => O.map(avatar, (picture) => largest(picture).label)) // => O.some(O.some("_400x400"))
+ * O.flatMap(profile, ({ avatar }) => O.map(avatar, (picture) => Picture.largest(picture).label)) // => O.some(O.some("_400x400"))
  * ```
  *
  * @category models
@@ -1738,6 +1867,84 @@ export class Profile extends S.Opaque<Profile, {
     joinedAt: instant("Instant the account was created.")
   }).pipe($I.annoteSchema("Profile", { description: "One account as its site publishes it to the current viewer." }))
 ) {
+  /**
+   * Every URL a profile points to: its link slots first, then the links
+   * written in its biography, each once.
+   *
+   * **Example** (Join the link slot and the biography)
+   *
+   * ```ts import.meta.vitest name="Join the link slot and the biography"
+   * import { Profile } from "@beep/scratchpad/int/content"
+   * import * as A from "effect/Array"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   *
+   * const profile = S.decodeUnknownOption(Profile)({
+   *   source: "https://www.instagram.com/example",
+   *   account: { by: "handle", handle: "example" },
+   *   bio: { text: "shop", entities: [{ kind: "link", url: "https://shop.example/" }] },
+   *   links: [{ url: "https://shop.example/", title: "Shop" }, { url: "https://linktr.ee/example" }],
+   * })
+   * O.map(profile, (p) => A.map(Profile.outbound(p), ({ hostname }) => hostname)) // => O.some(["shop.example", "linktr.ee"])
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly outbound = ({ bio, links }: Profile): ReadonlyArray<URL> =>
+    A.dedupeWith(
+      A.appendAll(
+        A.map(links, ({ url }) => url),
+        A.map(A.filter(bio.entities, TextEntity.guards.link), ({ url }) => url)
+      ),
+      (left, right) => left.href === right.href
+    )
+
+  /**
+   * Accounts on supported sites that a profile points to, other than itself.
+   *
+   * **Details**
+   *
+   * Each of the profile's {@link Profile.outbound} URLs that a supported site routes is
+   * reduced to the listing of the account it names, so a link to one post
+   * counts as a link to its author. This is how an account on one site is
+   * tied to the same person's accounts on others.
+   *
+   * **Gotchas**
+   *
+   * A link through an aggregator or a shortener (`linktr.ee`, `youtu.be`,
+   * `vm.tiktok.com`) names no account until something follows it, so it
+   * yields nothing here.
+   *
+   * **Example** (Find the other accounts in a biography)
+   *
+   * ```ts import.meta.vitest name="Find the other accounts in a biography"
+   * import { Profile } from "@beep/scratchpad/int/content"
+   * import * as A from "effect/Array"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   *
+   * const profile = S.decodeUnknownOption(Profile)({
+   *   source: "https://www.instagram.com/example",
+   *   account: { by: "handle", handle: "example" },
+   *   bio: { text: "snap me", entities: [{ kind: "link", url: "https://snapchat.com/add/example" }] },
+   *   links: [{ url: "https://x.com/example/status/20" }],
+   * })
+   * O.map(profile, (p) => A.map(Profile.elsewhere(p), ({ platform }) => platform)) // => O.some(["x", "snapchat"])
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly elsewhere = (profile: Profile): ReadonlyArray<CollectionLocator> => {
+    const own = A.prepend(A.fromOption(landing(profile.source)), profile.source)
+    return pipe(
+      Profile.outbound(profile),
+      A.flatMap(({ href }) => A.fromOption(O.flatMap(locatorOf(href), landing))),
+      A.dedupeWith(sameLocator),
+      A.filter((locator) => !A.containsWith(sameLocator)(own, locator))
+    )
+  }
 }
 
 /**
@@ -1765,220 +1972,9 @@ export declare namespace Profile {
   }
 }
 
-/**
- * Accounts a text mentions, in the order the site listed them.
- *
- * **Example** (List the accounts a caption mentions)
- *
- * ```ts import.meta.vitest name="List the accounts a caption mentions"
- * import { Account, RichText, TextEntity, handleOf, mentions } from "@beep/scratchpad/int/content"
- * import * as A from "effect/Array"
- * import * as O from "effect/Option"
- *
- * const jack = Account.cases.handle.make({ handle: "jack" })
- * const text = RichText.make({ text: "with @jack", entities: [TextEntity.cases.mention.make({ account: jack })] })
- * A.map(mentions(text), handleOf) // => [O.some("jack")]
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const mentions = (text: RichText): ReadonlyArray<Account> =>
-  A.map(A.filter(text.entities, TextEntity.guards.mention), ({ account }) => account)
-
-/**
- * Hashtags a text carries, without their leading #.
- *
- * **Example** (List the hashtags of a caption)
- *
- * ```ts import.meta.vitest name="List the hashtags of a caption"
- * import { RichText, TextEntity, hashtags } from "@beep/scratchpad/int/content"
- *
- * const text = RichText.make({ text: "#sunset", entities: [TextEntity.cases.hashtag.make({ tag: "sunset" })] })
- * hashtags(text) // => ["sunset"]
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const hashtags = (text: RichText): ReadonlyArray<string> =>
-  A.map(A.filter(text.entities, TextEntity.guards.hashtag), ({ tag }) => tag)
-
 const locatorOf = S.decodeUnknownOption(LocatorFromUrl)
 
-/**
- * Posts and accounts of supported sites that a text links to.
- *
- * **Details**
- *
- * A link to other material stays a plain link entity. Whether it names a
- * post is derived by decoding its URL, so the text never stores the same fact
- * twice.
- *
- * **Example** (Find a linked status in a caption)
- *
- * ```ts import.meta.vitest name="Find a linked status in a caption"
- * import { RichText, linked } from "@beep/scratchpad/int/content"
- * import * as A from "effect/Array"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const text = S.decodeUnknownOption(RichText)({
- *   text: "see the original",
- *   entities: [
- *     { kind: "link", url: "https://twitter.com/jack/status/20?s=20" },
- *     { kind: "link", url: "https://example.org/essay" },
- *   ],
- * })
- * O.map(text, (t) => A.map(linked(t), ({ platform }) => platform)) // => O.some(["x"])
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const linked = (text: RichText): ReadonlyArray<Locator> =>
-  pipe(
-    A.filter(text.entities, TextEntity.guards.link),
-    A.flatMap(({ url }) => A.fromOption(locatorOf(url.href)))
-  )
-
-/**
- * Every URL a profile points to: its link slots first, then the links
- * written in its biography, each once.
- *
- * **Example** (Join the link slot and the biography)
- *
- * ```ts import.meta.vitest name="Join the link slot and the biography"
- * import { Profile, outbound } from "@beep/scratchpad/int/content"
- * import * as A from "effect/Array"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const profile = S.decodeUnknownOption(Profile)({
- *   source: "https://www.instagram.com/example",
- *   account: { by: "handle", handle: "example" },
- *   bio: { text: "shop", entities: [{ kind: "link", url: "https://shop.example/" }] },
- *   links: [{ url: "https://shop.example/", title: "Shop" }, { url: "https://linktr.ee/example" }],
- * })
- * O.map(profile, (p) => A.map(outbound(p), ({ hostname }) => hostname)) // => O.some(["shop.example", "linktr.ee"])
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const outbound = ({ bio, links }: Profile): ReadonlyArray<URL> =>
-  A.dedupeWith(
-    A.appendAll(
-      A.map(links, ({ url }) => url),
-      A.map(A.filter(bio.entities, TextEntity.guards.link), ({ url }) => url)
-    ),
-    (left, right) => left.href === right.href
-  )
-
 const sameLocator = S.toEquivalence(Locator)
-
-/**
- * Accounts on supported sites that a profile points to, other than itself.
- *
- * **Details**
- *
- * Each of the profile's {@link outbound} URLs that a supported site routes is
- * reduced to the listing of the account it names, so a link to one post
- * counts as a link to its author. This is how an account on one site is
- * tied to the same person's accounts on others.
- *
- * **Gotchas**
- *
- * A link through an aggregator or a shortener (`linktr.ee`, `youtu.be`,
- * `vm.tiktok.com`) names no account until something follows it, so it
- * yields nothing here.
- *
- * **Example** (Find the other accounts in a biography)
- *
- * ```ts import.meta.vitest name="Find the other accounts in a biography"
- * import { Profile, elsewhere } from "@beep/scratchpad/int/content"
- * import * as A from "effect/Array"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const profile = S.decodeUnknownOption(Profile)({
- *   source: "https://www.instagram.com/example",
- *   account: { by: "handle", handle: "example" },
- *   bio: { text: "snap me", entities: [{ kind: "link", url: "https://snapchat.com/add/example" }] },
- *   links: [{ url: "https://x.com/example/status/20" }],
- * })
- * O.map(profile, (p) => A.map(elsewhere(p), ({ platform }) => platform)) // => O.some(["x", "snapchat"])
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const elsewhere = (profile: Profile): ReadonlyArray<CollectionLocator> => {
-  const own = A.prepend(A.fromOption(landing(profile.source)), profile.source)
-  return pipe(
-    outbound(profile),
-    A.flatMap(({ href }) => A.fromOption(O.flatMap(locatorOf(href), landing))),
-    A.dedupeWith(sameLocator),
-    A.filter((locator) => !A.containsWith(sameLocator)(own, locator))
-  )
-}
-
-/**
- * Every account tagged on any gallery item of a post, in gallery order.
- *
- * **Example** (Collect tags across a gallery)
- *
- * ```ts import.meta.vitest name="Collect tags across a gallery"
- * import { Post, handleOf, tagged } from "@beep/scratchpad/int/content"
- * import * as A from "effect/Array"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const post = S.decodeUnknownOption(Post)({
- *   source: "https://x.com/jack/status/20",
- *   author: { by: "handle", handle: "jack" },
- *   media: [
- *     { kind: "image", tags: [{ account: { by: "handle", handle: "a" } }] },
- *     { kind: "video", tags: [{ account: { by: "handle", handle: "b" } }] },
- *   ],
- * })
- * O.map(post, (p) => A.map(tagged(p), handleOf)) // => O.some([O.some("a"), O.some("b")])
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const tagged = (post: Post): ReadonlyArray<Account> =>
-  A.flatMap(post.media, ({ tags }) => A.map(tags, ({ account }) => account))
-
-/**
- * The traversal row a post reduces to: its source, media counts and date.
- *
- * **Example** (Reduce a post to its traversal row)
- *
- * ```ts import.meta.vitest name="Reduce a post to its traversal row"
- * import { Post, summary } from "@beep/scratchpad/int/content"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const post = S.decodeUnknownOption(Post)({
- *   source: "https://x.com/jack/status/20",
- *   author: { by: "handle", handle: "jack" },
- *   media: [{ kind: "image" }, { kind: "image" }, { kind: "video" }],
- * })
- * O.map(post, (p) => summary(p).images) // => O.some(2)
- * ```
- *
- * @category getters
- * @since 0.0.0
- */
-export const summary = (post: Post): MappedItem =>
-  MappedItem.make({
-    source: post.source,
-    images: A.length(A.filter(post.media, Media.guards.image)),
-    videos: A.length(A.filter(post.media, Media.guards.video)),
-    publishedAt: post.publishedAt
-  })
 
 /**
  * **Example** (Branch on a connection)
@@ -2109,6 +2105,10 @@ export interface SiteReader<Target> {
  * @since 0.0.0
  */
 export class XReader extends Context.Service<XReader, SiteReader<XTarget>>()($I`XReader`) {
+  static readonly posts = (target: XTarget) => Stream.unwrap(XReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: XTarget) => XReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: XTarget, connection: Connection) =>
+    Stream.unwrap(XReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2136,6 +2136,10 @@ export class XReader extends Context.Service<XReader, SiteReader<XTarget>>()($I`
  * @since 0.0.0
  */
 export class YouTubeReader extends Context.Service<YouTubeReader, SiteReader<YouTubeTarget>>()($I`YouTubeReader`) {
+  static readonly posts = (target: YouTubeTarget) => Stream.unwrap(YouTubeReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: YouTubeTarget) => YouTubeReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: YouTubeTarget, connection: Connection) =>
+    Stream.unwrap(YouTubeReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2163,6 +2167,10 @@ export class YouTubeReader extends Context.Service<YouTubeReader, SiteReader<You
  * @since 0.0.0
  */
 export class RedGifsReader extends Context.Service<RedGifsReader, SiteReader<RedGifsTarget>>()($I`RedGifsReader`) {
+  static readonly posts = (target: RedGifsTarget) => Stream.unwrap(RedGifsReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: RedGifsTarget) => RedGifsReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: RedGifsTarget, connection: Connection) =>
+    Stream.unwrap(RedGifsReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2190,6 +2198,10 @@ export class RedGifsReader extends Context.Service<RedGifsReader, SiteReader<Red
  * @since 0.0.0
  */
 export class FacebookReader extends Context.Service<FacebookReader, SiteReader<FacebookTarget>>()($I`FacebookReader`) {
+  static readonly posts = (target: FacebookTarget) => Stream.unwrap(FacebookReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: FacebookTarget) => FacebookReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: FacebookTarget, connection: Connection) =>
+    Stream.unwrap(FacebookReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2217,6 +2229,10 @@ export class FacebookReader extends Context.Service<FacebookReader, SiteReader<F
  * @since 0.0.0
  */
 export class FanslyReader extends Context.Service<FanslyReader, SiteReader<FanslyTarget>>()($I`FanslyReader`) {
+  static readonly posts = (target: FanslyTarget) => Stream.unwrap(FanslyReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: FanslyTarget) => FanslyReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: FanslyTarget, connection: Connection) =>
+    Stream.unwrap(FanslyReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2244,6 +2260,10 @@ export class FanslyReader extends Context.Service<FanslyReader, SiteReader<Fansl
  * @since 0.0.0
  */
 export class InstagramReader extends Context.Service<InstagramReader, SiteReader<InstagramTarget>>()($I`InstagramReader`) {
+  static readonly posts = (target: InstagramTarget) => Stream.unwrap(InstagramReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: InstagramTarget) => InstagramReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: InstagramTarget, connection: Connection) =>
+    Stream.unwrap(InstagramReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2271,6 +2291,10 @@ export class InstagramReader extends Context.Service<InstagramReader, SiteReader
  * @since 0.0.0
  */
 export class OnlyFansReader extends Context.Service<OnlyFansReader, SiteReader<OnlyFansTarget>>()($I`OnlyFansReader`) {
+  static readonly posts = (target: OnlyFansTarget) => Stream.unwrap(OnlyFansReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: OnlyFansTarget) => OnlyFansReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: OnlyFansTarget, connection: Connection) =>
+    Stream.unwrap(OnlyFansReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2298,6 +2322,10 @@ export class OnlyFansReader extends Context.Service<OnlyFansReader, SiteReader<O
  * @since 0.0.0
  */
 export class PinterestReader extends Context.Service<PinterestReader, SiteReader<PinterestTarget>>()($I`PinterestReader`) {
+  static readonly posts = (target: PinterestTarget) => Stream.unwrap(PinterestReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: PinterestTarget) => PinterestReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: PinterestTarget, connection: Connection) =>
+    Stream.unwrap(PinterestReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2325,6 +2353,10 @@ export class PinterestReader extends Context.Service<PinterestReader, SiteReader
  * @since 0.0.0
  */
 export class SnapchatReader extends Context.Service<SnapchatReader, SiteReader<SnapchatTarget>>()($I`SnapchatReader`) {
+  static readonly posts = (target: SnapchatTarget) => Stream.unwrap(SnapchatReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: SnapchatTarget) => SnapchatReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: SnapchatTarget, connection: Connection) =>
+    Stream.unwrap(SnapchatReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2352,6 +2384,10 @@ export class SnapchatReader extends Context.Service<SnapchatReader, SiteReader<S
  * @since 0.0.0
  */
 export class ThreadsReader extends Context.Service<ThreadsReader, SiteReader<ThreadsTarget>>()($I`ThreadsReader`) {
+  static readonly posts = (target: ThreadsTarget) => Stream.unwrap(ThreadsReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: ThreadsTarget) => ThreadsReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: ThreadsTarget, connection: Connection) =>
+    Stream.unwrap(ThreadsReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2379,6 +2415,10 @@ export class ThreadsReader extends Context.Service<ThreadsReader, SiteReader<Thr
  * @since 0.0.0
  */
 export class TikTokReader extends Context.Service<TikTokReader, SiteReader<TikTokTarget>>()($I`TikTokReader`) {
+  static readonly posts = (target: TikTokTarget) => Stream.unwrap(TikTokReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: TikTokTarget) => TikTokReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: TikTokTarget, connection: Connection) =>
+    Stream.unwrap(TikTokReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2406,6 +2446,10 @@ export class TikTokReader extends Context.Service<TikTokReader, SiteReader<TikTo
  * @since 0.0.0
  */
 export class VscoReader extends Context.Service<VscoReader, SiteReader<VscoTarget>>()($I`VscoReader`) {
+  static readonly posts = (target: VscoTarget) => Stream.unwrap(VscoReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: VscoTarget) => VscoReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: VscoTarget, connection: Connection) =>
+    Stream.unwrap(VscoReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2433,6 +2477,10 @@ export class VscoReader extends Context.Service<VscoReader, SiteReader<VscoTarge
  * @since 0.0.0
  */
 export class RedditReader extends Context.Service<RedditReader, SiteReader<RedditTarget>>()($I`RedditReader`) {
+  static readonly posts = (target: RedditTarget) => Stream.unwrap(RedditReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: RedditTarget) => RedditReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: RedditTarget, connection: Connection) =>
+    Stream.unwrap(RedditReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2460,6 +2508,10 @@ export class RedditReader extends Context.Service<RedditReader, SiteReader<Reddi
  * @since 0.0.0
  */
 export class DzenReader extends Context.Service<DzenReader, SiteReader<DzenTarget>>()($I`DzenReader`) {
+  static readonly posts = (target: DzenTarget) => Stream.unwrap(DzenReader.useSync((reader) => reader.posts(target)));
+  static readonly profile = (target: DzenTarget) => DzenReader.use((reader) => reader.profile(target));
+  static readonly connections = (target: DzenTarget, connection: Connection) =>
+    Stream.unwrap(DzenReader.useSync((reader) => reader.connections(target, connection)));
 }
 
 /**
@@ -2511,20 +2563,20 @@ export type Readers =
  * @since 0.0.0
  */
 export const posts = Locator.match({
-  x: ({ target }) => Stream.unwrap(XReader.useSync((reader) => reader.posts(target))),
-  youtube: ({ target }) => Stream.unwrap(YouTubeReader.useSync((reader) => reader.posts(target))),
-  redgifs: ({ target }) => Stream.unwrap(RedGifsReader.useSync((reader) => reader.posts(target))),
-  facebook: ({ target }) => Stream.unwrap(FacebookReader.useSync((reader) => reader.posts(target))),
-  fansly: ({ target }) => Stream.unwrap(FanslyReader.useSync((reader) => reader.posts(target))),
-  instagram: ({ target }) => Stream.unwrap(InstagramReader.useSync((reader) => reader.posts(target))),
-  onlyfans: ({ target }) => Stream.unwrap(OnlyFansReader.useSync((reader) => reader.posts(target))),
-  pinterest: ({ target }) => Stream.unwrap(PinterestReader.useSync((reader) => reader.posts(target))),
-  snapchat: ({ target }) => Stream.unwrap(SnapchatReader.useSync((reader) => reader.posts(target))),
-  threads: ({ target }) => Stream.unwrap(ThreadsReader.useSync((reader) => reader.posts(target))),
-  tiktok: ({ target }) => Stream.unwrap(TikTokReader.useSync((reader) => reader.posts(target))),
-  vsco: ({ target }) => Stream.unwrap(VscoReader.useSync((reader) => reader.posts(target))),
-  reddit: ({ target }) => Stream.unwrap(RedditReader.useSync((reader) => reader.posts(target))),
-  dzen: ({ target }) => Stream.unwrap(DzenReader.useSync((reader) => reader.posts(target)))
+  x: ({ target }) => XReader.posts(target),
+  youtube: ({ target }) => YouTubeReader.posts(target),
+  redgifs: ({ target }) => RedGifsReader.posts(target),
+  facebook: ({ target }) => FacebookReader.posts(target),
+  fansly: ({ target }) => FanslyReader.posts(target),
+  instagram: ({ target }) => InstagramReader.posts(target),
+  onlyfans: ({ target }) => OnlyFansReader.posts(target),
+  pinterest: ({ target }) => PinterestReader.posts(target),
+  snapchat: ({ target }) => SnapchatReader.posts(target),
+  threads: ({ target }) => ThreadsReader.posts(target),
+  tiktok: ({ target }) => TikTokReader.posts(target),
+  vsco: ({ target }) => VscoReader.posts(target),
+  reddit: ({ target }) => RedditReader.posts(target),
+  dzen: ({ target }) => DzenReader.posts(target)
 })
 
 /**
@@ -2548,20 +2600,20 @@ export const posts = Locator.match({
  * @since 0.0.0
  */
 export const profile = Locator.match({
-  x: ({ target }) => XReader.use((reader) => reader.profile(target)),
-  youtube: ({ target }) => YouTubeReader.use((reader) => reader.profile(target)),
-  redgifs: ({ target }) => RedGifsReader.use((reader) => reader.profile(target)),
-  facebook: ({ target }) => FacebookReader.use((reader) => reader.profile(target)),
-  fansly: ({ target }) => FanslyReader.use((reader) => reader.profile(target)),
-  instagram: ({ target }) => InstagramReader.use((reader) => reader.profile(target)),
-  onlyfans: ({ target }) => OnlyFansReader.use((reader) => reader.profile(target)),
-  pinterest: ({ target }) => PinterestReader.use((reader) => reader.profile(target)),
-  snapchat: ({ target }) => SnapchatReader.use((reader) => reader.profile(target)),
-  threads: ({ target }) => ThreadsReader.use((reader) => reader.profile(target)),
-  tiktok: ({ target }) => TikTokReader.use((reader) => reader.profile(target)),
-  vsco: ({ target }) => VscoReader.use((reader) => reader.profile(target)),
-  reddit: ({ target }) => RedditReader.use((reader) => reader.profile(target)),
-  dzen: ({ target }) => DzenReader.use((reader) => reader.profile(target))
+  x: ({ target }) => XReader.profile(target),
+  youtube: ({ target }) => YouTubeReader.profile(target),
+  redgifs: ({ target }) => RedGifsReader.profile(target),
+  facebook: ({ target }) => FacebookReader.profile(target),
+  fansly: ({ target }) => FanslyReader.profile(target),
+  instagram: ({ target }) => InstagramReader.profile(target),
+  onlyfans: ({ target }) => OnlyFansReader.profile(target),
+  pinterest: ({ target }) => PinterestReader.profile(target),
+  snapchat: ({ target }) => SnapchatReader.profile(target),
+  threads: ({ target }) => ThreadsReader.profile(target),
+  tiktok: ({ target }) => TikTokReader.profile(target),
+  vsco: ({ target }) => VscoReader.profile(target),
+  reddit: ({ target }) => RedditReader.profile(target),
+  dzen: ({ target }) => DzenReader.profile(target)
 })
 
 /**
@@ -2594,19 +2646,19 @@ export const connections: {
   2,
   (locator: Locator, connection: Connection): Stream.Stream<Account, MapFailure | ConnectionsHidden, Readers> =>
     Locator.match(locator, {
-      x: ({ target }) => Stream.unwrap(XReader.useSync((reader) => reader.connections(target, connection))),
-      youtube: ({ target }) => Stream.unwrap(YouTubeReader.useSync((reader) => reader.connections(target, connection))),
-      redgifs: ({ target }) => Stream.unwrap(RedGifsReader.useSync((reader) => reader.connections(target, connection))),
-      facebook: ({ target }) => Stream.unwrap(FacebookReader.useSync((reader) => reader.connections(target, connection))),
-      fansly: ({ target }) => Stream.unwrap(FanslyReader.useSync((reader) => reader.connections(target, connection))),
-      instagram: ({ target }) => Stream.unwrap(InstagramReader.useSync((reader) => reader.connections(target, connection))),
-      onlyfans: ({ target }) => Stream.unwrap(OnlyFansReader.useSync((reader) => reader.connections(target, connection))),
-      pinterest: ({ target }) => Stream.unwrap(PinterestReader.useSync((reader) => reader.connections(target, connection))),
-      snapchat: ({ target }) => Stream.unwrap(SnapchatReader.useSync((reader) => reader.connections(target, connection))),
-      threads: ({ target }) => Stream.unwrap(ThreadsReader.useSync((reader) => reader.connections(target, connection))),
-      tiktok: ({ target }) => Stream.unwrap(TikTokReader.useSync((reader) => reader.connections(target, connection))),
-      vsco: ({ target }) => Stream.unwrap(VscoReader.useSync((reader) => reader.connections(target, connection))),
-      reddit: ({ target }) => Stream.unwrap(RedditReader.useSync((reader) => reader.connections(target, connection))),
-      dzen: ({ target }) => Stream.unwrap(DzenReader.useSync((reader) => reader.connections(target, connection)))
+      x: ({ target }) => XReader.connections(target, connection),
+      youtube: ({ target }) => YouTubeReader.connections(target, connection),
+      redgifs: ({ target }) => RedGifsReader.connections(target, connection),
+      facebook: ({ target }) => FacebookReader.connections(target, connection),
+      fansly: ({ target }) => FanslyReader.connections(target, connection),
+      instagram: ({ target }) => InstagramReader.connections(target, connection),
+      onlyfans: ({ target }) => OnlyFansReader.connections(target, connection),
+      pinterest: ({ target }) => PinterestReader.connections(target, connection),
+      snapchat: ({ target }) => SnapchatReader.connections(target, connection),
+      threads: ({ target }) => ThreadsReader.connections(target, connection),
+      tiktok: ({ target }) => TikTokReader.connections(target, connection),
+      vsco: ({ target }) => VscoReader.connections(target, connection),
+      reddit: ({ target }) => RedditReader.connections(target, connection),
+      dzen: ({ target }) => DzenReader.connections(target, connection)
     })
 )
