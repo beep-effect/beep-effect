@@ -50,7 +50,6 @@ export type PermissionLevel = typeof PermissionLevel.Type;
 
 const isPermissionLevel = S.is(PermissionLevel);
 
-/** Ranks `read` below `write`, and `write` below `admin`. */
 const RANK: Record<PermissionLevel, number> = { read: 1, write: 2, admin: 3 };
 
 /**

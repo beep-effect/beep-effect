@@ -444,6 +444,11 @@ export class FrontmatterCodec {
   /**
    * Decode a capture node's raw value into data.
    *
+   * **Gotchas**
+   *
+   * An engine defect thrown while parsing surfaces as a defect of the
+   * returned effect, never at call time.
+   *
    * @since 0.0.0
    */
   readonly decode: (
@@ -452,6 +457,11 @@ export class FrontmatterCodec {
 
   /**
    * Serialize data into a frontmatter body, without fences.
+   *
+   * **Gotchas**
+   *
+   * An engine defect thrown while serializing surfaces as a defect of the
+   * returned effect, never at call time.
    *
    * @since 0.0.0
    */
@@ -469,8 +479,6 @@ export class FrontmatterCodec {
         : Result.fail(FrontmatterFormatMismatchError.make({ expected: format, actual: node.format }));
     this.encodeResult = (data) =>
       Result.mapError(stringify(data), (cause) => FrontmatterEncodeError.make({ format, cause }));
-    // Suspended so an engine defect thrown while parsing or serializing
-    // surfaces as a defect of the returned effect, never at call time.
     this.decode = Effect.fn("FrontmatterCodec.decode")((node: FrontmatterNode) =>
       Effect.suspend(() => Effect.fromResult(this.decodeResult(node)))
     );
@@ -681,31 +689,19 @@ export type FrontmatterWriteError =
   | FrontmatterEncodeError
   | FrontmatterValidationError;
 
-/**
- * The opening and closing fence lines for a frontmatter format — the closed
- * grammar the capture scanner recognizes: `---`…`---` yaml, `+++`…`+++` toml,
- * `---json`…`---` json.
- */
 const FENCES: Record<FrontmatterFormat, { readonly open: string; readonly close: string }> = {
   yaml: { open: "---", close: "---" },
   toml: { open: "+++", close: "+++" },
   json: { open: "---json", close: "---" },
 };
 
-/**
- * Render a full frontmatter block — fences included, no trailing terminator
- * after the closing fence. The body's final line terminator is normalized:
- * the engines disagree (yaml and toml stringify emit a trailing newline,
- * jsonc does not), and an empty body (toml's encoding of `{}`) collapses to
- * adjacent fence lines.
- */
-const renderBlock: {
+const renderUnterminatedBlock: {
   (format: FrontmatterFormat, body: string): string;
   (body: string): (format: FrontmatterFormat) => string;
 } = dual(2, (format: FrontmatterFormat, body: string): string => {
   const { open, close } = FENCES[format];
-  const normalized = body === "" || Str.endsWith("\n")(body) ? body : `${body}\n`;
-  return `${open}\n${normalized}${close}`;
+  const lineTerminatedBody = body === "" || Str.endsWith("\n")(body) ? body : `${body}\n`;
+  return `${open}\n${lineTerminatedBody}${close}`;
 });
 
 /**
@@ -811,25 +807,20 @@ export class MarkdownFrontmatter {
       (document) => {
         const node = document.frontmatter;
         return node === undefined
-          ? // The discriminant is the document's own structural signal: a source
-            // that opens with a capturable block but carries no capture node was
-            // parsed with the toggle off — the accessor and this error agree by
-            // construction.
-            Effect.fail(
+          ? Effect.fail(
               FrontmatterMissingError.make({ reason: document.hasFrontmatterBlock ? "captureDisabled" : "absent" })
             )
-          : codec.decode(node).pipe(
-              Effect.flatMap((data) =>
-                S.decodeUnknownEffect(schema)(data).pipe(
-                  // Normalize the schema failure at the boundary. Never leak
-                  // SchemaError deeper, never stringify it — carry its
-                  // structured issue tree instead.
-                  Effect.catchTag("SchemaError", (error) =>
-                    Effect.fail(FrontmatterValidationError.make({ issue: error.issue }))
+          : codec
+              .decode(node)
+              .pipe(
+                Effect.flatMap((data) =>
+                  S.decodeUnknownEffect(schema)(data).pipe(
+                    Effect.catchTag("SchemaError", (error) =>
+                      Effect.fail(FrontmatterValidationError.make({ issue: error.issue }))
+                    )
                   )
                 )
-              )
-            );
+              );
       }
   );
 
@@ -920,24 +911,16 @@ export class MarkdownFrontmatter {
           return Effect.fail(FrontmatterFormatMismatchError.make({ expected: codec.format, actual: node.format }));
         }
         return S.encodeUnknownEffect(schema)(data).pipe(
-          // Normalize the schema failure at the boundary, exactly as the
-          // decode side does: carry the structured issue tree, never a string.
           Effect.catchTag("SchemaError", (error) =>
             Effect.fail(FrontmatterValidationError.make({ issue: error.issue }))
           ),
           Effect.flatMap((encoded) => codec.encode(encoded)),
           Effect.map((body) => {
-            const block = renderBlock(codec.format, body);
+            const block = renderUnterminatedBlock(codec.format, body);
             if (node === undefined) {
-              // Insert at the head: the block, its line terminator, and a
-              // blank line before the existing content (nothing to separate
-              // from in an empty document).
               const content = document.source.length === 0 ? `${block}\n` : `${block}\n\n`;
               return [MarkdownEdit.make({ offset: 0, length: 0, content })];
             }
-            // Replace the whole node span — both fences included, and the
-            // capture's position excludes the terminator after the closing
-            // fence, so everything outside the block is untouched.
             const offset = node.position.start.offset;
             return [MarkdownEdit.make({ offset, length: node.position.end.offset - offset, content: block })];
           })

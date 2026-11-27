@@ -13,32 +13,24 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
+const numberBelowYamlBigintRange = S.Finite.check(
+  S.isBetween({
+    minimum: Number.MIN_SAFE_INTEGER,
+    maximum: Number.MAX_SAFE_INTEGER,
+  })
+);
 const sample = Arbitrary.schema(
   S.Struct({
     name: S.Literals(["library", "@scope/library", "__proto__"]),
     version: S.String,
-    // YAML resolves integers outside the safe range to bigint, which Yarn's
-    // string-or-number metadata schema does not accept. Keep numeric samples
-    // within the YAML number domain; arbitrary string metadata stays unbounded.
-    metadata: S.Union([
-      S.String,
-      S.Finite.check(
-        S.isBetween({
-          minimum: Number.MIN_SAFE_INTEGER,
-          maximum: Number.MAX_SAFE_INTEGER,
-        })
-      ),
-    ]),
+    metadata: S.Union([S.String, numberBelowYamlBigintRange]),
     checksum: S.Literals(["10c0/deadbeef", "sha512-YWJj", "sha256.deadbeef"]),
     peerRange: S.String,
     optionalPeer: S.Boolean,
   })
 );
 
-// Reconstruct a Yarn document from the normalized result for the generated
-// registry graph. Descriptor and locator are identical in this domain; peers
-// remain declarations, and dependency edges supply their recorded descriptors.
-const stringifyFields = (fields: LockfileFields) =>
+const yarnDocumentFromFields = (fields: LockfileFields) =>
   Yaml.stringify({
     __metadata: { version: fields.lockfileVersion },
     ...R.fromEntries(
@@ -64,14 +56,18 @@ describe("Yarn parser property floor", () => {
   it.effect("rejects unsafe integer metadata as a typed validation failure but preserves its string spelling", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(parseYarn("__metadata:\n  version: 9007199254740992\n"));
-      assert.strictEqual(failure.stage, "validation");
+      assert.strictEqual(
+        failure.stage,
+        "validation",
+        "YAML reads an unsafe integer as bigint, which Yarn's string-or-number metadata schema rejects"
+      );
       const stringify1 = yield* Yaml.stringify({
         __metadata: { version: "9007199254740992" },
       });
       const parsed = yield* parseYarn(stringify1);
       assert.strictEqual(parsed.lockfileVersion, "9007199254740992");
       const argument = S.toEquivalence(LockfileFields);
-      const stringifyFields3 = yield* stringifyFields(parsed);
+      const stringifyFields3 = yield* yarnDocumentFromFields(parsed);
       const parsedYarn = yield* parseYarn(stringifyFields3);
       assertTrue(argument(parsedYarn, parsed));
     })
@@ -108,10 +104,13 @@ describe("Yarn parser property floor", () => {
         });
         const parsed = yield* parseYarn(content);
         assert.strictEqual(parsed.lockfileVersion, String(value.metadata));
-        const text = yield* stringifyFields(parsed);
+        const text = yield* yarnDocumentFromFields(parsed);
         const reparsed = yield* parseYarn(text);
-        assertTrue(S.toEquivalence(LockfileFields)(reparsed, parsed));
-        const stringifyFields2 = yield* stringifyFields(reparsed);
+        assertTrue(
+          S.toEquivalence(LockfileFields)(reparsed, parsed),
+          "the rebuilt document keys each locator as its own descriptor and keeps peers as declarations"
+        );
+        const stringifyFields2 = yield* yarnDocumentFromFields(reparsed);
         assert.strictEqual(stringifyFields2, text);
         assert.deepStrictEqual(
           A.map(parsed.packages, (pkg) => pkg.resolved),

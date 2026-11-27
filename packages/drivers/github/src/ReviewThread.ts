@@ -330,11 +330,6 @@ export class ReviewThreads extends S.Opaque<ReviewThreads, { readonly brand: uni
   )
 ) {}
 
-// --- GraphQL wire shapes -----------------------------------------------------
-//
-// Decoded once per response and projected onto the models above. `null`
-// becomes `Option` at this boundary so nothing nullish reaches a caller.
-
 const WireLogin = S.Struct({ login: S.String });
 
 const WireActor = S.Struct({ __typename: S.optionalKey(S.String), login: S.String });
@@ -375,8 +370,6 @@ const ListResponse = S.Struct({
   }),
 });
 
-// `node(id:)` answers `{ __typename }` alone when the id is not a pull request,
-// so the pull-request fields are optional keys here and absent means "wrong kind".
 const NodeResponse = S.Struct({
   node: S.OptionFromNullOr(
     S.Struct({
@@ -385,11 +378,15 @@ const NodeResponse = S.Struct({
       reviewThreads: S.optionalKey(WireConnection),
     })
   ),
-});
+}).pipe(
+  $I.annoteSchema("NodeResponse", {
+    description:
+      "A `node(id:)` answer. GitHub sends `{ __typename }` alone for an id that is not a pull request, so absent pull-request fields mean the wrong kind of node.",
+  })
+);
 
 const COMMENT_FIELDS = "id databaseId author { __typename login } body path line originalLine createdAt url";
 
-/** The `reviewThreads` connection selection both list documents share. */
 const THREAD_CONNECTION = `pageInfo { hasNextPage endCursor }
       nodes {
         id isResolved isOutdated isCollapsed path line startLine diffSide
@@ -439,7 +436,6 @@ const ResolutionResponse = S.Struct({
   result: S.Struct({ thread: S.OptionFromNullOr(S.Struct({ id: S.String, isResolved: S.Boolean })) }),
 });
 
-/** `resolveReviewThread` and `unresolveReviewThread` differ only in the field name; the alias keeps one response schema. */
 const resolutionDocument = (field: "resolveReviewThread" | "unresolveReviewThread") =>
   GraphQLDocument.make({
     name: field,
@@ -451,8 +447,6 @@ const resolutionDocument = (field: "resolveReviewThread" | "unresolveReviewThrea
 
 const ResolveDocument = resolutionDocument("resolveReviewThread");
 const UnresolveDocument = resolutionDocument("unresolveReviewThread");
-
-// --- Projections -------------------------------------------------------------
 
 const actorOf = (actor: typeof WireActor.Type): ReviewThreadActor =>
   ReviewThreadActor.make({ login: actor.login, isBot: actor.__typename === "Bot" });
@@ -485,7 +479,6 @@ const pageOf = (pullRequestAuthor: O.Option<string>, connection: typeof WireConn
 
 const loginOf = (actor: typeof WireLogin.Type): string => actor.login;
 
-/** The warning `list` logs once per page naming every thread whose comments were cut at 100. */
 const truncationWarning = (threadIds: A.NonEmptyReadonlyArray<string>): string =>
   `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; ReviewThread reads only the first 100 comments per thread, so those threads are returned with commentsTruncated set.`;
 
@@ -501,11 +494,6 @@ const warnTruncated = (page: ReviewThreadPage): Effect.Effect<void> =>
     })
   );
 
-/**
- * Walk every page, warning per page about truncated threads, until GitHub
- * reports no next page. A next page without a (non-empty) cursor, or one naming
- * the cursor the page was read from, is a malformed answer.
- */
 const collectPages = Effect.fn("ReviewThread.collectPages")(function* <E>(
   operation: string,
   fetchPage: (after: O.Option<string>) => Effect.Effect<ReviewThreadPage, E>
@@ -519,26 +507,17 @@ const collectPages = Effect.fn("ReviewThread.collectPages")(function* <E>(
     if (!page.pageInfo.hasNextPage) {
       return ReviewThreads.make({ pullRequestAuthor: page.pullRequestAuthor, threads });
     }
-    // An empty cursor names no position, so it is as missing as a null one.
-    const endCursor = O.filter(page.pageInfo.endCursor, Str.isNonEmpty);
-    if (O.isNone(endCursor)) {
+    const nonEmptyEndCursor = O.filter(page.pageInfo.endCursor, Str.isNonEmpty);
+    if (O.isNone(nonEmptyEndCursor)) {
       return yield* GitHubGraphQLError.decode(operation, "another page was reported without an end cursor");
     }
-    // A page naming its own cursor as the next one would re-read the same
-    // hundred threads forever and count each of them once per lap.
-    if (O.contains(after, endCursor.value)) {
+    if (O.contains(after, nonEmptyEndCursor.value)) {
       return yield* GitHubGraphQLError.decode(operation, "the same end cursor was reported twice");
     }
-    after = endCursor;
+    after = nonEmptyEndCursor;
   }
 });
 
-// --- The outstanding rule ----------------------------------------------------
-
-/**
- * The follow-up on a resolved thread: the newest comment's author when the
- * pull request author resolved the thread and someone else spoke last.
- */
 const followUp: {
   (thread: ReviewThreadNode, pullRequestAuthor: O.Option<string>): O.Option<ReviewThreadActor>;
   (pullRequestAuthor: O.Option<string>): (thread: ReviewThreadNode) => O.Option<ReviewThreadActor>;
@@ -632,8 +611,6 @@ export const isOutstanding: {
  */
 export const outstanding = (read: ReviewThreads): number =>
   A.length(A.filter(read.threads, isOutstanding(read.pullRequestAuthor)));
-
-// --- The service -------------------------------------------------------------
 
 /**
  * List a pull request's review threads and reply to, resolve or unresolve one.

@@ -177,19 +177,18 @@ describe("Package wire transform + rest", () => {
 
   it.effect("carries an own __proto__ manifest key through round-trip without prototype pollution", () =>
     Effect.gen(function* () {
-      // JSON.parse defines `__proto__` as an OWN data property — exactly what
-      // a hostile or merely odd manifest on disk produces. The wire transform
-      // must store it as data (null-prototype rest record), never assign it
-      // (which on a plain object MUTATES the prototype and loses the key).
       const raw = yield* S.decodeEffect(Json)(
         '{"name":"proto-carrier","version":"1.0.0","__proto__":{"polluted":true},"custom":"kept"}'
       );
 
       const decoded = yield* Package.decode(raw);
       const restProto = Object.getOwnPropertyDescriptor(decoded.rest, "__proto__");
-      assert.deepStrictEqual(restProto?.value, { polluted: true });
-      // No pollution anywhere: fresh objects must not have inherited the key.
-      assert.isFalse("polluted" in {});
+      assert.deepStrictEqual(
+        restProto?.value,
+        { polluted: true },
+        "JSON.parse makes __proto__ an own data property; the wire transform stores it as data, never assigns it"
+      );
+      assert.isFalse("polluted" in {}, "no pollution anywhere: fresh objects must not inherit the key");
       const fresh: { readonly polluted?: boolean } = {};
       assert.isUndefined(fresh.polluted);
 
@@ -198,9 +197,8 @@ describe("Package wire transform + rest", () => {
       assert.deepStrictEqual(encodedProto?.value, { polluted: true });
       assert.strictEqual(encoded.custom, "kept");
       assert.isFalse("rest" in encoded);
-      // Byte-level: the serialized manifest still carries the key as data.
       const value1 = yield* S.encodeEffect(Json)(encoded);
-      assert.include(value1, '"__proto__":{"polluted":true}');
+      assert.include(value1, '"__proto__":{"polluted":true}', "the serialized manifest still carries the key as data");
       const rendered = yield* S.decodeEffect(Json)(decoded.toJsonString());
       assert.deepStrictEqual(Object.getOwnPropertyDescriptor(rendered, "__proto__")?.value, { polluted: true });
       assert.strictEqual(rendered.custom, "kept");
@@ -211,11 +209,13 @@ describe("Package wire transform + rest", () => {
   it.effect("a typed field wins over a rest entry smuggling the same key", () =>
     Effect.gen(function* () {
       const decoded = yield* Package.decode({ name: "p", version: "1.0.0", description: "real" });
-      // A decode never lands a known key in `rest`; only a hand-built patch
-      // can smuggle one. The typed member must win on encode.
       const smuggled = decoded.copyWith({ rest: { description: "shadow", other: 1 } });
       const encoded = yield* S.encodeUnknownEffect(Package.schema)(smuggled);
-      assert.strictEqual(encoded.description, "real");
+      assert.strictEqual(
+        encoded.description,
+        "real",
+        "only a hand-built patch can put a known key in rest; the typed member wins"
+      );
       assert.strictEqual(encoded.other, 1);
       assert.isFalse("rest" in encoded);
     })
@@ -313,8 +313,7 @@ describe("Package.toJsonString", () => {
       assert.isTrue(keys.indexOf("name") < keys.indexOf("version"));
       assert.isTrue(keys.indexOf("version") < keys.indexOf("description"));
       assert.isTrue(keys.indexOf("scripts") < keys.indexOf("dependencies"));
-      // unset dependency maps do not appear
-      assert.isFalse("optionalDependencies" in parsed);
+      assert.isFalse("optionalDependencies" in parsed, "unset dependency maps do not appear");
     })
   );
 });

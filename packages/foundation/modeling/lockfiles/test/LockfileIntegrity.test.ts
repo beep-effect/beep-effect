@@ -1,6 +1,3 @@
-// Seam repair 2: integrity checking as a total, pure function fed by
-// in-memory manifests — no Effect, no error channel, no IO anywhere.
-
 import { Lockfile } from "@beep/lockfiles/Lockfile";
 import { LockfileIntegrity, WorkspaceManifest } from "@beep/lockfiles/LockfileIntegrity";
 import { ResolvedPackage } from "@beep/lockfiles/ResolvedPackage";
@@ -16,7 +13,7 @@ const registry = (name: string, version: string): ResolvedPackage =>
 const lockfileWith = (packages: ReadonlyArray<ResolvedPackage>): Lockfile =>
   Lockfile.make({ format: "npm", lockfileVersion: "3", packages, workspaceDependencies: [] });
 
-describe("LockfileIntegrity.compare", () => {
+describe("LockfileIntegrity.compare is a total, pure function over in-memory manifests with no Effect or IO", () => {
   it("reports a fully consistent lockfile as valid", () => {
     const lockfile = lockfileWith([
       workspace("@acme/core", "packages/core"),
@@ -198,16 +195,16 @@ describe("LockfileIntegrity.compare", () => {
   it("skips rows whose range or resolved version does not parse", () => {
     const lockfile = lockfileWith([
       workspace("@acme/core", "packages/core"),
-      registry("weird-version", "not-a-semver"),
-      registry("fine", "1.0.0"),
+      registry("resolved-unparseable", "not-a-semver"),
+      registry("range-unparseable", "1.0.0"),
     ]);
     const manifests = [
       WorkspaceManifest.make({
         name: "@acme/core",
         dependencies: {
-          "weird-version": "^1.0.0", // resolved side unparseable — skipped
-          fine: "definitely !! not a range", // range side unparseable — skipped
-          "not-resolved-at-all": "^1.0.0", // not in the lockfile — skipped
+          "resolved-unparseable": "^1.0.0",
+          "range-unparseable": "definitely !! not a range",
+          "not-in-the-lockfile": "^1.0.0",
         },
       }),
     ];

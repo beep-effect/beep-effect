@@ -56,7 +56,6 @@ class FixtureError extends S.TaggedError<FixtureError, { readonly brand: unique 
   })
 ) {}
 
-/** GitHub's own maximum page size, and the default this package requests. */
 const DEFAULT_PER_PAGE = 100;
 
 /**
@@ -92,6 +91,13 @@ export interface GitHubClientShape {
    * **Gotchas**
    *
    * Handing this a non-paginating route is a compile error.
+   *
+   * A single `request` against a paginating route returns its first page only,
+   * so a collection read that way looks complete and is silently truncated.
+   *
+   * The result is always the item array: octokit's paginator unwraps a
+   * `{ total_count, items }` envelope, and a collection GitHub answers without
+   * its array key comes back empty.
    */
   readonly paginate: {
     <R extends Rest.PaginatingRoute>(
@@ -425,6 +431,10 @@ export class GitHubFixtures extends S.Opaque<GitHubFixtures, { readonly brand: u
      * **params** they were called with, which is what lets a suite assert that a
      * method sent the right `owner`/`repo`/body rather than only the right
      * route. `graphql` records the document name as `route`.
+     *
+     * A call is recorded before its fixture is looked up, so a call that finds
+     * no entry or a recorded failure still appears: a suite can tell "never
+     * called" from "called and failed".
      */
     requested: S.optionalKey(RecordedCalls).pipe(
       $I.annoteKey("GitHubFixtures.requested", {
@@ -779,13 +789,13 @@ export const makeClientShape = Effect.fn("GitHubClient.makeClientShape")(functio
     ) {
       yield* Effect.annotateCurrentSpan({ document: document.name });
       const raw = yield* transport.graphql(document.name, document.document, document.encodeVariables(variables));
-      return yield* document.decode(raw).pipe(
-        // Normalized at the boundary: a SchemaError never escapes into
-        // application logic.
-        Effect.catchTag("SchemaError", (error) =>
-          Effect.fail(GitHubGraphQLError.decode(document.name, "response did not match its schema", error))
-        )
-      );
+      return yield* document
+        .decode(raw)
+        .pipe(
+          Effect.catchTag("SchemaError", (error) =>
+            Effect.fail(GitHubGraphQLError.decode(document.name, "response did not match its schema", error))
+          )
+        );
     })
   );
 
@@ -808,11 +818,6 @@ const makeFixture = (fixtures: GitHubFixtures.Encoded): GitHubClientShape => {
       _params: Rest.Params<R>,
       options?: PageOptions
     ): Stream.Stream<Rest.Item<R>, GitHubError> => {
-      // Record BEFORE the existence and error branches, matching every other
-      // surface. Recording afterwards meant a stubbed-error or unstubbed
-      // paginated read never appeared in `requested`, so a suite could not tell
-      // "paginate was never called" from "paginate was called and failed" —
-      // which is the one case the error-as-response fixture exists to confirm.
       const perPage = perPageOf(options);
       requested?.push(RecordedCall.make({ kind: "paginate", route, params: { ..._params }, perPage }));
 
@@ -832,7 +837,6 @@ const makeFixture = (fixtures: GitHubFixtures.Encoded): GitHubClientShape => {
     }
   );
 
-  // A missing fixture is wiring, not a domain condition — see `unstubbed`.
   const missing: {
     (method: string, route: string): Effect.Effect<never, GitHubError>;
     (route: string): (method: string) => Effect.Effect<never, GitHubError>;
@@ -853,8 +857,6 @@ const makeFixture = (fixtures: GitHubFixtures.Encoded): GitHubClientShape => {
         requested?.push(RecordedCall.make({ kind: "request", route, params: { ...params } }));
         const data: Result.Result<Rest.Data<R>, GitHubError> | undefined = fixtures.request?.[route];
         if (data === undefined) return missing("GitHubClient.request", route);
-        // A recorded Result failure is the response: this is how a suite stubs a
-        // 404 deliberately, rather than relying on a route's absence.
         return Effect.fromResult(data);
       }
     ),

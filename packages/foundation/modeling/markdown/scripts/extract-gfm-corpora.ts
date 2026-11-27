@@ -77,13 +77,11 @@ const EXAMPLE_FENCE = `${FENCE} example`;
 const HEADER = /^#+ /;
 const HEADERS = /#+ /g;
 
-// Python's str.strip() whitespace set (str.isspace): unlike JS \s it includes \x1c-\x1f and U+0085
-// and excludes U+FEFF.
-const PY_SPACE = "[\\t\\n\\v\\f\\r \\x1c-\\x1f\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]";
-const pyStrip = Str.replace(new RegExp(`^${PY_SPACE}+|${PY_SPACE}+$`, "g"), "");
+const PY_ISSPACE_CLASS =
+  "[\\t\\n\\v\\f\\r \\x1c-\\x1f\\x85\\xa0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000]";
+const pyStrip = Str.replace(new RegExp(`^${PY_ISSPACE_CLASS}+|${PY_ISSPACE_CLASS}+$`, "g"), "");
 
-// Lines with their "\n" terminators, as Python iterates a file opened with newline="\n".
-const linesOf = (text: string): ReadonlyArray<string> =>
+const pyFileLines = (text: string): ReadonlyArray<string> =>
   pipe(
     Str.match(/[^\n]*\n|[^\n]+$/g)(text),
     O.getOrElse((): ReadonlyArray<string> => [])
@@ -179,7 +177,7 @@ const scanLine = (state: ScanState, line: string): ScanState => {
  * @since 0.0.0
  */
 export const getTests = (spec: string): ReadonlyArray<GfmExample> =>
-  A.reduce(linesOf(spec), initialState, scanLine).examples;
+  A.reduce(pyFileLines(spec), initialState, scanLine).examples;
 
 /**
  * Keep the examples whose section matches a case-insensitive pattern, as
@@ -194,8 +192,7 @@ export const filterSections =
     return A.filter(examples, (example) => section.test(example.section));
   };
 
-// Python json.dumps(ensure_ascii=True): every non-ASCII UTF-16 code unit as a lowercase \uXXXX escape.
-const asciiOnly = (json: string): string =>
+const pyEnsureAscii = (json: string): string =>
   A.join(
     A.map(Str.split(json, ""), (unit) => {
       const code = O.getOrElse(Str.charCodeAt(0)(unit), () => 0);
@@ -210,7 +207,7 @@ const asciiOnly = (json: string): string =>
  * @since 0.0.0
  */
 export const renderCorpus = (examples: ReadonlyArray<GfmExample>) =>
-  Effect.map(encodeCorpus(examples), (json) => `${asciiOnly(json)}\n`);
+  Effect.map(encodeCorpus(examples), (json) => `${pyEnsureAscii(json)}\n`);
 
 const summarize = (label: string, examples: ReadonlyArray<GfmExample>): string =>
   A.join(
