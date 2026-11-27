@@ -156,9 +156,7 @@ describe("capability schemas", () => {
   );
 });
 
-describe("capability schema arbitraries", () => {
-  // Schema-derived property coverage: every generated value survives an
-  // encode → decode round trip structurally (S.Class instances are Equal).
+describe("schema arbitraries round-trip structurally with S.Class equality", () => {
   const roundTrips = Effect.fn("roundTrips")(function* <A, I>(schema: S.Codec<A, I>, value: A) {
     const encoded = yield* S.encodeEffect(schema)(value);
     const decoded = yield* S.decodeEffect(schema)(encoded);

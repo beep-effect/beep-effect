@@ -20,7 +20,6 @@ class AlternateBlobStore extends Context.Service<AlternateBlobStore, Context.Ser
 
 class Meta extends S.Class<Meta, { readonly brand: unique symbol }>("Meta")({ tag: S.String, durationMs: S.Finite }) {}
 
-/** A transport that keeps what it was given, keyed by the url it was given it at. */
 const memoryTransfer = () => {
   const blobs = MutableHashMap.empty<string, Uint8Array>();
   const transfer: DataBlobTransfer = {
@@ -53,10 +52,6 @@ const store = (
 
 describe("GitHubCacheBlobStore", () => {
   {
-    // The single most common misuse: the results backend is injected into
-    // `uses:` steps and not into `run:` steps, so the same code that works
-    // inside a bundled action fails here — and the failure has to say which
-    // variable is absent, because nothing else in the environment differs.
     const { fetch } = twirpFetch({});
     it.layer(store(fetch, memoryTransfer().transfer, resultsEnv({ ACTIONS_RESULTS_URL: "" })), {
       timeout: "30 seconds",
@@ -66,7 +61,11 @@ describe("GitHubCacheBlobStore", () => {
           const error = yield* Effect.flip(Effect.flatMap(BlobStore, (blobs) => blobs.has("k")));
           assert.instanceOf(error, BlobStoreError);
           assert.strictEqual(error.reason, "misconfigured");
-          assert.include(error.message, "ACTIONS_RESULTS_URL");
+          assert.include(
+            error.message,
+            "ACTIONS_RESULTS_URL",
+            "the backend reaches uses: steps, not run: steps, and nothing else differs; the error names the variable"
+          );
         })
       );
     });
@@ -94,13 +93,13 @@ describe("GitHubCacheBlobStore", () => {
             A.map(calls, (call) => call.method),
             ["CreateCacheEntry", "FinalizeCacheEntryUpload"]
           );
-          // The url is the one the backend signed, not one this package composed.
           const uploaded = O.getOrUndefined(MutableHashMap.get(blobs, "https://blob.example/upload?sig=abc"));
-          assert.isDefined(uploaded);
-          // The finalized size is the size of the FRAMED bytes. Reporting the
-          // caller's body length instead produces an entry the backend accepts and
-          // then serves truncated.
-          assert.strictEqual(calls[1]?.body.size_bytes, String(uploaded?.byteLength));
+          assert.isDefined(uploaded, "the upload goes to the url the backend signed, not one this package composed");
+          assert.strictEqual(
+            calls[1]?.body.size_bytes,
+            String(uploaded?.byteLength),
+            "the finalized size is the framed size; the body length makes an entry the backend serves truncated"
+          );
           assert.isAbove(uploaded?.byteLength ?? 0, 3);
         })
       );
@@ -130,11 +129,10 @@ describe("GitHubCacheBlobStore", () => {
       it.effect("appends the trailing slash the Twirp path needs and sends the token as a bearer", () =>
         Effect.gen(function* () {
           yield* Effect.flatMap(BlobStore, (blobs) => blobs.has("k"));
-          // `ACTIONS_RESULTS_URL` has no trailing slash in the fixture; without one
-          // the path collapses to `…/twirpbasetwirp/…` and every RPC 404s.
           assert.strictEqual(
             calls[0]?.url,
-            "https://results.example/twirpbase/twirp/github.actions.results.api.v1.CacheService/GetCacheEntryDownloadURL"
+            "https://results.example/twirpbase/twirp/github.actions.results.api.v1.CacheService/GetCacheEntryDownloadURL",
+            "the fixture URL has no trailing slash; unjoined, the path is …/twirpbasetwirp/… and every RPC 404s"
           );
           assert.include(calls[0]?.authorization ?? "", "Bearer ");
         })
@@ -179,9 +177,6 @@ describe("GitHubCacheBlobStore", () => {
   }
 
   {
-    // The backend is an internal protocol whose two halves disagree; reading
-    // one spelling only presents as "the cache never hits", which is the
-    // hardest cache failure to notice.
     const { transfer, blobs } = memoryTransfer();
 
     const { fetch } = twirpFetch({
@@ -192,15 +187,16 @@ describe("GitHubCacheBlobStore", () => {
         Effect.gen(function* () {
           MutableHashMap.set(blobs, "https://blob.example/snake", new Uint8Array([1]));
           const flatMap1 = yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.has("k"));
-          assert.isTrue(flatMap1);
+          assert.isTrue(
+            flatMap1,
+            "the backend's two halves disagree on spelling; reading one shows only as a cache that never hits"
+          );
         })
       );
     });
   }
 
   {
-    // Two jobs racing on the same key: the entry is immutable, so the loser
-    // got what it asked for and must not upload over it.
     const { blobs, transfer } = memoryTransfer();
 
     const { calls, fetch } = twirpFetch({ CreateCacheEntry: () => new Response(null, { status: 409 }) });
@@ -210,7 +206,11 @@ describe("GitHubCacheBlobStore", () => {
           yield* Effect.flatMap(BlobStore, (blobStore) =>
             blobStore.put("k", { metadata: Meta.make({ tag: "x", durationMs: 1 }), body: new Uint8Array([1]) }, Meta)
           );
-          assert.strictEqual(MutableHashMap.size(blobs), 0, "a conflicting create must not upload");
+          assert.strictEqual(
+            MutableHashMap.size(blobs),
+            0,
+            "two jobs race on an immutable entry, so the loser got what it asked for and must not upload"
+          );
           assert.lengthOf(calls, 1, "and must not finalize either");
         })
       );
@@ -235,8 +235,6 @@ describe("GitHubCacheBlobStore", () => {
   }
 
   {
-    // Bytes in Azure that no lookup can find are worse than no write: the
-    // caller believes the entry exists.
     const { blobs, transfer } = memoryTransfer();
 
     const { fetch } = twirpFetch({
@@ -252,7 +250,11 @@ describe("GitHubCacheBlobStore", () => {
             )
           );
           assert.strictEqual(MutableHashMap.size(blobs), 1);
-          assert.include(error.message, "FinalizeCacheEntryUpload");
+          assert.include(
+            error.message,
+            "FinalizeCacheEntryUpload",
+            "bytes in Azure no lookup can find are worse than no write: the caller believes the entry exists"
+          );
         })
       );
     });
@@ -261,8 +263,6 @@ describe("GitHubCacheBlobStore", () => {
   {
     const miss = twirpFetch({ GetCacheEntryDownloadURL: () => json({ ok: false }) });
 
-    // The url resolved but the bytes did not arrive. That is not a miss —
-    // reporting it as one would silently discard a cache the runner has.
     const present = twirpFetch({
       GetCacheEntryDownloadURL: () => json({ ok: true, signedDownloadUrl: "https://blob.example/gone" }),
     });
@@ -280,7 +280,11 @@ describe("GitHubCacheBlobStore", () => {
           const flatMap2 = yield* Effect.flatMap(BlobStore, (blobStore) => blobStore.get("absent", Meta));
           assertNone(flatMap2);
           const error = yield* Effect.flip(Effect.flatMap(AlternateBlobStore, (blobStore) => blobStore.get("k", Meta)));
-          assert.strictEqual(error._tag, "BlobStoreError");
+          assert.strictEqual(
+            error._tag,
+            "BlobStoreError",
+            "the url resolved but the bytes did not arrive; a miss would silently discard a cache the runner has"
+          );
         })
       );
     });
@@ -293,7 +297,6 @@ describe("GitHubCacheBlobStore", () => {
           index === 0 ? new Response(null, { status: 503 }) : json({ ok: false }),
       });
       it.layer(store(fetch, memoryTransfer().transfer), { timeout: "30 seconds" })((it) => {
-        // This single-test layer owns a fresh TestClock; its adjustment cannot affect another test.
         it.effect("retries a 503 and succeeds", () =>
           Effect.gen(function* () {
             const blobStore = yield* BlobStore;
@@ -311,9 +314,11 @@ describe("GitHubCacheBlobStore", () => {
         it.effect("does not retry a 400", () =>
           Effect.gen(function* () {
             const error = yield* Effect.flip(Effect.flatMap(BlobStore, (blobStore) => blobStore.has("k")));
-            // Never sleeps, so this test needs no clock at all — which is itself
-            // the assertion that a rejected request is not retried four times.
-            assert.lengthOf(calls, 1);
+            assert.lengthOf(
+              calls,
+              1,
+              "no clock is advanced, so finishing at all proves a 400 is not retried four times"
+            );
             assert.strictEqual(error.reason === "refused" ? error.status : undefined, 400);
           })
         );

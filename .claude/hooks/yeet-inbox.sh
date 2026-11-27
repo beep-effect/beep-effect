@@ -2,7 +2,8 @@
 # Local inbox adapter for Claude Code, Codex, and Grok-compatible tails.
 # The hook never calls GitHub. Its hot path reads only .beep/inbox state.
 # PreToolUse events inject context without denying tools. Unacknowledged P0 rows
-# remain a hard gate only at Stop and SubagentStop.
+# gate Stop and SubagentStop once per P0 set per stop chain. On stop_hook_active,
+# release an already-blocked set so Claude Code's 9-block cap is not the release valve.
 set -u
 
 harness="${1:-claude}"
@@ -377,8 +378,18 @@ $context"
   *:Stop|*:SubagentStop)
     if [ -n "$first_p0" ]; then
       stamp_first_seen_and_write "$entries"
-      context="$(render_context "$entries")"
-      jq -cn --arg context "$context" '{decision:"block",reason:$context}'
+      stop_hook_active="$(printf '%s' "$payload" | jq -r '.stop_hook_active == true' 2>/dev/null || printf 'false')"
+      p0_ids="$(printf '%s' "$entries" | jq -c '[.[] | select(.severity == "P0") | .id] | sort')"
+      stop_blocked_ids="$(printf '%s' "$state" | jq -c '.stopBlockedIds // []')"
+      if [ "$stop_hook_active" = true ] && [ "$p0_ids" = "$stop_blocked_ids" ]; then
+        context="$(printf '%s' "$p0_ids" | jq -r '"Open P0 rows: " + join(", ") + ". The Stop gate already fired once for them in this stop chain."')"
+        jq -cn --arg context "$context" '{systemMessage:$context}'
+      else
+        state="$(printf '%s' "$state" | jq -c --argjson ids "$p0_ids" '.stopBlockedIds = $ids')"
+        write_state
+        context="$(render_context "$entries")"
+        jq -cn --arg context "$context" '{decision:"block",reason:$context}'
+      fi
     else
       printf '{}\n'
     fi

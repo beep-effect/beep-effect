@@ -14,14 +14,6 @@ import * as Effect from "effect/Effect";
 import { configForStage } from "./stack/OipWebConfig.ts";
 import { oipWebProviders, oipWebResources, requireCiForLiveStage } from "./stack/OipWebStack.ts";
 
-/**
- * The shared Alchemy state store (goals/infra-alchemy-rebuild, D6 and D17):
- * one account-regional S3 bucket, `alchemy-state-<accountId>-<region>-an`,
- * SSE-KMS with the AWS-managed S3 key, bucket keys on, customer-provided keys
- * blocked. Account, region and credentials come from the process
- * environment: exported from aws-vault on a workstation, set by the GitHub
- * OIDC state role in CI. Runbook: docs/runbooks/alchemy-infra.md.
- */
 const state = AWS.state({
   backend: "s3",
   encryption: { sseAlgorithm: "aws:kms", bucketKeyEnabled: true, blockedEncryptionTypes: ["SSE-C"] },
@@ -32,6 +24,15 @@ const state = AWS.state({
  * deploy only from CI (`.github/workflows/deploy-oip-web-infra.yml`); a
  * personal stage (`dev_$USER`) owns a new, stage-named project and bucket
  * and nothing live.
+ *
+ * **Details**
+ *
+ * Supply account, region and credentials through the environment: an aws-vault
+ * export on a workstation or the GitHub OIDC state role in CI. This stack uses
+ * the shared account-regional S3 backend governed by the
+ * [shared-state bootstrap decision](../../goals/infra-alchemy-rebuild/decisions/2026-11-09-shared-s3-state-store-bootstrap.md).
+ * Follow that authority for the AWS-managed versus customer-managed KMS
+ * bootstrap choice and for state teardown after every stack is destroyed.
  *
  * **Example** (Plan a personal stage)
  *
@@ -54,7 +55,7 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* () {
     const stack = yield* Alchemy.Stack;
-    // `prod` and `staging` deploy only from CI; a local plan of either fails here.
+
     yield* requireCiForLiveStage(stack.stage);
     const config = yield* configForStage(stack.stage).pipe(Effect.orDie);
     return yield* oipWebResources(config);

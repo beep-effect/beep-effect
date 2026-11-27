@@ -14,7 +14,6 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const Json = S.fromJsonString(S.Unknown);
 const JsonString = S.fromJsonString(S.String);
-// JSON canonicalizes -0 to 0, so this contract can encode successfully and fail the parsed round trip.
 const NegativeZero = S.Finite.check(
   S.makeFilter((value) => 1 / value === Number.NEGATIVE_INFINITY, {
     identifier: "NegativeZero",
@@ -25,12 +24,6 @@ const NegativeZero = S.Finite.check(
 
 const Token = S.Struct({ value: S.String, expires: S.Finite });
 
-/**
- * A real in-memory volume for the runner files, fresh per test — the shape
- * `ActionEnvironment`'s TSDoc points consumers at. The writes are `flag: "a"`
- * appends and the volume performs them, rather than a stub re-implementing
- * append by concatenation. `/rf` is seeded because a write needs its parent.
- */
 const runnerFiles = () => {
   const handle = MemoryFileSystem.makeSync({ "/rf": MemoryFileSystem.directory() });
   return { written: handle.volume, layer: handle.layer };
@@ -87,12 +80,13 @@ describe("ActionState", () => {
     const { files, layer } = stateFixture();
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("refuses a key that cannot head a block, and writes nothing", () => {
-        // The same heredoc protocol as ActionOutputs: a key carrying a line break
-        // would end its block early and corrupt every entry after it, so it is
-        // a typed `writeFailed` naming the key — never a silent corruption.
         const run = Effect.gen(function* () {
           const error = yield* Effect.flip((yield* ActionState).save("to\nken", { value: "abc", expires: 1 }, Token));
-          assert.strictEqual(error.reason, "writeFailed");
+          assert.strictEqual(
+            error.reason,
+            "writeFailed",
+            "as in ActionOutputs, a line break would end the block early and corrupt every later entry"
+          );
           assert.strictEqual(error.key, "to\nken");
         });
         return Effect.map(run, () => {
@@ -106,25 +100,31 @@ describe("ActionState", () => {
     const { files, layer } = stateFixture();
     it.layer(layer, { timeout: "30 seconds" })((it) => {
       it.effect("refuses a key containing the runner-file separators, and writes nothing", () => {
-        // The runner reads each line up to its first `=` or `<<`, whichever comes
-        // first: a key carrying `=` parses as a key=value property before the
-        // block ever opens, and a key carrying `<<` splits at the wrong delimiter
-        // — either way every entry after it is corrupt, so both fail typed. A key
-        // ending in `<` composes a header (`to<<<DELIM`) whose first `<<` matches
-        // one character early, leaving a delimiter the terminator can never match.
         const run = Effect.gen(function* () {
           const forEquals = yield* Effect.flip(
             (yield* ActionState).save("to=ken", { value: "abc", expires: 1 }, Token)
           );
-          assert.strictEqual(forEquals.reason, "writeFailed");
+          assert.strictEqual(
+            forEquals.reason,
+            "writeFailed",
+            "the runner reads up to the first = or <<, so a key with = parses as key=value before the block opens"
+          );
           assert.strictEqual(forEquals.key, "to=ken");
           const forHeredoc = yield* Effect.flip(
             (yield* ActionState).save("to<<ken", { value: "abc", expires: 1 }, Token)
           );
-          assert.strictEqual(forHeredoc.reason, "writeFailed");
+          assert.strictEqual(
+            forHeredoc.reason,
+            "writeFailed",
+            "a key with << splits at the wrong delimiter and corrupts every later entry"
+          );
           assert.strictEqual(forHeredoc.key, "to<<ken");
           const forTrailing = yield* Effect.flip((yield* ActionState).save("to<", { value: "abc", expires: 1 }, Token));
-          assert.strictEqual(forTrailing.reason, "writeFailed");
+          assert.strictEqual(
+            forTrailing.reason,
+            "writeFailed",
+            "a trailing < composes to<<<DELIM, whose first << matches early and leaves an unmatchable delimiter"
+          );
           assert.strictEqual(forTrailing.key, "to<");
         });
         return Effect.map(run, () => {
@@ -219,23 +219,22 @@ describe("ActionState", () => {
       const { files, layer } = stateFixture();
       it.layer(layer, { timeout: "30 seconds" })((it) => {
         it.effect("a schema whose encoded form is not plain JSON fails AT SAVE, naming the key", () => {
-          // The regression that cost a real matrix round: Schema.Option's encoded
-          // form is an Option INSTANCE — JSON.stringify serializes it via toJSON
-          // to {"_id":"Option",…}, the save "succeeds", and post's decode fails
-          // `malformed` with no pointer to the cause. The round-trip must decode
-          // the PARSED value: a mutant that re-decodes the encoded value instead
-          // passes an Option instance straight through and goes green here.
           const run = Effect.gen(function* () {
             return yield* Effect.flip((yield* ActionState).save("choice", O.some("x"), S.Option(S.String)));
           });
           return Effect.map(run, (error) => {
             assert.strictEqual(error._tag, "ActionStateError");
-            assert.strictEqual(error.reason, "notPlainJson");
+            assert.strictEqual(
+              error.reason,
+              "notPlainJson",
+              "Schema.Option encodes to an Option whose toJSON is {_id: Option}; save decodes the parsed value"
+            );
             assert.strictEqual(error.key, "choice");
             assert.include(error.message, "plain JSON");
-            // The failure must precede the write: a state file carrying the bad
-            // value would resurrect the phase-later mystery this exists to kill.
-            assert.isUndefined(files.written.text("/rf/state"));
+            assert.isUndefined(
+              files.written.text("/rf/state"),
+              "the failure precedes the write, or post would later fail malformed with no pointer to the cause"
+            );
           });
         });
       });
@@ -264,10 +263,12 @@ describe("ActionState", () => {
       it.layer(layer, { timeout: "30 seconds" })((it) => {
         it.effect("an unstringifiable encoded form fails typed rather than as a defect", () =>
           Effect.gen(function* () {
-            // JSON.stringify THROWS on a bigint; before the round-trip that
-            // left `save` through the defect channel, not the typed one.
             const error = yield* Effect.flip((yield* ActionState).save("big", { n: 1n }, S.Any));
-            assert.strictEqual(error.reason, "notPlainJson");
+            assert.strictEqual(
+              error.reason,
+              "notPlainJson",
+              "JSON.stringify throws on a bigint; save must keep that on the typed channel, not the defect one"
+            );
             assert.strictEqual(error.key, "big");
           })
         );
@@ -288,9 +289,11 @@ describe("ActionState", () => {
             const argument = S.encodeResult(Json);
             const logLines1 = yield* TestConsole.logLines;
             const lines = Result.getOrThrowWith(argument(logLines1), (error) => error);
-            assert.include(lines, "::add-mask::ghs_abc123");
-            // GITHUB_STATE is plaintext by GitHub's protocol; the mask is the only
-            // available defense, so it must have happened.
+            assert.include(
+              lines,
+              "::add-mask::ghs_abc123",
+              "GITHUB_STATE is plaintext by GitHub's protocol, so the mask is the only defense and must have happened"
+            );
             assert.include(files.written.text("/rf/state") ?? "", "ghs_abc123");
           });
         });
@@ -325,7 +328,11 @@ describe("ActionState", () => {
         const error = yield* Effect.flip((yield* ActionState).save("signed-zero", -0, NegativeZero));
         assert.strictEqual(error.reason, "notPlainJson");
         assert.strictEqual(error.key, "signed-zero");
-        assert.instanceOf(error.cause, S.SchemaError);
+        assert.instanceOf(
+          error.cause,
+          S.SchemaError,
+          "JSON canonicalizes -0 to 0, so NegativeZero encodes and then fails the parsed round trip"
+        );
         assert.isUndefined(files.written.text("/rf/state"));
       })
     );

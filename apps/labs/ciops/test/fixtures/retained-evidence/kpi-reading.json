@@ -25,7 +25,7 @@
     {
       "role": "adoption-table",
       "path": "apps/labs/ciops/test/fixtures/retained-evidence/kpi-adoption-table.json",
-      "sha256": "c61b29d4bae157405336f041d8c071bb14adb7cb0b00cd6ef3486c6f2887e9e4"
+      "sha256": "191b21a6fc3ee7d63c95a2b03f00ed348c55f287f26e6bfd710c975ba7c4a5be"
     }
   ],
   "windows": [

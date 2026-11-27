@@ -57,7 +57,6 @@ import { dryRunPipelineLayer, FilesLayer, fixtureMessage, PipelineHarness, Pipel
 import type { DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
 
 type WiringLogShape = {
-  /** The listing floor each `intake` wiring was asked for. */
   readonly initialSince: Ref.Ref<ReadonlyArray<string>>;
 };
 
@@ -72,8 +71,6 @@ const WiringLogLayer = Layer.effect(
   })
 );
 
-// The services the fake wiring hands to the handlers are built once per test block, so the test
-// body and the handler see the same harness, store, file system and scripted mailbox.
 const makeTestHandlers = Effect.gen(function* () {
   const context = yield* Effect.context<
     DocketIntakeStore | FakeM365 | FileSystem.FileSystem | PipelineHarness | WiringLog
@@ -108,12 +105,10 @@ const { DOCKET_INTAKE_START_AT: _startAt, ...envWithoutStart } = fixtureEnv;
 
 const noFlags = { maxMessages: O.none(), since: O.none() };
 
-// The JSON lines a command printed; log lines on the test console are left out.
 const printed = Effect.map(TestConsole.logLines, (lines) =>
   A.filter(lines, (line): line is string => Str.isString(line) && Str.startsWith("{")(line))
 );
 
-// The first JSON line a command printed.
 const firstLine = Effect.flatMap(printed, (lines) => Effect.fromOption(A.head(lines)));
 
 const decodeCycleReport = S.decodeUnknownEffect(S.fromJsonString(DocketCycleReport));
@@ -132,8 +127,6 @@ const REVIEW_HUB = "/fixture/review-hub";
 const record = (outcome: DocketLedgerRecord["outcome"]) =>
   DocketLedgerRecord.make({ attempts: 1, outcome, processedOn: DAY, receivedAt: "2030-01-09T09:00:00.000Z" });
 
-// Real saved state, as a running service would have left it: three settled or failing messages
-// the mailbox no longer lists, and no cursor yet.
 const savedState = DocketIntakeState.make({
   ledger: {
     "m-failing": record(IntakeFailed.make({ messageId: "m-failing", stage: "review" })),
@@ -194,12 +187,11 @@ describe("@beep/docket-intake commands", () => {
         assertSome((yield* Ref.get(harness.state)).cursor, "2030-01-09T10:00:00.000Z");
         expect(lines).toHaveLength(1);
         expect([report.runId, report.processed, report.entered]).toStrictEqual(["run-19700101T000000000Z", 1, 1]);
-        // One due-date entry, four reminders and the mark: exactly the writes the harness received.
-        expect(A.map(journal, (line) => line.kind)).toStrictEqual([
-          ...A.replicate("event-created", 5),
-          "message-marked",
-          "run-completed",
-        ]);
+
+        expect(
+          A.map(journal, (line) => line.kind),
+          "One due-date entry, four reminders and the mark are exactly the writes the harness received."
+        ).toStrictEqual([...A.replicate("event-created", 5), "message-marked", "run-completed"]);
         const got3 = yield* Ref.get(harness.entries);
         expect(HashMap.size(got3)).toBe(5);
         const got4 = yield* Ref.get(harness.marked);
@@ -215,15 +207,17 @@ describe("@beep/docket-intake commands", () => {
         const handlers = yield* makeTestHandlers;
         const log = yield* WiringLog;
         const harness = yield* PipelineHarness;
-        // No mail on this run, so the saved cursor is exactly the seeded one.
+
         yield* Ref.set(harness.listingFailures, [true]);
 
         const kind = yield* kindOf(handlers.poll(noFlags));
         const state = yield* Ref.get(harness.state);
 
-        // The test clock stands at the Unix epoch.
         const got5 = yield* Ref.get(log.initialSince);
-        expect(got5).toStrictEqual(["1970-01-01T00:00:00.000Z"]);
+        expect(
+          got5,
+          "Handlers and test bodies share one block-scoped harness, store, filesystem and scripted mailbox. With no mail and TestClock at the Unix epoch, the persisted cursor is exactly the seeded first-run instant."
+        ).toStrictEqual(["1970-01-01T00:00:00.000Z"]);
         assertSome(state.cursor, "1970-01-01T00:00:00.000Z");
         assertSome(
           O.map(kind, (error) => [error.kind, error.message]),
@@ -326,9 +320,12 @@ describe("@beep/docket-intake commands", () => {
         ]);
         expect(A.map(A.take(report.entries, 1), (entry) => entry.date.toISOString())).toStrictEqual(["2030-04-08"]);
         expect(A.every(report.entries, (entry) => A.contains(entry.flags, "matter-lookup-failed"))).toBe(true);
-        // Nothing reached the calendar or the mailbox, and the real state directory is as it was.
+
         const got10 = yield* Ref.get(harness.entries);
-        expect(HashMap.size(got10)).toBe(0);
+        expect(
+          HashMap.size(got10),
+          "Nothing reached the calendar or mailbox, and the real state directory is unchanged."
+        ).toBe(0);
         const got11 = yield* Ref.get(harness.marked);
         expect(got11).toStrictEqual([]);
         const readFileString12 = yield* fs.readFileString(STATE_FILE);
@@ -459,7 +456,7 @@ describe("@beep/docket-intake commands", () => {
           const handlers = yield* makeTestHandlers;
           const fake = yield* FakeM365;
           const fs = yield* FileSystem.FileSystem;
-          // The cycle enters and marks `m1`; its question was stored before questions named their email.
+
           yield* handlers.poll(noFlags);
           yield* fs.makeDirectory(REVIEW_HUB, { recursive: true });
           const build20 = yield* Layer.build(DocketQuestionsLive.pipe(Layer.provide(BunCrypto.layer)));

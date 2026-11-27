@@ -12,13 +12,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-// Every value distinct, and `workflow_ref` ≠ `job_workflow_ref` (a reusable
-// workflow in another repository) — sbom's own fixture keeps them different
-// because upstream builds the builder id from one and the workflow path from
-// the other, and a constructor that confuses them passes everything when they
-// are equal. A survived mutant found exactly that; do not collapse them here
-// either.
-const CLAIMS = OidcClaims.make({
+const DISTINCT_CLAIMS = OidcClaims.make({
   iss: "https://token.actions.githubusercontent.com",
   ref: "refs/heads/release",
   sha: "d34db33fd34db33fd34db33fd34db33fd34db33f",
@@ -39,7 +33,6 @@ const provided = <A, E>(
   env: Layer.Layer<ActionEnvironment> = ActionEnvironment.layerTest()
 ) => program.pipe(provideScopedLayer(Layer.mergeAll(issuer, env)));
 
-/** An environment with NOTHING seeded — `GITHUB_SERVER_URL` genuinely absent — over an empty volume. */
 const emptyEnvironment = ActionEnvironment.layerFrom({}).pipe(Layer.provide(MemoryFileSystem.layer));
 
 describe("ActionsProvenance", () => {
@@ -47,9 +40,6 @@ describe("ActionsProvenance", () => {
     provided(
       Effect.gen(function* () {
         const provenance = yield* ActionsProvenance.capture("sigstore");
-        // The oracle is sbom's own constructor over the CORRECTLY spelled
-        // record, so this deep-equal pins exactly the snake_case→camelCase
-        // rename the module exists to own — every field, not a sample.
         assert.deepStrictEqual(
           provenance,
           SlsaProvenance.forGitHubWorkflow({
@@ -65,44 +55,45 @@ describe("ActionsProvenance", () => {
             runnerEnvironment: "github-hosted",
             runId: "777",
             runAttempt: "3",
-          })
+          }),
+          "sbom's own constructor over the correctly spelled record pins every snake_case to camelCase rename"
         );
       }),
-      OidcTokenIssuer.layerFor(CLAIMS)
+      OidcTokenIssuer.layerFor(DISTINCT_CLAIMS)
     )
   );
 
   it.effect("keeps repository_id and repository_owner_id on their own sides of the predicate", () =>
     provided(
       Effect.gen(function* () {
-        // The transposition hazard the ask names: both fields are strings, so
-        // swapping them compiles clean and signs a WRONG attestation. Asserted
-        // individually, against distinct values, on the emitted document.
         const provenance = yield* ActionsProvenance.capture();
-        assert.strictEqual(provenance.buildDefinition.internalParameters.github.repository_id, "1111");
+        assert.strictEqual(
+          provenance.buildDefinition.internalParameters.github.repository_id,
+          "1111",
+          "both fields are strings, so a swap compiles and signs a wrong attestation; each is asserted on its own"
+        );
         assert.strictEqual(provenance.buildDefinition.internalParameters.github.repository_owner_id, "2222");
       }),
-      OidcTokenIssuer.layerFor(CLAIMS)
+      OidcTokenIssuer.layerFor(DISTINCT_CLAIMS)
     )
   );
 
   it.effect("defaults the server URL to https://github.com when the environment does not set it", () =>
     provided(
       Effect.gen(function* () {
-        // `layerFrom({})` seeds nothing at all — the seeded test default
-        // happens to EQUAL the fallback, so using `layerTest()` here would
-        // pass even if the default never applied.
         const provenance = yield* ActionsProvenance.capture();
         assert.strictEqual(
           provenance.buildDefinition.externalParameters.workflow.repository,
-          "https://github.com/acme/widgets"
+          "https://github.com/acme/widgets",
+          "layerFrom({}) leaves GITHUB_SERVER_URL absent; layerTest()'s seeded default equals the fallback"
         );
         assert.strictEqual(
           provenance.runDetails.builder.id,
-          "https://github.com/acme/reusable/.github/workflows/publish.yml@refs/tags/v2"
+          "https://github.com/acme/reusable/.github/workflows/publish.yml@refs/tags/v2",
+          "upstream builds the builder id from job_workflow_ref, so the claims keep it distinct from workflow_ref"
         );
       }),
-      OidcTokenIssuer.layerFor(CLAIMS),
+      OidcTokenIssuer.layerFor(DISTINCT_CLAIMS),
       emptyEnvironment
     )
   );
@@ -126,7 +117,7 @@ describe("ActionsProvenance", () => {
           `${ghes}/acme/widgets/actions/runs/777/attempts/3`
         );
       }),
-      OidcTokenIssuer.layerFor(CLAIMS),
+      OidcTokenIssuer.layerFor(DISTINCT_CLAIMS),
       ActionEnvironment.layerTest({ GITHUB_SERVER_URL: "https://github.example.com" })
     )
   );
@@ -138,10 +129,11 @@ describe("ActionsProvenance", () => {
         Effect.flip(ActionsProvenance.capture("sigstore")),
         OidcTokenIssuer.layerTest({ claims: () => Effect.fail(failure) })
       );
-      // Identity, not just shape: the SAME error object, proving the adapter
-      // neither caught, rewrapped nor defaulted it. Whether attestation is
-      // mandatory or best-effort is decided downstream, at the consumer.
-      assert.strictEqual(error, failure);
+      assert.strictEqual(
+        error,
+        failure,
+        "the same error object: not caught, rewrapped or defaulted; the consumer decides if attestation is mandatory"
+      );
     })
   );
 
@@ -152,14 +144,16 @@ describe("ActionsProvenance", () => {
         claims: (audience) =>
           Effect.suspend(() => {
             audiences.push(audience);
-            return Effect.succeed(CLAIMS);
+            return Effect.succeed(DISTINCT_CLAIMS);
           }),
       });
       yield* provided(ActionsProvenance.capture("sigstore"), issuer);
       yield* provided(ActionsProvenance.capture(), issuer);
-      // No defaulting in either direction: a caller's audience arrives as
-      // given, and omitting it sends none rather than inventing one.
-      assert.deepStrictEqual(audiences, ["sigstore", undefined]);
+      assert.deepStrictEqual(
+        audiences,
+        ["sigstore", undefined],
+        "no defaulting in either direction: an audience arrives as given, and omitting it sends none"
+      );
     })
   );
 });

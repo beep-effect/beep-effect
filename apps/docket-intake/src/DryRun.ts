@@ -53,9 +53,7 @@ const $I = $DocketIntakeId.create("DryRun");
 
 const DRY_RUN_DIRECTORY = "dry-run";
 
-// Service shape of the dry-run recorder.
 interface DocketDryRunRecorderShape {
-  /** The calendar entries the pass would have created, in order. */
   readonly entries: Effect.Effect<ReadonlyArray<DocketCalendarEntry>>;
 }
 
@@ -77,7 +75,6 @@ export class DocketDryRunRecorder extends Context.Service<DocketDryRunRecorder, 
   $I`DocketDryRunRecorder`
 ) {}
 
-// The synthetic id of a recorded entry is its idempotency key, so outcomes can be traced back to it.
 const recordedEntry = (key: string) => DocketWrittenEntry.make({ eventId: key });
 
 /**
@@ -143,8 +140,6 @@ export const DocketDryRunPortsLive: Layer.Layer<
   })
 );
 
-// One calendar entry a dry run would have created. It carries the subject the service would write
-// on the entry, never the text, sender or subject of a message.
 class DocketDryRunEntry extends S.Opaque<DocketDryRunEntry, { readonly brand: unique symbol }>()(
   S.Struct({
     messageId: S.OptionFromOptionalKey(S.NonEmptyString).annotateKey({
@@ -156,7 +151,10 @@ class DocketDryRunEntry extends S.Opaque<DocketDryRunEntry, { readonly brand: un
     flags: S.Array(DocketEntryFlag).annotateKey({ description: "Things the attorney should check." }),
     subject: S.NonEmptyString.annotateKey({ description: "The subject the service would write on the entry." }),
   }).pipe(
-    $I.annoteSchema("DocketDryRunEntry", { description: "One calendar entry a docket intake dry run would create." })
+    $I.annoteSchema("DocketDryRunEntry", {
+      description:
+        "One calendar entry a docket intake dry run would create, with its written-entry subject and never any message text, sender or subject.",
+    })
   )
 ) {}
 

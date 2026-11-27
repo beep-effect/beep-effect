@@ -12,17 +12,9 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { PathSafetyError } from "./PathSafety.errors.ts";
 
-/**
- * Detect roots that unambiguously use Windows drive or backslash syntax.
- */
 const isWindowsStyleRoot = (root: string): boolean =>
   Str.startsWith("\\")(root) || Eq.equals(Str.slice(1, 3)(root), ":\\") || Eq.equals(Str.slice(1, 3)(root), ":/");
 
-/**
- * Normalize a pure path string according to its root's detected path style and
- * drop a single trailing separator. POSIX roots deliberately preserve literal
- * backslashes; Windows-style roots collapse them to forward slashes.
- */
 const normalizeForComparison = (value: string, windowsStyle: boolean): string => {
   const forward = windowsStyle ? Str.replaceAll("\\", "/")(value) : value;
   return Str.length(forward) > 1 && Str.endsWith("/")(forward)
@@ -30,9 +22,6 @@ const normalizeForComparison = (value: string, windowsStyle: boolean): string =>
     : forward;
 };
 
-/**
- * Split a normalized path into non-empty segments.
- */
 const segmentsOf: (normalized: string) => ReadonlyArray<string> = flow(Str.split("/"), A.filter(Str.isNonEmpty));
 
 /**

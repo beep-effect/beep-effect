@@ -4,7 +4,7 @@
  * @since 0.0.0
  */
 // beep: port only the SQLite branch; Effect.fn helpers, schema codecs and typed errors enforce repo laws.
-// The single-table set delegates to setMany and SQL errors share contextual messages; store behavior is unchanged.
+// beep: The single-table set delegates to setMany and SQL errors share contextual messages; store behavior is unchanged.
 import { $DuckdbId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -76,7 +76,7 @@ export const layerBackingSql: Layer.Layer<Persistence.BackingPersistence, never,
     const sql = (yield* SqlClient.SqlClient).withoutTransforms();
     const table = sql("effect_persistence");
     // beep: BIGINT preserves current epoch milliseconds; DuckDB does not support partial indexes.
-    // A plain expires index preserves cleanup's range lookup without changing expiration semantics.
+    // beep: A plain expires index preserves cleanup's range lookup without changing expiration semantics.
     yield* sql`CREATE TABLE IF NOT EXISTS ${table} (
       store_id TEXT NOT NULL, id TEXT NOT NULL, value TEXT NOT NULL, expires BIGINT,
       PRIMARY KEY (store_id, id)

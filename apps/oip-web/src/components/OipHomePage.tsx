@@ -256,7 +256,6 @@ function Contact({
             >
               {contact.officePhone}
             </a>
-            {/*<span className={`${monoLabel} text-oip-on-burgundy-accent`}>Iowa and Minnesota Bars</span>*/}
           </div>
         </div>
         <div className="grid gap-5">

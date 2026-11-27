@@ -8,17 +8,14 @@ import * as Str from "effect/String";
 import { checkPlan as checkPlanLog, guardedKindOf, parsePlanLog } from "../../stack/PlanGuard.ts";
 import { failureTag } from "./Harness.ts";
 
-/** One line as the CI logger writes it: `[<time>] <level>: <message>`, built so no bracketed literal sits in source. */
 const logged = (time: string, message: string, level = "INFO") =>
   `${A.join(["[", time, "]"], "")} ${level}: ${message}`;
 
-/** The rules below hold on every stage; they run on a personal stage, which creates freely. */
 const checkPlan = (log: string) => checkPlanLog(`Plan · dev_test\n${log}`);
 
 const esc = String.fromCharCode(27);
 const color = (code: number, text: string) => `${esc}[${code}m${text}${esc}[0m`;
 
-/** A first prod plan as the census predicts it, colored the way the CI renderer prints it. */
 const firstProdPlan = A.join(
   [
     `${color(1, "Plan:")} 1 to create, 5 to adopted`,
@@ -88,7 +85,6 @@ describe("PlanGuard", () => {
 
   it.effect("reads the timestamped logger format a CI plan prints", () =>
     Effect.gen(function* () {
-      // Verbatim shape of the 2026-11-14 `dev_elpresidank` plan log.
       const personalPlan = A.join(
         [
           logged("20:33:00.808", "Plan · dev_elpresidank"),
@@ -132,20 +128,19 @@ describe("PlanGuard fails closed", () => {
   it.effect("on a resource line with an action it does not know", () =>
     Effect.gen(function* () {
       yield* unreadable("Plan: 1 to create\n[AssetsBucket] create\n[Project] transmogrify\n");
-      // A reshaped line: the action is no longer a bare word after the FQN.
+
       yield* unreadable("Plan: 1 to update\n[Project] (update)\n");
     })
   );
 
   it.effect("when the summary counts disagree with the resource lines", () =>
     Effect.gen(function* () {
-      // A silently dropped line: the summary counts two adoptions, the log lists one.
       yield* unreadable("Plan: 2 to adopted\n[Project] adopted\n");
-      // A line the summary does not count.
+
       yield* unreadable("Plan: 1 to create\n[AssetsBucket] create\n[Dns-oip-law] update\n");
-      // A summary action the guard does not know.
+
       yield* unreadable("Plan: 1 to frobnicate\n");
-      // No resources, yet a resource line.
+
       yield* unreadable("Plan: no resources\n[Project] create\n");
     })
   );
@@ -178,7 +173,6 @@ describe("PlanGuard fails closed", () => {
   );
 });
 
-/** The first plans of the live stages, as the engine renders them against the census (see OipWebStack.test.ts). */
 const firstPlan = {
   prod: A.join(
     [
@@ -238,7 +232,7 @@ describe("PlanGuard on the live stages", () => {
       yield* refusedCreate("Plan · prod\nPlan: 1 to create\n[Dns-oip-law] create\n");
       yield* refusedCreate("Plan · staging\nPlan: 1 to create\n[Dns-staging-opip-law] create\n");
       yield* refusedCreate("Plan · prod\nPlan: 1 to create\n[NewThing] create\n");
-      // An allow-listed id of the other stage is not allowed here.
+
       yield* refusedCreate("Plan · staging\nPlan: 1 to create\n[Domain-oip-law] create\n");
     })
   );

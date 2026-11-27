@@ -19,9 +19,7 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("Extraction");
 
-type JsonEncodeEffect<Input> = {
-  // Data-last first: the `(input, options?)` overload would otherwise absorb a
-  // lone parse-options argument and hide the curried form.
+type DataLastFirstJsonEncode<Input> = {
   (options?: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
 };
@@ -516,7 +514,7 @@ export class ChildArtifactRecord extends S.Opaque<ChildArtifactRecord, { readonl
     })
   )
 ) {
-  static readonly encodeJson: JsonEncodeEffect<ChildArtifactRecord> = dual(
+  static readonly encodeJson: DataLastFirstJsonEncode<ChildArtifactRecord> = dual(
     SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(ChildArtifactRecord))
   );
@@ -564,7 +562,7 @@ export class FileProcessingCoverageSummary extends S.Opaque<
     })
   )
 ) {
-  static readonly encodeJson: JsonEncodeEffect<FileProcessingCoverageSummary> = dual(
+  static readonly encodeJson: DataLastFirstJsonEncode<FileProcessingCoverageSummary> = dual(
     SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary))
   );
@@ -618,7 +616,7 @@ export class ProcessRunManifest extends S.Opaque<ProcessRunManifest, { readonly 
     })
   )
 ) {
-  static readonly encodeJson: JsonEncodeEffect<ProcessRunManifest> = dual(
+  static readonly encodeJson: DataLastFirstJsonEncode<ProcessRunManifest> = dual(
     SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest))
   );

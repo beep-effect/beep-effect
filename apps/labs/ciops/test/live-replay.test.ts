@@ -76,13 +76,11 @@ const releasedOnlyFixturePath = "test/fixtures/admission-journal-released-only-c
 const trimmedEvictionFixturePath = "test/fixtures/admission-journal-trimmed-lease-eviction.ndjson";
 const fixtureJournalSha256 = Sha256Hex.make(Str.repeat(64)("a"));
 const frozenRecord = "# committed live evidence — must survive every check run\n";
-// Golden render bytes at 801020f3dc (before the W5 widening), recomputed from that tree.
+
 const goldenRenderSha256 = "624bab058087d54693e1c4b0b4c6d83ed45bf381520664acbb1568f5b4d30699";
 
 const PlatformLive = Layer.mergeAll(BunFileSystem.layer, BunCrypto.layer, BunPath.layer);
 
-// Independent literal restatement of the pin, cross-checked against the shared
-// constants the evidence script and the end-to-end tests run on.
 const pinnedWindowLiteral = ReplayWindow.make({
   firstRetainedInstant: DateTime.makeUnsafe("2026-10-01T09:32:09.602Z"),
   lastRetainedInstant: DateTime.makeUnsafe("2026-10-06T01:51:50.495Z"),
@@ -125,7 +123,6 @@ const readPolicy = Effect.fn("LiveReplayTest.readPolicy")(function* () {
   return yield* decodeAdmissionPolicyParams(readText1);
 });
 
-// A scratch evidence file holding a frozen record, addressed repo-relative like every live path.
 const scratchEvidence = Effect.fn("LiveReplayTest.scratchEvidence")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -159,8 +156,6 @@ const v3Base = {
 };
 const queued = { kind: "review-fix", priority: "verify", originKey: "", enqueuedAtMillis: 1 };
 
-// One row per v3 class: the enqueue/withdrawal rows inherit the invariant through
-// `.extend`, the release and eviction rows through a re-applied spread check.
 const v3Shapes: ReadonlyArray<Record<string, unknown>> = [
   { ...queued, _tag: "admission-enqueued", weightTokens: 1 },
   { ...queued, _tag: "admission-withdrawn", withdrawnAtMillis: 2 },
@@ -169,7 +164,6 @@ const v3Shapes: ReadonlyArray<Record<string, unknown>> = [
   { _tag: "admission-ticket-evicted", evictedAtMillis: 2, reason: "queued-submitter-death" },
 ];
 
-// One row per v1/v2 class that carries owner members.
 const legacyShapes: ReadonlyArray<Record<string, unknown>> = [
   {
     schemaVersion: "yeet-admission-journal/v1",
@@ -198,14 +192,11 @@ const surrogateOwner: { readonly ownerRef: string; readonly ownerRefVariant: Adm
   ownerRefVariant: AdmissionOwnerRefVariant.Enum.pid_pair,
 };
 
-// A live owner: classes without a procStart member ignore it as an excess key.
-const liveOwner = { pid: 7, procStart: "proc-start" };
+const liveOwnerWithExtraProcStart = { pid: 7, procStart: "proc-start" };
 
 const sameCheckout: MismatchAttribution = MismatchAttribution.Enum["same-checkout-active-lease"];
 const unattributed: MismatchAttribution = MismatchAttribution.Enum.unattributed;
 
-// One synthetic grant chain: a v3 enqueue (the chain's checkout), a v1 admission and a
-// v3 release. `protocol` is written by value only when given; none of the pinned rows carry it.
 const syntheticChain = (grant: {
   readonly nonce: string;
   readonly checkoutRoot: string;
@@ -247,7 +238,6 @@ const syntheticChain = (grant: {
   };
 };
 
-// Two overlapping grants: `holder` admitted at 1100, `entrant` at 1200, released at 1300 and 1400.
 const overlappingGrants = (
   holder: { readonly checkoutRoot: string; readonly originKey: string; readonly protocol: O.Option<string> },
   entrant: { readonly checkoutRoot: string; readonly originKey: string; readonly protocol: O.Option<string> }
@@ -302,7 +292,6 @@ const fixtureMismatch = (eventIndex: number, projectedNonce: string, activeGrant
     activeGrantNonces,
   });
 
-// A pin-manifest excerpt with exactly the members the live run reads.
 const syntheticManifest = (members: {
   readonly label: string;
   readonly first: string;
@@ -432,12 +421,17 @@ describe("@beep/ciops live replay", () => {
     it.effect("fails typed on a v3 row with both or neither of pid and ownerRef, on every v3 class", () =>
       Effect.gen(function* () {
         for (const shape of v3Shapes) {
-          const live = yield* decodeRow({ ...v3Base, ...shape, ...liveOwner });
+          const live = yield* decodeRow({ ...v3Base, ...shape, ...liveOwnerWithExtraProcStart });
           const surrogate = yield* decodeRow({ ...v3Base, ...shape, ...surrogateOwner });
-          const both = yield* Effect.flip(decodeRow({ ...v3Base, ...shape, ...surrogateOwner, ...liveOwner }));
+          const both = yield* Effect.flip(
+            decodeRow({ ...v3Base, ...shape, ...surrogateOwner, ...liveOwnerWithExtraProcStart })
+          );
           const neither = yield* Effect.flip(decodeRow({ ...v3Base, ...shape }));
 
-          expect(A.map(live, admissionRowCustody)).toStrictEqual(["live"]);
+          expect(
+            A.map(live, admissionRowCustody),
+            "v3 ownership invariants survive extends on queued rows and reapplied spread checks on release and eviction rows"
+          ).toStrictEqual(["live"]);
           expect(A.map(surrogate, admissionRowCustody)).toStrictEqual(["surrogate"]);
           assertInstanceOf(both, PolicyDecodeError);
           assertInstanceOf(neither, PolicyDecodeError);
@@ -463,16 +457,15 @@ describe("@beep/ciops live replay", () => {
       Effect.gen(function* () {
         for (const shape of legacyShapes) {
           const row = { ...shape, nonce: "row" };
-          const live = yield* decodeRow({ ...row, ...liveOwner });
+          const live = yield* decodeRow({ ...row, ...liveOwnerWithExtraProcStart });
           const surrogate = yield* decodeRow({ ...row, ...surrogateOwner });
           const redacted = yield* decodeRow(row);
-          const both = yield* Effect.flip(decodeRow({ ...row, ...surrogateOwner, ...liveOwner }));
+          const both = yield* Effect.flip(decodeRow({ ...row, ...surrogateOwner, ...liveOwnerWithExtraProcStart }));
 
-          expect(A.map([...live, ...surrogate, ...redacted], admissionRowCustody)).toStrictEqual([
-            "live",
-            "surrogate",
-            "redacted",
-          ]);
+          expect(
+            A.map([...live, ...surrogate, ...redacted], admissionRowCustody),
+            "classes without procStart ignore that excess key on a live owner"
+          ).toStrictEqual(["live", "surrogate", "redacted"]);
           assertInstanceOf(both, PolicyDecodeError);
         }
       })
@@ -1039,7 +1032,7 @@ describe("@beep/ciops live replay", () => {
         const events = yield* decodeAdmissionJournal(readText17);
         const report = yield* replayAdmissionJournal(policy, events, "frozen-policy", "frozen-journal");
 
-        expect(Hex.encode(digest)).toBe(goldenRenderSha256);
+        expect(Hex.encode(digest), "pre-W5 golden render recomputed from commit 801020f3dc").toBe(goldenRenderSha256);
         expect(report.skippedRows).toHaveLength(0);
         expect(A.some(report.verdicts, (verdict) => verdict.ledgerCensored)).toBe(false);
         expect(A.every(events, (event) => admissionRowCustody(event) === "redacted")).toBe(true);

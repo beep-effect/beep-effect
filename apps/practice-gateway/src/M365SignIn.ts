@@ -236,20 +236,11 @@ export const makeDpapiTokenCache = Effect.fnUntraced(function* (filePath: string
   return persistence;
 });
 
-// One open loopback listener and the authorizer that uses it.
 interface LoopbackSignIn {
-  /**
-   * Opens the sign-in page and waits for its redirect; hand it to the driver.
-   */
   readonly authorizer: M365InteractiveAuthorizer;
-  /**
-   * Why the last authorization failed, in plain language, when the
-   * authorizer itself saw why.
-   */
+
   readonly problem: Effect.Effect<O.Option<M365SignInFailure>>;
-  /**
-   * The redirect URI the listener answers: `http://127.0.0.1:<port>`.
-   */
+
   readonly redirectUri: string;
 }
 
@@ -453,6 +444,12 @@ export class M365SignIn extends Context.Service<M365SignIn, M365SignInShape>()($
    * (anywhere but Windows) sign-in is refused, so tokens never reach a file
    * unprotected.
    *
+   * **Gotchas**
+   *
+   * Use the sign-in failure message for attorney-facing feedback: when the
+   * authorizer recorded a plain-language reason, the live layer preserves it
+   * instead of the driver’s technical error.
+   *
    * **Example** (Compose the live sign-in)
    *
    * ```ts
@@ -514,7 +511,6 @@ export class M365SignIn extends Context.Service<M365SignIn, M365SignInShape>()($
           );
           const finished = yield* Context.get(services, M365Auth).acquireToken.pipe(
             Effect.timeoutOption(M365_SIGN_IN_TIMEOUT),
-            // The driver's error is technical; the authorizer recorded the plain reason when it saw one.
             Effect.catchTag("M365Error", () =>
               Effect.flatMap(
                 loopback.problem,

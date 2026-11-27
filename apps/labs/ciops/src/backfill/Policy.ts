@@ -78,11 +78,9 @@ const effectiveRank = (policy: BackfillPolicy, nowMillis: number, unit: QueuedUn
     verify: () => (nowMillis - unit.enqueuedAtMillis >= policy.publishAgingMillis ? 0 : 1),
   });
 
-// The keys fairness reads from a unit: its origin and its checkout.
 type FairnessKeys = Pick<QueuedUnit, "checkoutKey" | "originKey">;
 
-// Length-prefixed, so no two (origin, checkout) pairs share a key whatever characters they hold.
-const checkoutUsageKey = (originKey: string, checkoutKey: string): string =>
+const lengthPrefixedCheckoutKey = (originKey: string, checkoutKey: string): string =>
   `${originKey.length}:${originKey}${checkoutKey}`;
 
 interface WindowSpan {
@@ -134,7 +132,11 @@ const usageIndex = (policy: BackfillPolicy, view: SchedulerView): UsageIndex =>
       const tokenMillis = spanTokenMillis(policy, view.nowMillis, span);
       return {
         byOrigin: addUsage(index.byOrigin, span.originKey, tokenMillis),
-        byCheckout: addUsage(index.byCheckout, checkoutUsageKey(span.originKey, span.checkoutKey), tokenMillis),
+        byCheckout: addUsage(
+          index.byCheckout,
+          lengthPrefixedCheckoutKey(span.originKey, span.checkoutKey),
+          tokenMillis
+        ),
         total: index.total + tokenMillis,
       };
     }
@@ -144,7 +146,7 @@ const originUsage = (index: UsageIndex, unit: { readonly originKey: string }): n
   O.getOrElse(HashMap.get(index.byOrigin, unit.originKey), () => 0);
 
 const checkoutUsage = (index: UsageIndex, unit: { readonly originKey: string; readonly checkoutKey: string }) =>
-  O.getOrElse(HashMap.get(index.byCheckout, checkoutUsageKey(unit.originKey, unit.checkoutKey)), () => 0);
+  O.getOrElse(HashMap.get(index.byCheckout, lengthPrefixedCheckoutKey(unit.originKey, unit.checkoutKey)), () => 0);
 
 const fifoOrder: Order.Order<QueuedUnit> = pipe(
   Order.mapInput(Order.Number, (unit: QueuedUnit) => unit.enqueuedAtMillis),
@@ -223,8 +225,6 @@ export const queueOrder: {
 
 const activeTokens = (view: SchedulerView): number => N.sumAll(A.map(view.running, (lease) => lease.weightTokens));
 
-// A running lease's end is projected only from a declared ETA it has not
-// overrun; one without, or past it, makes every projection unknown.
 const projectedEnd = (nowMillis: number, lease: RunningLease): O.Option<number> =>
   pipe(
     lease.etaMillis,
@@ -239,24 +239,10 @@ const projectedEnds = (view: SchedulerView): O.Option<ReadonlyArray<{ end: numbe
     )
   );
 
-/**
- * The earliest instant the head fits if every running lease ends at its ETA.
- *
- * **Details**
- *
- * `None` when a running lease has no declared ETA or has overrun it: the
- * start cannot be projected, so nothing may backfill. The head's weight is
- * clamped to the capacity, so a projection always exists otherwise.
- *
- * @category projections
- * @since 0.0.0
- */
 const projectedHeadStart: {
   (policy: BackfillPolicy, head: QueuedUnit): (view: SchedulerView) => O.Option<number>;
   (view: SchedulerView, policy: BackfillPolicy, head: QueuedUnit): O.Option<number>;
 } = dual(3, (view: SchedulerView, policy: BackfillPolicy, head: QueuedUnit): O.Option<number> => {
-  // The scan starts at the current instant with the free tokens, so a head that
-  // already fits projects to now.
   const free = policy.capacityTokens - activeTokens(view);
   return O.flatMap(projectedEnds(view), (ends) => {
     const byEnd = A.sort(
@@ -335,12 +321,6 @@ export const conditionalDeadline: {
   );
 });
 
-/**
- * Whether any waiting unit is past its stamped deadline, which disables backfill.
- *
- * @category predicates
- * @since 0.0.0
- */
 const isBoundBreached = (view: SchedulerView): boolean =>
   A.some(view.waiting, (unit) => O.exists(unit.deadlineMillis, (deadline) => view.nowMillis > deadline));
 

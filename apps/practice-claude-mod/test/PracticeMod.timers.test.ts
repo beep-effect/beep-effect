@@ -18,7 +18,6 @@ import { ChosenMatter, TimerInterval } from "@/PracticeMod.values";
 const decodeTimerIntervals = S.decodeUnknownEffect(S.Array(TimerInterval));
 const decodeTimerIntervalLine = S.decodeEffect(S.fromJsonString(TimerInterval));
 
-// What the fake host stored and wrote, so a test can seed and inspect it.
 class FakeHostState extends Context.Service<
   FakeHostState,
   { readonly store: MutableHashMap.MutableHashMap<string, unknown> }

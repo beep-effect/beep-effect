@@ -40,11 +40,10 @@ const claim = Effect.gen(function* () {
   return yield* storage.unprocessedMessages(["default:1"], currentTimeMillis1);
 });
 
-// Both cases claim shard default:1 in the shared cluster_ tables, so run them one at a time (D49).
 it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenerator), {
   concurrent: false,
   timeout: "30 seconds",
-})("DuckDB message storage boundaries", (it) => {
+})("DuckDB message storage boundaries, run serially over the shared shard default:1", (it) => {
   it.effect("reads requests without trace context and sampled requests", () =>
     Effect.gen(function* () {
       yield* save(request("10"));
@@ -105,23 +104,20 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenera
     })
   );
 
-  // After deleteProcessed removes a request its row is gone; a late reply must not leave an orphan behind (D70).
   it.effect("drops a reply whose request row is gone", () =>
     Effect.gen(function* () {
       const storage = yield* DuckDbMessageStorage.makeEncoded({ prefix: "late" });
       yield* storage.saveReply({ _tag: "Chunk", id: "41", requestId: "40", sequence: 0, values: [null] });
       const orphans = yield* storage.repliesForUnfiltered(["40"]);
-      assert.deepStrictEqual(orphans, []);
+      assert.deepStrictEqual(orphans, [], "a late reply after deleteProcessed removed its request leaves no orphan");
     })
   );
 
-  // Migration 0005 must reach files migrated before deleteProcessed existed, without editing 0001.
   it.effect("adds the retention index to a schema migrated before it existed", () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       const migrate = DuckDbMessageStorage.makeEncoded({ prefix: "retention" });
       yield* migrate;
-      // Recreate a schema migrated by the earlier port: only migrations 1-3 ran.
       yield* sql`DROP INDEX retention_messages_retention_idx`;
       yield* sql`DELETE FROM retention_migrations WHERE migration_id > 3`;
       const storage = yield* migrate;
@@ -130,14 +126,16 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenera
       `;
       assert.deepStrictEqual(
         A.map(indexes, (row) => row.index_name),
-        ["retention_messages_request_id_idx", "retention_messages_retention_idx", "retention_messages_shard_idx"]
+        ["retention_messages_request_id_idx", "retention_messages_retention_idx", "retention_messages_shard_idx"],
+        "a schema left by the earlier port, where only migrations 1-3 ran, gains the retention index"
       );
       const migrations = yield* sql<{ readonly migration_id: number }>`
         SELECT migration_id FROM retention_migrations ORDER BY migration_id
       `;
       assert.deepStrictEqual(
         A.map(migrations, (row) => Number(row.migration_id)),
-        [1, 2, 3, 4, 5]
+        [1, 2, 3, 4, 5],
+        "migration 5 reaches files migrated before deleteProcessed existed, without editing migration 1"
       );
       const deleted = yield* storage.deleteProcessed({
         entityType: "test",

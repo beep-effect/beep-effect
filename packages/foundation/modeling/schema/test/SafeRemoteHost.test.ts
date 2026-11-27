@@ -67,19 +67,20 @@ describe("SafeRemoteHost", () => {
   );
 
   it("blocks IPv4-mapped IPv6 RFC1918/loopback/link-local forms (CSF-SSRF mapped-v6 bypass)", () => {
-    // Hex form as produced by `new URL(...).hostname` normalization.
-    expect(isBlockedRemoteHost("::ffff:c0a8:101")).toBe(true); // 192.168.1.1
-    expect(isBlockedRemoteHost("::ffff:a00:1")).toBe(true); // 10.0.0.1
-    expect(isBlockedRemoteHost("::ffff:ac10:1")).toBe(true); // 172.16.0.1
-    expect(isBlockedRemoteHost("::ffff:7f00:1")).toBe(true); // 127.0.0.1
-    expect(isBlockedRemoteHost("::ffff:a9fe:a9fe")).toBe(true); // 169.254.169.254
-    expect(isBlockedRemoteHost("[::ffff:c0a8:101]")).toBe(true); // bracketed
-    // Dotted-suffix mapped form (reachable for raw-host callers).
-    expect(isBlockedRemoteHost("::ffff:192.168.1.1")).toBe(true);
+    expect(isBlockedRemoteHost("::ffff:c0a8:101"), "192.168.1.1 in the hex form URL hostname parsing produces").toBe(
+      true
+    );
+    expect(isBlockedRemoteHost("::ffff:a00:1"), "10.0.0.1").toBe(true);
+    expect(isBlockedRemoteHost("::ffff:ac10:1"), "172.16.0.1").toBe(true);
+    expect(isBlockedRemoteHost("::ffff:7f00:1"), "127.0.0.1").toBe(true);
+    expect(isBlockedRemoteHost("::ffff:a9fe:a9fe"), "169.254.169.254").toBe(true);
+    expect(isBlockedRemoteHost("[::ffff:c0a8:101]"), "bracketed 192.168.1.1").toBe(true);
+    expect(isBlockedRemoteHost("::ffff:192.168.1.1"), "the dotted-suffix form, reachable for raw-host callers").toBe(
+      true
+    );
     expect(isBlockedRemoteHost("::ffff:10.0.0.1")).toBe(true);
-    // Public mapped addresses stay allowed (no over-blocking).
-    expect(isBlockedRemoteHost("::ffff:101:101")).toBe(false); // 1.1.1.1
-    expect(isBlockedRemoteHost("::ffff:ac20:1")).toBe(false); // 172.32.0.1 (outside the /12)
+    expect(isBlockedRemoteHost("::ffff:101:101"), "public 1.1.1.1 stays allowed").toBe(false);
+    expect(isBlockedRemoteHost("::ffff:ac20:1"), "172.32.0.1 lies outside 172.16.0.0/12").toBe(false);
   });
 
   it.effect(
