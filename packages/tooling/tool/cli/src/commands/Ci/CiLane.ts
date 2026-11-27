@@ -2060,11 +2060,20 @@ export const ciLaneStepsForTesting: {
         const skillsLock = options.skipSkillsLock
           ? A.empty<QualityTaskStep>()
           : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check", "--offline"])];
+        const repoScans = bunRunStep(repoRoot, "ci:repo-sanity:repo-scans", [
+          "--cwd",
+          "packages/tooling/tool/cli",
+          "vitest",
+          "run",
+          "--config",
+          "vitest.repo-scans.config.ts",
+        ]);
         if (options.docsOnly) {
           return [
             homePaths,
             bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
             changesetStatus,
+            repoScans,
             ...skillsLock,
           ];
         }
@@ -2114,6 +2123,7 @@ export const ciLaneStepsForTesting: {
           // required, so a finding blocks the merge. The step group runs every
           // step and fails with all reds, so an earlier red cannot hide it.
           rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
+          repoScans,
           ...(options.changesetStatus ? [changesetStatus] : A.empty<QualityTaskStep>()),
           ...skillsLock,
         ];

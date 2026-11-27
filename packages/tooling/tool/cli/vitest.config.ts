@@ -7,6 +7,7 @@ import shared, {
   packageTestTimeout,
   vitestDoctestActive,
 } from "../../../../vitest.shared.ts";
+import { repoScanSuites } from "./vitest.repo-scans.config.ts";
 import shardPlan from "./vitest.shards.json" with { type: "json" };
 
 // A committed plan keeps every hosted runner on the same assignment. New files use Vitest's
@@ -201,7 +202,7 @@ export default splitProjects
             test: {
               name: "shared",
               include: ["test/**/*.test.{ts,tsx}"],
-              exclude: isolatedSuites,
+              exclude: [...isolatedSuites, ...repoScanSuites],
               isolate: false,
             },
           },
