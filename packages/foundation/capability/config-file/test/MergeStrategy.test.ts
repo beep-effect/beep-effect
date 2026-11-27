@@ -294,15 +294,14 @@ describe("MergeStrategy.layeredMerge", () => {
       const malicious = Result.getOrThrow(S.decodeResult(JsonValue)(`{"__proto__":{"polluted":true}}`));
       if (!P.isObject(malicious)) return assert.fail("expected a JSON object");
       const value = yield* strategy.resolve([src("/a", "walk", { ok: 1 }), src("/etc", "system", malicious)]);
-      // Assert on the merged value's own prototype chain, not a fresh `{}` —
-      // the attack repoints the merged object's own [[Prototype]], it does
-      // not touch the shared Object.prototype, so a fresh literal can never
-      // observe it.
-      assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
+      assert.strictEqual(
+        Object.getPrototypeOf(value),
+        Object.prototype,
+        "the attack repoints the merged value's own prototype, which a fresh literal never observes"
+      );
       assert.isUndefined(value.polluted);
-      // Defense in depth: the shared prototype really is untouched too.
       const empty: Record<string, unknown> = {};
-      assert.isUndefined(empty.polluted);
+      assert.isUndefined(empty.polluted, "defense in depth: the shared Object.prototype is untouched too");
     })
   );
 });
@@ -324,8 +323,7 @@ describe("MergeStrategy.layeredMerge — value identity", () => {
       const higher = yield* S.decodeEffect(Doc)({ port: 1, host: "a" });
       const lower = yield* S.decodeEffect(Doc)({ port: 2, host: "b" });
       const value = yield* strategy.resolve([src("/a", "walk", higher), src("/etc", "system", lower)]);
-      // `load` declares Effect<A>. Returning a structurally-equal POJO would be a lie.
-      assert.instanceOf(value, Doc);
+      assert.instanceOf(value, Doc, "load declares Effect<A>, so a structurally equal POJO would be a lie");
       assert.strictEqual(value, higher);
       assert.strictEqual(value.secret, "ready");
       assert.strictEqual(value.origin, "http://a:1");
@@ -394,13 +392,16 @@ describe("MergeStrategy.layeredMerge — prototype pollution via the higher-prio
   it.effect("a hostile __proto__ on the HIGHER-priority document cannot reassign the result's prototype", () =>
     Effect.gen(function* () {
       const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
-      // `deepMerge(higher, merged)` passes the highest-priority document as `target`.
       const hostile = Result.getOrThrow(S.decodeResult(JsonValue)(`{"ok":1,"__proto__":{"polluted":true}}`));
       if (!P.isObject(hostile)) return assert.fail("expected a JSON object");
       const value = yield* strategy.resolve([src("/a", "walk", hostile), src("/etc", "system", { other: 2 })]);
 
       const proto: unknown = Object.getPrototypeOf(value);
-      assert.strictEqual(proto, Object.prototype, "the result's prototype must not be attacker-controlled");
+      assert.strictEqual(
+        proto,
+        Object.prototype,
+        "deepMerge takes the highest-priority document as target; its prototype must not be attacker-controlled"
+      );
       assert.isUndefined(value.polluted);
       const empty: Record<string, unknown> = {};
       assert.isUndefined(empty.polluted);
@@ -410,14 +411,17 @@ describe("MergeStrategy.layeredMerge — prototype pollution via the higher-prio
   it.effect("a hostile __proto__ nested under a key absent from the target stays inert", () =>
     Effect.gen(function* () {
       const strategy = MergeStrategy.layeredMerge<Record<string, unknown>>();
-      // `section` exists only on the lower-priority source, so it is copied wholesale.
       const lower = Result.getOrThrow(S.decodeResult(JsonValue)(`{"section":{"__proto__":{"polluted":true}}}`));
       if (!P.isObject(lower)) return assert.fail("expected a JSON object");
       const value = yield* strategy.resolve([src("/a", "walk", { ok: 1 }), src("/etc", "system", lower)]);
 
       const section = value.section;
       if (!P.isObject(section)) return assert.fail("expected a section object");
-      assert.strictEqual(Object.getPrototypeOf(section), Object.prototype);
+      assert.strictEqual(
+        Object.getPrototypeOf(section),
+        Object.prototype,
+        "section exists only on the lower-priority source, so it is copied wholesale"
+      );
       assert.isUndefined(section.polluted);
       const empty: Record<string, unknown> = {};
       assert.isUndefined(empty.polluted);

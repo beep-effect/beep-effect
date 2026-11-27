@@ -11,22 +11,6 @@ import { readJsonText } from "../AcpJson.codec.ts";
 import type * as RpcMessage from "effect/rpc/RpcMessage";
 import type { JsonTextSyntaxError } from "../AcpJson.codec.ts";
 
-// Inbound JSON-RPC frame decoding. This mirrors the private envelope mapping inside effect's
-// `RpcSerialization.ndJsonRpc` (4.0.0-rc.113) so that the JSON text itself can be read through
-// `readJsonText`, which the effect parser does not allow injecting. Batch responses are not
-// correlated (ACP never sends JSON-RPC batches); every message is encoded individually.
-//
-// Two deliberate differences, both because an ACP peer has no effect-rpc control plane:
-// - effect reads an id-less `@effect/rpc/<Tag>` method as an RPC control message (Ack, Interrupt,
-//   Ping, Eof, Pong). A peer `Eof` would end our writer, so these frames stay ordinary requests
-//   and notifications.
-// - effect reads an error object tagged `Defect` as a connection-level defect, which `RpcClient`
-//   applies to every in-flight call. One peer line could then fail all pending requests, so every
-//   error object stays a response to the id it carries; the protocol logs and drops one that no
-//   outstanding request can claim. An error object member `_tag` with any other value than
-//   `Cause` is ordinary data: ACP error objects allow extra members.
-// The decoder therefore yields only requests, chunks and exits (`AcpInboundMessage`).
-
 const DEFAULT_MAX_BUFFER_SIZE = 16 * 1024 * 1024;
 
 /**
@@ -115,6 +99,7 @@ const toRequestMessage = (frame: unknown, request: (typeof JsonRpcRequestFrame)[
   }),
 });
 
+// decision: own-inbound-json-rpc-decoder
 const toResponseMessage = (
   response: (typeof JsonRpcResponseFrame)["Type"]
 ): Result.Result<AcpInboundMessage, S.SchemaError> => {
@@ -150,7 +135,7 @@ const decodeJsonRpcMessage = (frame: unknown): Result.Result<AcpInboundMessage, 
     ? Result.map(decodeRequestFrame(frame), (request) => toRequestMessage(frame, request))
     : Result.flatMap(decodeResponseFrame(frame), toResponseMessage);
 
-const isBlankLine = (line: string): boolean => Str.isEmpty(Str.trim(line));
+const isKeepAliveLine = (line: string): boolean => Str.isEmpty(Str.trim(line));
 
 const decodeJsonRpcFrame = (frame: unknown): Result.Result<ReadonlyArray<AcpInboundMessage>, S.SchemaError> =>
   isJsonArray(frame) ? Result.all(A.map(frame, decodeJsonRpcMessage)) : Result.map(decodeJsonRpcMessage(frame), A.of);
@@ -196,7 +181,6 @@ export const makeNdJsonRpcFrameDecoder = (): ((
     buffer += decoder.decode(chunk, { stream: true });
     const batches = A.empty<ReadonlyArray<AcpInboundMessage>>();
     let position = 0;
-    // A global pattern finds each newline after the previous one without splitting the buffer.
     const newlines = /\n/g;
     for (let newline = newlines.exec(buffer); newline !== null; newline = newlines.exec(buffer)) {
       if (exceeds(newline.index - position)) {
@@ -204,8 +188,7 @@ export const makeNdJsonRpcFrameDecoder = (): ((
       }
       const line = pipe(buffer, Str.slice(position, newline.index));
       position = newline.index + 1;
-      // A blank keep-alive line carries no message; skip it instead of failing the connection.
-      if (isBlankLine(line)) {
+      if (isKeepAliveLine(line)) {
         continue;
       }
       const decoded = Result.flatMap(readJsonText(line), decodeJsonRpcFrame);

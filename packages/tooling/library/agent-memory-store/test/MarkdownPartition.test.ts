@@ -16,8 +16,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { MarkdownPartition } from "@beep/agent-memory-store";
 
-// Synthetic fixtures only; the goals/** fixture belongs to the projector stage.
-
 const cut = (text: string): ReadonlyArray<readonly [string, string]> =>
   A.map(partition(text).nodes, (node) => [node.kind, node.text] as const);
 
@@ -253,10 +251,11 @@ describe("MarkdownPartition constructs", () => {
     assertByteIdentity(text, result);
     const item = result.nodes[2];
     expect(item?.text).toBe("- 😀 émoji");
-    // "# Café ✓ 😀" is 11 UTF-16 code units (the emoji counts 2) and the blank line adds 2.
-    expect(item?.range.offset).toBe(13);
-    // The emoji is a surrogate pair: two UTF-16 code units, four UTF-8 bytes.
-    expect(item?.range.length).toBe(10);
+    expect(
+      item?.range.offset,
+      '"# Café ✓ 😀" is 11 UTF-16 code units (the emoji counts 2) and the blank line adds 2'
+    ).toBe(13);
+    expect(item?.range.length, "the emoji is a surrogate pair: two UTF-16 code units, four UTF-8 bytes").toBe(10);
   });
 
   it("partitions a file the parser rejects as one unparsed node", () => {
@@ -328,8 +327,7 @@ describe("MarkdownPartition reparse check", () => {
   });
 });
 
-// Hand-built trees stand in for parser output with unusable positions.
-const span = (start: number, end: number) => ({
+const handBuiltSpan = (start: number, end: number) => ({
   start: { line: 1, column: start + 1, offset: start },
   end: { line: 1, column: end + 1, offset: end },
 });
@@ -348,14 +346,14 @@ describe("MarkdownPartition fallback", () => {
       children: [
         List.make({
           children: [
-            ListItem.make({ children: [], position: span(0, 7) }),
-            ListItem.make({ children: [], position: span(4, 6) }),
+            ListItem.make({ children: [], position: handBuiltSpan(0, 7) }),
+            ListItem.make({ children: [], position: handBuiltSpan(4, 6) }),
           ],
-          position: span(0, 7),
+          position: handBuiltSpan(0, 7),
         }),
-        Paragraph.make({ children: [], position: span(9, 14) }),
+        Paragraph.make({ children: [], position: handBuiltSpan(9, 14) }),
       ],
-      position: span(0, text.length),
+      position: handBuiltSpan(0, text.length),
     });
     const result = partitionTree(text, root);
     expect(result.fallback).toBe("block");
@@ -372,14 +370,14 @@ describe("MarkdownPartition fallback", () => {
     const text = "one\n\ntwo\n";
     const backwards = Root.make({
       children: [
-        Paragraph.make({ children: [], position: span(5, 8) }),
-        Paragraph.make({ children: [], position: span(0, 3) }),
+        Paragraph.make({ children: [], position: handBuiltSpan(5, 8) }),
+        Paragraph.make({ children: [], position: handBuiltSpan(0, 3) }),
       ],
-      position: span(0, text.length),
+      position: handBuiltSpan(0, text.length),
     });
     const outside = Root.make({
-      children: [Paragraph.make({ children: [], position: span(0, 40) })],
-      position: span(0, 40),
+      children: [Paragraph.make({ children: [], position: handBuiltSpan(0, 40) })],
+      position: handBuiltSpan(0, 40),
     });
     for (const root of [backwards, outside]) {
       const result = partitionTree(text, root);
@@ -400,8 +398,8 @@ describe("MarkdownPartition fallback", () => {
   it("cuts a table with no rows as one tableRow node", () => {
     const text = "| a |\n|---|\n\nend\n";
     const root = Root.make({
-      children: [Table.make({ align: [], children: [], position: span(0, 11) })],
-      position: span(0, text.length),
+      children: [Table.make({ align: [], children: [], position: handBuiltSpan(0, 11) })],
+      position: handBuiltSpan(0, text.length),
     });
     const result = partitionTree(text, root);
     expect(result.fallback).toBe("none");
@@ -418,13 +416,13 @@ describe("MarkdownPartition fallback", () => {
         Table.make({
           align: [],
           children: [
-            TableRow.make({ children: [], position: span(0, 30) }),
-            TableRow.make({ children: [], position: span(35, 36) }),
+            TableRow.make({ children: [], position: handBuiltSpan(0, 30) }),
+            TableRow.make({ children: [], position: handBuiltSpan(35, 36) }),
           ],
-          position: span(0, 11),
+          position: handBuiltSpan(0, 11),
         }),
       ],
-      position: span(0, text.length),
+      position: handBuiltSpan(0, text.length),
     });
     const result = partitionTree(text, root);
     expect(result.fallback).toBe("block");
@@ -439,11 +437,11 @@ describe("MarkdownPartition fallback", () => {
     const text = "> quoted\n\nend\n";
     const root = Root.make({
       children: [
-        Blockquote.make({ children: [], position: span(0, 8) }),
-        Paragraph.make({ children: [], position: span(9, 9) }),
-        Paragraph.make({ children: [], position: span(10, 13) }),
+        Blockquote.make({ children: [], position: handBuiltSpan(0, 8) }),
+        Paragraph.make({ children: [], position: handBuiltSpan(9, 9) }),
+        Paragraph.make({ children: [], position: handBuiltSpan(10, 13) }),
       ],
-      position: span(0, text.length),
+      position: handBuiltSpan(0, text.length),
     });
     const result = partitionTree(text, root);
     expect(result.fallback).toBe("none");
@@ -458,8 +456,8 @@ describe("MarkdownPartition fallback", () => {
   it("never puts a boundary inside a surrogate pair", () => {
     const text = "😀😀\n";
     const root = Root.make({
-      children: [Paragraph.make({ children: [], position: span(1, 4) })],
-      position: span(0, text.length),
+      children: [Paragraph.make({ children: [], position: handBuiltSpan(1, 4) })],
+      position: handBuiltSpan(0, text.length),
     });
     const result = partitionTree(text, root);
     expect(result.fallback).toBe("file");

@@ -1,11 +1,3 @@
-// Shared fixtures for the three services that speak the Actions results
-// backend: the cache, the artifact protocol and the GitHub-cache blob store.
-//
-// They exist as one file because the *protocol* is one protocol — a suite that
-// hand-rolled its own runtime token would be free to hand-roll one the real
-// backend-id decoder rejects, and the divergence would only show up in
-// production.
-
 import { ActionEnvironment } from "@beep/github-actions";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -19,8 +11,7 @@ import * as Str from "effect/String";
 const Json = S.fromJsonString(S.Unknown);
 const RequestBodyJson = S.fromJsonString(S.Record(S.String, S.Unknown));
 
-/** A base64url segment, as a JWT carries them. */
-const segment = (value: unknown): string =>
+const jwtSegment = (value: unknown): string =>
   Buffer.from(Result.getOrThrowWith(S.encodeResult(Json)(value), (error) => error)).toString("base64url");
 
 /**
@@ -31,17 +22,16 @@ const segment = (value: unknown): string =>
  * fixture that looked signed would suggest something does.
  */
 export const runtimeToken = (scope = "Actions.Results:run-1:job-1"): string =>
-  `${segment({ alg: "HS256", typ: "JWT" })}.${segment({ scp: scope })}.not-a-signature`;
+  `${jwtSegment({ alg: "HS256", typ: "JWT" })}.${jwtSegment({ scp: scope })}.not-a-signature`;
 
-/** The two variables the runner injects into `uses:` steps, and nothing else. */
-const RESULTS_ENV: Readonly<Record<string, string>> = {
+const USES_STEP_RUNNER_ENV: Readonly<Record<string, string>> = {
   ACTIONS_RESULTS_URL: "https://results.example/twirpbase",
   ACTIONS_RUNTIME_TOKEN: runtimeToken(),
 };
 
 /** An `ActionEnvironment` that knows about the results backend. */
 export const resultsEnv = (overrides: Readonly<Record<string, string>> = {}) =>
-  ActionEnvironment.layerTest({ ...RESULTS_ENV, ...overrides });
+  ActionEnvironment.layerTest({ ...USES_STEP_RUNNER_ENV, ...overrides });
 
 /** One observed RPC. */
 export interface Rpc {
@@ -81,16 +71,12 @@ export const twirpFetch = (
   handlers: Readonly<Record<string, (body: Record<string, unknown>, index: number) => Response>>
 ): { readonly calls: Array<Rpc>; readonly fetch: typeof globalThis.fetch } => {
   const calls: Array<Rpc> = [];
+  const bodyBytesAsText = (init: Parameters<typeof globalThis.fetch>[1]) => new Response(init?.body ?? "{}").text();
   const fetch: typeof globalThis.fetch = Object.assign(
     (input: Parameters<typeof globalThis.fetch>[0], init: Parameters<typeof globalThis.fetch>[1]) =>
-      new Response(init?.body ?? "{}").text().then((text) => {
+      bodyBytesAsText(init).then((text) => {
         const url = String(input);
         const method = Str.slice(O.getOrElse(Str.lastIndexOf("/")(url), () => -1) + 1)(url);
-        // Decoded through `Response` rather than `String(init.body)`: the request
-        // body arrives as bytes, and stringifying a Uint8Array produces `123,34,…`,
-        // which throws in `JSON.parse` — inside a fake `fetch`, that surfaces as a
-        // transport fault, which the client then RETRIES, which hangs the virtual
-        // clock. One misread fixture presented as ten unrelated timeouts.
         const body = Result.getOrThrowWith(S.decodeResult(RequestBodyJson)(text || "{}"), (error) => error);
         const index = A.filter(calls, (call) => call.method === method).length;
         calls.push({ url, method, body, authorization: new Headers(init?.headers).get("authorization") });
@@ -102,12 +88,12 @@ export const twirpFetch = (
   return { calls, fetch };
 };
 
+const clockAdvanceLimit = 12;
+
 /** Run a fiber to completion while a virtual clock drives its retry sleeps. */
 export const settle = Effect.fn("settle")(function* <A, E>(effect: Effect.Effect<A, E>, adjust: Effect.Effect<void>) {
   const fiber = yield* Effect.forkChild(effect);
-  // Bounded rather than `while (true)`: a fiber blocked on something that is
-  // not a sleep would otherwise hang to the vitest timeout with no clue why.
-  for (let attempt = 0; attempt < 12 && fiber.pollUnsafe() === undefined; attempt += 1) {
+  for (let attempt = 0; attempt < clockAdvanceLimit && fiber.pollUnsafe() === undefined; attempt += 1) {
     yield* adjust;
   }
   return yield* Fiber.await(fiber);

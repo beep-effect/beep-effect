@@ -50,7 +50,6 @@ const needsReview = (reason: DocketNeedsReviewReason, messageId = "AAMkAGsynthet
     reason,
   });
 
-// The email a synthetic needs-review message is about.
 const SUBJECT = "Office action response";
 const SENDER = "examiner@example.com";
 const MESSAGE_LINK = "https://outlook.example.com/mail/AAMkAGsynthetic-message-1";
@@ -176,11 +175,10 @@ describe("@beep/law-practice-use-cases docket questions", () => {
           O.flatMap(A.head(question.options), ({ write }) => O.flatMap(write, ({ eventId }) => eventId)),
           NEEDS_REVIEW_EVENT
         );
-        // A chosen date gives the entry the item's title, not a generic one.
-        expect(A.map(A.getSomes(A.map(question.options, ({ write }) => write)), ({ title }) => title)).toStrictEqual([
-          "Response to office action",
-          "Response to office action",
-        ]);
+        expect(
+          A.map(A.getSomes(A.map(question.options, ({ write }) => write)), ({ title }) => title),
+          "a chosen date gives the entry the item's title, not a generic one"
+        ).toStrictEqual(["Response to office action", "Response to office action"]);
         assertSome(question.docket, "90001US01");
         assertSome(question.conversationId, "AAQkADsynthetic-thread");
         expect(A.map(question.facts, ({ text }) => text)).toStrictEqual([
@@ -335,15 +333,19 @@ describe("@beep/law-practice-use-cases docket questions", () => {
     it.effect(
       "pins a question's id to the first 32 hex digits of its message id's SHA-256",
       Effect.fnUntraced(function* () {
-        // `printf '%s' 'AAMkAGsynthetic-message-1=' | sha256sum`, cut to 32 digits. Changing the hash, its
-        // encoding or its length would re-key every stored docket question.
         const golden = "eb740d95d0e01389172d8c72ac30e815";
         const raise12 = yield* raise(DocketQuestionInput.make({ outcome: needsReview("no-usable-date") }));
         const question = yield* Effect.fromOption(raise12);
 
-        expect(question.itemId).toBe(`docket-intake:no-usable-date:${golden}`);
+        expect(
+          question.itemId,
+          "changing the hash, its encoding or its length would re-key every stored docket question"
+        ).toBe(`docket-intake:no-usable-date:${golden}`);
         const docketQuestionDigest13 = yield* docketQuestionDigest("AAMkAGsynthetic-message-1=");
-        expect(docketQuestionDigest13).toBe(golden);
+        expect(
+          docketQuestionDigest13,
+          "golden is `printf '%s' 'AAMkAGsynthetic-message-1=' | sha256sum`, cut to 32 digits"
+        ).toBe(golden);
       })
     );
 

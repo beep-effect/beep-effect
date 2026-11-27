@@ -57,17 +57,12 @@ import type { XlsxValue } from "./XlsxCell.schema.ts";
 import type { XlsxContainer, XlsxFatal } from "./XlsxDiagnostic.schema.ts";
 import type { XlsxSheetName } from "./XlsxWorkbook.schema.ts";
 
-// The engine hands on constructor inputs built from parts it has checked one by one (a finite number, text within
-// its cap, an error code from the list), and each leaves the engine through one `make` that keeps the shape checked
-// and skips the filters: one walk per read, where a `make` per cell and per aggregate walked every cell four times
-// over (a read of 200,000 cells went from about 200 ms to 800 ms). Every workbook a test reads, from a fixture, a
-// generated file or a hostile one, is held to `S.is(XlsxWorkbook)`, which runs every filter.
+// decision: engine-makes-skip-filters
 const checked = { disableChecks: true } as const;
 
 const byNumber = Order.mapInput(Order.Number, (row: RowInput) => row.number);
 
-/** The rows of a sheet in rising order with no number twice, whatever order the file wrote them in. */
-const settled = (rows: ReadonlyArray<RowInput>, unordered: boolean): ReadonlyArray<RowInput> =>
+const sortedUniqueRows = (rows: ReadonlyArray<RowInput>, unordered: boolean): ReadonlyArray<RowInput> =>
   unordered ? A.dedupeAdjacentWith(A.sort(rows, byNumber), (a, b) => a.number === b.number) : rows;
 
 const readerOf = (opened: Opened, entry: SheetEntry, budget: ReadBudget): SheetReader =>
@@ -81,17 +76,11 @@ const readerOf = (opened: Opened, entry: SheetEntry, budget: ReadBudget): SheetR
     budget,
   });
 
-/** One part's rows and what its XML said beside them, once its whole stream has been read. */
 interface SheetRead {
   readonly layout: SheetLayout;
   readonly rows: ReadonlyArray<RowInput>;
 }
 
-/**
- * Reads the XML of the wanted sheets in one pass over the archive, keeping their rows when asked to. Each part is
- * read once, by its `partKey`, however many sheets name it; every reader shares the read's one budget, whose
- * warnings are the read's.
- */
 const readSheets = Effect.fnUntraced(function* (input: {
   readonly opened: Opened;
   readonly wanted: ReadonlyArray<SheetEntry>;
@@ -99,23 +88,23 @@ const readSheets = Effect.fnUntraced(function* (input: {
 }) {
   const { opened, keep } = input;
   const budget = new ReadBudget(opened.caps);
-  // The first sheet that names a part names its reader and so its findings.
-  const readers = MutableHashMap.empty<string, SheetReader>();
+  const firstSheetReaderByPart = MutableHashMap.empty<string, SheetReader>();
   for (const entry of input.wanted) {
     const key = partKey(entry.path);
-    if (!MutableHashMap.has(readers, key)) MutableHashMap.set(readers, key, readerOf(opened, entry, budget));
+    if (!MutableHashMap.has(firstSheetReaderByPart, key))
+      MutableHashMap.set(firstSheetReaderByPart, key, readerOf(opened, entry, budget));
   }
   const reads = MutableHashMap.empty<string, SheetRead>();
-  yield* bodiesOf(opened.bytes, (key) => MutableHashMap.has(readers, key)).pipe(
+  yield* bodiesOf(opened.bytes, (key) => MutableHashMap.has(firstSheetReaderByPart, key)).pipe(
     Stream.mapEffect((part) => {
-      const found = MutableHashMap.get(readers, part.key);
+      const found = MutableHashMap.get(firstSheetReaderByPart, part.key);
       if (O.isNone(found)) return Effect.void;
       const reader = found.value;
       const rows: Array<RowInput> = [];
       return eventsOf({ path: part.path, body: part.body, cellChars: opened.caps.cellChars }).pipe(
         Stream.runForEachArray((events) =>
           Effect.suspend(() => {
-            // crispen: the per-event loop of a whole sheet; each chunk of events is fed to the reader in place.
+            // decision: hot-paths-are-mutable-loops
             for (const event of events) {
               const ended = reader.push(event);
               if (keep) for (const row of ended) rows.push(row);
@@ -144,8 +133,7 @@ const chosen = (opened: Opened, options: XlsxReadOptions): ReadonlyArray<SheetEn
     },
   });
 
-/** The sheet of a name, compared as `XlsxWorkbook.sheet` compares names; `MissingPart` when the workbook lacks it. */
-const entryNamed = (opened: Opened, sheet: string): Effect.Effect<SheetEntry, XlsxFatal> => {
+const entryNamedIgnoringCase = (opened: Opened, sheet: string): Effect.Effect<SheetEntry, XlsxFatal> => {
   const wanted = Str.toLowerCase(sheet);
   return Effect.fromOption(A.findFirst(opened.sheets, (found) => Str.toLowerCase(found.name) === wanted)).pipe(
     Effect.mapError(() => stop(MissingPart.make({ path: Str.slice(0, 1024)(`the sheet ${sheet}`) })))
@@ -159,7 +147,6 @@ const infoOf = (entry: SheetEntry, layout: O.Option<SheetLayout>): XlsxSheetInfo
     declared: O.flatMap(layout, (found) => found.declared),
   });
 
-/** What a sheet's XML said beside its rows, or nothing for a sheet that was not read. */
 const layoutParts = (
   layout: O.Option<SheetLayout>
 ): { readonly merges: ReadonlyArray<XlsxRange>; readonly hiddenColumns: ReadonlyArray<number> } => ({
@@ -182,7 +169,7 @@ const readWorkbook = Effect.fnUntraced(function* (bytes: Uint8Array, options: Xl
     return {
       info: infoOf(entry, layout),
       rows: O.getOrElse(
-        O.map(read, (found) => settled(found.rows, found.layout.unordered)),
+        O.map(read, (found) => sortedUniqueRows(found.rows, found.layout.unordered)),
         A.empty
       ),
       ...layoutParts(layout),
@@ -196,10 +183,6 @@ const readWorkbook = Effect.fnUntraced(function* (bytes: Uint8Array, options: Xl
 
 const parseError = (fatal: XlsxFatal): XlsxParseError => XlsxParseError.make({ fatal });
 
-/**
- * Read options that read the one sheet a records codec names, under the caps given. A codec's records come from
- * its sheet's rows, which a choice of other sheets would leave unread, so the choice in `read.sheets` is not used.
- */
 const onlySheet = (read: XlsxReadOptions, sheet: XlsxSheetName): XlsxReadOptions =>
   XlsxReadOptions.make({ limits: read.limits, sheets: XlsxNamedSheets.make({ names: [sheet] }) });
 
@@ -222,15 +205,13 @@ const headingOf = (value: XlsxValue): O.Option<string> =>
       ? O.some(renderGeneral(value.value))
       : O.none();
 
-/** The headings of a header row: by column for lookup, and in column order, which a hash map does not keep. */
 type Headings = {
   readonly byColumn: HashMap.HashMap<number, string>;
-  readonly inOrder: ReadonlyArray<string>;
+  readonly inColumnOrder: ReadonlyArray<string>;
 };
 
 const byColumn = Order.mapInput(Order.Number, (entry: readonly [number, string]) => entry[0]);
 
-/** The headings of a header row by column, each once. */
 const headingsOf = (
   header: XlsxRow,
   sheet: XlsxSheetName,
@@ -260,14 +241,13 @@ const headingsOf = (
     ),
     (found) => ({
       byColumn: found.byColumn,
-      inOrder: A.map(A.sort(HashMap.toEntries(found.byColumn), byColumn), ([, heading]) => heading),
+      inColumnOrder: A.map(A.sort(HashMap.toEntries(found.byColumn), byColumn), ([, heading]) => heading),
     })
   );
 };
 
 const blank = XlsxBlank.make({});
 
-/** One data row as a record, or the issue of its first cell with a value and no heading. */
 const recordOf = (
   row: XlsxRow,
   headings: Headings,
@@ -285,9 +265,8 @@ const recordOf = (
           )
         ),
       onNone: () => {
-        // crispen: own properties set one by one, so a heading such as `__proto__` stays an own property.
         const record: { [heading: string]: XlsxValue } = {};
-        for (const heading of headings.inOrder) setOwnProperty(record, heading, blank);
+        for (const heading of headings.inColumnOrder) setOwnProperty(record, heading, blank);
         for (const cell of row.cells) {
           const heading = HashMap.get(headings.byColumn, cell.column);
           if (O.isSome(heading)) setOwnProperty(record, heading.value, cell.value);
@@ -297,16 +276,12 @@ const recordOf = (
     }
   );
 
-/**
- * The headings of a header row, if the records under them hold no more values than `maxRecordValues`: one per
- * heading per row below it, a blank where a row lacks a heading's cell. Counted before any record is built.
- */
 const withinRecordValues = (
   headings: Headings,
   sheet: XlsxWorksheet,
   input: { readonly bytes: Uint8Array; readonly maxRecordValues: number }
 ): Result.Result<Headings, SchemaIssue.Issue> => {
-  const values = headings.inOrder.length * (sheet.rows.length - 1);
+  const values = headings.inColumnOrder.length * (sheet.rows.length - 1);
   return values > input.maxRecordValues
     ? Result.fail(
         issue(
@@ -319,12 +294,6 @@ const withinRecordValues = (
     : Result.succeed(headings);
 };
 
-/**
- * A sheet's rows under the headings of its first row. A heading that is empty, missing or used twice stops the
- * read: a heading that is not text, a heading written twice, and a cell with a value in a column whose heading cell
- * the header row lacks, which would otherwise be read past without a word. So do records that would hold more values
- * than `maxRecordValues`.
- */
 const toRecords = (
   sheet: XlsxWorksheet,
   input: { readonly bytes: Uint8Array; readonly maxRecordValues: number }
@@ -340,12 +309,6 @@ const toRecords = (
       ),
   });
 
-/**
- * Records as one sheet: the headings of the records in the first row, a date under Excel's short date. Each heading
- * is already one a cell holds (`XlsxHeading`); records with more headings than a sheet has columns, more records
- * than it has rows below its header, or records with no heading at all (whose header row would be empty, so a read
- * gives no records back), are refused here, so nothing is written that a read could not give back.
- */
 const fromRecords = (
   records: ReadonlyArray<XlsxRecord>,
   name: XlsxSheetName
@@ -586,7 +549,7 @@ export class Xlsx {
   ): Stream.Stream<XlsxRow, XlsxParseError> {
     return Stream.unwrap(
       Effect.flatMap(open({ bytes, caps: capsOf(options.limits) }), (opened) =>
-        Effect.map(entryNamed(opened, sheet), (entry) => {
+        Effect.map(entryNamedIgnoringCase(opened, sheet), (entry) => {
           const reader = readerOf(opened, entry, new ReadBudget(opened.caps));
           const key = partKey(entry.path);
           return bodiesOf(bytes, (found) => found === key).pipe(
@@ -614,7 +577,7 @@ export class Xlsx {
     options: XlsxReadOptions = XlsxReadOptions.default
   ) {
     const opened = yield* open({ bytes, caps: capsOf(options.limits) });
-    const entry = yield* entryNamed(opened, sheet);
+    const entry = yield* entryNamedIgnoringCase(opened, sheet);
     const { readOf } = yield* readSheets({ opened, wanted: [entry], keep: false });
     const layout = O.map(readOf(entry), (found) => found.layout);
     return XlsxWorksheet.make({ info: infoOf(entry, layout), ...layoutParts(layout) });
@@ -662,6 +625,13 @@ export class Xlsx {
    * is used twice, or a cell with a value in a column the header row has no heading for, fails the decode, as do
    * records that would hold more values than `read.limits.maxRecordValues`, blanks included. The named sheet is the
    * one read, whatever `read.sheets` chooses; a sheet that holds no rows gives no records.
+   *
+   * **Details**
+   *
+   * Writing puts the headings in the first row and a date under Excel's short date. It refuses records with more
+   * headings than a sheet has columns, more records than it has rows below its header, or records with no heading at
+   * all (whose header row would be empty, so a read gives no records back), so nothing is written that a read could
+   * not give back.
    */
   static recordsFromBytes(
     input: { readonly sheet: XlsxSheetName; readonly header: "first" },

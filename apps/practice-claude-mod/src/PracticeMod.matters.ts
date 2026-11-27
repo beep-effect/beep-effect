@@ -15,7 +15,6 @@ import { ChosenMatter } from "./PracticeMod.values.ts";
 
 const $I = $PracticeClaudeModId.create("PracticeMod.matters");
 
-// Wire projections deliberately omit server dependencies and unused fields.
 const Envelope = S.Struct({
   data: S.Struct({ columns: S.Array(S.String), rows: S.Unknown.pipe(S.Array, S.Array) }),
 });

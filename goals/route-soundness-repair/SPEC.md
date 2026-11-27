@@ -129,7 +129,7 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| ROUT-03 | Register goal-folder data consumers; narrow the #2999 widening for consumed paths | slice 1 landed in #3064 (census test and `ciGoalDataConsumers` rows in `codeRoots`, checked at 5e09d90a6da); slice 2 (CoverageScope rows, per-package Turbo inputs) open | Generated census of every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, plus the existing cross-package fixture read the ROUT-09 audit found (law-practice-server coverage tests read `packages/law-practice/use-cases/test/fixtures` by relative path, unregistered as a fixture owner and excluded from transit; PLAN ROUT-09 entry); each non-docs-only, mapped in CoverageScope and a per-package Turbo input; mutations of a `.py` probe, a `.ts` ops script, the frozen JSON fixture and a research JSON each selected and red | none |
+| ROUT-03 | Register goal-folder data consumers; narrow the #2999 widening for consumed paths | slice 1 landed in #3064 (census test and `ciGoalDataConsumers` rows in `codeRoots`, checked at 5e09d90a6da); slice 2 landed (PLAN slice 4): #3245 selected coverage owners for goal paths from the registry; slice 4 maps the `packages/law-practice/use-cases/test/fixtures/` prefix to `@beep/law-practice-server` in CoverageScope and declares every census path as a `test` input in its reader package's `turbo.json` (new files for `packages/law-practice/server` and `packages/foundation/modeling/ontology`), which the census now checks positively and which `turbo --affected` follows | Generated census of every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, plus the existing cross-package fixture read the ROUT-09 audit found (law-practice-server coverage tests read `packages/law-practice/use-cases/test/fixtures` by relative path, unregistered as a fixture owner and excluded from transit; PLAN ROUT-09 entry); each non-docs-only, mapped in CoverageScope and a per-package Turbo input; mutations of a `.py` probe, a `.ts` ops script, the frozen JSON fixture and a research JSON each selected and red | none |
 | ROUT-02 | Docs-policy job: knowledge and packet policy on docs-only and goals-only PRs | open (#3010 and #3011 add no job or lane id; #3039 added a Repo Sanity goals-only path that runs only the private-home-paths law, check.yml line 329) | Completeness test derived from `turbo.json` inputs against fixed probe paths with an explicit exclusion list (fails today on `lint:effect-imports-markdown`); goals-only and docs-only fixtures select the docs-policy job; replaying #2909's head goes red | ROUT-03; HOST-06 (heavy-pool-diet) |
 | TEST-10 | Key `test`, `test:property` and `doctest` on `@beep/glob#transit` with a setup-closure invariant (merges TURB-04) | open (`turbo.json` lines 5374, 5419, 67) | Dry-run hash A/B in a disposable worktree: every hash in the three families changes on a `GlobPattern.ts` edit, a control edit leaves them stable (pre-fix `@beep/identity#test=efb65c7d1bcb4fc1`); invariant over cacheable families only; cache-qualification baseline re-recorded in the same PR | none |
 | COVE-02 | Bare `bun run coverage` judges against the merge base it planned from | landed (slice 2): the bare run carries its resolved merge base as the comparison base, so `compareCoverageRegressionBaseline` judges against the base it planned from | Fixture in `quality-tasks.test.ts`: a lowered row in a dirty baseline fails the bare run with the self-judge line; the same fixture passes on the current tree | none |
@@ -137,7 +137,7 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 | COVE-03 | Local coverage children and baseline writes on Node 22.23.4 from one shared pin | open (`.nvmrc` 24.22.1; check.yml pins 22.23.4 at three sites) | Wrong runtime refused with no rows written; `bunx --bun` law-practice-server argv unchanged; pin-drift test against check.yml; A/B on `@beep/acp` plus 2-4 v8 packages in hosted producer mode matches hosted rows within 0.001 | none |
 | COVE-08 | Fixed comparator context name, removing the conditional on the job name | open (check.yml `coverage-regression` job, Heavy / Coverage Regression: its `name:` is still the conditional on `needs.admission.outputs.legacy_coverage`, which has been the constant `'false'` since #3116, so only the literal name and the dead output remain) | Route replay of context emission on docs, source and main events | coordinated with PERIH-01's probe-deletion slice (heavy-pool-diet), see Constraints |
 | COVE-04 | Label coverage failure rows (inherited, environment) | open | Synthetic fixtures; exit status unchanged | COVE-03 |
-| PERIH-10 | Classify PRs against base-ref CI patterns | open (change-profile reads the head patterns file) | Canonical base patterns plus a widened head give `docs_only=false`; a push gives the full profile; a base from an older schema decodes or falls back explicitly; every call site covered or listed as excluded with a reason | ROUT-03; PERIH-11 (heavy-pool-diet) |
+| PERIH-10 | Classify PRs against base-ref CI patterns | landed (slice 12): change-profile and the heavy lane-skip read take the patterns file from the pull request's base commit; a base without the file uses the compiled-in patterns; an unreadable or undecodable base file keeps every profile active | Canonical base patterns plus a widened head give `docs_only=false`; a push gives the full profile; a base from an older schema decodes or falls back explicitly; every call site covered or listed as excluded with a reason | ROUT-03; PERIH-11 (heavy-pool-diet) |
 | ROUT-07 | Differential test across the seven classifiers, then one RoutePlan registry | open | Differential parity over corpus heads; zero unadmitted disagreements | ROUT-03; ROUT-05 (certainty-scorecard) |
 
 ## Constraints
@@ -196,7 +196,7 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 
 ## Acceptance Criteria
 
-- [ ] **Goal-data consumers (ROUT-03):** the census test lists every `goals/` path a test reads, spawns or imports, or a
+- [x] **Goal-data consumers (ROUT-03):** the census test lists every `goals/` path a test reads, spawns or imports, or a
       `turbo.json` declares; each is non-docs-only and, after slice 2, mapped in CoverageScope and declared as a
       per-package Turbo test input. The `packages/law-practice/use-cases/test/fixtures` prefix is mapped to
       `@beep/law-practice-server` in CoverageScope's fixture-owner prefixes and declared as its Turbo test input: a
@@ -218,7 +218,7 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 - [ ] **COVE-08:** the comparator job name is a literal, `ci-runner-security.test.ts` asserts it, and the
       `legacy_coverage` output is gone if PERIH-01's probe deletion landed first; route replay shows the same context on docs, source and main
       events. **COVE-04:** synthetic failure rows carry their label and the exit status is unchanged.
-- [ ] **PERIH-10:** a widened head pattern over canonical base patterns gives `docs_only=false`; an older-schema base
+- [x] **PERIH-10:** a widened head pattern over canonical base patterns gives `docs_only=false`; an older-schema base
       decodes or falls back explicitly; every call site is covered or listed as excluded with a reason.
 - [ ] **ROUT-07:** the differential reports zero unadmitted disagreements over the corpus heads; each admitted
       disagreement has a decision file.
@@ -337,6 +337,38 @@ Source: `packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts` (`c
 Lane fix/rout-03-goal-data-census · PR #3064
 
 Reverse: Remove the ciGoalDataConsumers rows from codeRoots in CiOperational.schemas.ts, run bun run beep ci patterns --write, and delete goal-data-consumer-census.test.ts.
+
+### The read census widens from goal data to every cross-package test read, 2026-11-27
+
+ROUT-03 checked only goal and exploration paths, but the same hole exists for package-owned files. On origin/main a change to a `packages/_internal/db-admin/drizzle` migration selected only `@beep/db-admin`'s integration tasks, while integration and pglite tests in six server packages replay that folder by relative path. `#3608` fixed one instance by hand, the law-practice use-cases fixtures (ROUT-09). The driver ruled that the defect be fixed now, before slice 12, rather than deferred.
+
+The new `cross-package-read-census.test.ts` applies #3608's rule to every test source. A string literal of the form `../…`, outside an import or export statement, is resolved against the test file. If it lands in another workspace package's tracked files, two checks apply:
+- every such file is an input of each test task the reader package has a script for (`test`, `test:integration`, `test:integration:parallel`), with `!` exclusions honoured;
+- for a read outside `test/integration/`, CoverageScope's affected plan selects the reader or plans a full run.
+
+The turbo-input helpers move to `test/support/TurboTestInputs.ts`, which both censuses share.
+
+**Boundary.** Root-anchored bare literals such as `path.join(root, "packages/…")` are not counted. On origin/main, 170 of them resolve to tracked files in another package. Almost all are classifier rows, synthetic temp-tree paths, assertion messages or tailwind source maps, chiefly in repo tooling tests, so they cannot be told apart from reads by their shape. Repo-cli's real repository reads stay declared by hand in its `turbo.json` (`packages/_internal/db-admin/**`, `packages/architecture-lab/**` and the rest). Relative reads are always resolved against the test file, so they are counted without exception.
+
+**Changes.**
+- Five server packages get their first `turbo.json`, declaring `drizzle/**` on every test task they run.
+- law-practice-server adds `drizzle/**` and the domain claim-element fixtures.
+- repo-cli adds the identity package registry and law-practice-server's `vitest.shards.json`.
+- github-reporting and ci-runners declare the source trees their tests read.
+- CoverageScope adds documents-server to the drizzle readers. Its coverage runs `test/*.pglite.test.ts`, so the old `quality-tasks.test.ts` expectation that excluded it was wrong.
+- CoverageScope maps the domain claim-element fixtures to law-practice-server, and `vitest.shards.json` to repo-cli.
+
+**Readings.**
+- On the pre-change tree the census fails both checks.
+- After it, a migration-only change selects `test`, `test:integration` and `test:integration:parallel` for every replaying server package.
+- A malformed baseline migration turns `packages/epistemic/server/test/RetentionAuthority.pglite.test.ts` red with `syntax error at or near "THIS"`.
+- Two review findings on #3616 widened the census. It now strips only module specifiers from a line instead of skipping every `import`/`export` line, and it keeps a reference that resolves to another package's root. On main the first surfaced 0 new reads. The second surfaced 1: `ci-partitions.test.ts` named law-practice-server's root as a join base for the test files it globs. The literal is narrowed to `test/`, and repo-cli declares `packages/law-practice/server/test/**` on `test`, `test:property` and `coverage`, with a CoverageScope row for the same prefix.
+
+The cache subjects are re-recorded through `docs/reports/cross-package-reads-cache-baseline-request-2026-11-27.json` and, for the review fix, `docs/reports/cross-package-reads-root-reference-cache-baseline-request-2026-11-27.json`. No changed file is in the CI binary closure.
+
+Lane fix/route-soundness-cross-package-reads
+
+Reverse: Revert this PR's squash commit: the cross-package census, the nine turbo.json changes and the three CoverageScope rows go, and the cache baseline returns to its previous digests.
 
 <!-- beep:decisions:end -->
 

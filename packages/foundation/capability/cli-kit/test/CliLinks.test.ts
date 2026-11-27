@@ -20,7 +20,6 @@ const Json = S.fromJsonString(S.Unknown);
 const dir = MemoryFileSystem.directory();
 const file = MemoryFileSystem.file("");
 
-/** `n` nested directories under the root: `/a/a/a` for 3. */
 const deep = (n: number): string =>
   `/${A.join(
     Array.from({ length: n }, () => "a"),
@@ -34,7 +33,6 @@ interface Setup {
   readonly terminal?: string;
 }
 
-/** Build `CliLinks` over a memfs volume with a fixed runtime and environment. */
 const links = (setup: Setup): Effect.Effect<CliLinksShape> => {
   const runtime = CurrentRuntimeEnv.layerTest(
     setup.terminal === undefined ? {} : { terminal: O.some({ name: setup.terminal, version: O.none() }) }
@@ -284,8 +282,11 @@ it.layer(CliLinks.layerTest("file"), { timeout: "30 seconds" })('CliLinks.layerT
     Effect.gen(function* () {
       const test = yield* CliLinks;
       assert.deepStrictEqual(test.target({ file: "D:\\a\\b.ts" }), O.some("file:///D:/a/b.ts"));
-      // A drive-relative path ("C:x.ts") is not absolute, so it has no link without a Path to resolve it.
-      assert.deepStrictEqual(test.target({ file: "C:x.ts" }), O.none());
+      assert.deepStrictEqual(
+        test.target({ file: "C:x.ts" }),
+        O.none(),
+        "a drive-relative path is not absolute, so it has no link without a Path to resolve it"
+      );
     })
   );
 });
@@ -383,7 +384,6 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
         ]) {
           assert.strictEqual(human({ url }, "label"), "label", Result.getOrThrow(S.encodeUnknownResult(Json)(url)));
         }
-        // The service itself has no target for one either: see the CliLinks.layerTest("vscode") group.
       })
   );
 
@@ -442,8 +442,11 @@ describe("CliLinks.linker: the RenderContext.link policy", () => {
         assert.strictEqual(links.pairs, 1, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
         assert.isTrue(links.balanced, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
         assert.strictEqual(links.wrapped, "label");
-        // Four ESC in all: the open and close sequences' introducer and ST each. Nothing else.
-        assert.strictEqual(Str.split(out, "\u001B").length - 1, 4, Result.getOrThrow(S.encodeUnknownResult(Json)(out)));
+        assert.strictEqual(
+          Str.split(out, "\u001B").length - 1,
+          4,
+          `only the open and close sequences' introducer and ST: ${Result.getOrThrow(S.encodeUnknownResult(Json)(out))}`
+        );
         assert.notMatch(
           Str.replace(/\u001B\]8;;|\u001B\\/g, "")(out),
           /[\u0000-\u001F\u007F-\u009F]/,

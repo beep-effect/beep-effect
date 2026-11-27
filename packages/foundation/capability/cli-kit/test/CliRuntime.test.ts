@@ -31,7 +31,6 @@ const capturing = (): { readonly console: Console.Console; readonly out: string[
   return { console: console_, out, err };
 };
 
-/** Run a program under the CLI logger, returning what was written and the exit. */
 const run = <A, E>(
   program: Effect.Effect<A, E>,
   options: Parameters<typeof CliRuntime.reportFailures>[0] = {}
@@ -47,7 +46,6 @@ const run = <A, E>(
     return { out, err, exit };
   });
 
-/** The squashed failure, the same way `makeRunMain` reads one. */
 const failureOf = <A>(exit: Exit.Exit<A, Error>): unknown =>
   Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined;
 
@@ -57,8 +55,7 @@ describe("CliRuntime.reportFailures", () => {
       const { out, err, exit } = yield* F.pipe(TestError.make({ message: "boom" }), Effect.fail, run);
 
       assert.deepStrictEqual(err, ["[FAIL] Error: boom"]);
-      // The bug this exists to prevent is the report landing on stdout.
-      assert.deepStrictEqual(out, []);
+      assert.deepStrictEqual(out, [], "the report must never land on stdout");
       assert.strictEqual(Exit.isFailure(exit), true);
     })
   );
@@ -75,11 +72,11 @@ describe("CliRuntime.reportFailures", () => {
       const { exit } = yield* F.pipe(TestError.make({ message: "boom" }), Effect.fail, run);
       const error = failureOf(exit);
 
-      // Read through core's own getter, not our property. The polarity is
-      // inverted relative to the name — `false` is what suppresses — so this
-      // assertion FAILS if anyone "corrects" the marker to `true` to match the
-      // name, which is the whole reason it is written this way.
-      assert.strictEqual(Runtime.getErrorReported(CliRuntime.reported(new Error("x"))), false);
+      assert.strictEqual(
+        Runtime.getErrorReported(CliRuntime.reported(new Error("x"))),
+        false,
+        "read through core's getter: false is what suppresses, so a marker 'corrected' to true fails here"
+      );
       assert.strictEqual(error === undefined ? true : Runtime.getErrorReported(error), false);
     })
   );
@@ -90,9 +87,11 @@ describe("CliRuntime.reportFailures", () => {
       const { exit } = yield* run(Effect.fail(picky), { exitCode: 9 });
       const error = failureOf(exit);
 
-      // The option is a FALLBACK, never an override: 3 was a deliberate choice
-      // by whatever raised the error.
-      assert.strictEqual(Runtime.getErrorExitCode(error), 3);
+      assert.strictEqual(
+        Runtime.getErrorExitCode(error),
+        3,
+        "the option is a fallback, never an override of the error's own code"
+      );
     })
   );
 
@@ -106,9 +105,11 @@ describe("CliRuntime.reportFailures", () => {
 
       const codeOf = <A>(exit: Exit.Exit<A, Error>): number => exit.pipe(failureOf, Runtime.getErrorExitCode);
 
-      // `getErrorExitCode` answers 1 for both an error marked 1 and an unmarked
-      // one, so reading it alone would let the option override a deliberate 1.
-      assert.strictEqual(codeOf(kept.exit), 1);
+      assert.strictEqual(
+        codeOf(kept.exit),
+        1,
+        "getErrorExitCode answers 1 for marked-1 and unmarked alike, so the option must not override a deliberate 1"
+      );
       assert.strictEqual(codeOf(defaulted.exit), 7);
     })
   );
@@ -176,9 +177,7 @@ describe("CliRuntime.reportFailures", () => {
     Effect.gen(function* () {
       const { out, err, exit } = yield* run(Effect.interrupt);
 
-      // An interrupt is not a failure to report, and the default teardown
-      // already maps an interrupt-only cause to 130.
-      assert.deepStrictEqual(err, []);
+      assert.deepStrictEqual(err, [], "an interrupt is not a failure to report: the default teardown maps it to 130");
       assert.deepStrictEqual(out, []);
       assert.strictEqual(Exit.isFailure(exit), true);
     })
@@ -243,7 +242,6 @@ describe("CliRuntime.reportFailures and ShowHelp", () => {
 });
 
 describe("CliRuntime.reported", () => {
-  /** A stand-in for the typed errors a CLI fails with (issue #717). */
   class GateError extends S.TaggedError<GateError, { readonly brand: unique symbol }>()("GateError", {
     message: S.String,
     count: S.Finite,
@@ -258,7 +256,6 @@ describe("CliRuntime.reported", () => {
       const error = gateError(2);
       const marked = CliRuntime.reported(error, 1);
 
-      // A wrapper is possible; narrow before accessing the original subtype.
       if (!isGateError(marked)) return yield* Effect.fail(marked);
       const typed: GateError = marked;
       assert.strictEqual(typed, error);
@@ -266,14 +263,13 @@ describe("CliRuntime.reported", () => {
       assert.strictEqual(Runtime.getErrorExitCode(typed), 1);
       assert.strictEqual(Runtime.getErrorReported(typed), false);
 
-      // Recover only the preserved typed instance, leaving wrappers as failures.
       const recovered = yield* Effect.fail(CliRuntime.reported(gateError(3), 1)).pipe(
         Effect.catchIf(
           (caught): caught is GateError => isGateError(caught),
           (caught) => Effect.succeed(caught.count)
         )
       );
-      assert.strictEqual(recovered, 3);
+      assert.strictEqual(recovered, 3, "only the preserved typed instance is recovered; a wrapper stays a failure");
     })
   );
 

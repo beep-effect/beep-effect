@@ -42,12 +42,9 @@ const makeReviewQueue = (log: VerdictLogShape, writeLock: Semaphore.Semaphore): 
   const openItems = Effect.fn("ReviewQueue.openItems")(function* (items: ReadonlyArray<ReviewItem>) {
     const rows1 = yield* log.rows;
     const latest = latestVerdictByItem(rows1);
-    // Questions close by answer, not verdict; the question loop owns them.
     return A.filter(items, (item) => !isQuestion(item) && !O.exists(HashMap.get(latest, item.itemId), isFinalVerdict));
   });
 
-  // Writes read the log, check the lock and append under one permit, so no
-  // other write of this queue interleaves between the check and the append.
   const recordVerdict = Effect.fn("ReviewQueue.recordVerdict")(function* (input: RecordVerdictInput) {
     const rows = yield* log.rows;
     yield* ensureUnlocked(rows, input.batchId);

@@ -23,7 +23,7 @@ PR-sized, in landing order. At most three open at once (`goals/README.md`). Size
 | 1 | `fix(ci): keep goal ops scripts, fixtures and research inputs on the code route` (landed, #3064) | ROUT-03 | S | Census test (a new goal-data consumer census test under `packages/tooling/tool/cli/test`) finds every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, and asserts each is non-docs-only; mutations of a citation ops `.py` probe, a `.ts` ops script, the frozen JSON fixture and a ciops research JSON are each selected by change-profile. Edits `CiOperational.schemas.ts` (the `ciGoalDataConsumers` rows joined into `codeRoots`), the generated patterns JSON and `ci-heavy-admission.test.ts`, and adds `goal-data-consumer-census.test.ts`; no workflow or `turbo.json` change, so it lands alone. Merge by 2026-11-16 (D8). | none; first |
 | 2 | `fix(coverage): judge bare affected runs against the merge base they planned from` (landed, #3115) | COVE-02 | S | Lowered-row fixture in `quality-tasks.test.ts` fails the bare run with the self-judge line; clean tree passes | none; parallel with 1 |
 | 3 | `fix(yeet): version final-check receipts by gate set; docs name the exact gates` (landed, #3177) | YEET-08 slice 1 | S | v1 receipt refused on head and ancestor-carry paths, and on the unchanged-rewrite carry #3130 added; docs-drift test over AGENTS.md, the yeet skill and the skill's gate table | none; parallel with 1-2 |
-| 4 | `fix(quality): declare goal-data consumers in CoverageScope and per-package turbo.json inputs` | ROUT-03 slice 2 | S | Census asserts each path is mapped in CoverageScope and a per-package Turbo input; the four mutations turn their consumers red under `--affected`; a coverage scope fixture with only `packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json` changed includes `@beep/law-practice-server` (ROUT-09 hole); no root `turbo.json` edit; per-package `turbo.json` change, so coverage rows freeze at base and the cache-qualification baseline is re-recorded in the same PR | 1 |
+| 4 | `fix(quality): declare goal-data consumers in CoverageScope and per-package turbo.json inputs` (landed) | ROUT-03 slice 2 | S | Census asserts each path is mapped in CoverageScope and a per-package Turbo input; the four mutations turn their consumers red under `--affected`; a coverage scope fixture with only `packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json` changed includes `@beep/law-practice-server` (ROUT-09 hole); no root `turbo.json` edit; per-package `turbo.json` change, so coverage rows freeze at base and the cache-qualification baseline is re-recorded in the same PR | 1 |
 | 5 | `ci: fixed coverage comparator context name` | COVE-08 | S | Route replay of context emission (docs, source, main); `ci-runner-security.test.ts` updated for the literal `Heavy / Coverage Regression` name; if PERIH-01's probe deletion landed first, delete the `legacy_coverage` output with its last consumer; workflow change, so coverage rows freeze at base; re-record the cache-policy baseline in the same PR | owns making the job name literal; whichever of COVE-08 and PERIH-01's probe-deletion slice lands second merges `main` first and deletes `legacy_coverage` |
 | 6 | `fix(turbo): key test, test:property and doctest on @beep/glob#transit` | TEST-10 | S | Dry-run hash A/B with control; cache-qualification baseline re-recorded and `standards/policy-tools.fingerprint.json` resealed in the same PR; no other `turbo.json`, lockfile or workflow change in the PR | none; #3041 has merged, so re-record against main |
 | 7 | `fix(ci): docs-policy job running knowledge and packet checks on documentation and goal PRs` | ROUT-02 | M | Completeness test from `turbo.json` inputs over fixed probe paths with an exclusion list; goals-only and docs-only fixtures select the docs-policy job; #2909 head replay red; the operator kept the separate job (2026-11-09), so no Repo Sanity measurement; re-record the cache-policy baseline in the same PR | 1; HOST-06 (heavy-pool-diet) |
@@ -140,5 +140,52 @@ Slice 3 lands. `yeet final-check` writes `yeet-final-check/v2` receipts that rec
 Lane claude/stoic-torvalds-00017b
 
 Reverse: Revert the slice PR: receipts go back to yeet-final-check/v1 and lanes re-run yeet final-check once more
+
+### PERIH-10 classifies against base-ref CI patterns; the 170 root-anchored literals are counted, 2026-11-27
+
+`beep ci change-profile` and the heavy lane-skip read (`readHeavyLaneSkips`) now take `CiOperational.patterns.json` from the pull request's base commit (`git show <base>:<file>`), never from the head checkout. A base with no file uses the binary's compiled-in patterns. A base file that git cannot read, or that does not decode under the binary's schema, keeps every profile active. Neither case fails the job, so a pin bump whose binary expects a changed schema runs in full instead of failing its own Change Profile. A pattern edit therefore takes effect on the pull request after it merges.
+
+**Mutation evidence.** `ci-bootstrap-parity.test.ts` commits canonical patterns at the base. The head widens `docs` to `.` and `codeRoots` to `^$`, and adds a source file. Against the previous head-checkout read the profile came out `docs_only=true`, which was the red assertion. With the base read it comes out `docs_only=false`. The same test covers four more cases:
+
+- a base without the file classifies with the compiled-in patterns;
+- a narrowed base pattern applies to a docs-only head;
+- a base file that predates `lanes` keeps every lane relevant;
+- an undecodable base file yields the full profile with exit 0.
+
+A push already yields the full profile (golden `push` row).
+
+**Call sites.** None needed a workflow edit. These call the pinned `beep` binary:
+
+- `check.yml`: the Change Profile job, the Test Plan classification and the lane-gate evals in Coverage Regression, Professional Desktop IPC Stdio and JSDoc Ratchet;
+- `heavy-admit.yml`, the documentation-only admission;
+- `storybook.yml`, the lane gate.
+
+The admission lane skips (`readHeavyLaneSkips`) run from source instead: `bun run beep ci admission` in `check.yml` and `heavy-admit.yml`, both `pull_request` workflows that check out the merge ref.
+
+`heavy.yml` no longer calls change-profile, and `shard-overflow.yml` only consumes the `docs_only` output. One call site is excluded: the smoke run in `beep-ci-binary.yml` sets `GITHUB_EVENT_NAME=push`, which never reads patterns. `CiOperational.service.ts` is in the CI binary closure, so the change-profile half ships with the next closure-digest binary release and its reviewed pin bump (PERIH-11), and the pull request is an operator hand merge. The base read goes through `@beep/git/Git`, which grows the closure from 352 to 363 paths: the nine `@beep/git` sources plus its `package.json` and `tsconfig.json`, and nothing else. `ci-binary-closure.test.ts` pins `Git.ts` inside the closure. The admission half is live at merge. Until the pin bump merges, admission skips read the base patterns while change-profile still reads the head checkout.
+
+**Root-anchored literals (170 rows, origin/main).**
+
+- 143 are not reads: classifier rows, synthetic temp-tree paths, assertion messages and in-memory projects.
+- 5 are real reads already declared: the claim-element fixtures and `vitest.shards.json`.
+- 10 are real reads the task graph already reaches. Nine are sources in the reader's workspace dependency closure. A turbo `--affected` dry run selected `@beep/repo-cli#test` for a one-byte change to each of the nine. The tenth is repo-gate-vitest's source, which every `test` reaches through `@beep/repo-gate-vitest#transit`.
+- 2 are real reads that no input declared, now declared on repo-cli's `test`, `test:property` and `coverage`. Before the declaration a dry run did not select `@beep/repo-cli#test` for either file. After it, it does.
+- 10 are expected results of repository-wide scans in repo-cli tests (the property sweep, the goal-data census, the tracked `turbo.json` listing). Declaring the listed files does not make those scans sound. They move to a Repo Sanity task in the next PR of this lane.
+
+Lane fix/route-soundness-perih-10
+
+Reverse: Restore readCheckoutCiPatterns at the head checkout in CiOperational.service.ts and HeavyAdmission.ts, revert the parity fixture, and drop the two repo-cli inputs with a cache re-record
+
+### ROUT-03 slice 2 declares goal-data consumers as per-package Turbo test inputs, 2026-11-27
+
+PLAN slice 4 lands ROUT-03 slice 2, the half #3245 left open. Every goal or exploration path a package's tests read is now a `test` input in that package's own `turbo.json`: repo-cli gains the runner-burst directory and `goals/*/ops/**/*.ts`; ciops, semantica and eyecite gain test overrides for their reads; `packages/law-practice/server` and `packages/foundation/modeling/ontology` get their first `turbo.json`. The server override lists citation `ops/**` minus `ops/manifest.json`, so a packet manifest edit still selects nothing, and `packages/law-practice/use-cases/test/fixtures/**`, the ROUT-09 read. CoverageScope maps that fixture prefix to `@beep/law-practice-server`. No root `turbo.json` task changed. The same inputs are declared on every integration test task a reader package runs (`test:integration` for eyecite and ontology; `test:integration` and `test:integration:parallel` for law-practice-server): the citation ops child is read only from law-practice-server's `test/integration/**`, which its `test` script excludes, and the integration lane runs `test:integration:parallel --affected`.
+
+The census in `goal-data-consumer-census.test.ts` now checks positively that every consumed path is matched by the inputs of each test task its reader package runs, honours `!` negations in a turbo.json, and checks the ROUT-09 fixture; `coverage-scope-goal-readers.test.ts` checks that the fixture alone selects law-practice-server. On the pre-fix turbo files the new census test lists 2,949 undeclared paths and the ROUT-09 tests fail.
+
+Readings at this lane's head (`turbo run test --affected --dry=json`, one-path change): the frozen profile fixture selects eyecite and law-practice-server; the citation ops child selects law-practice-server; `gate-order-handoff.json` selects ciops and repo-cli; a `goals/*/ops` `.ts` script and the runner-burst script select repo-cli; the ROUT-09 fixture selects law-practice-server and use-cases; `goals/citation-extraction-engine/ops/manifest.json` selects nothing. Malforming each mutation target turns its consumer red: the frozen fixture fails eyecite `test/index.test.ts`, the ops child fails `test/integration/CitationRegexTranslatorNode.test.ts`, the handoff JSON fails ciops `test/lane-plan.test.ts`. For the `.ts` ops script, `goals-ops-typecheck.test.ts` reads only the glob keys, so a content mutation leaves it green. The content gate is Repo Sanity's `repo-sanity:goals-ops-typecheck` lane, and a type error in `goals/beep-cli-composition/ops/edge-census.ts` turns `tsrs -p goals/tsconfig.ops.json` red. The changed cache subjects are re-recorded through `docs/reports/rout-03-slice-2-cache-baseline-request-2026-11-26.json` and `docs/reports/rout-03-slice-2-integration-cache-baseline-request-2026-11-26.json`. None of the changed files is in the CI binary closure, so no pin bump follows.
+
+Lane fix/route-soundness-rout-03-slice-2
+
+Reverse: Revert this PR's squash commit; the six turbo.json overrides, the CoverageScope fixture prefix and the census turbo checks go, and the cache baseline returns to its previous digests.
 
 <!-- beep:decisions:end -->

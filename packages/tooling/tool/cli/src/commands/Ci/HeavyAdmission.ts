@@ -48,7 +48,7 @@ import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_ID_VALUES, CiLaneId } from "./CiLane.ts";
 import { isCiHeavyLane } from "./CiLaneJobs.ts";
 import { isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
-import { classifyChangeProfile, readCheckoutCiPatterns, readPinnedPrDiff } from "./CiOperational.service.ts";
+import { classifyChangeProfile, readBaseCiPatterns, readPinnedPrDiff } from "./CiOperational.service.ts";
 import type { CiOperationalPatterns } from "./CiOperational.schemas.ts";
 
 export { heavyDocsOnlyPattern, isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
@@ -849,12 +849,10 @@ export const readHeavyLaneSkips = Effect.fn("Ci.readHeavyLaneSkips")(function* (
     if (O.isNone(paths)) {
       yield* Console.error("heavy lane skips: pinned PR diff unavailable; every heavy lane runs");
     }
-    const patterns = yield* readCheckoutCiPatterns(input.cwd).pipe(
-      Effect.tapCause((cause) =>
-        Console.error(`heavy lane skips: CI patterns unreadable; goals-only skips nothing: ${Cause.pretty(cause)}`)
-      ),
-      Effect.option
-    );
+    const patterns = yield* O.match(base, {
+      onNone: () => Effect.succeedNone,
+      onSome: (baseSha) => readBaseCiPatterns(baseSha, O.some(input.cwd)),
+    });
     return decideHeavyLaneSkips(input.eventName, paths, patterns);
   }).pipe(
     failOpenWithin<ReadonlyArray<CiLaneId>>(readTimeout, "heavy lane skips unavailable", heavyAdmissionLaneSkipsDefault)

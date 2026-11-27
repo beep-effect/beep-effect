@@ -78,25 +78,25 @@ it.layer(Layer.fresh(DuckDbTestLayer), { timeout: "30 seconds" })("DuckDB persis
 });
 
 it.layer(Layer.fresh(DuckDbTestLayer), { timeout: "30 seconds" })("DuckDB persistence failures", (it) => {
-  it.effect("skips malformed rows in getMany and reports failures after the table is gone", () =>
-    Effect.gen(function* () {
-      // Build in the test scope so the expiry sweep runs on this test's TestClock.
-      const backing = yield* Layer.build(DuckDbPersistence.layerBackingSql);
-      const store = yield* Context.get(backing, Persistence.BackingPersistence).make("failures");
-      yield* store.setMany([
-        ["good", { ok: true }, undefined],
-        ["bad", { ok: false }, undefined],
-      ]);
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`UPDATE effect_persistence SET value = 'not json' WHERE id = 'bad'`;
-      const gotMany = yield* store.getMany(["good", "bad"]);
-      assert.deepStrictEqual(gotMany, [{ ok: true }, undefined]);
-      yield* sql`DROP TABLE effect_persistence`;
-      const error = yield* Effect.flip(store.clear);
-      assert.strictEqual(error.message, "Failed to clear backing store");
-      // The next scheduled expiry sweep logs its failed delete instead of failing the layer.
-      yield* TestClock.adjust("5 minutes");
-      yield* TestClock.withLive(Effect.sleep("100 millis"));
-    })
+  it.effect(
+    "skips malformed rows in getMany, reports failures after the table is gone and only logs the failed expiry sweep",
+    () =>
+      Effect.gen(function* () {
+        const backingOnTestClock = yield* Layer.build(DuckDbPersistence.layerBackingSql);
+        const store = yield* Context.get(backingOnTestClock, Persistence.BackingPersistence).make("failures");
+        yield* store.setMany([
+          ["good", { ok: true }, undefined],
+          ["bad", { ok: false }, undefined],
+        ]);
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`UPDATE effect_persistence SET value = 'not json' WHERE id = 'bad'`;
+        const gotMany = yield* store.getMany(["good", "bad"]);
+        assert.deepStrictEqual(gotMany, [{ ok: true }, undefined]);
+        yield* sql`DROP TABLE effect_persistence`;
+        const error = yield* Effect.flip(store.clear);
+        assert.strictEqual(error.message, "Failed to clear backing store");
+        yield* TestClock.adjust("5 minutes");
+        yield* TestClock.withLive(Effect.sleep("100 millis"));
+      })
   );
 });

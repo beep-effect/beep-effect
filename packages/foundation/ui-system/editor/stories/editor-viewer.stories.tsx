@@ -8,11 +8,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const text = (value: string) => MdModel.Text.make({ value });
 
-/**
- * A fixture assistant turn as md-core blocks — the canonical `@beep/md` AST
- * an assistant turn persists as — lifted through the `@beep/lexical-schema`
- * codec into serialized Lexical state and rendered by the read-only viewer.
- */
 const fixtureTurn = MdModel.Document.make({
   children: [
     MdModel.Heading.make({ level: 2, children: [text("Rollout plan")] }),
@@ -76,7 +71,6 @@ export const AssistantTurn: Story = {
     void expect(canvas.getByRole("heading", { name: "Rollout plan" })).toBeVisible();
     void expect(canvas.getByRole("link", { name: "the design doc" })).toBeVisible();
     void expect(canvas.getByText("ready to review")).toBeVisible();
-    // The artifact-ref block renders as the decorator chip, not a link.
     void expect(canvas.getByText("Quarterly report")).toBeVisible();
     void expect(canvas.queryByRole("link", { name: "Quarterly report" })).toBeNull();
   },

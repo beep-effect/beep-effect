@@ -142,7 +142,6 @@ const bucketAttributes = (bucket: BucketRecord) => ({
   tags: bucket.tags,
 });
 
-/** Mark an object read without prior state as foreign, like the real Vercel and Cloudflare providers. */
 const ownership = <T extends object>(attrs: T, owned: boolean): T => (owned ? attrs : Unowned(attrs));
 
 const ProjectFake = Provider.effect(
@@ -166,7 +165,7 @@ const ProjectFake = Provider.effect(
             () => nextId("prj")
           ),
         name,
-        // Like the real provider's `projectPatch`: only declared fields are sent, the rest stay.
+
         props: { ...O.getOrUndefined(O.map(MutableHashMap.get(projects, name), (p) => p.props)), ...news },
       };
       declaredProjectKeys = A.appendAll(declaredProjectKeys, Struct.keys(news));
@@ -185,8 +184,7 @@ const EnvVarFake = Provider.effect(
   Vercel.EnvVar,
   Effect.succeed({
     stables: ["envId", "projectId"],
-    // Like the real provider: a `valueFrom` key is read while planning, so a missing key fails the
-    // plan before anything is applied, and a changed value plans an update.
+
     diff: Effect.fn("Fake.diff")(function* ({ news, output }) {
       const source = pipe(
         O.liftPredicate(news, P.hasProperty("valueFrom")),
@@ -209,7 +207,6 @@ const EnvVarFake = Provider.effect(
         )
       ),
     reconcile: Effect.fn("Fake.reconcile")(function* ({ news, output }) {
-      // Like the real provider: a `valueFrom` value is read now and only sent to Vercel.
       const value =
         news.valueFrom === undefined
           ? O.getOrElse(O.map(O.fromUndefinedOr(news.value), Redacted.value), () => "")
@@ -267,7 +264,6 @@ const DomainFake = Provider.effect(
   })
 );
 
-/** The store key of a record from its attributes or props: zone, name and type, when all are known. */
 const recordKeyOf = (
   identity: { readonly zoneId?: unknown; readonly name?: string; readonly type?: string } | undefined
 ): O.Option<string> =>
@@ -303,7 +299,7 @@ const RecordFake = Provider.effect(
         content: "content" in news && typeof news.content === "string" ? news.content : "",
         comment: news.comment ?? "",
       };
-      // Like the real provider: a record whose declared fields all match is not written.
+
       const unchanged = O.exists(
         MutableHashMap.get(records, key),
         (live) => live.content === record.content && live.comment === record.comment
@@ -322,7 +318,6 @@ const RecordFake = Provider.effect(
 const BucketFake = Provider.effect(
   AWS.S3.Bucket,
   Effect.succeed({
-    // Like the real provider: a new bucket name is a new bucket.
     diff: ({ news, olds }) =>
       Effect.sync(() =>
         isResolved(news) && news.bucketName !== olds.bucketName ? ({ action: "replace" } as const) : undefined
@@ -429,7 +424,7 @@ export const FakeCloud = {
           name: domain.name,
           type: domain.record,
           content: domain.record === "A" ? vercelApexTarget : vercelCnameTarget,
-          // The live comment, verbatim from the census.
+
           comment: "Managed by Pulumi for oip.law Vercel routing.",
         });
       }

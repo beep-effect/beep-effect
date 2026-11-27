@@ -9,8 +9,6 @@ import * as SqlClient from "effect/sql/SqlClient";
 import type { DuckDBConnection } from "@duckdb/node-api";
 import type { SqlErrorReason } from "effect/sql/SqlError";
 
-// Fake native connection (SPEC §8.3): answers only the `duckdb_databases()`
-// setup query of `fromConnection` and rejects every probed statement.
 const setupResult = {
   closeSync: () => undefined,
   returnType: 3,
@@ -19,7 +17,7 @@ const setupResult = {
   convertRows: () => Promise.resolve([]),
 };
 
-const makeFailingConnection = (cause: unknown) => ({
+const makeSetupOnlyConnection = (cause: unknown) => ({
   run: (sql: string) =>
     /^SET TimeZone|duckdb_databases/.test(sql) ? Promise.resolve(setupResult) : Promise.reject(cause),
   prepare: () => Promise.reject(cause),
@@ -28,7 +26,7 @@ const makeFailingConnection = (cause: unknown) => ({
 });
 
 const clientOver = (cause: unknown) =>
-  DuckDbClient.fromConnection({ connection: makeFailingConnection(cause) as unknown as DuckDBConnection });
+  DuckDbClient.fromConnection({ connection: makeSetupOnlyConnection(cause) as unknown as DuckDBConnection });
 
 const reasonOf = Effect.fnUntraced(function* (cause: unknown) {
   const client = yield* clientOver(cause);

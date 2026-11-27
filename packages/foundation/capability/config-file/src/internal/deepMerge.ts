@@ -115,51 +115,39 @@ function mergeRecords(
   if (O.isSome(previous)) return previous.value[2];
   const result: Record<PropertyKey, unknown> = { __proto__: Object.getPrototypeOf(target) };
   const active = A.prepend(ancestors, [target, source, result] as const);
-  // Own keys are copied as data properties, including constructor/prototype.
-  // A bare assignment uses [[Set]] semantics, so an own `__proto__` key on the
-  // higher-priority document would reach `Object.prototype`'s inherited accessor
-  // and reassign `result`'s prototype to attacker-controlled data — defeating
-  // the prototype we just installed. `Object.assign` and `result[k] = v`
-  // both do this; `defineProperty` does not.
+  // decision: merge-writes-keys-with-define-property
   for (const key of copyableKeys(target)) {
-    define(result, key, target[key]);
+    defineDataProperty(result, key, target[key]);
   }
   for (const key of copyableKeys(source)) {
-    mergeSourceKey(result, key, source[key], active);
+    mergeLowerPriorityKey(result, key, source[key], active);
   }
   return result;
 }
 
-/** Own enumerable string and symbol keys, minus the string `__proto__`: the keys a merge copies. */
 const copyableKeys = (record: Record<PropertyKey, unknown>): ReadonlyArray<string | symbol> =>
   A.filter(
     Reflect.ownKeys(record),
     (key) => key !== "__proto__" && Object.prototype.propertyIsEnumerable.call(record, key)
   );
 
-/**
- * Fold one lower-priority key into `result`: absent keys are copied, and a key
- * both sides hold as plain records merges recursively. Any other value already
- * on `result` wins whole.
- */
-const mergeSourceKey = (
+const mergeLowerPriorityKey = (
   result: Record<PropertyKey, unknown>,
   key: string | symbol,
   sourceValue: unknown,
   active: ReadonlyArray<readonly [object, object, Record<PropertyKey, unknown>]>
 ): void => {
   if (!R.has(result, key)) {
-    define(result, key, sourceValue);
+    defineDataProperty(result, key, sourceValue);
     return;
   }
   const targetValue = result[key];
   if (isPlainObject(targetValue) && isPlainObject(sourceValue)) {
-    define(result, key, mergeRecords(targetValue, sourceValue, active));
+    defineDataProperty(result, key, mergeRecords(targetValue, sourceValue, active));
   }
 };
 
-/** Create an own data property, never invoking a setter inherited from the prototype chain. */
-const define: {
+const defineDataProperty: {
   (target: Record<PropertyKey, unknown>, key: PropertyKey, value: unknown): void;
   (key: PropertyKey, value: unknown): (target: Record<PropertyKey, unknown>) => void;
 } = dual(3, (target: Record<PropertyKey, unknown>, key: PropertyKey, value: unknown): void => {

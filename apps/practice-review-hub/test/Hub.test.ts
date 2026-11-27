@@ -33,7 +33,6 @@ import type { CallToolResult } from "effect/ai/McpSchema";
 const API_TOKEN = Redacted.make("synthetic-test-token-with-32-characters");
 const ATTORNEY = "attorney@example.test";
 
-// The hub on 127.0.0.1 at an ephemeral port, over stores in a fresh temporary directory.
 const HubTest = Layer.unwrap(
   Effect.gen(function* () {
     const dataDirectory = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "review-hub-" });
@@ -66,7 +65,6 @@ const connectAs = Effect.fnUntraced(function* (login: string) {
 const decodeOpenItems = S.decodeUnknownEffect(OpenItems);
 const decodeToolError = S.decodeUnknownEffect(S.fromJsonString(ReviewHubToolError));
 
-// A failed call's code, read from the JSON of its one text part.
 const codeOf = (result: CallToolResult) =>
   Effect.map(
     Effect.flatMap(Effect.fromOption(A.findFirst(result.content, S.is(TextContent))), ({ text }) =>

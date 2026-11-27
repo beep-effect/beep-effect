@@ -7,6 +7,12 @@
     },
     "check": {
       "dependsOn": ["^build"]
+    },
+    "test": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/goals/semantica-canary/history/c2/full-w1.replay.eval-report.json"
+      ]
     }
   }
 }

@@ -75,11 +75,7 @@ const verdictAt = Effect.fnUntraced(function* (at: number, input: RecordVerdictI
   return yield* queue.recordVerdict(input);
 });
 
-// Reference recency order for the property test: rows sorted stably by
-// `recordedAt`, then `revision`, so the last row is the latest and a full tie
-// goes to the row appended last.
-// Stable sort: rows that tie on `recordedAt` keep their append order.
-const byRecency: Order.Order<VerdictRow> = Order.mapInput(DateTime.Order, (row: VerdictRow) => row.recordedAt);
+const byRecordedAt: Order.Order<VerdictRow> = Order.mapInput(DateTime.Order, (row: VerdictRow) => row.recordedAt);
 
 const finding = (
   batchId: string,
@@ -377,7 +373,7 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         const judgements = A.filter(own, (row) => O.isNone(row.lockedAt));
 
         const expected = pipe(
-          A.last(A.sort(judgements, byRecency)),
+          A.last(A.sort(judgements, byRecordedAt)),
           O.flatMap((latest) =>
             Match.value(latest.verdict).pipe(
               Match.when("right", () =>
@@ -406,10 +402,15 @@ describe("@beep/law-practice-use-cases review verdict round trip", () => {
         );
 
         const projections = projector.project({ items: [item], resolvedBy, rows: own });
-        assertTrue(sameProjections(projections, expected));
+        assertTrue(
+          sameProjections(projections, expected),
+          "the stable sort keeps append order on a recordedAt tie, so a full tie goes to the row appended last"
+        );
         assertTrue(sameProjections(O.toArray(projector.projectItem({ item, resolvedBy, rows: own })), expected));
 
-        const hasFullTie = A.some(own, (row, i) => A.some(own, (other, j) => i !== j && byRecency(row, other) === 0));
+        const hasFullTie = A.some(own, (row, i) =>
+          A.some(own, (other, j) => i !== j && byRecordedAt(row, other) === 0)
+        );
         if (!hasFullTie) {
           assertTrue(sameProjections(projector.project({ items: [item], resolvedBy, rows: A.reverse(own) }), expected));
         }

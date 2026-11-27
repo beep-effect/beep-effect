@@ -42,7 +42,6 @@ import type { OperatorApproval, ProposedWriteBatch } from "./QuestionWrites.sche
 export const questionWriteKey = ({ itemId, optionId }: Pick<ProposedWrite, "itemId" | "optionId">): string =>
   `question:${itemId}:${optionId}`;
 
-// The write a question's current answer implies: a decided answer on an option that names one.
 const proposalFor =
   (answers: HashMap.HashMap<string, AnswerRow>) =>
   (item: QuestionReviewItem): O.Option<ProposedWrite> =>
@@ -74,9 +73,6 @@ const makeQuestionWrites = (calendar: QuestionCalendarShape): QuestionWritesShap
   const restoreAll = (applied: ReadonlyArray<AppliedWrite>) =>
     Effect.forEach(A.reverse(applied), calendar.restore, { concurrency: 1, discard: true });
 
-  // Take back every write of a failed apply, newest first, trying each one even after another
-  // fails. The original error is never lost: it is the failure when every write came back, and
-  // the cause of a `restore-failed` naming the questions still applied when some did not.
   const rollback = Effect.fnUntraced(function* (applied: ReadonlyArray<AppliedWrite>, error: QuestionWriteError) {
     const kept = yield* Effect.forEach(
       A.reverse(applied),
@@ -93,8 +89,6 @@ const makeQuestionWrites = (calendar: QuestionCalendarShape): QuestionWritesShap
       : Effect.fail(QuestionWriteError.make({ cause: O.some(error), pendingItemIds, reason: "restore-failed" }));
   });
 
-  // Each write after the first restores the writes before it when it fails,
-  // so a failed apply leaves the calendar as it was, or says which writes remain.
   const apply = Effect.fn("QuestionWrites.apply")(function* (input: {
     readonly batch: ProposedWriteBatch;
     readonly approval: OperatorApproval;

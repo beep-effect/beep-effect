@@ -29,8 +29,6 @@ const decodeMentionOptionsResult = S.decodeResult(MentionOptions);
 const decodeSlashItemResult = S.decodeResult(SlashItem);
 const decodeSlashItemsResult = S.decodeResult(SlashItems);
 const decodeAttachmentRejection = S.decodeEffect(AttachmentRejection);
-// Round-trip comparisons use each codec's declared equivalence: raw Equal.equals
-// can see runtime metadata outside the encoded schema contract.
 const sendOnEquivalence = S.toEquivalence(SendOn);
 const imageAttachmentMimeTypeEquivalence = S.toEquivalence(ImageAttachmentMimeType);
 const composerFeaturesEquivalence = S.toEquivalence(ComposerFeatures);
@@ -104,22 +102,34 @@ describe("@beep/editor schema crispening parity", () => {
         {
           const encoded = yield* encodeSendOn(sendOn);
           const decoded = yield* decodeSendOn(encoded);
-          pipe(sendOnEquivalence(decoded, sendOn), assertTrue);
+          assertTrue(
+            sendOnEquivalence(decoded, sendOn),
+            "Compare declared schema fields; runtime metadata is outside the encoded contract."
+          );
         }
         {
           const encoded = yield* encodeImageAttachmentMimeType(mimeTypes);
           const decoded = yield* decodeImageAttachmentMimeType(encoded);
-          pipe(imageAttachmentMimeTypeEquivalence(decoded, mimeTypes), assertTrue);
+          assertTrue(
+            imageAttachmentMimeTypeEquivalence(decoded, mimeTypes),
+            "Compare declared schema fields; runtime metadata is outside the encoded contract."
+          );
         }
         {
           const encoded = yield* encodeComposerFeatures(features);
           const decoded = yield* decodeComposerFeatures(encoded);
-          pipe(composerFeaturesEquivalence(decoded, features), assertTrue);
+          assertTrue(
+            composerFeaturesEquivalence(decoded, features),
+            "Compare declared schema fields; runtime metadata is outside the encoded contract."
+          );
         }
         {
           const encoded = yield* encodeAttachmentRejection(rejections);
           const decoded = yield* decodeAttachmentRejection(encoded);
-          pipe(attachmentRejectionEquivalence(decoded, rejections), assertTrue);
+          assertTrue(
+            attachmentRejectionEquivalence(decoded, rejections),
+            "Compare declared schema fields; runtime metadata is outside the encoded contract."
+          );
         }
       }),
     { arbitrary: fcRuns(100) }

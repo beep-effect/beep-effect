@@ -30,12 +30,10 @@ const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
 
 describe("index property floor", () => {
   roundTrips("SbomDocument through the barrel", SbomDocument);
-  // W3-f: the barrel no longer re-exports the manifest models; consumers import
-  // them from @beep/package-json directly.
   it.effect("does not re-export the manifest models", () =>
     Effect.sync(() => {
       for (const name of ["Package", "Person", "Repository"]) {
-        assert.notProperty(Sbom, name);
+        assert.notProperty(Sbom, name, `consumers import ${name} from @beep/package-json directly`);
       }
     })
   );

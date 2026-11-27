@@ -123,7 +123,6 @@ export class CodeBlockNode extends DecoratorBlockNode {
     });
   }
 
-  // Copying the message, or exporting it to plain text, still yields the code.
   override getTextContent(): string {
     return this.__code;
   }

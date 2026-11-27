@@ -71,7 +71,6 @@ const layers = (audience: AudienceKind, stdout: Partial<StreamEnv> = {}, stderr:
   );
 };
 
-/** The context a stderr report is rendered with, built from the same services a CLI has. */
 const contextFor = Effect.fnUntraced(function* (
   audience: AudienceKind,
   stderr: Partial<StreamEnv> = {},
@@ -94,7 +93,6 @@ class Boom extends S.TaggedError<Boom, { readonly brand: unique symbol }>()("Boo
 
 const kinds = (doc: Document): ReadonlyArray<string> => A.map(doc, (block: Block) => block._tag);
 
-/** A defect whose stack is exactly `frames`, as V8 prints them. */
 const errorWithStack = (message: string, frames: ReadonlyArray<string>): Error => {
   const error = new Error(message);
   error.stack = A.join([`Error: ${message}`, ...A.map(frames, (frame) => `    at ${frame}`)], "\n");
@@ -196,15 +194,14 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           })
         );
         assert.notInclude(plain7, "map");
-        // A tag with no entry is the generic line, and an inherited name is not an entry.
         const plain8 = yield* plain(
           CliFailure.toDoc(Cause.fail(Boom.make({ message: "y" })), { render: { Other: () => [] } })
         );
-        assert.include(plain8, "y");
+        assert.include(plain8, "y", "a tag with no entry renders the generic line");
         const plain9 = yield* plain(
           CliFailure.toDoc(Cause.fail({ _tag: "constructor", message: "z" }), { render: {} })
         );
-        assert.include(plain9, "z");
+        assert.include(plain9, "z", "an inherited name is not an entry");
       })
     );
   });
@@ -241,8 +238,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           ))
             assert.include(text, segment, line);
         }
-        // The nesting is the path: g sits under groups.
-        assert.match(text, /groups\n.*g\n.*extra: unknown key/);
+        assert.match(text, /groups\n.*g\n.*extra: unknown key/, "the nesting is the path: g sits under groups");
       })
     );
 
@@ -318,11 +314,14 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const error = errorWithStack("boom", [`run (${USER}:3:4)`]);
         const displayPath = (p: string) => Str.replace("/repo/", "")(p);
         const doc = CliFailure.toDoc(Cause.die(error), { displayPath });
-        // The context applies the same function to the link's target, as the default report does.
         const contextFor14 = yield* contextFor("agent", {}, { displayPath });
         const text = Render.plain(doc, contextFor14);
         assert.include(text, "src/run.ts:3:4");
-        assert.notInclude(text, "/repo/");
+        assert.notInclude(
+          text,
+          "/repo/",
+          "the context applies displayPath to the link's target, as the default report does"
+        );
       })
     );
 
@@ -599,14 +598,16 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       return { err, out, code };
     });
 
-    // Fresh errors per run: `reportFailures` marks the error it reports with its exit code, and a shared instance would
-    // carry the first run's mark into the next.
-    const failing = Effect.failSync(() => Boom.make({ message: "disk full" }));
+    const failsWithAFreshError = Effect.failSync(() => Boom.make({ message: "disk full" }));
     const dying = Effect.suspend(() => Effect.die(errorWithStack("kaboom", [`run (${USER}:3:4)`, ...INTERNAL_FRAMES])));
 
     it.effect("an agent gets the plain rendering: a status line, no escape of any kind", () =>
       Effect.gen(function* () {
-        const { err, out, code } = yield* runMain(failing, { AI_AGENT: "claude", TERM: "xterm-256color" }, true);
+        const { err, out, code } = yield* runMain(
+          failsWithAFreshError,
+          { AI_AGENT: "claude", TERM: "xterm-256color" },
+          true
+        );
         assert.strictEqual(code, 1);
         assert.deepStrictEqual(out, []);
         assert.strictEqual(err.length, 1);
@@ -618,7 +619,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("a human on a colour terminal gets the painted rendering", () =>
       Effect.gen(function* () {
-        const { err, code } = yield* runMain(failing, { TERM: "xterm-256color" }, true);
+        const { err, code } = yield* runMain(failsWithAFreshError, { TERM: "xterm-256color" }, true);
         assert.strictEqual(code, 1);
         assert.include(A.join(err, "\n"), "disk full");
         assert.include(A.join(err, "\n"), `${ESC}[`);
@@ -649,17 +650,23 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         const { err } = yield* runMain(program, { AI_AGENT: "claude" }, true);
         const text = A.join(err, "\n");
         assert.include(text, "thrown by a thunk");
-        // V8 names the thunk's own frame by Effect's method alias, in parentheses; JavaScriptCore (Bun) may print an
-        // anonymous frame's location bare. Either way the frame is still the program's.
         const first = /(?:\(|at )([^()\s]*CliFailure\.test\.ts:\d+:\d+)/.exec(thrown?.stack ?? "")?.[1];
         assert.isDefined(first, "control: the engine put the thunk's frame on the stack");
-        assert.include(text, first);
+        assert.include(
+          text,
+          first,
+          "V8 names the frame in parentheses, Bun may print it bare: either way it is the program's"
+        );
       })
     );
 
     it.effect("exit codes are unchanged: the exitCode option, a marked error's own code, and Cancelled's 130", () =>
       Effect.gen(function* () {
-        assert.strictEqual((yield* runMain(failing, {}, true, { exitCode: 7 })).code, 7);
+        assert.strictEqual(
+          (yield* runMain(failsWithAFreshError, {}, true, { exitCode: 7 })).code,
+          7,
+          "reportFailures marks the error it reports with its code, so a shared instance would carry it over"
+        );
         const marked = CliRuntime.reported(Boom.make({ message: "m" }), 4);
         assert.strictEqual((yield* runMain(Effect.fail(marked), {}, true, { exitCode: 7 })).code, 4);
         const cancelled = yield* runMain(
@@ -674,16 +681,16 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
     it.effect("a consumer render, as a string or as lines, still overrides it", () =>
       Effect.gen(function* () {
-        const one = yield* runMain(failing, {}, true, { render: () => "mine" });
+        const one = yield* runMain(failsWithAFreshError, {}, true, { render: () => "mine" });
         assert.deepStrictEqual(one.err, ["mine"]);
-        const many = yield* runMain(failing, {}, true, { render: () => ["a", "b"] });
+        const many = yield* runMain(failsWithAFreshError, {}, true, { render: () => ["a", "b"] });
         assert.deepStrictEqual(many.err, ["a", "b"]);
       })
     );
 
     it.effect("the failure report is written through the logger and never to stdout", () =>
       Effect.gen(function* () {
-        const { out } = yield* runMain(failing, { AI_AGENT: "claude" }, true);
+        const { out } = yield* runMain(failsWithAFreshError, { AI_AGENT: "claude" }, true);
         assert.deepStrictEqual(out, []);
       })
     );
@@ -691,7 +698,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("without env the report is the plain rendering too, with no services to ask", () =>
       Effect.gen(function* () {
         const { double, err } = capturing();
-        yield* CliRuntime.main(failing, { platform: Layer.empty }).pipe(
+        yield* CliRuntime.main(failsWithAFreshError, { platform: Layer.empty }).pipe(
           Effect.exit,
           Effect.provideService(Console.Console, double)
         );
@@ -714,8 +721,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           assert.notInclude(text, BEL);
           assert.notInclude(text, "\r");
           assert.notInclude(text, `${ESC}[2J`);
-          // Whatever escapes remain are SGR the kit painted: no OSC and no cursor control.
-          assert.notInclude(text, `${ESC}]`);
+          assert.notInclude(
+            text,
+            `${ESC}]`,
+            "whatever escapes remain are SGR the kit painted: no OSC and no cursor control"
+          );
           for (const line of err) {
             for (const match of Str.matchAll(new RegExp(`${ESC}(.)`, "g"))(line)) assert.strictEqual(match[1], "[");
           }
@@ -734,8 +744,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
             Command.withSharedFlags(CliAudience.flags()),
             Command.withSubcommands([Command.make("go", {}, () => Effect.fail(Boom.make({ message: "flagged" })))])
           );
-          // The platform main builds the environment from is the colour terminal; the command only gets the
-          // services core's runner needs, so they cannot replace the terminal.
           yield* CliRuntime.main(CliAudience.runWith(tool, { version: "1.0.0" })(argv), {
             platform: platform(true),
             env: {},
@@ -751,18 +759,24 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         assert.notInclude(flagged, ESC);
         const unflagged = yield* runTool(["go"]);
         assert.include(unflagged, "flagged");
-        assert.include(unflagged, ESC, "control: with no flag the same terminal is painted");
-        // And --human restores the painted report where the environment DETECTED an agent.
+        assert.include(
+          unflagged,
+          ESC,
+          "control: with no flag the platform's colour terminal paints; the command cannot replace it"
+        );
         const agentEnv = { AI_AGENT: "x", TERM: "xterm-256color" };
         const detected = yield* runTool(["go"], agentEnv);
         assert.include(detected, "flagged");
         assert.notInclude(detected, ESC, "control: a detected agent gets the plain report");
         const human = yield* runTool(["--human", "go"], agentEnv);
         assert.include(human, "flagged");
-        assert.include(human, ESC);
-        // --log-level none silences the logger, but not the failure report, which is written outside that scope.
+        assert.include(human, ESC, "--human restores the painted report where the environment detected an agent");
         const silent = yield* runTool(["--log-level", "none", "go"], agentEnv);
-        assert.include(silent, "flagged");
+        assert.include(
+          silent,
+          "flagged",
+          "--log-level none silences the logger, not the report written outside that scope"
+        );
       })
     );
 

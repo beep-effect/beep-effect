@@ -23,8 +23,7 @@ describe("ACP declared-field equivalence", () => {
 
     expect(sameAcpError(a, b)).toBe(true);
     expect(sameAcpError(a, c)).toBe(false);
-    // the defect cause is payload, never identity
-    expect(sameAcpError(a, d)).toBe(true);
+    expect(sameAcpError(a, d), "the defect cause is payload, never identity").toBe(true);
     expect(sameAcpError(a, Errors.AcpTransportError.make({ cause: a.cause, detail: a.detail }))).toBe(false);
   });
 

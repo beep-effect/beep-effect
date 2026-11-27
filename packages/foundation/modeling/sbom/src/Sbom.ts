@@ -29,6 +29,13 @@ const $I = $SbomId.create("Sbom");
 /**
  * Defines the root, dependencies and metadata used to assemble an SBOM with {@link Sbom.generate}.
  *
+ * **Gotchas**
+ *
+ * `root` is a suspended `Component`. Annotating `Component` directly would
+ * rebuild it to its underlying struct and drop the opaque `Component` type;
+ * the suspend keeps the decoded root an admitted `Component`, which
+ * `Sbom.generate` relies on.
+ *
  * **Example** (Decode the root and dependency input)
  *
  * ```ts
@@ -49,9 +56,6 @@ const $I = $SbomId.create("Sbom");
 export class SbomInput extends S.Opaque<SbomInput, { readonly brand: unique symbol }>()(
   S.Struct({
     /** The component the BOM is about. */
-    // Annotating `Component` directly would rebuild it to its underlying struct
-    // and drop the opaque `Component` type; the suspend keeps the decoded root
-    // an admitted `Component`, which `Sbom.generate` relies on.
     root: S.suspend((): typeof Component => Component).pipe(
       $I.annoteKey("SbomInput.root", { description: "The component the BOM is about." })
     ),
@@ -188,13 +192,7 @@ export class SbomWriteError extends S.TaggedError<SbomWriteError, { readonly bra
   }
 }
 
-// Implementation of Sbom.generate; the public contract lives on the static.
 const generate = (input: SbomInput.Admitted): SbomDocument =>
-  // The one document admission: the inputs are already admitted values (the
-  // caller's `Component.make`, or a decode), so the single `SbomDocument.make`
-  // (through `admission`, the seam `test/Sbom.admission.test.ts` counts)
-  // re-checks invariants that already hold and cannot throw. It copies the
-  // nested values (so a returned component is never the caller's object, D-22).
   admission.admit(SbomDocument, {
     bomFormat: BOM_FORMAT,
     specVersion: SPEC_VERSION,
@@ -203,26 +201,11 @@ const generate = (input: SbomInput.Admitted): SbomDocument =>
     components: A.sort(input.components, byName),
   });
 
-/**
- * Components sorted by name in UTF-16 code-unit order, so two runs over the
- * same inputs produce the same bytes on any host. A locale collation would
- * vary with the runtime's locale and ICU data; CycloneDX requires no order.
- */
 const byName: Order.Order<Component.Encoded> = Order.mapInput(
   Str.Order,
   (component: Component.Encoded) => component.name
 );
 
-/**
- * Thread the root component onto the caller's metadata, or synthesize metadata
- * carrying it.
- *
- * **Details**
- *
- * A plain record, admitted with the rest of the document by `generate`. The
- * conditional spreads are required by `exactOptionalPropertyTypes`: an explicit
- * `undefined` does not satisfy an `optionalKey` field.
- */
 const metadataWithRoot = (input: SbomInput.Admitted): SbomMetadata.Encoded => ({
   component: input.root,
   ...(input.metadata?.timestamp !== undefined && { timestamp: input.metadata.timestamp }),
@@ -230,14 +213,9 @@ const metadataWithRoot = (input: SbomInput.Admitted): SbomMetadata.Encoded => ({
   ...(input.metadata?.supplier !== undefined && { supplier: input.metadata.supplier }),
 });
 
-/**
- * Data-first dispatch for the document-first members: the subject is an
- * `SbomDocument`. Recognized by its `bomFormat` key, which no options record
- * carries, rather than by a structural `S.is` that would walk the document.
- */
+// decision: dual-dispatch-by-subject-key
 const isDocumentFirst = (args: IArguments): boolean => P.hasProperty(args[0], "bomFormat");
 
-// Implementation of Sbom.toJson; the public contract lives on the static.
 const toJson: {
   (document: SbomDocument, options?: SbomJsonOptions.Encoded): string;
   (options?: SbomJsonOptions.Encoded): (document: SbomDocument) => string;
@@ -248,7 +226,6 @@ const toJson: {
   )
 );
 
-// Implementation of Sbom.write; the public contract lives on the static.
 const write: {
   (
     document: SbomDocument,
@@ -299,10 +276,14 @@ export class Sbom {
    * **Total** — no error channel, because there is nothing here that can fail:
    * the root and components are admitted values (`Component.make` or a
    * decode), so every invariant the document checks already holds. Plain
-   * records do not type-check; admit them first.
+   * records do not type-check; admit them first. The document is admitted by
+   * one `SbomDocument.make`, which copies the nested values, so a returned
+   * component is never the caller's object.
    * Components are sorted by name, in code-unit order rather than a locale
    * collation, so two runs over the same inputs produce the same bytes on any host: an SBOM's digest becomes an attestation subject, and a document
    * that reordered itself between runs would change that digest for no reason.
+   * A locale collation would vary with the runtime's locale and ICU data;
+   * CycloneDX requires no order.
    *
    * **Example** (Generate a document with sorted dependencies)
    *

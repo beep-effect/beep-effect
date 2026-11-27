@@ -158,8 +158,10 @@ describe("SigV4 executable contracts", () => {
       const decoded = yield* S.decodeEffect(SigV4Credentials)(plain);
       assert.deepStrictEqual(decoded, plain);
       assert.notProperty(decoded, "sessionToken");
-      // Exact optional keys (EF-40): an optional key is omitted, never undefined.
-      assert.isFalse(S.is(SigV4Credentials)({ ...plain, sessionToken: undefined }));
+      assert.isFalse(
+        S.is(SigV4Credentials)({ ...plain, sessionToken: undefined }),
+        "exact optional keys: an absent sessionToken is omitted, never undefined"
+      );
       assert.isTrue(S.is(SigV4Credentials)({ ...plain, sessionToken: "" }));
       assert.isFalse(S.is(SigV4Credentials)({ ...plain, secretAccessKey: 123 }));
       assert.isFalse(S.is(SigV4Credentials)({ ...plain, sessionToken: null }));

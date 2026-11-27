@@ -24,18 +24,6 @@ import type {
 
 const $I = $CiopsId.create("backfill/BackfillModel");
 
-/**
- * Operations of the backfill and fairness model.
- *
- * **Details**
- *
- * `verdict`, `order` and `deadline` read one scheduler view, the shape slice
- * 12 ports into the live `selfMayAttempt`. `simulate` drives an arrival
- * stream to quiescence through the same verdict and journals every event.
- *
- * @category services
- * @since 0.0.0
- */
 interface BackfillModelShape {
   readonly deadline: (policy: BackfillPolicy, view: SchedulerView, unit: QueuedUnit) => Effect.Effect<O.Option<number>>;
   readonly order: (policy: BackfillPolicy, view: SchedulerView) => Effect.Effect<ReadonlyArray<QueuedUnit>>;
@@ -48,6 +36,12 @@ interface BackfillModelShape {
 
 /**
  * Service tag for the backfill and fairness model.
+ *
+ * **Details**
+ *
+ * `verdict`, `order` and `deadline` read the scheduler view used by the live
+ * `selfMayAttempt`. `simulate` drives an arrival stream to quiescence through
+ * the same verdict and journals every event.
  *
  * **Example** (Simulate an empty stream)
  *

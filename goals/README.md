@@ -113,8 +113,11 @@ Every future execution-capable packet must include `GOAL.md`.
 - The standard launch command is:
 
 ```text
-/goal follow the instructions in goals/<slug>/GOAL.md
+/goal follow the instructions in goals/<slug>/GOAL.md, or stop when the only work left is a step the packet names as Benjamin's
 ```
+
+The `/goal` judge cannot see that a step is the operator's; without the hand-off
+clause it re-blocks until Claude Code's 9-block cap.
 
 New manifests must index launchers near the agent asset metadata:
 
@@ -129,7 +132,7 @@ New manifests must index launchers near the agent asset metadata:
       "path": "GOAL.md",
       "targetChars": 3500,
       "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/<slug>/GOAL.md"
+      "command": "/goal follow the instructions in goals/<slug>/GOAL.md, or stop when the only work left is a step the packet names as Benjamin's"
     }
   ]
 }

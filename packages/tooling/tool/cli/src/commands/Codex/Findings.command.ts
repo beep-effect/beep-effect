@@ -20,6 +20,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { GOAL_HANDOFF_CLAUSE } from "../Goals/Goals.schemas.ts";
 import { writePortfolioIndex } from "../Goals/PortfolioIndex.ts";
 import {
   CodexCaptureSource,
@@ -433,7 +434,7 @@ const renderCodexFindingsIngestLines = (
     ? A.empty<string>()
     : ["! index    goals/INDEX.md could not be regenerated; run `beep goals index`"]),
   "",
-  `Next: /goal follow the instructions in ${outcome.packetPath}/GOAL.md`,
+  `Next: /goal follow the instructions in ${outcome.packetPath}/GOAL.md${GOAL_HANDOFF_CLAUSE}`,
 ];
 
 const printCodexFindingsIngestResult = Effect.fn("CodexFindings.printIngestResult")(function* (

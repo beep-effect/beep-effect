@@ -224,7 +224,6 @@ const make = (client: GitHubClient["Service"]): ArtifactMetadataShape => ({
   createStorageRecord: Effect.fn("ArtifactMetadata.createStorageRecord")(function* (input: StorageRecordInput) {
     const { owner } = yield* Repo;
     yield* Effect.annotateCurrentSpan({ org: owner, artifact: input.name });
-    // The route is in GitHub's OpenAPI description, so this is a typed call.
     const stored = yield* client.request("POST /orgs/{org}/artifacts/metadata/storage-record", {
       org: owner,
       name: input.name,

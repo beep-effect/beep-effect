@@ -221,10 +221,6 @@ export class ConfigProbe extends S.Opaque<ConfigProbe, { readonly brand: unique 
   )
 ) {}
 
-/**
- * Admit one lookup's plain result as a {@link ConfigProbe}: the single `make`
- * a resolve performs, after every candidate was built as plain data.
- */
 const probeOf: {
   (match: O.Option<typeof ConfigMatch.Encoded>, probed: ReadonlyArray<string>): ConfigProbe;
   (probed: ReadonlyArray<string>): (match: O.Option<typeof ConfigMatch.Encoded>) => ConfigProbe;
@@ -234,37 +230,18 @@ const probeOf: {
     ConfigProbe.make({ match: O.map(match, ConfigMatch.make), probed })
 );
 
-/** The probe of a lookup that checked nothing and found nothing. */
 const emptyProbe = (): ConfigProbe => probeOf(O.none(), []);
 
-/**
- * Probe `paths` in order and stop at the first that exists.
- *
- * **Details**
- *
- * `Walker.firstMatch` short-circuits at the first existing candidate, so the
- * paths actually CHECKED are the prefix ending at the match — the full list
- * only when nothing was found.
- */
 const firstExisting = Effect.fnUntraced(function* (paths: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const found = yield* Walker.firstMatch(paths, (candidate) => fs.exists(candidate));
-  const probed = O.match(
+  const checkedThroughMatch = O.match(
     O.flatMap(found, (target) => A.findFirstIndex(paths, (candidate) => candidate === target)),
     { onNone: () => paths, onSome: (index) => A.take(paths, index + 1) }
   );
-  return { found, probed };
+  return { found, probed: checkedThroughMatch };
 });
 
-/**
- * Build a resolver from a probe-reporting lookup, deriving `resolveMatch` and
- * `resolve` from it.
- *
- * **Details**
- *
- * Every built-in goes through here, so `resolve`, `resolveMatch` and
- * `resolveProbe` are one implementation and cannot drift.
- */
 const fromProbe: {
   <R>(name: string, resolveProbe: Effect.Effect<ConfigProbe, never, R>): ConfigResolver<R>;
   <R>(resolveProbe: Effect.Effect<ConfigProbe, never, R>): (name: string) => ConfigResolver<R>;
@@ -278,13 +255,11 @@ const fromProbe: {
   })
 );
 
-/** Absorb any failure into an empty probe — the resolver contract. */
 const absorb = <E, R>(effect: Effect.Effect<ConfigProbe, E, R>): Effect.Effect<ConfigProbe, never, R> =>
   Effect.orElseSucceed(effect, emptyProbe);
 
 const cwdOf = (given: string | undefined): string => given ?? globalThis.process?.cwd?.() ?? "/";
 
-// Implementation of ConfigResolver.explicitPath; the public contract lives on the static.
 const explicitPath = (target: string): ConfigResolver<FileSystem.FileSystem | Path.Path> =>
   fromProbe(
     "explicit",
@@ -292,13 +267,11 @@ const explicitPath = (target: string): ConfigResolver<FileSystem.FileSystem | Pa
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const exists = yield* fs.exists(target);
-        // No `dir`: an explicit path names a file, not an anchored candidate.
         return probeOf(exists ? O.some({ path: target }) : O.none(), [target]);
       })
     )
   );
 
-// Implementation of ConfigResolver.staticDir; the public contract lives on the static.
 const staticDir = (options: {
   readonly dir: string;
   readonly filename: string;
@@ -415,7 +388,6 @@ export type UpwardWalkOptions =
       readonly name?: string;
     };
 
-// Implementation of ConfigResolver.upwardWalk; the public contract lives on the static.
 const upwardWalk = (options: UpwardWalkOptions): ConfigResolver<FileSystem.FileSystem | Path.Path> =>
   fromProbe(
     options.name ?? "walk",
@@ -426,11 +398,7 @@ const upwardWalk = (options: UpwardWalkOptions): ConfigResolver<FileSystem.FileS
       const dirs = yield* Walker.ascend(cwdOf(options.cwd), {
         ...(options.stopAt !== undefined && { stopAt: options.stopAt }),
       });
-      // Directory-major, then subpath, then filename: every candidate at one
-      // ancestor is exhausted before the walk ascends. A parent's first
-      // candidate must never beat a child's second, which is exactly what
-      // registering one resolver per filename would do.
-      const candidates = A.flatMap(dirs, (dir) =>
+      const candidatesByAncestor = A.flatMap(dirs, (dir) =>
         A.flatMap(subpaths, (sub) =>
           A.map(filenames, (filename): typeof ConfigMatch.Encoded => ({
             path: path.join(dir, sub, filename),
@@ -440,19 +408,15 @@ const upwardWalk = (options: UpwardWalkOptions): ConfigResolver<FileSystem.FileS
           }))
         )
       );
-      const paths = A.map(candidates, (candidate) => candidate.path);
+      const paths = A.map(candidatesByAncestor, (candidate) => candidate.path);
       const { found, probed } = yield* firstExisting(paths);
-      // `firstMatch` returns the path; recover the descriptor that produced it.
-      const match = O.flatMap(found, (target) => A.findFirst(candidates, (candidate) => candidate.path === target));
-      return probeOf(match, probed);
+      const matchedCandidate = O.flatMap(found, (target) =>
+        A.findFirst(candidatesByAncestor, (candidate) => candidate.path === target)
+      );
+      return probeOf(matchedCandidate, probed);
     })
   );
 
-/**
- * Ascend from `cwd` looking for the first directory where `isRoot` reports
- * true, then probe `subpaths` under it. Shared by `gitRoot` and
- * `workspaceRoot`, which differ only in how a "root" is detected.
- */
 const rootAnchored: {
   (
     name: string,
@@ -477,21 +441,15 @@ const rootAnchored: {
         const dirs = yield* Walker.ascend(cwdOf(options.cwd));
 
         const root = yield* Walker.findRoot(dirs, isRoot);
-        // No root, no candidates: root detection probes for `.git`/workspace
-        // markers, not config paths, so there is nothing config-shaped to
-        // report as searched.
         if (O.isNone(root)) return emptyProbe();
 
         const subpaths = options.subpaths ?? ["."];
         const candidates = A.map(subpaths, (sub) => ({ sub, path: path.join(root.value, sub, options.filename) }));
-        // As in `upwardWalk`: the checked prefix, ending at the match.
         const { found, probed } = yield* firstExisting(A.map(candidates, (candidate) => candidate.path));
         const match = O.flatMap(found, (target) => A.findFirst(candidates, (candidate) => candidate.path === target));
         return probeOf(
           O.map(match, (candidate) => ({
             path: candidate.path,
-            // The anchor is the ROOT, not the subpath directory: a consumer
-            // asking "where is my project" wants the git/workspace root back.
             dir: root.value,
             filename: options.filename,
             ...(options.subpaths !== undefined && { subpath: candidate.sub }),
@@ -502,18 +460,17 @@ const rootAnchored: {
     )
 );
 
-/** `.git` may be a directory (a normal repo) or a file (a worktree pointing at the real repo). */
 const isGitRoot: (
   dir: string
 ) => Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fnUntraced(
   function* (dir: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    return yield* fs.exists(path.join(dir, ".git"));
+    const gitDirOrWorktreeFile = path.join(dir, ".git");
+    return yield* fs.exists(gitDirOrWorktreeFile);
   }
 );
 
-/** A workspace root is marked by `pnpm-workspace.yaml`, or a `package.json` with a `workspaces` field. */
 const isWorkspaceRoot: (
   dir: string
 ) => Effect.Effect<boolean, PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fnUntraced(
@@ -531,38 +488,27 @@ const isWorkspaceRoot: (
   }
 );
 
-// Implementation of ConfigResolver.gitRoot; the public contract lives on the static.
 const gitRoot = (options: {
   readonly filename: string;
   readonly cwd?: string;
   readonly subpaths?: ReadonlyArray<string>;
 }): ConfigResolver<FileSystem.FileSystem | Path.Path> => rootAnchored("git", isGitRoot, options);
 
-// Implementation of ConfigResolver.workspaceRoot; the public contract lives on the static.
 const workspaceRoot = (options: {
   readonly filename: string;
   readonly cwd?: string;
   readonly subpaths?: ReadonlyArray<string>;
 }): ConfigResolver<FileSystem.FileSystem | Path.Path> => rootAnchored("workspace", isWorkspaceRoot, options);
 
-// Implementation of ConfigResolver.systemEtc; the public contract lives on the static.
 const systemEtc = (options: {
   readonly app: string;
   readonly filename: string;
-  /**
-   * System config root. Defaults to `/etc`. Overridable primarily so tests
-   * can point at a writable temp directory — the real `/etc` is not writable
-   * in test environments — and as an escape hatch for non-standard layouts.
-   *
-   * @since 0.0.0
-   */
   readonly dir?: string;
 }): ConfigResolver<FileSystem.FileSystem | Path.Path> =>
   fromProbe(
     "system",
     absorb(
       Effect.gen(function* () {
-        // `/etc` has no meaning on Windows; short-circuit to "not found".
         if ((yield* HostProcessPlatform) === "win32") return emptyProbe();
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -709,6 +655,12 @@ export class ConfigResolver {
   /**
    * Resolves `<dir>/<app>/<filename>` under the system config root (`/etc` by
    * default). Always `Option.none()` on Windows, where `/etc` has no meaning.
+   *
+   * **Details**
+   *
+   * `dir` overrides the system config root. It exists chiefly so a test can
+   * point at a writable temp directory, since the real `/etc` is not writable
+   * in test environments, and as an escape hatch for non-standard layouts.
    *
    * **Example** (Construct a system configuration lookup)
    *

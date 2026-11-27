@@ -43,8 +43,7 @@ import {
 import type { CiOpsKpiError, CiOpsKpiShape } from "@/kpi/CiOpsKpi";
 import type { RepoRelativePath } from "@/projection/Schemas";
 
-// The empty-input digest: a well-formed placeholder pin for contract tests, never a real input's digest.
-const placeholderSha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+const emptyInputPlaceholderSha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const ledgerPath: RepoRelativePath = "explorations/beep-ci-operational-ontology/research/control-interventions.yaml";
 
 const set = (n: number, p50: number, p95: number) =>
@@ -54,7 +53,7 @@ const emptySet = PercentileSet.make({ n: S.Natural.make(0), p50Ms: O.none(), p95
 
 const readingInput = KpiReadingInput.make({
   repoRoot: ".",
-  inputs: [PinnedKpiInput.make({ role: "change-event-ledger", path: ledgerPath, sha256: placeholderSha256 })],
+  inputs: [PinnedKpiInput.make({ role: "change-event-ledger", path: ledgerPath, sha256: emptyInputPlaceholderSha256 })],
 });
 
 const sharesDecomposition: Cq012Decomposition = Cq012Decomposition.cases.shares.make({
@@ -78,7 +77,6 @@ const episode = KpiEpisode.make({
   adoption: [EpisodeAdoption.make({ changeEventId: pushFirstId, adoption: "pre" })],
 });
 
-// A reading that exercises every row type, so the JSON codec covers each nested schema.
 const reading = KpiReading.make({
   schemaVersion: "ciops-kpi-reading/v1",
   estimator: "nearest-rank",
@@ -159,7 +157,6 @@ const reading = KpiReading.make({
 
 const ReadingJson = S.fromJsonString(KpiReading);
 
-// Every literal domain with the members the launch sitting rules; totality is checked both ways.
 const domain = <L extends string>(
   kit: { readonly literals: ReadonlyArray<L> },
   is: (u: unknown) => boolean,
@@ -233,7 +230,7 @@ describe("@beep/ciops KPI contract", () => {
     })
   );
 
-  it.effect("the reading document round-trips through its JSON codec", () =>
+  it.effect("the all-row reading round-trips through its JSON codec and every nested schema", () =>
     Effect.gen(function* () {
       const json = yield* S.encodeEffect(ReadingJson)(reading);
       const decoded = yield* S.decodeEffect(ReadingJson)(json);

@@ -29,10 +29,6 @@ const proxyHmr = O.map(portlessConfig.mode === "0" ? O.none() : portlessConfig.u
   };
 });
 
-// Lexical 0.46 emits two prod bundles with a pure annotation before `return`.
-// The strip plugin is deliberately copied into each Vite composition root
-// (professional-desktop vite.config.ts is the other); a shared tooling package
-// for a two-site workaround is out of this packet's scope.
 // fallow-ignore-next-line code-duplication -- the Lexical prod-module strip plugin is copied into both Vite composition roots (professional-desktop is the other). Owner: @beep/storybook. Exit: import it from a shared Vite tooling module once one exists, or delete when Lexical ships fixed pure annotations.
 const lexicalReactProdModule =
   /node_modules[\\/]@lexical[\\/]react[\\/]dist[\\/]Lexical(ContentEditable|ErrorBoundary)\.prod\.mjs(?:\?.*)?$/;
@@ -52,8 +48,6 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
   },
 });
 
-// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
-// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
 // fallow-ignore-next-line code-duplication -- the `.ts`-to-`.tsx` resolver is copied into both Vite composition roots (professional-desktop is the other). Owner: @beep/storybook. Exit: import it from a shared Vite tooling module once one exists, or delete when Vite applies the TypeScript source fallback.
 const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   name: "beep:resolve-uniform-typescript-source-specifiers",
@@ -71,21 +65,19 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   },
 });
 
+const mermaidChunkWarningKb = 1_500;
+
+// decision: static-brand-manager
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
   stories: [
     epistemicStories,
     "../../../packages/foundation/ui-system/*/stories/**/*.stories.@(ts|tsx)",
-    // graph-3d driver stories (goal graph-3d-view): the storybook app is a
-    // composition root, so hosting driver stories keeps slice `ui` clean of
-    // driver imports.
     "../../../packages/drivers/graph-3d/stories/**/*.stories.@(ts|tsx)",
   ],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-vitest"],
   staticDirs: [
     { from: "../../../node_modules/emojibase-data", to: "/emojibase-data" },
-    // beep brand assets (favicon, wordmark) for the manager chrome; see manager.ts. Served as
-    // static files on purpose: the manager bundle must not import @beep/brand (effect/Schema).
     { from: "../../../packages/foundation/ui-system/brand/assets", to: "/brand" },
   ],
   managerHead: (head) => `${head}<link rel="icon" type="image/svg+xml" href="./brand/favicon.svg" />`,
@@ -93,8 +85,7 @@ const config: StorybookConfig = {
     `${head}<style>html,body,#storybook-root,#storybook-docs{background:oklch(0.145 0 0);color-scheme:dark}.sb-loader{border-color:oklch(0.708 0 0);border-top-color:transparent}</style><script>globalThis.process ??= { env: { NODE_ENV: "development" }, platform: "browser", arch: "browser" };</script>`,
   viteFinal(config) {
     const defaults = {
-      // Prebundle the Effect leaves reached through workspace UI/schema imports.
-      // Discovering them during story rendering would reload the preview.
+      // decision: eager-browser-dependencies
       optimizeDeps: {
         include: [
           "effect/Number",
@@ -123,11 +114,8 @@ const config: StorybookConfig = {
 
     return mergeConfig(merged, {
       build: {
-        // Mermaid's lazy ELK layout engine is a single generated ~1.46 MB module.
-        chunkSizeWarningLimit: 1_500,
+        chunkSizeWarningLimit: mermaidChunkWarningKb,
         rolldownOptions: {
-          // The preview runs entirely in the browser; React server/client
-          // boundary directives have no semantics in this application bundle.
           checks: { moduleLevelDirective: false },
         },
       },

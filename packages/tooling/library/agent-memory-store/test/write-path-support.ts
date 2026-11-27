@@ -20,7 +20,6 @@ import type { StatusFields } from "@beep/agent-memory-store";
 /** The SQLite options a write path store opens with. */
 export type WritingStoreDatabase = Parameters<typeof makeMemorySqlClientLayer>[0];
 
-// The services a write path test runs on: admission and the projector over one log.
 const writingStoreLayer = (database: WritingStoreDatabase, statusFields: StatusFields) =>
   Layer.mergeAll(MarkdownProjectorLayer, makeAdmissionLayer(statusFields)).pipe(
     Layer.provideMerge(MemoryLogLayer),

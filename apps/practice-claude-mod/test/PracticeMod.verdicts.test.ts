@@ -19,7 +19,6 @@ import { KgAnswerItem } from "@/PracticeMod.values";
 import { VerdictInput, VerdictLog, verdictLogLayer } from "@/PracticeMod.verdicts";
 import type { Verdict } from "@beep/law-practice-domain/values";
 
-// What the fake host stored, so a test can seed and inspect it.
 class FakeHostState extends Context.Service<
   FakeHostState,
   { readonly store: MutableHashMap.MutableHashMap<string, unknown> }
@@ -28,7 +27,6 @@ class FakeHostState extends Context.Service<
 const fakeHost = Layer.effect(ModHost)(
   Effect.map(FakeHostState, ({ store }) =>
     ModHost.of({
-      // Yield after each read so concurrent records interleave between read and write.
       storeGet: Effect.fn("FakeHost.storeGet")((key: string) =>
         Effect.sync(() => O.getOrUndefined(MutableHashMap.get(store, key))).pipe(Effect.tap(() => Effect.yieldNow))
       ),
@@ -236,10 +234,12 @@ describe("VerdictLog", () => {
           S.decodeUnknownEffect(VerdictRows)
         );
         expect(pipe2).toHaveLength(4);
-        // A nonempty v2 log wins even when the reversal key is unreadable.
+
         MutableHashMap.set(store, "verdict-rows", "unreadable old data");
         const exportJsonl3 = yield* log.exportJsonl;
-        expect(exportJsonl3).toContain('"recordedAt":3000');
+        expect(exportJsonl3, "A nonempty v2 log wins even if the legacy reversal key is unreadable.").toContain(
+          '"recordedAt":3000'
+        );
       })
     );
   });
@@ -269,9 +269,9 @@ describe("VerdictLog", () => {
           { itemId: item.itemId, batchId: "old", verdict: "wrong", revision: 9, recordedAt: 1000 },
           { itemId: item.itemId, batchId: "old", verdict: "right", revision: 1, recordedAt: 2000 },
           { itemId: item.itemId, batchId: "new", verdict: "partly", revision: 9, recordedAt: 2000 },
-          // Same timestamp, lower revision, appended later: append order wins.
+
           { itemId: item.itemId, batchId: "new2", verdict: "withdrawn", revision: 1, recordedAt: 2000 },
-          // A lock row is never a verdict, however recent.
+
           { itemId: item.itemId, batchId: "other", verdict: "wrong", revision: 20, recordedAt: 3000, lockedAt: 3000 },
         ]);
         const value4 = yield* S.encodeEffect(VerdictRows)(rows);
