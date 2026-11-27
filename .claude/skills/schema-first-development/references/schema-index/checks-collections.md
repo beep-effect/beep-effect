@@ -1,6 +1,6 @@
 # effect/Schema index: checks on collections and other inputs
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.isBetweenBigDecimal (check on BigDecimal.BigDecimal): Validates that a `BigDecimal` is within a specified range.
 - S.isBetweenLength (check on has .length): Validates that a value's length is within the specified range.

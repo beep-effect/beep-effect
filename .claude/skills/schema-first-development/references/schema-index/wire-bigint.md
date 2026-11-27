@@ -1,6 +1,6 @@
 # effect/Schema index: bigint on the wire
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.BigInt: Schema for `bigint` values.
 - S.ByteSizeFromBigInt → ByteSize.ByteSize: Schema that decodes non-negative bigint byte counts.

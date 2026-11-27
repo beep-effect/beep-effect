@@ -1,6 +1,6 @@
 # effect/Schema index: constructors and combinators that take a schema
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.Array
 - S.ArrayEnsure: Creates a schema that accepts either a value decoded by `schema` or an array decoded by `Schema.Array(schema)`, then returns an array.

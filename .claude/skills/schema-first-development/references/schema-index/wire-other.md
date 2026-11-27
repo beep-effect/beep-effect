@@ -1,6 +1,6 @@
 # effect/Schema index: other wire shapes
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.Any (wire any): Schema for the `any` type.
 - S.BigDecimal (wire BigDecimal.BigDecimal): Schema for `BigDecimal` values.

@@ -1,6 +1,6 @@
 # effect/Schema index: number on the wire
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.ByteSizeFromNumber → ByteSize.ByteSize: Schema that decodes non-negative safe-integer byte counts.
 - S.DateFromMillis → Date: Schema that decodes epoch milliseconds into a JavaScript `Date`.

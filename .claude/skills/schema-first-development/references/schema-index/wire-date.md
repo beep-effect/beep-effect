@@ -1,6 +1,6 @@
 # effect/Schema index: Date on the wire
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.Date: Schema for valid JavaScript `Date` objects.
 - S.DateTimeUtcFromDate → DateTime.Utc: Schema that decodes a `Date` into a `DateTime.Utc`.

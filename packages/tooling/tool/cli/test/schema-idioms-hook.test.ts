@@ -6,7 +6,7 @@ import {
 } from "@beep/repo-cli/commands/SchemaIdioms";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -59,7 +59,7 @@ const decodeHookOutput = S.decodeEffect(S.fromJsonString(SchemaIdiomHookOutput))
 
 const encodePayload = S.encodeEffect(S.fromJsonString(S.Unknown));
 
-const StateEntries = S.fromJsonString(S.Array(S.String));
+const StateEntries = S.String.pipe(S.Array, S.fromJsonString);
 
 const contextOf = (output: O.Option<string>) =>
   O.match(output, {
@@ -146,7 +146,7 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
       const writeFields = yield* hintedFields(write);
       const writeContext = yield* contextOf(write);
       expect(writeFields).toEqual(["timeoutMs", "listenPort"]);
-      assertSome(O.map(writeContext, Str.startsWith("[schema-idiom] Advisory:")), true);
+      expect(O.getOrElse(writeContext, () => "")).toMatch(/^\[schema-idiom\] Advisory:/);
       const edit = yield* hookFields("Edit", file, { old_string: "x", new_string: "  listenPort: S.Int," }, O.none());
       expect(edit).toEqual(["listenPort"]);
       const multiEdit = yield* hookFields(
@@ -178,13 +178,19 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
   it.effect("decodes only Edit, MultiEdit and Write payloads with a session", () =>
     Effect.gen(function* () {
       const { file } = yield* sourceFile(SOURCE);
-      assertNone(yield* hook("Read", file, {}, O.none()));
-      assertNone(yield* hook("Grep", file, { content: SOURCE }, O.none()));
-      assertNone(yield* hook("Write", file, { new_string: "  listenPort: S.Int," }, O.none()));
-      assertNone(yield* hook("Edit", file, { content: SOURCE }, O.none()));
-      assertNone(yield* hook("MultiEdit", file, { edits: [] }, O.none()));
-      assertNone(yield* hook("Write", file, { content: SOURCE }, O.none(), O.none()));
-      assertNone(yield* hook("Write", file, { content: SOURCE }, O.none(), O.some("")));
+      const refused = yield* Effect.all(
+        [
+          hook("Read", file, {}, O.none()),
+          hook("Grep", file, { content: SOURCE }, O.none()),
+          hook("Write", file, { new_string: "  listenPort: S.Int," }, O.none()),
+          hook("Edit", file, { content: SOURCE }, O.none()),
+          hook("MultiEdit", file, { edits: [] }, O.none()),
+          hook("Write", file, { content: SOURCE }, O.none(), O.none()),
+          hook("Write", file, { content: SOURCE }, O.none(), O.some("")),
+        ],
+        { concurrency: 1 }
+      );
+      A.forEach(refused, (output) => assertNone(output));
       const control = yield* hookFields("Write", file, { content: SOURCE }, O.none());
       expect(control).toEqual(["timeoutMs", "listenPort"]);
     })
@@ -197,10 +203,17 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
       const { root, file } = yield* sourceFile(COMMENTED);
       const statePath = path.join(root, "state.json");
       const state = O.some(statePath);
-      assertNone(yield* hook("Edit", file, { old_string: "/* old note */", new_string: COMMENT_EDIT }, state));
-      assertNone(yield* hook("MultiEdit", file, { edits: [{ new_string: COMMENT_EDIT }] }, state));
-      assertNone(yield* hook("Edit", file, { new_string: "timeoutMs: S.Number," }, state));
-      expect(yield* fs.exists(statePath)).toBe(false);
+      const silent = yield* Effect.all(
+        [
+          hook("Edit", file, { old_string: "/* old note */", new_string: COMMENT_EDIT }, state),
+          hook("MultiEdit", file, { edits: [{ new_string: COMMENT_EDIT }] }, state),
+          hook("Edit", file, { new_string: "timeoutMs: S.Number," }, state),
+        ],
+        { concurrency: 1 }
+      );
+      A.forEach(silent, (output) => assertNone(output));
+      const stateWritten = yield* fs.exists(statePath);
+      expect(stateWritten).toBe(false);
       const write = yield* hookFields("Write", file, { content: COMMENTED }, state);
       expect(write).toEqual(["timeoutMs"]);
     })
@@ -210,10 +223,16 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })((it) => {
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const { root } = yield* sourceFile(SOURCE);
-      assertNone(yield* hook("Write", path.join(root, "README.md"), { content: "x" }, O.none()));
-      assertNone(yield* schemaIdiomHookOutput("not json", O.none()));
-      assertNone(yield* schemaIdiomHookOutput('{"tool_name":"Edit"}', O.none()));
-      assertNone(yield* hook("Write", path.join(root, "Missing.ts"), { content: SOURCE }, O.none()));
+      const silent = yield* Effect.all(
+        [
+          hook("Write", path.join(root, "README.md"), { content: "x" }, O.none()),
+          schemaIdiomHookOutput("not json", O.none()),
+          schemaIdiomHookOutput('{"tool_name":"Edit"}', O.none()),
+          hook("Write", path.join(root, "Missing.ts"), { content: SOURCE }, O.none()),
+        ],
+        { concurrency: 1 }
+      );
+      A.forEach(silent, (output) => assertNone(output));
     })
   );
 

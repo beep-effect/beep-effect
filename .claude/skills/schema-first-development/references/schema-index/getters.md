@@ -1,6 +1,6 @@
 # effect/Schema index: named getters and transformations
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - SchemaGetter.BigInt: Coerces a value to `bigint` using the global `BigInt()` constructor.
 - SchemaGetter.Boolean: Coerces any value to a `boolean` using the global `Boolean()` constructor.

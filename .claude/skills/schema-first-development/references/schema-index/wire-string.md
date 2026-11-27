@@ -1,6 +1,6 @@
 # effect/Schema index: string on the wire
 
-Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+Generated from effect 4.1.6 by `bun run beep schema-idioms index --write`. Do not edit by hand.
 
 - S.BigDecimalFromString → BigDecimal.BigDecimal: Schema that parses a string into a `BigDecimal`.
 - S.BigIntFromString → bigint: Schema that parses a string into a `bigint`.
@@ -35,6 +35,7 @@ Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do no
 - S.Ipv6InterfaceFromString → IpInterface.Ipv6Interface: Schema for IPv6 interface addresses encoded as an address and prefix length.
 - S.Ipv6NetworkFromString → IpNetwork.Ipv6Network: Schema for canonical IPv6 network prefixes encoded in CIDR notation.
 - S.Ipv6UniqueLocalAddressFromString → NetAddress.UniqueLocalAddress<NetAddress.Ipv6Address>: Schema for IPv6 unique-local addresses encoded as strings.
+- S.LinkHeaderFromString → readonly { readonly target: string; readonly rel: readonl…: Schema for `Link` header values (RFC 8288), decoded with `Headers.parseLink` and encoded with `Headers.formatLink`.
 - S.MacAddressFromString → NetAddress.MacAddress: Schema for MAC addresses encoded as canonical colon-separated hexadecimal strings.
 - S.MacBroadcastAddressFromString → Brand.Branded<NetAddress.MulticastAddress<NetAddress.MacA…: Schema for the MAC all-ones broadcast address encoded as a string.
 - S.MacLocallyAdministeredAddressFromString → NetAddress.LocallyAdministeredAddress<NetAddress.MacAddress>: Schema for locally administered MAC addresses encoded as strings.

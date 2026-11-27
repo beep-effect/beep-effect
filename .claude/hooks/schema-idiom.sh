@@ -2,7 +2,7 @@
 # PostToolUse advisory: hints a just-written effect/Schema field whose name
 # reads as a duration, instant, byte size, URL, host, port or version while
 # its schema decodes to a primitive. Always exits 0; silent without a hint.
-# Logic: packages/tooling/tool/cli/src/commands/SchemaIdioms/SchemaIdioms.hook.ts
+# Logic and path exclusions: packages/tooling/tool/cli/src/commands/SchemaIdioms/SchemaIdioms.hook.ts
 set -u
 
 payload="$(cat 2>/dev/null || true)"
@@ -13,10 +13,10 @@ else
   file="$(printf '%s' "$payload" | grep -o '"file_path"[[:space:]]*:[[:space:]]*"[^"]*"' | head -n 1 | sed 's/.*"\([^"]*\)"$/\1/')"
 fi
 
+# Extension gate only, so Bun never starts for other files; the hook program
+# applies the declaration, generated and test exclusions itself.
 case "$file" in
-  *.d.ts | *.gen.ts | *.gen.tsx | *.test.ts | *.test.tsx | *.spec.ts | *.spec.tsx) exit 0 ;;
-  */test/* | */tests/* | */__tests__/* | */_generated/*) exit 0 ;;
-  *.ts | *.tsx) ;;
+  *.ts | *.tsx | *.mts | *.cts) ;;
   *) exit 0 ;;
 esac
 
@@ -25,9 +25,13 @@ entry="$here/../../packages/tooling/tool/cli/src/commands/SchemaIdioms/SchemaIdi
 [ -f "$entry" ] || exit 0
 command -v bun >/dev/null 2>&1 || exit 0
 
-# Keyed per user and per checkout like law-pulse.sh; the entry keys each
-# remembered hint by session, file, field and kind inside it.
-export BEEP_SCHEMA_IDIOM_STATE="${TMPDIR:-/tmp}/beep-schema-idiom-$(id -u)-$(printf '%s' "$PWD" | cksum | cut -d' ' -f1).json"
+# State lives in an owner-only directory, one file per checkout; it holds
+# only digests of the remembered (session, file, field, kind) hints.
+state_dir="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/beep-schema-idiom-$(id -u)"
+(umask 077 && mkdir -p "$state_dir") 2>/dev/null || exit 0
+{ [ -d "$state_dir" ] && [ ! -L "$state_dir" ] && [ -O "$state_dir" ]; } || exit 0
+chmod 700 "$state_dir" 2>/dev/null || exit 0
+export BEEP_SCHEMA_IDIOM_STATE="${BEEP_SCHEMA_IDIOM_STATE:-$state_dir/$(printf '%s' "$PWD" | cksum | cut -d' ' -f1).json}"
 
 printf '%s' "$payload" | bun "$entry" 2>/dev/null || true
 exit 0
