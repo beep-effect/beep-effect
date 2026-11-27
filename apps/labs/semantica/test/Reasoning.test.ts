@@ -147,9 +147,6 @@ describe("C2 declarative reasoner", () => {
     );
   });
 
-  // RuntimeProbeChild closes its scoped ledger services before emitting the commit
-  // marker and killing itself. This proves recovery of post-close committed state,
-  // not recovery from an open transaction or an unflushed database.
   it.layer(BunServices.layer, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect(
       "recovers projection-relevant state committed before SIGKILL",
@@ -195,7 +192,10 @@ describe("C2 declarative reasoner", () => {
           const recoveredDigest = yield* recover;
           const repeatedDigest = yield* recover;
           pipe(isSha256Hex(recoveredDigest), assertTrue);
-          expect(recoveredDigest).not.toBe(emptyDigest);
+          expect(
+            recoveredDigest,
+            "The runtime child closes scoped ledger services before its commit marker and death: this proves recovery after close, not an open transaction or unflushed database."
+          ).not.toBe(emptyDigest);
           expect(repeatedDigest).toBe(recoveredDigest);
         }),
       120_000

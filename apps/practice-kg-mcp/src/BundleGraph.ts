@@ -20,13 +20,6 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { PackageFailure } from "./PracticeKgMcp.errors.ts";
 
-/**
- * Native DuckDB addons the host loads from the unpacked sidecar instead of
- * bundling.
- *
- * @category constants
- * @since 0.0.0
- */
 const NativeAddonExternals: ReadonlyArray<string> = [
   "@duckdb/node-bindings-linux-x64/duckdb.node",
   "@duckdb/node-bindings-linux-x64-musl/duckdb.node",
@@ -38,9 +31,6 @@ const NativeAddonExternals: ReadonlyArray<string> = [
   "@duckdb/node-bindings-win32-x64/duckdb.node",
 ];
 
-// Path fragments no input module of the host bundle may contain: the
-// OpenTelemetry SDK packages and the observability server and
-// experimental-server entrypoints.
 const ForbiddenBundleFragments: ReadonlyArray<string> = [
   "@effect/opentelemetry/",
   "@opentelemetry/",

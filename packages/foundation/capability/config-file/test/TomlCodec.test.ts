@@ -27,8 +27,11 @@ describe("TomlCodec", () => {
       assert.strictEqual(error.operation, "parse");
       assert.isDefined(error.cause);
       assert.notStrictEqual(typeof error.cause, "string");
-      // The underlying TomlParseError survives structurally, not as prose.
-      assert.instanceOf(error.cause, TomlParseError);
+      assert.instanceOf(
+        error.cause,
+        TomlParseError,
+        "the underlying TomlParseError survives structurally, not as prose"
+      );
     })
   );
 
@@ -42,14 +45,15 @@ describe("TomlCodec", () => {
 
   it.effect("wraps a toml stringify failure as ConfigCodecError — TOML has no null", () =>
     Effect.gen(function* () {
-      // The yaml adapter has no cheap stringify-failure case; this codec
-      // does, because TOML cannot represent null at all. The structured
-      // TomlStringifyError must survive in `cause`, never as prose.
       const error = yield* Effect.flip(TomlCodec.stringify({ port: null }));
       assert.instanceOf(error, ConfigCodecError);
       assert.strictEqual(error.codec, "toml");
       assert.strictEqual(error.operation, "stringify");
-      assert.instanceOf(error.cause, TomlStringifyError);
+      assert.instanceOf(
+        error.cause,
+        TomlStringifyError,
+        "TOML cannot represent null, so the structured TomlStringifyError rides in cause"
+      );
       const cause = error.cause;
       if (!S.is(TomlStringifyError)(cause)) return assert.fail("expected TomlStringifyError");
       assert.strictEqual(cause.diagnostic.code, "UnsupportedValue");
@@ -58,28 +62,23 @@ describe("TomlCodec", () => {
 
   it.effect("never dies on hostile deeply-nested input — trips the parser's nesting-depth cap", () =>
     Effect.gen(function* () {
-      // The parser caps array/inline-table nesting depth at 256
-      // (packages/foundation/modeling/toml/src/internal/limits.ts MAX_NESTING_DEPTH).
-      // 1000 levels of array nesting comfortably exceeds that cap while
-      // remaining syntactically valid TOML, so this exercises the depth
-      // guard rather than a plain syntax error.
-      const depth = 1000;
-      const hostile = `bomb = ${Str.repeat(depth)("[")}1${Str.repeat(depth)("]")}`;
+      const depthBeyondNestingCap = 1000;
+      const hostile = `bomb = ${Str.repeat(depthBeyondNestingCap)("[")}1${Str.repeat(depthBeyondNestingCap)("]")}`;
       const exit = yield* Effect.exit(TomlCodec.parse(hostile));
       const causeOption = Exit.getCause(exit);
       const failureCause = O.getOrThrow(causeOption);
       assertExitFailure(exit, failureCause);
       assertSome(causeOption, failureCause);
-      // A defect here would mean the guard threw instead of failing typed.
-      assert.isTrue(Cause.hasFails(failureCause));
-      assert.isFalse(Cause.hasDies(failureCause));
-      // Confirm this trips the depth guard specifically, not some unrelated
-      // syntax failure.
+      assert.isTrue(Cause.hasFails(failureCause), "the guard fails typed");
+      assert.isFalse(Cause.hasDies(failureCause), "a Die reason would mean the guard threw");
       const error = yield* TomlCodec.parse(hostile).pipe(Effect.asVoid, Effect.flip);
       assert.instanceOf(error.cause, TomlParseError);
       const cause = error.cause;
       if (!S.is(TomlParseError)(cause)) return assert.fail("expected TomlParseError");
-      assert.isTrue(A.some(cause.diagnostics, (d) => d.code === "NestingDepthExceeded"));
+      assert.isTrue(
+        A.some(cause.diagnostics, (d) => d.code === "NestingDepthExceeded"),
+        "valid TOML 1000 deep exceeds the 256 MAX_NESTING_DEPTH cap, so the depth guard fires, not a syntax error"
+      );
     })
   );
 });

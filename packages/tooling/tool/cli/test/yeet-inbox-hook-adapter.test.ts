@@ -302,6 +302,64 @@ describe("Yeet inbox harness adapter", () => {
   });
 
   it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
+    for (const event of ["Stop", "SubagentStop"]) {
+      it.effect(`blocks ${event} once per P0 set in a stop chain and re-arms for fresh stops`, () =>
+        withInbox(({ root }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const payload = { cwd: root, hook_event_name: event, session_id: "stop-chain" };
+            const first = yield* runHook(root, "claude", payload);
+            expect(first.exitCode).toBe(0);
+            const firstDecision = yield* decodeObject(first.stdout);
+            expect(firstDecision).toMatchObject({ decision: "block" });
+            const activePayload = { ...payload, stop_hook_active: true };
+            const repeated = yield* runHook(root, "claude", activePayload);
+            expect(repeated.exitCode).toBe(0);
+            const released = yield* decodeObject(repeated.stdout);
+            expect(released).not.toHaveProperty("decision");
+            expect(released).toMatchObject({ systemMessage: expect.stringContaining("coverage-live") });
+            expect(released).toMatchObject({ systemMessage: expect.stringContaining("already fired once") });
+            const failuresPath = path.join(root, ".beep/inbox/failures.ndjson");
+            const failures = yield* fs.readFileString(failuresPath);
+            const next = yield* encodeUnknown({
+              schemaVersion: "yeet-inbox/v1",
+              kind: "check-failed",
+              id: "another-p0",
+              severity: "P0",
+              checkout: root,
+              ts: "2026-11-26T00:00:00Z",
+              capsule: { headSha: "abc123", prNumber: 900, lane: "new failure" },
+            });
+            yield* fs.writeFileString(failuresPath, `${failures}${next}\n`);
+            const newP0Result = yield* runHook(root, "claude", activePayload);
+            const newP0Decision = yield* decodeObject(newP0Result.stdout);
+            expect(newP0Decision).toMatchObject({
+              decision: "block",
+              reason: expect.stringContaining("another-p0"),
+            });
+            const nextRepeatResult = yield* runHook(root, "claude", activePayload);
+            const nextRepeatDecision = yield* decodeObject(nextRepeatResult.stdout);
+            expect(nextRepeatDecision).not.toHaveProperty("decision");
+            const freshStopResult = yield* runHook(root, "claude", payload);
+            const freshStopDecision = yield* decodeObject(freshStopResult.stdout);
+            expect(freshStopDecision).toMatchObject({
+              decision: "block",
+            });
+            const sessions = path.join(root, ".beep/inbox/sessions");
+            const sessionNames = yield* fs.readDirectory(sessions);
+            const names = A.filter(sessionNames, Str.endsWith(".json"));
+            const stateText = yield* fs.readFileString(path.join(sessions, A.getUnsafe(names, 0)));
+            const state = yield* decodeObject(stateText);
+            expect(state).toMatchObject({
+              schemaVersion: "yeet-hook-session/v1",
+              stopBlockedIds: ["another-p0", "coverage-live"],
+            });
+          })
+        )
+      );
+    }
+
     it.effect("keeps every P0 PreToolUse path context-only and blocks Stop until acknowledgement", () =>
       withInbox(({ ack, root }) =>
         Effect.gen(function* () {

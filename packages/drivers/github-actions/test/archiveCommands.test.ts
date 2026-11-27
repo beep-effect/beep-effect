@@ -14,19 +14,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { commandArgs } from "./support/commandArgs.ts";
 
-/**
- * The archiver command lines, pinned verbatim.
- *
- * @remarks
- * These are the ONE spelling of each archiver invocation the package makes,
- * shared by `Artifact` and `ToolInstaller`. The Windows halves cannot be
- * executed from a POSIX host, so their text is the contract under test —
- * in particular the three-argument `ExtractToDirectory(src, dest, $true)`
- * overload (the two-argument one refuses to overwrite, which is how a second
- * extraction into a populated directory failed with an EMPTY stderr) and the
- * try/catch that writes the .NET exception to stderr and exits 1.
- */
-describe("archiveCommands", () => {
+describe("archiveCommands: the one pinned spelling of each archiver call that Artifact and ToolInstaller share", () => {
   it.effect("option schemas preserve plain objects and required fields and reject explicit undefined flags", () =>
     Effect.gen(function* () {
       const zip: ZipCommandOptions.Encoded = {
@@ -42,8 +30,10 @@ describe("archiveCommands", () => {
       assert.deepStrictEqual(value1, zip);
       const value2 = yield* S.decodeEffect(UnzipCommandOptions)(unzip);
       assert.deepStrictEqual(value2, unzip);
-      // Exact optional keys (EF-40): an optional key is omitted, never undefined.
-      assert.isFalse(S.is(TarExtractCommandOptions)({ archive: "a.tgz", destination: "out", flags: undefined }));
+      assert.isFalse(
+        S.is(TarExtractCommandOptions)({ archive: "a.tgz", destination: "out", flags: undefined }),
+        "exact optional keys: absent flags are omitted, never undefined"
+      );
       for (const options of [
         { archive: "a.tgz", destination: "out" },
         { archive: "a.tgz", destination: "out", flags: [] },
@@ -163,33 +153,33 @@ describe("archiveCommands", () => {
     });
 
     it("Windows: the script's size does not grow with the file list — the list is in the manifest", () => {
-      // `CreateProcessW` caps the command line at 32,767 characters; the
-      // inlined form hit it at ~150 files. The script must not mention the
-      // files at all.
       const one = windowsZip(["a.txt"]);
       const many = windowsZip(Array.from({ length: 5_000 }, (_, index) => `dir\\file-${index}.txt`));
-      assert.strictEqual(many, one);
-      assert.notInclude(one, "a.txt");
+      assert.strictEqual(
+        many,
+        one,
+        "CreateProcessW caps the command line at 32,767 characters, which ~150 inlined files hit"
+      );
+      assert.notInclude(one, "a.txt", "the script must not mention the files at all");
       assert.isBelow(one.length, 1_000);
     });
 
     it("Windows: every CreateEntryFromFile is assigned to $null, so entry listings never reach the captured stderr", () => {
-      // Unassigned, pwsh prints the returned ZipArchiveEntry (~430 bytes per
-      // file) to stdout, and `spawnOnce` interleaves that with stderr — burying
-      // the .NET exception `ArtifactError.stderr` exists to surface.
       const script = windowsZip(["a.txt"]);
-      assert.include(script, "{ $null = [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(");
+      assert.include(
+        script,
+        "{ $null = [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(",
+        "unassigned, pwsh prints each ZipArchiveEntry (~430 bytes) to stdout, burying ArtifactError.stderr's exception"
+      );
       assert.notInclude(script, "{ [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(");
     });
 
     it("Windows: the entry keeps its directory — source is Combine(root, $rel), entry name is $rel with `\\` swapped for `/` literally", () => {
-      // `Compress-Archive -Path` with file paths flattened every entry to its
-      // bare name, so `dir\b.txt` landed as `b.txt`. Naming the entry is the
-      // fix, and `.Replace` is .NET String.Replace: a literal swap, not a regex.
       const script = windowsZip(["dir\\sub\\b.txt"]);
       assert.include(
         script,
-        "CreateEntryFromFile($zip, [System.IO.Path]::Combine('D:\\a\\root', $rel), $rel.Replace('\\', '/'), "
+        "CreateEntryFromFile($zip, [System.IO.Path]::Combine('D:\\a\\root', $rel), $rel.Replace('\\', '/'), ",
+        "Compress-Archive -Path flattens dir\\b.txt to b.txt, so the entry is named; .Replace is a literal .NET swap"
       );
     });
 
@@ -274,16 +264,18 @@ describe("archiveCommands", () => {
           "$ErrorActionPreference = 'Stop'; try { Add-Type -AssemblyName System.IO.Compression.FileSystem; " +
             "[System.IO.Compression.ZipFile]::ExtractToDirectory('D:\\a.zip', 'D:\\out', $true) } " +
             "catch { [Console]::Error.WriteLine($_.Exception.ToString()); exit 1 }",
-        ]
+        ],
+        "a POSIX host cannot run the Windows half, so its text is the contract, try/catch to stderr and exit 1 included"
       );
     });
 
     it("Windows: the overwrite overload is the mutant that shipped — `$true` must be present", () => {
-      // The two-argument form typechecks in PowerShell just as well and
-      // refuses to overwrite; the assertion above pins the whole string, this
-      // one names the load-bearing token so a rewrite cannot lose it quietly.
       const command = unzipCommand({ windows: true, source: "a.zip", destination: "out" });
-      assert.include(command.args[3], "ExtractToDirectory('a.zip', 'out', $true)");
+      assert.include(
+        command.args[3],
+        "ExtractToDirectory('a.zip', 'out', $true)",
+        "the two-argument form typechecks but refuses to overwrite, failing a re-extraction with an empty stderr"
+      );
     });
 
     it("Windows: single quotes in either path are doubled", () => {

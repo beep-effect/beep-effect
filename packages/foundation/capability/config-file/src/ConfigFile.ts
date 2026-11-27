@@ -580,6 +580,15 @@ export interface ConfigFileShape<A> {
    * With `defaultValue` the load cannot fail with
    * {@link ConfigFileNotFoundError}; without it, it can.
    *
+   * Publishes `Updated` alone: the save inside it emits no `Saved`.
+   *
+   * **Gotchas**
+   *
+   * Concurrent calls on one service instance are serialized across the whole
+   * load, transform and save, so neither caller's change is lost to a stale
+   * read. It is not a file lock: another process writing the same path can
+   * still clobber the result.
+   *
    * @since 0.0.0
    */
   readonly update: {
@@ -652,6 +661,13 @@ export interface ConfigFileOptions<A, I, RR> {
    * `R`. When this is omitted, `emit` is `Effect.void` — it does not even
    * perform the lookup. That is what "zero-cost when absent" means here.
    *
+   * **Gotchas**
+   *
+   * Publishing is never fatal. `PubSub.publish` has no error channel, but a
+   * consumer-supplied hub can still throw: that defect is logged at debug level
+   * and dropped. Interruption is not caught, so a load that is being interrupted
+   * stays interrupted.
+   *
    * @since 0.0.0
    */
   readonly events?: Context.Key<ConfigEvents, ConfigEventsShape>;
@@ -716,24 +732,11 @@ export interface ConfigFileOptions<A, I, RR> {
   readonly validate?: (value: A) => Effect.Effect<A, ConfigValidationError>;
 }
 
-// Implementation of ConfigFile.Service; the public contract lives on the static.
 const Service =
   <Self, A>() =>
   <const Id extends string>(id: Id) =>
     Context.Service<Self, ConfigFileShape<A>>()(id);
 
-/**
- * Re-raise a codec failure with the file it came from attached.
- *
- * **Details**
- *
- * A codec is handed a string and never a path, so `ConfigCodecError.path` can
- * only be filled in here, where the resolved target is in scope. An error that
- * already carries a path is left alone — a decorator codec that knew better
- * wins — and anything that is not a `ConfigCodecError` passes through
- * untouched. The return type admits both the original error and the path-bearing
- * codec error constructed here.
- */
 const withCodecPath: {
   <E>(error: E, target: string): E | ConfigCodecError;
   (target: string): <E>(error: E) => E | ConfigCodecError;
@@ -748,14 +751,6 @@ const withCodecPath: {
     : error
 );
 
-/**
- * Put `header` in front of `document`, separated by exactly one newline.
- *
- * **Details**
- *
- * A header that already ends in a newline is not given another — a caller who
- * built the line with a trailing `"\n"` and one who did not get the same file.
- */
 const prependHeader: {
   (document: string, header: string | undefined): string;
   (header: string | undefined): (document: string) => string;
@@ -783,23 +778,6 @@ const makeImpl: {
     path: Path.Path,
     resolverEnv: Context.Context<RR>
   ): ConfigFileShape<A> => {
-    /**
-     * Publish one event, or nothing at all.
-     *
-     * **Details**
-     *
-     * Three properties hold, in order of how easy they are to lose:
-     *
-     * 1. **Zero-cost when absent.** No `events` option means `Effect.void` — no
-     *    context lookup, no `DateTime.now`.
-     * 2. **Never a requirement.** `Effect.serviceOption` reads the ambient context
-     *    without adding to `R`, so wiring events cannot change a layer's type.
-     * 3. **Never fatal.** A subscriber's hub is consumer-supplied code. It cannot
-     *    FAIL — `PubSub.publish` has no error channel — but it CAN throw, and
-     *    `catchDefect` absorbs that; interruption is deliberately left to
-     *    propagate, because a config load that is being interrupted must stay
-     *    interrupted.
-     */
     const emit = (payload: ConfigEventPayload): Effect.Effect<void> =>
       options.events === undefined
         ? Effect.void
@@ -816,9 +794,6 @@ const makeImpl: {
             Effect.catchDefect((defect) => Effect.logDebug("ConfigEvents.emit: consumer hub raised a defect", defect))
           );
 
-    /**
-     * The public, path-and-resolver view of the sources that fed a load.
-     */
     const sourceRefs = (sources: ReadonlyArray<ConfigSource<A>>): ReadonlyArray<ConfigSourceRef> =>
       A.map(sources, (s) => ConfigSourceRef.make({ path: s.path, resolver: s.resolver }));
 
@@ -829,8 +804,6 @@ const makeImpl: {
       2,
       (parsed: unknown, at: O.Option<string>): Effect.Effect<A, ConfigValidationError> =>
         S.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
-          // Normalize the schema failure at the boundary. Never leak SchemaError
-          // deeper, never stringify it — carry its structured issue tree instead.
           Effect.catchTag("SchemaError", (error) =>
             Effect.fail(ConfigValidationError.make({ path: at, issue: error.issue }))
           )
@@ -851,8 +824,6 @@ const makeImpl: {
       );
       yield* emit({ _tag: "Parsed", path: target, codec: options.codec.name });
 
-      // Schema decoding and the caller's `validate` are one validation step from a
-      // subscriber's point of view: both answer "is this document acceptable?".
       const validated = yield* Effect.gen(function* () {
         const decoded = yield* decode(parsed, O.some(target));
         return yield* runValidate(decoded);
@@ -862,17 +833,6 @@ const makeImpl: {
       return validated;
     });
 
-    /**
-     * One resolver's lookup as a probe.
-     *
-     * **Details**
-     *
-     * `resolve` cannot fail — the absorption contract — so no error handling
-     * here. `resolveProbe` is the same lookup carrying its own detail plus the
-     * paths it checked; a resolver that omits it degrades to `resolveMatch`,
-     * then to a bare-path match, contributing no candidates — the mirror of
-     * `ConfigSource.match` degrading when `resolveMatch` is absent.
-     */
     const probeResolver = (resolver: ConfigResolver<RR>): Effect.Effect<ConfigProbe> =>
       Effect.provide(
         resolver.resolveProbe ??
@@ -889,34 +849,22 @@ const makeImpl: {
 
     const discover = Effect.fn("ConfigFile.discover")(function* () {
       const sources: Array<ConfigSource<A>> = [];
-      const candidates: Array<string> = [];
+      const probedByMisses: Array<string> = [];
       for (const resolver of options.resolvers) {
         const probe = yield* probeResolver(resolver);
-        // Only a miss consumes the probe list: on a hit the prefix says which
-        // candidate won, which `ConfigMatch` already reports in full.
         if (O.isNone(probe.match)) {
-          candidates.push(...probe.probed);
+          probedByMisses.push(...probe.probed);
         } else {
           const match = probe.match.value;
-          // Emitted before the read, so a corrupt file is still reported as found.
           yield* emit({ _tag: "Discovered", path: match.path, resolver: resolver.name });
           sources.push({ path: match.path, resolver: resolver.name, match, value: yield* loadFrom(match.path) });
         }
       }
-      return { sources, candidates };
+      return { sources, candidates: probedByMisses };
     });
 
     const searched = A.map(options.resolvers, (r) => r.name);
 
-    /**
-     * Merge the discovered sources and announce the result. Shared by `load` and
-     * `loadOrDefault`, so the two cannot drift apart.
-     *
-     * **Details**
-     *
-     * Both events carry EVERY contributing source, because under `layeredMerge`
-     * all of them contributed.
-     */
     const mergeAndEmit: (sources: NonEmptySources<A>) => Effect.Effect<A, ConfigValidationError> = Effect.fnUntraced(
       function* (sources: NonEmptySources<A>) {
         const merged = yield* options.strategy.resolve(sources);
@@ -953,17 +901,6 @@ const makeImpl: {
       return yield* runValidate(decoded);
     });
 
-    /**
-     * Schema-encode, stringify, and prepend the header. Shared by `encode`,
-     * `write` and `save`. Untraced: it is internal, and the public
-     * boundaries that call it already open a span.
-     *
-     * **Details**
-     *
-     * `target` is the file this text is destined for, when there is one. It is
-     * only ever used to NAME the file in an error — `encode` passes `none` and
-     * its errors honestly carry no path.
-     */
     const encodeTo: {
       (
         value: A,
@@ -982,7 +919,6 @@ const makeImpl: {
         encodeOptions?: typeof ConfigEncodeOptions.Encoded
       ) {
         const encoded = yield* S.encodeEffect(options.schema)(value).pipe(
-          // Same normalization as `decode`: carry the structured issue, never stringify.
           Effect.catchTag("SchemaError", (error) =>
             Effect.fail(ConfigValidationError.make({ path: target, issue: error.issue }))
           )
@@ -998,15 +934,6 @@ const makeImpl: {
       })
     );
 
-    /**
-     * `encodeTo` a known file, then write it. Shared by `write` and `save`.
-     *
-     * **Details**
-     *
-     * `StringifyFailed` is emitted HERE, not in `encodeTo`: it is a write-path
-     * event, and `encode` promises to publish nothing. A subscriber counting
-     * failed writes must not see a dry run's codec failure.
-     */
     const encodeAndWrite: {
       (
         value: A,
@@ -1033,7 +960,6 @@ const makeImpl: {
       })
     );
 
-    // No event: nothing was written.
     const encode = Effect.fn("ConfigFile.encode")(function* (
       value: A,
       encodeOptions?: typeof ConfigEncodeOptions.Encoded
@@ -1041,22 +967,11 @@ const makeImpl: {
       return yield* encodeTo(value, O.none(), encodeOptions);
     });
 
-    /**
-     * Resolve `defaultPath`, `mkdir -p` its parent and write. Shared by `save`
-     * and `update`, and — crucially — emits nothing.
-     *
-     * **Details**
-     *
-     * `update` must not call the public `save`, or one `update` would publish
-     * `Saved` as well as `Updated`. Event granularity is per-operation, so the
-     * emitting boundary sits in the public method, never in the shared internals
-     * it delegates to.
-     */
-    const saveTo: (value: A) => Effect.Effect<string, ConfigSaveError> = Effect.fnUntraced(function* (value: A) {
+    const saveWithoutEmitting: (value: A) => Effect.Effect<string, ConfigSaveError> = Effect.fnUntraced(function* (
+      value: A
+    ) {
       const configured = options.defaultPath;
       if (configured === undefined) return yield* ConfigDefaultPathMissingError.make({});
-      // `defaultPath`'s requirements are `RR`, satisfied by the same context the
-      // resolvers use. No cast needed.
       const target = yield* Effect.provide(configured, resolverEnv);
       yield* fs
         .makeDirectory(path.dirname(target), { recursive: true })
@@ -1072,31 +987,17 @@ const makeImpl: {
         target: string,
         encodeOptions?: typeof ConfigEncodeOptions.Encoded
       ) {
-        // No `makeDirectory` here, deliberately: `write` trusts the caller's path.
         yield* encodeAndWrite(value, target, encodeOptions);
         yield* emit({ _tag: "Written", path: target });
       })
     );
 
     const save = Effect.fn("ConfigFile.save")(function* (value: A) {
-      const target = yield* saveTo(value);
+      const target = yield* saveWithoutEmitting(value);
       yield* emit({ _tag: "Saved", path: target });
       return target;
     });
 
-    /**
-     * Serializes `update`'s read-modify-write. One permit, one service instance.
-     *
-     * **Gotchas**
-     *
-     * `update` is load → transform → save. Without a lock, two concurrent calls
-     * both read the old document across the read's async boundary and both write
-     * their own transform of it, so one caller's change is silently lost. The
-     * lock covers the whole critical section, not just the write.
-     *
-     * This guards a single service instance in a single process. It is not a file
-     * lock: another process writing the same path concurrently can still clobber.
-     */
     const updateLock = Semaphore.makeUnsafe(1);
 
     const update: ConfigFileShape<A>["update"] = dual(
@@ -1106,8 +1007,7 @@ const makeImpl: {
           Effect.gen(function* () {
             const current = defaultValue !== undefined ? yield* loadOrDefault(defaultValue) : yield* load();
             const updated = fn(current);
-            // `saveTo`, not `save`: calling the public method would leak its `Saved`.
-            const target = yield* saveTo(updated);
+            const target = yield* saveWithoutEmitting(updated);
             yield* emit({ _tag: "Updated", path: target });
             return updated;
           })
@@ -1129,18 +1029,12 @@ const makeImpl: {
   }
 );
 
-// Discovery can execute any of the three resolver effects.
 type ResolverRequirements<R extends ConfigResolver<unknown>> =
   | Effect.Services<R["resolve"]>
   | Effect.Services<NonNullable<R["resolveMatch"]>>
   | Effect.Services<NonNullable<R["resolveProbe"]>>;
 
-// Implementation of ConfigFile.layer; the public contract lives on the static.
-// `tag` is pinned by three intersected parts. `Context.Key<Self, S>` captures the key's real shape;
-// `Context.Key<Self, ConfigFileShape<A>>` keeps `A` inferable from the key, which a bare
-// `MergeStrategy.firstMatch()` in the options needs; the conditional only checks (`NoInfer`), rejecting a
-// shape wider than ConfigFileShape<A>. It cannot see through method-syntax parameter bivariance: a member
-// redeclared as a method with a wider parameter still passes.
+// decision: tag-pinned-by-three-part-intersection
 const layer: {
   <
     Self,
@@ -1174,7 +1068,6 @@ const layer: {
       tag,
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        // `save` needs `dirname`, so `Path` is required alongside `FileSystem`.
         const path = yield* Path.Path;
         const resolverEnv = yield* Effect.context<RR>();
         return makeImpl(options, fs, path, resolverEnv);
@@ -1239,8 +1132,7 @@ export interface ConfigFileTestOptions<A, I> {
   readonly validate?: (value: A) => Effect.Effect<A, ConfigValidationError>;
 }
 
-// Implementation of ConfigFile.testLayer; the public contract lives on the static.
-// `tag` is pinned exactly as ConfigFile.layer's is; see the note there.
+// decision: tag-pinned-by-three-part-intersection
 const testLayer: {
   <Self, A, I, S extends ConfigFileShape<A> = ConfigFileShape<A>>(
     tag: Context.Key<Self, S> &
@@ -1268,11 +1160,8 @@ const testLayer: {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        // The resolvers below need exactly this context. Taking it from the
-        // ambient environment avoids rebuilding it — and avoids a cast.
         const resolverEnv = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
 
-        // Failures here are test-harness defects, not config errors: die.
         const dir = yield* fs.makeTempDirectory({ prefix: "effected-config-file-" }).pipe(Effect.orDie);
         yield* Effect.addFinalizer(() => fs.remove(dir, { recursive: true }).pipe(Effect.orDie));
 
@@ -1290,8 +1179,6 @@ const testLayer: {
             codec: options.codec,
             strategy: options.strategy,
             resolvers,
-            // Conditional spread: passing `validate: undefined` explicitly is not
-            // the same as omitting it.
             ...(options.validate !== undefined && { validate: options.validate }),
           },
           fs,
@@ -1394,7 +1281,6 @@ export interface ConfigReadOptions<A, I> {
   readonly schema: ConfigReadSchema<A, I>;
 }
 
-// Implementation of ConfigFile.read; the public contract lives on the static.
 const read: {
   <A, I>(path: string, options: ConfigReadOptions<A, I>): Effect.Effect<A, ConfigReadError, FileSystem.FileSystem>;
   <A, I>(options: ConfigReadOptions<A, I>): (path: string) => Effect.Effect<A, ConfigReadError, FileSystem.FileSystem>;
@@ -1411,8 +1297,6 @@ const read: {
       const parsed = yield* options.codec.parse(raw).pipe(Effect.mapError(withCodecPath(path)));
 
       return yield* S.decodeUnknownEffect(options.schema)(parsed, options.parseOptions).pipe(
-        // The same boundary normalization the service performs: never leak a
-        // SchemaError outward, and carry its issue tree rather than a string.
         Effect.catchTag("SchemaError", (error) =>
           Effect.fail(ConfigValidationError.make({ path: O.some(path), issue: error.issue }))
         )

@@ -77,7 +77,6 @@ interface Setup {
   readonly stderrTty?: boolean;
 }
 
-/** CliLog.layer owns the whole logger set, so the stderr CliLogger it builds is always present beside the sink. */
 const diagnostics = (setup: Setup = {}) =>
   CliLog.layer({
     envVar: ENV,
@@ -107,10 +106,8 @@ const both = Effect.gen(function* () {
   yield* Effect.logError("boom");
 });
 
-/** The sink's NDJSON lines: CliLogger's plain lines share stderr, so a parser reads the lines that start with `{`. */
 const ndjson = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(lines, (line) => Str.startsWith("{")(line));
-/** The sink's pretty lines: a time, a level, then the message. */
 const pretty = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.filter(lines, (line) => /^\d\d:\d\d:\d\d\.\d{3} /.test(line));
 
@@ -235,13 +232,12 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("an invalid value warns exactly once through the existing logger, not the sink, and stays silent", () =>
       Effect.gen(function* () {
         const { err } = yield* capture(Effect.logError("boom"), { env: { [ENV]: "bogus" } });
-        // The one line is the plain CliLogger warning and "boom" (an Info-or-above record) printed by CliLogger;
-        // nothing is written as NDJSON by the sink.
         assert.strictEqual(A.filter(err, (l) => Str.includes("bogus")(l)).length, 1, A.join(err, "\n"));
-        assert.deepStrictEqual(ndjson(err), []);
+        assert.deepStrictEqual(ndjson(err), [], "nothing is written as NDJSON by the sink");
         assert.deepStrictEqual(
           A.filter(err, (l) => !Str.includes("bogus")(l)),
-          ["boom"]
+          ["boom"],
+          "an Info-or-above record is printed plain by CliLogger"
         );
       })
     );
@@ -353,7 +349,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       return { out, err, code };
     });
 
-    // Neither the diagnostics default nor `--log-level none` may silence the failure report.
     for (const argv of [["boom"], ["--log-level", "none", "boom"]]) {
       it.effect(
         `a failure is still reported, once and plain, with the diagnostics level None: ${A.join(argv, " ")}`,
@@ -370,9 +365,12 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("the diagnostics level does not make CliLogger print debug records: only the sink does", () =>
       Effect.gen(function* () {
         const { err } = yield* runMain(["inside"], { [ENV]: "debug" });
-        // One NDJSON line from the sink. CliLogger keeps the threshold it had and prints nothing for a debug record.
         assert.strictEqual(err.length, 1, A.join(err, "\n"));
-        assert.strictEqual(json(err[0] ?? "").level, "DEBUG");
+        assert.strictEqual(
+          json(err[0] ?? "").level,
+          "DEBUG",
+          "the one line is the sink's: CliLogger keeps its threshold and prints nothing for a debug record"
+        );
       })
     );
 
@@ -406,9 +404,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
       })
     );
 
-    // The layer builds CliLogger itself and replaces the logger set without reading it, so there is no order to get
-    // wrong: every wiring below gives the same result.
-    describe("the wiring order does not matter", () => {
+    describe("the wiring order does not matter: the layer builds CliLogger and replaces the logger set unread", () => {
       const wirings: ReadonlyArray<readonly [string, () => Layer.Layer<never>]> = [
         ["CliLog.layer alone", diagnostic],
         [
@@ -437,8 +433,7 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     it.effect("passes options through to the CliLogger it builds", () =>
       Effect.gen(function* () {
         const { out, err } = yield* capture(Effect.logInfo("hello"), { logger: { stderrFrom: "Error" } });
-        // With stderrFrom Error an Info record is program-facing output on stdout, not a diagnostic.
-        assert.deepStrictEqual(out, ["hello"]);
+        assert.deepStrictEqual(out, ["hello"], "with stderrFrom Error an Info record is program output on stdout");
         assert.deepStrictEqual(err, []);
       })
     );
@@ -470,8 +465,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
                 Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ [ENV]: "debug" })),
                 Effect.provideService(Console.Console, double)
               );
-              // The debug record reached the diagnostics sink but not the extra logger, which keeps filtering at Info.
-              assert.deepStrictEqual(seen, ["Error:boom"]);
+              assert.deepStrictEqual(
+                seen,
+                ["Error:boom"],
+                "the debug record reached the sink but not the extra logger, which keeps filtering at Info"
+              );
             })
         );
       });
@@ -513,8 +511,11 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
           }),
           { env, audience: "human", stderrTty: true }
         );
-        // Outside the flag the build-time audience (human on a TTY) gives pretty; inside it, agent gives NDJSON.
-        assert.match(A.join(pretty(err), "\n"), /INFO outside$/);
+        assert.match(
+          A.join(pretty(err), "\n"),
+          /INFO outside$/,
+          "outside the flag the build-time audience (human on a TTY) gives pretty; inside, agent gives NDJSON"
+        );
         assert.deepStrictEqual(
           A.map(ndjson(err), (line) => json(line).message),
           ["hello"]
@@ -540,7 +541,6 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
 
   describe("CliLog.layer under GitHub Actions captured when it was built", () => {
     const hostile = Effect.logWarning("::error::injected\n##[warning]also");
-    /** A host's layer: CliLog built over a layer whose CurrentRuntimeEnv says GitHub Actions, never in the fiber. */
     const hosted = (neutralize?: boolean | "auto") =>
       CliLog.layer({
         level: "Info",
@@ -632,23 +632,21 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
     );
   });
 
-  /** The `R` of a layer. */
-  type RIn<L> = L extends Layer.Layer<infer _A, infer _E, infer R> ? R : never;
-  /** True only when `A` and `B` are the same type. */
-  type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
+  type RequirementsOf<L> = L extends Layer.Layer<infer _A, infer _E, infer R> ? R : never;
+  type IsSameType<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
   describe("CliLog.layer requirements per overload", () => {
     it("each overload's R, and an optional file keeps FileSystem and Path in R", () => {
       const maybe: CliLogFile | undefined = undefined;
       type Fs = FileSystem.FileSystem | Path.Path;
       const checks: ReadonlyArray<boolean> = [
-        true satisfies Same<RIn<ReturnType<typeof jsonNoFile>>, never>,
-        true satisfies Same<RIn<typeof jsonFile>, Fs>,
-        true satisfies Same<RIn<ReturnType<typeof jsonMaybe>>, Fs>,
-        true satisfies Same<RIn<ReturnType<typeof prettyNoFile>>, TerminalEnv>,
-        true satisfies Same<RIn<ReturnType<typeof prettyMaybe>>, TerminalEnv | Fs>,
-        true satisfies Same<RIn<ReturnType<typeof autoNoFile>>, Audience | TerminalEnv>,
-        true satisfies Same<RIn<ReturnType<typeof autoMaybe>>, Audience | TerminalEnv | Fs>,
+        true satisfies IsSameType<RequirementsOf<ReturnType<typeof jsonNoFile>>, never>,
+        true satisfies IsSameType<RequirementsOf<typeof jsonFile>, Fs>,
+        true satisfies IsSameType<RequirementsOf<ReturnType<typeof jsonMaybe>>, Fs>,
+        true satisfies IsSameType<RequirementsOf<ReturnType<typeof prettyNoFile>>, TerminalEnv>,
+        true satisfies IsSameType<RequirementsOf<ReturnType<typeof prettyMaybe>>, TerminalEnv | Fs>,
+        true satisfies IsSameType<RequirementsOf<ReturnType<typeof autoNoFile>>, Audience | TerminalEnv>,
+        true satisfies IsSameType<RequirementsOf<ReturnType<typeof autoMaybe>>, Audience | TerminalEnv | Fs>,
       ];
       assert.isTrue(A.every(checks, Boolean));
       assert.isUndefined(maybe);
@@ -699,14 +697,14 @@ it.layer(platformServices, { timeout: "30 seconds" })((it) => {
         it.effect("neutralize: false reaches the plain line too", () =>
           Effect.gen(function* () {
             yield* Effect.logWarning("::error::injected").pipe(Effect.provideService(Console.Console, double));
-            // The plain line is the one a `::` command could open: an NDJSON line starts with `{`.
             assert.deepStrictEqual(
               pipe(
                 err,
                 A.flatMap((line) => Str.split(line, LINE_BREAK)),
                 A.filter(isCommand)
               ),
-              ["::error::injected"]
+              ["::error::injected"],
+              "the plain line is the one a :: command could open; an NDJSON line starts with {"
             );
           })
         );

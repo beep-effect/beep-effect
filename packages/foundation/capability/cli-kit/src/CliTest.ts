@@ -283,7 +283,8 @@ export abstract class CliTest {
    * the child gets an already-ended empty input (`Stream.empty`), so a
    * stdin-reading bin exits instead of hanging on `effect/process`'s
    * default `"pipe"` stdio, which stays open until something writes to and
-   * ends it.
+   * ends it. Both streams and the exit are read concurrently: sequential
+   * reads deadlock once an OS pipe buffer fills.
    *
    * **Example** (Construct a version command with closed stdin)
    *
@@ -332,8 +333,6 @@ export abstract class CliTest {
                 : Stream.make(new TextEncoder().encode(options.stdin)),
           });
           const handle = yield* spawner.spawn(command);
-          // Read both streams and the exit concurrently: sequential reads
-          // deadlock once an OS pipe buffer fills.
           const [stdout, stderr, exitCode] = yield* Effect.all(
             [text(handle.stdout), text(handle.stderr), handle.exitCode],
             { concurrency: "unbounded" }

@@ -36,9 +36,11 @@ describe("GitHubToken option schemas", () => {
       assert.deepStrictEqual(Result.getOrThrow(S.decodeResult(ProvisionOptions)(input)), input);
       assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(ProvisionOptions)(ProvisionOptions.make(input))), input);
     }
-    // Exact optional keys (EF-40): an optional key is omitted, never undefined.
     for (const key of ["installationId", "owner", "required", "stateKey"]) {
-      assert.isFalse(S.is(ProvisionOptions)({ ...minimal, [key]: undefined }));
+      assert.isFalse(
+        S.is(ProvisionOptions)({ ...minimal, [key]: undefined }),
+        "exact optional keys: an absent option is omitted, never undefined"
+      );
     }
     assert.isFalse(S.is(ProvisionOptions)({ ...minimal, privateKey: "pem" }));
     assert.isFalse(S.is(ProvisionOptions)({ ...minimal, required: { contents: "owner" } }));
@@ -48,8 +50,10 @@ describe("GitHubToken option schemas", () => {
   });
 
   it("read options preserve Duration values and leave existing defaults to the reader", () => {
-    // Exact optional keys (EF-40): omission leaves the default; explicit undefined is rejected.
-    assert.isFalse(S.is(ReadOptions)({ stateKey: undefined }));
+    assert.isFalse(
+      S.is(ReadOptions)({ stateKey: undefined }),
+      "exact optional keys: omission leaves the default; explicit undefined is rejected"
+    );
     assert.isFalse(S.is(ReadOptions)({ skew: undefined }));
     for (const input of [{}, { stateKey: "token", skew: Duration.seconds(30) }]) {
       const options: ReadOptions.Encoded = input;
@@ -61,7 +65,6 @@ describe("GitHubToken option schemas", () => {
   });
 });
 
-/** A fixed instant to reason about expiry from — the clock starts at the epoch otherwise. */
 const NOW = Date.parse("2026-07-25T12:00:00.000Z");
 
 const tokenAt = (expiresAt: string, permissions: Readonly<Record<string, string>> = { contents: "write" }) =>
@@ -72,10 +75,6 @@ const tokenAt = (expiresAt: string, permissions: Readonly<Record<string, string>
     permissions,
   });
 
-/**
- * The three doubles, each recording exactly what the member-usage table says
- * this bridge touches.
- */
 const rig = (
   options: {
     readonly app?: Partial<GitHubAppShape>;
@@ -143,9 +142,8 @@ const rig = (
   return { events, saved, revoked, layer: Layer.mergeAll(app, outputs, state) };
 };
 
-// The PEM banner is assembled so no literal key header sits in source (semgrep beep-hardcoded-private-key).
-const pemHeader = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY-----`;
-const CREDENTIALS = { appId: "123456", privateKey: Redacted.make(pemHeader("BEGIN")) };
+const semgrepSafePemHeader = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY-----`;
+const CREDENTIALS = { appId: "123456", privateKey: Redacted.make(semgrepSafePemHeader("BEGIN")) };
 
 const identity = (userId?: number): AppIdentity =>
   AppIdentity.make({ slug: "my-app", name: "My App", ...(userId === undefined ? {} : { userId }) });
@@ -170,16 +168,18 @@ describe("GitHubToken", () => {
             yield* TestClock.setTime(NOW);
             const provisioned = yield* GitHubToken.provision(CREDENTIALS);
 
-            // `GITHUB_STATE` is a plaintext file by GitHub's protocol, so the mask
-            // is the only defense — and it is worth nothing if it lands after the
-            // write. The ordering is the assertion.
-            assert.deepStrictEqual(harness.events, ["mask:ghs_installation", "save:githubToken"]);
+            assert.deepStrictEqual(
+              harness.events,
+              ["mask:ghs_installation", "save:githubToken"],
+              "GITHUB_STATE is plaintext by protocol, so the mask is the only defense and is worthless after the write"
+            );
             assert.strictEqual(provisioned.appSlug, "my-app");
             assert.strictEqual(provisioned.appUserId, 99);
-            // The lookup is authenticated with the installation token on purpose:
-            // `GET /users/{slug}[bot]` rejects an app JWT, and the unauthenticated
-            // fallback is rate-limited to sixty per hour per IP.
-            assert.deepStrictEqual(seen, [Redacted.make("ghs_installation")]);
+            assert.deepStrictEqual(
+              seen,
+              [Redacted.make("ghs_installation")],
+              "GET /users/{slug}[bot] rejects an app JWT; unauthenticated lookups are capped at sixty an hour per IP"
+            );
           })
         );
       });
@@ -217,10 +217,12 @@ describe("GitHubToken", () => {
           Effect.gen(function* () {
             yield* TestClock.setTime(NOW);
             const provisioned = yield* GitHubToken.provision(CREDENTIALS);
-            // A cosmetic request must not fail a release. The commit identity falls
-            // back to the well-known bot instead.
             assert.isUndefined(provisioned.appSlug);
-            assert.strictEqual(provisioned.botIdentity().name, "github-actions[bot]");
+            assert.strictEqual(
+              provisioned.botIdentity().name,
+              "github-actions[bot]",
+              "a cosmetic request must not fail a release, so the identity falls back to the well-known bot"
+            );
             assert.deepStrictEqual(harness.events, ["mask:ghs_installation", "save:githubToken"]);
           })
         );
@@ -239,10 +241,11 @@ describe("GitHubToken", () => {
               GitHubToken.provision({ ...CREDENTIALS, required: { contents: "write" } })
             );
             assert.strictEqual(error._tag, "TokenPermissionError");
-            // Defense in depth: a workflow that retries a failing `pre` would
-            // otherwise leave an hour of unreferenced write tokens behind, each one
-            // a live credential nobody is tracking.
-            assert.deepStrictEqual(harness.revoked, ["ghs_installation"]);
+            assert.deepStrictEqual(
+              harness.revoked,
+              ["ghs_installation"],
+              "a workflow retrying a failing pre would otherwise leave an hour of live, untracked write tokens behind"
+            );
             assert.strictEqual(MutableHashMap.size(harness.saved), 0);
           })
         );
@@ -274,10 +277,11 @@ describe("GitHubToken", () => {
             yield* TestClock.setTime(NOW);
             const error = yield* Effect.flip(GitHubToken.provision(CREDENTIALS));
             assert.instanceOf(error, ActionStateError);
-            // A token that was minted and then not handed on is a live credential
-            // with no owner. The release arm is what stops the retry loop from
-            // accumulating them.
-            assert.deepStrictEqual(revoked, ["ghs_installation"]);
+            assert.deepStrictEqual(
+              revoked,
+              ["ghs_installation"],
+              "a minted token not handed on is an ownerless live credential; the release arm stops retries piling up"
+            );
           })
         );
       });
@@ -295,10 +299,12 @@ describe("GitHubToken", () => {
         it.effect("checks the scopes GitHub granted, not the ones asked for", () =>
           Effect.gen(function* () {
             yield* TestClock.setTime(NOW);
-            // Satisfied, and a broader grant is not an error — only `assertExact`
-            // treats extra permissions as a misconfiguration.
             yield* GitHubToken.provision({ ...CREDENTIALS, required: { contents: "write" } });
-            assert.strictEqual(MutableHashMap.size(harness.saved), 1);
+            assert.strictEqual(
+              MutableHashMap.size(harness.saved),
+              1,
+              "a broader grant is not an error; only assertExact treats extra permissions as a misconfiguration"
+            );
           })
         );
       });
@@ -340,13 +346,14 @@ describe("GitHubToken", () => {
           Effect.gen(function* () {
             yield* TestClock.setTime(NOW);
             yield* harness.seed;
-            // An hour and a minute later. The package this replaces persisted the
-            // expiry and read it nowhere, so this case presented as an
-            // unexplained 401 in the middle of a long `main` phase.
             yield* TestClock.setTime(NOW + 61 * 60 * 1000);
             const error = yield* Effect.flip(GitHubToken.read());
             assert.instanceOf(error, GitHubTokenError);
-            assert.strictEqual(error.reason, "expired");
+            assert.strictEqual(
+              error.reason,
+              "expired",
+              "an hour and a minute on, an unread persisted expiry shows up as an unexplained 401 mid main phase"
+            );
             assert.include(error.message, "2026-07-25T13:00:00");
           })
         );
@@ -360,10 +367,12 @@ describe("GitHubToken", () => {
           Effect.gen(function* () {
             yield* TestClock.setTime(NOW);
             yield* harness.seed;
-            // Thirty seconds out: inside the default skew, because the check and the
-            // request it guards are not the same instant.
             yield* TestClock.setTime(Date.parse("2026-07-25T12:59:30.000Z"));
-            assert.strictEqual((yield* Effect.flip(GitHubToken.read())).reason, "expired");
+            assert.strictEqual(
+              (yield* Effect.flip(GitHubToken.read())).reason,
+              "expired",
+              "thirty seconds out is inside the default skew: the check and the request it guards are not one instant"
+            );
             const token = yield* GitHubToken.read({ skew: Duration.zero });
             assert.strictEqual(token.installationId, 42);
           })
@@ -394,14 +403,17 @@ describe("GitHubToken", () => {
           return yield* ActionState;
         })
       ).pipe(Layer.provide(harness.layer));
-      // The later phase builds from the persisted token, without linking an app JWT signer.
       const client = GitHubToken.clientLayer({ fetch }).pipe(Layer.provide(seeded));
       it.layer(client, { timeout: "30 seconds" })((it) => {
         it.effect("builds a client that authenticates with the persisted token", () =>
           Effect.gen(function* () {
             const github = yield* GitHubClient;
             yield* github.request("GET /users/{username}", { username: "acme" });
-            assert.deepStrictEqual(seen, ["token ghs_installation"]);
+            assert.deepStrictEqual(
+              seen,
+              ["token ghs_installation"],
+              "the later phase builds from the persisted token, without linking an app JWT signer"
+            );
           })
         );
       });
@@ -414,9 +426,8 @@ describe("GitHubToken", () => {
       it.layer(harness.layer, { timeout: "30 seconds" })((it) => {
         it.effect("is a no-op when no earlier phase provisioned anything", () =>
           Effect.gen(function* () {
-            // `post` still runs when `pre` failed before minting anything.
             yield* GitHubToken.dispose();
-            assert.deepStrictEqual(harness.revoked, []);
+            assert.deepStrictEqual(harness.revoked, [], "post still runs when pre failed before minting anything");
           })
         );
       });
@@ -455,9 +466,11 @@ describe("GitHubToken", () => {
             yield* GitHubToken.provision(CREDENTIALS);
             yield* TestClock.setTime(NOW + 2 * 60 * 60 * 1000);
             yield* GitHubToken.dispose();
-            // The request would fail, and the only thing it could accomplish is
-            // turning a successful run into a failed one on the way out.
-            assert.deepStrictEqual(harness.revoked, []);
+            assert.deepStrictEqual(
+              harness.revoked,
+              [],
+              "the revoke would fail, and could only turn a successful run into a failed one on the way out"
+            );
           })
         );
       });
@@ -499,13 +512,12 @@ describe("GitHubToken", () => {
       it.layer(missing, { timeout: "30 seconds" })((it) => {
         it.effect("a double missing setSecret dies, naming the member", () =>
           Effect.gen(function* () {
-            // The control for the table above: without it, "exactly these members"
-            // could be true of a double that needed fewer.
             yield* TestClock.setTime(NOW);
             const exit = yield* Effect.exit(GitHubToken.provision(CREDENTIALS));
             Exit.match(exit, {
               onFailure: (cause) => assertExitFailure(exit, cause),
-              onSuccess: () => fail("Expected a failure from the missing setSecret member"),
+              onSuccess: () =>
+                fail("Expected a failure from the missing setSecret member, or the table could need fewer"),
             });
           })
         );

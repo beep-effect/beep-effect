@@ -35,10 +35,6 @@ import { $getRoot, $setState, createState } from "lexical";
 const text = (value: string) => MdModel.Text.make({ value });
 const syntheticYouTubeVideoId = "AbCdEfGhI12";
 
-/**
- * The fixture flows through the real pipeline: Md AST → schema codec →
- * encoded wire state → headless Lexical import/export → schema decode.
- */
 const fixtureTurn = MdModel.Document.make({
   children: [
     MdModel.Heading.make({ level: 2, children: [MdModel.Strong.make({ children: [text("Plan")] })] }),
@@ -99,7 +95,7 @@ describe("@beep/editor node registration", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.effect("imports a codec-built editor state and re-exports schema-conformant wire state", () =>
+  it.effect("round-trips an Md fixture through schema encoding, headless Lexical, and schema decoding", () =>
     Effect.gen(function* () {
       const state = yield* documentToEditorState(fixtureTurn);
       const wire = yield* encodeSerializedEditorStateJson(state);
@@ -115,7 +111,6 @@ describe("@beep/editor node registration", () => {
       editor.setEditorState(editor.parseEditorState(wire));
       const exported = editor.getEditorState().toJSON();
 
-      // Whatever the runtime nodes export must decode through the schema.
       const decoded = yield* decodeUnknownSerializedEditorState(exported);
       const artifact = decoded.root.children.at(-1);
       expect(artifact?.type).toBe("artifact-ref");

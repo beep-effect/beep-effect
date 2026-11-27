@@ -21,9 +21,8 @@ import type { ConfigEncodeError, ConfigWriteError } from "@beep/config-file/Conf
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
-const platform = (): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
+const platformWithTargetDirs = (): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
   Layer.mergeAll(
-    // `write` never mkdirs, so the target directories must pre-exist.
     MemoryFileSystem.layerWith({
       "/out": MemoryFileSystem.directory(),
       "/x": MemoryFileSystem.directory(),
@@ -41,14 +40,12 @@ const layerFor = (codec: ConfigCodecShape) =>
     codec,
     resolvers: [],
     strategy: MergeStrategy.firstMatch<Doc>(),
-    // `provideMerge`, not `provide`: the test body reads the same volume the service writes.
-  }).pipe(Layer.provideMerge(platform()));
+  }).pipe(Layer.provideMerge(platformWithTargetDirs()));
 
 const HEADER = "#:schema https://example/schema.json";
 const value = Doc.make({ name: "svc", port: 8080 });
 
-/** Encode in memory and write to disk under the same options; return both texts. */
-const both = Effect.fn("both")(function* (target: string, options?: { readonly header?: string }) {
+const encodeAndWrite = Effect.fn("encodeAndWrite")(function* (target: string, options?: { readonly header?: string }) {
   const cfg = yield* DocConfig;
   const fs = yield* FileSystem.FileSystem;
   const encoded = yield* cfg.encode(value, options);
@@ -78,16 +75,15 @@ describe("ConfigFile.encode", () => {
       resolvers: [],
       strategy: MergeStrategy.firstMatch<Doc>(),
       events: ConfigEvents,
-    }).pipe(Layer.provide(platform()))
+    }).pipe(Layer.provide(platformWithTargetDirs()))
   );
 
   it.layer(layerFor(TomlCodec), { timeout: "30 seconds" })((it) => {
     it.effect("produces byte-for-byte what write puts on disk (TOML)", () =>
       Effect.gen(function* () {
-        const { encoded, written } = yield* both("/out/config.toml");
-        assert.strictEqual(encoded, written);
-        // A positive control on the content itself, so an empty-string pair cannot pass.
-        assert.include(encoded, "port = 8080");
+        const { encoded, written } = yield* encodeAndWrite("/out/config.toml");
+        assert.strictEqual(encoded, written, "write never mkdirs, so platformWithTargetDirs pre-creates /out");
+        assert.include(encoded, "port = 8080", "a content control, so an empty-string pair cannot pass");
       })
     );
   });
@@ -95,8 +91,8 @@ describe("ConfigFile.encode", () => {
   it.layer(layerFor(JsonCodec), { timeout: "30 seconds" })((it) => {
     it.effect("produces byte-for-byte what write puts on disk (JSON)", () =>
       Effect.gen(function* () {
-        const { encoded, written } = yield* both("/out/config.json");
-        assert.strictEqual(encoded, written);
+        const { encoded, written } = yield* encodeAndWrite("/out/config.json");
+        assert.strictEqual(encoded, written, "provideMerge lets the test body read the volume the service writes");
         assertSuccess(S.decodeResult(JsonValue)(encoded), {
           name: "svc",
           port: 8080,
@@ -110,13 +106,15 @@ describe("ConfigFile.encode", () => {
       Effect.gen(function* () {
         const cfg = yield* DocConfig;
         const bare = yield* cfg.encode(value);
-        const { encoded, written } = yield* both("/out/config.toml", {
+        const { encoded, written } = yield* encodeAndWrite("/out/config.toml", {
           header: HEADER,
         });
         assert.strictEqual(encoded, `${HEADER}\n${bare}`);
         assert.strictEqual(written, encoded);
-        // Exactly one newline separates the header from the document.
-        assert.isTrue(Str.startsWith(`${HEADER}\n`)(encoded));
+        assert.isTrue(
+          Str.startsWith(`${HEADER}\n`)(encoded),
+          "exactly one newline separates the header from the document"
+        );
         assert.isFalse(Str.startsWith(`${HEADER}\n\n`)(encoded));
       })
     );
@@ -141,13 +139,16 @@ describe("ConfigFile.encode", () => {
     it.effect("fails with ConfigValidationError whose path is none for an invalid value", () =>
       Effect.gen(function* () {
         const cfg = yield* DocConfig;
-        // Bypass the constructor's own validation: the schema encode is what must reject this.
         const bogus = deliberatelyInvalid<Doc>({
           name: "svc",
           port: "not-a-number",
         });
         const error = yield* Effect.flip(cfg.encode(bogus));
-        assert.instanceOf(error, ConfigValidationError);
+        assert.instanceOf(
+          error,
+          ConfigValidationError,
+          "deliberatelyInvalid skips the constructor, so the schema encode must reject it"
+        );
         assert.isTrue(S.is(ConfigValidationError)(error));
         assertNone(error.path);
       })
@@ -186,8 +187,6 @@ describe("ConfigFile.encode", () => {
           yield* Effect.flip(cfg.encode(value));
           const afterEncode = yield* PubSub.takeUpTo(sub, Number.MAX_SAFE_INTEGER);
 
-          // Positive control: the same failure through `write` still publishes, so
-          // an empty `afterEncode` cannot be a subscription that never worked.
           yield* Effect.flip(cfg.write(value, "/x/config.json"));
           const afterWrite = yield* PubSub.takeUpTo(sub, Number.MAX_SAFE_INTEGER);
           return { afterEncode, afterWrite };
@@ -200,7 +199,8 @@ describe("ConfigFile.encode", () => {
         );
         assert.deepStrictEqual(
           A.map(afterWrite, (e) => e.event._tag),
-          ["StringifyFailed"]
+          ["StringifyFailed"],
+          "write still publishes, so an empty afterEncode is not a dead subscription"
         );
       })
     );
@@ -210,7 +210,6 @@ describe("ConfigFile.encode", () => {
     it.effect("write keeps its two-argument form and encode's error type excludes the write error", () =>
       Effect.gen(function* () {
         const cfg = yield* DocConfig;
-        // Compile-time pins: the shapes the design promises.
         const _write: (value: Doc, path: string) => Effect.Effect<void, ConfigWriteError> = cfg.write;
         const _encode: (value: Doc) => Effect.Effect<string, ConfigEncodeError> = cfg.encode;
         yield* _write(value, "/legacy/config.json");

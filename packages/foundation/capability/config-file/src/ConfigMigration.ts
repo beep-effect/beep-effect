@@ -137,6 +137,13 @@ export interface ConfigFileMigration<E = unknown> {
    * Transforms the parsed config. Signal recoverable failure with `Effect.fail`;
    * a synchronous `throw` is treated as a defect, not a `ConfigMigrationError`.
    *
+   * **Gotchas**
+   *
+   * A `throw` here, or from a {@link (VersionAccess:interface)} accessor, is a
+   * programmer bug rather than a data condition. It stays a defect whether it is
+   * raised while building the effect or while running it, so a consumer's
+   * `catchTag("ConfigMigrationError")` cannot silently swallow it.
+   *
    * @since 0.0.0
    */
   readonly up: (raw: unknown) => Effect.Effect<unknown, E>;
@@ -261,19 +268,6 @@ export interface ConfigMigrationOptions<EM = unknown, EV = unknown> {
   readonly versionAccess?: VersionAccess<EV>;
 }
 
-/**
- * Runs one migration phase, mapping its declared failure into a
- * {@link ConfigMigrationError}.
- *
- * **Gotchas**
- *
- * `up` and {@link (VersionAccess:interface)} are caller-supplied code with a declared error
- * channel: they signal failure with `Effect.fail`. A `throw` from one of them is
- * a contract violation — a programmer bug, not a data condition — and stays a
- * defect so a consumer's `catchTag("ConfigMigrationError")` cannot silently
- * swallow it. `Effect.suspend` ensures a throw raised while constructing the
- * effect dies exactly like a throw raised while running it.
- */
 const runPhase: {
   <A, E>(
     phase: "read-version" | "apply" | "write-version",
@@ -299,7 +293,6 @@ const runPhase: {
     )
 );
 
-// Implementation of ConfigMigration.make; the public contract lives on the static.
 const make: (options: ConfigMigrationOptions) => ConfigCodec<ConfigCodecError | ConfigMigrationError> = <EM, EV>(
   options: ConfigMigrationOptions<EM, EV>
 ): ConfigCodec<ConfigCodecError | ConfigMigrationError> => {

@@ -855,7 +855,6 @@ export class M1ReplicaRow extends S.Opaque<M1ReplicaRow, { readonly brand: uniqu
   )
 ) {}
 
-// CQ-012 queue-wait share over W-b, printed only when every episode in the slice decomposes.
 class Cq012Shares extends S.Opaque<Cq012Shares, { readonly brand: unique symbol }>()(
   S.Struct({
     status: S.tag("shares"),
@@ -870,11 +869,10 @@ class Cq012Shares extends S.Opaque<Cq012Shares, { readonly brand: unique symbol 
   )
 ) {}
 
-// CQ-012 shares voided because some episode in the slice does not decompose; only the pair is kept.
 class Cq012Void extends S.Opaque<Cq012Void, { readonly brand: unique symbol }>()(
   S.Struct({ status: S.tag("void"), decomposedEpisodes: S.Natural, windowEpisodes: S.Natural }).pipe(
     $I.annoteSchema("Cq012Void", {
-      description: "Void CQ-012 shares, reported only as the decomposed and window episode counts.",
+      description: "Void CQ-012 shares when any episode fails to decompose; only decomposed and window counts remain.",
     })
   )
 ) {}

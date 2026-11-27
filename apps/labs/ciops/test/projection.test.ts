@@ -138,9 +138,8 @@ const inputFor = (
     journalPrefixDigest: "journal-prefix-digest",
   });
 
-// Hoisted: the compiled decoders are built once per module, not per test call.
-const decodeProjectionInput = S.decodeEffect(ProjectionInput);
-const decodeUnknownProjectionInput = S.decodeUnknownEffect(ProjectionInput);
+const moduleProjectionDecoder = S.decodeEffect(ProjectionInput);
+const moduleUnknownProjectionDecoder = S.decodeUnknownEffect(ProjectionInput);
 
 it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", (it) => {
   it.effect("strictly decodes every ratified S6 policy parameter from Turtle bytes", () =>
@@ -347,10 +346,13 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
       const journalSource = yield* fs
         .readFileString(journalPath)
         .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the frozen journal." })));
-      // The optional keys a scheduler writes once its protocol's `units` gate is on.
-      const unitKeys =
+
+      const unitsGateKeys =
         '"unit":{"_tag":"tier"},"weightSource":{"_tag":"static-seed"},"owner":{"proofNonce":"n","pid":1,"procStart":"1","originKey":"o","checkoutRoot":"/repo","branch":"main","command":"bun run beep yeet verify"}';
-      const gatedSource = A.join(A.map(Str.split("\n")(journalSource), Str.replace(/\}$/u, `,${unitKeys}}`)), "\n");
+      const gatedSource = A.join(
+        A.map(Str.split("\n")(journalSource), Str.replace(/\}$/u, `,${unitsGateKeys}}`)),
+        "\n"
+      );
       expect(gatedSource).not.toBe(journalSource);
       const plainEvents = yield* decodeAdmissionJournal(journalSource);
       const gatedEvents = yield* decodeAdmissionJournal(gatedSource);
@@ -371,13 +373,13 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
       const journalSource = yield* fs
         .readFileString(journalPath)
         .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the frozen journal." })));
-      // The optional key a scheduler adds to admitted and released rows once its protocol's `pressure` gate is on.
-      const stamp =
+
+      const pressureGateStamp =
         '"pressure":{"capacityTokens":8,"activeTokens":3,"queuedTokens":2,"queuedTickets":1,"memAvailableGib":41.738,"psiCpuSome10":2.13,"psiMemorySome10":0.5,"psiIoSome10":0.31,"unadmittedSliceGib":1.25}';
       const stamped = A.join(
         A.map(Str.split("\n")(journalSource), (line) =>
           O.isSome(Str.match(/"_tag":"admission-(admitted|released)"/u)(line))
-            ? Str.replace(/\}$/u, `,${stamp}}`)(line)
+            ? Str.replace(/\}$/u, `,${pressureGateStamp}}`)(line)
             : line
         ),
         "\n"
@@ -634,7 +636,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
     Effect.gen(function* () {
       const policy = yield* TestPolicy;
       const input = inputFor(policy, []);
-      const empty = yield* decodeProjectionInput({ ...input, episodeId: "" }).pipe(Effect.exit);
+      const empty = yield* moduleProjectionDecoder({ ...input, episodeId: "" }).pipe(Effect.exit);
       assertExitFailure(
         Exit.match(empty, {
           onSuccess: Exit.succeed,
@@ -650,7 +652,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
         Cause.fail("SchemaError")
       );
       const { episodeId: _episodeId, ...missingEpisode } = input;
-      const missing = yield* decodeUnknownProjectionInput(missingEpisode).pipe(Effect.exit);
+      const missing = yield* moduleUnknownProjectionDecoder(missingEpisode).pipe(Effect.exit);
       assertExitFailure(
         Exit.match(missing, {
           onSuccess: Exit.succeed,

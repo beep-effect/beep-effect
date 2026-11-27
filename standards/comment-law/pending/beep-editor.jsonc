@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/editor",
-  "root": "packages/foundation/ui-system/editor",
-  "scopes": ["."]
-}

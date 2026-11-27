@@ -3,10 +3,6 @@ import { TestTerminal } from "@beep/cli-kit/testing";
 import { MemoryFileSystem } from "@beep/memfs";
 import { Audience, TerminalEnv } from "@beep/runtime-env";
 import { AudienceShape } from "@beep/runtime-env/Audience";
-// The audience flag must be known BEFORE core parses, because a fallback prompt fires during the parse: core parses
-// the root flags into a local context (Command.ts:922-925) and only wraps the subcommand HANDLER with what
-// `provideEffect` resolves (Command.ts:941), so the prompt in `sub.parse` (Param.ts:1478-1485) cannot see them.
-// `CliAudience.run` / `runWith` scan argv first and provide the answer around the whole run.
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -112,10 +108,10 @@ const init = Command.make("init", { profile }, ({ profile }) =>
     yield* Console.log(`profile=${profile} audience=${audience.kind}/${audience.source}`);
   })
 );
-// The one wiring: share the flags, and hand the root to CliAudience.run / runWith, which apply `provide` themselves.
 const root = Command.make("tool").pipe(Command.withSharedFlags(CliAudience.flags()), Command.withSubcommands([init]));
 
-/** A human on a terminal (interactive), with keys waiting that "down, enter" would answer the prompt with. */
+const keysThatPickLibrary = [{ name: "down" }, { name: "enter" }] as const;
+
 const run = Effect.fn("run")(function* (
   argv: ReadonlyArray<string>,
   via: "runWith" | "core" = "runWith",
@@ -123,7 +119,7 @@ const run = Effect.fn("run")(function* (
 ) {
   const fixtures = yield* Fixtures;
   const terminal = yield* TestTerminal.make();
-  yield* terminal.input([{ name: "down" }, { name: "enter" }]);
+  yield* terminal.input(keysThatPickLibrary);
   const { double, out, err } = capturing();
   const program =
     via === "runWith"
@@ -146,7 +142,7 @@ const run = Effect.fn("run")(function* (
 const QUIET = { keys: 0, lines: 0, subscriptions: 0 };
 
 it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 seconds" })((it) => {
-  describe("CliAudience.runWith resolves the audience flag before parsing", () => {
+  describe("CliAudience.runWith resolves the audience flag before core parses, where a fallback prompt fires", () => {
     it.effect("no flag: the human on a terminal is prompted", () =>
       Effect.gen(function* () {
         const { out, reads } = yield* run(["init"]);
@@ -209,18 +205,15 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
     it.effect("control: core's own runWith lets the prompt fire under --agent (the parse-order gap)", () =>
       Effect.gen(function* () {
         const { out, reads } = yield* run(["--agent", "init"], "core");
-        // The fallback ran before the flag was visible, so the terminal was read.
         assert.deepStrictEqual(out, ["profile=library audience=agent/flag"]);
-        assert.deepStrictEqual(reads.keys, 2);
+        assert.deepStrictEqual(reads.keys, 2, "the fallback ran before the flag was visible, so the terminal was read");
       })
     );
 
-    // `gateWizard` decides from the audience DETECTED at build time, before the flag is read, so on a human terminal
-    // `--agent --wizard` used to run core's wizard (ANSI on stdout, exit 0) for a run that did nothing.
     it.effect("--agent --wizard on a human terminal is an unrecognised flag (64), never the wizard", () =>
       Effect.gen(function* () {
         const { out, err, code } = yield* run(["--agent", "--wizard", "init"], "runWith", true);
-        assert.strictEqual(code, 64);
+        assert.strictEqual(code, 64, "gateWizard decided from the audience detected at build time, before the flag");
         assert.isTrue(
           A.some(err, (line) => Str.includes("wizard")(line)),
           A.join(err, "\n")
@@ -232,33 +225,28 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
       })
     );
 
-    // Without `provide` the conflict check used to be skipped silently: `--agent --ci` ran the handler, exit 0.
     it.effect("runWith applies provide itself: --agent --ci exits 64 with no explicit provide on the root", () =>
       Effect.gen(function* () {
         const { code, out } = yield* run(["--agent", "--ci", "init"]);
-        assert.strictEqual(code, 64);
+        assert.strictEqual(code, 64, "without provide the conflict check is skipped and the handler exits 0");
         assert.isFalse(A.some(out, (line) => Str.startsWith("profile=")(line)));
       })
     );
 
     it("a root without the shared audience flags is a compile error", () => {
       const bare = Command.make("tool").pipe(Command.withSubcommands([Command.make("x", {}, () => Effect.void)]));
-      // The root must carry the four shared flags; assigning true here must fail to compile.
-      // The data-first overload's parameters: `runWith` is dual, so plain `Parameters` would read the data-last one.
       type DataFirstParameters<F> = F extends { (...args: infer A): unknown; (...args: infer _B): unknown } ? A : never;
       const acceptsBare: typeof bare extends DataFirstParameters<typeof CliAudience.runWith>[0] ? true : false = false;
-      assert.isFalse(acceptsBare);
+      assert.isFalse(
+        acceptsBare,
+        "the root must carry the four shared flags (runWith is dual: read its data-first overload)"
+      );
     });
   });
 
-  // A flag that names the audience decides interactivity from the TTY facts, so `--human` can widen it: a human who runs a
-  // tool inside an agent (detected `agent`) on a real terminal gets the human experience back, and a pipe still cannot
-  // prompt. Only the audience input changes; the TTY requirement does not.
   describe("CliAudience: a flag decides CliInteractive from the TTY facts", () => {
     interface Facts {
-      /** What `CliInteractive` was built as from the detected audience and the TTYs. */
       readonly ambient: boolean;
-      /** The audience the environment detected, before any flag. */
       readonly detected: "human" | "agent" | "ci";
       readonly stdin: boolean;
       readonly stdout: boolean;
@@ -276,17 +264,11 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
     );
 
     interface RunUnderOptions {
-      /** A consumer's own `builtIns`, provided under the gate. */
-      readonly builtIns?: ReadonlyArray<GlobalFlag.BuiltIn>;
-      /** End the terminal's input, so core's wizard quits instead of waiting. */
+      readonly builtInsInsideGate?: ReadonlyArray<GlobalFlag.BuiltIn>;
+      readonly builtInsUnderGate?: ReadonlyArray<GlobalFlag.BuiltIn>;
       readonly endInput?: boolean;
-      /** The environment, fixed, never the host's: `TERM` decides interactivity on two terminals. */
       readonly env?: Record<string, string>;
-      /** Provide `CliPrompt.gateWizard`. */
       readonly gateWizard?: boolean;
-      /** A consumer's `builtIns`, provided inside the gate, around the program. */
-      readonly innerBuiltIns?: ReadonlyArray<GlobalFlag.BuiltIn>;
-      /** Through `CliAudience.runWith` (the default) or core's `Command.runWith` over `CliAudience.provide`. */
       readonly via?: "runWith" | "core";
     }
 
@@ -295,32 +277,40 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
       return facts.stdout ? fixtures.ft : fixtures.ff;
     };
 
-    const wizardFixture = (facts: Facts, fixtures: typeof Fixtures.Service, builtIns: RunUnderOptions["builtIns"]) =>
-      builtIns === undefined ? (facts.ambient ? fixtures.gateHuman : fixtures.gateQuiet) : fixtures.gateConsumer;
+    const wizardFixture = (
+      facts: Facts,
+      fixtures: typeof Fixtures.Service,
+      builtIns: RunUnderOptions["builtInsUnderGate"]
+    ) => (builtIns === undefined ? (facts.ambient ? fixtures.gateHuman : fixtures.gateQuiet) : fixtures.gateConsumer);
 
     const runUnder = Effect.fn("runUnder")(function* (
       facts: Facts,
       argv: ReadonlyArray<string>,
       options: RunUnderOptions = {}
     ) {
-      const { via = "runWith", gateWizard = false, endInput = false, builtIns, innerBuiltIns, env = {} } = options;
+      const {
+        via = "runWith",
+        gateWizard = false,
+        endInput = false,
+        builtInsUnderGate: builtIns,
+        builtInsInsideGate,
+        env = {},
+      } = options;
       const fixtures = yield* Fixtures;
       const terminal = yield* TestTerminal.make();
-      yield* terminal.input([{ name: "down" }, { name: "enter" }]);
-      // Core's wizard keeps reading until the input ends; ending it quits the wizard instead of hanging.
+      yield* terminal.input(keysThatPickLibrary);
       if (endInput === true) yield* terminal.end;
       const { double, out, err } = capturing();
       const program =
         via === "runWith"
           ? CliAudience.runWith(both, { version: "1.0.0" })(argv)
           : Command.runWith(CliAudience.provide(both), { version: "1.0.0" })(argv);
-      // A consumer's config provided INSIDE the gate, around the program: the gate never saw it.
-      const inner =
-        innerBuiltIns === undefined
+      const insideGate =
+        builtInsInsideGate === undefined
           ? program
-          : Effect.provideService(program, CliConfig.CliConfig, CliConfig.make({ builtIns: innerBuiltIns }));
+          : Effect.provideService(program, CliConfig.CliConfig, CliConfig.make({ builtIns: builtInsInsideGate }));
       const FileSystem2 = yield* FileSystem.FileSystem;
-      const exit = yield* CliRuntime.main(inner, {
+      const exit = yield* CliRuntime.main(insideGate, {
         platform: Layer.mergeAll(
           memoryPlatform(FileSystem2),
           CliPrompt.gateTerminal.pipe(Layer.provide(terminal.layer))
@@ -329,7 +319,6 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
         Effect.exit,
         Effect.provideService(Console.Console, double),
         gateWizard === true ? Effect.provideContext(wizardFixture(facts, fixtures, builtIns)) : (self) => self,
-        // The consumer's own config, provided under the gate: it filters whatever `builtIns` it finds.
         builtIns === undefined
           ? (self) => self
           : Effect.provideService(CliConfig.CliConfig, CliConfig.make({ builtIns })),
@@ -342,7 +331,6 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
       return { out, err, code, reads: yield* terminal.reads };
     });
 
-    // Detected as an agent on real TTYs (a human running `! tool` inside Claude Code): ambient interactivity is off.
     const agentOnTtys: Facts = { detected: "agent", stdin: true, stdout: true, ambient: false };
 
     it.effect("--human on real TTYs widens a detected agent: the prompt runs", () =>
@@ -431,17 +419,16 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
           gateWizard: true,
           endInput: true,
         });
-        assert.isAtLeast(reads.subscriptions, 1, "the wizard read the terminal");
+        assert.isAtLeast(reads.subscriptions, 1, "the wizard read the terminal, and quit once its input ended");
         assert.isFalse(
           A.some(err, (line) => /unrecogni[sz]ed.*wizard|wizard.*unrecogni[sz]ed|unknown.*wizard/i.test(line)),
           A.join(err, "\n")
         );
         assert.notStrictEqual(code, 64, A.join(err, "\n"));
-        // Without a terminal the gate's drop stands: the wizard is an unknown flag.
         const piped = yield* runUnder({ ...agentOnTtys, stdin: false }, ["--human", "--wizard", "init"], {
           gateWizard: true,
         });
-        assert.strictEqual(piped.code, 64);
+        assert.strictEqual(piped.code, 64, "without a terminal the gate's drop stands: the wizard is an unknown flag");
       })
     );
 
@@ -451,21 +438,30 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
         Effect.gen(function* () {
           const noWizard = A.filter(GlobalFlag.BuiltIns, (flag) => flag !== GlobalFlag.Wizard);
           assert.isFalse(noWizard.includes(GlobalFlag.Wizard));
-          // Under a detected agent the gate has nothing to drop, and --human on real TTYs must not invent a wizard.
           const { err, code, reads } = yield* runUnder(agentOnTtys, ["--human", "--wizard", "init"], {
             gateWizard: true,
             endInput: true,
-            builtIns: noWizard,
+            builtInsUnderGate: noWizard,
           });
           assert.strictEqual(code, 64, A.join(err, "\n"));
           assert.isTrue(
             A.some(err, (line) => /unrecogni[sz]ed.*wizard/i.test(line)),
             A.join(err, "\n")
           );
-          assert.strictEqual(reads.subscriptions, 0, "the wizard never ran");
-          // The same consumer's --human still widens the prompt itself.
-          const prompted = yield* runUnder(agentOnTtys, ["--human", "init"], { gateWizard: true, builtIns: noWizard });
-          assert.deepStrictEqual(prompted.out, ["profile=library audience=human/flag"]);
+          assert.strictEqual(
+            reads.subscriptions,
+            0,
+            "the gate had nothing to drop, so --human must not invent a wizard"
+          );
+          const prompted = yield* runUnder(agentOnTtys, ["--human", "init"], {
+            gateWizard: true,
+            builtInsUnderGate: noWizard,
+          });
+          assert.deepStrictEqual(
+            prompted.out,
+            ["profile=library audience=human/flag"],
+            "the same consumer's --human still widens the prompt itself"
+          );
         })
     );
 
@@ -474,49 +470,50 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, fixturesLayer), { timeout: "30 s
       () =>
         Effect.gen(function* () {
           const noWizard = A.filter(GlobalFlag.BuiltIns, (flag) => flag !== GlobalFlag.Wizard);
-          // The gate (outside) saw the full list and dropped Wizard, so its mark is set; the consumer's config is a
-          // different object, so the mark must not license putting Wizard back into it.
           const inner = yield* runUnder(agentOnTtys, ["--human", "--wizard", "init"], {
             gateWizard: true,
             endInput: true,
-            innerBuiltIns: noWizard,
+            builtInsInsideGate: noWizard,
           });
           assert.strictEqual(inner.code, 64, A.join(inner.err, "\n"));
           assert.isTrue(
             A.some(inner.err, (line) => /unrecogni[sz]ed.*wizard/i.test(line)),
             A.join(inner.err, "\n")
           );
-          assert.strictEqual(inner.reads.subscriptions, 0, "the wizard never ran");
-          // Control: with no consumer config inside, the gate's own object is current, so the restore still happens.
+          assert.strictEqual(
+            inner.reads.subscriptions,
+            0,
+            "the gate's drop mark is on its own config, not the consumer's"
+          );
           const control = yield* runUnder(agentOnTtys, ["--human", "--wizard", "init"], {
             gateWizard: true,
             endInput: true,
           });
-          assert.isTrue(control.reads.subscriptions >= 1, "the wizard ran");
+          assert.isTrue(
+            control.reads.subscriptions >= 1,
+            "with no consumer config inside, the gate's own config is restored"
+          );
         })
     );
 
     it.effect("the gate's drop is restored, and a second flag-driven narrowing then drops it again", () =>
       Effect.gen(function* () {
-        // Gate dropped it (ambient non-interactive, full builtIns): --human on TTYs brings it back.
         const back = yield* runUnder(agentOnTtys, ["--human", "--wizard", "init"], {
           gateWizard: true,
           endInput: true,
         });
-        assert.isTrue(back.reads.subscriptions >= 1, "the wizard ran");
-        // A non-human flag drops it whatever the ambient config had.
+        assert.isTrue(back.reads.subscriptions >= 1, "--human on TTYs brings back the wizard the gate dropped");
         const humanOnTtys: Facts = { detected: "human", stdin: true, stdout: true, ambient: true };
         const dropped = yield* runUnder(humanOnTtys, ["--agent", "--wizard", "init"], { gateWizard: true });
-        assert.strictEqual(dropped.code, 64);
+        assert.strictEqual(dropped.code, 64, "a non-human flag drops the wizard whatever the ambient config had");
       })
     );
 
     it.effect("with no TerminalEnv in the environment a flag only narrows, as before", () =>
       Effect.gen(function* () {
-        // The harness of the first block provides no TerminalEnv: `--human` leaves the ambient value alone.
         const { out, reads } = yield* run(["--human", "init"]);
         assert.deepStrictEqual(out, ["profile=library audience=human/flag"]);
-        assert.strictEqual(reads.keys, 2);
+        assert.strictEqual(reads.keys, 2, "the first block's harness provides no TerminalEnv: the ambient value stays");
       })
     );
   });

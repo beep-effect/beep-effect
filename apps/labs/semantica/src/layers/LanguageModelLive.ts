@@ -173,9 +173,7 @@ const cachedGenerateText = Effect.fn("LanguageModelCache.cachedGenerateText")(fu
   const onCacheMiss = Effect.fn("LanguageModelCache.cachedGenerateText.onCacheMiss")(function* (key: ProviderCacheKey) {
     const cache = yield* ProviderCache;
     const response = yield* inner.generateText({ prompt });
-    // An empty generation (for example an API-level refusal) can never become a
-    // cache entry: the entry schema requires non-empty text, and replay must
-    // not reproduce an unusable response as success.
+
     if (Str.isEmpty(response.text)) {
       return yield* AiError.AiError.make({
         method: "generateText",
@@ -369,13 +367,6 @@ export const ActiveModelIdentityLive = (identity: ModelIdentity) =>
     Layer.succeed(Model.ModelName, identity.name)
   );
 
-/**
- * Requires a dated or explicitly versioned model id and retains it verbatim as
- * the revision.
- *
- * @category models
- * @since 0.0.0
- */
 const modelRevision = Effect.fn("LanguageModel.modelRevision")(function* (
   model: string,
   setting: ModelRevisionUnpinned["setting"]
@@ -390,12 +381,6 @@ const modelRevision = Effect.fn("LanguageModel.modelRevision")(function* (
   return model;
 });
 
-/**
- * Builds the cache identity for a pinned provider prompt artifact.
- *
- * @category models
- * @since 0.0.0
- */
 const makeModelIdentity = (
   provider: "anthropic",
   model: string,

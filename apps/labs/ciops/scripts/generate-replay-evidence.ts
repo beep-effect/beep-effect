@@ -19,9 +19,7 @@ const paths = EvidencePaths.make({
   evidence: "../../../explorations/beep-ci-operational-ontology/research/s7-replay-evidence.md",
 });
 
-// The committed evidence is a frozen dated record, so writing is opt-in:
-// only `--write` regenerates it, and only after the replay matched. The
-// default (check) mode prints the recomputed report instead of writing it.
+// decision: opt-in-evidence-writes
 const generate = Effect.gen(function* () {
   const mode: EvidenceMode = yield* decodeEvidenceMode(process.argv, EvidenceWriteScript.Enum["evidence:s7:write"]);
   const run: EvidenceRun = yield* generateReplayEvidence(mode, paths);
@@ -30,8 +28,6 @@ const generate = Effect.gen(function* () {
   }
 }).pipe(Effect.withSpan("S7Evidence.generate"));
 
-// strictEffectProvide bans Layer-provide outside composed entry layers, so the
-// scoped context build below provides the file system as a Context instead.
 BunRuntime.runMain(
   BunFileSystem.layer.pipe(
     Layer.merge(BunCrypto.layer),

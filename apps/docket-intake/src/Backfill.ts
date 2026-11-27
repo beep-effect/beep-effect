@@ -41,7 +41,6 @@ import type { DocketIntakeAppConfig } from "./Config.ts";
 
 const $I = $DocketIntakeId.create("Backfill");
 
-// Only what names the email; the body is never downloaded.
 const MESSAGE_FIELDS = "subject,from,receivedDateTime,webLink";
 const NOT_FOUND = 404;
 
@@ -98,7 +97,6 @@ const decodeItemId = S.decodeUnknownOption(DocketQuestionItemId);
 
 type Unnamed = { readonly digest: string; readonly question: QuestionReviewItem };
 
-// A docket intake question that does not name its email yet, with the message digest its id carries.
 const unnamedOf = (item: ReviewItem): O.Option<Unnamed> =>
   pipe(
     O.liftPredicate(item, ReviewItem.guards.question),
@@ -108,11 +106,9 @@ const unnamedOf = (item: ReviewItem): O.Option<Unnamed> =>
 
 const isMarked = (line: DocketJournalEntry): boolean => DocketJournalKind.is["message-marked"](line.kind);
 
-// Every message the service marked, so every message it wrote a needs-review entry for.
 const markedMessageIds = (journal: ReadonlyArray<DocketJournalEntry>): ReadonlyArray<string> =>
   A.dedupe(A.getSomes(A.map(A.filter(journal, isMarked), (line) => line.messageId)));
 
-// The needs-review messages still in the ledger: the service raises their questions every cycle.
 const publishedMessageIds = (state: DocketIntakeState): ReadonlyArray<string> =>
   A.getSomes(
     A.map(R.values(state.ledger), ({ outcome }) =>

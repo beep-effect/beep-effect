@@ -53,30 +53,20 @@ const $I = $AcpId.create("protocol");
 const isAcpSchemaError = S.is(AcpSchema.Error);
 const isAcpError = S.is(AcpError.AcpError);
 const isProcessExited = S.is(AcpError.AcpProcessExitedError);
-// Typed Effect RPC ids are allocated as non-negative safe integers (effect's default counter starts
-// at 0, this package's at `RPC_REQUEST_ID_START`); anything else is not an RpcClient response.
-// effect's own encoder writes a server-level `Defect` with the id -32603.
 const isEffectRpcRequestId = S.is(S.Int.check(S.isGreaterThanOrEqualTo(0)));
 
-// CSF-017: every peer-fed queue is bounded. Notifications slide (dropping the oldest unread one)
-// instead of suspending, so a consumer that never drains `incoming` cannot stall the reader. No
-// production consumer reads `incoming`, so it keeps only a short tail (upstream parity: 32).
+// decision: peer-fed-queues-are-bounded
 const ACP_PROTOCOL_QUEUE_CAPACITY = 1_024;
 const ACP_PROTOCOL_NOTIFICATION_CAPACITY = 32;
 const ACP_PROTOCOL_DISCONNECT_QUEUE_CAPACITY = 16;
-// Inbound extension requests run on their own fibers so a handler can await an outbound request
-// whose response the reader still has to deliver. Past the bound, a new extension request is
-// answered with an error instead of parking the reader: a parked reader could never deliver the
-// responses that would free a permit.
+// decision: reader-never-waits-on-a-handler
 const ACP_PROTOCOL_EXT_REQUEST_CONCURRENCY = 64;
-// Notification handlers that sent a request released the reader and finish in the background. The
-// bound keeps a peer from growing them without limit; past it, the handler's request fails.
+// decision: reader-never-waits-on-a-handler
 const ACP_PROTOCOL_DETACHED_NOTIFICATION_HANDLERS = 64;
-// Distinct notification decode failures warned about per connection. Array indices are folded out
-// of the dedupe key, so one defect repeated at new indices stays one kind; the cap bounds the rest.
+// decision: notification-decode-failures-keep-the-session
 const ACP_PROTOCOL_DECODE_WARNING_KINDS = 64;
 const DECODE_FAILURE_INDEX_SEGMENT = /(?<=^|[.\s])\d+(?=[.\s…]|$)/g;
-// A peer that closes stdout but keeps running would otherwise hold every caller until it exits.
+// decision: termination-waits-for-the-peer-exit
 const ACP_PROTOCOL_TERMINATION_CLASSIFICATION_TIMEOUT: Duration.Input = "5 seconds";
 const ACP_STDIO_CLIENT_ID = 0;
 
@@ -88,7 +78,8 @@ const ACP_STDIO_CLIENT_ID = 0;
  * Typed RPC ids count up from here once per connection. The value stays inside signed int32,
  * because some ACP SDKs (the Kotlin SDK decodes ids as `Int`) do not answer larger ids, and far
  * above extension request ids, which count up from 1. The protocol forwards only responses with
- * non-negative safe-integer ids to the RPC client.
+ * non-negative safe-integer ids to the RPC client, so the server-level `Defect` that effect's own
+ * encoder writes with the id -32603 never reaches it.
  *
  * **Example** (Allocate the first typed RPC id)
  *
@@ -501,15 +492,7 @@ export class AcpProtocolLoggingOptions extends S.Opaque<AcpProtocolLoggingOption
 
 type AcpProtocolLoggingFields = typeof AcpProtocolLoggingOptions.Encoded;
 
-// --- Incoming notification payloads --------------------------------------------------------------
-// The accepted `session/update` params and `elicitation/complete` method names live here so the
-// notification union can widen (generation 1 and compat shapes) in one place.
-//
-// `session/update` params decode as generation 2 first, then generation 1. The generation-2
-// members are open structs, so an idle `state_update` that carries the prompt `error` some agents
-// report keeps it (as JSON) instead of failing. The compat member is listed last: it is what a
-// client's `transformSessionUpdate` returns, so dispatched notifications carry either the decoded
-// wire shape or the normalized one.
+// decision: dual-generation-union-order
 const AcpSessionUpdateParams = S.Union([
   AcpSchema.UpdateSessionNotification,
   AcpSchemaV1.SessionNotification,
@@ -709,15 +692,12 @@ interface AcpOutgoingWriterState {
 }
 
 interface AcpNotificationDispatch {
-  // Identifies the connection whose reader waits, so a request sent on another connection does
-  // not release it.
+  // decision: reader-never-waits-on-a-handler
   readonly connection: symbol;
-  // Completed when the handler finishes or first sends a request on its connection.
   readonly readerReleased: Deferred.Deferred<void>;
 }
 
-// Set while a notification handler runs. `RpcClient` forks the send of a typed call with the
-// caller's context, so a request the handler sends, directly or through a typed client, sees it.
+// decision: reader-never-waits-on-a-handler
 const CurrentNotificationDispatch = Context.Reference<O.Option<AcpNotificationDispatch>>(
   $I`CurrentNotificationDispatch`,
   { defaultValue: O.none }
@@ -725,9 +705,7 @@ const CurrentNotificationDispatch = Context.Reference<O.Option<AcpNotificationDi
 
 const decodeSessionUpdate = S.decodeUnknownEffect(AcpSessionUpdateParams);
 
-// An idle `state_update` is what ends a generation-2 prompt, so it must not be dropped because an
-// optional field fails strict decoding: `usage` and `error` are unstable in the v2 draft and agents
-// report partial or newer shapes. Such an idle is re-decoded without those two fields.
+// decision: notification-decode-failures-keep-the-session
 const IdleStateUpdateEnvelope = S.StructWithRest(
   S.Struct({
     update: S.StructWithRest(S.Struct({ sessionUpdate: S.tag("state_update"), state: S.tag("idle") }), [
@@ -816,9 +794,7 @@ const uncorrelatedResponseAnnotations = (message: AcpInboundResponse) => {
   };
 };
 
-// Effect RPC's JSON-RPC codec reads a standard JSON-RPC error object inside a `Cause` envelope
-// whose data is not a cause array as a defect. A single defect that is a protocol error object is
-// the peer's typed failure, so it is restored to a `Fail` entry.
+// decision: own-inbound-json-rpc-decoder
 const normalizeAcpJsonRpcError: (message: AcpInboundMessage) => AcpInboundMessage =
   Match.type<AcpInboundMessage>().pipe(
     Match.tag("Exit", (message): AcpInboundMessage => {
@@ -833,8 +809,7 @@ const normalizeAcpJsonRpcError: (message: AcpInboundMessage) => AcpInboundMessag
     Match.orElse((message): AcpInboundMessage => message)
   );
 
-// An ACP request carries only JSON-RPC members. A typed RPC call also has effect trace ids and
-// headers, which a strict peer rejects as unknown members and which would leak internal span ids.
+// decision: outbound-frames-are-plain-json-rpc
 const toAcpWireRequest: (message: AcpWireMessage) => AcpWireMessage = Match.type<AcpWireMessage>().pipe(
   Match.tag(
     "Request",
@@ -919,10 +894,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   options: AcpPatchedProtocolOptions
 ): Effect.fn.Return<AcpPatchedProtocol, never, Scope.Scope> {
   const encoder = parserFactory.makeUnsafe();
-  // Inbound frames bypass the effect ndjson parser: `JSON.parse` on V8 12.8 through 13.7 (Node 24,
-  // Electron 36 and 37) resolves an escaped object key through an existing map transition whenever
-  // the raw source prefix matches it, turning `_meta` keys such as "\n" into "\\". The package
-  // reader keeps native parsing for texts without escaped keys and reads the rest strictly.
+  // decision: own-inbound-json-rpc-decoder
   const decodeFrames = makeNdJsonRpcFrameDecoder();
   const serverQueue = yield* Queue.bounded<RpcMessage.FromClientEncoded>(ACP_PROTOCOL_QUEUE_CAPACITY);
   const clientQueue = yield* Queue.bounded<RpcMessage.FromServerEncoded>(ACP_PROTOCOL_QUEUE_CAPACITY);
@@ -938,7 +910,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   const warnedDecodeFailures = MutableHashSet.empty<string>();
   const terminationHandled = yield* Ref.make(false);
   const terminationFailure = yield* Deferred.make<never, AcpError.AcpError>();
-  // Keyed by the raw JSON-RPC id: HashMap equality keeps the number 1 and the string "1" apart.
   const extPending = yield* Ref.make(HashMap.empty<AcpError.AcpRequestId, AcpPendingRequest>());
   const rpcPending = yield* Ref.make(HashSet.empty<AcpError.AcpRequestId>());
   const extRequestFibers = yield* FiberSet.make<void>();
@@ -960,16 +931,13 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     });
   });
 
-  // --- Outgoing writer --------------------------------------------------------------------------
-
   const removeAcknowledgement = (acknowledgement: AcpAcknowledgement) =>
     Ref.update(writerState, (state) => ({
       ...state,
       outstandingAcknowledgements: HashSet.remove(state.outstandingAcknowledgements, acknowledgement),
     }));
 
-  // Admission is atomic with the writer's terminal state, so a response admitted while the writer
-  // closes is failed together with the rest instead of waiting forever for an acknowledgement.
+  // decision: peer-fed-queues-are-bounded
   const admitOutgoing = (acknowledgement: O.Option<AcpAcknowledgement>) =>
     Ref.modify(writerState, (state): readonly [O.Option<AcpError.AcpError>, AcpOutgoingWriterState] =>
       O.isSome(state.terminalError)
@@ -986,8 +954,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
           ]
     ).pipe(Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: Effect.fail })));
 
-  // A rejected offer reports the writer's terminal error when there is one, so a send that waited
-  // for room in the full queue fails like every other send after a writer failure.
+  // decision: peer-fed-queues-are-bounded
   const rejectedWriteError = Ref.get(writerState).pipe(
     Effect.flatMap(({ terminalError }) =>
       Effect.fail(
@@ -1014,9 +981,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     )
   );
 
-  // A notification handler that sends a request awaits a response only this connection's reader
-  // can deliver, so the reader stops waiting for that handler, which then holds a detached slot
-  // until it finishes.
+  // decision: reader-never-waits-on-a-handler
   const detachNotificationHandler = Effect.fnUntraced(function* (dispatch: AcpNotificationDispatch, method: string) {
     if (yield* Deferred.isDone(dispatch.readerReleased)) {
       return;
@@ -1027,8 +992,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
         method: O.some(method),
       });
     }
-    // Another fiber of the same handler, or the handler's own completion, may have released the
-    // reader first; the slot then goes back at once.
     if (!(yield* Deferred.succeed(dispatch.readerReleased, undefined))) {
       yield* Semaphore.release(detachedNotificationHandlers, 1);
     }
@@ -1044,7 +1007,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       })
     );
 
-  // Encodes one outbound message; `none` when the encoder produced nothing to write.
   const encodeOutgoing = Effect.fn($I`encodeOutgoing`)(function* (message: AcpWireMessage) {
     const encoded = yield* Effect.try({
       try: () => encoder.encode(message),
@@ -1064,7 +1026,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     return O.some(encoded);
   });
 
-  // Hands an encoded message to the writer; a response waits for the writer's acknowledgement.
   const writeOutgoing = Effect.fn($I`writeOutgoing`)(function* (message: AcpWireMessage, encoded: string | Uint8Array) {
     yield* ensureActive;
     const acknowledgement =
@@ -1085,8 +1046,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   });
 
   const offerOutgoing = Effect.fn($I`offerOutgoing`)(function* (outbound: AcpWireMessage) {
-    // RpcClient emits `@effect/rpc/Interrupt` when a pending typed call is interrupted. ACP has no
-    // such method and agents log it as an error, so it never reaches the wire.
+    // decision: outbound-frames-are-plain-json-rpc
     if (outbound._tag === "Interrupt") {
       return;
     }
@@ -1101,8 +1061,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       yield* writeOutgoing(message, encoded.value);
     }
   });
-
-  // --- Extension request bookkeeping ------------------------------------------------------------
 
   const resolveExtPending = (
     requestId: AcpError.AcpRequestId,
@@ -1134,8 +1092,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       )
     );
 
-  // --- Termination ------------------------------------------------------------------------------
-
   const emitClientProtocolError = (error: AcpError.AcpError) =>
     Queue.offer(clientQueue, {
       _tag: "ClientProtocolError",
@@ -1157,7 +1113,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     );
 
   const reportTermination = Effect.fnUntraced(function* (error: AcpError.AcpError) {
-    // Typed handlers stop through `disconnects`; extension handlers stop here.
     yield* FiberSet.clear(extRequestFibers);
     yield* emitClientProtocolError(error);
     if (options.onTermination !== undefined) {
@@ -1191,11 +1146,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     );
   });
 
-  // A child's pipes break when it exits, so the writer's stdin sink and the reader's stdout stream
-  // can fail before the ended stdout reports the exit status, and the first of them ends the
-  // connection. With a classifier, such a pipe failure therefore resolves to the peer's exit when
-  // the classifier reports one, so the terminal error does not depend on which side noticed first.
-  // Any other classification, and a classification past the timeout, keep the pipe failure.
+  // decision: termination-waits-for-the-peer-exit
   const terminateWithPipeFailure = (failure: AcpError.AcpTransportError) =>
     handleTermination(
       O.match(O.fromUndefinedOr(options.terminationError), {
@@ -1204,8 +1155,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       }),
       failure
     );
-
-  // --- Responses --------------------------------------------------------------------------------
 
   const respondWithSuccess = (requestId: AcpError.AcpRequestId, value: unknown) =>
     offerOutgoing({
@@ -1222,7 +1171,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     });
 
   const answerExtensionHandlerFailure = (message: RpcMessage.RequestEncoded, cause: Cause.Cause<AcpError.AcpError>) =>
-    // A defect wins over a typed failure: the handler is broken, so the peer gets a generic error.
     O.match(Cause.hasDies(cause) ? O.none() : Cause.findErrorOption(cause), {
       onNone: () =>
         Effect.logError(`ACP extension request handler failed for '${message.tag}'`, cause).pipe(
@@ -1280,7 +1228,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Effect.catchCause((cause) => Effect.logDebug("ACP extension response was not delivered", cause))
     );
 
-  // Answered on the reader: the response only waits for the writer, never for the reader.
   const rejectSaturatedExtRequest = (message: RpcMessage.RequestEncoded) =>
     Effect.logWarning("Rejected an ACP extension request: too many are already running").pipe(
       Effect.annotateLogs({
@@ -1305,8 +1252,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Effect.catchCause((cause) => Effect.logDebug("ACP extension response was not delivered", cause))
     );
 
-  // The reader never waits for a permit. Permits come back only when running handlers finish, and
-  // a handler that awaits an outbound request needs the reader to deliver its response.
+  // decision: reader-never-waits-on-a-handler
   const forkExtRequest = Effect.fn($I`forkExtRequest`)(function* (message: RpcMessage.RequestEncoded) {
     if (!(yield* Semaphore.takeIfAvailable(extRequestPermits, 1))) {
       return yield* rejectSaturatedExtRequest(message);
@@ -1317,21 +1263,14 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     );
   });
 
-  // --- Incoming notifications -------------------------------------------------------------------
-
-  // The handler runs on its own fiber and the reader waits until it finishes or sends a request on
-  // this connection (`detachNotificationHandler`). Handlers therefore start in arrival order, and a
-  // handler that needs the reader to deliver a response never blocks it.
+  // decision: reader-never-waits-on-a-handler
   const runNotificationHandler = Effect.fnUntraced(function* (handler: Effect.Effect<void, AcpError.AcpError>) {
     const readerReleased = yield* Deferred.make<void>();
     yield* handler.pipe(
-      // A failing or dying handler must not stop the reader, or every later message on the
-      // connection goes unanswered.
       isolateNotificationHandler,
       Effect.provideService(CurrentNotificationDispatch, O.some({ connection, readerReleased })),
       Effect.ensuring(
         Deferred.succeed(readerReleased, undefined).pipe(
-          // Already released: the handler had detached, so its slot goes back.
           Effect.flatMap((completedHere) =>
             completedHere ? Effect.void : Semaphore.release(detachedNotificationHandlers, 1)
           )
@@ -1373,10 +1312,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Str.replaceAll(DECODE_FAILURE_INDEX_SEGMENT, "*")
     )}`;
 
-  // A notification has no reply to fail, so one the schema rejects is logged and dropped. Ending
-  // the connection over it would kill a working session because one update, possibly from a newer
-  // spec, did not parse. An agent repeats a bad shape on every update, so each distinct failure is
-  // warned about once per connection, up to a bounded number of kinds.
+  // decision: notification-decode-failures-keep-the-session
   const dropUndecodableNotification = (method: string) => (cause: S.SchemaError) => {
     const error = AcpError.AcpProtocolParseError.fromSchemaError("decode-notification-payload", method, cause);
     const diagnostics = decodeFailureDiagnostics(error);
@@ -1433,8 +1369,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     return dispatchNotification({ _tag: "ExtNotification", method, params: message.payload });
   };
 
-  // --- Inbound routing --------------------------------------------------------------------------
-
   const handleRequestEncoded = Effect.fn($I`handleRequestEncoded`)((message: RpcMessage.RequestEncoded) => {
     if (message.id === "") {
       return handleIncomingNotification(message);
@@ -1452,10 +1386,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     );
   });
 
-  // A response with no id, `id: null`, or no request in flight for its id is dropped with a warning.
-  // This includes ids never issued, typed requests already answered by an `Exit` or interrupted
-  // locally, and cancelled extension requests. Chunks keep a typed request in flight. The warning
-  // also leaves a trace when the peer answers without a usable id (for example, a parse-error reply).
   const forwardToRpcClient = Effect.fn($I`forwardToRpcClient`)(function* (message: AcpInboundResponse) {
     const claimed = yield* Ref.modify(rpcPending, (pending) => [
       isEffectRpcRequestId(message.requestId) && HashSet.has(pending, message.requestId),
@@ -1520,9 +1450,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     )
   );
 
-  // ACP has no effect-rpc control plane, so a peer frame decodes only to a request, a chunk or an
-  // exit. A peer `Eof` would end our writer, an `Interrupt` would stop a typed handler, and a
-  // `Defect` would fail every in-flight typed call; none of them can reach the RPC server or client.
+  // decision: own-inbound-json-rpc-decoder
   const routeDecodedMessage: (message: AcpInboundMessage) => Effect.Effect<void, AcpError.AcpError> =
     Match.type<AcpInboundMessage>().pipe(
       Match.tag("Request", handleRequestEncoded),
@@ -1530,8 +1458,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Match.tag("Chunk", handleChunkEncoded),
       Match.exhaustive
     );
-
-  // --- Reader -----------------------------------------------------------------------------------
 
   const readChunk = (data: Uint8Array) =>
     (options.logIncoming === true
@@ -1554,8 +1480,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Effect.flatMap((messages) => Effect.forEach(messages, routeDecodedMessage, { concurrency: 1, discard: true }))
     );
 
-  // An AcpError (one a stdout transform raised, for instance) ends the connection as it is; any
-  // other failure is a broken stdout pipe, which the peer's exit may explain.
   const terminateReader = (cause: Cause.Cause<unknown>) => {
     const failure = O.getOrElse(Cause.findErrorOption(cause), () => Cause.squash(cause));
     return isAcpError(failure)
@@ -1567,8 +1491,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
 
   yield* options.stdio.stdin.pipe(
     Stream.runForEach(readChunk),
-    // Anything that ends the reader, including a defect in a callback it runs, terminates the
-    // connection so pending requests fail instead of hanging.
     Effect.matchCauseEffect({
       onFailure: terminateReader,
       onSuccess: () =>
@@ -1576,8 +1498,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     }),
     Effect.forkScoped
   );
-
-  // --- Writer -----------------------------------------------------------------------------------
 
   const failOutgoingWrites = (error: AcpError.AcpError) =>
     Ref.modify(writerState, (state) => {
@@ -1594,9 +1514,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
         })
       ),
       Effect.andThen(Queue.fail(outgoing, error)),
-      // A failed queue stays open for draining, and senders parked on it would wait forever for a
-      // writer that is gone. Shutting it down resumes them with a rejected offer, which
-      // `enqueueOutgoing` reports as the writer's terminal error.
+      // decision: peer-fed-queues-are-bounded
       Effect.andThen(Queue.shutdown(outgoing)),
       Effect.asVoid
     );
@@ -1663,8 +1581,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     Effect.onExit(handleWriterExit),
     Effect.forkScoped
   );
-
-  // --- Protocols --------------------------------------------------------------------------------
 
   // Each run loop is the only consumer of its queue. A message the RPC server or client rejects
   // (RpcServer answers a request that reuses an in-flight id with an interrupt) must not end the
@@ -1749,10 +1665,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     codecFor: parserFactory.codecFor,
   });
 
-  // --- Raw requests and notifications -----------------------------------------------------------
-
-  // JSON-RPC notifications carry no `id`. Encoding a Request without `isNotification` emits one,
-  // which real agents (Grok CLI) read as a malformed request and silently drop.
+  // decision: outbound-frames-are-plain-json-rpc
   const sendNotificationEffect = Effect.fn($I`sendNotification`)(function* (method: string, payload: unknown) {
     yield* ensureActive;
     yield* logProtocol({
@@ -1791,8 +1704,6 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     yield* ensureActive;
     const requestId = yield* Ref.getAndUpdate(nextRequestId, (current) => current + 1);
     const deferred = yield* Deferred.make<unknown, AcpError.AcpError>();
-    // Every exit removes the pending entry, including an interruption while the request waits for
-    // room in the output queue; a settled entry was already removed by the response.
     return yield* Effect.acquireUseRelease(
       Ref.update(extPending, (pending) => HashMap.set(pending, requestId, { deferred, method })),
       () =>

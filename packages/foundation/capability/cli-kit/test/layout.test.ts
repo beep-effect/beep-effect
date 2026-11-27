@@ -55,7 +55,6 @@ const assertMaximal = (original: ReadonlyArray<string>, kept: string, where: str
 };
 
 const assertKeptGraphemes = (label: string, plain: string, width: number, total: number, where: string): void => {
-  // Whole graphemes: what is kept, less the marker, is a prefix made of whole source graphemes.
   const original = graphemes(label);
   const kept = width >= total ? plain : Str.endsWith("…")(plain) ? Str.slice(0, -1)(plain) : plain;
   let prefix = "";
@@ -64,7 +63,7 @@ const assertKeptGraphemes = (label: string, plain: string, width: number, total:
     prefix += g;
     if (prefix === kept) matched = true;
   }
-  assert.isTrue(matched, `${where}: "${kept}" is a prefix of whole graphemes of "${label}"`);
+  assert.isTrue(matched, `${where}: "${kept}", less the marker, is a prefix of whole graphemes of "${label}"`);
 
   if (width < total) assertMaximal(original, kept, where, width);
 };
@@ -204,13 +203,28 @@ describe("sanitize", () => {
 });
 
 describe("flatten under hostile input: nothing can reassemble into a live sequence", () => {
-  // Every character an escape sequence, a C0 or a C1 control is made of, plus one plain letter.
-  const ALPHABET = ["\u001B", "[", "]", "(", "P", "\\", ";", "8", "3", "1", "m", "\u0007", "\b", "\u009B", "x"];
+  const ESCAPE_PARTS_AND_A_LETTER = [
+    "\u001B",
+    "[",
+    "]",
+    "(",
+    "P",
+    "\\",
+    ";",
+    "8",
+    "3",
+    "1",
+    "m",
+    "\u0007",
+    "\b",
+    "\u009B",
+    "x",
+  ];
   const upTo = (length: number): ReadonlyArray<string> => {
     const out: Array<string> = [];
     let frontier = [""];
     for (let n = 1; n <= length; n++) {
-      frontier = A.flatMap(frontier, (prefix) => A.map(ALPHABET, (ch) => prefix + ch));
+      frontier = A.flatMap(frontier, (prefix) => A.map(ESCAPE_PARTS_AND_A_LETTER, (ch) => prefix + ch));
       out.push(...frontier);
     }
     return out;
@@ -269,7 +283,7 @@ describe("flatten under hostile input: nothing can reassemble into a live sequen
           for (const second of short)
             check([Doc.text(first), Doc.code(second)], Result.getOrThrow(S.encodeUnknownResult(Json)([first, second])));
         }
-        checkTriples(ALPHABET, check);
+        checkTriples(ESCAPE_PARTS_AND_A_LETTER, check);
         assert.isAbove(cases, 60_000, "the enumeration ran");
         assert.deepStrictEqual(failures, []);
       }),
@@ -309,16 +323,18 @@ describe("truncateSpans: a coloured, linked label wider than the width", () => {
         Effect.gen(function* () {
           const ctx = yield* contextOf();
           const target = { url: "https://example.test/x" };
-          // Two spans under one link, in different styles, so a cut can land in either.
           const cut = Math.max(1, Math.floor(graphemes(label).length / 2));
           const first = A.join(graphemes(label).slice(0, cut), "");
           const rest = A.join(graphemes(label).slice(cut), "");
-          const spans = flatten([Doc.link(target, [Doc.text(first, "failure"), Doc.text(rest, { bold: true })])], ctx);
-          const total = widthOf(spans);
+          const twoStylesUnderOneLink = flatten(
+            [Doc.link(target, [Doc.text(first, "failure"), Doc.text(rest, { bold: true })])],
+            ctx
+          );
+          const total = widthOf(twoStylesUnderOneLink);
           assert.isAbove(total, 6, "the case is wider than the smallest width tried");
 
           for (let width = 0; width <= total + 2; width++) {
-            const out = truncateSpans(spans, width, "…");
+            const out = truncateSpans(twoStylesUnderOneLink, width, "…");
             const painted = paintSpans(out, ctx);
             const where = `${name} at width ${width}`;
 
@@ -531,7 +547,6 @@ describe("wrapSpans", () => {
       ),
       ["see", url, "now"]
     );
-    // Everything else is unchanged: spaces still break and wide characters are never split.
     assert.deepStrictEqual(
       A.map(wrapSpans([{ text: "the quick brown fox" }], 9, { hardBreak: false }), (line) =>
         pipe(
@@ -540,7 +555,8 @@ describe("wrapSpans", () => {
           A.join("")
         )
       ),
-      ["the quick", "brown fox"]
+      ["the quick", "brown fox"],
+      "everything else is unchanged: spaces still break and wide characters are never split"
     );
     assert.deepStrictEqual(
       A.map(wrapSpans([{ text: "abcdefghij" }], 4, { hardBreak: true }), (line) =>

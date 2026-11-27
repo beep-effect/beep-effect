@@ -109,9 +109,11 @@ describe("C0 HTML extractor", () => {
       _tag: "Success",
       success: "\nvisible\n",
     });
-    // script and style are HTML5 raw-text elements: they never nest, so the FIRST
-    // closing tag ends the element and the trailing text is visible content.
-    expect(extractHtmlText("<script>outer<script>inner</script>still hidden</script><p>visible</p>")).toMatchObject({
+
+    expect(
+      extractHtmlText("<script>outer<script>inner</script>still hidden</script><p>visible</p>"),
+      "HTML5 raw-text script and style never nest: the first case-insensitive closing tag ends the element and trailing text becomes visible."
+    ).toMatchObject({
       _tag: "Success",
       success: "still hidden\nvisible\n",
     });

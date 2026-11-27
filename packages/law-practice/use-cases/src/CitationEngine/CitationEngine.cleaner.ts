@@ -53,8 +53,6 @@ export class CitationCleanerTextCharge extends S.Opaque<CitationCleanerTextCharg
     })
   )
 ) {}
-// A structural decoder reconstructs data. These fields instead carry live
-// adapter/operation handles unchanged; their owner still rejects decoded copies.
 /** Validate a runtime handle without replacing its reference. The adapter still checks ownership.
  *
  * **Example** (Inspect the server contract)
@@ -70,7 +68,8 @@ export const CitationLiveCleanerObject = CitationCleanerObject.pipe(
   S.is,
   S.declare,
   $I.annoteSchema("CitationLiveCleanerObject", {
-    description: "Preserve a live reference's identity while validating its shape; ownership is checked separately.",
+    description:
+      "Preserve a live adapter or operation handle unchanged while validating its shape, where a structural decoder would rebuild it; its owner still rejects decoded copies.",
   })
 );
 /** Runtime handle type validated by the from-self codec; validation grants no ownership.

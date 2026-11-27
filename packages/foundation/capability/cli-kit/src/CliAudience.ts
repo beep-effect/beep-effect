@@ -45,17 +45,6 @@ class AudienceConflictError extends S.TaggedError<AudienceConflictError, { reado
   })
 ) {}
 
-/**
- * Whether the run may prompt once a flag has named the audience.
- *
- * **Details**
- *
- * Only a `human` audience prompts, and only with a terminal on both standard input and standard output and a `TERM`
- * that is not `dumb` (`canPrompt`, the decision `CliInteractive.layer` makes). With the
- * terminal facts in the environment (`TerminalEnv`) that is decided from them, not from the ambient value, so a
- * flag can WIDEN: `--human` under a detected agent on real terminals prompts, and in a pipe it still cannot. With no
- * `TerminalEnv` there is nothing to decide from and the flag only narrows.
- */
 const interactiveWhenFlagged: {
   (kind: AudienceKind, current: boolean): Effect.Effect<boolean>;
   (current: boolean): (kind: AudienceKind) => Effect.Effect<boolean>;
@@ -162,9 +151,7 @@ export type RequiresAudienceFlags<Input> = [Input] extends [AudienceFlagInput]
 
 const CONFLICT = "Give at most one of --audience, --human, --agent, --ci (once).";
 
-/** Resolve the four flags into the audience to provide, failing when more than one occurrence was given. */
 const resolve = (input: AudienceFlagInput): Effect.Effect<AudienceShape, CliError.UserError, Audience> => {
-  // The counting rule is shared with `scanAudience`, which reads argv before parsing, so the two cannot drift.
   const { given: named, conflict } = tallyAudience(input);
   if (conflict) {
     return Effect.fail(
@@ -175,7 +162,6 @@ const resolve = (input: AudienceFlagInput): Effect.Effect<AudienceShape, CliErro
     );
   }
   const [kind] = named;
-  // No flag: the ambient audience, the override variable or detection, is read and provided back unchanged.
   return kind === undefined ? Audience : Effect.succeed(AudienceShape.make({ kind, source: "flag" }));
 };
 
@@ -257,7 +243,8 @@ export class CliAudience {
    *
    * Each is repeatable, so every occurrence is counted; a boolean given as `false` (`--agent=false`,
    * `--no-agent`) is not an occurrence. Core lists shared flags in every command's help; pass
-   * `hidden` to remove them from all of them.
+   * `hidden` to remove them from all of them. `--audience` sets no metavar: core appends
+   * `(choices: human, agent, ci)` to the description, so a `<human|agent|ci>` placeholder would name them twice.
    *
    * **Example** (Create the four shared audience flags)
    *
@@ -285,8 +272,6 @@ export class CliAudience {
       audience: maybeHide(
         Flag.Literals("audience", AudienceKind.literals).pipe(
           Flag.atLeast(0),
-          // No metavar of its own: core appends "(choices: human, agent, ci)" to the description, and a
-          // `<human|agent|ci>` placeholder would name the choices a second time.
           Flag.withDescription("Who the output is for")
         )
       ),
@@ -334,9 +319,6 @@ export class CliAudience {
     command: Command.Command<Name, Input, ContextInput, E, R>
   ): Command.Command<Name, Input, ContextInput, E | CliError.UserError, Exclude<R, Audience> | Audience> =>
     CommandModule.provideEffect(command, Audience, (input: Input) => resolve(input)).pipe(
-      // A flag decides interactivity for the handler too: the env layer decided it from the DETECTED audience,
-      // before the flag was read, so `--agent` on a terminal would otherwise stay interactive and `--human` under
-      // a detected agent would stay off. See `interactiveWhenFlagged`.
       CommandModule.provideEffect(
         CliInteractive,
         Effect.fnUntraced(function* (input: Input) {
@@ -394,7 +376,6 @@ export class CliAudience {
       command: Command.Command<Name, Input, ContextInput, E, R> & RequiresAudienceFlags<Input>,
       config: { readonly version: string; readonly renderErrors?: boolean | undefined }
     ): ((input: ReadonlyArray<string>) => AudienceRun<E, R>) => {
-      // `provide` is applied here, so there is one wiring and conflict detection cannot be dropped by omission.
       const core = CommandModule.runWith(
         CliAudience.provide<Name, AudienceFlagInput & Input, ContextInput, E, R>(command),
         config
@@ -409,14 +390,9 @@ export class CliAudience {
           : Effect.provideService(run, Audience, AudienceShape.make({ kind, source: "flag" }));
         const current = yield* CliInteractive;
         const ambient = yield* CliConfig.CliConfig;
-        // The report of a failure is written outside this run, where the flag is not in force: record the audience
-        // the flag named, so `--agent` on a terminal gets the plain report and `--human` the painted one.
         if (!conflict) yield* refreshFailureTarget(AudienceShape.make({ kind, source: "flag" }));
         const interactive = !conflict && (yield* interactiveWhenFlagged(kind, current));
         const decided = Effect.provideService(withAudience, CliInteractive, interactive);
-        // The wizard prompts, so it follows the decision: the environment gated it from the detected audience,
-        // before the flag was read. A non-interactive run drops it, and a run the flag has made interactive
-        // where the gate had dropped it gets it back.
         const config = yield* wizardConfig(ambient, interactive);
         return yield* config === undefined ? decided : Effect.provideService(decided, CliConfig.CliConfig, config);
       });

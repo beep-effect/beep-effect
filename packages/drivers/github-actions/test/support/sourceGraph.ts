@@ -1,11 +1,3 @@
-// The package's `src` modules, read from source text Vite's raw glob import
-// inlines at transform time, so the scans touch no filesystem and run the same
-// under Node and Bun (the package test runner is `bunx --bun vitest`). The
-// import graph itself is `@beep/test-utils/ImportGraph`'s; this module adds
-// the one edge form that walker does not read: a literal
-// `process.getBuiltinModule("node:…")` load, which is how this package reaches
-// `node:crypto`, `node:fs` and `node:child_process`.
-
 import * as ImportGraph from "@beep/test-utils/ImportGraph";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
