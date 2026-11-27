@@ -31,7 +31,9 @@ declare module "@mui/material/styles" {
  *
  * **Details**
  *
- * The light scheme's `text.tertiary` is the lowest-contrast text that still passes WCAG AAA.
+ * The light scheme's `text.tertiary` meets WCAG AA for normal text, at about
+ * 4.59:1 on `background.paper` and 4.52:1 on `background.default` against the
+ * 4.5:1 minimum. It does not meet AAA's 7:1 for normal text.
  *
  * **Example** (Import colors theme)
  *
