@@ -8,8 +8,8 @@ import { ApiLive } from "./runtime/Layer.ts";
 
 const portlessBypassPort = 8787;
 
-// fallow-ignore-next-line code-duplication -- labs scaffold bootstrap is intentionally identical to apps/labs/api-docs. Owner: @beep/ciops. Exit: replace with a shared labs launcher when the lab graduates.
 const main = Effect.fnUntraced(function* () {
+  // fallow-ignore-next-line code-duplication -- labs scaffold bootstrap is intentionally identical to apps/labs/api-docs. Owner: @beep/ciops. Exit: replace with a shared labs launcher when the lab graduates.
   const port = yield* Config.Port("PORT").pipe(Config.withDefault(portlessBypassPort));
   return yield* Layer.launch(
     ApiLive.pipe(HttpRouter.serve, Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
