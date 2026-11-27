@@ -675,9 +675,11 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
  * the first 300 labels are rendered. Each label tries the four cardinal
  * positions, then the diagonals, on successively wider rings in the same order
  * every frame, so labels do not wander once the simulation settles; a label
- * that fits nowhere is hidden rather than drawn over a node or another label,
- * and the layer's `data-label-suppressed` attribute counts those. `update`
- * rebuilds the layer from the new projection's labels.
+ * that fits nowhere is hidden, and the layer's `data-label-suppressed`
+ * attribute counts those. Only nodes with a rendered label are obstacles: a
+ * label never covers another label or a labelled node, but it can cover a node
+ * whose label is not rendered. `update` rebuilds the layer from the new
+ * projection's labels.
  *
  * **Gotchas**
  *

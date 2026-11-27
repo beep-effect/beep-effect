@@ -50,24 +50,24 @@ const loadControlsModule = Effect.tryPromise({
 class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique symbol }>()(
   S.Struct({
     background: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0x111111)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0x111111)),
       S.annotateKey({
         description:
           "Canvas color, fixed in both app themes like the cosmos driver's: the reference renderer's observed #111111, not its bundle's #000000 no-override fallback.",
-      })
+      }),
+      S.withConstructorDefault(Effect.succeed(0x111111)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0x111111))
     ),
     cameraFov: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(40)),
       S.withDecodingDefaultTypeKey(Effect.succeed(40))
     ),
     sizeBase: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(10)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(10)),
       S.annotateKey({
         description:
           "Logical node size at importance 0: logical = sizeBase + importance * sizeScale, and world diameter = logical * sizeWorldFactor * zoomDamping.",
-      })
+      }),
+      S.withConstructorDefault(Effect.succeed(10)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(10))
     ),
     sizeScale: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(22.4)),
@@ -78,12 +78,12 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(0.5))
     ),
     edgeWidthBase: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0.4)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.4)),
       S.annotateKey({
         description:
           "Ribbon width at weight 0; width grows by edgeWidthScale * weight^1.2 (0.4..5.0 by default) and per-edge alpha runs 0.5..1.0 by weight, under a global opacity of max(0.10, 0.95 - sqrt(edgeCount) / 100).",
-      })
+      }),
+      S.withConstructorDefault(Effect.succeed(0.4)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.4))
     ),
     edgeWidthScale: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(4.6)),
@@ -102,12 +102,12 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(0.25))
     ),
     labelPoolSize: S.Int.pipe(
-      S.withConstructorDefault(Effect.succeed(96)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(96)),
       S.annotateKey({
         description:
           "Label sprites; each frame shows at most clamp(round(4.5 * sqrt(n) * (700 / d)^0.7), labelBudgetMin, labelBudgetMax) of them, with an opacity floor of 0.10 and a depth fade from 35 units behind center over 130 units, capped at 85%.",
-      })
+      }),
+      S.withConstructorDefault(Effect.succeed(96)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(96))
     ),
     labelBudgetMax: S.Int.pipe(
       S.withConstructorDefault(Effect.succeed(90)),
@@ -118,11 +118,11 @@ class Graph3DConfig extends S.Opaque<Graph3DConfig, { readonly brand: unique sym
       S.withDecodingDefaultTypeKey(Effect.succeed(8))
     ),
     dimmedNodeOpacity: S.Finite.pipe(
-      S.withConstructorDefault(Effect.succeed(0.1)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.1)),
       S.annotateKey({
         description: "Opacity of a node outside the selection's neighborhood, the reference renderer's value.",
-      })
+      }),
+      S.withConstructorDefault(Effect.succeed(0.1)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.1))
     ),
     dimmedEdgeOpacity: S.Finite.pipe(
       S.withConstructorDefault(Effect.succeed(0.3)),

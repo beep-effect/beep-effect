@@ -35,7 +35,7 @@ const CertThumbprintSha256 = S.String.check(
     $I.annote("CertThumbprintSha256Check", {
       title: "Certificate SHA-256 thumbprint",
       description:
-        "The certificate's SHA-256 thumbprint as 64 hex digits in either case: `openssl x509 -fingerprint -sha256` output with the colons stripped.",
+        "The certificate's SHA-256 thumbprint as 64 hex digits in either case: `openssl x509 -noout -fingerprint -sha256` output with the label up to its `=` and every colon removed.",
       message: "Expected the certificate's SHA-256 thumbprint as 64 hex digits",
     })
   )
