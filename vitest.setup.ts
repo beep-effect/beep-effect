@@ -1,3 +1,4 @@
+// Bun-API shim for Node-based Vitest runs, including the canonical coverage lane.
 // The per-file regression baseline requires Node/V8, so production coverage commands
 // retain that runtime until a compatible baseline migration is validated.
 // This file is typechecked by the root tsconfig.configs.json project
@@ -92,15 +93,15 @@ addEqualityTesters();
 // Never read config here through the default ConfigProvider: this file runs in every test worker,
 // the default provider is built once from the environment at its first use, and a test that stubs a
 // variable afterwards (vi.stubEnv) would read the old environment. Keep the provider of its own.
-const propertySeed = Config.String("BEEP_FC_SEED").pipe(
+const seedForPropertiesWithoutOptions = Config.String("BEEP_FC_SEED").pipe(
   Config.option,
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()),
   Effect.runSync,
   O.getOrUndefined,
   parseFcSeed
 );
-if (O.isSome(propertySeed)) {
-  const seed = propertySeed.value;
+if (O.isSome(seedForPropertiesWithoutOptions)) {
+  const seed = seedForPropertiesWithoutOptions.value;
   Arbitrary.configureGlobal({ check: { seed }, sample: { seed } });
 }
 

@@ -13,7 +13,6 @@ export default defineConfig({
       "packages/tooling/*/*/vitest.config.ts",
       "apps/*/vitest.config.ts",
       "apps/labs/*/vitest.config.ts",
-      ...(isBun ? [] : []),
     ],
   },
 });

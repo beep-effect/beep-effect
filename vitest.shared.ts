@@ -51,11 +51,11 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   },
 });
 
-const environment = ConfigProvider.fromEnv();
+const bootSnapshotEnvProvider = ConfigProvider.fromEnv();
 const readEnv = (name: string): O.Option<string> =>
   Config.String(name).pipe(
     Config.option,
-    Effect.provideService(ConfigProvider.ConfigProvider, environment),
+    Effect.provideService(ConfigProvider.ConfigProvider, bootSnapshotEnvProvider),
     Effect.runSync
   );
 
@@ -89,10 +89,8 @@ export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_
  *
  * **Gotchas**
  *
- * Every flag this module exports is read once, at module load, through a provider built from the
- * environment at that moment, never through the default ConfigProvider. Test files import this
- * module inside workers, so a test that stubs a variable afterwards (`vi.stubEnv`) changes none
- * of them.
+ * A test that stubs a variable after importing this module (`vi.stubEnv`) changes none of the
+ * flags it exports.
  *
  * **Example** (Keep a package timeout coverage-aware)
  *
@@ -118,20 +116,8 @@ const parsedFcNumRuns = readEnv("BEEP_FC_NUM_RUNS").pipe(
  *
  * **Details**
  *
- * True when `BEEP_FC_NUM_RUNS` holds a positive integer run floor (the property lane and the
- * nightly sweep export one before vitest starts). The sweep only changes tests that draw from an
- * arbitrary, because the floor reaches a test only through `fcRuns()` options or an inline
- * property call, so the config selects at two levels. `include` narrows to the test files that
- * match `propertyTestMarker` under `test/`. In a matched file whose relative-import graph runs a
- * property inline every test runs; in any other matched file the property runner skips a test
- * only when its registration line is positively a plain `it(...)` or `it.effect(...)`, and a
- * suite left with no runnable test skips its hooks. Everything skipped already ran in the unit
- * lane. The selection rules live in `@beep/fc-runs/PropertySelection`.
- *
- * **Gotchas**
- *
- * Under the sweep the merged config's `include` is set once more to the selected files, so a
- * package config's own `include` (merged by concatenation) does not add its files back.
+ * True when `BEEP_FC_NUM_RUNS` holds a positive integer run floor. The property lane and the
+ * nightly sweep export it before vitest starts.
  *
  * **Example** (Skip a slow setup outside the sweep)
  *
@@ -268,20 +254,19 @@ const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const toAliasEntry = (find: string, replacement: string): AliasEntry => {
   const replacementUrl = new URL(replacement, projectRootDirectory);
-  // DOM-backed test workers can expose this module through an HTTP URL.
-  const absoluteReplacement =
+  const filePathOrHttpUrlPathname =
     replacementUrl.protocol === "file:" ? NodeURL.fileURLToPath(replacementUrl) : replacementUrl.pathname;
 
   if (!Str.includes("*")(find)) {
     return {
       find: new RegExp(`^${escapeRegExp(find)}$`),
-      replacement: absoluteReplacement,
+      replacement: filePathOrHttpUrlPathname,
     };
   }
 
   return {
     find: new RegExp(`^${Str.replace("\\*", "(.*)")(escapeRegExp(find))}$`),
-    replacement: Str.replaceAll("*", "$1")(absoluteReplacement),
+    replacement: Str.replaceAll("*", "$1")(filePathOrHttpUrlPathname),
   };
 };
 
@@ -309,6 +294,8 @@ const gateReporterActive = !vitestDoctestActive && !fcDeepSweepActive;
  * package decision. When the run pins a property seed (`BEEP_FC_SEED`, else a fixed seed for a
  * coverage run so instrumentation compares between runs), `test.env` hands it to the workers,
  * whose argv does not carry `--coverage`; vitest.setup.ts applies it.
+ * The Oxc transform targets ESNext: the Node 24 and Bun runtimes both run top-level await, and a
+ * lower target makes Oxc warn on the coverage lane's ESM CLI entrypoints.
  *
  * Reporters are Vitest's defaults plus the gate adapter, registered by package specifier, which
  * writes the package's `test` record under `.beep/gates/test/`. Doctest and deep-sweep runs add
@@ -330,6 +317,8 @@ const gateReporterActive = !vitestDoctestActive && !fcDeepSweepActive;
  * `--js-float16array` as real argv, because V8 rejects that flag inside `NODE_OPTIONS`; a package
  * config that sets its own `execArgv` must keep it. A job-wide node wrapper cannot carry the flag
  * instead, because Next.js builds copy the parent execArgv into worker `NODE_OPTIONS`.
+ * Under a deep property sweep the merged `include` is set once more to the selected files, so a
+ * package config's own `include` (merged by concatenation) does not add its files back.
  *
  * **Example** (Opt a package back into isolation)
  *
@@ -349,9 +338,6 @@ const config: ViteUserConfig = {
     ...(fcDeepSweepActive && !vitestDoctestActive ? [exactPropertySweepInclude()] : []),
   ],
   oxc: {
-    // The repository's Node 24 and Bun runtimes both execute top-level await.
-    // Keeping Vitest's transform at ESNext avoids Oxc lowering/parsing warnings
-    // for the ESM CLI entrypoints exercised by the coverage lane.
     target: "esnext",
   },
   optimizeDeps: {
