@@ -213,9 +213,10 @@ const Sha256DigestBase: Omit<S.Opaque<Sha256Digest, typeof sha256Digest, {}>, ne
  *
  * Values are branded strings, never instances: TypeScript cannot extend a
  * primitive, so the class only carries the statics and its unused constructor
- * is widened to take `never`. The identity annotation sits on the string
- * before the pattern check, so the JSON Schema keeps its inline pattern while
- * the base schema carries the canonical identity.
+ * is retyped to take `never` and return the string members. The identity
+ * annotation sits on the string before the pattern check, so the JSON Schema
+ * keeps its inline pattern while the base schema carries the canonical
+ * identity.
  *
  * **Example** (Normalize a prefixed uppercase digest)
  *
