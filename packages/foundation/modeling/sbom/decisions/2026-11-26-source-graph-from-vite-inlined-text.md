@@ -16,7 +16,7 @@ shape, which keeps JSDoc example imports, prose and a `from` inside a string out
 of the graph. It is sized to this package: a relative edge is `./<Module>.ts` or
 `./internal/<module>.ts`, and anything else fails loudly.
 
-Rejected: a filesystem read, which the package's runtime must never need; a
-comment stripper, where a `/*` inside a line comment once opened a phantom block
-and hid every later import; a general resolver, which guesses where this package
-has exactly two shapes.
+Rejected: a filesystem read, which the inlined text replaces so Node and Bun
+walk identical input; a comment stripper, where a `/*` inside a line comment
+once opened a phantom block and hid every later import; a general resolver,
+which guesses where this package has exactly two shapes.

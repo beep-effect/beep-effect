@@ -190,7 +190,7 @@ describe("bundle reachability — the pure SBOM half never reaches network-bound
       assert.notMatch(
         code,
         /\bprocess\b/,
-        `${module} reads the ambient process; an upstream GITHUB_SERVER_URL read wrote a literal undefined`
+        `${module} reads the ambient process; upstream's unset GITHUB_SERVER_URL wrote undefined into every URL`
       );
     }
   });

@@ -55,7 +55,7 @@ describe("Sbom.generate", () => {
     assert.strictEqual(
       Sbom.generate({ root: admitted, components: [admitted] }).components.length,
       1,
-      "an empty bom-ref (CycloneDX refType minLength 1) is refused at Component.make, never inside generate"
+      "generate takes an admitted component as is; an empty bom-ref (refType minLength 1) fails at Component.make"
     );
   });
 
@@ -64,7 +64,7 @@ describe("Sbom.generate", () => {
     assert.strictEqual(
       document.bomFormat,
       "CycloneDX",
-      "an owned model over validated Schema values cannot fail, so generate has no error channel"
+      "an owned model over validated Schema values cannot fail, so generate and toJson have no error channel"
     );
     assert.strictEqual(document.specVersion, "1.6", "needing yield* here would lose the pure-tier claim");
   });
