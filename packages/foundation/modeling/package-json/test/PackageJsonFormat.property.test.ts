@@ -71,13 +71,15 @@ describe("formatting property floor", () => {
       Effect.gen(function* () {
         const source = '{\r\n\t"private": true,\r\n\t"custom": null\r\n}\r\n';
         const encoded = yield* S.encodeEffect(Json)(value);
-        // Built directly from the value: a replacement string would read `$&`
-        // and friends in a generated string as substitution patterns.
         const expected = `{\r\n\t"private": true,\r\n\t"custom": ${encoded}\r\n}\r\n`;
         const edits = yield* PackageJsonFormat.modify(source, ["custom"], value);
         const text = yield* PackageJsonFormat.modifyToString(source, ["custom"], value);
         assert.strictEqual(text, JsoncEdit.applyAll(source, edits));
-        assert.strictEqual(text, expected);
+        assert.strictEqual(
+          text,
+          expected,
+          "expected is built from the value: a replace string would read $& in it as a pattern"
+        );
         const modifyToString4 = yield* PackageJsonFormat.modifyToString(text, ["custom"], value);
         assert.strictEqual(modifyToString4, text);
         const parsed = yield* S.decodeEffect(CustomJson)(text);

@@ -10,21 +10,18 @@ import * as Str from "effect/String";
 import captures from "./fixtures/digests.json" with { type: "json" };
 import { corpus, fixture, unsuffixedCaptures } from "./support/fixtures.ts";
 
-// A real SHA-256 backend over WebCrypto, through core's WebCrypto layers: the
-// oracle that hashes each capture's UTF-8 bytes through @beep/jsonc's
-// content fingerprint.
-const WebCrypto = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
+const WebCryptoSha256 = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
 
 describe("historical lockfile documents", () => {
-  layer(WebCrypto)((it) => {
+  layer(WebCryptoSha256)((it) => {
     it.effect("preserves every captured document verbatim behind a non-installable filename", () =>
       Effect.gen(function* () {
         assert.strictEqual(captures.length, 38);
         assert.deepStrictEqual(unsuffixedCaptures, []);
         for (const { logicalPath, sha256 } of captures) {
           assert.isTrue(R.has(corpus, logicalPath), logicalPath);
-          const hashText1 = yield* JsoncFingerprint.hashText(fixture(logicalPath));
-          assert.strictEqual(hashText1, sha256, logicalPath);
+          const utf8Sha256 = yield* JsoncFingerprint.hashText(fixture(logicalPath));
+          assert.strictEqual(utf8Sha256, sha256, logicalPath);
         }
       })
     );

@@ -34,13 +34,11 @@ import { isBunRuntime, report, TestPlatform, tempDirectory } from "./projector-s
 import type { AdmissionOutcome, NodeId, NodeOperation } from "@beep/agent-memory-store";
 import type { ReplayRun, RunVerdict } from "./admission-replay.ts";
 
-/** The pinned commit and the seeded orders the decision fixed. */
 const pinnedCommit = "3f0261b37a0e98a0bcef4e5f0ef2c922b68e9fb2";
-const seeds = [1, 2, 3];
+const pinnedSeeds = [1, 2, 3];
 
-// S14b's measured resolver-needed ratio and per-op landing bar, as integers.
-const resolverBar = { held: 26, writes: 279 } as const;
-const perOpBarPercent = 95;
+const s14bResolverBar = { held: 26, writes: 279 } as const;
+const s14bPerOpBarPercent = 95;
 
 class HistoryReplay extends Context.Service<
   HistoryReplay,
@@ -62,7 +60,7 @@ const replayLayer = Layer.effect(
     const workspace = yield* tempDirectory("beep-ac3-history-");
     const prepared = yield* prepareReplay(fixture, workspace, historyStatus);
     const history = yield* replayInSubmissionOrder(prepared);
-    const seeded = yield* Effect.forEach(seeds, (seed) => Effect.map(replayOnce(prepared, seed), verdictOf), {
+    const seeded = yield* Effect.forEach(pinnedSeeds, (seed) => Effect.map(replayOnce(prepared, seed), verdictOf), {
       concurrency: 1,
     });
     return HistoryReplay.of({
@@ -81,10 +79,7 @@ const logged = Effect.fnUntraced(function* (line: string) {
   yield* report(line);
 });
 
-// --- The breakdown of what did not land ----------------------------------------------
-
-// The partition kind of every base node, by node id.
-const baseKinds = (run: ReplayRun) => {
+const baseKindsByNodeId = (run: ReplayRun) => {
   const kinds = MutableHashMap.empty<NodeId, string>();
   for (const file of run.base.files) {
     const parts = partition(
@@ -100,7 +95,6 @@ const baseKinds = (run: ReplayRun) => {
   return kinds;
 };
 
-// The kind of the node an operation names: an insert's own text, otherwise the base node's.
 const kindOf = (kinds: MutableHashMap.MutableHashMap<NodeId, string>, operation: NodeOperation): string =>
   operation.op === "insert"
     ? O.getOrElse(
@@ -125,9 +119,8 @@ const tally = (keys: ReadonlyArray<string>): ReadonlyArray<readonly [string, num
   );
 };
 
-// Every operation of the run with the kind of the node it names and its outcome.
 const operationsOf = (run: ReplayRun) => {
-  const kinds = baseKinds(run);
+  const kinds = baseKindsByNodeId(run);
   return A.flatMap(run.writes, (write) =>
     A.map(A.zip(write.batch.operations, write.outcomes), ([operation, outcome]) => ({
       kind: kindOf(kinds, operation),
@@ -144,7 +137,6 @@ const tallyLine = (counts: ReadonlyArray<readonly [string, number]>): string =>
     "; "
   );
 
-/** What did not land, by operation, node kind, outcome and finding; and the held writes by their findings. */
 const breakdownOf = (run: ReplayRun) => {
   const operations = operationsOf(run);
   const notLanded = A.filter(operations, ({ outcome }) => outcome.outcome !== "landed");
@@ -174,15 +166,12 @@ const breakdownOf = (run: ReplayRun) => {
   };
 };
 
-// --- The bars ------------------------------------------------------------------------
-
 const meetsResolverBar = (verdict: RunVerdict, writes: number): boolean =>
-  verdict.resolverNeededWrites * resolverBar.writes <= resolverBar.held * writes;
+  verdict.resolverNeededWrites * s14bResolverBar.writes <= s14bResolverBar.held * writes;
 
 const meetsPerOpBar = (verdict: RunVerdict): boolean =>
-  verdict.landedOperations * 100 >= perOpBarPercent * verdict.operations;
+  verdict.landedOperations * 100 >= s14bPerOpBarPercent * verdict.operations;
 
-/** The AC-3 counts of one order. */
 const countsOf = (verdict: RunVerdict, order: string) => ({
   order,
   floor: verdict.structuralFloorWrites,
@@ -197,9 +186,8 @@ const countsOf = (verdict: RunVerdict, order: string) => ({
 });
 
 const lineOf = (counts: ReturnType<typeof countsOf>, writes: number): string =>
-  `AC-3 ${counts.order} floor=${counts.floor}/${writes} resolverNeeded=${counts.resolverNeeded}/${writes} (${counts.resolverNeeded}*${resolverBar.writes}=${counts.resolverNeeded * resolverBar.writes} vs ${resolverBar.held}*${writes}=${resolverBar.held * writes}) landed=${counts.landed}/${counts.operations} (x100=${counts.landed * 100} vs ${perOpBarPercent}x=${perOpBarPercent * counts.operations}) statusNodes=${counts.statusNodes} held=${counts.statusHeld} wrong=${counts.statusWrong} backward=${counts.backward} rejected=${counts.backwardRejected}`;
+  `AC-3 ${counts.order} floor=${counts.floor}/${writes} resolverNeeded=${counts.resolverNeeded}/${writes} (${counts.resolverNeeded}*${s14bResolverBar.writes}=${counts.resolverNeeded * s14bResolverBar.writes} vs ${s14bResolverBar.held}*${writes}=${s14bResolverBar.held * writes}) landed=${counts.landed}/${counts.operations} (x100=${counts.landed * 100} vs ${s14bPerOpBarPercent}x=${s14bPerOpBarPercent * counts.operations}) statusNodes=${counts.statusNodes} held=${counts.statusHeld} wrong=${counts.statusWrong} backward=${counts.backward} rejected=${counts.backwardRejected}`;
 
-// The counts the replay measured, pinned so a change in admission or in the replay shows.
 const order = (
   name: string,
   floor: number,
@@ -304,14 +292,15 @@ describe.skipIf(!isBunRuntime)("admission on the goals history replay (Bun runti
           yield* logged(`AC-3 history not landed: ${tallyLine(breakdown.notLanded)}`);
           yield* logged(`AC-3 history held writes by findings: ${tallyLine(breakdown.heldWrites)}`);
 
-          // The measured counts per order, asserted exactly so any change in admission shows.
-          expect(measured).toEqual(MEASURED);
-          // The judged run: the history order. The resolver-needed bar is not
-          // met (40 x 279 = 11,160 above 26 x 275 = 7,150); per-op landing is
-          // (3,267 x 100 = 326,700 at or above 95 x 3,364 = 319,580).
+          expect(
+            measured,
+            "counts the replay measured, pinned exactly so a change in admission or in the replay shows"
+          ).toEqual(MEASURED);
           const history = replay.verdicts[0] as RunVerdict;
-          expect([meetsResolverBar(history, replay.writes), meetsPerOpBar(history)]).toEqual([false, true]);
-          // Typed status fields: never held, never wrong, every backward move refused.
+          expect(
+            [meetsResolverBar(history, replay.writes), meetsPerOpBar(history)],
+            "the judged run is the history order: resolver bar not met (40 x 279 = 11,160 above 26 x 275 = 7,150), per-op bar met (3,267 x 100 = 326,700 at or above 95 x 3,364 = 319,580)"
+          ).toEqual([false, true]);
           expect(A.every(replay.verdicts, (verdict) => verdict.statusHeld === 0 && verdict.statusWrong === 0)).toBe(
             true
           );

@@ -35,11 +35,11 @@ const { test } = Test.make({
 });
 
 test.provider(
-  "the TurboCache stack deploys the cache Worker for the beep team and refuses anonymous requests",
+  "the TurboCache stack deploys the cache Worker for the beep and inventory teams and refuses anonymous requests",
   (stack) =>
     Effect.gen(function* () {
       const output = yield* deployerOf(stack)(program);
-      expect(output.teams).toEqual(["beep"]);
+      expect(output.teams).toEqual(["beep", "inventory"]);
       const origin = new URL(output.url);
 
       const status = yield* HttpClient.execute(

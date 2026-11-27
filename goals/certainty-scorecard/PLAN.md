@@ -40,10 +40,11 @@ graduation merges. Lever gates are in `SPEC.md` (Levers).
 | 14 | refactor(ci): consolidate the lane-id maps | MEAS-05 slice 1 | S | One map; existing census and corpus tests unchanged | 2 |
 | 15 | feat(quality): ledger fold with absent-source rows | MEAS-05 slice 2 | M | At least 95% of job-minutes mapped on three reference runs; no umbrella double count; the empty-leg runner-minutes row computed per run, with a fixture for a run that allocated an empty partition | 14, 1 |
 | 16 | feat(yeet): join PSI samples | MEAS-08 | S | None (pure join, no hot-path stamps) | 15 |
+| 18 | feat(ci): report the sibling-goal rows and re-read main over a 7-day horizon | SPEC "Numbers the scorecard reports" (driver ruling 2026-11-27) | M | Heavy slot-minutes, heavy-queue p95, heavy-wait p95, Lint Policy wall p95, Property Laws p95, PR first-wave pickup p95, main cancel actor, replay inputs and the 7-day main horizon in `beep ci certainty` and its summary, aggregates only; `ci-certainty.test.ts` on Node and Bun with both Certainty files at 100% coverage; any row the job token cannot read recorded as a decision (`rows-not-built-in-full`); CLI only, no workflow change | 1, 4 |
 | 17 | docs(goals): certainty-scorecard closeout | evidence | S | 7-night evidence note, fleet census note, reflection, `closeout` | all |
 
 Waves under the three-PR limit: {1, 2, 3}, then {4, 5, 6} as each of the first wave merges, then {7, 10, 11},
-{8, 9, 12}, {5b, 13, 14}, then {11b, 15}, then 16, then 17. Slice 10b is unscheduled: it takes a free slot in
+{8, 9, 12}, {5b, 13, 14}, then {11b, 15}, then 16, then 18 (driver ruling 2026-11-27), then 17. Slice 10b is unscheduled: it takes a free slot in
 any wave after 10 merges and does not gate the closeout.
 
 ## Closeout Checklist
@@ -70,12 +71,10 @@ Before marking the packet closed:
 - **Baseline before after-numbers:** the first certified nightly is the "before" for every sibling goal. Record
   it under `history/` with run ids and aggregates only; never a raw head list with branch names that carry
   session ids.
-- **The nightly does not re-poll main (7-day horizon not built):** each night reads its day's main SHAs once,
-  at its capture (decision `certainty-nightly-workflow`), so a verdict that lands later is counted only if that
-  day is re-run. Build the re-poll when either holds: a recorded night in `history/certainty-nightly.md` has
-  main commits still `open` or `no-run` at capture that later received a completed push run, or
-  `main-verdict-every-commit` lands re-dispatch of missing main verdicts (its verdicts arrive after the push run
-  they replace, so a once-read rate would understate main).
+- **The nightly re-reads main over a 7-day horizon (slice 18):** each capture lists main push runs and reads
+  first-parent commits from `until` minus 7 days, so a verdict that lands after its own night (a re-run or a
+  re-dispatch) is counted by later nights; `mainHorizon` reports that rate and its day-late verdicts (decision
+  `sibling-row-definitions`, superseding the read-once note of decision `certainty-nightly-workflow`).
 - **Merge `main` before touching `LaneTimings.ts`:** `goals/ci-lane-economics` edits its shard layouts with
   every partition change.
 - **Hand-offs:** slice 2 unblocks route refinement replays in `route-soundness-repair` and `hosted-setup-tax`;
@@ -274,5 +273,13 @@ Slice 13 (MEAS-06) adds `beep ci unit-timings` and two steps in the existing `te
 Lane feat/certainty-13-unit-timings
 
 Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-13 PR.
+
+### Slice 18: the sibling-goal rows and the 7-day main horizon, 2026-11-27
+
+Slice 18 (driver ruling 2026-11-27) adds to `beep ci certainty`, in its JSON report and its aggregates-only summary, the rows of SPEC "Numbers the scorecard reports" that no slice had built. They are `heavySlotMinutes`, `heavyQueue`, the heavy-wait `admissionToHeavy.p95Minutes`, `lintPolicyWall`, `propertyLaws`, `firstWavePickup`, `mainCancels` (with `mainRuns[].cancelActor`, the `CiCertaintyCancelActor` literal domain), `replayInputs` (with `mainRuns[]` job counts) and `mainHorizon`. The capture re-reads main over 7 days and reads the jobs of the window commits' push runs. A partial read of those jobs refuses certification. Corpora captured earlier still decode, with no horizon and unread cancel actors. Row definitions are in decision `sibling-row-definitions`; the two parts the job token cannot read are in `rows-not-built-in-full`. The admission gate is `packages/tooling/tool/cli/test/ci-certainty.test.ts`, which passes on Node and Bun with `Certainty.ts` and `Certainty.schemas.ts` at 100% coverage. It folds the new rows over a synthetic corpus, pins them on the committed post-#3030 capture (Lint Policy wall p95 11.97 min over 14 jobs, heavy-queue p95 3.23 min over 46, PR first-wave pickup p95 7.97 min over 15), attributes all four cancel actors, and covers the late-arrival horizon and the live capture's main job reads. This is a CLI change only: the nightly workflow is unchanged, and its next run reports the rows. That unblocks `main-verdict-every-commit` slice 2 (its stop condition on first-wave pickup and heavy wait) and `heavy-pool-diet`'s P2 readings.
+
+Lane feat/certainty-scorecard-rows
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-18 PR.
 
 <!-- beep:decisions:end -->

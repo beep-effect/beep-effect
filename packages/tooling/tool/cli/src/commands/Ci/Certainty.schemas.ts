@@ -274,6 +274,53 @@ export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancell
 export type CiCertaintyMainVerdict = typeof CiCertaintyMainVerdict.Type;
 
 /**
+ * Who ended a cancelled check.yml push run on main.
+ *
+ * **Details**
+ *
+ * check.yml's concurrency group for main never cancels in progress, so GitHub
+ * itself only replaces a run that is still pending when a newer push enters
+ * the group: such a run has no job and ended when the newer run was created
+ * (`concurrency-queue`). A cancelled run that created jobs was cancelled by a
+ * person, an agent or an API call (`explicit`); the job token cannot say
+ * which, because the login is only in check-run annotations and every agent
+ * shares one login. A run with no job and no newer push run created before it
+ * ended is `unattributed`; a run whose jobs were not read is `unread`.
+ *
+ * **Example** (List the cancel actors)
+ *
+ * ```ts
+ * import { CiCertaintyCancelActor } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiCertaintyCancelActor.literals)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CiCertaintyCancelActor = LiteralKit(["concurrency-queue", "explicit", "unattributed", "unread"]).pipe(
+  $I.annoteSchema("CiCertaintyCancelActor", {
+    description:
+      "Who ended a cancelled check.yml push run on main: GitHub's concurrency queue, an explicit cancel, unattributed, or unread.",
+  })
+);
+
+/**
+ * **Example** (Type one cancel actor)
+ *
+ * ```ts
+ * import type { CiCertaintyCancelActor } from "@beep/repo-cli/commands/Ci"
+ *
+ * const actor: CiCertaintyCancelActor = "concurrency-queue"
+ * console.log(actor)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CiCertaintyCancelActor = typeof CiCertaintyCancelActor.Type;
+
+/**
  * **Details**
  *
  * `api-partial` means at least one head or the main run listing could not be
@@ -353,6 +400,7 @@ export const CiCertaintyPercentileStatus = LiteralKit(["attained", "not-attained
 export type CiCertaintyPercentileStatus = typeof CiCertaintyPercentileStatus.Type;
 
 const partialReadsDefault: ReadonlyArray<CiWorkflowPartialRead> = [];
+const mainPushRunsDefault: ReadonlyArray<CiWorkflowWindowRun> = [];
 
 /**
  * One captured producer run for the scorecard corpus.
@@ -396,6 +444,8 @@ export class CiCertaintyRun extends S.Opaque<CiCertaintyRun, { readonly brand: u
   )
 ) {}
 
+const mainRunJobsDefault: ReadonlyArray<CiCertaintyRun> = [];
+
 /**
  * **Example** (Describe a main commit without a run)
  *
@@ -436,6 +486,13 @@ export class CiCertaintyMainCommit extends S.Opaque<CiCertaintyMainCommit, { rea
  * fixture corpus under the CLI's test fixtures uses the same shape. `since` and
  * `until` bound the T0 of counted heads and the commit time of counted main
  * commits; `capturedAt` is the clock every open or superseded judgement uses.
+ * `mainHorizonSince` opens the late-arrival horizon: main commits from it to
+ * `until` are re-read each night, so a verdict that lands after its own day's
+ * capture is counted by a later night. `mainPushRuns` is the whole push-run
+ * listing (it names the newer run that replaced a pending one), and
+ * `mainRunJobs` holds the jobs of the push runs of the window's commits.
+ * Corpora captured before these fields decode with no horizon and no main
+ * jobs, so their cancel actors read `unread`.
  *
  * **Example** (Describe an empty corpus)
  *
@@ -462,9 +519,21 @@ export class CiCertaintyCorpus extends S.Opaque<CiCertaintyCorpus, { readonly br
   S.Struct({
     capturedAt: S.DateTimeUtcFromString,
     mainCommits: S.Array(CiCertaintyMainCommit),
+    mainHorizonSince: S.DateTimeUtcFromString.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
     mainListingPartial: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    mainPushRuns: S.Array(CiWorkflowWindowRun).pipe(
+      S.withConstructorDefault(Effect.succeed(mainPushRunsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(mainPushRunsDefault))
+    ),
+    mainRunJobs: S.Array(CiCertaintyRun).pipe(
+      S.withConstructorDefault(Effect.succeed(mainRunJobsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(mainRunJobsDefault))
     ),
     pullRequestRuns: S.Array(CiCertaintyRun),
     requestCount: NonNegativeInt,
@@ -810,7 +879,7 @@ export class CiCertaintyTestUnitConversion extends S.Opaque<
  * import { CiCertaintyAdmissionStat } from "@beep/repo-cli/commands/Ci"
  * import * as O from "effect/Option"
  *
- * console.log(CiCertaintyAdmissionStat.make({ n: 0, p50Minutes: O.none() }).n)
+ * console.log(CiCertaintyAdmissionStat.make({ n: 0, p50Minutes: O.none(), p95Minutes: O.none() }).n)
  * ```
  *
  * @category models
@@ -820,10 +889,202 @@ export class CiCertaintyAdmissionStat extends S.Opaque<CiCertaintyAdmissionStat,
   S.Struct({
     n: NonNegativeInt,
     p50Minutes: S.OptionFromNullOr(NonNegativeMinutes),
+    p95Minutes: S.OptionFromNullOr(NonNegativeMinutes),
   }).pipe(
     $I.annoteSchema("CiCertaintyAdmissionStat", {
       description:
-        "Median minutes from a run's Heavy Admission start to the start of its first executed job on the heavy pool.",
+        "Median and p95 minutes from a run's Heavy Admission start to the start of its first executed job on the heavy pool; the p95 is the heavy-wait row.",
+    })
+  )
+) {}
+
+/**
+ * Nearest-rank summary of one per-run or per-job quantity.
+ *
+ * **Details**
+ *
+ * The unit is the report field's: minutes for the latency and wall rows,
+ * runner-minutes for heavy slot-minutes, a job count for the replay inputs.
+ * Every statistic is absent when `n` is zero.
+ *
+ * **Example** (Describe an empty distribution)
+ *
+ * ```ts
+ * import { CiCertaintyDistribution } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const empty = CiCertaintyDistribution.make({ max: O.none(), mean: O.none(), n: 0, p50: O.none(), p95: O.none() })
+ * console.log(empty.n)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyDistribution extends S.Opaque<CiCertaintyDistribution, { readonly brand: unique symbol }>()(
+  S.Struct({
+    max: S.OptionFromNullOr(NonNegativeMinutes),
+    mean: S.OptionFromNullOr(NonNegativeMinutes),
+    n: NonNegativeInt,
+    p50: S.OptionFromNullOr(NonNegativeMinutes),
+    p95: S.OptionFromNullOr(NonNegativeMinutes),
+  }).pipe(
+    $I.annoteSchema("CiCertaintyDistribution", {
+      description:
+        "Count, mean, nearest-rank p50 and p95, and maximum of one non-negative per-run or per-job quantity.",
+    })
+  )
+) {}
+
+/**
+ * One check.yml push run of a main commit inside the window.
+ *
+ * **Details**
+ *
+ * `hostedJobs` and `heavyJobs` count the attempt-one jobs that started on a
+ * GitHub-hosted or a managed heavy-pool runner; with the commit's
+ * `committedAt` they are the merge-timestamp replay's inputs. Both, and
+ * `cancelActor`, are absent when the run's jobs were not read; `cancelActor`
+ * is also absent for a run that was not cancelled.
+ *
+ * **Example** (Read a run row's hosted job count)
+ *
+ * ```ts
+ * import type { CiCertaintyMainRunRow } from "@beep/repo-cli/commands/Ci"
+ *
+ * const hostedJobsOf = (row: CiCertaintyMainRunRow) => row.hostedJobs
+ * console.log(typeof hostedJobsOf)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyMainRunRow extends S.Opaque<CiCertaintyMainRunRow, { readonly brand: unique symbol }>()(
+  S.Struct({
+    cancelActor: S.OptionFromNullOr(CiCertaintyCancelActor),
+    conclusion: S.OptionFromNullOr(S.String),
+    createdAt: S.DateTimeUtcFromString,
+    heavyJobs: S.OptionFromNullOr(NonNegativeInt),
+    hostedJobs: S.OptionFromNullOr(NonNegativeInt),
+    runId: S.Finite,
+    sha: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyMainRunRow", {
+      description:
+        "One check.yml push run of a main commit in the window with its started hosted and heavy job counts and, when cancelled, its cancel actor.",
+    })
+  )
+) {}
+
+/**
+ * Cancelled check.yml push runs of the window's main commits, by cancel actor.
+ *
+ * **Details**
+ *
+ * `explicit` is the upper bound on agent-initiated main cancels that
+ * `goals/main-verdict-every-commit` reads; `concurrency-queue` cancels are
+ * GitHub replacing a pending run and are no actor's.
+ *
+ * **Example** (Describe a day without cancels)
+ *
+ * ```ts
+ * import { CiCertaintyMainCancelStat } from "@beep/repo-cli/commands/Ci"
+ *
+ * const stat = CiCertaintyMainCancelStat.make({
+ *   cancelledRuns: 0,
+ *   concurrencyQueue: 0,
+ *   explicit: 0,
+ *   unattributed: 0,
+ *   unread: 0,
+ * })
+ * console.log(stat.explicit)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyMainCancelStat extends S.Opaque<CiCertaintyMainCancelStat, { readonly brand: unique symbol }>()(
+  S.Struct({
+    cancelledRuns: NonNegativeInt,
+    concurrencyQueue: NonNegativeInt,
+    explicit: NonNegativeInt,
+    unattributed: NonNegativeInt,
+    unread: NonNegativeInt,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyMainCancelStat", {
+      description: "Cancelled check.yml push runs of the window's main commits counted by cancel actor.",
+    })
+  )
+) {}
+
+/**
+ * Main verdict rate over the late-arrival horizon.
+ *
+ * **Details**
+ *
+ * `stat` covers the non-docs first-parent commits from `since` to the
+ * report's `until`, read at this capture, so a commit whose verdict landed
+ * after its own day's capture is counted here. `lateVerdicts` counts those
+ * commits whose deciding run started a day or more after the commit, which is
+ * how a re-run or a re-dispatched verdict arrives. A corpus captured without a
+ * horizon reports `since` equal to the report's `since`.
+ *
+ * **Example** (Read the horizon rate)
+ *
+ * ```ts
+ * import type { CiCertaintyMainHorizon } from "@beep/repo-cli/commands/Ci"
+ *
+ * const rateOf = (horizon: CiCertaintyMainHorizon) => horizon.stat.rate
+ * console.log(typeof rateOf)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyMainHorizon extends S.Opaque<CiCertaintyMainHorizon, { readonly brand: unique symbol }>()(
+  S.Struct({
+    lateVerdicts: NonNegativeInt,
+    since: S.DateTimeUtcFromString,
+    stat: CiCertaintyMainStat,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyMainHorizon", {
+      description:
+        "Main verdict rate re-read over the late-arrival horizon, with the verdicts that arrived a day late.",
+    })
+  )
+) {}
+
+/**
+ * Inputs of the merge-timestamp replay in aggregate.
+ *
+ * **Details**
+ *
+ * The per-commit merge timestamps are `mainRows[].committedAt` and the
+ * per-run job counts are `mainRuns[]`; these are their aggregates.
+ * `pullRequestRunHostedJobs` counts the started GitHub-hosted jobs of each
+ * code pull-request head attempt (a check.yml run plus its admitted heavy-admit.yml
+ * runs), `mainRunHostedJobs` those of each main push run that started a job.
+ *
+ * **Example** (Read the main run job count p95)
+ *
+ * ```ts
+ * import type { CiCertaintyReplayInputs } from "@beep/repo-cli/commands/Ci"
+ *
+ * const p95Of = (inputs: CiCertaintyReplayInputs) => inputs.mainRunHostedJobs.p95
+ * console.log(typeof p95Of)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiCertaintyReplayInputs extends S.Opaque<CiCertaintyReplayInputs, { readonly brand: unique symbol }>()(
+  S.Struct({
+    mainMerges: NonNegativeInt,
+    mainRunHostedJobs: CiCertaintyDistribution,
+    pullRequestRunHostedJobs: CiCertaintyDistribution,
+  }).pipe(
+    $I.annoteSchema("CiCertaintyReplayInputs", {
+      description:
+        "Main merge count and hosted jobs per main push run and per pull-request head attempt, the merge-timestamp replay's inputs.",
     })
   )
 ) {}
@@ -835,7 +1096,10 @@ export class CiCertaintyAdmissionStat extends S.Opaque<CiCertaintyAdmissionStat,
  * heads with misses counted. Everything else is reported beside it, never
  * inside it: the green-only diagnostic, push to Yeet-mergeable, the coverage
  * verdict, docs heads, runner-minutes, the superseded share and the main
- * verdict rate. `certified` is false whenever `refusals` is non-empty, and an
+ * verdict rate. The sibling-goal rows (`heavySlotMinutes`, `heavyQueue`,
+ * `lintPolicyWall`, `propertyLaws`, `firstWavePickup`, `admissionToHeavy`'s
+ * heavy-wait p95, `mainCancels`, `mainHorizon` and `replayInputs`) cover code
+ * heads and the window's main commits. `certified` is false whenever `refusals` is non-empty, and an
  * uncertified report is never acceptance evidence. `notCovered` names what the
  * scorecard does not measure.
  *
@@ -859,14 +1123,23 @@ export class CiCertaintyReport extends S.Opaque<CiCertaintyReport, { readonly br
     clockSource: S.NonEmptyString,
     coverageVerdict: CiCertaintyLatencyStat,
     docsHeads: CiCertaintyLatencyStat,
+    firstWavePickup: CiCertaintyDistribution,
     greenOnly: CiCertaintyLatencyStat,
     heads: S.Array(CiCertaintyHeadRow),
+    heavyQueue: CiCertaintyDistribution,
+    heavySlotMinutes: CiCertaintyDistribution,
+    lintPolicyWall: CiCertaintyDistribution,
     main: CiCertaintyMainStat,
+    mainCancels: CiCertaintyMainCancelStat,
+    mainHorizon: CiCertaintyMainHorizon,
     mainRows: S.Array(CiCertaintyMainRow),
+    mainRuns: S.Array(CiCertaintyMainRunRow),
     mergeable: CiCertaintyLatencyStat,
     notCovered: S.Array(S.NonEmptyString),
     partialReads: S.Array(CiWorkflowPartialRead),
+    propertyLaws: CiCertaintyDistribution,
     refusals: S.Array(CiCertaintyRefusal),
+    replayInputs: CiCertaintyReplayInputs,
     requestCount: NonNegativeInt,
     requiredContexts: S.Array(S.NonEmptyString),
     rulesetDigest: S.NonEmptyString,

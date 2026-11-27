@@ -150,11 +150,13 @@ describe("NodeEvent events", () => {
         StaleParentsError,
         StaleParentsError,
       ]);
-      // NodeCreated also refuses a predecessor outside its file.
       const placement = UnplacedNodeError.make({ nodeId, filePath, after: otherNodeId });
       const isCreatedError = S.is(NodeCreatedEvent.error);
       const stale = StaleParentsError.make({ nodeId, parents: [], heads: [revisionA] });
-      expect(A.every([placement, stale], isCreatedError)).toBe(true);
+      expect(
+        A.every([placement, stale], isCreatedError),
+        "NodeCreated also refuses a predecessor outside its file"
+      ).toBe(true);
     })
   );
 
