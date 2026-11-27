@@ -365,13 +365,12 @@ describe("verified-span hostile-text contract", () => {
   it.effect(
     "fails as a typed error when NFKC expands a maximum-length locator",
     Effect.fnUntraced(function* () {
-      const expandedLocator = Str.concat(Str.repeat(4_095)("\u2026"), "x");
-      const failure = yield* locateRawText("a plain source without the locator", expandedLocator).pipe(Effect.flip);
+      const tripledByNfkcLocator = Str.concat(Str.repeat(4_095)("\u2026"), "x");
+      const failure = yield* locateRawText("a plain source without the locator", tripledByNfkcLocator).pipe(
+        Effect.flip
+      );
 
-      expect(
-        failure.reason,
-        "U+2026 normalizes to three code units, so this 4 096-unit locator becomes about 12 286"
-      ).toBe("not-found");
+      expect(failure.reason).toBe("not-found");
     })
   );
 

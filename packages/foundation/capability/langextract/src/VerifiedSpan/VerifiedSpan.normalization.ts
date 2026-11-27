@@ -19,8 +19,7 @@ const MarkLeadingText = S.String.check(
     /^\p{M}/u,
     $I.annote("MarkLeadingTextCheck", {
       title: "Mark-Leading Text",
-      description:
-        "Checks for text whose first code point is a Unicode combining mark. It is read on the NFKC form because U+0E33, U+0EB3, U+FF9E and U+FF9F are not marks but normalize to mark-leading text; left as its own cluster, such a letter would keep a later mark (Z, U+FF9E, U+0323) from composing with the cluster before it.",
+      description: "Checks for text whose first code point is a Unicode combining mark.",
       message: "Expected text that starts with a Unicode combining-mark code point.",
     })
   )
@@ -122,7 +121,7 @@ type NormalizationScan = {
 const formOf = (scan: NormalizationScan, rawCluster: string): ClusterForm =>
   scan.clusterForms(rawCluster, () => clusterForm(rawCluster));
 
-const startsWithMark = (scan: NormalizationScan, point: string): boolean =>
+const nfkcFormStartsWithMark = (scan: NormalizationScan, point: string): boolean =>
   scan.leadingMarks(point, () => isMarkLeading(formOf(scan, point)[0]));
 
 const joinsCluster = (scan: NormalizationScan, rawCluster: string, point: string): boolean =>
@@ -160,7 +159,10 @@ const scanPoint = (source: string, scan: NormalizationScan, point: string): void
   const pointEnd = scan.clusterEnd + point.length;
   const rawCluster = Str.slice(scan.clusterStart, scan.clusterEnd)(source);
   // decision: per-call-cluster-memo
-  if (startsWithMark(scan, point) || scan.joins(rawCluster + point, () => joinsCluster(scan, rawCluster, point))) {
+  if (
+    nfkcFormStartsWithMark(scan, point) ||
+    scan.joins(rawCluster + point, () => joinsCluster(scan, rawCluster, point))
+  ) {
     scan.clusterEnd = pointEnd;
     return;
   }

@@ -1,7 +1,7 @@
 ---
 title: Per-cluster normalization results are memoized for one normalization call, with short keys only
 date: 2026-11-26
-reversal: Drop memo() and MAX_MEMO_KEY_LENGTH and compute clusterForm, startsWithMark and joinsCluster for every occurrence.
+reversal: Drop memo() and MAX_MEMO_KEY_LENGTH and compute clusterForm, nfkcFormStartsWithMark and joinsCluster for every occurrence.
 governs:
   - src/VerifiedSpan/VerifiedSpan.normalization.ts#MAX_MEMO_KEY_LENGTH
   - src/VerifiedSpan/VerifiedSpan.normalization.ts#memo

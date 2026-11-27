@@ -585,11 +585,7 @@ describe("CheckDocument", () => {
           const flush9 = yield* doc.flush;
           assert.strictEqual(flush9, "stale");
           const flush10 = yield* doc.flush;
-          assert.strictEqual(
-            flush10,
-            "stale",
-            "a report-driven pass plus an explicit flush is the pair a consumer saw logging twice"
-          );
+          assert.strictEqual(flush10, "stale");
         }).pipe(withLayer(older.layer), withLayer(Logger.layer([collector])));
 
         const got11 = yield* Ref.get(lines);

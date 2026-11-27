@@ -103,7 +103,7 @@ describe("bundle reachability", () => {
       assert.include(
         reachableClosure4,
         "effect/FileSystem",
-        "Vite inlines the managed-section sources under @beep/managed-section/src/; a walker that never entered them would pass the FileSystem check vacuously"
+        "a walker that never entered managed-section would pass the FileSystem check vacuously"
       );
     })
   );

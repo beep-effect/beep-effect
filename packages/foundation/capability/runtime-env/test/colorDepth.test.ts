@@ -75,11 +75,7 @@ describe("colorDepth", () => {
     it.skipIf(win32)(
       `matches Node on a TTY for the extra row ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)}`,
       () => {
-        assert.strictEqual(
-          colorDepth(env, true),
-          nodeDepth(env),
-          "the Node oracle takes a win32 branch on Windows, so these rows are skipped there"
-        );
+        assert.strictEqual(colorDepth(env, true), nodeDepth(env));
       }
     );
   }
@@ -160,7 +156,7 @@ describe("colorDepth", () => {
       assert.strictEqual(
         colorDepth({ OS }, true),
         "truecolor",
-        "Node's win32 branch gives truecolor from Windows 10 build 14931; env is read only through Config, so OS=Windows_NT, which Windows sets system-wide and Git Bash keeps, stands in for the platform, and Node's process.platform oracle cannot pin these rows"
+        "Node's win32 branch gives truecolor from Windows 10 build 14931"
       );
     });
 
