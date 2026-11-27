@@ -445,7 +445,6 @@ describe("validateFileType", () => {
   });
 });
 
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
 it.effect.prop(
   "encodes FileSignature through its generation link",
   [Arbitrary.schema(FileSignature)],
@@ -458,7 +457,10 @@ it.effect.prop(
       throw new Error("Missing generation transformation");
     expect(link.transformation._tag).toBe("Transformation");
     const encoded = yield* encodeFileSignatureLink(value);
-    const expectation = expect(encoded);
+    const expectation = expect(
+      encoded,
+      "the arbitrary compiler consumes decode only, so the advertised encoding is checked here"
+    );
     const encodedFileSignature = yield* encodeFileSignature(value);
     expectation.toEqual(encodedFileSignature);
 
@@ -467,7 +469,6 @@ it.effect.prop(
   { arbitrary: fcRuns(50) }
 );
 
-// The arbitrary compiler consumes decode only; verify the advertised encoding separately.
 it.effect.prop(
   "encodes DetectedFileInfo through its generation link",
   [Arbitrary.schema(DetectedFileInfo)],
@@ -480,7 +481,10 @@ it.effect.prop(
       throw new Error("Missing generation transformation");
     expect(link.transformation._tag).toBe("Transformation");
     const encoded = yield* encodeDetectedFileInfoLink(value);
-    const expectation1 = expect(encoded);
+    const expectation1 = expect(
+      encoded,
+      "the arbitrary compiler consumes decode only, so the advertised encoding is checked here"
+    );
     const encodedFileTypeInfo = yield* encodeFileTypeInfo(value.info);
     expectation1.toEqual(encodedFileTypeInfo);
     expect(value.mimeType).toBe(value.info.mimeType);

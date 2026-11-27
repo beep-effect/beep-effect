@@ -5,13 +5,10 @@ import * as HashMap from "effect/HashMap";
 import * as Str from "effect/String";
 import { SOURCES } from "./support/sources.ts";
 
-/** Source text with block and line comments removed, so prose about `process.env` is not a read. */
-const code = (source: string): string => Str.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "")(source);
+const withoutComments = (source: string): string => Str.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "")(source);
 
-/** Code with double-quoted string literals emptied as well, so a description that mentions a process is not a read. */
-const bare = (body: string): string => Str.replace(/"(?:[^"\\\n]|\\.)*"/g, '""')(body);
+const withoutStringLiterals = (body: string): string => Str.replace(/"(?:[^"\\\n]|\\.)*"/g, '""')(body);
 
-/** Every module specifier a source imports, statically or dynamically. */
 const specifiers = (source: string): ReadonlyArray<string> =>
   A.flatMap(A.fromIterable(Str.matchAll(/(?:from|import)\s*\(?\s*"([^"]+)"/g)(source)), (match) =>
     A.fromNullishOr(match[1])
@@ -19,10 +16,9 @@ const specifiers = (source: string): ReadonlyArray<string> =>
 
 const FORBIDDEN_IMPORT = /^(?:node:|@effect\/platform|@effected\/)/;
 
-/** The purity rules this package holds its sources to, each a named check over one source text. */
 const violations = (source: string): ReadonlyArray<string> => {
-  const body = code(source);
-  const reads = bare(body);
+  const body = withoutComments(source);
+  const reads = withoutStringLiterals(body);
   return [
     ...(/\bprocess\b/.test(reads) ? ["process"] : []),
     ...(/\bconsole\s*\./.test(reads) ? ["console"] : []),
@@ -45,9 +41,17 @@ describe("env purity", () => {
       assert.deepStrictEqual(violations('import { NodeServices } from "@effect/platform-node";'), [
         "import @effect/platform-node",
       ]);
-      assert.deepStrictEqual(violations("// process.env is read by the host, never here\nconst a = 1;"), []);
+      assert.deepStrictEqual(
+        violations("// process.env is read by the host, never here\nconst a = 1;"),
+        [],
+        "comment prose about process.env is not a read"
+      );
       assert.deepStrictEqual(violations('import * as Effect from "effect/Effect";'), []);
-      assert.deepStrictEqual(violations('const description = "a snapshot of the relevant process state";'), []);
+      assert.deepStrictEqual(
+        violations('const description = "a snapshot of the relevant process state";'),
+        [],
+        "a string literal that mentions a process is not a read"
+      );
     })
   );
 

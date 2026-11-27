@@ -13,8 +13,6 @@ const decodeInfo = S.decodeUnknownEffect(FileDiff.Info);
 const encodeInfo = S.encodeEffect(FileDiff.Info);
 const InfoArbitrary = Arbitrary.schema(FileDiff.Info);
 
-// The decoded side keeps admitting `undefined` for the optional fields.
-
 describe("FileDiff.Info", () => {
   it.effect(
     "decodes added file summaries",

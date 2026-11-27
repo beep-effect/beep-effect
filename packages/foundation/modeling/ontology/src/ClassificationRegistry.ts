@@ -233,7 +233,6 @@ const decodeAssets = Effect.fnUntraced(function* (manifestPath: string, content:
   const forEach1 = yield* Effect.forEach(
     lines,
     Effect.fnUntraced(function* (line, index) {
-      // The shared decoder validates every discriminator, including unknown kinds.
       const route = yield* decodeVendorManifestRow(manifestPath, line, index).pipe(
         Effect.mapError(() => failure("manifest-invalid", `Manifest row ${index + 1}`))
       );

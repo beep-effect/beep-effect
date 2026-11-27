@@ -57,9 +57,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SchemaIdentity } from "@beep/epistemics/Factory";
 
-// A second binding, as a party slice would write it: local branded string ids
-// and identities under its own composer. None of these come from the
-// epistemic slice or the shared kernel.
 const PartyClaimId = S.String.pipe(S.brand("PartyClaimId"));
 const PartyEvidenceId = S.String.pipe(S.brand("PartyEvidenceId"));
 const PartyEdgeVersionId = S.String.pipe(S.brand("PartyEdgeVersionId"));
@@ -303,16 +300,12 @@ const ref = (edgeVersionId: string, key: string) =>
 
 const evidenceIds = (values: A.NonEmptyReadonlyArray<string>) => A.map(values, (id) => PartyEvidenceId.make(id));
 
-// A digest helper's failure as its message: the canonical JSON owner's refusal
-// arrives in the helper's own `SchemaError` channel, naming its code and pointer.
 const failureMessage = <A>(result: Result.Result<A, S.SchemaError>): Result.Result<A, string> =>
   Result.mapError(result, (error) => error.message);
 
-// Fixed seeds the candidate-content sampler runs under, beside the seed that
-// exhausted it on `main` (ep94).
-const SEED_COUNT = 64;
+const FIXED_SAMPLER_SEED_COUNT = 64;
+const SEED_THAT_EXHAUSTED_FILTERED_FACTS = 433213354620349;
 
-// `true` in the failure channel when that message names the given refusal.
 const refusedAt = <A>(result: Result.Result<A, S.SchemaError>, refusal: string): Result.Result<A, boolean> =>
   Result.mapError(failureMessage(result), Str.includes(refusal));
 
@@ -378,11 +371,13 @@ describe("second binding of the contradiction factories", () => {
       const samples = yield* Arbitrary.sampleEffect(arbitraries.ContradictionCandidateContentArbitrary, { count: 10 });
       A.forEach(samples, (content) => {
         expect(S.is(CandidateContent)(content)).toBe(true);
-        // This binding's ids are free `S.String`, so a sample can hold an
-        // unpaired surrogate, which the seal refuses typed (pinned below).
         Result.match(failureMessage(behavior.contradictionCandidateDigest(content)), {
           onSuccess: (digest) => expect(digest).toMatch(/^[0-9a-f]{64}$/),
-          onFailure: (message) => expect(message).toMatch(/LoneSurrogate at "\//),
+          onFailure: (message) =>
+            expect(
+              message,
+              "this binding's ids are free S.String, so a sample can hold an unpaired surrogate, which the seal refuses typed"
+            ).toMatch(/LoneSurrogate at "\//),
         });
       });
       const matchBases = yield* Arbitrary.sampleEffect(arbitraries.ContradictionMatchBasisArbitrary, { count: 10 });
@@ -390,22 +385,21 @@ describe("second binding of the contradiction factories", () => {
     })
   );
 
-  // The contradiction arbitraries construct their facts; they do not filter
-  // generated JSON. Deriving the fact from its checked schema discarded about
-  // a quarter of the samples and exhausted this sampler on some seeds,
-  // 433213354620349 among them (ep94).
   it.effect("samples candidate content on fixed seeds without exhausting the generator", () =>
     Effect.gen(function* () {
       const seeds = A.prepend(
-        A.makeBy(SEED_COUNT, (index) => index + 1),
-        433213354620349
+        A.makeBy(FIXED_SAMPLER_SEED_COUNT, (index) => index + 1),
+        SEED_THAT_EXHAUSTED_FILTERED_FACTS
       );
       for (const seed of seeds) {
         const samples = yield* Arbitrary.sampleEffect(arbitraries.ContradictionCandidateContentArbitrary, {
           count: 10,
           seed,
         });
-        expect(A.every(samples, S.is(CandidateContent))).toBe(true);
+        expect(
+          A.every(samples, S.is(CandidateContent)),
+          "the fact arbitrary constructs well-formed facts; filtering the checked schema exhausted this sampler"
+        ).toBe(true);
       }
       const facts = yield* Arbitrary.sampleEffect(vocabulary.ContradictionProposalFactArbitrary, {
         count: 200,
@@ -471,9 +465,6 @@ describe("second binding of the contradiction factories", () => {
     );
   });
 
-  // The synchronous export keeps its string return (the seal call sites and
-  // the two domain aliases use it), so its refusal is the owner's typed error,
-  // thrown; the Result twin reports the same refusal as a SchemaError.
   it("canonicalDetectionJson throws the owner's refusal and its Result twin returns it", () => {
     expect(canonicalDetectionJson({ b: 1, a: [true, null] })).toBe('{"a":[true,null],"b":1}');
     assertSuccess(canonicalDetectionJsonResult({ b: 1, a: [true, null] }), '{"a":[true,null],"b":1}');

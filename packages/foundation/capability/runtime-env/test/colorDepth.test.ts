@@ -55,10 +55,7 @@ const CASES: ReadonlyArray<Record<string, string>> = [
 
 const win32 = currentHostPlatform === "win32";
 
-// Added beyond the brief's table, which stays unedited above: terminals Node maps through its TERM table and
-// regex list, and the rows the first table skips. The Node oracle takes a win32 branch on Windows, so it is
-// skipped there.
-const EXTRA_CASES: ReadonlyArray<Record<string, string>> = [
+const NODE_TERM_TABLE_EXTRA_ROWS: ReadonlyArray<Record<string, string>> = [
   { TERM: "eterm" },
   { TERM: "putty" },
   { TERM: "st" },
@@ -74,7 +71,7 @@ const EXTRA_CASES: ReadonlyArray<Record<string, string>> = [
 ];
 
 describe("colorDepth", () => {
-  for (const env of EXTRA_CASES) {
+  for (const env of NODE_TERM_TABLE_EXTRA_ROWS) {
     it.skipIf(win32)(
       `matches Node on a TTY for the extra row ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(env), identity)}`,
       () => {
@@ -83,11 +80,13 @@ describe("colorDepth", () => {
     );
   }
 
-  // Node looks TERM up in a plain object, so TERM=constructor reaches Object.prototype and returns a function
-  // as a depth. Here the table is a Map: these rows are pinned against colorDepth only, never against Node.
   for (const term of ["constructor", "__proto__", "toString"]) {
     it(`TERM=${term} cannot reach Object.prototype and reads as none`, () => {
-      assert.strictEqual(colorDepth({ TERM: term }, true), "none");
+      assert.strictEqual(
+        colorDepth({ TERM: term }, true),
+        "none",
+        "Node's plain-object TERM lookup returns a function here; the table is a Map, so this pins colorDepth only, never Node"
+      );
     });
   }
 
@@ -100,7 +99,6 @@ describe("colorDepth", () => {
     );
   }
 
-  // Added beyond the brief's table: the CI provider keys live in a table the source regex cannot see.
   for (const name of [
     "APPVEYOR",
     "BUILDKITE",
@@ -114,7 +112,7 @@ describe("colorDepth", () => {
     it.skipIf(win32)(`matches Node for CI provider ${name}`, () => {
       const env = { CI: "true", [name]: "true" };
       assert.strictEqual(colorDepth(env, true), nodeDepth(env));
-      assert.include(colorKeys, name);
+      assert.include(colorKeys, name, "the CI provider keys live in a table the source regex cannot see");
     });
   }
 
@@ -138,22 +136,28 @@ describe("colorDepth", () => {
   it.skipIf(win32)(
     'documented divergence: FORCE_COLOR="" is unset here because readEnv normalizes empty strings to absent',
     () => {
-      // Node: "" forces 16 colours. Our env record never carries "" (readEnv drops it),
-      // so the record the detector sees has no FORCE_COLOR key at all.
-      assert.strictEqual(nodeDepth({ FORCE_COLOR: "", TERM: "dumb" }), "basic");
-      assert.strictEqual(colorDepth({ TERM: "dumb" }, true), "none");
+      assert.strictEqual(
+        nodeDepth({ FORCE_COLOR: "", TERM: "dumb" }),
+        "basic",
+        'Node: FORCE_COLOR="" forces 16 colours'
+      );
+      assert.strictEqual(
+        colorDepth({ TERM: "dumb" }, true),
+        "none",
+        "readEnv drops an empty value, so the detector's record has no FORCE_COLOR key at all"
+      );
     }
   );
 
-  // Node's win32 branch sits after the FORCE_COLOR and disable checks and before every other row, and gives truecolor
-  // from Windows 10 build 14931. Env is read only through Config, so `OS=Windows_NT`, which Windows sets system-wide
-  // and Git Bash keeps, stands in for the platform. The Node oracle reads `process.platform`, so these rows are pinned
-  // against colorDepth only.
   describe("on Windows (OS=Windows_NT)", () => {
     const OS = "Windows_NT";
 
     it("a TTY with no TERM is truecolor, as in cmd.exe, PowerShell and Windows Terminal", () => {
-      assert.strictEqual(colorDepth({ OS }, true), "truecolor");
+      assert.strictEqual(
+        colorDepth({ OS }, true),
+        "truecolor",
+        "Node's win32 branch gives truecolor from Windows 10 build 14931"
+      );
     });
 
     it("the Windows branch comes before TERM, CI and the rest of the table", () => {

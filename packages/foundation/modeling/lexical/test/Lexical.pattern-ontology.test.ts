@@ -23,30 +23,24 @@ const { collectPoTaggedConstructors, getPoPattern, poConservation } = PatternOnt
 
 const patternOf = (schema: S.Top): PatternOntology.PoPattern => O.getOrThrow(getPoPattern(schema));
 
-/**
- * The Lexical codec has no issue channel: its demotions are the locked
- * lossiness profile in the package README ("Degraded on Md -> Lexical" and
- * "Normalizations"). This table is that profile stated as pattern transitions;
- * a pattern change outside it is a silent demotion and fails the law.
- */
-const mdToLexicalDemotions: ReadonlyArray<readonly [source: string, target: string]> = [
-  // Degraded: plain-text paragraphs using the canonical Markdown projection.
+type PatternTransition = readonly [source: string, target: string];
+
+const plainTextParagraphDemotions: ReadonlyArray<PatternTransition> = [
   ["mathBlock", "paragraph"],
   ["footnoteDefinition", "paragraph"],
   ["admonition", "paragraph"],
   ["embed", "paragraph"],
-  // Degraded: Hr -> a literal "---" paragraph.
   ["hr", "paragraph"],
-  // Normalization: a block quote flattens to one inline-only quote element.
-  ["blockquote", "quote"],
-  // Lossless: fenced code text re-realizes as text, tab, and linebreak leaves.
+];
+
+const blockquoteFlattening: ReadonlyArray<PatternTransition> = [["blockquote", "quote"]];
+
+const losslessRealizations: ReadonlyArray<PatternTransition> = [
   ["pre", "code"],
-  // Lossless: the artifact-link paragraph convention becomes a block leaf.
   ["p", "artifact-ref"],
-  // Degraded: marks become text format bits on their flattened children, so a
-  // mark projects onto exactly the leaves its children project onto: text
-  // runs, line breaks, and links. Images become links; footnote references
-  // become literal text.
+];
+
+const markFormatBitDemotions: ReadonlyArray<PatternTransition> = [
   ["strong", "text"],
   ["strong", "linebreak"],
   ["strong", "link"],
@@ -58,30 +52,33 @@ const mdToLexicalDemotions: ReadonlyArray<readonly [source: string, target: stri
   ["del", "link"],
   ["img", "link"],
   ["footnoteReference", "text"],
-  // In place: an Md table cell holds inline content directly; a Lexical cell
-  // wraps that content in a paragraph.
-  ["tableCell", "tablecell"],
 ];
 
-/**
- * `nodeToBlocks` is a total projection. Root-level elements keep their pattern
- * or re-realize through these documented transitions; loose leaves that have no
- * block position in Md wrap into a paragraph.
- */
-const lexicalToMdDemotions: ReadonlyArray<readonly [source: string, target: string]> = [
+const cellParagraphWrapping: ReadonlyArray<PatternTransition> = [["tableCell", "tablecell"]];
+
+const mdToLexicalDemotions: ReadonlyArray<PatternTransition> = [
+  ...plainTextParagraphDemotions,
+  ...blockquoteFlattening,
+  ...losslessRealizations,
+  ...markFormatBitDemotions,
+  ...cellParagraphWrapping,
+];
+
+const detachedStructuralToParagraph: ReadonlyArray<PatternTransition> = [
+  ["listitem", "p"],
+  ["tablecell", "p"],
+];
+
+const cellParagraphUnwrapping: ReadonlyArray<PatternTransition> = [["tablecell", "tableCell"]];
+
+const lexicalToMdDemotions: ReadonlyArray<PatternTransition> = [
   ["quote", "blockquote"],
   ["code", "pre"],
   ["artifact-ref", "p"],
-  // Detached structural nodes project onto their paragraph content; a detached
-  // table row re-wraps into a table and conserves its pattern.
-  ["listitem", "p"],
-  ["tablecell", "p"],
-  // In place: a Lexical cell's paragraph content becomes the Md cell's inline
-  // content.
-  ["tablecell", "tableCell"],
+  ...detachedStructuralToParagraph,
+  ...cellParagraphUnwrapping,
 ];
 
-/** Md constructors reachable only through fields, checked in their real position. */
 const mdFieldOnlyMembers = {
   li: Md.Li,
   taskItem: Md.TaskItem,
@@ -95,7 +92,6 @@ type LexicalStructuralNode = Extract<LexicalNode, { readonly type: "listitem" | 
 const isLexicalStructural = (node: LexicalNode): node is LexicalStructuralNode =>
   node.type === "listitem" || node.type === "tablerow" || node.type === "tablecell";
 
-/** Field-only Md children of a list or table, paired with the rows' cells. */
 const mdFieldOnlyChildren = (block: Md.Block): ReadonlyArray<MdFieldOnlyNode> =>
   block._tag === "ul" || block._tag === "ol" || block._tag === "taskList"
     ? block.children
@@ -106,7 +102,6 @@ const mdFieldOnlyChildren = (block: Md.Block): ReadonlyArray<MdFieldOnlyNode> =>
 const structuralOnly = (nodes: ReadonlyArray<LexicalNode>): ReadonlyArray<LexicalStructuralNode> =>
   A.getSomes(A.map(nodes, (node) => (isLexicalStructural(node) ? O.some(node) : O.none())));
 
-/** Structural Lexical children of a list or table, rows followed by their cells. */
 const lexicalStructuralChildren = (node: LexicalNode): ReadonlyArray<LexicalStructuralNode> =>
   node.type === "list"
     ? structuralOnly(node.children)
@@ -121,12 +116,6 @@ type InPlacePair = readonly [md: MdFieldOnlyNode, lexical: LexicalNode];
 
 const inPlacePair = (md: MdFieldOnlyNode, lexical: LexicalNode): InPlacePair => [md, lexical];
 
-/**
- * Pairs each field-only Md child with the Lexical node at the same position
- * under the same parent: list item with list item, row with row, and cell with
- * cell inside its own row. `A.zip` truncates, so callers compare the pair count
- * with the child count to catch a dropped sibling.
- */
 const inPlacePairs = (block: Md.Block, node: LexicalNode): ReadonlyArray<InPlacePair> =>
   (block._tag === "ul" || block._tag === "ol" || block._tag === "taskList") && node.type === "list"
     ? A.zipWith(block.children, node.children, inPlacePair)
@@ -143,7 +132,6 @@ const inPlacePairs = (block: Md.Block, node: LexicalNode): ReadonlyArray<InPlace
         )
       : [];
 
-/** The Lexical type each field-only Md constructor must land on in place. */
 const inPlaceLexicalType: Readonly<Record<MdFieldOnlyNode["_tag"], LexicalStructuralNode["type"]>> = {
   li: "listitem",
   taskItem: "listitem",
@@ -151,19 +139,11 @@ const inPlaceLexicalType: Readonly<Record<MdFieldOnlyNode["_tag"], LexicalStruct
   tableCell: "tablecell",
 };
 
-/** Inline-level leaves have no block position in Md and wrap into a paragraph. */
 const looseLeafTypes: ReadonlyArray<string> = ["text", "tab", "linebreak", "link"];
 
-/**
- * The derived `ListNode` arbitrary draws `listType` and `tag` independently and
- * leaves their agreement to the schema check, which rejects half of the pairs
- * on top of the discards every element node already pays. `ListNodeValue`
- * fixes the canonical tag per list type, so list nodes are built from its
- * payloads and no candidate is discarded for a mismatched tag.
- */
-const ListNodeArbitrary = Arbitrary.schema(ListNodeValue).pipe(Arbitrary.map((payload) => ListNode.make(payload)));
+const NoDiscardListNodes = Arbitrary.schema(ListNodeValue).pipe(Arbitrary.map((payload) => ListNode.make(payload)));
 
-const isDeclared = (table: ReadonlyArray<readonly [string, string]>, source: string, target: string): boolean =>
+const isDeclared = (table: ReadonlyArray<PatternTransition>, source: string, target: string): boolean =>
   A.some(table, ([from, to]) => from === source && to === target);
 
 const expectConserved = (input: {
@@ -172,14 +152,14 @@ const expectConserved = (input: {
   readonly sourcePattern: PatternOntology.PoPattern;
   readonly targetTag: string;
   readonly targetPattern: PatternOntology.PoPattern;
-  readonly declared: ReadonlyArray<readonly [string, string]>;
+  readonly declared: ReadonlyArray<PatternTransition>;
 }): void => {
   const conservation = poConservation(input.sourcePattern, input.targetPattern);
   const justified = conservation === "preserved" || isDeclared(input.declared, input.sourceTag, input.targetTag);
 
   expect(
     justified,
-    `${input.direction}: ${input.sourceTag}(${input.sourcePattern}) -> ${input.targetTag}(${input.targetPattern}) was demoted silently`
+    `${input.direction}: ${input.sourceTag}(${input.sourcePattern}) -> ${input.targetTag}(${input.targetPattern}) was demoted silently; the codec has no issue channel, so every demotion must be in the README lossiness profile`
   ).toBe(true);
 };
 
@@ -248,9 +228,10 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
           }
 
           if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
-            // Empty text leaves vanish in Lexical, so a mark over empty text has
-            // nothing a projection could drop.
-            expect(Str.isEmpty(Md.Inline.toPlainText(inline)), `md-to-lexical: ${tag} was dropped silently`).toBe(true);
+            expect(
+              Str.isEmpty(Md.Inline.toPlainText(inline)),
+              `md-to-lexical: ${tag} was dropped silently; only a mark over empty text may vanish, since Lexical drops empty text leaves`
+            ).toBe(true);
           }
 
           A.forEach(paragraph.children, (target) =>
@@ -273,17 +254,14 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
     for (const [type, member] of R.toEntries(LexicalNode.cases)) {
       it.prop(
         `projects the ${type} node with a conserved or declared pattern`,
-        { node: type === "list" ? ListNodeArbitrary : Arbitrary.schema(member) },
+        { node: type === "list" ? NoDiscardListNodes : Arbitrary.schema(member) },
         ({ node }) => {
           const blocks = nodeToBlocks(node);
 
-          // The root flattens to its children, which carry their own law.
           if (type === "root") {
             return;
           }
 
-          // An inline leaf wraps into a paragraph; every other node, root-level
-          // or detached structural, must conserve or carry a declared transition.
           const looseLeafWrapped = (target: Md.Block): boolean =>
             A.contains(looseLeafTypes, type) && target._tag === "p";
 
@@ -294,8 +272,6 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
             expectConserved({
               direction: "lexical-to-md",
               sourceTag: type,
-              // A quote is multi-pattern: a shadow-root instance is a container
-              // and conserves; a legacy instance re-realizes through the table.
               sourcePattern: node.type === "quote" ? QuoteNode.poPatternOf(node) : patternOf(member),
               targetTag: target._tag,
               targetPattern: patternOf(Md.Block.cases[target._tag]),
@@ -316,12 +292,11 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
         Effect.fnUntraced(function* ({ block }) {
           const node = yield* blockToLexical(block);
 
-          // Md -> Lexical: every field-only Md child has a Lexical partner at
-          // its own position, so a dropped item, row, or cell fails the count.
           const forward = inPlacePairs(block, node);
-          expect(A.length(forward), "md-to-lexical: a field-only child was dropped").toBe(
-            A.length(mdFieldOnlyChildren(block))
-          );
+          expect(
+            A.length(forward),
+            "md-to-lexical: a field-only child was dropped (zipWith truncates, so a missing sibling shortens the pair count)"
+          ).toBe(A.length(mdFieldOnlyChildren(block)));
           A.forEach(forward, ([md, lexical]) => {
             expect(lexical.type, `md-to-lexical: ${md._tag} landed on the wrong node`).toBe(
               inPlaceLexicalType[md._tag]
@@ -336,15 +311,14 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
             });
           });
 
-          // Lexical -> Md: project the produced node back; every structural
-          // Lexical child has an Md partner at its own position.
           const backward = O.match(A.head(nodeToBlocks(node)), {
             onNone: A.empty<InPlacePair>,
             onSome: (returned) => inPlacePairs(returned, node),
           });
-          expect(A.length(backward), "lexical-to-md: a structural child was dropped").toBe(
-            A.length(lexicalStructuralChildren(node))
-          );
+          expect(
+            A.length(backward),
+            "lexical-to-md: a structural child was dropped (zipWith truncates, so a missing sibling shortens the pair count)"
+          ).toBe(A.length(lexicalStructuralChildren(node)));
           A.forEach(backward, ([md, lexical]) => {
             expect(lexical.type, `lexical-to-md: ${lexical.type} landed on the wrong node`).toBe(
               inPlaceLexicalType[md._tag]

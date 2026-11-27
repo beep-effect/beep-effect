@@ -16,11 +16,8 @@ describe("EgressDenied", () => {
 
       expect(denial._tag).toBe("EgressDenied");
       expect(EgressDenied.is(denial)).toBe(true);
-      // Field-free by design: a denial reason surfaced to the caller would be a
-      // probing channel, so the error's serialized form carries the tag and
-      // nothing else.
       const encoded = yield* encodeEgressDenied(denial);
-      expect(R.keys(encoded)).toEqual(["_tag"]);
+      expect(R.keys(encoded), "a denial reason surfaced to the caller would be a probing channel").toEqual(["_tag"]);
     })
   );
 
