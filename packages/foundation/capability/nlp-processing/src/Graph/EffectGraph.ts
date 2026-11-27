@@ -32,10 +32,6 @@ import * as Str from "effect/String";
 
 const $I = $NlpProcessingId.create("Graph/EffectGraph");
 
-// =============================================================================
-// Core Data Types
-// =============================================================================
-
 /**
  * **Example** (Making a branded NodeId)
  *
@@ -234,12 +230,16 @@ export interface EffectGraph<A> {
   readonly nodeIdToIndex: HashMap.HashMap<NodeId, Graph.NodeIndex>;
 }
 
-// =============================================================================
-// Constructors
-// =============================================================================
-
 /**
  * Create a graph node with generated id, timestamp, parent, and operation metadata.
+ *
+ * **Gotchas**
+ *
+ * With fewer than three arguments, an `Option` first argument is read as
+ * `parentId` and returns the curried form, so node data that is itself an
+ * `Option` needs all three arguments. The node's `metadata.depth` is
+ * provisional (0, or 1 under a parent); {@link addNode} recomputes it from the
+ * parent in the graph.
  *
  * **Example** (Creating node with makeNode)
  *
@@ -258,9 +258,6 @@ export const makeNode: {
   <A>(data: A, parentId?: O.Option<NodeId>, operation?: O.Option<string>): Effect.Effect<GraphNode<A>>;
   (parentId?: O.Option<NodeId>, operation?: O.Option<string>): <A>(data: A) => Effect.Effect<GraphNode<A>>;
 } = dual(
-  // Data-first only at full arity or when the first argument is the data
-  // itself; the curried form passes two `Option`s, so an arity-2 call whose
-  // first argument is an `Option` is `(parentId, operation)`, not `(data, parentId)`.
   (args) => args.length >= 3 || !O.isOption(args[0]),
   Effect.fn("makeNode")(function* <A>(
     data: A,
@@ -276,7 +273,6 @@ export const makeNode: {
       metadata: NodeMetadata.make({
         operation,
         timestamp,
-        // recalculated when added to a graph under a parent
         depth: S.Natural.make(O.match(parentId, { onNone: thunk0, onSome: () => 1 })),
       }),
     };
@@ -337,10 +333,6 @@ export const singleton = Effect.fn("singleton")(function* <A>(data: A): Effect.f
   });
 });
 
-// =============================================================================
-// Graph Operations
-// =============================================================================
-
 /**
  * Add a node to the graph, recalculating its depth from its parent and linking
  * the parent-\>child edge when a parent is present.
@@ -369,8 +361,7 @@ export const addNode: {
   <A>(effectGraph: EffectGraph<A>, node: GraphNode<A>): EffectGraph<A>;
   <A>(node: GraphNode<A>): (effectGraph: EffectGraph<A>) => EffectGraph<A>;
 } = dual(2, <A>(effectGraph: EffectGraph<A>, node: GraphNode<A>): EffectGraph<A> => {
-  // Recalculate depth from the parent (pure: takes a pre-made node).
-  const updatedNode: GraphNode<A> = O.match(node.parentId, {
+  const nodeAtParentDepth: GraphNode<A> = O.match(node.parentId, {
     onNone: () => node,
     onSome: (parentId) => {
       const parentNode = O.flatMap(HashMap.get(effectGraph.nodeIdToIndex, parentId), (idx) =>
@@ -386,7 +377,7 @@ export const addNode: {
 
   let newNodeIndex: O.Option<Graph.NodeIndex> = O.none();
   const newGraph = Graph.mutate(effectGraph.graph, (mutable) => {
-    const nodeIndex = Graph.addNode(mutable, updatedNode);
+    const nodeIndex = Graph.addNode(mutable, nodeAtParentDepth);
     newNodeIndex = O.some(nodeIndex);
     if (O.isSome(node.parentId)) {
       const parentIndex = HashMap.get(effectGraph.nodeIdToIndex, node.parentId.value);
@@ -400,8 +391,8 @@ export const addNode: {
     onNone: () => effectGraph,
     onSome: (idx) => ({
       graph: newGraph,
-      nodeIdToIndex: HashMap.set(effectGraph.nodeIdToIndex, updatedNode.id, idx),
-      indexToNodeId: HashMap.set(effectGraph.indexToNodeId, idx, updatedNode.id),
+      nodeIdToIndex: HashMap.set(effectGraph.nodeIdToIndex, nodeAtParentDepth.id, idx),
+      indexToNodeId: HashMap.set(effectGraph.indexToNodeId, idx, nodeAtParentDepth.id),
     }),
   });
 });
@@ -519,7 +510,8 @@ export type GraphAlgebra<A, B> = (node: GraphNode<A>, children: ReadonlyArray<B>
  * **Details**
  *
  * Results are returned once per root, so a forest produces multiple folded
- * values. Traversal memoizes by node id to avoid recomputing shared subgraphs.
+ * values. Traversal memoizes by node id to avoid recomputing shared subgraphs,
+ * and processes one child at a time so memory stays bounded on deep graphs.
  *
  * **Example** (Folding graph with cata)
  *
@@ -552,7 +544,6 @@ export const cata: {
         return cached.value;
       }
       const node = yield* Effect.fromOption(getNode(graph, nodeId), () => NodeNotFoundError.make({ nodeId }));
-      // children first (bottom-up); sequential to bound memory on deep graphs
       const processedChildren = yield* Effect.all(
         A.map(getChildren(graph, nodeId), (child) => go(child.id)),
         { concurrency: 1 }
@@ -659,14 +650,12 @@ export const map: {
   const indexMap = MutableHashMap.empty<Graph.NodeIndex, Graph.NodeIndex>();
 
   const newGraph = Graph.directed<GraphNode<B>, GraphEdge>((mutable) => {
-    // map node data, tracking the id/index remapping
     for (const [oldIdx, node] of Graph.nodes(graph.graph)) {
       const mappedNode: GraphNode<B> = { ...node, data: f(node.data) };
       const newIdx = Graph.addNode(mutable, mappedNode);
       MutableHashMap.set(nodeMap, node.id, newIdx);
       MutableHashMap.set(indexMap, oldIdx, newIdx);
     }
-    // re-link edges using the new indices
     for (const edgeIdx of Graph.indices(graph.graph.pipe(Graph.edges))) {
       O.match(Graph.getEdge(graph.graph, edgeIdx), {
         onNone: () => {},

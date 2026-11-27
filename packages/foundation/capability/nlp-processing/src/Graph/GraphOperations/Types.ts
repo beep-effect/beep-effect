@@ -31,10 +31,6 @@ import type { GraphNode } from "../EffectGraph.ts";
 
 const $I = $NlpProcessingId.create("Graph/GraphOperations/Types");
 
-// =============================================================================
-// Execution Strategy
-// =============================================================================
-
 /**
  * Conservative upper bound the executor enforces on parallel concurrency.
  *
@@ -172,10 +168,6 @@ export class ExecutionMetrics extends S.Opaque<ExecutionMetrics, { readonly bran
       tokensConsumed: S.Natural.make(0),
     });
 }
-
-// =============================================================================
-// Operation Cost Estimation
-// =============================================================================
 
 /**
  * Asymptotic complexity vocabulary used when scaling operation cost estimates.
@@ -423,7 +415,6 @@ export const OperationCost = Complexity.mapMembers(
         "O(n log n)": () => nodeCount * Math.log2(nodeCount),
         "O(n^2)": () => nodeCount * nodeCount,
       });
-      // Spreading keeps the member (and its brand) that `cost.complexity` selects.
       return {
         ...cost,
         estimatedTime: Duration.times(cost.estimatedTime, timeMultiplier),
@@ -467,10 +458,6 @@ export const OperationCost = Complexity.mapMembers(
  * @since 0.0.0
  */
 export type OperationCost = typeof OperationCost.Type;
-
-// =============================================================================
-// Validation Result
-// =============================================================================
 
 /**
  * Result of checking whether an operation may run against graph leaves.
@@ -532,10 +519,6 @@ export class ValidationResult extends S.Opaque<ValidationResult, { readonly bran
   );
 }
 
-// =============================================================================
-// Operation Category
-// =============================================================================
-
 /**
  * **Example** (Check expansion category tag)
  *
@@ -575,10 +558,6 @@ export const OperationCategory = LiteralKit([
  * @since 0.0.0
  */
 export type OperationCategory = typeof OperationCategory.Type;
-
-// =============================================================================
-// Execution Options
-// =============================================================================
 
 const executionOptionsTimeoutDefault = O.none();
 /**
@@ -640,10 +619,6 @@ export class ExecutionOptions extends S.Opaque<ExecutionOptions, { readonly bran
     });
 }
 
-// =============================================================================
-// Execution ID
-// =============================================================================
-
 /**
  * Branded identifier for one graph-operation execution.
  *
@@ -703,10 +678,6 @@ export const generateExecutionId: Effect.Effect<ExecutionId> = Effect.gen(functi
   const rand = yield* Random.nextInt;
   return ExecutionId.make(`exec-${ms}-${rand}`);
 });
-
-// =============================================================================
-// Operation Result
-// =============================================================================
 
 /**
  * Result of applying one operation to the sampled graph leaves.

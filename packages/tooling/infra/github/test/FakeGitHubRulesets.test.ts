@@ -2,13 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import { FakeRepository } from "./support/FakeGitHub.ts";
 
-/**
- * Ruleset validation the real API applies and the fake must too. Each case
- * is an answer from the live rehearsal on `beep-effect/infra-github-rehearsal`
- * (2026-11-14), where these Apps are not installed: GitHub refused a bypass
- * actor and a required-check binding for an App the repository's
- * organization does not have, with these messages.
- */
 const repo = "/repos/beep-effect/beep-effect";
 const query = new URLSearchParams();
 
@@ -28,7 +21,7 @@ const withChecks = (body: Json, checks: ReadonlyArray<Json>) => ({
   ),
 });
 
-describe("the GitHub fake validates rulesets like the REST API", () => {
+describe("the GitHub fake validates rulesets as the REST API did in the live rehearsal, where these Apps were not installed", () => {
   it("refuses a bypass actor whose App is not installed", () => {
     const fake = FakeRepository.fromCensus();
     const body = {

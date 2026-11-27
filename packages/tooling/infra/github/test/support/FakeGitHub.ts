@@ -22,15 +22,13 @@ import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 type Json = Record<string, unknown>;
 
-/** A response: HTTP status and JSON body (`undefined` for an empty body). */
-type Reply = readonly [number, unknown];
+type Reply = readonly [status: number, body: unknown];
 
 const notFound: Reply = [404, { message: "Not Found" }];
 
 const environmentPublicKeyId = "fake-environment-key";
 const environmentPublicKey = "U3JF04TQ4ExYTXcO9XRc2fOvSp9a4cJmgwnTw2QQFzk=";
 
-/** A page past the first is always empty: every list fits one page. */
 const isLaterPage = (method: string, query: URLSearchParams) =>
   method === "GET" && Number(query.get("page") ?? "1") > 1;
 
@@ -46,14 +44,10 @@ export interface Call {
   readonly path: string;
 }
 
-/**
- * GitHub Apps installed on the organization: GitHub Actions (15368), the
- * runner fleet's orchestrator (5309624, a ruleset bypass actor) and
- * beep-reviewer (5321138, a required check). A ruleset naming any other App,
- * as a bypass actor or as a check binding, is refused, as the live rehearsal
- * showed on a repository without those Apps.
- */
-const installedApps = HashSet.make(15_368, 5_309_624, 5_321_138);
+const githubActionsAppId = 15_368;
+const fleetOrchestratorAppId = 5_309_624;
+const beepReviewerAppId = 5_321_138;
+const installedApps = HashSet.make(githubActionsAppId, fleetOrchestratorAppId, beepReviewerAppId);
 
 const rulesetRefusal = (body: Json): O.Option<Reply> => {
   const bypass = (body.bypass_actors as ReadonlyArray<Json> | undefined) ?? [];
@@ -362,7 +356,6 @@ const bodyOf = (request: HttpClientRequest.HttpClientRequest): Effect.Effect<Jso
   return Effect.succeed({});
 };
 
-/** An `HttpClient` answering every request from the fake repository. */
 const fakeHttpClient = (fake: FakeRepository) =>
   Layer.succeed(
     HttpClient.HttpClient,

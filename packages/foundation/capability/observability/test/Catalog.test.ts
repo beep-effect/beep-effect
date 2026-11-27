@@ -185,22 +185,18 @@ describe("catalog names", () => {
 
   it("follows the npm scoped-name rules of @beep/package-json (3-A9)", () => {
     const isPackageName = S.is(PackageName);
-    // Inverted: the pre-3-A9 pattern rejected a leading `-`, which npm accepts.
-    assertTrue(isPackageName("@-scope/name"));
+    assertTrue(isPackageName("@-scope/name"), "npm accepts a leading `-`");
     assertTrue(isPackageName("@scope/-name"));
-    // Inverted: the pre-3-A9 pattern had no length limit; npm caps names at 214.
     assertTrue(isPackageName(`@beep/${Str.repeat(208)("a")}`));
-    assertFalse(isPackageName(`@beep/${Str.repeat(209)("a")}`));
+    assertFalse(isPackageName(`@beep/${Str.repeat(209)("a")}`), "npm caps package names at 214 characters");
     assertFalse(isPackageName("@Beep/observability"));
     assertFalse(isPackageName("@beep/"));
   });
 
   it("shares the ScopedPackageName brand and its decode message (3-A9)", () => {
-    // Type-level: a @beep/package-json ScopedPackageName is a catalog owner name, and back.
     const owner: PackageName = ScopedPackageName.make("@beep/observability");
     const scoped: ScopedPackageName = PackageName.make("@beep/observability");
-    strictEqual(owner, scoped);
-    // Accepted shift: the generic pattern message replaces the old custom text.
+    strictEqual(owner, scoped, "a @beep/package-json ScopedPackageName is a catalog owner name, and back");
     const decoded = S.decodeResult(CatalogOwner)({ owner: "observability" });
     assertFailure(
       Result.mapError(decoded, (error) => error.message),

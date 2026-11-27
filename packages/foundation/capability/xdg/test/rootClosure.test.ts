@@ -9,9 +9,6 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { sourceModules } from "./support/rawModules.ts";
 
-// Runtime import specifiers of one module: `import`/`export ... from "x"` and the
-// bare side-effect form `import "x"`. `import type` and `export type` statements
-// are erased at compile time and never load anything.
 const runtimeSpecifier = /^\s*(?:(?:import|export)\s+(?!type\b)[^;"]*?\bfrom\s+|import\s+)"([^"]+)"/gm;
 
 const specifiersOf = (source: string): ReadonlyArray<string> =>
@@ -19,7 +16,6 @@ const specifiersOf = (source: string): ReadonlyArray<string> =>
 
 const isRelative = (specifier: string): boolean => Str.startsWith("./")(specifier) || Str.startsWith("../")(specifier);
 
-/** Resolve a relative specifier against the importing module's directory, keyed below `src/`. */
 const resolveRelative = (importer: string, specifier: string): string =>
   pipe(
     Str.split("/")(specifier),
@@ -33,13 +29,11 @@ const resolveRelative = (importer: string, specifier: string): string =>
     A.join("/")
   );
 
-/** The source of one `src` module; a resolved edge that names no module fails the suite loudly. */
 const sourceOf = (key: string): string =>
   R.get(sourceModules, key).pipe(
     O.getOrThrowWith(() => new globalThis.Error(`root closure: no src module "${key}" for a resolved import`))
   );
 
-/** The `src` modules a runtime import of `entry` loads, and the bare packages they reach. */
 const closure = (entry: string) => {
   const visit = (
     pending: ReadonlyArray<string>,
@@ -67,7 +61,7 @@ const closure = (entry: string) => {
 };
 
 describe("@beep/xdg root closure walker", () => {
-  it.effect("follows side-effect imports and parent-relative specifiers", () =>
+  it.effect("follows side-effect imports and parent-relative specifiers, and skips erased `import type` lines", () =>
     Effect.sync(() => {
       const source = 'import "./side.ts";\nimport { a } from "../up.ts";\nimport type { T } from "./typeOnly.ts";\n';
       expect(specifiersOf(source)).toEqual(["./side.ts", "../up.ts"]);
@@ -100,8 +94,10 @@ describe("@beep/xdg root closure", () => {
     Effect.sync(() => {
       const subpath = closure("XdgConfig.ts");
       expect(HashSet.has(subpath.packages, "@beep/walker/Walker")).toBe(true);
-      // XdgConfig imports config-file for types only, so even the subpath does not load it at runtime.
-      expect(A.filter(A.fromIterable(subpath.packages), Str.startsWith("@beep/config-file"))).toEqual([]);
+      expect(
+        A.filter(A.fromIterable(subpath.packages), Str.startsWith("@beep/config-file")),
+        "XdgConfig imports config-file for types only"
+      ).toEqual([]);
     })
   );
 });

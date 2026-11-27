@@ -6,7 +6,6 @@ import * as A from "effect/Array";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 
-// Tag sources: no tag, one per emitter context variant, and tags that do not decode.
 const tagSources: ReadonlyArray<readonly [string, O.Option<unknown>, TelemetryTier]> = [
   ["untagged", O.none(), "shape-only"],
   ["unresolvable string", O.some("Workstation"), "shape-only"],
@@ -35,7 +34,6 @@ const tagSources: ReadonlyArray<readonly [string, O.Option<unknown>, TelemetryTi
   ["Browser", O.some({ _tag: "Browser", identitySource: "self-claimed" }), "shape-only"],
 ];
 
-// A request is absent, a tier name, or a value that is not a tier.
 const requestValues: ReadonlyArray<O.Option<string>> = [
   O.none(),
   O.some("shape-only"),
@@ -50,8 +48,7 @@ const requestSets: ReadonlyArray<ReadonlyArray<O.Option<string>>> = [
   ...A.flatMap(requestValues, (first) => A.map(requestValues, (second) => [first, second])),
 ];
 
-// Independent of the resolver: strictness rank, with anything that is not a tier name strictest.
-const rank = (tier: string): number =>
+const strictnessRank = (tier: string): number =>
   O.getOrElse(
     A.findFirstIndex(TelemetryTier.literals, (name) => name === tier),
     () => 0
@@ -59,7 +56,7 @@ const rank = (tier: string): number =>
 
 const expectedTier = (ceiling: TelemetryTier, requests: ReadonlyArray<O.Option<string>>): TelemetryTier =>
   TelemetryTier.literals[
-    A.reduce(A.getSomes(requests), rank(ceiling), (lowest, request) => N.min(lowest, rank(request)))
+    A.reduce(A.getSomes(requests), strictnessRank(ceiling), (lowest, request) => N.min(lowest, strictnessRank(request)))
   ] ?? "shape-only";
 
 describe("resolveStrictTier", () => {
@@ -68,7 +65,7 @@ describe("resolveStrictTier", () => {
       for (const requests of requestSets) {
         const resolution = resolveStrictTier(tagSource, requests);
         expect(resolution.tier).toBe(expectedTier(ceiling, requests));
-        expect(rank(resolution.tier)).toBeLessThanOrEqual(rank(ceiling));
+        expect(strictnessRank(resolution.tier)).toBeLessThanOrEqual(strictnessRank(ceiling));
       }
     }
     expect(A.length(tagSources) * A.length(requestSets)).toBe(341);

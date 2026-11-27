@@ -668,7 +668,6 @@ export interface DetachedProcessOps {
   ) => Effect.Effect<ChildProcessSpawner.ProcessId, DetachedProcessError>;
 }
 
-/** See {@link DetachedProcess.makeTestOps}: an unstubbed member dies naming itself. */
 const dies = unstubbed("DetachedProcess.makeTestOps");
 
 /**
@@ -773,8 +772,6 @@ export abstract class DetachedProcess {
     });
 
     yield* Effect.annotateCurrentSpan({ pid });
-    // Core's nominal constructor: no runtime check, which is correct here
-    // because the operating system just handed us the number.
     return ChildProcessSpawner.ProcessId(pid);
   });
 
@@ -819,9 +816,6 @@ export abstract class DetachedProcess {
       probe: Effect.Effect<boolean, E, R>,
       options?: ReadinessOptions.Encoded
     ) {
-      // One initial probe plus `attempts` spaced retries, stopping early the
-      // moment one answers ready; the last answer is what remains when the
-      // budget runs out.
       const ready = yield* Effect.repeat(probe, {
         schedule: Schedule.spaced(options?.interval ?? "150 millis"),
         times: options?.attempts ?? 40,

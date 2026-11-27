@@ -5,11 +5,14 @@ import * as Stream from "effect/Stream";
 import type * as FileSystem from "effect/FileSystem";
 import type * as PlatformError from "effect/PlatformError";
 
-// Effect Crypto cannot provide synchronous or incremental digests.
 const { createHash } = process.getBuiltinModule("node:crypto");
 
 /**
  * The raw SHA-256 of a string or byte array held in memory.
+ *
+ * **Gotchas**
+ *
+ * Use native crypto for synchronous and incremental digests, which Effect Crypto cannot provide.
  *
  * **Example** (Hash in-memory bytes)
  *

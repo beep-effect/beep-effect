@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/infra-github",
-  "root": "packages/tooling/infra/github",
-  "scopes": ["."]
-}

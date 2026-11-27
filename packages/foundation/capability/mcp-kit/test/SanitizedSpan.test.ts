@@ -54,7 +54,7 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 describe("withSanitizedToolSpan", () => {
   it.layer(FixtureHandlersLive, { timeout: "5 seconds" })("with the fixture toolkit mounted", (it) => {
     it.effect(
-      "suppresses raw tool parameters from reaching span attributes",
+      "suppresses raw tool parameters from span attributes even when upstream is asked to record arguments",
       Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const toolkit = yield* FixtureToolkit;
@@ -64,7 +64,6 @@ describe("withSanitizedToolSpan", () => {
           return yield* Stream.runLast(stream);
         });
 
-        // Ask upstream to record arguments, so only the sanitizer can keep them off the span.
         yield* dispatch.pipe(
           withSanitizedToolSpan("mcp.tool.call"),
           Effect.provideService(Toolkit.RecordToolArguments, true),
@@ -125,10 +124,7 @@ it.effect(
   })
 );
 
-describe("withTopLevelObjectInputSchema guard arms", () => {
-  // rc.117 inlines a top-level `$ref` before the kit sees the schema, so the
-  // arms operate on the root itself (measured 2026-09-22: an empty parameter
-  // class still renders as the non-null wildcard, with no `type`).
+describe("withTopLevelObjectInputSchema guard arms on an already-inlined root", () => {
   it("patches a non-null wildcard root with a top-level object type", () => {
     const patched = withTopLevelObjectInputSchemaForTesting({ not: { type: "null" } });
     expect(patched.type).toBe("object");

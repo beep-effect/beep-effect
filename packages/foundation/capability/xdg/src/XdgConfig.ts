@@ -17,7 +17,6 @@ import { NativeDirs } from "./NativeDirs.ts";
 import { currentPlatform, Xdg } from "./Xdg.ts";
 import type { ConfigResolver } from "@beep/config-file";
 
-// Implementation of XdgConfig.resolver; the public contract lives on the static.
 const resolver = (options: {
   readonly filename: string;
 }): ConfigResolver<AppDirs | FileSystem.FileSystem | Path.Path> => ({
@@ -31,7 +30,6 @@ const resolver = (options: {
   }),
 });
 
-// Implementation of XdgConfig.nativeResolver; the public contract lives on the static.
 const nativeResolver = (options: {
   readonly namespace: string;
   readonly filename: string;
@@ -46,15 +44,12 @@ const nativeResolver = (options: {
     const native = NativeDirs.resolve({ platform, namespace: options.namespace, paths, path });
     if (O.isNone(native)) return O.none();
 
-    // One candidate, but still through `firstMatch`: the absorption contract is
-    // what `ConfigResolver` requires, and it lives in exactly one place.
     return yield* Walker.firstMatch([path.join(native.value.config, options.filename)], (candidate) =>
       fs.exists(candidate)
     );
   }),
 });
 
-// Implementation of XdgConfig.savePath; the public contract lives on the static.
 const savePath = Effect.fn("XdgConfig.savePath")(function* (
   filename: string
 ): Effect.fn.Return<string, never, AppDirs | Path.Path> {
@@ -122,6 +117,10 @@ export abstract class XdgConfig {
    * {@link NativeDirs.resolve} yields `Option.none()`, so this resolver returns
    * `Option.none()` without probing at all — the XDG resolver already owns
    * `~/.config` there.
+   *
+   * The single candidate still goes through `Walker.firstMatch`, as in
+   * {@link XdgConfig.resolver}: a probe that cannot look counts as no match,
+   * so `resolve`'s error channel stays `never`.
    *
    * Takes `namespace` rather than reading it off {@link AppDirs}: the native
    * directory is a property of the OS convention, not of however the app happened

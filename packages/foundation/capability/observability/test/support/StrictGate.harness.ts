@@ -21,13 +21,10 @@ import type * as HttpBody from "effect/http/HttpBody";
 const owner = PackageName.make("@beep/observability-strict-test");
 const textDecoder = new TextDecoder();
 
-/** Attribute key the test gate writes the tool id to. */
 const demoToolKey = AttributeKeyName.make("beep.demo.tool");
 
-/** Attribute key allowed at the shape-only tier but with no literal values, so the gate refuses it. */
-const demoBoundedKey = AttributeKeyName.make("beep.demo.bounded");
+const demoKeyWithoutValues = AttributeKeyName.make("beep.demo.bounded");
 
-/** Allowlisted demo metric. */
 const demoCalls = MetricInstrument.make({
   name: MetricName.make("beep.demo.calls"),
   owner,
@@ -38,7 +35,6 @@ const demoCalls = MetricInstrument.make({
   unit: UcumUnit.make("{call}"),
 });
 
-/** Allowlisted demo histogram. */
 const demoLatency = MetricInstrument.make({
   name: MetricName.make("beep.demo.latency"),
   owner,
@@ -50,7 +46,6 @@ const demoLatency = MetricInstrument.make({
   boundaries: O.some([10, 100]),
 });
 
-/** Kernel declarations plus a literal-valued tool key, one counter and one histogram. */
 const demoCatalog = InstrumentCatalog.make({
   attributes: [
     ...ObservabilityInstruments.attributes,
@@ -65,7 +60,7 @@ const demoCatalog = InstrumentCatalog.make({
       description: "Demo tool id.",
     }),
     AttributeKey.make({
-      key: demoBoundedKey,
+      key: demoKeyWithoutValues,
       type: "string",
       signals: ["span"],
       cardinality: "bounded",

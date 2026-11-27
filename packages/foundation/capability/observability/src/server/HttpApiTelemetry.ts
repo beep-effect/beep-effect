@@ -73,8 +73,7 @@ export const HttpStatusCode = S.Natural.check(S.isBetween({ minimum: 100, maximu
 export type HttpStatusCode = typeof HttpStatusCode.Type;
 
 const decodeHttpStatusCodeResult = S.decodeUnknownResult(HttpStatusCode);
-// Status resolution runs in synchronous helpers; an invalid status still reaches the caller as the thrown SchemaError.
-const decodeHttpStatusCode = (status: unknown): HttpStatusCode =>
+const decodeStatusOrThrow = (status: unknown): HttpStatusCode =>
   Result.getOrThrowWith(decodeHttpStatusCodeResult(status), identity);
 
 const HttpApiMethod = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE", "QUERY"]).pipe(
@@ -209,11 +208,11 @@ export const httpApiSuccessStatus: {
   (schema: S.Top, fallback?: number): number;
   (fallback?: number): (schema: S.Top) => number;
 } = dual(isHttpApiSuccessStatusDataFirst, (schema: S.Top, fallback = 200): number =>
-  decodeHttpStatusCode(resolveHttpApiStatus(schema.ast) ?? fallback)
+  decodeStatusOrThrow(resolveHttpApiStatus(schema.ast) ?? fallback)
 );
 
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): number =>
-  decodeHttpStatusCode(resolveHttpApiStatus(schema.ast) ?? fallback);
+  decodeStatusOrThrow(resolveHttpApiStatus(schema.ast) ?? fallback);
 
 const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): A.NonEmptyReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
@@ -252,12 +251,7 @@ const endpointErrorSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<
  * @category observability
  * @since 0.0.0
  */
-// unary by contract: `prefix` and `descriptionPrefix` are both `string`, so a
-// dual is undecidable — a lone string cannot be told apart from a data-last
-// call. `descriptionPrefix` is REMOVED FROM THE PUBLIC TYPE, not merely
-// relocated: it keeps its runtime default but no caller can supply it through
-// any export. That was a deliberate narrowing (it had zero callers); widening
-// the signature back re-arms the diagnostic.
+// decision: http-api-metrics-take-only-a-prefix
 export const makeHttpApiMetrics: (prefix: string) => HttpApiMetricSet = (
   prefix: string,
   descriptionPrefix = "HTTP API request"
@@ -391,7 +385,7 @@ export const httpApiFailureStatus: {
   (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<number> =>
     HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
-      O.orElse(() => (S.isSchemaError(error) ? O.some(decodeHttpStatusCode(400)) : O.none())),
+      O.orElse(() => (S.isSchemaError(error) ? O.some(decodeStatusOrThrow(400)) : O.none())),
       O.orElse(() => {
         for (const schema of endpointErrorSchemas(endpoint)) {
           if (S.is(schema)(error)) {
@@ -443,7 +437,7 @@ const observeHttpApiEffectImpl = <E, R>(
       Effect.fnUntraced(function* (startedAt) {
         return yield* Effect.annotateCurrentSpan({
           ...descriptorAnnotations(options.descriptor),
-          http_success_status: decodeHttpStatusCode(options.descriptor.successStatus),
+          http_success_status: decodeStatusOrThrow(options.descriptor.successStatus),
         }).pipe(
           Effect.andThen(effect.pipe(Effect.annotateLogs(descriptorAnnotations(options.descriptor)))),
           Effect.exit,
@@ -696,7 +690,7 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
       http_endpoint: options.descriptor.endpointName,
       http_method: options.descriptor.method,
       http_route: options.descriptor.route,
-      http_success_status: decodeHttpStatusCode(options.descriptor.successStatus),
+      http_success_status: decodeStatusOrThrow(options.descriptor.successStatus),
     }).pipe(
       Effect.andThen(
         effect.pipe(

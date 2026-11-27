@@ -81,7 +81,6 @@ const readOnly = <R extends ResourceLike, E, RIn>(
         Effect.fail(PreviewStageIsReadOnly.make({ stage, resourceType: resource.Type, operation }));
       return {
         ...base,
-        // Apply calls precreate only for dependency cycles, and it writes: refuse it like the rest.
         precreate: refuse("precreate"),
         reconcile: refuse("reconcile"),
         delete: refuse("delete"),
@@ -94,6 +93,11 @@ const readOnly = <R extends ResourceLike, E, RIn>(
  * (`Repository`, `Ruleset`, `Environment`, `Variable`, `Label`, `Secret`). Registered
  * for each type directly, they take precedence over the same types in the
  * `GitHub.providers()` collection, so layering them over the collection is enough.
+ *
+ * **Details**
+ *
+ * Every writing method is refused, `precreate` included: Apply calls it only
+ * inside a dependency cycle, and it writes a placeholder.
  *
  * **Example** (Build the preview providers)
  *

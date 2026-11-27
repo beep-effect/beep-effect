@@ -200,6 +200,12 @@ export class ToolHandlerPayload extends S.Opaque<ToolHandlerPayload, { readonly 
  * upstream projection, where declared failures are tool errors and invalid
  * arguments are `InvalidParams`.
  *
+ * **Gotchas**
+ *
+ * The envelope travels in `content[].text` only, never in `structuredContent`:
+ * that field must conform to the tool's advertised `outputSchema`, which
+ * describes the success value, not this failure.
+ *
  * **Example** (Translate a declared failure)
  *
  * ```ts
@@ -221,10 +227,7 @@ export class ToolHandlerPayload extends S.Opaque<ToolHandlerPayload, { readonly 
  */
 export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<CallToolResult> =>
   isApiKeyRequiredFailure(payload.result)
-    ? // The envelope travels in `content[].text` only: `structuredContent`
-      // must conform to the tool's advertised `outputSchema`, which describes
-      // the success value, not this failure.
-      CallToolResult.makeOption({
+    ? CallToolResult.makeOption({
         isError: false,
         content: [
           {

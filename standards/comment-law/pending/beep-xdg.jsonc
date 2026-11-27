@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/xdg",
-  "root": "packages/foundation/capability/xdg",
-  "scopes": ["."]
-}
