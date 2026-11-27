@@ -429,7 +429,7 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
     ),
   },
   "no-annotation-after-decoding-default": {
-    invalidCount: 10,
+    invalidCount: 12,
     messageIncludes: "annotate a field before `withDecodingDefault*`",
     invalid: A.join(
       [
@@ -447,6 +447,8 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
         "export const direct = S.withDecodingDefaultKey(d)(S.Finite).annotateKey({ description: 'X' });",
         "export const directPipe = S.withDecodingDefaultKey(d)(S.Finite).pipe($I.annoteKey('Parent.direct'));",
         "export const fnPipe = pipe(S.Finite, withDecodingDefaultTypeKey(d), annotateKey({ description: 'X' }));",
+        "export const ctorBetween = S.String.pipe(S.withDecodingDefaultKey(d), S.withConstructorDefault(d)).annotateKey({ description: 'X' });",
+        "export const ctorBetweenPipe = S.String.pipe(S.withDecodingDefaultTypeKey(d), S.withConstructorDefault(d), $I.annoteKey('Parent.ctor'));",
       ],
       "\n"
     ),
@@ -464,6 +466,9 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
         "export const identity = S.Boolean.pipe(S.withDecodingDefaultTypeKey(d), $I.annoteSchema('Flag', { description: 'X' }));",
         "export const outer = S.Struct({ a: S.Finite.pipe(S.withDecodingDefaultKey(d)) }).annotate({ description: 'X' });",
         "export const optional = S.Finite.pipe(S.optionalKey, S.annotateKey({ description: 'X' }));",
+        "export const enclosing = S.String.pipe(S.withDecodingDefaultType(Effect.succeed('')), S.Array, S.annotate({ description: 'Names' }));",
+        "export const enclosingMethod = S.String.pipe(S.withDecodingDefaultKey(d), S.Array).annotateKey({ description: 'X' });",
+        "export const enclosingLaterPipe = S.String.pipe(S.withDecodingDefaultKey(d), S.NullOr).pipe(S.annotate({ description: 'X' }));",
         "// S.Finite.pipe(S.withDecodingDefaultKey(d), S.annotateKey({})) in a comment",
       ],
       "\n"
