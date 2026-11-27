@@ -204,7 +204,6 @@ export declare namespace OidcClaims {
   export type Encoded = typeof OidcClaims.Encoded;
 }
 
-/** The token envelope the runner's token service answers with. */
 const TokenEnvelope = S.Struct({
   value: S.String,
   count: S.optionalKey(S.Finite),
@@ -213,14 +212,6 @@ const TokenEnvelope = S.Struct({
 const REQUEST_TOKEN = "ACTIONS_ID_TOKEN_REQUEST_TOKEN";
 const REQUEST_URL = "ACTIONS_ID_TOKEN_REQUEST_URL";
 
-/**
- * Read the claims out of a JWT **without verifying its signature**.
- *
- * **Gotchas**
- *
- * The absence of verification is deliberate and is documented on
- * {@link OidcTokenIssuerShape.claims}; do not "fix" it here.
- */
 const readClaims = Effect.fn("readClaims")(function* (token: string) {
   const decoded = yield* Effect.fromResult(payloadOf(token)).pipe(
     Effect.mapError((failure) =>

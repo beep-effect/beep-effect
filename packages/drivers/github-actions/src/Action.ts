@@ -97,6 +97,10 @@ export class ActionRuntime {
    * fresh layer per call, and layers memoize by reference — a factory here
    * would rebuild the environment snapshot for every composition site.
    *
+   * **Gotchas**
+   *
+   * Bare flat `Config` reads try the runner's `INPUT_` derivation first and then the unchanged ambient lookup, so a plain-named read never silently falls back to its `withDefault`. A caller-supplied provider in `Action.run`'s `layer` option still wins: its context merges last.
+   *
    * **Example** (Compose the default runner services)
    *
    * ```ts
@@ -115,21 +119,8 @@ export class ActionRuntime {
     // values with the same contents are different layers and memoize separately.
     ActionLogger.layerLogger,
     ActionState.layer,
-    // The inputs-first config provider, NOT the record-backed test double
-    // (`ActionInput.layer()`, which replaces the environment lookup wholesale
-    // and stays exported for resolving inputs from an explicit record in a
-    // test). This one changes bare `Config` reads only: a flat name tries the
-    // runner's INPUT_ derivation first and then falls back to the ambient
-    // lookup unchanged. It is needed because the runner publishes
-    // INPUT_<MANGLED>, so a plain-named lookup finds nothing and every bare
-    // read would silently fall back to its `withDefault`. A caller-supplied provider in the `layer` option still wins:
-    // the extra layer's context merges last in `Action.run`'s composition.
     ActionInput.layerDefault
   ).pipe(
-    // `provideMerge` rather than a flat `mergeAll`, and the difference is the
-    // whole wiring: `ActionState` needs `ActionOutputs` (it masks before it
-    // persists) and `ActionOutputs` needs `ActionEnvironment`. Merged as
-    // siblings they would not see each other, and the layer would not build.
     Layer.provideMerge(ActionOutputs.layer),
     Layer.provideMerge(ActionEnvironment.layer),
     Layer.provideMerge(Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer))
@@ -189,10 +180,6 @@ export interface ActionRunOptions<R> {
   readonly teardown?: Runtime.Teardown | undefined;
 }
 
-/**
- * Lower the minimum log level to `Debug` for the program when the runner has
- * step debugging on — and never raise it.
- */
 const withStepDebugLogLevel = Effect.fn("withStepDebugLogLevel")(function* <A, E, R>(program: Effect.Effect<A, E, R>) {
   const env = yield* ActionEnvironment;
   const stepDebug = yield* env.isDebug;
@@ -241,9 +228,6 @@ export const describeCause = (cause: Cause.Cause<unknown>): string => {
   return Str.trim(pretty) === "" ? "the action failed with no diagnostic information" : pretty;
 };
 
-/**
- * The `[Tag]: message` half, over anything a failure or a defect can be.
- */
 const describeError = (error: unknown): string => {
   if (P.isObjectOrArray(error) && "_tag" in error) {
     const tagged = error;
@@ -349,20 +333,8 @@ export class ActionFailedError extends S.TaggedError<ActionFailedError, { readon
   }
 }
 
-/**
- * The summary {@link Action.main} falls back to when rendering the failure
- * itself broke. The verdict must not depend on the renderer.
- */
 const UNRENDERED_FAILURE = "the failure could not be rendered";
 
-/**
- * Write a failed program's cause as workflow commands and return the summary.
- *
- * **Details**
- *
- * Written with the workflow-command renderer rather than through the `Logger`,
- * because this runs after the program — and after whatever went wrong with it.
- */
 const reportFailure = Effect.fn("Action.reportFailure")(function* (cause: Cause.Cause<unknown>) {
   const detail = Cause.pretty(cause);
   if (Str.trim(detail) !== "") {
@@ -473,6 +445,12 @@ export class Action {
    * an action's verdict without exiting the process: {@link Action.run} is this
    * effect handed to `NodeRuntime.runMain`.
    *
+   * **Gotchas**
+   *
+   * Failure reporting writes workflow commands directly after the program exits, bypassing a Logger that may itself have failed. A broken renderer is caught independently of the failed verdict.
+   *
+   * The caller is trusted to provide the remaining R through its layer; an omitted service still defects at use.
+   *
    * **Example** (Read the exit code of a failed program)
    *
    * ```ts
@@ -506,19 +484,15 @@ export class Action {
           ? ActionRuntime.layer
           : Layer.mergeAll(ActionRuntime.layer, Layer.provide(extra, ActionRuntime.layer));
 
-      // Inside the provide, so the level read is the one the composed runtime —
-      // including a caller's `layer` — actually installed.
       const leveled = options.stepDebugLogLevel === false ? program : withStepDebugLogLevel(program);
 
       return Effect.scopedWith((scope) =>
         Effect.flatMap(Layer.buildWithScope(composed, scope), (context) =>
-          // This entry point trusts the caller's layer for R; an omitted service still defects at use.
           Effect.provideContext(leveled, Context.makeUnsafe<ActionServices | R>(context.mapUnsafe))
         )
       ).pipe(
         Effect.catchCause((cause) =>
           reportFailure(cause).pipe(
-            // A renderer that itself broke must not turn a failed run green.
             Effect.catchCause(() => Effect.succeed(UNRENDERED_FAILURE)),
             Effect.flatMap((summary) => Effect.fail(ActionFailedError.make({ summary }))),
             Effect.uninterruptible

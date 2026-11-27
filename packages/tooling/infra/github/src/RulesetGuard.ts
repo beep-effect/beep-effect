@@ -506,7 +506,6 @@ export const diffFields = Effect.fn("InfraGithub.diffFields")(function* (planned
     { concurrency: 1 }
   );
   return A.flatten(compared);
-  // Encoding these field schemas to JSON is total; a failure here is a defect, not a drift.
 }, Effect.orDie);
 
 /**

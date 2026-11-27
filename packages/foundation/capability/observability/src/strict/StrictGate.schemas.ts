@@ -202,7 +202,6 @@ export const metricValueCeiling = 1_000_000_000_000;
 
 const ladderExponents = A.range(0, 12);
 
-// 0, then 1, 2, 5, 10, 25, 50, 100, 250, 500, ... up to the ceiling.
 const metricValueLadder: ReadonlyArray<number> = [
   0,
   ...A.filter(

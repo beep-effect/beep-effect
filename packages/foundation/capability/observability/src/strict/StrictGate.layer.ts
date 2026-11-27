@@ -28,9 +28,7 @@ import type { StrictGateConfig } from "./StrictGate.schemas.ts";
 
 const textDecoder = new TextDecoder();
 const defaultSinkCapacity = 64;
-// The exporter flushes early once a buffer holds this many records, so it is
-// set far above one window's traffic; the gate floors timestamps regardless.
-const strictMaxBatchSize = 1_000_000;
+const batchSizeAboveWindowTraffic = 1_000_000;
 
 /**
  * Base URL the strict OTLP layer posts to. The `.invalid` top-level domain is
@@ -257,7 +255,7 @@ export const layerStrictOtlp = (
     Otlp.layer({
       baseUrl: StrictEgressBaseUrl,
       resource: { serviceName: config.serviceName, serviceVersion: config.serviceVersion },
-      maxBatchSize: strictMaxBatchSize,
+      maxBatchSize: batchSizeAboveWindowTraffic,
       loggerExportInterval: StrictExportWindow,
       loggerExcludeLogSpans: true,
       loggerMergeWithExisting: false,

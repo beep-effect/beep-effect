@@ -34,8 +34,7 @@ const decodeTier = S.decodeUnknownOption(TelemetryTier);
  */
 export const FailClosedEmitterContext: StrictDesktop = StrictDesktop.make({ identitySource: "self-claimed" });
 
-// A present request that does not decode lowers to the strictest tier.
-const requestedTier = (request: string): TelemetryTier =>
+const requestedTierOrStrictest = (request: string): TelemetryTier =>
   O.getOrElse(decodeTier(request), () => TelemetryTier.Enum["shape-only"]);
 
 /**
@@ -77,7 +76,7 @@ export const resolveStrictTier: {
     contextSource: O.isSome(tagged) ? StrictContextSource.Enum.tagged : StrictContextSource.Enum["fail-closed"],
     tier: pipe(
       A.getSomes(requests),
-      A.map(requestedTier),
+      A.map(requestedTierOrStrictest),
       A.reduce(effectiveTier(context, TelemetryTier.Enum["dev-verbose"]), (tier, request) =>
         stricterTier(tier, request)
       )

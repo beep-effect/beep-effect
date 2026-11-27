@@ -34,19 +34,13 @@ const { test } = Test.make({
 
 type ScratchStack = Test.ScratchStack;
 
-/** The failures Alchemy's own top-level `deploy` declares for a stack deployment. */
 type DeployError = Effect.Error<Core.DeployResult<unknown>>;
 
-/**
- * `ScratchStack.deploy` erases its error channel to `any`. This signature
- * restates the deployment failures Alchemy declares for its top-level `deploy`
- * plus the stack definition's own `E`, so no erased channel reaches a test.
- */
-type ScratchDeploy = <A, E, R>(
+type ScratchDeployKeepingErrors = <A, E, R>(
   definition: Effect.Effect<A, E, R>
 ) => Effect.Effect<Input.Resolve<A>, DeployError | E, Exclude<R, StackServices>>;
 
-const deployerOf = (stack: ScratchStack): ScratchDeploy => stack.deploy;
+const deployerOf = (stack: ScratchStack): ScratchDeployKeepingErrors => stack.deploy;
 
 const deploy = <A, E, R>(stack: ScratchStack, definition: Effect.Effect<A, E, R>) => deployerOf(stack)(definition);
 
@@ -151,11 +145,10 @@ test.provider(
             const betaPut = yield* statusOf(beta, "PUT", "test-only-beta", new Uint8Array([1]));
             expect(betaPut).toBe(200);
 
-            // The beta reader restores beta's artifact but may not overwrite it.
             const readerGet = yield* statusOf(beta, "GET", "test-only-beta-reader");
             expect(readerGet).toBe(200);
             const readerPut = yield* statusOf(beta, "PUT", "test-only-beta-reader", payload);
-            expect(readerPut).toBe(403);
+            expect(readerPut, "the beta reader restores beta's artifact but may not overwrite it").toBe(403);
             const readerOnAlpha = yield* statusOf(alpha, "GET", "test-only-beta-reader");
             expect(readerOnAlpha).toBe(403);
 
@@ -240,11 +233,7 @@ test.provider(
       const path = yield* Path.Path;
       const inheritedPath = yield* Config.String("PATH").pipe(Config.withDefault(""));
       const directory = yield* fs.makeTempDirectoryScoped();
-      // The fixture runs its build through Bun, the runtime executing this
-      // suite, so a cache miss never depends on another package manager being
-      // installed. It has no dependencies, so Bun writes no lockfile and the
-      // Turbo task hash stays stable across runs.
-      const packageJson = yield* encodeJson({
+      const lockfileFreeBunFixtureManifest = yield* encodeJson({
         name: "cache-protocol-fixture",
         packageManager: `bun@${process.versions.bun}`,
         private: true,
@@ -253,7 +242,7 @@ test.provider(
       const turboJson = yield* encodeJson({
         tasks: { build: { inputs: ["build.cjs"], outputs: ["out.txt"] } },
       });
-      yield* fs.writeFileString(`${directory}/package.json`, packageJson);
+      yield* fs.writeFileString(`${directory}/package.json`, lockfileFreeBunFixtureManifest);
       yield* fs.writeFileString(`${directory}/turbo.json`, turboJson);
       yield* fs.writeFileString(`${directory}/build.cjs`, "require('node:fs').writeFileSync('out.txt', 'built')\n");
 
@@ -298,13 +287,14 @@ test.provider(
 
       const writeOnly = yield* run("second-cache", { TURBO_CACHE: "local:w,remote:w" });
       expect(writeOnly).toContain("0 cached, 1 total");
-      // A read-only token restores but never uploads: a fresh task hash run
-      // with it stays a miss for the next reader too.
       yield* fs.writeFileString(`${directory}/build.cjs`, "require('node:fs').writeFileSync('out.txt', 'rebuilt')\n");
       const readerFirst = yield* run("reader-cache-1", { TURBO_TEAM: "beta", TURBO_TOKEN: "test-only-beta-reader" });
       expect(readerFirst).toContain("0 cached, 1 total");
       const readerSecond = yield* run("reader-cache-2", { TURBO_TEAM: "beta", TURBO_TOKEN: "test-only-beta-reader" });
-      expect(readerSecond).toContain("0 cached, 1 total");
+      expect(
+        readerSecond,
+        "a read-only token never uploads: a fresh task hash stays a miss for the next reader"
+      ).toContain("0 cached, 1 total");
       const unconfigured = yield* run("unconfigured-cache", {
         TURBO_API: "",
         TURBO_TEAM: "",
@@ -319,6 +309,8 @@ test.provider(
   "the cache stack keeps one token per principal under stable fqns and hands each to its holder",
   (stack) =>
     Effect.gen(function* cartridgeStateHandoff() {
+      const readerStatusOkUploadRefused =
+        "let input=''; process.stdin.on('data',x=>input+=x); process.stdin.on('end',async()=>{ if(!/^[a-f0-9]{64}$/.test(input))process.exit(1); const auth={authorization:'Bearer '+input}; const status=await fetch(process.argv[1]+'/v8/artifacts/status?slug=rat-stack',{headers:auth}); const put=await fetch(process.argv[1]+'/v8/artifacts/abc?slug=rat-stack',{method:'PUT',headers:{...auth,'content-length':'1'},body:'x'}); process.exit(status.status===200&&put.status===403?0:2); });";
       const deployment = yield* deploy(stack, TurboCache).pipe(Effect.orDie);
       const origin = deployment.url ?? "";
 
@@ -335,12 +327,7 @@ test.provider(
       const values = yield* handoffToken(
         (fqn) => state.get({ fqn, stack: stack.name, stage: stack.stage }).pipe(Effect.orDie),
         TokenHandoffOptions.make({
-          args: [
-            "-e",
-            // The reader token reads status but its upload is refused 403.
-            "let input=''; process.stdin.on('data',x=>input+=x); process.stdin.on('end',async()=>{ if(!/^[a-f0-9]{64}$/.test(input))process.exit(1); const auth={authorization:'Bearer '+input}; const status=await fetch(process.argv[1]+'/v8/artifacts/status?slug=rat-stack',{headers:auth}); const put=await fetch(process.argv[1]+'/v8/artifacts/abc?slug=rat-stack',{method:'PUT',headers:{...auth,'content-length':'1'},body:'x'}); process.exit(status.status===200&&put.status===403?0:2); });",
-            origin,
-          ],
+          args: ["-e", readerStatusOkUploadRefused, origin],
           command: process.execPath,
           policy: fixturePolicy,
           principal: "reader",

@@ -31,8 +31,7 @@ const singletons = [
 
 const adoptedClean = (fqn: string) => [colored(fqn, "adopted"), line("  no declared property changes"), line("")];
 
-/** The first prod plan as the workflow sees it: one budget create, nine adopts. */
-const cleanPlan = A.join(
+const firstPlan = A.join(
   [
     line("Plan: 1 to create, 9 to adopted"),
     line(""),
@@ -93,6 +92,22 @@ describe("parsePlanLog", () => {
     expect(A.join(entries[0]?.changedProperties ?? [], ",")).not.toContain("@");
   });
 
+  it("reports a bare scalar as (value), a URL or an identifier-shaped one included, because only a key colon names a property", () => {
+    const { entries } = parsePlanLog(
+      A.join(
+        [
+          colored("ApiKey", "update"),
+          line("  + tokens:"),
+          line("  +   - token123"),
+          line("  +   - https://hooks.example.com/x"),
+          line("  + rotation"),
+        ],
+        "\n"
+      )
+    );
+    expect(entries[0]?.changedProperties).toEqual(["tokens", "(value)"]);
+  });
+
   it("ignores action tasks and the summary line", () => {
     const log = parsePlanLog(A.join([line("Plan: no changes"), line("[Seed] run [action]")], "\n"));
     expect(log.entries).toEqual([]);
@@ -103,7 +118,7 @@ describe("parsePlanLog", () => {
 describe("checkPlan", () => {
   it.effect("passes a clean first plan: one create, nine adopts, live settings as declared", () =>
     Effect.gen(function* () {
-      const entries = yield* checkPlan(parsePlanLog(cleanPlan), live);
+      const entries = yield* checkPlan(parsePlanLog(firstPlan), live);
       expect(entries).toHaveLength(10);
     })
   );
@@ -120,7 +135,7 @@ describe("checkPlan", () => {
 
   it.effect("refuses a singleton update", () =>
     Effect.gen(function* () {
-      const plan = replaceIn(cleanPlan, colored("AppTag", "adopted"), colored("AppTag", "update"));
+      const plan = replaceIn(firstPlan, colored("AppTag", "adopted"), colored("AppTag", "update"));
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["AppTag", "singleton-not-adopt-or-noop"],
@@ -132,7 +147,7 @@ describe("checkPlan", () => {
   it.effect("refuses an adopted singleton whose declared properties change", () =>
     Effect.gen(function* () {
       const plan = replaceIn(
-        cleanPlan,
+        firstPlan,
         `${colored("ComputeOptimizer", "adopted")}\n${line("  no declared property changes")}`,
         A.join([colored("ComputeOptimizer", "adopted"), line("  - status: Active"), line("  + status: Inactive")], "\n")
       );
@@ -145,7 +160,7 @@ describe("checkPlan", () => {
 
   it.effect("refuses a delete and a replace anywhere in the plan", () =>
     Effect.gen(function* () {
-      const plan = A.join([cleanPlan, colored("MonthlyBudget", "delete"), colored("AnomalyAlerts", "replace")], "\n");
+      const plan = A.join([firstPlan, colored("MonthlyBudget", "delete"), colored("AnomalyAlerts", "replace")], "\n");
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["MonthlyBudget", "delete-or-replace"],
@@ -156,7 +171,7 @@ describe("checkPlan", () => {
 
   it.effect("refuses a missing singleton", () =>
     Effect.gen(function* () {
-      const plan = replaceIn(cleanPlan, colored("ProjectTag", "adopted"), "");
+      const plan = replaceIn(firstPlan, colored("ProjectTag", "adopted"), "");
       const failure = yield* refusal(plan);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["ProjectTag", "singleton-missing"]]);
     })
@@ -171,7 +186,7 @@ describe("checkPlan", () => {
         ),
         computeOptimizer: { status: "Active", memberAccountsEnrolled: true },
       });
-      const failure = yield* refusal(cleanPlan, drifted);
+      const failure = yield* refusal(firstPlan, drifted);
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["tag beep-ci", "live-setting-differs"],
         ["ComputeOptimizer", "live-setting-differs"],
@@ -181,7 +196,7 @@ describe("checkPlan", () => {
 
   it.effect("stops and escalates on any resource outside the stack, such as a launch-throttling one", () =>
     Effect.gen(function* () {
-      const failure = yield* refusal(A.join([cleanPlan, colored("SpotQuota", "create")], "\n"));
+      const failure = yield* refusal(A.join([firstPlan, colored("SpotQuota", "create")], "\n"));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["SpotQuota", "unexpected-resource"]]);
       expect(failure.escalate).toBe(true);
     })
@@ -211,7 +226,7 @@ describe("liveSettingsFromAws", () => {
       const settings = liveSettingsFromAws(raw);
       expect(settings.computeOptimizer).toEqual({ status: "Active" });
       expect(settings.costOptimizationHub).toEqual({ items: [{ status: "Active" }] });
-      yield* checkPlan(parsePlanLog(cleanPlan), settings);
+      yield* checkPlan(parsePlanLog(firstPlan), settings);
     })
   );
 
@@ -223,7 +238,7 @@ describe("liveSettingsFromAws", () => {
         costOptimizationHub: { includeMemberAccounts: false, items: [{ status: "Active" }] },
         anomalyMonitors: { AnomalyMonitors: live.anomalyMonitors },
       });
-      const failure = yield* refusal(cleanPlan, liveSettingsFromAws(raw));
+      const failure = yield* refusal(firstPlan, liveSettingsFromAws(raw));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([
         ["ComputeOptimizer", "live-setting-differs"],
       ]);
@@ -262,14 +277,12 @@ describe("checkPlan rollback exception", () => {
 
   it.effect.each(["replace", "orphaned"])("still refuses a %s of AnomalyAlerts", (action) =>
     Effect.gen(function* () {
-      const failure = yield* refusal(A.join([cleanPlan, colored("AnomalyAlerts", action)], "\n"));
+      const failure = yield* refusal(A.join([firstPlan, colored("AnomalyAlerts", action)], "\n"));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["AnomalyAlerts", "delete-or-replace"]]);
     })
   );
 });
 
-// Plan lines exactly as `Deploy cost controls` run 43560670140 logged them
-// (the first live deploy, 2026-11-14): timestamped INFO prefix, no ANSI.
 const runLine = (text: string) => `[05:18:13.716] INFO: ${text}`;
 const livePlanFromRun = A.join(
   [
@@ -317,7 +330,7 @@ describe("parsePlanLog fails closed on unreadable actions", () => {
 
   it.effect("passes the silent first deploy and an all no-op plan unchanged", () =>
     Effect.gen(function* () {
-      for (const plan of [cleanPlan, noopPlan]) {
+      for (const plan of [firstPlan, noopPlan]) {
         const log = parsePlanLog(plan);
         expect(log.unreadable).toEqual([]);
         yield* checkPlan(log, live);

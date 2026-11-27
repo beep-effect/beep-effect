@@ -1,9 +1,3 @@
-// The matching cases of the retired `@beep/utils/Glob` suite, retargeted to
-// `compileAndExpand`: one fixture tree, every case the walker now owns.
-// Directory emission and the Bun/Node backend split retired with the module;
-// the ignore, array, `absolute` and implicit-cwd cases live with the FsUtils
-// adapter that kept those options.
-
 import { GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { DescendError } from "@beep/walker/Descend";
 import { compileAndExpand, GlobExpansionError } from "@beep/walker/Expand";
@@ -53,7 +47,6 @@ describe("GlobExpansionError — declared equivalence", () => {
   });
 });
 
-// A statically rooted pattern must never list the unreadable sibling directory.
 layer(platformWith(tree, { unreadable: HashSet.make("/fx/unrelated") }), { timeout: "10 seconds" })(
   "compileAndExpand, statically rooted patterns",
   (it) => {

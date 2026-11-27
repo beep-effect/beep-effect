@@ -5144,7 +5144,7 @@
       "line": 53,
       "endLine": 53,
       "symbol": "scoped",
-      "occurrence": "v2:ea3b4d95e6b6ce636a7fa1db7eb2f39f972d87085e7dda05017ac91773e1ca12",
+      "occurrence": "v2:da0102b86636b4b0c2bfb9b1666d6c702dc3ee3f06282f6f3139dd77c0014c8e",
       "class": "helper-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -5155,7 +5155,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Owner: @beep/observability. runWithLayer scopes the layer so closing it flushes the OTLP exporters before the caller asserts on the captured requests; the helper comment says so. Without the shorter scope the exports arrive only at test teardown, after the assertions. Exit: retire when EV004 recognises a helper scope whose close the caller's later assertions observe (#1855 wave 4 register)."
+      "reason": "Owner: @beep/observability. runThenFlushExporters scopes the layer so closing it flushes the OTLP exporters before the caller asserts on the captured requests. Without the shorter scope the exports arrive only at test teardown, after the assertions. Exit: retire when EV004 recognises a helper scope whose close the caller's later assertions observe (#1855 wave 4 register)."
     },
     {
       "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:101:scoped@26#1",
@@ -6295,17 +6295,17 @@
       "reason": "The subject is the native Chromium DOM/WebGL renderer: requestAnimationFrame, real canvas hit testing, GPU disposal and remount; TestClock cannot drive those browser callbacks. Owner: @beep/graph-3d. Exit: retire when EV009 recognises it.live tests in browser-mode suites whose subject is a native renderer (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/foundation/capability/observability/test/LocalLgtmServer.test.ts:62:it.live@2#1",
+      "id": "EV009:packages/foundation/capability/observability/test/LocalLgtmServer.test.ts:60:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/observability",
       "file": "packages/foundation/capability/observability/test/LocalLgtmServer.test.ts",
-      "line": 62,
-      "endLine": 75,
+      "line": 60,
+      "endLine": 73,
       "symbol": "it.live",
-      "occurrence": "v2:d5cde1998e0b3b828593c6038f0ed3941b0f28826a31a668f63be835bb20b07a",
+      "occurrence": "v2:ff1dce2d5b485e0170f5d7443a03d414822c6c5b2de98dff404f5c597cc8e791",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"exports spans over OTLP when devtools is also enabled\", Effect.fnUntraced(function* () { const http = makeCapturingHttpClient(); const span = yield* runWithLayer( Effect.currentSpan.pipe(Eff",
+      "evidence": "it.live( \"exports spans over OTLP when devtools is also enabled, on the live clock the devtools connect timeout needs\", Effect.fnUntraced(function* () { const http = makeCapturingHttpClient(); const s",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -6314,7 +6314,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The DevTools client dials a real websocket and waits out its one-second connect timeout before the OTLP export can be asserted; the TestClock never advances that timeout, as the test comment states. Owner: @beep/observability. Exit: retire when the DevTools client takes its connect timeout from the caller's Clock (#1855 wave 8 register)."
+      "reason": "The DevTools client dials a real websocket and waits out its one-second connect timeout before the OTLP export can be asserted; the TestClock never advances that timeout. Owner: @beep/observability. Exit: retire when the DevTools client takes its connect timeout from the caller's Clock (#1855 wave 8 register)."
     },
     {
       "id": "EV009:packages/foundation/ui-system/editor/test/capability-runtime.test.tsx:120:it.live@2#1",

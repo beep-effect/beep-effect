@@ -31,11 +31,12 @@ const makeCapturingHttpClient = () => {
   return { requests, layer };
 };
 
+const unreachableDevToolsUrl = "ws://127.0.0.1:9";
+
 const makeConfig = (devtoolsEnabled: boolean) =>
   ServerObservabilityConfig.make({
     devtoolsEnabled,
-    // Nothing listens here; the devtools client gives up connecting after its 1s grace period.
-    devtoolsUrl: "ws://127.0.0.1:9",
+    devtoolsUrl: unreachableDevToolsUrl,
     environment: "test",
     minLogLevel: "Info",
     otlpBaseUrl: "http://otlp.test:4318",
@@ -46,8 +47,7 @@ const makeConfig = (devtoolsEnabled: boolean) =>
     serviceVersion: "0.0.0",
   });
 
-// Builds the layer in its own scope so closing it flushes the OTLP exporters before assertions run.
-const runWithLayer = <A, E, ROut>(effect: Effect.Effect<A, E, ROut>, layer: Layer.Layer<ROut>) =>
+const runThenFlushExporters = <A, E, ROut>(effect: Effect.Effect<A, E, ROut>, layer: Layer.Layer<ROut>) =>
   Layer.build(layer).pipe(
     Effect.flatMap((context) => Effect.provideContext(effect, context)),
     Effect.scoped
@@ -57,13 +57,11 @@ const tracesRequests = (requests: ReadonlyArray<CapturedRequest>) =>
   A.filter(requests, (request) => request.url === "http://otlp.test:4318/v1/traces");
 
 describe("layerLocalLgtmServer", () => {
-  // Live clock on purpose: the DevTools client dials a real websocket and waits out its connect
-  // timeout, which never elapses under the TestClock.
   it.live(
-    "exports spans over OTLP when devtools is also enabled",
+    "exports spans over OTLP when devtools is also enabled, on the live clock the devtools connect timeout needs",
     Effect.fnUntraced(function* () {
       const http = makeCapturingHttpClient();
-      const span = yield* runWithLayer(
+      const span = yield* runThenFlushExporters(
         Effect.currentSpan.pipe(Effect.withSpan("lgtm.both-enabled")),
         layerLocalLgtmServer(makeConfig(true)).pipe(Layer.provide(http.layer))
       );
@@ -78,7 +76,7 @@ describe("layerLocalLgtmServer", () => {
     "serializes OTLP payloads as protobuf by default",
     Effect.fnUntraced(function* () {
       const http = makeCapturingHttpClient();
-      yield* runWithLayer(
+      yield* runThenFlushExporters(
         Effect.void.pipe(Effect.withSpan("lgtm.protobuf")),
         layerLocalLgtmServer(makeConfig(false)).pipe(Layer.provide(http.layer))
       );
@@ -94,7 +92,7 @@ describe("layerLocalLgtmServer", () => {
     "accepts a substitute OTLP serializer",
     Effect.fnUntraced(function* () {
       const http = makeCapturingHttpClient();
-      yield* runWithLayer(
+      yield* runThenFlushExporters(
         Effect.void.pipe(Effect.withSpan("lgtm.json")),
         layerLocalLgtmServer(makeConfig(false), { otlpSerialization: OtlpSerialization.layerJson }).pipe(
           Layer.provide(http.layer)

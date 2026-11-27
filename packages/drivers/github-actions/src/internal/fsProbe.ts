@@ -1,11 +1,7 @@
-import * as P from "effect/Predicate";
-
-// "Is there a file / a directory at this path?" — the probe the installers
-// ask before deciding whether to reinstall, skip or fail typed.
-
 import * as Effect from "effect/Effect";
 import * as Function from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";

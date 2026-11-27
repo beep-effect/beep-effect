@@ -58,19 +58,6 @@ const StringList = S.Array(S.String);
  */
 export const inputVariable = (name: string): string => `INPUT_${pipe(name, Str.replaceAll(" ", "_"), Str.toUpperCase)}`;
 
-/**
- * A validation failure for an input that is present but unusable.
- *
- * **Details**
- *
- * `Config.withDefault` and `Config.option` fall back only when the config
- * resolves *absent* — no provider input at all. A failure raised from inside
- * `Config.mapEffect` is a hard evaluation failure carrying the evidence that
- * input WAS present, so a default never swallows it. That is the guard against
- * `dry-run: yes` quietly becoming `false` and the action performing the
- * mutations the author meant to rehearse. `actual` carries the offending value
- * so the rendered error names it.
- */
 const configError: {
   (message: string, actual: unknown): Config.ConfigError;
   (actual: unknown): (message: string) => Config.ConfigError;
@@ -80,7 +67,6 @@ const configError: {
     new Config.ConfigError(new S.SchemaError(new SchemaIssue.InvalidValue({ message }, actual)))
 );
 
-/** YAML 1.2 core-schema booleans, which is what the runner documents. */
 const TRUE = HashSet.fromIterable<string>(["true", "True", "TRUE"]);
 const FALSE = HashSet.fromIterable<string>(["false", "False", "FALSE"]);
 
@@ -145,13 +131,11 @@ export declare namespace PairsOptions {
   export type Encoded = typeof PairsOptions.Encoded;
 }
 
-/** Strip a trailing `#` comment and surrounding whitespace from one line. */
 const stripComment = (line: string): string => {
   const kept = O.match(Str.indexOf("#")(line), { onNone: () => line, onSome: (hash) => Str.slice(0, hash)(line) });
   return Str.trim(kept);
 };
 
-/** One stripped, non-empty `key=value` line of a pairs input, or the typed reason it is not one. */
 const pairLine =
   (name: string, requireValue: boolean) =>
   (raw: string) =>
@@ -546,6 +530,10 @@ export class ActionInput {
    * outright. A *whitespace-only* value (a block scalar holding only a
    * newline) is present, and parses to `[]`.
    *
+   * **Gotchas**
+   *
+   * Drop full-line comments before stripping bullets: only a line beginning with # is a comment; a - #tag item must survive as #tag.
+   *
    * **Example** (Preserve a hash after a bullet)
    *
    * ```ts
@@ -582,10 +570,7 @@ export class ActionInput {
         const entries = pipe(
           Str.split(trimmed, /[\n,]/),
           A.map(Str.trim),
-          // A line whose first character is "#" is a full-line comment,
-          // dropped before a bullet marker is considered.
           A.filter((item) => !Str.startsWith("#")(item)),
-          // A leading "- " or "* " is a YAML/Markdown bullet, not part of the value.
           A.map((item) =>
             Str.startsWith("- ")(item) || Str.startsWith("* ")(item) ? pipe(item, Str.slice(2), Str.trim) : item
           ),
@@ -775,21 +760,13 @@ export class ActionInput {
    * @since 0.0.0
    */
   static provider(env: Readonly<Record<string, string | undefined>> = process.env): ConfigProvider.ConfigProvider {
-    /** Unset, and the `""` the runner writes for an unsupplied input, are both absent. */
     const present = (value: string | undefined): value is string => value !== undefined && value !== "";
-    /**
-     * The input-name entries, keyed by the runner variable they would be
-     * (`inputVariable`, the one spelling of the derivation) — built once,
-     * so an `INPUT_`-prefixed miss is a map read rather than a scan of the
-     * whole environment per `Config` read.
-     */
     const byInputName = MutableHashMap.empty<string, string>();
     for (const [key, value] of R.toEntries(env)) {
       if (!Str.startsWith("INPUT_")(key) && present(value) && !MutableHashMap.has(byInputName, inputVariable(key))) {
         MutableHashMap.set(byInputName, inputVariable(key), value);
       }
     }
-    /** Resolve one runner-variable name: the verbatim entry wins, then the input-name entry. */
     const lookup = (name: string): string | undefined => {
       const direct = O.getOrUndefined(R.get(env, name));
       return present(direct) ? direct : O.getOrUndefined(MutableHashMap.get(byInputName, name));

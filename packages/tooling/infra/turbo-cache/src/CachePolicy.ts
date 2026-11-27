@@ -215,11 +215,7 @@ export class Team extends S.Opaque<Team, { readonly brand: unique symbol }>()(
   }).pipe($I.annoteSchema("Team", { description: "A cache team: its slug and the principals that hold its tokens." }))
 ) {}
 
-// A token's resource id joins team slug and principal name with `-`, and both
-// allow `-`, so `beep-x`/`ci` and `beep`/`x-ci` would name one token. Alchemy
-// registers a repeated logical id once, so both holders would share a secret
-// (and the Worker would apply the first holder's team and access). Refuse the
-// policy instead of changing the id format, which would rotate every token.
+// decision: colliding-token-ids-are-refused
 const tokenKeyCollisions = (teams: ReadonlyArray<Team>): true | string => {
   const holders = A.flatMap(teams, ({ slug, principals }) =>
     A.map(principals, ({ name }) => ({ key: `${slug}-${name}`, label: `${slug}/${name}` }))

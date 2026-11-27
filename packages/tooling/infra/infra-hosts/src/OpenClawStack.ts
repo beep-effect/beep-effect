@@ -82,22 +82,11 @@ export const openClawStackName = "HostsOpenClaw";
  */
 export const openClawConfigEnvKey = "BEEP_OPENCLAW_HOST_CONFIG";
 
-/**
- * Memo scope for applicator steps: hash no files, so only the rendered
- * command decides whether a step re-runs.
- */
-const commandOnlyMemo = { include: [], exclude: ["**"] };
+const hashNoFilesMemo = { include: [], exclude: ["**"] };
 
-/**
- * The rendered scripts are `/bin/bash --noprofile --norc -p -c '<program>'`
- * invocations; `/bin/sh` only parses that one quoted word and starts bash.
- */
-const shell = "/bin/sh";
+const shParsingOneBashInvocation = "/bin/sh";
 
-/**
- * Privileged staging runs `npm install` under `sudo`; give it room.
- */
-const stepTimeout = "20 minutes";
+const longStepTimeout = "20 minutes";
 
 const generationFailure = (cause: unknown) =>
   new Config.ConfigError(new SourceError({ message: "Cannot render the OpenClaw generation.", cause }));
@@ -109,28 +98,28 @@ const applyGeneration = Effect.fn("OpenClawStack.applyGeneration")(function* (
   const identityInput = OpenClawGenerationIdentityScriptInput.make({ generation, identity: args.identity });
   const preflight = yield* Command.Exec("Preflight", {
     command: renderOpenClawPreflightScript(identityInput),
-    shell,
-    memo: commandOnlyMemo,
+    shell: shParsingOneBashInvocation,
+    memo: hashNoFilesMemo,
   });
   const stage = yield* Command.Exec("Stage", {
     command: renderOpenClawStageScript(generation),
-    shell,
-    memo: commandOnlyMemo,
-    timeout: stepTimeout,
+    shell: shParsingOneBashInvocation,
+    memo: hashNoFilesMemo,
+    timeout: longStepTimeout,
     env: { BEEP_HOSTS_AFTER: preflight.hash.input },
   });
   const apply = yield* Command.Exec("Apply", {
     command: renderOpenClawApplyScript(generation),
-    shell,
-    memo: commandOnlyMemo,
-    timeout: stepTimeout,
+    shell: shParsingOneBashInvocation,
+    memo: hashNoFilesMemo,
+    timeout: longStepTimeout,
     env: { BEEP_HOSTS_AFTER: stage.hash.input },
   });
   const probe = yield* Command.Exec("Probe", {
     command: renderOpenClawProbeScript(identityInput),
-    shell,
-    memo: commandOnlyMemo,
-    timeout: stepTimeout,
+    shell: shParsingOneBashInvocation,
+    memo: hashNoFilesMemo,
+    timeout: longStepTimeout,
     env: { BEEP_HOSTS_AFTER: apply.hash.input },
   });
   yield* O.match(args.backup, {
@@ -138,12 +127,9 @@ const applyGeneration = Effect.fn("OpenClawStack.applyGeneration")(function* (
     onSome: (backup) =>
       Command.Exec("BackupShip", {
         command: renderOpenClawBackupShipScript(OpenClawBackupShipScriptInput.make({ backup, generation })),
-        shell,
-        memo: commandOnlyMemo,
-        timeout: stepTimeout,
-        // The archive passphrase reaches the script through the deploy
-        // process environment `op run` builds; it is never a prop, so it never
-        // lands in state.
+        shell: shParsingOneBashInvocation,
+        memo: hashNoFilesMemo,
+        timeout: longStepTimeout,
         env: { BEEP_HOSTS_AFTER: probe.hash.input },
       }),
   });
@@ -153,6 +139,12 @@ const applyGeneration = Effect.fn("OpenClawStack.applyGeneration")(function* (
  * The OpenClaw stack program: guard, decode the config file, render the
  * generation and, for `prod`, declare the applicator steps. `prod` refuses to
  * run in CI.
+ *
+ * **Gotchas**
+ *
+ * The backup archive passphrase reaches the backup step only through the
+ * deploy process environment `op run` builds. It is never a prop, so it never
+ * lands in Alchemy state.
  *
  * **Example** (Compose the stack)
  * ```ts

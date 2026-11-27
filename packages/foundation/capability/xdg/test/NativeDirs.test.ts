@@ -15,12 +15,6 @@ const paths = (overrides?: { readonly appData?: string; readonly localAppData?: 
     ...(overrides?.localAppData !== undefined && { localAppData: overrides.localAppData }),
   });
 
-/**
- * The whole platform matrix runs against a POSIX `Path` and a record — no real
- * platform, no filesystem, no `process.platform` stubbing. `NativeDirs.resolve`
- * is pure and takes the platform as a parameter, which is exactly what makes
- * this possible.
- */
 describe("NativeDirs.resolve", () => {
   layer(Path.layer, { timeout: "30 seconds" })((it) => {
     const resolve = Effect.fn("resolve")(function* (platform: XdgPlatform, xdg: XdgPaths = paths()) {
@@ -44,8 +38,11 @@ describe("NativeDirs.resolve", () => {
         assert.strictEqual(dirs.config, "/home/ada/Library/Application Support/myapp");
         assert.strictEqual(dirs.data, "/home/ada/Library/Application Support/myapp");
         assert.strictEqual(dirs.state, "/home/ada/Library/Application Support/myapp");
-        // Cache is the one that does NOT collapse into Application Support.
-        assert.strictEqual(dirs.cache, "/home/ada/Library/Caches/myapp");
+        assert.strictEqual(
+          dirs.cache,
+          "/home/ada/Library/Caches/myapp",
+          "cache alone does not collapse into Application Support"
+        );
       })
     );
 
@@ -72,12 +69,13 @@ describe("NativeDirs.resolve", () => {
 
     it.effect("falls back per-variable, not all-or-nothing", () =>
       Effect.gen(function* () {
-        // LOCALAPPDATA set, APPDATA not: the roaming fallback must still apply
-        // while the local one does not. An all-or-nothing branch passes the two
-        // tests above and fails this one.
         const native = yield* resolve("win32", paths({ localAppData: "/L" }));
         const dirs = O.getOrThrow(native);
-        assert.strictEqual(dirs.config, "/home/ada/AppData/Roaming/myapp");
+        assert.strictEqual(
+          dirs.config,
+          "/home/ada/AppData/Roaming/myapp",
+          "LOCALAPPDATA alone must not switch off the roaming fallback"
+        );
         assert.strictEqual(dirs.cache, "/L/myapp/Cache");
       })
     );

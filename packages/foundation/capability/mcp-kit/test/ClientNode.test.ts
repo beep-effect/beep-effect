@@ -19,8 +19,6 @@ import * as Stream from "effect/Stream";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 import type { StdioHost } from "@beep/mcp-kit/test/Conformance";
 
-// A spawner whose only process is the fixture host: bytes written to the
-// handle's stdin reach the host, the host's lines come back as stdout bytes.
 const fakeSpawner = (io: StdioHost) =>
   ChildProcessSpawner.make((_command) =>
     Effect.succeed(

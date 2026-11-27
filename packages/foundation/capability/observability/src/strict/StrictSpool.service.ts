@@ -209,7 +209,6 @@ const deriveSpoolKey = Effect.fnUntraced(function* (key: Context.Service.Shape<t
   });
 });
 
-// The header bound to the ciphertext as additional authenticated data.
 const additionalData = (header: {
   readonly signal: string;
   readonly tier: string;
@@ -294,7 +293,6 @@ const segmentNamesIn = (fs: FileSystem.FileSystem, directory: string) =>
 
 const isNatural = S.is(S.Natural);
 
-// The seal time a segment name starts with, or 0 for a name without one.
 const sealedAtOfName = (name: string): number =>
   pipe(
     Str.slice(0, millisWidth)(name),
@@ -321,14 +319,9 @@ const openSegment = Effect.fnUntraced(function* (aesKey: CryptoKey, segment: Str
   return StrictEgressRecord.make({ signal: segment.signal, body: textDecoder.decode(plaintext) });
 });
 
-// Decodes, checks and opens one segment's text; every failure is a refusal tag.
 const outcomeOf = (reader: SegmentReader, text: string): Effect.Effect<StrictSpoolOutcome> =>
   decodeSegment(text).pipe(
     Effect.mapError(() => TelemetryRefusalTag.Enum["spool-segment-invalid"]),
-    // Authenticate before trusting any header field: the tier is bound as
-    // additional data, so an edited tier fails here as an invalid segment
-    // and only a genuine segment sealed under a looser tier is tier-refused.
-    // Replay, the survey and the privacy receipt all classify through here.
     Effect.flatMap((segment) =>
       segment.keyEpoch !== reader.key.epoch
         ? Effect.fail(TelemetryRefusalTag.Enum["spool-segment-invalid"])
@@ -358,7 +351,6 @@ const readSegment = Effect.fnUntraced(function* (reader: SegmentReader, name: st
   });
 });
 
-// Reads every named segment, in name order, without writing anything.
 const readSegments = <E>(
   reader: SegmentReader,
   names: Effect.Effect<ReadonlyArray<string>, E>
@@ -381,6 +373,15 @@ const readSegments = <E>(
  *   oldest first, even for appends in the same millisecond.
  * - The AES-256-GCM key is derived from the {@link StrictSpoolKey} with
  *   HKDF-SHA256; each segment gets a fresh 12-byte nonce.
+ * - The header, tier included, is bound as additional authenticated data and
+ *   checked before any header field is trusted: an edited tier reads as
+ *   `spool-segment-invalid`, and only a genuine segment sealed under a looser
+ *   tier is `spool-tier-refused`. Replay and the survey classify alike.
+ * - Each append then evicts the oldest segments until the rest fit
+ *   `maxBytes`, one remove per segment: each removed one counts
+ *   `spool-evicted` and each one that could not be removed counts
+ *   `spool-evict-failed`, as does a directory that cannot be listed or sized.
+ *   Eviction never fails the append; the next append tries again.
  *
  * **Gotchas**
  *
@@ -418,11 +419,6 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
 
   const segmentNames = segmentNamesIn(fs, directory);
 
-  // Removes the oldest segments until the rest fit, one remove per segment:
-  // each one removed counts `spool-evicted` and each one that could not be
-  // removed `spool-evict-failed`, so a failed remove neither hides the
-  // removes before it nor stops the ones after it. A directory that cannot be
-  // listed or sized is one `spool-evict-failed`.
   const evict = (): Effect.Effect<ReadonlyArray<TelemetryRefusalTag>> =>
     Effect.gen(function* () {
       const names = yield* segmentNames;
@@ -432,7 +428,6 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
         { concurrency: 1 }
       );
       const total = A.reduce(sizes, 0, (sum, size) => sum + size);
-      // Walk oldest first, picking segments until the rest fit.
       const candidates = pipe(
         A.zip(names, sizes),
         A.reduce({ remaining: total, names: A.empty<string>() }, (state, [name, size]) =>
@@ -452,8 +447,7 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
       );
     }).pipe(Effect.orElseSucceed(() => [TelemetryRefusalTag.Enum["spool-evict-failed"]]));
 
-  // Untraced: the spool runs inside the exporter, and its own spans would only
-  // be exported, and refused, in the next window.
+  // decision: strict-spool-runs-untraced
   const append = Effect.fnUntraced(function* (record: StrictEgressRecord) {
     const sealedAtMillis = yield* Clock.currentTimeMillis;
     const header = { signal: record.signal, tier: options.tier, keyEpoch: key.epoch, sealedAtMillis };
@@ -483,8 +477,6 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.mapError(spoolFailure("append", "A strict spool segment could not be written."))
     );
-    // The body is already on disk, so eviction never fails the append: a
-    // segment it could not remove is counted and the next append tries again.
     const evict1 = yield* evict();
     return refusalLedgerOf(evict1);
   });

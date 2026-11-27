@@ -32,11 +32,9 @@ import type { Token } from "@beep/nlp-processing/Core/Token";
 const noTokens: ReadonlyArray<Token> = [];
 const noSentences: ReadonlyArray<Sentence> = [];
 
-// The last text each delegated backend operation received, so a test can see that a service
-// call reached its backend method instead of only matching the stub's empty result.
-const backendCalls = MutableHashMap.empty<string, string>();
+const lastTextPerOperation = MutableHashMap.empty<string, string>();
 const recordBackendCall = (operation: string, text: string): void => {
-  MutableHashMap.set(backendCalls, operation, text);
+  MutableHashMap.set(lastTextPerOperation, operation, text);
 };
 
 const backend: NLPBackendShape = {
@@ -107,19 +105,22 @@ describe("NLPService", () => {
       const graph = yield* service.processText("ada lovelace");
 
       expect((yield* service.getBackend).name).toBe("minimal");
-      MutableHashMap.clear(backendCalls);
+      MutableHashMap.clear(lastTextPerOperation);
       const extractEntities1 = yield* service.extractEntities("ada lovelace");
       expect(extractEntities1).toStrictEqual([]);
-      assertSome(MutableHashMap.get(backendCalls, "extractEntities"), "ada lovelace");
-      MutableHashMap.clear(backendCalls);
+      assertSome(MutableHashMap.get(lastTextPerOperation, "extractEntities"), "ada lovelace");
+      MutableHashMap.clear(lastTextPerOperation);
       const extractRelations2 = yield* service.extractRelations("grace hopper");
       expect(extractRelations2).toStrictEqual([]);
-      assertSome(MutableHashMap.get(backendCalls, "extractRelations"), "grace hopper");
-      MutableHashMap.clear(backendCalls);
+      assertSome(MutableHashMap.get(lastTextPerOperation, "extractRelations"), "grace hopper");
+      MutableHashMap.clear(lastTextPerOperation);
       const tagPartsOfSpeech3 = yield* service.tagPartsOfSpeech("alan turing");
       expect(tagPartsOfSpeech3).toStrictEqual([]);
-      assertSome(MutableHashMap.get(backendCalls, "posTag"), "alan turing");
-      expect(MutableHashMap.size(backendCalls)).toBe(1);
+      assertSome(MutableHashMap.get(lastTextPerOperation, "posTag"), "alan turing");
+      expect(
+        MutableHashMap.size(lastTextPerOperation),
+        "each service call reached its backend method, not only the stub's empty result"
+      ).toBe(1);
       expect(Graph.nodeCount(graph)).toBeGreaterThanOrEqual(2);
     })
   );
@@ -132,19 +133,19 @@ describe("NLPService", () => {
         Effect.fnUntraced(function* () {
           const graph = yield* processText("ada lovelace");
 
-          MutableHashMap.clear(backendCalls);
+          MutableHashMap.clear(lastTextPerOperation);
           const extractEntities4 = yield* extractEntities("ada lovelace");
           expect(extractEntities4).toStrictEqual([]);
-          assertSome(MutableHashMap.get(backendCalls, "extractEntities"), "ada lovelace");
-          MutableHashMap.clear(backendCalls);
+          assertSome(MutableHashMap.get(lastTextPerOperation, "extractEntities"), "ada lovelace");
+          MutableHashMap.clear(lastTextPerOperation);
           const extractRelations5 = yield* extractRelations("grace hopper");
           expect(extractRelations5).toStrictEqual([]);
-          assertSome(MutableHashMap.get(backendCalls, "extractRelations"), "grace hopper");
-          MutableHashMap.clear(backendCalls);
+          assertSome(MutableHashMap.get(lastTextPerOperation, "extractRelations"), "grace hopper");
+          MutableHashMap.clear(lastTextPerOperation);
           const tagPartsOfSpeech6 = yield* tagPartsOfSpeech("alan turing");
           expect(tagPartsOfSpeech6).toStrictEqual([]);
-          assertSome(MutableHashMap.get(backendCalls, "posTag"), "alan turing");
-          expect(MutableHashMap.size(backendCalls)).toBe(1);
+          assertSome(MutableHashMap.get(lastTextPerOperation, "posTag"), "alan turing");
+          expect(MutableHashMap.size(lastTextPerOperation)).toBe(1);
           expect(Graph.nodeCount(graph)).toBeGreaterThanOrEqual(2);
         })
       );

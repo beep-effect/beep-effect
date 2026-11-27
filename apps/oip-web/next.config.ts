@@ -1,12 +1,7 @@
 import * as NodeURL from "node:url";
 import { defineBeepNextConfig } from "@beep/repo-configs/next";
-import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { oipRedirects } from "./src/config/OipRedirects.ts";
-
-// decision: node-worker-feature-flags
-const blockedNodeWorkerFlag = "--js-float16array";
-process.execArgv = A.filter(process.execArgv, (flag) => flag !== blockedNodeWorkerFlag);
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../..", import.meta.url));
 

@@ -124,9 +124,7 @@ export const annotateFourHints: {
 } = dual(
   2,
   <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): AnnotatedTool<T> =>
-    // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
-    // shape rather than the caller's specific `T`; the annotation chain does
-    // not change `Name`/`Config`/`Requirements`, so re-narrowing here is sound.
+    // decision: annotate-results-renarrowed-to-input-tool
     tool
       .annotate(AiTool.Readonly, hints.readOnly)
       .annotate(AiTool.Destructive, hints.destructive)

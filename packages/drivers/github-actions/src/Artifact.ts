@@ -163,7 +163,6 @@ export class ArtifactError extends S.TaggedError<ArtifactError, { readonly brand
  * @category schemas
  * @since 0.0.0
  */
-// A boundary struct preserves the backend's plain-record public representation.
 export class ArtifactItem extends S.Opaque<ArtifactItem, { readonly brand: unique symbol }>()(
   S.Struct({
     /** The database id, which is what `download` takes. */
@@ -449,6 +448,10 @@ export declare namespace ArtifactRef {
  * The members of the {@link Artifact} service: upload, list, get, download and
  * delete, each failing with {@link ArtifactError}.
  *
+ * **Gotchas**
+ *
+ * Backend ids come from the runtime token's scope claim, so a token without one fails as a workflow misconfiguration rather than a call failure. A path holding a line break is rejected on every platform: the same upload must not succeed on one runner and fail on another. An artifact-name conflict is a failure, unlike an immutable-cache race: a run owns one artifact per name.
+ *
  * @public
  * @category type-level
  * @since 0.0.0
@@ -490,7 +493,6 @@ export interface ArtifactShape {
   };
 }
 
-/** The Twirp service the artifact protocol lives under. */
 const SERVICE = "github.actions.results.api.v1.ArtifactService";
 
 /**
@@ -505,7 +507,6 @@ const SERVICE = "github.actions.results.api.v1.ArtifactService";
  */
 const ARTIFACT_VERSION = 7;
 
-/** One row of a `ListArtifacts` answer, read under either field spelling. */
 const toItem = Effect.fnUntraced(function* (row: unknown) {
   const createdAt = stringField(row, "createdAt");
   return yield* S.decodeEffect(ArtifactItem)({
@@ -519,7 +520,6 @@ const toItem = Effect.fnUntraced(function* (row: unknown) {
 const make = Effect.fn("make")(function* (
   transfer: FileBlobTransfer
 ): Effect.fn.Return<ArtifactShape, never, RunnerServiceRequirements> {
-  // Resolved once, at construction, so every member's `R` is `never`.
   const { http, fs, path, spawner, env, windows } = yield* runnerServices;
 
   const backend = (artifact: string) =>
@@ -532,10 +532,6 @@ const make = Effect.fn("make")(function* (
         })
       ),
       Effect.flatMap((resolved) =>
-        // The backend ids come from the runtime token's own scope claim, so a
-        // token without one is a misconfiguration rather than a call failure —
-        // and saying which is the difference between a fixable workflow and a
-        // bug report.
         Result.isFailure(resolved.backendIds)
           ? Effect.fail(ArtifactError.make({ reason: "misconfigured", artifact, detail: resolved.backendIds.failure }))
           : Effect.succeed({
@@ -589,7 +585,6 @@ const make = Effect.fn("make")(function* (
       : [];
   });
 
-  /** Run an archiving command ONCE (`internal/spawn.ts`), keeping its stderr. */
   const archive: {
     (command: ChildProcess.Command, artifact: string): Effect.Effect<void, ArtifactError>;
     (artifact: string): (command: ChildProcess.Command) => Effect.Effect<void, ArtifactError>;
@@ -677,10 +672,6 @@ const make = Effect.fn("make")(function* (
       // — and absolute inputs would extract into a tree named after the
       // runner that produced them.
       const relative = A.map(files, (file) => path.relative(root, file));
-      // The Windows list travels one path per line (`internal/archiveCommands.ts`
-      // says why), so a path holding a line break cannot be represented.
-      // Rejected on every platform: the same upload must not succeed on one
-      // runner and fail on another.
       const unrepresentable = A.findFirst(relative, (file) => Str.includes("\n")(file) || Str.includes("\r")(file));
       if (O.isSome(unrepresentable)) {
         const quoted = yield* S.encodeEffect(Json)(unrepresentable.value).pipe(Effect.orDie);
@@ -716,14 +707,9 @@ const make = Effect.fn("make")(function* (
       archive(unzipCommand({ windows, source, destination }), artifact)
   );
 
-  /** An `invalidOptions` failure for one artifact. */
   const invalidUpload = (artifact: string, detail: string) =>
     Effect.fail(ArtifactError.make({ reason: "invalidOptions", artifact, detail }));
 
-  /**
-   * The expiration `retentionDays` asks for, anchored now: positive, finite
-   * and representable, or `Option.none()` for the repository default.
-   */
   const retentionExpiry = Effect.fnUntraced(function* (
     name: string,
     retentionDays: number | undefined
@@ -743,11 +729,6 @@ const make = Effect.fn("make")(function* (
       : expiresAt;
   });
 
-  /**
-   * Validate an upload before any scratch, archive, RPC or transfer, answering
-   * its expiration: there must be files, the retention must be usable, and
-   * `compressionLevel` must not be `NaN`.
-   */
   const uploadExpiry = Effect.fnUntraced(function* (
     name: string,
     files: ReadonlyArray<string>,
@@ -763,16 +744,9 @@ const make = Effect.fn("make")(function* (
     return expiresAt;
   });
 
-  /** A `refused` failure for one artifact. */
   const refusedUpload = (artifact: string, detail: string) =>
     Effect.fail(ArtifactError.make({ reason: "refused", artifact, detail }));
 
-  /**
-   * Create the artifact, move the packed zip to its signed URL and finalize it.
-   * Unlike the cache, a create conflict is a real failure: a run may hold one
-   * artifact per name, so the second upload is a mistake rather than a race
-   * that resolved itself.
-   */
   const uploadPacked = Effect.fnUntraced(function* (
     name: string,
     packed: string,

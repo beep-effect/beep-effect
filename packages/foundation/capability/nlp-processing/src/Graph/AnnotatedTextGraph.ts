@@ -32,10 +32,6 @@ import { DependencyNode, EntityNode, LemmaNode, POSNode, RelationNode, TextEdge,
 
 const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
 
-// =============================================================================
-// Annotated Node Types
-// =============================================================================
-
 /**
  * **Example** (Create TextNode as AnnotatedNode)
  *
@@ -221,10 +217,6 @@ export const isDependencyNode: (node: AnnotatedNode) => node is DependencyNode =
  */
 export const isRelationNode: (node: AnnotatedNode) => node is RelationNode = S.is(RelationNode);
 
-// =============================================================================
-// Annotated Graph Types
-// =============================================================================
-
 /**
  * A directed text graph whose nodes may be structural or annotation nodes.
  *
@@ -273,10 +265,6 @@ const makeTextNode = (fields: {
       ...OptionUtils.getSomesStruct({ operation: O.fromUndefinedOr(fields.operation) }),
     })
   );
-
-// =============================================================================
-// Constructors
-// =============================================================================
 
 /**
  * Create an empty annotated graph.
@@ -445,10 +433,6 @@ export const fromDocumentAnnotated = Effect.fn("AnnotatedTextGraph.fromDocument"
     return graph;
   }).pipe(Obs.observeNlpWorkflow("AnnotatedTextGraph.fromDocument", attributes));
 });
-
-// =============================================================================
-// Annotation passes
-// =============================================================================
 
 const sentenceIndices = (graph: AnnotatedTextGraph): ReadonlyArray<Graph.NodeIndex> =>
   Graph.findNodes(graph, (node) => isTextNode(node) && node.type === "sentence");
@@ -640,10 +624,6 @@ export const addDependencyAnnotations = (
     relation: "head-of",
   });
 
-// =============================================================================
-// Query Functions
-// =============================================================================
-
 const entriesWhere: {
   <K extends AnnotatedNode>(
     graph: AnnotatedTextGraph,
@@ -834,10 +814,6 @@ export const countNodesByType = (graph: AnnotatedTextGraph): Record<string, numb
       return { ...counts, relation: counts.relation + 1 };
     }
   );
-
-// =============================================================================
-// Utility Functions
-// =============================================================================
 
 /**
  * Collect all structural and annotation nodes in backing graph order.
