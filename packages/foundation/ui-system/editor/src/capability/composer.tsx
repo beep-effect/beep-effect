@@ -69,11 +69,12 @@ export function ProfileResolutionNotice({ error }: { readonly error: ProfileReso
 /** Resolves an app profile and mounts only its projected authoring surfaces.
  *
  * **Gotchas**
- *  * Keep the outer column box-filling: toolbar and help stay pinned while the editable owns the flexible space and scrolls, so a short dock never collapses the document.
+ *
+ * Keep the outer column box-filling: toolbar and help stay pinned while the editable owns the flexible space and scrolls, so a short dock never collapses the document.
  *
  * The editing surface uses an inset focus-within ring so keyboard focus remains visible inside its scroll container.
  *
-Profile and initial state are mount-only; change the React key to remount.
+ * Profile and initial state are mount-only; change the React key to remount.
  *
  * **Example** (Mount a reference profile)
  * ```tsx

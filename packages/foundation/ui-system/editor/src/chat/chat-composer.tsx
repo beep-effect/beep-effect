@@ -537,6 +537,11 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
 /**
  * The feature-flagged chat composer.
  *
+ * **Details**
+ *
+ * This component is the declarative assembly boundary for plugins and optional consumer ports.
+ * Keep prop forwarding here so the mount-time inputs to the atom-backed body remain explicit.
+ *
  * **Example** (Composer with onSend config)
  *
  * ```tsx
@@ -555,9 +560,6 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
  * @category components
  * @since 0.0.0
  */
-// This component is intentionally the declarative assembly boundary for the
-// composer plugins and their optional consumer ports. Extracting the prop
-// forwarding would obscure which mount-time values enter the atom-backed body.
 export function ChatComposer(props: ChatComposerProps): JSX.Element {
   const {
     ariaLabel = DEFAULT_ARIA_LABEL,
