@@ -314,6 +314,23 @@ describe("a biography", () => {
     expect(kinds("https://example.org/a#top @")).toStrictEqual(O.some(["link"]));
   });
 
+  it("reads a host only where it is plainly one", () => {
+    expect(sliced("Mr.Smith/Jones and v2.0/beta, site.com")).toStrictEqual(O.some([]));
+    expect(sliced("see www.site.com, or Linktr.ee/jack.")).toStrictEqual(O.some(["www.site.com", "Linktr.ee/jack"]));
+  });
+
+  it("separates links and hashtags written without a space between them", () => {
+    expect(sliced("https://x.com/jack,https://x.com/jill")).toStrictEqual(
+      O.some(["https://x.com/jack", "https://x.com/jill"])
+    );
+    expect(sliced("#tag1#tag2 abc#def")).toStrictEqual(O.some(["#tag1", "#tag2"]));
+  });
+
+  it("reads a handle up to a doubled separator and skips an address of another network", () => {
+    expect(sliced("@a..b @jack_ @jack's @jack.")).toStrictEqual(O.some(["@a", "@jack_", "@jack", "@jack"]));
+    expect(sliced("@jack@mastodon.social")).toStrictEqual(O.some([]));
+  });
+
   it("prints the text it was read from", () => {
     const text = "#a @b https://example.org/c";
     expect(O.flatMap(read(text), S.encodeOption(RichTextFromString))).toStrictEqual(O.some(text));
