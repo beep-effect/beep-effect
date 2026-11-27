@@ -129,7 +129,7 @@ export const makeLivePng = (): Uint8Array => {
   ]);
 };
 
-const zipDosEpochDate = 0x0021;
+const zipDosDate = 0x0021;
 const zipDosTime = 0x0000;
 
 type ZipEntry = {
@@ -149,7 +149,7 @@ const zipLocalHeader = (entry: ZipEntry): Uint8Array =>
     uint16le(0),
     uint16le(0),
     uint16le(zipDosTime),
-    uint16le(zipDosEpochDate),
+    uint16le(zipDosDate),
     uint32le(crc32(entry.data)),
     uint32le(entry.data.length),
     uint32le(entry.data.length),
@@ -166,7 +166,7 @@ const zipCentralHeader = (entry: ZipEntry, offset: number): Uint8Array =>
     uint16le(0),
     uint16le(0),
     uint16le(zipDosTime),
-    uint16le(zipDosEpochDate),
+    uint16le(zipDosDate),
     uint32le(crc32(entry.data)),
     uint32le(entry.data.length),
     uint32le(entry.data.length),
@@ -279,7 +279,7 @@ const cfbDirectoryEntry = (
   return entry;
 };
 
-const makeFatOnlyCompoundFile = (streams: ReadonlyArray<CfbStream>): Uint8Array => {
+const makeCompoundFile = (streams: ReadonlyArray<CfbStream>): Uint8Array => {
   let cursor = 0;
   const placed = A.map(streams, (stream) => {
     const startSector = cursor;
@@ -422,4 +422,4 @@ const makeWordDocumentStream = (text: string): Uint8Array => {
  * cp1252.
  */
 export const makeLiveDoc = (text = "hello live tika corpus"): Uint8Array =>
-  makeFatOnlyCompoundFile([{ data: makeWordDocumentStream(text), name: "WordDocument" }]);
+  makeCompoundFile([{ data: makeWordDocumentStream(text), name: "WordDocument" }]);
