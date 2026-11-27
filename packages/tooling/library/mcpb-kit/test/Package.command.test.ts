@@ -57,8 +57,6 @@ const runtimeCache = `${cache}/bun-windows-x64-${mcpbWindowsRuntime.version}`;
 const stagedRuntime = (suffix: string) =>
   new RegExp(`^${cache}/\\.bun-windows-x64-${mcpbWindowsRuntime.version}-[^/]+${suffix}`);
 
-// A Portable Executable header with 16 data directories. Directory 4 is the
-// Authenticode certificate table: a file offset and a size.
 const portableExecutable = (options: {
   readonly optionalMagic: 0x10b | 0x20b;
   readonly certificateTable?: { readonly offset: number; readonly size: number };
@@ -72,8 +70,9 @@ const portableExecutable = (options: {
   view.setUint32(peOffset, 0x4550, true);
   view.setUint16(peOffset + 24, options.optionalMagic, true);
   view.setUint32(directories - 4, 16, true);
-  view.setUint32(directories + 32, options.certificateTable?.offset ?? 0, true);
-  view.setUint32(directories + 36, options.certificateTable?.size ?? 0, true);
+  const certificateTableEntry = directories + 32;
+  view.setUint32(certificateTableEntry, options.certificateTable?.offset ?? 0, true);
+  view.setUint32(certificateTableEntry + 4, options.certificateTable?.size ?? 0, true);
   return bytes;
 };
 const signedRuntime = portableExecutable({ optionalMagic: 0x20b, certificateTable: { offset: 0x1c0, size: 0x40 } });
@@ -81,9 +80,10 @@ const textEncoder = new TextEncoder();
 const syntheticArchive = textEncoder.encode("synthetic archive");
 
 const originalSpawn = Bun.spawn;
+const unzipQuietUnpackFlag = "-q";
 
-// Bun exposes a fixed global and a non-configurable, writable spawn property.
-afterEach(() => Object.defineProperty(Bun, "spawn", { value: originalSpawn }));
+const restoreNonConfigurableBunSpawn = () => Object.defineProperty(Bun, "spawn", { value: originalSpawn });
+afterEach(restoreNonConfigurableBunSpawn);
 
 const commandEnvironment = Layer.mergeAll(
   MemoryFileSystem.layer,
@@ -130,9 +130,6 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     yield* fs.writeFileString(argument, encodedBindings);
     yield* fs.writeFileString(`${nativeDir}/duckdb.node`, "synthetic native sidecar");
     yield* fs.makeDirectory(output, { recursive: true });
-    // `Bun.spawn` is a plain function, so it hands each synthetic archive write to
-    // a fiber of the test, which writes it to the in-memory filesystem and then
-    // settles the process's `exited` promise.
     const fileWrites = yield* Queue.unbounded<{
       readonly path: string;
       readonly content: Uint8Array;
@@ -170,8 +167,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
         offerFileWrite(args[args.length - 1] ?? "", textEncoder.encode("synthetic download"), exitCode),
       tar: (args, exitCode) =>
         offerFileWrite(`${args[5]}/duckdb.node`, textEncoder.encode("downloaded Windows sidecar"), exitCode),
-      // `unzip -q -j -o <archive> <member> -d <directory>` unpacks the runtime; `unzip -Z1` only lists.
-      unzip: (args, exitCode) => (args[1] === "-q" ? unpackRuntime : exitOnly)(args, exitCode),
+      unzip: (args, exitCode) => (args[1] === unzipQuietUnpackFlag ? unpackRuntime : exitOnly)(args, exitCode),
     };
     const settle: Settler = (args, exitCode) => (settlers[args[0] ?? ""] ?? exitOnly)(args, exitCode);
     const calls: Array<ReadonlyArray<string>> = [];
@@ -189,7 +185,6 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     return { fs, calls };
   });
 
-  // The Windows downloads as an earlier packaging run left them in the cache.
   const cacheWindowsDownloads = Effect.fnUntraced(function* (runtime: Uint8Array = signedRuntime) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.makeDirectory(bindingsCache, { recursive: true });
@@ -267,13 +262,13 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
       const fixture = yield* prepare({ listing: windowsInventory });
       yield* cacheWindowsDownloads();
       yield* fixture.fs.remove(runtimeCache, { recursive: true });
-      // The digest service below reports the pinned sha256 for what curl downloads.
+      const digestReportingPinnedSha256 = {
+        digest: () => Effect.succeed(new Uint8Array()),
+        digestHex: () => Effect.succeed(mcpbWindowsRuntime.sha256),
+      };
       yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
         Effect.provideService(FileSystem.FileSystem, fixture.fs),
-        Effect.provideService(Digest.Digest, {
-          digest: () => Effect.succeed(new Uint8Array()),
-          digestHex: () => Effect.succeed(mcpbWindowsRuntime.sha256),
-        })
+        Effect.provideService(Digest.Digest, digestReportingPinnedSha256)
       );
       expect(A.map(fixture.calls, (args) => args[0])).toEqual(["curl", "unzip", "bun", "zip", "unzip"]);
       expect(fixture.calls[0]).toContain(
@@ -369,9 +364,9 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     Effect.gen(function* () {
       const fixture = yield* prepare({ listing: windowsInventory });
       yield* cacheWindowsDownloads();
-      // A directory where the executable should be: the cache entry exists, copying it fails.
-      yield* fixture.fs.remove(`${runtimeCache}/bun.exe`);
-      yield* fixture.fs.makeDirectory(`${runtimeCache}/bun.exe`);
+      const executableAsDirectory = `${runtimeCache}/bun.exe`;
+      yield* fixture.fs.remove(executableAsDirectory);
+      yield* fixture.fs.makeDirectory(executableAsDirectory);
       const result = yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
         Effect.provideService(FileSystem.FileSystem, fixture.fs),
         Effect.result

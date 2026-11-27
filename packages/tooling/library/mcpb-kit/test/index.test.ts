@@ -99,10 +99,12 @@ layer(BunServices.layer, { timeout: "30 seconds" })("the pinned Windows runtime"
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      // The checked-in file itself: a Bun bump that leaves the pin behind fails here.
       const versionFile = yield* fs.realPath(path.resolve(import.meta.dirname, "../../../../../.bun-version"));
       const repoVersion = yield* fs.readFileString(versionFile);
-      expect(mcpbWindowsRuntime.version).toBe(Str.trim(repoVersion));
+      expect(
+        mcpbWindowsRuntime.version,
+        "reads the checked-in .bun-version: a Bun bump that leaves the pin behind fails here"
+      ).toBe(Str.trim(repoVersion));
     })
   );
 });

@@ -39,7 +39,6 @@ const $I = $RepoGateRunId.create("TsDiagnostic");
 export const tsDiagnosticPattern =
   /^(?<file>[^:\n]+):(?<line>\d+):(?<column>\d+)(?:\s+-)?\s+(?<severity>error|warning)\s+TS(?<code>\d+):\s+(?<message>.+)$/u;
 
-// The file runs to the final `(line,column):` delimiter, so a path may hold parentheses.
 const plainDiagnosticPattern =
   /^(?<file>[^\n]+)\((?<line>\d+),(?<column>\d+)\):\s+(?<severity>error|warning)\s+TS(?<code>\d+):\s+(?<message>.+)$/u;
 
@@ -157,6 +156,11 @@ export const parsePrettyDiagnostic = (line: string): O.Option<TsDiagnostic> =>
  * Parse one line of compiler output in any form it prints a diagnostic in:
  * pretty (`file:line:column - error`), plain (`file(line,column): error`)
  * or with no location (`error TS6305: ...`).
+ *
+ * **Gotchas**
+ *
+ * In the plain form the file runs to the final `(line,column):`, so a path
+ * may contain parentheses.
  *
  * **Example** (Parse a plain line)
  *

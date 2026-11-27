@@ -70,12 +70,10 @@ const sample = LaneRedsInput.make({
       "lane-a",
       [
         row({}),
-        // Acknowledged, superseded, P2 and observation rows never count.
         row({ acked: true }),
         row({ superseded: true }),
         row({ kind: "base-drift", severity: "P2" }),
         row({ kind: "pr-merge-ready", severity: "P1" }),
-        // A P1 review thread observed 30 minutes ago: open but stale.
         row({
           kind: "review-thread",
           severity: "P1",
@@ -96,7 +94,10 @@ const sample = LaneRedsInput.make({
 describe("reduceLaneReds", () => {
   it("keeps open P0/P1 reds, P0 first, and a branch's newest failed job", () => {
     const parcel = reduceLaneReds(sample, NOW, 20);
-    expect(A.map(reds(parcel), (red) => [red.lane, red.kind, red.severity, reasonOf(red.freshness)])).toEqual([
+    expect(
+      A.map(reds(parcel), (red) => [red.lane, red.kind, red.severity, reasonOf(red.freshness)]),
+      "acked, superseded, P2 and observation rows never count; a P1 thread seen 30 minutes ago is open but stale"
+    ).toEqual([
       ["lane-a", "check-failed", "P0", "fresh"],
       ["lane-b", "pr-comment", "P1", "fresh"],
       ["lane-b", "proof-job-failed", "P1", "fresh"],

@@ -53,11 +53,9 @@ const noEvidence = DerivationEvidence.make({
 const isRetiredScriptName = S.is(RetiredScriptName);
 const isRetiredAppImpl = (name: string, value: string) =>
   A.some(retiredImplScripts, (row) => row.kind === "app" && row.name === name && row.value === value);
-// A check whose first segment the (possibly just retired) build program now serves.
 const isServedCheck = (impls: HashMap.HashMap<string, string>, name: string, value: string) =>
   name === "beep:check" &&
   O.isSome(O.flatMap(HashMap.get(impls, "beep:build"), (build) => buildServedCheck(value, build)));
-// The per-package Turbo override every package whose build is not declaration-only carries.
 const checkOffOwnBuild = { extends: ["//"], tasks: { check: { dependsOn: ["^build"] } } };
 const fixture = Effect.fn("fixture")(function* (files: Readonly<Record<string, unknown>>) {
   const fs = yield* FileSystem.FileSystem;
@@ -258,17 +256,15 @@ describe("package scripts policy", () => {
         });
         yield* fs.writeFileString(file, jsonStringifyPretty6);
         const before = yield* fs.readFileString(file);
+        const packageOwnedFlagsDrift = ImplScriptDrift.make({
+          name: "beep:check",
+          actual: "tsrs --extendedDiagnostics -p tsconfig.check.json",
+          expected: `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`,
+        });
         for (const report of [yield* policy.check(root), yield* policy.write(root)]) {
           expect(HashMap.size(report.drift)).toBe(0);
           expect(HashMap.size(report.implDrift)).toBe(1);
-          assertSome(HashMap.get(report.implDrift, "packages/a/package.json"), [
-            // Flags before the program are package-owned: never rewritten, compared with the served default.
-            ImplScriptDrift.make({
-              name: "beep:check",
-              actual: "tsrs --extendedDiagnostics -p tsconfig.check.json",
-              expected: `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`,
-            }),
-          ]);
+          assertSome(HashMap.get(report.implDrift, "packages/a/package.json"), [packageOwnedFlagsDrift]);
           expect(HashSet.size(report.written)).toBe(0);
         }
         const readFileString7 = yield* fs.readFileString(file);
@@ -430,10 +426,11 @@ describe("package scripts policy", () => {
         expect(HashMap.size((yield* policy.check(root)).drift)).toBe(0);
         expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
         const declarationOnly = "tsrs -p tsconfig.json --emitDeclarationOnly";
-        // `packages/legacy` held the Babel build in its task: the seeded implementation is retired in the same pass.
         for (const dir of ["packages/babel", "packages/javascript", "apps/library-shaped", "packages/legacy"]) {
           const scripts = yield* buildOf(root, dir);
-          expect(scripts["beep:build"]).toBe(declarationOnly);
+          expect(scripts["beep:build"], `${dir} retires in one pass, a build seeded from its task included`).toBe(
+            declarationOnly
+          );
           expect(scripts).not.toHaveProperty("babel");
         }
         const codegen = yield* buildOf(root, "packages/codegen");
@@ -639,9 +636,11 @@ describe("package scripts policy", () => {
             actual: "tsrs -p tsconfig.check.json && bun run beep:check:tests",
           },
         ]);
-        // Flags of the first segment follow the build command in the same order; the later segment is untouched.
         const flaggedServed = `${DECLARATION_ONLY_BUILD_COMMAND} --checkerCostCache a.cache --pretty false && tsrs -p test/tsconfig.json --checkerCostCache b.cache`;
-        expect(checkRows("packages/flagged")).toEqual([
+        expect(
+          checkRows("packages/flagged"),
+          "first-segment flags follow the build command in order; the later segment is untouched"
+        ).toEqual([
           {
             _tag: "retired-impl",
             name: "beep:check",
@@ -656,13 +655,15 @@ describe("package scripts policy", () => {
         expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
         const library = yield* scriptsOf(root, "packages/library");
         expect(library["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`);
-        // Later segments keep their spelling; only the leading segment changes.
         const codegen = yield* scriptsOf(root, "packages/codegen");
-        expect(codegen["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND}&&bun run beep:check:scripts`);
-        // The Babel build retires to the declaration-only build and serves the check in the same pass.
+        expect(codegen["beep:check"], "later segments keep their spelling").toBe(
+          `${DECLARATION_ONLY_BUILD_COMMAND}&&bun run beep:check:scripts`
+        );
         const babel = yield* scriptsOf(root, "packages/babel");
         expect(babel["beep:build"]).toBe(DECLARATION_ONLY_BUILD_COMMAND);
-        expect(babel["beep:check"]).toBe(`${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`);
+        expect(babel["beep:check"], "the retired Babel build serves the check in the same pass").toBe(
+          `${DECLARATION_ONLY_BUILD_COMMAND} && bun run beep:check:tests`
+        );
         const flagged = yield* scriptsOf(root, "packages/flagged");
         expect(flagged["beep:check"]).toBe(flaggedServed);
         const kept = yield* scriptsOf(root, "packages/wide");
@@ -697,7 +698,6 @@ describe("package scripts policy", () => {
       Effect.fnUntraced(function* () {
         const root = yield* fixture({
           "package.json": { name: "root", workspaces: ["packages/*"] },
-          // A package flipped from the declaration-only build to a bundler, with no Turbo override.
           "packages/flipped/package.json": {
             name: "@beep/flipped",
             scripts: { ...checked, "beep:build": "vite build" },

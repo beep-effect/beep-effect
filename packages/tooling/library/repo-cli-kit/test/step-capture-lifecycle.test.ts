@@ -47,7 +47,6 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type * as ChildProcess from "effect/process/ChildProcess";
 
-// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
@@ -76,12 +75,7 @@ const processGroupFromStat = (text: string): number | undefined => {
   return Number.isInteger(processGroup) && processGroup > 0 ? processGroup : undefined;
 };
 
-// A spawner whose child "exits" immediately but whose output pipe stays open until kill is called
-// (killEndsStream: true — the straggler dies with the group reap and the kernel delivers EOF), or
-// forever (killEndsStream: false — a descendant escaped the process group too). This is the shape
-// of the Lint Policy success-exit hang: jobs 94646234791 and 95354812245 logged every policy step
-// done, then sat silent for 29-40 minutes because an orphaned grandchild held the inherited pipe
-// write end and nothing reaped it after a successful exit.
+// decision: capture-reaps-child-group-after-exit
 const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   readonly output: string;
   readonly killEndsStream: boolean;
@@ -94,8 +88,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
   const pipe = Stream.make(encoder.encode(options.output)).pipe(
     Stream.concat(closed.pipe(Deferred.await, Stream.fromEffect, Stream.drain))
   );
-  // Own double: kill() is counted and ends the stream, and isRunning can fail; ScriptedSpawner's kill is a no-op.
-  const handle = ChildProcessSpawner.makeHandle({
+  const killCountingHandle = ChildProcessSpawner.makeHandle({
     all: pipe,
     exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
     getInputFd: () => Sink.drain,
@@ -121,7 +114,7 @@ const makeStuckSpawner = Effect.fnUntraced(function* (options: {
     stdout: pipe,
     unref: Effect.succeed(Effect.void),
   });
-  const spawner = ChildProcessSpawner.make(() => Effect.succeed(handle));
+  const spawner = ChildProcessSpawner.make(() => Effect.succeed(killCountingHandle));
   return { spawner, killCount, closed } as const;
 });
 
@@ -136,8 +129,7 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
   const pipe = Stream.make(encoder.encode("started")).pipe(
     Stream.concat(closed.pipe(Deferred.await, Stream.fromEffect, Stream.drain))
   );
-  // Own double: kill() is counted and settles a Deferred-gated exitCode, and unref is counted.
-  const handle = ChildProcessSpawner.makeHandle({
+  const killCountingHandle = ChildProcessSpawner.makeHandle({
     all: pipe,
     exitCode: Deferred.await(exited),
     getInputFd: () => Sink.drain,
@@ -161,7 +153,7 @@ const makeNeverExitSpawner = Effect.fnUntraced(function* (killCompletes?: boolea
     stdout: pipe,
     unref: Ref.update(unrefCount, (count) => count + 1).pipe(Effect.as(Effect.void)),
   });
-  const spawner = ChildProcessSpawner.make(() => Effect.succeed(handle));
+  const spawner = ChildProcessSpawner.make(() => Effect.succeed(killCountingHandle));
   return { spawner, killCount, killOptions, unrefCount } as const;
 });
 
@@ -228,8 +220,6 @@ describe("StepExec capture pipe lifecycle", () => {
     );
   });
 
-  // Teeing and bounding are independent: a bounded capture still echoes every
-  // chunk to the parent stdout while the fold enforces the cap.
   it.layer(gitPlatform, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("tees a bounded capture while the bound still clips the output", () =>
       Effect.gen(function* () {
@@ -404,9 +394,6 @@ describe("StepExec capture pipe lifecycle", () => {
     }
   );
 
-  // Registration reads the child's start time to fence the generation. When
-  // that read fails, the liveness probe decides between "already gone" and a
-  // real failure; a probe that cannot answer is itself the reported cause.
   it.layer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer), { excludeTestServices: true })(
     (it) => {
       it.effect("names the liveness probe when process-generation recovery cannot confirm the exit", () =>

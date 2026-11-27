@@ -53,14 +53,15 @@ export const resolveOperatorPath: {
  * **Details**
  *
  * Each {@link SystemdBunCandidate} is probed under `home` in order and the
- * first regular file this user can execute wins, so a unit installed on a
- * mise-managed workstation runs whichever Bun the repo's `mise.toml` pins on
- * the night it fires. A candidate that is missing, unreadable, a directory,
- * or a leftover without execute permission is skipped rather than pinned, so
- * the probe never fails. The installer's own `process.execPath` is the
- * fallback only when no candidate qualifies: it is one version's binary, and
- * a unit pinned to it keeps running that version after a bump, or fails
- * outright once the version is pruned.
+ * first regular file this user can execute wins (a shim symlink is followed,
+ * so the bits checked are those of the binary the unit would run), so a unit
+ * installed on a mise-managed workstation runs whichever Bun the repo's
+ * `mise.toml` pins on the night it fires. A candidate that is missing,
+ * unreadable, a directory, or a leftover without execute permission is
+ * skipped rather than pinned, so the probe never fails. The installer's own
+ * `process.execPath` is the fallback only when no candidate qualifies: it is
+ * one version's binary, and a unit pinned to it keeps running that version
+ * after a bump, or fails outright once the version is pruned.
  *
  * **Example** (Prepare a resolution under an operator home)
  *
@@ -79,8 +80,6 @@ export const resolveOperatorPath: {
 export const resolveSystemdBunPath = Effect.fn("SystemdUnit.resolveBunPath")(function* (home: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // stat follows the shim's symlink, so the executable bits are those of the
-  // binary the unit would actually run.
   const found = yield* Effect.findFirst(
     A.map(SystemdBunCandidate.literals, (candidate) => path.join(home, candidate)),
     (candidate) =>
@@ -155,8 +154,6 @@ export const systemdUserUnitDir: {
 
 const DIRECTIVE_KEY_PATTERN = /^[A-Za-z][A-Za-z0-9]*$/;
 
-// A directive is `Key=Value` with a bare identifier key; section headers have
-// no `=`, and a commented-out directive fails the key pattern on its marker.
 const parseSystemdDirective = (line: string): O.Option<SystemdUnitDirective> => {
   const trimmed = Str.trim(line);
   return O.flatMap(Str.indexOf("=")(trimmed), (separator) => {

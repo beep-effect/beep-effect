@@ -1,13 +1,14 @@
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared from "../../../../vitest.shared.ts";
 
+// decision: alchemy-inlined-in-vitest
+const alchemySingleModuleInstance = [/alchemy/];
+
 export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      // alchemy brands Unowned reads with a module-private symbol; inlining keeps the
-      // engine and the providers on one module instance.
-      server: { deps: { inline: [/alchemy/] } },
+      server: { deps: { inline: alchemySingleModuleInstance } },
     },
   })
 );

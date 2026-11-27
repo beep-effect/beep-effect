@@ -26,8 +26,7 @@ import type { ScratchStack } from "@alchemy.run/test/Vitest";
 
 const isPrefix = S.is(FleetNamePrefix);
 
-// The prop each resource type pins its physical name with.
-const nameKey: Readonly<Record<string, string>> = {
+const namePropOf: Readonly<Record<string, string>> = {
   "Lambda.Function": "functionName",
   "SQS.Queue": "queueName",
   "IAM.Role": "roleName",
@@ -38,7 +37,7 @@ const nameKey: Readonly<Record<string, string>> = {
 };
 
 const nameOf = (entry: { readonly type: string; readonly news: Readonly<Record<string, unknown>> }) =>
-  entry.news[nameKey[entry.type] ?? ""];
+  entry.news[namePropOf[entry.type] ?? ""];
 
 const environment = Layer.succeed(
   AWSEnvironment,
@@ -96,7 +95,7 @@ const fleet = (namePrefix: string | undefined) =>
     })
   );
 
-const namedEntries = (recorder: Recorder) => A.filter(recorder.reconciled, (entry) => R.has(nameKey, entry.type));
+const namedEntries = (recorder: Recorder) => A.filter(recorder.reconciled, (entry) => R.has(namePropOf, entry.type));
 
 const deploy = (stack: ScratchStack, namePrefix: string | undefined) => {
   const run: (definition: ReturnType<typeof fleet>) => Effect.Effect<unknown, { readonly _tag: string }> = stack.deploy;
@@ -110,14 +109,15 @@ describe("RunnerFleetNames", () => {
       assertTrue(isPrefix(prefix));
       assertFalse(isPrefix(`${prefix}b`));
       assertFalse(isPrefix("Beep-fleet"));
-      // The check runs on the derived "<prefix>-binaries" bucket names, so boundary prefixes are refused too.
       for (const reserved of ["xn--fleet", "sthree-fleet", "amzn-s3-demo-fleet", "sthree", "xn-", "amzn-s3-demo"]) {
-        assertFalse(isPrefix(reserved));
+        assertFalse(
+          isPrefix(reserved),
+          "the check reads the derived <prefix>-binaries bucket name, so boundaries refuse too"
+        );
       }
-      // Dash-free pool names keep `<prefix>-<pool>` unique per (prefix, pool).
       const isPool = S.is(RunnerPool.fields.name);
       assertTrue(isPool("heavy"));
-      assertFalse(isPool("heavy-two"));
+      assertFalse(isPool("heavy-two"), "dash-free pool names keep <prefix>-<pool> unique per (prefix, pool)");
       for (const allowed of ["sthre", "xn", "amzn-s3-dem", "s3alias", "beep-fleet-prod"]) {
         assertTrue(isPrefix(allowed));
       }

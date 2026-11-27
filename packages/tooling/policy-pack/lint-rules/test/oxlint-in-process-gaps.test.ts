@@ -30,11 +30,6 @@ const namespaceImport = (source: string, local: string) =>
 
 const singleQuoted: SourceText = (node) => `'${node.value ?? ""}'`;
 
-/**
- * Instantiates a `create`-style oxlint rule against a fake rule context that
- * records every report, so the rule's visitor branches run in-process under
- * coverage instead of only through the spawned oxlint CLI harness.
- */
 const createRule = (name: RuleName, filename: string, reports: Array<unknown>, getText: SourceText = singleQuoted) => {
   const rule = plugin.rules[name];
   if (P.isUndefined(rule) || !("create" in rule)) {
@@ -50,10 +45,6 @@ const createRule = (name: RuleName, filename: string, reports: Array<unknown>, g
   } as never);
 };
 
-/**
- * Instantiates a `createOnce`-style oxlint rule against a fake rule context and runs its
- * `before` hook, so file-scoped state (shadow tracking, import bindings) starts clean.
- */
 const createOnceRule = (name: RuleName, filename: string, reports: Array<unknown>) => {
   const rule = plugin.rules[name];
   if (P.isUndefined(rule) || !("createOnce" in rule) || P.isUndefined(rule.createOnce)) {
@@ -193,7 +184,6 @@ describe("oxlint rules in process", () => {
 
     rule.CallExpression?.(processExit());
 
-    // A parameter binding shadows `process` for the arrow and every nested function.
     rule.ArrowFunctionExpression?.(params("other", "process"));
     rule.CallExpression?.(processExit());
     rule.FunctionExpression?.(params());
@@ -202,14 +192,13 @@ describe("oxlint rules in process", () => {
     rule["ArrowFunctionExpression:exit"]?.(params());
     rule.CallExpression?.(processExit());
 
-    expect(reports).toHaveLength(2);
+    expect(reports, "a parameter binding shadows process for the arrow and every nested function").toHaveLength(2);
   });
 
   it("ignores Bun only inside the function whose declarator binds it", () => {
     const reports: Array<unknown> = [];
     const rule = createOnceRule("no-direct-process-io", "/repo/packages/example/src/fixture.ts", reports);
 
-    // A declarator shadows only the names the rule tracks, and only inside its function.
     rule.FunctionDeclaration?.(params());
     rule.VariableDeclarator?.(declarator(identifier("Bun")));
     rule.VariableDeclarator?.(declarator({ type: "ObjectPattern" }));
@@ -219,7 +208,9 @@ describe("oxlint rules in process", () => {
     rule["FunctionDeclaration:exit"]?.(params());
     rule.CallExpression?.(call(member(identifier("Bun"), "exit")));
 
-    expect(reports).toHaveLength(2);
+    expect(reports, "a declarator shadows only the names the rule tracks, and only inside its function").toHaveLength(
+      2
+    );
   });
 
   it("keeps the module scope on an unbalanced function exit", () => {

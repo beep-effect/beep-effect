@@ -397,9 +397,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
       A.forEach(["check"], (taskName) => {
         const task = R.get(tasks, taskName).pipe(O.flatMap(decodeUnknownStructInlineSchemaOption), O.getOrThrow);
         assert.deepEqual(A.intersection(task.inputs, configInputs), configInputs);
-        // The overlay extends the root role boundary (package prose excluded, quality audit K3);
-        // `ai-sync check` reads only its committed `src/_generated` files and these two configs.
-        assert.strictEqual(A.head(task.inputs).pipe(O.getOrUndefined), "$TURBO_EXTENDS$");
+        assert.strictEqual(
+          A.head(task.inputs).pipe(O.getOrUndefined),
+          "$TURBO_EXTENDS$",
+          "the overlay extends the root role boundary; ai-sync check reads only src/_generated and these two configs"
+        );
       });
     })
   );

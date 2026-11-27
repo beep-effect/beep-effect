@@ -113,9 +113,7 @@ const encodeUnsupported = (transformationName: string) => (): Effect.Effect<stri
     })
   );
 
-// The allowlist's own error text names each recovered parse error as
-// `<code>@<offset>:<length>`, the shape the jsonc-parser reading printed.
-const parseAllowlistJsonc = (content: string): Effect.Effect<unknown, SchemaIssue.Issue> =>
+const parseAllowlistJsoncLegacyErrorText = (content: string): Effect.Effect<unknown, SchemaIssue.Issue> =>
   Jsonc.parseResult(content).pipe(
     Result.mapError(
       (error) =>
@@ -135,7 +133,7 @@ export const AllowlistJsoncTextToUnknown = S.String.pipe(
   S.decodeTo(
     S.Unknown,
     SchemaTransformation.transformEffect({
-      decode: parseAllowlistJsonc,
+      decode: parseAllowlistJsoncLegacyErrorText,
       encode: encodeUnsupported("AllowlistJsoncTextToUnknown"),
     })
   ),
@@ -146,7 +144,6 @@ export const AllowlistJsoncTextToUnknown = S.String.pipe(
 
 const AllowlistJsoncTextToDocument = AllowlistJsoncTextToUnknown.pipe(S.decodeTo(EffectLawsAllowlistDocument));
 
-// unary by contract: a dual is undecidable here because `input` is `unknown`.
 export const decodeAllowlistDocumentFromJsoncText: (
   input: unknown
 ) => Effect.Effect<EffectLawsAllowlistDocument, S.SchemaError> = S.decodeUnknownEffect(AllowlistJsoncTextToDocument);

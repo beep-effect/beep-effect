@@ -1,7 +1,3 @@
-// AC-L5, AC-L6, AC-L8 and AC-L10 through the gate run entry: labels and the
-// delta from the history contract's test layers, the record and log paths
-// read back with the log's size, and a console that still opens and closes
-// on the verdict when the recorder or history fails.
 import { RunDelta } from "@beep/gate-report/ConsoleDocument";
 import { formatBytes } from "@beep/gate-report/Format";
 import { GateEvent } from "@beep/gate-report/GateEvent";
@@ -131,9 +127,6 @@ describe("runGate", () => {
     );
   });
 
-  // RG-1: the console is unconditional. Whatever the record step does, the
-  // console opens and closes on the verdict, names the record and log as not
-  // written, names no path, and returns the tool's exit code.
   const recorderOf = (record: GateRecorderShape["record"]) => Layer.succeed(GateRecorder, GateRecorder.of({ record }));
   const notWritten = (lines: A.NonEmptyReadonlyArray<string>) =>
     O.getOrThrow(A.findFirst(lines, Str.startsWith("record and raw log unavailable: ")));

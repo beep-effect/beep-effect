@@ -1,5 +1,3 @@
-// The history store contract, run against every backend: the in-memory
-// layer here and the SQLite layer in the store module's own tests.
 import { GateReport, Totals, Unit } from "@beep/gate-report/GateReport";
 import { HistoryConfig } from "@beep/gate-report/History";
 import { Item } from "@beep/gate-report/Item";
@@ -108,7 +106,6 @@ export const historyContract = (backend: {
   readonly layerFor: (config: HistoryConfig) => Layer.Layer<GateHistoryStore>;
 }) => {
   const { name, layerFor } = backend;
-  // Every test gets a store of its own, built and released around it.
   const withStore =
     (config: HistoryConfig = HistoryConfig.make({})) =>
     <A, E>(effect: Effect.Effect<A, E, GateHistoryStore>) =>
@@ -236,14 +233,14 @@ export const historyContract = (backend: {
             { runId: "r3", at: 3000, items: [testItem({ name: "adds", outcome: "passed" })] },
             { runId: "r4", at: 4000, items: [testItem({ name: "adds", outcome: "passed" })] },
           ]);
-          // r1's fail on input "same" is outside the window, so a fail on "same" now is not flaky.
           const answer = yield* answerFor({
             runId: "r5",
             at: 5000,
             input: "same",
             items: [testItem({ name: "adds", outcome: "failed" })],
           });
-          assertSome(labelOf(answer, "adds"), "introduced-on-lane");
+          const notFlakyOutsideWindow = labelOf(answer, "adds");
+          assertSome(notFlakyOutsideWindow, "introduced-on-lane");
           const store = yield* GateHistoryStore;
           const series = yield* store.series(
             HistoryItemQuery.make({ gate: "test", subject: "@beep/glob", selector: "adds" })
@@ -329,7 +326,6 @@ export const historyContract = (backend: {
             yield* ingestAll([failing("r2", 2000), failing("r3", 3000)]);
             const replayed = yield* answerFor(failing("r2", 2000));
             assert.deepStrictEqual(replayed, rendered);
-            // r1's run row is gone; r2 and r3 hold the series window. Replaying any of them changes nothing.
             const seriesQuery = HistoryItemQuery.make({ gate: "test", subject: "@beep/glob", selector: "adds" });
             const before = yield* store.series(seriesQuery);
             const replays = yield* Effect.forEach(
@@ -342,7 +338,11 @@ export const historyContract = (backend: {
               [false, false, false]
             );
             const after = yield* store.series(seriesQuery);
-            assert.deepStrictEqual(after, before);
+            assert.deepStrictEqual(
+              after,
+              before,
+              "r1's run row is gone and r2, r3 hold the series window: replaying any of them changes nothing"
+            );
           })
         )
     );

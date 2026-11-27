@@ -108,12 +108,9 @@ export class GateHistorySqliteOptions extends S.Opaque<GateHistorySqliteOptions,
 
 type Sql = SqlClient.SqlClient;
 
-// --- error translation -------------------------------------------------------
-
 const BUSY_REASONS = ["LockTimeoutError", "DeadlockError"];
 
-// The driver's own error keeps its cause and message as options.
-const field = (error: unknown, key: "cause" | "message"): unknown => {
+const unwrappedOptionField = (error: unknown, key: "cause" | "message"): unknown => {
   const value = P.hasProperty(error, key) ? error[key] : undefined;
   return O.isOption(value) ? O.getOrUndefined(value) : value;
 };
@@ -121,10 +118,10 @@ const field = (error: unknown, key: "cause" | "message"): unknown => {
 const isBusy = (error: unknown): boolean =>
   SqlError.isSqlError(error)
     ? A.contains(BUSY_REASONS, error.reason._tag)
-    : SqlError.isSqlError(field(error, "cause")) && isBusy(field(error, "cause"));
+    : SqlError.isSqlError(unwrappedOptionField(error, "cause")) && isBusy(unwrappedOptionField(error, "cause"));
 
 const messageOf = (error: unknown): string => {
-  const message = field(error, "message");
+  const message = unwrappedOptionField(error, "message");
   return P.isString(message) && Str.isNonEmpty(message) ? message : Inspectable.toStringUnknown(error);
 };
 
@@ -153,13 +150,10 @@ export const translateStoreError =
 
 const translate = translateStoreError;
 
-// Rows the store wrote itself always decode; a row that does not is a defect. A failed query stays typed.
 const decodeRows =
   <Row, I>(schema: S.Codec<ReadonlyArray<Row>, I>) =>
   <E>(rows: Effect.Effect<ReadonlyArray<unknown>, E>) =>
     Effect.flatMap(rows, (raw) => Effect.orDie(S.decodeUnknownEffect(schema)(raw)));
-
-// --- migrations ----------------------------------------------------------------
 
 const MIGRATIONS: ReadonlyArray<(sql: Sql) => Effect.Effect<unknown, SqlError.SqlError>> = [
   (sql) =>
@@ -206,7 +200,6 @@ const MIGRATIONS: ReadonlyArray<(sql: Sql) => Effect.Effect<unknown, SqlError.Sq
   (sql) =>
     Effect.all(
       [
-        // Every run id ever ingested, kept past the pruning of the run's own row, with the answer it rendered.
         sql`CREATE TABLE IF NOT EXISTS gate_history_ingested (
           run_id TEXT PRIMARY KEY,
           branch TEXT NOT NULL,
@@ -242,7 +235,6 @@ const VersionRows = S.Array(S.Struct({ user_version: S.Finite }));
 const schemaVersion = (sql: Sql) =>
   sql`PRAGMA user_version`.pipe(decodeRows(VersionRows), Effect.map(A.reduce(0, (_, row) => row.user_version)));
 
-// A current schema is read without the write lock, so an open never waits on a writer for nothing.
 const migrate = Effect.fnUntraced(function* (sql: Sql) {
   const found = yield* schemaVersion(sql);
   if (found >= SCHEMA_VERSION) return;
@@ -254,8 +246,6 @@ const migrate = Effect.fnUntraced(function* (sql: Sql) {
     })
   );
 });
-
-// --- rows ----------------------------------------------------------------------
 
 const Units = S.String.pipe(S.Array, S.fromJsonString);
 const Failures = DeltaFailure.pipe(S.Array, S.fromJsonString);
@@ -306,8 +296,6 @@ const observationOf = (row: ObservationRow): Observation =>
     attempt: row.attempt,
     at: DateTime.makeUnsafe(row.at_ms),
   });
-
-// --- writes ----------------------------------------------------------------------
 
 const ingestedRow = (sql: Sql, runId: string) =>
   sql`SELECT branch, answer_json FROM gate_history_ingested WHERE run_id = ${runId}`.pipe(
@@ -380,9 +368,6 @@ const insertObservations = (sql: Sql, record: HistoryRunRecord) =>
     { concurrency: 1, discard: true }
   );
 
-// Runs keep the newest `retainRuns` per gate, subject and branch; observations
-// the newest `window` per series. The observations of a pruned run stay while
-// they are in a window (upstream `0003_run_retention.ts`).
 const prune = (sql: Sql, record: HistoryRunRecord, config: HistoryConfig) =>
   Effect.all(
     [
@@ -418,8 +403,6 @@ const insertWithin = (sql: Sql, config: HistoryConfig) =>
     return true;
   });
 
-// --- reads -----------------------------------------------------------------------
-
 const laneRows = (sql: Sql, query: LaneQuery) =>
   sql`SELECT * FROM (
         SELECT o.*, ROW_NUMBER() OVER (PARTITION BY fingerprint ORDER BY at_ms DESC, attempt DESC) AS position
@@ -444,7 +427,6 @@ const laneOf = (sql: Sql) => (query: LaneQuery) =>
         )
       );
 
-// An answer written by another version of the store that no longer decodes is answered afresh.
 const recordedOf = (sql: Sql) => (query: RecordedRunQuery) =>
   Effect.map(
     ingestedRow(sql, query.runId),
@@ -521,10 +503,6 @@ const seriesOf = (sql: Sql) => (query: HistoryItemQuery) =>
     )
   );
 
-// --- opening ---------------------------------------------------------------------
-
-// The driver waits on a lock synchronously, so each lock wait of an open or a read is capped at the
-// read deadline; only a write, which runs after the console was printed, gets the longer write timeout.
 const waitAtMost = (sql: Sql, millis: number) => sql.unsafe(`PRAGMA busy_timeout = ${millis}`);
 
 const backendOn = (sql: Sql, options: GateHistorySqliteOptions): HistoryBackend => {
@@ -555,7 +533,6 @@ const retryBusy =
       while: (error) => error.reason === "open-busy",
     });
 
-// The store runs only under Bun, where the driver always loads; elsewhere the first use dies.
 const loadDriver = Effect.promise(() => import("@beep/sqlite"));
 
 const openBackend = Effect.fnUntraced(function* (options: GateHistorySqliteOptions) {
@@ -576,7 +553,6 @@ const lazyBackend = (opened: Effect.Effect<HistoryBackend, GateHistoryError>): H
   series: (query) => Effect.flatMap(opened, (backend) => backend.series(query)),
 });
 
-// A successful open is shared by every later use; a failed one closes what it opened, and the next use opens again.
 const makeLazyBackend = Effect.fnUntraced(function* (options: GateHistorySqliteOptions) {
   const scope = yield* Effect.scope;
   const context = yield* Effect.context<Reactivity.Reactivity>();
@@ -612,12 +588,22 @@ const makeStore = Effect.fnUntraced(function* (options: GateHistorySqliteOptions
  * layer's scope. Opening on a missing directory, on a file that is not a
  * database or on a store locked past the retry schedule fails that use with
  * a `GateHistoryError` (`open-failed`, `open-busy` or `migrate-failed`), which
- * a caller turns into one console line.
+ * a caller turns into one console line. A successful open is shared by every
+ * later use; a failed one closes what it opened, and the next use opens
+ * again. An open whose schema is already current reads it without the write
+ * lock, so it never waits on a writer. Runs keep the newest `retainRuns` per
+ * gate, subject and branch, and observations the newest `window` per series;
+ * a pruned run's observations stay while they are in a window (upstream
+ * `0003_run_retention.ts`). Every ingested run id is kept past the pruning of
+ * its run row, with the answer it rendered.
  *
  * **Gotchas**
  *
  * The store runs under Bun only: outside Bun the driver does not load and
- * the first use dies, which a gate run absorbs like any history defect.
+ * the first use dies, which a gate run absorbs like any history defect. The
+ * driver waits on a lock synchronously, so each lock wait of an open or a
+ * read is capped at the read deadline (`deadlineMs`); only a write, which
+ * runs after the console was printed, gets the longer `busyTimeoutMs`.
  *
  * **Example** (Provide the store)
  *

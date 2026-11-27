@@ -64,11 +64,6 @@ const jsonObjectTextFromRight = (output: string): O.Option<string> => {
   return O.none();
 };
 
-// The forward pass decodes disjoint top-level spans and retains only the latest.
-// If an unmatched opening brace leaves a later object nested, one bounded reverse
-// pass decodes disjoint spans from the end. Accumulating spans (or rescanning per
-// closing brace) is quadratic on balanced-object floods and let a large
-// untruncated subprocess buffer hang the CLI.
 /**
  * Extract the last decodable top-level JSON object from mixed command output.
  *

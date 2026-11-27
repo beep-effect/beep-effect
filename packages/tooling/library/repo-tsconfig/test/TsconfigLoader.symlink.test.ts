@@ -8,17 +8,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 
-/**
- * A real temporary workspace whose package is linked into `node_modules`, the shape bun and pnpm
- * workspaces produce:
- *
- * - `packages/base/tsconfig.base.json`: the shared base;
- * - `packages/lib/tsconfig.json`: extends the base RELATIVELY (`../base/tsconfig.base.json`);
- * - `app/node_modules/lib`: a symlink to `packages/lib`;
- * - `app/linked`: a symlink to `packages/lib`, reached by a relative `extends`.
- *
- * @param root - The real (symlink-free) temporary directory to build it in.
- */
 const linkedWorkspace = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -71,10 +60,13 @@ layer(NodeServices.layer, { timeout: "30 seconds" })(
         const target = yield* resolveExtendsTarget("./linked/tsconfig.json", configPath);
         assertSome(target, path.join(root, "app/linked/tsconfig.json"));
 
-        // tsc keeps the relative path unresolved too, so `../base` from `app/linked` is missing.
         const error = yield* Effect.flip(TsconfigLoader.resolve(configPath));
         assert.instanceOf(error, TsconfigExtendsError);
-        assert.strictEqual(error.reason, "not-found");
+        assert.strictEqual(
+          error.reason,
+          "not-found",
+          "tsc keeps a relative target unrealpathed, so ../base from app/linked is missing"
+        );
         assert.strictEqual(error.path, path.join(root, "app/linked/tsconfig.json"));
         assert.isTrue(A.contains(error.chain, configPath));
       })

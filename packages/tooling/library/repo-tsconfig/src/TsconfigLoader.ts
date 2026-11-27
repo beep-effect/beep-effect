@@ -45,11 +45,6 @@ import type * as PlatformError from "effect/PlatformError";
 
 const $I = $RepoTsconfigId.create("TsconfigLoader");
 
-/**
- * The maximum number of `extends` levels the loader will descend before failing
- * with {@link TsconfigExtendsError} `reason: "depth"`. A guard on the recursive
- * walk over untrusted config files, not a tsc limit.
- */
 const MAX_EXTENDS_DEPTH = 32;
 
 /**
@@ -174,30 +169,16 @@ export class TsconfigExtendsError extends S.TaggedError<TsconfigExtendsError, { 
   }
 }
 
-/**
- * tsc normalizes to forward slashes throughout; the merge engine and the cycle keys assume that convention.
- *
- * @param p - The path to normalize.
- * @returns The path with forward slashes.
- */
 const normalizeSlashes: (p: string) => string = Str.replace(/\\/g, "/");
 
-/** The shared JSONC decode entrypoint (`TsconfigJsonFromString` is already the shared codec instance). */
 const decodeConfig = S.decodeEffect(TsconfigJsonFromString);
 
-/**
- * Normalize a config's `extends` field (absent / string / array) to an ordered spec list.
- *
- * @param doc - The decoded config.
- * @returns The `extends` specifiers in order.
- */
 const extendsSpecs = (doc: TsconfigJson.Type): ReadonlyArray<string> =>
   O.match(O.fromUndefinedOr(doc.extends), {
     onNone: A.empty<string>,
     onSome: (ext) => (P.isString(ext) ? [ext] : ext),
   });
 
-/** Read + decode one config at an already-absolute, normalized path; wrap decode failures with that path. */
 const loadAbs = Effect.fnUntraced(function* (
   abs: string
 ): Effect.fn.Return<TsconfigJson.Type, TsconfigParseError | PlatformError.PlatformError, FileSystem.FileSystem> {
@@ -206,27 +187,16 @@ const loadAbs = Effect.fnUntraced(function* (
   return yield* decodeConfig(text).pipe(Effect.mapError((cause) => TsconfigParseError.make({ path: abs, cause })));
 });
 
-// Implementation of TsconfigLoader.load; the public contract lives on the static.
 const load = Effect.fn("TsconfigLoader.load")(function* (configPath: string) {
   const path = yield* Path.Path;
   return yield* loadAbs(normalizeSlashes(path.resolve(configPath)));
 });
 
-/** One absolutized config document paired with its normalized absolute path, in fold order. */
 interface ConfigLayer {
   readonly doc: TsconfigJson.Type;
   readonly path: string;
 }
 
-/**
- * Resolve one `extends` specifier of the config at `abs` to the normalized absolute path to descend into,
- * failing typed on an empty spec, an unresolvable target, or a target already on this branch's stack.
- *
- * @param spec - The `extends` specifier.
- * @param abs - The normalized absolute path of the extending config.
- * @param chain - The visited stack on this branch, `abs` included.
- * @returns The normalized absolute target path.
- */
 const resolveSpec = Effect.fnUntraced(function* (
   spec: string,
   abs: string,
@@ -240,7 +210,6 @@ const resolveSpec = Effect.fnUntraced(function* (
     return yield* TsconfigExtendsError.make({ path: abs, target: spec, reason: "not-found", chain });
   }
   const normTarget = normalizeSlashes(target.value);
-  // Cycle guard: the target already sits on this branch's stack.
   if (A.contains(chain, normTarget)) {
     return yield* TsconfigExtendsError.make({
       path: abs,
@@ -252,16 +221,6 @@ const resolveSpec = Effect.fnUntraced(function* (
   return normTarget;
 });
 
-/**
- * Flatten an already-decoded config document at `abs` and its full `extends`
- * chain into base-most-first layers. `chain` is the visited stack on THIS
- * branch, `abs` included (copied per branch, so a diamond is legal).
- *
- * @param doc - The decoded, not yet absolutized document at `abs`.
- * @param abs - The normalized absolute path of `doc`.
- * @param chain - The visited stack on this branch, `abs` included.
- * @returns The config layers in fold order, own config last.
- */
 const collectLayers = Effect.fnUntraced(function* (
   doc: TsconfigJson.Type,
   abs: string,
@@ -272,28 +231,15 @@ const collectLayers = Effect.fnUntraced(function* (
   FileSystem.FileSystem | Path.Path
 > {
   const path = yield* Path.Path;
-  // Parse phase: absolutize this config's path options against its own dir.
   const absolutized = ResolvedTsconfig.absolutize(doc, path.dirname(abs), path.resolve);
-  // Depth-first and sequential: fully flatten each entry's nested chain before the sibling.
   const nested = yield* Effect.forEach(
     extendsSpecs(absolutized),
     (spec) => Effect.flatMap(resolveSpec(spec, abs, chain), (target) => collect(target, chain)),
     { concurrency: 1 }
   );
-  // Own config last: it wins over everything it extends.
   return A.append(A.flatten(nested), { doc: absolutized, path: abs });
 });
 
-/**
- * Collect the flattened, base-most-first list of absolutized config documents
- * for `configPath` and its full `extends` chain. `chain` is the stack of
- * already-visited normalized absolute paths on THIS branch (copied per branch,
- * so a diamond is legal); it excludes `configPath` itself until it is admitted.
- *
- * @param configPath - The config to collect.
- * @param chain - The visited stack on this branch.
- * @returns The config layers in fold order, own config last.
- */
 const collect = Effect.fnUntraced(function* (
   configPath: string,
   chain: ReadonlyArray<string>
@@ -306,7 +252,6 @@ const collect = Effect.fnUntraced(function* (
   const abs = normalizeSlashes(path.resolve(configPath));
   const newChain = A.append(chain, abs);
 
-  // Depth guard (hardening): refuse to descend past MAX_EXTENDS_DEPTH levels.
   if (chain.length >= MAX_EXTENDS_DEPTH) {
     return yield* TsconfigExtendsError.make({ path: abs, target: abs, reason: "depth", chain: newChain });
   }
@@ -315,32 +260,19 @@ const collect = Effect.fnUntraced(function* (
   return yield* collectLayers(doc, abs, newChain);
 });
 
-/**
- * Fold the layers of an already-decoded top document at `topAbs` into one
- * `ResolvedTsconfig`: base-most first onto an empty seed, then the single
- * `${configDir}` substitution against the TOP config's directory.
- *
- * @param doc - The decoded top document.
- * @param topAbs - Its normalized absolute path.
- * @returns The resolved record.
- */
 const resolveFrom = Effect.fnUntraced(function* (doc: TsconfigJson.Type, topAbs: string) {
   const path = yield* Path.Path;
   const layers = yield* collectLayers(doc, topAbs, [topAbs]);
 
-  // Fold base-most first onto an empty seed; each merge sets the accumulated
-  // configPath to the derived config, so the seed's is immediately overwritten.
   const seed = ResolvedTsconfig.make({ configPath: topAbs, extendedPaths: [], compilerOptions: {} });
   let acc = seed;
   for (const entry of layers) {
     acc = ResolvedTsconfig.merge(acc, entry.doc, entry.path);
   }
 
-  // Final phase: ${configDir} resolves against the TOP config's directory.
   return ResolvedTsconfig.substituteConfigDir(acc, path.dirname(topAbs));
 });
 
-// Implementation of TsconfigLoader.resolve; the public contract lives on the static.
 const resolve = Effect.fn("TsconfigLoader.resolve")(function* (configPath: string) {
   const path = yield* Path.Path;
   const topAbs = normalizeSlashes(path.resolve(configPath));
@@ -348,7 +280,6 @@ const resolve = Effect.fn("TsconfigLoader.resolve")(function* (configPath: strin
   return yield* resolveFrom(doc, topAbs);
 });
 
-// Implementation of TsconfigLoader.resolveDocument; the public contract lives on the static.
 const resolveDocument = Effect.fn("TsconfigLoader.resolveDocument")(function* (
   document: TsconfigJson.Type,
   configPath: string
@@ -357,7 +288,6 @@ const resolveDocument = Effect.fn("TsconfigLoader.resolveDocument")(function* (
   return yield* resolveFrom(document, normalizeSlashes(path.resolve(configPath)));
 });
 
-// Implementation of TsconfigLoader.compilerOptions; the public contract lives on the static.
 const compilerOptions = Effect.fn("TsconfigLoader.compilerOptions")(function* (configPath: string) {
   const resolved = yield* resolve(configPath);
   return resolved.compilerOptions satisfies CompilerOptions.Type;
@@ -429,6 +359,12 @@ export abstract class TsconfigLoader {
    * failure is a typed error — `TsconfigParseError` (a malformed file,
    * carrying that file's path), `TsconfigExtendsError` (a broken chain), or
    * a `PlatformError` from IO — never a defect.
+   *
+   * Paths are normalized to forward slashes, as tsc does, before they are
+   * compared. Each branch keeps its own visited stack, so a diamond is legal
+   * and only a target already on the branch fails with `reason: "cycle"`. The
+   * walk refuses to descend past 32 `extends` levels with `reason: "depth"`: a
+   * guard on untrusted config files, not a tsc limit.
    *
    * **Example** (Construct an extends-chain resolution)
    *

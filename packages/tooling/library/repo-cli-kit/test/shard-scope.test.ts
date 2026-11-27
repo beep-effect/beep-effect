@@ -27,7 +27,6 @@ const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
 
 const json = (value: unknown): string => `${Result.getOrThrowWith(encodeJson(value), identity)}\n`;
 
-// A scratch repository with two workspace members; `files` maps repo-relative paths to contents.
 const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, string>>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -47,7 +46,6 @@ const fixtureFiles = {
   "packages/b/package.json": json({ name: "@beep/b" }),
 };
 
-// Owner by path prefix, the way a schema-first owner resolver attributes files; anything else is the root.
 const ownerByPrefix = (root: string) => (absolutePath: string) =>
   Str.startsWith(`${root}/packages/a/`)(absolutePath)
     ? "@beep/a"
@@ -81,8 +79,6 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("resolveShardScope", (it) =
   );
 });
 
-// A `Git` whose `add` replays the scripted outcomes in order and counts its calls, so the
-// index-lock retry policy is observable without a real repository.
 const scriptedAdd = Effect.fn("CatalogShardScopeTest.scriptedAdd")(function* (
   outcomes: ReadonlyArray<O.Option<GitCommandError>>
 ) {

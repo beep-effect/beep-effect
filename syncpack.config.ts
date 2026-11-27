@@ -1,6 +1,20 @@
 import heldDependencies from "./hold-ledger/syncpack-held.generated.json" with { type: "json" };
 import type { RcFile } from "syncpack";
 
+/**
+ * Repo syncpack configuration.
+ *
+ * **Details**
+ *
+ * The held `updateGroups` entry is a projection of `hold-ledger/claims.jsonl`: each hold's
+ * reason, probe and exit condition live in its record (`bun run beep holds why <package>`), and
+ * `bun run deps:update` retires flipped holds first.
+ *
+ * **Gotchas**
+ *
+ * An empty `dependencies` array would match every dependency, so the held group is omitted when
+ * nothing is held.
+ */
 const config = {
   source: [
     "package.json",
@@ -145,12 +159,6 @@ const config = {
       strategy: "versionsByName",
     },
   },
-  // The held list is a projection of hold-ledger/claims.jsonl: each hold's
-  // reason, probe and exit condition live in its record (`bun run beep holds
-  // why <package>`), `bun run deps:update` retires flipped holds first, and
-  // docs/runbooks/hold-ledger.md covers the rest. An
-  // empty `dependencies` array would match every dependency, so the group is
-  // omitted when nothing is held.
   updateGroups:
     heldDependencies.length > 0
       ? [
@@ -163,9 +171,6 @@ const config = {
       : [],
   versionGroups: [
     {
-      // The private workspace root is an orchestration manifest, not a
-      // publishable package. Keep its intentionally absent version out of
-      // Syncpack's local-package version policy.
       label: "Private workspace root is intentionally unversioned",
       dependencies: ["@beep/root"],
       packages: ["@beep/root"],

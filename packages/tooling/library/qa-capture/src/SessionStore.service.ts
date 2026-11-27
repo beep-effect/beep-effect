@@ -155,6 +155,14 @@ export class RoundLayout extends S.Opaque<RoundLayout, { readonly brand: unique 
 /**
  * Runtime shape exposed by the {@link SessionStore} service.
  *
+ * **Details**
+ *
+ * `prepareRound` clears a reused round's recorder outputs (clips, frames,
+ * sheets, video, report and session manifest), so a retried
+ * `qa record --round N` never mixes sessions in the directories judge-pack
+ * lists wholesale. It leaves legacy screenshot manifests in the round root, and
+ * leaves `events.ndjson` for the collector to truncate at serve.
+ *
  * **Example** (Use SessionStoreShape methods)
  *
  * ```ts
@@ -239,12 +247,6 @@ const makeService = Effect.fnUntraced(function* () {
 
   const prepareRound = Effect.fn("SessionStore.prepareRound")(function* (qaRoot: string, round: RoundNumber) {
     const layout = roundLayout(qaRoot, round);
-    // A retried `qa record --round N` must not mix sessions: judge-pack lists
-    // the frames/sheets directories wholesale, so recorder-owned outputs from
-    // a prior occupant are cleared before reuse. Only the enumerated outputs
-    // are removed — legacy screenshot manifests inside the round root stay
-    // untouched per the package contract, and events.ndjson is truncated by
-    // the collector at serve.
     yield* Effect.forEach(
       [layout.clipsDir, layout.framesDir, layout.sheetsDir, layout.videoDir, layout.reportPath, layout.sessionPath],
       (target) =>

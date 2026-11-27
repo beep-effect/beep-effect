@@ -28,9 +28,6 @@ import * as Str from "effect/String";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-// Module-local structural declarations of the browser surface this script
-// touches. They shadow any Node globals and erase at bundle time.
-
 type WitnessRect = {
   readonly height: number;
   readonly width: number;
@@ -187,22 +184,12 @@ declare const requestAnimationFrame: (callback: () => void) => number;
 declare const getComputedStyle: (element: WitnessElement) => WitnessComputedStyle;
 declare const decodeURIComponent: (value: string) => string;
 
-// The whole in-page witness is one IIFE by construction: it is bundled to a
-// browser script and guarded by `window.__beepQa`, so its helpers cannot be
-// hoisted to module scope without breaking the bundling contract (one IIFE whose
-// only import, the pure `effect/Array` module, `Bun.build` inlines).
-// The arrow is the module body rather than a unit of logic, and the script is
-// exercised by live capture rounds, not by Node unit tests.
 // fallow-ignore-next-line complexity -- browser IIFE bundled by Bun.build; its helpers cannot hoist to module scope without breaking the single-IIFE bundle. Owner: @beep/qa-capture. Exit: remove when the witness bundles as an ES module.
 (() => {
   if (window.__beepQa !== undefined) {
     return;
   }
 
-  // Config priority: window.__BEEP_QA__ > script-src query params
-  // (`/witness.js?collector=...&cursor=0`) > script data attributes.
-  // A bare `?flag` pair carries no `=`, so its value is the empty string
-  // rather than absent; `null` here means "this pair is not the one asked for".
   const queryPairValue = (pair: string, name: string): string | null => {
     const separator = Str.indexOf("=")(pair);
     const key = pipe(separator, O.match({ onNone: () => pair, onSome: (index) => pipe(pair, Str.slice(0, index)) }));
@@ -301,15 +288,11 @@ declare const decodeURIComponent: (value: string) => string;
   setInterval(flush, config.flushIntervalMs);
   window.addEventListener("pagehide", () => flushWith(true));
 
-  // --- deterministic selector builder ------------------------------------
   const attributeToken = (element: WitnessElement, name: string): string | null => {
     const value = element.getAttribute(name);
     return value === null || value === "" ? null : `[${name}="${value}"]`;
   };
 
-  // Deterministic selector-priority ladder: each branch is one strategy and
-  // the order IS the contract. CRAP is coverage-driven here (cyclomatic 10
-  // against a threshold of 20); this file is a browser IIFE, not Node-testable.
   // fallow-ignore-next-line complexity -- CRAP finding comes from fallow's static coverage estimate; the selector-priority ladder's order is the contract, and live capture rounds exercise it rather than Node unit tests. Owner: @beep/qa-capture. Exit: remove once fallow health reads the measured coverage for this file (#1855 detector frontier) or the branches collapse.
   const terminalToken = (element: WitnessElement): string | null => {
     const dataQa = attributeToken(element, "data-qa");
@@ -379,7 +362,6 @@ declare const decodeURIComponent: (value: string) => string;
     return { height: rect.height, width: rect.width, x: rect.x, y: rect.y };
   };
 
-  // --- cursor ring overlay ------------------------------------------------
   const overlayCss =
     "position:fixed;top:0;left:0;width:22px;height:22px;margin:-11px 0 0 -11px;border:2px solid #ff2d92;" +
     "border-radius:50%;background:rgba(255,45,146,0.15);pointer-events:none;z-index:2147483646;";
@@ -397,7 +379,6 @@ declare const decodeURIComponent: (value: string) => string;
     cursorRing.style.cssText = `${overlayCss}transform:translate(${x}px,${y}px) ${scale};`;
   };
 
-  // --- pointer capture ----------------------------------------------------
   type PendingMove = {
     readonly pointerId: number;
     readonly tEpochMs: number;
@@ -464,7 +445,6 @@ declare const decodeURIComponent: (value: string) => string;
     "pointerup",
     (event) => {
       moveCursorRing(event.clientX, event.clientY, false);
-      // Last-before-up: never lose the final throttled move of a gesture.
       emitPendingMove();
       record({
         button: event.button,
@@ -485,8 +465,6 @@ declare const decodeURIComponent: (value: string) => string;
     "pointercancel",
     (event) => {
       moveCursorRing(event.clientX, event.clientY, false);
-      // A cancelled gesture still closes its window: keep the final throttled
-      // move, then record the cancellation instant.
       emitPendingMove();
       record({
         kind: "pointer-cancel",
@@ -502,7 +480,6 @@ declare const decodeURIComponent: (value: string) => string;
     { capture: true, passive: true }
   );
 
-  // --- delegated enter/leave on interactive elements ----------------------
   const interactiveSelector =
     "[data-qa], [data-testid], [data-panel-id], [data-group-id], button, a, input, select, textarea, [role], [tabindex]";
 
@@ -544,7 +521,6 @@ declare const decodeURIComponent: (value: string) => string;
     { capture: true, passive: true }
   );
 
-  // --- focus --------------------------------------------------------------
   document.addEventListener(
     "focusin",
     (event) => {
@@ -571,7 +547,6 @@ declare const decodeURIComponent: (value: string) => string;
     { capture: true, passive: true }
   );
 
-  // --- non-printable keys only --------------------------------------------
   document.addEventListener(
     "keydown",
     (event) => {
@@ -603,7 +578,6 @@ declare const decodeURIComponent: (value: string) => string;
     { capture: true, passive: true }
   );
 
-  // --- transitions / animations with computed durations -------------------
   const durationMsOf = (raw: string): number => {
     const first = pipe(raw, Str.split(","))[0] ?? "";
     const trimmed = pipe(first, Str.trim);
@@ -656,7 +630,6 @@ declare const decodeURIComponent: (value: string) => string;
   document.addEventListener("animationend", onAnimation("end"), { capture: true, passive: true });
   document.addEventListener("animationcancel", onAnimation("cancel"), { capture: true, passive: true });
 
-  // --- scroll (throttled ~10 Hz) ------------------------------------------
   let lastScrollEmitMs = 0;
   const isScrollable = (target: WitnessElement | null): target is WitnessScrollableElement =>
     target !== null && "scrollTop" in target;
@@ -682,7 +655,6 @@ declare const decodeURIComponent: (value: string) => string;
     { capture: true, passive: true }
   );
 
-  // --- markers ------------------------------------------------------------
   const mark = (label: string): void => {
     record({
       kind: "marker",
@@ -693,7 +665,6 @@ declare const decodeURIComponent: (value: string) => string;
     flush();
   };
 
-  // --- sync beacon --------------------------------------------------------
   const beaconBaseCss = "position:fixed;top:0;left:0;width:128px;height:128px;pointer-events:none;z-index:2147483647;";
 
   const runSyncBeacon = (): globalThis.Promise<void> => {

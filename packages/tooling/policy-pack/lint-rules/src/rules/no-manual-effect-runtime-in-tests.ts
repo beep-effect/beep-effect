@@ -36,9 +36,6 @@ const EFFECT_RUNTIME_METHODS = HashSet.fromIterable([
   "runSyncExitWith",
   "runSyncWith",
 ]);
-
-// Import sources that bind the `Effect` namespace, the `ManagedRuntime` namespace, and the
-// `effect` root namespace (reached as `<root>.Effect.run*` / `<root>.ManagedRuntime.make`).
 const EFFECT_NAMED_SOURCES = HashSet.fromIterable(["effect"]);
 const EFFECT_MODULE_SOURCES = HashSet.fromIterable(["effect/Effect"]);
 const MANAGED_RUNTIME_NAMED_SOURCES = HashSet.fromIterable(["effect", "effect/ManagedRuntime"]);
@@ -90,6 +87,15 @@ const baselineFor = (repoPath: string): number => {
  * `ManagedRuntime.make` calls in test files while preserving the current
  * legacy baseline counts.
  *
+ * **Details**
+ *
+ * The rule follows `Effect` as a named import from `effect` or the
+ * `effect/Effect` module itself, `ManagedRuntime` as a named import from
+ * `effect` or `effect/ManagedRuntime` or that module itself, and the `effect`
+ * root namespace reached as `<root>.Effect.run*` or
+ * `<root>.ManagedRuntime.make`. Same-named imports from other modules are
+ * ignored.
+ *
  * **Example** (Manual runtime rule description)
  *
  * ```ts
@@ -116,17 +122,12 @@ export default defineRule({
 
     const allowedCount = baselineFor(toRepoPath(context.filename, context.cwd));
     let occurrenceCount = 0;
-
-    // Local names bound to the Effect namespace, the ManagedRuntime namespace, and the
-    // `effect` root namespace (reached as `<root>.Effect.run*` / `<root>.ManagedRuntime.make`).
     const effectIdentifiers = MutableHashSet.empty<string>();
     const managedRuntimeIdentifiers = MutableHashSet.empty<string>();
     const effectRootNamespaces = MutableHashSet.empty<string>();
 
     const isTracked = (node: O.Option<AstNode>, tracked: MutableHashSet.MutableHashSet<string>): boolean =>
       O.exists(node, (expression) => expression.type === "Identifier" && MutableHashSet.has(tracked, expression.name));
-
-    // `<root>.<name>` reached through the `effect` root namespace, when `object` is that member.
     const isRootMember = (object: O.Option<AstNode>, name: string): boolean =>
       O.exists(
         O.flatMap(object, unwrapMemberExpression),
@@ -134,8 +135,6 @@ export default defineRule({
           O.exists(getPropertyName(access.property), (member) => member === name) &&
           isTracked(access.object, effectRootNamespaces)
       );
-
-    // The receiver resolves to the Effect namespace, directly or via the effect root.
     const isEffectReceiver = (object: O.Option<AstNode>): boolean =>
       isTracked(object, effectIdentifiers) || isRootMember(object, "Effect");
 
@@ -162,16 +161,12 @@ export default defineRule({
 
     const isNamed = (imported: string, expected: string, sources: HashSet.HashSet<string>, source: string): boolean =>
       imported === expected && HashSet.has(sources, source);
-
-    // Record a named binding under its local name when its imported name + source match.
     const recordNamed = (imported: string, local: string, source: string) => {
       if (isNamed(imported, "Effect", EFFECT_NAMED_SOURCES, source)) MutableHashSet.add(effectIdentifiers, local);
       else if (isNamed(imported, "ManagedRuntime", MANAGED_RUNTIME_NAMED_SOURCES, source)) {
         MutableHashSet.add(managedRuntimeIdentifiers, local);
       }
     };
-
-    // Record a module binding (`* as X` / default) for the Effect, ManagedRuntime, or root module.
     const recordModule = (local: string, source: string) => {
       if (HashSet.has(EFFECT_MODULE_SOURCES, source)) MutableHashSet.add(effectIdentifiers, local);
       else if (HashSet.has(MANAGED_RUNTIME_MODULE_SOURCES, source))
