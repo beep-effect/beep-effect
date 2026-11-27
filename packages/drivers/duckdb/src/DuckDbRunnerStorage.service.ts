@@ -53,11 +53,6 @@ const makeStorage = Effect.fnUntraced(function* (options: { readonly prefix?: st
   const prefix = options?.prefix ?? "cluster";
   const table = (name: string) => `${prefix}_${name}`;
 
-  // `Effect.timeout` waits for the timed-out effect to finish interrupting, so
-  // an operation stuck in an uninterruptible region (such as a scope finalizer
-  // releasing an unresponsive connection) can outlive its deadline. Fork the
-  // operation and timeout the join instead, leaving stalled cleanup to finish
-  // detached in the layer scope.
   const withDeadline = Effect.fnUntraced(function* <A, E, R>(operation: Effect.Effect<A, E, R>) {
     const fiber = yield* Effect.forkIn(operation, layerScope, { startImmediately: true });
     return yield* Fiber.join(fiber).pipe(
@@ -90,9 +85,7 @@ const makeStorage = Effect.fnUntraced(function* (options: { readonly prefix?: st
 
   const encodeBoolean = (b: boolean) => (b ? 1 : 0);
 
-  // Upsert runner and return machine_id
   const insertRunner = (address: string, runner: string, healthy: boolean) =>
-    // sqlite
     sql<{ machine_id: number }>`
         INSERT INTO ${runnersTableSql} (address, runner, last_heartbeat, healthy)
         VALUES (${address}, ${runner}, ${sqlNow}, ${encodeBoolean(healthy)})
@@ -194,10 +187,8 @@ const makeStorage = Effect.fnUntraced(function* (options: { readonly prefix?: st
 
     refresh: (address, shardIds) => {
       const heartbeat = sql`UPDATE ${runnersTableSql} SET last_heartbeat = ${sqlNow} WHERE address = ${address}`;
-      // An empty refresh is the liveness probe used while lock storage is
-      // unhealthy. Run it on the shared pool, so a wedged reserved lock
-      // connection cannot block recovery.
-      if (shardIds.length === 0) {
+      const isLivenessProbe = shardIds.length === 0;
+      if (isLivenessProbe) {
         return withDeadline(heartbeat).pipe(Effect.as([]), PersistenceError.refail, withTracerDisabled);
       }
       return withLockOperationDeadline(
@@ -224,6 +215,16 @@ const makeStorage = Effect.fnUntraced(function* (options: { readonly prefix?: st
 /**
  * DuckDbRunnerStorage constructor.
  *
+ * **Gotchas**
+ *
+ * Every lock operation runs under a deadline of the shorter of
+ * `shardLockRefreshInterval` and a third of `shardLockExpiration`. The
+ * operation is forked into the layer scope and the join is timed out:
+ * `Effect.timeout` waits for the timed-out effect to finish interrupting, so
+ * an operation stuck in an uninterruptible region (such as a scope finalizer
+ * releasing an unresponsive connection) would outlive its deadline. Stalled
+ * cleanup finishes detached in the layer scope.
+ *
  * **Example** (Compose DuckDB storage)
  *
  * ```ts
@@ -245,6 +246,13 @@ export const make = (options: {
 /**
  * DuckDbRunnerStorage migration loader.
  *
+ * **Gotchas**
+ *
+ * `0001_create_tables` creates its tables `IF NOT EXISTS`, because existing
+ * deployments may hold them with no migration history. The history table
+ * (`<prefix>_runner_migrations`) is kept apart from DuckDbMessageStorage's
+ * because the two storages' migration ids overlap.
+ *
  * **Example** (Compose DuckDB storage)
  *
  * ```ts
@@ -262,7 +270,6 @@ export const migrations = (options: { readonly prefix?: string | undefined }): M
   const locksTable = table("locks");
 
   return Migrator.fromRecord({
-    // Existing deployments may have these tables but no migration history.
     "0001_create_tables": Effect.gen(function* () {
       const sql = (yield* SqlClient.SqlClient).withoutTransforms();
       const runnersTableSql = sql(runnersTable);
@@ -293,7 +300,6 @@ export const migrations = (options: { readonly prefix?: string | undefined }): M
   });
 };
 
-// Message and runner migration ids overlap, so keep separate histories.
 const runRunnerMigrations = runPrefixedMigrations({ migrations, historySuffix: "runner_migrations" });
 
 /**
