@@ -3,7 +3,12 @@ title: cache-pilot-inputs reproduces the retired Python and shell adapter byte f
 date: 2026-11-26
 reversal: Emit JSON with JSON.stringify, use Effect helpers in place of the stdlib emulations, and re-baseline the ci-cache-pilot parity pins.
 governs:
+  - src/commands/Ci/CiCachePilotInputs.ts#refuse
+  - src/commands/Ci/CiCachePilotInputs.ts#shortEscapes
   - src/commands/Ci/CiCachePilotInputs.ts#pythonJson
+  - src/commands/Ci/CiCachePilotInputs.ts#UrlParts
+  - src/commands/Ci/CiCachePilotInputs.ts#tarMembers
+  - src/commands/Ci/CiCachePilotInputs.ts#which
   - src/commands/Ci/CiCachePilotInputs.ts#runCachePilotInputs
 enforcedBy: []
 ---

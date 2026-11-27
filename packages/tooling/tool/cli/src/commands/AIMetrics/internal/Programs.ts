@@ -1949,17 +1949,19 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
   target,
 }: MakeForwarderTimerProgramOptions) {
   const pathApi = yield* Path.Path;
-  const homeForBunProbeOrTildePin = Config.String("HOME").pipe(
+  const requireHome = Config.String("HOME").pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({ cause, message: "HOME is not set; cannot resolve the timer Bun executable." })
     )
   );
+  // Only the default candidate probe and a `~/` pin read HOME; an absolute pin
+  // renders in a sanitized container or CI environment that has no HOME at all.
   const executable = yield* Effect.flatMap(
     O.match(bunPath, {
-      onNone: () => Effect.flatMap(homeForBunProbeOrTildePin, resolveSystemdBunPath),
+      onNone: () => Effect.flatMap(requireHome, resolveSystemdBunPath),
       onSome: (pinned) =>
         Str.startsWith("~/")(pinned)
-          ? Effect.map(homeForBunProbeOrTildePin, (home) => resolveOperatorPath(pinned, home, pathApi.resolve))
+          ? Effect.map(requireHome, (home) => resolveOperatorPath(pinned, home, pathApi.resolve))
           : Effect.succeed(pathApi.resolve(pinned)),
     }),
     (candidate) =>

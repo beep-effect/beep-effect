@@ -227,6 +227,8 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
       yield* writeContainedFileString(directory, "request.json", encoded);
       const worker = yield* renderSignedPilotWorker(root, directory, protectedIssuerMaterial, upload);
       yield* writeContainedFileString(directory, "worker.ts", worker);
+      // Bun otherwise discovers sourceRoot/bunfig.toml from the untrusted cwd,
+      // including preloads that run before this trusted worker.
       yield* writeContainedFileString(directory, "bunfig.toml", "");
       const verifyIssuerMountIsolation = Effect.fn("CachePilot.verifyIssuerMountIsolation")(function* () {
         if (O.isSome(protectedIssuerMaterial)) {
@@ -392,8 +394,6 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
  * and probed from each nested reader. It is never added to the mount list or
  * passed as key bytes. The returned report remains observation-only and cannot
  * authorize promotion; callers still own issuer selection and approval.
- * An empty `bunfig.toml` in the worker directory keeps Bun from loading the
- * untrusted source root's config, whose preloads would run before the worker.
  *
  * **Example** (Reference the admitted matrix supervisor)
  * ```ts

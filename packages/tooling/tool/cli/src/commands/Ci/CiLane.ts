@@ -435,7 +435,7 @@ const PARTITION_PLAN_FLAGS = ["--plan-partitions", "--planned-partitions"] as co
  * its partitions and prove a plan it was handed. A `jobAliases` entry is a name the same lane
  * reported under before: check.yml's conditional name on a legacy-integration head
  * (`Test Integration Partitions`) or legacy-coverage head (`Coverage Artifact Migration`), or the
- * context's name before its lane moved under Heavy (`Build`, until 2026-09-09). Since #3005 the
+ * context's name before its lane moved under Heavy (`Build`, until 2026-09-09). The
  * integration shards run in check.yml as `Test Integration (<partition>)`.
  *
  * **Example** (Configure a CI lane)
@@ -450,6 +450,8 @@ const PARTITION_PLAN_FLAGS = ["--plan-partitions", "--planned-partitions"] as co
  * @category models
  * @since 0.0.0
  */
+// decision: ci-lane-context-promotion
+// decision: storybook-affected-probe
 export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   CiLaneDescriptor.make({
     id: "pr-size",
@@ -565,7 +567,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Always runs the full Turbo doctest fleet; the shared --base, --head, and --mode flags parse but have no doctest effect.",
   }),
-  // decision: ci-lane-context-promotion
   CiLaneDescriptor.make({
     id: "ecosystem",
     contextName: "Ecosystem Contracts",
@@ -613,7 +614,12 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI's sequence, unless --inventory <path> supplies a prebuilt inventory (then only the ratchet runs).",
   }),
-  // decision: ci-lane-context-promotion
+  // Quality-lane audit D12: Build runs on pull requests affected-scoped with
+  // remote-cache read; trusted main pushes run unscoped and are the only
+  // cache writer. It dispatches from heavy.yml (the beep-ec2-heavy runner
+  // group admits heavy.yml@main on pull requests, not check.yml jobs), so its
+  // hosted context carries the Heavy prefix. Still non-required until it has
+  // a stable green history.
   CiLaneDescriptor.make({
     id: "build",
     workflow: "heavy",
@@ -660,7 +666,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     contextName: "Security",
     required: true,
     laneClass: "ci-native",
-    // decision: ci-lane-context-promotion
+    // DELIBERATE fail-open: dependency review needs GitHub's dependency-graph API.
+    // Record this CI-only constraint in the gate-integrity expectation file.
     replay: "none",
     flags: [],
     notes: "Requires the GitHub dependency-graph API; permanently CI-only.",
@@ -691,7 +698,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history. Hosted CI runs it as four slices under one aggregate context: the two Vitest shards of @beep/repo-cli (--filter @beep/repo-cli --shard 1/2 and 2/2), packages/foundation with packages/drivers, and every other package; --filter takes comma-separated Turbo filters, and without --filter and --shard the lane runs everything.",
   }),
-  // decision: ci-lane-context-promotion
   CiLaneDescriptor.make({
     id: "labs",
     contextName: "Labs",
@@ -702,7 +708,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Path-gated in the workflow to direct apps/labs/** changes on PRs; push and local replays run the full labs glob. Zero labs => zero tasks (green).",
   }),
-  // decision: ci-lane-context-promotion
   CiLaneDescriptor.make({
     id: "storybook",
     workflow: "storybook",
@@ -782,7 +787,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
   )
 ) {}
 
-// decision: property-lane-determinism
+// decision: property-lane-concurrency
 const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
@@ -795,7 +800,6 @@ const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   }),
 ];
 
-// decision: property-lane-determinism
 const vitestShardPassThroughArgs = (options: CiLaneRunOptions): ReadonlyArray<string> =>
   O.match(O.fromUndefinedOr(options.shard), {
     onNone: A.empty<string>,
@@ -808,7 +812,6 @@ const decodeCiLaneShardFlag = (raw: string) => {
 };
 
 // decision: property-lane-determinism
-
 const DEFAULT_PROPERTY_LANE_RUNS = "400";
 
 // decision: property-lane-determinism
@@ -1332,7 +1335,7 @@ const partitionDryRunArgs = (laneId: PartitionedCiLane, options: CiLaneRunOption
     [...(options.affected ? ["--affected"] : A.empty<string>()), LABS_TURBO_EXCLUDE_FILTER, "--only", "--dry-run=json"]
   );
 
-// decision: hosted-runner-concurrency
+// decision: integration-shard-one-worker
 const INTEGRATION_SHARD_VITEST_ARGS: ReadonlyArray<string> = ["--maxWorkers=1"];
 
 const shardPassThroughArgs = (
@@ -1381,7 +1384,7 @@ const shardedLanePackages = (laneId: PartitionedCiLane): ReadonlyArray<string> =
     A.sort(Order.String)
   );
 
-// decision: integration-partitions
+// decision: integration-rest-partition
 const isIntegrationRestPartition = (laneId: PartitionedCiLane, shard: O.Option<CiLanePartitionShard>): boolean =>
   laneId === "test-integration" && O.isNone(shard);
 
@@ -1798,6 +1801,13 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * @category testing
  * @since 0.0.0
  */
+// decision: codegen-bundle-check-ungated
+// decision: labs-full-glob
+// decision: lint-lane-scope
+// decision: docs-policy-lane
+// decision: repo-sanity-lane-body
+// decision: repo-sanity-documentation-path
+// decision: storybook-affected-probe
 export const ciLaneStepsForTesting: {
   (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep>;
   (laneId: CiLaneId, options: CiLaneRunOptions): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
@@ -1806,11 +1816,12 @@ export const ciLaneStepsForTesting: {
   (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
     CiLaneId.match(laneId, {
       build: () => [turboRootLaneStep(repoRoot, "build", "build", A.empty<string>(), options)],
-      // decision: hosted-runner-concurrency
+      // D2 admission profile: a solo proof uses measured-safe c3; any active
+      // sibling lease lowers it to c2. Hosted CI has no local admission lease
+      // and therefore takes the conservative c2 default.
       check: () => [turboRootLaneStep(repoRoot, "check", "check", [qualityCheckConcurrencyArg()], options)],
       codegen: () => [
         ...codegenDriverSteps(repoRoot),
-        // decision: ci-lane-step-composition
         QualityTaskStep.make({
           label: "ci:codegen:desktop-migration-bundle",
           command: "bun",
@@ -1847,7 +1858,8 @@ export const ciLaneStepsForTesting: {
       ],
       docgen: () => docgenLaneSteps(repoRoot, options),
       doctest: () => doctestLaneSteps(repoRoot),
-      // decision: ci-lane-step-composition
+      // Target the first ecosystem member explicitly. Generalize member
+      // discovery only when a second ecosystem member exists.
       ecosystem: () => [
         QualityTaskStep.make({
           label: "ci:ecosystem:effect-drizzle:type-test",
@@ -1863,7 +1875,6 @@ export const ciLaneStepsForTesting: {
         }),
       ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
-      // decision: lint-lane-scope
       "jsdoc-ratchet": () =>
         pipe(
           O.fromUndefinedOr(options.inventory),
@@ -1875,7 +1886,6 @@ export const ciLaneStepsForTesting: {
             onSome: (inventoryPath) => [jsdocRatchetStep(repoRoot, inventoryPath)],
           })
         ),
-      // decision: labs-and-storybook-lane-scope
       labs: () => [
         QualityTaskStep.make({
           label: "ci:labs",
@@ -1891,7 +1901,6 @@ export const ciLaneStepsForTesting: {
           cwd: repoRoot,
         }),
       ],
-      // decision: lint-lane-scope
       lint: () => [
         turboTaskLaneStep(
           repoRoot,
@@ -1901,7 +1910,6 @@ export const ciLaneStepsForTesting: {
           options
         ),
       ],
-      // decision: lint-lane-scope
       "lint-policy": () => [
         bunRunStep(repoRoot, "ci:lint-policy", [
           "beep",
@@ -1928,7 +1936,8 @@ export const ciLaneStepsForTesting: {
         QualityTaskStep.make({
           label: "ci:property",
           command: "bunx",
-          // decision: property-lane-determinism
+          // Keep sweeping after one red suite so a nightly run reports every
+          // failing package instead of the first (#2687).
           args: [
             ...directTurboArgs(
               ["test:property"],
@@ -1944,7 +1953,6 @@ export const ciLaneStepsForTesting: {
           },
         }),
       ],
-      // decision: lint-lane-scope
       "docs-policy": () => [
         QualityTaskStep.make({
           label: "ci:docs-policy:tasks",
@@ -1972,7 +1980,6 @@ export const ciLaneStepsForTesting: {
           "private-home-paths",
           "--check",
         ]);
-        // decision: repo-sanity-lane-body
         const changesetStatus = bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", [
           "beep",
           "quality",
@@ -1980,8 +1987,6 @@ export const ciLaneStepsForTesting: {
           "--since",
           "origin/main",
         ]);
-        // decision: repo-sanity-lane-body
-        // decision: repo-sanity-lane-body
         const skillsLock = options.skipSkillsLock
           ? A.empty<QualityTaskStep>()
           : [bunRunStep(repoRoot, "ci:repo-sanity:skills-lock", ["beep", "skills", "update", "--check", "--offline"])];
@@ -2003,18 +2008,22 @@ export const ciLaneStepsForTesting: {
           ];
         }
         return [
-          // decision: repo-sanity-lane-body
           bunRunStep(repoRoot, "ci:repo-sanity:workflow-lint", ["beep", "ci", "workflow-lint"]),
           bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
           bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
-          // decision: repo-sanity-lane-body
+          // The single-checker census baseline records the compiler it was measured with, and a
+          // compiler bump that leaves it behind makes the gate's counts incomparable; no lane
+          // noticed two such bumps. The stamp check reads the baseline and one `tsc --version`
+          // (no build, about a second), so it runs on every full pass. A documentation-only diff
+          // can move neither input, so the documentation path leaves it out.
           bunRunStep(repoRoot, "ci:repo-sanity:check-census-stamp", [
             "beep",
             "quality",
             "check-census",
             "--stamp-only",
           ]),
-          // decision: repo-sanity-lane-body
+          // Required on every head: Heavy / Lint Policy also runs the law on
+          // code PRs, but it is not a required context.
           homePaths,
           bunRunStep(repoRoot, "lint:comment-law", [
             "beep",
@@ -2025,11 +2034,8 @@ export const ciLaneStepsForTesting: {
             options.base,
             ...(options.push ? ["--push"] : []),
           ]),
-          // decision: repo-sanity-lane-body
           bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
-          // decision: repo-sanity-lane-body
           bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
-          // decision: repo-sanity-lane-body
           rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
           repoScans,
           ...(options.changesetStatus ? [changesetStatus] : A.empty<QualityTaskStep>()),
@@ -2039,7 +2045,6 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
-      // decision: labs-and-storybook-lane-scope
       storybook: () => [
         QualityTaskStep.make({
           label: "ci:storybook:build",
@@ -2081,7 +2086,10 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
     CiCommandError.mapError("Rejected a caller-provided cache runtime identity.")
   );
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(resolved)}`);
-  // decision: ci-lane-step-composition
+  // Lane bodies that shell out to Turbo need the same env hygiene the root
+  // quality runner applies: no interactive TUI (it can leave a killed run's
+  // terminal in mouse-capture mode) and no unresolved `op://` token/team
+  // references leaking through as literal values on a workstation.
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
   const runtime = cacheRuntimeStep(resolved);
   return yield* runToExit({
@@ -2094,6 +2102,7 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(resolved)}.`));
 });
 
+// decision: hosted-runner-concurrency
 const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
   repoRoot: string,
   options: CiLaneRunOptions
@@ -2107,7 +2116,8 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
     .makeDirectory(fallowDirectory, { recursive: true })
     .pipe(CiCommandError.mapError(`Failed to create ${fallowDirectory}.`));
 
-  // decision: hosted-runner-concurrency
+  // Status lines keep declaration order whatever order the sub-lanes finish in,
+  // and the permit stops two finishing sub-lanes from interleaving their writes.
   const statusLines = MutableHashMap.empty<string, string>();
   const statusPermit = yield* Semaphore.make(1);
   const writeStatus = Effect.fnUntraced(function* () {
@@ -2127,7 +2137,6 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
     return exitCode;
   });
 
-  // decision: hosted-runner-concurrency
   const exitCodes = yield* Effect.forEach(FALLOW_SUB_LANES, runFallowSubLane, {
     concurrency: options.serial ? 1 : FALLOW_SUB_LANE_CONCURRENCY,
   });
@@ -2233,7 +2242,7 @@ const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(
   return mode;
 });
 
-// decision: labs-and-storybook-lane-scope
+// decision: storybook-affected-probe
 const storybookAffectedProbeArgs = (): ReadonlyArray<string> =>
   directTurboArgs([STORYBOOK_BUILD_TASK], [STORYBOOK_TURBO_SELECT_FILTER, "--affected", "--dry-run=json"]);
 
@@ -2296,7 +2305,11 @@ const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffec
   return affected;
 });
 
-// decision: ci-lane-step-composition
+// The check lane's census step: the single-checker gate after the lane's Turbo
+// run, as one more task of the lane. A stale compiler stamp is Repo Sanity's
+// red, so the lane defers it; `--row-packages` narrows the gate to the rows
+// whose packages this run's Turbo selection checked, the only rows whose
+// upstream declarations that run built.
 const CHECK_CENSUS_TURBO_TASK = "check";
 
 const checkCensusLaneStep = (repoRoot: string, rowPackages: O.Option<ReadonlyArray<string>>): QualityTaskStep =>
@@ -2315,7 +2328,12 @@ const checkCensusLaneStep = (repoRoot: string, rowPackages: O.Option<ReadonlyArr
 const runCheckCensusLaneStep = (repoRoot: string, rowPackages: O.Option<ReadonlyArray<string>>) =>
   runQualityTaskStreamingStepGroup("ci:check", [checkCensusLaneStep(repoRoot, rowPackages)]);
 
-// decision: ci-lane-step-composition
+// The selection the lane's Turbo run made, replayed as a JSON dry run with the
+// same `--affected` and `--filter` shape. Without a lane `--filter`, the census
+// rows' packages are the positive filters, which keeps the plan to at most one
+// task per row package; a lane `--filter` is used as given, because Turbo
+// unions positive filters and the row filters would widen it. `--only` leaves
+// the dependency builds out of the plan.
 const checkCensusSelectionProbe = (
   repoRoot: string,
   rowPackages: ReadonlyArray<string>,
@@ -2442,7 +2460,6 @@ export const runCiLaneSteps = Effect.fn("CiLane.runCiLaneSteps")(function* (
   laneId: CiLaneId,
   steps: ReadonlyArray<QualityTaskStep>
 ) {
-  // decision: lint-lane-scope
   yield* ciLaneFailurePolicy(laneId) === "fail-fast"
     ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), {
         concurrency: 1,
@@ -2451,6 +2468,7 @@ export const runCiLaneSteps = Effect.fn("CiLane.runCiLaneSteps")(function* (
     : runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
+// decision: storybook-affected-probe
 const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   repoRoot: string,
   laneId: CiLaneId,
@@ -2463,7 +2481,6 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
           mode: yield* resolveAutoDocgenLaneMode(repoRoot, options.base, options.head),
         })
       : options;
-  // decision: labs-and-storybook-lane-scope
   if (laneId === "storybook" && options.affected && !(yield* resolveStorybookLaneAffected(repoRoot, options.base))) {
     yield* Console.log("[ci] storybook: @beep/storybook is outside Turbo's affected set for this change set (skipped)");
     return;
@@ -2475,9 +2492,12 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   }
 
   yield* Match.value(laneId).pipe(
-    // decision: lint-lane-scope
+    // The knowledge doctor reads only committed Git state (its own archive extractions of HEAD and
+    // the merge-base), never a Turbo output, so it runs abreast of the task graph as it does in the
+    // Lint Policy plan. Buffered output keeps each step's log whole; every red is still collected.
     Match.when("docs-policy", () => runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps, A.length(steps), true)),
-    // decision: ci-lane-step-composition
+    // The census needs the declarations the Turbo run builds and a tree that type-checks, so it
+    // runs only after a green Turbo run; a red census fails the lane like any other task.
     Match.when("check", () =>
       runCiLaneSteps(laneId, steps).pipe(Effect.andThen(runCheckLaneCensus(repoRoot, options)))
     ),
@@ -2489,7 +2509,6 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   );
 });
 
-// decision: property-lane-determinism
 const propertySweepStep = (
   repoRoot: string,
   packages: ReadonlyArray<PropertySweepPackage>,
@@ -2541,7 +2560,7 @@ const runPropertySweep = Effect.fn("CiLane.runPropertySweep")(function* (repoRoo
   const packages = yield* propertySweepPackages(repoRoot);
   const swept = A.filter(packages, (entry) => A.isReadonlyArrayNonEmpty(entry.files));
   yield* clearPropertySweepReceipts(repoRoot, swept);
-  // decision: property-lane-determinism
+  // An empty list means the census is wrong, and with no filter Turbo would run every package's tests.
   if (A.isReadonlyArrayEmpty(swept)) {
     return yield* CiCommandError.make({ message: "The property sweep found no package to run." });
   }
@@ -2563,7 +2582,6 @@ const runPropertySweep = Effect.fn("CiLane.runPropertySweep")(function* (repoRoo
   }
 });
 
-// decision: property-lane-determinism
 const runFullPropertyLane = Effect.fn("CiLane.runFullPropertyLane")(function* (
   repoRoot: string,
   steps: ReadonlyArray<QualityTaskStep>,
@@ -2655,6 +2673,7 @@ const resolvePartitionedLaneRequest = Effect.fn("CiLane.resolvePartitionedLaneRe
   return O.none();
 });
 
+// decision: integration-rest-partition
 const runCiPartitionExecution = Effect.fn("CiLane.runCiPartitionExecution")(function* (
   repoRoot: string,
   request: PartitionedLaneRequest,
@@ -2664,7 +2683,6 @@ const runCiPartitionExecution = Effect.fn("CiLane.runCiPartitionExecution")(func
 ) {
   const { laneId, partition } = request;
   const shard = O.fromUndefinedOr(proof.shard);
-  // decision: integration-partitions
   const runnable = isIntegrationRestPartition(laneId, shard) || A.isReadonlyArrayNonEmpty(proof.packages);
   const step = runnable
     ? O.some(partitionExecutionStep(repoRoot, laneId, partition, proof.packages, options, shard))
@@ -2712,7 +2730,7 @@ type PartitionedLaneSelection = {
   readonly workspacePackageNames: ReadonlyArray<string>;
 };
 
-// decision: integration-partitions
+// decision: partition-plan-proof
 const resolvePartitionedLaneSelection = Effect.fn("CiLane.resolvePartitionedLaneSelection")(function* (
   repoRoot: string,
   laneId: PartitionedCiLane,
@@ -2842,7 +2860,7 @@ const resolvePartitionedLaneSelection = Effect.fn("CiLane.resolvePartitionedLane
   return { coveragePlan, selectedPackages, taskPackageNames, workspacePackageNames };
 });
 
-// decision: integration-partitions
+// decision: partition-plan-proof
 const provePlannedCiLanePartitions = Effect.fn("CiLane.provePlannedCiLanePartitions")(function* (
   laneId: PartitionedCiLane,
   partition: CiLanePartitionId,
@@ -2994,8 +3012,7 @@ const validateCiCoverageProducerRequest = Effect.fn("CiLane.validateCiCoveragePr
  *
  * **Details**
  *
- * Changed paths for an `auto` docgen mode come from `Git.changedFiles` over `<base>...<head>`,
- * folded onto the retired capture's two error wordings (repo-cli-gh-git-consolidation SPEC D-10).
+ * Changed paths for an `auto` docgen mode come from `Git.changedFiles` over `<base>...<head>`.
  *
  * **Example** (Configure a CI lane)
  *
@@ -3084,7 +3101,7 @@ const partitionFlagChoices: ReadonlyArray<readonly [CiLanePartitionId, CiLanePar
   (partition) => [partition, partition] as const
 );
 
-// decision: integration-partitions
+// decision: partition-plan-proof
 const PlannedCiLanePartitions = S.Array(CiLanePartitionId);
 const decodePlannedCiLanePartitions = S.decodeUnknownEffect(S.fromJsonString(PlannedCiLanePartitions));
 const PLANNED_PARTITIONS_OUTPUT = "partitions";
@@ -3511,9 +3528,10 @@ export class CiLocalStepPlan extends S.Opaque<CiLocalStepPlan, { readonly brand:
   )
 ) {}
 
+// decision: labs-full-glob
+// decision: storybook-affected-probe
 const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArray<string> => {
   const affectedFlags = plan.affected ? ["--affected", "--base", plan.base] : A.empty<string>();
-  // decision: labs-and-storybook-lane-scope
   const turboShapeFlags = [...affectedFlags, "--summarize"];
 
   return CiLaneId.match(laneId, {
@@ -3529,7 +3547,6 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     ecosystem: A.empty<string>,
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
-    // decision: labs-and-storybook-lane-scope
     labs: () => ["--summarize"],
     lint: () => turboShapeFlags,
     "lint-policy": () => turboShapeFlags,
@@ -3539,7 +3556,6 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
-    // decision: labs-and-storybook-lane-scope
     storybook: () => turboShapeFlags,
     "test-integration": () => turboShapeFlags,
     "test-unit": () => turboShapeFlags,
@@ -3660,8 +3676,11 @@ export const ciLocalLaneInputsForTesting: {
  *
  * **Details**
  *
- * The current branch is read with `Git.currentBranch` in `show-current` mode; a detached HEAD reads
- * as the empty string the retired capture trimmed to (repo-cli-gh-git-consolidation SPEC D-10).
+ * The current branch is read with `Git.currentBranch` in `show-current` mode, so a detached HEAD
+ * reads as an empty branch name.
+ *
+ * Every Turbo-backed lane replays with `--summarize`, as check.yml dispatches it, so the local argv
+ * stays identical to the hosted one; it writes only gitignored `.turbo/runs/*.json` receipts.
  *
  * **Example** (Configure a CI lane)
  *

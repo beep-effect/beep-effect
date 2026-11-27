@@ -3,7 +3,7 @@ title: default placement hashes package names with a hand-written FNV-1a
 date: 2026-11-26
 reversal: Hash with a runtime or library string hash, accepting that placements move when it changes.
 governs:
-  - src/commands/Ci/CiLanePartitions.ts#ciLaneDefaultPlacements
+  - src/commands/Ci/CiLanePartitions.ts#stablePackageNameHash
 enforcedBy: []
 ---
 

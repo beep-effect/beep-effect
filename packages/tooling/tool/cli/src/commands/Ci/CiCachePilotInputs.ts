@@ -98,7 +98,6 @@ const shortEscapes: Readonly<Record<string, string>> = {
 const hexDigits = Str.split("0123456789abcdef", "");
 const escapeUnit = (unit: string): string =>
   O.getOrElse(R.get(shortEscapes, unit), () => {
-    // `unit` is one UTF-16 code unit, so the fallback never runs.
     const code = O.getOrElse(Str.charCodeAt(unit, 0), F.constant(0));
     return code >= 0x20 && code < 0x7f
       ? unit
@@ -161,7 +160,6 @@ const isReviewedRegistryUrl = (url: string) =>
   O.match(Str.match(UrlParts)(url), {
     onNone: () => false,
     onSome: (parts) =>
-      // Groups 1 and 2 always participate in a match.
       Str.toLowerCase(`${parts[1]}`) === "https" &&
       parts[2] === "registry.npmjs.org" &&
       Str.isEmpty(parts[3] ?? "") &&
@@ -488,6 +486,7 @@ const runStatus = Effect.fn("Ci.cachePilotRun")(function* (
  * @category use-cases
  * @since 0.0.0
  */
+// decision: cache-pilot-inputs-adapter-parity
 export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function* (mode: string, computation: string) {
   if (!isPilotMode(mode)) {
     yield* Console.error("Unsupported pilot input mode.");
@@ -516,7 +515,6 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
   const program = Effect.gen(function* () {
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: git stderr stays on the job log, inherited (D-22)
     const head = yield* runStatus("git", ["rev-parse", "HEAD"], "pipe", env);
-    // decision: cache-pilot-inputs-adapter-parity
     const revision = yield* variable("GITHUB_SHA");
     if (Str.replace(/\n+$/u, "")(head.output) !== revision)
       return yield* failWithPrintedExit("Checkout is not at GITHUB_SHA.");
@@ -547,7 +545,6 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: the exit status of diff --quiet is the step contract (D-22)
     yield* step("git", ["diff", "--quiet", "HEAD"]);
   });
-  // decision: cache-pilot-inputs-adapter-parity
   return yield* Effect.acquireUseRelease(
     Effect.sync(() => process.umask(0o077)),
     () => program,

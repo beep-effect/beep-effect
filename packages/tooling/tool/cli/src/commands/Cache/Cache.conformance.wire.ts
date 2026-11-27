@@ -1272,7 +1272,7 @@ const faultProbes = [
   ["truncated-body", "written", "truncated-body"],
 ] as const satisfies ReadonlyArray<readonly [CacheConformanceFault, "written" | "unwritten", CacheConformanceOutcome]>;
 
-const faultProbeTimeoutMs = 1500;
+const probeDeadlineUnderLabHoldMs = 1500;
 
 const faultClasses: LabCase = Effect.fnUntraced(function* (
   context: WireContext,
@@ -1284,7 +1284,7 @@ const faultClasses: LabCase = Effect.fnUntraced(function* (
   const viaProxy: WireContext = {
     ...context,
     base: proxy.url,
-    target: CacheConformanceTarget.make({ ...context.target, requestTimeoutMs: faultProbeTimeoutMs }),
+    target: CacheConformanceTarget.make({ ...context.target, requestTimeoutMs: probeDeadlineUnderLabHoldMs }),
   };
   const run = sendTracked(viaProxy, recorder);
   const seen = A.empty<CacheConformanceOutcome>();

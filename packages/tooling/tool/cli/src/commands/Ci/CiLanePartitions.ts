@@ -269,6 +269,9 @@ export class CiLanePartition extends S.Opaque<CiLanePartition, { readonly brand:
  * @category constants
  * @since 0.0.0
  */
+// decision: law-practice-server-unit-shards
+// decision: unit-bins-lpt
+// decision: law-practice-server-integration-shards
 export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "lint-a",
@@ -488,7 +491,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 9, total: 9 }),
   }),
-  // decision: law-practice-server-unit-shards
   CiLanePartition.make({
     id: "law-practice-1",
     lane: "test-unit",
@@ -545,7 +547,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 8, total: 8 }),
   }),
-  // decision: unit-bins-lpt
   CiLanePartition.make({
     id: "unit-a",
     lane: "test-unit",
@@ -790,7 +791,6 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/yaml",
     ],
   }),
-  // decision: law-practice-server-integration-shards
   CiLanePartition.make({
     id: "lps-int-1",
     lane: "test-integration",

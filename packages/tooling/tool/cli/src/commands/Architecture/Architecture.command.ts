@@ -270,6 +270,8 @@ const applyAndRegister = Effect.fn(function* (plan: CanonicalSliceOperationPlan,
   });
 });
 
+// After an interrupted apply the files can all match while the packages were
+// never registered; check would then call the plan idempotent.
 const ensureModelFirstRegistration = Effect.fn(function* (rootDir: string, plan: CanonicalSliceOperationPlan) {
   const packagePaths = yield* modelFirstPackagePathsOf(plan);
   const { missingWorkspaces, missingIdentities } = yield* scaffoldedRegistrationGaps(rootDir, packagePaths);
@@ -339,17 +341,15 @@ const architectureCheckCommand = Command.make(
     const rootDir = yield* findRepoRoot();
     const plan = yield* readOperationPlanFile(file);
     const planShape = yield* ensurePlanShape(plan, shape);
+    // A model-first plan is checked like apply checks it, and its registration is
+    // checked too, all read-only; legacy plans check their files alone.
     if (planShape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
     const result = yield* checkCanonicalSliceOperationPlan(rootDir, plan);
     yield* reportCheckResult(result);
     yield* ensureIdempotent(result);
     if (planShape === "model-first") yield* ensureModelFirstRegistration(rootDir, plan);
   })
-).pipe(
-  Command.withDescription(
-    "Validate, read-only, that a canonical architecture operation plan is idempotent; a model-first plan must also be registered, since an interrupted apply can leave its files matching but its packages unregistered"
-  )
-);
+).pipe(Command.withDescription("Validate that a canonical architecture operation plan is idempotent"));
 
 const createContextCommand = Command.make(
   "context",

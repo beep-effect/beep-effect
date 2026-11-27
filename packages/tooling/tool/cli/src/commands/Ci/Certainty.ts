@@ -1582,6 +1582,7 @@ const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (
   request: CiCertaintyCaptureRequest,
   since: DateTime.Utc
 ) {
+  // `log.showSignature` in a gitconfig would interleave gpg lines with the formatted ones.
   const lines = yield* gitLines(request.repoRoot, [
     "log",
     "--no-show-signature",
@@ -1767,8 +1768,7 @@ const readRequiredContexts = Effect.fn("Ci.certaintyReadRequiredContexts")(funct
  *
  * **Details**
  *
- * Main's first-parent history is read with `git log --no-show-signature`, since a
- * `log.showSignature` gitconfig would interleave gpg lines with the formatted ones. The main push
+ * The main push
  * listing, a few pages, is read before the per-attempt job reads spend the request bound. Every
  * read is counted and the reader stops at the bound, so a refused read becomes a partial read,
  * never a smaller census. Runs of heads outside the window are kept without jobs, only to detect

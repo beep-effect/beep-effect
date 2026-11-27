@@ -460,7 +460,7 @@ export const loadCacheConformanceEnvelope = Effect.fn("CacheConformance.loadEnve
   );
 }, CacheCommandError.mapError("Cannot read the measured load envelope."));
 
-const labHoldMs = 3000;
+const labHoldMsOverProbeDeadline = 3000;
 
 const scoreLabCase = Effect.fn("CacheConformance.scoreLabCase")(function* (
   entry: CacheConformanceCase,
@@ -522,7 +522,7 @@ export const runCacheConformanceLab = Effect.fn("CacheConformance.runLab")(funct
   const now2 = yield* DateTime.now;
   const startedAt = DateTime.formatIso(now2);
   const proxy = yield* makeCacheConformanceFaultProxy(
-    CacheConformanceProxyOptions.make({ target, bearers, holdMs: labHoldMs })
+    CacheConformanceProxyOptions.make({ target, bearers, holdMs: labHoldMsOverProbeDeadline })
   );
   const cases = yield* Effect.forEach(
     corpus.cases,

@@ -1,8 +1,9 @@
 ---
-title: the dependency diagnostic parses tar with Python tarfile stream-mode semantics
+title: the dependency diagnostic keeps the retired Python observer's tarfile and refusal semantics
 date: 2026-11-26
 reversal: Replace the reader with a strict POSIX ustar/pax parser and re-baseline the refusal fixtures.
 governs:
+  - src/commands/Cache/Cache.diagnostics.ts#strictUtf8
   - src/commands/Cache/Cache.diagnostics.ts#nextMember
   - src/commands/Cache/Cache.diagnostics.ts#field
 enforcedBy: []

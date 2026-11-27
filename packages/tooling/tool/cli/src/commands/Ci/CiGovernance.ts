@@ -662,7 +662,7 @@ const REVIEWER_APP = { context: "beep-reviewer", integrationId: 5321138 } as con
  * **Details**
  * The reviewer is advisory while the ruleset omits it, so an absent context passes.
  * The reviewer App publishes its check outside the CI workflow lane inventory;
- * `beep reviewer ruleset require|release` switches the requirement on and off (D41).
+ * `beep reviewer ruleset require|release` switches the requirement on and off.
  *
  * **Example** (Accept the reviewer App or its absence and reject an unpinned context)
  *

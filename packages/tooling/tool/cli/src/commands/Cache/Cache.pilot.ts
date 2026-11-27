@@ -1985,6 +1985,8 @@ const runPilot = Effect.fn("CachePilot.run")(
               });
               yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-seed`, fault: "none" }));
               const seed = yield* executeSignedProducer(producerRoot, `signed-${pair}-seed`);
+              // Deprecated-import verdicts belong to the root policy task.
+              // The package dependency mutation still requires hash invalidation.
               const expectedExit = id === "root-lint-config" ? 1 : 0;
               if (
                 seed.graphExitCode !== expectedExit ||
@@ -2526,10 +2528,6 @@ export const runCachePilotExperiment = Effect.fn("Cache.runPilotExperiment")(fun
  * and requires clean registered
  * source roots. The caller owns admission and the outer namespace. Returned
  * observations do not establish protected-producer or qualification authority.
- * A mutation seed expects exit 1 only for `root-lint-config`, because the root
- * policy task owns deprecated-import verdicts; the package dependency mutation
- * exits 0 and must still invalidate the input hash.
- *
  * **Example** (Reference the signed worker)
  * ```ts
  * import { runCacheSignedPilotWorker } from "@beep/repo-cli/commands/Cache"

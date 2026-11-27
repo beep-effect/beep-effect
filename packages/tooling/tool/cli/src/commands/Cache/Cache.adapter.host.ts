@@ -487,8 +487,10 @@ const stopUnit = Effect.fnUntraced(function* (environment: Readonly<Record<strin
   yield* systemctl(environment, ["reset-failed", unit], Duration.seconds(10)).pipe(Effect.ignore);
 });
 
+const processKillGrace = Duration.seconds(10);
+const stopTimeoutOverKillGrace = Duration.seconds(15);
 const stopProcess = (scope: Scope.Closeable) =>
-  Scope.close(scope, Exit.void).pipe(Effect.timeout(Duration.seconds(15)));
+  Scope.close(scope, Exit.void).pipe(Effect.timeout(stopTimeoutOverKillGrace));
 
 interface OwnedResources {
   readonly processes: ReadonlyArray<Scope.Closeable>;
@@ -590,7 +592,7 @@ const startLive = Effect.fn("CacheAdapterHost.start")(function* (startup: CacheO
     stdin: { stream: Stream.make(input.bytes) },
     stdout: "ignore",
     stderr: "ignore",
-    forceKillAfter: Duration.seconds(10),
+    forceKillAfter: processKillGrace,
   }).pipe(Scope.provide(processScope));
   yield* awaitReadiness(handle, input.port);
   const pid = yield* unitProperty(manager, unit, "MainPID").pipe(

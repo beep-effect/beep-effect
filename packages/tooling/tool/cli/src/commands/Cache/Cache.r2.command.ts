@@ -63,6 +63,8 @@ const cacheR2ProbeCommand = Command.make(
       const checked = yield* decodeMarker(marker).pipe(
         Effect.mapError(() => CacheCommandError.new("Marker must be sixteen hexadecimal characters"))
       );
+      // The command handler is this probe's entry point; the live layer needs the
+      // tuple resolved above, so it is built here rather than at command wiring.
       const io = yield* Layer.build(
         layerCacheR2ProbeIo(CacheR2ProbeTarget.make({ root: process.cwd(), ...tuple }), process.env)
       ).pipe(CacheCommandError.mapError("Cannot prepare the qualification probe."));
@@ -116,8 +118,6 @@ const cacheR2FleetCommand = Command.make(
  *
  * **Details**
  * Replaces the retired `infra/r2-cache/probe.py` and `fleet.py`.
- * The probe handler builds its live layer itself, because that layer needs the
- * Turbo tuple the handler resolves first.
  *
  * **Example** (Reference the R2 command group)
  * ```ts

@@ -224,10 +224,13 @@ const forwarderRunMaxSnapshotExportsFlag = Flag.Int("max-snapshot-exports").pipe
     "Per-run Parquet snapshot exports to keep; older snapshots are pruned automatically after each forwarder run"
   )
 );
+// Accepted but inert: `forwarder run` now always enforces snapshot retention. Retained so that
+// already-installed systemd timer units (and any timer-rendered command) that still pass
+// --retention-enforce continue to parse instead of failing with an unrecognized-flag error.
 const forwarderRunRetentionEnforceCompatFlag = Flag.Boolean("retention-enforce").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
-    "Deprecated no-op kept so installed timer units still parse: forwarder run always prunes old Parquet snapshots"
+    "Deprecated no-op: forwarder run always prunes old per-run Parquet snapshots; kept for backward compatibility"
   )
 );
 const hashSaltFlag = Flag.String("hash-salt").pipe(
