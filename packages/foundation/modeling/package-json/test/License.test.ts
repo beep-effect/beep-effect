@@ -86,13 +86,14 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
     const expr = licenseExpressionOf(brand("MIT OR Apache-2.0"));
     const present = O.isSome(expr);
     assertTrue(present);
-    // SpdxExpression round-trips fully parenthesized; that is canonical here.
-    assert.strictEqual(String(expr.value), "(MIT OR Apache-2.0)");
+    assert.strictEqual(
+      String(expr.value),
+      "(MIT OR Apache-2.0)",
+      "SpdxExpression round-trips fully parenthesized, the canonical form here"
+    );
   });
 
-  it("UNLICENSED is a legal manifest value and not an expression", () => {
-    // The whole reason this accessor exists: the brand admits it, the
-    // grammar does not, and every consumer was hand-rolling this screen.
+  it("UNLICENSED is a legal manifest value (the brand admits it) and not an expression (the grammar does not)", () => {
     assertNone(licenseExpressionOf(brand("UNLICENSED")));
   });
 
@@ -102,9 +103,6 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
   });
 
   it("agrees with the brand: everything isValidSpdx admits either parses or is one of the two", () => {
-    // Pins the seam itself rather than a sample. If npm gains a third
-    // special case and `isValidSpdx` is widened without widening this
-    // accessor, the two drift and this test is what notices.
     for (const value of [
       "MIT",
       "Apache-2.0",
@@ -117,7 +115,11 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
       assert.isTrue(isValidSpdx(value), `isValidSpdx should admit ${value}`);
       const expr = licenseExpressionOf(brand(value));
       const isSpecial = value === "UNLICENSED" || Str.startsWith("SEE LICENSE IN ")(value);
-      assert.strictEqual(O.isNone(expr), isSpecial, `${value}: none iff a non-SPDX spelling`);
+      assert.strictEqual(
+        O.isNone(expr),
+        isSpecial,
+        `${value}: none iff a non-SPDX spelling; widening isValidSpdx must widen this accessor too`
+      );
     }
   });
 
@@ -127,9 +129,7 @@ describe("licenseExpressionOf — the brand/grammar seam", () => {
     assertTrue(present);
   });
 
-  it("an unparseable string the brand would reject yields none rather than throwing", () => {
-    // Total by construction: a caller holding an unbranded cast still gets
-    // an answer instead of a defect.
+  it("an unparseable string the brand would reject yields none rather than a defect, even through an unbranded cast", () => {
     assertNone(licenseExpressionOf(deliberatelyInvalid<SpdxLicense>("MIT AND")));
   });
 });

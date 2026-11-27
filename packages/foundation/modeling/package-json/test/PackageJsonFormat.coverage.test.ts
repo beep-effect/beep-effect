@@ -18,10 +18,9 @@ describe("formatter diagnostic coverage", () => {
         "package.json text is not valid JSON"
       );
 
-      // A scalar on the navigation path, rather than a missing container, is invalid.
-      const invalid = yield* Effect.flip(PackageJsonFormat.modify('{"x":1}', ["x", "bad"], 1));
-      assert.instanceOf(invalid, PackageJsonModifyError);
-      assert.strictEqual(invalid.message, "Failed to modify package.json at path [x, bad]");
+      const scalarOnNavigationPath = yield* Effect.flip(PackageJsonFormat.modify('{"x":1}', ["x", "bad"], 1));
+      assert.instanceOf(scalarOnNavigationPath, PackageJsonModifyError);
+      assert.strictEqual(scalarOnNavigationPath.message, "Failed to modify package.json at path [x, bad]");
       assert.strictEqual(
         PackageJsonModifyError.make({ path: ["x", 0], cause: "container mismatch" }).message,
         "Failed to modify package.json at path [x, 0]"

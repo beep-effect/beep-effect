@@ -399,16 +399,6 @@ export class GitBranch extends Context.Service<GitBranch, GitBranchShape>()($I`G
 
 const unstubbed = unstubbedFor({ service: "GitBranch" });
 
-/**
- * `main`, `refs/heads/main` and `heads/main` all name the same branch.
- *
- * **Details**
- *
- * GitHub's own API is inconsistent here — creation wants the full
- * `refs/heads/x`, every other operation wants `heads/x` — so callers routinely
- * pass whichever they last saw. Normalizing once is cheaper than documenting it
- * seven times.
- */
 const shortName = (name: string): string => pipe(name, Str.replace(/^refs\/heads\//, ""), Str.replace(/^heads\//, ""));
 
 const rejectEmpty: {
@@ -421,23 +411,8 @@ const rejectEmpty: {
     : Effect.succeed(short);
 });
 
-/**
- * Every method resolves {@link Repo} per call rather than once at layer
- * construction.
- *
- * **Details**
- *
- * This is what makes `Repo.provide(other)` mean something. Capturing the
- * coordinate when the layer is built would give each method `R = never` — the
- * house pattern for a stable dependency — but it would also make a scoped
- * override silently do nothing, because the resource would already hold the
- * repository it was built with. The repository is precisely the dependency that
- * is *not* stable: one program may loop over many target repositories.
- *
- * The client stays resolved at construction, so this costs one context read per
- * call and nothing else.
- */
 const make = (client: GitHubClient["Service"]): GitBranchShape => {
+  // decision: repo-resolved-per-call
   const create: GitBranchShape["create"] = dual(
     2,
     Effect.fn("GitBranch.create")(function* (branch: string, sha: string) {
@@ -476,9 +451,6 @@ const make = (client: GitHubClient["Service"]): GitBranchShape => {
       yield* Effect.annotateCurrentSpan({ branch: short });
       return yield* create(short, sha).pipe(
         Effect.as<BranchOutcome>("created"),
-        // The whole point of a structural `alreadyExists`: a concurrent creator
-        // is recognized by the error's shape, not by matching its prose, and the
-        // recovery needs no second existence check to tell the cases apart.
         Effect.catchIf(GitHubError.hasKind("alreadyExists"), () => Effect.as(reset(short, sha), "reset" as const))
       );
     })

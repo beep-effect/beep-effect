@@ -245,7 +245,16 @@ export class CommitComparison extends S.Opaque<CommitComparison, { readonly bran
  * @since 0.0.0
  */
 export interface GitHubCommitShape {
-  /** The files one commit touched, paginated by file. */
+  /**
+   * The files one commit touched, paginated by file.
+   *
+   * **Details**
+   *
+   * GitHub pages this read by file inside a commit payload, at most 300 per
+   * page and 3000 in total. The payload is a commit object, not an array, so it
+   * is not one of octokit's paginating routes: the walk is a custom page source
+   * over the same engine every other paginated read uses.
+   */
   readonly changedFiles: {
     (
       ref: string,
@@ -380,15 +389,6 @@ export class GitHubCommit extends Context.Service<GitHubCommit, GitHubCommitShap
 
 const unstubbed = unstubbedFor({ service: "GitHubCommit" });
 
-/**
- * The minimum of a commit payload this projection reads.
- *
- * **Details**
- *
- * `author.login` is **optional**, not required, because GitHub answers with an
- * empty object — typed `Record<string, never>` — for a commit it cannot
- * attribute to an account.
- */
 const CommitResponse = S.Struct({
   sha: S.String,
   html_url: S.String,
@@ -398,7 +398,12 @@ const CommitResponse = S.Struct({
   }),
   author: S.Struct({ login: S.optionalKey(S.String) }).pipe(S.NullOr, S.optionalKey),
   parents: S.Array(S.Struct({ sha: S.String })),
-}).pipe($I.annoteSchema("CommitResponse", { description: "The selected fields used to summarize a commit response." }));
+}).pipe(
+  $I.annoteSchema("CommitResponse", {
+    description:
+      "The selected fields used to summarize a commit response. `author.login` is optional: GitHub answers an empty `author` object for a commit it cannot attribute to an account.",
+  })
+);
 
 const summarize: {
   (input: unknown, operation: string): Effect.Effect<CommitSummary, GitHubError>;
@@ -594,12 +599,6 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
     ) {
       const { owner, repo } = yield* Repo;
       yield* Effect.annotateCurrentSpan({ owner, repo, ref });
-      // This endpoint pages by FILE, not by commit — 300 per page, up to 3000 —
-      // so octokit does not list it as a paginating route at all: its payload is
-      // a commit object, not an array. The traversal is therefore a custom
-      // `PageSource` handed to the SAME engine every other paginated read uses,
-      // which is exactly what that seam exists for. There is still one pagination
-      // implementation in this package.
       const perPage = options?.page?.perPage ?? 100;
       const source = (): PageSource<CommitFile> => {
         let page = 0;

@@ -181,6 +181,10 @@ export interface GitHubReleaseShape {
    * `Invalid name for request` — a hand-written route owns its query
    * parameters in the template, always. `label` is the endpoint's optional
    * display label, shown in place of the file name on the release page.
+   *
+   * An asset without a `label` uses the `assets{?name}` template:
+   * `{?name,label}` with an absent label expands to a dangling `&` (observed
+   * at `@octokit/endpoint` 11.0.3).
    */
   readonly uploadAsset: {
     (
@@ -320,8 +324,6 @@ const project: {
     return ReleaseInfo.make({
       id: raw.id,
       tag: raw.tag_name,
-      // GitHub sends null for an unset name or body; the empty string is what
-      // every caller does with it anyway.
       name: raw.name ?? "",
       body: raw.body ?? "",
       draft: raw.draft,
@@ -439,12 +441,6 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
       ) {
         const { owner, repo } = yield* Repo;
         yield* Effect.annotateCurrentSpan({ owner, repo, release: release.id, asset: asset.name });
-        // `name` MUST be in the template: this route is outside the generated
-        // endpoint map, so no schema routes it to the query string — passed
-        // only as a parameter it is silently dropped and GitHub answers 400
-        // "Invalid name for request". The two
-        // template spellings exist because `{?name,label}` with an absent
-        // label expands to a dangling `&` (probed at @octokit/endpoint 11.0.3).
         const raw = yield* client.requestDecoded(
           asset.label === undefined
             ? "POST /repos/{owner}/{repo}/releases/{release_id}/assets{?name}"
@@ -473,7 +469,6 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
       ) {
         const { owner, repo } = yield* Repo;
         yield* Effect.annotateCurrentSpan({ owner, repo, id });
-        // Paginated, and the caller's budget is forwarded.
         const raw = yield* client.paginate(
           "GET /repos/{owner}/{repo}/releases/{release_id}/assets",
           { owner, repo, release_id: id },
@@ -485,5 +480,4 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
   };
 };
 
-/** Release assets do not go to the API host. */
 const UPLOADS_BASE_URL = "https://uploads.github.com";

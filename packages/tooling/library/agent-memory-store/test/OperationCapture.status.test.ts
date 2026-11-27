@@ -37,7 +37,6 @@ const row = "| P2 Admission | pending |";
 const moveTo = (to: string) =>
   StatusTransition.make({ field: "status", from: O.some(pending), to: StatusValue.make(to) });
 
-// The captured batch of one edit of a one-file base, typed with `statusFields`.
 const typed = (baseText: string, editedText: string, statusFields: StatusFields) => {
   const base = baseOf([["notes.md", baseText]]);
   const captured = captureBatch(
@@ -57,16 +56,12 @@ describe("statusMoveBetween", () => {
     assertSome(statusMoveBetween(row, "| P2 Admission | in-progress |")(status), moveTo("in-progress"));
   });
 
-  it("reads every other edit as no move", () => {
-    // The base holds no value, or two.
+  it("reads as no move: a base with no value or two, a too-short edit, changed bytes around the token, or no one-token swap", () => {
     assertNone(statusMoveBetween(status, "| P2 Admission | open |", "| P2 Admission | complete |"));
     assertNone(statusMoveBetween(status, "| pending | pending |", "| pending | complete |"));
-    // The edit is shorter than the bytes around the token.
     assertNone(statusMoveBetween(status, row, "| P2 Admission |"));
-    // The bytes before or after the token changed too.
     assertNone(statusMoveBetween(status, row, "| P3 Admission | complete |"));
     assertNone(statusMoveBetween(status, row, "| P2 Admission | complete |\n"));
-    // The token is unchanged, or the new text there is not one token.
     assertNone(statusMoveBetween(status, row, row));
     assertNone(statusMoveBetween(status, row, "| P2 Admission | not done |"));
   });
@@ -83,8 +78,8 @@ describe("statusMoveBetween", () => {
       statusMoveBetween(spaced, "| P2 | in review |", "| P2 | approved |"),
       StatusTransition.make({ field: "status", from: O.some(inReview), to: approved })
     );
-    // Several words that are no lifecycle value stay free text.
-    assertNone(statusMoveBetween(spaced, "| P2 | approved |", "| P2 | not reviewed |"));
+    const offLifecycleWords = statusMoveBetween(spaced, "| P2 | approved |", "| P2 | not reviewed |");
+    assertNone(offLifecycleWords);
     const spacedFields = StatusFields.make({ lifecycles: [spaced] });
     expect(typed("| P2 | approved |\n", "| P2 | in review |\n", spacedFields)).toEqual(["setStatus"]);
   });

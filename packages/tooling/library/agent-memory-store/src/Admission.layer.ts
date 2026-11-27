@@ -114,8 +114,6 @@ export const AdmissionResolverLineage: LineageId = LineageId.make("agent-memory-
 type InsertOperation = typeof NodeOperation.cases.insert.Type;
 type SetStatusOperation = typeof NodeOperation.cases.setStatus.Type;
 
-// What a replace, delete or status move names: a node and the revision the
-// writer edited against.
 interface RevisionTarget {
   readonly expectedRevision: RevisionId;
   readonly nodeId: NodeId;
@@ -135,7 +133,6 @@ const refuse = (input: Parameters<typeof finding>[0]) => Effect.succeed(Plan.Ref
 
 const keep = (state: NodeState) => Effect.succeed(Plan.Keep({ nodeId: state.nodeId, revisionId: state.head }));
 
-// The agent's text of an operation; a delete and a status move carry none.
 const theirsOf = (operation: NodeOperation): O.Option<string> =>
   NodeOperation.match(operation, {
     replace: (replace) => O.some(replace.text),
@@ -144,7 +141,6 @@ const theirsOf = (operation: NodeOperation): O.Option<string> =>
     setStatus: () => O.none(),
   });
 
-// A write to a retired node: held with no logged text.
 const heldRetired = (state: NodeState, message: string) =>
   Effect.succeed(
     Plan.Hold({
@@ -257,8 +253,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
     });
   });
 
-  // The lifecycle a status move names, when its field has one and its target
-  // value is in it.
   const lifecycleFor = (setStatus: SetStatusOperation): Result.Result<StatusLifecycle, MemoryGateViolation> =>
     O.match(lifecycleOf(statusFields, setStatus.transition.field), {
       onNone: () =>
@@ -283,8 +277,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
             ),
     });
 
-  // The lifecycle guard: the move is judged against the value the head text
-  // holds, never the writer's base or the transition's `from`.
   const statusPlan = (
     lifecycle: StatusLifecycle,
     setStatus: SetStatusOperation,
@@ -319,9 +311,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
       },
     });
 
-  // An insert: refused when its id is taken or its predecessor is no node of
-  // its file; held when its predecessor never reached the log, or, when
-  // `holdUnderRetired`, when its predecessor is retired.
   const insertPlan = Effect.fnUntraced(function* (
     insert: InsertOperation,
     after: O.Option<NodeId>,
@@ -391,9 +380,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
     return yield* create(insert, after, text, author);
   });
 
-  // A replace, delete or status move: refused when its node or expected
-  // revision is unknown, held when its node is an insert of the same batch
-  // that did not land, otherwise judged by `then` with the base text.
   const onKnownRevision = Effect.fnUntraced(function* (
     target: RevisionTarget,
     missing: MutableHashSet.MutableHashSet<NodeId>,
@@ -507,8 +493,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         }),
     });
 
-  // Appends a held write as a `WriteHeld` under a store-minted hold id, after
-  // `before` in the same journal transaction.
   const holdWrite = Effect.fnUntraced(function* (
     operation: NodeOperation,
     author: LineageId,
@@ -533,8 +517,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
     });
   });
 
-  // Carries out an `admit` plan: a write is appended alone, a hold as a
-  // `WriteHeld`.
   const admitPlan = (operation: NodeOperation, author: LineageId) =>
     Plan.$match({
       Write: ({ event, nodeId, revisionId }) => Effect.as(log.append(event), landed(nodeId, revisionId)),
@@ -543,8 +525,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
       Hold: (hold) => holdWrite(operation, author, hold, []),
     });
 
-  // One operation, judged and appended in one transaction; a stale append is
-  // judged again against the heads that beat it.
   const admitOne = (operation: NodeOperation, author: LineageId, missing: MutableHashSet.MutableHashSet<NodeId>) =>
     sql
       .withTransaction(
@@ -559,14 +539,12 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
       .pipe(Effect.mapError(failure("admit", O.some(operation.nodeId))));
 
   const admit = Effect.fn("Admission.admit")(function* (batch: OperationBatch) {
-    // Inserts of this batch that did not land, so later operations that
-    // depend on them are held rather than refused.
-    const missing = MutableHashSet.empty<NodeId>();
+    const unlandedInserts = MutableHashSet.empty<NodeId>();
     const outcomes: Array<AdmissionOutcome> = [];
     for (const operation of batch.operations) {
-      const outcome = yield* admitOne(operation, batch.author, missing);
+      const outcome = yield* admitOne(operation, batch.author, unlandedInserts);
       if (NodeOperation.guards.insert(operation) && outcome.outcome !== "landed") {
-        MutableHashSet.add(missing, operation.nodeId);
+        MutableHashSet.add(unlandedInserts, operation.nodeId);
       }
       outcomes.push(outcome);
     }
@@ -575,7 +553,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
 
   const catchUp = lock.withPermit(catchUpHolds(log, fold));
 
-  // The read model of one hold: `ours` is the text the log held at the hold.
   const conflictOf = Effect.fnUntraced(function* (record: HoldRecord) {
     const { held } = record;
     const state = yield* nodeState(held.operation.nodeId);
@@ -599,7 +576,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
     Effect.withSpan("Admission.held")
   );
 
-  // A replace, delete or status move resolved on the node's current head.
   const onCurrent = Effect.fnUntraced(function* (nodeId: NodeId, then: (state: NodeState) => Effect.Effect<Plan>) {
     const state = yield* nodeState(nodeId);
     if (O.isNone(state)) {
@@ -615,8 +591,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
     return yield* then(state.value);
   });
 
-  // A held status move applied with `theirs`: the lifecycle guard runs again
-  // on the node's current head, under the resolving layer's lifecycles.
   const replayStatus = (setStatus: SetStatusOperation, state: NodeState, author: LineageId) =>
     Result.match(lifecycleFor(setStatus), {
       onFailure: (violation) => Effect.succeed(Plan.Refuse({ violation })),
@@ -633,19 +607,13 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         }),
     });
 
-  // Whether the node moved on to another text since the hold, so a resolution
-  // written now would replace a text the hold never showed its resolver. A
-  // hold that recorded no head showed no text: its node had not reached the
-  // log, so a node that holds a text now has moved.
+  // decision: resolve-re-holds-a-write-whose-node-moved-since-the-hold
   const movedSince = (record: HoldRecord, state: NodeState): boolean =>
     !Equal.equals(
       O.flatMap(record.held.headRevision, (revision) => O.flatten(textAt(state, revision))),
       state.headText
     );
 
-  // Runs `then` when the node still holds the text the hold recorded; when it
-  // moved on, the write is held again on the current head with that text as
-  // `ours`, and the resolution is not applied.
   const unmoved = (record: HoldRecord, state: NodeState, then: () => Effect.Effect<Plan>) =>
     movedSince(record, state)
       ? Effect.succeed(
@@ -662,10 +630,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         )
       : then();
 
-  // What `theirs` (no merged text) or `merged` writes for a held write, judged
-  // on the node as the log holds it now. A merged text replaces the held
-  // write's text and is the resolver's; `theirs` writes under the held
-  // write's author.
   const settlePlan = (record: HoldRecord, mergedText: O.Option<string>, placement: O.Option<InsertPlacement>) => {
     const { held: write } = record;
     const author = O.isSome(mergedText) ? AdmissionResolverLineage : write.author;
@@ -698,8 +662,7 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
             })
           )
         ),
-      // A status move rewrites only the status token of the current text, so
-      // `theirs` needs no unmoved head; a merged text replaces the whole text.
+      // decision: resolve-re-holds-a-write-whose-node-moved-since-the-hold
       setStatus: (setStatus) =>
         onCurrent(setStatus.nodeId, (state) =>
           O.match(mergedText, {
@@ -715,11 +678,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
     payload: HoldResolved.make({ holdId, resolution, author: AdmissionResolverLineage, revisionId }),
   });
 
-  // Carries out a `resolve` plan: a write lands with the `HoldResolved` that
-  // settles the hold, in one journal transaction; a refusal or a renewed hold
-  // on the same head appends nothing and leaves the hold open; a hold on a
-  // head that moved since closes this hold and holds the write again under a
-  // new hold id, in one journal transaction.
   const resolvePlan = (record: HoldRecord, resolution: ConflictResolution) =>
     Plan.$match({
       Write: ({ event, nodeId, revisionId }) =>
@@ -746,8 +704,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
             ]),
     });
 
-  // `ours` keeps what the log holds: the hold closes and the held write ends
-  // rejected by the resolver.
   const keepOurs = (record: HoldRecord, resolution: ConflictResolution) =>
     Effect.as(
       log.append(settled(record.held.holdId, resolution, O.none())),
@@ -770,9 +726,7 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
         Effect.flatMap(settlePlan(record, O.some(merged.text), merged.placement), resolvePlan(record, resolution)),
     });
 
-  // Fails when a `HoldResolved` for the hold committed after `cursor`: another
-  // resolver closed it since the fold read it open. Run inside the resolve
-  // transaction, which holds the write lock, so it cannot close afterwards.
+  // decision: resolve-re-holds-a-write-whose-node-moved-since-the-hold
   const stillOpen = Effect.fnUntraced(function* (holdId: HoldId, cursor: LogCursor) {
     const closed = yield* holdClosedAfter(log, cursor, holdId);
     if (closed) {
@@ -788,10 +742,6 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
       return yield* HoldNotOpenError.make({ holdId });
     }
     const open = record.value;
-    // The hold is checked open again inside the transaction, so a re-judgment
-    // that appends nothing never answers for a hold another resolver closed;
-    // the log also refuses a HoldResolved for a closed hold, so of two
-    // resolvers exactly one settles it.
     return yield* sql
       .withTransaction(Effect.andThen(stillOpen(holdId, cursor), settle(open, resolution)))
       .pipe(

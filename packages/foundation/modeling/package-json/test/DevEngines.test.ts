@@ -20,9 +20,10 @@ describe("DevEnginesSchema", () => {
         packageManager: { name: "pnpm", version: "10.33.0", onFail: "ignore" },
         runtime: [{ name: "node", version: "24.11.0", onFail: "ignore" }],
       });
-      // W3-h conformance shift: DevEngine is an Opaque record, so a decoded
-      // constraint is a plain object recognised structurally, not a class instance.
-      assert.isTrue(S.is(DevEngine)(decoded.packageManager));
+      assert.isTrue(
+        S.is(DevEngine)(decoded.packageManager),
+        "DevEngine is an Opaque record: a decoded constraint is a plain object recognised structurally"
+      );
       assert.strictEqual(Object.getPrototypeOf(decoded.packageManager), Object.prototype);
       assert.isTrue(A.isArray(decoded.runtime));
     })

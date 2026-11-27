@@ -1,13 +1,3 @@
-// The presence-lenient manifest model. The four probe rows from #286 are
-// pinned explicitly — the first three flip from the strict model's behavior,
-// the fourth deliberately does not:
-//
-//   private root (no name/version)   PackageManifest OK   (Package still rejects)
-//   name only                        PackageManifest OK
-//   name+version                     PackageManifest OK
-//   nonsemver version ("1.0")        PackageManifest REJECT — lenient about
-//                                    ABSENCE, strict about shape when present.
-
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { Package } from "@beep/package-json/Package";
 import { PackageManifest } from "@beep/package-json/PackageManifest";
@@ -26,8 +16,7 @@ const PRIVATE_ROOT = {
   devEngines: { runtime: { name: "node", version: "24.9.1" } },
 } as const;
 
-describe("PackageManifest.decode", () => {
-  // Probe row 1: the idiomatic monorepo root manifest — no name, no version.
+describe("PackageManifest.decode (lenient about absence, strict about shape when present)", () => {
   it.effect("decodes the private workspace-root shape", () =>
     Effect.gen(function* () {
       const manifest = yield* PackageManifest.decode(PRIVATE_ROOT);
@@ -42,7 +31,6 @@ describe("PackageManifest.decode", () => {
     })
   );
 
-  // The strictness contrast, pinned: the strict model still rejects it.
   it.effect("Package.decode still rejects the private workspace-root shape", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(Package.decode(PRIVATE_ROOT));
@@ -50,7 +38,6 @@ describe("PackageManifest.decode", () => {
     })
   );
 
-  // Probe row 2: name without version.
   it.effect("decodes a name-only manifest", () =>
     Effect.gen(function* () {
       const manifest = yield* PackageManifest.decode({ name: "my-root", private: true });
@@ -59,7 +46,6 @@ describe("PackageManifest.decode", () => {
     })
   );
 
-  // Probe row 3: the fully publishable shape decodes here too.
   it.effect("decodes a name+version manifest with typed fields", () =>
     Effect.gen(function* () {
       const manifest = yield* PackageManifest.decode({
@@ -73,14 +59,14 @@ describe("PackageManifest.decode", () => {
     })
   );
 
-  // Probe row 4: presence is still validated — a nonsemver version fails
-  // typed. Total tolerance is the decode-free path's job, not this model's:
-  // a SemVer-typed field cannot carry "1.0", and silently dropping the field
-  // (npm's loose-reader behavior) would break round-trip fidelity.
   it.effect("rejects a present nonsemver version", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(PackageManifest.decode({ private: true, version: "1.0" }));
-      assert.strictEqual(error._tag, "PackageDecodeError");
+      assert.strictEqual(
+        error._tag,
+        "PackageDecodeError",
+        "a SemVer field cannot carry 1.0, and dropping it as npm loose readers do would break round-trip fidelity"
+      );
     })
   );
 
@@ -91,12 +77,10 @@ describe("PackageManifest.decode", () => {
     })
   );
 
-  // The consumer's supported input: a range pin, which the strict
-  // PackageManager rejects, decodes here with its exactness tracked.
   it.effect("decodes a range packageManager pin and tracks exactness", () =>
     Effect.gen(function* () {
       const manifest = yield* PackageManifest.decode({ private: true, packageManager: "pnpm@^11.20.0" });
-      assert.strictEqual(manifest.packageManager?.range, "^11.20.0");
+      assert.strictEqual(manifest.packageManager?.range, "^11.20.0", "the strict PackageManager rejects a range pin");
       assert.isFalse(manifest.packageManager?.isExact);
     })
   );
@@ -145,15 +129,17 @@ describe("PackageManifest wire fidelity", () => {
     })
   );
 
-  // Absent name/version stay absent — the encode invents nothing, and the
-  // range packageManager re-encodes byte-identically.
   it.effect("encodes the private root without inventing name or version", () =>
     Effect.gen(function* () {
       const manifest = yield* PackageManifest.decode({ private: true, packageManager: "pnpm@^11.20.0" });
       const encoded = yield* S.encodeUnknownEffect(PackageManifest.schema)(manifest);
       assert.isFalse("name" in encoded);
       assert.isFalse("version" in encoded);
-      assert.strictEqual(encoded.packageManager, "pnpm@^11.20.0");
+      assert.strictEqual(
+        encoded.packageManager,
+        "pnpm@^11.20.0",
+        "the range packageManager re-encodes byte-identically"
+      );
       assert.strictEqual(encoded.private, true);
     })
   );

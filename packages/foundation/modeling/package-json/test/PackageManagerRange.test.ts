@@ -1,17 +1,10 @@
-import { identity } from "effect/Function";
-// The range-tolerant `packageManager` field: `<name>@<range>[+<integrity>]`.
-//
-// The class exists so the presence-lenient `PackageManifest` can read the
-// range spelling (`pnpm@^11.20.0`) pnpm accepts, without weakening the strict
-// `PackageManager` — whose continued rejection of ranges is pinned here as a
-// control.
-
 import { DevEngine } from "@beep/package-json/DevEngines";
 import { PackageManager } from "@beep/package-json/PackageManager";
 import { InvalidPackageManagerRangeError, PackageManagerRange } from "@beep/package-json/PackageManagerRange";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -22,7 +15,7 @@ const decode = S.decodeUnknownEffect(PackageManagerRange.FromString);
 const encode = S.encodeUnknownEffect(PackageManagerRange.FromString);
 const decodeStrict = S.decodeUnknownEffect(PackageManager.FromString);
 
-describe("PackageManagerRange.FromString", () => {
+describe("PackageManagerRange.FromString (<name>@<range>[+<integrity>], read by the presence-lenient PackageManifest)", () => {
   it("annotates the reusable range check without broadening component validation", () => {
     const $I = $PackageJsonId.create("PackageManagerRange");
     const range = PackageManagerRange.fields.range;
@@ -68,13 +61,13 @@ describe("PackageManagerRange.FromString", () => {
     })
   );
 
-  // `=11.2.0` names a single version but is a RANGE spelling — exactness
-  // tracks the spelling the manifest carried, not the set it denotes, because
-  // a consumer re-emitting the field must reproduce the spelling.
   it.effect("reports a range spelling of a single version as inexact", () =>
     Effect.gen(function* () {
       const pm = yield* decode("pnpm@=11.2.0");
-      assert.isFalse(pm.isExact);
+      assert.isFalse(
+        pm.isExact,
+        "exactness tracks the carried spelling, not the denoted set, so re-emitting reproduces it"
+      );
     })
   );
 
@@ -105,21 +98,21 @@ describe("PackageManagerRange.FromString", () => {
     })
   );
 
-  // node-semver coerces an empty range string to `*`; accepting `pnpm@` on
-  // those terms would be a silent edit, so it is a typed format failure.
   it.effect("rejects an empty version position rather than coercing it to *", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(decode("pnpm@"));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(
+        error._tag,
+        "SchemaError",
+        "node-semver coerces an empty range to *, which would be a silent edit"
+      );
     })
   );
 
-  // The control: the strict PackageManager is unchanged — the range spelling
-  // still fails there, so nothing was silently loosened.
   it.effect("strict PackageManager.FromString still rejects the range spelling", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(decodeStrict("pnpm@^11.20.0"));
-      assert.strictEqual(error._tag, "SchemaError");
+      assert.strictEqual(error._tag, "SchemaError", "the control: the strict model was not silently loosened");
     })
   );
 });
