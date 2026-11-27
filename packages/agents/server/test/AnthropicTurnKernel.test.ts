@@ -34,8 +34,6 @@ const providerState: {
   repairOutputTokens: 2,
 };
 
-// Typed to the provider plan's contract: the live plan's model layer can fail
-// with a missing-key ConfigError, so the scripted one declares the same channel.
 const TestLanguageModel: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigError> = Layer.effect(
   LanguageModel.LanguageModel,
   LanguageModel.make({
@@ -48,7 +46,6 @@ const TestLanguageModel: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigE
 );
 
 const TestAnthropicTurnProvider = Layer.succeed(AnthropicTurnProvider)({
-  // One attempt that never retries: the plan only supplies the scripted model.
   turnPlan: ExecutionPlan.make({
     provide: Layer.mergeAll(
       TestLanguageModel,
@@ -127,157 +124,160 @@ beforeEach(() => {
 });
 
 describe("AnthropicTurnKernel", () => {
-  // The test provider reads one scenario record; deferred provider and repair
-  // reads must finish before the next case resets or mutates that record.
-  it.layer(TestAnthropicTurnKernel, { concurrent: false })("with a deterministic provider stream", (it) => {
-    it.effect("streams a turn with prior conversation history", () =>
-      Effect.gen(function* () {
-        providerState.parts = [
-          deltaPart(envelope(validParagraph("reply"))),
-          endPart,
-          metadataPart("claude-test"),
-          finishPart(),
-        ];
-        const kernel = yield* AgentTurnKernel;
-        const events = yield* Stream.runCollect(
-          kernel.streamTurn([UserTurnHistoryItem.make({ text: "previous question" })])
-        );
-        expect(A.map(events, (event) => event.type)).toEqual(["block", "finalization"]);
-      })
-    );
+  it.layer(TestAnthropicTurnKernel, { concurrent: false })(
+    "serial provider and repair reads share one scenario record",
+    (it) => {
+      it.effect("streams a turn with prior conversation history", () =>
+        Effect.gen(function* () {
+          providerState.parts = [
+            deltaPart(envelope(validParagraph("reply"))),
+            endPart,
+            metadataPart("claude-test"),
+            finishPart(),
+          ];
+          const kernel = yield* AgentTurnKernel;
+          const events = yield* Stream.runCollect(
+            kernel.streamTurn([UserTurnHistoryItem.make({ text: "previous question" })])
+          );
+          expect(A.map(events, (event) => event.type)).toEqual(["block", "finalization"]);
+        })
+      );
 
-    it.effect(
-      "captures finish usage and response metadata, then finalizes after every block",
-      Effect.fnUntraced(function* () {
-        providerState.parts = [
-          metadataPart("claude-test"),
-          deltaPart(envelope(validParagraph("first"), validParagraph("second"))),
-          endPart,
-          finishPart(21, 13),
-        ];
+      it.effect(
+        "captures finish usage and response metadata, then finalizes after every block",
+        Effect.fnUntraced(function* () {
+          providerState.parts = [
+            metadataPart("claude-test"),
+            deltaPart(envelope(validParagraph("first"), validParagraph("second"))),
+            endPart,
+            finishPart(21, 13),
+          ];
 
-        const resultTurn = yield* runTurn;
-        const events = A.fromIterable(resultTurn);
+          const resultTurn = yield* runTurn;
+          const events = A.fromIterable(resultTurn);
 
-        expect(A.map(events, (event) => event.type)).toEqual(["block", "block", "finalization"]);
-        expect(events[0]).toMatchObject({
-          block: { block: { children: [{ text: "first", type: "text" }], type: "paragraph" }, index: 0 },
-          type: "block",
-        });
-        expect(events[1]).toMatchObject({
-          block: { block: { children: [{ text: "second", type: "text" }], type: "paragraph" }, index: 1 },
-          type: "block",
-        });
-        expect(events[2]).toMatchObject({
-          type: "finalization",
-          usage: {
-            inputTokens: 21,
-            model: "claude-test",
-            outputTokens: 13,
-            provider: "anthropic",
-          },
-        });
-        assertSome(events[2]?.type === "finalization" ? events[2].usage.stopReason : O.none(), "tool-calls");
-      })
-    );
+          expect(A.map(events, (event) => event.type)).toEqual(["block", "block", "finalization"]);
+          expect(events[0]).toMatchObject({
+            block: { block: { children: [{ text: "first", type: "text" }], type: "paragraph" }, index: 0 },
+            type: "block",
+          });
+          expect(events[1]).toMatchObject({
+            block: { block: { children: [{ text: "second", type: "text" }], type: "paragraph" }, index: 1 },
+            type: "block",
+          });
+          expect(events[2]).toMatchObject({
+            type: "finalization",
+            usage: {
+              inputTokens: 21,
+              model: "claude-test",
+              outputTokens: 13,
+              provider: "anthropic",
+            },
+          });
+          assertSome(events[2]?.type === "finalization" ? events[2].usage.stopReason : O.none(), "tool-calls");
+        })
+      );
 
-    it.effect(
-      "fails after emitted blocks when provider usage and metadata parts are absent",
-      Effect.fnUntraced(function* () {
-        providerState.parts = [deltaPart(envelope(validParagraph("delivered"))), endPart];
-        const observed = yield* Ref.make<ReadonlyArray<string>>([]);
+      it.effect(
+        "fails after emitted blocks when provider usage and metadata parts are absent",
+        Effect.fnUntraced(function* () {
+          providerState.parts = [deltaPart(envelope(validParagraph("delivered"))), endPart];
+          const observed = yield* Ref.make<ReadonlyArray<string>>([]);
 
-        const error = yield* AgentTurnKernel.pipe(
-          Effect.flatMap((kernel) =>
-            kernel.streamTurn([]).pipe(
-              Stream.tap((event) => Ref.update(observed, A.append(event.type))),
-              Stream.runDrain
-            )
-          ),
-          Effect.flip
-        );
+          const error = yield* AgentTurnKernel.pipe(
+            Effect.flatMap((kernel) =>
+              kernel.streamTurn([]).pipe(
+                Stream.tap((event) => Ref.update(observed, A.append(event.type))),
+                Stream.runDrain
+              )
+            ),
+            Effect.flip
+          );
 
-        const got = yield* Ref.get(observed);
-        expect(got).toEqual(["block"]);
-        expect(error).toBeInstanceOf(TurnGenerationError);
-        expect(error.message).toBe("Anthropic assistant turn completed without provider model or token usage metadata");
-      })
-    );
+          const got = yield* Ref.get(observed);
+          expect(got).toEqual(["block"]);
+          expect(error).toBeInstanceOf(TurnGenerationError);
+          expect(error.message).toBe(
+            "Anthropic assistant turn completed without provider model or token usage metadata"
+          );
+        })
+      );
 
-    it.effect(
-      "repairs an invalid block and adds repair-call usage to finalization",
-      Effect.fnUntraced(function* () {
-        const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
-        providerState.parts = [
-          metadataPart("claude-repair"),
-          deltaPart(envelope(invalid, validParagraph("already valid"))),
-          endPart,
-          finishPart(),
-        ];
-        providerState.repairJson =
-          '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"repaired"}]}}]}';
-        providerState.repairInputTokens = 5;
-        providerState.repairOutputTokens = 3;
+      it.effect(
+        "repairs an invalid block and adds repair-call usage to finalization",
+        Effect.fnUntraced(function* () {
+          const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
+          providerState.parts = [
+            metadataPart("claude-repair"),
+            deltaPart(envelope(invalid, validParagraph("already valid"))),
+            endPart,
+            finishPart(),
+          ];
+          providerState.repairJson =
+            '{"repairs":[{"index":0,"block":{"type":"paragraph","children":[{"type":"text","text":"repaired"}]}}]}';
+          providerState.repairInputTokens = 5;
+          providerState.repairOutputTokens = 3;
 
-        const resultTurn1 = yield* runTurn;
-        const events = A.fromIterable(resultTurn1);
+          const resultTurn1 = yield* runTurn;
+          const events = A.fromIterable(resultTurn1);
 
-        expect(A.map(events, (event) => event.type)).toEqual(["block", "block", "finalization"]);
-        expect(events[0]).toMatchObject({
-          block: { block: { children: [{ text: "repaired" }] }, index: 0 },
-        });
-        expect(events[1]).toMatchObject({
-          block: { block: { children: [{ text: "already valid" }] }, index: 1 },
-        });
-        expect(events[2]).toMatchObject({
-          type: "finalization",
-          usage: { inputTokens: 17, outputTokens: 11 },
-        });
-      })
-    );
+          expect(A.map(events, (event) => event.type)).toEqual(["block", "block", "finalization"]);
+          expect(events[0]).toMatchObject({
+            block: { block: { children: [{ text: "repaired" }] }, index: 0 },
+          });
+          expect(events[1]).toMatchObject({
+            block: { block: { children: [{ text: "already valid" }] }, index: 1 },
+          });
+          expect(events[2]).toMatchObject({
+            type: "finalization",
+            usage: { inputTokens: 17, outputTokens: 11 },
+          });
+        })
+      );
 
-    it.effect(
-      "translates repair failures at the kernel boundary",
-      Effect.fnUntraced(function* () {
-        const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
-        providerState.parts = [metadataPart("claude-repair"), deltaPart(envelope(invalid)), endPart, finishPart()];
-        providerState.repairError = "repair provider unavailable";
+      it.effect(
+        "translates repair failures at the kernel boundary",
+        Effect.fnUntraced(function* () {
+          const invalid = '{"type":"paragraph","children":[{"type":"text","text":1}]}';
+          providerState.parts = [metadataPart("claude-repair"), deltaPart(envelope(invalid)), endPart, finishPart()];
+          providerState.repairError = "repair provider unavailable";
 
-        const error = yield* runTurn.pipe(Effect.flip);
+          const error = yield* runTurn.pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(TurnGenerationError);
-        expect(error.message).toContain("Anthropic assistant turn failed: Block repair call failed");
-        expect(error.message).toContain("repair provider unavailable");
-      })
-    );
+          expect(error).toBeInstanceOf(TurnGenerationError);
+          expect(error.message).toContain("Anthropic assistant turn failed: Block repair call failed");
+          expect(error.message).toContain("repair provider unavailable");
+        })
+      );
 
-    it.effect(
-      "translates provider stream failures at the kernel boundary",
-      Effect.fnUntraced(function* () {
-        providerState.providerError = AiError.make({
-          method: "streamText",
-          module: "Anthropic",
-          reason: AiError.UnknownError.make({ description: "provider stream failed" }),
-        });
+      it.effect(
+        "translates provider stream failures at the kernel boundary",
+        Effect.fnUntraced(function* () {
+          providerState.providerError = AiError.make({
+            method: "streamText",
+            module: "Anthropic",
+            reason: AiError.UnknownError.make({ description: "provider stream failed" }),
+          });
 
-        const error = yield* runTurn.pipe(Effect.flip);
+          const error = yield* runTurn.pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(TurnGenerationError);
-        expect(error.message).toBe("Anthropic assistant turn failed: Anthropic.streamText: provider stream failed");
-      })
-    );
+          expect(error).toBeInstanceOf(TurnGenerationError);
+          expect(error.message).toBe("Anthropic assistant turn failed: Anthropic.streamText: provider stream failed");
+        })
+      );
 
-    it.effect(
-      "translates schema-invalid provider usage",
-      Effect.fnUntraced(function* () {
-        providerState.parts = [metadataPart("claude-test"), endPart, finishPart(-1, 8)];
+      it.effect(
+        "translates schema-invalid provider usage",
+        Effect.fnUntraced(function* () {
+          providerState.parts = [metadataPart("claude-test"), endPart, finishPart(-1, 8)];
 
-        const error = yield* runTurn.pipe(Effect.flip);
+          const error = yield* runTurn.pipe(Effect.flip);
 
-        expect(error).toBeInstanceOf(TurnGenerationError);
-        expect(error.message).toContain("Anthropic assistant turn returned invalid usage metadata");
-        expect(error.message).toContain("inputTokens");
-      })
-    );
-  });
+          expect(error).toBeInstanceOf(TurnGenerationError);
+          expect(error.message).toContain("Anthropic assistant turn returned invalid usage metadata");
+          expect(error.message).toContain("inputTokens");
+        })
+      );
+    }
+  );
 });

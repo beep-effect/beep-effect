@@ -82,9 +82,8 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
   expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value), label).toBe(true);
 };
 
-// Keep the five-schema property under one 600-second deadline. At the PR
-// floor it checks 2,000 round trips; sequential suite execution preserves
-// the existing CPU-bound property and fixture-sibling concurrency contract.
+const fiveSchemaRoundTripDeadlineMs = 600_000;
+
 describe("@beep/agents-use-cases", { concurrent: false }, () => {
   it.effect("runs deterministic fixtures into structured candidate output sets", () =>
     Effect.gen(function* () {
@@ -340,6 +339,6 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
         roundTrip(RuntimeActivity, RuntimeActivity.make(values.RuntimeActivity), "RuntimeActivity");
         roundTrip(SdkContextPacket, SdkContextPacket.make(values.SdkContextPacket), "SdkContextPacket");
       }),
-    { arbitrary: fcRuns(10), timeout: 600_000 }
+    { arbitrary: fcRuns(10), timeout: fiveSchemaRoundTripDeadlineMs }
   );
 });

@@ -76,7 +76,6 @@ const makeM365Stub = (overrides: Partial<M365Shape>): Layer.Layer<M365> =>
     })
   );
 
-// An empty mailbox, a Box client nothing calls, and a bundle with no matters.
 const emptyMailbox: Partial<M365Shape> = {
   getMailFolder: (request) => Effect.succeed(GraphMailFolder.make({ id: `folder-${request.folder}` })),
   listMessages: () => Effect.succeed(M365MessageCollection.make({ value: [] })),

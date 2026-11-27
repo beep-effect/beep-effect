@@ -34,7 +34,7 @@ class SyncGenesisSnapshot extends S.Opaque<SyncGenesisSnapshot, { readonly brand
   )
 ) {}
 
-// A CUID-shaped random token needs no host services; the binding's UNIQUE constraint backs it.
+// decision: genesis-binding-id-from-clock-and-random
 const mintBindingId = Effect.gen(function* () {
   const at = yield* Clock.currentTimeMillis;
   const high = yield* Random.nextIntBetween(0, 2_147_483_647);
@@ -82,7 +82,6 @@ type GenesisOptions = {
   readonly correlationId: string;
   readonly provenance: { readonly principal: string; readonly source: string };
 };
-// Everything the per-table import phases share: the validated snapshot and its identities.
 type GenesisContext = {
   readonly snapshot: SyncGenesisSnapshot;
   readonly importId: string;
@@ -109,7 +108,6 @@ const readSnapshot = Effect.fnUntraced(function* () {
   const cursors = yield* sql`SELECT * FROM documents_sync_cursor_cutover_backup ORDER BY id`;
   return yield* S.decodeUnknownEffect(SyncGenesisSnapshot)({ items, operations, conflicts, cursors });
 });
-// The global allocator must be beyond every seeded numeric id, even with gaps.
 const seedIdentities = Effect.fnUntraced(function* (snapshot: SyncGenesisSnapshot) {
   const sql = yield* SqlClient.SqlClient;
   yield* sql`CREATE TABLE IF NOT EXISTS documents_sync_legacy_identity (
@@ -125,11 +123,11 @@ const seedIdentities = Effect.fnUntraced(function* (snapshot: SyncGenesisSnapsho
     for (const row of rows)
       yield* sql`INSERT INTO documents_sync_legacy_identity (entity,public_id,id)
       VALUES (${entity},${row.public_id},${row.id}) ON CONFLICT(entity,public_id) DO UPDATE SET id=EXCLUDED.id`;
-  yield* sql`SELECT setval(pg_get_serial_sequence('documents_sync_legacy_identity','id'),
+  const allocatorPastMaxSeededId = sql`SELECT setval(pg_get_serial_sequence('documents_sync_legacy_identity','id'),
     GREATEST(COALESCE(MAX(id),0)+1,1),false) FROM documents_sync_legacy_identity`;
+  yield* allocatorPastMaxSeededId;
 });
-// One representative row per workspace names the destination's genesis command.
-const workspaceRowsOf = (snapshot: SyncGenesisSnapshot) => {
+const representativeRowPerWorkspace = (snapshot: SyncGenesisSnapshot) => {
   const all: ReadonlyArray<LegacyRow> = [
     ...snapshot.items,
     ...snapshot.operations,
@@ -157,7 +155,6 @@ const hasDanglingReference = (ctx: GenesisContext, workspaceId: number) =>
     ctx.snapshot.conflicts,
     (c) => c.workspace_id === workspaceId && c.sync_item_id !== null && !H.has(ctx.itemIds, c.sync_item_id)
   );
-// Duplicate cursors, paths and dangling item references keep their rows and pause admission.
 const destinationRecord = (ctx: GenesisContext, workspaceId: number, orgId: number) => {
   const { paths, duplicate } = pathsOf(A.filter(ctx.snapshot.items, (i) => i.workspace_id === workspaceId));
   const cursors = A.filter(ctx.snapshot.cursors, (c) => c.workspace_id === workspaceId);
@@ -257,8 +254,7 @@ const operationRecordInput = (ctx: GenesisContext, row: V.LegacyOperationRow) =>
     digest: row.input_content_digest,
     generation: row.input_generation,
     parentRequired: row.target_parent_rel_path !== null,
-    // The legacy key text stays in the imported row; the state takes the operation's own id, the only
-    // key the operation aggregate accepts, so an imported operation queues and retargets like a live one.
+    // decision: genesis-keeps-legacy-rows-verbatim
     idempotencyKey: row.public_id,
   },
   status: row.status,
@@ -307,8 +303,8 @@ const genesisContext = Effect.fnUntraced(function* (snapshot: SyncGenesisSnapsho
   const audit = yield* LegacySyncAudit;
   const encoded = yield* encodeSnapshot(snapshot);
   const importId = `v1-${bytesToHex(sha256(new TextEncoder().encode(`${mirrorRootName}\n${encoded}`)))}`;
-  const workspaces = workspaceRowsOf(snapshot);
-  const destinationIds = yield* workspaces.pipe(H.keys, bindDestinations);
+  const workspaces = representativeRowPerWorkspace(snapshot);
+  const boundDestinationIds = yield* workspaces.pipe(H.keys, bindDestinations);
   const itemIds = A.reduce(snapshot.items, H.empty<number, V.ItemId>(), (ids, row) =>
     H.set(ids, row.id, V.ItemId.make(row.public_id))
   );
@@ -317,8 +313,7 @@ const genesisContext = Effect.fnUntraced(function* (snapshot: SyncGenesisSnapsho
     importId,
     mirrorRootName,
     itemIds,
-    // Every row's workspace is a key of workspaces, so its binding exists.
-    destinationId: (workspaceId) => O.getOrThrow(H.get(destinationIds, workspaceId)),
+    destinationId: (workspaceId) => O.getOrThrow(H.get(boundDestinationIds, workspaceId)),
     itemId: (numericId) =>
       H.get(itemIds, numericId).pipe(O.getOrElse(() => V.ItemId.make(`documents_sync_item_adangling${numericId}`))),
     meta: (table, publicId) =>
@@ -353,7 +348,6 @@ const genesisContext = Effect.fnUntraced(function* (snapshot: SyncGenesisSnapsho
 export const importSyncGenesis = Effect.fn($I`importSyncGenesis`)(function* (backupId: string, mirrorRootName: string) {
   yield* backupSyncTables(backupId);
   const snapshot = yield* readSnapshot();
-  // All numeric mappings are seeded before any dependent event is sent.
   yield* seedIdentities(snapshot);
   const { ctx, workspaces } = yield* genesisContext(snapshot, mirrorRootName);
   yield* importDestinations(ctx, workspaces);

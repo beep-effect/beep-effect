@@ -94,18 +94,11 @@ export class LauncherPrefixes extends S.Opaque<LauncherPrefixes, { readonly bran
   }).pipe($I.annoteSchema("LauncherPrefixes", { description: "Per-launcher exec, dlx and script argv prefixes." }))
 ) {}
 
-/** The argv prefixes for each launcher. The one place this knowledge lives. */
+// decision: launcher-argument-separators
 const PREFIXES: Readonly<Record<Launcher, LauncherPrefixes>> = {
-  // `--no` refuses to silently install a missing binary; the `--` stops npx
-  // from claiming the tool's own flags. `npm run` needs its own `--` for the
-  // same reason: npm silently CLAIMS flag arguments after the script name
-  // (probed live at npm 11: `npm run args --flag` delivers nothing to the
-  // script; `npm run -- args --flag` delivers `--flag`). The other three
-  // managers forward post-script arguments without it.
   npm: LauncherPrefixes.make({ prefix: ["npx", "--no", "--"], dlxPrefix: ["npx"], scriptPrefix: ["npm", "run", "--"] }),
   pnpm: LauncherPrefixes.make({ prefix: ["pnpm", "exec"], dlxPrefix: ["pnpm", "dlx"], scriptPrefix: ["pnpm", "run"] }),
   yarn: LauncherPrefixes.make({ prefix: ["yarn", "exec"], dlxPrefix: ["yarn", "dlx"], scriptPrefix: ["yarn", "run"] }),
-  // `--no-install` is bun's equivalent of npm's `--no`.
   bun: LauncherPrefixes.make({
     prefix: ["bun", "x", "--no-install"],
     dlxPrefix: ["bun", "x"],

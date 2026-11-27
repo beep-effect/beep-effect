@@ -1,10 +1,3 @@
-// Real processes, through @effect/platform-node's real ChildProcessSpawner.
-//
-// Everything here exercises behavior a mocked spawner cannot reproduce: OS pipe
-// backpressure, the platform backend's ENOENT mapping, and the unref/scope
-// interaction that `Run.detach` rests on. Nothing here re-tests classification
-// logic — that lives in the unit suite over a scripted spawner.
-
 import { CommandFailedError, Run } from "@beep/commands/Run";
 import { NodeChildProcessSpawner, NodePath } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
@@ -18,7 +11,6 @@ import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as TestClock from "effect/testing/TestClock";
 
-/** Builds each test layer under the program's scope, with fresh per-invocation state. */
 const withLayer =
   <R, E2, R2>(layer: Layer.Layer<R, E2, R2>) =>
   <A, E, R3>(program: Effect.Effect<A, E, R3>) =>
@@ -26,39 +18,29 @@ const withLayer =
       Effect.flatMap(Layer.buildWithScope(layer, scope), (context) => Effect.provideContext(program, context))
     );
 
-/**
- * The real Node child-process spawner — the subject of this suite.
- *
- * The spawner needs `Path` (real) and `FileSystem`, which it touches only to
- * check an explicit `cwd`. No test here sets one, so the file system is a noop
- * that fails loudly (`NotFound`) if a future test ever routes a `cwd` through
- * it — at which point that test must bring a real file-system layer.
- */
+const noopFileSystemWithoutCwd = FileSystem.layerNoop({});
 const Platform = NodeChildProcessSpawner.layer.pipe(
-  Layer.provide(Layer.mergeAll(NodePath.layer, FileSystem.layerNoop({})))
+  Layer.provide(Layer.mergeAll(NodePath.layer, noopFileSystemWithoutCwd))
 );
 
-/** Runs a program against the real spawner. */
 const live = <A, E>(program: Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner>): Effect.Effect<A, E> =>
   withLayer(Platform)(program);
 
-/** `node -e "<script>"` — the one binary guaranteed to exist wherever these tests run. */
 const node = (script: string) => ChildProcess.make(process.execPath, ["-e", script]);
 
-/** A pause on the live clock: real OS processes do not observe the TestClock. */
 const realDelay = (millis: number) => TestClock.withLive(Effect.sleep(millis));
 
-/** Whether a pid is still alive, without signalling it. */
+const existenceCheckSignal = 0;
 const isAlive = (pid: number): boolean => {
   try {
-    process.kill(pid, 0);
+    process.kill(pid, existenceCheckSignal);
     return true;
   } catch {
     return false;
   }
 };
 
-describe("Run against real processes", () => {
+describe("Run against real processes: pipe backpressure, ENOENT mapping and unref a scripted spawner cannot reproduce", () => {
   it.effect("text captures stdout", () =>
     Effect.gen(function* () {
       const output = yield* live(Run.text(node("process.stdout.write('hello')")));
@@ -79,17 +61,15 @@ describe("Run against real processes", () => {
   );
 
   it.effect("an absent executable maps to notFound", () =>
-    // This pins PLATFORM-BACKEND behavior, not core's contract: the whole
-    // "tool is absent" classification rests on the Node backend mapping ENOENT
-    // to a NotFound SystemError. If a future backend changes that, every
-    // availability answer in this package silently inverts — so it is tested
-    // against a real spawn, not a fixture.
     Effect.gen(function* () {
       const error = yield* Run.text(ChildProcess.make("effected-no-such-binary-xyz", [])).pipe(live, Effect.flip);
       assert.instanceOf(error, CommandFailedError);
       if (S.is(CommandFailedError)(error)) {
         assert.strictEqual(error.kind, "spawn");
-        assert.isTrue(error.notFound, "ENOENT from a real spawn must classify as notFound");
+        assert.isTrue(
+          error.notFound,
+          "ENOENT from a real spawn must classify as notFound: every availability answer rests on the Node backend's mapping"
+        );
       }
     })
   );
@@ -106,16 +86,6 @@ describe("Run against real processes", () => {
   it.effect(
     "collect drains stdout and stderr concurrently under simultaneous backpressure on BOTH pipes",
     () =>
-      // The single most important test in this file. Collecting the two
-      // streams sequentially deadlocks the moment either OS pipe buffer
-      // fills: the child blocks writing to a full pipe while the reader that
-      // would drain it is still waiting on the other stream. A mock spawner
-      // over in-memory streams CANNOT reproduce this, and a large-output-on-
-      // one-stream case does not discriminate sequential from concurrent
-      // collection — the pressure has to be on both at once.
-      //
-      // Do not delete this test. If `{ concurrency: "unbounded" }` in
-      // `collectRaw` is ever relaxed, this hangs to the timeout below.
       Effect.gen(function* () {
         const script = A.join(
           [
@@ -128,7 +98,11 @@ describe("Run against real processes", () => {
           ""
         );
         const output = yield* live(Run.collect(node(script)));
-        assert.strictEqual(output.stdout.length, 2 * 1024 * 1024);
+        assert.strictEqual(
+          output.stdout.length,
+          2 * 1024 * 1024,
+          "both pipes full at once: collecting sequentially deadlocks here, which in-memory streams cannot reproduce"
+        );
         assert.strictEqual(output.stderr.length, 2 * 1024 * 1024);
         assert.strictEqual(output.exitCode, 0);
       }),
@@ -146,27 +120,26 @@ describe("Run against real processes", () => {
 });
 
 describe("environment extension against a real spawn", () => {
-  // One probe script serves both halves: it reports whether the child saw the
-  // marker AND whether it saw a PATH. The pair is what discriminates — either
-  // test alone would pass under the wrong env-resolution behavior.
-  const probe =
+  const markerAndPathProbe =
     "process.stdout.write((process.env.EFFECTED_MARKER ?? 'no-marker') + ':' + (process.env.PATH ? 'has-path' : 'no-path'))";
 
   it.effect("Run.extendEnv gives the child the new variable WITHOUT losing the parent PATH", () =>
     Effect.gen(function* () {
-      const output = yield* live(Run.text(node(probe).pipe(Run.extendEnv({ EFFECTED_MARKER: "x" }))));
+      const output = yield* live(Run.text(node(markerAndPathProbe).pipe(Run.extendEnv({ EFFECTED_MARKER: "x" }))));
       assert.strictEqual(output, "x:has-path");
     })
   );
 
   it.effect("bare core setEnv strips the parent environment — the platform trap Run.extendEnv exists for", () =>
-    // This empirically pins the resolveEnvironment behavior the combinator
-    // compensates for: setEnv never sets extendEnv, so the child's WHOLE
-    // environment is the one variable. The spawn itself still works because
-    // `node` is invoked by absolute path, not through PATH lookup.
     Effect.gen(function* () {
-      const output = yield* live(Run.text(node(probe).pipe(ChildProcess.setEnv({ EFFECTED_MARKER: "x" }))));
-      assert.strictEqual(output, "x:no-path");
+      const output = yield* live(
+        Run.text(node(markerAndPathProbe).pipe(ChildProcess.setEnv({ EFFECTED_MARKER: "x" })))
+      );
+      assert.strictEqual(
+        output,
+        "x:no-path",
+        "setEnv never sets extendEnv, so the child's whole environment is the one variable; node spawns by absolute path"
+      );
     })
   );
 });
@@ -176,8 +149,6 @@ describe("Run.detach lifecycle", () => {
     "an unref'd child SURVIVES its scope closing",
     () =>
       Effect.gen(function* () {
-        // A child that would outlive the test if we leaked it — always reaped
-        // below, whichever way the assertions go.
         const pid = yield* live(Run.detach(node("setTimeout(() => {}, 60_000)")));
         yield* realDelay(250).pipe(
           Effect.tap(() =>
@@ -186,13 +157,9 @@ describe("Run.detach lifecycle", () => {
             )
           ),
           Effect.ensuring(
-            Effect.sync(() => {
-              try {
-                process.kill(Number(pid), "SIGKILL");
-              } catch {
-                // already gone
-              }
-            })
+            Effect.ignore(
+              Effect.try({ try: () => process.kill(Number(pid), "SIGKILL"), catch: () => "already-exited" })
+            )
           )
         );
       }),
@@ -202,12 +169,7 @@ describe("Run.detach lifecycle", () => {
   it.effect(
     "a child spawned WITHOUT unref is killed when its scope closes — the mirror case",
     () =>
-      // Without this half, the test above could pass for the wrong reason: if
-      // scope close never killed anything, "still alive" would prove nothing
-      // about unref. This is what makes the pair discriminating.
       Effect.gen(function* () {
-        // The child's own scope is deliberately shorter than the test: it must
-        // close (and kill the referenced child) BEFORE the liveness check.
         const pid = yield* live(
           Effect.scopedWith((childScope) =>
             Effect.gen(function* () {
@@ -218,7 +180,10 @@ describe("Run.detach lifecycle", () => {
           )
         );
         yield* realDelay(250);
-        assert.isFalse(isAlive(Number(pid)), "a referenced child must not survive its scope");
+        assert.isFalse(
+          isAlive(Number(pid)),
+          "a referenced child must not survive its scope; without this mirror, the survival test proves nothing about unref"
+        );
       }),
     15_000
   );

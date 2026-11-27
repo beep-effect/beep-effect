@@ -21,17 +21,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict";
 
-// Optional on insert: the column's SQL default supplies the first version.
-const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? 1;
+const sqlDefaultRowVersion = 1;
+const insertedRowVersion = (rowVersion: number | undefined): number => rowVersion ?? sqlDefaultRowVersion;
 
 const decodeUnknownSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
 
 const SyncConflictEquivalence = S.toEquivalence(DomainSyncConflict.SyncConflict);
 
-// The row codec is a class schema, so an unencodable entity has to stay an
-// instance of its model: clone onto the same prototype and corrupt a single
-// column rather than handing the encoder a bare struct it would reject wholesale.
-const withUnencodablePublicId = <A extends object>(entity: A): A =>
+const modelCloneWithBadPublicId = <A extends object>(entity: A): A =>
   Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
 
 const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
@@ -41,6 +38,8 @@ const expectConverterFailure = (error: { readonly _tag: string; readonly message
   expect(error._tag).toBe(tag);
   pipe(Str.isNonEmpty(error.message), assertTrue);
 };
+
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -121,13 +120,10 @@ describe("SyncConflict table", () => {
           deletedByPrincipal: insert.deletedByPrincipal ?? null,
           rowVersion: insertedRowVersion(insert.rowVersion),
           id: 40,
-          // $inferInsert types nullable columns as `value | null | undefined`; the
-          // select-row converter expects `value | null`, so resolve absent
-          // optionals to their concrete nulls before round-tripping.
-          localRelPath: insert.localRelPath ?? null,
-          remoteEventId: insert.remoteEventId ?? null,
-          remoteId: insert.remoteId ?? null,
-          syncItemId: insert.syncItemId ?? null,
+          localRelPath: absentAsNull(insert.localRelPath),
+          remoteEventId: absentAsNull(insert.remoteEventId),
+          remoteId: absentAsNull(insert.remoteId),
+          syncItemId: absentAsNull(insert.syncItemId),
         })
       );
 
@@ -173,7 +169,7 @@ describe("SyncConflict table", () => {
       const syncConflict = yield* decodeUnknownSyncConflict(mappedDriftRow);
       const insert = yield* Effect.fromResult(toSyncConflictInsert(syncConflict));
 
-      const converterFailure1 = yield* converterFailure(toSyncConflictInsert(withUnencodablePublicId(syncConflict)));
+      const converterFailure1 = yield* converterFailure(toSyncConflictInsert(modelCloneWithBadPublicId(syncConflict)));
       expectConverterFailure(converterFailure1, "SyncConflictConverterError");
       const converterFailure2 = yield* converterFailure(
         fromSyncConflictRow({

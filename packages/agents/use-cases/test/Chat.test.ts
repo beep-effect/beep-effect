@@ -31,7 +31,6 @@ describe("@beep/agents-use-cases Chat", () => {
     for (const tag of tags) {
       const rpc = ChatRpcs.requests.get(tag);
       expect(rpc, `missing rpc ${tag}`).toBeDefined();
-      // streaming rpcs wrap their success schema in an RpcSchema.Stream
       expect(RpcSchema.isStreamSchema(rpc!.successSchema), `stream flag for ${tag}`).toBe(streaming.has(tag));
     }
   });

@@ -39,9 +39,7 @@ const isPatentCitationEvent = S.is(PatentCitationEvent);
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = NodeURL.fileURLToPath(new URL("../../drizzle", import.meta.url));
 
-// The drizzle folder contains `CREATE EXTENSION btree_gist` (the epistemic edge
-// migration), which the shared external pglite-socket lane cannot load, so this
-// proof is pinned to the in-process lane like its epistemic siblings.
+// decision: migration-proofs-run-in-process
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
@@ -51,8 +49,6 @@ const candorTableNames: ReadonlyArray<string> = [
   "law_practice_patent_citation_event",
 ];
 
-// These names are the append-only guarantee. A silent rename would leave the
-// tables writable while this proof still passed, so they are asserted exactly.
 const expectedConstraintNames: ReadonlyArray<string> = [
   "law_practice_candor_disposition_org_id_id_unique",
   "law_practice_candor_disposition_pkey",
@@ -158,12 +154,6 @@ describe("law-practice candor migration schema laws", () => {
 
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
 
-/**
- * Apply the migration bundle, assert the candor tables carry the constraints and
- * triggers that make them append-only, and record one of each entity through the
- * schema-first converters so the generated columns are proven to accept what the
- * domain encodes. Returns the raw sql client for the caller's denial probe.
- */
 const migrateAndRecord = Effect.fnUntraced(function* () {
   const info = yield* TestDatabaseInfo;
   const db = yield* makeDrizzle();
@@ -194,7 +184,8 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
       A.filter((row) => A.contains(candorTableNames, row.relname)),
       A.map((row) => row.conname),
       sortedNames
-    )
+    ),
+    "exact names are the append-only guarantee; a rename would leave the tables writable"
   ).toEqual(expectedConstraintNames);
   expect(
     pipe(
@@ -202,15 +193,14 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
       A.filter((row) => A.contains(candorTableNames, row.relname)),
       A.map((row) => row.tgname),
       sortedNames
-    )
+    ),
+    "exact names are the append-only guarantee; a rename would leave the tables writable"
   ).toEqual(expectedTriggerNames);
 
   const event = yield* decodeUnknownPatentCitationEvent(eventInput);
   const disposition = yield* decodeUnknownCandorDisposition(dispositionInput);
   const submissionFact = yield* decodeUnknownIdsSubmissionFact(submissionFactInput);
 
-  // The converters return `Result` because encoding is fallible; converting them
-  // keeps a schema failure in the error channel instead of inserting defaults.
   const eventInsert = yield* Effect.fromResult(toPatentCitationEventInsert(event));
   const dispositionInsert = yield* Effect.fromResult(toCandorDispositionInsert(disposition));
   const submissionFactInsert = yield* Effect.fromResult(toIdsSubmissionFactInsert(submissionFact));
@@ -233,22 +223,20 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin law-practice-candor-gate migration PgLite integration", () => {});
 } else {
   describe("db-admin law-practice-candor-gate migration PgLite integration", { concurrent: false }, () => {
-    // Two fresh databases rather than two probes in one session: an implicit
-    // transaction pglite host rolls the whole session chain back after an
-    // intentional failure, so the UPDATE and DELETE denials cannot share one.
     it.layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the law-practice-candor-gate migration and rejects updating a recorded disposition",
         Effect.fnUntraced(function* () {
           const sql = yield* migrateAndRecord();
 
-          // Keep the intentional failure last: the append-only trigger must
-          // reject a direct edit of a filed decision.
           const mutation = yield* Effect.flip(sql`
             UPDATE law_practice_candor_disposition SET rule56_judgment = 'DoNotSubmit' WHERE id = 1
           `);
 
-          expect(NodeUtil.inspect(mutation, { depth: 10 })).toContain("append-only");
+          expect(
+            NodeUtil.inspect(mutation, { depth: 10 }),
+            "the trigger rejects editing a filed decision; the edit runs last: PGlite rolls the session back after an intentional failure"
+          ).toContain("append-only");
         }),
         120_000
       );
@@ -293,9 +281,7 @@ if (!shouldRunPgliteIntegration) {
           Effect.fnUntraced(function* () {
             const sql = yield* migrateAndRecord();
 
-            // Clone a schema-valid fixture row, changing only its persisted
-            // identity and primary identifiers for each acceptance/denial probe.
-            const recordSql =
+            const cloneFixtureRowSql =
               table === "law_practice_candor_disposition"
                 ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, $1::jsonb, decided_at, disposes, lifecycle, litigation_frame_judgment, rule56_judgment, supersedes, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`
                 : table === "law_practice_ids_submission_fact"
@@ -307,14 +293,16 @@ if (!shouldRunPgliteIntegration) {
               kind: "WipoSt13",
               officeCode: "EP",
             });
-            yield* sql.unsafe(recordSql, [conformantIdentity, 100, "-st13-valid"]);
+            yield* sql.unsafe(cloneFixtureRowSql, [conformantIdentity, 100, "-st13-valid"]);
             const accepted = yield* sql.unsafe<{ readonly officeCode: string }>(
               `SELECT citing_application ->> 'officeCode' AS "officeCode" FROM ${table} WHERE id = 101`
             );
             expect(accepted).toEqual([{ officeCode: "EP" }]);
 
             const encodedIdentity = yield* encodeJsonEffect(identity);
-            const violation = yield* sql.unsafe(recordSql, [encodedIdentity, 200, "-st13-invalid"]).pipe(Effect.flip);
+            const violation = yield* sql
+              .unsafe(cloneFixtureRowSql, [encodedIdentity, 200, "-st13-invalid"])
+              .pipe(Effect.flip);
 
             expect(violation).toBeInstanceOf(SqlError.SqlError);
             expect(violation.reason).toBeInstanceOf(SqlError.ConstraintError);

@@ -217,7 +217,6 @@ export const practiceMailTaggingConfig: Config.Config<PracticeMailTaggingConfig>
   )
 );
 
-// An environment file carries a PEM key on one line with literal `\n` marks.
 const restoreLineBreaks = (key: Redacted.Redacted<string>): Redacted.Redacted<string> =>
   key.pipe(Redacted.value, Str.replaceAll("\\n", "\n"), Redacted.make);
 

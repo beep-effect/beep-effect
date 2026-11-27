@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/alchemy-postgres",
-  "root": "packages/drivers/alchemy-postgres",
-  "scopes": ["."]
-}

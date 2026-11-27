@@ -27,7 +27,6 @@ import * as S from "effect/Schema";
 
 const runs = { arbitrary: fcRuns(100) };
 
-// Exercise the public barrel itself. Type-only exports have no runtime codec.
 const roundTrips = <T, E>(name: string, schema: S.Codec<T, E>): void => {
   const equivalent = S.toEquivalence(schema);
   it.effect.prop(
