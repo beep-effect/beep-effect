@@ -1,13 +1,3 @@
-// The surgical mutator: `PackageJsonFormat.modify` / `modifyToString`.
-//
-// The contract under test is BYTE preservation: a tool that changes one field
-// in someone else's manifest must not rewrite unrelated regions, so every
-// input here is deliberately NOT canonically sorted — the keys are in an order
-// the formatter would rewrite — and every assertion is exact-string equality
-// against an expected text in which only the edited span differs. A repo that
-// runs sort-package-json cannot catch a reorder (the reorder is a no-op
-// there); these fixtures can.
-
 import {
   PackageJsonFormat,
   PackageJsonModifyError,
@@ -20,8 +10,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-// Keys deliberately out of canonical order: dependencies before name,
-// devEngines before version, scripts unsorted.
 const UNSORTED =
   "{\n" +
   '  "dependencies": {\n' +
@@ -43,11 +31,15 @@ const UNSORTED =
   '  "packageManager": "pnpm@11.2.0"\n' +
   "}\n";
 
-describe("PackageJsonFormat.modifyToString", () => {
+describe("PackageJsonFormat.modifyToString (byte preservation: only the edited span may differ)", () => {
   it.effect("replaces one top-level value and preserves every other byte", () =>
     Effect.gen(function* () {
       const output = yield* PackageJsonFormat.modifyToString(UNSORTED, ["packageManager"], "pnpm@11.3.0");
-      assert.strictEqual(output, Str.replace('"pnpm@11.2.0"', '"pnpm@11.3.0"')(UNSORTED));
+      assert.strictEqual(
+        output,
+        Str.replace('"pnpm@11.2.0"', '"pnpm@11.3.0"')(UNSORTED),
+        "the fixture is out of canonical order, so any formatter reorder shows up as a diff"
+      );
     })
   );
 
@@ -100,12 +92,13 @@ describe("PackageJsonFormat.modifyToString", () => {
 
   it.effect("passes a nonsemver version through untouched — the modify path never decodes", () =>
     Effect.gen(function* () {
-      // "1.0" is legal for an unpublished root and rejected by every decode
-      // in this package; the mutator must carry it anyway, or the tool
-      // refuses the repos it exists to edit.
       const source = '{\n  "version": "1.0",\n  "packageManager": "pnpm@11.2.0"\n}\n';
       const output = yield* PackageJsonFormat.modifyToString(source, ["packageManager"], "pnpm@11.3.0");
-      assert.strictEqual(output, '{\n  "version": "1.0",\n  "packageManager": "pnpm@11.3.0"\n}\n');
+      assert.strictEqual(
+        output,
+        '{\n  "version": "1.0",\n  "packageManager": "pnpm@11.3.0"\n}\n',
+        "1.0 is legal for an unpublished root though every decode here rejects it; the mutator must carry it"
+      );
     })
   );
 
@@ -131,13 +124,15 @@ describe("PackageJsonFormat.modifyToString", () => {
 
   it.effect("fails with PackageJsonModifyError when the path cannot be navigated", () =>
     Effect.gen(function* () {
-      // `name` is a string; descending into it as an object is a mismatch.
       const error = yield* Effect.flip(PackageJsonFormat.modifyToString(UNSORTED, ["name", "sub"], 1));
       if (!S.is(PackageJsonModifyError)(error)) {
         return assert.fail(`expected PackageJsonModifyError, got ${error._tag}`);
       }
-      assert.deepStrictEqual(error.path, ["name", "sub"]);
-      // The structured cause is the underlying JsoncModificationError.
+      assert.deepStrictEqual(
+        error.path,
+        ["name", "sub"],
+        "name is a string, so descending into it as an object is a mismatch"
+      );
       assertTrue(P.hasProperty(error.cause, "_tag"));
       assert.strictEqual(error.cause._tag, "JsoncModificationError");
     })
@@ -147,9 +142,8 @@ describe("PackageJsonFormat.modifyToString", () => {
 describe("PackageJsonFormat.modify", () => {
   it.effect("returns no edits for a structural no-op", () =>
     Effect.gen(function* () {
-      // Deleting a key that does not exist is a no-op, not an error.
       const edits = yield* PackageJsonFormat.modify(UNSORTED, ["doesNotExist"], undefined);
-      assert.strictEqual(edits.length, 0);
+      assert.strictEqual(edits.length, 0, "deleting a key that does not exist is a no-op, not an error");
     })
   );
 
