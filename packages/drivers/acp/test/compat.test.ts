@@ -127,7 +127,7 @@ describe("compat session updates", () => {
           assert.deepStrictEqual(
             normalized,
             update,
-            "generation 2 requires Cost.currency to match ^[A-Z]{3}$ and Annotations.priority in [0, 1]"
+            "generation 2 tightens Cost.currency (^[A-Z]{3}$) and Annotations.priority ([0, 1]), so these decode only as generation 1"
           );
           assert.isTrue(isCompatSessionNotification({ sessionId: "session-1", update: normalized }));
         }

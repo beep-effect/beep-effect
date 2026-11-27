@@ -199,7 +199,7 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
       assert.strictEqual(
         continuationOutput.output,
         "",
-        "a one-byte limit retains only the final continuation byte of the euro sign"
+        "a one-byte limit retains only the final continuation byte of the euro sign, which decodes to no text"
       );
     })
   );
@@ -419,7 +419,7 @@ it.layer(SpawnerLayer, { excludeTestServices: true, timeout: "30 seconds" })(
           assert.strictEqual(
             exit.signal,
             "SIGKILL",
-            "the kill waits for the SIGTERM handler, or the default disposition would end the child first"
+            "the test kills only once the SIGTERM handler is installed, or the default disposition would end the child"
           );
         }
       })
