@@ -309,8 +309,6 @@ export class AcpRequestDiagnostics extends S.Opaque<AcpRequestDiagnostics, { rea
   )
 ) {}
 
-// --- Value-free schema issue summaries -------------------------------------------------------
-
 const summaryPathSegment = (segment: PropertyKey): string =>
   P.isNumber(segment) || (P.isString(segment) && SUMMARY_IDENTIFIER_SEGMENT.test(segment)) ? `${segment}` : "*";
 
@@ -387,8 +385,6 @@ const schemaIssueDiagnostics = (root: SchemaIssue.Issue) => {
 };
 
 const nonEmptyText = (value: O.Option<string>): O.Option<string> => O.filter(value, Str.isNonEmpty);
-
-// --- Errors -------------------------------------------------------------------------------------
 
 /**
  * **Example** (Make spawn error)
@@ -698,7 +694,6 @@ export class AcpTransportError extends S.TaggedError<AcpTransportError, { readon
       onNone: () => "",
       onSome: (name) => ` for method ${name}`,
     });
-    // Callers often pass a sentence; strip its period so the message ends with exactly one.
     const detail = O.match(nonEmptyText(this.detail), {
       onNone: () => "",
       onSome: (text) => `: ${Str.replace(TRAILING_PERIOD, "")(text)}`,
@@ -734,7 +729,6 @@ export class AcpInputStreamEndedError extends S.TaggedError<
   }
 }
 
-// Maps a handler failure to the peer-facing `-32603`; an `AcpRequestError` passes through.
 const handlerFailure =
   (handler: string, operation: AcpRequestOperation) =>
   (error: AcpError, method: string): AcpRequestError =>
