@@ -18,7 +18,7 @@ const $I = $XlsxId.create("XlsxDiagnostic");
 
 const path = S.String.check(S.isMaxLength(1024)).pipe(S.annotateKey({ description: "The part's path in the archive" }));
 const sheet = S.String.check(S.isMaxLength(255)).pipe(S.annotateKey({ description: "The sheet's name" }));
-// The cell a finding is about. An Opaque field takes no key annotation: `annotateKey` would drop its brand.
+// decision: opaque-fields-take-no-key-annotation
 const address = XlsxAddress;
 const short = (description: string) => S.String.check(S.isMaxLength(255)).pipe(S.annotateKey({ description }));
 const whole = (description: string) =>

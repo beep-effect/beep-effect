@@ -60,10 +60,6 @@ export const XlsxSheetState = LiteralKit(["visible", "hidden", "veryHidden"]).pi
  */
 export type XlsxSheetState = typeof XlsxSheetState.Type;
 
-/**
- * A check that no two items share a key. The keys are numbers or lower-cased text, so `A.dedupe`'s hash buckets
- * compare them exactly and the check is linear in the items.
- */
 const uniqueBy = <T>(
   key: (value: T) => number | string,
   name: string,
@@ -374,10 +370,7 @@ export const FIRST_CUSTOM_FORMAT = 164;
 const byRowNumber = Order.mapInput(Order.Number, (row: XlsxRow) => row.number);
 const byColumn = Order.mapInput(Order.Number, (cell: XlsxCell) => cell.column);
 
-// crispen: a loop, not a fold — `canonical` runs it on every write over every cell, and a reduce over an
-// accumulator record allocates per cell; the sheet reader keeps the same bounds as it streams (internal/sheet.ts)
-// because it never holds the rows.
-/** The smallest range that holds every cell `holds` accepts, when there is one. */
+// decision: hot-paths-are-mutable-loops
 const boundsOf = (rows: ReadonlyArray<XlsxRow>, holds: (cell: XlsxCell) => boolean): O.Option<XlsxRange> => {
   let firstRow = MAX_ROW + 1;
   let lastRow = 0;
@@ -462,7 +455,7 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
 
   /** How much a sheet holds, counted from its rows. */
   static readonly count = (sheet: Pick<XlsxWorksheet, "info" | "rows">): XlsxSheetCount => {
-    // crispen: three counters in one pass over every row; a fold would allocate an accumulator per row.
+    // decision: hot-paths-are-mutable-loops
     let rowsWithValues = 0;
     let cellsWithValues = 0;
     let lastRow = 0;
@@ -610,7 +603,7 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
   static readonly canonical = (workbook: Pick<XlsxWorkbook, "dateSystem" | "sheets">): XlsxWorkbook => {
     const ids = MutableHashMap.empty<string, number>();
     let next = FIRST_CUSTOM_FORMAT;
-    // crispen: a counter, not a fold — the ids are handed out in the order codes are met across every cell.
+    // decision: hot-paths-are-mutable-loops
     const idOf = (code: string): number => {
       const known = O.orElse(MutableHashMap.get(ids, code), () => HashMap.get(builtinIds, code));
       if (O.isSome(known)) return known.value;
@@ -726,7 +719,6 @@ export type XlsxHeading = typeof XlsxHeading.Type;
  */
 export const XlsxRecord = S.Record(XlsxHeading, XlsxValue)
   .check(
-    // A record schema passes over a key its key schema refuses; on the way to bytes this check refuses it instead.
     S.makeFilter<{ readonly [heading: string]: unknown }>(
       (record) => A.every(R.keys(record), S.is(XlsxHeading)),
       $I.annote("EveryKeyAHeading", {
