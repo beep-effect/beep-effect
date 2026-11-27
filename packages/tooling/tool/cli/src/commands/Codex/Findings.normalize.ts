@@ -53,7 +53,6 @@ import type { CodexFindingSeverity, CodexFindingsCapturePayload } from "./Findin
  */
 export const severityRank = (severity: CodexFindingSeverity): number => Severity.literals.indexOf(severity);
 
-/** Minimal shape {@link captureOrder} needs to place a finding. */
 type OrderableFinding = {
   readonly severity: CodexFindingSeverity;
   readonly codexId: string;
@@ -202,20 +201,6 @@ export const ordinalOfRecordId = (recordId: string): O.Option<number> => {
   return match === null ? O.none() : O.some(Number.parseInt(match[1] ?? "", 10));
 };
 
-/**
- * Highest ordinal any prior binding has already consumed.
- *
- * **Details**
- *
- * Retired findings keep their reservation. A number that once addressed a
- * finding is never handed to a different one, so a Codex identifier quoted in a
- * merged PR or a closeout allowlist keeps meaning what it meant.
- *
- * @param priorIds - Existing `codexId -> CSF-NNN` bindings.
- * @returns The highest ordinal already consumed, or zero when there are none.
- * @category utilities
- * @since 0.0.0
- */
 const highestReservedOrdinal = (priorIds: HashMap.HashMap<string, string>): number =>
   priorIds.pipe(
     HashMap.values,
@@ -277,7 +262,10 @@ export const priorIdsOfEntries = (
  * every identifier is reassigned from capture order, so one new high-severity
  * finding silently shifts every later `CSF-NNN` — invalidating hand-written
  * triage prose and the exact-identifier allowlist used to close findings after
- * merge. With it, existing findings keep their numbers and new ones append.
+ * merge. With it, existing findings keep their numbers and new ones append
+ * after the highest ordinal any prior binding consumed, so a retired finding's
+ * number is never handed to another finding. The prior identifiers must come
+ * from the packet this plan writes: `slug`, else `defaultPacketSlug(capturedAt)`.
  *
  * **Example** (Planning an empty capture)
  *
@@ -317,7 +305,6 @@ export const planPacket = Effect.fnUntraced(function* (
     readonly priorIds?: HashMap.HashMap<string, string> | undefined;
   }
 ) {
-  // Cloud captures carry only cloud IDs; sealed bundles carry only `local:` IDs.
   const identityMatchesSource = {
     "cloud-csv": isCloudFindingId,
     "security-cloud-csv": isSecurityCloudFindingId,
@@ -351,10 +338,6 @@ export const planPacket = Effect.fnUntraced(function* (
   const ordered = A.sort(payload.findings, captureOrder);
   const priorIds = overrides.priorIds ?? HashMap.empty<string, string>();
 
-  // Identifiers are assigned once and never reassigned. A finding that already
-  // has a CSF number keeps it even when a more severe finding arrives ahead of
-  // it in capture order, because that number is quoted in hand-written triage
-  // prose and in the post-merge Codex close allowlist.
   const assignment = A.reduce(
     ordered,
     { nextOrdinal: highestReservedOrdinal(priorIds) + 1, records: A.empty<CodexFindingRecord>() },

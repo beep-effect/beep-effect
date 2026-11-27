@@ -106,10 +106,6 @@ export const assertPrivateOutputDirectory = Effect.fn("CodexSecurity.assertPriva
   }
 });
 
-/**
- * Binds the repository's origin slug and `HEAD` into the receipt written next to the scan.
- * An origin git does not know reads as the empty remote the slug parser refuses.
- */
 const resolveSourceReceipt = Effect.fn("CodexSecurity.resolveSourceReceipt")(function* (repo: string) {
   const git = yield* Git;
   const remoteUrl1 = yield* git.remoteUrl(repo);
@@ -121,11 +117,6 @@ const resolveSourceReceipt = Effect.fn("CodexSecurity.resolveSourceReceipt")(fun
   });
 });
 
-/**
- * A dirty checkout makes the scanner seal a `git_worktree` snapshot that bundle
- * ingest cannot attribute to a revision. Scans refuse before any spend;
- * preflight only warns so it stays usable mid-work.
- */
 const requireCleanWorktree = Effect.fn("CodexSecurity.requireCleanWorktree")(function* (
   repo: string,
   preflight: boolean
@@ -144,7 +135,6 @@ const requireCleanWorktree = Effect.fn("CodexSecurity.requireCleanWorktree")(fun
   ]);
 });
 
-/** Canonical output path whose parent exists, lies outside the repository, and is not yet taken. */
 const resolveOutputDirectory = Effect.fn("CodexSecurity.resolveOutputDirectory")(function* (
   repoRealPath: string,
   output: string
@@ -220,7 +210,6 @@ const run = Effect.fn("CodexSecurity.run")(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const repo = yield* findRepoRoot();
-    // Verify the pin before touching the filesystem or spawning git.
     yield* securityRuntime;
     const preflight = SecurityScanMode.is.preflight(mode);
     const repoRealPath = yield* fs.realPath(repo);
@@ -246,7 +235,6 @@ const run = Effect.fn("CodexSecurity.run")(
       timeout: Duration.minutes(preflight ? 1 : options.timeoutMinutes),
       timeoutMessage: "Security process timed out. Retained artifacts may be incomplete and are not a passing scan.",
     });
-    // Fail closed on a swapped directory before any verdict, even a non-zero exit.
     if (!preflight) {
       yield* writeSourceReceipt(repoRealPath, outputDir, source);
     }
@@ -278,7 +266,6 @@ type RawScanOptions = {
   readonly target: O.Option<string>;
 };
 
-// First failing flag wins, so the operator is pointed at the flag that actually needs changing.
 const scanOptionFailures: ReadonlyArray<readonly [(values: RawScanOptions) => boolean, string]> = [
   [(values) => !isValidMaxCost(values.maxCost), "--max-cost must be greater than 0 and at most 100 USD."],
   [(values) => !isValidTimeout(values.timeoutMinutes), "--timeout-minutes must be a whole number from 1 to 120."],
@@ -299,6 +286,11 @@ const boundMessage = (values: RawScanOptions): string =>
 
 /**
  * Decodes raw CLI flags into bounded scan options, naming the offending flag on failure.
+ *
+ * **Details**
+ *
+ * Flags are checked in a fixed order and the first failing one names the
+ * error, so the operator is pointed at the flag that needs changing.
  *
  * **Example** (Naming an invalid path flag)
  * ```ts
@@ -326,6 +318,17 @@ const securitySubcommand = (mode: SecurityScanMode) =>
 
 /**
  * Provides non-scanning preflight and explicitly budgeted local scan commands.
+ *
+ * **Details**
+ *
+ * The pinned Security runtime is verified before the command touches the file
+ * system or spawns git. A dirty checkout would be sealed as a `git_worktree`
+ * snapshot that bundle ingest cannot attribute to a revision, so `scan`
+ * refuses it before any spend while `preflight` only warns. A scan writes a
+ * source receipt binding the origin's repository slug and `HEAD` next to its
+ * output; an origin git does not know reads as an empty remote, which the slug
+ * parser refuses. The output directory is re-checked for a swap before any
+ * verdict, even after a non-zero exit.
  *
  * **Example** (Composing the command group)
  * ```ts

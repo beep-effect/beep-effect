@@ -30,32 +30,15 @@ import type * as Order from "effect/Order";
 
 const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * File extensions recognised as TypeScript source modules during barrel generation.
- *
- * **Example** (Log TS extensions label)
- *
- * ```ts
- * console.log("TS_EXTENSIONS")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const TYPE_SCRIPT_SOURCE_FILE_PATTERN = /^.+\.(ts|tsx)$/;
 const TYPE_SCRIPT_TEST_FILE_PATTERN = /^.+\.(test|spec)\.(ts|tsx)$/;
 const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
-// `(?!\*\/)` keeps a block from swallowing the comment that follows it: a lazy
-// `[\s\S]*?` would happily span from the module header to the first documented export.
-const BARREL_DOC_BLOCK_PATTERN = /\/\*\*(?:(?!\*\/)[\s\S])*\*\//;
-// A block documents an export only when the export sits on the very next line; the same
-// single-newline rule decides both patterns so a module header separated from its first
-// export by a blank line stays a header instead of vanishing on regeneration.
-const BARREL_DOCUMENTED_EXPORT_PATTERN = /(\/\*\*(?:(?!\*\/)[\s\S])*\*\/)\r?\nexport \* from "([^"]+)";/g;
+const SINGLE_JSDOC_BLOCK_BODY = String.raw`(?:(?!\*\/)[\s\S])*`;
+const BARREL_DOC_BLOCK_PATTERN = new RegExp(String.raw`\/\*\*${SINGLE_JSDOC_BLOCK_BODY}\*\/`);
+const BARREL_DOCUMENTED_EXPORT_PATTERN = new RegExp(
+  String.raw`(\/\*\*${SINGLE_JSDOC_BLOCK_BODY}\*\/)\r?\nexport \* from "([^"]+)";`,
+  "g"
+);
 const BARREL_EXPORT_FOLLOWS_PATTERN = /^\r?\nexport \* from "/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(
@@ -111,25 +94,6 @@ const isInternalDirectoryName = S.is(InternalDirectoryName);
 const isRootIndexFileName = S.is(RootIndexFileName);
 const decodeImportPathResult = S.decodeUnknownResult(TypeScriptSourceToImportPath);
 
-/**
- * Convert a TypeScript filename to its corresponding source import specifier.
- *
- * **Details**
- *
- * Uses the repository's uniform `.ts` source specifier and prepends `./` so the
- * result is a valid relative import path (e.g. `"View.tsx"` becomes `"./View.ts"`).
- *
- * **Example** (Log toImportPath label)
- *
- * ```ts
- * console.log("toImportPath")
- * ```
- *
- * @param name - The TypeScript filename (may include a sub-path prefix).
- * @returns A relative import specifier with the uniform `.ts` source extension.
- * @category utilities
- * @since 0.0.0
- */
 const toImportPath = (name: string): string => {
   if (!isTypeScriptSourceFileName(name)) {
     return `./${name}`;
@@ -137,45 +101,8 @@ const toImportPath = (name: string): string => {
   return Result.getOrThrow(decodeImportPathResult(name));
 };
 
-/**
- * Alphabetical `Order` instance used to sort discovered module paths deterministically
- * before emitting barrel re-exports.
- *
- * **Example** (Log alphabetical order label)
- *
- * ```ts
- * console.log("alphabetical")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const alphabetical: Order.Order<string> = Str.orderAsc;
 
-// ---------------------------------------------------------------------------
-// Core logic
-// ---------------------------------------------------------------------------
-
-/**
- * Recursively discover exportable TypeScript modules under `srcDir`.
- *
- * **Details**
- *
- * Returns relative paths from `srcDir` (e.g. `"FsUtils.ts"`, `"errors/index.ts"`).
- * Skips `index.ts` at the root level, `internal/` directories, and test files.
- *
- * **Example** (Log discoverModules label)
- *
- * ```ts
- * console.log("discoverModules")
- * ```
- *
- * @param srcDir - Absolute path to the `src/` directory to scan.
- * @returns An unsorted array of relative file paths suitable for barrel re-export.
- * @depends FileSystem, Path
- * @category utilities
- * @since 0.0.0
- */
 const discoverModules = Effect.fn(function* (srcDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -189,22 +116,17 @@ const discoverModules = Effect.fn(function* (srcDir: string) {
         Effect.fnUntraced(function* (entry) {
           const fullPath = path.join(dir, entry);
 
-          // Check if this entry is a directory
           const info = yield* fs.stat(fullPath).pipe(Effect.orElseSucceed(thunkUndefined));
           if (info === undefined) return A.empty<string>();
 
           if (Str.equivalence(info.type, "Directory")) {
-            // Skip internal directories
             if (isInternalDirectoryName(entry)) return A.empty<string>();
 
-            // Recurse into subdirectories
             return yield* walk(fullPath, `${prefix}${entry}/`);
           }
           if (Str.equivalence(info.type, "File") && isTypeScriptSourceFileName(entry)) {
-            // Skip test files
             if (isTypeScriptTestFileName(entry)) return A.empty<string>();
 
-            // Skip root-level index.ts (that's what we're generating)
             if (Str.isEmpty(prefix) && isRootIndexFileName(entry)) return A.empty<string>();
 
             return A.of(`${prefix}${entry}`);
@@ -221,42 +143,8 @@ const discoverModules = Effect.fn(function* (srcDir: string) {
   return yield* walk(srcDir, Str.empty);
 });
 
-/**
- * Empty preserved-documentation map used when no previous barrel exists.
- *
- * **Example** (Log emptyBarrelDocs label)
- *
- * ```ts
- * console.log("emptyBarrelDocs")
- * ```
- *
- * @returns An empty import-path to JSDoc-block map.
- * @category utilities
- * @since 0.0.0
- */
 const emptyBarrelDocs = (): HashMap.HashMap<string, string> => HashMap.empty<string, string>();
 
-/**
- * Read the module-level JSDoc header from a previously generated barrel.
- *
- * **Details**
- *
- * The header is the file's first JSDoc block when it is not the block documenting
- * the first `export *` statement, which is the block sitting on the line directly above
- * that export. A barrel whose first block sits directly above an export has no separate
- * header, so the caller falls back to the generated default.
- *
- * **Example** (Log parseBarrelHeader label)
- *
- * ```ts
- * console.log("parseBarrelHeader")
- * ```
- *
- * @param content - Contents of the existing `index.ts` barrel.
- * @returns The header block when the barrel declares one.
- * @category utilities
- * @since 0.0.0
- */
 const parseBarrelHeader = (content: string): O.Option<string> =>
   pipe(
     O.fromNullishOr(BARREL_DOC_BLOCK_PATTERN.exec(content)),
@@ -264,26 +152,6 @@ const parseBarrelHeader = (content: string): O.Option<string> =>
     O.map((match) => match[0])
   );
 
-/**
- * Index a previously generated barrel's per-export JSDoc blocks by import path.
- *
- * **Details**
- *
- * Regeneration is otherwise lossy: hand-authored `**Example**` sections on barrel
- * re-exports are required by the repository's JSDoc law and are exercised by docgen,
- * so they must survive a `beep codegen barrel` run.
- *
- * **Example** (Log parseBarrelDocs label)
- *
- * ```ts
- * console.log("parseBarrelDocs")
- * ```
- *
- * @param content - Contents of the existing `index.ts` barrel.
- * @returns A map from import specifier to the JSDoc block documenting it.
- * @category utilities
- * @since 0.0.0
- */
 const parseBarrelDocs = (content: string): HashMap.HashMap<string, string> => {
   let docs = emptyBarrelDocs();
   for (const match of Str.matchAll(BARREL_DOCUMENTED_EXPORT_PATTERN)(content)) {
@@ -296,32 +164,6 @@ const parseBarrelDocs = (content: string): HashMap.HashMap<string, string> => {
   return docs;
 };
 
-/**
- * Build the barrel file content from a sorted list of module relative paths.
- *
- * **Details**
- *
- * Produces a string containing a JSDoc header and one `export * from ...` statement
- * per module, each annotated with `@since 0.0.0` as required by `@beep/repo-docgen`.
- *
- * **Gotchas**
- *
- * Documentation already present in `previous` wins over the generated defaults, so a
- * regeneration normalises ordering and spacing without discarding authored prose.
- *
- * **Example** (Log buildBarrelContent label)
- *
- * ```ts
- * console.log("buildBarrelContent")
- * ```
- *
- * @param packageName - Used in the module description header comment.
- * @param modules - Sorted list of relative file paths (e.g. `"FsUtils.ts"`).
- * @param previous - Contents of the existing barrel, when one is already committed.
- * @returns The full content of the generated `index.ts` barrel file.
- * @category utilities
- * @since 0.0.0
- */
 const buildBarrelContent = (
   packageName: string,
   modules: ReadonlyArray<string>,
@@ -350,23 +192,6 @@ const buildBarrelContent = (
   return `${header}\n${A.join(exportLines, "\n\n")}\n`;
 };
 
-// ---------------------------------------------------------------------------
-// Command
-// ---------------------------------------------------------------------------
-
-/**
- * CLI command that scans a package's `src/` directory and generates (or previews)
- * an `index.ts` barrel file with `export *` re-exports for every discovered module.
- *
- * **Example** (Log codegenCommand label)
- *
- * ```ts
- * console.log("codegenCommand")
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const barrelCommand = Command.make(
   "barrel",
   {
@@ -385,19 +210,16 @@ const barrelCommand = Command.make(
     const pathSvc = yield* Path.Path;
     const fsUtils = yield* FsUtils;
 
-    // Resolve absolute path to the package
     const packageDir = pathSvc.isAbsolute(config.packageDir) ? config.packageDir : pathSvc.resolve(config.packageDir);
 
     const srcDir = pathSvc.join(packageDir, "src");
 
-    // Verify src/ exists
     const srcExists = yield* fs.exists(srcDir).pipe(Effect.orElseSucceed(thunkFalse));
     if (!srcExists) {
       yield* Console.error(`Error: No src/ directory found at ${srcDir}`);
       return;
     }
 
-    // Read package.json to extract the package name for the header
     const packageJsonPath = pathSvc.join(packageDir, "package.json");
     const packageJson = yield* fsUtils.readJson(packageJsonPath).pipe(Effect.orElseSucceed(O.none));
     const packageName =
@@ -413,10 +235,8 @@ const barrelCommand = Command.make(
 
     yield* Console.log(`Scanning ${srcDir} for modules...`);
 
-    // Discover modules
     const rawModules = yield* discoverModules(srcDir);
 
-    // Sort alphabetically for determinism
     const modules = A.sort(rawModules, alphabetical);
 
     const hasModules = yield* A.match(modules, {
@@ -432,10 +252,8 @@ const barrelCommand = Command.make(
 
     const indexPath = pathSvc.join(srcDir, "index.ts");
 
-    // Preserve documentation already authored on the committed barrel.
     const previous = yield* fs.readFileString(indexPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 
-    // Generate barrel content
     const content = buildBarrelContent(packageName, modules, previous);
 
     if (config.dryRun) {
@@ -456,6 +274,22 @@ const barrelCommand = Command.make(
 
 /**
  * Groups code generators under explicit subcommands.
+ *
+ * **Details**
+ *
+ * `barrel` scans the package's `src/` for `.ts` and `.tsx` modules, skipping the
+ * root `index.ts`, `internal/` directories and test files, and writes `index.ts`
+ * with one `export * from "./<path>.ts"` per module in alphabetical order (a
+ * `.tsx` module is imported as `.ts`), each under a `@since 0.0.0` block.
+ * `--dry-run` prints the file instead.
+ *
+ * **Gotchas**
+ *
+ * Documentation in the committed barrel survives regeneration. A JSDoc block on
+ * the line directly above an `export *` stays with that export. The first block
+ * is the module header unless an export sits on its next line, so a header
+ * needs a blank line before the first export or it is read as that export's
+ * documentation.
  *
  * **Example** (Build the codegen command runner)
  *

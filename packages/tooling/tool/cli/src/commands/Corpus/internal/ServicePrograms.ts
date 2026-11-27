@@ -569,8 +569,6 @@ const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestoration
         message: `Recycle-bin metadata file "${relativePath}" is missing from the provenance manifest.`,
       });
     }
-    // Fail closed: the manifest is untrusted, so only read metadata files that
-    // canonicalize inside <corpusRoot>/raw, never an attacker-chosen path.
     const safeDestPath = yield* resolveWithinRoot(
       rawRoot,
       destPath,
@@ -892,12 +890,7 @@ const extensionOf = (name: string): string | undefined => {
   return dot <= 0 || dot === name.length - 1 ? undefined : Str.toLowerCase(Str.slice(dot + 1)(name));
 };
 
-// Fail-closed resolver for manifest-supplied paths: the provenance manifest is
-// untrusted input, so a `destPath` (or organize target) must canonicalize to a
-// real path inside the allowed root before it is read, hashed, copied, or
-// passed to an extraction engine. `resolvePathWithinRoot` follows symlinks and
-// rejects absolute escapes and `..` traversal, returning the in-root canonical
-// path callers should use for the actual filesystem operation.
+// decision: corpus-manifest-paths-resolve-within-root
 const resolveWithinRoot = Effect.fn("CorpusCommandService.resolveWithinRoot")(function* (
   root: string,
   candidate: string,
@@ -951,9 +944,7 @@ const hashFileSha256 = Effect.fn("CorpusCommandService.hashFileSha256")(function
 interface CorpusExtractOutcome {
   readonly childArtifactCount: number;
   readonly failure: O.Option<FileProcessingFailureRecord>;
-  // Present when the OCR pass looked at the source's pages.
   readonly ocr: O.Option<CorpusExtractOcrCounts>;
-  // Present only on a failure that the engine routing decides, so it settles.
   readonly routingKey: O.Option<Sha256Hex>;
   readonly sourceRecord: SourceProcessingRecord;
   readonly strategy: SelectedStrategy;
@@ -1035,9 +1026,6 @@ const appendCorpusJsonLines = Effect.fn("CorpusCommandService.appendCorpusJsonLi
   );
 });
 
-// An existing output tree is resumed, never refused: `overwrite` is the only
-// path that discards it. The staging directory holds half-written artifacts of
-// a killed run, so it is emptied on every start.
 const rejectExtractOutputLinks = Effect.fn("CorpusCommandService.rejectExtractOutputLinks")(function* (
   corpusRoot: string,
   outLabel: string
@@ -1062,6 +1050,7 @@ const rejectExtractOutputLinks = Effect.fn("CorpusCommandService.rejectExtractOu
   }
 });
 
+// decision: extract-artifacts-stage-then-rename
 const prepareExtractOutputDir = Effect.fn("CorpusCommandService.prepareExtractOutputDir")(function* (
   outDir: string,
   childrenRoot: string,
@@ -1085,9 +1074,7 @@ const prepareExtractOutputDir = Effect.fn("CorpusCommandService.prepareExtractOu
     );
 });
 
-// Stage-then-rename writer for extract artifacts: the content is written and
-// synced under the run's staging directory, then renamed into place, so a
-// killed process leaves either the whole artifact or none.
+// decision: extract-artifacts-stage-then-rename
 const makeExtractArtifactWriter = Effect.fn("CorpusCommandService.makeExtractArtifactWriter")(function* (
   stagingDir: string
 ) {
@@ -1114,19 +1101,13 @@ const makeExtractArtifactWriter = Effect.fn("CorpusCommandService.makeExtractArt
   });
 });
 
-// `artifact:` plus a 64-character SHA-256 hex digest: every libpff export
-// tree, claim, and child manifest of one source starts with this prefix.
-const extractArtifactIdLength = 73;
+const artifactPrefixedSha256Length = 73;
 
-// Succeeded and deferred sources are settled. A failure is settled only when it
-// carries a routing key: no engine routes the source's format, which no retry
-// can change until the routing does.
+// decision: extract-resumes-from-settled-outcome-markers
 const isSettledExtractOutcome = (outcome: CorpusExtractOutcome): boolean =>
   outcome.sourceRecord.status !== "failed" || O.isSome(outcome.routingKey);
 
-// Fingerprint of everything that decides which engine a format reaches. It is
-// derived from the engine descriptors, so adding a format to an engine changes
-// it without anyone bumping a version.
+// decision: extract-resumes-from-settled-outcome-markers
 const extractRoutingBase = (engines: ReadonlyArray<FileProcessingEngineShape>): string =>
   A.join(
     A.map(
@@ -1140,9 +1121,6 @@ const extractRoutingBase = (engines: ReadonlyArray<FileProcessingEngineShape>): 
 const extractRoutingKey = (routingBase: string, format: FileFormatFamily): Sha256Hex =>
   Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${routingBase}#${format}`))));
 
-// One extract per output label: the lock file sits beside the output tree so
-// `--overwrite` cannot delete it, and names the holder's pid. A holder that is
-// no longer running (a killed run) is taken over.
 const acquireExtractRunLock = Effect.fn("CorpusCommandService.acquireExtractRunLock")(function* (
   lockPath: string
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
@@ -1181,7 +1159,6 @@ const acquireExtractRunLock = Effect.fn("CorpusCommandService.acquireExtractRunL
     );
 });
 
-// Formats whose bytes Tesseract can read directly as a one-page source.
 const ocrImageMediaType: (extension: string | undefined) => O.Option<PageImageMediaType> = Match.type<
   string | undefined
 >().pipe(
@@ -1191,8 +1168,7 @@ const ocrImageMediaType: (extension: string | undefined) => O.Option<PageImageMe
   Match.orElse(O.none<PageImageMediaType>)
 );
 
-// A first reading with fewer bytes of text per page than this is not usable:
-// the page is a scan, or its text layer is a stub.
+// decision: extract-ocr-rereads-only-unusable-first-readings
 const usableTextBytesPerPage = 50;
 
 const firstReadingPath = (first: CorpusExtractOutcome): O.Option<string> =>
@@ -1220,11 +1196,8 @@ interface ExtractOcr {
   ) => Effect.Effect<void, CorpusCommandError>;
 }
 
-// CPU page OCR for corpus extract: PDFs and images whose first reading is
-// missing, failed, or too thin are rendered page by page and read by Tesseract
-// with a per-page timeout. Every page gets a row in `ocr/pages/<operationId>.jsonl`
-// keyed by engine, with its text in its own file, so a later second reader can
-// add its rows and texts beside these instead of over them.
+// decision: extract-ocr-rereads-only-unusable-first-readings
+// decision: extract-ocr-records-beside-the-first-reading
 const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function* (
   options: CorpusExtractOptions,
   outDir: string,
@@ -1262,9 +1235,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       }),
     })
   );
-  // Both Poppler tools are probed once, like the Tesseract binary: a missing
-  // pdfinfo would otherwise leave every PDF on its first reading with no row,
-  // count or line saying why.
   const popplerProbe = yield* Effect.result(rasterizer.probe);
   if (Result.isFailure(popplerProbe)) {
     yield* Console.log(`corpus extract: OCR disabled: ${popplerProbe.failure.message}`);
@@ -1281,9 +1251,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     readonly render: (pageNumber: number) => Effect.Effect<PageImage, PopplerError>;
   }
 
-  // What the OCR pass decided for one source: pages to read, nothing to do, or
-  // a PDF whose pages could not be counted (an encrypted or corrupt file, or a
-  // pdfinfo failure), which is recorded rather than passed over in silence.
   type OcrPlan = Data.TaggedEnum<{
     readonly Read: { readonly pages: OcrPages };
     readonly Keep: {};
@@ -1291,9 +1258,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
   }>;
   const OcrPlan = Data.taggedEnum<OcrPlan>();
 
-  // A single-frame TIFF is one page. A multi-frame TIFF would be read whole by
-  // Tesseract under one page timeout and one digest, so it keeps its first
-  // reading until frames are rendered one by one.
   const imagePages = (extension: string | undefined, sourceBytes: Uint8Array) =>
     pipe(
       ocrImageMediaType(extension),
@@ -1320,9 +1284,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       })
     );
 
-  // Only PDFs and images whose first reading failed in a driver, or produced
-  // no text or too little of it, are read again. Deferred sources and sources
-  // no engine routes keep their outcome.
   const pagesToRead = Effect.fn("CorpusCommandService.ocrPagesToRead")(function* ({
     first,
     record,
@@ -1440,9 +1401,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     ];
   });
 
-  // The first reading is evidence too: it is kept beside the OCR text, and a
-  // source that had no first reading gets a metadata file so resume finds
-  // every artifact its marker implies.
   const keepFirstReading = Effect.fn("CorpusCommandService.ocrKeepFirstReading")(function* (
     first: CorpusExtractOutcome,
     ids: ExtractOcrSourceInput["ids"]
@@ -1524,10 +1482,6 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     };
   });
 
-  // Language comes from script detection on the first page; a source with no
-  // installed model for it (not even English) keeps its first outcome with
-  // ocr.completed false and ocr.missingLanguages recorded, so its marker has
-  // ocrEnabled false just as when a missing tool turns the OCR pass off.
   const readPages = Effect.fn("CorpusCommandService.ocrReadPages")(function* (
     input: ExtractOcrSourceInput,
     pages: OcrPages
@@ -1673,6 +1627,20 @@ const buildExtractCoverage = (
   }).pipe(CorpusCommandError.mapError("Coverage summary failed schema validation."));
 };
 
+/**
+ * Run one corpus extract into `staging/<outLabel>`, resuming an existing output tree.
+ *
+ * **Gotchas**
+ *
+ * - One extract runs per output label. A second run fails while the first holds
+ *   `staging/.<outLabel>.extract.lock`; a lock whose holder pid is no longer running is taken over.
+ *   The lock sits outside the output tree, so `--overwrite` never deletes it.
+ * - Under OCR, a missing `pdfinfo` or `pdftoppm` turns the whole pass off with one logged line,
+ *   so no PDF is left on its first reading without a stated reason.
+ * - Under OCR, a multi-frame TIFF keeps its first reading: frames are not yet rendered one by one.
+ * - A source whose detected script has no installed language model, English included, keeps its
+ *   first outcome with `ocr.completed` false, and its marker records `ocrEnabled` false.
+ */
 const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(function* (
   options: CorpusExtractOptions
 ): Effect.fn.Return<CorpusExtractSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
@@ -1688,6 +1656,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   );
 });
 
+// decision: extract-resumes-from-settled-outcome-markers
 const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked")(function* (
   options: CorpusExtractOptions
 ): Effect.fn.Return<CorpusExtractSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
@@ -1772,15 +1741,8 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
     return { artifactId, digest, operationId, relativePath: fallbackRelative };
   });
 
-  // The artifact id decoded above proves `sha256` is bare lowercase hex, so it
-  // is a safe single path segment.
-  const outcomeMarkerPath = (sha256: string): string => path.join(outcomesDir, `${sha256}.json`);
+  const outcomeMarkerPath = (hexDigest: string): string => path.join(outcomesDir, `${hexDigest}.json`);
 
-  // A source counts as already extracted only on disk evidence: a marker that
-  // decodes, names this exact source and the same `exportChildren` choice,
-  // records a settled outcome, and whose artifacts are all still present.
-  // Anything else (no marker, a marker from different inputs, a missing
-  // artifact) is redone from scratch.
   const readCompletedOutcome = Effect.fn("CorpusCommandService.readCompletedExtractOutcome")(function* (
     record: CorpusProvenanceRecord
   ): Effect.fn.Return<O.Option<CorpusExtractOutcome>, CorpusCommandError, Digest.Digest> {
@@ -1793,9 +1755,6 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
         (candidate) =>
           candidate.sha256 === record.sha256 &&
           candidate.exportChildren === options.exportChildren &&
-          // A marker whose run did not make the OCR pass (no --ocr, or a
-          // missing tool turned it off) does not settle the source for a run
-          // that does make it. While the pass is off, any marker stands.
           (O.isNone(extractOcr) || candidate.ocrEnabled) &&
           !O.exists(extractOcr, (engine) =>
             O.exists(candidate.ocr, (counts) =>
@@ -1807,7 +1766,6 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
           candidate.sourceRecord.operationId === ids.operationId &&
           candidate.sourceRecord.relativePath === ids.relativePath &&
           isSettledExtractOutcome(candidate) &&
-          // A settled failure stands only while the routing that produced it does.
           !O.exists(candidate.routingKey, (routingKey) => routingKey !== routingKeyFor(record))
       )
     );
@@ -1848,14 +1806,15 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
     `corpus extract: ${alreadyCompleteCount} sources already complete, ${A.length(pendingRecords)} to extract`
   );
 
-  // A redone source must start clean: libpff refuses an export whose tree or
-  // claim already exists, so every child entry of a pending source is removed.
   const pendingArtifactIds = HashSet.fromIterable(A.map(pendingRecords, (record) => `artifact:${record.sha256}`));
   const childEntries = yield* fs
     .readDirectory(childrenRoot)
     .pipe(CorpusCommandError.mapError(`Failed reading extract children "${childrenRoot}".`));
+  const childEntriesLibpffWouldRefuse = A.filter(childEntries, (name) =>
+    HashSet.has(pendingArtifactIds, Str.slice(0, artifactPrefixedSha256Length)(name))
+  );
   yield* Effect.forEach(
-    A.filter(childEntries, (name) => HashSet.has(pendingArtifactIds, Str.slice(0, extractArtifactIdLength)(name))),
+    childEntriesLibpffWouldRefuse,
     (name) =>
       fs
         .remove(path.join(childrenRoot, name), { force: true, recursive: true })
@@ -1883,9 +1842,6 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
     const ids = yield* deriveSourceIds(record);
     const { artifactId, digest, operationId } = ids;
 
-    // Fail closed before extraction: the manifest is untrusted, so the source
-    // file must canonicalize to a real path inside <corpusRoot>/raw rather than
-    // an attacker-chosen absolute path or `..`/symlink escape.
     const safeSourcePath = yield* resolveWithinRoot(
       rawRoot,
       record.destPath,
@@ -1932,9 +1888,6 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
               ids,
               error.reason === "engine-unavailable" ? "engine-unavailable" : "unsupported-file-format",
               error.message,
-              // No engine was selected and none supports the detected format:
-              // the routing decided this failure, so it is settled. Driver
-              // failures (timeout, spawn, parse) name their engine and retry.
               isRoutingFailure(error) ? O.some(routingKeyFor(record)) : O.none()
             )
           ),
@@ -2076,8 +2029,6 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
       onSome: (ocr) => ocr.readSource({ first: firstOutcome, ids, record, sourceBytes, sourcePath: safeSourcePath }),
     });
 
-    // The marker is the last write for a source and the only thing a resumed
-    // run trusts. Failed sources get none, so they are retried.
     if (isSettledExtractOutcome(outcome)) {
       const sha256 = yield* decodeSha256Hex(record.sha256).pipe(
         CorpusCommandError.mapError("Provenance sha256 failed digest decoding.")
@@ -2247,8 +2198,6 @@ const fileMtimeFields = (info: FileSystem.File.Info): { readonly mtimeEpoch: num
   };
 };
 
-// Walks `root` depth-first in sorted entry order: each regular file goes through
-// `makeFile`, each directory recurses, and every other entry kind is skipped.
 const collectSortedSourceFiles = Effect.fn("CorpusCommandService.collectSortedSourceFiles")(function* <Row, E>(
   root: string,
   label: string,
@@ -2281,6 +2230,7 @@ const collectSortedSourceFiles = Effect.fn("CorpusCommandService.collectSortedSo
   return yield* collectAt(root);
 });
 
+// decision: corpus-source-paths-stay-unresolved
 const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvageSourceFiles")(function* (
   spec: CorpusSalvageSourceSpec
 ): Effect.fn.Return<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
@@ -2298,8 +2248,6 @@ const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvage
     filePath: string,
     info: FileSystem.File.Info
   ) {
-    // Keep source filenames opaque: Bun's realpath can reject otherwise valid
-    // POSIX names such as paths containing literal backslashes.
     const originPath = path.resolve(filePath);
     const rawRelative =
       sourceInfo.type === "Directory" ? path.relative(relativeRoot, filePath) : path.basename(filePath);
@@ -2581,9 +2529,6 @@ const verifySalvageImpl = Effect.fn("CorpusCommandService.verifySalvage")(functi
   const results = yield* Effect.forEach(
     sampled,
     Effect.fnUntraced(function* (record) {
-      // Fail closed before reading: never `exists`/`hashFile` a manifest path
-      // that escapes <corpusRoot>/raw, which would leak an existence/hash
-      // oracle for arbitrary victim-readable files.
       const safeDestPath = yield* resolveWithinRoot(
         rawRoot,
         record.destPath,
@@ -2649,12 +2594,11 @@ const referencedRawPathForArchive = (record: CorpusProvenanceRecord): string =>
     ? O.getOrElse(O.fromUndefinedOr(record.dedupeOfPath), () => record.destPath)
     : record.destPath;
 
+// decision: corpus-source-paths-stay-unresolved
 const collectArchiveSourceFiles = Effect.fn("CorpusCommandService.collectArchiveSourceFiles")(function* (
   sourcePath: string
 ): Effect.fn.Return<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
-  // Keep source filenames opaque: Bun's realpath can reject otherwise valid
-  // POSIX names such as paths containing literal backslashes.
   return yield* collectSortedSourceFiles(path.resolve(sourcePath), "archive-move source", (filePath) =>
     Effect.succeed(path.resolve(filePath))
   );
@@ -3246,10 +3190,6 @@ const materializeOrganizedRow = Effect.fn("CorpusCommandService.materializeOrgan
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  // Fail closed on both ends: the manifest source must canonicalize inside
-  // <corpusRoot>/raw, and the taxonomy-derived target must canonicalize inside
-  // organizedRoot, so neither a `..`/symlink escape in sourceLabel/relativePath
-  // nor an attacker `destPath` can read or overwrite files outside the corpus.
   const safeSourcePath = yield* resolveWithinRoot(
     rawRoot,
     row.destPath,
@@ -3633,20 +3573,18 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
     );
   }
 
-  const orderedCandidates = A.sort(
+  const docketAssociatedFirst = A.sort(
     [...candidates.entries()],
     Order.mapInput(
       Order.Number,
       (entry: readonly [string, EnrichCandidate]) =>
-        // Docket-family-associated candidates first (filename-grounded, high
-        // precision), then by corpus occurrence.
         (entry[1].docketFamilies.size > 0 ? -1_000_000 : 0) - entry[1].occurrenceCount
     )
   );
   const limited =
     options.maxLookups === undefined
-      ? orderedCandidates
-      : A.take(orderedCandidates, Math.max(0, Math.floor(options.maxLookups)));
+      ? docketAssociatedFirst
+      : A.take(docketAssociatedFirst, Math.max(0, Math.floor(options.maxLookups)));
   yield* Console.log(
     `corpus enrich: ${A.length(limited)}/${candidates.size} identifier candidates selected for USPTO lookup`
   );

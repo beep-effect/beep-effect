@@ -107,11 +107,6 @@ const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
     return priorIdsOfEntries([]);
   }
 
-  // A ledger that exists but cannot be read is a hard failure, never an empty
-  // binding map. Falling back to "no bindings" here would let a --force ingest
-  // renumber every CSF-NNN from the current sort order, silently invalidating
-  // hand-written references and the exact-identifier closeout allowlist — the
-  // precise outcome sticky identity exists to prevent.
   const entries = yield* fs.readFileString(ledgerPath).pipe(
     Effect.flatMap(parseJsonText),
     Effect.flatMap(decodeCodexTriageLedger),
@@ -201,8 +196,6 @@ const decodeCapturePayload = Effect.fn("CodexFindings.decodeCapturePayload")(fun
     findings: parsed.findings,
   };
 
-  // Scan the payload before decoding: a credential sitting in a field the
-  // schema would have dropped must still stop the ingest.
   const hits = scanSensitiveUnknown("capture", payloadInput);
   if (A.isReadonlyArrayNonEmpty(hits)) {
     return yield* CodexFindingsRedactionError.make({
@@ -275,8 +268,6 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
       refreshSource: O.none<CodexRefreshLedgerSource>(),
       documents: A.append(
         documents,
-        // Raw upstream evidence legitimately carries secret-shaped text (that is
-        // what a credential finding is); hits are reported, never a refusal.
         PacketDocument.make({
           path: "raw/security-bundle.json",
           tracked: false,
@@ -295,8 +286,6 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
   }
   const capturedAt = yield* resolveCaptureDate(options.date, path.basename(options.from));
   const payload = yield* decodeCapturePayload(parsed, capturedAt, options.expectedCount);
-  // Must match the slug planPacket will derive, or prior identifiers would be
-  // read from the wrong packet; both sides go through the same helper.
   const provisionalSlug = O.getOrElse(options.slug, () => defaultPacketSlug(capturedAt));
   const provenance = yield* loadPlanningProvenance(options, repoRoot, provisionalSlug);
   const plan = yield* planPacket(payload, {
@@ -306,10 +295,6 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
     expectedCount: O.getOrUndefined(options.expectedCount),
     priorIds: provenance.priorIds,
   });
-  // Report bodies are the evidence P2 validates against. They only ever reach
-  // ignored `raw/reports/`; no tracked renderer accepts this shape.
-  // Raw evidence is the normalized capture, never the export itself: the CSV
-  // carries author email addresses and unsanitized report bodies.
   const rawPayloadJson = yield* encodeRawPayloadJson(payload);
   const documents = yield* renderPacketDocuments({
     plan,
@@ -464,6 +449,17 @@ const printCodexFindingsIngestResult = Effect.fn("CodexFindings.printIngestResul
 
 /**
  * Ingest a Codex findings CSV export into a bootstrapped goal packet.
+ *
+ * **Gotchas**
+ *
+ * The payload is scanned for credentials before it is decoded, so a credential
+ * in a field the schema would drop still stops the ingest. A sealed bundle's raw
+ * evidence legitimately carries secret-shaped text, so its hits are reported,
+ * never a refusal. Raw evidence is the normalized capture, never the export: the
+ * CSV carries author email addresses and unsanitized report bodies, and report
+ * bodies reach only the ignored `raw/reports/`. A triage ledger that exists but
+ * cannot be read fails the ingest; it never reads as no bindings, which would
+ * let `--force` renumber every `CSF-NNN`.
  *
  * **Example** (Naming the ingest entry point)
  *

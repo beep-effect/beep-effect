@@ -199,18 +199,12 @@ const nonNegative = (value: number): number => S.Natural.make(Math.max(0, Math.f
 
 const digestBytes = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(bytesToHex(sha256(bytes)));
 
-// Streaming SHA-256. The CLI runs under Bun, whose native hasher measured
-// 1.68 GB/s against 187 MB/s for the pure-JS hasher on the 147 GB root
-// archive (2026-10-06); Effect's `Crypto` service only offers one-shot
-// digests. A runtime without a native `CryptoHasher` falls back to the pure-JS
-// hasher; digests are identical either way. The probe checks the hasher
-// surface, not the `Bun` global, because a partial `Bun` global (such as a
-// test shim) may or may not provide one.
 interface StreamingSha256 {
   readonly digestHex: () => Sha256Hex;
   readonly update: (chunk: Uint8Array) => void;
 }
 const hasNativeSha256 = (): boolean => P.hasProperty(globalThis, "Bun") && P.isFunction(Bun.CryptoHasher);
+// decision: restoration-hashes-with-the-native-streaming-hasher
 const createStreamingSha256 = (): StreamingSha256 => {
   if (hasNativeSha256()) {
     const native = new Bun.CryptoHasher("sha256");
@@ -2027,8 +2021,6 @@ const writeInheritedLossRecords = Effect.fn("CorpusRestoration.writeInheritedLos
     ["missing-recycle-payload", context.options.expectedMissingRecyclePayloadCount],
     ["mutated-destination", context.collector.mutatedDestinationCount],
     ["stripped-filesystem-metadata", context.inventory.files.length + context.inventory.directories.length],
-    // Optional fifth class (2026-10-06): collector destinations the operator
-    // deliberately removed from the source after the approved preflight.
     ...(context.options.expectedOperatorDeletedDestinationCount > 0
       ? ([["operator-deleted-noise", context.options.expectedOperatorDeletedDestinationCount]] as const)
       : []),

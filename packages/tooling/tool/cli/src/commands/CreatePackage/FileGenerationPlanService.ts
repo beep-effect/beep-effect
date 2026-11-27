@@ -603,6 +603,12 @@ const resolveContainedSymlinkDestinationPath: {
 /**
  * Construct the default generation plan service implementation.
  *
+ * **Gotchas**
+ *
+ * Execution copies a `copy-asset` file without checking whether its destination exists, since
+ * `create-package` refuses an existing output directory. Only an action's destination must stay
+ * inside `outputDir`: a `copy-asset` `sourcePath` points at a template asset outside the tree.
+ *
  * **Example** (Create default plan service)
  *
  * ```ts
@@ -754,10 +760,6 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
         )
       );
 
-    // Copied unconditionally rather than skipped-if-present. `create-package`
-    // refuses to run against an existing directory, so a destination-exists
-    // branch here is one no test can reach — the shape that reads as lost
-    // coverage the moment anything else in this file moves.
     const copyAsset = (absolutePath: string, sourcePath: string) =>
       ensureDirectoryFor(absolutePath).pipe(
         Effect.andThen(() =>
@@ -871,8 +873,6 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       yield* GenerationAction.match(action, {
         mkdir: thunkEffectVoid,
         "write-file": thunkEffectVoid,
-        // Only the destination is constrained; `sourcePath` deliberately points
-        // at the template asset outside the generated tree.
         "copy-asset": thunkEffectVoid,
         symlink: ({ target }) => validateSymlinkTarget(absolutePath, target),
       });

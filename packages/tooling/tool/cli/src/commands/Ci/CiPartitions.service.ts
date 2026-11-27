@@ -76,7 +76,6 @@ const durationPattern = /^\s*Duration\s+([\d.]+)s\b/u;
 const reportPattern = /JSON report written to \S*?\/((?:packages|apps|tools|infra)\/\S+?)\/coverage\//u;
 const jobNamePattern = /^Test Unit \((.+)\)$/u;
 
-// One log line with reporter colours and the Actions timestamp (or `gh run view` prefix) removed.
 const logLineContent = (line: string): string =>
   pipe(line, Str.replace(timestampPrefixPattern, ""), Str.replaceAll(decorationPattern, ""));
 
@@ -203,7 +202,6 @@ interface TestUnitShardJob {
   readonly partitionId: CiLanePartitionId;
 }
 
-/** The run's Test Unit shard jobs, every one of which must be green for its timings to be complete. */
 const greenTestUnitShards = Effect.fn("CiPartitionTimingSource.greenShards")(function* (runId: number) {
   const jobs = yield* collectJobs(runId);
   const shards: ReadonlyArray<TestUnitShardJob> = A.getSomes(
@@ -236,11 +234,9 @@ const readShardLog = Effect.fn("CiPartitionTimingSource.readShardLog")(function*
   repo: string,
   shard: TestUnitShardJob
 ) {
-  // KEEP (D-22): the job log is a raw redirect download under its own bound; no kit member reads job logs.
-  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22): the job log is a raw redirect download under its own bound; no kit member reads job logs.
   const log = yield* runCaptured({
     command: "gh",
-    // Reporter output carries ANSI colours, which `gh api` refuses to print without this flag.
     args: ["api", `repos/${owner}/${repo}/actions/jobs/${shard.id}/logs`, "--allow-escape-sequences"],
     cwd: process.cwd(),
     source: "stdout",

@@ -127,7 +127,6 @@ class RunnerLossPullRequest extends S.Opaque<RunnerLossPullRequest, { readonly b
   )
 ) {}
 
-// The REST shapes the head gate reads; each is projected onto the decision's own model.
 const RepositoryOwner = S.NullOr(S.Struct({ owner: S.Struct({ login: S.String }) }));
 const RunWire = S.Struct({
   id: S.Finite,
@@ -363,7 +362,6 @@ const readHead = (run: RunnerLossRun): Effect.Effect<RunnerLossHead, CiCommandEr
   return Effect.succeed(RunnerLossHead.make({ status: "unsupported-event" }));
 };
 
-// `gh run rerun --job <id>`: the job and the jobs that depend on it run again.
 const requestRerun = Effect.fn("Ci.rerunRunnerLoss.requestRerun")(function* (
   jobId: number
 ): Effect.fn.Return<void, CiCommandError, GhRequirements> {

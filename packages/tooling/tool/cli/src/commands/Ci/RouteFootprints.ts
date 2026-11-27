@@ -56,13 +56,8 @@ const UnknownJson = S.fromJsonString(S.Unknown);
  * @category constructors
  * @since 0.0.0
  */
+// decision: packet-markdown-refinement-anchor
 export const ROUTE_REFINEMENTS: ReadonlyArray<RouteRefinement> = [
-  // Packet markdown sits under goals/, explorations/, research/ and docs/_internal/, outside every
-  // workspace glob, so it is root-owned; turbo registers no //#build or //#check, and no non-test
-  // source imports a .md/.mdx file (?raw, import.meta.glob or a module import). Packet data
-  // (goals/*/ops/**/*.ts, goals/tsconfig.ops.json) stays in both footprints. Both lanes read the
-  // tree only, never commit messages, so the commits atom every head carries is removed too;
-  // without it every packet-only head would still select them.
   RouteRefinement.make({
     id: "packet-markdown-out-of-build-check",
     lanes: ["build", "check"],
@@ -111,9 +106,6 @@ const unrefined = (
 const BUILD_CLASS = "unrefined; propagation by lane class: the lane reads its package's dependency closure";
 const LOCAL_CLASS = "unrefined; propagation by lane class: the lane reads only the owning package or the root";
 const COVERAGE_CLASS = "unrefined; propagation by lane class: the coverage ratchet moves only on covered packages";
-// Replay evidence (2026-10-31): PR #1399 head 9a2e1b9644 has a tree identical to its merge base,
-// yet Security went red there while green on the base, because osv-scanner reads the live advisory
-// database (check.yml). The same feed reded #2332 with a six-comment-line diff.
 const EXTERNAL_ADVISORY =
   "unrefined; external: osv-scanner reads the live OSV advisory database, so the verdict can change with no change to the head";
 
@@ -209,7 +201,6 @@ export const routeFootprintCanonicalJson = (): string =>
     identity
   );
 
-// The external lanes, each seeded with an empty kind set: required before any atom is read.
 const externalLanes = (): HashMap.HashMap<CiLaneId, HashSet.HashSet<ChangeAtomKind>> =>
   pipe(
     routeFootprintList(),

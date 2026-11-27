@@ -73,8 +73,6 @@ const $I = $RepoCliId.create("commands/Ci/CostLedger");
 
 const isPlannedLane = S.is(CiLedgerPlannedLane);
 
-// The partitions a plan allocates whether or not its selection reached them: the Test Integration
-// bins without a shard (`int-rest`), which run every package the sharded bins do not own.
 const CATCH_ALL_PARTITIONS: ReadonlyArray<readonly [CiLedgerPlannedLane, string]> = pipe(
   CI_LANE_PARTITIONS,
   A.filter((partition) => partition.lane === "test-integration" && partition.shard === undefined),
@@ -83,19 +81,11 @@ const CATCH_ALL_PARTITIONS: ReadonlyArray<readonly [CiLedgerPlannedLane, string]
 const legKey = (lane: string, partition: string): string => `${lane}\u0000${partition}`;
 const CATCH_ALL_KEYS = HashSet.fromIterable(A.map(CATCH_ALL_PARTITIONS, ([lane, id]) => legKey(lane, id)));
 
-// ---------------------------------------------------------------------------------------------
-// Test Plan and partition log lines
-// ---------------------------------------------------------------------------------------------
-
-// `publish` in check.yml's Test Plan job: `test_unit: 3 of 24 partitions: unit-a unit-b unit-c`.
 const PUBLISHED_PLAN = /(test_unit|test_integration): \d+ of \d+ partitions:(.*)$/;
-// `planCiLanePartitions`: `[ci] test-integration plan: 1 partition(s) for 0 selected task(s) of 24: int-rest`.
 const PLAN_STEP = /\[ci\] (test-unit|test-integration) plan: \d+ partition\(s\) for (\d+) selected task\(s\) of (\d+)/;
-// `runCiPartitionedLane`: `[ci] test-integration partition union proved: 24 executable tasks, 0 selected, 0 in int-rest.`
 const PARTITION_PROOF =
   /\[ci\] (test-unit|test-integration) partition union proved: \d+ executable tasks, (\d+) selected, (\d+) in ([^ .]+)\./;
 
-// The Test Plan job publishes each lane's plan under its output name.
 const CiLedgerPlanOutput = LiteralKit(["test_unit", "test_integration"]).pipe(
   $I.annoteSchema("CiLedgerPlanOutput", {
     description: "The Test Plan job output that publishes one planned lane's partitions.",
@@ -110,7 +100,6 @@ const plannedLaneOfOutput = (output: typeof CiLedgerPlanOutput.Type): CiLedgerPl
 
 const TaskCount = S.NumberFromString.pipe(S.check(S.isInt(), S.isGreaterThanOrEqualTo(0)));
 
-// Each pattern's match, decoded as the tuple of the whole line and its groups.
 const decodePublishedPlan = S.decodeUnknownOption(S.Tuple([S.String, CiLedgerPlanOutput, S.String]));
 const decodePlanStep = S.decodeUnknownOption(S.Tuple([S.String, CiLedgerPlannedLane, TaskCount, TaskCount]));
 const decodePartitionProof = S.decodeUnknownOption(
@@ -212,10 +201,6 @@ export const parseCiLedgerPartitionProofs = (log: string): ReadonlyArray<CiLedge
       CiLedgerPartitionProof.make({ lane, partition, partitionTasks, selectedTasks })
   );
 
-// ---------------------------------------------------------------------------------------------
-// The fold
-// ---------------------------------------------------------------------------------------------
-
 const instant = (value: string | null): O.Option<number> =>
   O.map(O.flatMap(O.fromNullOr(value), DateTime.make), DateTime.toEpochMillis);
 
@@ -230,9 +215,6 @@ const jobMs = (job: CiWorkflowJob): number =>
 
 const isSkipped = (job: CiWorkflowJob): boolean => job.conclusion === "skipped";
 
-// A rerun attempt lists the jobs it did not re-execute again, under its own attempt number with the
-// earlier attempt's name and timestamps. Two jobs of one attempt with the same name and timestamps
-// (skipped matrix jobs) are two jobs.
 const isRerunCopy = (jobs: ReadonlyArray<CiWorkflowJob>, job: CiWorkflowJob): boolean =>
   A.some(
     jobs,
@@ -243,7 +225,6 @@ const isRerunCopy = (jobs: ReadonlyArray<CiWorkflowJob>, job: CiWorkflowJob): bo
       earlier.completed_at === job.completed_at
   );
 
-// The executed listing of a job: the latest attempt that ran it, never a skipped job or a rerun copy.
 const latestJobNamed = (jobs: ReadonlyArray<CiWorkflowJob>, name: string): O.Option<CiWorkflowJob> =>
   A.last(
     A.sort(
@@ -357,8 +338,6 @@ const shareOf = (part: number, total: number): O.Option<number> =>
 const rowsWithTasks = (rows: ReadonlyArray<CiLedgerRow>, tasks: CiLedgerLegTasks): ReadonlyArray<CiLedgerRow> =>
   A.filter(rows, (row) => O.contains(row.legTasks, tasks));
 
-// A caller job with no runner whose called jobs (`<caller> / <job>`) are listed is a wrapper: the
-// called jobs carry the runner time, so its wall time is never added to theirs.
 const wrapperNames = (jobs: ReadonlyArray<CiWorkflowJob>): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.getSomes(A.map(jobs, (job) => ciCallerJobName(job.name))));
 
@@ -374,7 +353,9 @@ const isWrapper =
  *
  * Rerun copies are dropped first (a later attempt's listing of a job with the
  * same name and timestamps as an earlier attempt's); skipped jobs
- * cost nothing and are counted apart; wrappers are measured apart. Every other
+ * cost nothing and are counted apart; wrappers are measured apart. A wrapper
+ * is a caller job with no runner whose called jobs (`<caller> / <job>`) are
+ * listed: the called jobs carry the runner time. Every other
  * job is attributed by the route census's `hostedJobAttribution`: a lane job
  * joins the row of its lane and partition, a support or unknown job adds to
  * those minutes. The lane, support and unknown minutes sum to `totalMs`, so no
@@ -464,8 +445,6 @@ export const foldCiLedgerRun = (run: CiLedgerRun): CiLedgerRunRow => {
   });
 };
 
-// The parts of a run's Test Plan join: its Test Plan output, then the selection line of each catch-all
-// partition job the run executed. Each part names itself, so a source row can say which one is missing.
 const testPlanParts = (run: CiLedgerRun): ReadonlyArray<readonly [string, boolean]> => [
   ["Test Plan output", O.isSome(run.testPlan)],
   ...A.flatMap(CATCH_ALL_PARTITIONS, ([lane, partition]) =>
@@ -484,10 +463,8 @@ const testPlanStatus = (run: CiLedgerRun): CiLedgerSourceStatus => {
   return ciLedgerSourceStatus(readParts(parts), parts.length);
 };
 
-// A run read every attempt it had, or names each attempt whose jobs read failed.
 const attemptsRead = (run: CiLedgerRun): number => Num.max(0, run.run.run_attempt - run.partialReads.length);
 
-// `<part> (<n> of <runs> runs)` for every part some run could not read.
 const missingParts = (runs: ReadonlyArray<CiLedgerRun>): ReadonlyArray<string> =>
   pipe(
     A.flatMap(runs, (run) => A.filter(testPlanParts(run), ([, read]) => !read)),
@@ -502,7 +479,6 @@ const withMissing = (note: string, missing: ReadonlyArray<string>): string =>
     onNonEmpty: (parts) => `${note}; missing: ${A.join(parts, ", ")}`,
   });
 
-// Sources this fold does not join yet, each with the lever that would supply it.
 const UNJOINED_SOURCES: ReadonlyArray<readonly [CiLedgerSourceKind, string]> = [
   [
     "turbo-tasks",
@@ -572,10 +548,6 @@ export const foldCiLedger = (capture: CiLedgerCapture): CiLedgerReport =>
     sources: sourceRows(capture.runs),
   });
 
-// ---------------------------------------------------------------------------------------------
-// Rendering
-// ---------------------------------------------------------------------------------------------
-
 const minutes = (ms: number): string => `${Num.round(ms / 60_000, 1)}`;
 
 const percent = (share: O.Option<number>): string =>
@@ -634,10 +606,6 @@ export const renderCiLedgerMarkdown = (report: CiLedgerReport): string =>
     ],
     "\n"
   );
-
-// ---------------------------------------------------------------------------------------------
-// The live reader
-// ---------------------------------------------------------------------------------------------
 
 /**
  * Service shape of the ledger's capture reader.

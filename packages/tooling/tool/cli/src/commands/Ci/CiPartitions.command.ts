@@ -394,7 +394,6 @@ export const renderCiPartitionReport = (report: CiPartitionRebalanceReport): Rea
   ...A.map(report.warnings, (warning) => `warning: ${warning}`),
 ];
 
-// One line per shard: the planned file time and the table weight it should carry.
 const shardPlanLines = (partitions: ReadonlyArray<CiLanePartition>, plan: VitestShardPlan): ReadonlyArray<string> =>
   A.map(
     A.zip(partitions, plan.estimatedMilliseconds),
@@ -435,7 +434,6 @@ const writeFamilyPlan = Effect.fn("CiPartitions.writeFamilyPlan")(function* (
   ];
 });
 
-// Package name by repository-relative directory, for mapping measured package paths back to names.
 const workspaceNamesByPath = Effect.fn("CiPartitions.workspaceNamesByPath")(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const workspaces = yield* workspaceManifests(repoRoot).pipe(
@@ -451,7 +449,6 @@ const workspaceNamesByPath = Effect.fn("CiPartitions.workspaceNamesByPath")(func
   );
 });
 
-// The largest measured wall of every bin package, keyed by package name.
 const measuredBinPackages = (
   timings: CiPartitionRunTimings,
   bins: ReadonlyArray<CiLanePartition>,
@@ -680,9 +677,6 @@ export const rebalanceCiPartitions = Effect.fn("CiPartitions.rebalance")(functio
   return A.appendAll(provenance, A.appendAll(A.flatten(planLines), binLines));
 });
 
-// `--write`: require at least one run, build the timing source for this command's scope and hand
-// its context to the program; the GitHub client and repository come from the same scope through
-// `withCiGithub`.
 const writeCiPartitionPlans = Effect.fn("CiPartitions.writeCiPartitionPlans")(function* (
   repoRoot: string,
   run: ReadonlyArray<number>

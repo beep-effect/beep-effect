@@ -70,7 +70,10 @@ export type PacketScanPolicy = typeof PacketScanPolicy.Type;
  *
  * `path` is always relative to the packet directory, never to the repository
  * and never absolute, so a document cannot address a location outside the
- * packet even before path containment is enforced.
+ * packet even before path containment is enforced. Every directory segment
+ * starts alphanumeric, so a hidden directory such as `.git/` is refused while a
+ * dotfile name such as `raw/.gitignore`, which every packet carries, is
+ * admitted; `.` and `..` are never a file name.
  *
  * **Example** (Describing a packet document)
  *
@@ -91,10 +94,6 @@ export type PacketScanPolicy = typeof PacketScanPolicy.Type;
  */
 export class PacketDocument extends S.Opaque<PacketDocument, { readonly brand: unique symbol }>()(
   S.Struct({
-    // Directory segments must start alphanumeric, so a hidden directory such as
-    // `.git/` is refused, while a dotfile filename such as `raw/.gitignore` —
-    // which every Codex packet requires — is admitted. The trailing lookahead
-    // rejects `.` and `..` as a filename in their own right.
     path: S.String.check(
       S.isPattern(
         /^(?:[A-Za-z0-9][A-Za-z0-9._-]*\/)*(?!\.\.?$)[A-Za-z0-9._-]+$/,
@@ -143,6 +142,12 @@ export class PacketDocument extends S.Opaque<PacketDocument, { readonly brand: u
  * directory — which the repository's commit-range secret scanner structurally
  * never sees — without any control at all.
  *
+ * **Details**
+ *
+ * `spreadsheet-formula` hits are ignored in `.md` documents, whose frontmatter
+ * and lists are not spreadsheet cells; captured CSV fields get the full scan
+ * before any document is rendered.
+ *
  * **Example** (Refusing a private path)
  *
  * ```ts
@@ -166,8 +171,6 @@ export const assertPacketDocumentsClean = Effect.fnUntraced(function* (documents
   const hits = A.flatMap(strict, (document) =>
     A.filter(
       scanSensitiveText(document.path, document.contents),
-      // Markdown frontmatter and lists are not spreadsheet cells. Imported
-      // CSV fields still receive the full scan before document rendering.
       (hit) => hit.code !== "spreadsheet-formula" || !Str.endsWith(".md")(document.path)
     )
   );
@@ -180,8 +183,6 @@ export const assertPacketDocumentsClean = Effect.fnUntraced(function* (documents
     });
   }
 
-  // Verbatim evidence is not refused, but the operator is told what it holds so
-  // ignored `raw/` never becomes a place where nobody is looking.
   const verbatim: ReadonlyArray<PacketDocument> = A.filter(documents, (document) => document.scan === "report");
   return describeSensitiveHits(A.flatMap(verbatim, (document) => scanSensitiveText(document.path, document.contents)));
 });
@@ -194,7 +195,13 @@ export const assertPacketDocumentsClean = Effect.fnUntraced(function* (documents
  * The staging directory is created inside `goals/` so the final promotion is a
  * same-filesystem rename. Promotion fails when the destination already exists,
  * which is the refuse-to-clobber guarantee — four packets of hand-written
- * triage prose are exactly what must never be silently overwritten.
+ * triage prose are exactly what must never be silently overwritten. It holds
+ * for a packet created after the existence check too, since a rename onto a
+ * non-empty directory fails. With `force` the existing packet is moved aside
+ * rather than deleted and put back when promotion fails, so a failed rename
+ * never loses both the replacement and the packet it replaced. Every
+ * containment decision is made against the canonical repository root, so a
+ * symlink later swapped in for `goals/` gains no write authority.
  *
  * **Gotchas**
  *
@@ -229,8 +236,6 @@ export const writePacket = Effect.fnUntraced(function* (options: {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  // Every containment decision is made against the canonical repository root,
-  // so a symlink later swapped in for `goals/` cannot inherit write authority.
   const canonicalRoot = yield* fs
     .realPath(options.repoRoot)
     .pipe(
@@ -293,10 +298,6 @@ export const writePacket = Effect.fnUntraced(function* (options: {
         );
       }
 
-      // Under --force the existing packet is moved aside rather than deleted,
-      // so a failed promotion can put it back. Deleting first would open a
-      // window where a rename failure loses the replacement AND the packet of
-      // hand-written triage prose it was replacing.
       const replacing = options.force === true && exists;
       const backupDir = `${stagingDir}-replaced`;
 
@@ -310,12 +311,7 @@ export const writePacket = Effect.fnUntraced(function* (options: {
           );
       }
 
-      // A rename onto an existing non-empty directory fails, so the
-      // refuse-to-clobber guarantee survives a packet created between the
-      // existence check above and this promotion.
       const restoreThenFail = Effect.fnUntraced(function* (cause: unknown) {
-        // Put the replaced packet back before surfacing the failure, so a lost
-        // promotion never also loses the packet it was replacing.
         if (replacing) {
           yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
         }

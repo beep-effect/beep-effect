@@ -257,9 +257,6 @@ const heavyAdmissionLaneSkipsDefault = A.empty<CiLaneId>();
 const RouteReceiptJson = S.fromJsonString(S.Unknown);
 const decodeRouteSentinel = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
 
-// An admission read never blocks Heavy: a stall past the bound or any failure falls back to running
-// every lane, and the cause goes to stderr (stdout carries the admission JSON) so a read that breaks
-// on every PR stays visible in the job log.
 const failOpenWithin =
   <A>(readTimeout: Duration.Input, label: string, fallback: A) =>
   <E, R>(read: Effect.Effect<A, E, R>): Effect.Effect<A, never, R> =>
@@ -491,7 +488,6 @@ const safeBranch = (branch: string): Effect.Effect<string, CiCommandError> =>
     ? Effect.succeed(branch)
     : Effect.fail(CiCommandError.make({ message: `ci admission refuses an unsafe base branch "${branch}".` }));
 
-// `origin/main` → `main`; a bare `main` stays `main`.
 const branchOfBase = (base: string): string => Str.replace(/^origin\//u, "")(base);
 
 /**
@@ -613,6 +609,8 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
  *
  * Push and merge-group events never consult the classifier. Receipts are capped at 16 KiB of
  * UTF-16 output, well below GitHub's 1 MiB job output limit; overflow retains every lane.
+ * A stall past the read bound or any other failure also retains every lane, and the cause
+ * goes to stderr, since stdout carries the admission JSON.
  *
  * **Example** (Build the route read)
  *

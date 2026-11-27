@@ -88,6 +88,14 @@ const ProjectionJson = S.fromJsonString(UnitTimingProjection);
 const encodeProjection = S.encodeEffect(ProjectionJson);
 
 /**
+ * **Details**
+ *
+ * `writtenSince` is epoch seconds, the job's setup start: a report last
+ * written before it was left by an earlier attempt in a kept workspace and is
+ * not read. A file system that records no modification time keeps every
+ * report. A manifest stamped with another `runId` or `runAttempt` selects
+ * nothing.
+ *
  * **Example** (Project a local partition)
  *
  * ```ts
@@ -140,10 +148,6 @@ type Selection = {
 const byReportPath = Order.mapInput(Order.String, (row: UnitTimingPackage) => row.reportPath);
 const byFilePath = Order.mapInput(Order.String, (row: UnitTimingFile) => row.path);
 
-// The Vitest reports one workspace holds: `coverage/unit-results.json`, invocation 0, and
-// `coverage/invocation-<n>/unit-results.json`, the layout CiCoverage gives a multi-invocation package. With
-// `writtenSince` (epoch seconds, the job's setup start), a report last written before it is a file a kept
-// workspace held from an earlier attempt, and is not this attempt's row.
 const workspaceReports = Effect.fnUntraced(function* (
   repoRoot: string,
   packageName: string,
@@ -176,7 +180,6 @@ const workspaceReports = Effect.fnUntraced(function* (
     const info = yield* fs.stat(file).pipe(CiCommandError.mapError(`Failed to stat ${path.relative(repoRoot, file)}.`));
     return O.match(writtenSince, {
       onNone: () => true,
-      // A file system that records no modification time keeps the report.
       onSome: (since) => !O.exists(info.mtime, (mtime) => mtime.getTime() < since * 1000),
     });
   });
@@ -205,8 +208,6 @@ const rowBase = (location: ReportLocation, selection: O.Option<Selection>) => ({
   shard: O.flatMap(selection, (entry) => entry.shard),
 });
 
-// An invocation the manifest selected whose report this attempt did not write (absent, or left by an earlier
-// attempt and dropped by `writtenSince`) is `missing`, never read.
 const missingRow = (location: ReportLocation, selection: O.Option<Selection>) =>
   UnitTimingPackage.make({
     ...rowBase(location, selection),
@@ -217,7 +218,6 @@ const missingRow = (location: ReportLocation, selection: O.Option<Selection>) =>
     files: [],
   });
 
-// A report this attempt wrote: `workspaceReports` already proved it present and fresh.
 const packageRow = Effect.fnUntraced(function* (
   repoRoot: string,
   location: ReportLocation,
@@ -267,9 +267,6 @@ const packageRow = Effect.fnUntraced(function* (
   );
 });
 
-// The selections the partition's sealed manifest names, keyed by report path; none when the producer sealed
-// nothing (a red shard), or when the manifest is stamped for another run or attempt (a workspace a self-hosted
-// runner kept), so an earlier attempt's selection never reads as this attempt's.
 const isOtherAttempt = (identity: (typeof ManifestView.Type)["identity"], options: UnitTimingOptions): boolean =>
   O.exists(options.runId, (runId) => identity.runId !== `${runId}`) ||
   O.exists(options.runAttempt, (attempt) => identity.runAttempt !== attempt);
@@ -322,11 +319,14 @@ const manifestSelections = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * Every workspace's report is a row, so a red shard still reports the
- * packages it executed. When the partition's coverage manifest exists, each
- * row it names carries `expectedTestFiles`, and an invocation it names whose
- * report is gone is a `missing` row. A report that does not decode is an
- * `unreadable` row; only a file-system or manifest failure fails the effect.
+ * Each workspace's reports are `coverage/unit-results.json` (invocation 0)
+ * and `coverage/invocation-<n>/unit-results.json`. Every workspace's report is
+ * a row, so a red shard still reports the packages it executed. When the
+ * partition's coverage manifest exists, each row it names carries
+ * `expectedTestFiles`, and an invocation it names whose report is gone or
+ * older than `writtenSince` is a `missing` row. A report that does not decode
+ * is an `unreadable` row; only a file-system or manifest failure fails the
+ * effect.
  *
  * **Example** (Inspect the projection effect)
  *
@@ -390,8 +390,6 @@ type CensusGroup = {
 const runKey = (projection: UnitTimingProjection) => `${O.getOrElse(projection.runId, () => "local")}`;
 const attemptOf = (projection: UnitTimingProjection) => O.getOrElse(projection.runAttempt, () => 1);
 
-// "Re-run failed jobs" gives only the re-run partitions a new attempt, so a run's evidence is each partition's
-// latest attempt: an older attempt of a partition the run re-ran is dropped, never added.
 const latestAttempts = (projections: ReadonlyArray<UnitTimingProjection>): ReadonlyArray<UnitTimingProjection> =>
   HashMap.toValues(
     A.reduce(projections, HashMap.empty<string, UnitTimingProjection>(), (acc, projection) => {

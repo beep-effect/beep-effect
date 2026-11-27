@@ -132,8 +132,6 @@ class LicenseLeaf extends S.Opaque<LicenseLeaf, { readonly brand: unique symbol 
   }).pipe($I.annoteSchema("LicenseLeaf", { description: "One normalized license term of an SPDX expression." }))
 ) {}
 
-// Version families of the denied licenses, oldest first, after `-only` and
-// `-or-later` normalization (the spdx-ranges data the action consults).
 const LICENSE_VERSION_RANGES: ReadonlyArray<ReadonlyArray<string>> = [
   ["AGPL-1.0", "AGPL-3.0"],
   ["GPL-1.0", "GPL-2.0", "GPL-3.0"],
@@ -156,7 +154,6 @@ const sameLeaf = (self: LicenseLeaf, that: LicenseLeaf): boolean => self.key ===
 const mergeGroups = (left: ReadonlyArray<LicenseLeaf>, right: ReadonlyArray<LicenseLeaf>) =>
   A.dedupeWith(A.appendAll(left, right), sameLeaf);
 
-// Expand an expression into OR-ed groups of AND-ed terms.
 const expand: (expression: SpdxExpression) => ReadonlyArray<ReadonlyArray<LicenseLeaf>> =
   Match.type<SpdxExpression>().pipe(
     Match.tagsExhaustive({
@@ -242,7 +239,6 @@ export const decideLicense: {
         )
 );
 
-// Checked in order, against lowercased gh output: a rate limit also answers 403.
 const GITHUB_FAILURE_MARKERS: ReadonlyArray<readonly [DependencyReviewUnknownReason, ReadonlyArray<string>]> = [
   ["rate-limited", ["(http 429)", "rate limit"]],
   ["permission-denied", ["(http 401)", "(http 403)"]],
@@ -251,6 +247,11 @@ const GITHUB_FAILURE_MARKERS: ReadonlyArray<readonly [DependencyReviewUnknownRea
 
 /**
  * Map a failed `gh api` reply to the reason the review is unknown.
+ *
+ * **Details**
+ *
+ * Markers match the lowercased reply, rate limits first: GitHub also answers a
+ * rate limit with HTTP 403.
  *
  * **Example** (Classify a permission failure)
  *
@@ -314,14 +315,11 @@ const decodeComparePage = S.decodeUnknownEffect(S.fromJsonString(DependencyGraph
  */
 export const DEPENDENCY_REVIEW_COMPARE_PAGE_LIMIT = 500;
 
-// RFC 8288 Link entries: `<url>; rel="next", <url>; rel="last"`. Entries split
-// only at a comma that opens the next `<`, so commas inside a URL survive.
 const LINK_ENTRY_SEPARATOR = /,(?=\s*<)/u;
 const LINK_ENTRY = /^\s*<([^>]*)>/u;
 const LINK_REL = /;\s*rel\s*=\s*(?:"([^"]*)"|([^\s;,]+))/iu;
 const isPageNumber = S.is(S.Int.check(S.isGreaterThan(0)));
 
-// `gh api -i` prints the status line, the headers, one blank line, then the body.
 const httpReplyParts = (output: string) => {
   const lines = Str.split(output, "\n");
   return pipe(
@@ -341,7 +339,6 @@ const isNextEntry = (entry: string): boolean =>
     O.exists((rel) => A.contains(Str.split(/\s+/u)(Str.toLowerCase(Str.trim(rel))), "next"))
   );
 
-// The `page` query parameter by name, wherever it appears in the query.
 const queryPage = (url: string): O.Option<number> =>
   pipe(
     Str.indexOf("?")(url),
@@ -351,16 +348,6 @@ const queryPage = (url: string): O.Option<number> =>
     O.filter(isPageNumber)
   );
 
-/**
- * The page a `Link` header's `rel="next"` entry names: none when there is no
- * `rel="next"` (the last page), a failure when a `rel="next"` entry exists but
- * names no readable `page` (a cursor link, a page parameter that is not a
- * positive integer, or an entry without `<url>`), so a page that cannot be
- * followed is never mistaken for the last one.
- *
- * @param headers - Response header lines, including any pagination links.
- * @returns The next page number, no page for the last response, or an invalid-link error.
- */
 const nextPage = (headers: ReadonlyArray<string>): Result.Result<O.Option<number>, string> =>
   pipe(
     headers,
@@ -454,7 +441,8 @@ const licenseFinding = (change: DependencyChange, license: string | null, decisi
  * **Details**
  *
  * `review` never fails: GitHub and decode failures become the `unknown`
- * verdict. The live layer reads GitHub through {@link GithubPolicyClient};
+ * verdict. A dependency repository GitHub answers 404 for has no license, as
+ * in the action. The live layer reads GitHub through {@link GithubPolicyClient};
  * tests provide a recorded client instead.
  *
  * **Example** (Reference the contract)
@@ -509,8 +497,6 @@ export const makeDependencyReviewLayer = (settings: DependencyReviewSettings) =>
         return yield* replyOutput(endpoint, reply);
       });
 
-      // The compare API answers 200 with an empty list for commits it does
-      // not know, which would pass review. Both commits must resolve first.
       const verifyCommit = Effect.fn("DependencyReview.verifyCommit")(function* (sha: string) {
         const endpoint = `repos/{owner}/{repo}/commits/${sha}`;
         const read1 = yield* read(endpoint, ["--jq", ".sha"]);
@@ -522,9 +508,6 @@ export const makeDependencyReviewLayer = (settings: DependencyReviewSettings) =>
           );
       });
 
-      // One `per_page=1` page per request, each its own bounded capture,
-      // following `rel="next"` (a page may be empty mid-sequence) up to the
-      // page ceiling. Any failed, truncated, malformed or skipped page is unknown.
       const comparePage = Effect.fn("DependencyReview.comparePage")(function* (
         request: DependencyReviewRequest,
         page: number
@@ -567,8 +550,6 @@ export const makeDependencyReviewLayer = (settings: DependencyReviewSettings) =>
         return rows;
       });
 
-      // GitHub answers 404 for a repository without a detectable license; the
-      // action records that as no license. Every other failure is unknown.
       const repositoryLicense = Effect.fn("DependencyReview.repositoryLicense")(function* (repository: string) {
         const endpoint = `repos/${repository}/license`;
         const reply = yield* client

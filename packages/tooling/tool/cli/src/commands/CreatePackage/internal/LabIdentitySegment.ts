@@ -135,14 +135,9 @@ export class LabIdentitySegmentState extends S.Opaque<LabIdentitySegmentState, {
 ) {}
 
 const BEEP_SCOPE_PREFIX = "@beep/";
-// Mirrors `formatter.lineWidth` in the root biome.jsonc so regenerated region
-// text is already biome-canonical and `yeet repair` never churns it.
 const BIOME_LINE_WIDTH = 120;
 const EMPTY_LAB_COMPOSERS_REGION = "const generatedLabComposers = {};";
-// The labs compose group is a pure registry: only `RepoPkgs` evaluates it, so a bundle that never
-// reads `RepoPkgs` drops the group and its slugs.
 const LAB_COMPOSERS_DECLARATION_HEAD = `const generatedLabComposers = ${PURE_ANNOTATION} $I.compose`;
-// Where biome breaks an over-long leaf export: after `=`, before the pure-annotated initializer.
 const LEAF_INITIALIZER_JOIN = ` = ${PURE_ANNOTATION} $I.create(`;
 
 const markerError = (problem: string, marker: string): DomainError =>
@@ -170,10 +165,6 @@ const markerIndexOnce = (content: string, marker: string): Effect.Effect<number,
     })
   );
 
-/**
- * Locate one marker-fenced region, returning the body span between the line
- * after the start marker and the start of the end-marker line.
- */
 const locateRegion = Effect.fnUntraced(function* (content: string, startMarker: string, endMarker: string) {
   const startIndex = yield* markerIndexOnce(content, startMarker);
   const endIndex = yield* markerIndexOnce(content, endMarker);
@@ -212,14 +203,6 @@ const regionBody = Effect.fnUntraced(function* (content: string, startMarker: st
   return Str.slice(bodyStart, bodyEnd)(content);
 });
 
-/**
- * Render the labs composer group body: the empty-object state for zero labs
- * (`$I.compose` requires at least one segment) or a `$I.compose(...)` call
- * over the sorted slugs in biome-canonical layout.
- *
- * @param slugs - Lab workspace slugs to render into the composer group.
- * @returns The composer-region body text.
- */
 const renderLabComposersRegion = (slugs: ReadonlyArray<string>): string => {
   if (A.isReadonlyArrayEmpty(slugs)) {
     return EMPTY_LAB_COMPOSERS_REGION;
@@ -243,13 +226,6 @@ const renderLabComposersRegion = (slugs: ReadonlyArray<string>): string => {
       ]);
 };
 
-/**
- * Render one lab's typed export block, breaking the export statement the way
- * biome would when it exceeds the configured line width.
- *
- * @param slug - Lab workspace slug the export block targets.
- * @returns The rendered typed export block.
- */
 const labExportBlock = (slug: string): string => {
   const block = CreatePackageIdentityRegistration.typedIdentityExportBlock(slug);
   const lastLineStart = pipe(Str.lastIndexOf("\n")(block), O.match({ onNone: () => 0, onSome: (index) => index + 1 }));
@@ -258,8 +234,6 @@ const labExportBlock = (slug: string): string => {
     return block;
   }
 
-  // Biome keeps `... = /*#__PURE__*/ $I.create(` on one line and breaks the argument when that
-  // head fits the line width; otherwise it breaks after `=` and indents the initializer.
   const leafCall = `$I.create("${slug}");`;
   const headWidth = Str.length(block) - lastLineStart - Str.length(leafCall) + Str.length("$I.create(");
 
@@ -268,14 +242,6 @@ const labExportBlock = (slug: string): string => {
     : Str.replace(LEAF_INITIALIZER_JOIN, ` =\n  ${PURE_ANNOTATION} $I.create(`)(block);
 };
 
-/**
- * Render the labs export-block body: one typed identity export per sorted
- * slug, reusing the `typedIdentityExportBlock` JSDoc template so the
- * `@beep/identity` docgen and JSDoc lint lanes stay green; empty for zero labs.
- *
- * @param slugs - Lab workspace slugs to render into the export block.
- * @returns The export-region body text.
- */
 const renderLabExportsRegion = (slugs: ReadonlyArray<string>): string =>
   A.join(A.map(A.sort(slugs, Order.String), labExportBlock), "\n");
 
@@ -294,10 +260,6 @@ const replaceLabRegions = Effect.fnUntraced(function* (content: string, slugs: R
   );
 });
 
-/**
- * Enumerate the `@beep/*` workspace slugs whose directory sits below
- * `apps/labs`, sorted by slug.
- */
 const expectedLabSlugs = Effect.fn("LabIdentitySegment.expectedLabSlugs")(function* (repoRoot: string) {
   const path = yield* Path.Path;
   const workspaces = yield* workspaceDirectories(repoRoot);
@@ -312,10 +274,6 @@ const expectedLabSlugs = Effect.fn("LabIdentitySegment.expectedLabSlugs")(functi
   return A.sort(slugs, Order.String);
 });
 
-/**
- * Read the labs segment out of registry content and compare it against the
- * expected lab slugs, including live labs registered outside the regions.
- */
 const stateFromRegistryContent = Effect.fnUntraced(function* (content: string, expectedSlugs: ReadonlyArray<string>) {
   const composersBody = yield* regionBody(content, LAB_COMPOSERS_START_MARKER, LAB_COMPOSERS_END_MARKER);
   const exportsBody = yield* regionBody(content, LAB_EXPORTS_START_MARKER, LAB_EXPORTS_END_MARKER);
@@ -360,10 +318,6 @@ const readRegistryContent = Effect.fnUntraced(function* (repoRoot: string) {
   return [absolutePath, content] as const;
 });
 
-/**
- * Regenerate both marker-fenced labs regions from the live workspace catalog,
- * writing the registry only when the rendered text differs.
- */
 const syncLabIdentitySegment = Effect.fn("LabIdentitySegment.syncLabIdentitySegment")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const [absolutePath, content] = yield* readRegistryContent(repoRoot);
@@ -381,9 +335,6 @@ const syncLabIdentitySegment = Effect.fn("LabIdentitySegment.syncLabIdentitySegm
   return { changed, state };
 });
 
-/**
- * Read-only labs segment diff for lint and doctor consumers; never writes.
- */
 const diffLabIdentitySegment = Effect.fn("LabIdentitySegment.diffLabIdentitySegment")(function* (repoRoot: string) {
   const [, content] = yield* readRegistryContent(repoRoot);
   const expected = yield* expectedLabSlugs(repoRoot);
@@ -393,6 +344,26 @@ const diffLabIdentitySegment = Effect.fn("LabIdentitySegment.diffLabIdentitySegm
 /**
  * Labs identity-segment surface shared by create-package, delete-package,
  * the identity-registry lint, and the architecture command.
+ *
+ * **Details**
+ *
+ * - `syncLabIdentitySegment` regenerates both marker-fenced labs regions from the live workspace
+ *   catalog and writes the registry only when the rendered text differs. `diffLabIdentitySegment`
+ *   is the read-only diff for lint and doctor consumers and never writes.
+ * - `expectedLabSlugs` lists the beep-scoped slugs whose directory sits below `apps/labs`,
+ *   sorted by slug. The diff also reports live labs registered outside the regions.
+ * - `renderLabComposersRegion` renders the empty object for zero labs (`$I.compose` requires at
+ *   least one segment), otherwise one `$I.compose(...)` call over the sorted slugs.
+ * - `renderLabExportsRegion` renders one typed export per sorted slug from the
+ *   `typedIdentityExportBlock` template, so the identity package docgen and JSDoc lint stay
+ *   green; it is empty for zero labs.
+ * - Both renderers emit the layout biome writes at the root `formatter.lineWidth` of 120, so
+ *   `yeet repair` never rewrites a regenerated region.
+ *
+ * **Gotchas**
+ *
+ * The labs compose group is a pure registry that only `RepoPkgs` evaluates: a bundle that never
+ * reads `RepoPkgs` drops the group and its slugs.
  *
  * **Example** (Build a labs segment sync effect)
  *

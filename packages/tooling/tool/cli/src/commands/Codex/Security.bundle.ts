@@ -35,16 +35,10 @@ const decodeJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const utf8 = new TextDecoder();
-/** Per-artifact ceiling: 16 MiB. */
-const MAX_ARTIFACT_BYTES = S.Natural.make(16777216);
-/** Whole-bundle ceiling across every file read: 64 MiB. */
-const MAX_BUNDLE_BYTES = 67108864;
+const MAX_ARTIFACT_BYTES = S.Natural.make(16 * 1024 * 1024);
+const MAX_BUNDLE_BYTES = 64 * 1024 * 1024;
 
 type SealedArtifact = { readonly path: string; readonly bytes: Uint8Array };
-/**
- * Where the repository identity came from. Only the wrapper receipt is
- * deterministic; a sealed remote is model-written and unverified upstream.
- */
 type ScanIdentity = {
   readonly repository: GitHubRepoSlug;
   readonly repositorySource: "local-source-receipt" | "sealed-remote-unverified";
@@ -95,10 +89,6 @@ const artifactReadError = (cause: FsGuardError): CodexSecurityError =>
     cause,
   });
 
-/**
- * Bounded, contained, symlink-refusing read of one bundle file that also
- * charges the bytes against the whole-bundle budget. `None` means absent.
- */
 const readSealedBytes = Effect.fn("CodexSecurity.readSealedBytes")(function* (
   root: string,
   relative: string,
@@ -184,8 +174,6 @@ const verifySealedArtifacts = Effect.fn("CodexSecurity.verifySealedArtifacts")(f
   );
 });
 
-// Manifest binding and digest verification establish the required entries before lookup.
-// Keep the typed missing-artifact fallback for callers through the standard Option fold.
 const sealedArtifactBytes = Effect.fn("CodexSecurity.sealedArtifactBytes")(
   (artifacts: ReadonlyArray<SealedArtifact>, name: string): Effect.Effect<Uint8Array, CodexSecurityError> =>
     O.match(
@@ -235,12 +223,6 @@ const receiptDisagrees = (
   receipt.revision !== manifest.scan.target.revision ||
   O.exists(remoteRepository, (repository) => repository !== receipt.repository);
 
-/**
- * The wrapper receipt is the identity whenever it exists: it is written from the
- * actual checkout, while the sealed remote is model-asserted. A remote that
- * normalizes must agree with the receipt; one that does not is ignored. Without
- * a receipt the sealed remote is used and labelled unverified.
- */
 const resolveScanIdentity = Effect.fn("CodexSecurity.resolveScanIdentity")(function* (
   root: string,
   manifest: SecurityManifest,
@@ -273,14 +255,6 @@ const reportOf = (manifest: SecurityManifest) => (finding: SecurityFindings["fin
     detectedAt: manifest.scan.completedAt,
   }));
 
-/**
- * Projects verified inputs into the capture payload, private reports, and evidence record.
- *
- * Only the capture projection (titles, ids, repository, commit) reaches tracked
- * files, so only it is hard-scanned. The raw upstream findings and coverage stay
- * complete in the private evidence record: a credential finding is secret-shaped
- * by definition, and refusing it would abort every real scan.
- */
 const projectCapture = Effect.fn("CodexSecurity.projectCapture")(function* (input: {
   readonly manifest: SecurityManifest;
   readonly manifestBytes: Uint8Array;
@@ -338,7 +312,20 @@ const projectCapture = Effect.fn("CodexSecurity.projectCapture")(function* (inpu
  * **Details**
  * Complete and partial coverage can both supply findings; neither supplies a
  * remediation verdict. File references must resolve beneath the bundle root.
- * Seals establish consistency, not authenticity of scanner claims.
+ * Seals establish consistency, not authenticity of scanner claims. Each file
+ * read is contained, refuses symlinks and is bounded at 16 MiB, with 64 MiB
+ * across the whole bundle.
+ *
+ * The repository identity is the wrapper's source receipt whenever it exists,
+ * since the receipt is written from the actual checkout while the sealed remote
+ * is model-written. A sealed remote that normalizes must agree with the
+ * receipt, and one that does not is ignored; without a receipt the sealed
+ * remote is used and labelled `sealed-remote-unverified`.
+ *
+ * Only the capture projection (titles, ids, repository, commit) reaches
+ * tracked files, so only it is hard-scanned. The raw upstream findings and
+ * coverage stay complete in the private evidence record: a credential finding
+ * is secret-shaped by definition, and refusing it would abort every real scan.
  *
  * **Example** (Composing a bundle import)
  * ```ts

@@ -185,6 +185,8 @@ export type CodexFindingId = typeof CodexFindingId.Type;
  *
  * Keep the provider's namespace intact. A legacy bare ID is not automatically
  * an alias: refresh must never silently merge identities across export formats.
+ * Only the `commit:` namespace is admitted, the one a real export verified; a
+ * new namespace is admitted with its own fixture, never stripped to a bare ID.
  *
  * **Example** (Recognizing a commit finding)
  *
@@ -431,10 +433,6 @@ const CodexFindingTitleChecks = S.makeFilterGroup([
       message: "Expected a finding title without control or bidirectional format characters",
     })
   ),
-  // A title is captured from an external system and flows into tracked
-  // Markdown that a reader may well paste into a spreadsheet. A leading sigil
-  // is what turns that value into a formula, so it is refused at the boundary
-  // rather than neutralized downstream.
   S.isPattern(
     /^[^=+\-@]/u,
     $I.annote("CodexFindingTitleFormulaCheck", {
@@ -454,7 +452,10 @@ const CodexFindingTitleChecks = S.makeFilterGroup([
  * bidirectional overrides (`U+202E` and friends) that would otherwise let a
  * title reverse how a generated table row renders in a reviewer's diff. Markdown
  * metacharacters are escaped separately at render time; this check only
- * guarantees the value is single-line printable text.
+ * guarantees the value is single-line printable text. A title opening with
+ * `=`, `+`, `-` or the at sign is refused at the boundary rather than
+ * neutralized downstream: titles reach tracked Markdown that a reader may paste
+ * into a spreadsheet, where that sigil turns the value into a formula.
  *
  * **Example** (Rejecting a bidi override)
  *

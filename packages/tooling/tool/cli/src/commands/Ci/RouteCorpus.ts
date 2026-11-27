@@ -171,7 +171,9 @@ export type RouteGhRunner = (
  * reset instant with `gh api rate_limit`, wait for it once (at most 60
  * minutes) and retry the call. When the wait is too long, the reset is
  * unknown, or the retry is refused again, capture fails with a `corpus-fetch`
- * {@link RouteError} that names the reset instant.
+ * {@link RouteError} that names the reset instant. `requests` counts the
+ * task-outcome requests the refused call had already sent; the capture adds
+ * them to the retried call's count.
  *
  * **Example** (Refuse a call for the rate limit)
  *
@@ -195,7 +197,6 @@ export class RouteGhRateLimited extends S.TaggedError<RouteGhRateLimited, { read
   {
     command: S.String,
     output: S.String,
-    // The task-outcome requests the refused call had already sent, so the capture can count them across the wait.
     requests: S.Int.pipe(S.withConstructorDefault(Effect.succeed(0))),
   },
   $I.annoteError<RouteGhRateLimited>("RouteGhRateLimited", {
@@ -203,8 +204,6 @@ export class RouteGhRateLimited extends S.TaggedError<RouteGhRateLimited, { read
   })
 ) {}
 
-// gh spells an absent value as a missing key, `null`, an empty string, or Go's
-// zero time (`0001-01-01T00:00:00Z` for a job that never started or finished).
 const GhText = S.OptionFromOptionalNullOr(S.String).pipe(
   $I.annoteSchema("GhText", {
     description: "A gh text field that may be missing or null; empty and zero-time values are dropped later.",
@@ -292,8 +291,6 @@ const presentText = (value: O.Option<string>): O.Option<string> =>
 const hostedStepOf = (step: GhRunViewStep): HostedStep =>
   HostedStep.make({ name: step.name, conclusion: presentText(step.conclusion) });
 
-// Steps are kept only on a failed job, the one job the replay judges by them, so the pinned corpus stays
-// small.
 const hostedJobOf = (job: GhRunViewJob): HostedJob => {
   const conclusion = presentText(job.conclusion);
   return HostedJob.make({
@@ -329,11 +326,9 @@ const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(AnyTaskOutc
 );
 const decodeTaskOutcomeRead = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRead));
 
-// The task-outcome reads a continued capture carries from its receipt; a window started again counts afresh.
 const carriedReads = (loaded: RouteCorpusLoaded, kept: boolean): number =>
   kept ? O.getOrElse(loaded.receipt.taskOutcomeReads, () => 0) : 0;
 
-// A fetched run and the GitHub requests its task-outcome records cost.
 type FetchedRun = { readonly run: HostedRun; readonly reads: number };
 
 const isFailedJob = (job: HostedJob): boolean => O.exists(job.conclusion, (value) => Str.Equivalence(value, "failure"));
@@ -343,7 +338,6 @@ const isFailedJob = (job: HostedJob): boolean => O.exists(job.conclusion, (value
 const recordFor = (records: ReadonlyArray<AnyTaskOutcomeRecord>, job: HostedJob): O.Option<AnyTaskOutcomeRecord> =>
   A.findFirst(records, (record) => record.job === job.name || Str.startsWith(`${record.job} / `)(job.name));
 
-// Tasks are kept on the jobs that keep steps: the failed ones.
 const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<AnyTaskOutcomeRecord>): HostedRun =>
   HostedRun.make({
     ...run,
@@ -357,8 +351,6 @@ const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<AnyTaskOutcomeR
     ),
   });
 
-// A pull-request run, or a push to `main`. Only finished ones are fetched; an
-// unfinished one keeps its day open so a later capture lists it again.
 const isEligibleRun = (row: GhRunListRow): boolean =>
   row.event === "pull_request" || (row.event === "push" && row.headBranch === "main");
 const isFinishedRun = (row: GhRunListRow): boolean => row.status === "completed";
@@ -376,8 +368,6 @@ const dayBefore = (day: DateTime.Utc): string => DateTime.formatIsoDateUtc(DateT
 const sameWorkflows = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
   Equal.equals(HashSet.fromIterable(left), HashSet.fromIterable(right));
 
-// A capture day is a canonical UTC `YYYY-MM-DD`: it must parse and format back
-// to itself, which rejects both other spellings and impossible dates.
 const parseDay = (reason: "corpus-fetch" | "corpus-pin", label: string, day: string) =>
   pipe(
     DateTime.make(day),
@@ -438,7 +428,6 @@ const isIndexedGateFile = (file: string): boolean =>
 
 const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
   const entries = yield* Effect.try({
-    // Only small JSON entries are inflated; every other entry is skipped before it expands.
     try: () =>
       unzipSync(new Uint8Array(bytes), {
         filter: (file) =>
@@ -499,13 +488,12 @@ const ghRun = (run: typeof RunWire.Type) => ({
  * @category constructors
  * @since 0.0.0
  */
+// decision: per-attempt-page-fallback-anchor
 export const makeRouteGithubRunner = Effect.gen(function* () {
   const client = yield* GitHubClient;
   const repo = yield* Repo;
   const rest = yield* GithubRest;
   const at = { owner: repo.owner, repo: repo.repo };
-  // `spent` counts the task-outcome requests of one call across its retries, so a retried listing or download is
-  // counted every time it is sent.
   const runGh: RouteGhRunner = (args) =>
     Effect.flatMap(Ref.make(0), (spent) =>
       Effect.gen(function* () {
@@ -605,9 +593,6 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
             run_id: runId,
             per_page: perPage,
           });
-        // Some runs answer 502 on every 100-job page yet read cleanly at 30 (run 42669948388;
-        // certainty-scorecard decision `per-attempt-page-fallback`), so a transport failure is
-        // retried once in pages of 30 before the call fails.
         const jobs = yield* jobPages(ROUTE_CORPUS_JOB_PAGE).pipe(
           Effect.catchIf(GitHubError.hasKind("transport"), () => jobPages(ROUTE_CORPUS_JOB_FALLBACK_PAGE)),
           Effect.flatMap(decodeJobRows)
@@ -629,7 +614,6 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
           schedule: Schedule.exponential(Duration.seconds(1)),
           while: P.not(P.isTagged("RouteGhRateLimited")),
         }),
-        // A rate-limited call hands the requests it already sent to the caller that waits for the reset.
         Effect.catchTag("RouteGhRateLimited", (refused) =>
           Effect.flatMap(Ref.get(spent), (requests) => Effect.fail(RouteGhRateLimited.make({ ...refused, requests })))
         )
@@ -638,12 +622,9 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
   return runGh;
 }).pipe(Effect.withSpan("RouteCorpus.githubRunner"));
 
-// The gh command line the corpus names in an unreadable-payload message.
 const unreadableCommand = (args: ReadonlyArray<string>): string =>
   args[1] === "list" ? `gh run list --workflow ${args[3]} --created ${args[5]}` : `gh run view ${args[2]}`;
 
-// A GitHub failure in the corpus's gh wording: a rate limit stays its own tag, a refusal names gh's exit, a decode
-// failure is an unreadable payload.
 const githubFailure = (args: ReadonlyArray<string>, error: unknown): RouteError | RouteGhRateLimited => {
   const command = A.join(["gh", ...args], " ");
   if (!S.is(GitHubError)(error))
@@ -715,8 +696,6 @@ const gunzipText = (bytes: Uint8Array, file: string) =>
     catch: RouteError.mapError("corpus-pin", `${file} is not a gzip of UTF-8 text.`),
   });
 
-// One `HostedRun` per line, each line newline-terminated; an empty corpus is an
-// empty file. A missing final newline means a truncated write.
 const corpusLines = (text: string, file: string) =>
   Str.isEmpty(text)
     ? Effect.succeed(A.empty<string>())
@@ -755,15 +734,11 @@ const encodeCorpus = Effect.fnUntraced(function* (
   return yield* gzipText(text, file);
 });
 
-// Capture state threaded through the days: the runs by id, the digest of the
-// corpus on disk while it still matches them, the last fully captured day, and
-// whether every day so far was complete.
 type CaptureState = {
   readonly runs: HashMap.HashMap<number, HostedRun>;
   readonly pinned: O.Option<string>;
   readonly covered: string;
   readonly open: boolean;
-  // GitHub requests spent on task-outcome records, summed over the captures that built the corpus.
   readonly reads: number;
 };
 
@@ -839,7 +814,6 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const path = yield* Path.Path;
   const context = yield* Effect.context<Digest.Digest | SecureRandom.SecureRandom>();
   const meter = budget ?? (yield* makeRouteReadBudget(O.none()));
-  // Every GitHub call is counted; `callGh` also waits on the reserve before it.
   const gh: RouteGhRunner = (args, repoRoot) => meter.metered(runGh(args, repoRoot));
 
   const digest = (bytes: Uint8Array, file: string) =>
@@ -875,7 +849,6 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       .readFile(corpusPath)
       .pipe(Effect.mapError(RouteError.mapError("corpus-pin", `Failed to read the corpus ${corpusPath}.`)));
 
-  // The corpus already on disk: its runs, and its digest while it is unchanged.
   const readExisting = Effect.fnUntraced(function* (corpusPath: string): Effect.fn.Return<CaptureState, RouteError> {
     const bytes = yield* readCorpusBytes(corpusPath);
     const runs = yield* decodeCorpus(bytes, corpusPath);
@@ -906,7 +879,6 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       )
     );
 
-  // Wait once for the reported reset (at most an hour), then retry the call.
   const waitForReset = Effect.fnUntraced(function* <A>(
     label: string,
     repoRoot: string,
@@ -993,16 +965,11 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     if (!A.some(run.jobs, isFailedJob)) {
       return O.some({ run, reads: 0 });
     }
-    // A failed job's per-task records ride the run as artifacts of its attempt; only runs with a failed job
-    // are read, since only failed jobs keep steps and tasks.
     const label = `gh run task-outcomes ${runId} ${view.attempt}`;
-    // A call refused for the rate limit reports the requests it had sent; they are added to the retried call's.
     const carried = yield* Ref.make(0);
-    // Metered like every capture call: every response it gets is counted in the capture's spend.
     const attemptRead = gh(["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot).pipe(
       Effect.tapErrorTag("RouteGhRateLimited", (refused) => Ref.update(carried, (n) => n + refused.requests))
     );
-    // Every attempt is admitted at the reserve, the retry after the rate-limit wait included.
     const admittedRead = meter.admit(label).pipe(Effect.andThen(attemptRead));
     const outcomes = yield* admittedRead.pipe(
       Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, admittedRead))
@@ -1014,9 +981,6 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     return O.some({ run: withTaskOutcomes(run, read.records), reads: read.requests + before });
   });
 
-  // Where this capture starts and what the receipt already covers. A receipt
-  // for the same workflows whose window holds `since` is continued after its
-  // `until`; anything else starts the window again at `since`.
   const capturePlan = Effect.fnUntraced(function* (
     previous: O.Option<RouteCorpusReceipt>,
     since: string,
@@ -1115,8 +1079,6 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       return sha256;
     });
 
-    // Commit immutable corpus bytes first, then atomically switch the receipt.
-    // Prior versions remain available if that final switch is interrupted.
     const checkpoint = Effect.fnUntraced(function* (
       state: CaptureState
     ): Effect.fn.Return<readonly [RouteCorpusReceipt, CaptureState], RouteError> {
@@ -1201,8 +1163,6 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     receiptPath: string
   ): Effect.fn.Return<RouteCorpusLoaded, RouteError> {
     const receipt = yield* readReceipt(receiptPath);
-    // `receipt.path` is relative to the repo root the capture ran in; the corpus
-    // file always sits beside its receipt, so resolve it from the receipt.
     const corpusPath = path.join(path.dirname(receiptPath), path.basename(receipt.path));
     const bytes = yield* readCorpusBytes(corpusPath);
     const sha256 = yield* digest(bytes, corpusPath);
