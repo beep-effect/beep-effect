@@ -178,25 +178,11 @@ const errorOf = (raw: string, unreadable: Unreadable): XlsxValue =>
  * `failed` holds the finding that stopped the read, after which events are ignored.
  *
  * **Details**
+ *
  * The reader reads one worksheet part: its rows of cells, its merged ranges, its hidden columns and the extent it
  * declares. It hands back each row as its end tag arrives, so a sheet of any length costs one row of memory until
  * the caller keeps the rows. Nothing here trusts the file: a reference that cannot be read is placed after the one
  * before it, and a value that cannot be read is kept as what was written and reported.
- *
- * **Gotchas**
- * - A shared text index is digits only, so no other text (`0x1`, `1e0`, nothing) names an entry.
- * - A hidden `<col>` span is kept as its two ends, never as its columns: one `<col>` of a few bytes may name every
- *   column.
- * - Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as the
- *   formula, so that text is counted against the read's cap before it is moved. A group already kept takes its new
- *   text in place; a new group needs room under the read's cap, and a group with none is dropped and counted, its
- *   cells keeping the empty formula they wrote.
- * - A date read from an ISO cell under a format that is not a date format is shown as Excel's short date; a number
- *   becomes a date only under a date format, so this touches the ISO case alone.
- * - The calendar schema holds each field of an ISO date to its range (an hour 0 to 23, a minute 0 to 59), so an
- *   impossible time such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone
- *   ("January 0, 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the
- *   system's last serial.
  */
 // decision: hot-paths-are-mutable-loops
 export class SheetReader {
@@ -413,7 +399,10 @@ export class SheetReader {
     this.merges.push(range.value);
   }
 
-  /** Keeps a hidden `<col>` span, clamped to the column cap. */
+  /**
+   * Keeps a hidden `<col>` span, clamped to the column cap, as its two ends and never as its columns: one `<col>` of
+   * a few bytes may name every column.
+   */
   private addHiddenSpan(attributes: Readonly<Record<string, string>>): void {
     const first = Math.max(Number(attributes.min), 1);
     const last = Math.min(Number(attributes.max), this.caps.columns);
@@ -538,6 +527,11 @@ export class SheetReader {
     return general;
   }
 
+  /**
+   * Closes the cell in hand and adds it to its row. A date read from an ISO cell under a format that is not a date
+   * format is shown as Excel's short date; a number becomes a date only under a date format, so this touches the ISO
+   * case alone.
+   */
   private endCell(): void {
     this.inCell = false;
     if (O.isSome(this.failed)) return;
@@ -571,7 +565,11 @@ export class SheetReader {
     return O.some(text.length <= MAX_FORMULA_CHARS && isXmlSafe(text) ? text : "");
   }
 
-  /** The text of a cell in a shared formula group: its own when it is the group's first cell, else the shifted first. */
+  /**
+   * The text of a cell in a shared formula group: its own when it is the group's first cell, else the shifted first.
+   * Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as the
+   * formula, so that text is counted against the read's cap before it is moved.
+   */
   private sharedFormula(column: number, row: number): string {
     const text = this.formulaText;
     if (text !== "") {
@@ -587,6 +585,10 @@ export class SheetReader {
     return shifted({ formula: master.value.text, columns: column - master.value.column, rows: row - master.value.row });
   }
 
+  /**
+   * Keeps a group's first cell. A group already kept takes its new text in place; a new group needs room under the
+   * read's cap, and a group with none is dropped and counted, its cells keeping the empty formula they wrote.
+   */
   private keepMaster(text: string, column: number, row: number): void {
     if (MutableHashMap.has(this.masters, this.formulaShared) || this.budget.take("sharedFormulas")) {
       MutableHashMap.set(this.masters, this.formulaShared, { text, column, row });
@@ -613,12 +615,22 @@ export class SheetReader {
     return XlsxUnreadable.make({ raw: detached(unescaped(raw)) }, checked);
   }
 
+  /**
+   * The shared text entry a cell names. The index is digits only, so no other text (`0x1`, `1e0`, nothing) names an
+   * entry.
+   */
   private sharedString(raw: string, unreadable: Unreadable): XlsxValue {
     const written = Str.trim(raw);
     const shared = sharedIndex.test(written) ? this.strings[Number(written)] : undefined;
     return shared === undefined ? unreadable("sharedString") : textValue(shared);
   }
 
+  /**
+   * An ISO date cell. The calendar schema holds each field to its range (an hour 0 to 23, a minute 0 to 59), so an
+   * impossible time such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone
+   * ("January 0, 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the
+   * system's last serial.
+   */
   private isoDate(raw: string, unreadable: Unreadable): XlsxValue {
     const serial = O.fromNullishOr(isoDate.exec(Str.trim(raw))).pipe(
       O.filter((found) => found[3] !== "00"),

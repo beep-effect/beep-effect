@@ -135,6 +135,7 @@ function* cellsOf(sheets: XlsxWorkbook["sheets"]): Generator<XlsxCell> {
  * The parts of a canonical workbook, each with its path in the archive.
  *
  * **Details**
+ *
  * The parts are the content types, the relationships, the workbook part, the styles that carry the number formats,
  * and one part per sheet. Only values are written: text goes in its cell, inline or as a formula's saved result, so
  * there is no shared text table, and a cell's style says its number format and nothing else. A formula's text result
@@ -148,6 +149,7 @@ function* cellsOf(sheets: XlsxWorkbook["sheets"]): Generator<XlsxCell> {
  * or an attribute, a tab or a line break becomes a character reference instead.
  *
  * **Gotchas**
+ *
  * The workbook must be in canonical form (`XlsxWorkbook.canonical`), which gives every format code one id and turns
  * what a file got wrong into the text it wrote.
  */

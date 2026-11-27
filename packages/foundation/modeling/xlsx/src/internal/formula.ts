@@ -22,6 +22,7 @@ const piece = new RegExp(
  * A formula's text with every relative reference moved by a number of columns and rows.
  *
  * **Details**
+ *
  * A shared formula is written once, on its first cell; the cells that share it say only which one. Each of them gets
  * the first cell's text with its relative references moved by the distance between the two cells, as Excel shows it.
  * A reference is a cell (`B2`), a whole-column range (`A:C`) or a whole-row range (`2:5`); each relative part moves
@@ -36,6 +37,7 @@ const piece = new RegExp(
  * either case included, and is never followed by `!`: what is (`JAN:DEC!B2`, `A:C!B2`) names sheets.
  *
  * **Gotchas**
+ *
  * The text between matches is copied as each reference is moved: a replace callback cannot skip a match that would
  * move off the sheet without also losing its place.
  */

@@ -60,6 +60,7 @@ const builtins: ReadonlyArray<readonly [id: number, code: string]> = [
  * The code Excel has built in under each id.
  *
  * **Details**
+ *
  * The ids are ECMA-376 part 1, 18.8.30, as far as a file may leave them unwritten.
  */
 export const builtinFormats: HashMap.HashMap<number, string> = HashMap.fromIterable(builtins);
@@ -140,6 +141,7 @@ const dateMarkStep: NextPieceStart = (code, at) => {
  * AM/PM mark or an elapsed-time block outside quotes, escapes and the word General.
  *
  * **Gotchas**
+ *
  * The word General is read without regard to case, as `classify` reads it; a lone `g` is an era, so a date.
  */
 export const isDateFormat = (code: string): boolean => {
@@ -496,6 +498,7 @@ const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => 
  * section of its own for zero) and none past the system's last serial, where Excel shows `#####`.
  *
  * **Details**
+ *
  * Only the code's first section, the one a positive number is shown with, is rendered. A time is shown rounded to
  * the second from the millisecond `partsOf` keeps, carried into the minute, hour and day.
  */

@@ -25,6 +25,7 @@ export type XmlElement = Xml.Element;
  * A name without its namespace prefix.
  *
  * **Details**
+ *
  * Effect's XML reader reports names as written and has no namespace option, so elements and attributes are matched
  * by their local name: `x:row` is `row`.
  */
@@ -80,6 +81,7 @@ const decodeOptions = (cellChars: number): Xml.DecodeOptions => ({
  * The events of a part's XML, from the stream of its bytes.
  *
  * **Details**
+ *
  * This file is the only one that imports `effect/encoding/Xml`. That reader expands no entity declared in a DOCTYPE
  * and reads no outside resource.
  */
@@ -165,6 +167,7 @@ export const relationshipsPath = (part: string): string => {
  * The relationships a `.rels` part lists, their targets resolved from the part they belong to.
  *
  * **Details**
+ *
  * An absolute target starts at the archive's root; either kind has its `.` and `..` segments worked out, and a `..`
  * past the root stays there.
  */

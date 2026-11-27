@@ -78,6 +78,7 @@ export const capsOf = (
  * its name goes through this key; findings keep the name as the archive or the relationship writes it.
  *
  * **Gotchas**
+ *
  * Only `A` to `Z` fold, as OPC folds them, which no Effect string helper does without folding the rest of Unicode
  * too.
  */
@@ -187,6 +188,7 @@ interface Located {
  * reads: the first at byte 0, each where the one before it ends, the last ending where the directory starts.
  *
  * **Details**
+ *
  * A 64-bit end record is taken whenever its locator precedes the end record, whatever the 32-bit fields hold. A
  * listed entry must have the name its local header gives it, as OPC compares names: the same bytes without regard to
  * ASCII case, read under the same encoding when any is not ASCII (ASCII reads the same under every name encoding a
@@ -195,6 +197,7 @@ interface Located {
  * that lands on the next entry or the directory.
  *
  * **Gotchas**
+ *
  * Every offset and count here comes from the file, so each read is bounded on both ends (-1 outside the file) and
  * each count is checked against the bytes left before it is used. Locating a directory from one end record is
  * constant work, so every candidate end record is tried.
@@ -466,6 +469,7 @@ const inflate = (input: {
  * not kept is inflated and let go, and so is the body of a directory entry, counted as a part's is.
  *
  * **Details**
+ *
  * Effect's zip reader goes through the local entries in order and never reads the central directory, which is what
  * Excel opens a file by, so a file could show the two readers two workbooks. One part name met twice is refused
  * (`DuplicatePart`), part names compared by `partKey`; and when the file ends with a directory, that directory must
@@ -473,6 +477,7 @@ const inflate = (input: {
  * from the sizes a file declares.
  *
  * **Gotchas**
+ *
  * The zip reader takes a name ending with `/` for a directory whatever its body holds, and inflates that body when
  * it moves on; the body is counted as any part's is, and a directory is never a part.
  */

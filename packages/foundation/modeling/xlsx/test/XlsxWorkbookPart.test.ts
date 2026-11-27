@@ -46,7 +46,7 @@ const findingOf = (bytes: Uint8Array, limits: Parameters<typeof XlsxLimits.make>
   );
 const sheetLink = ["s1", "worksheet", "worksheets/sheet1.xml"] as const;
 
-describe("opening a workbook part: where its parts sit, what a sheet entry names, what a styles part writes", () => {
+describe("opening a workbook part, by an example for each way that the property tests reach only by chance", () => {
   it.effect("styles under a worksheets folder and shared text without an XML name are read in a second pass", () =>
     Effect.gen(function* () {
       const bytes = yield* archive([
@@ -66,10 +66,7 @@ describe("opening a workbook part: where its parts sit, what a sheet entry names
       ]);
       const result = yield* read(bytes);
       expect(A.map(result.workbook.sheets, (entry) => entry.info.name)).toEqual(["First"]);
-      expect(
-        result.workbook.sheets[0]?.rows[0]?.cells[0]?.value,
-        "each way of opening has an example here: the property tests reach these only by chance"
-      ).toMatchObject({ kind: "Text", text: "moved" });
+      expect(result.workbook.sheets[0]?.rows[0]?.cells[0]?.value).toMatchObject({ kind: "Text", text: "moved" });
     })
   );
 

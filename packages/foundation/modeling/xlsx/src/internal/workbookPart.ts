@@ -103,7 +103,6 @@ const grandchildren = (root: XmlElement, parent: string, name: string): Readonly
 
 const customCodes = (root: XmlElement): HashMap.HashMap<number, string> => {
   let lastCodeById = HashMap.empty<number, string>();
-  // decision: hot-paths-are-mutable-loops
   for (const numFmt of grandchildren(root, "numFmts", "numFmt")) {
     const id = Number(numFmt.attributes.numFmtId);
     const code = numFmt.attributes.formatCode ?? "";
@@ -287,7 +286,6 @@ const workbookPathOf = Effect.fnUntraced(function* (input: {
   );
 });
 
-// decision: hot-paths-are-mutable-loops
 const linksById = (links: ReadonlyArray<Relationship>): MutableHashMap.MutableHashMap<string, Relationship> => {
   const byId = MutableHashMap.empty<string, Relationship>();
   for (const link of links) if (!MutableHashMap.has(byId, link.id)) MutableHashMap.set(byId, link.id, link);
@@ -382,12 +380,14 @@ const droppedPartOf = (
  * styles and the shared text. The sheets' own XML is left for the pass that reads rows.
  *
  * **Details**
+ *
  * Every part is looked up by its `partKey`, as OPC compares names; a finding names the part as it was written. Every
  * small XML part is held on the census, so the workbook part, the styles and the shared text are usually in hand
  * without a second pass; a sheet's own XML is not held, wherever the workbook says it is. The styles part is read,
  * and is also listed as dropped when it styles more than number formats, which are all a read keeps of it.
  *
  * **Gotchas**
+ *
  * The shared text table reaches the XML reader in slices, each a view into the part and its own pull. The reader
  * hands on every event a slice completes before it can stop, so a whole part in one piece would be read to its end
  * before a cap on its entries could stop it; in slices, a read stops within a slice of the cap.

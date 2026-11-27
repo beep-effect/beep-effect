@@ -62,6 +62,7 @@ const MS_PER_DAY = 86_400_000;
  * so a whole second always survives. A time that rounds to midnight is the next day's 00:00:00.
  *
  * **Details**
+ *
  * The arithmetic is ECMA-376 part 1, 18.17.4.1. The 1900 system counts 1 as 1 January 1900 and keeps 29 February
  * 1900, a day that never was, as serial 60, so every later serial is one more than the true day count. The 1904
  * system counts 0 as 1 January 1904 and has no such day. Serial 0 in the 1900 system is shown as "January 0, 1900".

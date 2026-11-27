@@ -773,7 +773,7 @@ describe("hostile files made here: each stops the read with its finding and part
   };
   it.layer(Targets.layer, { timeout: "30 seconds" })((it) =>
     it.effect.prop(
-      "no damage to a workbook's bytes makes a read die",
+      "no damage to a workbook's bytes makes a read die, an early end record over streamed 64-bit markers included",
       [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), ReadBesideParse],
       ([mutations, other]) =>
         Effect.gen(function* () {

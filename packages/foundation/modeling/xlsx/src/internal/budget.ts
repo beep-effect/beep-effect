@@ -7,11 +7,13 @@ import type { Caps } from "./container.ts";
  * One read's caps on the lists it keeps, what each has used, and the warnings kept so far.
  *
  * **Details**
+ *
  * Every sheet reader of a read is handed the same budget, so a file that names one part from many sheets, or holds
  * many parts, still meets one cap on each list (`XlsxLimits`). An item past its list's cap is dropped and counted,
  * and the warnings end with one `ListTruncated` per list that dropped any.
  *
  * **Gotchas**
+ *
  * One budget belongs to one read and is never shared between reads.
  */
 // decision: hot-paths-are-mutable-loops
