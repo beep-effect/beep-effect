@@ -1,0 +1,88 @@
+# effect/Schema index: constructors and combinators that take a schema
+
+Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+
+- S.Array
+- S.ArrayEnsure: Creates a schema that accepts either a value decoded by `schema` or an array decoded by `Schema.Array(schema)`, then returns an array.
+- S.Cause: Creates a schema for `Cause` values using separate schemas for typed failures and unexpected defects.
+- S.CauseReason: Creates a schema for `Cause.Reason` values using separate schemas for typed failures and unexpected defects.
+- S.Chunk: Schema for chunks whose values conform to the provided element schema.
+- S.Class: Creates a schema-backed class whose constructor validates input against a Struct schema.
+- S.Defect: Schema for unexpected defect values represented as `unknown` with a JSON encoded form.
+- S.Enum: Creates a schema from a TypeScript enum or an object mapping names to string or number values.
+- S.Error: Creates a schema-backed error class that can be used as a typed, yieldable error in Effect programs.
+- S.ErrorInstance: Schema for JavaScript `Error` objects.
+- S.Exit: Creates a schema for `Exit` values using schemas for the success value, typed failure, and unexpected defect channels.
+- S.Graph: Creates a schema for immutable directed or undirected Effect graphs.
+- S.HashMap: Schema for hash maps whose keys and values conform to the provided schemas.
+- S.HashSet: Schema for hash sets whose values conform to the provided element schema.
+- S.JsonFromUrlParamsField: Extracts a JSON value from the first occurrence of the given `field` in URL parameters.
+- S.Literal: Creates a schema for a single literal value (string, number, bigint, boolean, or null).
+- S.Literals: Creates a union schema from a fixed-length tuple of literal values.
+- S.NonEmptyArray: Defines a non-empty `ReadonlyArray` schema — at least one element required.
+- S.NullOr: Creates a union schema of `S | null`.
+- S.NullishOr: Creates a union schema of `S | null | undefined`.
+- S.Opaque: Wraps a struct schema so that its decoded `Type` becomes a nominally distinct type `Self`.
+- S.Option: Schema for `Option<A>` values.
+- S.OptionFromNullOr: Decodes a nullable, required value `T` to a required `Option<T>` value.
+- S.OptionFromNullishOr: Decodes a nullish value `T` to a required `Option<T>` value.
+- S.OptionFromOptional: Decodes an optional or `undefined` value `A` to a required `Option<A>` value.
+- S.OptionFromOptionalKey: Decodes an optional value `A` to a required `Option<A>` value.
+- S.OptionFromOptionalNullOr: Decodes an optional or `null` or `undefined` value `A` to a required `Option<A>` value.
+- S.OptionFromUndefinedOr: Decodes a required value that may be `undefined` to a required `Option<T>` value.
+- S.ReadonlyMap: Schema for readonly maps whose keys and values conform to the provided schemas.
+- S.ReadonlySet: Schema for readonly sets whose values conform to the provided element schema.
+- S.Record: Defines a record schema whose dynamic properties are selected by a key schema and decoded with a value schema.
+- S.Redacted: Schema for `Redacted` values, which hide their contents from inspection.
+- S.RedactedFromValue: Decodes a value and wraps it in `Redacted<A>`.
+- S.Result: Schema for `Result<A, E>` values.
+- S.Struct: Defines a struct schema from a map of field schemas.
+- S.StructWithRest: Extends a struct schema with a fixed-length tuple of record schemas, producing a schema whose decoded type intersects the struct and all records.
+- S.TaggedClass: Defines a schema-backed class with an automatically populated `_tag` field.
+- S.TaggedError: Defines a schema-backed yieldable error class with an automatically populated `_tag` field.
+- S.TaggedStruct: Creates a struct schema with an automatically populated `_tag` field.
+- S.TaggedUnion: Builds a discriminated union from a record of field sets, one per variant.
+- S.TemplateLiteral: Creates a schema that validates strings against a fixed-length tuple of template literal parts.
+- S.TemplateLiteralParser: Parses strings into typed tuples using a fixed-length tuple of template literal parts.
+- S.Tree: Creates a recursive schema for a Tree of values described by `node`.
+- S.Tuple: Defines a tuple schema from a fixed-length tuple of element schemas.
+- S.TupleWithRest: Extends a fixed-length tuple schema with a variadic rest segment.
+- S.UndefinedOr: Creates a union schema of `S | undefined`.
+- S.Union: Creates a union schema from a fixed-length tuple of member schemas.
+- S.UniqueArray: Returns a new array schema that ensures all elements are unique.
+- S.UniqueSymbol: Creates a schema for a specific symbol.
+- S.brand: Intersects a schema's output type with `Brand.Brand<B>` to prevent accidental mixing of structurally identical types.
+- S.check: Attaches one or more filter checks to a schema without changing the TypeScript type.
+- S.declare: Creates a schema for a **non-parametric** opaque type using a type-guard function.
+- S.declareConstructor: Creates a schema for a **parametric** type (a generic container such as `Array<A>`, `Option<A>`, etc.) by accepting a list of type-parameter schemas and a decoder factory.
+- S.decode: Applies a transformation to a schema, creating a new schema with the same type but transformed encoding/decoding.
+- S.decodeTo: Creates a schema that transforms from a source schema to a target schema.
+- S.encode: Applies a transformation to a schema's encoded type, creating a new schema where encoding/decoding operate on `S["Encoded"]` rather than `S["Type"]`.
+- S.encodeKeys: Renames struct keys in the encoded form without changing the decoded type.
+- S.encodeTo: Reverses a schema transformation so the encoded schema is supplied first.
+- S.extendTo: Adds derived fields to a struct schema during decoding.
+- S.fieldsAssign: Adds fields to a struct schema through a struct-mapping lambda.
+- S.flip: Swaps the decoded and encoded sides of a schema.
+- S.fromBrand: Creates a branded schema from a Brand.Constructor, applying the constructor's checks and branded type to the underlying schema.
+- S.fromJsonString: Returns a schema that decodes a JSON string and then decodes the parsed value using the given schema.
+- S.instanceOf: Creates a schema that validates values using `instanceof`.
+- S.link: Constructs an `SchemaAST.Link` that describes how a value of type `T` encodes to and decodes from a `To` schema.
+- S.make: Creates a schema from an AST (Abstract Syntax Tree) node.
+- S.mutable: Makes an array or tuple schema mutable, removing the `readonly` modifier.
+- S.mutableKey: Makes a struct field mutable (removes the `readonly` modifier on the property).
+- S.optional: Marks a struct field as optional, allowing the key to be absent or `undefined`.
+- S.optionalKey: Creates an exact optional key schema for struct fields.
+- S.overrideToCodecIso: Overrides a schema's derived ISO codec with an explicit target codec.
+- S.readonlyKey: Reverses `mutableKey` and returns the inner readonly schema.
+- S.refine: Narrows the TypeScript type of a schema's output via a type guard predicate, attaching the guard as a runtime filter check.
+- S.required: Reverses `optional` and returns the inner schema.
+- S.requiredKey: Reverses `optionalKey` and returns the inner required schema.
+- S.suspend: Creates a suspended schema that defers evaluation until needed.
+- S.tag: Combines a Literal schema with withConstructorDefault, making it ideal for discriminator fields in tagged unions.
+- S.tagDefaultOmit: Creates a literal `_tag` schema that is omitted from encoded output.
+- S.toEncoded: Extracts the encoded-side schema: sets `Type` to equal the `Encoded`, discarding the decoding transformation path.
+- S.toIsoFocus: Returns an identity `Iso` over the schema's focus (`Iso`) side.
+- S.toIsoSource: Returns an identity `Iso` over the schema's source (`Type`) side.
+- S.toTaggedUnion: Augments a Union of tagged structs or nested unions with utility methods and an ordered tuple of discriminant values.
+- S.toType: Extracts the type-side schema: sets `Encoded` to equal the decoded `Type`, discarding the encoding transformation path.
+- S.withConstructorDefault: Attaches a constructor default value to a schema field.

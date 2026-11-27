@@ -45,7 +45,9 @@ Absorbing logic into the wrong schema is a second bug wearing a smaller diff.
    `error`") is carried by shape: a tagged union whose members declare only
    their own fields, before any cross-field filter.
 2. **Does a schema/combinator/primitive already exist?** Check upstream
-   `effect/Schema` first, then search `@beep/schema` and `@beep/identity` before
+   `effect/Schema` first (`bun run beep schema-idioms lookup <wire-type>` lists
+   what ships for a string, number, bigint or date on the wire), then search
+   `@beep/schema` and `@beep/identity` before
    inventing — see `schema-first-development` →
    `references/local-primitives.md`. Where upstream covers a
    `foundation/modeling` concept's intent, its covered facets retire in the same
@@ -129,7 +131,16 @@ Smell-checks before you start — the walls to demolish:
 rg -n 'const (is|decode)\w+ = S\.(is|decodeUnknown)' path/   # decode/guard wall
 rg -n '\.\.\.\w*Defaults\b' path/                            # *Defaults spreads
 rg -n ' as [A-Z]| as unknown|![.)\]]' path/                  # assertions / non-null
+bun run beep schema-idioms hint path/File.ts                 # primitives named like richer values
 ```
+
+Null checks, `??` fallbacks, `.trim()` and `.length > 0` in application code
+are a prompt to trace the value back to where it was decoded, not a finding
+on the line. A sample of 188 such lines in this repo, labelled by two
+independent reviewers, found fewer than one in ten was a schema's to fix: the
+rest acted on local variables, platform values or parser input. Fix the
+definition when the value does come from a schema; the compensating line then
+goes with it.
 
 Do not run manual `turbo`/`docgen`/`vitest` while a background `yeet verify` is
 in flight — daemon contention emits spurious failures; use read-only probes.

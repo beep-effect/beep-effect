@@ -1,0 +1,88 @@
+# effect/Schema index: other wire shapes
+
+Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+
+- S.Any (wire any): Schema for the `any` type.
+- S.BigDecimal (wire BigDecimal.BigDecimal): Schema for `BigDecimal` values.
+- S.Boolean (wire boolean): Schema for `boolean` values.
+- S.BooleanFromBit (wire 0 | 1) → boolean: Schema for a boolean parsed from 0 or 1.
+- S.ByteSize (wire ByteSize.ByteSize): Schema for exact, non-negative `ByteSize` values.
+- S.Cookie (wire Cookies.Cookie): Schema for HTTP cookie values.
+- S.Cookies (wire Cookies.Cookies): Schema for HTTP cookie collections.
+- S.DateTimeUtc (wire DateTime.Utc): Schema for `DateTime.Utc` values.
+- S.DateTimeZoned (wire DateTime.Zoned): Schema for `DateTime.Zoned` values.
+- S.DnsARecord (wire Dns.A): Schema for already-constructed IPv4 address (`A`) DNS records.
+- S.DnsAaaaRecord (wire Dns.Aaaa): Schema for already-constructed IPv6 address (`AAAA`) DNS records.
+- S.DnsCaaRecord (wire Dns.Caa): Schema for already-constructed certification authority authorization (`CAA`) DNS records.
+- S.DnsCnameRecord (wire Dns.Cname): Schema for already-constructed canonical name (`CNAME`) DNS records.
+- S.DnsMxRecord (wire Dns.Mx): Schema for already-constructed mail exchange (`MX`) DNS records.
+- S.DnsNaptrRecord (wire Dns.Naptr): Schema for already-constructed naming authority pointer (`NAPTR`) DNS records.
+- S.DnsNsRecord (wire Dns.Ns): Schema for already-constructed name server (`NS`) DNS records.
+- S.DnsPtrRecord (wire Dns.Ptr): Schema for already-constructed pointer (`PTR`) DNS records.
+- S.DnsRecord (wire Dns.A | Dns.Aaaa | Dns.Caa | Dns.Cname | Dns.Mx | Dns.Nap…): Schema for already-constructed DNS records of any supported record type.
+- S.DnsRecordType (wire Dns.RecordType): Schema for supported DNS record types such as `"A"` or `"SRV"`.
+- S.DnsSoaRecord (wire Dns.Soa): Schema for already-constructed start of authority (`SOA`) DNS records.
+- S.DnsSrvRecord (wire Dns.Srv): Schema for already-constructed service locator (`SRV`) DNS records.
+- S.DnsTlsaRecord (wire Dns.Tlsa): Schema for already-constructed TLS authentication (`TLSA`) DNS records.
+- S.DnsTxtRecord (wire Dns.Txt): Schema for already-constructed text (`TXT`) DNS records.
+- S.Duration (wire Duration.Duration): Schema for `Duration` values.
+- S.File (wire File): Schema for JavaScript `File` objects.
+- S.FormData (wire FormData): Schema for JavaScript `FormData` objects.
+- S.Headers (wire Headers.Headers): Schema for HTTP headers encoded as records of string values.
+- S.Host (wire string | NetAddress.IpAddress) → (string & Brand.Brand<"~effect/net/Host/DomainName">) | N…: Schema for hosts: numeric IP addresses, scoped IPv6 literals, or domain names.
+- S.HostPort (wire Host.HostPort): Schema for already-constructed unresolved host and port values.
+- S.InetAddress (wire NetAddress.InetAddress): Schema for already-constructed resolved internet addresses.
+- S.InetAddressV4 (wire NetAddress.InetAddressV4): Schema for already-constructed resolved IPv4 internet addresses.
+- S.InetAddressV6 (wire NetAddress.InetAddressV6): Schema for already-constructed resolved IPv6 internet addresses.
+- S.IpAddress (wire NetAddress.IpAddress): Schema for already-constructed IPv4 or IPv6 address values.
+- S.IpInterface (wire IpInterface.IpInterface<NetAddress.IpAddress>): Schema for already-constructed IPv4 or IPv6 interface address values.
+- S.IpLinkLocalAddress (wire NetAddress.IpAddress) → NetAddress.LinkLocalAddress<NetAddress.IpAddress>: Schema for already-constructed link-local IP addresses.
+- S.IpLoopbackAddress (wire NetAddress.IpAddress) → NetAddress.LoopbackAddress<NetAddress.IpAddress>: Schema for already-constructed loopback IP addresses.
+- S.IpMulticastAddress (wire NetAddress.IpAddress) → NetAddress.MulticastAddress<NetAddress.IpAddress>: Schema for already-constructed multicast IP addresses.
+- S.IpNetwork (wire IpNetwork.IpNetwork<NetAddress.IpAddress>): Schema for already-constructed canonical IPv4 or IPv6 network prefixes.
+- S.IpUnicastAddress (wire NetAddress.IpAddress) → NetAddress.UnicastAddress<NetAddress.IpAddress>: Schema for already-constructed syntactic unicast IP addresses.
+- S.IpUnspecifiedAddress (wire NetAddress.IpAddress) → NetAddress.UnspecifiedAddress<NetAddress.IpAddress>: Schema for already-constructed unspecified IP addresses.
+- S.Ipv4Address (wire NetAddress.Ipv4Address): Schema for already-constructed IPv4 address values.
+- S.Ipv4BroadcastAddress (wire NetAddress.Ipv4Address) → Brand.Branded<NetAddress.Ipv4Address, "~effect/net/NetAdd…: Schema for the already-constructed IPv4 limited broadcast address.
+- S.Ipv4Interface (wire IpInterface.Ipv4Interface): Schema for already-constructed IPv4 interface address values.
+- S.Ipv4Network (wire IpNetwork.Ipv4Network): Schema for already-constructed canonical IPv4 network prefixes.
+- S.Ipv4PrivateAddress (wire NetAddress.Ipv4Address) → NetAddress.PrivateAddress<NetAddress.Ipv4Address>: Schema for already-constructed RFC 1918 private-use addresses.
+- S.Ipv6Address (wire NetAddress.Ipv6Address): Schema for already-constructed IPv6 address values.
+- S.Ipv6Interface (wire IpInterface.Ipv6Interface): Schema for already-constructed IPv6 interface address values.
+- S.Ipv6Network (wire IpNetwork.Ipv6Network): Schema for already-constructed canonical IPv6 network prefixes.
+- S.Ipv6UniqueLocalAddress (wire NetAddress.Ipv6Address) → NetAddress.UniqueLocalAddress<NetAddress.Ipv6Address>: Schema for already-constructed IPv6 unique-local addresses.
+- S.Json (wire Schema.Json): Schema that accepts and validates any immutable JSON-compatible value.
+- S.JsonObject (wire { readonly [x: string]: Schema.Json; }): Schema for readonly string-keyed records whose values are JSON-compatible.
+- S.MacAddress (wire NetAddress.MacAddress): Schema for already-constructed MAC address values.
+- S.MacBroadcastAddress (wire NetAddress.MacAddress) → Brand.Branded<NetAddress.MulticastAddress<NetAddress.MacA…: Schema for the already-constructed MAC all-ones broadcast address.
+- S.MacLocallyAdministeredAddress (wire NetAddress.MacAddress) → NetAddress.LocallyAdministeredAddress<NetAddress.MacAddress>: Schema for already-constructed locally administered MAC addresses.
+- S.MacMulticastAddress (wire NetAddress.MacAddress) → NetAddress.MulticastAddress<NetAddress.MacAddress>: Schema for already-constructed multicast MAC addresses.
+- S.MacUnicastAddress (wire NetAddress.MacAddress) → NetAddress.UnicastAddress<NetAddress.MacAddress>: Schema for already-constructed unicast MAC addresses.
+- S.MacUniversallyAdministeredAddress (wire NetAddress.MacAddress) → NetAddress.UniversallyAdministeredAddress<NetAddress.MacA…: Schema for already-constructed universally administered MAC addresses.
+- S.MutableJson (wire Schema.MutableJson): Schema that accepts any mutable JSON-compatible value.
+- S.Never (wire never): Schema for the `never` type.
+- S.Null (wire null): Schema for the `null` literal.
+- S.ObjectKeyword (wire object): Schema for the `object` type.
+- S.PropertyKey (wire string | number | symbol): Schema for property keys accepted by Effect schemas: finite `number`, `symbol`, or `string`.
+- S.Rational (wire Rational.Rational): Schema for `Rational` values.
+- S.RecordFromCookies (wire Cookies.Cookies) → { readonly [x: string]: string; }: Schema that decodes HTTP cookies into a record of decoded string values keyed by cookie name.
+- S.RecordFromUrlParams (wire UrlParams.UrlParams) → { readonly [x: string]: string | readonly [string, ...str…: Schema that decodes URL parameters into a record of string values.
+- S.RegExp (wire RegExp): Schema for JavaScript `RegExp` objects.
+- S.RetryAfter (wire { readonly _tag: "Duration"; readonly duration: Duration.…): Schema for parsed `Retry-After` header values.
+- S.SemVer (wire SemVer.SemVer): Schema for `SemVer` values.
+- S.SemVerRange (wire SemVerRange.SemVerRange): Schema for `SemVerRange` values.
+- S.SocketAddress (wire NetAddress.SocketAddress): Schema for already-constructed portable concrete socket addresses.
+- S.StandardSchemaV1FailureResult (wire { readonly issues: readonly { readonly message: string; r…): Schema for a Standard Schema v1 failure result.
+- S.StringForLiteralAutocomplete (wire string & {}): Schema for `string & {}`.
+- S.Symbol (wire symbol): Schema for `symbol` values.
+- S.TimeZone (wire DateTime.TimeZone): Schema for `DateTime.TimeZone` values.
+- S.TimeZoneNamed (wire DateTime.TimeZone.Named): Schema for `DateTime.TimeZone.Named` values.
+- S.TimeZoneOffset (wire DateTime.TimeZone.Offset): Schema for `DateTime.TimeZone.Offset` values.
+- S.URL (wire URL): Schema for JavaScript `URL` objects.
+- S.URLSearchParams (wire URLSearchParams): Schema for JavaScript `URLSearchParams` objects.
+- S.Uint8Array (wire Uint8Array<ArrayBufferLike>): Schema for JavaScript `Uint8Array` objects.
+- S.Undefined (wire undefined): Schema for the `undefined` literal.
+- S.UnixPathAddress (wire NetAddress.UnixPathAddress): Schema for already-constructed Unix-domain filesystem addresses.
+- S.Unknown (wire unknown): Schema for the `unknown` type.
+- S.UrlParams (wire UrlParams.UrlParams): Schema for HTTP URL parameters.
+- S.Void (wire void): Schema for a TypeScript `void` return value.

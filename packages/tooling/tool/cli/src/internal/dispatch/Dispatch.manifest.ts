@@ -285,6 +285,13 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Qa/index.ts").then((module) => module.qaCommand)),
   groupRoute(
+    {
+      name: "schema-idioms",
+      description: "The generated effect/Schema index and advisory schema field hints (index, lookup, hint)",
+    },
+    []
+  )(() => import("../../commands/SchemaIdioms/index.ts").then((module) => module.schemaIdiomsCommand)),
+  groupRoute(
     { name: "skills", description: "Manage repo-local Claude and Codex skill mirrors" },
     []
   )(() => import("../../commands/Skills/index.ts").then((module) => module.skillsCommand)),

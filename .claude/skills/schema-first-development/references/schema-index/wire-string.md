@@ -1,0 +1,86 @@
+# effect/Schema index: string on the wire
+
+Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+
+- S.BigDecimalFromString → BigDecimal.BigDecimal: Schema that parses a string into a `BigDecimal`.
+- S.BigIntFromString → bigint: Schema that parses a string into a `bigint`.
+- S.ByteSizeFromString → ByteSize.ByteSize: Schema that decodes byte-size strings into exact, non-negative `ByteSize` values.
+- S.Char: Schema for strings whose JavaScript `length` is exactly `1`.
+- S.DateFromString → Date: Schema that decodes a string into a JavaScript `Date`.
+- S.DateTimeUtcFromHttpDate → DateTime.Utc: Schema for HTTP date header values, such as `Date`, `Last-Modified` and `Expires`, decoded as `DateTime.Utc`.
+- S.DateTimeUtcFromString → DateTime.Utc: Schema that decodes a date-time string into a `DateTime.Utc`.
+- S.DateTimeZonedFromString → DateTime.Zoned: Schema that parses a zoned DateTime string into a `DateTime.Zoned`.
+- S.DomainName → string & Brand.Brand<"~effect/net/Host/DomainName">: Schema for normalized DNS domain names.
+- S.DomainNameFromString → string & Brand.Brand<"~effect/net/Host/DomainName">: Schema for DNS domain names decoded from strings, normalizing case and converting internationalized names to their ASCII form.
+- S.DurationFromIsoString → Duration.Duration: Schema that decodes an ISO 8601 duration string into a `Duration`.
+- S.DurationFromString → Duration.Duration: Schema that parses a string into a `Duration`.
+- S.FiniteFromString → number: Schema that parses a string into a finite number.
+- S.HostFromString → (string & Brand.Brand<"~effect/net/Host/DomainName">) | N…: Schema for hosts decoded from strings.
+- S.HostPortFromString → Host.HostPort: Schema for unresolved endpoints encoded as `host:port` or `[IPv6]:port` strings.
+- S.InetAddressFromString → NetAddress.InetAddress: Schema for resolved internet addresses encoded as numeric socket strings.
+- S.IpAddressFromString → NetAddress.IpAddress: Schema for IP addresses encoded as canonical numeric strings.
+- S.IpInterfaceFromString → IpInterface.IpInterface<NetAddress.IpAddress>: Schema for IPv4 or IPv6 interface addresses encoded as an address and prefix length.
+- S.IpLinkLocalAddressFromString → NetAddress.LinkLocalAddress<NetAddress.IpAddress>: Schema for link-local IP addresses encoded as numeric strings.
+- S.IpLoopbackAddressFromString → NetAddress.LoopbackAddress<NetAddress.IpAddress>: Schema for loopback IP addresses encoded as numeric strings.
+- S.IpMulticastAddressFromString → NetAddress.MulticastAddress<NetAddress.IpAddress>: Schema for multicast IP addresses encoded as numeric strings.
+- S.IpNetworkFromString → IpNetwork.IpNetwork<NetAddress.IpAddress>: Schema for canonical IPv4 or IPv6 network prefixes encoded in CIDR notation.
+- S.IpUnicastAddressFromString → NetAddress.UnicastAddress<NetAddress.IpAddress>: Schema for syntactic unicast IP addresses encoded as numeric strings.
+- S.IpUnspecifiedAddressFromString → NetAddress.UnspecifiedAddress<NetAddress.IpAddress>: Schema for unspecified IP addresses encoded as numeric strings.
+- S.Ipv4AddressFromString → NetAddress.Ipv4Address: Schema for IPv4 addresses encoded as canonical dotted-decimal strings.
+- S.Ipv4BroadcastAddressFromString → Brand.Branded<NetAddress.Ipv4Address, "~effect/net/NetAdd…: Schema for the IPv4 limited broadcast address encoded as a string.
+- S.Ipv4InterfaceFromString → IpInterface.Ipv4Interface: Schema for IPv4 interface addresses encoded as an address and prefix length.
+- S.Ipv4NetworkFromString → IpNetwork.Ipv4Network: Schema for canonical IPv4 network prefixes encoded in CIDR notation.
+- S.Ipv4PrivateAddressFromString → NetAddress.PrivateAddress<NetAddress.Ipv4Address>: Schema for RFC 1918 private-use addresses encoded as strings.
+- S.Ipv6AddressFromString → NetAddress.Ipv6Address: Schema for IPv6 addresses encoded as canonical strings.
+- S.Ipv6InterfaceFromString → IpInterface.Ipv6Interface: Schema for IPv6 interface addresses encoded as an address and prefix length.
+- S.Ipv6NetworkFromString → IpNetwork.Ipv6Network: Schema for canonical IPv6 network prefixes encoded in CIDR notation.
+- S.Ipv6UniqueLocalAddressFromString → NetAddress.UniqueLocalAddress<NetAddress.Ipv6Address>: Schema for IPv6 unique-local addresses encoded as strings.
+- S.MacAddressFromString → NetAddress.MacAddress: Schema for MAC addresses encoded as canonical colon-separated hexadecimal strings.
+- S.MacBroadcastAddressFromString → Brand.Branded<NetAddress.MulticastAddress<NetAddress.MacA…: Schema for the MAC all-ones broadcast address encoded as a string.
+- S.MacLocallyAdministeredAddressFromString → NetAddress.LocallyAdministeredAddress<NetAddress.MacAddress>: Schema for locally administered MAC addresses encoded as strings.
+- S.MacMulticastAddressFromString → NetAddress.MulticastAddress<NetAddress.MacAddress>: Schema for multicast MAC addresses encoded as canonical strings.
+- S.MacUnicastAddressFromString → NetAddress.UnicastAddress<NetAddress.MacAddress>: Schema for unicast MAC addresses encoded as canonical strings.
+- S.MacUniversallyAdministeredAddressFromString → NetAddress.UniversallyAdministeredAddress<NetAddress.MacA…: Schema for universally administered MAC addresses encoded as strings.
+- S.NonEmptyString: Schema for non-empty strings.
+- S.NumberFromString → number: Schema that parses a string into a `number` using JavaScript number coercion.
+- S.RationalFromString → Rational.Rational: Schema that parses a fraction string into a `Rational`.
+- S.RetryAfterFromString → { readonly _tag: "Duration"; readonly duration: Duration.…: Schema for `Retry-After` header values, decoded with `Headers.parseRetryAfter`.
+- S.ScopedIpv6Literal → string & Brand.Brand<"~effect/net/NetAddress/ScopedIpv6Li…: Schema for canonical scoped IPv6 literals such as `fe80::1%eth0`.
+- S.ScopedIpv6LiteralFromString → string & Brand.Brand<"~effect/net/NetAddress/ScopedIpv6Li…: Schema for scoped IPv6 literals decoded from strings, normalizing the address and numeric zones.
+- S.SemVerFromString → SemVer.SemVer: Schema that parses a Semantic Versioning 2.0.0 string into a `SemVer`.
+- S.SemVerRangeFromString → SemVerRange.SemVerRange: Schema that parses an npm-style version range string into a `SemVerRange`.
+- S.String: Schema for `string` values.
+- S.StringFromBase64: Decodes a base64 (RFC4648) encoded string into a UTF-8 string.
+- S.StringFromBase64Url: Decodes a base64 (URL) encoded string into a UTF-8 string.
+- S.StringFromHex: Decodes a hex encoded string into a UTF-8 string.
+- S.StringFromUriComponent: Decodes a URI component encoded string into a UTF-8 string.
+- S.TimeZoneFromString → DateTime.TimeZone: Schema that parses a time zone string into a `DateTime.TimeZone`.
+- S.TimeZoneNamedFromString → DateTime.TimeZone.Named: Schema that parses an IANA time zone identifier string into a `DateTime.TimeZone.Named`.
+- S.Trim: Schema that trims whitespace from a string.
+- S.Trimmed: Schema for strings that contains no leading or trailing whitespaces.
+- S.URLFromString → URL: Schema that decodes a `string` into a `URL`.
+- S.Uint8ArrayFromBase64 → Uint8Array<ArrayBufferLike>: Schema that decodes a base64 encoded string into a `Uint8Array`.
+- S.Uint8ArrayFromBase64Url → Uint8Array<ArrayBufferLike>: Schema that decodes a base64 (URL) encoded string into a `Uint8Array`.
+- S.Uint8ArrayFromHex → Uint8Array<ArrayBufferLike>: Schema that decodes a hex encoded string into a `Uint8Array`.
+- S.UnixPathAddressFromString → NetAddress.UnixPathAddress: Schema for Unix-domain filesystem addresses encoded as opaque path strings.
+- S.isAscii (check): Validates that a string contains only ASCII characters.
+- S.isBase64 (check): Validates that a string is valid Base64 encoded data.
+- S.isBase64Url (check): Validates that a string is valid Base64URL encoded data (Base64 with URL-safe characters).
+- S.isBetweenCodePoints (check): Validates that a string's Unicode code point count is within the specified inclusive range.
+- S.isCapitalized (check): Validates that the first character of a string is unchanged by `toUpperCase()`.
+- S.isEndingWith (check): Validates at runtime that a string ends with the specified literal suffix.
+- S.isGUID (check): Validates that a string has the GUID / UUID textual shape.
+- S.isIncluding (check): Validates at runtime that a string contains the specified literal substring.
+- S.isLowercased (check): Validates that a string is unchanged by JavaScript's `toLowerCase()`.
+- S.isMaxCodePoints (check): Validates that a string contains at most the specified number of Unicode code points.
+- S.isMinCodePoints (check): Validates that a string contains at least the specified number of Unicode code points.
+- S.isPattern (check): Validates that a string matches the specified regular expression pattern.
+- S.isStartingWith (check): Validates at runtime that a string starts with the specified literal prefix.
+- S.isStringBigInt (check): Validates that a string is a signed base-10 integer literal for Effect's BigInt string encoding.
+- S.isStringFinite (check): Validates that a string represents a finite number.
+- S.isStringSymbol (check): Validates that a string has the `Symbol(description)` format used by Effect's symbol string encoding.
+- S.isTrimmed (check): Validates that a string has no leading or trailing whitespace.
+- S.isULID (check): Validates that a string is a valid ULID (Universally Unique Lexicographically Sortable Identifier).
+- S.isUUID (check): Validates that a string is a strict Universally Unique Identifier (UUID).
+- S.isUncapitalized (check): Validates that the first character of a string is unchanged by `toLowerCase()`.
+- S.isUppercased (check): Validates that a string is unchanged by JavaScript's `toUpperCase()`.

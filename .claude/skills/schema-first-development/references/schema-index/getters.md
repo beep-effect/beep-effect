@@ -1,0 +1,104 @@
+# effect/Schema index: named getters and transformations
+
+Generated from effect 4.1.5 by `bun run beep schema-idioms index --write`. Do not edit by hand.
+
+- SchemaGetter.BigInt: Coerces a value to `bigint` using the global `BigInt()` constructor.
+- SchemaGetter.Boolean: Coerces any value to a `boolean` using the global `Boolean()` constructor.
+- SchemaGetter.Date: Coerces a value to a `Date` using `new Date(input)`.
+- SchemaGetter.Number: Coerces any value to a `number` using the global `Number()` constructor.
+- SchemaGetter.String: Coerces any value to a `string` using the global `String()` constructor.
+- SchemaGetter.camelToSnake: Converts a `camelCase` string to `snake_case`.
+- SchemaGetter.capitalize: Capitalizes the first character of a string.
+- SchemaGetter.checkEffect: Creates a getter that validates a value using an effectful check function.
+- SchemaGetter.collectBracketPathEntries: Flattens a nested object into bracket-path entries, filtering leaf values by a type guard.
+- SchemaGetter.compose: Composes two getters by passing the output of the first to the second.
+- SchemaGetter.dateTimeUtcFromInput: Parses a `DateTime.Input` value into a `DateTime.Utc`.
+- SchemaGetter.decodeBase64: Decodes a Base64 string to a `Uint8Array`.
+- SchemaGetter.decodeBase64String: Decodes a Base64 string to a UTF-8 `string`.
+- SchemaGetter.decodeBase64Url: Decodes a URL-safe Base64 string to a `Uint8Array`.
+- SchemaGetter.decodeBase64UrlString: Decodes a URL-safe Base64 string to a UTF-8 `string`.
+- SchemaGetter.decodeFormData: Decodes a `FormData` object into a nested tree structure using bracket-path notation.
+- SchemaGetter.decodeHex: Decodes a hexadecimal string to a `Uint8Array`.
+- SchemaGetter.decodeHexString: Decodes a hexadecimal string to a UTF-8 `string`.
+- SchemaGetter.decodeURLSearchParams: Decodes a `URLSearchParams` object into a nested tree structure using bracket-path notation.
+- SchemaGetter.decodeUriComponent: Decodes a URI component encoded string using `decodeURIComponent`.
+- SchemaGetter.encodeBase64: Encodes a `Uint8Array` or string to a Base64 string.
+- SchemaGetter.encodeBase64Url: Encodes a `Uint8Array` or string to a URL-safe Base64 string.
+- SchemaGetter.encodeFormData: Encodes a nested object into a `FormData` instance using bracket-path notation.
+- SchemaGetter.encodeHex: Encodes a `Uint8Array` or string to a hexadecimal string.
+- SchemaGetter.encodeURLSearchParams: Encodes a nested object into a `URLSearchParams` instance using bracket-path notation.
+- SchemaGetter.encodeUriComponent: Encodes a present string using `encodeURIComponent`.
+- SchemaGetter.fail: Creates a getter that always fails with the given issue.
+- SchemaGetter.forbidden: Creates a getter that always fails with a `Forbidden` issue.
+- SchemaGetter.forbiddenEncoding: Getter that always fails with a `Forbidden` issue indicating that encoding is unsupported.
+- SchemaGetter.joinKeyValue: Joins a record of key-value pairs into a delimited string.
+- SchemaGetter.makeTreeRecord: Builds a nested tree object from a list of bracket-path entries.
+- SchemaGetter.map: Maps the output of a getter while preserving missing values.
+- SchemaGetter.omit: Creates a getter that always returns `None`, effectively omitting the value from output.
+- SchemaGetter.parseJson: Parses a JSON string into a value.
+- SchemaGetter.passthrough: Returns the identity getter — passes the value through unchanged.
+- SchemaGetter.passthroughSubtype: Returns the identity getter, typed for when the encoded type `E` is a subtype of `T`.
+- SchemaGetter.passthroughSupertype: Returns the identity getter typed for the relationship `T extends E`.
+- SchemaGetter.required: Creates a getter that fails with `MissingKey` if the input is absent (`Option.None`).
+- SchemaGetter.run: Runs a getter directly.
+- SchemaGetter.snakeToCamel: Converts a `snake_case` string to `camelCase`.
+- SchemaGetter.split: Splits a string into an array of strings by a separator.
+- SchemaGetter.splitKeyValue: Parses a string into a record of key-value pairs.
+- SchemaGetter.stringifyJson: Stringifies a present value using `JSON.stringify`.
+- SchemaGetter.succeed: Creates a getter that always produces the given constant value, ignoring the input.
+- SchemaGetter.toLowerCase: Converts a string to lowercase.
+- SchemaGetter.toUpperCase: Converts a string to uppercase.
+- SchemaGetter.transform: Creates a getter that applies a pure function to present values.
+- SchemaGetter.transformEffect: Creates a getter that applies an effectful transformation to present values.
+- SchemaGetter.transformOptional: Creates a getter that transforms the full `Option` — both present and absent values.
+- SchemaGetter.transformOptionalEffect: Creates a getter that effectfully transforms the full `Option`.
+- SchemaGetter.trim: Strips whitespace from both ends of a string.
+- SchemaGetter.uncapitalize: Uncapitalizes the first character of a string.
+- SchemaGetter.withDefault: Creates a getter that replaces `undefined` values with a default.
+- SchemaTransformation.Middleware: Constructs schema middleware from its decode and encode functions.
+- SchemaTransformation.Transformation: Constructs a bidirectional schema transformation from its decode and encode getters.
+- SchemaTransformation.bigDecimalFromString: Decodes a `string` into a `BigDecimal` and encodes a `BigDecimal` back to its string representation.
+- SchemaTransformation.bigintFromString: Decodes a `string` into a `bigint` and encodes a `bigint` back to a `string`.
+- SchemaTransformation.byteSizeFromBigInt: Decodes a non-negative bigint byte count into a `ByteSize`.
+- SchemaTransformation.byteSizeFromNumber: Decodes a non-negative safe-integer byte count into a `ByteSize`.
+- SchemaTransformation.byteSizeFromString: Decodes a string into a `ByteSize` and encodes it as an exact string.
+- SchemaTransformation.capitalize: Transforms strings by capitalizing the first character on decode.
+- SchemaTransformation.composeTransformation: Composes two schema transformations into a single bidirectional conversion.
+- SchemaTransformation.dateFromMillis: Decodes epoch milliseconds into a `Date` and encodes a `Date` back to epoch milliseconds.
+- SchemaTransformation.dateFromString: Decodes a `string` into a `Date` and encodes a `Date` back to a `string`.
+- SchemaTransformation.dateTimeUtcFromString: Decodes a date-time string into a `DateTime.Utc` and encodes it back to an ISO string.
+- SchemaTransformation.dateTimeZonedFromString: Decodes a zoned date-time string into a `DateTime.Zoned` and encodes it back to an ISO zoned string.
+- SchemaTransformation.durationFromMillis: Decodes a `number` of milliseconds into a `Duration` and encodes a `Duration` back to milliseconds.
+- SchemaTransformation.durationFromNanos: Decodes a `bigint` (nanoseconds) into a `Duration` and encodes a `Duration` back to `bigint` nanoseconds.
+- SchemaTransformation.durationFromString: Decodes a `string` into a `Duration` and encodes a `Duration` back to a parseable `string`.
+- SchemaTransformation.fromFormData: Decodes a `FormData` instance into a nested record using bracket-path keys and encodes object-like values back into `FormData`.
+- SchemaTransformation.fromJsonString: Decodes a JSON string with `JSON.parse` and encodes a value with `JSON.stringify`.
+- SchemaTransformation.fromURLSearchParams: Decodes `URLSearchParams` into a nested record using bracket-path keys and encodes object-like values back into `URLSearchParams`.
+- SchemaTransformation.makeTransformation: Constructs a `Transformation` from an object with `decode` and `encode` `Getter`s.
+- SchemaTransformation.numberFromString: Decodes a `string` into a `number` and encodes a `number` back to a `string`.
+- SchemaTransformation.optionFromNullOr: Decodes `T | null` into `Option<T>` and encodes `Option<T>` back to `T | null`.
+- SchemaTransformation.optionFromNullishOr: Decodes `T | null | undefined` into `Option<T>` and encodes `Option<T>` back to `T | null` or `T | undefined` depending on the provided `options.onNoneEncoding` (defaults to `undefined`).
+- SchemaTransformation.optionFromOptional: Decodes optional values into `Option<T>` and encodes `Option.none()` back to an omitted optional value.
+- SchemaTransformation.optionFromOptionalKey: Decodes an optional struct key into `Option<T>` and encodes `Option<T>` back to an optional key.
+- SchemaTransformation.optionFromUndefinedOr: Decodes `T | undefined` into `Option<T>` and encodes `Option.none()` back to `undefined`.
+- SchemaTransformation.passthrough: Transforms values by returning the input unchanged in both directions.
+- SchemaTransformation.passthroughSubtype: Transforms values without changing them, typed so that `E extends T` — the encoded type is a subtype of the decoded type.
+- SchemaTransformation.passthroughSupertype: Transforms values without changing them, typed so that `T extends E`, where the decoded type `T` is a subtype of the encoded type `E`.
+- SchemaTransformation.snakeToCamel: Transforms strings by converting snake_case to camelCase on decode and camelCase to snake_case on encode.
+- SchemaTransformation.splitKeyValue: Transforms a string into a record of key-value pairs and encodes a record of key-value pairs into a string.
+- SchemaTransformation.stringFromBase64String: Decodes a Base64-encoded `string` into a UTF-8 `string` and encodes a UTF-8 `string` back to a Base64 string.
+- SchemaTransformation.stringFromBase64UrlString: Decodes a base64 (URL) encoded `string` into a UTF-8 `string` and encodes it back.
+- SchemaTransformation.stringFromHexString: Decodes a hex encoded `string` into a UTF-8 `string` and encodes it back.
+- SchemaTransformation.stringFromUriComponent: Decodes a URI component encoded string into a UTF-8 string and encodes a UTF-8 string into a URI component encoded string.
+- SchemaTransformation.timeZoneFromString: Decodes a string into a `DateTime.TimeZone` and encodes a time zone back to its string representation.
+- SchemaTransformation.timeZoneNamedFromString: Decodes an IANA time-zone identifier string into a `DateTime.TimeZone.Named` and encodes a named time zone back to its `id`.
+- SchemaTransformation.timeZoneOffsetFromNumber: Decodes a numeric time-zone offset in milliseconds into a `DateTime.TimeZone.Offset` and encodes it back to the offset number.
+- SchemaTransformation.toLowerCase: Transforms strings by lowercasing on decode.
+- SchemaTransformation.toUpperCase: Transforms strings by uppercasing on decode.
+- SchemaTransformation.transform: Creates a `Transformation` from pure (sync, infallible) decode and encode functions.
+- SchemaTransformation.transformEffect: Creates a `Transformation` from effectful decode and encode functions.
+- SchemaTransformation.transformOptional: Creates a `Transformation` where decode and encode operate on `Option` values, giving full control over missing-key handling.
+- SchemaTransformation.trim: Transforms strings by trimming whitespace on decode.
+- SchemaTransformation.uint8ArrayFromBase64String: Decodes a Base64-encoded `string` into a `Uint8Array` and encodes a `Uint8Array` back to a Base64 string.
+- SchemaTransformation.uncapitalize: Transforms strings by lowercasing the first character on decode.
+- SchemaTransformation.urlFromString: Decodes a `string` into a `URL` and encodes a `URL` back to its `href` string.

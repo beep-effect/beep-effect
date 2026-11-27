@@ -99,6 +99,49 @@ Trimming, case and splitting are getters or transformations composed with
 `.toUpperCase()`; `SchemaGetter.split(...)`). Business code does not call
 `Str.trim` on a decoded value.
 
+### Look up what ships before choosing a primitive
+
+The table above is a sample. The complete list is generated from the installed
+`effect` into `references/schema-index/`, grouped by the type on the wire, so
+the lookup is "this arrives as a number, what can it become":
+
+```bash
+bun run beep schema-idioms lookup number
+```
+
+Slices: `string`, `number`, `bigint`, `date`, `collections` (size, length and
+uniqueness checks), `constructors` (schemas that take a schema: `S.Option`,
+`S.OptionFromNullOr`, `S.HashSet`, `S.Redacted`, `S.NonEmptyArray`) and
+`getters`. `bun run beep schema-idioms index --write` regenerates them after an
+Effect bump; `--check` fails when they are stale.
+
+A field's name is the strongest sign that a primitive is standing in for a
+richer value. Seven name shapes are checked on newly written schema fields, and
+`bun run beep schema-idioms hint <file>` prints them for a file:
+
+| The name reads as | Examples | Consider |
+| --- | --- | --- |
+| a duration | `timeoutMs`, `leaseMillis`, `ttl`, `retryDelay` | `S.DurationFromMillis`, `S.DurationFromNanos`, `S.DurationFromString` |
+| an instant | `createdAt`, `expiresAt`, `startedAtMs`, `maintenanceUntil` | `S.DateTimeUtcFromString`, `S.DateTimeUtcFromMillis`, `S.DateTimeUtcFromDate` |
+| a byte size | `payloadBytes`, `diskFreeBytes` | `S.ByteSizeFromNumber`, `S.ByteSizeFromBigInt`, `S.ByteSizeFromString` |
+| a URL | `endpointUrl`, `callbackUri`, `href` | `S.URLFromString` |
+| a network address | `address`, `host`, `sourceIp` | `S.IpAddressFromString`, `S.HostFromString`, `S.HostPortFromString` |
+| a port | `port`, `listenPort` | `S.Port` |
+| a version | `agentVersion`, `clientVersion` | `S.SemVerFromString` |
+
+The hint is advisory. Keep the primitive when the encoded shape is a persisted
+or published contract that other code compares as a number, or when the value
+only passes through to another field of the same primitive type.
+
+Changing the definition is what removes the compensating code. Once a field
+decodes to `ByteSize`, the `bytes / 1024 ** 3` at the call site is replaced by
+`ByteSize.format`; once it decodes to `Option`, the `=== null` goes. So a null
+check, a `??` fallback, a `.trim()` or a `.length > 0` in application code is a
+reason to read back to where the value was decoded, not a defect on that line:
+most such lines act on local variables, platform values or parser input that no
+schema produced. Use them as a reading aid in review (`crispen`), never as a
+line-level rule.
+
 A field's description is a key annotation: `S.annotateKey({ description })`
 or `$I.annoteKey("Owner.field", { description })`, never `.annotate(...)`,
 which describes the schema as a whole.

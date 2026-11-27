@@ -39,6 +39,13 @@ Keep `Schema` as the source of truth for pure data models.
 3. Check local Effect v4 source for nontrivial Schema API choices.
    `.repos/effect` points to `$HOME/YeeBois/references/effect/effect`, the Effect
    child of the reference workspace; Effect `main` is v4.
+- Before a field becomes `S.String`, `S.Number` or a custom check, look up
+  what `effect/Schema` ships for that wire type:
+  `bun run beep schema-idioms lookup <string|number|bigint|date|collections|constructors|getters>`
+  (the generated slices live in `references/schema-index/`). The decoded side
+  holds Effect's own value (`Duration`, `DateTime.Utc`, `ByteSize`, `URL`,
+  `Option`, `Redacted`), the encoded side holds what the wire sends, and
+  normalization lives in the codec between them.
 - Start with `.repos/effect/packages/effect/SCHEMA.md`, and `ARBITRARY.md`
   beside it for generated test data.
 - Confirm behavior in `.repos/effect/packages/effect/src/Schema.ts` or the

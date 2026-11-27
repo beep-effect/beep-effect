@@ -49,6 +49,7 @@ import { refsCommand } from "./Refs/index.ts";
 import { researchCommand } from "./Research/index.ts";
 import { reviewerCommand } from "./Reviewer/index.ts";
 import { runnersCommand } from "./Runners/index.ts";
+import { schemaIdiomsCommand } from "./SchemaIdioms/index.ts";
 import { sessionCommand } from "./Session/index.ts";
 import { skillsCommand } from "./Skills/index.ts";
 import { syncDataToTsCommand } from "./SyncDataToTs/index.ts";
@@ -133,6 +134,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     codegenCommand,
     purgeCommand,
     qaCommand,
+    schemaIdiomsCommand,
     skillsCommand,
     syncDataToTsCommand,
     toolchainCommand,

@@ -125,6 +125,7 @@ const isolatedSuites = [
   "test/research-library-views.test.ts",
   "test/schema-catalog.test.ts",
   "test/schema-first-parity.test.ts",
+  "test/schema-idioms-command.test.ts",
   "test/schema-topology.test.ts",
   "test/session-ledger.test.ts",
   "test/skills-command.test.ts",
