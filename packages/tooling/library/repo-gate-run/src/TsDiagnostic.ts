@@ -157,6 +157,11 @@ export const parsePrettyDiagnostic = (line: string): O.Option<TsDiagnostic> =>
  * pretty (`file:line:column - error`), plain (`file(line,column): error`)
  * or with no location (`error TS6305: ...`).
  *
+ * **Gotchas**
+ *
+ * In the plain form the file runs to the final `(line,column):`, so a path
+ * may contain parentheses.
+ *
  * **Example** (Parse a plain line)
  *
  * ```ts

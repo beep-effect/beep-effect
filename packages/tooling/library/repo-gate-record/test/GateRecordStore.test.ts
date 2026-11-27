@@ -169,11 +169,7 @@ describe("GateRecordStore", () => {
         const names = yield* fs.readDirectory(dir);
         assert.strictEqual(first.report.runId, "r1");
         assert.strictEqual(second.report.runId, "r2");
-        assert.strictEqual(
-          held,
-          "a writer's unfinished contents",
-          "every write draws the taken name first and collides once, leaving the holder's file alone"
-        );
+        assert.strictEqual(held, "a writer's unfinished contents", "the holder's file is left alone");
         assert.instanceOf(exhausted, GateRecordWriteError);
         assert.include(
           exhausted.message,

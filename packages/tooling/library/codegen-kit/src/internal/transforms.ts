@@ -562,7 +562,7 @@ const annotationLayer = (members: ReadonlyArray<Record<string, unknown>>): Recor
     ...annotationsOf(member),
   }));
 
-const memberAnnotations = (
+const annotationsFromEveryMember = (
   parts: ReadonlyArray<unknown>,
   inline: (ref: string) => unknown
 ): Record<string, unknown> => {
@@ -584,7 +584,7 @@ const distributeNode = (node: Record<string, unknown>, inline: (ref: string) => 
     : base;
   const reduced =
     A.isArray(allOf) && A.length(allOf) > 1 && A.isArray(folded.anyOf)
-      ? { ...memberAnnotations(allOf, inline), ...constraintsOf(folded) }
+      ? { ...annotationsFromEveryMember(allOf, inline), ...constraintsOf(folded) }
       : folded;
   const combined = withOuterAnnotations(reduced, annotations, inline);
   if (A.isArray(anyOf) && !A.isArray(allOf) && isAnnotationOnly(base)) return { ...base, anyOf };

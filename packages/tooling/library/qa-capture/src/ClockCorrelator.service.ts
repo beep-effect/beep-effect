@@ -357,6 +357,8 @@ const assumedStartSync = (assumedStartEpochMs: number): ClockSync =>
     slope: 1,
   });
 
+const seekableClipCodec = "h264";
+
 const makeService = Effect.fnUntraced(function* () {
   const ffmpeg = yield* FFmpeg;
 
@@ -376,7 +378,7 @@ const makeService = Effect.fnUntraced(function* () {
     );
     const clip = yield* ffmpeg.extractClip(
       ExtractClipRequest.make({
-        codec: "h264",
+        codec: seekableClipCodec,
         durationSeconds: O.some(clipDurationSeconds),
         outPath: `${request.workDir}/beacon-probe.mp4`,
         overwrite: true,
@@ -435,8 +437,7 @@ const makeService = Effect.fnUntraced(function* () {
  *
  * The probed clip spans the recorded beacon flips plus `probePadSeconds` on
  * each side, never a fixed head window, so a slow first paint cannot push the
- * flips outside it. The clip is re-encoded to h264/mp4 first, because seeking
- * a keyframe-sparse webm is unreliable.
+ * flips outside it.
  *
  * **Example** (Access correlator service layer)
  *
