@@ -24,16 +24,6 @@ import type {
   RegistrationTarget,
 } from "./RegistrationGeometry.schemas.ts";
 
-// Dated records: they say what was true when they were written, so a deleted package named there is
-// evidence, never residue, and rewriting it would falsify the record. The doctor probes read these globs
-// for both the authored-references skip and the historical-records surface, so a path has one reading.
-// Everything else in the same trees stays live: the architecture chapters and glossary, `docs/` outside
-// reports and the commit-message history, the other `standards/` files, the guides directly under
-// `explorations/` and its packet template, and the changeset config and README. `goals/` and `research/`
-// are whole trees because the dependents scan reads their code; it never reads `explorations/` or
-// `docs/`, so there only prose and data are records. Source and every file a tool loads stay live: other
-// file types (TOML, JSONC), dot entries (a wildcard here never matches one), agent
-// instructions, and the JSON and YAML names that tools look for.
 const agentDocs = "!(AGENTS|CLAUDE|GEMINI|SKILL)";
 const toolYaml =
   "!(Chart|Pulumi|Pulumi.*|compose|compose.*|docker-compose|docker-compose.*|kustomization|lefthook|pnpm-workspace)";
@@ -72,6 +62,19 @@ const slugOf = (packageName: string): string => Str.replace("@beep/", Str.empty)
  *
  * The result is pure and deterministic. Lab targets with decoded lab facts also
  * receive a data-resource surface for their Postgres schema.
+ *
+ * **Gotchas**
+ *
+ * - The `historical-records` surface lists dated records: they say what was true when they
+ *   were written, so a deleted package named there is evidence, never residue, and is never
+ *   rewritten. The doctor's authored-references skip reads the same globs, so a path has one
+ *   reading.
+ * - `goals/` and `research/` count as whole trees, because the dependents scan reads their
+ *   code. Under `explorations/` and `docs/reports` only prose and data files are records.
+ * - Everything else stays live: the architecture chapters and glossary, the other `standards/`
+ *   files, the guides directly under `explorations/` and its packet template, the changeset
+ *   config and README, other file types, dot entries, agent instructions, and the JSON and
+ *   YAML names that tools load.
  *
  * **Example** (List surface ids for a package)
  *
@@ -257,8 +260,6 @@ const pendingChangesetRemoveDetails: PendingChangesetDetails = {
     `delete dedicated pending files and strip multi-package key ${packageName}; labs deletion emits no changeset (ceremony-exempt)`,
 };
 
-// The forward and inverse plans word the pending-changeset step per deletion
-// note policy; only the operation kind and the wording differ between them.
 const pendingChangesetOperation =
   (operation: RegistrationOperationKind, details: PendingChangesetDetails) =>
   (surface: PendingChangesetSurface): RegistrationOperation =>

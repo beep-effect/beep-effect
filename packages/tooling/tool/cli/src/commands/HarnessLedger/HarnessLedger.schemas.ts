@@ -463,8 +463,6 @@ export class PruneProposal extends S.Opaque<PruneProposal, { readonly brand: uni
   )
 ) {}
 
-// The skip, refusal, coverage and regime tallies shared by the observed window
-// and the prune report, so the two schemas cannot drift apart field by field.
 const SessionWindowTallyFields = {
   sessionsSkippedOutOfRegime: S.Finite,
   sessionsSkippedUnstamped: S.Finite,

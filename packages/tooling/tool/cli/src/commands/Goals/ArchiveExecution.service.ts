@@ -204,6 +204,11 @@ export interface ArchiveStoreShape {
 /**
  * Mirrors packets into the local archive checkout and verifies their tree hashes.
  *
+ * **Details**
+ *
+ * `ARCHIVE-INDEX.md` names the archive commit, so it lands in a follow-up commit that leaves
+ * every packet tree unchanged.
+ *
  * **Example** (Request the store)
  *
  * ```ts
@@ -240,6 +245,12 @@ export interface TombstoneWriterShape {
 /**
  * Replaces archived packets on `main` with tombstones: deletes the moved
  * files, regenerates `README.md` as a stub and writes the manifest `archive` block.
+ *
+ * **Details**
+ *
+ * A goal tombstone keeps only part of `research/` and no `ops/` scripts, so its generated
+ * `researchReports` projection is recomputed from the kept files, and `opsScripts` is narrowed
+ * to the kept files and dropped when none remain.
  *
  * **Example** (Request the writer)
  *
@@ -477,7 +488,6 @@ const pushPlan = Effect.fn("ArchiveStore.push")(function* (plan: ArchivePlan) {
     .pipe(Effect.mapError(pushFailed));
   const commit = yield* git.revParse(workspace.archiveDir, "HEAD").pipe(Effect.mapError(pushFailed));
 
-  // The index names the archive commit, so it lands in a follow-up commit that leaves every packet tree unchanged.
   const indexPath = path.join(workspace.archiveDir, ARCHIVE_INDEX_FILE);
   const existing = yield* fs.readFileString(indexPath).pipe(Effect.orElseSucceed(() => ""));
   const replaced = HashSet.fromIterable(A.map(plan.entries, packetPath));
@@ -524,7 +534,6 @@ const verifyPlan = Effect.fn("ArchiveStore.verify")(function* (plan: ArchivePlan
   );
 });
 
-// The child-process services serve the default Biome manifest formatter the tombstone writer runs.
 type ArchiveServices =
   | FileSystem.FileSystem
   | Path.Path
@@ -781,7 +790,6 @@ const stubFor = Effect.fnUntraced(function* (
   });
 });
 
-// A goal tombstone keeps only part of research/, so its generated researchReports projection is recomputed from the kept files.
 const reprojectResearch = (manifestText: string, packetDir: string, keep: ReadonlyArray<string>): string =>
   O.getOrElse(
     planResearchProjection(
@@ -791,7 +799,6 @@ const reprojectResearch = (manifestText: string, packetDir: string, keep: Readon
     () => manifestText
   );
 
-// A goal tombstone keeps no ops/ scripts, so opsScripts is narrowed to the kept files and dropped when none remain.
 const reprojectOpsScripts = (
   manifestText: string,
   opsScripts: ReadonlyArray<GoalOpsScript> | undefined,
@@ -974,8 +981,6 @@ const OPEN_LINK_TEXT = /\[[^\]]*$/u;
 const CLOSE_LINK_TEXT = /^[^[\]]*\]\(/u;
 const OPENING_BACKTICKS = /^`+/u;
 
-// The knowledge doctor reads an inline code span even inside link text, so a citation leaves as plain
-// text: wrapped in a new link, or only unquoted when it already sits inside one.
 const rewriteCodeSpan = (line: string, link: InboundLink): O.Option<string> =>
   O.flatMap(
     A.findFirst(knowledgeInlineSpans(line), (candidate) => candidate.span === link.destination),
@@ -999,8 +1004,6 @@ const rewriteCodeSpan = (line: string, link: InboundLink): O.Option<string> =>
     }
   );
 
-// One reference's line, rewritten at its parsed column; `None` when the line no longer carries that
-// reference (the file changed after the plan was computed).
 const rewriteLine = (lines: ReadonlyArray<string>, link: InboundLink): O.Option<ReadonlyArray<string>> =>
   pipe(
     A.get(lines, link.line - 1),
@@ -1012,6 +1015,12 @@ const rewriteLine = (lines: ReadonlyArray<string>, link: InboundLink): O.Option<
  * Rewrite the inbound references of one document's text, line-exact: a link
  * destination is replaced at its parsed column, and a code-span citation
  * becomes plain link text.
+ *
+ * **Gotchas**
+ *
+ * A code-span citation leaves as plain text, wrapped in a new link or only unquoted when it
+ * already sits inside one, because the knowledge doctor reads an inline code span even inside
+ * link text.
  *
  * **Example** (Rewrite one link)
  *

@@ -103,7 +103,6 @@ export interface DrawingReviewShape {
 const fail = (message: string) => (cause: unknown) => DrawingsCommandError.new(cause, message);
 const refuse = (message: string) => DrawingsCommandError.make({ message });
 
-// The review round records the branded `@beep/schema` digest.
 const sha256 = flow(sha256Hex, Effect.map(Sha256Hex.make));
 
 const encoder = new TextEncoder();
@@ -184,11 +183,9 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
   const removeStagedOutput = (temporary: string | undefined, temporaryDir: string | undefined) => {
     const nodeFs = process.getBuiltinModule("node:fs");
     if (temporary !== undefined) {
-      // Preserve the original write error; this file is only a stale temporary.
       Result.try(() => nodeFs.unlinkSync(temporary));
     }
     if (temporaryDir !== undefined) {
-      // Preserve the original write error; this directory is only a stale temporary.
       Result.try(() => nodeFs.rmdirSync(temporaryDir));
     }
   };
@@ -273,7 +270,6 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
       catch: fail(`Could not safely create review directory "${roundDir}".`),
     });
 
-  // Writes `value` as pretty JSON and returns the hash of the bytes written.
   const writeJson = Effect.fn("DrawingReview.writeJson")(function* <A, I>(
     schema: S.ConstraintCodec<A, I>,
     file: string,
@@ -300,7 +296,6 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     return { root, roundDir: path.join(matter, "review", `round-${location.round}`) };
   });
 
-  // Re-hash the sheet set on disk so a round never ties to a PDF that changed.
   const loadSheetSet = Effect.fn("DrawingReview.loadSheetSet")(function* (manifestPath: string) {
     const resolved = path.resolve(manifestPath);
     const manifest = yield* readJson(RenderManifest, resolved, "render manifest");
@@ -330,7 +325,6 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     return yield* readJson(ReviewRound, roundFile, "review round");
   });
 
-  // `checkDispositions` is false only for plan, which replaces dispositions.json.
   const readStatus = Effect.fn("DrawingReview.readStatus")(function* (
     roundDir: string,
     round: number,
@@ -450,7 +444,6 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
 
   const ingest = Effect.fn("DrawingReview.ingest")(function* (request: ReviewIngestRequest) {
     const { root, roundDir } = yield* roundDirOf(ReviewRoundLocation.make(request.location));
-    // Ingest rewrites intake.json and inventory.json, so it reads round.json only.
     const round = yield* readRound(roundDir, request.location.round);
     if (round.status !== "open" && round.status !== "ingested") {
       return yield* refuse(
@@ -609,8 +602,6 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
     return DeliveryWritten.make({ path: target, record });
   });
 
-  // The nearest `review/` directory in the manifest's directory or any above it;
-  // the ascent stops at the first hit, and an unreadable probe counts as a miss.
   const findReviewDir = Effect.fn("DrawingReview.findReviewDir")(function* (manifestDir: string) {
     const ancestors = yield* Walker.ascend(manifestDir).pipe(Effect.provideService(Path.Path, path));
     const hit = yield* Walker.findRoot(ancestors, (dir) =>
@@ -677,6 +668,15 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
 
 /**
  * Review rounds over delivered design-figure sheet sets.
+ *
+ * **Gotchas**
+ *
+ * - Every round re-hashes the sheet set on disk, so a round never ties to a PDF that changed.
+ * - `ingest` checks only `round.json`: it rewrites `intake.json` and `inventory.json`, so their
+ *   recorded hashes are not verified first.
+ * - Without a review directory, `guard` uses the nearest `review/` in the manifest's directory
+ *   or any above it. The ascent stops at the first hit, and an unreadable probe counts as a
+ *   miss.
  *
  * **Example** (Reference the service)
  *

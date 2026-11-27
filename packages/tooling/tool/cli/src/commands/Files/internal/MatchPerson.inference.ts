@@ -261,16 +261,17 @@ const detectorInput = (image: FaceImage, width: number, height: number): Float32
     }
   return values;
 };
-// OpenCV-compatible inverse affine resampling with black borders.
+const OPENCV_INTER_LINEAR_STEPS = 32;
 const warpFace = (image: FaceImage, transform: ReadonlyArray<number>, side = 112): FaceImage => {
   const [a = 1, b = 0, tx = 0, c = 0, d = 1, ty = 0] = transform;
   const det = a * d - b * c;
   const pixels = new Uint8Array(side * side * 3);
   for (let y = 0; y < side; y++)
     for (let x = 0; x < side; x++) {
-      // OpenCV INTER_LINEAR uses a 32-entry interpolation table.
-      const sx = Math.round(((d * (x - tx) - b * (y - ty)) / det) * 32) / 32;
-      const sy = Math.round(((-c * (x - tx) + a * (y - ty)) / det) * 32) / 32;
+      const sx =
+        Math.round(((d * (x - tx) - b * (y - ty)) / det) * OPENCV_INTER_LINEAR_STEPS) / OPENCV_INTER_LINEAR_STEPS;
+      const sy =
+        Math.round(((-c * (x - tx) + a * (y - ty)) / det) * OPENCV_INTER_LINEAR_STEPS) / OPENCV_INTER_LINEAR_STEPS;
       for (let channel = 0; channel < 3; channel++)
         pixels[(y * side + x) * 3 + channel] = Math.round(sampleImage(image, sx, sy, channel));
     }
@@ -278,6 +279,10 @@ const warpFace = (image: FaceImage, transform: ReadonlyArray<number>, side = 112
 };
 /**
  * Fit the five detector landmarks to the ArcFace template and resample a 112x112 crop.
+ *
+ * **Details**
+ *
+ * The crop is resampled like OpenCV's inverse-affine INTER_LINEAR warp, with black borders.
  *
  * **Example** (Align a detected face)
  *
@@ -396,7 +401,6 @@ export const openFaceSession = Effect.fn("Files.openFaceSession")((path: string)
     (session) => Effect.promise(() => session.release())
   )
 );
-// Compose the fixed CPU detector and recognition sessions.
 const outputName = (names: ReadonlyArray<string>, index: number) => names[index] ?? "";
 const decodeLevel = (
   outputs: ort.InferenceSession.ReturnType,
@@ -501,13 +505,13 @@ const suppressDetections = (detections: ReadonlyArray<InferredFace>): ReadonlyAr
 
   return kept;
 };
+const ADAFACE_DETECTOR_MAX_FACES = 32;
 const selectDetections = (
   kept: ReadonlyArray<InferredFace>,
   image: FaceImage,
   adaFace: boolean
 ): ReadonlyArray<InferredFace> =>
-  // AdaFace's detector max_num=32 chooses area minus twice squared center distance.
-  adaFace && kept.length > 32
+  adaFace && kept.length > ADAFACE_DETECTOR_MAX_FACES
     ? A.take(
         A.sort(
           kept,
@@ -522,7 +526,7 @@ const selectDetections = (
               )
           )
         ),
-        32
+        ADAFACE_DETECTOR_MAX_FACES
       )
     : kept;
 const makeFaceInferenceImpl = (detector: FaceSession, recognizer: FaceSession, aligner: O.Option<FaceSession>) =>

@@ -174,7 +174,6 @@ const redClaims = (parsed: ParsedDecision, finalPullRequest: number): ReadonlyAr
 
 const claimValue = (claim: GoalRedAttributionClaim): string => `${claim.attribution}#${claim.fixPullRequest}`;
 
-// One context's claims: a single value attributes through its strongest claim; two values fail closed.
 const resolveContext = (
   claims: A.NonEmptyReadonlyArray<GoalRedAttributionClaim>
 ): Result.Result<GoalRedAttributionClaim, GoalAttributionConflict> => {
@@ -345,7 +344,6 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
   const path = yield* Path.Path;
   const git = yield* Git.make;
 
-  // The reader never fetches: callers that need a fresh origin/main fetch first.
   const committedDecisions = Effect.fn("GoalCompletionClaimsReader.committedDecisions")(function* (
     root: string,
     ref: string,
@@ -397,7 +395,6 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
     return A.getSomes(read);
   });
 
-  // The checkout's own files: its HEAD commit, then its working tree.
   const checkoutDecisions = Effect.fn("GoalCompletionClaimsReader.checkoutDecisions")(function* (
     root: string,
     directory: string
@@ -415,7 +412,6 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
   ) {
     const directory = `goals/${slug}/${GOAL_DECISIONS_DIR}`;
     const originMain = yield* committedDecisions(root, "origin/main", GoalClaimSource.Enum["origin-main"], directory);
-    // No scope reads the checkout's files too.
     const checkout = GoalClaimScope.is["origin-main"](scope)
       ? A.empty<GoalSourcedDecision>()
       : yield* checkoutDecisions(root, directory);
@@ -438,7 +434,8 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
  * `origin-main` {@link GoalClaimScope} skips `HEAD` and the working tree. A failed git or
  * filesystem read contributes no files from that source and never fails the
  * read; a missing `origin/main` ref contributes nothing. The reader never
- * fetches. {@link GoalCompletionClaimsReader.layerTest} returns fixed claims.
+ * fetches: a caller that needs a fresh `origin/main` fetches first.
+ * {@link GoalCompletionClaimsReader.layerTest} returns fixed claims.
  *
  * **Example** (Read fixed claims)
  *

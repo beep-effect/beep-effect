@@ -213,8 +213,6 @@ const traceFindings = Effect.fn("Explore.traceFindings")(function* (
       )
     );
   }
-  // The trace is a whole-file derivation: any byte drift from the re-rendered
-  // projection (not just a moved sourceTip) means the committed copy lies.
   const rendered = yield* renderPacketTraceFile(projectPacketTrace(derived, events)).pipe(
     Effect.asSome,
     Effect.orElseSucceed(O.none<string>)
@@ -298,8 +296,6 @@ const fleetLintFindings = Effect.fn("Explore.fleetLintFindings")(function* () {
   );
 });
 
-// E19: a leftover pending-events sidecar means a graduation stopped between
-// the manifest flip and the stream append.
 const graduationPendingFindings = Effect.fn("Explore.graduationPendingFindings")(function* (
   root: PacketRoot,
   slug: string,
@@ -374,6 +370,13 @@ const printCheckReport = Effect.fn("Explore.printCheckReport")(function* (scan: 
  * Advisory-only: stream and fleet-graph findings are printed on stderr in the
  * goals-doctor line format, per-stream derived summaries on stdout, and the
  * effect always succeeds so CI stays green until the blocking ratchet flips.
+ *
+ * **Gotchas**
+ *
+ * - A committed packet trace is a whole-file derivation: any byte drift from its re-rendered
+ *   projection is a finding, not only a moved `sourceTip`.
+ * - A leftover pending-events sidecar is a finding: a graduation stopped between the manifest
+ *   flip and the stream append.
  *
  * **Example** (Verify the check returns an Effect)
  *

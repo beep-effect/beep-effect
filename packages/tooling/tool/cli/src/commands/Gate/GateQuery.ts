@@ -122,6 +122,10 @@ const rootQuery = Effect.fnUntraced(function* (gate: GateName, cwd: string, run:
 /**
  * Resolve which record a query shows.
  *
+ * **Gotchas**
+ *
+ * A relative `--dir` is repository-relative, as the console's pointer prints it.
+ *
  * **Example** (Resolve the working directory's record)
  *
  * ```ts
@@ -144,7 +148,6 @@ export const resolveRunQuery = Effect.fn("Gate.resolveRunQuery")(function* (gate
   const cwd = path.resolve(process.cwd());
   if (O.isSome(where.run)) return yield* rootQuery(name, cwd, where.run);
   if (O.isSome(where.dir)) {
-    // A relative `--dir` is repository-relative, as the console's pointer prints it.
     const base = yield* findRepoRoot(cwd);
     return yield* packageQuery(
       name,

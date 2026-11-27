@@ -56,7 +56,6 @@ const sourceDigest = (source: string): string => `effect-hash:${Hash.string(sour
 const lineAtOffset = (source: string, offset: number): number =>
   Str.split(/\r?\n/)(Str.slice(0, offset)(source)).length;
 
-// The comment with each line's leading `*` frame removed; lines stay one to one with the source.
 const unwrapJSDocStars: (comment: string) => string = Str.replace(/^[ \t]*\*(?!\/) ?/gm, "");
 
 const ownersByJSDocStart = (file: string, source: string): MutableHashMap.MutableHashMap<number, Node> => {
@@ -507,11 +506,8 @@ const canonicalInfoString = (title: string): O.Option<string> =>
 
 type ScannedFence = ScannedDoctestFence;
 
-// The first line of a fence-extraction warning, which otherwise repeats the whole comment text.
 const warningHeadline: (warning: string) => string = flow(Str.split("\n"), A.headNonEmpty, Str.replace(/:$/, ""));
 
-// A comment whose Markdown was refused or holds an unterminated fence fails the scan: its fences
-// cannot be read reliably, so passing it would let `doctest verify` skip its marked examples.
 const unreadableJSDoc = (file: string, line: number, warning: string): DoctestAnalysisError =>
   DoctestAnalysisError.make({
     message: `JSDoc Markdown could not be read, so its fences were not checked: ${warningHeadline(warning)}.`,
@@ -721,7 +717,6 @@ type DoctestSourceInspection = {
   readonly findings: ReadonlyArray<DoctestFinding>;
 };
 
-// The fences of one source file and their findings, or the error for a JSDoc comment it cannot read.
 const inspectSource = (
   file: string,
   source: string
@@ -838,7 +833,6 @@ const gitErrorAdapter: GitCommandErrorAdapter<DoctestAnalysisError> = {
   onTruncated: O.none(),
 };
 
-// The workspace roots whose changed sources can host doctests.
 const DOCTEST_PATHSPEC = ["packages", "apps"];
 
 /**
@@ -1024,6 +1018,8 @@ const replaceSourceLine = (
 ): Effect.Effect<ReadonlyArray<string>, DoctestRewriteError> =>
   Effect.fromOption(A.replace(lines, index, replacement), () => error);
 
+const WHOLE_FENCE_MARKER_RUN = /(`{3,}|~{3,}).*$/;
+
 const applyMarkerEdit = (
   file: string,
   lines: ReadonlyArray<string>,
@@ -1041,8 +1037,7 @@ const applyMarkerEdit = (
   return replaceSourceLine(
     lines,
     openingIndex,
-    // Keep the whole marker run: a four-backtick opener cut to three would let a ``` line in the body close it.
-    Str.replace(/(`{3,}|~{3,}).*$/, `$1${plan.expectedInfoString}`)(opening),
+    Str.replace(WHOLE_FENCE_MARKER_RUN, `$1${plan.expectedInfoString}`)(opening),
     DoctestRewriteError.make({
       message: "Opening fence no longer matches the analyzed location.",
       file,
@@ -1102,7 +1097,6 @@ const applyRewritePlans = (
     )
   );
 
-// A rewrite whose result no longer scans finds none of its fences, so every plan counts as invalid.
 const invalidRewrittenPlan = (file: string, rewritten: string, plans: ReadonlyArray<MarkPlan>): O.Option<MarkPlan> => {
   const fences = Result.getOrElse(scanSourceFences(file, rewritten), A.empty<ScannedFence>);
   return A.findFirst(plans, (plan) => {
@@ -1202,6 +1196,12 @@ const rewriteWithServices = Effect.fn("Doctest.rewrite")(function* (plans: Reado
 
 /**
  * Supplies the filesystem-backed doctest analyzer used by CLI commands.
+ *
+ * **Gotchas**
+ *
+ * A JSDoc comment whose Markdown was refused, or that holds an unterminated fence, fails the
+ * scan with a `DoctestAnalysisError`: its fences cannot be read reliably, and passing it would
+ * let `doctest verify` skip its marked examples.
  *
  * **Example** (Inspect the live analyzer layer)
  *

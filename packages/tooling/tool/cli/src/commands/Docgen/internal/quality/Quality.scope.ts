@@ -23,8 +23,6 @@ import type { DocgenQualityScopeMode } from "./Quality.schemas.ts";
 
 const DOCGEN_SCOPE_PATHSPECS = ["*.ts", "*.tsx"];
 
-// Docgen quality tolerates broken worktree probes: `--changed-files` must still resolve a
-// scope in repositories without a HEAD commit, where the `git diff HEAD` probe fails.
 const WORKING_TREE_CHANGED_FILE_SCAN = {
   diffFilter: "ACMR",
   pathspecs: DOCGEN_SCOPE_PATHSPECS,
@@ -74,6 +72,11 @@ const countSelectedScopes = (packageSelector: O.Option<string>, all: boolean, ch
 
 /**
  * Resolves `docgen quality` targets using the v1 scope policy.
+ *
+ * **Gotchas**
+ *
+ * `--changed-files` still resolves a scope in a repository without a HEAD commit: a failed
+ * worktree probe (the `git diff HEAD` read) is ignored.
  *
  * **Example** (Resolve changed-file docgen targets)
  *

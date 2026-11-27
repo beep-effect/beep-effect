@@ -113,7 +113,6 @@ export const itemSeriesLines = (series: ReadonlyArray<HistoryItemSeries>): Reado
 
 const NO_STORE = ["no history store for this checkout"];
 
-// The package a directory is in: the nearest directory up to the repository root with a manifest, else itself.
 const packageDirOf = Effect.fnUntraced(function* (dir: string, root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

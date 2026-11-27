@@ -126,8 +126,6 @@ type ExampleFindingRule = {
 
 const exampleCodeEvidence = (example: string): ReadonlyArray<string> => [boundedText(exampleCodeText(example), 160)];
 
-// Per-example checks as a data catalog: a new rule is one array entry, folded over
-// parsedExamples in order — not another imperative `if (...) findings = addFinding(...)` block.
 const EXAMPLE_FINDING_RULES: ReadonlyArray<ExampleFindingRule> = [
   {
     when: (_subject, example) => !exampleHasFencedCode(example),

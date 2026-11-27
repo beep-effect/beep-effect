@@ -466,8 +466,6 @@ const isRegisterableOpsScript = S.is(GoalOpsScriptPath);
 
 const isUnderDotSegment = (file: string): boolean => A.some(Str.split(file, "/"), Str.startsWith("."));
 
-// Lists the regular files under one packet subdirectory, at any depth, as sorted packet-relative
-// `<directory>/...` paths; an absent or unreadable directory lists as empty.
 const filesystemPacketFiles = Effect.fn("Goals.filesystemPacketFiles")(function* (
   packetPath: string,
   directory: string
@@ -549,7 +547,9 @@ const filesystemReadDocument = Effect.fn("Goals.filesystemReadDocument")(functio
  * **Details**
  *
  * Unreadable reflection directories and files read as empty, and an exploration back-link resolves
- * against the repository root found from the working directory.
+ * against the repository root found from the working directory. `opsFiles` and `researchFiles`
+ * list regular files at any depth as sorted packet-relative paths; an absent or unreadable
+ * directory lists as empty.
  *
  * **Example** (Build the filesystem reader)
  *
@@ -580,9 +580,6 @@ const decisionLogFindings = Effect.fn("Goals.decisionLogFindings")(function* <E,
   record: GoalPacketRecord,
   reader: GoalPacketReader<E, R>
 ) {
-  // Decision files are the lane-owned source; the SPEC.md / PLAN.md blocks are
-  // projections. A rejected file and a stale block both block, so a merged lane
-  // can never leave the rendered log behind its files.
   const report = yield* goalDecisionLogReport(record, reader);
   const invalid = A.map(report.invalid, (item) =>
     finding(
@@ -640,9 +637,7 @@ export const makeGoalPacketWorkingTreeReader = Effect.fn("Goals.makeGoalPacketWo
 ) {
   const path = yield* Path.Path;
   const base = makeGoalPacketFilesystemReader();
-  // KEEP (D-21): `ls-files --others --ignored` has no kit member; the raw stdout capture keeps the NUL
-  // records.
-  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21), reason above
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21): no kit member lists ignored files; raw stdout keeps NUL records
   const listed = yield* runRepoCommandCaptureRaw(
     "git",
     ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", GOALS_DIR],
@@ -678,8 +673,6 @@ const researchReportFindings = Effect.fn("Goals.researchReportFindings")(functio
   manifest: GoalManifest,
   reader: GoalPacketReader<E, R>
 ) {
-  // `researchReports` is a generated projection of research/: every packet is checked, and the
-  // only remedy is to rerun the writer (bun run beep goals manifest --write).
   const files = yield* reader.researchFiles(record.packetPath);
   const drift = diffResearchReports(manifest.researchReports, projectResearchReports(files));
   return O.match(drift, {
@@ -699,8 +692,6 @@ const reflectionArtifactFindings = Effect.fn("Goals.reflectionArtifactFindings")
   record: GoalPacketRecord,
   reader: GoalPacketReader<E, R>
 ) {
-  // Reflection frontmatter must decode in ANY packet (the PR #365 YAML traps
-  // hid in the completed-only gap).
   let findings = A.empty<GoalDoctorFinding>();
   const files = yield* reader.reflectionFiles(record.packetPath);
   for (const file of A.sort(A.filter(files, reflectionFileNameIsArtifact), Order.String)) {
@@ -727,7 +718,6 @@ const opsScriptFindings = Effect.fn("Goals.opsScriptFindings")(function* <E, R>(
   manifest: GoalManifest,
   reader: GoalPacketReader<E, R>
 ) {
-  // Registration is opt-in: a manifest without `opsScripts` is not checked.
   if (manifest.opsScripts === undefined) {
     return A.empty<GoalDoctorFinding>();
   }
@@ -746,9 +736,6 @@ const opsScriptFindings = Effect.fn("Goals.opsScriptFindings")(function* <E, R>(
         script.path
       )
   );
-  // Dot-leading segments (`ops/.scratch/probe.ts`, `ops/.hidden.ts`) are hidden scratch space and are not
-  // checked. Every other unlisted `*.ts` is reported: as unregistered when `GoalOpsScriptPath` admits it
-  // (fixed by listing it), else as unregistrable (fixed by renaming it), so nothing under ops/ goes unchecked.
   const candidates = A.filter(
     files,
     (file) => Str.endsWith(".ts")(file) && !isUnderDotSegment(file) && !HashSet.has(listed, file)
@@ -832,8 +819,6 @@ const statusConsistencyFindings = (
     );
   }
 
-  // Closeout is one PR: the final binds `closeout` and flips the status itself,
-  // so an active packet whose phases are all complete owes that flip.
   const phases = goalManifestPhases(manifest);
   if (
     GoalStatus.is.active(status) &&
@@ -993,11 +978,6 @@ const manifestAdvisoryFindings = (
   return findings;
 };
 
-// The retired `proposedCloseout` key is no longer modeled, so the decoder
-// strips it and only the raw JSON still shows it. One-PR closeout binds the
-// final through `goals set-status`, which deletes the key (also beside a
-// committed closeout or on a grandfathered gate); a manifest that still
-// carries it (an agent following an old checklist) blocks until then.
 const legacyProposalFindings = (
   record: GoalPacketRecord,
   raw: Readonly<Record<string, unknown>>
@@ -1071,6 +1051,25 @@ const explorationBacklinkFindings = Effect.fn("Goals.explorationBacklinkFindings
  * manifest advisories, and the exploration back-link. Git-history advisories and capability findings
  * span packets and are computed by the caller. The reader decides where packet-adjacent files come
  * from, which is what lets the knowledge doctor list the same findings from a Git tree.
+ *
+ * **Gotchas**
+ *
+ * - Decision files are the lane-owned source and the `SPEC.md` / `PLAN.md` blocks are their
+ *   projections: a rejected file and a stale block both block, so a merged lane can never leave
+ *   the rendered log behind its files.
+ * - Reflection frontmatter is checked in every packet, whatever its status, not only in
+ *   completed ones.
+ * - `researchReports` is checked in every packet; the only remedy for drift is rerunning
+ *   `bun run beep goals manifest --write`.
+ * - `opsScripts` registration is opt-in: a manifest without the key has its ops/ files unchecked.
+ *   With the key, a path under a dot-leading segment (`ops/.scratch/probe.ts`) is hidden scratch
+ *   space; every other unlisted `*.ts` is reported, as unregistered when `GoalOpsScriptPath`
+ *   admits it (list it) and as unregistrable otherwise (rename it).
+ * - An active packet whose phases are all complete blocks: one-PR closeout means the final flips
+ *   the status and binds `closeout` itself.
+ * - A legacy `proposedCloseout` key blocks. The decoder strips it, so only the raw JSON shows it;
+ *   `goals set-status` binds the final and deletes the key, also beside a committed closeout or
+ *   on a grandfathered gate.
  *
  * **Example** (Check a packet with no manifest)
  *
@@ -1169,7 +1168,6 @@ type DoctorPacket = {
   readonly raw: O.Option<Readonly<Record<string, unknown>>>;
 };
 
-// The slugs whose packet paths appear in the staleness window's git log.
 const touchedSlugs = (recentPaths: ReadonlyArray<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(
     pipe(
@@ -1179,16 +1177,11 @@ const touchedSlugs = (recentPaths: ReadonlyArray<string>): HashSet.HashSet<strin
     )
   );
 
-// A squash merge's subject ends with its PR number and a merge commit's starts
-// with "Merge pull request"; every other subject is an ordinary commit.
 const SQUASH_SUBJECT_PATTERN = /\(#\d+\)$/;
 const MERGE_COMMIT_SUBJECT_PATTERN = /^Merge pull request #\d+/;
 const isMergeSubject = (subject: string): boolean =>
   SQUASH_SUBJECT_PATTERN.test(subject) || MERGE_COMMIT_SUBJECT_PATTERN.test(subject);
 
-// Citation tokens are whole words: a slug or a "#N" reference, split on
-// anything that cannot be part of either, so "#123" never matches "#1234" and
-// a short slug never matches the inside of another word.
 const CITATION_SEPARATOR = /[^A-Za-z0-9#-]+/;
 const citationTokens = (subjects: ReadonlyArray<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.flatMap(subjects, (subject) => Str.split(subject, CITATION_SEPARATOR)));
@@ -1206,21 +1199,14 @@ const recordedPullRequest = (packet: DoctorPacket): O.Option<string> =>
     O.map((value) => `#${String(value)}`)
   );
 
-// A subject cites the packet by its slug or by its recorded PR number, as a
-// whole token.
 const citedBy = (packet: DoctorPacket, tokens: HashSet.HashSet<string>): boolean =>
   HashSet.has(tokens, packet.record.slug) ||
   O.exists(recordedPullRequest(packet), (value) => HashSet.has(tokens, value));
 
-// The completion gate keeps its looser substring reading: a packet shipped
-// under a branch name such as feature/beep-<slug> is still cited, and the
-// committed baseline was recorded against that reading.
 const citedAnywhere = (packet: DoctorPacket, subjectsText: string): boolean =>
   Str.includes(packet.record.slug)(subjectsText) ||
   O.exists(recordedPullRequest(packet), (value) => Str.includes(value)(subjectsText));
 
-// A statusNote or a non-empty blockedBy is the packet's own account of why it
-// is still open; both staleness-shaped advisories defer to it.
 const hasOpenContext = (manifest: GoalManifest): boolean =>
   manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
 
@@ -1255,12 +1241,6 @@ const stalenessAdvisories = (
   return findings;
 };
 
-// An active packet that a merge/squash commit already cites and that nobody
-// has touched since the staleness window opened is the "shipped, never
-// closed" shape: the lifecycle flip belonged in the PR that cited it. A
-// statusNote or blockedBy is the packet saying it stays open on purpose, so
-// it silences this advisory exactly as it silences stale-active; the plain
-// stale-active advisory is suppressed for the same packet.
 const activeAfterMergeAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
   subjectsText: string,
@@ -1344,12 +1324,9 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
     };
   }
 
-  // Single-pass staleness walk: every path under goals/ touched in the window.
   const recentPaths = yield* git
     .log(".", { since: `${STALE_ACTIVE_DAYS}.days`, paths: ["goals/"] })
     .pipe(Effect.map(A.flatMap((entry) => entry.paths)), Effect.option);
-  // Single-pass completion-gate heuristic: merge/squash subjects citing the
-  // packet slug or the packet's recorded PR number.
   const subjects = yield* git.log(".", { limit: 4000, omitPaths: true }).pipe(
     Effect.map(
       flow(
@@ -1360,8 +1337,6 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
     Effect.option
   );
 
-  // Shipped-but-open packets first: they take the slot the plain staleness
-  // advisory would otherwise fill for the same slug.
   const afterMerge =
     O.isSome(subjects) && O.isSome(recentPaths)
       ? activeAfterMergeAdvisories(packets, subjects.value, recentPaths.value)
@@ -1547,9 +1522,6 @@ type StructuredCompletionAdvisory = {
   readonly notes: ReadonlyArray<string>;
 };
 
-// Online, a legacy row (a final but no committed closeout) takes the closeout
-// window pre-check: a final merged before the window reads its stored receipt,
-// so its full observation, thread read included, is skipped.
 const legacyOnlineReceipt = Effect.fn("Goals.legacyOnlineReceipt")(function* (
   root: string,
   slug: string,
@@ -1597,7 +1569,6 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
     !online
   )
     return O.none<StructuredCompletionAdvisory>();
-  // A committed closeout reads as the same line `session open` and `goals explain` print.
   const status = A.map(
     O.toArray(O.map(goalCloseoutView(slug, manifest, receipt), renderGoalCloseoutView)),
     (line) => `${slug}: ${line}`
@@ -1612,7 +1583,6 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
 const describeAttributedRed = (red: GoalAttributedRedFact): string =>
   `${red.context} (${red.observed === "missing" ? "never reported, " : ""}${red.attribution}, fix #${red.fixPullRequest}, ${red.decisionFile})`;
 
-// The 2.6 mapping of one online closeout check onto findings and notes.
 const closeoutCheckAdvisory = (
   slug: string,
   record: GoalCloseoutRecord,
@@ -1685,8 +1655,6 @@ const structuredCompletionAdvisory = Effect.fn("Goals.structuredCompletionAdviso
   if (O.isNone(eligible)) return O.none<StructuredCompletionAdvisory>();
   const manifest = eligible.value;
   const record = manifest.closeout;
-  // Online, a committed closeout is classified from hosted facts; this is the
-  // only path that can block.
   if (online && record !== undefined) {
     const root = yield* findRepoRoot().pipe(Effect.orElseSucceed(process.cwd));
     const check = yield* readGoalCloseoutCheck(root, packet.record.slug, manifest);
@@ -1710,21 +1678,6 @@ const structuredCompletionAdvisory = Effect.fn("Goals.structuredCompletionAdviso
   return yield* completionEvidenceAdvisory(packet, manifest, final.value, online);
 });
 
-/**
- * Run the goals doctor: collect findings, ratchet blocking ones against the
- * committed baseline, and fail on new blocking findings.
- *
- * **Example** (Verify doctor returns Effect)
- *
- * ```ts
- * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
- * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
- * ```
- *
- * @category use-cases
- * @since 0.0.0
- */
 const writeDoctorBaseline = Effect.fn("Goals.writeDoctorBaseline")(function* (
   blocking: ReadonlyArray<GoalDoctorFinding>
 ) {
@@ -1766,7 +1719,6 @@ const loadDoctorBaselineKeys = Effect.fn("Goals.loadDoctorBaselineKeys")(functio
   );
 });
 
-// The findings the checkout's prunes skipped, counted and named; nothing when there are none.
 const printSkippedFindings = Effect.fn("Goals.printSkippedFindings")(function* (
   skipped: ReadonlyArray<GoalDoctorFinding>
 ) {
@@ -1781,7 +1733,6 @@ const printSkippedFindings = Effect.fn("Goals.printSkippedFindings")(function* (
   );
 });
 
-// Prints a header and its lines on stderr, or nothing when there are no lines.
 const printErrorSection = Effect.fn("Goals.printErrorSection")(function* (
   header: string,
   lines: ReadonlyArray<string>
@@ -1813,9 +1764,6 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
   );
 });
 
-// goals/prunable-product-leaves, seam 1b: a finding of a packet the checkout pruned or owns, or a
-// link finding whose target it pruned, does not apply to this checkout. It is skipped and counted.
-// The inventory is read only when there is a finding to judge, so a clean run reads nothing more.
 const withoutPrunedFindings = Effect.fn("Goals.withoutPrunedFindings")(function* (
   found: ReadonlyArray<readonly [GoalDoctorFinding, string]>
 ) {
@@ -1845,7 +1793,26 @@ const withoutPrunedFindings = Effect.fn("Goals.withoutPrunedFindings")(function*
  * The findings of a packet the checkout pruned or owns, and a link finding
  * whose target it pruned (see `@beep/repo-cli-kit/CheckoutSubject`), are
  * skipped and counted. A packet whose directory remains is present, so it is
- * checked in full unless the checkout's declaration owns it.
+ * checked in full unless the checkout's declaration owns it. An exploration finding's slug is
+ * already its packet root, `explorations/<slug>`.
+ *
+ * **Gotchas**
+ *
+ * - Git advisories take one walk of the paths under goals/ touched in the staleness window and
+ *   one read of the latest 4000 commit subjects; a shallow checkout or a failed log skips them
+ *   with a note.
+ * - `active-after-merge` reports an active packet cited by a merge or squash subject and untouched
+ *   since the window opened: the lifecycle flip belonged in the PR that cited it. It takes the
+ *   slot of the plain `stale-active` advisory for the same packet.
+ * - Citations are whole tokens, a slug or a `#N` reference, so `#123` never matches `#1234`. The
+ *   completion gate keeps the looser substring reading, so a packet shipped under a branch name
+ *   such as `feature/beep-<slug>` still counts, because its baseline was recorded that way.
+ * - A `statusNote` or a non-empty `blockedBy` is the packet's own account of why it stays open,
+ *   and silences both staleness-shaped advisories.
+ * - Online, a committed closeout is classified from hosted facts, the only completion path that
+ *   can block. A legacy row (a final but no committed closeout) whose final merged before the
+ *   closeout window reads its stored receipt instead, skipping the thread read. A committed
+ *   closeout prints the same line `session open` and `goals explain` print.
  *
  * **Example** (Verify doctor returns Effect)
  *
@@ -1881,8 +1848,6 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   const structuredRun = Effect.forEach(packets, (packet) => structuredCompletionAdvisory(packet, online), {
     concurrency: 1,
   });
-  // One memoized completion port serves the whole online run, so packets that
-  // share a base branch read its rule-suite listing once.
   const forEach3 = yield* online ? withGoalCompletionIo(structuredRun) : structuredRun;
   const structured = A.getSomes(forEach3);
   const completionFindings = A.flatMap(structured, (row) => row.findings);
@@ -1904,7 +1869,6 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
       ],
       (item) => [item, `${GOALS_DIR}/${item.slug}`] as const
     ),
-    // An exploration finding's slug is already its packet root, `explorations/<slug>`.
     ...A.map(explorationFindings, (item) => [item, item.slug] as const),
   ];
   const { allFindings, skipped } = yield* withoutPrunedFindings(found);

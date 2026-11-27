@@ -76,6 +76,11 @@ const decodePacketManifest = Effect.fn("Goals.decodePacketManifest")(function* (
  * a {@link GoalGraphOperationalError} naming the packet. A broken census never
  * renders as a smaller graph.
  *
+ * **Gotchas**
+ *
+ * A packet's status is its declared `initiative.status`; nothing is derived from completion
+ * receipts.
+ *
  * **Example** (Build the census-load effect)
  *
  * ```ts
@@ -92,10 +97,6 @@ export const loadCapabilityProjection = Effect.fn("Goals.loadCapabilityProjectio
   return (yield* loadCapabilityCensus(repoRoot)).projection;
 });
 
-// The decoded census and its projection together: `explain` needs the manifest
-// behind one packet to read its clone-scoped closeout view, so the scan runs once.
-// Every packet's declared `initiative.status` is its status; nothing is derived
-// from completion receipts.
 const loadCapabilityCensus = Effect.fn("Goals.loadCapabilityCensus")(function* (repoRoot: string) {
   const records = yield* listGoalPacketsStrict(repoRoot).pipe(
     Effect.mapError(GoalGraphOperationalError.new("Failed to scan goals/ for the capability graph."))
@@ -188,6 +189,11 @@ export const goalsNextCommand = Command.make(
 /**
  * `bun run beep goals explain <slug>` — explain why one packet is or is not ready.
  *
+ * **Details**
+ *
+ * The explanation adds the packet's committed closeout and whether this clone's receipt verified
+ * it, read from the same census scan as the readiness answer.
+ *
  * **Example** (Log command name)
  *
  * ```ts
@@ -219,9 +225,6 @@ export const goalsExplainCommand = Command.make(
           )
         )
       );
-      // The view adds the committed closeout and whether this clone's receipt
-      // verified it. A report exists only for a slug the manifests carry, so the
-      // manifest is always found here.
       const manifest = A.findFirst(manifests, (candidate) => candidate.initiative.id === slug);
       const transposeOption1 = yield* Effect.transposeOption(
         O.map(manifest, (found) => readGoalCloseoutView(".", slug, found))

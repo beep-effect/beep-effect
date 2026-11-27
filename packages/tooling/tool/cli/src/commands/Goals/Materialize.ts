@@ -81,8 +81,6 @@ const receiptFile = Effect.fn("Goals.receiptFile")(function* (entry: PlanEntry &
   return MaterializedFile.make({ path: entry.path, digest });
 });
 
-// Checks the staged packet against the plan's validations the stage can prove
-// on its own; doctor and index requirements run after publish.
 const validateStage = Effect.fn("Goals.validateStage")(function* (stagePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -121,13 +119,8 @@ const removeQuietly = Effect.fn("Goals.removeQuietly")(function* (absolutePath: 
   yield* fs.remove(absolutePath, { recursive: true, force: true }).pipe(Effect.ignore);
 });
 
-// An empty-only, atomic removal: a claim that a concurrent creator has started
-// filling is never deleted (no check-then-remove gap).
 const removeIfEmpty = (absolutePath: string) => Effect.asVoid(removeEmptyDirectory(absolutePath));
 
-// E12: a staging directory is never published content, so every leftover
-// `goals/.staging-*` (a foreign digest, or this plan's own from a crashed attempt)
-// is removed before staging.
 const sweepStaleStages = Effect.fn("Goals.sweepStaleStages")(function* (goalsDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -141,7 +134,6 @@ const sweepStaleStages = Effect.fn("Goals.sweepStaleStages")(function* (goalsDir
     );
   }
   const entries = yield* fs.readDirectory(goalsDir).pipe(Effect.orElseSucceed(A.empty<string>));
-  // Every removal is attempted; the failures are reported together by path.
   const outcomes = yield* Effect.forEach(
     A.filter(entries, Str.startsWith(".staging-")),
     (entry) => {
@@ -172,8 +164,17 @@ const sweepStaleStages = Effect.fn("Goals.sweepStaleStages")(function* (goalsDir
  * stage onto the empty claim. If any step fails, the stage and an empty
  * claim are removed. A conflicted plan or a non-bootstrap plan is refused
  * before any write.
+ * The stage proves only what it can on its own; doctor and index requirements
+ * run after publish.
  *
  * **Gotchas**
+ *
+ * Every leftover `goals/.staging-*` directory, a foreign digest or this plan's
+ * own from a crashed attempt, is removed before staging; each removal is
+ * attempted and the failures are reported together by path. An empty
+ * `goals/<slug>` is an abandoned claim from a crashed attempt and is removed
+ * before claiming. Removing a claim is empty-only and atomic, so a claim a
+ * concurrent creator has started filling is never deleted.
  *
  * The caller must already have matched `plan.planId` against the reviewed id
  * (`--expect`); this function trusts the plan it receives.
@@ -219,7 +220,6 @@ export const publishBootstrapPlan = Effect.fn("Goals.publishBootstrapPlan")(func
       { concurrency: 1, discard: true }
     );
     const validations = yield* validateStage(stage);
-    // E11: an empty slug directory is an abandoned claim from a crashed attempt.
     yield* removeIfEmpty(target);
     yield* fs
       .makeDirectory(target)
@@ -532,7 +532,6 @@ export const writeReviewedPlan = Effect.fn("Goals.writeReviewedPlan")(function* 
 ) {
   yield* requireExpectedPlanId(plan.planId, expect);
   const receipt = yield* plan.mode === "bootstrap" ? publishBootstrapPlan(plan) : applyAdoptionPlan(plan);
-  // The receipt was just constructed from its own schema, so encoding cannot fail.
   const encoded = yield* S.encodeEffect(MaterializationReceipt)(receipt).pipe(Effect.orDie);
   yield* Console.log(Str.trimEnd(canonicalJsonTextPretty(encoded)));
   return receipt;

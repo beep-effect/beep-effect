@@ -39,15 +39,9 @@ const UnknownJson = S.fromJsonString(S.Unknown);
 
 const PT_PER_MM = 72 / 25.4;
 const SHADING_STROKE_PT = "0.567";
-// Path layers that carry the sheet's labels rather than the view.
 const LABEL_LAYERS = HashSet.fromIterable(["labels", "label-outlines"]);
-// Straight pieces a curve is flattened into before it is measured.
 const CURVE_STEPS = 16;
-// Facing strokes closer than this are one line drawn twice, not parallel neighbours.
 const SAME_LINE_MM = 0.005;
-// Strokes whose directions differ by at most this many degrees are parallel neighbours: on a face of a
-// converging pictorial the hatch strokes run toward a vanishing point, so each turns from the next by a
-// fraction of a degree, and a whole band can span several.
 const PARALLEL_DEG = 2.5;
 const NUMBER = /[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g;
 
@@ -55,7 +49,6 @@ type Point = readonly [number, number];
 
 interface StrokeRow {
   readonly angle: number;
-  // The unrounded direction in degrees, [0, 180), and endpoints in mm, for the gap measure.
   readonly direction: number;
   readonly from: Point;
   readonly length: number;
@@ -74,10 +67,6 @@ const sumOf = (values: ReadonlyArray<number>): number => A.reduce(values, 0, (to
 const numbersIn = (text: string): ReadonlyArray<number> =>
   A.map(A.fromIterable(Str.matchAll(NUMBER)(text)), (m) => Number(m[0]));
 
-// ---------------------------------------------------------------------------
-// SVG reading
-// ---------------------------------------------------------------------------
-
 const attr = (tag: string, name: string): O.Option<string> =>
   pipe(
     O.fromNullishOr(new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`).exec(tag)),
@@ -86,7 +75,6 @@ const attr = (tag: string, name: string): O.Option<string> =>
 
 const UNIT_PT: Readonly<Record<string, number>> = { pt: 1, mm: PT_PER_MM, cm: PT_PER_MM * 10, in: 72, px: 0.75 };
 
-// A length attribute (`612pt`, `215.9mm`, `816`) in points; a bare number is CSS pixels.
 const lengthPt = (value: string): O.Option<number> =>
   pipe(
     O.fromNullishOr(/^\s*([-+]?(?:\d+\.?\d*|\.\d+))\s*(pt|mm|cm|in|px)?\s*$/.exec(value)),
@@ -99,8 +87,6 @@ interface SheetScale {
   readonly widthMm: number;
 }
 
-// User units per millimetre and the sheet size. With a viewBox the scale is its width over the
-// root width; without one the sheets' own convention holds, one user unit per point.
 const sheetScale = (svg: string): SheetScale => {
   const root = pipe(
     O.fromNullishOr(/<svg\b[^>]*>/.exec(svg)),
@@ -143,11 +129,6 @@ const unescapeXml = (text: string): string =>
 const pathTags = (svg: string): ReadonlyArray<string> =>
   A.map(A.fromIterable(Str.matchAll(/<path\b[^>]*>/g)(svg)), (m) => m[0]);
 
-// ---------------------------------------------------------------------------
-// Shading strokes (the stroke table and the shading statistics)
-// ---------------------------------------------------------------------------
-
-// The stroke row of one drawn segment, in sheet millimetres; none for a zero-length segment.
 const rowOf = (from: Point, to: Point): O.Option<StrokeRow> => {
   const [x1, y1] = from;
   const [x2, y2] = to;
@@ -173,7 +154,6 @@ const rowOf = (from: Point, to: Point): O.Option<StrokeRow> => {
   });
 };
 
-// The stroke rows of a shading path's move/line data: each line command draws from the current point.
 const rowsOfPath = (data: string, unitsPerMm: number): ReadonlyArray<StrokeRow> =>
   pipe(
     A.mapAccum(
@@ -189,8 +169,6 @@ const rowsOfPath = (data: string, unitsPerMm: number): ReadonlyArray<StrokeRow> 
     ([, rows]) => A.getSomes(rows)
   );
 
-// The shading layer of a figure SVG: the path with id `shading`, or else the first path drawn at the
-// shading stroke weight (0.567 pt).
 const shadingPathData = (svg: string): O.Option<string> => {
   const paths = pathTags(svg);
   return pipe(
@@ -278,7 +256,6 @@ export const strokeTableMarkdown = (input: {
   );
 };
 
-// Distance from a point to the infinite line through a stroke.
 const distanceToLine = (point: Point, row: StrokeRow): number => {
   const [px, py] = point;
   const [ax, ay] = row.from;
@@ -293,10 +270,6 @@ const unitOf = (row: StrokeRow): Point => {
   return [dx / length, dy / length];
 };
 
-// The gap between two near-parallel strokes where they face each other. Both are projected onto their
-// bisector; where their extents overlap, the point of each stroke at the overlap's midpoint is measured to
-// the other stroke's line, and the two distances averaged. None when the strokes do not overlap, as two
-// pieces of one broken line do not.
 const facingGap = (one: StrokeRow, other: StrokeRow): O.Option<number> => {
   const u = unitOf(one);
   const raw = unitOf(other);
@@ -326,8 +299,6 @@ const facingGap = (one: StrokeRow, other: StrokeRow): O.Option<number> => {
 
 const byDirection = Order.mapInput(Order.Number, (row: StrokeRow) => row.direction);
 
-// The candidate neighbours of each stroke: the strokes after it in direction order whose directions are
-// within PARALLEL_DEG of its own, the strokes near 0° also reached from near 180° (a direction wraps there).
 const parallelCandidates = (rows: ReadonlyArray<StrokeRow>): ReadonlyArray<readonly [StrokeRow, StrokeRow]> => {
   const sorted = A.sort(rows, byDirection);
   const wrapped = A.appendAll(
@@ -346,7 +317,6 @@ const parallelCandidates = (rows: ReadonlyArray<StrokeRow>): ReadonlyArray<reado
   );
 };
 
-// The smallest perpendicular gap between a stroke and a facing stroke within PARALLEL_DEG of its direction.
 const minParallelGap = (rows: ReadonlyArray<StrokeRow>): O.Option<number> =>
   pipe(
     parallelCandidates(rows),
@@ -386,17 +356,12 @@ const shadingStats = (svg: string): CriticShadingStats => {
   });
 };
 
-// ---------------------------------------------------------------------------
-// Path layers
-// ---------------------------------------------------------------------------
-
 interface PathChunk {
   readonly letter: string;
   readonly params: ReadonlyArray<number>;
 }
 
 interface WalkState {
-  // The last curve's second control point, reflected by a following S or T.
   readonly control: O.Option<Point>;
   readonly current: Point;
   readonly previous: string;
@@ -413,8 +378,6 @@ const NOTHING: Drawn = { segments: 0, length: 0, points: [] };
 
 const ARITY: Readonly<Record<string, number>> = { M: 2, L: 2, T: 2, H: 1, V: 1, S: 4, Q: 4, C: 6, A: 7, Z: 0 };
 
-// Every command of path data split into one chunk per coordinate group; the extra pairs after a move are
-// lines, as SVG reads them.
 const pathChunks = (d: string): ReadonlyArray<PathChunk> =>
   A.flatMap(A.fromIterable(Str.matchAll(/([MLHVCSQTAZmlhvcsqtaz])([^MLHVCSQTAZmlhvcsqtaz]*)/g)(d)), (m) => {
     const letter = m[1] ?? "";
@@ -457,7 +420,6 @@ const cubicPoints = (from: Point, c1: Point, c2: Point, to: Point): ReadonlyArra
     ];
   });
 
-// One chunk of path data drawn from the walk's state: the next state and what it inked.
 const walkChunk = (state: WalkState, chunk: PathChunk): readonly [WalkState, Drawn] => {
   const upper = Str.toUpperCase(chunk.letter);
   const relative = chunk.letter !== upper;
@@ -503,7 +465,6 @@ const walkChunk = (state: WalkState, chunk: PathChunk): readonly [WalkState, Dra
       const to = at(n(2), n(3));
       return moveTo(to, O.some(c2), drawnCurve(cubicPoints(state.current, reflected(["C", "S"]), c2, to)));
     }),
-    // An arc is measured along its chord.
     Match.when("A", () => lineTo(at(n(5), n(6)))),
     Match.when("Z", (): readonly [WalkState, Drawn] => [
       { current: state.start, start: state.start, control: O.none(), previous: upper },
@@ -547,7 +508,6 @@ const unionOf = (extents: ReadonlyArray<Extent>): O.Option<Extent> =>
     ? O.some(A.reduce(A.tailNonEmpty(extents), A.headNonEmpty(extents), (union, extent) => widen(union, extent)))
     : O.none();
 
-// The ink extent of a path in user units: its drawn points widened by half the stroke width.
 const extentOf = (points: ReadonlyArray<Point>, halfWidth: number): O.Option<Extent> =>
   O.map(unionOf(A.map(points, ([x, y]) => ({ minX: x, minY: y, maxX: x, maxY: y }))), (extent) => ({
     minX: extent.minX - halfWidth,
@@ -665,6 +625,15 @@ const textLabels = (svg: string, unitsPerMm: number): ReadonlyArray<CriticTextLa
  * unit per point. `<text>` glyph extents depend on the font, so text labels
  * are listed by anchor and size but are not in either box.
  *
+ * A curve is measured as 16 straight pieces and an arc along its chord, so curved lengths
+ * are approximate.
+ *
+ * The smallest parallel gap pairs strokes whose directions differ by at most 2.5 degrees: on a
+ * face of a converging pictorial the hatch strokes run toward a vanishing point, so each turns
+ * from the next by a fraction of a degree and a whole band can span several. Two strokes count
+ * only where they overlap facing each other, so two pieces of one broken line are no gap, and
+ * facing strokes closer than 0.005 mm are one line drawn twice.
+ *
  * **Example** (One 100 mm line on a Letter sheet)
  *
  * ```ts
@@ -703,10 +672,6 @@ export const figureMeasurements = (input: {
     labels: textLabels(input.svg, scale.unitsPerMm),
   });
 };
-
-// ---------------------------------------------------------------------------
-// PDF tool output
-// ---------------------------------------------------------------------------
 
 const pdfBox = ([left, bottom, right, top]: readonly [number, number, number, number]): CriticPdfBox =>
   CriticPdfBox.make({
@@ -815,10 +780,6 @@ export const parsePdfFonts = (text: string): ReadonlyArray<CriticPdfFont> =>
     }),
     A.getSomes
   );
-
-// ---------------------------------------------------------------------------
-// MEASUREMENTS.md
-// ---------------------------------------------------------------------------
 
 const yesNo = (value: boolean) => (value ? "yes" : "no");
 const orDash = (value: O.Option<number>) => O.getOrElse(O.map(value, String), () => "—");

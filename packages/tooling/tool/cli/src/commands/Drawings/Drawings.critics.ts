@@ -88,7 +88,6 @@ const sha256 = flow(sha256Hex, Effect.map(Sha256Hex.make));
 const fail = (message: string) => (cause: unknown) => DrawingsCommandError.new(cause, message);
 const encoder = new TextEncoder();
 
-// Appends a byte stream's text to `printed` as it arrives, so a run stopped mid-stream keeps what came before.
 const collectInto = <E>(stream: Stream.Stream<Uint8Array, E>, printed: Ref.Ref<string>) =>
   stream.pipe(
     Stream.decodeText(),
@@ -115,8 +114,6 @@ export const DRAWING_CRITIC_PROMPT_TEMPLATE = ".claude/skills/browser-qa-loop/re
 const SHEET_DPI = 150;
 const ZOOM_DPI = 300;
 const IMAGE_EXTENSIONS = HashSet.fromIterable([".png", ".jpg", ".jpeg", ".webp"]);
-// Variables that would make a nested `claude -p` believe it runs inside this
-// session, or route it through a proxy the operator did not choose.
 const SCRUBBED_ENV = HashSet.fromIterable([
   "CLAUDECODE",
   "CLAUDE_CODE_ENTRYPOINT",
@@ -188,10 +185,6 @@ export const CRITIC_CLAUDE_LIMITS: Readonly<Record<"CLAUDE_CODE_MAX_OUTPUT_TOKEN
  * @since 0.0.0
  */
 export const CRITIC_TIME_LIMIT_EXIT_CODE = 124;
-
-// ---------------------------------------------------------------------------
-// Pure helpers (exported for tests)
-// ---------------------------------------------------------------------------
 
 /**
  * Parse one `--zoom` flag value `fig:x,y,width,height:label` into a
@@ -289,7 +282,6 @@ export const grokSandboxRefusal = (stderr: string): O.Option<CriticSeatUnavailab
       )
     : O.none();
 
-// How a summary and the command name a seat that ended without a report.
 const seatOutcome = (seat: CriticSeatUnavailable) =>
   CriticSeatUnavailableReason.match(seat.reason, {
     "sandbox-deny-path-unresolved": () => ({ verb: "did not run", line: "seat unavailable on this host, skipped" }),
@@ -297,7 +289,6 @@ const seatOutcome = (seat: CriticSeatUnavailable) =>
     "output-limit": () => ({ verb: "did not finish", line: "stopped at its output-token cap, no report" }),
   });
 
-// A seat the harness stopped at the run's time limit.
 const timeLimitSeat = (minutes: number): CriticSeatUnavailable =>
   CriticSeatUnavailable.make({
     reason: "time-limit",
@@ -494,18 +485,16 @@ export const priorIdsMarkdown = (reports: ReadonlyArray<CriticReport>): string =
 const parseJson = S.decodeUnknownOption(UnknownJson);
 
 const decodeClaudeResult = S.decodeUnknownOption(CriticClaudeResult);
+const decodeClaudeResultUnary = (event: unknown) => decodeClaudeResult(event);
 
-// A `claude -p` event: a JSON object with a string `type`.
 const isClaudeEvent = S.is(CriticClaudeEvent);
 
 const decodeOutputLimitStop = S.decodeUnknownOption(CriticClaudeOutputLimitStop);
 
-// The events `claude -p` printed: one JSON value (an envelope, or an array of events), or one event per line.
 const claudeEvents = (text: string): O.Option<ReadonlyArray<unknown>> =>
   pipe(
     parseJson(text),
     O.map(A.ensure),
-    // `--output-format stream-json` prints one event per line.
     O.orElse(
       (): O.Option<ReadonlyArray<unknown>> =>
         pipe(
@@ -548,7 +537,6 @@ const OUTPUT_CAP = /exceeded the (\d+) output token maximum/;
 export const claudeOutputLimit = (stdout: string): O.Option<CriticSeatUnavailable> =>
   pipe(
     claudeEvents(stdout),
-    // A lambda, not a direct ref: findLast's index must not reach the decoder as parse options.
     O.flatMap(A.findLast((event: unknown) => O.isSome(decodeClaudeResult(event)))),
     O.flatMap((event) => decodeOutputLimitStop(event)),
     O.map((stop) => {
@@ -573,8 +561,6 @@ export const claudeOutputLimit = (stdout: string): O.Option<CriticSeatUnavailabl
     })
   );
 
-// The recognised reason a seat that exited non-zero wrote no report: Grok's strict sandbox could not start,
-// or claude ended at its output-token cap. Any other failure stays a plain failed run.
 const seatStop = (
   route: CriticRoute,
   output: { readonly stdout: string; readonly stderr: string; readonly exitCode: number }
@@ -661,8 +647,7 @@ export const extractReportText = (input: { readonly route: CriticRoute; readonly
         O.match({
           onNone: () => outermost(input.text),
           onSome: flow(
-            // A lambda, not a direct ref: findLast's index must not reach the decoder as parse options.
-            A.findLast((event: unknown) => decodeClaudeResult(event)),
+            A.findLast(decodeClaudeResultUnary),
             O.filter((event) => !event.is_error),
             O.flatMap((event) => event.result),
             O.flatMap(outermost)
@@ -688,6 +673,9 @@ export const extractReportText = (input: { readonly route: CriticRoute; readonly
  * sandbox with the repository's `.cursor/cli.json` deny list.
  *
  * **Gotchas**
+ *
+ * The environment drops the variables that would make a nested `claude -p` believe it runs
+ * inside the calling session, or route it through a proxy the operator did not choose.
  *
  * `packDir`, `reportPath`, and the `workspace` a synthetic-scope reviewer runs
  * in must be non-empty paths. The result is built with `CriticInvocation.make`,
@@ -824,7 +812,6 @@ export const criticInvocation = (input: {
           input.prompt,
         ],
         cwd,
-        // the seat's caps unless the operator's environment sets its own
         env: { ...CRITIC_CLAUDE_LIMITS, ...R.filter(input.env, (_, key) => !HashSet.has(SCRUBBED_ENV, key)) },
         reportFrom: stdout,
       })
@@ -855,10 +842,6 @@ export const criticInvocation = (input: {
     Match.exhaustive
   );
 };
-
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
 
 /**
  * What the critic service does.
@@ -896,7 +879,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
   const copy = (from: string, to: string) =>
     fs.copyFile(from, to).pipe(Effect.mapError(fail(`Could not copy "${from}".`)));
 
-  // One poppler tool (pdftoppm, pdfinfo, pdffonts: the package pdf-tools already depends on); its stdout.
   const runPoppler = Effect.fnUntraced(function* (executable: string, args: ReadonlyArray<string>) {
     const handle = yield* spawner
       .spawn(ChildProcess.make(executable, args, { stdin: "ignore", stdout: "pipe", stderr: "pipe" }))
@@ -911,7 +893,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     return stdout;
   }, Effect.scoped);
 
-  // A 300 dpi crop through pdftoppm.
   const cropZoom = (pdfPath: string, zoom: CriticZoom, outPrefix: string) =>
     runPoppler("pdftoppm", [
       "-r",
@@ -933,8 +914,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
       outPrefix,
     ]);
 
-  // The PDF facts a read-only reviewer cannot get itself: version, pages and their boxes, fonts, and
-  // the streams a strict reader refuses.
   const measurePdf = Effect.fn("DrawingCritics.measurePdf")(function* (pdfPath: string) {
     const structure = yield* tools.inspect(pdfPath).pipe(Effect.mapError(fail(`Could not inspect "${pdfPath}".`)));
     const pageCount = A.length(structure.pages);
@@ -1011,12 +990,15 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
       request.zooms,
       (zoom) => {
         const prefix = path.join(renderDir, `zoom-${zoom.figure}-${zoom.label}`);
-        // pdftoppm appends -<page> to the prefix; rename to the bare name.
         return cropZoom(pdfPath, zoom, prefix).pipe(
           Effect.andThen(
             fs
               .rename(`${prefix}-${zoom.figure}.png`, `${prefix}.png`)
-              .pipe(Effect.mapError(fail(`Could not name the zoom "${prefix}.png".`)))
+              .pipe(
+                Effect.mapError(
+                  fail(`Could not rename pdftoppm's page-suffixed "${prefix}-${zoom.figure}.png" to "${prefix}.png".`)
+                )
+              )
           ),
           Effect.as(`render/zoom-${zoom.figure}-${zoom.label}.png`)
         );
@@ -1126,10 +1108,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     );
   });
 
-  // One reviewer CLI run: what it printed on stdout and stderr, and its exit code, or None when it ran past the
-  // time limit (closing the scope stops the process: SIGTERM to its group, then SIGKILL if it is still alive 30
-  // seconds later, so a seat that ignores SIGTERM cannot hold the sequence). The output gathers in Refs as it
-  // arrives, which the interruption at the limit leaves alone, so a stopped seat still hands back what it printed.
   const runInvocation = Effect.fn("DrawingCritics.runInvocation")(function* (
     invocation: CriticInvocation,
     minutes: number
@@ -1163,7 +1141,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     };
   }, Effect.scoped);
 
-  // The record of a seat that ended without a report: why, and when.
   const stoppedRun = Effect.fn("DrawingCritics.stoppedRun")(function* (input: {
     readonly order: number;
     readonly reviewer: CriticReviewer;
@@ -1191,7 +1168,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     });
   });
 
-  // A seat that exited: a recognised stop or its report.
   const recordRun = Effect.fn("DrawingCritics.recordRun")(function* (input: {
     readonly order: number;
     readonly reviewer: CriticReviewer;
@@ -1262,7 +1238,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     readonly order: number;
     readonly template: string;
     readonly extra: O.Option<string>;
-    // The runs of this loop so far, so the summary names a seat that could not run.
     readonly earlier: ReadonlyArray<CriticRunRecord>;
   }) {
     const { request, reviewer, pack } = input;
@@ -1355,12 +1330,9 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
       env: processEnvironment(),
     });
     const { stdout, stderr, exitCode } = yield* runInvocation(invocation, request.timeoutMinutes);
-    // What the seat printed is kept beside its record however it ended, so a seat stopped at its time limit
-    // leaves what it printed before then. Only a seat that exited is read for a report.
     yield* write(path.join(loopDir, `${reviewer.name}.log`), stderr);
     yield* write(path.join(loopDir, `${reviewer.name}.raw`), stdout);
     const seat = { order: input.order, reviewer, startedAt };
-    // A seat stopped at its time limit is recorded like one that could not start, and the sequence goes on.
     return yield* O.match(exitCode, {
       onNone: () =>
         stoppedRun({ ...seat, exitCode: CRITIC_TIME_LIMIT_EXIT_CODE, stop: timeLimitSeat(request.timeoutMinutes) }),
@@ -1384,7 +1356,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
       Effect.mapError(fail(`Could not stat "${extraPath}".`)),
       Effect.flatMap((exists) => (exists ? read(extraPath).pipe(Effect.asSome) : Effect.succeedNone))
     );
-    // Each seat runs after the ones before it and reads their runs, so a seat that could not run is named.
     const runs = yield* Effect.reduce(
       request.reviewers,
       (): ReadonlyArray<CriticRunRecord> => A.empty(),
@@ -1410,7 +1381,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     return record;
   });
 
-  // The runs of a finished loop, when its loop.json exists.
   const loopRuns = Effect.fn("DrawingCritics.loopRuns")(function* (loopDir: string) {
     const loopPath = path.join(loopDir, "loop.json");
     const exists = yield* fs.exists(loopPath).pipe(Effect.mapError(fail(`Could not stat "${loopPath}".`)));
@@ -1434,8 +1404,6 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
   return { buildPack, runSequence, summary } satisfies DrawingCriticsShape;
 });
 
-// The process environment as a string record; undefined entries dropped. The
-// reviewers are external CLIs that read their own sign-in from it.
 const processEnvironment = (): Readonly<Record<string, string>> =>
   R.filterMap(
     (globalThis as unknown as { readonly process?: { readonly env?: Readonly<Record<string, string | undefined>> } })
@@ -1445,6 +1413,19 @@ const processEnvironment = (): Readonly<Record<string, string>> =>
 
 /**
  * The critic-loop service.
+ *
+ * **Gotchas**
+ *
+ * - Seats run one after another, and each reads the runs before it, so its summary names a
+ *   seat that could not run.
+ * - A seat stopped at its time limit is recorded like one that could not start, and the
+ *   sequence goes on. Its process group gets SIGTERM and then SIGKILL 30 seconds later, so a
+ *   seat that ignores SIGTERM cannot hold the sequence, and what it printed before the limit
+ *   is still kept beside its record. Only a seat that exited is read for a report.
+ * - A seat that exited non-zero without a report is a recognised stop only when Grok's strict
+ *   sandbox could not start or `claude -p` ended at its output-token cap; any other failure
+ *   stays a plain failed run.
+ * - Reviewer CLIs inherit the process environment, because they read their own sign-in from it.
  *
  * **Example** (Reference the service)
  *

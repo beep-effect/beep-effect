@@ -169,7 +169,6 @@ const checkoutScope = Effect.fnUntraced(function* (repoRoot: string) {
   const head = yield* Effect.option(git.revParse(repoRoot, "HEAD"));
   if (O.isNone(head)) return O.none<HistoryScope>();
   const branch = yield* git.currentBranch(repoRoot).pipe(Effect.orElseSucceed(O.none<string>));
-  // A detached checkout records under its commit, so it never joins a branch's series.
   const recorded = O.getOrElse(branch, constant(`detached@${head.value}`));
   return HistoryScope.makeOption({ branch: recorded, head });
 });
@@ -205,6 +204,10 @@ const namedTarget = Effect.fnUntraced(function* (
  * Resolution never fails a gate run: outside a git checkout, without a state
  * directory, or on any other failure there is no history and the run
  * renders as before.
+ *
+ * **Gotchas**
+ *
+ * A detached checkout records under `detached@<commit>`, so it never joins a branch's series.
  *
  * **Example** (Keep no history)
  *
@@ -292,7 +295,6 @@ export const historyStoreLayer = (target: GateHistoryTarget): Layer.Layer<GateHi
 
 const isHistoryError = S.is(GateHistoryError);
 
-// One line: a store error's reason and message, else the first line of the cause.
 const failureLine = (cause: Cause.Cause<unknown>): string =>
   pipe(
     Cause.findErrorOption(cause),

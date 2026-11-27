@@ -165,8 +165,6 @@ const byDateThenFile: Order.Order<GoalDecision> = Order.combine(
   Order.mapInput(Order.String, (decision: GoalDecision) => decision.file)
 );
 
-// The lane is a branch name, not a tracked path: it stays plain text so the knowledge gates never
-// probe it as a repository path once the lane branch is gone.
 const attribution = (decision: GoalDecision): O.Option<string> => {
   const parts = A.getSomes([
     O.map(O.fromUndefinedOr(decision.frontmatter.lane), (lane) => `Lane ${lane}`),
@@ -175,7 +173,6 @@ const attribution = (decision: GoalDecision): O.Option<string> => {
   return A.isReadonlyArrayNonEmpty(parts) ? O.some(A.join(parts, " · ")) : O.none();
 };
 
-// Completion claims render as plain text too: a context such as "Heavy / Check" is a check name, not a path.
 const claimLines = (decision: GoalDecision): ReadonlyArray<string> => [
   ...O.match(O.fromUndefinedOr(decision.frontmatter.redAttribution), {
     onNone: A.empty<string>,
@@ -216,6 +213,12 @@ const renderEntry = (decision: GoalDecision): ReadonlyArray<string> => [
  * (each red with its cause and fix PR) and `Operator ruling closes #N` after
  * its body. Changing this renderer changes every projected packet, so a
  * change is a repo-wide `--write`.
+ *
+ * **Gotchas**
+ *
+ * A lane and a completion-claim context render as plain text, never as code spans: a lane is a
+ * branch name and a context such as "Heavy / Check" is a check name, so the knowledge gates must
+ * never probe either as a repository path.
  *
  * **Example** (Render an empty block)
  *

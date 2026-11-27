@@ -83,7 +83,6 @@ class FlattenMediaPlan extends S.Opaque<FlattenMediaPlan, { readonly brand: uniq
   )
 ) {}
 
-// The nearest path at or above `directory` that exists, or a failure when none does.
 const nearestExistingAncestor = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -175,9 +174,6 @@ const validateFlattenMediaDirectories = Effect.fn("Files.validateFlattenMediaDir
   });
 });
 
-// Every regular file below the source directory, dotfiles included, sorted and joined onto it.
-// Symlinked directories are never entered, and a symlinked file is dropped too: flattening
-// moves files, and moving a link would relocate the link rather than the media it points at.
 const collectFlattenMediaSources = Effect.fn("Files.collectFlattenMediaSources")(function* (sourceDirectory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -510,6 +506,12 @@ const makeFlattenMediaSummary = (plan: FlattenMediaPlan, dryRun: boolean, movedC
 
 /**
  * Validate, plan, preview, and apply a recursive media flattening operation.
+ *
+ * **Gotchas**
+ *
+ * Every regular file below the source directory moves, dotfiles included. Symlinked
+ * directories are never entered and symlinked files are dropped: moving a link would relocate
+ * the link rather than the media it points at.
  *
  * **Example** (Run flatten with options)
  *

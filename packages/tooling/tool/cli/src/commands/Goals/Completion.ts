@@ -82,8 +82,6 @@ import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Completion");
 const hostedRef = GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true });
-// Gating while a fix PR named by a committed claim cannot be read: the claim is
-// counted, but this unknown check keeps the outcome from verifying (DN-5).
 const fixPullRequestsRef = GoalAcceptanceEvidenceRef.make({
   kind: "hosted-required-checks",
   ref: "fix-pull-requests",
@@ -184,8 +182,6 @@ export const goalCompletionVerdict = (
     })
   );
 
-// Only hosted facts gate (DN-9): a declared `yeet-verdict`, `proof-fact` or
-// `packet-history` ref is recorded at most and never decides the outcome.
 const isHostedEvidenceKind = S.is(GoalHostedEvidenceKind);
 const gatingEvidence = (evidence: ReadonlyArray<GoalEvidenceCheck>): ReadonlyArray<GoalEvidenceCheck> =>
   A.filter(evidence, (check) => check.ref.gating && isHostedEvidenceKind(check.ref.kind));
@@ -193,8 +189,6 @@ const gatingEvidence = (evidence: ReadonlyArray<GoalEvidenceCheck>): ReadonlyArr
 const isFixPullRequestsCheck = (check: GoalEvidenceCheck): boolean =>
   check.ref.kind === fixPullRequestsRef.kind && check.ref.ref === fixPullRequestsRef.ref;
 
-// A transient read failure names itself in its detail; any other unknown gating
-// check is named by its kind and ref.
 const unknownEvidenceReason = (check: GoalEvidenceCheck): string =>
   isFixPullRequestsCheck(check) || (check.ref.kind === "hosted-review-threads" && check.outcome === "unknown")
     ? check.detail
@@ -454,9 +448,6 @@ const RedAttributionValidation = S.Struct({
 );
 type RedAttributionValidation = typeof RedAttributionValidation.Type;
 
-// DN-5: one pull-request read per distinct fix PR. A fix PR that is open or
-// merged counts; one closed without merging is dropped; a failed read is
-// unreadable (GitHub reports a missing PR as a failed read too).
 const validateRedAttributions = Effect.fn("Goals.Completion.validateRedAttributions")(function* (
   root: string,
   claims: ReadonlyArray<GoalRedAttributionClaim>
@@ -487,13 +478,6 @@ const fixPullRequestList = (claims: ReadonlyArray<GoalRedAttributionClaim>): str
 
 const equivalentVerdict = S.toEquivalence(GoalCompletionEvidenceVerdict);
 
-// The claims the verdict counts. A claim whose fix PR could not be read counts
-// whenever it decides something, so the verdict is not verified without it and
-// differs with it: it clears a red, or it covers a required context that never
-// reported a run (DN-4 `missing`). Counting it never makes the verdict
-// unsatisfied. `pending` then keeps the gating fix-pull-requests check
-// unknown, so the outcome is a transient unknown rather than verified,
-// unsatisfied or a structural unknown (DN-5, DN-13).
 const countedRedAttributions = (observation: GoalCompletionObservation, validation: RedAttributionValidation) => {
   const strict = goalCompletionVerdict({ ...observation, redAttributions: validation.counted });
   const optimistic = A.appendAll(validation.counted, validation.unreadable);
@@ -505,9 +489,6 @@ const countedRedAttributions = (observation: GoalCompletionObservation, validati
     : { pending, redAttributions: validation.counted, verdict: strict };
 };
 
-// Records the committed claims and the hosted-required-checks evidence they
-// decide; the outcome comes from the verdict alone (see countedRedAttributions
-// for a claim whose fix PR could not be read).
 const withRedAttributions = (
   observation: GoalCompletionObservation,
   manifest: GoalManifest,
@@ -563,8 +544,6 @@ const withRedAttributions = (
 const reviewThreadTally = (read: ReviewThreads): GoalReviewThreadTally =>
   GoalReviewThreadTally.make({ total: A.length(read.threads), outstanding: outstanding(read) });
 
-// DN-7: zero outstanding threads verifies, any outstanding thread is
-// unsatisfied, and a failed read is a transient unknown.
 const reviewThreadEvidence = (
   manifest: GoalManifest,
   head: O.Option<string>,
@@ -586,8 +565,6 @@ const reviewThreadEvidence = (
   );
 };
 
-// DN-12: the accepted-head manifest is read raw, so a key the current schema
-// no longer models (a legacy `proposedCloseout`) still names its final.
 const AcceptedHeadFinalNaming = S.Struct({
   closeout: S.optionalKey(S.Struct({ finalPullRequest: S.Int })),
   proposedCloseout: S.optionalKey(S.Struct({ finalPullRequest: S.Int })),
@@ -643,6 +620,19 @@ const readAcceptedManifest = Effect.fn("Goals.Completion.acceptedManifest")(func
  * decides something: it would clear a red, or cover a required context that
  * never reported a run. An open final resolves unsatisfied with
  * `merged = false`; a failed pull-request read resolves unknown.
+ *
+ * **Gotchas**
+ *
+ * - Only hosted facts gate: a declared `yeet-verdict`, `proof-fact` or `packet-history` ref is
+ *   recorded at most and never decides the outcome.
+ * - GitHub reports a missing fix PR as a failed read, so its claim is unreadable, not dropped.
+ *   Counting an unreadable claim never makes the outcome unsatisfied.
+ * - Zero outstanding review threads verifies, any outstanding thread is unsatisfied, and a
+ *   failed thread read is a transient unknown.
+ * - The accepted-head manifest is read raw, so a key the current schema no longer models (a
+ *   legacy `proposedCloseout`) still names its final.
+ * - The merge method is never guessed: a single-parent merge result cannot tell squash from
+ *   rebase, so the method stays none.
  *
  * **Example** (Inspect the read-only adapter)
  *
@@ -706,11 +696,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
     const mergedAt = yield* Effect.fromOption(pull.merged_at).pipe(
       Effect.mapError(() => YeetCommandError.make({ message: "Merged PR has no merge time" }))
     );
-    // Project only the decoded fields: a large merge commit's file patches would
-    // otherwise truncate the captured response and lose the merge facts.
     const mergeCommit = yield* readGoalCompletion(root, (io, root) => io.commit(root, mergeSha));
-    // GitHub binds this merge result to this PR head for all three workflows. A single-parent
-    // result cannot distinguish squash from rebase reliably; retain method=None rather than guess.
     const merge = GoalMergeResult.make({
       mergeCommit: mergeSha,
       tree: mergeCommit.commit.tree.sha,
@@ -920,8 +906,6 @@ const newestReceipt = (receipts: ReadonlyArray<GoalCompletionReceipt>): O.Option
     O.isNone(found) || DateTime.isGreaterThan(receipt.verifiedAt, found.value.verifiedAt) ? O.some(receipt) : found
   );
 
-// A stored receipt back as an observation. The thread tally and the committed
-// claims map explicitly; a v1 row has no `merged`, so its merge facts stand in.
 const receiptObservation = (receipt: GoalCompletionReceipt, grandfathered: boolean): GoalCompletionObservation =>
   GoalCompletionObservation.make({
     ...receipt,
@@ -953,6 +937,10 @@ const receiptObservation = (receipt: GoalCompletionReceipt, grandfathered: boole
  * it verified under the stricter Yeet readiness gate, which already counted
  * review threads. Any other v1 row reads `unknown` and keeps its v1 tag, so
  * {@link goalCompletionUnknownReasons} names it for a rerun of refresh.
+ *
+ * **Gotchas**
+ *
+ * A v1 row has no `merged` field, so its merge facts stand in for it.
  *
  * **Example** (Inspect the receipt reader)
  *
@@ -1162,7 +1150,6 @@ export const goalCloseoutView: {
     )
 );
 
-// A committed closeout's view with the stored receipt it was read against.
 const readCloseoutViewAndReceipt = Effect.fn("Goals.Completion.readCloseoutViewAndReceipt")(function* (
   root: string,
   slug: string,
@@ -1269,7 +1256,6 @@ const decisionFiles = (claims: ReadonlyArray<{ readonly decisionFile: string }>)
 const describeAttributedRed = (red: GoalAttributedRedFact): string =>
   `${red.context} (${red.observed === "missing" ? "never reported, " : ""}${red.attribution}, fix #${red.fixPullRequest}, ${red.decisionFile}, ${red.source})`;
 
-// What the operator does next for an outcome that is not verified.
 const remediationHints = (slug: string, receipt: GoalCompletionReceipt): ReadonlyArray<string> =>
   Match.value(receipt.outcome).pipe(
     Match.when("unsatisfied", () => [
@@ -1282,9 +1268,6 @@ const remediationHints = (slug: string, receipt: GoalCompletionReceipt): Readonl
     ])
   );
 
-// Prints the outcome, the reds committed claims attributed (with their
-// sources), and for an outcome that is not verified the operator rulings, the
-// remediation and what the working-tree claims would change once committed.
 const reportRefresh = Effect.fn("Goals.Completion.reportRefresh")(function* (
   root: string,
   label: string,
@@ -1359,7 +1342,6 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   if (O.isNone(final)) return;
   const label = `[goals:completion] ${record.slug} #${final.value.number}`;
   const claims = yield* readGoalCompletionClaims(root, record.slug, final.value.number);
-  // The receipt is written from the committed claims only (DN-6).
   const receipt = yield* observeGoalCompletion(root, record.slug, manifest.value, final.value, claims);
   if (O.isNone(receipt.merge)) {
     yield* Console.log(`${label}: ${receipt.outcome} (no post-merge receipt written)`);
@@ -1370,8 +1352,6 @@ const refreshRecord = Effect.fn("Goals.Completion.refreshRecord")(function* (
   yield* acknowledgeClosedFinal(root, label, record.slug, receipt, receipt.merge.value, claims.committed);
 });
 
-// A final this refresh closes clears its P0 inbox row in this checkout, and
-// the rows of any final the packet bound before it (DN-14).
 const acknowledgeClosedFinal = Effect.fn("Goals.Completion.acknowledgeClosedFinal")(function* (
   root: string,
   label: string,
@@ -1393,10 +1373,6 @@ const acknowledgeClosedFinal = Effect.fn("Goals.Completion.acknowledgeClosedFina
   );
 });
 
-// Whether a refresh closes the final in this checkout: a plain `verified`, or
-// an operator ruling for the final on origin/main (DN-15). A verified outcome
-// that counts a claim found only at `HEAD`, or a ruling found only at `HEAD`,
-// is not done until that claim merges.
 const refreshClosesFinal = (receipt: GoalCompletionReceipt, claims: GoalClaimSet): boolean => {
   const verdict = goalCompletionVerdict(receipt);
   const headOnly = verdict._tag === "verified" && A.some(verdict.attributedReds, (red) => red.source === "head");
@@ -1567,8 +1543,6 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (slug: O.Option<
   const records = yield* listGoalPackets(root);
   const location = yield* receiptLocation(root);
   const repository = yield* readReceiptRepository(root);
-  // The workstation store is shared by every clone of the repository; without
-  // a resolvable github.com origin the owning clone's legacy file still records it.
   const store = O.isSome(repository) ? yield* Effect.asSome(goalCompletionReceiptStore()) : O.none();
   const write = (receipt: GoalCompletionReceipt) =>
     O.match(store, {
@@ -1605,6 +1579,11 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (slug: O.Option<
  * `goal-closeout:<slug>#<n>` P0 inbox row in this checkout, the row
  * `yeet sweep --retire` raises for a merged closeout that did not verify,
  * and the rows of any final the packet bound before.
+ *
+ * **Gotchas**
+ *
+ * Without a resolvable github.com `origin`, `refresh` writes receipts to the owning clone's
+ * legacy file instead of the workstation store every clone shares.
  *
  * **Example** (Inspect the completion command)
  *

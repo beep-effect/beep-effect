@@ -75,12 +75,6 @@ type FallowBoundaryConfig = {
   };
 };
 
-/**
- * Boundary violation emitted by `fallow dead-code --boundary-violations`.
- *
- * @category models
- * @since 0.0.0
- */
 class FallowBoundaryViolation extends S.Opaque<FallowBoundaryViolation, { readonly brand: unique symbol }>()(
   S.Struct({
     from_path: S.String,
@@ -97,12 +91,6 @@ class FallowBoundaryViolation extends S.Opaque<FallowBoundaryViolation, { readon
   )
 ) {}
 
-/**
- * Fallow boundary report subset used for doctrine-pinned layer checks.
- *
- * @category models
- * @since 0.0.0
- */
 class FallowBoundaryReport extends S.Opaque<FallowBoundaryReport, { readonly brand: unique symbol }>()(
   S.Struct({
     boundary_violations: S.Array(FallowBoundaryViolation),
@@ -190,7 +178,6 @@ const resolveBoundaryWorkspaceEntries = Effect.fn("Fallow.resolveBoundaryWorkspa
   );
 });
 
-// The workspace packages `name` depends on, sorted, or none when the graph does not know it.
 const dependencyNamesOf = (
   adjacency: HashMap.HashMap<string, HashSet.HashSet<string>>,
   name: string

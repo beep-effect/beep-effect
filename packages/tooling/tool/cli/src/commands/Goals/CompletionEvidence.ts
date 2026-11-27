@@ -95,6 +95,12 @@ const decodeObservation =
 /**
  * Resolve typed completion reads from a fixture port or the git and GitHub kits.
  *
+ * **Gotchas**
+ *
+ * GitHub reads take Yeet's identity precedence: `BEEP_GH_TOKEN_REF`, then the GitHub App, then
+ * the gh login. A host whose `gh` refuses `gh auth token` reaches GitHub through the 1Password
+ * reference.
+ *
  * **Example** (Inspect the reader factory)
  *
  * ```ts
@@ -110,9 +116,6 @@ export const goalCompletionIo = Effect.fn("Goals.Completion.io")(function* () {
   if (O.isSome(supplied)) return supplied.value;
   const context = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner>();
   const error = () => YeetCommandError.make({ message: "goal completion GitHub observation: read failed" });
-  // Each read owns its scope: the returned port accepts roots later and outlives this factory.
-  // The same precedence as Yeet: `BEEP_GH_TOKEN_REF`, then the GitHub App, then the gh login. A host
-  // whose `gh` refuses `gh auth token` reaches GitHub through the 1Password reference.
   const github = <A, E>(root: string, read: Effect.Effect<A, E, GitHubClient | Repo>) =>
     Effect.flatMap(
       Effect.flatMap(selectGithubIdentity(O.none()), (identity) =>
@@ -269,8 +272,6 @@ export const goalCompletionIo = Effect.fn("Goals.Completion.io")(function* () {
   });
 });
 
-// The listing key joins the checkout root and ref with a NUL, which neither a
-// path nor a git ref can contain.
 const RULE_SUITES_KEY_SEPARATOR = "\u0000";
 
 /**
@@ -364,10 +365,6 @@ export const readGoalCompletion = Effect.fn("Goals.Completion.read")(function* <
 
 const REQUIRED_STATUS_CHECKS = "required_status_checks";
 
-// How a merge-time ruleset version relates to the base branch: it gated the
-// merge (`applies`), was in evaluate mode (`evaluate`, never gating), or was
-// inactive or did not target this branch (`mismatch`). A rule-suite source was
-// evaluated by GitHub on this branch, so `mismatch` means GitHub's two records disagree.
 const HistoricalApplicability = LiteralKit(["applies", "evaluate", "mismatch"]);
 
 const applicabilityOfEnforcement = (enforcement: string): typeof HistoricalApplicability.Type =>
@@ -424,9 +421,6 @@ const readHistoricalRuleset = Effect.fn("Goals.Completion.historicalRuleset")(fu
   const { state } = yield* readGoalCompletion(root, (io, root) =>
     io.rulesetVersion(root, ruleset.id, version.value.version_id)
   );
-  // An evaluate-mode version at merge is a recovered fact that the ruleset did not
-  // gate this merge. An inactive or non-matching version contradicts the merge-push
-  // rule suite that evaluated it on this branch, so it is a mismatch (unknown).
   const applicability = yield* historicalRulesetApplicability(state, base);
   const applies = applicability === "applies";
   const folded = rulesetRequiredContextsFromRules(
@@ -454,11 +448,8 @@ const SuiteLookup = S.Struct({
   gap: S.Option(GoalCompletionEvidenceGap),
 });
 
-// GitHub lists rule suites for the last month at most.
 const RULE_SUITE_LISTING_DAYS = 31;
 
-// An older merge push has no listed suite and stays rule-suite-unavailable
-// rather than being guessed; past the listing window the listing is not read.
 const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(function* (
   root: string,
   base: string,
@@ -471,7 +462,6 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
   const ref = `refs/heads/${base}`;
   const pages = yield* readGoalCompletion(root, (io, root) => io.ruleSuites(root, ref));
   const listed = A.flatten(pages);
-  // Offset pagination can repeat a row when new pushes arrive mid-read; one suite id is one suite.
   const ids = A.dedupe(
     A.map(
       A.filter(listed, (row) => row.after_sha === mergeCommit && row.ref === ref),
@@ -492,11 +482,6 @@ const readMergeRuleSuite = Effect.fn("Goals.CompletionEvidence.ruleSuite")(funct
 const successful = (conclusion: GoalCheckConclusion): boolean =>
   conclusion === "success" || conclusion === "neutral" || conclusion === "skipped";
 
-// Binds each required context to the newest run on the accepted head when the
-// facts are read, whenever that run started or finished. Newer runs (higher
-// check-run id) supersede older ones, so any rerun replaces an older result,
-// before or after the merge. A run not yet completed is pending and unknown; a
-// context with no run on the head is unknown.
 const goalRequiredCheckFacts = ({
   contexts,
   checkRuns,
@@ -549,9 +534,6 @@ const goalRequiredCheckFacts = ({
 const requiresChecks = (source: GoalMergeTimeRuleSource): boolean =>
   source.enforcement !== "evaluate" && O.isSome(source.requiredStatusChecks);
 
-// Whether a rule source gated the merge: recovered history wins over the
-// enforcement GitHub reported at push time (a deleted ruleset reports
-// `deleted ruleset`, which says nothing about its merge-time enforcement).
 const gatesAtMerge = (source: GoalMergeTimeRuleSource): boolean =>
   O.isSome(source.requiredStatusChecks) &&
   source.history !== "not-gating" &&
@@ -571,8 +553,6 @@ const ClaimStrength = Order.mapInput(Order.Number, (claim: GoalRedAttributionCla
 
 const claimValue = (claim: GoalRedAttributionClaim): string => `${claim.attribution}#${claim.fixPullRequest}`;
 
-// One claim per context. Claims that agree collapse to the strongest source;
-// claims that disagree leave the context unattributed (fail closed).
 const attributionsByContext = (
   claims: ReadonlyArray<GoalRedAttributionClaim>
 ): HashMap.HashMap<string, GoalRedAttributionClaim> =>
@@ -586,9 +566,6 @@ const attributionsByContext = (
     )
   );
 
-// The fact a claim attributes for one context: a head-bound red, or, when no
-// run on the head ever reported, the context's missing fact. A pending run is
-// neither, so it is never attributed.
 const attributedRedOf = (
   facts: ReadonlyArray<GoalRequiredCheckFact>,
   claim: O.Option<GoalRedAttributionClaim>
@@ -636,6 +613,13 @@ const attributedRedOf = (
  * Completeness is re-derived from the stored rule suite; the
  * `inventoryComplete` flag alone never verifies.
  *
+ * **Gotchas**
+ *
+ * - Claims for one context that agree collapse to the strongest source.
+ * - Recovered history wins over the enforcement GitHub reported at push time: a deleted ruleset
+ *   reports `deleted ruleset`, which says nothing about its merge-time enforcement. A ruleset
+ *   deleted since the merge whose history shows it gated the merge also records a bypass.
+ *
  * **Example** (No inventory is unknown)
  *
  * ```ts
@@ -667,12 +651,10 @@ export const decideGoalCompletionEvidence = (input: GoalCompletionEvidenceInput)
     onNone: A.empty<GoalMergeTimeRuleSource>,
     onSome: (value) => value.ruleSources,
   });
-  // Active at push: GitHub's own failed evaluation, recorded but not a red by itself.
   const activeRed = A.some(
     boundSources,
     (source) => source.enforcement === "active" && source.history !== "not-gating" && failedRequiredChecks(source)
   );
-  // Deleted since merge, with history showing it gated the merge: also a bypass.
   const recoveredRed = A.some(
     boundSources,
     (source) => source.enforcement === "deleted ruleset" && source.history === "gating" && failedRequiredChecks(source)
@@ -713,10 +695,7 @@ export const decideGoalCompletionEvidence = (input: GoalCompletionEvidenceInput)
           : []),
       ]),
   });
-  // Gaps win over attributions: without the inventory nobody knows which contexts were required.
   if (A.isReadonlyArrayNonEmpty(gaps)) return GoalCompletionEvidenceUnknown.make({ gaps });
-  // No gap means contexts is non-empty and each has a green or attributed head
-  // fact, so `relevant` is non-empty; the verified schema enforces that minimum.
   return GoalCompletionEvidenceVerified.make({
     facts: relevant,
     attributedReds,
@@ -811,6 +790,12 @@ const ruleSourcesOf = (
  * `rule-suite-unavailable`. Each required context binds to the newest run on
  * the accepted head at read time, whether it ran before or after the merge.
  *
+ * **Gotchas**
+ *
+ * - A newer run (a higher check-run id) supersedes an older one, so any rerun replaces an
+ *   older result, before or after the merge.
+ * - Offset pagination can list one rule suite twice when pushes arrive mid-read; it counts once.
+ *
  * **Example** (Inspect the live provider operation)
  *
  * ```ts
@@ -901,21 +886,12 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
           }
         );
       }
-      // Deleted since merge: GitHub's ruleset history is the only authoritative
-      // record of its rules. When history is gone, no contexts are invented.
       const history = yield* readHistoricalRuleset(
         root,
         GoalCompletionRulesetListEntry.make({ id, source_type: "Repository" }),
         base,
         mergedAt
       ).pipe(Effect.option);
-      // Recovered history restores the ruleset's enforcement at merge: an active,
-      // applicable version gates; an evaluate-mode version does not, so the
-      // remaining evidence decides. An inactive or non-matching version
-      // contradicts the rule suite (GitHub evaluated it on this branch), so it
-      // is `conflicting`: an inventory mismatch, never verified.
-      // A deleted ruleset has no listed creation time, so a read that finds no
-      // version at merge fails rather than returning none; both are unrecoverable.
       return O.match(O.flatten(history), {
         onNone: () => ({ ...none, gap: O.some<GoalCompletionEvidenceGap>("deleted-ruleset-unrecoverable") }),
         onSome: (version) => ({

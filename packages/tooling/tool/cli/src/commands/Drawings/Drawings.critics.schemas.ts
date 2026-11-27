@@ -469,8 +469,6 @@ const STRICT_KEYWORDS = HashSet.fromIterable([
 
 const isRecord = (value: unknown): value is Record<string, unknown> => P.isObject(value);
 
-// Keep only the keywords the strict structured-output modes accept, recursively;
-// the children of `properties` are property names, not keywords, and stay.
 const strictKeywords = (node: unknown): unknown =>
   A.isArray(node)
     ? A.map(node, strictKeywords)
@@ -548,12 +546,6 @@ export class CriticPackManifest extends S.Opaque<CriticPackManifest, { readonly 
   }).pipe($I.annoteSchema("CriticPackManifest", { description: "Hashes and pack-relative files of a critic pack." }))
 ) {}
 
-/**
- * Decode a pack manifest from JSON text.
- *
- * @category decoding
- * @since 0.0.0
- */
 const manifestCodec = S.fromJsonString(CriticPackManifest);
 const decodeCriticPackManifestJson = S.decodeEffect(manifestCodec);
 const encodeCriticPackManifestJson = S.encodeEffect(manifestCodec);
@@ -814,12 +806,6 @@ export class CriticLoopRecord extends S.Opaque<CriticLoopRecord, { readonly bran
   }).pipe($I.annoteSchema("CriticLoopRecord", { description: "Loop number, sheet-set hash, and runs of one loop." }))
 ) {}
 
-/**
- * Decode a loop record from JSON text.
- *
- * @category decoding
- * @since 0.0.0
- */
 const recordCodec = S.fromJsonString(CriticLoopRecord);
 const decodeCriticLoopRecordJson = S.decodeEffect(recordCodec);
 const encodeCriticLoopRecordJson = S.encodeEffect(recordCodec);

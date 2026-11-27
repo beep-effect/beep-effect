@@ -436,7 +436,6 @@ type ManifestEdit = { readonly path: ReadonlyArray<string>; readonly value: unkn
 
 type CloseoutTransition = { readonly edits: ReadonlyArray<ManifestEdit>; readonly note: string };
 
-// What the operator asked the bind writer for: `--final-pr <n>` and `--adopt-merged`.
 type CloseoutRequest = { readonly finalPullRequest: O.Option<number>; readonly adoptMerged: boolean };
 
 type BoundFinal = { readonly number: number; readonly source: string };
@@ -447,8 +446,6 @@ const PUBLISH_FIRST = "publish first (`bun run beep yeet open` or `bun run beep 
 
 const DELETE_PROPOSAL: ManifestEdit = { path: ["proposedCloseout"], value: undefined };
 
-// A stale proposedCloseout beside a committed closeout, or on a grandfathered
-// gate, binds nothing; the write deletes it so doctor's raw-key guard clears.
 const deletingStaleProposal = (
   manifest: Readonly<Record<string, unknown>>,
   transition: O.Option<CloseoutTransition>
@@ -465,8 +462,6 @@ const deletingStaleProposal = (
       )
     : transition;
 
-// A legacy proposal has the committed record's shape. It is read from the raw
-// JSON, so the bind still finds it once the schema stops modelling the key.
 const decodeLegacyProposal = S.decodeUnknownOption(GoalCloseoutRecord);
 
 const legacyProposal = Effect.fn("Goals.legacyProposal")(function* (
@@ -485,8 +480,6 @@ const legacyProposal = Effect.fn("Goals.legacyProposal")(function* (
   return proposal;
 });
 
-// `number` takes `role` at its first position (appended when absent), later
-// duplicates of it go, and any other final is demoted to supporting.
 const placePullRequestRef = (
   refs: ReadonlyArray<GoalPullRequestRef>,
   number: number,
@@ -511,8 +504,6 @@ const placePullRequestRef = (
 const otherDeclaredFinals = (gate: GoalCompletionGate, number: number): ReadonlyArray<GoalPullRequestRef> =>
   A.filter(gate.pullRequests ?? [], (ref) => GoalPullRequestRole.is.final(ref.role) && ref.number !== number);
 
-// An open PR never displaces a declared final that already merged: that merged
-// PR is the goal's real final, and binding it is an explicit --adopt-merged.
 const refuseMergedDeclaredFinal = Effect.fn("Goals.refuseMergedDeclaredFinal")(function* (
   resolver: GoalFinalPullRequestResolverShape,
   root: string,
@@ -595,8 +586,6 @@ const branchFinal = Effect.fn("Goals.branchFinal")(function* (
   });
 });
 
-// The final, in order: the legacy proposal's own, then --final-pr, then the
-// checked-out branch's open PR. Only the last two read GitHub.
 const resolveBoundFinal = Effect.fn("Goals.resolveBoundFinal")(function* (
   gate: GoalCompletionGate,
   proposal: O.Option<GoalCloseoutRecord>,
@@ -620,9 +609,6 @@ const resolveBoundFinal = Effect.fn("Goals.resolveBoundFinal")(function* (
   return yield* branchFinal(resolver, root, gate);
 });
 
-// `completed-retained` binds the final in the status write itself, so the
-// writer can no longer produce a completed packet with no closeout record.
-// A grandfathered gate carries no record and flips status only.
 const bindCloseout = Effect.fn("Goals.bindCloseout")(function* (
   slug: string,
   decoded: GoalManifest,
@@ -660,8 +646,6 @@ const bindCloseout = Effect.fn("Goals.bindCloseout")(function* (
   });
 });
 
-// Reopening a committed closeout (active or paused) deletes the record and
-// keeps its final as a supporting PR; any other status would contradict it.
 const reopenCommittedCloseout = Effect.fn("Goals.reopenCommittedCloseout")(function* (
   slug: string,
   status: GoalStatus,
@@ -726,8 +710,6 @@ const closeoutTransition = Effect.fn("Goals.closeoutTransition")(function* (
   );
 });
 
-// One JSONC edit per field keeps comments and key order; a closeout transition
-// lands in the same write, and the result must still decode before anything is written.
 const rewriteManifestStatus = Effect.fn("Goals.rewriteManifestStatus")(function* (
   slug: string,
   surfaces: { readonly manifestText: string; readonly manifest: Readonly<Record<string, unknown>> },
@@ -847,7 +829,6 @@ type SetStatusInput = {
 
 const POSITIVE_INTEGER = /^[1-9]\d*$/;
 
-// Flag-shape errors refuse before any packet read or process spawn.
 const parseCloseoutRequest = Effect.fn("Goals.parseCloseoutRequest")(function* (input: SetStatusInput) {
   if (input.adoptMerged && O.isNone(input.finalPr)) {
     return yield* GoalStatusInputError.new("--adopt-merged binds the merged PR that --final-pr <n> names; pass both.");
@@ -902,6 +883,29 @@ const runSetStatusProgram = Effect.fn("Goals.runSetStatusProgram")(function* (in
 
 /**
  * `bun run beep goals set-status` — single writer for goal-packet status.
+ *
+ * **Details**
+ *
+ * `completed-retained` binds the final in the status write itself, so the writer never produces a
+ * completed packet without a closeout record; a grandfathered gate carries no record and flips
+ * the status only. The final is, in order, a legacy proposal's own, then `--final-pr`, then the
+ * checked-out branch's open PR; only the last two read GitHub. Each field is one JSONC edit, so
+ * comments and key order survive, a closeout transition lands in the same write, and the result
+ * must still decode before anything is written.
+ *
+ * **Gotchas**
+ *
+ * - Flag-shape errors refuse before any packet read or process spawn.
+ * - An open PR never displaces a declared final that already merged: that merged PR is the
+ *   goal's real final, and binding it takes an explicit `--adopt-merged`.
+ * - Binding a final places it first under its role (appended when absent), drops its later
+ *   duplicates and demotes any other final to supporting.
+ * - A committed closeout keeps its status or reopens as active or paused; reopening deletes the
+ *   record and keeps its final as a supporting PR.
+ * - A legacy `proposedCloseout` has the committed record's shape and is read from the raw JSON,
+ *   so the bind still finds it although the schema no longer models the key. Beside a committed
+ *   closeout or on a grandfathered gate it binds nothing, and the write deletes it so the doctor's
+ *   raw-key check clears.
  *
  * **Example** (Import and log command name)
  *

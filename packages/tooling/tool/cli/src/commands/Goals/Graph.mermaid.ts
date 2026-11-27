@@ -32,16 +32,12 @@ import type { CapabilityGraphAnswers, CapabilityProjection, GraphPacketRow } fro
 
 const NON_TERMINAL: ReadonlyArray<GoalStatus> = ["active", "paused"];
 
-// Providers the diagram draws are exactly the buildable ones: live nodes or relics.
 const RENDERED_PROVIDER_STATUSES = BUILDABLE_PROVIDER_STATUSES;
 
 const isNonTerminal = (packet: GraphPacketRow): boolean => A.contains(NON_TERMINAL, packet.status);
 
 const nodeId = (slug: string): string => `p_${Str.replaceAll("-", "_")(slug)}`;
 
-// Injective: capability slugs only use [a-z0-9/-]; every other character is
-// spelled as its hex code, so distinct capabilities never share a node id
-// (knowledge-surface/doctor and knowledge/surface-doctor stay apart).
 const SAFE_ID_CHAR = /^[a-z0-9]$/;
 
 const encodeIdChar = (char: string): string =>
@@ -53,6 +49,13 @@ const quote = (text: string): string => `"${Str.replaceAll('"', "#quot;")(text)}
 
 /**
  * Renders the capability graph as a Markdown section with a Mermaid block and a blocker table.
+ *
+ * **Gotchas**
+ *
+ * Only buildable providers, live nodes or relics, are drawn and get an edge; a reference or
+ * superseded provider would otherwise become an undeclared node. Node ids spell every character
+ * outside `[a-z0-9]` as its hex code, so distinct capabilities never share an id
+ * (`knowledge-surface/doctor` and `knowledge/surface-doctor` stay apart).
  *
  * **Example** (Render an empty graph)
  *
@@ -88,8 +91,6 @@ export const renderCapabilityMermaidSection: {
   const edges = A.flatMap(liveRequires, (requirement) =>
     pipe(
       projection.provides,
-      // Only providers the diagram draws (live nodes or relics) get an edge; a
-      // reference or superseded provider would otherwise become an undeclared node.
       A.filter(
         (provide) =>
           provide.capability === requirement.capability &&

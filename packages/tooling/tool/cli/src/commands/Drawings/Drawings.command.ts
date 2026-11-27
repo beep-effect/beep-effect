@@ -121,8 +121,6 @@ const sheetSummary = (manifest: RenderManifest, requested: SheetOptions): Readon
     })
   );
 
-// A pictorial camera without a focus is the isometric projection; a converging one that carries a facing sight is
-// the two-point perspective (only a two-point camera carries one).
 const cameraProjectionNote = (camera: Camera): string =>
   O.match(camera.focus, {
     onNone: () => ", isometric",
@@ -320,8 +318,6 @@ const reviewDirFlag = Flag.Directory("review-dir", { mustExist: true }).pipe(
   Flag.withDescription("The matter's review/ directory; found from the manifest's ancestors when omitted")
 );
 
-// Shared by `statement` and `sign`: refuse while any review round of the
-// matter is not cleared, else print the guard's warnings.
 const guardApproval = Effect.fn("DrawingsCommand.guardApproval")(function* (
   what: string,
   manifest: string,
@@ -359,10 +355,6 @@ const runStatement = Effect.fn("DrawingsCommand.statement")(function* (options: 
   ]);
 });
 
-// The approver is never a flag: `sign` reads it from the manifest, which carries
-// the address the spec recorded when the set was rendered. Flags are checked
-// first, then the review guard, so an approval line printed earlier, or derived
-// by hand, cannot be recorded over a round that is not cleared.
 const runSign = (
   source: (options: Record<string, unknown>) => Effect.Effect<ConfirmationSource, DrawingsCommandError>
 ) =>
@@ -956,6 +948,15 @@ const drawingsCriticsCommand = Command.make("critics", {}, () =>
 
 /**
  * Design-figure drawings command group.
+ *
+ * **Gotchas**
+ *
+ * - `statement` and `sign` refuse while any review round of the matter is not cleared, and
+ *   otherwise print the review guard's warnings.
+ * - The approver is never a flag: `sign` reads it from the manifest, which carries the address
+ *   the spec recorded when the set was rendered. Flags are checked first, then the review
+ *   guard, so an approval line printed earlier, or derived by hand, cannot be recorded over a
+ *   round that is not cleared.
  *
  * **Example** (Run the drawings command group)
  *

@@ -123,11 +123,6 @@ const storedBySeqThenId = Order.combine(
   Order.mapInput(Order.String, (stored: StoredPacketEvent) => stored.id)
 );
 
-/**
- * Fork verdicts carry their parent key alongside the verdict so the total order can
- * sort on the key the child index was built from. The genesis group's key is the
- * sentinel rather than an absent digest, so ordering never has to reconstruct it.
- */
 type ForkEntry = {
   readonly key: string;
   readonly verdict: PacketForkVerdict;
@@ -573,10 +568,6 @@ type PlannableFork = SurvivingWalk & {
   readonly fork: PacketForkVerdict;
 };
 
-// Rebasing onto a tip that itself forks would ENLARGE the nested fork (a
-// third child), so the plan descends the surviving path to the innermost
-// fork: each applied plan strictly shrinks the fork set, and re-planning
-// works outward one fork at a time.
 const innermostPlannableFork = (
   sorted: ReadonlyArray<StoredPacketEvent>,
   index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>,
@@ -609,6 +600,12 @@ const innermostPlannableFork = (
  * preserved, and the losing event files are listed for removal. An unforked
  * stream plans to `None`. Applying the plan is not this function's job —
  * writers stay guarded and separate.
+ *
+ * **Gotchas**
+ *
+ * When the surviving chain's tip itself forks, rebasing onto it would enlarge that nested fork
+ * with a third child, so the plan descends the surviving path to the innermost fork. Each applied
+ * plan strictly shrinks the fork set, and re-planning works outward one fork at a time.
  *
  * **Example** (An unforked stream needs no repair)
  *

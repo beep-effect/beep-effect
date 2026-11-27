@@ -26,8 +26,9 @@ const TensorHeaders = S.Record(S.String, S.Union([TensorHeader, S.Record(S.Strin
 );
 const decodeHeaders = S.decodeUnknownEffect(S.fromJsonString(TensorHeaders));
 
-// The small writer implements only the ONNX protobuf fields this fixed graph uses.
-// ONNX IR v8, default-domain opset 17. Numeric tensor payloads are little endian.
+const ONNX_IR_VERSION = 8;
+const ONNX_DEFAULT_DOMAIN_OPSET = 17;
+
 const concat = (parts: ReadonlyArray<Uint8Array>): Uint8Array => {
   const output = new Uint8Array(A.reduce(parts, 0, (n, p) => n + p.length));
   let offset = 0;
@@ -118,10 +119,9 @@ class Graph {
     if (O.isSome(previous)) return previous.value;
     this.used = HashMap.set(this.used, name, name);
     this.requested.push(name);
-    // An absent tensor stays a bare input name; compileAdaFaceOnnx builds once with no tensors
-    // to collect `requested` and rejects missing names before the real build.
+    const collectingPassInput = () => name;
     return O.match(HashMap.get(this.tensors, name), {
-      onNone: () => name,
+      onNone: collectingPassInput,
       onSome: ({ shape, data, dtype }) => this.tensor(name, shape, data, dtype === "F32" ? 1 : 7),
     });
   }
@@ -236,7 +236,12 @@ class Graph {
       ...A.map(inputs, (n) => bytes(11, n)),
       bytes(12, valueInfo("output", shape)),
     ]);
-    return concat([integer(1, 8), text(2, "beep-photo-face"), bytes(7, graph), bytes(8, integer(2, 17))]);
+    return concat([
+      integer(1, ONNX_IR_VERSION),
+      text(2, "beep-photo-face"),
+      bytes(7, graph),
+      bytes(8, integer(2, ONNX_DEFAULT_DOMAIN_OPSET)),
+    ]);
   }
 }
 
@@ -390,7 +395,6 @@ const buildRecognizer = (g: Graph, dimensions: RecognizerGraphDimensions): Uint8
   const tokens = gridSide * gridSide;
   const width = heads * headWidth;
   const imageSide = gridSide * patchSide;
-  // Patch projection has no padding, unlike the aligner's padded convolutions.
   const patch = g.node(
     "Conv",
     ["images", g.weight("patch_embed.proj.weight"), g.weight("patch_embed.proj.bias")],
@@ -502,6 +506,10 @@ export const decodeFaceSafetensors = Effect.fn("Files.decodeFaceSafetensors")(fu
 });
 /**
  * Decode a checksum-verified safetensors payload and compile the fixed graph.
+ *
+ * **Gotchas**
+ *
+ * A payload missing a tensor the graph names is rejected before the real build.
  *
  * **Example** (Reference the compiler)
  * ```ts

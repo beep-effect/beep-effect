@@ -34,8 +34,6 @@ const HARD_DEPENDENT_KINDS = [
   "file-path",
 ];
 
-// Only authored path text and root script commands can be reviewed and accepted. A manifest or import
-// edge is real code that breaks when the target goes, so no acknowledgement ever accepts one.
 const ACKNOWLEDGEABLE_KINDS = ["file-path", "script"];
 
 const slugOf = (packageName: string): string => Str.replace("@beep/", Str.empty)(packageName);
@@ -52,7 +50,6 @@ const acknowledgementEntries = (policy: DeletePackagePolicy): ReadonlyArray<Dele
     O.getOrElse(A.empty<DeletePackageAcknowledgement>)
   );
 
-// The entries that may accept a report's hits: none when the file names another target.
 const targetAcknowledgementEntries = (
   report: DependentsReport,
   policy: DeletePackagePolicy
@@ -66,8 +63,6 @@ const targetAcknowledgementEntries = (
 
 const scriptNameEquivalence = O.makeEquivalence(Str.Equivalence);
 
-// An entry names one dependent by path, script name (root scripts only) and exact trimmed text, so an
-// entry without `script` never accepts a script hit and one script's entry never accepts another's.
 const entryMatches =
   (entry: DeletePackageAcknowledgement) =>
   (hit: DependentHit): boolean =>
@@ -75,7 +70,6 @@ const entryMatches =
     scriptNameEquivalence(hit.script, entry.script) &&
     O.exists(hit.text, Str.equivalence(entry.text));
 
-// The same entry ignoring the script name: a script hit an entry would name by command text alone.
 const matchesScriptByTextAlone =
   (entry: DeletePackageAcknowledgement) =>
   (hit: DependentHit): boolean =>
@@ -87,7 +81,6 @@ const matchesScriptByTextAlone =
 const entryKey = (entry: DeletePackageAcknowledgement): string =>
   `${entry.path}\u0000${O.getOrElse(entry.script, () => Str.empty)}\u0000${entry.text}`;
 
-// The entry that accepts a hit: an acknowledgeable hit some entry matches by path and text.
 const acknowledgingEntry =
   (entries: ReadonlyArray<DeletePackageAcknowledgement>) =>
   (hit: DependentHit): O.Option<DeletePackageAcknowledgement> =>
@@ -157,7 +150,6 @@ const entryRefusal = (
   );
 };
 
-// A second entry naming the same (path, script, text) as an earlier one: both would count the same hits.
 const duplicateEntryRefusal = (
   entries: ReadonlyArray<DeletePackageAcknowledgement>,
   entry: DeletePackageAcknowledgement,
@@ -170,9 +162,6 @@ const duplicateEntryRefusal = (
     () => acknowledgementRefusal(`${entryLabel(entry)} is listed more than once; merge it into one entry.`)
   );
 
-// Every acknowledgement refusal: a file naming another target refuses alone, otherwise each duplicate
-// entry and each entry that matches an edge, names a script by command alone, matches nothing (stale) or
-// matches a different number of hits than it declares.
 const acknowledgementRefusals = (
   target: RegistrationTarget,
   report: DependentsReport,
@@ -198,7 +187,6 @@ const acknowledgementRefusals = (
     O.getOrElse(A.empty<DeletePackageRefusal>)
   );
 
-// The `[delete-package] ACK` block body: every acknowledged hit with the reason that accepts it.
 const acknowledgedHitLines = (report: DependentsReport, policy: DeletePackagePolicy): ReadonlyArray<string> =>
   A.flatMap(report.hits, (hit) =>
     pipe(
@@ -210,8 +198,6 @@ const acknowledgedHitLines = (report: DependentsReport, policy: DeletePackagePol
 
 const decodeScriptLine = S.decodeUnknownOption(S.fromJsonString(S.Record(S.String, S.String)));
 
-// Whether a trimmed `package.json` line is the script entry `"<script>": "<command>"` (trailing comma
-// optional), read through the JSON codec so escaped names and commands compare by value.
 const isScriptLine = (text: string, script: string, command: string): boolean =>
   O.exists(decodeScriptLine(`{${Str.endsWith(",")(text) ? Str.slice(0, -1)(text) : text}}`), (scripts) =>
     O.exists(R.get(scripts, script), (value) => Str.equivalence(Str.trim(value), command))
@@ -224,9 +210,6 @@ const entryNamesLine = (entry: DeletePackageAcknowledgement, file: string, text:
     onSome: (script) => isScriptLine(text, script, entry.text),
   });
 
-// The doctor's view of the same file: how many occurrences of a `(file, trimmed line)` the entries
-// accept. A script entry accepts its `package.json` line, so an acknowledged script stays clean after
-// apply while any other script naming the target is still residue.
 const acknowledgedOccurrencesFor =
   (policy: DeletePackagePolicy): AcknowledgedOccurrences =>
   (file, text) =>
@@ -375,9 +358,6 @@ const dependentsCascadeLines = (report: DependentsReport): ReadonlyArray<string>
   ...A.map(report.hits, (hit) => `${hit.kind}: ${hit.owner} ${hit.file}`),
 ];
 
-// P2-D17 belt-and-braces scoping: `consent-required` is green ONLY for the
-// dedicated lab-postgres-schema surface AND a labs-path target, so any future
-// non-lab data resource still blocks the doctor.
 const acceptedConsentObservation = (target: RegistrationTarget, item: RegistrationObservation): boolean =>
   Str.equivalence(item.status, "consent-required") &&
   Str.equivalence(item.surfaceId, "lab-postgres-schema") &&
@@ -407,6 +387,17 @@ const doctorIsClean = (target: RegistrationTarget, observations: ReadonlyArray<R
  * their reasons; `acknowledgedOccurrencesFor` is the same file as the doctor's
  * per-line allowance. `hitLocation` renders a hit as `file:line`, `file#script`
  * for a root script, or the bare file.
+ *
+ * **Gotchas**
+ *
+ * - Only `file-path` and `script` hits are acknowledgeable. A manifest or import edge is real
+ *   code that breaks when the target goes, so no entry ever accepts one.
+ * - A script entry's name and command compare as decoded JSON values, so an escaped name in
+ *   `package.json` still matches its entry.
+ * - An acknowledged script's `package.json` line stays clean in the doctor after apply, while
+ *   any other script naming the target is still residue.
+ * - `doctorIsClean` accepts a `consent-required` observation only for the `lab-postgres-schema`
+ *   surface on a labs-path target, so any other data resource still blocks the doctor.
  *
  * **Example** (Inspect available policy operations)
  *

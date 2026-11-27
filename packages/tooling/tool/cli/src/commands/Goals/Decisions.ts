@@ -179,7 +179,6 @@ export const runGoalsDecisionsCheck = Effect.fn("Goals.runDecisionsCheck")(funct
   const records = yield* selectPackets(options.slug);
   const reports = yield* Effect.forEach(records, service.report, { concurrency: 1 });
   if (options.json) {
-    // Reports are built through `GoalDecisionLogReport.make`, so encoding cannot fail.
     const rendered = yield* encodeReports(reports).pipe(Effect.orDie, Effect.map(canonicalJsonTextPretty));
     yield* Console.log(Str.trimEnd(rendered));
   } else {
@@ -224,7 +223,6 @@ export const runGoalsDecisionsWrite = Effect.fn("Goals.runDecisionsWrite")(funct
 const slugify = (title: string): string =>
   pipe(title, Str.toLowerCase, Str.replace(/[^a-z0-9]+/g, "-"), Str.replace(/^-+|-+$/g, ""));
 
-// Double-quoted YAML scalar: only backslash and the quote need escaping for single-line text.
 const yamlScalar = (value: string): string => `"${pipe(value, Str.replace(/\\/g, "\\\\"), Str.replace(/"/g, '\\"'))}"`;
 
 /**
@@ -293,7 +291,6 @@ const positiveInteger = (flag: string, raw: O.Option<string>) =>
         : Effect.fail(GoalPlanInputError.new(`${flag} "${value}" is not a positive integer.`)),
   });
 
-// `<context>=<cause>#<fix>`: the context runs to the last "=" and may itself contain "=" or "#".
 const ATTRIBUTE_RED = /^(.+)=([^=#]+)#\s*([1-9]\d*)$/;
 
 const parseAttributeRed = Effect.fn("Goals.parseAttributeRed")(function* (raw: string) {
@@ -317,7 +314,6 @@ const parseAttributeRed = Effect.fn("Goals.parseAttributeRed")(function* (raw: s
   return { context: Str.trim(context), attribution, fixPullRequest: Number(fix) };
 });
 
-// Claims need --final and a kind: decision file; --final needs a claim.
 const checkClaimFlags = Effect.fn("Goals.checkDecisionClaimFlags")(function* (
   kind: GoalDecisionKind,
   finalPullRequest: O.Option<number>,
@@ -338,7 +334,6 @@ const checkClaimFlags = Effect.fn("Goals.checkDecisionClaimFlags")(function* (
   }
 });
 
-// The reds as one validated redAttribution block for the final, or None without any.
 const redAttributionBlock = (final: number, reds: ReadonlyArray<unknown>) =>
   A.isReadonlyArrayNonEmpty(reds)
     ? decodeRedAttribution({ finalPullRequest: final, reds }).pipe(
@@ -356,7 +351,6 @@ const redAttributionBlock = (final: number, reds: ReadonlyArray<unknown>) =>
       )
     : Effect.succeed(O.none<GoalRedAttributionBlock>());
 
-// The claim blocks a decision file carries; both stay None without --attribute-red or --operator-ruling.
 const completionClaims = Effect.fn("Goals.decisionCompletionClaims")(function* (
   kind: GoalDecisionKind,
   finalPullRequest: O.Option<number>,
@@ -393,6 +387,13 @@ const redAttributionLines = (block: GoalRedAttributionBlock): ReadonlyArray<stri
  * `kind: decision` file, and `--final` needs one of them. The reds are
  * validated as a `redAttribution` block (unique contexts, no fix PR equal to
  * the final) before anything is written.
+ *
+ * **Gotchas**
+ *
+ * - `--attribute-red` takes `<context>=<cause>#<fix>`: the context runs to the last `=` and may
+ *   itself contain `=` or `#`.
+ * - The title, lane, reversal and red contexts are written as double-quoted YAML scalars that
+ *   escape only the backslash and the quote, so each must be single-line text.
  *
  * **Example** (Build the add effect)
  *

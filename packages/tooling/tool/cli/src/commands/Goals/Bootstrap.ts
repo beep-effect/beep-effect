@@ -144,8 +144,6 @@ const REPORT_FIRST_PHASES: ReadonlyArray<ArchetypePhase> = [
 export const archetypePhases = (archetype: PhaseArchetype): ReadonlyArray<ArchetypePhase> =>
   PhaseArchetype.is["standard-delivery"](archetype) ? STANDARD_DELIVERY_PHASES : REPORT_FIRST_PHASES;
 
-// Pretty-printed manifest bytes are the hashed file payload. Stringify stays in
-// this sync helper; no schema codec owns this exact two-space file layout.
 const renderPrettyJson = (value: unknown): string => `${Result.getOrThrowWith(encodePrettyJson(value), identity)}\n`;
 
 const manifestPayload = Effect.fnUntraced(function* (input: BootstrapInput) {
@@ -470,9 +468,6 @@ const sourcesPayload = (input: BootstrapInput): string => {
   corpus during the first research phase.`
       : `- **Source exploration:** \`explorations/${input.provenanceExploration}\` — primary ledger:
   \`explorations/${input.provenanceExploration}/research/SOURCES.md\`.`;
-  // Repo-root paths to the packet files the caller found on disk. A relative
-  // link copied from the exploration's ledger would resolve inside the goal,
-  // and a path to a file the packet lacks is a broken target either way.
   const crossLinkLines = pipe(
     O.fromUndefinedOr(input.provenanceExploration),
     O.filter(() => A.isReadonlyArrayNonEmpty(input.provenanceFiles)),
@@ -662,6 +657,13 @@ export const sealMaterializationPlan = Effect.fnUntraced(function* (fields: {
  * plan carries no entries. Every `create` entry carries its complete payload
  * bytes and digest, matching the ratified contract that the plan is the
  * complete deterministic description of the intended change.
+ *
+ * **Gotchas**
+ *
+ * - A seeded manifest's payload is its two-space pretty-printed JSON plus a trailing newline,
+ *   and those exact bytes are digested.
+ * - Cross-links to the provenance exploration are repo-root paths to the files the caller found
+ *   on disk: a relative link copied from the exploration's ledger would resolve inside the goal.
  *
  * **Example** (Build the compile effect for a minimal plan)
  *
@@ -1072,8 +1074,6 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
   const slug = yield* decodeSlug(options.slug);
   const provides = yield* parseCapabilityList("provides", options.provides);
   const requires = yield* parseCapabilityList("requires", options.requires);
-  // The GoalManifest schema rejects self-cycles; refusing here keeps the plan's
-  // own manifest-decodes validation satisfiable by construction.
   const selfCycles = A.intersection(provides, requires);
   if (A.isReadonlyArrayNonEmpty(selfCycles)) {
     return yield* GoalPlanInputError.new(
