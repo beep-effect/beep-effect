@@ -137,7 +137,7 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 | COVE-03 | Local coverage children and baseline writes on Node 22.23.4 from one shared pin | open (`.nvmrc` 24.22.1; check.yml pins 22.23.4 at three sites) | Wrong runtime refused with no rows written; `bunx --bun` law-practice-server argv unchanged; pin-drift test against check.yml; A/B on `@beep/acp` plus 2-4 v8 packages in hosted producer mode matches hosted rows within 0.001 | none |
 | COVE-08 | Fixed comparator context name, removing the conditional on the job name | open (check.yml `coverage-regression` job, Heavy / Coverage Regression: its `name:` is still the conditional on `needs.admission.outputs.legacy_coverage`, which has been the constant `'false'` since #3116, so only the literal name and the dead output remain) | Route replay of context emission on docs, source and main events | coordinated with PERIH-01's probe-deletion slice (heavy-pool-diet), see Constraints |
 | COVE-04 | Label coverage failure rows (inherited, environment) | open | Synthetic fixtures; exit status unchanged | COVE-03 |
-| PERIH-10 | Classify PRs against base-ref CI patterns | open (change-profile reads the head patterns file) | Canonical base patterns plus a widened head give `docs_only=false`; a push gives the full profile; a base from an older schema decodes or falls back explicitly; every call site covered or listed as excluded with a reason | ROUT-03; PERIH-11 (heavy-pool-diet) |
+| PERIH-10 | Classify PRs against base-ref CI patterns | landed (slice 12): change-profile and the heavy lane-skip read take the patterns file from the pull request's base commit; a base without the file uses the compiled-in patterns; an unreadable or undecodable base file keeps every profile active | Canonical base patterns plus a widened head give `docs_only=false`; a push gives the full profile; a base from an older schema decodes or falls back explicitly; every call site covered or listed as excluded with a reason | ROUT-03; PERIH-11 (heavy-pool-diet) |
 | ROUT-07 | Differential test across the seven classifiers, then one RoutePlan registry | open | Differential parity over corpus heads; zero unadmitted disagreements | ROUT-03; ROUT-05 (certainty-scorecard) |
 
 ## Constraints
@@ -218,7 +218,7 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 - [ ] **COVE-08:** the comparator job name is a literal, `ci-runner-security.test.ts` asserts it, and the
       `legacy_coverage` output is gone if PERIH-01's probe deletion landed first; route replay shows the same context on docs, source and main
       events. **COVE-04:** synthetic failure rows carry their label and the exit status is unchanged.
-- [ ] **PERIH-10:** a widened head pattern over canonical base patterns gives `docs_only=false`; an older-schema base
+- [x] **PERIH-10:** a widened head pattern over canonical base patterns gives `docs_only=false`; an older-schema base
       decodes or falls back explicitly; every call site is covered or listed as excluded with a reason.
 - [ ] **ROUT-07:** the differential reports zero unadmitted disagreements over the corpus heads; each admitted
       disagreement has a decision file.

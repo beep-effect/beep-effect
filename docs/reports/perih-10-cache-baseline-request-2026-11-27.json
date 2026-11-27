@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "c612eb33c13073f6c22755282665a3310fa5b66d85c0b1db39867cc967b131e3",
+    "@beep/repo-cli": "cd4db3301c88f9bef71de9c8d33a4159b281aea31368bbeb7191907a88345b58"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair PERIH-10 lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared two files its tests read from other packages as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/perih-10-cache-review-2026-11-27.md",
+      "sha256": "0b8a240212e02276f0a22638a3c53fa01856ad13d66b9affe21fe2c98a616f06"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

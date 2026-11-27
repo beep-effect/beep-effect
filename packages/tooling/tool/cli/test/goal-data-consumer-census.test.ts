@@ -4,6 +4,7 @@ import { GlobSet } from "@beep/glob";
 import {
   CiGoalDataConsumer,
   CiGoalDocument,
+  CiOperationalPatterns,
   ciBinaryCommand,
   ciGoalDataConsumers,
   ciOperationalPatterns,
@@ -346,13 +347,21 @@ const pullRequest = Effect.provideService(
 );
 
 // `beep ci change-profile` over a scripted one-path diff, read against the committed patterns file.
+const CHECKOUT_PATTERNS_JSON = S.encodeSync(S.fromJsonString(CiOperationalPatterns))(ciOperationalPatterns);
 const changeProfileFor = Effect.fnUntraced(function* (changed: string) {
-  const spawner = ScriptedSpawner.make((command) => (command === "git" ? { stdout: `${changed}\n` } : { exit: 1 }));
+  const spawner = ScriptedSpawner.make((command, args) =>
+    command !== "git"
+      ? { exit: 1 }
+      : A.contains(args, "show")
+        ? { stdout: CHECKOUT_PATTERNS_JSON }
+        : { stdout: `${changed}\n` }
+  );
   const earlier = yield* TestConsole.logLines;
   yield* runCi(["ci", "change-profile"]).pipe(pullRequest, provideSpawner(spawner));
   const all = yield* TestConsole.logLines;
   const logged = A.map(A.drop(all, A.length(earlier)), (line) => `${line}`);
-  expect(A.map(spawner.spawns, ({ command, args }) => [command, ...args])).toEqual([
+  const diffs = A.filter(spawner.spawns, ({ args }) => A.contains(args, "--no-renames"));
+  expect(A.map(diffs, ({ command, args }) => [command, ...args])).toEqual([
     ["git", "diff", "--name-only", "--no-renames", `${BASE_SHA}...${HEAD_SHA}`],
   ]);
   return A.join(logged, "\n");

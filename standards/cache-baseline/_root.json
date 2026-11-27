@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (route-soundness-repair cross-package reads lane)",
-    "reason": "Re-record the root subject and nine packages after their turbo.json files declared the files their tests read from other packages as test-task inputs. Configuration review only; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (route-soundness-repair PERIH-10 lane)",
+    "reason": "Re-record the root subject and @beep/repo-cli after its turbo.json declared two files its tests read from other packages as test, test:property and coverage inputs. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/cross-package-reads-cache-review-2026-11-27.md",
-      "sha256": "459eea41e7a0bff558a2b9d51b9fbed2aa35592d9e88fb7519143a4a29130b4f"
+      "path": "docs/reports/perih-10-cache-review-2026-11-27.md",
+      "sha256": "0b8a240212e02276f0a22638a3c53fa01856ad13d66b9affe21fe2c98a616f06"
     }
   },
   "globalConfiguration": {
@@ -228,7 +228,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "adcc7780a5d67fbf4e0d7c9fcde40180b623c9753637597f019fa2e8bff5c948"
+      "sha256": "ea584ac1b81142f2d8990c5966bb8194723227f09a9235fbaccb673503790b9a"
     },
     {
       "path": "packages/workspace/server/turbo.json",
