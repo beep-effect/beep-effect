@@ -161,17 +161,12 @@ const decisionContent = (input: {
     verdict: "allowed",
   }) as const;
 
-// ── Stored-seal replay through the canonical digest owner ───────────────────
-//
-// Goal canonical-digest-owner. Each seal is recomputed without the domain's
-// encoder: the wire form comes from the public schemas, the bytes from
-// `JsoncFingerprint` (RFC 8785), and the version line is restated here. Since
-// slice C the domain's encoder is the owner, so the replay now holds the
-// domain's manual wire projections and version lines to the public schemas,
-// and the stored golden seals to the owner.
-const sealThroughOwner = (version: string, wire: unknown): Result.Result<string, JsoncCanonicalizeError> =>
-  Result.map(JsoncFingerprint.canonicalizeResult(wire), (canonical) =>
-    bytesToHex(sha256(utf8ToBytes(`${version}\n${canonical}`)))
+const sealThroughOwner = (
+  restatedVersionLine: string,
+  publicSchemaWire: unknown
+): Result.Result<string, JsoncCanonicalizeError> =>
+  Result.map(JsoncFingerprint.canonicalizeResult(publicSchemaWire), (canonical) =>
+    bytesToHex(sha256(utf8ToBytes(`${restatedVersionLine}\n${canonical}`)))
   );
 
 const decisionSealThroughOwner = (record: ExecutionDecisionRecord) =>
@@ -196,12 +191,9 @@ const grantSetSealThroughOwner = (set: Pick<FrozenGrantSet, "frozenAt" | "grants
     )
   );
 
-// The owner's refusal as the code-and-pointer phrase its message carries.
 const refusalOf = (failure: JsoncCanonicalizeError): string => `${failure.code} at "${failure.path}"`;
 
-// `freezeGrantSet` reports a grant the owner refuses in its own `SchemaError`
-// channel; the failure is read back as whether its message names the refusal.
-const freezeNaming = (draft: DraftGrantSet, frozenAt: DateTime.Utc, refusal: string) =>
+const freezeErrorNamesRefusal = (draft: DraftGrantSet, frozenAt: DateTime.Utc, refusal: string) =>
   Result.mapError(freezeGrantSet(draft, frozenAt), (error) => Str.includes(refusal)(error.message));
 
 describe("ExecutionAuthority", () => {
@@ -274,21 +266,20 @@ describe("ExecutionAuthority", () => {
       expectDenied(verdict, "operation-not-granted");
     });
 
-    it.effect("denies grant-set-digest-mismatch for a tampered seal before answering anything else", () =>
-      Effect.gen(function* () {
-        // The tampered set's grants would otherwise produce operation-not-granted;
-        // the broken seal must win because a set that fails its own digest cannot
-        // be trusted to answer any narrower question.
-        const tampered = yield* decodeFrozenGrantSet({
-          ...(yield* encodeFrozenGrantSet(frozen)),
-          grants: [],
-        });
+    it.effect(
+      "denies grant-set-digest-mismatch before operation-not-granted: a set failing its own digest answers nothing narrower",
+      () =>
+        Effect.gen(function* () {
+          const tampered = yield* decodeFrozenGrantSet({
+            ...(yield* encodeFrozenGrantSet(frozen)),
+            grants: [],
+          });
 
-        expectDenied(
-          evaluateExecutionRequest(tampered, request(), evaluationOptions(now, revision)),
-          "grant-set-digest-mismatch"
-        );
-      })
+          expectDenied(
+            evaluateExecutionRequest(tampered, request(), evaluationOptions(now, revision)),
+            "grant-set-digest-mismatch"
+          );
+        })
     );
   });
 
@@ -385,10 +376,7 @@ describe("ExecutionAuthority", () => {
       expectChainBrokenAt(verifyExecutionDecisionChain([first, gapped]), 1);
     });
 
-    it("breaks the chain at a cross-run splice: a foreign runKey continuing the chain", () => {
-      // The foreign record is correctly sealed and continues seq/prevHash —
-      // only its runKey names another run. Without the in-verifier run check,
-      // this mixed-run array would certify as intact.
+    it("breaks the chain at a cross-run splice: a correctly sealed record of another runKey continuing seq and prevHash", () => {
       const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
       const foreign = sealExecutionDecision(
         decisionContent({ seq: 1, prevHash: O.some(first.hash), runKey: Str.repeat(64)("d") })
@@ -471,7 +459,6 @@ describe("ExecutionAuthority", () => {
     });
 
     it("rejects an outcome claiming to settle a denied decision", () => {
-      // A denied decision never executes, so nothing can legitimately settle it.
       const deniedDecision = sealExecutionDecision({
         ...decisionContent({ seq: 0, prevHash: O.none() }),
         verdict: "denied",
@@ -484,7 +471,10 @@ describe("ExecutionAuthority", () => {
         settlement: "completed",
       });
 
-      expect(verifyOutcomeBinding(outcome, deniedDecision)).toBe(false);
+      expect(
+        verifyOutcomeBinding(outcome, deniedDecision),
+        "a denied decision never executes, so nothing can legitimately settle it"
+      ).toBe(false);
     });
   });
 
@@ -506,10 +496,10 @@ describe("ExecutionAuthority", () => {
 
   describe("bounded vocabularies", () => {
     it("keeps the ungoverned-infrastructure destination set empty", () => {
-      // Membership is CLOSED: this set is the only fail-open branch at the
-      // policy seam, and a change here must be deliberate — update this
-      // assertion only alongside an explicit governance decision.
-      expect(ungovernedInfrastructureDestinations.length).toBe(0);
+      expect(
+        ungovernedInfrastructureDestinations.length,
+        "closed membership: the only fail-open branch at the policy seam; change it only with an explicit governance decision"
+      ).toBe(0);
     });
 
     it("denialGuidance is total with constant, non-interpolated guidance", () => {
@@ -528,26 +518,25 @@ describe("ExecutionAuthority", () => {
   });
 
   describe("golden digest vectors", () => {
-    // These vectors pin the EXACT output of the canonical encodings and their
-    // version prefixes. A change to ANY part of a canonical encoding — the
-    // shared canonicalJson, the wire-form projections, the field sets, or the
-    // version strings — MUST break these assertions deliberately: bump the
-    // encoding version and update the vectors in the same change. A silent
-    // digest change would strand every previously persisted seal.
+    const goldenVectorMoved =
+      "a canonical encoding changed (canonicalJson, wire projection, field set or version string): bump its encoding version and update this vector in the same change, or every persisted seal strands";
+
     it("pins freezeGrantSet over the empty draft at frozenAt=0, policyRevision 1.0.0", () => {
       const emptyFrozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)));
 
-      expect(emptyFrozen.digest).toBe("6b964a03608449b6b1900d53904a30b85625b8086f18dee48593d05cc94bc623");
+      expect(emptyFrozen.digest, goldenVectorMoved).toBe(
+        "6b964a03608449b6b1900d53904a30b85625b8086f18dee48593d05cc94bc623"
+      );
     });
 
     it("pins freezeGrantSet over the one-grant draft at frozenAt=0", () => {
-      expect(frozen.digest).toBe("637c2eed3a1a2cc13e35c71e3d309a63a56b5c26eea8cbb3eb7e15333ac33379");
+      expect(frozen.digest, goldenVectorMoved).toBe("637c2eed3a1a2cc13e35c71e3d309a63a56b5c26eea8cbb3eb7e15333ac33379");
     });
 
     it("pins sealExecutionDecision over a fixed allowed content", () => {
       const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
 
-      expect(record.hash).toBe("59963d1ec97b2eaabb2c4d6ff37cf1118b3f513a8da259b736586ab6791dbe9b");
+      expect(record.hash, goldenVectorMoved).toBe("59963d1ec97b2eaabb2c4d6ff37cf1118b3f513a8da259b736586ab6791dbe9b");
     });
 
     it("pins sealExecutionOutcome over a fixed content", () => {
@@ -558,7 +547,7 @@ describe("ExecutionAuthority", () => {
         settlement: "completed",
       });
 
-      expect(outcome.hash).toBe("c73e693653a6eb591d9a1cff1f46e5addf7e771ac3a32d9faa4d52dd7536113d");
+      expect(outcome.hash, goldenVectorMoved).toBe("c73e693653a6eb591d9a1cff1f46e5addf7e771ac3a32d9faa4d52dd7536113d");
     });
   });
 
@@ -607,7 +596,7 @@ describe("ExecutionAuthority", () => {
     });
 
     it.effect.prop(
-      "recomputes every seal the domain can mint, and refuses what the owner refuses",
+      "recomputes every seal the domain can mint, and refuses grant free text the owner refuses, such as an unpaired surrogate",
       {
         decision: Arbitrary.schema(ExecutionDecisionRecord),
         draft: Arbitrary.schema(DraftGrantSet),
@@ -615,32 +604,25 @@ describe("ExecutionAuthority", () => {
       },
       (values) =>
         Effect.sync(() => {
-          // Decision and outcome records hold digests, literals and a semantic
-          // version, never free text, so every one of them seals.
           const decision = sealExecutionDecision(values.decision);
           const outcome = sealExecutionOutcome(values.outcome);
           const unsealed = { ...values.draft, frozenAt: values.outcome.recordedAt };
 
           assertSuccess(decisionSealThroughOwner(decision), decision.hash);
           assertSuccess(outcomeSealThroughOwner(outcome), outcome.hash);
-          // Grants carry free text, which schema-derived values fill with an
-          // unpaired surrogate now and then: freezing then fails typed with
-          // the very refusal the owner returns for the same wire form.
           Result.match(Result.mapError(grantSetSealThroughOwner(unsealed), refusalOf), {
             onSuccess: (digest) =>
               assertSuccess(
                 Result.map(freezeGrantSet(values.draft, values.outcome.recordedAt), (set) => set.digest),
                 digest
               ),
-            onFailure: (refusal) => assertFailure(freezeNaming(values.draft, values.outcome.recordedAt, refusal), true),
+            onFailure: (refusal) =>
+              assertFailure(freezeErrorNamesRefusal(values.draft, values.outcome.recordedAt, refusal), true),
           });
         }),
       { arbitrary: fcRuns(100) }
     );
 
-    // Behaviour change from slice C: the domain sealed a grant whose
-    // destination is not well-formed Unicode; freezing it now fails typed,
-    // naming the owner's refusal and its JSON pointer, before any digest exists.
     it("refuses to freeze a grant with an unpaired surrogate, as the owner does", () => {
       const illFormed = ExecutionGrant.make({
         ...grant,
@@ -652,7 +634,10 @@ describe("ExecutionAuthority", () => {
       const illFormedDraft = Result.getOrThrow(addGrant(emptyDraftGrantSet(revision), illFormed));
       const frozenAt = DateTime.makeUnsafe(0);
 
-      assertFailure(freezeNaming(illFormedDraft, frozenAt, 'LoneSurrogate at "/grants/0/sink/destination"'), true);
+      assertFailure(
+        freezeErrorNamesRefusal(illFormedDraft, frozenAt, 'LoneSurrogate at "/grants/0/sink/destination"'),
+        true
+      );
       assertFailure(
         Result.mapError(grantSetSealThroughOwner({ ...illFormedDraft, frozenAt }), refusalOf),
         'LoneSurrogate at "/grants/0/sink/destination"'

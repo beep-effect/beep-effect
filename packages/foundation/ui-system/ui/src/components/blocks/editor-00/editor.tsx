@@ -64,7 +64,6 @@ export function Editor({
         initialConfig={{
           ...editorConfig,
           ...O.getSomesStruct({ editorState: O.fromUndefinedOr(editorState) }),
-          // TODO(effect-native-migration): model schema
           ...O.getSomesStruct({
             editorState: O.map(O.fromUndefinedOr(editorSerializedState), (editorSerializedState) =>
               encodeUnknownJsonSync(editorSerializedState)

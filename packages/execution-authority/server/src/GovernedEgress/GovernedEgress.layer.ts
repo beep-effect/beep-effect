@@ -70,6 +70,13 @@ export interface GovernedEgressLiveOptions {
 /**
  * Build the governed egress `Fetch` layer from composition-root options.
  *
+ * **Gotchas**
+ *
+ * `Fetch` is a `Context.Reference` that always resolves, defaulting to the
+ * platform fetch, so this layer's output type is `never`: nothing fails to
+ * compile when a composition root leaves it out, and requests then go out
+ * through the ungoverned platform fetch.
+ *
  * **Example** (Building the governed egress layer)
  *
  * ```ts
@@ -92,11 +99,6 @@ export interface GovernedEgressLiveOptions {
  * @category layers
  * @since 0.0.0
  */
-// `Fetch` is a `Context.Reference`, and a Reference's identifier is `never` —
-// it always resolves, defaulting to the platform fetch — so this layer's output
-// type is `never`. That is exactly why the override is a policy decision and
-// not a type-checked requirement: nothing fails to compile when it is missing,
-// which is what the transport test exists to catch.
 export const GovernedEgressLive = ({
   grant,
   baseFetch,

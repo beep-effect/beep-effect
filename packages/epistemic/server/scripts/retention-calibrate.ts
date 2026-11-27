@@ -75,7 +75,13 @@ const Protocol = S.Struct({
     validCandidates: S.Int,
   }),
 }).pipe($I.annoteSchema("Protocol", { description: "Executable frozen grid and one-factor candidate design." }));
-const Arguments = S.Struct({ packet: S.NonEmptyString, output: S.NonEmptyString });
+const Arguments = S.Struct({
+  packet: S.NonEmptyString,
+  output: S.NonEmptyString.annotateKey({
+    description:
+      "Fresh bundle path, created exclusively so unrelated output is never overwritten; a replay needs a new path.",
+  }),
+});
 const ManifestJson = S.fromJsonString(Manifest);
 const ProtocolJson = S.fromJsonString(Protocol);
 const InputsJson = S.fromJsonString(Inputs);
@@ -288,7 +294,6 @@ const main = Effect.gen(function* () {
     authorityUnchanged: true,
     strata,
   })}\n`;
-  // Exclusive creation prevents overwriting unrelated output. Replay uses a fresh output file.
   yield* fs.writeFileString(args.output, result, { flag: "wx" });
   yield* requireEvidence([mechanicalPassed], "Failed candidate attempts retained in output bundle");
   yield* Console.log(`Offline bundle SHA-256 ${yield* hash(result)}; production remains inert.`);

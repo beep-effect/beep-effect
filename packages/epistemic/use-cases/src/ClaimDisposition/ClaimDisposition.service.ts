@@ -46,16 +46,7 @@ const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.servic
 
 const unexplainedRejection = "Claim gate rejected the claim without an explanatory violation.";
 
-/**
- * Derive the disposition's headline reason from the violations that blocked
- * admission: the first violation carrying a message, or a fixed sentence when
- * the verdict carried none.
- *
- * The reason is a headline, not the record — every violation is stored verbatim
- * in the same row, so taking the first message loses nothing a reader cannot
- * recover, while a joined summary would grow without bound and still be a lossy
- * rendering of the array beside it.
- */
+// decision: first-violation-headline-reason
 const rejectionReason: (violations: ReadonlyArray<ClaimGateViolation>) => string = flow(
   A.findFirst((violation: ClaimGateViolation) => Str.isNonEmpty(violation.message)),
   O.match({

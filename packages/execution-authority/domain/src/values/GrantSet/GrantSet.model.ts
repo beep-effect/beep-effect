@@ -39,14 +39,7 @@ import type { DenialReason, ExecutionRequest } from "../ExecutionVerdict/index.t
 
 const $I = $ExecutionAuthorityDomainId.create("values/GrantSet/GrantSet.model");
 
-/**
- * Digest version prefix. Bump whenever the canonical encoding changes so old
- * and new digests can never collide in a table that holds both.
- *
- * The `epistemic-` prefix is frozen: grant sets began in the epistemic slice,
- * and the label is a hash input, so renaming it to match this slice would change
- * every new digest and orphan every persisted `grant_set_digest`.
- */
+// decision: epistemic-hash-labels-frozen
 const grantSetEncodingVersion = "epistemic-grant-set/v1";
 
 /**
@@ -335,8 +328,6 @@ export class GrantSetDigestInput extends S.Opaque<GrantSetDigestInput, { readonl
 
 const encodeDigestInput = S.encodeResult(GrantSetDigestInput);
 
-// A grant the canonical JSON owner refuses (free text with an unpaired
-// surrogate) fails in the same `SchemaError` channel as an encoding failure.
 const computeGrantSetDigest = (input: GrantSetDigestInput): Result.Result<GrantSetDigest, S.SchemaError> =>
   Result.flatMap(encodeDigestInput(input), (encoded) =>
     Result.map(JsoncFingerprint.canonicalizeSchemaResult(encoded), (canonical) =>
@@ -350,6 +341,12 @@ const computeGrantSetDigest = (input: GrantSetDigestInput): Result.Result<GrantS
  * encoding of (grants, policyRevision, frozenAt); a repo law bans
  * `FrozenGrantSet.make` everywhere else, so freezing cannot be bypassed by
  * constructing the class directly.
+ *
+ * **Gotchas**
+ *
+ * A grant the canonical JSON owner refuses, such as free text holding an
+ * unpaired surrogate, fails in the same `SchemaError` channel as an encoding
+ * failure.
  *
  * **Example** (Usage)
  * ```ts

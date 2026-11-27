@@ -103,7 +103,6 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
     );
   });
 
-  // The stub repository is the only dependency the resolver does not build itself.
   it.layer(inMemoryClaimDispositions, { timeout: "10 seconds" })("resolving a claim gate verdict", (it) => {
     it.effect(
       "records a durable rejection carrying the violations and returns the claim unchanged",
@@ -114,8 +113,9 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
 
         const outcome = yield* resolver.resolve(rejectedInput);
 
-        // The shared lifecycle transition is untouched: a rejected claim stays a candidate.
-        expect(outcome.claim.lifecycle).toBe("candidate");
+        expect(outcome.claim.lifecycle, "the shared lifecycle transition leaves a rejected claim a candidate").toBe(
+          "candidate"
+        );
         expect(outcome.claim.fixtureKey).toBe(rejectedInput.claim.fixtureKey);
 
         pipe(outcome.disposition, O.isSome, assertTrue);

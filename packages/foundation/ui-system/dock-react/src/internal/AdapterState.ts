@@ -76,12 +76,21 @@ export type AdapterState = {
   >;
 };
 
-// crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
+// decision: adapter-state-cache-identity
 const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
-export // Conservative synchronous strip minima (title chars + tab/strip chrome), so
-// sash clamps hold from first paint; measured title minima replace these per
-// group as soon as font capture lands.
-const ESTIMATED_CHAR_WIDTH = 7;
+/**
+ * Per-character width, in pixels, of the synchronous tab-strip minima estimate.
+ *
+ * **Details**
+ *
+ * The estimate (title characters plus tab and strip chrome) is conservative so
+ * sash clamps hold from the first paint. Measured title minima replace it per
+ * group as soon as font capture lands.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ESTIMATED_CHAR_WIDTH = 7;
 const estimateMinima = (workspace: DockWorkspace, chrome: TabChrome): Readonly<Record<string, number>> => {
   const groups = [
     ...DockWorkspace.match(workspace, {
@@ -113,11 +122,7 @@ const withEstimateFallback = (
 
 export let commandCounter = 0;
 
-// crispen: the key is measurement-config values plus the provider's SEMANTIC
-// identity (captureKey) — referential layer identity would mint a fresh
-// retained state per render whenever a host builds captureLayer inline,
-// while omitting the provider entirely would share stale metrics across
-// distinct providers.
+// decision: adapter-state-cache-identity
 const stateKey = (gap: number, minGroupExtent: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
   O.match(titleMinima, {
     onNone: () => `${gap}\u0000${minGroupExtent}`,
@@ -155,6 +160,13 @@ export const makeOperation = (
 /**
  * Returns the memoized adapter state for a graph and its geometry configuration.
  *
+ * **Gotchas**
+ *
+ * Pass the state's `rootRef` to the root element as-is. React 19 re-runs a ref
+ * callback whenever its identity changes, and this cached callback is what keeps
+ * one ResizeObserver per mounted root; an inline wrapper would re-wire it on
+ * every render.
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -178,7 +190,6 @@ export const adapterState: {
     minGroupExtent: number,
     titleMinima: O.Option<DockTitleMinimaOptions>
   ): AdapterState => {
-    // crispen: geometry inputs remain the adapter identity because the derived atoms close over them.
     const byOptions = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
       const created = MutableHashMap.empty<string, AdapterState>();
       states.set(graph, created);
@@ -267,9 +278,6 @@ export const adapterState: {
     const onReadySlot: { current: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined } = {
       current: undefined,
     };
-    // Stable identity across renders: React 19 only re-runs a ref callback when
-    // its identity changes, so wiring the ResizeObserver here (instead of inline
-    // in the component) keeps one observer per mounted root.
     const rootNode: { current: HTMLElement | null } = { current: null };
     const rootRef = (node: HTMLDivElement | null): (() => void) | undefined => {
       if (P.isNull(node)) return undefined;

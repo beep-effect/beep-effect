@@ -1,13 +1,3 @@
-// External-Postgres contradiction-review race lane (opt-in). PGlite uses one
-// in-process connection, so it cannot prove the production row-lock contract.
-//
-// Use a disposable database: this proof resets its public schema.
-//
-//   docker run -d --name beep-contradiction-pg -e POSTGRES_PASSWORD=postgres -p 55434:5432 \
-//     pgvector/pgvector:pg17
-//   BEEP_EPISTEMIC_CONTRADICTION_PG_URL=postgres://postgres:postgres@localhost:55434/postgres \
-//     bunx --bun vitest run test/integration/ContradictionTriage.pg.test.ts
-//   docker rm -f beep-contradiction-pg
 import * as NodeURL from "node:url";
 import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction";
 import {
@@ -288,9 +278,11 @@ const readBackendPid = Effect.fnUntraced(function* (sql: SqlClient.SqlClient) {
 });
 
 if (Str.isEmpty(externalUrl)) {
-  describe.skip("ContradictionTriage external Postgres race — BEEP_EPISTEMIC_CONTRADICTION_PG_URL not set", () => {});
+  describe.skip("ContradictionTriage external Postgres race — set BEEP_EPISTEMIC_CONTRADICTION_PG_URL to a disposable database", () => {});
 } else {
-  describe("ContradictionTriage external Postgres race", { concurrent: false }, () => {
+  describe("ContradictionTriage external Postgres row-lock race, which single-connection PGlite cannot host", {
+    concurrent: false,
+  }, () => {
     it.layer(makeExternalLayer(2), { timeout: "5 minutes" })((it) => {
       it.effect(
         "allows exactly one reviewer and preserves the disposition across a fresh repository/client stack",
@@ -555,16 +547,12 @@ if (Str.isEmpty(externalUrl)) {
             assertTrue
           );
           expect(A.length(failures)).toBe(1);
-          // The locked applicability check rejects the losing review before
-          // calling the lower-level edge superseder.
-          pipe(
-            A.every(
-              failures,
-              (outcome) =>
-                ContradictionReviewConflict.is(outcome.failure) && Eq.equals(outcome.failure.reason, "stale-candidate")
-            ),
-            assertTrue
+          const lockedCheckRefusedLoser = A.every(
+            failures,
+            (outcome) =>
+              ContradictionReviewConflict.is(outcome.failure) && Eq.equals(outcome.failure.reason, "stale-candidate")
           );
+          pipe(lockedCheckRefusedLoser, assertTrue);
           const successfulDisposition = yield* pipe(
             successes,
             A.head,

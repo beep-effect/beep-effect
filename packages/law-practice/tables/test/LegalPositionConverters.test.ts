@@ -1,24 +1,3 @@
-import * as Arbitrary from "effect/Arbitrary";
-/**
- * Proof for the five legal position row converters.
- *
- * Each entity is proved through one closed loop: a valid row decodes into the
- * entity, the entity encodes into an insert that omits the database-assigned
- * `id`, and putting an id back onto that insert decodes into an equivalent
- * entity. The loop is what makes the converters trustworthy as a pair — a
- * dropped column or an asymmetric codec breaks the return leg even when each
- * direction looks fine on its own.
- *
- * These are the repo's first persisted entities carrying set-valued fields, so
- * one suite is about nothing else. A bare `S.HashSet` encodes a set to a tagged
- * `{"_id":"HashSet","values":[...]}` wrapper and refuses to decode either that
- * wrapper or a plain array, which makes a jsonb round trip fail in both
- * directions; `S.toCodecJson(S.HashSet(Item))` encodes to a plain array and
- * decodes one back. The suite asserts the stored shape is a real JSON array and
- * that what comes back out is a real `HashSet`, because a converter that only
- * asserted equality would pass under either schema.
- */
-
 import {
   ActFrame,
   CorrectionDelta,
@@ -42,6 +21,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -52,8 +32,6 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-// The id every fixture carries. Reattaching exactly this one to an insert is
-// what lets the return leg be compared to the entity the loop started from.
 const ROW_ID = 1;
 
 const ACT = "enter the demised premises";
@@ -190,8 +168,6 @@ const candidateInput = {
   verdictFamily: { assignedBy: systemPrincipal, family: "principle-collision" },
 };
 
-// The audit envelope every law-practice entity carries, with `id` deliberately
-// absent: the insert defers to the table sequence, so the database assigns it.
 const BASE_INSERT_KEYS: ReadonlyArray<string> = [
   "createdAt",
   "createdByPrincipal",
@@ -212,9 +188,6 @@ const sortedKeys = (row: Readonly<Record<string, unknown>>): ReadonlyArray<strin
 const expectedInsertKeys = (own: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.sort(A.appendAll(BASE_INSERT_KEYS, own), Order.String);
 
-// Schema equivalence rather than a structural compare: the entities carry
-// `Option`, `HashSet`, and branded fields whose identity is the schema's to
-// decide.
 const sameRelator = S.toEquivalence(LegalPositionRelator);
 const sameFrame = S.toEquivalence(ActFrame);
 const sameExercise = S.toEquivalence(PowerExercise);
@@ -262,8 +235,6 @@ describe("LegalPositionRelator converters", () => {
     const { assertingInterpreter: _assertingInterpreter, ...unattributed } = relatorInput;
 
     pipe(fromLegalPositionRelatorRow({}), Result.isFailure, assertTrue);
-    // A relation with no attributed interpreter is the dangerous near-miss:
-    // every audit column is present, so only the entity schema can refuse it.
     pipe(fromLegalPositionRelatorRow(unattributed), Result.isFailure, assertTrue);
   });
 });
@@ -297,10 +268,11 @@ describe("ActFrame converters", () => {
       const insert = yield* Effect.fromResult(toActFrameInsert(frame));
       const returned = yield* Effect.fromResult(fromActFrameRow({ ...insert, id: ROW_ID }));
 
-      // The simultaneous create-and-extinguish is what a three-way enum would
-      // have thrown away, so it is asserted through the row trip specifically.
       expect(HashSet.has(returned.derivationKind.kinds, "create")).toBe(true);
-      expect(HashSet.has(returned.derivationKind.kinds, "extinguish")).toBe(true);
+      expect(
+        HashSet.has(returned.derivationKind.kinds, "extinguish"),
+        "create and extinguish at once survive the row trip; a three-way enum would drop one"
+      ).toBe(true);
       expect(returned.preconditions[0]?.polarity).toBe("absent");
       expect(sameFrame(returned, frame)).toBe(true);
     })
@@ -341,9 +313,10 @@ describe("PowerExercise converters", () => {
       const insert = yield* Effect.fromResult(toPowerExerciseInsert(exercise));
       const returned = yield* Effect.fromResult(fromPowerExerciseRow({ ...insert, id: ROW_ID }));
 
-      // A row trip that lost the disposition would be authority laundering: a
-      // renderer could then show an exercise without saying where it stands.
-      expect(returned.result.disposition.disposition).toBe("void");
+      expect(
+        returned.result.disposition.disposition,
+        "losing the disposition would let a renderer show an exercise without its standing"
+      ).toBe("void");
       expect(O.getOrThrow(returned.result.constitution).outcome).toBe("not-constituted");
       assertNone(returned.result.permission);
       expect(sameExercise(returned, exercise)).toBe(true);
@@ -423,7 +396,6 @@ describe("LegalOppositionCandidate converters", () => {
 
       expect(HashSet.size(returned.candidate.relators)).toBe(2);
       assertSome(O.getOrThrow(returned.priorityBasis).forum, "N.D. Cal.");
-      // The family never travels without the attorney it belongs to.
       expect(O.getOrThrow(returned.verdictFamily).family).toBe("principle-collision");
       expect(sameCandidate(returned, candidate)).toBe(true);
     })
@@ -437,8 +409,6 @@ describe("LegalOppositionCandidate converters", () => {
       const insert = yield* Effect.fromResult(toLegalOppositionCandidateInsert(candidate));
       const returned = yield* Effect.fromResult(fromLegalOppositionCandidateRow({ ...insert, id: ROW_ID }));
 
-      // Absence is the derivable fact — which candidates lack a family — so it
-      // has to survive the row trip as absence rather than as a placeholder.
       assertNone(returned.priorityBasis);
       assertNone(returned.verdictFamily);
       expect(sameCandidate(returned, candidate)).toBe(true);
@@ -454,11 +424,6 @@ describe("LegalOppositionCandidate converters", () => {
 });
 
 describe("set-valued fields across the storage boundary", () => {
-  // The trip a jsonb column actually puts a row through: the insert is
-  // serialized to JSON text and parsed back before it is decoded. Doing it
-  // through the shared `Unknown` JSON-string schema rather than by hand keeps the proof on the
-  // repo's schema APIs, and it is where the tagged `{"_id":"HashSet"}` form
-  // would show up if a set-valued field were declared with `S.HashSet`.
   it.effect(
     "stores every scope axis as a JSON array and reads it back as a HashSet",
     Effect.fnUntraced(function* () {
@@ -466,11 +431,12 @@ describe("set-valued fields across the storage boundary", () => {
       const insert = yield* Effect.fromResult(toLegalPositionRelatorInsert(relator));
       const stored = yield* throughStorage({ ...insert, id: ROW_ID });
 
-      // Decoding the stored value as arrays is the assertion: a set that had
-      // been written as a HashSet would not be one.
       const { scope } = yield* decodeStoredScopeAxes(stored);
 
-      expect(A.sort(scope.territorial, Order.String)).toEqual(["US-CA", "US-NV"]);
+      expect(
+        A.sort(scope.territorial, Order.String),
+        'a bare S.HashSet field would store the tagged {"_id":"HashSet"} wrapper, not this array'
+      ).toEqual(["US-CA", "US-NV"]);
       expect(A.sort(scope.material, Order.String)).toEqual(["the demised premises", "the yard"]);
 
       const returned = yield* Effect.fromResult(fromLegalPositionRelatorRow(stored));
@@ -479,9 +445,10 @@ describe("set-valued fields across the storage boundary", () => {
       expect(HashSet.has(returned.scope.territorial, "US-CA")).toBe(true);
       expect(HashSet.has(returned.scope.territorial, "US-NV")).toBe(true);
       expect(HashSet.size(returned.scope.material)).toBe(2);
-      // The role's admitted player kinds are a set nested one level deeper, so
-      // they prove the array form survives inside a nested value object too.
-      expect(HashSet.has(returned.bearer.admittedPlayerKinds, "natural-person")).toBe(true);
+      expect(
+        HashSet.has(returned.bearer.admittedPlayerKinds, "natural-person"),
+        "the array form survives inside a nested value object too"
+      ).toBe(true);
       expect(sameRelator(returned, relator)).toBe(true);
     })
   );
@@ -502,12 +469,10 @@ describe("set-valued fields across the storage boundary", () => {
       expect(HashSet.size(returned.candidate.relators)).toBe(2);
       expect(sameCandidate(returned, candidate)).toBe(true);
 
-      // Recorded in the other order, the pair is still the same set: the column
-      // preserves membership, and membership is all a candidate ever claims.
       const reversed = { ...candidateInput, candidate: { ...candidateInput.candidate, relators: [2, 1] } };
       const other = yield* Effect.fromResult(fromLegalOppositionCandidateRow(reversed));
 
-      expect(sameCandidate(other, candidate)).toBe(true);
+      expect(sameCandidate(other, candidate), "the column preserves membership, not recording order").toBe(true);
     })
   );
 

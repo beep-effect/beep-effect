@@ -24,7 +24,7 @@ export const linkTheme: ThemeComponents = {
   MuiLink: {
     styleOverrides: {
       root: {
-        verticalAlign: "var(--va)", // for button inside Typography to align properly with text
+        verticalAlign: "var(--va)",
         "&:focus-visible": {
           outlineOffset: "4px",
           outlineColor: "var(--Link-underlineColor)",

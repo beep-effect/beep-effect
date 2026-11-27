@@ -18,10 +18,6 @@ import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react
 import { cn } from "../lib/index.ts";
 import type { CSSProperties } from "react";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 /**
  * Graph node type.
  *
@@ -81,21 +77,13 @@ export interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
 }
 
 interface KnowledgeGraphProps {
-  /** Center node ID (will be positioned in center) */
   readonly centerNodeId?: undefined | string;
-  /** Additional CSS classes */
   readonly className?: undefined | string;
-  /** Array of links connecting nodes */
   readonly links: GraphLink[];
-  /** Array of nodes to display */
   readonly nodes: GraphNode[];
-  /** Callback when a node is clicked */
   readonly onNodeClick?: undefined | ((node: GraphNode) => void);
-  /** Callback when a node is hovered */
   readonly onNodeHover?: undefined | ((node: GraphNode | null) => void);
-  /** Show legend for node types */
   readonly showLegend?: undefined | boolean;
-  /** Show link labels */
   readonly showLinkLabels?: undefined | boolean;
 }
 
@@ -152,11 +140,6 @@ const knowledgeGraphStateAtom = Atom.family((_scope: string) =>
   Atom.make<KnowledgeGraphState>(emptyKnowledgeGraphState)
 );
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-/** Generate a deterministic color from a string */
 const stringToColor = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -170,15 +153,10 @@ const stringToColor = (str: string): string => {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
-/** Format type string for display */
 const formatTypeLabel: (type: string) => string = flow(
   Str.replace(/_/g, " "),
   Str.replaceWith(/\b\w/g, Str.toUpperCase)
 );
-
-// ============================================================================
-// Component
-// ============================================================================
 
 /**
  * Knowledge graph component.
@@ -205,7 +183,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
     const containerRef = useRef<HTMLDivElement>(null);
     const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
-    // Export as SVG
     const exportAsSVG = () => {
       if (svgRef.current === null) return;
 
@@ -237,7 +214,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
       URL.revokeObjectURL(url);
     };
 
-    // Export as PNG
     const exportAsPNG = () => {
       if (svgRef.current === null) return;
 
@@ -292,7 +268,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
       img.src = URL.createObjectURL(blob);
     };
 
-    // Reset zoom
     const resetZoom = () => {
       if (svgRef.current !== null && zoomRef.current !== null) {
         d3.select(svgRef.current).transition().duration(500).call(zoomRef.current.transform, d3.zoomIdentity);
@@ -305,20 +280,17 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
       resetZoom,
     }));
 
-    // Main D3 effect
     useEffect(() => {
       if (svgRef.current === null || containerRef.current === null || nodes.length === 0) return;
 
       const container = containerRef.current;
       const svg = d3.select(svgRef.current);
 
-      // Clear previous content
       svg.selectAll("*").remove();
 
       const width = container.clientWidth;
       const height = container.clientHeight;
 
-      // Get unique node types for coloring
       const nodeTypes = pipe(
         nodes,
         A.map((node) => node.type),
@@ -333,7 +305,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
 
       const colorScale = (type: string, customColor?: string) => customColor ?? colorMapping[type] ?? "#6b7280";
 
-      // Set legend items
       setGraphState((state) => ({
         ...state,
         legendItems: A.map(nodeTypes, (type) => ({
@@ -342,14 +313,12 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
         })),
       }));
 
-      // Clone data to avoid mutation
       const nodesCopy: GraphNode[] = A.map(nodes, (n) => ({
         ...n,
         size: n.size ?? 20,
       }));
       const linksCopy: GraphLink[] = A.map(links, (l) => ({ ...l }));
 
-      // Position center node if specified
       const centerNode =
         centerNodeId !== undefined
           ? pipe(
@@ -363,7 +332,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
         centerNode.y = height / 2;
       }
 
-      // Create simulation
       const simulation = d3
         .forceSimulation<GraphNode>(nodesCopy)
         .force(
@@ -381,7 +349,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
           d3.forceCollide<GraphNode>().radius((d: GraphNode) => (d.size ?? 20) + 20)
         );
 
-      // Create zoom behavior
       const zoom = d3
         .zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.1, 4])
@@ -393,17 +360,14 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
       zoomRef.current = zoom;
       svg.call(zoom);
 
-      // Create container group
       const g = svg.append("g");
 
-      // Create links
       const link = g
         .selectAll<SVGLineElement, GraphLink>(".link")
         .data(linksCopy)
         .join("line")
         .attr("class", "link stroke-muted-foreground/50 stroke-2");
 
-      // Create link labels
       const linkLabel = showLinkLabels
         ? g
             .selectAll<SVGTextElement, GraphLink>(".link-label")
@@ -413,7 +377,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
             .text((d: GraphLink) => d.label ?? "")
         : null;
 
-      // Create node groups
       const nodeGroup = g
         .selectAll<SVGGElement, GraphNode>(".node-group")
         .data(nodesCopy)
@@ -439,21 +402,18 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
             })
         );
 
-      // Add circles
       nodeGroup
         .append("circle")
         .attr("r", (d: GraphNode) => d.size ?? 20)
         .attr("fill", (d: GraphNode) => colorScale(d.type, d.color))
         .attr("class", "stroke-background stroke-2");
 
-      // Add labels
       nodeGroup
         .append("text")
         .attr("class", "node-label fill-white text-2xs font-medium text-anchor-middle pointer-events-none")
         .attr("dy", ".35em")
         .text((d: GraphNode) => (d.label.length > 12 ? `${Str.substring(0, 10)(d.label)}...` : d.label));
 
-      // Add event handlers
       nodeGroup
         .on("click", (_event: MouseEvent, d: GraphNode) => void onNodeClick?.(d))
         .on("mouseover", (event: MouseEvent, d: GraphNode) => {
@@ -477,7 +437,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
           onNodeHover?.(null);
         });
 
-      // Update positions on tick
       simulation.on("tick", () => {
         link
           .attr("x1", (d: GraphLink) => (d.source as GraphNode).x ?? 0)
@@ -494,7 +453,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
         nodeGroup.attr("transform", (d: GraphNode) => `translate(${d.x ?? 0},${d.y ?? 0})`);
       });
 
-      // Cleanup
       return () => void simulation.stop();
     }, [nodes, links, onNodeClick, onNodeHover, showLinkLabels, centerNodeId, setGraphState]);
 
@@ -504,7 +462,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
           <svg ref={svgRef} width="100%" height="100%" className="bg-card rounded-xl" />
         </div>
 
-        {/* Tooltip */}
         {graphState.tooltip.visible && (
           <div
             className="pointer-events-none absolute top-(--tooltip-y) left-(--tooltip-x) z-10 px-3 py-2 text-sm rounded-lg bg-popover text-popover-foreground shadow-lg border"
@@ -519,7 +476,6 @@ export const KnowledgeGraph = forwardRef<KnowledgeGraphHandle, KnowledgeGraphPro
           </div>
         )}
 
-        {/* Legend */}
         {showLegend && graphState.legendItems.length > 0 && (
           <div className="absolute top-4 right-4 z-10 p-3 rounded-lg bg-popover/90 backdrop-blur-sm border">
             <div className="max-h-48 space-y-1.5 overflow-y-auto">

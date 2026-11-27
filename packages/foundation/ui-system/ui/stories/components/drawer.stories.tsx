@@ -329,9 +329,10 @@ export const NonDismissible: Story = {
       .then(() => waitFor(() => expect(screen.getByText("Action required")).toBeVisible()))
       .then(() => userEvent.keyboard("{Escape}"))
       .then(() => {
-        // Asserted synchronously on purpose: the drawer must NOT close, so a
-        // retrying waitFor would mask a drawer that closes and reopens.
-        expect(screen.getByText("Action required")).toBeVisible();
+        expect(
+          screen.getByText("Action required"),
+          "asserted synchronously: a retrying waitFor would mask a drawer that closes and reopens"
+        ).toBeVisible();
       });
   },
 };

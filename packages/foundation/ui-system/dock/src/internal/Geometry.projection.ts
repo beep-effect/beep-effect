@@ -89,10 +89,6 @@ const panelMinimum = (tabs: TabsNode, axis: SashGeometry["axis"]): number =>
     )
   );
 
-// Per-group minima measure title-strip WIDTHS, so they bound only the
-// horizontal axis; applied vertically they would poison the clamp (a wide tab
-// strip would make every short split "infeasible" and abandon clamping).
-// Vertical requirements come from panel minHeights and minGroupExtent alone.
 const groupMinimum = (groupId: GroupId, axis: SashGeometry["axis"], minima: GroupMinimumLookup): number =>
   Match.value(axis).pipe(
     Match.when("horizontal", () => minima(groupId)),
@@ -100,9 +96,6 @@ const groupMinimum = (groupId: GroupId, axis: SashGeometry["axis"], minima: Grou
     Match.exhaustive
   );
 
-// The tightest bound among whichever options are present; none when neither
-// side carries one. Shared by the per-group panel fold and the cross-axis
-// split fold below.
 const minPresent = (first: O.Option<number>, second: O.Option<number>): O.Option<number> =>
   A.match(A.getSomes([first, second]), {
     onEmpty: O.none<number>,
@@ -124,11 +117,6 @@ const panelMaximum = (tabs: TabsNode, axis: SashGeometry["axis"]): O.Option<numb
     )
   );
 
-// The minimum extent a visible subtree needs along the given axis: leaf
-// minimums SUM through same-axis splits (plus the gap when both sides are
-// visible) and take the MAX across cross-axis splits. Hidden subtrees need
-// nothing. This is what makes the clamp honest for nested trees — a scalar
-// clamped level-by-level would understate a same-axis run's requirement.
 const requiredExtent = (
   node: DockNode,
   axis: SashGeometry["axis"],
@@ -183,9 +171,8 @@ const clampLeadingExtent = (
   maxLeading: O.Option<number>,
   maxTrailing: O.Option<number>
 ): number => {
-  // Below the combined minima the caller shrinks both sides proportionally
-  // instead of clamping one side into negatives — leave the raw value alone.
-  if (N.isLessThan(available, N.sum(minLeading, minTrailing))) return rawLeading;
+  const infeasibleSplit = N.isLessThan(available, N.sum(minLeading, minTrailing));
+  if (infeasibleSplit) return rawLeading;
   const lower = pipe(
     maxTrailing,
     O.map((maximum) => N.max(minLeading, N.subtract(available, maximum))),
@@ -196,9 +183,8 @@ const clampLeadingExtent = (
     O.map((maximum) => N.min(N.subtract(available, minTrailing), maximum)),
     O.getOrElse(() => N.subtract(available, minTrailing))
   );
-  // Over-constrained (a maximum below a minimum): minima win and the clamp
-  // degrades to the minima-only band, keeping the solver total.
-  return Bool.match(N.isLessThanOrEqualTo(lower, upper), {
+  const maximaFitMinima = N.isLessThanOrEqualTo(lower, upper);
+  return Bool.match(maximaFitMinima, {
     onFalse: () =>
       N.clamp(rawLeading, {
         minimum: minLeading,
@@ -249,12 +235,6 @@ const projectNode = (
       const gap = N.min(options.gap, axisExtent);
       const available = N.subtract(axisExtent, gap);
       const rawLeading = pipe(available, N.multiply(SplitLayout.ratio(layout)), N.divideUnsafe(10_000), N.round(0));
-      // Minimum-extent clamp fed by requiredExtent, so nested same-axis
-      // subtrees carry their summed leaf requirements (content-aware minimums
-      // are pure inputs — see explorations/computable-workspace-geometry).
-      // With zero minimums the bounds are [0, available] and the projection
-      // is unchanged; an infeasible split keeps the proportional partition
-      // rather than clamping one side into negatives.
       const minLeading = requiredExtent(first, layout.axis, options, minima);
       const minTrailing = requiredExtent(second, layout.axis, options, minima);
       const leading = clampLeadingExtent(
@@ -326,6 +306,17 @@ const projectNode = (
  *
  * Rounding assigns the integer remainder to the trailing child, so child
  * extents plus the gap always equal the parent extent.
+ *
+ * Minimum extents compose through nested trees: a same-axis split needs the sum
+ * of its visible children's minima plus the gap, and a cross-axis split needs the
+ * larger of the two. A split too small for both minima keeps its proportional
+ * partition, and a maximum below a minimum loses to the minimum.
+ *
+ * **Gotchas**
+ *
+ * The per-group `minima` lookup measures title-strip widths, so it bounds only
+ * horizontal splits. Vertical requirements come from panel `minHeight` and
+ * `minGroupExtent` alone.
  *
  * **Example** (Project split into boxes)
  *
@@ -400,7 +391,6 @@ export const projectWorkspace: Dual2<DockWorkspace, GeometryProjectionContext, D
   }
 );
 
-/** One weighted entry in a normalized same-axis row view. */
 class DockRowEntry extends S.Opaque<DockRowEntry, { readonly brand: unique symbol }>()(
   S.Struct({ node: DockNodeModel, share: Extent }).pipe(
     $I.annoteSchema("DockRowEntry", {
@@ -409,7 +399,6 @@ class DockRowEntry extends S.Opaque<DockRowEntry, { readonly brand: unique symbo
   )
 ) {}
 
-/** A derived maximal same-axis row view; it is never persisted as tree state. */
 class DockRow extends S.Opaque<DockRow, { readonly brand: unique symbol }>()(
   S.Struct({ axis: LiteralKit(["horizontal", "vertical"]), entries: S.Array(DockRowEntry) }).pipe(
     $I.annoteSchema("DockRow", { description: "A derived flat view of one maximal run of same-axis binary splits." })
@@ -449,6 +438,12 @@ export const rows = (node: DockNode): ReadonlyArray<DockRow> =>
 /**
  * Builds reactive geometry projections from host-owned workspace and container atoms.
  *
+ * **Details**
+ *
+ * Per-group minima from `minimaAtom` combine with the static `minima` lookup by
+ * taking the larger value, and an update recomputes geometry without rebuilding
+ * the atom graph.
+ *
  * **Example** (Reactive geometry from atoms)
  *
  * ```ts
@@ -472,9 +467,6 @@ export const makeDockGeometryAtoms = (input: MakeDockGeometryAtomsInput) => {
   const options = O.getOrElse(O.fromUndefinedOr(input.options), () => GeometryOptions.make({}));
   const minima = O.getOrElse(O.fromUndefinedOr(input.minima), () => zeroMinimum);
   const geometryAtom = Atom.readable((get) => {
-    // Reactive per-group minimums compose with the static lookup by max, so
-    // content-driven updates (a retitled panel, a loaded document) recompute
-    // geometry without rebuilding the atom graph.
     const lookup = O.match(O.fromUndefinedOr(input.minimaAtom), {
       onNone: () => minima,
       onSome: (recordAtom) => {

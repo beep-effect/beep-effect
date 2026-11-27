@@ -17,7 +17,6 @@ const WORDMARK_GLYPH_WIDTH = 11;
 
 const round = (value: number): number => Number(value.toFixed(4));
 
-// XML text escaping (& < >); attribute escaping additionally covers both quote kinds.
 const escapeXmlText: (value: string) => string = flow(
   Str.replaceAll("&", "&amp;"),
   Str.replaceAll("<", "&lt;"),

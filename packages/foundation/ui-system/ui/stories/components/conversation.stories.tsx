@@ -29,17 +29,6 @@ const longThread: ReadonlyArray<Message> = A.makeBy(20, (index) => ({
   text: `Message ${index + 1} in a long scrolling conversation thread.`,
 }));
 
-/**
- * `Conversation` is a scrollable chat container built on `use-stick-to-bottom`. It keeps the
- * viewport pinned to the latest message while still allowing the user to scroll up. Compose it
- * with `ConversationContent` for padded message layout, `ConversationScrollButton` to jump back
- * to the bottom, and `ConversationEmptyState` for the no-messages placeholder.
- *
- * Imported from `@beep/ui/components/conversation`.
- */
-// `Conversation` requires `children`, so the story args type treats it as required. Every
-// story supplies its own thread through `render`, so this default only satisfies the type
-// and is never the rendered output.
 const defaultConversationChildren = (
   <ConversationContent>
     <ConversationEmptyState />

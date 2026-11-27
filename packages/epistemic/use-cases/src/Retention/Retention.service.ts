@@ -103,6 +103,13 @@ const canonicalQuery = (query: RetentionQuery) =>
  * all policy values inert. Payload pressure measures canonical fact bytes; it never estimates RAM.
  * Disposition filtering happens after the as-of snapshot. Requested absent keys stay visible.
  *
+ * **Gotchas**
+ * A registry hit alone does not calibrate: the receipt must also match the query's organization,
+ * the policy digest, the production purpose and mechanism, and an approval window containing
+ * `knownAt`. The reader's snapshot is filtered again by organization, logical key and both time
+ * axes, so a reader that over-returns, a fixture included, cannot leak another tenant, key or
+ * window. The closing encode and decode revalidates field schemas only, not cross-field arithmetic.
+ *
  * **Example** (Build an inert report from an empty snapshot)
  * ```ts
  * import { RetentionQuery, RetentionSnapshot } from "@beep/epistemic-domain/values/Retention"
@@ -150,7 +157,6 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
     onSome: Effect.fn("Retention.calibrate")(function* (policy: RetentionPolicy) {
       const digest = yield* retentionPolicyDigest(policy).pipe(unavailable("policy"));
       const receipt = yield* registry.find(digest, query);
-      // Registry membership is necessary; all receipt bindings are also checked here.
       return O.filter(
         receipt,
         (r) =>
@@ -165,7 +171,6 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
     }),
   });
   const policy = O.isSome(calibration) ? candidate : O.none<RetentionPolicy>();
-  // Defense in depth: even fixture readers cannot leak another tenant, key or time window.
   const edges = A.filter(
     snapshot.edges,
     (edge) =>
@@ -228,7 +233,6 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
     }),
     tiers: summarizeTiers(rows),
   });
-  // Revalidate field schemas before exposing a report; this does not check cross-field arithmetic.
   return yield* S.encodeEffect(RetentionReport)(report).pipe(
     Effect.flatMap(S.decodeEffect(RetentionReport)),
     unavailable("report")

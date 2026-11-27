@@ -155,8 +155,6 @@ describe("Contradiction detection golden vectors", () => {
     }
     it.effect.prop(
       "schema-derived values preserve negation and permutation invariants",
-      // Well-formed text only: the proposal-fact bound refuses an unpaired
-      // surrogate, which has no canonical form to digest.
       [
         S.String.check(
           S.isMaxLength(32),

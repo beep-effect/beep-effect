@@ -30,6 +30,7 @@ import {
   exceedsDragThreshold,
   preFloatContextFor,
   pressStartsOnButton,
+  preventNativeSelection,
   px,
   relativePositionOf,
   releaseCapture,
@@ -42,7 +43,6 @@ import type React from "react";
 import type { DockAtomGraph, DockTabRenderer, DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 
-// The overflow trigger's width, also read back through --dock-overflow-width in src/dock.css.
 const OVERFLOW_TRIGGER_WIDTH = 32;
 
 const panelIdsEqual = A.makeEquivalence(S.toEquivalence(PanelId));
@@ -82,13 +82,9 @@ const Tab = (props: {
   const pointerRef = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
     const clearDrag = (): void => {
-      const current = props.graph.registry.get(props.state.dragAtom);
+      const recordedDrag = props.graph.registry.get(props.state.dragAtom);
       props.graph.registry.set(props.state.dragAtom, O.none());
-      // Synthetic pointercancel events skip the implicit capture release a
-      // real input-source cancel performs, and carry a default pointerId
-      // rather than the captured one — release the identity recorded at
-      // the press.
-      O.match(current, {
+      O.match(recordedDrag, {
         onNone: () => undefined,
         onSome: (drag) => {
           releaseCapture(node, drag.pointerId);
@@ -96,35 +92,19 @@ const Tab = (props: {
         },
       });
     };
-    // Escape on a PROMOTED drag concludes it but keeps the record so the
-    // release's trailing click can be recognized and swallowed; an
-    // unpromoted press (no drag chrome shown) clears outright so the
-    // release still reads as a plain activation click. pointercancel also
-    // clears outright: no click ever follows a pointercancel.
     const cancelWithEscape = (): void => {
-      // Every tab registers this document listener, so only the DRAGGED tab's
-      // own listener acts — otherwise a sibling concludes the record first and
-      // the owner then finds nothing left to restore focus from. A record that
-      // already concluded is waiting for its trailing click, not for Escape:
-      // after a cross-group drop unmounts the source tab that click may never
-      // arrive, and an unrelated Escape (dismissing a menu) must not re-enter
-      // cancellation or steal focus on its behalf.
-      const current = O.filter(
+      const liveDragOfThisTab = O.filter(
         props.graph.registry.get(props.state.dragAtom),
         (drag) => !drag.concluded && S.toEquivalence(PanelId)(drag.panelId, props.panel.id)
       );
-      if (O.isNone(current)) return;
+      if (O.isNone(liveDragOfThisTab)) return;
       props.graph.registry.set(
         props.state.dragAtom,
-        O.flatMap(current, (drag) => (drag.moved ? TabDrag.makeOption({ ...drag, concluded: true }) : O.none()))
+        O.flatMap(liveDragOfThisTab, (drag) =>
+          drag.moved ? TabDrag.makeOption({ ...drag, concluded: true }) : O.none()
+        )
       );
-      // The press moved focus to the dragged tab; hand it back to the
-      // group's active tab so the cancelled gesture leaves no focus trace
-      // (roving tabindex: focus follows activation). Only the owning tab's
-      // listener restores — sibling keydown listeners may already have
-      // concluded the drag by the time this one runs, and focusing the
-      // active tab is idempotent.
-      if (O.exists(current, (drag) => drag.moved)) {
+      if (O.exists(liveDragOfThisTab, (drag) => drag.moved)) {
         const active = node
           .closest("[data-group-id]")
           ?.querySelector<HTMLElement>("[data-panel-id][data-active='true']");
@@ -138,8 +118,6 @@ const Tab = (props: {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.exists(current, (drag) => drag.concluded && S.toEquivalence(PanelId)(drag.panelId, props.panel.id))) {
         props.graph.registry.set(props.state.dragAtom, O.none());
-        // The capture target receives a click for the cancelled drag's
-        // release; it is not an activation click.
         event.stopPropagation();
         event.preventDefault();
       }
@@ -166,23 +144,17 @@ const Tab = (props: {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.isNone(current) || !S.toEquivalence(PanelId)(current.value.panelId, props.panel.id)) return;
       if (current.value.concluded) {
-        // The concluded record stays for the trailing click to consume.
         releaseCapture(node, event.pointerId);
         event.preventDefault();
         return;
       }
       const pointer = relativePositionOf(props.state, event);
+      const promotedOnRelease = exceedsDragThreshold(current.value.origin, pointer);
       const finalDrag = {
         ...current.value,
         pointer,
-        // The release itself can carry the promoting displacement (jsdom
-        // tests fire down→up with no intervening move), so re-check here.
-        moved: current.value.moved || exceedsDragThreshold(current.value.origin, pointer),
+        moved: current.value.moved || promotedOnRelease,
       };
-      // A promoted drag concludes but stays recorded: its trailing click
-      // must not activate the source tab or re-point focus at the source
-      // group after the panel has moved. An unpromoted press clears so the
-      // release reads as a plain click.
       props.graph.registry.set(
         props.state.dragAtom,
         finalDrag.moved ? TabDrag.makeOption({ ...finalDrag, concluded: true }) : O.none()
@@ -192,23 +164,15 @@ const Tab = (props: {
         O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
       event.preventDefault();
     };
-    const down = (event: PointerEvent): void => {
-      // A concluded record whose trailing click never arrived (touch and
-      // pen releases produce no click) must not outlive the next press
-      // anywhere on the tab — including its buttons, whose presses return
-      // early below and would otherwise leave the stale record to swallow
-      // the button's own click.
+    const clearConcludedBeforeButtonGuard = (): void => {
       if (O.exists(props.graph.registry.get(props.state.dragAtom), (drag) => drag.concluded)) {
         props.graph.registry.set(props.state.dragAtom, O.none());
       }
+    };
+    const down = (event: PointerEvent): void => {
+      clearConcludedBeforeButtonGuard();
       if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
-      // Chrome anchors a native text selection even when the press starts on
-      // a `user-select: none` tab, then extends it across panel content as
-      // the drag leaves the strip — cancel the default before capturing.
-      event.preventDefault();
-      // preventDefault also suppresses the native click-to-focus transfer;
-      // restore it so roving tab focus and Enter/Space track the clicked tab
-      // instead of re-activating the previously focused one.
+      preventNativeSelection(event);
       node.focus({ preventScroll: true });
       node.setPointerCapture?.(event.pointerId);
       const pointer = relativePositionOf(props.state, event);
@@ -276,9 +240,6 @@ const Tab = (props: {
       <button
         type="button"
         aria-label={`Close ${props.panel.title}`}
-        // Real pointers: without this the tab's drag compiler captures the
-        // pointer on pointerdown and the button's click never fires (jsdom
-        // stubs capture, so only a live browser exposes it).
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
@@ -309,10 +270,6 @@ const TabStrip = (
   const overflowOpen = useAtomValue(overflowOpenAtom);
   const setOverflowed = useAtomSet(overflowAtom);
   const setOverflowOpen = useAtomSet(overflowOpenAtom);
-  // The overflow atom is keep-alive per group, but its value describes a
-  // measurement of a particular strip DOM. Across an unmount/remount the
-  // stale value must not hide tabs before this mount has measured — so
-  // hiding is gated on a per-mount freshness flag that measureStrip flips.
   const measuredThisMount = useRef(false);
   const overflowRootRef = useRef<HTMLDivElement | null>(null);
   const tabs = props.tabs;
@@ -325,9 +282,6 @@ const TabStrip = (
   const measureStrip = (node: HTMLDivElement, width: number): void => {
     const tabWidths = tabWidthsFor(props.state, props.groupId);
     const tabRects = tabRectsFor(props.state, props.groupId);
-    // Rects are recorded root-relative so drop targeting shares the pointer's
-    // coordinate space; panels absent from the DOM (overflowed) are cleared so
-    // a stale rect can never make a hidden tab look droppable.
     const rootLeft = pipe(
       O.fromNullOr(props.state.rootNode.current),
       O.match({
@@ -360,10 +314,6 @@ const TabStrip = (
         )
       )
     );
-    // An unmeasured strip (zero width, or no tab has reported a real width
-    // yet) must never overflow: before layout settles the honest state is
-    // "everything visible", not "everything hidden" — otherwise the first
-    // frames flicker every inactive tab into the dropdown.
     const unmeasured =
       N.isLessThanOrEqualTo(width, 0) || A.every(panels, (panel) => O.isNone(MutableHashMap.get(tabWidths, panel.id)));
     const allFit = unmeasured || N.isLessThanOrEqualTo(N.sum(totalTabsWidth, actionsWidth), width);
@@ -393,18 +343,10 @@ const TabStrip = (
         );
       },
     });
-    // The first measurement of a mount must always publish (even an equal
-    // value) so the render gated on the freshness flag re-runs with hiding
-    // enabled; after that, only genuine changes re-publish.
-    const firstMeasurement = Bool.not(measuredThisMount.current);
+    const firstMeasurementMustRerender = Bool.not(measuredThisMount.current);
     measuredThisMount.current = true;
-    if (firstMeasurement || Bool.not(panelIdsEqual(overflowed, nextOverflow))) setOverflowed(nextOverflow);
+    if (firstMeasurementMustRerender || Bool.not(panelIdsEqual(overflowed, nextOverflow))) setOverflowed(nextOverflow);
   };
-  // Stable ref + latest-closure pattern: the ResizeObserver must survive
-  // re-renders (a per-render callback ref would disconnect/reconnect it on
-  // every render, e.g. each dropdown toggle), while measurements must see the
-  // current panels/atom values — so the stable callback dispatches through a
-  // ref the effect refreshes each render.
   const measureStripLatest = useRef(measureStrip);
   useEffect(() => {
     measureStripLatest.current = measureStrip;
@@ -419,8 +361,6 @@ const TabStrip = (
     if (N.isGreaterThan(initialWidth, 0)) measureStripLatest.current(node, initialWidth);
     return () => observer.disconnect();
   }, []);
-  // ARIA menu semantics: an open dropdown dismisses on any pointer press
-  // outside its own subtree and on Escape.
   useEffect(() => {
     if (Bool.not(overflowOpen)) return undefined;
     const press = (event: PointerEvent): void => {
@@ -546,25 +486,19 @@ export const GroupPane = (
         aria-label={`Float group ${props.groupId}`}
         title="Float"
         onClick={() => {
-          // Remember where this group sat so Dock can put it back
-          // (neighbor, side, and split share) instead of forcing a
-          // root-right column — QA finding R1-03.
           O.match(preFloatContextFor(workspace, props.groupId), {
             onNone: () => MutableHashMap.remove(props.state.preFloatPlacements, props.groupId),
             onSome: (context) => MutableHashMap.set(props.state.preFloatPlacements, props.groupId, context),
           });
-          // Cascade against the existing floating stack and cap to a
-          // useful viewport fraction, so a new float never fully occludes
-          // an earlier one's header.
           const container = props.graph.registry.get(props.state.containerAtom);
-          const step = 32 * (workspace.floating.length % 6);
+          const cascadeOffset = 32 * (workspace.floating.length % 6);
           submit(
             makeOperation(
               FloatGroupCommand.make({
                 groupId: props.groupId,
                 anchoredBox: TopLeftAnchoredBox.make({
-                  left: box.left + 24 + step,
-                  top: box.top + 24 + step,
+                  left: box.left + 24 + cascadeOffset,
+                  top: box.top + 24 + cascadeOffset,
                   width: Math.min(Math.max(360, box.width - 48), Math.max(360, container.width * 0.55)),
                   height: Math.min(Math.max(240, box.height - 48), Math.max(240, container.height * 0.6)),
                 }),

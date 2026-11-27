@@ -56,44 +56,93 @@ export const positionOf = (event: PointerEvent): PointerPosition =>
     top: event.clientY,
   });
 
-// Drag pointers must live in the dock root's coordinate space: geometry
-// boxes are container-relative (the container box is measured 0-based), so
-// hit-testing raw client coordinates mis-targets every group by the root's
-// viewport offset — invisibly while nothing sits beyond the offset, then a
-// full nav-height off once groups stack vertically (QA finding R1-01).
+/**
+ * Reads a pointer event as a position relative to the dock root container.
+ *
+ * **Gotchas**
+ *
+ * Geometry boxes are relative to the container, so drop hit-testing must use
+ * this and not `positionOf`: raw client coordinates mis-target by the root's
+ * viewport offset.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const relativePositionOf: Dual2<AdapterState, PointerEvent, PointerPosition> = dual(
   2,
   (state: AdapterState, event: PointerEvent): PointerPosition => {
     const root = state.rootNode.current;
     if (P.isNull(root)) return positionOf(event);
-    const rect = root.getBoundingClientRect();
-    return PointerPosition.make({ left: event.clientX - rect.left, top: event.clientY - rect.top });
+    const containerOrigin = root.getBoundingClientRect();
+    return PointerPosition.make({
+      left: event.clientX - containerOrigin.left,
+      top: event.clientY - containerOrigin.top,
+    });
   }
 );
-// Presses on chrome buttons inside a gesture surface must not start a
-// drag/move: native pointer capture would retarget the release and swallow
-// the button's click (native capture beats React-level stopPropagation).
+
+/**
+ * Reports whether a pointer press began on a chrome button inside a gesture surface.
+ *
+ * **Gotchas**
+ *
+ * Check it before starting a drag or move: native pointer capture would
+ * retarget the release and swallow the button's click, and a React-level
+ * `stopPropagation` on the button cannot prevent that.
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
 export const pressStartsOnButton = (event: PointerEvent): boolean =>
   event.target instanceof Element && P.isNotNull(event.target.closest("button"));
 
-// A native cancellation has already released capture, and releasing a pointer
-// the element no longer captures throws NotFoundError straight out of the
-// handler — so ownership is checked first.
+/**
+ * Releases a pointer capture only while the element still holds it.
+ *
+ * **Gotchas**
+ *
+ * Use it instead of calling `releasePointerCapture` directly: a native
+ * cancellation has already released capture, and releasing a pointer the
+ * element no longer captures throws `NotFoundError` out of the handler. Pass the
+ * pointerId recorded at the press, not the cancelling event's: a synthetic
+ * `pointercancel` carries a default pointerId and skips the implicit release.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const releaseCapture: Dual2<HTMLElement, number, void> = dual(2, (node: HTMLElement, pointerId: number) => {
   if (node.hasPointerCapture?.(pointerId) === true) node.releasePointerCapture?.(pointerId);
 });
 
-// A press only promotes to a drag once the pointer travels past this radius
-// (dockview's PointerDragSource threshold): taps and plain clicks never show
-// drag chrome (ghost, drop indicator) or compile a drop.
-const DRAG_THRESHOLD = 5;
-const ROOT_EDGE_BAND_PX = 8;
+/**
+ * Cancels the default action of a press that starts a drag, move or resize.
+ *
+ * **Details**
+ *
+ * Chrome anchors a native text selection at the press point even on a
+ * `user-select: none` surface and extends it across panel content while the
+ * pointer moves; over an existing selection it can escalate to native
+ * drag-and-drop, which cancels the pointer stream mid-gesture.
+ *
+ * **Gotchas**
+ *
+ * It also suppresses the native click-to-focus transfer. A caller whose target
+ * takes focus restores it by hand, so roving tab focus and Enter/Space track
+ * the pressed element instead of the previously focused one.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const preventNativeSelection = (event: PointerEvent): void => event.preventDefault();
+
+const DRAG_PROMOTION_RADIUS_PX = 5;
+const THIN_ROOT_BAND_SPARES_GROUP_EDGES_PX = 8;
 export const exceedsDragThreshold: Dual2<PointerPosition, PointerPosition, boolean> = dual(
   2,
   (origin: PointerPosition, pointer: PointerPosition): boolean => {
     const dx = pointer.left - origin.left;
     const dy = pointer.top - origin.top;
-    return dx * dx + dy * dy > DRAG_THRESHOLD * DRAG_THRESHOLD;
+    return dx * dx + dy * dy > DRAG_PROMOTION_RADIUS_PX * DRAG_PROMOTION_RADIUS_PX;
   }
 );
 
@@ -156,11 +205,6 @@ const splitPreviewBox = (box: DockBox, side: DockSide, ratio: SplitRatio): DockB
   });
 };
 
-// The tabs actually rendered in a group's strip, paired with their logical
-// index and ordered left to right. Overflowed panels have no rect, so they
-// are absent here — targeting must never resolve to a tab the user cannot
-// see, and the strip's padding/gaps live in these measurements rather than
-// in group-box arithmetic.
 type RenderedTab = {
   readonly logicalIndex: number;
   readonly rect: TabRect;
@@ -189,12 +233,6 @@ const renderedTabs = (
     })
   );
 
-// Chrome's tab-strip rule: the insertion index advances once the pointer
-// crosses a tab's horizontal MIDPOINT, so hovering past the last tab reads as
-// append. The answer is a LOGICAL index — the position in the group's panel
-// list — derived from rendered geometry, so an overflowed strip cannot insert
-// before a hidden tab. Falls back to even fractions of the group box before
-// the strip has measured anything.
 const stripInsertionIndex = (
   state: AdapterState,
   groupId: GroupId,
@@ -207,10 +245,7 @@ const stripInsertionIndex = (
     const count = A.length(panels);
     return box.width <= 0 ? 0 : Math.floor(((pointerLeft - box.left) / box.width) * count);
   }
-  // Past every rendered midpoint the drop appends after the last rendered
-  // tab, which is one past ITS logical position rather than the list length —
-  // a hidden tail must stay behind the visible one.
-  const appendIndex = pipe(
+  const afterLastRenderedTab = pipe(
     A.last(rendered),
     O.map((tab) => tab.logicalIndex + 1),
     O.getOrElse(() => A.length(panels))
@@ -219,7 +254,7 @@ const stripInsertionIndex = (
     rendered,
     A.findFirst((tab) => pointerLeft <= tab.rect.left + tab.rect.width / 2),
     O.map((tab) => tab.logicalIndex),
-    O.getOrElse(() => appendIndex)
+    O.getOrElse(() => afterLastRenderedTab)
   );
 };
 
@@ -229,11 +264,7 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
     const geometry = graph.registry.get(state.geometry.geometryAtom);
     const container = graph.registry.get(state.containerAtom);
     const point = drag.pointer;
-    // A thin strip: any wider and the root band shadows the bottom/right
-    // quadrant of every edge-adjacent group, so hovers aimed at a group's
-    // own edge compile to a container-spanning root split (QA finding: the
-    // bottom drop preview spanned both panels instead of the target group).
-    const outer = Math.min(ROOT_EDGE_BAND_PX, Math.min(container.width, container.height) / 6);
+    const outer = Math.min(THIN_ROOT_BAND_SPARES_GROUP_EDGES_PX, Math.min(container.width, container.height) / 6);
     const rootSide: O.Option<DockSide> = Match.value(point).pipe(
       Match.when(
         ({ left }) => left <= container.left + outer,
@@ -335,9 +366,6 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
 
 const TAB_CARET_WIDTH_PX = 3;
 
-// Caret x prefers measured tab widths (the strip records them for overflow
-// math); before layout settles it falls back to even fractions so the caret
-// still lands between the right neighbors.
 const tabInsertionPreview = (
   state: AdapterState,
   graph: DockAtomGraph,
@@ -355,10 +383,6 @@ const tabInsertionPreview = (
     onNone: () => count,
     onSome: (position) => Math.min(position, count),
   });
-  // The caret sits on the rendered boundary it would insert at: the leading
-  // edge of the tab now occupying that logical position, or trailing the last
-  // rendered tab when appending. Falls back to even fractions of the group box
-  // before the strip has measured.
   const rendered = renderedTabs(state, groupId, panels);
   const trailingEdge = pipe(
     A.last(rendered),
@@ -442,12 +466,6 @@ const findSplitContext = (node: DockNode, groupId: GroupId): O.Option<PreFloatCo
     },
   });
 
-/**
- * The split context a group occupied before floating: its neighbor, which
- * side of that neighbor it sat on, and its share of the split. Recorded at
- * Float time so Dock restores the pane where it came from instead of
- * forcing a root-right column (QA finding R1-03).
- */
 interface PreFloatContext {
   readonly ratio: number;
   readonly referenceGroupId: GroupId;

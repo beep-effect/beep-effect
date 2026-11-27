@@ -72,11 +72,8 @@ const emptyLinkPreviewInstanceState: LinkPreviewInstanceState = {
   isInView: false,
 };
 
-// Fetched metadata is cached per `href` so sibling instances can reuse it.
 const linkPreviewStateAtom = Atom.family((_href: string) => Atom.make<LinkPreviewState>(emptyLinkPreviewState));
 
-// Element ref, observer, and in-view flag are scoped per component instance so
-// that unmounting one instance never tears down a sibling's observation.
 const linkPreviewInstanceStateAtom = Atom.family((_instanceId: string) =>
   Atom.make<LinkPreviewInstanceState>(emptyLinkPreviewInstanceState)
 );
@@ -126,14 +123,12 @@ const linkPreviewObserverAtom = Atom.family((instanceId: string) =>
   })
 );
 
-// Keyed by `instanceId\nhref` so each component instance drives its own fetch
-// trigger while writing the result into the per-`href` metadata cache.
-const linkPreviewFetchAtom = Atom.family((key: string) =>
+const linkPreviewFetchAtom = Atom.family((instanceAndHref: string) =>
   Atom.make((get) => {
     let disposed = false;
-    const separatorIndex = O.getOrElse(constant(-1))(Str.indexOf("\n")(key));
-    const instanceId = Str.slice(0, separatorIndex)(key);
-    const href = Str.slice(separatorIndex + 1)(key);
+    const separatorIndex = O.getOrElse(constant(-1))(Str.indexOf("\n")(instanceAndHref));
+    const instanceId = Str.slice(0, separatorIndex)(instanceAndHref);
+    const href = Str.slice(separatorIndex + 1)(instanceAndHref);
 
     const maybeFetch = () => {
       const instanceState = get.once(linkPreviewInstanceStateAtom(instanceId));

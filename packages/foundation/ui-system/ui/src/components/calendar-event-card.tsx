@@ -131,8 +131,6 @@ export function CalendarEventCard({
       className={cn(
         "relative flex gap-2 rounded-lg p-3 pl-5 pr-2 opacity-(--event-opacity) transition-colors",
         hasAction ? "items-end" : "items-start",
-        // The event color is content, not theme: it rides in `--event-color` and the
-        // opacity modifiers reproduce the old hex alpha suffixes (80 / 10 / 20).
         isDotted ? "border-2 border-dashed border-(--event-color)/50 bg-(--event-color)/6" : "bg-(--event-color)/12.5",
         className
       )}

@@ -201,8 +201,6 @@ const createEdgeGradient = (ctx: CanvasRenderingContext2D, width: number, fadeWi
   return gradient;
 };
 
-// The container height as a CSS length: a number is pixels, a string passes through,
-// and an omitted height fills the parent.
 const waveformHeight = (height: undefined | string | number): string =>
   P.isNumber(height) ? `${height}px` : (height ?? "100%");
 
@@ -263,7 +261,6 @@ export const LiveWaveform = ({
 
   const heightStyle = waveformHeight(height);
 
-  // Handle canvas resizing
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -368,7 +365,6 @@ export const LiveWaveform = ({
     return undefined;
   }, [processing, active, barWidth, barGap, mode]);
 
-  // Handle microphone setup and teardown
   useEffect(() => {
     const stopMicrophoneStream = () => {
       if (streamRef.current === null) return;
@@ -431,7 +427,6 @@ export const LiveWaveform = ({
           audioContextRef.current = audioContext;
           analyserRef.current = analyser;
 
-          // Clear history when starting
           historyRef.current = A.empty();
         })
         .catch((error: unknown) => onError?.(error as Error));
@@ -441,7 +436,6 @@ export const LiveWaveform = ({
     return teardownMicrophone;
   }, [active, deviceId, fftSize, hasDeviceId, smoothingTimeConstant, onError, onStreamReady, onStreamEnd]);
 
-  // Animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas === null) return;

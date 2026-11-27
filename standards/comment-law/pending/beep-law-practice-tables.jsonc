@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/law-practice-tables",
-  "root": "packages/law-practice/tables",
-  "scopes": ["."]
-}
