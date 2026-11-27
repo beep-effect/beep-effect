@@ -1,6 +1,3 @@
-// Hostile files, made here and never committed. Each one stops the read with its finding and the part it happened
-// in: never a defect, a stack overflow or a hang.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { columnLetters } from "@beep/xlsx/XlsxAddress.schema";
 import { XlsxCell, XlsxDate, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema";
@@ -58,7 +55,6 @@ const limited = (limits: Parameters<typeof XlsxLimits.make>[0]) =>
   XlsxReadOptions.make({ limits: XlsxLimits.make({ ...big, ...limits }) });
 const kinds = (warnings: ReadonlyArray<XlsxWarning>) => A.map(warnings, (warning) => warning.finding.kind);
 const lastOf = (warnings: ReadonlyArray<XlsxWarning>) => warnings[warnings.length - 1]?.finding;
-/** A workbook whose sheets name parts by index, so several sheets can name one part. */
 const sharing = (input: {
   readonly sheets: ReadonlyArray<readonly [name: string, part: number]>;
   readonly parts: ReadonlyArray<string>;
@@ -89,8 +85,7 @@ const sharing = (input: {
     ],
   ]);
 const late = (rows: number) => sheet(Str.repeat(rows)('<row r="1"/>'));
-/** The bytes with a name of the same length written over another: at every place it is, or at its last (the directory). */
-const renamed = (bytes: Uint8Array, from: string, to: string, where: "every" | "last"): Uint8Array => {
+const renamed = (bytes: Uint8Array, from: string, to: string, where: "every" | "inDirectory"): Uint8Array => {
   const [source, target] = [new TextEncoder().encode(from), new TextEncoder().encode(to)];
   const places = A.filter(A.range(0, bytes.length - source.length), (at) =>
     A.every(A.fromIterable(source), (byte, i) => bytes[at + i] === byte)
@@ -102,7 +97,7 @@ const renamed = (bytes: Uint8Array, from: string, to: string, where: "every" | "
 const escaped = (text: string): string =>
   Str.replace(/"/g, "&quot;")(Str.replace(/</g, "&lt;")(Str.replace(/&/g, "&amp;")(text)));
 
-describe("hostile files", () => {
+describe("hostile files made here: each stops the read with its finding and part, never a defect, an overflow or a hang", () => {
   it.effect("a part that inflates from a few kilobytes past the cap on inflated bytes", () =>
     Effect.gen(function* () {
       const bytes = yield* workbook(
@@ -156,16 +151,17 @@ describe("hostile files", () => {
     })
   );
 
-  // Each `<col>` is 37 bytes and names all 16,384 columns. Read as one column each, 50,000 of them would be 819
-  // million entries from a file of a few kilobytes; a span is kept as its two ends and every column comes out once.
   it.effect("50,000 hidden column spans that each name every column", () =>
     Effect.gen(function* () {
       const cols = `<cols>${Str.repeat(50_000)('<col min="1" max="16384" hidden="1"/>')}</cols>`;
       const bytes = yield* workbook(one(sheetWith({ before: cols, rows: '<row r="1"><c r="A1"><v>1</v></c></row>' })));
-      expect(bytes.length).toBeLessThan(64 * 1024);
+      expect(bytes.length, "each 37-byte <col> names all 16,384 columns").toBeLessThan(64 * 1024);
       const read = yield* Xlsx.parse(bytes, XlsxReadOptions.make({ limits: XlsxLimits.make(big) }));
       const hidden = read.workbook.sheets[0].hiddenColumns;
-      expect(hidden.length).toBe(16_384);
+      expect(
+        hidden.length,
+        "a span is kept as its two ends, not 819 million entries, and each column comes out once"
+      ).toBe(16_384);
       expect(hidden[0]).toBe(0);
       expect(hidden[16_383]).toBe(16_383);
       const outline = yield* Xlsx.outline(bytes, XlsxReadOptions.make({ limits: XlsxLimits.make(big) }));
@@ -187,8 +183,6 @@ describe("hostile files", () => {
     })
   );
 
-  // Every sheet names its relationship by id; with the links indexed once, 8,000 sheets against 300,000 links is
-  // one pass over each, where a scan per sheet was 2.4 billion comparisons and ran past the 30-second test timeout.
   it.effect("8,000 sheets naming the last of 300,000 relationships", () =>
     Effect.gen(function* () {
       const links =
@@ -214,7 +208,10 @@ describe("hostile files", () => {
       ]);
       const limits = XlsxLimits.make({ ...big, maxSheets: 8000 });
       const read = yield* Xlsx.parse(bytes, XlsxReadOptions.make({ limits }));
-      expect(read.workbook.sheets.length).toBe(8000);
+      expect(
+        read.workbook.sheets.length,
+        "the links are indexed once by id; a scan per sheet was 2.4 billion comparisons, past the test timeout"
+      ).toBe(8000);
     })
   );
 
@@ -277,9 +274,6 @@ describe("hostile files", () => {
     })
   );
 
-  // The reader goes through the entries in order and checks each against its checksum, so a cut inside an entry
-  // is a typed failure. A cut after the last entry, inside the directory that follows them, loses nothing the
-  // reader uses: such a file reads, to the very values of the whole file, and never to anything else.
   it.effect("a file cut short at every hundredth byte", () =>
     Effect.gen(function* () {
       const bytes = yield* workbook(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')));
@@ -290,7 +284,10 @@ describe("hostile files", () => {
         (n) =>
           Effect.map(Effect.result(Xlsx.parse(bytes.subarray(0, n * 100))), (found) => {
             if (Result.isFailure(found)) return found.failure.fatal.finding.kind;
-            expect(found.success.workbook).toEqual(whole.workbook);
+            expect(
+              found.success.workbook,
+              "a cut inside the directory after the last entry loses nothing the reader uses"
+            ).toEqual(whole.workbook);
             return "read";
           }),
         { concurrency: 1 }
@@ -301,7 +298,8 @@ describe("hostile files", () => {
         A.every(
           kinds,
           (kind) => kind === "read" || kind === "NotAWorkbook" || kind === "DamagedArchive" || kind === "MissingPart"
-        )
+        ),
+        "each entry is checked against its checksum in order, so a cut inside one is a typed failure"
       ).toBe(true);
     })
   );
@@ -309,11 +307,16 @@ describe("hostile files", () => {
   it.effect("an encrypted entry", () =>
     Effect.gen(function* () {
       const bytes = yield* workbook(one(sheet("")));
-      // Bit 0 of the general purpose flags of the first local header says the entry is encrypted.
       const marked = new Uint8Array(bytes);
       marked[6] = (marked[6] ?? 0) | 1;
       const finding = yield* findingOf(marked);
-      expect(finding).toMatchObject({ kind: "DamagedArchive", damage: "Unsupported" });
+      expect(
+        finding,
+        "bit 0 of the first local header's general purpose flags marks the entry encrypted"
+      ).toMatchObject({
+        kind: "DamagedArchive",
+        damage: "Unsupported",
+      });
     })
   );
 
@@ -326,9 +329,6 @@ describe("hostile files", () => {
     })
   );
 
-  // One part named by two sheets is read once, and its warnings with a second part's meet one cap for the read: the
-  // read keeps 100 of the 450 rows written late and says how many it dropped. Read per sheet, the two sheets naming
-  // one part each carried its 300 warnings.
   it.effect("warnings past the read's cap, from a part two sheets name and from another part", () =>
     Effect.gen(function* () {
       const bytes = yield* sharing({
@@ -340,9 +340,16 @@ describe("hostile files", () => {
         parts: [late(301), late(151)],
       });
       const read = yield* Xlsx.parse(bytes, limited({ maxWarnings: 100 }));
-      expect(read.warnings.length).toBe(101);
+      expect(
+        read.warnings.length,
+        "a part two sheets name is read once, and its warnings and the other part's meet one cap for the read"
+      ).toBe(101);
       expect(A.dedupe(kinds(A.take(read.warnings, 100)))).toEqual(["RowOutOfOrder"]);
-      expect(lastOf(read.warnings)).toMatchObject({ kind: "ListTruncated", list: "warnings", dropped: 350 });
+      expect(lastOf(read.warnings), "100 of the 450 rows written late are kept, and the rest counted").toMatchObject({
+        kind: "ListTruncated",
+        list: "warnings",
+        dropped: 350,
+      });
       const sheets = A.dedupe(
         A.map(A.take(read.warnings, 100), (warning) =>
           warning.finding.kind === "RowOutOfOrder" ? warning.finding.sheet : ""
@@ -374,9 +381,7 @@ describe("hostile files", () => {
     })
   );
 
-  // Every attribute or value the reader turns into a number, holding any text at all: the read succeeds with a
-  // workbook its schema accepts, or fails with a finding, and never dies.
-  const numeric: ReadonlyArray<(text: string) => Recipe> = [
+  const everyTextReadAsNumber: ReadonlyArray<(text: string) => Recipe> = [
     (x) => one(sheet(`<row r="${x}"><c><v>1</v></c></row>`)),
     (x) => one(sheet(`<row r="1"><c r="${x}"><v>1</v></c></row>`)),
     (x) => ({ ...one(sheet(`<row r="1"><c r="A1" s="${x}"><v>1</v></c></row>`)), styles: styles(["0.00"]) }),
@@ -405,20 +410,18 @@ describe("hostile files", () => {
     ([text, number]) =>
       Effect.gen(function* () {
         for (const written of [text, `${number}`]) {
-          for (const recipe of numeric) {
+          for (const recipe of everyTextReadAsNumber) {
             const exit = yield* Effect.exit(
               Effect.flatMap(workbook(recipe(escaped(written))), (bytes) => Xlsx.parse(bytes))
             );
-            assertFalse(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
-            if (Exit.isSuccess(exit)) expect(S.is(XlsxRead)(exit.value)).toBe(true);
+            assertFalse(Exit.isFailure(exit) && Cause.hasDies(exit.cause), "the read fails with a finding, never dies");
+            if (Exit.isSuccess(exit)) expect(S.is(XlsxRead)(exit.value), "a workbook its schema accepts").toBe(true);
           }
         }
       }),
     { arbitrary: { runs: 15 } }
   );
 
-  // A row written from its last column to its first, with one column twice: the repeat is found by a stamp per
-  // column, whatever the order, and the row keeps every column once in rising order.
   it.effect("a full row written right to left, with one column written twice", () =>
     Effect.gen(function* () {
       const columns = A.map(A.range(0, 16_383), columnLetters);
@@ -429,23 +432,27 @@ describe("hostile files", () => {
       const bytes = yield* workbook(one(sheet(`<row r="1">${cells}<c r="B1"><v>2</v></c></row>`)));
       const read = yield* Xlsx.parse(bytes, limited({}));
       const row = read.workbook.sheets[0].rows[0];
-      expect(row?.cells.length).toBe(16_384);
-      expect(row?.cells[1]).toMatchObject({ column: 1, value: { kind: "Number", value: 1 } });
+      expect(row?.cells.length, "the repeat is found by a stamp per column, whatever the order").toBe(16_384);
+      expect(row?.cells[1], "the row keeps every column once, in rising order").toMatchObject({
+        column: 1,
+        value: { kind: "Number", value: 1 },
+      });
       expect(A.map(read.warnings, (warning) => warning.finding)).toEqual([
         expect.objectContaining({ kind: "BadAddress", row: 1, raw: "B1" }),
       ]);
     })
   );
 
-  // The examples below reach what the property tests reach only with some seeds: a reference with text after its
-  // row digits, and format codes that end in the middle of an escape, a block or a run of sections.
   it.effect(
     "a cell reference with text after its row digits is a bad address, and the cell takes the next column",
     () =>
       Effect.gen(function* () {
         const bytes = yield* workbook(one(sheet('<row r="1"><c r="A1"><v>1</v></c><c r="C1x"><v>2</v></c></row>')));
         const read = yield* Xlsx.parse(bytes, limited({}));
-        expect(A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.column)).toEqual([0, 1]);
+        expect(
+          A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.column),
+          "the property tests reach text after a reference's row digits only with some seeds"
+        ).toEqual([0, 1]);
         expect(A.map(read.warnings, (warning) => warning.finding)).toEqual([
           expect.objectContaining({ kind: "BadAddress", row: 1, raw: "C1x" }),
         ]);
@@ -473,14 +480,17 @@ describe("hostile files", () => {
       O.getOrUndefined(
         XlsxCell.shown({ value: XlsxDate.make({ serial }), format: XlsxNumberFormat.make({ id: 164, code }) }, "1900")
       );
-    expect([
-      shownAs("yyyy[", 46_000),
-      shownAs("yyyy\\", 46_000),
-      shownAs("yyyy;;", 46_000),
-      shownAs("yyyy;;", 0),
-      shownAs("yyyy;", 0),
-      shownAs("yyyy_)", 46_000),
-    ]).toEqual(["2025", "2025", "2025", undefined, "1900", "2025 "]);
+    expect(
+      [
+        shownAs("yyyy[", 46_000),
+        shownAs("yyyy\\", 46_000),
+        shownAs("yyyy;;", 46_000),
+        shownAs("yyyy;;", 0),
+        shownAs("yyyy;", 0),
+        shownAs("yyyy_)", 46_000),
+      ],
+      "the property tests reach a code ending inside an escape, a block or its sections only with some seeds"
+    ).toEqual(["2025", "2025", "2025", undefined, "1900", "2025 "]);
   });
 
   it.effect("merged ranges written many times, and more than the read's cap over two sheets", () =>
@@ -535,8 +545,6 @@ describe("hostile files", () => {
     })
   );
 
-  // A shared formula is written once and handed, whole, to every cell that names it: a cell of a few bytes costs the
-  // formula's length. The text handed out is counted for the whole read, and the groups kept are capped.
   it.effect("a long shared formula handed to many cells, and more shared formulas than the read's cap", () =>
     Effect.gen(function* () {
       const master = `${Str.repeat(1000)("A1+")}A1`;
@@ -547,7 +555,10 @@ describe("hostile files", () => {
           ""
         );
       const finding = yield* builtFindingOf(one(sheet(rows)), { ...big, maxSharedFormulaChars: 30_000 });
-      expect(finding).toMatchObject({
+      expect(
+        finding,
+        "a shared formula is handed whole to each cell naming it, so the text is counted for the whole read"
+      ).toMatchObject({
         kind: "LimitExceeded",
         limit: "sharedFormulaChars",
         path: "xl/worksheets/sheet1.xml",
@@ -560,7 +571,11 @@ describe("hostile files", () => {
         one(sheet(`<row r="1">${groups}</row><row r="2"><c r="E2"><f t="shared" si="4"/><v>2</v></c></row>`))
       );
       const read = yield* Xlsx.parse(many, limited({ maxSharedFormulas: 4 }));
-      expect(lastOf(read.warnings)).toMatchObject({ kind: "ListTruncated", list: "sharedFormulas", dropped: 1 });
+      expect(lastOf(read.warnings), "the groups kept are capped").toMatchObject({
+        kind: "ListTruncated",
+        list: "sharedFormulas",
+        dropped: 1,
+      });
     })
   );
 
@@ -576,22 +591,24 @@ describe("hostile files", () => {
     })
   );
 
-  // Excel opens a file by the directory its last end record names; the reader here walks the entries from the first
-  // byte. An archive updated by appending shows the two different workbooks, so it is refused, as is an entry the
-  // directory leaves out. A file whose entries are streamed, with descriptors and 64-bit sizes, agrees and reads.
   it.effect("an archive updated by appending, and an entry its directory leaves out", () =>
     Effect.gen(function* () {
       const build = (value: number) => workbook(one(sheet(`<row r="1"><c r="A1"><v>${value}</v></c></row>`)));
       const first = yield* build(1);
       const second = yield* build(2);
       const updated = yield* findingOf(appended({ first, second }));
-      expect(updated).toMatchObject({ kind: "DirectoryMismatch" });
+      expect(
+        updated,
+        "Excel opens the last end record's directory and this reader walks entries from byte 0: they see two workbooks"
+      ).toMatchObject({ kind: "DirectoryMismatch" });
       const extra = yield* workbook({ ...one(sheet("")), extra: [["xl/extra.xml", "<x/>"]] });
       const unlisted = yield* findingOf(withoutLastListed(extra));
-      expect(unlisted).toMatchObject({ kind: "DirectoryMismatch" });
-      // The property tests damage a directory entry's lengths only with some seeds; this entry always runs long.
+      expect(unlisted, "an entry the directory leaves out is refused too").toMatchObject({ kind: "DirectoryMismatch" });
       const long = yield* findingOf(longFirstListed(extra));
-      expect(long).toMatchObject({
+      expect(
+        long,
+        "the property tests damage an entry's lengths only with some seeds; this one always runs long"
+      ).toMatchObject({
         kind: "DirectoryMismatch",
         reason: "the directory's entry 1 runs past the directory",
       });
@@ -599,19 +616,27 @@ describe("hostile files", () => {
       expect(short).toMatchObject({ kind: "DirectoryMismatch", reason: "the directory's 5 entries do not fill it" });
       const streamed = yield* streamedArchive(partsOf(one(sheet('<row r="1"><c r="A1"><v>3</v></c></row>'))));
       const read = yield* Xlsx.parse(streamed);
-      expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 3 });
+      expect(
+        read.workbook.sheets[0].rows[0]?.cells[0]?.value,
+        "streamed entries, with descriptors and 64-bit sizes, agree with the directory and read"
+      ).toMatchObject({ kind: "Number", value: 3 });
     })
   );
-  // The zip reader takes an entry whose name ends with `/` for a directory, whatever its body holds, and inflates
-  // that body whole when it moves to the next entry. The body is counted against the caps as any part's is.
   it.effect("a directory entry whose body inflates past the cap on inflated bytes", () =>
     Effect.gen(function* () {
       const bytes = yield* archive([...partsOf(one(sheet(""))), ["xl/padX", Str.repeat(8 * 1024 * 1024)(" ")]]);
       const directory = renamed(bytes, "xl/padX", "xl/pad/", "every");
       const finding = yield* findingOf(directory, { ...big, maxInflatedBytes: ByteSize.mebibytes(1) });
-      expect(finding).toMatchObject({ kind: "LimitExceeded", limit: "inflatedBytes", path: "xl/pad/" });
+      expect(
+        finding,
+        "the zip reader takes a name ending in / for a directory, and inflates its body whole when it moves on"
+      ).toMatchObject({ kind: "LimitExceeded", limit: "inflatedBytes", path: "xl/pad/" });
       const part = yield* findingOf(directory, { ...big, maxPartBytes: ByteSize.mebibytes(1) });
-      expect(part).toMatchObject({ kind: "LimitExceeded", limit: "partBytes", path: "xl/pad/" });
+      expect(part, "the body is counted against the caps as any part's is").toMatchObject({
+        kind: "LimitExceeded",
+        limit: "partBytes",
+        path: "xl/pad/",
+      });
       const empty = yield* archive([
         ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>'))),
         ["xl/padX", ""],
@@ -621,22 +646,24 @@ describe("hostile files", () => {
     })
   );
 
-  // Excel finds a part by the name its directory record gives; the reader here by the name its local header gives.
-  // The two must name one part, as OPC compares names: a directory that gives an entry another name is refused.
   it.effect("a directory that names an entry otherwise than its local header does", () =>
     Effect.gen(function* () {
       const bytes = yield* workbook(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')));
-      const other = renamed(bytes, "xl/worksheets/sheet1.xml", "xl/worksheets/sheet2.xml", "last");
+      const other = renamed(bytes, "xl/worksheets/sheet1.xml", "xl/worksheets/sheet2.xml", "inDirectory");
       const finding = yield* findingOf(other);
-      expect(finding).toMatchObject({ kind: "DirectoryMismatch" });
-      const cased = renamed(bytes, "xl/worksheets/sheet1.xml", "XL/Worksheets/SHEET1.xml", "last");
+      expect(
+        finding,
+        "Excel finds a part by its directory record's name, this reader by its local header's: they must name one part"
+      ).toMatchObject({ kind: "DirectoryMismatch" });
+      const cased = renamed(bytes, "xl/worksheets/sheet1.xml", "XL/Worksheets/SHEET1.xml", "inDirectory");
       const read = yield* Xlsx.parse(cased);
-      expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 1 });
+      expect(
+        read.workbook.sheets[0].rows[0]?.cells[0]?.value,
+        "the two names are compared as OPC compares them"
+      ).toMatchObject({ kind: "Number", value: 1 });
     })
   );
 
-  // The shared text table is handed to the XML reader in slices, so a read that passes the cap on entries stops
-  // within a slice of it. A slice ends anywhere: inside a tag, inside an entry, inside a character's UTF-8 bytes.
   it.effect.prop(
     "a shared text table read in slices that end anywhere, inside tags, entries and characters",
     [S.Int.check(S.isBetween({ minimum: 0, maximum: 23 }))],
@@ -652,22 +679,23 @@ describe("hostile files", () => {
           sharedStrings: strings(A.map(entries, (entry) => `<t>${entry}</t>`)),
         });
         const read = yield* Xlsx.parse(bytes, limited({}));
-        expect(A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.value)).toEqual(
-          A.map(entries, (text) => ({ kind: "Text", text }))
-        );
+        expect(
+          A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.value),
+          "the table reaches the XML reader in slices that end anywhere, even inside a character's UTF-8 bytes"
+        ).toEqual(A.map(entries, (text) => ({ kind: "Text", text })));
         const table = `<sst xmlns="x">${Str.repeat(200_000)("<si><t>a</t></si>")}</sst>`;
         const finding = yield* builtFindingOf(
           { ...one(sheet("")), sharedStrings: table },
           { ...big, maxSharedStrings: 10 + shift }
         );
-        expect(finding).toMatchObject({ kind: "LimitExceeded", limit: "sharedStrings" });
+        expect(finding, "a read past the cap on entries stops within a slice").toMatchObject({
+          kind: "LimitExceeded",
+          limit: "sharedStrings",
+        });
       }),
     { arbitrary: { runs: 8 } }
   );
 
-  // The directory is found from the back, so an end-record signature can sit anywhere: here at byte 14, the CRC field
-  // of a streamed entry's local header, counting 0xFFFF entries, so the reader looks for a 64-bit locator 20 bytes
-  // before it. That read lies before the file's first byte, and it is refused, not thrown.
   it.effect("an end record inside the first local header, naming a 64-bit locator before byte 0", () =>
     Effect.gen(function* () {
       const streamed = yield* streamedArchive([
@@ -675,19 +703,16 @@ describe("hostile files", () => {
         ["xl/media/filler.bin", filler(30_000)],
       ]);
       const finding = yield* findingOf(earlyEndRecord(streamed));
-      expect(finding).toMatchObject({
+      expect(
+        finding,
+        "an end record at byte 14, a streamed local header's CRC, counts 0xFFFF entries and asks for a locator 20 bytes back"
+      ).toMatchObject({
         kind: "DirectoryMismatch",
         reason: "the end record names a 64-bit record that is not there",
       });
     })
   );
 
-  // Any damage to a workbook's bytes is a typed failure of every read or a read, never a defect. The places a byte
-  // matters most are near a record, so each mutation lands within a few bytes of the file's first byte, a local
-  // header, a directory entry or the end record: a run of bytes overwritten or inserted, the file cut there, or an
-  // end-record signature written there (with the bytes after it read as that record's fields). The streamed form
-  // leaves fields a reader skips at their maximum, which an early end record reads as its 64-bit markers, and the
-  // first part's name is short, so the bytes such a record reads as its comment length are small.
   const Anchor = S.Literals(["start", "local", "central", "end"]);
   const Mutation = S.Struct({
     kind: S.Literals(["overwrite", "insert", "truncate", "signature"]),
@@ -720,25 +745,23 @@ describe("hostile files", () => {
     out.set(written.subarray(0, Math.max(0, bytes.length - at)), at);
     return out;
   };
-  const whole = streamedArchive([["a.xml", "<a/>"], ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')))]);
-  // Each case damages the workbook and the same workbook cut inside its directory, after its last entry: that one
-  // still reads, and has no end record left to be found before one a mutation writes. Both are built once, by the
-  // layer the property runs under.
+  const streamedShortFirstName = streamedArchive([
+    ["a.xml", "<a/>"],
+    ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>'))),
+  ]);
   class Targets extends Context.Service<Targets, ReadonlyArray<Uint8Array>>()("@beep/xlsx/test/hostile.test/Targets") {
     static readonly layer = Layer.effect(
       Targets,
-      Effect.map(whole, (bytes) => [bytes, bytes.subarray(0, bytes.length - 30)])
+      Effect.map(streamedShortFirstName, (bytes) => [bytes, bytes.subarray(0, bytes.length - 30)])
     );
   }
-  /** A read's exit is a success or a typed failure (`XlsxParseError`, or the codec's `SchemaError`), never a defect. */
-  const typed = <A, E>(exit: Exit.Exit<A, E>): boolean =>
+  const isSuccessOrTypedFailure = <A, E>(exit: Exit.Exit<A, E>): boolean =>
     Exit.isSuccess(exit) ||
     (!Cause.hasDies(exit.cause) &&
       O.exists(Cause.findErrorOption(exit.cause), (error) => S.is(XlsxParseError)(error) || S.isSchemaError(error)));
-  /** Every public read but `parse`, which each case runs; each case runs one of these beside it. */
-  const Other = S.Literals(["outline", "sheets", "sheetLayout", "rows", "fromBytes", "recordsFromBytes"]);
+  const ReadBesideParse = S.Literals(["outline", "sheets", "sheetLayout", "rows", "fromBytes", "recordsFromBytes"]);
   const others: {
-    readonly [K in typeof Other.Type]: (bytes: Uint8Array) => Effect.Effect<Exit.Exit<unknown, unknown>>;
+    readonly [K in typeof ReadBesideParse.Type]: (bytes: Uint8Array) => Effect.Effect<Exit.Exit<unknown, unknown>>;
   } = {
     outline: (bytes: Uint8Array) => Effect.exit(Xlsx.outline(bytes)),
     sheets: (bytes: Uint8Array) => Effect.exit(Xlsx.sheets(bytes)),
@@ -750,16 +773,19 @@ describe("hostile files", () => {
   };
   it.layer(Targets.layer, { timeout: "30 seconds" })((it) =>
     it.effect.prop(
-      "no damage to a workbook's bytes makes a read die",
-      [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), Other],
+      "no damage to a workbook's bytes makes a read die, an early end record over streamed 64-bit markers included",
+      [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), ReadBesideParse],
       ([mutations, other]) =>
         Effect.gen(function* () {
-          for (const target of yield* Targets) {
-            const bytes = A.reduce(mutations, target, mutate);
+          for (const wholeOrCutInDirectory of yield* Targets) {
+            const bytes = A.reduce(mutations, wholeOrCutInDirectory, mutate);
             const parsed = yield* Effect.exit(Xlsx.parse(bytes));
             const read = yield* others[other](bytes);
-            expect(typed(parsed)).toBe(true);
-            expect(typed(read)).toBe(true);
+            expect(
+              isSuccessOrTypedFailure(parsed),
+              "damage near a record is a typed failure or a read; the cut copy has no end record before one a mutation writes"
+            ).toBe(true);
+            expect(isSuccessOrTypedFailure(read), "every other public read is run beside parse").toBe(true);
           }
         }),
       { arbitrary: { runs: 1200 } }

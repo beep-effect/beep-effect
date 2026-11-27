@@ -1,8 +1,3 @@
-// Against SheetJS, the reader this package replaced, and the only file here that imports it. A round-trip law run by
-// one reader and one writer proves only that the two agree with each other; this is the outside check. SheetJS reads
-// what the package writes, the package reads what SheetJS writes, and the text the package displays for a number or
-// a date is the text SheetJS displayed, except where the comments below say the old text was wrong.
-
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import {
   XlsxBoolean,
@@ -27,6 +22,7 @@ import { read, SSF, utils, write } from "xlsx/dist/xlsx.mini.min.js";
 import type { CellObject, WorkSheet } from "xlsx/dist/xlsx.mini.min.js";
 
 const runs = { arbitrary: { runs: 100 } };
+// decision: sheetjs-is-the-outside-oracle
 const formatted = (code: string, value: number, date1904 = false): string | undefined => {
   try {
     return SSF.format(code, value, { date1904 }) as string;
@@ -35,20 +31,18 @@ const formatted = (code: string, value: number, date1904 = false): string | unde
   }
 };
 
-// Text a spreadsheet would hold: printable, since SheetJS does not keep every control character.
-const Words = S.String.check(S.isPattern(/^[ -~]{0,40}$/));
+const PrintableWords = S.String.check(S.isPattern(/^[ -~]{0,40}$/));
 const Decimal = S.Int.check(S.isBetween({ minimum: -99_999_999, maximum: 99_999_999 }));
 const Value = S.Union([
-  S.Struct({ kind: S.tag("text"), text: Words }),
+  S.Struct({ kind: S.tag("text"), text: PrintableWords }),
   S.Struct({ kind: S.tag("number"), hundredths: Decimal }),
   S.Struct({ kind: S.tag("boolean"), value: S.Boolean }),
   S.Struct({ kind: S.tag("error"), code: XlsxErrorCode }),
   S.Struct({ kind: S.tag("date"), day: S.Int.check(S.isBetween({ minimum: 1, maximum: 80_000 })) }),
   S.Struct({ kind: S.tag("formula"), hundredths: Decimal }),
-  S.Struct({ kind: S.tag("textFormula"), text: Words }),
+  S.Struct({ kind: S.tag("textFormula"), text: PrintableWords }),
 ]);
 const Table = S.Array(S.Array(Value).check(S.isMaxLength(8))).check(S.isMaxLength(12));
-// Each name gets its place in the workbook after it, so no two are the same.
 const SheetNames = S.NonEmptyArray(S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9 ]{0,20}$/))).check(S.isMaxLength(3));
 const Book = S.Struct({
   dateSystem: XlsxDateSystem,
@@ -61,7 +55,6 @@ const named = (book: typeof Book.Type) => A.map(book.names, (name, index) => `${
 
 const dateFormat = XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" });
 
-/** A generated table as a workbook of this package. */
 const ours = (book: typeof Book.Type): XlsxWorkbook =>
   XlsxWorkbook.canonical(
     XlsxWorkbook.make({
@@ -105,7 +98,6 @@ const ours = (book: typeof Book.Type): XlsxWorkbook =>
     })
   );
 
-/** One of our cells as SheetJS would hold it: its type, its value, its formula and its format. */
 const asSheetJs = (cell: XlsxWorkbook["sheets"][number]["rows"][number]["cells"][number]) => {
   const formula = O.getOrUndefined(cell.formula);
   const value = cell.value;
@@ -147,17 +139,18 @@ const errorNumbers: { readonly [code in XlsxErrorCode]: number } = {
   "#GETTING_DATA": 43,
 };
 
-/** One SheetJS cell in the same four parts. */
 const fromSheetJs = (cell: CellObject | undefined) => {
   if (cell === undefined || cell.t === "z" || (cell.t === "s" && cell.v === "")) return undefined;
   const format = typeof cell.z === "string" && cell.z !== "General" ? cell.z : undefined;
   return [cell.t, cell.t === "e" ? errorCodes[Number(cell.v)] : cell.v, cell.f, cell.t === "n" ? format : undefined];
 };
 
-// SheetJS leaves holes where a sheet has no row or no cell; spreading an array turns each hole into undefined.
 const gridOf = (sheet: WorkSheet | undefined) => {
   const data = (sheet?.["!data"] ?? []) as ReadonlyArray<ReadonlyArray<CellObject | undefined> | null | undefined>;
-  return A.map([...data], (row) => A.filter(A.map([...(row ?? [])], fromSheetJs), (cell) => cell !== undefined));
+  const rowsWithHolesAsUndefined = [...data];
+  return A.map(rowsWithHolesAsUndefined, (row) =>
+    A.filter(A.map([...(row ?? [])], fromSheetJs), (cell) => cell !== undefined)
+  );
 };
 
 const large = XlsxReadOptions.make({ limits: XlsxLimits.make({}) });
@@ -262,9 +255,6 @@ describe("displayed text is what SheetJS displayed", () => {
     { arbitrary: { runs: 2000 } }
   );
 
-  // Money-like numbers, where no rounding tie can occur. On a tie the old reader rounded some values down
-  // (826.045 read "$826.04") where Excel, and this package, round half away from zero; and under some formats it
-  // showed no minus sign for a negative number that rounds to zero. Those are left out as its mistakes.
   const Cents = S.Int.check(S.isBetween({ minimum: -9_999_999_999, maximum: 9_999_999_999 }));
   const codes = [
     "$#,##0.00",
@@ -279,11 +269,14 @@ describe("displayed text is what SheetJS displayed", () => {
     "0.000",
   ];
   it.prop(
-    "for plain number patterns, on numbers of two decimals",
+    "for plain number patterns, on money-like numbers of two decimals, where no rounding tie can occur",
     [Arbitrary.schema(Cents)],
     ([cents]) => {
       for (const code of codes)
-        expect([code, O.getOrUndefined(number(cents / 100, code))]).toEqual([code, formatted(code, cents / 100)]);
+        expect(
+          [code, O.getOrUndefined(number(cents / 100, code))],
+          'SheetJS rounded some ties down (826.045 as "$826.04") and dropped the minus of a negative rounding to zero'
+        ).toEqual([code, formatted(code, cents / 100)]);
     },
     { arbitrary: { runs: 500 } }
   );
@@ -300,8 +293,6 @@ describe("displayed text is what SheetJS displayed", () => {
     { arbitrary: { runs: 500 } }
   );
 
-  // Whole seconds, so that no time rounds up to midnight: there the old reader showed PM for what it called
-  // midnight, and lost the 1904 date system when the day moved on.
   const dates = [
     "yyyy-mm-dd",
     "m/d/yy",
@@ -325,7 +316,7 @@ describe("displayed text is what SheetJS displayed", () => {
     "ddd",
   ];
   it.prop(
-    "for date and time formats, in both date systems",
+    "for date and time formats, in both date systems, at whole seconds that never round up to midnight",
     [
       Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 99_999 }))),
       Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 86_399 }))),
@@ -335,10 +326,10 @@ describe("displayed text is what SheetJS displayed", () => {
       const serial = day + seconds / 86_400;
       for (const code of dates) {
         const cell = { value: XlsxDate.make({ serial }), format: XlsxNumberFormat.make({ id: 164, code }) };
-        expect([code, O.getOrUndefined(XlsxCell.shown(cell, system))]).toEqual([
-          code,
-          formatted(code, serial, system === "1904"),
-        ]);
+        expect(
+          [code, O.getOrUndefined(XlsxCell.shown(cell, system))],
+          "at midnight SheetJS showed PM and lost the 1904 date system when the day moved on"
+        ).toEqual([code, formatted(code, serial, system === "1904")]);
       }
     },
     { arbitrary: { runs: 500 } }

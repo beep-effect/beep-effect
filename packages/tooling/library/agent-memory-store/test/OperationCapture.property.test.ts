@@ -27,11 +27,8 @@ const path = "notes/generated.md";
 
 const Seed = S.Int.check(S.isBetween({ minimum: 0, maximum: 2_147_483_647 }));
 
-// `FileEdit` refuses a lone surrogate, which no file decoded from UTF-8 holds.
-const WellFormedText = S.String.check(isWellFormedText);
+const FileEditText = S.String.check(isWellFormedText);
 
-// Checks the invariant for one base text and one edited text, and returns
-// how many operations the captured batch holds.
 const assertCaptures = (filePath: string, baseText: string, editedText: string): number => {
   const base = baseOf([[filePath, baseText]]);
   const { files, operations } = roundTrip(base, [FileEdit.cases.edited.make({ path: filePath, text: editedText })]);
@@ -44,8 +41,7 @@ const assertCaptures = (filePath: string, baseText: string, editedText: string):
   return operations.length;
 };
 
-// A base text and an edited text drawn from one seed.
-const generated = (seed: number): readonly [string, string] => {
+const generated = (seed: number): readonly [baseText: string, editedText: string] => {
   const random = seededRandom(seed);
   const baseText = A.join(
     A.makeBy(Math.floor(random() * 30), () => piece(random)),
@@ -67,7 +63,7 @@ describe("op capture invariant", () => {
 
   it.prop(
     "reproduces arbitrary strings, unrelated or not",
-    [Arbitrary.schema(WellFormedText), Arbitrary.schema(WellFormedText)],
+    [Arbitrary.schema(FileEditText), Arbitrary.schema(FileEditText)],
     ([baseText, editedText]) => {
       assertCaptures(path, baseText, editedText);
       assertCaptures(path, baseText, `${baseText}${editedText}`);
@@ -101,7 +97,6 @@ const addCost = (total: CaptureCost, cost: CaptureCost): CaptureCost => ({
 
 const zero: CaptureCost = { kept: 0, lowerBound: 0, operations: 0, pairedRuns: 0, runs: 0 };
 
-// Operations in the batches capture emitted for the 516 sample edits.
 const CAPTURED_OPERATIONS = 3_659;
 
 describe("op capture on the goals Markdown sample", () => {
@@ -127,18 +122,19 @@ describe("op capture on the goals Markdown sample", () => {
           `op capture goals sample: edits=${edits} captured=${captured} operations=${total.operations} lowerBound=${total.lowerBound} ` +
             `ratio=${(total.operations / total.lowerBound).toFixed(4)} runs=${total.runs} pairedRuns=${total.pairedRuns} kept=${total.kept}`
         );
-        // The batches capture emitted and the alignment's changed runs, pinned
-        // exactly (decision op-capture-pairs-only-equal-count-runs), so a
-        // change that pairs fewer runs or emits more operations shows. The
-        // lower bound is the sum over changed runs of max(base run, edited
-        // run), which no capture can beat.
-        expect({ edits, captured, alignmentSteps: total.operations, lowerBound: total.lowerBound }).toEqual({
+        expect(
+          { edits, captured, alignmentSteps: total.operations, lowerBound: total.lowerBound },
+          "pinned exactly under goal decision op-capture-pairs-only-equal-count-runs; the lower bound sums max(base run, edited run) over changed runs, which no capture can beat"
+        ).toEqual({
           edits: 516,
           captured: CAPTURED_OPERATIONS,
           alignmentSteps: 3_659,
           lowerBound: 3_051,
         });
-        expect({ runs: total.runs, pairedRuns: total.pairedRuns }).toEqual({ runs: 1_143, pairedRuns: 534 });
+        expect(
+          { runs: total.runs, pairedRuns: total.pairedRuns },
+          "a change that pairs fewer runs or emits more operations shows here"
+        ).toEqual({ runs: 1_143, pairedRuns: 534 });
       })
     );
   });

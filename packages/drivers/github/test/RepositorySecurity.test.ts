@@ -21,9 +21,8 @@ const run = Effect.fn("run")(function* <A, E>(
       )
     )
   );
-  // The caller's test scope owns the layer, so its finalizers run when the test ends.
-  const context = yield* Layer.build(layer);
-  const value = yield* Effect.provideContext(effect, context);
+  const testScopedContext = yield* Layer.build(layer);
+  const value = yield* Effect.provideContext(effect, testScopedContext);
   return { value, requested };
 });
 
@@ -37,14 +36,17 @@ describe("RepositorySecurity setters", () => {
   for (const { setter, segment } of FEATURES) {
     it.effect(`${setter}(true) sends PUT and (false) sends DELETE to /${segment}`, () =>
       Effect.gen(function* () {
-        // The HTTP verb IS the value; there is no body either way.
         const on = yield* run(
           Effect.flatMap(RepositorySecurity, (s) => s[setter](true)),
           { [`PUT /repos/{owner}/{repo}/${segment}`]: Result.succeed("") }
         );
         assert.strictEqual(on.value, undefined);
         assert.strictEqual(on.requested[0]?.route, `PUT /repos/{owner}/{repo}/${segment}`);
-        assert.deepStrictEqual(on.requested[0]?.params, { owner: "acme", repo: "widget" });
+        assert.deepStrictEqual(
+          on.requested[0]?.params,
+          { owner: "acme", repo: "widget" },
+          "the HTTP verb is the value; there is no body either way"
+        );
 
         const off = yield* run(
           Effect.flatMap(RepositorySecurity, (s) => s[setter](false)),
@@ -66,8 +68,7 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
         { "GET /repos/{owner}/{repo}/vulnerability-alerts": Result.succeed("") }
       );
 
-      // 204, no payload — enabled is the ABSENCE of a 404.
-      assert.strictEqual(value, true);
+      assert.strictEqual(value, true, "a 204 with no payload: enabled is the absence of a 404");
       assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget" });
     })
   );
@@ -92,9 +93,6 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
       const error = yield* run(
         Effect.flatMap(RepositorySecurity, (s) => s.vulnerabilityAlerts),
         {
-          // A mis-scoped token is not "disabled". A blanket catch here would
-          // report a permissions problem as a feature being off, and the sync
-          // that follows would try to turn it "on" forever.
           "GET /repos/{owner}/{repo}/vulnerability-alerts": Result.fail(
             GitHubError.make({
               kind: "unauthorized",
@@ -106,13 +104,8 @@ describe("RepositorySecurity.vulnerabilityAlerts", () => {
         }
       ).pipe(Effect.flip);
 
-      // Assert the failure VALUE, not a serialisation of the Exit. A
-      // JSON.stringify check depends on the shape of Exit and GitHubError, and
-      // "unauthorized" appears in the fixture too — so it would pass even if
-      // the error surfaced with a different kind, which is the whole subject
-      // of this test.
-      assert.instanceOf(error, GitHubError);
-      assert.strictEqual(error.kind, "unauthorized");
+      assert.instanceOf(error, GitHubError, 'the failure value, since the fixture text also holds "unauthorized"');
+      assert.strictEqual(error.kind, "unauthorized", "a mis-scoped token is never reported as the feature being off");
     })
   );
 });
@@ -124,9 +117,6 @@ describe("RepositorySecurity flag reads", () => {
   ] as const) {
     it.effect(`${method} reads the enabled flag both ways`, () =>
       Effect.gen(function* () {
-        // These two answer 200 with a payload either way — the opposite of
-        // vulnerability-alerts, and the reason the 404 mapping is not applied
-        // uniformly.
         const on = yield* run(
           Effect.flatMap(RepositorySecurity, (s) => s[method]),
           { [`GET /repos/{owner}/{repo}/${segment}`]: Result.succeed({ enabled: true }) }
@@ -137,14 +127,13 @@ describe("RepositorySecurity flag reads", () => {
           Effect.flatMap(RepositorySecurity, (s) => s[method]),
           { [`GET /repos/{owner}/{repo}/${segment}`]: Result.succeed({ enabled: false }) }
         );
-        assert.strictEqual(off.value, false);
+        assert.strictEqual(off.value, false, "these answer 200 with a payload either way, unlike vulnerability-alerts");
 
-        // A response with no flag at all is not "enabled".
         const missing = yield* run(
           Effect.flatMap(RepositorySecurity, (s) => s[method]),
           { [`GET /repos/{owner}/{repo}/${segment}`]: Result.succeed({}) }
         );
-        assert.strictEqual(missing.value, false);
+        assert.strictEqual(missing.value, false, "a response with no flag at all is not enabled");
       })
     );
   }

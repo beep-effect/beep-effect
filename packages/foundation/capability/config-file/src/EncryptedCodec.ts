@@ -31,7 +31,6 @@ import type { CryptoFailure } from "./internal/crypto.ts";
 
 const $I = $ConfigFileId.create("EncryptedCodec");
 
-/** Identifies an encrypted envelope that cannot contain both an IV and ciphertext. */
 class CiphertextTooShortError extends S.TaggedError<CiphertextTooShortError, { readonly brand: unique symbol }>(
   $I`CiphertextTooShortError`
 )(
@@ -110,7 +109,6 @@ export class ConfigEncryptionError extends S.TaggedError<ConfigEncryptionError, 
   }
 }
 
-/** Lift `internal/crypto`'s dependency-free failure into the public error. */
 const toPublic = (failure: CryptoFailure): ConfigEncryptionError =>
   ConfigEncryptionError.make({ phase: failure.phase, cause: failure.cause });
 
@@ -210,7 +208,6 @@ export const EncryptedCodecKey = {
   }),
 } as const;
 
-/** The key effect a codec instance resolves against, before memoization. */
 const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, ConfigEncryptionError> =>
   keySource._tag === "CryptoKey"
     ? keySource.key
@@ -234,6 +231,17 @@ const keyEffect = (keySource: EncryptedCodecKey): Effect.Effect<CryptoKey, Confi
  * flattening — the inner codec's failures stay distinguishable from
  * cryptographic ones.
  *
+ * **Gotchas**
+ *
+ * The key resolves lazily, once per codec instance, shared across forked
+ * fibers, and only a successful resolution is kept. `Effect.cached` alone
+ * would keep the whole `Exit`, so an interrupt from whichever fiber touched
+ * the key first would be replayed forever outside the declared error channel;
+ * any non-success exit is invalidated instead, and the next call resolves again.
+ *
+ * `parse` rejects a malformed envelope before it resolves the key, so bad
+ * input can never force a key resolution such as a KMS round trip.
+ *
  * **Example** (Encrypt JSON configuration with a passphrase)
  *
  * ```ts
@@ -255,25 +263,17 @@ export const EncryptedCodec: {
 } = dual(2, <E>(inner: ConfigCodec<E>, keySource: EncryptedCodecKey): ConfigCodec<E | ConfigEncryptionError> => {
   const name = `encrypted(${inner.name})`;
 
-  // Memoize so the key is resolved once per codec instance, even across forked
-  // fibers.
-  //
-  // Only SUCCESS may be memoized. `Effect.cached` alone memoizes the whole
-  // `Exit`, so an interrupt — a property of whichever caller's fiber touched
-  // the key first, not of the key effect — would be replayed forever, outside
-  // this codec's declared error channel and unrecoverable via `Effect.catch`.
-  // Invalidating on any non-success exit lets the next caller resolve again.
-  // Lazy either way: nothing runs until the first parse/stringify.
   const [resolveKey, invalidateKey] = Effect.runSync(
     Effect.cachedInvalidateWithTTL(keyEffect(keySource), Duration.infinity)
   );
-  const getKey: Effect.Effect<CryptoKey, ConfigEncryptionError> = Effect.onError(resolveKey, () => invalidateKey);
+  const keyMemoizedOnSuccess: Effect.Effect<CryptoKey, ConfigEncryptionError> = Effect.onError(
+    resolveKey,
+    () => invalidateKey
+  );
 
   return {
     name,
     parse: Effect.fn("EncryptedCodec.parse")(function* (raw: string) {
-      // Validate the envelope before resolving the key: malformed input must
-      // not be able to force a key resolution, which may be a KMS round-trip.
       const combined = yield* Effect.mapError(fromBase64(raw), toPublic);
 
       if (combined.length <= IV_LENGTH) {
@@ -283,7 +283,7 @@ export const EncryptedCodec: {
         });
       }
 
-      const key = yield* getKey;
+      const key = yield* keyMemoizedOnSuccess;
       const iv = combined.slice(0, IV_LENGTH);
       const ciphertext = combined.slice(IV_LENGTH);
       const plaintext = yield* Effect.mapError(decrypt(key, iv, ciphertext), toPublic);
@@ -291,7 +291,7 @@ export const EncryptedCodec: {
       return yield* inner.parse(new TextDecoder().decode(plaintext));
     }),
     stringify: Effect.fn("EncryptedCodec.stringify")(function* (value: unknown) {
-      const key = yield* getKey;
+      const key = yield* keyMemoizedOnSuccess;
       const serialized = yield* inner.stringify(value);
 
       const encoded = new TextEncoder().encode(serialized);

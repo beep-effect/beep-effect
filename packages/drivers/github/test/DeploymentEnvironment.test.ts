@@ -71,10 +71,10 @@ describe("DeploymentEnvironment.upsert", () => {
         Effect.gen(function* () {
           yield* Effect.flatMap(DeploymentEnvironment, (e) => e.upsert("prod"));
 
-          // The route is idempotent, so unlike variables there is no read-then-branch.
           assert.deepStrictEqual(
             A.map(requested, (c) => c.route),
-            ["PUT /repos/{owner}/{repo}/environments/{environment_name}"]
+            ["PUT /repos/{owner}/{repo}/environments/{environment_name}"],
+            "the idempotent route needs no read before the write"
           );
           assert.deepStrictEqual(requested[0]?.params, { owner: "acme", repo: "widget", environment_name: "prod" });
         })
@@ -103,14 +103,19 @@ describe("DeploymentEnvironment.upsert", () => {
     )((it) => {
       it.effect("a config key cannot retarget the request at another repository", () =>
         Effect.gen(function* () {
-          // `config` is an open record. Spread AFTER the coordinates it would
-          // overwrite them, silently sending the request somewhere else while the
-          // span still annotated the intended repository.
           yield* Effect.flatMap(DeploymentEnvironment, (e) =>
             e.upsert("prod", { owner: "attacker", repo: "elsewhere", wait_timer: 5 })
           );
-          assert.strictEqual(requested[0]?.params.owner, "acme");
-          assert.strictEqual(requested[0]?.params.repo, "widget");
+          assert.strictEqual(
+            requested[0]?.params.owner,
+            "acme",
+            "the open config record is spread before the coordinates"
+          );
+          assert.strictEqual(
+            requested[0]?.params.repo,
+            "widget",
+            "the request goes to the repository the span annotates"
+          );
           assert.strictEqual(requested[0]?.params.wait_timer, 5, "the real body still passes through");
         })
       );

@@ -36,6 +36,13 @@ const JsonCheckOutput = Schema.fromJsonString(
 const JsonObject = Schema.fromJsonString(Schema.Record(Schema.String, Schema.Unknown));
 const JsonComment = Schema.fromJsonString(Schema.Struct({ body: Schema.String }));
 const JsonGraphQL = Schema.fromJsonString(Schema.Struct({ query: Schema.String, variables: Schema.Unknown }));
+// decision: utf8-truncation-property-domain
+const ScalarValue = Schema.Union([
+  Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 0xd7ff })),
+  Schema.Int.check(Schema.isBetween({ minimum: 0xe000, maximum: 0x10ffff })),
+]);
+const budgetCrossingRunOptions = { arbitrary: { size: 40_000, runs: 50 }, timeout: 30_000 };
+
 describe("CheckRunOutput byte budgeting", () => {
   it("leaves an output that fits alone", () => {
     const output = CheckRunOutput.make({ title: "t", summary: "short" });
@@ -50,11 +57,13 @@ describe("CheckRunOutput byte budgeting", () => {
   });
 
   it("counts BYTES, not characters", () => {
-    // 30k emoji is 30k characters and 120k bytes. A character-count check
-    // passes this and the request comes back 422.
     const summary = Str.repeat(30_000)("🦋");
     assert.isBelow(summary.length, CheckRunOutput.LIMIT_BYTES, "under the limit by characters");
-    assert.isAbove(Buffer.byteLength(summary, "utf8"), CheckRunOutput.LIMIT_BYTES, "over it by bytes");
+    assert.isAbove(
+      Buffer.byteLength(summary, "utf8"),
+      CheckRunOutput.LIMIT_BYTES,
+      "over it by bytes, which a character-count check would send for a 422"
+    );
     const cut = CheckRunOutput.make({ title: "t", summary }).truncated().summary;
     assert.isAtMost(Buffer.byteLength(cut, "utf8"), CheckRunOutput.LIMIT_BYTES);
   });
@@ -98,16 +107,6 @@ describe("CheckRunOutput byte budgeting", () => {
     assert.lengthOf(output.truncated().annotations ?? [], CheckRunOutput.MAX_ANNOTATIONS);
   });
 
-  // Every scalar value — the whole plane minus the surrogate block, so the
-  // cut can land inside any multi-byte sequence or pair without the input
-  // itself carrying broken halves. Generated as code points rather than a
-  // string because the native string generator stays in printable ASCII;
-  // `size` lifts the length scale to the 40 000 cap so the input actually
-  // crosses the 65 535-byte budget.
-  const ScalarValue = Schema.Union([
-    Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 0xd7ff })),
-    Schema.Int.check(Schema.isBetween({ minimum: 0xe000, maximum: 0x10ffff })),
-  ]);
   const binaryText = Arbitrary.schema(Schema.Array(ScalarValue).check(Schema.isMaxLength(40_000))).pipe(
     Arbitrary.map((codePoints) =>
       A.join(
@@ -123,19 +122,12 @@ describe("CheckRunOutput byte budgeting", () => {
     ([summary]) => {
       const cut = CheckRunOutput.make({ title: "t", summary }).truncated().summary;
       const withinBudget = Buffer.byteLength(cut, "utf8") <= CheckRunOutput.LIMIT_BYTES;
-      // Round-tripping through UTF-8 is lossless exactly when nothing is broken
-      // beyond what the input already contained.
       const noNewDamage =
         pipe(cut, Str.match(/�/g), O.getOrElse(constant([]))).length <=
         pipe(summary, Str.match(/�/g), O.getOrElse(constant([]))).length + 1;
       return withinBudget && noNewDamage;
     },
-    // `size: 40_000` is load-bearing: at 20_000 no run ever crosses the
-    // 65 535-byte budget (0/100 probed), at 40_000 about one in five does.
-    // That makes each run expensive — ~0.7s for 100 locally, past the 5s
-    // default under coverage on a CI runner — so the run count is halved and
-    // the timeout raised rather than the domain shrunk.
-    { arbitrary: { size: 40_000, runs: 50 }, timeout: 30_000 }
+    budgetCrossingRunOptions
   );
 });
 
@@ -205,19 +197,16 @@ describe("CheckRun", () => {
     it.layer(CheckRun.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("withCheckRun concludes as cancelled when `use` is interrupted", () =>
         Effect.gen(function* () {
-          const started = yield* Latch.make();
+          const openedInsideUse = yield* Latch.make();
           const fiber = yield* Effect.forkChild(
             Effect.flatMap(CheckRun, (check) =>
-              // Open the latch from INSIDE `use`, so the interrupt below cannot
-              // land before the run has been created — otherwise the test could
-              // pass by never having started one.
-              check.withCheckRun("build", "sha", () => Effect.flatMap(started.open, () => Effect.never))
+              check.withCheckRun("build", "sha", () => Effect.flatMap(openedInsideUse.open, () => Effect.never))
             )
           );
-          yield* started.await;
+          yield* openedInsideUse.await;
           yield* Fiber.interrupt(fiber);
 
-          assert.lengthOf(script.calls, 2, "the run was concluded rather than left in_progress");
+          assert.lengthOf(script.calls, 2, "the run was created, then concluded rather than left in_progress");
           const body = yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}");
           assert.strictEqual(body.conclusion, "cancelled");
           assert.strictEqual(body.status, "completed");
@@ -237,8 +226,6 @@ describe("CheckRun", () => {
           const value = yield* Effect.flatMap(CheckRun, (check) =>
             check.withCheckRun("build", "sha", (id, conclude) =>
               Effect.gen(function* () {
-                // The shape a findings-derived conclusion takes: the work computes
-                // the verdict, then hands it to the bracket.
                 yield* conclude("neutral");
                 return id * 2;
               })
@@ -318,8 +305,6 @@ describe("CheckRun", () => {
             Effect.flatMap(CheckRun, (check) =>
               check.withCheckRun("build", "sha", (_id, conclude) =>
                 Effect.gen(function* () {
-                  // A watchdog that has already decided the run timed out, then
-                  // waits to be torn down. The interrupt must not overwrite it.
                   yield* conclude("timed_out");
                   yield* started.open;
                   return yield* Effect.never;
@@ -331,7 +316,8 @@ describe("CheckRun", () => {
           yield* Fiber.interrupt(fiber);
           assert.strictEqual(
             (yield* Schema.decodeEffect(JsonObject)(script.calls[1]?.body ?? "{}")).conclusion,
-            "timed_out"
+            "timed_out",
+            "the teardown interrupt does not overwrite a watchdog's timed_out"
           );
         })
       );
@@ -452,7 +438,6 @@ describe("PullRequestComment", () => {
       it.effect("find PAGINATES, so a busy pull request does not lose the marker", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(PullRequestComment, (comments) => comments.find(5, marker));
-          // The version this replaces read one page of 100 and stopped.
           assert.strictEqual(O.getOrThrow(value).id, 3);
           assert.strictEqual(script.count(), 2);
         })
@@ -530,16 +515,13 @@ describe("PullRequest", () => {
       ...[{ status: 200, body: [pull(4, { body: "prior description" })] }],
     ]);
     it.layer(PullRequest.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
-      it.effect("carries the prior description — the carry-through read (effected#373)", () =>
+      it.effect("carries the prior description, the input that marker-based body management reads", () =>
         Effect.gen(function* () {
-          // Marker-based PR-body management takes the PRIOR body as input; this
-          // is the read path that makes `upsert(existing, managed)` possible.
           const value = yield* Effect.flatMap(PullRequest, (pulls) => pulls.get(4));
           assert.strictEqual(value.body, "prior description");
 
-          // And through `list`, which shares the projection.
           const listed = yield* Effect.flatMap(PullRequest, (pulls) => pulls.list());
-          assert.strictEqual(listed[0]?.body, "prior description");
+          assert.strictEqual(listed[0]?.body, "prior description", "list shares the projection");
         })
       );
     });
@@ -550,10 +532,11 @@ describe("PullRequest", () => {
     it.layer(PullRequest.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("a null description projects as absent, not as a value", () =>
         Effect.gen(function* () {
-          // GitHub sends `body: null` for an empty description; the projection
-          // omits the optionalKey rather than inventing "".
           const value = yield* Effect.flatMap(PullRequest, (pulls) => pulls.get(5));
-          assert.isUndefined(value.body);
+          assert.isUndefined(
+            value.body,
+            "GitHub sends body: null, and the projection omits the key rather than inventing one"
+          );
         })
       );
     });
@@ -577,13 +560,11 @@ describe("PullRequest", () => {
     it.layer(PullRequest.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("carries the head and base shas alongside the branch names", () =>
         Effect.gen(function* () {
-          // "Which commit did this branch from" is base.sha — routine, and it used
-          // to need a raw route.
           const value = yield* Effect.flatMap(PullRequest, (pulls) => pulls.get(9));
           assert.strictEqual(value.head, "feature");
           assert.strictEqual(value.headSha, "feature-sha");
           assert.strictEqual(value.base, "main");
-          assert.strictEqual(value.baseSha, "base-sha");
+          assert.strictEqual(value.baseSha, "base-sha", "base.sha answers which commit the branch came from");
         })
       );
     });
@@ -602,15 +583,16 @@ describe("PullRequest", () => {
     it.layer(PullRequest.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("listFiles carries the status, not the path alone", () =>
         Effect.gen(function* () {
-          // The endpoint answers with the same `diff-entry` shape as the
-          // single-commit read; projecting to the filename dropped the status and
-          // pushed consumers to a raw route.
           const value = yield* Effect.flatMap(PullRequest, (pulls) => pulls.listFiles(7));
           assert.deepStrictEqual(
             A.map(value, (file) => file.path),
             ["a.txt", "new.txt"]
           );
-          assert.strictEqual(value[0]?.status, "modified");
+          assert.strictEqual(
+            value[0]?.status,
+            "modified",
+            "the endpoint answers the diff-entry shape of the single-commit read"
+          );
           assert.strictEqual(value[1]?.status, "renamed");
           assert.strictEqual(value[1]?.previousPath, "old.txt");
           assert.include(script.calls[0]?.path ?? "", "/pulls/7/files");
@@ -744,8 +726,11 @@ describe("PullRequest", () => {
           yield* Effect.flatMap(PullRequest, (pulls) => pulls.setAutoMerge(info, "squash"));
           const body = yield* Schema.decodeEffect(JsonGraphQL)(script.calls[0]?.body ?? "{}");
           assert.include(body.query, "enablePullRequestAutoMerge");
-          // GraphQL spells the methods in capitals; REST does not.
-          assert.deepStrictEqual(body.variables, { pullRequestId: "PR_3", mergeMethod: "SQUASH" });
+          assert.deepStrictEqual(
+            body.variables,
+            { pullRequestId: "PR_3", mergeMethod: "SQUASH" },
+            "GraphQL spells merge methods in capitals; REST does not"
+          );
         })
       );
     });
@@ -770,8 +755,6 @@ describe("PullRequest", () => {
     it.layer(PullRequest.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("a create that succeeds is not failed by auto-merge", () =>
         Effect.gen(function* () {
-          // The previous surface fired auto-merge from an Effect.tap AFTER create,
-          // so an auto-merge failure surfaced as if the create had failed.
           const value = yield* Effect.flatMap(PullRequest, (pulls) =>
             pulls.create({ title: "t", head: "feature", base: "main" })
           );
@@ -792,14 +775,7 @@ describe("GitHubIssue REST", () => {
     node_id: "I_169",
   };
 
-  /**
-   * The default api-version (2022-11-28) is deprecated — sunset 2028-03-10 —
-   * and GitHub flags old-version calls to changed endpoints with a
-   * `Deprecation` header octokit prints to the consumer's console. The module
-   * pins the current version instead (effected#189); these assertions are on
-   * the wire, through the real octokit path, so dropping the header fails.
-   */
-  const PINNED = "2026-03-10";
+  const PINNED_API_VERSION = "2026-03-10";
 
   {
     const { script, base } = harness([{ status: 200, body: { ...issue, state: "closed" } }]);
@@ -811,7 +787,11 @@ describe("GitHubIssue REST", () => {
           assert.isDefined(call);
           assert.strictEqual(call?.method, "PATCH");
           assert.strictEqual(call.path, "/repos/acme/widget/issues/169");
-          assert.strictEqual(call.headers["x-github-api-version"], PINNED);
+          assert.strictEqual(
+            call.headers["x-github-api-version"],
+            PINNED_API_VERSION,
+            "the default 2022-11-28 version draws a Deprecation header that octokit prints"
+          );
           const body = yield* Schema.decodeEffect(JsonObject)(call.body ?? "{}");
           assert.strictEqual(body.state, "closed");
           assert.strictEqual(body.state_reason, "not_planned");
@@ -829,8 +809,7 @@ describe("GitHubIssue REST", () => {
           const body = yield* Schema.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}");
           assert.strictEqual(body.state, "closed");
           assert.notProperty(body, "state_reason");
-          // The version header does not leak into the body as a parameter.
-          assert.notProperty(body, "headers");
+          assert.notProperty(body, "headers", "the version header does not leak into the body as a parameter");
         })
       );
     });
@@ -842,7 +821,7 @@ describe("GitHubIssue REST", () => {
       it.effect("get pins the api-version and normalizes the label union", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(GitHubIssue, (issues) => issues.get(169));
-          assert.strictEqual(script.calls[0]?.headers["x-github-api-version"], PINNED);
+          assert.strictEqual(script.calls[0]?.headers["x-github-api-version"], PINNED_API_VERSION);
           assert.deepStrictEqual([...value.labels], ["release", "bug"]);
           assert.strictEqual(value.nodeId, "I_169");
         })
@@ -861,7 +840,7 @@ describe("GitHubIssue REST", () => {
           assert.isDefined(call);
           assert.strictEqual(call?.method, "POST");
           assert.strictEqual(call.path, "/repos/acme/widget/issues/169/comments");
-          assert.strictEqual(call.headers["x-github-api-version"], PINNED);
+          assert.strictEqual(call.headers["x-github-api-version"], PINNED_API_VERSION);
           assert.strictEqual((yield* Schema.decodeEffect(JsonObject)(call.body ?? "{}")).body, "done");
         })
       );
@@ -877,12 +856,11 @@ describe("GitHubIssue REST", () => {
             issues.list({ state: "open", labels: ["release", "bug"], page: PageOptions.make({ perPage: 5 }) })
           );
           assert.strictEqual(value.length, 1);
-          assert.strictEqual(script.calls[0]?.headers["x-github-api-version"], PINNED);
+          assert.strictEqual(script.calls[0]?.headers["x-github-api-version"], PINNED_API_VERSION);
           assert.strictEqual(script.queryOf(0).get("per_page"), "5");
           assert.strictEqual(script.queryOf(0).get("state"), "open");
           assert.strictEqual(script.queryOf(0).get("labels"), "release,bug");
-          // The header rode as a header, not as a query parameter.
-          assert.isNull(script.queryOf(0).get("headers"));
+          assert.isNull(script.queryOf(0).get("headers"), "the header rides as a header, not as a query parameter");
         })
       );
     });
@@ -906,12 +884,13 @@ describe("GitHubIssue.commentOnce", () => {
       it.effect("skips when the marker is already there — even on a later page", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(GitHubIssue, (issues) => issues.commentOnce(5, marker, "the body"));
-          // Found on page TWO: a single-page read would have posted a duplicate.
-          assert.isFalse(value.wrote);
+          assert.isFalse(value.wrote, "found on page two, where a single-page read would post a duplicate");
           assert.strictEqual(value.comment.id, 3);
           assert.strictEqual(script.count(), 2);
-          // Create-or-skip, never edit: nothing was posted or patched.
-          assert.isTrue(A.every(script.calls, (call) => call.method === "GET"));
+          assert.isTrue(
+            A.every(script.calls, (call) => call.method === "GET"),
+            "create-or-skip, never edit"
+          );
         })
       );
     });
@@ -932,13 +911,18 @@ describe("GitHubIssue.commentOnce", () => {
           assert.isDefined(post);
           assert.strictEqual(post?.method, "POST");
           assert.strictEqual(post.path, "/repos/acme/widget/issues/5/comments");
-          // The exact `upsert` spelling, so either member's comment is findable
-          // by the other's marker check.
           const sent = (yield* Schema.decodeEffect(JsonObject)(post.body ?? "{}")).body;
-          assert.strictEqual(sent, `the body\n\n${marker.html}`);
-          // The pinned api-version rides on the read AND the write.
+          assert.strictEqual(
+            sent,
+            `the body\n\n${marker.html}`,
+            "the upsert spelling, so each member finds the other's marker"
+          );
           for (const call of script.calls) {
-            assert.strictEqual(call.headers["x-github-api-version"], "2026-03-10");
+            assert.strictEqual(
+              call.headers["x-github-api-version"],
+              "2026-03-10",
+              "the pinned version rides on read and write"
+            );
           }
         })
       );
@@ -995,12 +979,12 @@ describe("GitHubIssue GraphQL documents", () => {
       it.effect("linkedIssues distinguishes human links from inferred ones", () =>
         Effect.gen(function* () {
           const value = yield* Effect.flatMap(GitHubIssue, (issues) => issues.linkedIssues(7));
-          // The field the whole owned document exists for.
           assert.isTrue(
             O.exists(
               A.findFirst(value, (issue) => issue.number === 1),
               (issue) => !issue.userLinked
-            )
+            ),
+            "userLinked is the field the owned document exists for"
           );
           assert.isTrue(
             O.exists(
@@ -1096,11 +1080,11 @@ describe("GitHubRelease", () => {
           assert.strictEqual(value.id, 9);
           assert.include(script.calls[0]?.url ?? "", "uploads.github.com");
           assert.strictEqual(script.calls[0]?.headers["content-type"], "application/zip");
-          // The discriminating assertion is on the BUILT url, not the arguments:
-          // this route is outside the generated map, so a `name` passed only as
-          // a parameter is silently dropped by octokit — every upload then 400s
-          // with "Invalid name for request" (live incident, 2026-07-26).
-          assert.strictEqual(script.queryOf(0).get("name"), "app.zip");
+          assert.strictEqual(
+            script.queryOf(0).get("name"),
+            "app.zip",
+            "the route is outside the generated map, so octokit drops a name passed only as a parameter"
+          );
           assert.isFalse(script.queryOf(0).has("label"));
           assert.notInclude(script.calls[0]?.url ?? "", "&");
         })
@@ -1299,9 +1283,8 @@ describe("Attestation", () => {
     it.layer(Attestation.layer.pipe(Layer.provideMerge(base)), { timeout: "30 seconds" })((it) => {
       it.effect("reads a 422 as no attestations too", () =>
         Effect.gen(function* () {
-          // GitHub answers a digest it has never seen either way depending on path.
           const value = yield* Effect.flatMap(Attestation, (attestations) => attestations.listForSubject("abc"));
-          assert.deepStrictEqual(value, []);
+          assert.deepStrictEqual(value, [], "GitHub answers an unseen digest with a 404 or a 422 depending on path");
         })
       );
     });
